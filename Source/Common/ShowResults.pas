@@ -169,7 +169,7 @@ Begin
              inc(jj)
          Until NodeIdx>0;
 
-         nref1  := GetRef(NodeIdx);   // Get the onverall node reference number
+         nref1  := GetRef(NodeIdx);   // Get the overall node reference number
          Volts := ActiveCircuit.Solution.NodeV^[nref1];
 
          kk := 1; // keep compiler from complaining
@@ -243,7 +243,7 @@ Begin
                               Else Vpu := 0.0;
                    End;
          IF LL then Vpu := Vpu/SQRT3;
-         Writeln(F, Format('%s  (%3d) %4d    %13.5g (%8.4g) /_ %6.1f',[UpperCase(BusName), nref, i,Vmag, Vpu, cdang(Volts) ]));
+         Writeln(F, Format('%s  (%3d) %4d    %13.5g (%8.4g) /_ %6.1f',[UpperCase(BusName), nref, MapNodeToBus^[nref].nodenum, Vmag, Vpu, cdang(Volts) ]));
        End;
     End;
     If j<Nterm Then Writeln(F,'------------');
