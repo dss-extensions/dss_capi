@@ -36,6 +36,7 @@ unit Load;
     4/1/14 Added Vlowpu property to make solution converge better at very low voltages
     1/7/15 Added puXHarm and XRHarm properties to help model motor load for harmonic studies
     3/16/16 Added PFSpecified to account for problems when UseActual is specified and no Qmult specified
+    1/10/18 Celso/Paulo mods for low-voltage transition for Model 5
 }
 
 interface
@@ -91,6 +92,7 @@ TYPE
         WNominal                :Double;  // Nominal Watts per phase
         Yeq                     :Complex;   // at nominal
         Yeq105                  :Complex;
+        Yeq105I                 :Complex; // ***Added by Celso & Paulo
         Yeq95                   :Complex;
         Yneut                   :Complex;
         YPrimOpenCond           :TCmatrix;  // To handle cases where one conductor of load is open
@@ -112,7 +114,9 @@ TYPE
         // For interpolating currents between VbaseLow and Vbase95
         ILow                    :Complex;
         I95                     :Complex;
+        IBase                   :Complex; // at nominal  ***Added by Celso & Paulo
         M95                     :Complex; // complex slope of line between Low and 95
+        M95I                    :Complex; // complex slope of line between Low and 95 for Constant I  **Added by Celso & Paulo
 
         ExemptFromLDCurve       :Boolean;
         Fixed                   :Boolean;   // IF Fixed, always at base value
@@ -142,6 +146,7 @@ TYPE
         FUNCTION  GrowthFactor(Year:Integer; ActorID : Integer):Double;
         PROCEDURE StickCurrInTerminalArray(TermArray:pComplexArray; Const Curr:Complex; i:Integer);
         FUNCTION  InterpolateY95_YLow(const Vmag:Double):Complex;Inline;
+        FUNCTION  InterpolateY95I_YLow(const Vmag:Double):Complex;Inline; // ***Added by Celso & Paulo
         FUNCTION  Get_Unserved:Boolean;
 
         PROCEDURE Set_kVAAllocationFactor(const Value: Double);
@@ -1065,10 +1070,16 @@ Begin
     IF   (Vmaxpu <> 0.0 ) THEN Yeq105 := CDivReal(Yeq, sqr(Vmaxpu))   // at 105% voltage
                           ELSE Yeq105 := Yeq;
 
+    IF   (Vmaxpu <> 0.0 ) THEN Yeq105I := CDivReal(Yeq, Vmaxpu)   // at 105% voltage for Constant I ***Added by Celso & Paulo
+                          ELSE Yeq105I := Yeq;                    // **Added by Celso & Paulo
+
     {New code to help with convergence at low voltages}
     ILow := (CmulReal(Yeq,   VbaseLow));
     I95  := (CmulReal(Yeq95, Vbase95));
     M95  := CDivReal(Csub(I95, ILow), (VBase95 - VBaseLow)); // (I95 - ILow)/(Vbase95 - VbaseLow);
+    M95  := CDivReal(Csub(I95, ILow), (VBase95 - VBaseLow)); // (I95 - ILow)/(Vbase95 - VbaseLow);    ***Added by Celso & Paulo
+    IBase:= (CmulReal(Yeq, VBase));                          // ***Added by Celso & Paulo
+    M95I := CDivReal(Csub(IBase, ILow), (VBase95 - VBaseLow)); // (IBase - ILow)/(Vbase95 - VbaseLow);    ***Added by Celso & Paulo
 
 End;
 
@@ -1457,8 +1468,8 @@ Begin
 
         Vmag := Cabs(V);
         IF      VMag <= VBaseLow THEN Curr := Cmul(Yeq,     V)  // Below VbaseZ resort to linear equal to Yprim contribution
-        ELSE IF VMag <= VBase95  THEN Curr := Cmul(InterpolateY95_YLow(Vmag), V)   //  Voltage between Vminpu and Vlow
-        ELSE IF VMag >  VBase105 THEN Curr := Cmul(Yeq105,  V)  // above 105% use an impedance model
+        ELSE IF VMag <= VBase95  THEN Curr := Cmul(InterpolateY95I_YLow(Vmag), V)   //  Voltage between Vminpu and Vlow    ***Added by Celso & Paulo
+        ELSE IF VMag >  VBase105 THEN Curr := Cmul(Yeq105I,  V)  // above 105% use an impedance model
         ELSE Begin
                 Curr := Conjg( Cdiv( Cmplx(WNominal,varNominal), CMulReal( CDivReal(V, Vmag), Vbase) ));
              End;
@@ -1496,17 +1507,31 @@ begin
     if      VMag <= VBaseLow THEN Curr := Cmul(Yeq,    V)  // Below VbaseZ resort to linear equal to Yprim contribution
     else
     Begin
-        if VMag <= VBase95  THEN Curr := Cmul(InterpolateY95_YLow(Vmag), V)   //  Voltage between Vminpu and Vlow
-        else if VMag > VBase105 then Curr := Cmul(Yeq105, V)
-        else begin
-          CurrZ := Cmul(Cmplx(Yeq.re*ZIPV^[1],Yeq.im*ZIPV^[4]), Vterminal^[i]);
-          CurrI := Conjg(Cdiv(Cmplx(WNominal*ZIPV^[2],varNominal*ZIPV^[5]), CMulReal(CDivReal(V, Cabs(V)), Vbase)));
-          CurrP := Conjg(Cdiv(Cmplx(WNominal*ZIPV^[3],varNominal*ZIPV^[6]), V));
-          Curr := CAdd (CurrZ, CAdd (CurrI, CurrP));
-        end;
+        if VMag <= VBase95  THEN
+          begin
+            CurrZ := Cmul(Cmplx(Yeq.re*ZIPV^[1],Yeq.im*ZIPV^[4]), V);    // ***Changed by Celso & Paulow
+            CurrP := Cmul(Cmplx(InterpolateY95_YLow(Vmag).re*ZIPV^[3], InterpolateY95_YLow(Vmag).im*ZIPV^[6]), V);   // ***Changed by Celso & Paulo
+            CurrI := Cmul(Cmplx(InterpolateY95I_YLow(Vmag).re*ZIPV^[2], InterpolateY95I_YLow(Vmag).im*ZIPV^[5]), V);  // ***Changed by Celso & Paulo
+            Curr := CAdd (CurrZ, CAdd (CurrI, CurrP));   // ***Changed by Celso & Paulo
+          end
+        else if VMag > VBase105 then
+          begin
+            CurrZ := Cmul(Cmplx(Yeq.re*ZIPV^[1],Yeq.im*ZIPV^[4]), V);   // ***Changed by Celso & Paulo
+            CurrP := Cmul(Cmplx(Yeq105.re*ZIPV^[3],Yeq105.im*ZIPV^[6]), V);         // ***Changed by Celso & Paulo
+            CurrI := Cmul(Cmplx(Yeq105I.re*ZIPV^[2],Yeq105I.im*ZIPV^[5]), V);       // ***Changed by Celso & Paulo
+            Curr := CAdd (CurrZ, CAdd (CurrI, CurrP));
+          end
+        else
+          begin
+            CurrZ := Cmul(Cmplx(Yeq.re*ZIPV^[1],Yeq.im*ZIPV^[4]), V);
+            CurrI := Conjg(Cdiv(Cmplx(WNominal*ZIPV^[2],varNominal*ZIPV^[5]), CMulReal(CDivReal(V, Cabs(V)), Vbase)));
+            CurrP := Conjg(Cdiv(Cmplx(WNominal*ZIPV^[3],varNominal*ZIPV^[6]), V));
+            Curr := CAdd (CurrZ, CAdd (CurrI, CurrP));
+          end;
 
-        // low-voltage drop-out
-        if ZIPV^[7] > 0.0 then begin
+      // low-voltage drop-out
+      if ZIPV^[7] > 0.0 then
+        begin
           vx := 500.0 * (Vmag / Vbase - ZIPV^[7]);
           evx := exp (2 * vx);
           yv := 0.5 * (1 + (evx-1)/(evx+1));
@@ -1528,10 +1553,10 @@ PROCEDURE TLoadObj.DoCVRModel(ActorID : Integer);
 // Linear P, quadratic Q
 
 Var
-   i    :Integer;
-   V    :Complex;
-   Curr :Complex;
-   Cvar :Complex;  // var current
+   i          :Integer;
+   V          :Complex;
+   Curr       :Complex;
+   Cvar       :Complex;  // var current
    WattFactor :Double;
    VarFactor  :Double;
    Vmag       :Double;
@@ -1876,6 +1901,20 @@ function TLoadObj.InterpolateY95_YLow(const Vmag: Double): Complex;
 begin
 
       Result := CDivReal( Cadd(ILow, CmulReal(M95, Vmag-VbaseLow)), Vmag);   //(Ilow + M95 * (Vmag - VBaseLow))/Vmag)
+
+{****
+    WriteDLLDebugFile(Format('Iter=%d, Name="%s", Vmag=%.6g, Yeq=%.6g +j %.6g',
+             [ActiveCircuit.Solution.iteration, Name, Vmag, Result.re, Result.im]));
+ }
+end;
+
+function TLoadObj.InterpolateY95I_YLow(const Vmag: Double): Complex;      // ***Added by Celso & Paulo
+{
+  For Vmag between V95 and Vlow, interpolate for equivalent  Y
+}
+begin
+
+      Result := CDivReal( Cadd(ILow, CmulReal(M95I, Vmag-VbaseLow)), Vmag);   //(Ilow + M95I * (Vmag - VBaseLow))/Vmag)   // ***Changed by Celso & Paulo
 
 {****
     WriteDLLDebugFile(Format('Iter=%d, Name="%s", Vmag=%.6g, Yeq=%.6g +j %.6g',

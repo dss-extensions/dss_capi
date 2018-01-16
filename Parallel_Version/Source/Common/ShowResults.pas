@@ -243,7 +243,7 @@ Begin
                               Else Vpu := 0.0;
                    End;
          IF LL then Vpu := Vpu/SQRT3;
-         Writeln(F, Format('%s  (%3d) %4d    %13.5g (%8.4g) /_ %6.1f',[UpperCase(BusName), nref, i,Vmag, Vpu, cdang(Volts) ]));
+         Writeln(F, Format('%s  (%3d) %4d    %13.5g (%8.4g) /_ %6.1f',[UpperCase(BusName), nref, MapNodeToBus^[nref].nodenum, Vmag, Vpu, cdang(Volts) ]));
        End;
     End;
     If j<Nterm Then Writeln(F,'------------');
