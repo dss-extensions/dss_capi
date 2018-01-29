@@ -21,7 +21,7 @@ unit DSSGlobals;
 interface
 
 Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerList,
-     UComplex, Arraydef, CktElement, Circuit, IniRegSave, {$IFNDEF FPC}Graphics,{$ENDIF} System.IOUtils, inifiles,
+     UComplex, Arraydef, CktElement, Circuit, IniRegSave, {$IFNDEF FPC}Graphics, System.IOUtils, {$ENDIF}inifiles,
 
      {Some units which have global vars defined here}
      Spectrum,
@@ -801,6 +801,7 @@ begin
   FreeAndNil(ini);
 end;
 
+{$IFNDEF FPC}
 function CheckDSSVisualizationTool: Boolean;
 begin
   DSS_Viz_path:=GetIni('Application','path','', TPath.GetHomePath+'\OpenDSS Visualization Tool\settings.ini');
@@ -809,6 +810,7 @@ begin
     Result:=false;
 end;
 // End of visualization tool check
+{$ENDIF}
 
 initialization
 
@@ -919,7 +921,9 @@ initialization
 
    //WriteDLLDebugFile('DSSGlobals');
 
+   {$IFNDEF FPC}
    DSS_Viz_installed:= CheckDSSVisualizationTool; // DSS visualization tool (flag of existance)
+   {$ENDIF}
 
 Finalization
 
