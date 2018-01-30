@@ -33,7 +33,7 @@ Procedure ExportCapacity(FileNm:String);
 Procedure ExportOverloads(FileNm:String);
 Procedure ExportUnserved(FileNm:String; UE_Only:Boolean);
 Procedure ExportYprim(FileNm:String);
-Procedure ExportY(FileNm:String);
+Procedure ExportY(FileNm:String; TripletOpt:Boolean);
 Procedure ExportSeqZ(FileNm:String);
 Procedure ExportBusCoords(FileNm:String);
 Procedure ExportLosses(FileNm:String);
@@ -2579,13 +2579,14 @@ Begin
 End;
 
 // illustrate retrieval of System Y using compressed column format
-Procedure ExportY(FileNm:String);
+Procedure ExportY(FileNm:String; TripletOpt:Boolean);
 
 {Exports System Y Matrix in Node Order}
 
 Var
     F                :TextFile;
     i,j,p            :LongWord;
+    col,row          :LongWord;
     hY               :NativeUInt;
     nNZ, nBus        :LongWord;
     ColPtr, RowIdx   :array of LongWord;
@@ -2609,52 +2610,60 @@ Begin
      Assignfile(F,FileNm);
      ReWrite(F);
 
-     SetLength (ColPtr, nBus + 1);
-     SetLength (RowIdx, nNZ);
-     SetLength (cVals, nNZ);
-     GetCompressedMatrix (hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
-
-     {Write out fully qualified Bus Names}
-      With ActiveCircuit Do Begin
-
-        Writeln(F, Format('%d, ',[NumNodes]));
-(*        For i := 1 to NumNodes DO BEGIN
-           j :=  MapNodeToBus^[i].BusRef;
-           Write(F, Format('%s.%-d, +j,',[BusList.Get(j), MapNodeToBus^[i].NodeNum]));
-        END;
-        Writeln(F);
-*)
-        For i := 1 to NumNodes Do Begin
-           j :=  MapNodeToBus^[i].BusRef;
-           Write(F, Format('"%s.%-d", ',[Uppercase(BusList.Get(j)), MapNodeToBus^[i].NodeNum]));
-           For j := 1 to NumNodes Do Begin
-              re := 0.0;
-              im := 0.0;
-              // search for a non-zero element [i,j]
-              //  DSS indices are 1-based, KLU indices are 0-based
-              for p := ColPtr[j-1] to ColPtr[j] - 1 do begin
-                if RowIdx[p] + 1 = i then begin
-                  re := cVals[p].re;
-                  im := cVals[p].im;
+     if TripletOpt then begin
+       SetLength (ColPtr, nNZ);
+       SetLength (RowIdx, nNZ);
+       SetLength (cVals, nNZ);
+       GetTripletMatrix (hY, nNZ, @RowIdx[0], @ColPtr[0], @cVals[0]);
+       Writeln(F, 'Row,Col,G,B');
+       for i := 0 to nNZ - 1 do begin
+         col := ColPtr[i] + 1;
+         row := RowIdx[i] + 1;
+         if row >= col then begin
+           re := cVals[i].re;
+           im := cVals[i].im;
+           Writeln (F, Format('%d,%d,%.10g,%.10g', [row, col, re, im]));
+         end;
+       end;
+     end else begin
+       SetLength (ColPtr, nBus + 1);
+       SetLength (RowIdx, nNZ);
+       SetLength (cVals, nNZ);
+       GetCompressedMatrix (hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
+       {Write out fully qualified Bus Names}
+        With ActiveCircuit Do Begin
+          Writeln(F, Format('%d, ',[NumNodes]));
+  (*        For i := 1 to NumNodes DO BEGIN
+             j :=  MapNodeToBus^[i].BusRef;
+             Write(F, Format('%s.%-d, +j,',[BusList.Get(j), MapNodeToBus^[i].NodeNum]));
+          END;
+          Writeln(F);
+  *)
+          For i := 1 to NumNodes Do Begin
+             j :=  MapNodeToBus^[i].BusRef;
+             Write(F, Format('"%s.%-d", ',[Uppercase(BusList.Get(j)), MapNodeToBus^[i].NodeNum]));
+             For j := 1 to NumNodes Do Begin
+                re := 0.0;
+                im := 0.0;
+                // search for a non-zero element [i,j]
+                //  DSS indices are 1-based, KLU indices are 0-based
+                for p := ColPtr[j-1] to ColPtr[j] - 1 do begin
+                  if RowIdx[p] + 1 = i then begin
+                    re := cVals[p].re;
+                    im := cVals[p].im;
+                  end;
                 end;
-              end;
-              Write(F, Format('%-13.10g, +j %-13.10g,', [re, im]));
-           End;
-           Writeln(F);
+                Write(F, Format('%-13.10g, +j %-13.10g,', [re, im]));
+             End;
+             Writeln(F);
+          End;
         End;
-
-      End;
-
+     end;
 
      GlobalResult := FileNm;
-
   Finally
-
      CloseFile(F);
-
   End;
-
-
 End;
 
 Procedure ExportSeqZ(FileNm:String);

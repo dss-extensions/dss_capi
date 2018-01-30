@@ -101,7 +101,7 @@ Begin
                         ' cause a separate file to be written for each meter.';
       ExportHelp[15] := '(file name is assigned by Monitor export) Monitor values.';
       ExportHelp[16] := '(Default file = EXP_YPRIMS.CSV) All primitive Y matrices.';
-      ExportHelp[17] := '(Default file = EXP_Y.CSV) System Y matrix.';
+      ExportHelp[17] := '(Default file = EXP_Y.CSV) [triplets] [Filename] System Y matrix, defaults to non-sparse format.';
       ExportHelp[18] := '(Default file = EXP_SEQZ.CSV) Equivalent sequence Z1, Z0 to each bus.';
       ExportHelp[19] := '(Default file = EXP_P_BYPHASE.CSV) [MVA] [Filename] Power by phase. Default is kVA.';
       ExportHelp[20] := '(Default file = CDPSM_Combined.XML) (IEC 61968-13, CDPSM Combined (unbalanced load flow) profile)';
@@ -155,6 +155,7 @@ VAR
 
    MVAopt       :Integer;
    UEonlyOpt    :Boolean;
+   TripletOpt   :Boolean;
    pMon         :TMonitorObj;
    pMeter       :TEnergyMeterObj;
    ParamPointer :Integer;
@@ -189,6 +190,7 @@ Begin
 
    MVAOpt := 0;
    UEonlyOpt := FALSE;
+   TripletOpt := FALSE;
    PhasesToPlot := PROFILE3PH;  // init this to get rid of compiler warning
    pMeter := Nil;
 
@@ -210,6 +212,13 @@ Begin
       15: Begin {Get monitor name for export monitors command}
              ParamName := Parser.NextParam;
              Parm2 := Parser.StrValue;
+          End;
+
+      17: Begin { Trap Sparse Triplet flag  }
+            ParamName := parser.nextParam;
+            Parm2 := LowerCase(Parser.strvalue);
+            TripletOpt := FALSE;
+            IF Length(Parm2) > 0 THEN IF Parm2[1]='t' THEN TripletOpt := TRUE;
           End;
 
       32: Begin {Get phases to plot}
@@ -326,7 +335,7 @@ Begin
          End
          ELSE   DoSimpleMsg('Monitor Name Not Specified.'+ CRLF + parser.CmdString, 251);
      16: ExportYprim(Filename);
-     17: ExportY(Filename);
+     17: ExportY(Filename, TripletOpt);
      18: ExportSeqZ(Filename);
      19: ExportPbyphase(Filename, MVAOpt);
      20: ExportCDPSM(Filename, Combined);    // defaults to a load-flow model
