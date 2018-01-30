@@ -17,7 +17,7 @@ unit FNCS;
 interface
 
 uses
-  Classes, SysUtils, {$IFDEF Unix} unix, {$ENDIF} dynlibs;
+  Classes, SysUtils, Executive, {$IFDEF Unix} unix, {$ENDIF} dynlibs;
 
 type
   fncs_time = qword;
@@ -111,21 +111,23 @@ begin
   time_stop := 6 * 3600;
   fncs_initialize;
 
-  while time_granted < time_stop do begin
-    time_granted := fncs_time_request (time_stop);
-    ilast := fncs_get_events_size();
-    if ilast > 0 then begin
-      events := fncs_get_events();
-      for i := 0 to ilast-1 do begin
-        key := events[i];
-        value := fncs_get_value(key);
-//        writeln ('t=', time_granted, ' ', key, '=', value);
-        fncs_publish ('output', value);
+  Try
+    while time_granted < time_stop do begin
+      time_granted := fncs_time_request (time_stop);
+      ilast := fncs_get_events_size();
+      if ilast > 0 then begin
+        events := fncs_get_events();
+        for i := 0 to ilast-1 do begin
+          key := events[i];
+          value := fncs_get_value(key);
+          DSSExecutive.Command := value;
+          fncs_publish ('output', value);
+        end;
       end;
     end;
+  finally
+    fncs_finalize;
   end;
-
-  fncs_finalize;
 end;
 
 function TFNCS.IsReady:Boolean;
