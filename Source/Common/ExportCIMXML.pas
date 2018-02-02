@@ -18,7 +18,11 @@ Type
   CIMProfileChoice = (Combined, Functional, ElectricalProperties,
     Asset, Geographical, Topology, StateVariables);
 
-Procedure ExportCDPSM (FileNm:String; prf:CIMProfileChoice = Combined);
+Procedure ExportCDPSM (FileNm:String;
+  Substation: String;
+  SubGeographicRegion: String;
+  GeographicRegion: String;
+  prf:CIMProfileChoice = Combined);
 
 implementation
 
@@ -1220,7 +1224,11 @@ begin
   EndInstance (F, 'Asset');
 end;
 
-Procedure ExportCDPSM(FileNm:String; prf:CIMProfileChoice);
+Procedure ExportCDPSM(FileNm:String;
+  Substation:String;
+  SubGeographicRegion:String;
+  GeographicRegion: String;
+  prf:CIMProfileChoice);
 Var
   F      : TextFile;
   i, j, k: Integer;
@@ -1304,7 +1312,8 @@ Begin
     StartBankList (ActiveCircuit.Transformers.ListSize);
 
     {$IFDEF FPC}
- 		Writeln(FileNm);    // this only works in the command line version
+ 		// this only works in the command line version
+    Writeln(FileNm + '<=' + ActiveCircuit.Name + '<-' + Substation + '<-' + SubGeographicRegion + '<-' + GeographicRegion);
     {$ENDIF}
     Assignfile(F, FileNm);
     ReWrite(F);
@@ -1318,37 +1327,41 @@ Begin
 
     VersionInstance (F);
 
-		pCRS := TNamedObject.Create (ActiveCircuit.Name + '_CrsUrn');
+		pCRS := TNamedObject.Create ('CoordinateSystem');
     CreateGUID (crsGUID);
     pCRS.GUID := crsGUID;
+    pCRS.localName := ActiveCircuit.Name + '_CrsUrn';
     StartInstance (F, 'CoordinateSystem', pCRS);
     StringNode (F, 'CoordinateSystem.crsUrn', 'OpenDSSLocalBusCoordinates');
     EndInstance (F, 'CoordinateSystem');
 
-    pRegion := TNamedObject.Create (ActiveCircuit.Name + '_Region');
+    pRegion := TNamedObject.Create ('GeographicalRegion');
     CreateGUID (geoGUID);
     pRegion.GUID := geoGUID;
+    pRegion.LocalName := GeographicRegion;
     StartInstance (F, 'GeographicalRegion', pRegion);
     EndInstance (F, 'GeographicalRegion');
 
-    pSubRegion := TNamedObject.Create (ActiveCircuit.Name + '_SubRegion');
+    pSubRegion := TNamedObject.Create ('SubGeographicalRegion');
     CreateGUID (geoGUID);
     pSubRegion.GUID := geoGUID;
+    pSubRegion.LocalName := SubGeographicRegion;
     StartInstance (F, 'SubGeographicalRegion', pSubRegion);
     RefNode (F, 'SubGeographicalRegion.Region', pRegion);
     EndInstance (F, 'SubGeographicalRegion');
 
-
-    pSubstation := TNamedObject.Create (ActiveCircuit.Name + '_Substation');
+    pSubstation := TNamedObject.Create ('Substation');
     CreateGUID (geoGUID);
     pSubstation.GUID := geoGUID;
+    pSubstation.LocalName := Substation;
     StartInstance (F, 'Substation', pSubstation);
     RefNode (F, 'Substation.Region', pSubRegion);
     EndInstance (F, 'Substation');
 
-    pLocation := TNamedObject.Create ('Feeder_Location');
+    pLocation := TNamedObject.Create ('Location');
     CreateGUID (geoGUID);
     pLocation.GUID := geoGUID;
+    pLocation.localName := ActiveCircuit.Name + '_Location';
     StartInstance (F, 'Location', pLocation);
     GuidNode (F, 'Location.CoordinateSystem', crsGUID);
     EndInstance (F, 'Location');
