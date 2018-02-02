@@ -104,18 +104,19 @@ Begin
       ExportHelp[17] := '(Default file = EXP_Y.CSV) [triplets] [Filename] System Y matrix, defaults to non-sparse format.';
       ExportHelp[18] := '(Default file = EXP_SEQZ.CSV) Equivalent sequence Z1, Z0 to each bus.';
       ExportHelp[19] := '(Default file = EXP_P_BYPHASE.CSV) [MVA] [Filename] Power by phase. Default is kVA.';
-      ExportHelp[20] := '(Default file = CDPSM_Combined.XML) (IEC 61968-13, CDPSM Combined (unbalanced load flow) profile)';
-      ExportHelp[21] := '(Default file = CDPSM_Functional.XML) (IEC 61968-13, CDPSM Functional profile)';
-      ExportHelp[22] := '(Default file = CDPSM_Asset.XML) (IEC 61968-13, CDPSM Asset profile)';
+      ExportHelp[20] := '(Default file = CIM17x.XML) (IEC 61968-13, CIM v17 extended, CDPSM Combined (unbalanced load flow) profile)' + CRLF
+                      + ' [Substation=subname SubGeographicRegion=subgeoname GeographicRegion=geoname File=filename]';
+      ExportHelp[21] := '** Deprecated ** (IEC 61968-13, CDPSM Functional profile)';
+      ExportHelp[22] := '** Deprecated ** (IEC 61968-13, CDPSM Asset profile)';
       ExportHelp[23] := '[Default file = EXP_BUSCOORDS.CSV] Bus coordinates in csv form.';
       ExportHelp[24] := '[Default file = EXP_LOSSES.CSV] Losses for each element.';
       ExportHelp[25] := '[Default file = EXP_GUIDS.CSV] Guids for each element.';
       ExportHelp[26] := '[Default file = EXP_Counts.CSV] (instance counts for each class)';
       ExportHelp[27] := '[Default file = EXP_Summary.CSV] Solution summary.';
-      ExportHelp[28] := '(Default file = CDPSM_ElectricalProperties.XML) (IEC 61968-13, CDPSM Electrical Properties profile)';
-      ExportHelp[29] := '(Default file = CDPSM_Geographical.XML) (IEC 61968-13, CDPSM Geographical profile)';
-      ExportHelp[30] := '(Default file = CDPSM_Topology.XML) (IEC 61968-13, CDPSM Topology profile)';
-      ExportHelp[31] := '(Default file = CDPSM_StateVariables.XML) (IEC 61968-13, CDPSM State Variables profile)';
+      ExportHelp[28] := '** Deprecated ** (IEC 61968-13, CDPSM Electrical Properties profile)';
+      ExportHelp[29] := '** Deprecated ** (IEC 61968-13, CDPSM Geographical profile)';
+      ExportHelp[30] := '** Deprecated ** (IEC 61968-13, CDPSM Topology profile)';
+      ExportHelp[31] := '** Deprecated ** (IEC 61968-13, CDPSM State Variables profile)';
       ExportHelp[32] := '[Default file = EXP_Profile.CSV] Coordinates, color of each line section in Profile plot. Same options as Plot Profile Phases property.' +  CRLF + CRLF +
                         'Example:  Export Profile Phases=All [optional file name]';
       ExportHelp[33] := '(Default file = EXP_EventLog.CSV) All entries in the present event log.';
@@ -161,10 +162,12 @@ VAR
    ParamPointer :Integer;
    PhasesToPlot :Integer;
    AbortExport  :Boolean;
+   Substation, GeographicRegion, SubGeographicRegion: String; // for CIM export
 
 Begin
    Result := 0;
    AbortExport := FALSE;
+   FileName := '';
 
    ParamName := Parser.NextParam;
    Parm1 := LowerCase(Parser.StrValue);
@@ -193,6 +196,9 @@ Begin
    TripletOpt := FALSE;
    PhasesToPlot := PROFILE3PH;  // init this to get rid of compiler warning
    pMeter := Nil;
+   Substation := ActiveCircuit.Name + '_Substation';
+   SubGeographicRegion := ActiveCircuit.Name + '_SubRegion';
+   GeographicRegion := ActiveCircuit.Name + '_Region';
 
    CASE ParamPointer OF
       9, 19: Begin { Trap export powers command and look for MVA/kVA option }
@@ -221,6 +227,23 @@ Begin
             IF Length(Parm2) > 0 THEN IF Parm2[1]='t' THEN TripletOpt := TRUE;
           End;
 
+      20: Begin {user-supplied substation and regions}
+            ParamName := LowerCase (parser.nextParam);
+            Parm2 := Parser.strValue;
+            while Length(ParamName) > 0 do begin
+              if CompareTextShortest(ParamName, 'subs')=0 then
+                Substation := Parm2
+              else if CompareTextShortest(ParamName, 'subg')=0 then
+                SubGeographicRegion := Parm2
+              else if CompareTextShortest(ParamName, 'g')=0 then
+                GeographicRegion := Parm2
+              else if CompareTextShortest(ParamName, 'f')=0 then
+                FileName := Parm2;
+              ParamName := LowerCase (parser.nextParam);
+              Parm2 := Parser.strValue;
+            end;
+          end;
+
       32: Begin {Get phases to plot}
              ParamName := Parser.NextParam;
              Parm2 := Parser.StrValue;
@@ -246,8 +269,10 @@ Begin
    End;
 
    {Pick up next parameter on line, alternate file name, if any}
-   ParamName := Parser.NextParam;
-   FileName := LowerCase(Parser.StrValue);    // should be full path name to work universally
+   if Length(FileName) = 0 then begin
+     ParamName := Parser.NextParam;
+     FileName := LowerCase(Parser.StrValue);    // should be full path name to work universally
+   end;
 
    InShowResults := True;
 
@@ -273,7 +298,7 @@ Begin
          17: Filename := 'EXP_Y.CSV';
          18: Filename := 'EXP_SEQZ.CSV';
          19: Filename := 'EXP_P_BYPHASE.CSV';
-         20: FileName := 'CDPSM_Combined.XML';
+         20: FileName := 'CIM17x.XML';
          21: FileName := 'CDPSM_Functional.XML';
          22: FileName := 'CDPSM_Asset.XML';
          23: FileName := 'EXP_BUSCOORDS.CSV';
@@ -338,18 +363,18 @@ Begin
      17: ExportY(Filename, TripletOpt);
      18: ExportSeqZ(Filename);
      19: ExportPbyphase(Filename, MVAOpt);
-     20: ExportCDPSM(Filename, Combined);    // defaults to a load-flow model
-     21: ExportCDPSM(Filename, Functional);
-     22: ExportCDPSM(Filename, Asset);
+     20: ExportCDPSM (Filename, Substation, SubGeographicRegion, GeographicRegion, Combined);
+     21: DoSimpleMsg ('Functional export no longer supported; use Combined', 252);
+     22: DoSimpleMsg ('Asset export no longer supported; use Combined', 252);
      23: ExportBusCoords(Filename);
      24: ExportLosses(Filename);
      25: ExportGuids(Filename);
      26: ExportCounts(Filename);
      27: ExportSummary(Filename);
-     28: ExportCDPSM(Filename, ElectricalProperties);
-     29: ExportCDPSM(Filename, Geographical);
-     30: ExportCDPSM(Filename, Topology);
-     31: ExportCDPSM(Filename, StateVariables);
+     28: DoSimpleMsg ('ElectricalProperties export no longer supported; use Combined', 252);
+     29: DoSimpleMsg ('Geographical export no longer supported; use Combined', 252);
+     30: DoSimpleMsg ('Topology export no longer supported; use Combined', 252);
+     31: DoSimpleMsg ('StateVariables export no longer supported; use Combined', 252);
      32: ExportProfile(FileName, PhasesToPlot);
      33: ExportEventLog(FileName);
      34: DumpAllocationFactors(FileName);
