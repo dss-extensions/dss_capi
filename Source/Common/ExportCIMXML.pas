@@ -341,11 +341,12 @@ begin
   Result := GetHashedGuid (key);
 end;
 
+// terminals are uniquely identified by class (DSSObjType), plus name and sequence
 function GetTermGuid (pElem: TDSSCktElement; Seq: Integer): TGuid;
 var
   key: String;
 begin
-  key:=IntToStr (pElem.ClassIndex) + '=' + pElem.Name + '=' + IntToStr (Seq);
+  key:=IntToStr (pElem.DSSObjType) + '=' + pElem.Name + '=' + IntToStr (Seq);
   Result := GetHashedGuid (key);
 end;
 
