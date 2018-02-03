@@ -35,7 +35,8 @@ Uses SysUtils, Utilities, Circuit, DSSClassDefs, DSSGlobals, CktElement,
 
 Type
   GuidChoice = (Bank, Wdg, XfCore, XfMesh, WdgInf, ScTest, OcTest,
-    BaseV, LinePhase, LoadPhase, GenPhase, CapPhase, XfLoc, LoadLoc, LineLoc, CapLoc, Topo, ReacLoc);
+    BaseV, LinePhase, LoadPhase, GenPhase, CapPhase, SolarPhase, BatteryPhase,
+    XfLoc, LoadLoc, LineLoc, CapLoc, Topo, ReacLoc);
   TBankObject = class(TNamedObject)
   public
     vectorGroup: String;
@@ -329,6 +330,8 @@ begin
     LinePhase: key := 'LinePhase=';
     LoadPhase: key := 'LoadPhase=';
     GenPhase: key := 'GenPhase=';
+    SolarPhase: key := 'PVPhase=';
+    BatteryPhase: key := 'BattPhase=';
     CapPhase: key := 'CapPhase=';
     XfLoc: key := 'XfLoc=';
     LoadLoc: key := 'LoadLoc=';
@@ -770,7 +773,7 @@ end;
 procedure AttachSecondarySolarPhases (var F: TextFile; pPV:TPVSystemObj; geoGUID: TGuid; pPhase: TNamedObject; p, q: double; phs:String);
 begin
 	pPhase.LocalName := pPV.Name + '_' + phs;
-	pPhase.GUID := GetDevGuid (GenPhase, pPhase.LocalName, 1);
+	pPhase.GUID := GetDevGuid (SolarPhase, pPhase.LocalName, 1);
 	StartInstance (F, 'PowerElectronicsConnectionPhase', pPhase);
 	PhaseKindNode (F, 'PowerElectronicsConnectionPhase', phs);
 	DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p);
@@ -811,7 +814,7 @@ begin
   for i := 1 to length(s) do begin
     phs := s[i];
     pPhase.LocalName := pPV.Name + '_' + phs;
-    pPhase.GUID := GetDevGuid (GenPhase, pPhase.LocalName, 1);
+    pPhase.GUID := GetDevGuid (SolarPhase, pPhase.LocalName, 1);
     StartInstance (F, 'PowerElectronicsConnectionPhase', pPhase);
     PhaseKindNode (F, 'PowerElectronicsConnectionPhase', phs);
     DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p);
@@ -825,7 +828,7 @@ end;
 procedure AttachSecondaryStoragePhases (var F: TextFile; pBat:TStorageObj; geoGUID: TGuid; pPhase: TNamedObject; p, q: double; phs:String);
 begin
 	pPhase.LocalName := pBat.Name + '_' + phs;
-	pPhase.GUID := GetDevGuid (GenPhase, pPhase.LocalName, 1);
+	pPhase.GUID := GetDevGuid (BatteryPhase, pPhase.LocalName, 1);
 	StartInstance (F, 'PowerElectronicsConnectionPhase', pPhase);
 	PhaseKindNode (F, 'PowerElectronicsConnectionPhase', phs);
 	DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p);
@@ -866,7 +869,7 @@ begin
   for i := 1 to length(s) do begin
     phs := s[i];
     pPhase.LocalName := pBat.Name + '_' + phs;
-    pPhase.GUID := GetDevGuid (GenPhase, pPhase.LocalName, 1);
+    pPhase.GUID := GetDevGuid (BatteryPhase, pPhase.LocalName, 1);
     StartInstance (F, 'PowerElectronicsConnectionPhase', pPhase);
     PhaseKindNode (F, 'PowerElectronicsConnectionPhase', phs);
     DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p);
