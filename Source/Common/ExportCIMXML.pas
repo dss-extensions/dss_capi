@@ -1592,11 +1592,11 @@ Begin
     while (pCapC <> nil) do begin
       with pCapC do begin
         StartInstance (F, 'RegulatingControl', pCapC);
-	GuidNode (F, 'PowerSystemResource.Location', GetDevGuid (CapLoc, This_Capacitor.Name, 1));
+	      GuidNode (F, 'PowerSystemResource.Location', GetDevGuid (CapLoc, This_Capacitor.Name, 1));
         RefNode (F, 'RegulatingControl.RegulatingCondEq', This_Capacitor);
         i1 := GetCktElementIndex(ElementName); // Global function
         GuidNode (F, 'RegulatingControl.Terminal',
-          GetTermGuid (ActiveCircuit.CktElements.Get(i1), ElementTerminal));
+        GetTermGuid (ActiveCircuit.CktElements.Get(i1), ElementTerminal));
         s := FirstPhaseString (ActiveCircuit.CktElements.Get(i1), 1);
         MonitoredPhaseNode (F, Char(Ord(s[1]) + PTPhase - 1)); // TODO - average, min and max unsupported in CIM
         val := 1.0;
@@ -1805,9 +1805,18 @@ Begin
 							IntegerNode (F, 'PowerTransformerEnd.phaseAngleClock', 0);
 					end;
 					IntegerNode (F, 'TransformerEnd.endNumber', i);
-          if (Winding^[i].Rneut < 0.0) or (Winding^[i].Connection = 1) then begin
+          j := (i-1) * pXf.NConds + pXf.Nphases + 1;
+//          Writeln (Format ('# %s wdg=%d conn=%d nterm=%d nref=%d',
+//            [pXf.Name, i, Winding^[i].Connection, j, pXf.NodeRef^[j]]));
+          if (Winding^[i].Connection = 1) then begin // delta
             BooleanNode (F, 'TransformerEnd.grounded', false);
-          end else begin
+          end else if (pXf.NodeRef^[j] = 0) then begin // last conductor is grounded solidly
+            BooleanNode (F, 'TransformerEnd.grounded', true);
+            DoubleNode (F, 'TransformerEnd.rground', 0.0);
+            DoubleNode (F, 'TransformerEnd.xground', 0.0);
+          end else if (Winding^[i].Rneut < 0.0) then begin // probably wye ungrounded
+            BooleanNode (F, 'TransformerEnd.grounded', false);
+          end else begin // not delta, not wye solidly grounded or ungrounded
             BooleanNode (F, 'TransformerEnd.grounded', true);
             DoubleNode (F, 'TransformerEnd.rground', Winding^[i].Rneut);
             DoubleNode (F, 'TransformerEnd.xground', Winding^[i].Xneut);
