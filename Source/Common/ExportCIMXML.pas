@@ -441,6 +441,19 @@ begin
     [CIM_NS, val]));
 end;
 
+procedure BatteryStateEnum (var F: TextFile; val: Integer);
+var
+  str: String;
+begin
+  str := 'Waiting';
+  if val = STORE_CHARGING then
+    str := 'Charging'
+  else if val = STORE_DISCHARGING then
+    str := 'Discharging';
+  Writeln (F, Format ('  <cim:BatteryUnit.batteryState rdf:resource="%s#BatteryState.%s"/>',
+    [CIM_NS, str]));
+end;
+
 procedure SynchMachTypeEnum (var F: TextFile; val: String);
 begin
   Writeln (F, Format ('  <cim:SynchronousMachine.type rdf:resource="%s#SynchronousMachineType.%s"/>',
@@ -1466,6 +1479,7 @@ Begin
         StartInstance (F, 'PowerElectronicsConnection', pPV);
         CircuitNode (F, ActiveCircuit);
         RefNode (F, 'PowerElectronicsConnection.PowerElectronicsUnit', pName1);
+        DoubleNode (F, 'PowerElectronicsConnection.maxIFault', 1.0 / pPV.MinModelVoltagePU);
         DoubleNode (F, 'PowerElectronicsConnection.p', pPV.Presentkw * 1000.0);
         DoubleNode (F, 'PowerElectronicsConnection.q', pPV.Presentkvar * 1000.0);
         DoubleNode (F, 'PowerElectronicsConnection.ratedS', pPV.PVSystemVars.fkvarating * 1000.0);
@@ -1486,10 +1500,14 @@ Begin
         CreateGuid (geoGUID);
         pName1.GUID := geoGUID;
         StartInstance (F, 'BatteryUnit', pName1);
+        DoubleNode (F, 'BatteryUnit.ratedE', pBat.StorageVars.kwhRating * 1000.0);
+        DoubleNode (F, 'BatteryUnit.storedE', pBat.StorageVars.kwhStored * 1000.0);
+        BatteryStateEnum (F, pBat.StorageState);
         EndInstance (F, 'BatteryUnit');
         StartInstance (F, 'PowerElectronicsConnection', pBat);
         CircuitNode (F, ActiveCircuit);
         RefNode (F, 'PowerElectronicsConnection.PowerElectronicsUnit', pName1);
+        DoubleNode (F, 'PowerElectronicsConnection.maxIFault', 1.0 / pBat.MinModelVoltagePU);
         DoubleNode (F, 'PowerElectronicsConnection.p', pBat.Presentkw * 1000.0);
         DoubleNode (F, 'PowerElectronicsConnection.q', pBat.Presentkvar * 1000.0);
         DoubleNode (F, 'PowerElectronicsConnection.ratedS', pBat.StorageVars.kvarating * 1000.0);
