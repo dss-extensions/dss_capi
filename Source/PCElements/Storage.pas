@@ -258,7 +258,8 @@ TYPE
         Property kWTotalLosses :Double  Read Get_kWTotalLosses;
         Property kWIdlingLosses :Double  Read Get_kWIdlingLosses;
 
-   End;
+        Property MinModelVoltagePU :Double Read VminPu;
+End;
 
 VAR
     ActiveStorageObj:TStorageObj;
