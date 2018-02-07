@@ -2142,7 +2142,20 @@ Begin
     pCode := clsCode.ElementList.First;
     while pCode <> nil do begin
       with pCode do begin
-        v1 := To_per_Meter (pCode.Units);
+        if pCode.Units = UNITS_NONE then begin // we need the real units for CIM
+          pLine := ActiveCircuit.Lines.First;
+          while pLine <> nil do begin
+            If pLine.Enabled Then Begin
+              if pLine.CondCode = pCode.LocalName then begin
+                pCode.Units := pLine.LengthUnits;
+//                writeln ('Setting Units on ' + pCode.LocalName + ' to ' + LineUnitsStr(pCode.Units));
+                break;
+              end;
+            end;
+            pLine := ActiveCircuit.Lines.Next;
+          end;
+        end;
+        v1 := To_per_Meter (pCode.Units); // TODO: warn if still UNITS_NONE
         if SymComponentsModel and (NumPhases=3) then begin
           v2 := 1.0e-9 * TwoPi * BaseFrequency; // convert nF to mhos
           StartInstance (F, 'PerLengthSequenceImpedance', pCode);
