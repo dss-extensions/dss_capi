@@ -434,7 +434,7 @@ begin
   THEN If IsLine(ActiveCircuit.ActiveCktElement)
   THEN Begin
        WITH TLineObj(ActiveCircuit.ActiveCktElement)DO Begin
-         Factor  := TwoPi * BaseFrequency  * 1.0e-9 / UnitsConvert;
+         Factor  := TwoPi * BaseFrequency  * 1.0e-9 * UnitsConvert;  // corrected 2.9.2018 RCD
          Result := VarArrayCreate([0, Sqr(Nphases) - 1], varDouble);
          k := 0;
          FOR i := 1 to NPhases DO
