@@ -36,7 +36,7 @@ Uses SysUtils, Utilities, Circuit, DSSClassDefs, DSSGlobals, CktElement,
 Type
   GuidChoice = (Bank, Wdg, XfCore, XfMesh, WdgInf, ScTest, OcTest,
     BaseV, LinePhase, LoadPhase, GenPhase, CapPhase, SolarPhase, BatteryPhase,
-    XfLoc, LoadLoc, LineLoc, CapLoc, Topo, ReacLoc);
+    XfLoc, LoadLoc, LineLoc, CapLoc, Topo, ReacLoc, SolarLoc, BatteryLoc);
   TBankObject = class(TNamedObject)
   public
     vectorGroup: String;
@@ -339,6 +339,8 @@ begin
 		ReacLoc: key := 'ReacLoc=';
     CapLoc: key := 'CapLoc=';
 		Topo: key := 'Topo=';
+    SolarLoc: key := 'SolarLoc=';
+    BatteryLoc: key := 'BatteryLoc=';
   end;
   key:=key + Name + '=' + IntToStr (Seq);
   Result := GetHashedGuid (key);
@@ -995,12 +997,12 @@ begin
     end;
     BusName := pElem.Nextbus;
   end;
-  WritePositions (F, pElem, geoGUID, crsGUID);
 end;
 
 procedure WriteTerminals(var F:TextFile; pElem:TDSSCktElement; geoGUID: TGuid; crsGUID: TGuid);
 begin
   WriteReferenceTerminals (F, pElem, geoGUID, crsGUID, pElem.GUID);
+  WritePositions (F, pElem, geoGUID, crsGUID);
 end;
 
 procedure VbaseNode(var F:TextFile; pElem:TDSSCktElement);
@@ -1475,6 +1477,8 @@ Begin
         CreateGuid (geoGUID);
         pName1.GUID := geoGUID;
         StartInstance (F, 'PhotovoltaicUnit', pName1);
+  			geoGUID := GetDevGuid (SolarLoc, pPV.localName, 1);
+        GuidNode (F, 'PowerSystemResource.Location', geoGUID);
         EndInstance (F, 'PhotovoltaicUnit');
         StartInstance (F, 'PowerElectronicsConnection', pPV);
         CircuitNode (F, ActiveCircuit);
@@ -1484,11 +1488,15 @@ Begin
         DoubleNode (F, 'PowerElectronicsConnection.q', pPV.Presentkvar * 1000.0);
         DoubleNode (F, 'PowerElectronicsConnection.ratedS', pPV.PVSystemVars.fkvarating * 1000.0);
         DoubleNode (F, 'PowerElectronicsConnection.ratedU', pPV.Presentkv * 1000.0);
-        CreateGuid (geoGUID);
         GuidNode (F, 'PowerSystemResource.Location', geoGUID);
         EndInstance (F, 'PowerElectronicsConnection');
         AttachSolarPhases (F, pPV, geoGUID);
-        WriteTerminals (F, pPV, geoGUID, crsGUID);
+        // we want the location using PV unit name
+        WriteReferenceTerminals (F, pPV, geoGUID, crsGUID, pPV.GUID);
+        s := pPV.LocalName;
+        pPV.LocalName := pName1.LocalName;
+        WritePositions (F, pPV, geoGUID, crsGUID);
+        pPV.LocalName := s;
       end;
       pPV := ActiveCircuit.PVSystems.Next;
     end;
@@ -1503,6 +1511,8 @@ Begin
         DoubleNode (F, 'BatteryUnit.ratedE', pBat.StorageVars.kwhRating * 1000.0);
         DoubleNode (F, 'BatteryUnit.storedE', pBat.StorageVars.kwhStored * 1000.0);
         BatteryStateEnum (F, pBat.StorageState);
+  			geoGUID := GetDevGuid (BatteryLoc, pBat.localName, 1);
+        GuidNode (F, 'PowerSystemResource.Location', geoGUID);
         EndInstance (F, 'BatteryUnit');
         StartInstance (F, 'PowerElectronicsConnection', pBat);
         CircuitNode (F, ActiveCircuit);
@@ -1512,11 +1522,15 @@ Begin
         DoubleNode (F, 'PowerElectronicsConnection.q', pBat.Presentkvar * 1000.0);
         DoubleNode (F, 'PowerElectronicsConnection.ratedS', pBat.StorageVars.kvarating * 1000.0);
         DoubleNode (F, 'PowerElectronicsConnection.ratedU', pBat.Presentkv * 1000.0);
-        CreateGuid (geoGUID);
         GuidNode (F, 'PowerSystemResource.Location', geoGUID);
         EndInstance (F, 'PowerElectronicsConnection');
         AttachStoragePhases (F, pBat, geoGUID);
-        WriteTerminals (F, pBat, geoGUID, crsGUID);
+        // we want the location using battery unit name
+        WriteReferenceTerminals (F, pBat, geoGUID, crsGUID, pBat.GUID);
+        s := pBat.LocalName;
+        pBat.LocalName := pName1.LocalName;
+        WritePositions (F, pBat, geoGUID, crsGUID);
+        pBat.LocalName := s;
       end;
       pBat := ActiveCircuit.StorageElements.Next;
     end;
