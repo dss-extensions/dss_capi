@@ -196,7 +196,9 @@ uses
   vccs in '..\PCElements\vccs.pas',
   MemoryMap_lib in '..\Meters\MemoryMap_lib.pas',
   ESPVLControl in '..\Controls\ESPVLControl.pas',
-  IndMach012 in '..\PCElements\IndMach012.pas';
+  IndMach012 in '..\PCElements\IndMach012.pas',
+  TCP_IP in '..\TCP_IP\TCP_IP.pas',
+  ConnectOptions in '..\Executive\ConnectOptions.pas';
 
 //**************************end of the functions*************************************
 
