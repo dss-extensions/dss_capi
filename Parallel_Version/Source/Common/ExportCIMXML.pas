@@ -18,7 +18,11 @@ Type
   CIMProfileChoice = (Combined, Functional, ElectricalProperties,
     Asset, Geographical, Topology, StateVariables);
 
-Procedure ExportCDPSM (FileNm:String; prf:CIMProfileChoice = Combined);
+Procedure ExportCDPSM (FileNm:String;
+  Substation: String;
+  SubGeographicRegion: String;
+  GeographicRegion: String;
+  prf:CIMProfileChoice = Combined);
 
 implementation
 
@@ -27,11 +31,12 @@ Uses SysUtils, Utilities, Circuit, DSSClassDefs, DSSGlobals, CktElement,
      Vsource, Line, Transformer, Ucomplex, UcMatrix, LineCode,
      Fuse, Capacitor, CapControl, CapControlvars,  Reactor, Feeder, ConductorData, LineUnits,
      LineGeometry, NamedObject, StrUtils, Math, XfmrCode, HashList, WireData,
-     LineSpacing, CableData, CNData, TSData;
+     LineSpacing, CableData, CNData, TSData, Storage, PVSystem;
 
 Type
   GuidChoice = (Bank, Wdg, XfCore, XfMesh, WdgInf, ScTest, OcTest,
-    BaseV, LinePhase, LoadPhase, GenPhase, CapPhase, XfLoc, LoadLoc, LineLoc, CapLoc, Topo, ReacLoc);
+    BaseV, LinePhase, LoadPhase, GenPhase, CapPhase, SolarPhase, BatteryPhase,
+    XfLoc, LoadLoc, LineLoc, CapLoc, Topo, ReacLoc, SolarLoc, BatteryLoc);
   TBankObject = class(TNamedObject)
   public
     vectorGroup: String;
@@ -59,7 +64,7 @@ Var
   BankList: array of TBankObject;
 
 Const
-  CIM_NS = 'http://iec.ch/TC57/2012/CIM-schema-cim16';
+  CIM_NS = 'http://iec.ch/TC57/2012/CIM-schema-cim17';
 
 // this returns s1, s2, or a combination of ABCN
 function PhaseString (pElem:TDSSCktElement; bus: Integer):String; // if order doesn't matter
@@ -325,6 +330,8 @@ begin
     LinePhase: key := 'LinePhase=';
     LoadPhase: key := 'LoadPhase=';
     GenPhase: key := 'GenPhase=';
+    SolarPhase: key := 'PVPhase=';
+    BatteryPhase: key := 'BattPhase=';
     CapPhase: key := 'CapPhase=';
     XfLoc: key := 'XfLoc=';
     LoadLoc: key := 'LoadLoc=';
@@ -332,16 +339,19 @@ begin
 		ReacLoc: key := 'ReacLoc=';
     CapLoc: key := 'CapLoc=';
 		Topo: key := 'Topo=';
+    SolarLoc: key := 'SolarLoc=';
+    BatteryLoc: key := 'BatteryLoc=';
   end;
   key:=key + Name + '=' + IntToStr (Seq);
   Result := GetHashedGuid (key);
 end;
 
+// terminals are uniquely identified by class (DSSObjType), plus name and sequence
 function GetTermGuid (pElem: TDSSCktElement; Seq: Integer): TGuid;
 var
   key: String;
 begin
-  key:=IntToStr (pElem.ClassIndex) + '=' + pElem.Name + '=' + IntToStr (Seq);
+  key:=IntToStr (pElem.DSSObjType) + '=' + pElem.Name + '=' + IntToStr (Seq);
   Result := GetHashedGuid (key);
 end;
 
@@ -431,6 +441,19 @@ procedure GeneratorControlEnum (var F: TextFile; val: String);
 begin
   Writeln (F, Format ('  <cim:GeneratingUnit.genControlSource rdf:resource="%s#GeneratorControlSource.%s"/>',
     [CIM_NS, val]));
+end;
+
+procedure BatteryStateEnum (var F: TextFile; val: Integer);
+var
+  str: String;
+begin
+  str := 'Waiting';
+  if val = STORE_CHARGING then
+    str := 'Charging'
+  else if val = STORE_DISCHARGING then
+    str := 'Discharging';
+  Writeln (F, Format ('  <cim:BatteryUnit.batteryState rdf:resource="%s#BatteryState.%s"/>',
+    [CIM_NS, str]));
 end;
 
 procedure SynchMachTypeEnum (var F: TextFile; val: String);
@@ -711,13 +734,13 @@ procedure AttachSecondaryGenPhases (var F: TextFile; pGen:TGeneratorObj; geoGUID
 begin
 	pPhase.LocalName := pGen.Name + '_' + phs;
 	pPhase.GUID := GetDevGuid (GenPhase, pPhase.LocalName, 1);
-	StartInstance (F, 'RotatingMachinePhase', pPhase);
-	PhaseKindNode (F, 'RotatingMachinePhase', phs);
-	DoubleNode (F, 'RotatingMachinePhase.pfixed', p);
-	DoubleNode (F, 'RotatingMachinePhase.qfixed', q);
-	RefNode (F, 'RotatingMachinePhase.RotatingMachine', pGen);
+	StartInstance (F, 'SynchronousMachinePhase', pPhase);
+	PhaseKindNode (F, 'SynchronousMachinePhase', phs);
+	DoubleNode (F, 'SynchronousMachinePhase.pfixed', p);
+	DoubleNode (F, 'SynchronousMachinePhase.qfixed', q);
+	RefNode (F, 'SynchronousMachinePhase.SynchronousMachine', pGen);
 	GuidNode (F, 'PowerSystemResource.Location', geoGUID);
-	EndInstance (F, 'RotatingMachinePhase');
+	EndInstance (F, 'SynchronousMachinePhase');
 end;
 
 procedure AttachGeneratorPhases (var F: TextFile; pGen:TGeneratorObj; geoGUID: TGuid);
@@ -752,21 +775,131 @@ begin
     phs := s[i];
     pPhase.LocalName := pGen.Name + '_' + phs;
     pPhase.GUID := GetDevGuid (GenPhase, pPhase.LocalName, 1);
-    StartInstance (F, 'RotatingMachinePhase', pPhase);
-    PhaseKindNode (F, 'RotatingMachinePhase', phs);
-    DoubleNode (F, 'RotatingMachinePhase.p', p);
-    DoubleNode (F, 'RotatingMachinePhase.q', q);
-    RefNode (F, 'RotatingMachinePhase.RotatingMachine', pGen);
+    StartInstance (F, 'SynchronousMachinePhase', pPhase);
+    PhaseKindNode (F, 'SynchronousMachinePhase', phs);
+    DoubleNode (F, 'SynchronousMachinePhase.pfixed', p);
+    DoubleNode (F, 'SynchronousMachinePhase.qfixed', q);
+    RefNode (F, 'SynchronousMachinePhase.SynchronousMachine', pGen);
     GuidNode (F, 'PowerSystemResource.Location', geoGUID);
-    EndInstance (F, 'RotatingMachinePhase');
+    EndInstance (F, 'SynchronousMachinePhase');
+  end;
+end;
+
+procedure AttachSecondarySolarPhases (var F: TextFile; pPV:TPVSystemObj; geoGUID: TGuid; pPhase: TNamedObject; p, q: double; phs:String);
+begin
+	pPhase.LocalName := pPV.Name + '_' + phs;
+	pPhase.GUID := GetDevGuid (SolarPhase, pPhase.LocalName, 1);
+	StartInstance (F, 'PowerElectronicsConnectionPhase', pPhase);
+	PhaseKindNode (F, 'PowerElectronicsConnectionPhase', phs);
+	DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p);
+	DoubleNode (F, 'PowerElectronicsConnectionPhase.qfixed', q);
+	RefNode (F, 'PowerElectronicsConnectionPhase.PowerElectronicsConnection', pPV);
+	GuidNode (F, 'PowerSystemResource.Location', geoGUID);
+	EndInstance (F, 'PowerElectronicsConnectionPhase');
+end;
+
+procedure AttachSolarPhases (var F: TextFile; pPV:TPVSystemObj; geoGUID: TGuid);
+var
+  s, phs: String;
+  i: Integer;
+  pPhase: TNamedObject;
+  p, q: double;
+begin
+  if pPV.NPhases = 3 then exit;
+  p := 1000.0 * pPV.Presentkw / pPV.NPhases;
+  q := 1000.0 * pPV.Presentkvar / pPV.NPhases;
+  if pPV.Connection = 1 then
+    s := DeltaPhaseString(pPV)
+  else
+    s := PhaseString(pPV, 1);
+
+	pPhase := TNamedObject.Create('dummy');
+  //  TODO - handle s1 to s2 240-volt loads; these would be s12, which is not a valid SinglePhaseKind
+	if pPV.Presentkv < 0.25 then begin
+		if pPV.NPhases=2 then begin
+			AttachSecondarySolarPhases (F, pPV, geoGUID, pPhase, p, q, 's1');
+			AttachSecondarySolarPhases (F, pPV, geoGUID, pPhase, p, q, 's2');
+			exit;
+		end else begin
+			AttachSecondarySolarPhases (F, pPV, geoGUID, pPhase, p, q, s);
+      exit;
+    end;
+	end;
+
+  for i := 1 to length(s) do begin
+    phs := s[i];
+    pPhase.LocalName := pPV.Name + '_' + phs;
+    pPhase.GUID := GetDevGuid (SolarPhase, pPhase.LocalName, 1);
+    StartInstance (F, 'PowerElectronicsConnectionPhase', pPhase);
+    PhaseKindNode (F, 'PowerElectronicsConnectionPhase', phs);
+    DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p);
+    DoubleNode (F, 'PowerElectronicsConnectionPhase.qfixed', q);
+    RefNode (F, 'PowerElectronicsConnectionPhase.PowerElectronicsConnection', pPV);
+    GuidNode (F, 'PowerSystemResource.Location', geoGUID);
+    EndInstance (F, 'PowerElectronicsConnectionPhase');
+  end;
+end;
+
+procedure AttachSecondaryStoragePhases (var F: TextFile; pBat:TStorageObj; geoGUID: TGuid; pPhase: TNamedObject; p, q: double; phs:String);
+begin
+	pPhase.LocalName := pBat.Name + '_' + phs;
+	pPhase.GUID := GetDevGuid (BatteryPhase, pPhase.LocalName, 1);
+	StartInstance (F, 'PowerElectronicsConnectionPhase', pPhase);
+	PhaseKindNode (F, 'PowerElectronicsConnectionPhase', phs);
+	DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p);
+	DoubleNode (F, 'PowerElectronicsConnectionPhase.qfixed', q);
+	RefNode (F, 'PowerElectronicsConnectionPhase.PowerElectronicsConnection', pBat);
+	GuidNode (F, 'PowerSystemResource.Location', geoGUID);
+	EndInstance (F, 'PowerElectronicsConnectionPhase');
+end;
+
+procedure AttachStoragePhases (var F: TextFile; pBat:TStorageObj; geoGUID: TGuid);
+var
+  s, phs: String;
+  i: Integer;
+  pPhase: TNamedObject;
+  p, q: double;
+begin
+  if pBat.NPhases = 3 then exit;
+  p := 1000.0 * pBat.Presentkw / pBat.NPhases;
+  q := 1000.0 * pBat.Presentkvar / pBat.NPhases;
+  if pBat.Connection = 1 then
+    s := DeltaPhaseString(pBat)
+  else
+    s := PhaseString(pBat, 1);
+
+	pPhase := TNamedObject.Create('dummy');
+  //  TODO - handle s1 to s2 240-volt loads; these would be s12, which is not a valid SinglePhaseKind
+	if pBat.Presentkv < 0.25 then begin
+		if pBat.NPhases=2 then begin
+			AttachSecondaryStoragePhases (F, pBat, geoGUID, pPhase, p, q, 's1');
+			AttachSecondaryStoragePhases (F, pBat, geoGUID, pPhase, p, q, 's2');
+			exit;
+		end else begin
+			AttachSecondaryStoragePhases (F, pBat, geoGUID, pPhase, p, q, s);
+      exit;
+    end;
+	end;
+
+  for i := 1 to length(s) do begin
+    phs := s[i];
+    pPhase.LocalName := pBat.Name + '_' + phs;
+    pPhase.GUID := GetDevGuid (BatteryPhase, pPhase.LocalName, 1);
+    StartInstance (F, 'PowerElectronicsConnectionPhase', pPhase);
+    PhaseKindNode (F, 'PowerElectronicsConnectionPhase', phs);
+    DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p);
+    DoubleNode (F, 'PowerElectronicsConnectionPhase.qfixed', q);
+    RefNode (F, 'PowerElectronicsConnectionPhase.PowerElectronicsConnection', pBat);
+    GuidNode (F, 'PowerSystemResource.Location', geoGUID);
+    EndInstance (F, 'PowerElectronicsConnectionPhase');
   end;
 end;
 
 procedure VersionInstance (var F: TextFile);
 begin
   StartFreeInstance (F, 'IEC61970CIMVersion');
-  StringNode (F, 'IEC61970CIMVersion.version', 'IEC61970CIM15v20');
-  StringNode (F, 'IEC61970CIMVersion.date', '2011-03-03');
+  StringNode (F, 'IEC61970CIMVersion.version', 'IEC61970CIM17v22');
+  StringNode (F, 'IEC61970CIMVersion.date', '2018-01-30');
   EndInstance (F, 'IEC61970CIMVersion');
 end;
 
@@ -857,18 +990,19 @@ begin
 			StringNode (F, 'IdentifiedObject.mRID', GUIDToCIMString(TermGuid));
       StringNode (F, 'IdentifiedObject.name', TermName);
       GuidNode (F, 'Terminal.ConductingEquipment', refGUID);
+      IntegerNode (F, 'ACDCTerminal.sequenceNumber', j);
       Writeln (F, Format('  <cim:Terminal.ConnectivityNode rdf:resource="#%s"/>',
         [ActiveCircuit[ActiveActor].Buses[ref].CIM_ID]));
       EndInstance (F, 'Terminal');
     end;
     BusName := pElem.Nextbus;
   end;
-  WritePositions (F, pElem, geoGUID, crsGUID);
 end;
 
 procedure WriteTerminals(var F:TextFile; pElem:TDSSCktElement; geoGUID: TGuid; crsGUID: TGuid);
 begin
   WriteReferenceTerminals (F, pElem, geoGUID, crsGUID, pElem.GUID);
+  WritePositions (F, pElem, geoGUID, crsGUID);
 end;
 
 procedure VbaseNode(var F:TextFile; pElem:TDSSCktElement);
@@ -1109,7 +1243,11 @@ begin
   EndInstance (F, 'Asset');
 end;
 
-Procedure ExportCDPSM(FileNm:String; prf:CIMProfileChoice);
+Procedure ExportCDPSM(FileNm:String;
+  Substation:String;
+  SubGeographicRegion:String;
+  GeographicRegion: String;
+  prf:CIMProfileChoice);
 Var
   F      : TextFile;
   i, j, k: Integer;
@@ -1120,8 +1258,9 @@ Var
   i1, i2 : Integer;
   Zs, Zm : complex;
   Rs, Rm, Xs, Xm, R1, R0, X1, X0: double;
-  pName1, pName2  : TNamedObject;
+  pName1, pName2 : TNamedObject;
   pIsland, pSwing : TNamedObject;  // island and ref node
+  pRegion, pSubRegion, pLocation, pSubstation, pCRS : TNamedObject;
   zbase  : double;
   s      : String;
 
@@ -1136,6 +1275,8 @@ Var
   pLoad  : TLoadObj;
   pVsrc  : TVsourceObj;
   pGen   : TGeneratorObj;
+  pPV    : TPVSystemObj;
+  pBat   : TStorageObj;
 
   pCap  : TCapacitorObj;
   pCapC : TCapControlObj;
@@ -1190,7 +1331,8 @@ Begin
     StartBankList (ActiveCircuit[ActiveActor].Transformers.ListSize);
 
     {$IFDEF FPC}
- 		Writeln(FileNm);    // this only works in the command line version
+ 		// this only works in the command line version
+    Writeln(FileNm + '<=' + ActiveCircuit[ActiveActor].Name + '<-' + Substation + '<-' + SubGeographicRegion + '<-' + GeographicRegion);
     {$ENDIF}
     Assignfile(F, FileNm);
     ReWrite(F);
@@ -1204,36 +1346,49 @@ Begin
 
     VersionInstance (F);
 
-		pName1.LocalName := ActiveCircuit[ActiveActor].Name + '_CrsUrn';
+		pCRS := TNamedObject.Create ('CoordinateSystem');
     CreateGUID (crsGUID);
-    pName1.GUID := crsGUID;
-    StartInstance (F, 'CoordinateSystem', pName1);
+    pCRS.GUID := crsGUID;
+    pCRS.localName := ActiveCircuit[ActiveActor].Name + '_CrsUrn';
+    StartInstance (F, 'CoordinateSystem', pCRS);
     StringNode (F, 'CoordinateSystem.crsUrn', 'OpenDSSLocalBusCoordinates');
     EndInstance (F, 'CoordinateSystem');
 
-    pName1.localName := ActiveCircuit[ActiveActor].Name + '_Region';
+    pRegion := TNamedObject.Create ('GeographicalRegion');
     CreateGUID (geoGUID);
-    pName1.GUID := geoGUID;
-    StartInstance (F, 'GeographicalRegion', pName1);
+    pRegion.GUID := geoGUID;
+    pRegion.LocalName := GeographicRegion;
+    StartInstance (F, 'GeographicalRegion', pRegion);
     EndInstance (F, 'GeographicalRegion');
 
-    pName2.localName := ActiveCircuit[ActiveActor].Name + '_SubRegion';
+    pSubRegion := TNamedObject.Create ('SubGeographicalRegion');
     CreateGUID (geoGUID);
-    pName2.GUID := geoGUID;
-    StartInstance (F, 'SubGeographicalRegion', pName2);
-    RefNode (F, 'SubGeographicalRegion.Region', pName1);
+    pSubRegion.GUID := geoGUID;
+    pSubRegion.LocalName := SubGeographicRegion;
+    StartInstance (F, 'SubGeographicalRegion', pSubRegion);
+    RefNode (F, 'SubGeographicalRegion.Region', pRegion);
     EndInstance (F, 'SubGeographicalRegion');
 
-    pName1.LocalName := 'Line_Location';
+    pSubstation := TNamedObject.Create ('Substation');
     CreateGUID (geoGUID);
-    pName1.GUID := geoGUID;
-    StartInstance (F, 'Location', pName1);
+    pSubstation.GUID := geoGUID;
+    pSubstation.LocalName := Substation;
+    StartInstance (F, 'Substation', pSubstation);
+    RefNode (F, 'Substation.Region', pSubRegion);
+    EndInstance (F, 'Substation');
+
+    pLocation := TNamedObject.Create ('Location');
+    CreateGUID (geoGUID);
+    pLocation.GUID := geoGUID;
+    pLocation.localName := ActiveCircuit[ActiveActor].Name + '_Location';
+    StartInstance (F, 'Location', pLocation);
     GuidNode (F, 'Location.CoordinateSystem', crsGUID);
     EndInstance (F, 'Location');
-    StartInstance (F, 'Line', ActiveCircuit[ActiveActor]);
-    RefNode (F, 'Line.Region', pName2);
-    RefNode (F, 'PowerSystemResource.Location', pName1);
-    EndInstance (F, 'Line');
+
+    StartInstance (F, 'Feeder', ActiveCircuit[ActiveActor]);
+    RefNode (F, 'Feeder.NormalEnergizingSubstation', pSubstation);
+    RefNode (F, 'PowerSystemResource.Location', pLocation);
+    EndInstance (F, 'Feeder');
 
 		// the whole system will be a topo island
 		pIsland := TNamedObject.Create('Island');
@@ -1300,12 +1455,12 @@ Begin
      if pGen.Enabled  then   begin
         StartInstance (F, 'SynchronousMachine', pGen);
         CircuitNode (F, ActiveCircuit[ActiveActor]);
-        DoubleNode (F, 'RotatingMachine.p', pGen.Presentkw * 1000.0);
-        DoubleNode (F, 'RotatingMachine.q', pGen.Presentkvar * 1000.0);
-        DoubleNode (F, 'RotatingMachine.ratedS', pGen.GenVars.kvarating * 1000.0);
-        DoubleNode (F, 'RotatingMachine.ratedU', pGen.Presentkv * 1000.0);
-        SynchMachTypeEnum (F, 'generator');
-        SynchMachModeEnum (F, 'generator');
+        DoubleNode (F, 'SynchronousMachine.p', pGen.Presentkw * 1000.0);
+        DoubleNode (F, 'SynchronousMachine.q', pGen.Presentkvar * 1000.0);
+        DoubleNode (F, 'SynchronousMachine.ratedS', pGen.GenVars.kvarating * 1000.0);
+        DoubleNode (F, 'SynchronousMachine.ratedU', pGen.Presentkv * 1000.0);
+//        SynchMachTypeEnum (F, 'generator');
+//        SynchMachModeEnum (F, 'generator');
         CreateGuid (geoGUID);
         GuidNode (F, 'PowerSystemResource.Location', geoGUID);
         EndInstance (F, 'SynchronousMachine');
@@ -1313,6 +1468,71 @@ Begin
         WriteTerminals (F, pGen, geoGUID, crsGUID);
      end;
      pGen := ActiveCircuit[ActiveActor].Generators.Next;
+    end;
+
+    pPV := ActiveCircuit[ActiveActor].PVSystems.First;
+    while pPV <> nil do begin
+      if pPV.Enabled then begin
+        pName1.LocalName := pPV.Name + '_PVPanels';
+        CreateGuid (geoGUID);
+        pName1.GUID := geoGUID;
+        StartInstance (F, 'PhotovoltaicUnit', pName1);
+  			geoGUID := GetDevGuid (SolarLoc, pPV.localName, 1);
+        GuidNode (F, 'PowerSystemResource.Location', geoGUID);
+        EndInstance (F, 'PhotovoltaicUnit');
+        StartInstance (F, 'PowerElectronicsConnection', pPV);
+        CircuitNode (F, ActiveCircuit[ActiveActor]);
+        RefNode (F, 'PowerElectronicsConnection.PowerElectronicsUnit', pName1);
+        DoubleNode (F, 'PowerElectronicsConnection.maxIFault', 1.0 / pPV.MinModelVoltagePU);
+        DoubleNode (F, 'PowerElectronicsConnection.p', pPV.Presentkw * 1000.0);
+        DoubleNode (F, 'PowerElectronicsConnection.q', pPV.Presentkvar * 1000.0);
+        DoubleNode (F, 'PowerElectronicsConnection.ratedS', pPV.PVSystemVars.fkvarating * 1000.0);
+        DoubleNode (F, 'PowerElectronicsConnection.ratedU', pPV.Presentkv * 1000.0);
+        GuidNode (F, 'PowerSystemResource.Location', geoGUID);
+        EndInstance (F, 'PowerElectronicsConnection');
+        AttachSolarPhases (F, pPV, geoGUID);
+        // we want the location using PV unit name
+        WriteReferenceTerminals (F, pPV, geoGUID, crsGUID, pPV.GUID);
+        s := pPV.LocalName;
+        pPV.LocalName := pName1.LocalName;
+        WritePositions (F, pPV, geoGUID, crsGUID);
+        pPV.LocalName := s;
+      end;
+      pPV := ActiveCircuit[ActiveActor].PVSystems.Next;
+    end;
+
+    pBat := ActiveCircuit[ActiveActor].StorageElements.First;
+    while pBat <> nil do begin
+      if pBat.Enabled then begin
+        pName1.LocalName := pBat.Name + '_Cells';
+        CreateGuid (geoGUID);
+        pName1.GUID := geoGUID;
+        StartInstance (F, 'BatteryUnit', pName1);
+        DoubleNode (F, 'BatteryUnit.ratedE', pBat.StorageVars.kwhRating * 1000.0);
+        DoubleNode (F, 'BatteryUnit.storedE', pBat.StorageVars.kwhStored * 1000.0);
+        BatteryStateEnum (F, pBat.StorageState);
+  			geoGUID := GetDevGuid (BatteryLoc, pBat.localName, 1);
+        GuidNode (F, 'PowerSystemResource.Location', geoGUID);
+        EndInstance (F, 'BatteryUnit');
+        StartInstance (F, 'PowerElectronicsConnection', pBat);
+        CircuitNode (F, ActiveCircuit[ActiveActor]);
+        RefNode (F, 'PowerElectronicsConnection.PowerElectronicsUnit', pName1);
+        DoubleNode (F, 'PowerElectronicsConnection.maxIFault', 1.0 / pBat.MinModelVoltagePU);
+        DoubleNode (F, 'PowerElectronicsConnection.p', pBat.Presentkw * 1000.0);
+        DoubleNode (F, 'PowerElectronicsConnection.q', pBat.Presentkvar * 1000.0);
+        DoubleNode (F, 'PowerElectronicsConnection.ratedS', pBat.StorageVars.kvarating * 1000.0);
+        DoubleNode (F, 'PowerElectronicsConnection.ratedU', pBat.Presentkv * 1000.0);
+        GuidNode (F, 'PowerSystemResource.Location', geoGUID);
+        EndInstance (F, 'PowerElectronicsConnection');
+        AttachStoragePhases (F, pBat, geoGUID);
+        // we want the location using battery unit name
+        WriteReferenceTerminals (F, pBat, geoGUID, crsGUID, pBat.GUID);
+        s := pBat.LocalName;
+        pBat.LocalName := pName1.LocalName;
+        WritePositions (F, pBat, geoGUID, crsGUID);
+        pBat.LocalName := s;
+      end;
+      pBat := ActiveCircuit[ActiveActor].StorageElements.Next;
     end;
 
     pVsrc := ActiveCircuit[ActiveActor].Sources.First; // pIsrc are in the same list
@@ -1404,11 +1624,11 @@ Begin
     while (pCapC <> nil) do begin
       with pCapC do begin
         StartInstance (F, 'RegulatingControl', pCapC);
-      	GuidNode (F, 'PowerSystemResource.Location', GetDevGuid (CapLoc, This_Capacitor.Name, 1));
+	      GuidNode (F, 'PowerSystemResource.Location', GetDevGuid (CapLoc, This_Capacitor.Name, 1));
         RefNode (F, 'RegulatingControl.RegulatingCondEq', This_Capacitor);
         i1 := GetCktElementIndex(ElementName); // Global function
         GuidNode (F, 'RegulatingControl.Terminal',
-          GetTermGuid (ActiveCircuit[ActiveActor].CktElements.Get(i1), ElementTerminal));
+        GetTermGuid (ActiveCircuit[ActiveActor].CktElements.Get(i1), ElementTerminal));
         s := FirstPhaseString (ActiveCircuit[ActiveActor].CktElements.Get(i1), 1);
         MonitoredPhaseNode (F, Char(Ord(s[1]) + PTPhase - 1)); // TODO - average, min and max unsupported in CIM
         val := 1.0;
@@ -1617,9 +1837,18 @@ Begin
 							IntegerNode (F, 'PowerTransformerEnd.phaseAngleClock', 0);
 					end;
 					IntegerNode (F, 'TransformerEnd.endNumber', i);
-          if (Winding^[i].Rneut < 0.0) or (Winding^[i].Connection = 1) then begin
+          j := (i-1) * pXf.NConds + pXf.Nphases + 1;
+//          Writeln (Format ('# %s wdg=%d conn=%d nterm=%d nref=%d',
+//            [pXf.Name, i, Winding^[i].Connection, j, pXf.NodeRef^[j]]));
+          if (Winding^[i].Connection = 1) then begin // delta
             BooleanNode (F, 'TransformerEnd.grounded', false);
-          end else begin
+          end else if (pXf.NodeRef^[j] = 0) then begin // last conductor is grounded solidly
+            BooleanNode (F, 'TransformerEnd.grounded', true);
+            DoubleNode (F, 'TransformerEnd.rground', 0.0);
+            DoubleNode (F, 'TransformerEnd.xground', 0.0);
+          end else if (Winding^[i].Rneut < 0.0) then begin // probably wye ungrounded
+            BooleanNode (F, 'TransformerEnd.grounded', false);
+          end else begin // not delta, not wye solidly grounded or ungrounded
             BooleanNode (F, 'TransformerEnd.grounded', true);
             DoubleNode (F, 'TransformerEnd.rground', Winding^[i].Rneut);
             DoubleNode (F, 'TransformerEnd.xground', Winding^[i].Xneut);
@@ -1636,6 +1865,7 @@ Begin
           // write the Terminal for this End
           StartInstance (F, 'Terminal', pName2);
           RefNode (F, 'Terminal.ConductingEquipment', pBank);
+          IntegerNode (F, 'ACDCTerminal.sequenceNumber', i);
           Writeln (F, Format('<cim:Terminal.ConnectivityNode rdf:resource="#%s"/>',
             [ActiveCircuit[ActiveActor].Buses[j].CIM_ID]));
           EndInstance (F, 'Terminal');
@@ -1780,8 +2010,8 @@ Begin
           // some OpenDSS models have enabled=false to signal open switches, but we can't actually
           // export them because disabled elements don't have terminal references in memory
           if Enabled then begin
-            BooleanNode (F, 'Switch.normalOpen', not pLine.Closed[0,ActiveActor]);
-            BooleanNode (F, 'Switch.open', not pLine.Closed[0,ActiveActor]);
+            BooleanNode (F, 'Switch.normalOpen', not pLine.Closed[0, ActiveActor]);
+            BooleanNode (F, 'Switch.open', not pLine.Closed[0, ActiveActor]);
           end else begin
             BooleanNode (F, 'Switch.normalOpen', true);
             BooleanNode (F, 'Switch.open', true);
@@ -1926,7 +2156,20 @@ Begin
     pCode := clsCode.ElementList.First;
     while pCode <> nil do begin
       with pCode do begin
-        v1 := To_per_Meter (pCode.Units);
+        if pCode.Units = UNITS_NONE then begin // we need the real units for CIM
+          pLine := ActiveCircuit[ActiveActor].Lines.First;
+          while pLine <> nil do begin
+            If pLine.Enabled Then Begin
+              if pLine.CondCode = pCode.LocalName then begin
+                pCode.Units := pLine.LengthUnits;
+//                writeln ('Setting Units on ' + pCode.LocalName + ' to ' + LineUnitsStr(pCode.Units));
+                break;
+              end;
+            end;
+            pLine := ActiveCircuit[ActiveActor].Lines.Next;
+          end;
+        end;
+        v1 := To_per_Meter (pCode.Units); // TODO: warn if still UNITS_NONE
         if SymComponentsModel and (NumPhases=3) then begin
           v2 := 1.0e-9 * TwoPi * BaseFrequency; // convert nF to mhos
           StartInstance (F, 'PerLengthSequenceImpedance', pCode);

@@ -405,8 +405,8 @@ begin
   Result := 0.0;
   IF ActiveCircuit[ActiveActor] <> NIL
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).C0 * 1.0e9;
+  THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
+       Result := C0/UnitsConvert * 1.0e9;
   End
   
 end;
@@ -416,10 +416,10 @@ begin
   Result := 0.0;
   IF ActiveCircuit[ActiveActor] <> NIL
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).C1 * 1.0e9;
+  THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
+       Result := C1/UnitsConvert * 1.0e9;
   End;
-  
+
 end;
 
 function TLines.Get_Cmatrix: OleVariant;
@@ -434,7 +434,7 @@ begin
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
   THEN Begin
        WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-         Factor  := TwoPi * BaseFrequency  * 1.0e-9;
+         Factor  := TwoPi * BaseFrequency * 1.0e-9 * UnitsConvert;
          Result := VarArrayCreate([0, Sqr(Nphases) - 1], varDouble);
          k := 0;
          FOR i := 1 to NPhases DO
@@ -453,8 +453,8 @@ begin
   Result := 0.0;
   IF ActiveCircuit[ActiveActor] <> NIL
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).R0;
+  THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
+       Result := R0/UnitsConvert;
   End;
 
 end;
@@ -474,7 +474,7 @@ begin
          FOR i := 1 to NPhases DO
           FOR j := 1 to Nphases DO
           Begin
-             Result[k] :=  Z.GetElement(i,j).Re;
+             Result[k] :=  Z.GetElement(i,j).Re/UnitsConvert;
              Inc(k);
           End;
        End;
@@ -488,10 +488,10 @@ begin
 
   IF ActiveCircuit[ActiveActor] <> NIL
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).X0;
+  THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
+       Result := X0/UnitsConvert;
   End;
- 
+
 end;
 
 function TLines.Get_Xmatrix: OleVariant;
@@ -508,7 +508,7 @@ begin
          FOR i := 1 to NPhases DO
           FOR j := 1 to Nphases DO
           Begin
-             Result[k] :=  Z.GetElement(i,j).im;
+             Result[k] :=  Z.GetElement(i,j).im/UnitsConvert;
              Inc(k);
           End;
        End;

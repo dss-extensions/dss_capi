@@ -314,7 +314,7 @@ TYPE
         Property VarFollowInverter
                               :Boolean read Get_VarFollowInverter  Write Set_VarFollowInverter;
         Property kvarLimit      :Double  Read PVSystemVars.Fkvarlimit  Write Set_Maxkvar;
-
+        Property MinModelVoltagePU :Double Read VminPu;
 
 
    End;

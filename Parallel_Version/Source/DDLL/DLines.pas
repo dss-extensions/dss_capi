@@ -209,8 +209,8 @@ begin
       Result := 0.0;
       IF ActiveCircuit[ActiveActor] <> NIL
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-      THEN Begin
-           Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).R0;
+      THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
+         Result := R0/UnitsConvert;
       End;
   end;
   7: begin  // Lines.R0 write
@@ -228,8 +228,8 @@ begin
     Result := 0.0;
     IF ActiveCircuit[ActiveActor] <> NIL
     THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-    THEN Begin
-         Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).X0;
+    THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
+      Result := X0/UnitsConvert;
     End;
   end;
   9: begin  // Lines.X0 write
@@ -247,8 +247,8 @@ begin
      Result := 0.0;
       IF ActiveCircuit[ActiveActor] <> NIL
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-      THEN Begin
-           Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).C1 * 1.0e9;
+      THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
+        Result := C1/UnitsConvert * 1.0e9;
       End;
   end;
   11: begin  // Lines.C1 write
@@ -266,8 +266,8 @@ begin
       Result := 0.0;
       IF ActiveCircuit[ActiveActor] <> NIL
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-      THEN Begin
-           Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).C0 * 1.0e9;
+      THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
+        Result := C0/UnitsConvert * 1.0e9;
       End
   end;
   13: begin  // Line.C0 write
@@ -565,7 +565,7 @@ begin
              FOR i := 1 to NPhases DO
               FOR j := 1 to Nphases DO
               Begin
-                arg[k] :=  Z.GetElement(i,j).Re;
+                arg[k] :=  Z.GetElement(i,j).Re/UnitsConvert;
                 Inc(k);
               End;
            End;
@@ -599,7 +599,7 @@ begin
              FOR i := 1 to NPhases DO
               FOR j := 1 to Nphases DO
               Begin
-                 arg[k] :=  Z.GetElement(i,j).im;
+                 arg[k] :=  Z.GetElement(i,j).im/UnitsConvert;
                  Inc(k);
               End;
            End;
@@ -628,7 +628,7 @@ begin
       THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
       THEN Begin
            WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-             Factor  := TwoPi * BaseFrequency  * 1.0e-9;
+             Factor  := TwoPi * BaseFrequency * 1.0e-9 * UnitsConvert;
              arg := VarArrayCreate([0, Sqr(Nphases) - 1], varDouble);
              k := 0;
              FOR i := 1 to NPhases DO

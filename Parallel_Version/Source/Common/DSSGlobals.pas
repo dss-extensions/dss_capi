@@ -21,7 +21,7 @@ unit DSSGlobals;
 interface
 
 Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerList,
-     UComplex, Arraydef, CktElement, Circuit, IniRegSave, Graphics, System.IOUtils, inifiles,
+     UComplex, Arraydef, CktElement, Circuit, IniRegSave, {$IFNDEF FPC} Graphics, System.IOUtils,{$ENDIF} inifiles,
 
      {Some units which have global vars defined here}
      Spectrum,
@@ -786,7 +786,7 @@ begin
   Result := ini.ReadString(s,k,d);
   FreeAndNil(ini);
 end;
-
+{$IFNDEF FPC}
 function CheckDSSVisualizationTool: Boolean;
 begin
   DSS_Viz_path:=GetIni('Application','path','', TPath.GetHomePath+'\OpenDSS Visualization Tool\settings.ini');
@@ -795,6 +795,7 @@ begin
     Result:=false;
 end;
 // End of visualization tool check
+{$ENDIF}
 
 initialization
 
@@ -950,8 +951,9 @@ initialization
 //   YBMatrix.Start_Ymatrix_Critical;   // Initializes the critical segment for the YMatrix class
 
    //WriteDLLDebugFile('DSSGlobals');
-
+{$IFNDEF FPC}
   DSS_Viz_installed:= CheckDSSVisualizationTool; // DSS visualization tool (flag of existance)
+{$ENDIF}
 
 Finalization
 

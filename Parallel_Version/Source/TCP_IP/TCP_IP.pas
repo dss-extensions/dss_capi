@@ -716,7 +716,7 @@ begin
          npts := ActiveLSObject.NumPoints;
      SetLength(time, 1, npts) ;
      for i:=0 to npts-1 do
-      time[0,i] := double(i)*sinterfal;
+      time[0,i] := i*sinterfal;
      x_label:='Time (s)';
     end;
 

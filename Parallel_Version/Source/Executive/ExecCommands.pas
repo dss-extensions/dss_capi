@@ -27,8 +27,9 @@ PROCEDURE ProcessCommand(Const CmdLine:String);
 
 implementation
 
-Uses DSSGlobals, ExecHelper, Executive, ExecOptions, ShowOptions,  PlotOptions,
-     ExportOptions, ConnectOptions, ParserDel, LoadShape, DSSForms, sysutils, Utilities, SolutionAlgs,
+Uses DSSGlobals, ExecHelper, Executive, ExecOptions, ShowOptions,
+     ExportOptions, ParserDel, LoadShape, {$IFNDEF FPC} DSSForms,
+     PlotOptions, ConnectOptions, {$ENDIF} sysutils, Utilities, SolutionAlgs,
      DSSClassDefs, windows, KLUSolve;
 
 
@@ -750,8 +751,13 @@ Begin
       102: EndofTimeStepCleanup(ActiveActor);
       103: FinishTimeStep(ActiveActor);
       104: CmdResult := DoNodeListCmd;
+{$IFNDEF FPC}
       113: CmdResult := DoConnectCmd; //'TCP/IP connect';
       114: CmdResult := DoDisConnectCmd; //'TCP/IP disconnect';
+{$ELSE}
+      113: Begin DSSInfoMessageDlg('Winsock TCP/IP connection is not supported in FPC version, it will be migrated to Indy (soon...)'); CmdResult := 0; end;
+      114: Begin DSSInfoMessageDlg('Winsock TCP/IP disconnection is not supported in FPC version, it will be migrated to Indy (soon...)'); CmdResult := 0; end;
+{$ENDIF}
      ELSE
        // Ignore excess parameters
      End;
