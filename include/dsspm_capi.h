@@ -1,19 +1,19 @@
-#ifndef DSS_CAPI_DLL_H
-#define DSS_CAPI_DLL_H
-#define DSS_CAPI_VERSION "0.9.2"
-#ifndef DSS_CAPI_DLL
-//#define DSS_CAPI_DLL __declspec(dllimport)
-#define DSS_CAPI_DLL
+#ifndef DSSPM_CAPI_DLL_H
+#define DSSPM_CAPI_DLL_H
+#define DSSPM_CAPI_VERSION "0.9.2"
+#ifndef DSSPM_CAPI_DLL
+//#define DSSPM_CAPI_DLL __declspec(dllimport)
+#define DSSPM_CAPI_DLL
 #endif
 #ifdef __cplusplus
 extern "C" {
 #else
 #endif
-    DSS_CAPI_DLL void DSS_ResetStringBuffer(void);
-    DSS_CAPI_DLL void DSS_Dispose_PByte(int8_t** p);
-    DSS_CAPI_DLL void DSS_Dispose_PDouble(double** p);
-    DSS_CAPI_DLL void DSS_Dispose_PInteger(int32_t** p);
-    DSS_CAPI_DLL void DSS_Dispose_PPAnsiChar(char ***p, int32_t cnt);
+    DSSPM_CAPI_DLL void DSS_ResetStringBuffer(void);
+    DSSPM_CAPI_DLL void DSS_Dispose_PByte(int8_t** p);
+    DSSPM_CAPI_DLL void DSS_Dispose_PDouble(double** p);
+    DSSPM_CAPI_DLL void DSS_Dispose_PInteger(int32_t** p);
+    DSSPM_CAPI_DLL void DSS_Dispose_PPAnsiChar(char ***p, int32_t cnt);
 
     DSS_CAPI_DLL void ActiveClass_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
     DSS_CAPI_DLL int32_t ActiveClass_Get_First(void);
@@ -598,6 +598,21 @@ extern "C" {
     DSS_CAPI_DLL void Monitors_Set_Element(char* Value);
     DSS_CAPI_DLL int32_t Monitors_Get_Terminal(void);
     DSS_CAPI_DLL void Monitors_Set_Terminal(int32_t Value);
+    DSS_CAPI_DLL int32_t Parallel_Get_NumCPUs(void);
+    DSS_CAPI_DLL int32_t Parallel_Get_NumCores(void);
+    DSS_CAPI_DLL int32_t Parallel_Get_ActiveActor(void);
+    DSS_CAPI_DLL void Parallel_Set_ActiveActor(int32_t Value);
+    DSS_CAPI_DLL void Parallel_CreateActor(void);
+    DSS_CAPI_DLL int32_t Parallel_Get_ActorCPU(void);
+    DSS_CAPI_DLL void Parallel_Set_ActorCPU(int32_t Value);
+    DSS_CAPI_DLL int32_t Parallel_Get_NumOfActors(void);
+    DSS_CAPI_DLL void Parallel_Wait(void);
+    DSS_CAPI_DLL void Parallel_Get_ActorProgress(int32_t** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_DLL void Parallel_Get_ActorStatus(int32_t** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_DLL int32_t Parallel_Get_ActiveParallel(void);
+    DSS_CAPI_DLL void Parallel_Set_ActiveParallel(int32_t Value);
+    DSS_CAPI_DLL int32_t Parallel_Get_ConcatenateReports(void);
+    DSS_CAPI_DLL void Parallel_Set_ConcatenateReports(int32_t Value);
     DSS_CAPI_DLL char* Parser_Get_CmdString(void);
     DSS_CAPI_DLL void Parser_Set_CmdString(char* Value);
     DSS_CAPI_DLL char* Parser_Get_NextParam(void);
@@ -902,6 +917,11 @@ extern "C" {
     DSS_CAPI_DLL void Solution_Set_IntervalHrs(double Value);
     DSS_CAPI_DLL int32_t Solution_Get_MinIterations(void);
     DSS_CAPI_DLL void Solution_Set_MinIterations(int32_t Value);
+    DSS_CAPI_DLL void Solution_SolveAll(void);
+    DSS_CAPI_DLL void Solution_Get_IncMatrix(int32_t** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_DLL void Solution_Get_BusLevels(int32_t** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_DLL void Solution_Get_IncMatrixRows(int32_t** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_DLL void Solution_Get_IncMatrixCols(int32_t** ResultPtr, int32_t* ResultCount);
     DSS_CAPI_DLL int32_t SwtControls_Get_Action(void);
     DSS_CAPI_DLL void SwtControls_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
     DSS_CAPI_DLL double SwtControls_Get_Delay(void);
@@ -1023,19 +1043,19 @@ extern "C" {
     DSS_CAPI_DLL void XYCurves_Set_Yscale(double Value);
     DSS_CAPI_DLL void XYCurves_Set_Yshift(double Value);
 
-    DSS_CAPI_DLL void YMatrix_GetCompressedYMatrix(uint16_t factor, uint32_t *nBus, uint32_t *nNz, int32_t **ColPtr, int32_t **RowIdxPtr, double **cValsPtr);
-    DSS_CAPI_DLL void YMatrix_ZeroInjCurr(void);
-    DSS_CAPI_DLL void YMatrix_GetSourceInjCurrents(void);
-    DSS_CAPI_DLL void YMatrix_GetPCInjCurr(void);
-    DSS_CAPI_DLL void YMatrix_BuildYMatrixD(int32_t BuildOps, int32_t AllocateVI);
-    DSS_CAPI_DLL void YMatrix_AddInAuxCurrents(int32_t SType);
-    DSS_CAPI_DLL void YMatrix_getIpointer(double **IvectorPtr);
-    DSS_CAPI_DLL void YMatrix_getVpointer(double **VvectorPtr);
-    DSS_CAPI_DLL int32_t YMatrix_SolveSystem(double **NodeVPtr);
-    DSS_CAPI_DLL void YMatrix_Set_SystemYChanged(uint16_t arg);
-    DSS_CAPI_DLL uint16_t YMatrix_Get_SystemYChanged(void);
-    DSS_CAPI_DLL void YMatrix_Set_UseAuxCurrents(uint16_t arg);
-    DSS_CAPI_DLL uint16_t YMatrix_Get_UseAuxCurrents(void);
+    DSSPM_CAPI_DLL void YMatrix_GetCompressedYMatrix(uint16_t factor, uint32_t *nBus, uint32_t *nNz, int32_t **ColPtr, int32_t **RowIdxPtr, double **cValsPtr);
+    DSSPM_CAPI_DLL void YMatrix_ZeroInjCurr(void);
+    DSSPM_CAPI_DLL void YMatrix_GetSourceInjCurrents(void);
+    DSSPM_CAPI_DLL void YMatrix_GetPCInjCurr(void);
+    DSSPM_CAPI_DLL void YMatrix_BuildYMatrixD(int32_t BuildOps, int32_t AllocateVI);
+    DSSPM_CAPI_DLL void YMatrix_AddInAuxCurrents(int32_t SType);
+    DSSPM_CAPI_DLL void YMatrix_getIpointer(double **IvectorPtr);
+    DSSPM_CAPI_DLL void YMatrix_getVpointer(double **VvectorPtr);
+    DSSPM_CAPI_DLL int32_t YMatrix_SolveSystem(double **NodeVPtr);
+    DSSPM_CAPI_DLL void YMatrix_Set_SystemYChanged(uint16_t arg);
+    DSSPM_CAPI_DLL uint16_t YMatrix_Get_SystemYChanged(void);
+    DSSPM_CAPI_DLL void YMatrix_Set_UseAuxCurrents(uint16_t arg);
+    DSSPM_CAPI_DLL uint16_t YMatrix_Get_UseAuxCurrents(void);
     
 
     enum MonitorModes {

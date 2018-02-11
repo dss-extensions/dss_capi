@@ -14,12 +14,12 @@ if not exist .\build\units_main (
     mkdir .\build\units_main
 ) 
 
-if not exist .\build\units_pm(
+if not exist .\build\units_pm (
     mkdir .\build\units_pm
 ) 
 
 if exist ..\electricdss\Source\Common\DSSGlobals.pas (
-    fpc -Px86_64 @src\windows.cfg -B src\dss_capi.lpr
+    fpc -Px86_64 @src\main\windows.cfg -B src\main\dss_capi.lpr
     if exist lib\dss_capi.dll (
         where /q dumpbin
         if errorlevel 1 (
@@ -43,7 +43,7 @@ if exist ..\electricdss\Source\Common\DSSGlobals.pas (
         exit /B
     )
 
-    fpc -Px86_64 @src\windows.cfg -B src\dss_capi.lpr
+    fpc -Px86_64 @src\pm\windows.cfg -B src\pm\dsspm_capi.lpr
     if exist lib\dsspm_capi.dll (
         where /q dumpbin
         if errorlevel 1 (
