@@ -2242,19 +2242,19 @@ Index: Parallel_Version/Source/DLL/OpenDSSengine.ridl
 +    HRESULT _stdcall MinIterations([out, retval] long* Value);
 +    [propput, id(0x000000E5), helpstring("Mininum number of iterations required for a power flow solution.")]
 +    HRESULT _stdcall MinIterations([in] long Value);
-+    [id(0x000000E5), helpstring("Solves the circuits for all the Actors created")]
++    [id(0x000000E6), helpstring("Solves the circuits for all the Actors created")]
      HRESULT _stdcall SolveAll(void);
 -    [propget, id(0x000000E5)]
-+    [propget, id(0x000000E6)]
++    [propget, id(0x000000E7)]
      HRESULT _stdcall IncMatrix([out, retval] VARIANT* Value);
 -    [propget, id(0x000000E6)]
-+    [propget, id(0x000000E7)]
++    [propget, id(0x000000E8)]
      HRESULT _stdcall IncMatrixRows([out, retval] VARIANT* Value);
 -    [propget, id(0x000000E7)]
-+    [propget, id(0x000000E8)]
++    [propget, id(0x000000E9)]
      HRESULT _stdcall IncMatrixCols([out, retval] VARIANT* Value);
 -    [propget, id(0x000000E8)]
-+    [propget, id(0x000000E9)]
++    [propget, id(0x000000E10)]
      HRESULT _stdcall BusLevels([out, retval] VARIANT* Value);
    };
  
