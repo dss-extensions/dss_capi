@@ -1450,22 +1450,24 @@ Index: Parallel_Version/Source/Common/Solution.pas
     Step_Time_Elapsed  := ((LoopEndtime-SolveStartTime)/CPU_Freq)*1000000;
  
  end;
-@@ -2453,9 +2540,14 @@
+@@ -2453,9 +2540,16 @@
    FInfoProc       :=  CallBack;
    FreeOnTerminate := False;
    ActorID         :=  ID;
 +{$IFNDEF UNIX}  
    Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
-+{$ELSE}
-+  Parallel.Set_Process_Priority(FpGetpid(), REALTIME_PRIORITY_CLASS);
-+{$ENDIF}  
    Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
    Parallel.Set_Thread_affinity(handle,local_CPU);
++{$ELSE}
++  Parallel.Set_Process_Priority(FpGetpid(), REALTIME_PRIORITY_CLASS);
++  Parallel.Set_Thread_Priority(self,THREAD_PRIORITY_TIME_CRITICAL);
++  Parallel.Set_Thread_affinity(handle,local_CPU);
++{$ENDIF}  
 +
  end;
  
  {*******************************************************************************
-@@ -2465,7 +2557,7 @@
+@@ -2465,7 +2559,7 @@
  
  procedure TSolver.Execute;
  var
@@ -1474,7 +1476,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
    idx       : Integer;
    begin
      with ActiveCircuit[ActorID].Solution do
-@@ -2499,7 +2591,9 @@
+@@ -2499,7 +2593,9 @@
                 DosimpleMsg('Unknown solution mode.', 481);
             End;
  
