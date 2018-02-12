@@ -4,10 +4,12 @@ dss_capi: An unofficial C API for EPRI's OpenDSS
 
 If you are looking for the Python bindings, see [dss_python](http://github.com/PMeira/dss_python/).
 
-Version 0.9.1, based on [OpenDSS revision 2123](https://sourceforge.net/p/electricdss/code/2123/tree/). 
-This is a work-in-progress but it's deemed stable enough to be made public.
+Version 0.9.2, based on [OpenDSS revision 2134](https://sourceforge.net/p/electricdss/code/2134/tree/). 
 
-This library exposes the OpenDSS engine in a plain C interface that tries to reproduce most of the COM methods. In fact, most of the code is derived from the COM implementation files. The resulting DLL can be using directly or through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level.
+This is a work-in-progress but it's deemed stable enough to be made public. 
+*Note that, while the interface with OpenDSS is stable (classic version), the OpenDSS-PM (actor-based parallel machine version) interface was integrated recently and is experimental.*
+
+This library exposes the OpenDSS/OpenDSS-PM engine in a plain C interface that tries to reproduce most of the COM methods. In fact, most of the code is derived from the COM implementation files. The resulting DLL can be using directly or through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level.
 
 Instead of using extra numeric parameters as in the official DDLL interface, each original COM property is exposed as a pair of functions. For example, the load kVA property is exposed as:
 
@@ -17,6 +19,11 @@ Instead of using extra numeric parameters as in the official DDLL interface, eac
 ```
 
 Besides low-level details such as memory management, most of the COM documentation can be used as-is. 
+
+Recent changes
+==============
+- 2018-02-08: First public release (OpenDSS revision 2123)
+- 2018-02-10: Experimental support for OpenDSS-PM (at the moment, a custom patch is provided for FreePascal support) and port COM interface fixes (OpenDSS revision 2134)
 
 Missing features and limitations
 ================================
@@ -31,20 +38,27 @@ Extra features
 ==============
 Besides most of the COM methods, some of the unique DDLL methods are also exposed in adapted forms, namely the methods from `DYMatrix.pas`, especially `GetCompressedYMatrix` (check the source files for more information).
 
-
 Building
 ========
 To build the DLL yourself:
 
 - Get the official OpenDSS source code [for the target revision](https://sourceforge.net/p/electricdss/code/2123/tree/) in the same root folder:
-    
-    svn checkout https://svn.code.sf.net/p/electricdss/code/trunk electricdss -r2123
-    
+```    
+    svn checkout https://svn.code.sf.net/p/electricdss/code/trunk electricdss -r2134
+```
+
 - Install the [FreePascal compiler](https://freepascal.org/). If you have the Lazarus IDE installed, you most likely already have the compiler too. Add the folder containing the compiler (`fpc.exe`) to your PATH environment variable.
 
 - Get this repository:
-
+```
     git clone https://github.com/PMeira/dss_capi.git
+```    
+    
+- For the OpenDSS revision 2134, apply the patch on `src/r2134.patch` if you're building the OpenDSS-PM version.
+```
+    cd electricdss
+    svn patch ../dss_capi/src/r2134.patch
+```
 
 On Windows
 ----------

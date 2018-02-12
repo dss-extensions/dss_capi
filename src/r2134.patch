@@ -1,0 +1,4786 @@
+Index: Parallel_Version/Source/CMD/CmdForms.pas
+===================================================================
+--- Parallel_Version/Source/CMD/CmdForms.pas	(nonexistent)
++++ Parallel_Version/Source/CMD/CmdForms.pas	(working copy)
+@@ -0,0 +1,278 @@
++unit CmdForms;
++
++{
++  ----------------------------------------------------------
++  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
++  All rights reserved.
++  ----------------------------------------------------------
++}
++
++{
++	08/17/2016  Created from OpenDSS
++ ----------------------------------------------------------
++  Copyright (c) 2016 Battelle Memorial Institute
++ ----------------------------------------------------------
++}
++
++interface
++
++Uses Classes;
++
++VAR
++   ControlPanelCreated     :Boolean;  // signify whether this is the DLL or EXE
++   RebuildHelpForm:Boolean;
++   PROCEDURE CreateControlPanel;
++   PROCEDURE ExitControlPanel;
++   PROCEDURE InitProgressForm;
++   Procedure ProgressCaption(const S:String; ActorID : Integer);
++   Procedure ProgressFormCaption(const S:String; ActorID : Integer);
++   Procedure ProgressHide(ActorID : Integer);
++   PROCEDURE ShowControlPanel;
++   PROCEDURE ShowHelpForm ;
++   PROCEDURE ShowAboutBox;
++   PROCEDURE ShowPropEditForm;
++   PROCEDURE ShowPctProgress(Count:Integer);
++   Procedure ShowMessageForm(S:TStrings);
++   FUNCTION  DSSMessageDlg(const Msg:String;err:boolean):Integer;
++   PROCEDURE DSSInfoMessageDlg(const Msg:String);
++   FUNCTION  GetDSSExeFile: String;
++   PROCEDURE CloseDownForms;
++   Procedure ShowTreeView(Const Fname:String);
++   FUNCTION  MakeChannelSelection(NumFieldsToSkip:Integer; const Filename:String):Boolean;
++   procedure ShowHeapUsage; // copied from Lazarus form; not used in command line yet
++
++implementation
++
++Uses ExecCommands, ExecOptions, ShowOptions, ExportOptions,
++	DSSGlobals, DSSClass, DSSClassDefs, ParserDel, Sysutils, Strutils, ArrayDef;
++
++const colwidth = 25; numcols = 4;  // for listing commands to the console
++
++procedure ShowHeapUsage;
++var
++   hstat: TFPCHeapStatus;
++   s: string;
++begin
++  hstat := GetFPCHeapStatus;
++  s := Format('Heap Memory Used: %dK',[hstat.CurrHeapUsed div 1024]);
++  DSSInfoMessageDlg(s);
++end;
++
++Procedure InitProgressForm;
++begin
++End;
++
++PROCEDURE ShowPctProgress(Count:Integer);
++Begin
++End;
++
++Procedure ProgressCaption(const S:String; ActorID : Integer);
++Begin
++	Writeln('Progress: ', S);
++End;
++
++Procedure ProgressFormCaption(const S:String; ActorID : Integer);
++begin
++	Writeln('Progress: ', S);
++End;
++
++Procedure ProgressHide(ActorID : Integer);
++Begin
++End;
++
++Procedure ShowAboutBox;
++begin
++	writeln ('Console OpenDSS (Electric Power Distribution System Simulator)');
++	writeln (VersionString);
++	writeln ('Copyright (c) 2008-2017, Electric Power Research Institute, Inc.');
++	writeln ('Copyright (c) 2016-2017, Battelle Memorial Institute');
++	writeln ('All rights reserved.');
++End;
++
++Procedure ShowTreeView(Const Fname:String);
++Begin
++end;
++
++FUNCTION GetDSSExeFile: String;
++Begin
++  Result := 'todo'; // ExtractFilePath (Application.ExeName);
++End;
++
++
++function DSSMessageDlg(const Msg:String;err:boolean):Integer;
++Begin
++	result := 0;
++	if err then write ('** Error: ');
++	writeln (Msg);
++End;
++
++procedure DSSInfoMessageDlg(const Msg:String);
++Begin
++	writeln (Msg);
++End;
++
++PROCEDURE CreateControlPanel;
++Begin
++End;
++
++PROCEDURE ExitControlPanel;
++Begin
++End;
++
++PROCEDURE ShowControlPanel;
++Begin
++End;
++
++function CompareClassNames(Item1, Item2: Pointer): Integer;
++begin
++  Result := CompareText(TDSSClass(Item1).name, TDSSClass(Item2).name);
++end;
++
++procedure AddHelpForClasses(BaseClass: WORD; bProperties: boolean);
++Var
++	HelpList  :TList;
++  pDSSClass :TDSSClass;
++  i,j       :Integer;
++begin
++	HelpList := TList.Create();
++  pDSSClass := DSSClassList[ActiveActor].First;
++  WHILE pDSSClass<>Nil DO Begin
++    If (pDSSClass.DSSClassType AND BASECLASSMASK) = BaseClass Then HelpList.Add (pDSSClass);
++    pDSSClass := DSSClassList[ActiveActor].Next;
++  End;
++  HelpList.Sort(@CompareClassNames);
++
++	for i := 1 to HelpList.Count do begin
++    pDSSClass := HelpList.Items[i-1];
++    writeln (pDSSClass.name);
++    if bProperties=true then for j := 1 to pDSSClass.NumProperties do
++      writeln ('  ', pDSSClass.PropertyName[j], ': ', pDSSClass.PropertyHelp^[j]);
++  end;
++  HelpList.Free;
++end;
++
++procedure ShowGeneralHelp;
++begin
++	writeln('This is a console-mode version of OpenDSS, available for Windows, Linux and Mac OS X');
++	writeln('Enter a command at the >> prompt, followed by any required command parameters');
++	writeln('Enter either a carriage return, "exit" or "q(uit)" to exit the program');
++	writeln('For specific help, enter:');
++	writeln('  "help command [cmd]" lists all executive commands, or');
++	writeln('                       if [cmd] provided, details on that command');
++	writeln('  "help option [opt]"  lists all simulator options, or');
++	writeln('                       if [opt] provided, details on that option');
++	writeln('  "help show [opt]"    lists the options to "show" various outputs, or');
++	writeln('                       if [opt] provided, details on that output');
++	writeln('  "help export [fmt]"  lists the options to "export" in various formats, or');
++	writeln('                       if [fmt] provided, details on that format');
++	writeln('  "help class [cls]"   lists the names of all available circuit model classes, or');
++	writeln('                       if [cls] provided, details on that class');
++  writeln('You may truncate any help topic name, which returns all matching entries');
++  writeln('// begins a comment, which is ignored by the parser (including help)');
++end;
++
++procedure ShowAnyHelp (const num:integer; cmd:pStringArray; hlp:pStringArray; const opt:String);
++VAR
++	i: integer;
++  lst: TStringList;
++begin
++  if Length(opt) < 1 then begin
++    lst := TStringList.Create;
++  	for i := 1 to num do lst.Add (PadRight (cmd[i], colwidth));
++    lst.Sort;
++  	for i :=  1 to num do
++      if ((i mod numcols) = 0) then
++         writeln (lst[i-1])
++      else
++        write (lst[i-1] + ' ');
++    lst.Free;
++  end else begin
++  	for i :=  1 to num do begin
++      if AnsiStartsStr (opt, LowerCase(cmd[i])) then begin
++  		   writeln (UpperCase (cmd[i]));
++         writeln ('======================');
++         writeln (hlp[i]);
++      end;
++  	end;
++  end;
++end;
++
++procedure ShowClassHelp (const opt:String);
++var
++  pDSSClass :TDSSClass;
++  i :Integer;
++begin
++  if Length(opt) > 0 then begin
++    pDSSClass := DSSClassList[ActiveActor].First;
++    while pDSSClass<>nil do begin
++      if AnsiStartsStr (opt, LowerCase(pDSSClass.name)) then begin
++        writeln (UpperCase (pDSSClass.name));
++        writeln ('======================');
++        for i := 1 to pDSSClass.NumProperties do
++          writeln ('  ', pDSSClass.PropertyName[i], ': ', pDSSClass.PropertyHelp^[i]);
++      end;
++      pDSSClass := DSSClassList[ActiveActor].Next;
++    end;
++  end else begin
++  	writeln('== Power Delivery Elements ==');
++	  AddHelpForClasses (PD_ELEMENT, false);
++	  writeln('== Power Conversion Elements ==');
++	  AddHelpForClasses (PC_ELEMENT, false);
++	  writeln('== Control Elements ==');
++	  AddHelpForClasses (CTRL_ELEMENT, false);
++	  writeln('== Metering Elements ==');
++	  AddHelpForClasses (METER_ELEMENT, false);
++	  writeln('== Supporting Elements ==');
++	  AddHelpForClasses (0, false);
++	  writeln('== Other Elements ==');
++	  AddHelpForClasses (NON_PCPD_ELEM, false);
++  end;
++end;
++
++PROCEDURE ShowHelpForm;
++VAR
++  Param, OptName:String;
++Begin
++	Parser[ActiveActor].NextParam;
++  Param := LowerCase(Parser[ActiveActor].StrValue);
++	Parser[ActiveActor].NextParam;
++  OptName := LowerCase(Parser[ActiveActor].StrValue);
++	if ANSIStartsStr ('com', param) then
++		ShowAnyHelp (NumExecCommands, @ExecCommand, @CommandHelp, OptName)
++	else if ANSIStartsStr ('op', param) then
++		ShowAnyHelp (NumExecOptions, @ExecOption, @OptionHelp, OptName)
++	else if ANSIStartsStr ('sh', param) then
++		ShowAnyHelp (NumShowOptions, @ShowOption, @ShowHelp, OptName)
++	else if ANSIStartsStr ('e', param) then
++		ShowAnyHelp (NumExportOptions, @ExportOption, @ExportHelp, OptName)
++	else if ANSIStartsStr ('cl', param) then
++		ShowClassHelp (OptName)
++	else
++		ShowGeneralHelp;
++end;
++
++Procedure ShowMessageForm(S:TStrings);
++begin
++	writeln(s.text);
++End;
++
++Procedure ShowPropEditForm;
++Begin
++End;
++
++Procedure CloseDownForms;
++Begin
++End;
++
++Function MakeChannelSelection(NumFieldsToSkip:Integer; const Filename:String):Boolean;
++Begin
++  Result := false;
++End;
++
++initialization
++
++  RebuildHelpForm := True;
++
++finalization
++
++end.
+
+Property changes on: Parallel_Version/Source/CMD/CmdForms.pas
+___________________________________________________________________
+Added: svn:executable
+## -0,0 +1 ##
++*
+\ No newline at end of property
+Index: Parallel_Version/Source/CMD/MyDSSClassDefs.pas
+===================================================================
+--- Parallel_Version/Source/CMD/MyDSSClassDefs.pas	(nonexistent)
++++ Parallel_Version/Source/CMD/MyDSSClassDefs.pas	(working copy)
+@@ -0,0 +1,50 @@
++unit MyDSSClassDefs;
++{
++  ----------------------------------------------------------
++  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
++  All rights reserved.
++  ----------------------------------------------------------
++}
++{
++    Prototype unit for creating custom version of DSS
++
++}
++
++interface
++
++
++CONST
++
++     MYCLASS_ELEMENT_CONST     = 99 * 8;  // make unique constants for your classes
++                                          // SEE DSSClassDefs.pas
++     {Assign (typically by adding) this constant to DSSClassType when objects of
++      your custom class are instantiated. See Tline.Create in Line.Pas, for example}
++
++Procedure CreateMyDSSClasses;  // Called in DSSClassDefs
++
++implementation
++
++Uses
++  DSSClass
++  {Add Special Uses clauses here:  }
++  {,MyDSSClass}
++  ;
++
++
++Procedure CreateMyDSSClasses;
++
++Begin
++     {Put your custom class instantiations here}
++
++     { Example:
++         DSSClasses.New := TMyDSSClass.Create;
++
++     }
++
++End;
++
++initialization
++
++finalization
++
++end.
+
+Property changes on: Parallel_Version/Source/CMD/MyDSSClassDefs.pas
+___________________________________________________________________
+Added: svn:executable
+## -0,0 +1 ##
++*
+\ No newline at end of property
+Index: Parallel_Version/Source/Common/AutoAdd.pas
+===================================================================
+--- Parallel_Version/Source/Common/AutoAdd.pas	(revision 2134)
++++ Parallel_Version/Source/Common/AutoAdd.pas	(working copy)
+@@ -87,7 +87,11 @@
+ implementation
+ 
+ Uses  DSSClassDefs, DSSGlobals, PDElement, Utilities, SysUtils, Executive,
+-      DSSForms,
++{$IFDEF FPC}
++        CmdForms,
++{$ELSE}
++       DSSForms,
++{$ENDIF}
+       {ProgressForm, Forms,} Solution;
+ 
+ FUNCTION SumSelectedRegisters(Mtr: TEnergyMeterObj; Regs: pIntegerArray;  count: Integer): Double;
+@@ -161,7 +165,7 @@
+         // No energymeters in circuit
+         // Include all buses in the circuit
+          BusIdxListSize :=  ActiveCircuit[ActorID].BusList.listsize;
+-         BusIdxList := AllocMem(Sizeof(BusIdxList^[i])*BusIdxListSize);
++         BusIdxList := AllocMem(Sizeof(BusIdxList^[1])*BusIdxListSize);
+ 
+          For i := 1 to BusIdxListSize Do Begin
+              BusIdxList^[i] := i;
+Index: Parallel_Version/Source/Common/Circuit.pas
+===================================================================
+--- Parallel_Version/Source/Common/Circuit.pas	(revision 2134)
++++ Parallel_Version/Source/Common/Circuit.pas	(working copy)
+@@ -25,7 +25,7 @@
+ USES
+      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
+      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
+-     AutoAdd, EnergyMeter, NamedObject, CktTree, Graphics;
++     AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF};
+ 
+ 
+ TYPE
+@@ -47,7 +47,7 @@
+ 
+     public
+       BusName: String;
+-      AddMarkerColor: Tcolor;
++      AddMarkerColor: {$IFNDEF FPC}Tcolor{$ELSE}Integer{$ENDIF};
+       AddMarkerCode,
+       AddMarkerSize: Integer;
+ 
+@@ -291,7 +291,7 @@
+      PDElement, CktElementClass,
+      ParserDel,  DSSClassDefs, DSSGlobals, Dynamics,
+      Line, Transformer,  Vsource,
+-     Utilities,  DSSForms, Executive;
++     Utilities, {$IFDEF FPC}CmdForms,{$ELSE}DSSForms,{$ENDIF} Executive;
+ 
+ //----------------------------------------------------------------------------
+ Constructor TDSSCircuit.Create(const aName:String);
+@@ -1415,7 +1415,7 @@
+ begin
+   inherited;
+   BusName := '';
+-  AddMarkerColor := clBlack;
++  AddMarkerColor := {$IFDEF FPC}0{$ELSE}clBlack{$ENDIF};
+   AddMarkerCode := 4;
+   AddMarkerSize := 1;
+ end;
+Index: Parallel_Version/Source/Common/CktElement.pas
+===================================================================
+--- Parallel_Version/Source/Common/CktElement.pas	(revision 2134)
++++ Parallel_Version/Source/Common/CktElement.pas	(working copy)
+@@ -841,7 +841,7 @@
+          FOR j := 1 TO Fnconds DO Begin
+              If Not Terminals^[i].Conductors^[j].Closed THEN Begin
+                 If Not ElementOpen Then Begin
+-                    RowEliminated := AllocMem(Sizeof(RowEliminated^[1])*Yorder);
++                    RowEliminated := AllocMem(Sizeof(Integer)*Yorder);
+                     ElementOpen := True;
+                     cEpsilon := Cmplx(EPSILON, 0.0);
+                 End;
+Index: Parallel_Version/Source/Common/DSSCallBackRoutines.pas
+===================================================================
+--- Parallel_Version/Source/Common/DSSCallBackRoutines.pas	(revision 2134)
++++ Parallel_Version/Source/Common/DSSCallBackRoutines.pas	(working copy)
+@@ -20,7 +20,7 @@
+ 
+ implementation
+ 
+-Uses  ParserDel, DSSGlobals, Executive, AnsiStrings, SysUtils, CktElement, Math, PDElement;
++Uses  ParserDel, DSSGlobals, Executive, {$IFNDEF FPC}AnsiStrings,{$ELSE}SysUtils,{$ENDIF} CktElement, Math, PDElement;
+ 
+ Var
+    CallBackParser  :TParser;
+@@ -74,7 +74,7 @@
+ 
+ Begin
+     With CallBackParser Do Begin
+-      SysUtils.StrlCopy(s, pAnsiChar(AnsiString(CB_Param)), Maxlen) ;
++      StrlCopy(s, pAnsiChar(AnsiString(CB_Param)), Maxlen) ;
+     End;
+ End;
+ 
+@@ -87,7 +87,7 @@
+         CB_ParamName  := NextParam ;
+         CB_Param      := StrValue;
+    End;
+-   SysUtils.StrlCopy(ParamName, pAnsiChar(AnsiString(CB_ParamName)), Maxlen) ; // Copies up to Maxlen
++   StrlCopy(ParamName, pAnsiChar(AnsiString(CB_ParamName)), Maxlen) ; // Copies up to Maxlen
+    Result := Length(CB_Param);
+ End;
+ 
+@@ -108,8 +108,8 @@
+    CktElement :TDSSCktElement;
+    BusIdx     :Integer;
+ Begin
+-   SysUtils.StrlCopy(Name1, pAnsiChar(''), Len1) ;  // Initialize to null
+-   SysUtils.StrlCopy(Name2, pAnsiChar(''), Len2) ;
++   StrlCopy(Name1, pAnsiChar(''), Len1) ;  // Initialize to null
++   StrlCopy(Name2, pAnsiChar(''), Len2) ;
+    If ActiveCircuit[ActiveActor] <> Nil Then Begin
+      CktElement :=  ActiveCircuit[ActiveActor].Activecktelement ;
+      If CktElement <> Nil Then Begin
+@@ -116,11 +116,11 @@
+      {First bus}
+        BusIdx := CktElement.Terminals^[1].busref;
+        If BusIdx > 0 Then With  ActiveCircuit[ActiveActor].Buses^[BusIdx]  Do
+-         If CoordDefined Then SysUtils.StrlCopy(Name1, pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].BusList.Get(Busidx))), Len1) ;
++         If CoordDefined Then StrlCopy(Name1, pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].BusList.Get(Busidx))), Len1) ;
+       {Second bus}
+        BusIdx := CktElement.Terminals^[2].busref;
+        If BusIdx > 0 Then With  ActiveCircuit[ActiveActor].Buses^[BusIdx] do
+-         If CoordDefined Then SysUtils.StrlCopy(Name2, pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].BusList.Get(Busidx))), Len2) ;
++         If CoordDefined Then StrlCopy(Name2, pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].BusList.Get(Busidx))), Len2) ;
+       End; {If CktElement}
+    End;  {If ActiveCircuit[ActiveActor]}
+ End;
+@@ -372,7 +372,7 @@
+            With ActiveCktElement Do Begin
+               S := ParentClass.Name + '.' + Name;
+ 
+-          SysUtils.StrlCopy(FullName, pAnsiChar(AnsiString(S)), Maxlen) ;
++          StrlCopy(FullName, pAnsiChar(AnsiString(S)), Maxlen) ;
+           Result := Length(FullName);
+         End;
+ End;
+@@ -389,7 +389,7 @@
+ 
+ Procedure GetResultStrCallBack(S:pAnsiChar; Maxlen:Cardinal); StdCall;
+ Begin
+-     SysUtils.StrlCopy(S, pAnsiChar(AnsiString( GlobalResult )), Maxlen) ;
++     StrlCopy(S, pAnsiChar(AnsiString( GlobalResult )), Maxlen) ;
+ End;
+ 
+ {====================================================================================================================}
+Index: Parallel_Version/Source/Common/DSSGlobals.pas
+===================================================================
+--- Parallel_Version/Source/Common/DSSGlobals.pas	(revision 2134)
++++ Parallel_Version/Source/Common/DSSGlobals.pas	(working copy)
+@@ -43,7 +43,7 @@
+      PVSystem,
+      InvControl,
+      ExpControl,
+-     ProgressForm,
++     {$IFNDEF FPC}ProgressForm,{$ENDIF}
+      variants,
+      YMatrix;
+ {
+@@ -196,7 +196,7 @@
+    DefaultEditor    :String;     // normally, Notepad
+    DefaultFontSize  :Integer;
+    DefaultFontName  :String;
+-   DefaultFontStyles :TFontStyles;
++{$IFNDEF FPC}DefaultFontStyles :TFontStyles;{$ENDIF}
+    DSSFileName      :String;     // Name of current exe or DLL
+    DSSDirectory     :String;     // where the current exe resides
+    StartupDirectory :String;     // Where we started
+@@ -245,7 +245,7 @@
+    ActorCPU           : Array of integer;
+    ActorStatus        : Array of integer;
+    ActorProgressCount : Array of integer;
+-   ActorProgress      : Array of TProgress;
++   {$IFNDEF FPC}ActorProgress      : Array of TProgress;{$ENDIF}
+    ActorPctProgress   : Array of integer;
+    ActorHandle        : Array of TThread;
+    Parallel_enabled   : Boolean;
+@@ -314,10 +314,15 @@
+ 
+ USES  {Forms,   Controls,}
+      SysUtils,
+-     Windows,
+-     DSSForms,
++     {$IFDEF FPC}
++     resource, versiontypes, versionresource, dynlibs, CmdForms,
++       {$IFDEF Linux}
++       cpucount,
++       {$ENDIF}
++     {$ELSE}
++     Windows, DSSForms, SHFolder,
++     {$ENDIF}
+      Solution,
+-     SHFolder,
+      Executive;
+      {Intrinsic Ckt Elements}
+ 
+@@ -332,7 +337,28 @@
+    LastUserDLLHandle: THandle;
+    DSSRegisterProc:TDSSRegister;   // of last library loaded
+ 
++{$IFDEF FPC}
+ FUNCTION GetDefaultDataDirectory: String;
++Begin
++{$IFDEF UNIX}
++  Result := GetEnvironmentVariable('HOME') + PathDelim + 'Documents';
++{$ENDIF}
++{$IF (defined(Windows) or defined(MSWindows))}
++  Result := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH') + PathDelim + 'Documents';
++{$ENDIF}
++end;
++
++FUNCTION GetDefaultScratchDirectory: String;
++Begin
++  {$IFDEF UNIX}
++  Result := '/tmp';
++  {$ENDIF}
++  {$IF (defined(Windows) or defined(MSWindows))}
++  Result := GetEnvironmentVariable('LOCALAPPDATA');
++  {$ENDIF}
++End;
++{$ELSE}
++FUNCTION GetDefaultDataDirectory: String;
+ Var
+   ThePath:Array[0..MAX_PATH] of char;
+ Begin
+@@ -349,6 +375,7 @@
+   SHGetFolderPath (0, CSIDL_LOCAL_APPDATA, 0, 0, ThePath);
+   Result := ThePath;
+ End;
++{$ENDIF}
+ 
+ function GetOutputDirectory:String;
+ begin
+@@ -589,16 +616,50 @@
+ 
+ 
+ 
++{$IFDEF FPC}
+ FUNCTION GetDSSVersion: String;
++(* Unlike most of AboutText (below), this takes significant activity at run-    *)
++ (* time to extract version/release/build numbers from resource information      *)
++ (* appended to the binary.                                                      *)
++
++ VAR     Stream: TResourceStream;
++         vr: TVersionResource;
++         fi: TVersionFixedInfo;
++
++ BEGIN
++   RESULT:= 'Unknown.';
++   TRY
++
++ (* This raises an exception if version info has not been incorporated into the  *)
++ (* binary (Lazarus Project -> Project Options -> Version Info -> Version        *)
++ (* numbering).                                                                  *)
++
++     Stream:= TResourceStream.CreateFromID(HINSTANCE, 1, PChar(RT_VERSION));
++     TRY
++       vr:= TVersionResource.Create;
++       TRY
++         vr.SetCustomRawDataStream(Stream);
++         fi:= vr.FixedInfo;
++         RESULT := 'Version ' + IntToStr(fi.FileVersion[0]) + '.' + IntToStr(fi.FileVersion[1]) +
++                ' release ' + IntToStr(fi.FileVersion[2]) + ' build ' + IntToStr(fi.FileVersion[3]) + LineEnding;
++         vr.SetCustomRawDataStream(nil)
++       FINALLY
++         vr.Free
++       END
++     FINALLY
++       Stream.Free
++     END
++   EXCEPT
++   END
++ End;
++{$ELSE}
++FUNCTION GetDSSVersion: String;
+ var
+-
+   InfoSize, Wnd: DWORD;
+   VerBuf: Pointer;
+   FI: PVSFixedFileInfo;
+   VerSize: DWORD;
+   MajorVer, MinorVer, BuildNo, RelNo :DWORD;
+-
+-
+ Begin
+     Result := 'Unknown.' ;
+ 
+@@ -619,8 +680,8 @@
+         FreeMem(VerBuf);
+       end;
+     end;
+-
+ End;
++{$ENDIF}
+ 
+ 
+ PROCEDURE WriteDLLDebugFile(Const S:String);
+@@ -643,7 +704,7 @@
+   TempFile: array[0..MAX_PATH] of Char;
+ begin
+   if GetTempFileName(PChar(Dir), 'DA', 0, TempFile) <> 0 then
+-    Result := Windows.DeleteFile(TempFile)
++    {$IFDEF FPC}Result := DeleteFile(TempFile){$ELSE}Result := Windows.DeleteFile(TempFile){$ENDIF}
+   else
+     Result := False;
+ end;
+@@ -666,7 +727,7 @@
+   // Put a \ on the end if not supplied. Allow a null specification.
+   If Length(DataDirectory) > 0 Then Begin
+     ChDir(DataDirectory[ActiveActor]);   // Change to specified directory
+-    If DataDirectory[ActiveActor][Length(DataDirectory[ActiveActor])] <> '\' Then DataDirectory[ActiveActor] := DataDirectory[ActiveActor] + '\';
++    If DataDirectory[ActiveActor][Length(DataDirectory[ActiveActor])] <> PathDelim Then DataDirectory[ActiveActor] := DataDirectory[ActiveActor] + PathDelim;
+   End;
+ 
+   // see if DataDirectory is writable. If not, set OutputDirectory to the user's appdata
+@@ -673,7 +734,7 @@
+   if IsDirectoryWritable(DataDirectory[ActiveActor]) then begin
+     OutputDirectory[ActiveActor] := DataDirectory[ActiveActor];
+   end else begin
+-    ScratchPath := GetDefaultScratchDirectory + '\' + ProgramName + '\';
++    ScratchPath := GetDefaultScratchDirectory + PathDelim + ProgramName + PathDelim;
+     if not DirectoryExists(ScratchPath) then CreateDir(ScratchPath);
+     OutputDirectory[ActiveActor] := ScratchPath;
+   end;
+@@ -686,9 +747,11 @@
+   DefaultEditor    := DSS_Registry.ReadString('Editor', 'Notepad.exe' );
+   DefaultFontSize  := StrToInt(DSS_Registry.ReadString('ScriptFontSize', '8' ));
+   DefaultFontName  := DSS_Registry.ReadString('ScriptFontName', 'MS Sans Serif' );
++  {$IFNDEF FPC}
+   DefaultFontStyles := [];
+   If DSS_Registry.ReadBool('ScriptFontBold', TRUE)    Then DefaultFontStyles := DefaultFontStyles + [fsbold];
+   If DSS_Registry.ReadBool('ScriptFontItalic', FALSE) Then DefaultFontStyles := DefaultFontStyles + [fsItalic];
++  {$ENDIF}
+   DefaultBaseFreq  := StrToInt(DSS_Registry.ReadString('BaseFrequency', '60' ));
+   LastFileCompiled := DSS_Registry.ReadString('LastFile', '' );
+   TestDataDirectory :=   DSS_Registry.ReadString('DataPath', DataDirectory[ActiveActor]);
+@@ -704,8 +767,8 @@
+       DSS_Registry.WriteString('Editor',        DefaultEditor);
+       DSS_Registry.WriteString('ScriptFontSize', Format('%d',[DefaultFontSize]));
+       DSS_Registry.WriteString('ScriptFontName', Format('%s',[DefaultFontName]));
+-      DSS_Registry.WriteBool('ScriptFontBold',   (fsBold in DefaultFontStyles));
+-      DSS_Registry.WriteBool('ScriptFontItalic', (fsItalic in DefaultFontStyles));
++      DSS_Registry.WriteBool('ScriptFontBold', {$IFDEF FPC}False{$ELSE}(fsBold in DefaultFontStyles){$ENDIF});
++      DSS_Registry.WriteBool('ScriptFontItalic', {$IFDEF FPC}False{$ELSE}(fsItalic in DefaultFontStyles){$ENDIF});
+       DSS_Registry.WriteString('BaseFrequency', Format('%d',[Round(DefaultBaseFreq)]));
+       DSS_Registry.WriteString('LastFile',      LastFileCompiled);
+       DSS_Registry.WriteString('DataPath', DataDirectory[ActiveActor]);
+@@ -800,11 +863,13 @@
+ initialization
+ 
+ //***************Initialization for Parallel Processing*************************
+-
++{$IFNDEF LINUX}
+    CPU_Cores        :=  CPUCount;
+-
++{$ELSE}
++   CPU_Cores        :=  GetLogicalCpuCount; // FreePascal's CPUCount returns 1 on Linux
++{$ENDIF}
+    setlength(ActiveCircuit,CPU_Cores + 1);
+-   setlength(ActorProgress,CPU_Cores + 1);
++   {$IFNDEF FPC}setlength(ActorProgress,CPU_Cores + 1);{$ENDIF}
+    setlength(ActorCPU,CPU_Cores + 1);
+    setlength(ActorStatus,CPU_Cores + 1);
+    setlength(ActorProgressCount,CPU_Cores + 1);
+@@ -849,7 +914,7 @@
+    for ActiveActor := 1 to CPU_Cores do
+    begin
+     ActiveCircuit[ActiveActor]        :=  nil;
+-    ActorProgress[ActiveActor]        :=  nil;
++    {$IFNDEF FPC}ActorProgress[ActiveActor]        :=  nil;{$ENDIF}
+     ActiveDSSClass[ActiveActor]       :=  nil;
+     ActorStatus[ActiveActor]          :=  1;
+     EventStrings[ActiveActor]         := TStringList.Create;
+@@ -862,7 +927,11 @@
+    NumOfActors            :=  1;
+    ActorCPU[ActiveActor]  :=  0;
+    Parser[ActiveActor]    :=  Tparser.Create;
++   {$IFDEF FPC}
++   ProgramName      := 'OpenDSSCmd';  // for now...
++   {$ELSE}
+    ProgramName      := 'OpenDSS';
++   {$ENDIF}
+    DSSFileName      := GetDSSExeFile;
+    DSSDirectory     := ExtractFilePath(DSSFileName);
+ {
+@@ -931,22 +1000,43 @@
+ {$ELSE ! CPUX86}
+    VersionString    := 'Version ' + GetDSSVersion + ' (32-bit build)';
+ {$ENDIF}
+-   StartupDirectory := GetCurrentDir+'\';
+-   SetDataPath (GetDefaultDataDirectory + '\' + ProgramName + '\');
+ 
++   StartupDirectory := GetCurrentDir + PathDelim;
++   SetDataPath (GetDefaultDataDirectory + PathDelim + ProgramName + PathDelim);
++{$IFNDEF FPC}
+    DSS_Registry     := TIniRegSave.Create('\Software\' + ProgramName);
++{$ELSE}
++   DSS_Registry     := TIniRegSave.Create(DataDirectory[ActiveActor] + 'opendsscmd.ini');
++{$ENDIF}
+ 
+    AuxParser        := TParser.Create;
+-   DefaultEditor    := 'NotePad';
+-   DefaultFontSize  := 8;
+-   DefaultFontName  := 'MS Sans Serif';
+ 
+-   NoFormsAllowed   := FALSE;
++   {$IFDEF Darwin}
++      DefaultEditor   := 'open -t';
++      DefaultFontSize := 12;
++      DefaultFontName := 'Geneva';
++   {$ENDIF}
++   {$IFDEF Linux}
++      DefaultEditor   := 'xdg-open';
++      DefaultFontSize := 10;
++      DefaultFontName := 'Arial';
++   {$ENDIF}
++   {$IF (defined(Windows) or defined(MSWindows))}
++      DefaultEditor   := 'NotePad.exe';
++      DefaultFontSize := 8;
++      DefaultFontName := 'MS Sans Serif';
++   {$ENDIF}
+ 
++   {$IFNDEF FPC}NoFormsAllowed   := FALSE;{$ENDIF}
++
+    LogQueries       := FALSE;
+    QueryLogFileName := '';
+    UpdateRegistry   := TRUE;
++   {$IFDEF FPC}
++   CPU_Freq := 1000; // until we can query it
++   {$ELSE}
+    QueryPerformanceFrequency(CPU_Freq);
++   {$ENDIF}
+ 
+ //   YBMatrix.Start_Ymatrix_Critical;   // Initializes the critical segment for the YMatrix class
+ 
+Index: Parallel_Version/Source/Common/ExportResults.pas
+===================================================================
+--- Parallel_Version/Source/Common/ExportResults.pas	(revision 2134)
++++ Parallel_Version/Source/Common/ExportResults.pas	(working copy)
+@@ -33,7 +33,7 @@
+ Procedure ExportOverloads(FileNm:String);
+ Procedure ExportUnserved(FileNm:String; UE_Only:Boolean);
+ Procedure ExportYprim(FileNm:String);
+-Procedure ExportY(FileNm:String);
++Procedure ExportY(FileNm:String; TripletOpt:Boolean);
+ Procedure ExportSeqZ(FileNm:String);
+ Procedure ExportBusCoords(FileNm:String);
+ Procedure ExportLosses(FileNm:String);
+@@ -66,7 +66,7 @@
+ 
+ IMPLEMENTATION
+ 
+-Uses uComplex,  Arraydef, System.sysutils,   Circuit, DSSClassDefs, DSSGlobals,
++Uses uComplex,  Arraydef, sysutils,   Circuit, DSSClassDefs, DSSGlobals,
+      uCMatrix,  solution, CktElement, Utilities, Bus, MathUtil, DSSClass,
+      PDElement, PCElement, Generator,  Sensor, Load, RegControl, Transformer,
+      ParserDel, Math, Ymatrix, LineGeometry, WireData, LineCode, XfmrCode, NamedObject,
+@@ -85,7 +85,7 @@
+   Nterm := pElem.Nterms;
+   k:=0;
+   BusName := (StripExtension(pElem.FirstBus));
+-  Write(F, System.Sysutils.Format('%s.%s',[pElem.DSSClassName, pElem.Name]));
++  Write(F, Format('%s.%s',[pElem.DSSClassName, pElem.Name]));
+ 
+ 
+   Write(F, Format(',%d',[NTerm]));
+@@ -1498,7 +1498,7 @@
+    { Solve for Fault Injection Currents}
+ 
+              YFault := TcMatrix.CreateMatrix(NumNodesThisBus);
+-             Getmem(VFault, Sizeof( VFault^[1])* NumNodesThisBus);
++             Getmem(VFault, Sizeof(Complex)* NumNodesThisBus);
+ 
+              {Build YscTemp}
+ 
+@@ -2583,7 +2583,7 @@
+ End;
+ 
+ // illustrate retrieval of System Y using compressed column format
+-Procedure ExportY(FileNm:String);
++Procedure ExportY(FileNm:String; TripletOpt:Boolean);
+ 
+ {Exports System Y Matrix in Node Order}
+ 
+@@ -2590,6 +2590,7 @@
+ Var
+     F                :TextFile;
+     i,j,p            :LongWord;
++    col,row          :LongWord;
+     hY               :NativeUInt;
+     nBus, nNZ        :LongWord;
+     ColPtr, RowIdx   :array of LongWord;
+@@ -2613,43 +2614,60 @@
+      Assignfile(F,FileNm);
+      ReWrite(F);
+ 
+-     SetLength (ColPtr, nBus + 1);
+-     SetLength (RowIdx, nNZ);
+-     SetLength (cVals, nNZ);
+-     GetCompressedMatrix(hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
++     if TripletOpt then begin
++       SetLength (ColPtr, nNZ);
++       SetLength (RowIdx, nNZ);
++       SetLength (cVals, nNZ);
++       GetTripletMatrix (hY, nNZ, @RowIdx[0], @ColPtr[0], @cVals[0]);
++       Writeln(F, 'Row,Col,G,B');
++       for i := 0 to nNZ - 1 do begin
++         col := ColPtr[i] + 1;
++         row := RowIdx[i] + 1;
++         if row >= col then begin
++           re := cVals[i].re;
++           im := cVals[i].im;
++           Writeln (F, Format('%d,%d,%.10g,%.10g', [row, col, re, im]));
++         end;
++       end;
++     end else begin
++       SetLength (ColPtr, nBus + 1);
++       SetLength (RowIdx, nNZ);
++       SetLength (cVals, nNZ);
++       GetCompressedMatrix (hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
+ 
+-     {Write out fully qualified Bus Names}
+-      With ActiveCircuit[ActiveActor] Do Begin
++       {Write out fully qualified Bus Names}
++        With ActiveCircuit[ActiveActor] Do Begin
+ 
+-        Writeln(F, Format('%d, ',[NumNodes]));
+-(*        For i := 1 to NumNodes DO BEGIN
+-           j :=  MapNodeToBus^[i].BusRef;
+-           Write(F, Format('%s.%-d, +j,',[BusList.Get(j), MapNodeToBus^[i].NodeNum]));
+-        END;
+-        Writeln(F);
+-*)
+-        For i := 1 to NumNodes Do Begin
+-           j :=  MapNodeToBus^[i].BusRef;
+-           Write(F, Format('"%s.%-d", ',[Uppercase(BusList.Get(j)), MapNodeToBus^[i].NodeNum]));
+-           For j := 1 to NumNodes Do Begin
+-              re := 0.0;
+-              im := 0.0;
+-              // search for a non-zero element [i,j]
+-              //  DSS indices are 1-based, KLU indices are 0-based
+-              for p := ColPtr[j-1] to ColPtr[j] - 1 do begin
+-                if RowIdx[p] + 1 = i then begin
+-                  re := cVals[p].re;
+-                  im := cVals[p].im;
++          Writeln(F, Format('%d, ',[NumNodes]));
++  (*        For i := 1 to NumNodes DO BEGIN
++             j :=  MapNodeToBus^[i].BusRef;
++             Write(F, Format('%s.%-d, +j,',[BusList.Get(j), MapNodeToBus^[i].NodeNum]));
++          END;
++          Writeln(F);
++  *)
++          For i := 1 to NumNodes Do Begin
++             j :=  MapNodeToBus^[i].BusRef;
++             Write(F, Format('"%s.%-d", ',[Uppercase(BusList.Get(j)), MapNodeToBus^[i].NodeNum]));
++             For j := 1 to NumNodes Do Begin
++                re := 0.0;
++                im := 0.0;
++                // search for a non-zero element [i,j]
++                //  DSS indices are 1-based, KLU indices are 0-based
++                for p := ColPtr[j-1] to ColPtr[j] - 1 do begin
++                  if RowIdx[p] + 1 = i then begin
++                    re := cVals[p].re;
++                    im := cVals[p].im;
++                  end;
+                 end;
+-              end;
+-              Write(F, Format('%-13.10g, +j %-13.10g,', [re, im]));
+-           End;
+-           Writeln(F);
++                Write(F, Format('%-13.10g, +j %-13.10g,', [re, im]));
++             End;
++             Writeln(F);
++          End;
++
+         End;
++     end;    
+ 
+-      End;
+ 
+-
+      GlobalResult := FileNm;
+ 
+   Finally
+Index: Parallel_Version/Source/Common/KLUSolve.pas
+===================================================================
+--- Parallel_Version/Source/Common/KLUSolve.pas	(revision 2134)
++++ Parallel_Version/Source/Common/KLUSolve.pas	(working copy)
+@@ -1,63 +1,72 @@
+ unit KLUSolve;
+ 
++{$IFDEF FPC}{$MODE Delphi}{$ENDIF}
++
++{$MACRO ON}
++{$IFDEF Windows}
++{$DEFINE KLU_CALL:=stdcall;external KLULib}
++{$ELSE} // Darwin and Unix
++{$linklib klusolve}
++{$DEFINE KLU_CALL:=cdecl;external}
++{$ENDIF}
++
+ interface
+ 
+ uses
+-    uComplex, DSSGlobals, Windows,variants, sysutils;
++    uComplex;
+ 
+ const
++{$IFNDEF FPC}
+   KLULib = 'klusolve.dll';
+-{
+-  procedure Create_KLU;
+-  procedure DestroyAll_KLU;
+-
+-}
+-
++{$ELSE}
++  KLULib = 'libklusolve';
++{$ENDIF}
++    
+ // in general, KLU arrays are 0-based
+ // function calls return 0 to indicate failure, 1 for success
+ 
+ // returns the non-zero handle of a new sparse matrix, if successful
+ // must call DeleteSparseSet on the valid handle when finished
+-FUNCTION NewSparseSet(nBus:LongWord):NativeUInt;stdcall;external KLULib;
++FUNCTION NewSparseSet(nBus:LongWord):NativeUInt;KLU_CALL;
+ // return 1 for success, 0 for invalid handle
+-FUNCTION DeleteSparseSet(id:NativeUInt):LongWord;stdcall;external KLULib;
++FUNCTION DeleteSparseSet(id:NativeUInt):LongWord;KLU_CALL;
+ 
+ // return 1 for success, 2 for singular, 0 for invalid handle
+ // factors matrix if needed
+-FUNCTION SolveSparseSet(id:NativeUInt; x,b:pComplexArray):LongWord;stdcall;external KLULib;
++FUNCTION SolveSparseSet(id:NativeUInt; x,b:pComplexArray):LongWord;KLU_CALL;
+ 
+ // return 1 for success, 0 for invalid handle
+-FUNCTION ZeroSparseSet(id:NativeUInt):LongWord;stdcall;external KLULib;
++FUNCTION ZeroSparseSet(id:NativeUInt):LongWord;KLU_CALL;
+ 
+ // return 1 for success, 2 for singular, 0 for invalid handle
+ // FactorSparseMatrix does no extra work if the factoring was done previously
+-FUNCTION FactorSparseMatrix(id:NativeUInt):LongWord;stdcall;external KLULib;
++FUNCTION FactorSparseMatrix(id:NativeUInt):LongWord;KLU_CALL;
+ 
+ // These "Get" functions for matrix information all return 1 for success, 0 for invalid handle
+ // Res is the matrix order (number of nodes)
+-FUNCTION GetSize(id:NativeUInt; Res: pLongWord):LongWord;stdcall;external KLULib;
++FUNCTION GetSize(id:NativeUInt; Res: pLongWord):LongWord;KLU_CALL;
+ 
+ // the following function results are not known prior to factoring
+ // Res is the number of floating point operations to factor
+-FUNCTION GetFlops(id:NativeUInt; Res: pDouble):LongWord;stdcall;external KLULib;
++FUNCTION GetFlops(id:NativeUInt; Res: pDouble):LongWord;KLU_CALL;
+ // Res is number of non-zero entries in the original matrix
+-FUNCTION GetNNZ(id:NativeUInt; Res: pLongWord):LongWord;stdcall;external KLULib;
++FUNCTION GetNNZ(id:NativeUInt; Res: pLongWord):LongWord;KLU_CALL;
+ // Res is the number of non-zero entries in factored matrix
+-FUNCTION GetSparseNNZ(id:NativeUInt; Res: pLongWord):LongWord;stdcall;external KLULib;
++FUNCTION GetSparseNNZ(id:NativeUInt; Res: pLongWord):LongWord;KLU_CALL;
+ // Res is a column number corresponding to a singularity, or 0 if not singular
+-FUNCTION GetSingularCol(id:NativeUInt; Res: pLongWord):LongWord;stdcall;external KLULib;
++FUNCTION GetSingularCol(id:NativeUInt; Res: pLongWord):LongWord;KLU_CALL;
+ // Res is the pivot element growth factor
+-FUNCTION GetRGrowth(id:NativeUInt; Res: pDouble):LongWord;stdcall;external KLULib;
++FUNCTION GetRGrowth(id:NativeUInt; Res: pDouble):LongWord;KLU_CALL;
+ // Res is aquick estimate of the reciprocal of condition number
+-FUNCTION GetRCond(id:NativeUInt; Res: pDouble):LongWord;stdcall;external KLULib;
++FUNCTION GetRCond(id:NativeUInt; Res: pDouble):LongWord;KLU_CALL;
+ // Res is a more accurate estimate of condition number
+-FUNCTION GetCondEst(id:NativeUInt; Res: pDouble):LongWord;stdcall;external KLULib;
++FUNCTION GetCondEst(id:NativeUInt; Res: pDouble):LongWord;KLU_CALL;
+ 
+ // return 1 for success, 0 for invalid handle or a node number out of range
+-FUNCTION AddPrimitiveMatrix(id:NativeUInt; nOrder:LongWord; Nodes: pLongWord; Mat: pComplex):LongWord;stdcall;external KLULib;
++FUNCTION AddPrimitiveMatrix(id:NativeUInt; nOrder:LongWord; Nodes: pLongWord; Mat: pComplex):LongWord;KLU_CALL;
+ 
+ // Action = 0 (close), 1 (rewrite) or 2 (append)
+-FUNCTION SetLogFile(Path: pChar; Action:LongWord):LongWord;stdcall;external KLULib;
++FUNCTION SetLogFile(Path: pChar; Action:LongWord):LongWord;KLU_CALL;
+ 
+ // fill sparse matrix in compressed column form
+ // return 1 for success, 0 for invalid handle, 2 for invalid array sizes
+@@ -64,22 +73,22 @@
+ // pColP must be of length nColP == nBus + 1
+ // pRowIdx and pMat of length nNZ, which
+ //    must be at least the value returned by GetNNZ
+-FUNCTION GetCompressedMatrix(id:NativeUInt; nColP, nNZ:LongWord; pColP, pRowIdx: pLongWord; Mat: pComplex):LongWord;stdcall;external KLULib;
++FUNCTION GetCompressedMatrix(id:NativeUInt; nColP, nNZ:LongWord; pColP, pRowIdx: pLongWord; Mat: pComplex):LongWord;KLU_CALL;
+ 
+ // fill sparse matrix in triplet form
+ // return 1 for success, 0 for invalid handle, 2 for invalid array sizes
+ // pRows, pCols, and Mat must all be of length nNZ
+-FUNCTION GetTripletMatrix(id:NativeUInt; nNZ:LongWord; pRows, pCols: pLongWord; Mat: pComplex):LongWord;stdcall;external KLULib;
++FUNCTION GetTripletMatrix(id:NativeUInt; nNZ:LongWord; pRows, pCols: pLongWord; Mat: pComplex):LongWord;KLU_CALL;
+ 
+ // returns number of islands >= 1 by graph traversal
+ // pNodes contains the island number for each node
+-FUNCTION FindIslands(id:NativeUInt; nOrder:LongWord; pNodes: pLongWord):LongWord;stdcall;external KLULib;
++FUNCTION FindIslands(id:NativeUInt; nOrder:LongWord; pNodes: pLongWord):LongWord;KLU_CALL;
+ 
+ // AddMatrixElement is deprecated, use AddPrimitiveMatrix instead
+-FUNCTION AddMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;stdcall;external KLULib;
++FUNCTION AddMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;KLU_CALL;
+ 
+ // GetMatrixElement is deprecated, use GetCompressedMatrix or GetTripletMatrix
+-FUNCTION GetMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;stdcall;external KLULib;
++FUNCTION GetMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;KLU_CALL;
+ 
+ Implementation
+ {
+Index: Parallel_Version/Source/Common/ShowResults.pas
+===================================================================
+--- Parallel_Version/Source/Common/ShowResults.pas	(revision 2134)
++++ Parallel_Version/Source/Common/ShowResults.pas	(working copy)
+@@ -46,8 +46,8 @@
+ Uses uComplex,  Arraydef,  sysutils, Circuit, DSSClass, DSSClassDefs, DSSGlobals,
+      uCMatrix,  solution,  CktElement, Utilities, Bus, MathUtil,
+      PDElement, PCElement, Generator, Transformer, EnergyMeter, Load, RegControl,
+-     ParserDel, CktTree,   DSSForms, Math, Line, LineUnits, LineGeometry, YMatrix,
+-     SwtControl, KLUSolve;
++     ParserDel, CktTree,   {$IFDEF FPC} CmdForms,{$ELSE} DSSForms,{$ENDIF}
++     Math, Line, LineUnits, LineGeometry, YMatrix, SwtControl, KLUSolve;
+ 
+ VAR
+    MaxBusNameLength :Integer;
+@@ -474,7 +474,7 @@
+   Nterm := pElem.Nterms;
+   
+   Try
+-    Getmem(cBuffer, sizeof(cBuffer^[1])*Ncond*Nterm);
++    Getmem(cBuffer, Sizeof(Complex)*NCond*Nterm);
+     pElem.GetCurrents(cBuffer, ActiveActor);
+     k:=0;
+     FromBus := Pad(StripExtension(pElem.FirstBus), MaxBusNameLength);
+@@ -1643,7 +1643,7 @@
+            {Bus Norton Equivalent Current, Isc has been previously computed}
+            With Buses^[iBus] Do Begin
+              YFault := TcMatrix.CreateMatrix(NumNodesThisBus);
+-             Getmem(VFault, Sizeof(VFault^[1])* NumNodesThisBus);
++             Getmem(VFault, Sizeof(Complex)* NumNodesThisBus);
+ 
+              GFault := Cmplx(10000.0, 0.0);
+ 
+Index: Parallel_Version/Source/Common/Solution.pas
+===================================================================
+--- Parallel_Version/Source/Common/Solution.pas	(revision 2134)
++++ Parallel_Version/Source/Common/Solution.pas	(working copy)
+@@ -34,6 +34,8 @@
+          0-th element is alway ground(complex zero volts).
+  8-14-06 Revised power flow initialization; removed forward/backward sweep
+ 
++ 9-14-16 Added SampleTheMeters Flag to allow sampling energy meters in Time and DutyCycle mode
++
+ }
+ 
+ interface
+@@ -47,13 +49,20 @@
+     Dynamics,
+     EnergyMeter,
+     SysUtils,
++    Parallel_Lib,
++    CktElement,
++{$IFDEF WINDOWS}
++    Windows,
++{$ELSE}    
++    BaseUnix, Unix,
++{$ENDIF}
++{$IFDEF FPC}Classes, Strings{$ELSE}
+     System.Diagnostics,
+     System.TimeSpan,
+     System.Classes,
+-    System.SyncObjs,
+-    Parallel_Lib,
+-    Windows,
+-    CktElement;
++    System.SyncObjs
++{$ENDIF}    
++    ;
+ 
+ CONST
+ 
+@@ -159,12 +168,14 @@
+        LoadsNeedUpdating :Boolean;
+        MaxControlIterations :Integer;
+        MaxError :Double;
+-       MaxIterations :Integer;
++       MaxIterations,
++       MinIterations :Integer;
+        MostIterationsDone :Integer;
+        NodeVbase :pDoubleArray;
+        NumberOfTimes :Integer;  // Number of times to solve
+        PreserveNodeVoltages:Boolean;
+        RandomType :Integer;     //0 = none; 1 = gaussian; 2 = UNIFORM
++       SampleTheMeters : Boolean;  // Flag to allow sampling of EnergyMeters
+        SeriesYInvalid :Boolean;
+        SolutionCount :Integer;  // Counter incremented for each solution
+        SolutionInitialized :Boolean;
+@@ -284,13 +295,16 @@
+ implementation
+ 
+ USES  SolutionAlgs,
+-      DSSClassDefs, DSSGlobals, DSSForms, PDElement,  ControlElem, Fault,
++      DSSClassDefs, DSSGlobals, {$IFDEF FPC} CmdForms,{$ELSE} DSSForms, {$ENDIF} PDElement,  ControlElem, Fault,
+       Executive, AutoAdd,  YMatrix, Load,CKtTree,
+-      ParserDel, Generator,Capacitor,SHELLAPI,
++      ParserDel, Generator,Capacitor,
++{$IFDEF WINDOWS}
++      SHELLAPI,
++{$ENDIF}      
+ {$IFDEF DLL_ENGINE}
+       ImplGlobals,  // to fire events
+ {$ENDIF}
+-      Math,  Circuit, Utilities, KLUSolve, ScriptEdit, PointerList, Line,
++      Math,  Circuit, Utilities, KLUSolve, {$IFNDEF FPC}ScriptEdit,{$ENDIF} PointerList, Line,
+       Transformer, Reactor
+ ;
+ 
+@@ -385,10 +399,13 @@
+     VoltageBaseChanged := TRUE;  // Forces Building of convergence check arrays
+ 
+     MaxIterations    := 15;
++    MinIterations    := 2;
+     MaxControlIterations  := 10;
+     ConvergenceTolerance := 0.0001;
+     ConvergedFlag := FALSE;
+ 
++    SampleTheMeters := FALSE;  // Flag to tell solution algorithm to sample the Energymeters
++
+     IsDynamicModel   := FALSE;
+     IsHarmonicModel  := FALSE;
+ 
+@@ -488,9 +505,10 @@
+ 
+ // ===========================================================================================
+ PROCEDURE TSolutionObj.Solve(ActorID : Integer);
++{$IFNDEF FPC}
+ var
+-  ScriptEd  : TScriptEdit;
+-
++ScriptEd  : TScriptEdit;
++{$ENDIF}
+ Begin
+      ActiveCircuit[ActorID].Issolved := False;
+      SolutionWasAttempted[ActorID]   := TRUE;
+@@ -529,7 +547,7 @@
+ {$ENDIF}
+ 
+     {CheckFaultStatus;  ???? needed here??}
+-     QueryPerformanceCounter(GStartTime);
++     {$IFNDEF FPC}QueryPerformanceCounter(GStartTime);{$ENDIF}
+ {
+      Case Dynavars.SolutionMode OF
+          SNAPSHOT:     SolveSnap;
+@@ -559,7 +577,7 @@
+       ActorHandle[ActorID].Terminate;
+       ActorHandle[ActorID].Free;
+     end;
+-    ActorHandle[ActorID] :=  TSolver.Create(false,ActorCPU[ActorID],ActorID,ScriptEd.UpdateSummaryForm);
++    ActorHandle[ActorID] :=  TSolver.Create(false,ActorCPU[ActorID],ActorID,{$IFNDEF FPC}ScriptEd.UpdateSummaryForm{$ELSE}nil{$ENDIF});
+     if not Parallel_enabled then
+       ActorHandle[ActorID].WaitFor; // If the parallel features are not active it will work as the classic version
+ Except
+@@ -592,9 +610,11 @@
+         Else If Vmag <> 0.0         Then ErrorSaved^[i] := Abs(1.0 - VmagSaved^[i]/Vmag);
+ 
+         VMagSaved^[i] := Vmag;  // for next go-'round
+-
++{$IFNDEF FPC}
+         MaxError := Max(MaxError, ErrorSaved^[i]);  // update max error
+-
++{$ELSE}
++       if ErrorSaved^[i] > MaxError Then MaxError := ErrorSaved^[i]; // TODO - line above used to compile in FPC
++{$ENDIF}
+     End;
+ 
+ 
+@@ -807,7 +827,7 @@
+        SolveSystem(NodeV, ActorID);
+        LoadsNeedUpdating := FALSE;
+ 
+-   Until (Converged(ActorID) and (Iteration > 1)) or (Iteration >= MaxIterations);
++   Until (Converged(ActorID) and (Iteration >= MinIterations)) or (Iteration >= MaxIterations);
+ 
+ End;
+ 
+@@ -874,7 +894,7 @@
+                 im := im - dV^[i].im;
+            End;
+ 
+-       UNTIL (Converged(ActorID) and (Iteration > 1)) or (Iteration >= MaxIterations);
++       UNTIL (Converged(ActorID) and (Iteration >= MinIterations)) or (Iteration >= MaxIterations);
+     End;
+ End;
+ 
+@@ -1043,7 +1063,7 @@
+ Begin
+    SnapShotInit(ActorID);
+    TotalIterations    := 0;
+-   QueryPerformanceCounter(SolveStartTime);
++   {$IFNDEF FPC}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
+    REPEAT
+ 
+        Inc(ControlIteration);
+@@ -1072,7 +1092,7 @@
+ {$IFDEF DLL_ENGINE}
+    Fire_StepControls;
+ {$ENDIF}
+-   QueryPerformanceCounter(SolveEndtime);
++{$IFNDEF FPC}QueryPerformanceCounter(SolveEndTime);{$ENDIF}
+    Solve_Time_Elapsed := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
+    Iteration := TotalIterations;  { so that it reports a more interesting number }
+ 
+@@ -1085,7 +1105,7 @@
+    Result := 0;
+ 
+    LoadsNeedUpdating := TRUE;  // Force possible update of loads and generators
+-   QueryPerformanceCounter(SolveStartTime);
++   {$IFNDEF FPC}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
+ 
+    If SystemYChanged THEN
+    begin
+@@ -1107,7 +1127,7 @@
+        ConvergedFlag := TRUE;
+    End;
+ 
+-   QueryPerformanceCounter(SolveEndtime);
++   {$IFNDEF FPC}QueryPerformanceCounter(SolveEndTime);{$ENDIF}
+    Solve_Time_Elapsed  := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
+    Total_Time_Elapsed  :=  Total_Time_Elapsed + Solve_Time_Elapsed;
+    Iteration := 1;
+@@ -1594,6 +1614,7 @@
+ {*******************************************************************************
+ *           Routine created to empty a recently created folder                 *
+ ********************************************************************************}
++{$IFDEF WINDOWS}
+ procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
+ var
+   SourceLst: string;
+@@ -1601,7 +1622,7 @@
+ begin
+   FillChar(FOS, SizeOf(FOS), 0);
+   FOS.wFunc := FO_DELETE;
+-  SourceLst := Directory + '\' + FileMask + #0;
++  SourceLst := Directory + PathDelim + FileMask + #0;
+   FOS.pFrom := PChar(SourceLst);
+   if not DelSubDirs then
+     FOS.fFlags := FOS.fFlags OR FOF_FILESONLY;
+@@ -1611,6 +1632,66 @@
+   FOS.fFlags := FOS.fFlags OR FOF_SILENT;
+   SHFileOperation(FOS);
+ end;
++{$ENDIF}
++{$IFDEF UNIX}
++procedure DeltreeDir(Directory: string);
++var 
++  Info: TSearchRec;
++Begin
++  If FindFirst(Directory + PathDelim + '*', faAnyFile and faDirectory, Info) = 0 then
++  begin
++    Repeat
++      With Info do
++      begin
++        If (name = '.') or (name = '..') then continue;
++        If (Attr and faDirectory) = faDirectory then
++        begin
++          DeltreeDir(Directory + PathDelim + Name)
++        end
++        else
++        begin
++          DeleteFile(Directory + PathDelim + Name);
++        end;
++      end;
++    Until FindNext(info) <> 0;
++  end;    
++  rmdir(Directory);
++end;
++
++procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
++var 
++  Info: TSearchRec;
++  flags: LongInt;
++Begin
++  if DelSubDirs then
++    flags := faAnyFile and faDirectory
++  else
++    flags := faAnyFile;
++  
++  If FindFirst(Directory + PathDelim + FileMask, flags, Info) = 0 then
++  begin
++    Repeat
++      With Info do
++      begin
++        if (name = '.') or (name = '..') then continue;
++        If (Attr and faDirectory) = faDirectory then
++        begin
++          try
++            DeltreeDir(Directory + PathDelim + Name)
++          except
++            Writeln('Could not remove directory ' + Directory + PathDelim + Name);
++          end;
++        end
++        else
++        begin
++          DeleteFile(Directory + PathDelim + Name);
++        end;
++      end;
++    Until FindNext(info) <> 0;
++  end;
++end;
++{$ENDIF}
++
+ {*******************************************************************************
+ *   This routine evaluates if the current location is the best or if its       *
+ *   Necessary to move back one PDE just to cover a wider area                  *
+@@ -1679,7 +1760,7 @@
+   i         :=  i - 1;
+   while flag do
+   begin
+-    if Fileroot[i] = '\' then flag  :=  False;
++    if Fileroot[i] = PathDelim then flag  :=  False;
+     i         :=  i - 1;
+     if i  < 0 then flag :=  False;
+   end;
+@@ -1783,7 +1864,8 @@
+      Writeln(F, 'Set circuit=',  ActiveCircuit[ActiveActor].Name);
+      Writeln(F, 'Set editor=',   DefaultEditor);
+      Writeln(F, 'Set tolerance=', Format('%-g', [ConvergenceTolerance]));
+-     Writeln(F, 'Set maxiter=',   MaxIterations:0);
++     Writeln(F, 'Set maxiterations=',   MaxIterations:0);
++     Writeln(F, 'Set miniterations=',   MinIterations:0);                                                         
+      Writeln(F, 'Set loadmodel=', GetLoadModel);
+ 
+      Writeln(F, 'Set loadmult=',    Format('%-g', [ActiveCircuit[ActiveActor].LoadMultiplier]));
+@@ -2040,6 +2122,7 @@
+ 
+    SolutionInitialized := FALSE;   // reinitialize solution when mode set (except dynamics)
+    PreserveNodeVoltages := FALSE;  // don't do this unless we have to
++   SampleTheMeters := FALSE;                         
+ 
+    // Reset defaults for solution modes
+    Case Dynavars.SolutionMode of
+@@ -2048,6 +2131,7 @@
+        DAILYMODE:     Begin
+                            DynaVars.h    := 3600.0;
+                            NumberOfTimes := 24;
++                           SampleTheMeters := TRUE;                        
+                       End;
+        SNAPSHOT:      Begin
+                            IntervalHrs   := 1.0;
+@@ -2057,6 +2141,7 @@
+                            IntervalHrs   := 1.0;
+                            DynaVars.h    := 3600.0;
+                            NumberOfTimes := 8760;
++                           SampleTheMeters := TRUE;                        
+                       End;
+        DUTYCYCLE:     Begin
+                            DynaVars.h  := 1.0;
+@@ -2073,9 +2158,9 @@
+                            DynaVars.h    := 3600.0;
+                            NumberOfTimes := 1;  // just one time step per Solve call expected
+                       End;
+-       MONTECARLO1:   Begin IntervalHrs    := 1.0;  End;
+-       MONTECARLO2:   Begin DynaVars.h     := 3600.0;   End;
+-       MONTECARLO3:   Begin IntervalHrs    := 1.0;   End;
++       MONTECARLO1:   Begin IntervalHrs    := 1.0;  SampleTheMeters := TRUE; End;
++       MONTECARLO2:   Begin DynaVars.h     := 3600.0;  SampleTheMeters := TRUE; End;
++       MONTECARLO3:   Begin IntervalHrs    := 1.0; SampleTheMeters := TRUE;  End;
+        MONTEFAULT:    Begin IsDynamicModel := TRUE;  END;
+        FAULTSTUDY:    Begin
+                             IsDynamicModel := TRUE;
+@@ -2083,10 +2168,12 @@
+        LOADDURATION1: Begin
+                            DynaVars.h := 3600.0;
+                            ActiveCircuit[ActiveActor].TrapezoidalIntegration := TRUE;
++                           SampleTheMeters := TRUE;                        
+                       End;
+        LOADDURATION2: Begin
+                            DynaVars.intHour := 1;
+                            ActiveCircuit[ActiveActor].TrapezoidalIntegration := TRUE;
++                           SampleTheMeters := TRUE;                        
+                       End;
+        AUTOADDFLAG :  Begin
+                            IntervalHrs := 1.0;
+@@ -2390,7 +2477,7 @@
+ // Update Loop time is called from end of time step cleanup
+ // Timer is based on beginning of SolveSnap time
+ 
+-   QueryPerformanceCounter(LoopEndtime);
++   {$IFNDEF FPC}QueryPerformanceCounter(LoopEndTime);{$ENDIF}
+    Step_Time_Elapsed  := ((LoopEndtime-SolveStartTime)/CPU_Freq)*1000000;
+ 
+ end;
+@@ -2453,9 +2540,14 @@
+   FInfoProc       :=  CallBack;
+   FreeOnTerminate := False;
+   ActorID         :=  ID;
++{$IFNDEF UNIX}  
+   Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
++{$ELSE}
++  Parallel.Set_Process_Priority(FpGetpid(), REALTIME_PRIORITY_CLASS);
++{$ENDIF}  
+   Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
+   Parallel.Set_Thread_affinity(handle,local_CPU);
++
+ end;
+ 
+ {*******************************************************************************
+@@ -2465,7 +2557,7 @@
+ 
+ procedure TSolver.Execute;
+ var
+-  ScriptEd  : TScriptEdit;
++  {$IFNDEF FPC}ScriptEd  : TScriptEdit;{$ENDIF}
+   idx       : Integer;
+   begin
+     with ActiveCircuit[ActorID].Solution do
+@@ -2499,7 +2591,9 @@
+                DosimpleMsg('Unknown solution mode.', 481);
+            End;
+ 
++{$IFNDEF FPC}           
+         QueryPerformanceCounter(GEndTime);
++{$ENDIF}
+         Total_Solve_Time_Elapsed := ((GEndTime-GStartTime)/CPU_Freq)*1000000;
+         Total_Time_Elapsed := Total_Time_Elapsed + Total_Solve_Time_Elapsed;
+         ActorStatus[ActorID]  :=  1;
+Index: Parallel_Version/Source/Common/SolutionAlgs.pas
+===================================================================
+--- Parallel_Version/Source/Common/SolutionAlgs.pas	(revision 2134)
++++ Parallel_Version/Source/Common/SolutionAlgs.pas	(working copy)
+@@ -42,8 +42,9 @@
+ 
+ implementation
+ 
+-Uses ArrayDef, DSSGlobals, DSSForms,  Utilities, SysUtils, MathUtil, Math, Fault, uComplex, YMatrix,
+-     PCElement, Spectrum, Vsource, Isource, KLUSolve, System.Classes;
++Uses ArrayDef, DSSGlobals, {$IFDEF FPC}CmdForms,{$ELSE}DSSForms, System.Classes, {$ENDIF}
++     Utilities, SysUtils, MathUtil, Math, Fault, uComplex, YMatrix,
++     PCElement, Spectrum, Vsource, Isource, KLUSolve;
+ 
+ VAR ProgressCount:Integer;
+ 
+@@ -58,8 +59,12 @@
+ }
+ Begin
+     MonitorClass[ActorID].SampleAll(ActorID);
+-    EndOfTimeStepCleanup(ActorID);
+-    ActiveCircuit[ActorID].Solution.Increment_time;
++    With ActiveCircuit[ActorID].Solution Do Begin
++        If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID);   // Save Demand interval Files
++
++        EndOfTimeStepCleanup(ActorID);
++        Increment_time;
++    End;
+ End;
+ 
+ 
+@@ -119,7 +124,7 @@
+           IF PriceCurveObj <> NIL THEN PriceSignal := PriceCurveObj.GetPrice(dblHour);
+           SolveSnap(ActorID);
+           MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+-          EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
++          If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
+           EndOfTimeStepCleanup(ActorID);
+           ActorPctProgress[ActorID]  :=  (N*100) div NumberofTimes;
+ //          If (N mod Twopct)=0 Then ShowPctProgress((N*100) div NumberofTimes,ActorID);
+@@ -126,7 +131,7 @@
+       End;
+   Finally
+     MonitorClass[ActorID].SaveAll(ActorID);
+-    EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files    See DIFilesAreOpen Logic
++    // EnergyMeterClass[ActorID].CloseAllDIFiles;   // Save Demand interval Files    See DIFilesAreOpen Logic
+   End;
+  End;
+ End;
+@@ -164,7 +169,7 @@
+             IF PriceCurveObj<> NIL THEN PriceSignal := PriceCurveObj.GetPrice(dblHour);
+             SolveSnap(ActorID);
+             MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+-            EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
++            If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
+ 
+             EndOfTimeStepCleanup(ActorID);
+ 
+@@ -172,7 +177,7 @@
+ 
+     Finally
+       MonitorClass[ActorID].SaveAll(ActorID);
+-      EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
++      If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
+     End; {Try}
+    End;  {WITH}
+ End;
+@@ -213,7 +218,7 @@
+             IF PriceCurveObj<> NIL THEN PriceSignal := PriceCurveObj.GetPrice(dblHour);
+             SolveSnap(ActorID);
+             MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+-            EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
++            If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
+ 
+             EndOfTimeStepCleanup(ActorID);
+ 
+@@ -220,7 +225,7 @@
+         End;
+       Finally
+         MonitorClass[ActorID].SaveAll(ActorID);
+-        EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
++        If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
+       End;
+      End;  {WITH}
+ End;
+@@ -260,6 +265,7 @@
+             // Assume pricesignal stays constant for dutycycle calcs
+             SolveSnap(ActorID);
+             MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
++            If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID);                                                                                               
+             EndOfTimeStepCleanup(ActorID);
+ 
+             ActorPctProgress[ActorID] :=  (N*100) div NumberofTimes;
+@@ -267,6 +273,7 @@
+         End;
+       Finally
+         MonitorClass[ActorID].SaveAll(ActorID);
++        If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
+ //        ProgressHide(ActorID);
+       End;
+     End;
+@@ -387,7 +394,7 @@
+             Inc(DynaVars.intHour);
+             SolveSnap(ActorID);
+             MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+-            EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
++            If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
+             ActorPctProgress[ActorID] :=  (N*100) div NumberofTimes;
+ //            Show10PctProgress(N, NumberOfTimes, ActorID);
+         End
+@@ -399,6 +406,7 @@
+         End;
+      Finally
+         MonitorClass[ActorID].SaveAll(ActorID);
++        If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);
+ //        ProgressHide(ActorID);
+      End;
+    End;
+@@ -449,7 +457,7 @@
+             SolveSnap(ActorID);
+ 
+             MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+-            EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
++            If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
+ 
+             EndOfTimeStepCleanup(ActorID);
+ 
+@@ -467,7 +475,7 @@
+         End;
+       Finally
+         MonitorClass[ActorID].SaveAll(ActorID);
+-        EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
++        If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
+ //        ProgressHide(ActorID);
+       End;
+     End;
+@@ -515,7 +523,7 @@
+             SolveSnap(ActorID);
+ 
+             MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+-            EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
++            If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
+ 
+             ActorPctProgress[ActorID] :=  (N*100) div NumberofTimes;
+ //            Show10PctProgress(N, NumberOfTimes, ActorID);
+@@ -529,7 +537,7 @@
+         End;
+       Finally
+         MonitorClass[ActorID].SaveAll(ActorID);
+-        EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
++        If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
+ //        ProgressHide(ActorID);
+       End;
+     End; {WITH}
+@@ -591,7 +599,7 @@
+               SolveSnap(ActorID);
+ 
+               MonitorClass[ActorID].SampleAll(ActorID);     // Make all monitors take a sample
+-              EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
++              If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
+ 
+               EndOfTimeStepCleanup(ActorID);
+ 
+@@ -612,7 +620,7 @@
+       End;
+     Finally
+       MonitorClass[ActorID].SaveAll(ActorID);
+-      EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
++      If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
+ //      ProgressHide(ActorID);
+     End;
+  End; {WITH ActiveCircuit[ActiveActor]}
+@@ -670,7 +678,7 @@
+         SolveSnap(ActorID);
+ 
+         MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+-        EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
++        If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
+ 
+         EndOfTimeStepCleanup(ActorID);
+ 
+@@ -677,7 +685,7 @@
+       End;
+     Finally
+       MonitorClass[ActorID].SaveAll(ActorID);
+-      EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
++      If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
+     End;
+   End; {WITH ActiveCircuit[ActiveActor]}
+ 
+@@ -984,7 +992,7 @@
+ 
+     {Mark Spectra being used}
+         {Check loads and generators - these are assumed to be at fundamental frequency}
+-    SpectrumInUse := AllocMem(SizeOf(SpectruminUse^[1])*SpectrumClass[ActorID].ElementCount);  //Allocate and zero
++    SpectrumInUse := AllocMem(SizeOf(Integer)*SpectrumClass[ActorID].ElementCount);  //Allocate and zero
+     WITH ActiveCircuit[ActorID] Do Begin
+         p := PCelements.First;
+         WHILE p <> NIL Do Begin
+Index: Parallel_Version/Source/Common/TOPExport.pas
+===================================================================
+--- Parallel_Version/Source/Common/TOPExport.pas	(revision 2134)
++++ Parallel_Version/Source/Common/TOPExport.pas	(working copy)
+@@ -71,21 +71,33 @@
+    TOP_Object      :Variant;  // For Top Automation
+ 
+ implementation
+-
+-Uses ComObj, SysUtils, AnsiStrings, Dialogs, ActiveX, DSSGlobals;
++{$IFNDEF FPC}
++Uses ComObj, AnsiStrings, SysUtils, Dialogs, ActiveX, DSSGlobals;
++{$ELSE}
++Uses SysUtils, DSSGlobals, CmdForms, Variants;
++{$ENDIF}
+ Var
+   TOP_Inited:Boolean;
+ 
++{$IFNDEF FPC}
++function StrCopy(Dest: PAnsiChar; const Source: PAnsiChar): PAnsiChar; inline;
++begin
++  Result := System.AnsiStrings.StrCopy(Dest, Source);
++end;
++{$ENDIF}
++
+ Procedure StartTop;
+ 
+ Begin
++{$IFNDEF FPC}
+   TOP_Object := CreateOleObject('TOP2000.MAIN');
+   TOP_Inited := TRUE;
++{$ENDIF}
+ End;
+ 
+ Procedure TOutFile32.SendToTop;
+ Begin
+-
++{$IFNDEF FPC}
+   TRY
+      If NOT TOP_Inited Then StartTop;
+ 
+@@ -106,11 +118,14 @@
+ 
+         On E:Exception Do ShowMessage('Error Connecting to TOP: '+E.Message);
+   End;
+-
++{$ELSE}
++  DSSInfoMessageDlg ('TOP Export (COM Interface) is not supported in FPC version');
++{$ENDIF}
+ End;
+ 
+ 
+ 
++
+ Procedure TOutFile32.Open;
+ BEGIN
+      AssignFile(Fout,Fname);
+@@ -121,7 +136,7 @@
+ Procedure TOutFile32.Close;
+ BEGIN
+ 
+-     System.CloseFile(Fout);  {Close the output file}
++     CloseFile(Fout);  {Close the output file}
+ 
+ END;
+ 
+@@ -158,7 +173,7 @@
+          IDXData := IDXCurrentNames + NCurrents * CurrNameSize;
+          IdxBaseData := 0;
+ 
+-         sysutils.StrCopy(Title1,pAnsichar(Title));
++         StrCopy(Title1,pAnsichar(Title));
+          Title2[0] := #0;
+          Title3[0] := #0;
+          Title4[0] := #0;
+@@ -183,13 +198,13 @@
+ 
+      If Header.NVoltages > 0 Then
+      For i:=0 to Vnames.Count-1 Do Begin
+-        Sysutils.StrCopy(Buf, pAnsichar(AnsiString(Vnames.Strings[i])));    // Assign string to a buffer
++        StrCopy(Buf, pAnsichar(AnsiString(Vnames.Strings[i])));    // Assign string to a buffer
+         BlockWrite(Fout, Buf, Header.VoltNameSize, NumWrite);    // Strings is default property of TStrings
+      END;
+ 
+      If Header.NCurrents > 0 Then
+      For i:=0 to Cnames.Count-1 Do Begin
+-        Sysutils.StrCopy(Buf, pAnsichar(AnsiString(Cnames.Strings[i])));    // Assign string to a buffer
++        StrCopy(Buf, pAnsichar(AnsiString(Cnames.Strings[i])));    // Assign string to a buffer
+         BlockWrite(Fout, Buf, Header.CurrNameSize, NumWrite);
+      END;
+ 
+@@ -258,6 +273,8 @@
+     TOPTransferFile:= TOutFile32.Create;
+     TOPTransferFile.Fname := 'DSSTransfer.STO';
+ 
++{$IFNDEF FPC}
+     CoInitialize(Nil);
++{$ENDIF}
+ end.
+ 
+Index: Parallel_Version/Source/Common/Utilities.pas
+===================================================================
+--- Parallel_Version/Source/Common/Utilities.pas	(revision 2134)
++++ Parallel_Version/Source/Common/Utilities.pas	(working copy)
+@@ -154,12 +154,13 @@
+ 
+ implementation
+ 
+-Uses Windows,    SysUtils, ShellAPI,  Dialogs,      DSSClassDefs,
++Uses {$IFDEF FPC} Process, CmdForms,{$ELSE} Windows, ShellAPI, Dialogs, Graphics, DSSForms,{$ENDIF}
++     SysUtils, DSSClassDefs, 
+      DSSGlobals, Dynamics, Executive, ExecCommands, ExecOptions,
+-     Solution,   DSSObject,math,      DSSForms,     ParserDel,
++     Solution,   DSSObject,math,      ParserDel,
+      Capacitor,  Reactor,  Generator, Load,
+      Line,       Fault,    Feeder,    HashList,
+-     EnergyMeter,PCElement,ControlElem, Graphics;
++     EnergyMeter,PCElement,ControlElem;
+ 
+ Const ZERONULL      :Integer=0;
+       padString     :String='                                                  '; //50 blanks
+@@ -236,6 +237,44 @@
+     Result := Copy(S, dotpos+1, Length(S));
+ End;
+ 
++{$IFDEF FPC}
++Procedure FireOffEditor(FileNm:String);
++Var
++   s: string;
++Begin
++  TRY
++  If FileExists(FileNm) Then
++  Begin
++{$IF (defined(Windows) or defined(MSWindows))}
++      RunCommand (DefaultEditor, [FileNm], s);
++{$ELSE}
++      RunCommand ('/bin/bash',['-c', DefaultEditor + ' ' + FileNm],s);
++{$ENDIF}
++  End;
++  EXCEPT
++      On E: Exception DO
++        DoErrorMsg('FireOffEditor.', E.Message,
++                   'Default Editor correctly specified???', 704);
++  END;
++End;
++
++Procedure DoDOSCmd(CmdString:String);
++Var //Handle:Word;
++   s: string;
++Begin
++  TRY
++{$IF (defined(Windows) or defined(MSWindows))}
++    RunCommand('cmd',['/c',CmdString],s);
++{$ELSE}
++    RunCommand('/bin/bash',['-c',CmdString],s);
++{$ENDIF}
++  EXCEPT
++      On E: Exception DO
++        DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"',[E.Message, CmdString]), 704);
++  END;
++End;
++
++{$ELSE}       
+ // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+ Procedure FireOffEditor(FileNm:String);
+ Var retval:Word;
+@@ -276,6 +315,8 @@
+   END;
+ End;
+ 
++{$ENDIF}
++
+ // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+ Function IntArrayToString( iarray:pIntegerArray; count:integer):String;
+ // Put array values in parentheses separated by commas.
+@@ -415,7 +456,7 @@
+       'o': Result := CONTROLSOFF;
+       'e': Result := EVENTDRIVEN;    // "event"
+       't': Result := TIMEDRIVEN;     // "time"
+-      'm': Result := MULTIRATE;     // "time"
++      'm': Result := MULTIRATE;     // "MultiRate"
+     ELSE
+        Result := CTRLSTATIC;
+     End;
+@@ -2029,7 +2070,7 @@
+    SaveDelims := AuxParser.Delimiters;
+    AuxParser.Delimiters := ',';
+    ArraySize   := 10;
+-   FieldLength := Allocmem(Sizeof(FieldLength^[1]) * ArraySize);
++   FieldLength := Allocmem(Sizeof(Integer) * ArraySize);
+ 
+  Try
+    {Scan once to set field lengths}
+@@ -2790,6 +2831,9 @@
+ FUNCTION  InterpretColorName(const s:string):Integer;
+ 
+ Begin
++{$IFDEF FPC}
++        Result := 0; // RGB for black
++{$ELSE}
+         Result := clBlue;  // default color
+         Try
+             if      CompareTextShortest(S,'black')=0  then Result := clBlack
+@@ -2814,7 +2858,7 @@
+         Except
+            On E:Exception Do DoSimpleMsg('Invalid Color Specification: "' + S + '".', 724);
+         End;
+-
++{$ENDIF}
+ End;
+ 
+ Function MakeNewCktElemName(const oldname:string):string;
+Index: Parallel_Version/Source/Common/Ymatrix.pas
+===================================================================
+--- Parallel_Version/Source/Common/Ymatrix.pas	(revision 2134)
++++ Parallel_Version/Source/Common/Ymatrix.pas	(working copy)
+@@ -14,7 +14,7 @@
+ 
+ interface
+ 
+-uses uComplex,SysUtils, windows, DSSClass, DSSObject;
++uses uComplex,SysUtils, {$IFDEF WINDOWS}windows, {$ENDIF}DSSClass, DSSObject;
+ 
+ 
+ {Options for building Y matrix}
+Index: Parallel_Version/Source/Controls/CapUserControl.pas
+===================================================================
+--- Parallel_Version/Source/Controls/CapUserControl.pas	(revision 2134)
++++ Parallel_Version/Source/Controls/CapUserControl.pas	(working copy)
+@@ -79,7 +79,7 @@
+ 
+ implementation
+ 
+-Uses  DSSGlobals, Windows, Sysutils;
++Uses  DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils;
+ 
+ { TCapUserControl }
+ 
+Index: Parallel_Version/Source/Controls/ExpControl.pas
+===================================================================
+--- Parallel_Version/Source/Controls/ExpControl.pas	(revision 2134)
++++ Parallel_Version/Source/Controls/ExpControl.pas	(working copy)
+@@ -12,8 +12,8 @@
+ INTERFACE
+ 
+   uses
+-    System.Generics.Collections, Command, ControlClass, ControlElem,
+-    CktElement, DSSClass, PVSystem, Arraydef, ucomplex,
++    {$IFDEF FPC}gqueue{$ELSE}System.Generics.Collections{$ENDIF}, Command, 
++    ControlClass, ControlElem, CktElement, DSSClass, PVSystem, Arraydef, ucomplex,
+     utilities, Dynamics, PointerList, Classes, StrUtils;
+ 
+   type
+@@ -84,7 +84,7 @@
+             // Sample control quantities and set action times in Control Queue
+             PROCEDURE   Sample(ActorID : Integer);  Override;
+ 
+-            // ActiveCircuit[ActiveActor] the action that is pending from last sample
++            // Do the action that is pending from last sample
+             PROCEDURE   DoPendingAction(Const Code, ProxyHdl:Integer;ActorID : Integer); Override;
+ 
+             PROCEDURE   Reset; Override;  // Reset to initial defined state
+@@ -311,7 +311,7 @@
+ 
+      {
+        Control elements are zero current sources that attach to a terminal of a
+-       power-carrying device, but ActiveCircuit[ActiveActor] not alter voltage or current flow.
++       power-carrying device, but do not alter voltage or current flow.
+        Define a default number of phases and conductors here and update in
+        RecalcElementData routine if necessary. This allocates arrays for voltages
+        and currents and gives more direct access to the values, if needed
+@@ -342,7 +342,7 @@
+      FPVSystemPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
+ 
+      // user parameters for dynamic Vreg
+-     FVregInit := 1.0;
++     FVregInit := 1.0; // 0 means to find it during initialization
+      FSlope := 50.0;
+      FVregTau := 1200.0;
+      FVregs := nil;
+@@ -477,6 +477,7 @@
+       PVSys.Varmode := VARMODEKVAR;  // Set var mode to VARMODEKVAR to indicate we might change kvar
+       FTargetQ[i] := 0.0;
+       Qbase  := PVSys.kVARating;
++      Qinvmaxpu := PVSys.kvarLimit / Qbase;                                     
+       Qpu := PVSys.Presentkvar / Qbase; // no change for now
+ 
+       if (FWithinTol[i]=False) then begin
+@@ -535,32 +536,31 @@
+       Vpresent := 0;
+       For j := 1 to PVSys.NPhases do Vpresent := Vpresent + Cabs(cBuffer[j]);
+       FPresentVpu[i] := (Vpresent / PVSys.NPhases) / (basekV * 1000.0);
++      // if initializing with Vreg=0 in static mode, we want to FIND Vreg
++      if (ActiveCircuit[ActorID].Solution.ControlMode = CTRLSTATIC) and (FVregInit <= 0.0) then
++        FVregs[i] := FPresentVpu[i];
+       // both errors are in per-unit
+       Verr := Abs(FPresentVpu[i] - FPriorVpu[i]);
+       Qerr := Abs(PVSys.Presentkvar - FTargetQ[i]) / PVSys.kVARating;
+-
+       // process the sample
+       if (PVSys.InverterON = FALSE) and (PVSys.VarFollowInverter = TRUE) then begin // not injecting
+-        if (FVregTau > 0.0) then FVregs[i] := FPresentVpu[i]; // tracking grid voltage while not injecting
++        if (FVregTau > 0.0) and (FVregs[i] <= 0.0) then
++          FVregs[i] := FPresentVpu[i]; // wake up to the grid voltage, otherwise track it while not injecting
+         continue;
+       end;
+       PVSys.VWmode := FALSE;
+-      if (FWithinTol[i] = False) then begin
+-        if ((Verr > FVoltageChangeTolerance) or (Qerr > FVarChangeTolerance) or
+-          (ActiveCircuit[ActorID].Solution.ControlIteration = 1)) then begin
+-          FWithinTol[i] := False;
+-          Set_PendingChange(CHANGEVARLEVEL,i);
+-          With  ActiveCircuit[ActorID].Solution.DynaVars do
+-            ControlActionHandle := ActiveCircuit[ActorID].ControlQueue.Push (intHour, t + TimeDelay, PendingChange[i], 0, Self, ActorID);
+-          If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
+-            (' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]),ActorID);
+--        end else begin
+-          if ((Verr <= FVoltageChangeTolerance) and (Qerr <= FVarChangeTolerance)) then FWithinTol[i] := True;
+-          If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
+-            (' within Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]),ActorID);
+--        end;
++      if ((Verr > FVoltageChangeTolerance) or (Qerr > FVarChangeTolerance) or
++        (ActiveCircuit[ActorID].Solution.ControlIteration = 1)) then begin
++        FWithinTol[i] := False;
++        Set_PendingChange(CHANGEVARLEVEL,i);
++        With  ActiveCircuit[ActorID].Solution.DynaVars do
++          ControlActionHandle := ActiveCircuit[ActorID].ControlQueue.Push (intHour, t + TimeDelay, PendingChange[i], 0, Self, ActorID);
++        If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
++          (' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]),ActorID);
++      end else begin
++        FWithinTol[i] := True;
++        If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
++          (' within Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]),ActorID);
+       end;
+     end;  {For}
+   end; {If FlistSize}
+@@ -627,7 +627,7 @@
+   //Initialize arrays
+   For i := 1 to FlistSize do begin
+ //    PVSys := PVSysClass.Find(FPVSystemNameList.Strings[i-1]);
+-//    Set_NTerms(PVSys.NTerms); // TOActiveCircuit[ActiveActor] - what is this for?
++//    Set_NTerms(PVSys.NTerms); // TODO - what is this for?
+     FPriorVpu[i] := 0.0;
+     FPresentVpu[i] := 0.0;
+     FPriorQ[i] := -1.0;
+@@ -700,7 +700,6 @@
+ begin
+   for j := 1 to FPVSystemPointerList.ListSize do begin
+     PVSys := ControlledElement[j];
+-    FWithinTol[j] := False;
+     if FVregTau > 0.0 then begin
+       dt :=  ActiveCircuit[ActorID].Solution.Dynavars.h;
+ Index: Parallel_Version/Source/Controls/InvControl.pas
+===================================================================
+--- Parallel_Version/Source/Controls/InvControl.pas	(revision 2134)
++++ Parallel_Version/Source/Controls/InvControl.pas	(working copy)
+@@ -1296,7 +1296,7 @@
+                   Qnew[k] := sign(QNew[k])*0.99*PVSys.kvarLimit;
+                   FHitkvarLimit[k] := True;
+                 end;
+-
++              QTemp2 := Qnew[k];
+               //Convert output from CalcVoltWatt_pu to kW
+               PVSys.VWmode  := TRUE;
+               PVSys.VWYAxis := FVoltwattYAxis;
+@@ -1360,7 +1360,6 @@
+                         end;
+                 end;
+ 
+-              PTemp := PVSys.PresentkW;
+               // if the desired kW and desired kvar exceed the kva rating of the PVSystem's inverter then...
+               PVSys.SetNominalPVSystemOuput(ActorID);
+               PTemp := PVSys.PresentkW;
+@@ -1447,7 +1446,7 @@
+                       PNew[k] :=FFinalpuPmpp[k];
+ 
+                       If ShowEventLog Then AppendtoEventLog('InvControl.' + Self.Name+','+PVSys.Name+',',
+-                       Format('**VV_VW mode set PVSystem output level to**, puPmpp= %.5g, PriorWatts= %.5g', [PVSys.puPmpp,FPriorWattspu[k]]),ActorID);
++                       Format('**VV_VW mode set PVSystem output level to**, puPmpp= %.5g, PriorWatts= %.5g', [PVSys.puPmpp,POld[k]]),ActorID);
+ 
+                       ActiveCircuit[ActorID].Solution.LoadsNeedUpdating := TRUE;
+                       FAvgpVuPrior[k] := FPresentVpu[k];
+@@ -3113,6 +3112,7 @@
+       if FVV_ReacPower_ref = 'VARAVAL_WATTS' then QHeadRoom[j] := SQRT(Sqr(PVSys.kVARating)-Sqr(PVSys.PresentkW));
+       if (FVV_ReacPower_ref = 'VARMAX_VARS') or (FVV_ReacPower_ref = 'VARMAX_WATTS') then QHeadRoom[j] := PVSys.kvarLimit;
+ 
++      if(QHeadRoom[j] = 0) then QHeadRoom[j] := PVSys.kvarLimit;
+       QPresentpu   := PVSys.Presentkvar / QHeadRoom[j];
+       voltagechangesolution := 0.0;
+ 
+Index: Parallel_Version/Source/Controls/RegControl.pas
+===================================================================
+--- Parallel_Version/Source/Controls/RegControl.pas	(revision 2134)
++++ Parallel_Version/Source/Controls/RegControl.pas	(working copy)
+@@ -1228,7 +1228,7 @@
+ Procedure TRegControlObj.Reset;
+ begin
+       PendingTapChange := 0.0;
+-
++      ARMED  := FALSE;
+ end;
+ 
+ procedure TRegcontrolObj.SaveWrite(var F: TextFile);
+Index: Parallel_Version/Source/DLL/ImplCapControls.pas
+===================================================================
+--- Parallel_Version/Source/DLL/ImplCapControls.pas	(revision 2134)
++++ Parallel_Version/Source/DLL/ImplCapControls.pas	(working copy)
+@@ -49,7 +49,8 @@
+     procedure Set_Vmax(Value: Double); safecall;
+     procedure Set_Vmin(Value: Double); safecall;
+     function Get_Count: Integer; safecall;
+-
++    procedure Reset; safecall;
++    
+   end;
+ 
+ implementation
+@@ -402,6 +403,17 @@
+               Result := ActiveCircuit[ActiveActor].CapControls.ListSize ;
+ end;
+ 
++procedure TCapControls.Reset;
++var
++  elem: TCapControlObj;
++begin
++  elem   := ActiveCapControl;
++  if elem <> nil then begin
++      elem.Reset;
++  end;
++
++end;
++
+ initialization
+   TAutoObjectFactory.Create(ComServer, TCapControls, Class_CapControls,
+     ciInternal, tmApartment);
+Index: Parallel_Version/Source/DLL/ImplCircuit.pas
+===================================================================
+--- Parallel_Version/Source/DLL/ImplCircuit.pas	(revision 2134)
++++ Parallel_Version/Source/DLL/ImplCircuit.pas	(working copy)
+@@ -726,7 +726,8 @@
+    iV               :LongWord;
+    i,j,p            :LongWord;
+    NValues          :LongWord;
+-   hY, nBus, nNZ    :LongWord;
++   hY               :NativeUint;
++   nBus, nNZ        :LongWord;
+    ColPtr, RowIdx   :array of LongWord;
+    cVals            :array of Complex;
+ 
+Index: Parallel_Version/Source/DLL/ImplGlobals.pas
+===================================================================
+--- Parallel_Version/Source/DLL/ImplGlobals.pas	(revision 2134)
++++ Parallel_Version/Source/DLL/ImplGlobals.pas	(working copy)
+@@ -124,8 +124,15 @@
+ 
+ implementation
+ 
+-uses DSSGlobals, Executive, sysutils;
++uses DSSGlobals, Executive, {$IFNDEF FPC}AnsiStrings, {$ENDIF}sysutils;
+ 
++{$IFNDEF FPC}
++function StrPLCopy(Dest: PAnsiChar; const Source: AnsiString; MaxLen: Cardinal): PAnsiChar; inline;
++begin
++  Result := System.AnsiStrings.StrPLCopy(Dest, Source, MaxLen);
++end;
++{$ENDIF}
++
+ Procedure Fire_InitControls;
+ begin
+   if assigned(FEvents) then TDSSEvents(FEvents).Fire_InitControls;
+Index: Parallel_Version/Source/DLL/ImplRegControls.pas
+===================================================================
+--- Parallel_Version/Source/DLL/ImplRegControls.pas	(revision 2134)
++++ Parallel_Version/Source/DLL/ImplRegControls.pas	(working copy)
+@@ -64,6 +64,7 @@
+     procedure Set_TapNumber(Value: Integer); safecall;
+ 
+     function Get_Count: Integer; safecall;
++    procedure Reset; safecall;
+ 
+   end;
+ 
+@@ -500,6 +501,17 @@
+      Result := ActiveCircuit[ActiveActor].RegControls.ListSize;
+ end;
+ 
++procedure TRegControls.Reset;
++var
++  elem: TRegControlObj;
++begin
++  elem   := ActiveRegControl;
++  if elem <> nil then begin
++      elem.Reset;
++  end;
++
++end;
++
+ initialization
+   TAutoObjectFactory.Create(ComServer, TRegControls, Class_RegControls,
+     ciInternal, tmApartment);
+Index: Parallel_Version/Source/DLL/ImplSolution.pas
+===================================================================
+--- Parallel_Version/Source/DLL/ImplSolution.pas	(revision 2134)
++++ Parallel_Version/Source/DLL/ImplSolution.pas	(working copy)
+@@ -99,6 +99,8 @@
+     function Get_Time_of_Step: Double; safecall;
+     function Get_IntervalHrs: Double; safecall;
+     procedure Set_IntervalHrs(Value: Double); safecall;
++    function Get_MinIterations: Integer; safecall;
++    procedure Set_MinIterations(Value: Integer); safecall;
+     procedure SolveAll; safecall;
+     function Get_IncMatrix: OleVariant; safecall;
+     function Get_BusLevels: OleVariant; safecall;
+@@ -230,7 +232,7 @@
+ begin
+      If ActiveCircuit[ActiveActor] <> Nil Then Begin
+          ActiveCircuit[ActiveActor].Solution.dynavars.h  := Value;
+-         Set_IntervalHrs(Value);     // Keep IntervalHrs in synch with time step size
++         Set_IntervalHrs(Value/3600.0);     // Keep IntervalHrs in synch with time step size
+      End;
+ end;
+ 
+@@ -702,6 +704,17 @@
+      If ActiveCircuit[ActiveActor] <> Nil Then ActiveCircuit[ActiveActor].Solution.IntervalHrs := Value;
+ end;
+ 
++function TSolution.Get_MinIterations: Integer;
++begin
++     If ActiveCircuit <> Nil Then Result := ActiveCircuit[ActiveActor].Solution.MinIterations
++     Else Result := 0;
++end;
++
++procedure TSolution.Set_MinIterations(Value: Integer);
++begin
++    If ActiveCircuit <> Nil Then ActiveCircuit[ActiveActor].Solution.MinIterations  := Value;
++end;
++
+ procedure TSolution.SolveAll;
+ var
+   i : Integer;
+Index: Parallel_Version/Source/DLL/OpenDSSengine.ridl
+===================================================================
+--- Parallel_Version/Source/DLL/OpenDSSengine.ridl	(revision 2134)
++++ Parallel_Version/Source/DLL/OpenDSSengine.ridl	(working copy)
+@@ -956,15 +956,23 @@
+     HRESULT _stdcall Process_Time([out, retval] double* Value);
+     [propget, id(0x000000E3), helpstring("Get the solution process time + sample time for time step")]
+     HRESULT _stdcall Time_of_Step([out, retval] double* Value);
+-    [id(0x000000E4), helpstring("Solves the circuits for all the Actors created")]
++    [propget, id(0x000000E4), helpstring("Get/Set the Solution.IntervalHrs variable used for devices that integrate")]
++    HRESULT _stdcall IntervalHrs([out, retval] double* Value);
++    [propput, id(0x000000E4), helpstring("Get/Set the Solution.IntervalHrs variable for custom solution algorithms")]
++    HRESULT _stdcall IntervalHrs([in] double Value);
++    [propget, id(0x000000E5), helpstring("Minimum number of iterations required for a power flow solution.")]
++    HRESULT _stdcall MinIterations([out, retval] long* Value);
++    [propput, id(0x000000E5), helpstring("Mininum number of iterations required for a power flow solution.")]
++    HRESULT _stdcall MinIterations([in] long Value);
++    [id(0x000000E5), helpstring("Solves the circuits for all the Actors created")]
+     HRESULT _stdcall SolveAll(void);
+-    [propget, id(0x000000E5)]
++    [propget, id(0x000000E6)]
+     HRESULT _stdcall IncMatrix([out, retval] VARIANT* Value);
+-    [propget, id(0x000000E6)]
++    [propget, id(0x000000E7)]
+     HRESULT _stdcall IncMatrixRows([out, retval] VARIANT* Value);
+-    [propget, id(0x000000E7)]
++    [propget, id(0x000000E8)]
+     HRESULT _stdcall IncMatrixCols([out, retval] VARIANT* Value);
+-    [propget, id(0x000000E8)]
++    [propget, id(0x000000E9)]
+     HRESULT _stdcall BusLevels([out, retval] VARIANT* Value);
+   };
+ 
+@@ -1964,6 +1972,8 @@
+     HRESULT _stdcall DeadTime([in] double Value);
+     [propget, id(0x000000DB), helpstring("Number of CapControls in Active Circuit\0ep. Control may reset before actually switching.\0 actually operating the switch.\0lf state).\0etc.)\0eturns 0 if no more.\0llElementNames.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")]
+     HRESULT _stdcall Count([out, retval] long* Value);
++    [id(0x000000DC), helpstring("Force a Reset of this CapControl")]
++    HRESULT _stdcall Reset(void);
+   };
+ 
+   [
+@@ -2071,6 +2081,8 @@
+     HRESULT _stdcall TapNumber([out, retval] long* Value);
+     [propput, id(0x000000E2), helpstring("Integer number of the tap that the controlled transformer winding is currentliy on.")]
+     HRESULT _stdcall TapNumber([in] long Value);
++    [id(0x000000E3), helpstring("Force Reset of this RegControl element")]
++    HRESULT _stdcall Reset(void);
+   };
+ 
+   [
+Index: Parallel_Version/Source/Executive/ExecCommands.pas
+===================================================================
+--- Parallel_Version/Source/Executive/ExecCommands.pas	(revision 2134)
++++ Parallel_Version/Source/Executive/ExecCommands.pas	(working copy)
+@@ -27,10 +27,11 @@
+ 
+ implementation
+ 
+-Uses DSSGlobals, ExecHelper, Executive, ExecOptions, ShowOptions,
+-     ExportOptions, ParserDel, LoadShape, {$IFNDEF FPC} DSSForms,
+-     PlotOptions, ConnectOptions, {$ENDIF} sysutils, Utilities, SolutionAlgs,
+-     DSSClassDefs, windows, KLUSolve;
++Uses DSSGlobals, ExecHelper, Executive, ExecOptions, ShowOptions, 
++     ExportOptions, ParserDel, LoadShape, 
++     {$IFDEF FPC} CmdForms,{$ELSE} Windows, PlotOptions, DSSForms, ConnectOptions,{$ENDIF}
++     sysutils, Utilities, SolutionAlgs,
++     DSSClassDefs, KLUSolve;
+ 
+ 
+ PROCEDURE DefineCommands;
+@@ -606,7 +607,11 @@
+               ActiveCircuit[ActiveActor].Solution.Calc_Inc_Matrix(ActiveActor);
+             end;
+        110: begin
++              {$IFNDEF FPC}
+               ShowDiakopticsBox;
++              {$ELSE}
++              DSSInfoMessageDlg ('Not supported in FPC version');CmdResult := 0;
++              {$ENDIF}
+             end;
+        111: begin
+               ActiveCircuit[ActiveActor].Solution.Calc_Inc_Matrix_Org(ActiveActor);
+@@ -663,7 +668,11 @@
+         9: CmdResult := DoSetCmd(1);  // changed from DoSolveCmd; //'solve';
+        10: CmdResult := DoEnableCmd;
+        11: CmdResult := DoDisableCmd;
++       {$IFNDEF FPC}
+        12: CmdResult := DoPlotCmd; //'plot';
++       {$ELSE}
++       12: begin DSSInfoMessageDlg ('Plotting not supported in FPC version');CmdResult := 0; end;
++       {$ENDIF}
+        13: CmdResult := DoResetCmd(ActiveActor); //'resetmonitors';
+        15: CmdResult := DoSetCmd(0);  //'set WITH no solve'
+        16: CmdResult := DoPropertyDump;
+Index: Parallel_Version/Source/Executive/ExecHelper.pas
+===================================================================
+--- Parallel_Version/Source/Executive/ExecHelper.pas	(revision 2134)
++++ Parallel_Version/Source/Executive/ExecHelper.pas	(working copy)
+@@ -143,11 +143,11 @@
+      DSSClass, DSSObject, Utilities, Solution,
+      EnergyMeter, Generator, LoadShape, Load, PCElement,   CktElement,
+      uComplex,  mathutil,  Bus,  SolutionAlgs,
+-     DSSForms,  ExecCommands, Executive, Dynamics,
+-     DssPlot,
+-     Capacitor, Reactor, Line, Lineunits, Math,
++     
++     {$IFDEF FPC}CmdForms,{$ELSE}DSSForms,DssPlot,{$ENDIF} ExecCommands, Executive,
++     Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
+      Classes,  CktElementClass, Sensor,  { ExportCIMXML,} NamedObject,
+-     RegularExpressionsCore, PstCalc;
++     {$IFDEF FPC}RegExpr,{$ELSE}RegularExpressionsCore,{$ENDIF} PstCalc;
+ 
+ Var
+    SaveCommands, DistributeCommands,  DI_PlotCommands,
+@@ -263,8 +263,49 @@
+ //----------------------------------------------------------------------------
+ FUNCTION DoBatchEditCmd:Integer;
+ // batchedit type=xxxx name=pattern  editstring
++{$IFDEF FPC}
+ VAR
+    ObjType, Pattern:String;
++   RegEx1: TRegExpr;
++   pObj: TDSSObject;
++   Params: Integer;
++Begin
++  Result := 0;
++  GetObjClassAndName(ObjType, Pattern);
++  IF CompareText(ObjType, 'circuit')=0 THEN Begin
++    // Do nothing
++  End ELSE Begin
++
++    LastClassReferenced[ActiveActor] := ClassNames[ActiveActor].Find(ObjType);
++
++    CASE LastClassReferenced[ActiveActor] of
++      0: Begin
++        DoSimpleMsg('BatchEdit Command: Object Type "' + ObjType + '" not found.'+ CRLF + parser[ActiveActor].CmdString, 267);
++        Exit;
++        End;{Error}
++    ELSE
++      Params:=Parser[ActiveActor].Position;
++      ActiveDSSClass[ActiveActor] := DSSClassList[ActiveActor].Get(LastClassReferenced[ActiveActor]);
++      RegEx1:=TRegExpr.Create;
++//      RegEx1.Options:=[preCaseLess];RegEx1.
++      RegEx1.Expression:=UTF8String(Pattern);
++      ActiveDSSClass[ActiveActor].First;
++      pObj:=ActiveDSSClass[ActiveActor].GetActiveObj;
++      while pObj <> Nil do begin
++        if RegEx1.Exec(UTF8String(pObj.Name)) then begin
++          Parser[ActiveActor].Position:=Params;
++          ActiveDSSClass[ActiveActor].Edit(ActiveActor);
++        end;
++        ActiveDSSClass[ActiveActor].Next;
++        pObj:=ActiveDSSClass[ActiveActor].GetActiveObj;
++      end;
++      RegEx1.Free;
++    End;
++  End;
++End;
++{$ELSE}
++VAR
++   ObjType, Pattern:String;
+    RegEx1: TPerlRegEx;
+    pObj: TDSSObject;
+    Params: Integer;
+@@ -287,11 +328,11 @@
+       ActiveDSSClass[ActiveActor] := DSSClassList[ActiveActor].Get(LastClassReferenced[ActiveActor]);
+       RegEx1:=TPerlRegEx.Create;
+       RegEx1.Options:=[preCaseLess];
+-      RegEx1.RegEx:=UTF8String(Pattern);
++      RegEx1.RegEx:=Pattern; // UTF8String(Pattern);
+       ActiveDSSClass[ActiveActor].First;
+       pObj:=ActiveDSSClass[ActiveActor].GetActiveObj;
+       while pObj <> Nil do begin
+-        RegEx1.Subject:=UTF8String(pObj.Name);
++        RegEx1.Subject:=pObj.Name; // UTF8String(pObj.Name);
+         if RegEx1.Match then begin
+           Parser[ActiveActor].Position:=Params;
+           ActiveDSSClass[ActiveActor].Edit(ActiveActor);
+@@ -302,6 +343,7 @@
+     End;
+   End;
+ End;
++{$ENDIF}
+ 
+ //----------------------------------------------------------------------------
+ FUNCTION DoRedirect(IsCompile:Boolean):Integer;
+@@ -399,7 +441,7 @@
+                   END;
+                End;
+ 
+-             IF ActiveCircuit[ActiveActor] <> Nil THEN ActiveCircuit[ActiveActor].CurrentDirectory := CurrDir +'\';
++             IF ActiveCircuit[ActiveActor] <> Nil THEN ActiveCircuit[ActiveActor].CurrentDirectory := CurrDir + PathDelim;
+ 
+           EXCEPT
+              On E: Exception DO
+@@ -585,7 +627,7 @@
+           Except
+              On E:Exception Do DoSimpleMsg('Error making Directory: "'+SaveDir+'". ' + E.Message, 247);
+           End;
+-       SaveFile := SaveDir+'\'+SaveFile;
++       SaveFile := SaveDir + PathDelim + SaveFile;
+      End;
+      WriteClassFile(DSSClass, SaveFile, FALSE); // just write the class with no checks
+    End;
+@@ -1024,7 +1066,7 @@
+ 
+ Begin
+ 
+-     Dummy := AllocMem(Sizeof(Dummy^[1]) * 100); // Big Buffer
++     Dummy := AllocMem(Sizeof(Double) * 100); // Big Buffer
+      Num   := Parser[ActiveActor].ParseAsVector(100, Dummy);
+      {Parsing zero-fills the array}
+ 
+@@ -1742,7 +1784,7 @@
+      Begin
+          NValues := NConds*Nterms;
+          GlobalResult := '';
+-         cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
++         cBuffer := Allocmem(sizeof(Complex)*NValues);
+          GetCurrents(cBuffer, ActiveActor);
+          For i := 1 to  NValues DO
+          Begin
+@@ -1827,7 +1869,7 @@
+   WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
+   Begin
+       NValues := NPhases;
+-      cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
++      cBuffer := Allocmem(sizeof(Complex)*NValues);
+       GlobalResult := '';
+       GetPhaseLosses( NValues, cBuffer);
+       For i := 1 to  NValues DO Begin
+@@ -1889,7 +1931,7 @@
+         THEN  For i := 0 to  3*Nterms-1 DO GlobalResult := GlobalResult + ' -1.0,'  // Signify n/A
+         ELSE Begin
+           NValues := NConds * Nterms;
+-          cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
++          cBuffer := Allocmem(sizeof(Complex)*NValues);
+           GetCurrents(cBuffer, ActiveActor);
+           For j := 1 to Nterms Do
+           Begin
+@@ -1936,7 +1978,7 @@
+          For i := 0 to 2*3*Nterms-1 DO GlobalResult := GlobalResult + '-1.0, '  // Signify n/A
+       ELSE Begin
+         NValues := NConds * Nterms;
+-        cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
++        cBuffer := Allocmem(sizeof(Complex)*NValues);
+         GetCurrents(cBuffer, ActiveActor);
+         FOR j := 1 to Nterms Do Begin
+          k :=(j-1) * NConds;
+@@ -2251,7 +2293,7 @@
+    ELSE Begin
+        DoAllHarmonics := FALSE;
+ 
+-       Dummy := AllocMem(Sizeof(Dummy^[1]) * 100); // Big Buffer
++       Dummy := AllocMem(Sizeof(Double) * 100); // Big Buffer
+        Num   := Parser[ActiveActor].ParseAsVector(100, Dummy);
+        {Parsing zero-fills the array}
+ 
+@@ -2987,7 +3029,7 @@
+ End;
+ 
+ FUNCTION DoDI_PlotCmd:Integer;
+-{$IFNDEF DLL_ENGINE}
++{$IF not (defined(DLL_ENGINE) or defined(FPC))}
+ Var
+     ParamName, Param:String;
+     ParamPointer, i:Integer;
+@@ -3000,7 +3042,7 @@
+     PeakDay:Boolean;
+ {$ENDIF}
+ Begin
+-{$IFNDEF DLL_ENGINE}
++{$IF not (defined(DLL_ENGINE) or defined(FPC))}
+      IF DIFilesAreOpen Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
+ 
+      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;
+@@ -3050,7 +3092,7 @@
+ End;
+ 
+ FUNCTION DoCompareCasesCmd:Integer;
+-{$IFNDEF DLL_ENGINE}
++{$IF not (defined(DLL_ENGINE) or defined(FPC))}
+ Var
+     ParamName, Param:String;
+     ParamPointer:Integer;
+@@ -3060,7 +3102,7 @@
+     CaseName2, WhichFile:String;
+ {$ENDIF}
+ Begin
+-{$IFNDEF DLL_ENGINE}
++{$IF not (defined(DLL_ENGINE) or defined(FPC))}
+      IF DIFilesAreOpen Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
+      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;
+      CaseName1 := 'base';
+@@ -3106,7 +3148,7 @@
+ End;
+ 
+ FUNCTION DoYearlyCurvesCmd:Integer;
+-{$IFNDEF DLL_ENGINE}
++{$IF not (defined(DLL_ENGINE) or defined(FPC))}
+ Var
+     ParamName, Param:String;
+     ParamPointer, i:Integer;
+@@ -3118,7 +3160,7 @@
+     WhichFile:String;
+ {$ENDIF}
+ Begin
+-{$IFNDEF DLL_ENGINE}
++{$IF not (defined(DLL_ENGINE) or defined(FPC))}
+      IF DIFilesAreOpen Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
+ 
+      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;
+@@ -3181,6 +3223,7 @@
+ End;
+ 
+ FUNCTION DoVisualizeCmd:Integer;
++{$IF not defined(FPC)}                      
+ Var
+     DevIndex    :integer;
+     Param       :String;
+@@ -3190,8 +3233,10 @@
+     Quantity    :Integer;
+     ElemName    :String;
+     pElem       :TDSSObject;
++{$ENDIF}        
+ Begin
+      Result := 0;
++{$IF not defined(FPC)}
+      // Abort if no circuit or solution
+      If not assigned(ActiveCircuit[ActiveActor]) Then
+      Begin
+@@ -3250,6 +3295,7 @@
+      End Else Begin
+         DoSimpleMsg('Requested Circuit Element: "' + ElemName + '" Not Found.',282 ); // Did not find it ..
+      End;
++{$ENDIF}
+ End;
+ 
+ FUNCTION DoCloseDICmd:Integer;
+@@ -3937,7 +3983,3 @@
+     PstCalcCommands.Free;
+ 
+ end.
+-
+-
+-
+-
+Index: Parallel_Version/Source/Executive/ExecOptions.pas
+===================================================================
+--- Parallel_Version/Source/Executive/ExecOptions.pas	(revision 2134)
++++ Parallel_Version/Source/Executive/ExecOptions.pas	(working copy)
+@@ -11,7 +11,7 @@
+ Uses Command;
+ 
+ CONST
+-        NumExecOptions = 118;
++        NumExecOptions = 120;
+ 
+ VAR
+          ExecOption,
+@@ -27,7 +27,7 @@
+ implementation
+ 
+ Uses DSSClassDefs, DSSGlobals, ParserDel, Math,     Executive,  ExecHelper,
+-     LoadShape,    Utilities,  Sysutils, ScriptEdit,  Solution, Energymeter;
++     LoadShape,    Utilities,  Sysutils, {$IFNDEF FPC}ScriptEdit,{$ENDIF} Solution, Energymeter;
+ 
+ 
+ PROCEDURE DefineOptions;
+@@ -142,16 +142,18 @@
+      ExecOption[106] := 'ProcessTime';
+      ExecOption[107] := 'TotalTime';
+      ExecOption[108] := 'StepTime';
+-     ExecOption[109] := 'NumCPUs';
+-     ExecOption[110] := 'NumCores';
+-     ExecOption[111] := 'NumActors';
+-     ExecOption[112] := 'ActiveActor';
+-     ExecOption[113] := 'CPU';
+-     ExecOption[114] := 'ActorProgress';
+-     ExecOption[115] := 'Parallel';
+-     ExecOption[116] := 'ConcatenateReports';
+-     ExecOption[117] := 'DSSVisualizationTool';
+-     ExecOption[118] := 'DSSVInstalled';
++     ExecOption[109] := 'SampleEnergyMeters';
++     ExecOption[110] := 'MinIterations'; // default is 2
++     ExecOption[111] := 'NumCPUs';
++     ExecOption[112] := 'NumCores';
++     ExecOption[113] := 'NumActors';
++     ExecOption[114] := 'ActiveActor';
++     ExecOption[115] := 'CPU';
++     ExecOption[116] := 'ActorProgress';
++     ExecOption[117] := 'Parallel';
++     ExecOption[118] := 'ConcatenateReports';
++     ExecOption[119] := 'DSSVisualizationTool';
++     ExecOption[120] := 'DSSVInstalled';
+ 
+ 
+ 
+@@ -174,7 +176,7 @@
+                     CRLF+'  Yearly (follow Yearly curve),'+
+                     CRLF+'  DIrect,'+
+                     CRLF+'  DUtycycle,'+
+-                    CRLF+'  Time, ( see LoadShapeClass option)' +
++                    CRLF+'  Time, ( see LoadShapeClass, SampleEnergymeters options)' +
+                     CRLF+'  DYnamic,  ( see LoadShapeClass option)'+
+                     CRLF+'  Harmonic,'+
+                     CRLF+'  HarmonicT,  (sequential Harmonic Mode)'+
+@@ -186,9 +188,7 @@
+                     CRLF+'  Peakday,'+
+                     CRLF+'  LD1 (load-duration 1)'+
+                     CRLF+'  LD2 (load-duration 2)'+
+-                    CRLF+'  AutoAdd (see AddType)' +
+-                    CRLF+'  YearlyVQ (Yearly Vector Quantiaztion)' +
+-                    CRLF+'  DutyVQ (Duty Vector Quantiaztion)' +CRLF +CRLF+
++                    CRLF+'  AutoAdd (see AddType)' +CRLF +CRLF+
+                     'Side effect: setting the Mode propergy resets all monitors and energy meters. It also ' +
+                     'resets the time step, etc. to defaults for each mode.  After the initial reset, the user ' +
+                     'must explicitly reset the monitors and/or meters until another Set Mode= command.';
+@@ -275,7 +275,7 @@
+                         'Examples:'+Crlf+CRlf+
+                         'Set autobuslist=(bus1, bus2, bus3, ... )' +CRLF+
+                         'Set autobuslist=(file=buslist.txt)';
+-     OptionHelp[43] := '{OFF | STATIC |EVENT | TIME}  Default is "STATIC".  Control mode for the solution. ' +
++     OptionHelp[43] := '{OFF | STATIC |EVENT | TIME | MULTIRATE}  Default is "STATIC".  Control mode for the solution. ' +
+                         'Set to OFF to prevent controls from changing.' + CRLF +
+                         'STATIC = Time does not advance.  Control actions are executed in order of shortest time to act ' +
+                         'until all actions are cleared from the control queue.  Use this mode for power flow solutions which may require several ' +
+@@ -284,6 +284,9 @@
+                         'are executed and the time is advanced automatically to the time of the event. ' + crlf +crlf+
+                         'TIME = solution is time driven.  Control actions are executed when the time for the pending ' +
+                         'action is reached or surpassed.' + CRLF + CRLF +
++                        'MULTIRATE = solution is time driven.  Control actions are executed when the time for the pending ' +
++                        'action is reached or surpassed. In this control mode a solution is performed after each control action' +
++                        'is performed to reduce the error accumulated when the time step is to long' + CRLF + CRLF +
+                         'Controls may reset and may choose not to act when it comes their time. ' +CRLF+
+                         'Use TIME mode when modeling a control externally to the DSS and a solution mode such as ' +
+                         'DAILY or DUTYCYCLE that advances time, or set the time (hour and sec) explicitly from the external program. ';
+@@ -400,18 +403,22 @@
+      OptionHelp[106] := 'The time in microseconds to execute the solve process in the most recent time step or solution (read only)';
+      OptionHelp[107] := 'The accumulated time in microseconds to solve the circuit since the last reset. Set this value to reset the accumulator.';
+      OptionHelp[108] := 'Process time + meter sampling time in microseconds for most recent time step - (read only)';
+-     OptionHelp[109] := 'Delivers the number of threads (CPUs) available on the machine (read Only)';
+-     OptionHelp[110] := 'Delivers the number of physical processors (Cores) available on the computer. If your computers processor has less than 64 cores, this number should be equal to the half of the available CPUs, otherise the number should  be the same (Read Only)';
+-     OptionHelp[111] := 'Delivers the number of Actors created by the user, 1 is the default';
+-     OptionHelp[112] := 'Gets/Sets the number of the active actor';
+-     OptionHelp[113] := 'Gets/Sets the CPU to be used by the active actor';
+-     OptionHelp[114] := 'Gets progress (%) for all the actors when performing a task';
+-     OptionHelp[115] := 'Activates/Deactivates the parallel machine in OpenDSS-PM, if deactivated OpenDSS will behave as the classical version';
+-     OptionHelp[116] := 'Activates/Deactivates the option for concatenate the reports generated by the existing actors, if Yes, everytime the user' +
++     OptionHelp[109] := '{YES/TRUE | NO/FALSE} Overrides default value for sampling EnergyMeter objects at the end of the solution loop. ' +
++                        'Normally Time and Duty modes do not automatically sample EnergyMeters whereas Daily, Yearly, M1, M2, M3, LD1 and LD2 modes do. ' +
++                        'Use this Option to turn sampling on or off';
++     OptionHelp[110] := 'Minimum number of iterations required for a solution. Default is 2.';
++     OptionHelp[111] := 'Delivers the number of threads (CPUs) available on the machine (read Only)';
++     OptionHelp[112] := 'Delivers the number of physical processors (Cores) available on the computer. If your computers processor has less than 64 cores, this number should be equal to the half of the available CPUs, otherise the number should  be the same (Read Only)';
++     OptionHelp[113] := 'Delivers the number of Actors created by the user, 1 is the default';
++     OptionHelp[114] := 'Gets/Sets the number of the active actor';
++     OptionHelp[115] := 'Gets/Sets the CPU to be used by the active actor';
++     OptionHelp[116] := 'Gets progress (%) for all the actors when performing a task';
++     OptionHelp[117] := 'Activates/Deactivates the parallel machine in OpenDSS-PM, if deactivated OpenDSS will behave as the classical version';
++     OptionHelp[118] := 'Activates/Deactivates the option for concatenate the reports generated by the existing actors, if Yes, everytime the user' +
+                         'a show/export monitor command the report will include the data generated by all the actors, otherwise the report will contain' +
+                         'The data generated by the active actor';
+-     OptionHelp[117] := 'Activates/Deactivates the extended version of the plot command for figures with the DSS Visualization Tool.';
+-     OptionHelp[118] := 'Returns Yes/No if the DSS Visualization Tool is installed (Read Only)';
++     OptionHelp[119] := 'Activates/Deactivates the extended version of the plot command for figures with the DSS Visualization Tool.';
++     OptionHelp[120] := 'Returns Yes/No if the DSS Visualization Tool is installed (Read Only)';
+ End;
+ //----------------------------------------------------------------------------
+ FUNCTION DoSetCmd_NoCircuit:Boolean;  // Set Commands that do not require a circuit
+@@ -443,7 +450,7 @@
+            67: DSSExecutive.RecorderOn := InterpretYesNo(Param);
+            73: DefaultBaseFreq  := Parser[ActiveActor].DblValue;
+           102: UpdateRegistry   := InterpretYesNo(Param);
+-          112:  Begin
++          114:  Begin
+                   if Parser[ActiveActor].IntValue <= NumOfActors then ActiveActor  :=  Parser[ActiveActor].IntValue
+                   else
+                   begin
+@@ -450,7 +457,7 @@
+                     DoSimpleMsg('The actor does not exists',7002);
+                   end;
+                 End;
+-          113:  Begin
++          115:  Begin
+                   if Parser[ActiveActor].IntValue < CPU_Cores then ActorCPU[ActiveActor]  :=  Parser[ActiveActor].IntValue
+                   else
+                   begin
+@@ -457,13 +464,13 @@
+                     DoSimpleMsg('The CPU does not exists',7003);
+                   end;
+                 End;
+-          115:  begin
++          117:  begin
+                   Parallel_enabled  :=  InterpretYesNo(Param);
+                 end;
+-          116:  begin
++          118:  begin
+                   ConcatenateReports  :=  InterpretYesNo(Param);
+                 end;
+-          117:  begin
++          119:  begin
+                   DSS_Viz_enable  :=  InterpretYesNo(Param);
+                 end;
+          ELSE
+@@ -656,7 +663,9 @@
+           104: ActiveCircuit[ActiveActor].RelayMarkerCode  := Parser[ActiveActor].IntValue;
+           105: ActiveCircuit[ActiveActor].RelayMarkerSize  := Parser[ActiveActor].IntValue;
+           107: ActiveCircuit[ActiveActor].Solution.Total_Time  :=  Parser[ActiveActor].DblValue;
+-          112:  Begin
++          109: ActiveCircuit[ActiveActor].Solution.SampleTheMeters :=  InterpretYesNo(Param);
++          110: ActiveCircuit[ActiveActor].solution.MinIterations   := Parser[ActiveActor].IntValue;
++          114:  Begin
+                   if Parser[ActiveActor].IntValue <= NumOfActors then ActiveActor  :=  Parser[ActiveActor].IntValue
+                   else
+                   begin
+@@ -663,7 +672,7 @@
+                     DoSimpleMsg('The actor does not exists',7002);
+                   end;
+                 End;
+-          113:  Begin
++          115:  Begin
+                   if Parser[ActiveActor].IntValue < CPU_Cores then ActorCPU[ActiveActor]  :=  Parser[ActiveActor].IntValue
+                   else
+                   begin
+@@ -670,13 +679,13 @@
+                     DoSimpleMsg('The CPU does not exists',7003);
+                   end;
+                 End;
+-          115:  begin
++          117:  begin
+                   Parallel_enabled  :=  InterpretYesNo(Param);
+                 end;
+-          116:  begin
++          118:  begin
+                   ConcatenateReports  :=  InterpretYesNo(Param);
+                 end;
+-          117:  begin
++          119:  begin
+                   DSS_Viz_enable  :=  InterpretYesNo(Param);
+                 end;
+          ELSE
+@@ -685,6 +694,8 @@
+ 
+          CASE ParamPointer OF
+               3,4: ActiveCircuit[ActiveActor].Solution.Update_dblHour;
++              // Update IntervalHrs for devices that integrate
++              7,18: ActiveCircuit[ActiveActor].Solution.IntervalHrs := ActiveCircuit[ActiveActor].Solution.DynaVars.h / 3600.0;
+          END;
+ 
+          ParamName := Parser[ActiveActor].NextParam;
+@@ -706,7 +717,7 @@
+    ParamPointer, i:Integer;
+    ParamName:String;
+    Param:String;
+-   ScriptEd : TScriptEdit;
++   {$IFNDEF FPC}ScriptEd : TScriptEdit;{$ENDIF}
+ 
+ Begin
+ 
+@@ -846,7 +857,7 @@
+            99: If ActiveCircuit[ActiveActor].MarkReclosers Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+           100: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RecloserMarkerCode]));
+           101: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RecloserMarkerSize]));
+-          102: UpdateRegistry                    := InterpretYesNo(Param);
++          102: If UpdateRegistry Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+           103: If ActiveCircuit[ActiveActor].MarkRelays Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+           104: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RelayMarkerCode]));
+           105: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RelayMarkerSize]));
+@@ -853,20 +864,22 @@
+           106: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Solution.Time_Solve]));
+           107: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Solution.Total_Time]));
+           108: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Solution.Time_Step]));
+-          109: AppendGlobalResult(Format('%d' ,[CPU_Cores]));
+-          110:
++          109: If ActiveCircuit[ActiveActor].Solution.SampleTheMeters Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
++          110: AppendGlobalResult(IntToStr(ActiveCircuit[ActiveActor].solution.MinIterations));
++          111: AppendGlobalResult(Format('%d' ,[CPU_Cores]));
++          112:
+             begin
+               if CPU_Cores < 64 then AppendGlobalResult(Format('%-g' ,[CPU_Cores/2]))
+               else AppendGlobalResult(Format('%d' ,[CPU_Cores]));
+             end;
+-          111: AppendGlobalResult(Format('%d' ,[NumOfActors]));
+-          112: AppendGlobalResult(Format('%d' ,[ActiveActor]));
+-          113: AppendGlobalResult(Format('%d' ,[ActorCPU[ActiveActor]]));
+-          114: ScriptEd.UpdateProgressSummary;
+-          115: if parallel_enabled then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+-          116: if ConcatenateReports then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+-          117: if DSS_Viz_enable then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+-          118: if DSS_Viz_installed then AppendGlobalResult('Yes') else AppendGlobalResult('No');
++          113: AppendGlobalResult(Format('%d' ,[NumOfActors]));
++          114: AppendGlobalResult(Format('%d' ,[ActiveActor]));
++          115: AppendGlobalResult(Format('%d' ,[ActorCPU[ActiveActor]]));
++          116: {$IFNDEF FPC}ScriptEd.UpdateProgressSummary;{$ELSE} ; {$ENDIF}
++          117: if parallel_enabled then AppendGlobalResult('Yes') else AppendGlobalResult('No');
++          118: if ConcatenateReports then AppendGlobalResult('Yes') else AppendGlobalResult('No');
++          119: if DSS_Viz_enable then AppendGlobalResult('Yes') else AppendGlobalResult('No');
++          120: if DSS_Viz_installed then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+ 
+          ELSE
+            // Ignore excess parameters
+Index: Parallel_Version/Source/Executive/Executive.pas
+===================================================================
+--- Parallel_Version/Source/Executive/Executive.pas	(revision 2134)
++++ Parallel_Version/Source/Executive/Executive.pas	(working copy)
+@@ -90,7 +90,7 @@
+ USES ExecCommands, ExecOptions,
+      {ExecHelper,} DSSClassDefs, DSSGlobals, ParserDel,  SysUtils,
+      Utilities, Solution, DSSClass, IniRegSave,
+-     DSSForms, KLUSolve;
++     {$IFDEF FPC} CmdForms{$ELSE} DSSForms{$ENDIF}, KLUSolve;
+ 
+ 
+ //----------------------------------------------------------------------------
+@@ -224,7 +224,9 @@
+           RebuildHelpForm := True; // because class strings have changed
+        End;
+ 
++{$IFNDEF FPC}
+        If Not IsDLL Then ControlPanel.UpdateElementBox ;
++{$ENDIF}
+ 
+        {Prepare for new variables}
+        ParserVars.Free;
+@@ -247,7 +249,9 @@
+        Parser[ActiveActor]  :=  Tparser.Create;
+ //       DestroyAll_KLU;
+ //       Create_KLU;
++{$IFNDEF FPC}
+        If Not IsDLL Then ControlPanel.UpdateElementBox ;
++{$ENDIF}
+        {Prepare for new variables}
+        ParserVars.Free;
+        ParserVars := TParserVar.Create(100);  // start with space for 100 variables
+Index: Parallel_Version/Source/Executive/ExportOptions.pas
+===================================================================
+--- Parallel_Version/Source/Executive/ExportOptions.pas	(revision 2134)
++++ Parallel_Version/Source/Executive/ExportOptions.pas	(working copy)
+@@ -105,7 +105,7 @@
+                         ' cause a separate file to be written for each meter.';
+       ExportHelp[15] := '(file name is assigned by Monitor export) Monitor values.';
+       ExportHelp[16] := '(Default file = EXP_YPRIMS.CSV) All primitive Y matrices.';
+-      ExportHelp[17] := '(Default file = EXP_Y.CSV) System Y matrix.';
++      ExportHelp[17] := '(Default file = EXP_Y.CSV) [triplets] [Filename] System Y matrix, defaults to non-sparse format.';
+       ExportHelp[18] := '(Default file = EXP_SEQZ.CSV) Equivalent sequence Z1, Z0 to each bus.';
+       ExportHelp[19] := '(Default file = EXP_P_BYPHASE.CSV) [MVA] [Filename] Power by phase. Default is kVA.';
+       ExportHelp[20] := '(Default file = CIM17x.XML) (IEC 61968-13, CIM v17 extended, CDPSM Combined (unbalanced load flow) profile)' + CRLF
+@@ -165,7 +165,7 @@
+ 
+    MVAopt               :Integer;
+    UEonlyOpt            :Boolean;
+-   TripletOpt   :Boolean;
++   TripletOpt           :Boolean;
+    pMon                 :TMonitorObj;
+    pMeter               :TEnergyMeterObj;
+    ParamPointer         :Integer;
+@@ -177,6 +177,7 @@
+ Begin
+    Result := 0;
+    AbortExport := FALSE;
++   FileName := '';
+ 
+    ParamName := Parser[ActiveActor].NextParam;
+    Parm1 := LowerCase(Parser[ActiveActor].StrValue);
+@@ -388,7 +389,7 @@
+          End
+          ELSE   DoSimpleMsg('Monitor Name Not Specified.'+ CRLF + parser[ActiveActor].CmdString, 251);
+      16: ExportYprim(Filename);
+-     17: ExportY(Filename);
++     17: ExportY(Filename, TripletOpt);
+      18: ExportSeqZ(Filename);
+      19: ExportPbyphase(Filename, MVAOpt);
+      20: ExportCDPSM (Filename, Substation, SubGeographicRegion, GeographicRegion, Combined);
+Index: Parallel_Version/Source/Executive/ShowOptions.pas
+===================================================================
+--- Parallel_Version/Source/Executive/ShowOptions.pas	(revision 2134)
++++ Parallel_Version/Source/Executive/ShowOptions.pas	(working copy)
+@@ -25,7 +25,7 @@
+ implementation
+ 
+ Uses ShowResults, ParserDel, Monitor, Utilities,
+-     DSSGlobals, sysutils, DSSForms,
++     DSSGlobals, sysutils, {$IFDEF FPC} CmdForms{$ELSE} DSSForms{$ENDIF},
+      LineUnits;
+ 
+ 
+Index: Parallel_Version/Source/General/GrowthShape.pas
+===================================================================
+--- Parallel_Version/Source/General/GrowthShape.pas	(revision 2134)
++++ Parallel_Version/Source/General/GrowthShape.pas	(working copy)
+@@ -215,12 +215,12 @@
+             1: Npts := Parser[ActorID].Intvalue;
+             2: BEGIN
+                  ReAllocmem(Year, Sizeof(Year^[1])*Npts);
+-                 YrBuffer := Allocmem(Sizeof(YrBuffer^[1])*Npts);
++                 YrBuffer := Allocmem(Sizeof(Double)*Npts);
+                  InterpretDblArray(Param, Npts, YrBuffer);  // Parser.ParseAsVector(Npts, Yrbuffer);
+                  
+                  FOR i := 1 to Npts DO Year^[i] := Round(YrBuffer^[i]);
+                  BaseYear := Year^[1];
+-                 FreeMem( YrBuffer,Sizeof(YrBuffer^[1])*Npts);
++                 FreeMem( YrBuffer,Sizeof(Double)*Npts);
+                END;
+             3: BEGIN
+                  ReAllocmem(Multiplier, Sizeof(Multiplier^[1])*Npts);
+Index: Parallel_Version/Source/General/LineCode.pas
+===================================================================
+--- Parallel_Version/Source/General/LineCode.pas	(revision 2134)
++++ Parallel_Version/Source/General/LineCode.pas	(working copy)
+@@ -766,7 +766,7 @@
+    
+    If Fnphases>1 then Begin
+         Try
+-          NewZ  := Z.Kron(FNeutralConductor);       // Perform Kron Reductions into temp space
++          NewZ  := Z.Kron(FNeutralConductor);       // Perform Kron Reductions into new TCMatrix; return pointer to it.
+         { Have to invert the Y matrix to eliminate properly}
+           YC.Invert;  // Vn = 0 not In
+           NewYC := YC.Kron(FNeutralConductor);
+Index: Parallel_Version/Source/General/LoadShape.pas
+===================================================================
+--- Parallel_Version/Source/General/LoadShape.pas	(revision 2134)
++++ Parallel_Version/Source/General/LoadShape.pas	(working copy)
+@@ -703,8 +703,6 @@
+ 
+ VAR
+    Index, i : Integer;
+-   R_part,
+-   Im_part  : Double;
+ 
+    Function Set_Result_im(const realpart:double):Double;
+    {Set imaginary part of Result when Qmultipliers not defined}
+@@ -730,11 +728,9 @@
+            Index := round(hr/Interval);
+            IF Index>FNumPoints Then Index := Index Mod FNumPoints;  // Wrap around using remainder
+            IF Index=0 THEN Index := FNumPoints;
+-           R_part     :=  PMultipliers^[Index];
++           Result.Re := PMultipliers^[Index];
+            If Assigned(QMultipliers) Then Result.im := QMultipliers^[Index]
+-           Else  Im_part  := Set_Result_im(R_part);
+-           Result.re      :=  R_part;
+-           Result.im      :=  Im_part;
++           Else  Result.im := Set_Result_im(Result.re);
+         END
+       ELSE  BEGIN
+           // For random interval
+@@ -1061,8 +1057,8 @@
+ 
+        Hr_Time := 0.0;
+ 
+-       VBuf := AllocMem(Sizeof(VBuf^[1])* ObjList.ListSize);
+-       CBuf := AllocMem(Sizeof(VBuf^[1])* 1);   // just a dummy -- Cbuf is ignored here
++       VBuf := AllocMem(Sizeof(Double)* ObjList.ListSize);
++       CBuf := AllocMem(Sizeof(Double)* 1);   // just a dummy -- Cbuf is ignored here
+ 
+        For i := 1 to MaxPts Do Begin
+           For j := 1 to ObjList.ListSize Do Begin
+Index: Parallel_Version/Source/General/PriceShape.pas
+===================================================================
+--- Parallel_Version/Source/General/PriceShape.pas	(revision 2134)
++++ Parallel_Version/Source/General/PriceShape.pas	(working copy)
+@@ -823,8 +823,8 @@
+ 
+        Hr_Time := 0.0;
+ 
+-       VBuf := AllocMem(Sizeof(VBuf^[1])* ObjList.ListSize);
+-       CBuf := AllocMem(Sizeof(VBuf^[1])* 1);   // just a dummy -- Cbuf is ignored here
++       VBuf := AllocMem(Sizeof(Double)* ObjList.ListSize);
++       CBuf := AllocMem(Sizeof(Double)* 1);   // just a dummy -- Cbuf is ignored here
+ 
+        For i := 1 to MaxPts Do Begin
+           For j := 1 to ObjList.ListSize Do Begin
+Index: Parallel_Version/Source/General/TempShape.pas
+===================================================================
+--- Parallel_Version/Source/General/TempShape.pas	(revision 2134)
++++ Parallel_Version/Source/General/TempShape.pas	(working copy)
+@@ -822,8 +822,8 @@
+ 
+        Hr_Time := 0.0;
+ 
+-       VBuf := AllocMem(Sizeof(VBuf^[1])* ObjList.ListSize);
+-       CBuf := AllocMem(Sizeof(VBuf^[1])* 1);   // just a dummy -- Cbuf is ignored here
++       VBuf := AllocMem(Sizeof(Double)* ObjList.ListSize);
++       CBuf := AllocMem(Sizeof(Double)* 1);   // just a dummy -- Cbuf is ignored here
+ 
+        For i := 1 to MaxPts Do Begin
+           For j := 1 to ObjList.ListSize Do Begin
+Index: Parallel_Version/Source/Meters/EnergyMeter.pas
+===================================================================
+--- Parallel_Version/Source/Meters/EnergyMeter.pas	(revision 2134)
++++ Parallel_Version/Source/Meters/EnergyMeter.pas	(working copy)
+@@ -382,7 +382,7 @@
+ implementation
+ USES  ParserDel, DSSClassDefs, DSSGlobals, Bus, Sysutils, MathUtil,  UCMatrix,
+       Utilities, PCElement,  StackDef, Circuit, Line, LineUnits,
+-      Classes, ReduceAlgs, Windows, Math, MemoryMap_Lib;
++      Classes, ReduceAlgs, {$IFNDEF FPC}Windows,{$ENDIF} Math, MemoryMap_Lib;
+ 
+ Const NumPropsThisClass = 24;
+ 
+@@ -845,7 +845,7 @@
+                  On E:Exception Do DoSimpleMsg('Error making  Directory: "'+CasePath+'". ' + E.Message, 522);
+               End;
+             End;
+-            DI_Dir  := CasePath+'\DI_yr_' + Trim( IntToStr(ActiveCircuit[ActorID].Solution.Year));
++            DI_Dir  := CasePath+ PathDelim + 'DI_yr_' + Trim( IntToStr(ActiveCircuit[ActorID].Solution.Year));
+             If not DirectoryExists(DI_Dir) Then Begin
+               Try
+                  mkDir(DI_Dir);
+@@ -1164,7 +1164,7 @@
+ 
+ function TEnergyMeterObj.MakeVPhaseReportFileName(ActorID: integer): String;
+ begin
+-    Result := EnergyMeterClass[ActorID].DI_Dir + '\' + Name + '_PhaseVoltageReport.CSV';
++    Result := EnergyMeterClass[ActorID].DI_Dir + PathDelim + Name + '_PhaseVoltageReport.CSV';
+ end;
+ 
+ //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+@@ -2786,12 +2786,12 @@
+      CloseFile(FCaps);
+ 
+      {If any records were written to the file, record their relative names}
+-     If NBranches>0  Then SavedFileList[ActiveActor].Add (dirname + '\Branches.dss') else DeleteFile('Branches.dss');
+-     If NXfmrs>0  Then SavedFileList[ActiveActor].Add (dirname + '\Transformers.dss') else DeleteFile('Transformers.dss');
+-     If NShunts>0 Then SavedFileList[ActiveActor].Add (dirname + '\Shunts.dss') else DeleteFile('Shunts.dss');
+-     If NLoads>0  Then SavedFileList[ActiveActor].Add (dirname + '\Loads.dss') else DeleteFile('Loads.dss');
+-     If NGens>0   Then SavedFileList[ActiveActor].Add (dirname + '\Generators.dss') else DeleteFile('Generators.dss');
+-     If NCaps>0   Then SavedFileList[ActiveActor].Add (dirname + '\Capacitors.dss') else DeleteFile('Capacitors.dss');
++     If NBranches>0  Then SavedFileList[ActiveActor].Add (dirname + PathDelim + 'Branches.dss') else DeleteFile('Branches.dss');
++     If NXfmrs>0  Then SavedFileList[ActiveActor].Add (dirname + PathDelim + 'Transformers.dss') else DeleteFile('Transformers.dss');
++     If NShunts>0 Then SavedFileList[ActiveActor].Add (dirname + PathDelim + 'Shunts.dss') else DeleteFile('Shunts.dss');
++     If NLoads>0  Then SavedFileList[ActiveActor].Add (dirname + PathDelim + 'Loads.dss') else DeleteFile('Loads.dss');
++     If NGens>0   Then SavedFileList[ActiveActor].Add (dirname + PathDelim + 'Generators.dss') else DeleteFile('Generators.dss');
++     If NCaps>0   Then SavedFileList[ActiveActor].Add (dirname + PathDelim + 'Capacitors.dss') else DeleteFile('Capacitors.dss');
+ 
+    End; {IF}
+ 
+@@ -2929,18 +2929,18 @@
+         WriteTotalsFile(ActorID);  // Sum all energymeter registers to "Totals.CSV"
+         SystemMeter.CloseDemandIntervalFile(ActorID);
+         SystemMeter.Save(ActorID);
+-        CloseMHandler(EMT_MHandle, DI_Dir + '\EnergyMeterTotals.CSV', EMT_Append);
++        CloseMHandler(EMT_MHandle, DI_Dir + PathDelim + 'EnergyMeterTotals.CSV', EMT_Append);
+         EMT_MHandle :=  nil;
+-        CloseMHandler(TDI_MHandle, DI_Dir+'\DI_Totals.CSV', TDI_Append);
++        CloseMHandler(TDI_MHandle, DI_Dir+PathDelim+'DI_Totals.CSV', TDI_Append);
+         TDI_MHandle :=  nil;
+         DIFilesAreOpen := FALSE;
+         if OverloadFileIsOpen then Begin
+-            CloseMHandler(OV_MHandle,EnergyMeterClass[ActorID].DI_Dir+'\DI_Overloads.CSV', OV_Append);
++            CloseMHandler(OV_MHandle,EnergyMeterClass[ActorID].DI_Dir + PathDelim + 'DI_Overloads.CSV', OV_Append);
+             OV_MHandle  :=  nil;
+             OverloadFileIsOpen := FALSE;
+         End;
+         if VoltageFileIsOpen then Begin
+-            CloseMHandler(VR_MHandle,EnergyMeterClass[ActorID].DI_Dir+'\DI_VoltExceptions.CSV', VR_Append);
++            CloseMHandler(VR_MHandle,EnergyMeterClass[ActorID].DI_Dir + PathDelim + 'DI_VoltExceptions.CSV', VR_Append);
+             VR_MHandle  := nil;
+             VoltageFileIsOpen := FALSE;
+         End;
+@@ -3024,7 +3024,7 @@
+ 
+           {Open FDI_Totals}
+           Try
+-              FileNm :=  DI_Dir+'\DI_Totals.CSV';
++              FileNm :=  DI_Dir+PathDelim+'DI_Totals.CSV';
+               {File Must Exist}
+               If FileExists(FileNm) Then  TDI_Append := True;
+               CreateFDI_Totals(ActorID);
+@@ -3039,7 +3039,7 @@
+ 
+ function TEnergyMeterObj.MakeDIFileName(ActorID:integer): String;
+ begin
+-    Result := EnergyMeterClass[ActorID].DI_Dir + '\' + Self.Name + '.CSV';
++    Result := EnergyMeterClass[ActorID].DI_Dir + PathDelim + Self.Name + '.CSV';
+ end;
+ 
+ procedure TEnergyMeter.Set_SaveDemandInterval(ActorID: integer; const Value: Boolean);
+@@ -3115,7 +3115,7 @@
+     end;
+     WriteintoMemStr(TDI_MHandle, Char(10));
+  Except
+-    On E:Exception Do DoSimpleMsg('Error creating: "'+DI_Dir+'\DI_Totals.CSV": '+E.Message, 539)
++    On E:Exception Do DoSimpleMsg('Error creating: "'+DI_Dir+ PathDelim +'DI_Totals.CSV": '+E.Message, 539)
+  End;
+ end;
+ 
+@@ -3131,12 +3131,12 @@
+   If This_Meter_DIFileIsOpen Then Exit;
+ 
+   Try
+-      FileNm := EnergyMeterClass[ActorID].Di_Dir + '\DI_SystemMeter.CSV';
++      FileNm := EnergyMeterClass[ActorID].Di_Dir + PathDelim + 'DI_SystemMeter.CSV';
+       AssignFile(SystemDIFile, FileNm );
+       {File Must Exist}
+       If FileExists(FileNm) Then
+       Begin
+-//        DI_MMFView:=  MapFile2Memory(EnergyMeterClass.DI_Dir+'\DI_SystemMeter.CSV', DI_MMFHandle);
++//        DI_MMFView:=  MapFile2Memory(EnergyMeterClass.DI_Dir+ PathDelim + 'DI_SystemMeter.CSV', DI_MMFHandle);
+ //        DI_Cursor :=  GetMMFCursor(DI_MMFView);
+       End
+       Else OpenDemandIntervalFile;
+@@ -3168,7 +3168,7 @@
+   File_Path : string;
+ begin
+      IF This_Meter_DIFileIsOpen Then Begin
+-       File_Path  :=  EnergyMeterClass[ActorID].DI_Dir+'\DI_SystemMeter.CSV';
++       File_Path  :=  EnergyMeterClass[ActorID].DI_Dir + PathDelim + 'DI_SystemMeter.CSV';
+        CloseMHandler(SDI_MHandle, File_Path, SDI_Append);
+        SDI_MHandle  :=  nil;
+        This_Meter_DIFileIsOpen := FALSE;
+@@ -3234,7 +3234,7 @@
+        {If we are doing a simulation and saving interval data, create this in the
+         same directory as the demand interval data}
+        If  energyMeterClass[ActorID].SaveDemandInterval[ActorID] Then
+-          Folder := energyMeterClass[ActorID].DI_DIR + '\'
++          Folder := energyMeterClass[ActorID].DI_DIR + PathDelim
+        Else
+           Folder := GetOutputDirectory;
+        GlobalResult := CSVName;
+@@ -3376,7 +3376,7 @@
+         WriteintoMemStr(FM_MHandle, inttostr(ActiveCircuit[ActorID].Solution.Year));
+         For i := 1 to NumEMRegisters Do WriteintoMem(FM_MHandle,Double(RegSum[i]));
+         WriteintoMemStr(FM_MHandle, Char(10));
+-        CloseMHandler(FM_MHandle, DI_Dir + '\Totals.CSV', FM_Append);
++        CloseMHandler(FM_MHandle, DI_Dir + PathDelim + 'Totals.CSV', FM_Append);
+         FM_MHandle  := nil;
+ 
+   Except
+Index: Parallel_Version/Source/Meters/MemoryMap_lib.pas
+===================================================================
+--- Parallel_Version/Source/Meters/MemoryMap_lib.pas	(revision 2134)
++++ Parallel_Version/Source/Meters/MemoryMap_lib.pas	(working copy)
+@@ -21,7 +21,7 @@
+ 
+ implementation
+ 
+-uses windows,
++uses {$IFNDEF FPC}windows,{$ENDIF}
+      sysutils,
+      math,
+      Dialogs,
+@@ -28,6 +28,10 @@
+      DSSGlobals;
+ type
+     TByteArr  = array of uint8;
++var
++  wordBuf: Word;
++// $01A0 is Header for identifying String type data
++// $02A0 is Header for identifying Double type data
+ //******************************************************************************
+ // Creates a new BytesStream for the caller
+ // Returns the handler to handle the new memory space
+@@ -37,7 +41,12 @@
+   Mem_Space : TBytesStream;
+ begin
+   Mem_Space :=  TBytesStream.Create();
+-  Mem_Space.WriteData($01A0);   // Header for identifying String type data
++{$IFNDEF FPC}
++  Mem_Space.WriteData($01A0);
++{$ELSE}
++  wordBuf := $01A0;
++  Mem_Space.Write(wordBuf,2);
++{$ENDIF};
+   Write_String(Mem_Space, Init_Str);
+   Result  :=  Mem_Space;
+ end;
+@@ -46,7 +55,12 @@
+ //******************************************************************************
+ procedure WriteintoMemStr(Mem_Space : TBytesStream; Content: string); overload;
+ begin
+-  Mem_Space.WriteData($01A0);   // Header for identifying String type data
++{$IFNDEF FPC}
++  Mem_Space.WriteData($01A0);
++{$ELSE}
++  wordBuf := $01A0;
++  Mem_Space.Write(wordBuf,2);
++{$ENDIF};
+   Write_String(Mem_Space, Content);
+ end;
+ //******************************************************************************
+@@ -54,8 +68,14 @@
+ //******************************************************************************
+ procedure WriteintoMem(Mem_Space : TBytesStream; Content: Double); overload;
+ begin
+-  Mem_Space.WriteData($02A0);   // Header for identifying a double type data
++{$IFNDEF FPC}
++  Mem_Space.WriteData($02A0);
+   Mem_Space.WriteData(Content);
++{$ELSE}
++  wordBuf := $02A0;
++  Mem_Space.Write(wordBuf,2);
++  Mem_Space.Write(Content, sizeof(double));
++{$ENDIF};
+ end;
+ //******************************************************************************
+ // Saves the content of the BytesStream into the specified file path
+@@ -133,7 +153,11 @@
+                   end;
+             end;
+             2 : begin        // Is a Double
++              {$IFNDEF FPC}
+                     Mem_Space.ReadData(TVariableDbl,8);
++              {$ELSE}
++                    Mem_Space.Read(TVariableDbl,sizeof(double));
++              {$ENDIF}
+                     idx :=  idx + 7;
+                     if Fhead then Fhead :=  False
+                     else write(F,', ');
+@@ -164,9 +188,12 @@
+ 
+ {  Str_Sz  :=  length(Content)-1;
+   For idx := 0 to Str_Sz do Mem_Space.WriteData(Content[idx+1]);}
+-
++{$IFNDEF FPC}
+   For idx := 1 to length(Content) do Mem_Space.WriteData(Content[idx]);
+-
++{$ELSE}
++  For idx := 1 to length(Content) do
++      Mem_Space.Write(Content[idx],Length(Content[idx])); // TODO - verify AnsiString vs. unicode
++{$ENDIF}
+ End;
+ 
+ end.
+Index: Parallel_Version/Source/Meters/Monitor.pas
+===================================================================
+--- Parallel_Version/Source/Meters/Monitor.pas	(revision 2134)
++++ Parallel_Version/Source/Meters/Monitor.pas	(working copy)
+@@ -1591,8 +1591,8 @@
+ 
+           {Find Max number of points}
+            RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
+-           VBuf := AllocMem(Sizeof(VBuf^[1])* RecordSize);  // Put Everything in here for now
+-           CBuf := AllocMem(Sizeof(VBuf^[1])* 1);   // just a dummy -- Cbuf is ignored here
++           VBuf := AllocMem(Sizeof(Double)* RecordSize);  // Put Everything in here for now
++           CBuf := AllocMem(Sizeof(Double)* 1);   // just a dummy -- Cbuf is ignored here
+ 
+            {Get first time value and set the interval to this value}
+            hr:= 0.0;
+@@ -1616,7 +1616,7 @@
+ 
+            {Now find Maxtime in Monitor}
+            PositionSave := MonitorStream.Position;
+-           MonitorStream.Seek(-(Recordbytes+8), soFromEnd);
++           MonitorStream.Seek(-(Recordbytes+8), soEnd);
+            If Not (MonitorStream.Position>=MonitorStream.Size) Then
+              With MonitorStream Do Begin
+                   Read( hr, 4);  // singles
+@@ -1632,7 +1632,7 @@
+            END;
+ 
+            {Go Back to where we were}
+-           MonitorStream.Seek(PositionSave, soFromBeginning);
++           MonitorStream.Seek(PositionSave, soBeginning);
+ 
+            TopTransferFile.WriteHeader(Time, MaxTime, Time, RecordSize, 0, 16,  'DSS (TM), EPRI (R)');
+            TopTransferFile.WriteNames(NameList, CNames);
+Index: Parallel_Version/Source/PCElements/GenUserModel.pas
+===================================================================
+--- Parallel_Version/Source/PCElements/GenUserModel.pas	(revision 2134)
++++ Parallel_Version/Source/PCElements/GenUserModel.pas	(working copy)
+@@ -86,7 +86,7 @@
+ 
+ implementation
+ 
+-Uses Generator, DSSGlobals, Windows, Sysutils;
++Uses Generator, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils;
+ 
+ { TGenUserModel }
+ 
+Index: Parallel_Version/Source/PCElements/Isource.pas
+===================================================================
+--- Parallel_Version/Source/PCElements/Isource.pas	(revision 2134)
++++ Parallel_Version/Source/PCElements/Isource.pas	(working copy)
+@@ -22,7 +22,7 @@
+ 
+ interface
+ 
+-USES DSSClass, PCClass,PCElement, ucmatrix, ucomplex, Spectrum, StdVcl, Loadshape;
++USES DSSClass, PCClass,PCElement, ucmatrix, ucomplex, Spectrum, Loadshape;
+ 
+ TYPE
+ // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+Index: Parallel_Version/Source/PCElements/Load.pas
+===================================================================
+--- Parallel_Version/Source/PCElements/Load.pas	(revision 2134)
++++ Parallel_Version/Source/PCElements/Load.pas	(working copy)
+@@ -1076,7 +1076,6 @@
+     {New code to help with convergence at low voltages}
+     ILow := (CmulReal(Yeq,   VbaseLow));
+     I95  := (CmulReal(Yeq95, Vbase95));
+-    M95  := CDivReal(Csub(I95, ILow), (VBase95 - VBaseLow)); // (I95 - ILow)/(Vbase95 - VbaseLow);
+     M95  := CDivReal(Csub(I95, ILow), (VBase95 - VBaseLow)); // (I95 - ILow)/(Vbase95 - VbaseLow);    ***Added by Celso & Paulo
+     IBase:= (CmulReal(Yeq, VBase));                          // ***Added by Celso & Paulo
+     M95I := CDivReal(Csub(IBase, ILow), (VBase95 - VBaseLow)); // (IBase - ILow)/(Vbase95 - VbaseLow);    ***Added by Celso & Paulo
+Index: Parallel_Version/Source/PCElements/PVSystemUserModel.pas
+===================================================================
+--- Parallel_Version/Source/PCElements/PVSystemUserModel.pas	(revision 2134)
++++ Parallel_Version/Source/PCElements/PVSystemUserModel.pas	(working copy)
+@@ -71,7 +71,7 @@
+ 
+ implementation
+ 
+-Uses PVSystem, DSSGlobals, Windows, Sysutils;
++Uses PVSystem, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils;
+ 
+ { TPVsystemUserModel }
+ 
+Index: Parallel_Version/Source/PCElements/PVsystem.pas
+===================================================================
+--- Parallel_Version/Source/PCElements/PVsystem.pas	(revision 2134)
++++ Parallel_Version/Source/PCElements/PVsystem.pas	(working copy)
+@@ -1297,7 +1297,7 @@
+               CASE Mode OF
+                   SNAPSHOT:    ; {Just solve for the present kW, kvar}  // Don't check for state change
+                   DAILYMODE:  Begin  CalcDailyMult(DynaVars.dblHour);  CalcDailyTemperature(DynaVars.dblHour); End;
+-                  YEARLYMODE,DUTYCYCLE: Begin  CalcYearlyMult(DynaVars.dblHour); CalcYearlyTemperature(DynaVars.dblHour); End;
++                  YEARLYMODE: Begin  CalcYearlyMult(DynaVars.dblHour); CalcYearlyTemperature(DynaVars.dblHour); End;
+                (*
+                   MONTECARLO1,
+                   MONTEFAULT,
+@@ -1322,7 +1322,7 @@
+                   LOADDURATION2: Begin CalcDailyMult(DynaVars.dblHour); CalcDailyTemperature(DynaVars.dblHour); End;
+                   PEAKDAY:       Begin CalcDailyMult(DynaVars.dblHour); CalcDailyTemperature(DynaVars.dblHour); End;
+ 
+-//                DUTYCYCLE:     Begin CalcDutyMult(DynaVars.dblHour) ; CalcDutyTemperature(DynaVars.dblHour) ;  End;
++                  DUTYCYCLE:     Begin CalcDutyMult(DynaVars.dblHour) ; CalcDutyTemperature(DynaVars.dblHour) ;  End;
+                   {AUTOADDFLAG:  ; }
+               END;
+ 
+Index: Parallel_Version/Source/PCElements/Storage.pas
+===================================================================
+--- Parallel_Version/Source/PCElements/Storage.pas	(revision 2134)
++++ Parallel_Version/Source/PCElements/Storage.pas	(working copy)
+@@ -2264,7 +2264,8 @@
+      CASE StorageState of
+           STORE_CHARGING:   Result := abs(Power[1,ActiveActor].re * (100.0 - pctChargeEff)/100000.0) + pctChargeEff*kWIdlingLosses/100.0; // kW
+           STORE_IDLING:     Result := kWIdlingLosses;
+-          STORE_DISCHARGING:Result := abs(Power[1,ActiveActor].re * (100.0 - pctDisChargeEff)/100000.0) + (2.0 - pctChargeEff/100.0) * kWIdlingLosses;  // kW
++        //****  STORE_DISCHARGING:Result := abs(Power[1,ActiveActor].re * (100.0 - pctDisChargeEff)/100000.0) + (2.0 - pctChargeEff/100.0) * kWIdlingLosses;  // kW
++          STORE_DISCHARGING:Result := abs(Power[1,ActiveActor].re * (100.0 / pctDisChargeEff - 1.0)/1000.0) + (100.0/pctDisChargeEff) * kWIdlingLosses;  // kW
+      END;
+ end;
+ 
+Index: Parallel_Version/Source/PCElements/StoreUserModel.pas
+===================================================================
+--- Parallel_Version/Source/PCElements/StoreUserModel.pas	(revision 2134)
++++ Parallel_Version/Source/PCElements/StoreUserModel.pas	(working copy)
+@@ -130,7 +130,7 @@
+ 
+ implementation
+ 
+-Uses Storage, DSSGlobals, Windows, Sysutils;
++Uses Storage, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils;
+ 
+ { TStoreUserModel }
+ 
+Index: Parallel_Version/Source/PCElements/vccs.pas
+===================================================================
+--- Parallel_Version/Source/PCElements/vccs.pas	(revision 2134)
++++ Parallel_Version/Source/PCElements/vccs.pas	(working copy)
+@@ -40,8 +40,11 @@
+         FsampleFreq: double; // discretization frequency for Z filter
+         Fwinlen: integer;
+         Ffiltlen: integer;
++        Irated: double; // line current at full output
++        Fkv: double; // scale voltage to HW pu input
++        Fki: double; // scale HW pu output to current
+ 
+-        // Support for Dynamics Mode
++        // Support for Dynamics Mode - PU of Vrated and BaseCurr
+         sVwave: double;
+         sIwave: double;
+         sIrms: double;
+@@ -294,6 +297,8 @@
+   Vrated := 208.0;
+   Ppct := 100.0;
+   FsampleFreq := 5000.0;
++  Fkv := 1.0;
++  Fki := 1.0;
+ 
+   Fwinlen := 0;
+   Ffilter_name := '';
+@@ -328,7 +333,13 @@
+     DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device VCCS.'+Name+' Not Found.', 333);
+   end;
+   Reallocmem(InjCurrent, SizeOf(InjCurrent^[1])*Yorder);
+-  BaseCurr := 0.01 * Ppct * Prated / Vrated / FNphases;
++
++  Irated := Prated / Vrated / FNphases;
++  if FNPhases = 3 then Irated := Irated * sqrt(3);
++  BaseCurr := 0.01 * Ppct * Irated;
++  Fkv := 1.0 / Vrated / sqrt(2.0);
++  Fki := BaseCurr * sqrt(2.0);
++
+   if Length (Ffilter_name) > 0 then begin
+     Ffiltlen := Ffilter.NumPoints;
+     Fwinlen := Trunc (FsampleFreq / BaseFrequency);
+@@ -338,8 +349,6 @@
+     Reallocmem (wlast, sizeof(wlast^[1]) * Ffiltlen);
+     Reallocmem (zlast, sizeof(zlast^[1]) * Ffiltlen);
+   end;
+-
+-  if FNPhases = 3 then BaseCurr := BaseCurr * sqrt(3);
+ End;
+ 
+ Procedure TVCCSObj.CalcYPrim(ActorID : Integer);
+@@ -393,7 +402,7 @@
+ //  IterminalUpdated := FALSE;
+   if ActiveSolutionObj.IsDynamicModel then begin
+     For i := 1 to Fnphases Do Begin
+-      Curr^[i] := pdegtocomplex (sIrms, cdang(Vterminal^[i]));
++      Curr^[i] := pdegtocomplex (sIrms * BaseCurr, cdang(Vterminal^[i]));
+     End;
+   end else begin
+     For i := 1 to Fnphases Do Begin
+@@ -445,7 +454,7 @@
+ //     However, OpenDSS uses the load convention
+ procedure TVCCSObj.InitStateVars(ActorID : Integer);
+ var
+-  d, wt, wd, val, iang, vang, pk: double;
++  d, wt, wd, val, iang, vang: double;
+   i, k: integer;
+ begin
+   // initialize outputs from the terminal conditions
+@@ -452,14 +461,13 @@
+   ComputeIterminal(ActorID);
+   iang := cang(Iterminal^[1]);
+   vang := cang(Vterminal^[1]);
+-  pk := sqrt(2);
+-  sVwave := cabs(Vterminal^[1]) * pk;
+-  sIrms := cabs(Iterminal^[1]);
+-  sIwave := sIrms * pk;
+-  sIpeak := sIrms * pk;
++  sVwave := cabs(Vterminal^[1]) / Vrated;
++  sIrms := cabs(Iterminal^[1]) / BaseCurr;
++  sIwave := sIrms;
++  sIpeak := sIrms;
+   sBP1out := 0;
+   sFilterout := 0;
+-  vlast := Vterminal^[1];
++  vlast := cdivreal (Vterminal^[1], Vrated);
+ 
+   // initialize the history terms for HW model source convention
+   d := 1 / FsampleFreq;
+@@ -472,7 +480,7 @@
+   end;
+   for i := 1 to Fwinlen do begin
+     wt := iang - wd * (Fwinlen - i);
+-    val := pk * sIrms * cos(wt);  // current by passive sign convention
++    val := sIrms * cos(wt);  // current by passive sign convention
+     y2[i] := val * val;
+     k := i - Fwinlen + Ffiltlen;
+     if k > 0 then begin
+@@ -489,7 +497,7 @@
+ // this is called twice per dynamic time step; predictor then corrector
+ procedure TVCCSObj.IntegrateStates(ActorID : Integer);
+ var
+-  t, h, d, f, w, wt, pk: double;
++  t, h, d, f, w, wt: double;
+   vre, vim, vin, scale, y: double;
+   nstep, i, k, corrector: integer;
+   vnow: complex;
+@@ -504,9 +512,8 @@
+   d := 1 / FSampleFreq;
+   nstep := trunc (1e-6 + h/d);
+   w := 2 * Pi * f;
+-  pk := sqrt(2);
+-
+-  vnow := Vterminal^[1];
++  
++  vnow := cdivreal (Vterminal^[1], Vrated);
+   vin := 0;
+   y := 0;
+   iu := sIdxU;
+@@ -522,7 +529,7 @@
+     vre := vlast.re + (vnow.re - vlast.re) * scale;
+     vim := vlast.im + (vnow.im - vlast.im) * scale;
+     wt := w * (t - h + i * d);
+-    vin := pk * (vre * cos(wt) + vim * sin(wt));
++    vin := (vre * cos(wt) + vim * sin(wt));
+     whist[iu] := Fbp1.GetYValue(vin);
+     // apply the filter and second PWL block
+     z[iu] := 0;
+@@ -542,7 +549,7 @@
+     if i = nstep then begin
+       y2sum := 0.0;
+       for k := 1 to Fwinlen do y2sum := y2sum + y2[k];
+-      sIrms := sqrt(y2sum / Fwinlen); // TODO - this is the magnitude, what about angle?
++      sIrms := sqrt(2.0 * y2sum / Fwinlen); // TODO - this is the magnitude, what about angle?
+     end;
+   end;
+ 
+Index: Parallel_Version/Source/PDElements/Capacitor.pas
+===================================================================
+--- Parallel_Version/Source/PDElements/Capacitor.pas	(revision 2134)
++++ Parallel_Version/Source/PDElements/Capacitor.pas	(working copy)
+@@ -1064,7 +1064,7 @@
+        2:  Result := GetBus(2);
+        4:  Result  := GetDSSArray_Real(FNumSteps, Fkvarrating);
+        8:  Begin
+-               FTemp := Allocmem(SizeOF(FTemp^[1])*FNumSteps);
++               FTemp := Allocmem(SizeOf(Double)*FNumSteps);
+                For i := 1 to FNumSteps Do FTemp^[i] := FC^[i] * 1.0e6;  // To microfarads
+                Result  := GetDSSArray_Real(FNumSteps, FTemp);
+                Reallocmem(FTemp, 0); // throw away temp storage
+Index: Parallel_Version/Source/PDElements/Line.pas
+===================================================================
+--- Parallel_Version/Source/PDElements/Line.pas	(revision 2134)
++++ Parallel_Version/Source/PDElements/Line.pas	(working copy)
+@@ -70,6 +70,8 @@
+ 
+         Procedure ReallocZandYcMatrices;
+ 
++        PROCEDURE DoLongLine(Frequency:Double);  // Long Line Correction for 1=phase
++
+       Protected
+         Zinv               :TCMatrix;
+ 
+@@ -807,6 +809,36 @@
+     Yc   := TCMatrix.CreateMatrix(Fnphases);
+ end;
+ 
++PROCEDURE TLineObj.DoLongLine(Frequency:Double);
++// do long line correction for len and frequwnen
++
++Var
++   Zs, Zm, Ys, Ym : Complex;
++   GammaL, ExpP, ExpM, Exp2P, Exp2M, SinhGL, Tanh2GL : Complex;
++
++Begin
++
++ // nominal PI parameters per unit length but Len variable is used here
++        Zs := cmplx (R1, X1);
++        Ys := cmplx (0.0, TwoPi * Frequency * C1);
++        // apply the long-line correction to obtain Zm and Ym
++        GammaL  := Csqrt (Cmul(Zs, Ys));
++        GammaL  := CmulReal (GammaL, Len);
++        ExpP    := CmulReal (cmplx(cos(GammaL.im), sin(GammaL.im)), exp(GammaL.re));
++        Exp2P   := CmulReal (cmplx(cos(0.5 * GammaL.im), sin(0.5 * GammaL.im)), exp(0.5 * GammaL.re));
++        ExpM    := Cinv(ExpP);
++        Exp2M   := Cinv(Exp2P);
++        SinhGL  := CmulReal (Csub (ExpP, ExpM), 0.5);
++        Tanh2GL := Cdiv (Csub (Exp2P, Exp2M), Cadd (Exp2P, Exp2M));
++        Zm := Cdiv (Cmul (CMulReal (Zs, Len), SinhGL), GammaL);
++        Ym := Cdiv (Cmul (CMulReal (Ys, Len), Tanh2GL), CmulReal (GammaL, 0.5));
++        // rely on this function being called only once, unless R1, X1, or C1 changes
++        R1 := Zm.re / Len;
++        X1 := Zm.im / Len;
++        C1 := Ym.im / Len / TwoPi / Frequency;
++
++End;
++
+ PROCEDURE TLineObj.RecalcElementData(ActorID : Integer);
+ 
+ {
+@@ -819,7 +851,6 @@
+    Zs, Zm, Ys, Ym, Ztemp : Complex;
+    i, j : Integer;
+    Yc1, Yc0, OneThird : double;
+-   GammaL, ExpP, ExpM, Exp2P, Exp2M, SinhGL, Tanh2GL : Complex;
+ 
+ Begin
+ 
+@@ -836,24 +867,7 @@
+       // long-line equivalent PI, but only for CktModel=Positive
+       if ActiveCircuit[ActorID].PositiveSequence and (C1 > 0) then
+       begin
+-        // nominal PI parameters per unit length but Len variable is used here
+-        Zs := cmplx (R1, X1);
+-        Ys := cmplx (0.0, TwoPi * BaseFrequency * C1);
+-        // apply the long-line correction to obtain Zm and Ym
+-        GammaL  := Csqrt (Cmul(Zs, Ys));
+-        GammaL  := CmulReal (GammaL, Len);
+-        ExpP    := CmulReal (cmplx(cos(GammaL.im), sin(GammaL.im)), exp(GammaL.re));
+-        Exp2P   := CmulReal (cmplx(cos(0.5 * GammaL.im), sin(0.5 * GammaL.im)), exp(0.5 * GammaL.re));
+-        ExpM    := Cinv(ExpP);
+-        Exp2M   := Cinv(Exp2P);
+-        SinhGL  := CmulReal (Csub (ExpP, ExpM), 0.5);
+-        Tanh2GL := Cdiv (Csub (Exp2P, Exp2M), Cadd (Exp2P, Exp2M));
+-        Zm := Cdiv (Cmul (CMulReal (Zs, Len), SinhGL), GammaL);
+-        Ym := Cdiv (Cmul (CMulReal (Ys, Len), Tanh2GL), CmulReal (GammaL, 0.5));
+-        // rely on this function being called only once, unless R1, X1, or C1 changes
+-        R1 := Zm.re / Len;
+-        X1 := Zm.im / Len;
+-        C1 := Ym.im / Len / TwoPi / BaseFrequency;
++        DoLongLine(BaseFrequency);  // computes R1, X1, C1  per unit length
+       end;
+       // zero sequence the same as positive sequence
+       R0 := R1;
+Index: Parallel_Version/Source/PDElements/Transformer.pas
+===================================================================
+--- Parallel_Version/Source/PDElements/Transformer.pas	(revision 2134)
++++ Parallel_Version/Source/PDElements/Transformer.pas	(working copy)
+@@ -41,6 +41,7 @@
+        PROCEDURE InterpretAllkVRatings(const S:String);
+        PROCEDURE InterpretAllkVARatings(const S:String);
+        PROCEDURE InterpretAllRs(const S:String);
++        FUNCTION InterpretLeadLag(const S:String):Boolean;
+        FUNCTION  TrapZero(const Value:Double; DefaultValue:Double):Double;
+ 
+        {PROCEDURE MakeNewBusNameForNeutral(Var NewBusName:String; Nphases:Integer);}
+@@ -144,6 +145,8 @@
+         pctLoadLoss       :Double;
+         pctNoLoadLoss     :Double;
+ 
++        HVLeadsLV         :Boolean;
++
+         XHLChanged        :Boolean;
+ 
+         PROCEDURE SetTermRef;
+@@ -225,7 +228,7 @@
+ var
+    XfmrCodeClass:TXfmrCode;
+ 
+-Const NumPropsThisClass = 43;
++Const NumPropsThisClass = 44;
+ 
+ //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ constructor TTransf.Create;  // Creates superstructure for all Transformer objects
+@@ -311,6 +314,7 @@
+      PropertyName[41] := 'X12';
+      PropertyName[42] := 'X13';
+      PropertyName[43] := 'X23';
++     PropertyName[44] := 'LeadLag';                              
+ 
+      // define Property help values
+      PropertyHelp[1] := 'Number of phases this transformer. Default is 3.';
+@@ -331,7 +335,9 @@
+      PropertyHelp[8] := 'Per unit tap that this winding is on.';
+      PropertyHelp[9] := 'Percent resistance this winding.  (half of total for a 2-winding).';
+      PropertyHelp[10] := 'Default = -1. Neutral resistance of wye (star)-connected winding in actual ohms.' +
+-                         'If entered as a negative value, the neutral is assumed to be open, or floating.';
++                         'If entered as a negative value, the neutral is assumed to be open, or floating. ' +
++                         'To solidly ground the neutral, connect the neutral conductor to Node 0 in the Bus property spec for this winding. ' +
++                         'For example: Bus=MyBusName.1.2.3.0, which is generally the default connection.';
+      PropertyHelp[11] := 'Neutral reactance of wye(star)-connected winding in actual ohms.  May be + or -.';
+ 
+    // General Data
+@@ -390,6 +396,9 @@
+                          'for 3-winding transformers only. Percent on the kVA base of winding 1. ';
+      PropertyHelp[43] := 'Alternative to XLT for specifying the percent reactance from winding 2 to winding 3.Use '+
+                          'for 3-winding transformers only. Percent on the kVA base of winding 1.  ';
++     PropertyHelp[44] := '{Lead | Lag (default) | ANSI (default) | Euro } Designation in mixed Delta-wye connections the '+
++                         'relationship between HV to LV winding. Default is ANSI 30 deg lag, e.g., Dy1 of Yd1 vector group. ' +
++                         'To get typical European Dy11 connection, specify either "lead" or "Euro"';
+ 
+      ActiveProperty := NumPropsThisClass;
+      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
+@@ -486,6 +495,7 @@
+            41: XHL :=  TrapZero(parser[ActorID].Dblvalue, 7.0) * 0.01;
+            42: XHT :=  TrapZero(parser[ActorID].Dblvalue, 35.0) * 0.01;
+            43: XLT :=  TrapZero(parser[ActorID].Dblvalue, 30.0) * 0.01;
++           44: HVLeadsLV := InterpretLeadLag(Param);
+          ELSE
+            // Inherited properties
+               ClassEdit(ActiveTransfObj, ParamPointer - NumPropsThisClass)
+@@ -631,6 +641,22 @@
+ 
+ 
+ //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
++FUNCTION TTransf.InterpretLeadLag(const S:String):Boolean;
++//  routine expecting all winding bus connections expressed in one array of strings
++VAR
++    BusNam  :String;
++    i       :Integer;
++Begin
++
++    Result := FALSE;   // default to ANSI 30 Deg Lag if can't understand S
++
++    if CompareTextShortest(S, 'lead')=0       then Result := TRUE
++    Else if CompareTextShortest(S, 'euro')=0  then   Result := TRUE;
++
++End;
++
++
++//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ PROCEDURE TTransf.InterpretAllkVRatings(const S:String);
+ //  routine expecting all winding kV ratings expressed in one array of strings
+ VAR
+@@ -853,6 +879,8 @@
+   IsSubstation  := FALSE;
+   XRConst       := FALSE;
+ 
++  HVLeadsLV     := FALSE; // Defaults to ANSI connection
++
+   Y_Terminal_FreqMult := 0.0;
+ 
+   Yorder := fNTerms * fNconds;
+@@ -933,8 +961,8 @@
+    Else Begin
+      If Winding^[1].kvll >= Winding^[2].kvll Then iHvolt:=1 else iHVolt := 2;
+      CASE Winding^[iHvolt].Connection of
+-       0:  DeltaDirection := 1;
+-       1:  DeltaDirection := -1;
++       0:  If HVLeadsLV then DeltaDirection := -1 Else DeltaDirection := 1;
++       1:  If HVLeadsLV then DeltaDirection := 1  Else DeltaDirection := -1;
+      ELSE
+          // ---old code --- If Winding^[2].Connection = 0 Then DeltaDirection := -1 Else DeltaDirection := 1;
+      END;
+@@ -1445,7 +1473,7 @@
+   TotalLosses := Losses;   // Side effect: computes Iterminal
+ 
+   {Compute No load losses in Yprim_Shunt}
+-  cTempIterminal := AllocMem(Sizeof(cTempIterminal^[1])* Yorder);
++  cTempIterminal := AllocMem(Sizeof(Complex)* Yorder);
+   ComputeVterminal(ActorID);
+   Yprim_Shunt.MVmult(cTempIterminal, Vterminal) ;
+   {No Load Losses are sum of all powers coming into YPrim_Shunt from each terminal}
+@@ -1586,6 +1614,7 @@
+      PropertyValue[41] := '7';   // Same as XHT ...
+      PropertyValue[42] := '35';
+      PropertyValue[43] := '30';
++     PropertyValue[44] := 'Lag';
+ 
+ 
+   inherited  InitPropertyValues(NumPropsThisClass);
+@@ -1835,11 +1864,11 @@
+    Y_1Volt_NL.Clear;
+ 
+    {Allocate temp complex arrays}
+-   ctempArray1 := AllocMem(SizeOF(ctempArray1^[1]) * NumWindings * 2);
+-   ctempArray2 := AllocMem(SizeOF(ctempArray2^[1]) * NumWindings * 2);
++   ctempArray1 := AllocMem(SizeOf(Complex) * NumWindings * 2);
++   ctempArray2 := AllocMem(SizeOf(Complex) * NumWindings * 2);
+ 
+    
+-   A          := AllocMem(SizeOF(A^[1]) * NumWindings * 2);
++   A          := AllocMem(SizeOf(Complex) * NumWindings * 2);
+    cMinusOne  := cmplx(-1.0, 0.0);
+    AT         := TcMatrix.Creatematrix(NumWindings);
+    FOR i := 1 to NumWindings-1 Do AT.SetElement(i+1, i, cONE);
+Index: Parallel_Version/Source/Parallel_Lib/Parallel_Lib.pas
+===================================================================
+--- Parallel_Version/Source/Parallel_Lib/Parallel_Lib.pas	(revision 2134)
++++ Parallel_Version/Source/Parallel_Lib/Parallel_Lib.pas	(working copy)
+@@ -1,79 +1,173 @@
+-unit Parallel_Lib;
+-
+-{**********************Parallel Library for OpenDSS*****************************
+-* This library gives acces to the processor to handle the affinity of the
+-* Specified process and thread to a specific processor core
+-* This library gives access to the Windows API for such purpose
+-* Written by Davis Montenegro 06-17-2016
+-*
+-* Used for multi-core processing in OpenDSS
+-********************************************************************************
+-}
+-
+-
+-interface
+-
+-uses
+-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes
+-  , math, vcl.Dialogs;
+-
+-type
+-  TParallel_Lib = class(TObject)
+-  public
+-    function Set_Thread_Affinity(Hnd : THandle; CPU : integer): Integer;
+-    function Set_Process_Priority(Hnd: THandle; P_priority : integer): Integer;
+-    function Set_Thread_Priority(Hnd: THandle; T_priority : integer): Integer;
+-    function Get_Thread_Priority(Hnd: THandle): String;
+-    function Get_Number_of_CPUs(): Integer;
+-  end;
+-
+-implementation
+-    function TParallel_Lib.Set_Thread_Affinity(Hnd : THandle; CPU : integer): Integer;
+-    var
+-      CPU_bit   : integer;
+-      Op_Result : Dword;
+-    begin
+-       CPU_bit    :=  floor(power(2, CPU));
+-       Op_Result  := SetThreadAffinityMask(Hnd,CPU_bit);
+-       if Op_Result = 0 then raise Exception.Create('Error setting thread affinity mask : ' + IntToStr(GetLastError));
+-       Result   :=  Op_Result;
+-    end;
+-    function TParallel_Lib.Set_Process_Priority(Hnd: THandle; P_priority : integer):Integer;
+-    var
+-      Op_result   :  bool;
+-    begin
+-      Result      :=  0;
+-      Op_Result   :=  SetPriorityClass(Hnd, P_priority);
+-      if Op_result=false then ShowMessage('Impossible to set the Process Priority');
+-      if Op_result then Result  :=1;
+-    end;
+-    function TParallel_Lib.Set_Thread_Priority(Hnd: THandle; T_priority : integer):Integer;
+-    var
+-      Op_result   :  bool;
+-    begin
+-      Result      :=  0;
+-      Op_Result   :=  SetThreadPriority(Hnd,T_priority);
+-      if Op_Result = false then ShowMessage('Impossible to set the Thread Priority');
+-      if Op_result then Result  :=1;
+-    end;
+-    function TParallel_Lib.Get_Thread_Priority(Hnd: THandle): String;
+-    var
+-      Num_priority  : integer;
+-    begin
+-      Num_Priority  :=  GetThreadPriority(Hnd);
+-      case Num_Priority of
+-        0:  Result    :=  'Normal';
+-        1:  Result    :=  'Above Normal';
+-        2:  Result    :=  'Highest';
+-        15: Result    :=  'Time Critical';
+-        -1: Result    :=  'Below Normal';
+-        -2: Result    :=  'Lowest';
+-      else
+-          Result    :=  'Not known';
+-      end;
+-    end;
+-    function TParallel_Lib.Get_Number_of_CPUs(): Integer;
+-    begin
+-      Result  :=  CPUCount;
+-    end;
+-end.
++unit Parallel_Lib;
++
++{**********************Parallel Library for OpenDSS*****************************
++* This library gives acces to the processor to handle the affinity of the
++* Specified process and thread to a specific processor core
++* This library gives access to the Windows API for such purpose
++* Written by Davis Montenegro 06-17-2016
++*
++* Used for multi-core processing in OpenDSS
++********************************************************************************
++}
++
++
++interface
++
++uses
++{$IFNDEF FPC}
++  Winapi.Windows, Winapi.Messages, vcl.Dialogs,
++{$ELSE}
++    {$IFDEF WINDOWS}
++    windows,
++    {$ELSE}
++    initc, cpucount, BaseUnix, Unix,
++    {$ENDIF}
++{$ENDIF}  
++  SysUtils, Variants, Classes, math;
++
++const REALTIME_PRIORITY_CLASS = 16;
++  
++{$IFDEF WINDOWS}
++const THREAD_PRIORITY_TIME_CRITICAL = 15;
++type
++  TParallel_Lib = class(TObject)
++  public
++    function Set_Thread_Affinity(Hnd : THandle; CPU : integer): Integer;
++    function Set_Process_Priority(Hnd: THandle; P_priority : integer): Integer;
++    function Set_Thread_Priority(Hnd: THandle; T_priority : integer): Integer;
++    function Get_Thread_Priority(Hnd: THandle): String;
++    function Get_Number_of_CPUs(): Integer;
++  end;
++{$ELSE}
++const THREAD_PRIORITY_TIME_CRITICAL = tpTimeCritical;
++type
++  TParallel_Lib = class(TObject)
++  public
++    function Set_Thread_Affinity(Hnd : THandle; CPU : integer): Integer;
++    function Set_Process_Priority(Hnd: TPid; P_priority : integer): Integer;
++    function Set_Thread_Priority(thread: TThread; T_priority : TThreadPriority): Integer;
++    function Get_Thread_Priority(Hnd: THandle): String;
++    function Get_Number_of_CPUs(): Integer;
++  end;
++    
++{$ENDIF}
++
++implementation
++{$IFNDEF UNIX}
++    function TParallel_Lib.Set_Thread_Affinity(Hnd : THandle; CPU : integer): Integer;
++    var
++      CPU_bit   : integer;
++      Op_Result : Dword;
++    begin
++       CPU_bit    :=  floor(power(2, CPU));
++       Op_Result  := SetThreadAffinityMask(Hnd,CPU_bit);
++       if Op_Result = 0 then raise Exception.Create('Error setting thread affinity mask : ' + IntToStr(GetLastError));
++       Result   :=  Op_Result;
++    end;
++    function TParallel_Lib.Set_Process_Priority(Hnd: THandle; P_priority : integer):Integer;
++    var
++      Op_result   :  bool;
++    begin
++      Result      :=  0;
++      Op_Result   :=  SetPriorityClass(Hnd, P_priority);
++      if Op_result=false then 
++        {$IFNDEF FPC}ShowMessage{$ELSE}WriteLn{$ENDIF}('Impossible to set the Process Priority');
++      if Op_result then Result  :=1;
++    end;
++    function TParallel_Lib.Set_Thread_Priority(Hnd: THandle; T_priority : integer):Integer;
++    var
++      Op_result   :  bool;
++    begin
++      Result      :=  0;
++      Op_Result   :=  SetThreadPriority(Hnd,T_priority);
++      if Op_Result = false then 
++        {$IFNDEF FPC}ShowMessage{$ELSE}WriteLn{$ENDIF}('Impossible to set the Thread Priority');
++      if Op_result then Result  :=1;
++    end;
++    function TParallel_Lib.Get_Thread_Priority(Hnd: THandle): String;
++    var
++      Num_priority  : integer;
++    begin
++      Num_Priority  :=  GetThreadPriority(Hnd);
++      case Num_Priority of
++        0:  Result    :=  'Normal';
++        1:  Result    :=  'Above Normal';
++        2:  Result    :=  'Highest';
++        15: Result    :=  'Time Critical';
++        -1: Result    :=  'Below Normal';
++        -2: Result    :=  'Lowest';
++      else
++          Result    :=  'Not known';
++      end;
++    end;
++    function TParallel_Lib.Get_Number_of_CPUs(): Integer;
++    begin
++      Result  :=  CPUCount;
++    end;
++{$ELSE}    
++    //function pthread_setaffinity_np(pid : Ptruint; cpusetsize : QWord; cpuset : pointer) : longint; cdecl; external;
++    
++    function TParallel_Lib.Set_Thread_Affinity(Hnd : THandle; CPU : integer): Integer;
++    // The following commented code segfaults but it's based on 
++    // http://free-pascal-general.1045716.n5.nabble.com/GetAffinity-SetAffinity-tp3351231p5717539.html
++    // An alternative may be to include a separate C file to handle this using the correct macros
++    {const
++      cpu_SetSize = 8; // 64 cores max
++    var
++      cpu_set : QWord;  //cpu_set_type sufficient for 64-core CPU
++      Op_Result : longint;
++    begin
++      cpu_set := 1 shl CPU;
++      Op_Result := pthread_setaffinity_np(Hnd,cpu_SetSize,@cpu_set);
++      if Op_Result = 0 then raise Exception.Create('Error setting thread affinity mask');
++      Result   :=  Op_Result;
++    end;}
++    begin
++      Result := 0;
++    end;
++    
++    function TParallel_Lib.Set_Thread_Priority(thread: TThread; T_priority : TThreadPriority): Integer;
++    begin
++      Result      :=  0;
++      try
++        thread.Priority := T_priority;
++        if thread.Priority = T_priority then
++            Result  := 1;
++      except
++        WriteLn('Impossible to set the Thread Priority');
++      end;
++    end;
++    
++    function TParallel_Lib.Set_Process_Priority(Hnd: TPid; P_priority : integer):Integer;
++    var
++      Op_result   :  Integer;
++    begin
++      Result      :=  0;
++      Op_Result   :=  fpsetpriority (prio_process,Hnd,P_priority);
++      if Op_result = -1 then 
++        WriteLn('Impossible to set the Process Priority');
++      if Op_result <> 0 then Result  :=1;
++    end;
++    
++    function TParallel_Lib.Get_Thread_Priority(Hnd: THandle): String;
++    var
++      Num_priority  : integer;
++    begin
++      Num_Priority  :=  ThreadGetPriority(Hnd);
++      case Num_Priority of
++        0:  Result    :=  'Normal';
++        1:  Result    :=  'Above Normal';
++        2:  Result    :=  'Highest';
++        15: Result    :=  'Time Critical';
++        -1: Result    :=  'Below Normal';
++        -2: Result    :=  'Lowest';
++      else
++          Result    :=  'Not known';
++      end;
++    end;
++    function TParallel_Lib.Get_Number_of_CPUs(): Integer;
++    begin
++      Result  :=  GetLogicalCpuCount();
++    end;
++{$ENDIF}
++end.
+Index: Parallel_Version/Source/Parallel_Lib/cpucount.pas
+===================================================================
+--- Parallel_Version/Source/Parallel_Lib/cpucount.pas	(nonexistent)
++++ Parallel_Version/Source/Parallel_Lib/cpucount.pas	(working copy)
+@@ -0,0 +1,76 @@
++// Unit originally from FPC Wiki: http://wiki.freepascal.org/Example_of_multi-threaded_application:_array_of_threads
++
++unit cpucount;
++interface
++//returns number of cores: a computer with two hyperthreaded cores will report 4
++function GetLogicalCpuCount: Integer;
++ 
++implementation
++ 
++{$IF defined(windows)}
++uses windows;
++{$endif}
++ 
++{$IF defined(darwin)}
++uses ctypes, sysctl;
++{$endif} 
++ 
++{$IFDEF Linux}
++uses initc, ctypes;
++ 
++const _SC_NPROCESSORS_ONLN = 83;
++function sysconf(i: cint): clong; cdecl; external name 'sysconf';
++{$ENDIF}
++ 
++ 
++function GetLogicalCpuCount: integer;
++// returns a good default for the number of threads on this system
++{$IF defined(windows)}
++//returns total number of processors available to system including logical hyperthreaded processors
++var
++  i: Integer;
++  ProcessAffinityMask, SystemAffinityMask: DWORD_PTR;
++  Mask: DWORD;
++  SystemInfo: SYSTEM_INFO;
++begin
++  if GetProcessAffinityMask(GetCurrentProcess, ProcessAffinityMask, SystemAffinityMask)
++  then begin
++    Result := 0;
++    for i := 0 to 31 do begin
++      Mask := DWord(1) shl i;
++      if (ProcessAffinityMask and Mask)<>0 then
++        inc(Result);
++    end;
++  end else begin
++    //can't get the affinity mask so we just report the total number of processors
++    GetSystemInfo(SystemInfo);
++    Result := SystemInfo.dwNumberOfProcessors;
++  end;
++end;
++{$ELSEIF defined(UNTESTEDsolaris)}
++  begin
++    t = sysconf(_SC_NPROC_ONLN);
++  end;
++{$ELSEIF defined(freebsd) or defined(darwin)}
++var
++  mib: array[0..1] of cint;
++  len: cint;
++  t: cint;
++begin
++  mib[0] := CTL_HW;
++  mib[1] := HW_NCPU;
++  len := sizeof(t);
++  fpsysctl(pchar(@mib), 2, @t, @len, Nil, 0);
++  Result:=t;
++end;
++{$ELSEIF defined(linux)}
++  begin
++    Result:=sysconf(_SC_NPROCESSORS_ONLN);
++  end;
++ 
++{$ELSE}
++  begin
++    Result:=1;
++  end;
++{$ENDIF}
++end.
+\ No newline at end of file
+
+Property changes on: Parallel_Version/Source/Parallel_Lib/cpucount.pas
+___________________________________________________________________
+Added: svn:executable
+## -0,0 +1 ##
++*
+\ No newline at end of property
+Index: Parallel_Version/Source/Parser/ParserDel.pas
+===================================================================
+--- Parallel_Version/Source/Parser/ParserDel.pas	(revision 2134)
++++ Parallel_Version/Source/Parser/ParserDel.pas	(working copy)
+@@ -18,7 +18,8 @@
+ interface
+ 
+ Uses
+-    Arraydef, classes,{controls,} DSSForms, Sysutils, RPN, HashList;
++    Arraydef, classes,{controls,} {$IFDEF FPC} CmdForms,{$ELSE} DSSForms,{$ENDIF} 
++    Sysutils, RPN, HashList;
+ 
+ 
+ 
+@@ -112,7 +113,7 @@
+ 
+ implementation
+ 
+-Uses  Dialogs;
++{$IFNDEF FPC}Uses  Dialogs;{$ENDIF}
+ 
+ CONST
+   Commentchar = '!';
+Index: Parallel_Version/Source/Plot/DSSPlot.pas
+===================================================================
+--- Parallel_Version/Source/Plot/DSSPlot.pas	(revision 2134)
++++ Parallel_Version/Source/Plot/DSSPlot.pas	(working copy)
+@@ -1522,8 +1522,8 @@
+    { If PeakDay=True then we only plot the peak of a 24-hr day }
+    Names := TStringList.Create;
+    { Open File }
+-   FileName := CaseName + '\di_yr_' + Trim(IntToStr(CaseYear))
+-     + '\' + MeterName + '.CSV';
++   FileName := CaseName + PathDelim + 'di_yr_' + Trim(IntToStr(CaseYear))
++     + PathDelim + MeterName + '.CSV';
+    If Not FileExists(FileName) Then
+    Begin
+       DoSimpleMsg('File "' + FileName + '" does not exist.', 191);
+@@ -1809,19 +1809,19 @@
+             SearchForMeterName := FALSE;
+             Case iPass of
+                1:
+-                  FileName := CaseName + '\di_yr_' + Trim(IntToStr(CaseYear))
+-                    + '\Totals.CSV';
++                  FileName := CaseName + PathDelim + 'di_yr_' + Trim(IntToStr(CaseYear))
++                    + PathDelim + 'Totals.CSV';
+                2:
+                   If (CompareText(WhichFile, 'Totals') = 0) OR
+                     (CompareText(WhichFile, 'Systemmeter') = 0) Then
+                   Begin
+-                     FileName := CaseName + '\di_yr_' + Trim
+-                       (IntToStr(CaseYear)) + '\' + WhichFile + '.CSV';
++                     FileName := CaseName + PathDelim + 'di_yr_' + Trim
++                       (IntToStr(CaseYear)) + PathDelim + WhichFile + '.CSV';
+                   End
+                   Else
+                   Begin
+-                     FileName := CaseName + '\di_yr_' + Trim
+-                       (IntToStr(CaseYear)) + '\' + 'EnergyMeterTotals.CSV';
++                     FileName := CaseName + PathDelim + 'di_yr_' + Trim
++                       (IntToStr(CaseYear)) + PathDelim +'EnergyMeterTotals.CSV';
+                      SearchForMeterName := TRUE;
+                   End;
+             End;
+@@ -2152,20 +2152,20 @@
+                   SearchForMeterName := FALSE;
+                   Case iPass of
+                      1:
+-                        FileName := CaseName + '\di_yr_' + Trim
+-                          (IntToStr(CaseYear)) + '\Totals.CSV';
++                        FileName := CaseName + PathDelim + 'di_yr_' + Trim
++                          (IntToStr(CaseYear)) + PathDelim + 'Totals.CSV';
+                   Else
+                      Begin
+                         If (CompareText(WhichFile, 'Totals') = 0) OR
+                           (CompareText(WhichFile, 'Systemmeter') = 0) Then
+                         Begin
+-                           FileName := CaseName + '\di_yr_' + Trim
+-                             (IntToStr(CaseYear)) + '\' + WhichFile + '.CSV';
++                           FileName := CaseName + PathDelim + 'di_yr_' + Trim
++                             (IntToStr(CaseYear)) + PathDelim + WhichFile + '.CSV';
+                         End
+                         Else
+                         Begin
+-                           FileName := CaseName + '\di_yr_' + Trim
+-                             (IntToStr(CaseYear)) + '\' +
++                           FileName := CaseName + PathDelim + 'di_yr_' + Trim
++                             (IntToStr(CaseYear)) + PathDelim +
+                              'EnergyMeterTotals.CSV';
+                            SearchForMeterName := TRUE;
+                         End;
+Index: Parallel_Version/Source/Shared/Arraydef.pas
+===================================================================
+--- Parallel_Version/Source/Shared/Arraydef.pas	(revision 2134)
++++ Parallel_Version/Source/Shared/Arraydef.pas	(working copy)
+@@ -43,7 +43,7 @@
+ Function AllocStringArray(Size:Integer):pStringArray;
+ // Allocates a string array initialized with nil values
+ Begin
+-      Result := AllocMem(SizeOf(Result^[1])*Size);
++      Result := AllocMem(SizeOf(string)*Size);
+ End;
+ 
+ Procedure FreeStringArray(var pS:pStringArray; Size:Integer);
+Index: Parallel_Version/Source/Shared/HashList.pas
+===================================================================
+--- Parallel_Version/Source/Shared/HashList.pas	(revision 2134)
++++ Parallel_Version/Source/Shared/HashList.pas	(working copy)
+@@ -366,11 +366,11 @@
+ 
+      OldNumLists := NumLists;
+ 
+-     NewStringPtr := AllocMem(SizeOf(newStringPtr^[1]) * NewSize);
++     NewStringPtr := AllocMem(SizeOf(string) * NewSize);
+      NewNumLists := round(sqrt(NewSize));
+      ElementsPerList := NewSize div NewNumLists + 1;
+      If NewNumLists < 1 Then NewNumLists := 1;  // make sure at least one list
+-     Getmem(NewListPtr, Sizeof(NewListptr^[1]) * NewNumLists);
++     Getmem(NewListPtr, Sizeof(TSubList) * NewNumLists);
+      FOR i := 1 to NumLists DO BEGIN
+          {Allocate initial Sublists}
+          WITH NewListPtr^[i] DO BEGIN
+Index: Parallel_Version/Source/Shared/IniRegSave.pas
+===================================================================
+--- Parallel_Version/Source/Shared/IniRegSave.pas	(revision 2134)
++++ Parallel_Version/Source/Shared/IniRegSave.pas	(working copy)
+@@ -20,7 +20,7 @@
+ interface
+ 
+ uses
+-  Registry;
++  {$IFDEF FPC}IniFiles{$ELSE}Registry{$ENDIF};
+ 
+ type
+ 
+@@ -27,7 +27,7 @@
+   TIniRegSave = class(TObject)
+     FSection : String;
+     Fname   : String;
+-    FIniFile: TRegIniFile;
++    FIniFile: {$IFDEF FPC}TIniFile{$ELSE}TRegIniFile{$ENDIF};
+ 
+   private
+     procedure Set_FSection(const Value: String);
+@@ -61,7 +61,11 @@
+ constructor TIniRegSave.Create(const Name: String);
+ begin
+      FName := Name;
++     {$IFDEF FPC}
++     FIniFile := TIniFile.Create(Name);
++     {$ELSE}
+      FIniFile := TRegIniFile.Create(Name);
++     {$ENDIF}
+      FSection := 'MainSect';
+ end;
+ 
+Index: Parallel_Version/Source/Shared/Pstcalc.pas
+===================================================================
+--- Parallel_Version/Source/Shared/Pstcalc.pas	(revision 2134)
++++ Parallel_Version/Source/Shared/Pstcalc.pas	(working copy)
+@@ -663,7 +663,7 @@
+   ipst:=1;
+   ts := pT[2] - pT[1];
+   for i := 1 to N do pRms[i] := pRms[i] / vbase;
+-  pBuf := AllocMem (N * sizeof (pBuf[1]));
++  pBuf := AllocMem (N * sizeof (Single));
+   Fhp(N, ts, whp, pRms, pBuf);
+   Fw1(N, ts, w1, k, lam, pBuf, pRms);
+   Fw2(N, ts, w2, w3, w4, pRms, pBuf);
+Index: Parallel_Version/Source/Shared/Ucmatrix.pas
+===================================================================
+--- Parallel_Version/Source/Shared/Ucmatrix.pas	(revision 2134)
++++ Parallel_Version/Source/Shared/Ucmatrix.pas	(working copy)
+@@ -163,7 +163,7 @@
+ {Allocate LT}
+ //     LT:=nil;
+ 
+-     GetMem(LT,SizeOf(LT^[1])*L);
++     GetMem(LT,SizeOf(Integer)*L);
+      IF LT=nil THEN
+      BEGIN
+       InvertError:=1;
+Index: Parallel_Version/Source/Shared/mathutil.pas
+===================================================================
+--- Parallel_Version/Source/Shared/mathutil.pas	(revision 2134)
++++ Parallel_Version/Source/Shared/mathutil.pas	(working copy)
+@@ -290,7 +290,7 @@
+ //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ function RCDSUM( Data:Pointer; Count:Integer): Extended; register;
+ 
+-{$IFDEF CPUX64}
++{$IF (Defined(CPUX64) or Defined(Darwin))}
+ 
+ begin
+   Result := 0.0;
+@@ -357,7 +357,7 @@
+     StdDev := Data^[1];
+     Exit;
+   end;
+-{$IFDEF CPUX64}
++{$IF (Defined(CPUX64) or Defined(Darwin))}
+   Mean := 0.0;
+   for i := 1 to NData do Mean := Mean + Data^[i];
+   Mean := Mean / Ndata;
+Index: Source/Common/DSSGlobals.pas
+===================================================================
+--- Source/Common/DSSGlobals.pas	(revision 2134)
++++ Source/Common/DSSGlobals.pas	(working copy)
+@@ -654,12 +654,7 @@
+   // Put a \ on the end if not supplied. Allow a null specification.
+   If Length(DataDirectory) > 0 Then Begin
+     ChDir(DataDirectory);   // Change to specified directory
+-    {$IF (defined(Windows) or defined(MSWindows))}
+-    If DataDirectory[Length(DataDirectory)] <> '\' Then DataDirectory := DataDirectory + '\';
+-    {$ENDIF}
+-    {$IFDEF UNIX}
+-    If DataDirectory[Length(DataDirectory)] <> '/' Then DataDirectory := DataDirectory + '/';
+-    {$ENDIF}
++    If DataDirectory[Length(DataDirectory)] <> PathDelim Then DataDirectory := DataDirectory + PathDelim;
+   End;
+ 
+   // see if DataDirectory is writable. If not, set OutputDirectory to the user's appdata
+@@ -666,12 +661,7 @@
+   if IsDirectoryWritable(DataDirectory) then begin
+     OutputDirectory := DataDirectory;
+   end else begin
+-    {$IF (defined(Windows) or defined(MSWindows))}
+-    ScratchPath := GetDefaultScratchDirectory + '\' + ProgramName + '\';
+-    {$ENDIF}
+-    {$IFDEF UNIX}
+-    ScratchPath := GetDefaultScratchDirectory + '/' + ProgramName + '/';
+-    {$ENDIF}
++    ScratchPath := GetDefaultScratchDirectory + PathDelim + ProgramName + PathDelim;
+     if not DirectoryExists(ScratchPath) then CreateDir(ScratchPath);
+     OutputDirectory := ScratchPath;
+   end;
+@@ -865,24 +855,13 @@
+    VersionString    := 'Version ' + GetDSSVersion + ' (32-bit build)';
+ {$ENDIF}
+ 
++   StartupDirectory := GetCurrentDir + PathDelim;
++   SetDataPath (GetDefaultDataDirectory + PathDelim + ProgramName + PathDelim);
+ {$IFNDEF FPC}
+-   StartupDirectory := GetCurrentDir+'\';
+-   SetDataPath (GetDefaultDataDirectory + '\' + ProgramName + '\');
+    DSS_Registry     := TIniRegSave.Create('\Software\' + ProgramName);
+-
+-
+ {$ELSE}
+-{$IFDEF WINDOWS} // deliberately different from MSWindows (Delphi)
+-        StartupDirectory := GetCurrentDir+'\';
+-        SetDataPath (GetDefaultDataDirectory + '\' + ProgramName + '\');
+-        DSS_Registry     := TIniRegSave.Create(DataDirectory + 'opendsscmd.ini');
++   DSS_Registry     := TIniRegSave.Create(DataDirectory + 'opendsscmd.ini');
+ {$ENDIF}
+-{$IFDEF UNIX}
+-        StartupDirectory := GetCurrentDir+'/';
+-        SetDataPath (GetDefaultDataDirectory + '/' + ProgramName + '/');
+-        DSS_Registry     := TIniRegSave.Create(DataDirectory + 'opendsscmd.ini');
+-{$ENDIF}
+-{$ENDIF}
+ 
+    AuxParser        := TParser.Create;
+ 
+Index: Source/Common/KLUSolve.pas
+===================================================================
+--- Source/Common/KLUSolve.pas	(revision 2134)
++++ Source/Common/KLUSolve.pas	(working copy)
+@@ -1,5 +1,15 @@
+ unit KLUSolve;
+ 
++{$IFDEF FPC}{$MODE Delphi}{$ENDIF}
++
++{$MACRO ON}
++{$IFDEF Windows}
++{$DEFINE KLU_CALL:=stdcall;external KLULib}
++{$ELSE} // Darwin and Unix
++{$linklib klusolve}
++{$DEFINE KLU_CALL:=cdecl;external}
++{$ENDIF}
++
+ interface
+ 
+ uses
+@@ -6,7 +16,11 @@
+     uComplex;
+ 
+ const
++{$IFNDEF FPC}
+   KLULib = 'klusolve.dll';
++{$ELSE}
++  KLULib = 'libklusolve';
++{$ENDIF}
+ 
+ // in general, KLU arrays are 0-based
+ // function calls return 0 to indicate failure, 1 for success
+@@ -13,46 +27,46 @@
+ 
+ // returns the non-zero handle of a new sparse matrix, if successful
+ // must call DeleteSparseSet on the valid handle when finished
+-FUNCTION NewSparseSet(nBus:LongWord):NativeUInt;stdcall;external KLULib;
++FUNCTION NewSparseSet(nBus:LongWord):NativeUInt;KLU_CALL;
+ // return 1 for success, 0 for invalid handle
+-FUNCTION DeleteSparseSet(id:NativeUInt):LongWord;stdcall;external KLULib;
++FUNCTION DeleteSparseSet(id:NativeUInt):LongWord;KLU_CALL;
+ 
+ // return 1 for success, 2 for singular, 0 for invalid handle
+ // factors matrix if needed
+-FUNCTION SolveSparseSet(id:NativeUInt; x,b:pComplexArray):LongWord;stdcall;external KLULib;
++FUNCTION SolveSparseSet(id:NativeUInt; x,b:pComplexArray):LongWord;KLU_CALL;
+ 
+ // return 1 for success, 0 for invalid handle
+-FUNCTION ZeroSparseSet(id:NativeUInt):LongWord;stdcall;external KLULib;
++FUNCTION ZeroSparseSet(id:NativeUInt):LongWord;KLU_CALL;
+ 
+ // return 1 for success, 2 for singular, 0 for invalid handle
+ // FactorSparseMatrix does no extra work if the factoring was done previously
+-FUNCTION FactorSparseMatrix(id:NativeUInt):LongWord;stdcall;external KLULib;
++FUNCTION FactorSparseMatrix(id:NativeUInt):LongWord;KLU_CALL;
+ 
+ // These "Get" functions for matrix information all return 1 for success, 0 for invalid handle
+ // Res is the matrix order (number of nodes)
+-FUNCTION GetSize(id:NativeUInt; Res: pLongWord):LongWord;stdcall;external KLULib;
++FUNCTION GetSize(id:NativeUInt; Res: pLongWord):LongWord;KLU_CALL;
+ 
+ // the following function results are not known prior to factoring
+ // Res is the number of floating point operations to factor
+-FUNCTION GetFlops(id:NativeUInt; Res: pDouble):LongWord;stdcall;external KLULib;
++FUNCTION GetFlops(id:NativeUInt; Res: pDouble):LongWord;KLU_CALL;
+ // Res is number of non-zero entries in the original matrix
+-FUNCTION GetNNZ(id:NativeUInt; Res: pLongWord):LongWord;stdcall;external KLULib;
++FUNCTION GetNNZ(id:NativeUInt; Res: pLongWord):LongWord;KLU_CALL;
+ // Res is the number of non-zero entries in factored matrix
+-FUNCTION GetSparseNNZ(id:NativeUInt; Res: pLongWord):LongWord;stdcall;external KLULib;
++FUNCTION GetSparseNNZ(id:NativeUInt; Res: pLongWord):LongWord;KLU_CALL;
+ // Res is a column number corresponding to a singularity, or 0 if not singular
+-FUNCTION GetSingularCol(id:NativeUInt; Res: pLongWord):LongWord;stdcall;external KLULib;
++FUNCTION GetSingularCol(id:NativeUInt; Res: pLongWord):LongWord;KLU_CALL;
+ // Res is the pivot element growth factor
+-FUNCTION GetRGrowth(id:NativeUInt; Res: pDouble):LongWord;stdcall;external KLULib;
++FUNCTION GetRGrowth(id:NativeUInt; Res: pDouble):LongWord;KLU_CALL;
+ // Res is aquick estimate of the reciprocal of condition number
+-FUNCTION GetRCond(id:NativeUInt; Res: pDouble):LongWord;stdcall;external KLULib;
++FUNCTION GetRCond(id:NativeUInt; Res: pDouble):LongWord;KLU_CALL;
+ // Res is a more accurate estimate of condition number
+-FUNCTION GetCondEst(id:NativeUInt; Res: pDouble):LongWord;stdcall;external KLULib;
++FUNCTION GetCondEst(id:NativeUInt; Res: pDouble):LongWord;KLU_CALL;
+ 
+ // return 1 for success, 0 for invalid handle or a node number out of range
+-FUNCTION AddPrimitiveMatrix(id:NativeUInt; nOrder:LongWord; Nodes: pLongWord; Mat: pComplex):LongWord;stdcall;external KLULib;
++FUNCTION AddPrimitiveMatrix(id:NativeUInt; nOrder:LongWord; Nodes: pLongWord; Mat: pComplex):LongWord;KLU_CALL;
+ 
+ // Action = 0 (close), 1 (rewrite) or 2 (append)
+-FUNCTION SetLogFile(Path: pChar; Action:LongWord):LongWord;stdcall;external KLULib;
++FUNCTION SetLogFile(Path: pChar; Action:LongWord):LongWord;KLU_CALL;
+ 
+ // fill sparse matrix in compressed column form
+ // return 1 for success, 0 for invalid handle, 2 for invalid array sizes
+@@ -59,22 +73,22 @@
+ // pColP must be of length nColP == nBus + 1
+ // pRowIdx and pMat of length nNZ, which
+ //    must be at least the value returned by GetNNZ
+-FUNCTION GetCompressedMatrix(id:NativeUInt; nColP, nNZ:LongWord; pColP, pRowIdx: pLongWord; Mat: pComplex):LongWord;stdcall;external KLULib;
++FUNCTION GetCompressedMatrix(id:NativeUInt; nColP, nNZ:LongWord; pColP, pRowIdx: pLongWord; Mat: pComplex):LongWord;KLU_CALL;
+ 
+ // fill sparse matrix in triplet form
+ // return 1 for success, 0 for invalid handle, 2 for invalid array sizes
+ // pRows, pCols, and Mat must all be of length nNZ
+-FUNCTION GetTripletMatrix(id:NativeUInt; nNZ:LongWord; pRows, pCols: pLongWord; Mat: pComplex):LongWord;stdcall;external KLULib;
++FUNCTION GetTripletMatrix(id:NativeUInt; nNZ:LongWord; pRows, pCols: pLongWord; Mat: pComplex):LongWord;KLU_CALL;
+ 
+ // returns number of islands >= 1 by graph traversal
+ // pNodes contains the island number for each node
+-FUNCTION FindIslands(id:NativeUInt; nOrder:LongWord; pNodes: pLongWord):LongWord;stdcall;external KLULib;
++FUNCTION FindIslands(id:NativeUInt; nOrder:LongWord; pNodes: pLongWord):LongWord;KLU_CALL;
+ 
+ // AddMatrixElement is deprecated, use AddPrimitiveMatrix instead
+-FUNCTION AddMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;stdcall;external KLULib;
++FUNCTION AddMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;KLU_CALL;
+ 
+ // GetMatrixElement is deprecated, use GetCompressedMatrix or GetTripletMatrix
+-FUNCTION GetMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;stdcall;external KLULib;
++FUNCTION GetMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;KLU_CALL;
+ 
+ implementation
+ 
+Index: Source/Executive/ExecHelper.pas
+===================================================================
+--- Source/Executive/ExecHelper.pas	(revision 2134)
++++ Source/Executive/ExecHelper.pas	(working copy)
+@@ -439,7 +439,7 @@
+                   END;
+                End;
+ 
+-             IF ActiveCircuit <> Nil THEN ActiveCircuit.CurrentDirectory := CurrDir +'\';
++             IF ActiveCircuit <> Nil THEN ActiveCircuit.CurrentDirectory := CurrDir + PathDelim;
+ 
+           EXCEPT
+              On E: Exception DO
+@@ -624,7 +624,7 @@
+           Except
+              On E:Exception Do DoSimpleMsg('Error making Directory: "'+SaveDir+'". ' + E.Message, 247);
+           End;
+-       SaveFile := SaveDir+'\'+SaveFile;
++       SaveFile := SaveDir + PathDelim + SaveFile;
+      End;
+      WriteClassFile(DSSClass, SaveFile, FALSE); // just write the class with no checks
+    End;
+Index: Source/Meters/EnergyMeter.pas
+===================================================================
+--- Source/Meters/EnergyMeter.pas	(revision 2134)
++++ Source/Meters/EnergyMeter.pas	(working copy)
+@@ -843,7 +843,7 @@
+                  On E:Exception Do DoSimpleMsg('Error making  Directory: "'+CasePath+'". ' + E.Message, 522);
+               End;
+             End;
+-            DI_Dir  := CasePath+'\DI_yr_' + Trim( IntToStr(ActiveCircuit.Solution.Year));
++            DI_Dir  := CasePath+ PathDelim + 'DI_yr_' + Trim( IntToStr(ActiveCircuit.Solution.Year));
+             If not DirectoryExists(DI_Dir) Then Begin
+               Try
+                  mkDir(DI_Dir);
+@@ -1162,7 +1162,7 @@
+ 
+ function TEnergyMeterObj.MakeVPhaseReportFileName: String;
+ begin
+-    Result := EnergyMeterClass.DI_Dir + '\' + Name + '_PhaseVoltageReport.CSV';
++    Result := EnergyMeterClass.DI_Dir + PathDelim + Name + '_PhaseVoltageReport.CSV';
+ end;
+ 
+ //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+@@ -2784,12 +2784,12 @@
+      CloseFile(FCaps);
+ 
+      {If any records were written to the file, record their relative names}
+-     If NBranches>0  Then SavedFileList.Add (dirname + '\Branches.dss') else DeleteFile('Branches.dss');
+-     If NXfmrs>0  Then SavedFileList.Add (dirname + '\Transformers.dss') else DeleteFile('Transformers.dss');
+-     If NShunts>0 Then SavedFileList.Add (dirname + '\Shunts.dss') else DeleteFile('Shunts.dss');
+-     If NLoads>0  Then SavedFileList.Add (dirname + '\Loads.dss') else DeleteFile('Loads.dss');
+-     If NGens>0   Then SavedFileList.Add (dirname + '\Generators.dss') else DeleteFile('Generators.dss');
+-     If NCaps>0   Then SavedFileList.Add (dirname + '\Capacitors.dss') else DeleteFile('Capacitors.dss');
++     If NBranches>0  Then SavedFileList.Add (dirname + PathDelim + 'Branches.dss') else DeleteFile('Branches.dss');
++     If NXfmrs>0  Then SavedFileList.Add (dirname + PathDelim + 'Transformers.dss') else DeleteFile('Transformers.dss');
++     If NShunts>0 Then SavedFileList.Add (dirname + PathDelim + 'Shunts.dss') else DeleteFile('Shunts.dss');
++     If NLoads>0  Then SavedFileList.Add (dirname + PathDelim + 'Loads.dss') else DeleteFile('Loads.dss');
++     If NGens>0   Then SavedFileList.Add (dirname + PathDelim + 'Generators.dss') else DeleteFile('Generators.dss');
++     If NCaps>0   Then SavedFileList.Add (dirname + PathDelim + 'Capacitors.dss') else DeleteFile('Capacitors.dss');
+ 
+    End; {IF}
+ 
+@@ -2842,6 +2842,7 @@
+       If (EnergyMeterClass.DI_Verbose) Then Begin
+ 
+           This_Meter_DIFileIsOpen :=  TRUE;
++          if DI_MHandle <> nil then DI_MHandle.free;               
+           DI_MHandle  :=  Create_Meter_Space('"Hour"');
+           For i := 1 to NumEMRegisters Do WriteintoMemStr(DI_MHandle,', "' + RegisterNames[i] + '"');
+           WriteintoMemStr(DI_MHandle, Char(10));
+@@ -2926,18 +2927,18 @@
+         WriteTotalsFile;  // Sum all energymeter registers to "Totals.CSV"
+         SystemMeter.CloseDemandIntervalFile;
+         SystemMeter.Save;
+-        CloseMHandler(EMT_MHandle, DI_Dir + '\EnergyMeterTotals.CSV', EMT_Append);
++        CloseMHandler(EMT_MHandle, DI_Dir + PathDelim + 'EnergyMeterTotals.CSV', EMT_Append);
+         EMT_MHandle     := nil;
+-        CloseMHandler(TDI_MHandle, DI_Dir+'\DI_Totals.CSV', TDI_Append);
++        CloseMHandler(TDI_MHandle, DI_Dir+PathDelim+'DI_Totals.CSV', TDI_Append);
+         TDI_MHandle     := nil;
+         DIFilesAreOpen  := FALSE;
+         if OverloadFileIsOpen then Begin
+-            CloseMHandler(OV_MHandle,EnergyMeterClass.DI_Dir+'\DI_Overloads.CSV', OV_Append);
++            CloseMHandler(OV_MHandle,EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads.CSV', OV_Append);
+             OV_MHandle  :=  nil;
+             OverloadFileIsOpen := FALSE;
+         End;
+         if VoltageFileIsOpen then Begin
+-            CloseMHandler(VR_MHandle,EnergyMeterClass.DI_Dir+'\DI_VoltExceptions.CSV', VR_Append);
++            CloseMHandler(VR_MHandle,EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions.CSV', VR_Append);
+             VR_MHandle  :=  nil;
+             VoltageFileIsOpen := FALSE;
+         End;
+@@ -3021,7 +3022,7 @@
+ 
+           {Open FDI_Totals}
+           Try
+-              FileNm :=  DI_Dir+'\DI_Totals.CSV';
++              FileNm :=  DI_Dir+PathDelim+'DI_Totals.CSV';
+               {File Must Exist}
+               If FileExists(FileNm) Then  TDI_Append := True;
+               CreateFDI_Totals;
+@@ -3036,7 +3037,7 @@
+ 
+ function TEnergyMeterObj.MakeDIFileName: String;
+ begin
+-    Result := EnergyMeterClass.DI_Dir + '\' + Self.Name + '.CSV';
++    Result := EnergyMeterClass.DI_Dir + PathDelim + Self.Name + '.CSV';
+ end;
+ 
+ procedure TEnergyMeter.Set_SaveDemandInterval(const Value: Boolean);
+@@ -3107,7 +3108,7 @@
+     end;
+     WriteintoMemStr(TDI_MHandle, Char(10));
+  Except
+-    On E:Exception Do DoSimpleMsg('Error creating: "'+DI_Dir+'\DI_Totals.CSV": '+E.Message, 539)
++    On E:Exception Do DoSimpleMsg('Error creating: "'+DI_Dir+ PathDelim + 'DI_Totals.CSV": '+E.Message, 539)
+  End;
+ end;
+ 
+@@ -3123,12 +3124,12 @@
+   If This_Meter_DIFileIsOpen Then Exit;
+ 
+   Try
+-      FileNm := EnergyMeterClass.Di_Dir + '\DI_SystemMeter.CSV';
++      FileNm := EnergyMeterClass.Di_Dir + PathDelim + 'DI_SystemMeter.CSV';
+       AssignFile(SystemDIFile, FileNm );
+       {File Must Exist}
+       If FileExists(FileNm) Then
+       Begin
+-//        DI_MMFView:=  MapFile2Memory(EnergyMeterClass.DI_Dir+'\DI_SystemMeter.CSV', DI_MMFHandle);
++//        DI_MMFView:=  MapFile2Memory(EnergyMeterClass.DI_Dir + PathDelim + 'DI_SystemMeter.CSV', DI_MMFHandle);
+ //        DI_Cursor :=  GetMMFCursor(DI_MMFView);
+       End
+       Else OpenDemandIntervalFile;
+@@ -3160,7 +3161,7 @@
+   File_Path : string;
+ begin
+      IF This_Meter_DIFileIsOpen Then Begin
+-       File_Path  :=  EnergyMeterClass.DI_Dir+'\DI_SystemMeter.CSV';
++       File_Path  :=  EnergyMeterClass.DI_Dir + PathDelim + 'DI_SystemMeter.CSV';
+        CloseMHandler(SDI_MHandle, File_Path, SDI_Append);
+        SDI_MHandle  :=  nil;
+        This_Meter_DIFileIsOpen := FALSE;
+@@ -3200,6 +3201,7 @@
+   Try
+       IF This_Meter_DIFileIsOpen Then SDI_MHandle.Free;
+       This_Meter_DIFileIsOpen	:=	TRUE;
++      if SDI_MHandle <> nil then SDI_MHandle.free;                                            
+       SDI_MHandle  :=  Create_Meter_Space('"Hour", ');
+       WriteintoMemStr(SDI_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
+ 
+@@ -3225,7 +3227,7 @@
+        {If we are doing a simulation and saving interval data, create this in the
+         same directory as the demand interval data}
+        If  energyMeterClass.SaveDemandInterval Then
+-          Folder := energyMeterClass.DI_DIR + '\'
++          Folder := energyMeterClass.DI_DIR + PathDelim
+        Else
+           Folder := GetOutputDirectory;
+        GlobalResult := CSVName;
+@@ -3362,7 +3364,7 @@
+         WriteintoMemStr(FM_MHandle, inttostr(ActiveCircuit.Solution.Year));
+         For i := 1 to NumEMRegisters Do WriteintoMem(FM_MHandle,Double(RegSum[i]));
+         WriteintoMemStr(FM_MHandle, Char(10));
+-        CloseMHandler(FM_MHandle, DI_Dir + '\Totals.CSV', FM_Append);
++        CloseMHandler(FM_MHandle, DI_Dir + PathDelim + 'Totals.CSV', FM_Append);
+         FM_MHandle  :=  nil;
+ 
+   Except
+@@ -3590,6 +3592,7 @@
+   Try
+       IF OverloadFileIsOpen Then OV_MHandle.Free;
+       OverloadFileIsOpen := TRUE;
++      if OV_MHandle <> nil then OV_MHandle.free;
+       OV_MHandle  :=  Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase"' + Char(10));
+   Except
+       On E:Exception Do DosimpleMsg('Error creating memory space (Overload report) for writing.'+CRLF+E.Message, 541);
+@@ -3602,6 +3605,7 @@
+   Try
+       IF VoltageFileIsOpen Then VR_MHandle.Free;
+       VoltageFileIsOpen := TRUE;
++      if VR_MHandle <> nil then VR_MHandle.free;
+       VR_MHandle  :=  Create_Meter_Space('"Hour", "Undervoltages", "Min Voltage", "Overvoltage", "Max Voltage", "Min Bus", "Max Bus"');
+       WriteintoMemStr(VR_MHandle,', "LV Undervoltages", "Min LV Voltage", "LV Overvoltage", "Max LV Voltage", "Min LV Bus", "Max LV Bus"' + Char(10));
+   Except
+Index: Source/PDElements/Capacitor.pas
+===================================================================
+--- Source/PDElements/Capacitor.pas	(revision 2134)
++++ Source/PDElements/Capacitor.pas	(working copy)
+@@ -85,6 +85,7 @@
+         Bus2Defined     :Boolean;
+ 
+         SpecType   :Integer;
++        NumTerm         : Integer;   // Flag used to indicate The number of terminals
+ 
+         function  get_States(Idx: Integer): Integer;
+         procedure set_States(Idx: Integer; const Value: Integer);
+@@ -123,6 +124,8 @@
+         Property NomKV:Double Read kvrating;
+         Property LastStepInService:Integer Read FLastStepInService Write set_LastStepInService;
+ 
++        Property NumTerminals:Integer Read NumTerm;   // Property to know if the capacitor has 2 terminals
++
+    end;
+ 
+ VAR
+@@ -341,7 +344,10 @@
+          CASE ParamPointer OF
+             0: DoSimpleMsg('Unknown parameter "'+ParamName+'" for Object "Capacitor.'+Name+'"', 450);
+             1: CapSetbus1(param);
+-            2: Setbus(2, param);
++            2: Begin
++                Setbus(2, param);
++                NumTerm :=  2;    // Specifies that the capacitor is not connected to ground
++               End;
+             3:{ Numphases := Parser.IntValue};  // see below
+             4: InterpretDblArray (Param, FNumSteps, FkvarRating);
+             5: kvRating := Parser.Dblvalue;
+@@ -526,6 +532,7 @@
+      Bus2Defined      := FALSE;
+ 
+      RecalcElementData;
++     NumTerm  :=  1;
+ 
+      InitPropertyValues(0);
+ END;
+Index: Source/Plot/DSSPlot.pas
+===================================================================
+--- Source/Plot/DSSPlot.pas	(revision 2134)
++++ Source/Plot/DSSPlot.pas	(working copy)
+@@ -1522,8 +1522,8 @@
+    { If PeakDay=True then we only plot the peak of a 24-hr day }
+    Names := TStringList.Create;
+    { Open File }
+-   FileName := CaseName + '\di_yr_' + Trim(IntToStr(CaseYear))
+-     + '\' + MeterName + '.CSV';
++   FileName := CaseName + PathDelim + 'di_yr_' + Trim(IntToStr(CaseYear))
++     + PathDelim + MeterName + '.CSV';
+    If Not FileExists(FileName) Then
+    Begin
+       DoSimpleMsg('File "' + FileName + '" does not exist.', 191);
+@@ -1809,19 +1809,19 @@
+             SearchForMeterName := FALSE;
+             Case iPass of
+                1:
+-                  FileName := CaseName + '\di_yr_' + Trim(IntToStr(CaseYear))
+-                    + '\Totals.CSV';
++                  FileName := CaseName + PathDelim + 'di_yr_' + Trim(IntToStr(CaseYear))
++                    + PathDelim + 'Totals.CSV';
+                2:
+                   If (CompareText(WhichFile, 'Totals') = 0) OR
+                     (CompareText(WhichFile, 'Systemmeter') = 0) Then
+                   Begin
+-                     FileName := CaseName + '\di_yr_' + Trim
+-                       (IntToStr(CaseYear)) + '\' + WhichFile + '.CSV';
++                     FileName := CaseName + PathDelim + 'di_yr_' + Trim
++                       (IntToStr(CaseYear)) + PathDelim + WhichFile + '.CSV';
+                   End
+                   Else
+                   Begin
+-                     FileName := CaseName + '\di_yr_' + Trim
+-                       (IntToStr(CaseYear)) + '\' + 'EnergyMeterTotals.CSV';
++                     FileName := CaseName + PathDelim + 'di_yr_' + Trim
++                       (IntToStr(CaseYear)) + PathDelim + 'EnergyMeterTotals.CSV';
+                      SearchForMeterName := TRUE;
+                   End;
+             End;
+@@ -2152,20 +2152,20 @@
+                   SearchForMeterName := FALSE;
+                   Case iPass of
+                      1:
+-                        FileName := CaseName + '\di_yr_' + Trim
+-                          (IntToStr(CaseYear)) + '\Totals.CSV';
++                        FileName := CaseName + PathDelim + 'di_yr_' + Trim
++                          (IntToStr(CaseYear)) + PathDelim + 'Totals.CSV';
+                   Else
+                      Begin
+                         If (CompareText(WhichFile, 'Totals') = 0) OR
+                           (CompareText(WhichFile, 'Systemmeter') = 0) Then
+                         Begin
+-                           FileName := CaseName + '\di_yr_' + Trim
+-                             (IntToStr(CaseYear)) + '\' + WhichFile + '.CSV';
++                           FileName := CaseName + PathDelim + 'di_yr_' + Trim
++                             (IntToStr(CaseYear)) + PathDelim + WhichFile + '.CSV';
+                         End
+                         Else
+                         Begin
+-                           FileName := CaseName + '\di_yr_' + Trim
+-                             (IntToStr(CaseYear)) + '\' +
++                           FileName := CaseName + PathDelim + 'di_yr_' + Trim
++                             (IntToStr(CaseYear)) + PathDelim +
+                              'EnergyMeterTotals.CSV';
+                            SearchForMeterName := TRUE;
+                         End;
