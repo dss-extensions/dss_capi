@@ -1,0 +1,53 @@
+From 9b3174d692c9a2f87ad4ff19e2c58d1f7f6857ea Mon Sep 17 00:00:00 2001
+From: Paulo Meira <10246101+PMeira@users.noreply.github.com>
+Date: Fri, 16 Feb 2018 16:06:38 -0200
+Subject: [PATCH] PM to Classic: Add NumTerminals to Capacitor
+
+---
+ Source/PDElements/Capacitor.pas | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+
+diff --git a/Source/PDElements/Capacitor.pas b/Source/PDElements/Capacitor.pas
+index 5ba88ae..af01111 100644
+--- a/Source/PDElements/Capacitor.pas
++++ b/Source/PDElements/Capacitor.pas
+@@ -85,6 +85,7 @@ TYPE
+         Bus2Defined     :Boolean;
+ 
+         SpecType   :Integer;
++        NumTerm         : Integer;   // Flag used to indicate The number of terminals
+ 
+         function  get_States(Idx: Integer): Integer;
+         procedure set_States(Idx: Integer; const Value: Integer);
+@@ -123,6 +124,8 @@ TYPE
+         Property NomKV:Double Read kvrating;
+         Property LastStepInService:Integer Read FLastStepInService Write set_LastStepInService;
+ 
++        Property NumTerminals:Integer Read NumTerm;   // Property to know if the capacitor has 2 terminals
++
+    end;
+ 
+ VAR
+@@ -341,7 +344,10 @@ BEGIN
+          CASE ParamPointer OF
+             0: DoSimpleMsg('Unknown parameter "'+ParamName+'" for Object "Capacitor.'+Name+'"', 450);
+             1: CapSetbus1(param);
+-            2: Setbus(2, param);
++            2: Begin
++                Setbus(2, param);
++                NumTerm :=  2;    // Specifies that the capacitor is not connected to ground
++               End;
+             3:{ Numphases := Parser.IntValue};  // see below
+             4: InterpretDblArray (Param, FNumSteps, FkvarRating);
+             5: kvRating := Parser.Dblvalue;
+@@ -526,6 +532,7 @@ BEGIN
+      Bus2Defined      := FALSE;
+ 
+      RecalcElementData;
++     NumTerm  :=  1;
+ 
+      InitPropertyValues(0);
+ END;
+-- 
+2.10.0.windows.1
+

@@ -1,6 +1,6 @@
 #ifndef DSSPM_CAPI_DLL_H
 #define DSSPM_CAPI_DLL_H
-#define DSSPM_CAPI_VERSION "0.9.2"
+#define DSSPM_CAPI_VERSION "0.9.3"
 #ifndef DSSPM_CAPI_DLL
 //#define DSSPM_CAPI_DLL __declspec(dllimport)
 #define DSSPM_CAPI_DLL

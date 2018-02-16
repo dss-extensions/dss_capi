@@ -1,0 +1,307 @@
+From fc8ccf1f3cf492c77d018e4b19899b585c1a50c0 Mon Sep 17 00:00:00 2001
+From: Paulo Meira <10246101+PMeira@users.noreply.github.com>
+Date: Fri, 16 Feb 2018 16:18:00 -0200
+Subject: [PATCH] Classic to PM: trivial changes based on warning silencing
+
+---
+ Parallel_Version/Source/Common/CktElement.pas      |  2 +-
+ Parallel_Version/Source/Common/ShowResults.pas     |  4 ++--
+ Parallel_Version/Source/Common/SolutionAlgs.pas    |  2 +-
+ Parallel_Version/Source/Common/Utilities.pas       |  2 +-
+ Parallel_Version/Source/Executive/ExecHelper.pas   | 12 ++++++------
+ Parallel_Version/Source/General/GrowthShape.pas    |  4 ++--
+ Parallel_Version/Source/General/LoadShape.pas      |  4 ++--
+ Parallel_Version/Source/General/PriceShape.pas     |  4 ++--
+ Parallel_Version/Source/Meters/Monitor.pas         |  4 ++--
+ Parallel_Version/Source/PDElements/Capacitor.pas   |  2 +-
+ Parallel_Version/Source/PDElements/Transformer.pas |  8 ++++----
+ Parallel_Version/Source/Shared/Arraydef.pas        |  2 +-
+ Parallel_Version/Source/Shared/HashList.pas        |  4 ++--
+ Parallel_Version/Source/Shared/Pstcalc.pas         |  2 +-
+ Parallel_Version/Source/Shared/Ucmatrix.pas        |  2 +-
+ 15 files changed, 29 insertions(+), 29 deletions(-)
+
+diff --git a/Parallel_Version/Source/Common/CktElement.pas b/Parallel_Version/Source/Common/CktElement.pas
+index c4d1d35..18186f1 100644
+--- a/Parallel_Version/Source/Common/CktElement.pas
++++ b/Parallel_Version/Source/Common/CktElement.pas
+@@ -841,7 +841,7 @@ Begin
+          FOR j := 1 TO Fnconds DO Begin
+              If Not Terminals^[i].Conductors^[j].Closed THEN Begin
+                 If Not ElementOpen Then Begin
+-                    RowEliminated := AllocMem(Sizeof(RowEliminated^[1])*Yorder);
++                    RowEliminated := AllocMem(Sizeof(Integer)*Yorder);
+                     ElementOpen := True;
+                     cEpsilon := Cmplx(EPSILON, 0.0);
+                 End;
+diff --git a/Parallel_Version/Source/Common/ShowResults.pas b/Parallel_Version/Source/Common/ShowResults.pas
+index ea0bcd1..5f0edce 100644
+--- a/Parallel_Version/Source/Common/ShowResults.pas
++++ b/Parallel_Version/Source/Common/ShowResults.pas
+@@ -474,7 +474,7 @@ BEGIN
+   Nterm := pElem.Nterms;
+   
+   Try
+-    Getmem(cBuffer, sizeof(cBuffer^[1])*Ncond*Nterm);
++    Getmem(cBuffer, Sizeof(Complex)*NCond*Nterm);
+     pElem.GetCurrents(cBuffer, ActiveActor);
+     k:=0;
+     FromBus := Pad(StripExtension(pElem.FirstBus), MaxBusNameLength);
+@@ -1643,7 +1643,7 @@ Begin
+            {Bus Norton Equivalent Current, Isc has been previously computed}
+            With Buses^[iBus] Do Begin
+              YFault := TcMatrix.CreateMatrix(NumNodesThisBus);
+-             Getmem(VFault, Sizeof(VFault^[1])* NumNodesThisBus);
++             Getmem(VFault, Sizeof(Complex)* NumNodesThisBus);
+ 
+              GFault := Cmplx(10000.0, 0.0);
+ 
+diff --git a/Parallel_Version/Source/Common/SolutionAlgs.pas b/Parallel_Version/Source/Common/SolutionAlgs.pas
+index cac2c56..22aa8cb 100644
+--- a/Parallel_Version/Source/Common/SolutionAlgs.pas
++++ b/Parallel_Version/Source/Common/SolutionAlgs.pas
+@@ -984,7 +984,7 @@ Begin
+ 
+     {Mark Spectra being used}
+         {Check loads and generators - these are assumed to be at fundamental frequency}
+-    SpectrumInUse := AllocMem(SizeOf(SpectruminUse^[1])*SpectrumClass[ActorID].ElementCount);  //Allocate and zero
++    SpectrumInUse := AllocMem(SizeOf(Integer)*SpectrumClass[ActorID].ElementCount);  //Allocate and zero
+     WITH ActiveCircuit[ActorID] Do Begin
+         p := PCelements.First;
+         WHILE p <> NIL Do Begin
+diff --git a/Parallel_Version/Source/Common/Utilities.pas b/Parallel_Version/Source/Common/Utilities.pas
+index 7a55cf8..78d571e 100644
+--- a/Parallel_Version/Source/Common/Utilities.pas
++++ b/Parallel_Version/Source/Common/Utilities.pas
+@@ -2029,7 +2029,7 @@ Begin
+    SaveDelims := AuxParser.Delimiters;
+    AuxParser.Delimiters := ',';
+    ArraySize   := 10;
+-   FieldLength := Allocmem(Sizeof(FieldLength^[1]) * ArraySize);
++   FieldLength := Allocmem(Sizeof(Integer) * ArraySize);
+ 
+  Try
+    {Scan once to set field lengths}
+diff --git a/Parallel_Version/Source/Executive/ExecHelper.pas b/Parallel_Version/Source/Executive/ExecHelper.pas
+index 8ba6942..aa43e2d 100644
+--- a/Parallel_Version/Source/Executive/ExecHelper.pas
++++ b/Parallel_Version/Source/Executive/ExecHelper.pas
+@@ -1024,7 +1024,7 @@ VAR
+ 
+ Begin
+ 
+-     Dummy := AllocMem(Sizeof(Dummy^[1]) * 100); // Big Buffer
++     Dummy := AllocMem(Sizeof(Double) * 100); // Big Buffer
+      Num   := Parser[ActiveActor].ParseAsVector(100, Dummy);
+      {Parsing zero-fills the array}
+ 
+@@ -1742,7 +1742,7 @@ Begin
+      Begin
+          NValues := NConds*Nterms;
+          GlobalResult := '';
+-         cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
++         cBuffer := Allocmem(sizeof(Complex)*NValues);
+          GetCurrents(cBuffer, ActiveActor);
+          For i := 1 to  NValues DO
+          Begin
+@@ -1827,7 +1827,7 @@ Begin
+   WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
+   Begin
+       NValues := NPhases;
+-      cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
++      cBuffer := Allocmem(sizeof(Complex)*NValues);
+       GlobalResult := '';
+       GetPhaseLosses( NValues, cBuffer);
+       For i := 1 to  NValues DO Begin
+@@ -1889,7 +1889,7 @@ Begin
+         THEN  For i := 0 to  3*Nterms-1 DO GlobalResult := GlobalResult + ' -1.0,'  // Signify n/A
+         ELSE Begin
+           NValues := NConds * Nterms;
+-          cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
++          cBuffer := Allocmem(sizeof(Complex)*NValues);
+           GetCurrents(cBuffer, ActiveActor);
+           For j := 1 to Nterms Do
+           Begin
+@@ -1936,7 +1936,7 @@ Begin
+          For i := 0 to 2*3*Nterms-1 DO GlobalResult := GlobalResult + '-1.0, '  // Signify n/A
+       ELSE Begin
+         NValues := NConds * Nterms;
+-        cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
++        cBuffer := Allocmem(sizeof(Complex)*NValues);
+         GetCurrents(cBuffer, ActiveActor);
+         FOR j := 1 to Nterms Do Begin
+          k :=(j-1) * NConds;
+@@ -2251,7 +2251,7 @@ Begin
+    ELSE Begin
+        DoAllHarmonics := FALSE;
+ 
+-       Dummy := AllocMem(Sizeof(Dummy^[1]) * 100); // Big Buffer
++       Dummy := AllocMem(Sizeof(Double) * 100); // Big Buffer
+        Num   := Parser[ActiveActor].ParseAsVector(100, Dummy);
+        {Parsing zero-fills the array}
+ 
+diff --git a/Parallel_Version/Source/General/GrowthShape.pas b/Parallel_Version/Source/General/GrowthShape.pas
+index bf50a66..c3fb8c7 100644
+--- a/Parallel_Version/Source/General/GrowthShape.pas
++++ b/Parallel_Version/Source/General/GrowthShape.pas
+@@ -215,12 +215,12 @@ BEGIN
+             1: Npts := Parser[ActorID].Intvalue;
+             2: BEGIN
+                  ReAllocmem(Year, Sizeof(Year^[1])*Npts);
+-                 YrBuffer := Allocmem(Sizeof(YrBuffer^[1])*Npts);
++                 YrBuffer := Allocmem(Sizeof(Double)*Npts);
+                  InterpretDblArray(Param, Npts, YrBuffer);  // Parser.ParseAsVector(Npts, Yrbuffer);
+                  
+                  FOR i := 1 to Npts DO Year^[i] := Round(YrBuffer^[i]);
+                  BaseYear := Year^[1];
+-                 FreeMem( YrBuffer,Sizeof(YrBuffer^[1])*Npts);
++                 FreeMem( YrBuffer,Sizeof(Double)*Npts);
+                END;
+             3: BEGIN
+                  ReAllocmem(Multiplier, Sizeof(Multiplier^[1])*Npts);
+diff --git a/Parallel_Version/Source/General/LoadShape.pas b/Parallel_Version/Source/General/LoadShape.pas
+index fa47e20..939b75d 100644
+--- a/Parallel_Version/Source/General/LoadShape.pas
++++ b/Parallel_Version/Source/General/LoadShape.pas
+@@ -1061,8 +1061,8 @@ begin
+ 
+        Hr_Time := 0.0;
+ 
+-       VBuf := AllocMem(Sizeof(VBuf^[1])* ObjList.ListSize);
+-       CBuf := AllocMem(Sizeof(VBuf^[1])* 1);   // just a dummy -- Cbuf is ignored here
++       VBuf := AllocMem(Sizeof(Double)* ObjList.ListSize);
++       CBuf := AllocMem(Sizeof(Double)* 1);   // just a dummy -- Cbuf is ignored here
+ 
+        For i := 1 to MaxPts Do Begin
+           For j := 1 to ObjList.ListSize Do Begin
+diff --git a/Parallel_Version/Source/General/PriceShape.pas b/Parallel_Version/Source/General/PriceShape.pas
+index f037026..6647fbb 100644
+--- a/Parallel_Version/Source/General/PriceShape.pas
++++ b/Parallel_Version/Source/General/PriceShape.pas
+@@ -823,8 +823,8 @@ Begin
+ 
+        Hr_Time := 0.0;
+ 
+-       VBuf := AllocMem(Sizeof(VBuf^[1])* ObjList.ListSize);
+-       CBuf := AllocMem(Sizeof(VBuf^[1])* 1);   // just a dummy -- Cbuf is ignored here
++       VBuf := AllocMem(Sizeof(Double)* ObjList.ListSize);
++       CBuf := AllocMem(Sizeof(Double)* 1);   // just a dummy -- Cbuf is ignored here
+ 
+        For i := 1 to MaxPts Do Begin
+           For j := 1 to ObjList.ListSize Do Begin
+diff --git a/Parallel_Version/Source/Meters/Monitor.pas b/Parallel_Version/Source/Meters/Monitor.pas
+index 89cbfcd..5f084b1 100644
+--- a/Parallel_Version/Source/Meters/Monitor.pas
++++ b/Parallel_Version/Source/Meters/Monitor.pas
+@@ -1591,8 +1591,8 @@ begin
+ 
+           {Find Max number of points}
+            RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
+-           VBuf := AllocMem(Sizeof(VBuf^[1])* RecordSize);  // Put Everything in here for now
+-           CBuf := AllocMem(Sizeof(VBuf^[1])* 1);   // just a dummy -- Cbuf is ignored here
++           VBuf := AllocMem(Sizeof(Double)* RecordSize);  // Put Everything in here for now
++           CBuf := AllocMem(Sizeof(Double)* 1);   // just a dummy -- Cbuf is ignored here
+ 
+            {Get first time value and set the interval to this value}
+            hr:= 0.0;
+diff --git a/Parallel_Version/Source/PDElements/Capacitor.pas b/Parallel_Version/Source/PDElements/Capacitor.pas
+index 326f316..b67fec0 100644
+--- a/Parallel_Version/Source/PDElements/Capacitor.pas
++++ b/Parallel_Version/Source/PDElements/Capacitor.pas
+@@ -1064,7 +1064,7 @@ begin
+        2:  Result := GetBus(2);
+        4:  Result  := GetDSSArray_Real(FNumSteps, Fkvarrating);
+        8:  Begin
+-               FTemp := Allocmem(SizeOF(FTemp^[1])*FNumSteps);
++               FTemp := Allocmem(SizeOf(Double)*FNumSteps);
+                For i := 1 to FNumSteps Do FTemp^[i] := FC^[i] * 1.0e6;  // To microfarads
+                Result  := GetDSSArray_Real(FNumSteps, FTemp);
+                Reallocmem(FTemp, 0); // throw away temp storage
+diff --git a/Parallel_Version/Source/PDElements/Transformer.pas b/Parallel_Version/Source/PDElements/Transformer.pas
+index 82cdd19..9415250 100644
+--- a/Parallel_Version/Source/PDElements/Transformer.pas
++++ b/Parallel_Version/Source/PDElements/Transformer.pas
+@@ -1445,7 +1445,7 @@ begin
+   TotalLosses := Losses;   // Side effect: computes Iterminal
+ 
+   {Compute No load losses in Yprim_Shunt}
+-  cTempIterminal := AllocMem(Sizeof(cTempIterminal^[1])* Yorder);
++  cTempIterminal := AllocMem(Sizeof(Complex)* Yorder);
+   ComputeVterminal(ActorID);
+   Yprim_Shunt.MVmult(cTempIterminal, Vterminal) ;
+   {No Load Losses are sum of all powers coming into YPrim_Shunt from each terminal}
+@@ -1835,11 +1835,11 @@ begin
+    Y_1Volt_NL.Clear;
+ 
+    {Allocate temp complex arrays}
+-   ctempArray1 := AllocMem(SizeOF(ctempArray1^[1]) * NumWindings * 2);
+-   ctempArray2 := AllocMem(SizeOF(ctempArray2^[1]) * NumWindings * 2);
++   ctempArray1 := AllocMem(SizeOf(Complex) * NumWindings * 2);
++   ctempArray2 := AllocMem(SizeOf(Complex) * NumWindings * 2);
+ 
+    
+-   A          := AllocMem(SizeOF(A^[1]) * NumWindings * 2);
++   A          := AllocMem(SizeOf(Complex) * NumWindings * 2);
+    cMinusOne  := cmplx(-1.0, 0.0);
+    AT         := TcMatrix.Creatematrix(NumWindings);
+    FOR i := 1 to NumWindings-1 Do AT.SetElement(i+1, i, cONE);
+diff --git a/Parallel_Version/Source/Shared/Arraydef.pas b/Parallel_Version/Source/Shared/Arraydef.pas
+index 80ef3b2..675a5cd 100644
+--- a/Parallel_Version/Source/Shared/Arraydef.pas
++++ b/Parallel_Version/Source/Shared/Arraydef.pas
+@@ -43,7 +43,7 @@ uses SysUtils;
+ Function AllocStringArray(Size:Integer):pStringArray;
+ // Allocates a string array initialized with nil values
+ Begin
+-      Result := AllocMem(SizeOf(Result^[1])*Size);
++      Result := AllocMem(SizeOf(string)*Size);
+ End;
+ 
+ Procedure FreeStringArray(var pS:pStringArray; Size:Integer);
+diff --git a/Parallel_Version/Source/Shared/HashList.pas b/Parallel_Version/Source/Shared/HashList.pas
+index ee81feb..4650be6 100644
+--- a/Parallel_Version/Source/Shared/HashList.pas
++++ b/Parallel_Version/Source/Shared/HashList.pas
+@@ -366,11 +366,11 @@ BEGIN
+ 
+      OldNumLists := NumLists;
+ 
+-     NewStringPtr := AllocMem(SizeOf(newStringPtr^[1]) * NewSize);
++     NewStringPtr := AllocMem(SizeOf(string) * NewSize);
+      NewNumLists := round(sqrt(NewSize));
+      ElementsPerList := NewSize div NewNumLists + 1;
+      If NewNumLists < 1 Then NewNumLists := 1;  // make sure at least one list
+-     Getmem(NewListPtr, Sizeof(NewListptr^[1]) * NewNumLists);
++     Getmem(NewListPtr, Sizeof(TSubList) * NewNumLists);
+      FOR i := 1 to NumLists DO BEGIN
+          {Allocate initial Sublists}
+          WITH NewListPtr^[i] DO BEGIN
+diff --git a/Parallel_Version/Source/Shared/Pstcalc.pas b/Parallel_Version/Source/Shared/Pstcalc.pas
+index 8525ce8..77680a9 100644
+--- a/Parallel_Version/Source/Shared/Pstcalc.pas
++++ b/Parallel_Version/Source/Shared/Pstcalc.pas
+@@ -663,7 +663,7 @@ begin
+   ipst:=1;
+   ts := pT[2] - pT[1];
+   for i := 1 to N do pRms[i] := pRms[i] / vbase;
+-  pBuf := AllocMem (N * sizeof (pBuf[1]));
++  pBuf := AllocMem (N * sizeof (Single));
+   Fhp(N, ts, whp, pRms, pBuf);
+   Fw1(N, ts, w1, k, lam, pBuf, pRms);
+   Fw2(N, ts, w2, w3, w4, pRms, pBuf);
+diff --git a/Parallel_Version/Source/Shared/Ucmatrix.pas b/Parallel_Version/Source/Shared/Ucmatrix.pas
+index bbccf07..928ac9a 100644
+--- a/Parallel_Version/Source/Shared/Ucmatrix.pas
++++ b/Parallel_Version/Source/Shared/Ucmatrix.pas
+@@ -163,7 +163,7 @@ implementation
+ {Allocate LT}
+ //     LT:=nil;
+ 
+-     GetMem(LT,SizeOf(LT^[1])*L);
++     GetMem(LT,SizeOf(Integer)*L);
+      IF LT=nil THEN
+      BEGIN
+       InvertError:=1;
+-- 
+2.10.0.windows.1
+

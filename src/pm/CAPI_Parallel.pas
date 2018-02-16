@@ -23,7 +23,7 @@ procedure Parallel_Set_ConcatenateReports(Value: Integer);cdecl;
 
 IMPLEMENTATION
 
-USES CAPI_Constants, DSSGlobals, Executive, SysUtils, solution, CktElement, ParserDel, KLUSolve, Classes;
+USES CAPI_Constants, DSSGlobals, Executive, SysUtils, solution, CktElement, ParserDel, KLUSolve, System.Classes;
 
 function Parallel_Get_NumCPUs():Integer;cdecl;
 Begin
@@ -90,10 +90,10 @@ VAR
   Result: PIntegerArray; 
   idx : Integer;
 begin
-    Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (NumOfActors - 1) + 1);
-    for idx := 0 to NumOfActors - 1 do
+    Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (NumOfActors) - (1) + 1);
+    for idx := 1 to NumOfActors do
     Begin
-      Result[idx] :=  ActorPctProgress[idx + 1];
+      Result[idx] :=  ActorPctProgress[idx];
     End;
 end;
 //------------------------------------------------------------------------------
@@ -102,9 +102,9 @@ VAR
   Result: PIntegerArray; 
   idx : Integer;
 begin
-    Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (NumOfActors - 1) + 1);
-    for idx := 0 to NumOfActors - 1 do
-      Result[idx] :=  ActorStatus[idx + 1];  
+    Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (NumOfActors) - (1) + 1);
+    for idx := 1 to NumOfActors do
+      Result[idx] :=  ActorStatus[idx];  
 end;
 //------------------------------------------------------------------------------
 function Parallel_Get_ActiveParallel():Integer;cdecl;

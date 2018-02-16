@@ -4,7 +4,7 @@ dss_capi: An unofficial C API for EPRI's OpenDSS
 
 If you are looking for the Python bindings, see [dss_python](http://github.com/PMeira/dss_python/).
 
-Version 0.9.2, based on [OpenDSS revision 2134](https://sourceforge.net/p/electricdss/code/2134/tree/). 
+Version 0.9.3, based on [OpenDSS revision 2136](https://sourceforge.net/p/electricdss/code/2136/tree/). 
 
 This is a work-in-progress but it's deemed stable enough to be made public. 
 *Note that, while the interface with OpenDSS is stable (classic version), the OpenDSS-PM (actor-based parallel machine version) interface was integrated recently and is experimental.*
@@ -20,10 +20,13 @@ Instead of using extra numeric parameters as in the official DDLL interface, eac
 
 Besides low-level details such as memory management, most of the COM documentation can be used as-is. 
 
+A custom patchset to build OpenDSS-PM with FreePascal (as well as port recent features of the Classic version) is maintained in the folder `src/patchset`.
+
 Recent changes
 ==============
-- 2018-02-08: First public release (OpenDSS revision 2123)
-- 2018-02-10: Experimental support for OpenDSS-PM (at the moment, a custom patch is provided for FreePascal support) and port COM interface fixes (OpenDSS revision 2134)
+- 2018-02-08 / version 0.9.1: First public release (OpenDSS revision 2123)
+- 2018-02-12 / version 0.9.2: Experimental support for OpenDSS-PM (at the moment, a custom patch is provided for FreePascal support) and port COM interface fixes (OpenDSS revision 2134)
+- 2018-02-16 / version 0.9.3: Integrate COM interface fixes from revision 2136 (`First` `Next` iteration)
 
 Missing features and limitations
 ================================
@@ -44,7 +47,7 @@ To build the DLL yourself:
 
 - Get the official OpenDSS source code [for the target revision](https://sourceforge.net/p/electricdss/code/2123/tree/) in the same root folder:
 ```    
-    svn checkout https://svn.code.sf.net/p/electricdss/code/trunk electricdss -r2134
+    svn checkout https://svn.code.sf.net/p/electricdss/code/trunk electricdss -r2136
 ```
 
 - Install the [FreePascal compiler](https://freepascal.org/). If you have the Lazarus IDE installed, you most likely already have the compiler too. Add the folder containing the compiler (`fpc.exe`) to your PATH environment variable.
@@ -54,10 +57,10 @@ To build the DLL yourself:
     git clone https://github.com/PMeira/dss_capi.git
 ```    
     
-- For the OpenDSS revision 2134, apply the patch on `src/r2134.patch` if you're building the OpenDSS-PM version.
+- For the OpenDSS revision 2136, apply the patch on `src/r2136.patch` if you're building the OpenDSS-PM version.
 ```
     cd electricdss
-    svn patch ../dss_capi/src/r2134.patch
+    svn patch ../dss_capi/src/r2136.patch
 ```
 
 On Windows

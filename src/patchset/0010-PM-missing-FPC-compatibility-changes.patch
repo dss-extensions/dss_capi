@@ -1,0 +1,27 @@
+From c5264af13ed67155415890d71c67ee725c8c298a Mon Sep 17 00:00:00 2001
+From: Paulo Meira <10246101+PMeira@users.noreply.github.com>
+Date: Fri, 16 Feb 2018 16:56:37 -0200
+Subject: [PATCH] PM: missing FPC compatibility changes
+
+---
+ Parallel_Version/Source/Controls/ExpControl.pas | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Parallel_Version/Source/Controls/ExpControl.pas b/Parallel_Version/Source/Controls/ExpControl.pas
+index 36aed38..a01023f 100644
+--- a/Parallel_Version/Source/Controls/ExpControl.pas
++++ b/Parallel_Version/Source/Controls/ExpControl.pas
+@@ -12,8 +12,8 @@ unit ExpControl;
+ INTERFACE
+ 
+   uses
+-    System.Generics.Collections, Command, ControlClass, ControlElem,
+-    CktElement, DSSClass, PVSystem, Arraydef, ucomplex,
++    {$IFDEF FPC}gqueue{$ELSE}System.Generics.Collections{$ENDIF}, Command, 
++    ControlClass, ControlElem, CktElement, DSSClass, PVSystem, Arraydef, ucomplex,
+     utilities, Dynamics, PointerList, Classes, StrUtils;
+ 
+   type
+-- 
+2.10.0.windows.1
+

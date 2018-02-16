@@ -352,7 +352,7 @@ Added: svn:executable
 \ No newline at end of property
 Index: Parallel_Version/Source/Common/AutoAdd.pas
 ===================================================================
---- Parallel_Version/Source/Common/AutoAdd.pas	(revision 2134)
+--- Parallel_Version/Source/Common/AutoAdd.pas	(revision 2136)
 +++ Parallel_Version/Source/Common/AutoAdd.pas	(working copy)
 @@ -87,7 +87,11 @@
  implementation
@@ -378,7 +378,7 @@ Index: Parallel_Version/Source/Common/AutoAdd.pas
               BusIdxList^[i] := i;
 Index: Parallel_Version/Source/Common/Circuit.pas
 ===================================================================
---- Parallel_Version/Source/Common/Circuit.pas	(revision 2134)
+--- Parallel_Version/Source/Common/Circuit.pas	(revision 2136)
 +++ Parallel_Version/Source/Common/Circuit.pas	(working copy)
 @@ -25,7 +25,7 @@
  USES
@@ -418,7 +418,7 @@ Index: Parallel_Version/Source/Common/Circuit.pas
  end;
 Index: Parallel_Version/Source/Common/CktElement.pas
 ===================================================================
---- Parallel_Version/Source/Common/CktElement.pas	(revision 2134)
+--- Parallel_Version/Source/Common/CktElement.pas	(revision 2136)
 +++ Parallel_Version/Source/Common/CktElement.pas	(working copy)
 @@ -841,7 +841,7 @@
           FOR j := 1 TO Fnconds DO Begin
@@ -431,7 +431,7 @@ Index: Parallel_Version/Source/Common/CktElement.pas
                  End;
 Index: Parallel_Version/Source/Common/DSSCallBackRoutines.pas
 ===================================================================
---- Parallel_Version/Source/Common/DSSCallBackRoutines.pas	(revision 2134)
+--- Parallel_Version/Source/Common/DSSCallBackRoutines.pas	(revision 2136)
 +++ Parallel_Version/Source/Common/DSSCallBackRoutines.pas	(working copy)
 @@ -20,7 +20,7 @@
  
@@ -503,9 +503,21 @@ Index: Parallel_Version/Source/Common/DSSCallBackRoutines.pas
  End;
  
  {====================================================================================================================}
+Index: Parallel_Version/Source/Common/DSSClass.pas
+===================================================================
+--- Parallel_Version/Source/Common/DSSClass.pas	(revision 2136)
++++ Parallel_Version/Source/Common/DSSClass.pas	(working copy)
+@@ -260,6 +260,7 @@
+ 
+ Function TDSSClass.GetActiveObj:Pointer; // Get address of active obj of this class
+ BEGIN
++    ActiveElement := ElementList.ActiveIndex ;
+     If ActiveElement>0 THEN
+        Result := ElementList.Get(ActiveElement)
+     Else
 Index: Parallel_Version/Source/Common/DSSGlobals.pas
 ===================================================================
---- Parallel_Version/Source/Common/DSSGlobals.pas	(revision 2134)
+--- Parallel_Version/Source/Common/DSSGlobals.pas	(revision 2136)
 +++ Parallel_Version/Source/Common/DSSGlobals.pas	(working copy)
 @@ -43,7 +43,7 @@
       PVSystem,
@@ -794,7 +806,7 @@ Index: Parallel_Version/Source/Common/DSSGlobals.pas
  
 Index: Parallel_Version/Source/Common/ExportResults.pas
 ===================================================================
---- Parallel_Version/Source/Common/ExportResults.pas	(revision 2134)
+--- Parallel_Version/Source/Common/ExportResults.pas	(revision 2136)
 +++ Parallel_Version/Source/Common/ExportResults.pas	(working copy)
 @@ -33,7 +33,7 @@
  Procedure ExportOverloads(FileNm:String);
@@ -943,7 +955,7 @@ Index: Parallel_Version/Source/Common/ExportResults.pas
    Finally
 Index: Parallel_Version/Source/Common/KLUSolve.pas
 ===================================================================
---- Parallel_Version/Source/Common/KLUSolve.pas	(revision 2134)
+--- Parallel_Version/Source/Common/KLUSolve.pas	(revision 2136)
 +++ Parallel_Version/Source/Common/KLUSolve.pas	(working copy)
 @@ -1,63 +1,72 @@
  unit KLUSolve;
@@ -1070,7 +1082,7 @@ Index: Parallel_Version/Source/Common/KLUSolve.pas
  {
 Index: Parallel_Version/Source/Common/ShowResults.pas
 ===================================================================
---- Parallel_Version/Source/Common/ShowResults.pas	(revision 2134)
+--- Parallel_Version/Source/Common/ShowResults.pas	(revision 2136)
 +++ Parallel_Version/Source/Common/ShowResults.pas	(working copy)
 @@ -46,8 +46,8 @@
  Uses uComplex,  Arraydef,  sysutils, Circuit, DSSClass, DSSClassDefs, DSSGlobals,
@@ -1103,7 +1115,7 @@ Index: Parallel_Version/Source/Common/ShowResults.pas
  
 Index: Parallel_Version/Source/Common/Solution.pas
 ===================================================================
---- Parallel_Version/Source/Common/Solution.pas	(revision 2134)
+--- Parallel_Version/Source/Common/Solution.pas	(revision 2136)
 +++ Parallel_Version/Source/Common/Solution.pas	(working copy)
 @@ -34,6 +34,8 @@
           0-th element is alway ground(complex zero volts).
@@ -1488,7 +1500,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
          ActorStatus[ActorID]  :=  1;
 Index: Parallel_Version/Source/Common/SolutionAlgs.pas
 ===================================================================
---- Parallel_Version/Source/Common/SolutionAlgs.pas	(revision 2134)
+--- Parallel_Version/Source/Common/SolutionAlgs.pas	(revision 2136)
 +++ Parallel_Version/Source/Common/SolutionAlgs.pas	(working copy)
 @@ -42,8 +42,9 @@
  
@@ -1687,7 +1699,7 @@ Index: Parallel_Version/Source/Common/SolutionAlgs.pas
          WHILE p <> NIL Do Begin
 Index: Parallel_Version/Source/Common/TOPExport.pas
 ===================================================================
---- Parallel_Version/Source/Common/TOPExport.pas	(revision 2134)
+--- Parallel_Version/Source/Common/TOPExport.pas	(revision 2136)
 +++ Parallel_Version/Source/Common/TOPExport.pas	(working copy)
 @@ -71,21 +71,33 @@
     TOP_Object      :Variant;  // For Top Automation
@@ -1787,7 +1799,7 @@ Index: Parallel_Version/Source/Common/TOPExport.pas
  
 Index: Parallel_Version/Source/Common/Utilities.pas
 ===================================================================
---- Parallel_Version/Source/Common/Utilities.pas	(revision 2134)
+--- Parallel_Version/Source/Common/Utilities.pas	(revision 2136)
 +++ Parallel_Version/Source/Common/Utilities.pas	(working copy)
 @@ -154,12 +154,13 @@
  
@@ -1899,7 +1911,7 @@ Index: Parallel_Version/Source/Common/Utilities.pas
  Function MakeNewCktElemName(const oldname:string):string;
 Index: Parallel_Version/Source/Common/Ymatrix.pas
 ===================================================================
---- Parallel_Version/Source/Common/Ymatrix.pas	(revision 2134)
+--- Parallel_Version/Source/Common/Ymatrix.pas	(revision 2136)
 +++ Parallel_Version/Source/Common/Ymatrix.pas	(working copy)
 @@ -14,7 +14,7 @@
  
@@ -1912,7 +1924,7 @@ Index: Parallel_Version/Source/Common/Ymatrix.pas
  {Options for building Y matrix}
 Index: Parallel_Version/Source/Controls/CapUserControl.pas
 ===================================================================
---- Parallel_Version/Source/Controls/CapUserControl.pas	(revision 2134)
+--- Parallel_Version/Source/Controls/CapUserControl.pas	(revision 2136)
 +++ Parallel_Version/Source/Controls/CapUserControl.pas	(working copy)
 @@ -79,7 +79,7 @@
  
@@ -1925,7 +1937,7 @@ Index: Parallel_Version/Source/Controls/CapUserControl.pas
  
 Index: Parallel_Version/Source/Controls/ExpControl.pas
 ===================================================================
---- Parallel_Version/Source/Controls/ExpControl.pas	(revision 2134)
+--- Parallel_Version/Source/Controls/ExpControl.pas	(revision 2136)
 +++ Parallel_Version/Source/Controls/ExpControl.pas	(working copy)
 @@ -12,8 +12,8 @@
  INTERFACE
@@ -2039,7 +2051,7 @@ Index: Parallel_Version/Source/Controls/ExpControl.pas
        dt :=  ActiveCircuit[ActorID].Solution.Dynavars.h;
  Index: Parallel_Version/Source/Controls/InvControl.pas
 ===================================================================
---- Parallel_Version/Source/Controls/InvControl.pas	(revision 2134)
+--- Parallel_Version/Source/Controls/InvControl.pas	(revision 2136)
 +++ Parallel_Version/Source/Controls/InvControl.pas	(working copy)
 @@ -1296,7 +1296,7 @@
                    Qnew[k] := sign(QNew[k])*0.99*PVSys.kvarLimit;
@@ -2077,7 +2089,7 @@ Index: Parallel_Version/Source/Controls/ExpControl.pas
  
 Index: Parallel_Version/Source/Controls/RegControl.pas
 ===================================================================
---- Parallel_Version/Source/Controls/RegControl.pas	(revision 2134)
+--- Parallel_Version/Source/Controls/RegControl.pas	(revision 2136)
 +++ Parallel_Version/Source/Controls/RegControl.pas	(working copy)
 @@ -1228,7 +1228,7 @@
  Procedure TRegControlObj.Reset;
@@ -2090,7 +2102,7 @@ Index: Parallel_Version/Source/Controls/RegControl.pas
  procedure TRegcontrolObj.SaveWrite(var F: TextFile);
 Index: Parallel_Version/Source/DLL/ImplCapControls.pas
 ===================================================================
---- Parallel_Version/Source/DLL/ImplCapControls.pas	(revision 2134)
+--- Parallel_Version/Source/DLL/ImplCapControls.pas	(revision 2136)
 +++ Parallel_Version/Source/DLL/ImplCapControls.pas	(working copy)
 @@ -49,7 +49,8 @@
      procedure Set_Vmax(Value: Double); safecall;
@@ -2122,7 +2134,7 @@ Index: Parallel_Version/Source/DLL/ImplCapControls.pas
      ciInternal, tmApartment);
 Index: Parallel_Version/Source/DLL/ImplCircuit.pas
 ===================================================================
---- Parallel_Version/Source/DLL/ImplCircuit.pas	(revision 2134)
+--- Parallel_Version/Source/DLL/ImplCircuit.pas	(revision 2136)
 +++ Parallel_Version/Source/DLL/ImplCircuit.pas	(working copy)
 @@ -726,7 +726,8 @@
     iV               :LongWord;
@@ -2136,7 +2148,7 @@ Index: Parallel_Version/Source/DLL/ImplCircuit.pas
  
 Index: Parallel_Version/Source/DLL/ImplGlobals.pas
 ===================================================================
---- Parallel_Version/Source/DLL/ImplGlobals.pas	(revision 2134)
+--- Parallel_Version/Source/DLL/ImplGlobals.pas	(revision 2136)
 +++ Parallel_Version/Source/DLL/ImplGlobals.pas	(working copy)
 @@ -124,8 +124,15 @@
  
@@ -2155,9 +2167,26 @@ Index: Parallel_Version/Source/DLL/ImplGlobals.pas
  Procedure Fire_InitControls;
  begin
    if assigned(FEvents) then TDSSEvents(FEvents).Fire_InitControls;
+Index: Parallel_Version/Source/DLL/ImplReclosers.pas
+===================================================================
+--- Parallel_Version/Source/DLL/ImplReclosers.pas	(revision 2136)
++++ Parallel_Version/Source/DLL/ImplReclosers.pas	(working copy)
+@@ -107,10 +107,10 @@
+         Repeat
+           If pElem.Enabled Then Begin
+               ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
+-              Result := 1;
++              Result := RecloserClass.ElementList.ActiveIndex;              
+           End
+           Else pElem := RecloserClass.ElementList.Next;
+-        Until (Result = 1) or (pElem = nil);
++        Until (Result >0) or (pElem = nil);
+      End;
+ end;
+ 
 Index: Parallel_Version/Source/DLL/ImplRegControls.pas
 ===================================================================
---- Parallel_Version/Source/DLL/ImplRegControls.pas	(revision 2134)
+--- Parallel_Version/Source/DLL/ImplRegControls.pas	(revision 2136)
 +++ Parallel_Version/Source/DLL/ImplRegControls.pas	(working copy)
 @@ -64,6 +64,7 @@
      procedure Set_TapNumber(Value: Integer); safecall;
@@ -2187,7 +2216,7 @@ Index: Parallel_Version/Source/DLL/ImplRegControls.pas
      ciInternal, tmApartment);
 Index: Parallel_Version/Source/DLL/ImplSolution.pas
 ===================================================================
---- Parallel_Version/Source/DLL/ImplSolution.pas	(revision 2134)
+--- Parallel_Version/Source/DLL/ImplSolution.pas	(revision 2136)
 +++ Parallel_Version/Source/DLL/ImplSolution.pas	(working copy)
 @@ -99,6 +99,8 @@
      function Get_Time_of_Step: Double; safecall;
@@ -2227,7 +2256,7 @@ Index: Parallel_Version/Source/DLL/ImplSolution.pas
    i : Integer;
 Index: Parallel_Version/Source/DLL/OpenDSSengine.ridl
 ===================================================================
---- Parallel_Version/Source/DLL/OpenDSSengine.ridl	(revision 2134)
+--- Parallel_Version/Source/DLL/OpenDSSengine.ridl	(revision 2136)
 +++ Parallel_Version/Source/DLL/OpenDSSengine.ridl	(working copy)
 @@ -956,15 +956,23 @@
      HRESULT _stdcall Process_Time([out, retval] double* Value);
@@ -2278,7 +2307,7 @@ Index: Parallel_Version/Source/DLL/OpenDSSengine.ridl
    [
 Index: Parallel_Version/Source/Executive/ExecCommands.pas
 ===================================================================
---- Parallel_Version/Source/Executive/ExecCommands.pas	(revision 2134)
+--- Parallel_Version/Source/Executive/ExecCommands.pas	(revision 2136)
 +++ Parallel_Version/Source/Executive/ExecCommands.pas	(working copy)
 @@ -27,10 +27,11 @@
  
@@ -2322,7 +2351,7 @@ Index: Parallel_Version/Source/Executive/ExecCommands.pas
         16: CmdResult := DoPropertyDump;
 Index: Parallel_Version/Source/Executive/ExecHelper.pas
 ===================================================================
---- Parallel_Version/Source/Executive/ExecHelper.pas	(revision 2134)
+--- Parallel_Version/Source/Executive/ExecHelper.pas	(revision 2136)
 +++ Parallel_Version/Source/Executive/ExecHelper.pas	(working copy)
 @@ -143,11 +143,11 @@
       DSSClass, DSSObject, Utilities, Solution,
@@ -2575,7 +2604,7 @@ Index: Parallel_Version/Source/Executive/ExecHelper.pas
 -
 Index: Parallel_Version/Source/Executive/ExecOptions.pas
 ===================================================================
---- Parallel_Version/Source/Executive/ExecOptions.pas	(revision 2134)
+--- Parallel_Version/Source/Executive/ExecOptions.pas	(revision 2136)
 +++ Parallel_Version/Source/Executive/ExecOptions.pas	(working copy)
 @@ -11,7 +11,7 @@
  Uses Command;
@@ -2830,7 +2859,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
             // Ignore excess parameters
 Index: Parallel_Version/Source/Executive/Executive.pas
 ===================================================================
---- Parallel_Version/Source/Executive/Executive.pas	(revision 2134)
+--- Parallel_Version/Source/Executive/Executive.pas	(revision 2136)
 +++ Parallel_Version/Source/Executive/Executive.pas	(working copy)
 @@ -90,7 +90,7 @@
  USES ExecCommands, ExecOptions,
@@ -2863,7 +2892,7 @@ Index: Parallel_Version/Source/Executive/Executive.pas
         ParserVars := TParserVar.Create(100);  // start with space for 100 variables
 Index: Parallel_Version/Source/Executive/ExportOptions.pas
 ===================================================================
---- Parallel_Version/Source/Executive/ExportOptions.pas	(revision 2134)
+--- Parallel_Version/Source/Executive/ExportOptions.pas	(revision 2136)
 +++ Parallel_Version/Source/Executive/ExportOptions.pas	(working copy)
 @@ -105,7 +105,7 @@
                          ' cause a separate file to be written for each meter.';
@@ -2902,7 +2931,7 @@ Index: Parallel_Version/Source/Executive/ExportOptions.pas
       20: ExportCDPSM (Filename, Substation, SubGeographicRegion, GeographicRegion, Combined);
 Index: Parallel_Version/Source/Executive/ShowOptions.pas
 ===================================================================
---- Parallel_Version/Source/Executive/ShowOptions.pas	(revision 2134)
+--- Parallel_Version/Source/Executive/ShowOptions.pas	(revision 2136)
 +++ Parallel_Version/Source/Executive/ShowOptions.pas	(working copy)
 @@ -25,7 +25,7 @@
  implementation
@@ -2915,7 +2944,7 @@ Index: Parallel_Version/Source/Executive/ShowOptions.pas
  
 Index: Parallel_Version/Source/General/GrowthShape.pas
 ===================================================================
---- Parallel_Version/Source/General/GrowthShape.pas	(revision 2134)
+--- Parallel_Version/Source/General/GrowthShape.pas	(revision 2136)
 +++ Parallel_Version/Source/General/GrowthShape.pas	(working copy)
 @@ -215,12 +215,12 @@
              1: Npts := Parser[ActorID].Intvalue;
@@ -2934,7 +2963,7 @@ Index: Parallel_Version/Source/General/GrowthShape.pas
                   ReAllocmem(Multiplier, Sizeof(Multiplier^[1])*Npts);
 Index: Parallel_Version/Source/General/LineCode.pas
 ===================================================================
---- Parallel_Version/Source/General/LineCode.pas	(revision 2134)
+--- Parallel_Version/Source/General/LineCode.pas	(revision 2136)
 +++ Parallel_Version/Source/General/LineCode.pas	(working copy)
 @@ -766,7 +766,7 @@
     
@@ -2947,7 +2976,7 @@ Index: Parallel_Version/Source/General/LineCode.pas
            NewYC := YC.Kron(FNeutralConductor);
 Index: Parallel_Version/Source/General/LoadShape.pas
 ===================================================================
---- Parallel_Version/Source/General/LoadShape.pas	(revision 2134)
+--- Parallel_Version/Source/General/LoadShape.pas	(revision 2136)
 +++ Parallel_Version/Source/General/LoadShape.pas	(working copy)
 @@ -703,8 +703,6 @@
  
@@ -2985,7 +3014,7 @@ Index: Parallel_Version/Source/General/LoadShape.pas
            For j := 1 to ObjList.ListSize Do Begin
 Index: Parallel_Version/Source/General/PriceShape.pas
 ===================================================================
---- Parallel_Version/Source/General/PriceShape.pas	(revision 2134)
+--- Parallel_Version/Source/General/PriceShape.pas	(revision 2136)
 +++ Parallel_Version/Source/General/PriceShape.pas	(working copy)
 @@ -823,8 +823,8 @@
  
@@ -3000,7 +3029,7 @@ Index: Parallel_Version/Source/General/PriceShape.pas
            For j := 1 to ObjList.ListSize Do Begin
 Index: Parallel_Version/Source/General/TempShape.pas
 ===================================================================
---- Parallel_Version/Source/General/TempShape.pas	(revision 2134)
+--- Parallel_Version/Source/General/TempShape.pas	(revision 2136)
 +++ Parallel_Version/Source/General/TempShape.pas	(working copy)
 @@ -822,8 +822,8 @@
  
@@ -3015,7 +3044,7 @@ Index: Parallel_Version/Source/General/TempShape.pas
            For j := 1 to ObjList.ListSize Do Begin
 Index: Parallel_Version/Source/Meters/EnergyMeter.pas
 ===================================================================
---- Parallel_Version/Source/Meters/EnergyMeter.pas	(revision 2134)
+--- Parallel_Version/Source/Meters/EnergyMeter.pas	(revision 2136)
 +++ Parallel_Version/Source/Meters/EnergyMeter.pas	(working copy)
 @@ -382,7 +382,7 @@
  implementation
@@ -3157,7 +3186,7 @@ Index: Parallel_Version/Source/Meters/EnergyMeter.pas
    Except
 Index: Parallel_Version/Source/Meters/MemoryMap_lib.pas
 ===================================================================
---- Parallel_Version/Source/Meters/MemoryMap_lib.pas	(revision 2134)
+--- Parallel_Version/Source/Meters/MemoryMap_lib.pas	(revision 2136)
 +++ Parallel_Version/Source/Meters/MemoryMap_lib.pas	(working copy)
 @@ -21,7 +21,7 @@
  
@@ -3252,7 +3281,7 @@ Index: Parallel_Version/Source/Meters/MemoryMap_lib.pas
  end.
 Index: Parallel_Version/Source/Meters/Monitor.pas
 ===================================================================
---- Parallel_Version/Source/Meters/Monitor.pas	(revision 2134)
+--- Parallel_Version/Source/Meters/Monitor.pas	(revision 2136)
 +++ Parallel_Version/Source/Meters/Monitor.pas	(working copy)
 @@ -1591,8 +1591,8 @@
  
@@ -3285,7 +3314,7 @@ Index: Parallel_Version/Source/Meters/Monitor.pas
             TopTransferFile.WriteNames(NameList, CNames);
 Index: Parallel_Version/Source/PCElements/GenUserModel.pas
 ===================================================================
---- Parallel_Version/Source/PCElements/GenUserModel.pas	(revision 2134)
+--- Parallel_Version/Source/PCElements/GenUserModel.pas	(revision 2136)
 +++ Parallel_Version/Source/PCElements/GenUserModel.pas	(working copy)
 @@ -86,7 +86,7 @@
  
@@ -3298,7 +3327,7 @@ Index: Parallel_Version/Source/PCElements/GenUserModel.pas
  
 Index: Parallel_Version/Source/PCElements/Isource.pas
 ===================================================================
---- Parallel_Version/Source/PCElements/Isource.pas	(revision 2134)
+--- Parallel_Version/Source/PCElements/Isource.pas	(revision 2136)
 +++ Parallel_Version/Source/PCElements/Isource.pas	(working copy)
 @@ -22,7 +22,7 @@
  
@@ -3311,7 +3340,7 @@ Index: Parallel_Version/Source/PCElements/Isource.pas
  // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 Index: Parallel_Version/Source/PCElements/Load.pas
 ===================================================================
---- Parallel_Version/Source/PCElements/Load.pas	(revision 2134)
+--- Parallel_Version/Source/PCElements/Load.pas	(revision 2136)
 +++ Parallel_Version/Source/PCElements/Load.pas	(working copy)
 @@ -1076,7 +1076,6 @@
      {New code to help with convergence at low voltages}
@@ -3323,7 +3352,7 @@ Index: Parallel_Version/Source/PCElements/Load.pas
      M95I := CDivReal(Csub(IBase, ILow), (VBase95 - VBaseLow)); // (IBase - ILow)/(Vbase95 - VbaseLow);    ***Added by Celso & Paulo
 Index: Parallel_Version/Source/PCElements/PVSystemUserModel.pas
 ===================================================================
---- Parallel_Version/Source/PCElements/PVSystemUserModel.pas	(revision 2134)
+--- Parallel_Version/Source/PCElements/PVSystemUserModel.pas	(revision 2136)
 +++ Parallel_Version/Source/PCElements/PVSystemUserModel.pas	(working copy)
 @@ -71,7 +71,7 @@
  
@@ -3336,7 +3365,7 @@ Index: Parallel_Version/Source/PCElements/PVSystemUserModel.pas
  
 Index: Parallel_Version/Source/PCElements/PVsystem.pas
 ===================================================================
---- Parallel_Version/Source/PCElements/PVsystem.pas	(revision 2134)
+--- Parallel_Version/Source/PCElements/PVsystem.pas	(revision 2136)
 +++ Parallel_Version/Source/PCElements/PVsystem.pas	(working copy)
 @@ -1297,7 +1297,7 @@
                CASE Mode OF
@@ -3358,7 +3387,7 @@ Index: Parallel_Version/Source/PCElements/PVsystem.pas
  
 Index: Parallel_Version/Source/PCElements/Storage.pas
 ===================================================================
---- Parallel_Version/Source/PCElements/Storage.pas	(revision 2134)
+--- Parallel_Version/Source/PCElements/Storage.pas	(revision 2136)
 +++ Parallel_Version/Source/PCElements/Storage.pas	(working copy)
 @@ -2264,7 +2264,8 @@
       CASE StorageState of
@@ -3372,7 +3401,7 @@ Index: Parallel_Version/Source/PCElements/Storage.pas
  
 Index: Parallel_Version/Source/PCElements/StoreUserModel.pas
 ===================================================================
---- Parallel_Version/Source/PCElements/StoreUserModel.pas	(revision 2134)
+--- Parallel_Version/Source/PCElements/StoreUserModel.pas	(revision 2136)
 +++ Parallel_Version/Source/PCElements/StoreUserModel.pas	(working copy)
 @@ -130,7 +130,7 @@
  
@@ -3385,7 +3414,7 @@ Index: Parallel_Version/Source/PCElements/StoreUserModel.pas
  
 Index: Parallel_Version/Source/PCElements/vccs.pas
 ===================================================================
---- Parallel_Version/Source/PCElements/vccs.pas	(revision 2134)
+--- Parallel_Version/Source/PCElements/vccs.pas	(revision 2136)
 +++ Parallel_Version/Source/PCElements/vccs.pas	(working copy)
 @@ -40,8 +40,11 @@
          FsampleFreq: double; // discretization frequency for Z filter
@@ -3521,7 +3550,7 @@ Index: Parallel_Version/Source/PCElements/vccs.pas
  
 Index: Parallel_Version/Source/PDElements/Capacitor.pas
 ===================================================================
---- Parallel_Version/Source/PDElements/Capacitor.pas	(revision 2134)
+--- Parallel_Version/Source/PDElements/Capacitor.pas	(revision 2136)
 +++ Parallel_Version/Source/PDElements/Capacitor.pas	(working copy)
 @@ -1064,7 +1064,7 @@
         2:  Result := GetBus(2);
@@ -3534,7 +3563,7 @@ Index: Parallel_Version/Source/PDElements/Capacitor.pas
                 Reallocmem(FTemp, 0); // throw away temp storage
 Index: Parallel_Version/Source/PDElements/Line.pas
 ===================================================================
---- Parallel_Version/Source/PDElements/Line.pas	(revision 2134)
+--- Parallel_Version/Source/PDElements/Line.pas	(revision 2136)
 +++ Parallel_Version/Source/PDElements/Line.pas	(working copy)
 @@ -70,6 +70,8 @@
  
@@ -3618,7 +3647,7 @@ Index: Parallel_Version/Source/PDElements/Line.pas
        R0 := R1;
 Index: Parallel_Version/Source/PDElements/Transformer.pas
 ===================================================================
---- Parallel_Version/Source/PDElements/Transformer.pas	(revision 2134)
+--- Parallel_Version/Source/PDElements/Transformer.pas	(revision 2136)
 +++ Parallel_Version/Source/PDElements/Transformer.pas	(working copy)
 @@ -41,6 +41,7 @@
         PROCEDURE InterpretAllkVRatings(const S:String);
@@ -3760,7 +3789,7 @@ Index: Parallel_Version/Source/PDElements/Transformer.pas
     FOR i := 1 to NumWindings-1 Do AT.SetElement(i+1, i, cONE);
 Index: Parallel_Version/Source/Parallel_Lib/Parallel_Lib.pas
 ===================================================================
---- Parallel_Version/Source/Parallel_Lib/Parallel_Lib.pas	(revision 2134)
+--- Parallel_Version/Source/Parallel_Lib/Parallel_Lib.pas	(revision 2136)
 +++ Parallel_Version/Source/Parallel_Lib/Parallel_Lib.pas	(working copy)
 @@ -1,79 +1,173 @@
 -unit Parallel_Lib;
@@ -4106,7 +4135,7 @@ Added: svn:executable
 \ No newline at end of property
 Index: Parallel_Version/Source/Parser/ParserDel.pas
 ===================================================================
---- Parallel_Version/Source/Parser/ParserDel.pas	(revision 2134)
+--- Parallel_Version/Source/Parser/ParserDel.pas	(revision 2136)
 +++ Parallel_Version/Source/Parser/ParserDel.pas	(working copy)
 @@ -18,7 +18,8 @@
  interface
@@ -4129,7 +4158,7 @@ Index: Parallel_Version/Source/Parser/ParserDel.pas
    Commentchar = '!';
 Index: Parallel_Version/Source/Plot/DSSPlot.pas
 ===================================================================
---- Parallel_Version/Source/Plot/DSSPlot.pas	(revision 2134)
+--- Parallel_Version/Source/Plot/DSSPlot.pas	(revision 2136)
 +++ Parallel_Version/Source/Plot/DSSPlot.pas	(working copy)
 @@ -1522,8 +1522,8 @@
     { If PeakDay=True then we only plot the peak of a 24-hr day }
@@ -4197,7 +4226,7 @@ Index: Parallel_Version/Source/Plot/DSSPlot.pas
                          End;
 Index: Parallel_Version/Source/Shared/Arraydef.pas
 ===================================================================
---- Parallel_Version/Source/Shared/Arraydef.pas	(revision 2134)
+--- Parallel_Version/Source/Shared/Arraydef.pas	(revision 2136)
 +++ Parallel_Version/Source/Shared/Arraydef.pas	(working copy)
 @@ -43,7 +43,7 @@
  Function AllocStringArray(Size:Integer):pStringArray;
@@ -4210,7 +4239,7 @@ Index: Parallel_Version/Source/Shared/Arraydef.pas
  Procedure FreeStringArray(var pS:pStringArray; Size:Integer);
 Index: Parallel_Version/Source/Shared/HashList.pas
 ===================================================================
---- Parallel_Version/Source/Shared/HashList.pas	(revision 2134)
+--- Parallel_Version/Source/Shared/HashList.pas	(revision 2136)
 +++ Parallel_Version/Source/Shared/HashList.pas	(working copy)
 @@ -366,11 +366,11 @@
  
@@ -4228,7 +4257,7 @@ Index: Parallel_Version/Source/Shared/HashList.pas
           WITH NewListPtr^[i] DO BEGIN
 Index: Parallel_Version/Source/Shared/IniRegSave.pas
 ===================================================================
---- Parallel_Version/Source/Shared/IniRegSave.pas	(revision 2134)
+--- Parallel_Version/Source/Shared/IniRegSave.pas	(revision 2136)
 +++ Parallel_Version/Source/Shared/IniRegSave.pas	(working copy)
 @@ -20,7 +20,7 @@
  interface
@@ -4262,7 +4291,7 @@ Index: Parallel_Version/Source/Shared/IniRegSave.pas
  
 Index: Parallel_Version/Source/Shared/Pstcalc.pas
 ===================================================================
---- Parallel_Version/Source/Shared/Pstcalc.pas	(revision 2134)
+--- Parallel_Version/Source/Shared/Pstcalc.pas	(revision 2136)
 +++ Parallel_Version/Source/Shared/Pstcalc.pas	(working copy)
 @@ -663,7 +663,7 @@
    ipst:=1;
@@ -4275,7 +4304,7 @@ Index: Parallel_Version/Source/Shared/Pstcalc.pas
    Fw2(N, ts, w2, w3, w4, pRms, pBuf);
 Index: Parallel_Version/Source/Shared/Ucmatrix.pas
 ===================================================================
---- Parallel_Version/Source/Shared/Ucmatrix.pas	(revision 2134)
+--- Parallel_Version/Source/Shared/Ucmatrix.pas	(revision 2136)
 +++ Parallel_Version/Source/Shared/Ucmatrix.pas	(working copy)
 @@ -163,7 +163,7 @@
  {Allocate LT}
@@ -4288,7 +4317,7 @@ Index: Parallel_Version/Source/Shared/Ucmatrix.pas
        InvertError:=1;
 Index: Parallel_Version/Source/Shared/mathutil.pas
 ===================================================================
---- Parallel_Version/Source/Shared/mathutil.pas	(revision 2134)
+--- Parallel_Version/Source/Shared/mathutil.pas	(revision 2136)
 +++ Parallel_Version/Source/Shared/mathutil.pas	(working copy)
 @@ -290,7 +290,7 @@
  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -4310,7 +4339,7 @@ Index: Parallel_Version/Source/Shared/mathutil.pas
    Mean := Mean / Ndata;
 Index: Source/Common/DSSGlobals.pas
 ===================================================================
---- Source/Common/DSSGlobals.pas	(revision 2134)
+--- Source/Common/DSSGlobals.pas	(revision 2136)
 +++ Source/Common/DSSGlobals.pas	(working copy)
 @@ -654,12 +654,7 @@
    // Put a \ on the end if not supplied. Allow a null specification.
@@ -4370,7 +4399,7 @@ Index: Source/Common/DSSGlobals.pas
  
 Index: Source/Common/KLUSolve.pas
 ===================================================================
---- Source/Common/KLUSolve.pas	(revision 2134)
+--- Source/Common/KLUSolve.pas	(revision 2136)
 +++ Source/Common/KLUSolve.pas	(working copy)
 @@ -1,5 +1,15 @@
  unit KLUSolve;
@@ -4492,7 +4521,7 @@ Index: Source/Common/KLUSolve.pas
  
 Index: Source/Executive/ExecHelper.pas
 ===================================================================
---- Source/Executive/ExecHelper.pas	(revision 2134)
+--- Source/Executive/ExecHelper.pas	(revision 2136)
 +++ Source/Executive/ExecHelper.pas	(working copy)
 @@ -439,7 +439,7 @@
                    END;
@@ -4514,7 +4543,7 @@ Index: Source/Executive/ExecHelper.pas
     End;
 Index: Source/Meters/EnergyMeter.pas
 ===================================================================
---- Source/Meters/EnergyMeter.pas	(revision 2134)
+--- Source/Meters/EnergyMeter.pas	(revision 2136)
 +++ Source/Meters/EnergyMeter.pas	(working copy)
 @@ -843,7 +843,7 @@
                   On E:Exception Do DoSimpleMsg('Error making  Directory: "'+CasePath+'". ' + E.Message, 522);
@@ -4679,7 +4708,7 @@ Index: Source/Meters/EnergyMeter.pas
    Except
 Index: Source/PDElements/Capacitor.pas
 ===================================================================
---- Source/PDElements/Capacitor.pas	(revision 2134)
+--- Source/PDElements/Capacitor.pas	(revision 2136)
 +++ Source/PDElements/Capacitor.pas	(working copy)
 @@ -85,6 +85,7 @@
          Bus2Defined     :Boolean;
@@ -4720,7 +4749,7 @@ Index: Source/PDElements/Capacitor.pas
  END;
 Index: Source/Plot/DSSPlot.pas
 ===================================================================
---- Source/Plot/DSSPlot.pas	(revision 2134)
+--- Source/Plot/DSSPlot.pas	(revision 2136)
 +++ Source/Plot/DSSPlot.pas	(working copy)
 @@ -1522,8 +1522,8 @@
     { If PeakDay=True then we only plot the peak of a 24-hr day }
