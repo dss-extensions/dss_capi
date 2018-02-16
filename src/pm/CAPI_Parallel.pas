@@ -23,7 +23,7 @@ procedure Parallel_Set_ConcatenateReports(Value: Integer);cdecl;
 
 IMPLEMENTATION
 
-USES CAPI_Constants, DSSGlobals, Executive, SysUtils, solution, CktElement, ParserDel, KLUSolve, System.Classes;
+USES CAPI_Constants, DSSGlobals, Executive, SysUtils, solution, CktElement, ParserDel, KLUSolve, Classes;
 
 function Parallel_Get_NumCPUs():Integer;cdecl;
 Begin
