@@ -206,15 +206,19 @@ BEGIN
          Param := Parser.StrValue;
      END;       {WHILE}
 
-     if HarmArrayHasaZero(iZeroPoint) then
-          DoSimpleMsg(Format('Error: Zero frequency detected in Spectrum.%s, point %d. Not allowed',[Name, iZeroPoint]), 65001)
-     else Begin
-         IF  (HarmArray <> NIL)
-         AND (puMagArray <> NIL)
-         AND (AngleArray <> NIL)
-         THEN SetMultArray;
-     End;
+     IF  (HarmArray <> NIL) Then   // Check this after HarmArray is allocated  2/20/2018
+     Begin
+        if HarmArrayHasaZero(iZeroPoint) then
 
+          DoSimpleMsg(Format('Error: Zero frequency detected in Spectrum.%s, point %d. Not allowed',[Name, iZeroPoint]), 65001)
+
+        else
+           IF  (HarmArray <> NIL)
+           AND (puMagArray <> NIL)
+           AND (AngleArray <> NIL)
+           THEN SetMultArray;
+
+     End
 
   END; {WITH}
 
