@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 114;
+     NumExecCommands = 115;
 
 Var
 
@@ -152,6 +152,7 @@ Begin
      ExecCommand[112] := 'Tear_Circuit';
      ExecCommand[113] := 'Connect';
      ExecCommand[114] := 'Disconnect';
+     ExecCommand[115] := 'Refine_BusLevels';
 
 
 
@@ -485,6 +486,8 @@ Begin
                          'Distribution of subsystems for the A-Diakoptics algorithm';
      CommandHelp[113] := 'Request to create a TCP/IP socket to communicate data with external modules. This function requires the host address and TCP port to connect.';
      CommandHelp[114] := 'Request to terminate a TCP/IP socket. This function requires the host address and TCP port to disconnect.';
+     CommandHelp[115] := 'This function takes the bus levels array and traces all the possible paths considering the longest paths from the substation to the longest branches' +
+                         ' within the circuit. Then, the new paths are filled with 0 to complement the oroginal levels proposed by the calcincmatrix_o command.';
 
 End;
 
@@ -615,9 +618,12 @@ Begin
        112: begin
               Temp_int  :=  ActiveCircuit[ActiveActor].Tear_Circuit();
               GlobalResult := 'Sub-Circuits Created: ' + inttostr(Temp_int);
-            end
-
-
+            end;
+       115: begin
+              ActiveCircuit[ActiveActor].Get_paths_4_Coverage();
+              Temp_int  :=  length(ActiveCircuit[ActiveActor].Path_Idx) - 1;
+              GlobalResult := inttostr(Temp_int) + ' new paths detected';
+       end
 
      ELSE IF ActiveCircuit[ActiveActor]=nil THEN
           Begin

@@ -171,7 +171,7 @@ TYPE
 
           Coverage,                     // Used for the user to stablish the coverage for the algorithm
           Actual_Coverage   : Double;   // Indicates the actual coverage of the circuit after running the tearing algorithm
-          Longest_paths     : Array of Array of Integer;   //Stores the coordinates of the longest paths in the circuit
+          Longest_paths     : Array of Integer;   //Stores the coordinates of the longest paths in the circuit
           Path_Idx          : Array of integer;   //Stores the indexes from where the areas where formed on the linearized graph
           Buses_Covered     : Array of integer;   //Stores the number of buses (estimated - 1 quadrant) per path
           Path_Size         : Array of Integer;   //Stores the estimated size of each path
@@ -286,7 +286,11 @@ TYPE
           Function GetBusAdjacentPDLists(ActorID: integer): TAdjArray;
           Function GetBusAdjacentPCLists(ActorID: integer): TAdjArray;
           function Tear_Circuit(): Integer;                            // Tears the circuit considering the number of Buses of the original Circuit
-          procedure  get_longest_path(graph_in: array of integer);          
+          procedure  get_longest_path();
+          function Append2PathsArray(New_Path :  array of integer): Integer;//  appends a new path to the array and returns the index(1D)
+          procedure Normalize_graph();
+          procedure Get_paths_4_Coverage();                             // Calculates the paths inside the graph
+                                                                        // To guarantee the desired coverage when tearing the system
 
           property Name             : String         Read Get_Name;
           Property CaseName         : String         Read FCaseName         Write Set_CaseName;
@@ -627,32 +631,142 @@ end;
 *         graph considering the zero level buses as the beginning of           *
 *         new path                                                             *
 ********************************************************************************}
-procedure  TDSSCircuit.get_longest_path(graph_in: array of integer);
+procedure  TDSSCircuit.get_longest_path();
 var
   End_flag        : Boolean;    //  Terminates the process
   Current_Idx,                  //  Stores the Index value of the current level   
   Current_level   : Integer;    //  Stores the current level traced
 Begin
-  Current_level   :=  maxintvalue(graph_in);                    //  Init level
-  Current_idx     :=  get_element_idx(graph_in,Current_level);  //  Init Index
-  End_flag        :=  True;
-  setlength(New_graph,0);
-  while End_flag do
-  Begin  
-    //Checks the termination cirteria
-    if (Current_level > graph_in[Current_idx]) or (graph_in[Current_idx] = 0)then
-    End_Flag  :=  False;
-    // Is the current bus part of the new backbone?
-    if graph_in[Current_idx] = Current_level then  
+  with solution do
+  Begin
+    Current_level   :=  maxintvalue(Inc_Mat_Levels);                    //  Init level
+    Current_idx     :=  get_element_idx(Inc_Mat_Levels,Current_level);  //  Init Index
+    End_flag        :=  True;
+    setlength(New_graph,0);
+    while End_flag do
     Begin
-      dec(Current_level);
-      setlength(New_graph,(length(New_graph) + 1));
-      New_graph[High(New_graph)]  :=  Current_idx;
+      //Checks the termination cirteria
+      if (Current_level > Inc_Mat_Levels[Current_idx]) or (Inc_Mat_Levels[Current_idx] = 0)then
+      End_Flag  :=  False;
+      // Is the current bus part of the new backbone?
+      if Inc_Mat_Levels[Current_idx] = Current_level then
+      Begin
+        dec(Current_level);
+        setlength(New_graph,(length(New_graph) + 1));
+        New_graph[High(New_graph)]  :=  Current_idx;
+      End;
+      dec(Current_idx);
     End;
-    dec(Current_idx);
   End;
 End;
+{*******************************************************************************
+*   This routine appends an array to the paths array and returns its index     *
+********************************************************************************}
+function TDSSCircuit.Append2PathsArray(New_Path :  array of integer): Integer;
+var
+  local_idx : Integer;
+begin
+    Result :=  High(Longest_paths) + 1;
+    for local_idx := 0 to High(New_path) do
+    Begin
+      setlength(Longest_paths,(length(Longest_paths) + 1));
+      Longest_paths[High(Longest_paths)]  :=  New_Path[Local_idx];
+    End;
+end;
+{*******************************************************************************
+*     This routine normalizes the Inc_matrix levels                            *
+********************************************************************************}
+procedure TDSSCircuit.Normalize_graph();
+var
+  Curr_level,                                   // To set the active level
+  idx           : Integer;                      //
+  Ref_detected  : Boolean;                      // To detect if there is a zero
+Begin
+  Curr_level    := -1;                          // Initializing values
+  Ref_detected  :=  False;
+  with Solution do
+  Begin
+    for idx := 0 to High(Inc_Mat_Levels) do     // Sweeps the whole graph
+    Begin
+      if Inc_Mat_Levels[idx] = 0 then Ref_detected  :=  True
+      else
+      Begin
+        if (Curr_level >= Inc_Mat_Levels[idx]) or Ref_detected then
+        Begin
+          Ref_detected        :=  False;
+          Curr_level          :=  Inc_Mat_Levels[idx] - 1;
+          Inc_Mat_Levels[idx] :=  1;
+        End
+        else  Inc_Mat_Levels[idx] :=  Inc_Mat_Levels[idx] - Curr_level;
+      End;
+    End;
+  End;
 
+End;
+{*******************************************************************************
+*  Traces the paths (0) in the graph to guarantee the desired coverage         *
+********************************************************************************}
+procedure TDSSCircuit.Get_paths_4_Coverage();
+var
+  DBLTemp,                                          //  For storing temoprary doubles
+  Sys_Size      : Double;                           //  Stores the number of buses contained in the system
+  SMEnd         : Boolean;                          //  Terminates the state machine
+  i,
+  State         : Integer;                          // The current state of the state machine
+  Candidates    : array of integer;                // Array for 0 level buses idx
+Begin
+  with solution do
+  Begin
+    SMEnd           :=  True;
+    State           :=  0;
+    Sys_Size        :=  double(length(Inc_Mat_Cols));
+    setlength(Buses_Covered,1);
+    setlength(Path_Idx,1);
+    Actual_Coverage :=  -1;
+    while SMEnd do                                            // The state machine starts
+    Begin
+      case State of
+        0:  Begin                                             // Processes the first path
+            setlength(Candidates,0);
+            for i := 0 to (length(Inc_Mat_Levels) - 1) do     //Extracts the 0 Level Buses
+            Begin
+              if solution.Inc_Mat_Levels[i] = 0 then
+              Begin
+                setlength(Candidates,length(Candidates)+1);
+                Candidates[High(Candidates)]  :=  i;
+              End;
+            End;
+            setlength(Longest_paths,0);
+            Buses_covered[0]    :=  MaxIntValue(Candidates);       //  Extracts the maximum level covered
+            Path_Idx[0]         :=  Append2PathsArray(Candidates); //  No shifting in the graph
+            State               :=  1;                             //  Go to the next state
+        End;
+        1:  Begin                                                  // Extracts a new path from the longest branch to
+            get_longest_path();                                    // the backbone (Zeros)
+            setlength(Path_Idx,(length(Path_Idx) + 1));
+            Path_Idx[High(Path_Idx)]  :=  Append2PathsArray(New_Graph); //  Adds the new candidates
+            //  Estimates the amount of buses covered in this path
+            setlength(Buses_covered,(length(Buses_covered) + 1));
+            Buses_covered[High(Buses_covered)]  :=  New_Graph[0] - New_Graph[High(New_Graph)];
+            // Replaces the latest path with 0 in the Bus levels array
+            for i := Path_Idx[High(Path_Idx)] to High(Longest_paths) do
+              Inc_Mat_Levels[Longest_paths[i]] := 0;
+            Normalize_graph;
+            // remains in the same state
+        End;
+      end;
+      //  Checks the coverage index to stablish if is necessary to keep tracing paths to increase the coverage
+      DBLTemp         :=  0;
+      for i := Low(Buses_covered) to High(Buses_covered) do
+        DBLtemp         :=  DBLTemp + double(Buses_Covered[i]);
+      DBLtemp         :=  DBLTemp/Sys_Size;
+{      If the New coverage is different from the previous one and is below the expected coverage keep going
+       The first criteria is to avoid keep working on a path that will not contribute to improve the coverage}
+      if (DBLTemp <> Actual_Coverage) and (DBLTemp >= Coverage) then SMEnd :=  False;
+      Actual_Coverage :=  DBLTemp;
+    end;
+  End;
+End;
 {*******************************************************************************
 *         This routine tears the circuit into many pieces as CPUs are          *
 *         available in the local computer (in the best case)                   *
@@ -663,82 +777,27 @@ var
   Num_buses,                                        // Goal for number of buses on each subsystem
   Num_target,                                       // Generic accumulator
   Location_idx,                                     // Active Location
-  i,                                                // Generic counter variables
-  State         : Integer;                          // The current state of the state machine
+  i             : Integer;                          // Generic counter variables
+
   Candidates,                                       // Array for 0 level buses idx
-  Active_graph,                                     // Is the active linearized graph  
   Locations     : Array of Integer;                 // Array for the best tearing locations
   Locations_V   : Array of Double;                  // Array to store the VMag and angle at the location
   TreeNm,                                           // For debugging
   Fileroot,
   PDElement     : String;
   Ftree         : TextFile;
-  flag,                                             //  Stop flag
-  SMEnd         : Boolean;                          //  Terminates the state machine
+  flag          : Boolean;                          //  Stop flag
+
   EMeter        : TEnergyMeterObj;
-  DBLTemp,                                          //  For storing temoprary doubles
-  Sys_Size      : Double;                           //  Stores the number of buses contained in the system 
+
 
 Begin
   Num_Pieces  :=  CPU_Cores-1;
   with solution do
   Begin
-    Calc_Inc_Matrix_Org(ActiveActor);                         //Calculates the ordered incidence matrix
-    SMEnd           :=  True;
-    State           :=  0;
     Num_buses       :=  length(Inc_Mat_Cols) div Num_Pieces;  // Estimates the number of buses for each subsystem
-    Sys_Size        :=  double(length(Inc_Mat_Cols));
-    setlength(Buses_Covered,1);
-    setlength(Path_Idx,1);
-    Actual_Coverage :=  -1;
-    while SMEnd do                                            // The state machine starts
-    Begin                                           
-      case State of
-        0:  Begin                                             // Processes the first path 
-            setlength(Candidates,0);
-            for i := 0 to (length(Inc_Mat_Levels) - 1) do     //Extracts the 0 Level Buses
-            Begin
-              if solution.Inc_Mat_Levels[i] = 0 then
-              Begin
-                setlength(Candidates,length(Candidates)+1);
-                Candidates[High(Candidates)]  :=  i;
-              End;
-            End;
-            setlength(Longest_paths,1);
-            setlength(Active_graph,length(Inc_Mat_Levels));
-            for i := Low(Active_graph) to High(Active_graph) do
-              Active_graph[i]        :=  Inc_Mat_Levels[i];
-//            Longest_paths[0]    :=  Candidates;                 //  Adds the initial path proposed by the Ckt-Tree
-            Buses_covered[0]    :=  MaxIntValue(Candidates);    //  Extracts the maximum level covered
-            Path_Idx[0]         :=  0;                          //  No shifting in the graph
-            State               :=  1;                          //  Go to the next state
-        End;
-        1:  Begin                                               // Extracts a new path from the longest branch
-            get_longest_path(Active_graph);
-            setlength(Longest_paths,(length(Longest_paths) + 1));
-//            Longest_paths[High(Longest_paths)]  :=  Candidates; // Adds the new candidates to the results
-//            Candidates  :=  Candidates - Candidates[High(Candidates)];
-//            for i := 0 to High(Candidates) do
-//              Candidates[Idx] :=
-            
-        End;
-      end;
-      //  Checks the coverage index to stablish if is necessary to keep tracing paths to increase the coverage
-      DBLTemp         :=  0;
-      for i := Low(Buses_covered) to High(Buses_covered) do
-        DBLtemp         :=  DBLTemp + double(Buses_Covered[i]);
-      DBLtemp         :=  DBLTemp/Sys_Size;
-{      If the New coverage is different from the previous one and is below the expected coverage keep going
-       The first criteria is to avoid keep working on a path that will not contribute to improve the coverage}
-      if (DBLTemp <> Actual_Coverage) and (DBLTemp < Coverage) then SMEnd :=  False;
-      Actual_Coverage :=  DBLTemp;
-    end;
-
-
-
-
-
-
+    Calc_Inc_Matrix_Org(ActiveActor);                         //Calculates the ordered incidence matrix
+    Get_paths_4_Coverage;                                     // Refines the levels vector according to the coverage desired
 
 
     setlength(Locations,Num_pieces-1);                // Setups the array for the tearing locations
