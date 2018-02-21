@@ -260,6 +260,7 @@ END;
 
 Function TDSSClass.GetActiveObj:Pointer; // Get address of active obj of this class
 BEGIN
+    ActiveElement :=  ElementList.ActiveIndex;
     If ActiveElement>0 THEN
        Result := ElementList.Get(ActiveElement)
     Else
