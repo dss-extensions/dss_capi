@@ -107,10 +107,10 @@ begin
         Repeat
           If pElem.Enabled Then Begin
               ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-              Result := 1;
+              Result := RecloserClass.ElementList.ActiveIndex;
           End
           Else pElem := RecloserClass.ElementList.Next;
-        Until (Result = 1) or (pElem = nil);
+        Until (Result > 0) or (pElem = nil);
      End;
 end;
 
