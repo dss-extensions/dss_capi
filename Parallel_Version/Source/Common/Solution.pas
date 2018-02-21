@@ -205,6 +205,7 @@ TYPE
       Inc_Mat_Cols  :  Array of String;
       Inc_Mat_levels:  Array of Integer;
       temp_counter  : Integer;
+      Active_Cols   : Array of Integer;
 //******************************************************************************
        constructor Create(ParClass:TDSSClass; const solutionname:String);
        destructor  Destroy; override;
@@ -261,7 +262,7 @@ TYPE
 
        PROCEDURE Calc_Inc_Matrix(ActorID : Integer);                // Calculates the incidence matrix for the Circuit
        PROCEDURE Calc_Inc_Matrix_Org(ActorID : Integer);            // Calculates the incidence matrix hierarchically organized for the Circuit
-       function Tear_Circuit(): Integer;                            // Tears the circuit considering the number of Buses of the original Circuit
+
        function get_IncMatrix_Row(Col : integer): Integer;          // Gets the index of the Row connected to the specified Column
        function get_IncMatrix_Col(Row : integer): Integer;          // Gets the index of the Column connected to the specified Row
        function CheckLocationIdx(Idx : Integer): Integer;           // Evaluates the area covered by the tearing point to see if there is a better one
@@ -285,7 +286,7 @@ implementation
 
 USES  SolutionAlgs,
       DSSClassDefs, DSSGlobals, DSSForms, PDElement,  ControlElem, Fault,
-      Executive, AutoAdd,  YMatrix, Load,CKtTree,
+      AutoAdd,  YMatrix, Load,CKtTree,
       ParserDel, Generator,Capacitor,SHELLAPI,
 {$IFDEF DLL_ENGINE}
       ImplGlobals,  // to fire events
@@ -1427,6 +1428,9 @@ Begin
   begin
     if (IncMatrix[Idx_1*3] = Row) and Tflag then
     begin
+      setlength(Active_Cols,2);
+      Active_Cols[0]  :=  IncMatrix[Idx_1*3 + 1];     //Stores the indexes of both columns for the link branch
+      Active_Cols[1]  :=  IncMatrix[Idx_1*3 + 4];     //In case they need ot be used in the future by the caller
       Result :=  IncMatrix[Idx_1*3 + 1];
       Tflag  :=  False;
     end;
@@ -1543,7 +1547,7 @@ Begin
       j         :=  0;
       ZeroLevel :=  0;
       SetLength(Temp_Array,0);
-      for i := 0 to (length(Inc_Mat_levels)-1) do
+      for i := 0 to high(Inc_Mat_levels) do
       begin
           if (Inc_Mat_levels[i] = 0) then
           begin
@@ -1558,8 +1562,8 @@ Begin
           end
           else
           begin
-            setlength(Temp_Array,length(Temp_Array) + 1);
-            Temp_Array[length(Temp_Array) - 1]  :=  Inc_Mat_levels[i];
+            setlength(Temp_Array,(length(Temp_Array) + 1));
+            Temp_Array[High(Temp_Array)]  :=  Inc_Mat_levels[i];
           end;
       end;
 //************Verifies is something else was missing at the end*****************
@@ -1567,18 +1571,24 @@ Begin
       begin
         BusdotIdx :=  0;                                                // Counter for defining the level
         j         :=  0;                                                // Stores the previous value (shift reg)
-        for j2 := ZeroLevel to (length(Inc_Mat_levels) - 1) do
+        for j2 := ZeroLevel to High(Inc_Mat_levels) do
         begin
+
+            if j2 = 2395 then
+                  IncMat_Ordered  :=  True;                             // For debugging
+
           if Inc_Mat_levels[j2] >= j then inc(BusdotIdx)
           else
           begin
+
             ActiveIncCell[1]  :=  get_IncMatrix_Row(j2);                //Looks for the Column in the IncMatrix
             if ActiveIncCell[1] < 0 then                                //Checks if the col was located (just in case)
               BusdotIdx     :=  1
             else
             begin
               ActiveIncCell[2] := get_IncMatrix_Col(ActiveIncCell[1]);  //Looks for the row in the IncMatrix
-              BusdotIdx :=  Inc_Mat_levels[ActiveIncCell[2]]  + 1;
+              if Active_Cols[0] = j2 then BusdotIdx :=  Inc_Mat_levels[Active_Cols[1]]  + 1
+              else  BusdotIdx :=  Inc_Mat_levels[ActiveIncCell[2]]  + 1;
             end;
           end;
           j :=  Inc_Mat_levels[j2];
@@ -1625,7 +1635,7 @@ end;
 *         This routine tears the circuit into many pieces as CPUs are          *
 *         available in the local computer (in the best case)                   *
 ********************************************************************************}
-function TSolutionObj.Tear_Circuit(): Integer;
+{function TSolutionObj.Tear_Circuit(): Integer;
 var
   Num_Pieces,                                       // Max Number of pieces considering the number of local CPUs
   Num_buses,                                        // Goal for number of buses on each subsystem
@@ -1637,12 +1647,11 @@ var
   Locations_V   : Array of Double;                  // Array to store the VMag and angle at the location
   TreeNm,                                           // For debugging
   Fileroot,
-  Command,                                          // Built OpenDSS Command
+  Cmd,                                          // Built OpenDSS Command
   PDElement     : String;
   Ftree         : TextFile;
   flag          : Boolean;                          // Stop flag
   EMeter        : TEnergyMeterObj;
-  Execute       : TExecutive;
 
 Begin
   Num_Pieces  :=  CPU_Cores-1;
@@ -1666,7 +1675,7 @@ Begin
     if (Candidates[i] >= Num_target) and (Location_idx < (Num_pieces-1)) then
     begin
       Num_target :=  Num_target + Num_buses;
-      if Candidates[i] > Num_target*1.05 then
+      if Candidates[i] > Num_target then
         Locations[Location_idx] :=  Candidates[i-1]
       else
         Locations[Location_idx] :=  Candidates[i];
@@ -1705,17 +1714,18 @@ Begin
     if Locations[i] >= 0 then
     Begin
       inc(Result);
-      PDElement :=  Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])]; // Gets the name of the PDE for placing the EnergyMeter
-      Command  :=  'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement +
-                 ' term=1 option=R action=C'; // Generates the OpenDSS Command
-      Execute.Command :=  pchar(Command);     // Creates the EnergyMeter
+      // Gets the name of the PDE for placing the EnergyMeter
+      PDElement :=  Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])];
+      // Generates the OpenDSS Command;
+      cmd := 'New EnergyMeter.Actor_' + inttostr(i + 1) + ' element=' + PDElement + ' term=1 option=R action=C';
+      DSSExecutive.Command :=  cmd;
       SetActiveBus(Inc_Mat_Cols[get_IncMatrix_Col(Locations[i])]);  // Activates the Bus
     End;
   end;
   Solve(ActiveActor);
-  Command :=  'save circuit Dir=' + Fileroot; // Generates the OpenDSS Command for the new circuit
-  Execute.Command :=  pchar(Command);         // Creates the new Circuit
-End;
+  // Generates the OpenDSS Command for the new circuit
+  DSSExecutive.Command :=  'save circuit Dir=' + Fileroot;
+End;}
 //----------------------------------------------------------------------------
 FUNCTION TDSSSolution.Init(Handle:Integer; ActorID : Integer):Integer;
 

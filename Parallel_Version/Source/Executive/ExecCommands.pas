@@ -28,8 +28,8 @@ PROCEDURE ProcessCommand(Const CmdLine:String);
 implementation
 
 Uses DSSGlobals, ExecHelper, Executive, ExecOptions, ShowOptions,
-     ExportOptions, ParserDel, LoadShape, {$IFNDEF FPC} DSSForms,
-     PlotOptions, ConnectOptions, {$ENDIF} sysutils, Utilities, SolutionAlgs,
+     ExportOptions, ParserDel, LoadShape, DSSForms,
+     PlotOptions, ConnectOptions, sysutils, Utilities, SolutionAlgs,
      DSSClassDefs, windows, KLUSolve;
 
 
@@ -485,6 +485,7 @@ Begin
                          'Distribution of subsystems for the A-Diakoptics algorithm';
      CommandHelp[113] := 'Request to create a TCP/IP socket to communicate data with external modules. This function requires the host address and TCP port to connect.';
      CommandHelp[114] := 'Request to terminate a TCP/IP socket. This function requires the host address and TCP port to disconnect.';
+
 End;
 
 //----------------------------------------------------------------------------
@@ -612,7 +613,7 @@ Begin
               ActiveCircuit[ActiveActor].Solution.Calc_Inc_Matrix_Org(ActiveActor);
             end;
        112: begin
-              Temp_int  :=  ActiveCircuit[ActiveActor].Solution.Tear_Circuit();
+              Temp_int  :=  ActiveCircuit[ActiveActor].Tear_Circuit();
               GlobalResult := 'Sub-Circuits Created: ' + inttostr(Temp_int);
             end
 

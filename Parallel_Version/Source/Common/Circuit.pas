@@ -25,7 +25,7 @@ interface
 USES
      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
-     AutoAdd, EnergyMeter, NamedObject, CktTree, Graphics;
+     AutoAdd, EnergyMeter, NamedObject, CktTree, Graphics, math;
 
 
 TYPE
@@ -166,7 +166,17 @@ TYPE
           NumDevices, NumBuses, NumNodes:Integer;
           MaxDevices, MaxBuses, MaxNodes:Integer;
           IncDevices, IncBuses, IncNodes:Integer;
-          
+
+          // Variables for the tearing Algorithm
+
+          Coverage,                     // Used for the user to stablish the coverage for the algorithm
+          Actual_Coverage   : Double;   // Indicates the actual coverage of the circuit after running the tearing algorithm
+          Longest_paths     : Array of Array of Integer;   //Stores the coordinates of the longest paths in the circuit
+          Path_Idx          : Array of integer;   //Stores the indexes from where the areas where formed on the linearized graph
+          Buses_Covered     : Array of integer;   //Stores the number of buses (estimated - 1 quadrant) per path
+          Path_Size         : Array of Integer;   //Stores the estimated size of each path
+          New_Graph         : Array of Integer;   //Stores the latest weighted graph
+
           // Bus and Node stuff
           Buses:    pTBusArray;
           MapNodeToBus:pTNodeBusArray;
@@ -275,6 +285,8 @@ TYPE
           Procedure FreeTopology;
           Function GetBusAdjacentPDLists(ActorID: integer): TAdjArray;
           Function GetBusAdjacentPCLists(ActorID: integer): TAdjArray;
+          function Tear_Circuit(): Integer;                            // Tears the circuit considering the number of Buses of the original Circuit
+          procedure  get_longest_path(graph_in: array of integer);          
 
           property Name             : String         Read Get_Name;
           Property CaseName         : String         Read FCaseName         Write Set_CaseName;
@@ -291,7 +303,7 @@ USES
      PDElement, CktElementClass,
      ParserDel,  DSSClassDefs, DSSGlobals, Dynamics,
      Line, Transformer,  Vsource,
-     Utilities,  DSSForms, Executive;
+     Utilities,  DSSForms, Executive, SHELLAPI;
 
 //----------------------------------------------------------------------------
 Constructor TDSSCircuit.Create(const aName:String);
@@ -479,6 +491,15 @@ BEGIN
    BusAdjPC    := nil;
    BusAdjPD    := nil;
 
+   // tearing algorithm vars initialization
+
+
+  Coverage        :=  0.7;      // 70% coverage expected by default
+  Actual_coverage :=  -1;       //No coverage
+  setlength(Longest_paths,0);
+  setlength(Path_Idx,0);
+  setlength(Buses_Covered,0);
+  setlength(Path_size,0);
 
 END;
 
@@ -551,6 +572,233 @@ BEGIN
 
      Inherited Destroy;
 END;
+
+{*******************************************************************************
+*           Routine created to empty a recently created folder                 *
+********************************************************************************}
+procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
+var
+  SourceLst: string;
+  FOS: TSHFileOpStruct;
+begin
+  FillChar(FOS, SizeOf(FOS), 0);
+  FOS.wFunc := FO_DELETE;
+  SourceLst := Directory + '\' + FileMask + #0;
+  FOS.pFrom := PChar(SourceLst);
+  if not DelSubDirs then
+    FOS.fFlags := FOS.fFlags OR FOF_FILESONLY;
+  // Remove the next line if you want a confirmation dialog box
+  FOS.fFlags := FOS.fFlags OR FOF_NOCONFIRMATION;
+  // Add the next line for a "silent operation" (no progress box)
+  FOS.fFlags := FOS.fFlags OR FOF_SILENT;
+  SHFileOperation(FOS);
+end;
+{*******************************************************************************
+*         This routine retuns the index of the element within the array        *
+********************************************************************************}
+function get_element_Idx(graph_in: array of integer; element: Integer): Integer;
+var
+  Found,                  // To indicate that the element was found
+  End_Flag  : Boolean;
+  Graph_size,
+  Local_idx : Integer;
+begin
+  Result      :=  -1;     // In case the element is not in the array
+  End_Flag    :=  True;   //  To control the algorithm execution (while based)
+  Local_idx   :=  0;
+  Found       :=  False;  //  Not found yet
+  Graph_size  :=  length(graph_in);
+  while (End_Flag) and (Local_idx < Graph_Size) do
+  Begin
+    if graph_in[Local_idx] = element then 
+    Begin
+      End_Flag  :=  False;
+      Found     :=  True;
+    End
+    else
+    begin
+      inc(Local_idx);
+    end;
+  End;
+  if Found then Result  :=  Local_Idx;
+end;
+{*******************************************************************************
+*         This routine calculates the longest path within a linearized         *
+*         graph considering the zero level buses as the beginning of           *
+*         new path                                                             *
+********************************************************************************}
+procedure  TDSSCircuit.get_longest_path(graph_in: array of integer);
+var
+  End_flag        : Boolean;    //  Terminates the process
+  Current_Idx,                  //  Stores the Index value of the current level   
+  Current_level   : Integer;    //  Stores the current level traced
+Begin
+  Current_level   :=  maxintvalue(graph_in);                    //  Init level
+  Current_idx     :=  get_element_idx(graph_in,Current_level);  //  Init Index
+  End_flag        :=  True;
+  setlength(New_graph,0);
+  while End_flag do
+  Begin  
+    //Checks the termination cirteria
+    if (Current_level > graph_in[Current_idx]) or (graph_in[Current_idx] = 0)then
+    End_Flag  :=  False;
+    // Is the current bus part of the new backbone?
+    if graph_in[Current_idx] = Current_level then  
+    Begin
+      dec(Current_level);
+      setlength(New_graph,(length(New_graph) + 1));
+      New_graph[High(New_graph)]  :=  Current_idx;
+    End;
+    dec(Current_idx);
+  End;
+End;
+
+{*******************************************************************************
+*         This routine tears the circuit into many pieces as CPUs are          *
+*         available in the local computer (in the best case)                   *
+********************************************************************************}
+function TDSSCircuit.Tear_Circuit(): Integer;
+var
+  Num_Pieces,                                       // Max Number of pieces considering the number of local CPUs
+  Num_buses,                                        // Goal for number of buses on each subsystem
+  Num_target,                                       // Generic accumulator
+  Location_idx,                                     // Active Location
+  i,                                                // Generic counter variables
+  State         : Integer;                          // The current state of the state machine
+  Candidates,                                       // Array for 0 level buses idx
+  Active_graph,                                     // Is the active linearized graph  
+  Locations     : Array of Integer;                 // Array for the best tearing locations
+  Locations_V   : Array of Double;                  // Array to store the VMag and angle at the location
+  TreeNm,                                           // For debugging
+  Fileroot,
+  PDElement     : String;
+  Ftree         : TextFile;
+  flag,                                             //  Stop flag
+  SMEnd         : Boolean;                          //  Terminates the state machine
+  EMeter        : TEnergyMeterObj;
+  DBLTemp,                                          //  For storing temoprary doubles
+  Sys_Size      : Double;                           //  Stores the number of buses contained in the system 
+
+Begin
+  Num_Pieces  :=  CPU_Cores-1;
+  with solution do
+  Begin
+    Calc_Inc_Matrix_Org(ActiveActor);                         //Calculates the ordered incidence matrix
+    SMEnd           :=  True;
+    State           :=  0;
+    Num_buses       :=  length(Inc_Mat_Cols) div Num_Pieces;  // Estimates the number of buses for each subsystem
+    Sys_Size        :=  double(length(Inc_Mat_Cols));
+    setlength(Buses_Covered,1);
+    setlength(Path_Idx,1);
+    Actual_Coverage :=  -1;
+    while SMEnd do                                            // The state machine starts
+    Begin                                           
+      case State of
+        0:  Begin                                             // Processes the first path 
+            setlength(Candidates,0);
+            for i := 0 to (length(Inc_Mat_Levels) - 1) do     //Extracts the 0 Level Buses
+            Begin
+              if solution.Inc_Mat_Levels[i] = 0 then
+              Begin
+                setlength(Candidates,length(Candidates)+1);
+                Candidates[High(Candidates)]  :=  i;
+              End;
+            End;
+            setlength(Longest_paths,1);
+            setlength(Active_graph,length(Inc_Mat_Levels));
+            for i := Low(Active_graph) to High(Active_graph) do
+              Active_graph[i]        :=  Inc_Mat_Levels[i];
+//            Longest_paths[0]    :=  Candidates;                 //  Adds the initial path proposed by the Ckt-Tree
+            Buses_covered[0]    :=  MaxIntValue(Candidates);    //  Extracts the maximum level covered
+            Path_Idx[0]         :=  0;                          //  No shifting in the graph
+            State               :=  1;                          //  Go to the next state
+        End;
+        1:  Begin                                               // Extracts a new path from the longest branch
+            get_longest_path(Active_graph);
+            setlength(Longest_paths,(length(Longest_paths) + 1));
+//            Longest_paths[High(Longest_paths)]  :=  Candidates; // Adds the new candidates to the results
+//            Candidates  :=  Candidates - Candidates[High(Candidates)];
+//            for i := 0 to High(Candidates) do
+//              Candidates[Idx] :=
+            
+        End;
+      end;
+      //  Checks the coverage index to stablish if is necessary to keep tracing paths to increase the coverage
+      DBLTemp         :=  0;
+      for i := Low(Buses_covered) to High(Buses_covered) do
+        DBLtemp         :=  DBLTemp + double(Buses_Covered[i]);
+      DBLtemp         :=  DBLTemp/Sys_Size;
+{      If the New coverage is different from the previous one and is below the expected coverage keep going
+       The first criteria is to avoid keep working on a path that will not contribute to improve the coverage}
+      if (DBLTemp <> Actual_Coverage) and (DBLTemp < Coverage) then SMEnd :=  False;
+      Actual_Coverage :=  DBLTemp;
+    end;
+
+
+
+
+
+
+
+
+    setlength(Locations,Num_pieces-1);                // Setups the array for the tearing locations
+
+    for i := 0 to (length(Locations) - 1) do Locations[i] :=  -1; // Initializes the locations array
+    Num_target    :=  Num_buses;
+    Location_idx  :=  0;
+
+    for i := 0 to (length(Candidates) - 1) do
+    Begin
+      if (Candidates[i] >= Num_target) and (Location_idx < (Num_pieces-1)) then
+      begin
+        Num_target :=  Num_target + Num_buses;
+        if Candidates[i] > Num_target then
+          Locations[Location_idx] :=  Candidates[i-1]
+        else
+          Locations[Location_idx] :=  Candidates[i];
+        inc(Location_idx);
+      end;
+    End;
+
+
+  //***********The directory is ready for storing the new circuit****************
+      EMeter    := EnergyMeters.First;
+      while EMeter  <> Nil do
+      begin
+        EMeter.Enabled  :=  False;
+        EMeter          :=  EnergyMeters.Next;
+      end;
+  //************ Creates the meters at the tearing locations  ********************
+    Result  :=  1;                              // Resets the result variable (Return)
+    setlength(Locations_V,length(Locations)*2);
+    SolutionAbort := FALSE;
+    for i := 0 to (length(Locations)-1) do
+    begin
+      if Locations[i] >= 0 then
+      Begin
+        inc(Result);
+        // Gets the name of the PDE for placing the EnergyMeter
+         with solution do
+         Begin
+           PDElement :=  Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])];
+           SetActiveBus(Inc_Mat_Cols[get_IncMatrix_Col(Locations[i])]);  // Activates the Bus
+         End;
+        // Generates the OpenDSS Command;
+        DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' term=1 option=R action=C';
+      End;
+    end;
+    DssExecutive.Command := 'set mode=snap';
+    Solve(ActiveActor);
+
+    Fileroot  :=  GetCurrentDir;
+    Fileroot  :=  Fileroot  + '\Torn_Circuit';
+    CreateDir(Fileroot);                        // Creates the folder for storing the modified circuit
+    DelFilesFromDir(Fileroot,'*',True);         // Removes all the files inside the new directory (if exists)
+
+    DssExecutive.Command :=  'save circuit Dir="' + Fileroot + '"';
+  End;
+End;
+//----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
 Procedure TDSSCircuit.ProcessBusDefs(ActorID : Integer);
