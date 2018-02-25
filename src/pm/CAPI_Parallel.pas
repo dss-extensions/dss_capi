@@ -93,7 +93,7 @@ begin
     Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (NumOfActors) - (1) + 1);
     for idx := 1 to NumOfActors do
     Begin
-      Result[idx] :=  ActorPctProgress[idx];
+      Result[(idx) - (1)] :=  ActorPctProgress[idx];
     End;
 end;
 //------------------------------------------------------------------------------
@@ -104,7 +104,7 @@ VAR
 begin
     Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (NumOfActors) - (1) + 1);
     for idx := 1 to NumOfActors do
-      Result[idx] :=  ActorStatus[idx];  
+      Result[(idx) - (1)] :=  ActorStatus[idx];  
 end;
 //------------------------------------------------------------------------------
 function Parallel_Get_ActiveParallel():Integer;cdecl;
