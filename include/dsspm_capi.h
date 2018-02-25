@@ -228,7 +228,7 @@ extern "C" {
     DSSPM_CAPI_DLL int32_t Capacitors_Get_First(void);
     
     /*
-    Delta connection or wye?\x01) for distributing and switching the total bank kVAR.
+    Delta connection or wye?
     */
     DSSPM_CAPI_DLL uint16_t Capacitors_Get_IsDelta(void);
     
@@ -258,7 +258,7 @@ extern "C" {
     DSSPM_CAPI_DLL int32_t Capacitors_Get_NumSteps(void);
     
     /*
-    Delta connection or wye?\x01) for distributing and switching the total bank kVAR.
+    Delta connection or wye?
     */
     DSSPM_CAPI_DLL void Capacitors_Set_IsDelta(uint16_t Value);
     
