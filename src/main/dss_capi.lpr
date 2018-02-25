@@ -1,5 +1,6 @@
 library dss_capi;
 {$MODE Delphi}
+{$APPTYPE CONSOLE}
 
 { ----------------------------------------------------------
   Copyright (c) 2008-2014, Electric Power Research Institute, Inc.
