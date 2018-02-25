@@ -482,10 +482,12 @@ exports
     { DSSProgress_Set_Caption, }
     { DSSProgress_Set_PctProgress, }
     { DSSProgress_Show, }
-    { DSSProperty_Get_Description, }
-    { DSSProperty_Get_Name, }
-    { DSSProperty_Get_Val, }
-    { DSSProperty_Set_Val, }
+    DSSProperty_Get_Description,
+    DSSProperty_Get_Name,
+    DSSProperty_Get_Val,
+    DSSProperty_Set_Val,
+    DSSProperty_Set_Index,
+    DSSProperty_Set_Name,
     DSS_Executive_Get_Command,
     DSS_Executive_Get_NumCommands,
     DSS_Executive_Get_NumOptions,

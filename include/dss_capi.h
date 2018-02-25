@@ -1,6 +1,6 @@
 #ifndef DSS_CAPI_DLL_H
 #define DSS_CAPI_DLL_H
-#define DSS_CAPI_VERSION "0.9.2"
+#define DSS_CAPI_VERSION "0.9.4"
 #ifndef DSS_CAPI_DLL
 //#define DSS_CAPI_DLL __declspec(dllimport)
 #define DSS_CAPI_DLL
@@ -249,6 +249,8 @@ extern "C" {
     DSS_CAPI_DLL char* DSSProperty_Get_Name(void);
     DSS_CAPI_DLL char* DSSProperty_Get_Val(void);
     DSS_CAPI_DLL void DSSProperty_Set_Val(char* Value);
+    DSS_CAPI_DLL void DSSProperty_Set_Name(char* Value);
+    DSS_CAPI_DLL void DSSProperty_Set_Index(int32_t Value);
     DSS_CAPI_DLL char* DSS_Executive_Get_Command(int32_t i);
     DSS_CAPI_DLL int32_t DSS_Executive_Get_NumCommands(void);
     DSS_CAPI_DLL int32_t DSS_Executive_Get_NumOptions(void);
