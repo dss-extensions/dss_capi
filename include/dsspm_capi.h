@@ -243,7 +243,7 @@ extern "C" {
     DSSPM_CAPI_DLL double Capacitors_Get_kvar(void);
     
     /*
-    Sets the acitve Capacitor by Name.
+    Sets the active Capacitor by Name.
     */
     DSSPM_CAPI_DLL char* Capacitors_Get_Name(void);
     
@@ -273,7 +273,7 @@ extern "C" {
     DSSPM_CAPI_DLL void Capacitors_Set_kvar(double Value);
     
     /*
-    Sets the acitve Capacitor by Name.
+    Sets the active Capacitor by Name.
     */
     DSSPM_CAPI_DLL void Capacitors_Set_Name(char* Value);
     
