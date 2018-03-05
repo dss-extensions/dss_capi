@@ -10,3 +10,7 @@ This folder contains patches to bring most changes (bug fixes and new features) 
     0008: PM: PM-specific FreePascal changes
     0009: Classic-to-PM: port many bug fixes and new features from the Classic
     0010: PM: missing FPC compatibility changes
+
+Since this patchset is meant mostly for review, to avoid too much work, this folder will not be updated for every single commit. I will try to update it every month.
+
+Note that the main single-file patch in the parent is kept updated.
