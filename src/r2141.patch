@@ -352,7 +352,7 @@ Added: svn:executable
 \ No newline at end of property
 Index: Parallel_Version/Source/Common/AutoAdd.pas
 ===================================================================
---- Parallel_Version/Source/Common/AutoAdd.pas	(revision 2136)
+--- Parallel_Version/Source/Common/AutoAdd.pas	(revision 2141)
 +++ Parallel_Version/Source/Common/AutoAdd.pas	(working copy)
 @@ -87,7 +87,11 @@
  implementation
@@ -378,14 +378,14 @@ Index: Parallel_Version/Source/Common/AutoAdd.pas
               BusIdxList^[i] := i;
 Index: Parallel_Version/Source/Common/Circuit.pas
 ===================================================================
---- Parallel_Version/Source/Common/Circuit.pas	(revision 2136)
+--- Parallel_Version/Source/Common/Circuit.pas	(revision 2141)
 +++ Parallel_Version/Source/Common/Circuit.pas	(working copy)
 @@ -25,7 +25,7 @@
  USES
       Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
       DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
--     AutoAdd, EnergyMeter, NamedObject, CktTree, Graphics;
-+     AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF};
+-     AutoAdd, EnergyMeter, NamedObject, CktTree, Graphics, math;
++     AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF}, math;
  
  
  TYPE
@@ -398,27 +398,223 @@ Index: Parallel_Version/Source/Common/Circuit.pas
        AddMarkerCode,
        AddMarkerSize: Integer;
  
-@@ -291,7 +291,7 @@
+@@ -166,7 +166,7 @@
+           NumDevices, NumBuses, NumNodes:Integer;
+           MaxDevices, MaxBuses, MaxNodes:Integer;
+           IncDevices, IncBuses, IncNodes:Integer;
+-
++ AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF};
+           // Variables for the tearing Algorithm
+ 
+           Coverage,                     // Used for the user to stablish the coverage for the algorithm
+@@ -176,6 +176,7 @@
+           Buses_Covered     : Array of integer;   //Stores the number of buses (estimated - 1 quadrant) per path
+           Path_Size         : Array of Integer;   //Stores the estimated size of each path
+           New_Graph         : Array of Integer;   //Stores the latest weighted graph
++          Num_SubCkts       : Integer;            // Stores the number of subcircuits for tearing the circuit when executing the "tear_Circuit" command
+ 
+           // Bus and Node stuff
+           Buses:    pTBusArray;
+@@ -190,7 +191,7 @@
+           NeglectLoadY      :Boolean;
+ 
+           // Voltage limits
+-          NormalMinVolts,
++          NormalMinVolts,{$IFDEF FPC}CmdForms,{$ELSE}DSSForms,{$ENDIF} Executive
+           NormalMaxVolts,
+           EmergMaxVolts,
+           EmergMinVolts     :Double;  //per unit voltage restraints for this circuit
+@@ -277,7 +278,7 @@
+           Procedure DoResetMeterZones(ActorID : Integer);
+           Function  SetElementActive(Const FullObjectName:String) : Integer;
+           Procedure InvalidateAllPCElements;
+-
++{$IFDEF FPC}CmdForms,{$ELSE}DSSForms,{$ENDIF} Executive
+           Procedure DebugDump(Var F:TextFile);
+ 
+           // Access to topology from the first source
+@@ -307,7 +308,7 @@
       PDElement, CktElementClass,
       ParserDel,  DSSClassDefs, DSSGlobals, Dynamics,
       Line, Transformer,  Vsource,
--     Utilities,  DSSForms, Executive;
-+     Utilities, {$IFDEF FPC}CmdForms,{$ELSE}DSSForms,{$ENDIF} Executive;
+-     Utilities,  DSSForms, Executive, SHELLAPI;
++     Utilities,  {$IFDEF FPC}CmdForms,{$ELSE}DSSForms,{$ENDIF} Executive, SHELLAPI;
  
  //----------------------------------------------------------------------------
  Constructor TDSSCircuit.Create(const aName:String);
-@@ -1415,7 +1415,7 @@
- begin
+@@ -498,8 +499,9 @@
+    // tearing algorithm vars initialization
+ 
+ 
+-  Coverage        :=  0.7;      // 70% coverage expected by default
++  Coverage        :=  0.9;      // 90% coverage expected by default
+   Actual_coverage :=  -1;       //No coverage
++  Num_SubCkts     :=  CPU_Cores-1;
+   setlength(Longest_paths,0);
+   setlength(Path_Idx,0);
+   setlength(Buses_Covered,0);
+@@ -773,12 +775,13 @@
+ ********************************************************************************}
+ function TDSSCircuit.Tear_Circuit(): Integer;
+ var
+-  Num_Pieces,                                       // Max Number of pieces considering the number of local CPUs
++  Num_Pieces,
++  Buses_Acc,                                         // Number of buses accumulated
+   Num_buses,                                        // Goal for number of buses on each subsystem
+   Num_target,                                       // Generic accumulator
+   Location_idx,                                     // Active Location
++  j,
+   i             : Integer;                          // Generic counter variables
+-
+   Candidates,                                       // Array for 0 level buses idx
+   Locations     : Array of Integer;                 // Array for the best tearing locations
+   Locations_V   : Array of Double;                  // Array to store the VMag and angle at the location
+@@ -787,36 +790,66 @@
+   PDElement     : String;
+   Ftree         : TextFile;
+   flag          : Boolean;                          //  Stop flag
+-
+   EMeter        : TEnergyMeterObj;
+-
+-
+ Begin
+-  Num_Pieces  :=  CPU_Cores-1;
++  Num_pieces    :=  Num_SubCkts;
+   with solution do
+   Begin
++    flag            := True;
++    while flag do
++    Begin
++      Calc_Inc_Matrix_Org(ActiveActor);                         //Calculates the ordered incidence matrix
++      Get_paths_4_Coverage;                                     // Refines the levels vector according to the coverage desired
++      if length(Path_Idx) >= Num_pieces then
++        flag  :=  False
++      else
++        Coverage  :=  Coverage + 0.1;
++    End;
+     Num_buses       :=  length(Inc_Mat_Cols) div Num_Pieces;  // Estimates the number of buses for each subsystem
+-    Calc_Inc_Matrix_Org(ActiveActor);                         //Calculates the ordered incidence matrix
+-    Get_paths_4_Coverage;                                     // Refines the levels vector according to the coverage desired
+-
+-
+-    setlength(Locations,Num_pieces-1);                // Setups the array for the tearing locations
+-
+-    for i := 0 to (length(Locations) - 1) do Locations[i] :=  -1; // Initializes the locations array
+-    Num_target    :=  Num_buses;
+-    Location_idx  :=  0;
+-
+-    for i := 0 to (length(Candidates) - 1) do
++    setlength(Locations,Num_pieces);                          // Setups the array for the tearing locations
++    for i := 0 to High(Locations) do Locations[i] :=  -1;     // Initializes the locations array
++    flag          :=  True;
++    j             :=  0;
++    Location_idx  :=  1;
++    Locations[0]  :=  0;
++    while flag do
+     Begin
+-      if (Candidates[i] >= Num_target) and (Location_idx < (Num_pieces-1)) then
+-      begin
+-        Num_target :=  Num_target + Num_buses;
+-        if Candidates[i] > Num_target then
+-          Locations[Location_idx] :=  Candidates[i-1]
+-        else
+-          Locations[Location_idx] :=  Candidates[i];
++      if j  = High(Path_Idx) then
++        setlength(Candidates,(Length(Longest_paths) - Path_Idx[j]))
++      else
++        setlength(Candidates,(Path_Idx[j + 1] - Path_Idx[j]));
++      if j = 0 then
++        for i := 0 to High(Candidates) do
++          Candidates[i] :=  Longest_paths[i]      // Moves the path into the cadidates array
++      else
++        for i := 0 to High(Candidates) do
++          Candidates[i] :=  Longest_paths[(High(Candidates) - i) + Path_Idx[j]];     // Moves the path into the cadidates array (reverse)
++      // Checks if the path has enough buses to cover the requirements
++      if ((Candidates[High(Candidates)] - Candidates[0]) >= 2*Num_Buses) then
++      Begin
++      // The path is large enough for tearing
++        Buses_Acc   :=  0;
++        for i := 1 to High(Candidates) do
++        Begin
++          Buses_Acc   := (Candidates[i] - Candidates[i - 1]) + Buses_Acc;
++          if Buses_Acc >= Num_Buses then
++          begin
++            Buses_Acc               :=  0;
++            Locations[Location_idx] :=  Candidates[i];
++            inc(Location_idx);
++          end;
++        End;
++      End
++      else
++      Begin
++        if  j = 0 then Location_idx  := 0;                 // To avoid placing an EMeter at the feederhead
++        Locations[Location_idx]  :=  Candidates[1];       // The path is too short, consider to leave this path together
+         inc(Location_idx);
+-      end;
++      End;
++      flag          :=  False;
++      for i := 0 to High(Locations) do
++        if Locations[i] = -1 then flag  :=  True;
++      inc(j)
+     End;
+ 
+ 
+@@ -831,7 +864,7 @@
+     Result  :=  1;                              // Resets the result variable (Return)
+     setlength(Locations_V,length(Locations)*2);
+     SolutionAbort := FALSE;
+-    for i := 0 to (length(Locations)-1) do
++    for i := 1 to High(Locations) do
+     begin
+       if Locations[i] >= 0 then
+       Begin
+@@ -937,7 +970,7 @@
+         ReallocMem(MapNodeToBus, SizeOf(MapNodeToBus^[1]) * MaxNodes);
+     END;
+ END;
+-
++ AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF};
+ //----------------------------------------------------------------------------
+ Function TDSSCircuit.AddBus(const BusName:String; NNodes:Integer;ActorID: integer):Integer;
+ 
+@@ -1159,7 +1192,7 @@
+              End;
+            SavedBusNames^[i] := ''; // De-allocate string
+        End;
+-
++ AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF};
+      If Assigned(SavedBuses) Then For i := 1 to SavedNumBuses Do SavedBuses^[i].Free;  // gets rid of old bus voltages, too
+ 
+      ReallocMem(SavedBuses, 0);
+@@ -1408,7 +1441,7 @@
+                   Success := TRUE;
+                   Break;
+                End;
+-          End;
++          End; AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF};
+          CurrDir :=  dir + Format('%.3d',[i]);
+       End;
+     End Else Begin
+@@ -1636,7 +1669,7 @@
+ end;
+ 
+ procedure TDSSCircuit.ReallocDeviceList(ActorID: integer);
+-
++ AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF};
+ Var
+     TempList:THashList;
+     i:Integer;
+@@ -1723,6 +1756,7 @@
    inherited;
    BusName := '';
--  AddMarkerColor := clBlack;
+   AddMarkerColor := clBlack;
 +  AddMarkerColor := {$IFDEF FPC}0{$ELSE}clBlack{$ENDIF};
    AddMarkerCode := 4;
    AddMarkerSize := 1;
  end;
 Index: Parallel_Version/Source/Common/CktElement.pas
 ===================================================================
---- Parallel_Version/Source/Common/CktElement.pas	(revision 2136)
+--- Parallel_Version/Source/Common/CktElement.pas	(revision 2141)
 +++ Parallel_Version/Source/Common/CktElement.pas	(working copy)
 @@ -841,7 +841,7 @@
           FOR j := 1 TO Fnconds DO Begin
@@ -431,7 +627,7 @@ Index: Parallel_Version/Source/Common/CktElement.pas
                  End;
 Index: Parallel_Version/Source/Common/DSSCallBackRoutines.pas
 ===================================================================
---- Parallel_Version/Source/Common/DSSCallBackRoutines.pas	(revision 2136)
+--- Parallel_Version/Source/Common/DSSCallBackRoutines.pas	(revision 2141)
 +++ Parallel_Version/Source/Common/DSSCallBackRoutines.pas	(working copy)
 @@ -20,7 +20,7 @@
  
@@ -503,21 +699,9 @@ Index: Parallel_Version/Source/Common/DSSCallBackRoutines.pas
  End;
  
  {====================================================================================================================}
-Index: Parallel_Version/Source/Common/DSSClass.pas
-===================================================================
---- Parallel_Version/Source/Common/DSSClass.pas	(revision 2136)
-+++ Parallel_Version/Source/Common/DSSClass.pas	(working copy)
-@@ -260,6 +260,7 @@
- 
- Function TDSSClass.GetActiveObj:Pointer; // Get address of active obj of this class
- BEGIN
-+    ActiveElement := ElementList.ActiveIndex ;
-     If ActiveElement>0 THEN
-        Result := ElementList.Get(ActiveElement)
-     Else
 Index: Parallel_Version/Source/Common/DSSGlobals.pas
 ===================================================================
---- Parallel_Version/Source/Common/DSSGlobals.pas	(revision 2136)
+--- Parallel_Version/Source/Common/DSSGlobals.pas	(revision 2141)
 +++ Parallel_Version/Source/Common/DSSGlobals.pas	(working copy)
 @@ -43,7 +43,7 @@
       PVSystem,
@@ -806,7 +990,7 @@ Index: Parallel_Version/Source/Common/DSSGlobals.pas
  
 Index: Parallel_Version/Source/Common/ExportResults.pas
 ===================================================================
---- Parallel_Version/Source/Common/ExportResults.pas	(revision 2136)
+--- Parallel_Version/Source/Common/ExportResults.pas	(revision 2141)
 +++ Parallel_Version/Source/Common/ExportResults.pas	(working copy)
 @@ -33,7 +33,7 @@
  Procedure ExportOverloads(FileNm:String);
@@ -955,7 +1139,7 @@ Index: Parallel_Version/Source/Common/ExportResults.pas
    Finally
 Index: Parallel_Version/Source/Common/KLUSolve.pas
 ===================================================================
---- Parallel_Version/Source/Common/KLUSolve.pas	(revision 2136)
+--- Parallel_Version/Source/Common/KLUSolve.pas	(revision 2141)
 +++ Parallel_Version/Source/Common/KLUSolve.pas	(working copy)
 @@ -1,63 +1,72 @@
  unit KLUSolve;
@@ -1082,7 +1266,7 @@ Index: Parallel_Version/Source/Common/KLUSolve.pas
  {
 Index: Parallel_Version/Source/Common/ShowResults.pas
 ===================================================================
---- Parallel_Version/Source/Common/ShowResults.pas	(revision 2136)
+--- Parallel_Version/Source/Common/ShowResults.pas	(revision 2141)
 +++ Parallel_Version/Source/Common/ShowResults.pas	(working copy)
 @@ -46,8 +46,8 @@
  Uses uComplex,  Arraydef,  sysutils, Circuit, DSSClass, DSSClassDefs, DSSGlobals,
@@ -1115,7 +1299,7 @@ Index: Parallel_Version/Source/Common/ShowResults.pas
  
 Index: Parallel_Version/Source/Common/Solution.pas
 ===================================================================
---- Parallel_Version/Source/Common/Solution.pas	(revision 2136)
+--- Parallel_Version/Source/Common/Solution.pas	(revision 2141)
 +++ Parallel_Version/Source/Common/Solution.pas	(working copy)
 @@ -34,6 +34,8 @@
           0-th element is alway ground(complex zero volts).
@@ -1167,13 +1351,13 @@ Index: Parallel_Version/Source/Common/Solution.pas
         SeriesYInvalid :Boolean;
         SolutionCount :Integer;  // Counter incremented for each solution
         SolutionInitialized :Boolean;
-@@ -284,13 +295,16 @@
+@@ -285,13 +296,16 @@
  implementation
  
  USES  SolutionAlgs,
 -      DSSClassDefs, DSSGlobals, DSSForms, PDElement,  ControlElem, Fault,
 +      DSSClassDefs, DSSGlobals, {$IFDEF FPC} CmdForms,{$ELSE} DSSForms, {$ENDIF} PDElement,  ControlElem, Fault,
-       Executive, AutoAdd,  YMatrix, Load,CKtTree,
+       AutoAdd,  YMatrix, Load,CKtTree,
 -      ParserDel, Generator,Capacitor,SHELLAPI,
 +      ParserDel, Generator,Capacitor,
 +{$IFDEF WINDOWS}
@@ -1187,7 +1371,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
        Transformer, Reactor
  ;
  
-@@ -385,10 +399,13 @@
+@@ -386,10 +400,13 @@
      VoltageBaseChanged := TRUE;  // Forces Building of convergence check arrays
  
      MaxIterations    := 15;
@@ -1201,7 +1385,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
      IsDynamicModel   := FALSE;
      IsHarmonicModel  := FALSE;
  
-@@ -488,9 +505,10 @@
+@@ -489,9 +506,10 @@
  
  // ===========================================================================================
  PROCEDURE TSolutionObj.Solve(ActorID : Integer);
@@ -1214,7 +1398,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  Begin
       ActiveCircuit[ActorID].Issolved := False;
       SolutionWasAttempted[ActorID]   := TRUE;
-@@ -529,7 +547,7 @@
+@@ -530,7 +548,7 @@
  {$ENDIF}
  
      {CheckFaultStatus;  ???? needed here??}
@@ -1223,7 +1407,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  {
       Case Dynavars.SolutionMode OF
           SNAPSHOT:     SolveSnap;
-@@ -559,7 +577,7 @@
+@@ -560,7 +578,7 @@
        ActorHandle[ActorID].Terminate;
        ActorHandle[ActorID].Free;
      end;
@@ -1232,7 +1416,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
      if not Parallel_enabled then
        ActorHandle[ActorID].WaitFor; // If the parallel features are not active it will work as the classic version
  Except
-@@ -592,9 +610,11 @@
+@@ -593,9 +611,11 @@
          Else If Vmag <> 0.0         Then ErrorSaved^[i] := Abs(1.0 - VmagSaved^[i]/Vmag);
  
          VMagSaved^[i] := Vmag;  // for next go-'round
@@ -1246,7 +1430,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
      End;
  
  
-@@ -807,7 +827,7 @@
+@@ -808,7 +828,7 @@
         SolveSystem(NodeV, ActorID);
         LoadsNeedUpdating := FALSE;
  
@@ -1255,7 +1439,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  
  End;
  
-@@ -874,7 +894,7 @@
+@@ -875,7 +895,7 @@
                  im := im - dV^[i].im;
             End;
  
@@ -1264,7 +1448,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
      End;
  End;
  
-@@ -1043,7 +1063,7 @@
+@@ -1044,7 +1064,7 @@
  Begin
     SnapShotInit(ActorID);
     TotalIterations    := 0;
@@ -1273,7 +1457,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
     REPEAT
  
         Inc(ControlIteration);
-@@ -1072,7 +1092,7 @@
+@@ -1073,7 +1093,7 @@
  {$IFDEF DLL_ENGINE}
     Fire_StepControls;
  {$ENDIF}
@@ -1282,7 +1466,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
     Solve_Time_Elapsed := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
     Iteration := TotalIterations;  { so that it reports a more interesting number }
  
-@@ -1085,7 +1105,7 @@
+@@ -1086,7 +1106,7 @@
     Result := 0;
  
     LoadsNeedUpdating := TRUE;  // Force possible update of loads and generators
@@ -1291,7 +1475,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  
     If SystemYChanged THEN
     begin
-@@ -1107,7 +1127,7 @@
+@@ -1108,7 +1128,7 @@
         ConvergedFlag := TRUE;
     End;
  
@@ -1300,7 +1484,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
     Solve_Time_Elapsed  := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
     Total_Time_Elapsed  :=  Total_Time_Elapsed + Solve_Time_Elapsed;
     Iteration := 1;
-@@ -1594,6 +1614,7 @@
+@@ -1604,6 +1624,7 @@
  {*******************************************************************************
  *           Routine created to empty a recently created folder                 *
  ********************************************************************************}
@@ -1308,7 +1492,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
  var
    SourceLst: string;
-@@ -1601,7 +1622,7 @@
+@@ -1611,7 +1632,7 @@
  begin
    FillChar(FOS, SizeOf(FOS), 0);
    FOS.wFunc := FO_DELETE;
@@ -1317,7 +1501,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
    FOS.pFrom := PChar(SourceLst);
    if not DelSubDirs then
      FOS.fFlags := FOS.fFlags OR FOF_FILESONLY;
-@@ -1611,6 +1632,66 @@
+@@ -1621,6 +1642,66 @@
    FOS.fFlags := FOS.fFlags OR FOF_SILENT;
    SHFileOperation(FOS);
  end;
@@ -1384,16 +1568,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  {*******************************************************************************
  *   This routine evaluates if the current location is the best or if its       *
  *   Necessary to move back one PDE just to cover a wider area                  *
-@@ -1679,7 +1760,7 @@
-   i         :=  i - 1;
-   while flag do
-   begin
--    if Fileroot[i] = '\' then flag  :=  False;
-+    if Fileroot[i] = PathDelim then flag  :=  False;
-     i         :=  i - 1;
-     if i  < 0 then flag :=  False;
-   end;
-@@ -1783,7 +1864,8 @@
+@@ -1698,7 +1779,8 @@
       Writeln(F, 'Set circuit=',  ActiveCircuit[ActiveActor].Name);
       Writeln(F, 'Set editor=',   DefaultEditor);
       Writeln(F, 'Set tolerance=', Format('%-g', [ConvergenceTolerance]));
@@ -1403,7 +1578,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
       Writeln(F, 'Set loadmodel=', GetLoadModel);
  
       Writeln(F, 'Set loadmult=',    Format('%-g', [ActiveCircuit[ActiveActor].LoadMultiplier]));
-@@ -2040,6 +2122,7 @@
+@@ -1955,6 +2037,7 @@
  
     SolutionInitialized := FALSE;   // reinitialize solution when mode set (except dynamics)
     PreserveNodeVoltages := FALSE;  // don't do this unless we have to
@@ -1411,23 +1586,23 @@ Index: Parallel_Version/Source/Common/Solution.pas
  
     // Reset defaults for solution modes
     Case Dynavars.SolutionMode of
-@@ -2048,6 +2131,7 @@
+@@ -1963,6 +2046,7 @@
         DAILYMODE:     Begin
                             DynaVars.h    := 3600.0;
                             NumberOfTimes := 24;
-+                           SampleTheMeters := TRUE;                        
++                           SampleTheMeters := TRUE;
                        End;
         SNAPSHOT:      Begin
                             IntervalHrs   := 1.0;
-@@ -2057,6 +2141,7 @@
+@@ -1972,6 +2056,7 @@
                             IntervalHrs   := 1.0;
                             DynaVars.h    := 3600.0;
                             NumberOfTimes := 8760;
-+                           SampleTheMeters := TRUE;                        
++                           SampleTheMeters := TRUE;
                        End;
         DUTYCYCLE:     Begin
                             DynaVars.h  := 1.0;
-@@ -2073,9 +2158,9 @@
+@@ -1988,9 +2073,9 @@
                             DynaVars.h    := 3600.0;
                             NumberOfTimes := 1;  // just one time step per Solve call expected
                        End;
@@ -1440,20 +1615,20 @@ Index: Parallel_Version/Source/Common/Solution.pas
         MONTEFAULT:    Begin IsDynamicModel := TRUE;  END;
         FAULTSTUDY:    Begin
                              IsDynamicModel := TRUE;
-@@ -2083,10 +2168,12 @@
+@@ -1998,10 +2083,12 @@
         LOADDURATION1: Begin
                             DynaVars.h := 3600.0;
                             ActiveCircuit[ActiveActor].TrapezoidalIntegration := TRUE;
-+                           SampleTheMeters := TRUE;                        
++                           SampleTheMeters := TRUE;
                        End;
         LOADDURATION2: Begin
                             DynaVars.intHour := 1;
                             ActiveCircuit[ActiveActor].TrapezoidalIntegration := TRUE;
-+                           SampleTheMeters := TRUE;                        
++                           SampleTheMeters := TRUE;
                        End;
         AUTOADDFLAG :  Begin
                             IntervalHrs := 1.0;
-@@ -2390,7 +2477,7 @@
+@@ -2305,7 +2392,7 @@
  // Update Loop time is called from end of time step cleanup
  // Timer is based on beginning of SolveSnap time
  
@@ -1462,7 +1637,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
     Step_Time_Elapsed  := ((LoopEndtime-SolveStartTime)/CPU_Freq)*1000000;
  
  end;
-@@ -2453,9 +2540,16 @@
+@@ -2368,9 +2455,16 @@
    FInfoProc       :=  CallBack;
    FreeOnTerminate := False;
    ActorID         :=  ID;
@@ -1479,7 +1654,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  end;
  
  {*******************************************************************************
-@@ -2465,7 +2559,7 @@
+@@ -2380,7 +2474,7 @@
  
  procedure TSolver.Execute;
  var
@@ -1488,7 +1663,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
    idx       : Integer;
    begin
      with ActiveCircuit[ActorID].Solution do
-@@ -2499,7 +2593,9 @@
+@@ -2414,7 +2508,9 @@
                 DosimpleMsg('Unknown solution mode.', 481);
             End;
  
@@ -1500,7 +1675,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
          ActorStatus[ActorID]  :=  1;
 Index: Parallel_Version/Source/Common/SolutionAlgs.pas
 ===================================================================
---- Parallel_Version/Source/Common/SolutionAlgs.pas	(revision 2136)
+--- Parallel_Version/Source/Common/SolutionAlgs.pas	(revision 2141)
 +++ Parallel_Version/Source/Common/SolutionAlgs.pas	(working copy)
 @@ -42,8 +42,9 @@
  
@@ -1699,7 +1874,7 @@ Index: Parallel_Version/Source/Common/SolutionAlgs.pas
          WHILE p <> NIL Do Begin
 Index: Parallel_Version/Source/Common/TOPExport.pas
 ===================================================================
---- Parallel_Version/Source/Common/TOPExport.pas	(revision 2136)
+--- Parallel_Version/Source/Common/TOPExport.pas	(revision 2141)
 +++ Parallel_Version/Source/Common/TOPExport.pas	(working copy)
 @@ -71,21 +71,33 @@
     TOP_Object      :Variant;  // For Top Automation
@@ -1799,7 +1974,7 @@ Index: Parallel_Version/Source/Common/TOPExport.pas
  
 Index: Parallel_Version/Source/Common/Utilities.pas
 ===================================================================
---- Parallel_Version/Source/Common/Utilities.pas	(revision 2136)
+--- Parallel_Version/Source/Common/Utilities.pas	(revision 2141)
 +++ Parallel_Version/Source/Common/Utilities.pas	(working copy)
 @@ -154,12 +154,13 @@
  
@@ -1911,7 +2086,7 @@ Index: Parallel_Version/Source/Common/Utilities.pas
  Function MakeNewCktElemName(const oldname:string):string;
 Index: Parallel_Version/Source/Common/Ymatrix.pas
 ===================================================================
---- Parallel_Version/Source/Common/Ymatrix.pas	(revision 2136)
+--- Parallel_Version/Source/Common/Ymatrix.pas	(revision 2141)
 +++ Parallel_Version/Source/Common/Ymatrix.pas	(working copy)
 @@ -14,7 +14,7 @@
  
@@ -1924,7 +2099,7 @@ Index: Parallel_Version/Source/Common/Ymatrix.pas
  {Options for building Y matrix}
 Index: Parallel_Version/Source/Controls/CapUserControl.pas
 ===================================================================
---- Parallel_Version/Source/Controls/CapUserControl.pas	(revision 2136)
+--- Parallel_Version/Source/Controls/CapUserControl.pas	(revision 2141)
 +++ Parallel_Version/Source/Controls/CapUserControl.pas	(working copy)
 @@ -79,7 +79,7 @@
  
@@ -1937,7 +2112,7 @@ Index: Parallel_Version/Source/Controls/CapUserControl.pas
  
 Index: Parallel_Version/Source/Controls/ExpControl.pas
 ===================================================================
---- Parallel_Version/Source/Controls/ExpControl.pas	(revision 2136)
+--- Parallel_Version/Source/Controls/ExpControl.pas	(revision 2141)
 +++ Parallel_Version/Source/Controls/ExpControl.pas	(working copy)
 @@ -12,8 +12,8 @@
  INTERFACE
@@ -2051,7 +2226,7 @@ Index: Parallel_Version/Source/Controls/ExpControl.pas
        dt :=  ActiveCircuit[ActorID].Solution.Dynavars.h;
  Index: Parallel_Version/Source/Controls/InvControl.pas
 ===================================================================
---- Parallel_Version/Source/Controls/InvControl.pas	(revision 2136)
+--- Parallel_Version/Source/Controls/InvControl.pas	(revision 2141)
 +++ Parallel_Version/Source/Controls/InvControl.pas	(working copy)
 @@ -1296,7 +1296,7 @@
                    Qnew[k] := sign(QNew[k])*0.99*PVSys.kvarLimit;
@@ -2089,7 +2264,7 @@ Index: Parallel_Version/Source/Controls/ExpControl.pas
  
 Index: Parallel_Version/Source/Controls/RegControl.pas
 ===================================================================
---- Parallel_Version/Source/Controls/RegControl.pas	(revision 2136)
+--- Parallel_Version/Source/Controls/RegControl.pas	(revision 2141)
 +++ Parallel_Version/Source/Controls/RegControl.pas	(working copy)
 @@ -1228,7 +1228,7 @@
  Procedure TRegControlObj.Reset;
@@ -2100,9 +2275,22 @@ Index: Parallel_Version/Source/Controls/RegControl.pas
  end;
  
  procedure TRegcontrolObj.SaveWrite(var F: TextFile);
+Index: Parallel_Version/Source/DDLL/DSolution.pas
+===================================================================
+--- Parallel_Version/Source/DDLL/DSolution.pas	(revision 2141)
++++ Parallel_Version/Source/DDLL/DSolution.pas	(working copy)
+@@ -193,7 +193,7 @@
+   38: begin  // Solution.converged read
+      If ActiveCircuit[ActiveActor] <> Nil Then Begin
+         Result:=0;
+-        if ActiveCircuit[ActiveActor].Issolved then Result:=1;
++        if ActiveCircuit[ActiveActor].Solution.ConvergedFlag then Result:=1;
+      End;
+   end;
+   39: begin  // Solution.converged Write
 Index: Parallel_Version/Source/DLL/ImplCapControls.pas
 ===================================================================
---- Parallel_Version/Source/DLL/ImplCapControls.pas	(revision 2136)
+--- Parallel_Version/Source/DLL/ImplCapControls.pas	(revision 2141)
 +++ Parallel_Version/Source/DLL/ImplCapControls.pas	(working copy)
 @@ -49,7 +49,8 @@
      procedure Set_Vmax(Value: Double); safecall;
@@ -2134,7 +2322,7 @@ Index: Parallel_Version/Source/DLL/ImplCapControls.pas
      ciInternal, tmApartment);
 Index: Parallel_Version/Source/DLL/ImplCircuit.pas
 ===================================================================
---- Parallel_Version/Source/DLL/ImplCircuit.pas	(revision 2136)
+--- Parallel_Version/Source/DLL/ImplCircuit.pas	(revision 2141)
 +++ Parallel_Version/Source/DLL/ImplCircuit.pas	(working copy)
 @@ -726,7 +726,8 @@
     iV               :LongWord;
@@ -2148,7 +2336,7 @@ Index: Parallel_Version/Source/DLL/ImplCircuit.pas
  
 Index: Parallel_Version/Source/DLL/ImplGlobals.pas
 ===================================================================
---- Parallel_Version/Source/DLL/ImplGlobals.pas	(revision 2136)
+--- Parallel_Version/Source/DLL/ImplGlobals.pas	(revision 2141)
 +++ Parallel_Version/Source/DLL/ImplGlobals.pas	(working copy)
 @@ -124,8 +124,15 @@
  
@@ -2167,26 +2355,9 @@ Index: Parallel_Version/Source/DLL/ImplGlobals.pas
  Procedure Fire_InitControls;
  begin
    if assigned(FEvents) then TDSSEvents(FEvents).Fire_InitControls;
-Index: Parallel_Version/Source/DLL/ImplReclosers.pas
-===================================================================
---- Parallel_Version/Source/DLL/ImplReclosers.pas	(revision 2136)
-+++ Parallel_Version/Source/DLL/ImplReclosers.pas	(working copy)
-@@ -107,10 +107,10 @@
-         Repeat
-           If pElem.Enabled Then Begin
-               ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
--              Result := 1;
-+              Result := RecloserClass.ElementList.ActiveIndex;              
-           End
-           Else pElem := RecloserClass.ElementList.Next;
--        Until (Result = 1) or (pElem = nil);
-+        Until (Result >0) or (pElem = nil);
-      End;
- end;
- 
 Index: Parallel_Version/Source/DLL/ImplRegControls.pas
 ===================================================================
---- Parallel_Version/Source/DLL/ImplRegControls.pas	(revision 2136)
+--- Parallel_Version/Source/DLL/ImplRegControls.pas	(revision 2141)
 +++ Parallel_Version/Source/DLL/ImplRegControls.pas	(working copy)
 @@ -64,6 +64,7 @@
      procedure Set_TapNumber(Value: Integer); safecall;
@@ -2216,7 +2387,7 @@ Index: Parallel_Version/Source/DLL/ImplRegControls.pas
      ciInternal, tmApartment);
 Index: Parallel_Version/Source/DLL/ImplSolution.pas
 ===================================================================
---- Parallel_Version/Source/DLL/ImplSolution.pas	(revision 2136)
+--- Parallel_Version/Source/DLL/ImplSolution.pas	(revision 2141)
 +++ Parallel_Version/Source/DLL/ImplSolution.pas	(working copy)
 @@ -99,6 +99,8 @@
      function Get_Time_of_Step: Double; safecall;
@@ -2256,7 +2427,7 @@ Index: Parallel_Version/Source/DLL/ImplSolution.pas
    i : Integer;
 Index: Parallel_Version/Source/DLL/OpenDSSengine.ridl
 ===================================================================
---- Parallel_Version/Source/DLL/OpenDSSengine.ridl	(revision 2136)
+--- Parallel_Version/Source/DLL/OpenDSSengine.ridl	(revision 2141)
 +++ Parallel_Version/Source/DLL/OpenDSSengine.ridl	(working copy)
 @@ -956,15 +956,23 @@
      HRESULT _stdcall Process_Time([out, retval] double* Value);
@@ -2307,15 +2478,15 @@ Index: Parallel_Version/Source/DLL/OpenDSSengine.ridl
    [
 Index: Parallel_Version/Source/Executive/ExecCommands.pas
 ===================================================================
---- Parallel_Version/Source/Executive/ExecCommands.pas	(revision 2136)
+--- Parallel_Version/Source/Executive/ExecCommands.pas	(revision 2141)
 +++ Parallel_Version/Source/Executive/ExecCommands.pas	(working copy)
 @@ -27,10 +27,11 @@
  
  implementation
  
 -Uses DSSGlobals, ExecHelper, Executive, ExecOptions, ShowOptions,
--     ExportOptions, ParserDel, LoadShape, {$IFNDEF FPC} DSSForms,
--     PlotOptions, ConnectOptions, {$ENDIF} sysutils, Utilities, SolutionAlgs,
+-     ExportOptions, ParserDel, LoadShape, DSSForms,
+-     PlotOptions, ConnectOptions, sysutils, Utilities, SolutionAlgs,
 -     DSSClassDefs, windows, KLUSolve;
 +Uses DSSGlobals, ExecHelper, Executive, ExecOptions, ShowOptions, 
 +     ExportOptions, ParserDel, LoadShape, 
@@ -2325,7 +2496,7 @@ Index: Parallel_Version/Source/Executive/ExecCommands.pas
  
  
  PROCEDURE DefineCommands;
-@@ -606,7 +607,11 @@
+@@ -610,7 +611,11 @@
                ActiveCircuit[ActiveActor].Solution.Calc_Inc_Matrix(ActiveActor);
              end;
         110: begin
@@ -2337,7 +2508,7 @@ Index: Parallel_Version/Source/Executive/ExecCommands.pas
              end;
         111: begin
                ActiveCircuit[ActiveActor].Solution.Calc_Inc_Matrix_Org(ActiveActor);
-@@ -663,7 +668,11 @@
+@@ -670,7 +675,11 @@
          9: CmdResult := DoSetCmd(1);  // changed from DoSolveCmd; //'solve';
         10: CmdResult := DoEnableCmd;
         11: CmdResult := DoDisableCmd;
@@ -2351,7 +2522,7 @@ Index: Parallel_Version/Source/Executive/ExecCommands.pas
         16: CmdResult := DoPropertyDump;
 Index: Parallel_Version/Source/Executive/ExecHelper.pas
 ===================================================================
---- Parallel_Version/Source/Executive/ExecHelper.pas	(revision 2136)
+--- Parallel_Version/Source/Executive/ExecHelper.pas	(revision 2141)
 +++ Parallel_Version/Source/Executive/ExecHelper.pas	(working copy)
 @@ -143,11 +143,11 @@
       DSSClass, DSSObject, Utilities, Solution,
@@ -2424,9 +2595,11 @@ Index: Parallel_Version/Source/Executive/ExecHelper.pas
        RegEx1:=TPerlRegEx.Create;
        RegEx1.Options:=[preCaseLess];
 -      RegEx1.RegEx:=UTF8String(Pattern);
+-      ActiveDSSClass[ActiveActor].First;
+-      pObj:=ActiveDSSClass[ActiveActor].GetActiveObj;
 +      RegEx1.RegEx:=Pattern; // UTF8String(Pattern);
-       ActiveDSSClass[ActiveActor].First;
-       pObj:=ActiveDSSClass[ActiveActor].GetActiveObj;
++      If ActiveDSSClass[ActiveActor].First > 0  Then pObj :=  ActiveDSSObject[ActiveActor]
++      else  pObj  :=  nil;
        while pObj <> Nil do begin
 -        RegEx1.Subject:=UTF8String(pObj.Name);
 +        RegEx1.Subject:=pObj.Name; // UTF8String(pObj.Name);
@@ -2594,24 +2767,16 @@ Index: Parallel_Version/Source/Executive/ExecHelper.pas
  End;
  
  FUNCTION DoCloseDICmd:Integer;
-@@ -3937,7 +3983,3 @@
-     PstCalcCommands.Free;
- 
- end.
--
--
--
--
 Index: Parallel_Version/Source/Executive/ExecOptions.pas
 ===================================================================
---- Parallel_Version/Source/Executive/ExecOptions.pas	(revision 2136)
+--- Parallel_Version/Source/Executive/ExecOptions.pas	(revision 2141)
 +++ Parallel_Version/Source/Executive/ExecOptions.pas	(working copy)
 @@ -11,7 +11,7 @@
  Uses Command;
  
  CONST
--        NumExecOptions = 118;
-+        NumExecOptions = 120;
+-        NumExecOptions = 119;
++        NumExecOptions = 122;
  
  VAR
           ExecOption,
@@ -2624,7 +2789,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
  
  
  PROCEDURE DefineOptions;
-@@ -142,16 +142,18 @@
+@@ -142,17 +142,20 @@
       ExecOption[106] := 'ProcessTime';
       ExecOption[107] := 'TotalTime';
       ExecOption[108] := 'StepTime';
@@ -2638,6 +2803,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
 -     ExecOption[116] := 'ConcatenateReports';
 -     ExecOption[117] := 'DSSVisualizationTool';
 -     ExecOption[118] := 'DSSVInstalled';
+-     ExecOption[119] := 'Coverage';
 +     ExecOption[109] := 'SampleEnergyMeters';
 +     ExecOption[110] := 'MinIterations'; // default is 2
 +     ExecOption[111] := 'NumCPUs';
@@ -2650,10 +2816,12 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
 +     ExecOption[118] := 'ConcatenateReports';
 +     ExecOption[119] := 'DSSVisualizationTool';
 +     ExecOption[120] := 'DSSVInstalled';
++     ExecOption[121] := 'Coverage';
++     ExecOption[122] := 'Num_SubCircuits';
  
  
  
-@@ -174,7 +176,7 @@
+@@ -175,7 +178,7 @@
                      CRLF+'  Yearly (follow Yearly curve),'+
                      CRLF+'  DIrect,'+
                      CRLF+'  DUtycycle,'+
@@ -2662,18 +2830,15 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                      CRLF+'  DYnamic,  ( see LoadShapeClass option)'+
                      CRLF+'  Harmonic,'+
                      CRLF+'  HarmonicT,  (sequential Harmonic Mode)'+
-@@ -186,9 +188,7 @@
+@@ -187,6 +190,7 @@
                      CRLF+'  Peakday,'+
                      CRLF+'  LD1 (load-duration 1)'+
                      CRLF+'  LD2 (load-duration 2)'+
--                    CRLF+'  AutoAdd (see AddType)' +
--                    CRLF+'  YearlyVQ (Yearly Vector Quantiaztion)' +
--                    CRLF+'  DutyVQ (Duty Vector Quantiaztion)' +CRLF +CRLF+
 +                    CRLF+'  AutoAdd (see AddType)' +CRLF +CRLF+
-                     'Side effect: setting the Mode propergy resets all monitors and energy meters. It also ' +
-                     'resets the time step, etc. to defaults for each mode.  After the initial reset, the user ' +
-                     'must explicitly reset the monitors and/or meters until another Set Mode= command.';
-@@ -275,7 +275,7 @@
+                     CRLF+'  AutoAdd (see AddType)' +
+                     CRLF+'  YearlyVQ (Yearly Vector Quantiaztion)' +
+                     CRLF+'  DutyVQ (Duty Vector Quantiaztion)' +CRLF +CRLF+
+@@ -276,7 +280,7 @@
                          'Examples:'+Crlf+CRlf+
                          'Set autobuslist=(bus1, bus2, bus3, ... )' +CRLF+
                          'Set autobuslist=(file=buslist.txt)';
@@ -2682,7 +2847,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                          'Set to OFF to prevent controls from changing.' + CRLF +
                          'STATIC = Time does not advance.  Control actions are executed in order of shortest time to act ' +
                          'until all actions are cleared from the control queue.  Use this mode for power flow solutions which may require several ' +
-@@ -284,6 +284,9 @@
+@@ -285,6 +289,9 @@
                          'are executed and the time is advanced automatically to the time of the event. ' + crlf +crlf+
                          'TIME = solution is time driven.  Control actions are executed when the time for the pending ' +
                          'action is reached or surpassed.' + CRLF + CRLF +
@@ -2692,7 +2857,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                          'Controls may reset and may choose not to act when it comes their time. ' +CRLF+
                          'Use TIME mode when modeling a control externally to the DSS and a solution mode such as ' +
                          'DAILY or DUTYCYCLE that advances time, or set the time (hour and sec) explicitly from the external program. ';
-@@ -400,18 +403,22 @@
+@@ -401,21 +408,26 @@
       OptionHelp[106] := 'The time in microseconds to execute the solve process in the most recent time step or solution (read only)';
       OptionHelp[107] := 'The accumulated time in microseconds to solve the circuit since the last reset. Set this value to reset the accumulator.';
       OptionHelp[108] := 'Process time + meter sampling time in microseconds for most recent time step - (read only)';
@@ -2720,12 +2885,18 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                          'The data generated by the active actor';
 -     OptionHelp[117] := 'Activates/Deactivates the extended version of the plot command for figures with the DSS Visualization Tool.';
 -     OptionHelp[118] := 'Returns Yes/No if the DSS Visualization Tool is installed (Read Only)';
+-     OptionHelp[119] := 'Percentage of coverage expected when estimating the longest paths on the circuit for tearing, the default coverage'+CRLF+CRLF+
+-                        'is the 70% (0.7), this value cannot exceed 1.0. When used with the "Set" command is used for the algorithm for estimating the paths within the circuit'+CRLF+CRLF+
 +     OptionHelp[119] := 'Activates/Deactivates the extended version of the plot command for figures with the DSS Visualization Tool.';
 +     OptionHelp[120] := 'Returns Yes/No if the DSS Visualization Tool is installed (Read Only)';
++     OptionHelp[121] := 'Percentage of coverage expected when estimating the longest paths on the circuit for tearing, the default coverage'+CRLF+CRLF+
++                        'is the 90% (0.9), this value cannot exceed 1.0. When used with the "Set" command is used for the algorithm for estimating the paths within the circuit'+CRLF+CRLF+
+                         'but when the "get" command is used after executing the tear_circuit command it will deliver the actual coverage after running the algorithm';
++     OptionHelp[122] := 'This is the number of subcircuits in which the circuit will be torn when executing the tear_circuit command, by default is the number of local CPUs - 1';
  End;
  //----------------------------------------------------------------------------
  FUNCTION DoSetCmd_NoCircuit:Boolean;  // Set Commands that do not require a circuit
-@@ -443,7 +450,7 @@
+@@ -447,7 +459,7 @@
             67: DSSExecutive.RecorderOn := InterpretYesNo(Param);
             73: DefaultBaseFreq  := Parser[ActiveActor].DblValue;
            102: UpdateRegistry   := InterpretYesNo(Param);
@@ -2734,7 +2905,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                    if Parser[ActiveActor].IntValue <= NumOfActors then ActiveActor  :=  Parser[ActiveActor].IntValue
                    else
                    begin
-@@ -450,7 +457,7 @@
+@@ -454,7 +466,7 @@
                      DoSimpleMsg('The actor does not exists',7002);
                    end;
                  End;
@@ -2743,7 +2914,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                    if Parser[ActiveActor].IntValue < CPU_Cores then ActorCPU[ActiveActor]  :=  Parser[ActiveActor].IntValue
                    else
                    begin
-@@ -457,13 +464,13 @@
+@@ -461,13 +473,13 @@
                      DoSimpleMsg('The CPU does not exists',7003);
                    end;
                  End;
@@ -2760,7 +2931,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                    DSS_Viz_enable  :=  InterpretYesNo(Param);
                  end;
           ELSE
-@@ -656,7 +663,9 @@
+@@ -660,7 +672,9 @@
            104: ActiveCircuit[ActiveActor].RelayMarkerCode  := Parser[ActiveActor].IntValue;
            105: ActiveCircuit[ActiveActor].RelayMarkerSize  := Parser[ActiveActor].IntValue;
            107: ActiveCircuit[ActiveActor].Solution.Total_Time  :=  Parser[ActiveActor].DblValue;
@@ -2771,7 +2942,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                    if Parser[ActiveActor].IntValue <= NumOfActors then ActiveActor  :=  Parser[ActiveActor].IntValue
                    else
                    begin
-@@ -663,7 +672,7 @@
+@@ -667,7 +681,7 @@
                      DoSimpleMsg('The actor does not exists',7002);
                    end;
                  End;
@@ -2780,7 +2951,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                    if Parser[ActiveActor].IntValue < CPU_Cores then ActorCPU[ActiveActor]  :=  Parser[ActiveActor].IntValue
                    else
                    begin
-@@ -670,13 +679,13 @@
+@@ -674,17 +688,20 @@
                      DoSimpleMsg('The CPU does not exists',7003);
                    end;
                  End;
@@ -2796,8 +2967,16 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
 +          119:  begin
                    DSS_Viz_enable  :=  InterpretYesNo(Param);
                  end;
+-          119:  Begin
++          121:  Begin
+                   ActiveCircuit[ActiveActor].Coverage :=  Parser[ActiveActor].DblValue;
++                End;
++          122:  Begin
++                  ActiveCircuit[ActiveActor].Num_SubCkts :=  Parser[ActiveActor].IntValue;
+                 End
           ELSE
-@@ -685,6 +694,8 @@
+            // Ignore excess parameters
+@@ -692,6 +709,8 @@
  
           CASE ParamPointer OF
                3,4: ActiveCircuit[ActiveActor].Solution.Update_dblHour;
@@ -2806,7 +2985,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
           END;
  
           ParamName := Parser[ActiveActor].NextParam;
-@@ -706,7 +717,7 @@
+@@ -713,7 +732,7 @@
     ParamPointer, i:Integer;
     ParamName:String;
     Param:String;
@@ -2815,7 +2994,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
  
  Begin
  
-@@ -846,7 +857,7 @@
+@@ -853,7 +872,7 @@
             99: If ActiveCircuit[ActiveActor].MarkReclosers Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
            100: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RecloserMarkerCode]));
            101: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RecloserMarkerSize]));
@@ -2824,7 +3003,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
            103: If ActiveCircuit[ActiveActor].MarkRelays Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
            104: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RelayMarkerCode]));
            105: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RelayMarkerSize]));
-@@ -853,20 +864,22 @@
+@@ -860,21 +879,24 @@
            106: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Solution.Time_Solve]));
            107: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Solution.Total_Time]));
            108: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Solution.Time_Step]));
@@ -2846,6 +3025,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
 -          116: if ConcatenateReports then AppendGlobalResult('Yes') else AppendGlobalResult('No');
 -          117: if DSS_Viz_enable then AppendGlobalResult('Yes') else AppendGlobalResult('No');
 -          118: if DSS_Viz_installed then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+-          119: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Actual_Coverage]));
 +          113: AppendGlobalResult(Format('%d' ,[NumOfActors]));
 +          114: AppendGlobalResult(Format('%d' ,[ActiveActor]));
 +          115: AppendGlobalResult(Format('%d' ,[ActorCPU[ActiveActor]]));
@@ -2854,12 +3034,24 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
 +          118: if ConcatenateReports then AppendGlobalResult('Yes') else AppendGlobalResult('No');
 +          119: if DSS_Viz_enable then AppendGlobalResult('Yes') else AppendGlobalResult('No');
 +          120: if DSS_Viz_installed then AppendGlobalResult('Yes') else AppendGlobalResult('No');
- 
++          121: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Actual_Coverage]));
++          122: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].Num_SubCkts]));
           ELSE
             // Ignore excess parameters
+          End;
+@@ -898,7 +920,8 @@
+ VAR
+    ParamPointer, i:Integer;
+    ParamName:String;
+-   Param:String;
++   Param:String;     ExecOption[119] := 'Coverage';
++     ExecOption[120] := 'Num_SubCircuits';
+ 
+ Begin
+ 
 Index: Parallel_Version/Source/Executive/Executive.pas
 ===================================================================
---- Parallel_Version/Source/Executive/Executive.pas	(revision 2136)
+--- Parallel_Version/Source/Executive/Executive.pas	(revision 2141)
 +++ Parallel_Version/Source/Executive/Executive.pas	(working copy)
 @@ -90,7 +90,7 @@
  USES ExecCommands, ExecOptions,
@@ -2892,7 +3084,7 @@ Index: Parallel_Version/Source/Executive/Executive.pas
         ParserVars := TParserVar.Create(100);  // start with space for 100 variables
 Index: Parallel_Version/Source/Executive/ExportOptions.pas
 ===================================================================
---- Parallel_Version/Source/Executive/ExportOptions.pas	(revision 2136)
+--- Parallel_Version/Source/Executive/ExportOptions.pas	(revision 2141)
 +++ Parallel_Version/Source/Executive/ExportOptions.pas	(working copy)
 @@ -105,7 +105,7 @@
                          ' cause a separate file to be written for each meter.';
@@ -2931,7 +3123,7 @@ Index: Parallel_Version/Source/Executive/ExportOptions.pas
       20: ExportCDPSM (Filename, Substation, SubGeographicRegion, GeographicRegion, Combined);
 Index: Parallel_Version/Source/Executive/ShowOptions.pas
 ===================================================================
---- Parallel_Version/Source/Executive/ShowOptions.pas	(revision 2136)
+--- Parallel_Version/Source/Executive/ShowOptions.pas	(revision 2141)
 +++ Parallel_Version/Source/Executive/ShowOptions.pas	(working copy)
 @@ -25,7 +25,7 @@
  implementation
@@ -2944,7 +3136,7 @@ Index: Parallel_Version/Source/Executive/ShowOptions.pas
  
 Index: Parallel_Version/Source/General/GrowthShape.pas
 ===================================================================
---- Parallel_Version/Source/General/GrowthShape.pas	(revision 2136)
+--- Parallel_Version/Source/General/GrowthShape.pas	(revision 2141)
 +++ Parallel_Version/Source/General/GrowthShape.pas	(working copy)
 @@ -215,12 +215,12 @@
              1: Npts := Parser[ActorID].Intvalue;
@@ -2961,22 +3153,9 @@ Index: Parallel_Version/Source/General/GrowthShape.pas
                 END;
              3: BEGIN
                   ReAllocmem(Multiplier, Sizeof(Multiplier^[1])*Npts);
-Index: Parallel_Version/Source/General/LineCode.pas
-===================================================================
---- Parallel_Version/Source/General/LineCode.pas	(revision 2136)
-+++ Parallel_Version/Source/General/LineCode.pas	(working copy)
-@@ -766,7 +766,7 @@
-    
-    If Fnphases>1 then Begin
-         Try
--          NewZ  := Z.Kron(FNeutralConductor);       // Perform Kron Reductions into temp space
-+          NewZ  := Z.Kron(FNeutralConductor);       // Perform Kron Reductions into new TCMatrix; return pointer to it.
-         { Have to invert the Y matrix to eliminate properly}
-           YC.Invert;  // Vn = 0 not In
-           NewYC := YC.Kron(FNeutralConductor);
 Index: Parallel_Version/Source/General/LoadShape.pas
 ===================================================================
---- Parallel_Version/Source/General/LoadShape.pas	(revision 2136)
+--- Parallel_Version/Source/General/LoadShape.pas	(revision 2141)
 +++ Parallel_Version/Source/General/LoadShape.pas	(working copy)
 @@ -703,8 +703,6 @@
  
@@ -3014,7 +3193,7 @@ Index: Parallel_Version/Source/General/LoadShape.pas
            For j := 1 to ObjList.ListSize Do Begin
 Index: Parallel_Version/Source/General/PriceShape.pas
 ===================================================================
---- Parallel_Version/Source/General/PriceShape.pas	(revision 2136)
+--- Parallel_Version/Source/General/PriceShape.pas	(revision 2141)
 +++ Parallel_Version/Source/General/PriceShape.pas	(working copy)
 @@ -823,8 +823,8 @@
  
@@ -3027,24 +3206,9 @@ Index: Parallel_Version/Source/General/PriceShape.pas
  
         For i := 1 to MaxPts Do Begin
            For j := 1 to ObjList.ListSize Do Begin
-Index: Parallel_Version/Source/General/TempShape.pas
-===================================================================
---- Parallel_Version/Source/General/TempShape.pas	(revision 2136)
-+++ Parallel_Version/Source/General/TempShape.pas	(working copy)
-@@ -822,8 +822,8 @@
- 
-        Hr_Time := 0.0;
- 
--       VBuf := AllocMem(Sizeof(VBuf^[1])* ObjList.ListSize);
--       CBuf := AllocMem(Sizeof(VBuf^[1])* 1);   // just a dummy -- Cbuf is ignored here
-+       VBuf := AllocMem(Sizeof(Double)* ObjList.ListSize);
-+       CBuf := AllocMem(Sizeof(Double)* 1);   // just a dummy -- Cbuf is ignored here
- 
-        For i := 1 to MaxPts Do Begin
-           For j := 1 to ObjList.ListSize Do Begin
 Index: Parallel_Version/Source/Meters/EnergyMeter.pas
 ===================================================================
---- Parallel_Version/Source/Meters/EnergyMeter.pas	(revision 2136)
+--- Parallel_Version/Source/Meters/EnergyMeter.pas	(revision 2141)
 +++ Parallel_Version/Source/Meters/EnergyMeter.pas	(working copy)
 @@ -382,7 +382,7 @@
  implementation
@@ -3186,7 +3350,7 @@ Index: Parallel_Version/Source/Meters/EnergyMeter.pas
    Except
 Index: Parallel_Version/Source/Meters/MemoryMap_lib.pas
 ===================================================================
---- Parallel_Version/Source/Meters/MemoryMap_lib.pas	(revision 2136)
+--- Parallel_Version/Source/Meters/MemoryMap_lib.pas	(revision 2141)
 +++ Parallel_Version/Source/Meters/MemoryMap_lib.pas	(working copy)
 @@ -21,7 +21,7 @@
  
@@ -3281,7 +3445,7 @@ Index: Parallel_Version/Source/Meters/MemoryMap_lib.pas
  end.
 Index: Parallel_Version/Source/Meters/Monitor.pas
 ===================================================================
---- Parallel_Version/Source/Meters/Monitor.pas	(revision 2136)
+--- Parallel_Version/Source/Meters/Monitor.pas	(revision 2141)
 +++ Parallel_Version/Source/Meters/Monitor.pas	(working copy)
 @@ -1591,8 +1591,8 @@
  
@@ -3314,7 +3478,7 @@ Index: Parallel_Version/Source/Meters/Monitor.pas
             TopTransferFile.WriteNames(NameList, CNames);
 Index: Parallel_Version/Source/PCElements/GenUserModel.pas
 ===================================================================
---- Parallel_Version/Source/PCElements/GenUserModel.pas	(revision 2136)
+--- Parallel_Version/Source/PCElements/GenUserModel.pas	(revision 2141)
 +++ Parallel_Version/Source/PCElements/GenUserModel.pas	(working copy)
 @@ -86,7 +86,7 @@
  
@@ -3327,7 +3491,7 @@ Index: Parallel_Version/Source/PCElements/GenUserModel.pas
  
 Index: Parallel_Version/Source/PCElements/Isource.pas
 ===================================================================
---- Parallel_Version/Source/PCElements/Isource.pas	(revision 2136)
+--- Parallel_Version/Source/PCElements/Isource.pas	(revision 2141)
 +++ Parallel_Version/Source/PCElements/Isource.pas	(working copy)
 @@ -22,7 +22,7 @@
  
@@ -3338,21 +3502,9 @@ Index: Parallel_Version/Source/PCElements/Isource.pas
  
  TYPE
  // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Index: Parallel_Version/Source/PCElements/Load.pas
-===================================================================
---- Parallel_Version/Source/PCElements/Load.pas	(revision 2136)
-+++ Parallel_Version/Source/PCElements/Load.pas	(working copy)
-@@ -1076,7 +1076,6 @@
-     {New code to help with convergence at low voltages}
-     ILow := (CmulReal(Yeq,   VbaseLow));
-     I95  := (CmulReal(Yeq95, Vbase95));
--    M95  := CDivReal(Csub(I95, ILow), (VBase95 - VBaseLow)); // (I95 - ILow)/(Vbase95 - VbaseLow);
-     M95  := CDivReal(Csub(I95, ILow), (VBase95 - VBaseLow)); // (I95 - ILow)/(Vbase95 - VbaseLow);    ***Added by Celso & Paulo
-     IBase:= (CmulReal(Yeq, VBase));                          // ***Added by Celso & Paulo
-     M95I := CDivReal(Csub(IBase, ILow), (VBase95 - VBaseLow)); // (IBase - ILow)/(Vbase95 - VbaseLow);    ***Added by Celso & Paulo
 Index: Parallel_Version/Source/PCElements/PVSystemUserModel.pas
 ===================================================================
---- Parallel_Version/Source/PCElements/PVSystemUserModel.pas	(revision 2136)
+--- Parallel_Version/Source/PCElements/PVSystemUserModel.pas	(revision 2141)
 +++ Parallel_Version/Source/PCElements/PVSystemUserModel.pas	(working copy)
 @@ -71,7 +71,7 @@
  
@@ -3365,7 +3517,7 @@ Index: Parallel_Version/Source/PCElements/PVSystemUserModel.pas
  
 Index: Parallel_Version/Source/PCElements/PVsystem.pas
 ===================================================================
---- Parallel_Version/Source/PCElements/PVsystem.pas	(revision 2136)
+--- Parallel_Version/Source/PCElements/PVsystem.pas	(revision 2141)
 +++ Parallel_Version/Source/PCElements/PVsystem.pas	(working copy)
 @@ -1297,7 +1297,7 @@
                CASE Mode OF
@@ -3387,7 +3539,7 @@ Index: Parallel_Version/Source/PCElements/PVsystem.pas
  
 Index: Parallel_Version/Source/PCElements/Storage.pas
 ===================================================================
---- Parallel_Version/Source/PCElements/Storage.pas	(revision 2136)
+--- Parallel_Version/Source/PCElements/Storage.pas	(revision 2141)
 +++ Parallel_Version/Source/PCElements/Storage.pas	(working copy)
 @@ -2264,7 +2264,8 @@
       CASE StorageState of
@@ -3401,7 +3553,7 @@ Index: Parallel_Version/Source/PCElements/Storage.pas
  
 Index: Parallel_Version/Source/PCElements/StoreUserModel.pas
 ===================================================================
---- Parallel_Version/Source/PCElements/StoreUserModel.pas	(revision 2136)
+--- Parallel_Version/Source/PCElements/StoreUserModel.pas	(revision 2141)
 +++ Parallel_Version/Source/PCElements/StoreUserModel.pas	(working copy)
 @@ -130,7 +130,7 @@
  
@@ -3414,7 +3566,7 @@ Index: Parallel_Version/Source/PCElements/StoreUserModel.pas
  
 Index: Parallel_Version/Source/PCElements/vccs.pas
 ===================================================================
---- Parallel_Version/Source/PCElements/vccs.pas	(revision 2136)
+--- Parallel_Version/Source/PCElements/vccs.pas	(revision 2141)
 +++ Parallel_Version/Source/PCElements/vccs.pas	(working copy)
 @@ -40,8 +40,11 @@
          FsampleFreq: double; // discretization frequency for Z filter
@@ -3550,7 +3702,7 @@ Index: Parallel_Version/Source/PCElements/vccs.pas
  
 Index: Parallel_Version/Source/PDElements/Capacitor.pas
 ===================================================================
---- Parallel_Version/Source/PDElements/Capacitor.pas	(revision 2136)
+--- Parallel_Version/Source/PDElements/Capacitor.pas	(revision 2141)
 +++ Parallel_Version/Source/PDElements/Capacitor.pas	(working copy)
 @@ -1064,7 +1064,7 @@
         2:  Result := GetBus(2);
@@ -3563,7 +3715,7 @@ Index: Parallel_Version/Source/PDElements/Capacitor.pas
                 Reallocmem(FTemp, 0); // throw away temp storage
 Index: Parallel_Version/Source/PDElements/Line.pas
 ===================================================================
---- Parallel_Version/Source/PDElements/Line.pas	(revision 2136)
+--- Parallel_Version/Source/PDElements/Line.pas	(revision 2141)
 +++ Parallel_Version/Source/PDElements/Line.pas	(working copy)
 @@ -70,6 +70,8 @@
  
@@ -3647,7 +3799,7 @@ Index: Parallel_Version/Source/PDElements/Line.pas
        R0 := R1;
 Index: Parallel_Version/Source/PDElements/Transformer.pas
 ===================================================================
---- Parallel_Version/Source/PDElements/Transformer.pas	(revision 2136)
+--- Parallel_Version/Source/PDElements/Transformer.pas	(revision 2141)
 +++ Parallel_Version/Source/PDElements/Transformer.pas	(working copy)
 @@ -41,6 +41,7 @@
         PROCEDURE InterpretAllkVRatings(const S:String);
@@ -3789,7 +3941,7 @@ Index: Parallel_Version/Source/PDElements/Transformer.pas
     FOR i := 1 to NumWindings-1 Do AT.SetElement(i+1, i, cONE);
 Index: Parallel_Version/Source/Parallel_Lib/Parallel_Lib.pas
 ===================================================================
---- Parallel_Version/Source/Parallel_Lib/Parallel_Lib.pas	(revision 2136)
+--- Parallel_Version/Source/Parallel_Lib/Parallel_Lib.pas	(revision 2141)
 +++ Parallel_Version/Source/Parallel_Lib/Parallel_Lib.pas	(working copy)
 @@ -1,79 +1,173 @@
 -unit Parallel_Lib;
@@ -4135,7 +4287,7 @@ Added: svn:executable
 \ No newline at end of property
 Index: Parallel_Version/Source/Parser/ParserDel.pas
 ===================================================================
---- Parallel_Version/Source/Parser/ParserDel.pas	(revision 2136)
+--- Parallel_Version/Source/Parser/ParserDel.pas	(revision 2141)
 +++ Parallel_Version/Source/Parser/ParserDel.pas	(working copy)
 @@ -18,7 +18,8 @@
  interface
@@ -4158,7 +4310,7 @@ Index: Parallel_Version/Source/Parser/ParserDel.pas
    Commentchar = '!';
 Index: Parallel_Version/Source/Plot/DSSPlot.pas
 ===================================================================
---- Parallel_Version/Source/Plot/DSSPlot.pas	(revision 2136)
+--- Parallel_Version/Source/Plot/DSSPlot.pas	(revision 2141)
 +++ Parallel_Version/Source/Plot/DSSPlot.pas	(working copy)
 @@ -1522,8 +1522,8 @@
     { If PeakDay=True then we only plot the peak of a 24-hr day }
@@ -4226,7 +4378,7 @@ Index: Parallel_Version/Source/Plot/DSSPlot.pas
                          End;
 Index: Parallel_Version/Source/Shared/Arraydef.pas
 ===================================================================
---- Parallel_Version/Source/Shared/Arraydef.pas	(revision 2136)
+--- Parallel_Version/Source/Shared/Arraydef.pas	(revision 2141)
 +++ Parallel_Version/Source/Shared/Arraydef.pas	(working copy)
 @@ -43,7 +43,7 @@
  Function AllocStringArray(Size:Integer):pStringArray;
@@ -4239,7 +4391,7 @@ Index: Parallel_Version/Source/Shared/Arraydef.pas
  Procedure FreeStringArray(var pS:pStringArray; Size:Integer);
 Index: Parallel_Version/Source/Shared/HashList.pas
 ===================================================================
---- Parallel_Version/Source/Shared/HashList.pas	(revision 2136)
+--- Parallel_Version/Source/Shared/HashList.pas	(revision 2141)
 +++ Parallel_Version/Source/Shared/HashList.pas	(working copy)
 @@ -366,11 +366,11 @@
  
@@ -4257,7 +4409,7 @@ Index: Parallel_Version/Source/Shared/HashList.pas
           WITH NewListPtr^[i] DO BEGIN
 Index: Parallel_Version/Source/Shared/IniRegSave.pas
 ===================================================================
---- Parallel_Version/Source/Shared/IniRegSave.pas	(revision 2136)
+--- Parallel_Version/Source/Shared/IniRegSave.pas	(revision 2141)
 +++ Parallel_Version/Source/Shared/IniRegSave.pas	(working copy)
 @@ -20,7 +20,7 @@
  interface
@@ -4291,7 +4443,7 @@ Index: Parallel_Version/Source/Shared/IniRegSave.pas
  
 Index: Parallel_Version/Source/Shared/Pstcalc.pas
 ===================================================================
---- Parallel_Version/Source/Shared/Pstcalc.pas	(revision 2136)
+--- Parallel_Version/Source/Shared/Pstcalc.pas	(revision 2141)
 +++ Parallel_Version/Source/Shared/Pstcalc.pas	(working copy)
 @@ -663,7 +663,7 @@
    ipst:=1;
@@ -4304,7 +4456,7 @@ Index: Parallel_Version/Source/Shared/Pstcalc.pas
    Fw2(N, ts, w2, w3, w4, pRms, pBuf);
 Index: Parallel_Version/Source/Shared/Ucmatrix.pas
 ===================================================================
---- Parallel_Version/Source/Shared/Ucmatrix.pas	(revision 2136)
+--- Parallel_Version/Source/Shared/Ucmatrix.pas	(revision 2141)
 +++ Parallel_Version/Source/Shared/Ucmatrix.pas	(working copy)
 @@ -163,7 +163,7 @@
  {Allocate LT}
@@ -4317,7 +4469,7 @@ Index: Parallel_Version/Source/Shared/Ucmatrix.pas
        InvertError:=1;
 Index: Parallel_Version/Source/Shared/mathutil.pas
 ===================================================================
---- Parallel_Version/Source/Shared/mathutil.pas	(revision 2136)
+--- Parallel_Version/Source/Shared/mathutil.pas	(revision 2141)
 +++ Parallel_Version/Source/Shared/mathutil.pas	(working copy)
 @@ -290,7 +290,7 @@
  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -4339,7 +4491,7 @@ Index: Parallel_Version/Source/Shared/mathutil.pas
    Mean := Mean / Ndata;
 Index: Source/Common/DSSGlobals.pas
 ===================================================================
---- Source/Common/DSSGlobals.pas	(revision 2136)
+--- Source/Common/DSSGlobals.pas	(revision 2141)
 +++ Source/Common/DSSGlobals.pas	(working copy)
 @@ -654,12 +654,7 @@
    // Put a \ on the end if not supplied. Allow a null specification.
@@ -4399,7 +4551,7 @@ Index: Source/Common/DSSGlobals.pas
  
 Index: Source/Common/KLUSolve.pas
 ===================================================================
---- Source/Common/KLUSolve.pas	(revision 2136)
+--- Source/Common/KLUSolve.pas	(revision 2141)
 +++ Source/Common/KLUSolve.pas	(working copy)
 @@ -1,5 +1,15 @@
  unit KLUSolve;
@@ -4519,10 +4671,182 @@ Index: Source/Common/KLUSolve.pas
  
  implementation
  
+Index: Source/Common/ShowResults.pas
+===================================================================
+--- Source/Common/ShowResults.pas	(revision 2141)
++++ Source/Common/ShowResults.pas	(working copy)
+@@ -986,9 +986,9 @@
+           Writeln(F, '   ', Cabs(Saccum)/1000.0:8:1,'     ', PowerFactor(Saccum):8:4);
+           FromBus := Pad(StripExtension(p_Elem.Nextbus), MaxBusNameLength);
+         End;
++        Writeln(F);
+        End;
+         p_Elem := ActiveCircuit.sources.Next;
+-        Writeln(F);
+      End;
+ 
+      // PDELEMENTS first
+@@ -1020,9 +1020,9 @@
+           Writeln(F, '   ', Cabs(Saccum)/1000.0:8:1,'     ', PowerFactor(Saccum):8:4);
+           FromBus := Pad(StripExtension(p_Elem.Nextbus),MaxBusNameLength);
+         End;
++        Writeln(F);
+        End;
+         p_Elem := ActiveCircuit.PDElements.Next;
+-        Writeln(F);
+      End;
+ 
+      Writeln(F,'= = = = = = = = = = = = = = = = = = =  = = = = = = = = = = =  = =');
+@@ -1066,9 +1066,9 @@
+           Writeln(F, '   ', Cabs(Saccum)/1000.0:8:1,'     ', PowerFactor(Saccum):8:4);
+           FromBus := Pad(StripExtension(p_Elem.Nextbus),MaxBusNameLength);
+         End;
++        Writeln(F);
+       End;
+         p_Elem := ActiveCircuit.PCElements.Next;
+-        Writeln(F);
+      End;
+ 
+    End; {ShowOptionCode=1}
+Index: Source/Executive/ExecCommands.pas
+===================================================================
+--- Source/Executive/ExecCommands.pas	(revision 2141)
++++ Source/Executive/ExecCommands.pas	(working copy)
+@@ -11,7 +11,7 @@
+ Uses Command;
+ 
+ CONST
+-     NumExecCommands = 106;
++     NumExecCommands = 107;
+ 
+ Var
+ 
+@@ -144,6 +144,7 @@
+      ExecCommand[104] := 'NodeList';
+      ExecCommand[105] := 'Connect';
+      ExecCommand[106] := 'Disconnect';
++     ExecCommand[107] := 'Remove';
+ 
+ 
+ 
+@@ -464,6 +465,15 @@
+                          'NodeList Line.Myline';
+      CommandHelp[105] := 'Request to create a TCP/IP socket to communicate data with external modules. This function requires the host address and TCP port to connect.';
+      CommandHelp[106] := 'Request to terminate a TCP/IP socket. This function requires the host address and TCP port to disconnect.';
++     CommandHelp[107] := '{ElementName=} [KeepLoad=Y*/N] [EditString="..."] ' +
++                         'Remove (disable) all branches downline from the PDelement named by "ElementName" property. Circuit must have an Energymeter on this branch. ' +
++                         'If KeepLoad=Y (default) one or more new 1-phase Load elements are defined and kW, kvar set to '+
++                         'present power flow solution for each phase of the element eliminated. ' +
++                         'The EditStringn is applied to each new Load element defined. ' + CRLF +
++                         'If KeepLoad=N, all downline elements are disabled. Examples: ' + CRLF + CRLF +
++                         'Remove Line.Lin3021' + CRLF +
++                         'Remove Line.L22 Editstring="Daily=Dailycurve Duty=SolarShape' + CRLF +
++                         'Remove Line.L333 KeepLoad=No';
+ 
+ End;
+ 
+@@ -697,6 +707,7 @@
+       105: begin DSSInfoMessageDlg ('Winsock TCP/IP connection is not supported in FPC version');CmdResult := 0; end;
+       106: begin DSSInfoMessageDlg ('Winsock TCP/IP disconnection is not supported in FPC version');CmdResult := 0; end;
+       {$ENDIF}
++      107: DoRemoveCmd;
+      ELSE
+        // Ignore excess parameters
+      End;
 Index: Source/Executive/ExecHelper.pas
 ===================================================================
---- Source/Executive/ExecHelper.pas	(revision 2136)
+--- Source/Executive/ExecHelper.pas	(revision 2141)
 +++ Source/Executive/ExecHelper.pas	(working copy)
+@@ -114,6 +114,7 @@
+          FUNCTION DoLambdaCalcs:Integer;
+          FUNCTION DoVarCmd:Integer;
+          FUNCTION DoNodeListCmd:Integer;
++         FUNCTION DoRemoveCmd:Integer;
+ 
+          PROCEDURE DoSetNormal(pctNormal:Double);
+ 
+@@ -145,12 +146,13 @@
+      {$IFDEF FPC}CmdForms,{$ELSE}DSSForms,DssPlot,{$ENDIF} ExecCommands, Executive,
+      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
+      Classes,  CktElementClass, Sensor,  { ExportCIMXML,} NamedObject,
+-     {$IFDEF FPC}RegExpr,{$ELSE}RegularExpressionsCore,{$ENDIF} PstCalc;
++     {$IFDEF FPC}RegExpr,{$ELSE}RegularExpressionsCore,{$ENDIF} PstCalc,
++     PDELement, ReduceAlgs;
+ 
+ Var
+    SaveCommands, DistributeCommands,  DI_PlotCommands,
+    ReconductorCommands, RephaseCommands, AddMarkerCommands,
+-   SetBusXYCommands, PstCalcCommands :TCommandList;
++   SetBusXYCommands, PstCalcCommands, RemoveCommands   :TCommandList;
+ 
+ 
+ 
+@@ -162,15 +164,16 @@
+ 
+ Begin
+ 
+-{We're looking for Object Definition:
++{
++   We're looking for Object Definition:
+ 
+-      ParamName = 'object' IF given
++    ParamName = 'object' IF given
+      and the name of the object
+ 
+      Object=Capacitor.C1
+     or just Capacitor.C1
+ 
+-If no dot, last class is assumed
++   If no dot, last class is assumed
+ }
+       ObjClass := '';
+       ObjName := '';
+@@ -287,15 +290,13 @@
+       RegEx1:=TRegExpr.Create;
+ //      RegEx1.Options:=[preCaseLess];RegEx1.
+       RegEx1.Expression:=UTF8String(Pattern);
+-      ActiveDSSClass.First;
+-      pObj:=ActiveDSSClass.GetActiveObj;
++      If ActiveDSSClass.First>0 then pObj:=ActiveDSSObject else pObj := Nil;
+       while pObj <> Nil do begin
+         if RegEx1.Exec(UTF8String(pObj.Name)) then begin
+           Parser.Position:=Params;
+           ActiveDSSClass.Edit;
+         end;
+-        ActiveDSSClass.Next;
+-        pObj:=ActiveDSSClass.GetActiveObj;
++        If ActiveDSSClass.Next>0 then pObj:=ActiveDSSObject else pObj := Nil;
+       end;
+       RegEx1.Free;
+     End;
+@@ -307,6 +308,7 @@
+    RegEx1: TPerlRegEx;
+    pObj: TDSSObject;
+    Params: Integer;
++   iElement: Integer;
+ Begin
+   Result := 0;
+   GetObjClassAndName(ObjType, Pattern);
+@@ -327,16 +329,14 @@
+       RegEx1:=TPerlRegEx.Create;
+       RegEx1.Options:=[preCaseLess];
+       RegEx1.RegEx:=Pattern; // UTF8String(Pattern);
+-      ActiveDSSClass.First;
+-      pObj:=ActiveDSSClass.GetActiveObj;
++      If ActiveDSSClass.First>0 then pObj:=ActiveDSSObject else pObj := Nil;
+       while pObj <> Nil do begin
+-        RegEx1.Subject:=pObj.Name; // UTF8String(pObj.Name);
++        RegEx1.Subject:= pObj.Name; //(pObj.Name);
+         if RegEx1.Match then begin
+           Parser.Position:=Params;
+           ActiveDSSClass.Edit;
+         end;
+-        ActiveDSSClass.Next;
+-        pObj:=ActiveDSSClass.GetActiveObj;
++        If ActiveDSSClass.Next>0 then pObj:=ActiveDSSObject else pObj := Nil;
+       end;
+     End;
+   End;
 @@ -439,7 +439,7 @@
                    END;
                 End;
@@ -4541,9 +4865,112 @@ Index: Source/Executive/ExecHelper.pas
       End;
       WriteClassFile(DSSClass, SaveFile, FALSE); // just write the class with no checks
     End;
+@@ -3934,7 +3934,84 @@
+ 
+ End;
+ 
++FUNCTION DoRemoveCmd:Integer;
++Var
++   ParamName :String;
++   Param     :String;
++   Str       :String;
++   ParamPointer :Integer;
++   DeviceIndex :Integer;
+ 
++   FElementName :String;
++   FKeepLoad    :Boolean;
++   FEditString  :String;
++
++   pPDElem      :TPDelement;
++   pMeter       :TEnergyMeterObj;
++   FMeterName   :String;
++
++Begin
++
++     Result := 0;
++
++     FKeepLoad := TRUE;
++     ParamPointer := 0;
++
++     ParamName := Parser.NextParam;
++     Param := Parser.StrValue;
++
++     WHILE Length(Param)>0 DO
++     Begin
++         IF   (Length(ParamName) = 0)  THEN Inc(ParamPointer)
++         ELSE ParamPointer := RemoveCommands.GetCommand(ParamName);
++
++         CASE ParamPointer OF
++           1: FElementName := Param; {ElementName}
++           2: FkeepLoad := InterpretYesNo(Param); {KeepLoad}
++           3: FEditString := Param; {EditString}
++         ELSE
++
++         End;
++
++         ParamName := Parser.NextParam;
++         Param := Parser.StrValue;
++     End;
++
++     // Check for existence of FelementName
++     DeviceIndex := GetCktElementIndex(FElementName);
++     if DeviceIndex = 0  then
++     Begin
++         DoSimpleMsg('Error: Element '+ FelementName + ' does not exist in this circuit.', 28726);
++     End
++     Else Begin // Element exists  GO!
++
++      // Set CktElement active
++        SetObject(FelementName);
++
++      // Get Energymeter associated with this element.
++        if ActiveCircuit.ActiveCktElement is TPDElement then Begin
++          pPDElem := ActiveCircuit.ActiveCktElement as TPDElement;
++          if pPDElem.SensorObj = Nil then DoSimpleMsg(Format('Element %s.%s is not in a meter zone! Add an Energymeter. ',[pPDelem.Parentclass.Name, pPDelem.name  ]),287261)
++          Else Begin
++            FMeterName := Format('%s.%s',[pPDElem.SensorObj.ParentClass.Name, pPDElem.SensorObj.Name]);
++            SetObject(FMeterName);
++
++            if ActiveCircuit.ActiveCktElement is TEnergyMeterObj then Begin
++                pMeter := ActiveCircuit.ActiveCktElement as TEnergyMeterObj;
++                // in ReduceAlgs
++                DoRemoveBranches(pMeter.BranchList, pPDelem, FKeepLoad, FEditString);
++            End
++            Else DoSimpleMsg('Error: The Sensor Object for '+ FelementName + ' is not an EnergyMeter object', 28727);
++          End;
++        End
++        Else DoSimpleMsg('Error: Element '+ FelementName + ' is not a power delivery element (PDElement)', 28728);
++
++     End;
++
++
++End;
++
++
+ initialization
+ 
+ {Initialize Command lists}
+@@ -3960,6 +4037,9 @@
+     PstCalcCommands := TCommandList.Create(['Npts', 'Voltages', 'dt', 'Frequency', 'lamp']);
+     PstCalcCommands.abbrev := True;
+ 
++    RemoveCommands := TCommandList.Create(['ElementName', 'KeepLoad', 'Editstring']);
++    RemoveCommands.abbrev := True;
++
+ finalization
+ 
+     DistributeCommands.Free;
+@@ -3970,6 +4050,7 @@
+     RephaseCommands.Free;
+     SetBusXYCommands.Free;
+     PstCalcCommands.Free;
++    RemoveCommands.Free;
+ 
+ end.
+ 
 Index: Source/Meters/EnergyMeter.pas
 ===================================================================
---- Source/Meters/EnergyMeter.pas	(revision 2136)
+--- Source/Meters/EnergyMeter.pas	(revision 2141)
 +++ Source/Meters/EnergyMeter.pas	(working copy)
 @@ -843,7 +843,7 @@
                   On E:Exception Do DoSimpleMsg('Error making  Directory: "'+CasePath+'". ' + E.Message, 522);
@@ -4586,7 +5013,7 @@ Index: Source/Meters/EnergyMeter.pas
        If (EnergyMeterClass.DI_Verbose) Then Begin
  
            This_Meter_DIFileIsOpen :=  TRUE;
-+          if DI_MHandle <> nil then DI_MHandle.free;               
++          if DI_MHandle <> nil then DI_MHandle.free;
            DI_MHandle  :=  Create_Meter_Space('"Hour"');
            For i := 1 to NumEMRegisters Do WriteintoMemStr(DI_MHandle,', "' + RegisterNames[i] + '"');
            WriteintoMemStr(DI_MHandle, Char(10));
@@ -4668,7 +5095,7 @@ Index: Source/Meters/EnergyMeter.pas
    Try
        IF This_Meter_DIFileIsOpen Then SDI_MHandle.Free;
        This_Meter_DIFileIsOpen	:=	TRUE;
-+      if SDI_MHandle <> nil then SDI_MHandle.free;                                            
++      if SDI_MHandle <> nil then SDI_MHandle.free;
        SDI_MHandle  :=  Create_Meter_Space('"Hour", ');
        WriteintoMemStr(SDI_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
  
@@ -4706,9 +5133,124 @@ Index: Source/Meters/EnergyMeter.pas
        VR_MHandle  :=  Create_Meter_Space('"Hour", "Undervoltages", "Min Voltage", "Overvoltage", "Max Voltage", "Min Bus", "Max Bus"');
        WriteintoMemStr(VR_MHandle,', "LV Undervoltages", "Min LV Voltage", "LV Overvoltage", "Max LV Voltage", "Min LV Bus", "Max LV Bus"' + Char(10));
    Except
+Index: Source/Meters/ReduceAlgs.pas
+===================================================================
+--- Source/Meters/ReduceAlgs.pas	(revision 2141)
++++ Source/Meters/ReduceAlgs.pas	(working copy)
+@@ -12,7 +12,7 @@
+ 
+ interface
+ 
+-Uses CktTree;
++Uses CktTree, PDElement;
+ 
+   procedure DoReduceDefault(Var BranchList:TCktTree);
+   procedure DoReduceStubs( Var BranchList:TCktTree );
+@@ -22,10 +22,12 @@
+   procedure DoMergeParallelLines(var BranchList:TCktTree);
+   procedure DoReduceSwitches(Var Branchlist:TCktTree);
+ 
++  procedure DoRemoveBranches(Var BranchList:TCktTree; FirstPDElement:TPDElement; KeepLoad:Boolean; Const EditStr:String);
++
+   
+ implementation
+ 
+-Uses Line, Utilities, DSSGlobals, Load, uComplex, ParserDel, CktElement, sysutils;
++Uses Line, Utilities, DSSGlobals, Load, uComplex, ParserDel, CktElement, sysutils, ExecHelper, Bus;
+ 
+ procedure DoMergeParallelLines(var BranchList:TCktTree);
+ {Merge all lines in this zone that are marked in parallel}
+@@ -283,4 +285,87 @@
+ 
+ end;
+ 
++procedure DoRemoveBranches(Var BranchList:TCktTree; FirstPDElement:TPDElement; KeepLoad:Boolean; Const EditStr:String);
++Var
++   PDElem :TPDElement;
++   BusName: String;
++   TotalkVA :Complex;
++   pLoad : TLoadObj;
++   NewLoadName: String;
++   pShunt: TDSSCktElement;
++   LoadBus: TDSSBus;
++   LoadBasekV: Double;
++   StartLevel: Integer;
++
++Begin
++
++// Position BranchList at "FirstPDElement"
++   PDElem := BranchList.First;
++   while (PDElem <> FirstPDElement) and (PDElem <> nil) do
++     PDElem := BranchList.GoForward;
++
++   StartLevel := BranchList.level;
++
++   if PDElem = nil then Begin
++     DoSimpleMsg(Format('%s.%s Not Found (Remove Command).',[FirstPDElement.ParentClass.Name, FirstPDElement.Name ]), 5432100);
++   End Else
++   Begin
++
++     { If KeepLoad, create a new Load object at upstream bus (from bus).}
++     if KeepLoad then
++     With BranchList.PresentBranch Do  Begin
++       BusName := FirstPDElement.GetBus(FromTerminal);
++       TotalkVA := CDivreal(PDelem.Power[FromTerminal], 1000.0);
++       NewLoadName := Format('Eq_%s_%s',[FirstPDElement.Name, StripExtension(BusName)]);
++       {Pick up the kV Base for the From bus}
++       LoadBus :=  ActiveCircuit.Buses^[FromBusReference];
++       if Loadbus.kVBase > 0.0 then LoadBasekV := LoadBus.kVBase
++       Else
++           Begin    // Try to guess from the present voltage at the first node on the bus
++               ActiveCircuit.Solution.UpdateVBus;
++               LoadBasekV := Cabs(Loadbus.Vbus^[1]) * 0.001;
++           End;
++       If FirstPDElement.NPhases > 1 Then LoadBasekV := LoadBasekV * Sqrt3;
++       {Load up parser with definition of equivalent load}
++       Parser.CmdString := Format(' phases=%d Bus1=%s kW=%g kvar=%g kV=%g %s', [FirstPDElement.NPhases, Busname, TotalkVA.re, TotalkVA.im, LoadBasekV, EditStr ]);
++       AddObject('load', NewLoadName); // Add new load to circuit
++     End;
++
++     {Disable all elements in the tree downline from the start element}
++
++   //  {****} WriteDLLDebugFile(Format('StartLevel = %d ',[ StartLevel]));
++
++     while PDElem <> Nil do
++     Begin
++   // {****} WriteDLLDebugFile(Format('Disabling cktelement %d %s.%s',[ BranchList.Level, PDelem.ParentClass.Name, PDElem.Name ]));
++         With BranchList.PresentBranch Do
++         Begin
++
++              pShunt := BranchList.PresentBranch.FirstShuntObject;
++              while pShunt <> Nil do
++              Begin
++                 pShunt.Enabled := False;
++   //  {****} WriteDLLDebugFile(Format('Disabling shunt element %s.%s',[ pShunt.ParentClass.Name, pShunt.Name ]));
++                 pShunt := BranchList.PresentBranch.NextShuntObject;
++              End;
++
++         End;
++
++         PDElem.Enabled := False;
++         PDElem := BranchList.GoForward;
++
++         // Check to see if we are back where we started. If so, stop.
++         if BranchList.Level <= StartLevel then PDElem := Nil;
++
++     End;
++
++   End;
++
++   With ActiveCircuit Do Begin
++     ReprocessBusDefs;  // to get new load added and account for disabled devices
++     DoResetMeterZones;  // without eliminated devices
++     Solution.SystemYChanged := True; // force rebuild of Y
++   End;
++End;
++
+ end.
 Index: Source/PDElements/Capacitor.pas
 ===================================================================
---- Source/PDElements/Capacitor.pas	(revision 2136)
+--- Source/PDElements/Capacitor.pas	(revision 2141)
 +++ Source/PDElements/Capacitor.pas	(working copy)
 @@ -85,6 +85,7 @@
          Bus2Defined     :Boolean;
@@ -4749,7 +5291,7 @@ Index: Source/PDElements/Capacitor.pas
  END;
 Index: Source/Plot/DSSPlot.pas
 ===================================================================
---- Source/Plot/DSSPlot.pas	(revision 2136)
+--- Source/Plot/DSSPlot.pas	(revision 2141)
 +++ Source/Plot/DSSPlot.pas	(working copy)
 @@ -1522,8 +1522,8 @@
     { If PeakDay=True then we only plot the peak of a 24-hr day }
