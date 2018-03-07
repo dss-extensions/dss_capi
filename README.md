@@ -4,12 +4,14 @@ dss_capi: An unofficial C API for EPRI's OpenDSS
 
 If you are looking for the Python bindings, see [dss_python](http://github.com/PMeira/dss_python/).
 
-Version 0.9.4, based on [OpenDSS revision 2146](https://sourceforge.net/p/electricdss/code/2146/tree/). 
+If you are looking for the .NET/C# bindings, check `src/dss_sharp` for the source code, or download the .NET assembly from the Releases page.
+
+Version 0.9.4, based on [OpenDSS revision 2152](https://sourceforge.net/p/electricdss/code/2152/tree/). 
 
 This is a work-in-progress but it's deemed stable enough to be made public. 
 *Note that, while the interface with OpenDSS is stable (classic version), the OpenDSS-PM (actor-based parallel machine version) interface was integrated recently and is experimental.*
 
-This library exposes the OpenDSS/OpenDSS-PM engine in a plain C interface that tries to reproduce most of the COM methods. In fact, most of the code is derived from the COM implementation files. The resulting DLL can be using directly or through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level.
+This library exposes the OpenDSS/OpenDSS-PM engine in a plain C interface that tries to reproduce most of the COM methods. In fact, most of the code is derived from the COM implementation files. The resulting DLL can be using directly or through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level. Initial support for .NET bindings is available starting in version 0.9.4.
 
 Instead of using extra numeric parameters as in the official DDLL interface, each original COM property is exposed as a pair of functions. For example, the load kVA property is exposed as:
 
@@ -24,10 +26,10 @@ A custom patchset to build OpenDSS-PM with FreePascal (as well as port recent fe
 
 Recent changes
 ==============
-- 2018-02-08 / version 0.9.1: First public release (OpenDSS revision 2123)
-- 2018-02-12 / version 0.9.2: Experimental support for OpenDSS-PM (at the moment, a custom patch is provided for FreePascal support) and port COM interface fixes (OpenDSS revision 2134)
+- 2018-03-06 / version 0.9.4: Includes fixes for DSSProperty, includes of the original helpstrings in the C header, integrate upstream changes up to revision 2152. This version introduces a first version of .NET bindings to the native DLL.
 - 2018-02-16 / version 0.9.3: Integrate COM interface fixes from revision 2136 (`First` `Next` iteration)
-- (planned) 2018-03-06 / version 0.9.4: Includes fixes for DSSProperty, includes most of the original helpstrings in the C header, integrate upstream changes up to revision 2146.
+- 2018-02-12 / version 0.9.2: Experimental support for OpenDSS-PM (at the moment, a custom patch is provided for FreePascal support) and port COM interface fixes (OpenDSS revision 2134)
+- 2018-02-08 / version 0.9.1: First public release (OpenDSS revision 2123)
 
 Missing features and limitations
 ================================
@@ -58,13 +60,13 @@ To build the DLL yourself:
     git clone https://github.com/PMeira/dss_capi.git
 ```    
     
-- For the OpenDSS revision 2141, apply the patch on `src/r2141.patch`:
+- For the OpenDSS revision 2141, apply the patch on `src/r2141.patch` to bring it up to r2152:
 ```
     cd electricdss
     svn patch ../dss_capi/src/r2141.patch
 ```
 
-The patch includes code changes up to the offical SVN r2146 and also contains many changes for OpenDSS-PM compatibility with FreePascal and Linux.
+The patch includes code changes up to the offical SVN r2152 and also contains many changes for OpenDSS-PM compatibility with FreePascal and Linux.
 
 On Windows
 ----------
