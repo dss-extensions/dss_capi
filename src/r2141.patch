@@ -398,15 +398,6 @@ Index: Parallel_Version/Source/Common/Circuit.pas
        AddMarkerCode,
        AddMarkerSize: Integer;
  
-@@ -166,7 +166,7 @@
-           NumDevices, NumBuses, NumNodes:Integer;
-           MaxDevices, MaxBuses, MaxNodes:Integer;
-           IncDevices, IncBuses, IncNodes:Integer;
--
-+ AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF};
-           // Variables for the tearing Algorithm
- 
-           Coverage,                     // Used for the user to stablish the coverage for the algorithm
 @@ -176,7 +176,11 @@
            Buses_Covered     : Array of integer;   //Stores the number of buses (estimated - 1 quadrant) per path
            Path_Size         : Array of Integer;   //Stores the estimated size of each path
@@ -420,25 +411,15 @@ Index: Parallel_Version/Source/Common/Circuit.pas
            // Bus and Node stuff
            Buses:    pTBusArray;
            MapNodeToBus:pTNodeBusArray;
-@@ -190,7 +194,7 @@
-           NeglectLoadY      :Boolean;
- 
-           // Voltage limits
--          NormalMinVolts,
-+          NormalMinVolts,{$IFDEF FPC}CmdForms,{$ELSE}DSSForms,{$ENDIF} Executive
-           NormalMaxVolts,
-           EmergMaxVolts,
-           EmergMinVolts     :Double;  //per unit voltage restraints for this circuit
-@@ -277,7 +281,7 @@
+@@ -277,7 +281,6 @@
            Procedure DoResetMeterZones(ActorID : Integer);
            Function  SetElementActive(Const FullObjectName:String) : Integer;
            Procedure InvalidateAllPCElements;
 -
-+{$IFDEF FPC}CmdForms,{$ELSE}DSSForms,{$ENDIF} Executive
            Procedure DebugDump(Var F:TextFile);
  
            // Access to topology from the first source
-@@ -286,11 +290,13 @@
+@@ -286,11 +289,13 @@
            Function GetBusAdjacentPDLists(ActorID: integer): TAdjArray;
            Function GetBusAdjacentPCLists(ActorID: integer): TAdjArray;
            function Tear_Circuit(): Integer;                            // Tears the circuit considering the number of Buses of the original Circuit
@@ -452,18 +433,18 @@ Index: Parallel_Version/Source/Common/Circuit.pas
  
            property Name             : String         Read Get_Name;
            Property CaseName         : String         Read FCaseName         Write Set_CaseName;
-@@ -307,8 +313,8 @@
+@@ -307,8 +312,8 @@
       PDElement, CktElementClass,
       ParserDel,  DSSClassDefs, DSSGlobals, Dynamics,
       Line, Transformer,  Vsource,
 -     Utilities,  DSSForms, Executive, SHELLAPI;
 -
-+     Utilities,  {$IFDEF FPC}CmdForms,{$ELSE}DSSForms, Windows,{$ENDIF} Executive, SHELLAPI;
++     Utilities,  {$IFDEF FPC}CmdForms,{$ELSE}DSSForms, {$ENDIF}{$IFNDEF unix}Windows,{$ENDIF} Executive, SHELLAPI;
 + 
  //----------------------------------------------------------------------------
  Constructor TDSSCircuit.Create(const aName:String);
  
-@@ -498,8 +504,9 @@
+@@ -498,8 +503,9 @@
     // tearing algorithm vars initialization
  
  
@@ -474,7 +455,16 @@ Index: Parallel_Version/Source/Common/Circuit.pas
    setlength(Longest_paths,0);
    setlength(Path_Idx,0);
    setlength(Buses_Covered,0);
-@@ -768,58 +775,219 @@
+@@ -758,7 +764,7 @@
+       //  Checks the coverage index to stablish if is necessary to keep tracing paths to increase the coverage
+       DBLTemp         :=  0;
+       for i := Low(Buses_covered) to High(Buses_covered) do
+-        DBLtemp         :=  DBLTemp + double(Buses_Covered[i]);
++        DBLtemp         :=  DBLTemp + {$IFNDEF FPC}double{$ENDIF}(Buses_Covered[i]);
+       DBLtemp         :=  DBLTemp/Sys_Size;
+ {      If the New coverage is different from the previous one and is below the expected coverage keep going
+        The first criteria is to avoid keep working on a path that will not contribute to improve the coverage}
+@@ -768,58 +774,219 @@
    End;
  End;
  {*******************************************************************************
@@ -725,7 +715,7 @@ Index: Parallel_Version/Source/Common/Circuit.pas
    //***********The directory is ready for storing the new circuit****************
        EMeter    := EnergyMeters.First;
        while EMeter  <> Nil do
-@@ -828,10 +996,13 @@
+@@ -828,10 +995,13 @@
          EMeter          :=  EnergyMeters.Next;
        end;
    //************ Creates the meters at the tearing locations  ********************
@@ -742,7 +732,7 @@ Index: Parallel_Version/Source/Common/Circuit.pas
      begin
        if Locations[i] >= 0 then
        Begin
-@@ -839,22 +1010,54 @@
+@@ -839,22 +1009,54 @@
          // Gets the name of the PDE for placing the EnergyMeter
           with solution do
           Begin
@@ -808,51 +798,52 @@ Index: Parallel_Version/Source/Common/Circuit.pas
    End;
  End;
  //----------------------------------------------------------------------------
-@@ -937,7 +1140,7 @@
+@@ -937,7 +1139,7 @@
          ReallocMem(MapNodeToBus, SizeOf(MapNodeToBus^[1]) * MaxNodes);
      END;
  END;
 -
-+ AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF};
++ 
  //----------------------------------------------------------------------------
  Function TDSSCircuit.AddBus(const BusName:String; NNodes:Integer;ActorID: integer):Integer;
  
-@@ -1159,7 +1362,7 @@
+@@ -1159,7 +1361,7 @@
               End;
             SavedBusNames^[i] := ''; // De-allocate string
         End;
 -
-+ AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF};
++ 
       If Assigned(SavedBuses) Then For i := 1 to SavedNumBuses Do SavedBuses^[i].Free;  // gets rid of old bus voltages, too
  
       ReallocMem(SavedBuses, 0);
-@@ -1408,7 +1611,7 @@
+@@ -1408,7 +1610,7 @@
                    Success := TRUE;
                    Break;
                 End;
 -          End;
-+          End; AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF};
++          End; 
           CurrDir :=  dir + Format('%.3d',[i]);
        End;
      End Else Begin
-@@ -1636,7 +1839,7 @@
+@@ -1636,7 +1838,7 @@
  end;
  
  procedure TDSSCircuit.ReallocDeviceList(ActorID: integer);
 -
-+ AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF};
++ 
  Var
      TempList:THashList;
      i:Integer;
-@@ -1723,6 +1926,7 @@
+@@ -1722,7 +1924,7 @@
+ begin
    inherited;
    BusName := '';
-   AddMarkerColor := clBlack;
+-  AddMarkerColor := clBlack;
 +  AddMarkerColor := {$IFDEF FPC}0{$ELSE}clBlack{$ENDIF};
    AddMarkerCode := 4;
    AddMarkerSize := 1;
  end;
-@@ -1736,7 +1940,3 @@
+@@ -1736,7 +1938,3 @@
  
  
  end.
@@ -3474,16 +3465,16 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
           ELSE
             // Ignore excess parameters
           End;
-@@ -898,7 +921,8 @@
+@@ -898,8 +921,7 @@
  VAR
     ParamPointer, i:Integer;
     ParamName:String;
 -   Param:String;
-+   Param:String;     ExecOption[119] := 'Coverage';
-+     ExecOption[120] := 'Num_SubCircuits';
- 
+-
++   Param:String;     
  Begin
  
+   Result := FALSE;
 Index: Parallel_Version/Source/Executive/Executive.pas
 ===================================================================
 --- Parallel_Version/Source/Executive/Executive.pas	(revision 2141)
