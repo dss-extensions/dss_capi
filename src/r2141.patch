@@ -407,15 +407,20 @@ Index: Parallel_Version/Source/Common/Circuit.pas
            // Variables for the tearing Algorithm
  
            Coverage,                     // Used for the user to stablish the coverage for the algorithm
-@@ -176,6 +176,7 @@
+@@ -176,7 +176,11 @@
            Buses_Covered     : Array of integer;   //Stores the number of buses (estimated - 1 quadrant) per path
            Path_Size         : Array of Integer;   //Stores the estimated size of each path
            New_Graph         : Array of Integer;   //Stores the latest weighted graph
+-
 +          Num_SubCkts       : Integer;            // Stores the number of subcircuits for tearing the circuit when executing the "tear_Circuit" command
- 
++          Link_Branches     : Array of String;    // Stores the names of the Link branches for Diakoptics
++          PConn_Names       : Array of String;    // Stores the names of the buses (bus1) of the link branches
++          PConn_Voltages    : Array of Double;    // Stores the voltages at the point of connection of the subcircuits
++          Locations         : Array of Integer;   // Stores the indexes of the locations
            // Bus and Node stuff
            Buses:    pTBusArray;
-@@ -190,7 +191,7 @@
+           MapNodeToBus:pTNodeBusArray;
+@@ -190,7 +194,7 @@
            NeglectLoadY      :Boolean;
  
            // Voltage limits
@@ -424,7 +429,7 @@ Index: Parallel_Version/Source/Common/Circuit.pas
            NormalMaxVolts,
            EmergMaxVolts,
            EmergMinVolts     :Double;  //per unit voltage restraints for this circuit
-@@ -277,7 +278,7 @@
+@@ -277,7 +281,7 @@
            Procedure DoResetMeterZones(ActorID : Integer);
            Function  SetElementActive(Const FullObjectName:String) : Integer;
            Procedure InvalidateAllPCElements;
@@ -433,16 +438,32 @@ Index: Parallel_Version/Source/Common/Circuit.pas
            Procedure DebugDump(Var F:TextFile);
  
            // Access to topology from the first source
-@@ -307,7 +308,7 @@
+@@ -286,11 +290,13 @@
+           Function GetBusAdjacentPDLists(ActorID: integer): TAdjArray;
+           Function GetBusAdjacentPCLists(ActorID: integer): TAdjArray;
+           function Tear_Circuit(): Integer;                            // Tears the circuit considering the number of Buses of the original Circuit
++          procedure Save_SubCircuits();
+           procedure  get_longest_path();
+           function Append2PathsArray(New_Path :  array of integer): Integer;//  appends a new path to the array and returns the index(1D)
+           procedure Normalize_graph();
+           procedure Get_paths_4_Coverage();                             // Calculates the paths inside the graph
+                                                                         // To guarantee the desired coverage when tearing the system
++          procedure Format_SubCircuits(Path  : String; NumCkts  : Integer); // Arrange the files of the subcircuits to make them independent
+ 
+           property Name             : String         Read Get_Name;
+           Property CaseName         : String         Read FCaseName         Write Set_CaseName;
+@@ -307,8 +313,8 @@
       PDElement, CktElementClass,
       ParserDel,  DSSClassDefs, DSSGlobals, Dynamics,
       Line, Transformer,  Vsource,
 -     Utilities,  DSSForms, Executive, SHELLAPI;
-+     Utilities,  {$IFDEF FPC}CmdForms,{$ELSE}DSSForms,{$ENDIF} Executive, SHELLAPI;
- 
+-
++     Utilities,  {$IFDEF FPC}CmdForms,{$ELSE}DSSForms, Windows,{$ENDIF} Executive, SHELLAPI;
++ 
  //----------------------------------------------------------------------------
  Constructor TDSSCircuit.Create(const aName:String);
-@@ -498,8 +499,9 @@
+ 
+@@ -498,8 +504,9 @@
     // tearing algorithm vars initialization
  
  
@@ -453,23 +474,161 @@ Index: Parallel_Version/Source/Common/Circuit.pas
    setlength(Longest_paths,0);
    setlength(Path_Idx,0);
    setlength(Buses_Covered,0);
-@@ -773,12 +775,13 @@
+@@ -768,58 +775,219 @@
+   End;
+ End;
+ {*******************************************************************************
++* This routine reads the master file of the torn circuit and creates the       *
++*  header definitions for declaring separate subcircuits in OpenDSS            *
++********************************************************************************}
++procedure TDSSCircuit.Format_SubCircuits(Path  : String; NumCkts  : Integer);
++var
++  myFile      : TextFile;
++  text        : string;
++  File_Struc  : Array of String;
++  Local_Temp,
++  FS_Idx,
++  FS_Idx1     : Integer;
++
++begin
++    // Creates a copy of the interconnected system to be used later
++    CopyFile(PChar(Path + '\master.dss'), PChar(Path + '\Master_Interconnected.dss'), true);
++    // Reads the master file
++    AssignFile(myFile, Path  + '\master.dss');
++    Reset(myFile);                                        // Prepares for reading
++    setlength(File_Struc,0);
++    FS_Idx    :=  0;
++    while not Eof(myFile) do                              // Extracts the file content as an array of strings
++    begin
++      setlength(File_Struc,(length(File_Struc) + 1));
++      ReadLn(myFile, text);
++      File_Struc[FS_Idx]  :=  text;
++      inc(FS_Idx);
++    end;
++    CloseFile(myFile);
++    // removes the unnecessary information from the master file (deletes the other zones)
++    AssignFile(myFile, Path  + '\master.dss');
++    ReWrite(myFile);                                      // Prepares for writing
++    for FS_Idx := 0 to High(File_Struc) do
++    Begin
++      Local_Temp  :=  ansipos('Redirect zone', File_Struc[FS_Idx]);
++      if Local_Temp   =  0 then
++      Begin
++        Local_Temp  :=  ansipos('Redirect EnergyM', File_Struc[FS_Idx]);
++        if Local_Temp   =  0 then
++        Begin
++          Local_Temp  :=  ansipos('Redirect Monitor', File_Struc[FS_Idx]);
++          if Local_Temp   =  0 then
++            WriteLn(myFile,File_Struc[FS_Idx]);
++        End;
++      End;
++    End;
++    CloseFile(myFile);
++    // Copies the support files to the zones directories
++    FS_Idx    :=  0;
++    while FS_Idx <> -1 do
++    Begin
++      Local_Temp  :=  ansipos('Redirect zone', File_Struc[FS_Idx]);
++      if Local_Temp   =  0 then
++      Begin
++        Local_Temp  :=  ansipos('Redirect ', File_Struc[FS_Idx]);
++        if Local_temp <> 0 then
++        Begin
++          text    :=  stringreplace(File_Struc[FS_Idx], 'Redirect ', '',[rfReplaceAll, rfIgnoreCase]);
++          for FS_Idx1 := 2 to NumCkts do
++            CopyFile(PChar(Path + '\' + text), PChar(Path + '\zone_' + inttostr(FS_Idx1) + '\' + text), true);
++        End;
++        inc(FS_Idx);
++      End
++      else
++        FS_Idx  :=  -1;                             // Ends the routine
++    End;
++    // Creates the master file for each subcircuit
++    for FS_Idx := 2 to NumCkts do
++    Begin
++      AssignFile(myFile, Path  + '\zone_' + inttostr(FS_Idx) + '\master.dss');
++      ReWrite(myFile);
++      WriteLn(myFile,'Clear');
++      WriteLn(myFile,'New Circuit.Zone_' + inttostr(FS_Idx));
++      FS_Idx1    :=  2;
++      while FS_Idx1 <> -1 do                      // Writes the global files
++      Begin
++        Local_Temp  :=  ansipos('Redirect zone', File_Struc[FS_Idx1]);
++        if Local_Temp   =  0 then
++        Begin
++          WriteLn(myFile,File_Struc[FS_Idx1]);
++          inc(FS_Idx1);
++        End
++        else
++          FS_Idx1   :=  -1;
++      End;
++      for FS_Idx1 := 0 to High(File_Struc) do   // Writes the zone files
++      Begin
++        Local_Temp  :=  ansipos('Redirect zone_' + inttostr(FS_Idx), File_Struc[FS_Idx1]);
++        if Local_Temp   <>  0 then
++        Begin
++          text    :=  stringreplace(File_Struc[FS_Idx1], 'zone_' + inttostr(FS_Idx) + '\', '',[rfReplaceAll, rfIgnoreCase]);
++          WriteLn(myFile,text);
++        End;
++      End;
++      CloseFile(myFile);
++    End;
++    // Sets the properties of the VSource on each subcricuit based on the latest voltage measured
++    FS_Idx1     :=    0;
++    for FS_Idx := 2 to NumCkts do
++    Begin
++       AssignFile(myFile, Path  + '\zone_' + inttostr(FS_Idx) + '\VSource.dss');
++       ReWrite(myFile);
++       text  :=  'Edit "Vsource.source" bus1=' + PConn_Names[FS_Idx - 1] + ' pu=1.0 basekv=' + floattostrF(PConn_Voltages[FS_Idx1],ffGeneral, 8, 3) +
++                 ' angle=' + floattostrF(PConn_Voltages[FS_Idx1 + 1],ffGeneral, 8, 3) + ' R1=0 X1=0.001 R0=0 X0=0.001';
++       WriteLn(myFile,text);
++       CloseFile(myFile);
++       FS_Idx1    :=  FS_Idx1 + 2;
++    End;
++end;
++
++{*******************************************************************************
++*        Saves the subcircuits created in memory into the hard drive           *
++********************************************************************************
++}
++procedure TDSSCircuit.Save_SubCircuits();
++var
++  Fileroot    : String;
++Begin
++    // Prepares everything to save the base of the torn circuit on a separate folder
++    Fileroot              :=  GetCurrentDir;
++    Fileroot              :=  Fileroot  + '\Torn_Circuit';
++    CreateDir(Fileroot);                        // Creates the folder for storing the modified circuit
++    DelFilesFromDir(Fileroot,'*',True);         // Removes all the files inside the new directory (if exists)
++    DssExecutive.Command  :=  'save circuit Dir="' + Fileroot + '"';
++    // This routine extracts and modifies the file content to separate the subsystems as OpenDSS projects indepedently
++    Format_SubCircuits(FileRoot, length(Locations));
++End;
++
++{*******************************************************************************
+ *         This routine tears the circuit into many pieces as CPUs are          *
+ *         available in the local computer (in the best case)                   *
  ********************************************************************************}
  function TDSSCircuit.Tear_Circuit(): Integer;
  var
 -  Num_Pieces,                                       // Max Number of pieces considering the number of local CPUs
++  NodeIdx,
 +  Num_Pieces,
 +  Buses_Acc,                                         // Number of buses accumulated
    Num_buses,                                        // Goal for number of buses on each subsystem
    Num_target,                                       // Generic accumulator
    Location_idx,                                     // Active Location
-+  j,
++  j,jj,dbg,dbg2,
    i             : Integer;                          // Generic counter variables
 -
-   Candidates,                                       // Array for 0 level buses idx
-   Locations     : Array of Integer;                 // Array for the best tearing locations
-   Locations_V   : Array of Double;                  // Array to store the VMag and angle at the location
-@@ -787,36 +790,66 @@
+-  Candidates,                                       // Array for 0 level buses idx
+-  Locations     : Array of Integer;                 // Array for the best tearing locations
+-  Locations_V   : Array of Double;                  // Array to store the VMag and angle at the location
++  Candidates    : Array of Integer;                 // Array for 0 level buses idx
+   TreeNm,                                           // For debugging
+-  Fileroot,
++  BusName,
++  Terminal,
    PDElement     : String;
    Ftree         : TextFile;
    flag          : Boolean;                          //  Stop flag
@@ -477,20 +636,24 @@ Index: Parallel_Version/Source/Common/Circuit.pas
    EMeter        : TEnergyMeterObj;
 -
 -
++  pBus          : TDSSBus;
++  Volts         : Polar;
++  Term_volts    : Array of Double;                  // To verify the connection of the branch
  Begin
 -  Num_Pieces  :=  CPU_Cores-1;
 +  Num_pieces    :=  Num_SubCkts;
    with solution do
    Begin
 +    flag            := True;
++    // Increases coverage until the number of paths is >= than the number of subcircuits to create
 +    while flag do
 +    Begin
-+      Calc_Inc_Matrix_Org(ActiveActor);                         //Calculates the ordered incidence matrix
-+      Get_paths_4_Coverage;                                     // Refines the levels vector according to the coverage desired
++      Calc_Inc_Matrix_Org(ActiveActor);                       //Calculates the ordered incidence matrix
++      Get_paths_4_Coverage;                                   // Refines the levels vector according to the coverage desired
 +      if length(Path_Idx) >= Num_pieces then
 +        flag  :=  False
 +      else
-+        Coverage  :=  Coverage + 0.1;
++        Coverage  :=  Coverage + 0.1;                         // Increases the coverage to have more paths for covering the circuit
 +    End;
      Num_buses       :=  length(Inc_Mat_Cols) div Num_Pieces;  // Estimates the number of buses for each subsystem
 -    Calc_Inc_Matrix_Org(ActiveActor);                         //Calculates the ordered incidence matrix
@@ -547,7 +710,7 @@ Index: Parallel_Version/Source/Common/Circuit.pas
 +      End
 +      else
 +      Begin
-+        if  j = 0 then Location_idx  := 0;                 // To avoid placing an EMeter at the feederhead
++        if  j = 0 then Location_idx  := 0;                // To avoid placing an EMeter at the feederhead
 +        Locations[Location_idx]  :=  Candidates[1];       // The path is too short, consider to leave this path together
          inc(Location_idx);
 -      end;
@@ -557,18 +720,95 @@ Index: Parallel_Version/Source/Common/Circuit.pas
 +        if Locations[i] = -1 then flag  :=  True;
 +      inc(j)
      End;
- 
- 
-@@ -831,7 +864,7 @@
-     Result  :=  1;                              // Resets the result variable (Return)
-     setlength(Locations_V,length(Locations)*2);
+-
+-
+   //***********The directory is ready for storing the new circuit****************
+       EMeter    := EnergyMeters.First;
+       while EMeter  <> Nil do
+@@ -828,10 +996,13 @@
+         EMeter          :=  EnergyMeters.Next;
+       end;
+   //************ Creates the meters at the tearing locations  ********************
+-    Result  :=  1;                              // Resets the result variable (Return)
+-    setlength(Locations_V,length(Locations)*2);
++    Result        :=  1;                                  // Resets the result variable (Return)
++    setlength(PConn_Voltages,length(Locations)*2);        //  Sets the memory space for storing the voltage at the point of conn
++    setlength(Link_branches,length(Locations));           //  Sets the memory space for storing the link branches names
++    setlength(PConn_Names,length(Locations));             //  Sets the memory space for storing the Bus names
      SolutionAbort := FALSE;
 -    for i := 0 to (length(Locations)-1) do
++    j             :=  0;
 +    for i := 1 to High(Locations) do
      begin
        if Locations[i] >= 0 then
        Begin
-@@ -937,7 +970,7 @@
+@@ -839,22 +1010,54 @@
+         // Gets the name of the PDE for placing the EnergyMeter
+          with solution do
+          Begin
+-           PDElement :=  Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])];
+-           SetActiveBus(Inc_Mat_Cols[get_IncMatrix_Col(Locations[i])]);  // Activates the Bus
++           PDElement        :=  Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])];
++           Link_Branches[i] :=  PDElement;
++           dbg              :=  get_IncMatrix_Col(Locations[i] + 1);      // Temporary stores the given location
++    // Checks the branch orientation across the feeder by substracting the voltages around the branch
++    // Start with Bus 1
++           setlength(Term_volts,2);
++           for dbg := 0 to 1 do
++           Begin
++             BusName          :=  Inc_Mat_Cols[Active_Cols[dbg]];
++             SetActiveBus(BusName);           // Activates the Bus
++             pBus             :=  Buses^[ActiveBusIndex];
++             jj               :=  1;
++       // this code so nodes come out in order from smallest to larges
++             Repeat
++               NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
++               inc(jj)
++             Until NodeIdx>0;
++             Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
++             Term_volts[dbg]     :=  Volts.mag;
++           End;
++
++      // Determines the best place to connect the EnergyMeter
++           Term_volts[0]      :=  Term_volts[0] - Term_volts[1];
++           if Term_volts[0] >= 0 then jj  :=  0
++           else   jj  :=  1;
++           BusName          :=  Inc_Mat_Cols[Active_Cols[jj]];
++           Terminal         :=  'term=' + inttostr(jj + 1);
++
++           PConn_Names[i]   :=  BusName;
++           SetActiveBus(BusName);           // Activates the Bus
++           pBus             :=  Buses^[ActiveBusIndex];
++           jj               :=  1;
++           // this code so nodes come out in order from smallest to larges
++           Repeat
++             NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
++             inc(jj)
++           Until NodeIdx>0;
++           Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
++           PConn_Voltages[j]  :=  (Volts.mag/1000)*SQRT3;
++           inc(j);
++           PConn_Voltages[j]  :=  Volts.ang;
++           inc(j);
+          End;
+         // Generates the OpenDSS Command;
+-        DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' term=1 option=R action=C';
++        DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
+       End;
+     end;
+-    DssExecutive.Command := 'set mode=snap';
+-    Solve(ActiveActor);
+ 
+-    Fileroot  :=  GetCurrentDir;
+-    Fileroot  :=  Fileroot  + '\Torn_Circuit';
+-    CreateDir(Fileroot);                        // Creates the folder for storing the modified circuit
+-    DelFilesFromDir(Fileroot,'*',True);         // Removes all the files inside the new directory (if exists)
+-
+-    DssExecutive.Command :=  'save circuit Dir="' + Fileroot + '"';
+   End;
+ End;
+ //----------------------------------------------------------------------------
+@@ -937,7 +1140,7 @@
          ReallocMem(MapNodeToBus, SizeOf(MapNodeToBus^[1]) * MaxNodes);
      END;
  END;
@@ -577,7 +817,7 @@ Index: Parallel_Version/Source/Common/Circuit.pas
  //----------------------------------------------------------------------------
  Function TDSSCircuit.AddBus(const BusName:String; NNodes:Integer;ActorID: integer):Integer;
  
-@@ -1159,7 +1192,7 @@
+@@ -1159,7 +1362,7 @@
               End;
             SavedBusNames^[i] := ''; // De-allocate string
         End;
@@ -586,7 +826,7 @@ Index: Parallel_Version/Source/Common/Circuit.pas
       If Assigned(SavedBuses) Then For i := 1 to SavedNumBuses Do SavedBuses^[i].Free;  // gets rid of old bus voltages, too
  
       ReallocMem(SavedBuses, 0);
-@@ -1408,7 +1441,7 @@
+@@ -1408,7 +1611,7 @@
                    Success := TRUE;
                    Break;
                 End;
@@ -595,7 +835,7 @@ Index: Parallel_Version/Source/Common/Circuit.pas
           CurrDir :=  dir + Format('%.3d',[i]);
        End;
      End Else Begin
-@@ -1636,7 +1669,7 @@
+@@ -1636,7 +1839,7 @@
  end;
  
  procedure TDSSCircuit.ReallocDeviceList(ActorID: integer);
@@ -604,7 +844,7 @@ Index: Parallel_Version/Source/Common/Circuit.pas
  Var
      TempList:THashList;
      i:Integer;
-@@ -1723,6 +1756,7 @@
+@@ -1723,6 +1926,7 @@
    inherited;
    BusName := '';
    AddMarkerColor := clBlack;
@@ -612,6 +852,14 @@ Index: Parallel_Version/Source/Common/Circuit.pas
    AddMarkerCode := 4;
    AddMarkerSize := 1;
  end;
+@@ -1736,7 +1940,3 @@
+ 
+ 
+ end.
+-
+-
+-
+-
 Index: Parallel_Version/Source/Common/CktElement.pas
 ===================================================================
 --- Parallel_Version/Source/Common/CktElement.pas	(revision 2141)
@@ -786,7 +1034,22 @@ Index: Parallel_Version/Source/Common/DSSGlobals.pas
  
  function GetOutputDirectory:String;
  begin
-@@ -589,16 +616,50 @@
+@@ -521,6 +548,14 @@
+         ActiveCircuit[I].NumCircuits := 0;
+         ActiveCircuit[I].Free;
+         ActiveCircuit[I]  :=  nil;
++        if ActorHandle[I] <> nil  then    // Terminate the threads that could be alive
++        begin
++          ActorHandle[I].Terminate;
++          ActorHandle[I].Free;
++          ActorHandle[I]  :=  nil;
++        end;
++        Parser[I].Free;
++        Parser[I] :=  nil;
+       end;
+     end;
+     Circuits.Free;
+@@ -589,16 +624,50 @@
  
  
  
@@ -840,7 +1103,7 @@ Index: Parallel_Version/Source/Common/DSSGlobals.pas
  Begin
      Result := 'Unknown.' ;
  
-@@ -619,8 +680,8 @@
+@@ -619,8 +688,8 @@
          FreeMem(VerBuf);
        end;
      end;
@@ -850,7 +1113,7 @@ Index: Parallel_Version/Source/Common/DSSGlobals.pas
  
  
  PROCEDURE WriteDLLDebugFile(Const S:String);
-@@ -643,7 +704,7 @@
+@@ -643,7 +712,7 @@
    TempFile: array[0..MAX_PATH] of Char;
  begin
    if GetTempFileName(PChar(Dir), 'DA', 0, TempFile) <> 0 then
@@ -859,7 +1122,7 @@ Index: Parallel_Version/Source/Common/DSSGlobals.pas
    else
      Result := False;
  end;
-@@ -666,7 +727,7 @@
+@@ -666,7 +735,7 @@
    // Put a \ on the end if not supplied. Allow a null specification.
    If Length(DataDirectory) > 0 Then Begin
      ChDir(DataDirectory[ActiveActor]);   // Change to specified directory
@@ -868,7 +1131,7 @@ Index: Parallel_Version/Source/Common/DSSGlobals.pas
    End;
  
    // see if DataDirectory is writable. If not, set OutputDirectory to the user's appdata
-@@ -673,7 +734,7 @@
+@@ -673,7 +742,7 @@
    if IsDirectoryWritable(DataDirectory[ActiveActor]) then begin
      OutputDirectory[ActiveActor] := DataDirectory[ActiveActor];
    end else begin
@@ -877,7 +1140,7 @@ Index: Parallel_Version/Source/Common/DSSGlobals.pas
      if not DirectoryExists(ScratchPath) then CreateDir(ScratchPath);
      OutputDirectory[ActiveActor] := ScratchPath;
    end;
-@@ -686,9 +747,11 @@
+@@ -686,9 +755,11 @@
    DefaultEditor    := DSS_Registry.ReadString('Editor', 'Notepad.exe' );
    DefaultFontSize  := StrToInt(DSS_Registry.ReadString('ScriptFontSize', '8' ));
    DefaultFontName  := DSS_Registry.ReadString('ScriptFontName', 'MS Sans Serif' );
@@ -889,7 +1152,7 @@ Index: Parallel_Version/Source/Common/DSSGlobals.pas
    DefaultBaseFreq  := StrToInt(DSS_Registry.ReadString('BaseFrequency', '60' ));
    LastFileCompiled := DSS_Registry.ReadString('LastFile', '' );
    TestDataDirectory :=   DSS_Registry.ReadString('DataPath', DataDirectory[ActiveActor]);
-@@ -704,8 +767,8 @@
+@@ -704,8 +775,8 @@
        DSS_Registry.WriteString('Editor',        DefaultEditor);
        DSS_Registry.WriteString('ScriptFontSize', Format('%d',[DefaultFontSize]));
        DSS_Registry.WriteString('ScriptFontName', Format('%s',[DefaultFontName]));
@@ -900,7 +1163,7 @@ Index: Parallel_Version/Source/Common/DSSGlobals.pas
        DSS_Registry.WriteString('BaseFrequency', Format('%d',[Round(DefaultBaseFreq)]));
        DSS_Registry.WriteString('LastFile',      LastFileCompiled);
        DSS_Registry.WriteString('DataPath', DataDirectory[ActiveActor]);
-@@ -800,11 +863,13 @@
+@@ -800,11 +871,13 @@
  initialization
  
  //***************Initialization for Parallel Processing*************************
@@ -917,7 +1180,7 @@ Index: Parallel_Version/Source/Common/DSSGlobals.pas
     setlength(ActorCPU,CPU_Cores + 1);
     setlength(ActorStatus,CPU_Cores + 1);
     setlength(ActorProgressCount,CPU_Cores + 1);
-@@ -849,7 +914,7 @@
+@@ -849,7 +922,7 @@
     for ActiveActor := 1 to CPU_Cores do
     begin
      ActiveCircuit[ActiveActor]        :=  nil;
@@ -926,7 +1189,13 @@ Index: Parallel_Version/Source/Common/DSSGlobals.pas
      ActiveDSSClass[ActiveActor]       :=  nil;
      ActorStatus[ActiveActor]          :=  1;
      EventStrings[ActiveActor]         := TStringList.Create;
-@@ -862,7 +927,11 @@
+@@ -857,12 +930,17 @@
+     ErrorStrings[ActiveActor]         := TStringList.Create;
+     ErrorStrings[ActiveActor].Clear;
+     ActorHandle[ActiveActor]          :=  nil;
++    Parser[ActiveActor]               :=  nil;
+    end;
+    ActiveActor            :=  1;
     NumOfActors            :=  1;
     ActorCPU[ActiveActor]  :=  0;
     Parser[ActiveActor]    :=  Tparser.Create;
@@ -938,7 +1207,7 @@ Index: Parallel_Version/Source/Common/DSSGlobals.pas
     DSSFileName      := GetDSSExeFile;
     DSSDirectory     := ExtractFilePath(DSSFileName);
  {
-@@ -931,22 +1000,43 @@
+@@ -931,22 +1009,43 @@
  {$ELSE ! CPUX86}
     VersionString    := 'Version ' + GetDSSVersion + ' (32-bit build)';
  {$ENDIF}
@@ -1310,7 +1579,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  }
  
  interface
-@@ -47,13 +49,20 @@
+@@ -47,18 +49,26 @@
      Dynamics,
      EnergyMeter,
      SysUtils,
@@ -1335,7 +1604,13 @@ Index: Parallel_Version/Source/Common/Solution.pas
  
  CONST
  
-@@ -159,12 +168,14 @@
+      NORMALSOLVE = 0;
+      NEWTONSOLVE = 1;
++     DIAKOPTICS  = 2;                 // Diakoptics method added on 02/26/2018
+ 
+ TYPE
+ 
+@@ -159,12 +169,14 @@
         LoadsNeedUpdating :Boolean;
         MaxControlIterations :Integer;
         MaxError :Double;
@@ -1351,7 +1626,40 @@ Index: Parallel_Version/Source/Common/Solution.pas
         SeriesYInvalid :Boolean;
         SolutionCount :Integer;  // Counter incremented for each solution
         SolutionInitialized :Boolean;
-@@ -285,13 +296,16 @@
+@@ -201,12 +213,17 @@
+ // Columns array (array of strigns with the names of the cols of the Inc matrix)'
+ // Levels array (array of integers that describes the proximity level for each
+ // bus to the circuit's backbone)
+-      Inc_Mat_Rows  :  Array of String;
+-      Inc_Mat_Cols  :  Array of String;
+-      Inc_Mat_levels:  Array of Integer;
+-      temp_counter  : Integer;
+-      Active_Cols   : Array of Integer;
++      Inc_Mat_Rows    :  Array of String;
++      Inc_Mat_Cols    :  Array of String;
++      Inc_Mat_levels  :  Array of Integer;
++      temp_counter    : Integer;
++      Active_Cols     : Array of Integer;
++      Active_Cols_Idx :  Array of Integer;
+ //******************************************************************************
++//********************Diakoptics solution mode variables************************
++      Diakoptics_ready  : Boolean;
++      Diakoptics_Actors :  Integer;
++//******************************************************************************
+        constructor Create(ParClass:TDSSClass; const solutionname:String);
+        destructor  Destroy; override;
+ 
+@@ -251,6 +268,9 @@
+        Property  Time_Step:Double      Read Step_Time_Elapsed;     // Solve + sample
+        Property  Total_Time   :Double  Read Total_Time_Elapsed      Write Set_Total_Time;
+ 
++  //  A-Diakoptics solution mode procedures
++      PROCEDURE DiakopticsInit();       
++
+  // Procedures that use to be private before 01-20-2016
+ 
+        PROCEDURE AddInAuxCurrents(SolveType:Integer; ActorID : Integer);
+@@ -285,13 +305,16 @@
  implementation
  
  USES  SolutionAlgs,
@@ -1371,7 +1679,15 @@ Index: Parallel_Version/Source/Common/Solution.pas
        Transformer, Reactor
  ;
  
-@@ -386,10 +400,13 @@
+@@ -321,6 +344,7 @@
+      CommandList.Abbrev := True;
+ 
+ 
++
+ End;
+ 
+ // ===========================================================================================
+@@ -386,10 +410,13 @@
      VoltageBaseChanged := TRUE;  // Forces Building of convergence check arrays
  
      MaxIterations    := 15;
@@ -1385,7 +1701,16 @@ Index: Parallel_Version/Source/Common/Solution.pas
      IsDynamicModel   := FALSE;
      IsHarmonicModel  := FALSE;
  
-@@ -489,9 +506,10 @@
+@@ -444,7 +471,7 @@
+     IntervalHrs   := 1.0;
+ 
+     InitPropertyValues(0);
+-
++    Diakoptics_Ready   :=  False;   // Diskoptics needs to be initialized
+     setlength(IncMatrix,3);
+ End;
+ 
+@@ -489,9 +516,10 @@
  
  // ===========================================================================================
  PROCEDURE TSolutionObj.Solve(ActorID : Integer);
@@ -1398,7 +1723,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  Begin
       ActiveCircuit[ActorID].Issolved := False;
       SolutionWasAttempted[ActorID]   := TRUE;
-@@ -530,7 +548,7 @@
+@@ -530,7 +558,7 @@
  {$ENDIF}
  
      {CheckFaultStatus;  ???? needed here??}
@@ -1407,7 +1732,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  {
       Case Dynavars.SolutionMode OF
           SNAPSHOT:     SolveSnap;
-@@ -560,7 +578,7 @@
+@@ -560,7 +588,7 @@
        ActorHandle[ActorID].Terminate;
        ActorHandle[ActorID].Free;
      end;
@@ -1416,7 +1741,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
      if not Parallel_enabled then
        ActorHandle[ActorID].WaitFor; // If the parallel features are not active it will work as the classic version
  Except
-@@ -593,9 +611,11 @@
+@@ -593,9 +621,11 @@
          Else If Vmag <> 0.0         Then ErrorSaved^[i] := Abs(1.0 - VmagSaved^[i]/Vmag);
  
          VMagSaved^[i] := Vmag;  // for next go-'round
@@ -1430,7 +1755,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
      End;
  
  
-@@ -808,7 +828,7 @@
+@@ -808,7 +838,7 @@
         SolveSystem(NodeV, ActorID);
         LoadsNeedUpdating := FALSE;
  
@@ -1439,7 +1764,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  
  End;
  
-@@ -875,7 +895,7 @@
+@@ -875,7 +905,7 @@
                  im := im - dV^[i].im;
             End;
  
@@ -1448,16 +1773,54 @@ Index: Parallel_Version/Source/Common/Solution.pas
      End;
  End;
  
-@@ -1044,7 +1064,7 @@
+@@ -919,8 +949,9 @@
+ 
+ 
+    CASE Algorithm of
+-      NORMALSOLVE: DoNormalSolution(ActorID);
+-      NEWTONSOLVE: DoNewtonSolution(ActorID);
++      NORMALSOLVE : DoNormalSolution(ActorID);
++      NEWTONSOLVE : DoNewtonSolution(ActorID);
++      DIAKOPTICS  : DoNormalSolution(ActorID);
+    End;
+ 
+    ActiveCircuit[ActorID].Issolved := ConvergedFlag;
+@@ -1016,6 +1047,15 @@
+ 
+ End;
+ 
++PROCEDURE TSolutionObj.DiakopticsInit();
++Begin
++  ActiveCircuit[ActiveActor].Num_SubCkts  :=  CPU_Cores-1;
++  ActiveActor  :=  1;
++  Algorithm            := NORMALSOLVE;
++  Diakoptics_actors :=  ActiveCircuit[ActiveActor].tear_circuit;
++  Algorithm            := DIAKOPTICS;
++End;
++
+ PROCEDURE TSolutionObj.CheckControls(ActorID : Integer);
+ 
  Begin
-    SnapShotInit(ActorID);
+@@ -1042,9 +1082,16 @@
+    TotalIterations  :Integer;
+ 
+ Begin
+-   SnapShotInit(ActorID);
++//      if Solution then
++   if Algorithm = DIAKOPTICS then
++   Begin
++    if not Diakoptics_Ready then
++      DiakopticsInit();
++   end
++   else
++    SnapShotInit(ActorID);
     TotalIterations    := 0;
 -   QueryPerformanceCounter(SolveStartTime);
 +   {$IFNDEF FPC}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
     REPEAT
  
         Inc(ControlIteration);
-@@ -1073,7 +1093,7 @@
+@@ -1073,7 +1120,7 @@
  {$IFDEF DLL_ENGINE}
     Fire_StepControls;
  {$ENDIF}
@@ -1466,7 +1829,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
     Solve_Time_Elapsed := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
     Iteration := TotalIterations;  { so that it reports a more interesting number }
  
-@@ -1086,7 +1106,7 @@
+@@ -1086,7 +1133,7 @@
     Result := 0;
  
     LoadsNeedUpdating := TRUE;  // Force possible update of loads and generators
@@ -1475,7 +1838,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  
     If SystemYChanged THEN
     begin
-@@ -1108,7 +1128,7 @@
+@@ -1108,7 +1155,7 @@
         ConvergedFlag := TRUE;
     End;
  
@@ -1484,7 +1847,36 @@ Index: Parallel_Version/Source/Common/Solution.pas
     Solve_Time_Elapsed  := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
     Total_Time_Elapsed  :=  Total_Time_Elapsed + Solve_Time_Elapsed;
     Iteration := 1;
-@@ -1604,6 +1624,7 @@
+@@ -1429,8 +1476,11 @@
+     if (IncMatrix[Idx_1*3] = Row) and Tflag then
+     begin
+       setlength(Active_Cols,2);
+-      Active_Cols[0]  :=  IncMatrix[Idx_1*3 + 1];     //Stores the indexes of both columns for the link branch
+-      Active_Cols[1]  :=  IncMatrix[Idx_1*3 + 4];     //In case they need ot be used in the future by the caller
++      setlength(Active_Cols_Idx,2);
++      Active_Cols[0]      :=  IncMatrix[Idx_1*3 + 1];     //Stores the indexes of both columns for the link branch
++      Active_Cols[1]      :=  IncMatrix[Idx_1*3 + 4];     //In case they need ot be used in the future by the caller
++      Active_Cols_Idx[0]  :=  IncMatrix[Idx_1*3 - 1];     //Stores the indexes of both columns for the link branch
++      Active_Cols_Idx[1]  :=  IncMatrix[Idx_1*3 + 2];     //In case they need ot be used in the future by the caller
+       Result :=  IncMatrix[Idx_1*3 + 1];
+       Tflag  :=  False;
+     end;
+@@ -1573,14 +1623,9 @@
+         j         :=  0;                                                // Stores the previous value (shift reg)
+         for j2 := ZeroLevel to High(Inc_Mat_levels) do
+         begin
+-
+-            if j2 = 2395 then
+-                  IncMat_Ordered  :=  True;                             // For debugging
+-
+           if Inc_Mat_levels[j2] >= j then inc(BusdotIdx)
+           else
+           begin
+-
+             ActiveIncCell[1]  :=  get_IncMatrix_Row(j2);                //Looks for the Column in the IncMatrix
+             if ActiveIncCell[1] < 0 then                                //Checks if the col was located (just in case)
+               BusdotIdx     :=  1
+@@ -1604,6 +1649,7 @@
  {*******************************************************************************
  *           Routine created to empty a recently created folder                 *
  ********************************************************************************}
@@ -1492,7 +1884,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
  var
    SourceLst: string;
-@@ -1611,7 +1632,7 @@
+@@ -1611,7 +1657,7 @@
  begin
    FillChar(FOS, SizeOf(FOS), 0);
    FOS.wFunc := FO_DELETE;
@@ -1501,7 +1893,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
    FOS.pFrom := PChar(SourceLst);
    if not DelSubDirs then
      FOS.fFlags := FOS.fFlags OR FOF_FILESONLY;
-@@ -1621,6 +1642,66 @@
+@@ -1621,6 +1667,66 @@
    FOS.fFlags := FOS.fFlags OR FOF_SILENT;
    SHFileOperation(FOS);
  end;
@@ -1568,7 +1960,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  {*******************************************************************************
  *   This routine evaluates if the current location is the best or if its       *
  *   Necessary to move back one PDE just to cover a wider area                  *
-@@ -1698,7 +1779,8 @@
+@@ -1698,7 +1804,8 @@
       Writeln(F, 'Set circuit=',  ActiveCircuit[ActiveActor].Name);
       Writeln(F, 'Set editor=',   DefaultEditor);
       Writeln(F, 'Set tolerance=', Format('%-g', [ConvergenceTolerance]));
@@ -1578,7 +1970,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
       Writeln(F, 'Set loadmodel=', GetLoadModel);
  
       Writeln(F, 'Set loadmult=',    Format('%-g', [ActiveCircuit[ActiveActor].LoadMultiplier]));
-@@ -1955,6 +2037,7 @@
+@@ -1955,6 +2062,7 @@
  
     SolutionInitialized := FALSE;   // reinitialize solution when mode set (except dynamics)
     PreserveNodeVoltages := FALSE;  // don't do this unless we have to
@@ -1586,7 +1978,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  
     // Reset defaults for solution modes
     Case Dynavars.SolutionMode of
-@@ -1963,6 +2046,7 @@
+@@ -1963,6 +2071,7 @@
         DAILYMODE:     Begin
                             DynaVars.h    := 3600.0;
                             NumberOfTimes := 24;
@@ -1594,7 +1986,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
                        End;
         SNAPSHOT:      Begin
                             IntervalHrs   := 1.0;
-@@ -1972,6 +2056,7 @@
+@@ -1972,6 +2081,7 @@
                             IntervalHrs   := 1.0;
                             DynaVars.h    := 3600.0;
                             NumberOfTimes := 8760;
@@ -1602,7 +1994,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
                        End;
         DUTYCYCLE:     Begin
                             DynaVars.h  := 1.0;
-@@ -1988,9 +2073,9 @@
+@@ -1988,9 +2098,9 @@
                             DynaVars.h    := 3600.0;
                             NumberOfTimes := 1;  // just one time step per Solve call expected
                        End;
@@ -1615,7 +2007,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
         MONTEFAULT:    Begin IsDynamicModel := TRUE;  END;
         FAULTSTUDY:    Begin
                              IsDynamicModel := TRUE;
-@@ -1998,10 +2083,12 @@
+@@ -1998,10 +2108,12 @@
         LOADDURATION1: Begin
                             DynaVars.h := 3600.0;
                             ActiveCircuit[ActiveActor].TrapezoidalIntegration := TRUE;
@@ -1628,7 +2020,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
                        End;
         AUTOADDFLAG :  Begin
                             IntervalHrs := 1.0;
-@@ -2305,7 +2392,7 @@
+@@ -2305,7 +2417,7 @@
  // Update Loop time is called from end of time step cleanup
  // Timer is based on beginning of SolveSnap time
  
@@ -1637,7 +2029,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
     Step_Time_Elapsed  := ((LoopEndtime-SolveStartTime)/CPU_Freq)*1000000;
  
  end;
-@@ -2368,9 +2455,16 @@
+@@ -2368,9 +2480,16 @@
    FInfoProc       :=  CallBack;
    FreeOnTerminate := False;
    ActorID         :=  ID;
@@ -1654,7 +2046,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
  end;
  
  {*******************************************************************************
-@@ -2380,7 +2474,7 @@
+@@ -2380,7 +2499,7 @@
  
  procedure TSolver.Execute;
  var
@@ -1663,7 +2055,7 @@ Index: Parallel_Version/Source/Common/Solution.pas
    idx       : Integer;
    begin
      with ActiveCircuit[ActorID].Solution do
-@@ -2414,7 +2508,9 @@
+@@ -2414,7 +2533,9 @@
                 DosimpleMsg('Unknown solution mode.', 481);
             End;
  
@@ -2056,7 +2448,22 @@ Index: Parallel_Version/Source/Common/Utilities.pas
      ELSE
         Result := CTRLSTATIC;
      End;
-@@ -2029,7 +2070,7 @@
+@@ -524,7 +565,13 @@
+ 
+     If CompareText( SLC, 'ne')=0
+     Then  Result := NEWTONSOLVE
+-    ELSE  Result := NORMALSOLVE;
++    ELSE
++    Begin
++      If CompareText( SLC, 'no')=0 Then
++        Result := NORMALSOLVE
++      else
++        Result := DIAKOPTICS;
++    End;
+ 
+ End;
+ 
+@@ -2029,7 +2076,7 @@
     SaveDelims := AuxParser.Delimiters;
     AuxParser.Delimiters := ',';
     ArraySize   := 10;
@@ -2065,7 +2472,7 @@ Index: Parallel_Version/Source/Common/Utilities.pas
  
   Try
     {Scan once to set field lengths}
-@@ -2790,6 +2831,9 @@
+@@ -2790,6 +2837,9 @@
  FUNCTION  InterpretColorName(const s:string):Integer;
  
  Begin
@@ -2075,7 +2482,7 @@ Index: Parallel_Version/Source/Common/Utilities.pas
          Result := clBlue;  // default color
          Try
              if      CompareTextShortest(S,'black')=0  then Result := clBlack
-@@ -2814,7 +2858,7 @@
+@@ -2814,7 +2864,7 @@
          Except
             On E:Exception Do DoSimpleMsg('Invalid Color Specification: "' + S + '".', 724);
          End;
@@ -2496,7 +2903,7 @@ Index: Parallel_Version/Source/Executive/ExecCommands.pas
  
  
  PROCEDURE DefineCommands;
-@@ -610,7 +611,11 @@
+@@ -610,14 +611,24 @@
                ActiveCircuit[ActiveActor].Solution.Calc_Inc_Matrix(ActiveActor);
              end;
         110: begin
@@ -2508,7 +2915,22 @@ Index: Parallel_Version/Source/Executive/ExecCommands.pas
              end;
         111: begin
                ActiveCircuit[ActiveActor].Solution.Calc_Inc_Matrix_Org(ActiveActor);
-@@ -670,7 +675,11 @@
+             end;
+        112: begin
+-              Temp_int  :=  ActiveCircuit[ActiveActor].Tear_Circuit();
+-              GlobalResult := 'Sub-Circuits Created: ' + inttostr(Temp_int);
++              With ActiveCircuit[ActiveActor].Solution do
++              Begin
++                Temp_int              :=  ActiveCircuit[ActiveActor].Tear_Circuit();
++                solve(ActiveActor);
++                Dynavars.SolutionMode :=  0;          // Shapshot mode
++                ActiveCircuit[ActiveActor].Save_SubCircuits();
++                GlobalResult := 'Sub-Circuits Created: ' + inttostr(Temp_int);
++              End;
+             end;
+        115: begin
+               ActiveCircuit[ActiveActor].Get_paths_4_Coverage();
+@@ -670,7 +681,11 @@
          9: CmdResult := DoSetCmd(1);  // changed from DoSolveCmd; //'solve';
         10: CmdResult := DoEnableCmd;
         11: CmdResult := DoDisableCmd;
@@ -2838,7 +3260,20 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                      CRLF+'  AutoAdd (see AddType)' +
                      CRLF+'  YearlyVQ (Yearly Vector Quantiaztion)' +
                      CRLF+'  DutyVQ (Duty Vector Quantiaztion)' +CRLF +CRLF+
-@@ -276,7 +280,7 @@
+@@ -255,9 +259,10 @@
+                         'When the CalcVoltageBases command is issued, a snapshot solution is performed '+
+                         'with no load injections and the bus base voltage is set to the nearest legal voltage base. '+
+                         'The defaults are as shown in the example above.';
+-     OptionHelp[40] := '{Normal | Newton}  Solution algorithm type.  Normal is a fixed point iteration ' +
++     OptionHelp[40] := '{Normal | Newton | Diakoptics}  Solution algorithm type.  Normal is a fixed point iteration ' +
+                         'that is a little quicker than the Newton iteration.  Normal is adequate for most radial '+
+-                        'distribution circuits.  Newton is more robust for circuits that are difficult to solve.';
++                        'distribution circuits.  Newton is more robust for circuits that are difficult to solve.' +
++                        'Diakoptics is used for accelerating the simulation using multicore computers';
+      OptionHelp[41] := '{YES/TRUE | NO/FALSE}  Default is "No/False". Specifies whether to use trapezoidal integration for accumulating energy meter registers. ' +
+                         'Applies to EnergyMeter and Generator objects.  Default method simply multiplies the ' +
+                         'present value of the registers times the width of the interval (Euler). ' +
+@@ -276,7 +281,7 @@
                          'Examples:'+Crlf+CRlf+
                          'Set autobuslist=(bus1, bus2, bus3, ... )' +CRLF+
                          'Set autobuslist=(file=buslist.txt)';
@@ -2847,7 +3282,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                          'Set to OFF to prevent controls from changing.' + CRLF +
                          'STATIC = Time does not advance.  Control actions are executed in order of shortest time to act ' +
                          'until all actions are cleared from the control queue.  Use this mode for power flow solutions which may require several ' +
-@@ -285,6 +289,9 @@
+@@ -285,6 +290,9 @@
                          'are executed and the time is advanced automatically to the time of the event. ' + crlf +crlf+
                          'TIME = solution is time driven.  Control actions are executed when the time for the pending ' +
                          'action is reached or surpassed.' + CRLF + CRLF +
@@ -2857,7 +3292,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                          'Controls may reset and may choose not to act when it comes their time. ' +CRLF+
                          'Use TIME mode when modeling a control externally to the DSS and a solution mode such as ' +
                          'DAILY or DUTYCYCLE that advances time, or set the time (hour and sec) explicitly from the external program. ';
-@@ -401,21 +408,26 @@
+@@ -401,21 +409,26 @@
       OptionHelp[106] := 'The time in microseconds to execute the solve process in the most recent time step or solution (read only)';
       OptionHelp[107] := 'The accumulated time in microseconds to solve the circuit since the last reset. Set this value to reset the accumulator.';
       OptionHelp[108] := 'Process time + meter sampling time in microseconds for most recent time step - (read only)';
@@ -2896,7 +3331,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
  End;
  //----------------------------------------------------------------------------
  FUNCTION DoSetCmd_NoCircuit:Boolean;  // Set Commands that do not require a circuit
-@@ -447,7 +459,7 @@
+@@ -447,7 +460,7 @@
             67: DSSExecutive.RecorderOn := InterpretYesNo(Param);
             73: DefaultBaseFreq  := Parser[ActiveActor].DblValue;
            102: UpdateRegistry   := InterpretYesNo(Param);
@@ -2905,7 +3340,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                    if Parser[ActiveActor].IntValue <= NumOfActors then ActiveActor  :=  Parser[ActiveActor].IntValue
                    else
                    begin
-@@ -454,7 +466,7 @@
+@@ -454,7 +467,7 @@
                      DoSimpleMsg('The actor does not exists',7002);
                    end;
                  End;
@@ -2914,7 +3349,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                    if Parser[ActiveActor].IntValue < CPU_Cores then ActorCPU[ActiveActor]  :=  Parser[ActiveActor].IntValue
                    else
                    begin
-@@ -461,13 +473,13 @@
+@@ -461,13 +474,13 @@
                      DoSimpleMsg('The CPU does not exists',7003);
                    end;
                  End;
@@ -2931,7 +3366,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                    DSS_Viz_enable  :=  InterpretYesNo(Param);
                  end;
           ELSE
-@@ -660,7 +672,9 @@
+@@ -660,7 +673,9 @@
            104: ActiveCircuit[ActiveActor].RelayMarkerCode  := Parser[ActiveActor].IntValue;
            105: ActiveCircuit[ActiveActor].RelayMarkerSize  := Parser[ActiveActor].IntValue;
            107: ActiveCircuit[ActiveActor].Solution.Total_Time  :=  Parser[ActiveActor].DblValue;
@@ -2942,7 +3377,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                    if Parser[ActiveActor].IntValue <= NumOfActors then ActiveActor  :=  Parser[ActiveActor].IntValue
                    else
                    begin
-@@ -667,7 +681,7 @@
+@@ -667,7 +682,7 @@
                      DoSimpleMsg('The actor does not exists',7002);
                    end;
                  End;
@@ -2951,7 +3386,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                    if Parser[ActiveActor].IntValue < CPU_Cores then ActorCPU[ActiveActor]  :=  Parser[ActiveActor].IntValue
                    else
                    begin
-@@ -674,17 +688,20 @@
+@@ -674,17 +689,20 @@
                      DoSimpleMsg('The CPU does not exists',7003);
                    end;
                  End;
@@ -2976,7 +3411,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
                  End
           ELSE
             // Ignore excess parameters
-@@ -692,6 +709,8 @@
+@@ -692,6 +710,8 @@
  
           CASE ParamPointer OF
                3,4: ActiveCircuit[ActiveActor].Solution.Update_dblHour;
@@ -2985,7 +3420,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
           END;
  
           ParamName := Parser[ActiveActor].NextParam;
-@@ -713,7 +732,7 @@
+@@ -713,7 +733,7 @@
     ParamPointer, i:Integer;
     ParamName:String;
     Param:String;
@@ -2994,7 +3429,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
  
  Begin
  
-@@ -853,7 +872,7 @@
+@@ -853,7 +873,7 @@
             99: If ActiveCircuit[ActiveActor].MarkReclosers Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
            100: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RecloserMarkerCode]));
            101: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RecloserMarkerSize]));
@@ -3003,7 +3438,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
            103: If ActiveCircuit[ActiveActor].MarkRelays Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
            104: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RelayMarkerCode]));
            105: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RelayMarkerSize]));
-@@ -860,21 +879,24 @@
+@@ -860,21 +880,24 @@
            106: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Solution.Time_Solve]));
            107: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Solution.Total_Time]));
            108: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Solution.Time_Step]));
@@ -3039,7 +3474,7 @@ Index: Parallel_Version/Source/Executive/ExecOptions.pas
           ELSE
             // Ignore excess parameters
           End;
-@@ -898,7 +920,8 @@
+@@ -898,7 +921,8 @@
  VAR
     ParamPointer, i:Integer;
     ParamName:String;
@@ -4489,6 +4924,40 @@ Index: Parallel_Version/Source/Shared/mathutil.pas
    Mean := 0.0;
    for i := 1 to NData do Mean := Mean + Data^[i];
    Mean := Mean / Ndata;
+Index: Source/Common/Circuit.pas
+===================================================================
+--- Source/Common/Circuit.pas	(revision 2141)
++++ Source/Common/Circuit.pas	(working copy)
+@@ -29,7 +29,7 @@
+ 
+ 
+ TYPE
+-    TReductionStrategy = (rsDefault, rsStubs, rsTapEnds, rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches);
++    TReductionStrategy = (rsDefault, rsStubs, {rsTapEnds,} rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches, rsLaterals);
+ 
+     CktElementDef = RECORD
+         CktElementClass:Integer;
+@@ -207,7 +207,8 @@
+           CurrentDirectory   :String;
+ 
+           ReductionStrategy:TReductionStrategy;
+-          ReductionMaxAngle, ReductionZmag:double;
++          {ReductionMaxAngle,} ReductionZmag:double;
++          ReduceLateralsKeepLoad:Boolean;
+           ReductionStrategyString:String;
+ 
+           PctNormalFactor:Double;
+@@ -470,8 +471,9 @@
+      SavedBusNames := nil;
+ 
+      ReductionStrategy := rsDefault;
+-     ReductionMaxAngle := 15.0;
++     // ReductionMaxAngle := 15.0;
+      ReductionZmag     := 0.02;
++     ReduceLateralsKeepLoad := TRUE;
+ 
+    {Misc objects}
+    AutoAddObj := TAutoAdd.Create;
 Index: Source/Common/DSSGlobals.pas
 ===================================================================
 --- Source/Common/DSSGlobals.pas	(revision 2141)
@@ -4865,7 +5334,29 @@ Index: Source/Executive/ExecHelper.pas
       End;
       WriteClassFile(DSSClass, SaveFile, FALSE); // just write the class with no checks
     End;
-@@ -3934,7 +3934,84 @@
+@@ -2645,12 +2645,20 @@
+        'B': ActiveCircuit.ReductionStrategy := rsBreakLoop;
+        'D': ActiveCircuit.ReductionStrategy := rsDefault;  {Default}
+        'E': ActiveCircuit.ReductionStrategy := rsDangling;  {Ends}
++       'L': Begin {Laterals}
++               ActiveCircuit.ReductionStrategy := rsLaterals;
++               if Length(Param2) > 0 then  Begin
++                  ActiveCircuit.ReduceLateralsKeepLoad := InterpretYesNo(Param2)
++               End;
++            End;
+        'M': ActiveCircuit.ReductionStrategy := rsMergeParallel;
+-       'T': Begin
++       (*
++       'T': Begin          removed 2-28-2018
+               ActiveCircuit.ReductionStrategy := rsTapEnds;
+               ActiveCircuit.ReductionMaxAngle := 15.0;  {default}
+               If Length(param2) > 0 Then  ActiveCircuit.ReductionMaxAngle := Auxparser.DblValue;
+             End;
++            *)
+        'S': Begin  {Stubs}
+               IF CompareTextShortest(Param, 'SWITCH')=0 Then Begin
+                   activeCircuit.ReductionStrategy := rsSwitches;
+@@ -3934,7 +3942,84 @@
  
  End;
  
@@ -4950,7 +5441,7 @@ Index: Source/Executive/ExecHelper.pas
  initialization
  
  {Initialize Command lists}
-@@ -3960,6 +4037,9 @@
+@@ -3960,6 +4045,9 @@
      PstCalcCommands := TCommandList.Create(['Npts', 'Voltages', 'dt', 'Frequency', 'lamp']);
      PstCalcCommands.abbrev := True;
  
@@ -4960,7 +5451,7 @@ Index: Source/Executive/ExecHelper.pas
  finalization
  
      DistributeCommands.Free;
-@@ -3970,6 +4050,7 @@
+@@ -3970,6 +4058,7 @@
      RephaseCommands.Free;
      SetBusXYCommands.Free;
      PstCalcCommands.Free;
@@ -4968,6 +5459,27 @@ Index: Source/Executive/ExecHelper.pas
  
  end.
  
+Index: Source/Executive/ExecOptions.pas
+===================================================================
+--- Source/Executive/ExecOptions.pas	(revision 2141)
++++ Source/Executive/ExecOptions.pas	(working copy)
+@@ -319,14 +319,14 @@
+                         'Reset Keeplist (sets all buses to FALSE (no keep))' +CRLF+
+                         'Set KeepList=(bus1, bus2, bus3, ... )' +CRLF+
+                         'Set KeepList=(file=buslist.txt)';
+-     OptionHelp[59] := '{ Default or [null] | Stubs [Zmag=nnn] | MergeParallel | BreakLoops | Switches | TapEnds [maxangle=nnn] | Ends}  Strategy for reducing feeders. ' +
++     OptionHelp[59] := '{ Default or [null] | Stubs [Zmag=nnn] | MergeParallel | BreakLoops | Switches | Ends | Laterals}  Strategy for reducing feeders. ' +
+                        'Default is to eliminate all dangling end buses and buses without load, caps, or taps. ' +  CRLF +
+                        '"Stubs [Zmag=0.02]" merges short branches with impedance less than Zmag (default = 0.02 ohms) ' + CRLF +
+                        '"MergeParallel" merges lines that have been found to be in parallel ' +CRLF+
+                        '"Breakloops" disables one of the lines at the head of a loop. ' +CRLF+
+-                       '"Tapends [maxangle=15]" eliminates all buses except those at the feeder ends, at tap points and where the feeder turns by greater than maxangle degrees. ' + CRLF+
+                        '"Ends" eliminates dangling ends only.'+CRLF+
+                        '"Switches" merges switches with downline lines and eliminates dangling switches.'+CRLF+
++                       '"Laterals [Keepload=Yes*/No]" uses the Remove command to eliminate 1-phase laterals and optionally lump the load back to the 2- or 3-phase feeder (default behavior). ' +CRLF+CRLF+
+                        'Marking buses with "Keeplist" will prevent their elimination.';
+      OptionHelp[60] := '{YES/TRUE | NO/FALSE} Default = no. Set for keeping demand interval data for daily, yearly, etc, simulations. '+
+                        'Side Effect:  Resets all meters!!!';
 Index: Source/Meters/EnergyMeter.pas
 ===================================================================
 --- Source/Meters/EnergyMeter.pas	(revision 2141)
@@ -4990,7 +5502,72 @@ Index: Source/Meters/EnergyMeter.pas
  end;
  
  //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-@@ -2784,12 +2784,12 @@
+@@ -2267,11 +2267,12 @@
+     Case ActiveCircuit.ReductionStrategy of
+ 
+          rsStubs:         DoReduceStubs(BranchList);    {See ReduceAlgs.Pas}
+-         rsTapEnds:       DoReduceTapEnds (BranchList);
++         {rsTapEnds:       DoReduceTapEnds (BranchList);}
+          rsMergeParallel: DoMergeParallelLines(BranchList);
+          rsDangling:      DoReduceDangling(BranchList);
+          rsBreakLoop:     DoBreakLoops(BranchList);
+          rsSwitches:      DoReduceSwitches(BranchList);
++         rsLaterals:      DoReduceLaterals(BranchList);
+     Else
+        {Default}
+        DoReduceDefault(BranchList);
+@@ -2493,7 +2494,7 @@
+                        TotalCustomers := PD_Elem.BranchTotalCustomers;
+                     End;
+                End;
+-(*
++
+ {**DEBUG**}
+             If idx=SequenceList.ListSize then WriteDLLDebugFile('Meter, SectionID, BranchName, FaultRate, AccumulatedBrFltRate, BranchFltRate, RepairHrs, NCustomers, Num_Interrupt');
+             With FeederSections^[PD_Elem.BranchSectionID] Do
+@@ -2502,7 +2503,7 @@
+                PD_Elem.FaultRate, PD_Elem.AccumulatedBrFltRate, PD_Elem.BranchFltRate, PD_Elem.HrsToRepair,
+                PD_Elem.BranchNumCustomers, pBus.Bus_Num_Interrupt ]));
+ {**DEBUG**}
+-*)
++
+            End;
+ 
+         {Compute Avg Interruption duration of each Section }
+@@ -2519,15 +2520,17 @@
+         End;
+ 
+ 
+-(*
++
+ {**DEBUG**}
+         WriteDLLDebugFile('Meter, SectionID, NBranches, NCustomers, AvgRepairHrs, AvgRepairMins, FailureRate*RepairtimeHrs, SumFailureRates');
+         for idx := 1 to SectionCount do
+-            With FFeederSections^[idx] Do
++            With FeederSections^[idx] Do
+                WriteDLLDebugFile(Format('%s.%s, %d, %d, %d, %.11g, %.11g, %.11g, %.11g ',
+-               [ParentClass.Name, Name, idx, NBranches, nCustomers, AverageRepairTime, AverageRepairTime * 60.0, SumFltRatesXRepairHrs, SumBranchFltRates    ]));
++              [ParentClass.Name, Name, idx, NBranches, nCustomers, AverageRepairTime, AverageRepairTime * 60.0, SumFltRatesXRepairHrs, SumBranchFltRates    ]));
++
++        WriteDLLDebugFile('Load, BusCustDurations, BusNumInterrupt, FaultRatesXRepairHrs');
+ {**DEBUG**}
+-*)
++
+        {Compute SAIFI based on numcustomers and load kW}
+        {SAIFI is weighted by specified load weights}
+        {SAIFI is for the EnergyMeter Zone}
+@@ -2552,8 +2555,8 @@
+                        // Set BusCustDurations for Branch reliability export
+                        pBus.BusCustDurations :=  NumCustomers * RelWeighting * pBus.Bus_Int_Duration * pBus.Bus_Num_Interrupt; // FeederSections^[pBus.BusSectionID].SumFltRatesXRepairHrs;
+ 
+-    // WriteDLLDebugFile(Format('Load.%s, %.11g, %.11g, %.11g ',
+-    //              [pLoad.Name,pBus.BusCustDurations, pBus.Bus_Num_Interrupt, FeederSections^[pBus.BusSectionID].SumFltRatesXRepairHrs]));
++    WriteDLLDebugFile(Format('Load.%s, %.11g, %.11g, %.11g ',
++                  [pLoad.Name,pBus.BusCustDurations, pBus.Bus_Num_Interrupt, FeederSections^[pBus.BusSectionID].SumFltRatesXRepairHrs]));
+ 
+                        SAIDI := SAIDI + pBus.BusCustDurations;
+                   End ;
+@@ -2784,12 +2787,12 @@
       CloseFile(FCaps);
  
       {If any records were written to the file, record their relative names}
@@ -5009,7 +5586,7 @@ Index: Source/Meters/EnergyMeter.pas
  
     End; {IF}
  
-@@ -2842,6 +2842,7 @@
+@@ -2842,6 +2845,7 @@
        If (EnergyMeterClass.DI_Verbose) Then Begin
  
            This_Meter_DIFileIsOpen :=  TRUE;
@@ -5017,7 +5594,7 @@ Index: Source/Meters/EnergyMeter.pas
            DI_MHandle  :=  Create_Meter_Space('"Hour"');
            For i := 1 to NumEMRegisters Do WriteintoMemStr(DI_MHandle,', "' + RegisterNames[i] + '"');
            WriteintoMemStr(DI_MHandle, Char(10));
-@@ -2926,18 +2927,18 @@
+@@ -2926,18 +2930,18 @@
          WriteTotalsFile;  // Sum all energymeter registers to "Totals.CSV"
          SystemMeter.CloseDemandIntervalFile;
          SystemMeter.Save;
@@ -5040,7 +5617,7 @@ Index: Source/Meters/EnergyMeter.pas
              VR_MHandle  :=  nil;
              VoltageFileIsOpen := FALSE;
          End;
-@@ -3021,7 +3022,7 @@
+@@ -3021,7 +3025,7 @@
  
            {Open FDI_Totals}
            Try
@@ -5049,7 +5626,7 @@ Index: Source/Meters/EnergyMeter.pas
                {File Must Exist}
                If FileExists(FileNm) Then  TDI_Append := True;
                CreateFDI_Totals;
-@@ -3036,7 +3037,7 @@
+@@ -3036,7 +3040,7 @@
  
  function TEnergyMeterObj.MakeDIFileName: String;
  begin
@@ -5058,7 +5635,7 @@ Index: Source/Meters/EnergyMeter.pas
  end;
  
  procedure TEnergyMeter.Set_SaveDemandInterval(const Value: Boolean);
-@@ -3107,7 +3108,7 @@
+@@ -3107,7 +3111,7 @@
      end;
      WriteintoMemStr(TDI_MHandle, Char(10));
   Except
@@ -5067,7 +5644,7 @@ Index: Source/Meters/EnergyMeter.pas
   End;
  end;
  
-@@ -3123,12 +3124,12 @@
+@@ -3123,12 +3127,12 @@
    If This_Meter_DIFileIsOpen Then Exit;
  
    Try
@@ -5082,7 +5659,7 @@ Index: Source/Meters/EnergyMeter.pas
  //        DI_Cursor :=  GetMMFCursor(DI_MMFView);
        End
        Else OpenDemandIntervalFile;
-@@ -3160,7 +3161,7 @@
+@@ -3160,7 +3164,7 @@
    File_Path : string;
  begin
       IF This_Meter_DIFileIsOpen Then Begin
@@ -5091,7 +5668,7 @@ Index: Source/Meters/EnergyMeter.pas
         CloseMHandler(SDI_MHandle, File_Path, SDI_Append);
         SDI_MHandle  :=  nil;
         This_Meter_DIFileIsOpen := FALSE;
-@@ -3200,6 +3201,7 @@
+@@ -3200,6 +3204,7 @@
    Try
        IF This_Meter_DIFileIsOpen Then SDI_MHandle.Free;
        This_Meter_DIFileIsOpen	:=	TRUE;
@@ -5099,7 +5676,7 @@ Index: Source/Meters/EnergyMeter.pas
        SDI_MHandle  :=  Create_Meter_Space('"Hour", ');
        WriteintoMemStr(SDI_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
  
-@@ -3225,7 +3227,7 @@
+@@ -3225,7 +3230,7 @@
         {If we are doing a simulation and saving interval data, create this in the
          same directory as the demand interval data}
         If  energyMeterClass.SaveDemandInterval Then
@@ -5108,7 +5685,7 @@ Index: Source/Meters/EnergyMeter.pas
         Else
            Folder := GetOutputDirectory;
         GlobalResult := CSVName;
-@@ -3362,7 +3364,7 @@
+@@ -3362,7 +3367,7 @@
          WriteintoMemStr(FM_MHandle, inttostr(ActiveCircuit.Solution.Year));
          For i := 1 to NumEMRegisters Do WriteintoMem(FM_MHandle,Double(RegSum[i]));
          WriteintoMemStr(FM_MHandle, Char(10));
@@ -5117,7 +5694,7 @@ Index: Source/Meters/EnergyMeter.pas
          FM_MHandle  :=  nil;
  
    Except
-@@ -3590,6 +3592,7 @@
+@@ -3590,6 +3595,7 @@
    Try
        IF OverloadFileIsOpen Then OV_MHandle.Free;
        OverloadFileIsOpen := TRUE;
@@ -5125,7 +5702,7 @@ Index: Source/Meters/EnergyMeter.pas
        OV_MHandle  :=  Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase"' + Char(10));
    Except
        On E:Exception Do DosimpleMsg('Error creating memory space (Overload report) for writing.'+CRLF+E.Message, 541);
-@@ -3602,6 +3605,7 @@
+@@ -3602,6 +3608,7 @@
    Try
        IF VoltageFileIsOpen Then VR_MHandle.Free;
        VoltageFileIsOpen := TRUE;
@@ -5137,7 +5714,7 @@ Index: Source/Meters/ReduceAlgs.pas
 ===================================================================
 --- Source/Meters/ReduceAlgs.pas	(revision 2141)
 +++ Source/Meters/ReduceAlgs.pas	(working copy)
-@@ -12,7 +12,7 @@
+@@ -12,20 +12,23 @@
  
  interface
  
@@ -5146,9 +5723,13 @@ Index: Source/Meters/ReduceAlgs.pas
  
    procedure DoReduceDefault(Var BranchList:TCktTree);
    procedure DoReduceStubs( Var BranchList:TCktTree );
-@@ -22,10 +22,12 @@
+   procedure DoReduceDangling(var BranchList:TCktTree);
+-  procedure DoReduceTapEnds(var BranchList:TCktTree);
++  {{procedure DoReduceTapEnds(var BranchList:TCktTree);}
+   procedure DoBreakLoops(var BranchList:TCktTree);
    procedure DoMergeParallelLines(var BranchList:TCktTree);
    procedure DoReduceSwitches(Var Branchlist:TCktTree);
++  procedure DoReduceLaterals(Var Branchlist:TCktTree);
  
 +  procedure DoRemoveBranches(Var BranchList:TCktTree; FirstPDElement:TPDElement; KeepLoad:Boolean; Const EditStr:String);
 +
@@ -5160,7 +5741,26 @@ Index: Source/Meters/ReduceAlgs.pas
  
  procedure DoMergeParallelLines(var BranchList:TCktTree);
  {Merge all lines in this zone that are marked in parallel}
-@@ -283,4 +285,87 @@
+@@ -74,6 +77,8 @@
+ end;
+ 
+ 
++{
++
+ procedure DoReduceTapEnds(var BranchList:TCktTree);
+ (*Var
+    pLineElem1, pLineElem2:TLineObj;
+@@ -84,8 +89,8 @@
+ begin
+ 
+ end;
++}
+ 
+-
+ procedure DoReduceDangling(var BranchList:TCktTree);
+ VAr
+         pLineElem1:TDSSCktElement;
+@@ -283,4 +288,195 @@
  
  end;
  
@@ -5245,6 +5845,114 @@ Index: Source/Meters/ReduceAlgs.pas
 +     DoResetMeterZones;  // without eliminated devices
 +     Solution.SystemYChanged := True; // force rebuild of Y
 +   End;
++End;
++
++procedure DoReduceLaterals(Var Branchlist:TCktTree);
++{Remove all 1-phase laterals in Branchlist and lump load back to main feeder}
++
++Var
++   PDelem:      TPDElement;
++   BusName:     String;
++   TotalkVA:    Complex;
++   pLoad :      TLoadObj;
++   NewLoadName: String;
++   pShunt:      TDSSCktElement;
++   LoadBus:     TDSSBus;
++   LoadBasekV:  Double;
++   StartLevel:  Integer;
++   pBus:        TDSSBus;
++
++Begin
++ {
++  Just march down the feeder until we encounter a 1-phase PD element
++ }
++   // Position BranchList at "beginning"
++   PDElem := BranchList.First;
++
++   While PDElem<> Nil Do
++   Begin
++
++     if PDElem.nphases=1 then   // ELIMINATE THIS LATERAL
++     Begin
++        {Check to see if this is a 1-phase switch or other branch in the middle of a 3-phase branch and go on}
++        {If the To bus has more than 1 phase, keep this branch else lump the load at the From node}
++         pBus := ActiveCircuit.Buses^[Branchlist.PresentBranch.ToBusReference];  //To Bus
++
++         if pBus.NumNodesThisBus = 1 then // Eliminate the lateral starting with this branch
++         Begin
++
++             { If KeepLoad (ReduceLateralsKeepLoad), create a new Load object at upstream bus (from bus).}
++
++             if ActiveCircuit.ReduceLateralsKeepLoad  then
++             With BranchList.PresentBranch Do  Begin
++                 BusName     := PDElem.GetBus(FromTerminal);
++                 TotalkVA    := CDivreal(PDelem.Power[FromTerminal], 1000.0);
++                 NewLoadName := Format('Lateral_%s',[PDElem.Name]);
++                 {Pick up the kV Base for the From bus}
++                 LoadBus     :=  ActiveCircuit.Buses^[FromBusReference];
++                 if (Loadbus.kVBase > 0.0 )
++                 Then LoadBasekV := LoadBus.kVBase  // Use defined voltage base
++                 Else
++                     Begin    // Try to guess voltage base from the present voltage at the first node on the bus
++                         ActiveCircuit.Solution.UpdateVBus;
++                         LoadBasekV := Cabs(Loadbus.Vbus^[1]) * 0.001;
++                     End;
++                 {Load up parser with definition of equivalent load and create a new Load object on the main feeder
++                  with the same bus definition as the From Bus of the 1-phase line}
++                 Parser.CmdString := Format(' phases=%d Bus1=%s kW=%g kvar=%g kV=%g', [PDElem.NPhases, Busname, TotalkVA.re, TotalkVA.im, LoadBasekV ]);
++                 AddObject('load', NewLoadName); // Add new load to circuit
++             End;
++
++             {
++
++               Disable all elements in the tree downline from the beginning of the 1-phase lateral
++
++             }
++
++             StartLevel := BranchList.level;   // record level of first 1-phase branch in this lateral
++             while PDElem <> Nil do
++             Begin
++           // {****} WriteDLLDebugFile(Format('Disabling cktelement %d %s.%s',[ BranchList.Level, PDelem.ParentClass.Name, PDElem.Name ]));
++                 { Get rid of loads and other shunt elements connected to this branch }
++                 With BranchList.PresentBranch Do
++                 Begin
++
++                      pShunt := BranchList.PresentBranch.FirstShuntObject;
++                      while pShunt <> Nil do
++                      Begin
++                         pShunt.Enabled := False;
++           //  {****} WriteDLLDebugFile(Format('Disabling shunt element %s.%s',[ pShunt.ParentClass.Name, pShunt.Name ]));
++                         pShunt := BranchList.PresentBranch.NextShuntObject;
++                      End;
++
++                 End;
++
++                 PDElem.Enabled := False;
++                 PDElem := BranchList.GoForward;
++
++                 // Check to see if we are back where we started. If so, stop with this lateral and get on to the next.
++                 If PDElem <> Nil then if (BranchList.Level <= StartLevel) then Break;
++             End ;
++
++         End
++         ELSE PDElem := BranchList.GoForward;
++
++
++     End
++     ELSE PDElem := BranchList.GoForward;
++
++
++   // {****} If PDElem<>Nil then WriteDLLDebugFile(Format('Going on.. cktelement %d %s.%s phases=%d',[ BranchList.Level, PDelem.ParentClass.Name, PDElem.Name, PDelem.NPhases  ]));
++
++   End;
++
++   With ActiveCircuit Do Begin
++     ReprocessBusDefs;  // to get new load added and account for disabled devices
++     DoResetMeterZones;  // without eliminated devices
++     Solution.SystemYChanged := True; // force rebuild of Y
++   End;
++
++
 +End;
 +
  end.
