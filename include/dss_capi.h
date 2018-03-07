@@ -3767,22 +3767,22 @@ extern "C" {
     DSS_CAPI_DLL void Solution_Set_GenMult(double Value);
     
     /*
-    Default daily load shape (defaults to "Default\
+    Default daily load shape (defaults to "Default")
     */
     DSS_CAPI_DLL char* Solution_Get_DefaultDaily(void);
     
     /*
-    Default Yearly load shape (defaults to "Default\
+    Default Yearly load shape (defaults to "Default")
     */
     DSS_CAPI_DLL char* Solution_Get_DefaultYearly(void);
     
     /*
-    Default daily load shape (defaults to "Default\
+    Default daily load shape (defaults to "Default")
     */
     DSS_CAPI_DLL void Solution_Set_DefaultDaily(char* Value);
     
     /*
-    Default Yearly load shape (defaults to "Default\
+    Default Yearly load shape (defaults to "Default")
     */
     DSS_CAPI_DLL void Solution_Set_DefaultYearly(char* Value);
     

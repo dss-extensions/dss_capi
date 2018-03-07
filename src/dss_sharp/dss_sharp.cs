@@ -8931,7 +8931,7 @@ namespace dss_sharp
         }
 
         /// <summary>
-        /// Default daily load shape (defaults to "Default\
+        /// Default daily load shape (defaults to "Default")
         /// </summary>
         public /*static*/ string DefaultDaily
         {
@@ -8944,7 +8944,7 @@ namespace dss_sharp
         }
 
         /// <summary>
-        /// Default Yearly load shape (defaults to "Default\
+        /// Default Yearly load shape (defaults to "Default")
         /// </summary>
         public /*static*/ string DefaultYearly
         {
