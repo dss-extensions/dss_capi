@@ -986,9 +986,9 @@ Begin
           Writeln(F, '   ', Cabs(Saccum)/1000.0:8:1,'     ', PowerFactor(Saccum):8:4);
           FromBus := Pad(StripExtension(p_Elem.Nextbus), MaxBusNameLength);
         End;
+        Writeln(F);
        End;
         p_Elem := ActiveCircuit.sources.Next;
-        Writeln(F);
      End;
 
      // PDELEMENTS first
@@ -1020,9 +1020,9 @@ Begin
           Writeln(F, '   ', Cabs(Saccum)/1000.0:8:1,'     ', PowerFactor(Saccum):8:4);
           FromBus := Pad(StripExtension(p_Elem.Nextbus),MaxBusNameLength);
         End;
+        Writeln(F);
        End;
         p_Elem := ActiveCircuit.PDElements.Next;
-        Writeln(F);
      End;
 
      Writeln(F,'= = = = = = = = = = = = = = = = = = =  = = = = = = = = = = =  = =');
@@ -1066,9 +1066,9 @@ Begin
           Writeln(F, '   ', Cabs(Saccum)/1000.0:8:1,'     ', PowerFactor(Saccum):8:4);
           FromBus := Pad(StripExtension(p_Elem.Nextbus),MaxBusNameLength);
         End;
+        Writeln(F);
       End;
         p_Elem := ActiveCircuit.PCElements.Next;
-        Writeln(F);
      End;
 
    End; {ShowOptionCode=1}

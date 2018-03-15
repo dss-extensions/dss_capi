@@ -319,14 +319,14 @@ Begin
                         'Reset Keeplist (sets all buses to FALSE (no keep))' +CRLF+
                         'Set KeepList=(bus1, bus2, bus3, ... )' +CRLF+
                         'Set KeepList=(file=buslist.txt)';
-     OptionHelp[59] := '{ Default or [null] | Stubs [Zmag=nnn] | MergeParallel | BreakLoops | Switches | TapEnds [maxangle=nnn] | Ends}  Strategy for reducing feeders. ' +
+     OptionHelp[59] := '{ Default or [null] | Stubs [Zmag=nnn] | MergeParallel | BreakLoops | Switches | Ends | Laterals}  Strategy for reducing feeders. ' +
                        'Default is to eliminate all dangling end buses and buses without load, caps, or taps. ' +  CRLF +
                        '"Stubs [Zmag=0.02]" merges short branches with impedance less than Zmag (default = 0.02 ohms) ' + CRLF +
                        '"MergeParallel" merges lines that have been found to be in parallel ' +CRLF+
                        '"Breakloops" disables one of the lines at the head of a loop. ' +CRLF+
-                       '"Tapends [maxangle=15]" eliminates all buses except those at the feeder ends, at tap points and where the feeder turns by greater than maxangle degrees. ' + CRLF+
                        '"Ends" eliminates dangling ends only.'+CRLF+
                        '"Switches" merges switches with downline lines and eliminates dangling switches.'+CRLF+
+                       '"Laterals [Keepload=Yes*/No]" uses the Remove command to eliminate 1-phase laterals and optionally lump the load back to the 2- or 3-phase feeder (default behavior). ' +CRLF+CRLF+
                        'Marking buses with "Keeplist" will prevent their elimination.';
      OptionHelp[60] := '{YES/TRUE | NO/FALSE} Default = no. Set for keeping demand interval data for daily, yearly, etc, simulations. '+
                        'Side Effect:  Resets all meters!!!';

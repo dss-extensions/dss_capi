@@ -562,6 +562,7 @@ begin
   // Main control panel
   //   script windows numbered 1..ScriptCount
   //   the main script window is #1 in the list
+
   DSS_Registry.Section := 'Panels';
   DSS_Registry.ClearSection;
   DSS_Registry.WriteString('MainWindow', Format(' %d, %d, %d, %d, %d',

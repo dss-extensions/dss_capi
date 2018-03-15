@@ -193,7 +193,7 @@ begin
   38: begin  // Solution.converged read
      If ActiveCircuit[ActiveActor] <> Nil Then Begin
         Result:=0;
-        if ActiveCircuit[ActiveActor].Issolved then Result:=1;
+        if ActiveCircuit[ActiveActor].Solution.ConvergedFlag then Result:=1;
      End;
   end;
   39: begin  // Solution.converged Write

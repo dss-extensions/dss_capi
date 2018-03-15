@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-        NumExecOptions = 119;
+        NumExecOptions = 120;
 
 VAR
          ExecOption,
@@ -153,6 +153,7 @@ Begin
      ExecOption[117] := 'DSSVisualizationTool';
      ExecOption[118] := 'DSSVInstalled';
      ExecOption[119] := 'Coverage';
+     ExecOption[120] := 'Num_SubCircuits';
 
 
 
@@ -255,9 +256,10 @@ Begin
                         'When the CalcVoltageBases command is issued, a snapshot solution is performed '+
                         'with no load injections and the bus base voltage is set to the nearest legal voltage base. '+
                         'The defaults are as shown in the example above.';
-     OptionHelp[40] := '{Normal | Newton}  Solution algorithm type.  Normal is a fixed point iteration ' +
+     OptionHelp[40] := '{Normal | Newton | Diakoptics}  Solution algorithm type.  Normal is a fixed point iteration ' +
                         'that is a little quicker than the Newton iteration.  Normal is adequate for most radial '+
-                        'distribution circuits.  Newton is more robust for circuits that are difficult to solve.';
+                        'distribution circuits.  Newton is more robust for circuits that are difficult to solve.' +
+                        'Diakoptics is used for accelerating the simulation using multicore computers';
      OptionHelp[41] := '{YES/TRUE | NO/FALSE}  Default is "No/False". Specifies whether to use trapezoidal integration for accumulating energy meter registers. ' +
                         'Applies to EnergyMeter and Generator objects.  Default method simply multiplies the ' +
                         'present value of the registers times the width of the interval (Euler). ' +
@@ -414,8 +416,9 @@ Begin
      OptionHelp[117] := 'Activates/Deactivates the extended version of the plot command for figures with the DSS Visualization Tool.';
      OptionHelp[118] := 'Returns Yes/No if the DSS Visualization Tool is installed (Read Only)';
      OptionHelp[119] := 'Percentage of coverage expected when estimating the longest paths on the circuit for tearing, the default coverage'+CRLF+CRLF+
-                        'is the 70% (0.7), this value cannot exceed 1.0. When used with the "Set" command is used for the algorithm for estimating the paths within the circuit'+CRLF+CRLF+
+                        'is the 90% (0.9), this value cannot exceed 1.0. When used with the "Set" command is used for the algorithm for estimating the paths within the circuit'+CRLF+CRLF+
                         'but when the "get" command is used after executing the tear_circuit command it will deliver the actual coverage after running the algorithm';
+     OptionHelp[120] := 'This is the number of subcircuits in which the circuit will be torn when executing the tear_circuit command, by default is the number of local CPUs - 1';
 End;
 //----------------------------------------------------------------------------
 FUNCTION DoSetCmd_NoCircuit:Boolean;  // Set Commands that do not require a circuit
@@ -685,6 +688,9 @@ Begin
                 end;
           119:  Begin
                   ActiveCircuit[ActiveActor].Coverage :=  Parser[ActiveActor].DblValue;
+                End;
+          120:  Begin
+                  ActiveCircuit[ActiveActor].Num_SubCkts :=  Parser[ActiveActor].IntValue;
                 End
          ELSE
            // Ignore excess parameters
@@ -875,6 +881,7 @@ Begin
           117: if DSS_Viz_enable then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           118: if DSS_Viz_installed then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           119: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Actual_Coverage]));
+          120: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].Num_SubCkts]));
          ELSE
            // Ignore excess parameters
          End;

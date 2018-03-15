@@ -176,6 +176,16 @@ TYPE
           Buses_Covered     : Array of integer;   //Stores the number of buses (estimated - 1 quadrant) per path
           Path_Size         : Array of Integer;   //Stores the estimated size of each path
           New_Graph         : Array of Integer;   //Stores the latest weighted graph
+          Num_SubCkts       : Integer;            // Stores the number of subcircuits for tearing the circuit when executing the "tear_Circuit" command
+          Link_Branches     : Array of String;    // Stores the names of the Link branches for Diakoptics
+          PConn_Names       : Array of String;    // Stores the names of the buses (bus1) of the link branches
+          PConn_Voltages    : Array of Double;    // Stores the voltages at the point of connection of the subcircuits
+          Locations         : Array of Integer;   // Stores the indexes of the locations
+
+          // Variables for Diakoptics
+          Contours         : Array of Array of Complex;
+          ZCT              : Array of Array of Complex;
+          ZCC              : Array of Array of Complex;
 
           // Bus and Node stuff
           Buses:    pTBusArray;
@@ -286,11 +296,13 @@ TYPE
           Function GetBusAdjacentPDLists(ActorID: integer): TAdjArray;
           Function GetBusAdjacentPCLists(ActorID: integer): TAdjArray;
           function Tear_Circuit(): Integer;                            // Tears the circuit considering the number of Buses of the original Circuit
+          procedure Save_SubCircuits();
           procedure  get_longest_path();
           function Append2PathsArray(New_Path :  array of integer): Integer;//  appends a new path to the array and returns the index(1D)
           procedure Normalize_graph();
           procedure Get_paths_4_Coverage();                             // Calculates the paths inside the graph
                                                                         // To guarantee the desired coverage when tearing the system
+          procedure Format_SubCircuits(Path  : String; NumCkts  : Integer); // Arrange the files of the subcircuits to make them independent
 
           property Name             : String         Read Get_Name;
           Property CaseName         : String         Read FCaseName         Write Set_CaseName;
@@ -307,7 +319,7 @@ USES
      PDElement, CktElementClass,
      ParserDel,  DSSClassDefs, DSSGlobals, Dynamics,
      Line, Transformer,  Vsource,
-     Utilities,  DSSForms, Executive, SHELLAPI;
+     Utilities,  DSSForms, Executive, SHELLAPI, Windows;
 
 //----------------------------------------------------------------------------
 Constructor TDSSCircuit.Create(const aName:String);
@@ -498,12 +510,19 @@ BEGIN
    // tearing algorithm vars initialization
 
 
-  Coverage        :=  0.7;      // 70% coverage expected by default
+  Coverage        :=  0.9;      // 90% coverage expected by default
   Actual_coverage :=  -1;       //No coverage
+  Num_SubCkts     :=  CPU_Cores-1;
   setlength(Longest_paths,0);
   setlength(Path_Idx,0);
   setlength(Buses_Covered,0);
   setlength(Path_size,0);
+
+  // Diakoptics variables
+
+  setlength(ZCC,0);
+  setlength(ZCT,0);
+  setlength(Contours,0);
 
 END;
 
@@ -768,58 +787,249 @@ Begin
   End;
 End;
 {*******************************************************************************
+* This routine reads the master file of the torn circuit and creates the       *
+*  header definitions for declaring separate subcircuits in OpenDSS            *
+********************************************************************************}
+procedure TDSSCircuit.Format_SubCircuits(Path  : String; NumCkts  : Integer);
+var
+  myFile      : TextFile;
+  text        : string;
+  Xtra,
+  File_Struc  : Array of String;
+  Str_Found   : Boolean;
+  Local_Temp,
+  FS_Idx,
+  FS_Idx1     : Integer;
+const
+  Reference   : array[0..5] of string =                   // To filter the source file
+    ('Redirect EnergyM', 'Redirect Monitor', 'MakeBu', 'Redirect BusVolta', 'Buscoords busco', 'Redirect zone');
+
+begin
+    // Reads the master file
+    AssignFile(myFile, Path  + '\master.dss');
+    Reset(myFile);                                        // Prepares for reading
+    setlength(File_Struc,0);
+    FS_Idx    :=  0;
+    while not Eof(myFile) do                              // Extracts the file content as an array of strings
+    begin
+      setlength(File_Struc,(length(File_Struc) + 1));
+      ReadLn(myFile, text);
+      File_Struc[FS_Idx]  :=  text;
+      inc(FS_Idx);
+    end;
+    CloseFile(myFile);
+    //  Creates the copy for the interconnected system
+    setlength(Xtra,0);
+    AssignFile(myFile, Path  + '\Master_Interconnected.dss');
+    ReWrite(myFile);                                      // Prepares for writing
+    for FS_Idx := 0 to High(File_Struc) do
+    Begin
+      Str_Found   :=  False;
+      for FS_Idx1 := 0 to 5 do
+      Begin
+        Local_Temp  :=  ansipos(Reference[FS_Idx1], File_Struc[FS_Idx]);
+        Str_Found   :=  (Local_Temp   <>  0) or Str_Found;
+      End;
+      if Str_found then
+      Begin
+        setlength(Xtra,(length(Xtra) + 1));
+        Xtra[High(Xtra)]  :=  File_Struc[FS_Idx];
+      End
+      else  WriteLn(myFile,File_Struc[FS_Idx]);
+    End;
+    // Adds the zones and the rest to the file
+    for FS_Idx := 0 to High(Xtra) do
+    Begin
+      WriteLn(myFile,Xtra[FS_Idx])
+    End;
+
+    CloseFile(myFile);
+
+    // removes the unnecessary information from the master file (deletes the other zones)
+    AssignFile(myFile, Path  + '\master.dss');
+    ReWrite(myFile);                                      // Prepares for writing
+    for FS_Idx := 0 to High(File_Struc) do
+    Begin
+      Local_Temp  :=  ansipos('Redirect zone', File_Struc[FS_Idx]);
+      if Local_Temp   =  0 then
+      Begin
+        Local_Temp  :=  ansipos('Redirect EnergyM', File_Struc[FS_Idx]);
+        if Local_Temp   =  0 then
+        Begin
+          Local_Temp  :=  ansipos('Redirect Monitor', File_Struc[FS_Idx]);
+          if Local_Temp   =  0 then
+            WriteLn(myFile,File_Struc[FS_Idx]);
+        End;
+      End;
+    End;
+    CloseFile(myFile);
+    // Copies the support files to the zones directories
+    FS_Idx    :=  0;
+    while FS_Idx <> -1 do
+    Begin
+      Local_Temp  :=  ansipos('Redirect zone', File_Struc[FS_Idx]);
+      if Local_Temp   =  0 then
+      Begin
+        Local_Temp  :=  ansipos('Redirect ', File_Struc[FS_Idx]);
+        if Local_temp <> 0 then
+        Begin
+          text    :=  stringreplace(File_Struc[FS_Idx], 'Redirect ', '',[rfReplaceAll, rfIgnoreCase]);
+          for FS_Idx1 := 2 to NumCkts do
+            CopyFile(PChar(Path + '\' + text), PChar(Path + '\zone_' + inttostr(FS_Idx1) + '\' + text), true);
+        End;
+        inc(FS_Idx);
+      End
+      else
+        FS_Idx  :=  -1;                             // Ends the routine
+    End;
+    // Creates the master file for each subcircuit
+    for FS_Idx := 2 to NumCkts do
+    Begin
+      AssignFile(myFile, Path  + '\zone_' + inttostr(FS_Idx) + '\master.dss');
+      ReWrite(myFile);
+      WriteLn(myFile,'Clear');
+      WriteLn(myFile,'New Circuit.Zone_' + inttostr(FS_Idx));
+      FS_Idx1    :=  2;
+      while FS_Idx1 <> -1 do                      // Writes the global files
+      Begin
+        Local_Temp  :=  ansipos('Redirect zone', File_Struc[FS_Idx1]);
+        if Local_Temp   =  0 then
+        Begin
+          WriteLn(myFile,File_Struc[FS_Idx1]);
+          inc(FS_Idx1);
+        End
+        else
+          FS_Idx1   :=  -1;
+      End;
+      for FS_Idx1 := 0 to High(File_Struc) do   // Writes the zone files
+      Begin
+        Local_Temp  :=  ansipos('Redirect zone_' + inttostr(FS_Idx), File_Struc[FS_Idx1]);
+        if Local_Temp   <>  0 then
+        Begin
+          text    :=  stringreplace(File_Struc[FS_Idx1], 'zone_' + inttostr(FS_Idx) + '\', '',[rfReplaceAll, rfIgnoreCase]);
+          WriteLn(myFile,text);
+        End;
+      End;
+      CloseFile(myFile);
+    End;
+    // Sets the properties of the VSource on each subcricuit based on the latest voltage measured
+    FS_Idx1     :=    0;
+    for FS_Idx := 2 to NumCkts do
+    Begin
+       AssignFile(myFile, Path  + '\zone_' + inttostr(FS_Idx) + '\VSource.dss');
+       ReWrite(myFile);
+       text  :=  'Edit "Vsource.source" bus1=' + PConn_Names[FS_Idx - 1] + ' pu=1.0 basekv=' + floattostrF(PConn_Voltages[FS_Idx1],ffGeneral, 8, 3) +
+                 ' angle=' + floattostrF(PConn_Voltages[FS_Idx1 + 1],ffGeneral, 8, 3) + ' R1=0 X1=0.001 R0=0 X0=0.001';
+       WriteLn(myFile,text);
+       CloseFile(myFile);
+       FS_Idx1    :=  FS_Idx1 + 2;
+    End;
+end;
+
+{*******************************************************************************
+*        Saves the subcircuits created in memory into the hard drive           *
+********************************************************************************
+}
+procedure TDSSCircuit.Save_SubCircuits();
+var
+  Fileroot    : String;
+Begin
+    // Prepares everything to save the base of the torn circuit on a separate folder
+    Fileroot              :=  GetCurrentDir;
+    Fileroot              :=  Fileroot  + '\Torn_Circuit';
+    CreateDir(Fileroot);                        // Creates the folder for storing the modified circuit
+    DelFilesFromDir(Fileroot,'*',True);         // Removes all the files inside the new directory (if exists)
+    DssExecutive.Command  :=  'save circuit Dir="' + Fileroot + '"';
+    // This routine extracts and modifies the file content to separate the subsystems as OpenDSS projects indepedently
+    Format_SubCircuits(FileRoot, length(Locations));
+End;
+
+{*******************************************************************************
 *         This routine tears the circuit into many pieces as CPUs are          *
 *         available in the local computer (in the best case)                   *
 ********************************************************************************}
 function TDSSCircuit.Tear_Circuit(): Integer;
 var
-  Num_Pieces,                                       // Max Number of pieces considering the number of local CPUs
+  NodeIdx,
+  Num_Pieces,
+  Buses_Acc,                                         // Number of buses accumulated
   Num_buses,                                        // Goal for number of buses on each subsystem
   Num_target,                                       // Generic accumulator
   Location_idx,                                     // Active Location
+  j,jj,dbg,dbg2,
   i             : Integer;                          // Generic counter variables
-
-  Candidates,                                       // Array for 0 level buses idx
-  Locations     : Array of Integer;                 // Array for the best tearing locations
-  Locations_V   : Array of Double;                  // Array to store the VMag and angle at the location
+  Candidates    : Array of Integer;                 // Array for 0 level buses idx
   TreeNm,                                           // For debugging
-  Fileroot,
+  BusName,
+  Terminal,
   PDElement     : String;
   Ftree         : TextFile;
   flag          : Boolean;                          //  Stop flag
-
   EMeter        : TEnergyMeterObj;
-
-
+  pBus          : TDSSBus;
+  Volts         : Polar;
+  Term_volts    : Array of Double;                  // To verify the connection of the branch
 Begin
-  Num_Pieces  :=  CPU_Cores-1;
+  Num_pieces    :=  Num_SubCkts;
   with solution do
   Begin
-    Num_buses       :=  length(Inc_Mat_Cols) div Num_Pieces;  // Estimates the number of buses for each subsystem
-    Calc_Inc_Matrix_Org(ActiveActor);                         //Calculates the ordered incidence matrix
-    Get_paths_4_Coverage;                                     // Refines the levels vector according to the coverage desired
-
-
-    setlength(Locations,Num_pieces-1);                // Setups the array for the tearing locations
-
-    for i := 0 to (length(Locations) - 1) do Locations[i] :=  -1; // Initializes the locations array
-    Num_target    :=  Num_buses;
-    Location_idx  :=  0;
-
-    for i := 0 to (length(Candidates) - 1) do
+    flag            := True;
+    // Increases coverage until the number of paths is >= than the number of subcircuits to create
+    while flag do
     Begin
-      if (Candidates[i] >= Num_target) and (Location_idx < (Num_pieces-1)) then
-      begin
-        Num_target :=  Num_target + Num_buses;
-        if Candidates[i] > Num_target then
-          Locations[Location_idx] :=  Candidates[i-1]
-        else
-          Locations[Location_idx] :=  Candidates[i];
-        inc(Location_idx);
-      end;
+      Calc_Inc_Matrix_Org(ActiveActor);                       //Calculates the ordered incidence matrix
+      Get_paths_4_Coverage;                                   // Refines the levels vector according to the coverage desired
+      if length(Path_Idx) >= Num_pieces then
+        flag  :=  False
+      else
+        Coverage  :=  Coverage + 0.1;                         // Increases the coverage to have more paths for covering the circuit
     End;
-
-
+    Num_buses       :=  length(Inc_Mat_Cols) div Num_Pieces;  // Estimates the number of buses for each subsystem
+    setlength(Locations,Num_pieces);                          // Setups the array for the tearing locations
+    for i := 0 to High(Locations) do Locations[i] :=  -1;     // Initializes the locations array
+    flag          :=  True;
+    j             :=  0;
+    Location_idx  :=  1;
+    Locations[0]  :=  0;
+    while flag do
+    Begin
+      if j  = High(Path_Idx) then
+        setlength(Candidates,(Length(Longest_paths) - Path_Idx[j]))
+      else
+        setlength(Candidates,(Path_Idx[j + 1] - Path_Idx[j]));
+      if j = 0 then
+        for i := 0 to High(Candidates) do
+          Candidates[i] :=  Longest_paths[i]      // Moves the path into the cadidates array
+      else
+        for i := 0 to High(Candidates) do
+          Candidates[i] :=  Longest_paths[(High(Candidates) - i) + Path_Idx[j]];     // Moves the path into the cadidates array (reverse)
+      // Checks if the path has enough buses to cover the requirements
+      if ((Candidates[High(Candidates)] - Candidates[0]) >= 2*Num_Buses) then
+      Begin
+      // The path is large enough for tearing
+        Buses_Acc   :=  0;
+        for i := 1 to High(Candidates) do
+        Begin
+          Buses_Acc   := (Candidates[i] - Candidates[i - 1]) + Buses_Acc;
+          if Buses_Acc >= Num_Buses then
+          begin
+            Buses_Acc               :=  0;
+            Locations[Location_idx] :=  Candidates[i];
+            inc(Location_idx);
+          end;
+        End;
+      End
+      else
+      Begin
+        if  j = 0 then Location_idx  := 0;                // To avoid placing an EMeter at the feederhead
+        Locations[Location_idx]  :=  Candidates[1];       // The path is too short, consider to leave this path together
+        inc(Location_idx);
+      End;
+      flag          :=  False;
+      for i := 0 to High(Locations) do
+        if Locations[i] = -1 then flag  :=  True;
+      inc(j)
+    End;
   //***********The directory is ready for storing the new circuit****************
       EMeter    := EnergyMeters.First;
       while EMeter  <> Nil do
@@ -828,10 +1038,13 @@ Begin
         EMeter          :=  EnergyMeters.Next;
       end;
   //************ Creates the meters at the tearing locations  ********************
-    Result  :=  1;                              // Resets the result variable (Return)
-    setlength(Locations_V,length(Locations)*2);
+    Result        :=  1;                                  // Resets the result variable (Return)
+    setlength(PConn_Voltages,length(Locations)*2);        //  Sets the memory space for storing the voltage at the point of conn
+    setlength(Link_branches,length(Locations));           //  Sets the memory space for storing the link branches names
+    setlength(PConn_Names,length(Locations));             //  Sets the memory space for storing the Bus names
     SolutionAbort := FALSE;
-    for i := 0 to (length(Locations)-1) do
+    j             :=  0;
+    for i := 1 to High(Locations) do
     begin
       if Locations[i] >= 0 then
       Begin
@@ -839,22 +1052,54 @@ Begin
         // Gets the name of the PDE for placing the EnergyMeter
          with solution do
          Begin
-           PDElement :=  Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])];
-           SetActiveBus(Inc_Mat_Cols[get_IncMatrix_Col(Locations[i])]);  // Activates the Bus
+           PDElement        :=  Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])];
+           Link_Branches[i] :=  PDElement;
+           dbg              :=  get_IncMatrix_Col(Locations[i] + 1);      // Temporary stores the given location
+    // Checks the branch orientation across the feeder by substracting the voltages around the branch
+    // Start with Bus 1
+           setlength(Term_volts,2);
+           for dbg := 0 to 1 do
+           Begin
+             BusName          :=  Inc_Mat_Cols[Active_Cols[dbg]];
+             SetActiveBus(BusName);           // Activates the Bus
+             pBus             :=  Buses^[ActiveBusIndex];
+             jj               :=  1;
+       // this code so nodes come out in order from smallest to larges
+             Repeat
+               NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
+               inc(jj)
+             Until NodeIdx>0;
+             Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
+             Term_volts[dbg]     :=  Volts.mag;
+           End;
+
+      // Determines the best place to connect the EnergyMeter
+           Term_volts[0]      :=  Term_volts[0] - Term_volts[1];
+           if Term_volts[0] >= 0 then jj  :=  0
+           else   jj  :=  1;
+           BusName          :=  Inc_Mat_Cols[Active_Cols[jj]];
+           Terminal         :=  'term=' + inttostr(jj + 1);
+
+           PConn_Names[i]   :=  BusName;
+           SetActiveBus(BusName);           // Activates the Bus
+           pBus             :=  Buses^[ActiveBusIndex];
+           jj               :=  1;
+           // this code so nodes come out in order from smallest to larges
+           Repeat
+             NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
+             inc(jj)
+           Until NodeIdx>0;
+           Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
+           PConn_Voltages[j]  :=  (Volts.mag/1000)*SQRT3;
+           inc(j);
+           PConn_Voltages[j]  :=  Volts.ang;
+           inc(j);
          End;
         // Generates the OpenDSS Command;
-        DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' term=1 option=R action=C';
+        DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
       End;
     end;
-    DssExecutive.Command := 'set mode=snap';
-    Solve(ActiveActor);
 
-    Fileroot  :=  GetCurrentDir;
-    Fileroot  :=  Fileroot  + '\Torn_Circuit';
-    CreateDir(Fileroot);                        // Creates the folder for storing the modified circuit
-    DelFilesFromDir(Fileroot,'*',True);         // Removes all the files inside the new directory (if exists)
-
-    DssExecutive.Command :=  'save circuit Dir="' + Fileroot + '"';
   End;
 End;
 //----------------------------------------------------------------------------
@@ -1736,7 +1981,3 @@ end;
 
 
 end.
-
-
-
-

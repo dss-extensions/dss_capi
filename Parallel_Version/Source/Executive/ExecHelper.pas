@@ -288,8 +288,8 @@ Begin
       RegEx1:=TPerlRegEx.Create;
       RegEx1.Options:=[preCaseLess];
       RegEx1.RegEx:=UTF8String(Pattern);
-      ActiveDSSClass[ActiveActor].First;
-      pObj:=ActiveDSSClass[ActiveActor].GetActiveObj;
+      If ActiveDSSClass[ActiveActor].First > 0  Then pObj :=  ActiveDSSObject[ActiveActor]
+      else  pObj  :=  nil;
       while pObj <> Nil do begin
         RegEx1.Subject:=UTF8String(pObj.Name);
         if RegEx1.Match then begin

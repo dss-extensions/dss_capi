@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 106;
+     NumExecCommands = 107;
 
 Var
 
@@ -144,6 +144,7 @@ Begin
      ExecCommand[104] := 'NodeList';
      ExecCommand[105] := 'Connect';
      ExecCommand[106] := 'Disconnect';
+     ExecCommand[107] := 'Remove';
 
 
 
@@ -464,6 +465,15 @@ Begin
                          'NodeList Line.Myline';
      CommandHelp[105] := 'Request to create a TCP/IP socket to communicate data with external modules. This function requires the host address and TCP port to connect.';
      CommandHelp[106] := 'Request to terminate a TCP/IP socket. This function requires the host address and TCP port to disconnect.';
+     CommandHelp[107] := '{ElementName=} [KeepLoad=Y*/N] [EditString="..."] ' +
+                         'Remove (disable) all branches downline from the PDelement named by "ElementName" property. Circuit must have an Energymeter on this branch. ' +
+                         'If KeepLoad=Y (default) a new Load element is defined and kW, kvar set to '+
+                         'present power flow solution for the first element eliminated. ' +
+                         'The EditString is applied to each new Load element defined. ' + CRLF +
+                         'If KeepLoad=N, all downline elements are disabled. Examples: ' + CRLF + CRLF +
+                         'Remove Line.Lin3021' + CRLF +
+                         'Remove Line.L22 Editstring="Daily=Dailycurve Duty=SolarShape' + CRLF +
+                         'Remove Line.L333 KeepLoad=No';
 
 End;
 
@@ -697,6 +707,7 @@ Begin
       105: begin DSSInfoMessageDlg ('Winsock TCP/IP connection is not supported in FPC version');CmdResult := 0; end;
       106: begin DSSInfoMessageDlg ('Winsock TCP/IP disconnection is not supported in FPC version');CmdResult := 0; end;
       {$ENDIF}
+      107: DoRemoveCmd;
      ELSE
        // Ignore excess parameters
      End;

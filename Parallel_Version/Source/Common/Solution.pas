@@ -59,6 +59,7 @@ CONST
 
      NORMALSOLVE = 0;
      NEWTONSOLVE = 1;
+     DIAKOPTICS  = 2;                 // Diakoptics method added on 02/26/2018
 
 TYPE
 
@@ -201,11 +202,16 @@ TYPE
 // Columns array (array of strigns with the names of the cols of the Inc matrix)'
 // Levels array (array of integers that describes the proximity level for each
 // bus to the circuit's backbone)
-      Inc_Mat_Rows  :  Array of String;
-      Inc_Mat_Cols  :  Array of String;
-      Inc_Mat_levels:  Array of Integer;
-      temp_counter  : Integer;
-      Active_Cols   : Array of Integer;
+      Inc_Mat_Rows    :  Array of String;
+      Inc_Mat_Cols    :  Array of String;
+      Inc_Mat_levels  :  Array of Integer;
+      temp_counter    : Integer;
+      Active_Cols     : Array of Integer;
+      Active_Cols_Idx :  Array of Integer;
+//******************************************************************************
+//********************Diakoptics solution mode variables************************
+      Diakoptics_ready  : Boolean;
+      Diakoptics_Actors :  Integer;
 //******************************************************************************
        constructor Create(ParClass:TDSSClass; const solutionname:String);
        destructor  Destroy; override;
@@ -319,6 +325,7 @@ Begin
 
      CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
      CommandList.Abbrev := True;
+
 
 
 End;
@@ -444,7 +451,7 @@ Begin
     IntervalHrs   := 1.0;
 
     InitPropertyValues(0);
-
+    Diakoptics_Ready   :=  False;   // Diskoptics needs to be initialized
     setlength(IncMatrix,3);
 End;
 
@@ -919,8 +926,9 @@ Begin
 
 
    CASE Algorithm of
-      NORMALSOLVE: DoNormalSolution(ActorID);
-      NEWTONSOLVE: DoNewtonSolution(ActorID);
+      NORMALSOLVE : DoNormalSolution(ActorID);
+      NEWTONSOLVE : DoNewtonSolution(ActorID);
+      DIAKOPTICS  : DoNormalSolution(ActorID);
    End;
 
    ActiveCircuit[ActorID].Issolved := ConvergedFlag;
@@ -1042,6 +1050,7 @@ VAR
    TotalIterations  :Integer;
 
 Begin
+//      if Solution then
    SnapShotInit(ActorID);
    TotalIterations    := 0;
    QueryPerformanceCounter(SolveStartTime);
@@ -1429,8 +1438,11 @@ Begin
     if (IncMatrix[Idx_1*3] = Row) and Tflag then
     begin
       setlength(Active_Cols,2);
-      Active_Cols[0]  :=  IncMatrix[Idx_1*3 + 1];     //Stores the indexes of both columns for the link branch
-      Active_Cols[1]  :=  IncMatrix[Idx_1*3 + 4];     //In case they need ot be used in the future by the caller
+      setlength(Active_Cols_Idx,2);
+      Active_Cols[0]      :=  IncMatrix[Idx_1*3 + 1];     //Stores the indexes of both columns for the link branch
+      Active_Cols[1]      :=  IncMatrix[Idx_1*3 + 4];     //In case they need ot be used in the future by the caller
+      Active_Cols_Idx[0]  :=  IncMatrix[Idx_1*3 - 1];     //Stores the indexes of both columns for the link branch
+      Active_Cols_Idx[1]  :=  IncMatrix[Idx_1*3 + 2];     //In case they need ot be used in the future by the caller
       Result :=  IncMatrix[Idx_1*3 + 1];
       Tflag  :=  False;
     end;
@@ -1573,14 +1585,9 @@ Begin
         j         :=  0;                                                // Stores the previous value (shift reg)
         for j2 := ZeroLevel to High(Inc_Mat_levels) do
         begin
-
-            if j2 = 2395 then
-                  IncMat_Ordered  :=  True;                             // For debugging
-
           if Inc_Mat_levels[j2] >= j then inc(BusdotIdx)
           else
           begin
-
             ActiveIncCell[1]  :=  get_IncMatrix_Row(j2);                //Looks for the Column in the IncMatrix
             if ActiveIncCell[1] < 0 then                                //Checks if the col was located (just in case)
               BusdotIdx     :=  1

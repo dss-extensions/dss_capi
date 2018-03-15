@@ -1148,7 +1148,7 @@ BEGIN
 
               pctVV  := QNew[k]/QTemp;
               pctDRC := QDRCNew[k]/QTemp;
-              WriteDLLDebugFile(Format('%g, %d, %.6g, %.6g, %.6g, %s', [ActiveCircuit.Solution.Dynavars.t, ActiveCircuit.Solution.ControlIteration, QNew[k],QDRCNew[k], QTemp, 'before limit.']));
+//              WriteDLLDebugFile(Format('%g, %d, %.6g, %.6g, %.6g, %s', [ActiveCircuit.Solution.Dynavars.t, ActiveCircuit.Solution.ControlIteration, QNew[k],QDRCNew[k], QTemp, 'before limit.']));
 
               //Respect the PVSystem's maximum kvar limit, first
               if abs(Qtemp2) > abs(PVSys.kvarLimit) then

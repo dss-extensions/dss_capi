@@ -2267,11 +2267,12 @@ begin
     Case ActiveCircuit.ReductionStrategy of
 
          rsStubs:         DoReduceStubs(BranchList);    {See ReduceAlgs.Pas}
-         rsTapEnds:       DoReduceTapEnds (BranchList);
+         {rsTapEnds:       DoReduceTapEnds (BranchList);}
          rsMergeParallel: DoMergeParallelLines(BranchList);
          rsDangling:      DoReduceDangling(BranchList);
          rsBreakLoop:     DoBreakLoops(BranchList);
          rsSwitches:      DoReduceSwitches(BranchList);
+         rsLaterals:      DoReduceLaterals(BranchList);
     Else
        {Default}
        DoReduceDefault(BranchList);
@@ -2493,7 +2494,7 @@ begin
                        TotalCustomers := PD_Elem.BranchTotalCustomers;
                     End;
                End;
-(*
+
 {**DEBUG**}
             If idx=SequenceList.ListSize then WriteDLLDebugFile('Meter, SectionID, BranchName, FaultRate, AccumulatedBrFltRate, BranchFltRate, RepairHrs, NCustomers, Num_Interrupt');
             With FeederSections^[PD_Elem.BranchSectionID] Do
@@ -2502,7 +2503,7 @@ begin
                PD_Elem.FaultRate, PD_Elem.AccumulatedBrFltRate, PD_Elem.BranchFltRate, PD_Elem.HrsToRepair,
                PD_Elem.BranchNumCustomers, pBus.Bus_Num_Interrupt ]));
 {**DEBUG**}
-*)
+
            End;
 
         {Compute Avg Interruption duration of each Section }
@@ -2519,15 +2520,17 @@ begin
         End;
 
 
-(*
+
 {**DEBUG**}
         WriteDLLDebugFile('Meter, SectionID, NBranches, NCustomers, AvgRepairHrs, AvgRepairMins, FailureRate*RepairtimeHrs, SumFailureRates');
         for idx := 1 to SectionCount do
-            With FFeederSections^[idx] Do
+            With FeederSections^[idx] Do
                WriteDLLDebugFile(Format('%s.%s, %d, %d, %d, %.11g, %.11g, %.11g, %.11g ',
-               [ParentClass.Name, Name, idx, NBranches, nCustomers, AverageRepairTime, AverageRepairTime * 60.0, SumFltRatesXRepairHrs, SumBranchFltRates    ]));
+              [ParentClass.Name, Name, idx, NBranches, nCustomers, AverageRepairTime, AverageRepairTime * 60.0, SumFltRatesXRepairHrs, SumBranchFltRates    ]));
+
+        WriteDLLDebugFile('Load, BusCustDurations, BusNumInterrupt, FaultRatesXRepairHrs');
 {**DEBUG**}
-*)
+
        {Compute SAIFI based on numcustomers and load kW}
        {SAIFI is weighted by specified load weights}
        {SAIFI is for the EnergyMeter Zone}
@@ -2552,8 +2555,8 @@ begin
                        // Set BusCustDurations for Branch reliability export
                        pBus.BusCustDurations :=  NumCustomers * RelWeighting * pBus.Bus_Int_Duration * pBus.Bus_Num_Interrupt; // FeederSections^[pBus.BusSectionID].SumFltRatesXRepairHrs;
 
-    // WriteDLLDebugFile(Format('Load.%s, %.11g, %.11g, %.11g ',
-    //              [pLoad.Name,pBus.BusCustDurations, pBus.Bus_Num_Interrupt, FeederSections^[pBus.BusSectionID].SumFltRatesXRepairHrs]));
+    WriteDLLDebugFile(Format('Load.%s, %.11g, %.11g, %.11g ',
+                  [pLoad.Name,pBus.BusCustDurations, pBus.Bus_Num_Interrupt, FeederSections^[pBus.BusSectionID].SumFltRatesXRepairHrs]));
 
                        SAIDI := SAIDI + pBus.BusCustDurations;
                   End ;

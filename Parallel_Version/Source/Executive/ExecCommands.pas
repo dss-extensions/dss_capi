@@ -30,7 +30,7 @@ implementation
 Uses DSSGlobals, ExecHelper, Executive, ExecOptions, ShowOptions,
      ExportOptions, ParserDel, LoadShape, DSSForms,
      PlotOptions, ConnectOptions, sysutils, Utilities, SolutionAlgs,
-     DSSClassDefs, windows, KLUSolve;
+     DSSClassDefs, windows, KLUSolve, Diakoptics;
 
 
 PROCEDURE DefineCommands;
@@ -147,7 +147,7 @@ Begin
      ExecCommand[107] := 'Wait';
      ExecCommand[108] := 'SolveAll';
      ExecCommand[109] := 'CalcIncMatrix';
-     ExecCommand[110] := 'Diakoptics';
+     ExecCommand[110] := 'Init_Diakoptics';
      ExecCommand[111] := 'CalcIncMatrix_O';
      ExecCommand[112] := 'Tear_Circuit';
      ExecCommand[113] := 'Connect';
@@ -479,7 +479,7 @@ Begin
      CommandHelp[107] := 'Pauses the script thread until all the active actors are Ready to receive new commands (Under Testing)';
      CommandHelp[108] := 'Solves all the circuits loaded into memory';
      CommandHelp[109] := 'Calculates the incidence matrix of the Active Circuit';
-     CommandHelp[110] := 'Starts the form for configuring the A-Diakoptics algorithm and to apply it into the active simulation';
+     CommandHelp[110] := 'Initializes the Diakoptics algorithm by tearing the system, creating subsystems and the memory space for processing. It must be invoked before solving the system using this algorithm';
      CommandHelp[111] := 'Calculates the incidence matrix of the Active Circuit. However, in this case the matrix will be calculated by considering its hierarchical order,'+
                          'which means that the buses order will be generated considering their distribution from the substation to the last load in a radial hierarchy';
      CommandHelp[112] := 'Estimates the buses for tearing the system in many parts as CPUs - 1 are in the local computer, is used for creating a balanced distribution of' +
@@ -610,14 +610,13 @@ Begin
               ActiveCircuit[ActiveActor].Solution.Calc_Inc_Matrix(ActiveActor);
             end;
        110: begin
-              ShowDiakopticsBox;
+              DiakopticsInit();
             end;
        111: begin
               ActiveCircuit[ActiveActor].Solution.Calc_Inc_Matrix_Org(ActiveActor);
             end;
        112: begin
-              Temp_int  :=  ActiveCircuit[ActiveActor].Tear_Circuit();
-              GlobalResult := 'Sub-Circuits Created: ' + inttostr(Temp_int);
+              Diakoptics_Tearing();
             end;
        115: begin
               ActiveCircuit[ActiveActor].Get_paths_4_Coverage();

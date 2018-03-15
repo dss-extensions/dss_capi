@@ -521,6 +521,14 @@ Begin
         ActiveCircuit[I].NumCircuits := 0;
         ActiveCircuit[I].Free;
         ActiveCircuit[I]  :=  nil;
+        if ActorHandle[I] <> nil  then    // Terminate the threads that could be alive
+        begin
+          ActorHandle[I].Terminate;
+          ActorHandle[I].Free;
+          ActorHandle[I]  :=  nil;
+        end;
+        Parser[I].Free;
+        Parser[I] :=  nil;
       end;
     end;
     Circuits.Free;
@@ -857,6 +865,7 @@ initialization
     ErrorStrings[ActiveActor]         := TStringList.Create;
     ErrorStrings[ActiveActor].Clear;
     ActorHandle[ActiveActor]          :=  nil;
+    Parser[ActiveActor]               :=  nil;
    end;
    ActiveActor            :=  1;
    NumOfActors            :=  1;

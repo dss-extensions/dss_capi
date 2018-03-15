@@ -212,7 +212,9 @@ uses
   ExpControl in '..\Controls\ExpControl.pas',
   ESPVLControl in '..\Controls\ESPVLControl.pas',
   IndMach012 in '..\PCElements\IndMach012.pas',
-  ImplLineCodes in 'ImplLineCodes.pas' {LineCodes: CoClass};
+  ImplLineCodes in 'ImplLineCodes.pas' {LineCodes: CoClass},
+  ConnectOptions in '..\Executive\ConnectOptions.pas',
+  TCP_IP in '..\TCP_IP\TCP_IP.pas';
 
 exports
   DllGetClassObject,

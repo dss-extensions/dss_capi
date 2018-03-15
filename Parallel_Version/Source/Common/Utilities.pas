@@ -524,7 +524,13 @@ Begin
 
     If CompareText( SLC, 'ne')=0
     Then  Result := NEWTONSOLVE
-    ELSE  Result := NORMALSOLVE;
+    ELSE
+    Begin
+      If CompareText( SLC, 'no')=0 Then
+        Result := NORMALSOLVE
+      else
+        Result := DIAKOPTICS;
+    End;
 
 End;
 

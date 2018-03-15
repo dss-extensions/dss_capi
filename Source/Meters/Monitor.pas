@@ -72,6 +72,7 @@ unit Monitor;
    3: State Variables
    4: Flicker level and severity index by phase (no modifiers apply)
    5: Solution Variables (Iteration count, etc.)
+   6: Capacitor
 
    +16: Sequence components: V012, I012
    +32: Magnitude Only
@@ -267,10 +268,10 @@ Begin
                     '3 = State Variables (PCElements only)' +CRLF+
                     '4 = Flicker level and severity index (Pst) for voltages. No adders apply.' +CRLF+
                     '    Flicker level at simulation time step, Pst at 10-minute time step.' +CRLF+
-                    '5 = Solution variables (Iterations, etc).' +CRLF+CRLF+
+                    '5 = Solution variables (Iterations, etc).' +CRLF+
+                    '6 = Capacitor Switching (Capacitor Objecs only)'+CRLF+ CRLF+
                     'Normally, these would be actual phasor quantities from solution.' + CRLF+
-                    '6 = Capacitor Switching (Capacitors only)'+CRLF+
-                    'Combine with adders below to achieve other results for terminal quantities:' + CRLF+
+                    'Combine mode with adders below to achieve other results for terminal quantities:' + CRLF+
                     '+16 = Sequence quantities' + CRLF+
                     '+32 = Magnitude only' + CRLF+
                     '+64 = Positive sequence only or avg of all phases' + CRLF+
