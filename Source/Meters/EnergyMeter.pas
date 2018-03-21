@@ -382,6 +382,8 @@ USES  ParserDel, DSSClassDefs, DSSGlobals, Bus, Sysutils, MathUtil,  UCMatrix,
       Utilities, PCElement,  StackDef, Circuit, Line, LineUnits,
       Classes, ReduceAlgs, {$IFNDEF FPC}Windows,{$ENDIF} Math, MemoryMap_Lib;
 
+{$UNDEF DEBUG}
+
 Const NumPropsThisClass = 24;
 
 VAR
@@ -2495,14 +2497,14 @@ begin
                     End;
                End;
 
-{**DEBUG**}
+{$IFDEF DEBUG}
             If idx=SequenceList.ListSize then WriteDLLDebugFile('Meter, SectionID, BranchName, FaultRate, AccumulatedBrFltRate, BranchFltRate, RepairHrs, NCustomers, Num_Interrupt');
             With FeederSections^[PD_Elem.BranchSectionID] Do
                WriteDLLDebugFile(Format('%s.%s, %d, %s.%s, %.11g, %.11g, %.11g, %.11g, %d, %.11g ',
                [ParentClass.Name, Name, PD_Elem.BranchSectionID, PD_Elem.ParentClass.Name, PD_Elem.Name,
                PD_Elem.FaultRate, PD_Elem.AccumulatedBrFltRate, PD_Elem.BranchFltRate, PD_Elem.HrsToRepair,
                PD_Elem.BranchNumCustomers, pBus.Bus_Num_Interrupt ]));
-{**DEBUG**}
+{$ENDIF}
 
            End;
 
@@ -2521,7 +2523,7 @@ begin
 
 
 
-{**DEBUG**}
+{$IFDEF DEBUG}
         WriteDLLDebugFile('Meter, SectionID, NBranches, NCustomers, AvgRepairHrs, AvgRepairMins, FailureRate*RepairtimeHrs, SumFailureRates');
         for idx := 1 to SectionCount do
             With FeederSections^[idx] Do
@@ -2529,7 +2531,7 @@ begin
               [ParentClass.Name, Name, idx, NBranches, nCustomers, AverageRepairTime, AverageRepairTime * 60.0, SumFltRatesXRepairHrs, SumBranchFltRates    ]));
 
         WriteDLLDebugFile('Load, BusCustDurations, BusNumInterrupt, FaultRatesXRepairHrs');
-{**DEBUG**}
+{$ENDIF}
 
        {Compute SAIFI based on numcustomers and load kW}
        {SAIFI is weighted by specified load weights}
@@ -2554,10 +2556,10 @@ begin
                        DblInc(dblkW,     kWBase       * RelWeighting);   // total up weighted kW
                        // Set BusCustDurations for Branch reliability export
                        pBus.BusCustDurations :=  NumCustomers * RelWeighting * pBus.Bus_Int_Duration * pBus.Bus_Num_Interrupt; // FeederSections^[pBus.BusSectionID].SumFltRatesXRepairHrs;
-
+{$IFDEF DEBUG}
     WriteDLLDebugFile(Format('Load.%s, %.11g, %.11g, %.11g ',
                   [pLoad.Name,pBus.BusCustDurations, pBus.Bus_Num_Interrupt, FeederSections^[pBus.BusSectionID].SumFltRatesXRepairHrs]));
-
+{$ENDIF}
                        SAIDI := SAIDI + pBus.BusCustDurations;
                   End ;
            End;
