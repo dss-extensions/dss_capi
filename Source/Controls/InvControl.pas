@@ -2013,6 +2013,7 @@ begin
 
               end;
 
+            // comment
             if CombiControlMode = 'VV_VW' then
               begin
                   if ((FHitkVALimit[i] = True) or (FHitkvarLimit[i] = True)) and (ActiveCircuit.Solution.Dynavars.dblHour>0.0) then exit;
