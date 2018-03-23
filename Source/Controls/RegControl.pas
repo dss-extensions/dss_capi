@@ -60,7 +60,8 @@ TYPE
         RemotePTRatio,
         CTRating,
         R,
-        X           :Double;
+        X,
+        LDC_Z           :Double;
 
         {Reverse Power Variables}
         revVreg,
@@ -69,7 +70,8 @@ TYPE
         kWRevPowerThreshold,
         revDelay,
         revR,
-        revX         :Double;
+        revX,
+        revLDC_Z         :Double;
 
         IsReversible   :Boolean;
         InReverseMode  :Boolean;
@@ -192,7 +194,7 @@ CONST
     ACTION_TAPCHANGE = 0;
     ACTION_REVERSE   = 1;
 
-    NumPropsThisClass = 29;
+    NumPropsThisClass = 31;
 
 Var
     LastChange:Integer;
@@ -258,6 +260,8 @@ Begin
      PropertyName[27] := 'RemotePTRatio';
      PropertyName[28] := 'TapNum';
      PropertyName[29] := 'Reset';
+     PropertyName[30] := 'LDC_Z';
+     PropertyName[31] := 'rev_Z';
 
      PropertyHelp[1] := 'Name of Transformer element to which the RegControl is connected. '+
                         'Do not specify the full object name; "Transformer" is assumed for '  +
@@ -272,8 +276,9 @@ Begin
      PropertyHelp[5] := 'Ratio of the PT that converts the controlled winding voltage to the regulator control voltage. '+
                         'Default is 60.  If the winding is Wye, the line-to-neutral voltage is used.  Else, the line-to-line ' +
                         'voltage is used. SIDE EFFECT: Also sets RemotePTRatio property.';
-     PropertyHelp[6] := 'Rating, in Amperes, of the primary CT rating for converting the line amps to control amps.'+
-                        'The typical default secondary ampere rating is 0.2 Amps (check with manufacturer specs).';
+     PropertyHelp[6] := 'Rating, in Amperes, of the primary CT rating for which the line amps convert to control rated amps.'+
+                        'The typical default secondary ampere rating is 0.2 Amps (check with manufacturer specs). ' +
+                        'Current at which the LDC voltages match the R and X settings.';
      PropertyHelp[7] := 'R setting on the line drop compensator in the regulator, expressed in VOLTS.';
      PropertyHelp[8] := 'X setting on the line drop compensator in the regulator, expressed in VOLTS.';
      PropertyHelp[9] := 'Name of a bus (busname.nodename) in the system to use as the controlled bus instead of the bus to which the '+
@@ -314,6 +319,8 @@ Begin
      PropertyHelp[28] := 'An integer number indicating the tap position that the controlled transformer winding tap position is currently at, or is being set to.  If being set, and the value is outside the range of the transformer min or max tap,'+
                          ' then set to the min or max tap position as appropriate. Default is 0';
      PropertyHelp[29] := '{Yes | No} If Yes, forces Reset of this RegControl.' ;
+     PropertyHelp[30] := 'Z value for Beckwith LDC_Z control option. Volts adjustment at rated control current.';
+     PropertyHelp[31] := 'Reverse Z value for Beckwith LDC_Z control option.';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -400,7 +407,10 @@ Begin
             29: If InterpretYesNo (Param) Then Begin  // force a reset
                   Reset;
                   PropertyValue[29]  := 'n'; // so it gets reported properly
-               End;
+                End;
+            30: LDC_Z := Parser.DblValue ;
+            31: revLDC_Z := Parser.DblValue;
+
          ELSE
            // Inherited parameters
            ClassEdit( ActiveRegControlObj, ParamPointer - NumPropsthisClass)
@@ -515,6 +525,7 @@ Begin
     CTRating     :=  300.0;
     R            :=    0.0;
     X            :=    0.0;
+    LDC_Z        :=    0.0;
     TimeDelay    :=   15.0;
 
     FPTphase     := 1;
@@ -532,6 +543,7 @@ Begin
     revBandwidth :=   3.0;
     revR         :=   0.0;
     revX         :=   0.0;
+    revLDC_Z     :=   0.0;
     revDelay     :=  60.0; // Power must be reversed this long before it will reverse
     RevPowerThreshold   := 100000.0; // 100 kW
     kWRevPowerThreshold := 100.0;
@@ -579,7 +591,7 @@ VAR
    DevIndex :Integer;
 
 Begin
-         IF (R<>0.0) or (X<>0.0) Then LDCActive := TRUE else LDCActive := FALSE;
+         IF (R<>0.0) or (X<>0.0) or (LDC_Z>0.0)Then LDCActive := TRUE else LDCActive := FALSE;
          IF Length(RegulatedBus)=0 Then UsingRegulatedBus := FALSE Else  UsingRegulatedBus := TRUE;
 
          Devindex := GetCktElementIndex(ElementName); // Global FUNCTION
@@ -1045,9 +1057,21 @@ begin
      IF NOT UsingRegulatedBus and LDCActive Then
      Begin
         ControlledElement.GetCurrents(Cbuffer);
+        // Convert current to control current by CTRating
         ILDC  := CDivReal(CBuffer^[ControlledElement.Nconds*(ElementTerminal-1) + ControlledPhase], CTRating);
-        If InReverseMode Then VLDC  := Cmul(Cmplx(revR, revX), ILDC) else VLDC  := Cmul(Cmplx(R, X), ILDC);
-        Vcontrol := Cadd(Vcontrol, VLDC);   // Direction on ILDC is INTO terminal, so this is equivalent to Vterm - (R+jX)*ILDC
+        if LDC_Z=0.0 Then  // Standard R, X LDC
+          Begin
+            If InReverseMode Then VLDC  := Cmul(Cmplx(revR, revX), ILDC)
+                             else VLDC  := Cmul(Cmplx(R, X), ILDC);
+            Vcontrol := Cadd(Vcontrol, VLDC);   // Direction on ILDC is INTO terminal, so this is equivalent to Vterm - (R+jX)*ILDC
+          End
+        Else // Beckwith LDC_Z control mode
+          Begin
+            if InReverseMode Then
+              Vcontrol := Cmplx( (Cabs(VControl) - Cabs(ILDC)*revLDC_Z), 0.0)
+            Else
+              Vcontrol := Cmplx( (Cabs(VControl) - Cabs(ILDC)*LDC_Z), 0.0);   // Just magnitudes
+          End;
      End;
 
      Vactual := Cabs(Vcontrol);   // Assumes looking forward; see below
@@ -1056,15 +1080,16 @@ begin
        BEGIN
          // Check for out of band voltage
          if InReverseMode then
-         Begin
-            Vactual := Vactual /  PresentTap[TapWinding];
-            VregTest := RevVreg;
-            BandTest := RevBandwidth;
-         End Else
-         Begin
-            VregTest := Vreg;
-            BandTest := Bandwidth;
-         End;
+           Begin
+              Vactual  := Vactual /  PresentTap[TapWinding];
+              VregTest := RevVreg;
+              BandTest := RevBandwidth;
+           End
+         Else
+           Begin
+              VregTest := Vreg;
+              BandTest := Bandwidth;
+           End;
          IF (Abs(VregTest - Vactual) > BandTest / 2.0) Then TapChangeIsNeeded := TRUE
                                                        Else TapChangeIsNeeded := FALSE;
 
@@ -1282,6 +1307,9 @@ begin
      PropertyValue[26] := 'YES';
      PropertyValue[27] := '60';
      PropertyValue[28] := '0';
+     PropertyValue[29] := 'NO';
+     PropertyValue[30] := '0';
+     PropertyValue[31] := '0';
 
   inherited  InitPropertyValues(NumPropsThisClass);
 
