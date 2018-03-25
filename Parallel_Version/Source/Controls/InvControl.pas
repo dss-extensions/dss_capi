@@ -1150,7 +1150,7 @@ BEGIN
 
               pctVV  := QNew[k]/QTemp;
               pctDRC := QDRCNew[k]/QTemp;
-              WriteDLLDebugFile(Format('%g, %d, %.6g, %.6g, %.6g, %s', [ActiveCircuit[ActorID].Solution.Dynavars.t, ActiveCircuit[ActorID].Solution.ControlIteration, QNew[k],QDRCNew[k], QTemp, 'before limit.']));
+//              WriteDLLDebugFile(Format('%g, %d, %.6g, %.6g, %.6g, %s', [ActiveCircuit[ActorID].Solution.Dynavars.t, ActiveCircuit[ActorID].Solution.ControlIteration, QNew[k],QDRCNew[k], QTemp, 'before limit.']));
               //Respect the PVSystem's maximum kvar limit, first
               if abs(Qtemp2) > abs(PVSys.kvarLimit) then
                 begin
@@ -1312,7 +1312,8 @@ BEGIN
                               //...if watts have precedence, reduce the reactive power to not exceed the kva rating
                               if(FVV_ReacPower_ref = 'VARAVAL_WATTS') or (FVV_ReacPower_ref = 'VARMAX_WATTS') then
                                 begin
-                                  Qtemp2 := 0.99*sign(Qtemp2)*SQRT(Sqr(PVSys.kVARating)-Sqr(PTemp));
+                                  Qtemp2 := 1.0*sign(Qtemp2)*SQRT(Sqr(PVSys.kVARating)-Sqr(PTemp));
+                                  if(Qtemp2) < FVarChangeTolerance/QHeadroom[k] then Qtemp2 := 0.0;
                                   Qnew[k] := Qtemp2;
                                   PVSys.Presentkvar := Qnew[k];
                                 end
@@ -1320,7 +1321,7 @@ BEGIN
                               //...else, vars have precedence, reduce the active power to not exceed the kva rating
                               else
                                 begin
-                                  PTemp := 0.99*sign(PTemp)*SQRT(Sqr(PVSys.kVARating)-Sqr(QTemp2));
+                                  PTemp := 1.0*sign(PTemp)*SQRT(Sqr(PVSys.kVARating)-Sqr(QTemp2));
                                   // Set the active power
                                   FFinalpuPmpp[k] :=PTemp/PVSys.Pmpp;
                                   PVSys.VWmode  := TRUE;
@@ -1370,14 +1371,15 @@ BEGIN
                   //...if watts have precedence, reduce the reactive power to not exceed the kva rating
                 if(FVV_ReacPower_ref = 'VARAVAL_WATTS') or (FVV_ReacPower_ref = 'VARMAX_WATTS') then
                 begin
-                  Qtemp2 := 0.99*sign(Qtemp2)*SQRT(Sqr(PVSys.kVARating)-Sqr(PTemp));
+                  Qtemp2 := 1.0*sign(Qtemp2)*SQRT(Sqr(PVSys.kVARating)-Sqr(PTemp));
+                  if(Qtemp2) < FVarChangeTolerance/QHeadroom[k] then Qtemp2 := 0.0;
                   Qnew[k] := Qtemp2;
                   PVSys.Presentkvar := Qnew[k];
                 end
                 //...else, vars have precedence, reduce the active power to not exceed the kva rating
                 else
                 begin
-                  PTemp := 0.99*sign(PTemp)*SQRT(Sqr(PVSys.kVARating)-Sqr(QTemp2));
+                  PTemp := 1.0*sign(PTemp)*SQRT(Sqr(PVSys.kVARating)-Sqr(QTemp2));
                   // Set the active power
                   FFinalpuPmpp[k] :=PTemp/PVSys.Pmpp;
                   PVSys.VWmode  := TRUE;
@@ -2014,6 +2016,7 @@ begin
             if CombiControlMode = 'VV_VW' then
               begin
                   if ((FHitkVALimit[i] = True) or (FHitkvarLimit[i] = True)) and (ActiveCircuit[ActorID].Solution.Dynavars.dblHour>0.0) then exit;
+                  if ((FHitkVALimit[i] = True) or (FHitkvarLimit[i] = True)) and (ActiveCircuit[ActorID].Solution.Dynavars.dblHour=0.0) and ((ActiveCircuit[ActorID].Solution.ControlIteration) >= (0.5*ActiveCircuit[ActorID].Solution.MaxControlIterations)) then exit;
                   // if inverter is off then exit
 //                  if (ControlledElement[i].InverterON = FALSE) then exit;
                   if (ControlledElement[i].InverterON = FALSE) and (ControlledElement[i].VarFollowInverter = TRUE) then exit;

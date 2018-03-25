@@ -115,6 +115,7 @@ interface
          FUNCTION DoLambdaCalcs:Integer;
          FUNCTION DoVarCmd:Integer;
          FUNCTION DoNodeListCmd:Integer;
+         FUNCTION DoRemoveCmd:Integer;
 
          PROCEDURE DoSetNormal(pctNormal:Double);
 
@@ -143,16 +144,16 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      DSSClass, DSSObject, Utilities, Solution,
      EnergyMeter, Generator, LoadShape, Load, PCElement,   CktElement,
      uComplex,  mathutil,  Bus,  SolutionAlgs,
-     DSSForms,  ExecCommands, Executive, Dynamics,
-     DssPlot,
-     Capacitor, Reactor, Line, Lineunits, Math,
+     {$IFDEF FPC}CmdForms,{$ELSE}DSSForms,DssPlot,{$ENDIF} ExecCommands, Executive,
+     Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
      Classes,  CktElementClass, Sensor,  { ExportCIMXML,} NamedObject,
-     RegularExpressionsCore, PstCalc;
+     {$IFDEF FPC}RegExpr,{$ELSE}RegularExpressionsCore,{$ENDIF} PstCalc,
+     PDELement, ReduceAlgs;
 
 Var
    SaveCommands, DistributeCommands,  DI_PlotCommands,
    ReconductorCommands, RephaseCommands, AddMarkerCommands,
-   SetBusXYCommands, PstCalcCommands :TCommandList;
+   SetBusXYCommands, PstCalcCommands, RemoveCommands   :TCommandList;
 
 
 
@@ -164,7 +165,8 @@ VAR
 
 Begin
 
-{We're looking for Object Definition:
+{
+  We're looking for Object Definition:
 
       ParamName = 'object' IF given
      and the name of the object
@@ -172,7 +174,7 @@ Begin
      Object=Capacitor.C1
     or just Capacitor.C1
 
-If no dot, last class is assumed
+  If no dot, last class is assumed
 }
       ObjClass := '';
       ObjName := '';
@@ -263,6 +265,7 @@ End;
 //----------------------------------------------------------------------------
 FUNCTION DoBatchEditCmd:Integer;
 // batchedit type=xxxx name=pattern  editstring
+{$IFDEF FPC}
 VAR
    ObjType, Pattern:String;
    RegEx1: TPerlRegEx;
@@ -286,9 +289,9 @@ Begin
       Params:=Parser[ActiveActor].Position;
       ActiveDSSClass[ActiveActor] := DSSClassList[ActiveActor].Get(LastClassReferenced[ActiveActor]);
       RegEx1:=TPerlRegEx.Create;
-      RegEx1.Options:=[preCaseLess];
-      RegEx1.RegEx:=UTF8String(Pattern);
-      If ActiveDSSClass[ActiveActor].First > 0  Then pObj :=  ActiveDSSObject[ActiveActor]
+//      RegEx1.Options:=[preCaseLess];
+      RegEx1.Expression:=UTF8String(Pattern);
+      If ActiveDSSClass[ActiveActor].First>0 then pObj:=ActiveDSSObject[ActiveActor] else pObj := Nil;
       else  pObj  :=  nil;
       while pObj <> Nil do begin
         RegEx1.Subject:=UTF8String(pObj.Name);
@@ -296,12 +299,51 @@ Begin
           Parser[ActiveActor].Position:=Params;
           ActiveDSSClass[ActiveActor].Edit(ActiveActor);
         end;
-        ActiveDSSClass[ActiveActor].Next;
-        pObj:=ActiveDSSClass[ActiveActor].GetActiveObj;
+        If ActiveDSSClass[ActiveActor].Next>0 then pObj:=ActiveDSSObject[ActiveActor] else pObj := Nil;
       end;
     End;
   End;
 End;
+{$ELSE}
+VAR
+   ObjType, Pattern:String;
+   RegEx1: TPerlRegEx;
+   pObj: TDSSObject;
+   Params: Integer;
+   iElement: Integer;
+Begin
+  Result := 0;
+  GetObjClassAndName(ObjType, Pattern);
+  IF CompareText(ObjType, 'circuit')=0 THEN Begin
+    // Do nothing
+  End ELSE Begin
+
+    LastClassReferenced[ActiveActor] := ClassNames[ActiveActor].Find(ObjType);
+
+    CASE LastClassReferenced[ActiveActor] of
+      0: Begin
+        DoSimpleMsg('BatchEdit Command: Object Type "' + ObjType + '" not found.'+ CRLF + parser[ActiveActor].CmdString, 267);
+        Exit;
+        End;{Error}
+    ELSE
+      Params:=Parser[ActiveActor].Position;
+      ActiveDSSClass[ActiveActor] := DSSClassList[ActiveActor].Get(LastClassReferenced[ActiveActor]);
+      RegEx1:=TPerlRegEx.Create;
+      RegEx1.Options:=[preCaseLess];
+      RegEx1.RegEx:=Pattern; // UTF8String(Pattern);
+      If ActiveDSSClass[ActiveActor].First>0 then pObj:=ActiveDSSObject[ActiveActor] else pObj := Nil;
+      while pObj <> Nil do begin
+        RegEx1.Subject:= pObj.Name; //(pObj.Name);
+        if RegEx1.Match then begin
+          Parser[ActiveActor].Position:=Params;
+          ActiveDSSClass[ActiveActor].Edit(ActiveActor);
+        end;
+        If ActiveDSSClass[ActiveActor].Next>0 then pObj:=ActiveDSSObject[ActiveActor] else pObj := Nil;
+      end;
+    End;
+  End;
+End;
+{$ENDIF}
 
 //----------------------------------------------------------------------------
 FUNCTION DoRedirect(IsCompile:Boolean):Integer;
@@ -2614,12 +2656,20 @@ Begin
        'B': ActiveCircuit[ActiveActor].ReductionStrategy := rsBreakLoop;
        'D': ActiveCircuit[ActiveActor].ReductionStrategy := rsDefault;  {Default}
        'E': ActiveCircuit[ActiveActor].ReductionStrategy := rsDangling;  {Ends}
+       'L': Begin {Laterals}
+               ActiveCircuit[ActiveActor].ReductionStrategy := rsLaterals;
+               if Length(Param2) > 0 then  Begin
+                  ActiveCircuit[ActiveActor].ReduceLateralsKeepLoad := InterpretYesNo(Param2)
+               End;
+            End;
        'M': ActiveCircuit[ActiveActor].ReductionStrategy := rsMergeParallel;
+        {*
        'T': Begin
               ActiveCircuit[ActiveActor].ReductionStrategy := rsTapEnds;
-              ActiveCircuit[ActiveActor].ReductionMaxAngle := 15.0;  {default}
+              ActiveCircuit[ActiveActor].ReductionMaxAngle := 15.0;
               If Length(param2) > 0 Then  ActiveCircuit[ActiveActor].ReductionMaxAngle := Auxparser.DblValue;
             End;
+            *}
        'S': Begin  {Stubs}
               IF CompareTextShortest(Param, 'SWITCH')=0 Then Begin
                   ActiveCircuit[ActiveActor].ReductionStrategy := rsSwitches;
@@ -3899,6 +3949,82 @@ Begin
 
 End;
 
+FUNCTION DoRemoveCmd:Integer;
+Var
+   ParamName :String;
+   Param     :String;
+   Str       :String;
+   ParamPointer :Integer;
+   DeviceIndex :Integer;
+
+   FElementName :String;
+   FKeepLoad    :Boolean;
+   FEditString  :String;
+
+   pPDElem      :TPDelement;
+   pMeter       :TEnergyMeterObj;
+   FMeterName   :String;
+
+Begin
+
+     Result := 0;
+
+     FKeepLoad := TRUE;
+     ParamPointer := 0;
+
+     ParamName := Parser[ActiveActor].NextParam;
+     Param := Parser[ActiveActor].StrValue;
+
+     WHILE Length(Param)>0 DO
+     Begin
+         IF   (Length(ParamName) = 0)  THEN Inc(ParamPointer)
+         ELSE ParamPointer := RemoveCommands.GetCommand(ParamName);
+
+         CASE ParamPointer OF
+           1: FElementName := Param; {ElementName}
+           2: FkeepLoad := InterpretYesNo(Param); {KeepLoad}
+           3: FEditString := Param; {EditString}
+         ELSE
+
+         End;
+
+         ParamName := Parser[ActiveActor].NextParam;
+         Param := Parser[ActiveActor].StrValue;
+     End;
+
+     // Check for existence of FelementName
+     DeviceIndex := GetCktElementIndex(FElementName);
+     if DeviceIndex = 0  then
+     Begin
+         DoSimpleMsg('Error: Element '+ FelementName + ' does not exist in this circuit.', 28726);
+     End
+     Else Begin // Element exists  GO!
+
+      // Set CktElement active
+        SetObject(FelementName);
+
+      // Get Energymeter associated with this element.
+        if ActiveCircuit[ActiveActor].ActiveCktElement is TPDElement then Begin
+          pPDElem := ActiveCircuit[ActiveActor].ActiveCktElement as TPDElement;
+          if pPDElem.SensorObj = Nil then DoSimpleMsg(Format('Element %s.%s is not in a meter zone! Add an Energymeter. ',[pPDelem.Parentclass.Name, pPDelem.name  ]),287261)
+          Else Begin
+            FMeterName := Format('%s.%s',[pPDElem.SensorObj.ParentClass.Name, pPDElem.SensorObj.Name]);
+            SetObject(FMeterName);
+
+            if ActiveCircuit[ActiveActor].ActiveCktElement is TEnergyMeterObj then Begin
+                pMeter := ActiveCircuit[ActiveActor].ActiveCktElement as TEnergyMeterObj;
+                // in ReduceAlgs
+                DoRemoveBranches(pMeter.BranchList, pPDelem, FKeepLoad, FEditString);
+            End
+            Else DoSimpleMsg('Error: The Sensor Object for '+ FelementName + ' is not an EnergyMeter object', 28727);
+          End;
+        End
+        Else DoSimpleMsg('Error: Element '+ FelementName + ' is not a power delivery element (PDElement)', 28728);
+
+     End;
+
+
+End;
 
 initialization
 
@@ -3925,6 +4051,9 @@ initialization
     PstCalcCommands := TCommandList.Create(['Npts', 'Voltages', 'dt', 'Frequency', 'lamp']);
     PstCalcCommands.abbrev := True;
 
+    RemoveCommands := TCommandList.Create(['ElementName', 'KeepLoad', 'Editstring']);
+    RemoveCommands.abbrev := True;
+
 finalization
 
     DistributeCommands.Free;
@@ -3935,6 +4064,7 @@ finalization
     RephaseCommands.Free;
     SetBusXYCommands.Free;
     PstCalcCommands.Free;
+    RemoveCommands.Free;
 
 end.
 

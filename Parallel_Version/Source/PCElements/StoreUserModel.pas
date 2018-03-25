@@ -22,11 +22,11 @@ TYPE
   // Interface for Dynamics-only user-written model
     TStoreDynaModel = Class (TObject)
       private
-         FHandle : Integer;  // Handle to DLL containing user model
-         FID : Integer;    // ID of this instance of the user model
-         Fname : String;    // Name of the DLL file containing user model
+         FHandle    : NativeUint;  // Handle to DLL containing user model
+         FID        : Integer;    // ID of this instance of the user model
+         Fname      : String;    // Name of the DLL file containing user model
 
-         FuncError : Boolean;
+         FuncError  : Boolean;
 
          {These functions should only be called by the object itself}
          FNew:    Function( Var DynaData:TDynamicsRec; Var CallBacks:TDSSCallBacks): Integer;  Stdcall;// Make a new instance

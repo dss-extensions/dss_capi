@@ -29,7 +29,7 @@ USES
 
 
 TYPE
-    TReductionStrategy = (rsDefault, rsStubs, rsTapEnds, rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches);
+    TReductionStrategy = (rsDefault, rsStubs, {rsTapEnds,} rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches, rsLaterals);
 
     CktElementDef = RECORD
         CktElementClass:Integer;
@@ -225,7 +225,8 @@ TYPE
           CurrentDirectory   :String;
 
           ReductionStrategy:TReductionStrategy;
-          ReductionMaxAngle, ReductionZmag:double;
+          {ReductionMaxAngle,} ReductionZmag:double;
+          ReduceLateralsKeepLoad:Boolean;
           ReductionStrategyString:String;
 
           PctNormalFactor:Double;
@@ -496,9 +497,10 @@ BEGIN
      SavedBusNames := nil;
 
      ReductionStrategy := rsDefault;
-     ReductionMaxAngle := 15.0;
+//     ReductionMaxAngle := 15.0;
      ReductionZmag     := 0.02;
      NumCircuits       := 0;
+     ReduceLateralsKeepLoad := TRUE;
 
    {Misc objects}
    AutoAddObj := TAutoAdd.Create;

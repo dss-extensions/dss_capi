@@ -5,6 +5,7 @@ interface
 uses
   Circuit, Solution, DSSGlobals, SysUtils, DSSClassDefs;
 
+Function Solve_Diakoptics():Integer;
 procedure Diakoptics_Tearing();
 procedure DiakopticsInit();
 procedure Calc_C_Matrix(PLinks : PString; NLinks  : Integer);
@@ -16,6 +17,14 @@ implementation
 Uses
   ExecHelper, Executive, ParserDel, YMatrix, KLUSolve, Ucomplex;
 
+Function Solve_Diakoptics():Integer;
+Begin
+  {Space left empty to implement the simplified Diakoptics algorithm}
+
+  Result  :=  0;
+End;
+
+
 {*******************************************************************************
 *              Calculates the Connections matrix ZCC in the                    *
 *                      contours-contours domain                                *
@@ -25,7 +34,7 @@ Begin
   ActiveActor   :=  1;
   WITH ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution DO
   Begin
-
+  {Space left empty to implement the simplified Diakoptics algorithm}
   End;
 End;
 
@@ -34,6 +43,8 @@ End;
 *                   Calculates the Lateral matrix ZCT in                       *
 *                         contours-trees domain                                *
 *******************************************************************************}
+
+  {Probably to be removed}
 procedure Calc_ZCT();
 var
   i,j,

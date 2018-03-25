@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 115;
+     NumExecCommands = 116;
 
 Var
 
@@ -153,6 +153,7 @@ Begin
      ExecCommand[113] := 'Connect';
      ExecCommand[114] := 'Disconnect';
      ExecCommand[115] := 'Refine_BusLevels';
+     ExecCommand[116] := 'Remove';
 
 
 
@@ -488,6 +489,15 @@ Begin
      CommandHelp[114] := 'Request to terminate a TCP/IP socket. This function requires the host address and TCP port to disconnect.';
      CommandHelp[115] := 'This function takes the bus levels array and traces all the possible paths considering the longest paths from the substation to the longest branches' +
                          ' within the circuit. Then, the new paths are filled with 0 to complement the oroginal levels proposed by the calcincmatrix_o command.';
+     CommandHelp[116] := '{ElementName=} [KeepLoad=Y*/N] [EditString="..."] ' +
+                         'Remove (disable) all branches downline from the PDelement named by "ElementName" property. Circuit must have an Energymeter on this branch. ' +
+                         'If KeepLoad=Y (default) a new Load element is defined and kW, kvar set to '+
+                         'present power flow solution for the first element eliminated. ' +
+                         'The EditString is applied to each new Load element defined. ' + CRLF +
+                         'If KeepLoad=N, all downline elements are disabled. Examples: ' + CRLF + CRLF +
+                         'Remove Line.Lin3021' + CRLF +
+                         'Remove Line.L22 Editstring="Daily=Dailycurve Duty=SolarShape' + CRLF +
+                         'Remove Line.L333 KeepLoad=No';
 
 End;
 
@@ -764,6 +774,7 @@ Begin
       113: Begin DSSInfoMessageDlg('Winsock TCP/IP connection is not supported in FPC version, it will be migrated to Indy (soon...)'); CmdResult := 0; end;
       114: Begin DSSInfoMessageDlg('Winsock TCP/IP disconnection is not supported in FPC version, it will be migrated to Indy (soon...)'); CmdResult := 0; end;
 {$ENDIF}
+      116: DoRemoveCmd;
      ELSE
        // Ignore excess parameters
      End;

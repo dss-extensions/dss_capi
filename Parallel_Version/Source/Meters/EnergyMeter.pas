@@ -384,6 +384,8 @@ USES  ParserDel, DSSClassDefs, DSSGlobals, Bus, Sysutils, MathUtil,  UCMatrix,
       Utilities, PCElement,  StackDef, Circuit, Line, LineUnits,
       Classes, ReduceAlgs, Windows, Math, MemoryMap_Lib;
 
+//{$UNDEF DEBUG}
+
 Const NumPropsThisClass = 24;
 
 VAR
@@ -2269,11 +2271,12 @@ begin
     Case ActiveCircuit[ActorID].ReductionStrategy of
 
          rsStubs:         DoReduceStubs(BranchList);    {See ReduceAlgs.Pas}
-         rsTapEnds:       DoReduceTapEnds (BranchList);
+         {rsTapEnds:       DoReduceTapEnds (BranchList);}
          rsMergeParallel: DoMergeParallelLines(BranchList);
          rsDangling:      DoReduceDangling(BranchList);
          rsBreakLoop:     DoBreakLoops(BranchList);
          rsSwitches:      DoReduceSwitches(BranchList);
+         rsLaterals:      DoReduceLaterals(BranchList);
     Else
        {Default}
        DoReduceDefault(BranchList);
@@ -2495,6 +2498,7 @@ begin
                        TotalCustomers := PD_Elem.BranchTotalCustomers;
                     End;
                End;
+
 (*
 {**DEBUG**}
             If idx=SequenceList.ListSize then WriteDLLDebugFile('Meter, SectionID, BranchName, FaultRate, AccumulatedBrFltRate, BranchFltRate, RepairHrs, NCustomers, Num_Interrupt');
