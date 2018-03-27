@@ -3507,7 +3507,7 @@ Begin
      ReWrite(F);
 
      // Write Header
-     Writeln(F, 'Meter, SectionID, DeviceType, NumCustomers, NumBranches, AvgRepairHrs, TotalDownlineCust, SumFltRatesXRepairHrs, SumBranchFltRates, HeadBranch ');
+     Writeln(F, 'Meter, SectionID, SeqIndex, DeviceType, NumCustomers, NumBranches, AvgRepairHrs, TotalDownlineCust, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates, HeadBranch ');
 
    If Assigned(pMeter) Then
      // If a meter is specified, export that meter only
@@ -3516,8 +3516,8 @@ Begin
          for i  := 1 to SectionCount  do
            With FeederSections^[i] Do Begin
               ActiveCircuit.ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
-              Writeln(F, format('%s, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %s',
-              [Name, i, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SumFltRatesXRepairHrs, SumBranchFltRates,
+              Writeln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
+              [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
                FullName(ActiveCircuit.ActiveCktElement)  ]));
            End;
      End
@@ -3531,10 +3531,12 @@ Begin
              With MyMeterPtr Do
              Begin
                  for i  := 1 to SectionCount  do
-                   With FeederSections^[i] Do
-                  Writeln(F, format('%s, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %s',
-                  [Name, i, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SumFltRatesXRepairHrs, SumBranchFltRates,
-                   FullName(ActiveCircuit.ActiveCktElement)  ]));
+                 With FeederSections^[i] Do Begin
+                    ActiveCircuit.ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
+                    Writeln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
+                    [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
+                     FullName(ActiveCircuit.ActiveCktElement)  ]));
+                 End;
             End;
              iMeter := EnergyMeterClass.Next;
           End;

@@ -71,6 +71,7 @@ unit EnergyMeter;
 9/18/08 Added load loss and no load loss registers  and aux registers
 11/8/08 Revamped TakeSample to fix bugs with Demand Interval reporting
 8/8/13  Added initial reliability calcs
+3/27/2018 Corrected SAIDI calcs
 }
 
 {$WARN UNIT_PLATFORM OFF}
@@ -138,8 +139,9 @@ Type
         NCustomers           : Integer;
         NBranches            : Integer;
         TotalCustomers       : Integer;
-        SeqIndex             : Integer;
+        SeqIndex             : Integer;  // index of pdelement with OCP device at head of section
         AverageRepairTime    : double;
+        SectFaultRate       : Double;
         SumFltRatesXRepairHrs: double;
         SumBranchFltRates    : double;
     End;
@@ -382,7 +384,9 @@ USES  ParserDel, DSSClassDefs, DSSGlobals, Bus, Sysutils, MathUtil,  UCMatrix,
       Utilities, PCElement,  StackDef, Circuit, Line, LineUnits,
       Classes, ReduceAlgs, {$IFNDEF FPC}Windows,{$ENDIF} Math, MemoryMap_Lib;
 
+ //     {$DEFINE DEBUG}
 {$UNDEF DEBUG}
+
 
 Const NumPropsThisClass = 24;
 
@@ -452,9 +456,9 @@ Begin
      Do_OverloadReport   := FALSE;  // FSaveDemandInterval must be true for this to have an effect
      OverLoadFileIsOpen  := FALSE;
      VoltageFileIsOpen   := FALSE;
-     
+
      DI_Dir := '';
-     
+
      DefineProperties;
 
      CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
@@ -1266,7 +1270,7 @@ Procedure TEnergyMeterObj.TakeSample;
 
 VAR
    i,j, idx :Integer;
-   
+
    S_Local,
    S_Totallosses,
    S_LoadLosses,
@@ -2377,15 +2381,7 @@ begin
        X := Buses^[FirstCoordref].X;
        Y := Buses^[FirstCoordref].Y;
 
-       {***Debug}
-   (*    If ((X<10.0) and (y<10.0)) or
-          ((Buses^[SecondCoordRef].X<10.0) and (Buses^[SecondCoordRef].Y<10.0)) Then
-       Begin
-          X := y;  // Stopping point
-       End;
-     *)
-     
-     {Either start with the "to" end of StartNode or the "from" end;}
+      {Either start with the "to" end of StartNode or the "from" end;}
        If FirstCoordRef <> StartBranch.FromBusReference Then
        Begin  // Start with "to" end
           X:= X- Xinc;
@@ -2414,162 +2410,192 @@ end;
 
 
 {-------------------------------------------------------------------------------}
-procedure TEnergyMeterObj.CalcReliabilityIndices(AssumeRestoration:Boolean);
+procedure TEnergyMeterObj.CalcReliabilityIndices(AssumeRestoration: Boolean);
 Var
-    PD_Elem : TPDElement;
-    pLoad   : TLoadObj;
-    idx     : Integer;
-    pBus    : TDSSBus;
-    dblNcusts  : Double;
-    dblkW      : Double;
+  PD_Elem: TPDElement;
+  pLoad: TLoadObj;
+  idx: Integer;
+  pBus: TDSSBus;
+  dblNcusts: Double;
+  dblkW: Double;
 
 begin
 
-       If not assigned (SequenceList) Then Begin
-           DoSimpleMsg('Energymeter.' + Name + ' Zone not defined properly.', 52901);
-           Exit;
-       End;
+  If not Assigned(SequenceList) Then
+  Begin
+    DoSimpleMsg('Energymeter.' + Name + ' Zone not defined properly.', 52901);
+    Exit;
+  End;
 
-    // Zero reliability accumulators
-       For idx := SequenceList.ListSize downto 1 Do
-           TPDElement(SequenceList.Get(idx)).ZeroReliabilityAccums ;
+  // Zero reliability accumulators
+  For idx := SequenceList.ListSize downto 1 Do
+    TPDElement(SequenceList.Get(idx)).ZeroReliabilityAccums;
 
-    // Backward sweep calculating failure rates
-       For idx := SequenceList.ListSize downto 1 Do
-           Begin
-               With TPDElement(SequenceList.Get(idx)) do Begin
-                   CalcFltRate;    // Calc failure rate for this element
-                   AccumFltRate;
-               End;
-           End;
+  // Backward sweep calculating failure rates
+  For idx := SequenceList.ListSize downto 1 Do
+  Begin
+    With TPDElement(SequenceList.Get(idx)) do
+    Begin
+      CalcFltRate; // Calc failure rate for this element
+      AccumFltRate;
+    End;
+  End;
 
-    // Forward sweep to get number of interruptions
-       // Initialize number of interruptions and Duration
-       PD_Elem := TPDElement(SequenceList.Get(1));
-       pBus    := ActiveCircuit.Buses^[PD_Elem.Terminals^[PD_Elem.FromTerminal].BusRef];
-       pBus.Bus_Num_Interrupt  := Source_NumInterruptions;
-       pBus.BusCustInterrupts  := Source_NumInterruptions * pBus.BusTotalNumCustomers;
-       pBus.Bus_Int_Duration   := Source_IntDuration;
+  // Forward sweep to get number of interruptions
+  // Initialize number of interruptions and Duration
+  PD_Elem := TPDElement(SequenceList.Get(1));
+  pBus := ActiveCircuit.Buses^[PD_Elem.Terminals^[PD_Elem.FromTerminal].BusRef];
+  pBus.Bus_Num_Interrupt := Source_NumInterruptions;
+  pBus.BusCustInterrupts := Source_NumInterruptions * pBus.BusTotalNumCustomers;
+  pBus.Bus_Int_Duration := Source_IntDuration;
 
-       // init for defining sections
-       SectionCount := 0;
-       pBus.BusSectionID := SectionCount; // section before 1st OCP device is zero
+  // init for defining sections
+  SectionCount := 0;
+  pBus.BusSectionID := SectionCount; // section before 1st OCP device is zero
 
-       For idx := 1 to SequenceList.ListSize Do
-           TPDElement(SequenceList.Get(idx)).CalcNum_Int(SectionCount, AssumeRestoration);
+  For idx := 1 to SequenceList.ListSize Do
+    TPDElement(SequenceList.Get(idx)).CalcNum_Int(SectionCount,
+      AssumeRestoration);
 
-       If SectionCount=0 Then Begin   // Error - no OCP devices
-             DoSimpleMsg('Error: No Overcurrent Protection device (Relay, Recloser, or Fuse) defined. Aborting Reliability calc.', 52902);
-             Exit;
-       End;
+  If SectionCount = 0 Then
+  Begin // Error - no OCP devices
+    DoSimpleMsg
+      ('Error: No Overcurrent Protection device (Relay, Recloser, or Fuse) defined. Aborting Reliability calc.',
+      52902);
+    Exit;
+  End;
 
-       // Now have number of sections  so allocate FeederSections array
-       Reallocmem(FeederSections, Sizeof(FeederSections^[1])*SectionCount);
-       for idx := 1 to SectionCount do
-            With FeederSections^[idx] Do Begin
-                OCPDeviceType         := 0;    // 1=Fuse; 2=Recloser; 3=Relay
-                AverageRepairTime     := 0.0;
-                SumFltRatesXRepairHrs := 0.0;
-                SumBranchFltRates     := 0.0;
-                NCustomers            := 0;
-                TotalCustomers        := 0;
-                NBranches             := 0;
-                SeqIndex              := 0;
-            End;
+  // Now have number of sections  so allocate FeederSections array
+  ReallocMem(FeederSections, SizeOf(FeederSections^[1]) * SectionCount);
+  for idx := 1 to SectionCount do
+    With FeederSections^[idx] Do      // Initialize all Section data
+    Begin
+      OCPDeviceType := 0; // 1=Fuse; 2=Recloser; 3=Relay
+      AverageRepairTime := 0.0;
+      SumFltRatesXRepairHrs := 0.0;
+      SumBranchFltRates := 0.0;
+      NCustomers := 0;
+      TotalCustomers := 0;
+      SectFaultRate := 0.0;
+      NBranches := 0;
+      SeqIndex := 0;
+    End;
 
+  // Now do Backward sweep calculating N*Fault rates
+  For idx := SequenceList.ListSize downto 1 Do
+  Begin
+    PD_Elem := SequenceList.Get(idx);
+    PD_Elem.CalcCustInterrupts;
 
-    // Now do Backward sweep calculating N*Fault rates
-       For idx := SequenceList.ListSize downto 1 Do
-           Begin
-               PD_Elem := SequenceList.Get(idx);
-               PD_Elem.CalcCustInterrupts;
-
-               With FeederSections^[PD_Elem.BranchSectionID] Do Begin
-                       Inc(NCustomers, PD_Elem.BranchNumCustomers); // Sum up num Customers on this Section
-                       Inc(NBranches, 1); // Sum up num branches on this Section
-                    pBus    := ActiveCircuit.Buses^[PD_Elem.Terminals^[PD_Elem.ToTerminal].BusRef];
-                    dblInc(SumBranchFltRates,  pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate);
-                    dblInc(SumFltRatesXRepairHrs, (pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate * PD_Elem.HrsToRepair));
-                    If PD_Elem.HasOCPDevice  Then  Begin
-                       OCPDeviceType := GetOCPDeviceType(PD_Elem);
-                       SeqIndex := Idx;
-                       TotalCustomers := PD_Elem.BranchTotalCustomers;
-                    End;
-               End;
-
-{$IFDEF DEBUG}
-            If idx=SequenceList.ListSize then WriteDLLDebugFile('Meter, SectionID, BranchName, FaultRate, AccumulatedBrFltRate, BranchFltRate, RepairHrs, NCustomers, Num_Interrupt');
-            With FeederSections^[PD_Elem.BranchSectionID] Do
-               WriteDLLDebugFile(Format('%s.%s, %d, %s.%s, %.11g, %.11g, %.11g, %.11g, %d, %.11g ',
-               [ParentClass.Name, Name, PD_Elem.BranchSectionID, PD_Elem.ParentClass.Name, PD_Elem.Name,
-               PD_Elem.FaultRate, PD_Elem.AccumulatedBrFltRate, PD_Elem.BranchFltRate, PD_Elem.HrsToRepair,
-               PD_Elem.BranchNumCustomers, pBus.Bus_Num_Interrupt ]));
-{$ENDIF}
-
-           End;
-
-        {Compute Avg Interruption duration of each Section }
-        for idx := 1 to SectionCount do
-            With FeederSections^[idx] Do AverageRepairTime    := SumFltRatesXRepairHrs / SumBranchFltRates;
-
-        { Set Bus_int_Duration}
-
-        With ActiveCircuit  do
-        for idx := 1 to NumBuses  do  Begin
-           pBus := Buses^[idx];
-           If pBus.BusSectionID > 0 Then
-              pBus.Bus_Int_Duration := Source_IntDuration + FeederSections^[pBus.BusSectionID].AverageRepairTime;
-        End;
-
-
+    With FeederSections^[PD_Elem.BranchSectionID] Do
+    Begin
+      Inc(NCustomers, PD_Elem.BranchNumCustomers);
+      // Sum up num Customers on this Section
+      Inc(NBranches, 1); // Sum up num branches on this Section
+      pBus := ActiveCircuit.Buses^
+        [PD_Elem.Terminals^[PD_Elem.ToTerminal].BusRef];
+      DblInc(SumBranchFltRates, pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate);
+      DblInc(SumFltRatesXRepairHrs,
+        (pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate * PD_Elem.HrsToRepair));
+      If PD_Elem.HasOCPDevice Then
+      Begin
+        OCPDeviceType := GetOCPDeviceType(PD_Elem);
+        SeqIndex := idx;  // index of pdelement with OCP device at head of section
+        TotalCustomers := PD_Elem.BranchTotalCustomers;
+        SectFaultRate := PD_Elem.AccumulatedBrFltRate;
+      End;
+    End;
 
 {$IFDEF DEBUG}
-        WriteDLLDebugFile('Meter, SectionID, NBranches, NCustomers, AvgRepairHrs, AvgRepairMins, FailureRate*RepairtimeHrs, SumFailureRates');
-        for idx := 1 to SectionCount do
-            With FeederSections^[idx] Do
-               WriteDLLDebugFile(Format('%s.%s, %d, %d, %d, %.11g, %.11g, %.11g, %.11g ',
-              [ParentClass.Name, Name, idx, NBranches, nCustomers, AverageRepairTime, AverageRepairTime * 60.0, SumFltRatesXRepairHrs, SumBranchFltRates    ]));
-
-        WriteDLLDebugFile('Load, BusCustDurations, BusNumInterrupt, FaultRatesXRepairHrs');
+    If idx = SequenceList.ListSize then
+      WriteDLLDebugFile
+        ('Meter, SectionID, BranchName, FaultRate, AccumulatedBrFltRate, BranchFltRate, RepairHrs, NCustomers, Num_Interrupt');
+    With FeederSections^[PD_Elem.BranchSectionID] Do
+      WriteDLLDebugFile
+        (Format('%s.%s, %d, %s.%s, %.11g, %.11g, %.11g, %.11g, %d, %.11g ',
+        [ParentClass.Name, Name, PD_Elem.BranchSectionID,
+        PD_Elem.ParentClass.Name, PD_Elem.Name, PD_Elem.FaultRate,
+        PD_Elem.AccumulatedBrFltRate, PD_Elem.BranchFltRate,
+        PD_Elem.HrsToRepair, PD_Elem.BranchNumCustomers,
+        pBus.Bus_Num_Interrupt]));
 {$ENDIF}
 
-       {Compute SAIFI based on numcustomers and load kW}
-       {SAIFI is weighted by specified load weights}
-       {SAIFI is for the EnergyMeter Zone}
-       SAIFI     := 0.0;
-       SAIDI     := 0.0;
-       CAIDI     := 0.0;
-       SAIFIKW   := 0.0;
-       CustInterrupts := 0.0;
-       dblNcusts := 0.0;
-       dblkW     := 0.0;
-       WITH ActiveCircuit do
-       For idx := 1 to LoadList.ListSize Do  // all loads in meter zone
-           Begin
-                pLoad := TLoadObj(LoadList.Get(idx));
-                WITH pLoad Do
-                  Begin
-                       pBus := Buses^[Terminals^[1].BusRef];  // pointer to bus
-                       CustInterrupts   := CustInterrupts + NumCustomers * RelWeighting * pBus.Bus_Num_Interrupt;
-                       SAIFIkW := SAIFIkW + kWBase     * RelWeighting * pBus.Bus_Num_Interrupt;
-                       DblInc(dblNcusts, NumCustomers * RelWeighting);   // total up weighted numcustomers
-                       DblInc(dblkW,     kWBase       * RelWeighting);   // total up weighted kW
-                       // Set BusCustDurations for Branch reliability export
-                       pBus.BusCustDurations :=  NumCustomers * RelWeighting * pBus.Bus_Int_Duration * pBus.Bus_Num_Interrupt; // FeederSections^[pBus.BusSectionID].SumFltRatesXRepairHrs;
+  End;
+
+  { Compute Avg Interruption duration of each Section }
+  for idx := 1 to SectionCount do
+    With FeederSections^[idx] Do
+      AverageRepairTime := SumFltRatesXRepairHrs / SumBranchFltRates;
+
+  { Set Bus_int_Duration }
+
+  With ActiveCircuit do
+    for idx := 1 to NumBuses do
+    Begin
+      pBus := Buses^[idx];
+      If pBus.BusSectionID > 0 Then
+        pBus.Bus_Int_Duration := Source_IntDuration + FeederSections^
+          [pBus.BusSectionID].AverageRepairTime;
+    End;
+
 {$IFDEF DEBUG}
-    WriteDLLDebugFile(Format('Load.%s, %.11g, %.11g, %.11g ',
-                  [pLoad.Name,pBus.BusCustDurations, pBus.Bus_Num_Interrupt, FeederSections^[pBus.BusSectionID].SumFltRatesXRepairHrs]));
+  WriteDLLDebugFile
+    ('Meter, SectionID, NBranches, NCustomers, AvgRepairHrs, AvgRepairMins, FailureRate*RepairtimeHrs, SumFailureRates');
+  for idx := 1 to SectionCount do
+    With FeederSections^[idx] Do
+      WriteDLLDebugFile(Format('%s.%s, %d, %d, %d, %.11g, %.11g, %.11g, %.11g ',
+        [ParentClass.Name, Name, idx, NBranches, NCustomers, AverageRepairTime,
+        AverageRepairTime * 60.0, SumFltRatesXRepairHrs, SumBranchFltRates]));
 {$ENDIF}
-                       SAIDI := SAIDI + pBus.BusCustDurations;
-                  End ;
-           End;
-       If dblNcusts>0.0  Then  Begin
-           SAIFI   := CustInterrupts / dblNcusts; // Normalize to total number of customers
-           SAIDI   := SAIDI / dblNcusts; // Normalize to total number of customers
-       End;
-       If SAIFI > 0.0 Then CAIDI := SAIDI/SAIFI;
 
-       If dblkW>0.0      Then  SAIFIkW := SAIFIkW / dblkW; // Normalize to total kW
+  { Compute SAIFI based on numcustomers and load kW }
+  { SAIFI is weighted by specified load weights }
+  { SAIFI is for the EnergyMeter Zone }
+  SAIFI := 0.0;
+  CAIDI := 0.0;
+  SAIFIkW := 0.0;
+  CustInterrupts := 0.0;
+  dblNcusts := 0.0;
+  dblkW := 0.0;
+
+  // Use LoadList for SAIFI calculation
+  WITH ActiveCircuit do
+    For idx := 1 to LoadList.ListSize Do // all loads in meter zone
+    Begin
+      pLoad := TLoadObj(LoadList.Get(idx));
+      WITH pLoad Do
+      Begin
+        pBus := Buses^[Terminals^[1].BusRef]; // pointer to bus
+        CustInterrupts := CustInterrupts + NumCustomers * RelWeighting *
+          pBus.Bus_Num_Interrupt;
+        SAIFIkW := SAIFIkW + kWBase * RelWeighting * pBus.Bus_Num_Interrupt;
+        DblInc(dblNcusts, NumCustomers * RelWeighting);
+        // total up weighted numcustomers
+        DblInc(dblkW, kWBase * RelWeighting); // total up weighted kW
+        // Set BusCustDurations for Branch reliability export
+        pBus.BusCustDurations := (pBus.BusTotalNumCustomers + NumCustomers) *
+               RelWeighting * pBus.Bus_Int_Duration * pBus.Bus_Num_Interrupt;
+      End;
+    End;
+
+  // Compute SAIDI from Sections list
+  SAIDI := 0.0;
+  For idx := 1 to SectionCount Do
+    With FeederSections^[idx] Do
+      Begin
+        SAIDI := SAIDI +  SectFaultRate * AverageRepairTime * TotalCustomers  ;
+      End;
+
+  If dblNcusts > 0.0 Then
+    Begin
+      SAIFI := CustInterrupts / dblNcusts; // Normalize to total number of customers
+      SAIDI := SAIDI / dblNcusts; // Normalize to total number of customers
+    End;
+  If SAIFI > 0.0 Then
+    CAIDI := SAIDI / SAIFI;
+
+  If dblkW > 0.0 Then
+    SAIFIkW := SAIFIkW / dblkW; // Normalize to total kW
 
 end;
 
@@ -3268,7 +3294,7 @@ begin
 
   Integrate(kWh, cPower.re, dkwh);
   Integrate(kvarh, cPower.im, dkvarh);
-  
+
   PeakkW := Max(cPower.re, PeakkW);
   Peakkva := Max(Cabs(cPower), Peakkva);
 
@@ -3278,7 +3304,7 @@ begin
 
    Integrate(Losseskwh, cLosses.re, dLosseskwh);
    Integrate(Losseskvarh, cLosses.im, dLosseskvarh);
-   
+
   PeakLosseskW := Max(cLosses.re, PeakLosseskW);
 
   FirstSampleAfterReset := FALSE;
@@ -3287,7 +3313,7 @@ begin
 end;
 
 procedure TEnergyMeter.CreateMeterTotals;
-Var 
+Var
     i:Integer;
     mtr:TEnergyMeterObj;
 begin
@@ -3373,7 +3399,7 @@ begin
   Except
       On E:Exception Do DosimpleMsg('Error writing demand interval file Totals.CSV.'+CRLF+E.Message, 543);
   End;
-  
+
 end;
 
 procedure TEnergyMeter.WriteVoltageReport;
@@ -3626,4 +3652,3 @@ initialization
 Finalization
 
 end.
-
