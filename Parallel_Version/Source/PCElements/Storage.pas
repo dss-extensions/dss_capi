@@ -101,17 +101,7 @@ TYPE
         ForceBalanced   :Boolean;
         CurrentLimited  :Boolean;
 
-        kVANotSet       :Boolean;
-        kvar_out        :Double;
-        kW_out          :Double;
-        pctIdlekW       :Double;
-        pctIdlekvar     :Double;
-        pctChargeEff    :Double;
-        pctDischargeEff :Double;
-        DischargeTrigger:Double;
-        ChargeTrigger   :Double;
-        ChargeTime      :Double;
-        kWhBeforeUpdate :Double;
+
 
         pctR            :Double;
         pctX            :Double;
@@ -210,6 +200,18 @@ TYPE
         pctkWin         :Double;
         pctReserve      :Double;
         DispatchMode    :Integer;
+        kVANotSet       :Boolean;
+
+        kvar_out        :Double;
+        kW_out          :Double;
+        pctIdlekW       :Double;
+        pctIdlekvar     :Double;
+        pctChargeEff    :Double;
+        pctDischargeEff :Double;
+        DischargeTrigger:Double;
+        ChargeTrigger   :Double;
+        ChargeTime      :Double;
+        kWhBeforeUpdate :Double;
 
         Registers,  Derivatives         :Array[1..NumStorageRegisters] of Double;
 

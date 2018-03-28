@@ -72,6 +72,8 @@ unit Monitor;
    3: State Variables
    4: Flicker level and severity index by phase (no modifiers apply)
    5: Solution Variables (Iteration count, etc.)
+   6: Capacitor Switching (Capacitors only)
+   7: Storage variables
 
    +16: Sequence components: V012, I012
    +32: Magnitude Only
@@ -198,7 +200,7 @@ USES
 
     ParserDel, DSSClassDefs, DSSGlobals, Circuit, CktElement,Transformer, PCElement,
     Sysutils, ucmatrix, showresults, mathUtil, PointerList, TOPExport, Dynamics, PstCalc,
-    Capacitor;
+    Capacitor, Storage;
 
 CONST
     SEQUENCEMASK = 16;
@@ -261,9 +263,10 @@ Begin
                     '3 = State Variables (PCElements only)' +CRLF+
                     '4 = Flicker level and severity index (Pst) for voltages. No adders apply.' +CRLF+
                     '    Flicker level at simulation time step, Pst at 10-minute time step.' +CRLF+
-                    '5 = Solution variables (Iterations, etc).' +CRLF+CRLF+
+                    '5 = Solution variables (Iterations, etc).' +CRLF+
                     'Normally, these would be actual phasor quantities from solution.' + CRLF+
                     '6 = Capacitor Switching (Capacitors only)'+CRLF+
+                    '7 = Storage state vars (storage device only)'+CRLF+
                     'Combine with adders below to achieve other results for terminal quantities:' + CRLF+
                     '+16 = Sequence quantities' + CRLF+
                     '+32 = Magnitude only' + CRLF+
@@ -606,9 +609,12 @@ Begin
                             Exit;
                           End;
                    end;
-
-
-
+                7: begin                                                // Checking if the element is a storage device
+                          If (MeteredElement.DSSObjType And CLASSMASK) <> STORAGE_ELEMENT Then Begin
+                            DoSimpleMsg(MeteredElement.Name + ' is not a storage device!', 2016002);
+                            Exit;
+                          End;
+                   end;
              End;
 
              IF MeteredTerminal>MeteredElement.Nterms THEN Begin
@@ -768,6 +774,14 @@ Begin
                   strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
                 end;
 
+        End;
+     7: Begin
+              RecordSize := 5;     // Storage state vars
+              strLcat(strPtr, ('kW output, '), Sizeof(TMonitorStrBuffer));
+              strLcat(strPtr, ('kvar output, '), Sizeof(TMonitorStrBuffer));
+              strLcat(strPtr, ('kW Stored, '), Sizeof(TMonitorStrBuffer));
+              strLcat(strPtr, ('%kW Stored, '), Sizeof(TMonitorStrBuffer));
+              strLcat(strPtr, ('State, '), Sizeof(TMonitorStrBuffer));
         End;
      Else Begin
          // Compute RecordSize
@@ -1086,13 +1100,24 @@ Begin
 
         End;
 
-     6: Begin     // Monitor Transformer Tap Position
+     6: Begin     // Monitor Cap switching
 
               With TCapacitorObj(MeteredElement) Do Begin
                   for i := 1 to NumSteps do
                     begin
                       AddDblToBuffer(States[i,ActorID]);
                     end;
+              End;
+              Exit;  // Done with this mode now.
+        End;
+     7: Begin     // Monitor Storage Device state variables
+
+              With TStorageObj(MeteredElement) Do Begin
+                AddDblToBuffer(PresentkW);
+                AddDblToBuffer(Presentkvar);
+                AddDblToBuffer(StorageVars.kWhStored);
+                AddDblToBuffer(((StorageVars.kWhStored)/(StorageVars.kWhRating))*100);
+                AddDblToBuffer(StorageState);
               End;
               Exit;  // Done with this mode now.
         End;
