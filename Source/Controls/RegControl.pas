@@ -77,6 +77,8 @@ TYPE
         InReverseMode  :Boolean;
         ReversePending :Boolean;
         ReverseNeutral :Boolean;
+        CogenModeActive:Boolean;
+        InCogenMode    :Boolean;
 
         RevHandle      :Integer;
         RevBackHandle  :Integer;
@@ -194,7 +196,7 @@ CONST
     ACTION_TAPCHANGE = 0;
     ACTION_REVERSE   = 1;
 
-    NumPropsThisClass = 31;
+    NumPropsThisClass = 32;
 
 Var
     LastChange:Integer;
@@ -262,6 +264,7 @@ Begin
      PropertyName[29] := 'Reset';
      PropertyName[30] := 'LDC_Z';
      PropertyName[31] := 'rev_Z';
+     PropertyName[32] := 'Cogen';
 
      PropertyHelp[1] := 'Name of Transformer element to which the RegControl is connected. '+
                         'Do not specify the full object name; "Transformer" is assumed for '  +
@@ -312,7 +315,7 @@ Begin
                          'Must be less than or equal to the number of phases. Ignored for regulated bus.';
      PropertyHelp[23] := 'kW reverse power threshold for reversing the direction of the regulator. Default is 100.0 kw.';
      PropertyHelp[24] := 'Time Delay in seconds (s) for executing the reversing action once the threshold for reversing has been exceeded. Default is 60 s.';
-     PropertyHelp[25] := '{Yes | No*} Default is no. Set this to Yes if you want the regulator to go to neutral in the reverse direction.';
+     PropertyHelp[25] := '{Yes | No*} Default is no. Set this to Yes if you want the regulator to go to neutral in the reverse direction or in cogen operation.';
      PropertyHelp[26] := '{Yes/True* | No/False} Default is YES for regulator control. Log control actions to Eventlog.';
      PropertyHelp[27] := 'When regulating a bus (the Bus= property is set), the PT ratio required to convert actual voltage at the remote bus to control voltage. ' +
                          'Is initialized to PTratio property. Set this property after setting PTratio.';
@@ -321,6 +324,8 @@ Begin
      PropertyHelp[29] := '{Yes | No} If Yes, forces Reset of this RegControl.' ;
      PropertyHelp[30] := 'Z value for Beckwith LDC_Z control option. Volts adjustment at rated control current.';
      PropertyHelp[31] := 'Reverse Z value for Beckwith LDC_Z control option.';
+     PropertyHelp[32] := '{Yes|No*} Default is No. The Cogen feature is activated. Continues looking forward if power ' +
+                         'reverses, but switches to reverse-mode LDC values.';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -401,15 +406,16 @@ Begin
             23: kWRevPowerThreshold := Parser.DblValue ;
             24: RevDelay := Parser.DblValue;
             25: ReverseNeutral := InterpretYesNo(Param);
-            26: ShowEventLog := InterpretYesNo(param);
-            27: RemotePTRatio := Parser.DblValue;
+            26: ShowEventLog   := InterpretYesNo(param);
+            27: RemotePTRatio  := Parser.DblValue;
             28: TapNum := Parser.IntValue;
             29: If InterpretYesNo (Param) Then Begin  // force a reset
                   Reset;
                   PropertyValue[29]  := 'n'; // so it gets reported properly
                 End;
-            30: LDC_Z := Parser.DblValue ;
+            30: LDC_Z    := Parser.DblValue ;
             31: revLDC_Z := Parser.DblValue;
+            32: CogenModeActive := InterpretYesNo(Param);
 
          ELSE
            // Inherited parameters
@@ -551,6 +557,8 @@ Begin
     ReversePending := FALSE;
     InReverseMode  := FALSE;
     ReverseNeutral := FALSE;
+    InCogenMode    := FALSE;
+    CogenModeActive := FALSE;
 
     RevHandle      := 0;
     RevBackHandle  := 0;
@@ -883,12 +891,16 @@ begin
         End;  {ACTION_TAPCHANGE}
 
       ACTION_REVERSE:
-        Begin  // Toggle reverse mode flag
+        Begin  // Toggle reverse mode or Cogen mode flag
              If (DebugTrace) Then RegWriteDebugRecord(Format('Handling Reverse Action, ReversePending=%s, InReverseMode=%s',
                                   [BoolToStr(ReversePending, TRUE), BoolToStr(InReverseMode, TRUE)]));
              If ReversePending Then        // check to see if action has reset
              Begin
-                If InReverseMode Then InReverseMode := FALSE Else InReverseMode := TRUE;
+                If CogenModeActive then
+                Begin   // Cogen mode takes precedence if present
+                   If InCogenMode then InCogenMode := FALSE Else InCogenMode := TRUE;
+                End Else
+                   If InReverseMode Then InReverseMode := FALSE Else InReverseMode := TRUE;
                 ReversePending := FALSE;
              End;
         End;  {ACTION_REVERSE}
@@ -927,16 +939,16 @@ begin
         Exit;
      end;
 
-     LookingForward := not InReverseMode;
+     LookingForward := not InReverseMode OR InCogenMode; // Always looking forward in cogen mode
 
      {First, check the direction of power flow to see if we need to reverse direction}
      {Don't do this if using regulated bus logic}
      If Not UsingRegulatedBus Then
      Begin
-         If IsReversible Then
+         If IsReversible or CogenModeActive Then
          Begin
 
-              If LookingForward Then   // If looking forward, check to see if we should reverse
+              If LookingForward and NOT InCogenMode Then   // If looking forward, check to see if we should reverse
                 Begin
                   FwdPower := -ControlledTransformer.Power[ElementTerminal].re;  // watts
                   If Not ReversePending Then  // If reverse is already pending, don't send any more messages
@@ -961,7 +973,7 @@ begin
                   End;
                 End
 
-              Else      // Looking the reverse direction
+              Else      // Looking the reverse direction or in cogen mode
 
                 Begin   // If reversed look to see if power is back in forward direction
                       FwdPower := -ControlledTransformer.Power[ElementTerminal].re;  // watts
@@ -987,7 +999,8 @@ begin
                       End;
 
                   {Check for special case of Reverse Neutral where regulator is to move to neutral position}
-                  With ControlledTransformer Do
+                  {Both Cogen Mode and Reverse operaiont}
+                      With ControlledTransformer Do
                       If ReverseNeutral Then
                       Begin
                           If Not Armed Then
@@ -1061,13 +1074,13 @@ begin
         ILDC  := CDivReal(CBuffer^[ControlledElement.Nconds*(ElementTerminal-1) + ControlledPhase], CTRating);
         if LDC_Z=0.0 Then  // Standard R, X LDC
           Begin
-            If InReverseMode Then VLDC  := Cmul(Cmplx(revR, revX), ILDC)
-                             else VLDC  := Cmul(Cmplx(R, X), ILDC);
+            If InReverseMode OR InCogenMode Then VLDC  := Cmul(Cmplx(revR, revX), ILDC)
+            else VLDC  := Cmul(Cmplx(R, X), ILDC);
             Vcontrol := Cadd(Vcontrol, VLDC);   // Direction on ILDC is INTO terminal, so this is equivalent to Vterm - (R+jX)*ILDC
           End
         Else // Beckwith LDC_Z control mode
           Begin
-            if InReverseMode Then
+            if InReverseMode OR InCogenMode Then
               Vcontrol := Cmplx( (Cabs(VControl) - Cabs(ILDC)*revLDC_Z), 0.0)
             Else
               Vcontrol := Cmplx( (Cabs(VControl) - Cabs(ILDC)*LDC_Z), 0.0);   // Just magnitudes
@@ -1086,7 +1099,7 @@ begin
               BandTest := RevBandwidth;
            End
          Else
-           Begin
+           Begin   // Forward or Cogen Modes
               VregTest := Vreg;
               BandTest := Bandwidth;
            End;
@@ -1310,6 +1323,7 @@ begin
      PropertyValue[29] := 'NO';
      PropertyValue[30] := '0';
      PropertyValue[31] := '0';
+     PropertyValue[32] := 'No';
 
   inherited  InitPropertyValues(NumPropsThisClass);
 
