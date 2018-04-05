@@ -1,6 +1,6 @@
 #ifndef DSS_CAPI_DLL_H
 #define DSS_CAPI_DLL_H
-#define DSS_CAPI_VERSION "0.9.4"
+#define DSS_CAPI_VERSION "0.9.5"
 #ifndef DSS_CAPI_DLL
 //#define DSS_CAPI_DLL __declspec(dllimport)
 #define DSS_CAPI_DLL
@@ -639,6 +639,8 @@ extern "C" {
     Complex array of actual node voltages in same order as SystemY matrix.
     */
     DSS_CAPI_DLL void Circuit_Get_YNodeVarray(double** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_DLL void Circuit_SetCktElementName(char* Value);
+    DSS_CAPI_DLL void Circuit_SetCktElementIndex(int32_t Value);
     
     /*
     Array of strings. Get  Bus definitions to which each terminal is connected. 0-based array.

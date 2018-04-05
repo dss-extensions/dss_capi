@@ -6,7 +6,7 @@ If you are looking for the Python bindings, see [dss_python](http://github.com/P
 
 If you are looking for the .NET/C# bindings, check `src/dss_sharp` for the source code, or download the .NET assembly from the Releases page.
 
-Version 0.9.4, based on [OpenDSS revision 2152](https://sourceforge.net/p/electricdss/code/2152/tree/). 
+Version 0.9.5, based on [OpenDSS revision 2152](https://sourceforge.net/p/electricdss/code/2152/tree/). 
 
 This is a work-in-progress but it's deemed stable enough to be made public. 
 *Note that, while the interface with OpenDSS is stable (classic version), the OpenDSS-PM (actor-based parallel machine version) interface was integrated recently and is experimental.*
@@ -26,8 +26,9 @@ A custom patchset to build OpenDSS-PM with FreePascal (as well as port recent fe
 
 Recent changes
 ==============
+- 2018-04-05 / version 0.9.5: New functions `Circuit_SetCktElement*` to set the active circuit element.
 - 2018-03-06 / version 0.9.4: Includes fixes for DSSProperty, includes of the original helpstrings in the C header, integrate upstream changes up to revision 2152. This version introduces a first version of .NET bindings to the native DLL.
-- 2018-02-16 / version 0.9.3: Integrate COM interface fixes from revision 2136 (`First` `Next` iteration)
+- 2018-02-16 / version 0.9.3: Integrates COM interface fixes from revision 2136 (`First` `Next` iteration)
 - 2018-02-12 / version 0.9.2: Experimental support for OpenDSS-PM (at the moment, a custom patch is provided for FreePascal support) and port COM interface fixes (OpenDSS revision 2134)
 - 2018-02-08 / version 0.9.1: First public release (OpenDSS revision 2123)
 

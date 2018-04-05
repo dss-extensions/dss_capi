@@ -48,6 +48,8 @@ procedure Circuit_EndOfTimeStepUpdate();cdecl;
 PROCEDURE Circuit_Get_YNodeOrder(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
 PROCEDURE Circuit_Get_YCurrents(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
 PROCEDURE Circuit_Get_YNodeVarray(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+procedure Circuit_SetCktElementIndex(const Value: Integer);cdecl;
+procedure Circuit_SetCktElementName(const Value: PAnsiChar);cdecl;
 
 IMPLEMENTATION
 
@@ -924,6 +926,25 @@ Begin
      End
     ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
+end;
+//------------------------------------------------------------------------------
+procedure Circuit_SetCktElementIndex(const Value: Integer);
+begin
+   If ActiveCircuit <> Nil Then With ActiveCircuit Do 
+   Begin
+      If NumDevices > Value Then
+      Begin
+         ActiveCktElement := CktElements.Get(Value+1);
+      End;
+   End;
+end;
+
+procedure Circuit_SetCktElementName(const Value: PAnsiChar);
+begin
+   If ActiveCircuit <> Nil Then With ActiveCircuit Do 
+   Begin
+      ActiveCircuit.SetElementActive(Value); // By name
+   End;
 end;
 //------------------------------------------------------------------------------
 END.
