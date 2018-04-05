@@ -147,6 +147,7 @@ VAR
    ParamPointer:Integer;
    ParamName:String;
    Param:String;
+   Devindex :Integer;
 
 Begin
 
@@ -205,11 +206,16 @@ Begin
              4: if Locked then LockCommand :=  CTRL_LOCK else LockCommand := CTRL_UNLOCK;
 
              7: Begin
-                  if NormalState=CTRL_NONE then  NormalState := PresentState;
-                  Case PresentState of     // Force state
-                    CTRL_OPEN:  ControlledElement.Closed[0] := FALSE;
-                    CTRL_CLOSE: ControlledElement.Closed[0] := TRUE;
-                  End;
+                    if NormalState=CTRL_NONE then  NormalState := PresentState;
+                    Devindex := GetCktElementIndex(ElementName);   // Set Controlled element
+                    IF DevIndex>0 THEN Begin
+                      ControlledElement := ActiveCircuit.CktElements.Get(DevIndex);
+                      if ControlledElement <> Nil then
+                        Case PresentState of     // Force state
+                          CTRL_OPEN:  ControlledElement.Closed[0] := FALSE;
+                          CTRL_CLOSE: ControlledElement.Closed[0] := TRUE;
+                        End;
+                    End;
                 End;
          end;
 
