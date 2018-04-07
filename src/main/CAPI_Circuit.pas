@@ -928,7 +928,7 @@ Begin
 
 end;
 //------------------------------------------------------------------------------
-procedure Circuit_SetCktElementIndex(const Value: Integer);
+procedure Circuit_SetCktElementIndex(const Value: Integer);cdecl;
 begin
    If ActiveCircuit <> Nil Then With ActiveCircuit Do 
    Begin
@@ -939,7 +939,7 @@ begin
    End;
 end;
 
-procedure Circuit_SetCktElementName(const Value: PAnsiChar);
+procedure Circuit_SetCktElementName(const Value: PAnsiChar);cdecl;
 begin
    If ActiveCircuit <> Nil Then With ActiveCircuit Do 
    Begin

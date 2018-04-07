@@ -390,6 +390,8 @@ exports
     Circuit_Get_YNodeOrder,
     Circuit_Get_YCurrents,
     Circuit_Get_YNodeVarray,
+    Circuit_SetCktElementIndex,
+    Circuit_SetCktElementName,
     CktElement_Get_BusNames,
     CktElement_Get_Name,
     CktElement_Get_NumConductors,
