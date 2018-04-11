@@ -2993,6 +2993,8 @@ Var
    ParamName,
    Param:String;
 
+   DoGenerators :Boolean;
+
    kW, PF :double;
    Skip:Integer;
    How,
@@ -3007,6 +3009,7 @@ Begin
      Skip := 1;
      PF := 1.0;
      FilName := 'DistGenerators.dss';
+     DoGenerators := TRUE;
 
      ParamName := Parser[ActiveActor].NextParam;
      Param := Parser[ActiveActor].StrValue;
@@ -3023,6 +3026,7 @@ Begin
            4: PF := Parser[ActiveActor].DblValue;
            5: FilName := Parser[ActiveActor].StrValue;
            6: kW := Parser[ActiveActor].DblValue * 1000.0;
+           7: if (Uppercase(Param)[1]='L') then DoGenerators := FALSE Else DoGenerators := TRUE;  // Load or Generator
 
          ELSE
              // ignore unnamed and extra parms
@@ -3032,7 +3036,9 @@ Begin
          Param := Parser[ActiveActor].StrValue;
      End;
 
-     MakeDistributedGenerators(kW, PF, How, Skip, FilName);  // in Utilities
+     if Not DoGenerators then FilName := 'DistLoads.dss' ;
+
+     MakeDistributedGenerators(kW, PF, How, Skip, FilName, DoGenerators);  // in Utilities
 
 End;
 
@@ -4033,7 +4039,7 @@ initialization
     SaveCommands := TCommandList.Create(['class', 'file', 'dir', 'keepdisabled']);
     SaveCommands.Abbrev := True;
     DI_PlotCommands := TCommandList.Create(['case','year','registers','peak','meter']);
-    DistributeCommands := TCommandList.Create(['kW','how','skip','pf','file','MW']);
+    DistributeCommands := TCommandList.Create(['kW','how','skip','pf','file','MW','what']);
     DistributeCommands.Abbrev := True;
 
     ReconductorCommands := TCommandList.Create(['Line1', 'Line2', 'LineCode', 'Geometry', 'EditString', 'Nphases']);
