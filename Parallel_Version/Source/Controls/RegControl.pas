@@ -77,6 +77,8 @@ TYPE
         InReverseMode  :Boolean;
         ReversePending :Boolean;
         ReverseNeutral :Boolean;
+        CogenEnabled   :Boolean;
+        InCogenMode    :Boolean;
 
         RevHandle      :Integer;
         RevBackHandle  :Integer;
@@ -194,7 +196,7 @@ CONST
     ACTION_TAPCHANGE = 0;
     ACTION_REVERSE   = 1;
 
-    NumPropsThisClass = 31;
+    NumPropsThisClass = 32;
 
 Var
     LastChange: Array of Integer;
@@ -268,6 +270,7 @@ Begin
      PropertyName[29] := 'Reset';
      PropertyName[30] := 'LDC_Z';
      PropertyName[31] := 'rev_Z';
+     PropertyName[32] := 'Cogen';
 
      PropertyHelp[1] := 'Name of Transformer element to which the RegControl is connected. '+
                         'Do not specify the full object name; "Transformer" is assumed for '  +
@@ -318,7 +321,7 @@ Begin
                          'Must be less than or equal to the number of phases. Ignored for regulated bus.';
      PropertyHelp[23] := 'kW reverse power threshold for reversing the direction of the regulator. Default is 100.0 kw.';
      PropertyHelp[24] := 'Time Delay in seconds (s) for executing the reversing action once the threshold for reversing has been exceeded. Default is 60 s.';
-     PropertyHelp[25] := '{Yes | No*} Default is no. Set this to Yes if you want the regulator to go to neutral in the reverse direction.';
+     PropertyHelp[25] := '{Yes | No*} Default is no. Set this to Yes if you want the regulator to go to neutral in the reverse direction or in cogen operation.';
      PropertyHelp[26] := '{Yes/True* | No/False} Default is YES for regulator control. Log control actions to Eventlog.';
      PropertyHelp[27] := 'When regulating a bus (the Bus= property is set), the PT ratio required to convert actual voltage at the remote bus to control voltage. ' +
                          'Is initialized to PTratio property. Set this property after setting PTratio.';
@@ -353,7 +356,7 @@ VAR
 
    Function Max(a,b:integer):Integer;
    Begin
-      If a>=b Then Result := a else Result := b;
+      If a >= b Then Result := a else Result := b;
    End;
 Begin
 
@@ -377,26 +380,26 @@ Begin
 
          CASE ParamPointer OF
             0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 120);
-            1: ElementName := 'Transformer.' + lowercase(param);
-            2: ElementTerminal := Parser[ActorID].IntValue;
-            3: Vreg := Parser[ActorID].DblValue;
-            4: Bandwidth := Parser[ActorID].DblValue;
-            5: PTRatio := Parser[ActorID].DblValue;
-            6: CTRating := Parser[ActorID].DblValue;
-            7: R := Parser[ActorID].DblValue;
-            8: X := Parser[ActorID].DblValue;
-            9: RegulatedBus := Param;
-            10: TimeDelay := Parser[ActorID].DblValue;
-            11: IsReversible := InterpretYesNo(Param);
-            12: revVreg := Parser[ActorID].DblValue;
-            13: revBandwidth := Parser[ActorID].DblValue;
-            14: revR := Parser[ActorID].DblValue;
-            15: revX := Parser[ActorID].DblValue;
-            16: TapDelay := Parser[ActorID].DblValue;
-            17: DebugTrace   := InterpretYesNo(Param);
+            1: ElementName      := 'Transformer.' + lowercase(param);
+            2: ElementTerminal  := Parser[ActorID].IntValue;
+            3: Vreg             := Parser[ActorID].DblValue;
+            4: Bandwidth        := Parser[ActorID].DblValue;
+            5: PTRatio          := Parser[ActorID].DblValue;
+            6: CTRating         := Parser[ActorID].DblValue;
+            7: R                := Parser[ActorID].DblValue;
+            8: X                := Parser[ActorID].DblValue;
+            9: RegulatedBus     := Param;
+            10: TimeDelay       := Parser[ActorID].DblValue;
+            11: IsReversible    := InterpretYesNo(Param);
+            12: revVreg         := Parser[ActorID].DblValue;
+            13: revBandwidth    := Parser[ActorID].DblValue;
+            14: revR            := Parser[ActorID].DblValue;
+            15: revX            := Parser[ActorID].DblValue;
+            16: TapDelay        := Parser[ActorID].DblValue;
+            17: DebugTrace      := InterpretYesNo(Param);
             18: TapLimitPerChange := max(0, Parser[ActorID].IntValue);
-            19: FInversetime := InterpretYesNo(Param);
-            20: TapWinding   := Parser[ActorID].intValue;
+            19: FInversetime    := InterpretYesNo(Param);
+            20: TapWinding      := Parser[ActorID].intValue;
             21: Begin
                   Vlimit      := Parser[ActorID].DblValue;
                   If VLimit > 0.0 then  VLimitActive := TRUE else VLimitActive := FALSE;
@@ -405,17 +408,18 @@ Begin
                 Else If CompareTextShortest(param, 'min') = 0 Then FPTPhase := MINPHASE
                                                               Else FPTPhase := max(1, Parser[ActorID].IntValue);
             23: kWRevPowerThreshold := Parser[ActorID].DblValue ;
-            24: RevDelay := Parser[ActorID].DblValue;
-            25: ReverseNeutral := InterpretYesNo(Param);
-            26: ShowEventLog := InterpretYesNo(param);
-            27: RemotePTRatio := Parser[ActorID].DblValue;
-            28: TapNum := Parser[ActorID].IntValue;
+            24: RevDelay        := Parser[ActorID].DblValue;
+            25: ReverseNeutral  := InterpretYesNo(Param);
+            26: ShowEventLog    := InterpretYesNo(param);
+            27: RemotePTRatio   := Parser[ActorID].DblValue;
+            28: TapNum          := Parser[ActorID].IntValue;
             29: If InterpretYesNo (Param) Then Begin  // force a reset
                   Reset;
                   PropertyValue[29]  := 'n'; // so it gets reported properly
                End;
-            30: LDC_Z := Parser[ActorID].DblValue ;
-            31: revLDC_Z := Parser[ActorID].DblValue;
+            30: LDC_Z           := Parser[ActorID].DblValue ;
+            31: revLDC_Z        := Parser[ActorID].DblValue;
+            32: CogenEnabled    := InterpretYesNo(Param);
          ELSE
            // Inherited parameters
            ClassEdit( ActiveRegControlObj, ParamPointer - NumPropsthisClass)
@@ -423,8 +427,8 @@ Begin
 
          CASE ParamPointer of
             2: Begin
-                  Tapwinding := ElementTerminal;  // Resets if property re-assigned
-                  PropertyValue[20]:= Param ;
+                  Tapwinding        := ElementTerminal;  // Resets if property re-assigned
+                  PropertyValue[20] := Param ;
                 End;
             5: RemotePTRatio := PTRatio;  // re-initialise RemotePTRatio whenever PTRatio is set
             17: IF DebugTrace THEN
@@ -437,8 +441,8 @@ Begin
             23:  RevPowerThreshold := kWRevPowerThreshold * 1000.0;
          END;
 
-         ParamName := Parser[ActorID].NextParam;
-         Param := Parser[ActorID].StrValue;
+         ParamName  := Parser[ActorID].NextParam;
+         Param      := Parser[ActorID].StrValue;
      End;
 
      RecalcElementData(ActorID);
@@ -463,26 +467,26 @@ Begin
         Nphases := OtherRegControl.Fnphases;
         NConds  := OtherRegControl.Fnconds; // Force Reallocation of terminal stuff
 
-        ElementName       := OtherRegControl.ElementName;
-        ControlledElement := OtherRegControl.ControlledElement;  // Pointer to target circuit element
-        ElementTerminal   := OtherRegControl.ElementTerminal;
-        Vreg              := OtherRegControl.Vreg;
-        Bandwidth         := OtherRegControl.Bandwidth;
-        PTRatio           := OtherRegControl.PTRatio;
-        RemotePTRatio     := OtherRegControl.RemotePTRatio;
-        CTRating          := OtherRegControl.CTRating;
-        R                 := OtherRegControl.R;
-        X                 := OtherRegControl.X;
-        RegulatedBus      := OtherRegControl.RegulatedBus;
-        TimeDelay         := OtherRegControl.TimeDelay;
-        IsReversible      := OtherRegControl.IsReversible;
-        revVreg           := OtherRegControl.revVreg;
-        revBandwidth      := OtherRegControl.revBandwidth;
-        revR              := OtherRegControl.revR;
-        revX              := OtherRegControl.revX;
-        TapDelay          := OtherRegControl.TapDelay;
-        TapWinding        := OtherRegControl.TapWinding;
-        FInversetime      := OtherRegControl.FInversetime;
+        ElementName         := OtherRegControl.ElementName;
+        ControlledElement   := OtherRegControl.ControlledElement;  // Pointer to target circuit element
+        ElementTerminal     := OtherRegControl.ElementTerminal;
+        Vreg                := OtherRegControl.Vreg;
+        Bandwidth           := OtherRegControl.Bandwidth;
+        PTRatio             := OtherRegControl.PTRatio;
+        RemotePTRatio       := OtherRegControl.RemotePTRatio;
+        CTRating            := OtherRegControl.CTRating;
+        R                   := OtherRegControl.R;
+        X                   := OtherRegControl.X;
+        RegulatedBus        := OtherRegControl.RegulatedBus;
+        TimeDelay           := OtherRegControl.TimeDelay;
+        IsReversible        := OtherRegControl.IsReversible;
+        revVreg             := OtherRegControl.revVreg;
+        revBandwidth        := OtherRegControl.revBandwidth;
+        revR                := OtherRegControl.revR;
+        revX                := OtherRegControl.revX;
+        TapDelay            := OtherRegControl.TapDelay;
+        TapWinding          := OtherRegControl.TapWinding;
+        FInversetime        := OtherRegControl.FInversetime;
         TapLimitPerChange   := OtherRegControl.TapLimitPerChange;
         kWRevPowerThreshold := OtherRegControl.kWRevPowerThreshold;
         RevPowerThreshold   := OtherRegControl.RevPowerThreshold;
@@ -491,8 +495,11 @@ Begin
         ShowEventLog        := OtherRegControl.ShowEventLog;
     //    DebugTrace     := OtherRegControl.DebugTrace;  Always default to NO
 
-        FPTphase     := OtherRegControl.FPTphase;
-        TapNum    := OtherRegControl.TapNum;
+        FPTphase            := OtherRegControl.FPTphase;
+        TapNum              := OtherRegControl.TapNum;
+        CogenEnabled        := OtherRegControl.CogenEnabled;
+        LDC_Z               := OtherRegControl.LDC_Z;
+        RevLDC_Z            := OtherRegControl.revLDC_Z;
         For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherRegControl.PropertyValue[i];
 
    End
@@ -556,6 +563,8 @@ Begin
     ReversePending := FALSE;
     InReverseMode  := FALSE;
     ReverseNeutral := FALSE;
+    InCogenMode    := FALSE;
+    CogenEnabled   := FALSE;
 
     RevHandle      := 0;
     RevBackHandle  := 0;
@@ -891,7 +900,11 @@ begin
                                   [BoolToStr(ReversePending, TRUE), BoolToStr(InReverseMode, TRUE)]));
              If ReversePending Then        // check to see if action has reset
              Begin
-                If InReverseMode Then InReverseMode := FALSE Else InReverseMode := TRUE;
+                If CogenEnabled then
+                Begin   // Cogen mode takes precedence if present
+                   If InCogenMode then InCogenMode := FALSE Else InCogenMode := TRUE;
+                End Else
+                   If InReverseMode Then InReverseMode := FALSE Else InReverseMode := TRUE;
                 ReversePending := FALSE;
              End;
         End;  {ACTION_REVERSE}
@@ -930,19 +943,19 @@ begin
         Exit;
      end;
 
-     LookingForward := not InReverseMode;
+     LookingForward := (not InReverseMode) OR InCogenMode;
 
      {First, check the direction of power flow to see if we need to reverse direction}
      {Don't do this if using regulated bus logic}
      If Not UsingRegulatedBus Then
      Begin
-         If IsReversible Then
+         If IsReversible or CogenEnabled Then
          Begin
 
-              If LookingForward Then   // If looking forward, check to see if we should reverse
+              If LookingForward and (NOT InCogenMode) Then   // If looking forward, check to see if we should reverse
                 Begin
                   FwdPower := -ControlledTransformer.Power[ElementTerminal,ActorID].re;  // watts
-                  If Not ReversePending Then  // If reverse is already pending, don't send any more messages
+                  If (Not ReversePending) Then  // If reverse is already pending, don't send any more messages
                   Begin
                         If (FwdPower < -RevPowerThreshold) Then
                         Begin
@@ -964,7 +977,7 @@ begin
                   End;
                 End
 
-              Else      // Looking the reverse direction
+              Else      // Looking the reverse direction or in cogen mode
 
                 Begin   // If reversed look to see if power is back in forward direction
                       FwdPower := -ControlledTransformer.Power[ElementTerminal,ActorID].re;  // watts
@@ -990,6 +1003,7 @@ begin
                       End;
 
                   {Check for special case of Reverse Neutral where regulator is to move to neutral position}
+                  {Both Cogen Mode and Reverse operation}
                   With ControlledTransformer Do
                       If ReverseNeutral Then
                       Begin
@@ -1064,13 +1078,13 @@ begin
         ILDC  := CDivReal(CBuffer^[ControlledElement.Nconds*(ElementTerminal-1) + ControlledPhase], CTRating);
         if LDC_Z=0.0 Then  // Standard R, X LDC
           Begin
-            If InReverseMode Then VLDC  := Cmul(Cmplx(revR, revX), ILDC)
-                             else VLDC  := Cmul(Cmplx(R, X), ILDC);
+            If InReverseMode OR InCogenMode Then VLDC  := Cmul(Cmplx(revR, revX), ILDC)
+            else VLDC  := Cmul(Cmplx(R, X), ILDC);
             Vcontrol := Cadd(Vcontrol, VLDC);   // Direction on ILDC is INTO terminal, so this is equivalent to Vterm - (R+jX)*ILDC
           End
         Else // Beckwith LDC_Z control mode
           Begin
-            if InReverseMode Then
+            if InReverseMode OR InCogenMode Then
               Vcontrol := Cmplx( (Cabs(VControl) - Cabs(ILDC)*revLDC_Z), 0.0)
             Else
               Vcontrol := Cmplx( (Cabs(VControl) - Cabs(ILDC)*LDC_Z), 0.0);   // Just magnitudes
@@ -1202,7 +1216,7 @@ procedure TRegControlObj.RegWriteDebugRecord(S: String);
 // write a general debug string
 begin
       Try
-      If (Not InshowResults) Then
+          If (Not InshowResults) Then
           Begin
                Append(TraceFile);
                Writeln(TraceFile, S);
@@ -1222,7 +1236,7 @@ VAR
 Begin
 
       Try
-      If (Not InshowResults) Then
+          If (Not InshowResults) Then
           Begin
                Separator := ', ';
                Append(TraceFile);
@@ -1243,7 +1257,7 @@ Begin
                CloseFile(TraceFile);
           End;
       Except
-            On E:Exception Do Begin End;
+            On E:Exception Do Begin {Do Nothing} End;
 
       End;
 End;
@@ -1312,6 +1326,7 @@ begin
      PropertyValue[29] := 'NO';
      PropertyValue[30] := '0';
      PropertyValue[31] := '0';
+     PropertyValue[32] := 'No';
 
   inherited  InitPropertyValues(NumPropsThisClass);
 
@@ -1347,24 +1362,26 @@ end;
 
 procedure TRegControlObj.MakePosSequence(ActorID : Integer);
 begin
-  if ControlledElement <> Nil then begin
-    Enabled :=   ControlledElement.Enabled;
-    If UsingRegulatedBus Then
-      Nphases := 1
-    Else
-      Nphases := ControlledElement.NPhases;
-    Nconds := FNphases;
-    IF Comparetext(ControlledElement.DSSClassName, 'transformer') = 0 THEN Begin
-      // Sets name of i-th terminal's connected bus in RegControl's buslist
-      // This value will be used to set the NodeRef array (see Sample function)
-      IF UsingRegulatedBus Then
-        Setbus(1, RegulatedBus)   // hopefully this will actually exist
+    if ControlledElement <> Nil then
+    Begin
+      Enabled :=   ControlledElement.Enabled;
+      If UsingRegulatedBus Then
+        Nphases := 1
       Else
-        Setbus(1, ControlledElement.GetBus(ElementTerminal));
-      ReAllocMem(VBuffer, SizeOF(Vbuffer^[1]) * ControlledElement.NPhases );  // buffer to hold regulator voltages
-      ReAllocMem(CBuffer, SizeOF(CBuffer^[1]) * ControlledElement.Yorder );
+        Nphases := ControlledElement.NPhases;
+      Nconds := FNphases;
+      IF Comparetext(ControlledElement.DSSClassName, 'transformer') = 0 THEN
+      Begin
+        // Sets name of i-th terminal's connected bus in RegControl's buslist
+        // This value will be used to set the NodeRef array (see Sample function)
+        IF UsingRegulatedBus Then
+          Setbus(1, RegulatedBus)   // hopefully this will actually exist
+        Else
+          Setbus(1, ControlledElement.GetBus(ElementTerminal));
+        ReAllocMem(VBuffer, SizeOF(Vbuffer^[1]) * ControlledElement.NPhases );  // buffer to hold regulator voltages
+        ReAllocMem(CBuffer, SizeOF(CBuffer^[1]) * ControlledElement.Yorder );
+      End;
     End;
-  end;
   inherited;
 end;
 

@@ -18,6 +18,7 @@ uses DSSClassDefs,
      sysUtils,
      Executive,
      Variants,
+     ParserDel,
      ExecCommands, ExecOptions;
 
 function DSSI(mode:longint;arg:longint):longint;cdecl;

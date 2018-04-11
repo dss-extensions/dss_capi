@@ -126,6 +126,8 @@ End;
 
 //----------------------------------------------------------------------------
 Destructor TExecutive.Destroy;
+var
+  I : Integer;
 
 Begin
 
@@ -139,8 +141,10 @@ Begin
      Circuits.Free;
 
      DisposeDSSClasses;
-
-     Parser[ActiveActor].Free;
+     for I := 1 to NumOfActors do
+     begin
+      Parser[I].Free;
+     end;
 
      Inherited Destroy;
 End;
