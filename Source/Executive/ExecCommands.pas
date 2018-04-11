@@ -352,14 +352,15 @@ Begin
      CommandHelp[65] := 'Usage: Rotate [angle=]nnn.  Rotate circuit plotting coordinates by specified angle (degrees). ';
      CommandHelp[66] := 'Displays the difference between the present solution and the last on saved using the SAVE VOLTAGES command.';
      CommandHelp[67] := 'Returns a power flow summary of the most recent solution in the global result string.';
-     CommandHelp[68] := 'kw=nn how={Proportional | Uniform |Random | Skip} skip=nn PF=nn file=filename MW=nn' +CRLF +
-                        'Distributes generators on the system in the manner specified by "how".' + CRLF +
+     CommandHelp[68] := 'kw=nn how={Proportional* | Uniform |Random | Skip} skip=nn PF=nn file=filename MW=nn What=[Generator*|Load]' +CRLF + CRLF +
+                        'Creates a DSS script file to distribute Generator or Load objects on the system in the manner specified by "how".' + CRLF +
                         'kW = total generation to be distributed (default=1000) '+ CRLF +
                         'how= process name as indicated (default=proportional to load)' + CRLF +
                         'skip = no. of buses to skip for "How=Skip" (default=1)' + CRLF +
                         'PF = power factor for new generators (default=1.0)'+ CRLF +
-                        'file = name of file to save (default=distgenerators.txt)'+ CRLF +
-                        'MW = alternate way to specify kW (default = 1)';
+                        'file = name of file to save (default=distgenerators.dss or distloads.dss)'+ CRLF +
+                        'MW = alternate way to specify kW (default = 1)' +CRLF+
+                        'What = what type of device to add, Generator (default) or Load';
      CommandHelp[69] := '[case=]casename [year=]yr [registers=](reg1, reg2,...)  [peak=]y/n  [meter=]metername' +CRLF+
                         'Plots demand interval (DI) results from yearly simulation cases.  '+
                         'Plots selected registers from selected meter file (default = DI_Totals.CSV).  ' +

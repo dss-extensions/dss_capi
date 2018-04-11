@@ -139,7 +139,7 @@ Function  IsPathBetween(FromLine, ToLine:TPDElement):Boolean;
 Procedure TraceAndEdit(FromLine, ToLine:TPDElement; NPhases: Integer; EditStr:String);
 Procedure GoForwardAndRephase(FromLine:TPDElement; const PhaseString, EditStr, ScriptFileName:String; TransStop:Boolean);
 
-Procedure MakeDistributedGenerators(kW, PF:double; How:String; Skip:Integer; Fname:String);
+Procedure MakeDistributedGenerators(kW, PF:double; How:String; Skip:Integer; Fname:String; DoGenerators:Boolean);
 
 Procedure Obfuscate;
 
@@ -2234,7 +2234,7 @@ Begin
   End;
 End;
 
-Procedure WriteUniformGenerators(var F:TextFile; kW, PF:Double);
+Procedure WriteUniformGenerators(var F:TextFile; kW, PF:Double; DoGenerators:Boolean);
  { Distribute the generators uniformly amongst the feeder nodes that have loads}
 
 Var
@@ -2253,7 +2253,8 @@ Begin
    For i := 1 to Count Do Begin
       pLoad := TLoadObj(LoadClass.ElementList.Get(i));
       If pLoad.Enabled Then Begin
-        Write(F, Format('new generator.DG_%d  bus1=%s',[i, pLoad.GetBus(1)]));
+        If DoGenerators Then Write(F, Format('new generator.DG_%d  bus1=%s',[i, pLoad.GetBus(1)]))
+                        else Write(F, Format('new load.DL_%d  bus1=%s',[i, pLoad.GetBus(1)]));
         With ActiveCircuit Do Begin
             Write(F, Format(' phases=%d kV=%-g',[pLoad.NPhases, pLoad.kVLoadBase]));
             Write(F, Format(' kW=%-g',[kWeach]));
@@ -2265,7 +2266,7 @@ Begin
    End;
 End;
 
-Procedure WriteRandomGenerators(var F:TextFile; kW, PF:Double);
+Procedure WriteRandomGenerators(var F:TextFile; kW, PF:Double; DoGenerators:Boolean);
 {Distribute Generators randomly to loaded buses}
 
 Var
@@ -2294,7 +2295,8 @@ Begin
    For i := 1 to Count Do Begin
       pLoad := TLoadObj(LoadClass.ElementList.Get(i));
       If pLoad.Enabled Then Begin
-       Write(F, Format('new generator.DG_%d  bus1=%s',[i, pLoad.GetBus(1)]));
+        If DoGenerators Then Write(F, Format('new generator.DG_%d  bus1=%s',[i, pLoad.GetBus(1)]))
+                        else Write(F, Format('new load.DL_%d  bus1=%s',[i, pLoad.GetBus(1)]));
         With ActiveCircuit Do Begin
             Write(F, Format(' phases=%d kV=%-g',[pLoad.NPhases, pLoad.kVLoadBase]));
             Write(F, Format(' kW=%-g',[kWeach*random*2.0]));
@@ -2308,7 +2310,7 @@ Begin
 
 End;
 
-Procedure WriteEveryOtherGenerators(var F:TextFile; kW, PF:Double; Skip:Integer);
+Procedure WriteEveryOtherGenerators(var F:TextFile; kW, PF:Double; Skip:Integer; DoGenerators:Boolean);
 
 {distribute generators on every other load, skipping the number specified}
 
@@ -2346,7 +2348,8 @@ Begin
       pLoad := TLoadObj(LoadClass.ElementList.Get(i));
       If pLoad.Enabled Then
        If SkipCount=0 then Begin
-        Write(F, Format('new generator.DG_%d  bus1=%s',[i, pLoad.GetBus(1)]));
+        If DoGenerators Then Write(F, Format('new generator.DG_%d  bus1=%s',[i, pLoad.GetBus(1)]))
+                        else Write(F, Format('new load.DL_%d  bus1=%s',[i, pLoad.GetBus(1)]));
         With ActiveCircuit Do Begin
             Write(F, Format(' phases=%d kV=%-g',[pLoad.NPhases, pLoad.kVLoadBase]));
             Write(F, Format(' kW=%-g ',[kWeach * pLoad.kWBase]));
@@ -2361,7 +2364,7 @@ Begin
 
 End;
 
-Procedure WriteProportionalGenerators(var F:TextFile; kW, PF:Double);
+Procedure WriteProportionalGenerators(var F:TextFile; kW, PF:Double; DoGenerators:Boolean);
 
 {Distribute the generator Proportional to load}
 
@@ -2391,7 +2394,8 @@ Begin
    For i := 1 to Count Do Begin
       pLoad := TLoadObj(LoadClass.ElementList.Get(i));
       If pLoad.Enabled Then Begin
-        Write(F, Format('new generator.DG_%d  bus1=%s',[i, pLoad.GetBus(1)]));
+        If DoGenerators Then Write(F, Format('new generator.DG_%d  bus1=%s',[i, pLoad.GetBus(1)]))
+                        else Write(F, Format('new load.DL_%d  bus1=%s',[i, pLoad.GetBus(1)]));
         With ActiveCircuit Do Begin
             Write(F, Format(' phases=%d kV=%-g',[pLoad.NPhases, pLoad.kVLoadBase]));
             Write(F, Format(' kW=%-g',[kWeach*pLoad.kWBase]));
@@ -2405,10 +2409,11 @@ Begin
 End;
 
 
-Procedure MakeDistributedGenerators(kW, PF:double; How:String; Skip:Integer; Fname:String);
+Procedure MakeDistributedGenerators(kW, PF:double; How:String; Skip:Integer; Fname:String; DoGenerators:Boolean);
 
 Var
    F:TextFile;
+   WhatStr : String;
 
 Begin
     {Write outputfile and then redirect command parser to it.}
@@ -2425,17 +2430,19 @@ Begin
     End;
 
     Try
+      if DoGenerators then  WhatStr := 'Generators' else WhatStr := 'Loads';
+
       Writeln(F, '! Created with Distribute Command:');
-      Writeln(f, Format('! Distribute kW=%-.6g PF=%-.6g How=%s Skip=%d  file=%s', [kW, PF, How, Skip, Fname]));
+      Writeln(f, Format('! Distribute kW=%-.6g PF=%-.6g How=%s Skip=%d  file=%s  what=%s', [kW, PF, How, Skip, Fname, WhatStr]));
       Writeln(F);
      // Writeln(F, 'Set allowduplicates=yes');
       If Length(How)=0 Then How:='P';
       Case Uppercase(How)[1] of
-          'U':  WriteUniformGenerators(F, kW, PF);
-          'R':  WriteRandomGenerators (F, kW, PF);
-          'S':  WriteEveryOtherGenerators(F, kW, PF, Skip);
+          'U':  WriteUniformGenerators(F, kW, PF, DoGenerators);
+          'R':  WriteRandomGenerators (F, kW, PF, DoGenerators);
+          'S':  WriteEveryOtherGenerators(F, kW, PF, Skip, DoGenerators);
       Else
-           WriteProportionalGenerators(F, kW, PF);
+           WriteProportionalGenerators(F, kW, PF, DoGenerators);
       End;
       GlobalResult := Fname;
     Finally
