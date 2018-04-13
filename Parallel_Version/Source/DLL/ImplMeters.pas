@@ -550,7 +550,7 @@ end;
 function TMeters.Get_DIFilesAreOpen: WordBool;
 begin
      IF ActiveCircuit[ActiveActor] <> Nil THEN Begin
-            Result := DIFilesAreOpen;    // Global variable
+            Result := DIFilesAreOpen[ActiveActor];    // Global variable
      End;
 end;
 

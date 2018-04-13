@@ -3057,7 +3057,7 @@ Var
 {$ENDIF}
 Begin
 {$IFNDEF DLL_ENGINE}
-     IF DIFilesAreOpen Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
+     IF DIFilesAreOpen[ActiveActor] Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
 
      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;
 
@@ -3117,7 +3117,7 @@ Var
 {$ENDIF}
 Begin
 {$IFNDEF DLL_ENGINE}
-     IF DIFilesAreOpen Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
+     IF DIFilesAreOpen[ActiveActor] Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;
      CaseName1 := 'base';
      CaseName2 := '';
@@ -3175,7 +3175,7 @@ Var
 {$ENDIF}
 Begin
 {$IFNDEF DLL_ENGINE}
-     IF DIFilesAreOpen Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
+     IF DIFilesAreOpen[ActiveActor] Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
 
      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;
 

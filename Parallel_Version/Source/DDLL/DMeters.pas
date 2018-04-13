@@ -126,7 +126,7 @@ begin
   8: begin  // Meters.DIFilesAreOpen
        IF ActiveCircuit[ActiveActor] <> Nil THEN Begin
           Result:=0;
-          if DIFilesAreOpen then Result:=1;    // Global variable
+          if DIFilesAreOpen[ActiveActor] then Result:=1;    // Global variable
        End;
        Result:=0;
   end;

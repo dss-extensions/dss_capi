@@ -617,8 +617,8 @@ Begin
            65: ActiveCircuit[ActiveActor].NodeMarkerWidth := Parser[ActiveActor].IntValue;
            66: ActiveCircuit[ActiveActor].LogEvents       := InterpretYesNo(Param);
            67: DSSExecutive.RecorderOn       := InterpretYesNo(Param);
-           68: EnergyMeterClass[ActiveActor].Do_OverloadReport[ActiveActor] := InterpretYesNo(Param);
-           69: EnergyMeterClass[ActiveActor].Do_VoltageExceptionReport[ActiveActor] := InterpretYesNo(Param);
+           68: EnergyMeterClass[ActiveActor].Do_OverloadReport := InterpretYesNo(Param);
+           69: EnergyMeterClass[ActiveActor].Do_VoltageExceptionReport := InterpretYesNo(Param);
            70: DoSetCFactors(Parser[ActiveActor].DblValue);
            71: AutoShowExport := InterpretYesNo(Param);
            72: MaxAllocationIterations := Parser[ActiveActor].IntValue;
@@ -825,8 +825,8 @@ Begin
            65: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].NodeMarkerWidth]));
            66: If ActiveCircuit[ActiveActor].LogEvents Then  AppendGlobalResult('Yes') else AppendGlobalResult('No');
            67: If DSSExecutive.RecorderON Then  AppendGlobalResult('Yes') else AppendGlobalResult('No');
-           68: If EnergyMeterClass[ActiveActor].Do_OverloadReport[ActiveActor] Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
-           69: If EnergyMeterClass[ActiveActor].Do_VoltageExceptionReport[ActiveActor] Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+           68: If EnergyMeterClass[ActiveActor].Do_OverloadReport Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+           69: If EnergyMeterClass[ActiveActor].Do_VoltageExceptionReport Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
            70: AppendGlobalResult('Get function not applicable.');
            71: If AutoShowExport Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
            72: AppendGlobalResult(Format('%d' ,[MaxAllocationIterations])) ;

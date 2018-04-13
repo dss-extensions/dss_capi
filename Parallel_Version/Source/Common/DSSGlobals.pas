@@ -178,7 +178,7 @@ VAR
    InShowResults      :Boolean;
    Redirect_Abort     :Boolean;
    In_Redirect        :Boolean;
-   DIFilesAreOpen     :Boolean;
+   DIFilesAreOpen     :array of Boolean;
    AutoShowExport     :Boolean;
    SolutionWasAttempted : Array of Boolean;
 
@@ -310,7 +310,6 @@ VAR
    EMT_Append             : array of Boolean;
    PHV_Append             : array of Boolean;
    FM_Append              : array of Boolean;
-
 
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
@@ -912,6 +911,8 @@ initialization
    SetLength(EMT_Append,CPU_Cores + 1);
    SetLength(PHV_Append,CPU_Cores + 1);
    SetLength(FM_Append,CPU_Cores + 1);
+   SetLength(DIFilesAreOpen,CPU_Cores + 1);
+
 
    for ActiveActor := 1 to CPU_Cores do
    begin
@@ -935,7 +936,7 @@ initialization
     EMT_MHandle[ActiveActor]          :=  nil;
     PHV_MHandle[ActiveActor]          :=  nil;
     FM_MHandle[ActiveActor]           :=  nil;
-
+    DIFilesAreOpen[ActiveActor]       :=  FALSE;
    end;
    ActiveActor            :=  1;
    NumOfActors            :=  1;
@@ -976,7 +977,7 @@ initialization
    InvSQRT3              := 1.0/SQRT3;
    InvSQRT3x1000         := InvSQRT3 * 1000.0;
    CmdResult             := 0;
-   DIFilesAreOpen        := FALSE;
+   //DIFilesAreOpen        := FALSE;
    ErrorNumber           := 0;
    ErrorPending          := FALSE;
    GlobalHelpString      := '';
