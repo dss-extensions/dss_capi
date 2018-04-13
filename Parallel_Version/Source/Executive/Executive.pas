@@ -141,10 +141,7 @@ Begin
      Circuits.Free;
 
      DisposeDSSClasses;
-     for I := 1 to NumOfActors do
-     begin
-      Parser[I].Free;
-     end;
+     Parser[ActiveActor].Free;
 
      Inherited Destroy;
 End;
