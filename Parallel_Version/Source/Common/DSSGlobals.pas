@@ -275,6 +275,44 @@ VAR
    GetMatrixElement   : Array of TGetMatrixElement; }
    Parser             : Array of TParser;
 
+{*******************************************************************************
+*    Nomenclature:                                                             *
+*                  OV_ Overloads                                               *
+*                  VR_ Voltage report                                          *
+*                  DI_ Demand interval                                         *
+*                  SI_ System Demand interval                                  *
+*                  TDI_ DI Totals                                              *
+*                  FM_  Meter Totals                                           *
+*                  SM_  System Mater                                           *
+*                  EMT_  Energy Meter Totals                                   *
+*                  PHV_  Phase Voltage Report                                  *
+*     These prefixes are applied to the variables of each file mapped into     *
+*     Memory using the MemoryMap_Lib                                           *
+********************************************************************************
+}
+   OV_MHandle             : array of TBytesStream;  // a. Handle to the file in memory
+   VR_MHandle             : array of TBytesStream;
+   DI_MHandle             : array of TBytesStream;
+   SDI_MHandle            : array of TBytesStream;
+   TDI_MHandle            : array of TBytesStream;
+   SM_MHandle             : array of TBytesStream;
+   EMT_MHandle            : array of TBytesStream;
+   PHV_MHandle            : array of TBytesStream;
+   FM_MHandle             : array of TBytesStream;
+
+//*********** Flags for appending Files*****************************************
+   OV_Append              : array of Boolean;
+   VR_Append              : array of Boolean;
+   DI_Append              : array of Boolean;
+   SDI_Append             : array of Boolean;
+   TDI_Append             : array of Boolean;
+   SM_Append              : array of Boolean;
+   EMT_Append             : array of Boolean;
+   PHV_Append             : array of Boolean;
+   FM_Append              : array of Boolean;
+
+
+
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
 PROCEDURE DoSimpleMsg(Const S :String; ErrNum:Integer);
 
@@ -854,6 +892,27 @@ initialization
    setlength(ActiveYPrim,CPU_Cores + 1);
    SetLength(SolutionWasAttempted,CPU_Cores + 1);
 
+   // Init pointer repositories for the EnergyMeter in multiple cores
+
+   SetLength(OV_MHandle,CPU_Cores + 1);
+   SetLength(VR_MHandle,CPU_Cores + 1);
+   SetLength(DI_MHandle,CPU_Cores + 1);
+   SetLength(SDI_MHandle,CPU_Cores + 1);
+   SetLength(TDI_MHandle,CPU_Cores + 1);
+   SetLength(SM_MHandle,CPU_Cores + 1);
+   SetLength(EMT_MHandle,CPU_Cores + 1);
+   SetLength(PHV_MHandle,CPU_Cores + 1);
+   SetLength(FM_MHandle,CPU_Cores + 1);
+   SetLength(OV_Append,CPU_Cores + 1);
+   SetLength(VR_Append,CPU_Cores + 1);
+   SetLength(DI_Append,CPU_Cores + 1);
+   SetLength(SDI_Append,CPU_Cores + 1);
+   SetLength(TDI_Append,CPU_Cores + 1);
+   SetLength(SM_Append,CPU_Cores + 1);
+   SetLength(EMT_Append,CPU_Cores + 1);
+   SetLength(PHV_Append,CPU_Cores + 1);
+   SetLength(FM_Append,CPU_Cores + 1);
+
    for ActiveActor := 1 to CPU_Cores do
    begin
     ActiveCircuit[ActiveActor]        :=  nil;
@@ -866,6 +925,17 @@ initialization
     ErrorStrings[ActiveActor].Clear;
     ActorHandle[ActiveActor]          :=  nil;
     Parser[ActiveActor]               :=  nil;
+
+    OV_MHandle[ActiveActor]           :=  nil;
+    VR_MHandle[ActiveActor]           :=  nil;
+    DI_MHandle[ActiveActor]           :=  nil;
+    SDI_MHandle[ActiveActor]          :=  nil;
+    TDI_MHandle[ActiveActor]          :=  nil;
+    SM_MHandle[ActiveActor]           :=  nil;
+    EMT_MHandle[ActiveActor]          :=  nil;
+    PHV_MHandle[ActiveActor]          :=  nil;
+    FM_MHandle[ActiveActor]           :=  nil;
+
    end;
    ActiveActor            :=  1;
    NumOfActors            :=  1;
