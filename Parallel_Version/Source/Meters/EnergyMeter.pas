@@ -200,8 +200,8 @@ Type
         Procedure CreateFDI_Totals(ActorID: integer);
         Procedure ClearDI_Totals;
         Procedure WriteTotalsFile(ActorID: integer);
-        Procedure OpenOverloadReportFile;
-        Procedure OpenVoltageReportFile;
+        Procedure OpenOverloadReportFile(ActorID: integer);
+        Procedure OpenVoltageReportFile(ActorID: integer);
         Procedure WriteOverloadReport(ActorID : Integer);
         Procedure WriteVoltageReport(ActorID:integer);
         Procedure InterpretRegisterMaskArray(Var Mask:TRegisterArray; ActorID : Integer);
@@ -3573,8 +3573,8 @@ begin
           SystemMeter.OpenDemandIntervalFile(ActorID);
 
           {Optional Exception Reporting}
-          if Do_OverloadReport         then OpenOverloadReportFile;
-          If Do_VoltageExceptionReport then OpenVoltageReportFile;
+          if Do_OverloadReport         then OpenOverloadReportFile(ActorID);
+          If Do_VoltageExceptionReport then OpenVoltageReportFile(ActorID);
 
           {Open FDI_Totals}
           Try
@@ -3591,27 +3591,27 @@ begin
 
 end;
 
-procedure TEnergyMeter.OpenOverloadReportFile;
+procedure TEnergyMeter.OpenOverloadReportFile(ActorID: integer);
 begin
   Try
-      IF OverloadFileIsOpen Then OV_MHandle[ActiveActor].Free;
+      IF OverloadFileIsOpen Then OV_MHandle[ActorID].Free;
       OverloadFileIsOpen := TRUE;
-      if OV_MHandle[ActiveActor] <> nil then OV_MHandle[ActiveActor].free;
-      OV_MHandle[ActiveActor]  :=  Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase"' + Char(10));
+      if OV_MHandle[ActorID] <> nil then OV_MHandle[ActorID].free;
+      OV_MHandle[ActorID]  :=  Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase"' + Char(10));
   Except
       On E:Exception Do DosimpleMsg('Error creating memory space (Overload report) for writing.'+CRLF+E.Message, 541);
   End;
 
 end;
 
-procedure TEnergyMeter.OpenVoltageReportFile;
+procedure TEnergyMeter.OpenVoltageReportFile(ActorID: integer);
 begin
   Try
-      IF VoltageFileIsOpen Then VR_MHandle[ActiveActor].Free;
+      IF VoltageFileIsOpen Then VR_MHandle[ActorID].Free;
       VoltageFileIsOpen := TRUE;
-      if VR_MHandle[ActiveActor] <> nil then VR_MHandle[ActiveActor].free;
-      VR_MHandle[ActiveActor]  :=  Create_Meter_Space('"Hour", "Undervoltages", "Min Voltage", "Overvoltage", "Max Voltage", "Min Bus", "Max Bus"');
-      WriteintoMemStr(VR_MHandle[ActiveActor],', "LV Undervoltages", "Min LV Voltage", "LV Overvoltage", "Max LV Voltage", "Min LV Bus", "Max LV Bus"' + Char(10));
+      if VR_MHandle[ActorID] <> nil then VR_MHandle[ActorID].free;
+      VR_MHandle[ActorID]  :=  Create_Meter_Space('"Hour", "Undervoltages", "Min Voltage", "Overvoltage", "Max Voltage", "Min Bus", "Max Bus"');
+      WriteintoMemStr(VR_MHandle[ActorID],', "LV Undervoltages", "Min LV Voltage", "LV Overvoltage", "Max LV Voltage", "Min LV Bus", "Max LV Bus"' + Char(10));
   Except
       On E:Exception Do DosimpleMsg('Error creating memory space (Voltage report) for writing.'+CRLF+E.Message, 541);
   End;
