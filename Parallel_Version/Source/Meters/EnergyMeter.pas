@@ -164,12 +164,12 @@ Type
 
         Procedure Clear;
         Procedure Integrate(Var Reg:Double; Value:Double; Var Deriv:Double; ActorID: integer);
-        Procedure WriteRegisters(Var F:TextFile);
+        Procedure WriteRegisters(Var F:TextFile; ActorID: Integer);
         Procedure WriteRegisterNames(Var F:TextFile);
 
      protected
 
-        Procedure OpenDemandIntervalFile;
+        Procedure OpenDemandIntervalFile(ActorID:integer);
         Procedure WriteDemandIntervalData(ActorID:integer);
         Procedure CloseDemandIntervalFile(ActorID: integer);
         Procedure AppendDemandIntervalFile(ActorID: integer);
@@ -323,8 +323,8 @@ Type
         RegisterNames: Array[1..NumEMregisters] of String;
 
         BranchList            : TCktTree;      // Pointers to all circuit elements in meter's zone
-        SequenceList          : TPointerList;  // Pointers to branches in sequence from meter to ends
-        LoadList              : TPointerList;  // Pointers to Loads in the Meter zone to aid reliability calcs
+        SequenceList          : PointerList.TPointerList;  // Pointers to branches in sequence from meter to ends
+        LoadList              : PointerList.TPointerList;  // Pointers to Loads in the Meter zone to aid reliability calcs
 
         Registers             : TRegisterArray;
         Derivatives           : TRegisterArray;
@@ -344,6 +344,7 @@ Type
         SectionCount          : Integer;
         ActiveSection         : Integer;  // For COM interface to index into FeederSections array
         FeederSections        : pFeederSections;
+
 
         constructor Create(ParClass:TDSSClass; const EnergyMeterName:String);
         destructor Destroy; override;
@@ -380,9 +381,9 @@ VAR
 
 
 implementation
-USES  ParserDel, DSSClassDefs, DSSGlobals, Bus, Sysutils, MathUtil,  UCMatrix,
+USES  ParserDel, DSSClassDefs, DSSGlobals, Bus,  MathUtil,  UCMatrix,
       Utilities, PCElement,  StackDef, Circuit, Line, LineUnits,
-      Classes, ReduceAlgs, Windows, Math, MemoryMap_Lib;
+      ReduceAlgs, Math, MemoryMap_Lib, Sysutils, Windows, Classes;
 
 //{$UNDEF DEBUG}
 
@@ -395,41 +396,6 @@ VAR
    BusAdjPC : TAdjArray; // also includes shunt PD elements
    BusAdjPD : TAdjArray;
 
-{*******************************************************************************
-*    Nomenclature:                                                             *
-*                  OV_ Overloads                                               *
-*                  VR_ Voltage report                                          *
-*                  DI_ Demand interval                                         *
-*                  SI_ System Demand interval                                  *
-*                  TDI_ DI Totals                                              *
-*                  FM_  Meter Totals                                           *
-*                  SM_  System Mater                                           *
-*                  EMT_  Energy Meter Totals                                   *
-*                  PHV_  Phase Voltage Report                                  *
-*     These prefixes are applied to the variables of each file mapped into     *
-*     Memory using the MemoryMap_Lib                                           *
-********************************************************************************
-}
-   OV_MHandle             : TBytesStream;  // a. Handle to the file in memory
-   VR_MHandle             : TBytesStream;
-   DI_MHandle             : TBytesStream;
-   SDI_MHandle            : TBytesStream;
-   TDI_MHandle            : TBytesStream;
-   SM_MHandle             : TBytesStream;
-   EMT_MHandle            : TBytesStream;
-   PHV_MHandle            : TBytesStream;
-   FM_MHandle             : TBytesStream;
-
-//*********** Flags for appending Files*****************************************
-   OV_Append              : Boolean;
-   VR_Append              : Boolean;
-   DI_Append              : Boolean;
-   SDI_Append             : Boolean;
-   TDI_Append             : Boolean;
-   SM_Append              : Boolean;
-   EMT_Append             : Boolean;
-   PHV_Append             : Boolean;
-   FM_Append              : Boolean;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -466,15 +432,7 @@ Begin
      GeneratorClass := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('generator'));
 
      SystemMeter := TSystemMeter.Create;
-     OV_MHandle             :=  nil;
-     VR_MHandle             :=  nil;
-     DI_MHandle             :=  nil;
-     SDI_MHandle            :=  nil;
-     TDI_MHandle            :=  nil;
-     SM_MHandle             :=  nil;
-     EMT_MHandle            :=  nil;
-     PHV_MHandle            :=  nil;
-     FM_MHandle             :=  nil;
+
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -482,15 +440,7 @@ Destructor TEnergyMeter.Destroy;
 
 Begin
     SystemMeter.Free;
-    if OV_MHandle <> nil then OV_MHandle.Free;
-    if VR_MHandle <> nil then VR_MHandle.Free;
-    if DI_MHandle <> nil then DI_MHandle.Free;
-    if SDI_MHandle <> nil then SDI_MHandle.Free;
-    if TDI_MHandle <> nil then TDI_MHandle.Free;
-    if SM_MHandle <> nil then SM_MHandle.Free;
-    if EMT_MHandle <> nil then EMT_MHandle.Free;
-    if PHV_MHandle <> nil then PHV_MHandle.Free;
-    if FM_MHandle <> nil then FM_MHandle.Free;
+
     // ElementList and  CommandList freed in inherited destroy
     Inherited Destroy;
 End;
@@ -895,9 +845,9 @@ Begin
       SystemMeter.TakeSample(ActorID);
 
       If FSaveDemandInterval Then Begin  {Write Totals Demand interval file}
-        With ActiveCircuit[ActorID].Solution  Do WriteintoMem(TDI_MHandle,DynaVars.dblHour);
-        For i := 1 to NumEMRegisters Do WriteintoMem(TDI_MHandle,DI_RegisterTotals[i]);
-        WriteintoMemStr(TDI_MHandle, Char(10));
+        With ActiveCircuit[ActorID].Solution  Do WriteintoMem(TDI_MHandle[ActorID],DynaVars.dblHour);
+        For i := 1 to NumEMRegisters Do WriteintoMem(TDI_MHandle[ActorID],DI_RegisterTotals[i]);
+        WriteintoMemStr(TDI_MHandle[ActorID], Char(10));
         ClearDI_Totals;
         if OverLoadFileIsOpen then WriteOverloadReport(ActorID);
         If VoltageFileIsOpen  then WriteVoltageReport(ActorID);
@@ -1010,15 +960,15 @@ Begin
      VoltageUEOnly       := FALSE;
 
 //*************No append files by default***************************************
-     OV_Append              :=  False;
-     VR_Append              :=  False;
-     DI_Append              :=  False;
-     SDI_Append             :=  False;
-     TDI_Append             :=  False;
-     SM_Append              :=  False;
-     EMT_Append             :=  False;
-     PHV_Append             :=  False;
-     FM_Append              :=  False;
+     OV_Append[ActiveActor]              :=  False;
+     VR_Append[ActiveActor]              :=  False;
+     DI_Append[ActiveActor]              :=  False;
+     SDI_Append[ActiveActor]             :=  False;
+     TDI_Append[ActiveActor]             :=  False;
+     SM_Append[ActiveActor]              :=  False;
+     EMT_Append[ActiveActor]             :=  False;
+     PHV_Append[ActiveActor]             :=  False;
+     FM_Append[ActiveActor]              :=  False;
 
      // Set Register names  that correspond to the register quantities
      RegisterNames[1]  := 'kWh';
@@ -1069,6 +1019,16 @@ Begin
      FeederSections := Nil;
      ActiveSection  := 0;
 
+     OV_MHandle[ActiveActor]      :=  nil;
+     VR_MHandle[ActiveActor]      :=  nil;
+     DI_MHandle[ActiveActor]      :=  nil;
+     SDI_MHandle[ActiveActor]     :=  nil;
+     TDI_MHandle[ActiveActor]     :=  nil;
+     SM_MHandle[ActiveActor]      :=  nil;
+     EMT_MHandle[ActiveActor]     :=  nil;
+     PHV_MHandle[ActiveActor]     :=  nil;
+     FM_MHandle[ActiveActor]      :=  nil;
+
     // RecalcElementData;
 End;
 
@@ -1096,6 +1056,16 @@ Begin
     FreeStringArray(DefinedZoneList, DefinedZoneListSize);
 
     If Assigned (FeederSections) Then Reallocmem(FeederSections, 0);
+
+    if OV_MHandle[ActiveActor] <> nil then OV_MHandle[ActiveActor].Free;
+    if VR_MHandle[ActiveActor] <> nil then VR_MHandle[ActiveActor].Free;
+    if DI_MHandle[ActiveActor] <> nil then DI_MHandle[ActiveActor].Free;
+    if SDI_MHandle[ActiveActor] <> nil then SDI_MHandle[ActiveActor].Free;
+    if TDI_MHandle[ActiveActor] <> nil then TDI_MHandle[ActiveActor].Free;
+    if SM_MHandle[ActiveActor] <> nil then SM_MHandle[ActiveActor].Free;
+    if EMT_MHandle[ActiveActor] <> nil then EMT_MHandle[ActiveActor].Free;
+    if PHV_MHandle[ActiveActor] <> nil then PHV_MHandle[ActiveActor].Free;
+    if FM_MHandle[ActiveActor] <> nil then FM_MHandle[ActiveActor].Free;
 
     Inherited destroy;
 End;
@@ -1166,7 +1136,7 @@ end;
 
 function TEnergyMeterObj.MakeVPhaseReportFileName(ActorID: integer): String;
 begin
-    Result := EnergyMeterClass[ActorID].DI_Dir + '\' + Name + '_PhaseVoltageReport.CSV';
+    Result := EnergyMeterClass[ActorID].DI_Dir + '\' + Name + '_PhaseVoltageReport_' + inttostr(ActorID) + '.CSV';
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2811,16 +2781,20 @@ begin
 end;
 
 procedure TEnergyMeterObj.CloseDemandIntervalFile(ActorID: integer);
-Var i:integer;
+Var
+  i   :   integer;
+
 begin
 
   Try
      IF This_Meter_DIFileIsOpen Then Begin
-       CloseMHandler(DI_MHandle, MakeDIFileName(ActorID), DI_Append);
-       DI_MHandle :=  nil;
+       if DI_MHandle[ActorID] <> nil then
+         CloseMHandler(DI_MHandle[ActorID], MakeDIFileName(ActorID), DI_Append[ActorID]);
+       DI_MHandle[ActorID] :=  nil;
        This_Meter_DIFileIsOpen := FALSE;
-       If VPhaseReportFileIsOpen then CloseMHandler(PHV_MHandle, MakeVPhaseReportFileName(ActorID), PHV_Append) ;
-       PHV_MHandle  :=  nil;
+       if PHV_MHandle <> nil then
+        If VPhaseReportFileIsOpen then CloseMHandler(PHV_MHandle[ActorID], MakeVPhaseReportFileName(ActorID), PHV_Append[ActorID]) ;
+       PHV_MHandle[ActorID]  :=  nil;
        VPhaseReportFileIsOpen := FALSE;
      End;
   Except
@@ -2831,15 +2805,16 @@ begin
      {Write Registers to Totals File}
      with EnergyMeterClass[ActorID] do
      begin
-       WriteintoMemStr(EMT_MHandle,'"' + Self.Name + '"');
-       For i := 1 to NumEMregisters Do WriteintoMem(EMT_MHandle,Registers[i]);
-       WriteintoMemStr(EMT_MHandle, Char(10));
+       WriteintoMemStr(EMT_MHandle[ActorID],'"' + Self.Name + '"');
+       For i := 1 to NumEMregisters Do WriteintoMem(EMT_MHandle[ActorID],Registers[i]);
+       WriteintoMemStr(EMT_MHandle[ActorID], Char(10));
      end;
 end;
 
 procedure TEnergyMeterObj.OpenDemandIntervalFile(ActorID: integer);
-Var i,j :Integer;
-    vbase :double;
+Var i,j     : Integer;
+    vbase   : double;
+
 begin
 
   Try
@@ -2848,25 +2823,25 @@ begin
       If (EnergyMeterClass[ActorID].DI_Verbose[ActorID]) Then Begin
 
           This_Meter_DIFileIsOpen :=  TRUE;
-          if DI_MHandle <> nil then DI_MHandle.free;
-          DI_MHandle  :=  Create_Meter_Space('"Hour"');
-          For i := 1 to NumEMRegisters Do WriteintoMemStr(DI_MHandle,', "' + RegisterNames[i] + '"');
-          WriteintoMemStr(DI_MHandle, Char(10));
+          if DI_MHandle[ActorID] <> nil then DI_MHandle[ActorID].free;
+          DI_MHandle[ActorID]  :=  Create_Meter_Space('"Hour"');
+          For i := 1 to NumEMRegisters Do WriteintoMemStr(DI_MHandle[ActorID],', "' + RegisterNames[i] + '"');
+          WriteintoMemStr(DI_MHandle[ActorID], Char(10));
 
          {Phase Voltage Report, if requested}
           If FPhaseVoltageReport Then Begin
-              if PHV_MHandle <> nil then PHV_MHandle.free;
-              PHV_MHandle :=  Create_Meter_Space('"Hour"');
+              if PHV_MHandle[ActorID] <> nil then PHV_MHandle[ActorID].free;
+              PHV_MHandle[ActorID] :=  Create_Meter_Space('"Hour"');
               VPhaseReportFileIsOpen := TRUE;
               For i := 1 to MaxVBaseCount Do Begin
                 vbase := VBaseList^[i] * SQRT3;
                 If Vbase > 0.0 then   Begin
-                  For j := 1 to 3 Do WriteintoMemStr(PHV_MHandle, Format(', %.3gkV_Phs_%d_Max', [vbase, j]));
-                  For j := 1 to 3 Do WriteintoMemStr(PHV_MHandle, Format(', %.3gkV_Phs_%d_Min', [vbase, j]));
-                  For j := 1 to 3 Do WriteintoMemStr(PHV_MHandle, Format(', %.3gkV_Phs_%d_Avg', [vbase, j]));
+                  For j := 1 to 3 Do WriteintoMemStr(PHV_MHandle[ActorID], Format(', %.3gkV_Phs_%d_Max', [vbase, j]));
+                  For j := 1 to 3 Do WriteintoMemStr(PHV_MHandle[ActorID], Format(', %.3gkV_Phs_%d_Min', [vbase, j]));
+                  For j := 1 to 3 Do WriteintoMemStr(PHV_MHandle[ActorID], Format(', %.3gkV_Phs_%d_Avg', [vbase, j]));
                 End;
               End;
-              WriteintoMemStr(PHV_MHandle, ', Min Bus, MaxBus' + Char(10));
+              WriteintoMemStr(PHV_MHandle[ActorID], ', Min Bus, MaxBus' + Char(10));
           End;
 
       End;
@@ -2877,7 +2852,7 @@ begin
 end;
 
 procedure TEnergyMeterObj.WriteDemandIntervalData(ActorID: integer);
-Var i,j:Integer;
+Var i,j   : Integer;
 
      Function MyCount_Avg(const Value:Double; const count:Integer): double;
      Begin
@@ -2887,9 +2862,9 @@ Var i,j:Integer;
 
 begin
       If EnergyMeterClass[ActorID].DI_Verbose[ActorID] and This_Meter_DIFileIsOpen Then Begin
-          With ActiveCircuit[ActorID].Solution Do  WriteintoMem(DI_MHandle, DynaVars.dblHour);
-          For i := 1 to NumEMRegisters Do WriteintoMem(DI_MHandle, Derivatives[i]);
-          WriteIntoMemStr(DI_MHandle,Char(10));
+          With ActiveCircuit[ActorID].Solution Do  WriteintoMem(DI_MHandle[ActorID], DynaVars.dblHour);
+          For i := 1 to NumEMRegisters Do WriteintoMem(DI_MHandle[ActorID], Derivatives[i]);
+          WriteIntoMemStr(DI_MHandle[ActorID],Char(10));
       End;
 
       {Add to Class demand interval registers}
@@ -2898,14 +2873,14 @@ begin
 
       {Phase Voltage Report, if requested}
       If VPhaseReportFileIsOpen Then Begin
-          With ActiveCircuit[ActorID].Solution Do WriteintoMem(PHV_MHandle, DynaVars.dblHour);
+          With ActiveCircuit[ActorID].Solution Do WriteintoMem(PHV_MHandle[ActorID], DynaVars.dblHour);
           For i := 1 to MaxVBaseCount Do
           If VBaseList^[i] > 0.0 then  Begin
-              For j := 1 to 3 Do WriteintoMem(PHV_MHandle, 0.001 * VPhaseMax^[jiIndex(j, i)]);
-              For j := 1 to 3 Do WriteintoMem(PHV_MHandle, 0.001 * VPhaseMin^[jiIndex(j, i)]);
-              For j := 1 to 3 Do WriteintoMem(PHV_MHandle, 0.001 * MyCount_Avg(VPhaseAccum^[jiIndex(j, i)], VPhaseAccumCount^[jiIndex(j, i)]));
+              For j := 1 to 3 Do WriteintoMem(PHV_MHandle[ActorID], 0.001 * VPhaseMax^[jiIndex(j, i)]);
+              For j := 1 to 3 Do WriteintoMem(PHV_MHandle[ActorID], 0.001 * VPhaseMin^[jiIndex(j, i)]);
+              For j := 1 to 3 Do WriteintoMem(PHV_MHandle[ActorID], 0.001 * MyCount_Avg(VPhaseAccum^[jiIndex(j, i)], VPhaseAccumCount^[jiIndex(j, i)]));
           End;
-          WriteintoMemStr(PHV_MHandle, Char(10));
+          WriteintoMemStr(PHV_MHandle[ActorID], Char(10));
       End;
 
 end;
@@ -2933,20 +2908,24 @@ Begin
         WriteTotalsFile(ActorID);  // Sum all energymeter registers to "Totals.CSV"
         SystemMeter.CloseDemandIntervalFile(ActorID);
         SystemMeter.Save(ActorID);
-        CloseMHandler(EMT_MHandle, DI_Dir + '\EnergyMeterTotals.CSV', EMT_Append);
-        EMT_MHandle :=  nil;
-        CloseMHandler(TDI_MHandle, DI_Dir+'\DI_Totals.CSV', TDI_Append);
-        TDI_MHandle :=  nil;
+        if EMT_MHandle[ActorID] <> nil then
+          CloseMHandler(EMT_MHandle[ActorID], DI_Dir + '\EnergyMeterTotals_' + inttostr(ActorID) + '.CSV', EMT_Append[ActorID]);
+        EMT_MHandle[ActorID] :=  nil;
+        if TDI_MHandle[ActorID] <> nil then
+          CloseMHandler(TDI_MHandle[ActorID], DI_Dir+'\DI_Totals_' + inttostr(ActorID) + '.CSV', TDI_Append[ActorID]);
+        TDI_MHandle[ActorID] :=  nil;
         DIFilesAreOpen := FALSE;
         if OverloadFileIsOpen then Begin
-            CloseMHandler(OV_MHandle,EnergyMeterClass[ActorID].DI_Dir+'\DI_Overloads.CSV', OV_Append);
-            OV_MHandle  :=  nil;
-            OverloadFileIsOpen := FALSE;
+          if OV_MHandle[ActorID] <> nil then
+            CloseMHandler(OV_MHandle[ActorID],EnergyMeterClass[ActorID].DI_Dir+'\DI_Overloads_' + inttostr(ActorID) + '.CSV', OV_Append[ActorID]);
+          OV_MHandle[ActorID]  :=  nil;
+          OverloadFileIsOpen := FALSE;
         End;
         if VoltageFileIsOpen then Begin
-            CloseMHandler(VR_MHandle,EnergyMeterClass[ActorID].DI_Dir+'\DI_VoltExceptions.CSV', VR_Append);
-            VR_MHandle  := nil;
-            VoltageFileIsOpen := FALSE;
+          if VR_MHandle[ActorID] <> nil then
+            CloseMHandler(VR_MHandle[ActorID],EnergyMeterClass[ActorID].DI_Dir+'\DI_VoltExceptions_' + inttostr(ActorID) + '.CSV', VR_Append[ActorID]);
+          VR_MHandle[ActorID]  := nil;
+          VoltageFileIsOpen := FALSE;
         End;
       End;
 end;
@@ -2964,10 +2943,10 @@ begin
   Try
       If Energymeterclass[ActorID].FDI_Verbose Then Begin
           FileNm := MakeDIFileName(ActorID);   // Creates directory if it doesn't exist
-          If FileExists(FileNm) Then DI_Append  :=  True
-          Else DI_Append :=  False;
-          if DI_MHandle <> nil then DI_MHandle.free;
-          DI_MHandle  :=  Create_Meter_Space(' ');
+          If FileExists(FileNm) Then DI_Append[ActorID]  :=  True
+          Else DI_Append[ActorID] :=  False;
+          if DI_MHandle[ActorID] <> nil then DI_MHandle[ActorID].free;
+          DI_MHandle[ActorID]  :=  Create_Meter_Space(' ');
           This_Meter_DIFileIsOpen := TRUE;
       End;
   Except
@@ -3028,9 +3007,9 @@ Begin
 
           {Open FDI_Totals}
           Try
-              FileNm :=  DI_Dir+'\DI_Totals.CSV';
+              FileNm :=  DI_Dir+'\DI_Totals_' + inttostr(ActorID) + '.CSV';
               {File Must Exist}
-              If FileExists(FileNm) Then  TDI_Append := True;
+              If FileExists(FileNm) Then  TDI_Append[ActorID] := True;
               CreateFDI_Totals(ActorID);
           Except
               On E:Exception Do DosimpleMsg('Error opening demand interval file "'+Name+'.CSV' +' for appending.'+CRLF+E.Message, 538);
@@ -3043,7 +3022,7 @@ end;
 
 function TEnergyMeterObj.MakeDIFileName(ActorID:integer): String;
 begin
-    Result := EnergyMeterClass[ActorID].DI_Dir + '\' + Self.Name + '.CSV';
+    Result := EnergyMeterClass[ActorID].DI_Dir + '\' + Self.Name + '_' + inttostr(ActorID) + '.CSV';
 end;
 
 procedure TEnergyMeter.Set_SaveDemandInterval(ActorID: integer; const Value: Boolean);
@@ -3059,8 +3038,9 @@ end;
 
 procedure TEnergyMeter.WriteOverloadReport(ActorID : Integer);
 Var
-   PDelem  :TPDelement;
-   Cmax    :double;
+   PDelem   :TPDelement;
+   Cmax     :double;
+   mtr      : TEnergyMeterObj;
 
 begin
 {
@@ -3069,7 +3049,7 @@ begin
 }
 
  { CHECK PDELEMENTS ONLY}
-     PDelem := ActiveCircuit[ActorID].PDElements.First;
+     PDelem :=  ActiveCircuit[ActorID].PDElements.First;
      WHILE PDelem<>nil DO Begin
        IF (PDelem.Enabled)and (Not PDelem.IsShunt)  THEN Begin   // Ignore shunts
 
@@ -3077,17 +3057,17 @@ begin
              PDelem.ComputeIterminal(ActorID);
              Cmax := PDelem.MaxTerminalOneImag; // For now, check only terminal 1 for overloads
              IF (Cmax > PDElem.NormAmps) OR (Cmax > pdelem.EmergAmps) THEN Begin
-                  With ActiveCircuit[ActorID].Solution Do WriteintoMem(OV_MHandle,DynaVars.dblHour);
-                  WriteintoMemStr(OV_MHandle,', ' + FullName(PDelem));
-                  WriteintoMem(OV_MHandle,PDElem.NormAmps);
-                  WriteintoMem(OV_MHandle,pdelem.EmergAmps);
-                 IF PDElem.Normamps > 0.0  THEN WriteintoMem(OV_MHandle,Cmax/PDElem.Normamps*100.0)
-                                           ELSE WriteintoMem(OV_MHandle, 0.0);
-                 IF PDElem.Emergamps > 0.0 THEN WriteintoMem(OV_MHandle,Cmax/PDElem.Emergamps*100.0)
-                                           ELSE WriteintoMem(OV_MHandle, 0.0);
+                  With ActiveCircuit[ActorID].Solution Do WriteintoMem(OV_MHandle[ActorID],DynaVars.dblHour);
+                  WriteintoMemStr(OV_MHandle[ActorID],', ' + FullName(PDelem));
+                  WriteintoMem(OV_MHandle[ActorID],PDElem.NormAmps);
+                  WriteintoMem(OV_MHandle[ActorID],pdelem.EmergAmps);
+                 IF PDElem.Normamps > 0.0  THEN WriteintoMem(OV_MHandle[ActorID],Cmax/PDElem.Normamps*100.0)
+                                           ELSE WriteintoMem(OV_MHandle[ActorID], 0.0);
+                 IF PDElem.Emergamps > 0.0 THEN WriteintoMem(OV_MHandle[ActorID],Cmax/PDElem.Emergamps*100.0)
+                                           ELSE WriteintoMem(OV_MHandle[ActorID], 0.0);
                  With ActiveCircuit[ActorID] Do // Find bus of first terminal
-                   WriteintoMem(OV_MHandle,Buses^[MapNodeToBus^[PDElem.NodeRef^[1]].BusRef].kVBase);
-                 WriteintoMemStr(OV_MHandle, ' ' + char(10));
+                   WriteintoMem(OV_MHandle[ActorID],Buses^[MapNodeToBus^[PDElem.NodeRef^[1]].BusRef].kVBase);
+                 WriteintoMemStr(OV_MHandle[ActorID], ' ' + char(10));
              END;
           End; { }
        End;
@@ -3107,19 +3087,19 @@ Var i:Integer;
 
 begin
  Try
-    if TDI_MHandle <> nil then TDI_MHandle.free;
-    TDI_MHandle :=  Create_Meter_Space('Time');
+    if TDI_MHandle[ActorID] <> nil then TDI_MHandle[ActorID].free;
+    TDI_MHandle[ActorID] :=  Create_Meter_Space('Time');
     mtr := ActiveCircuit[ActorID].EnergyMeters.First;  // just get the first one
     if Assigned(mtr) then
     begin
       For i := 1 to NumEMRegisters Do
       begin
-        WriteintoMemStr(TDI_MHandle,', "' + mtr.RegisterNames[i] +'"');
+        WriteintoMemStr(TDI_MHandle[ActorID],', "' + mtr.RegisterNames[i] +'"');
       end;
     end;
-    WriteintoMemStr(TDI_MHandle, Char(10));
+    WriteintoMemStr(TDI_MHandle[ActorID], Char(10));
  Except
-    On E:Exception Do DoSimpleMsg('Error creating: "'+DI_Dir+'\DI_Totals.CSV": '+E.Message, 539)
+    On E:Exception Do DoSimpleMsg('Error creating: "'+DI_Dir+'\DI_Totals_' + inttostr(ActorID) + '.CSV": '+E.Message, 539)
  End;
 end;
 
@@ -3135,7 +3115,7 @@ begin
   If This_Meter_DIFileIsOpen Then Exit;
 
   Try
-      FileNm := EnergyMeterClass[ActorID].Di_Dir + '\DI_SystemMeter.CSV';
+      FileNm := EnergyMeterClass[ActorID].Di_Dir + '\DI_SystemMeter_' + inttostr(ActorID) + '.CSV';
       AssignFile(SystemDIFile, FileNm );
       {File Must Exist}
       If FileExists(FileNm) Then
@@ -3143,7 +3123,7 @@ begin
 //        DI_MMFView:=  MapFile2Memory(EnergyMeterClass.DI_Dir+'\DI_SystemMeter.CSV', DI_MMFHandle);
 //        DI_Cursor :=  GetMMFCursor(DI_MMFView);
       End
-      Else OpenDemandIntervalFile;
+      Else OpenDemandIntervalFile(ActorID);
       This_Meter_DIFileIsOpen := TRUE;
   Except
       On E:Exception Do DosimpleMsg('Error opening demand interval file "'+FileNm +' for appending.'+CRLF+E.Message, 540);
@@ -3170,11 +3150,12 @@ end;
 procedure TSystemMeter.CloseDemandIntervalFile(ActorID: integer);
 var
   File_Path : string;
+  mtr       : TEnergyMeterObj;
 begin
      IF This_Meter_DIFileIsOpen Then Begin
-       File_Path  :=  EnergyMeterClass[ActorID].DI_Dir+'\DI_SystemMeter.CSV';
-       CloseMHandler(SDI_MHandle, File_Path, SDI_Append);
-       SDI_MHandle  :=  nil;
+       File_Path  :=  EnergyMeterClass[ActorID].DI_Dir+'\DI_SystemMeter_' + inttostr(ActorID) + '.CSV';
+       CloseMHandler(SDI_MHandle[ActorID], File_Path, SDI_Append[ActorID]);
+       SDI_MHandle[ActorID]  :=  nil;
        This_Meter_DIFileIsOpen := FALSE;
      End;
 end;
@@ -3205,16 +3186,17 @@ begin
 
 end;
 
-procedure TSystemMeter.OpenDemandIntervalFile;
+procedure TSystemMeter.OpenDemandIntervalFile(ActorID:integer);
 var
   F_header  : string;
+  mtr       : TEnergyMeterObj;
 begin
   Try
-      IF This_Meter_DIFileIsOpen Then SDI_MHandle.Free;
+      IF This_Meter_DIFileIsOpen Then SDI_MHandle[ActorID].Free;
       This_Meter_DIFileIsOpen	:=	TRUE;
-      if SDI_MHandle <> nil then SDI_MHandle.free;
-      SDI_MHandle  :=  Create_Meter_Space('"Hour", ');
-      WriteintoMemStr(SDI_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
+      if SDI_MHandle[ActorID] <> nil then SDI_MHandle[ActorID].free;
+      SDI_MHandle[ActorID]  :=  Create_Meter_Space('"Hour", ');
+      WriteintoMemStr(SDI_MHandle[ActorID], 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
 
   Except
       On E:Exception Do DosimpleMsg('Error opening demand interval file "DI_SystemMeter.CSV"  for writing.'+CRLF+E.Message, 541);
@@ -3232,9 +3214,10 @@ end;
 procedure TSystemMeter.Save(ActorID: integer);
 Var  F:Textfile;
      CSVName, Folder:String;
+     mtr    :   TEnergyMeterObj;
 begin
  Try
-       CSVName := 'SystemMeter.CSV';
+       CSVName := 'SystemMeter_' + inttostr(ActorID) + '.CSV';
        {If we are doing a simulation and saving interval data, create this in the
         same directory as the demand interval data}
        If  energyMeterClass[ActorID].SaveDemandInterval[ActorID] Then
@@ -3253,16 +3236,16 @@ begin
   End;
 
  Try
-      if SM_MHandle <> nil then SM_MHandle.free;
-      SM_MHandle  :=  Create_Meter_Space('Year, ');
-      WriteintoMemStr(SM_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
-      WriteintoMemStr(SM_MHandle, inttostr(ActiveCircuit[ActorID].Solution.Year));
-      WriteRegisters(F);
-      WriteintoMemStr(SM_MHandle, Char(10));
+      if SM_MHandle[ActorID] <> nil then SM_MHandle[ActorID].free;
+      SM_MHandle[ActorID]  :=  Create_Meter_Space('Year, ');
+      WriteintoMemStr(SM_MHandle[ActorID], 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
+      WriteintoMemStr(SM_MHandle[ActorID], inttostr(ActiveCircuit[ActorID].Solution.Year));
+      WriteRegisters(F,ActorID);
+      WriteintoMemStr(SM_MHandle[ActorID], Char(10));
 
  Finally
-      CloseMHandler(SM_MHandle, Folder + CSVName, SM_Append);
-      SM_MHandle  :=  nil;
+      CloseMHandler(SM_MHandle[ActorID], Folder + CSVName, SM_Append[ActorID]);
+      SM_MHandle[ActorID]  :=  nil;
  End;
 end;
 
@@ -3299,25 +3282,27 @@ Var
     i:Integer;
     mtr:TEnergyMeterObj;
 begin
-    if EMT_MHandle <> nil then EMT_MHandle.free;
-    EMT_MHandle :=  Create_Meter_Space('Name');
+    if EMT_MHandle[ActorID] <> nil then EMT_MHandle[ActorID].free;
+    EMT_MHandle[ActorID] :=  Create_Meter_Space('Name');
     mtr := ActiveCircuit[ActorID].EnergyMeters.First;
     if Assigned(mtr) then
-      For i := 1 to NumEMRegisters Do WriteintoMemStr(EMT_MHandle,', "' + mtr.RegisterNames[i] + '"');
-    WriteintoMemStr(EMT_MHandle, Char(10));
+      For i := 1 to NumEMRegisters Do WriteintoMemStr(EMT_MHandle[ActorID],', "' + mtr.RegisterNames[i] + '"');
+    WriteintoMemStr(EMT_MHandle[ActorID], Char(10));
 end;
 
 procedure TSystemMeter.WriteDemandIntervalData(ActorID:integer);
+var
+  mtr   :   TEnergyMeterObj;
 begin
-   With ActiveCircuit[ActorID].Solution Do WriteintoMem(SDI_MHandle,DynaVars.dblHour);
-   WriteintoMem(SDI_MHandle,cPower.re);
-   WriteintoMem(SDI_MHandle,cPower.im);
-   WriteintoMem(SDI_MHandle,peakkW);
-   WriteintoMem(SDI_MHandle,peakkVA);
-   WriteintoMem(SDI_MHandle,cLosses.re);
-   WriteintoMem(SDI_MHandle,cLosses.im);
-   WriteintoMem(SDI_MHandle,PeakLosseskW);
-   WriteintoMemStr(SDI_MHandle,Char(10));
+   With ActiveCircuit[ActorID].Solution Do WriteintoMem(SDI_MHandle[ActorID],DynaVars.dblHour);
+   WriteintoMem(SDI_MHandle[ActorID],cPower.re);
+   WriteintoMem(SDI_MHandle[ActorID],cPower.im);
+   WriteintoMem(SDI_MHandle[ActorID],peakkW);
+   WriteintoMem(SDI_MHandle[ActorID],peakkVA);
+   WriteintoMem(SDI_MHandle[ActorID],cLosses.re);
+   WriteintoMem(SDI_MHandle[ActorID],cLosses.im);
+   WriteintoMem(SDI_MHandle[ActorID],PeakLosseskW);
+   WriteintoMemStr(SDI_MHandle[ActorID],Char(10));
 
 end;
 
@@ -3326,15 +3311,17 @@ begin
 // Does nothing
 end;
 
-procedure TSystemMeter.WriteRegisters(var F: TextFile);
+procedure TSystemMeter.WriteRegisters(var F: TextFile; ActorID: Integer);
+var
+  mtr   :   TEnergyMeterObj;
 begin
-     WriteintoMem(SM_MHandle, kWh);
-     WriteintoMem(SM_MHandle, kvarh);
-     WriteintoMem(SM_MHandle, peakkW);
-     WriteintoMem(SM_MHandle, peakkVA);
-     WriteintoMem(SM_MHandle, Losseskwh);
-     WriteintoMem(SM_MHandle, Losseskvarh);
-     WriteintoMem(SM_MHandle, PeakLosseskW);
+     WriteintoMem(SM_MHandle[ActorID], kWh);
+     WriteintoMem(SM_MHandle[ActorID], kvarh);
+     WriteintoMem(SM_MHandle[ActorID], peakkW);
+     WriteintoMem(SM_MHandle[ActorID], peakkVA);
+     WriteintoMem(SM_MHandle[ActorID], Losseskwh);
+     WriteintoMem(SM_MHandle[ActorID], Losseskvarh);
+     WriteintoMem(SM_MHandle[ActorID], PeakLosseskW);
 
 end;
 
@@ -3370,21 +3357,21 @@ begin
   End;
 
   Try     // Writes the file
-        if FM_MHandle <> nil then FM_MHandle.free;
-        FM_MHandle  :=  Create_Meter_Space('Year');
+        if FM_MHandle[ActorID] <> nil then FM_MHandle[ActorID].free;
+        FM_MHandle[ActorID]  :=  Create_Meter_Space('Year');
         mtr := ActiveCircuit[ActorID].EnergyMeters.First;
         if assigned(mtr) then
-           For i := 1 to NumEMRegisters Do WriteintoMemStr(FM_MHandle, ', "' + mtr.RegisterNames[i] + '"'); //Write(F,', "', mtr.RegisterNames[i],'"');
-        WriteintoMemStr(FM_MHandle, Char(10));
+           For i := 1 to NumEMRegisters Do WriteintoMemStr(FM_MHandle[ActorID], ', "' + mtr.RegisterNames[i] + '"'); //Write(F,', "', mtr.RegisterNames[i],'"');
+        WriteintoMemStr(FM_MHandle[ActorID], Char(10));
 
-        WriteintoMemStr(FM_MHandle, inttostr(ActiveCircuit[ActorID].Solution.Year));
-        For i := 1 to NumEMRegisters Do WriteintoMem(FM_MHandle,Double(RegSum[i]));
-        WriteintoMemStr(FM_MHandle, Char(10));
-        CloseMHandler(FM_MHandle, DI_Dir + '\Totals.CSV', FM_Append);
-        FM_MHandle  := nil;
+        WriteintoMemStr(FM_MHandle[ActorID], inttostr(ActiveCircuit[ActorID].Solution.Year));
+        For i := 1 to NumEMRegisters Do WriteintoMem(FM_MHandle[ActorID],Double(RegSum[i]));
+        WriteintoMemStr(FM_MHandle[ActorID], Char(10));
+        CloseMHandler(FM_MHandle[ActorID], DI_Dir + '\Totals_' + inttostr(ActorID) + '.CSV', FM_Append[ActorID]);
+        FM_MHandle[ActorID]  := nil;
 
   Except
-      On E:Exception Do DosimpleMsg('Error writing demand interval file Totals.CSV.'+CRLF+E.Message, 543);
+      On E:Exception Do DosimpleMsg('Error writing demand interval file Totals_' + inttostr(ActorID) + '.CSV.'+CRLF+E.Message, 543);
   End;
   
 end;
@@ -3400,6 +3387,7 @@ var
   MinBus     :Integer;
   MaxBus     :Integer;
   BusCounted :Boolean;
+  mtr        :TEnergyMeterObj;
 
 begin
      {For any bus with a defined voltage base, test for > Vmax or < Vmin}
@@ -3450,13 +3438,13 @@ begin
            End;
        End; {For i}
 
-       With Solution Do WriteintoMem(VR_MHandle,DynaVars.dblHour);
-       WriteintoMemStr(VR_MHandle,', ' + inttostr(UnderCount));
-       WriteintoMem(VR_MHandle, UnderVmin);
-       WriteintoMemStr(VR_MHandle,', ' + inttostr(OverCount));
-       WriteintoMem(VR_MHandle, OverVmax);
-       WriteintoMemStr(VR_MHandle,', ' + BusList.Get(minbus));
-       WriteintoMemStr(VR_MHandle,', ' + Buslist.Get(maxbus));
+       With Solution Do WriteintoMem(VR_MHandle[ActorID],DynaVars.dblHour);
+       WriteintoMemStr(VR_MHandle[ActorID],', ' + inttostr(UnderCount));
+       WriteintoMem(VR_MHandle[ActorID], UnderVmin);
+       WriteintoMemStr(VR_MHandle[ActorID],', ' + inttostr(OverCount));
+       WriteintoMem(VR_MHandle[ActorID], OverVmax);
+       WriteintoMemStr(VR_MHandle[ActorID],', ' + BusList.Get(minbus));
+       WriteintoMemStr(VR_MHandle[ActorID],', ' + Buslist.Get(maxbus));
 
      // Klugy but it works
      // now repeat for buses under 1 kV
@@ -3505,13 +3493,13 @@ begin
            End;
        End; {For i}
 
-       WriteintoMemStr(VR_MHandle,', ' + inttostr(UnderCount));
-       WriteintoMem(VR_MHandle, UnderVmin);
-       WriteintoMemStr(VR_MHandle,', ' + inttostr(OverCount));
-       WriteintoMem(VR_MHandle, OverVmax);
-       WriteintoMemStr(VR_MHandle,', ' + BusList.Get(minbus));
-       WriteintoMemStr(VR_MHandle,', ' + Buslist.Get(maxbus));
-       WriteintoMemStr(VR_MHandle,Char(10));
+       WriteintoMemStr(VR_MHandle[ActorID],', ' + inttostr(UnderCount));
+       WriteintoMem(VR_MHandle[ActorID], UnderVmin);
+       WriteintoMemStr(VR_MHandle[ActorID],', ' + inttostr(OverCount));
+       WriteintoMem(VR_MHandle[ActorID], OverVmax);
+       WriteintoMemStr(VR_MHandle[ActorID],', ' + BusList.Get(minbus));
+       WriteintoMemStr(VR_MHandle[ActorID],', ' + Buslist.Get(maxbus));
+       WriteintoMemStr(VR_MHandle[ActorID],Char(10));
     End;
 
 end;
@@ -3582,7 +3570,7 @@ begin
               mtr := ActiveCircuit[ActorID].EnergyMeters.Next;
           End;
 
-          SystemMeter.OpenDemandIntervalFile;
+          SystemMeter.OpenDemandIntervalFile(ActorID);
 
           {Optional Exception Reporting}
           if Do_OverloadReport         then OpenOverloadReportFile;
@@ -3606,10 +3594,10 @@ end;
 procedure TEnergyMeter.OpenOverloadReportFile;
 begin
   Try
-      IF OverloadFileIsOpen Then OV_MHandle.Free;
+      IF OverloadFileIsOpen Then OV_MHandle[ActiveActor].Free;
       OverloadFileIsOpen := TRUE;
-      if OV_MHandle <> nil then OV_MHandle.free;
-      OV_MHandle  :=  Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase"' + Char(10));
+      if OV_MHandle[ActiveActor] <> nil then OV_MHandle[ActiveActor].free;
+      OV_MHandle[ActiveActor]  :=  Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase"' + Char(10));
   Except
       On E:Exception Do DosimpleMsg('Error creating memory space (Overload report) for writing.'+CRLF+E.Message, 541);
   End;
@@ -3619,11 +3607,11 @@ end;
 procedure TEnergyMeter.OpenVoltageReportFile;
 begin
   Try
-      IF VoltageFileIsOpen Then VR_MHandle.Free;
+      IF VoltageFileIsOpen Then VR_MHandle[ActiveActor].Free;
       VoltageFileIsOpen := TRUE;
-      if VR_MHandle <> nil then VR_MHandle.free;
-      VR_MHandle  :=  Create_Meter_Space('"Hour", "Undervoltages", "Min Voltage", "Overvoltage", "Max Voltage", "Min Bus", "Max Bus"');
-      WriteintoMemStr(VR_MHandle,', "LV Undervoltages", "Min LV Voltage", "LV Overvoltage", "Max LV Voltage", "Min LV Bus", "Max LV Bus"' + Char(10));
+      if VR_MHandle[ActiveActor] <> nil then VR_MHandle[ActiveActor].free;
+      VR_MHandle[ActiveActor]  :=  Create_Meter_Space('"Hour", "Undervoltages", "Min Voltage", "Overvoltage", "Max Voltage", "Min Bus", "Max Bus"');
+      WriteintoMemStr(VR_MHandle[ActiveActor],', "LV Undervoltages", "Min LV Voltage", "LV Overvoltage", "Max LV Voltage", "Min LV Bus", "Max LV Bus"' + Char(10));
   Except
       On E:Exception Do DosimpleMsg('Error creating memory space (Voltage report) for writing.'+CRLF+E.Message, 541);
   End;
