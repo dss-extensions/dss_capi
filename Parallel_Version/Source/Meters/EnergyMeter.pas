@@ -220,11 +220,11 @@ Type
        FDI_Totals             :TextFile;
        FMeterTotals           :TextFile;
 
-       SystemMeter            :TSystemMeter;
-       Do_OverloadReport      :Boolean;
-       Do_VoltageExceptionReport :Boolean;
-       OverLoadFileIsOpen     :Boolean;
-       VoltageFileIsOpen      :Boolean;
+       SystemMeter                :TSystemMeter;
+       Do_OverloadReport          :array of Boolean;
+       Do_VoltageExceptionReport  :array of Boolean;
+       OverLoadFileIsOpen         :array of Boolean;
+       VoltageFileIsOpen          :array of Boolean;
 
        constructor Create;
        destructor Destroy;     override;
@@ -406,7 +406,8 @@ End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TEnergyMeter.Create;  // Creates superstructure FOR all EnergyMeter objects
-
+var
+  idx : Integer;
 Begin
      Inherited Create;
      Class_Name := 'EnergyMeter';
@@ -417,10 +418,19 @@ Begin
      {Initialice demand interval options to off}
      FSaveDemandInterval := FALSE;
      FDI_Verbose         := FALSE;
-     Do_OverloadReport   := FALSE;  // FSaveDemandInterval must be true for this to have an effect
-     OverLoadFileIsOpen  := FALSE;
-     VoltageFileIsOpen   := FALSE;
-     
+
+     setlength(OverLoadFileIsOpen,CPU_Cores + 1);
+     setlength(OverLoadFileIsOpen,CPU_Cores + 1);
+     setlength(Do_OverloadReport,CPU_Cores + 1);
+     setlength(Do_VoltageExceptionReport,CPU_Cores + 1);
+     for Idx := 0 to CPU_Cores do
+     Begin
+       OverLoadFileIsOpen[Idx]        :=  FALSE;
+       VoltageFileIsOpen[Idx]         :=  FALSE;
+       Do_OverloadReport[Idx]         :=  FALSE;
+       Do_VoltageExceptionReport[Idx] :=  FALSE;
+     End;
+
      DI_Dir := '';
      
      DefineProperties;
@@ -849,8 +859,8 @@ Begin
         For i := 1 to NumEMRegisters Do WriteintoMem(TDI_MHandle[ActorID],DI_RegisterTotals[i]);
         WriteintoMemStr(TDI_MHandle[ActorID], Char(10));
         ClearDI_Totals;
-        if OverLoadFileIsOpen then WriteOverloadReport(ActorID);
-        If VoltageFileIsOpen  then WriteVoltageReport(ActorID);
+        if OverLoadFileIsOpen[ActorID] then WriteOverloadReport(ActorID);
+        If VoltageFileIsOpen[ActorID]  then WriteVoltageReport(ActorID);
       End;
 
       // Sample Generator ans Storage Objects, too
@@ -2915,17 +2925,17 @@ Begin
           CloseMHandler(TDI_MHandle[ActorID], DI_Dir+'\DI_Totals_' + inttostr(ActorID) + '.CSV', TDI_Append[ActorID]);
         TDI_MHandle[ActorID] :=  nil;
         DIFilesAreOpen := FALSE;
-        if OverloadFileIsOpen then Begin
+        if OverloadFileIsOpen[ActorID] then Begin
           if OV_MHandle[ActorID] <> nil then
             CloseMHandler(OV_MHandle[ActorID],EnergyMeterClass[ActorID].DI_Dir+'\DI_Overloads_' + inttostr(ActorID) + '.CSV', OV_Append[ActorID]);
           OV_MHandle[ActorID]  :=  nil;
-          OverloadFileIsOpen := FALSE;
+          OverloadFileIsOpen[ActorID] := FALSE;
         End;
-        if VoltageFileIsOpen then Begin
+        if VoltageFileIsOpen[ActorID] then Begin
           if VR_MHandle[ActorID] <> nil then
             CloseMHandler(VR_MHandle[ActorID],EnergyMeterClass[ActorID].DI_Dir+'\DI_VoltExceptions_' + inttostr(ActorID) + '.CSV', VR_Append[ActorID]);
           VR_MHandle[ActorID]  := nil;
-          VoltageFileIsOpen := FALSE;
+          VoltageFileIsOpen[ActorID] := FALSE;
         End;
       End;
 end;
@@ -3573,8 +3583,8 @@ begin
           SystemMeter.OpenDemandIntervalFile(ActorID);
 
           {Optional Exception Reporting}
-          if Do_OverloadReport         then OpenOverloadReportFile(ActorID);
-          If Do_VoltageExceptionReport then OpenVoltageReportFile(ActorID);
+          if Do_OverloadReport[ActorID]         then OpenOverloadReportFile(ActorID);
+          If Do_VoltageExceptionReport[ActorID] then OpenVoltageReportFile(ActorID);
 
           {Open FDI_Totals}
           Try
@@ -3594,8 +3604,8 @@ end;
 procedure TEnergyMeter.OpenOverloadReportFile(ActorID: integer);
 begin
   Try
-      IF OverloadFileIsOpen Then OV_MHandle[ActorID].Free;
-      OverloadFileIsOpen := TRUE;
+      IF OverloadFileIsOpen[ActorID] Then OV_MHandle[ActorID].Free;
+      OverloadFileIsOpen[ActorID] := TRUE;
       if OV_MHandle[ActorID] <> nil then OV_MHandle[ActorID].free;
       OV_MHandle[ActorID]  :=  Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase"' + Char(10));
   Except
@@ -3607,8 +3617,8 @@ end;
 procedure TEnergyMeter.OpenVoltageReportFile(ActorID: integer);
 begin
   Try
-      IF VoltageFileIsOpen Then VR_MHandle[ActorID].Free;
-      VoltageFileIsOpen := TRUE;
+      IF VoltageFileIsOpen[ActorID] Then VR_MHandle[ActorID].Free;
+      VoltageFileIsOpen[ActorID] := TRUE;
       if VR_MHandle[ActorID] <> nil then VR_MHandle[ActorID].free;
       VR_MHandle[ActorID]  :=  Create_Meter_Space('"Hour", "Undervoltages", "Min Voltage", "Overvoltage", "Max Voltage", "Min Bus", "Max Bus"');
       WriteintoMemStr(VR_MHandle[ActorID],', "LV Undervoltages", "Min LV Voltage", "LV Overvoltage", "Max LV Voltage", "Min LV Bus", "Max LV Bus"' + Char(10));
