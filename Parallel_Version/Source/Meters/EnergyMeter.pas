@@ -420,7 +420,7 @@ Begin
      FDI_Verbose         := FALSE;
 
      setlength(OverLoadFileIsOpen,CPU_Cores + 1);
-     setlength(OverLoadFileIsOpen,CPU_Cores + 1);
+     setlength(VoltageFileIsOpen,CPU_Cores + 1);
      setlength(Do_OverloadReport,CPU_Cores + 1);
      setlength(Do_VoltageExceptionReport,CPU_Cores + 1);
      for Idx := 0 to CPU_Cores do
