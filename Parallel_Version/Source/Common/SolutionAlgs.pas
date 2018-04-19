@@ -167,6 +167,7 @@ Begin
             EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
 
             EndOfTimeStepCleanup(ActorID);
+            ActorPctProgress[ActorID]  :=  (N*100) div NumberofTimes;
 
         End;
 
