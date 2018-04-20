@@ -3062,7 +3062,7 @@ begin
 
           IF (PdElem.Normamps > 0.0) OR (PdElem.Emergamps>0.0) THEN Begin
              PDelem.ComputeIterminal(ActorID);
-             Cmax := PDelem.MaxTerminalOneImag; // For now, check only terminal 1 for overloads
+             Cmax := PDelem.MaxTerminalOneImag(ActorID); // For now, check only terminal 1 for overloads
              IF (Cmax > PDElem.NormAmps) OR (Cmax > pdelem.EmergAmps) THEN Begin
                   With ActiveCircuit[ActorID].Solution Do WriteintoMem(OV_MHandle[ActorID],DynaVars.dblHour);
                   WriteintoMemStr(OV_MHandle[ActorID],', ' + FullName(PDelem));
@@ -3271,7 +3271,7 @@ begin
   Peakkva := Max(Cabs(cPower), Peakkva);
 
   {Get total circuit losses}
-   cLosses := ActiveCircuit[ActorID].Losses;  // PD Elements except shunts
+   cLosses := ActiveCircuit[ActorID].Losses[ActorID];  // PD Elements except shunts
    cLosses := CmulReal(cLosses, 0.001);  // convert to kW
 
    Integrate(Losseskwh, cLosses.re, dLosseskwh, ActorID);

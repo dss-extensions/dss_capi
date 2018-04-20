@@ -121,7 +121,7 @@ TYPE
        PROCEDURE DoNormalSolution(ActorID : Integer);
 //       PROCEDURE GetMachineInjCurrents;
        PROCEDURE SetGeneratordQdV(ActorID : Integer);
-       PROCEDURE SumAllCurrents;
+       PROCEDURE SumAllCurrents(ActorID : Integer);
        procedure Set_Frequency(const Value: Double);
        PROCEDURE Set_Mode(const Value: Integer);
        procedure Set_Year(const Value: Integer);
@@ -859,7 +859,7 @@ Begin
 
         // Get sum of currents at all nodes for all  devices
            ZeroInjCurr(ActorID);
-           SumAllCurrents;
+           SumAllCurrents(ActorID);
 
            // Call to current calc could change YPrim for some devices
            IF SystemYChanged THEN
@@ -1838,18 +1838,18 @@ Begin
 End;
 
 // =========================================================================================== =
-PROCEDURE TSolutionObj.SumAllCurrents;
+PROCEDURE TSolutionObj.SumAllCurrents(ActorID : Integer);
 
 Var
    pelem :TDSSCktElement;
 
 begin
-     WITH  ActiveCircuit[ActiveActor] Do
+     WITH  ActiveCircuit[ActorID] Do
        Begin
           pelem := CktElements.First;
           WHILE pelem <> nil Do
           Begin
-              pelem.SumCurrents ;   // sum terminal currents into system Currents Array
+              pelem.SumCurrents(ActorID) ;   // sum terminal currents into system Currents Array
               pelem := CktElements.Next;
           End;
        End;

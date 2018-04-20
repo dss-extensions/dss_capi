@@ -1078,7 +1078,7 @@ Begin
    END; {CASE}
 
      Writeln(F);
-     S := CmulReal(ActiveCircuit[ActiveActor].Losses, 0.001);
+     S := CmulReal(ActiveCircuit[ActiveActor].Losses[ActiveActor], 0.001);
      If Opt=1 Then S := CmulReal(S, 0.001);
      Writeln(F,'Total Circuit Losses = ', S.re:6:1  ,' +j ', S.im:6:1  );
 
@@ -2339,7 +2339,7 @@ Begin
        {THEN IF (CLASSMASK AND PDElem.DSSObjType) <>  CAP_ELEMENT }    // Ignore capacitors
        THEN Begin
         //----PDelem.ActiveTerminalIdx := 1;  // activate 1st terminal for Power call
-        kLosses := CmulReal(PDelem.Losses, 0.001);   // kW Losses in element
+        kLosses := CmulReal(PDelem.Losses[ActiveActor], 0.001);   // kW Losses in element
         Caccum(TotalLosses, kLosses);
         TermPower := CmulReal(PDelem.power[1,ActiveActor], 0.001);     // Terminal 1 power
 

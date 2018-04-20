@@ -986,7 +986,7 @@ begin
 
    if (RpSpecified and IsShunt and (Rp <> 0.0)) then  Begin
 
-     TotalLosses := Losses;  // Side effect: computes Iterminal and Vterminal
+     TotalLosses := Losses[ActorID];  // Side effect: computes Iterminal and Vterminal
      {Compute losses in Rp Branch from voltages across shunt element -- node to ground}
      NoLoadLosses := CZERO;
      With ActiveCircuit[ActorID].Solution Do

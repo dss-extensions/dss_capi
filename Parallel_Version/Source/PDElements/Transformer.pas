@@ -1442,7 +1442,7 @@ begin
   {inherited;}
 
   {Calculates losses in watts, vars}
-  TotalLosses := Losses;   // Side effect: computes Iterminal
+  TotalLosses := Losses[ActorID];   // Side effect: computes Iterminal
 
   {Compute No load losses in Yprim_Shunt}
   cTempIterminal := AllocMem(Sizeof(cTempIterminal^[1])* Yorder);

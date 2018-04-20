@@ -34,7 +34,7 @@ program OpenDSS;
 
 
 
-{$R *.dres}
+
 
 uses
   Forms,

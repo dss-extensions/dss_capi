@@ -722,7 +722,7 @@ Begin
      
         // No energymeters in circuit
         // Just go by total system losses
-          kWLosses := ActiveCircuit[ActorID].Losses.re * 0.001;
+          kWLosses := ActiveCircuit[ActorID].Losses[ActorID].re * 0.001;
           kWEEN := 0.0;
 
      End

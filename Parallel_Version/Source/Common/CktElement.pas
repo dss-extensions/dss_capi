@@ -40,7 +40,7 @@ TYPE
       FUNCTION Get_YprimInvalid(ActorID: integer):Boolean;
       FUNCTION  Get_FirstBus:String;
       FUNCTION  Get_NextBus:String;
-      FUNCTION  Get_Losses:Complex;   // Get total losses for property...
+      FUNCTION  Get_Losses(ACtorID: Integer):Complex;   // Get total losses for property...
       FUNCTION  Get_Power(idxTerm:Integer; ActorID: integer):Complex;    // Get total complex power in active terminal
 
       PROCEDURE DoYprimCalcs(Ymatrix: TCMatrix);
@@ -105,7 +105,7 @@ TYPE
 
       FUNCTION  GetYPrim(Var Ymatrix:TCmatrix; Opt:Integer) :Integer; Virtual;  //returns values of array
       FUNCTION  GetYPrimValues(Opt:Integer):pComplexArray; Virtual;
-      FUNCTION  MaxTerminalOneIMag:Double;   // Max of Iterminal 1 phase currents
+      FUNCTION  MaxTerminalOneIMag(ActorID  : Integer) :Double;   // Max of Iterminal 1 phase currents
       PROCEDURE ComputeIterminal(ActorID : Integer); Virtual;   // Computes Iterminal for this device
       PROCEDURE ComputeVterminal(ActorID : Integer);
       PROCEDURE ZeroITerminal;
@@ -123,8 +123,8 @@ TYPE
       PROCEDURE MakePosSequence(ActorID : Integer);Virtual;  // Make a positive Sequence Model
 
       PROCEDURE GetTermVoltages(iTerm:Integer; VBuffer:PComplexArray; ActorID:Integer);
-      PROCEDURE GetPhasePower(PowerBuffer:pComplexArray); Virtual;
-      PROCEDURE GetPhaseLosses(Var Num_Phases:Integer; LossBuffer:pComplexArray); Virtual;
+      PROCEDURE GetPhasePower(PowerBuffer:pComplexArray; ActorID: Integer); Virtual;
+      PROCEDURE GetPhaseLosses(Var Num_Phases:Integer; LossBuffer:pComplexArray; ActorID: Integer); Virtual;
       PROCEDURE GetLosses(Var TotalLosses, LoadLosses, NoLoadLosses:Complex; ActorID : Integer); Virtual;
       PROCEDURE GetSeqLosses(Var PosSeqLosses, NegSeqLosses, ZeroModeLosses:complex; ActorID : Integer); Virtual;
 
@@ -141,11 +141,11 @@ TYPE
       Property NPhases:Integer        read Fnphases        write Set_NPhases;
       Property FirstBus:String        read Get_FirstBus;
       Property NextBus:String         read Get_NextBus;    // null string if no more values
-      Property Losses:Complex         read Get_Losses;
+      Property Losses[ActorID: Integer]:Complex         read Get_Losses;
       Property Power[idxTerm:Integer; ActorID: integer]:Complex  read Get_Power;  // Total power in active terminal
       Property ActiveTerminalIdx:Integer       read FActiveTerminal      write Set_ActiveTerminal;
       Property Closed[Index:Integer;ActorID:Integer]:Boolean   read Get_ConductorClosed  write Set_ConductorClosed;
-      PROCEDURE SumCurrents;
+      PROCEDURE SumCurrents(ActorID: Integer);
 
   End;
 
@@ -503,7 +503,7 @@ begin
   {For no override, Default behavior is:
     Just return total losses and set LoadLosses=total losses and noload losses =0}
 
-  TotalLosses  := Losses;  // Watts, vars
+  TotalLosses  := Losses[ActorID];  // Watts, vars
   LoadLosses   := TotalLosses;
   NoLoadLosses := CZERO;
 
@@ -616,18 +616,18 @@ Begin
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FUNCTION TDSSCktElement.MaxTerminalOneIMag:Double;
+FUNCTION TDSSCktElement.MaxTerminalOneIMag(ActorID : Integer):Double;
 
 { Get max of phase currents on the first terminal; Requires computing Iterminal
 }
 VAR
-   i:Integer;
-
+   i    : Integer;
+   MaxI : Double;
 Begin
-     Result := 0.0;
-     If FEnabled Then
-         For i := 1 to Fnphases DO With Iterminal^[i] Do Result := Max(Result, SQR(re) + SQR(im));
-     Result := Sqrt(Result);  // just do the sqrt once and save a little time
+    MaxI := 0.0;
+    If FEnabled Then
+      For i := 1 to Fnphases DO MaxI := SQR(Iterminal^[i].re) + SQR(Iterminal^[i].im);
+    Result := Sqrt(MaxI);  // just do the sqrt once and save a little time
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -666,7 +666,7 @@ Begin
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FUNCTION TDSSCktElement.Get_Losses:Complex;
+FUNCTION TDSSCktElement.Get_Losses(ActorID: Integer):Complex;
 // get total losses in circuit element, all phases, all terminals.
 // Returns complex losses (watts, vars)
 
@@ -679,14 +679,14 @@ Begin
    cLoss := CZERO;
 
    If FEnabled Then Begin
-       ComputeIterminal(ActiveActor);
+       ComputeIterminal(ActorID);
 
     // Method: Sum complex power going into all conductors of all terminals
-       WITH ActiveCircuit[ActiveActor].Solution DO
+       WITH ActiveCircuit[ActorID].Solution DO
          FOR k := 1 to Yorder Do Begin
             n := NodeRef^[k];
             IF  n > 0 THEN Begin
-               IF   ActiveCircuit[ActiveActor].PositiveSequence
+               IF   ActiveCircuit[ActorID].PositiveSequence
                THEN  Caccum(cLoss, CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[k])), 3.0))
                ELSE  Caccum(cLoss, Cmul(NodeV^[n], conjg(Iterminal^[k])));
             END;
@@ -699,7 +699,7 @@ Begin
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-PROCEDURE TDSSCktElement.GetPhasePower( PowerBuffer:pComplexArray);
+PROCEDURE TDSSCktElement.GetPhasePower( PowerBuffer:pComplexArray; ActorID: Integer);
 // Get the power in each phase (complex losses) of active terminal
 // neutral conductors are ignored by this routine
 VAR
@@ -707,14 +707,14 @@ VAR
 Begin
 
      IF FEnabled THEN Begin
-       ComputeIterminal(ActiveActor);
+       ComputeIterminal(ActorID);
 
-       WITH ActiveCircuit[ActiveActor].Solution DO
+       WITH ActiveCircuit[ActorID].Solution DO
          For i := 1 to Yorder DO
          Begin
             n := NodeRef^[i]; // increment through terminals
             IF   n > 0 THEN Begin
-               IF   ActiveCircuit[ActiveActor].PositiveSequence
+               IF   ActiveCircuit[ActorID].PositiveSequence
                THEN PowerBuffer^[i] := CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[i])), 3.0)
                ELSE PowerBuffer^[i] := Cmul(NodeV^[n], conjg(Iterminal^[i]));
             END;
@@ -726,7 +726,7 @@ End;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-PROCEDURE TDSSCktElement.GetPhaseLosses(Var Num_Phases:Integer; LossBuffer:pComplexArray);
+PROCEDURE TDSSCktElement.GetPhaseLosses(Var Num_Phases:Integer; LossBuffer:pComplexArray; ActorID: Integer);
 // Get the losses in each phase (complex losses);  Power difference coming out
 // each phase. Note: This can be misleading if the nodev voltage is greatly unbalanced.
 // neutral conductors are ignored by this routine
@@ -738,16 +738,16 @@ Begin
 
      Num_Phases := Fnphases;
      If FEnabled Then Begin
-       ComputeIterminal(ActiveActor);
+       ComputeIterminal(ActorID);
 
-       WITH ActiveCircuit[ActiveActor].Solution Do
+       WITH ActiveCircuit[ActorID].Solution Do
           For i := 1 to Num_Phases Do Begin
              cLoss := cmplx(0.0,0.0);
              For j := 1 to FNTerms Do Begin
                  k := (j-1)*FNconds + i;
                  n := NodeRef^[k]; // increment through terminals
                  If  n > 0 THEN Begin
-                     IF    ActiveCircuit[ActiveActor].PositiveSequence
+                     IF    ActiveCircuit[ActorID].PositiveSequence
                      THEN  Caccum(cLoss, CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[k])), 3.0))
                      ELSE  Caccum(cLoss, Cmul(NodeV^[n], conjg(Iterminal^[k])));
                  End;
@@ -884,7 +884,7 @@ Begin
 end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-PROCEDURE TDSSCktElement.SumCurrents;
+PROCEDURE TDSSCktElement.SumCurrents(ActorID: Integer);
 
 // sum Terminal Currents into System  Currents Array
 // Primarily for Newton Iteration
@@ -895,8 +895,8 @@ Var
 Begin
     IF   FEnabled  THEN
       Begin
-         ComputeIterminal(ActiveActor);
-         WITH ActiveCircuit[ActiveActor].Solution Do
+         ComputeIterminal(ActorID);
+         WITH ActiveCircuit[ActorID].Solution Do
          FOR i := 1 to Yorder Do Caccum(Currents^[NodeRef^[i]], Iterminal^[i]);  // Noderef=0 is OK
       End;
 end;

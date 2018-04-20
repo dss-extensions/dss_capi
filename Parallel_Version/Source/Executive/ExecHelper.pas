@@ -1763,7 +1763,7 @@ begin
      IF ActiveCircuit[ActiveActor] <> Nil THEN
       Begin
          GlobalResult := '';
-         LossValue := ActiveCircuit[ActiveActor].Losses;
+         LossValue := ActiveCircuit[ActiveActor].Losses[ActiveActor];
          GlobalResult := Format('%10.5g, %10.5g',[LossValue.re * 0.001,  LossValue.im*0.001]);
       End
     ELSE  GlobalResult := 'No Active Circuit.';
@@ -1844,7 +1844,7 @@ begin
         If ActiveCktElement<>Nil THEN
         Begin
          GlobalResult := '';
-         LossValue := ActiveCktElement.Losses;
+         LossValue := ActiveCktElement.Losses[ActiveActor];
          GlobalResult := Format('%10.5g, %10.5g', [LossValue.re * 0.001, LossValue.im * 0.001]);
         End;
       End
@@ -1871,7 +1871,7 @@ Begin
       NValues := NPhases;
       cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
       GlobalResult := '';
-      GetPhaseLosses( NValues, cBuffer);
+      GetPhaseLosses( NValues, cBuffer,ActiveActor);
       For i := 1 to  NValues DO Begin
          GlobalResult := GlobalResult + Format('%10.5g, %10.5g,',[ cBuffer^[i].re*0.001, cBuffer^[i].im*0.001]);
       End;
@@ -1897,7 +1897,7 @@ Begin
       NValues := NConds*Nterms;
       GlobalResult := '';
       cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
-      GetPhasePower(cBuffer);
+      GetPhasePower(cBuffer, ActiveActor);
       For i := 1 to  NValues DO Begin
          GlobalResult := GlobalResult+ Format('%10.5g, %10.5g,', [cBuffer^[i].re*0.001, cBuffer^[i].im*0.001]);
       End;
@@ -2974,7 +2974,7 @@ Begin
          cPower :=  CmulReal(GetTotalPowerFromSources(ActiveActor), 0.000001);  // MVA
          S := S + Format('Total Active Power:   %-.6g MW',[cpower.re]) + CRLF;
          S := S + Format('Total Reactive Power: %-.6g Mvar',[cpower.im]) + CRLF;
-         cLosses := CmulReal(ActiveCircuit[ActiveActor].Losses, 0.000001);
+         cLosses := CmulReal(ActiveCircuit[ActiveActor].Losses[ActiveActor], 0.000001);
          If cPower.re <> 0.0 Then S := S + Format('Total Active Losses:   %-.6g MW, (%-.4g %%)',[cLosses.re,(Closses.re/cPower.re*100.0)]) + CRLF
                              Else S := S + 'Total Active Losses:   ****** MW, (**** %%)' + CRLF;
          S := S + Format('Total Reactive Losses: %-.6g Mvar',[cLosses.im]) + CRLF;

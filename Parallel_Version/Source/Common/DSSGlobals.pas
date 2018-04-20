@@ -20,7 +20,7 @@ unit DSSGlobals;
 
 interface
 
-Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerList,
+Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerList, PDELement,
      UComplex, Arraydef, CktElement, Circuit, IniRegSave, {$IFNDEF FPC} Graphics, System.IOUtils,{$ENDIF} inifiles,
 
      {Some units which have global vars defined here}
@@ -310,6 +310,7 @@ VAR
    EMT_Append             : array of Boolean;
    PHV_Append             : array of Boolean;
    FM_Append              : array of Boolean;
+
 
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);

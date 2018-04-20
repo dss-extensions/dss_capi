@@ -231,7 +231,7 @@ Begin
      End;
 
      kVA    := CmulReal(Power[idxTerm,ActorID], 0.001);  // Also forces computation of Current into Itemp
-     Factor := (MaxTerminalOneIMag/NormAmps - 1.0);
+     Factor := (MaxTerminalOneIMag(ActorID)/NormAmps - 1.0);
      IF    (Factor > 0.0) THEN  Begin
         OverLoad_EEN := Factor;
         Factor := 1.0 - 1.0/(Factor + 1.0);   // To get factor
@@ -258,7 +258,7 @@ Begin
 
      kVA := CmulReal(Power[idxTerm,ActorID], 0.001);  // Also forces computation of Current into Itemp
 
-     Factor := (MaxTerminalOneIMag/EmergAmps-1.0);
+     Factor := (MaxTerminalOneIMag(ActorID)/EmergAmps-1.0);
      IF    Factor > 0.0
      THEN  Begin
         Overload_UE := Factor;

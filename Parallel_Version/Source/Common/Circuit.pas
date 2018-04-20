@@ -82,7 +82,7 @@ TYPE
           Function  AddBus(const BusName:String; NNodes:Integer;ActorID: integer):Integer;
           Procedure Set_ActiveCktElement(Value:TDSSCktElement);
           Procedure Set_BusNameRedefined(Value:Boolean);
-          Function Get_Losses:Complex; //Total Circuit losses
+          Function Get_Losses(ActorID: Integer):Complex; //Total Circuit losses
           Procedure Set_LoadMultiplier(Value :Double);
           Procedure SaveBusInfo;
           Procedure RestoreBusInfo;
@@ -308,7 +308,7 @@ TYPE
           property Name             : String         Read Get_Name;
           Property CaseName         : String         Read FCaseName         Write Set_CaseName;
           Property ActiveCktElement : TDSSCktElement Read FActiveCktElement Write Set_ActiveCktElement;
-          Property Losses           : Complex        Read Get_Losses;  // Total Circuit PD Element losses
+          Property Losses[ActorID: Integer]           : Complex        Read Get_Losses;  // Total Circuit PD Element losses
           Property BusNameRedefined : Boolean        Read FBusNameRedefined Write Set_BusNameRedefined;
           Property LoadMultiplier   : Double         Read FLoadMultiplier   write Set_LoadMultiplier;
 
@@ -1469,7 +1469,7 @@ BEGIN
 END;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TDSSCircuit.Get_Losses:Complex;
+Function TDSSCircuit.Get_Losses(ActorID:Integer):Complex;
 
 Var
    pdelem :TPDElement;
@@ -1482,7 +1482,7 @@ Begin
         While pdelem <> nil Do Begin
             IF pdelem.enabled Then Begin
               {Ignore Shunt Elements}
-              If Not pdElem.IsShunt Then Caccum(Result, pdelem.losses);
+              If Not pdElem.IsShunt Then Caccum(Result, pdelem.losses[ActorID]);
             End;
             pdelem := PDElements.Next;
         End;

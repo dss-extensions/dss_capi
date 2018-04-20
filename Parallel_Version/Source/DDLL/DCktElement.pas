@@ -497,7 +497,7 @@ begin
           numcond := NConds*Nterms;
           arg := VarArrayCreate([0, 2*numcond-1], varDouble);
           cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
-          GetPhasePower(cBuffer);
+          GetPhasePower(cBuffer, ActiveActor);
           iV :=0;
           For i := 1 to  numcond DO Begin
                arg[iV] := cBuffer^[i].re*0.001;
@@ -516,7 +516,7 @@ begin
             If ActiveCktElement<>Nil THEN
             Begin
              arg    := VarArrayCreate([0, 1], varDouble);
-             Volts := ActiveCktElement.Losses;
+             Volts := ActiveCktElement.Losses[ActiveActor];
              arg[0] := Volts.re;
              arg[1] := Volts.im;
             End;
@@ -530,7 +530,7 @@ begin
           numcond := NPhases;
           arg := VarArrayCreate([0, 2*numcond-1], varDouble);
           cBuffer := Allocmem(sizeof(cBuffer^[1])*numcond);
-          GetPhaseLosses(numcond, cBuffer);
+          GetPhaseLosses(numcond, cBuffer, ActiveActor);
           iV :=0;
           For i := 1 to  numcond DO Begin
                arg[iV] := cBuffer^[i].re*0.001;

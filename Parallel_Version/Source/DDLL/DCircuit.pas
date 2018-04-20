@@ -298,7 +298,7 @@ begin
      IF ActiveCircuit[ActiveActor] <> Nil THEN
       Begin
          arg := VarArrayCreate([0, 1], varDouble);
-         LossValue := ActiveCircuit[ActiveActor].Losses;
+         LossValue := ActiveCircuit[ActiveActor].Losses[ActiveActor];
          arg[0] := LossValue.re;
          arg[1] := LossValue.im;
       End
@@ -313,7 +313,7 @@ begin
           Loss := Cmplx(0.0,0.0);
           WHILE pLine<>nil DO
           Begin
-             CAccum(Loss, pLine.Losses);
+             CAccum(Loss, pLine.Losses[ActiveActor]);
              pLine := Lines.Next;
           End;
           arg[0] := Loss.re * 0.001;
@@ -329,7 +329,7 @@ begin
        Loss := Cmplx(0.0,0.0);
        WHILE pTransf<>nil DO
        Begin
-          IF pTransf.Issubstation THEN Caccum(Loss, pTransf.Losses);
+          IF pTransf.Issubstation THEN Caccum(Loss, pTransf.Losses[ActiveActor]);
           pTransf := Transformers.Next;
        End;
        arg[0] := Loss.re * 0.001;
@@ -433,7 +433,7 @@ begin
          pCktElem := CktElements.First;
          WHILE pCktElem<>Nil DO
          Begin
-            cLoss := pCktElem.Losses;
+            cLoss := pCktElem.Losses[ActiveActor];
             arg[k] := cLoss.re * 0.001;
             Inc(k);
             arg[k] := cLoss.im * 0.001;

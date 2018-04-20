@@ -308,7 +308,7 @@ begin
         If ActiveCktElement<>Nil THEN
         Begin
          Result    := VarArrayCreate([0, 1], varDouble);
-         LossValue := ActiveCktElement.Losses;
+         LossValue := ActiveCktElement.Losses[ActiveActor];
          Result[0] := LossValue.re;
          Result[1] := LossValue.im;
         End;
@@ -351,7 +351,7 @@ Begin
       NValues := NPhases;
       Result := VarArrayCreate([0, 2*NValues-1], varDouble);
       cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
-      GetPhaseLosses( NValues, cBuffer);
+      GetPhaseLosses( NValues, cBuffer, ActiveActor);
       iV :=0;
       For i := 1 to  NValues DO Begin
            Result[iV] := cBuffer^[i].re*0.001;
@@ -385,7 +385,7 @@ Begin
       NValues := NConds*Nterms;
       Result := VarArrayCreate([0, 2*NValues-1], varDouble);
       cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
-      GetPhasePower(cBuffer);
+      GetPhasePower(cBuffer, Activeactor);
       iV :=0;
       For i := 1 to  NValues DO Begin
            Result[iV] := cBuffer^[i].re*0.001;

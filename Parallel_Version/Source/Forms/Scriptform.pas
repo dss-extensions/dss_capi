@@ -284,7 +284,7 @@ begin
                  cPower :=  CmulReal(GetTotalPowerFromSources(ActiveActor), 0.000001);  // MVA
                  Add(Format('Total Active Power:   %-.6g MW',[cpower.re]));
                  Add(Format('Total Reactive Power: %-.6g Mvar',[cpower.im]));
-                 cLosses := CmulReal(ActiveCircuit[ActiveActor].Losses, 0.000001);
+                 cLosses := CmulReal(ActiveCircuit[ActiveActor].Losses[ActiveActor], 0.000001);
                  If cPower.re <> 0.0 Then Add(Format('Total Active Losses:   %-.6g MW, (%-.4g %%)',[cLosses.re,(Closses.re/cPower.re*100.0)]))
                                      Else Add('Total Active Losses:   ****** MW, (**** %%)');
                  Add(Format('Total Reactive Losses: %-.6g Mvar',[cLosses.im]));
