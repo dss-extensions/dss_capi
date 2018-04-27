@@ -622,12 +622,12 @@ FUNCTION TDSSCktElement.MaxTerminalOneIMag(ActorID : Integer):Double;
 }
 VAR
    i    : Integer;
-   MaxI : Double;
+
 Begin
-    MaxI := 0.0;
+    Result := 0.0;
     If FEnabled Then
-      For i := 1 to Fnphases DO MaxI := SQR(Iterminal^[i].re) + SQR(Iterminal^[i].im);
-    Result := Sqrt(MaxI);  // just do the sqrt once and save a little time
+      For i := 1 to Fnphases DO Result := max(Result, cabs(Iterminal^[i]));
+//    Result := Sqrt(MaxI);  // just do the sqrt once and save a little time
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
