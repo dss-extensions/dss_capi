@@ -643,7 +643,7 @@ var
   FI: PVSFixedFileInfo;
   VerSize: DWORD;
   MajorVer, MinorVer, BuildNo, RelNo :DWORD;
-
+  iLastError: DWord;
 
 Begin
     Result := 'Unknown.' ;
@@ -664,6 +664,12 @@ Begin
       finally
         FreeMem(VerBuf);
       end;
+    end
+    else
+    begin
+      iLastError := GetLastError;
+      Result := Format('GetFileVersionInfo failed: (%d) %s',
+               [iLastError, SysErrorMessage(iLastError)]);
     end;
 
 End;

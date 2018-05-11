@@ -248,6 +248,8 @@ exports
    getVpointer,SolveSystem,ParallelI,ParallelV,LineCodesI,LineCodesF,LineCodesS,
    LineCodesV;
 
+   {$R *.RES}
+
 begin
 
 {Library initialization code}
