@@ -1807,14 +1807,14 @@ Begin
                   FOR i := 1 to Order DO
                    Begin
                      Write(F, '! ');
-                       For j := 1 to i DO Write(F, GetElement(i,j).re:0:8,' ');
+                       For j := 1 to i DO Write(F, Format('%g ', [GetElement(i,j).re]));
                      Writeln(F);
                    End;
                  Writeln(F, '!(Imaginary part) = ');
                  FOR i := 1 to Order DO
                    Begin
                      Write(F, '! ');
-                      For j := 1 to i DO  Write(F, GetElement(i,j).im:0:8,' ');
+                      For j := 1 to i DO  Write(F, Format('%g ', [GetElement(i,j).im]));
                      Writeln(F);
                    End;
                End;

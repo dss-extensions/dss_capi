@@ -28,6 +28,7 @@ TYPE
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
    TIsource = CLASS(TPCClass)
      private
+       Procedure IsourceSetBus1(const S:String);
      Protected
        Procedure DefineProperties;
        Function MakeLike(Const OtherSource:STring):Integer;Override;
@@ -47,6 +48,7 @@ TYPE
         FphaseShift  :Double;
         ShapeIsActual: Boolean;
         ShapeFactor  : Complex;
+        Bus2Defined   : Boolean;
 
         Function GetBaseCurr(ActorID : Integer):Complex;
         PROCEDURE CalcDailyMult(Hr:double);
@@ -125,7 +127,7 @@ End;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Procedure TIsource.DefineProperties;
 Begin
-     NumPropsThisClass := 10;
+     NumPropsThisClass := 11;
 
      Numproperties := NumPropsThisClass;
      CountProperties;   // Get inherited property count
@@ -143,6 +145,7 @@ Begin
      PropertyName[8] := 'Yearly';
      PropertyName[9] := 'Daily';
      PropertyName[10] := 'Duty';
+     PropertyName[11] := 'Bus2';
 
      // define Property help values
      PropertyHelp[1] := 'Name of bus to which source is connected.'+CRLF+'bus1=busname'+CRLF+'bus1=busname.1.2.3';
@@ -174,6 +177,9 @@ Begin
                           'Defaults to Daily load shape when Daily is defined.   '+
                           'Set to NONE to reset to no loadahape for Yearly mode. ' +
                           'The default is no variation.';
+      PropertyHelp[11] := 'Name of bus to which 2nd terminal is connected.'+CRLF+'bus2=busname'+CRLF+'bus2=busname.1.2.3' +
+                          CRLF + CRLF +
+                          'Default is Bus1.0.0.0 (grounded-wye connection)';
 
 
      ActiveProperty := NumPropsThisClass;
@@ -224,7 +230,7 @@ Begin
 
          CASE ParamPointer OF
             0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 330);
-            1: SetBus(1, param);
+            1: IsourceSetBus1( param);
             2: Amps     := Parser[ActorID].DblValue;
             3: Angle     := Parser[ActorID].DblValue; // Ang
             4: SrcFrequency     := Parser[ActorID].DblValue; // freq
@@ -255,6 +261,7 @@ Begin
             8: YearlyShape  := Param;
             9: DailyShape   := Param;
            10: DutyShape    := Param;
+           11: SetBus(2, Param);
          ELSE
             ClassEdit(ActiveIsourceObj, ParamPointer - NumPropsThisClass);
          End;
@@ -315,6 +322,8 @@ Begin
        YearlyShape      := OtherIsource.YearlyShape;
        YearlyShapeObj   := OtherIsource.YearlyShapeObj;
 
+       Bus2Defined    := OtherIsource.Bus2Defined;
+
        ClassMakeLike(OtherIsource); // set spectrum,  base frequency
 
        For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherIsource.PropertyValue[i];
@@ -332,6 +341,32 @@ Begin
    Result := 0;
 End;
 
+procedure TIsource.IsourceSetBus1(const S: String);
+Var
+   s2:String;
+   i, dotpos:Integer;
+
+   // Special handling for Bus 1
+   // Set Bus2 = Bus1.0.0.0
+
+BEGIN
+   WITH ActiveISourceObj DO BEGIN
+     SetBus(1, S);
+
+     If Not Bus2Defined Then // Default Bus2 to zero node of Bus1. (Grounded-Y connection)
+     Begin
+         // Strip node designations from S
+         dotpos := Pos('.',S);
+         IF dotpos>0 THEN S2 := Copy(S,1,dotpos-1)
+                     ELSE S2 := Copy(S,1,Length(S));  // copy up to Dot
+         FOR i := 1 to Fnphases DO S2 := S2 + '.0';   // append series of ".0"'s
+
+         SetBus(2, S2);    // default setting for Bus2
+     End;
+   END;
+
+end;
+
 //----------------------------------------------------------------------------
 Constructor TIsourceObj.Create(ParClass:TDSSClass; const SourceName:String);
 Begin
@@ -341,7 +376,7 @@ Begin
 
      Nphases := 3;
      Fnconds := 3;
-     Nterms  := 1;
+     Nterms  := 2;
 
      Amps     := 0.0;
      Angle    := 0.0;
@@ -350,7 +385,7 @@ Begin
      FphaseShift := 120.0;
      ScanType := 1;  // Pos Sequence
      Sequencetype := 1;
-
+     Bus2Defined   := FALSE;
      InitPropertyValues(0);
      ShapeIsActual := FALSE;
      YearlyShape    := '';
@@ -511,6 +546,7 @@ Begin
 
        For i := 1 to Fnphases Do Begin
            Curr^[i] := BaseCurr ;
+           Curr^[i+FnPhases] := Cnegate(BaseCurr);  // 2nd Terminal
            If (i < Fnphases) Then Begin
 
                If IsHarmonicModel Then
@@ -571,6 +607,7 @@ begin
      PropertyValue[8]  := '';
      PropertyValue[9]  := '';
      PropertyValue[10]  := '';
+     PropertyValue[11]  := '';
 
     inherited  InitPropertyValues(NumPropsThisClass);
 
