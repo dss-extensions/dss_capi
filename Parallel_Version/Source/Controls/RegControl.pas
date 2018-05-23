@@ -1265,6 +1265,7 @@ End;
 Procedure TRegControlObj.Reset;
 begin
       PendingTapChange := 0.0;
+      Armed            := False;
 
 end;
 
