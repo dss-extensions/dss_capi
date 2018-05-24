@@ -219,6 +219,15 @@ begin
           ActiveCircuit[ActiveActor].NumCircuits := 0; // <<<< added
           ActiveCircuit[ActiveActor].Free; // <<<< added
           ActiveCircuit[ActiveActor] := nil;
+          if ActorHandle[ActiveActor] <> nil  then    // Terminate the threads that could be alive
+          begin
+            ActorHandle[ActiveActor].Terminate;
+            ActorHandle[ActiveActor].Free;
+            ActorHandle[ActiveActor]  :=  nil;
+          end;
+
+          Circuits.Free;
+          Circuits := TPointerList.Create(4);   // Make a new list of circuits
 //          ClearAllCircuits;
           DisposeDSSClasses;
             {Now, Start over}
@@ -227,7 +236,12 @@ begin
           RebuildHelpForm := True; // because class strings have changed
        End;
 
+
        If Not IsDLL Then ControlPanel.UpdateElementBox ;
+
+       DefaultEarthModel     := DERI;
+       LogQueries            := FALSE;
+       MaxAllocationIterations := 2;
 
        {Prepare for new variables}
        ParserVars.Free;
