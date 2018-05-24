@@ -216,6 +216,8 @@ begin
        IF   (ActiveCircuit[ActiveActor] <> nil)  THEN
        Begin
           {First get rid of all existing stuff}
+          ActiveCircuit[ActiveActor].NumCircuits := 0; // <<<< added
+          ActiveCircuit[ActiveActor].Free; // <<<< added
           ActiveCircuit[ActiveActor] := nil;
 //          ClearAllCircuits;
           DisposeDSSClasses;
