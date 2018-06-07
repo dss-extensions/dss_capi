@@ -2656,7 +2656,7 @@ Begin
 
      While hMeter>0 Do Begin
 
-       pMtr:=TEnergyMeterObj(ActiveDSSObject);
+       pMtr:=TEnergyMeterObj(ActiveDSSObject[ActiveActor]);
 
          If pMtr.BranchList<>Nil Then  Begin
          
