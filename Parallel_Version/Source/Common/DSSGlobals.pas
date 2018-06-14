@@ -45,31 +45,12 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      ExpControl,
      ProgressForm,
      variants,
+     vcl.dialogs,
+     Strutils,
+     Types,
      YMatrix;
-{
-TYPE
-//  KLUSolve base type definition
-   TNewSparseSet        = function(nBus:LongWord):NativeUInt;stdcall;
-   TDeleteSparseSet     = function(id:NativeUInt):LongWord;stdcall;
-   TSolveSparseSet      = function(id:NativeUInt; x,b:pComplexArray):LongWord;stdcall;
-   TZeroSparseSet       = function(id:NativeUInt):LongWord;stdcall;
-   TFactorSparseMatrix  = function(id:NativeUInt):LongWord;stdcall;
-   TGetSize             = function(id:NativeUInt; Res: pLongWord):LongWord;stdcall;
-   TGetFlops            = function(id:NativeUInt; Res: pDouble):LongWord;stdcall;
-   TGetNNZ              = function(id:NativeUInt; Res: pLongWord):LongWord;stdcall;
-   TGetSparseNNZ        = function(id:NativeUInt; Res: pLongWord):LongWord;stdcall;
-   TGetSingularCol      = function(id:NativeUInt; Res: pLongWord):LongWord;stdcall;
-   TGetRGrowth          = function(id:NativeUInt; Res: pDouble):LongWord;stdcall;
-   TGetRCond            = function(id:NativeUInt; Res: pDouble):LongWord;stdcall;
-   TGetCondEst          = function(id:NativeUInt; Res: pDouble):LongWord;stdcall;
-   TAddPrimitiveMatrix  = function(id:NativeUInt; nOrder:LongWord; Nodes: pLongWord; Mat: pComplex):LongWord;stdcall;
-   TSetLogFile          = function(Path: pChar; Action:LongWord):LongWord;stdcall;
-   TGetCompressedMatrix = function(id:NativeUInt; nColP, nNZ:LongWord; pColP, pRowIdx: pLongWord; Mat: pComplex):LongWord;stdcall;
-   TGetTripletMatrix    = function(id:NativeUInt; nNZ:LongWord; pRows, pCols: pLongWord; Mat: pComplex):LongWord;stdcall;
-   TFindIslands         = function(id:NativeUInt; nOrder:LongWord; pNodes: pLongWord):LongWord;stdcall;
-   TAddMatrixElement    = function(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;stdcall;
-   TGetMatrixElement    = function(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;stdcall;
-}
+
+
 CONST
       CRLF = #13#10;
 
@@ -251,28 +232,6 @@ VAR
    Parallel_enabled   : Boolean;
    ConcatenateReports : Boolean;
    IncMat_Ordered     : Boolean;
-// KLU Variable arrays per actor
-{   ActorKLU           : Array of THandle;
-   NewSparseSet       : Array of TNewSparseSet;
-   DeleteSparseSet    : Array of TDeleteSparseSet;
-   SolveSparseSet     : Array of TSolveSparseSet;
-   ZeroSparseSet      : Array of TZeroSparseSet;
-   FactorSparseMatrix : Array of TFactorSparseMatrix;
-   GetSize            : Array of TGetSize;
-   GetFlops           : Array of TGetFlops;
-   GetNNZ             : Array of TGetNNZ;
-   GetSparseNNZ       : Array of TGetSparseNNZ;
-   GetSingularCol     : Array of TGetSingularCol;
-   GetRGrowth         : Array of TGetRGrowth;
-   GetRCond           : Array of TGetRCond;
-   GetCondEst         : Array of TGetCondEst;
-   AddPrimitiveMatrix : Array of TAddPrimitiveMatrix;
-   SetLogFile         : Array of TSetLogFile;
-   GetCompressedMatrix: Array of TGetCompressedMatrix;
-   GetTripletMatrix   : Array of TGetTripletMatrix;
-   FindIslands        : Array of TFindISlands;
-   AddMatrixElement   : Array of TAddMatrixElement;
-   GetMatrixElement   : Array of TGetMatrixElement; }
    Parser             : Array of TParser;
 
 {*******************************************************************************
@@ -840,11 +799,14 @@ begin
 end;
 {$IFNDEF FPC}
 function CheckDSSVisualizationTool: Boolean;
+var FileName: string;
 begin
   DSS_Viz_path:=GetIni('Application','path','', TPath.GetHomePath+'\OpenDSS Visualization Tool\settings.ini');
-  Result:=true;
-  if DSS_Viz_path='' then
-    Result:=false;
+  // to make it compatible with the function
+  FileName  :=  stringreplace(DSS_Viz_path, '\\' ,'\',[rfReplaceAll, rfIgnoreCase]);
+  FileName  :=  stringreplace(FileName, '"' ,'',[rfReplaceAll, rfIgnoreCase]);
+  // returns true only if the executable exists
+  Result:=fileexists(FileName);
 end;
 // End of visualization tool check
 {$ENDIF}
