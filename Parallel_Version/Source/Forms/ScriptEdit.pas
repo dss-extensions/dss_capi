@@ -49,6 +49,7 @@ type
     Procedure UpdateSummaryForm(Const s: string);
     Property HasBeenModified:Boolean Read Get_HasBeenModified Write Set_HasBeenModified;
     Procedure UpdateProgressSummary;
+    Procedure PublishMessage(Msg : String);
   end;
 
 var
@@ -477,6 +478,18 @@ begin
             If Not IsDLL Then ControlPanel.UpdateStatus;
             Lines.EndUpdate;
           End;
+      End;
+  End;
+end;
+
+Procedure TScriptEdit.PublishMessage(Msg : String);
+begin
+  With ControlPanel.SummaryEdit Do Begin
+      Clear;
+      Lines.BeginUpdate;
+      With Lines Do Begin
+          Add(Msg);
+          Lines.EndUpdate;
       End;
   End;
 end;

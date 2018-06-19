@@ -50,7 +50,7 @@ Uses      ExecCommands, ExecOptions,
 //          MessageForm,
           ComCtrls,
           TViewer,
-          Sysutils, FrmCSVchannelSelect, System.UITypes;
+          Sysutils, FrmCSVchannelSelect, System.UITypes,ScriptEdit;
 
 
 Procedure InitProgressForm(Actor_ID : integer);
@@ -140,7 +140,9 @@ End;
 
 FUNCTION DSSMessageDlg(const Msg:String;err:boolean):Integer;
 
-Var  Str:String;
+Var
+      ScriptEd : TScriptEdit;
+      Str:String;
 
        Function IntResult(R:Integer):Integer;
        Begin
@@ -149,20 +151,27 @@ Var  Str:String;
        End;
 Begin
      If Length(msg) > 1024 Then
-        Str := 'Message too long; See Result Form.'
-     Else Str := msg;
-
-     If Err Then Result := MessageDlg(Str, mtError , [mbOK], 0)
-     Else Result := IntResult(MessageDlg(Str, mtInformation , [mbAbort, mbIgnore], 0));
+        Str     :=  'Message too long; See Result Form.'
+     Else
+        Str     :=  msg;
+//       If Err Then Result := MessageDlg(Str, mtError , [mbOK], 0)
+//       Else Result := IntResult(MessageDlg(Str, mtInformation , [mbAbort, mbIgnore], 0));
+     ScriptEd.PublishMessage(Str);
+     Result  :=  -1;
 End;
 
 Procedure DSSInfoMessageDlg(const Msg:String);
-
+Var
+      ScriptEd : TScriptEdit;
+      Str:String;
 Begin
-    If length(msg)<=1024 Then MessageDlg(Msg, mtInformation , [mbOK], 0)
-    Else  MessageDlg('Message too long; See Result Form.', mtInformation , [mbOK], 0)
-
-
+//    If length(msg)<=1024 Then MessageDlg(Msg, mtInformation , [mbOK], 0)
+//    Else MessageDlg('Message too long; See Result Form.', mtInformation , [mbOK], 0);
+    If length(msg)<=1024 Then
+      Str :=  Msg
+    else
+      Str :=  'Message too long; See Result Form.';
+    ScriptEd.PublishMessage(Str);
 End;
 
 
