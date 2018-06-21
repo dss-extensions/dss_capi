@@ -92,6 +92,7 @@ TYPE
    TSolver=class(TThread)
       Constructor Create(Susp:Boolean;local_CPU: integer; ID : integer; CallBack: TInfoMessageCall);overload;
       procedure Execute; override;
+      procedure Doterminate; override;
 //*******************************Private components*****************************
     private
       FMessage  : String;
@@ -567,7 +568,7 @@ Try
       ActorHandle[ActorID].Terminate;
       ActorHandle[ActorID].Free;
     end;
-    ActorHandle[ActorID] :=  TSolver.Create(false,ActorCPU[ActorID],ActorID,ScriptEd.UpdateSummaryForm);
+    ActorHandle[ActorID]  := TSolver.Create(false,ActorCPU[ActorID],ActorID,ScriptEd.UpdateSummaryForm);
     if not Parallel_enabled then
       ActorHandle[ActorID].WaitFor; // If the parallel features are not active it will work as the classic version
 Except
@@ -2421,19 +2422,30 @@ var
                DosimpleMsg('Unknown solution mode.', 481);
            End;
 
-        QueryPerformanceCounter(GEndTime);
-        Total_Solve_Time_Elapsed := ((GEndTime-GStartTime)/CPU_Freq)*1000000;
-        Total_Time_Elapsed := Total_Time_Elapsed + Total_Solve_Time_Elapsed;
-        ActorStatus[ActorID]  :=  1;
-        FMessage  :=  '1';
-        if Not IsDLL then synchronize(CallCallBack);
       end;
     end;
   end;
+
 procedure TSolver.CallCallBack;
   begin
     if Assigned(FInfoProc) then  FInfoProc(FMessage);
   end;
+
+procedure TSolver.DoTerminate;        // Is the end of the thread
+var
+  ex: TObject;
+begin
+    with ActiveCircuit[ActorID].Solution do
+    begin
+        QueryPerformanceCounter(GEndTime);
+        Total_Solve_Time_Elapsed  :=  ((GEndTime-GStartTime)/CPU_Freq)*1000000;
+        Total_Time_Elapsed        :=  Total_Time_Elapsed + Total_Solve_Time_Elapsed;
+        ActorStatus[ActorID]      :=  1;
+        FMessage                  :=  '1';
+        if Not IsDLL then synchronize(CallCallBack);
+    end;
+    inherited;
+End;
 
 initialization
 
