@@ -136,7 +136,10 @@ TYPE
           Lines,
           Loads,
           ShuntCapacitors,
-					Reactors, // added for CIM XML export
+		  Reactors, // added for CIM XML export
+          Relays, // added for CIM XML export
+          Fuses, // added for CIM XML export
+          Reclosers, // added for CIM XML export
           Feeders,
           SwtControls        :PointerList.TPointerList;
 
@@ -357,7 +360,10 @@ BEGIN
      Lines           := TPointerList.Create(1000);
      Loads           := TPointerList.Create(1000);
      ShuntCapacitors := TPointerList.Create(20);
-		 Reactors        := TPointerList.Create(5);
+	 Reactors        := TPointerList.Create(5);
+     Reclosers       := TPointerList.Create(10);
+     Relays          := TPointerList.Create(10);
+     Fuses           := TPointerList.Create(50);
 
      Buses        := Allocmem(Sizeof(Buses^[1])        * Maxbuses);
      MapNodeToBus := Allocmem(Sizeof(MapNodeToBus^[1]) * MaxNodes);
@@ -541,7 +547,10 @@ BEGIN
      Loads.Free;
      Lines.Free;
      ShuntCapacitors.Free;
-		 Reactors.Free;
+     Reactors.Free;
+     Reclosers.Free;
+     Relays.Free;
+     Fuses.Free;
 
      ControlQueue.Free;
 
@@ -764,7 +773,10 @@ BEGIN
        REG_CONTROL   :RegControls.Add(ActiveCktElement);
        LOAD_ELEMENT  :Loads.Add(ActiveCktElement);
        CAP_ELEMENT   :ShuntCapacitors.Add(ActiveCktElement);
-			 REACTOR_ELEMENT :Reactors.Add(ActiveCktElement);
+       REACTOR_ELEMENT  :Reactors.Add(ActiveCktElement);
+       RELAY_CONTROL    :Relays.Add(ActiveCktElement);
+       FUSE_CONTROL     :Fuses.Add(ActiveCktElement);
+       RECLOSER_CONTROL :Reclosers.Add(ActiveCktElement);
 
        { Keep Lines, Transformer, and Lines and Faults in PDElements and separate lists
          so we can find them quickly.}
