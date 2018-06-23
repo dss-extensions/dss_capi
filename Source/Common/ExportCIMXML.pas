@@ -31,7 +31,7 @@ Uses SysUtils, Utilities, Circuit, DSSClassDefs, DSSGlobals, CktElement,
      Vsource, Line, Transformer, Ucomplex, UcMatrix, LineCode,
      Fuse, Capacitor, CapControl, CapControlvars,  Reactor, Feeder, ConductorData, LineUnits,
      LineGeometry, NamedObject, StrUtils, Math, XfmrCode, HashList, WireData,
-     LineSpacing, CableData, CNData, TSData, Storage, PVSystem;
+     LineSpacing, CableData, CNData, TSData, Storage, PVSystem, Relay, Recloser;
 
 Type
   GuidChoice = (Bank, Wdg, XfCore, XfMesh, WdgInf, ScTest, OcTest,
@@ -65,6 +65,43 @@ Var
 
 Const
   CIM_NS = 'http://iec.ch/TC57/2012/CIM-schema-cim17';
+
+procedure ParseSwitchClass (pLine:TLineObj; var swtCls:String; var ratedAmps, breakingAmps: double);
+var
+  pFuse: TFuseObj;
+  pRelay: TRelayObj;
+  pRecloser: TRecloserObj;
+begin
+  swtCls := 'LoadBreakSwitch';
+  ratedAmps := pLine.NormAmps;
+  breakingAmps := ratedAmps;
+  pFuse := ActiveCircuit.Fuses.First;
+  while (pFuse <> nil) do begin
+    if pFuse.ControlledElement = pLine then begin
+      swtCls := 'Fuse';
+      ratedAmps := pFuse.RatedCurrent;
+      breakingAmps := 0.0;
+      exit;
+    end;
+    pFuse := ActiveCircuit.Fuses.Next;
+  end;
+  pRelay := ActiveCircuit.Relays.First;
+  while (pRelay <> nil) do begin
+    if pRelay.ControlledElement = pLine then begin
+      swtCls := 'Breaker';
+      exit;
+    end;
+    pRelay := ActiveCircuit.Relays.Next;
+  end;
+  pRecloser := ActiveCircuit.Reclosers.First;
+  while (pRecloser <> nil) do begin
+    if pRecloser.ControlledElement = pLine then begin
+      swtCls := 'Recloser';
+      exit;
+    end;
+    pRecloser := ActiveCircuit.Reclosers.Next;
+  end;
+end;
 
 // this returns s1, s2, or a combination of ABCN
 function PhaseString (pElem:TDSSCktElement; bus: Integer):String; // if order doesn't matter
@@ -736,8 +773,8 @@ begin
 	pPhase.GUID := GetDevGuid (GenPhase, pPhase.LocalName, 1);
 	StartInstance (F, 'SynchronousMachinePhase', pPhase);
 	PhaseKindNode (F, 'SynchronousMachinePhase', phs);
-	DoubleNode (F, 'SynchronousMachinePhase.pfixed', p);
-	DoubleNode (F, 'SynchronousMachinePhase.qfixed', q);
+	DoubleNode (F, 'SynchronousMachinePhase.p', p);
+	DoubleNode (F, 'SynchronousMachinePhase.q', q);
 	RefNode (F, 'SynchronousMachinePhase.SynchronousMachine', pGen);
 	GuidNode (F, 'PowerSystemResource.Location', geoGUID);
 	EndInstance (F, 'SynchronousMachinePhase');
@@ -777,8 +814,8 @@ begin
     pPhase.GUID := GetDevGuid (GenPhase, pPhase.LocalName, 1);
     StartInstance (F, 'SynchronousMachinePhase', pPhase);
     PhaseKindNode (F, 'SynchronousMachinePhase', phs);
-    DoubleNode (F, 'SynchronousMachinePhase.pfixed', p);
-    DoubleNode (F, 'SynchronousMachinePhase.qfixed', q);
+    DoubleNode (F, 'SynchronousMachinePhase.p', p);
+    DoubleNode (F, 'SynchronousMachinePhase.q', q);
     RefNode (F, 'SynchronousMachinePhase.SynchronousMachine', pGen);
     GuidNode (F, 'PowerSystemResource.Location', geoGUID);
     EndInstance (F, 'SynchronousMachinePhase');
@@ -791,7 +828,7 @@ begin
 	pPhase.GUID := GetDevGuid (SolarPhase, pPhase.LocalName, 1);
 	StartInstance (F, 'PowerElectronicsConnectionPhase', pPhase);
 	PhaseKindNode (F, 'PowerElectronicsConnectionPhase', phs);
-	DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p);
+	DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p); // TODO - change to p and q as approved for CIM17
 	DoubleNode (F, 'PowerElectronicsConnectionPhase.qfixed', q);
 	RefNode (F, 'PowerElectronicsConnectionPhase.PowerElectronicsConnection', pPV);
 	GuidNode (F, 'PowerSystemResource.Location', geoGUID);
@@ -832,7 +869,7 @@ begin
     pPhase.GUID := GetDevGuid (SolarPhase, pPhase.LocalName, 1);
     StartInstance (F, 'PowerElectronicsConnectionPhase', pPhase);
     PhaseKindNode (F, 'PowerElectronicsConnectionPhase', phs);
-    DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p);
+    DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p); // TODO - change to p and q as approved for CIM17
     DoubleNode (F, 'PowerElectronicsConnectionPhase.qfixed', q);
     RefNode (F, 'PowerElectronicsConnectionPhase.PowerElectronicsConnection', pPV);
     GuidNode (F, 'PowerSystemResource.Location', geoGUID);
@@ -846,7 +883,7 @@ begin
 	pPhase.GUID := GetDevGuid (BatteryPhase, pPhase.LocalName, 1);
 	StartInstance (F, 'PowerElectronicsConnectionPhase', pPhase);
 	PhaseKindNode (F, 'PowerElectronicsConnectionPhase', phs);
-	DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p);
+	DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p); // TODO - change to p and q as approved for CIM17
 	DoubleNode (F, 'PowerElectronicsConnectionPhase.qfixed', q);
 	RefNode (F, 'PowerElectronicsConnectionPhase.PowerElectronicsConnection', pBat);
 	GuidNode (F, 'PowerSystemResource.Location', geoGUID);
@@ -887,7 +924,7 @@ begin
     pPhase.GUID := GetDevGuid (BatteryPhase, pPhase.LocalName, 1);
     StartInstance (F, 'PowerElectronicsConnectionPhase', pPhase);
     PhaseKindNode (F, 'PowerElectronicsConnectionPhase', phs);
-    DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p);
+    DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p); // TODO - change to p and q as approved for CIM17
     DoubleNode (F, 'PowerElectronicsConnectionPhase.qfixed', q);
     RefNode (F, 'PowerElectronicsConnectionPhase.PowerElectronicsConnection', pBat);
     GuidNode (F, 'PowerSystemResource.Location', geoGUID);
@@ -1263,6 +1300,8 @@ Var
   pRegion, pSubRegion, pLocation, pSubstation, pCRS : TNamedObject;
   zbase  : double;
   s      : String;
+  swtCls : String;  // based on controls, if any, attached to a line having switch=yes
+  ratedAmps, breakingAmps: double;
 
   pBank  : TBankObject;
   maxWdg : Integer;
@@ -2002,11 +2041,13 @@ Begin
         v1 := To_Meters (pLine.LengthUnits);
         geoGUID := GetDevGuid (LineLoc, pLine.Name, 1);
         if IsSwitch then begin
-          StartInstance (F, 'LoadBreakSwitch', pLine);
+          ParseSwitchClass (pLine, swtCls, ratedAmps, breakingAmps);
+          StartInstance (F, swtCls, pLine);
           CircuitNode (F, ActiveCircuit);
           VbaseNode (F, pLine);
-          DoubleNode (F, 'ProtectedSwitch.breakingCapacity', pLine.NormAmps);
-          DoubleNode (F, 'Switch.ratedCurrent', pLine.NormAmps);
+          if breakingAmps > 0.0 then
+            DoubleNode (F, 'ProtectedSwitch.breakingCapacity', breakingAmps); // Fuse and Sectionaliser don't have this, others do
+          DoubleNode (F, 'Switch.ratedCurrent', ratedAmps);
           // some OpenDSS models have enabled=false to signal open switches, but we can't actually
           // export them because disabled elements don't have terminal references in memory
           if Enabled then begin
@@ -2018,7 +2059,7 @@ Begin
           end;
           BooleanNode (F, 'Switch.retained', True);
           GuidNode (F, 'PowerSystemResource.Location', geoGUID);
-          EndInstance (F, 'LoadBreakSwitch');
+          EndInstance (F, swtCls);
           AttachSwitchPhases (F, pLine);
         end else begin
           StartInstance (F, 'ACLineSegment', pLine);
