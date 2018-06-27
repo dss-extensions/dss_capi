@@ -258,7 +258,7 @@ USES
 
 CONST
 
-    NumPropsThisClass = 23;
+    NumPropsThisClass = 24;
 
     NONE = 0;
     CHANGEVARLEVEL = 1;
@@ -327,6 +327,7 @@ Begin
      PropertyName[21] := 'DeltaP_factor';
      PropertyName[22] := 'EventLog';
      PropertyName[23] := 'VV_RefReactivePower';
+     PropertyName[24] := 'ActivePChangeTolerance';
 
      PropertyHelp[1] := 'Array list of PVSystems to be controlled.  Usually only one PVSystem is controlled by one InvControl. '+CRLF+CRLF+
                         'If not specified, all PVSystems in the circuit are assumed to be controlled by this control, only. ' +CRLF+CRLF+
@@ -369,10 +370,13 @@ Begin
                         'Maintain the same per-unit available var output level (unless head-room has changed due to change in active power or kva rating of PVSystem).  Per-unit var values remain the same for this internally constructed second curve (hysteresis curve). '+CRLF+CRLF+
                         'If the PVSystem terminal voltage has been decreasing and changes directions and begins to increase , then move from utilizing the offset curve, back to the vvc_curve1 for volt-var response, but stay at the same per-unit available vars output level.';
 
-     PropertyHelp[6] := 'Required for VOLTVAR and VOLTWATT modes, and defaults to rated.  Possible values are: {rated|avg}.  '+CRLF+CRLF+
-                        'Defines whether the x-axis values (voltage in per unit) for vvc_curve1 corresponds to the rated voltage for the '+
-                        'PVSystem object (1.0 in the volt-var curve equals rated voltage), or the average terminal voltage recorded over a certain number of prior power-flow solutions.  With the avg setting, 1.0 per unit on the x-axis of the volt-var curve(s) '+
-                        'corresponds to the average voltage from a certain number of prior intervals.  See avgwindowlen parameter.';
+     PropertyHelp[6] := 'Required for VOLTVAR and VOLTWATT modes, and defaults to rated.  Possible values are: {rated|avg|ravg}.  '+CRLF+CRLF+
+                        'Defines whether the x-axis values (voltage in per unit) for vvc_curve1 and the volt-watt curve corresponds to:'+CRLF+CRLF+
+                        'rated:    The rated voltage for the PVSystem object (1.0 in the volt-var curve equals rated voltage)'+CRLF+CRLF+
+                        'avg:      The average terminal voltage recorded over a certain number of prior power-flow solutions.'+CRLF+
+                        '          With the avg setting, 1.0 per unit on the x-axis of the volt-var curve(s) corresponds to the average voltage'+CRLF+
+                        '          from a certain number of prior intervals.  See avgwindowlen parameter.'+CRLF+CRLF+
+                        'ravg:     Same as avg, with the exception that the avgerage terminal voltage is divided by the rated voltage.';
 
      PropertyHelp[7] := 'Required for VOLTVAR mode and VOLTWATT mode, and defaults to 0 seconds (0s). '+CRLF+CRLF+
                         'Sets the length of the averaging window over which the average PVSystem terminal voltage is calculated. '+CRLF+CRLF+
@@ -491,6 +495,7 @@ Begin
                          'VARMAX_WATTS: When set to VARMAX_WATTS the units of the y-axis for the volt-var curve are given in percent of the maximum reactive power setting of each of the PVSystems.  Active power generation has'+CRLF+
                          'precedence over reactive power generation/absorption.'+CRLF;
 
+     PropertyName[24] := 'ActivePChangeTolerance is the active power tolerance required to be met between control iterations to signal achieving convergence. Default is 0.01';
 
      ActiveProperty  := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -559,7 +564,16 @@ Begin
                     Begin
                       ControlMode := 'FIXEDPF';
                       CombiControlMode := '';
+                    End
+                   Else
+                    Begin
+                      if ControlMode = '' then
+                         DoSimpleMsg('Invalid Control Mode selected', 1366);
+                      CombiControlMode := '';
+                      SolutionAbort := True;
+                      exit;
                     End;
+
                End;
 
             3: Begin
@@ -572,7 +586,17 @@ Begin
                     Begin
                       ControlMode := '';
                       CombiControlMode := 'VV_DRC';
+                    End
+                   Else
+                    Begin
+                      if CombiControlMode = '' then
+                         DoSimpleMsg('Invalid CombiControl Mode selected', 1367);
+                      CombiControlMode := '';
+                      SolutionAbort := True;
+                      exit;
                     End;
+
+
                End;
 
 
@@ -590,8 +614,12 @@ Begin
                     Fvvc_curveOffset := Parser.DblValue;
                End;
 
-            6: If CompareTextShortest(Parser.StrValue, 'rated') = 0 then FVoltage_CurveX_ref := 0
-               Else FVoltage_CurveX_ref := 1;
+            6: Begin
+                 If CompareTextShortest(Parser.StrValue, 'rated') = 0 then FVoltage_CurveX_ref := 0
+                 Else If CompareTextShortest(Parser.StrValue, 'avg')= 0 then FVoltage_CurveX_ref := 1
+                 Else If CompareTextShortest(Parser.StrValue, 'ravg')= 0 then FVoltage_CurveX_ref := 2
+               End;
+
             7: FRollAvgWindowLength := InterpretAvgVWindowLen(Param);
             8: Begin
                   Fvoltwatt_curvename := Parser.StrValue;
@@ -651,6 +679,8 @@ Begin
                    Else If CompareTextShortest(Parser.StrValue, 'varmax_vars')= 0        Then  FVV_ReacPower_ref := 'VARMAX_VARS'
                    Else If CompareTextShortest(Parser.StrValue, 'varmax_watts')= 0 Then  FVV_ReacPower_ref := 'VARMAX_WATTS'
                 End;
+            24: FActivePChangeTolerance := Parser.DblValue;
+
          ELSE
            // Inherited parameters
            ClassEdit( ActiveInvControlObj, ParamPointer - NumPropsthisClass)
@@ -738,7 +768,7 @@ Begin
       FRollAvgWindowLengthIntervalUnit  := OtherInvControl.FRollAvgWindowLengthIntervalUnit;
       FDRCRollAvgWindowLength       := OtherInvControl.FDRCRollAvgWindowLength;
       FDRCRollAvgWindowLengthIntervalUnit  := OtherInvControl.FDRCRollAvgWindowLengthIntervalUnit;
-
+      FActivePChangeTolerance    := OtherInvControl.FActivePChangeTolerance;
       FvoltwattDeltaVTolerance   := OtherInvControl.FvoltwattDeltaVTolerance;
       FdeltaQ_factor             := OtherInvControl.FdeltaQ_factor;
       FdeltaP_factor             := OtherInvControl.FdeltaP_factor;
@@ -787,6 +817,9 @@ Begin
      Fnconds := 3;
      Nterms  := 1;  // this forces allocation of terminals and conductors
                          // in base class
+
+     ControlMode              := '';
+     CombiControlMode         := '';
      ControlledElement        := nil;
      FkWLimit                 := nil;
      FkvarLimit               := nil;
@@ -1306,14 +1339,17 @@ BEGIN
                   if (RateofChangeMode=INACTIVE) or (ActiveCircuit.Solution.Dynavars.dblHour = 0.0) then
                       if(FVoltwattYAxis = 0) or (FVoltwattYAxis = 1) then
                         begin
-                    Ptemp := min(PVSys.PVSystemVars.PanelkW*PVSys.PVSystemVars.EffFactor,FFinalpuPmpp[k]*PVSys.Pmpp);
+
+                        if(FVoltwattYaxis = 0) then Ptemp := (PVSys.PVSystemVars.PanelkW*PVSys.PVSystemVars.EffFactor*FFinalpuPmpp[k]);
+                        if(FVoltwattYaxis = 1)  then Ptemp := (FFinalpuPmpp[k]*PVSys.Pmpp);
+//                      Ptemp := PVSys.PVSystemVars.PanelkW*PVSys.PVSystemVars.EffFactor*FFinalpuPmpp[k];
                     if SQRT(Sqr(QTemp2)+Sqr(PTemp)) > PVSys.kVARating then
                       begin
                         //...if watts have precedence, reduce the reactive power to not exceed the kva rating
                         if(FVV_ReacPower_ref = 'VARAVAL_WATTS') or (FVV_ReacPower_ref = 'VARMAX_WATTS') then
                           begin
-                            Qtemp2 := 1.0*sign(Qtemp2)*SQRT(Sqr(PVSys.kVARating)-Sqr(PTemp));
-                            if(Qtemp2) < FVarChangeTolerance/QHeadroom[k] then Qtemp2 := 0.0;
+                            if(Ptemp = PVSys.Pmpp) then QTemp2:= 0.0
+                            else Qtemp2 := 0.99*sign(Qtemp2)*SQRT(Sqr(PVSys.kVARating)-Sqr(PTemp));
                             Qnew[k] := Qtemp2;
                             PVSys.Presentkvar := Qnew[k];
                           end
@@ -1321,7 +1357,8 @@ BEGIN
                         //...else, vars have precedence, reduce the active power to not exceed the kva rating
                         else
                           begin
-                            PTemp := 1.0*sign(PTemp)*SQRT(Sqr(PVSys.kVARating)-Sqr(QTemp2));
+                            if(QTemp2 = PVSys.Pmpp) then PTemp:= 0.0
+                            else PTemp := 0.99*sign(PTemp)*SQRT(Sqr(PVSys.kVARating)-Sqr(QTemp2));
                             // Set the active power
                             FFinalpuPmpp[k] :=PTemp/PVSys.Pmpp;
                             PVSys.VWmode  := TRUE;
@@ -1371,8 +1408,7 @@ BEGIN
                   //...if watts have precedence, reduce the reactive power to not exceed the kva rating
                   if(FVV_ReacPower_ref = 'VARAVAL_WATTS') or (FVV_ReacPower_ref = 'VARMAX_WATTS') then
                     begin
-                      Qtemp2 := 1.0*sign(Qtemp2)*SQRT(Sqr(PVSys.kVARating)-Sqr(PTemp));
-                      if(Qtemp2) < FVarChangeTolerance/QHeadroom[k] then Qtemp2 := 0.0;
+                      Qtemp2 := 0.99*sign(Qtemp2)*SQRT(Sqr(PVSys.kVARating)-Sqr(PTemp));
                       Qnew[k] := Qtemp2;
                       PVSys.Presentkvar := Qnew[k];
                     end
@@ -1380,7 +1416,7 @@ BEGIN
                   //...else, vars have precedence, reduce the active power to not exceed the kva rating
                   else
                     begin
-                      PTemp := 1.0*sign(PTemp)*SQRT(Sqr(PVSys.kVARating)-Sqr(QTemp2));
+                      PTemp := 0.99*sign(PTemp)*SQRT(Sqr(PVSys.kVARating)-Sqr(QTemp2));
                       // Set the active power
                       FFinalpuPmpp[k] :=PTemp/PVSys.Pmpp;
                       PVSys.VWmode  := TRUE;
@@ -1566,7 +1602,7 @@ BEGIN
 
               PVSys.Varmode := VARMODEKVAR;  // Set var mode to VARMODEKVAR to indicate we might change kvar
               CalcVoltVar_vars(k);
-    
+
               If PVSys.Presentkvar <> Qnew[k] Then
                 begin
                   if abs(QNew[k]) > abs(PVSys.kvarLimit) then
@@ -1577,7 +1613,8 @@ BEGIN
                 PVSys.Presentkvar := Qnew[k];
                 QTemp2 := Qnew[k];
                 end;
-
+              PVSys.Presentkvar := Qnew[k];
+              QTemp2 := Qnew[k];
               PVSys.SetNominalPVSystemOuput;
               PTemp := PVSys.PresentkW;
               // if the desired kW and desired kvar exceed the kva rating of the PVSystem's inverter then...
@@ -1908,9 +1945,9 @@ begin
          for i := 1 to FPVSystemPointerList.ListSize do
          begin
             if(ActiveCircuit.Solution.DynaVars.t = 1) and (ActiveCircuit.Solution.ControlIteration=1) then
-              FWithinTol[i] := False;
-              FWithinTolVV[i] := False;
-              FWithinTolVW[i] := False;
+                FWithinTol[i] := False;
+                FWithinTolVV[i] := False;
+                FWithinTolVW[i] := False;
             ControlledElement[i].ComputeVTerminal;
             for j := 1 to ControlledElement[i].Yorder do
               cBuffer[i,j] := ControlledElement[i].Vterminal^[j];
@@ -1925,12 +1962,9 @@ begin
 
             // convert to per-unit on bus' kvbase, or
             // if using averaging window values, then set prior voltage to averaging window
-            if(FVoltage_CurveX_ref <> 0) and (FRollAvgWindow[i].Get_AvgVal <> 0.0) then FPresentVpu[i] := (Vpresent / ControlledElement[i].NPhases) / (FRollAvgWindow[i].Get_AvgVal)
-            else                              FPresentVpu[i] := (Vpresent / ControlledElement[i].NPhases) / (basekV * 1000.0);
-
-
-
-
+            if(FVoltage_CurveX_ref = 1) and (FRollAvgWindow[i].Get_AvgVal <> 0.0) then FPresentVpu[i] := (Vpresent / ControlledElement[i].NPhases) / (FRollAvgWindow[i].Get_AvgVal)
+            else if(FVoltage_CurveX_ref = 2) and (FRollAvgWindow[i].Get_AvgVal <> 0.0) then FPresentVpu[i] := (FRollAvgWindow[i].Get_AvgVal) / (basekV * 1000.0)
+            else FPresentVpu[i] := (Vpresent / ControlledElement[i].NPhases) / (basekV * 1000.0);
 
 
             if CombiControlMode = 'VV_DRC' then
@@ -2017,7 +2051,7 @@ begin
             if CombiControlMode = 'VV_VW' then
               begin
                   if ((FHitkVALimit[i] = True) or (FHitkvarLimit[i] = True)) and (ActiveCircuit.Solution.Dynavars.dblHour>0.0) then exit;
-                  if ((FHitkVALimit[i] = True) or (FHitkvarLimit[i] = True)) and (ActiveCircuit.Solution.Dynavars.dblHour=0.0) and ((ActiveCircuit.Solution.ControlIteration) >= (0.5*ActiveCircuit.Solution.MaxControlIterations)) then exit;
+//                  if ((FHitkVALimit[i] = True) or (FHitkvarLimit[i] = True)) and (ActiveCircuit.Solution.Dynavars.dblHour=0.0) and ((ActiveCircuit.Solution.ControlIteration) >= (0.5*ActiveCircuit.Solution.MaxControlIterations)) then exit;
                   // if inverter is off then exit
   //                if (ControlledElement[i].InverterON = FALSE) then exit;
                   if (ControlledElement[i].InverterON = FALSE) and (ControlledElement[i].VarFollowInverter = TRUE) then exit;
@@ -2316,7 +2350,7 @@ begin
      PropertyValue[21] := '1.0'; // deltaP_factor
      PropertyValue[22] := 'yes'; // show event log?
      PropertyValue[23] := 'VARAVAL'; // y-axis reference (and power precedence) for volt-var
-
+     PropertyValue[24] := '0.01';
 
 
 
@@ -2727,7 +2761,9 @@ Begin
           6              :
                          begin
                             if(FVoltage_CurveX_ref = 0) then Result := 'rated'
-                            else                             Result := 'avg';
+                            else if (FVoltage_CurveX_ref = 1) then Result := 'avg'
+                            else if (FVoltage_CurveX_ref = 2) then Result := 'avgrated'
+
                          end;
           7              : Result := Format('%d', [FRollAvgWindowLength,FRollAvgWindowLengthIntervalUnit]);
           8              : Result := Format ('%s',[Fvoltwatt_curvename]);
@@ -2755,7 +2791,8 @@ Begin
           21            : Result := Format('%.6g', [FdeltaP_factor]);
           // 21 skipped, EventLog always went to the default handler
           23            : Result := FVV_ReacPower_ref;
-
+          24            : Result := Format('%.6g', [FActivePChangeTolerance]);
+          
       ELSE  // take the generic handler
            Result := Inherited GetPropertyValue(index);
       END;
@@ -3114,10 +3151,17 @@ BEGIN
       QDesiredpu[j] := 0.0;
 
 
-      if FVV_ReacPower_ref = 'VARAVAL_WATTS' then QHeadRoom[j] := SQRT(Sqr(PVSys.kVARating)-Sqr(PVSys.PresentkW));
+      if FVV_ReacPower_ref = 'VARAVAL_WATTS' then 
+        begin
+            if(PVSys.PresentkW < PVSys.kVARating) then
+                QHeadRoom[j] := SQRT(Sqr(PVSys.kVARating)-Sqr(PVSys.PresentkW))
+            else
+                QHeadRoom[j] := 0.0
+        end;
+        
       if (FVV_ReacPower_ref = 'VARMAX_VARS') or (FVV_ReacPower_ref = 'VARMAX_WATTS') then QHeadRoom[j] := PVSys.kvarLimit;
 
-      if(QHeadRoom[j] = 0) then QHeadRoom[j] := PVSys.kvarLimit;
+      if(QHeadRoom[j] = 0.0) then QHeadRoom[j] := PVSys.kvarLimit;
       QPresentpu   := PVSys.Presentkvar / QHeadRoom[j];
       voltagechangesolution := 0.0;
 
