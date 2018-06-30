@@ -3,8 +3,8 @@ This includes a filtered copy of the [OpenDSS SVN repository](https://svn.code.s
 The upstream copy is on branch `opendss-official-svn`, while the `master` branch will contain specific modifications, including:
 
 - Multi-platform modifications for building with FreePascal on Windows and Linux
-- Match version 7 ("Classic" version, on folder `Source`) with version 8 ("Parallel Machine" version, on folder `Parallel_Version`)
-- Potentially, 
+- Matching version 7 ("Classic" version, on folder `Source`) with version 8 ("Parallel Machine" version, on folder `Parallel_Version`)
+- Potentially, API extensions or performance tweaks
 
 This repository was created to more easily track upstream changes without all non-essential files for building `dss_capi`, resulting in less than 20 MB in total, including the (almost full) history of the OpenDSS public source-code. The full history, including binary files and more, is almost 2.3 GB.
 
