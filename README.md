@@ -19,3 +19,4 @@ git svn fetch -r2162:HEAD
 
 This will skip those bad revisions. If you need the full history, you can just remove the long `--ignore-paths="..."` parameter. For fetching new SVN branches, you can use `git svn rebase`.
 
+For an equivalent repository containing only DSS scripts (tests and examples), see [electricdss-tst](https://github.com/PMeira/electricdss-tst/).
