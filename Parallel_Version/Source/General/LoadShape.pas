@@ -730,11 +730,9 @@ BEGIN
            Index := round(hr/Interval);
            IF Index>FNumPoints Then Index := Index Mod FNumPoints;  // Wrap around using remainder
            IF Index=0 THEN Index := FNumPoints;
-           R_part     :=  PMultipliers^[Index];
+           Result.re     :=  PMultipliers^[Index];
            If Assigned(QMultipliers) Then Result.im := QMultipliers^[Index]
-           Else  Im_part  := Set_Result_im(R_part);
-           Result.re      :=  R_part;
-           Result.im      :=  Im_part;
+           Else  Im_part  := Set_Result_im(Result.re );
         END
       ELSE  BEGIN
           // For random interval
