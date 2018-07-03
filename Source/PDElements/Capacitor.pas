@@ -85,6 +85,7 @@ TYPE
         Bus2Defined     :Boolean;
 
         SpecType   :Integer;
+        NumTerm         : Integer;   // Flag used to indicate The number of terminals
 
         function  get_States(Idx: Integer): Integer;
         procedure set_States(Idx: Integer; const Value: Integer);
@@ -122,6 +123,8 @@ TYPE
         Property Totalkvar:Double Read FTotalkvar;
         Property NomKV:Double Read kvrating;
         Property LastStepInService:Integer Read FLastStepInService Write set_LastStepInService;
+
+        Property NumTerminals:Integer Read NumTerm;   // Property to know if the capacitor has 2 terminals
 
    end;
 
@@ -341,7 +344,10 @@ BEGIN
          CASE ParamPointer OF
             0: DoSimpleMsg('Unknown parameter "'+ParamName+'" for Object "Capacitor.'+Name+'"', 450);
             1: CapSetbus1(param);
-            2: Setbus(2, param);
+            2: Begin
+                Setbus(2, param);
+                NumTerm :=  2;    // Specifies that the capacitor is not connected to ground
+               End;
             3:{ Numphases := Parser.IntValue};  // see below
             4: InterpretDblArray (Param, FNumSteps, FkvarRating);
             5: kvRating := Parser.Dblvalue;
@@ -526,6 +532,7 @@ BEGIN
      Bus2Defined      := FALSE;
 
      RecalcElementData;
+     NumTerm  :=  1;
 
      InitPropertyValues(0);
 END;
