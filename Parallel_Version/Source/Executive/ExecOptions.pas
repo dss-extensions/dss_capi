@@ -188,9 +188,7 @@ Begin
                     CRLF+'  Peakday,'+
                     CRLF+'  LD1 (load-duration 1)'+
                     CRLF+'  LD2 (load-duration 2)'+
-                    CRLF+'  AutoAdd (see AddType)' +
-                    CRLF+'  YearlyVQ (Yearly Vector Quantiaztion)' +
-                    CRLF+'  DutyVQ (Duty Vector Quantiaztion)' +CRLF +CRLF+
+                    CRLF+'  AutoAdd (see AddType)' +CRLF +CRLF+
                     'Side effect: setting the Mode propergy resets all monitors and energy meters. It also ' +
                     'resets the time step, etc. to defaults for each mode.  After the initial reset, the user ' +
                     'must explicitly reset the monitors and/or meters until another Set Mode= command.';
@@ -278,7 +276,7 @@ Begin
                         'Examples:'+Crlf+CRlf+
                         'Set autobuslist=(bus1, bus2, bus3, ... )' +CRLF+
                         'Set autobuslist=(file=buslist.txt)';
-     OptionHelp[43] := '{OFF | STATIC |EVENT | TIME}  Default is "STATIC".  Control mode for the solution. ' +
+     OptionHelp[43] := '{OFF | STATIC |EVENT | TIME | MULTIRATE}  Default is "STATIC".  Control mode for the solution. ' +
                         'Set to OFF to prevent controls from changing.' + CRLF +
                         'STATIC = Time does not advance.  Control actions are executed in order of shortest time to act ' +
                         'until all actions are cleared from the control queue.  Use this mode for power flow solutions which may require several ' +
@@ -287,6 +285,9 @@ Begin
                         'are executed and the time is advanced automatically to the time of the event. ' + crlf +crlf+
                         'TIME = solution is time driven.  Control actions are executed when the time for the pending ' +
                         'action is reached or surpassed.' + CRLF + CRLF +
+                        'MULTIRATE = solution is time driven.  Control actions are executed when the time for the pending ' +
+                        'action is reached or surpassed. In this control mode a solution is performed after each control action' +
+                        'is performed to reduce the error accumulated when the time step is to long' + CRLF + CRLF +
                         'Controls may reset and may choose not to act when it comes their time. ' +CRLF+
                         'Use TIME mode when modeling a control externally to the DSS and a solution mode such as ' +
                         'DAILY or DUTYCYCLE that advances time, or set the time (hour and sec) explicitly from the external program. ';
@@ -698,6 +699,8 @@ Begin
 
          CASE ParamPointer OF
               3,4: ActiveCircuit[ActiveActor].Solution.Update_dblHour;
+              // Update IntervalHrs for devices that integrate
+              7,18: ActiveCircuit[ActiveActor].Solution.IntervalHrs := ActiveCircuit[ActiveActor].Solution.DynaVars.h / 3600.0;
          END;
 
          ParamName := Parser[ActiveActor].NextParam;
@@ -719,7 +722,7 @@ VAR
    ParamPointer, i:Integer;
    ParamName:String;
    Param:String;
-   ScriptEd : TScriptEdit;
+   {$IFNDEF FPC}ScriptEd : TScriptEdit;{$ENDIF}
 
 Begin
 
@@ -859,7 +862,7 @@ Begin
            99: If ActiveCircuit[ActiveActor].MarkReclosers Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           100: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RecloserMarkerCode]));
           101: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RecloserMarkerSize]));
-          102: UpdateRegistry                    := InterpretYesNo(Param);
+          102: If UpdateRegistry Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           103: If ActiveCircuit[ActiveActor].MarkRelays Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           104: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RelayMarkerCode]));
           105: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].RelayMarkerSize]));
