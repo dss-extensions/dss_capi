@@ -474,7 +474,7 @@ BEGIN
   Nterm := pElem.Nterms;
   
   Try
-    Getmem(cBuffer, sizeof(cBuffer^[1])*Ncond*Nterm);
+    Getmem(cBuffer, Sizeof(Complex)*NCond*Nterm);
     pElem.GetCurrents(cBuffer, ActiveActor);
     k:=0;
     FromBus := Pad(StripExtension(pElem.FirstBus), MaxBusNameLength);
@@ -1643,7 +1643,7 @@ Begin
            {Bus Norton Equivalent Current, Isc has been previously computed}
            With Buses^[iBus] Do Begin
              YFault := TcMatrix.CreateMatrix(NumNodesThisBus);
-             Getmem(VFault, Sizeof(VFault^[1])* NumNodesThisBus);
+             Getmem(VFault, Sizeof(Complex)* NumNodesThisBus);
 
              GFault := Cmplx(10000.0, 0.0);
 

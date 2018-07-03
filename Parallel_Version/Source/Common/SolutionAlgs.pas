@@ -985,7 +985,7 @@ Begin
 
     {Mark Spectra being used}
         {Check loads and generators - these are assumed to be at fundamental frequency}
-    SpectrumInUse := AllocMem(SizeOf(SpectruminUse^[1])*SpectrumClass[ActorID].ElementCount);  //Allocate and zero
+    SpectrumInUse := AllocMem(SizeOf(Integer)*SpectrumClass[ActorID].ElementCount);  //Allocate and zero
     WITH ActiveCircuit[ActorID] Do Begin
         p := PCelements.First;
         WHILE p <> NIL Do Begin

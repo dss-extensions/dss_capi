@@ -841,7 +841,7 @@ Begin
          FOR j := 1 TO Fnconds DO Begin
              If Not Terminals^[i].Conductors^[j].Closed THEN Begin
                 If Not ElementOpen Then Begin
-                    RowEliminated := AllocMem(Sizeof(RowEliminated^[1])*Yorder);
+                    RowEliminated := AllocMem(Sizeof(Integer)*Yorder);
                     ElementOpen := True;
                     cEpsilon := Cmplx(EPSILON, 0.0);
                 End;
