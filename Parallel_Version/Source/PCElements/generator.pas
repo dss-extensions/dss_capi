@@ -1731,10 +1731,20 @@ Begin
         1: Begin
               VLL    := Vterminal^[i];     // VTerminal is LL for this connection
               VMagLL := Cabs(VLL);
-              With Genvars Do
-                 DeltaCurr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), VLL));
-              If Cabs(DeltaCurr)*SQRT3 > Model7MaxPhaseCurr Then
-                 DeltaCurr := Conjg( Cdiv( PhaseCurrentLimit, CDivReal(VLL, VMagLL/SQRT3)) );
+              case Fnphases of
+                 2, 3:   // 2 or 3 phase generator model 7
+                     Begin
+                       With Genvars Do
+                       DeltaCurr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), VLL));
+                       If Cabs(DeltaCurr)*SQRT3 > Model7MaxPhaseCurr Then
+                       DeltaCurr := Conjg( Cdiv( PhaseCurrentLimit, CDivReal(VLL, VMagLL/SQRT3)) );
+                     End
+              else  // 1-phase generator model 7
+                   With Genvars Do
+                     DeltaCurr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), VLL));
+                   If Cabs(DeltaCurr) > Model7MaxPhaseCurr Then
+                     DeltaCurr := Conjg( Cdiv( PhaseCurrentLimit, CDivReal(VLL, VMagLL)) );
+              end;
 
               StickCurrInTerminalArray(ITerminal, Cnegate(DeltaCurr), i);  // Put into Terminal array taking into account connection
               set_ITerminalUpdated(TRUE, ActorID);
