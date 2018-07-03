@@ -2873,6 +2873,7 @@ begin
       If (EnergyMeterClass.DI_Verbose) Then Begin
 
           This_Meter_DIFileIsOpen :=  TRUE;
+          if DI_MHandle <> nil then DI_MHandle.free;
           DI_MHandle  :=  Create_Meter_Space('"Hour"');
           For i := 1 to NumEMRegisters Do WriteintoMemStr(DI_MHandle,', "' + RegisterNames[i] + '"');
           WriteintoMemStr(DI_MHandle, Char(10));
@@ -3231,6 +3232,7 @@ begin
   Try
       IF This_Meter_DIFileIsOpen Then SDI_MHandle.Free;
       This_Meter_DIFileIsOpen	:=	TRUE;
+      if SDI_MHandle <> nil then SDI_MHandle.free;
       SDI_MHandle  :=  Create_Meter_Space('"Hour", ');
       WriteintoMemStr(SDI_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
 
@@ -3621,6 +3623,7 @@ begin
   Try
       IF OverloadFileIsOpen Then OV_MHandle.Free;
       OverloadFileIsOpen := TRUE;
+      if OV_MHandle <> nil then OV_MHandle.free;
       OV_MHandle  :=  Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase"' + Char(10));
   Except
       On E:Exception Do DosimpleMsg('Error creating memory space (Overload report) for writing.'+CRLF+E.Message, 541);
@@ -3633,6 +3636,7 @@ begin
   Try
       IF VoltageFileIsOpen Then VR_MHandle.Free;
       VoltageFileIsOpen := TRUE;
+      if VR_MHandle <> nil then VR_MHandle.free;
       VR_MHandle  :=  Create_Meter_Space('"Hour", "Undervoltages", "Min Voltage", "Overvoltage", "Max Voltage", "Min Bus", "Max Bus"');
       WriteintoMemStr(VR_MHandle,', "LV Undervoltages", "Min LV Voltage", "LV Overvoltage", "Max LV Voltage", "Min LV Bus", "Max LV Bus"' + Char(10));
   Except
