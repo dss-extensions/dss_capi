@@ -1669,7 +1669,10 @@ Begin
         GuidNode (F, 'RegulatingControl.Terminal',
         GetTermGuid (ActiveCircuit.CktElements.Get(i1), ElementTerminal));
         s := FirstPhaseString (ActiveCircuit.CktElements.Get(i1), 1);
-        MonitoredPhaseNode (F, Char(Ord(s[1]) + PTPhase - 1)); // TODO - average, min and max unsupported in CIM
+        if PTPhase > 0 then
+          MonitoredPhaseNode (F, Char(Ord(s[1]) + PTPhase - 1))
+        else
+          MonitoredPhaseNode (F, Char(Ord(s[1]))); // TODO - average, min and max unsupported in CIM
         val := 1.0;
         if CapControlType = PFCONTROL then begin
           v1 := PfOnValue;
