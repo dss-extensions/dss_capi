@@ -237,7 +237,7 @@ Begin
            FPVSystemPointerList.Clear; // clear this for resetting on first sample
            FListSize := FPVSystemNameList.count;
            end;
-        2: If Parser[ActorID].DblValue > 0 then FVregInit := Parser[ActorID].DblValue;
+        2: If Parser[ActorID].DblValue >= 0 then FVregInit := Parser[ActorID].DblValue;
         3: If Parser[ActorID].DblValue > 0 then FSlope := Parser[ActorID].DblValue;
         4: If Parser[ActorID].DblValue >= 0 then FVregTau := Parser[ActorID].DblValue; // zero means fixed Vreg
         5: FQbias := Parser[ActorID].DblValue;
