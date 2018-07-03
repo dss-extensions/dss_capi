@@ -47,13 +47,20 @@ USES
     Dynamics,
     EnergyMeter,
     SysUtils,
+    Parallel_Lib,
+    CktElement,
+{$IFDEF WINDOWS}
+    Windows,
+{$ELSE}    
+    BaseUnix, Unix,
+{$ENDIF}
+{$IFDEF FPC}Classes, Strings{$ELSE}
     System.Diagnostics,
     System.TimeSpan,
     System.Classes,
-    System.SyncObjs,
-    Parallel_Lib,
-    Windows,
-    CktElement;
+    System.SyncObjs
+{$ENDIF}    
+    ;
 
 CONST
 
@@ -292,13 +299,16 @@ VAR
 implementation
 
 USES  SolutionAlgs,
-      DSSClassDefs, DSSGlobals, DSSForms, PDElement,  ControlElem, Fault,
-      AutoAdd,  YMatrix, Load,CKtTree,
-      ParserDel, Generator,Capacitor,SHELLAPI,
+      DSSClassDefs, DSSGlobals, {$IFDEF FPC} CmdForms,{$ELSE} DSSForms, {$ENDIF} PDElement,  ControlElem, Fault,
+      Executive, AutoAdd,  YMatrix, Load,CKtTree,
+      ParserDel, Generator,Capacitor,
+{$IFDEF WINDOWS}
+      SHELLAPI,
+{$ENDIF}      
 {$IFDEF DLL_ENGINE}
       ImplGlobals,  // to fire events
 {$ENDIF}
-      Math,  Circuit, Utilities, KLUSolve, ScriptEdit, PointerList, Line,
+      Math,  Circuit, Utilities, KLUSolve, {$IFNDEF FPC}ScriptEdit,{$ENDIF} PointerList, Line,
       Transformer, Reactor
 ;
 
@@ -497,9 +507,10 @@ End;
 
 // ===========================================================================================
 PROCEDURE TSolutionObj.Solve(ActorID : Integer);
+{$IFNDEF FPC}
 var
-  ScriptEd  : TScriptEdit;
-
+ScriptEd  : TScriptEdit;
+{$ENDIF}
 Begin
      ActiveCircuit[ActorID].Issolved := False;
      SolutionWasAttempted[ActorID]   := TRUE;
@@ -538,7 +549,7 @@ Try
 {$ENDIF}
 
     {CheckFaultStatus;  ???? needed here??}
-     QueryPerformanceCounter(GStartTime);
+     {$IFNDEF FPC}QueryPerformanceCounter(GStartTime);{$ENDIF}
 {
      Case Dynavars.SolutionMode OF
          SNAPSHOT:     SolveSnap;
@@ -568,7 +579,7 @@ Try
       ActorHandle[ActorID].Terminate;
       ActorHandle[ActorID].Free;
     end;
-    ActorHandle[ActorID]  := TSolver.Create(false,ActorCPU[ActorID],ActorID,ScriptEd.UpdateSummaryForm);
+    ActorHandle[ActorID] := TSolver.Create(false,ActorCPU[ActorID],ActorID,{$IFNDEF FPC}ScriptEd.UpdateSummaryForm{$ELSE}nil{$ENDIF});
     if not Parallel_enabled then
       ActorHandle[ActorID].WaitFor; // If the parallel features are not active it will work as the classic version
 Except
@@ -601,9 +612,11 @@ Begin
         Else If Vmag <> 0.0         Then ErrorSaved^[i] := Abs(1.0 - VmagSaved^[i]/Vmag);
 
         VMagSaved^[i] := Vmag;  // for next go-'round
-
+{$IFNDEF FPC}
         MaxError := Max(MaxError, ErrorSaved^[i]);  // update max error
-
+{$ELSE}
+       if ErrorSaved^[i] > MaxError Then MaxError := ErrorSaved^[i]; // TODO - line above used to compile in FPC
+{$ENDIF}
     End;
 
 
@@ -1054,7 +1067,7 @@ Begin
 //      if Solution then
    SnapShotInit(ActorID);
    TotalIterations    := 0;
-   QueryPerformanceCounter(SolveStartTime);
+   {$IFNDEF FPC}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
    REPEAT
 
        Inc(ControlIteration);
@@ -1083,7 +1096,7 @@ Begin
 {$IFDEF DLL_ENGINE}
    Fire_StepControls;
 {$ENDIF}
-   QueryPerformanceCounter(SolveEndtime);
+{$IFNDEF FPC}QueryPerformanceCounter(SolveEndTime);{$ENDIF}
    Solve_Time_Elapsed := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
    Iteration := TotalIterations;  { so that it reports a more interesting number }
 
@@ -1096,7 +1109,7 @@ Begin
    Result := 0;
 
    LoadsNeedUpdating := TRUE;  // Force possible update of loads and generators
-   QueryPerformanceCounter(SolveStartTime);
+   {$IFNDEF FPC}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
 
    If SystemYChanged THEN
    begin
@@ -1118,7 +1131,7 @@ Begin
        ConvergedFlag := TRUE;
    End;
 
-   QueryPerformanceCounter(SolveEndtime);
+   {$IFNDEF FPC}QueryPerformanceCounter(SolveEndTime);{$ENDIF}
    Solve_Time_Elapsed  := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
    Total_Time_Elapsed  :=  Total_Time_Elapsed + Solve_Time_Elapsed;
    Iteration := 1;
@@ -1612,6 +1625,7 @@ End;
 {*******************************************************************************
 *           Routine created to empty a recently created folder                 *
 ********************************************************************************}
+{$IFDEF WINDOWS}
 procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
 var
   SourceLst: string;
@@ -1619,7 +1633,7 @@ var
 begin
   FillChar(FOS, SizeOf(FOS), 0);
   FOS.wFunc := FO_DELETE;
-  SourceLst := Directory + '\' + FileMask + #0;
+  SourceLst := Directory + PathDelim + FileMask + #0;
   FOS.pFrom := PChar(SourceLst);
   if not DelSubDirs then
     FOS.fFlags := FOS.fFlags OR FOF_FILESONLY;
@@ -1629,6 +1643,66 @@ begin
   FOS.fFlags := FOS.fFlags OR FOF_SILENT;
   SHFileOperation(FOS);
 end;
+{$ENDIF}
+{$IFDEF UNIX}
+procedure DeltreeDir(Directory: string);
+var 
+  Info: TSearchRec;
+Begin
+  If FindFirst(Directory + PathDelim + '*', faAnyFile and faDirectory, Info) = 0 then
+  begin
+    Repeat
+      With Info do
+      begin
+        If (name = '.') or (name = '..') then continue;
+        If (Attr and faDirectory) = faDirectory then
+        begin
+          DeltreeDir(Directory + PathDelim + Name)
+        end
+        else
+        begin
+          DeleteFile(Directory + PathDelim + Name);
+        end;
+      end;
+    Until FindNext(info) <> 0;
+  end;    
+  rmdir(Directory);
+end;
+
+procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
+var 
+  Info: TSearchRec;
+  flags: LongInt;
+Begin
+  if DelSubDirs then
+    flags := faAnyFile and faDirectory
+  else
+    flags := faAnyFile;
+  
+  If FindFirst(Directory + PathDelim + FileMask, flags, Info) = 0 then
+  begin
+    Repeat
+      With Info do
+      begin
+        if (name = '.') or (name = '..') then continue;
+        If (Attr and faDirectory) = faDirectory then
+        begin
+          try
+            DeltreeDir(Directory + PathDelim + Name)
+          except
+            Writeln('Could not remove directory ' + Directory + PathDelim + Name);
+          end;
+        end
+        else
+        begin
+          DeleteFile(Directory + PathDelim + Name);
+        end;
+      end;
+    Until FindNext(info) <> 0;
+  end;
+end;
+{$ENDIF}
+
 {*******************************************************************************
 *   This routine evaluates if the current location is the best or if its       *
 *   Necessary to move back one PDE just to cover a wider area                  *
@@ -2313,7 +2387,7 @@ begin
 // Update Loop time is called from end of time step cleanup
 // Timer is based on beginning of SolveSnap time
 
-   QueryPerformanceCounter(LoopEndtime);
+   {$IFNDEF FPC}QueryPerformanceCounter(LoopEndTime);{$ENDIF}
    Step_Time_Elapsed  := ((LoopEndtime-SolveStartTime)/CPU_Freq)*1000000;
 
 end;
@@ -2376,9 +2450,16 @@ begin
   FInfoProc       :=  CallBack;
   FreeOnTerminate := False;
   ActorID         :=  ID;
+{$IFNDEF UNIX}  
   Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
   Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
   Parallel.Set_Thread_affinity(handle,local_CPU);
+{$ELSE}
+  Parallel.Set_Process_Priority(FpGetpid(), REALTIME_PRIORITY_CLASS);
+  Parallel.Set_Thread_Priority(self,THREAD_PRIORITY_TIME_CRITICAL);
+  Parallel.Set_Thread_affinity(handle,local_CPU);
+{$ENDIF}  
+
 end;
 
 {*******************************************************************************
@@ -2388,7 +2469,7 @@ end;
 
 procedure TSolver.Execute;
 var
-  ScriptEd  : TScriptEdit;
+  {$IFNDEF FPC}ScriptEd  : TScriptEdit;{$ENDIF}
   idx       : Integer;
   begin
     with ActiveCircuit[ActorID].Solution do
@@ -2437,7 +2518,9 @@ var
 begin
     with ActiveCircuit[ActorID].Solution do
     begin
+{$IFNDEF FPC}    
         QueryPerformanceCounter(GEndTime);
+{$ENDIF}
         Total_Solve_Time_Elapsed  :=  ((GEndTime-GStartTime)/CPU_Freq)*1000000;
         Total_Time_Elapsed        :=  Total_Time_Elapsed + Total_Solve_Time_Elapsed;
         ActorStatus[ActorID]      :=  1;

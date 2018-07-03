@@ -43,9 +43,8 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      PVSystem,
      InvControl,
      ExpControl,
-     {$IFNDEF FPC}ProgressForm,{$ENDIF}
+     {$IFNDEF FPC}ProgressForm, vcl.dialogs,{$ENDIF}
      variants,
-     vcl.dialogs,
      Strutils,
      Types,
      YMatrix;
@@ -226,7 +225,7 @@ VAR
    ActorCPU           : Array of integer;
    ActorStatus        : Array of integer;
    ActorProgressCount : Array of integer;
-   ActorProgress      : Array of TProgress;
+   {$IFNDEF FPC}ActorProgress      : Array of TProgress;{$ENDIF}
    ActorPctProgress   : Array of integer;
    ActorHandle        : Array of TThread;
    Parallel_enabled   : Boolean;
@@ -372,6 +371,7 @@ Begin
   SHGetFolderPath (0, CSIDL_LOCAL_APPDATA, 0, 0, ThePath);
   Result := ThePath;
 End;
+{$ENDIF}
 
 function GetOutputDirectory:String;
 begin
@@ -695,6 +695,7 @@ Begin
     end;
 
 End;
+{$ENDIF}
 
 
 PROCEDURE WriteDLLDebugFile(Const S:String);
@@ -879,11 +880,13 @@ end;
 initialization
 
 //***************Initialization for Parallel Processing*************************
-
+{$IFNDEF LINUX}
    CPU_Cores        :=  CPUCount;
-
+{$ELSE}
+   CPU_Cores        :=  GetLogicalCpuCount; // FreePascal's CPUCount returns 1 on Linux
+{$ENDIF}
    setlength(ActiveCircuit,CPU_Cores + 1);
-   setlength(ActorProgress,CPU_Cores + 1);
+   {$IFNDEF FPC}setlength(ActorProgress,CPU_Cores + 1);{$ENDIF}
    setlength(ActorCPU,CPU_Cores + 1);
    setlength(ActorStatus,CPU_Cores + 1);
    setlength(ActorProgressCount,CPU_Cores + 1);
@@ -951,7 +954,7 @@ initialization
    for ActiveActor := 1 to CPU_Cores do
    begin
     ActiveCircuit[ActiveActor]        :=  nil;
-    ActorProgress[ActiveActor]        :=  nil;
+    {$IFNDEF FPC}ActorProgress[ActiveActor]        :=  nil;{$ENDIF}
     ActiveDSSClass[ActiveActor]       :=  nil;
     ActorStatus[ActiveActor]          :=  1;
     EventStrings[ActiveActor]         := TStringList.Create;
