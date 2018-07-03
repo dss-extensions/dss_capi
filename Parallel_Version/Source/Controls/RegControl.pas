@@ -330,6 +330,8 @@ Begin
      PropertyHelp[29] := '{Yes | No} If Yes, forces Reset of this RegControl.' ;
      PropertyHelp[30] := 'Z value for Beckwith LDC_Z control option. Volts adjustment at rated control current.';
      PropertyHelp[31] := 'Reverse Z value for Beckwith LDC_Z control option.';
+     PropertyHelp[32] := '{Yes|No*} Default is No. The Cogen feature is activated. Continues looking forward if power ' +
+                         'reverses, but switches to reverse-mode LDC values.';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
