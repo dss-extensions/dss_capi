@@ -12,8 +12,8 @@ unit ExpControl;
 INTERFACE
 
   uses
-    System.Generics.Collections, Command, ControlClass, ControlElem,
-    CktElement, DSSClass, PVSystem, Arraydef, ucomplex,
+    {$IFDEF FPC}gqueue{$ELSE}System.Generics.Collections{$ENDIF}, Command, 
+    ControlClass, ControlElem, CktElement, DSSClass, PVSystem, Arraydef, ucomplex,
     utilities, Dynamics, PointerList, Classes, StrUtils;
 
   type
