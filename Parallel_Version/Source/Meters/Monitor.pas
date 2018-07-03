@@ -1641,7 +1641,7 @@ begin
 
            {Now find Maxtime in Monitor}
            PositionSave := MonitorStream.Position;
-           MonitorStream.Seek(-(Recordbytes+8), soFromEnd);
+           MonitorStream.Seek(-(Recordbytes+8), soEnd);
            If Not (MonitorStream.Position>=MonitorStream.Size) Then
              With MonitorStream Do Begin
                   Read( hr, 4);  // singles
@@ -1657,7 +1657,7 @@ begin
            END;
 
            {Go Back to where we were}
-           MonitorStream.Seek(PositionSave, soFromBeginning);
+           MonitorStream.Seek(PositionSave, soBeginning);
 
            TopTransferFile.WriteHeader(Time, MaxTime, Time, RecordSize, 0, 16,  'DSS (TM), EPRI (R)');
            TopTransferFile.WriteNames(NameList, CNames);

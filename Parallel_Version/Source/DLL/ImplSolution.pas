@@ -99,6 +99,8 @@ type
     function Get_Time_of_Step: Double; safecall;
     function Get_IntervalHrs: Double; safecall;
     procedure Set_IntervalHrs(Value: Double); safecall;
+    function Get_MinIterations: Integer; safecall;
+    procedure Set_MinIterations(Value: Integer); safecall;
     procedure SolveAll; safecall;
     function Get_IncMatrix: OleVariant; safecall;
     function Get_BusLevels: OleVariant; safecall;
@@ -230,7 +232,7 @@ procedure TSolution.Set_StepSize(Value: Double);
 begin
      If ActiveCircuit[ActiveActor] <> Nil Then Begin
          ActiveCircuit[ActiveActor].Solution.dynavars.h  := Value;
-         Set_IntervalHrs(Value);     // Keep IntervalHrs in synch with time step size
+         Set_IntervalHrs(Value/3600.0);     // Keep IntervalHrs in synch with time step size
      End;
 end;
 
@@ -700,6 +702,17 @@ end;
 procedure TSolution.Set_IntervalHrs(Value: Double);
 begin
      If ActiveCircuit[ActiveActor] <> Nil Then ActiveCircuit[ActiveActor].Solution.IntervalHrs := Value;
+end;
+
+function TSolution.Get_MinIterations: Integer;
+begin
+     If ActiveCircuit <> Nil Then Result := ActiveCircuit[ActiveActor].Solution.MinIterations
+     Else Result := 0;
+end;
+
+procedure TSolution.Set_MinIterations(Value: Integer);
+begin
+    If ActiveCircuit <> Nil Then ActiveCircuit[ActiveActor].Solution.MinIterations  := Value;
 end;
 
 procedure TSolution.SolveAll;

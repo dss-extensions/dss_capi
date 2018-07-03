@@ -105,7 +105,7 @@ Begin
                         ' cause a separate file to be written for each meter.';
       ExportHelp[15] := '(file name is assigned by Monitor export) Monitor values.';
       ExportHelp[16] := '(Default file = EXP_YPRIMS.CSV) All primitive Y matrices.';
-      ExportHelp[17] := '(Default file = EXP_Y.CSV) System Y matrix.';
+      ExportHelp[17] := '(Default file = EXP_Y.CSV) [triplets] [Filename] System Y matrix, defaults to non-sparse format.';
       ExportHelp[18] := '(Default file = EXP_SEQZ.CSV) Equivalent sequence Z1, Z0 to each bus.';
       ExportHelp[19] := '(Default file = EXP_P_BYPHASE.CSV) [MVA] [Filename] Power by phase. Default is kVA.';
       ExportHelp[20] := '(Default file = CIM17x.XML) (IEC 61968-13, CIM v17 extended, CDPSM Combined (unbalanced load flow) profile)' + CRLF
@@ -165,7 +165,7 @@ VAR
 
    MVAopt               :Integer;
    UEonlyOpt            :Boolean;
-   TripletOpt   :Boolean;
+   TripletOpt           :Boolean;
    pMon                 :TMonitorObj;
    pMeter               :TEnergyMeterObj;
    ParamPointer         :Integer;
@@ -177,6 +177,7 @@ VAR
 Begin
    Result := 0;
    AbortExport := FALSE;
+   FileName := '';
 
    ParamName := Parser[ActiveActor].NextParam;
    Parm1 := LowerCase(Parser[ActiveActor].StrValue);
@@ -388,7 +389,7 @@ Begin
          End
          ELSE   DoSimpleMsg('Monitor Name Not Specified.'+ CRLF + parser[ActiveActor].CmdString, 251);
      16: ExportYprim(Filename);
-     17: ExportY(Filename);
+     17: ExportY(Filename, TripletOpt);
      18: ExportSeqZ(Filename);
      19: ExportPbyphase(Filename, MVAOpt);
      20: ExportCDPSM (Filename, Substation, SubGeographicRegion, GeographicRegion, Combined);

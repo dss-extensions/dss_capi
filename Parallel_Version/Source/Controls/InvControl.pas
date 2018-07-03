@@ -1322,7 +1322,7 @@ BEGIN
                   Qnew[k] := sign(QNew[k])*0.99*PVSys.kvarLimit;
                   FHitkvarLimit[k] := True;
                 end;
-
+              QTemp2 := Qnew[k];
               //Convert output from CalcVoltWatt_pu to kW
               PVSys.VWmode  := TRUE;
               PVSys.VWYAxis := FVoltwattYAxis;
@@ -1391,7 +1391,6 @@ BEGIN
                         end;
                 end;
 
-              PTemp := PVSys.PresentkW;
               // if the desired kW and desired kvar exceed the kva rating of the PVSystem's inverter then...
               PVSys.SetNominalPVSystemOuput(ActorID);
               PTemp := PVSys.PresentkW;
@@ -1479,7 +1478,7 @@ BEGIN
                       PNew[k] :=FFinalpuPmpp[k];
 
                       If ShowEventLog Then AppendtoEventLog('InvControl.' + Self.Name+','+PVSys.Name+',',
-                       Format('**VV_VW mode set PVSystem output level to**, puPmpp= %.5g, PriorWatts= %.5g', [PVSys.puPmpp,FPriorWattspu[k]]),ActorID);
+                       Format('**VV_VW mode set PVSystem output level to**, puPmpp= %.5g, PriorWatts= %.5g', [PVSys.puPmpp,POld[k]]),ActorID);
 
                       ActiveCircuit[ActorID].Solution.LoadsNeedUpdating := TRUE;
                       FAvgpVuPrior[k] := FPresentVpu[k];
@@ -3158,6 +3157,7 @@ BEGIN
 
       if (FVV_ReacPower_ref = 'VARMAX_VARS') or (FVV_ReacPower_ref = 'VARMAX_WATTS') then QHeadRoom[j] := PVSys.kvarLimit;
 
+      if(QHeadRoom[j] = 0.0) then QHeadRoom[j] := PVSys.kvarLimit;
       QPresentpu   := PVSys.Presentkvar / QHeadRoom[j];
       voltagechangesolution := 0.0;
 

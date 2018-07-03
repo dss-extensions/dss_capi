@@ -956,15 +956,23 @@ library OpenDSSengine
     HRESULT _stdcall Process_Time([out, retval] double* Value);
     [propget, id(0x000000E3), helpstring("Get the solution process time + sample time for time step")]
     HRESULT _stdcall Time_of_Step([out, retval] double* Value);
-    [id(0x000000E4), helpstring("Solves the circuits for all the Actors created")]
+    [propget, id(0x000000E4), helpstring("Get/Set the Solution.IntervalHrs variable used for devices that integrate")]
+    HRESULT _stdcall IntervalHrs([out, retval] double* Value);
+    [propput, id(0x000000E4), helpstring("Get/Set the Solution.IntervalHrs variable for custom solution algorithms")]
+    HRESULT _stdcall IntervalHrs([in] double Value);
+    [propget, id(0x000000E5), helpstring("Minimum number of iterations required for a power flow solution.")]
+    HRESULT _stdcall MinIterations([out, retval] long* Value);
+    [propput, id(0x000000E5), helpstring("Mininum number of iterations required for a power flow solution.")]
+    HRESULT _stdcall MinIterations([in] long Value);
+    [id(0x000000E6), helpstring("Solves the circuits for all the Actors created")]
     HRESULT _stdcall SolveAll(void);
-    [propget, id(0x000000E5)]
-    HRESULT _stdcall IncMatrix([out, retval] VARIANT* Value);
-    [propget, id(0x000000E6)]
-    HRESULT _stdcall IncMatrixRows([out, retval] VARIANT* Value);
     [propget, id(0x000000E7)]
-    HRESULT _stdcall IncMatrixCols([out, retval] VARIANT* Value);
+    HRESULT _stdcall IncMatrix([out, retval] VARIANT* Value);
     [propget, id(0x000000E8)]
+    HRESULT _stdcall IncMatrixRows([out, retval] VARIANT* Value);
+    [propget, id(0x000000E9)]
+    HRESULT _stdcall IncMatrixCols([out, retval] VARIANT* Value);
+    [propget, id(0x000000E10)]
     HRESULT _stdcall BusLevels([out, retval] VARIANT* Value);
   };
 
@@ -1964,6 +1972,8 @@ library OpenDSSengine
     HRESULT _stdcall DeadTime([in] double Value);
     [propget, id(0x000000DB), helpstring("Number of CapControls in Active Circuit\0ep. Control may reset before actually switching.\0 actually operating the switch.\0lf state).\0etc.)\0eturns 0 if no more.\0llElementNames.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")]
     HRESULT _stdcall Count([out, retval] long* Value);
+    [id(0x000000DC), helpstring("Force a Reset of this CapControl")]
+    HRESULT _stdcall Reset(void);
   };
 
   [
@@ -2071,6 +2081,8 @@ library OpenDSSengine
     HRESULT _stdcall TapNumber([out, retval] long* Value);
     [propput, id(0x000000E2), helpstring("Integer number of the tap that the controlled transformer winding is currentliy on.")]
     HRESULT _stdcall TapNumber([in] long Value);
+    [id(0x000000E3), helpstring("Force Reset of this RegControl element")]
+    HRESULT _stdcall Reset(void);
   };
 
   [

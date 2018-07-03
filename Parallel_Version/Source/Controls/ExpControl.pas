@@ -84,7 +84,7 @@ INTERFACE
             // Sample control quantities and set action times in Control Queue
             PROCEDURE   Sample(ActorID : Integer);  Override;
 
-            // ActiveCircuit[ActiveActor] the action that is pending from last sample
+            // Do the action that is pending from last sample
             PROCEDURE   DoPendingAction(Const Code, ProxyHdl:Integer;ActorID : Integer); Override;
 
             PROCEDURE   Reset; Override;  // Reset to initial defined state
@@ -311,7 +311,7 @@ Begin
 
      {
        Control elements are zero current sources that attach to a terminal of a
-       power-carrying device, but ActiveCircuit[ActiveActor] not alter voltage or current flow.
+       power-carrying device, but do not alter voltage or current flow.
        Define a default number of phases and conductors here and update in
        RecalcElementData routine if necessary. This allocates arrays for voltages
        and currents and gives more direct access to the values, if needed
@@ -342,7 +342,7 @@ Begin
      FPVSystemPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
 
      // user parameters for dynamic Vreg
-     FVregInit := 1.0;
+     FVregInit := 1.0; // 0 means to find it during initialization
      FSlope := 50.0;
      FVregTau := 1200.0;
      FVregs := nil;
@@ -477,6 +477,7 @@ BEGIN
       PVSys.Varmode := VARMODEKVAR;  // Set var mode to VARMODEKVAR to indicate we might change kvar
       FTargetQ[i] := 0.0;
       Qbase  := PVSys.kVARating;
+      Qinvmaxpu := PVSys.kvarLimit / Qbase;                                     
       Qpu := PVSys.Presentkvar / Qbase; // no change for now
 
       if (FWithinTol[i]=False) then begin
@@ -534,30 +535,31 @@ begin
       Vpresent := 0;
       For j := 1 to PVSys.NPhases do Vpresent := Vpresent + Cabs(cBuffer[j]);
       FPresentVpu[i] := (Vpresent / PVSys.NPhases) / (basekV * 1000.0);
+      // if initializing with Vreg=0 in static mode, we want to FIND Vreg
+      if (ActiveCircuit[ActorID].Solution.ControlMode = CTRLSTATIC) and (FVregInit <= 0.0) then
+        FVregs[i] := FPresentVpu[i];
       // both errors are in per-unit
       Verr := Abs(FPresentVpu[i] - FPriorVpu[i]);
       Qerr := Abs(PVSys.Presentkvar - FTargetQ[i]) / PVSys.kVARating;
-
       // process the sample
       if (PVSys.InverterON = FALSE) and (PVSys.VarFollowInverter = TRUE) then begin // not injecting
-        if (FVregTau > 0.0) then FVregs[i] := FPresentVpu[i]; // tracking grid voltage while not injecting
+        if (FVregTau > 0.0) and (FVregs[i] <= 0.0) then
+          FVregs[i] := FPresentVpu[i]; // wake up to the grid voltage, otherwise track it while not injecting
         continue;
       end;
       PVSys.VWmode := FALSE;
-      if (FWithinTol[i] = False) then begin
-        if ((Verr > FVoltageChangeTolerance) or (Qerr > FVarChangeTolerance) or
-          (ActiveCircuit[ActorID].Solution.ControlIteration = 1)) then begin
-          FWithinTol[i] := False;
-          Set_PendingChange(CHANGEVARLEVEL,i);
-          With  ActiveCircuit[ActorID].Solution.DynaVars do
-            ControlActionHandle := ActiveCircuit[ActorID].ControlQueue.Push (intHour, t + TimeDelay, PendingChange[i], 0, Self, ActorID);
-          If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
-            (' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]),ActorID);
-        end else begin
-          if ((Verr <= FVoltageChangeTolerance) and (Qerr <= FVarChangeTolerance)) then FWithinTol[i] := True;
-          If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
-            (' within Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]),ActorID);
-        end;
+      if ((Verr > FVoltageChangeTolerance) or (Qerr > FVarChangeTolerance) or
+        (ActiveCircuit[ActorID].Solution.ControlIteration = 1)) then begin
+        FWithinTol[i] := False;
+        Set_PendingChange(CHANGEVARLEVEL,i);
+        With  ActiveCircuit[ActorID].Solution.DynaVars do
+          ControlActionHandle := ActiveCircuit[ActorID].ControlQueue.Push (intHour, t + TimeDelay, PendingChange[i], 0, Self, ActorID);
+        If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
+          (' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]),ActorID);
+      end else begin
+        FWithinTol[i] := True;
+        If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
+          (' within Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]),ActorID);
       end;
     end;  {For}
   end; {If FlistSize}
@@ -624,7 +626,7 @@ begin
   //Initialize arrays
   For i := 1 to FlistSize do begin
 //    PVSys := PVSysClass.Find(FPVSystemNameList.Strings[i-1]);
-//    Set_NTerms(PVSys.NTerms); // TOActiveCircuit[ActiveActor] - what is this for?
+//    Set_NTerms(PVSys.NTerms); // TODO - what is this for?
     FPriorVpu[i] := 0.0;
     FPresentVpu[i] := 0.0;
     FPriorQ[i] := -1.0;
@@ -697,7 +699,6 @@ Var
 begin
   for j := 1 to FPVSystemPointerList.ListSize do begin
     PVSys := ControlledElement[j];
-    FWithinTol[j] := False;
     if FVregTau > 0.0 then begin
       dt :=  ActiveCircuit[ActorID].Solution.Dynavars.h;
       Verr := FPresentVpu[j] - FVregs[j];
