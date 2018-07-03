@@ -42,8 +42,9 @@ interface
 
 implementation
 
-Uses ArrayDef, DSSGlobals, DSSForms,  Utilities, SysUtils, MathUtil, Math, Fault, uComplex, YMatrix,
-     PCElement, Spectrum, Vsource, Isource, KLUSolve, System.Classes;
+Uses ArrayDef, DSSGlobals, {$IFDEF FPC}CmdForms,{$ELSE}DSSForms, System.Classes, {$ENDIF}
+     Utilities, SysUtils, MathUtil, Math, Fault, uComplex, YMatrix,
+     PCElement, Spectrum, Vsource, Isource, KLUSolve;
 
 VAR ProgressCount:Integer;
 

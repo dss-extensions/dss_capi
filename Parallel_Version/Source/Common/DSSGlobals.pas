@@ -43,7 +43,7 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      PVSystem,
      InvControl,
      ExpControl,
-     ProgressForm,
+     {$IFNDEF FPC}ProgressForm,{$ENDIF}
      variants,
      vcl.dialogs,
      Strutils,
@@ -177,7 +177,7 @@ VAR
    DefaultEditor    :String;     // normally, Notepad
    DefaultFontSize  :Integer;
    DefaultFontName  :String;
-   DefaultFontStyles :TFontStyles;
+{$IFNDEF FPC}DefaultFontStyles :TFontStyles;{$ENDIF}
    DSSFileName      :String;     // Name of current exe or DLL
    DSSDirectory     :String;     // where the current exe resides
    StartupDirectory :String;     // Where we started
@@ -311,10 +311,15 @@ implementation
 
 USES  {Forms,   Controls,}
      SysUtils,
-     Windows,
-     DSSForms,
+     {$IFDEF FPC}
+     resource, versiontypes, versionresource, dynlibs, CmdForms,
+       {$IFDEF Linux}
+       cpucount,
+       {$ENDIF}
+     {$ELSE}
+     Windows, DSSForms, SHFolder,
+     {$ENDIF}
      Solution,
-     SHFolder,
      Executive;
      {Intrinsic Ckt Elements}
 
@@ -329,6 +334,27 @@ VAR
    LastUserDLLHandle: THandle;
    DSSRegisterProc:TDSSRegister;   // of last library loaded
 
+{$IFDEF FPC}
+FUNCTION GetDefaultDataDirectory: String;
+Begin
+{$IFDEF UNIX}
+  Result := GetEnvironmentVariable('HOME') + PathDelim + 'Documents';
+{$ENDIF}
+{$IF (defined(Windows) or defined(MSWindows))}
+  Result := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH') + PathDelim + 'Documents';
+{$ENDIF}
+end;
+
+FUNCTION GetDefaultScratchDirectory: String;
+Begin
+  {$IFDEF UNIX}
+  Result := '/tmp';
+  {$ENDIF}
+  {$IF (defined(Windows) or defined(MSWindows))}
+  Result := GetEnvironmentVariable('LOCALAPPDATA');
+  {$ENDIF}
+End;
+{$ELSE}
 FUNCTION GetDefaultDataDirectory: String;
 Var
   ThePath:Array[0..MAX_PATH] of char;
@@ -594,6 +620,43 @@ End;
 
 
 
+{$IFDEF FPC}
+FUNCTION GetDSSVersion: String;
+(* Unlike most of AboutText (below), this takes significant activity at run-    *)
+ (* time to extract version/release/build numbers from resource information      *)
+ (* appended to the binary.                                                      *)
+
+ VAR     Stream: TResourceStream;
+         vr: TVersionResource;
+         fi: TVersionFixedInfo;
+
+ BEGIN
+   RESULT:= 'Unknown.';
+   TRY
+
+ (* This raises an exception if version info has not been incorporated into the  *)
+ (* binary (Lazarus Project -> Project Options -> Version Info -> Version        *)
+ (* numbering).                                                                  *)
+
+     Stream:= TResourceStream.CreateFromID(HINSTANCE, 1, PChar(RT_VERSION));
+     TRY
+       vr:= TVersionResource.Create;
+       TRY
+         vr.SetCustomRawDataStream(Stream);
+         fi:= vr.FixedInfo;
+         RESULT := 'Version ' + IntToStr(fi.FileVersion[0]) + '.' + IntToStr(fi.FileVersion[1]) +
+                ' release ' + IntToStr(fi.FileVersion[2]) + ' build ' + IntToStr(fi.FileVersion[3]) + LineEnding;
+         vr.SetCustomRawDataStream(nil)
+       FINALLY
+         vr.Free
+       END
+     FINALLY
+       Stream.Free
+     END
+   EXCEPT
+   END
+ End;
+{$ELSE}
 FUNCTION GetDSSVersion: String;
 var
 
@@ -654,7 +717,7 @@ var
   TempFile: array[0..MAX_PATH] of Char;
 begin
   if GetTempFileName(PChar(Dir), 'DA', 0, TempFile) <> 0 then
-    Result := Windows.DeleteFile(TempFile)
+    {$IFDEF FPC}Result := DeleteFile(TempFile){$ELSE}Result := Windows.DeleteFile(TempFile){$ENDIF}
   else
     Result := False;
 end;
@@ -697,9 +760,11 @@ Begin
   DefaultEditor    := DSS_Registry.ReadString('Editor', 'Notepad.exe' );
   DefaultFontSize  := StrToInt(DSS_Registry.ReadString('ScriptFontSize', '8' ));
   DefaultFontName  := DSS_Registry.ReadString('ScriptFontName', 'MS Sans Serif' );
+  {$IFNDEF FPC}
   DefaultFontStyles := [];
   If DSS_Registry.ReadBool('ScriptFontBold', TRUE)    Then DefaultFontStyles := DefaultFontStyles + [fsbold];
   If DSS_Registry.ReadBool('ScriptFontItalic', FALSE) Then DefaultFontStyles := DefaultFontStyles + [fsItalic];
+  {$ENDIF}
   DefaultBaseFreq  := StrToInt(DSS_Registry.ReadString('BaseFrequency', '60' ));
   LastFileCompiled := DSS_Registry.ReadString('LastFile', '' );
   TestDataDirectory :=   DSS_Registry.ReadString('DataPath', DataDirectory[ActiveActor]);
@@ -715,8 +780,8 @@ Begin
       DSS_Registry.WriteString('Editor',        DefaultEditor);
       DSS_Registry.WriteString('ScriptFontSize', Format('%d',[DefaultFontSize]));
       DSS_Registry.WriteString('ScriptFontName', Format('%s',[DefaultFontName]));
-      DSS_Registry.WriteBool('ScriptFontBold',   (fsBold in DefaultFontStyles));
-      DSS_Registry.WriteBool('ScriptFontItalic', (fsItalic in DefaultFontStyles));
+      DSS_Registry.WriteBool('ScriptFontBold', {$IFDEF FPC}False{$ELSE}(fsBold in DefaultFontStyles){$ENDIF});
+      DSS_Registry.WriteBool('ScriptFontItalic', {$IFDEF FPC}False{$ELSE}(fsItalic in DefaultFontStyles){$ENDIF});
       DSS_Registry.WriteString('BaseFrequency', Format('%d',[Round(DefaultBaseFreq)]));
       DSS_Registry.WriteString('LastFile',      LastFileCompiled);
       DSS_Registry.WriteString('DataPath', DataDirectory[ActiveActor]);
@@ -911,7 +976,11 @@ initialization
    NumOfActors            :=  1;
    ActorCPU[ActiveActor]  :=  0;
    Parser[ActiveActor]    :=  Tparser.Create;
+   {$IFDEF FPC}
+   ProgramName      := 'OpenDSSCmd';  // for now...
+   {$ELSE}
    ProgramName      := 'OpenDSS';
+   {$ENDIF}
    DSSFileName      := GetDSSExeFile;
    DSSDirectory     := ExtractFilePath(DSSFileName);
 {
@@ -983,19 +1052,40 @@ initialization
 
    StartupDirectory := GetCurrentDir + PathDelim;
    SetDataPath (GetDefaultDataDirectory + PathDelim + ProgramName + PathDelim);
+{$IFNDEF FPC}
    DSS_Registry     := TIniRegSave.Create('\Software\' + ProgramName);
+{$ELSE}
+   DSS_Registry     := TIniRegSave.Create(DataDirectory[ActiveActor] + 'opendsscmd.ini');
+{$ENDIF}
 
    AuxParser        := TParser.Create;
-   DefaultEditor    := 'NotePad';
-   DefaultFontSize  := 8;
-   DefaultFontName  := 'MS Sans Serif';
 
-   NoFormsAllowed   := FALSE;
+   {$IFDEF Darwin}
+      DefaultEditor   := 'open -t';
+      DefaultFontSize := 12;
+      DefaultFontName := 'Geneva';
+   {$ENDIF}
+   {$IFDEF Linux}
+      DefaultEditor   := 'xdg-open';
+      DefaultFontSize := 10;
+      DefaultFontName := 'Arial';
+   {$ENDIF}
+   {$IF (defined(Windows) or defined(MSWindows))}
+      DefaultEditor   := 'NotePad.exe';
+      DefaultFontSize := 8;
+      DefaultFontName := 'MS Sans Serif';
+   {$ENDIF}
+
+   {$IFNDEF FPC}NoFormsAllowed   := FALSE;{$ENDIF}
 
    LogQueries       := FALSE;
    QueryLogFileName := '';
    UpdateRegistry   := TRUE;
+   {$IFDEF FPC}
+   CPU_Freq := 1000; // until we can query it
+   {$ELSE}
    QueryPerformanceFrequency(CPU_Freq);
+   {$ENDIF}
 
 //   YBMatrix.Start_Ymatrix_Critical;   // Initializes the critical segment for the YMatrix class
 

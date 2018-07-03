@@ -71,21 +71,33 @@ VAR
    TOP_Object      :Variant;  // For Top Automation
 
 implementation
-
-Uses ComObj, SysUtils, AnsiStrings, Dialogs, ActiveX, DSSGlobals;
+{$IFNDEF FPC}
+Uses ComObj, AnsiStrings, SysUtils, Dialogs, ActiveX, DSSGlobals;
+{$ELSE}
+Uses SysUtils, DSSGlobals, CmdForms, Variants;
+{$ENDIF}
 Var
   TOP_Inited:Boolean;
+
+{$IFNDEF FPC}
+function StrCopy(Dest: PAnsiChar; const Source: PAnsiChar): PAnsiChar; inline;
+begin
+  Result := System.AnsiStrings.StrCopy(Dest, Source);
+end;
+{$ENDIF}
 
 Procedure StartTop;
 
 Begin
+{$IFNDEF FPC}
   TOP_Object := CreateOleObject('TOP2000.MAIN');
   TOP_Inited := TRUE;
+{$ENDIF}
 End;
 
 Procedure TOutFile32.SendToTop;
 Begin
-
+{$IFNDEF FPC}
   TRY
      If NOT TOP_Inited Then StartTop;
 
@@ -106,8 +118,11 @@ Begin
 
         On E:Exception Do ShowMessage('Error Connecting to TOP: '+E.Message);
   End;
-
+{$ELSE}
+  DSSInfoMessageDlg ('TOP Export (COM Interface) is not supported in FPC version');
+{$ENDIF}
 End;
+
 
 
 
@@ -121,7 +136,7 @@ END;
 Procedure TOutFile32.Close;
 BEGIN
 
-     System.CloseFile(Fout);  {Close the output file}
+     CloseFile(Fout);  {Close the output file}
 
 END;
 
@@ -158,7 +173,7 @@ BEGIN
          IDXData := IDXCurrentNames + NCurrents * CurrNameSize;
          IdxBaseData := 0;
 
-         sysutils.StrCopy(Title1,pAnsichar(Title));
+         StrCopy(Title1,pAnsichar(Title));
          Title2[0] := #0;
          Title3[0] := #0;
          Title4[0] := #0;
@@ -183,13 +198,13 @@ BEGIN
 
      If Header.NVoltages > 0 Then
      For i:=0 to Vnames.Count-1 Do Begin
-        Sysutils.StrCopy(Buf, pAnsichar(AnsiString(Vnames.Strings[i])));    // Assign string to a buffer
+        StrCopy(Buf, pAnsichar(AnsiString(Vnames.Strings[i])));    // Assign string to a buffer
         BlockWrite(Fout, Buf, Header.VoltNameSize, NumWrite);    // Strings is default property of TStrings
      END;
 
      If Header.NCurrents > 0 Then
      For i:=0 to Cnames.Count-1 Do Begin
-        Sysutils.StrCopy(Buf, pAnsichar(AnsiString(Cnames.Strings[i])));    // Assign string to a buffer
+        StrCopy(Buf, pAnsichar(AnsiString(Cnames.Strings[i])));    // Assign string to a buffer
         BlockWrite(Fout, Buf, Header.CurrNameSize, NumWrite);
      END;
 
@@ -258,6 +273,8 @@ Initialization
     TOPTransferFile:= TOutFile32.Create;
     TOPTransferFile.Fname := 'DSSTransfer.STO';
 
+{$IFNDEF FPC}
     CoInitialize(Nil);
+{$ENDIF}
 end.
 

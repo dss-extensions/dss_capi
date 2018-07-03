@@ -25,8 +25,7 @@ interface
 USES
      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
-     AutoAdd, EnergyMeter, NamedObject, CktTree, Graphics, math;
-
+     AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF}, math;
 
 TYPE
     TReductionStrategy = (rsDefault, rsStubs, {rsTapEnds,} rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches, rsLaterals);
@@ -47,7 +46,7 @@ TYPE
 
     public
       BusName: String;
-      AddMarkerColor: Tcolor;
+      AddMarkerColor: {$IFNDEF FPC}Tcolor{$ELSE}Integer{$ENDIF};
       AddMarkerCode,
       AddMarkerSize: Integer;
 
@@ -320,8 +319,7 @@ USES
      PDElement, CktElementClass,
      ParserDel,  DSSClassDefs, DSSGlobals, Dynamics,
      Line, Transformer,  Vsource,
-     Utilities,  DSSForms, Executive, SHELLAPI, Windows;
-
+     Utilities, {$IFDEF FPC}CmdForms,{$ELSE}DSSForms, SHELLAPI, Windows, {$ENDIF} Executive;
 //----------------------------------------------------------------------------
 Constructor TDSSCircuit.Create(const aName:String);
 
@@ -1969,7 +1967,7 @@ constructor TBusMarker.Create;
 begin
   inherited;
   BusName := '';
-  AddMarkerColor := clBlack;
+  AddMarkerColor := {$IFDEF FPC}0{$ELSE}clBlack{$ENDIF};
   AddMarkerCode := 4;
   AddMarkerSize := 1;
 end;

@@ -294,7 +294,7 @@ Begin
       If ActiveDSSClass[ActiveActor].First>0 then pObj:=ActiveDSSObject[ActiveActor] else pObj := Nil;
       else  pObj  :=  nil;
       while pObj <> Nil do begin
-        RegEx1.Subject:=UTF8String(pObj.Name);
+        RegEx1.Subject:=pObj.Name; // UTF8String(pObj.Name);
         if RegEx1.Match then begin
           Parser[ActiveActor].Position:=Params;
           ActiveDSSClass[ActiveActor].Edit(ActiveActor);
@@ -441,7 +441,7 @@ Begin
                   END;
                End;
 
-             IF ActiveCircuit[ActiveActor] <> Nil THEN ActiveCircuit[ActiveActor].CurrentDirectory := CurrDir +'\';
+             IF ActiveCircuit[ActiveActor] <> Nil THEN ActiveCircuit[ActiveActor].CurrentDirectory := CurrDir + PathDelim;
 
           EXCEPT
              On E: Exception DO
@@ -627,7 +627,7 @@ Begin
           Except
              On E:Exception Do DoSimpleMsg('Error making Directory: "'+SaveDir+'". ' + E.Message, 247);
           End;
-       SaveFile := SaveDir+'\'+SaveFile;
+       SaveFile := SaveDir + PathDelim + SaveFile;
      End;
      WriteClassFile(DSSClass, SaveFile, FALSE); // just write the class with no checks
    End;
@@ -3043,7 +3043,7 @@ Begin
 End;
 
 FUNCTION DoDI_PlotCmd:Integer;
-{$IFNDEF DLL_ENGINE}
+{$IF not (defined(DLL_ENGINE) or defined(FPC))}
 Var
     ParamName, Param:String;
     ParamPointer, i:Integer;
@@ -3056,7 +3056,7 @@ Var
     PeakDay:Boolean;
 {$ENDIF}
 Begin
-{$IFNDEF DLL_ENGINE}
+{$IF not (defined(DLL_ENGINE) or defined(FPC))}
      IF DIFilesAreOpen[ActiveActor] Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
 
      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;
@@ -3106,7 +3106,7 @@ Begin
 End;
 
 FUNCTION DoCompareCasesCmd:Integer;
-{$IFNDEF DLL_ENGINE}
+{$IF not (defined(DLL_ENGINE) or defined(FPC))}
 Var
     ParamName, Param:String;
     ParamPointer:Integer;
@@ -3116,7 +3116,7 @@ Var
     CaseName2, WhichFile:String;
 {$ENDIF}
 Begin
-{$IFNDEF DLL_ENGINE}
+{$IF not (defined(DLL_ENGINE) or defined(FPC))}
      IF DIFilesAreOpen[ActiveActor] Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;
      CaseName1 := 'base';
@@ -3162,7 +3162,7 @@ Begin
 End;
 
 FUNCTION DoYearlyCurvesCmd:Integer;
-{$IFNDEF DLL_ENGINE}
+{$IF not (defined(DLL_ENGINE) or defined(FPC))}
 Var
     ParamName, Param:String;
     ParamPointer, i:Integer;
@@ -3174,7 +3174,7 @@ Var
     WhichFile:String;
 {$ENDIF}
 Begin
-{$IFNDEF DLL_ENGINE}
+{$IF not (defined(DLL_ENGINE) or defined(FPC))}
      IF DIFilesAreOpen[ActiveActor] Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
 
      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;
@@ -3237,6 +3237,7 @@ Begin
 End;
 
 FUNCTION DoVisualizeCmd:Integer;
+{$IF not defined(FPC)}                      
 Var
     DevIndex    :integer;
     Param       :String;
@@ -3246,8 +3247,10 @@ Var
     Quantity    :Integer;
     ElemName    :String;
     pElem       :TDSSObject;
+{$ENDIF}        
 Begin
      Result := 0;
+{$IF not defined(FPC)}
      // Abort if no circuit or solution
      If not assigned(ActiveCircuit[ActiveActor]) Then
      Begin
@@ -3306,6 +3309,7 @@ Begin
      End Else Begin
         DoSimpleMsg('Requested Circuit Element: "' + ElemName + '" Not Found.',282 ); // Did not find it ..
      End;
+{$ENDIF}
 End;
 
 FUNCTION DoCloseDICmd:Integer;

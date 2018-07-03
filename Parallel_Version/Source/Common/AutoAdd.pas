@@ -87,7 +87,11 @@ Type
 implementation
 
 Uses  DSSClassDefs, DSSGlobals, PDElement, Utilities, SysUtils, Executive,
-      DSSForms,
+{$IFDEF FPC}
+        CmdForms,
+{$ELSE}
+       DSSForms,
+{$ENDIF}
       {ProgressForm, Forms,} Solution;
 
 FUNCTION SumSelectedRegisters(Mtr: TEnergyMeterObj; Regs: pIntegerArray;  count: Integer): Double;
@@ -161,7 +165,7 @@ Begin
         // No energymeters in circuit
         // Include all buses in the circuit
          BusIdxListSize :=  ActiveCircuit[ActorID].BusList.listsize;
-         BusIdxList := AllocMem(Sizeof(BusIdxList^[i])*BusIdxListSize);
+         BusIdxList := AllocMem(Sizeof(BusIdxList^[1])*BusIdxListSize);
 
          For i := 1 to BusIdxListSize Do Begin
              BusIdxList^[i] := i;

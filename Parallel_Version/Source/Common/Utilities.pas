@@ -154,12 +154,13 @@ Procedure BackwardSweepAllFeeders;
 
 implementation
 
-Uses Windows,    SysUtils, ShellAPI,  Dialogs,      DSSClassDefs,
+Uses {$IFDEF FPC} Process, CmdForms,{$ELSE} Windows, ShellAPI, Dialogs, Graphics, DSSForms,{$ENDIF}
+     SysUtils, DSSClassDefs, 
      DSSGlobals, Dynamics, Executive, ExecCommands, ExecOptions,
-     Solution,   DSSObject,math,      DSSForms,     ParserDel,
+     Solution,   DSSObject,math,      ParserDel,
      Capacitor,  Reactor,  Generator, Load,
      Line,       Fault,    Feeder,    HashList,
-     EnergyMeter,PCElement,ControlElem, Graphics;
+     EnergyMeter,PCElement,ControlElem;
 
 Const ZERONULL      :Integer=0;
       padString     :String='                                                  '; //50 blanks
@@ -236,6 +237,44 @@ BEGIN
     Result := Copy(S, dotpos+1, Length(S));
 End;
 
+{$IFDEF FPC}
+Procedure FireOffEditor(FileNm:String);
+Var
+   s: string;
+Begin
+  TRY
+  If FileExists(FileNm) Then
+  Begin
+{$IF (defined(Windows) or defined(MSWindows))}
+      RunCommand (DefaultEditor, [FileNm], s);
+{$ELSE}
+      RunCommand ('/bin/bash',['-c', DefaultEditor + ' ' + FileNm],s);
+{$ENDIF}
+  End;
+  EXCEPT
+      On E: Exception DO
+        DoErrorMsg('FireOffEditor.', E.Message,
+                   'Default Editor correctly specified???', 704);
+  END;
+End;
+
+Procedure DoDOSCmd(CmdString:String);
+Var //Handle:Word;
+   s: string;
+Begin
+  TRY
+{$IF (defined(Windows) or defined(MSWindows))}
+    RunCommand('cmd',['/c',CmdString],s);
+{$ELSE}
+    RunCommand('/bin/bash',['-c',CmdString],s);
+{$ENDIF}
+  EXCEPT
+      On E: Exception DO
+        DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"',[E.Message, CmdString]), 704);
+  END;
+End;
+
+{$ELSE}       
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 Procedure FireOffEditor(FileNm:String);
 Var retval:Word;
@@ -275,6 +314,8 @@ Begin
         DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"',[E.Message, CmdString]), 704);
   END;
 End;
+
+{$ENDIF}
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 Function IntArrayToString( iarray:pIntegerArray; count:integer):String;
@@ -415,7 +456,7 @@ Begin
       'o': Result := CONTROLSOFF;
       'e': Result := EVENTDRIVEN;    // "event"
       't': Result := TIMEDRIVEN;     // "time"
-      'm': Result := MULTIRATE;     // "time"
+      'm': Result := MULTIRATE;     // "MultiRate"
     ELSE
        Result := CTRLSTATIC;
     End;
@@ -2802,6 +2843,9 @@ End;
 FUNCTION  InterpretColorName(const s:string):Integer;
 
 Begin
+{$IFDEF FPC}
+        Result := 0; // RGB for black
+{$ELSE}
         Result := clBlue;  // default color
         Try
             if      CompareTextShortest(S,'black')=0  then Result := clBlack
@@ -2826,7 +2870,7 @@ Begin
         Except
            On E:Exception Do DoSimpleMsg('Invalid Color Specification: "' + S + '".', 724);
         End;
-
+{$ENDIF}
 End;
 
 Function MakeNewCktElemName(const oldname:string):string;

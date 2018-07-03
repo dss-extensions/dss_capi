@@ -14,7 +14,7 @@ unit Ymatrix;
 
 interface
 
-uses uComplex,SysUtils, windows, DSSClass, DSSObject;
+uses uComplex,SysUtils, {$IFDEF WINDOWS}windows, {$ENDIF}DSSClass, DSSObject;
 
 
 {Options for building Y matrix}
