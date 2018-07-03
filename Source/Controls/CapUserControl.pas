@@ -31,7 +31,7 @@ TYPE
 
     TCapUserControl  = class(TObject)
       private
-         FHandle: Integer;  // Handle to DLL containing user model
+         FHandle: NativeUInt;  // Handle to DLL containing user model
          FID : Integer;    // ID of this instance of the user model
          // OK for this to be Wide String, since not passed to DLLs
          Fname: String;    // Name of the DLL file containing user model

@@ -75,7 +75,7 @@ TYPE
   // Interface for general user-written model that includes power flow calcs as well as dynamics
     TStoreUserModel  = class(TObject)
       private
-         FHandle: Integer;  // Handle to DLL containing user model
+         FHandle: NativeUint;  // Handle to DLL containing user model
          FID : Integer;    // ID of this instance of the user model
          Fname: String;    // Name of the DLL file containing user model
          FuncError:Boolean;

@@ -622,7 +622,7 @@ Begin
            31: GenVars.Hmass       := Parser[ActorID].DblValue;
            32: GenVars.Dpu         := Parser[ActorID].DblValue;
            33: UserModel.Name      := Parser[ActorID].StrValue;  // Connect to user written models
-           34: UserModel.Edit      := Parser[ActorID].StrValue;  // Send edit string to user model
+           34: If UserModel.Exists then UserModel.Edit      := Parser[ActorID].StrValue;  // Send edit string to user model
            35: ShaftModel.Name     := Parser[ActorID].StrValue;
            36: ShaftModel.Edit     := Parser[ActorID].StrValue;
            37: DutyStart           := Parser[ActorID].DblValue;

@@ -327,7 +327,7 @@ Begin
                End;
            18: ShowEventLog := InterpretYesNo(param);
            19: UserModel.Name := Parser.StrValue;  // Connect to user written model
-           20: UserModel.Edit := Parser.StrValue;  // Send edit string to user model
+           20: If UserModel.Exists then UserModel.Edit := Parser.StrValue;  // Send edit string to user model
            21: FpctMinKvar := Parser.DblValue;
            22: If InterpretYesNo (Param) Then Begin  // force a reset
                   Reset;

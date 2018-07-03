@@ -708,13 +708,13 @@ Begin
                propKWHSTORED    : StorageVars.kWhstored    := Parser[ActorID].DblValue;
                propPCTRESERVE   : pctReserve    := Parser[ActorID].DblValue;
                propUSERMODEL    : UserModel.Name := Parser[ActorID].StrValue;  // Connect to user written models
-               propUSERDATA     : UserModel.Edit := Parser[ActorID].StrValue;  // Send edit string to user model
+               propUSERDATA     : If UserModel.Exists then UserModel.Edit := Parser[ActorID].StrValue;  // Send edit string to user model
                propDEBUGTRACE   : DebugTrace   := InterpretYesNo(Param);
                propPCTKWIN      : pctkWIn     := Parser[ActorID].DblValue;
                propPCTSTORED    : StorageVars.kWhStored   := Parser[ActorID].DblValue * 0.01 * StorageVars.kWhRating;
                propCHARGETIME   : ChargeTime := Parser[ActorID].DblValue;
                propDynaDLL      : DynaModel.Name := Parser[ActorID].StrValue;
-               propDynaData     : DynaModel.Edit := Parser[ActorID].StrValue;
+               propDynaData     : If DynaModel.Exists then DynaModel.Edit := Parser[ActorID].StrValue;
                propBalanced     : ForceBalanced  := InterpretYesNo(Param);
                propLimited      : CurrentLimited := InterpretYesNo(Param);
 

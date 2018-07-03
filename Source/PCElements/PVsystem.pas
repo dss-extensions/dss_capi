@@ -729,7 +729,7 @@ Begin
                                       Fkvarlimit    := FkVArating;   // Reset kvar limit to kVA rating
                                   End;
                propUSERMODEL    : UserModel.Name := Parser.StrValue;  // Connect to user written models
-               propUSERDATA     : UserModel.Edit := Parser.StrValue;  // Send edit string to user model
+               propUSERDATA     : If UserModel.Exists then UserModel.Edit := Parser.StrValue;  // Send edit string to user model
                propDEBUGTRACE   : DebugTrace   := InterpretYesNo(Param);
                proppctPmpp      : PVSystemVars.FpuPmpp  := Parser.DblValue / 100.0;  // convert to pu
                propBalanced     : ForceBalanced  := InterpretYesNo(Param);

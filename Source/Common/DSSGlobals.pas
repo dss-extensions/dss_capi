@@ -268,7 +268,7 @@ USES  {Forms,   Controls,}
 
 TYPE
 
-   THandle = Integer;
+   THandle = NativeUint;
 
    TDSSRegister = function(var ClassName: pchar):Integer;  // Returns base class 1 or 2 are defined
    // Users can only define circuit elements at present
