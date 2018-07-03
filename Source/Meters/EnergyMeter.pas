@@ -849,7 +849,7 @@ Begin
                  On E:Exception Do DoSimpleMsg('Error making  Directory: "'+CasePath+'". ' + E.Message, 522);
               End;
             End;
-            DI_Dir  := CasePath+'\DI_yr_' + Trim( IntToStr(ActiveCircuit.Solution.Year));
+            DI_Dir  := CasePath+ PathDelim + 'DI_yr_' + Trim( IntToStr(ActiveCircuit.Solution.Year));
             If not DirectoryExists(DI_Dir) Then Begin
               Try
                  mkDir(DI_Dir);
@@ -1168,7 +1168,7 @@ end;
 
 function TEnergyMeterObj.MakeVPhaseReportFileName: String;
 begin
-    Result := EnergyMeterClass.DI_Dir + '\' + Name + '_PhaseVoltageReport.CSV';
+    Result := EnergyMeterClass.DI_Dir + PathDelim + Name + '_PhaseVoltageReport.CSV';
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2815,12 +2815,12 @@ begin
      CloseFile(FCaps);
 
      {If any records were written to the file, record their relative names}
-     If NBranches>0  Then SavedFileList.Add (dirname + '\Branches.dss') else DeleteFile('Branches.dss');
-     If NXfmrs>0  Then SavedFileList.Add (dirname + '\Transformers.dss') else DeleteFile('Transformers.dss');
-     If NShunts>0 Then SavedFileList.Add (dirname + '\Shunts.dss') else DeleteFile('Shunts.dss');
-     If NLoads>0  Then SavedFileList.Add (dirname + '\Loads.dss') else DeleteFile('Loads.dss');
-     If NGens>0   Then SavedFileList.Add (dirname + '\Generators.dss') else DeleteFile('Generators.dss');
-     If NCaps>0   Then SavedFileList.Add (dirname + '\Capacitors.dss') else DeleteFile('Capacitors.dss');
+     If NBranches>0  Then SavedFileList.Add (dirname + PathDelim + 'Branches.dss') else DeleteFile('Branches.dss');
+     If NXfmrs>0  Then SavedFileList.Add (dirname + PathDelim + 'Transformers.dss') else DeleteFile('Transformers.dss');
+     If NShunts>0 Then SavedFileList.Add (dirname + PathDelim + 'Shunts.dss') else DeleteFile('Shunts.dss');
+     If NLoads>0  Then SavedFileList.Add (dirname + PathDelim + 'Loads.dss') else DeleteFile('Loads.dss');
+     If NGens>0   Then SavedFileList.Add (dirname + PathDelim + 'Generators.dss') else DeleteFile('Generators.dss');
+     If NCaps>0   Then SavedFileList.Add (dirname + PathDelim + 'Capacitors.dss') else DeleteFile('Capacitors.dss');
 
    End; {IF}
 
@@ -2958,18 +2958,18 @@ Begin
         WriteTotalsFile;  // Sum all energymeter registers to "Totals.CSV"
         SystemMeter.CloseDemandIntervalFile;
         SystemMeter.Save;
-        CloseMHandler(EMT_MHandle, DI_Dir + '\EnergyMeterTotals.CSV', EMT_Append);
+        CloseMHandler(EMT_MHandle, DI_Dir + PathDelim + 'EnergyMeterTotals.CSV', EMT_Append);
         EMT_MHandle     := nil;
-        CloseMHandler(TDI_MHandle, DI_Dir+'\DI_Totals.CSV', TDI_Append);
+        CloseMHandler(TDI_MHandle, DI_Dir+PathDelim+'DI_Totals.CSV', TDI_Append);
         TDI_MHandle     := nil;
         DIFilesAreOpen  := FALSE;
         if OverloadFileIsOpen then Begin
-            CloseMHandler(OV_MHandle,EnergyMeterClass.DI_Dir+'\DI_Overloads.CSV', OV_Append);
+            CloseMHandler(OV_MHandle,EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads.CSV', OV_Append);
             OV_MHandle  :=  nil;
             OverloadFileIsOpen := FALSE;
         End;
         if VoltageFileIsOpen then Begin
-            CloseMHandler(VR_MHandle,EnergyMeterClass.DI_Dir+'\DI_VoltExceptions.CSV', VR_Append);
+            CloseMHandler(VR_MHandle,EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions.CSV', VR_Append);
             VR_MHandle  :=  nil;
             VoltageFileIsOpen := FALSE;
         End;
@@ -3053,7 +3053,7 @@ Begin
 
           {Open FDI_Totals}
           Try
-              FileNm :=  DI_Dir+'\DI_Totals.CSV';
+              FileNm :=  DI_Dir+PathDelim+'DI_Totals.CSV';
               {File Must Exist}
               If FileExists(FileNm) Then  TDI_Append := True;
               CreateFDI_Totals;
@@ -3068,7 +3068,7 @@ end;
 
 function TEnergyMeterObj.MakeDIFileName: String;
 begin
-    Result := EnergyMeterClass.DI_Dir + '\' + Self.Name + '.CSV';
+    Result := EnergyMeterClass.DI_Dir + PathDelim + Self.Name + '.CSV';
 end;
 
 procedure TEnergyMeter.Set_SaveDemandInterval(const Value: Boolean);
@@ -3139,7 +3139,7 @@ begin
     end;
     WriteintoMemStr(TDI_MHandle, Char(10));
  Except
-    On E:Exception Do DoSimpleMsg('Error creating: "'+DI_Dir+'\DI_Totals.CSV": '+E.Message, 539)
+    On E:Exception Do DoSimpleMsg('Error creating: "'+DI_Dir+ PathDelim + 'DI_Totals.CSV": '+E.Message, 539)
  End;
 end;
 
@@ -3155,12 +3155,12 @@ begin
   If This_Meter_DIFileIsOpen Then Exit;
 
   Try
-      FileNm := EnergyMeterClass.Di_Dir + '\DI_SystemMeter.CSV';
+      FileNm := EnergyMeterClass.Di_Dir + PathDelim + 'DI_SystemMeter.CSV';
       AssignFile(SystemDIFile, FileNm );
       {File Must Exist}
       If FileExists(FileNm) Then
       Begin
-//        DI_MMFView:=  MapFile2Memory(EnergyMeterClass.DI_Dir+'\DI_SystemMeter.CSV', DI_MMFHandle);
+//        DI_MMFView:=  MapFile2Memory(EnergyMeterClass.DI_Dir + PathDelim + 'DI_SystemMeter.CSV', DI_MMFHandle);
 //        DI_Cursor :=  GetMMFCursor(DI_MMFView);
       End
       Else OpenDemandIntervalFile;
@@ -3192,7 +3192,7 @@ var
   File_Path : string;
 begin
      IF This_Meter_DIFileIsOpen Then Begin
-       File_Path  :=  EnergyMeterClass.DI_Dir+'\DI_SystemMeter.CSV';
+       File_Path  :=  EnergyMeterClass.DI_Dir + PathDelim + 'DI_SystemMeter.CSV';
        CloseMHandler(SDI_MHandle, File_Path, SDI_Append);
        SDI_MHandle  :=  nil;
        This_Meter_DIFileIsOpen := FALSE;
@@ -3258,7 +3258,7 @@ begin
        {If we are doing a simulation and saving interval data, create this in the
         same directory as the demand interval data}
        If  energyMeterClass.SaveDemandInterval Then
-          Folder := energyMeterClass.DI_DIR + '\'
+          Folder := energyMeterClass.DI_DIR + PathDelim
        Else
           Folder := GetOutputDirectory;
        GlobalResult := CSVName;
@@ -3395,7 +3395,7 @@ begin
         WriteintoMemStr(FM_MHandle, inttostr(ActiveCircuit.Solution.Year));
         For i := 1 to NumEMRegisters Do WriteintoMem(FM_MHandle,Double(RegSum[i]));
         WriteintoMemStr(FM_MHandle, Char(10));
-        CloseMHandler(FM_MHandle, DI_Dir + '\Totals.CSV', FM_Append);
+        CloseMHandler(FM_MHandle, DI_Dir + PathDelim + 'Totals.CSV', FM_Append);
         FM_MHandle  :=  nil;
 
   Except

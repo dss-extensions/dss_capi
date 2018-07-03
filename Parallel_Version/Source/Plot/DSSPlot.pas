@@ -1522,8 +1522,8 @@ begin
    { If PeakDay=True then we only plot the peak of a 24-hr day }
    Names := TStringList.Create;
    { Open File }
-   FileName := CaseName + '\di_yr_' + Trim(IntToStr(CaseYear))
-     + '\' + MeterName + '.CSV';
+   FileName := CaseName + PathDelim + 'di_yr_' + Trim(IntToStr(CaseYear))
+     + PathDelim + MeterName + '.CSV';
    If Not FileExists(FileName) Then
    Begin
       DoSimpleMsg('File "' + FileName + '" does not exist.', 191);
@@ -1809,19 +1809,19 @@ begin
             SearchForMeterName := FALSE;
             Case iPass of
                1:
-                  FileName := CaseName + '\di_yr_' + Trim(IntToStr(CaseYear))
-                    + '\Totals.CSV';
+                  FileName := CaseName + PathDelim + 'di_yr_' + Trim(IntToStr(CaseYear))
+                    + PathDelim + 'Totals.CSV';
                2:
                   If (CompareText(WhichFile, 'Totals') = 0) OR
                     (CompareText(WhichFile, 'Systemmeter') = 0) Then
                   Begin
-                     FileName := CaseName + '\di_yr_' + Trim
-                       (IntToStr(CaseYear)) + '\' + WhichFile + '.CSV';
+                     FileName := CaseName + PathDelim + 'di_yr_' + Trim
+                       (IntToStr(CaseYear)) + PathDelim + WhichFile + '.CSV';
                   End
                   Else
                   Begin
-                     FileName := CaseName + '\di_yr_' + Trim
-                       (IntToStr(CaseYear)) + '\' + 'EnergyMeterTotals.CSV';
+                     FileName := CaseName + PathDelim + 'di_yr_' + Trim
+                       (IntToStr(CaseYear)) + PathDelim +'EnergyMeterTotals.CSV';
                      SearchForMeterName := TRUE;
                   End;
             End;
@@ -2152,20 +2152,20 @@ begin
                   SearchForMeterName := FALSE;
                   Case iPass of
                      1:
-                        FileName := CaseName + '\di_yr_' + Trim
-                          (IntToStr(CaseYear)) + '\Totals.CSV';
+                        FileName := CaseName + PathDelim + 'di_yr_' + Trim
+                          (IntToStr(CaseYear)) + PathDelim + 'Totals.CSV';
                   Else
                      Begin
                         If (CompareText(WhichFile, 'Totals') = 0) OR
                           (CompareText(WhichFile, 'Systemmeter') = 0) Then
                         Begin
-                           FileName := CaseName + '\di_yr_' + Trim
-                             (IntToStr(CaseYear)) + '\' + WhichFile + '.CSV';
+                           FileName := CaseName + PathDelim + 'di_yr_' + Trim
+                             (IntToStr(CaseYear)) + PathDelim + WhichFile + '.CSV';
                         End
                         Else
                         Begin
-                           FileName := CaseName + '\di_yr_' + Trim
-                             (IntToStr(CaseYear)) + '\' +
+                           FileName := CaseName + PathDelim + 'di_yr_' + Trim
+                             (IntToStr(CaseYear)) + PathDelim +
                              'EnergyMeterTotals.CSV';
                            SearchForMeterName := TRUE;
                         End;

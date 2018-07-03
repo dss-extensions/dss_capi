@@ -654,24 +654,14 @@ BEGIN
   // Put a \ on the end if not supplied. Allow a null specification.
   If Length(DataDirectory) > 0 Then Begin
     ChDir(DataDirectory);   // Change to specified directory
-    {$IF (defined(Windows) or defined(MSWindows))}
-    If DataDirectory[Length(DataDirectory)] <> '\' Then DataDirectory := DataDirectory + '\';
-    {$ENDIF}
-    {$IFDEF UNIX}
-    If DataDirectory[Length(DataDirectory)] <> '/' Then DataDirectory := DataDirectory + '/';
-    {$ENDIF}
+    If DataDirectory[Length(DataDirectory)] <> PathDelim Then DataDirectory := DataDirectory + PathDelim;
   End;
 
   // see if DataDirectory is writable. If not, set OutputDirectory to the user's appdata
   if IsDirectoryWritable(DataDirectory) then begin
     OutputDirectory := DataDirectory;
   end else begin
-    {$IF (defined(Windows) or defined(MSWindows))}
-    ScratchPath := GetDefaultScratchDirectory + '\' + ProgramName + '\';
-    {$ENDIF}
-    {$IFDEF UNIX}
-    ScratchPath := GetDefaultScratchDirectory + '/' + ProgramName + '/';
-    {$ENDIF}
+    ScratchPath := GetDefaultScratchDirectory + PathDelim + ProgramName + PathDelim;
     if not DirectoryExists(ScratchPath) then CreateDir(ScratchPath);
     OutputDirectory := ScratchPath;
   end;
@@ -865,23 +855,12 @@ initialization
    VersionString    := 'Version ' + GetDSSVersion + ' (32-bit build)';
 {$ENDIF}
 
+   StartupDirectory := GetCurrentDir + PathDelim;
+   SetDataPath (GetDefaultDataDirectory + PathDelim + ProgramName + PathDelim);
 {$IFNDEF FPC}
-   StartupDirectory := GetCurrentDir+'\';
-   SetDataPath (GetDefaultDataDirectory + '\' + ProgramName + '\');
    DSS_Registry     := TIniRegSave.Create('\Software\' + ProgramName);
-
-
 {$ELSE}
-{$IFDEF WINDOWS} // deliberately different from MSWindows (Delphi)
-        StartupDirectory := GetCurrentDir+'\';
-        SetDataPath (GetDefaultDataDirectory + '\' + ProgramName + '\');
-        DSS_Registry     := TIniRegSave.Create(DataDirectory + 'opendsscmd.ini');
-{$ENDIF}
-{$IFDEF UNIX}
-        StartupDirectory := GetCurrentDir+'/';
-        SetDataPath (GetDefaultDataDirectory + '/' + ProgramName + '/');
-        DSS_Registry     := TIniRegSave.Create(DataDirectory + 'opendsscmd.ini');
-{$ENDIF}
+   DSS_Registry     := TIniRegSave.Create(DataDirectory + 'opendsscmd.ini');
 {$ENDIF}
 
    AuxParser        := TParser.Create;

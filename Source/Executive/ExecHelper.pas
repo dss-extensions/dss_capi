@@ -439,7 +439,7 @@ Begin
                   END;
                End;
 
-             IF ActiveCircuit <> Nil THEN ActiveCircuit.CurrentDirectory := CurrDir +'\';
+             IF ActiveCircuit <> Nil THEN ActiveCircuit.CurrentDirectory := CurrDir + PathDelim;
 
           EXCEPT
              On E: Exception DO
@@ -624,7 +624,7 @@ Begin
           Except
              On E:Exception Do DoSimpleMsg('Error making Directory: "'+SaveDir+'". ' + E.Message, 247);
           End;
-       SaveFile := SaveDir+'\'+SaveFile;
+       SaveFile := SaveDir + PathDelim + SaveFile;
      End;
      WriteClassFile(DSSClass, SaveFile, FALSE); // just write the class with no checks
    End;

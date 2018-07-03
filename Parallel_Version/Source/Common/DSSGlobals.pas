@@ -677,14 +677,14 @@ BEGIN
   // Put a \ on the end if not supplied. Allow a null specification.
   If Length(DataDirectory) > 0 Then Begin
     ChDir(DataDirectory[ActiveActor]);   // Change to specified directory
-    If DataDirectory[ActiveActor][Length(DataDirectory[ActiveActor])] <> '\' Then DataDirectory[ActiveActor] := DataDirectory[ActiveActor] + '\';
+    If DataDirectory[ActiveActor][Length(DataDirectory[ActiveActor])] <> PathDelim Then DataDirectory[ActiveActor] := DataDirectory[ActiveActor] + PathDelim;
   End;
 
   // see if DataDirectory is writable. If not, set OutputDirectory to the user's appdata
   if IsDirectoryWritable(DataDirectory[ActiveActor]) then begin
     OutputDirectory[ActiveActor] := DataDirectory[ActiveActor];
   end else begin
-    ScratchPath := GetDefaultScratchDirectory + '\' + ProgramName + '\';
+    ScratchPath := GetDefaultScratchDirectory + PathDelim + ProgramName + PathDelim;
     if not DirectoryExists(ScratchPath) then CreateDir(ScratchPath);
     OutputDirectory[ActiveActor] := ScratchPath;
   end;
@@ -980,9 +980,9 @@ initialization
 {$ELSE ! CPUX86}
    VersionString    := 'Version ' + GetDSSVersion + ' (32-bit build)';
 {$ENDIF}
-   StartupDirectory := GetCurrentDir+'\';
-   SetDataPath (GetDefaultDataDirectory + '\' + ProgramName + '\');
 
+   StartupDirectory := GetCurrentDir + PathDelim;
+   SetDataPath (GetDefaultDataDirectory + PathDelim + ProgramName + PathDelim);
    DSS_Registry     := TIniRegSave.Create('\Software\' + ProgramName);
 
    AuxParser        := TParser.Create;
