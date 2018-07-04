@@ -129,12 +129,27 @@ end;
 
 procedure TDSSObject.SaveWrite(var F: TextFile);
 var
-   iprop:Integer;
-   str  :String;
+   iprop    :Integer;
+   str      :String;
+   LShpFlag,
+   NptsRdy  : Boolean;    // Created to  know the that object is loadshape
 begin
    {Write only properties that were explicitly set in the
    final order they were actually set}
-   iProp := GetNextPropertySet(0); // Works on ActiveDSSObject
+   LShpFlag  :=  False;
+   NptsRdy   :=  False;
+   with ParentClass Do
+   Begin
+     if ParentClass.Name = 'LoadShape' then
+     Begin
+      iProp     :=  1;
+      LShpFlag  :=  True
+     End
+     else
+      iProp     := GetNextPropertySet(0); // Works on ActiveDSSObject
+   End;
+//  The part above was created to guarantee that the npts property will be the
+//  first to be declared when saving LoadShapes
    While iProp >0 Do
      Begin
       str:= trim(PropertyValue[iProp]);
@@ -142,7 +157,18 @@ begin
           With ParentClass Do Write(F,' ', PropertyName^[RevPropertyIdxMap[iProp]]);
           Write(F, '=', CheckForBlanks(str));
       End;
-      iProp := GetNextPropertySet(iProp);
+      if LShpFlag then
+      Begin
+        iProp     := GetNextPropertySet(0);   // starts over
+        LShpFlag  :=  False;  // The npts is already processed
+        NptsRdy   :=  True    // Flag to not repeat it again
+      End
+      else
+      Begin
+        iProp := GetNextPropertySet(iProp);
+        if NptsRdy then
+          if iProp = 1 then iProp := GetNextPropertySet(iProp);
+      End;
      End;
 end;
 
