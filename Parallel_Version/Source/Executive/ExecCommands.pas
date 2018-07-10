@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 116;
+     NumExecCommands = 117;
 
 Var
 
@@ -154,7 +154,7 @@ Begin
      ExecCommand[114] := 'Disconnect';
      ExecCommand[115] := 'Refine_BusLevels';
      ExecCommand[116] := 'Remove';
-
+     ExecCommand[117] := 'Abort';
 
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
@@ -499,6 +499,7 @@ Begin
                          'Remove Line.Lin3021' + CRLF +
                          'Remove Line.L22 Editstring="Daily=Dailycurve Duty=SolarShape' + CRLF +
                          'Remove Line.L333 KeepLoad=No';
+     CommandHelp[117] := 'Aborts all the simulations running';
 
 End;
 
@@ -776,6 +777,7 @@ Begin
       114: Begin DSSInfoMessageDlg('Winsock TCP/IP disconnection is not supported in FPC version, it will be migrated to Indy (soon...)'); CmdResult := 0; end;
 {$ENDIF}
       116: DoRemoveCmd;
+      117: SolutionAbort := TRUE;
      ELSE
        // Ignore excess parameters
      End;
