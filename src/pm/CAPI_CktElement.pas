@@ -366,7 +366,7 @@ begin
         If ActiveCktElement<>Nil THEN
         Begin
          Result    := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
-         LossValue := ActiveCktElement.Losses;
+         LossValue := ActiveCktElement.Losses[ActiveActor];
          Result[0] := LossValue.re;
          Result[1] := LossValue.im;
         End;
@@ -410,7 +410,7 @@ Begin
       NValues := NPhases;
       Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues-1) + 1);
       cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
-      GetPhaseLosses( NValues, cBuffer);
+      GetPhaseLosses( NValues, cBuffer, ActiveActor);
       iV :=0;
       For i := 1 to  NValues DO Begin
            Result[iV] := cBuffer^[i].re*0.001;
@@ -444,7 +444,7 @@ Begin
       NValues := NConds*Nterms;
       Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues-1) + 1);
       cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
-      GetPhasePower(cBuffer);
+      GetPhasePower(cBuffer, Activeactor);
       iV :=0;
       For i := 1 to  NValues DO Begin
            Result[iV] := cBuffer^[i].re*0.001;

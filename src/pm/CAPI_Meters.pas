@@ -540,7 +540,7 @@ end;
 function Meters_Get_DIFilesAreOpen():WordBool;cdecl;
 begin
      IF ActiveCircuit[ActiveActor] <> Nil THEN Begin
-            Result := DIFilesAreOpen;    // Global variable
+            Result := DIFilesAreOpen[ActiveActor];    // Global variable
      End;
 end;
 //------------------------------------------------------------------------------
