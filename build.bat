@@ -18,7 +18,7 @@ if not exist .\build\units_pm (
     mkdir .\build\units_pm
 ) 
 
-if exist ..\electricdss\Source\Common\DSSGlobals.pas (
+if exist ..\electricdss-src\Source\Common\DSSGlobals.pas (
     fpc -Px86_64 @src\main\windows.cfg -B src\main\dss_capi.lpr
     if exist lib\dss_capi.dll (
         where /q dumpbin
@@ -37,7 +37,8 @@ if exist ..\electricdss\Source\Common\DSSGlobals.pas (
         del /s lib\dss_capi.def
         del /s lib\exports.txt
 
-        copy /Y ..\electricdss\Distrib\x64\klusolve.dll lib\libklusolve.dll
+        REM copy /Y ..\electricdss-src\Distrib\x64\klusolve.dll lib\libklusolve.dll
+        echo TODO: COPY KLUSOLVE DLL!
     ) else (
         echo ERROR: DSS_CAPI.DLL file not found. Check previous messages for possible causes.
         exit /B
@@ -61,12 +62,13 @@ if exist ..\electricdss\Source\Common\DSSGlobals.pas (
         del /s lib\dsspm_capi.def
         del /s lib\exports.txt
         
-        copy /Y ..\electricdss\Distrib\x64\klusolve.dll lib\libklusolve.dll
+        REM copy /Y ..\electricdss-src\Distrib\x64\klusolve.dll lib\libklusolve.dll
+        echo TODO: COPY KLUSOLVE DLL!
     ) else (
         echo ERROR: DSSPM_CAPI.DLL file not found. Check previous messages for possible causes.
     )
     
 ) else (
-    echo ERROR: Please copy or link the OpenDSS source code repository to ..\electricdss and try again.
+    echo ERROR: Did you forget to clone https://github.com/PMeira/electricdss-src ?
     exit /B
 )
