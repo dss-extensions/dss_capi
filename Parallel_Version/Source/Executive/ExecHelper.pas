@@ -268,7 +268,7 @@ FUNCTION DoBatchEditCmd:Integer;
 {$IFDEF FPC}
 VAR
    ObjType, Pattern:String;
-   RegEx1: TPerlRegEx;
+   RegEx1: TRegExpr;
    pObj: TDSSObject;
    Params: Integer;
 Begin
@@ -288,14 +288,12 @@ Begin
     ELSE
       Params:=Parser[ActiveActor].Position;
       ActiveDSSClass[ActiveActor] := DSSClassList[ActiveActor].Get(LastClassReferenced[ActiveActor]);
-      RegEx1:=TPerlRegEx.Create;
+      RegEx1:=TRegExpr.Create;
 //      RegEx1.Options:=[preCaseLess];
       RegEx1.Expression:=UTF8String(Pattern);
       If ActiveDSSClass[ActiveActor].First>0 then pObj:=ActiveDSSObject[ActiveActor] else pObj := Nil;
-      else  pObj  :=  nil;
       while pObj <> Nil do begin
-        RegEx1.Subject:=pObj.Name; // UTF8String(pObj.Name);
-        if RegEx1.Match then begin
+        if RegEx1.Exec(UTF8String(pObj.Name)) then begin
           Parser[ActiveActor].Position:=Params;
           ActiveDSSClass[ActiveActor].Edit(ActiveActor);
         end;

@@ -23,15 +23,15 @@ VAR
    RebuildHelpForm:Boolean;
    PROCEDURE CreateControlPanel;
    PROCEDURE ExitControlPanel;
-   PROCEDURE InitProgressForm;
-   Procedure ProgressCaption(const S:String);
-   Procedure ProgressFormCaption(const S:String);
-   Procedure ProgressHide;
+   PROCEDURE InitProgressForm(Actor_ID : integer);
+   Procedure ProgressCaption(const S:String; Actor_ID : integer);
+   Procedure ProgressFormCaption(const S:String; Actor_ID : integer);
+   Procedure ProgressHide(Actor_ID : integer);
    PROCEDURE ShowControlPanel;
    PROCEDURE ShowHelpForm ;
    PROCEDURE ShowAboutBox;
    PROCEDURE ShowPropEditForm;
-   PROCEDURE ShowPctProgress(Count:Integer);
+   PROCEDURE ShowPctProgress(Count:Integer; Actor_ID : integer);
    Procedure ShowMessageForm(S:TStrings);
    FUNCTION  DSSMessageDlg(const Msg:String;err:boolean):Integer;
    PROCEDURE DSSInfoMessageDlg(const Msg:String);
@@ -58,25 +58,25 @@ begin
   DSSInfoMessageDlg(s);
 end;
 
-Procedure InitProgressForm;
+Procedure InitProgressForm(Actor_ID : integer);
 begin
 End;
 
-PROCEDURE ShowPctProgress(Count:Integer);
+PROCEDURE ShowPctProgress(Count:Integer; Actor_ID : integer);
 Begin
 End;
 
-Procedure ProgressCaption(const S:String);
+Procedure ProgressCaption(const S:String; Actor_ID : integer);
 Begin
-	Writeln('Progress: ', S);
+	Writeln('Actor: ', Actor_ID, ' Progress: ', S);
 End;
 
-Procedure ProgressFormCaption(const S:String);
+Procedure ProgressFormCaption(const S:String; Actor_ID : integer);
 begin
-	Writeln('Progress: ', S);
+	Writeln('Actor: ', Actor_ID, ' Progress: ', S);
 End;
 
-Procedure ProgressHide;
+Procedure ProgressHide(Actor_ID : integer);
 Begin
 End;
 
@@ -135,10 +135,10 @@ Var
   i,j       :Integer;
 begin
 	HelpList := TList.Create();
-  pDSSClass := DSSClassList.First;
+  pDSSClass := DSSClassList[ActiveActor].First;
   WHILE pDSSClass<>Nil DO Begin
     If (pDSSClass.DSSClassType AND BASECLASSMASK) = BaseClass Then HelpList.Add (pDSSClass);
-    pDSSClass := DSSClassList.Next;
+    pDSSClass := DSSClassList[ActiveActor].Next;
   End;
   HelpList.Sort(@CompareClassNames);
 
@@ -203,7 +203,7 @@ var
   i :Integer;
 begin
   if Length(opt) > 0 then begin
-    pDSSClass := DSSClassList.First;
+    pDSSClass := DSSClassList[ActiveActor].First;
     while pDSSClass<>nil do begin
       if AnsiStartsStr (opt, LowerCase(pDSSClass.name)) then begin
         writeln (UpperCase (pDSSClass.name));
@@ -211,7 +211,7 @@ begin
         for i := 1 to pDSSClass.NumProperties do
           writeln ('  ', pDSSClass.PropertyName[i], ': ', pDSSClass.PropertyHelp^[i]);
       end;
-      pDSSClass := DSSClassList.Next;
+      pDSSClass := DSSClassList[ActiveActor].Next;
     end;
   end else begin
   	writeln('== Power Delivery Elements ==');
@@ -233,10 +233,10 @@ PROCEDURE ShowHelpForm;
 VAR
   Param, OptName:String;
 Begin
-	Parser.NextParam;
-  Param := LowerCase(Parser.StrValue);
-	Parser.NextParam;
-  OptName := LowerCase(Parser.StrValue);
+	Parser[ActiveActor].NextParam;
+  Param := LowerCase(Parser[ActiveActor].StrValue);
+	Parser[ActiveActor].NextParam;
+  OptName := LowerCase(Parser[ActiveActor].StrValue);
 	if ANSIStartsStr ('com', param) then
 		ShowAnyHelp (NumExecCommands, @ExecCommand, @CommandHelp, OptName)
 	else if ANSIStartsStr ('op', param) then

@@ -322,7 +322,8 @@ USES
      PDElement, CktElementClass,
      ParserDel,  DSSClassDefs, DSSGlobals, Dynamics,
      Line, Transformer,  Vsource,
-     Utilities, {$IFDEF FPC}CmdForms,{$ELSE}DSSForms, SHELLAPI, Windows, {$ENDIF} Executive;
+     Utilities, {$IFDEF FPC}CmdForms,{$ELSE}DSSForms, {$ENDIF} 
+     {$IFDEF WINDOWS}Windows,  SHELLAPI, {$ELSE} BaseUnix, Unix, {$ENDIF} Executive;
 //----------------------------------------------------------------------------
 Constructor TDSSCircuit.Create(const aName:String);
 
@@ -608,6 +609,7 @@ END;
 {*******************************************************************************
 *           Routine created to empty a recently created folder                 *
 ********************************************************************************}
+{$IFDEF WINDOWS}
 procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
 var
   SourceLst: string;
@@ -615,7 +617,7 @@ var
 begin
   FillChar(FOS, SizeOf(FOS), 0);
   FOS.wFunc := FO_DELETE;
-  SourceLst := Directory + '\' + FileMask + #0;
+  SourceLst := Directory + PathDelim + FileMask + #0;
   FOS.pFrom := PChar(SourceLst);
   if not DelSubDirs then
     FOS.fFlags := FOS.fFlags OR FOF_FILESONLY;
@@ -625,6 +627,65 @@ begin
   FOS.fFlags := FOS.fFlags OR FOF_SILENT;
   SHFileOperation(FOS);
 end;
+{$ENDIF}
+{$IFDEF UNIX}
+procedure DeltreeDir(Directory: string);
+var 
+  Info: TSearchRec;
+Begin
+  If FindFirst(Directory + PathDelim + '*', faAnyFile and faDirectory, Info) = 0 then
+  begin
+    Repeat
+      With Info do
+      begin
+        If (name = '.') or (name = '..') then continue;
+        If (Attr and faDirectory) = faDirectory then
+        begin
+          DeltreeDir(Directory + PathDelim + Name)
+        end
+        else
+        begin
+          DeleteFile(Directory + PathDelim + Name);
+        end;
+      end;
+    Until FindNext(info) <> 0;
+  end;    
+  rmdir(Directory);
+end;
+
+procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
+var 
+  Info: TSearchRec;
+  flags: LongInt;
+Begin
+  if DelSubDirs then
+    flags := faAnyFile and faDirectory
+  else
+    flags := faAnyFile;
+  
+  If FindFirst(Directory + PathDelim + FileMask, flags, Info) = 0 then
+  begin
+    Repeat
+      With Info do
+      begin
+        if (name = '.') or (name = '..') then continue;
+        If (Attr and faDirectory) = faDirectory then
+        begin
+          try
+            DeltreeDir(Directory + PathDelim + Name)
+          except
+            Writeln('Could not remove directory ' + Directory + PathDelim + Name);
+          end;
+        end
+        else
+        begin
+          DeleteFile(Directory + PathDelim + Name);
+        end;
+      end;
+    Until FindNext(info) <> 0;
+  end;
+end;
+{$ENDIF}
 {*******************************************************************************
 *         This routine retuns the index of the element within the array        *
 ********************************************************************************}
@@ -786,7 +847,12 @@ Begin
       //  Checks the coverage index to stablish if is necessary to keep tracing paths to increase the coverage
       DBLTemp         :=  0;
       for i := Low(Buses_covered) to High(Buses_covered) do
+{$IFDEF FPC}
+        DBLtemp         :=  DBLTemp + Buses_Covered[i];
+{$ELSE}
         DBLtemp         :=  DBLTemp + double(Buses_Covered[i]);
+{$ENDIF}        
+        
       DBLtemp         :=  DBLTemp/Sys_Size;
 {      If the New coverage is different from the previous one and is below the expected coverage keep going
        The first criteria is to avoid keep working on a path that will not contribute to improve the coverage}
