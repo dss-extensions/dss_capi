@@ -861,6 +861,32 @@ Begin
     end;
   End;
 End;
+
+{$IFDEF UNIX}
+PROCEDURE CopyFile(inFn: String; outFn: String; failIfExists: Boolean);
+VAR
+    inStream, outStream: TFilestream;
+    exists: Boolean;
+BEGIN
+    exists := FileExists(outFn);
+    IF FileExists(inFn) AND ((NOT exists) OR (exists AND NOT failIfExists)) THEN
+    BEGIN
+        inStream := TFilestream.Create(inFn, fmOpenRead);
+        TRY
+            outStream := TFilestream.Create(inFn, fmOpenwrite);
+            TRY
+                outStream.Position := outStream.size;
+                outStream.CopyFrom(inStream, 0);
+            FINALLY
+                inStream.Free;
+            END;
+        FINALLY
+            outStream.Free;
+        END;
+    END;
+END;
+{$ENDIF}
+
 {*******************************************************************************
 * This routine reads the master file of the torn circuit and creates the       *
 *  header definitions for declaring separate subcircuits in OpenDSS            *
