@@ -27,6 +27,7 @@ function Fuses_Get_Delay():Double;cdecl;
 procedure Fuses_Open();cdecl;
 procedure Fuses_Close();cdecl;
 procedure Fuses_Set_Delay(Value: Double);cdecl;
+function Fuses_IsBlown():WordBool;cdecl;
 function Fuses_Get_idx():Integer;cdecl;
 procedure Fuses_Set_idx(Value: Integer);cdecl;
 function Fuses_Get_NumPhases():Integer;cdecl;
@@ -296,6 +297,20 @@ Var
 begin
   elem := FuseClass.GetActiveObj ;
   if elem <> nil then Set_parameter('Delay', Format('%.8g ',[Value]));
+end;
+//------------------------------------------------------------------------------
+function Fuses_IsBlown():WordBool;cdecl;
+// Return TRUE if any phase blown
+Var
+  elem : TFuseObj;
+  i : Integer;
+begin
+  Result :=FALSE;
+  elem := FuseClass.GetActiveObj ;
+  if elem <> nil then Begin
+      for i := 1 to elem.nphases do
+          If not elem.ControlledElement.Closed[i,ActiveActor] Then Result := TRUE;
+  End;
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_idx():Integer;cdecl;

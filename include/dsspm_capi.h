@@ -15,6 +15,7 @@ extern "C" {
     DSSPM_CAPI_DLL void DSS_Dispose_PInteger(int32_t** p);
     DSSPM_CAPI_DLL void DSS_Dispose_PPAnsiChar(char ***p, int32_t cnt);
 
+    DSSPM_CAPI_DLL void DSS_NewCircuit(char* Value);
     
     /*
     Array of strings consisting of all element names in the active class.
@@ -1204,6 +1205,8 @@ extern "C" {
     */
     DSSPM_CAPI_DLL void Fuses_Set_Delay(double Value);
     
+    DSSPM_CAPI_DLL uint16_t Fuses_IsBlown(void);
+    
     /*
     Get/set active fuse by index into the list of fuses. 1 based: 1..count
     */
@@ -2034,6 +2037,11 @@ extern "C" {
     DSSPM_CAPI_DLL double Loads_Get_RelWeight(void);
     
     /*
+    Relative Weighting factor for the active LOAD
+    */
+    DSSPM_CAPI_DLL void Loads_Set_RelWeight(double Value);
+    
+    /*
     Get the Name of the active Loadshape
     */
     DSSPM_CAPI_DLL char* LoadShapes_Get_Name(void);
@@ -2131,6 +2139,8 @@ extern "C" {
     Fixed interval data time interval, seconds
     */
     DSSPM_CAPI_DLL void LoadShapes_Set_Sinterval(double Value);
+    
+    DSSPM_CAPI_DLL int32_t LoadShapes_New(char* Name);
     
     DSSPM_CAPI_DLL double LoadShapes_Get_PBase(void);
     
@@ -2845,6 +2855,21 @@ extern "C" {
     Get Power factor 
     */
     DSSPM_CAPI_DLL double PVSystems_Get_PF(void);
+    
+    /*
+    Set kva rated
+    */
+    DSSPM_CAPI_DLL void PVSystems_Set_kVArated(double Value);
+    
+    /*
+    Set PF 
+    */
+    DSSPM_CAPI_DLL void PVSystems_Set_PF(double Value);
+    
+    /*
+    Set kvar output value
+    */
+    DSSPM_CAPI_DLL void PVSystems_Set_kvar(double Value);
     
     /*
     Array of strings with names of all Reclosers in Active Circuit
@@ -4502,6 +4527,11 @@ extern "C" {
     Set Y value or get interpolated Y value after setting X
     */
     DSSPM_CAPI_DLL void XYCurves_Set_y(double Value);
+    
+    /*
+    Get/Set Y values in curve; Set Npts to max number expected if setting
+    */
+    DSSPM_CAPI_DLL void XYCurves_Set_Yarray(double* ValuePtr, int32_t ValueCount);
     
     /*
     Factor to scale X values from original curve

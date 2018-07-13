@@ -5,6 +5,7 @@ INTERFACE
 
 USES CAPI_Utils;
 
+procedure DSS_NewCircuit(const Value: PAnsiChar);cdecl;
 function DSS_Get_NumCircuits():Integer;cdecl;
 procedure DSS_ClearAll();cdecl;
 function DSS_Get_Version():PAnsiChar;cdecl;
@@ -23,6 +24,12 @@ IMPLEMENTATION
 
 USES CAPI_Constants, DSSClassDefs, DSSGlobals, DSSClass, Exechelper, sysUtils, Executive;
 
+
+procedure DSS_NewCircuit(const Value: PAnsiChar);cdecl;
+begin
+    MakeNewCircuit(Value);
+end;
+//------------------------------------------------------------------------------
 function DSS_Get_NumCircuits():Integer;cdecl;
 begin
     Result := ActiveCircuit[ActiveActor].NumCircuits;

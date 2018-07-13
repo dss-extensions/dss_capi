@@ -80,6 +80,7 @@ procedure Loads_Set_ZIPV(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 function Loads_Get_pctSeriesRL():Double;cdecl;
 procedure Loads_Set_pctSeriesRL(Value: Double);cdecl;
 function Loads_Get_RelWeight():Double;cdecl;
+procedure Loads_Set_RelWeight(Value: Double);cdecl;
 
 IMPLEMENTATION
 
@@ -873,6 +874,14 @@ begin
   elem := ActiveLoad;
   if elem <> nil then Result := elem.RelWeighting;
 
+end;
+//------------------------------------------------------------------------------
+procedure Loads_Set_RelWeight(Value: Double);cdecl;
+var
+  elem: TLoadObj;
+begin
+  elem := ActiveLoad;
+  if elem <> nil then elem.RelWeighting := Value;
 end;
 //------------------------------------------------------------------------------
 END.

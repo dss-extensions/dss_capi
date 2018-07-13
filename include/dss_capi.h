@@ -15,6 +15,7 @@ extern "C" {
     DSS_CAPI_DLL void DSS_Dispose_PInteger(int32_t** p);
     DSS_CAPI_DLL void DSS_Dispose_PPAnsiChar(char ***p, int32_t cnt);
 
+    DSS_CAPI_DLL void DSS_NewCircuit(char* Value);
     
     /*
     Array of strings consisting of all element names in the active class.
@@ -1204,6 +1205,8 @@ extern "C" {
     */
     DSS_CAPI_DLL void Fuses_Set_Delay(double Value);
     
+    DSS_CAPI_DLL uint16_t Fuses_IsBlown(void);
+    
     /*
     Get/set active fuse by index into the list of fuses. 1 based: 1..count
     */
@@ -2085,6 +2088,11 @@ extern "C" {
     DSS_CAPI_DLL double Loads_Get_RelWeight(void);
     
     /*
+    Relative Weighting factor for the active LOAD
+    */
+    DSS_CAPI_DLL void Loads_Set_RelWeight(double Value);
+    
+    /*
     Get the Name of the active Loadshape
     */
     DSS_CAPI_DLL char* LoadShapes_Get_Name(void);
@@ -2182,6 +2190,8 @@ extern "C" {
     Fixed interval data time interval, seconds
     */
     DSS_CAPI_DLL void LoadShapes_Set_Sinterval(double Value);
+    
+    DSS_CAPI_DLL int32_t LoadShapes_New(char* Name);
     
     DSS_CAPI_DLL double LoadShapes_Get_PBase(void);
     
@@ -2827,6 +2837,21 @@ extern "C" {
     Get Power factor 
     */
     DSS_CAPI_DLL double PVSystems_Get_PF(void);
+    
+    /*
+    Set kva rated
+    */
+    DSS_CAPI_DLL void PVSystems_Set_kVArated(double Value);
+    
+    /*
+    Set PF 
+    */
+    DSS_CAPI_DLL void PVSystems_Set_PF(double Value);
+    
+    /*
+    Set kvar output value
+    */
+    DSS_CAPI_DLL void PVSystems_Set_kvar(double Value);
     
     /*
     Array of strings with names of all Reclosers in Active Circuit
@@ -4474,6 +4499,11 @@ extern "C" {
     Set Y value or get interpolated Y value after setting X
     */
     DSS_CAPI_DLL void XYCurves_Set_y(double Value);
+    
+    /*
+    Get/Set Y values in curve; Set Npts to max number expected if setting
+    */
+    DSS_CAPI_DLL void XYCurves_Set_Yarray(double* ValuePtr, int32_t ValueCount);
     
     /*
     Factor to scale X values from original curve

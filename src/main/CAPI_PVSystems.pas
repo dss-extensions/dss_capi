@@ -21,6 +21,9 @@ function PVSystems_Get_kvar():Double;cdecl;
 function PVSystems_Get_kVArated():Double;cdecl;
 function PVSystems_Get_kW():Double;cdecl;
 function PVSystems_Get_PF():Double;cdecl;
+procedure PVSystems_Set_kVArated(Value: Double);cdecl;
+procedure PVSystems_Set_PF(Value: Double);cdecl;
+procedure PVSystems_Set_kvar(Value: Double);cdecl;
 
 IMPLEMENTATION
 
@@ -296,6 +299,39 @@ begin
          WITH ActiveCircuit.PVSystems Do Begin
              IF ActiveIndex<>0 THEN Begin
                  Result := TPVSystemObj(Active).PowerFactor ;
+             End;
+         End;
+   End;
+end;
+//------------------------------------------------------------------------------
+procedure PVSystems_Set_kVArated(Value: Double);cdecl;
+begin
+   IF ActiveCircuit<> NIL THEN Begin
+         WITH ActiveCircuit.PVSystems Do Begin
+             IF ActiveIndex<>0 THEN Begin
+                  TPVSystemObj(Active).kVARating  := Value;
+             End;
+         End;
+   End;
+end;
+//------------------------------------------------------------------------------
+procedure PVSystems_Set_PF(Value: Double);cdecl;
+begin
+   IF ActiveCircuit<> NIL THEN Begin
+         WITH ActiveCircuit.PVSystems Do Begin
+             IF ActiveIndex<>0 THEN Begin
+                  TPVSystemObj(Active).PowerFactor  := Value;
+             End;
+         End;
+   End;
+end;
+//------------------------------------------------------------------------------
+procedure PVSystems_Set_kvar(Value: Double);cdecl;
+begin
+   IF ActiveCircuit<> NIL THEN Begin
+         WITH ActiveCircuit.PVSystems Do Begin
+             IF ActiveIndex<>0 THEN Begin
+                  TPVSystemObj(Active).Presentkvar := Value;
              End;
          End;
    End;

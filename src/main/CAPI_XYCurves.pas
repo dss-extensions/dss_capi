@@ -19,6 +19,7 @@ function XYCurves_Get_y():Double;cdecl;
 PROCEDURE XYCurves_Get_Yarray(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
 procedure XYCurves_Set_x(Value: Double);cdecl;
 procedure XYCurves_Set_y(Value: Double);cdecl;
+procedure XYCurves_Set_Yarray(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 function XYCurves_Get_Xscale():Double;cdecl;
 function XYCurves_Get_Xshift():Double;cdecl;
 function XYCurves_Get_Yscale():Double;cdecl;
@@ -264,6 +265,37 @@ begin
            DoSimpleMsg('No active XYCurve Object found.',51010);
         End;
      End;
+end;
+//------------------------------------------------------------------------------
+procedure XYCurves_Set_Yarray(ValuePtr: PDouble; ValueCount: Integer);cdecl;
+VAR
+  Value: PDoubleArray;
+   pXYCurve:TXYCurveObj;
+   i, k, LoopLimit: Integer;
+
+begin
+    Value := PDoubleArray(ValuePtr);
+    If ActiveCircuit <> Nil Then
+     Begin
+        pXYCurve := XYCurveClass.GetActiveObj;
+        If pXYCurve <> Nil Then Begin
+
+        // Only put in as many points as we have allocated
+         LoopLimit := (ValueCount - 1);
+         If (LoopLimit - (0) + 1) > pXYCurve.NumPoints  Then   LoopLimit :=  (0) + pXYCurve.NumPoints - 1;
+
+         k := 1;
+         for i := (0) to LoopLimit do
+         Begin
+             pXYCurve.YValue_pt[k] := Value[i];
+             inc(k);
+         End;
+
+        End Else Begin
+           DoSimpleMsg('No active XYCurve Object found.',51016);
+        End;
+     End;
+
 end;
 //------------------------------------------------------------------------------
 function XYCurves_Get_Xscale():Double;cdecl;

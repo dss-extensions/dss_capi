@@ -26,6 +26,7 @@ function LoadShapes_Get_sInterval():Double;cdecl;
 procedure LoadShapes_Set_HrInterval(Value: Double);cdecl;
 procedure LoadShapes_Set_MinInterval(Value: Double);cdecl;
 procedure LoadShapes_Set_Sinterval(Value: Double);cdecl;
+function LoadShapes_New(const Name: PAnsiChar):Integer;cdecl;
 function LoadShapes_Get_PBase():Double;cdecl;
 function LoadShapes_Get_Qbase():Double;cdecl;
 procedure LoadShapes_Set_PBase(Value: Double);cdecl;
@@ -365,6 +366,12 @@ begin
    If ActiveCircuit[ActiveActor] <> Nil Then
    If ActiveLSObject <> Nil Then
      ActiveLSObject.Interval := Value / 3600.0 ;
+end;
+//------------------------------------------------------------------------------
+function LoadShapes_New(const Name: PAnsiChar):Integer;cdecl;
+begin
+      Result := AddObject('loadshape', Name);    // Returns handle to object
+      ActiveLSObject := ActiveDSSObject[ActiveActor] as TLoadShapeObj;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_PBase():Double;cdecl;
