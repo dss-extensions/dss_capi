@@ -599,12 +599,13 @@ Begin
              If  abs(Frequency - SrcFrequency) > EPSILON2 Then  Vmag:=0.0;  // Solution Frequency and Source Frequency don't match!
        {NOTE: RE-uses VTerminal space}
              FOR i := 1 to Fnphases DO Begin
-                CASE Sequencetype of
+                CASE Sequencetype of   // Always 0 for GIC
                    -1: Vterminal^[i] :=  pdegtocomplex(Vmag, (360.0 + Angle + (i-1)* 360.0/Fnphases) );  // neg seq
                     0: Vterminal^[i] :=  pdegtocomplex(Vmag, (360.0 + Angle) );   // all the same for zero sequence
                  Else
                        Vterminal^[i] :=  pdegtocomplex(Vmag, (360.0 + Angle - (i-1)* 360.0/Fnphases) );
                 END;
+                // bottom part of the vector is zero
                 VTerminal^[i+Fnphases] := CZERO;    // See comments in GetInjCurrents
              End;
          End;
