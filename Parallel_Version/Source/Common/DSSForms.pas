@@ -154,9 +154,13 @@ Begin
         Str     :=  'Message too long; See Result Form.'
      Else
         Str     :=  msg;
-//       If Err Then Result := MessageDlg(Str, mtError , [mbOK], 0)
-//       Else Result := IntResult(MessageDlg(Str, mtInformation , [mbAbort, mbIgnore], 0));
-     ScriptEd.PublishMessage(Str);
+     if isDLL then
+     Begin
+       If Err Then Result := MessageDlg(Str, mtError , [mbOK], 0)
+       Else Result := IntResult(MessageDlg(Str, mtInformation , [mbAbort, mbIgnore], 0))
+     End
+     else
+      ScriptEd.PublishMessage(Str);
      Result  :=  -1;
 End;
 
@@ -165,12 +169,17 @@ Var
       ScriptEd : TScriptEdit;
       Str:String;
 Begin
-//    If length(msg)<=1024 Then MessageDlg(Msg, mtInformation , [mbOK], 0)
-//    Else MessageDlg('Message too long; See Result Form.', mtInformation , [mbOK], 0);
+
     If length(msg)<=1024 Then
       Str :=  Msg
     else
       Str :=  'Message too long; See Result Form.';
+     if isDLL then
+     Begin
+        If length(msg)<=1024 Then MessageDlg(Msg, mtInformation , [mbOK], 0)
+        Else MessageDlg('Message too long; See Result Form.', mtInformation , [mbOK], 0);
+     End
+     else
     ScriptEd.PublishMessage(Str);
 End;
 
