@@ -808,7 +808,7 @@ Begin
   Begin
     SMEnd           :=  True;
     State           :=  0;
-    Sys_Size        :=  double(length(Inc_Mat_Cols));
+    Sys_Size        :=  {$IFNDEF FPC}double{$ENDIF}(length(Inc_Mat_Cols));
     setlength(Buses_Covered,1);
     setlength(Path_Idx,1);
     Actual_Coverage :=  -1;
