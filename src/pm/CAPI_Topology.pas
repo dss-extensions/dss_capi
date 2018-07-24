@@ -83,7 +83,7 @@ VAR
   ActualResult: PPAnsiCharArray;
   elm: TPDElement;
   topo: TCktTree;
-  k: integer;
+  k, i: integer;
 begin
   SetLength(Result, 1);
   Result[0] := 'NONE';
@@ -299,7 +299,7 @@ VAR
   ActualResult: PPAnsiCharArray;
   elm: TPCElement;
   topo: TCktTree;
-  k: integer;
+  k, i: integer;
 begin
   SetLength(Result, 1);
   Result[0] := DSS_CopyStringAsPChar('NONE');
