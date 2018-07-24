@@ -1,0 +1,6 @@
+*.dcu
+__recovery
+*.identcache
+*.stat
+*.dproj.local
+__history
