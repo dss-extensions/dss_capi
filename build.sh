@@ -1,9 +1,9 @@
-if [ ! -d "build/units_main" ]; then
-    mkdir build/units_main
+if [ ! -d "build/units_v7_x64" ]; then
+    mkdir build/units_v7_x64
 fi
-fpc -Px86_64 @src/main/linux.cfg -B src/main/dss_capi.lpr
+fpc -Px86_64 @src/v7/linux_x64.cfg -B src/v7/dss_capi.lpr
 
-if [ ! -d "build/units_pm" ]; then
-    mkdir build/units_pm
+if [ ! -d "build/units_v8_x64" ]; then
+    mkdir build/units_v8_x64
 fi
-fpc -Px86_64 @src/pm/linux.cfg -B src/pm/dsspm_capi.lpr
+fpc -Px86_64 @src/v8/linux_x64.cfg -B src/v8/dsspm_capi.lpr

@@ -28,7 +28,7 @@ In order to track upstream changes in the official SVN repository, a custom patc
 
 ## Recent changes
 
-- 2018-07-20 / version 0.9.6: **Planned**
+- 2018-07-27 / version 0.9.6: **Planned**
 - 2018-04-05 / version 0.9.5: New functions `Circuit_SetCktElement*` to set the active circuit element.
 - 2018-03-06 / version 0.9.4: Includes fixes for DSSProperty, includes of the original helpstrings in the C header, integrate upstream changes up to revision 2152. This version introduces a first version of .NET bindings to the native DLL.
 - 2018-02-16 / version 0.9.3: Integrates COM interface fixes from revision 2136 (`First` `Next` iteration)
@@ -37,7 +37,7 @@ In order to track upstream changes in the official SVN repository, a custom patc
 
 ## Missing features and limitations
 
-- Only the 64-bit version of OpenDSS is built. A 32-bit version should be possible with a few changes.
+- The 64-bit version of OpenDSS is built as primary target. Build scripts for the Windows 32-bit version were added in version 0.9.6.
 - Currently not implemented:
     - `DSSEvents` from `DLL/ImplEvents.pas`: seems too dependent on COM.
     - `DSSProgress` from `DLL/ImplDSSProgress.pas`: would need a reimplementation depending on the target UI (GUI, text, headless, etc.)
@@ -69,11 +69,11 @@ Otherwise:
 
 - If you want to use the DLL from Visual Studio, you need to generate an import library. This can be done by starting the next step from the "x64 Native Tools Command Prompt for VS 2017" (or equivalent for your Visual Studio version) -- you only need the `dumpbin.exe` and `lib.exe` utilities.
 
-- Open a command prompt on the `dss_capi` folder and run `build.bat`
+- Open a command prompt on the `dss_capi` folder and run `build_win_x64.bat`
 
 For the Windows build process, the `KLUSolve.dll` from the official OpenDSS repository/distribution is used. This may change in the future.
 
-The output files will be placed into the `lib` folder.
+The output files will be placed into the `lib/win_x64` folder.
 
 ### On Linux
 
