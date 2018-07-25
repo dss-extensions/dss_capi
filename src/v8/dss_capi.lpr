@@ -1,4 +1,4 @@
-library dsspm_capi;
+library dss_capi;
 {$MODE Delphi}
 {$APPTYPE CONSOLE}
 {$H+}

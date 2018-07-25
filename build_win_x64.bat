@@ -20,7 +20,7 @@ if not exist .\build\units_v8_x64 (
 
 if exist ..\electricdss-src\Source\Common\DSSGlobals.pas (
     fpc -Px86_64 @src\v7\windows-x64.cfg -B src\v7\dss_capi.lpr
-    if exist lib\win_x64\dss_capi.dll (
+    if exist lib\win_x64\v7\dss_capi.dll (
         where /q dumpbin
         if errorlevel 1 (
             echo WARNING: dumpbin.exe is not in your path. Be sure to run this script on 
@@ -28,24 +28,24 @@ if exist ..\electricdss-src\Source\Common\DSSGlobals.pas (
             echo          equivalent for your Visual Studio version.
             exit /B
         )
-        dumpbin /exports "lib\win_x64\dss_capi.dll" > lib\win_x64\exports.txt
-        echo LIBRARY DSS_CAPI > lib\win_x64\dss_capi.def
-        echo EXPORTS >> lib\win_x64\dss_capi.def
-        for /f "skip=19 tokens=4" %%A in (lib\win_x64\exports.txt) do echo %%A >> lib\win_x64\dss_capi.def
-        lib /def:lib\win_x64\dss_capi.def /out:lib\win_x64\dss_capi.lib /machine:X64
-        del /s lib\win_x64\dss_capi.exp
-        del /s lib\win_x64\dss_capi.def
-        del /s lib\win_x64\exports.txt
+        dumpbin /exports "lib\win_x64\v7\dss_capi.dll" > lib\win_x64\v7\exports.txt
+        echo LIBRARY DSS_CAPI > lib\win_x64\v7\dss_capi.def
+        echo EXPORTS >> lib\win_x64\v7\dss_capi.def
+        for /f "skip=19 tokens=4" %%A in (lib\win_x64\v7\exports.txt) do echo %%A >> lib\win_x64\v7\dss_capi.def
+        lib /def:lib\win_x64\v7\dss_capi.def /out:lib\win_x64\v7\dss_capi.lib /machine:X64
+        del /s lib\win_x64\v7\dss_capi.exp
+        del /s lib\win_x64\v7\dss_capi.def
+        del /s lib\win_x64\v7\exports.txt
 
         REM copy /Y ..\electricdss-src\Distrib\x64\klusolve.dll lib\libklusolve.dll
         echo TODO: COPY KLUSOLVE DLL!
     ) else (
-        echo ERROR: DSS_CAPI.DLL file not found. Check previous messages for possible causes.
+        echo ERROR: v7/DSS_CAPI.DLL file not found. Check previous messages for possible causes.
         exit /B
     )
 
-    fpc -Px86_64 @src\v8\windows-x64.cfg -B src\v8\dsspm_capi.lpr
-    if exist lib\win_x64\dsspm_capi.dll (
+    fpc -Px86_64 @src\v8\windows-x64.cfg -B src\v8\dss_capi.lpr
+    if exist lib\win_x64\v8\dss_capi.dll (
         where /q dumpbin
         if errorlevel 1 (
             echo WARNING: dumpbin.exe is not in your path. Be sure to run this script on 
@@ -53,19 +53,19 @@ if exist ..\electricdss-src\Source\Common\DSSGlobals.pas (
             echo          equivalent for your Visual Studio version.
             exit /B
         )
-        dumpbin /exports "lib\win_x64\dsspm_capi.dll" > lib\win_x64\exports.txt
-        echo LIBRARY DSSPM_CAPI > lib\win_x64\dsspm_capi.def
-        echo EXPORTS >> lib\win_x64\dsspm_capi.def
-        for /f "skip=19 tokens=4" %%A in (lib\win_x64\exports.txt) do echo %%A >> lib\win_x64\dsspm_capi.def
-        lib /def:lib\win_x64\dsspm_capi.def /out:lib\win_x64\dsspm_capi.lib /machine:X64
-        del /s lib\win_x64\dsspm_capi.exp
-        del /s lib\win_x64\dsspm_capi.def
-        del /s lib\win_x64\exports.txt
+        dumpbin /exports "lib\win_x64\v8\dss_capi.dll" > lib\win_x64\v8\exports.txt
+        echo LIBRARY DSS_CAPI > lib\win_x64\v8\dss_capi.def
+        echo EXPORTS >> lib\win_x64\v8\dss_capi.def
+        for /f "skip=19 tokens=4" %%A in (lib\win_x64\v8\exports.txt) do echo %%A >> lib\win_x64\v8\dss_capi.def
+        lib /def:lib\win_x64\v8\dss_capi.def /out:lib\win_x64\v8\dss_capi.lib /machine:X64
+        del /s lib\win_x64\v8\dss_capi.exp
+        del /s lib\win_x64\v8\dss_capi.def
+        del /s lib\win_x64\v8\exports.txt
         
         REM copy /Y ..\electricdss-src\Distrib\x64\klusolve.dll lib\libklusolve.dll
         echo TODO: COPY KLUSOLVE DLL!
     ) else (
-        echo ERROR: DSSPM_CAPI.DLL file not found. Check previous messages for possible causes.
+        echo ERROR: v8/DSS_CAPI.DLL file not found. Check previous messages for possible causes.
     )
     
 ) else (
