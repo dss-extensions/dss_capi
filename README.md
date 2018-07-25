@@ -2,7 +2,7 @@
 
 If you are looking for the Python bindings, see [dss_python](http://github.com/PMeira/dss_python/).
 
-If you are looking for the .NET/C# bindings, check `src/dss_sharp` for the source code, or download the .NET assembly from the Releases page.
+If you are looking for the .NET/C# bindings, the code was moved to [dss_sharp](http://github.com/PMeira/dss_sharp/).
 
 **Version 0.9.6 is under development with a new structure for easier development and building, expected to be released by 2018-07-20.**
 You can always use 0.9.5 though!
