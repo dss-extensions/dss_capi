@@ -703,8 +703,6 @@ Function TLoadShapeObj.GetMult(hr:double):Complex;
 
 VAR
    Index, i : Integer;
-   R_part,
-   Im_part  : Double;
 
    Function Set_Result_im(const realpart:double):Double;
    {Set imaginary part of Result when Qmultipliers not defined}
@@ -732,7 +730,7 @@ BEGIN
            IF Index=0 THEN Index := FNumPoints;
            Result.re     :=  PMultipliers^[Index];
            If Assigned(QMultipliers) Then Result.im := QMultipliers^[Index]
-           Else  Im_part  := Set_Result_im(Result.re );
+           Else  Result.im  := Set_Result_im(Result.re );
         END
       ELSE  BEGIN
           // For random interval
