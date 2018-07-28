@@ -24,7 +24,7 @@ implementation
 uses {$IFNDEF FPC}windows,{$ENDIF}
      sysutils,
      math,
-     Dialogs,
+     {$IFNDEF FPC}Dialogs,{$ENDIF}
      DSSGlobals;
 type
     TByteArr  = array of uint8;
