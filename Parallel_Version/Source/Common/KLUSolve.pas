@@ -20,11 +20,7 @@ const
 {$IFNDEF FPC}
   KLULib = 'klusolve.dll';
 {$ELSE}
-    {$IFDEF WINDOWS}
-  KLULib = 'klusolve';
-    {$ELSE}
   KLULib = 'libklusolve';
-    {$ENDIF}
 {$ENDIF}
 
 // in general, KLU arrays are 0-based
