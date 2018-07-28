@@ -730,7 +730,7 @@ BEGIN
            IF Index=0 THEN Index := FNumPoints;
            Result.re     :=  PMultipliers^[Index];
            If Assigned(QMultipliers) Then Result.im := QMultipliers^[Index]
-           Else  Result.im := Set_Result_im(Result.re);
+           Else  Result.im  := Set_Result_im(Result.re );
         END
       ELSE  BEGIN
           // For random interval
