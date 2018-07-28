@@ -43,10 +43,10 @@ const THREAD_PRIORITY_TIME_CRITICAL = tpTimeCritical;
 type
   TParallel_Lib = class(TObject)
   public
-    function Set_Thread_Affinity(Hnd : THandle; CPU : integer): Integer;
-    function Set_Process_Priority(Hnd: TPid; P_priority : integer): Integer;
-    function Set_Thread_Priority(thread: TThread; T_priority : TThreadPriority): Integer;
-    function Get_Thread_Priority(Hnd: THandle): String;
+    function Set_Thread_Affinity(Hnd: TThreadId; CPU: integer): Integer;
+    function Set_Process_Priority(Hnd: TPid; P_priority: integer): Integer;
+    function Set_Thread_Priority(thread: TThread; T_priority: TThreadPriority): Integer;
+    function Get_Thread_Priority(Hnd: TThreadId): String;
     function Get_Number_of_CPUs(): Integer;
   end;
     
@@ -107,7 +107,7 @@ implementation
 {$ELSE}    
     //function pthread_setaffinity_np(pid : Ptruint; cpusetsize : QWord; cpuset : pointer) : longint; cdecl; external;
     
-    function TParallel_Lib.Set_Thread_Affinity(Hnd : THandle; CPU : integer): Integer;
+    function TParallel_Lib.Set_Thread_Affinity(Hnd: TThreadId; CPU: integer): Integer;
     // The following commented code segfaults but it's based on 
     // http://free-pascal-general.1045716.n5.nabble.com/GetAffinity-SetAffinity-tp3351231p5717539.html
     // An alternative may be to include a separate C file to handle this using the correct macros
@@ -149,7 +149,7 @@ implementation
       if Op_result <> 0 then Result  :=1;
     end;
     
-    function TParallel_Lib.Get_Thread_Priority(Hnd: THandle): String;
+    function TParallel_Lib.Get_Thread_Priority(Hnd: TThreadId): String;
     var
       Num_priority  : integer;
     begin
