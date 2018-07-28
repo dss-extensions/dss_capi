@@ -8,7 +8,7 @@ DSS_CAPI_LIB="lib/darwin_x64/v7/libdss_capi_v7.dylib"
 CURRENT_LIBKLUSOLVE=`otool -L "$DSS_CAPI_LIB" | grep libklusolve | cut -f 1 -d ' ' | sed $'s/^[ \t]*//'`
 NEW_LIBKLUSOLVE="@loader_path/./libklusolve.dylib"
 install_name_tool -change "$CURRENT_LIBKLUSOLVE" "$NEW_LIBKLUSOLVE" "$DSS_CAPI_LIB"
-
+install_name_tool -id "@loader_path/./libdss_capi_v7.dylib" "$DSS_CAPI_LIB"
 
 if [ ! -d "build/units_v8_x64" ]; then
     mkdir build/units_v8_x64
@@ -20,3 +20,4 @@ DSS_CAPI_LIB="lib/darwin_x64/v8/libdss_capi_v8.dylib"
 CURRENT_LIBKLUSOLVE=`otool -L "$DSS_CAPI_LIB" | grep libklusolve | cut -f 1 -d ' ' | sed $'s/^[ \t]*//'`
 NEW_LIBKLUSOLVE="@loader_path/./libklusolve.dylib"
 install_name_tool -change "$CURRENT_LIBKLUSOLVE" "$NEW_LIBKLUSOLVE" "$DSS_CAPI_LIB"
+install_name_tool -id "@loader_path/./libdss_capi_v8.dylib" "$DSS_CAPI_LIB"
