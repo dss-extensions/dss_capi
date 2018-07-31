@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-        NumExecOptions = 120;
+        NumExecOptions = 121;
 
 VAR
          ExecOption,
@@ -154,7 +154,7 @@ Begin
      ExecOption[118] := 'DSSVInstalled';
      ExecOption[119] := 'Coverage';
      ExecOption[120] := 'Num_SubCircuits';
-
+     ExecOption[121] := 'SampleEnergyMeters';
 
 
      OptionHelp[1]  := 'Sets the active DSS class type.  Same as Class=...';
@@ -419,6 +419,9 @@ Begin
                         'is the 90% (0.9), this value cannot exceed 1.0. When used with the "Set" command is used for the algorithm for estimating the paths within the circuit'+CRLF+CRLF+
                         'but when the "get" command is used after executing the tear_circuit command it will deliver the actual coverage after running the algorithm';
      OptionHelp[120] := 'This is the number of subcircuits in which the circuit will be torn when executing the tear_circuit command, by default is the number of local CPUs - 1';
+     OptionHelp[121] := '{YES/TRUE | NO/FALSE} Overrides default value for sampling EnergyMeter objects at the end of the solution loop. ' +
+                        'Normally Time and Duty modes do not automatically sample EnergyMeters whereas Daily, Yearly, M1, M2, M3, LD1 and LD2 modes do. ' +
+                        'Use this Option to turn sampling on or off';
 End;
 //----------------------------------------------------------------------------
 FUNCTION DoSetCmd_NoCircuit:Boolean;  // Set Commands that do not require a circuit
@@ -691,7 +694,8 @@ Begin
                 End;
           120:  Begin
                   ActiveCircuit[ActiveActor].Num_SubCkts :=  Parser[ActiveActor].IntValue;
-                End
+                End;
+          121:  ActiveCircuit[ActiveActor].Solution.SampleTheMeters :=  InterpretYesNo(Param);
          ELSE
            // Ignore excess parameters
          End;
@@ -882,6 +886,7 @@ Begin
           118: if DSS_Viz_installed then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           119: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Actual_Coverage]));
           120: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].Num_SubCkts]));
+          121: If ActiveCircuit[ActiveActor].Solution.SampleTheMeters Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
          ELSE
            // Ignore excess parameters
          End;
