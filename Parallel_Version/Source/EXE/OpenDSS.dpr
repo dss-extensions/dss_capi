@@ -185,7 +185,8 @@ uses
   ESPVLControl in '..\Controls\ESPVLControl.pas',
   TCP_IP in '..\TCP_IP\TCP_IP.pas',
   ConnectOptions in '..\Executive\ConnectOptions.pas',
-  Diakoptics in '..\Common\Diakoptics.pas';
+  Diakoptics in '..\Common\Diakoptics.pas',
+  Sparse_Math in '..\Common\Sparse_Math.pas';
 
 {$R *.RES}
 

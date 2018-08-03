@@ -62,6 +62,7 @@ Procedure ExportIncMatrix(FileNm:String);
 Procedure ExportIncMatrixRows(FileNm:String);
 Procedure ExportIncMatrixCols(FileNm:String);
 Procedure ExportBusLevels(FileNm:String);
+Procedure ExportLaplacian(FileNm:String);
 
 
 IMPLEMENTATION
@@ -3076,9 +3077,9 @@ Begin
     Assignfile(F,FileNm);
     ReWrite(F);
     Writeln(F,'Row,Col,Value');
-    for i := 1 to ((length(IncMatrix) div 3)-1) do
+    for i := 0 to (IncMat.NZero -1) do
     begin
-      Writeln(F,inttostr(IncMatrix[i*3]) + ',' + inttostr(IncMatrix[i*3 + 1]) + ',' + inttostr(IncMatrix[i*3 + 2]));
+      Writeln(F,inttostr(IncMat.data[i][0]) + ',' + inttostr(IncMat.data[i][1]) + ',' + inttostr(IncMat.data[i][2]));
     end;
     CloseFile(F);
   End;
@@ -3134,6 +3135,24 @@ Begin
     for i := 0 to (length(Inc_Mat_Cols)-1) do
     begin
       Writeln(F,Inc_Mat_Cols[i] + ',' + inttostr(Inc_Mat_levels[i]));
+    end;
+    CloseFile(F);
+  End;
+End;
+//-------------------------------------------------------------------
+Procedure ExportLaplacian(FileNm:String);
+var
+  F             : TextFile;
+  i             : Integer;
+Begin
+  with ActiveCircuit[ActiveActor].Solution do
+  Begin
+    Assignfile(F,FileNm);
+    ReWrite(F);
+    Writeln(F,'Row,Col,Value');
+    for i := 0 to (Laplacian.NZero -1) do
+    begin
+      Writeln(F,inttostr(Laplacian.data[i][0]) + ',' + inttostr(Laplacian.data[i][1]) + ',' + inttostr(Laplacian.data[i][2]));
     end;
     CloseFile(F);
   End;

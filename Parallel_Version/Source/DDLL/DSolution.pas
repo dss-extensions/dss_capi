@@ -470,6 +470,7 @@ end;
 //**********************************Variant type properties*******************************
 procedure SolutionV(mode:longint; out arg: Variant); cdecl;
 Var
+  Counter,
   i,
   IMIdx,
   Idx,
@@ -486,16 +487,22 @@ begin
     Else arg := VarArrayCreate([0,0], varOleStr);;
   end;
   1: begin  // Solution.IncMatrix
-      If ActiveCircuit[ActiveActor] <> Nil Then Begin
-        with ACtiveCircuit[ActiveActor].Solution do
+      if (ActiveCircuit[ActiveActor] <> Nil) and (ActiveCircuit[ActiveActor].Solution.IncMat <> Nil) Then Begin
+        with ActiveCircuit[ActiveActor].Solution do
         begin
-           ArrSize    :=  length(IncMatrix)-4;    // Removes the 3 initial zeros and the extra index
-                                                  // Since it starts on 0
-           arg     :=  VarArrayCreate([0, ArrSize], varInteger);
-           for IMIdx  :=  0 to ArrSize Do
-           Begin
-              arg[IMIdx] := IncMatrix[IMIdx+3];
-           End;
+          ArrSize    :=  IncMat.NZero*3;
+          arg     :=  VarArrayCreate([0, ArrSize], varInteger);
+          Counter    :=  0;
+          IMIdx      :=  0;
+          while IMIdx  < ArrSize Do
+          Begin
+            for i := 0 to 2 do
+            Begin
+              arg[IMIdx] := IncMat.data[Counter][i];
+              inc(IMIdx)
+            End;
+            inc(Counter)
+          End;
         end;
       END
       Else arg := VarArrayCreate([0,0], varInteger);
@@ -553,7 +560,28 @@ begin
        end;
      End
      Else arg := VarArrayCreate([0,0], varInteger);
-    end
+    end;
+  5: begin  // Solution.Laplacian
+      if (ActiveCircuit[ActiveActor] <> Nil) and (ActiveCircuit[ActiveActor].Solution.Laplacian <> Nil) Then Begin
+        with ActiveCircuit[ActiveActor].Solution do
+        begin
+          ArrSize     :=  Laplacian.NZero*3;
+          arg         :=  VarArrayCreate([0, ArrSize], varInteger);
+          Counter     :=  0;
+          IMIdx       :=  0;
+          while IMIdx  < ArrSize Do
+          Begin
+            for i := 0 to 2 do
+            Begin
+              arg[IMIdx] := Laplacian.data[Counter][i];
+              inc(IMIdx)
+            End;
+            inc(Counter)
+          End;
+        end;
+      END
+      Else arg := VarArrayCreate([0,0], varInteger);
+     end
     else
       arg[0] := 'Error, paratemer not recognized';
   end;

@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 117;
+     NumExecCommands = 118;
 
 Var
 
@@ -30,7 +30,7 @@ implementation
 Uses DSSGlobals, ExecHelper, Executive, ExecOptions, ShowOptions,
      ExportOptions, ParserDel, LoadShape, DSSForms,
      PlotOptions, ConnectOptions, sysutils, Utilities, SolutionAlgs,
-     DSSClassDefs, windows, KLUSolve, Diakoptics;
+     DSSClassDefs, windows, KLUSolve, Diakoptics, sparse_math;
 
 
 PROCEDURE DefineCommands;
@@ -155,7 +155,7 @@ Begin
      ExecCommand[115] := 'Refine_BusLevels';
      ExecCommand[116] := 'Remove';
      ExecCommand[117] := 'Abort';
-
+     ExecCommand[118] := 'CalcLaplacian';
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
                          'active object' + CRLF +
@@ -500,6 +500,9 @@ Begin
                          'Remove Line.L22 Editstring="Daily=Dailycurve Duty=SolarShape' + CRLF +
                          'Remove Line.L333 KeepLoad=No';
      CommandHelp[117] := 'Aborts all the simulations running';
+     CommandHelp[118] := 'Calculate the laplacian matrix using the incidence matrix' + CRLF +
+                         'previously calculated, this means that before calling this command' + CRLF +
+                         'the incidence matrix needs to be calculated using calcincmatrix/calcincmatrix_o';
 
 End;
 
@@ -634,7 +637,14 @@ Begin
               ActiveCircuit[ActiveActor].Get_paths_4_Coverage();
               Temp_int  :=  length(ActiveCircuit[ActiveActor].Path_Idx) - 1;
               GlobalResult := inttostr(Temp_int) + ' new paths detected';
-       end
+            end;
+       118: Begin
+              With ActiveCircuit[ActiveActor].Solution do
+              Begin
+                Laplacian := IncMat.Transpose();          // Transposes the Incidence Matrix
+                Laplacian := Laplacian.multiply(IncMat);  // IncMatT*IncMat
+              End;
+            End
 
      ELSE IF ActiveCircuit[ActiveActor]=nil THEN
           Begin

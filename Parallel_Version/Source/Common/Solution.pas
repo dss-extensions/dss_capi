@@ -55,6 +55,7 @@ USES
     System.SyncObjs,
     Parallel_Lib,
     Windows,
+    Sparse_Math,
     CktElement;
 
 CONST
@@ -71,8 +72,6 @@ TYPE
    TNodeVarray = Array[0..1000] of Complex;
    pNodeVarray = ^TNodeVarray;
 
-   TIncMatrixArray = Array of Integer;
-   pIncMatrixArray = ^TIncMatrixArray;
 
    TDSSSolution = CLASS(TDSSClass)
 
@@ -182,7 +181,8 @@ TYPE
        NodeV    : pNodeVArray;    // Main System Voltage Array   allows NodeV^[0]=0
        Currents : pNodeVArray;      // Main System Currents Array
 
-       IncMatrix : TIncMatrixArray;  // Row of the Incidence Matrix Value
+       IncMat    :  Tsparse_matrix; // Incidence sparse matrix
+       Laplacian :  Tsparse_matrix; // Laplacian sparse matrix
 
 //****************************Timing variables**********************************
        SolveStartTime      : int64;
@@ -458,7 +458,6 @@ Begin
 
     InitPropertyValues(0);
     Diakoptics_Ready   :=  False;   // Diskoptics needs to be initialized
-    setlength(IncMatrix,3);
 End;
 
 // ===========================================================================================
@@ -1178,10 +1177,7 @@ var
 
 Begin
   // Uploads the values to the incidence matrix
-  for Cidx := 1 to 3 do IncMatrix[Length(IncMatrix) - CIdx]  := ActiveIncCell[3 - CIdx];
-  // Normalize values
-  IncMatrix[Length(IncMatrix) - 3] := IncMatrix[Length(IncMatrix) - 3] - 1;
-  IncMatrix[Length(IncMatrix) - 2] := IncMatrix[Length(IncMatrix) - 2] - 2;
+  IncMat.insert((ActiveIncCell[0] - 1),(ActiveIncCell[1] - 2),ActiveIncCell[2]);
   ActiveIncCell[2]  :=  -1;
 End;
 // ===========================================================================================
@@ -1210,7 +1206,6 @@ begin
         Inc_Mat_Rows[temp_counter - 1]  :=  'Line.'+elem.Name;
         for TermIdx := 1 to 2 do
         Begin
-            SetLength(IncMatrix, Length(IncMatrix) + 3);
             LineBus           :=  elem.GetBus(TermIdx);
             BusdotIdx         :=  ansipos('.',LineBus);
             if BusdotIdx <> 0 then
@@ -1265,7 +1260,6 @@ begin
         Inc_Mat_Rows[temp_counter - 1]  :=  'Transformer.'+elem.Name;
         for TermIdx := 1 to elem.NumberOfWindings do
         Begin
-            SetLength(IncMatrix, Length(IncMatrix) + 3);
             LineBus     :=  elem.GetBus(TermIdx);
             BusdotIdx   :=  ansipos('.',LineBus);
             if BusdotIdx <> 0 then
@@ -1314,7 +1308,6 @@ begin
           ActiveIncCell[2]  :=  1;
           for CapTermIdx := 1 to 2 do
           Begin
-            SetLength(IncMatrix, Length(IncMatrix) + 3);
             CapBus      :=  elem.GetBus(CapTermIdx);
             BusdotIdx   :=  ansipos('.',CapBus);
             if BusdotIdx <> 0 then
@@ -1366,7 +1359,6 @@ begin
         ActiveIncCell[2]  :=  1;
         for TermIdx := 1 to 2 do
         Begin
-          SetLength(IncMatrix, Length(IncMatrix) + 3);
           RBus      :=  ActiveCktElement.GetBus(TermIdx);
           BusdotIdx   :=  ansipos('.',RBus);
           if BusdotIdx <> 0 then
@@ -1394,11 +1386,16 @@ PROCEDURE TSolutionObj.Calc_Inc_Matrix(ActorID : Integer);
 var
   dlong : Integer;
 Begin
+  // If the sparse matrix obj doesn't exists creates it, otherwise deletes the content
+  if IncMat = nil then
+    IncMat  :=  Tsparse_matrix.Create
+  else
+    IncMat.reset;
+
   if ActiveCircuit[ActorID]<>nil then
     with ActiveCircuit[ActorID] do
     Begin
       temp_counter  :=  0;
-      setlength(IncMatrix,3);           // Init array
       ActiveIncCell[0]  := 1;           // Activates row 1 of the incidence matrix
       // Now we proceed to evaluate the link branches
       AddLines2IncMatrix(ActorID);      // Includes the Lines
@@ -1419,11 +1416,11 @@ var
 begin
   Result            :=  -1;
   Tflag             :=  True;
-  for idx_1 := 1 to ((length(IncMatrix)  div 3) - 1) do    //Looks for the Column in the IncMatrix
+  for idx_1 := 1 to (IncMat.NZero - 1) do    //Looks for the Column in the IncMatrix
   begin
-    if (IncMatrix[idx_1*3 + 1] = Col) and Tflag then
+    if (IncMat.data[idx_1][1] = Col) and Tflag then
     begin
-      Result :=   IncMatrix[idx_1*3];
+      Result :=   IncMat.data[idx_1][0];
       Tflag  :=   False;
     end;
   end;
@@ -1439,17 +1436,17 @@ var
 Begin
   Result  :=  -1;
   Tflag   :=  True;    // Detection Flag
-  for Idx_1 := 1 to ((length(IncMatrix)  div 3) - 1) do    //Looks for the row in the IncMatrix
+  for Idx_1 := 1 to (IncMat.NZero - 1) do    //Looks for the row in the IncMatrix
   begin
-    if (IncMatrix[Idx_1*3] = Row) and Tflag then
+    if (IncMat.data[Idx_1][0] = Row) and Tflag then
     begin
       setlength(Active_Cols,2);
       setlength(Active_Cols_Idx,2);
-      Active_Cols[0]      :=  IncMatrix[Idx_1*3 + 1];     //Stores the indexes of both columns for the link branch
-      Active_Cols[1]      :=  IncMatrix[Idx_1*3 + 4];     //In case they need ot be used in the future by the caller
-      Active_Cols_Idx[0]  :=  IncMatrix[Idx_1*3 - 1];     //Stores the indexes of both columns for the link branch
-      Active_Cols_Idx[1]  :=  IncMatrix[Idx_1*3 + 2];     //In case they need ot be used in the future by the caller
-      Result :=  IncMatrix[Idx_1*3 + 1];
+      Active_Cols[0]      :=  IncMat.data[Idx_1][1];     //Stores the indexes of both columns for the link branch
+      Active_Cols[1]      :=  IncMat.data[Idx_1 + 1][1]; //In case they need to be used in the future by the caller
+      Active_Cols_Idx[0]  :=  IncMat.data[Idx_1 - 1][2]; //Stores the indexes of both columns for the link branch
+      Active_Cols_Idx[1]  :=  IncMat.data[Idx_1][2];     //In case they need to be used in the future by the caller
+      Result :=  IncMat.data[Idx_1][1];
       Tflag  :=  False;
     end;
   end;
@@ -1476,7 +1473,10 @@ Var
   j,                                                  // Default counter
   j2,                                                 // Default counter
   ZeroLevel,                                          // Number of Zero level Buses
-  BusdotIdx,                                          // Local Shared variable
+  BusdotIdx,
+  row,
+  col,
+  val,                                          // Local Shared variable
   nPDE           : Integer;                           // PDElements index
 Begin
   Try
@@ -1487,7 +1487,12 @@ Begin
       nLevels     := 0;
       nPDE        := 0;
       setlength(Inc_Mat_Cols,0);
-      setlength(IncMatrix,3);           // Init array
+      //Init the spaser matrix
+      if IncMat = nil then
+        IncMat  :=  Tsparse_matrix.Create
+      else
+        IncMat.reset;
+
       ActiveIncCell[0]  := -1;           // Activates row 1 of the incidence matrix
       If Assigned (topo) Then Begin
         PDElem                  := topo.First;
@@ -1520,24 +1525,22 @@ Begin
               Inc_Mat_Rows[nPDE-1]    :=  PDE_Name;
               for j := 0 to ActiveCktElement.Nterms-1 do
               Begin
-                ActiveIncCell[1]  :=  length(IncMatrix);  // Gets the offset inside the vector
-                setlength(IncMatrix,ActiveIncCell[1] + 3);
-                IncMatrix[ActiveIncCell[1]] :=  ActiveIncCell[0]; //Sets the row
-                BusdotIdx           :=  -1;       // Flag to not create a new variable
+                row :=  ActiveIncCell[0];                 //Sets the row
+                BusdotIdx           :=  -1;               // Flag to not create a new variable
                 for i := 0 to length(Inc_Mat_Cols)-1 do   // Checks if the bus already exists in the Cols array
                   if Inc_Mat_Cols[i] = PDE_Buses[j] then  BusdotIdx :=  i;
-                if BusdotIdx >= 0 then  IncMatrix[ActiveIncCell[1]  + 1] :=  BusdotIdx   //Sets the Col
+                if BusdotIdx >= 0 then  col :=  BusdotIdx   //Sets the Col
                 else
                 Begin
                   setlength(Inc_Mat_Cols,length(Inc_Mat_Cols)+1);
                   setlength(Inc_Mat_levels,length(Inc_Mat_levels)+1);
                   Inc_Mat_Cols[length(Inc_Mat_Cols)-1]  :=  PDE_Buses[j];
                   Inc_Mat_levels[length(Inc_Mat_Cols)-1]:=  nLevels;
-                  IncMatrix[ActiveIncCell[1]  + 1] :=  length(Inc_Mat_Cols) - 1; //Sets the Col
+                  col :=  length(Inc_Mat_Cols) - 1; //Sets the Col
                 End;
-                if j = 0 then IncMatrix[ActiveIncCell[1]  + 2]  :=  1 //Sets the value
-                else IncMatrix[ActiveIncCell[1]  + 2] :=  -1;
-
+                if j = 0 then val  :=  1 //Sets the value
+                else val :=  -1;
+                IncMat.insert(row,col,val);
               End;
             end;
           End;

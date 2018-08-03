@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-        NumExportOptions = 56;
+        NumExportOptions = 57;
 
 FUNCTION DoExportCmd:Integer;
 
@@ -86,6 +86,7 @@ Begin
       ExportOption[54] := 'IncMatrixRows';
       ExportOption[55] := 'IncMatrixCols';
       ExportOption[56] := 'BusLevels';
+      ExportOption[57] := 'Laplacian';
 
       ExportHelp[ 1] := '(Default file = EXP_VOLTAGES.CSV) Voltages to ground by bus/node.';
       ExportHelp[ 2] := '(Default file = EXP_SEQVOLTAGES.CSV) Sequence voltages.';
@@ -151,7 +152,7 @@ Begin
       ExportHelp[55] := 'Exports the names of the Cols (Buses) used for calculating the Branch-to-Node Incidence matrix for the active circuit';
       ExportHelp[56] := 'Exports the names and the level of each Bus inside the Circuit based on its topology information. The level value defines' +
                         'how far or close is the bus from the circuits backbone (0 means that the bus is at the backbone)';
-
+      ExportHelp[57] := 'Exports the Laplacian matrix calculated using the branch-to-node Incidence matrix in compressed coordinated format (Row,Col,Value)';
 End;
 
 //----------------------------------------------------------------------------
@@ -344,6 +345,7 @@ Begin
          54: FileName := 'Inc_Matrix_Rows.csv';
          55: FileName := 'Inc_Matrix_Cols.csv';
          56: FileName := 'Bus_Levels.csv';
+         57: FileName := 'Laplacian.csv';
 
        ELSE
              FileName := 'EXP_VOLTAGES.CSV';    // default
@@ -428,6 +430,7 @@ Begin
      54: ExportIncMatrixRows(FileName);
      55: ExportIncMatrixCols(FileName);
      56: ExportBusLevels(FileName);
+     57: ExportLaplacian(FileName);
 
    ELSE
         // ExportVoltages(FileName);    // default

@@ -104,6 +104,7 @@ type
     function Get_BusLevels: OleVariant; safecall;
     function Get_IncMatrixRows: OleVariant; safecall;
     function Get_IncMatrixCols: OleVariant; safecall;
+    function Get_Laplacian: OleVariant; safecall;
   end;
 
 implementation
@@ -715,18 +716,27 @@ end;
 
 function TSolution.Get_IncMatrix: OleVariant;
 var
+  i,
+  Counter,
   IMIdx,
   Idx,
   ArrSize : Integer;
 begin
-    If ActiveCircuit[ActiveActor] <> Nil Then Begin
-      with ACtiveCircuit[ActiveActor].Solution do
+    If (ActiveCircuit[ActiveActor] <> Nil) and (ActiveCircuit[ActiveActor].Solution.IncMat <> Nil) Then Begin
+      with ActiveCircuit[ActiveActor].Solution do
       begin
-         ArrSize    :=  length(IncMatrix)-3;
+         ArrSize    :=  IncMat.NZero*3;
          Result     :=  VarArrayCreate([0, ArrSize], varInteger);
-         for IMIdx  :=  0 to ArrSize Do
+         Counter    :=  0;
+         IMIdx      :=  0;
+         while IMIdx  < ArrSize Do
          Begin
-            Result[IMIdx] := IncMatrix[IMIdx+3];
+            for i := 0 to 2 do
+            Begin
+              Result[IMIdx] := IncMat.data[Counter][i];
+              inc(IMIdx)
+            End;
+            inc(Counter)
          End;
       end;
     END
@@ -806,6 +816,35 @@ begin
        end;
      End
      Else Result := VarArrayCreate([0,0], varInteger);
+end;
+
+function TSolution.Get_Laplacian: OleVariant;
+var
+  i,
+  Counter,
+  IMIdx,
+  Idx,
+  ArrSize : Integer;
+begin
+    If (ActiveCircuit[ActiveActor] <> Nil) and (ActiveCircuit[ActiveActor].Solution.Laplacian <> Nil) Then Begin
+      with ActiveCircuit[ActiveActor].Solution do
+      begin
+         ArrSize    :=  Laplacian.NZero*3;
+         Result     :=  VarArrayCreate([0, ArrSize], varInteger);
+         Counter    :=  0;
+         IMIdx      :=  0;
+         while IMIdx  < ArrSize Do
+         Begin
+            for i := 0 to 2 do
+            Begin
+              Result[IMIdx] := Laplacian.data[Counter][i];
+              inc(IMIdx)
+            End;
+            inc(Counter)
+         End;
+      end;
+    END
+    Else Result := VarArrayCreate([0,0], varInteger);
 end;
 
 initialization

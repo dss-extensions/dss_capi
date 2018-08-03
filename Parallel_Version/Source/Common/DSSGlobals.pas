@@ -271,7 +271,6 @@ VAR
    FM_Append              : array of Boolean;
 
 
-
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
 PROCEDURE DoSimpleMsg(Const S :String; ErrNum:Integer);
 
@@ -969,6 +968,7 @@ initialization
    ActiveEarthModel[ActiveActor]      := DefaultEarthModel;
    Parallel_enabled      :=  False;
    ConcatenateReports    :=  False;
+
 
    {Initialize filenames and directories}
 

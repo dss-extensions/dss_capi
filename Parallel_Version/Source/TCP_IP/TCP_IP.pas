@@ -9,7 +9,7 @@ unit TCP_IP;
 interface
 
 uses
-  System.Win.ScktComp,SysUtils,System.JSON,ShellApi,TlHelp32,Windows,Winsock;
+  System.Win.ScktComp,SysUtils,System.JSON,ShellApi,TlHelp32,Windows,Winsock,DSSPlot;
 
 type
   IntegerArray1d  = array of Integer;
@@ -43,7 +43,7 @@ type
     procedure ProfilePlotMsg(ObjectName: string);
     procedure ScatterPlotMsg;
     procedure EvolutionPlotMsg;
-    procedure MatrixPlotMsg;
+    procedure MatrixPlotMsg(MatrixType : Integer);
   end;
 
   function flat_int2str (number:integer): AnsiString;
@@ -1171,10 +1171,11 @@ begin
   MySocket.Socket.SendText(MSG);//Send the message's content to the server
 end;
 
-procedure TDSSConnect.MatrixPlotMsg;
+procedure TDSSConnect.MatrixPlotMsg(MatrixType : Integer);
 var
   MSG : AnsiString;
-  ArrSize,IMIdx,i : Integer;
+  ArrSize,IMIdx,i,
+  Counter : Integer;
 
   x_axis,y_axis,z_axis: DoubleArray2d;
   y_labels: StringArray1d;
@@ -1195,32 +1196,79 @@ begin
   SetLength(z_axis, 0, 0);
   SetLength(PD_Elements,0,0);
 
-  // Solution.IncMatrix
+  // Matrix could be the B2N Incidence or the Laplacian
   If ActiveCircuit[ActiveActor] <> Nil Then
   Begin
     with ACtiveCircuit[ActiveActor].Solution do
     begin
-      // Removes the 3 initial zeros and the extra index
-      // Since it starts on 0
-      ArrSize    :=  length(IncMatrix)-4;
-      Setlength(x_axis,1,ArrSize+1);
-      for IMIdx  :=  0 to ArrSize Do
+      if MatrixType = 0 then              // Incidence matrix
       Begin
-        x_axis[0,IMIdx]:= IncMatrix[IMIdx+3];
-      end;
+        ArrSize    :=  IncMat.NZero*3;
+        Setlength(x_axis,1,ArrSize+1);
+        Counter :=  0;
+        IMIdx   :=  0;
+        while IMIdx < ArrSize Do
+        Begin
+          for i := 0 to 2 do
+          Begin
+            x_axis[0,IMIdx]:= IncMat.data[Counter][i];
+            inc(IMIdx);
+          End;
+          inc(Counter);
+        end;
+      end
+      else                                // Laplacian matrix
+      Begin
+        ArrSize    :=  Laplacian.NZero*3;
+        Setlength(x_axis,1,ArrSize+1);
+        Counter :=  0;
+        IMIdx   :=  0;
+        while IMIdx < ArrSize Do
+        Begin
+          for i := 0 to 2 do
+          Begin
+            x_axis[0,IMIdx]:= Laplacian.data[Counter][i];
+            inc(IMIdx);
+          End;
+          inc(Counter);
+        end;
+      End;
     end;
   end;
 
   // Solution.IncMatrixRows
   If ActiveCircuit[ActiveActor] <> Nil Then Begin
-    with ACtiveCircuit[ActiveActor].Solution,ActiveCircuit[ActiveActor] do
+    with ActiveCircuit[ActiveActor].Solution,ActiveCircuit[ActiveActor] do
     begin
+      if MatrixType = 0 then   // Incidence matrix
+      Begin
         ArrSize :=  length(Inc_Mat_Rows)-1;
         Setlength(y_labels,ArrSize+1);
         for IMIdx  :=  0 to ArrSize Do
         Begin
            y_labels[IMIdx] := Inc_Mat_Rows[IMIdx];
         End;
+      End
+      else                      // Laplacian matrix
+      Begin
+        if IncMat_Ordered then
+        begin
+          ArrSize    :=  length(Inc_Mat_Cols)-1;
+          Setlength(y_labels,ArrSize+1);
+          for IMIdx  :=  0 to ArrSize Do
+          Begin
+             y_labels[IMIdx] := Inc_Mat_Cols[IMIdx];
+          End;
+        end
+        else
+        begin
+          Setlength(y_labels,NumBuses);
+          FOR i := 0 to NumBuses-1 DO
+          Begin
+             Y_labels[i] := BusList.Get(i+1);
+          End;
+        end;
+      End;
     end;
   END;
 
@@ -1237,14 +1285,14 @@ begin
            Bus_Names[IMIdx] := Inc_Mat_Cols[IMIdx];
         End;
       end
-    else
-    begin
-      Setlength(Bus_Names,NumBuses);
-      FOR i := 0 to NumBuses-1 DO
-      Begin
-         Bus_Names[i] := BusList.Get(i+1);
-      End;
-    end;
+      else
+      begin
+        Setlength(Bus_Names,NumBuses);
+        FOR i := 0 to NumBuses-1 DO
+        Begin
+           Bus_Names[i] := BusList.Get(i+1);
+        End;
+      end;
     end;
   End;
 
