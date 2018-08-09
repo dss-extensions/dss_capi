@@ -102,6 +102,8 @@ CONST
       PROFILELLALL = 9996;
       PROFILELLPRI = 9995;
       PROFILELL    = 9994;
+      PROFILEPUKM = 9993;  // not mutually exclusive to the other choices 9999..9994
+      PROFILE120KFT = 9992;  // not mutually exclusive to the other choices 9999..9994
 
 VAR
 

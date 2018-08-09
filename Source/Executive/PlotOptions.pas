@@ -13,7 +13,7 @@ Uses Command;
 
 
 CONST
-        NumPlotOptions = 21;
+        NumPlotOptions = 22;
 
 FUNCTION DoPlotCmd:Integer;
 
@@ -56,6 +56,7 @@ Begin
       PlotOption[19] := '3phLinestyle';
       PlotOption[20] := '1phLinestyle';
       PlotOption[21] := 'phases';
+      PlotOption[22] := 'profilescale';
 
 
       PlotHelp[ 1] := 'One of {Circuit | Monitor | Daisy | Zones | AutoAdd | '+ CRLF +
@@ -136,6 +137,9 @@ Begin
                       'LLPRIMARY = plot all nodes -- L-L voltages primary only)' +CRLF+
                       '(phase number) = plot all nodes on selected phase'+CRLF+CRLF+
                       'Note: Only nodes downline from an energy meter are plotted.';
+      PlotHelp[22] := 'PUKM | 120KFT, default is PUKM' + CRLF +
+                      'PUKM = per-unit voltage vs. distance in km' + CRLF +
+                      '120KFT = voltage on 120-V base vs. distance in kft.';
 
 End;
 
@@ -283,6 +287,10 @@ Begin
                   Else if CompareTextShortest(Param, 'llall')=0   then PhasesToPlot := PROFILELLALL
                   Else if CompareTextShortest(Param, 'llprimary')=0 then PhasesToPlot := PROFILELLPRI
                   Else If Length(Param)=1 then PhasesToPlot := Parser.IntValue;
+             End;
+         22: Begin
+              ProfileScale := PROFILEPUKM;
+              if CompareTextShortest (Param, '120KFT') = 0 then ProfileScale := PROFILE120KFT;
              End;
 
        Else
