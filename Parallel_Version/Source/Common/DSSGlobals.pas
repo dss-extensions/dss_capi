@@ -768,9 +768,11 @@ Begin
   {$ENDIF}
   DefaultBaseFreq  := StrToInt(DSS_Registry.ReadString('BaseFrequency', '60' ));
   LastFileCompiled := DSS_Registry.ReadString('LastFile', '' );
+{$IFNDEF DSS_CAPI} // Disable datapath persistence when building the DSS_CAPI DLL  
   TestDataDirectory :=   DSS_Registry.ReadString('DataPath', DataDirectory[ActiveActor]);
   If SysUtils.DirectoryExists (TestDataDirectory) Then SetDataPath (TestDataDirectory)
                                         Else SetDataPath (DataDirectory[ActiveActor]);
+{$ENDIF}
 End;
 
 
@@ -785,7 +787,9 @@ Begin
       DSS_Registry.WriteBool('ScriptFontItalic', {$IFDEF FPC}False{$ELSE}(fsItalic in DefaultFontStyles){$ENDIF});
       DSS_Registry.WriteString('BaseFrequency', Format('%d',[Round(DefaultBaseFreq)]));
       DSS_Registry.WriteString('LastFile',      LastFileCompiled);
+{$IFNDEF DSS_CAPI} // Disable datapath persistence when building the DSS_CAPI DLL      
       DSS_Registry.WriteString('DataPath', DataDirectory[ActiveActor]);
+{$ENDIF}
   End;
 End;
 
@@ -1054,7 +1058,11 @@ initialization
 {$ENDIF}
 
    StartupDirectory := GetCurrentDir + PathDelim;
+{$IFNDEF DSS_CAPI}
    SetDataPath (GetDefaultDataDirectory + PathDelim + ProgramName + PathDelim);
+{$ELSE} // Use the current working directory as the initial datapath when using DSS_CAPI
+   SetDataPath (StartupDirectory);
+{$ENDIF} 
 {$IFNDEF FPC}
    DSS_Registry     := TIniRegSave.Create('\Software\' + ProgramName);
 {$ELSE}
