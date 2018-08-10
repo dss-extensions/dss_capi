@@ -4,13 +4,12 @@ If you are looking for the Python bindings, see [dss_python](http://github.com/P
 
 If you are looking for the .NET/C# bindings, the code was moved to [dss_sharp](http://github.com/PMeira/dss_sharp/).
 
-**Version 0.9.6 is under development with a new structure for easier development and building, expected to be released by 2018-07-20.**
-You can always use 0.9.5 though!
+Version 0.9.8, based on OpenDSS SVN r2246.
 
 This is a work-in-progress but it's deemed stable enough to be made public. 
-*Note that, while the interface with OpenDSS is stable (v7, classic version), the OpenDSS-PM (v8, actor-based parallel machine version) interface is experimental.*
+*Note that, while the interface with OpenDSS is stable (v7, classic version), the OpenDSS-PM (v8, actor-based parallel machine version) interface is experimental in our builds.*
 
-This library exposes the OpenDSS/OpenDSS-PM engine in a plain C interface that tries to reproduce most of the COM methods. In fact, most of the code is derived from the COM implementation files. The resulting DLL can be using directly or through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level. Initial support for .NET bindings is available starting in version 0.9.4.
+This library exposes the OpenDSS/OpenDSS-PM engine in a plain C interface that tries to reproduce most of the COM methods. In fact, most of the code is derived from the COM implementation files. The resulting DLL can be using directly or through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level. Initial support for .NET bindings is available starting in version 0.9.4. MATLAB bindings are expected for version 0.10.
 
 Instead of using extra numeric parameters as in the official DDLL interface, each original COM property is exposed as a pair of functions. For example, the load kVA property is exposed as:
 
@@ -21,6 +20,8 @@ Instead of using extra numeric parameters as in the official DDLL interface, eac
 
 Besides low-level details such as memory management, most of the COM documentation can be used as-is. 
 
+**Starting in version 0.9.8, we disabled the `opendsscmd.ini` creation. You can set the default base frequency using the environment variable DSS_BASE_FREQUENCY, or just set it in the DSS scripts (recommended). This also means that the initial datapath is set to the current working directory.**
+
 This repository contains only the the custom API source code.
 In order to track upstream changes in the official SVN repository, a custom patched version of the source code with changes to build v8/OpenDSS-PM with FreePascal, as well as port recent features to the v7/Classic version, is maintained in the repository at [electricdss-src](https://github.com/PMeira/electricdss-src).
 
@@ -28,7 +29,7 @@ In order to track upstream changes in the official SVN repository, a custom patc
 
 ## Recent changes
 
-- 2018-07-27 / version 0.9.6: **Planned**
+- 2018-08-10 / version 0.9.8: Major reorganization of the source code, many minor fixes, new building scripts.
 - 2018-04-05 / version 0.9.5: New functions `Circuit_SetCktElement*` to set the active circuit element.
 - 2018-03-06 / version 0.9.4: Includes fixes for DSSProperty, includes of the original helpstrings in the C header, integrate upstream changes up to revision 2152. This version introduces a first version of .NET bindings to the native DLL.
 - 2018-02-16 / version 0.9.3: Integrates COM interface fixes from revision 2136 (`First` `Next` iteration)
@@ -41,8 +42,6 @@ In order to track upstream changes in the official SVN repository, a custom patc
 - Currently not implemented:
     - `DSSEvents` from `DLL/ImplEvents.pas`: seems too dependent on COM.
     - `DSSProgress` from `DLL/ImplDSSProgress.pas`: would need a reimplementation depending on the target UI (GUI, text, headless, etc.)
-
-- Linux binaries are not yet available. For the time being, you need to build them yourself.
     
 ## Extra features
 
@@ -92,8 +91,20 @@ The current recommendation is to build your own KLUSolve, so you need to downloa
 
 - Build the main project:
 ```
-    bash build.sh
+    bash build_linux_x64.sh
 ```
+
+### On MacOS
+
+For MacOS, you can copy the relevant libklusolve.dylib from the official OpenDSS SVN repository. Overall instructions:
+
+- Install the x64 FreePascal compiler -- see [the wiki](http://wiki.freepascal.org/Installing_Lazarus#Installing_The_Free_Pascal_Compiler) for further instructions.
+- Copy libklusolve.dylib
+- Build the main project:
+```
+    bash build_macos_x64.sh
+```
+
 
 ## Example
 
@@ -141,9 +152,9 @@ Currently all testing/validation is based on [dss_python](http://github.com/PMei
 
 Besides bug fixes, the main funcionality of this library is mostly done. Notable desirable features that may be implemented are:
 
-- More and better documentation, including the integration of the help strings from the IDL/COM definition files.
-- Automate package building for some Linux distributions
-- Automate validation of the Linux binaries (compare the outputs to the Windows version)
+- More and better documentation. We already integrated the help strings from the IDL/COM definition files in the header files.
+- Automate package building for some Linux distributions.
+- Automate validation of the Linux binaries (compare the outputs to the Windows version).
 - C++ wrappers: Expose the API to C++ using namespaces for organization, overload methods, etc.
 
 Other features that may include more invasive changes in the code base will probably be developed in another repository.
