@@ -114,9 +114,10 @@ Begin
      FRecorderOn := FALSE;
      FrecorderFile := '';
 
+{$IFNDEF DSS_CAPI}     
      {Get some global Variables from Registry}
      ReadDSS_Registry;
-
+{$ENDIF}
      {Override Locale defaults so that CSV files get written properly}
      FormatSettings.DecimalSeparator  := '.';
      FormatSettings.ThousandSeparator := ',';
@@ -131,8 +132,10 @@ var
 
 Begin
 
+{$IFNDEF DSS_CAPI}     
     {Write some global Variables to Registry}
      WriteDSS_Registry;
+{$ENDIF}
 
      ClearAllCircuits;
 

@@ -113,7 +113,9 @@ VAR
    DLLFirstTime   :Boolean=TRUE;
    DLLDebugFile   :TextFile;
    ProgramName    :String;
+{$IFNDEF DSS_CAPI} // Disable DSS_Registry completely when building the DSS_CAPI DLL   
    DSS_Registry   :TIniRegSave; // Registry   (See Executive)
+{$ENDIF}
 
    // Global variables for the DSS visualization tool
    DSS_Viz_installed   :Boolean=False; // DSS visualization tool (flag of existance)
@@ -292,8 +294,10 @@ PROCEDURE WriteQueryLogFile(Const Prop, S:String);
 
 PROCEDURE WriteDLLDebugFile(Const S:String);
 
+{$IFNDEF DSS_CAPI} // Disable DSS_Registry completely when building the DSS_CAPI DLL
 PROCEDURE ReadDSS_Registry;
 PROCEDURE WriteDSS_Registry;
+{$ENDIF}
 
 FUNCTION IsDSSDLL(Fname:String):Boolean;
 
@@ -754,6 +758,7 @@ BEGIN
   end;
 END;
 
+{$IFNDEF DSS_CAPI} // Disable DSS_Registry completely when building the DSS_CAPI DLL
 PROCEDURE ReadDSS_Registry;
 Var  TestDataDirectory:string;
 Begin
@@ -768,11 +773,9 @@ Begin
   {$ENDIF}
   DefaultBaseFreq  := StrToInt(DSS_Registry.ReadString('BaseFrequency', '60' ));
   LastFileCompiled := DSS_Registry.ReadString('LastFile', '' );
-{$IFNDEF DSS_CAPI} // Disable datapath persistence when building the DSS_CAPI DLL  
   TestDataDirectory :=   DSS_Registry.ReadString('DataPath', DataDirectory[ActiveActor]);
   If SysUtils.DirectoryExists (TestDataDirectory) Then SetDataPath (TestDataDirectory)
                                         Else SetDataPath (DataDirectory[ActiveActor]);
-{$ENDIF}
 End;
 
 
@@ -787,11 +790,10 @@ Begin
       DSS_Registry.WriteBool('ScriptFontItalic', {$IFDEF FPC}False{$ELSE}(fsItalic in DefaultFontStyles){$ENDIF});
       DSS_Registry.WriteString('BaseFrequency', Format('%d',[Round(DefaultBaseFreq)]));
       DSS_Registry.WriteString('LastFile',      LastFileCompiled);
-{$IFNDEF DSS_CAPI} // Disable datapath persistence when building the DSS_CAPI DLL      
       DSS_Registry.WriteString('DataPath', DataDirectory[ActiveActor]);
-{$ENDIF}
   End;
 End;
+{$ENDIF}
 
 PROCEDURE ResetQueryLogFile;
 Begin
@@ -1063,10 +1065,18 @@ initialization
 {$ELSE} // Use the current working directory as the initial datapath when using DSS_CAPI
    SetDataPath (StartupDirectory);
 {$ENDIF} 
-{$IFNDEF FPC}
+
+{$IFNDEF DSS_CAPI}
+   {$IFNDEF FPC}
    DSS_Registry     := TIniRegSave.Create('\Software\' + ProgramName);
-{$ELSE}
+   {$ELSE}
    DSS_Registry     := TIniRegSave.Create(DataDirectory[ActiveActor] + 'opendsscmd.ini');
+   {$ENDIF}
+{$ELSE}
+   IF GetEnvironmentVariable('DSS_BASE_FREQUENCY') <> '' THEN
+   BEGIN
+      DefaultBaseFreq  := StrToInt(GetEnvironmentVariable('DSS_BASE_FREQUENCY'));
+   END;
 {$ENDIF}
 
    AuxParser        := TParser.Create;
@@ -1118,7 +1128,9 @@ Finalization
   With DSSExecutive Do If RecorderOn Then Recorderon := FALSE;
   ClearAllCircuits;
   DSSExecutive.Free;  {Writes to Registry}
+{$IFNDEF DSS_CAPI}  
   DSS_Registry.Free;  {Close Registry}
+{$ENDIF}
 
 
 // Free all the KLU instances
