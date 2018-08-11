@@ -6,6 +6,10 @@
 #ifndef klusystem_included
 #define klusystem_included
 
+#ifndef csi
+#define csi int
+#endif
+
 extern "C" {
 #include "cs.h"
 #include "csz.h"
