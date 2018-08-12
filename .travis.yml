@@ -1,0 +1,33 @@
+language: cpp
+os: 
+    - linux
+    - osx
+before_install:
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install fpc; fi
+    - |
+      if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
+        wget https://sourceforge.net/projects/freepascal/files/Linux/3.0.4/fpc-3.0.4.x86_64-linux.tar/download -Ofpc.tar
+        tar xf fpc.tar
+        cd fpc-3.0.4.x86_64-linux
+        echo > fpc_install_options.txt
+        echo n >> fpc_install_options.txt
+        echo n >> fpc_install_options.txt
+        echo n >> fpc_install_options.txt
+        sh ./install.sh < fpc_install_options.txt
+        cd ..
+        rm -rf fpc-3.0.4.x86_64-linux
+        export PATH=$PATH:~/fpc-3.0.4/bin
+      fi
+
+install: true
+script:
+    - git clone https://github.com/PMeira/electricdss-src ../electricdss-src
+    - mkdir klusolve/build
+    - cd klusolve/build
+    - cmake -DUSE_SYSTEM_SUITESPARSE=OFF ..
+    - cmake --build . --config Release
+    - cd ../..
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sh build_macos_x64.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sh build_linux_x64.sh; fi
+    - ls -lR lib
+
