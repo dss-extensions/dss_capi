@@ -1,3 +1,5 @@
+[![AppVeyor: Windows build status](https://ci.appveyor.com/api/projects/status/vky40m4kj99nlxyc/branch/master?svg=true)](https://ci.appveyor.com/project/PMeira/dss-capi/branch/master)
+
 # dss_capi: An unofficial C API for EPRI's OpenDSS
 
 If you are looking for the Python bindings, see [dss_python](http://github.com/PMeira/dss_python/).
