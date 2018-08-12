@@ -3,10 +3,30 @@
 # build SuiteSparse on Windows
 
 cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
-SET(CMAKE_DEBUG_POSTFIX "d")
 project(klusolve)
+SET(CMAKE_DEBUG_POSTFIX "d")
+SET(CMAKE_RELEASE_PREFIX "")
 
-SET(USE_SYSTEM_SUITESPARSE ON CACHE BOOL "Use system SuiteSparse.") 
+SET(USE_SYSTEM_SUITESPARSE ON CACHE BOOL "Use system SuiteSparse.")
+
+if ("${CMAKE_SIZEOF_VOID_P}" EQUAL "8")
+    SET(KLUSOLVE_OUT_DIR_SUFFIX "x64")
+else () 
+    SET(KLUSOLVE_OUT_DIR_SUFFIX "x86")
+endif ()
+
+if ("${CMAKE_SYSTEM_NAME}" STREQUAL "Windows")
+    SET(KLUSOLVE_OUT_DIR_PREFIX "win")
+elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+    SET(KLUSOLVE_OUT_DIR_PREFIX "darwin")
+elseif ("${CMAKE_SYSTEM_NAME}" STREQUAL "Linux")
+    SET(KLUSOLVE_OUT_DIR_PREFIX "linux")
+else ()
+    MESSAGE(FATAL_ERROR "Unsupported system? ${CMAKE_SYSTEM_NAME}" )
+endif ()
+
+
+SET(KLUSOLVE_OUT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../lib/${KLUSOLVE_OUT_DIR_PREFIX}_${KLUSOLVE_OUT_DIR_SUFFIX}")
 
 if (USE_SYSTEM_SUITESPARSE)
     find_path(SUITESPARSE_INCLUDE_DIR NAMES klu.h HINTS /usr/include /usr/include/suitesparse /usr/local/include /usr/local/include/suitesparse)
@@ -40,8 +60,6 @@ if (USE_SYSTEM_SUITESPARSE)
     endif()
     
     add_library(shared SHARED KLUSolve.cpp KLUSystem.cpp csz_stuff.c klusolve.def)
-    set_target_properties(shared PROPERTIES OUTPUT_NAME klusolve)
-    set_target_properties(shared PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../lib)
     target_link_libraries(shared ${KLU_LIBRARIES})
     include_directories(${SUITESPARSE_INCLUDE_DIR})
 else ()    
@@ -205,8 +223,6 @@ else ()
     SET(SUITESPARSE_SRC "${SUITESPARSE_DIR}/SuiteSparse_config/SuiteSparse_config.c" ${KLU_I} ${KLU_L} ${KLU_D} ${KLU_DL} ${KLU_Z} ${KLU_ZL} ${BTF_I} ${BTF_L} ${COLAMD_I} ${COLAMD_L} ${COLAMD_GLOBAL} ${AMD_I} ${AMD_L} ${AMD_GLOBAL} ${CSPARSE_SRC})
     SET(KLUSOLVE_SRC KLUSolve.cpp KLUSystem.cpp csz_stuff.c)
     add_library(shared SHARED ${KLUSOLVE_SRC} ${SUITESPARSE_SRC} klusolve.def)
-    set_target_properties(shared PROPERTIES OUTPUT_NAME klusolve)
-    set_target_properties(shared PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../lib)
     target_link_libraries(shared ${KLU_LIBRARIES})
     include_directories(
         "${SUITESPARSE_DIR}/AMD/Include"
@@ -215,4 +231,21 @@ else ()
         "${SUITESPARSE_DIR}/SuiteSparse_config/Include"
     )
 endif (USE_SYSTEM_SUITESPARSE)
+
+if (MSVC)
+    set_target_properties(shared PROPERTIES OUTPUT_NAME libklusolve)
+else ()
+    set_target_properties(shared PROPERTIES OUTPUT_NAME klusolve)
+endif ()
+
+set_target_properties(shared PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${KLUSOLVE_OUT_DIR})
+set_target_properties(shared PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${KLUSOLVE_OUT_DIR})
+set_target_properties(shared PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${KLUSOLVE_OUT_DIR})
+
+if (MSVC)
+    # Force the Release output to be in the expected folder
+    set_target_properties(shared PROPERTIES LIBRARY_OUTPUT_DIRECTORY_RELEASE ${KLUSOLVE_OUT_DIR})
+    set_target_properties(shared PROPERTIES RUNTIME_OUTPUT_DIRECTORY_RELEASE ${KLUSOLVE_OUT_DIR})
+    set_target_properties(shared PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${KLUSOLVE_OUT_DIR})
+endif ()
 
