@@ -25,7 +25,7 @@ interface
 USES
      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
-     AutoAdd, EnergyMeter, NamedObject, CktTree, Graphics, math;
+     AutoAdd, EnergyMeter, NamedObject, CktTree, Graphics, math,     Sparse_Math;
 
 
 TYPE
@@ -58,23 +58,22 @@ TYPE
     TDSSCircuit = CLASS(TNamedObject)
 
       Private
-          NodeBuffer        :pIntegerArray;
-          NodeBufferMax     :Integer;
-          FBusNameRedefined :Boolean;
-          FActiveCktElement :TDSSCktElement;
-          FCaseName         :String;
+          NodeBuffer          :pIntegerArray;
+          NodeBufferMax       :Integer;
+          FBusNameRedefined   :Boolean;
+          FActiveCktElement   :TDSSCktElement;
+          FCaseName           :String;
 
           // Temp arrays for when the bus swap takes place
-          SavedBuses    :pTBusArray;
-          SavedBusNames :pStringArray;
-          SavedNumBuses :Integer;
-          FLoadMultiplier :Double;  // global multiplier for every load
+          SavedBuses          :pTBusArray;
+          SavedBusNames       :pStringArray;
+          SavedNumBuses       :Integer;
+          FLoadMultiplier     :Double;  // global multiplier for every load
 
-          AbortBusProcess :Boolean;
+          AbortBusProcess     :Boolean;
 
-          Branch_List: TCktTree; // topology from the first source, lazy evaluation
-          BusAdjPC, BusAdjPD: TAdjArray; // bus adjacency lists of PD and PC elements
-
+          Branch_List         : TCktTree; // topology from the first source, lazy evaluation
+          BusAdjPC, BusAdjPD  : TAdjArray; // bus adjacency lists of PD and PC elements
 
           Procedure AddDeviceHandle(Handle:Integer);
           Procedure AddABus;
@@ -166,6 +165,8 @@ TYPE
           NumDevices, NumBuses, NumNodes:Integer;
           MaxDevices, MaxBuses, MaxNodes:Integer;
           IncDevices, IncBuses, IncNodes:Integer;
+          // Flag to signal that the A-Diakoptics parallelization will be used
+          ADiakoptics         : Boolean;
 
           // Variables for the tearing Algorithm
 
@@ -489,32 +490,34 @@ BEGIN
      DefaultDailyShapeObj  := LoadShapeClass[ActiveActor].Find('default');
      DefaultYearlyShapeObj := LoadShapeClass[ActiveActor].Find('default');
 
-     CurrentDirectory := '';
+     CurrentDirectory   := '';
 
-     BusNameRedefined := True;  // set to force rebuild of buslists, nodelists
+     BusNameRedefined   := True;  // set to force rebuild of buslists, nodelists
 
-     SavedBuses    := nil;
-     SavedBusNames := nil;
+     SavedBuses         := nil;
+     SavedBusNames      := nil;
 
-     ReductionStrategy := rsDefault;
+     ReductionStrategy  := rsDefault;
 //     ReductionMaxAngle := 15.0;
-     ReductionZmag     := 0.02;
-     NumCircuits       := 0;
+     ReductionZmag      := 0.02;
+     NumCircuits        := 0;
      ReduceLateralsKeepLoad := TRUE;
 
    {Misc objects}
-   AutoAddObj := TAutoAdd.Create;
+   AutoAddObj           := TAutoAdd.Create;
 
-   Branch_List := nil;
-   BusAdjPC    := nil;
-   BusAdjPD    := nil;
+   Branch_List          := nil;
+   BusAdjPC             := nil;
+   BusAdjPD             := nil;
+   ADiakoptics          :=  False;
 
    // tearing algorithm vars initialization
 
 
-  Coverage        :=  0.9;      // 90% coverage expected by default
-  Actual_coverage :=  -1;       //No coverage
-  Num_SubCkts     :=  CPU_Cores-1;
+  Coverage              :=  0.9;      // 90% coverage expected by default
+  Actual_coverage       :=  -1;       //No coverage
+  Num_SubCkts           :=  CPU_Cores-1;
+
   setlength(Longest_paths,0);
   setlength(Path_Idx,0);
   setlength(Buses_Covered,0);
@@ -952,6 +955,8 @@ End;
 ********************************************************************************}
 function TDSSCircuit.Tear_Circuit(): Integer;
 var
+  F             : TextFile;
+  FileName      : String;
   NodeIdx,
   Num_Pieces,
   Buses_Acc,                                         // Number of buses accumulated
@@ -966,72 +971,46 @@ var
   Terminal,
   PDElement     : String;
   Ftree         : TextFile;
-  flag          : Boolean;                          //  Stop flag
   EMeter        : TEnergyMeterObj;
   pBus          : TDSSBus;
   Volts         : Polar;
   Term_volts    : Array of Double;                  // To verify the connection of the branch
+
 Begin
   Num_pieces    :=  Num_SubCkts;
   with solution do
   Begin
-    flag            := True;
-    // Increases coverage until the number of paths is >= than the number of subcircuits to create
-    while flag do
+
+    // Calculates the incidence matrix and laplacian to generate the graph file to be
+    // send to MeTiS
+    Calc_Inc_Matrix_Org(ActiveActor);                       //Calculates the ordered incidence matrix
+    Laplacian := IncMat.Transpose();                        // Transposes the Incidence Matrix
+    Laplacian := Laplacian.multiply(IncMat);                // Laplacian Matrix calculated
+    // Generates the graph file
+    FileName  := GetOutputDirectory + CircuitName_[ActiveActor] + '.graph';
+    Assignfile(F,FileName);
+    ReWrite(F);
+    Writeln(F,inttostr(length(Inc_Mat_Cols)) + ' ' + inttostr(length(Inc_Mat_Rows)));
+    jj        :=  0;
+    for i := 1 to Laplacian.NZero do
     Begin
-      Calc_Inc_Matrix_Org(ActiveActor);                       //Calculates the ordered incidence matrix
-      Get_paths_4_Coverage;                                   // Refines the levels vector according to the coverage desired
-      if length(Path_Idx) >= Num_pieces then
-        flag  :=  False
+      if (Laplacian.data[i-1][0] = jj) and (Laplacian.data[i-1][0] <> Laplacian.data[i-1][1]) then
+        Write(F,inttostr(Laplacian.data[i-1][1] + 1) + ' ')
       else
-        Coverage  :=  Coverage + 0.1;                         // Increases the coverage to have more paths for covering the circuit
-    End;
-    Num_buses       :=  length(Inc_Mat_Cols) div Num_Pieces;  // Estimates the number of buses for each subsystem
-    setlength(Locations,Num_pieces);                          // Setups the array for the tearing locations
-    for i := 0 to High(Locations) do Locations[i] :=  -1;     // Initializes the locations array
-    flag          :=  True;
-    j             :=  0;
-    Location_idx  :=  1;
-    Locations[0]  :=  0;
-    while flag do
-    Begin
-      if j  = High(Path_Idx) then
-        setlength(Candidates,(Length(Longest_paths) - Path_Idx[j]))
-      else
-        setlength(Candidates,(Path_Idx[j + 1] - Path_Idx[j]));
-      if j = 0 then
-        for i := 0 to High(Candidates) do
-          Candidates[i] :=  Longest_paths[i]      // Moves the path into the cadidates array
-      else
-        for i := 0 to High(Candidates) do
-          Candidates[i] :=  Longest_paths[(High(Candidates) - i) + Path_Idx[j]];     // Moves the path into the cadidates array (reverse)
-      // Checks if the path has enough buses to cover the requirements
-      if ((Candidates[High(Candidates)] - Candidates[0]) >= 2*Num_Buses) then
       Begin
-      // The path is large enough for tearing
-        Buses_Acc   :=  0;
-        for i := 1 to High(Candidates) do
+        if (Laplacian.data[i-1][0] <> jj) then
         Begin
-          Buses_Acc   := (Candidates[i] - Candidates[i - 1]) + Buses_Acc;
-          if Buses_Acc >= Num_Buses then
-          begin
-            Buses_Acc               :=  0;
-            Locations[Location_idx] :=  Candidates[i];
-            inc(Location_idx);
-          end;
+          Writeln(F,'');
+          Write(F,inttostr(Laplacian.data[i-1][1] + 1) + ' ');
+          inc(jj);
         End;
-      End
-      else
-      Begin
-        if  j = 0 then Location_idx  := 0;                // To avoid placing an EMeter at the feederhead
-        Locations[Location_idx]  :=  Candidates[1];       // The path is too short, consider to leave this path together
-        inc(Location_idx);
       End;
-      flag          :=  False;
-      for i := 0 to High(Locations) do
-        if Locations[i] = -1 then flag  :=  True;
-      inc(j)
     End;
+    CloseFile(F);
+
+
+
+    {
   //***********The directory is ready for storing the new circuit****************
       EMeter    := EnergyMeters.First;
       while EMeter  <> Nil do
@@ -1101,7 +1080,7 @@ Begin
         DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
       End;
     end;
-
+    }
   End;
 End;
 //----------------------------------------------------------------------------

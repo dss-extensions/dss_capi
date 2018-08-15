@@ -625,13 +625,13 @@ Begin
               ActiveCircuit[ActiveActor].Solution.Calc_Inc_Matrix(ActiveActor);
             end;
        110: begin
-              DiakopticsInit();
+              ADiakopticsInit();
             end;
        111: begin
               ActiveCircuit[ActiveActor].Solution.Calc_Inc_Matrix_Org(ActiveActor);
             end;
        112: begin
-              Diakoptics_Tearing();
+              ADiakoptics_Tearing();
             end;
        115: begin
               ActiveCircuit[ActiveActor].Get_paths_4_Coverage();

@@ -6,8 +6,8 @@ uses
   Circuit, Solution, DSSGlobals, SysUtils, DSSClassDefs;
 
 Function Solve_Diakoptics():Integer;
-procedure Diakoptics_Tearing();
-procedure DiakopticsInit();
+procedure ADiakoptics_Tearing();
+procedure ADiakopticsInit();
 procedure Calc_C_Matrix(PLinks : PString; NLinks  : Integer);
 procedure Calc_ZCT();
 procedure Calc_ZCC();
@@ -171,7 +171,7 @@ End;
 *           Tears the system using considering the number of                   *
 *           available CPUs as reference                                        *
 *******************************************************************************}
-procedure Diakoptics_Tearing();
+procedure ADiakoptics_Tearing();
 var
   Prev_Mode,                              // Stores the previous solution mode
   Num_Ckts    : Integer;                  // Stores the number of Sub-Circuits created
@@ -179,21 +179,21 @@ Begin
   With ActiveCircuit[ActiveActor].Solution do
   Begin
     Num_Ckts                      :=  ActiveCircuit[ActiveActor].Tear_Circuit();
-    Prev_mode                     :=  Dynavars.SolutionMode;
-    Dynavars.SolutionMode         :=  0;          // Shapshot mode
-    solve(ActiveActor);
-    ActiveCircuit[ActiveActor].Save_SubCircuits();
-    Dynavars.SolutionMode         :=  Prev_mode;  // Goes back to the previous solution mode
-    ActiveCircuit[1].Num_SubCkts  :=  Num_Ckts;
-    GlobalResult                  := 'Sub-Circuits Created: ' + inttostr(Num_Ckts);
+//    Prev_mode                     :=  Dynavars.SolutionMode;
+//    Dynavars.SolutionMode         :=  0;          // Shapshot mode
+//    solve(ActiveActor);
+//    ActiveCircuit[ActiveActor].Save_SubCircuits();
+//    Dynavars.SolutionMode         :=  Prev_mode;  // Goes back to the previous solution mode
+//    ActiveCircuit[1].Num_SubCkts  :=  Num_Ckts;
+//    GlobalResult                  := 'Sub-Circuits Created: ' + inttostr(Num_Ckts);
   End;
 End;
 
 {*******************************************************************************
 *            Generates the subsystems, actors and memory space                 *
-*                     For using the Diakoptics solver                          *
+*                     For using the A-Diakoptics parallelism                   *
 *******************************************************************************}
-procedure DiakopticsInit();
+procedure ADiakopticsInit();
 var
   DIdx,
   Diak_Actors : Integer;
@@ -203,7 +203,7 @@ var
 Begin
   ActiveActor                     :=  1;
   ActiveCircuit[1].Num_SubCkts    :=  CPU_Cores - 1;
-  Diakoptics_Tearing();
+  ADiakoptics_Tearing();
   Diak_Actors                     :=  ActiveCircuit[1].Num_SubCkts + 1;
   // Saves the Link Branch list locally
   setlength(Links,length(ActiveCircuit[1].Link_Branches));

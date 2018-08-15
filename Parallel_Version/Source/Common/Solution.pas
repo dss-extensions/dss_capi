@@ -62,7 +62,6 @@ CONST
 
      NORMALSOLVE = 0;
      NEWTONSOLVE = 1;
-     DIAKOPTICS  = 2;                 // Diakoptics method added on 02/26/2018
 
 TYPE
 
@@ -933,7 +932,6 @@ Begin
    CASE Algorithm of
       NORMALSOLVE : DoNormalSolution(ActorID);
       NEWTONSOLVE : DoNewtonSolution(ActorID);
-      DIAKOPTICS  : DoNormalSolution(ActorID);
    End;
 
    ActiveCircuit[ActorID].Issolved := ConvergedFlag;

@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-        NumExecOptions = 121;
+        NumExecOptions = 122;
 
 VAR
          ExecOption,
@@ -155,6 +155,7 @@ Begin
      ExecOption[119] := 'Coverage';
      ExecOption[120] := 'Num_SubCircuits';
      ExecOption[121] := 'SampleEnergyMeters';
+     ExecOption[122] := 'ADiakoptics';
 
 
      OptionHelp[1]  := 'Sets the active DSS class type.  Same as Class=...';
@@ -256,7 +257,7 @@ Begin
                         'When the CalcVoltageBases command is issued, a snapshot solution is performed '+
                         'with no load injections and the bus base voltage is set to the nearest legal voltage base. '+
                         'The defaults are as shown in the example above.';
-     OptionHelp[40] := '{Normal | Newton | Diakoptics}  Solution algorithm type.  Normal is a fixed point iteration ' +
+     OptionHelp[40] := '{Normal | Newton}  Solution algorithm type.  Normal is a fixed point iteration ' +
                         'that is a little quicker than the Newton iteration.  Normal is adequate for most radial '+
                         'distribution circuits.  Newton is more robust for circuits that are difficult to solve.' +
                         'Diakoptics is used for accelerating the simulation using multicore computers';
@@ -422,6 +423,8 @@ Begin
      OptionHelp[121] := '{YES/TRUE | NO/FALSE} Overrides default value for sampling EnergyMeter objects at the end of the solution loop. ' +
                         'Normally Time and Duty modes do not automatically sample EnergyMeters whereas Daily, Yearly, M1, M2, M3, LD1 and LD2 modes do. ' +
                         'Use this Option to turn sampling on or off';
+     OptionHelp[122] := '{YES/TRUE | NO/FALSE} Activates the A-Diakoptics solution algorithm for using spatial parallelization on the feeder.' + CRLF +
+                        'This parameter only affects Actor 1, no matter from which actor is called';
 End;
 //----------------------------------------------------------------------------
 FUNCTION DoSetCmd_NoCircuit:Boolean;  // Set Commands that do not require a circuit
@@ -696,6 +699,7 @@ Begin
                   ActiveCircuit[ActiveActor].Num_SubCkts :=  Parser[ActiveActor].IntValue;
                 End;
           121:  ActiveCircuit[ActiveActor].Solution.SampleTheMeters :=  InterpretYesNo(Param);
+          122:  ActiveCircuit[1].ADiakoptics :=  InterpretYesNo(Param);
          ELSE
            // Ignore excess parameters
          End;
@@ -887,6 +891,7 @@ Begin
           119: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Actual_Coverage]));
           120: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].Num_SubCkts]));
           121: If ActiveCircuit[ActiveActor].Solution.SampleTheMeters Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+          122: If ActiveCircuit[1].ADiakoptics Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
          ELSE
            // Ignore excess parameters
          End;

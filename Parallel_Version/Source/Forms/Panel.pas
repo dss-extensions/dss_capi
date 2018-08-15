@@ -10,10 +10,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, Menus, ToolWin, ImgList,ScriptEdit, ExtCtrls, PsAPI,
-  System.ImageList
-  {$IFDEF VER300} // Seattle
-  ,System.ImageList, YMatrix;
+  StdCtrls, ComCtrls, Menus, ToolWin, ImgList,ScriptEdit, ExtCtrls,
+  PsAPI, System.ImageList
+  {$IF CompilerVersion > 30} // Delphi 2007 or later
+  ,YMatrix;
   {$ELSE}
   ;
   {$ENDIF}
