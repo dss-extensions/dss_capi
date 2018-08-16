@@ -3,7 +3,12 @@ os:
     - linux
     - osx
 before_install:
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install fpc; fi
+    - |
+      if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
+          wget https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.0.4/fpc-3.0.4.intel-macosx.dmg/download -Ofpc.dmg
+          sudo hdiutil attach fpc.dmg
+          sudo installer -package /Volumes/fpc-3.0.4.intel-macosx/fpc-3.0.4.intel-macosx.pkg -target /
+      fi
     - |
       if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
         wget https://sourceforge.net/projects/freepascal/files/Linux/3.0.4/fpc-3.0.4.x86_64-linux.tar/download -Ofpc.tar
