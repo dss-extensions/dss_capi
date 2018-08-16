@@ -2,7 +2,7 @@
 This includes a filtered copy of the [OpenDSS SVN repository](https://svn.code.sf.net/p/electricdss/code/trunk), including only the relevant source-code for the [dss_capi](https://github.com/PMeira/dss_capi/) project.
 The upstream copy is on branch `opendss-official-svn`, while the `master` branch will contain specific modifications, including:
 
-- Multi-platform modifications for building with FreePascal on Windows and Linux
+- Multi-platform modifications for building with FreePascal on Windows, MacOS and Linux
 - Matching version 7 ("Classic" version, on folder `Source`) with version 8 ("Parallel Machine" version, on folder `Parallel_Version`)
 - Potentially, API extensions or performance tweaks
 
