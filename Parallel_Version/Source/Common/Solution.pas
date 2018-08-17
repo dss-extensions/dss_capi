@@ -2386,9 +2386,11 @@ begin
   FInfoProc       :=  CallBack;
   FreeOnTerminate := False;
   ActorID         :=  ID;
+  {$IFDEF MSWINDOWS}              // Only for windows
   Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
   Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
   Parallel.Set_Thread_affinity(handle,local_CPU);
+  {$ENDIF}
 end;
 
 {*******************************************************************************

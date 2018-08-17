@@ -15,6 +15,10 @@ interface
 uses dialogs;
 
   TYPE
+    TData = array of integer;
+    PData = ^TData;
+
+  TYPE
 
     Tsparse_matrix = class(Tobject)
     private
@@ -23,6 +27,8 @@ uses dialogs;
       len   : Integer;
 
       function checkifexists(r, c: Integer): Integer;
+      procedure getrow(index   : Integer; cols, vals : PData);
+      function R_equal(acols,avals,bcols,bvals : PData): Boolean;
 
     Public
       data  : array of array of integer;
@@ -33,9 +39,97 @@ uses dialogs;
       function multiply(b  : Tsparse_matrix): Tsparse_matrix;
       procedure reset();
       function NZero(): Integer;
+      function NCols(): Integer;
+      function NRows(): Integer;
+      function Rank(): Integer;
+
+
+
   end;
 
 implementation
+
+// Evaluates of both rows are equal
+  function Tsparse_matrix.R_equal(acols,avals,bcols,bvals : PData): Boolean;
+  var
+    idx,
+    rlen     : Integer;
+  Begin
+    Result  :=  False;                        // In case they are not equal
+    if length(acols^) = length(bcols^) then   // If they have the same # of Cols
+    Begin
+      rlen  :=  0;                            // First, verify if the cols are the same
+      for idx := 0 to high(acols^) do
+        if (acols^[idx] - bcols^[idx]) <> 0 then inc(rlen);
+      if rlen = 0 then Result  := True;
+    End;
+  End;
+// Gets the columns and values at each columns for the row specified
+  procedure Tsparse_matrix.getrow(index   : Integer; cols, vals : PData);
+  var
+    rowcols,
+    rowvals     : TData;
+    j           : Integer;
+  Begin
+      setlength(rowcols,0);
+      setlength(rowvals,0);
+
+      for j := 0 to (len - 1) do
+      Begin
+        if data[j][0] = index then
+        Begin
+          setlength(rowcols,length(rowcols) + 1);
+          setlength(rowvals,length(rowvals) + 1);
+
+          rowcols[high(rowcols)] := data[j][1];
+          rowvals[high(rowvals)] := data[j][2];
+        End;
+      End;
+
+      cols^  :=  rowcols;
+      vals^  :=  rowvals;
+  End;
+
+  function Tsparse_matrix.Rank(): Integer;   // Added 08/16/2018 by DM for calculating the
+  var                                        // Rank of the sparse matrix
+    i,
+    j           : Integer;
+    flag        : Boolean;
+    acols,                                   // Row under evaluation
+    avals,
+    bcols,                                   // Reference row
+    bvals       : TData;
+  Begin
+    Result  :=  0;
+    for i := 0 to (row-1) do
+    Begin
+      getrow(i,@acols,@avals);
+      if i > 0 then
+      Begin
+        j     :=  i - 1;
+        flag  :=  True;
+        while flag and (j >= 0) do
+        Begin
+          getrow(j,@bcols,@bvals);    // sweeps the matrix bottom up
+          flag  :=  Not R_equal(@acols,@avals,@bcols,@bvals);
+          dec(j);
+        End;
+        if flag then inc(Result);
+      End
+      else
+        inc(Result);
+    End;
+  End;
+
+  function Tsparse_matrix.NCols(): Integer;
+  Begin
+    Result  := Col;
+  End;
+
+  function Tsparse_matrix.NRows(): Integer;
+  Begin
+    Result  := Row;
+  End;
 
   function Tsparse_matrix.checkifexists(r, c: Integer): Integer;
   var

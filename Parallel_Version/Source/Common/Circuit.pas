@@ -25,7 +25,8 @@ interface
 USES
      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
-     AutoAdd, EnergyMeter, NamedObject, CktTree, Graphics, math,     Sparse_Math;
+     AutoAdd, EnergyMeter, NamedObject, CktTree, Graphics, math,     Sparse_Math,
+     vcl.dialogs;
 
 
 TYPE
@@ -955,18 +956,17 @@ End;
 ********************************************************************************}
 function TDSSCircuit.Tear_Circuit(): Integer;
 var
+  FileCreated   : Boolean;
   F             : TextFile;
   FileName      : String;
   NodeIdx,
   Num_Pieces,
-  Buses_Acc,                                         // Number of buses accumulated
-  Num_buses,                                        // Goal for number of buses on each subsystem
-  Num_target,                                       // Generic accumulator
   Location_idx,                                     // Active Location
   j,jj,dbg,dbg2,
   i             : Integer;                          // Generic counter variables
   Candidates    : Array of Integer;                 // Array for 0 level buses idx
   TreeNm,                                           // For debugging
+  MeTISCmd,
   BusName,
   Terminal,
   PDElement     : String;
@@ -975,6 +975,8 @@ var
   pBus          : TDSSBus;
   Volts         : Polar;
   Term_volts    : Array of Double;                  // To verify the connection of the branch
+  MeTISZones    : TStringList;                      // The list for assigning a zone to a bus after tearing
+  BusZones      : Array of Integer;
 
 Begin
   Num_pieces    :=  Num_SubCkts;
@@ -986,11 +988,12 @@ Begin
     Calc_Inc_Matrix_Org(ActiveActor);                       //Calculates the ordered incidence matrix
     Laplacian := IncMat.Transpose();                        // Transposes the Incidence Matrix
     Laplacian := Laplacian.multiply(IncMat);                // Laplacian Matrix calculated
+
     // Generates the graph file
     FileName  := GetOutputDirectory + CircuitName_[ActiveActor] + '.graph';
     Assignfile(F,FileName);
     ReWrite(F);
-    Writeln(F,inttostr(length(Inc_Mat_Cols)) + ' ' + inttostr(length(Inc_Mat_Rows)));
+    Writeln(F,inttostr(length(Inc_Mat_Cols)) + ' ' + inttostr(length(Inc_Mat_Cols) - 1)); // it should be the rank of the incidence matrix
     jj        :=  0;
     for i := 1 to Laplacian.NZero do
     Begin
@@ -1007,80 +1010,137 @@ Begin
       End;
     End;
     CloseFile(F);
+    if Num_pieces <= 8 then MeTISCmd   :=  'pmetis.exe'  // For less than 8 zones use pMeTIS
+    else MeTISCmd   :=  'kmetis.exe';                    // For more than 8 zonez use k-Way (kMeTIS)
 
+    // Executes MeTIS
+    // MS Windows
+    {$IFDEF MSWINDOWS}
+    i :=  ShellExecute(0, 'open', pchar(DSSDirectory + MeTISCmd), pchar(FileName + ' ' + inttostr(Num_pieces)), nil, SW_HIDE);
+    {$ENDIF}
+    FileCreated :=  fileexists(pchar(FileName + '.part.' + inttostr(Num_pieces)));
 
+    if (i > 32) and FileCreated then
+    Begin
+  //    showmessage(inttostr(i));
+    // Opens the file containing the tearing results
+      MeTISZones  :=  TStringList.Create;
+      MeTISZones.LoadFromFile(FileName + '.part.' + inttostr(Num_pieces));
+      setlength(Locations,1);
+      setlength(BusZones,1);
 
-    {
-  //***********The directory is ready for storing the new circuit****************
-      EMeter    := EnergyMeters.First;
-      while EMeter  <> Nil do
-      begin
-        EMeter.Enabled  :=  False;
-        EMeter          :=  EnergyMeters.Next;
-      end;
-  //************ Creates the meters at the tearing locations  ********************
-    Result        :=  1;                                  // Resets the result variable (Return)
-    setlength(PConn_Voltages,length(Locations)*2);        //  Sets the memory space for storing the voltage at the point of conn
-    setlength(Link_branches,length(Locations));           //  Sets the memory space for storing the link branches names
-    setlength(PConn_Names,length(Locations));             //  Sets the memory space for storing the Bus names
-    SolutionAbort := FALSE;
-    j             :=  0;
-    for i := 1 to High(Locations) do
-    begin
-      if Locations[i] >= 0 then
+      for i := 0 to (MeTISZones.Count - 1) do
       Begin
-        inc(Result);
-        // Gets the name of the PDE for placing the EnergyMeter
-         with solution do
-         Begin
-           PDElement        :=  Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])];
-           Link_Branches[i] :=  PDElement;
-           dbg              :=  get_IncMatrix_Col(Locations[i] + 1);      // Temporary stores the given location
-    // Checks the branch orientation across the feeder by substracting the voltages around the branch
-    // Start with Bus 1
-           setlength(Term_volts,2);
-           for dbg := 0 to 1 do
+        if i = 0 then
+        Begin
+          Locations[i]  :=  0;
+          BusZones[i]   :=  strtoint(MeTISZones[i]);
+        End
+        else
+        Begin
+          if strtoint(MeTISZones[i]) <> BusZones[high(BusZones)] then   // Moving to another zone in the file
+          Begin
+            j   :=  0;                                                  // Verifies that this zone hasn't been counted before
+            for jj := 0 to High(BusZones) do
+            Begin
+              if strtoint(MeTISZones[i]) = BusZones[jj] then
+              Begin
+                inc(j);
+                Break;
+              End;
+            End;
+            if j = 0 then                                               // Is not in the list
+            Begin
+              setlength(Locations,Length(Locations) + 1);
+              setlength(BusZones,Length(BusZones) + 1);
+              Locations[High(Locations)]  :=  i;
+              BusZones[High(BusZones)]    :=  strtoint(MeTISZones[i]);
+            End;
+          End;
+        End;
+      End;
+
+    //***********The directory is ready for storing the new circuit****************
+        EMeter    := EnergyMeters.First;
+        while EMeter  <> Nil do
+        begin
+          EMeter.Enabled  :=  False;
+          EMeter          :=  EnergyMeters.Next;
+        end;
+    //************ Creates the meters at the tearing locations  ********************
+      Result        :=  1;                                  // Resets the result variable (Return)
+      setlength(PConn_Voltages,length(Locations)*2);        //  Sets the memory space for storing the voltage at the point of conn
+      setlength(Link_branches,length(Locations));           //  Sets the memory space for storing the link branches names
+      setlength(PConn_Names,length(Locations));             //  Sets the memory space for storing the Bus names
+      SolutionAbort := FALSE;
+      j             :=  0;
+
+      for i := 1 to High(Locations) do
+      begin
+        if Locations[i] >= 0 then
+        Begin
+          inc(Result);
+          // Gets the name of the PDE for placing the EnergyMeter
+           with solution do
            Begin
-             BusName          :=  Inc_Mat_Cols[Active_Cols[dbg]];
+             PDElement        :=  Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])];
+             Link_Branches[i] :=  PDElement;
+             dbg              :=  get_IncMatrix_Col(Locations[i] + 1);      // Temporary stores the given location
+      // Checks the branch orientation across the feeder by substracting the voltages around the branch
+      // Start with Bus 1
+             setlength(Term_volts,2);
+             for dbg := 0 to 1 do
+             Begin
+               BusName          :=  Inc_Mat_Cols[Active_Cols[dbg]];
+               SetActiveBus(BusName);           // Activates the Bus
+               pBus             :=  Buses^[ActiveBusIndex];
+               jj               :=  1;
+         // this code so nodes come out in order from smallest to larges
+               Repeat
+                 NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
+                 inc(jj)
+               Until NodeIdx>0;
+               Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
+               Term_volts[dbg]     :=  Volts.mag;
+             End;
+
+        // Determines the best place to connect the EnergyMeter
+             Term_volts[0]      :=  Term_volts[0] - Term_volts[1];
+             if Term_volts[0] >= 0 then jj  :=  0
+             else   jj  :=  1;
+             BusName          :=  Inc_Mat_Cols[Active_Cols[jj]];
+             Terminal         :=  'term=' + inttostr(jj + 1);
+
+             PConn_Names[i]   :=  BusName;
              SetActiveBus(BusName);           // Activates the Bus
              pBus             :=  Buses^[ActiveBusIndex];
              jj               :=  1;
-       // this code so nodes come out in order from smallest to larges
+             // this code so nodes come out in order from smallest to larges
              Repeat
                NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
                inc(jj)
              Until NodeIdx>0;
              Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
-             Term_volts[dbg]     :=  Volts.mag;
+             PConn_Voltages[j]  :=  (Volts.mag/1000)*SQRT3;
+             inc(j);
+             PConn_Voltages[j]  :=  Volts.ang;
+             inc(j);
            End;
-
-      // Determines the best place to connect the EnergyMeter
-           Term_volts[0]      :=  Term_volts[0] - Term_volts[1];
-           if Term_volts[0] >= 0 then jj  :=  0
-           else   jj  :=  1;
-           BusName          :=  Inc_Mat_Cols[Active_Cols[jj]];
-           Terminal         :=  'term=' + inttostr(jj + 1);
-
-           PConn_Names[i]   :=  BusName;
-           SetActiveBus(BusName);           // Activates the Bus
-           pBus             :=  Buses^[ActiveBusIndex];
-           jj               :=  1;
-           // this code so nodes come out in order from smallest to larges
-           Repeat
-             NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
-             inc(jj)
-           Until NodeIdx>0;
-           Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
-           PConn_Voltages[j]  :=  (Volts.mag/1000)*SQRT3;
-           inc(j);
-           PConn_Voltages[j]  :=  Volts.ang;
-           inc(j);
-         End;
-        // Generates the OpenDSS Command;
-        DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
-      End;
-    end;
-    }
+          // Generates the OpenDSS Command;
+          DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
+        End;
+      end;
+    End
+    else
+    Begin
+      if (i < 32) then
+        DoErrorMsg('Tear_Circuit','MeTIS cannot start.',
+                   'The MeTIS program (pmetis.exe/kmetis.exe) cannot be executed/found.', 7006)
+      else
+        DoErrorMsg('Tear_Circuit','The graph file is incorrect.',
+                   'MeTIS cannot process the graph file because is incorrect' +
+                   '(The number of edges is incorrect).', 7007);
+    End;
   End;
 End;
 //----------------------------------------------------------------------------
