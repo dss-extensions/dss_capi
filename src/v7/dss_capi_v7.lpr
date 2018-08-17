@@ -195,9 +195,11 @@ uses
     XfmrCode in 'electricdss-src/Source/General/XfmrCode.pas',
     XYcurve in 'electricdss-src/Source/General/XYcurve.pas',
     Ymatrix in 'electricdss-src/Source/Common/Ymatrix.pas',
-  
+    ESPVLControl in 'electricdss-src/Source/Controls/ESPVLControl.pas',
+    IndMach012 in 'electricdss-src/Source/PCElements/IndMach012.pas',
+
     CAPI_Utils in 'CAPI_Utils.pas',
-  
+
     CAPI_ActiveClass in 'CAPI_ActiveClass.pas',
     CAPI_Bus in 'CAPI_Bus.pas',
     CAPI_Capacitors in 'CAPI_Capacitors.pas',
@@ -247,7 +249,7 @@ exports
     DSS_Dispose_PDouble,
     DSS_Dispose_PInteger,
     DSS_Dispose_PPAnsiChar,
-    
+
 
     ActiveClass_Get_AllNames,
     ActiveClass_Get_First,
@@ -1271,7 +1273,7 @@ exports
     XYCurves_Set_Yscale,
     XYCurves_Set_Yshift,
     XYCurves_Set_Yarray,
-    
+
     YMatrix_GetCompressedYMatrix,
     YMatrix_ZeroInjCurr,
     YMatrix_GetSourceInjCurrents,
