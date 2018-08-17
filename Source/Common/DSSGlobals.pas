@@ -23,6 +23,8 @@ interface
 Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerList,
      UComplex, Arraydef, CktElement, Circuit, IniRegSave, {$IFNDEF FPC}Graphics, System.IOUtils, {$ENDIF}inifiles,
 
+     {$IFDEF UNIX}BaseUnix,{$ENDIF}
+     
      {Some units which have global vars defined here}
      Spectrum,
      LoadShape,
@@ -629,6 +631,7 @@ Begin
 
 End;
 
+{$IFNDEF UNIX}
 function IsDirectoryWritable(const Dir: String): Boolean;
 var
   TempFile: array[0..MAX_PATH] of Char;
@@ -638,6 +641,12 @@ begin
   else
     Result := False;
 end;
+{$ELSE}
+function IsDirectoryWritable(const Dir: String): Boolean;
+begin
+  Result := (FpAccess(PChar(Dir), X_OK or W_OK) = 0);
+end;
+{$ENDIF}
 
 PROCEDURE SetDataPath(const PathName:String);
 var
