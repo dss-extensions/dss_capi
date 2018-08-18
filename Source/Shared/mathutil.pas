@@ -253,13 +253,32 @@ Var
    a,aa:complex;
    i:Integer;
 Begin
-    a := cmplx(-0.5,0.866025403);
-    aa := cmplx(-0.5,-0.866025403);
+    a := cmplx(-0.5,0.8660254037844387);
+    aa := cmplx(-0.5,-0.8660254037844387);
     With Amat Do begin
          For i := 1 to 3 Do SetElemSym(1,i,CONE);
          SetElement(2,2,aa);
          SetElement(3,3,aa);
          SetElemsym(2,3,a);
+    End;
+
+End;
+
+
+{-------------------------------------------------------------}
+Procedure SetAMatrix_inv(Amat_inv:Tcmatrix);
+Var
+   a_3,aa_3,one_3:complex;
+   i:Integer;
+Begin
+    a_3 := CDiv(cmplx(-0.5,0.8660254037844387), cmplx(3, 0));
+    aa_3 := CDiv(cmplx(-0.5,-0.8660254037844387), cmplx(3, 0));
+    one_3 := CDiv(CONE, cmplx(3, 0));
+    With Amat_inv Do begin
+         For i := 1 to 3 Do SetElemSym(1,i,one_3);
+         SetElement(2,2,a_3);
+         SetElement(3,3,a_3);
+         SetElemsym(2,3,aa_3);
     End;
 
 End;
@@ -510,8 +529,7 @@ initialization
     ClarkeF := TcMatrix.CreateMatrix(3);
     ClarkeR := TcMatrix.CreateMatrix(3);
     SetAMatrix(As2p);
-    SetAMatrix(Ap2s);
-    Ap2s.Invert;
+    SetAMatrix_inv(Ap2s);
     SetClarkeMatrices;
     // Sqrt23 := Sqrt(2.0/3.0); // for park
 finalization
