@@ -3,6 +3,8 @@
 
 # dss_capi: An unofficial C API for EPRI's OpenDSS
 
+This library exposes the OpenDSS/OpenDSS-PM engine in a plain C interface that tries to reproduce most of the COM methods. In fact, most of the code is derived from the COM implementation files. The resulting DLL can be using directly or through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level. Support for .NET bindings is available starting in version 0.9.4. MATLAB bindings are expected for version 0.10.
+
 <p align="center">
     <img alt="Overview of related repositories" src="https://raw.githubusercontent.com/PMeira/dss_capi/master/docs/images/repomap.svg?sanitize=true" width=600>
 </p>
@@ -15,8 +17,6 @@ Version 0.9.8, based on OpenDSS SVN r2246.
 
 This is a work-in-progress but it's deemed stable enough to be made public. 
 *Note that, while the interface with OpenDSS is stable (v7, classic version), the OpenDSS-PM (v8, actor-based parallel machine version) interface is experimental in our builds.*
-
-This library exposes the OpenDSS/OpenDSS-PM engine in a plain C interface that tries to reproduce most of the COM methods. In fact, most of the code is derived from the COM implementation files. The resulting DLL can be using directly or through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level. Support for .NET bindings is available starting in version 0.9.4. MATLAB bindings are expected for version 0.10.
 
 Instead of using extra numeric parameters as in the official DDLL interface, each original COM property is exposed as a pair of functions. For example, the load kVA property is exposed as:
 
