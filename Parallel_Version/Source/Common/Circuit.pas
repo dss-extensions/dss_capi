@@ -26,7 +26,7 @@ USES
      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
      AutoAdd, EnergyMeter, NamedObject, CktTree, Graphics, math,     Sparse_Math,
-     vcl.dialogs;
+     vcl.dialogs, MeTIS_Exec;
 
 
 TYPE
@@ -322,7 +322,13 @@ USES
      PDElement, CktElementClass,
      ParserDel,  DSSClassDefs, DSSGlobals, Dynamics,
      Line, Transformer,  Vsource,
-     Utilities,  DSSForms, Executive, SHELLAPI, Windows;
+     Utilities,  DSSForms, Executive, SHELLAPI,
+     StrUtils
+     {$IFDEF MSWINDOWS}
+     ,windows;
+     {$ELSE}
+     ;
+     {$ENDIF}
 
 //----------------------------------------------------------------------------
 Constructor TDSSCircuit.Create(const aName:String);
@@ -957,26 +963,30 @@ End;
 function TDSSCircuit.Tear_Circuit(): Integer;
 var
   FileCreated   : Boolean;
+  Ftree,
   F             : TextFile;
+  TreeNm,                                           // For debugging
+  MeTISCmd,
+  BusName,
+  Terminal,
+  TextCmd,
+  PDElement,
   FileName      : String;
+  SEInfo        : TShellExecuteInfo;                // Shell Info handle
   NodeIdx,
   Num_Pieces,
   Location_idx,                                     // Active Location
   j,jj,dbg,dbg2,
   i             : Integer;                          // Generic counter variables
   Candidates    : Array of Integer;                 // Array for 0 level buses idx
-  TreeNm,                                           // For debugging
-  MeTISCmd,
-  BusName,
-  Terminal,
-  PDElement     : String;
-  Ftree         : TextFile;
+
   EMeter        : TEnergyMeterObj;
   pBus          : TDSSBus;
   Volts         : Polar;
   Term_volts    : Array of Double;                  // To verify the connection of the branch
   MeTISZones    : TStringList;                      // The list for assigning a zone to a bus after tearing
-  BusZones      : Array of Integer;
+  BusZones      : Array of String;
+  Replacer      : TFileSearchReplace;
 
 Begin
   Num_pieces    :=  Num_SubCkts;
@@ -988,8 +998,8 @@ Begin
     Calc_Inc_Matrix_Org(ActiveActor);                       //Calculates the ordered incidence matrix
     Laplacian := IncMat.Transpose();                        // Transposes the Incidence Matrix
     Laplacian := Laplacian.multiply(IncMat);                // Laplacian Matrix calculated
-
     // Generates the graph file
+    {******************************************************************************************}
     FileName  := GetOutputDirectory + CircuitName_[ActiveActor] + '.graph';
     Assignfile(F,FileName);
     ReWrite(F);
@@ -1010,63 +1020,81 @@ Begin
       End;
     End;
     CloseFile(F);
+    {******************************************************************************************}
     if Num_pieces <= 8 then MeTISCmd   :=  'pmetis.exe'  // For less than 8 zones use pMeTIS
     else MeTISCmd   :=  'kmetis.exe';                    // For more than 8 zonez use k-Way (kMeTIS)
-
-    // Executes MeTIS
-    // MS Windows
-    {$IFDEF MSWINDOWS}
-    i :=  ShellExecute(0, 'open', pchar(DSSDirectory + MeTISCmd), pchar(FileName + ' ' + inttostr(Num_pieces)), nil, SW_HIDE);
-    {$ENDIF}
-    FileCreated :=  fileexists(pchar(FileName + '.part.' + inttostr(Num_pieces)));
-
-    if (i > 32) and FileCreated then
+    {******************************************************************************************}
+    if fileexists(pchar(FileName + '.part.' + inttostr(Num_pieces))) then    // Checks if the file exists before
+      deletefile(pchar(FileName + '.part.' + inttostr(Num_pieces)));
+    repeat
+      TextCmd  :=  RunMeTIS(DSSDirectory + MeTISCmd + ' ' + FileName + ' ' + inttostr(Num_pieces));  // Executes MeTIS
+      Flag      :=  ContainsText(TextCmd,'I detected an error');
+      if Flag then       // The # of edges was wrong, use the one proposed by MeTIS
+      Begin
+        TextCmd  :=  GetNumEdges(TextCmd);                     // Gest the # of edges proposed by MeTIS
+        jj        :=  length(inttostr(length(Inc_Mat_Cols))) + 2;// Caculates the index for replacing the number in the Graph File
+        // Replaces the old data with the new at the file header
+        Replacer:=TFileSearchReplace.Create(FileName);
+        try
+          Replacer.Replace(inttostr(length(Inc_Mat_Cols)) + ' ' + inttostr(length(Inc_Mat_Cols) - 1),
+                          inttostr(length(Inc_Mat_Cols)) + ' ' + TextCmd, [rfIgnoreCase]);
+        finally
+          Replacer.Free;
+        end;
+      End;
+    until Not flag;
+    {******************************************************************************************}
+    // Verifies if there was no error executing MeTIS and the zones file was created
+    if (TextCmd <> '**Error**') and fileexists(pchar(FileName + '.part.' + inttostr(Num_pieces))) then
     Begin
-  //    showmessage(inttostr(i));
-    // Opens the file containing the tearing results
-      MeTISZones  :=  TStringList.Create;
+      MeTISZones  :=  TStringList.Create;                     // Opens the file containing the tearing results
       MeTISZones.LoadFromFile(FileName + '.part.' + inttostr(Num_pieces));
       setlength(Locations,1);
       setlength(BusZones,1);
-
       for i := 0 to (MeTISZones.Count - 1) do
       Begin
         if i = 0 then
         Begin
           Locations[i]  :=  0;
-          BusZones[i]   :=  strtoint(MeTISZones[i]);
+          BusZones[i]   :=  MeTISZones[i];
         End
         else
         Begin
-          if strtoint(MeTISZones[i]) <> BusZones[high(BusZones)] then   // Moving to another zone in the file
+          if MeTISZones[i] <> BusZones[high(BusZones)] then   // Moving to another zone in the file
           Begin
-            j   :=  0;                                                  // Verifies that this zone hasn't been counted before
-            for jj := 0 to High(BusZones) do
+            j :=  0;
+            if i < (MeTISZones.Count - 1) then                // If not lower means the zone is only 1 bus
+              j := Integer(MeTISZones[i] = MeTISZones[i + 1]);
+            if j = 1 then                                     // Varifies that the zone is big enough
             Begin
-              if strtoint(MeTISZones[i]) = BusZones[jj] then
+              j   :=  0;                                      // Verifies that this zone hasn't been counted before
+              for jj := 0 to High(BusZones) do
               Begin
-                inc(j);
-                Break;
+                if MeTISZones[i] = BusZones[jj] then
+                Begin
+                  inc(j);
+                  Break;
+                End;
               End;
-            End;
-            if j = 0 then                                               // Is not in the list
-            Begin
-              setlength(Locations,Length(Locations) + 1);
-              setlength(BusZones,Length(BusZones) + 1);
-              Locations[High(Locations)]  :=  i;
-              BusZones[High(BusZones)]    :=  strtoint(MeTISZones[i]);
+              if j = 0 then                                   // Is not in the list, add the new location
+              Begin
+                setlength(Locations,Length(Locations) + 1);
+                setlength(BusZones,Length(BusZones) + 1);
+                Locations[High(Locations)]  :=  i;
+                BusZones[High(BusZones)]    :=  MeTISZones[i];
+              End;
             End;
           End;
         End;
       End;
 
     //***********The directory is ready for storing the new circuit****************
-        EMeter    := EnergyMeters.First;
-        while EMeter  <> Nil do
-        begin
-          EMeter.Enabled  :=  False;
-          EMeter          :=  EnergyMeters.Next;
-        end;
+      EMeter    := EnergyMeters.First;
+      while EMeter  <> Nil do
+      begin
+        EMeter.Enabled  :=  False;
+        EMeter          :=  EnergyMeters.Next;
+      end;
     //************ Creates the meters at the tearing locations  ********************
       Result        :=  1;                                  // Resets the result variable (Return)
       setlength(PConn_Voltages,length(Locations)*2);        //  Sets the memory space for storing the voltage at the point of conn
@@ -1074,7 +1102,6 @@ Begin
       setlength(PConn_Names,length(Locations));             //  Sets the memory space for storing the Bus names
       SolutionAbort := FALSE;
       j             :=  0;
-
       for i := 1 to High(Locations) do
       begin
         if Locations[i] >= 0 then
@@ -1133,7 +1160,7 @@ Begin
     End
     else
     Begin
-      if (i < 32) then
+      if (TextCmd = '**Error**') then
         DoErrorMsg('Tear_Circuit','MeTIS cannot start.',
                    'The MeTIS program (pmetis.exe/kmetis.exe) cannot be executed/found.', 7006)
       else
