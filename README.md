@@ -3,6 +3,10 @@
 
 # dss_capi: An unofficial C API for EPRI's OpenDSS
 
+<p align="center">
+    <img alt="Overview of related repositories" src="https://raw.githubusercontent.com/PMeira/dss_capi/master/docs/images/repomap.svg?sanitize=true" width=600>
+</p>
+
 If you are looking for the Python bindings, see [dss_python](http://github.com/PMeira/dss_python/).
 
 If you are looking for the .NET/C# bindings, the code was moved to [dss_sharp](http://github.com/PMeira/dss_sharp/).
