@@ -214,7 +214,7 @@ uses
     CAPI_DSS in 'CAPI_DSS.pas',
     CAPI_DSSElement in 'CAPI_DSSElement.pas',
     CAPI_DSSimComs in 'CAPI_DSSimComs.pas',
-    //CAPI_DSSProgress in 'CAPI_DSSProgress.pas',
+    CAPI_DSSProgress in 'CAPI_DSSProgress.pas',
     CAPI_DSSProperty in 'CAPI_DSSProperty.pas',
     CAPI_DSS_Executive in 'CAPI_DSS_Executive.pas',
     CAPI_Error in 'CAPI_Error.pas',
@@ -489,10 +489,10 @@ exports
     { DSSMain_Get_ActiveCircuit, }
     { DSSMain_Get_NumCircuits, }
     { DSSMain_Set_ActiveCircuit, }
-    { DSSProgress_Close, }
-    { DSSProgress_Set_Caption, }
-    { DSSProgress_Set_PctProgress, }
-    { DSSProgress_Show, }
+    DSSProgress_Close,
+    DSSProgress_Set_Caption,
+    DSSProgress_Set_PctProgress,
+    DSSProgress_Show,
     DSSProperty_Get_Description,
     DSSProperty_Get_Name,
     DSSProperty_Get_Val,

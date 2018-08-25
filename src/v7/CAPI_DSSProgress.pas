@@ -12,7 +12,7 @@ procedure DSSProgress_Show();cdecl;
 
 IMPLEMENTATION
 
-USES CAPI_Constants, DSSGlobals;
+USES CAPI_Constants, DSSGlobals, CmdForms;
 
 procedure DSSProgress_Close();cdecl;
 begin

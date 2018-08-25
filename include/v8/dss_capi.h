@@ -1030,19 +1030,19 @@ extern "C" {
     
     DSS_CAPI_V8_DLL void DSSimComs_BusVoltage(double** ResultPtr, int32_t* ResultCount, size_t Index);
     
-//    DSS_CAPI_V8_DLL void DSSProgress_Close(void);
+    DSS_CAPI_V8_DLL void DSSProgress_Close(void);
     
     /*
     Caption to appear on the bottom of the DSS Progress form.
     */
-//    DSS_CAPI_V8_DLL void DSSProgress_Set_Caption(char* Value);
+    DSS_CAPI_V8_DLL void DSSProgress_Set_Caption(char* Value);
     
     /*
     Percent progress to indicate [0..100]
     */
-//    DSS_CAPI_V8_DLL void DSSProgress_Set_PctProgress(int32_t Value);
+    DSS_CAPI_V8_DLL void DSSProgress_Set_PctProgress(int32_t Value);
     
-//    DSS_CAPI_V8_DLL void DSSProgress_Show(void);
+    DSS_CAPI_V8_DLL void DSSProgress_Show(void);
     
     /*
     Description of the property.
