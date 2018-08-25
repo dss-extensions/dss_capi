@@ -162,7 +162,7 @@ end;
 //------------------------------------------------------------------------------
 procedure DSS_Set_AllowForms(Value: WordBool);cdecl;
 begin
-     If Not Value Then NoFormsAllowed := Not Value;  // Only set to False
+     {If Not Value Then} NoFormsAllowed := Not Value;
      If NoFormsAllowed Then CloseDownForms;  // DSSForms
 
 end;
