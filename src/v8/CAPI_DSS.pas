@@ -19,10 +19,12 @@ procedure DSS_Set_DataPath(const Value: PAnsiChar);cdecl;
 procedure DSS_Reset();cdecl;
 function DSS_Get_DefaultEditor():PAnsiChar;cdecl;
 function DSS_SetActiveClass(const ClassName: PAnsiChar):Integer;cdecl;
+function DSS_Get_AllowForms: WordBool;cdecl;
+procedure DSS_Set_AllowForms(Value: WordBool);cdecl;
 
 IMPLEMENTATION
 
-USES CAPI_Constants, DSSClassDefs, DSSGlobals, DSSClass, Exechelper, sysUtils, Executive;
+USES CAPI_Constants, DSSClassDefs, DSSGlobals, DSSClass, Exechelper, sysUtils, Executive, CmdForms;
 
 
 procedure DSS_NewCircuit(const Value: PAnsiChar);cdecl;
@@ -150,6 +152,18 @@ begin
      LastClassReferenced[ActiveActor] := DevClassIndex;
      ActiveDSSClass[ActiveActor] := DSSClassList[ActiveActor].Get(LastClassReferenced[ActiveActor]);
      Result := LastClassReferenced[ActiveActor];
+
+end;
+//------------------------------------------------------------------------------
+function DSS_Get_AllowForms: WordBool;cdecl;
+begin
+     Result := Not NoFormsAllowed;
+end;
+//------------------------------------------------------------------------------
+procedure DSS_Set_AllowForms(Value: WordBool);cdecl;
+begin
+     If Not Value Then NoFormsAllowed := Not Value;  // Only set to False
+     If NoFormsAllowed Then CloseDownForms;  // DSSForms
 
 end;
 //------------------------------------------------------------------------------

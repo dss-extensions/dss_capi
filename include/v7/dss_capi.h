@@ -1007,6 +1007,10 @@ extern "C" {
     
     DSS_CAPI_V7_DLL int32_t DSS_SetActiveClass(char* ClassName);
     
+    DSS_CAPI_V7_DLL uint16_t DSS_Get_AllowForms();
+
+    DSS_CAPI_V7_DLL void DSS_Set_AllowForms(uint16_t Value);
+    
     /*
     Array of strings containing the names of all properties for the active DSS object.
     */

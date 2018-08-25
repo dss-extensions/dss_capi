@@ -479,6 +479,8 @@ exports
     DSS_Reset,
     DSS_Get_DefaultEditor,
     DSS_SetActiveClass,
+    DSS_Get_AllowForms,
+    DSS_Set_AllowForms,
     DSSElement_Get_AllPropertyNames,
     DSSElement_Get_Name,
     DSSElement_Get_NumProperties,
