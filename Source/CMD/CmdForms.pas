@@ -68,11 +68,13 @@ End;
 
 Procedure ProgressCaption(const S:String);
 Begin
+    if NoFormsAllowed then Exit;
 	Writeln('Progress: ', S);
 End;
 
 Procedure ProgressFormCaption(const S:String);
 begin
+    if NoFormsAllowed then Exit;
 	Writeln('Progress: ', S);
 End;
 
@@ -82,11 +84,20 @@ End;
 
 Procedure ShowAboutBox;
 begin
+{$IFNDEF DSS_CAPI}
 	writeln ('Console OpenDSS (Electric Power Distribution System Simulator)');
 	writeln (VersionString);
 	writeln ('Copyright (c) 2008-2017, Electric Power Research Institute, Inc.');
 	writeln ('Copyright (c) 2016-2017, Battelle Memorial Institute');
 	writeln ('All rights reserved.');
+{$ELSE}
+	writeln ('OpenDSS (Electric Power Distribution System Simulator), DSS C-API library version, v7/classic branch');
+	writeln (VersionString);
+	writeln ('Copyright (c) 2008-2017, Electric Power Research Institute, Inc.');
+	writeln ('Copyright (c) 2016-2017, Battelle Memorial Institute');
+	writeln ('Copyright (c) 2017-2018, Paulo Meira');
+	writeln ('All rights reserved.');
+{$ENDIF}    
 End;
 
 Procedure ShowTreeView(Const Fname:String);
@@ -102,12 +113,14 @@ End;
 function DSSMessageDlg(const Msg:String;err:boolean):Integer;
 Begin
 	result := 0;
+    if NoFormsAllowed then Exit;
 	if err then write ('** Error: ');
 	writeln (Msg);
 End;
 
 procedure DSSInfoMessageDlg(const Msg:String);
 Begin
+    if NoFormsAllowed then Exit;
 	writeln (Msg);
 End;
 
@@ -253,6 +266,7 @@ end;
 
 Procedure ShowMessageForm(S:TStrings);
 begin
+    if NoFormsAllowed then Exit;
 	writeln(s.text);
 End;
 
