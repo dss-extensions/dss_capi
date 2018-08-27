@@ -5,14 +5,14 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Sensors_Get_Count():Integer;cdecl;
-PROCEDURE Sensors_Get_Currents(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function Sensors_Get_First():Integer;cdecl;
 function Sensors_Get_IsDelta():WordBool;cdecl;
-PROCEDURE Sensors_Get_kVARS(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Sensors_Get_kVS(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Sensors_Get_kWS(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Sensors_Get_kVARS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Sensors_Get_kVS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Sensors_Get_kWS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function Sensors_Get_MeteredElement():PAnsiChar;cdecl;
 function Sensors_Get_MeteredTerminal():Integer;cdecl;
 function Sensors_Get_Name():PAnsiChar;cdecl;
@@ -56,13 +56,13 @@ begin
   DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   elem:TSensorObj;
   k:Integer;
 Begin
-  Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
   Result[0] := DSS_CopyStringAsPChar('NONE');
   IF ActiveCircuit[ActiveActor] <> Nil THEN
     WITH ActiveCircuit[ActiveActor] DO
@@ -84,7 +84,7 @@ begin
     Result := ActiveCircuit[ActiveActor].Sensors.ListSize;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Sensors_Get_Currents(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
   elem :TSensorObj;
@@ -92,10 +92,10 @@ VAR
 Begin
   elem := ActiveSensor;
   if elem <> Nil then begin
-    Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases -1) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases -1) + 1);
     for k := 0 to elem.NPhases-1 do Result[k] := elem.SensorCurrent^[k+1];
   end else
-    Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_First():Integer;cdecl;
@@ -129,7 +129,7 @@ begin
     if elem.Conn > 0 then Result := TRUE;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Sensors_Get_kVARS(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Sensors_Get_kVARS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
   elem :TSensorObj;
@@ -137,13 +137,13 @@ VAR
 Begin
   elem := ActiveSensor;
   if elem <> Nil then begin
-    Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases -1) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases -1) + 1);
     for k := 0 to elem.NPhases-1 do Result[k] := elem.SensorQ^[k+1];
   end else
-    Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Sensors_Get_kVS(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Sensors_Get_kVS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
   elem :TSensorObj;
@@ -151,13 +151,13 @@ VAR
 Begin
   elem := ActiveSensor;
   if elem <> Nil then begin
-    Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases -1) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases -1) + 1);
     for k := 0 to elem.NPhases-1 do Result[k] := elem.SensorVoltage^[k+1];
   end else
-    Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Sensors_Get_kWS(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Sensors_Get_kWS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
   elem :TSensorObj;
@@ -165,10 +165,10 @@ VAR
 Begin
   elem := ActiveSensor;
   if elem <> Nil then begin
-    Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases -1) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases -1) + 1);
     for k := 0 to elem.NPhases-1 do Result[k] := elem.SensorP^[k+1];
   end else
-    Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_MeteredElement_AnsiString():AnsiString;inline;

@@ -5,23 +5,23 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE Meters_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Meters_Get_First():Integer;cdecl;
 function Meters_Get_Name():PAnsiChar;cdecl;
 function Meters_Get_Next():Integer;cdecl;
-PROCEDURE Meters_Get_RegisterNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
-PROCEDURE Meters_Get_RegisterValues(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Meters_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure Meters_Reset();cdecl;
 procedure Meters_ResetAll();cdecl;
 procedure Meters_Sample();cdecl;
 procedure Meters_Save();cdecl;
 procedure Meters_Set_Name(const Value: PAnsiChar);cdecl;
-PROCEDURE Meters_Get_Totals(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Meters_Get_Peakcurrent(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_Totals(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Meters_Get_Peakcurrent(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure Meters_Set_Peakcurrent(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-PROCEDURE Meters_Get_CalcCurrent(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_CalcCurrent(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure Meters_Set_CalcCurrent(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-PROCEDURE Meters_Get_AllocFactors(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_AllocFactors(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure Meters_Set_AllocFactors(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 function Meters_Get_MeteredElement():PAnsiChar;cdecl;
 function Meters_Get_MeteredTerminal():Integer;cdecl;
@@ -32,10 +32,10 @@ procedure Meters_CloseAllDIFiles();cdecl;
 procedure Meters_OpenAllDIFiles();cdecl;
 procedure Meters_SampleAll();cdecl;
 procedure Meters_SaveAll();cdecl;
-PROCEDURE Meters_Get_AllEndElements(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_AllEndElements(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Meters_Get_CountEndElements():Integer;cdecl;
 function Meters_Get_Count():Integer;cdecl;
-PROCEDURE Meters_Get_AllBranchesInZone(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_AllBranchesInZone(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Meters_Get_CountBranches():Integer;cdecl;
 function Meters_Get_SAIFI():Double;cdecl;
 function Meters_Get_SequenceIndex():Integer;cdecl;
@@ -61,14 +61,14 @@ IMPLEMENTATION
 
 USES CAPI_Constants, EnergyMeter, DSSGlobals, SysUtils, ucomplex, CktElement, PDElement, CktTree;
 
-PROCEDURE Meters_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   MeterElem:TEnergyMeterObj;
   k:Integer;
 
 Begin
-    Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     IF ActiveCircuit <> Nil THEN
      WITH ActiveCircuit DO
@@ -159,7 +159,7 @@ Begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Meters_Get_RegisterNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
     pMeterObj :TEnergyMeterObj;
@@ -168,15 +168,15 @@ VAR
 Begin
     pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
     if Assigned(pMeterObj) then  Begin
-      Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumEMRegisters - 1) + 1);
+      Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumEMRegisters - 1) + 1);
       For k := 0 to  NumEMRegisters - 1  Do Begin
          Result[k] := DSS_CopyStringAsPChar(pMeterObj.RegisterNames[k + 1]);
       End;
     End
-    Else Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1); // null array
+    Else Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1); // null array
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Meters_Get_RegisterValues(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    pMeterObj :TEnergyMeterObj;
@@ -189,17 +189,17 @@ Begin
         pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
         If pMeterObj <> Nil Then
         Begin
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (numEMRegisters-1) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (numEMRegisters-1) + 1);
             FOR k := 0 to numEMRegisters-1 DO
             Begin
                 Result[k] := pMeterObj.Registers[k+1];
             End;
         End
         Else
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
    End
    ELSE Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
    End;
 
 end;
@@ -293,7 +293,7 @@ Begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Meters_Get_Totals(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_Totals(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    i:Integer;
@@ -302,16 +302,16 @@ begin
 
      If ActiveCircuit <> Nil Then With ActiveCircuit Do Begin
           TotalizeMeters;
-          Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (NumEMRegisters-1) + 1);
+          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (NumEMRegisters-1) + 1);
           For i := 1 to NumEMregisters Do Result[i-1] := RegisterTotals[i];
      End
      Else Begin
-          Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
      End;
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Meters_Get_Peakcurrent(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_Peakcurrent(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    pMeterObj :TEnergyMeterObj;
@@ -324,13 +324,13 @@ Begin
         pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
         If pMeterObj <> Nil Then
         Begin
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (pMeterObj.NPhases -1) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMeterObj.NPhases -1) + 1);
             FOR k := 0 to pMeterObj.NPhases-1 DO  Result[k] := pMeterObj.SensorCurrent^[k+1];
         End
-        Else Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Else Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
    End
    ELSE Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
    End;
 
 end;
@@ -358,7 +358,7 @@ Begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Meters_Get_CalcCurrent(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_CalcCurrent(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    pMeterObj :TEnergyMeterObj;
@@ -371,13 +371,13 @@ Begin
         pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
         If pMeterObj <> Nil Then
         Begin
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (pMeterObj.NPhases -1) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMeterObj.NPhases -1) + 1);
             FOR k := 0 to pMeterObj.NPhases-1 DO  Result[k] := Cabs(pMeterObj.CalculatedCurrent^[k+1]);
         End
-        Else Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Else Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
    End
    ELSE Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
    End;
 
 end;
@@ -405,7 +405,7 @@ Begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Meters_Get_AllocFactors(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_AllocFactors(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    pMeterObj :TEnergyMeterObj;
@@ -418,13 +418,13 @@ Begin
         pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
         If pMeterObj <> Nil Then
         Begin
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (pMeterObj.NPhases -1) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMeterObj.NPhases -1) + 1);
             FOR k := 0 to pMeterObj.NPhases-1 DO  Result[k] := pMeterObj.PhsAllocationFactor^[k+1];
         End
-        Else Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Else Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
    End
    ELSE Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
    End;
 
 end;
@@ -572,7 +572,7 @@ begin
      End;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Meters_Get_AllEndElements(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_AllEndElements(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   pMeterObj :TEnergyMeterObj;
@@ -580,7 +580,7 @@ VAR
   elem : TDSSCktElement;
   node : TCktTreeNode;
 Begin
-  Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
   IF ActiveCircuit <> Nil THEN WITH ActiveCircuit DO Begin
     pMeterObj := EnergyMeters.Active;
     if pMeterObj <> Nil then begin
@@ -614,7 +614,7 @@ begin
        Result := ActiveCircuit.EnergyMeters.ListSize;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Meters_Get_AllBranchesInZone(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Meters_Get_AllBranchesInZone(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   pMeterObj   :TEnergyMeterObj;
@@ -622,7 +622,7 @@ VAR
   BranchCount :Integer;
   pElem       :TDSSCktElement;
 Begin
-  Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
   IF ActiveCircuit <> Nil THEN WITH ActiveCircuit DO Begin
     pMeterObj := EnergyMeters.Active;
     if pMeterObj <> Nil then begin

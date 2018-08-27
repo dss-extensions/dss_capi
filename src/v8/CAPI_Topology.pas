@@ -7,8 +7,8 @@ USES CAPI_Utils;
 
 function Topology_Get_NumLoops():Integer;cdecl;
 function Topology_Get_ActiveBranch():Integer;cdecl;
-PROCEDURE Topology_Get_AllIsolatedBranches(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
-PROCEDURE Topology_Get_AllLoopedPairs(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Topology_Get_AllIsolatedBranches(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Topology_Get_AllLoopedPairs(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Topology_Get_BackwardBranch():Integer;cdecl;
 function Topology_Get_BranchName():PAnsiChar;cdecl;
 function Topology_Get_First():Integer;cdecl;
@@ -18,7 +18,7 @@ function Topology_Get_Next():Integer;cdecl;
 function Topology_Get_NumIsolatedBranches():Integer;cdecl;
 function Topology_Get_ParallelBranch():Integer;cdecl;
 procedure Topology_Set_BranchName(const Value: PAnsiChar);cdecl;
-PROCEDURE Topology_Get_AllIsolatedLoads(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Topology_Get_AllIsolatedLoads(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Topology_Get_FirstLoad():Integer;cdecl;
 function Topology_Get_NextLoad():Integer;cdecl;
 function Topology_Get_NumIsolatedLoads():Integer;cdecl;
@@ -77,7 +77,7 @@ begin
   end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Topology_Get_AllIsolatedBranches(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Topology_Get_AllIsolatedBranches(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: Array of WideString;
   ActualResult: PPAnsiCharArray;
@@ -109,7 +109,7 @@ begin
   SetLength(Result, 0);
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Topology_Get_AllLoopedPairs(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Topology_Get_AllLoopedPairs(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: Array of WideString;
   ActualResult: PPAnsiCharArray;
@@ -293,7 +293,7 @@ begin
   end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Topology_Get_AllIsolatedLoads(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Topology_Get_AllIsolatedLoads(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: Array of WideString;
   ActualResult: PPAnsiCharArray;

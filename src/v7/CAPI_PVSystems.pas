@@ -5,9 +5,9 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE PVSystems_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
-PROCEDURE PVSystems_Get_RegisterNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
-PROCEDURE PVSystems_Get_RegisterValues(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE PVSystems_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE PVSystems_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE PVSystems_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function PVSystems_Get_First():Integer;cdecl;
 function PVSystems_Get_Next():Integer;cdecl;
 function PVSystems_Get_Count():Integer;cdecl;
@@ -29,14 +29,14 @@ IMPLEMENTATION
 
 USES CAPI_Constants, DSSGlobals, PVSystem, SysUtils;
 
-PROCEDURE PVSystems_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE PVSystems_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   PVSystemElem:TPVSystemObj;
   k:Integer;
 
 Begin
-    Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     IF ActiveCircuit <> Nil THEN
      WITH ActiveCircuit DO
@@ -53,19 +53,19 @@ Begin
      End;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE PVSystems_Get_RegisterNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE PVSystems_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
     k :integer;
 
 Begin
-    Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumPVSystemRegisters - 1) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumPVSystemRegisters - 1) + 1);
     For k := 0 to  NumPVSystemRegisters - 1  Do Begin
        Result[k] := DSS_CopyStringAsPChar(PVSystemClass.RegisterNames[k + 1]);
     End;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE PVSystems_Get_RegisterValues(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE PVSystems_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    PVSystem :TPVSystemObj;
@@ -77,17 +77,17 @@ Begin
         PVSystem :=  TPVSystemObj(ActiveCircuit.PVSystems.Active);
         If PVSystem <> Nil Then
         Begin
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (numPVSystemRegisters-1) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (numPVSystemRegisters-1) + 1);
             FOR k := 0 to numPVSystemRegisters-1 DO
             Begin
                 Result[k] := PVSystem.Registers[k+1];
             End;
         End
         Else
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
    End
    ELSE Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
    End;
 
 

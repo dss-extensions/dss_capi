@@ -201,7 +201,7 @@ uses
     XYcurve in 'electricdss-src/Parallel_Version/Source/General/XYcurve.pas',
     Ymatrix in 'electricdss-src/Parallel_Version/Source/Common/Ymatrix.pas',
   
-    CAPI_Utils in '../CAPI_Utils.pas',
+    CAPI_Utils in 'CAPI_Utils.pas',
   
     CAPI_ActiveClass in 'CAPI_ActiveClass.pas',
     CAPI_Bus in 'CAPI_Bus.pas',

@@ -22,9 +22,9 @@ procedure Parser_Set_EndQuote(const Value: PAnsiChar);cdecl;
 function Parser_Get_Delimiters():PAnsiChar;cdecl;
 procedure Parser_Set_Delimiters(const Value: PAnsiChar);cdecl;
 procedure Parser_ResetDelimiters();cdecl;
-PROCEDURE Parser_Get_Vector(var ResultPtr: PDouble; var ResultCount: Integer; ExpectedSize: Integer);cdecl;
-PROCEDURE Parser_Get_Matrix(var ResultPtr: PDouble; var ResultCount: Integer; ExpectedOrder: Integer);cdecl;
-PROCEDURE Parser_Get_SymMatrix(var ResultPtr: PDouble; var ResultCount: Integer; ExpectedOrder: Integer);cdecl;
+PROCEDURE Parser_Get_Vector(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedSize: Integer);cdecl;
+PROCEDURE Parser_Get_Matrix(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedOrder: Integer);cdecl;
+PROCEDURE Parser_Get_SymMatrix(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedOrder: Integer);cdecl;
 
 IMPLEMENTATION
 
@@ -152,7 +152,7 @@ begin
      ComParser.ResetDelims;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Parser_Get_Vector(var ResultPtr: PDouble; var ResultCount: Integer; ExpectedSize: Integer);cdecl;
+PROCEDURE Parser_Get_Vector(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedSize: Integer);cdecl;
 VAR
   Result: PDoubleArray;  i, ActualSize:Integer;
      VectorBuffer:ArrayDef.PDoubleArray;
@@ -161,13 +161,13 @@ begin
     VectorBuffer := Allocmem(SizeOf(VectorBuffer^[1])*ExpectedSize);
     ActualSize := ComParser.ParseAsVector(ExpectedSize, VectorBuffer);
 
-    Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, ((ActualSize-1)) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ((ActualSize-1)) + 1);
     For i := 0 to (ActualSize-1) Do Result[i] := VectorBuffer^[i+1];
 
     Reallocmem(VectorBuffer, 0);
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Parser_Get_Matrix(var ResultPtr: PDouble; var ResultCount: Integer; ExpectedOrder: Integer);cdecl;
+PROCEDURE Parser_Get_Matrix(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedOrder: Integer);cdecl;
 VAR
   Result: PDoubleArray;  i, MatrixSize:Integer;
      MatrixBuffer:ArrayDef.PDoubleArray;
@@ -177,13 +177,13 @@ begin
     MatrixBuffer := Allocmem(SizeOf(MatrixBuffer^[1])*MatrixSize);
     ComParser.ParseAsMatrix(ExpectedOrder, MatrixBuffer);
 
-    Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, ((MatrixSize-1)) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ((MatrixSize-1)) + 1);
     For i := 0 to (MatrixSize-1) Do Result[i] := MatrixBuffer^[i+1];
 
     Reallocmem(MatrixBuffer, 0);
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Parser_Get_SymMatrix(var ResultPtr: PDouble; var ResultCount: Integer; ExpectedOrder: Integer);cdecl;
+PROCEDURE Parser_Get_SymMatrix(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedOrder: Integer);cdecl;
 VAR
   Result: PDoubleArray;  i, MatrixSize:Integer;
      MatrixBuffer:ArrayDef.PDoubleArray;
@@ -193,7 +193,7 @@ begin
     MatrixBuffer := Allocmem(SizeOf(MatrixBuffer^[1])*MatrixSize);
     ComParser.ParseAsSymMatrix(ExpectedOrder, MatrixBuffer);
 
-    Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, ((MatrixSize-1)) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ((MatrixSize-1)) + 1);
     For i := 0 to (MatrixSize-1) Do Result[i] := MatrixBuffer^[i+1];
 
     Reallocmem(MatrixBuffer, 0);

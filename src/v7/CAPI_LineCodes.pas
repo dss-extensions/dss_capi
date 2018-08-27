@@ -27,9 +27,9 @@ function LineCodes_Get_C0():Double;cdecl;
 function LineCodes_Get_C1():Double;cdecl;
 procedure LineCodes_Set_C0(Value: Double);cdecl;
 procedure LineCodes_Set_C1(Value: Double);cdecl;
-PROCEDURE LineCodes_Get_Cmatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE LineCodes_Get_Rmatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE LineCodes_Get_Xmatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE LineCodes_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE LineCodes_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE LineCodes_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure LineCodes_Set_Cmatrix(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 procedure LineCodes_Set_Rmatrix(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 procedure LineCodes_Set_Xmatrix(ValuePtr: PDouble; ValueCount: Integer);cdecl;
@@ -37,7 +37,7 @@ function LineCodes_Get_NormAmps():Double;cdecl;
 procedure LineCodes_Set_NormAmps(Value: Double);cdecl;
 function LineCodes_Get_EmergAmps():Double;cdecl;
 procedure LineCodes_Set_EmergAmps(Value: Double);cdecl;
-PROCEDURE LineCodes_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE LineCodes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 
 IMPLEMENTATION
 
@@ -356,7 +356,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE LineCodes_Get_Cmatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE LineCodes_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    i,j, k:Integer;
@@ -365,13 +365,13 @@ VAR
 
 begin
 
-  Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
   IF ActiveCircuit <> NIL
   THEN Begin
        pLineCode := LineCodeClass.GetActiveObj ;
        WITH pLineCode DO Begin
          Factor := (TwoPi * BaseFrequency  * 1.0e-9);
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (Sqr(FNphases) - 1) + 1);
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(FNphases) - 1) + 1);
          k := 0;
          FOR i := 1 to FNPhases DO
           FOR j := 1 to FNphases DO
@@ -384,7 +384,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE LineCodes_Get_Rmatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE LineCodes_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    i,j, k:Integer;
@@ -392,12 +392,12 @@ VAR
 
 begin
 
-  Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
   IF ActiveCircuit <> NIL
   THEN Begin
        pLineCode := LineCodeClass.GetActiveObj ;
        WITH pLineCode DO Begin
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (Sqr(FNphases) - 1) + 1);
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(FNphases) - 1) + 1);
          k := 0;
          FOR i := 1 to FNPhases DO
           FOR j := 1 to FNphases DO
@@ -410,19 +410,19 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE LineCodes_Get_Xmatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE LineCodes_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    i,j, k:Integer;
    pLineCode:TLineCodeObj;
 
 begin
-  Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
   IF ActiveCircuit <> NIL
   THEN Begin
        pLineCode := LineCodeClass.GetActiveObj ;
        WITH pLineCode DO Begin
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (Sqr(FNphases) - 1) + 1);
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(FNphases) - 1) + 1);
          k := 0;
          FOR i := 1 to FNPhases DO
           FOR j := 1 to FNphases DO
@@ -566,14 +566,14 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE LineCodes_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE LineCodes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   LineCodeElem:TLineCodeObj;
   k:Integer;
 
 Begin
-    Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     IF ActiveCircuit <> Nil THEN
      WITH ActiveCircuit DO

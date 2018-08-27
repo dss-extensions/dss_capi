@@ -9,45 +9,45 @@ function Circuit_Get_Name():PAnsiChar;cdecl;
 function Circuit_Get_NumBuses():Integer;cdecl;
 function Circuit_Get_NumCktElements():Integer;cdecl;
 function Circuit_Get_NumNodes():Integer;cdecl;
-PROCEDURE Circuit_Get_LineLosses(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Circuit_Get_Losses(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Circuit_Get_AllBusVmag(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Circuit_Get_AllBusVolts(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Circuit_Get_AllElementNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
-PROCEDURE Circuit_Get_SubstationLosses(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Circuit_Get_TotalPower(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_LineLosses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_Losses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllBusVmag(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllBusVolts(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllElementNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_SubstationLosses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_TotalPower(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure Circuit_Disable(const Name: PAnsiChar);cdecl;
 procedure Circuit_Enable(const Name: PAnsiChar);cdecl;
 function Circuit_FirstPCElement():Integer;cdecl;
 function Circuit_FirstPDElement():Integer;cdecl;
 function Circuit_NextPCElement():Integer;cdecl;
 function Circuit_NextPDElement():Integer;cdecl;
-PROCEDURE Circuit_Get_AllBusNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
-PROCEDURE Circuit_Get_AllElementLosses(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_AllBusNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllElementLosses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure Circuit_Sample();cdecl;
 procedure Circuit_SaveSample();cdecl;
 function Circuit_SetActiveElement(const FullName: PAnsiChar):Integer;cdecl;
 function Circuit_Capacity(Start, Increment: Double):Double;cdecl;
-PROCEDURE Circuit_Get_AllBusVmagPu(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_AllBusVmagPu(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function Circuit_SetActiveBus(const BusName: PAnsiChar):Integer;cdecl;
 function Circuit_SetActiveBusi(BusIndex: Integer):Integer;cdecl;
-PROCEDURE Circuit_Get_AllNodeNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
-PROCEDURE Circuit_Get_SystemY(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Circuit_Get_AllBusDistances(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Circuit_Get_AllNodeDistances(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Circuit_Get_AllNodeDistancesByPhase(var ResultPtr: PDouble; var ResultCount: Integer; Phase: Integer);cdecl;
-PROCEDURE Circuit_Get_AllNodeVmagByPhase(var ResultPtr: PDouble; var ResultCount: Integer; Phase: Integer);cdecl;
-PROCEDURE Circuit_Get_AllNodeVmagPUByPhase(var ResultPtr: PDouble; var ResultCount: Integer; Phase: Integer);cdecl;
-PROCEDURE Circuit_Get_AllNodeNamesByPhase(var ResultPtr: PPAnsiChar; var ResultCount: Integer; Phase: Integer);cdecl;
+PROCEDURE Circuit_Get_AllNodeNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_SystemY(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllBusDistances(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllNodeDistances(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllNodeDistancesByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer);cdecl;
+PROCEDURE Circuit_Get_AllNodeVmagByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer);cdecl;
+PROCEDURE Circuit_Get_AllNodeVmagPUByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer);cdecl;
+PROCEDURE Circuit_Get_AllNodeNamesByPhase(var ResultPtr: PPAnsiChar; ResultCount: PInteger; Phase: Integer);cdecl;
 function Circuit_SetActiveClass(const ClassName: PAnsiChar):Integer;cdecl;
 function Circuit_FirstElement():Integer;cdecl;
 function Circuit_NextElement():Integer;cdecl;
 procedure Circuit_UpdateStorage();cdecl;
 function Circuit_Get_ParentPDElement():Integer;cdecl;
 procedure Circuit_EndOfTimeStepUpdate();cdecl;
-PROCEDURE Circuit_Get_YNodeOrder(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
-PROCEDURE Circuit_Get_YCurrents(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Circuit_Get_YNodeVarray(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_YNodeOrder(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_YCurrents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_YNodeVarray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure Circuit_SetCktElementIndex(const Value: Integer);cdecl;
 procedure Circuit_SetCktElementName(const Value: PAnsiChar);cdecl;
 
@@ -82,14 +82,14 @@ begin
     If ActiveCircuit[ActiveActor] <> Nil Then Result := ActiveCircuit[ActiveActor].NumNodes;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_LineLosses(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_LineLosses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray; pLine :TLineObj;
     Loss :Complex;
     V   : PDoubleArray;
 
 Begin
-    V := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
+    V := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
     IF ActiveCircuit[ActiveActor] <> NIL THEN
     WITH ActiveCircuit[ActiveActor] DO
     Begin
@@ -108,7 +108,7 @@ Begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_Losses(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_Losses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    LossValue :complex;
@@ -116,16 +116,16 @@ begin
 
      IF ActiveCircuit[ActiveActor] <> Nil THEN
       Begin
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
          LossValue := ActiveCircuit[ActiveActor].Losses[ActiveActor];
          Result[0] := LossValue.re;
          Result[1] := LossValue.im;
       End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_AllBusVmag(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_AllBusVmag(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    i,j,k:Integer;
@@ -134,7 +134,7 @@ Begin
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
      Begin
-       Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (NumNodes-1) + 1);
+       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (NumNodes-1) + 1);
        k:=0;
        FOR i := 1 to NumBuses DO
        Begin
@@ -145,10 +145,10 @@ Begin
            End;
        End;
      End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 End;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_AllBusVolts(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_AllBusVolts(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    i,j,k:Integer;
@@ -158,7 +158,7 @@ Begin
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
      Begin
-       Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NumNodes-1) + 1);
+       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NumNodes-1) + 1);
        k:=0;
        FOR i := 1 to NumBuses DO
        Begin
@@ -172,11 +172,11 @@ Begin
          End;
        End;
      End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_AllElementNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_AllElementNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
    i:Integer;
@@ -185,23 +185,23 @@ Begin
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
      Begin
-       Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumDevices-1) + 1);
+       Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumDevices-1) + 1);
        FOR i := 1 to NumDevices DO
        Begin
             WITH  TDSSCktElement(CktElements.Get(i)) DO
              Result[i-1] := DSS_CopyStringAsPChar(ParentClass.Name + '.' + Name);
        End;
      End
-    ELSE Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_SubstationLosses(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_SubstationLosses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray; pTransf:TTransfObj;
     Loss:Complex;
 
 Begin
-    Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
     IF ActiveCircuit[ActiveActor] <> nil THEN
      WITH ActiveCircuit[ActiveActor] DO
      Begin
@@ -223,7 +223,7 @@ Begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_TotalPower(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_TotalPower(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Total power being consumed in the circuit.
 // Add up all power being contributed by sources.
 // Returns result in kW
@@ -234,7 +234,7 @@ VAR
 
 Begin
 
-    Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
     IF ActiveCircuit[ActiveActor] <> nil THEN
       WITH ActiveCircuit[ActiveActor] DO Begin
         pCktElem := Sources.First;
@@ -372,7 +372,7 @@ Begin
       End;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_AllBusNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_AllBusNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 // Just Bus names      modified 2/7/03
 VAR
   Result: PPAnsiCharArray;
@@ -382,16 +382,16 @@ Begin
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
      Begin
-       Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumBuses-1) + 1);
+       Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumBuses-1) + 1);
        FOR i := 0 to NumBuses-1 DO
        Begin
            Result[i] := DSS_CopyStringAsPChar(BusList.Get(i+1));
        End;
      End
-    ELSE Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_AllElementLosses(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_AllElementLosses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
   pCktElem:TDSSCktElement;
@@ -402,7 +402,7 @@ Begin
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
      Begin
-       Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NumDevices-1) + 1);
+       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NumDevices-1) + 1);
        k:=0;
        pCktElem := CktElements.First;
        WHILE pCktElem<>Nil DO
@@ -415,7 +415,7 @@ Begin
           pCktElem := CktElements.Next;
        End;
      End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
 //------------------------------------------------------------------------------
 procedure Circuit_Sample();cdecl;
@@ -470,7 +470,7 @@ begin
     End;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_AllBusVmagPu(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_AllBusVmagPu(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    i,j,k:Integer;
@@ -480,7 +480,7 @@ Begin
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
      Begin
-       Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (NumNodes-1) + 1);
+       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (NumNodes-1) + 1);
        k:=0;
        FOR i := 1 to NumBuses DO
        Begin
@@ -493,7 +493,7 @@ Begin
            End;
        End;
      End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
 //------------------------------------------------------------------------------
 function Circuit_SetActiveBus(const BusName: PAnsiChar):Integer;cdecl;
@@ -515,7 +515,7 @@ begin
     End;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_AllNodeNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_AllNodeNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 // Return all node names (Busname.nodenumber)
 // Same order as current solution array.
 VAR
@@ -527,7 +527,7 @@ Begin
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
      Begin
-       Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumNodes-1) + 1);
+       Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumNodes-1) + 1);
        k:=0;
        FOR i := 1 to NumBuses DO
        Begin
@@ -539,12 +539,12 @@ Begin
            End;
        End;
      End
-    ELSE Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 end;
 
 // this calls the compressed column
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_SystemY(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_SystemY(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 {Return System Y matrix, complex form}
 
 VAR
@@ -552,16 +552,15 @@ VAR
    iV               :LongWord;
    i,j,p            :LongWord;
    NValues          :LongWord;
-   hY               :NativeUint;
-   nBus, nNZ        :LongWord;
+   hY, nBus, nNZ    :NativeUint;
    ColPtr, RowIdx   :array of LongWord;
    cVals            :array of Complex;
 
 begin
 
 { Return zero length Array if no circuit or no Y matrix}
-   IF ActiveCircuit[ActiveActor] = nil                Then Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
-   ELSE If ActiveCircuit[ActiveActor].Solution.hY = 0 Then Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+   IF ActiveCircuit[ActiveActor] = nil                Then Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+   ELSE If ActiveCircuit[ActiveActor].Solution.hY = 0 Then Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
    ELSE
    With ActiveCircuit[ActiveActor] Do Begin
       hY := ActiveCircuit[ActiveActor].Solution.hY;
@@ -577,7 +576,7 @@ begin
 
       // allocate a square matrix
       NValues := SQR(NumNodes);
-      Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);  // Make variant array for complex
+      Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);  // Make variant array for complex
 
       // the new way, first set all elements to zero
       for iV := 0 to 2*NValues - 1 do Result[iV] := 0.0;
@@ -594,7 +593,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_AllBusDistances(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_AllBusDistances(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 {Return distances from each bus to its parent energymeter in an array that aligns with the buslist}
 VAR
   Result: PDoubleArray;
@@ -604,17 +603,17 @@ Begin
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
      Begin
-       Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (NumBuses-1) + 1);
+       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (NumBuses-1) + 1);
        FOR i := 0 to NumBuses-1 DO
        Begin
            Result[i] := Buses^[i+1].DistFromMeter;
        End;
      End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_AllNodeDistances(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_AllNodeDistances(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 {Return distance from each Node back to parent EnergyMeter}
 {Array sequence is same as all bus Vmag and Vmagpu}
 VAR
@@ -625,7 +624,7 @@ Begin
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
      Begin
-       Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (NumNodes-1) + 1);
+       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (NumNodes-1) + 1);
        k:=0;
        FOR i := 1 to NumBuses DO
        Begin
@@ -636,11 +635,11 @@ Begin
            End;
        End;
      End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_AllNodeDistancesByPhase(var ResultPtr: PDouble; var ResultCount: Integer; Phase: Integer);cdecl;
+PROCEDURE Circuit_Get_AllNodeDistancesByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer);cdecl;
 VAR
   Result: PDoubleArray;
    i,k, NodeIdx:Integer;
@@ -666,17 +665,17 @@ Begin
        End;
 
        // Assign to result and free temp array
-       Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (k-1) + 1);
+       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (k-1) + 1);
        For i := 0 to k-1 do
           Result[i] := Temp^[i+1];
 
        Freemem(Temp, SizeOF(Temp^[1])*NumNodes);
      End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_AllNodeVmagByPhase(var ResultPtr: PDouble; var ResultCount: Integer; Phase: Integer);cdecl;
+PROCEDURE Circuit_Get_AllNodeVmagByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer);cdecl;
 VAR
   Result: PDoubleArray;
    i,k, NodeIdx:Integer;
@@ -702,16 +701,16 @@ Begin
        End;
 
        // Assign to result and free temp array
-       Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (k-1) + 1);
+       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (k-1) + 1);
        For i := 0 to k-1 do  Result[i] := Temp^[i+1];
 
        Freemem(Temp, SizeOF(Temp^[1])*NumNodes);
      End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_AllNodeVmagPUByPhase(var ResultPtr: PDouble; var ResultCount: Integer; Phase: Integer);cdecl;
+PROCEDURE Circuit_Get_AllNodeVmagPUByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer);cdecl;
 VAR
   Result: PDoubleArray;
    i,k, NodeIdx:Integer;
@@ -738,16 +737,16 @@ Begin
        End;
 
        // Assign to result and free temp array
-       Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (k-1) + 1);
+       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (k-1) + 1);
        For i := 0 to k-1 do  Result[i] := Temp^[i+1];
 
        Freemem(Temp, SizeOF(Temp^[1])*NumNodes);
      End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_AllNodeNamesByPhase(var ResultPtr: PPAnsiChar; var ResultCount: Integer; Phase: Integer);cdecl;
+PROCEDURE Circuit_Get_AllNodeNamesByPhase(var ResultPtr: PPAnsiChar; ResultCount: PInteger; Phase: Integer);cdecl;
 VAR
   Result: PPAnsiCharArray;
    i,k, NodeIdx:Integer;
@@ -772,12 +771,12 @@ Begin
        End;
 
        // Assign to result and free temp array
-       Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (k-1) + 1);
+       Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (k-1) + 1);
        For i := 0 to k-1 do  Result[i] := DSS_CopyStringAsPChar(Temp^[i+1]);
 
        FreeStringArray(Temp, NumNodes);
      End
-    ELSE Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------
@@ -856,7 +855,7 @@ begin
       EndOfTimeStepCleanup(ActiveActor);
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_YNodeOrder(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_YNodeOrder(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
    i, k:Integer;
@@ -865,7 +864,7 @@ Begin
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
      Begin
-       Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumNodes-1) + 1);
+       Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumNodes-1) + 1);
        k:=0;
        FOR i := 1 to NumNodes DO
        Begin
@@ -874,11 +873,11 @@ Begin
              Inc(k);
        End;
      End
-    ELSE Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_YCurrents(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_YCurrents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    i,k:Integer;
@@ -888,7 +887,7 @@ Begin
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
      Begin
-       Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NumNodes-1) + 1);
+       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NumNodes-1) + 1);
        k:=0;
        FOR i := 1 to NumNodes DO
        Begin
@@ -899,11 +898,11 @@ Begin
              Inc(k);
        End;
      End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Circuit_Get_YNodeVarray(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Circuit_Get_YNodeVarray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    i,k:Integer;
@@ -913,7 +912,7 @@ Begin
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
      Begin
-       Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NumNodes-1) + 1);
+       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NumNodes-1) + 1);
        k:=0;
        FOR i := 1 to NumNodes DO
        Begin
@@ -924,7 +923,7 @@ Begin
              Inc(k);
        End;
      End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------

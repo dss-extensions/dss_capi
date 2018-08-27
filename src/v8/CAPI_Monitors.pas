@@ -5,7 +5,7 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Monitors_Get_FileName():PAnsiChar;cdecl;
 function Monitors_Get_First():Integer;cdecl;
 function Monitors_Get_Mode():Integer;cdecl;
@@ -18,18 +18,18 @@ procedure Monitors_Save();cdecl;
 procedure Monitors_Set_Mode(Value: Integer);cdecl;
 procedure Monitors_Show();cdecl;
 procedure Monitors_Set_Name(const Value: PAnsiChar);cdecl;
-PROCEDURE Monitors_Get_ByteStream(var ResultPtr: PByte; var ResultCount: Integer);cdecl;
+PROCEDURE Monitors_Get_ByteStream(var ResultPtr: PByte; ResultCount: PInteger);cdecl;
 function Monitors_Get_SampleCount():Integer;cdecl;
 procedure Monitors_SampleAll();cdecl;
 procedure Monitors_SaveAll();cdecl;
 function Monitors_Get_Count():Integer;cdecl;
 procedure Monitors_Process();cdecl;
 procedure Monitors_ProcessAll();cdecl;
-PROCEDURE Monitors_Get_Channel(var ResultPtr: PDouble; var ResultCount: Integer; Index: Integer);cdecl;
-PROCEDURE Monitors_Get_dblFreq(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Monitors_Get_dblHour(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Monitors_Get_Channel(var ResultPtr: PDouble; ResultCount: PInteger; Index: Integer);cdecl;
+PROCEDURE Monitors_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Monitors_Get_dblHour(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function Monitors_Get_FileVersion():Integer;cdecl;
-PROCEDURE Monitors_Get_Header(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Monitors_Get_Header(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Monitors_Get_NumChannels():Integer;cdecl;
 function Monitors_Get_RecordSize():Integer;cdecl;
 function Monitors_Get_Element():PAnsiChar;cdecl;
@@ -77,14 +77,14 @@ Begin
 
 End;
 //------------------------------------------------------------------------------
-PROCEDURE Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   MonitorElem:TMonitorObj;
   k:Integer;
 
 Begin
-    Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
@@ -328,7 +328,7 @@ Begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Monitors_Get_ByteStream(var ResultPtr: PByte; var ResultCount: Integer);cdecl;
+PROCEDURE Monitors_Get_ByteStream(var ResultPtr: PByte; ResultCount: PInteger);cdecl;
 VAR
   Result: PByteArray;
    pMon:TMonitorObj;
@@ -340,7 +340,7 @@ Begin
    Begin
         pMon := ActiveCircuit[ActiveActor].Monitors.Active;
         If PMon <> Nil Then Begin
-          Result := DSS_CreateArray_PByte(ResultPtr, ResultCount, (pmon.MonitorStream.Size -1) + 1);
+          Result := DSS_RecreateArray_PByte(ResultPtr, ResultCount, (pmon.MonitorStream.Size -1) + 1);
           pmon.MonitorStream.Seek(0, soFromBeginning);
           p := ResultPtr;
           pmon.MonitorStream.Read(p^, pmon.MonitorStream.Size);   // Move it all over
@@ -348,7 +348,7 @@ Begin
           // VarArrayUnlock(Result);
         End
         Else
-             Result := DSS_CreateArray_PByte(ResultPtr, ResultCount, (0) + 1);
+             Result := DSS_RecreateArray_PByte(ResultPtr, ResultCount, (0) + 1);
    End;
 
 end;
@@ -401,7 +401,7 @@ begin
   End;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Monitors_Get_Channel(var ResultPtr: PDouble; var ResultCount: Integer; Index: Integer);cdecl;
+PROCEDURE Monitors_Get_Channel(var ResultPtr: PDouble; ResultCount: PInteger; Index: Integer);cdecl;
 // Return an array of doubles for selected channel
 VAR
   Result: PDoubleArray;  Header : THeaderRec;
@@ -420,7 +420,7 @@ begin
       pMon := ActiveCircuit[ActiveActor].Monitors.Active;
       If pMon.SampleCount >0 Then Begin
 
-             Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (pMon.SampleCount-1) + 1);
+             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMon.SampleCount-1) + 1);
              ReadMonitorHeader(Header, FALSE);   // FALSE = leave at beginning of data
              AuxParser.CmdString := string(Header.StrBuffer);
              AuxParser.AutoIncrement := TRUE;
@@ -444,12 +444,12 @@ begin
               Reallocmem(SngBuffer, 0);  // Dispose of buffer
 
       End
-      Else   Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+      Else   Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
     End;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Monitors_Get_dblFreq(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Monitors_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return an array of doubles for frequence for Harmonic solutions
 VAR
   Result: PDoubleArray;  Header : THeaderRec;
@@ -467,7 +467,7 @@ begin
 
       pMon := ActiveCircuit[ActiveActor].Monitors.Active;
       If pMon.SampleCount >0 Then Begin
-             Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (pMon.SampleCount-1) + 1);
+             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMon.SampleCount-1) + 1);
              ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
              AuxParser.CmdString := string(Header.StrBuffer);
              AuxParser.AutoIncrement := TRUE;
@@ -492,17 +492,17 @@ begin
                   Reallocmem(SngBuffer, 0);  // Dispose of buffer
 
              End Else Begin   // Not harmonic solution, so return nil array
-                Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
                 pMon.MonitorStream.Seek(0, soFromEnd) ; // leave stream at end
              End;
       End
-      Else   Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+      Else   Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
     End;
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Monitors_Get_dblHour(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Monitors_Get_dblHour(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return an array of doubles for time in hours
 VAR
   Result: PDoubleArray;  Header : THeaderRec;
@@ -520,7 +520,7 @@ begin
 
       pMon := ActiveCircuit[ActiveActor].Monitors.Active;
       If pMon.SampleCount >0 Then Begin
-             Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (pMon.SampleCount-1) + 1);
+             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMon.SampleCount-1) + 1);
              ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
              AuxParser.CmdString := string(Header.StrBuffer);
              AuxParser.AutoIncrement := TRUE;
@@ -545,11 +545,11 @@ begin
                   Reallocmem(SngBuffer, 0);  // Dispose of buffer
 
              End Else Begin   // Not time solution, so return nil array
-                Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
                 pMon.MonitorStream.Seek(0, soFromEnd) ; // leave stream at end
              End;
       End
-      Else   Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+      Else   Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
     End;
 
@@ -565,7 +565,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Monitors_Get_Header(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Monitors_Get_Header(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 // Variant list of strings with names of all channels
 VAR
   Result: PPAnsiCharArray;  Header : THeaderRec;
@@ -575,7 +575,7 @@ VAR
      SaveWhiteSpace : String;
 begin
 
-    Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO

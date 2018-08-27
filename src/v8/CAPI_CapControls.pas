@@ -5,7 +5,7 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function CapControls_Get_Capacitor():PAnsiChar;cdecl;
 function CapControls_Get_CTratio():Double;cdecl;
 function CapControls_Get_DeadTime():Double;cdecl;
@@ -61,14 +61,14 @@ begin
   DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   elem: TCapControlObj;
   lst: TPointerList;
   k: Integer;
 Begin
-  Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
   Result[0] := DSS_CopyStringAsPChar('NONE');
   IF ActiveCircuit[ActiveActor] <> Nil THEN WITH ActiveCircuit[ActiveActor] DO
   If CapControls.ListSize > 0 Then

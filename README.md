@@ -13,7 +13,7 @@ If you are looking for the Python bindings, see [dss_python](http://github.com/P
 
 If you are looking for the .NET/C# bindings, the code was moved to [dss_sharp](http://github.com/PMeira/dss_sharp/).
 
-Version 0.9.8, based on OpenDSS SVN r2246.
+Version 0.10.0 **(WIP)**, based on OpenDSS SVN r2246.
 
 This is a work-in-progress but it's deemed stable enough to be made public. 
 *Note that, while the interface with OpenDSS is stable (v7, classic version), the OpenDSS-PM (v8, actor-based parallel machine version) interface is experimental in our builds.*
@@ -36,6 +36,7 @@ In order to track upstream changes in the official SVN repository, a custom patc
 
 ## Recent changes
 
+- 2018-08-28 (WIP) / version 0.10.0: Reduce memory allocations if the current buffers are reusable.
 - 2018-08-10 / version 0.9.8: Major reorganization of the source code, many minor fixes, new building scripts.
 - 2018-04-05 / version 0.9.5: New functions `Circuit_SetCktElement*` to set the active circuit element.
 - 2018-03-06 / version 0.9.4: Includes fixes for DSSProperty, includes of the original helpstrings in the C header, integrate upstream changes up to revision 2152. This version introduces a first version of .NET bindings to the native DLL.

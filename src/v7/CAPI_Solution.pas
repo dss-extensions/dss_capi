@@ -54,7 +54,7 @@ function Solution_Get_DefaultDaily():PAnsiChar;cdecl;
 function Solution_Get_DefaultYearly():PAnsiChar;cdecl;
 procedure Solution_Set_DefaultDaily(const Value: PAnsiChar);cdecl;
 procedure Solution_Set_DefaultYearly(const Value: PAnsiChar);cdecl;
-PROCEDURE Solution_Get_EventLog(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Solution_Get_dblHour():Double;cdecl;
 procedure Solution_Set_dblHour(Value: Double);cdecl;
 procedure Solution_Set_StepsizeHr(Value: Double);cdecl;
@@ -433,17 +433,17 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Solution_Get_EventLog(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray; i:Integer;
 begin
     If ActiveCircuit <> Nil Then Begin
-       Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (EventStrings.Count-1) + 1);
+       Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (EventStrings.Count-1) + 1);
        For i := 0 to EventStrings.Count-1 Do Begin
           Result[i] := DSS_CopyStringAsPChar(EventStrings.Strings[i]); 
        End;
     END
-    Else Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);;
+    Else Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);;
 
 end;
 //------------------------------------------------------------------------------

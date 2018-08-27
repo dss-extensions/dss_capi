@@ -5,7 +5,7 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Reclosers_Get_Count():Integer;cdecl;
 function Reclosers_Get_First():Integer;cdecl;
 function Reclosers_Get_Name():PAnsiChar;cdecl;
@@ -20,7 +20,7 @@ function Reclosers_Get_SwitchedTerm():Integer;cdecl;
 procedure Reclosers_Set_MonitoredObj(const Value: PAnsiChar);cdecl;
 procedure Reclosers_Set_SwitchedTerm(Value: Integer);cdecl;
 function Reclosers_Get_NumFast():Integer;cdecl;
-PROCEDURE Reclosers_Get_RecloseIntervals(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Reclosers_Get_RecloseIntervals(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function Reclosers_Get_Shots():Integer;cdecl;
 procedure Reclosers_Set_NumFast(Value: Integer);cdecl;
 procedure Reclosers_Set_Shots(Value: Integer);cdecl;
@@ -51,14 +51,14 @@ begin
   DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   elem: TRecloserObj;
   pList: TPointerList;
   k: Integer;
 Begin
-    Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     IF ActiveCircuit[ActiveActor] <> Nil THEN
     Begin
@@ -239,14 +239,14 @@ begin
   if elem <> nil then Result := elem.NumFast ;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Reclosers_Get_RecloseIntervals(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Reclosers_Get_RecloseIntervals(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // return reclose intervals in seconds
 VAR
   Result: PDoubleArray;
   elem: TRecloserObj;
   i, k: Integer;
 Begin
-  Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
   Result[0] := -1.0;
   IF ActiveCircuit[ActiveActor] <> Nil THEN
   Begin

@@ -6,7 +6,7 @@ INTERFACE
 USES CAPI_Utils;
 
 function SwtControls_Get_Action():Integer;cdecl;
-PROCEDURE SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function SwtControls_Get_Delay():Double;cdecl;
 function SwtControls_Get_First():Integer;cdecl;
 function SwtControls_Get_IsLocked():WordBool;cdecl;
@@ -61,20 +61,20 @@ begin
   end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   elem: TSwtControlObj;
   lst: TPointerList;
   k: Integer;
 Begin
-  Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
   Result[0] := DSS_CopyStringAsPChar('NONE');
   IF ActiveCircuit <> Nil THEN WITH ActiveCircuit DO
   If SwtControls.ListSize > 0 Then
   Begin
     lst := SwtControls;
-    Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (lst.ListSize-1) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (lst.ListSize-1) + 1);
     k:=0;
     elem := lst.First;
     WHILE elem<>Nil DO Begin

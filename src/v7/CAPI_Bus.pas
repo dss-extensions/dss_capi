@@ -7,18 +7,18 @@ USES CAPI_Utils;
 
 function Bus_Get_Name():PAnsiChar;cdecl;
 function Bus_Get_NumNodes():Integer;cdecl;
-PROCEDURE Bus_Get_SeqVoltages(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Bus_Get_Voltages(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Bus_Get_Nodes(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
-PROCEDURE Bus_Get_Isc(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Bus_Get_Voc(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_Voltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_Nodes(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_Isc(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_Voc(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function Bus_Get_kVBase():Double;cdecl;
-PROCEDURE Bus_Get_puVoltages(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Bus_Get_Zsc0(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Bus_Get_Zsc1(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Bus_Get_ZscMatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_puVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_Zsc0(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_Zsc1(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_ZscMatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function Bus_ZscRefresh():WordBool;cdecl;
-PROCEDURE Bus_Get_YscMatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_YscMatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function Bus_Get_Coorddefined():WordBool;cdecl;
 function Bus_Get_x():Double;cdecl;
 procedure Bus_Set_x(Value: Double);cdecl;
@@ -26,17 +26,17 @@ function Bus_Get_y():Double;cdecl;
 procedure Bus_Set_y(Value: Double);cdecl;
 function Bus_Get_Distance():Double;cdecl;
 function Bus_GetUniqueNodeNumber(StartNumber: Integer):Integer;cdecl;
-PROCEDURE Bus_Get_CplxSeqVoltages(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function Bus_Get_Int_Duration():Double;cdecl;
 function Bus_Get_Lambda():Double;cdecl;
 function Bus_Get_Cust_Duration():Double;cdecl;
 function Bus_Get_Cust_Interrupts():Double;cdecl;
 function Bus_Get_N_Customers():Integer;cdecl;
 function Bus_Get_N_interrupts():Double;cdecl;
-PROCEDURE Bus_Get_puVLL(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Bus_Get_VLL(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Bus_Get_puVmagAngle(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE Bus_Get_VMagAngle(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_puVLL(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_VLL(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_puVmagAngle(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_VMagAngle(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function Bus_Get_TotalMiles():Double;cdecl;
 function Bus_Get_SectionID():Integer;cdecl;
 
@@ -67,7 +67,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Bus_Get_SeqVoltages(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Compute sequence voltages for Active Bus
 // magnitude only
 // returns a set of seq voltages (3)
@@ -78,7 +78,7 @@ VAR
 
 Begin
    IF ActiveCircuit = nil Then Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
    End
    ELSE With ActiveCircuit Do
    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
@@ -87,7 +87,7 @@ Begin
       If Nvalues >3 then Nvalues := 3;
 
       // Assume nodes 1, 2, and 3 are the 3 phases
-      Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2) + 1);
+      Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2) + 1);
       IF Nvalues<>3 THEN
          For i := 1 to 3 DO Result[i-1] := -1.0  // Signify seq voltages n/A for less then 3 phases
       ELSE
@@ -109,12 +109,12 @@ Begin
 
       End;
    End
-  ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Bus_Get_Voltages(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_Voltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return Complex for all nodes of voltages for Active Bus
 VAR
   Result: PDoubleArray;
@@ -124,14 +124,14 @@ VAR
 
 Begin
    IF ActiveCircuit = nil Then Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
    End
    ELSE With ActiveCircuit Do
    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
    Begin
       pBus    := Buses^[ActiveBusIndex];
       Nvalues := pBus.NumNodesThisBus;
-      Result  := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
+      Result  := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
       iV := 0;
       jj := 1;
       WITH pBus DO
@@ -150,11 +150,11 @@ Begin
             Inc(iV);
       End;
   End
-  ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
+  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Bus_Get_Nodes(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_Nodes(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 // return array of node numbers corresponding to voltages
 VAR
   Result: PIntegerArray;
@@ -163,7 +163,7 @@ VAR
 
 Begin
    IF ActiveCircuit = nil Then Begin
-        Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (0) + 1)
+        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1)
    End
    ELSE With ActiveCircuit Do
    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
@@ -172,7 +172,7 @@ Begin
       With pBus Do
       Begin
           Nvalues := NumNodesThisBus;
-          Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (NValues -1) + 1);
+          Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (NValues -1) + 1);
           iV := 0;
           jj := 1;
           FOR i := 1 to  NValues DO
@@ -187,11 +187,11 @@ Begin
           End;
       End;
   End
-  ELSE Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);  // just return null array
+  ELSE Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Bus_Get_Isc(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_Isc(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return the short circuit current
 VAR
   Result: PDoubleArray;
@@ -201,7 +201,7 @@ VAR
 begin
 
    IF ActiveCircuit = nil Then Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
    End
    ELSE With ActiveCircuit Do
    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
@@ -209,7 +209,7 @@ begin
       If Buses^[ActiveBusIndex].BusCurrent <> nil Then
       Begin
         NValues := Buses^[ActiveBusIndex].NumNodesThisBus;
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
         iV := 0;
         FOR i := 1 to  NValues DO
         Begin
@@ -221,13 +221,13 @@ begin
         End;
       End
       Else
-          Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
   End
-  ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
+  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Bus_Get_Voc(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_Voc(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return the Open circuit Voltage for this bus
 VAR
   Result: PDoubleArray;
@@ -237,7 +237,7 @@ VAR
 begin
 
    IF ActiveCircuit = nil Then Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
    End
    ELSE With ActiveCircuit Do
    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
@@ -245,7 +245,7 @@ begin
       If Buses^[ActiveBusIndex].VBus <> nil Then
       Begin
         NValues := Buses^[ActiveBusIndex].NumNodesThisBus;
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
         iV := 0;
         FOR i := 1 to  NValues DO
         Begin
@@ -257,9 +257,9 @@ begin
         End;
       End
       Else
-          Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
   End
-  ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
+  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
 
 
 end;
@@ -273,7 +273,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Bus_Get_puVoltages(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_puVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Returns voltages at bus in per unit.  However, if kVBase=0, returns actual volts
 VAR
   Result: PDoubleArray;
@@ -284,7 +284,7 @@ VAR
 
 Begin
    IF ActiveCircuit = nil Then Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
    End
    ELSE With ActiveCircuit Do
    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
@@ -293,7 +293,7 @@ Begin
       With pBus Do
       Begin
           Nvalues := NumNodesThisBus;
-          Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
+          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
           iV := 0;
           jj := 1;
           If kVBase>0.0 Then BaseFactor := 1000.0*kVBase
@@ -314,51 +314,51 @@ Begin
           End;
       End;
   End
-  ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
+  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Bus_Get_Zsc0(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_Zsc0(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;  Z:Complex;
 
 begin
     IF ActiveCircuit = nil Then Begin
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     End
     ELSE With ActiveCircuit Do
     IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
     Begin
             Z := Buses^[ActiveBusIndex].Zsc0;
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
             Result[0] := Z.Re;
             Result[1] := Z.Im;
     End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Bus_Get_Zsc1(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_Zsc1(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray; Z:Complex;
 
 begin
 
     IF ActiveCircuit = nil Then Begin
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     End
     ELSE With ActiveCircuit Do
     IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
     Begin
             Z := Buses^[ActiveBusIndex].Zsc1;
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
             Result[0] := Z.Re;
             Result[1] := Z.Im;
     End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Bus_Get_ZscMatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_ZscMatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
     Nelements, iV, i, j : Integer;
@@ -367,7 +367,7 @@ VAR
 begin
 
     IF ActiveCircuit = nil Then Begin
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     End
     ELSE
 
@@ -378,7 +378,7 @@ begin
       Begin
         If Assigned(Buses^[ActiveBusIndex].Zsc) Then Begin
           Nelements := Buses^[ActiveBusIndex].Zsc.Order;
-          Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (((2*Nelements*Nelements)-1)) + 1);
+          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (((2*Nelements*Nelements)-1)) + 1);
           iV := 0;
           With Buses^[ActiveBusIndex] Do
           For i := 1 to Nelements Do
@@ -391,9 +391,9 @@ begin
             End;
 
         End
-        Else  Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
+        Else  Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
       End
-      ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
+      ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
 
       Except
           On E:Exception Do DoSimpleMsg('ZscMatrix Error: ' + E.message + CRLF , 5016);
@@ -410,7 +410,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Bus_Get_YscMatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_YscMatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
     Nelements, iV, i, j : Integer;
@@ -419,7 +419,7 @@ VAR
 begin
 
     IF ActiveCircuit = nil Then Begin
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     End
     ELSE
 
@@ -430,7 +430,7 @@ begin
       Begin
         If Assigned(Buses^[ActiveBusIndex].Ysc) Then Begin
           Nelements := Buses^[ActiveBusIndex].Ysc.Order;
-          Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (((2*Nelements*Nelements)-1)) + 1);
+          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (((2*Nelements*Nelements)-1)) + 1);
           iV := 0;
           With Buses^[ActiveBusIndex] Do
           For i := 1 to Nelements Do
@@ -443,9 +443,9 @@ begin
             End;
 
         End
-        Else  Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
+        Else  Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
       End
-      ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
+      ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
 
       Except
           On E:Exception Do DoSimpleMsg('ZscMatrix Error: ' + E.message + CRLF, 5017 );
@@ -518,7 +518,7 @@ begin
       Result := Utilities.GetUniqueNodeNumber(BusList.Get(ActiveBusIndex), StartNumber);
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Bus_Get_CplxSeqVoltages(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Compute sequence voltages for Active Bus
 // Complex values
 // returns a set of seq voltages (3) in 0, 1, 2 order
@@ -529,7 +529,7 @@ VAR
 
 Begin
    IF ActiveCircuit = nil Then Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
    End
    ELSE With ActiveCircuit Do
    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
@@ -538,7 +538,7 @@ Begin
       If Nvalues > 3 then Nvalues := 3;
 
       // Assume nodes labelled 1, 2, and 3 are the 3 phases
-      Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (5) + 1);
+      Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (5) + 1);
       IF Nvalues <> 3 THEN
           For i := 1 to 6 DO Result[i-1] := -1.0  // Signify seq voltages n/A for less then 3 phases
       ELSE
@@ -557,7 +557,7 @@ Begin
           End;
       End;
    End
-  ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------
@@ -615,7 +615,7 @@ begin
          Result := Buses^[ActiveBusIndex].Bus_Num_Interrupt ;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Bus_Get_puVLL(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_puVLL(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
   Nvalues,i,  iV, NodeIdxi, NodeIdxj, jj : Integer;
@@ -625,7 +625,7 @@ VAR
 
 Begin
    IF ActiveCircuit = nil Then Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
    End
    ELSE With ActiveCircuit Do
    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
@@ -637,7 +637,7 @@ Begin
       If Nvalues > 1 Then
       Begin
           If Nvalues = 2 Then  Nvalues := 1;  // only one L-L voltage if 2 phase
-          Result  := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
+          Result  := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
           iV := 0;
           WITH pBus DO
           Begin
@@ -660,17 +660,17 @@ Begin
           End;  {With pBus}
       End
       ELSE Begin  // for 1-phase buses, do not attempt to compute.
-          Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);  // just return -1's in array
+          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);  // just return -1's in array
           Result[0] := -99999.0;
           Result[1] := 0.0;
       End;
   End
-  ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
+  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Bus_Get_VLL(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_VLL(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
   Nvalues,i,  iV, NodeIdxi, NodeIdxj, jj : Integer;
@@ -679,7 +679,7 @@ VAR
 
 Begin
    IF ActiveCircuit = nil Then Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
    End
    ELSE With ActiveCircuit Do
    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
@@ -691,7 +691,7 @@ Begin
       If Nvalues > 1 Then
       Begin
           If Nvalues = 2 Then  Nvalues := 1;  // only one L-L voltage if 2 phase
-          Result  := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
+          Result  := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
           iV := 0;
           WITH pBus DO
             FOR i := 1 to  NValues DO     // for 2- or 3-phases
@@ -712,16 +712,16 @@ Begin
             End;
       End
       ELSE Begin  // for 1-phase buses, do not attempt to compute.
-          Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);  // just return -1's in array
+          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);  // just return -1's in array
           Result[0] := -99999.0;
           Result[1] := 0.0;
       End;
   End
-  ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
+  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Bus_Get_puVmagAngle(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_puVmagAngle(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return mag/angle for all nodes of voltages for Active Bus
 VAR
   Result: PDoubleArray;
@@ -733,14 +733,14 @@ VAR
 Begin
 
    IF ActiveCircuit = nil Then Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
    End
    ELSE With ActiveCircuit Do
    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
    Begin
       pBus    := Buses^[ActiveBusIndex];
       Nvalues := pBus.NumNodesThisBus;
-      Result  := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
+      Result  := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
       iV := 0;
       jj := 1;
       WITH pBus DO Begin
@@ -763,11 +763,11 @@ Begin
           End;
       End;
   End
-  ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
+  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Bus_Get_VMagAngle(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Bus_Get_VMagAngle(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return mag/angle for all nodes of voltages for Active Bus
 VAR
   Result: PDoubleArray;
@@ -778,14 +778,14 @@ VAR
 Begin
 
    IF ActiveCircuit = nil Then Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
    End
    ELSE With ActiveCircuit Do
    IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then
    Begin
       pBus    := Buses^[ActiveBusIndex];
       Nvalues := pBus.NumNodesThisBus;
-      Result  := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
+      Result  := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);
       iV := 0;
       jj := 1;
       WITH pBus DO
@@ -804,7 +804,7 @@ Begin
             Inc(iV);
       End;
   End
-  ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
+  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
 //------------------------------------------------------------------------------

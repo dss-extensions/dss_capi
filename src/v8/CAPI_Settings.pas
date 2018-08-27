@@ -22,10 +22,10 @@ procedure Settings_Set_EmergVminpu(Value: Double);cdecl;
 procedure Settings_Set_NormVmaxpu(Value: Double);cdecl;
 procedure Settings_Set_NormVminpu(Value: Double);cdecl;
 procedure Settings_Set_ZoneLock(Value: WordBool);cdecl;
-PROCEDURE Settings_Get_LossRegs(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
+PROCEDURE Settings_Get_LossRegs(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 function Settings_Get_LossWeight():Double;cdecl;
 function Settings_Get_Trapezoidal():WordBool;cdecl;
-PROCEDURE Settings_Get_UEregs(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
+PROCEDURE Settings_Get_UEregs(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 function Settings_Get_UEweight():Double;cdecl;
 procedure Settings_Set_LossRegs(ValuePtr: PInteger; ValueCount: Integer);cdecl;
 procedure Settings_Set_LossWeight(Value: Double);cdecl;
@@ -33,7 +33,7 @@ procedure Settings_Set_Trapezoidal(Value: WordBool);cdecl;
 procedure Settings_Set_UEregs(ValuePtr: PInteger; ValueCount: Integer);cdecl;
 procedure Settings_Set_UEweight(Value: Double);cdecl;
 function Settings_Get_ControlTrace():WordBool;cdecl;
-PROCEDURE Settings_Get_VoltageBases(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Settings_Get_VoltageBases(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure Settings_Set_ControlTrace(Value: WordBool);cdecl;
 procedure Settings_Set_VoltageBases(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 function Settings_Get_PriceCurve():PAnsiChar;cdecl;
@@ -189,20 +189,20 @@ begin
       If ActiveCircuit[ActiveActor] <> NIL THEN ActiveCircuit[ActiveActor].ZonesLocked := Value;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Settings_Get_LossRegs(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
+PROCEDURE Settings_Get_LossRegs(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 VAR
   Result: PIntegerArray;
    i:Integer;
 begin
    If ActiveCircuit[ActiveActor] <> NIL
    THEN Begin
-       Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (ActiveCircuit[ActiveActor].NumLossRegs - 1) + 1);
+       Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ActiveCircuit[ActiveActor].NumLossRegs - 1) + 1);
        FOR i := 0 to ActiveCircuit[ActiveActor].NumLossRegs - 1 DO
        Begin
            Result[i] := ActiveCircuit[ActiveActor].LossRegs^[i+1]
        End;
    END
-   ELSE    Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+   ELSE    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------
@@ -225,20 +225,20 @@ begin
    ELSE    Result := FALSE;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Settings_Get_UEregs(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
+PROCEDURE Settings_Get_UEregs(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 VAR
   Result: PIntegerArray;
    i:Integer;
 begin
    IF ActiveCircuit[ActiveActor] <> NIL
    THEN Begin
-       Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (ActiveCircuit[ActiveActor].NumUERegs - 1) + 1);
+       Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ActiveCircuit[ActiveActor].NumUERegs - 1) + 1);
        FOR i := 0 to ActiveCircuit[ActiveActor].NumUERegs - 1 DO
        Begin
            Result[i] := ActiveCircuit[ActiveActor].UERegs^[i+1]
        End;
    END
-   ELSE    Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+   ELSE    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
 end;
 //------------------------------------------------------------------------------
 function Settings_Get_UEweight():Double;cdecl;
@@ -316,7 +316,7 @@ begin
      THEN Result := ActiveCircuit[ActiveActor].ControlQueue.TraceLog;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Settings_Get_VoltageBases(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Settings_Get_VoltageBases(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    i, Count :Integer;
@@ -331,12 +331,12 @@ begin
       Until LegalVoltageBases^[i] = 0.0;
       Count := i-1;
 
-      Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (Count-1) + 1);
+      Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Count-1) + 1);
 
       FOR i := 0 to Count-1 Do Result[i] := LegalVoltageBases^[i+1];
 
   END
-  ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
 //------------------------------------------------------------------------------
 procedure Settings_Set_ControlTrace(Value: WordBool);cdecl;

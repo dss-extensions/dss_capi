@@ -5,7 +5,7 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function DSSElement_Get_Name():PAnsiChar;cdecl;
 function DSSElement_Get_NumProperties():Integer;cdecl;
 
@@ -13,12 +13,12 @@ IMPLEMENTATION
 
 USES CAPI_Constants, DSSGlobals, Sysutils;
 
-PROCEDURE DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
    k:Integer;
 begin
-  Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
   IF ActiveCircuit <> Nil THEN
    WITH ActiveCircuit DO
    Begin
@@ -27,7 +27,7 @@ begin
      Begin
           WITH ParentClass Do
           Begin
-              Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumProperties-1) + 1);
+              Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumProperties-1) + 1);
               For k := 1 to NumProperties DO Begin
                   Result[k-1] := DSS_CopyStringAsPChar(PropertyName^[k]);
               End;

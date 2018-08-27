@@ -54,7 +54,7 @@ function Solution_Get_DefaultDaily():PAnsiChar;cdecl;
 function Solution_Get_DefaultYearly():PAnsiChar;cdecl;
 procedure Solution_Set_DefaultDaily(const Value: PAnsiChar);cdecl;
 procedure Solution_Set_DefaultYearly(const Value: PAnsiChar);cdecl;
-PROCEDURE Solution_Get_EventLog(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Solution_Get_dblHour():Double;cdecl;
 procedure Solution_Set_dblHour(Value: Double);cdecl;
 procedure Solution_Set_StepsizeHr(Value: Double);cdecl;
@@ -93,10 +93,10 @@ procedure Solution_Set_IntervalHrs(Value: Double);cdecl;
 function Solution_Get_MinIterations():Integer;cdecl;
 procedure Solution_Set_MinIterations(Value: Integer);cdecl;
 procedure Solution_SolveAll();cdecl;
-PROCEDURE Solution_Get_IncMatrix(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
-PROCEDURE Solution_Get_BusLevels(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
-PROCEDURE Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
-PROCEDURE Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 
 IMPLEMENTATION
 
@@ -438,17 +438,17 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Solution_Get_EventLog(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray; i:Integer;
 begin
     If ActiveCircuit[ActiveActor] <> Nil Then Begin
-       Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (EventStrings[ActiveActor].Count-1) + 1);
+       Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (EventStrings[ActiveActor].Count-1) + 1);
        For i := 0 to EventStrings[ActiveActor].Count-1 Do Begin
           Result[i] := DSS_CopyStringAsPChar(EventStrings[ActiveActor].Strings[i]);
        End;
     END
-    Else Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);;
+    Else Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);;
 
 end;
 //------------------------------------------------------------------------------
@@ -735,7 +735,7 @@ begin
   end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Solution_Get_IncMatrix(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
+PROCEDURE Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 VAR
   Result: PIntegerArray;
   IMIdx,
@@ -746,17 +746,17 @@ begin
       with ACtiveCircuit[ActiveActor].Solution do
       begin
          ArrSize    :=  length(IncMatrix)-3;
-         Result     :=  DSS_CreateArray_PInteger(ResultPtr, ResultCount, (ArrSize) + 1);
+         Result     :=  DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ArrSize) + 1);
          for IMIdx  :=  0 to ArrSize Do
          Begin
             Result[IMIdx] := IncMatrix[IMIdx+3];
          End;
       end;
     END
-    Else Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+    Else Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Solution_Get_BusLevels(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
+PROCEDURE Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 VAR
   Result: PIntegerArray;
   i,
@@ -769,17 +769,17 @@ begin
         begin
            ArrSize    :=  length(Inc_Mat_Levels)-1;    // Removes the 3 initial zeros and the extra index
                                                   // Since it starts on 0
-           Result     :=  DSS_CreateArray_PInteger(ResultPtr, ResultCount, (ArrSize) + 1);
+           Result     :=  DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ArrSize) + 1);
            for IMIdx  :=  0 to ArrSize Do
            Begin
               Result[IMIdx] := Inc_Mat_levels[IMIdx];
            End;
         end;
       END
-      Else Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+      Else Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   i,
@@ -791,17 +791,17 @@ begin
         with ACtiveCircuit[ActiveActor].Solution do
         begin
           ArrSize    :=  length(Inc_Mat_Rows)-1;
-          Result     :=  DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (ArrSize) + 1);
+          Result     :=  DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (ArrSize) + 1);
           for IMIdx  :=  0 to ArrSize Do
           Begin
              Result[IMIdx] := DSS_CopyStringAsPChar(Inc_Mat_Rows[IMIdx]);
           End;
         end;
       END
-      Else Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+      Else Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   i,
@@ -815,7 +815,7 @@ begin
         if IncMat_Ordered then
         begin
           ArrSize    :=  length(Inc_Mat_Cols)-1;
-          Result     :=  DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (ArrSize) + 1);
+          Result     :=  DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (ArrSize) + 1);
           for IMIdx  :=  0 to ArrSize Do
           Begin
              Result[IMIdx] := DSS_CopyStringAsPChar(Inc_Mat_Cols[IMIdx]);
@@ -823,7 +823,7 @@ begin
         end
         else
         begin
-             Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumBuses-1) + 1);
+             Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumBuses-1) + 1);
              FOR i := 0 to NumBuses-1 DO
              Begin
                  Result[i] := DSS_CopyStringAsPChar(BusList.Get(i+1));
@@ -831,7 +831,7 @@ begin
         end;
        end;
      End
-     Else Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+     Else Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 end;
 //------------------------------------------------------------------------------
 END.

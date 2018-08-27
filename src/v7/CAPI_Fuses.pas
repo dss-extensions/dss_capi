@@ -5,7 +5,7 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE Fuses_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Fuses_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Fuses_Get_Count():Integer;cdecl;
 function Fuses_Get_First():Integer;cdecl;
 function Fuses_Get_Name():PAnsiChar;cdecl;
@@ -46,7 +46,7 @@ begin
   DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Fuses_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Fuses_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   elem: TFuseObj;
@@ -54,7 +54,7 @@ VAR
   k: Integer;
 
 Begin
-    Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     IF ActiveCircuit <> Nil THEN
     Begin

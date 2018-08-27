@@ -11,12 +11,12 @@ function XYCurves_Get_Name():PAnsiChar;cdecl;
 function XYCurves_Get_Next():Integer;cdecl;
 procedure XYCurves_Set_Name(const Value: PAnsiChar);cdecl;
 function XYCurves_Get_Npts():Integer;cdecl;
-PROCEDURE XYCurves_Get_Xarray(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE XYCurves_Get_Xarray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure XYCurves_Set_Npts(Value: Integer);cdecl;
 procedure XYCurves_Set_Xarray(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 function XYCurves_Get_x():Double;cdecl;
 function XYCurves_Get_y():Double;cdecl;
-PROCEDURE XYCurves_Get_Yarray(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE XYCurves_Get_Yarray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure XYCurves_Set_x(Value: Double);cdecl;
 procedure XYCurves_Set_y(Value: Double);cdecl;
 procedure XYCurves_Set_Yarray(ValuePtr: PDouble; ValueCount: Integer);cdecl;
@@ -107,14 +107,14 @@ begin
      End;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE XYCurves_Get_Xarray(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE XYCurves_Get_Xarray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    pXYCurve:TXYCurveObj;
    k:Integer;
 
 begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
         Result[0] := 0.0;  // error condition: one element array=0
         If ActiveCircuit <> Nil Then
          Begin
@@ -212,14 +212,14 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE XYCurves_Get_Yarray(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE XYCurves_Get_Yarray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    pXYCurve:TXYCurveObj;
    k:Integer;
 
 begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
         Result[0] := 0.0;  // error condition: one element array=0
         If ActiveCircuit <> Nil Then
          Begin

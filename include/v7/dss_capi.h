@@ -1,6 +1,6 @@
 #ifndef DSS_CAPI_V7_DLL_H
 #define DSS_CAPI_V7_DLL_H
-#define DSS_CAPI_V7_VERSION "0.9.8"
+#define DSS_CAPI_V7_VERSION "0.10.0"
 #ifndef DSS_CAPI_V7_DLL
 //#define DSS_CAPI_V7_DLL __declspec(dllimport)
 #define DSS_CAPI_V7_DLL
@@ -1006,9 +1006,7 @@ extern "C" {
     DSS_CAPI_V7_DLL char* DSS_Get_DefaultEditor(void);
     
     DSS_CAPI_V7_DLL int32_t DSS_SetActiveClass(char* ClassName);
-    
     DSS_CAPI_V7_DLL uint16_t DSS_Get_AllowForms();
-
     DSS_CAPI_V7_DLL void DSS_Set_AllowForms(uint16_t Value);
     
     /*

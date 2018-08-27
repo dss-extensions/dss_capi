@@ -35,7 +35,8 @@ Var
     NumNZ, NumBuses: LongWord;
     YColumns, YRows: pIntegerArray;
   
-    tmpColPtrN, tmpRowIdxPtrN, tmpValsPtrN: Integer;
+    //tmpColPtrN, tmpRowIdxPtrN, tmpValsPtrN: PInteger;
+    tmpCnt: array[0..1] of integer;
 Begin
     If ActiveCircuit=Nil then Exit;
     Yhandle := ActiveCircuit.Solution.hY;
@@ -50,9 +51,9 @@ Begin
     GetNNZ(Yhandle, @NumNz);
     GetSize(Yhandle, @NumBuses);
 
-    YColumns := Arraydef.PIntegerArray(DSS_CreateArray_PInteger(ColPtr, tmpColPtrN, NumBuses + 1));
-    YRows := Arraydef.PIntegerArray(DSS_CreateArray_PInteger(RowIdxPtr, tmpRowIdxPtrN, NumNZ));
-    DSS_CreateArray_PDouble(cValsPtr, tmpValsPtrN, 2 * NumNZ);
+    YColumns := Arraydef.PIntegerArray(DSS_CreateArray_PInteger(ColPtr, @tmpCnt[0], NumBuses + 1));
+    YRows := Arraydef.PIntegerArray(DSS_CreateArray_PInteger(RowIdxPtr, @tmpCnt[0], NumNZ));
+    DSS_CreateArray_PDouble(cValsPtr, @tmpCnt[0], 2 * NumNZ);
     
     nBus := NumBuses;
     nNZ  := NumNZ;

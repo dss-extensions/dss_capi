@@ -5,7 +5,7 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE RegControls_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE RegControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function RegControls_Get_CTPrimary():Double;cdecl;
 function RegControls_Get_Delay():Double;cdecl;
 function RegControls_Get_First():Integer;cdecl;
@@ -75,14 +75,14 @@ begin
   DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE RegControls_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE RegControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   elem: TRegControlObj;
   lst: TPointerList;
   k: Integer;
 Begin
-  Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
   Result[0] := DSS_CopyStringAsPChar('NONE');
   IF ActiveCircuit <> Nil THEN WITH ActiveCircuit DO Begin
     lst := RegControls;

@@ -5,7 +5,7 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Transformers_Get_First():Integer;cdecl;
 function Transformers_Get_IsDelta():WordBool;cdecl;
 function Transformers_Get_kV():Double;cdecl;
@@ -66,14 +66,14 @@ begin
   DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   elem: TTransfObj;
   lst: TPointerList;
   k: Integer;
 Begin
-  Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
   Result[0] := DSS_CopyStringAsPChar('NONE');
   IF ActiveCircuit <> Nil THEN WITH ActiveCircuit DO
   If Transformers.ListSize > 0 Then

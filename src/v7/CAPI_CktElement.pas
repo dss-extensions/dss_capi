@@ -5,33 +5,33 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function CktElement_Get_Name():PAnsiChar;cdecl;
 function CktElement_Get_NumConductors():Integer;cdecl;
 function CktElement_Get_NumPhases():Integer;cdecl;
 function CktElement_Get_NumTerminals():Integer;cdecl;
 procedure CktElement_Set_BusNames(ValuePtr: PPAnsiChar; ValueCount: Integer);cdecl;
-PROCEDURE CktElement_Get_Currents(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE CktElement_Get_Voltages(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_Voltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function CktElement_Get_EmergAmps():Double;cdecl;
 function CktElement_Get_Enabled():WordBool;cdecl;
-PROCEDURE CktElement_Get_Losses(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_Losses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function CktElement_Get_NormalAmps():Double;cdecl;
-PROCEDURE CktElement_Get_PhaseLosses(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE CktElement_Get_Powers(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE CktElement_Get_SeqCurrents(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE CktElement_Get_SeqPowers(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE CktElement_Get_SeqVoltages(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_PhaseLosses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_Powers(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure CktElement_Close(Term, Phs: Integer);cdecl;
 procedure CktElement_Open(Term, Phs: Integer);cdecl;
 procedure CktElement_Set_EmergAmps(Value: Double);cdecl;
 procedure CktElement_Set_Enabled(Value: WordBool);cdecl;
 procedure CktElement_Set_NormalAmps(Value: Double);cdecl;
 function CktElement_IsOpen(Term, Phs: Integer):WordBool;cdecl;
-PROCEDURE CktElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function CktElement_Get_NumProperties():Integer;cdecl;
-PROCEDURE CktElement_Get_Residuals(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE CktElement_Get_Yprim(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_Residuals(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_Yprim(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function CktElement_Get_DisplayName():PAnsiChar;cdecl;
 function CktElement_Get_GUID():PAnsiChar;cdecl;
 function CktElement_Get_Handle():Integer;cdecl;
@@ -40,19 +40,19 @@ function CktElement_Get_Controller(idx: Integer):PAnsiChar;cdecl;
 function CktElement_Get_EnergyMeter():PAnsiChar;cdecl;
 function CktElement_Get_HasVoltControl():WordBool;cdecl;
 function CktElement_Get_HasSwitchControl():WordBool;cdecl;
-PROCEDURE CktElement_Get_CplxSeqVoltages(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE CktElement_Get_CplxSeqCurrents(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE CktElement_Get_AllVariableNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
-PROCEDURE CktElement_Get_AllVariableValues(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_CplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_AllVariableNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_AllVariableValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function CktElement_Get_Variable(const MyVarName: PAnsiChar;  out Code: Integer):Double;cdecl;
 function CktElement_Get_Variablei(Idx: Integer;  out Code: Integer):Double;cdecl;
-PROCEDURE CktElement_Get_NodeOrder(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_NodeOrder(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 function CktElement_Get_HasOCPDevice():WordBool;cdecl;
 function CktElement_Get_NumControls():Integer;cdecl;
 function CktElement_Get_OCPDevIndex():Integer;cdecl;
 function CktElement_Get_OCPDevType():Integer;cdecl;
-PROCEDURE CktElement_Get_CurrentsMagAng(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 
 IMPLEMENTATION
 
@@ -164,7 +164,7 @@ End;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
    i :Integer;
@@ -173,14 +173,14 @@ begin
      If ActiveCircuit <> Nil Then
      Begin
        With ActiveCircuit Do Begin
-         Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (ActiveCktElement.Nterms-1) + 1);
+         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (ActiveCktElement.Nterms-1) + 1);
          For i := 1 to  ActiveCktElement.Nterms Do Begin
              Result[i-1] := DSS_CopyStringAsPChar(ActiveCktElement.GetBus(i));
          End;
        End;
      End
      Else
-         Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 
 end;
 
@@ -256,7 +256,7 @@ end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_Currents(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
   cBuffer: pComplexArray;
@@ -267,7 +267,7 @@ Begin
      WITH ActiveCircuit.ActiveCktElement DO
      Begin
          NValues := NConds*NTerms;
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues-1) + 1);
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues-1) + 1);
          cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
          GetCurrents(cBuffer);
          iV :=0;
@@ -281,14 +281,14 @@ Begin
          Reallocmem(cBuffer,0);
      End
   Else
-     Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_Voltages(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_Voltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Bus Voltages at active terminal
 VAR
   Result: PDoubleArray;
@@ -306,7 +306,7 @@ Begin
         WITH ActiveCktElement DO
         Begin
          numcond := NConds*Nterms;
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*numcond-1) + 1);
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*numcond-1) + 1);
          // k := (Terminal-1)*numcond;    // RCD 8-30-00 Changed
          iV :=0;
          FOR i := 1 to  numcond DO
@@ -320,7 +320,7 @@ Begin
          End;
         End;
       End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 
 end;
@@ -354,7 +354,7 @@ end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_Losses(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_Losses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    LossValue :complex;
@@ -365,13 +365,13 @@ begin
       Begin
         If ActiveCktElement<>Nil THEN
         Begin
-         Result    := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
+         Result    := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
          LossValue := ActiveCktElement.Losses;
          Result[0] := LossValue.re;
          Result[1] := LossValue.im;
         End;
       End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 
 end;
@@ -393,7 +393,7 @@ end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_PhaseLosses(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_PhaseLosses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Returns Phase losses in kW, kVar
 VAR
   Result: PDoubleArray;
@@ -408,7 +408,7 @@ Begin
   WITH ActiveCircuit.ActiveCktElement DO
   Begin
       NValues := NPhases;
-      Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues-1) + 1);
+      Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues-1) + 1);
       cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
       GetPhaseLosses( NValues, cBuffer);
       iV :=0;
@@ -420,14 +420,14 @@ Begin
       End;
       Reallocmem(cBuffer,0);
   End
- ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+ ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_Powers(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_Powers(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return complex kW, kvar in each conductor for each terminal
 VAR
   Result: PDoubleArray;
@@ -442,7 +442,7 @@ Begin
   WITH ActiveCircuit.ActiveCktElement DO
   Begin
       NValues := NConds*Nterms;
-      Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues-1) + 1);
+      Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues-1) + 1);
       cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
       GetPhasePower(cBuffer);
       iV :=0;
@@ -454,14 +454,14 @@ Begin
       End;
       Reallocmem(cBuffer,0);
   End
- ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+ ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_SeqCurrents(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // All sequence currents of active ciruit element
 // returns magnitude only.
 VAR
@@ -479,7 +479,7 @@ Begin
      If Enabled Then
      Begin
          TRY
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (3*NTerms-1) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (3*NTerms-1) + 1);
 
             i012 := Allocmem(Sizeof(i012^[1]) * 3 * Nterms);
             // get complex seq voltages
@@ -502,16 +502,16 @@ Begin
           END;
      End
      Else
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // Disabled
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // Disabled
 
    End
-  ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_SeqPowers(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // All seq Powers of active 3-phase ciruit element
 // returns kW + j kvar
 VAR
@@ -528,7 +528,7 @@ Begin
    WITH ActiveCircuit DO Begin
      If ActiveCktElement<>Nil THEN
      WITH ActiveCktElement DO Begin
-      Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*3*NTerms-1) + 1); // allocate for kW and kvar
+      Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*3*NTerms-1) + 1); // allocate for kW and kvar
       IF NPhases <> 3 THEN
       Begin
            IF (Nphases = 1) and PositiveSequence THEN
@@ -579,14 +579,14 @@ Begin
       End;
      End;
    End
- ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+ ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_SeqVoltages(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // All voltages of active ciruit element
 // magnitude only
 // returns a set of seq voltages (3) for each terminal
@@ -606,7 +606,7 @@ Begin
      If Enabled Then
      Begin
          TRY
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (3*NTerms-1) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (3*NTerms-1) + 1);
 
             V012 := Allocmem(Sizeof(V012^[1]) * 3 * Nterms);
             // get complex seq voltages
@@ -629,10 +629,10 @@ Begin
           END;
      End
      Else
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // Disabled
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // Disabled
 
    End
-  ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 
 end;
@@ -734,12 +734,12 @@ begin
      End;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
    k:Integer;
 begin
-  Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
   IF ActiveCircuit <> Nil THEN
    WITH ActiveCircuit DO
    Begin
@@ -748,7 +748,7 @@ begin
      Begin
           WITH ParentClass Do
           Begin
-              Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumProperties-1) + 1);
+              Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumProperties-1) + 1);
               For k := 1 to NumProperties DO Begin
                   Result[k-1] := DSS_CopyStringAsPChar(PropertyName^[k]);
               End;
@@ -773,7 +773,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_Residuals(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_Residuals(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
   cBuffer       :pComplexArray;
@@ -785,7 +785,7 @@ Begin
   If ActiveCircuit <> Nil Then
      WITH ActiveCircuit.ActiveCktElement DO
      Begin
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NTerms-1) + 1);    // 2 values per terminal
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NTerms-1) + 1);    // 2 values per terminal
          cBuffer := Allocmem(sizeof(cBuffer^[1])*Yorder);
          GetCurrents(cBuffer);
          iV :=0;
@@ -805,11 +805,11 @@ Begin
          Reallocmem(cBuffer,0);
      End
   Else
-     Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_Yprim(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_Yprim(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 { Return the YPrim matrix for this element }
 
 VAR
@@ -821,7 +821,7 @@ VAR
 
 begin
    IF ActiveCircuit = nil Then Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
    End
    ELSE With ActiveCircuit Do
       If ActiveCktElement<>Nil THEN
@@ -829,10 +829,10 @@ begin
           NValues := SQR(Yorder);
           cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
           If cValues=Nil Then Begin   // check for unassigned array
-                            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
+                            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
                             Exit;  // Get outta here
                          End;
-          Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);  // Make variant array
+          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);  // Make variant array
           iV := 0;
 
           FOR i := 1 to  NValues DO  Begin    // Plunk the values in the variant array
@@ -842,7 +842,7 @@ begin
               Inc(iV);
           End;
       End
-      ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
+      ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
 //------------------------------------------------------------------------------
@@ -967,7 +967,7 @@ begin
   end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_CplxSeqVoltages(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 {returns Seq Voltages as array of complex values}
 VAR
   Result: PDoubleArray;
@@ -985,7 +985,7 @@ Begin
      If Enabled Then
      Begin
          TRY
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*3*NTerms-1) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*3*NTerms-1) + 1);
 
             V012 := Allocmem(Sizeof(V012^[1]) * 3 * Nterms);
             // get complex seq voltages
@@ -1014,14 +1014,14 @@ Begin
           END;
      End
      Else
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // Disabled
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // Disabled
 
    End
-  ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_CplxSeqCurrents(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_CplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 {returns Seq Voltages as array of complex values}
 VAR
   Result: PDoubleArray;
@@ -1039,7 +1039,7 @@ Begin
      If Enabled Then
      Begin
          TRY
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*3*NTerms-1) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*3*NTerms-1) + 1);
 
             i012 := Allocmem(Sizeof(i012^[1]) * 3 * Nterms);
             // get complex seq voltages
@@ -1068,15 +1068,15 @@ Begin
           END;
      End
      Else
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // Disabled
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // Disabled
 
    End
-  ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_AllVariableNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_AllVariableNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
    k:Integer;
@@ -1084,7 +1084,7 @@ VAR
 
 begin
 
-  Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
   IF ActiveCircuit <> Nil THEN
    WITH ActiveCircuit DO
    Begin
@@ -1095,7 +1095,7 @@ begin
          If (DSSObjType And BASECLASSMASK) = PC_ELEMENT Then
           Begin
               pPCElem := (ActiveCktElement as TPCElement);
-              Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (pPCElem.NumVariables-1) + 1);
+              Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (pPCElem.NumVariables-1) + 1);
               For k := 1 to pPCElem.NumVariables DO
               Begin
                   Result[k-1] := DSS_CopyStringAsPChar(pPCElem.VariableName(k));
@@ -1108,7 +1108,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_AllVariableValues(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_AllVariableValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 {Return array of doubles with values of all variables if PCElement}
 VAR
   Result: PDoubleArray;
@@ -1117,7 +1117,7 @@ VAR
 
 begin
 
-  Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
   IF ActiveCircuit <> Nil THEN
    WITH ActiveCircuit DO
    Begin
@@ -1128,7 +1128,7 @@ begin
          If (DSSObjType And BASECLASSMASK) = PC_ELEMENT Then
           Begin
               pPCElem := (ActiveCktElement as TPCElement);
-              Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (pPCElem.NumVariables-1) + 1);
+              Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pPCElem.NumVariables-1) + 1);
               For k := 1 to pPCElem.NumVariables DO
               Begin
                   Result[k-1] := pPCElem.Variable[k];
@@ -1202,7 +1202,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_NodeOrder(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_NodeOrder(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 VAR
   Result: PIntegerArray;
    k : Integer;
@@ -1210,7 +1210,7 @@ VAR
    j : Integer;
 begin
 
-      Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+      Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
       If ActiveCircuit <> Nil Then With ActiveCircuit Do
       Begin
 
@@ -1218,7 +1218,7 @@ begin
          WITH ActiveCktElement DO
          Begin
               k := 0;
-              Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (NTerms*Nconds-1) + 1);
+              Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (NTerms*Nconds-1) + 1);
 
               for i := 1 to Nterms do
               Begin
@@ -1284,7 +1284,7 @@ begin
          Result := GetOCPDeviceType(ActiveCktElement);     // see Utilities.pas
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_CurrentsMagAng(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // return currents in magnitude, angle array
 VAR
   Result: PDoubleArray;
@@ -1298,7 +1298,7 @@ Begin
      WITH ActiveCircuit.ActiveCktElement DO
      Begin
          NValues := NConds*NTerms;
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues-1) + 1);
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues-1) + 1);
          cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
          GetCurrents(cBuffer);
          iV :=0;
@@ -1313,11 +1313,11 @@ Begin
          Reallocmem(cBuffer,0);
      End
   Else
-     Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Bus Voltages in magnitude, angle at all terminal
 VAR
   Result: PDoubleArray;
@@ -1335,7 +1335,7 @@ Begin
         WITH ActiveCktElement DO
         Begin
          numcond := NConds*Nterms;
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*numcond-1) + 1);
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*numcond-1) + 1);
          // k := (Terminal-1)*numcond;    // RCD 8-30-00 Changed
          iV :=0;
          FOR i := 1 to  numcond DO
@@ -1349,7 +1349,7 @@ Begin
          End;
         End;
       End
-    ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------

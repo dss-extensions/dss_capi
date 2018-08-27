@@ -5,7 +5,7 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE Loads_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Loads_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Loads_Get_First():Integer;cdecl;
 function Loads_Get_idx():Integer;cdecl;
 function Loads_Get_Name():PAnsiChar;cdecl;
@@ -75,7 +75,7 @@ procedure Loads_Set_Vminpu(Value: Double);cdecl;
 procedure Loads_Set_xfkVA(Value: Double);cdecl;
 procedure Loads_Set_Xneut(Value: Double);cdecl;
 procedure Loads_Set_Yearly(const Value: PAnsiChar);cdecl;
-PROCEDURE Loads_Get_ZIPV(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Loads_Get_ZIPV(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure Loads_Set_ZIPV(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 function Loads_Get_pctSeriesRL():Double;cdecl;
 procedure Loads_Set_pctSeriesRL(Value: Double);cdecl;
@@ -102,14 +102,14 @@ begin
   DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Loads_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Loads_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   LoadElem:TLoadObj;
   k:Integer;
 
 Begin
-    Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     IF ActiveCircuit <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
@@ -795,14 +795,14 @@ begin
   Set_Parameter ('Yearly', Value);
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Loads_Get_ZIPV(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Loads_Get_ZIPV(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
   elem:TLoadObj;
   k:Integer;
 
 Begin
-    Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
     Result[0] := 0.0;  // error condition: one element array=0
     elem := ActiveLoad;
     IF elem <> Nil THEN

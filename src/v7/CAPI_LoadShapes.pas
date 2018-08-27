@@ -10,15 +10,15 @@ procedure LoadShapes_Set_Name(const Value: PAnsiChar);cdecl;
 function LoadShapes_Get_Count():Integer;cdecl;
 function LoadShapes_Get_First():Integer;cdecl;
 function LoadShapes_Get_Next():Integer;cdecl;
-PROCEDURE LoadShapes_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE LoadShapes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function LoadShapes_Get_Npts():Integer;cdecl;
-PROCEDURE LoadShapes_Get_Pmult(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
-PROCEDURE LoadShapes_Get_Qmult(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE LoadShapes_Get_Pmult(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE LoadShapes_Get_Qmult(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure LoadShapes_Set_Npts(Value: Integer);cdecl;
 procedure LoadShapes_Set_Pmult(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 procedure LoadShapes_Set_Qmult(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 procedure LoadShapes_Normalize();cdecl;
-PROCEDURE LoadShapes_Get_TimeArray(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE LoadShapes_Get_TimeArray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure LoadShapes_Set_TimeArray(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 function LoadShapes_Get_HrInterval():Double;cdecl;
 function LoadShapes_Get_MinInterval():Double;cdecl;
@@ -113,7 +113,7 @@ begin
      End;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE LoadShapes_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE LoadShapes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   elem: TLoadshapeObj;
@@ -121,7 +121,7 @@ VAR
   k: Integer;
 
 Begin
-  Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
   Result[0] := DSS_CopyStringAsPChar('NONE');
   IF ActiveCircuit <> Nil THEN
   Begin
@@ -149,13 +149,13 @@ begin
      Result := ActiveLSObject.NumPoints;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE LoadShapes_Get_Pmult(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE LoadShapes_Get_Pmult(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    k:Integer;
 
 begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
         Result[0] := 0.0;  // error condition: one element array=0
         If ActiveCircuit <> Nil Then
          Begin
@@ -169,13 +169,13 @@ begin
          End;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE LoadShapes_Get_Qmult(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE LoadShapes_Get_Qmult(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    k:Integer;
 
 begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
         Result[0] := 0.0;  // error condition: one element array=0
         If ActiveCircuit <> Nil Then
          Begin
@@ -269,13 +269,13 @@ begin
       ActiveLSObject.Normalize;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE LoadShapes_Get_TimeArray(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE LoadShapes_Get_TimeArray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    k:Integer;
 
 begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
         Result[0] := 0.0;  // error condition: one element array=0
         If ActiveCircuit <> Nil Then
          Begin

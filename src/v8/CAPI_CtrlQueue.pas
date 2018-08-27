@@ -16,7 +16,7 @@ function CtrlQueue_Get_PopAction():Integer;cdecl;
 procedure CtrlQueue_Set_Action(Param1: Integer);cdecl;
 function CtrlQueue_Get_QueueSize():Integer;cdecl;
 procedure CtrlQueue_DoAllQueue();cdecl;
-PROCEDURE CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 
 IMPLEMENTATION
 
@@ -123,7 +123,7 @@ begin
    End;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 // returns entire queue in CSV file format as a variant array of strings
 VAR
   Result: PPAnsiCharArray;
@@ -131,7 +131,7 @@ VAR
   Qsize : integer;
 
 begin
-      Result  := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+      Result  := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
       QSize   := CtrlQueue_Get_queuesize;
       if QSize > 0 then
       begin

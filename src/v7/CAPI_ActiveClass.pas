@@ -5,7 +5,7 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE ActiveClass_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE ActiveClass_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function ActiveClass_Get_First():Integer;cdecl;
 function ActiveClass_Get_Next():Integer;cdecl;
 function ActiveClass_Get_Name():PAnsiChar;cdecl;
@@ -18,7 +18,7 @@ IMPLEMENTATION
 
 USES CAPI_Constants, DSSGlobals, DSSObject, CktElement;
 
-PROCEDURE ActiveClass_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE ActiveClass_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   idx: Integer;
@@ -28,7 +28,7 @@ Begin
     If (ActiveCircuit <> Nil) and Assigned(ActiveDSSClass) Then
      WITH ActiveCircuit DO
      Begin
-       Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (ActiveDSSClass.ElementCount-1) + 1);
+       Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (ActiveDSSClass.ElementCount-1) + 1);
        k:=0;
        idx := ActiveDSSClass.First;
        WHILE idx > 0 DO  Begin
@@ -37,7 +37,7 @@ Begin
           idx := ActiveDSSClass.Next;
        End;
      End
-    ELSE Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    ELSE Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 
 end;
 //------------------------------------------------------------------------------

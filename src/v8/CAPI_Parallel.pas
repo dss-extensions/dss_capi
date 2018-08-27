@@ -14,8 +14,8 @@ function Parallel_Get_ActorCPU():Integer;cdecl;
 procedure Parallel_Set_ActorCPU(Value: Integer);cdecl;
 function Parallel_Get_NumOfActors():Integer;cdecl;
 procedure Parallel_Wait();cdecl;
-PROCEDURE Parallel_Get_ActorProgress(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
-PROCEDURE Parallel_Get_ActorStatus(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
+PROCEDURE Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 function Parallel_Get_ActiveParallel():Integer;cdecl;
 procedure Parallel_Set_ActiveParallel(Value: Integer);cdecl;
 function Parallel_Get_ConcatenateReports():Integer;cdecl;
@@ -85,24 +85,24 @@ begin
   ActorHandle[i].WaitFor;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Parallel_Get_ActorProgress(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
+PROCEDURE Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 VAR
   Result: PIntegerArray; 
   idx : Integer;
 begin
-    Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (NumOfActors) - (1) + 1);
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (NumOfActors) - (1) + 1);
     for idx := 1 to NumOfActors do
     Begin
       Result[(idx) - (1)] :=  ActorPctProgress[idx];
     End;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Parallel_Get_ActorStatus(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
+PROCEDURE Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 VAR
   Result: PIntegerArray; 
   idx : Integer;
 begin
-    Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (NumOfActors) - (1) + 1);
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (NumOfActors) - (1) + 1);
     for idx := 1 to NumOfActors do
       Result[(idx) - (1)] :=  ActorStatus[idx];  
 end;

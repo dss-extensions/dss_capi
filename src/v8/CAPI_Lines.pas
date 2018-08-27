@@ -5,7 +5,7 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE Lines_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Lines_Get_Bus1():PAnsiChar;cdecl;
 function Lines_Get_Bus2():PAnsiChar;cdecl;
 function Lines_Get_First():Integer;cdecl;
@@ -27,11 +27,11 @@ procedure Lines_Set_R1(Value: Double);cdecl;
 procedure Lines_Set_X1(Value: Double);cdecl;
 function Lines_Get_C0():Double;cdecl;
 function Lines_Get_C1():Double;cdecl;
-PROCEDURE Lines_Get_Cmatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Lines_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function Lines_Get_R0():Double;cdecl;
-PROCEDURE Lines_Get_Rmatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Lines_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function Lines_Get_X0():Double;cdecl;
-PROCEDURE Lines_Get_Xmatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Lines_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure Lines_Set_C0(Value: Double);cdecl;
 procedure Lines_Set_C1(Value: Double);cdecl;
 procedure Lines_Set_Cmatrix(ValuePtr: PDouble; ValueCount: Integer);cdecl;
@@ -51,7 +51,7 @@ function Lines_Get_Xg():Double;cdecl;
 procedure Lines_Set_Rg(Value: Double);cdecl;
 procedure Lines_Set_Rho(Value: Double);cdecl;
 procedure Lines_Set_Xg(Value: Double);cdecl;
-PROCEDURE Lines_Get_Yprim(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Lines_Get_Yprim(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 procedure Lines_Set_Yprim(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 function Lines_Get_NumCust():Integer;cdecl;
 function Lines_Get_TotalCust():Integer;cdecl;
@@ -75,14 +75,14 @@ Begin
        'Element name='+ CktElem.Name, 5007) ;
 END;
 //------------------------------------------------------------------------------
-PROCEDURE Lines_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   LineElem:TLineObj;
   k:Integer;
 
 Begin
-    Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
@@ -417,7 +417,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Lines_Get_Cmatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Lines_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    i,j, k:Integer;
@@ -425,13 +425,13 @@ VAR
 
 begin
 
-  Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
   IF ActiveCircuit[ActiveActor] <> NIL
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
   THEN Begin
        WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
          Factor  := TwoPi * BaseFrequency * 1.0e-9 * UnitsConvert;
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
          k := 0;
          FOR i := 1 to NPhases DO
           FOR j := 1 to Nphases DO
@@ -455,18 +455,18 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Lines_Get_Rmatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Lines_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    i,j, k:Integer;
 
 begin
-  Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
   IF ActiveCircuit[ActiveActor] <> NIL
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
   THEN Begin
        WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
          k := 0;
          FOR i := 1 to NPhases DO
           FOR j := 1 to Nphases DO
@@ -491,17 +491,17 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Lines_Get_Xmatrix(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Lines_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    i,j, k:Integer;
 begin
-  Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
   IF ActiveCircuit[ActiveActor] <> NIL
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
   THEN Begin
        WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-         Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
+         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
          k := 0;
          FOR i := 1 to NPhases DO
           FOR j := 1 to Nphases DO
@@ -778,7 +778,7 @@ begin
   End;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Lines_Get_Yprim(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Lines_Get_Yprim(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 { Return the YPrim matrix for this element }
 
 VAR
@@ -790,7 +790,7 @@ VAR
 
 begin
    IF ActiveCircuit[ActiveActor] = nil Then Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
    End
    ELSE With ActiveCircuit[ActiveActor] Do
       If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) THEN
@@ -798,10 +798,10 @@ begin
           NValues := SQR(Yorder);
           cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
           If cValues=Nil Then Begin   // check for unassigned array
-                            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
+                            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
                             Exit;  // Get outta here
                          End;
-          Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);  // Make variant array
+          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);  // Make variant array
           iV := 0;
 
           FOR i := 1 to  NValues DO  Begin    // Plunk the values in the variant array
@@ -811,7 +811,7 @@ begin
               Inc(iV);
           End;
       End
-      ELSE Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
+      ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
 //------------------------------------------------------------------------------

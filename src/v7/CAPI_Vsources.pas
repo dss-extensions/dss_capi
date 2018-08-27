@@ -5,7 +5,7 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Vsources_Get_Count():Integer;cdecl;
 function Vsources_Get_First():Integer;cdecl;
 function Vsources_Get_Next():Integer;cdecl;
@@ -26,7 +26,7 @@ IMPLEMENTATION
 
 USES CAPI_Constants, Vsource, PointerList, DSSGlobals, CktElement;
 
-PROCEDURE Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   elem: TVsourceObj;
@@ -34,7 +34,7 @@ VAR
   k: Integer;
 
 Begin
-    Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     IF ActiveCircuit <> Nil THEN
     Begin

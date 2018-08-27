@@ -10,8 +10,8 @@ function DSS_Get_NumCircuits():Integer;cdecl;
 procedure DSS_ClearAll();cdecl;
 function DSS_Get_Version():PAnsiChar;cdecl;
 function DSS_Start(code: Integer):WordBool;cdecl;
-PROCEDURE DSS_Get_Classes(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
-PROCEDURE DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function DSS_Get_NumClasses():Integer;cdecl;
 function DSS_Get_NumUserClasses():Integer;cdecl;
 function DSS_Get_DataPath():PAnsiChar;cdecl;
@@ -30,6 +30,18 @@ USES CAPI_Constants, DSSClassDefs, DSSGlobals, DSSClass, Exechelper, sysUtils, E
 procedure DSS_NewCircuit(const Value: PAnsiChar);cdecl;
 begin
     MakeNewCircuit(Value);
+end;
+//------------------------------------------------------------------------------
+function DSS_Get_AllowForms: WordBool;cdecl;
+begin
+     Result := Not NoFormsAllowed;
+end;
+//------------------------------------------------------------------------------
+procedure DSS_Set_AllowForms(Value: WordBool);cdecl;
+begin
+     {If Not Value Then} NoFormsAllowed := Not Value;
+     If NoFormsAllowed Then CloseDownForms;  // DSSForms
+
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_NumCircuits():Integer;cdecl;
@@ -65,14 +77,14 @@ begin
   *)
 end;
 //------------------------------------------------------------------------------
-PROCEDURE DSS_Get_Classes(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   i,k:Integer;
 
 Begin
 
-   Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumIntrinsicClasses-1) + 1);
+   Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumIntrinsicClasses-1) + 1);
    k:=0;
    For i := 1 to NumIntrinsicClasses Do
    Begin
@@ -82,7 +94,7 @@ Begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   i,k:Integer;
@@ -90,7 +102,7 @@ VAR
 Begin
      If NumUserClasses > 0 Then
      Begin
-         Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumUserClasses-1) + 1);
+         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumUserClasses-1) + 1);
          k:=0;
          For i := NumIntrinsicClasses+1 To DSSClassList.ListSize   Do
          Begin
@@ -99,7 +111,7 @@ Begin
          End;
      End
      Else
-     Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_NumClasses():Integer;cdecl;
@@ -161,18 +173,6 @@ begin
      LastClassReferenced := DevClassIndex;
      ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
      Result := LastClassReferenced;
-
-end;
-//------------------------------------------------------------------------------
-function DSS_Get_AllowForms: WordBool;cdecl;
-begin
-     Result := Not NoFormsAllowed;
-end;
-//------------------------------------------------------------------------------
-procedure DSS_Set_AllowForms(Value: WordBool);cdecl;
-begin
-     {If Not Value Then} NoFormsAllowed := Not Value;
-     If NoFormsAllowed Then CloseDownForms;  // DSSForms
 
 end;
 //------------------------------------------------------------------------------

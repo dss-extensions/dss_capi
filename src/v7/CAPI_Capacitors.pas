@@ -5,7 +5,7 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Capacitors_Get_First():Integer;cdecl;
 function Capacitors_Get_IsDelta():WordBool;cdecl;
 function Capacitors_Get_kV():Double;cdecl;
@@ -22,7 +22,7 @@ function Capacitors_Get_Count():Integer;cdecl;
 function Capacitors_AddStep():WordBool;cdecl;
 function Capacitors_SubtractStep():WordBool;cdecl;
 function Capacitors_Get_AvailableSteps():Integer;cdecl;
-PROCEDURE Capacitors_Get_States(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
+PROCEDURE Capacitors_Get_States(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 procedure Capacitors_Set_States(ValuePtr: PInteger; ValueCount: Integer);cdecl;
 procedure Capacitors_Open();cdecl;
 procedure Capacitors_Close();cdecl;
@@ -47,14 +47,14 @@ begin
   DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   elem: TCapacitorObj;
   lst: TPointerList;
   k: Integer;
 Begin
-  Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
   Result[0] := DSS_CopyStringAsPChar('NONE');
   IF ActiveCircuit <> Nil THEN WITH ActiveCircuit DO
   If ShuntCapacitors.ListSize > 0 then
@@ -248,13 +248,13 @@ begin
   if elem <> nil then Result := elem.AvailableSteps ;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Capacitors_Get_States(var ResultPtr: PInteger; var ResultCount: Integer);cdecl;
+PROCEDURE Capacitors_Get_States(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 VAR
   Result: PIntegerArray;
   elem: TCapacitorObj;
   i, k: Integer;
 Begin
-  Result := DSS_CreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+  Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
   Result[0] := -1;     // error code
   IF ActiveCircuit <> Nil THEN
   Begin

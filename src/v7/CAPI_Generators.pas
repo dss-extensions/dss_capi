@@ -5,12 +5,12 @@ INTERFACE
 
 USES CAPI_Utils;
 
-PROCEDURE Generators_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 function Generators_Get_First():Integer;cdecl;
 function Generators_Get_Name():PAnsiChar;cdecl;
 function Generators_Get_Next():Integer;cdecl;
-PROCEDURE Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
-PROCEDURE Generators_Get_RegisterValues(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 function Generators_Get_ForcedON():WordBool;cdecl;
 procedure Generators_Set_ForcedON(Value: WordBool);cdecl;
 procedure Generators_Set_Name(const Value: PAnsiChar);cdecl;
@@ -40,14 +40,14 @@ IMPLEMENTATION
 
 USES CAPI_Constants, DSSCLassDefs, DSSGlobals, Generator, CktElement, SysUtils;
 
-PROCEDURE Generators_Get_AllNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
   GenElem:TGeneratorObj;
   k:Integer;
 
 Begin
-    Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     IF ActiveCircuit <> Nil THEN
      WITH ActiveCircuit DO
@@ -141,7 +141,7 @@ Begin
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; var ResultCount: Integer);cdecl;
+PROCEDURE Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
   Result: PPAnsiCharArray;
     GeneratorClass:TGenerator;
@@ -149,14 +149,14 @@ VAR
 
 Begin
     GeneratorClass := DssClassList.Get(Classnames.Find('Generator'));
-    Result := DSS_CreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumGenRegisters - 1) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumGenRegisters - 1) + 1);
     For k := 0 to  NumGenRegisters - 1  Do Begin
        Result[k] := DSS_CopyStringAsPChar(GeneratorClass.RegisterNames[k + 1]);
     End;
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Generators_Get_RegisterValues(var ResultPtr: PDouble; var ResultCount: Integer);cdecl;
+PROCEDURE Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
   Result: PDoubleArray;
    Gen :TGeneratorObj;
@@ -168,17 +168,17 @@ Begin
         Gen :=  TGeneratorObj(ActiveCircuit.Generators.Active);
         If Gen <> Nil Then
         Begin
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (numGenRegisters-1) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (numGenRegisters-1) + 1);
             FOR k := 0 to numGenRegisters-1 DO
             Begin
                 Result[k] := Gen.Registers[k+1];
             End;
         End
         Else
-            Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
    End
    ELSE Begin
-        Result := DSS_CreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
    End;
 
 
