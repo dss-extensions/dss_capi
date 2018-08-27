@@ -23,16 +23,16 @@ procedure DSS_Dispose_PDouble(var p: PDouble);cdecl;
 procedure DSS_Dispose_PInteger(var p: PInteger);cdecl;
 procedure DSS_Dispose_PPAnsiChar(var p: PPAnsiChar; cnt: Integer);cdecl;
 
-function DSS_CreateArray_PByte(var p: PByte; var cnt: Integer; Const incount: Integer): PByteArray;
-function DSS_CreateArray_PDouble(var p: PDouble; var cnt: Integer; Const incount: Integer): PDoubleArray;
-function DSS_CreateArray_PInteger(var p: PInteger; var cnt: Integer; Const incount: Integer): PIntegerArray;
-function DSS_CreateArray_PPAnsiChar(var p: PPAnsiChar; var cnt: Integer; Const incount: Integer): PPAnsiCharArray;
+function DSS_CreateArray_PByte(var p: PByte; cnt: PInteger; Const incount: Integer): PByteArray;
+function DSS_CreateArray_PDouble(var p: PDouble; cnt: PInteger; Const incount: Integer): PDoubleArray;
+function DSS_CreateArray_PInteger(var p: PInteger; cnt: PInteger; Const incount: Integer): PIntegerArray;
+function DSS_CreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PInteger; Const incount: Integer): PPAnsiCharArray;
 
-// TODO: check if we need to copy old values in these procedures
-procedure DSS_RecreateArray_PByte(var res: PByteArray; var p: PByte; var cnt: Integer; Const incount: Integer);
-procedure DSS_RecreateArray_PDouble(var res: PDoubleArray; var p: PDouble; var cnt: Integer; Const incount: Integer);
-procedure DSS_RecreateArray_PInteger(var res: PIntegerArray; var p: PInteger; var cnt: Integer; Const incount: Integer);
-procedure DSS_RecreateArray_PPAnsiChar(var res: PPAnsiCharArray; var p: PPAnsiChar; var cnt: Integer; Const incount: Integer);
+// NOTE: these procedures do not copy to copy old values
+procedure DSS_RecreateArray_PByte(var res: PByteArray; var p: PByte; cnt: PInteger; Const incount: Integer);
+procedure DSS_RecreateArray_PDouble(var res: PDoubleArray; var p: PDouble; cnt: PInteger; Const incount: Integer);
+procedure DSS_RecreateArray_PInteger(var res: PIntegerArray; var p: PInteger; cnt: PInteger; Const incount: Integer);
+procedure DSS_RecreateArray_PPAnsiChar(var res: PPAnsiCharArray; var p: PPAnsiChar; cnt: PInteger; Const incount: Integer);
 
 
 IMPLEMENTATION
@@ -91,14 +91,14 @@ begin
     p := nil;
 end;
 
-function DSS_CreateArray_PByte(var p: PByte; var cnt: Integer; Const incount: Integer): PByteArray;
+function DSS_CreateArray_PByte(var p: PByte; cnt: PInteger; Const incount: Integer): PByteArray;
 begin
     cnt := incount;
     p := AllocMem(incount * sizeof(Byte));
     result := PByteArray(p);
 end;
 
-function DSS_CreateArray_PDouble(var p: PDouble; var cnt: Integer; Const incount: Integer): PDoubleArray;
+function DSS_CreateArray_PDouble(var p: PDouble; cnt: PInteger; Const incount: Integer): PDoubleArray;
 begin
     if ((cnt <> 0) and (p <> nil)) then
     begin
@@ -112,14 +112,14 @@ begin
     end;
 end;
 
-function DSS_CreateArray_PInteger(var p: PInteger; var cnt: Integer; Const incount: Integer): PIntegerArray;
+function DSS_CreateArray_PInteger(var p: PInteger; cnt: PInteger; Const incount: Integer): PIntegerArray;
 begin
     cnt := incount;
     p := AllocMem(incount * sizeof(Integer));
     result := PIntegerArray(p);
 end;
 
-function DSS_CreateArray_PPAnsiChar(var p: PPAnsiChar; var cnt: Integer; Const incount: Integer): PPAnsiCharArray;
+function DSS_CreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PInteger; Const incount: Integer): PPAnsiCharArray;
 begin
     cnt := incount;
     p := AllocMem(incount * sizeof(PAnsiChar));
@@ -127,15 +127,15 @@ begin
 end;
 
 
-procedure DSS_RecreateArray_PByte(var res: PByteArray; var p: PByte; var cnt: Integer; Const incount: Integer);
+procedure DSS_RecreateArray_PByte(var res: PByteArray; var p: PByte; cnt: PInteger; Const incount: Integer);
 begin
     DSS_Dispose_PByte(p);
     res := DSS_CreateArray_PByte(p, cnt, incount);
 end;
 
-procedure DSS_RecreateArray_PDouble(var res: PDoubleArray; var p: PDouble; var cnt: Integer; Const incount: Integer);
+procedure DSS_RecreateArray_PDouble(var res: PDoubleArray; var p: PDouble; cnt: PInteger; Const incount: Integer);
 begin
-    if (incount > cnt) then // only resize if we actually need to
+    if ((p = nil) or (incount > cnt)) then // only resize if we actually need to
     begin
         DSS_Dispose_PDouble(p);
         res := DSS_CreateArray_PDouble(p, cnt, incount);
@@ -146,15 +146,15 @@ begin
     end;
 end;
 
-procedure DSS_RecreateArray_PInteger(var res: PIntegerArray; var p: PInteger; var cnt: Integer; Const incount: Integer);
+procedure DSS_RecreateArray_PInteger(var res: PIntegerArray; var p: PInteger; cnt: PInteger; Const incount: Integer);
 begin
     DSS_Dispose_PInteger(p);
     res := DSS_CreateArray_PInteger(p, cnt, incount);
 end;
 
-procedure DSS_RecreateArray_PPAnsiChar(var res: PPAnsiCharArray; var p: PPAnsiChar; var cnt: Integer; Const incount: Integer);
+procedure DSS_RecreateArray_PPAnsiChar(var res: PPAnsiCharArray; var p: PPAnsiChar; cnt: PInteger; Const incount: Integer);
 begin
-    DSS_Dispose_PPAnsiChar(p, cnt); 
+    DSS_Dispose_PPAnsiChar(p, cnt[1]); 
     res := DSS_CreateArray_PPAnsiChar(p, cnt, incount);
 end;
 
