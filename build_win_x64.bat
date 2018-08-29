@@ -6,7 +6,7 @@ if errorlevel 1 (
         set "PATH=%PATH%;c:\lazarus\fpc\3.0.4\bin\x86_64-win64"
     ) else (
         echo ERROR: Please put fpc.exe in your executable search path and try again.
-        exit /B
+        exit /B 1
     )
 )
 
@@ -20,13 +20,14 @@ if not exist .\build\units_v8_x64 (
 
 if exist ..\electricdss-src\Source\Common\DSSGlobals.pas (
     fpc -Px86_64 @src\v7\windows-x64.cfg -B src\v7\dss_capi_v7.lpr
+    if errorlevel 1 exit /B 1
     if exist lib\win_x64\v7\dss_capi_v7.dll (
         where /q dumpbin
         if errorlevel 1 (
             echo WARNING: dumpbin.exe is not in your path. Be sure to run this script on 
             echo          the "x64 Native Tools Command Prompt for VS 2017" or the 
             echo          equivalent for your Visual Studio version.
-            exit /B
+            exit /B 1
         )
         dumpbin /exports "lib\win_x64\v7\dss_capi_v7.dll" > lib\win_x64\v7\exports.txt
         echo LIBRARY DSS_CAPI_V7 > lib\win_x64\v7\dss_capi_v7.def
@@ -41,17 +42,18 @@ if exist ..\electricdss-src\Source\Common\DSSGlobals.pas (
         echo TODO: COPY KLUSOLVE DLL!
     ) else (
         echo ERROR: DSS_CAPI_V7.DLL file not found. Check previous messages for possible causes.
-        exit /B
+        exit /B 1
     )
 
     fpc -Px86_64 @src\v8\windows-x64.cfg -B src\v8\dss_capi_v8.lpr
+    if errorlevel 1 exit /B 1
     if exist lib\win_x64\v8\dss_capi_v8.dll (
         where /q dumpbin
         if errorlevel 1 (
             echo WARNING: dumpbin.exe is not in your path. Be sure to run this script on 
             echo          the "x64 Native Tools Command Prompt for VS 2017" or the 
             echo          equivalent for your Visual Studio version.
-            exit /B
+            exit /B 1
         )
         dumpbin /exports "lib\win_x64\v8\dss_capi_v8.dll" > lib\win_x64\v8\exports.txt
         echo LIBRARY DSS_CAPI_V8 > lib\win_x64\v8\dss_capi_v8.def
@@ -70,5 +72,5 @@ if exist ..\electricdss-src\Source\Common\DSSGlobals.pas (
     
 ) else (
     echo ERROR: Did you forget to clone https://github.com/PMeira/electricdss-src ?
-    exit /B
+    exit /B 1
 )
