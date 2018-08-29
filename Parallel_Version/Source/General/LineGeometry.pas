@@ -64,8 +64,10 @@ TYPE
         FY           :pDoubleArray;
         FUnits       :pIntegerArray;
         FLastUnit    :Integer;
+{$IFNDEF DSS_CAPI}
         DataChanged  :Boolean;
         FReduce      :Boolean;
+{$ENDIF}
         FActiveCond  :Integer;
         FSpacingType :String;
 
@@ -88,9 +90,18 @@ TYPE
         function Get_FUnits (i: integer) : Integer;
         function Get_ConductorName (i: integer) : String;
         function Get_ConductorData (i: integer) : TConductorDataObj;
+{$IFDEF DSS_CAPI}
+        procedure Set_FX(i:Integer; Value: Double);
+        procedure Set_FY(i:Integer; Value: Double);
+        procedure Set_FUnits(i:Integer; Value: Integer);
+{$ENDIF}
 
       public
 
+{$IFDEF DSS_CAPI}
+        DataChanged  :Boolean;
+        FReduce      :Boolean;
+{$ENDIF}
         NormAmps          :Double;
         EmergAmps         :Double;
 
@@ -114,9 +125,9 @@ TYPE
         Property RhoEarth:Double    Read Get_RhoEarth Write Set_RhoEarth;
 
         // CIM XML accessors
-        Property Xcoord[i:Integer]: Double Read Get_FX;
-        Property Ycoord[i:Integer]: Double Read Get_FY;
-        Property Units[i:Integer]: Integer Read Get_FUnits;
+        Property Xcoord[i:Integer]: Double Read Get_FX{$IFDEF DSS_CAPI} Write Set_FX{$ENDIF};
+        Property Ycoord[i:Integer]: Double Read Get_FY{$IFDEF DSS_CAPI} Write Set_FY{$ENDIF};
+        Property Units[i:Integer]: Integer Read Get_FUnits{$IFDEF DSS_CAPI} Write Set_FUnits{$ENDIF};
         Property ConductorName[i:Integer]: String Read Get_ConductorName;
         Property ConductorData[i: Integer]: TConductorDataObj Read Get_ConductorData;
         Property NWires: Integer Read FNConds;
@@ -572,6 +583,23 @@ function TLineGeometryObj.Get_FUnits(i:Integer) : Integer;
 begin
   If i <= FNConds Then Result := FUnits^[i] Else Result := 0;
 end;
+
+{$IFDEF DSS_CAPI}
+procedure TLineGeometryObj.Set_FX(i:Integer; Value: Double);
+begin
+  If i <= FNConds Then FX^[i] := Value;
+end;
+
+procedure TLineGeometryObj.Set_FY(i:Integer; Value: Double);
+begin
+  If i <= FNConds Then FY^[i] := Value;
+end;
+
+procedure TLineGeometryObj.Set_FUnits(i:Integer; Value: Integer);
+begin
+  If i <= FNConds Then FUnits^[i] := Value;
+end;
+{$ENDIF}
 
 function TLineGeometryObj.Get_ConductorName(i:Integer) : String;
 begin
