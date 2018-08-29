@@ -5255,6 +5255,46 @@ extern "C" {
         LineUnits_mm = 0x00000008,
         LineUnits_Maxnum = 0x00000009
     };
+    
+    // Experimental API extensions
+    DSS_CAPI_V8_DLL int32_t LineGeometries_Get_Count();
+    DSS_CAPI_V8_DLL int32_t LineGeometries_Get_First();
+    DSS_CAPI_V8_DLL int32_t LineGeometries_Get_Next();
+    DSS_CAPI_V8_DLL char* LineGeometries_Get_Name();
+    DSS_CAPI_V8_DLL void LineGeometries_Set_Name(char* Value);
+    DSS_CAPI_V8_DLL int32_t LineGeometries_Get_Nconds();
+    DSS_CAPI_V8_DLL void LineGeometries_Set_Nconds(int32_t Value);
+    DSS_CAPI_V8_DLL int32_t LineGeometries_Get_Phases();
+    DSS_CAPI_V8_DLL void LineGeometries_Set_Phases(int32_t Value);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Cmatrix(double** ResultPtr, int32_t* ResultCount, double Frequency, double Length, int32_t Units);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Cmatrix_GR(double Frequency, double Length, int32_t Units);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Rmatrix(double** ResultPtr, int32_t* ResultCount, double Frequency, double Length, int32_t Units);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Rmatrix_GR(double Frequency, double Length, int32_t Units);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Xmatrix(double** ResultPtr, int32_t* ResultCount, double Frequency, double Length, int32_t Units);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Xmatrix_GR(double Frequency, double Length, int32_t Units);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Zmatrix(double** ResultPtr, int32_t* ResultCount, double Frequency, double Length, int32_t Units);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Zmatrix_GR(double Frequency, double Length, int32_t Units);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Units(int32_t** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Units_GR();
+    DSS_CAPI_V8_DLL void LineGeometries_Set_Units(int32_t *ValuePtr, int32_t ValueCount);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Xcoords(double** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Xcoords_GR();
+    DSS_CAPI_V8_DLL void LineGeometries_Set_Xcoords(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Ycoords(double** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Ycoords_GR();
+    DSS_CAPI_V8_DLL void LineGeometries_Set_Ycoords(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Conductors(char*** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_Conductors_GR();
+    DSS_CAPI_V8_DLL uint16_t LineGeometries_Get_Reduce();
+    DSS_CAPI_V8_DLL void LineGeometries_Set_Reduce(uint16_t Value);
+    DSS_CAPI_V8_DLL double LineGeometries_Get_RhoEarth();
+    DSS_CAPI_V8_DLL void LineGeometries_Set_RhoEarth(double Value);
+    DSS_CAPI_V8_DLL double LineGeometries_Get_NormAmps();
+    DSS_CAPI_V8_DLL void LineGeometries_Set_NormAmps(double Value);
+    DSS_CAPI_V8_DLL double LineGeometries_Get_EmergAmps();
+    DSS_CAPI_V8_DLL void LineGeometries_Set_EmergAmps(double Value);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_V8_DLL void LineGeometries_Get_AllNames_GR();
 
 #ifdef __cplusplus
 } // extern "C"
