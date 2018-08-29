@@ -147,8 +147,7 @@ begin
   THEN Begin
        pLineGeometry := LineGeometryClass.GetActiveObj ;
        Result := pLineGeometry.NPhases;
-  End
-
+  End;
 end;
 //------------------------------------------------------------------------------
 PROCEDURE LineGeometries_Set_Phases(Value: Integer);cdecl;
@@ -158,9 +157,12 @@ begin
   IF ActiveCircuit[ActiveActor] <> NIL
   THEN Begin
        pLineGeometry := LineGeometryClass.GetActiveObj ;
-       pLineGeometry.NPhases := Value ;   // use property value to force reallocations
+       with pLineGeometry do 
+       begin
+          DataChanged := TRUE;
+          NPhases := Value ;
+       end;
   End
-
 end;
 //------------------------------------------------------------------------------
 PROCEDURE LineGeometries_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger; Frequency, Length:double; Units:Integer);cdecl;
@@ -186,7 +188,6 @@ begin
             Inc(k);
         End;
   End;
-
 end;
 PROCEDURE LineGeometries_Get_Cmatrix_GR(Frequency, Length:double; Units:Integer);cdecl;
 // Same as LineGeometries_Get_Cmatrix but uses global result (GR) pointers
@@ -306,7 +307,7 @@ begin
        pLineGeometry := LineGeometryClass.GetActiveObj;
        with pLineGeometry do
        begin
-          DataChanged := DataChanged or (FReduce <> Value);
+          DataChanged := TRUE;
           FReduce := Value;
        end;
   End;

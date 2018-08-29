@@ -158,9 +158,12 @@ begin
   IF ActiveCircuit <> NIL
   THEN Begin
        pLineGeometry := LineGeometryClass.GetActiveObj ;
-       pLineGeometry.NPhases := Value ;   // use property value to force reallocations
+       with pLineGeometry do 
+       begin
+          DataChanged := TRUE;
+          NPhases := Value ;
+       end;
   End
-
 end;
 //------------------------------------------------------------------------------
 PROCEDURE LineGeometries_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger; Frequency, Length:double; Units:Integer);cdecl;
@@ -306,7 +309,7 @@ begin
        pLineGeometry := LineGeometryClass.GetActiveObj;
        with pLineGeometry do
        begin
-          DataChanged := DataChanged or (FReduce <> Value);
+          DataChanged := TRUE;
           FReduce := Value;
        end;
   End;
