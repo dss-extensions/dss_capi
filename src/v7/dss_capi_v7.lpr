@@ -197,6 +197,7 @@ uses
     Ymatrix in 'electricdss-src/Source/Common/Ymatrix.pas',
   
     CAPI_Utils in 'CAPI_Utils.pas',
+    CAPI_Metadata in 'CAPI_Metadata.pas',
   
     CAPI_ActiveClass in 'CAPI_ActiveClass.pas',
     CAPI_Bus in 'CAPI_Bus.pas',
