@@ -6,6 +6,7 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Transformers_Get_AllNames_GR();cdecl;
 function Transformers_Get_First():Integer;cdecl;
 function Transformers_Get_IsDelta():WordBool;cdecl;
 function Transformers_Get_kV():Double;cdecl;
@@ -89,6 +90,12 @@ Begin
       End;
     End;
 end;
+PROCEDURE Transformers_Get_AllNames_GR();cdecl;
+// Same as Transformers_Get_AllNames but uses global result (GR) pointers
+begin
+   Transformers_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Transformers_Get_First():Integer;cdecl;
 Var

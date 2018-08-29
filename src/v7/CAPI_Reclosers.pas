@@ -6,6 +6,7 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Reclosers_Get_AllNames_GR();cdecl;
 function Reclosers_Get_Count():Integer;cdecl;
 function Reclosers_Get_First():Integer;cdecl;
 function Reclosers_Get_Name():PAnsiChar;cdecl;
@@ -21,6 +22,7 @@ procedure Reclosers_Set_MonitoredObj(const Value: PAnsiChar);cdecl;
 procedure Reclosers_Set_SwitchedTerm(Value: Integer);cdecl;
 function Reclosers_Get_NumFast():Integer;cdecl;
 PROCEDURE Reclosers_Get_RecloseIntervals(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Reclosers_Get_RecloseIntervals_GR();cdecl;
 function Reclosers_Get_Shots():Integer;cdecl;
 procedure Reclosers_Set_NumFast(Value: Integer);cdecl;
 procedure Reclosers_Set_Shots(Value: Integer);cdecl;
@@ -76,6 +78,12 @@ Begin
         End;
     End;
 end;
+PROCEDURE Reclosers_Get_AllNames_GR();cdecl;
+// Same as Reclosers_Get_AllNames but uses global result (GR) pointers
+begin
+   Reclosers_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Reclosers_Get_Count():Integer;cdecl;
 begin
@@ -263,6 +271,12 @@ Begin
       End;
   End;
 end;
+PROCEDURE Reclosers_Get_RecloseIntervals_GR();cdecl;
+// Same as Reclosers_Get_RecloseIntervals but uses global result (GR) pointers
+begin
+   Reclosers_Get_RecloseIntervals(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function Reclosers_Get_Shots():Integer;cdecl;
 var

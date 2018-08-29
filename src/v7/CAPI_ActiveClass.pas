@@ -6,6 +6,7 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE ActiveClass_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE ActiveClass_Get_AllNames_GR();cdecl;
 function ActiveClass_Get_First():Integer;cdecl;
 function ActiveClass_Get_Next():Integer;cdecl;
 function ActiveClass_Get_Name():PAnsiChar;cdecl;
@@ -40,6 +41,12 @@ Begin
     ELSE Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE ActiveClass_Get_AllNames_GR();cdecl;
+// Same as ActiveClass_Get_AllNames but uses global result (GR) pointers
+begin
+   ActiveClass_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function ActiveClass_Get_First():Integer;cdecl;
 Begin

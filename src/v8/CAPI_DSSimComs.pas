@@ -6,7 +6,9 @@ INTERFACE
 USES CAPI_Utils, UComplex;
 
 PROCEDURE DSSimComs_BusVoltagepu(var ResultPtr: PDouble; ResultCount: PInteger; Index: PtrUInt);cdecl;
+PROCEDURE DSSimComs_BusVoltagepu_GR(Index: PtrUInt);cdecl;
 PROCEDURE DSSimComs_BusVoltage(var ResultPtr: PDouble; ResultCount: PInteger; Index: PtrUInt);cdecl;
+PROCEDURE DSSimComs_BusVoltage_GR(Index: PtrUInt);cdecl;
 
 IMPLEMENTATION
 
@@ -32,6 +34,12 @@ begin
      End
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
+PROCEDURE DSSimComs_BusVoltagepu_GR(Index: PtrUInt);cdecl;
+// Same as DSSimComs_BusVoltagepu but uses global result (GR) pointers
+begin
+   DSSimComs_BusVoltagepu(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Index)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE DSSimComs_BusVoltage(var ResultPtr: PDouble; ResultCount: PInteger; Index: PtrUInt);cdecl;
 VAR
@@ -55,5 +63,11 @@ begin
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE DSSimComs_BusVoltage_GR(Index: PtrUInt);cdecl;
+// Same as DSSimComs_BusVoltage but uses global result (GR) pointers
+begin
+   DSSimComs_BusVoltage(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Index)
+end;
+
 //------------------------------------------------------------------------------
 END.

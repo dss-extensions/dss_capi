@@ -10,12 +10,19 @@ function Circuit_Get_NumBuses():Integer;cdecl;
 function Circuit_Get_NumCktElements():Integer;cdecl;
 function Circuit_Get_NumNodes():Integer;cdecl;
 PROCEDURE Circuit_Get_LineLosses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_LineLosses_GR();cdecl;
 PROCEDURE Circuit_Get_Losses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_Losses_GR();cdecl;
 PROCEDURE Circuit_Get_AllBusVmag(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllBusVmag_GR();cdecl;
 PROCEDURE Circuit_Get_AllBusVolts(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllBusVolts_GR();cdecl;
 PROCEDURE Circuit_Get_AllElementNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllElementNames_GR();cdecl;
 PROCEDURE Circuit_Get_SubstationLosses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_SubstationLosses_GR();cdecl;
 PROCEDURE Circuit_Get_TotalPower(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_TotalPower_GR();cdecl;
 procedure Circuit_Disable(const Name: PAnsiChar);cdecl;
 procedure Circuit_Enable(const Name: PAnsiChar);cdecl;
 function Circuit_FirstPCElement():Integer;cdecl;
@@ -23,22 +30,33 @@ function Circuit_FirstPDElement():Integer;cdecl;
 function Circuit_NextPCElement():Integer;cdecl;
 function Circuit_NextPDElement():Integer;cdecl;
 PROCEDURE Circuit_Get_AllBusNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllBusNames_GR();cdecl;
 PROCEDURE Circuit_Get_AllElementLosses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllElementLosses_GR();cdecl;
 procedure Circuit_Sample();cdecl;
 procedure Circuit_SaveSample();cdecl;
 function Circuit_SetActiveElement(const FullName: PAnsiChar):Integer;cdecl;
 function Circuit_Capacity(Start, Increment: Double):Double;cdecl;
 PROCEDURE Circuit_Get_AllBusVmagPu(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllBusVmagPu_GR();cdecl;
 function Circuit_SetActiveBus(const BusName: PAnsiChar):Integer;cdecl;
 function Circuit_SetActiveBusi(BusIndex: Integer):Integer;cdecl;
 PROCEDURE Circuit_Get_AllNodeNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllNodeNames_GR();cdecl;
 PROCEDURE Circuit_Get_SystemY(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_SystemY_GR();cdecl;
 PROCEDURE Circuit_Get_AllBusDistances(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllBusDistances_GR();cdecl;
 PROCEDURE Circuit_Get_AllNodeDistances(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_AllNodeDistances_GR();cdecl;
 PROCEDURE Circuit_Get_AllNodeDistancesByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer);cdecl;
+PROCEDURE Circuit_Get_AllNodeDistancesByPhase_GR(Phase: Integer);cdecl;
 PROCEDURE Circuit_Get_AllNodeVmagByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer);cdecl;
+PROCEDURE Circuit_Get_AllNodeVmagByPhase_GR(Phase: Integer);cdecl;
 PROCEDURE Circuit_Get_AllNodeVmagPUByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer);cdecl;
+PROCEDURE Circuit_Get_AllNodeVmagPUByPhase_GR(Phase: Integer);cdecl;
 PROCEDURE Circuit_Get_AllNodeNamesByPhase(var ResultPtr: PPAnsiChar; ResultCount: PInteger; Phase: Integer);cdecl;
+PROCEDURE Circuit_Get_AllNodeNamesByPhase_GR(Phase: Integer);cdecl;
 function Circuit_SetActiveClass(const ClassName: PAnsiChar):Integer;cdecl;
 function Circuit_FirstElement():Integer;cdecl;
 function Circuit_NextElement():Integer;cdecl;
@@ -46,8 +64,11 @@ procedure Circuit_UpdateStorage();cdecl;
 function Circuit_Get_ParentPDElement():Integer;cdecl;
 procedure Circuit_EndOfTimeStepUpdate();cdecl;
 PROCEDURE Circuit_Get_YNodeOrder(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_YNodeOrder_GR();cdecl;
 PROCEDURE Circuit_Get_YCurrents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_YCurrents_GR();cdecl;
 PROCEDURE Circuit_Get_YNodeVarray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Circuit_Get_YNodeVarray_GR();cdecl;
 procedure Circuit_SetCktElementIndex(const Value: Integer);cdecl;
 procedure Circuit_SetCktElementName(const Value: PAnsiChar);cdecl;
 
@@ -107,6 +128,12 @@ Begin
     Result := V;
 
 end;
+PROCEDURE Circuit_Get_LineLosses_GR();cdecl;
+// Same as Circuit_Get_LineLosses but uses global result (GR) pointers
+begin
+   Circuit_Get_LineLosses(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_Losses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -124,6 +151,12 @@ begin
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE Circuit_Get_Losses_GR();cdecl;
+// Same as Circuit_Get_Losses but uses global result (GR) pointers
+begin
+   Circuit_Get_Losses(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_AllBusVmag(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -147,6 +180,12 @@ Begin
      End
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 End;
+PROCEDURE Circuit_Get_AllBusVmag_GR();cdecl;
+// Same as Circuit_Get_AllBusVmag but uses global result (GR) pointers
+begin
+   Circuit_Get_AllBusVmag(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_AllBusVolts(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -175,6 +214,12 @@ Begin
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE Circuit_Get_AllBusVolts_GR();cdecl;
+// Same as Circuit_Get_AllBusVolts but uses global result (GR) pointers
+begin
+   Circuit_Get_AllBusVolts(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_AllElementNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
@@ -194,6 +239,12 @@ Begin
      End
     ELSE Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 end;
+PROCEDURE Circuit_Get_AllElementNames_GR();cdecl;
+// Same as Circuit_Get_AllElementNames but uses global result (GR) pointers
+begin
+   Circuit_Get_AllElementNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_SubstationLosses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -222,6 +273,12 @@ Begin
      End;
 
 end;
+PROCEDURE Circuit_Get_SubstationLosses_GR();cdecl;
+// Same as Circuit_Get_SubstationLosses but uses global result (GR) pointers
+begin
+   Circuit_Get_SubstationLosses(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_TotalPower(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Total power being consumed in the circuit.
@@ -252,6 +309,12 @@ Begin
         Result[1] := 0.0;
       End;
 end;
+PROCEDURE Circuit_Get_TotalPower_GR();cdecl;
+// Same as Circuit_Get_TotalPower but uses global result (GR) pointers
+begin
+   Circuit_Get_TotalPower(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure Circuit_Disable(const Name: PAnsiChar);cdecl;
 begin
@@ -390,6 +453,12 @@ Begin
      End
     ELSE Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 end;
+PROCEDURE Circuit_Get_AllBusNames_GR();cdecl;
+// Same as Circuit_Get_AllBusNames but uses global result (GR) pointers
+begin
+   Circuit_Get_AllBusNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_AllElementLosses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -417,6 +486,12 @@ Begin
      End
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
+PROCEDURE Circuit_Get_AllElementLosses_GR();cdecl;
+// Same as Circuit_Get_AllElementLosses but uses global result (GR) pointers
+begin
+   Circuit_Get_AllElementLosses(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure Circuit_Sample();cdecl;
 // Sample all meters and monitors
@@ -495,6 +570,12 @@ Begin
      End
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
+PROCEDURE Circuit_Get_AllBusVmagPu_GR();cdecl;
+// Same as Circuit_Get_AllBusVmagPu but uses global result (GR) pointers
+begin
+   Circuit_Get_AllBusVmagPu(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function Circuit_SetActiveBus(const BusName: PAnsiChar):Integer;cdecl;
 begin
@@ -543,6 +624,12 @@ Begin
 end;
 
 // this calls the compressed column
+PROCEDURE Circuit_Get_AllNodeNames_GR();cdecl;
+// Same as Circuit_Get_AllNodeNames but uses global result (GR) pointers
+begin
+   Circuit_Get_AllNodeNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_SystemY(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 {Return System Y matrix, complex form}
@@ -593,6 +680,12 @@ begin
    END;
 
 end;
+PROCEDURE Circuit_Get_SystemY_GR();cdecl;
+// Same as Circuit_Get_SystemY but uses global result (GR) pointers
+begin
+   Circuit_Get_SystemY(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_AllBusDistances(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 {Return distances from each bus to its parent energymeter in an array that aligns with the buslist}
@@ -613,6 +706,12 @@ Begin
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE Circuit_Get_AllBusDistances_GR();cdecl;
+// Same as Circuit_Get_AllBusDistances but uses global result (GR) pointers
+begin
+   Circuit_Get_AllBusDistances(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_AllNodeDistances(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 {Return distance from each Node back to parent EnergyMeter}
@@ -639,6 +738,12 @@ Begin
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE Circuit_Get_AllNodeDistances_GR();cdecl;
+// Same as Circuit_Get_AllNodeDistances but uses global result (GR) pointers
+begin
+   Circuit_Get_AllNodeDistances(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_AllNodeDistancesByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer);cdecl;
 VAR
@@ -675,6 +780,12 @@ Begin
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE Circuit_Get_AllNodeDistancesByPhase_GR(Phase: Integer);cdecl;
+// Same as Circuit_Get_AllNodeDistancesByPhase but uses global result (GR) pointers
+begin
+   Circuit_Get_AllNodeDistancesByPhase(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Phase)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_AllNodeVmagByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer);cdecl;
 VAR
@@ -710,6 +821,12 @@ Begin
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE Circuit_Get_AllNodeVmagByPhase_GR(Phase: Integer);cdecl;
+// Same as Circuit_Get_AllNodeVmagByPhase but uses global result (GR) pointers
+begin
+   Circuit_Get_AllNodeVmagByPhase(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Phase)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_AllNodeVmagPUByPhase(var ResultPtr: PDouble; ResultCount: PInteger; Phase: Integer);cdecl;
 VAR
@@ -746,6 +863,12 @@ Begin
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE Circuit_Get_AllNodeVmagPUByPhase_GR(Phase: Integer);cdecl;
+// Same as Circuit_Get_AllNodeVmagPUByPhase but uses global result (GR) pointers
+begin
+   Circuit_Get_AllNodeVmagPUByPhase(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Phase)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_AllNodeNamesByPhase(var ResultPtr: PPAnsiChar; ResultCount: PInteger; Phase: Integer);cdecl;
 VAR
@@ -780,6 +903,12 @@ Begin
     ELSE Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE Circuit_Get_AllNodeNamesByPhase_GR(Phase: Integer);cdecl;
+// Same as Circuit_Get_AllNodeNamesByPhase but uses global result (GR) pointers
+begin
+   Circuit_Get_AllNodeNamesByPhase(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar, Phase)
+end;
+
 //------------------------------------------------------------------------------
 function Circuit_SetActiveClass(const ClassName: PAnsiChar):Integer;cdecl;
 Var
@@ -877,6 +1006,12 @@ Begin
     ELSE Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE Circuit_Get_YNodeOrder_GR();cdecl;
+// Same as Circuit_Get_YNodeOrder but uses global result (GR) pointers
+begin
+   Circuit_Get_YNodeOrder(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_YCurrents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -902,6 +1037,12 @@ Begin
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE Circuit_Get_YCurrents_GR();cdecl;
+// Same as Circuit_Get_YCurrents but uses global result (GR) pointers
+begin
+   Circuit_Get_YCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Circuit_Get_YNodeVarray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -927,6 +1068,12 @@ Begin
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE Circuit_Get_YNodeVarray_GR();cdecl;
+// Same as Circuit_Get_YNodeVarray but uses global result (GR) pointers
+begin
+   Circuit_Get_YNodeVarray(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure Circuit_SetCktElementIndex(const Value: Integer);cdecl;
 begin

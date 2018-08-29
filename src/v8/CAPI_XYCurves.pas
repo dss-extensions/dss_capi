@@ -12,11 +12,13 @@ function XYCurves_Get_Next():Integer;cdecl;
 procedure XYCurves_Set_Name(const Value: PAnsiChar);cdecl;
 function XYCurves_Get_Npts():Integer;cdecl;
 PROCEDURE XYCurves_Get_Xarray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE XYCurves_Get_Xarray_GR();cdecl;
 procedure XYCurves_Set_Npts(Value: Integer);cdecl;
 procedure XYCurves_Set_Xarray(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 function XYCurves_Get_x():Double;cdecl;
 function XYCurves_Get_y():Double;cdecl;
 PROCEDURE XYCurves_Get_Yarray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE XYCurves_Get_Yarray_GR();cdecl;
 procedure XYCurves_Set_x(Value: Double);cdecl;
 procedure XYCurves_Set_y(Value: Double);cdecl;
 procedure XYCurves_Set_Yarray(ValuePtr: PDouble; ValueCount: Integer);cdecl;
@@ -128,6 +130,12 @@ begin
             End;
          End;
 end;
+PROCEDURE XYCurves_Get_Xarray_GR();cdecl;
+// Same as XYCurves_Get_Xarray but uses global result (GR) pointers
+begin
+   XYCurves_Get_Xarray(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure XYCurves_Set_Npts(Value: Integer);cdecl;
 Var
@@ -234,6 +242,12 @@ begin
          End;
 
 end;
+PROCEDURE XYCurves_Get_Yarray_GR();cdecl;
+// Same as XYCurves_Get_Yarray but uses global result (GR) pointers
+begin
+   XYCurves_Get_Yarray(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure XYCurves_Set_x(Value: Double);cdecl;
 Var

@@ -6,6 +6,7 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE DSSElement_Get_AllPropertyNames_GR();cdecl;
 function DSSElement_Get_Name():PAnsiChar;cdecl;
 function DSSElement_Get_NumProperties():Integer;cdecl;
 
@@ -36,6 +37,12 @@ begin
    End;
 
 end;
+PROCEDURE DSSElement_Get_AllPropertyNames_GR();cdecl;
+// Same as DSSElement_Get_AllPropertyNames but uses global result (GR) pointers
+begin
+   DSSElement_Get_AllPropertyNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function DSSElement_Get_Name_AnsiString():AnsiString;inline;
 Begin

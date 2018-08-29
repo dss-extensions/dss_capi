@@ -6,8 +6,11 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE PVSystems_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE PVSystems_Get_AllNames_GR();cdecl;
 PROCEDURE PVSystems_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE PVSystems_Get_RegisterNames_GR();cdecl;
 PROCEDURE PVSystems_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE PVSystems_Get_RegisterValues_GR();cdecl;
 function PVSystems_Get_First():Integer;cdecl;
 function PVSystems_Get_Next():Integer;cdecl;
 function PVSystems_Get_Count():Integer;cdecl;
@@ -52,6 +55,12 @@ Begin
        End;
      End;
 end;
+PROCEDURE PVSystems_Get_AllNames_GR();cdecl;
+// Same as PVSystems_Get_AllNames but uses global result (GR) pointers
+begin
+   PVSystems_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE PVSystems_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
@@ -64,6 +73,12 @@ Begin
        Result[k] := DSS_CopyStringAsPChar(PVSystemClass.RegisterNames[k + 1]);
     End;
 end;
+PROCEDURE PVSystems_Get_RegisterNames_GR();cdecl;
+// Same as PVSystems_Get_RegisterNames but uses global result (GR) pointers
+begin
+   PVSystems_Get_RegisterNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE PVSystems_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -93,6 +108,12 @@ Begin
 
 
 end;
+PROCEDURE PVSystems_Get_RegisterValues_GR();cdecl;
+// Same as PVSystems_Get_RegisterValues but uses global result (GR) pointers
+begin
+   PVSystems_Get_RegisterValues(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function PVSystems_Get_First():Integer;cdecl;
 Var

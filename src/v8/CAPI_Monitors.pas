@@ -6,6 +6,7 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Monitors_Get_AllNames_GR();cdecl;
 function Monitors_Get_FileName():PAnsiChar;cdecl;
 function Monitors_Get_First():Integer;cdecl;
 function Monitors_Get_Mode():Integer;cdecl;
@@ -19,6 +20,7 @@ procedure Monitors_Set_Mode(Value: Integer);cdecl;
 procedure Monitors_Show();cdecl;
 procedure Monitors_Set_Name(const Value: PAnsiChar);cdecl;
 PROCEDURE Monitors_Get_ByteStream(var ResultPtr: PByte; ResultCount: PInteger);cdecl;
+PROCEDURE Monitors_Get_ByteStream_GR();cdecl;
 function Monitors_Get_SampleCount():Integer;cdecl;
 procedure Monitors_SampleAll();cdecl;
 procedure Monitors_SaveAll();cdecl;
@@ -26,10 +28,14 @@ function Monitors_Get_Count():Integer;cdecl;
 procedure Monitors_Process();cdecl;
 procedure Monitors_ProcessAll();cdecl;
 PROCEDURE Monitors_Get_Channel(var ResultPtr: PDouble; ResultCount: PInteger; Index: Integer);cdecl;
+PROCEDURE Monitors_Get_Channel_GR(Index: Integer);cdecl;
 PROCEDURE Monitors_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Monitors_Get_dblFreq_GR();cdecl;
 PROCEDURE Monitors_Get_dblHour(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Monitors_Get_dblHour_GR();cdecl;
 function Monitors_Get_FileVersion():Integer;cdecl;
 PROCEDURE Monitors_Get_Header(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Monitors_Get_Header_GR();cdecl;
 function Monitors_Get_NumChannels():Integer;cdecl;
 function Monitors_Get_RecordSize():Integer;cdecl;
 function Monitors_Get_Element():PAnsiChar;cdecl;
@@ -100,6 +106,12 @@ Begin
        End;
      End;
 end;
+PROCEDURE Monitors_Get_AllNames_GR();cdecl;
+// Same as Monitors_Get_AllNames but uses global result (GR) pointers
+begin
+   Monitors_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Monitors_Get_FileName_AnsiString():AnsiString;inline;
 Var
@@ -352,6 +364,12 @@ Begin
    End;
 
 end;
+PROCEDURE Monitors_Get_ByteStream_GR();cdecl;
+// Same as Monitors_Get_ByteStream but uses global result (GR) pointers
+begin
+   Monitors_Get_ByteStream(GR_DataPtr_PByte, GR_CountPtr_PByte)
+end;
+
 //------------------------------------------------------------------------------
 function Monitors_Get_SampleCount():Integer;cdecl;
 Var
@@ -448,6 +466,12 @@ begin
 
     End;
 end;
+PROCEDURE Monitors_Get_Channel_GR(Index: Integer);cdecl;
+// Same as Monitors_Get_Channel but uses global result (GR) pointers
+begin
+   Monitors_Get_Channel(GR_DataPtr_PDouble, GR_CountPtr_PDouble, Index)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Monitors_Get_dblFreq(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return an array of doubles for frequence for Harmonic solutions
@@ -501,6 +525,12 @@ begin
     End;
 
 end;
+PROCEDURE Monitors_Get_dblFreq_GR();cdecl;
+// Same as Monitors_Get_dblFreq but uses global result (GR) pointers
+begin
+   Monitors_Get_dblFreq(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Monitors_Get_dblHour(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return an array of doubles for time in hours
@@ -554,6 +584,12 @@ begin
     End;
 
 end;
+PROCEDURE Monitors_Get_dblHour_GR();cdecl;
+// Same as Monitors_Get_dblHour but uses global result (GR) pointers
+begin
+   Monitors_Get_dblHour(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function Monitors_Get_FileVersion():Integer;cdecl;
 Var  Header : THeaderRec;
@@ -605,6 +641,12 @@ begin
      End;
 
 end;
+PROCEDURE Monitors_Get_Header_GR();cdecl;
+// Same as Monitors_Get_Header but uses global result (GR) pointers
+begin
+   Monitors_Get_Header(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Monitors_Get_NumChannels():Integer;cdecl;
 Var  Header:THeaderRec;

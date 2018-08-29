@@ -6,13 +6,18 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Sensors_Get_AllNames_GR();cdecl;
 function Sensors_Get_Count():Integer;cdecl;
 PROCEDURE Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Sensors_Get_Currents_GR();cdecl;
 function Sensors_Get_First():Integer;cdecl;
 function Sensors_Get_IsDelta():WordBool;cdecl;
 PROCEDURE Sensors_Get_kVARS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Sensors_Get_kVARS_GR();cdecl;
 PROCEDURE Sensors_Get_kVS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Sensors_Get_kVS_GR();cdecl;
 PROCEDURE Sensors_Get_kWS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Sensors_Get_kWS_GR();cdecl;
 function Sensors_Get_MeteredElement():PAnsiChar;cdecl;
 function Sensors_Get_MeteredTerminal():Integer;cdecl;
 function Sensors_Get_Name():PAnsiChar;cdecl;
@@ -77,6 +82,12 @@ Begin
         End;
       End;
 end;
+PROCEDURE Sensors_Get_AllNames_GR();cdecl;
+// Same as Sensors_Get_AllNames but uses global result (GR) pointers
+begin
+   Sensors_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Sensors_Get_Count():Integer;cdecl;
 begin
@@ -97,6 +108,12 @@ Begin
   end else
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
+PROCEDURE Sensors_Get_Currents_GR();cdecl;
+// Same as Sensors_Get_Currents but uses global result (GR) pointers
+begin
+   Sensors_Get_Currents(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function Sensors_Get_First():Integer;cdecl;
 Var
@@ -142,6 +159,12 @@ Begin
   end else
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
+PROCEDURE Sensors_Get_kVARS_GR();cdecl;
+// Same as Sensors_Get_kVARS but uses global result (GR) pointers
+begin
+   Sensors_Get_kVARS(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Sensors_Get_kVS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -156,6 +179,12 @@ Begin
   end else
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
+PROCEDURE Sensors_Get_kVS_GR();cdecl;
+// Same as Sensors_Get_kVS but uses global result (GR) pointers
+begin
+   Sensors_Get_kVS(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Sensors_Get_kWS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -170,6 +199,12 @@ Begin
   end else
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
+PROCEDURE Sensors_Get_kWS_GR();cdecl;
+// Same as Sensors_Get_kWS but uses global result (GR) pointers
+begin
+   Sensors_Get_kWS(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function Sensors_Get_MeteredElement_AnsiString():AnsiString;inline;
 Var

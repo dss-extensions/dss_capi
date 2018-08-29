@@ -23,9 +23,11 @@ procedure Settings_Set_NormVmaxpu(Value: Double);cdecl;
 procedure Settings_Set_NormVminpu(Value: Double);cdecl;
 procedure Settings_Set_ZoneLock(Value: WordBool);cdecl;
 PROCEDURE Settings_Get_LossRegs(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Settings_Get_LossRegs_GR();cdecl;
 function Settings_Get_LossWeight():Double;cdecl;
 function Settings_Get_Trapezoidal():WordBool;cdecl;
 PROCEDURE Settings_Get_UEregs(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Settings_Get_UEregs_GR();cdecl;
 function Settings_Get_UEweight():Double;cdecl;
 procedure Settings_Set_LossRegs(ValuePtr: PInteger; ValueCount: Integer);cdecl;
 procedure Settings_Set_LossWeight(Value: Double);cdecl;
@@ -34,6 +36,7 @@ procedure Settings_Set_UEregs(ValuePtr: PInteger; ValueCount: Integer);cdecl;
 procedure Settings_Set_UEweight(Value: Double);cdecl;
 function Settings_Get_ControlTrace():WordBool;cdecl;
 PROCEDURE Settings_Get_VoltageBases(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Settings_Get_VoltageBases_GR();cdecl;
 procedure Settings_Set_ControlTrace(Value: WordBool);cdecl;
 procedure Settings_Set_VoltageBases(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 function Settings_Get_PriceCurve():PAnsiChar;cdecl;
@@ -205,6 +208,12 @@ begin
    ELSE    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE Settings_Get_LossRegs_GR();cdecl;
+// Same as Settings_Get_LossRegs but uses global result (GR) pointers
+begin
+   Settings_Get_LossRegs(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+end;
+
 //------------------------------------------------------------------------------
 function Settings_Get_LossWeight():Double;cdecl;
 begin
@@ -240,6 +249,12 @@ begin
    END
    ELSE    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
 end;
+PROCEDURE Settings_Get_UEregs_GR();cdecl;
+// Same as Settings_Get_UEregs but uses global result (GR) pointers
+begin
+   Settings_Get_UEregs(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+end;
+
 //------------------------------------------------------------------------------
 function Settings_Get_UEweight():Double;cdecl;
 begin
@@ -338,6 +353,12 @@ begin
   END
   ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
+PROCEDURE Settings_Get_VoltageBases_GR();cdecl;
+// Same as Settings_Get_VoltageBases but uses global result (GR) pointers
+begin
+   Settings_Get_VoltageBases(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure Settings_Set_ControlTrace(Value: WordBool);cdecl;
 begin

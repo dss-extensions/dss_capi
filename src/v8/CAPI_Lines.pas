@@ -6,6 +6,7 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Lines_Get_AllNames_GR();cdecl;
 function Lines_Get_Bus1():PAnsiChar;cdecl;
 function Lines_Get_Bus2():PAnsiChar;cdecl;
 function Lines_Get_First():Integer;cdecl;
@@ -28,10 +29,13 @@ procedure Lines_Set_X1(Value: Double);cdecl;
 function Lines_Get_C0():Double;cdecl;
 function Lines_Get_C1():Double;cdecl;
 PROCEDURE Lines_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Lines_Get_Cmatrix_GR();cdecl;
 function Lines_Get_R0():Double;cdecl;
 PROCEDURE Lines_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Lines_Get_Rmatrix_GR();cdecl;
 function Lines_Get_X0():Double;cdecl;
 PROCEDURE Lines_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Lines_Get_Xmatrix_GR();cdecl;
 procedure Lines_Set_C0(Value: Double);cdecl;
 procedure Lines_Set_C1(Value: Double);cdecl;
 procedure Lines_Set_Cmatrix(ValuePtr: PDouble; ValueCount: Integer);cdecl;
@@ -52,6 +56,7 @@ procedure Lines_Set_Rg(Value: Double);cdecl;
 procedure Lines_Set_Rho(Value: Double);cdecl;
 procedure Lines_Set_Xg(Value: Double);cdecl;
 PROCEDURE Lines_Get_Yprim(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Lines_Get_Yprim_GR();cdecl;
 procedure Lines_Set_Yprim(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 function Lines_Get_NumCust():Integer;cdecl;
 function Lines_Get_TotalCust():Integer;cdecl;
@@ -100,6 +105,12 @@ Begin
      End;
 
 end;
+PROCEDURE Lines_Get_AllNames_GR();cdecl;
+// Same as Lines_Get_AllNames but uses global result (GR) pointers
+begin
+   Lines_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Lines_Get_Bus1_AnsiString():AnsiString;inline;
 begin
@@ -443,6 +454,12 @@ begin
   End;
 
 end;
+PROCEDURE Lines_Get_Cmatrix_GR();cdecl;
+// Same as Lines_Get_Cmatrix but uses global result (GR) pointers
+begin
+   Lines_Get_Cmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function Lines_Get_R0():Double;cdecl;
 begin
@@ -477,6 +494,12 @@ begin
        End;
   End;
 end;
+PROCEDURE Lines_Get_Rmatrix_GR();cdecl;
+// Same as Lines_Get_Rmatrix but uses global result (GR) pointers
+begin
+   Lines_Get_Rmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function Lines_Get_X0():Double;cdecl;
 begin
@@ -512,6 +535,12 @@ begin
        End;
   End;
 end;
+PROCEDURE Lines_Get_Xmatrix_GR();cdecl;
+// Same as Lines_Get_Xmatrix but uses global result (GR) pointers
+begin
+   Lines_Get_Xmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure Lines_Set_C0(Value: Double);cdecl;
 begin
@@ -814,6 +843,12 @@ begin
       ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
+PROCEDURE Lines_Get_Yprim_GR();cdecl;
+// Same as Lines_Get_Yprim but uses global result (GR) pointers
+begin
+   Lines_Get_Yprim(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure Lines_Set_Yprim(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 VAR

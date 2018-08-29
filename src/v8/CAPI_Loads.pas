@@ -6,6 +6,7 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE Loads_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Loads_Get_AllNames_GR();cdecl;
 function Loads_Get_First():Integer;cdecl;
 function Loads_Get_idx():Integer;cdecl;
 function Loads_Get_Name():PAnsiChar;cdecl;
@@ -76,6 +77,7 @@ procedure Loads_Set_xfkVA(Value: Double);cdecl;
 procedure Loads_Set_Xneut(Value: Double);cdecl;
 procedure Loads_Set_Yearly(const Value: PAnsiChar);cdecl;
 PROCEDURE Loads_Get_ZIPV(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Loads_Get_ZIPV_GR();cdecl;
 procedure Loads_Set_ZIPV(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 function Loads_Get_pctSeriesRL():Double;cdecl;
 procedure Loads_Set_pctSeriesRL(Value: Double);cdecl;
@@ -125,6 +127,12 @@ Begin
        End;
      End ;
 end;
+PROCEDURE Loads_Get_AllNames_GR();cdecl;
+// Same as Loads_Get_AllNames but uses global result (GR) pointers
+begin
+   Loads_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Loads_Get_First():Integer;cdecl;
 Var
@@ -813,6 +821,12 @@ Begin
     End ;
 
 end;
+PROCEDURE Loads_Get_ZIPV_GR();cdecl;
+// Same as Loads_Get_ZIPV but uses global result (GR) pointers
+begin
+   Loads_Get_ZIPV(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure Loads_Set_ZIPV(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 VAR

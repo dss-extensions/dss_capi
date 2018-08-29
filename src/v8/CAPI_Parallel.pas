@@ -15,7 +15,9 @@ procedure Parallel_Set_ActorCPU(Value: Integer);cdecl;
 function Parallel_Get_NumOfActors():Integer;cdecl;
 procedure Parallel_Wait();cdecl;
 PROCEDURE Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Parallel_Get_ActorProgress_GR();cdecl;
 PROCEDURE Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Parallel_Get_ActorStatus_GR();cdecl;
 function Parallel_Get_ActiveParallel():Integer;cdecl;
 procedure Parallel_Set_ActiveParallel(Value: Integer);cdecl;
 function Parallel_Get_ConcatenateReports():Integer;cdecl;
@@ -96,6 +98,12 @@ begin
       Result[(idx) - (1)] :=  ActorPctProgress[idx];
     End;
 end;
+PROCEDURE Parallel_Get_ActorProgress_GR();cdecl;
+// Same as Parallel_Get_ActorProgress but uses global result (GR) pointers
+begin
+   Parallel_Get_ActorProgress(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 VAR
@@ -106,6 +114,12 @@ begin
     for idx := 1 to NumOfActors do
       Result[(idx) - (1)] :=  ActorStatus[idx];  
 end;
+PROCEDURE Parallel_Get_ActorStatus_GR();cdecl;
+// Same as Parallel_Get_ActorStatus but uses global result (GR) pointers
+begin
+   Parallel_Get_ActorStatus(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+end;
+
 //------------------------------------------------------------------------------
 function Parallel_Get_ActiveParallel():Integer;cdecl;
 begin

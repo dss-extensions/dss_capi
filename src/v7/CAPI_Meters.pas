@@ -6,22 +6,29 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Meters_Get_AllNames_GR();cdecl;
 function Meters_Get_First():Integer;cdecl;
 function Meters_Get_Name():PAnsiChar;cdecl;
 function Meters_Get_Next():Integer;cdecl;
 PROCEDURE Meters_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Meters_Get_RegisterNames_GR();cdecl;
 PROCEDURE Meters_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Meters_Get_RegisterValues_GR();cdecl;
 procedure Meters_Reset();cdecl;
 procedure Meters_ResetAll();cdecl;
 procedure Meters_Sample();cdecl;
 procedure Meters_Save();cdecl;
 procedure Meters_Set_Name(const Value: PAnsiChar);cdecl;
 PROCEDURE Meters_Get_Totals(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Meters_Get_Totals_GR();cdecl;
 PROCEDURE Meters_Get_Peakcurrent(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Meters_Get_Peakcurrent_GR();cdecl;
 procedure Meters_Set_Peakcurrent(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 PROCEDURE Meters_Get_CalcCurrent(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Meters_Get_CalcCurrent_GR();cdecl;
 procedure Meters_Set_CalcCurrent(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 PROCEDURE Meters_Get_AllocFactors(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Meters_Get_AllocFactors_GR();cdecl;
 procedure Meters_Set_AllocFactors(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 function Meters_Get_MeteredElement():PAnsiChar;cdecl;
 function Meters_Get_MeteredTerminal():Integer;cdecl;
@@ -33,9 +40,11 @@ procedure Meters_OpenAllDIFiles();cdecl;
 procedure Meters_SampleAll();cdecl;
 procedure Meters_SaveAll();cdecl;
 PROCEDURE Meters_Get_AllEndElements(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Meters_Get_AllEndElements_GR();cdecl;
 function Meters_Get_CountEndElements():Integer;cdecl;
 function Meters_Get_Count():Integer;cdecl;
 PROCEDURE Meters_Get_AllBranchesInZone(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Meters_Get_AllBranchesInZone_GR();cdecl;
 function Meters_Get_CountBranches():Integer;cdecl;
 function Meters_Get_SAIFI():Double;cdecl;
 function Meters_Get_SequenceIndex():Integer;cdecl;
@@ -86,6 +95,12 @@ Begin
      End;
 
 end;
+PROCEDURE Meters_Get_AllNames_GR();cdecl;
+// Same as Meters_Get_AllNames but uses global result (GR) pointers
+begin
+   Meters_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Meters_Get_First():Integer;cdecl;
 Var
@@ -175,6 +190,12 @@ Begin
     End
     Else Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1); // null array
 end;
+PROCEDURE Meters_Get_RegisterNames_GR();cdecl;
+// Same as Meters_Get_RegisterNames but uses global result (GR) pointers
+begin
+   Meters_Get_RegisterNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Meters_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -203,6 +224,12 @@ Begin
    End;
 
 end;
+PROCEDURE Meters_Get_RegisterValues_GR();cdecl;
+// Same as Meters_Get_RegisterValues but uses global result (GR) pointers
+begin
+   Meters_Get_RegisterValues(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure Meters_Reset();cdecl;
 Var
@@ -310,6 +337,12 @@ begin
      End;
 
 end;
+PROCEDURE Meters_Get_Totals_GR();cdecl;
+// Same as Meters_Get_Totals but uses global result (GR) pointers
+begin
+   Meters_Get_Totals(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Meters_Get_Peakcurrent(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -334,6 +367,12 @@ Begin
    End;
 
 end;
+PROCEDURE Meters_Get_Peakcurrent_GR();cdecl;
+// Same as Meters_Get_Peakcurrent but uses global result (GR) pointers
+begin
+   Meters_Get_Peakcurrent(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure Meters_Set_Peakcurrent(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 VAR
@@ -381,6 +420,12 @@ Begin
    End;
 
 end;
+PROCEDURE Meters_Get_CalcCurrent_GR();cdecl;
+// Same as Meters_Get_CalcCurrent but uses global result (GR) pointers
+begin
+   Meters_Get_CalcCurrent(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure Meters_Set_CalcCurrent(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 VAR
@@ -428,6 +473,12 @@ Begin
    End;
 
 end;
+PROCEDURE Meters_Get_AllocFactors_GR();cdecl;
+// Same as Meters_Get_AllocFactors but uses global result (GR) pointers
+begin
+   Meters_Get_AllocFactors(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure Meters_Set_AllocFactors(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 VAR
@@ -594,6 +645,12 @@ Begin
     end;
   End;
 end;
+PROCEDURE Meters_Get_AllEndElements_GR();cdecl;
+// Same as Meters_Get_AllEndElements but uses global result (GR) pointers
+begin
+   Meters_Get_AllEndElements(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Meters_Get_CountEndElements():Integer;cdecl;
 Var
@@ -642,6 +699,12 @@ Begin
   End;
 
 end;
+PROCEDURE Meters_Get_AllBranchesInZone_GR();cdecl;
+// Same as Meters_Get_AllBranchesInZone but uses global result (GR) pointers
+begin
+   Meters_Get_AllBranchesInZone(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Meters_Get_CountBranches():Integer;cdecl;
 Var

@@ -8,17 +8,27 @@ USES CAPI_Utils;
 function Bus_Get_Name():PAnsiChar;cdecl;
 function Bus_Get_NumNodes():Integer;cdecl;
 PROCEDURE Bus_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_SeqVoltages_GR();cdecl;
 PROCEDURE Bus_Get_Voltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_Voltages_GR();cdecl;
 PROCEDURE Bus_Get_Nodes(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_Nodes_GR();cdecl;
 PROCEDURE Bus_Get_Isc(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_Isc_GR();cdecl;
 PROCEDURE Bus_Get_Voc(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_Voc_GR();cdecl;
 function Bus_Get_kVBase():Double;cdecl;
 PROCEDURE Bus_Get_puVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_puVoltages_GR();cdecl;
 PROCEDURE Bus_Get_Zsc0(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_Zsc0_GR();cdecl;
 PROCEDURE Bus_Get_Zsc1(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_Zsc1_GR();cdecl;
 PROCEDURE Bus_Get_ZscMatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_ZscMatrix_GR();cdecl;
 function Bus_ZscRefresh():WordBool;cdecl;
 PROCEDURE Bus_Get_YscMatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_YscMatrix_GR();cdecl;
 function Bus_Get_Coorddefined():WordBool;cdecl;
 function Bus_Get_x():Double;cdecl;
 procedure Bus_Set_x(Value: Double);cdecl;
@@ -27,6 +37,7 @@ procedure Bus_Set_y(Value: Double);cdecl;
 function Bus_Get_Distance():Double;cdecl;
 function Bus_GetUniqueNodeNumber(StartNumber: Integer):Integer;cdecl;
 PROCEDURE Bus_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_CplxSeqVoltages_GR();cdecl;
 function Bus_Get_Int_Duration():Double;cdecl;
 function Bus_Get_Lambda():Double;cdecl;
 function Bus_Get_Cust_Duration():Double;cdecl;
@@ -34,9 +45,13 @@ function Bus_Get_Cust_Interrupts():Double;cdecl;
 function Bus_Get_N_Customers():Integer;cdecl;
 function Bus_Get_N_interrupts():Double;cdecl;
 PROCEDURE Bus_Get_puVLL(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_puVLL_GR();cdecl;
 PROCEDURE Bus_Get_VLL(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_VLL_GR();cdecl;
 PROCEDURE Bus_Get_puVmagAngle(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_puVmagAngle_GR();cdecl;
 PROCEDURE Bus_Get_VMagAngle(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Bus_Get_VMagAngle_GR();cdecl;
 function Bus_Get_TotalMiles():Double;cdecl;
 function Bus_Get_SectionID():Integer;cdecl;
 
@@ -113,6 +128,12 @@ Begin
 
 
 end;
+PROCEDURE Bus_Get_SeqVoltages_GR();cdecl;
+// Same as Bus_Get_SeqVoltages but uses global result (GR) pointers
+begin
+   Bus_Get_SeqVoltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Bus_Get_Voltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return Complex for all nodes of voltages for Active Bus
@@ -153,6 +174,12 @@ Begin
   ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
+PROCEDURE Bus_Get_Voltages_GR();cdecl;
+// Same as Bus_Get_Voltages but uses global result (GR) pointers
+begin
+   Bus_Get_Voltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Bus_Get_Nodes(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 // return array of node numbers corresponding to voltages
@@ -190,6 +217,12 @@ Begin
   ELSE Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
+PROCEDURE Bus_Get_Nodes_GR();cdecl;
+// Same as Bus_Get_Nodes but uses global result (GR) pointers
+begin
+   Bus_Get_Nodes(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Bus_Get_Isc(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return the short circuit current
@@ -226,6 +259,12 @@ begin
   ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
 
 end;
+PROCEDURE Bus_Get_Isc_GR();cdecl;
+// Same as Bus_Get_Isc but uses global result (GR) pointers
+begin
+   Bus_Get_Isc(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Bus_Get_Voc(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return the Open circuit Voltage for this bus
@@ -263,6 +302,12 @@ begin
 
 
 end;
+PROCEDURE Bus_Get_Voc_GR();cdecl;
+// Same as Bus_Get_Voc but uses global result (GR) pointers
+begin
+   Bus_Get_Voc(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function Bus_Get_kVBase():Double;cdecl;
 begin
@@ -317,6 +362,12 @@ Begin
   ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
+PROCEDURE Bus_Get_puVoltages_GR();cdecl;
+// Same as Bus_Get_puVoltages but uses global result (GR) pointers
+begin
+   Bus_Get_puVoltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Bus_Get_Zsc0(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -336,6 +387,12 @@ begin
     End
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
 end;
+PROCEDURE Bus_Get_Zsc0_GR();cdecl;
+// Same as Bus_Get_Zsc0 but uses global result (GR) pointers
+begin
+   Bus_Get_Zsc0(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Bus_Get_Zsc1(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -357,6 +414,12 @@ begin
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1) ;  // just return null array
 
 end;
+PROCEDURE Bus_Get_Zsc1_GR();cdecl;
+// Same as Bus_Get_Zsc1 but uses global result (GR) pointers
+begin
+   Bus_Get_Zsc1(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Bus_Get_ZscMatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -400,6 +463,12 @@ begin
       End;
 
 end;
+PROCEDURE Bus_Get_ZscMatrix_GR();cdecl;
+// Same as Bus_Get_ZscMatrix but uses global result (GR) pointers
+begin
+   Bus_Get_ZscMatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function Bus_ZscRefresh():WordBool;cdecl;
 begin
@@ -453,6 +522,12 @@ begin
 
 
 end;
+PROCEDURE Bus_Get_YscMatrix_GR();cdecl;
+// Same as Bus_Get_YscMatrix but uses global result (GR) pointers
+begin
+   Bus_Get_YscMatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function Bus_Get_Coorddefined():WordBool;cdecl;
 begin
@@ -560,6 +635,12 @@ Begin
   ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE Bus_Get_CplxSeqVoltages_GR();cdecl;
+// Same as Bus_Get_CplxSeqVoltages but uses global result (GR) pointers
+begin
+   Bus_Get_CplxSeqVoltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function Bus_Get_Int_Duration():Double;cdecl;
 begin
@@ -669,6 +750,12 @@ Begin
 
 
 end;
+PROCEDURE Bus_Get_puVLL_GR();cdecl;
+// Same as Bus_Get_puVLL but uses global result (GR) pointers
+begin
+   Bus_Get_puVLL(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Bus_Get_VLL(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -720,6 +807,12 @@ Begin
   ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
+PROCEDURE Bus_Get_VLL_GR();cdecl;
+// Same as Bus_Get_VLL but uses global result (GR) pointers
+begin
+   Bus_Get_VLL(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Bus_Get_puVmagAngle(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return mag/angle for all nodes of voltages for Active Bus
@@ -766,6 +859,12 @@ Begin
   ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
+PROCEDURE Bus_Get_puVmagAngle_GR();cdecl;
+// Same as Bus_Get_puVmagAngle but uses global result (GR) pointers
+begin
+   Bus_Get_puVmagAngle(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Bus_Get_VMagAngle(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return mag/angle for all nodes of voltages for Active Bus
@@ -807,6 +906,12 @@ Begin
   ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
+PROCEDURE Bus_Get_VMagAngle_GR();cdecl;
+// Same as Bus_Get_VMagAngle but uses global result (GR) pointers
+begin
+   Bus_Get_VMagAngle(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function Bus_Get_TotalMiles():Double;cdecl;
 begin

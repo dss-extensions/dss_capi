@@ -6,6 +6,7 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE Relays_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Relays_Get_AllNames_GR();cdecl;
 function Relays_Get_Count():Integer;cdecl;
 function Relays_Get_First():Integer;cdecl;
 function Relays_Get_Name():PAnsiChar;cdecl;
@@ -62,6 +63,12 @@ Begin
   End;
 
 end;
+PROCEDURE Relays_Get_AllNames_GR();cdecl;
+// Same as Relays_Get_AllNames but uses global result (GR) pointers
+begin
+   Relays_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Relays_Get_Count():Integer;cdecl;
 begin

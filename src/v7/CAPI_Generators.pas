@@ -6,11 +6,14 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Generators_Get_AllNames_GR();cdecl;
 function Generators_Get_First():Integer;cdecl;
 function Generators_Get_Name():PAnsiChar;cdecl;
 function Generators_Get_Next():Integer;cdecl;
 PROCEDURE Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Generators_Get_RegisterNames_GR();cdecl;
 PROCEDURE Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE Generators_Get_RegisterValues_GR();cdecl;
 function Generators_Get_ForcedON():WordBool;cdecl;
 procedure Generators_Set_ForcedON(Value: WordBool);cdecl;
 procedure Generators_Set_Name(const Value: PAnsiChar);cdecl;
@@ -63,6 +66,12 @@ Begin
        End;
      End;
 end;
+PROCEDURE Generators_Get_AllNames_GR();cdecl;
+// Same as Generators_Get_AllNames but uses global result (GR) pointers
+begin
+   Generators_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Generators_Get_First():Integer;cdecl;
 Var
@@ -155,6 +164,12 @@ Begin
     End;
 
 end;
+PROCEDURE Generators_Get_RegisterNames_GR();cdecl;
+// Same as Generators_Get_RegisterNames but uses global result (GR) pointers
+begin
+   Generators_Get_RegisterNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -183,6 +198,12 @@ Begin
 
 
 end;
+PROCEDURE Generators_Get_RegisterValues_GR();cdecl;
+// Same as Generators_Get_RegisterValues but uses global result (GR) pointers
+begin
+   Generators_Get_RegisterValues(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function Generators_Get_ForcedON():WordBool;cdecl;
 begin

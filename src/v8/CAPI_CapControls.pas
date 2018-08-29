@@ -6,6 +6,7 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE CapControls_Get_AllNames_GR();cdecl;
 function CapControls_Get_Capacitor():PAnsiChar;cdecl;
 function CapControls_Get_CTratio():Double;cdecl;
 function CapControls_Get_DeadTime():Double;cdecl;
@@ -84,6 +85,12 @@ Begin
     End;
   End;
 end;
+PROCEDURE CapControls_Get_AllNames_GR();cdecl;
+// Same as CapControls_Get_AllNames but uses global result (GR) pointers
+begin
+   CapControls_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function CapControls_Get_Capacitor_AnsiString():AnsiString;inline;
 var

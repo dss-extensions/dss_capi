@@ -11,14 +11,18 @@ function LoadShapes_Get_Count():Integer;cdecl;
 function LoadShapes_Get_First():Integer;cdecl;
 function LoadShapes_Get_Next():Integer;cdecl;
 PROCEDURE LoadShapes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE LoadShapes_Get_AllNames_GR();cdecl;
 function LoadShapes_Get_Npts():Integer;cdecl;
 PROCEDURE LoadShapes_Get_Pmult(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE LoadShapes_Get_Pmult_GR();cdecl;
 PROCEDURE LoadShapes_Get_Qmult(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE LoadShapes_Get_Qmult_GR();cdecl;
 procedure LoadShapes_Set_Npts(Value: Integer);cdecl;
 procedure LoadShapes_Set_Pmult(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 procedure LoadShapes_Set_Qmult(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 procedure LoadShapes_Normalize();cdecl;
 PROCEDURE LoadShapes_Get_TimeArray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE LoadShapes_Get_TimeArray_GR();cdecl;
 procedure LoadShapes_Set_TimeArray(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 function LoadShapes_Get_HrInterval():Double;cdecl;
 function LoadShapes_Get_MinInterval():Double;cdecl;
@@ -140,6 +144,12 @@ Begin
   End;
 
 end;
+PROCEDURE LoadShapes_Get_AllNames_GR();cdecl;
+// Same as LoadShapes_Get_AllNames but uses global result (GR) pointers
+begin
+   LoadShapes_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function LoadShapes_Get_Npts():Integer;cdecl;
 begin
@@ -168,6 +178,12 @@ begin
             End;
          End;
 end;
+PROCEDURE LoadShapes_Get_Pmult_GR();cdecl;
+// Same as LoadShapes_Get_Pmult but uses global result (GR) pointers
+begin
+   LoadShapes_Get_Pmult(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE LoadShapes_Get_Qmult(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -193,6 +209,12 @@ begin
             End;
          End;
 end;
+PROCEDURE LoadShapes_Get_Qmult_GR();cdecl;
+// Same as LoadShapes_Get_Qmult but uses global result (GR) pointers
+begin
+   LoadShapes_Get_Qmult(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_Npts(Value: Integer);cdecl;
 begin
@@ -290,6 +312,12 @@ begin
             End;
          End;
 end;
+PROCEDURE LoadShapes_Get_TimeArray_GR();cdecl;
+// Same as LoadShapes_Get_TimeArray but uses global result (GR) pointers
+begin
+   LoadShapes_Get_TimeArray(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_TimeArray(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 VAR

@@ -6,6 +6,7 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE RegControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE RegControls_Get_AllNames_GR();cdecl;
 function RegControls_Get_CTPrimary():Double;cdecl;
 function RegControls_Get_Delay():Double;cdecl;
 function RegControls_Get_First():Integer;cdecl;
@@ -98,6 +99,12 @@ Begin
     End;
   End;
 end;
+PROCEDURE RegControls_Get_AllNames_GR();cdecl;
+// Same as RegControls_Get_AllNames but uses global result (GR) pointers
+begin
+   RegControls_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function RegControls_Get_CTPrimary():Double;cdecl;
 var

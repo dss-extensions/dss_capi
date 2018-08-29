@@ -6,6 +6,7 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE Fuses_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Fuses_Get_AllNames_GR();cdecl;
 function Fuses_Get_Count():Integer;cdecl;
 function Fuses_Get_First():Integer;cdecl;
 function Fuses_Get_Name():PAnsiChar;cdecl;
@@ -73,6 +74,12 @@ Begin
     End;
 
 end;
+PROCEDURE Fuses_Get_AllNames_GR();cdecl;
+// Same as Fuses_Get_AllNames but uses global result (GR) pointers
+begin
+   Fuses_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Fuses_Get_Count():Integer;cdecl;
 begin

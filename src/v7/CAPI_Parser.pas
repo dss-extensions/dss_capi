@@ -23,8 +23,11 @@ function Parser_Get_Delimiters():PAnsiChar;cdecl;
 procedure Parser_Set_Delimiters(const Value: PAnsiChar);cdecl;
 procedure Parser_ResetDelimiters();cdecl;
 PROCEDURE Parser_Get_Vector(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedSize: Integer);cdecl;
+PROCEDURE Parser_Get_Vector_GR(ExpectedSize: Integer);cdecl;
 PROCEDURE Parser_Get_Matrix(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedOrder: Integer);cdecl;
+PROCEDURE Parser_Get_Matrix_GR(ExpectedOrder: Integer);cdecl;
 PROCEDURE Parser_Get_SymMatrix(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedOrder: Integer);cdecl;
+PROCEDURE Parser_Get_SymMatrix_GR(ExpectedOrder: Integer);cdecl;
 
 IMPLEMENTATION
 
@@ -166,6 +169,12 @@ begin
 
     Reallocmem(VectorBuffer, 0);
 end;
+PROCEDURE Parser_Get_Vector_GR(ExpectedSize: Integer);cdecl;
+// Same as Parser_Get_Vector but uses global result (GR) pointers
+begin
+   Parser_Get_Vector(GR_DataPtr_PDouble, GR_CountPtr_PDouble, ExpectedSize)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Parser_Get_Matrix(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedOrder: Integer);cdecl;
 VAR
@@ -182,6 +191,12 @@ begin
 
     Reallocmem(MatrixBuffer, 0);
 end;
+PROCEDURE Parser_Get_Matrix_GR(ExpectedOrder: Integer);cdecl;
+// Same as Parser_Get_Matrix but uses global result (GR) pointers
+begin
+   Parser_Get_Matrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble, ExpectedOrder)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Parser_Get_SymMatrix(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedOrder: Integer);cdecl;
 VAR
@@ -199,6 +214,12 @@ begin
     Reallocmem(MatrixBuffer, 0);
 
 end;
+PROCEDURE Parser_Get_SymMatrix_GR(ExpectedOrder: Integer);cdecl;
+// Same as Parser_Get_SymMatrix but uses global result (GR) pointers
+begin
+   Parser_Get_SymMatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble, ExpectedOrder)
+end;
+
 //------------------------------------------------------------------------------
 initialization
   ComParser := ParserDel.TParser.Create;  // create COM Parser object

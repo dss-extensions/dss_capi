@@ -6,6 +6,7 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Capacitors_Get_AllNames_GR();cdecl;
 function Capacitors_Get_First():Integer;cdecl;
 function Capacitors_Get_IsDelta():WordBool;cdecl;
 function Capacitors_Get_kV():Double;cdecl;
@@ -23,6 +24,7 @@ function Capacitors_AddStep():WordBool;cdecl;
 function Capacitors_SubtractStep():WordBool;cdecl;
 function Capacitors_Get_AvailableSteps():Integer;cdecl;
 PROCEDURE Capacitors_Get_States(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Capacitors_Get_States_GR();cdecl;
 procedure Capacitors_Set_States(ValuePtr: PInteger; ValueCount: Integer);cdecl;
 procedure Capacitors_Open();cdecl;
 procedure Capacitors_Close();cdecl;
@@ -70,6 +72,12 @@ Begin
     End;
   End;
 end;
+PROCEDURE Capacitors_Get_AllNames_GR();cdecl;
+// Same as Capacitors_Get_AllNames but uses global result (GR) pointers
+begin
+   Capacitors_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Capacitors_Get_First():Integer;cdecl;
 Var
@@ -271,6 +279,12 @@ Begin
   End;
 
 end;
+PROCEDURE Capacitors_Get_States_GR();cdecl;
+// Same as Capacitors_Get_States but uses global result (GR) pointers
+begin
+   Capacitors_Get_States(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+end;
+
 //------------------------------------------------------------------------------
 procedure Capacitors_Set_States(ValuePtr: PInteger; ValueCount: Integer);cdecl;
 VAR

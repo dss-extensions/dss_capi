@@ -7,6 +7,7 @@ USES CAPI_Utils;
 
 function SwtControls_Get_Action():Integer;cdecl;
 PROCEDURE SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE SwtControls_Get_AllNames_GR();cdecl;
 function SwtControls_Get_Delay():Double;cdecl;
 function SwtControls_Get_First():Integer;cdecl;
 function SwtControls_Get_IsLocked():WordBool;cdecl;
@@ -84,6 +85,12 @@ Begin
     End;
   End;
 end;
+PROCEDURE SwtControls_Get_AllNames_GR();cdecl;
+// Same as SwtControls_Get_AllNames but uses global result (GR) pointers
+begin
+   SwtControls_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function SwtControls_Get_Delay():Double;cdecl;
 var

@@ -8,7 +8,9 @@ USES CAPI_Utils;
 function Topology_Get_NumLoops():Integer;cdecl;
 function Topology_Get_ActiveBranch():Integer;cdecl;
 PROCEDURE Topology_Get_AllIsolatedBranches(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Topology_Get_AllIsolatedBranches_GR();cdecl;
 PROCEDURE Topology_Get_AllLoopedPairs(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Topology_Get_AllLoopedPairs_GR();cdecl;
 function Topology_Get_BackwardBranch():Integer;cdecl;
 function Topology_Get_BranchName():PAnsiChar;cdecl;
 function Topology_Get_First():Integer;cdecl;
@@ -19,6 +21,7 @@ function Topology_Get_NumIsolatedBranches():Integer;cdecl;
 function Topology_Get_ParallelBranch():Integer;cdecl;
 procedure Topology_Set_BranchName(const Value: PAnsiChar);cdecl;
 PROCEDURE Topology_Get_AllIsolatedLoads(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Topology_Get_AllIsolatedLoads_GR();cdecl;
 function Topology_Get_FirstLoad():Integer;cdecl;
 function Topology_Get_NextLoad():Integer;cdecl;
 function Topology_Get_NumIsolatedLoads():Integer;cdecl;
@@ -108,6 +111,12 @@ begin
   end;
   SetLength(Result, 0);
 end;
+PROCEDURE Topology_Get_AllIsolatedBranches_GR();cdecl;
+// Same as Topology_Get_AllIsolatedBranches but uses global result (GR) pointers
+begin
+   Topology_Get_AllIsolatedBranches(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Topology_Get_AllLoopedPairs(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
@@ -153,6 +162,12 @@ begin
   end;
   SetLength(Result, 0);
 end;
+PROCEDURE Topology_Get_AllLoopedPairs_GR();cdecl;
+// Same as Topology_Get_AllLoopedPairs but uses global result (GR) pointers
+begin
+   Topology_Get_AllLoopedPairs(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Topology_Get_BackwardBranch():Integer;cdecl;
 var
@@ -324,6 +339,12 @@ begin
   end;
   SetLength(Result, 0);
 end;
+PROCEDURE Topology_Get_AllIsolatedLoads_GR();cdecl;
+// Same as Topology_Get_AllIsolatedLoads but uses global result (GR) pointers
+begin
+   Topology_Get_AllIsolatedLoads(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Topology_Get_FirstLoad():Integer;cdecl;
 var

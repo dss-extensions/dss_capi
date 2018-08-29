@@ -6,6 +6,7 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE ISources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE ISources_Get_AllNames_GR();cdecl;
 function ISources_Get_Count():Integer;cdecl;
 function ISources_Get_First():Integer;cdecl;
 function ISources_Get_Next():Integer;cdecl;
@@ -49,6 +50,12 @@ Begin
     End;
 
 end;
+PROCEDURE ISources_Get_AllNames_GR();cdecl;
+// Same as ISources_Get_AllNames but uses global result (GR) pointers
+begin
+   ISources_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function ISources_Get_Count():Integer;cdecl;
 Begin

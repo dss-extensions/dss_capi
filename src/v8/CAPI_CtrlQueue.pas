@@ -17,6 +17,7 @@ procedure CtrlQueue_Set_Action(Param1: Integer);cdecl;
 function CtrlQueue_Get_QueueSize():Integer;cdecl;
 procedure CtrlQueue_DoAllQueue();cdecl;
 PROCEDURE CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE CtrlQueue_Get_Queue_GR();cdecl;
 
 IMPLEMENTATION
 
@@ -145,6 +146,12 @@ begin
       else Result[0]:=DSS_CopyStringAsPChar('No events');
 
 end;
+PROCEDURE CtrlQueue_Get_Queue_GR();cdecl;
+// Same as CtrlQueue_Get_Queue but uses global result (GR) pointers
+begin
+   CtrlQueue_Get_Queue(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 procedure TCOMControlProxyObj.DoPendingAction(const Code, ProxyHdl: Integer; ActorID : Integer);
 Var

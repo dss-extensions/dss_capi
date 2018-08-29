@@ -55,6 +55,7 @@ function Solution_Get_DefaultYearly():PAnsiChar;cdecl;
 procedure Solution_Set_DefaultDaily(const Value: PAnsiChar);cdecl;
 procedure Solution_Set_DefaultYearly(const Value: PAnsiChar);cdecl;
 PROCEDURE Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_EventLog_GR();cdecl;
 function Solution_Get_dblHour():Double;cdecl;
 procedure Solution_Set_dblHour(Value: Double);cdecl;
 procedure Solution_Set_StepsizeHr(Value: Double);cdecl;
@@ -446,6 +447,12 @@ begin
     Else Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);;
 
 end;
+PROCEDURE Solution_Get_EventLog_GR();cdecl;
+// Same as Solution_Get_EventLog but uses global result (GR) pointers
+begin
+   Solution_Get_EventLog(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Solution_Get_dblHour():Double;cdecl;
 begin

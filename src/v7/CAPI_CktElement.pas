@@ -6,22 +6,31 @@ INTERFACE
 USES CAPI_Utils;
 
 PROCEDURE CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_BusNames_GR();cdecl;
 function CktElement_Get_Name():PAnsiChar;cdecl;
 function CktElement_Get_NumConductors():Integer;cdecl;
 function CktElement_Get_NumPhases():Integer;cdecl;
 function CktElement_Get_NumTerminals():Integer;cdecl;
 procedure CktElement_Set_BusNames(ValuePtr: PPAnsiChar; ValueCount: Integer);cdecl;
 PROCEDURE CktElement_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_Currents_GR();cdecl;
 PROCEDURE CktElement_Get_Voltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_Voltages_GR();cdecl;
 function CktElement_Get_EmergAmps():Double;cdecl;
 function CktElement_Get_Enabled():WordBool;cdecl;
 PROCEDURE CktElement_Get_Losses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_Losses_GR();cdecl;
 function CktElement_Get_NormalAmps():Double;cdecl;
 PROCEDURE CktElement_Get_PhaseLosses(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_PhaseLosses_GR();cdecl;
 PROCEDURE CktElement_Get_Powers(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_Powers_GR();cdecl;
 PROCEDURE CktElement_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_SeqCurrents_GR();cdecl;
 PROCEDURE CktElement_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_SeqPowers_GR();cdecl;
 PROCEDURE CktElement_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_SeqVoltages_GR();cdecl;
 procedure CktElement_Close(Term, Phs: Integer);cdecl;
 procedure CktElement_Open(Term, Phs: Integer);cdecl;
 procedure CktElement_Set_EmergAmps(Value: Double);cdecl;
@@ -29,9 +38,12 @@ procedure CktElement_Set_Enabled(Value: WordBool);cdecl;
 procedure CktElement_Set_NormalAmps(Value: Double);cdecl;
 function CktElement_IsOpen(Term, Phs: Integer):WordBool;cdecl;
 PROCEDURE CktElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_AllPropertyNames_GR();cdecl;
 function CktElement_Get_NumProperties():Integer;cdecl;
 PROCEDURE CktElement_Get_Residuals(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_Residuals_GR();cdecl;
 PROCEDURE CktElement_Get_Yprim(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_Yprim_GR();cdecl;
 function CktElement_Get_DisplayName():PAnsiChar;cdecl;
 function CktElement_Get_GUID():PAnsiChar;cdecl;
 function CktElement_Get_Handle():Integer;cdecl;
@@ -41,18 +53,25 @@ function CktElement_Get_EnergyMeter():PAnsiChar;cdecl;
 function CktElement_Get_HasVoltControl():WordBool;cdecl;
 function CktElement_Get_HasSwitchControl():WordBool;cdecl;
 PROCEDURE CktElement_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_CplxSeqVoltages_GR();cdecl;
 PROCEDURE CktElement_Get_CplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_CplxSeqCurrents_GR();cdecl;
 PROCEDURE CktElement_Get_AllVariableNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_AllVariableNames_GR();cdecl;
 PROCEDURE CktElement_Get_AllVariableValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_AllVariableValues_GR();cdecl;
 function CktElement_Get_Variable(const MyVarName: PAnsiChar;  out Code: Integer):Double;cdecl;
 function CktElement_Get_Variablei(Idx: Integer;  out Code: Integer):Double;cdecl;
 PROCEDURE CktElement_Get_NodeOrder(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_NodeOrder_GR();cdecl;
 function CktElement_Get_HasOCPDevice():WordBool;cdecl;
 function CktElement_Get_NumControls():Integer;cdecl;
 function CktElement_Get_OCPDevIndex():Integer;cdecl;
 function CktElement_Get_OCPDevType():Integer;cdecl;
 PROCEDURE CktElement_Get_CurrentsMagAng(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_CurrentsMagAng_GR();cdecl;
 PROCEDURE CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE CktElement_Get_VoltagesMagAng_GR();cdecl;
 
 IMPLEMENTATION
 
@@ -185,6 +204,12 @@ begin
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
+PROCEDURE CktElement_Get_BusNames_GR();cdecl;
+// Same as CktElement_Get_BusNames but uses global result (GR) pointers
+begin
+   CktElement_Get_BusNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function CktElement_Get_Name_AnsiString():AnsiString;inline;
 begin
@@ -287,6 +312,12 @@ Begin
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
+PROCEDURE CktElement_Get_Currents_GR();cdecl;
+// Same as CktElement_Get_Currents but uses global result (GR) pointers
+begin
+   CktElement_Get_Currents(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE CktElement_Get_Voltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Bus Voltages at active terminal
@@ -326,6 +357,12 @@ Begin
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
+PROCEDURE CktElement_Get_Voltages_GR();cdecl;
+// Same as CktElement_Get_Voltages but uses global result (GR) pointers
+begin
+   CktElement_Get_Voltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function CktElement_Get_EmergAmps():Double;cdecl;
 begin
@@ -377,6 +414,12 @@ begin
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
+PROCEDURE CktElement_Get_Losses_GR();cdecl;
+// Same as CktElement_Get_Losses but uses global result (GR) pointers
+begin
+   CktElement_Get_Losses(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function CktElement_Get_NormalAmps():Double;cdecl;
 begin
@@ -426,6 +469,12 @@ Begin
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
+PROCEDURE CktElement_Get_PhaseLosses_GR();cdecl;
+// Same as CktElement_Get_PhaseLosses but uses global result (GR) pointers
+begin
+   CktElement_Get_PhaseLosses(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE CktElement_Get_Powers(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Return complex kW, kvar in each conductor for each terminal
@@ -460,6 +509,12 @@ Begin
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
+PROCEDURE CktElement_Get_Powers_GR();cdecl;
+// Same as CktElement_Get_Powers but uses global result (GR) pointers
+begin
+   CktElement_Get_Powers(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE CktElement_Get_SeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // All sequence currents of active ciruit element
@@ -510,6 +565,12 @@ Begin
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
+PROCEDURE CktElement_Get_SeqCurrents_GR();cdecl;
+// Same as CktElement_Get_SeqCurrents but uses global result (GR) pointers
+begin
+   CktElement_Get_SeqCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE CktElement_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // All seq Powers of active 3-phase ciruit element
@@ -585,6 +646,12 @@ Begin
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
+PROCEDURE CktElement_Get_SeqPowers_GR();cdecl;
+// Same as CktElement_Get_SeqPowers but uses global result (GR) pointers
+begin
+   CktElement_Get_SeqPowers(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE CktElement_Get_SeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // All voltages of active ciruit element
@@ -638,6 +705,12 @@ Begin
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
+PROCEDURE CktElement_Get_SeqVoltages_GR();cdecl;
+// Same as CktElement_Get_SeqVoltages but uses global result (GR) pointers
+begin
+   CktElement_Get_SeqVoltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure CktElement_Close(Term, Phs: Integer);cdecl;
 Begin
@@ -756,6 +829,12 @@ begin
      End
    End;
 end;
+PROCEDURE CktElement_Get_AllPropertyNames_GR();cdecl;
+// Same as CktElement_Get_AllPropertyNames but uses global result (GR) pointers
+begin
+   CktElement_Get_AllPropertyNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function CktElement_Get_NumProperties():Integer;cdecl;
 begin
@@ -808,6 +887,12 @@ Begin
      Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE CktElement_Get_Residuals_GR();cdecl;
+// Same as CktElement_Get_Residuals but uses global result (GR) pointers
+begin
+   CktElement_Get_Residuals(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE CktElement_Get_Yprim(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 { Return the YPrim matrix for this element }
@@ -845,6 +930,12 @@ begin
       ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
+PROCEDURE CktElement_Get_Yprim_GR();cdecl;
+// Same as CktElement_Get_Yprim but uses global result (GR) pointers
+begin
+   CktElement_Get_Yprim(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function CktElement_Get_DisplayName_AnsiString():AnsiString;inline;
 begin
@@ -1020,6 +1111,12 @@ Begin
   ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE CktElement_Get_CplxSeqVoltages_GR();cdecl;
+// Same as CktElement_Get_CplxSeqVoltages but uses global result (GR) pointers
+begin
+   CktElement_Get_CplxSeqVoltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE CktElement_Get_CplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 {returns Seq Voltages as array of complex values}
@@ -1075,6 +1172,12 @@ Begin
 
 
 end;
+PROCEDURE CktElement_Get_CplxSeqCurrents_GR();cdecl;
+// Same as CktElement_Get_CplxSeqCurrents but uses global result (GR) pointers
+begin
+   CktElement_Get_CplxSeqCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE CktElement_Get_AllVariableNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
@@ -1107,6 +1210,12 @@ begin
    End;
 
 end;
+PROCEDURE CktElement_Get_AllVariableNames_GR();cdecl;
+// Same as CktElement_Get_AllVariableNames but uses global result (GR) pointers
+begin
+   CktElement_Get_AllVariableNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE CktElement_Get_AllVariableValues(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 {Return array of doubles with values of all variables if PCElement}
@@ -1140,6 +1249,12 @@ begin
    End;
 
 end;
+PROCEDURE CktElement_Get_AllVariableValues_GR();cdecl;
+// Same as CktElement_Get_AllVariableValues but uses global result (GR) pointers
+begin
+   CktElement_Get_AllVariableValues(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 function CktElement_Get_Variable(const MyVarName: PAnsiChar;  out Code: Integer):Double;cdecl;
 Var
@@ -1233,6 +1348,12 @@ begin
 
 
 end;
+PROCEDURE CktElement_Get_NodeOrder_GR();cdecl;
+// Same as CktElement_Get_NodeOrder but uses global result (GR) pointers
+begin
+   CktElement_Get_NodeOrder(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+end;
+
 //------------------------------------------------------------------------------
 function CktElement_Get_HasOCPDevice():WordBool;cdecl;
 // Check for presence of a fuse, recloser, etc.
@@ -1316,6 +1437,12 @@ Begin
      Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE CktElement_Get_CurrentsMagAng_GR();cdecl;
+// Same as CktElement_Get_CurrentsMagAng but uses global result (GR) pointers
+begin
+   CktElement_Get_CurrentsMagAng(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 // Bus Voltages in magnitude, angle at all terminal
@@ -1352,5 +1479,11 @@ Begin
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
 end;
+PROCEDURE CktElement_Get_VoltagesMagAng_GR();cdecl;
+// Same as CktElement_Get_VoltagesMagAng but uses global result (GR) pointers
+begin
+   CktElement_Get_VoltagesMagAng(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 END.

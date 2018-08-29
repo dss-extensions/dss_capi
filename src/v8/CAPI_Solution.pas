@@ -55,6 +55,7 @@ function Solution_Get_DefaultYearly():PAnsiChar;cdecl;
 procedure Solution_Set_DefaultDaily(const Value: PAnsiChar);cdecl;
 procedure Solution_Set_DefaultYearly(const Value: PAnsiChar);cdecl;
 PROCEDURE Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_EventLog_GR();cdecl;
 function Solution_Get_dblHour():Double;cdecl;
 procedure Solution_Set_dblHour(Value: Double);cdecl;
 procedure Solution_Set_StepsizeHr(Value: Double);cdecl;
@@ -94,9 +95,13 @@ function Solution_Get_MinIterations():Integer;cdecl;
 procedure Solution_Set_MinIterations(Value: Integer);cdecl;
 procedure Solution_SolveAll();cdecl;
 PROCEDURE Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_IncMatrix_GR();cdecl;
 PROCEDURE Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_BusLevels_GR();cdecl;
 PROCEDURE Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_IncMatrixRows_GR();cdecl;
 PROCEDURE Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_IncMatrixCols_GR();cdecl;
 
 IMPLEMENTATION
 
@@ -451,6 +456,12 @@ begin
     Else Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);;
 
 end;
+PROCEDURE Solution_Get_EventLog_GR();cdecl;
+// Same as Solution_Get_EventLog but uses global result (GR) pointers
+begin
+   Solution_Get_EventLog(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 function Solution_Get_dblHour():Double;cdecl;
 begin
@@ -755,6 +766,12 @@ begin
     END
     Else Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
 end;
+PROCEDURE Solution_Get_IncMatrix_GR();cdecl;
+// Same as Solution_Get_IncMatrix but uses global result (GR) pointers
+begin
+   Solution_Get_IncMatrix(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 VAR
@@ -778,6 +795,12 @@ begin
       END
       Else Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
 end;
+PROCEDURE Solution_Get_BusLevels_GR();cdecl;
+// Same as Solution_Get_BusLevels but uses global result (GR) pointers
+begin
+   Solution_Get_BusLevels(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
@@ -800,6 +823,12 @@ begin
       END
       Else Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 end;
+PROCEDURE Solution_Get_IncMatrixRows_GR();cdecl;
+// Same as Solution_Get_IncMatrixRows but uses global result (GR) pointers
+begin
+   Solution_Get_IncMatrixRows(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
 VAR
@@ -833,5 +862,11 @@ begin
      End
      Else Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 end;
+PROCEDURE Solution_Get_IncMatrixCols_GR();cdecl;
+// Same as Solution_Get_IncMatrixCols but uses global result (GR) pointers
+begin
+   Solution_Get_IncMatrixCols(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 END.

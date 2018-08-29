@@ -28,8 +28,11 @@ function LineCodes_Get_C1():Double;cdecl;
 procedure LineCodes_Set_C0(Value: Double);cdecl;
 procedure LineCodes_Set_C1(Value: Double);cdecl;
 PROCEDURE LineCodes_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE LineCodes_Get_Cmatrix_GR();cdecl;
 PROCEDURE LineCodes_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE LineCodes_Get_Rmatrix_GR();cdecl;
 PROCEDURE LineCodes_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+PROCEDURE LineCodes_Get_Xmatrix_GR();cdecl;
 procedure LineCodes_Set_Cmatrix(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 procedure LineCodes_Set_Rmatrix(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 procedure LineCodes_Set_Xmatrix(ValuePtr: PDouble; ValueCount: Integer);cdecl;
@@ -38,6 +41,7 @@ procedure LineCodes_Set_NormAmps(Value: Double);cdecl;
 function LineCodes_Get_EmergAmps():Double;cdecl;
 procedure LineCodes_Set_EmergAmps(Value: Double);cdecl;
 PROCEDURE LineCodes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE LineCodes_Get_AllNames_GR();cdecl;
 
 IMPLEMENTATION
 
@@ -383,6 +387,12 @@ begin
   End;
 
 end;
+PROCEDURE LineCodes_Get_Cmatrix_GR();cdecl;
+// Same as LineCodes_Get_Cmatrix but uses global result (GR) pointers
+begin
+   LineCodes_Get_Cmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE LineCodes_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -409,6 +419,12 @@ begin
   End;
 
 end;
+PROCEDURE LineCodes_Get_Rmatrix_GR();cdecl;
+// Same as LineCodes_Get_Rmatrix but uses global result (GR) pointers
+begin
+   LineCodes_Get_Rmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 PROCEDURE LineCodes_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
 VAR
@@ -434,6 +450,12 @@ begin
   End;
 
 end;
+PROCEDURE LineCodes_Get_Xmatrix_GR();cdecl;
+// Same as LineCodes_Get_Xmatrix but uses global result (GR) pointers
+begin
+   LineCodes_Get_Xmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_Cmatrix(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 VAR
@@ -591,5 +613,11 @@ Begin
      End;
 
 end;
+PROCEDURE LineCodes_Get_AllNames_GR();cdecl;
+// Same as LineCodes_Get_AllNames but uses global result (GR) pointers
+begin
+   LineCodes_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 END.
