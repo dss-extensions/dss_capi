@@ -262,6 +262,9 @@ implementation
 
 USES  {Forms,   Controls,}
      SysUtils,
+     {$IFDEF DSS_CAPI}
+     CAPI_Metadata,
+     {$ENDIF}
      {$IFDEF FPC}
      resource, versiontypes, versionresource, dynlibs, CmdForms,
      {$ELSE}
@@ -549,6 +552,15 @@ Begin
 End;
 
 
+{$IFDEF DSS_CAPI}
+FUNCTION GetDSSVersion: String;
+BEGIN
+    Result := 'DSS C-API Library version ' + DSS_CAPI_VERSION + 
+              ' revision ' + DSS_CAPI_REV + 
+              ' based on OpenDSS SVN ' + DSS_CAPI_SVN_REV +
+              ' (v7/classic variation)';
+END;
+{$ELSE}
 {$IFDEF FPC}
 FUNCTION GetDSSVersion: String;
 (* Unlike most of AboutText (below), this takes significant activity at run-    *)
@@ -615,6 +627,7 @@ Begin
     end;
 End;
 {$ENDIF}
+{$ENDIF} //IFDEF DSS_CAPI
 
 PROCEDURE WriteDLLDebugFile(Const S:String);
 
@@ -863,10 +876,18 @@ initialization
    DSSDirectory     := ExtractFilePath(DSSFileName);
    // want to know if this was built for 64-bit, not whether running on 64 bits
    // (i.e. we could have a 32-bit build running on 64 bits; not interested in that
+{$IFDEF DSS_CAPI}   
+{$IFDEF CPUX64}
+   VersionString    := GetDSSVersion + ' (64-bit build)';
+{$ELSE ! CPUX86}
+   VersionString    := GetDSSVersion + ' (32-bit build)';
+{$ENDIF}
+{$ELSE}
 {$IFDEF CPUX64}
    VersionString    := 'Version ' + GetDSSVersion + ' (64-bit build)';
 {$ELSE ! CPUX86}
    VersionString    := 'Version ' + GetDSSVersion + ' (32-bit build)';
+{$ENDIF}
 {$ENDIF}
 
    StartupDirectory := GetCurrentDir + PathDelim;
