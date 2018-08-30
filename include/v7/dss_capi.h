@@ -5244,6 +5244,26 @@ extern "C" {
     DSS_CAPI_V7_DLL void LineGeometries_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
     DSS_CAPI_V7_DLL void LineGeometries_Get_AllNames_GR();
 
+    DSS_CAPI_V7_DLL int32_t LineSpacings_Get_Count();
+    DSS_CAPI_V7_DLL int32_t LineSpacings_Get_First();
+    DSS_CAPI_V7_DLL int32_t LineSpacings_Get_Next();
+    DSS_CAPI_V7_DLL char* LineSpacings_Get_Name();
+    DSS_CAPI_V7_DLL void LineSpacings_Set_Name(char* Value);
+    DSS_CAPI_V7_DLL int32_t LineSpacings_Get_Nconds();
+    DSS_CAPI_V7_DLL void LineSpacings_Set_Nconds(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t LineSpacings_Get_Phases();
+    DSS_CAPI_V7_DLL void LineSpacings_Set_Phases(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t LineSpacings_Get_Units();
+    DSS_CAPI_V7_DLL void LineSpacings_Set_Units(int32_t Value);
+    DSS_CAPI_V7_DLL void LineSpacings_Get_Xcoords(double** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_V7_DLL void LineSpacings_Get_Xcoords_GR();
+    DSS_CAPI_V7_DLL void LineSpacings_Set_Xcoords(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_V7_DLL void LineSpacings_Get_Ycoords(double** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_V7_DLL void LineSpacings_Get_Ycoords_GR();
+    DSS_CAPI_V7_DLL void LineSpacings_Set_Ycoords(double* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_V7_DLL void LineSpacings_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_V7_DLL void LineSpacings_Get_AllNames_GR();
+    
 #ifdef __cplusplus
 } // extern "C"
 #endif

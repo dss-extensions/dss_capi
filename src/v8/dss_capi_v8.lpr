@@ -225,6 +225,7 @@ uses
     CAPI_Isources in 'CAPI_Isources.pas',
     CAPI_LineCodes in 'CAPI_LineCodes.pas',
     CAPI_LineGeometries in 'CAPI_LineGeometries.pas', // API extension
+    CAPI_LineSpacings in 'CAPI_LineSpacings.pas', // API extension
     CAPI_Lines in 'CAPI_Lines.pas',
     CAPI_Loads in 'CAPI_Loads.pas',
     CAPI_LoadShapes in 'CAPI_LoadShapes.pas',
@@ -1496,7 +1497,27 @@ exports
     LineGeometries_Get_EmergAmps,
     LineGeometries_Set_EmergAmps,
     LineGeometries_Get_AllNames,
-    LineGeometries_Get_AllNames_GR;
+    LineGeometries_Get_AllNames_GR,
+    
+    LineSpacings_Get_Count, 
+    LineSpacings_Get_First, 
+    LineSpacings_Get_Next, 
+    LineSpacings_Get_Name, 
+    LineSpacings_Set_Name, 
+    LineSpacings_Get_Nconds, 
+    LineSpacings_Set_Nconds, 
+    LineSpacings_Get_Phases, 
+    LineSpacings_Set_Phases, 
+    LineSpacings_Get_Units, 
+    LineSpacings_Set_Units, 
+    LineSpacings_Get_Xcoords, 
+    LineSpacings_Get_Xcoords_GR, 
+    LineSpacings_Set_Xcoords, 
+    LineSpacings_Get_Ycoords, 
+    LineSpacings_Get_Ycoords_GR, 
+    LineSpacings_Set_Ycoords, 
+    LineSpacings_Get_AllNames, 
+    LineSpacings_Get_AllNames_GR;
 
 begin
   IsDLL := TRUE;
