@@ -220,8 +220,8 @@ uses
     CAPI_Isources in 'CAPI_Isources.pas',
     CAPI_LineCodes in 'CAPI_LineCodes.pas',
     CAPI_LineGeometries in 'CAPI_LineGeometries.pas', // API extension
-    CAPI_LineSpacings in 'CAPI_LineSpacings.pas', // API extension
     CAPI_Lines in 'CAPI_Lines.pas',
+    CAPI_LineSpacings in 'CAPI_LineSpacings.pas', // API extension
     CAPI_Loads in 'CAPI_Loads.pas',
     CAPI_LoadShapes in 'CAPI_LoadShapes.pas',
     CAPI_Meters in 'CAPI_Meters.pas',
@@ -240,6 +240,7 @@ uses
     CAPI_Topology in 'CAPI_Topology.pas',
     CAPI_Transformers in 'CAPI_Transformers.pas',
     CAPI_Vsources in 'CAPI_Vsources.pas',
+    CAPI_WireData in 'CAPI_WireData.pas', // API extension
     CAPI_XYCurves in 'CAPI_XYCurves.pas',
     CAPI_YMatrix in 'CAPI_YMatrix.pas';
 
@@ -1485,8 +1486,36 @@ exports
     LineSpacings_Get_Ycoords_GR, 
     LineSpacings_Set_Ycoords, 
     LineSpacings_Get_AllNames, 
-    LineSpacings_Get_AllNames_GR;
-
+    LineSpacings_Get_AllNames_GR,
+    
+    WireData_Get_Count,
+    WireData_Get_First,
+    WireData_Get_Next,
+    WireData_Get_Name,
+    WireData_Set_Name,
+    WireData_Get_AllNames,
+    WireData_Get_AllNames_GR,
+    WireData_Get_Rdc,
+    WireData_Set_Rdc,
+    WireData_Get_Rac,
+    WireData_Set_Rac,
+    WireData_Get_GMRac,
+    WireData_Set_GMRac,
+    WireData_Get_GMRUnits,
+    WireData_Set_GMRUnits,
+    WireData_Get_Radius,
+    WireData_Set_Radius,
+    WireData_Get_RadiusUnits,
+    WireData_Set_RadiusUnits,
+    WireData_Get_ResistanceUnits,
+    WireData_Set_ResistanceUnits,
+    WireData_Get_Diameter,
+    WireData_Set_Diameter,
+    WireData_Get_NormAmps,
+    WireData_Set_NormAmps,
+    WireData_Get_EmergAmps,
+    WireData_Set_EmergAmps;
+    
 begin
   IsDLL := TRUE;
   DSSExecutive := TExecutive.Create;

@@ -5315,6 +5315,34 @@ extern "C" {
     DSS_CAPI_V8_DLL void LineSpacings_Set_Ycoords(double* ValuePtr, int32_t ValueCount);
     DSS_CAPI_V8_DLL void LineSpacings_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
     DSS_CAPI_V8_DLL void LineSpacings_Get_AllNames_GR();
+
+    DSS_CAPI_V8_DLL int32_t WireData_Get_Count();
+    DSS_CAPI_V8_DLL int32_t WireData_Get_First();
+    DSS_CAPI_V8_DLL int32_t WireData_Get_Next();
+    DSS_CAPI_V8_DLL char* WireData_Get_Name();
+    DSS_CAPI_V8_DLL void WireData_Set_Name(char* Value);
+    DSS_CAPI_V8_DLL void WireData_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_V8_DLL void WireData_Get_AllNames_GR();
+    DSS_CAPI_V8_DLL double WireData_Get_Rdc();
+    DSS_CAPI_V8_DLL void WireData_Set_Rdc(double Value);
+    DSS_CAPI_V8_DLL double WireData_Get_Rac();
+    DSS_CAPI_V8_DLL void WireData_Set_Rac(double Value);
+    DSS_CAPI_V8_DLL double WireData_Get_GMRac();
+    DSS_CAPI_V8_DLL void WireData_Set_GMRac(double Value);
+    DSS_CAPI_V8_DLL int32_t WireData_Get_GMRUnits();
+    DSS_CAPI_V8_DLL void WireData_Set_GMRUnits(int32_t Value);
+    DSS_CAPI_V8_DLL double WireData_Get_Radius();
+    DSS_CAPI_V8_DLL void WireData_Set_Radius(double Value);
+    DSS_CAPI_V8_DLL int32_t WireData_Get_RadiusUnits();
+    DSS_CAPI_V8_DLL void WireData_Set_RadiusUnits(int32_t Value);
+    DSS_CAPI_V8_DLL int32_t WireData_Get_ResistanceUnits();
+    DSS_CAPI_V8_DLL void WireData_Set_ResistanceUnits(int32_t Value);
+    DSS_CAPI_V8_DLL double WireData_Get_Diameter();
+    DSS_CAPI_V8_DLL void WireData_Set_Diameter(double Value);
+    DSS_CAPI_V8_DLL double WireData_Get_NormAmps();
+    DSS_CAPI_V8_DLL void WireData_Set_NormAmps(double Value);
+    DSS_CAPI_V8_DLL double WireData_Get_EmergAmps();
+    DSS_CAPI_V8_DLL void WireData_Set_EmergAmps(double Value);
     
 #ifdef __cplusplus
 } // extern "C"
