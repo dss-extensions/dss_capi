@@ -43,7 +43,11 @@ TYPE
   end;
 
   TConductorDataObj = class(TDSSObject)
+{$IFDEF DSS_CAPI}
+    public
+{$ELSE}
     private
+{$ENDIF}
       FRDC              :Double;
       FR60              :Double;
       FGMR60            :Double;
