@@ -48,16 +48,24 @@ TYPE
         FX           :pDoubleArray;
         FY           :pDoubleArray;
         FUnits       :Integer;
+{$IFNDEF DSS_CAPI}
         DataChanged  :Boolean;
+{$ENDIF}
 
         procedure set_Nwires(const Value: Integer);
 
         // CIM Accessors
         function Get_FX (i: integer) : Double;
         function Get_FY (i: integer) : Double;
-
+{$IFDEF DSS_CAPI}
+        procedure Set_FX(i:Integer; Value: Double);
+        procedure Set_FY(i:Integer; Value: Double);
+        procedure Set_FUnits(Value: Integer);
+{$ENDIF}
       public
-
+{$IFDEF DSS_CAPI}
+        DataChanged  :Boolean;
+{$ENDIF}
         constructor Create(ParClass:TDSSClass; const LineSpacingName:String);
         destructor Destroy; override;
 
@@ -66,11 +74,11 @@ TYPE
         PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean); Override;
 
         // CIM XML accessors
-        Property Xcoord[i:Integer]: Double Read Get_FX;
-        Property Ycoord[i:Integer]: Double Read Get_FY;
+        Property Xcoord[i:Integer]: Double Read Get_FX{$IFDEF DSS_CAPI} Write Set_FX{$ENDIF};
+        Property Ycoord[i:Integer]: Double Read Get_FY{$IFDEF DSS_CAPI} Write Set_FY{$ENDIF};
         Property NWires: Integer Read FNConds Write set_Nwires;
-        Property NPhases: Integer Read FNPhases;
-        Property Units: Integer Read FUnits;
+        Property NPhases: Integer Read FNPhases{$IFDEF DSS_CAPI} Write FNPhases{$ENDIF};
+        Property Units: Integer Read FUnits{$IFDEF DSS_CAPI} Write Set_FUnits{$ENDIF};
    end;
 
 VAR
@@ -360,6 +368,23 @@ function TLineSpacingObj.Get_FY(i:Integer) : Double;
 begin
   If i <= FNConds Then Result := FY^[i] Else Result := 0.0;
 end;
+
+{$IFDEF DSS_CAPI}
+procedure TLineSpacingObj.Set_FX(i:Integer; Value: Double);
+begin
+   If (i > 0) and (i <= FNConds) Then FX^[i] := Value;
+end;
+
+procedure TLineSpacingObj.Set_FY(i:Integer; Value: Double);
+begin
+   If (i > 0) and (i <= FNConds) Then FY^[i] := Value;
+end;
+
+procedure TLineSpacingObj.Set_FUnits(Value: Integer);
+begin
+   FUnits := Value;
+end;
+{$ENDIF}
 
 procedure TLineSpacingObj.InitPropertyValues(ArrayOffset: Integer);
 begin
