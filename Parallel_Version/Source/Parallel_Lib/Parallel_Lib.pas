@@ -28,6 +28,7 @@ type
   end;
 
 implementation
+
     function TParallel_Lib.Set_Thread_Affinity(Hnd : THandle; CPU : integer): Integer;
     var
       CPU_bit   : integer;

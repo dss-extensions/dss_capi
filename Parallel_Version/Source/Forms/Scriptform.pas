@@ -299,9 +299,9 @@ begin
 
          If Not IsDLL Then   ControlPanel.Caption := 'DSS Main Control Panel: Active Circuit = ' + ActiveCircuit[ActiveActor].Name;
         End
-      Else
+        Else
         With Lines Do Begin
-          Add('No Circuits Defined');
+          Add('No Circuits Have been Defined for this Actor');
         End;
 
       {Status ...}

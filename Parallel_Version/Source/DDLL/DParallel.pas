@@ -50,7 +50,12 @@ begin
     Result  :=  ActorCPU[ActiveActor];
   end;
   6: begin  // Parallel.ActorCPU Write
-    if arg < CPU_Cores  then  ActorCPU[ActiveActor] :=  arg
+    if arg < CPU_Cores  then
+    Begin
+      ActorCPU[ActiveActor] :=  arg;
+      if ActorHandle[ActiveActor] <> nil then
+        ActorHandle[ActiveActor].CPU :=  ActorCPU[ActiveActor];
+    End
     else DoSimpleMsg('The CPU does not exists',7004);
   end;
   7: begin  // Parallel.NumActors Read

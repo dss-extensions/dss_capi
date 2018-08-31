@@ -599,8 +599,8 @@ Begin
               if NumOfActors < CPU_Cores then
               begin
                 inc(NumOfActors);
-                GlobalResult  :=  inttostr(NumOfActors);
-                ActiveActor   :=  NumOfActors;
+                GlobalResult          :=  inttostr(NumOfActors);
+                ActiveActor           :=  NumOfActors;
                 ActorCPU[ActiveActor] :=  ActiveActor -1;
                 DSSExecutive := TExecutive.Create;  // Make a DSS object
                 Parser[ActiveActor]   :=  TParser.Create;
@@ -612,7 +612,9 @@ Begin
        106: DoClearAllCmd;
        107: begin
               for i := 1 to NumOfActors do
-                ActorHandle[i].WaitFor;
+              Begin
+                with ActiveCircuit[i].Solution do WaitForActor(i);
+              End;
             end;
        108: begin
               for i := 1 to NumOfActors do

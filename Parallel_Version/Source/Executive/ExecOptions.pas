@@ -464,7 +464,12 @@ Begin
                   end;
                 End;
           113:  Begin
-                  if Parser[ActiveActor].IntValue < CPU_Cores then ActorCPU[ActiveActor]  :=  Parser[ActiveActor].IntValue
+                  if Parser[ActiveActor].IntValue < CPU_Cores then
+                  Begin
+                    ActorCPU[ActiveActor]  :=  Parser[ActiveActor].IntValue;
+                    if ActorHandle[ActiveActor] <> nil then
+                      ActorHandle[ActiveActor].CPU :=  ActorCPU[ActiveActor];
+                  End
                   else
                   begin
                     DoSimpleMsg('The CPU does not exists',7003);
@@ -677,7 +682,12 @@ Begin
                   end;
                 End;
           113:  Begin
-                  if Parser[ActiveActor].IntValue < CPU_Cores then ActorCPU[ActiveActor]  :=  Parser[ActiveActor].IntValue
+                  if Parser[ActiveActor].IntValue < CPU_Cores then
+                  Begin
+                    ActorCPU[ActiveActor]  :=  Parser[ActiveActor].IntValue;
+                    if ActorHandle[ActiveActor] <> nil then
+                      ActorHandle[ActiveActor].CPU :=  ActorCPU[ActiveActor];
+                  End
                   else
                   begin
                     DoSimpleMsg('The CPU does not exists',7003);

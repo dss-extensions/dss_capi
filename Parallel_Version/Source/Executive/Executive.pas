@@ -219,21 +219,21 @@ begin
           ActiveCircuit[ActiveActor].NumCircuits := 0; // <<<< added
           ActiveCircuit[ActiveActor].Free; // <<<< added
           ActiveCircuit[ActiveActor] := nil;
-          if ActorHandle[ActiveActor] <> nil  then    // Terminate the threads that could be alive
-          begin
-            ActorHandle[ActiveActor].Terminate;
-            ActorHandle[ActiveActor].Free;
-            ActorHandle[ActiveActor]  :=  nil;
-          end;
-
           Circuits.Free;
           Circuits := TPointerList.Create(4);   // Make a new list of circuits
-//          ClearAllCircuits;
           DisposeDSSClasses;
             {Now, Start over}
           CreateDSSClasses;
           CreateDefaultDSSItems;
           RebuildHelpForm := True; // because class strings have changed
+          // In case the actor hasn't been destroyed
+          if ActorHandle[ActiveActor] <> nil then
+          Begin
+            ActorHandle[ActiveActor].Send_Message(EXIT_ACTOR);
+            ActorHandle[ActiveActor].WaitFor;
+            ActorHandle[ActiveActor].Free;
+            ActorHandle[ActiveActor]  :=  nil;
+          End;
        End;
 
 
@@ -266,6 +266,7 @@ begin
        {Prepare for new variables}
        ParserVars.Free;
        ParserVars := TParserVar.Create(100);  // start with space for 100 variables
+       ActiveActor  :=  1;
        NumOfActors  :=  1;
 end;
 

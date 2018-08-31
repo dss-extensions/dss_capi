@@ -158,9 +158,9 @@ Begin
      Begin
        If Err Then Result := MessageDlg(Str, mtError , [mbOK], 0)
        Else Result := IntResult(MessageDlg(Str, mtInformation , [mbAbort, mbIgnore], 0))
-     End
-     else
-      ScriptEd.PublishMessage(Str);
+     End;
+//     else
+//      ScriptEd.PublishMessage(Str);
      Result  :=  -1;
 End;
 
@@ -179,8 +179,8 @@ Begin
         If length(msg)<=1024 Then MessageDlg(Msg, mtInformation , [mbOK], 0)
         Else MessageDlg('Message too long; See Result Form.', mtInformation , [mbOK], 0);
      End
-     else
-    ScriptEd.PublishMessage(Str);
+//     else
+//    ScriptEd.PublishMessage(Str);
 End;
 
 

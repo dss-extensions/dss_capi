@@ -203,7 +203,8 @@ uses
   TCP_IP in '..\TCP_IP\TCP_IP.pas',
   ConnectOptions in '..\Executive\ConnectOptions.pas',
   Diakoptics in '..\Common\Diakoptics.pas',
-  Sparse_Math in '..\Common\Sparse_Math.pas';
+  Sparse_Math in '..\Common\Sparse_Math.pas',
+  MeTIS_Exec in '..\Common\MeTIS_Exec.pas';
 
 //**************************end of the functions*************************************
 exports
