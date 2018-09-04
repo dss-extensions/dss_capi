@@ -84,7 +84,7 @@ var
   i : Integer;
 begin
   for i := 1 to NumOfActors do
-  ActorHandle[i].WaitFor;
+    with ActiveCircuit[i].Solution do WaitForActor(i);
 end;
 //------------------------------------------------------------------------------
 PROCEDURE Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
@@ -112,7 +112,10 @@ VAR
 begin
     Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (NumOfActors) - (1) + 1);
     for idx := 1 to NumOfActors do
-      Result[(idx) - (1)] :=  ActorStatus[idx];  
+    Begin
+      if ActorHandle[idx].Is_Busy then Result[(idx) - (1)] :=  0
+      else Result[(idx) - (1)] :=  1;
+    End;
 end;
 PROCEDURE Parallel_Get_ActorStatus_GR();cdecl;
 // Same as Parallel_Get_ActorStatus but uses global result (GR) pointers
