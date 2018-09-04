@@ -12,7 +12,9 @@ unit Sparse_Math;
 
 interface
 
+{$IFNDEF FPC}
 uses dialogs;
+{$ENDIF}
 
   TYPE
     TData = array of integer;
