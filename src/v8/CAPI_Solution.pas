@@ -96,6 +96,8 @@ procedure Solution_Set_MinIterations(Value: Integer);cdecl;
 procedure Solution_SolveAll();cdecl;
 PROCEDURE Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 PROCEDURE Solution_Get_IncMatrix_GR();cdecl;
+PROCEDURE Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_Laplacian_GR();cdecl;
 PROCEDURE Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 PROCEDURE Solution_Get_BusLevels_GR();cdecl;
 PROCEDURE Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
@@ -746,21 +748,66 @@ begin
   end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
 VAR
   Result: PIntegerArray;
+  i,
+  Counter,
   IMIdx,
   Idx,
   ArrSize : Integer;
 begin
-    If ActiveCircuit[ActiveActor] <> Nil Then Begin
-      with ACtiveCircuit[ActiveActor].Solution do
+    If (ActiveCircuit[ActiveActor] <> Nil) and (ActiveCircuit[ActiveActor].Solution.Laplacian <> Nil) Then Begin
+      with ActiveCircuit[ActiveActor].Solution do
       begin
-         ArrSize    :=  length(IncMatrix)-3;
+         ArrSize    :=  Laplacian.NZero*3;
          Result     :=  DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ArrSize) + 1);
-         for IMIdx  :=  0 to ArrSize Do
+         Counter    :=  0;
+         IMIdx      :=  0;
+         while IMIdx  < ArrSize Do
          Begin
-            Result[IMIdx] := IncMatrix[IMIdx+3];
+            for i := 0 to 2 do
+            Begin
+              Result[IMIdx] := Laplacian.data[Counter][i];
+              inc(IMIdx)
+            End;
+            inc(Counter)
+         End;
+      end;
+    END
+    Else Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+end;
+PROCEDURE Solution_Get_Laplacian_GR();cdecl;
+// Same as Solution_Get_Laplacian but uses global result (GR) pointers
+begin
+   Solution_Get_Laplacian(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+end;
+
+//------------------------------------------------------------------------------
+PROCEDURE Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+VAR
+  Result: PIntegerArray;
+  i,
+  Counter,
+  IMIdx,
+  Idx,
+  ArrSize : Integer;
+begin
+    If (ActiveCircuit[ActiveActor] <> Nil) and (ActiveCircuit[ActiveActor].Solution.IncMat <> Nil) Then Begin
+      with ActiveCircuit[ActiveActor].Solution do
+      begin
+         ArrSize    :=  IncMat.NZero*3;
+         Result     :=  DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ArrSize) + 1);
+         Counter    :=  0;
+         IMIdx      :=  0;
+         while IMIdx  < ArrSize Do
+         Begin
+            for i := 0 to 2 do
+            Begin
+              Result[IMIdx] := IncMat.data[Counter][i];
+              inc(IMIdx)
+            End;
+            inc(Counter)
          End;
       end;
     END

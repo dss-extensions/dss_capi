@@ -4509,10 +4509,18 @@ extern "C" {
     DSS_CAPI_V8_DLL void Solution_SolveAll(void);
     
     DSS_CAPI_V8_DLL void Solution_Get_IncMatrix(int32_t** ResultPtr, int32_t* ResultCount);
+    
     /*
     Same as Solution_Get_IncMatrix but using the global buffer interface for results
     */
     DSS_CAPI_V8_DLL void Solution_Get_IncMatrix_GR();
+    
+    DSS_CAPI_V8_DLL void Solution_Get_Laplacian(int32_t** ResultPtr, int32_t* ResultCount);
+    
+    /*
+    Same as Solution_Get_Laplacian but using the global buffer interface for results
+    */
+    DSS_CAPI_V8_DLL void Solution_Get_Laplacian_GR();
     
     DSS_CAPI_V8_DLL void Solution_Get_BusLevels(int32_t** ResultPtr, int32_t* ResultCount);
     /*
