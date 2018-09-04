@@ -2591,7 +2591,7 @@ var
             Else
                 DosimpleMsg('Unknown solution mode.', 481);
             End;
-            QueryPerformanceCounter(GEndTime);
+            {$IFNDEF FPC}QueryPerformanceCounter(GEndTime);{$ENDIF}
             Total_Solve_Time_Elapsed  :=  ((GEndTime-GStartTime)/CPU_Freq)*1000000;
             Total_Time_Elapsed        :=  Total_Time_Elapsed + Total_Solve_Time_Elapsed;
             Processing                :=  False;

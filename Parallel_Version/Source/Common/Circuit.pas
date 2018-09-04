@@ -26,7 +26,7 @@ USES
      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
      AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF}, math,     Sparse_Math,
-     {$IFNDEF FPC}vcl.dialogs,{$ENDIF} MeTIS_Exec;
+     {$IFNDEF FPC}vcl.dialogs, {$ELSE} Process, {$ENDIF} MeTIS_Exec;
 
 
 TYPE
@@ -856,7 +856,7 @@ Begin
         DBLtemp         :=  DBLTemp + Buses_Covered[i];
 {$ELSE}
         DBLtemp         :=  DBLTemp + double(Buses_Covered[i]);
-{$ENDIF}        
+{$ENDIF}
         
       DBLtemp         :=  DBLTemp/Sys_Size;
 {      If the New coverage is different from the previous one and is below the expected coverage keep going
@@ -1066,7 +1066,7 @@ var
   TextCmd,
   PDElement,
   FileName      : String;
-  SEInfo        : TShellExecuteInfo;                // Shell Info handle
+  // SEInfo        : TShellExecuteInfo;                // Shell Info handle
   NodeIdx,
   Num_Pieces,
   Location_idx,                                     // Active Location
@@ -1115,13 +1115,22 @@ Begin
     End;
     CloseFile(F);
     {******************************************************************************************}
+{$IFNDEF UNIX}
     if Num_pieces <= 8 then MeTISCmd   :=  'pmetis.exe'  // For less than 8 zones use pMeTIS
     else MeTISCmd   :=  'kmetis.exe';                    // For more than 8 zonez use k-Way (kMeTIS)
+{$ELSE}
+    if Num_pieces <= 8 then MeTISCmd   :=  'pmetis'  // For less than 8 zones use pMeTIS
+    else MeTISCmd   :=  'kmetis';                    // For more than 8 zonez use k-Way (kMeTIS)
+{$ENDIF}
     {******************************************************************************************}
     if fileexists(pchar(FileName + '.part.' + inttostr(Num_pieces))) then    // Checks if the file exists before
       deletefile(pchar(FileName + '.part.' + inttostr(Num_pieces)));
     repeat
+{$IFNDEF FPC}
       TextCmd  :=  RunMeTIS(DSSDirectory + MeTISCmd + ' ' + FileName + ' ' + inttostr(Num_pieces));  // Executes MeTIS
+{$ELSE}
+      Process.RunCommand(DSSDirectory + MeTISCmd, [Filename, inttostr(Num_pieces)], TextCmd); // Executes MeTIS
+{$ENDIF}
       Flag      :=  {$IFDEF FPC}ANSIContainsText{$ELSE}ContainsText{$ENDIF}(TextCmd,'I detected an error');
       if Flag then       // The # of edges was wrong, use the one proposed by MeTIS
       Begin
