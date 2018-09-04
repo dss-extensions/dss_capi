@@ -25,7 +25,9 @@ interface
 USES
      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
-     AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF}, math;
+     AutoAdd, EnergyMeter, NamedObject, CktTree, {$IFNDEF FPC}, Graphics{$ENDIF}, math,     Sparse_Math,
+     {$IFNDEF FPC}vcl.dialogs,{$ENDIF} MeTIS_Exec;
+
 
 TYPE
     TReductionStrategy = (rsDefault, rsStubs, {rsTapEnds,} rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches, rsLaterals);
@@ -57,23 +59,22 @@ TYPE
     TDSSCircuit = CLASS(TNamedObject)
 
       Private
-          NodeBuffer        :pIntegerArray;
-          NodeBufferMax     :Integer;
-          FBusNameRedefined :Boolean;
-          FActiveCktElement :TDSSCktElement;
-          FCaseName         :String;
+          NodeBuffer          :pIntegerArray;
+          NodeBufferMax       :Integer;
+          FBusNameRedefined   :Boolean;
+          FActiveCktElement   :TDSSCktElement;
+          FCaseName           :String;
 
           // Temp arrays for when the bus swap takes place
-          SavedBuses    :pTBusArray;
-          SavedBusNames :pStringArray;
-          SavedNumBuses :Integer;
-          FLoadMultiplier :Double;  // global multiplier for every load
+          SavedBuses          :pTBusArray;
+          SavedBusNames       :pStringArray;
+          SavedNumBuses       :Integer;
+          FLoadMultiplier     :Double;  // global multiplier for every load
 
-          AbortBusProcess :Boolean;
+          AbortBusProcess     :Boolean;
 
-          Branch_List: TCktTree; // topology from the first source, lazy evaluation
-          BusAdjPC, BusAdjPD: TAdjArray; // bus adjacency lists of PD and PC elements
-
+          Branch_List         : TCktTree; // topology from the first source, lazy evaluation
+          BusAdjPC, BusAdjPD  : TAdjArray; // bus adjacency lists of PD and PC elements
 
           Procedure AddDeviceHandle(Handle:Integer);
           Procedure AddABus;
@@ -168,6 +169,8 @@ TYPE
           NumDevices, NumBuses, NumNodes:Integer;
           MaxDevices, MaxBuses, MaxNodes:Integer;
           IncDevices, IncBuses, IncNodes:Integer;
+          // Flag to signal that the A-Diakoptics parallelization will be used
+          ADiakoptics         : Boolean;
 
           // Variables for the tearing Algorithm
 
@@ -323,7 +326,7 @@ USES
      ParserDel,  DSSClassDefs, DSSGlobals, Dynamics,
      Line, Transformer,  Vsource,
      Utilities, {$IFDEF FPC}CmdForms,{$ELSE}DSSForms, {$ENDIF} 
-     {$IFDEF WINDOWS}Windows,  SHELLAPI, {$ELSE} BaseUnix, Unix, {$ENDIF} Executive;
+     {$IFDEF WINDOWS}Windows,  SHELLAPI, {$ELSE} BaseUnix, Unix, {$ENDIF} Executive, StrUtils;
 //----------------------------------------------------------------------------
 Constructor TDSSCircuit.Create(const aName:String);
 
@@ -494,32 +497,34 @@ BEGIN
      DefaultDailyShapeObj  := LoadShapeClass[ActiveActor].Find('default');
      DefaultYearlyShapeObj := LoadShapeClass[ActiveActor].Find('default');
 
-     CurrentDirectory := '';
+     CurrentDirectory   := '';
 
-     BusNameRedefined := True;  // set to force rebuild of buslists, nodelists
+     BusNameRedefined   := True;  // set to force rebuild of buslists, nodelists
 
-     SavedBuses    := nil;
-     SavedBusNames := nil;
+     SavedBuses         := nil;
+     SavedBusNames      := nil;
 
-     ReductionStrategy := rsDefault;
+     ReductionStrategy  := rsDefault;
 //     ReductionMaxAngle := 15.0;
-     ReductionZmag     := 0.02;
-     NumCircuits       := 0;
+     ReductionZmag      := 0.02;
+     NumCircuits        := 0;
      ReduceLateralsKeepLoad := TRUE;
 
    {Misc objects}
-   AutoAddObj := TAutoAdd.Create;
+   AutoAddObj           := TAutoAdd.Create;
 
-   Branch_List := nil;
-   BusAdjPC    := nil;
-   BusAdjPD    := nil;
+   Branch_List          := nil;
+   BusAdjPC             := nil;
+   BusAdjPD             := nil;
+   ADiakoptics          :=  False;
 
    // tearing algorithm vars initialization
 
 
-  Coverage        :=  0.9;      // 90% coverage expected by default
-  Actual_coverage :=  -1;       //No coverage
-  Num_SubCkts     :=  CPU_Cores-1;
+  Coverage              :=  0.9;      // 90% coverage expected by default
+  Actual_coverage       :=  -1;       //No coverage
+  Num_SubCkts           :=  CPU_Cores-1;
+
   setlength(Longest_paths,0);
   setlength(Path_Idx,0);
   setlength(Buses_Covered,0);
@@ -1051,156 +1056,212 @@ End;
 ********************************************************************************}
 function TDSSCircuit.Tear_Circuit(): Integer;
 var
+  FileCreated   : Boolean;
+  Ftree,
+  F             : TextFile;
+  TreeNm,                                           // For debugging
+  MeTISCmd,
+  BusName,
+  Terminal,
+  TextCmd,
+  PDElement,
+  FileName      : String;
+  SEInfo        : TShellExecuteInfo;                // Shell Info handle
   NodeIdx,
   Num_Pieces,
-  Buses_Acc,                                         // Number of buses accumulated
-  Num_buses,                                        // Goal for number of buses on each subsystem
-  Num_target,                                       // Generic accumulator
   Location_idx,                                     // Active Location
   j,jj,dbg,dbg2,
   i             : Integer;                          // Generic counter variables
   Candidates    : Array of Integer;                 // Array for 0 level buses idx
-  TreeNm,                                           // For debugging
-  BusName,
-  Terminal,
-  PDElement     : String;
-  Ftree         : TextFile;
-  flag          : Boolean;                          //  Stop flag
+
   EMeter        : TEnergyMeterObj;
   pBus          : TDSSBus;
   Volts         : Polar;
   Term_volts    : Array of Double;                  // To verify the connection of the branch
+  MeTISZones    : TStringList;                      // The list for assigning a zone to a bus after tearing
+  BusZones      : Array of String;
+  Replacer      : TFileSearchReplace;
+
 Begin
   Num_pieces    :=  Num_SubCkts;
   with solution do
   Begin
-    flag            := True;
-    // Increases coverage until the number of paths is >= than the number of subcircuits to create
-    while flag do
+
+    // Calculates the incidence matrix and laplacian to generate the graph file to be
+    // send to MeTiS
+    Calc_Inc_Matrix_Org(ActiveActor);                       //Calculates the ordered incidence matrix
+    Laplacian := IncMat.Transpose();                        // Transposes the Incidence Matrix
+    Laplacian := Laplacian.multiply(IncMat);                // Laplacian Matrix calculated
+    // Generates the graph file
+    {******************************************************************************************}
+    FileName  := GetOutputDirectory + CircuitName_[ActiveActor] + '.graph';
+    Assignfile(F,FileName);
+    ReWrite(F);
+    Writeln(F,inttostr(length(Inc_Mat_Cols)) + ' ' + inttostr(length(Inc_Mat_Cols) - 1)); // it should be the rank of the incidence matrix
+    jj        :=  0;
+    for i := 1 to Laplacian.NZero do
     Begin
-      Calc_Inc_Matrix_Org(ActiveActor);                       //Calculates the ordered incidence matrix
-      Get_paths_4_Coverage;                                   // Refines the levels vector according to the coverage desired
-      if length(Path_Idx) >= Num_pieces then
-        flag  :=  False
+      if (Laplacian.data[i-1][0] = jj) and (Laplacian.data[i-1][0] <> Laplacian.data[i-1][1]) then
+        Write(F,inttostr(Laplacian.data[i-1][1] + 1) + ' ')
       else
-        Coverage  :=  Coverage + 0.1;                         // Increases the coverage to have more paths for covering the circuit
-    End;
-    Num_buses       :=  length(Inc_Mat_Cols) div Num_Pieces;  // Estimates the number of buses for each subsystem
-    setlength(Locations,Num_pieces);                          // Setups the array for the tearing locations
-    for i := 0 to High(Locations) do Locations[i] :=  -1;     // Initializes the locations array
-    flag          :=  True;
-    j             :=  0;
-    Location_idx  :=  1;
-    Locations[0]  :=  0;
-    while flag do
-    Begin
-      if j  = High(Path_Idx) then
-        setlength(Candidates,(Length(Longest_paths) - Path_Idx[j]))
-      else
-        setlength(Candidates,(Path_Idx[j + 1] - Path_Idx[j]));
-      if j = 0 then
-        for i := 0 to High(Candidates) do
-          Candidates[i] :=  Longest_paths[i]      // Moves the path into the cadidates array
-      else
-        for i := 0 to High(Candidates) do
-          Candidates[i] :=  Longest_paths[(High(Candidates) - i) + Path_Idx[j]];     // Moves the path into the cadidates array (reverse)
-      // Checks if the path has enough buses to cover the requirements
-      if ((Candidates[High(Candidates)] - Candidates[0]) >= 2*Num_Buses) then
       Begin
-      // The path is large enough for tearing
-        Buses_Acc   :=  0;
-        for i := 1 to High(Candidates) do
+        if (Laplacian.data[i-1][0] <> jj) then
         Begin
-          Buses_Acc   := (Candidates[i] - Candidates[i - 1]) + Buses_Acc;
-          if Buses_Acc >= Num_Buses then
-          begin
-            Buses_Acc               :=  0;
-            Locations[Location_idx] :=  Candidates[i];
-            inc(Location_idx);
-          end;
+          Writeln(F,'');
+          Write(F,inttostr(Laplacian.data[i-1][1] + 1) + ' ');
+          inc(jj);
         End;
-      End
-      else
-      Begin
-        if  j = 0 then Location_idx  := 0;                // To avoid placing an EMeter at the feederhead
-        Locations[Location_idx]  :=  Candidates[1];       // The path is too short, consider to leave this path together
-        inc(Location_idx);
       End;
-      flag          :=  False;
-      for i := 0 to High(Locations) do
-        if Locations[i] = -1 then flag  :=  True;
-      inc(j)
     End;
-  //***********The directory is ready for storing the new circuit****************
+    CloseFile(F);
+    {******************************************************************************************}
+    if Num_pieces <= 8 then MeTISCmd   :=  'pmetis.exe'  // For less than 8 zones use pMeTIS
+    else MeTISCmd   :=  'kmetis.exe';                    // For more than 8 zonez use k-Way (kMeTIS)
+    {******************************************************************************************}
+    if fileexists(pchar(FileName + '.part.' + inttostr(Num_pieces))) then    // Checks if the file exists before
+      deletefile(pchar(FileName + '.part.' + inttostr(Num_pieces)));
+    repeat
+      TextCmd  :=  RunMeTIS(DSSDirectory + MeTISCmd + ' ' + FileName + ' ' + inttostr(Num_pieces));  // Executes MeTIS
+      Flag      :=  ContainsText(TextCmd,'I detected an error');
+      if Flag then       // The # of edges was wrong, use the one proposed by MeTIS
+      Begin
+        TextCmd  :=  GetNumEdges(TextCmd);                     // Gest the # of edges proposed by MeTIS
+        jj        :=  length(inttostr(length(Inc_Mat_Cols))) + 2;// Caculates the index for replacing the number in the Graph File
+        // Replaces the old data with the new at the file header
+        Replacer:=TFileSearchReplace.Create(FileName);
+        try
+          Replacer.Replace(inttostr(length(Inc_Mat_Cols)) + ' ' + inttostr(length(Inc_Mat_Cols) - 1),
+                          inttostr(length(Inc_Mat_Cols)) + ' ' + TextCmd, [rfIgnoreCase]);
+        finally
+          Replacer.Free;
+        end;
+      End;
+    until Not flag;
+    {******************************************************************************************}
+    // Verifies if there was no error executing MeTIS and the zones file was created
+    if (TextCmd <> '**Error**') and fileexists(pchar(FileName + '.part.' + inttostr(Num_pieces))) then
+    Begin
+      MeTISZones  :=  TStringList.Create;                     // Opens the file containing the tearing results
+      MeTISZones.LoadFromFile(FileName + '.part.' + inttostr(Num_pieces));
+      setlength(Locations,1);
+      setlength(BusZones,1);
+      for i := 0 to (MeTISZones.Count - 1) do
+      Begin
+        if i = 0 then
+        Begin
+          Locations[i]  :=  0;
+          BusZones[i]   :=  MeTISZones[i];
+        End
+        else
+        Begin
+          if MeTISZones[i] <> BusZones[high(BusZones)] then   // Moving to another zone in the file
+          Begin
+            j :=  0;
+            if i < (MeTISZones.Count - 1) then                // If not lower means the zone is only 1 bus
+              j := Integer(MeTISZones[i] = MeTISZones[i + 1]);
+            if j = 1 then                                     // Varifies that the zone is big enough
+            Begin
+              j   :=  0;                                      // Verifies that this zone hasn't been counted before
+              for jj := 0 to High(BusZones) do
+              Begin
+                if MeTISZones[i] = BusZones[jj] then
+                Begin
+                  inc(j);
+                  Break;
+                End;
+              End;
+              if j = 0 then                                   // Is not in the list, add the new location
+              Begin
+                setlength(Locations,Length(Locations) + 1);
+                setlength(BusZones,Length(BusZones) + 1);
+                Locations[High(Locations)]  :=  i;
+                BusZones[High(BusZones)]    :=  MeTISZones[i];
+              End;
+            End;
+          End;
+        End;
+      End;
+
+    //***********The directory is ready for storing the new circuit****************
       EMeter    := EnergyMeters.First;
       while EMeter  <> Nil do
       begin
         EMeter.Enabled  :=  False;
         EMeter          :=  EnergyMeters.Next;
       end;
-  //************ Creates the meters at the tearing locations  ********************
-    Result        :=  1;                                  // Resets the result variable (Return)
-    setlength(PConn_Voltages,length(Locations)*2);        //  Sets the memory space for storing the voltage at the point of conn
-    setlength(Link_branches,length(Locations));           //  Sets the memory space for storing the link branches names
-    setlength(PConn_Names,length(Locations));             //  Sets the memory space for storing the Bus names
-    SolutionAbort := FALSE;
-    j             :=  0;
-    for i := 1 to High(Locations) do
-    begin
-      if Locations[i] >= 0 then
-      Begin
-        inc(Result);
-        // Gets the name of the PDE for placing the EnergyMeter
-         with solution do
-         Begin
-           PDElement        :=  Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])];
-           Link_Branches[i] :=  PDElement;
-           dbg              :=  get_IncMatrix_Col(Locations[i] + 1);      // Temporary stores the given location
-    // Checks the branch orientation across the feeder by substracting the voltages around the branch
-    // Start with Bus 1
-           setlength(Term_volts,2);
-           for dbg := 0 to 1 do
+    //************ Creates the meters at the tearing locations  ********************
+      Result        :=  1;                                  // Resets the result variable (Return)
+      setlength(PConn_Voltages,length(Locations)*2);        //  Sets the memory space for storing the voltage at the point of conn
+      setlength(Link_branches,length(Locations));           //  Sets the memory space for storing the link branches names
+      setlength(PConn_Names,length(Locations));             //  Sets the memory space for storing the Bus names
+      SolutionAbort := FALSE;
+      j             :=  0;
+      for i := 1 to High(Locations) do
+      begin
+        if Locations[i] >= 0 then
+        Begin
+          inc(Result);
+          // Gets the name of the PDE for placing the EnergyMeter
+           with solution do
            Begin
-             BusName          :=  Inc_Mat_Cols[Active_Cols[dbg]];
+             PDElement        :=  Inc_Mat_Rows[get_IncMatrix_Row(Locations[i])];
+             Link_Branches[i] :=  PDElement;
+             dbg              :=  get_IncMatrix_Col(Locations[i] + 1);      // Temporary stores the given location
+      // Checks the branch orientation across the feeder by substracting the voltages around the branch
+      // Start with Bus 1
+             setlength(Term_volts,2);
+             for dbg := 0 to 1 do
+             Begin
+               BusName          :=  Inc_Mat_Cols[Active_Cols[dbg]];
+               SetActiveBus(BusName);           // Activates the Bus
+               pBus             :=  Buses^[ActiveBusIndex];
+               jj               :=  1;
+         // this code so nodes come out in order from smallest to larges
+               Repeat
+                 NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
+                 inc(jj)
+               Until NodeIdx>0;
+               Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
+               Term_volts[dbg]     :=  Volts.mag;
+             End;
+
+        // Determines the best place to connect the EnergyMeter
+             Term_volts[0]      :=  Term_volts[0] - Term_volts[1];
+             if Term_volts[0] >= 0 then jj  :=  0
+             else   jj  :=  1;
+             BusName          :=  Inc_Mat_Cols[Active_Cols[jj]];
+             Terminal         :=  'term=' + inttostr(jj + 1);
+
+             PConn_Names[i]   :=  BusName;
              SetActiveBus(BusName);           // Activates the Bus
              pBus             :=  Buses^[ActiveBusIndex];
              jj               :=  1;
-       // this code so nodes come out in order from smallest to larges
+             // this code so nodes come out in order from smallest to larges
              Repeat
                NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
                inc(jj)
              Until NodeIdx>0;
              Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
-             Term_volts[dbg]     :=  Volts.mag;
+             PConn_Voltages[j]  :=  (Volts.mag/1000)*SQRT3;
+             inc(j);
+             PConn_Voltages[j]  :=  Volts.ang;
+             inc(j);
            End;
-
-      // Determines the best place to connect the EnergyMeter
-           Term_volts[0]      :=  Term_volts[0] - Term_volts[1];
-           if Term_volts[0] >= 0 then jj  :=  0
-           else   jj  :=  1;
-           BusName          :=  Inc_Mat_Cols[Active_Cols[jj]];
-           Terminal         :=  'term=' + inttostr(jj + 1);
-
-           PConn_Names[i]   :=  BusName;
-           SetActiveBus(BusName);           // Activates the Bus
-           pBus             :=  Buses^[ActiveBusIndex];
-           jj               :=  1;
-           // this code so nodes come out in order from smallest to larges
-           Repeat
-             NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
-             inc(jj)
-           Until NodeIdx>0;
-           Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
-           PConn_Voltages[j]  :=  (Volts.mag/1000)*SQRT3;
-           inc(j);
-           PConn_Voltages[j]  :=  Volts.ang;
-           inc(j);
-         End;
-        // Generates the OpenDSS Command;
-        DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
-      End;
-    end;
-
+          // Generates the OpenDSS Command;
+          DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
+        End;
+      end;
+    End
+    else
+    Begin
+      if (TextCmd = '**Error**') then
+        DoErrorMsg('Tear_Circuit','MeTIS cannot start.',
+                   'The MeTIS program (pmetis.exe/kmetis.exe) cannot be executed/found.', 7006)
+      else
+        DoErrorMsg('Tear_Circuit','The graph file is incorrect.',
+                   'MeTIS cannot process the graph file because is incorrect' +
+                   '(The number of edges is incorrect).', 7007);
+    End;
   End;
 End;
 //----------------------------------------------------------------------------

@@ -104,6 +104,7 @@ Type
       ValueIndex, MarkerIdx: Integer; { For General & AutoAdd }
 
       PhasesToPlot: Integer; // Profile Plot
+      ProfileScale: Integer; // CYMDIST or pu/km scaling
 
       Channels: Array of Cardinal; // for Monitor Plot
       Bases: Array of Double; // for Monitor Plot
@@ -358,6 +359,7 @@ begin
    { Initialize Plotting DLL }
    // --deprecated --- DSSGraphInit(@CallBackRoutines);  // send a pointer to the DSS Callback routines struct
    PhasesToPlot := PROFILE3PH;
+   ProfileScale := PROFILEPUKM;
 end;
 
 destructor TDSSPlot.Destroy;
@@ -2623,6 +2625,7 @@ Var
    LineType: TPenStyle;
    DSSGraphProps: TDSSGraphProperties;
    RangeLoY, RangeHiY: Double;
+   DenomLL, DenomLN, LenScale, RangeScale: Double;
 
 begin
 
@@ -2636,9 +2639,21 @@ begin
 
    Set_Caption(S);
    Set_ChartCaption(S);
-   S := 'Distance (km)';
-   Set_XaxisLabel(S);
-   Set_YaxisLabel('p.u. Voltage');
+   if ProfileScale = PROFILE120KFT then begin
+     Set_XaxisLabel('Distance (kft)');
+     Set_YaxisLabel('120 Base Voltage');
+     DenomLN := 1000.0 / 120.0;
+     DenomLL := 1732.0 / 120.0;
+     LenScale := 3.2809;
+     RangeScale := 120.0;
+   end else begin
+     Set_XaxisLabel('Distance (km)');
+     Set_YaxisLabel('p.u. Voltage');
+     DenomLN := 1000.0;
+     DenomLL := 1732.0;
+     LenScale := 1.0;
+     RangeScale := 1.0;
+   end;
 
    Get_Properties(DSSGraphProps);
    With DSSGraphProps Do
@@ -2680,13 +2695,13 @@ begin
                               puV1 := Cabs
                                 (Solution.NodeV^[Bus1.GetRef
                                    (Bus1.FindIdx(iphs))])
-                                / Bus1.kVBase / 1000.0;
+                                / Bus1.kVBase / DenomLN;
                               puV2 := Cabs
                                 (Solution.NodeV^[Bus2.GetRef
                                    (Bus2.FindIdx(iphs))])
-                                / Bus2.kVBase / 1000.0;
-                              AddNewLine(Bus1.DistFromMeter, puV1,
-                                 Bus2.DistFromMeter, puV2, ColorArray[iphs],
+                                / Bus2.kVBase / DenomLN;
+                              AddNewLine(Bus1.DistFromMeter * LenScale, puV1,
+                                 Bus2.DistFromMeter * LenScale, puV2, ColorArray[iphs],
                                  2, psSolid, Dots,
                                    Format('%s.%s',[PresentCktElement.ParentClass.Name, PresentCktElement.Name]), FALSE, 0,
                                  NodeMarkerCode, NodeMarkerWidth);
@@ -2706,13 +2721,13 @@ begin
                                  puV1 := Cabs
                                    (Solution.NodeV^[Bus1.GetRef
                                       (Bus1.FindIdx(iphs))])
-                                   / Bus1.kVBase / 1000.0;
+                                   / Bus1.kVBase / DenomLN;
                                  puV2 := Cabs
                                    (Solution.NodeV^[Bus2.GetRef
                                       (Bus2.FindIdx(iphs))])
-                                   / Bus2.kVBase / 1000.0;
-                                 AddNewLine(Bus1.DistFromMeter, puV1,
-                                    Bus2.DistFromMeter, puV2, MyColor, 2,
+                                   / Bus2.kVBase / DenomLN;
+                                 AddNewLine(Bus1.DistFromMeter * LenScale, puV1,
+                                    Bus2.DistFromMeter * LenScale, puV2, MyColor, 2,
                                     LineType, Dots,
                                       Format('%s.%s',[PresentCktElement.ParentClass.Name, PresentCktElement.Name]), FALSE, 0,
                                     NodeMarkerCode, NodeMarkerWidth);
@@ -2734,13 +2749,13 @@ begin
                                     puV1 := Cabs
                                       (Solution.NodeV^[Bus1.GetRef
                                         (Bus1.FindIdx(iphs))])
-                                      / Bus1.kVBase / 1000.0;
+                                      / Bus1.kVBase / DenomLN;
                                     puV2 := Cabs
                                       (Solution.NodeV^[Bus2.GetRef
                                         (Bus2.FindIdx(iphs))])
-                                      / Bus2.kVBase / 1000.0;
-                                    AddNewLine(Bus1.DistFromMeter, puV1,
-                                       Bus2.DistFromMeter, puV2, MyColor, 2,
+                                      / Bus2.kVBase / DenomLN;
+                                    AddNewLine(Bus1.DistFromMeter * LenScale, puV1,
+                                       Bus2.DistFromMeter * LenScale, puV2, MyColor, 2,
                                        LineType, Dots,
                                        Format('%s.%s',[PresentCktElement.ParentClass.Name, PresentCktElement.Name]),
                                        FALSE, 0, NodeMarkerCode,
@@ -2773,17 +2788,17 @@ begin
                                         ],
                                         NodeV^[Bus1.GetRef
                                         (Bus1.FindIdx(iphs2))]))
-                                        / Bus1.kVBase / 1732.0;
+                                        / Bus1.kVBase / DenomLL;
                                        puV2 := Cabs
                                         (CSUB
                                         (NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))
                                         ],
                                         NodeV^[Bus2.GetRef
                                         (Bus2.FindIdx(iphs2))]))
-                                        / Bus2.kVBase / 1732.0;
+                                        / Bus2.kVBase / DenomLL;
                                     End;
-                                    AddNewLine(Bus1.DistFromMeter, puV1,
-                                       Bus2.DistFromMeter, puV2, MyColor, 2,
+                                    AddNewLine(Bus1.DistFromMeter * LenScale, puV1,
+                                       Bus2.DistFromMeter * LenScale, puV2, MyColor, 2,
                                        LineType, Dots,
                                        Format('%s.%s',[PresentCktElement.ParentClass.Name, PresentCktElement.Name]),
                                        FALSE, 0, NodeMarkerCode,
@@ -2816,17 +2831,17 @@ begin
                                         ],
                                         NodeV^[Bus1.GetRef
                                         (Bus1.FindIdx(iphs2))]))
-                                      / Bus1.kVBase / 1732.0;
+                                      / Bus1.kVBase / DenomLL;
                                     puV2 := Cabs
                                       (CSUB
                                         (NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))
                                         ],
                                         NodeV^[Bus2.GetRef
                                         (Bus2.FindIdx(iphs2))]))
-                                      / Bus2.kVBase / 1732.0;
+                                      / Bus2.kVBase / DenomLL;
                                  End;
-                                 AddNewLine(Bus1.DistFromMeter, puV1,
-                                    Bus2.DistFromMeter, puV2, MyColor, 2,
+                                 AddNewLine(Bus1.DistFromMeter * LenScale, puV1,
+                                    Bus2.DistFromMeter * LenScale, puV2, MyColor, 2,
                                     LineType, Dots,
                                     Format('%s.%s',[PresentCktElement.ParentClass.Name, PresentCktElement.Name]), FALSE, 0,
                                     NodeMarkerCode, NodeMarkerWidth);
@@ -2859,17 +2874,17 @@ begin
                                         ],
                                         NodeV^[Bus1.GetRef
                                         (Bus1.FindIdx(iphs2))]))
-                                        / Bus1.kVBase / 1732.0;
+                                        / Bus1.kVBase / DenomLL;
                                        puV2 := Cabs
                                         (CSUB
                                         (NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))
                                         ],
                                         NodeV^[Bus2.GetRef
                                         (Bus2.FindIdx(iphs2))]))
-                                        / Bus2.kVBase / 1732.0;
+                                        / Bus2.kVBase / DenomLL;
                                     End;
-                                    AddNewLine(Bus1.DistFromMeter, puV1,
-                                       Bus2.DistFromMeter, puV2, MyColor, 2,
+                                    AddNewLine(Bus1.DistFromMeter * LenScale, puV1,
+                                       Bus2.DistFromMeter * LenScale, puV2, MyColor, 2,
                                        LineType, Dots,
                                        Format('%s.%s',[PresentCktElement.ParentClass.Name, PresentCktElement.Name]),
                                        FALSE, 0, NodeMarkerCode,
@@ -2889,12 +2904,12 @@ begin
                         MyColor := ColorArray[iphs];
                         puV1 := Cabs
                           (ActiveCircuit.Solution.NodeV^[Bus1.GetRef
-                             (Bus1.FindIdx(iphs))]) / Bus1.kVBase / 1000.0;
+                             (Bus1.FindIdx(iphs))]) / Bus1.kVBase / DenomLN;
                         puV2 := Cabs
                           (ActiveCircuit.Solution.NodeV^[Bus2.GetRef
-                             (Bus2.FindIdx(iphs))]) / Bus2.kVBase / 1000.0;
-                        AddNewLine(Bus1.DistFromMeter, puV1,
-                           Bus2.DistFromMeter, puV2, MyColor, 2, LineType,
+                             (Bus2.FindIdx(iphs))]) / Bus2.kVBase / DenomLN;
+                        AddNewLine(Bus1.DistFromMeter * LenScale, puV1,
+                           Bus2.DistFromMeter * LenScale, puV2, MyColor, 2, LineType,
                            Dots,
                            Format('%s.%s',[PresentCktElement.ParentClass.Name, PresentCktElement.Name]),
                            FALSE,
@@ -2918,8 +2933,8 @@ begin
       // AddNewLine(0.0, NormalMinvolts, Xmax, NormalMinvolts, ColorArray[1], 1, psDash, FALSE, 'Lower Limit', False, 0,0,0);
 
       // --deprecated-- Get_Range(RangeLoX, RangeHiX, RangeLoY, RangeHiY);
-      RangeLoY := 0.90;
-      RangeHiY := 1.10;
+      RangeLoY := 0.90 * RangeScale;
+      RangeHiY := 1.10 * RangeScale;
       Xmin := 0.0;
       Set_Range(Xmin, Xmax, RangeLoY, RangeHiY);
 
@@ -2930,10 +2945,10 @@ begin
       Ymax := RangeHiY;
       Set_LineWidth(3);
       Set_DataColor(clRed);
-      Moveto(0.0, NormalMaxVolts);
-      Drawto(Xmax, NormalMaxVolts);
-      Moveto(0.0, NormalMinVolts);
-      Drawto(Xmax, NormalMinVolts);
+      Moveto(0.0, NormalMaxVolts * RangeScale);
+      Drawto(Xmax, NormalMaxVolts * RangeScale);
+      Moveto(0.0, NormalMinVolts * RangeScale);
+      Drawto(Xmax, NormalMinVolts * RangeScale);
    End;
    Set_Properties(DSSGraphProps);
    Set_Autorange(2.0); // 2% rim

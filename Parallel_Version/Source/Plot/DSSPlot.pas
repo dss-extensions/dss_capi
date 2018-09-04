@@ -37,6 +37,7 @@ Type
       ptEvolutionPlot, ptMatrixplot);
    TPlotQuantity = (pqVoltage, pqCurrent, pqPower, pqLosses, pqCapacity,
       pqNone);
+   TMatrixType =  (pIncMatrix, pLaplacian); // The types of matrices that can be plotted
 
    TDSSPlot = class(TObject)
    private
@@ -96,6 +97,7 @@ Type
    public
 
       PlotType: TPlotType;
+      MatrixType: TMatrixType;
       MaxScale, MinScale: Double;
       Dots, Labels, ShowLoops, { applies to Meterzone plots only }
       ShowSubs: Boolean;
@@ -1113,7 +1115,12 @@ begin
     ptEvolutionPlot:
       DSSConnectObj.EvolutionPlotMsg;
     ptMatrixplot:
-      DSSConnectObj.MatrixPlotMsg;
+    Begin
+      if MatrixType = pLaplacian then
+        DSSConnectObj.MatrixPlotMsg(1)
+      else
+        DSSConnectObj.MatrixPlotMsg(0)
+    End;
   End;
 end;
 

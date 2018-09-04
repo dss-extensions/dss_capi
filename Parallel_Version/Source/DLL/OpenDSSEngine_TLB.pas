@@ -12,7 +12,7 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 52393 $
-// File generated on 9/29/2017 4:23:42 AM from Type Library described below.
+// File generated on 8/3/2018 2:59:32 PM from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\OpenDSS\Parallel_Version\Source\DLL\OpenDSSengine (1)
@@ -1149,6 +1149,7 @@ type
     function Get_IncMatrixRows: OleVariant; safecall;
     function Get_IncMatrixCols: OleVariant; safecall;
     function Get_BusLevels: OleVariant; safecall;
+    function Get_Laplacian: OleVariant; safecall;
     property Mode: Integer read Get_Mode write Set_Mode;
     property Frequency: Double read Get_Frequency write Set_Frequency;
     property Hour: Integer read Get_Hour write Set_Hour;
@@ -1192,6 +1193,7 @@ type
     property IncMatrixRows: OleVariant read Get_IncMatrixRows;
     property IncMatrixCols: OleVariant read Get_IncMatrixCols;
     property BusLevels: OleVariant read Get_BusLevels;
+    property Laplacian: OleVariant read Get_Laplacian;
   end;
 
 // *********************************************************************//
@@ -1260,6 +1262,7 @@ type
     property IncMatrixRows: OleVariant readonly dispid 230;
     property IncMatrixCols: OleVariant readonly dispid 231;
     property BusLevels: OleVariant readonly dispid 232;
+    property Laplacian: OleVariant readonly dispid 233;
   end;
 
 // *********************************************************************//

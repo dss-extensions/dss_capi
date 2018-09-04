@@ -24,6 +24,7 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      UComplex, Arraydef, CktElement, Circuit, IniRegSave, {$IFNDEF FPC} Graphics, System.IOUtils,{$ENDIF} inifiles,
 
      {Some units which have global vars defined here}
+     solution,
      Spectrum,
      LoadShape,
      TempShape,
@@ -48,6 +49,7 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      variants,
      Strutils,
      Types,
+     SyncObjs,
      YMatrix;
 
 
@@ -230,7 +232,7 @@ VAR
    ActorProgressCount : Array of integer;
    {$IFNDEF FPC}ActorProgress      : Array of TProgress;{$ENDIF}
    ActorPctProgress   : Array of integer;
-   ActorHandle        : Array of TThread;
+   ActorHandle        : Array of TSolver;
    Parallel_enabled   : Boolean;
    ConcatenateReports : Boolean;
    IncMat_Ordered     : Boolean;
@@ -307,7 +309,8 @@ Function GetOutputDirectory:String;
 Procedure MyReallocMem(Var p:Pointer; newsize:integer);
 Function MyAllocMem(nbytes:Cardinal):Pointer;
 
-
+procedure New_Actor(ActorID:  Integer);
+procedure Delay(TickTime : Integer);
 
 implementation
 
@@ -326,8 +329,9 @@ USES  {Forms,   Controls,}
      {$ELSE}
      Windows, DSSForms, SHFolder,
      {$ENDIF}
-     Solution,
-     Executive;
+     ScriptEdit,
+     Executive,
+     Parallel_Lib;
      {Intrinsic Ckt Elements}
 
 TYPE
@@ -549,17 +553,20 @@ Begin
     begin
       if ActiveCircuit[I] <> nil then
       begin
+        ActiveActor   :=  I;
         ActiveCircuit[I].NumCircuits := 0;
         ActiveCircuit[I].Free;
         ActiveCircuit[I]  :=  nil;
-        if ActorHandle[I] <> nil  then    // Terminate the threads that could be alive
-        begin
-          ActorHandle[I].Terminate;
-          ActorHandle[I].Free;
-          ActorHandle[I]  :=  nil;
-        end;
         Parser[I].Free;
         Parser[I] :=  nil;
+        // In case the actor hasn't been destroyed
+        if ActorHandle[I] <> nil then
+        Begin
+          ActorHandle[I].Send_Message(EXIT_ACTOR);
+          ActorHandle[I].WaitFor;
+          ActorHandle[I].Free;
+          ActorHandle[I]  :=  nil;
+        End;
       end;
     end;
     Circuits.Free;
@@ -568,7 +575,7 @@ Begin
     DefaultEarthModel     := DERI;
     LogQueries            := FALSE;
     MaxAllocationIterations := 2;
-
+    ActiveActor           :=  1;
 End;
 
 
@@ -596,6 +603,10 @@ Begin
            SolutionABort              := FALSE;
            {Voltage source named "source" connected to SourceBus}
            DSSExecutive.Command       := 'New object=vsource.source Bus1=SourceBus ' + S;  // Load up the parser as if it were read in
+           // Creates the thread for the actor if not created before
+           If ActorHandle[ActiveActor]  = nil then New_Actor(ActiveActor);
+
+
        End
        Else
        Begin
@@ -890,6 +901,14 @@ begin
   Result := ini.ReadString(s,k,d);
   FreeAndNil(ini);
 end;
+// Creates a new actor
+procedure New_Actor(ActorID:  Integer);
+Var
+  ScriptEd    : TScriptEdit;
+Begin
+  ActorHandle[ActorID] :=  TSolver.Create(false,ActorCPU[ActorID],ActorID,ScriptEd.UpdateSummaryForm);
+End;
+
 {$IFNDEF FPC}
 function CheckDSSVisualizationTool: Boolean;
 var FileName: string;
@@ -904,6 +923,18 @@ end;
 // End of visualization tool check
 {$ENDIF}
 
+procedure Delay(TickTime : Integer);
+ var
+ Past: longint;
+ begin
+ Past := GetTickCount;
+ repeat
+
+ Until (GetTickCount - Past) >= longint(TickTime);
+end;
+
+
+
 initialization
 
 //***************Initialization for Parallel Processing*************************
@@ -915,7 +946,6 @@ initialization
    setlength(ActiveCircuit,CPU_Cores + 1);
    {$IFNDEF FPC}setlength(ActorProgress,CPU_Cores + 1);{$ENDIF}
    setlength(ActorCPU,CPU_Cores + 1);
-   setlength(ActorStatus,CPU_Cores + 1);
    setlength(ActorProgressCount,CPU_Cores + 1);
    setlength(ActiveDSSClass,CPU_Cores + 1);
    setlength(DataDirectory,CPU_Cores + 1);
@@ -954,6 +984,7 @@ initialization
    setlength(Parser,CPU_Cores + 1);
    setlength(ActiveYPrim,CPU_Cores + 1);
    SetLength(SolutionWasAttempted,CPU_Cores + 1);
+   SetLength(ActorStatus,CPU_Cores + 1);
 
    // Init pointer repositories for the EnergyMeter in multiple cores
 
@@ -977,13 +1008,11 @@ initialization
    SetLength(FM_Append,CPU_Cores + 1);
    SetLength(DIFilesAreOpen,CPU_Cores + 1);
 
-
    for ActiveActor := 1 to CPU_Cores do
    begin
     ActiveCircuit[ActiveActor]        :=  nil;
     {$IFNDEF FPC}ActorProgress[ActiveActor]        :=  nil;{$ENDIF}
     ActiveDSSClass[ActiveActor]       :=  nil;
-    ActorStatus[ActiveActor]          :=  1;
     EventStrings[ActiveActor]         := TStringList.Create;
     SavedFileList[ActiveActor]        := TStringList.Create;
     ErrorStrings[ActiveActor]         := TStringList.Create;
@@ -1013,30 +1042,7 @@ initialization
    {$ENDIF}
    DSSFileName      := GetDSSExeFile;
    DSSDirectory     := ExtractFilePath(DSSFileName);
-{
-//***********Init for KLUSolver************************************
-   setlength(ActorKLU,CPU_Cores + 1);
-   setlength(NewSparseSet,CPU_Cores + 1);
-   setlength(DeleteSparseSet,CPU_Cores + 1);
-   setlength(SolveSparseSet,CPU_Cores + 1);
-   setlength(ZeroSparseSet,CPU_Cores + 1);
-   setlength(FactorSparseMatrix,CPU_Cores + 1);
-   setlength(GetSize,CPU_Cores + 1);
-   setlength(GetFlops,CPU_Cores + 1);
-   setlength(GetNNZ,CPU_Cores + 1);
-   setlength(GetSparseNNZ,CPU_Cores + 1);
-   setlength(GetSingularCol,CPU_Cores + 1);
-   setlength(GetRGrowth,CPU_Cores + 1);
-   setlength(GetRCond,CPU_Cores + 1);
-   setlength(GetCondEst,CPU_Cores + 1);
-   setlength(AddPrimitiveMatrix,CPU_Cores + 1);
-   setlength(SetLogFile,CPU_Cores + 1);
-   setlength(GetCompressedMatrix,CPU_Cores + 1);
-   setlength(GetTripletMatrix,CPU_Cores + 1);
-   setlength(FindIslands,CPU_Cores + 1);
-   setlength(AddMatrixElement,CPU_Cores + 1);
-   setlength(GetMatrixElement,CPU_Cores + 1);
-}
+
    {Various Constants and Switches}
 
    CALPHA                := Cmplx(-0.5, -0.866025); // -120 degrees phase shift
@@ -1056,7 +1062,7 @@ initialization
    IsDLL                 := FALSE;
    LastCommandWasCompile := FALSE;
    LastErrorMessage      := '';
-   MaxCircuits           := 1;  //  This version only allows one circuit at a time
+   MaxCircuits           := 1;  //  Not required anymore. planning to remove it
    MaxAllocationIterations := 2;
    SolutionAbort         := FALSE;
    AutoShowExport        := FALSE;
@@ -1068,6 +1074,7 @@ initialization
    ActiveEarthModel[ActiveActor]      := DefaultEarthModel;
    Parallel_enabled      :=  False;
    ConcatenateReports    :=  False;
+
 
    {Initialize filenames and directories}
 
@@ -1148,6 +1155,7 @@ Finalization
 
   // Dosimplemsg('Enter DSSGlobals Unit Finalization.');
 //  YBMatrix.Finish_Ymatrix_Critical;   // Ends the critical segment for the YMatrix class
+
   Auxparser.Free;
 
   EventStrings[ActiveActor].Free;
@@ -1161,14 +1169,13 @@ Finalization
   DSS_Registry.Free;  {Close Registry}
 {$ENDIF}
 
-
-// Free all the KLU instances
+// Free all the Actors
 {  for ActiveActor := 1 to NumOfActors do
-     freelibrary(ActorKLU[ActiveActor]);
-  if NumOfActors  > 1 then
   Begin
-    for ActiveActor := 2 to NumOfActors do
-      deletefile(pchar(DSSDirectory + 'KLUSolve' + inttostr(ActiveActor) +'.dll'));
+    if ActorHandle[Activeactor] <> nil then
+    Begin
+      ActorHandle[Activeactor].Free
+    End;
   End;
 }
 End.

@@ -131,7 +131,7 @@ Begin
       End;
   Finally
     MonitorClass[ActorID].SaveAll(ActorID);
-    // EnergyMeterClass[ActorID].CloseAllDIFiles;   // Save Demand interval Files    See DIFilesAreOpen Logic
+//    EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files    See DIFilesAreOpen Logic
   End;
  End;
 End;
@@ -255,26 +255,20 @@ Begin
         IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
         FOR N := 1 TO NumberOfTimes Do
         IF Not SolutionAbort Then With DynaVars Do Begin
-            Temp1 := N = 10190;
-            if Temp1  then
-            Begin
-              Temp0 :=  N;
-            End;
-
             ActiveCircuit[ActorID].Solution.Increment_time;
             DefaultHourMult := DefaultDailyShapeObj.getmult(dblHour);
             // Assume pricesignal stays constant for dutycycle calcs
             SolveSnap(ActorID);
             MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
-            If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID);                                                                                               
+            If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
             EndOfTimeStepCleanup(ActorID);
 
             ActorPctProgress[ActorID] :=  (N*100) div NumberofTimes;
+            If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
 //            If (N mod Twopct)=0 Then ShowPctProgress((N*100) div NumberofTimes, ActorID);
         End;
       Finally
         MonitorClass[ActorID].SaveAll(ActorID);
-        If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
 //        ProgressHide(ActorID);
       End;
     End;
@@ -407,7 +401,7 @@ Begin
         End;
      Finally
         MonitorClass[ActorID].SaveAll(ActorID);
-        If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);
+        If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID) ;
 //        ProgressHide(ActorID);
      End;
    End;

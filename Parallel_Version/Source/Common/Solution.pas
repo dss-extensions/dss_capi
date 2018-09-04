@@ -52,7 +52,7 @@ USES
     Parallel_Lib,
     CktElement,
 {$IFDEF WINDOWS}
-    Windows,
+    Windows, Dialogs,
 {$ELSE}    
     BaseUnix, Unix,
 {$ENDIF}
@@ -60,15 +60,18 @@ USES
     System.Diagnostics,
     System.TimeSpan,
     System.Classes,
-    System.SyncObjs
 {$ENDIF}    
-    ;
+    Sparse_Math,
+    SyncObjs;
 
 CONST
 
      NORMALSOLVE = 0;
      NEWTONSOLVE = 1;
-     DIAKOPTICS  = 2;                 // Diakoptics method added on 02/26/2018
+// Constants for the actor's messaging
+     SIMULATE    = 0;
+     EXIT_ACTOR  = 1;
+
 
 TYPE
 
@@ -78,8 +81,6 @@ TYPE
    TNodeVarray = Array[0..1000] of Complex;
    pNodeVarray = ^TNodeVarray;
 
-   TIncMatrixArray = Array of Integer;
-   pIncMatrixArray = ^TIncMatrixArray;
 
    TDSSSolution = CLASS(TDSSClass)
 
@@ -102,24 +103,44 @@ TYPE
       Constructor Create(Susp:Boolean;local_CPU: integer; ID : integer; CallBack: TInfoMessageCall);overload;
       procedure Execute; override;
       procedure Doterminate; override;
+
 //*******************************Private components*****************************
-    private
-      FMessage  : String;
-      FInfoProc : TInfoMessageCall;
-      Msg_Cmd   : string;
-      ActorID   : integer;
+    protected
+      FMessage      : String;
+      UINotifier,
+      FInfoProc     : TInfoMessageCall;
+      Msg_Cmd       : string;
+      ActorID       : integer;
+      ActorMsg      : TEvent;
+      MsgType       : Integer;
+      ActorActive   : Boolean;
+      Processing    : Boolean;
+
+      procedure Notify_Main;
+      function Get_Processing(): Boolean;
+      procedure Set_Processing(Nval : Boolean);
+      function Get_CPU(): Integer;
+      procedure Set_CPU(CPU : Integer);
 //*******************************Public components******************************
     Public
+      Procedure Send_Message(Msg  : Integer);
       procedure CallCallBack;
+
+
+      property Is_Busy: Boolean read  Get_Processing write Set_Processing;
+      property  CPU : Integer read Get_CPU write Set_CPU;
+
    end;
 
    TSolutionObj = class(TDSSObject)
+
+     protected
+       UIMsg  :  TEvent;         // Event handler for this actor (Messages)
 
      private
 
        dV :pNodeVArray;   // Array of delta V for Newton iteration
        FFrequency:Double;
-       Process  : TThread;
 
        FUNCTION Converged(ActorID : Integer):Boolean;
        FUNCTION OK_for_Dynamics(const Value:Integer):Boolean;
@@ -190,7 +211,8 @@ TYPE
        NodeV    : pNodeVArray;    // Main System Voltage Array   allows NodeV^[0]=0
        Currents : pNodeVArray;      // Main System Currents Array
 
-       IncMatrix : TIncMatrixArray;  // Row of the Incidence Matrix Value
+       IncMat    :  Tsparse_matrix; // Incidence sparse matrix
+       Laplacian :  Tsparse_matrix; // Laplacian sparse matrix
 
 //****************************Timing variables**********************************
        SolveStartTime      : int64;
@@ -222,8 +244,8 @@ TYPE
       Active_Cols_Idx :  Array of Integer;
 //******************************************************************************
 //********************Diakoptics solution mode variables************************
-      Diakoptics_ready  : Boolean;
-      Diakoptics_Actors :  Integer;
+      ADiakoptics_ready  : Boolean;
+      ADiakoptics_Actors :  Integer;
 //******************************************************************************
        constructor Create(ParClass:TDSSClass; const solutionname:String);
        destructor  Destroy; override;
@@ -289,12 +311,11 @@ TYPE
        procedure AddXfmr2IncMatrix(ActorID : Integer);              // Adds the Xfmrs to the Incidence matrix arrays
        procedure AddSeriesCap2IncMatrix(ActorID : Integer);         // Adds capacitors in series to the Incidence matrix arrays
        procedure AddSeriesReac2IncMatrix(ActorID : Integer);         // Adds Reactors in series to the Incidence matrix arrays
+       procedure UI_message;                                        // Message structure for the Actor (1 message initially)
+       procedure WaitForActor(ActorID : Integer);                   // Waits for the actor to finish the latest assigned task
 
    End;
-
-
 {==========================================================================}
-
 
 VAR
    ActiveSolutionObj:TSolutionObj;
@@ -326,7 +347,6 @@ Const NumPropsThisClass = 1;
 var FDebug:TextFile;
 {$ENDIF}
 
-
 // ===========================================================================================
 constructor TDSSSolution.Create;  // Collection of all solution objects
 Begin
@@ -340,9 +360,6 @@ Begin
 
      CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
      CommandList.Abbrev := True;
-
-
-
 End;
 
 // ===========================================================================================
@@ -469,8 +486,8 @@ Begin
     IntervalHrs   := 1.0;
 
     InitPropertyValues(0);
-    Diakoptics_Ready   :=  False;   // Diskoptics needs to be initialized
-    setlength(IncMatrix,3);
+    ADiakoptics_Ready   :=  False;   // A-Diakoptics needs to be initialized
+    UIMsg     :=  TEvent.Create(nil, True, False, inttostr(ActiveActor));
 End;
 
 // ===========================================================================================
@@ -484,13 +501,22 @@ Begin
       Reallocmem(NodeVbase, 0);
       Reallocmem(VMagSaved, 0);
 
-      If hYsystem <> 0 THEN   DeleteSparseSet(hYsystem);
-      If hYseries <> 0 THEN   DeleteSparseSet(hYseries);
+      If hYsystem <> 0 THEN DeleteSparseSet(hYsystem);
+      If hYseries <> 0 THEN DeleteSparseSet(hYseries);
 
 //      SetLogFile ('c:\\temp\\KLU_Log.txt', 0);
 
       Reallocmem(HarmonicList,0);
- 
+
+      UIMsg.Free;
+// Sends a message to the working actor
+      if ActorHandle[ActiveActor] <> nil then
+      Begin
+        ActorHandle[ActiveActor].Send_Message(EXIT_ACTOR);
+        ActorHandle[ActiveActor].WaitFor;
+        ActorHandle[ActiveActor].Free;
+        ActorHandle[ActiveActor]  :=  nil;
+      End;
       Inherited Destroy;
 End;
 
@@ -510,8 +536,28 @@ Begin
 
      End;  {WITH}
 End;
+// ===========================================================================================
+{ Waits until the actor finishes the last task
+  This iterative routine was implemented because sometimes the
+  Solving actor is much faster than the calling thread, so, probably the
+  actor sent his response before we were able to wait for it and it may get
+  lost
+}
+procedure TSolutionObj.WaitForActor(ActorID : Integer);
+var
+  EndFlag : Boolean;
 
-
+Begin
+      EndFlag :=  True;
+      while EndFlag do
+      Begin
+        UIMsg.WaitFor(1);
+        if Not ActorHandle[ActorID].Terminated then
+          EndFlag :=  ActorHandle[ActorID].Is_Busy
+        else
+          EndFlag :=  False;
+      End
+End;
 // ===========================================================================================
 PROCEDURE TSolutionObj.Solve(ActorID : Integer);
 {$IFNDEF FPC}
@@ -536,59 +582,41 @@ Begin
          ErrorNumber := CmdResult;
          Exit;
     End;
-
-
 Try
-
 {Main solution Algorithm dispatcher}
-
     WITH ActiveCircuit[ActorID] Do  Begin
-    
+
        CASE Year of
          0:  DefaultGrowthFactor := 1.0;    // RCD 8-17-00
        ELSE
            DefaultGrowthFactor := IntPower(DefaultGrowthRate, (year-1));
        END;
     End;
-
 {$IFDEF DLL_ENGINE}
     Fire_InitControls;
 {$ENDIF}
-
-    {CheckFaultStatus;  ???? needed here??}
-     {$IFNDEF FPC}QueryPerformanceCounter(GStartTime);{$ENDIF}
-{
-     Case Dynavars.SolutionMode OF
-         SNAPSHOT:     SolveSnap;
-         YEARLYMODE:   SolveYearly;
-         DAILYMODE:    SolveDaily;
-         DUTYCYCLE:    SolveDuty;
-         DYNAMICMODE:  SolveDynamic;
-         MONTECARLO1:  SolveMonte1;
-         MONTECARLO2:  SolveMonte2;
-         MONTECARLO3:  SolveMonte3;
-         PEAKDAY:      SolvePeakDay;
-         LOADDURATION1:SolveLD1;
-         LOADDURATION2:SolveLD2;
-         DIRECT:       SolveDirect;
-         MONTEFAULT:   SolveMonteFault;  // Monte Carlo Fault Cases
-         FAULTSTUDY:   SolveFaultStudy;
-         AUTOADDFLAG:  ActiveCircuit[ActiveActor].AutoAddObj.Solve;
-         HARMONICMODE: SolveHarmonic;
-         GENERALTIME:  SolveGeneralTime;
-         HARMONICMODET:SolveHarmonicT;  //Declares the Hsequential-time harmonics
-     Else
-         DosimpleMsg('Unknown solution mode.', 481);
-     End;
-}
-    if ActorHandle[ActorID] <> nil  then
-    begin
-      ActorHandle[ActorID].Terminate;
+    // Creates the actor again in case of being terminated due to an error before
+    if ActorHandle[ActorID].Terminated or (ActorHandle[ActorID] = nil)  then
+    Begin
       ActorHandle[ActorID].Free;
-    end;
-    ActorHandle[ActorID] := TSolver.Create(false,ActorCPU[ActorID],ActorID,{$IFNDEF FPC}ScriptEd.UpdateSummaryForm{$ELSE}nil{$ENDIF});
-    if not Parallel_enabled then
-      ActorHandle[ActorID].WaitFor; // If the parallel features are not active it will work as the classic version
+      New_Actor(ActorID);
+    End;
+    {CheckFaultStatus;  ???? needed here??}
+    // Resets the event for receiving messages from the active actor
+      // Updates the status of the Actor in the GUI
+      ActorStatus[ActorID]      :=  1;    // Global to indicate that the actor is busy
+      if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
+      UIMsg.ResetEvent;
+      {$IFNDEF FPC}QueryPerformanceCounter(GStartTime);{$ENDIF}
+      // Sends message to start the Simulation
+      ActorHandle[ActorID].Send_Message(SIMULATE);
+      // If the parallel mode is not active, Waits until the actor finishes
+      if not Parallel_enabled then
+      Begin
+        WaitForActor(ActorID);
+        if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
+      End;
+
 Except
 
     On E:Exception Do Begin
@@ -949,7 +977,6 @@ Begin
    CASE Algorithm of
       NORMALSOLVE : DoNormalSolution(ActorID);
       NEWTONSOLVE : DoNewtonSolution(ActorID);
-      DIAKOPTICS  : DoNormalSolution(ActorID);
    End;
 
    ActiveCircuit[ActorID].Issolved := ConvergedFlag;
@@ -1193,10 +1220,7 @@ var
 
 Begin
   // Uploads the values to the incidence matrix
-  for Cidx := 1 to 3 do IncMatrix[Length(IncMatrix) - CIdx]  := ActiveIncCell[3 - CIdx];
-  // Normalize values
-  IncMatrix[Length(IncMatrix) - 3] := IncMatrix[Length(IncMatrix) - 3] - 1;
-  IncMatrix[Length(IncMatrix) - 2] := IncMatrix[Length(IncMatrix) - 2] - 2;
+  IncMat.insert((ActiveIncCell[0] - 1),(ActiveIncCell[1] - 2),ActiveIncCell[2]);
   ActiveIncCell[2]  :=  -1;
 End;
 // ===========================================================================================
@@ -1225,7 +1249,6 @@ begin
         Inc_Mat_Rows[temp_counter - 1]  :=  'Line.'+elem.Name;
         for TermIdx := 1 to 2 do
         Begin
-            SetLength(IncMatrix, Length(IncMatrix) + 3);
             LineBus           :=  elem.GetBus(TermIdx);
             BusdotIdx         :=  ansipos('.',LineBus);
             if BusdotIdx <> 0 then
@@ -1280,7 +1303,6 @@ begin
         Inc_Mat_Rows[temp_counter - 1]  :=  'Transformer.'+elem.Name;
         for TermIdx := 1 to elem.NumberOfWindings do
         Begin
-            SetLength(IncMatrix, Length(IncMatrix) + 3);
             LineBus     :=  elem.GetBus(TermIdx);
             BusdotIdx   :=  ansipos('.',LineBus);
             if BusdotIdx <> 0 then
@@ -1329,7 +1351,6 @@ begin
           ActiveIncCell[2]  :=  1;
           for CapTermIdx := 1 to 2 do
           Begin
-            SetLength(IncMatrix, Length(IncMatrix) + 3);
             CapBus      :=  elem.GetBus(CapTermIdx);
             BusdotIdx   :=  ansipos('.',CapBus);
             if BusdotIdx <> 0 then
@@ -1381,7 +1402,6 @@ begin
         ActiveIncCell[2]  :=  1;
         for TermIdx := 1 to 2 do
         Begin
-          SetLength(IncMatrix, Length(IncMatrix) + 3);
           RBus      :=  ActiveCktElement.GetBus(TermIdx);
           BusdotIdx   :=  ansipos('.',RBus);
           if BusdotIdx <> 0 then
@@ -1409,11 +1429,16 @@ PROCEDURE TSolutionObj.Calc_Inc_Matrix(ActorID : Integer);
 var
   dlong : Integer;
 Begin
+  // If the sparse matrix obj doesn't exists creates it, otherwise deletes the content
+  if IncMat = nil then
+    IncMat  :=  Tsparse_matrix.Create
+  else
+    IncMat.reset;
+
   if ActiveCircuit[ActorID]<>nil then
     with ActiveCircuit[ActorID] do
     Begin
       temp_counter  :=  0;
-      setlength(IncMatrix,3);           // Init array
       ActiveIncCell[0]  := 1;           // Activates row 1 of the incidence matrix
       // Now we proceed to evaluate the link branches
       AddLines2IncMatrix(ActorID);      // Includes the Lines
@@ -1434,11 +1459,11 @@ var
 begin
   Result            :=  -1;
   Tflag             :=  True;
-  for idx_1 := 1 to ((length(IncMatrix)  div 3) - 1) do    //Looks for the Column in the IncMatrix
+  for idx_1 := 1 to (IncMat.NZero - 1) do    //Looks for the Column in the IncMatrix
   begin
-    if (IncMatrix[idx_1*3 + 1] = Col) and Tflag then
+    if (IncMat.data[idx_1][1] = Col) and Tflag then
     begin
-      Result :=   IncMatrix[idx_1*3];
+      Result :=   IncMat.data[idx_1][0];
       Tflag  :=   False;
     end;
   end;
@@ -1454,17 +1479,17 @@ var
 Begin
   Result  :=  -1;
   Tflag   :=  True;    // Detection Flag
-  for Idx_1 := 1 to ((length(IncMatrix)  div 3) - 1) do    //Looks for the row in the IncMatrix
+  for Idx_1 := 1 to (IncMat.NZero - 1) do    //Looks for the row in the IncMatrix
   begin
-    if (IncMatrix[Idx_1*3] = Row) and Tflag then
+    if (IncMat.data[Idx_1][0] = Row) and Tflag then
     begin
       setlength(Active_Cols,2);
       setlength(Active_Cols_Idx,2);
-      Active_Cols[0]      :=  IncMatrix[Idx_1*3 + 1];     //Stores the indexes of both columns for the link branch
-      Active_Cols[1]      :=  IncMatrix[Idx_1*3 + 4];     //In case they need ot be used in the future by the caller
-      Active_Cols_Idx[0]  :=  IncMatrix[Idx_1*3 - 1];     //Stores the indexes of both columns for the link branch
-      Active_Cols_Idx[1]  :=  IncMatrix[Idx_1*3 + 2];     //In case they need ot be used in the future by the caller
-      Result :=  IncMatrix[Idx_1*3 + 1];
+      Active_Cols[0]      :=  IncMat.data[Idx_1][1];     //Stores the indexes of both columns for the link branch
+      Active_Cols[1]      :=  IncMat.data[Idx_1 + 1][1]; //In case they need to be used in the future by the caller
+      Active_Cols_Idx[0]  :=  IncMat.data[Idx_1 - 1][2]; //Stores the indexes of both columns for the link branch
+      Active_Cols_Idx[1]  :=  IncMat.data[Idx_1][2];     //In case they need to be used in the future by the caller
+      Result :=  IncMat.data[Idx_1][1];
       Tflag  :=  False;
     end;
   end;
@@ -1491,7 +1516,10 @@ Var
   j,                                                  // Default counter
   j2,                                                 // Default counter
   ZeroLevel,                                          // Number of Zero level Buses
-  BusdotIdx,                                          // Local Shared variable
+  BusdotIdx,
+  row,
+  col,
+  val,                                          // Local Shared variable
   nPDE           : Integer;                           // PDElements index
 Begin
   Try
@@ -1502,7 +1530,12 @@ Begin
       nLevels     := 0;
       nPDE        := 0;
       setlength(Inc_Mat_Cols,0);
-      setlength(IncMatrix,3);           // Init array
+      //Init the spaser matrix
+      if IncMat = nil then
+        IncMat  :=  Tsparse_matrix.Create
+      else
+        IncMat.reset;
+
       ActiveIncCell[0]  := -1;           // Activates row 1 of the incidence matrix
       If Assigned (topo) Then Begin
         PDElem                  := topo.First;
@@ -1535,24 +1568,22 @@ Begin
               Inc_Mat_Rows[nPDE-1]    :=  PDE_Name;
               for j := 0 to ActiveCktElement.Nterms-1 do
               Begin
-                ActiveIncCell[1]  :=  length(IncMatrix);  // Gets the offset inside the vector
-                setlength(IncMatrix,ActiveIncCell[1] + 3);
-                IncMatrix[ActiveIncCell[1]] :=  ActiveIncCell[0]; //Sets the row
-                BusdotIdx           :=  -1;       // Flag to not create a new variable
+                row :=  ActiveIncCell[0];                 //Sets the row
+                BusdotIdx           :=  -1;               // Flag to not create a new variable
                 for i := 0 to length(Inc_Mat_Cols)-1 do   // Checks if the bus already exists in the Cols array
                   if Inc_Mat_Cols[i] = PDE_Buses[j] then  BusdotIdx :=  i;
-                if BusdotIdx >= 0 then  IncMatrix[ActiveIncCell[1]  + 1] :=  BusdotIdx   //Sets the Col
+                if BusdotIdx >= 0 then  col :=  BusdotIdx   //Sets the Col
                 else
                 Begin
                   setlength(Inc_Mat_Cols,length(Inc_Mat_Cols)+1);
                   setlength(Inc_Mat_levels,length(Inc_Mat_levels)+1);
                   Inc_Mat_Cols[length(Inc_Mat_Cols)-1]  :=  PDE_Buses[j];
                   Inc_Mat_levels[length(Inc_Mat_Cols)-1]:=  nLevels;
-                  IncMatrix[ActiveIncCell[1]  + 1] :=  length(Inc_Mat_Cols) - 1; //Sets the Col
+                  col :=  length(Inc_Mat_Cols) - 1; //Sets the Col
                 End;
-                if j = 0 then IncMatrix[ActiveIncCell[1]  + 2]  :=  1 //Sets the value
-                else IncMatrix[ActiveIncCell[1]  + 2] :=  -1;
-
+                if j = 0 then val  :=  1 //Sets the value
+                else val :=  -1;
+                IncMat.insert(row,col,val);
               End;
             end;
           End;
@@ -2045,8 +2076,7 @@ begin
 
    SolutionInitialized := FALSE;   // reinitialize solution when mode set (except dynamics)
    PreserveNodeVoltages := FALSE;  // don't do this unless we have to
-   SampleTheMeters := FALSE;                         
-
+   SampleTheMeters := FALSE;
    // Reset defaults for solution modes
    Case Dynavars.SolutionMode of
 
@@ -2296,6 +2326,11 @@ begin
 
 end;
 
+procedure TSolutionObj.UI_message;
+Begin
+  UIMsg.SetEvent;
+End;
+
 procedure TSolutionObj.Set_Year(const Value: Integer);
 begin
       If DIFilesAreOpen[ActiveActor] Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
@@ -2430,8 +2465,6 @@ Begin
 
 end;
 
-
-
 FUNCTION TSolutionObj.SolveYDirect(ActorID : Integer): Integer;
 
 { Solves present Y matrix with no injection sources except voltage and current sources }
@@ -2456,24 +2489,56 @@ END;
 constructor TSolver.Create(Susp: Boolean; local_CPU: integer; ID : integer; CallBack: TInfoMessageCall);
 
 var
-  Parallel  : TParallel_Lib;
-  Thpriority: String;
+  Parallel    : TParallel_Lib;
+  Thpriority  : String;
 begin
   Inherited Create(Susp);
   FInfoProc       :=  CallBack;
-  FreeOnTerminate := False;
+  FreeOnTerminate :=  False;
   ActorID         :=  ID;
-{$IFNDEF UNIX}  
+  ActorMsg        :=  TEvent.Create(nil, True, False, 'ActorMsg' + inttostr(ActorID));
+  MsgType         :=  -1;
+  ActorActive     :=  True;
+  Processing      :=  False;
+  {$IFNDEF UNIX}              // Only for windows
   Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
-  Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
   Parallel.Set_Thread_affinity(handle,local_CPU);
-{$ELSE}
-  Parallel.Set_Process_Priority(FpGetpid(), REALTIME_PRIORITY_CLASS);
+  Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
+  {$ELSE}
   Parallel.Set_Thread_Priority(self,THREAD_PRIORITY_TIME_CRITICAL);
   Parallel.Set_Thread_affinity(handle,local_CPU);
 {$ENDIF}  
 
 end;
+
+Procedure TSolver.Send_Message(Msg  : Integer);
+Begin
+  MsgType :=  Msg;
+  ActorMsg.SetEvent;
+End;
+
+procedure TSolver.Set_Processing(NVal : Boolean);
+Begin
+  Processing  :=  NVal;
+End;
+
+function TSolver.Get_Processing(): Boolean;
+Begin
+  Result  :=  Processing;
+End;
+
+function TSolver.Get_CPU(): Integer;
+Begin
+  Result  :=  ActorCPU[ActorID];
+End;
+
+procedure TSolver.Set_CPU(CPU : Integer);
+var
+  Parallel  : TParallel_Lib;
+Begin
+  ActorCPU[ActorID] :=  CPU;
+  Parallel.Set_Thread_affinity(handle,CPU);
+End;
 
 {*******************************************************************************
 *             executes the selected solution algorithm                         *
@@ -2484,38 +2549,60 @@ procedure TSolver.Execute;
 var
   {$IFNDEF FPC}ScriptEd  : TScriptEdit;{$ENDIF}
   idx       : Integer;
+
   begin
     with ActiveCircuit[ActorID].Solution do
     begin
-      if ActorStatus[ActorID] = 1 then
-      begin
-        ActorStatus[ActorID] := 0;
-        FMessage  :=  '1';
-        if Not IsDLL then synchronize(CallCallBack);
-
-           Case Dynavars.SolutionMode OF
-               SNAPSHOT       : SolveSnap(ActorID);
-               YEARLYMODE     : SolveYearly(ActorID);
-               DAILYMODE      : SolveDaily(ActorID);
-               DUTYCYCLE      : SolveDuty(ActorID);
-               DYNAMICMODE    : SolveDynamic(ActorID);
-               MONTECARLO1    : SolveMonte1(ActorID);
-               MONTECARLO2    : SolveMonte2(ActorID);
-               MONTECARLO3    : SolveMonte3(ActorID);
-               PEAKDAY        : SolvePeakDay(ActorID);
-               LOADDURATION1  : SolveLD1(ActorID);
-               LOADDURATION2  : SolveLD2(ActorID);
-               DIRECT         : SolveDirect(ActorID);
-               MONTEFAULT     : SolveMonteFault(ActorID);  // Monte Carlo Fault Cases
-               FAULTSTUDY     : SolveFaultStudy(ActorID);
-               AUTOADDFLAG    : ActiveCircuit[ActorID].AutoAddObj.Solve(ActorID);
-               HARMONICMODE   : SolveHarmonic(ActorID);
-               GENERALTIME    : SolveGeneralTime(ActorID);
-               HARMONICMODET  : SolveHarmonicT(ActorID);  //Declares the Hsequential-time harmonics
-           Else
-               DosimpleMsg('Unknown solution mode.', 481);
-           End;
-
+      while ActorActive do
+      Begin
+        if not Processing then
+        begin
+          ActorMsg.ResetEvent;
+          ActorMsg.WaitFor(INFINITE); // Keeps waiting for an incomming message (Event)
+          Processing                  := True;
+          case MsgType of             // Evaluates the incomming message
+          SIMULATE  :                 // Simulates the active ciruit on this actor
+            Begin
+            Case Dynavars.SolutionMode OF
+                SNAPSHOT       : SolveSnap(ActorID);
+                YEARLYMODE     : SolveYearly(ActorID);
+                DAILYMODE      : SolveDaily(ActorID);
+                DUTYCYCLE      : SolveDuty(ActorID);
+                DYNAMICMODE    : SolveDynamic(ActorID);
+                MONTECARLO1    : SolveMonte1(ActorID);
+                MONTECARLO2    : SolveMonte2(ActorID);
+                MONTECARLO3    : SolveMonte3(ActorID);
+                PEAKDAY        : SolvePeakDay(ActorID);
+                LOADDURATION1  : SolveLD1(ActorID);
+                LOADDURATION2  : SolveLD2(ActorID);
+                DIRECT         : SolveDirect(ActorID);
+                MONTEFAULT     : SolveMonteFault(ActorID);  // Monte Carlo Fault Cases
+                FAULTSTUDY     : SolveFaultStudy(ActorID);
+                AUTOADDFLAG    : ActiveCircuit[ActorID].AutoAddObj.Solve(ActorID);
+                HARMONICMODE   : SolveHarmonic(ActorID);
+                GENERALTIME    : SolveGeneralTime(ActorID);
+                HARMONICMODET  : SolveHarmonicT(ActorID);  //Declares the Hsequential-time harmonics
+            Else
+                DosimpleMsg('Unknown solution mode.', 481);
+            End;
+            QueryPerformanceCounter(GEndTime);
+            Total_Solve_Time_Elapsed  :=  ((GEndTime-GStartTime)/CPU_Freq)*1000000;
+            Total_Time_Elapsed        :=  Total_Time_Elapsed + Total_Solve_Time_Elapsed;
+            Processing                :=  False;
+            FMessage                  :=  '1';
+            ActorStatus[ActorID]      :=  0;      // Global to indicate that the actor is ready
+            // If required, sends a message to UI to notify that the actor has finised
+            if Not Parallel_enabled then Notify_Main
+            else if Not IsDLL then queue(CallCallBack); // Refreshes the GUI if running asynchronously
+            End;
+          EXIT_ACTOR:                // Terminates the thread
+            Begin
+              ActorActive  :=  False;
+            End
+          else                       // I don't know what the message is
+            DosimpleMsg('Unknown Message.', 7010);
+          End;
+        End;
       end;
     end;
   end;
@@ -2525,21 +2612,21 @@ procedure TSolver.CallCallBack;
     if Assigned(FInfoProc) then  FInfoProc(FMessage);
   end;
 
+procedure TSolver.Notify_Main;
+Begin
+  With ActiveCircuit[ActorID].Solution do
+    UI_Message;
+End;
+
 procedure TSolver.DoTerminate;        // Is the end of the thread
 var
   ex: TObject;
 begin
-    with ActiveCircuit[ActorID].Solution do
-    begin
-{$IFNDEF FPC}    
-        QueryPerformanceCounter(GEndTime);
-{$ENDIF}
-        Total_Solve_Time_Elapsed  :=  ((GEndTime-GStartTime)/CPU_Freq)*1000000;
-        Total_Time_Elapsed        :=  Total_Time_Elapsed + Total_Solve_Time_Elapsed;
-        ActorStatus[ActorID]      :=  1;
-        FMessage                  :=  '1';
-        if Not IsDLL then synchronize(CallCallBack);
-    end;
+    ActorActive               :=  False;
+    Processing                :=  False;
+    ActorStatus[ActorID]      :=  0;      // Global to indicate that the actor is ready
+    ActorMsg.Free;
+
     inherited;
 End;
 
@@ -2551,7 +2638,6 @@ initialization
     Rewrite(Fdebug);
     CloseFile(Fdebug);
    {$ENDIF}
-
 
 End.
 

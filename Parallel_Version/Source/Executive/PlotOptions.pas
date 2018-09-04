@@ -227,7 +227,9 @@ Begin
                     'U': Quantity := pqcurrent;
                     End;
                'P': Quantity := pqpower;
-               'L': Quantity := pqlosses;
+               'L': IF CompareTextShortest('los', Param)=0 Then Quantity := pqlosses
+                    ELSE MatrixType :=  pLaplacian;
+               'I': MatrixType :=  pIncMatrix;
              Else
                Quantity := pqNone;
                Valueindex := Parser[ActiveActor].IntValue;

@@ -50,7 +50,12 @@ begin
     Result  :=  ActorCPU[ActiveActor];
   end;
   6: begin  // Parallel.ActorCPU Write
-    if arg < CPU_Cores  then  ActorCPU[ActiveActor] :=  arg
+    if arg < CPU_Cores  then
+    Begin
+      ActorCPU[ActiveActor] :=  arg;
+      if ActorHandle[ActiveActor] <> nil then
+        ActorHandle[ActiveActor].CPU :=  ActorCPU[ActiveActor];
+    End
     else DoSimpleMsg('The CPU does not exists',7004);
   end;
   7: begin  // Parallel.NumActors Read
@@ -58,7 +63,7 @@ begin
   end;
   8: begin  // Parallel.Wait
     for i := 1 to NumOfActors do
-    ActorHandle[i].WaitFor;
+      with ActiveCircuit[i].Solution do WaitForActor(i);
   end;
   9: begin  // Parallel.ActiveParallel Read
     if Parallel_enabled then Result :=  1 else Result  :=  0;
@@ -93,7 +98,10 @@ Begin
   end;
   1: begin  // Parallel.AxtorState Read
     for i := 1 to NumOfActors do
-      arg[i] :=  ActorStatus[i];
+    Begin
+      if ActorHandle[i].Is_Busy then arg[i] :=  0
+      else arg[i] :=  1;
+    End;
   end
   else
       arg[1]:=-1;

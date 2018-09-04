@@ -146,11 +146,11 @@ begin
   end;
   Screen.Cursor := crDefault;
 
-  If Not IsDLL Then Begin
-    if ActorStatus[ActiveActor] = 1 then
+  If Not IsDLL and (ActorHandle[ActiveActor] <> nil) Then Begin
+    if (ActorStatus[ActiveActor] = 0) then
     begin
       UpdateResultForm;
-//      UpdateSummaryForm(ActiveActor);
+  //    UpdateSummaryForm(ActiveActor);
       If Assigned(ActiveCircuit[ActiveActor]) Then With ActiveCircuit[ActiveActor] Do
         if (SolutionWasAttempted[ActiveActor]) and (Not IsSolved) then Begin
           Beep;
@@ -166,7 +166,7 @@ Begin
   SolutionAbort := FALSE;
   DSSExecutive.Command := S;
   If RecordCommands then Editor.Lines.Append(S);
-  if ActorStatus[ActiveActor] = 1 then
+  if (ActorStatus[ActiveActor] = 0) then
   begin
     If Not IsDLL Then  Begin
       UpdateResultForm;
@@ -186,97 +186,101 @@ end;
 Procedure TScriptEdit.UpdateSummaryForm(Const s: string);
 Var
   cLosses, cPower :Complex;
+  ActorBusy,
   ActorsRdy       : Boolean;
   USIdx           : Integer;
   TStr            : String;
 begin
-  With ControlPanel.SummaryEdit Do Begin
-    ActorsRdy :=  True;
-    for USIdx := 1 to NumOfActors do if ActorStatus[USIdx] <> 1 then ActorsRdy  := False;
-    if ActorsRdy then
-    Begin
-      Clear;
-      for USIdx := 1 to NumOfActors do
-      Begin
-        ActiveActor :=  USIdx;
-        if ActiveCircuit[ActiveActor] <> nil then
+    With ControlPanel.SummaryEdit Do Begin
+        ActorsRdy :=  True;
+        for USIdx := 1 to NumOfActors do
+          ActorsRdy   := ActorsRdy and (ActorStatus[USIdx] = 0);
+
+        if ActorsRdy then
         Begin
-          Lines.BeginUpdate;
-          If ActiveCircuit[ActiveActor] <> nil Then With Lines Do Begin
-            Add('Results for Actor ID # ' + inttostr(ActiveActor));
-            Add('CPU selected : ' + inttostr( ActorCPU[ActiveActor]));
-            IF ActiveCircuit[ActiveActor].Issolved Then Add('Status = SOLVED')
-            Else Begin
-              SelAttributes.Color := clRed;
-              Add('Status = NOT Solved');
-              SelAttributes.Color := clBlack;
-            End;
-            Add('Solution Mode = ' + GetSolutionModeID);
-            Add('Number = ' + IntToStr(ActiveCircuit[ActiveActor].Solution.NumberofTimes));
-            Add('Load Mult = '+ Format('%5.3f', [ActiveCircuit[ActiveActor].LoadMultiplier]));
-            Add('Devices = '+ Format('%d', [ActiveCircuit[ActiveActor].NumDevices]));
-            Add('Buses = ' + Format('%d', [ActiveCircuit[ActiveActor].NumBuses]));
-            Add('Nodes = ' + Format('%d', [ActiveCircuit[ActiveActor].NumNodes]));
-            Add('Control Mode =' + GetControlModeID);
-            Add('Total Iterations = '+IntToStr(ActiveCircuit[ActiveActor].Solution.Iteration));
-            Add('Control Iterations = '+IntToStr(ActiveCircuit[ActiveActor].Solution.ControlIteration));
-            Add('Max Sol Iter = ' +IntToStr(ActiveCircuit[ActiveActor].Solution.MostIterationsDone ));
-            Add(' ');
-            Add(' - Circuit Summary -');
-            Add(' ');
-            If ActiveCircuit[ActiveActor] <> Nil Then
-              If ActiveCircuit[ActiveActor].Issolved and not ActiveCircuit[ActiveActor].BusNameRedefined Then Begin
-                TRY
-                  Add(Format('Year = %d ',[ActiveCircuit[ActiveActor].Solution.Year]));
-                  Add(Format('Hour = %d ',[ActiveCircuit[ActiveActor].Solution.DynaVars.intHour]));
-                  Add('Max pu. voltage = '+Format('%-.5g ',[GetMaxPUVoltage]));
-                  Add('Min pu. voltage = '+Format('%-.5g ',[GetMinPUVoltage(TRUE)]));
-                  cPower :=  CmulReal(GetTotalPowerFromSources(ActiveActor), 0.000001);  // MVA
-                  Add(Format('Total Active Power:   %-.6g MW',[cpower.re]));
-                  Add(Format('Total Reactive Power: %-.6g Mvar',[cpower.im]));
-                  cLosses := CmulReal(ActiveCircuit[ActiveActor].Losses[ActiveActor], 0.000001);
-                  If cPower.re <> 0.0 Then
-                    Add(Format('Total Active Losses:   %-.6g MW, (%-.4g %%)',[cLosses.re,(Closses.re/cPower.re*100.0)]))
-                  Else
-                    Add('Total Active Losses:   ****** MW, (**** %%)');
-                  Add(Format('Total Reactive Losses: %-.6g Mvar',[cLosses.im]));
-                  Add(Format('Frequency = %-g Hz',[ActiveCircuit[ActiveActor].Solution.Frequency]));
-                  Add('Mode = '+GetSolutionModeID);
-                  Add('Control Mode = '+GetControlModeID);
-                  Add('Load Model = '+GetLoadModel);
-                  Add('------------------------');
-                EXCEPT
-                  On E:Exception Do Add('Error encountered. Re-solve circuit.');
-                END;
-              End;
-            If Not IsDLL Then
-              ControlPanel.Caption := 'DSS Main Control Panel: Active Circuit = ' + ActiveCircuit[ActiveActor].Name;
-          End Else With Lines Do Begin
-            Add('No Circuits Defined');
-          End;
-          If Not IsDLL Then ControlPanel.UpdateStatus;
-          Lines.EndUpdate;
-        End;
-      End;
-    End
-    else
-    begin
-      Clear;
-      Lines.BeginUpdate;
-      With Lines Do Begin
-          Add('Process Status');
+          Clear;
           for USIdx := 1 to NumOfActors do
           Begin
-            if ActorStatus[USIdx] <> 1 then TStr :=  'Processing'
-            else TStr :=  'Ready';
-            Add('Actor ' + inttostr(USIdx) + ' CPU ' + inttostr(ActorCPU[USIdx]) + ': ' + TStr);
-            If Not IsDLL Then ControlPanel.UpdateStatus;
-            Lines.EndUpdate;
+            ActiveActor :=  USIdx;
+            if ActiveCircuit[ActiveActor] <> nil then
+            Begin
+              Lines.BeginUpdate;
+              If ActiveCircuit[ActiveActor] <> nil Then With Lines Do Begin
+                Add('Results for Actor ID # ' + inttostr(ActiveActor));
+                Add('CPU selected : ' + inttostr( ActorCPU[ActiveActor]));
+                IF ActiveCircuit[ActiveActor].Issolved Then Add('Status = SOLVED')
+                Else Begin
+                  SelAttributes.Color := clRed;
+                  Add('Status = NOT Solved');
+                  SelAttributes.Color := clBlack;
+                End;
+                Add('Solution Mode = ' + GetSolutionModeID);
+                Add('Number = ' + IntToStr(ActiveCircuit[ActiveActor].Solution.NumberofTimes));
+                Add('Load Mult = '+ Format('%5.3f', [ActiveCircuit[ActiveActor].LoadMultiplier]));
+                Add('Devices = '+ Format('%d', [ActiveCircuit[ActiveActor].NumDevices]));
+                Add('Buses = ' + Format('%d', [ActiveCircuit[ActiveActor].NumBuses]));
+                Add('Nodes = ' + Format('%d', [ActiveCircuit[ActiveActor].NumNodes]));
+                Add('Control Mode =' + GetControlModeID);
+                Add('Total Iterations = '+IntToStr(ActiveCircuit[ActiveActor].Solution.Iteration));
+                Add('Control Iterations = '+IntToStr(ActiveCircuit[ActiveActor].Solution.ControlIteration));
+                Add('Max Sol Iter = ' +IntToStr(ActiveCircuit[ActiveActor].Solution.MostIterationsDone ));
+                Add(' ');
+                Add(' - Circuit Summary -');
+                Add(' ');
+                If ActiveCircuit[ActiveActor] <> Nil Then
+                  If ActiveCircuit[ActiveActor].Issolved and not ActiveCircuit[ActiveActor].BusNameRedefined Then Begin
+                    TRY
+                      Add(Format('Year = %d ',[ActiveCircuit[ActiveActor].Solution.Year]));
+                      Add(Format('Hour = %d ',[ActiveCircuit[ActiveActor].Solution.DynaVars.intHour]));
+                      Add('Max pu. voltage = '+Format('%-.5g ',[GetMaxPUVoltage]));
+                      Add('Min pu. voltage = '+Format('%-.5g ',[GetMinPUVoltage(TRUE)]));
+                      cPower :=  CmulReal(GetTotalPowerFromSources(ActiveActor), 0.000001);  // MVA
+                      Add(Format('Total Active Power:   %-.6g MW',[cpower.re]));
+                      Add(Format('Total Reactive Power: %-.6g Mvar',[cpower.im]));
+                      cLosses := CmulReal(ActiveCircuit[ActiveActor].Losses[ActiveActor], 0.000001);
+                      If cPower.re <> 0.0 Then
+                        Add(Format('Total Active Losses:   %-.6g MW, (%-.4g %%)',[cLosses.re,(Closses.re/cPower.re*100.0)]))
+                      Else
+                        Add('Total Active Losses:   ****** MW, (**** %%)');
+                      Add(Format('Total Reactive Losses: %-.6g Mvar',[cLosses.im]));
+                      Add(Format('Frequency = %-g Hz',[ActiveCircuit[ActiveActor].Solution.Frequency]));
+                      Add('Mode = '+GetSolutionModeID);
+                      Add('Control Mode = '+GetControlModeID);
+                      Add('Load Model = '+GetLoadModel);
+                      Add('------------------------');
+                    EXCEPT
+                      On E:Exception Do Add('Error encountered. Re-solve circuit.');
+                    END;
+                  End;
+                If Not IsDLL Then
+                  ControlPanel.Caption := 'DSS Main Control Panel: Active Circuit = ' + ActiveCircuit[ActiveActor].Name;
+              End Else With Lines Do Begin
+                Add('No Circuits Have been Defined for this Actor');
+              End;
+              If Not IsDLL Then ControlPanel.UpdateStatus;
+              Lines.EndUpdate;
+            End;
           End;
-      End;
-    end;
-    ControlPanel.ResultPages.ActivePage := ControlPanel.SummaryTab;
-  End;
+        End
+        else
+        begin
+          Clear;
+          Lines.BeginUpdate;
+          With Lines Do Begin
+              Add('Process Status');
+              for USIdx := 1 to NumOfActors do
+              Begin
+                if (ActorStatus[USIdx] = 1) then TStr :=  'Processing'
+                else TStr :=  'Ready';
+                Add('Actor ' + inttostr(USIdx) + ' CPU ' + inttostr(ActorCPU[USIdx]) + ': ' + TStr);
+                If Not IsDLL Then ControlPanel.UpdateStatus;
+                Lines.EndUpdate;
+              End;
+          End;
+        end;
+        ControlPanel.ResultPages.ActivePage := ControlPanel.SummaryTab;
+    End;
+
 end;
 
 function TScriptEdit.CheckEditorClose:Boolean;
