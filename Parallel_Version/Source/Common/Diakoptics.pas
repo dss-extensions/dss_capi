@@ -179,13 +179,13 @@ Begin
   With ActiveCircuit[ActiveActor].Solution do
   Begin
     Num_Ckts                      :=  ActiveCircuit[ActiveActor].Tear_Circuit();
-//    Prev_mode                     :=  Dynavars.SolutionMode;
-//    Dynavars.SolutionMode         :=  0;          // Shapshot mode
-//    solve(ActiveActor);
-//    ActiveCircuit[ActiveActor].Save_SubCircuits();
-//    Dynavars.SolutionMode         :=  Prev_mode;  // Goes back to the previous solution mode
-//    ActiveCircuit[1].Num_SubCkts  :=  Num_Ckts;
-//    GlobalResult                  := 'Sub-Circuits Created: ' + inttostr(Num_Ckts);
+    Prev_mode                     :=  Dynavars.SolutionMode;
+    Dynavars.SolutionMode         :=  0;          // Shapshot mode
+    solve(ActiveActor);
+    ActiveCircuit[ActiveActor].Save_SubCircuits();
+    Dynavars.SolutionMode         :=  Prev_mode;  // Goes back to the previous solution mode
+    ActiveCircuit[1].Num_SubCkts  :=  Num_Ckts;
+    GlobalResult                  := 'Sub-Circuits Created: ' + inttostr(Num_Ckts);
   End;
 End;
 
