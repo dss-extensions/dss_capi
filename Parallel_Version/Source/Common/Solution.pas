@@ -56,7 +56,9 @@ USES
 {$ELSE}    
     BaseUnix, Unix,
 {$ENDIF}
-{$IFDEF FPC}Classes, Strings{$ELSE}
+{$IFDEF FPC}
+    Classes, Strings,
+{$ELSE}
     System.Diagnostics,
     System.TimeSpan,
     System.Classes,
@@ -605,7 +607,9 @@ Try
     // Resets the event for receiving messages from the active actor
       // Updates the status of the Actor in the GUI
       ActorStatus[ActorID]      :=  1;    // Global to indicate that the actor is busy
+{$IFNDEF FPC}
       if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
+{$ENDIF}
       UIMsg.ResetEvent;
       {$IFNDEF FPC}QueryPerformanceCounter(GStartTime);{$ENDIF}
       // Sends message to start the Simulation
@@ -614,7 +618,9 @@ Try
       if not Parallel_enabled then
       Begin
         WaitForActor(ActorID);
+{$IFNDEF FPC}
         if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
+{$ENDIF}
       End;
 
 Except

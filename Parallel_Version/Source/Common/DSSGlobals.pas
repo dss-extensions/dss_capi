@@ -328,8 +328,8 @@ USES  {Forms,   Controls,}
        {$ENDIF}
      {$ELSE}
      Windows, DSSForms, SHFolder,
-     {$ENDIF}
      ScriptEdit,
+     {$ENDIF}
      Executive,
      Parallel_Lib;
      {Intrinsic Ckt Elements}
@@ -903,10 +903,12 @@ begin
 end;
 // Creates a new actor
 procedure New_Actor(ActorID:  Integer);
+{$IFNDEF DSS_CAPI}
 Var
   ScriptEd    : TScriptEdit;
+{$ENDIF}
 Begin
-  ActorHandle[ActorID] :=  TSolver.Create(false,ActorCPU[ActorID],ActorID,ScriptEd.UpdateSummaryForm);
+  ActorHandle[ActorID] :=  TSolver.Create(false,ActorCPU[ActorID],ActorID,{$IFNDEF DSS_CAPI}ScriptEd.UpdateSummaryForm{$ELSE}nil{$ENDIF});
 End;
 
 {$IFNDEF FPC}

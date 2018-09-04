@@ -25,7 +25,7 @@ interface
 USES
      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
-     AutoAdd, EnergyMeter, NamedObject, CktTree, {$IFNDEF FPC}, Graphics{$ENDIF}, math,     Sparse_Math,
+     AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF}, math,     Sparse_Math,
      {$IFNDEF FPC}vcl.dialogs,{$ENDIF} MeTIS_Exec;
 
 
@@ -1122,7 +1122,7 @@ Begin
       deletefile(pchar(FileName + '.part.' + inttostr(Num_pieces)));
     repeat
       TextCmd  :=  RunMeTIS(DSSDirectory + MeTISCmd + ' ' + FileName + ' ' + inttostr(Num_pieces));  // Executes MeTIS
-      Flag      :=  ContainsText(TextCmd,'I detected an error');
+      Flag      :=  {$IFDEF FPC}ANSIContainsText{$ELSE}ContainsText{$ENDIF}(TextCmd,'I detected an error');
       if Flag then       // The # of edges was wrong, use the one proposed by MeTIS
       Begin
         TextCmd  :=  GetNumEdges(TextCmd);                     // Gest the # of edges proposed by MeTIS

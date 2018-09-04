@@ -31,8 +31,12 @@ Function GetNumEdges(MeTISSrc : string): String;
 implementation
 
 uses
+{$IFNDEF FPC}
   System.IOUtils,
   System.StrUtils;
+{$ELSE}  
+  StrUtils;
+{$ENDIF}  
 
 function Max(const A, B: Integer): Integer;
 begin
@@ -61,8 +65,11 @@ begin
 
   FreeAndNil(FtmpFile);
   FreeAndNil(FSourceFile);
-
+{$IFNDEF FPC}
   TFile.Delete(tmpFileName);
+{$ELSE}
+  DeleteFile(PChar(tmpFileName));
+{$ENDIF}
 
   inherited;
 end;
@@ -151,9 +158,9 @@ var
 
     BufStr := FEncoding.GetString(Buf, 0, ReadedBufLen);
     if rfIgnoreCase in ReplaceFlags then
-      IsReplaced := ContainsText(BufStr, AFrom)
+      IsReplaced := {$IFDEF FPC}ANSIContainsText{$ELSE}ContainsText{$ENDIF}(BufStr, AFrom)
     else
-      IsReplaced := ContainsStr(BufStr, AFrom);
+      IsReplaced := {$IFDEF FPC}ANSIContainsStr{$ELSE}ContainsStr{$ENDIF}(BufStr, AFrom);
 
     if IsReplaced then
       begin
