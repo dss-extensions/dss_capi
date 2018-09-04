@@ -235,8 +235,6 @@ VAR
    ConcatenateReports : Boolean;
    IncMat_Ordered     : Boolean;
    Parser             : Array of TParser;
-   UIMessage          : Boolean;
-   Actor_Emerg_Exit   : Array of boolean;
 
 {*******************************************************************************
 *    Nomenclature:                                                             *
@@ -891,7 +889,6 @@ initialization
    setlength(Parser,CPU_Cores + 1);
    setlength(ActiveYPrim,CPU_Cores + 1);
    SetLength(SolutionWasAttempted,CPU_Cores + 1);
-   SetLength(Actor_Emerg_Exit,CPU_Cores + 1);
    SetLength(ActorStatus,CPU_Cores + 1);
 
    // Init pointer repositories for the EnergyMeter in multiple cores
@@ -966,7 +963,7 @@ initialization
    IsDLL                 := FALSE;
    LastCommandWasCompile := FALSE;
    LastErrorMessage      := '';
-   MaxCircuits           := 1;  //  This version only allows one circuit at a time
+   MaxCircuits           := 1;  //  Not required anymore. planning to remove it
    MaxAllocationIterations := 2;
    SolutionAbort         := FALSE;
    AutoShowExport        := FALSE;

@@ -594,7 +594,6 @@ Try
       // Updates the status of the Actor in the GUI
       ActorStatus[ActorID]      :=  1;    // Global to indicate that the actor is busy
       if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
-      Actor_Emerg_Exit[ActorID] :=  False;
       UIMsg.ResetEvent;
       QueryPerformanceCounter(GStartTime);
       // Sends message to start the Simulation
@@ -2426,7 +2425,7 @@ begin
   ActorActive     :=  True;
   Processing      :=  False;
   {$IFDEF MSWINDOWS}              // Only for windows
-//  Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+  Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
   Parallel.Set_Thread_affinity(handle,local_CPU);
   Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
   {$ENDIF}
@@ -2545,7 +2544,6 @@ var
 begin
     ActorActive               :=  False;
     Processing                :=  False;
-    Actor_Emerg_Exit[ActorID] :=  True;
     ActorStatus[ActorID]      :=  0;      // Global to indicate that the actor is ready
     ActorMsg.Free;
     inherited;

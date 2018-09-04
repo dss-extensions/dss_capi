@@ -92,7 +92,7 @@ var
   i : Integer;
 begin
   for i := 1 to NumOfActors do
-  ActorHandle[i].WaitFor;
+    with ActiveCircuit[i].Solution do WaitForActor(i);
 end;
 
 function TParallel.Get_ActorProgress: OleVariant;
@@ -112,7 +112,10 @@ var
 begin
     Result := VarArrayCreate([1, NumOfActors], varInteger);
     for idx := 1 to NumOfActors do
-      Result[idx] :=  ActorStatus[idx];  
+    Begin
+      if ActorHandle[idx].Is_Busy then Result[idx] :=  0
+      else Result[idx] :=  1;
+    End;
 end;
 
 function TParallel.Get_ActiveParallel: Integer;
