@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-        NumExecOptions = 122;
+        NumExecOptions = 123;
 
 VAR
          ExecOption,
@@ -156,6 +156,7 @@ Begin
      ExecOption[120] := 'Num_SubCircuits';
      ExecOption[121] := 'SampleEnergyMeters';
      ExecOption[122] := 'ADiakoptics';
+     ExecOption[123] := 'MinIterations'; // default is 2
 
 
      OptionHelp[1]  := 'Sets the active DSS class type.  Same as Class=...';
@@ -425,6 +426,7 @@ Begin
                         'Use this Option to turn sampling on or off';
      OptionHelp[122] := '{YES/TRUE | NO/FALSE} Activates the A-Diakoptics solution algorithm for using spatial parallelization on the feeder.' + CRLF +
                         'This parameter only affects Actor 1, no matter from which actor is called';
+     OptionHelp[123] := 'Minimum number of iterations required for a solution. Default is 2.';
 End;
 //----------------------------------------------------------------------------
 FUNCTION DoSetCmd_NoCircuit:Boolean;  // Set Commands that do not require a circuit
@@ -710,6 +712,7 @@ Begin
                 End;
           121:  ActiveCircuit[ActiveActor].Solution.SampleTheMeters :=  InterpretYesNo(Param);
           122:  ActiveCircuit[1].ADiakoptics :=  InterpretYesNo(Param);
+          123:  ActiveCircuit[ActiveActor].solution.MinIterations   := Parser[ActiveActor].IntValue
          ELSE
            // Ignore excess parameters
          End;
@@ -902,6 +905,7 @@ Begin
           120: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].Num_SubCkts]));
           121: If ActiveCircuit[ActiveActor].Solution.SampleTheMeters Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           122: If ActiveCircuit[1].ADiakoptics Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+          123: AppendGlobalResult(IntToStr(ActiveCircuit[ActiveActor].solution.MinIterations));
          ELSE
            // Ignore excess parameters
          End;
