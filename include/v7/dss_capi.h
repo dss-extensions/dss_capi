@@ -86,7 +86,7 @@ extern "C" {
     Name of Bus
     */
     DSS_CAPI_V7_DLL char* Bus_Get_Name(void);
-    
+
     /*
     Number of Nodes this bus.
     */
@@ -5291,6 +5291,12 @@ extern "C" {
     DSS_CAPI_V7_DLL void WireData_Set_NormAmps(double Value);
     DSS_CAPI_V7_DLL double WireData_Get_EmergAmps();
     DSS_CAPI_V7_DLL void WireData_Set_EmergAmps(double Value);
+
+    /*
+    Set the next bus as active. Returns -1 if no more buses, 0 otherwise.
+    */
+    DSS_CAPI_V7_DLL int32_t Bus_Get_Next(void);
+
 
 #ifdef __cplusplus
 } // extern "C"

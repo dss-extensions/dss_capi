@@ -1549,7 +1549,9 @@ exports
     WireData_Get_NormAmps,
     WireData_Set_NormAmps,
     WireData_Get_EmergAmps,
-    WireData_Set_EmergAmps;
+    WireData_Set_EmergAmps,
+    
+    Bus_Get_Next;
 
 begin
   IsDLL := TRUE;

@@ -5352,6 +5352,12 @@ extern "C" {
     DSS_CAPI_V8_DLL double WireData_Get_EmergAmps();
     DSS_CAPI_V8_DLL void WireData_Set_EmergAmps(double Value);
     
+    /*
+    Set the next bus as active. Returns -1 if no more buses, 0 otherwise.
+    */
+    DSS_CAPI_V8_DLL int32_t Bus_Get_Next(void);
+
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

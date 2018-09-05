@@ -54,6 +54,7 @@ PROCEDURE Bus_Get_VMagAngle(var ResultPtr: PDouble; ResultCount: PInteger);cdecl
 PROCEDURE Bus_Get_VMagAngle_GR();cdecl;
 function Bus_Get_TotalMiles():Double;cdecl;
 function Bus_Get_SectionID():Integer;cdecl;
+function Bus_Get_Next():Integer;cdecl; // API Extension
 
 IMPLEMENTATION
 
@@ -929,6 +930,21 @@ begin
     With ActiveCircuit[ActiveActor] Do
       if ActiveBusIndex > 0 then
          Result := Buses^[ActiveBusIndex].BusSectionID  ;
+end;
+//------------------------------------------------------------------------------
+function Bus_Get_Next():Integer;cdecl;
+var 
+    BusIndex: integer;
+begin
+    Result := -1;   // Signifies Error
+    if ActiveCircuit[ActiveActor] <> Nil then
+    With ActiveCircuit[ActiveActor] Do Begin
+        BusIndex := ActiveBusIndex + 1;
+        If (BusIndex > 0) and (BusIndex <= Numbuses) Then Begin
+           ActiveBusIndex := BusIndex;
+           Result := 0;
+        End;
+    End;
 end;
 //------------------------------------------------------------------------------
 END.
