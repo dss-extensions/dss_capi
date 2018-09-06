@@ -1855,6 +1855,7 @@ Begin
         DSSExecutive.Command := 'get voltagebases';
         VBases := GlobalResult;
         Writeln(F, 'Set Voltagebases='+VBases);
+        Writeln(F, 'CalcVoltagebases');
         CloseFile(F);
         Result := TRUE;
      Except
