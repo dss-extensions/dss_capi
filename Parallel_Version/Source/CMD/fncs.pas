@@ -8,7 +8,7 @@ unit FNCS;
 {$mode delphi}
 
 {$MACRO ON}
-{$IFDEF Windows}
+{$IFDEF MSWINDOWS}
 {$DEFINE FNCS_CALL:=stdcall}
 {$ELSE} // Darwin and Unix
 {$DEFINE FNCS_CALL:=cdecl}

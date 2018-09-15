@@ -319,6 +319,9 @@ implementation
 
 
 USES  {Forms,   Controls,}
+     {$IFDEF MSWINDOWS}
+     Windows,
+     {$ENDIF}
      SysUtils,
      {$IFDEF DSS_CAPI}
      CAPI_Metadata,
@@ -329,7 +332,7 @@ USES  {Forms,   Controls,}
        cpucount,
        {$ENDIF}
      {$ELSE}
-     Windows, DSSForms, SHFolder,
+     DSSForms, SHFolder,
      ScriptEdit,
      {$ENDIF}
      Executive,
@@ -1142,8 +1145,9 @@ initialization
    LogQueries       := FALSE;
    QueryLogFileName := '';
    UpdateRegistry   := TRUE;
-   {$IFDEF FPC}
+   {$IFNDEF MSWINDOWS}
    CPU_Freq := 1000; // until we can query it
+   //clock_gettime
    {$ELSE}
    QueryPerformanceFrequency(CPU_Freq);
    {$ENDIF}

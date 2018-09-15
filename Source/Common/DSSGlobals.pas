@@ -263,6 +263,9 @@ implementation
 
 
 USES  {Forms,   Controls,}
+     {$IFDEF MSWINDOWS}
+     Windows,
+     {$ENDIF}
      SysUtils,
      {$IFDEF DSS_CAPI}
      CAPI_Metadata,
@@ -270,7 +273,7 @@ USES  {Forms,   Controls,}
      {$IFDEF FPC}
      resource, versiontypes, versionresource, dynlibs, CmdForms,
      {$ELSE}
-     Windows, DSSForms, SHFolder,
+     DSSForms, SHFolder,
      {$ENDIF}
      Solution,
      Executive;
@@ -939,7 +942,7 @@ initialization
    LogQueries       := FALSE;
    QueryLogFileName := '';
    UpdateRegistry   := TRUE;
-   {$IFDEF FPC}
+   {$IFNDEF MSWINDOWS}
    CPU_Freq := 1000; // until we can query it
    {$ELSE}
    QueryPerformanceFrequency(CPU_Freq);

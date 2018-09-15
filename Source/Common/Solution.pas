@@ -49,7 +49,15 @@ USES
     Dynamics,
     EnergyMeter,
     SysUtils
-{$IFDEF FPC};{$ELSE},System.Diagnostics, System.TimeSpan;{$ENDIF}
+{$IFDEF FPC}
+    {$IFDEF MSWINDOWS}
+    , Windows;
+    {$ELSE}
+    ;
+    {$ENDIF}
+{$ELSE}
+    , System.Diagnostics, System.TimeSpan;
+{$ENDIF}
 
 CONST
 
@@ -477,7 +485,7 @@ Try
 {$ENDIF}
 
     {CheckFaultStatus;  ???? needed here??}
-     {$IFNDEF FPC}QueryPerformanceCounter(GStartTime);{$ENDIF}
+     {$IFDEF MSWINDOWS}QueryPerformanceCounter(GStartTime);{$ENDIF}
      Case Dynavars.SolutionMode OF
          SNAPSHOT:     SolveSnap;
          YEARLYMODE:   SolveYearly;
@@ -500,7 +508,7 @@ Try
      Else
          DosimpleMsg('Unknown solution mode.', 481);
      End;
-    {$IFNDEF FPC}QueryPerformanceCounter(GEndTime);{$ENDIF}
+    {$IFDEF MSWINDOWS}QueryPerformanceCounter(GEndTime);{$ENDIF}
     Total_Solve_Time_Elapsed := ((GEndTime-GStartTime)/CPU_Freq)*1000000;
     Total_Time_Elapsed := Total_Time_Elapsed + Total_Solve_Time_Elapsed;
 Except
@@ -976,7 +984,7 @@ VAR
 Begin
    SnapShotInit;
    TotalIterations    := 0;
-   {$IFNDEF FPC}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
+   {$IFDEF MSWINDOWS}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
    REPEAT
 
        Inc(ControlIteration);
@@ -1006,7 +1014,7 @@ Begin
 {$IFDEF DLL_ENGINE}
    Fire_StepControls;
 {$ENDIF}
-{$IFNDEF FPC}QueryPerformanceCounter(SolveEndTime);{$ENDIF}
+{$IFDEF MSWINDOWS}QueryPerformanceCounter(SolveEndTime);{$ENDIF}
    Solve_Time_Elapsed := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
    Iteration := TotalIterations;  { so that it reports a more interesting number }
 
@@ -1019,7 +1027,7 @@ Begin
    Result := 0;
 
    LoadsNeedUpdating := TRUE;  // Force possible update of loads and generators
-   {$IFNDEF FPC}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
+   {$IFDEF MSWINDOWS}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
 
    If SystemYChanged THEN BuildYMatrix(WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
 
@@ -1038,7 +1046,7 @@ Begin
        ConvergedFlag := TRUE;
    End;
 
-   {$IFNDEF FPC}QueryPerformanceCounter(SolveEndTime);{$ENDIF}
+   {$IFDEF MSWINDOWS}QueryPerformanceCounter(SolveEndTime);{$ENDIF}
    Solve_Time_Elapsed  := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
    Total_Time_Elapsed  :=  Total_Time_Elapsed + Solve_Time_Elapsed;
    Iteration := 1;
@@ -1766,7 +1774,7 @@ begin
 // Update Loop time is called from end of time step cleanup
 // Timer is based on beginning of SolveSnap time
 
-   {$IFNDEF FPC}QueryPerformanceCounter(LoopEndTime);{$ENDIF}
+   {$IFDEF MSWINDOWS}QueryPerformanceCounter(LoopEndTime);{$ENDIF}
    Step_Time_Elapsed  := ((LoopEndtime-SolveStartTime)/CPU_Freq)*1000000;
 
 end;

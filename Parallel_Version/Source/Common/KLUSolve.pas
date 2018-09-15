@@ -3,7 +3,7 @@ unit KLUSolve;
 {$IFDEF FPC}
   {$MODE Delphi}
   {$MACRO ON}
-  {$IFDEF Windows}
+  {$IFDEF MSWINDOWS}
   {$DEFINE KLU_CALL:=stdcall;external KLULib}
   {$ELSE} // Darwin and Unix
   {$linklib klusolve}

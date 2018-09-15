@@ -173,7 +173,7 @@ end;
 var
   Application: TMyApplication;
 
-//{$IFDEF WINDOWS}{$R project1.rc}{$ENDIF}
+//{$IFDEF MSWINDOWS}{$R project1.rc}{$ENDIF}
 
 begin
   Application:=TMyApplication.Create(nil);

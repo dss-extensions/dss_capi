@@ -3,7 +3,7 @@ unit KLUSolve;
 {$IFDEF FPC}{$MODE Delphi}{$ENDIF}
 
 {$MACRO ON}
-{$IFDEF Windows}
+{$IFDEF MSWINDOWS}
 {$DEFINE KLU_CALL:=stdcall;external 'libklusolve'}
 {$ELSE} // Darwin and Unix
 {$linklib klusolve}
@@ -15,7 +15,7 @@ interface
 uses
     uComplex;
 
-{$IFDEF Windows}
+{$IFDEF MSWINDOWS}
 // in general, KLU arrays are 0-based
 // function calls return 0 to indicate failure, 1 for success
 

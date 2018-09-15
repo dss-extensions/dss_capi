@@ -326,7 +326,7 @@ USES
      ParserDel,  DSSClassDefs, DSSGlobals, Dynamics,
      Line, Transformer,  Vsource,
      Utilities, {$IFDEF FPC}CmdForms,{$ELSE}DSSForms, {$ENDIF} 
-     {$IFDEF WINDOWS}Windows,  SHELLAPI, {$ELSE} BaseUnix, Unix, {$ENDIF} Executive, StrUtils;
+     {$IFDEF MSWINDOWS}Windows,  SHELLAPI, {$ELSE} BaseUnix, Unix, {$ENDIF} Executive, StrUtils;
 //----------------------------------------------------------------------------
 Constructor TDSSCircuit.Create(const aName:String);
 
@@ -614,7 +614,7 @@ END;
 {*******************************************************************************
 *           Routine created to empty a recently created folder                 *
 ********************************************************************************}
-{$IFDEF WINDOWS}
+{$IFDEF MSWINDOWS}
 procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
 var
   SourceLst: string;

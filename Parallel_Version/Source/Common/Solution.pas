@@ -51,7 +51,7 @@ USES
     SysUtils,
     Parallel_Lib,
     CktElement,
-{$IFDEF WINDOWS}
+{$IFDEF MSWINDOWS}
     Windows, Dialogs,
 {$ELSE}    
     BaseUnix, Unix,
@@ -329,7 +329,7 @@ USES  SolutionAlgs,
       DSSClassDefs, DSSGlobals, {$IFDEF FPC} CmdForms,{$ELSE} DSSForms, {$ENDIF} PDElement,  ControlElem, Fault,
       Executive, AutoAdd,  YMatrix, Load,CKtTree,
       ParserDel, Generator,Capacitor,
-{$IFDEF WINDOWS}
+{$IFDEF MSWINDOWS}
       SHELLAPI,
 {$ENDIF}      
 {$IFDEF DLL_ENGINE}
@@ -611,7 +611,7 @@ Try
       if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
 {$ENDIF}
       UIMsg.ResetEvent;
-      {$IFNDEF FPC}QueryPerformanceCounter(GStartTime);{$ENDIF}
+      {$IFDEF MSWINDOWS}QueryPerformanceCounter(GStartTime);{$ENDIF}
       // Sends message to start the Simulation
       ActorHandle[ActorID].Send_Message(SIMULATE);
       // If the parallel mode is not active, Waits until the actor finishes
@@ -1107,7 +1107,7 @@ Begin
 //      if Solution then
    SnapShotInit(ActorID);
    TotalIterations    := 0;
-   {$IFNDEF FPC}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
+   {$IFDEF MSWINDOWS}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
    REPEAT
 
        Inc(ControlIteration);
@@ -1136,7 +1136,7 @@ Begin
 {$IFDEF DLL_ENGINE}
    Fire_StepControls;
 {$ENDIF}
-{$IFNDEF FPC}QueryPerformanceCounter(SolveEndTime);{$ENDIF}
+{$IFDEF MSWINDOWS}QueryPerformanceCounter(SolveEndTime);{$ENDIF}
    Solve_Time_Elapsed := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
    Iteration := TotalIterations;  { so that it reports a more interesting number }
 
@@ -1149,7 +1149,7 @@ Begin
    Result := 0;
 
    LoadsNeedUpdating := TRUE;  // Force possible update of loads and generators
-   {$IFNDEF FPC}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
+   {$IFDEF MSWINDOWS}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
 
    If SystemYChanged THEN
    begin
@@ -1171,7 +1171,7 @@ Begin
        ConvergedFlag := TRUE;
    End;
 
-   {$IFNDEF FPC}QueryPerformanceCounter(SolveEndTime);{$ENDIF}
+   {$IFDEF MSWINDOWS}QueryPerformanceCounter(SolveEndTime);{$ENDIF}
    Solve_Time_Elapsed  := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
    Total_Time_Elapsed  :=  Total_Time_Elapsed + Solve_Time_Elapsed;
    Iteration := 1;
@@ -1669,7 +1669,7 @@ End;
 {*******************************************************************************
 *           Routine created to empty a recently created folder                 *
 ********************************************************************************}
-{$IFDEF WINDOWS}
+{$IFDEF MSWINDOWS}
 procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
 var
   SourceLst: string;
@@ -2441,7 +2441,7 @@ begin
 // Update Loop time is called from end of time step cleanup
 // Timer is based on beginning of SolveSnap time
 
-   {$IFNDEF FPC}QueryPerformanceCounter(LoopEndTime);{$ENDIF}
+   {$IFDEF MSWINDOWS}QueryPerformanceCounter(LoopEndTime);{$ENDIF}
    Step_Time_Elapsed  := ((LoopEndtime-SolveStartTime)/CPU_Freq)*1000000;
 
 end;
@@ -2591,7 +2591,7 @@ var
             Else
                 DosimpleMsg('Unknown solution mode.', 481);
             End;
-            {$IFNDEF FPC}QueryPerformanceCounter(GEndTime);{$ENDIF}
+            {$IFDEF MSWINDOWS}QueryPerformanceCounter(GEndTime);{$ENDIF}
             Total_Solve_Time_Elapsed  :=  ((GEndTime-GStartTime)/CPU_Freq)*1000000;
             Total_Time_Elapsed        :=  Total_Time_Elapsed + Total_Solve_Time_Elapsed;
             Processing                :=  False;

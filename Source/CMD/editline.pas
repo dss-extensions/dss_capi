@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 {$mode delphi}
 
 {$MACRO ON}
-{$IFDEF Windows}
+{$IFDEF MSWINDOWS}
 {$DEFINE EDITLINE_CALL:=stdcall;external 'libeditline'}
 {$ELSE} // Darwin and Unix
 {$linklib editline}

@@ -17,7 +17,7 @@ uses
 {$IFNDEF FPC}
   Winapi.Windows, Winapi.Messages, vcl.Dialogs,
 {$ELSE}
-    {$IFDEF WINDOWS}
+    {$IFDEF MSWINDOWS}
     windows,
     {$ELSE}
     initc, cpucount, BaseUnix, Unix,
@@ -27,7 +27,7 @@ uses
 
 const REALTIME_PRIORITY_CLASS = 16;
   
-{$IFDEF WINDOWS}
+{$IFDEF MSWINDOWS}
 const THREAD_PRIORITY_TIME_CRITICAL = 15;
 type
   TParallel_Lib = class(TObject)

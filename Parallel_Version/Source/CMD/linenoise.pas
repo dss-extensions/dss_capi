@@ -45,7 +45,7 @@ unit linenoise;
 {$mode delphi}
 
 {$MACRO ON}
-{$IFDEF Windows}
+{$IFDEF MSWINDOWS}
 {$DEFINE LINENOISE_CALL:=stdcall;external 'liblinenoise'}
 {$ELSE} // Darwin and Unix
 {$linklib linenoise}
