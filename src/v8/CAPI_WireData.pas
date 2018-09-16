@@ -3,8 +3,13 @@ UNIT CAPI_WireData;
 
 INTERFACE
 
-USES CAPI_Utils, WireData;
+USES CAPI_Utils, WireData, ConductorData;
 
+type
+  //TODO: create a simple script to extract this directly from the Pascal files from electricdss-src
+  ConductorProps = (Rdc=1, Rac, Runits, GMRac, GMRunits, radius, radunits, normamps, emergamps, diam);
+
+  
 FUNCTION WireData_Get_Count():Integer;cdecl;
 FUNCTION WireData_Get_First():Integer;cdecl;
 FUNCTION WireData_Get_Next():Integer;cdecl;
@@ -32,17 +37,15 @@ FUNCTION WireData_Get_NormAmps():Double;cdecl;
 PROCEDURE WireData_Set_NormAmps(Value: Double);cdecl;
 FUNCTION WireData_Get_EmergAmps():Double;cdecl;
 PROCEDURE WireData_Set_EmergAmps(Value: Double);cdecl;
+ 
+procedure ConductorSetDefaults(prop: ConductorProps; conductor: TConductorDataObj);
+
 
 IMPLEMENTATION
 
-USES CAPI_Constants, sysutils, DSSGlobals, LineUnits, ConductorData;
+USES CAPI_Constants, sysutils, DSSGlobals, LineUnits;
 
-type
-//TODO: create a simple script to extract this directly from the Pascal files from electricdss-src
-  ConductorProps = (Rdc=1, Rac, Runits, GMRac, GMRunits, radius, radunits, normamps, emergamps, diam);
-  
-
-procedure ConductorSetDefaults(prop: ConductorProps; conductor: TWireDataObj);
+procedure ConductorSetDefaults(prop: ConductorProps; conductor: TConductorDataObj);
 begin
   {Set defaults}
   With conductor do
