@@ -31,7 +31,11 @@ TYPE
   end;
 
   TTSDataObj = class(TCableDataObj)
+{$IFDEF DSS_CAPI}
+    public
+{$ELSE}
     private
+{$ENDIF}
       FDiaShield: Double;
       FTapeLayer: Double;
       FTapeLap: Double;

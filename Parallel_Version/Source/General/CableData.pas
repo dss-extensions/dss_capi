@@ -26,7 +26,11 @@ type
    end;
 
    TCableDataObj = class(TConductorDataObj)
+{$IFDEF DSS_CAPI}
+      public
+{$ELSE}
       private
+{$ENDIF}
         FEpsR       :Double;
         // next 3 use parent RadiusUnits
         FInsLayer   :Double;

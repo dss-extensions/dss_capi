@@ -31,7 +31,11 @@ TYPE
   end;
 
   TCNDataObj = class(TCableDataObj)
+{$IFDEF DSS_CAPI}
+    public
+{$ELSE}
     private
+{$ENDIF}
       FkStrand: Integer;
       FDiaStrand: Double;
       FGmrStrand: Double;
