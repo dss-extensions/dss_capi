@@ -380,7 +380,7 @@ VAR
    pMeterObj :TEnergyMeterObj;
    k, i      :Integer;
 Begin
-
+   Value := PDoubleArray(ValuePtr);
 // First make sure active circuit element is a meter
    IF ActiveCircuit[ActiveActor] <> Nil THEN
    Begin
@@ -433,7 +433,7 @@ VAR
    pMeterObj :TEnergyMeterObj;
    k, i      :Integer;
 Begin
-
+   Value := PDoubleArray(ValuePtr);
 // First make sure active circuit element is a meter
    IF ActiveCircuit[ActiveActor] <> Nil THEN
    Begin
@@ -486,7 +486,7 @@ VAR
    pMeterObj :TEnergyMeterObj;
    k, i      :Integer;
 Begin
-
+   Value := PDoubleArray(ValuePtr);
 // First make sure active circuit element is a meter
    IF ActiveCircuit[ActiveActor] <> Nil THEN
    Begin

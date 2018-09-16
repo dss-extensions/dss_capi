@@ -374,7 +374,7 @@ VAR
    i, j, Num   :Integer;
 
 Begin
-
+     Value := PDoubleArray(ValuePtr);
      Num   := (ValueCount - 1) - (0) + 1;
 
      {LegalVoltageBases is a zero-terminated array, so we have to allocate

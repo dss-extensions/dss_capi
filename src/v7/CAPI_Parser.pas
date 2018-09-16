@@ -161,7 +161,7 @@ VAR
      VectorBuffer:ArrayDef.PDoubleArray;
 
 begin
-    VectorBuffer := Allocmem(SizeOf(VectorBuffer^[1])*ExpectedSize);
+    VectorBuffer := Allocmem(SizeOf(Double)*ExpectedSize);
     ActualSize := ComParser.ParseAsVector(ExpectedSize, VectorBuffer);
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ((ActualSize-1)) + 1);
@@ -183,7 +183,7 @@ VAR
 
 begin
     MatrixSize := ExpectedOrder*ExpectedOrder;
-    MatrixBuffer := Allocmem(SizeOf(MatrixBuffer^[1])*MatrixSize);
+    MatrixBuffer := Allocmem(SizeOf(Double)*MatrixSize);
     ComParser.ParseAsMatrix(ExpectedOrder, MatrixBuffer);
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ((MatrixSize-1)) + 1);
@@ -205,7 +205,7 @@ VAR
 
 begin
     MatrixSize := ExpectedOrder*ExpectedOrder;
-    MatrixBuffer := Allocmem(SizeOf(MatrixBuffer^[1])*MatrixSize);
+    MatrixBuffer := Allocmem(SizeOf(Double)*MatrixSize);
     ComParser.ParseAsSymMatrix(ExpectedOrder, MatrixBuffer);
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ((MatrixSize-1)) + 1);

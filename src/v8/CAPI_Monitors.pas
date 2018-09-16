@@ -445,7 +445,7 @@ begin
              FirstCol := AuxParser.StrValue;  // Get rid of first two columns
              AuxParser.AutoIncrement := FALSE;
 
-              AllocSize :=  Sizeof(SngBuffer^[1]) * Header.RecordSize;
+              AllocSize :=  Sizeof(Single) * Header.RecordSize;
               SngBuffer := Allocmem(AllocSize);
               k := 0;
               for i := 1 to pMon.SampleCount  do Begin
@@ -499,7 +499,7 @@ begin
              AuxParser.AutoIncrement := FALSE;
              // check first col to see if it is "Freq" for harmonics solution
              If Sysutils.CompareText(FirstCol, 'freq') = 0  Then Begin
-                  AllocSize :=  Sizeof(SngBuffer^[1]) * Header.RecordSize;
+                  AllocSize :=  Sizeof(Single) * Header.RecordSize;
                   SngBuffer := Allocmem(AllocSize);
                   k := 0;
                   for i := 1 to pMon.SampleCount  do Begin
@@ -558,7 +558,7 @@ begin
              AuxParser.AutoIncrement := FALSE;
              // check first col to see if it is "Hour"
              If Sysutils.CompareText(FirstCol, 'hour') = 0  Then Begin
-                  AllocSize :=  Sizeof(SngBuffer^[1]) * Header.RecordSize;
+                  AllocSize :=  Sizeof(Single) * Header.RecordSize;
                   SngBuffer := Allocmem(AllocSize);
                   k := 0;
                   for i := 1 to pMon.SampleCount  do Begin

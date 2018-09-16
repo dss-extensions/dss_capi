@@ -755,7 +755,7 @@ Begin
      WITH ActiveCircuit[ActiveActor] DO
      Begin
        // Make a Temporary Array big enough to hold all nodes
-       Temp := AllocMem(SizeOF(Temp^[1]) * NumNodes);
+       Temp := AllocMem(SizeOF(Double) * NumNodes);
 
        // Find nodes connected to specified phase
        k:=0;
@@ -774,7 +774,7 @@ Begin
        For i := 0 to k-1 do
           Result[i] := Temp^[i+1];
 
-       Freemem(Temp, SizeOF(Temp^[1])*NumNodes);
+       Freemem(Temp, SizeOF(Double)*NumNodes);
      End
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
@@ -797,7 +797,7 @@ Begin
      WITH ActiveCircuit[ActiveActor] DO
      Begin
        // Make a Temporary Array big enough to hold all nodes
-       Temp := AllocMem(SizeOF(Temp^[1]) * NumNodes);
+       Temp := AllocMem(SizeOF(Double) * NumNodes);
 
        // Find nodes connected to specified phase
        k:=0;
@@ -815,7 +815,7 @@ Begin
        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (k-1) + 1);
        For i := 0 to k-1 do  Result[i] := Temp^[i+1];
 
-       Freemem(Temp, SizeOF(Temp^[1])*NumNodes);
+       Freemem(Temp, SizeOF(Double)*NumNodes);
      End
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 
@@ -839,7 +839,7 @@ Begin
      WITH ActiveCircuit[ActiveActor] DO
      Begin
        // Make a Temporary Array big enough to hold all nodes
-       Temp := AllocMem(SizeOF(Temp^[1]) * NumNodes);
+       Temp := AllocMem(SizeOF(Double) * NumNodes);
 
        // Find nodes connected to specified phase
        k:=0;
@@ -857,7 +857,7 @@ Begin
        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (k-1) + 1);
        For i := 0 to k-1 do  Result[i] := Temp^[i+1];
 
-       Freemem(Temp, SizeOF(Temp^[1])*NumNodes);
+       Freemem(Temp, SizeOF(Double)*NumNodes);
      End
     ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 

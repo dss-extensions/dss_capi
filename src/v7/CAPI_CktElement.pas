@@ -92,7 +92,7 @@ BEGIN
            IF (Nphases = 1) and PositiveSequence THEN
            Begin
                 NValues := NConds*NTerms;
-                cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
+                cBuffer := Allocmem(sizeof(Complex)*NValues);
                 GetCurrents(cBuffer);
 
                 For i := 1 to  3*NTerms DO i012^[i] := CZERO;   // Initialize Result
@@ -111,7 +111,7 @@ BEGIN
       ELSE Begin    // for 3-phase elements
            iV := 1;
            NValues := NConds * NTerms;
-           cBuffer := Allocmem(sizeof(cBuffer^[1]) * NValues);
+           cBuffer := Allocmem(sizeof(Complex) * NValues);
            GetCurrents(cBuffer);
            FOR j := 1 to NTerms Do
            Begin
@@ -293,7 +293,7 @@ Begin
      Begin
          NValues := NConds*NTerms;
          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues-1) + 1);
-         cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
+         cBuffer := Allocmem(sizeof(Complex)*NValues);
          GetCurrents(cBuffer);
          iV :=0;
          For i := 1 to  NValues DO
@@ -452,7 +452,7 @@ Begin
   Begin
       NValues := NPhases;
       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues-1) + 1);
-      cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
+      cBuffer := Allocmem(sizeof(Complex)*NValues);
       GetPhaseLosses( NValues, cBuffer);
       iV :=0;
       For i := 1 to  NValues DO Begin
@@ -492,7 +492,7 @@ Begin
   Begin
       NValues := NConds*Nterms;
       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues-1) + 1);
-      cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
+      cBuffer := Allocmem(sizeof(Complex)*NValues);
       GetPhasePower(cBuffer);
       iV :=0;
       For i := 1 to  NValues DO Begin
@@ -536,7 +536,7 @@ Begin
          TRY
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (3*NTerms-1) + 1);
 
-            i012 := Allocmem(Sizeof(i012^[1]) * 3 * Nterms);
+            i012 := Allocmem(sizeof(Complex) * 3 * Nterms);
             // get complex seq voltages
             CalcSeqCurrents(ActiveCktElement, i012);
             // return 0 based array
@@ -595,7 +595,7 @@ Begin
            IF (Nphases = 1) and PositiveSequence THEN
            Begin
                 NValues := NConds*NTerms;
-                cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
+                cBuffer := Allocmem(sizeof(Complex)*NValues);
                 GetCurrents(cBuffer);
 
                 For i := 0 to  2*3*NTerms-1 DO Result[i] := 0.0;   // Initialize Result
@@ -619,7 +619,7 @@ Begin
       END
       ELSE Begin
           NValues := NConds*NTerms;
-          cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
+          cBuffer := Allocmem(sizeof(Complex)*NValues);
           GetCurrents(cBuffer);
           icount := 0;
           FOR j := 1 to NTerms Do Begin
@@ -675,7 +675,7 @@ Begin
          TRY
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (3*NTerms-1) + 1);
 
-            V012 := Allocmem(Sizeof(V012^[1]) * 3 * Nterms);
+            V012 := Allocmem(sizeof(Complex) * 3 * Nterms);
             // get complex seq voltages
             CalcSeqVoltages(ActiveCktElement, V012);
             // return 0 based array
@@ -865,7 +865,7 @@ Begin
      WITH ActiveCircuit.ActiveCktElement DO
      Begin
          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NTerms-1) + 1);    // 2 values per terminal
-         cBuffer := Allocmem(sizeof(cBuffer^[1])*Yorder);
+         cBuffer := Allocmem(sizeof(Complex)*Yorder);
          GetCurrents(cBuffer);
          iV :=0;
          For i := 1 to  NTerms DO
@@ -1078,7 +1078,7 @@ Begin
          TRY
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*3*NTerms-1) + 1);
 
-            V012 := Allocmem(Sizeof(V012^[1]) * 3 * Nterms);
+            V012 := Allocmem(sizeof(Complex) * 3 * Nterms);
             // get complex seq voltages
             CalcSeqVoltages(ActiveCktElement, V012);
             // return 0 based array
@@ -1138,7 +1138,7 @@ Begin
          TRY
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*3*NTerms-1) + 1);
 
-            i012 := Allocmem(Sizeof(i012^[1]) * 3 * Nterms);
+            i012 := Allocmem(sizeof(Complex) * 3 * Nterms);
             // get complex seq voltages
             CalcSeqCurrents(ActiveCktElement, i012);
             // return 0 based array
@@ -1420,7 +1420,7 @@ Begin
      Begin
          NValues := NConds*NTerms;
          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues-1) + 1);
-         cBuffer := Allocmem(sizeof(cBuffer^[1])*NValues);
+         cBuffer := Allocmem(sizeof(Complex)*NValues);
          GetCurrents(cBuffer);
          iV :=0;
          For i := 1 to  NValues DO
