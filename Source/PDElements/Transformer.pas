@@ -118,6 +118,8 @@ TYPE
 
         PROCEDURE FetchXfmrCode(Const Code:String);
 
+        FUNCTION InterpretCoreType(const str:String):Integer;
+
 
 
       Protected
@@ -161,6 +163,8 @@ TYPE
         Winding            :pWindingArray;
         XfmrBank           :String;
         XfmrCode           :String;
+        CoreType           :Integer; {0=Shell; 1=1ph; 3-3leg; 5=5-leg}
+        strCoreType        :String;
 
         constructor Create(ParClass:TDSSClass; const TransfName:String);
         destructor  Destroy; override;
@@ -234,7 +238,7 @@ USES    DSSClassDefs, DSSGlobals, Sysutils, Utilities, XfmrCode;
 var
    XfmrCodeClass:TXfmrCode;
 
-Const NumPropsThisClass = 45;
+Const NumPropsThisClass = 46;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TTransf.Create;  // Creates superstructure for all Transformer objects
@@ -322,6 +326,7 @@ Begin
      PropertyName[43] := 'X23';
      PropertyName[44] := 'LeadLag';
      PropertyName[45] := 'WdgCurrents';
+     PropertyName[46] := 'Core';
 
 
      // define Property help values
@@ -409,6 +414,7 @@ Begin
                          'To get typical European Dy11 connection, specify either "lead" or "Euro"';
      PropertyHelp[45] := '(Read only) Makes winding currents available via return on query (? Transformer.TX.WdgCurrents). ' +
                          'Order: Phase 1, Wdg 1, Wdg 2, ..., Phase 2 ...';
+     PropertyHelp[46] := '{Shell*|5-leg|3-Leg|1-phase} Core Type. Used for GIC analysis';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -507,6 +513,7 @@ Begin
            43: XLT :=  TrapZero(parser.Dblvalue, 30.0) * 0.01;
            44: HVLeadsLV := InterpretLeadLag(Param);
            45: PropertyValue[45] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
+           46: strCoreType := Param;
          ELSE
            // Inherited properties
               ClassEdit(ActiveTransfObj, ParamPointer - NumPropsThisClass)
@@ -540,6 +547,7 @@ Begin
               End;
           37: pctLoadLoss := (Winding^[1].Rpu + Winding^[2].Rpu) * 100.0;  // Update
           41..43: XHLChanged := True;
+          46: CoreType := InterpretCoreType(Param); // Assign integer number
          ELSE
          End;
 
@@ -864,6 +872,9 @@ Begin
   SubstationName := '';
   XfmrBank := '';
   XfmrCode := '';
+
+  CoreType := 0;
+  strCoreType := 'shell';
 
   VABase           := Winding^[1].kVA*1000.0;
   ThermalTimeconst := 2.0;
@@ -1666,6 +1677,12 @@ begin
            43: Result := Format('%.7g', [XLT * 100.0]);
 
            45: Result := GetWindingCurrentsResult;
+           46: Case CoreType of
+                   0: Result := 'shell';
+                   1: Result := '1-phase';
+                   3: Result := '3-leg';
+                   5: Result := '5-Leg';
+               End;
 
         ELSE
           Result := Inherited GetPropertyValue(index);
@@ -1735,6 +1752,7 @@ begin
      PropertyValue[43] := '30';
      PropertyValue[44] := 'Lag';
      PropertyValue[45] := '0';
+     PropertyValue[46] := 'shell';
 
 
   inherited  InitPropertyValues(NumPropsThisClass);
@@ -1748,6 +1766,17 @@ begin
 
    ClearPropSeqArray;    // so the overrides don't show up on save
 
+end;
+
+function TTransfObj.InterpretCoreType(const str: String): Integer;
+begin
+     Case str[1] of
+          '3':Result := 3;
+          '5':Result := 5;
+          's','S':Result := 1;
+     Else
+         Result := 0; // default to shell
+     End;
 end;
 
 function TTransfObj.RotatePhases(iPhs: integer): Integer;
