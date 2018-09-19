@@ -56,6 +56,8 @@ type
     function Get_WdgVoltages: OleVariant; safecall;
     function Get_WdgCurrents: OleVariant; safecall;
     function Get_strWdgCurrents: WideString; safecall;
+    function Get_CoreType: Integer; safecall;
+    procedure Set_CoreType(Value: Integer); safecall;
   end;
 
 implementation
@@ -511,6 +513,36 @@ begin
   Begin
       Result := elem.GetWindingCurrentsResult ;
   End;
+end;
+
+function TTransformers.Get_CoreType: Integer;
+var
+  elem: TTransfObj;
+begin
+  Result := 0;  // default = shell
+  elem := ActiveTransformer;
+  if elem <> nil then
+    Result := elem.CoreType ;
+
+end;
+
+procedure TTransformers.Set_CoreType(Value: Integer);
+var
+  elem: TTransfObj;
+begin
+  elem := ActiveTransformer;
+  if elem <> nil then
+  Begin
+    elem.CoreType := Value;
+    Case Value of
+       1: elem.strCoreType := '1-phase';
+       3: elem.strCoreType := '3-leg';
+       5: elem.strCoreType := '5-leg';
+    Else
+        elem.strCoreType := 'shell';
+    End;
+  End;
+
 end;
 
 initialization
