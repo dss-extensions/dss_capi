@@ -1,0 +1,1757 @@
+object ControlPanel: TControlPanel
+  Left = 132
+  Top = 186
+  Anchors = []
+  Caption = 'OpenDSS: Main Control Panel'
+  ClientHeight = 489
+  ClientWidth = 1015
+  Position = poScreenCenter
+  Visible = True
+  OnClose = FormClose
+  OnDestroy = FormDestroy
+  object ToolBar1: TToolBar
+    Left = 0
+    Top = 0
+    Width = 1015
+    Height = 22
+    AutoSize = True
+    Color = clBtnFace
+    Images = ImageList1
+    ParentColor = False
+    TabOrder = 0
+    object ToolButton6: TButton
+Position.X = 0.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'New Script Window'
+      Text = '&New Script Window'
+      ImageIndex = 7
+      MenuItem = NewScriptWindow1
+WordWrap = True
+    end
+    object ToolButton1: TButton
+Position.X = 24.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Open a script file'
+      Text = '&Open ...'
+      ImageIndex = 0
+      MenuItem = Open1
+WordWrap = True
+    end
+    object ToolButton9: TButton
+Position.X = 48.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 8
+      Text = 'ToolButton9'
+      ImageIndex = 7
+WordWrap = True
+    end
+    object ToolButton2: TButton
+Position.X = 56.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Do Command'
+      Text = '&Do'
+      ImageIndex = 14
+      OnClick = ToolButton2Click
+WordWrap = True
+    end
+    object ToolButton19: TButton
+Position.X = 80.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Edit Result File'
+      Text = '&Result File'
+      ImageIndex = 17
+      MenuItem = ResultFile1
+WordWrap = True
+    end
+    object ToolButton3: TButton
+Position.X = 104.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Solve'
+      Text = 'Solve'
+      ImageIndex = 4
+      OnClick = ToolButton3Click
+WordWrap = True
+    end
+    object ToolButton14: TButton
+Position.X = 128.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Make Bus List'
+      Text = 'Make &Bus List'
+      ImageIndex = 9
+      MenuItem = MakeBusList1
+WordWrap = True
+    end
+    object ToolButton8: TButton
+Position.X = 152.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 9
+      Text = 'ToolButton8'
+      ImageIndex = 7
+WordWrap = True
+    end
+    object ToolButton17: TButton
+Position.X = 161.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Summary'
+      Text = 'Summary'
+      ImageIndex = 16
+WordWrap = True
+    end
+    object ToolButton7: TButton
+Position.X = 185.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 8
+      Text = 'ToolButton7'
+      ImageIndex = 7
+WordWrap = True
+    end
+    object BaseClassCombo: TComboBox
+Position.X = 193.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 130
+      Height = 24
+      TabOrder = 2
+      OnChange = BaseClassComboChange
+    end
+    object ClassBox: TComboBox
+Position.X = 323.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 130
+      Height = 24
+      Hint = 'Active Class'
+      DropDownCount = 16
+      TabOrder = 0
+      OnChange = ClassBoxChange
+    end
+    object ToolButton18: TButton
+Position.X = 453.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 8
+      Text = 'ToolButton18'
+      ImageIndex = 16
+WordWrap = True
+    end
+    object ElementBox: TComboBox
+Position.X = 461.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 222
+      Height = 24
+      Hint = 'Active Element'
+      DropDownCount = 16
+      TabOrder = 1
+      OnChange = ElementBoxChange
+    end
+    object ToolButton16: TButton
+Position.X = 683.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Form edit on active element'
+      Text = 'Edit &Active'
+      ImageIndex = 10
+      MenuItem = EditActive1
+WordWrap = True
+    end
+    object ToolButton23: TButton
+Position.X = 707.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Visualize Currents'
+      Text = 'Currents [Element]'
+      ImageIndex = 19
+      MenuItem = CurrentsElem2
+WordWrap = True
+    end
+    object ToolButton24: TButton
+Position.X = 731.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Visualize Voltages'
+      Text = 'Voltages [Element]'
+      ImageIndex = 20
+      MenuItem = VoltagesElement1
+WordWrap = True
+    end
+    object ToolButton25: TButton
+Position.X = 755.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Visualize Powers'
+      Text = 'Powers [Element]'
+      ImageIndex = 21
+      MenuItem = PowersElement1
+WordWrap = True
+    end
+    object ToolButton15: TButton
+Position.X = 779.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 8
+      Text = 'ToolButton15'
+      ImageIndex = 9
+WordWrap = True
+    end
+    object ToolButton12: TButton
+Position.X = 787.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 24
+      Text = 'ToolButton12'
+      ImageIndex = 7
+WordWrap = True
+    end
+    object ToolButton10: TButton
+Position.X = 811.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Record Commands'
+      Text = 'Recor&d Script'
+      ImageIndex = 18
+      MenuItem = RecordScript1
+WordWrap = True
+    end
+    object ToolButton11: TButton
+Position.X = 835.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 8
+      Text = 'ToolButton11'
+      ImageIndex = 7
+WordWrap = True
+    end
+    object ToolButton5: TButton
+Position.X = 843.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Clear DSS'
+      Text = 'C&lear DSS'
+      ImageIndex = 12
+      MenuItem = Clear1
+WordWrap = True
+    end
+    object ToolButton4: TButton
+Position.X = 867.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Help on DSS commands'
+      Text = '&DSS Help'
+      ImageIndex = 15
+      MenuItem = DSSHelp1
+WordWrap = True
+    end
+    object ToolButton13: TButton
+Position.X = 891.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 8
+      Text = 'ToolButton13'
+      ImageIndex = 8
+WordWrap = True
+    end
+    object LBL_DefaultFreq: TLabel
+Position.X = 899.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 113
+      Height = 22
+      Anchors = [akLeft]
+      Text = 'LBL_DefaultFreq'
+  FontColor = xFFFF0000
+  StyledSettings = []
+Font.Size = 13
+      Font.Family = 'MS Serif'
+      Font.Style = [fsBold]
+WordWrap = False
+AutoSize = True
+    end
+  end
+  object StatusBar1: TStatusBar
+Position.X = 0.000000000000000000
+Position.Y = 465.000000000000000000
+    Width = 1015
+    Height = 24
+    Panels = <
+      item
+        Text = 'Memory:'
+        Width = 150
+      end
+      item
+        Text = 'Status'
+        Width = 400
+      end
+      item
+        Text = 'Blocks'
+        Width = 400
+      end>
+  end
+  object ToolBar2: TToolBar
+    Left = 0
+    Top = 22
+    Width = 1015
+    Height = 30
+    Images = ImageList1
+    TabOrder = 2
+    object CompileCombo: TComboBox
+Position.X = 0.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 521
+      Height = 24
+      PopupMenu = PopupMenuCombo
+      TabOrder = 0
+    end
+    object ToolButton21: TButton
+Position.X = 521.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Open File Listed'
+      Text = 'ToolButton21'
+      ImageIndex = 0
+      OnClick = ToolButton21Click
+WordWrap = True
+    end
+    object EditFileBtn: TButton
+Position.X = 544.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Edit File Listed'
+      Text = 'EditFileBtn'
+      ImageIndex = 3
+      OnClick = EditFileBtnClick
+WordWrap = True
+    end
+    object ToolButton22: TButton
+Position.X = 567.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 8
+      Text = 'ToolButton22'
+      ImageIndex = 2
+WordWrap = True
+    end
+    object CompileBtn: TButton
+Position.X = 575.000000000000000000
+Position.Y = 0.000000000000000000
+      Hint = 'Compile File Listed'
+      Text = 'CompileBtn'
+      ImageIndex = 1
+      OnClick = CompileBtnClick
+WordWrap = True
+    end
+    object Edit_Result: TEdit
+Position.X = 598.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 396
+      Height = 22
+      TabOrder = 1
+      Text = 'Result'
+    end
+    object ToolButton20: TButton
+Position.X = 994.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 8
+      Text = 'ToolButton20'
+      ImageIndex = 2
+WordWrap = True
+    end
+  end
+  object Panel1: TPanel
+Position.X = 0.000000000000000000
+Position.Y = 52.000000000000000000
+    Width = 1015
+    Height = 413
+    Align = alClient
+    BevelEdges = []
+    TabOrder = 3
+    object Splitter23: TSplitter
+Position.X = 186.000000000000000000
+Position.Y = 1.000000000000000000
+      Height = 411
+    end
+    object Panel2: TPanel
+Position.X = 1.000000000000000000
+Position.Y = 1.000000000000000000
+      Width = 185
+      Height = 411
+      Align = alLeft
+      BevelEdges = []
+      TabOrder = 0
+      object ResultPages: TTabControl
+TabIndex = 0
+Position.X = 1.000000000000000000
+Position.Y = 1.000000000000000000
+        Width = 183
+        Height = 409
+        Align = alClient
+        TabOrder = 0
+        object SummaryTab: TTabItem
+          Text = 'Summary'
+          object SummaryEdit: TRichEdit
+            Left = 0
+            Top = 0
+            Width = 175
+            Height = 380
+            Align = alClient
+            Font.Charset = ANSI_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -11
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            Lines.Strings = (
+              'SummaryEdit')
+            ParentFont = False
+            ScrollBars = ssVertical
+            TabOrder = 0
+            Zoom = 100
+          end
+        end
+        object ResultsTab: TTabItem
+          Text = 'Results'
+          ImageIndex = 1
+          object ResultsEdit: TRichEdit
+            Left = 0
+            Top = 0
+            Width = 175
+            Height = 380
+            Align = alClient
+            Font.Charset = ANSI_CHARSET
+            Font.Color = clWindowText
+            Font.Height = -13
+            Font.Name = 'Tahoma'
+            Font.Style = []
+            Lines.Strings = (
+              'Results will appear here')
+            ParentFont = False
+            ScrollBars = ssVertical
+            TabOrder = 0
+            Zoom = 100
+          end
+        end
+      end
+    end
+    object Panel3: TPanel
+Position.X = 189.000000000000000000
+Position.Y = 1.000000000000000000
+      Width = 825
+      Height = 411
+      Align = alClient
+      BevelEdges = []
+      TabOrder = 1
+      object Splitter45: TSplitter
+Position.X = 1.000000000000000000
+Position.Y = 357.000000000000000000
+        Width = 823
+        Height = 3
+        Cursor = crVSplit
+        Align = alBottom
+      end
+      object Panel4: TPanel
+Position.X = 1.000000000000000000
+Position.Y = 1.000000000000000000
+        Width = 823
+        Height = 356
+        Align = alClient
+        BevelEdges = []
+        TabOrder = 0
+        object EditPages: TTabControl
+TabIndex = 0
+Position.X = 1.000000000000000000
+Position.Y = 1.000000000000000000
+          Width = 821
+          Height = 354
+          Align = alClient
+          PopupMenu = PopupMenuScript
+          TabOrder = 0
+          OnChange = EditPagesChange
+        end
+      end
+      object Panel5: TPanel
+Position.X = 1.000000000000000000
+Position.Y = 360.000000000000000000
+        Width = 823
+        Height = 50
+        Align = alBottom
+        BevelEdges = []
+        Constraints.MinHeight = 50
+        TabOrder = 1
+        object Label1: TLabel
+Position.X = 1.000000000000000000
+Position.Y = 1.000000000000000000
+          Width = 56
+          Height = 48
+          Align = alLeft
+          Text = 'Messages'
+  FontColor = claBlack
+  StyledSettings = []
+Font.Size = 13
+          Font.Family = 'Tahoma'
+          Font.Style = []
+WordWrap = False
+AutoSize = True
+        end
+        object MessageEdit: TRichEdit
+          Left = 57
+          Top = 1
+          Width = 765
+          Height = 48
+          Align = alClient
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          Lines.Strings = (
+            'MessageEdit')
+          ParentFont = False
+          ScrollBars = ssVertical
+          TabOrder = 0
+          Zoom = 100
+        end
+      end
+    end
+  end
+  object OpenDialog1: TOpenDialog
+    Filter = '(*.txt)|*.txt'
+    Title = 'Select File With DSS Commands'
+    Left = 296
+    Top = 168
+  end
+  object MainMenu1: TMainMenu
+    Images = ImageList1
+    Left = 296
+    Top = 88
+    object file1: TMenuItem
+      Text = '&File'
+      object NewScriptWindow1: TMenuItem
+        Text = '&New Script Window'
+        Hint = 'New Script Window'
+        ImageIndex = 7
+        ShortCut = 16462
+        OnClick = NewScriptWindow1Click
+      end
+      object Open1: TMenuItem
+        Text = '&Open ...'
+        Hint = 'Open a script file'
+        ImageIndex = 0
+        OnClick = Open1Click
+      end
+      object Compile1: TMenuItem
+        Text = '&Compile...'
+        Hint = 'Redirect and change to directory'
+        OnClick = Compile1Click
+      end
+      object Redirect1: TMenuItem
+        Text = '&Redirect...'
+        Hint = 'Redirect and return to this directory'
+        OnClick = Redirect1Click
+      end
+      object Clear1: TMenuItem
+        Text = 'C&lear DSS'
+        Hint = 'Clear DSS'
+        ImageIndex = 12
+        OnClick = Clear1Click
+      end
+      object Save2: TMenuItem
+        Text = '&Save'
+        Hint = 'Save active script window'
+        ShortCut = 16467
+        OnClick = Save2Click
+      end
+      object SaveScriptWindow1: TMenuItem
+        Text = 'Save &Window As ...'
+        Hint = 'Save Active Script Window As'
+        ShortCut = 16471
+        OnClick = SaveScriptWindow1Click
+      end
+      object N7: TMenuItem
+        Text = '-'
+      end
+      object Save1: TMenuItem
+        Text = 'S&ave Circuit'
+        Hint = 'Saves Circuit to a New Directory'
+        OnClick = Save1Click
+      end
+      object N1: TMenuItem
+        Text = '-'
+      end
+      object SaveAllMonitors1: TMenuItem
+        Text = 'Save All &Monitors'
+        Hint = 'Saves Meters and Monitors'
+        OnClick = SaveAllMonitors1Click
+      end
+      object N8: TMenuItem
+        Text = '-'
+      end
+      object AlignFile1: TMenuItem
+        Text = '&Align File ...'
+        OnClick = AlignFile1Click
+      end
+      object N9: TMenuItem
+        Text = '-'
+      end
+      object Exit1: TMenuItem
+        Text = 'E&xit'
+        OnClick = Exit1Click
+      end
+    end
+    object Edit1: TMenuItem
+      Text = '&Edit'
+      Hint = 'Edit file listed in Result Form'
+      object ResultFile1: TMenuItem
+        Text = '&Result File'
+        Hint = 'Edit Result File'
+        ImageIndex = 17
+        ShortCut = 16466
+        OnClick = ResultFile1Click
+      end
+      object LastFile1: TMenuItem
+        Text = '&Last File Compiled'
+        Hint = 'Edit the Last File compiled'
+        OnClick = LastFile1Click
+      end
+      object EditActive1: TMenuItem
+        Text = 'Edit &Active'
+        Hint = 'Form edit on active element'
+        ImageIndex = 10
+        OnClick = EditActive1Click
+      end
+      object SelectActive1: TMenuItem
+        Text = '&Select Active'
+        Hint = 'Sets Element shown to be active'
+        OnClick = SelectActive1Click
+      end
+      object RPNEvaluator1: TMenuItem
+        Text = 'RPN E&valuator'
+        OnClick = RPNEvaluator1Click
+      end
+      object N3: TMenuItem
+        Text = '-'
+      end
+      object File2: TMenuItem
+        Text = '&File ...'
+        Hint = 'Edit an arbitrary text file'
+        OnClick = File2Click
+      end
+      object N5: TMenuItem
+        Text = '-'
+      end
+      object RecordScript1: TMenuItem
+        Text = 'Recor&d Script'
+        Hint = 'Record Commands'
+        ImageIndex = 18
+        OnClick = RecordScript1Click
+      end
+    end
+    object Do1: TMenuItem
+      Text = '&Do'
+      object Selection1: TMenuItem
+        Text = '&Selected Line(s)'
+        ShortCut = 16452
+        OnClick = Selection1Click
+      end
+      object N10: TMenuItem
+        Text = '-'
+      end
+      object Command1: TMenuItem
+        Text = '&Command  ...'
+        OnClick = Command1Click
+      end
+      object N11: TMenuItem
+        Text = '-'
+      end
+      object CalcVoltageBases1: TMenuItem
+        Text = 'Calc &Voltage Bases'
+        OnClick = CalcVoltageBases1Click
+      end
+      object TakeSample1: TMenuItem
+        Text = '&Take Sample'
+        OnClick = TakeSample1Click
+      end
+      object Initialize1: TMenuItem
+        Text = '&Initialize'
+        OnClick = Initialize1Click
+      end
+      object RebuildYMatrix1: TMenuItem
+        Text = 'Rebuild &Y Matrix'
+        ShortCut = 16473
+        OnClick = RebuildYMatrix1Click
+      end
+      object MakeBusList1: TMenuItem
+        Text = 'Make &Bus List'
+        Hint = 'Make Bus List'
+        ImageIndex = 9
+        OnClick = MakeBusList1Click
+      end
+      object Interpolate2: TMenuItem
+        Text = 'Inter&polate'
+        OnClick = Interpolate2Click
+      end
+      object Reduce1: TMenuItem
+        Text = 'Re&duce'
+        object Default1: TMenuItem
+          Text = 'Default'
+          OnClick = Default1Click
+        end
+        object Stubs1: TMenuItem
+          Text = 'Stubs'
+          OnClick = Stubs1Click
+        end
+        object TapsandEnds1: TMenuItem
+          Text = 'Taps and Ends'
+          OnClick = TapsandEnds1Click
+        end
+        object BreakLoops1: TMenuItem
+          Text = 'Break Loops'
+          OnClick = BreakLoops1Click
+        end
+        object MergeParallel1: TMenuItem
+          Text = 'Merge Parallel'
+          OnClick = MergeParallel1Click
+        end
+      end
+      object AllocateLoads1: TMenuItem
+        Text = '&Allocate Loads'
+        OnClick = AllocateLoads1Click
+      end
+    end
+    object Set1: TMenuItem
+      Text = '&Set'
+      object BaseFrequency1: TMenuItem
+        Text = 'Base Frequency=&60'
+        OnClick = BaseFrequency1Click
+      end
+      object BaseFrequcney501: TMenuItem
+        Text = 'Base Frequency=&50'
+        OnClick = BaseFrequcney501Click
+      end
+      object Mode1: TMenuItem
+        Text = '&Mode='
+        OnClick = Mode1Click
+      end
+      object Number1: TMenuItem
+        Text = '&Number='
+        OnClick = Number1Click
+      end
+      object Bus1: TMenuItem
+        Text = '&Bus='
+        OnClick = Bus1Click
+      end
+      object LoadModel1: TMenuItem
+        Text = 'Load Model='
+        OnClick = LoadModel1Click
+      end
+      object LoadMultiplier1: TMenuItem
+        Text = '&Load Multiplier='
+        OnClick = LoadMultiplier1Click
+      end
+      object Growth1: TMenuItem
+        Text = '% Growth='
+        OnClick = Growth1Click
+      end
+      object Year1: TMenuItem
+        Text = 'Year='
+        OnClick = Year1Click
+      end
+      object DefaultDaily1: TMenuItem
+        Text = 'Default Daily='
+        OnClick = DefaultDaily1Click
+      end
+      object AllocationFactors1: TMenuItem
+        Text = '&Allocation Factors='
+        OnClick = AllocationFactors1Click
+      end
+      object Editor1: TMenuItem
+        Text = '&Editor='
+        OnClick = Editor1Click
+      end
+      object Datapath1: TMenuItem
+        Text = 'Datapath='
+        OnClick = Datapath1Click
+      end
+      object Option1: TMenuItem
+        Text = '&Other Option ...'
+        OnClick = Option1Click
+      end
+      object N12: TMenuItem
+        Text = '-'
+      end
+      object TrueFalse1: TMenuItem
+        Text = 'True/False'
+        object DemandInterval1: TMenuItem
+          Text = 'DemandInterval'
+          OnClick = DemandInterval1Click
+        end
+        object ZonesLocked1: TMenuItem
+          Text = 'ZonesLocked'
+          OnClick = ZonesLocked1Click
+        end
+        object DuplicatesAllowed1: TMenuItem
+          Text = 'DuplicatesAllowed'
+          OnClick = DuplicatesAllowed1Click
+        end
+        object TraceLog1: TMenuItem
+          Text = 'TraceLog'
+          OnClick = TraceLog1Click
+        end
+        object Trapezoidal1: TMenuItem
+          Text = 'Trapezoidal'
+          OnClick = Trapezoidal1Click
+        end
+      end
+    end
+    object Make1: TMenuItem
+      Text = '&Make'
+      object BusList1: TMenuItem
+        Text = '&Bus List'
+        OnClick = BusList1Click
+      end
+      object PosSeqEquiv1: TMenuItem
+        Text = '&Pos Seq Equiv'
+        OnClick = PosSeqEquiv1Click
+      end
+      object NewYMatrix1: TMenuItem
+        Text = '&New Y Matrix'
+        OnClick = NewYMatrix1Click
+      end
+    end
+    object Export1: TMenuItem
+      Text = 'E&xport'
+      object Result1: TMenuItem
+        Text = 'Result'
+        OnClick = Result1Click
+      end
+      object Voltages2: TMenuItem
+        Text = 'Voltages'
+        object Phase1: TMenuItem
+          Text = 'Buses'
+          OnClick = Phase1Click
+        end
+        object Sequence1: TMenuItem
+          Text = 'Sequence'
+          OnClick = Sequence1Click
+        end
+        object Element1: TMenuItem
+          Text = 'Element'
+          OnClick = Element1Click
+        end
+      end
+      object Currents3: TMenuItem
+        Text = 'Currents'
+        object Phase2: TMenuItem
+          Text = 'Terminal'
+          OnClick = Phase2Click
+        end
+        object Sequence2: TMenuItem
+          Text = 'Sequence'
+          OnClick = Sequence2Click
+        end
+        object Element2: TMenuItem
+          Text = 'Element'
+          OnClick = Element2Click
+        end
+      end
+      object Powers2: TMenuItem
+        Text = 'Powers'
+        object erminal1: TMenuItem
+          Text = 'Terminal'
+          OnClick = erminal1Click
+        end
+        object ByOhase1: TMenuItem
+          Text = 'By Phase'
+          OnClick = ByOhase1Click
+        end
+        object Sequence3: TMenuItem
+          Text = 'Sequence'
+          OnClick = Sequence3Click
+        end
+        object Element3: TMenuItem
+          Text = 'Element'
+          OnClick = Element3Click
+        end
+      end
+      object Losses2: TMenuItem
+        Text = 'Losses'
+        OnClick = Losses2Click
+      end
+      object Summary2: TMenuItem
+        Text = 'Summary'
+        OnClick = Summary2Click
+      end
+      object Buscoords1: TMenuItem
+        Text = 'Buscoords'
+        OnClick = Buscoords1Click
+      end
+      object FaultCurrents1: TMenuItem
+        Text = 'Fault Currents'
+        OnClick = FaultCurrents1Click
+      end
+      object Capacity1: TMenuItem
+        Text = 'Capacity'
+        OnClick = Capacity1Click
+      end
+      object Overloads1: TMenuItem
+        Text = 'Overloads'
+        OnClick = Overloads1Click
+      end
+      object Unserved1: TMenuItem
+        Text = 'Unserved'
+        OnClick = Unserved1Click
+      end
+      object Generators2: TMenuItem
+        Text = 'Generators'
+        OnClick = Generators2Click
+      end
+      object Loads1: TMenuItem
+        Text = 'Loads'
+        OnClick = Loads1Click
+      end
+      object NodeNames1: TMenuItem
+        Text = 'Node Names'
+        OnClick = NodeNames1Click
+      end
+      object NodeOrder1: TMenuItem
+        Text = 'Node Order'
+        OnClick = NodeOrder1Click
+      end
+      object Meters2: TMenuItem
+        Text = 'Meters'
+        object EnergyMeters2: TMenuItem
+          Text = 'EnergyMeters'
+          OnClick = EnergyMeters2Click
+        end
+        object Generators3: TMenuItem
+          Text = 'Generators'
+          OnClick = Generators3Click
+        end
+        object PVSystems1: TMenuItem
+          Text = 'PVSystems'
+          OnClick = PVSystems1Click
+        end
+        object Storage1: TMenuItem
+          Text = 'Storage'
+          OnClick = Storage1Click
+        end
+      end
+      object Estimation1: TMenuItem
+        Text = 'Estimation'
+        OnClick = Estimation1Click
+      end
+      object Monitors2: TMenuItem
+        Text = 'Monitors ...'
+        OnClick = Monitors2Click
+      end
+      object Yprims1: TMenuItem
+        Text = 'Yprims'
+        OnClick = Yprims1Click
+      end
+      object Y1: TMenuItem
+        Text = 'Y'
+        object YMatrix1: TMenuItem
+          Text = 'Y Matrix'
+          OnClick = YMatrix1Click
+        end
+        object NodeList1: TMenuItem
+          Text = 'NodeList'
+          OnClick = NodeList1Click
+        end
+        object VoltArray1: TMenuItem
+          Text = 'Volt Array'
+          OnClick = VoltArray1Click
+        end
+        object CurrArray1: TMenuItem
+          Text = 'Curr Array'
+          OnClick = CurrArray1Click
+        end
+      end
+      object SeqZ1: TMenuItem
+        Text = 'Seq Z'
+        OnClick = SeqZ1Click
+      end
+    end
+    object show1: TMenuItem
+      Text = 'S&how'
+      object Summary1: TMenuItem
+        Text = '&Summary'
+        OnClick = Summary1Click
+      end
+      object Voltages1: TMenuItem
+        Text = '&Voltages'
+        object VoltagesLN1: TMenuItem
+          Text = 'Voltages L&N'
+          Hint = 'Show voltages Line-Neutral'
+          OnClick = VoltagesLN1Click
+        end
+        object VoltagesLL1: TMenuItem
+          Text = 'Voltages &LL'
+          Hint = 'Show voltages Line-Line'
+          OnClick = VoltagesLL1Click
+        end
+        object VoltagesLNNodes1: TMenuItem
+          Text = 'Voltages LN Nodes'
+          OnClick = VoltagesLNNodes1Click
+        end
+        object VoltagesLNElements1: TMenuItem
+          Text = 'Voltages LN Elements'
+          OnClick = VoltagesLNElements1Click
+        end
+        object VoltageLLNodes1: TMenuItem
+          Text = 'Voltage LL Nodes'
+          OnClick = VoltageLLNodes1Click
+        end
+      end
+      object Currents2: TMenuItem
+        Text = '&Currents'
+        object Currents1: TMenuItem
+          Text = 'Currents &Seq'
+          Hint = 'Show present values of currents'
+          OnClick = Currents1Click
+        end
+        object CurrentsElem1: TMenuItem
+          Text = 'Currents &Elem'
+          OnClick = CurrentsElem1Click
+        end
+        object CurrentsElemResid1: TMenuItem
+          Text = 'Currents Elem &Resid'
+          OnClick = CurrentsElemResid1Click
+        end
+      end
+      object Powers1: TMenuItem
+        Text = '&Powers'
+        object PowerskVA1: TMenuItem
+          Text = 'Powers &kVA'
+          Hint = 'Show power flow in kVA'
+          OnClick = PowerskVA1Click
+        end
+        object PowersMVA1: TMenuItem
+          Text = 'Powers &MVA'
+          Hint = 'Power Flow in MVA'
+          OnClick = PowersMVA1Click
+        end
+        object PowerkVAElem1: TMenuItem
+          Text = 'Powers kVA Elem'
+          OnClick = PowerkVAElem1Click
+        end
+        object PowersMVAElem1: TMenuItem
+          Text = 'Powers MVA Elem'
+          OnClick = PowersMVAElem1Click
+        end
+      end
+      object N4: TMenuItem
+        Text = '-'
+      end
+      object Buses1: TMenuItem
+        Text = '&Buses'
+        Hint = 'Bus report'
+        OnClick = Buses1Click
+      end
+      object BusFlow1: TMenuItem
+        Text = 'BusFlow...'
+        OnClick = BusFlow1Click
+      end
+      object Converged1: TMenuItem
+        Text = 'Converged'
+        OnClick = Converged1Click
+      end
+      object Elementsw1: TMenuItem
+        Text = 'E&lements'
+        Hint = 'All elements in the circuit'
+        OnClick = Elementsw1Click
+      end
+      object ElementsinClass1: TMenuItem
+        Text = 'Elements in Cla&ss'
+        OnClick = ElementsinClass1Click
+      end
+      object Meters1: TMenuItem
+        Text = '&Energy Meters'
+        Hint = 'Values in all energy meters'
+        OnClick = Meters1Click
+      end
+      object EventLog1: TMenuItem
+        Text = 'E&vent Log'
+        Hint = 'Displays the event log'
+        OnClick = EventLog1Click
+      end
+      object Generators1: TMenuItem
+        Text = '&Generators'
+        Hint = 'Generator register values'
+        OnClick = Generators1Click
+      end
+      object Isolated1: TMenuItem
+        Text = '&Isolated'
+        Hint = 'Isolated element and bus report'
+        OnClick = Isolated1Click
+      end
+      object Losses1: TMenuItem
+        Text = '&Losses'
+        OnClick = Losses1Click
+      end
+      object kVBaseMismatch1: TMenuItem
+        Text = 'kV Base Mismatch'
+        OnClick = kVBaseMismatch1Click
+      end
+      object LineConstants1: TMenuItem
+        Text = 'Line Constants ...'
+        OnClick = LineConstants1Click
+      end
+      object Loops1: TMenuItem
+        Text = 'Loops'
+        OnClick = Loops1Click
+      end
+      object Mismatch1: TMenuItem
+        Text = 'Mismatch'
+        OnClick = Mismatch1Click
+      end
+      object Taps1: TMenuItem
+        Text = '&Taps'
+        OnClick = Taps1Click
+      end
+      object Monitor1: TMenuItem
+        Text = '&Monitor [monitor]'
+        Hint = 'Values in selected Monitor object'
+        OnClick = Monitor1Click
+      end
+      object Zone1: TMenuItem
+        Text = '&Zone [meter]'
+        Hint = 'Tree view of selected EnergyMeter object'
+        OnClick = Zone1Click
+      end
+      object ZonemeterTreeview1: TMenuItem
+        Text = 'Zone [meter] Treeview'
+        OnClick = ZonemeterTreeview1Click
+      end
+      object List1: TMenuItem
+        Text = 'List ...'
+        OnClick = List1Click
+      end
+    end
+    object Visual1: TMenuItem
+      Text = '&Visualize'
+      object CurrentsElem2: TMenuItem
+        Text = 'Currents [Element]'
+        Hint = 'Visualize Currents'
+        ImageIndex = 19
+        OnClick = CurrentsElem2Click
+      end
+      object VoltagesElement1: TMenuItem
+        Text = 'Voltages [Element]'
+        Hint = 'Visualize Voltages'
+        ImageIndex = 20
+        OnClick = VoltagesElement1Click
+      end
+      object PowersElement1: TMenuItem
+        Text = 'Powers [Element]'
+        Hint = 'Visualize Powers'
+        ImageIndex = 21
+        OnClick = PowersElement1Click
+      end
+    end
+    object Plot1: TMenuItem
+      Text = '&Plot'
+      object Circuit1: TMenuItem
+        Text = '&Circuit Plots'
+        Hint = 'Plot entire circuit'
+        object AutoaddLog1: TMenuItem
+          Text = '&Autoadd Log'
+          OnClick = AutoaddLog1Click
+        end
+        object CircuitPlot1: TMenuItem
+          Text = '&Circuit Plot'
+          OnClick = CircuitPlot1Click
+        end
+        object Daisy1: TMenuItem
+          Text = '&Daisy Plot'
+          Hint = 'Plot circuit with generators displayed in Daisy format'
+          OnClick = Daisy1Click
+        end
+        object GeneralBusData1: TMenuItem
+          Text = '&General Bus Data'
+          OnClick = GeneralBusData1Click
+        end
+        object GeneralLineData1: TMenuItem
+          Text = 'General &Line Data'
+          OnClick = GeneralLineData1Click
+        end
+        object Zone2: TMenuItem
+          Text = 'Zone [&meter]'
+          Hint = 'Plot meter zone'
+          OnClick = Zone2Click
+        end
+        object Zone3: TMenuItem
+          Text = '&Zone'
+          OnClick = Zone3Click
+        end
+        object N13: TMenuItem
+          Text = '-'
+        end
+      end
+      object Monitor2: TMenuItem
+        Text = 'Monitor'
+        OnClick = Monitor2Click
+      end
+      object Loadshape1: TMenuItem
+        Text = '&Loadshapes'
+        OnClick = Loadshape1Click
+      end
+      object P1: TMenuItem
+        Text = 'Profile'
+        OnClick = P1Click
+      end
+      object TCCCurve1: TMenuItem
+        Text = 'TCC Curves'
+        OnClick = TCCCurve1Click
+      end
+      object N6: TMenuItem
+        Text = '-'
+      end
+      object Interpolate1: TMenuItem
+        Text = '&Interpolate'
+        Hint = 'Interpolate circuit coordinates'
+        OnClick = Interpolate1Click
+      end
+      object Options1: TMenuItem
+        Text = '&Options...'
+        Hint = 'Set circuit plotting options'
+        OnClick = Options1Click
+      end
+    end
+    object Reset1: TMenuItem
+      Text = '&Reset'
+      object All1: TMenuItem
+        Text = '&All'
+        Hint = 'Resets all items in list below'
+        OnClick = All1Click
+      end
+      object Monitors1: TMenuItem
+        Text = '&Monitors'
+        Hint = 'Resets monitor memory'
+        OnClick = Monitors1Click
+      end
+      object EnergyMeters1: TMenuItem
+        Text = '&Energy Meters'
+        Hint = 'Resets all energy meter registers incl generators'
+        OnClick = EnergyMeters1Click
+      end
+      object Zones1: TMenuItem
+        Text = '&Faults'
+        Hint = 'Set faults to original states'
+        OnClick = Zones1Click
+      end
+      object Controls1: TMenuItem
+        Text = '&Controls'
+        Hint = 'Resets all control elements to original states'
+        OnClick = Controls1Click
+      end
+      object EventLog2: TMenuItem
+        Text = 'E&vent Log'
+        Hint = 'Clears the Event Log'
+        OnClick = EventLog2Click
+      end
+      object KeepList1: TMenuItem
+        Text = '&Keep List'
+        Hint = 'Clears the bus Keep list for reductions'
+        OnClick = KeepList1Click
+      end
+    end
+    object Help1: TMenuItem
+      Text = '&Help'
+      object DSSHelp1: TMenuItem
+        Text = '&DSS Help'
+        Hint = 'Help on DSS commands'
+        ImageIndex = 15
+        OnClick = DSSHelp1Click
+      end
+      object LinkstoHelpFiles1: TMenuItem
+        Text = '&Links to Help Files'
+        OnClick = LinkstoHelpFiles1Click
+      end
+      object ScriptEditorHelp1: TMenuItem
+        Text = '&Script Editor'
+        Hint = 'Help on how to operate the script windows'
+        OnClick = ScriptEditorHelp1Click
+      end
+      object OpenDSSWiki1: TMenuItem
+        Text = 'OpenDSS &Web Links'
+        OnClick = OpenDSSWiki1Click
+      end
+      object N2: TMenuItem
+        Text = '-'
+      end
+      object AboutDSS1: TMenuItem
+        Text = '&About DSS'
+        OnClick = AboutDSS1Click
+      end
+    end
+  end
+  object ImageList1: TImageList
+    Left = 296
+    Top = 128
+  Source = <
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            008349444154384FA5935B1280200845A5ADB16ED7565D05F301D5C8F981B138
+            244C74DEA40087C46DC2827605222A07CADF9B15018A73CE72546166C91E2CA9
+            2BB08074969802ABFB8C8A96216A173CF7628FB3050C146FAE11B3D6EE6010D4
+            EEC8ECE21A478C2FF08B31ABBE3B6843045F9B70B7501291BC31178326D825FC
+            2F0405295D2CCE6673F3B558D50000000049454E44AE426082}
+        end>
+      Name = 'ILBitmap_0'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            00EE49444154384F8D93C10D83300C45A165111805C682430F30165C18844590
+            DA3C373F3210AA3EC98D1BDBDF4E9A96EF4091611886E87D19C7317A2710C841
+            689E675BFBBE8FBB571EA612A16B5996F1DB955C2C1D81E2B66D6D13BCBF2C8B
+            194CD3C4D4E6C3F315C0A160DB365B9BA629F67D4F4550D7B5C5D775B5981A1C
+            8E008C19CE6C0974CBE12FF4A1736314A9581D72281F6C8270DB66A2EBBA9480
+            8F09F268222A3E94C0E5F8EEECFB64F06250F9F3F84B3B83A8E25EF4F012EF04
+            548C9D7FC6EC3BF83509024C9026474084006269D553569A629E8380C70B9D8B
+            3C97872442ECF621796EFFCEFF51141F672F11FBAA3BB2DF0000000049454E44
+            AE426082}
+        end>
+      Name = 'ILBitmap_1'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            00B449444154384F8D93511284200C4361AF2D9FDC5BDBA65D0A44C637E306DA
+            3432ABD65B28942A97B642393F5747CDA17938D76752C032544575A94AC38007
+            2C261B4A1C423C601F6ED725DB1BAA6C21809C00F4DEE577ECC1EE93805CC41D
+            71D7A867862F42FC31CE2193C2275BD627279854970A1D465302DE9AAAFE671E
+            FAE94D24A6BF6FA9A36890A790D47CA46E0A3C6037B5D66C694AFAC1F2312593
+            2E0373ECC38A9F2088E67803A1A3BE72F89CBF50CA03E9D06BA3E8126F920000
+            000049454E44AE426082}
+        end>
+      Name = 'ILBitmap_2'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            00AB49444154384F9D92590EC3200C4421E7CE273977C378D3C438A2ED9308DE
+            C63284FE99B43FE8BD37280FF37FC2C5E0D100891D2C068F06BBD364F1751547
+            789BC2C59E86182C0DAA2958CC4DCE737EF017004C7729AC76E4741F836AE513
+            052630C4A6059FC5402C043808B2186BCCB5D4D91E78416E508941BC44BF7DB8
+            7A69BA4FA160F7A50E210D580C7233B72B90950C17EC44CC570FA98A3931C11B
+            79B23CD5518D591D07ACB5ADDD92AAF08DC6826BD50000000049454E44AE4260
+            82}
+        end>
+      Name = 'ILBitmap_3'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            007349444154384FED935B0AC0200C0437BD9AC7F26C9E2DCD1623A9480AE267
+            0762E2031D44A19D5AAB02F80CAE8B081B9B8088A0B5C632A594C2437B0FB87A
+            DE870684A5190CD555F87C243770D5A03C936F60F7F2CA0BCE5F22176479E637
+            3860C0CE034B7F69315B31C2C723E70CF6BEB3EA0D3B05DAF630767051000000
+            0049454E44AE426082}
+        end>
+      Name = 'ILBitmap_4'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            006D49444154384FA592410EC0200804A1FFFFB3ED36C534AB08E85C8C093B10
+            54DB831C707D6719557DCF2D01C2367859F00F839280C3202D9885C1F6128D94
+            C0EB0E4201C22BBA00855C6C77AF3BE8022B8A3A32C35766C1AA3B1876100598
+            E9124D9291B9AF909DC415E410B9014DB22C17E6EE78B80000000049454E44AE
+            426082}
+        end>
+      Name = 'ILBitmap_5'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            009749444154384F8D920B0EC4200844A567F7DE5D868A79EBB20D2F31F299B1
+            466AB76366C3B7D1857AF3B59D9D43644EA4BF6862B382FD39E713F80181C25C
+            15ECBB7955BDBEF68022C23ACDE2E773149FF96916E57D697A338BF200D1318B
+            F80F5CF445358D42165C6BDF94A372FE8E58374894E6E2B5593FD9158ACAD746
+            9F44C6E6DB83519778DC3327D4479EC58E39A1BE1C639F313EB754F46A15AB41
+            C60000000049454E44AE426082}
+        end>
+      Name = 'ILBitmap_6'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            006249444154384FC593410E00100C045BFFFF339A6852B554F4602E24EC1A09
+            5C3B94A08CF199C98099C76C6527BA14A08D5A8CD6E01524E06D248C0C61816C
+            F6A7A1B07034D0102A548E06BB902534B02688D02032F96F70FD12155FF6FF33
+            250B881A5B6D5605CD74E6960000000049454E44AE426082}
+        end>
+      Name = 'ILBitmap_7'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            00C249444154384F9D924116C320084435E77669CEDD32E0288876D1FF5E8328
+            0C639AFA118A506B4550C656C6D5489186070FDF0CF69C60F7ED1609D6791CD4
+            45243BB156E8F34C1D04D824114EE24F1CBC764CA2809F28D5483189F1C4330F
+            7CC168964D243A99F677D4818A58556A46F4C73BF30A41C4357B9113F33B2078
+            59BB03DBB39C33D896FF05653523A21822C8E3B883802F5E13A388275D819C6C
+            7BD876B9C2728266ACD9D0E553F65C1DDC58CE0C1568AD8DF4375DC61F05C6FA
+            0F4AF902227C84149CFB25E60000000049454E44AE426082}
+        end>
+      Name = 'ILBitmap_8'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            00A149444154384FA591611284200885A173F7D3AE96C7DAE511A4B9ACD4F4CD
+            100EC2F369FC11C860665BCDE946E847A0DF8CF043BC2F14C89C788FE64860C6
+            28FED8417F00FA984A6995754D1DF44060B1F505554EC20905E0220BE7B503C2
+            1B04074CA221D3A8C8475D1F853C5FFBCF2BB8A934CB42470D154041FEFEBD2C
+            51EBAEC3E0CF23B6C8408BDEC69BB11E89F7C4936C2C98E6AD5811A06B0C67AC
+            117D019BE9D124436A60260000000049454E44AE426082}
+        end>
+      Name = 'ILBitmap_9'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            00AD49444154384FA592010EC3200C0349FFFF6786E7783814B44A3DA92204DB
+            89A645EBBD3727228B336EB9F224C38C3708740AF6780F1B3203D23CA4B8E422
+            5C107D37A1A73B158BB986109FEEB5D4D99C660F9101F826E09A8FD54CE17E7D
+            7DC07EC469C609C129C4F906B818666ACF211EF6DBE02EA6B08613F444F91F48
+            0C3D6A096708F1BA04089F20D640B10D00DC84934E35889156C6E171691D81F6
+            EF069AE6A76AF07A836DC0735AFB0037D5911A9F230F220000000049454E44AE
+            426082}
+        end>
+      Name = 'ILBitmap_10'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            008449444154384FCD93511280200844B16B7336BD1AB1819996A3D94FEF0398
+            91DD36670CA2D00736949492D6F0BA1F2081669018E342C7A4CC2DDF3BF84D82
+            55134C0E33FB342BAE12649FD36FD2C415CC26B414C5C4E89B00DFA64513DF34
+            7131B87E013C8BEDDCB77282D6647417AEC8E2FA37C61709AC6A6B4D8CBED8BA
+            C8C7E74CB40326BBB9AD317347750000000049454E44AE426082}
+        end>
+      Name = 'ILBitmap_11'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            008349444154384FAD93DB0E80200C43C1DFD647FF5B2949CDDC3AC5CB493061
+            ACA519B16E8DF281099FA5D6BE46F0BDDD80DC19F16C35A1BB812D0065A2C420
+            CCC08AD98C9A1712394495203338CD80F8E64C0CA4814FA0129160E067C0DB33
+            93F08CC4C6BE32390C3231513520679001939002CF48E6F37688E78A86BDE89F
+            BFF13DA5ECE242B9FB63FA847C0000000049454E44AE426082}
+        end>
+      Name = 'ILBitmap_12'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            012F49444154384F755231964540106CFBF60042291919A1D0115C81CC158452
+            47900A1D412875035219A16C77ABBF9E1D63D47BDED03D5DAABBDAF9F90359E0
+            38CEF5F6C1CB35B212A0B8691AF27D9FBFC771A4AEEBAC2456822008B838CB32
+            5AD79509806559F8D4F1759D0FC471AC4844890D3702482FCB928AA2B822FF40
+            0C397336DFD7C90948DCB68DF67DA7B66D699E67CE4181EBBA8A1877A5733503
+            04A76922CFF338610273E8FB9E5BAAEB5A113C66000572EA8F149B5004604CD3
+            94ED7A0354E87F075E6D44CFE8FD380E8EA1D872F5498059E479CEC54992700C
+            AA40380CC38344B58042D884414AA10EC49033ADBCB9209B86A14132B6109085
+            8212D94C51F2B01108C390774107861745917A17829B8DE2008A4D1BF100F8BB
+            0EEB10ABAAA2F33CAFC807D2D2FD3AD12FAD88D4D8355D38430000000049454E
+            44AE426082}
+        end>
+      Name = 'ILBitmap_13'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            015E49444154384F8D52B1B5C2300C547EC706B4610B53862DD2660CB7B04528
+            F95B24256C415AB6F0BF3BC54E02BFE05E6CC5B275B2CEB2B482996104D96FF1
+            83C34255559823BEC66C18AC3A1E8BDFF7F29937CC449E39C664C16F0012B775
+            9DDAD67D7553A780FD352A4E24123B32DBE98455F09B8CA3D5BB97F571E21101
+            2EBB5C94D81D24C8507666E64D6099199CA9EFA98D21BB693D0C8B4E1F6A71A3
+            9481C1807218B66D7D64141133E0B374BFEB1F35CB22B397D834FC20CB22E807
+            41753894CDFD3EA8E6F3D90C59AD6FA10982A745922D410E7C3E8302BA661281
+            44051878BD9ADD6E2A5DBECD2B044475CDAFB2F0202DAF3C8E01CA3F1440E460
+            8104195965046ACDED18E757403FFCD7A59B4E7CBC5CB4522398F8AF3226D4F4
+            D6A5C4468336EC659155842CA1EB7CB0CBC5C44683AA59AFCD7DB85C9AC5476E
+            A2D2DAAB96578CE615782846AF9564458FB72EE5BEFC9ABF846E3077A923A53F
+            4079ABEDA61A655F0000000049454E44AE426082}
+        end>
+      Name = 'ILBitmap_14'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            012F49444154384F7D93C19584200C86B3FBB608AF9681473DDAC15E2D038E4C
+            2BD3051CB50BE76A176C7E020A233BDF7B11124848027E0586DEF0DEB3189E6D
+            62605EAF9EFAFE979665E1B14F5606014A9C7341290A5A5FC24744718E020708
+            FBBEC7BDA00A0067AD15CF7425B0C119DB11D05ACB73E12C0169F397C611DA1D
+            59DFE2FA348DA439D2C8CAB72C6383A99C8D411FE02460B3F72A691767801238
+            5BBBF2CC56415A3403F079F28DA7C6E989E1CB811D028A12E46448C6988133B9
+            EAF27EA3E358A8EBBA64216ABE037077267A3E0F527CC7780B996609A83BA708
+            24BB477C40A533F81020298CF78FA897A967FE69620D3220BA5F21F8496305D2
+            1F86E9CC02231A38CFB3180A3E948013B348905609CD0C407903C6E0AFACBB9F
+            695EA3C16BE1FF22831EAC2B5EE63B447F00BFD264D986074B0000000049454E
+            44AE426082}
+        end>
+      Name = 'ILBitmap_15'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            004949444154384FED8F410A00200804DDFEFFE7B268454FA55D1B90720B19D1
+            1579A0EDB38C190058C12D140F03189EF07FC30AF381E57BE2EFE41B68F60DA2
+            41061AD8802A61853C22036EE9484EBFE7E3C00000000049454E44AE426082}
+        end>
+      Name = 'ILBitmap_16'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            008E49444154384FCD93511280200844A56BFBABE736175D4B329BF2A737B303
+            4386A02829E316D8AA5544A47A73B02EC6A8BE2640803FD3BF93A555503A092A
+            F8146345AEED4CBA1652F2AA338CD938E9127CE167094462271B1BB15C413E5D
+            BD2B9847B02E84D02CD00AF00D43823B1E0DCB8CD642D9A0F0E60C2EB5233413
+            4B27C3D768C7D5E2FD31958BCFD9B91D8A4B95667799EE6C0000000049454E44
+            AE426082}
+        end>
+      Name = 'ILBitmap_17'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            004D49444154384F633C76ECD87F060A001394261B0CBC0158C3C0D2CA0ACA82
+            80E3C78E41599800C305E89A41009B180CA018804F212EB941160BF8020B971C
+            860BB029C467F06852A6D800060600ED8719115E06244B0000000049454E44AE
+            426082}
+        end>
+      Name = 'ILBitmap_18'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            005F49444154384F63FC0F040C140026284D36187803B0870123239401057882
+            09D305E89A410024864D1C08500D405604B2958808221C063083701846A758C0
+            E17F10206C004C33518188EC4F90063C36C300A60BB005169E401CF299898101
+            00960020123A43A19F0000000049454E44AE426082}
+        end>
+      Name = 'ILBitmap_19'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            004F49444154384F63FC0F040C140026284D36186C0630324230328089A18B43
+            01761760538C23AC510D202342F087010E672303E202118FCB300D802926C276
+            1020CE05780061030804EC685E606000002DE5121D94D15CA90000000049454E
+            44AE426082}
+        end>
+      Name = 'ILBitmap_20'
+    end
+    item
+      MultiResBitmap.LoadSize = 2
+      MultiResBitmap = <
+        item
+          Width = 16
+          Height = 16
+          PNG = {
+            89504E470D0A1A0A0000000D49484452000000100000001008060000001FF3FF
+            61000000017352474200AECE1CE90000000467414D410000B18F0BFC61050000
+            004F49444154384F63FC0F040C140026284D3618780330C3809111CA40027882
+            8938176033140A701B00B215D9661C86E03600A40159130E6F10E705B2C200E6
+            053C9A41803817E001141B309A17181800F1A61C0CE87D7B920000000049454E
+            44AE426082}
+        end>
+      Name = 'ILBitmap_21'
+    end>
+  Destination = <>
+  Left = 24
+  Top = 8
+
+  end
+  object SaveDialog1: TSaveDialog
+    Left = 296
+    Top = 208
+  end
+  object PopupMenuCombo: TPopupMenu
+    Left = 296
+    Top = 48
+    object Popup1Compile: TMenuItem
+      Text = '&Compile'
+      OnClick = Popup1CompileClick
+    end
+    object Popup1Edit: TMenuItem
+      Text = '&Edit'
+      OnClick = Popup1EditClick
+    end
+    object PopUp1Delete: TMenuItem
+      Text = '&Delete'
+      OnClick = PopUp1DeleteClick
+    end
+    object PopUp1ChDir: TMenuItem
+      Text = 'C&hDir'
+      Hint = 'Change Directory to directory of  file'
+      OnClick = PopUp1ChDirClick
+    end
+    object Popup1ClearList: TMenuItem
+      Text = 'Clear &List'
+      Hint = 'Clear the compiled file list'
+      OnClick = Popup1ClearListClick
+    end
+    object Sort1: TMenuItem
+      Text = '&Sort'
+      OnClick = Sort1Click
+    end
+  end
+  object PopupMenuScript: TPopupMenu
+    Left = 296
+    Top = 264
+    object ScriptDoMnu: TMenuItem
+      Text = '&Do Selected'
+      Hint = 'Execute selected script'
+      ShortCut = 16452
+      OnClick = ScriptDoClick
+    end
+    object ScriptSaveMnu: TMenuItem
+      Text = '&Save This Window'
+      OnClick = ScriptSaveClick
+    end
+    object ScriptCloseMnu: TMenuItem
+      Text = '&Close Window'
+      OnClick = ScriptCloseClick
+    end
+    object ScriptDirMnu: TMenuItem
+      Text = 'C&hange to this Directory'
+      OnClick = ScriptDirClick
+    end
+    object ScriptOpenMnu: TMenuItem
+      Text = '&Open Selected File'
+      OnClick = ScriptOpenClick
+    end
+    object ScriptEditMnu: TMenuItem
+      Text = '&Edit Selected File'
+      OnClick = ScriptEditClick
+    end
+    object N14: TMenuItem
+      Text = '-'
+    end
+    object ScriptFontMnu: TMenuItem
+      Text = 'Change &Font...'
+      OnClick = ScriptFontClick
+    end
+  end
+  object FontDialog1: TFontDialog
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    OnApply = ApplyFont
+    Left = 296
+    Top = 320
+  end
+end

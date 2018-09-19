@@ -1,0 +1,51 @@
+object PropEditForm: TPropEditForm
+  Left = 337
+  Top = 193
+  VertScrollBar.Style = ssHotTrack
+  BorderIcons = [biSystemMenu]
+  Caption = 'PropEditForn'
+  ClientHeight = 247
+  ClientWidth = 254
+  Position = poDesigned
+  OnCreate = FormCreate
+  OnShow = FormShow
+  object StringGrid1: TStringGrid
+Position.X = 8.000000000000000000
+Position.Y = 56.000000000000000000
+    Width = 201
+    Height = 32
+    RowCount = 2
+    OnKeyPress = StringGrid1KeyPress
+    OnSelectCell = StringGrid1SelectCell
+    OnSetEditText = StringGrid1SetEditText
+  end
+  object Button1: TButton
+Position.X = 95.000000000000000000
+Position.Y = 25.000000000000000000
+    Width = 81
+    Height = 25
+    Anchors = [akLeft]
+    Text = '&Update'
+    TabOrder = 1
+    OnClick = Button1Click
+  end
+  object Button2: TButton
+Position.X = 8.000000000000000000
+Position.Y = 25.000000000000000000
+    Width = 81
+    Height = 25
+    Anchors = [akLeft]
+    Text = '&Close'
+    TabOrder = 2
+    OnClick = Button2Click
+  end
+  object Edit1: TEdit
+Position.X = 8.000000000000000000
+Position.Y = 0.000000000000000000
+    Width = 241
+    Height = 21
+    ReadOnly = True
+    TabOrder = 3
+    Text = 'Edit1'
+  end
+end

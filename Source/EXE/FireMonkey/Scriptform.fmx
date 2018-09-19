@@ -1,0 +1,211 @@
+object MainEditForm: TMainEditForm
+  StyleBook = StyleBook1
+  StyleLookup = 'backgroundstyle'
+  Left = 266
+  Top = 205
+  Caption = 'Main Script Window'
+  ClientHeight = 375
+  ClientWidth = 585
+  Position = poDefault
+  Visible = True
+  OnActivate = FormActivate
+  OnClose = FormClose
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  object Editor: TRichEdit
+    Left = 0
+    Top = 18
+    Width = 585
+    Height = 357
+    Align = alClient
+    Font.Charset = ANSI_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -12
+    Font.Name = 'MS Sans Serif'
+    Font.Style = [fsBold]
+    Lines.Strings = (
+      '')
+    ParentFont = False
+    PopupMenu = PopupMenu2
+    ScrollBars = ssBoth
+    TabOrder = 0
+    WordWrap = False
+    Zoom = 100
+    OnChange = EditorChange
+    OnKeyDown = EditorKeyDown
+    OnSelectionChange = EditorSelectionChange
+  end
+  object ToolBar1: TToolBar
+    Left = 0
+    Top = 0
+    Width = 585
+    Height = 18
+    Margins.Left = 2
+    Margins.Top = 2
+    Margins.Right = 2
+    Margins.Bottom = 2
+    TabOrder = 1
+    object FontBtn: TButton
+Position.X = 0.000000000000000000
+Position.Y = 0.000000000000000000
+      Width = 59
+      Height = 15
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
+      Text = 'Font...'
+  StyledSettings = [ssFontColor]
+StyleLookup = 'FontBtnStyle1'
+Font.Size = 7
+      Font.Family = 'MS Sans Serif'
+      TabOrder = 0
+      OnClick = FontBtnClick
+    end
+  end
+  object PopupMenu2: TPopupMenu
+    Left = 680
+    Top = 248
+    object Do2: TMenuItem
+      Text = '&Do Selected'
+      Hint = 'Execute selected script'
+      ShortCut = 16452
+      OnClick = Do2Click
+    end
+    object Save3: TMenuItem
+      Text = '&Save This Window'
+      OnClick = Save3Click
+    end
+    object CloseWindow1: TMenuItem
+      Text = '&Close Window'
+      OnClick = CloseWindow1Click
+    end
+    object ChangetothisDir1: TMenuItem
+      Text = 'C&hange to this Directory'
+      OnClick = ChangetothisDir1Click
+    end
+    object OpenSelectedFile1: TMenuItem
+      Text = '&Open Selected File'
+      OnClick = OpenSelectedFile1Click
+    end
+    object EditSelectedFile1: TMenuItem
+      Text = '&Edit Selected File'
+      OnClick = EditSelectedFile1Click
+    end
+  end
+  object FontDialog1: TFontDialog
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -11
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    OnApply = FontDialog1Apply
+    Left = 336
+    Top = 112
+  end
+  object StyleBook1: TStyleBook
+      Left = 8
+      Top = 8
+    Resource.Strings = (
+      'object _1: TLayout'
+      '  Align = alClient'
+      '  Position.X = 0.000000000000000000'
+      '  Position.Y = 33.000000000000000000'
+      '  Width = 842.000000000000000000'
+      '  Height = 882.000000000000000000'
+      '  object TLayout'
+      '    StyleName = '#39'FontBtnStyle1'#39
+      '    Position.Point = '#39'(376,375)'#39
+      '    Width = 91.000000000000000000'
+      '    Height = 24.000000000000000000'
+      '    object TRectangle'
+      '      StyleName = '#39'background'#39
+      '      Align = alContents'
+      '      Width = 91.000000000000000000'
+      '      Height = 24.000000000000000000'
+      '      HitTest = False'
+      '      Fill.Color = xFFEFEFEF'
+      '      Stroke.Kind = bkNone'
+      '      XRadius = 3.000000000000000000'
+      '      YRadius = 3.000000000000000000'
+      '      object TRectangle'
+      '        Align = alContents'
+      '        Width = 91.000000000000000000'
+      '        Height = 24.000000000000000000'
+      '        HitTest = False'
+      '        Fill.Kind = bkGradient'
+      '        Fill.Gradient.Points = <'
+      '          item'
+      '            Color = x24F4F4F4'
+      '          end'
+      '          item'
+      '            Color = x24EAEAEA'
+      '            Offset = 0.499000012874603300'
+      '          end'
+      '          item'
+      '            Color = x4E868686'
+      '            Offset = 0.500000000000000000'
+      '          end>'
+      '        Stroke.Color = xC84F4F4F'
+      '        XRadius = 3.000000000000000000'
+      '        YRadius = 3.000000000000000000'
+      '      end'
+      '      object TColorAnimation'
+      '        Duration = 0.200000002980232200'
+      '        Trigger = '#39'IsMouseOver=true'#39
+      '        StartValue = xFFEFEFEF'
+      '        StopValue = xFFA5D9FF'
+      '        PropertyName = '#39'Fill.Color'#39
+      '      end'
+      '      object TColorAnimation'
+      '        Duration = 0.200000002980232200'
+      '        Trigger = '#39'IsMouseOver=false'#39
+      '        StartValue = xFFA5D9FF'
+      '        StopValue = xFFEFEFEF'
+      '        PropertyName = '#39'Fill.Color'#39
+      '      end'
+      '      object TInnerGlowEffect'
+      '        Trigger = '#39'IsPressed=true'#39
+      '        Enabled = False'
+      '        Softness = 0.400000005960464500'
+      '        GlowColor = xFF4F4848'
+      '        Opacity = 0.899999976158142100'
+      '      end'
+      '      object TRectangle'
+      '        Align = alClient'
+      '        Position.Point = '#39'(1,1)'#39
+      '        Locked = True'
+      '        Width = 89.000000000000000000'
+      '        Height = 22.000000000000000000'
+      '        Padding.Rect = '#39'(1,1,1,1)'#39
+      '        HitTest = False'
+      '        Fill.Kind = bkNone'
+      '        Stroke.Color = x96FCFCFC'
+      '        XRadius = 2.000000000000000000'
+      '        YRadius = 2.000000000000000000'
+      '      end'
+      '    end'
+      '    object TText'
+      '      StyleName = '#39'text'#39
+      '      Align = alClient'
+      '      Position.Point = '#39'(5,3)'#39
+      '      Locked = True'
+      '      Width = 81.000000000000000000'
+      '      Height = 18.000000000000000000'
+      '      Padding.Rect = '#39'(5,3,5,3)'#39
+      '      HitTest = False'
+      '      Fill.Color = claBlack'
+      '      Text = '#39'button'#39
+      '    end'
+      '    object TGlowEffect'
+      '      Trigger = '#39'IsFocused=true'#39
+      '      Enabled = False'
+      '      Softness = 0.200000002980232200'
+      '      GlowColor = x82005ACC'
+      '      Opacity = 0.899999976158142100'
+      '    end'
+      '  end'
+'end')
+end
+
+end
