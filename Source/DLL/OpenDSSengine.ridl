@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 2/27/2018 5:47:10 PM (- $Rev: 12980 $, 21963296).
+// File generated on 9/19/2018 11:40:50 AM (- $Rev: 12980 $, 8097078).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -1826,6 +1826,16 @@ library OpenDSSengine
     HRESULT _stdcall AllNames([out, retval] VARIANT* Value);
     [propget, id(0x000000DD)]
     HRESULT _stdcall Count([out, retval] long* Value);
+    [propget, id(0x000000DE), helpstring("Complex array of voltages for active winding")]
+    HRESULT _stdcall WdgVoltages([out, retval] VARIANT* Value);
+    [propget, id(0x000000DF), helpstring("All Winding currents (ph1, wdg1, wdg2,... ph2, wdg1, wdg2 ...)")]
+    HRESULT _stdcall WdgCurrents([out, retval] VARIANT* Value);
+    [propget, id(0x000000E0), helpstring("All winding currents in CSV string form like the WdgCurrents property")]
+    HRESULT _stdcall strWdgCurrents([out, retval] BSTR* Value);
+    [propget, id(0x000000E1), helpstring("Transformer Core Type: 0=shell;1 = 1-phase; 3= 3-leg; 5= 5-leg")]
+    HRESULT _stdcall CoreType([out, retval] long* Value);
+    [propput, id(0x000000E1)]
+    HRESULT _stdcall CoreType([in] long Value);
   };
 
   [
