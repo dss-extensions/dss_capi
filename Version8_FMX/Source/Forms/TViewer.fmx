@@ -1,0 +1,64 @@
+object TViewForm: TTViewForm
+  Left = 283
+  Top = 184
+  Caption = 'TViewForm'
+  ClientHeight = 467
+  ClientWidth = 648
+  Position = Default
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop, iPhone, iPad]
+  Left = 283
+  Top = 184
+  DesignerMasterStyle = 0
+  object Label1: TLabel
+    AutoSize = True
+    Position.X = 328.000000000000000000
+    Size.Width = 169.000000000000000000
+    Size.Height = 16.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.WordWrap = False
+    Text = 'Right-click to edit/view element'
+  end
+  object TreeView1: TTreeView
+    Align = Client
+    Size.Width = 648.000000000000000000
+    Size.Height = 467.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    Viewport.Width = 644.000000000000000000
+    Viewport.Height = 463.000000000000000000
+  end
+  object MainMenuTView: TMainMenu
+    Left = 264
+    object File1: TMenuItem
+      Text = '&File'
+      object Close1: TMenuItem
+        Locked = True
+        Text = '&Close'
+        OnClick = Close1Click
+      end
+      object Print2: TMenuItem
+        Locked = True
+        Text = '&Print'
+        OnClick = Print2Click
+      end
+    end
+    object Edit1: TMenuItem
+      Text = '&Edit'
+      object ExpandAll1: TMenuItem
+        Locked = True
+        Text = '&Expand All'
+        OnClick = ExpandAll1Click
+      end
+      object CollapseAll1: TMenuItem
+        Locked = True
+        Text = '&Collapse All'
+        OnClick = CollapseAll1Click
+      end
+    end
+  end
+  object PrintDialog1: TPrintDialog
+    Left = 176
+  end
+end

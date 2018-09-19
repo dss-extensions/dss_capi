@@ -1,0 +1,404 @@
+object DoDSSCommandForm: TDoDSSCommandForm
+  StyleBook = StyleBook1
+  StyleLookup = 'backgroundstyle'
+  Left = 245
+  Top = 182
+  Caption = 'Do DSS Command'
+  ClientHeight = 328
+  ClientWidth = 800
+  OnCreate = FormCreate
+  object Label1: TLabel
+Position.X = 40.000000000000000000
+Position.Y = 32.000000000000000000
+    Width = 84
+    Height = 13
+    Text = 'DSS Command'
+  FontColor = claBlack
+  StyledSettings = []
+Font.Size = 11
+    Font.Family = 'MS Sans Serif'
+    Font.Style = [fsBold]
+WordWrap = False
+AutoSize = True
+  end
+  object Label2: TLabel
+Position.X = 40.000000000000000000
+Position.Y = 184.000000000000000000
+    Width = 118
+    Height = 13
+    Text = 'Command Arguments'
+  FontColor = claBlack
+  StyledSettings = []
+Font.Size = 11
+    Font.Family = 'MS Sans Serif'
+    Font.Style = [fsBold]
+WordWrap = False
+AutoSize = True
+  end
+  object DSSCMDCombo: TComboBox
+Position.X = 40.000000000000000000
+Position.Y = 56.000000000000000000
+    Width = 185
+    Height = 21
+    Sorted = True
+    TabOrder = 0
+    OnChange = DSSCMDComboChange
+  end
+  object Edit1: TEdit
+Position.X = 40.000000000000000000
+Position.Y = 208.000000000000000000
+    Width = 745
+    Height = 21
+    TabOrder = 1
+    OnChange = Edit1Change
+  end
+  object Btn_Doit: TButton
+Position.X = 40.000000000000000000
+Position.Y = 240.000000000000000000
+    Width = 113
+    Height = 25
+    Text = '&Do It'
+  StyledSettings = [ssFontColor]
+StyleLookup = 'Btn_DoitStyle1'
+Font.Size = 11
+    Font.Family = 'MS Sans Serif'
+    TabOrder = 2
+    OnClick = Btn_DoitClick
+  end
+  object Btn_Cancel: TButton
+Position.X = 168.000000000000000000
+Position.Y = 240.000000000000000000
+    Width = 81
+    Height = 25
+    Text = '&Cancel'
+  StyledSettings = [ssFontColor]
+StyleLookup = 'Btn_CancelStyle1'
+Font.Size = 11
+    Font.Family = 'MS Sans Serif'
+    TabOrder = 3
+    OnClick = Btn_CancelClick
+  end
+  object Memo1: TMemo
+Position.X = 243.000000000000000000
+Position.Y = 8.000000000000000000
+    Width = 534
+    Height = 191
+    Lines.Strings = (
+      'Memo1')
+    TabOrder = 4
+  end
+  object Btn_AddFileName: TButton
+Position.X = 584.000000000000000000
+Position.Y = 232.000000000000000000
+    Width = 137
+    Height = 25
+    Text = '&Add a File Name ...'
+  StyledSettings = [ssFontColor]
+StyleLookup = 'Btn_AddFileNameStyle1'
+Font.Size = 11
+    Font.Family = 'MS Sans Serif'
+    TabOrder = 5
+    OnClick = Btn_AddFileNameClick
+  end
+  object E_Command: TEdit
+Position.X = 40.000000000000000000
+Position.Y = 280.000000000000000000
+    Width = 737
+    Height = 21
+    ReadOnly = True
+    TabOrder = 6
+  end
+  object OpenDialog1: TOpenDialog
+    Left = 104
+    Top = 88
+  end
+  object StyleBook1: TStyleBook
+      Left = 8
+      Top = 8
+    Resource.Strings = (
+      'object _1: TLayout'
+      '  Align = alClient'
+      '  Position.X = 0.000000000000000000'
+      '  Position.Y = 33.000000000000000000'
+      '  Width = 842.000000000000000000'
+      '  Height = 882.000000000000000000'
+      '  object TLayout'
+      '    StyleName = '#39'Btn_DoitStyle1'#39
+      '    Position.Point = '#39'(376,375)'#39
+      '    Width = 91.000000000000000000'
+      '    Height = 24.000000000000000000'
+      '    object TRectangle'
+      '      StyleName = '#39'background'#39
+      '      Align = alContents'
+      '      Width = 91.000000000000000000'
+      '      Height = 24.000000000000000000'
+      '      HitTest = False'
+      '      Fill.Color = xFFEFEFEF'
+      '      Stroke.Kind = bkNone'
+      '      XRadius = 3.000000000000000000'
+      '      YRadius = 3.000000000000000000'
+      '      object TRectangle'
+      '        Align = alContents'
+      '        Width = 91.000000000000000000'
+      '        Height = 24.000000000000000000'
+      '        HitTest = False'
+      '        Fill.Kind = bkGradient'
+      '        Fill.Gradient.Points = <'
+      '          item'
+      '            Color = x24F4F4F4'
+      '          end'
+      '          item'
+      '            Color = x24EAEAEA'
+      '            Offset = 0.499000012874603300'
+      '          end'
+      '          item'
+      '            Color = x4E868686'
+      '            Offset = 0.500000000000000000'
+      '          end>'
+      '        Stroke.Color = xC84F4F4F'
+      '        XRadius = 3.000000000000000000'
+      '        YRadius = 3.000000000000000000'
+      '      end'
+      '      object TColorAnimation'
+      '        Duration = 0.200000002980232200'
+      '        Trigger = '#39'IsMouseOver=true'#39
+      '        StartValue = xFFEFEFEF'
+      '        StopValue = xFFA5D9FF'
+      '        PropertyName = '#39'Fill.Color'#39
+      '      end'
+      '      object TColorAnimation'
+      '        Duration = 0.200000002980232200'
+      '        Trigger = '#39'IsMouseOver=false'#39
+      '        StartValue = xFFA5D9FF'
+      '        StopValue = xFFEFEFEF'
+      '        PropertyName = '#39'Fill.Color'#39
+      '      end'
+      '      object TInnerGlowEffect'
+      '        Trigger = '#39'IsPressed=true'#39
+      '        Enabled = False'
+      '        Softness = 0.400000005960464500'
+      '        GlowColor = xFF4F4848'
+      '        Opacity = 0.899999976158142100'
+      '      end'
+      '      object TRectangle'
+      '        Align = alClient'
+      '        Position.Point = '#39'(1,1)'#39
+      '        Locked = True'
+      '        Width = 89.000000000000000000'
+      '        Height = 22.000000000000000000'
+      '        Padding.Rect = '#39'(1,1,1,1)'#39
+      '        HitTest = False'
+      '        Fill.Kind = bkNone'
+      '        Stroke.Color = x96FCFCFC'
+      '        XRadius = 2.000000000000000000'
+      '        YRadius = 2.000000000000000000'
+      '      end'
+      '    end'
+      '    object TText'
+      '      StyleName = '#39'text'#39
+      '      Align = alClient'
+      '      Position.Point = '#39'(5,3)'#39
+      '      Locked = True'
+      '      Width = 81.000000000000000000'
+      '      Height = 18.000000000000000000'
+      '      Padding.Rect = '#39'(5,3,5,3)'#39
+      '      HitTest = False'
+      '      Fill.Color = claBlack'
+      '      Text = '#39'button'#39
+      '    end'
+      '    object TGlowEffect'
+      '      Trigger = '#39'IsFocused=true'#39
+      '      Enabled = False'
+      '      Softness = 0.200000002980232200'
+      '      GlowColor = x82005ACC'
+      '      Opacity = 0.899999976158142100'
+      '    end'
+      '  end'
+      '  object TLayout'
+      '    StyleName = '#39'Btn_CancelStyle1'#39
+      '    Position.Point = '#39'(376,375)'#39
+      '    Width = 91.000000000000000000'
+      '    Height = 24.000000000000000000'
+      '    object TRectangle'
+      '      StyleName = '#39'background'#39
+      '      Align = alContents'
+      '      Width = 91.000000000000000000'
+      '      Height = 24.000000000000000000'
+      '      HitTest = False'
+      '      Fill.Color = xFFEFEFEF'
+      '      Stroke.Kind = bkNone'
+      '      XRadius = 3.000000000000000000'
+      '      YRadius = 3.000000000000000000'
+      '      object TRectangle'
+      '        Align = alContents'
+      '        Width = 91.000000000000000000'
+      '        Height = 24.000000000000000000'
+      '        HitTest = False'
+      '        Fill.Kind = bkGradient'
+      '        Fill.Gradient.Points = <'
+      '          item'
+      '            Color = x24F4F4F4'
+      '          end'
+      '          item'
+      '            Color = x24EAEAEA'
+      '            Offset = 0.499000012874603300'
+      '          end'
+      '          item'
+      '            Color = x4E868686'
+      '            Offset = 0.500000000000000000'
+      '          end>'
+      '        Stroke.Color = xC84F4F4F'
+      '        XRadius = 3.000000000000000000'
+      '        YRadius = 3.000000000000000000'
+      '      end'
+      '      object TColorAnimation'
+      '        Duration = 0.200000002980232200'
+      '        Trigger = '#39'IsMouseOver=true'#39
+      '        StartValue = xFFEFEFEF'
+      '        StopValue = xFFA5D9FF'
+      '        PropertyName = '#39'Fill.Color'#39
+      '      end'
+      '      object TColorAnimation'
+      '        Duration = 0.200000002980232200'
+      '        Trigger = '#39'IsMouseOver=false'#39
+      '        StartValue = xFFA5D9FF'
+      '        StopValue = xFFEFEFEF'
+      '        PropertyName = '#39'Fill.Color'#39
+      '      end'
+      '      object TInnerGlowEffect'
+      '        Trigger = '#39'IsPressed=true'#39
+      '        Enabled = False'
+      '        Softness = 0.400000005960464500'
+      '        GlowColor = xFF4F4848'
+      '        Opacity = 0.899999976158142100'
+      '      end'
+      '      object TRectangle'
+      '        Align = alClient'
+      '        Position.Point = '#39'(1,1)'#39
+      '        Locked = True'
+      '        Width = 89.000000000000000000'
+      '        Height = 22.000000000000000000'
+      '        Padding.Rect = '#39'(1,1,1,1)'#39
+      '        HitTest = False'
+      '        Fill.Kind = bkNone'
+      '        Stroke.Color = x96FCFCFC'
+      '        XRadius = 2.000000000000000000'
+      '        YRadius = 2.000000000000000000'
+      '      end'
+      '    end'
+      '    object TText'
+      '      StyleName = '#39'text'#39
+      '      Align = alClient'
+      '      Position.Point = '#39'(5,3)'#39
+      '      Locked = True'
+      '      Width = 81.000000000000000000'
+      '      Height = 18.000000000000000000'
+      '      Padding.Rect = '#39'(5,3,5,3)'#39
+      '      HitTest = False'
+      '      Fill.Color = claBlack'
+      '      Text = '#39'button'#39
+      '    end'
+      '    object TGlowEffect'
+      '      Trigger = '#39'IsFocused=true'#39
+      '      Enabled = False'
+      '      Softness = 0.200000002980232200'
+      '      GlowColor = x82005ACC'
+      '      Opacity = 0.899999976158142100'
+      '    end'
+      '  end'
+      '  object TLayout'
+      '    StyleName = '#39'Btn_AddFileNameStyle1'#39
+      '    Position.Point = '#39'(376,375)'#39
+      '    Width = 91.000000000000000000'
+      '    Height = 24.000000000000000000'
+      '    object TRectangle'
+      '      StyleName = '#39'background'#39
+      '      Align = alContents'
+      '      Width = 91.000000000000000000'
+      '      Height = 24.000000000000000000'
+      '      HitTest = False'
+      '      Fill.Color = xFFEFEFEF'
+      '      Stroke.Kind = bkNone'
+      '      XRadius = 3.000000000000000000'
+      '      YRadius = 3.000000000000000000'
+      '      object TRectangle'
+      '        Align = alContents'
+      '        Width = 91.000000000000000000'
+      '        Height = 24.000000000000000000'
+      '        HitTest = False'
+      '        Fill.Kind = bkGradient'
+      '        Fill.Gradient.Points = <'
+      '          item'
+      '            Color = x24F4F4F4'
+      '          end'
+      '          item'
+      '            Color = x24EAEAEA'
+      '            Offset = 0.499000012874603300'
+      '          end'
+      '          item'
+      '            Color = x4E868686'
+      '            Offset = 0.500000000000000000'
+      '          end>'
+      '        Stroke.Color = xC84F4F4F'
+      '        XRadius = 3.000000000000000000'
+      '        YRadius = 3.000000000000000000'
+      '      end'
+      '      object TColorAnimation'
+      '        Duration = 0.200000002980232200'
+      '        Trigger = '#39'IsMouseOver=true'#39
+      '        StartValue = xFFEFEFEF'
+      '        StopValue = xFFA5D9FF'
+      '        PropertyName = '#39'Fill.Color'#39
+      '      end'
+      '      object TColorAnimation'
+      '        Duration = 0.200000002980232200'
+      '        Trigger = '#39'IsMouseOver=false'#39
+      '        StartValue = xFFA5D9FF'
+      '        StopValue = xFFEFEFEF'
+      '        PropertyName = '#39'Fill.Color'#39
+      '      end'
+      '      object TInnerGlowEffect'
+      '        Trigger = '#39'IsPressed=true'#39
+      '        Enabled = False'
+      '        Softness = 0.400000005960464500'
+      '        GlowColor = xFF4F4848'
+      '        Opacity = 0.899999976158142100'
+      '      end'
+      '      object TRectangle'
+      '        Align = alClient'
+      '        Position.Point = '#39'(1,1)'#39
+      '        Locked = True'
+      '        Width = 89.000000000000000000'
+      '        Height = 22.000000000000000000'
+      '        Padding.Rect = '#39'(1,1,1,1)'#39
+      '        HitTest = False'
+      '        Fill.Kind = bkNone'
+      '        Stroke.Color = x96FCFCFC'
+      '        XRadius = 2.000000000000000000'
+      '        YRadius = 2.000000000000000000'
+      '      end'
+      '    end'
+      '    object TText'
+      '      StyleName = '#39'text'#39
+      '      Align = alClient'
+      '      Position.Point = '#39'(5,3)'#39
+      '      Locked = True'
+      '      Width = 81.000000000000000000'
+      '      Height = 18.000000000000000000'
+      '      Padding.Rect = '#39'(5,3,5,3)'#39
+      '      HitTest = False'
+      '      Fill.Color = claBlack'
+      '      Text = '#39'button'#39
+      '    end'
+      '    object TGlowEffect'
+      '      Trigger = '#39'IsFocused=true'#39
+      '      Enabled = False'
+      '      Softness = 0.200000002980232200'
+      '      GlowColor = x82005ACC'
+      '      Opacity = 0.899999976158142100'
+      '    end'
+      '  end'
+'end')
+end
+
+end

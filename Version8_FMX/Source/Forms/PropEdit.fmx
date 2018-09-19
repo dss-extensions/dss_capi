@@ -1,0 +1,62 @@
+object PropEditForm: TPropEditForm
+  Left = 337
+  Top = 193
+  BorderIcons = [biSystemMenu]
+  Caption = 'PropEditForn'
+  ClientHeight = 247
+  ClientWidth = 254
+  Position = Designed
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop, iPhone, iPad]
+  OnCreate = FormCreate
+  OnShow = FormShow
+  Left = 337
+  Top = 193
+  DesignerMasterStyle = 0
+  object StringGrid1: TStringGrid
+    CanFocus = True
+    ClipChildren = True
+    Position.X = 8.000000000000000000
+    Position.Y = 56.000000000000000000
+    Size.Width = 201.000000000000000000
+    Size.Height = 32.000000000000000000
+    Size.PlatformDefault = False
+    RowCount = 2
+    OnSelectCell = StringGrid1SelectCell
+    Viewport.Width = 197.000000000000000000
+    Viewport.Height = 7.000000000000000000
+  end
+  object Button1: TButton
+    Anchors = [akLeft]
+    Position.X = 95.000000000000000000
+    Position.Y = 25.000000000000000000
+    Size.Width = 81.000000000000000000
+    Size.Height = 25.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    Text = '&Update'
+    OnClick = Button1Click
+  end
+  object Button2: TButton
+    Anchors = [akLeft]
+    Position.X = 8.000000000000000000
+    Position.Y = 25.000000000000000000
+    Size.Width = 81.000000000000000000
+    Size.Height = 25.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    Text = '&Close'
+    OnClick = Button2Click
+  end
+  object Edit1: TEdit
+    Touch.InteractiveGestures = [LongTap, DoubleTap]
+    TabOrder = 3
+    ReadOnly = True
+    Text = 'Edit1'
+    Position.X = 8.000000000000000000
+    Size.Width = 241.000000000000000000
+    Size.Height = 21.000000000000000000
+    Size.PlatformDefault = False
+  end
+end

@@ -1,0 +1,188 @@
+Mida - Convert VCL Application To FireMonkey for Delphi Embarcadero from XE5 to Tokyo and C++Builder from XE5 to Tokyo
+Official Site http://www.midaconverter.com
+Mida version : 560
+-------------------------------------------------------------------------------------------------------------------------
+
+Converting...
+
+CONVERSION MODE: VCL TO FIREMONKEY
+IDE OUTPUT: DX11
+CUSTOM CONVERSION: NOT ACTIVE
+
+DFM :
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\About.dfm
+Binary DFM found : C:\OpenDSS\Parallel_Version\Source\EXE\FireMonkey\About.fmx
+     Component not supported on FireMonkey :     object LicenseText: TRichEdit
+     Code updated :      Version.Caption := VersionString; >      Version.Text  := VersionString;
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\DlgComboBox.dfm
+Binary DFM found : C:\OpenDSS\Parallel_Version\Source\EXE\FireMonkey\DlgComboBox.fmx
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\dlgNumber.dfm
+Binary DFM found : C:\OpenDSS\Parallel_Version\Source\EXE\FireMonkey\dlgNumber.fmx
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\DlgPlotOptions.dfm
+Binary DFM found : C:\OpenDSS\Parallel_Version\Source\EXE\FireMonkey\DlgPlotOptions.fmx
+     Removed : 3 old VCL properties
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\FrmCSVchannelSelect.dfm
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\FrmDoDSSCommand.dfm
+     TStyleBook Created
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\HelpForm.dfm
+Binary DFM found : C:\OpenDSS\Parallel_Version\Source\EXE\FireMonkey\HelpForm.fmx
+     Code updated :           if rdoAlphabetical.Checked then begin >           if rdoAlphabetical.IsChecked  then begin
+     Code updated :         If rdoAlphabetical.Checked Then Node1.AlphaSort(); >         If rdoAlphabetical.IsChecked  Then Node1.AlphaSort();
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\ListForm.dfm
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\MessageForm.dfm
+     Component not supported on FireMonkey :   object Editor: TRichEdit
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\Panel.dfm
+Binary DFM found : C:\OpenDSS\Parallel_Version\Source\EXE\FireMonkey\Panel.fmx
+     Component not supported on FireMonkey :         object MessageEdit: TRichEdit
+     To Activate manually TMainMenu Component
+     Code updated :   Case MessageDlg('File '+ActiveScriptForm.Caption+' has changed.  Save ?', mtConfirmation, [mbYes, mbNo], 0) of >   Case MessageDlg('File '+ActiveScriptForm.Text+' has changed.  Save ?', TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) of
+     Code updated :     DSS_Registry.WriteString(Format ('File%d', [idx]), ActiveScriptForm.Caption); >     DSS_Registry.WriteString(Format ('File%d', [idx]), ActiveScriptForm.Text);
+     Code updated :     Screen.Cursor := crHourglass; > Screen_Cursor_crHourGlass;
+     Code updated :     Screen.Cursor := crDefault; > Screen_Cursor_crDefault;
+     Code updated :       Screen.Cursor := crHourglass; > Screen_Cursor_crHourGlass;
+     Code updated :       Screen.Cursor := crDefault; > Screen_Cursor_crDefault;
+     Code updated :       Screen.Cursor := crHourglass; > Screen_Cursor_crHourGlass;
+     Code updated :       Screen.Cursor := crDefault; > Screen_Cursor_crDefault;
+     Code updated :   Screen.Cursor := crHourglass; > Screen_Cursor_crHourGlass;
+     Code updated :   Screen.Cursor := crDefault; > Screen_Cursor_crDefault;
+     Code updated :   Screen.Cursor := crHourglass; > Screen_Cursor_crHourGlass;
+     Code updated :   Screen.Cursor := crDefault; > Screen_Cursor_crDefault;
+     Code updated :       ActiveScriptForm.Caption := ExpandFileName(FileName); >       ActiveScriptForm.Text  := ExpandFileName(FileName);
+     Code updated :     ts.Caption := 'Script'+IntToStr(id) >     ts.Text  := 'Script'+IntToStr(id)
+     Code updated :     ts.Caption := 'Main'; >     ts.Text  := 'Main';
+     Code updated :   Result.Caption := Cap; >   Result.Text  := Cap;
+     Code updated :   If (Self.Left > Screen.Width) or (Self.Left < 0) then Self.Left := 0; >   If (Self.Position.X > Screen_Width) or (Self.Position.X < 0) then Self.Position.X := 0;
+     Code updated :   DemandInterval1.Checked   := EnergyMeterclass[ActiveActor].SaveDemandInterval[ActiveActor] ; >   DemandInterval1.IsChecked    := EnergyMeterclass[ActiveActor].SaveDemandInterval[ActiveActor] ;
+     Code updated :       ZonesLocked1.Checked       := ZonesLocked; >       ZonesLocked1.IsChecked        := ZonesLocked;
+     Code updated :       DuplicatesAllowed1.checked := DuplicatesAllowed; >       DuplicatesAllowed1.IsChecked  := DuplicatesAllowed;
+     Code updated :       TraceLog1.Checked          := ControlQueue.TraceLog; >       TraceLog1.IsChecked           := ControlQueue.TraceLog;
+     Code updated :       Trapezoidal1.checked       := TrapezoidalIntegration; >       Trapezoidal1.IsChecked        := TrapezoidalIntegration;
+     Code updated :   LBL_DefaultFreq.Caption := Format(' Base Frequency = %d Hz', [Round(DefaultBaseFreq) ]); >   LBL_DefaultFreq.Text  := Format(' Base Frequency = %d Hz', [Round(DefaultBaseFreq) ]);
+     Code updated :   RecordScript1.Checked := NOT  RecordScript1.Checked; >   RecordScript1.IsChecked  := NOT  RecordScript1.IsChecked ;
+     Code updated :   RecordCommands        := RecordScript1.Checked; >   RecordCommands        := RecordScript1.IsChecked;
+     Code updated :          Screen.Cursor := crHourglass; > Screen_Cursor_crHourGlass;
+     Code updated :          Screen.Cursor := crDefault; > Screen_Cursor_crDefault;
+     Code updated :             If LoopCheck.Checked Then S := S + ' showloops=y'; >             If LoopCheck.IsChecked  Then S := S + ' showloops=y';
+     Code updated :             ComboLabel.Caption := 'Option'; >             ComboLabel.Text  := 'Option';
+     Code updated :             ValueLabel.Caption := 'Value'; >             ValueLabel.Text  := 'Value';
+     Code updated :             ComBoLabel.caption := 'Buses:'; >             ComBoLabel.Text  := 'Buses:';
+     Code updated :             Combolabel.caption := 'Choices:'; >             Combolabel.Text  := 'Choices:';
+     Code updated :             ComboLabel.caption := 'Curves:'; >             ComboLabel.Text  := 'Curves:';
+     Code updated :             ComboLabel.caption := 'Curves:'; >             ComboLabel.Text  := 'Curves:';
+     Code updated :     MessageEdit.Lines.Add(ProgramName + ' - ' + ActiveScriptForm.Caption); >     MessageEdit.Lines.Add(ProgramName + ' - ' + ActiveScriptForm.Text);
+     Code updated :     ActiveScriptForm.Tab.Caption := ExtractFileName(ActiveScriptForm.Caption); >     ActiveScriptForm.Tab.Text  := ExtractFileName(ActiveScriptForm.Text );
+     Code updated :     MessageEdit.Lines.Add(ActiveScriptForm.Caption); >     MessageEdit.Lines.Add(ActiveScriptForm.Text);
+     Code updated :       Screen.Cursor := crHourglass; > Screen_Cursor_crHourGlass;
+     Code updated :       Screen.Cursor := crDefault; > Screen_Cursor_crDefault;
+     Code updated :   Screen.Cursor := crHourglass; > Screen_Cursor_crHourGlass;
+     Code updated :   Screen.Cursor := crDefault; > Screen_Cursor_crDefault;
+     Code updated :          Screen.Cursor := crHourglass; > Screen_Cursor_crHourGlass;
+     Code updated :          Screen.Cursor := crDefault; > Screen_Cursor_crDefault;
+     Code updated :         If Loopcheck.Checked Then S := S + ' ShowLoops=y'; >         If Loopcheck.IsChecked  Then S := S + ' ShowLoops=y';
+     Code updated :             Combolabel.Caption := 'Command'; >             Combolabel.Text  := 'Command';
+     Code updated :             ValueLabel.Caption := 'Parameter'; >             ValueLabel.Text  := 'Parameter';
+     Code updated :      DemandInterval1.Checked := NOT DemandInterval1.checked; >      DemandInterval1.IsChecked  := NOT DemandInterval1.IsChecked ;
+     Code updated :      EnergyMeterclass[ActiveActor].SaveDemandInterval[ActiveActor]:= DemandInterval1.Checked; >      EnergyMeterclass[ActiveActor].SaveDemandInterval[ActiveActor]:= DemandInterval1.IsChecked;
+     Code updated :        ZonesLocked1.Checked := NOT ZonesLocked1.Checked; >        ZonesLocked1.IsChecked  := NOT ZonesLocked1.IsChecked ;
+     Code updated :        ZonesLocked := ZonesLocked1.Checked; >        ZonesLocked := ZonesLocked1.IsChecked;
+     Code updated :        DuplicatesAllowed1.Checked := NOT DuplicatesAllowed1.Checked; >        DuplicatesAllowed1.IsChecked  := NOT DuplicatesAllowed1.IsChecked ;
+     Code updated :        DuplicatesAllowed := DuplicatesAllowed1.Checked; >        DuplicatesAllowed := DuplicatesAllowed1.IsChecked;
+     Code updated :        TraceLog1.Checked := NOT TraceLog1.Checked; >        TraceLog1.IsChecked  := NOT TraceLog1.IsChecked ;
+     Code updated :        ControlQueue.TraceLog := TraceLog1.Checked; >        ControlQueue.TraceLog := TraceLog1.IsChecked;
+     Code updated :        Trapezoidal1.Checked := NOT Trapezoidal1.Checked; >        Trapezoidal1.IsChecked  := NOT Trapezoidal1.IsChecked ;
+     Code updated :        TrapezoidalIntegration := Trapezoidal1.Checked; >        TrapezoidalIntegration := Trapezoidal1.IsChecked;
+     Code updated :            ActiveScriptForm.Caption := FileName; >            ActiveScriptForm.Text  := FileName;
+     Code updated :             Combolabel.Caption := 'Command'; >             Combolabel.Text  := 'Command';
+     Code updated :             ValueLabel.Caption := 'Parameter'; >             ValueLabel.Text  := 'Parameter';
+     Code updated :            Screen.Cursor := crHourglass; > Screen_Cursor_crHourGlass;
+     Code updated :            Screen.Cursor := crDefault; > Screen_Cursor_crDefault;
+     Code updated :      Screen.Cursor := crHourglass; > Screen_Cursor_crHourGlass;
+     Code updated :      Screen.Cursor := crDefault; > Screen_Cursor_crDefault;
+     Code updated :         Screen.Cursor := crHourglass; > Screen_Cursor_crHourGlass;
+     Code updated :         Screen.Cursor := crDefault; > Screen_Cursor_crDefault;
+     Code updated :             Combolabel.caption := 'Choices:'; >             Combolabel.Text  := 'Choices:';
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\ProgressForm.dfm
+Binary DFM found : C:\OpenDSS\Parallel_Version\Source\EXE\FireMonkey\ProgressForm.fmx
+     Code updated :      Formcaption.Caption := Value; >      Formcaption.Text  := Value;
+     Code updated :    FormCaption.Caption := ''; >    FormCaption.Text  := '';
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\PropEdit.dfm
+     Not supported on FireMonkey : OnKeyPress
+     Code updated :    Edit1.Left := StringGrid1.Left; >    Edit1.Position.X := StringGrid1.Position.X;
+     Code updated :      StringGrid1.Height := min(StringGrid1.DefaultRowHeight * (StringGrid1.RowCount+2), (Screen.Height div 10) * 7); >      StringGrid1.Height := min(StringGrid1.DefaultRowHeight * (StringGrid1.RowCount+2), (Screen_Height div 10) * 7);
+     Code updated :      Button1.Top := 25; >      Button1.Position.Y := 25;
+     Code updated :      Button2.Top := Button1.Top ; >      Button2.Position.Y := Button1.Position.Y ;
+     Code updated :  //       If Height > Screen.Height  then  Height := (Screen.Height div 10) * 9; >  //       If Height > Screen_Height  then  Height := (Screen_Height div 10) * 9;
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\Scriptform.dfm
+     Not supported on FireMonkey : OnKeyDown
+     Component not supported on FireMonkey :   object Editor: TRichEdit
+     TStyleBook Created
+     Code updated :   if (Key = VK_RETURN) then begin >   if (Key = vkReturn) then begin
+     Code updated :   Screen.Cursor := crHourglass; > Screen_Cursor_crHourGlass;
+     Code updated :   Screen.Cursor := crDefault; > Screen_Cursor_crDefault;
+     Code updated :             Beep; > System.SysUtils.Beep;
+     Code updated :          If Not IsDLL Then   ControlPanel.Caption := 'DSS Main Control Panel: Active Circuit = ' + ActiveCircuit[ActiveActor].Name; >          If Not IsDLL Then   ControlPanel.Text  := 'DSS Main Control Panel: Active Circuit = ' + ActiveCircuit[ActiveActor].Name;
+     Code updated :          Case MessageDlg('File '+Caption+' has changed.  Save ?', mtConfirmation, [mbYes, mbNo], 0) of >          Case MessageDlg('File '+Caption+' has changed.  Save ?', TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) of
+     Code updated :        Case MessageDlg('Do you want to close file '+Caption+'  ?', mtConfirmation, [mbYes, mbNo], 0) of >        Case MessageDlg('Do you want to close file '+Caption+'  ?', TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) of
+     Code updated :                 TempActiveForm.Caption := ExpandFileName(FileName); >                 TempActiveForm.Text  := ExpandFileName(FileName);
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\ScriptformNormal.dfm
+     Not supported on FireMonkey : OnKeyDown
+     Component not supported on FireMonkey :   object Editor: TRichEdit
+     To Activate manually TMainMenu Component
+     Code updated :   if (Key = VK_RETURN) then begin >   if (Key = vkReturn) then begin
+     Code updated :   Screen.Cursor := crHourglass; > Screen_Cursor_crHourGlass;
+     Code updated :   Screen.Cursor := crDefault; > Screen_Cursor_crDefault;
+     Code updated :          Case MessageDlg('File '+Caption+' has changed.  Save ?', mtConfirmation, [mbYes, mbNo], 0) of >          Case MessageDlg('File '+Caption+' has changed.  Save ?', TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], 0) of
+     Code updated :                 TempActiveForm.Caption := ExpandFileName(FileName); >                 TempActiveForm.Text  := ExpandFileName(FileName);
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\TViewer.dfm
+     Not supported on FireMonkey : OnMouseDown
+     To Activate manually TMainMenu Component
+     
+XFM :
+FMX :
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\About.fmx
+Binary DFM found : C:\OpenDSS\Parallel_Version\Source\EXE\FireMonkey\About.fmx
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\DlgComboBox.fmx
+Binary DFM found : C:\OpenDSS\Parallel_Version\Source\EXE\FireMonkey\DlgComboBox.fmx
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\dlgNumber.fmx
+Binary DFM found : C:\OpenDSS\Parallel_Version\Source\EXE\FireMonkey\dlgNumber.fmx
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\DlgPlotOptions.fmx
+Binary DFM found : C:\OpenDSS\Parallel_Version\Source\EXE\FireMonkey\DlgPlotOptions.fmx
+     
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\FrmCSVchannelSelect.fmx
+     
+PAS LIBRARY :
+Converting : C:\OpenDSS\Parallel_Version\Source\Forms\ScriptEdit.pas
+     Code updated :   Screen.Cursor := crHourglass; > Screen_Cursor_crHourGlass;
+     Code updated :   Screen.Cursor := crDefault; > Screen_Cursor_crDefault;
+     Code updated :           Beep; > System.SysUtils.Beep;
+     Code updated :                   ControlPanel.Caption := 'DSS Main Control Panel: Active Circuit = ' + ActiveCircuit[ActiveActor].Name; >                   ControlPanel.Text  := 'DSS Main Control Panel: Active Circuit = ' + ActiveCircuit[ActiveActor].Name;
+     Code updated :       Case MessageDlg('File '+Caption+' has changed.  Save?', mtConfirmation, [mbYes, mbNo, mbCancel], 0) of >       Case MessageDlg('File '+Caption+' has changed.  Save?', TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, mbNo, TMsgDlgBtn.mbCancel], 0) of
+     Code updated :     MessageDlg('Main script window cannot be closed', mtInformation, [mbOK], 0); >     MessageDlg('Main script window cannot be closed', TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOk], 0);
+     
+DPR :
+CPP :
+H :
+cbProj :
+Others :
+
+Total removed : 3 old VCL properties
+
+Operation Complete
+Time convertion project : 18.55 seconds.
