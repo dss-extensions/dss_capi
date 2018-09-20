@@ -41,6 +41,7 @@ unit generator;
     3-17-03  Revised user-written models and harmonic models
     5-11-09  Added properties to support kW, kvar, PV, and kV  through COM
     8-28-13 Forced re-initializing solution if Model 3 generator added.
+    7-??-18 Corrected Generator Model 7 1-phase Model
 }
 {
   The generator is essentially a negative load that can be dispatched.
@@ -1731,10 +1732,20 @@ Begin
         1: Begin
               VLL    := Vterminal^[i];     // VTerminal is LL for this connection
               VMagLL := Cabs(VLL);
-              With Genvars Do
-                 DeltaCurr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), VLL));
-              If Cabs(DeltaCurr)*SQRT3 > Model7MaxPhaseCurr Then
-                 DeltaCurr := Conjg( Cdiv( PhaseCurrentLimit, CDivReal(VLL, VMagLL/SQRT3)) );
+              case Fnphases of
+                 2, 3:   // 2 or 3 phase generator model 7
+                     Begin
+                       With Genvars Do
+                       DeltaCurr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), VLL));
+                       If Cabs(DeltaCurr)*SQRT3 > Model7MaxPhaseCurr Then
+                       DeltaCurr := Conjg( Cdiv( PhaseCurrentLimit, CDivReal(VLL, VMagLL/SQRT3)) );
+                     End
+              else  // 1-phase generator model 7
+                   With Genvars Do
+                     DeltaCurr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), VLL));
+                   If Cabs(DeltaCurr) > Model7MaxPhaseCurr Then
+                     DeltaCurr := Conjg( Cdiv( PhaseCurrentLimit, CDivReal(VLL, VMagLL)) );
+              end;
 
               StickCurrInTerminalArray(ITerminal, Cnegate(DeltaCurr), i);  // Put into Terminal array taking into account connection
               ITerminalUpdated := TRUE;
