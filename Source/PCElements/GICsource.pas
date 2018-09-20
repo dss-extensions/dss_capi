@@ -26,8 +26,8 @@ TYPE
        constructor Create;
        destructor  Destroy; override;
 
-       Function Edit:Integer; override;
-       Function Init(Handle:Integer):Integer; override;
+       Function Edit(ActorID : Integer):Integer; override;
+       Function Init(Handle:Integer; ActorID : Integer):Integer; override;
        Function NewObject(const ObjName:String):Integer; override;
    End;
 
@@ -56,21 +56,21 @@ TYPE
 
         LineClass :Tline;
 
-        Procedure GetVterminalForSource;
+        Procedure GetVterminalForSource(ActorID: Integer);
         Function  Compute_VLine: Double;
       public
 
         constructor Create(ParClass:TDSSClass; const SourceName:String);
         destructor  Destroy; override;
 
-        Procedure RecalcElementData; Override;
-        Procedure CalcYPrim; Override;
+        Procedure RecalcElementData(ActorID: Integer); Override;
+        Procedure CalcYPrim(ActorID: Integer); Override;
 
-        PROCEDURE MakePosSequence;Override;  // Make a positive Sequence Model
+        PROCEDURE MakePosSequence(ActorID: Integer);Override;  // Make a positive Sequence Model
 
-        Function  InjCurrents:Integer; Override;
-        Procedure GetInjCurrents(Curr:pComplexArray); Override;
-        Procedure GetCurrents(Curr: pComplexArray);Override;
+        Function  InjCurrents(ActorID: Integer):Integer; Override;
+        Procedure GetInjCurrents(Curr:pComplexArray; ActorID : Integer); Override;
+        Procedure GetCurrents(Curr: pComplexArray; ActorID : Integer);Override;
         PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
         Procedure DumpProperties(Var F:TextFile; Complete:Boolean); Override;
         FUNCTION  GetPropertyValue(Index:Integer):String;Override;
@@ -170,7 +170,7 @@ End;
 Function TGICsource.NewObject(const ObjName:String):Integer;
 Begin
     // Make a new voltage source and add it to GICsource class list
-    With ActiveCircuit Do
+    With ActiveCircuit[ActiveActor] Do
     Begin
       ActiveCktElement := TGICSourceObj.Create(Self, ObjName);
       Result := AddObjectToList(ActiveDSSObject);
@@ -179,7 +179,7 @@ End;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TGICsource.Edit:Integer;
+Function TGICsource.Edit(ActorID : Integer):Integer;
 VAR
    ParamPointer :Integer;
    ParamName,
@@ -188,15 +188,15 @@ VAR
 Begin
   // continue parsing with contents of Parser
   ActiveGICsourceObj            := ElementList.Active;
-  ActiveCircuit.ActiveCktElement := ActiveGICsourceObj;
+  ActiveCircuit[ActorID].ActiveCktElement := ActiveGICsourceObj;
 
   Result := 0;
 
   WITH ActiveGICsourceObj DO Begin
 
      ParamPointer := 0;
-     ParamName := Parser.NextParam;
-     Param     := Parser.StrValue;
+     ParamName := Parser[ActorID].NextParam;
+     Param     := Parser[ActorID].StrValue;
      WHILE Length(Param) > 0 DO Begin
          IF Length(ParamName) = 0 THEN Inc(ParamPointer)
          ELSE ParamPointer := CommandList.GetCommand(ParamName);
@@ -205,20 +205,20 @@ Begin
 
          CASE ParamPointer OF
             0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 330);
-            1: Volts     := Parser.DblValue;
-            2: Angle     := Parser.DblValue; // Ang
-            3: SrcFrequency    := Parser.DblValue; // freq   Usually 0.1 Hz
+            1: Volts     := Parser[ActorID].DblValue;
+            2: Angle     := Parser[ActorID].DblValue; // Ang
+            3: SrcFrequency    := Parser[ActorID].DblValue; // freq   Usually 0.1 Hz
             4: Begin
-                   Nphases     := Parser.IntValue; // num phases
+                   Nphases     := Parser[ActorID].IntValue; // num phases
                    FphaseShift := 0.0;     // Zero Sequence
                    NConds      := Fnphases;  // Force Reallocation of terminal info
                End;
-            5: ENorth := Parser.DblValue;
-            6: EEast  := Parser.DblValue;
-            7: Lat1   := Parser.DblValue;
-            8: Lon1   := Parser.DblValue;
-            9: Lat2   := Parser.DblValue;
-           10: Lon2   := Parser.DblValue;
+            5: ENorth := Parser[ActorID].DblValue;
+            6: EEast  := Parser[ActorID].DblValue;
+            7: Lat1   := Parser[ActorID].DblValue;
+            8: Lon1   := Parser[ActorID].DblValue;
+            9: Lat2   := Parser[ActorID].DblValue;
+           10: Lon2   := Parser[ActorID].DblValue;
 
          ELSE
             ClassEdit(ActiveGICsourceObj, ParamPointer - NumPropsThisClass);
@@ -229,12 +229,12 @@ Begin
               5..10:  VoltsSpecified := FALSE;
          END;
 
-         ParamName := Parser.NextParam;
-         Param     := Parser.StrValue;
+         ParamName := Parser[ActorID].NextParam;
+         Param     := Parser[ActorID].StrValue;
      End;
 
-     RecalcElementData;
-     YPrimInvalid := True;
+     RecalcElementData(ActorID);
+     YPrimInvalid[ActorID] := True;
   End;
 
 End;
@@ -257,7 +257,7 @@ Begin
            NConds  := Fnphases;  // Forces reallocation of terminal stuff
 
            Yorder := Fnconds * Fnterms;
-           YPrimInvalid := True;
+           YPrimInvalid[ActiveActor] := True;
        End;
 
        Volts           := OtherGICsource.Volts;
@@ -287,7 +287,7 @@ Begin
 End;
 
 //----------------------------------------------------------------------------
-Function TGICsource.Init(Handle:Integer):Integer;
+Function TGICsource.Init(Handle:Integer; ActorID : Integer):Integer;
 
 Begin
    DoSimpleMsg('Need to implement TGICsource.Init', -1);
@@ -303,7 +303,7 @@ Begin
      DSSObjType := ParClass.DSSClassType; // SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
      LineName := Name;  // GICsource name must be same as associated Line
 
-     LineClass := DSSClassList.Get(ClassNames.Find('Line'));
+     LineClass := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('Line'));
      Nphases := 3;
      Fnconds := 3;
      Nterms  := 2;   // 4/27/2018 made a 2-terminal I source
@@ -356,7 +356,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-Procedure TGICSourceObj.RecalcElementData;
+Procedure TGICSourceObj.RecalcElementData(ActorID: Integer);
 
 Var
    GICBus : String;
@@ -382,8 +382,8 @@ Begin
              SetBus(1, GICBus);
              SetBus(2, LineBus2);
              // Redefine the bus2 spec for LineElem
-             Parser.CmdString := 'Bus2=' + GICBus;
-             pLineElem.Edit;  // invoke the Line's editor to process Parser
+             Parser[ActorID].CmdString := 'Bus2=' + GICBus;
+             pLineElem.Edit(ActorID);  // invoke the Line's editor to process Parser
          End;
 
          Bus2Defined   := TRUE;
@@ -396,7 +396,7 @@ Begin
 End;
 
 //----------------------------------------------------------------------------
-Procedure TGICSourceObj.CalcYPrim;
+Procedure TGICSourceObj.CalcYPrim(ActorID: Integer);
 
 Var Rs, Rm, Rzero : Double;
     i  : Integer;
@@ -406,7 +406,7 @@ Var Rs, Rm, Rzero : Double;
 Begin
 
  // Build only YPrim Series
-     IF YPrimInvalid THEN Begin
+     IF YPrimInvalid[ActorID] THEN Begin
        IF YPrim_Series <> nil Then YPrim_Series.Free;
        YPrim_Series := TcMatrix.CreateMatrix(Yorder);
        IF YPrim <> nil Then YPrim.Free;
@@ -461,13 +461,13 @@ Begin
 
      {Now Account for Open Conductors}
      {For any conductor that is open, zero out row and column}
-     Inherited CalcYPrim;
+     Inherited CalcYPrim(ActorID);
 
-     YPrimInvalid := False;
+     YPrimInvalid[ActorID] := False;
 
 End;
 
-Procedure TGICSourceObj.GetVterminalForSource;
+Procedure TGICSourceObj.GetVterminalForSource(ActorID: Integer);
 
 Var
    Vmag        : Double;
@@ -477,7 +477,7 @@ Begin
 
   TRY
      // If the solution frequency not 0.1 Hz, source is shorted.
-      WITH ActiveCircuit.Solution Do
+      WITH ActiveCircuit[ActorID].Solution Do
       Begin
            IF abs(Frequency - SrcFrequency) < EPSILON2 THEN Vmag := Volts Else Vmag := 0.0;
            For i := 1 to Fnphases do
@@ -495,19 +495,19 @@ Begin
 
 End;
 
-Function TGICSourceObj.InjCurrents:Integer;
+Function TGICSourceObj.InjCurrents(ActorID: Integer):Integer;
 
 {Sum Currents directly into solution array}
 
 Begin
 
-  GetInjCurrents(InjCurrent);
+  GetInjCurrents(InjCurrent, ActorID);
 
-  Result := Inherited Injcurrents;  // Adds into system array
+  Result := Inherited Injcurrents(ActorID);  // Adds into system array
 
 End;
 
-Procedure TGICSourceObj.GetCurrents(Curr: pComplexArray);
+Procedure TGICSourceObj.GetCurrents(Curr: pComplexArray; ActorID : Integer);
 
 {Total currents into a device}
 
@@ -517,14 +517,14 @@ VAR
 Begin
 
   TRY
-   WITH    ActiveCircuit.Solution  Do
+   WITH    ActiveCircuit[ActorID].Solution  Do
    Begin
 
        FOR     i := 1 TO Yorder DO  Vterminal^[i] := NodeV^[NodeRef^[i]];
 
        YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
 
-       GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
+       GetInjCurrents(ComplexBuffer,ActorID);  // Get present value of inj currents
       // Add Together  with yprim currents
        FOR i := 1 TO Yorder DO Curr^[i] := Csub(Curr^[i], ComplexBuffer^[i]);
 
@@ -538,7 +538,7 @@ Begin
 
 End;
 
-Procedure TGICSourceObj.GetInjCurrents(Curr:pComplexArray);
+Procedure TGICSourceObj.GetInjCurrents(Curr:pComplexArray; ActorID : Integer);
 
   { source injection currents given by this formula:
      _     _           _         _
@@ -549,10 +549,10 @@ Procedure TGICSourceObj.GetInjCurrents(Curr:pComplexArray);
    }
 
 Begin
-       GetVterminalForSource;    // only at 0.1 Hz
+       GetVterminalForSource(ActorID);    // only at 0.1 Hz
        YPrim.MVMult(Curr, Vterminal);
 
-       ITerminalUPdated := FALSE;
+       set_ITerminalUpdated(FALSE, ActorID);
 End;
 
 function TGICSourceObj.GetPropertyValue(Index: Integer): String;
@@ -607,13 +607,13 @@ begin
 
 end;
 
-procedure TGICSourceObj.MakePosSequence;
+procedure TGICSourceObj.MakePosSequence(ActorID: Integer);
 begin
 
   If Fnphases>1 Then
   Begin
-     Parser.CmdString := 'phases=1';
-     Edit;
+     Parser[ActorID].CmdString := 'phases=1';
+     Edit(ActorID);
   End;
   inherited;
 

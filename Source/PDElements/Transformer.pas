@@ -1759,9 +1759,9 @@ end;
 function TTransfObj.InterpretCoreType(const str: String): Integer;
 begin
      Case str[1] of
-          '3':Result := 3;
-          '5':Result := 5;
-          's','S':Result := 1;
+          '1':Result := 1;  // 1-phase
+          '3':Result := 3;  // 3-Leg
+          '5':Result := 5;  // 5-Leg
      Else
          Result := 0; // default to shell
      End;

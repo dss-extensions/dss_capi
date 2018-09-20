@@ -1,6 +1,6 @@
 program OpenDSS;
 { ----------------------------------------------------------
-  Copyright (c) 2008-2016, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2018, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 
@@ -187,7 +187,9 @@ uses
   ConnectOptions in '..\Executive\ConnectOptions.pas',
   Diakoptics in '..\Common\Diakoptics.pas',
   Sparse_Math in '..\Common\Sparse_Math.pas',
-  MeTIS_Exec in '..\Common\MeTIS_Exec.pas';
+  MeTIS_Exec in '..\Common\MeTIS_Exec.pas',
+  AutoTrans in '..\PDElements\AutoTrans.pas',
+  GICsource in '..\PCElements\GICsource.pas';
 
 {$R *.RES}
 
