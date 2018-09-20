@@ -1,7 +1,7 @@
 library OpenDSSengine;
 
 { ----------------------------------------------------------
-  Copyright (c) 2008-2016, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2018, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 
@@ -214,7 +214,9 @@ uses
   IndMach012 in '..\PCElements\IndMach012.pas',
   ImplLineCodes in 'ImplLineCodes.pas' {LineCodes: CoClass},
   ConnectOptions in '..\Executive\ConnectOptions.pas',
-  TCP_IP in '..\TCP_IP\TCP_IP.pas';
+  TCP_IP in '..\TCP_IP\TCP_IP.pas',
+  GICsource in '..\PCElements\GICsource.pas',
+  AutoTrans in '..\PDElements\AutoTrans.pas';
 
 exports
   DllGetClassObject,
