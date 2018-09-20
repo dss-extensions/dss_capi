@@ -53,7 +53,7 @@ CONST
       STORAGE_CONTROL  = 22 * 8;
       SWT_CONTROL      = 23 * 8;
       PVSYSTEM_ELEMENT = 24 * 8;
-      // Deleted --- VV_CONTROL       = 25 * 8;
+      //  Deleted --- VV_CONTROL       = 25 * 8;
       GIC_Line         = 26 * 8;
       GIC_Transformer  = 27 * 8;
       INV_CONTROL      = 28 * 8;
@@ -64,6 +64,8 @@ CONST
       VCCS_ELEMENT     = 33 * 8;
       ESPVL_CONTROL     = 34 * 8;
       INDMACH012_ELEMENT = 35 * 8;
+      GIC_SOURCE         = 36 * 8;
+      AUTOTRANS_ELEMENT  = 37 * 8;
 
 VAR
    NumIntrinsicClasses,
@@ -132,7 +134,9 @@ USES
      UPFC,
      UPFCControl,
      ESPVLControl,
-     IndMach012
+     IndMach012,
+     GICSource,
+     AutoTrans
 ;
 
 
@@ -182,8 +186,8 @@ Begin
 
      {Circuit Element Classes}
      DSSClasses.New := TLine.Create;
-     DSSClasses.New := TVSource.Create;
-     DSSClasses.New := TISource.Create;
+     DSSClasses.New := TVSource.Create;    // 2-terminal Vsource
+     DSSClasses.New := TISource.Create;    // 2-terminal Isource
      DSSClasses.New := TVCCS.Create;
      DSSClasses.New := TLoad.Create;
      DSSClasses.New := TTransf.Create;
@@ -209,7 +213,8 @@ Begin
      DSSClasses.New := TUPFCControl.Create;
      DSSClasses.New := TESPVLControl.Create;
      DSSClasses.New := TIndMach012.Create;
-
+     DSSClasses.New := TGICsource.Create; // GIC source
+     DSSClasses.New := TAutoTrans.Create; // Auto Transformer
 
 
      InvControlClass := TInvControl.Create;
