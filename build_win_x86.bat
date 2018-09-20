@@ -18,7 +18,7 @@ if not exist .\build\units_v8_x86 (
     mkdir .\build\units_v8_x86
 ) 
 
-if exist ..\electricdss-src\Source\Common\DSSGlobals.pas (
+if exist ..\electricdss-src\Version7\Source\Common\DSSGlobals.pas (
     fpc -Pi386 @src\v7\windows-x86.cfg -B src\v7\dss_capi_v7.lpr
     if errorlevel 1 exit /B 1
     if exist lib\win_x86\v7\dss_capi_v7.dll (
