@@ -8,6 +8,7 @@ unit Line;
 
 {  3-1-00 Reactivated line dump
    3-13-03  Fixed bug where terminal quantities were not getting reallocated in FetchCondCode
+   2018	    Added GIC stuff
 }
 
 interface
@@ -69,6 +70,9 @@ TYPE
         function FetchConductorData(i:Integer):TConductorDataObj;
 
         Procedure ReallocZandYcMatrices;
+
+        PROCEDURE DoLongLine(Frequency:Double);  // Long Line Correction for 1=phase
+        PROCEDURE ConvertZinvToPosSeqR;  // for GIC analysis, primarily
 
       Protected
         Zinv               :TCMatrix;
@@ -807,6 +811,36 @@ begin
     Yc   := TCMatrix.CreateMatrix(Fnphases);
 end;
 
+PROCEDURE TLineObj.DoLongLine(Frequency:Double);
+// do long line correction for len and frequwnen
+
+Var
+   Zs, Zm, Ys, Ym : Complex;
+   GammaL, ExpP, ExpM, Exp2P, Exp2M, SinhGL, Tanh2GL : Complex;
+
+Begin
+
+ // nominal PI parameters per unit length but Len variable is used here
+        Zs := cmplx (R1, X1);
+        Ys := cmplx (0.0, TwoPi * Frequency * C1);
+        // apply the long-line correction to obtain Zm and Ym
+        GammaL  := Csqrt (Cmul(Zs, Ys));
+        GammaL  := CmulReal (GammaL, Len);
+        ExpP    := CmulReal (cmplx(cos(GammaL.im), sin(GammaL.im)), exp(GammaL.re));
+        Exp2P   := CmulReal (cmplx(cos(0.5 * GammaL.im), sin(0.5 * GammaL.im)), exp(0.5 * GammaL.re));
+        ExpM    := Cinv(ExpP);
+        Exp2M   := Cinv(Exp2P);
+        SinhGL  := CmulReal (Csub (ExpP, ExpM), 0.5);
+        Tanh2GL := Cdiv (Csub (Exp2P, Exp2M), Cadd (Exp2P, Exp2M));
+        Zm := Cdiv (Cmul (CMulReal (Zs, Len), SinhGL), GammaL);
+        Ym := Cdiv (Cmul (CMulReal (Ys, Len), Tanh2GL), CmulReal (GammaL, 0.5));
+        // rely on this function being called only once, unless R1, X1, or C1 changes
+        R1 := Zm.re / Len;
+        X1 := Zm.im / Len;
+        C1 := Ym.im / Len / TwoPi / Frequency;
+
+End;
+
 PROCEDURE TLineObj.RecalcElementData(ActorID : Integer);
 
 {
@@ -836,24 +870,7 @@ Begin
       // long-line equivalent PI, but only for CktModel=Positive
       if ActiveCircuit[ActorID].PositiveSequence and (C1 > 0) then
       begin
-        // nominal PI parameters per unit length but Len variable is used here
-        Zs := cmplx (R1, X1);
-        Ys := cmplx (0.0, TwoPi * BaseFrequency * C1);
-        // apply the long-line correction to obtain Zm and Ym
-        GammaL  := Csqrt (Cmul(Zs, Ys));
-        GammaL  := CmulReal (GammaL, Len);
-        ExpP    := CmulReal (cmplx(cos(GammaL.im), sin(GammaL.im)), exp(GammaL.re));
-        Exp2P   := CmulReal (cmplx(cos(0.5 * GammaL.im), sin(0.5 * GammaL.im)), exp(0.5 * GammaL.re));
-        ExpM    := Cinv(ExpP);
-        Exp2M   := Cinv(Exp2P);
-        SinhGL  := CmulReal (Csub (ExpP, ExpM), 0.5);
-        Tanh2GL := Cdiv (Csub (Exp2P, Exp2M), Cadd (Exp2P, Exp2M));
-        Zm := Cdiv (Cmul (CMulReal (Zs, Len), SinhGL), GammaL);
-        Ym := Cdiv (Cmul (CMulReal (Ys, Len), Tanh2GL), CmulReal (GammaL, 0.5));
-        // rely on this function being called only once, unless R1, X1, or C1 changes
-        R1 := Zm.re / Len;
-        X1 := Zm.im / Len;
-        C1 := Ym.im / Len / TwoPi / BaseFrequency;
+        DoLongLine(BaseFrequency);  // computes R1, X1, C1  per unit length
       end;
       // zero sequence the same as positive sequence
       R0 := R1;
@@ -930,7 +947,8 @@ Begin
 
 
     // Build Series YPrim
-    WITH YPrim_Series DO Begin
+    WITH YPrim_Series DO
+    Begin
 
          {Build Zmatrix}
          If GeometrySpecified Then
@@ -968,7 +986,14 @@ Begin
                Zinv.Invert;  {Invert Z in place to get values to put in Yprim}
            End;
 
-         If Zinv.Inverterror>0 Then
+      {At this point have Z and Zinv in proper values including length}
+      {If GIC simulation, convert Zinv back to sym components, R Only }
+
+         if ActiveCircuit[actorID].Solution.Frequency < 0.51 then     // 0.5 Hz is cutoff
+             ConvertZinvToPosSeqR;
+
+
+         If Zinv.Inverterror > 0 Then
            Begin
                  {If error, put in tiny series conductance}
 // TEMc - shut this up for the CDPSM connectivity profile test, or whenever else it gets annoying
@@ -992,7 +1017,7 @@ Begin
              End;
 
            
-     End;
+     End;   {With Yprim_series}
 
      YPrim.Copyfrom(Yprim_Series);      // Initialize YPrim for series impedances
 
@@ -1003,6 +1028,7 @@ Begin
      With Yprim_Series Do For i := 1 to Yorder Do AddElement(i,i, CAP_EPSILON);
 
      // Now Build the Shunt admittances and add into YPrim
+     if ActiveCircuit[ActorID].Solution.Frequency > 0.51 then   // Skip Capacitance for GIC
      WITH YPrim_Shunt Do  Begin
 
          {Put half the Shunt Capacitive Admittance at each end}
@@ -1805,6 +1831,33 @@ begin
           YPrim_Shunt.Clear;    // zero out YPrim Shunt
           YPrim.Clear;          // zero out YPrim
       End;
+end;
+
+procedure TLineObj.ConvertZinvToPosSeqR;
+
+// For GIC Analysis, use only real part of Z
+
+Var
+  Z1, ZS, Zm:Complex;
+  i,j:Integer;
+
+begin
+
+// re-invert Zinv
+    Zinv.Invert;
+// Now Zinv is back to Z with length included
+
+    // average the diagonal and off-dialgonal elements
+    Zs := Zinv.AvgDiagonal;
+    Zm := Zinv.AvgOffDiagonal;
+    Z1 := CSub(Zs, Zm);
+    Z1.im := 0.0;  // ignore X part
+
+    Zinv.Clear;
+    for i := 1 to Zinv.order do Zinv.SetElement(i, i, Z1);   // Set Diagonals
+
+    Zinv.Invert;  // back to zinv for inserting in Yprim
+
 end;
 
 procedure TLineObj.ResetLengthUnits;
