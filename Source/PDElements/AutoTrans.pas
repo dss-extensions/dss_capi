@@ -27,7 +27,7 @@ TYPE
      private
 
        PROCEDURE SetActiveWinding(w:Integer);
-       PROCEDURE InterpretConnection(const S:String);
+       PROCEDURE InterpretAutoConnection(const S:String);
        PROCEDURE InterpretAllConns(const S:String);
        PROCEDURE InterpretAllBuses(const S:String);
        PROCEDURE InterpretAllTaps(const S:String);
@@ -40,13 +40,13 @@ TYPE
        {PROCEDURE MakeNewBusNameForNeutral(Var NewBusName:String; Nphases:Integer);}
      Protected
        PROCEDURE DefineProperties;
-       FUNCTION MakeLike(Const TransfName:String):Integer; Override;
+       FUNCTION MakeLike(Const AutoTransfName:String):Integer; Override;
      public
        constructor Create;
        destructor Destroy; override;
 
-       FUNCTION Edit:Integer; override;     // uses global parser
-       FUNCTION Init(Handle:Integer):Integer; override;
+       FUNCTION Edit(ActorID : Integer):Integer; override;     // uses global parser
+       FUNCTION Init(Handle:Integer; ActorID : Integer):Integer; override;
        FUNCTION NewObject(const ObjName:String):Integer; override;
 
    End;
@@ -72,7 +72,7 @@ TYPE
 
         Procedure ComputeAntiFloatAdder(PPM_Factor, VABase1ph:Double);
 
-        Constructor Create;
+        Constructor Create(iWinding:Integer);
         destructor Destroy; Override;
    end;
 
@@ -87,8 +87,8 @@ TYPE
         pctImag                :Double;
         XRConst                :Boolean;
 
-        FUNCTION  Get_PresentTap(i: Integer): double;
-        PROCEDURE Set_PresentTap(i: Integer; const Value: double);
+        FUNCTION  Get_PresentTap(i: Integer; ActorID : Integer): double;
+        PROCEDURE Set_PresentTap(i: Integer; ActorID : Integer ; const Value: double);
         FUNCTION  Get_MinTap(i: Integer): Double;
         FUNCTION  Get_MaxTap(i: Integer): Double;
         FUNCTION  Get_TapIncrement(i: Integer): Double;
@@ -104,7 +104,7 @@ TYPE
         FUNCTION  Get_WdgXneutral(i: Integer): Double;
         FUNCTION  Get_WdgYPPM(i: Integer): Double;
 
-        PROCEDURE CalcY_Terminal(FreqMult:Double);
+        PROCEDURE CalcY_Terminal(FreqMult:Double; ActorID: Integer);
         PROCEDURE GICBuildYTerminal;
 
         PROCEDURE BuildYPrimComponent(YPrim_Component, Y_Terminal:TCMatrix);
@@ -112,7 +112,7 @@ TYPE
 
         PROCEDURE FetchXfmrCode(Const Code:String);
 
-        Function  GeTAutoWindingCurrentsResult:String;
+        Function  GeTAutoWindingCurrentsResult(ActorID : Integer):String;
 
 
       Protected
@@ -120,9 +120,10 @@ TYPE
         MaxWindings     :Integer;
         TermRef         :pIntegerArray;  // keeps track of terminal connections
 
-        XHL, XHT, XLT   :Double;  // per unit
+        puXHL, puXHT,
+        puXLT           :Double;  // per unit
         Zbase           :Double;
-        XSC             :pDoubleArray;     // per unit SC measurements
+        puXSC           :pDoubleArray;     // per unit SC measurements
         VABase          :Double;    // FOR impedances
 
         ZB              :TCMatrix;
@@ -162,25 +163,25 @@ TYPE
 
         PROCEDURE SetNumWindings(N:Integer);
 
-        PROCEDURE RecalcElementData;Override;
+        PROCEDURE RecalcElementData(ActorID : Integer);Override;
         PROCEDURE SetNodeRef(iTerm:Integer; NodeRefArray:pIntegerArray);Override;
-        PROCEDURE CalcYPrim;Override;
+        PROCEDURE CalcYPrim(ActorID : Integer);Override;
 
         {GetLosses override for AutoTrans}
-        PROCEDURE GetLosses(Var TotalLosses, LoadLosses, NoLoadLosses:Complex); Override;
+        PROCEDURE GetLosses(Var TotalLosses, LoadLosses, NoLoadLosses:Complex; ActorID: Integer); Override;
 
         FUNCTION  RotatePhases(iPhs:integer):Integer;
         FUNCTION  GetPropertyValue(Index:Integer):String;Override;
         PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
         PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
         PROCEDURE SaveWrite(Var F:TextFile);Override;
-        PROCEDURE GeTAutoWindingVoltages(iWind:Integer; VBuffer:pComplexArray);
-        PROCEDURE GetAllWindingCurrents(CurrBuffer: pComplexArray);
+        PROCEDURE GeTAutoWindingVoltages(iWind:Integer; VBuffer:pComplexArray; ActorID: Integer);
+        PROCEDURE GetAllWindingCurrents(CurrBuffer: pComplexArray; ActorID: Integer);
 
 
-        PROCEDURE MakePosSequence;Override;  // Make a positive Sequence Model
+        PROCEDURE MakePosSequence(ActorID : Integer);Override;  // Make a positive Sequence Model
 
-        Property PresentTap[i:Integer]   :Double read Get_PresentTap write Set_PresentTap;
+        Property PresentTap[i:Integer;ActorID: Integer]:Double read Get_PresentTap write Set_PresentTap;
         Property Mintap[i:Integer]       :Double Read Get_MinTap;
         Property Maxtap[i:Integer]       :Double Read Get_MaxTap;
         Property TapIncrement[i:Integer] :Double Read Get_TapIncrement;
@@ -197,9 +198,9 @@ TYPE
         Property WdgXneutral[i:Integer]   :Double  Read Get_WdgXneutral;
         Property WdgYPPM[i:Integer]       :Double  Read Get_WdgYPPM;
         Property XscVal[i:Integer]        :Double  Read Get_Xsc;
-        Property XhlVal:Double Read Xhl;
-        Property XhtVal:Double Read Xht;
-        Property XltVal:Double Read Xlt;
+        Property XhlVal:Double Read puXHL;
+        Property XhtVal:Double Read puXHT;
+        Property XltVal:Double Read puXLT;
         Property NormalHkVA: Double Read NormMaxHkVA;
         Property EmergHkVA: Double Read EmergMaxHkVA;
         Property thTau: Double Read ThermalTimeConst;
@@ -215,8 +216,8 @@ TYPE
    end;
 
 VAR
-   ActiveAutoTransObj:TAutoTransObj;
-   AutoTransClass:TAutoTrans;
+   ActiveAutoTransObj :TAutoTransObj;
+   AutoTransClass     :TAutoTrans;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -237,7 +238,7 @@ constructor TAutoTrans.Create;  // Creates superstructure for all AutoTrans obje
 Begin
      Inherited Create;
      Class_Name   := 'AutoTrans';
-     DSSClassType := DSSClassType + XFMR_ELEMENT; // override PDElement   (kept in both actually)
+     DSSClassType := DSSClassType + AUTOTRANS_ELEMENT; // override PDElement   (kept in both actually)
 
      ActiveElement := 0;
      XfmrCodeClass := Nil;
@@ -276,7 +277,7 @@ Begin
      PropertyName[3] := 'wdg';
      PropertyName[4] := 'bus';
      PropertyName[5] := 'conn';
-     PropertyName[6] := 'kV'; // FOR 2-and 3- always kVLL ELSE actual winding KV
+     PropertyName[6] := 'kV'; // FOR 2-and 3- phase always kVLL ELSE actual winding KV
      PropertyName[7] := 'kVA';
      PropertyName[8] := 'tap';
      PropertyName[9] := '%R';
@@ -289,10 +290,10 @@ Begin
      PropertyName[14] := 'kVs';
      PropertyName[15] := 'kVAs';
      PropertyName[16] := 'taps';
-     PropertyName[17] := 'Xhl';
-     PropertyName[18] := 'Xht';
-     PropertyName[19] := 'Xlt';
-     PropertyName[20] := 'Xscarray';  // x12 13 14... 23 24.. 34 ..
+     PropertyName[17] := 'XHL';
+     PropertyName[18] := 'XHT';
+     PropertyName[19] := 'XLT';
+     PropertyName[20] := 'XSCarray';  // x12 13 14... 23 24.. 34 ..
      PropertyName[21] := 'thermal';
      PropertyName[22] := 'n';
      PropertyName[23] := 'm';
@@ -324,22 +325,23 @@ Begin
      // define Property help values
      PropertyHelp[1] := 'Number of phases this AutoTrans. Default is 3.';
      PropertyHelp[2] := 'Number of windings, this AutoTranss. (Also is the number of terminals) '+
-                    'Default is 2. This property triggers memory allocation for the AutoTrans and will cause other properties to revert to default values.';
+                        'Default is 2. This property triggers memory allocation for the AutoTrans and will cause other properties to revert to default values.';
    // Winding Definition
      PropertyHelp[3] := 'Set this = to the number of the winding you wish to define.  Then set '+
-                    'the values for this winding.  Repeat for each winding.  Alternatively, use '+
-                    'the array collections (buses, kVAs, etc.) to define the windings.  Note: '+
-                    'reactances are BETWEEN pairs of windings; they are not the property of a single winding.';
+                        'the values for this winding.  Repeat for each winding.  Alternatively, use '+
+                        'the array collections (buses, kVAs, etc.) to define the windings.  Note: '+
+                        'reactances are BETWEEN pairs of windings; they are not the property of a single winding.';
      PropertyHelp[4] := 'Bus connection spec for this winding.';
-     PropertyHelp[5] := 'Connection of this winding {wye*, Delta, LN, LL, Series}. Default is "wye" with the neutral solidly grounded. ' + CRLF +
-                        'For AutoAutoTrans, specify Winding 1 as Series and Winding 2 (the Common winding) as Wye. ';
+     PropertyHelp[5] := 'Connection of this winding {Series, wye*, Delta, LN, LL }. Default is "wye" with the neutral solidly grounded. ' + CRLF +
+                        'For AutoTrans, Winding 1 is always Series and Winding 2 (the Common winding) is Wye. ' + CRLF +
+                        'If only 2 windings, no need to specify connections.';
      PropertyHelp[6] := 'For 2-or 3-phase, enter phase-phase kV rating.  Otherwise, kV rating of the actual winding';
      PropertyHelp[7] := 'Base kVA rating of the winding. Side effect: forces change of max normal and emerg kVA ratings.' +
                         'If 2-winding AutoTrans, forces other winding to same value. ' +
                         'When winding 1 is defined, all other windings are defaulted to the same rating ' +
                         'and the first two winding resistances are defaulted to the %loadloss value.';
      PropertyHelp[8] := 'Per unit tap that this winding is on.';
-     PropertyHelp[9] := 'Percent resistance this winding.  (half of total for a 2-winding).';
+     PropertyHelp[9] := 'Percent resistance this winding.  ';
      PropertyHelp[10] := 'Default = -1. Neutral resistance of wye (star)-connected winding in actual ohms. ' +
                          'If entered as a negative value, the neutral is assumed to be open, or floating. ' +
                          'To solidly ground the neutral, connect the neutral conductor to Node 0 in the Bus property spec for this winding. ' +
@@ -351,20 +353,20 @@ Begin
                          'New AutoTrans.T1 buses="Hibus, lowbus"';
      PropertyHelp[13] := 'Use this to specify all the Winding connections at once using an array. Example:'+CRLF+CRLF+
                          'New AutoTrans.T1 buses="Hibus, lowbus" '+
-                         '~ conns=(delta, wye)';
+                         '~ conns=(series, wye)';
      PropertyHelp[14] := 'Use this to specify the kV ratings of all windings at once using an array. Example:'+CRLF+CRLF+
                          'New AutoTrans.T1 buses="Hibus, lowbus" '+CRLF+
-                         '~ conns=(delta, wye)'+CRLF+
+                         '~ conns=(series, wye)'+CRLF+
                          '~ kvs=(115, 12.47)'+CRLF+CRLF+
                          'See kV= property for voltage rules.';
      PropertyHelp[15] := 'Use this to specify the kVA ratings of all windings at once using an array.';
      PropertyHelp[16] := 'Use this to specify the p.u. tap of all windings at once using an array.';
      PropertyHelp[17] := 'Use this to specify the percent reactance, H-L (winding 1 to winding 2).  Use '+
-                         'for 2- or 3-winding AutoTranss. On the kVA base of winding 1. See also X12.';
+                         'for 2- or 3-winding AutoTranss. On the kVA base of winding 1(H-X). See also X12.';
      PropertyHelp[18] := 'Use this to specify the percent reactance, H-T (winding 1 to winding 3).  Use '+
-                         'for 3-winding AutoTranss only. On the kVA base of winding 1. See also X13.';
+                         'for 3-winding AutoTranss only. On the kVA base of winding 1(H-X). See also X13.';
      PropertyHelp[19] := 'Use this to specify the percent reactance, L-T (winding 2 to winding 3).  Use '+
-                         'for 3-winding AutoTranss only. On the kVA base of winding 1.  See also X23.';
+                         'for 3-winding AutoTranss only. On the kVA base of winding 1(H-X).  See also X23.';
      PropertyHelp[20] := 'Use this to specify the percent reactance between all pairs of windings as an array. '+
                          'All values are on the kVA base of winding 1.  The order of the values is as follows:'+CRLF+CRLF+
                          '(x12 13 14... 23 24.. 34 ..)  '+CRLF+CRLF+
@@ -376,9 +378,9 @@ Begin
      PropertyHelp[25] := 'Hot spot temperature rise, deg C.  Default is 15.';
      PropertyHelp[26] := 'Percent load loss at full load. The %R of the High and Low windings (1 and 2) are adjusted to agree at rated kVA loading.';
      PropertyHelp[27] := 'Percent no load losses at rated excitatation voltage. Default is 0. Converts to a resistance in parallel with the magnetizing impedance in each winding.';
-     PropertyHelp[28] := 'Normal maximum kVA rating of H winding (winding 1).  Usually 100% - 110% of'+
+     PropertyHelp[28] := 'Normal maximum kVA rating of H winding (winding 1+2).  Usually 100% - 110% of'+
                          'maximum nameplate rating, depending on load shape. Defaults to 110% of kVA rating of Winding 1.';
-     PropertyHelp[29] := 'Emergency (contingency)  kVA rating of H winding (winding 1).  Usually 140% - 150% of'+
+     PropertyHelp[29] := 'Emergency (contingency)  kVA rating of H winding (winding 1+2).  Usually 140% - 150% of'+
                          'maximum nameplate rating, depending on load shape. Defaults to 150% of kVA rating of Winding 1.';
      PropertyHelp[30] := '={Yes|No}  Designates whether this AutoTrans is to be considered a substation.'+
                          'Default is No.';  // =y/n
@@ -393,15 +395,15 @@ Begin
      PropertyHelp[37] := 'Use this property to specify all the winding %resistances using an array. Example:'+CRLF+CRLF+
                          'New AutoTrans.T1 buses="Hibus, lowbus" ' +
                          '~ %Rs=(0.2  0.3)';
-     PropertyHelp[38] := 'Name of the bank this AutoTrans is part of, for CIM, MultiSpeak, and other interfaces.';
-     PropertyHelp[39] := 'Name of a library entry for AutoTrans properties. The named XfmrCode must already be defined.';
+     PropertyHelp[38] := '{****NOT USED****}Name of the bank this AutoTrans is part of, for CIM, MultiSpeak, and other interfaces.';
+     PropertyHelp[39] := '{****NOT USED****}Name of a library entry for AutoTrans properties. The named XfmrCode must already be defined.';
      PropertyHelp[40] := '={Yes|No} Default is NO. Signifies whether or not the X/R is assumed contant for harmonic studies.';
      PropertyHelp[41] := 'Alternative to XHL for specifying the percent reactance from winding 1 to winding 2.  Use '+
-                         'for 2- or 3-winding AutoTranss. Percent on the kVA base of winding 1. ';
+                         'for 2- or 3-winding AutoTranss. Percent on the kVA base of winding 1(H-X). ';
      PropertyHelp[42] := 'Alternative to XHT for specifying the percent reactance from winding 1 to winding 3.  Use '+
-                         'for 3-winding AutoTranss only. Percent on the kVA base of winding 1. ';
+                         'for 3-winding AutoTranss only. Percent on the kVA base of winding 1(H-X). ';
      PropertyHelp[43] := 'Alternative to XLT for specifying the percent reactance from winding 2 to winding 3.Use '+
-                         'for 3-winding AutoTranss only. Percent on the kVA base of winding 1.  ';
+                         'for 3-winding AutoTranss only. Percent on the kVA base of winding 1(H-X).  ';
      PropertyHelp[44] := '{Lead | Lag (default) | ANSI (default) | Euro } Designation in mixed Delta-wye connections the '+
                          'relationship between HV to LV winding. Default is ANSI 30 deg lag, e.g., Dy1 of Yd1 vector group. ' +
                          'To get typical European Dy11 connection, specify either "lead" or "Euro"';
@@ -417,17 +419,17 @@ End;
 FUNCTION TAutoTrans.NewObject(const ObjName:String):Integer;
 Begin
    // create a new object of this class and add to list
-   WITH ActiveCircuit Do Begin
+   WITH ActiveCircuit[ActiveActor] Do Begin
 
       ActiveCktElement := TAutoTransObj.Create(Self, ObjName);
-      Result           := AddObjectToList(ActiveDSSObject);  // Return index of AutoTrans in AutoTrans list
+      Result           := AddObjectToList(ActiveDSSObject[ActiveActor]);  // Return index of AutoTrans in AutoTrans list
 
    End;
 
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FUNCTION TAutoTrans.Edit:Integer;
+FUNCTION TAutoTrans.Edit(ActorID : Integer):Integer;
 {
   A Transf Defaults to 3-phases, 2-windings (both wye)
 }
@@ -442,7 +444,7 @@ Begin
 
   {Make this object the active circuit element}
   ActiveAutoTransObj := ElementList.Active;
-  ActiveCircuit.ActiveCktElement := ActiveAutoTransObj;  // use property to set this value
+  ActiveCircuit[ActorID].ActiveCktElement := ActiveAutoTransObj;  // use property to set this value
 
   Result := 0;
 
@@ -450,8 +452,8 @@ Begin
    Begin
      XHLChanged   := False;
      ParamPointer := 0;
-     ParamName    := Parser.NextParam;
-     Param        := Parser.StrValue;
+     ParamName    := Parser[ActorID].NextParam;
+     Param        := Parser[ActorID].StrValue;
      WHILE Length(Param)>0 Do Begin
          IF Length(ParamName) = 0 THEN Inc(ParamPointer)
          ELSE ParamPointer := CommandList.GetCommand(ParamName);
@@ -459,50 +461,50 @@ Begin
          IF (ParamPointer>0) and (ParamPointer<=NumProperties) THEN PropertyValue[ParamPointer]:= Param;
 
          CASE ParamPointer OF
-            0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "AutoTrans.' + Name + '"', 110);
-            1: Nphases   := Parser.IntValue;
-            2: SetNumWindings(Parser.IntValue); // Reallocate stuff if bigger
-            3: SetActiveWinding(Parser.IntValue);
+            0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "AutoTrans.' + Name + '"', 100110);
+            1: Nphases   := Parser[ActorID].IntValue;
+            2: SetNumWindings(Parser[ActorID].IntValue); // Reallocate stuff if bigger
+            3: SetActiveWinding(Parser[ActorID].IntValue);
             4: Setbus(ActiveWinding, param);
             5: InterpretConnection(Param);
-            6: Winding^[ActiveWinding].kVLL  := parser.Dblvalue;
-            7: Winding^[ActiveWinding].kVA   := parser.Dblvalue;
-            8: Winding^[ActiveWinding].puTap := parser.Dblvalue;
-            9: Winding^[ActiveWinding].Rpu   := parser.Dblvalue * 0.01;  // %R
-           10: Winding^[ActiveWinding].Rneut := parser.Dblvalue;
-           11: Winding^[ActiveWinding].Xneut := parser.Dblvalue;
+            6: Winding^[ActiveWinding].kVLL  := parser[ActorID].Dblvalue;
+            7: Winding^[ActiveWinding].kVA   := parser[ActorID].Dblvalue;
+            8: Winding^[ActiveWinding].puTap := parser[ActorID].Dblvalue;
+            9: Winding^[ActiveWinding].Rpu   := parser[ActorID].Dblvalue * 0.01;  // %R
+           10: Winding^[ActiveWinding].Rneut := parser[ActorID].Dblvalue;
+           11: Winding^[ActiveWinding].Xneut := parser[ActorID].Dblvalue;
            12: InterpretAllBuses(Param);
            13: InterpretAllConns(Param);
            14: InterpretAllkVRatings(Param);
            15: InterpretAllkVARatings(Param);
            16: InterpretAllTaps(Param);
-           17: XHL :=  TrapZero(parser.Dblvalue, 7.0) * 0.01;
-           18: XHT :=  TrapZero(parser.Dblvalue, 35.0) * 0.01;
-           19: XLT :=  TrapZero(parser.Dblvalue, 30.0) * 0.01;
-           20: Parser.ParseAsVector(((NumWindings - 1) * NumWindings div 2), Xsc);
-           21: ThermalTimeConst := Parser.DblValue;
-           22: n_thermal        := Parser.DblValue;
-           23: m_thermal        := Parser.DblValue;
-           24: FLrise           := Parser.DblValue;
-           25: HSRise           := Parser.DblValue;
-           26: pctLoadLoss      := Parser.DblValue;
-           27: pctNoLoadLoss    := Parser.DblValue;
-           28: NormMaxHkVA      := Parser.Dblvalue;
-           29: EmergMaxHkVA     := Parser.Dblvalue;
+           17: puXHL :=  TrapZero(parser[ActorID].Dblvalue, 7.0) * 0.01;
+           18: puXHT :=  TrapZero(parser[ActorID].Dblvalue, 35.0) * 0.01;
+           19: puXLT :=  TrapZero(parser[ActorID].Dblvalue, 30.0) * 0.01;
+           20: Parser[ActorID].ParseAsVector(((NumWindings - 1) * NumWindings div 2), puXsc);
+           21: ThermalTimeConst := Parser[ActorID].DblValue;
+           22: n_thermal        := Parser[ActorID].DblValue;
+           23: m_thermal        := Parser[ActorID].DblValue;
+           24: FLrise           := Parser[ActorID].DblValue;
+           25: HSRise           := Parser[ActorID].DblValue;
+           26: pctLoadLoss      := Parser[ActorID].DblValue;
+           27: pctNoLoadLoss    := Parser[ActorID].DblValue;
+           28: NormMaxHkVA      := Parser[ActorID].Dblvalue;
+           29: EmergMaxHkVA     := Parser[ActorID].Dblvalue;
            30: IsSubstation     := InterpretYesNo(Param);
-           31: Winding^[ActiveWinding].MaxTap  := Parser.DblValue;
-           32: Winding^[ActiveWinding].MinTap  := Parser.DblValue;
-           33: Winding^[ActiveWinding].NumTaps := Parser.IntValue;
+           31: Winding^[ActiveWinding].MaxTap  := Parser[ActorID].DblValue;
+           32: Winding^[ActiveWinding].MinTap  := Parser[ActorID].DblValue;
+           33: Winding^[ActiveWinding].NumTaps := Parser[ActorID].IntValue;
            34: SubstationName   := Param;
-           35: pctImag          := Parser.DblValue;
-           36: ppm_FloatFactor  := Parser.DblValue * 1.0e-6;
+           35: pctImag          := Parser[ActorID].DblValue;
+           36: ppm_FloatFactor  := Parser[ActorID].DblValue * 1.0e-6;
            37: InterpretAllRs(Param);
-           38: XfmrBank := Param;
-           39: FetchXfmrCode (Param);
+           38: {XfmrBank := Param};
+           39: {FetchXfmrCode (Param)};    // Do nothing until we define auto code
            40: XRConst := InterpretYesNo(Param);
-           41: XHL :=  TrapZero(parser.Dblvalue, 7.0) * 0.01;
-           42: XHT :=  TrapZero(parser.Dblvalue, 35.0) * 0.01;
-           43: XLT :=  TrapZero(parser.Dblvalue, 30.0) * 0.01;
+           41: puXHL :=  TrapZero(parser[ActorID].Dblvalue, 7.0) * 0.01;
+           42: puXHT :=  TrapZero(parser[ActorID].Dblvalue, 35.0) * 0.01;
+           43: puXLT :=  TrapZero(parser[ActorID].Dblvalue, 30.0) * 0.01;
            44: HVLeadsLV := InterpretLeadLag(Param);
            45: PropertyValue[45] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
          ELSE
@@ -530,32 +532,34 @@ Begin
                EmergMaxHkVA := 1.5 * Winding^[1].kVA;
              End;
           17..19: XHLChanged := True;
-          20: For i := 1 to ((NumWindings - 1) * NumWindings div 2) Do Xsc^[i] := Xsc^[i]*0.01;  // Convert to per unit
+          20: For i := 1 to ((NumWindings - 1) * NumWindings div 2) Do puXSC^[i] := puXSC^[i]*0.01;  // Convert to per unit
 
           26: Begin    // Assume load loss is split evenly  between windings 1 and 2
                  Winding^[1].Rpu := pctLoadLoss/2.0/100.0;
                  Winding^[2].Rpu := Winding^[1].Rpu;
               End;
           37: pctLoadLoss := (Winding^[1].Rpu + Winding^[2].Rpu) * 100.0;  // Update
+          38: DoSimpleMsg('Bank Property not used with AutoTrans object.', 100130);
+          39: DoSimpleMsg('XFmrCode Property not used with AutoTrans object.', 100131);
           41..43: XHLChanged := True;
          ELSE
          End;
 
          //YPrim invalidation on anything that changes impedance values
          CASE ParamPointer OF
-           5..19  : YprimInvalid := TRUE;
-           26..27 : YprimInvalid := TRUE;
-           35..37 : YprimInvalid := TRUE;
-           41..43 : YPrimInvalid := TRUE;
+           5..19  : YprimInvalid[ActorID] := TRUE;
+           26..27 : YprimInvalid[ActorID] := TRUE;
+           35..37 : YprimInvalid[ActorID] := TRUE;
+           41..43 : YPrimInvalid[ActorID] := TRUE;
          ELSE
          End;
 
          {Advance to next property on input line}
-         ParamName := Parser.NextParam;
-         Param     := Parser.StrValue;
+         ParamName := Parser[ActorID].NextParam;
+         Param     := Parser[ActorID].StrValue;
      End;
 
-     RecalcElementData;
+     RecalcElementData(ActorID);
   End;
 
 End;
@@ -566,21 +570,21 @@ PROCEDURE TAutoTrans.SetActiveWinding(w:Integer);
 Begin
    WITH ActiveAutoTransObj DO
     IF   (w > 0) And (w <= NumWindings) THEN ActiveWinding := w
-    ELSE DoSimpleMsg('Wdg parameter invalid for "' + ActiveAutoTransObj.Name + '"', 112);
+    ELSE DoSimpleMsg('Wdg parameter invalid for "' + ActiveAutoTransObj.Name + '"', 100112);
 End;
 
 function TAutoTrans.TrapZero(const Value: Double; DefaultValue: Double): Double;
 begin
      if Value=0.0 then
      Begin
-       Dosimplemsg('Zero Reactance specified for AutoTrans.' + ActiveAutoTransObj.Name, 11201);
+       Dosimplemsg('Zero Reactance specified for AutoTrans.' + ActiveAutoTransObj.Name, 10011201);
        Result := DefaultValue;
      End
      else Result := Value;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-PROCEDURE TAutoTrans.InterpretConnection(const S:String);
+PROCEDURE TAutoTrans.InterpretAutoConnection(const S:String);
 
 // Accepts
 //    delta or LL           (Case insensitive)
@@ -588,19 +592,24 @@ PROCEDURE TAutoTrans.InterpretConnection(const S:String);
 
 Begin
         WITH ActiveAutoTransObj Do  Begin
-            WITH Winding^[ActiveWinding] Do Begin
-                 CASE lowercase(S)[1] OF
-                   'y','w': Connection := 0;  {Wye}
-                   'd': Connection := 1;  {Delta or line-Line}
-                   's': Connection := 2;  {Series winding of Auto}
-                   'l': CASE lowercase(s)[2] OF
-                        'n': Connection := 0;
-                        'l': Connection := 1;
-                        End;
+            WITH Winding^[ActiveWinding] Do
+            Begin
+                 Case ActiveWinding of
+                   1: Connection := 2;  // First Winding always Series
+                   2: Connection := 0;  // Second Winding is always Common and Wye
+                 Else
+                     CASE lowercase(S)[1] OF
+                       'y','w': Connection := 0;  {Wye}
+                       'd': Connection := 1;  {Delta or line-Line}
+                       'l': CASE lowercase(s)[2] OF
+                            'n': Connection := 0;
+                            'l': Connection := 1;
+                            End;
+                     End;
                  End;
             End;
             Yorder := fNConds * fNTerms;
-            YPrimInvalid := True;
+            YPrimInvalid[ActiveActor] := True;
         End;
 End;
 
@@ -623,7 +632,7 @@ Begin
          ActiveWinding := i;
          S1 := AuxParser.NextParam; // ignore any parameter name  not expecting any
          S2 := AuxParser.StrValue;
-         IF Length(S2)>0 THEN InterpretConnection(S2);
+         IF Length(S2)>0 THEN InterpretAutoConnection(S2);
       End;
 
 End;
@@ -675,7 +684,7 @@ Begin
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
     WITH ActiveAutoTransObj DO
-      FOR i := 1 to Numwindings Do  Begin
+      For i := 1 to Numwindings Do  Begin
            ActiveWinding := i;
            AuxParser.NextParam; // ignore any parameter name  not expecting any
            DataStr := AuxParser.StrValue;
@@ -696,7 +705,7 @@ Begin
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
     WITH ActiveAutoTransObj DO
-      FOR i := 1 to Numwindings Do Begin
+      For i := 1 to Numwindings Do Begin
          ActiveWinding := i;
          AuxParser.NextParam; // ignore any parameter name  not expecting any
          DataStr := AuxParser.StrValue;
@@ -750,7 +759,7 @@ Begin
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FUNCTION TAutoTrans.MakeLike(Const TransfName:String):Integer;
+FUNCTION TAutoTrans.MakeLike(Const AutoTransfName:String):Integer;
 VAR
    OtherTransf :TAutoTransObj;
    i           :Integer;
@@ -758,7 +767,7 @@ VAR
 Begin
    Result := 0;
    {See if we can find this Transf name in the present collection}
-   OtherTransf := Find(TransfName);
+   OtherTransf := Find(AutoTransfName);
    IF OtherTransf<>Nil THEN 
    WITH ActiveAutoTransObj Do
      Begin
@@ -767,34 +776,34 @@ Begin
        NConds := Fnphases + 1; // forces reallocation of terminals and conductors
 
        Yorder := fNConds*fNTerms;
-       YPrimInvalid := True;
+       YPrimInvalid[ActiveActor] := True;
 
        FOR i := 1 to NumWindings DO
        WITH Winding^[i] Do
          Begin
-           Connection := OtherTransf.Winding^[i].Connection;
-           kVLL       := OtherTransf.Winding^[i].kVLL;
-           kVSeries   := OtherTransf.Winding^[i].kVSeries;
-           VBase      := OtherTransf.Winding^[i].VBase;
-           kVA        := OtherTransf.Winding^[i].kVA;
-           puTAP      := OtherTransf.Winding^[i].puTAP;
-           Rpu        := OtherTransf.Winding^[i].Rpu;
-           RNeut      := OtherTransf.Winding^[i].RNeut;
-           Xneut      := OtherTransf.Winding^[i].Xneut;
-           // copy the taps
-           TapIncrement := OtherTransf.Winding^[i].TapIncrement;
-           MinTap       := OtherTransf.Winding^[i].MinTap;
-           MaxTap       := OtherTransf.Winding^[i].MaxTap;
-           NumTaps      := OtherTransf.Winding^[i].NumTaps;
+             Connection := OtherTransf.Winding^[i].Connection;
+             kVLL       := OtherTransf.Winding^[i].kVLL;
+             kVSeries   := OtherTransf.Winding^[i].kVSeries;
+             VBase      := OtherTransf.Winding^[i].VBase;
+             kVA        := OtherTransf.Winding^[i].kVA;
+             puTAP      := OtherTransf.Winding^[i].puTAP;
+             Rpu        := OtherTransf.Winding^[i].Rpu;
+             RNeut      := OtherTransf.Winding^[i].RNeut;
+             Xneut      := OtherTransf.Winding^[i].Xneut;
+             // copy the taps
+             TapIncrement := OtherTransf.Winding^[i].TapIncrement;
+             MinTap       := OtherTransf.Winding^[i].MinTap;
+             MaxTap       := OtherTransf.Winding^[i].MaxTap;
+             NumTaps      := OtherTransf.Winding^[i].NumTaps;
          End;
 
        SetTermRef;
 
-       XHL := OtherTransf.XHL;
-       XHT := OtherTransf.XHT;
-       XLT := OtherTransf.XLT;
+       puXHL := OtherTransf.puXHL;
+       puXHT := OtherTransf.puXHT;
+       puXLT := OtherTransf.puXLT;
 
-       FOR i := 1 to (NumWindings*(NumWindings-1) div 2) DO XSc^[i] := OtherTransf.XSC^[i];
+       FOR i := 1 to (NumWindings*(NumWindings-1) div 2) DO puXSC^[i] := OtherTransf.puXSC^[i];
 
        ZB.CopyFrom(OtherTransf.ZB);
        Y_1Volt.CopyFrom(OtherTransf.Y_1Volt);
@@ -818,17 +827,17 @@ Begin
 
        ClassMakeLike(OtherTransf);
 
-       FOR i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherTransf.PropertyValue[i];
+       For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherTransf.PropertyValue[i];
        Result := 1;
    End
-   ELSE  DoSimpleMsg('Error in Transf MakeLike: "' + TransfName + '" Not Found.', 113);
+   ELSE  DoSimpleMsg('Error in AutoTrans MakeLike: "' + AutoTransfName + '" Not Found.', 100113);
 
 
 
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FUNCTION TAutoTrans.Init(Handle:Integer):Integer;
+FUNCTION TAutoTrans.Init(Handle:Integer; ActorID : Integer):Integer;
 
 Begin
    DoSimpleMsg('Need to implement TAutoTrans.Init', -1);
@@ -855,9 +864,9 @@ Begin
 
   Nterms  := NumWindings;  // Force allocation of terminals and conductors
 
-  XHL := 0.07;
-  XHT := 0.35;
-  XLT := 0.30;
+  puXHL := 0.10;
+  puXHT := 0.35;
+  puXLT := 0.30;
   XHLChanged := True;  // Set flag to for calc of XSC array from XHL, etc.
 
   DeltaDirection := 1;
@@ -893,7 +902,7 @@ Begin
 
   Yorder := fNTerms * fNconds;
   InitPropertyValues(0);
-  RecalcElementData;
+  RecalcElementData(ActiveActor);
 End;
 
 procedure TAutoTransObj.SetNodeRef(iTerm: Integer; NodeRefArray: pIntegerArray);
@@ -905,13 +914,15 @@ begin
 
   // Now fixup noderefs for autoAutoTranss
 
-  // set 2nd node to same as first node of 2nd winding (common winding)
-  If iTerm=2 Then
-    if Winding^[1].Connection = 2 then
-    Begin
-        for i := 1 to Fnphases do
-            NodeRef^[Fnconds] := NodeRef^[i+Fnconds + 1];
-    End;
+(*   This won't work
+    // set 2nd node of Series winding to same as first node of 2nd winding (common winding)
+      If iTerm=2 Then
+        if Winding^[1].Connection = 2 then
+        Begin
+            for i := 1 to Fnphases do
+                NodeRef^[Fnconds] := NodeRef^[i+Fnconds + 1];
+        End;
+  *)
 end;
 
 PROCEDURE TAutoTransObj.SetNumWindings(N:Integer);
@@ -920,36 +931,38 @@ VAR
   OldWdgSize :Integer;
   NewWdgSize :Integer;
 Begin
-  IF N>1 THEN begin
-    FOR i := 1 to NumWindings Do Winding^[i].Free;  // Free old winding objects
-    OldWdgSize  := (NumWindings-1) * NumWindings div 2;
-    NumWindings := N;
-    MaxWindings := N;
-    NewWdgSize  := (NumWindings-1) * NumWindings div 2;
-    FNconds     := Fnphases + 1;
-    Nterms      := NumWindings;
-    Reallocmem(Winding,  Sizeof(Winding^[1])*MaxWindings);  // Reallocate collector array
-    FOR i := 1 to MaxWindings DO Winding^[i] := TAutoWinding.Create;
 
-    // array of short circuit measurements between pairs of windings
-    ReAllocmem(XSC, SizeOF(XSC^[1]) * NewWdgSize);
-    FOR i := OldWdgSize+1 to NewWdgSize Do  XSC^[i] := 0.30;
-    Reallocmem(TermRef, SizeOf(TermRef^[1]) * 2 * NumWindings*Fnphases);
+  IF N > 1 THEN
+  begin
+      FOR i := 1 to NumWindings Do Winding^[i].Free;  // Free old winding objects
+      OldWdgSize  := (NumWindings-1) * NumWindings div 2;
+      NumWindings := N;
+      MaxWindings := N;
+      NewWdgSize  := (NumWindings-1) * NumWindings div 2;
+      FNconds     := Fnphases + 1;
+      Nterms      := NumWindings;
+      Reallocmem(Winding,  Sizeof(Winding^[1])*MaxWindings);  // Reallocate collector array
+      FOR i := 1 to MaxWindings DO Winding^[i] := TAutoWinding.Create(i);
 
-    {Reallocate impedance matrices}
-    ZB.Free;
-    Y_1Volt.Free;
-    Y_1Volt_NL.Free;
-    Y_Term.Free;
-    Y_Term_NL.Free;
+      // array of short circuit measurements between pairs of windings
+      ReAllocmem(puXSC, SizeOF(puXSC^[1]) * NewWdgSize);
+      FOR i := OldWdgSize+1 to NewWdgSize Do  puXSC^[i] := 0.30;
+      Reallocmem(TermRef, SizeOf(TermRef^[1]) * 2 * NumWindings*Fnphases);
 
-    ZB         := TCMatrix.CreateMatrix(NumWindings - 1);
-    Y_1Volt    := TCMatrix.CreateMatrix(NumWindings);
-    Y_1Volt_NL := TCMatrix.CreateMatrix(NumWindings);
-    Y_Term     := TCMatrix.CreateMatrix(2 * NumWindings);
-    Y_Term_NL  := TCMatrix.CreateMatrix(2 * NumWindings);
+      {Reallocate impedance matrices}
+      ZB.Free;
+      Y_1Volt.Free;
+      Y_1Volt_NL.Free;
+      Y_Term.Free;
+      Y_Term_NL.Free;
+
+      ZB         := TCMatrix.CreateMatrix(NumWindings - 1);
+      Y_1Volt    := TCMatrix.CreateMatrix(NumWindings);
+      Y_1Volt_NL := TCMatrix.CreateMatrix(NumWindings);
+      Y_Term     := TCMatrix.CreateMatrix(2 * NumWindings);
+      Y_Term_NL  := TCMatrix.CreateMatrix(2 * NumWindings);
   end Else
-    Dosimplemsg('Invalid number of windings: (' + IntToStr(N) + ') for AutoTrans ' + Name, 111);
+    Dosimplemsg('Invalid number of windings: (' + IntToStr(N) + ') for AutoTrans.' + Name, 100111);
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -960,7 +973,7 @@ Begin
     {Throw away stuff allocated for this object}
     FOR i := 1 to NumWindings Do Winding^[i].Free;
     Reallocmem(Winding, 0);
-    Reallocmem(XSC, 0);
+    Reallocmem(puXSC, 0);
     Reallocmem(TermRef, 0);
     ZB.Free;
     Y_1Volt.Free;
@@ -971,7 +984,7 @@ Begin
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-PROCEDURE TAutoTransObj.RecalcElementData;
+PROCEDURE TAutoTransObj.RecalcElementData(ActorID : Integer);
 VAR
    i,
    ihvolt   :Integer;
@@ -1007,9 +1020,9 @@ Begin
       IF NumWindings <=3 THEN
         FOR i := 1 to (NumWindings*(NumWindings-1) div 2) DO
          CASE i of
-             1: XSC^[1] := XHL;
-             2: XSC^[2] := XHT;
-             3: XSC^[3] := XLT;
+             1: puXSC^[1] := puXHL;
+             2: puXSC^[2] := puXHT;
+             3: puXSC^[3] := puXLT;
          ELSE
          End;
       XHLChanged := false;
@@ -1057,7 +1070,7 @@ Begin
      NormAmps  := NormMaxHkVA  / Fnphases / Vfactor;
      EmergAmps := EmergMaxHkVA / Fnphases / Vfactor;
 
-     CalcY_Terminal(1.0);   // Calc Y_Terminal at base frequency
+     CalcY_Terminal(1.0, ActorID);   // Calc Y_Terminal at base frequency
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1135,14 +1148,14 @@ End;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-PROCEDURE TAutoTransObj.CalcYPrim;
+PROCEDURE TAutoTransObj.CalcYPrim(ActorID : Integer);
 
 VAR
    FreqMultiplier :Double;
 
 Begin
 
-    IF   YPrimInvalid THEN Begin
+    IF   YPrimInvalid[ActorID] THEN Begin
          // Reallocate YPrim if something has invalidated old allocation
          IF YPrim_Series<>nil THEN  YPrim_Series.Free;
          IF YPrim_Shunt<>nil  THEN  YPrim_Shunt.Free;
@@ -1159,10 +1172,10 @@ Begin
     End;
 
     // Set frequency multipliers for this calculation
-    FYprimFreq     := ActiveCircuit.Solution.Frequency ;
+    FYprimFreq     := ActiveCircuit[ActorID].Solution.Frequency ;
     FreqMultiplier := FYprimFreq / BaseFrequency;
     // Check for rebuilding Y_Terminal; Only rebuild if freq is different than last time
-    If   FreqMultiplier <> Y_Terminal_Freqmult Then CalcY_Terminal(FreqMultiplier);
+    If   FreqMultiplier <> Y_Terminal_Freqmult Then CalcY_Terminal(FreqMultiplier, ActorID);
 
     BuildYPrimComponent(YPrim_Series, Y_Term);
     BuildYPrimComponent(YPrim_Shunt,  Y_Term_NL);
@@ -1175,9 +1188,9 @@ Begin
 
     {Now Account for Open Conductors}
     {For any conductor that is open, zero out row and column}
-    Inherited CalcYPrim;
+    Inherited CalcYPrim(ActorID);
 
-    YprimInvalid := False;
+    YprimInvalid[ActorID] := False;
 End;
 
 PROCEDURE TAutoTransObj.DumpProperties(Var F:TextFile;Complete:Boolean);
@@ -1212,14 +1225,14 @@ Begin
         End;
     End;
 
-    Writeln(F,'~ ','XHL=',xhl*100.0:0:3);
-    Writeln(F,'~ ','XHT=',xht*100.0:0:3);
-    Writeln(F,'~ ','XLT=',xlt*100.0:0:3);
-    Writeln(F,'~ ','X12=',xhl*100.0:0:3);
-    Writeln(F,'~ ','X13=',xht*100.0:0:3);
-    Writeln(F,'~ ','X23=',xlt*100.0:0:3);
+    Writeln(F,'~ ','XHL=',puXHL*100.0:0:3);
+    Writeln(F,'~ ','XHT=',puXHT*100.0:0:3);
+    Writeln(F,'~ ','XLT=',puXLT*100.0:0:3);
+    Writeln(F,'~ ','X12=',puXHL*100.0:0:3);
+    Writeln(F,'~ ','X13=',puXHT*100.0:0:3);
+    Writeln(F,'~ ','X23=',puXLT*100.0:0:3);
     Write(F,'~ Xscmatrix= "');
-    FOR i := 1 to (NumWindings-1)*NumWindings div 2 Do Write(F, Xsc^[i]*100.0:0:2,' ');
+    FOR i := 1 to (NumWindings-1)*NumWindings div 2 Do Write(F, puXSC^[i]*100.0:0:2,' ');
     Writeln(F,'"');
     Writeln(F,'~ ','NormMAxHkVA=',NormMAxHkVA:0:0);
     Writeln(F,'~ ','EmergMAxHkVA=',EmergMAxHkVA:0:0);
@@ -1311,13 +1324,19 @@ begin
        // put half on each terminal of the winding.
 end;
 
-Constructor TAutoWinding.Create;
+Constructor TAutoWinding.Create(iWinding:Integer);
 {
    Make a new winding
 }
 Begin
      Inherited Create;
-     Connection := 0;
+
+     Case iWinding of
+         1: Connection := 2;  // First Winding is Series Winding
+     Else
+         Connection := 0;
+     End;
+
      kVLL       := 12.47;
      VBase      := kVLL/SQRT3*1000.0;
      kVA        := 1000.0;
@@ -1339,20 +1358,20 @@ Begin
     Inherited Destroy;
 End;
 
-FUNCTION TAutoTransObj.Get_PresentTap(i: Integer): double;
+FUNCTION TAutoTransObj.Get_PresentTap(i: Integer; ActorID : Integer): double;
 Begin
      IF (i > 0) and (i <= NumWindings)
          THEN Result := Winding^[i].puTap
          ELSE Result := 0.0;
 end;
 
-PROCEDURE TAutoTransObj.Set_PresentTap(i: Integer; const Value: double);
+PROCEDURE TAutoTransObj.Set_PresentTap(i: Integer; ActorID : Integer; const Value: double);
 
 Var
    TempVal :Double;
 
 Begin
-     IF (i > 0) and (i <= NumWindings) THEN 
+     IF (i > 0) and (i <= NumWindings) THEN
        WITH Winding^[i] Do Begin
            {Range Checking}
            TempVal := Value;
@@ -1361,8 +1380,8 @@ Begin
 
            IF TempVal <> puTap THEN Begin    {Only if there's been a change}
               puTap        := TempVal;
-              YPrimInvalid := True;  // this property triggers setting SystemYChanged=true
-              RecalcElementData;
+              YPrimInvalid[ActorID] := True;  // this property triggers setting SystemYChanged=true
+              RecalcElementData(ActorID);
            End;
        End;
 end;
@@ -1408,7 +1427,7 @@ var
 Begin
   imax := (NumWindings - 1) * NumWindings div 2;
   IF (i > 0) and (i <= imax)
-  THEN Result := XSC^[i]
+  THEN Result := puXSC^[i]
   ELSE Result := 0.0;
 end;
 
@@ -1449,7 +1468,7 @@ Begin
      ELSE Result := 0.0;
 end;
 
-PROCEDURE TAutoTransObj.GetAllWindingCurrents(CurrBuffer: pComplexArray);
+PROCEDURE TAutoTransObj.GetAllWindingCurrents(CurrBuffer: pComplexArray; ActorID: Integer);
 
 {
   Return a vector of complex currents for each Winding of all phases
@@ -1476,7 +1495,7 @@ Begin
      ITerm_NL := Allocmem(SizeOf(Complex)*2*NumWindings);
 
      {Load up Vterminal - already allocated for all cktelements}
-     WITH ActiveCircuit.Solution DO
+     WITH ActiveCircuit[ActorID].Solution DO
         FOR i := 1 TO Yorder DO  Vterminal^[i] := NodeV^[NodeRef^[i]];
 
 
@@ -1520,13 +1539,13 @@ Begin
      On E:Exception Do
         DoSimpleMsg('Error filling voltage buffer in GetAllWindingCurrents for Circuit Element:AutoTrans.'+Name+CRLF+
                     'Probable Cause: Invalid definition of element.'+CRLF+
-                    'System Error Message: '+E.Message, 100114);
+                    'System Error Message: '+E.Message, 100115);
   END;
 
 End;
 
 
-function TAutoTransObj.GeTAutoWindingCurrentsResult: String;
+function TAutoTransObj.GeTAutoWindingCurrentsResult(ActorID : Integer): String;
 
 // Returns string mag, angle
 Var
@@ -1537,7 +1556,7 @@ begin
 
     WindingCurrents := AllocMem(Sizeof(Complex)*2*FNPhases*NumWindings);
 
-    GetAllWindingCurrents(WindingCurrents);
+    GetAllWindingCurrents(WindingCurrents, ActorID);
 
     Result := '';
     k := 0;
@@ -1556,7 +1575,7 @@ begin
 
 end;
 
-PROCEDURE TAutoTransObj.GeTAutoWindingVoltages(iWind: Integer;  VBuffer: pComplexArray);
+PROCEDURE TAutoTransObj.GeTAutoWindingVoltages(iWind: Integer;  VBuffer: pComplexArray; ActorID: Integer);
 
 //  Voltages across indicated winding
 // Fill Vbuffer array which must be adequately allocated by calling routine
@@ -1576,7 +1595,7 @@ Begin
      End;
 
      {Load up VTerminal - already allocated for all cktelements}
-     WITH ActiveCircuit.Solution DO
+     WITH ActiveCircuit[ActorID].Solution DO
      FOR i := 1 TO Yorder DO  Vterminal^[i] := NodeV^[NodeRef^[i]];
 
 
@@ -1590,14 +1609,17 @@ Begin
             1:Begin   // Delta
                 ii := RotatePhases(i);      // Get next phase in sequence
                 VBuffer^[i] := CSub(Vterminal^[i+k], Vterminal^[ii+k]);
-              End
+              End;
+            2:Begin      // Series   (winding 1)
+                 VBuffer^[i] := Csub(Vterminal^[i+k], Vterminal^[i+Fnconds]);
+              End;
          End; {CASE}
 
   EXCEPT
      On E:Exception Do
         DoSimpleMsg('Error filling voltage buffer in GeTAutoWindingVoltages for Circuit Element:AutoTrans.'+Name+CRLF+
                     'Probable Cause: Invalid definition of element.'+CRLF+
-                    'System Error Message: '+E.Message, 114);
+                    'System Error Message: '+E.Message, 100114);
   END;
 end;
 
@@ -1611,7 +1633,7 @@ end;
 
 {============================== GetLosses Override ===============================}
 
-procedure TAutoTransObj.GetLosses(var TotalLosses, LoadLosses,   NoLoadLosses: Complex);
+procedure TAutoTransObj.GetLosses(var TotalLosses, LoadLosses,   NoLoadLosses: Complex; ActorID : Integer);
 VAR
    cTempIterminal  :pComplexArray;
    i               :Integer;
@@ -1619,11 +1641,11 @@ begin
   {inherited;}
 
   {Calculates losses in watts, vars}
-  TotalLosses := Losses;   // Side effect: computes Iterminal
+  TotalLosses := Losses[ActorID];   // Side effect: computes Iterminal
 
   {Compute No load losses in Yprim_Shunt}
   cTempIterminal := AllocMem(Sizeof(Complex)* Yorder);
-  ComputeVterminal;
+  ComputeVterminal(ActorID);
   Yprim_Shunt.MVmult(cTempIterminal, Vterminal) ;
   {No Load Losses are sum of all powers coming into YPrim_Shunt from each terminal}
   NoLoadLosses := CZERO;
@@ -1678,10 +1700,10 @@ begin
            14: FOR i := 1 to NumWindings Do Result := Result + Format('%.7g, ',[Winding^[i].kVLL]);
            15: FOR i := 1 to NumWindings Do Result := Result + Format('%.7g, ',[Winding^[i].kVA]);
            16: FOR i := 1 to NumWindings Do Result := Result + Format('%.7g, ',[Winding^[i].puTap]);// InterpretAllTaps(Param);
-           17: Result := Format('%.7g', [XHL * 100.0]);
-           18: Result := Format('%.7g', [XHT * 100.0]);
-           19: Result := Format('%.7g', [XLT * 100.0]);
-           20: FOR i := 1 to (NumWindings-1)*NumWindings div 2 Do Result := Result + Format('%-g, ',[ Xsc^[i]*100.0]);// Parser.ParseAsVector(((NumWindings - 1)*NumWindings div 2), Xsc);
+           17: Result := Format('%.7g', [puXHL * 100.0]);
+           18: Result := Format('%.7g', [puXHT * 100.0]);
+           19: Result := Format('%.7g', [puXLT * 100.0]);
+           20: FOR i := 1 to (NumWindings-1)*NumWindings div 2 Do Result := Result + Format('%-g, ',[ puXSC^[i]*100.0]);// Parser.ParseAsVector(((NumWindings - 1)*NumWindings div 2), Xsc);
            26: Result := Format('%.7g',[pctLoadLoss]);
            27: Result := Format('%.7g',[pctNoLoadLoss]);
            28: Result := Format('%.7g',[NormMaxHkVA]);
@@ -1693,11 +1715,11 @@ begin
            36: Result := Format('%.7g', [ppm_FloatFactor / 1.0e-6]);
            37: FOR i := 1 to NumWindings Do Result := Result + Format('%.7g, ',[Winding^[i].rpu * 100.0]);
            40: If XRconst Then  Result := 'YES' Else Result := 'NO';
-           41: Result := Format('%.7g', [XHL * 100.0]);
-           42: Result := Format('%.7g', [XHT * 100.0]);
-           43: Result := Format('%.7g', [XLT * 100.0]);
+           41: Result := Format('%.7g', [puXHL * 100.0]);
+           42: Result := Format('%.7g', [puXHT * 100.0]);
+           43: Result := Format('%.7g', [puXLT * 100.0]);
 
-           45: Result := GeTAutoWindingCurrentsResult;
+           45: Result := GeTAutoWindingCurrentsResult(ActiveActor);
 
         ELSE
           Result := Inherited GetPropertyValue(index);
@@ -1797,7 +1819,7 @@ begin
 
 end;
 
-procedure TAutoTransObj.MakePosSequence;
+procedure TAutoTransObj.MakePosSequence(ActorID : Integer);
 {
   Converts default 3-phase AutoTrans model into equivalent positive-sequence
   using scripting
@@ -1818,7 +1840,7 @@ begin
        {Load up auxiliary parser}
        AuxParser.CmdString  := GetBus(iW);
        AuxParser.NextParam;
-       S := AuxParser.ParseAsBusName(N, @Nodes);
+       S := AuxParser.ParseAsBusName(N, @Nodes, ActorID);
        If N =0 then OnPhase1 := TRUE;
        For i := 1 to N Do If Nodes[i]=1 Then OnPhase1 := TRUE;
        If Not OnPhase1 Then Begin
@@ -1849,8 +1871,8 @@ begin
 
    S := S + ' NormHkVA='+Format(' %-.5g %-.5g',[NormMaxHkVA/FNPhases, EmergMaxHkVA/FNPhases]);
 
-  Parser.CmdString := S;
-  Edit;
+  Parser[ActorID].CmdString := S;
+  Edit(ActorID);
 
   inherited;
 
@@ -1974,7 +1996,7 @@ begin
 
 end;
 
-procedure TAutoTransObj.CalcY_Terminal(FreqMult: Double);
+procedure TAutoTransObj.CalcY_Terminal(FreqMult: Double; ActorID : Integer);
 
 Var
     i,
@@ -1999,7 +2021,7 @@ Var
 
 begin
 
-    If ActiveCircuit.Solution.Frequency < 0.51   Then
+    If ActiveCircuit[ActorID].Solution.Frequency < 0.51   Then
          {Build Yterminal for GIC ~dc simulation}
 
          GICBuildYTerminal
@@ -2014,7 +2036,7 @@ begin
        ZBase := 1.0/(VABase/Fnphases); // base ohms on 1.0 volt basis
        FOR i := 1 to Numwindings-1 Do
           { convert pu to ohms on one volt base as we go... }
-           ZB.SetElement(i, i, CmulReal(Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i+1].Rpu), Freqmult*XSC^[i]), ZBase));
+           ZB.SetElement(i, i, CmulReal(Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i+1].Rpu), Freqmult*puXSC^[i]), ZBase));
 
        // Off diagonals
        k := NumWindings;
@@ -2024,7 +2046,7 @@ begin
               SetElemSym(i,j,
                 CmulReal(
                     Csub(CAdd(GetElement(i, i), GetElement(j, j)),
-                    CmulReal(Cmplx(Rmult * (Winding^[i+1].Rpu + Winding^[j+1].Rpu), Freqmult*XSC^[k]),
+                    CmulReal(Cmplx(Rmult * (Winding^[i+1].Rpu + Winding^[j+1].Rpu), Freqmult*puXSC^[k]),
                     ZBase)
                     ),  0.5) );
               Inc(k);
@@ -2183,7 +2205,7 @@ var
   Obj: TXfmrCodeObj;
   i: Integer;
 begin
-  if XfmrCodeClass=Nil then XfmrCodeClass := DSSClassList.Get(ClassNames.Find('xfmrcode'));
+  if XfmrCodeClass=Nil then XfmrCodeClass := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('xfmrcode'));
 
   if XfmrCodeClass.SetActive(Code) then begin
     Obj := XfmrCodeClass.GetActiveObj;
@@ -2208,10 +2230,10 @@ begin
         NumTaps      := Obj.Winding^[i].NumTaps;
       end;
     SetTermRef;
-    XHL := Obj.XHL;
-    XHT := Obj.XHT;
-    XLT := Obj.XLT;
-    for i := 1 to (NumWindings*(NumWindings-1) div 2) do XSc^[i] := Obj.XSC^[i];
+    puXHL := Obj.XHL;
+    puXHT := Obj.XHT;
+    puXLT := Obj.XLT;
+    for i := 1 to (NumWindings*(NumWindings-1) div 2) do puXSc^[i] := Obj.XSC^[i];
     ThermalTimeConst := Obj.ThermalTimeConst;
     n_thermal        := Obj.n_thermal;
     m_thermal        := Obj.m_thermal;
@@ -2223,12 +2245,12 @@ begin
     EmergMaxHkVA     := Obj.EmergMaxHkVA;
     ppm_FloatFactor  := Obj.ppm_FloatFactor;
     Yorder := fNConds*fNTerms;
-    YPrimInvalid := True;
+    YPrimInvalid[ActiveActor] := True;
     Y_Terminal_FreqMult := 0.0;
 
-    RecalcElementData
+    RecalcElementData(ActiveActor)
   end else
-    DoSimpleMsg('Xfmr Code:' + Code + ' not found.', 180);
+    DoSimpleMsg('Xfmr Code:' + Code + ' not found.', 100180);
 End;
 
 end.
