@@ -147,7 +147,7 @@ TYPE
         PROCEDURE StickCurrInTerminalArray(TermArray:pComplexArray; Const Curr:Complex; i:Integer);
         FUNCTION  InterpolateY95_YLow(const Vmag:Double):Complex;Inline;
         FUNCTION  InterpolateY95I_YLow(const Vmag:Double):Complex;Inline; // ***Added by Celso & Paulo
-        FUNCTION  Get_Unserved:Boolean;
+        FUNCTION  Get_Unserved(ActorID : Integer):Boolean;
 
         PROCEDURE Set_kVAAllocationFactor(const Value: Double);
         PROCEDURE Set_ConnectedkVA(const Value: Double);
@@ -226,7 +226,7 @@ TYPE
 
         PROCEDURE UpdateVoltageBases;
 
-        Property Unserved      :Boolean Read Get_Unserved;
+        Property Unserved[ActorID : Integer]      :Boolean Read Get_Unserved;
 //        Property ExceedsNormal[ActorID:Integer] :Boolean Read Get_ExceedsNormal(ActorID:Integer);
 
         {AllocationFactor adjusts either connected kVA allocation factor or kWh CFactor}
@@ -1950,7 +1950,7 @@ Begin
 End;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-FUNCTION TLoadObj.Get_Unserved:Boolean;
+FUNCTION TLoadObj.Get_Unserved(ActorID : Integer):Boolean;
 Var
   i :Integer;
   Vpu,
@@ -1971,8 +1971,8 @@ Begin
      End;
 
      {ELSE Check Voltages}
-     IF   LoadSolutionCount <> ActiveCircuit[ActiveActor].Solution.SolutionCount
-     THEN CalcVTerminalPhase(ActiveActor);
+     IF   LoadSolutionCount <> ActiveCircuit[ActorID].Solution.SolutionCount
+     THEN CalcVTerminalPhase(ActorID);
 
      // Get the lowest of the Phase voltages
      Vpu := Vbase;
@@ -1985,11 +1985,11 @@ Begin
 
      IF  VminNormal <> 0.0
      THEN NormMinCriteria := VMinNormal
-     ELSE NormMinCriteria := ActiveCircuit[ActiveActor].NormalMinVolts;
+     ELSE NormMinCriteria := ActiveCircuit[ActorID].NormalMinVolts;
 
      IF  VminEmerg <> 0.0
      THEN EmergMinCriteria := VMinEmerg
-     ELSE EmergMinCriteria := ActiveCircuit[ActiveActor].EmergMinVolts;
+     ELSE EmergMinCriteria := ActiveCircuit[ActorID].EmergMinVolts;
 
      IF Vpu < EmergMinCriteria
      THEN Begin

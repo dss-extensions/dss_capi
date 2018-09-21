@@ -215,7 +215,7 @@ begin
      Begin
          pMeter := TEnergyMeterObj(EnergyMeters.Active);
          If pMeter <> Nil Then Begin
-                pMeter.CalcReliabilityIndices(AssumeRestoration);
+                pMeter.CalcReliabilityIndices(AssumeRestoration, ActiveActor);
 
          End;
      End;

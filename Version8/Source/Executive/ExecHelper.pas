@@ -3895,7 +3895,7 @@ Begin
          End;
 
       while pMeter <> Nil do Begin
-         pMeter.CalcReliabilityIndices(AssumeRestoration);
+         pMeter.CalcReliabilityIndices(AssumeRestoration, ActiveActor);
          pMeter := ActiveCircuit[ActiveActor].EnergyMeters.Next;
       End;
 End;
