@@ -93,7 +93,7 @@ TYPE
        FUNCTION NewObject(const ObjName:String):Integer; override;
 
        PROCEDURE ResetRegistersAll;
-       PROCEDURE SampleAll;
+       PROCEDURE SampleAll(ActorID: Integer);
        PROCEDURE UpdateAll;
 
    End;
@@ -284,7 +284,7 @@ TYPE
 
 
         PROCEDURE ResetRegisters;
-        PROCEDURE TakeSample;
+        PROCEDURE TakeSample(ActorID: Integer);
 
         // Support for Dynamics Mode
         PROCEDURE InitStateVars(ActorID : Integer); Override;
@@ -917,14 +917,14 @@ Begin
 End;
 
 {--------------------------------------------------------------------------}
-PROCEDURE TPVsystem.SampleAll;  // Force all active PV System energy meters  to take a sample
+PROCEDURE TPVsystem.SampleAll(ActorID: Integer);  // Force all active PV System energy meters  to take a sample
 
 VAR
       i :Integer;
 Begin
       For i := 1 to ElementList.ListSize  Do
         With TPVsystemObj(ElementList.Get(i)) Do
-          If Enabled Then TakeSample;
+          If Enabled Then TakeSample(ActorID);
 End;
 
 // ===========================================================================================
@@ -2151,7 +2151,7 @@ Begin
 End;
 
 // ===========================================================================================
-PROCEDURE TPVsystemObj.TakeSample;
+PROCEDURE TPVsystemObj.TakeSample(ActorID: Integer);
 // Update Energy from metered zone
 
 VAR
@@ -2169,9 +2169,9 @@ Begin
           HourValue := 1.0;
 
 
-        WITH ActiveCircuit[ActiveActor].Solution
+        WITH ActiveCircuit[ActorID].Solution
         Do Begin
-             IF ActiveCircuit[ActiveActor].PositiveSequence
+             IF ActiveCircuit[ActorID].PositiveSequence
              THEN
              Begin
                 S    := CmulReal(S, 3.0);
@@ -2182,7 +2182,7 @@ Begin
              SetDragHandRegister  (Reg_MaxkW, abs(S.re));
              SetDragHandRegister  (Reg_MaxkVA, Smag);
              Integrate            (Reg_Hours, HourValue, IntervalHrs);  // Accumulate Hours in operation
-             Integrate            (Reg_Price, S.re*ActiveCircuit[ActiveActor].PriceSignal * 0.001 , IntervalHrs);  //
+             Integrate            (Reg_Price, S.re*ActiveCircuit[ActorID].PriceSignal * 0.001 , IntervalHrs);  //
              FirstSampleAfterReset := False;
           End;
      End;
