@@ -852,7 +852,7 @@ Begin
        SolveSystem(NodeV, ActorID);
        LoadsNeedUpdating := FALSE;
 
-   Until (Converged(ActorID) and (Iteration > MinIterations)) or (Iteration >= MaxIterations);
+   Until (Converged(ActorID) and (Iteration >= MinIterations)) or (Iteration >= MaxIterations);
 
 End;
 
@@ -919,7 +919,7 @@ Begin
                 im := im - dV^[i].im;
            End;
 
-       UNTIL (Converged(ActorID) and (Iteration > MinIterations)) or (Iteration >= MaxIterations);
+       UNTIL (Converged(ActorID) and (Iteration >= MinIterations)) or (Iteration >= MaxIterations);
     End;
 End;
 
