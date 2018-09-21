@@ -130,6 +130,7 @@ TYPE
        CurrentBuffer     :pComplexArray;
        VoltageBuffer     :pComplexArray;
        WdgCurrentsBuffer :pComplexArray;
+       WdgVoltagesBuffer :pComplexArray;
        NumTransformerCurrents :Integer;
 
        NumStateVars    :Integer;
@@ -280,7 +281,7 @@ Begin
                     '5 = Solution variables (Iterations, etc).' +CRLF+
                     '6 = Capacitor Switching (Capacitor Objecs only)'+CRLF+
                     '7 = Storage state vars (Storage device only)'+CRLF+
-                    '8 = Winding currents (Transformer device only)'+CRLF+
+                    '8 = Winding voltages and all winding currents (Transformer device only)'+CRLF+
                     '9 = Losses, watts and var (of monitored device)'+CRLF+ CRLF+
                     'Normally, these would be actual phasor quantities from solution.' + CRLF+
                     'Combine mode with adders below to achieve other results for terminal quantities:' + CRLF+
@@ -534,6 +535,8 @@ Begin
      FlickerBuffer := Nil;
      SolutionBuffer:= Nil;
      WdgCurrentsBuffer := Nil;
+     WdgVoltagesBuffer := Nil;
+
      NumTransformerCurrents := 0;
 
      Basefrequency := 60.0;
@@ -670,7 +673,8 @@ Begin
                          End;
                       8: Begin
                              With  TTransfObj(MeteredElement) Do NumTransformerCurrents := 2* NumberOfWindings * nphases;
-                             ReallocMem(WdgCurrentsBuffer, Sizeof(WdgCurrentsBuffer^[1])*NumTransformerCurrents);
+                             ReallocMem(WdgCurrentsBuffer, Sizeof(Complex)*NumTransformerCurrents);
+                             ReallocMem(WdgVoltagesBuffer, Sizeof(Complex)*nphases);
                          End;
                  Else
                      ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
@@ -810,17 +814,20 @@ Begin
      8: Begin
               With TTransfObj(MeteredElement) Do
               Begin
-                  RecordSize := NumTransformerCurrents;     // Transformer Winding Currents
+                  RecordSize := NumTransformerCurrents + 2*Nphases;     // Transformer Winding Currents
+                  For i := 1 to nphases Do
+                    Begin
+                          Str_Temp  :=  AnsiString(Format('V%d,Deg, ', [i] ));
+                          strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                    End;
                   for i := 1 to Nphases do
-                  Begin
-                    for j := 1 to NumberOfWindings do
-                      begin
-                        Str_Temp  :=  AnsiString(Format('P%dW%d, ', [i,j] ));
-                        strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
-                        Str_Temp  :=  AnsiString(Format('Deg, ', [i,j] ));
-                        strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
-                      end;
-                  End;
+                    Begin
+                      for j := 1 to NumberOfWindings do
+                        begin
+                          Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
+                          strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                        end;
+                    End;
               End;
         End;
      9: Begin // watts vars of meteredElement
@@ -1170,10 +1177,15 @@ Begin
               // Get all currents in each end of each winding
               With TTransfobj(MeteredElement) Do
               Begin
+                GetWindingVoltages(MeteredTerminal, WdgVoltagesBuffer);
+                ConvertComplexArrayToPolar( WdgVoltagesBuffer, Nphases);
+                {Put winding Voltages into Monitor}
+                AddDblsToBuffer(@WdgVoltagesBuffer^[1].re, 2 * Nphases);  // Add Mag, Angle
+
                 GetAllWindingCurrents(WdgCurrentsBuffer);
                 ConvertComplexArrayToPolar( WdgCurrentsBuffer, NumTransformerCurrents);
-                // Put every other Current into buffer
 
+                // Put every other Current into buffer
                 k := 1;
                 for i := 1 to Nphases*NumberOfWindings  do
                 Begin
