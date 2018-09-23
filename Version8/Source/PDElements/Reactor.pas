@@ -79,7 +79,11 @@ TYPE
    end;
 
    TReactorObj = class(TPDElement)
-      Private
+{$IFDEF DSS_CAPI}
+    public
+{$ELSE}
+    private
+{$ENDIF}
         R, Rp, Gp,
         X, L,
         kvarrating,

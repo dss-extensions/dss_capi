@@ -44,7 +44,11 @@ TYPE
 
       PROCEDURE DoYprimCalcs(Ymatrix: TCMatrix);
 
+{$IFDEF DSS_CAPI}
+    public
+{$ELSE}
     Protected
+{$ENDIF}
 
       Fnterms  : Integer;
       Fnconds  : Integer;  // no. conductors per terminal

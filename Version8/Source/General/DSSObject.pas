@@ -19,7 +19,11 @@ TYPE
       function Get_Name: String;
       procedure Set_Name(const Value: String);
 
+{$IFDEF DSS_CAPI}
+    public
+{$ELSE}
     protected
+{$ENDIF}
 
       PropSeqCount   :Integer;
       FPropertyValue :pStringArray;
