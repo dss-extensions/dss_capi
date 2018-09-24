@@ -80,7 +80,9 @@ Otherwise:
 
 For the Windows build process, the `KLUSolve.dll` from the official OpenDSS repository/distribution is used. This may change in the future.
 
-The output files will be placed into the `lib/win_x64` folder.
+The output files will be placed into the `lib/win_x64` folder. 
+
+If you just need the DLLs, you can also find the x64 DLLs and LIBs in [the artifacts from the AppVeyor instance](https://ci.appveyor.com/project/PMeira/dss-capi/branch/master/artifacts). These files are built after each commit to this repository and are kept for 6 months.
 
 ### On Linux
 
