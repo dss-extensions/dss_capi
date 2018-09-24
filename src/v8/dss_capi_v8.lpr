@@ -1621,6 +1621,7 @@ exports
     Reactors_Get_Z0,
     Reactors_Get_Z0_GR,
     Reactors_Set_Z0,
+    Reactors_Get_SpecType,
 
     TSData_Get_Count,
     TSData_Get_First,

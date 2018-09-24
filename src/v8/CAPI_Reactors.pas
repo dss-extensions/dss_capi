@@ -18,6 +18,7 @@ FUNCTION Reactors_Get_kvar():Double;cdecl;
 PROCEDURE Reactors_Set_kvar(Value: Double);cdecl;
 FUNCTION Reactors_Get_Phases():Integer;cdecl;
 PROCEDURE Reactors_Set_Phases(Value: Integer);cdecl;
+FUNCTION Reactors_Get_SpecType():Integer;cdecl;
 FUNCTION Reactors_Get_IsDelta():WordBool;cdecl;
 PROCEDURE Reactors_Set_IsDelta(Value: WordBool);cdecl;
 FUNCTION Reactors_Get_Parallel():WordBool;cdecl;
@@ -378,6 +379,17 @@ begin
     if ActiveReactor(pReactor) <> Nil
     THEN Begin
         Result := pReactor.Nphases;
+    End
+end;
+//------------------------------------------------------------------------------
+FUNCTION Reactors_Get_SpecType():Integer;cdecl;
+var
+    pReactor: TReactorObj;
+begin
+    Result := 0;
+    if ActiveReactor(pReactor) <> Nil
+    THEN Begin
+        Result := pReactor.SpecType;
     End
 end;
 //------------------------------------------------------------------------------
