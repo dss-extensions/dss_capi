@@ -717,8 +717,8 @@ begin
     THEN WITH pReactor DO 
     Begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-        Result[0] := Z.Re;
-        Result[1] := Z.Im;
+        Result[0] := R;
+        Result[1] := X;
     End;
 end;
 PROCEDURE Reactors_Get_Z_GR();cdecl;
