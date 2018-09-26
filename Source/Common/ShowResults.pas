@@ -1503,10 +1503,13 @@ Begin
      WHILE p_Elem<>nil DO Begin
        IF p_Elem.Enabled THEN  If CheckBusReference(p_Elem, BusReference, jTerm) Then Begin
           WriteTerminalPower(F, p_Elem, jTerm, opt);
-          {Get the other bus for the report}
-          if jTerm=1 then jTerm:=2 Else jTerm:=1; // may sometimes give wrong terminal if more than 2 terminals
-          WriteTerminalPower(F, p_Elem, jTerm, opt);
-          Writeln(F);
+
+          {Get the other buses for the report}
+          For j := 1 to p_Elem.nterms Do
+          if j <> jTerm then  Begin
+              Writeln(F,'------------');
+              WriteTerminalPower(F, p_Elem, j, opt);
+          End;
        End;
        p_Elem := ActiveCircuit[ActiveActor].PDElements.Next;
      End;
