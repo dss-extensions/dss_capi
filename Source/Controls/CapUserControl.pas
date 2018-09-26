@@ -55,7 +55,7 @@ TYPE
 
       public
 
-        FEdit:    Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
+        FEdit:    Procedure(s:{$IFDEF MSWINDOWS}pAnsichar{$ELSE}pchar{$ENDIF}; Maxlen:Cardinal); Stdcall; // send string to user model to handle
 
         Procedure Select;
         Procedure UpdateModel;
@@ -79,7 +79,12 @@ TYPE
 
 implementation
 
-Uses  DSSGlobals, Windows, Sysutils;
+Uses
+  DSSGlobals,
+  {$IFDEF MSWINDOWS}
+  Windows,
+  {$ENDIF}
+  Sysutils;
 
 { TCapUserControl }
 
@@ -157,7 +162,8 @@ end;
 
 procedure TCapUserControl.Set_Edit(const Value: String);
 begin
-     If FID <> 0 Then FEdit(pAnsichar(AnsiString(Value)), Length(Value));
+     If FID <> 0 Then FEdit({$IFDEF MSWINDOWS}pAnsichar(AnsiString(Value))
+     {$ELSE}pchar(String(Value)){$ENDIF}, Length(Value));
 end;
 
 procedure TCapUserControl.Set_Name(const Value:String);

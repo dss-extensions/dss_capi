@@ -7,8 +7,9 @@ unit DSSForms;
 }
 
 interface
-
-Uses Panel, Classes;
+{$IFNDEF CMD}
+Uses
+  Panel, Classes;
 
 VAR
 
@@ -37,9 +38,9 @@ VAR
    Procedure ShowTreeView(Const Fname:String);
    FUNCTION  MakeChannelSelection(NumFieldsToSkip:Integer; const Filename:String):Boolean;
 
-
+{$ENDIF}
 implementation
-
+{$IFNDEF CMD}
 Uses      ExecCommands, ExecOptions,
           Windows, Forms, Controls, Dialogs, DSSGlobals,Executive, DSSClass,ParserDel,
           ProgressForm,
@@ -346,5 +347,5 @@ finalization
     If Assigned(TViewForm) Then TViewForm.Free;
 //    If Assigned(MessageForm1) Then MessageForm1.Free;
   End;
-
+{$ENDIF}
 end.

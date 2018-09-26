@@ -8,10 +8,19 @@ unit ScriptEdit;
 }
 
 interface
-
+{$IFDEF MSWINDOWS}
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls,contnrs;
+  Windows,
+  Messages,
+  Graphics,
+  Controls,
+  Forms,
+  Dialogs,
+  StdCtrls,
+  ComCtrls,
+  SysUtils,
+  Classes,
+  contnrs;
 
 type
   TScriptEdit = class(TObject)
@@ -57,9 +66,9 @@ var
   ActiveScriptForm  :TScriptEdit;
   ScriptWindowList  :TObjectList;
   RecordCommands    :Boolean;
-
+{$ENDIF}
 implementation
-
+{$IFDEF MSWINDOWS}
 Uses RichEdit, Executive, DSSGlobals, DSSForms,  Panel,Utilities, uComplex,
   System.Types, System.UITypes;
 
@@ -497,6 +506,6 @@ begin
       End;
   End;
 end;
-
+{$ENDIF}
 end.
 

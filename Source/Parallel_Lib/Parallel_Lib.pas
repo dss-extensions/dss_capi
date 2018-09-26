@@ -14,8 +14,8 @@ unit Parallel_Lib;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes
-  , math, vcl.Dialogs;
+  {$IFDEF MSWINDOWS}Winapi.Windows, Winapi.Messages,{$ENDIF} System.SysUtils, System.Variants, System.Classes
+  , math{$IFDEF MSWINDOWS}, vcl.Dialogs{$ENDIF};
 
 type
   TParallel_Lib = class(TObject)
@@ -32,36 +32,50 @@ implementation
     function TParallel_Lib.Set_Thread_Affinity(Hnd : THandle; CPU : integer): Integer;
     var
       CPU_bit   : integer;
-      Op_Result : Dword;
+      Op_Result : {$IFDEF MSWINDOWS}Dword{$ELSE}Cardinal{$ENDIF};
     begin
        CPU_bit    :=  floor(power(2, CPU));
+       {$IFDEF MSWINDOWS}
        Op_Result  := SetThreadAffinityMask(Hnd,CPU_bit);
+       {$ENDIF}
        if Op_Result = 0 then raise Exception.Create('Error setting thread affinity mask : ' + IntToStr(GetLastError));
        Result   :=  Op_Result;
     end;
     function TParallel_Lib.Set_Process_Priority(Hnd: THandle; P_priority : integer):Integer;
+   {$IFDEF MSWINDOWS}
     var
       Op_result   :  bool;
+    {$ENDIF}
     begin
       Result      :=  0;
+      {$IFDEF MSWINDOWS}
       Op_Result   :=  SetPriorityClass(Hnd, P_priority);
       if Op_result=false then ShowMessage('Impossible to set the Process Priority');
       if Op_result then Result  :=1;
+      {$ENDIF}
     end;
     function TParallel_Lib.Set_Thread_Priority(Hnd: THandle; T_priority : integer):Integer;
+   {$IFDEF MSWINDOWS}
     var
       Op_result   :  bool;
+    {$ENDIF}
     begin
       Result      :=  0;
+     {$IFDEF MSWINDOWS}
       Op_Result   :=  SetThreadPriority(Hnd,T_priority);
       if Op_Result = false then ShowMessage('Impossible to set the Thread Priority');
       if Op_result then Result  :=1;
+     {$ENDIF}
     end;
     function TParallel_Lib.Get_Thread_Priority(Hnd: THandle): String;
     var
       Num_priority  : integer;
     begin
+     {$IFDEF MSWINDOWS}
       Num_Priority  :=  GetThreadPriority(Hnd);
+     {$ELSE}
+      Num_Priority  :=  0;
+     {$ENDIF}
       case Num_Priority of
         0:  Result    :=  'Normal';
         1:  Result    :=  'Above Normal';

@@ -90,7 +90,7 @@ USES
      Command, MeterClass, Meterelement, DSSClass, Arraydef, ucomplex, utilities, Classes;
 
 TYPE
-    TMonitorStrBuffer = Array[1..256] of AnsiChar;
+    TMonitorStrBuffer = Array[1..256] of {$IFDEF MSWINDOWS} AnsiChar {$ELSE} char {$ENDIF};
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
    {This has to be named TDSSMonitor because Delphi has a TMonitor Class and the compiler will get confused}
@@ -129,6 +129,7 @@ TYPE
        CurrentBuffer     :pComplexArray;
        VoltageBuffer     :pComplexArray;
        WdgCurrentsBuffer :pComplexArray;
+       WdgVoltagesBuffer :pComplexArray;
        NumTransformerCurrents :Integer;
 
        NumStateVars    :Integer;
@@ -272,7 +273,7 @@ Begin
                     'Normally, these would be actual phasor quantities from solution.' + CRLF+
                     '6 = Capacitor Switching (Capacitors only)'+CRLF+
                     '7 = Storage state vars (Storage device only)'+CRLF+
-                    '8 = Winding currents (Transformer device only)'+CRLF+
+                    '8 = Winding voltages and all winding currents (Transformer device only)'+CRLF+
                     '9 = Losses, watts and var (of monitored device)'+CRLF+ CRLF+
                     'Normally, these would be actual phasor quantities from solution.' + CRLF+
                     'Combine mode with adders below to achieve other results for terminal quantities:' + CRLF+
@@ -526,6 +527,8 @@ Begin
      FlickerBuffer := Nil;
      SolutionBuffer:= Nil;
      WdgCurrentsBuffer := Nil;
+     WdgVoltagesBuffer := Nil;
+
      NumTransformerCurrents := 0;
 
      Basefrequency := 60.0;
@@ -659,7 +662,8 @@ Begin
                          End;
                       8: Begin
                              With  TTransfObj(MeteredElement) Do NumTransformerCurrents := 2* NumberOfWindings * nphases;
-                             ReallocMem(WdgCurrentsBuffer, Sizeof(WdgCurrentsBuffer^[1])*NumTransformerCurrents);
+                             ReallocMem(WdgCurrentsBuffer, Sizeof(Complex)*NumTransformerCurrents);
+                             ReallocMem(WdgVoltagesBuffer, Sizeof(Complex)*nphases);
                          End;
                  Else
                      ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
@@ -726,11 +730,17 @@ VAR
     iMin        :Integer;
     IsPosSeq    :Boolean;
     IsPower     :Boolean;
+    {$IFDEF MSWINDOWS}
     NameOfState :AnsiString;
-    NumVI       :Integer;
-    RecordSize  :Integer;
     strPtr      :pANSIchar;
     Str_Temp    :AnsiString;
+    {$ELSE}
+    NameOfState :String;
+    strPtr      :pchar;
+    Str_Temp    :String;
+    {$ENDIF}
+    NumVI       :Integer;
+    RecordSize  :Integer;
 
 Begin
   Try
@@ -742,50 +752,50 @@ Begin
      fillchar(StrBuffer, Sizeof(TMonitorStrBuffer), 0);  {clear buffer}
      strPtr := @StrBuffer;
      strPtr^ := chr(0);     // Init string
-     If ActiveCircuit[ActorID].Solution.IsHarmonicModel Then strLcat(strPtr, pAnsichar('Freq, Harmonic, '), Sizeof(TMonitorStrBuffer))
-                                                        Else strLcat(strPtr, pAnsichar('hour, t(sec), '),   Sizeof(TMonitorStrBuffer));
+     If ActiveCircuit[ActorID].Solution.IsHarmonicModel Then strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('Freq, Harmonic, '), Sizeof(TMonitorStrBuffer))
+                                                        Else strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('hour, t(sec), '),   Sizeof(TMonitorStrBuffer));
      
      CASE (Mode and MODEMASK) of
 
      2: Begin
               RecordSize := 1;     // Transformer Taps
-              strLcat(strPtr, pAnsichar('Tap (pu)'), Sizeof(TMonitorStrBuffer));
+              strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('Tap (pu)'), Sizeof(TMonitorStrBuffer));
         End;
      3: Begin
               RecordSize := NumStateVars;   // Statevariabes
               For i := 1 to NumStateVars Do Begin
-                  NameofState := AnsiString(TpcElement(MeteredElement).VariableName(i) + ',');
-                  strLcat(strPtr, pAnsichar(NameofState), Sizeof(TMonitorStrBuffer));
+                  NameofState := {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(TpcElement(MeteredElement).VariableName(i) + ',');
+                  strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(NameofState), Sizeof(TMonitorStrBuffer));
               End;
         End;
      4: Begin
               RecordSize := 2 * FnPhases;
               For i := 1 to FnPhases Do Begin
-                strLcat(strPtr, pAnsichar(AnsiString('Flk'+IntToStr(i)+', Pst'+IntToStr(i))), Sizeof(TMonitorStrBuffer));
-                if i < FnPhases then strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}({$IFDEF MSWINDOWS}Ansistring{$ELSE}String{$ENDIF}('Flk'+IntToStr(i)+', Pst'+IntToStr(i))), Sizeof(TMonitorStrBuffer));
+                if i < FnPhases then strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(', '), Sizeof(TMonitorStrBuffer));
               End;
         End;
      5: Begin
              RecordSize := NumSolutionVars;
-             strLcat(strPtr, pAnsichar('TotalIterations, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsichar('ControlIteration, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsichar('MaxIterations, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsichar('MaxControlIterations, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsichar('Converged, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsichar('IntervalHrs, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsichar('SolutionCount, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsichar('Mode, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsichar('Frequency, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsichar('Year, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsichar('SolveSnap_uSecs, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsichar('TimeStep_uSecs, '), Sizeof(TMonitorStrBuffer));
+             strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('TotalIterations, '), Sizeof(TMonitorStrBuffer));
+             strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('ControlIteration, '), Sizeof(TMonitorStrBuffer));
+             strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('MaxIterations, '), Sizeof(TMonitorStrBuffer));
+             strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('MaxControlIterations, '), Sizeof(TMonitorStrBuffer));
+             strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('Converged, '), Sizeof(TMonitorStrBuffer));
+             strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('IntervalHrs, '), Sizeof(TMonitorStrBuffer));
+             strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('SolutionCount, '), Sizeof(TMonitorStrBuffer));
+             strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('Mode, '), Sizeof(TMonitorStrBuffer));
+             strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('Frequency, '), Sizeof(TMonitorStrBuffer));
+             strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('Year, '), Sizeof(TMonitorStrBuffer));
+             strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('SolveSnap_uSecs, '), Sizeof(TMonitorStrBuffer));
+             strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('TimeStep_uSecs, '), Sizeof(TMonitorStrBuffer));
         End;
      6: Begin
               RecordSize := TCapacitorObj(MeteredElement).NumSteps;     // Capacitor Taps
               for i := 1 to RecordSize do
                 begin
-                  Str_Temp  :=  AnsiString('Step_' + inttostr(i) + ' ');
-                  strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                  Str_Temp  :=  {$IFDEF MSWINDOWS}Ansistring{$ELSE}string{$ENDIF}('Step_' + inttostr(i) + ' ');
+                  strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(Str_Temp), Sizeof(TMonitorStrBuffer));
                 end;
 
         End;
@@ -800,22 +810,25 @@ Begin
      8: Begin
               With TTransfObj(MeteredElement) Do
               Begin
-                  RecordSize := NumTransformerCurrents;     // Transformer Winding Currents
+                  RecordSize := NumTransformerCurrents + 2*Nphases;     // Transformer Winding Currents
+                  For i := 1 to nphases Do
+                    Begin
+                          Str_Temp  :=  {$IFDEF MSWINDOWS}Ansistring{$ELSE}string{$ENDIF}(Format('V%d,Deg, ', [i] ));
+                          strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(Str_Temp), Sizeof(TMonitorStrBuffer));
+                    End;
                   for i := 1 to Nphases do
                   Begin
                     for j := 1 to NumberOfWindings do
                       begin
-                        Str_Temp  :=  AnsiString(Format('P%dW%d, ', [i,j] ));
-                        strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
-                        Str_Temp  :=  AnsiString(Format('Deg, ', [i,j] ));
-                        strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                        Str_Temp  :=  {$IFDEF MSWINDOWS}Ansistring{$ELSE}string{$ENDIF}(Format('P%dW%d,Deg, ', [i,j] ));
+                        strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(Str_Temp), Sizeof(TMonitorStrBuffer));
                       end;
                   End;
               End;
         End;
      9: Begin // watts vars of meteredElement
               RecordSize := 2;
-              strLcat(strPtr,  pAnsichar('watts, vars'), Sizeof(TMonitorStrBuffer));
+              strLcat(strPtr,  {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('watts, vars'), Sizeof(TMonitorStrBuffer));
         End
      Else Begin
          // Compute RecordSize
@@ -843,27 +856,27 @@ Begin
                       FOR i := 1 to NumVI DO Inc(RecordSize,1);
                       IF IncludeResidual Then Inc(RecordSize, 2);
                        For i := 1 to NumVI Do Begin
-                           strLcat(strPtr, pAnsichar(AnsiString(Format('|V|%d (volts)',[i]))), Sizeof(TMonitorStrBuffer));
-                           strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
+                           strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}({$IFDEF MSWINDOWS}Ansistring{$ELSE}String{$ENDIF}(Format('|V|%d (volts)',[i]))), Sizeof(TMonitorStrBuffer));
+                           strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(', '), Sizeof(TMonitorStrBuffer));
                        End;
                        IF IncludeResidual Then Begin
-                           strLcat(strPtr, pAnsichar('|VN| (volts)'), Sizeof(TMonitorStrBuffer));
-                           strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
+                           strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('|VN| (volts)'), Sizeof(TMonitorStrBuffer));
+                           strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(', '), Sizeof(TMonitorStrBuffer));
                        End;
                        For i := 1 to NumVI Do Begin
-                           strLcat(strPtr, pAnsichar(AnsiString('|I|'+IntToStr(i)+' (amps)')), Sizeof(TMonitorStrBuffer));
-                           If i<NumVI Then strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
+                           strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}({$IFDEF MSWINDOWS}AnsiString{$ELSE}String{$ENDIF}('|I|'+IntToStr(i)+' (amps)')), Sizeof(TMonitorStrBuffer));
+                           If i<NumVI Then strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(', '), Sizeof(TMonitorStrBuffer));
                        End;
                        IF IncludeResidual Then Begin
-                           strLcat(strPtr, pAnsichar(',|IN| (amps)'), Sizeof(TMonitorStrBuffer));
+                           strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(',|IN| (amps)'), Sizeof(TMonitorStrBuffer));
                        End;
                  End
                  Else Begin  // Power
                        For i := 1 to NumVI Do
                        Begin
-                           If PPolar Then strLcat(strPtr, pAnsichar(AnsiString('S'+IntToStr(i)+' (kVA)')), Sizeof(TMonitorStrBuffer))
-                                     Else strLcat(strPtr, pAnsichar(AnsiString('P'+IntToStr(i)+' (kW)')), Sizeof(TMonitorStrBuffer));
-                           If i<NumVI Then strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
+                           If PPolar Then strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}({$IFDEF MSWINDOWS}Ansistring{$ELSE}String{$ENDIF}('S'+IntToStr(i)+' (kVA)')), Sizeof(TMonitorStrBuffer))
+                                     Else strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}({$IFDEF MSWINDOWS}Ansistring{$ELSE}String{$ENDIF}('P'+IntToStr(i)+' (kW)')), Sizeof(TMonitorStrBuffer));
+                           If i<NumVI Then strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(', '), Sizeof(TMonitorStrBuffer));
                        End;
                  End;
               End ;
@@ -871,12 +884,12 @@ Begin
                      RecordSize := 2;
                      IF Not IsPower THEN Begin
                         RecordSize := RecordSize+ 2;
-                        If VIPolar Then strLcat(strPtr, pAnsichar('V1, V1ang, I1, I1ang'), Sizeof(TMonitorStrBuffer))
-                                   Else strLcat(strPtr, pAnsichar('V1.re, V1.im, I1.re, I1.im'), Sizeof(TMonitorStrBuffer));
+                        If VIPolar Then strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('V1, V1ang, I1, I1ang'), Sizeof(TMonitorStrBuffer))
+                                   Else strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('V1.re, V1.im, I1.re, I1.im'), Sizeof(TMonitorStrBuffer));
                      End
                      Else Begin
-                        If Ppolar Then strLcat(strPtr, pAnsichar('S1 (kVA), Ang '), Sizeof(TMonitorStrBuffer))
-                                  Else strLcat(strPtr, pAnsichar('P1 (kW), Q1 (kvar)'), Sizeof(TMonitorStrBuffer));
+                        If Ppolar Then strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('S1 (kVA), Ang '), Sizeof(TMonitorStrBuffer))
+                                  Else strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('P1 (kW), Q1 (kvar)'), Sizeof(TMonitorStrBuffer));
                      End;
                End ;
             96:Begin  // Save Pos Seq or Aver magnitude of all Phases of total kVA (Magnitude)
@@ -884,11 +897,11 @@ Begin
                      IF Not IsPower
                      THEN Begin
                        RecordSize := RecordSize+ 1;
-                       strLcat(strPtr, pAnsichar('V, I '), Sizeof(TMonitorStrBuffer));
+                       strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('V, I '), Sizeof(TMonitorStrBuffer));
                      End
                      Else Begin  // Power
-                        If Ppolar Then strLcat(strPtr, pAnsichar('S1 (kVA)'), Sizeof(TMonitorStrBuffer))
-                                  Else strLcat(strPtr, pAnsichar('P1 (kW)'), Sizeof(TMonitorStrBuffer));
+                        If Ppolar Then strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('S1 (kVA)'), Sizeof(TMonitorStrBuffer))
+                                  Else strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('P1 (kW)'), Sizeof(TMonitorStrBuffer));
                      End;
                End ;
 
@@ -900,32 +913,32 @@ Begin
                      RecordSize := RecordSize + NumVI*2;
                      IF IncludeResidual Then Inc(RecordSize, 4);
                      For i := iMin to iMax Do Begin
-                        If VIPolar Then strLcat(strPtr, pAnsichar(AnsiString('V'+IntToStr(i)+', VAngle'+IntToStr(i))), Sizeof(TMonitorStrBuffer))
-                                   Else strLcat(strPtr, pAnsichar(AnsiString('V'+IntToStr(i)+'.re, V'+IntToStr(i)+'.im')), Sizeof(TMonitorStrBuffer));
-                        strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
+                        If VIPolar Then strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}({$IFDEF MSWINDOWS}Ansistring{$ELSE}String{$ENDIF}('V'+IntToStr(i)+', VAngle'+IntToStr(i))), Sizeof(TMonitorStrBuffer))
+                                   Else strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}({$IFDEF MSWINDOWS}Ansistring{$ELSE}String{$ENDIF}('V'+IntToStr(i)+'.re, V'+IntToStr(i)+'.im')), Sizeof(TMonitorStrBuffer));
+                        strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(', '), Sizeof(TMonitorStrBuffer));
                      End;
                      IF IncludeResidual Then Begin
-                        If VIPolar Then strLcat(strPtr, pAnsichar('VN, VNAngle'), Sizeof(TMonitorStrBuffer))
-                                   Else strLcat(strPtr, pAnsichar('VN.re, VN.im'), Sizeof(TMonitorStrBuffer));
-                        strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
+                        If VIPolar Then strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('VN, VNAngle'), Sizeof(TMonitorStrBuffer))
+                                   Else strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}('VN.re, VN.im'), Sizeof(TMonitorStrBuffer));
+                        strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(', '), Sizeof(TMonitorStrBuffer));
                      End;
                      For i := iMin to iMax Do Begin
-                        If VIPolar Then strLcat(strPtr, pAnsichar(AnsiString('I'+IntToStr(i)+', IAngle'+IntToStr(i))), Sizeof(TMonitorStrBuffer))
-                                   Else strLcat(strPtr, pAnsichar(AnsiString('I'+IntToStr(i)+'.re, I'+IntToStr(i)+'.im')), Sizeof(TMonitorStrBuffer));
-                        If i<NumVI Then strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
+                        If VIPolar Then strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}({$IFDEF MSWINDOWS}Ansistring{$ELSE}String{$ENDIF}('I'+IntToStr(i)+', IAngle'+IntToStr(i))), Sizeof(TMonitorStrBuffer))
+                                   Else strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}({$IFDEF MSWINDOWS}Ansistring{$ELSE}String{$ENDIF}('I'+IntToStr(i)+'.re, I'+IntToStr(i)+'.im')), Sizeof(TMonitorStrBuffer));
+                        If i<NumVI Then strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(', '), Sizeof(TMonitorStrBuffer));
                      End;
                      IF IncludeResidual Then Begin
-                        If VIPolar Then strLcat(strPtr, pAnsichar(', IN, INAngle'), Sizeof(TMonitorStrBuffer))
-                        Else strLcat(strPtr, pAnsichar(', IN.re, IN.im'), Sizeof(TMonitorStrBuffer));
+                        If VIPolar Then strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(', IN, INAngle'), Sizeof(TMonitorStrBuffer))
+                        Else strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(', IN.re, IN.im'), Sizeof(TMonitorStrBuffer));
                      End;
                 End
                 Else Begin
                     If isPosSeq then Begin iMin := 0; iMax := NumVI-1; End
                     Else Begin iMin := 1; iMax := NumVI; End;
                     For i := iMin to iMax Do Begin
-                        If Ppolar Then strLcat(strPtr, pAnsichar(AnsiString('S'+IntToStr(i)+' (kVA), Ang'+IntToStr(i))), Sizeof(TMonitorStrBuffer))
-                                  Else strLcat(strPtr, pAnsichar(AnsiString('P'+IntToStr(i)+' (kW), Q'+IntToStr(i)+' (kvar)')), Sizeof(TMonitorStrBuffer));
-                        If i<NumVI Then strLcat(strPtr, pAnsichar(', '), Sizeof(TMonitorStrBuffer));
+                        If Ppolar Then strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}({$IFDEF MSWINDOWS}Ansistring{$ELSE}String{$ENDIF}('S'+IntToStr(i)+' (kVA), Ang'+IntToStr(i))), Sizeof(TMonitorStrBuffer))
+                                  Else strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}({$IFDEF MSWINDOWS}Ansistring{$ELSE}String{$ENDIF}('P'+IntToStr(i)+' (kW), Q'+IntToStr(i)+' (kvar)')), Sizeof(TMonitorStrBuffer));
+                        If i<NumVI Then strLcat(strPtr, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF}(', '), Sizeof(TMonitorStrBuffer));
                     End;
                 End;
           END;
@@ -975,7 +988,9 @@ Procedure TMonitorObj.OpenMonitorStream;
 Begin
 
     If NOT IsFileOpen then Begin
+{$IFDEF MSWINDOWS}
        MonitorStream.Seek(0, soFromEnd	);    // Positioned at End of Stream
+{$ENDIF}
        IsFileOpen := True;
     End;
 
@@ -987,7 +1002,9 @@ Begin
   Try
      If IsFileOpen THEN Begin  // only close open files
         PostProcess(ActorID);
+{$IFDEF MSWINDOWS}
         MonitorStream.Seek(0, soFromBeginning);   // just move stream position to the beginning
+{$ENDIF}
         IsFileOpen := false;
      End;
   Except
@@ -1161,8 +1178,14 @@ Begin
               // Get all currents in each end of each winding
               With TTransfobj(MeteredElement) Do
               Begin
+                GetWindingVoltages(MeteredTerminal, WdgVoltagesBuffer, ActorID);
+                ConvertComplexArrayToPolar( WdgVoltagesBuffer, Nphases);
+                {Put winding Voltages into Monitor}
+                AddDblsToBuffer(@WdgVoltagesBuffer^[1].re, 2 * Nphases);  // Add Mag, Angle
+
                 GetAllWindingCurrents(WdgCurrentsBuffer, ActorID);
                 ConvertComplexArrayToPolar( WdgCurrentsBuffer, NumTransformerCurrents);
+
                 // Put every other Current into buffer
 
                 k := 1;
@@ -1347,7 +1370,9 @@ var
 begin
   N := SampleCount;
   With MonitorStream Do Begin
+{$IFDEF MSWINDOWS}
     Seek(0, soFromBeginning);  // Start at the beginning of the Stream
+{$ENDIF}
     Read( Fsignature, Sizeof(Fsignature));
     Read( Fversion,   Sizeof(Fversion));
     Read( RecordSize, Sizeof(RecordSize));
@@ -1422,7 +1447,7 @@ VAR
     i             :Cardinal;
     Mode          :Integer;
     Nread         :Cardinal;
-    pStr          :pAnsichar;
+    pStr          :{$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF};
     RecordBytes   :Cardinal;
     RecordSize    :Cardinal;
     s             :single;
@@ -1449,7 +1474,9 @@ Begin
      End;
 
      With MonitorStream Do Begin
+{$IFDEF MSWINDOWS}
          Seek(0, soFromBeginning);  // Start at the beginning of the Stream
+{$ENDIF}
          Read( Fsignature, Sizeof(Fsignature));
          Read( Fversion,   Sizeof(Fversion));
          Read( RecordSize, Sizeof(RecordSize));
@@ -1588,7 +1615,7 @@ Var
    ObjList:TPointerList;
    Hours:Boolean;
    StrBuffer:TMonitorStrBuffer;
-   pStrBuffer:PAnsichar;
+   pStrBuffer:{$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF};
    Fversion, FSignature, iMode:Integer;
    Nread, RecordSize, RecordBytes, PositionSave:Cardinal;
    sngBuffer:Array[1..100] of Single;
@@ -1655,7 +1682,9 @@ begin
 
            pStrBuffer := @StrBuffer;
            With MonitorStream Do Begin
+{$IFDEF MSWINDOWS}
                Seek(0, soFromBeginning);  // Start at the beginning of the Stream
+{$ENDIF}
                Read( Fsignature, Sizeof(Fsignature));
                Read( Fversion,   Sizeof(Fversion));
                Read( RecordSize, Sizeof(RecordSize));
@@ -1703,7 +1732,9 @@ begin
 
            {Now find Maxtime in Monitor}
            PositionSave := MonitorStream.Position;
+{$IFDEF MSWINDOWS}
            MonitorStream.Seek(-(Recordbytes+8), soFromEnd);
+{$ENDIF}
            If Not (MonitorStream.Position>=MonitorStream.Size) Then
              With MonitorStream Do Begin
                   Read( hr, 4);  // singles
@@ -1719,7 +1750,9 @@ begin
            END;
 
            {Go Back to where we were}
+{$IFDEF MSWINDOWS}
            MonitorStream.Seek(PositionSave, soFromBeginning);
+{$ENDIF}
 
            TopTransferFile.WriteHeader(Time, MaxTime, Time, RecordSize, 0, 16,  'DSS (TM), EPRI (R)');
            TopTransferFile.WriteNames(NameList, CNames);

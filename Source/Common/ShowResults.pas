@@ -46,7 +46,13 @@ implementation
 Uses uComplex,  Arraydef,  sysutils, Circuit, DSSClass, DSSClassDefs, DSSGlobals,
      uCMatrix,  solution,  CktElement, Utilities, Bus, MathUtil,
      PDElement, PCElement, Generator, Transformer, EnergyMeter, Load, RegControl,
-     ParserDel, CktTree,   DSSForms, Math, Line, LineUnits, LineGeometry, YMatrix,
+     ParserDel, CktTree,
+{$IFDEF MSWINDOWS}
+     DSSForms,
+{$ELSE}
+     CmdForms,
+{$ENDIF}
+     Math, Line, LineUnits, LineGeometry, YMatrix,
      SwtControl, KLUSolve;
 
 VAR
@@ -2824,6 +2830,7 @@ Begin
     FireOffEditor(FileNm);
     ParserVars.Add('@lastshowfile', FileNm);
     ShowTreeView(TreeNm);
+
   End;
 End;
 

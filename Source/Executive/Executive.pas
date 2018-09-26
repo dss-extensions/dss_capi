@@ -90,7 +90,10 @@ implementation
 USES ExecCommands, ExecOptions,
      {ExecHelper,} DSSClassDefs, DSSGlobals, ParserDel,  SysUtils,
      Utilities, Solution, DSSClass, IniRegSave,
-     DSSForms, KLUSolve;
+{$IFDEF MSWINDOWS}
+     DSSForms,
+{$ENDIF}
+     KLUSolve;
 
 
 //----------------------------------------------------------------------------
@@ -225,7 +228,9 @@ begin
             {Now, Start over}
           CreateDSSClasses;
           CreateDefaultDSSItems;
+{$IFDEF MSWINDOWS}
           RebuildHelpForm := True; // because class strings have changed
+{$ENDIF}
           // In case the actor hasn't been destroyed
           if ActorHandle[ActiveActor] <> nil then
           Begin
@@ -236,8 +241,9 @@ begin
           End;
        End;
 
-
+       {$IFDEF MSWINDOWS}
        If Not IsDLL Then ControlPanel.UpdateElementBox ;
+       {$ENDIF}
 
        DefaultEarthModel     := DERI;
        LogQueries            := FALSE;
@@ -260,9 +266,10 @@ begin
        CreateDSSClasses;
        Parser[ActiveActor]  :=  Tparser.Create;
        CreateDefaultDSSItems;
+{$IFDEF MSWINDOWS}
        RebuildHelpForm := True; // because class strings have changed
-
        If Not IsDLL Then ControlPanel.UpdateElementBox ;
+{$ENDIF}
        {Prepare for new variables}
        ParserVars.Free;
        ParserVars := TParserVar.Create(100);  // start with space for 100 variables

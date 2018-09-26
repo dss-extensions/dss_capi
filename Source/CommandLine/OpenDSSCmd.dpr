@@ -3,11 +3,13 @@ program opendss;
 {$APPTYPE CONSOLE}
 
 uses
-  {$IFDEF UNIX}{$IFDEF UseCThreads}
+  {$IFDEF UNIX}
+  {$IFDEF UseCThreads}
   cthreads,
-  {$ENDIF}{$ENDIF}
-  Classes, SysUtils,
-
+  {$ENDIF }
+  {$ENDIF }
+  Classes,
+  SysUtils,
   Arraydef in '..\Shared\Arraydef.pas',
   AutoAdd in '..\Common\AutoAdd.pas',
   Bus in '..\Common\Bus.pas',
@@ -39,7 +41,6 @@ uses
   ExportResults in '..\Common\ExportResults.pas',
   Fault in '..\PDElements\Fault.pas',
   Feeder in '..\Common\Feeder.pas',
-  {Frm_RPNcalc in '..\Parser\Frm_RPNcalc.pas' RPNForm,}
   fuse in '..\PDElements\fuse.pas',
   GenDispatcher in '..\Controls\GenDispatcher.pas',
   generator in '..\PCElements\generator.pas',
@@ -101,7 +102,38 @@ uses
   StorageController in '..\Controls\StorageController.pas',
   StoreUserModel in '..\PCElements\StoreUserModel.pas',
   LineGeometry in '..\General\LineGeometry.pas',
-  SwtControl in '..\Controls\SwtControl.pas';
+  SwtControl in '..\Controls\SwtControl.pas',
+  GeneratorVars in '..\PCElements\GeneratorVars.pas',
+  Parallel_Lib in '..\Parallel_Lib\Parallel_Lib.pas',
+  Sparse_Math in '..\Common\Sparse_Math.pas',
+  PriceShape in '..\General\PriceShape.pas',
+  MeTIS_Exec in '..\Common\MeTIS_Exec.pas',
+  TempShape in '..\General\TempShape.pas',
+  XYcurve in '..\General\XYcurve.pas',
+  ConductorData in '..\General\ConductorData.pas',
+  CNData in '..\General\CNData.pas',
+  CableData in '..\General\CableData.pas',
+  TSData in '..\General\TSData.pas',
+  StorageVars in '..\PCElements\StorageVars.pas',
+  PVsystem in '..\PCElements\PVsystem.pas',
+  InvControl in '..\Controls\InvControl.pas',
+  ExpControl in '..\Controls\ExpControl.pas',
+  ProgressForm in '..\Forms\ProgressForm.pas' {Progress},
+  PVSystemUserModel in '..\PCElements\PVSystemUserModel.pas',
+  ScriptEdit in '..\Forms\ScriptEdit.pas',
+  LineConstants in '..\General\LineConstants.pas',
+  CNLineConstants in '..\General\CNLineConstants.pas',
+  CableConstants in '..\General\CableConstants.pas',
+  TSLineConstants in '..\General\TSLineConstants.pas',
+  Pstcalc in '..\Shared\Pstcalc.pas',
+  KLUSolve in '..\Common\KLUSolve.pas',
+  GICTransformer in '..\PDElements\GICTransformer.pas',
+  CapControlVars in '..\Controls\CapControlVars.pas',
+  CapUserControl in '..\Controls\CapUserControl.pas',
+  ConnectOptions in '..\Executive\ConnectOptions.pas',
+  Diakoptics in '..\Common\Diakoptics.pas',
+  TCP_IP in '..\TCP_IP\TCP_IP.pas',
+  MemoryMap_lib in '..\Meters\MemoryMap_lib.pas';
 
 //{$R *.RES}
 

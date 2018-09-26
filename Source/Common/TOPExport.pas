@@ -17,7 +17,7 @@ TYPE
     time_t = LongInt;
     ToutfileHdr = Packed Record
        Size:WORD;
-       Signature:Array[0..15] of ANSICHAR;
+       Signature:Array[0..15] of {$IFDEF MSWINDOWS}ANSICHAR{$ELSE}CHAR{$ENDIF};
        VersionMajor,
        VersionMinor:WORD;
        FBase,
@@ -40,7 +40,7 @@ TYPE
        Title2,
        Title3,
        Title4,
-       Title5  :Array[0..79] of ANSICHAR;  // Fixed length 80-byte string  space
+       Title5  :Array[0..79] of {$IFDEF MSWINDOWS}ANSICHAR{$ELSE}CHAR{$ENDIF};  // Fixed length 80-byte string  space
     End;
 
     TOutFile32 = Class(Tobject)
@@ -54,7 +54,7 @@ TYPE
           {constructor Create(Owner: TObject);}
           Procedure Open;
           Procedure Close;
-          Procedure WriteHeader(const t_start, t_stop,h:Double; const NV, NI,NameSize:Integer; const Title:AnsiString);
+          Procedure WriteHeader(const t_start, t_stop,h:Double; const NV, NI,NameSize:Integer; const Title:{$IFDEF MSWINDOWS}AnsiString{$ELSE}string{$ENDIF});
           Procedure WriteNames(var Vnames, Cnames:TStringList);
           Procedure WriteData(Const t:Double; Const V, Curr:pDoubleArray);
           Procedure OpenR;  {Open for Read Only}
@@ -72,14 +72,22 @@ VAR
 
 implementation
 
-Uses ComObj, SysUtils, AnsiStrings, Dialogs, ActiveX, DSSGlobals;
+Uses
+{$IFDEF MSWINDOWS}
+    ComObj, AnsiStrings, Dialogs, ActiveX,
+{$ELSE}
+    CMDForms,
+{$ENDIF}
+    SysUtils, DSSGlobals;
 Var
   TOP_Inited:Boolean;
 
 Procedure StartTop;
 
 Begin
+{$IFDEF MSWINDOWS}
   TOP_Object := CreateOleObject('TOP2000.MAIN');
+{$ENDIF}
   TOP_Inited := TRUE;
 End;
 
@@ -125,7 +133,7 @@ BEGIN
 
 END;
 
-Procedure TOutFile32.WriteHeader(const t_start, t_stop, h:Double; const NV, NI,NameSize:Integer; const Title:AnsiString);
+Procedure TOutFile32.WriteHeader(const t_start, t_stop, h:Double; const NV, NI,NameSize:Integer; const Title:{$IFDEF MSWINDOWS}AnsiString{$ELSE}String{$ENDIF});
 
 VAR
    NumWrite:Integer;
@@ -158,7 +166,7 @@ BEGIN
          IDXData := IDXCurrentNames + NCurrents * CurrNameSize;
          IdxBaseData := 0;
 
-         sysutils.StrCopy(Title1,pAnsichar(Title));
+         sysutils.StrCopy(Title1,{$IFDEF MSWINDOWS}pAnsichar{$ELSE}pchar{$ENDIF}(Title));
          Title2[0] := #0;
          Title3[0] := #0;
          Title4[0] := #0;
@@ -177,19 +185,19 @@ Procedure TOutFile32.WriteNames(var Vnames, Cnames:TStringList);
 VAR
    NumWrite : Integer;
    i:integer;
-   Buf:Array[0..120] of AnsiChar;  //120 char buffer to hold names  + null terminator
+   Buf:Array[0..120] of {$IFDEF MSWINDOWS}AnsiChar{$ELSE}char{$ENDIF};  //120 char buffer to hold names  + null terminator
 
 BEGIN
 
      If Header.NVoltages > 0 Then
      For i:=0 to Vnames.Count-1 Do Begin
-        Sysutils.StrCopy(Buf, pAnsichar(AnsiString(Vnames.Strings[i])));    // Assign string to a buffer
+        Sysutils.StrCopy(Buf, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pchar{$ENDIF}({$IFDEF MSWINDOWS}AnsiString{$ELSE}String{$ENDIF}(Vnames.Strings[i])));    // Assign string to a buffer
         BlockWrite(Fout, Buf, Header.VoltNameSize, NumWrite);    // Strings is default property of TStrings
      END;
 
      If Header.NCurrents > 0 Then
      For i:=0 to Cnames.Count-1 Do Begin
-        Sysutils.StrCopy(Buf, pAnsichar(AnsiString(Cnames.Strings[i])));    // Assign string to a buffer
+        Sysutils.StrCopy(Buf, {$IFDEF MSWINDOWS}pAnsichar{$ELSE}pchar{$ENDIF}({$IFDEF MSWINDOWS}AnsiString{$ELSE}String{$ENDIF}(Cnames.Strings[i])));    // Assign string to a buffer
         BlockWrite(Fout, Buf, Header.CurrNameSize, NumWrite);
      END;
 
@@ -257,7 +265,8 @@ Initialization
     TOP_Inited := FALSE;
     TOPTransferFile:= TOutFile32.Create;
     TOPTransferFile.Fname := 'DSSTransfer.STO';
-
+{$IFDEF MSWINDOWS}
     CoInitialize(Nil);
+{$ENDIF}
 end.
 

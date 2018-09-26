@@ -39,7 +39,7 @@ VAR
 
 implementation
 
-Uses      Windows, {Forms, Controls, Dialogs,}
+Uses      {$IFDEF MSWINDOWS} Windows, {$ENDIF} {Forms, Controls, Dialogs,}
           DSSGlobals,Executive, DSSClass,ParserDel,
           {ProgressForm,
           Helpform,
