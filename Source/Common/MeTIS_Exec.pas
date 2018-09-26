@@ -3,10 +3,11 @@ unit MeTIS_Exec;
 interface
 
 uses
-  ShellAPI,
+
   SysUtils,
-  Classes,
+  Classes
   {$IFDEF MSWINDOWS}
+  , ShellAPI,
   windows;
   {$ELSE}
   ;
@@ -24,8 +25,9 @@ type
 
     procedure Replace(const AFrom, ATo: string; ReplaceFlags: TReplaceFlags);
   end;
-
+{$IFDEF MSWINDOWS}
 Function RunMeTIS(DosApp: string): String;
+{$ENDIF}
 Function GetNumEdges(MeTISSrc : string): String;
 
 implementation
@@ -210,7 +212,7 @@ Begin
       j       :=  Pos(' edges in the file.',MeTISSrc);
       Result  :=  copy(MeTISSrc,(i + SOffset),(j-(i + SOffset)));// Gets the # of edges proposed by MeTIS
 End;
-
+{$IFDEF MSWINDOWS}
 Function RunMeTIS(DosApp: string): String;
 const
     READ_BUFFER_SIZE = 2400;
@@ -282,5 +284,5 @@ begin
         CloseHandle(writeableEndOfPipe);
     end;
 end;
-
+{$ENDIF}
 end.

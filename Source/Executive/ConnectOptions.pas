@@ -42,12 +42,14 @@ FUNCTION DoConnectCmd:Integer;
 //   ParamPointer, i:Integer;
 Begin
   Result := 0;
+{$IFDEF MSWINDOWS}
 //    If NoFormsAllowed Then Begin Result :=1; Exit; End;
   If Not Assigned(DSSConnectObj) Then DSSConnectObj := TDSSConnect.Create;
   DSSConnectObj.SetDefaults;
   With DSSConnectObj Do Begin
     Connect;
   End;
+{$ENDIF}
 End;
 
 FUNCTION DoDisConnectCmd:Integer;
@@ -56,6 +58,7 @@ FUNCTION DoDisConnectCmd:Integer;
 //  ParamPointer, i:Integer;
 Begin
   Result := 0;
+{$IFDEF MSWINDOWS}
 //    If NoFormsAllowed Then Begin Result :=1; Exit; End;
   If Assigned(DSSConnectObj) Then
   begin
@@ -63,6 +66,7 @@ Begin
       Disconnect;
     End;
   end;
+{$ENDIF}
 End;
 
 

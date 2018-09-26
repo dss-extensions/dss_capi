@@ -53,10 +53,12 @@ USES
     System.TimeSpan,
     System.Classes,
     Parallel_Lib,
+    {$IFDEF MSWINDOWS}
     Windows,
+    Dialogs,
+    {$ENDIF}
     Sparse_Math,
     SyncObjs,
-    Dialogs,
     CktElement;
 
 CONST
@@ -319,9 +321,16 @@ VAR
 implementation
 
 USES  SolutionAlgs,
-      DSSClassDefs, DSSGlobals, DSSForms, PDElement,  ControlElem, Fault,
+      DSSClassDefs, DSSGlobals,
+{$IFDEF MSWINDOWS}
+      SHELLAPI,
+      DSSForms,
+{$ELSE}
+      CmdForms,
+{$ENDIF}
+      PDElement,  ControlElem, Fault,
       AutoAdd,  YMatrix, Load,CKtTree,
-      ParserDel, Generator,Capacitor,SHELLAPI,
+      ParserDel, Generator,Capacitor,
 {$IFDEF DLL_ENGINE}
       ImplGlobals,  // to fire events
 {$ENDIF}
@@ -552,8 +561,10 @@ Begin
 End;
 // ===========================================================================================
 PROCEDURE TSolutionObj.Solve(ActorID : Integer);
+{$IFDEF MSWINDOWS}
 var
   ScriptEd  : TScriptEdit;
+{$ENDIF}
 Begin
      ActiveCircuit[ActorID].Issolved := False;
      SolutionWasAttempted[ActorID]   := TRUE;
@@ -595,16 +606,20 @@ Try
     // Resets the event for receiving messages from the active actor
       // Updates the status of the Actor in the GUI
       ActorStatus[ActorID]      :=  1;    // Global to indicate that the actor is busy
+      {$IFDEF MSWINDOWS}
       if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
-      UIMsg.ResetEvent;
       QueryPerformanceCounter(GStartTime);
+      {$ENDIF}
+      UIMsg.ResetEvent;
       // Sends message to start the Simulation
       ActorHandle[ActorID].Send_Message(SIMULATE);
       // If the parallel mode is not active, Waits until the actor finishes
       if not Parallel_enabled then
       Begin
         WaitForActor(ActorID);
+       {$IFDEF MSWINDOWS}
         if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
+        {$ENDIF}
       End;
 
 Except
@@ -1089,7 +1104,9 @@ Begin
 //      if Solution then
    SnapShotInit(ActorID);
    TotalIterations    := 0;
+  {$IFDEF MSWINDOWS}
    QueryPerformanceCounter(SolveStartTime);
+   {$ENDIF}
    REPEAT
 
        Inc(ControlIteration);
@@ -1118,7 +1135,9 @@ Begin
 {$IFDEF DLL_ENGINE}
    Fire_StepControls;
 {$ENDIF}
+  {$IFDEF MSWINDOWS}
    QueryPerformanceCounter(SolveEndtime);
+   {$ENDIF}
    Solve_Time_Elapsed := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
    Iteration := TotalIterations;  { so that it reports a more interesting number }
 
@@ -1131,7 +1150,9 @@ Begin
    Result := 0;
 
    LoadsNeedUpdating := TRUE;  // Force possible update of loads and generators
+   {$IFDEF MSWINDOWS}
    QueryPerformanceCounter(SolveStartTime);
+   {$ENDIF}
 
    If SystemYChanged THEN
    begin
@@ -1152,8 +1173,9 @@ Begin
        ActiveCircuit[ActorID].IsSolved := TRUE;
        ConvergedFlag := TRUE;
    End;
-
+  {$IFDEF MSWINDOWS}
    QueryPerformanceCounter(SolveEndtime);
+   {$ENDIF}
    Solve_Time_Elapsed  := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
    Total_Time_Elapsed  :=  Total_Time_Elapsed + Solve_Time_Elapsed;
    Iteration := 1;
@@ -1652,10 +1674,13 @@ End;
 *           Routine created to empty a recently created folder                 *
 ********************************************************************************}
 procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
+{$IFDEF MSWINDOWS}
 var
   SourceLst: string;
   FOS: TSHFileOpStruct;
+{$ENDIF}
 begin
+{$IFDEF MSWINDOWS}
   FillChar(FOS, SizeOf(FOS), 0);
   FOS.wFunc := FO_DELETE;
   SourceLst := Directory + '\' + FileMask + #0;
@@ -1667,6 +1692,7 @@ begin
   // Add the next line for a "silent operation" (no progress box)
   FOS.fFlags := FOS.fFlags OR FOF_SILENT;
   SHFileOperation(FOS);
+{$ENDIF}
 end;
 {*******************************************************************************
 *   This routine evaluates if the current location is the best or if its       *
@@ -2361,8 +2387,9 @@ begin
 
 // Update Loop time is called from end of time step cleanup
 // Timer is based on beginning of SolveSnap time
-
+   {$IFDEF MSWINDOWS}
    QueryPerformanceCounter(LoopEndtime);
+   {$ENDIF}
    Step_Time_Elapsed  := ((LoopEndtime-SolveStartTime)/CPU_Freq)*1000000;
 
 end;
@@ -2460,7 +2487,9 @@ var
   Parallel  : TParallel_Lib;
 Begin
   ActorCPU[ActorID] :=  CPU;
+  {$IFDEF MSWINDOWS}
   Parallel.Set_Thread_affinity(handle,CPU);
+  {$ENDIF}
 End;
 
 {*******************************************************************************
@@ -2470,7 +2499,9 @@ End;
 
 procedure TSolver.Execute;
 var
+ {$IFDEF MSWINDOWS}
   ScriptEd  : TScriptEdit;
+  {$ENDIF}
   idx       : Integer;
 
   begin
@@ -2508,7 +2539,9 @@ var
             Else
                 DosimpleMsg('Unknown solution mode.', 481);
             End;
+            {$IFDEF MSWINDOWS}
             QueryPerformanceCounter(GEndTime);
+            {$ENDIF}
             Total_Solve_Time_Elapsed  :=  ((GEndTime-GStartTime)/CPU_Freq)*1000000;
             Total_Time_Elapsed        :=  Total_Time_Elapsed + Total_Solve_Time_Elapsed;
             Processing                :=  False;
@@ -2516,7 +2549,9 @@ var
             ActorStatus[ActorID]      :=  0;      // Global to indicate that the actor is ready
             // If required, sends a message to UI to notify that the actor has finised
             if Not Parallel_enabled then Notify_Main
+            {$IFDEF MSWINDOWS}
             else if Not IsDLL then queue(CallCallBack); // Refreshes the GUI if running asynchronously
+            {$ENDIF}
             End;
           EXIT_ACTOR:                // Terminates the thread
             Begin

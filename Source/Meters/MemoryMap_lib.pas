@@ -21,10 +21,13 @@ procedure Write_String(Mem_Space : TBytesStream; const Content : string);
 
 implementation
 
-uses windows,
+uses
+    {$IFDEF MSWINDOWS}
+     windows,
+     Dialogs,
+     {$ENDIF}
      sysutils,
      math,
-     Dialogs,
      DSSGlobals;
 type
     TByteArr  = array of uint8;

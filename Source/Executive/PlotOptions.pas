@@ -208,15 +208,15 @@ Begin
                      ValueIndex := 2;
                     End;
                'C': PlotType := ptCircuitplot;
-               'E': PlotType := ptEvolutionPlot;
+               'E': {$IFDEF MSWINDOWS}PlotType := ptEvolutionPlot{$ENDIF};
                'G': PlotType := ptGeneralDataPlot;
                'L': PlotType := ptLoadshape;
                'M': IF CompareTextShortest('mon', Param)=0 Then PlotType := ptMonitorplot
-                    ELSE PlotType := ptMatrixplot;
-               'P': IF CompareTextShortest('pro', Param)=0 Then PlotType := ptProfile
-                    ELSE PlotType := ptPriceShape;
-               'S': PlotType := ptScatterPlot;
-               'T': PlotType := ptTshape;
+                    {$IFDEF MSWINDOWS}ELSE PlotType := ptMatrixplot{$ENDIF};
+               'P': {$IFDEF MSWINDOWS}IF CompareTextShortest('pro', Param)=0 Then PlotType := ptProfile
+                    ELSE PlotType := ptPriceShape{$ENDIF};
+               'S': {$IFDEF MSWINDOWS}PlotType := ptScatterPlot{$ENDIF};
+               'T': {$IFDEF MSWINDOWS}PlotType := ptTshape{$ENDIF};
                'D': Begin
                       PlotType := ptDaisyplot;
                       DaisyBusList.Clear;
@@ -231,9 +231,9 @@ Begin
                     'U': Quantity := pqcurrent;
                     End;
                'P': Quantity := pqpower;
-               'L': IF CompareTextShortest('los', Param)=0 Then Quantity := pqlosses
-                    ELSE MatrixType :=  pLaplacian;
-               'I': MatrixType :=  pIncMatrix;
+               'L': {$IFDEF MSWINDOWS}IF CompareTextShortest('los', Param)=0 Then Quantity := pqlosses
+                    ELSE MatrixType :=  pLaplacian{$ENDIF};
+               'I': {$IFDEF MSWINDOWS}MatrixType :=  pIncMatrix{$ENDIF};
              Else
                Quantity := pqNone;
                Valueindex := Parser[ActiveActor].IntValue;
@@ -275,12 +275,15 @@ Begin
          16: MaxLineThickness := Parser[ActiveActor].IntValue ;
          17: InterpretTStringListArray(Param,  DaisyBusList);  {read in Bus list}
          18: Begin
+                {$IFDEF MSWINDOWS}
                  MinScale := Parser[ActiveActor].DblValue;
                  MinScaleIsSpecified := TRUE;    // Indicate the user wants a particular value
+                {$ENDIF}
              End;
-         19: ThreePhLineStyle  := Parser[ActiveActor].IntValue;
-         20: SinglePhLineStyle := Parser[ActiveActor].IntValue;
+         19: {$IFDEF MSWINDOWS}ThreePhLineStyle  := Parser[ActiveActor].IntValue{$ENDIF};
+         20: {$IFDEF MSWINDOWS}SinglePhLineStyle := Parser[ActiveActor].IntValue{$ENDIF};
          21: Begin  // Parse off phase(s) to plot
+             {$IFDEF MSWINDOWS}
                   PhasesToPlot := PROFILE3PH; // the default
                   if      CompareTextShortest(Param, 'default')=0 then PhasesToPlot := PROFILE3PH
                   Else if CompareTextShortest(Param, 'all')=0     then PhasesToPlot := PROFILEALL
@@ -289,6 +292,7 @@ Begin
                   Else if CompareTextShortest(Param, 'llall')=0   then PhasesToPlot := PROFILELLALL
                   Else if CompareTextShortest(Param, 'llprimary')=0 then PhasesToPlot := PROFILELLPRI
                   Else If Length(Param)=1 then PhasesToPlot := Parser[ActiveActor].IntValue;
+             {$ENDIF}
              End;
 
        Else
@@ -304,6 +308,7 @@ Begin
      With DSSPlotObj Do Begin
       if DSS_Viz_enable then
       begin
+      {$IFDEF MSWINDOWS}
         if (DSS_Viz_installed and ((
             PlotType = ptMonitorplot) or (
             PlotType = ptLoadshape) or (
@@ -312,15 +317,18 @@ Begin
             PlotType = ptEvolutionPlot) or (
             PlotType = ptMatrixplot))) then
           DSSVizPlot; // DSS Visualization tool
+      {$ENDIF}
       end
       else
       begin
+      {$IFDEF MSWINDOWS}
         if (PlotType = ptScatterPlot) or (
            PlotType = ptEvolutionPlot) or (
            PlotType = ptMatrixplot) then
            DoSimpleMsg('The DSS Visualization tool is disabled (Check the DSSVisualizationTool option).',0)
         else
            Execute;   // makes a new plot based on these options
+      {$ENDIF}
       end;
      End;
 

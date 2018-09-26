@@ -7,7 +7,7 @@ unit TCP_IP;
 }
 
 interface
-
+{$IFDEF MSWINDOWS}
 uses
   System.Win.ScktComp,SysUtils,System.JSON,ShellApi,TlHelp32,Windows,Winsock,DSSPlot;
 
@@ -55,9 +55,9 @@ type
   function processExists(exeFileName: string): Boolean;
 var
   DSSConnectObj: TDSSConnect;
-
+{$ENDIF}
 implementation
-
+{$IFDEF MSWINDOWS}
 uses
   Monitor,
   Loadshape,
@@ -1325,5 +1325,5 @@ DSSConnectObj := nil; // Instantiate only if connect command issued
 
 finalization
 If Assigned(DSSConnectObj) then  DSSConnectObj.Free;
-
+{$ENDIF}
 end.

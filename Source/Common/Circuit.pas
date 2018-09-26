@@ -25,8 +25,8 @@ interface
 USES
      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
-     AutoAdd, EnergyMeter, NamedObject, CktTree, Graphics, math,     Sparse_Math,
-     vcl.dialogs, MeTIS_Exec;
+     AutoAdd, EnergyMeter, NamedObject, CktTree, math,     Sparse_Math,
+     {$IFDEF MSWINDOWS}Graphics, vcl.dialogs,{$ENDIF} MeTIS_Exec;
 
 
 TYPE
@@ -48,7 +48,11 @@ TYPE
 
     public
       BusName: String;
+      {$IFDEF MSWINDOWS}
       AddMarkerColor: Tcolor;
+      {$ELSE}
+      AddMarkerColor,
+      {$ENDIF}
       AddMarkerCode,
       AddMarkerSize: Integer;
 
@@ -322,12 +326,14 @@ USES
      PDElement, CktElementClass,
      ParserDel,  DSSClassDefs, DSSGlobals, Dynamics,
      Line, Transformer,  Vsource,
-     Utilities,  DSSForms, Executive, SHELLAPI,
+     Utilities, Executive,
      StrUtils
      {$IFDEF MSWINDOWS}
-     ,windows;
+     ,DSSForms,
+     ,SHELLAPI,
+     windows;
      {$ELSE}
-     ;
+     ,CmdForms;
      {$ENDIF}
 
 //----------------------------------------------------------------------------
@@ -612,10 +618,13 @@ END;
 *           Routine created to empty a recently created folder                 *
 ********************************************************************************}
 procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
+{$IFDEF MSWINDOWS}
 var
   SourceLst: string;
   FOS: TSHFileOpStruct;
+{$ENDIF}
 begin
+{$IFDEF MSWINDOWS}
   FillChar(FOS, SizeOf(FOS), 0);
   FOS.wFunc := FO_DELETE;
   SourceLst := Directory + '\' + FileMask + #0;
@@ -627,6 +636,7 @@ begin
   // Add the next line for a "silent operation" (no progress box)
   FOS.fFlags := FOS.fFlags OR FOF_SILENT;
   SHFileOperation(FOS);
+{$ENDIF}
 end;
 {*******************************************************************************
 *         This routine retuns the index of the element within the array        *
@@ -889,8 +899,10 @@ begin
         if Local_temp <> 0 then
         Begin
           text    :=  stringreplace(File_Struc[FS_Idx], 'Redirect ', '',[rfReplaceAll, rfIgnoreCase]);
+          {$IFDEF MSWINDOWS}
           for FS_Idx1 := 2 to NumCkts do
             CopyFile(PChar(Path + '\' + text), PChar(Path + '\zone_' + inttostr(FS_Idx1) + '\' + text), true);
+          {$ENDIF}
         End;
         inc(FS_Idx);
       End
@@ -993,7 +1005,9 @@ var
   TextCmd,
   PDElement,
   FileName      : String;
+  {$IFDEF MSWINDOWS}
   SEInfo        : TShellExecuteInfo;                // Shell Info handle
+  {$ENDIF}
   NodeIdx,
   Num_Pieces,
   Location_idx,                                     // Active Location
@@ -1048,7 +1062,9 @@ Begin
     if fileexists(pchar(FileName + '.part.' + inttostr(Num_pieces))) then    // Checks if the file exists before
       deletefile(pchar(FileName + '.part.' + inttostr(Num_pieces)));
     repeat
+      {$IFDEF MSWINDOWS}
       TextCmd  :=  RunMeTIS(DSSDirectory + MeTISCmd + ' ' + FileName + ' ' + inttostr(Num_pieces));  // Executes MeTIS
+      {$ENDIF}
       Flag      :=  ContainsText(TextCmd,'I detected an error');
       if Flag then       // The # of edges was wrong, use the one proposed by MeTIS
       Begin
@@ -2059,7 +2075,7 @@ constructor TBusMarker.Create;
 begin
   inherited;
   BusName := '';
-  AddMarkerColor := clBlack;
+  AddMarkerColor := {$IFDEF MSWINDOWS}clBlack{$ELSE}0{$ENDIF};
   AddMarkerCode := 4;
   AddMarkerSize := 1;
 end;
