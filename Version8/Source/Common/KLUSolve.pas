@@ -3,7 +3,13 @@ unit KLUSolve;
 interface
 
 uses
-    uComplex, DSSGlobals, Windows,variants, sysutils;
+    uComplex,
+    DSSGlobals,
+    {$IFDEF MSWINDOWS}
+    Windows,
+    {$ENDIF}
+    variants,
+    sysutils;
 
 const
   KLULib = 'klusolve.dll';

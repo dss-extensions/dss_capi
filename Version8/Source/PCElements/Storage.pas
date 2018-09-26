@@ -2641,8 +2641,8 @@ Const
 VAR
     n,
     i2    :integer;
-    Buff  :Array[0..BuffSize] of AnsiChar;
-    pName :pAnsichar;
+    Buff  :Array[0..BuffSize] of {$IFDEF MSWINDOWS}AnsiChar{$ELSE}Char{$ENDIF};
+    pName :{$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF};
 
 Begin
       If i<1 Then Exit;  // Someone goofed
