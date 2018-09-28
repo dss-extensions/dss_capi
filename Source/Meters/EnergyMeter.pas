@@ -751,7 +751,9 @@ Begin
        FVBaseLosses   := OtherEnergyMeter.FVBaseLosses;
        FPhaseVoltageReport  := OtherEnergyMeter.FPhaseVoltageReport;
 
-       FOR i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherEnergyMeter.PropertyValue[i];
+       FOR i := 1 to ParentClass.NumProperties Do
+         // Skip Read Only properties
+         If i<20 Then PropertyValue[i] := OtherEnergyMeter.PropertyValue[i];
 
    End
    ELSE  DoSimpleMsg('Error in EnergyMeter MakeLike: "' + EnergyMeterName + '" Not Found.', 521);
