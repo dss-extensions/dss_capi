@@ -621,7 +621,7 @@ Begin
        107: begin
               for i := 1 to NumOfActors do
               Begin
-                with ActiveCircuit[i].Solution do WaitForActor(i);
+                With ActiveCircuit[i].Solution do WaitForActor(i);
               End;
             end;
        108: begin

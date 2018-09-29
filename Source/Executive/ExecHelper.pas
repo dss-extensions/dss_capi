@@ -3043,7 +3043,7 @@ Begin
 End;
 
 FUNCTION DoDI_PlotCmd:Integer;
-{$IFNDEF DLL_ENGINE}
+{$IF not (defined(DLL_ENGINE) or defined(FPC))}
 Var
     ParamName, Param:String;
     ParamPointer, i:Integer;
@@ -3056,7 +3056,7 @@ Var
     PeakDay:Boolean;
 {$ENDIF}
 Begin
-{$IFNDEF DLL_ENGINE}
+{$IF not (defined(DLL_ENGINE) or defined(FPC))}
      IF DIFilesAreOpen[ActiveActor] Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
 {$IFDEF MSWINDOWS}
      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;

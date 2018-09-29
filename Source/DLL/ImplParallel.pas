@@ -92,7 +92,7 @@ var
   i : Integer;
 begin
   for i := 1 to NumOfActors do
-    with ActiveCircuit[i].Solution do WaitForActor(i);
+    With ActiveCircuit[i].Solution do WaitForActor(i);
 end;
 
 function TParallel.Get_ActorProgress: OleVariant;

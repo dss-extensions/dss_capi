@@ -19,8 +19,10 @@ interface
 
 Uses
     Arraydef, classes,{controls,}
-    {$IFDEF UNIX}
+    {$IFDEF MSWINDOWS}
     DSSForms,
+    {$ELSE}
+    CmdForms,
     {$ENDIF}
     Sysutils, RPN, HashList;
 
@@ -115,11 +117,10 @@ Type
 
 
 implementation
-Uses
+
 {$IFDEF MSWINDOWS}
+Uses
   Dialogs;
-{$ELSE}
-  CmdForms;
 {$ENDIF}
 
 CONST

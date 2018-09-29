@@ -818,7 +818,9 @@ Begin
 
        ClassMakeLike(OtherTransf);
 
-       FOR i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherTransf.PropertyValue[i];
+       FOR i := 1 to ParentClass.NumProperties Do
+         // Skip readonly properties
+          If i<>45 Then PropertyValue[i] := OtherTransf.PropertyValue[i];
        Result := 1;
    End
    ELSE  DoSimpleMsg('Error in Transf MakeLike: "' + TransfName + '" Not Found.', 113);
