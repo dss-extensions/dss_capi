@@ -46,11 +46,11 @@ type
     procedure MatrixPlotMsg(MatrixType : Integer);
   end;
 
-  function flat_int2str (number:integer): AnsiString;
+  function flat_int2str (number:integer): UTF8String;
   function flatten2JSON (Model: string; Name: string; PlotType: string;
     Xlabel: string; X_axis: pDoubleArray2d; Ylabels: pStringArray1d;
     Y_axis: pDoubleArray2d; Phase: pIntegerArray1d; Z_axis: pDoubleArray2d;
-    PD_Elements: pStringArray2d; Bus_names: pStringArray1d): AnsiString;
+    PD_Elements: pStringArray2d; Bus_names: pStringArray1d): UTF8String;
   function StrippedOfNonAscii(const s: string): string;
   function processExists(exeFileName: string): Boolean;
 var
@@ -185,7 +185,7 @@ begin
   End;
 end;
 
-function flat_int2str (number:integer): AnsiString;
+function flat_int2str (number:integer): UTF8String;
 var
   temp_str : Array of Byte;
 begin
@@ -194,13 +194,13 @@ begin
   temp_str[1]  := byte(number shr 16);
   temp_str[2]  := byte(number shr 8);
   temp_str[3]  := byte(number);
-  SetString(Result, PAnsiChar(temp_str), length(temp_str));
+  SetString(Result, PUTF8Char(temp_str), length(temp_str));
 end;
 
 function flatten2JSON (Model: string; Name: string; PlotType: string;
   Xlabel: string; X_axis: pDoubleArray2d; Ylabels: pStringArray1d;
   Y_axis: pDoubleArray2d; Phase: pIntegerArray1d; Z_axis: pDoubleArray2d;
-  PD_Elements: pStringArray2d; Bus_names: pStringArray1d): AnsiString;
+  PD_Elements: pStringArray2d; Bus_names: pStringArray1d): UTF8String;
 var
   o: TJSONObject;
   x,x2: TJSONArray;
@@ -307,7 +307,7 @@ begin
       bus_n.Add(Bus_names^[i]);
 
   finally
-    Result := AnsiString(o.ToString);
+    Result := UTF8String(o.ToString);
     o.Free;
   end;
 end;
@@ -485,7 +485,7 @@ end;
 //////////////////////////////// MSG functions /////////////////////////////////
 procedure TDSSConnect.MonitorPlotMsg(ObjectName: string);
 var
-  MSG : AnsiString;
+  MSG : UTF8String;
   pMon:TMonitorObj;
   activesave :integer;
   tempS: String;
@@ -650,7 +650,7 @@ end;
 procedure TDSSConnect.LoadshapePlotMsg(ObjectName: string);
 var
   ActiveLSObject: TLoadshapeObj;
-  MSG : AnsiString;
+  MSG : UTF8String;
   sinterfal: double;
   npts: integer;
   i, k: Integer;
@@ -768,7 +768,7 @@ end;
 
 procedure TDSSConnect.ProfilePlotMsg(ObjectName: string);
 var
-  MSG : AnsiString;
+  MSG : UTF8String;
   iEnergyMeter       :Integer;
   ActiveEnergyMeter  :TEnergyMeterObj;
   PresentCktElement  :TDSSCktElement;
@@ -852,7 +852,7 @@ end;
 
 procedure TDSSConnect.ScatterPlotMsg;
 var
-  MSG : AnsiString;
+  MSG : UTF8String;
   NumBuses,NumPDelements,Nvalues,iV,jj,NodeIdx : integer;
   counter,i,k : integer;
   pBus : TDSSBus;
@@ -968,7 +968,7 @@ end;
 
 procedure TDSSConnect.EvolutionPlotMsg;
 var
-  MSG : AnsiString;
+  MSG : UTF8String;
   ObjClass, ObjName:String;
   handle:Integer;
   load_names: StringArray1d;
@@ -1173,7 +1173,7 @@ end;
 
 procedure TDSSConnect.MatrixPlotMsg(MatrixType : Integer);
 var
-  MSG : AnsiString;
+  MSG : UTF8String;
   ArrSize,IMIdx,i,
   Counter : Integer;
 

@@ -5,17 +5,17 @@ TYPE
    pDSSCallBacks = ^TDSSCallBacks;  {Pointer to callback structure}
    TDSSCallBacks = Packed Record
 
-        MsgCallBack: Procedure (S : {$IFDEF MSWINDOWS}pAnsiChar {$ELSE} pChar {$ENDIF}; Maxlen:Cardinal);Stdcall; {Make use of DSS Message handling}
+        MsgCallBack: Procedure (S : pUTF8Char; Maxlen:Cardinal);Stdcall; {Make use of DSS Message handling}
 
         {Routines for using DSS Parser.  This allows you to write models that accept
          syntax like other DSS scripts.}
         GetIntValue: Procedure(var i : Integer);Stdcall; {Get next param as an integer}
         GetDblValue: Procedure(var x : Double); Stdcall;  {Get next param as a double}
-        GetStrValue: Procedure(s : {$IFDEF MSWINDOWS}pAnsiChar{$ELSE} pChar {$ENDIF}; maxlen : Cardinal); Stdcall;
+        GetStrValue: Procedure(s : pUTF8Char ; maxlen : Cardinal); Stdcall;
              {Get next param as a string <= maxlen characters  (Cardinal = 32-bit unsigned)}
              {caller must allocate space for s (Maxlen chars)}
-        LoadParser:  Procedure(S : {$IFDEF MSWINDOWS}pAnsiChar{$ELSE} pChar {$ENDIF}; maxlen : Cardinal); Stdcall; // Copies a string into a special instance of the DSS parser
-        NextParam:   Function (ParamName : {$IFDEF MSWINDOWS}pAnsiChar{$ELSE} pChar {$ENDIF}; Maxlen : Cardinal):Integer; Stdcall;
+        LoadParser:  Procedure(S : pUTF8Char; maxlen : Cardinal); Stdcall; // Copies a string into a special instance of the DSS parser
+        NextParam:   Function (ParamName : pUTF8Char; Maxlen : Cardinal):Integer; Stdcall;
              {Advance to the next parameter and
               Get name of the param just retrieved, if one was given.
               Returns length of parameter found.  If 0, then end of string.
@@ -23,8 +23,8 @@ TYPE
               Copies the string to the location specified by s up to maxlen characters.
               Caller must allocate space (Maxlen chars)}
 
-        DoDSSCommand:             Procedure(S : {$IFDEF MSWINDOWS}pAnsiChar{$ELSE} pChar {$ENDIF}; Maxlen : Cardinal); StdCall;
-        GetActiveElementBusNames: Procedure(Name1 : {$IFDEF MSWINDOWS}pAnsiChar{$ELSE} pChar {$ENDIF}; Len1 : Cardinal; Name2 : {$IFDEF MSWINDOWS}pAnsiChar{$ELSE} pChar {$ENDIF}; Len2 : Cardinal); StdCall;
+        DoDSSCommand:             Procedure(S : pUTF8Char; Maxlen : Cardinal); StdCall;
+        GetActiveElementBusNames: Procedure(Name1 : pUTF8Char; Len1 : Cardinal; Name2 : pUTF8Char; Len2 : Cardinal); StdCall;
         GetActiveElementVoltages: Procedure(Var NumVoltages : Integer; V : pComplexArray); StdCall;
         GetActiveElementCurrents: Procedure(Var NumCurrents : Integer; Curr : pComplexArray; ActorID : Integer); StdCall;
         GetActiveElementLosses:   Procedure(Var TotalLosses, LoadLosses, NoLoadLosses : Complex; ActorID : Integer); StdCall;
@@ -47,10 +47,10 @@ TYPE
         GetTimeHr:                Function(ActorID: Integer) : Double; StdCall; // returns time as a double in hours
 
         GetPublicDataPtr:         Procedure(var pPublicData : Pointer; Var PublicDataBytes : Integer; ActorID : Integer); StdCall;
-        GetActiveElementName:     Function(FullName : {$IFDEF MSWINDOWS}pAnsiChar{$ELSE} pChar {$ENDIF}; MaxNameLen : Cardinal; ActorID : Integer) : Integer; StdCall;
+        GetActiveElementName:     Function(FullName : pUTF8Char; MaxNameLen : Cardinal; ActorID : Integer) : Integer; StdCall;
         GetActiveElementPtr:      Function(ActorID : Integer) : Pointer; StdCall;  // Returns pointer to active circuit element
         ControlQueuePush:         Function(Const Hour:Integer; Const Sec:Double; Const Code, ProxyHdl:Integer; Owner:Pointer; ActorID : Integer):Integer; StdCall;
-        GetResultStr:             Procedure(S : {$IFDEF MSWINDOWS}pAnsiChar{$ELSE} pChar {$ENDIF}; Maxlen : Cardinal); StdCall;
+        GetResultStr:             Procedure(S : pUTF8Char; Maxlen : Cardinal); StdCall;
 
    End;
 

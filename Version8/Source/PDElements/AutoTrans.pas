@@ -827,7 +827,9 @@ Begin
 
        ClassMakeLike(OtherTransf);
 
-       For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherTransf.PropertyValue[i];
+       For i := 1 to ParentClass.NumProperties Do
+          // skip read only properties
+          if i<> 45 then PropertyValue[i] := OtherTransf.PropertyValue[i];
        Result := 1;
    End
    ELSE  DoSimpleMsg('Error in AutoTrans MakeLike: "' + AutoTransfName + '" Not Found.', 100113);

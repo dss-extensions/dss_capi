@@ -221,7 +221,7 @@ var
     readableEndOfPipe, writeableEndOfPipe: THandle;
     start       : TStartUpInfo;
     ProcessInfo : TProcessInformation;
-    Buffer      : PAnsiChar;
+    Buffer      : PUTF8Char;
     BytesRead   : DWORD;
     AppRunning  : DWORD;
     AppReturn   : String;

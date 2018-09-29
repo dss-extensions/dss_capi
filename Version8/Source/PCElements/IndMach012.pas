@@ -666,7 +666,8 @@ Begin
        // Finally initialize all the property value strings to be the same as
        // the copied element
        For i := 1 to ParentClass.NumProperties Do
-           FPropertyValue^[i] := OtherIndMach012.FPropertyValue^[i];
+          // Skip read only properties
+          If i<>5 then FPropertyValue^[i] := OtherIndMach012.FPropertyValue^[i];
 
        Result := 1;
    End

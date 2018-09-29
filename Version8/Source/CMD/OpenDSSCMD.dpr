@@ -207,14 +207,46 @@ Begin
 End;
 
 procedure ExecuteProgram;
+var
+  i       : Integer;
+  DSSCMD  : String;
 begin
 {Intialize the internal interfaces so they're ready to go}
   IsDLL := TRUE;
   IsMultiThread := True;
+{Writes some text to introduce OpenDSS}
+  WriteLn('********************************************************************');
+  WriteLn('*            OpenDSS for Red Hat Linux V 8.2.1                     *');
+  WriteLn('* Copyright (c) 2008-2018, Electric Power Research Institute, Inc. *');
+  WriteLn('*                   All rights reserved.                           *');
+  WriteLn('********************************************************************');
+
 {Create one instance of DSS executive whenever the DSS Engine is init'd}
   DSSExecutive := TExecutive.Create;  // Start the DSS when DSS interface is created
   DSSExecutive.CreateDefaultDSSItems;
-  raise Exception.Create('Unforeseen exception');
+
+	writeln('Startup Directory: ', StartupDirectory);
+	DataDirectory[ActiveActor]    := StartupDirectory;
+	OutputDirectory[ActiveActor]  := StartupDirectory;
+
+  if ParamCount > 0 then
+  Begin
+    DSSCMD  :=  'Compile '+ paramstr(1)+'';   // Takes only the first argument
+    ShowMessage(DSSCMD);
+    with DSSExecutive do
+      Command :=  DSSCMD;
+  End
+  else
+  begin
+    with DSSExecutive do
+      Command :=  'Compile C:\OpenDSS\Version8\Source\CMD\IEEE13Nodeckt.dss';
+{		repeat begin
+			write('>>');
+			readln(DSSCMD);
+			DSSExecutive.Command := DSSCMD;
+			writeln(GlobalResult);
+		end until UserFinished (DSSCMD);   }
+  end;
 end;
 
 
@@ -223,7 +255,7 @@ begin
     ExecuteProgram;
   except
     // Handle error condition
-    WriteLn('Program terminated due to an exception');
+    WriteLn('Phase 2');
     // Set ExitCode <> 0 to flag error condition (by convention)
     ExitCode := 1;
   end;

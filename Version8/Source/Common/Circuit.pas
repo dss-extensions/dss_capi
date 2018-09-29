@@ -330,7 +330,7 @@ USES
      StrUtils
      {$IFDEF MSWINDOWS}
      ,DSSForms,
-     ,SHELLAPI,
+     SHELLAPI,
      windows;
      {$ELSE}
      ,CmdForms;

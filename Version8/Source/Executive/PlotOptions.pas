@@ -294,7 +294,10 @@ Begin
                   Else If Length(Param)=1 then PhasesToPlot := Parser[ActiveActor].IntValue;
              {$ENDIF}
              End;
-
+         22: Begin
+              ProfileScale := PROFILEPUKM;
+              if CompareTextShortest (Param, '120KFT') = 0 then ProfileScale := PROFILE120KFT;
+             End;
        Else
        End;
 
