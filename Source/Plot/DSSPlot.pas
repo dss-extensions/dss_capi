@@ -2403,7 +2403,7 @@ Var
    i, Nread, RecordSize, RecordBytes: Cardinal;
    sngBuffer: Array [1 .. 100] of single;      // a big buffer
    StrBuffer: TMonitorStrBuffer;
-   pStrBuffer: PAnsichar;
+   pStrBuffer: PUTF8char;
    time: Double;
    FirstRecord, Hours: Boolean;
    ChannelNames: Array of String;

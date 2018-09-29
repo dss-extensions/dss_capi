@@ -440,8 +440,9 @@ Begin
      CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
      CommandList.Abbrev := TRUE;
 
-
+//{$IFDEF MSWINDOWS}
      GeneratorClass := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('generator'));
+//{$ENDIF}
 
      SystemMeter := TSystemMeter.Create;
 
@@ -711,7 +712,9 @@ Begin
        FVBaseLosses   := OtherEnergyMeter.FVBaseLosses;
        FPhaseVoltageReport  := OtherEnergyMeter.FPhaseVoltageReport;
 
-       FOR i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherEnergyMeter.PropertyValue[i];
+       FOR i := 1 to ParentClass.NumProperties Do
+         // Skip Read Only properties
+         If i<20 Then PropertyValue[i] := OtherEnergyMeter.PropertyValue[i];
 
    End
    ELSE  DoSimpleMsg('Error in EnergyMeter MakeLike: "' + EnergyMeterName + '" Not Found.', 521);

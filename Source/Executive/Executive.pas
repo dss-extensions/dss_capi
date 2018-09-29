@@ -92,6 +92,8 @@ USES ExecCommands, ExecOptions,
      Utilities, Solution, DSSClass, IniRegSave,
 {$IFDEF MSWINDOWS}
      DSSForms,
+{$ELSE}
+     CmdForms,
 {$ENDIF}
      KLUSolve;
 
@@ -142,8 +144,9 @@ Begin
      CommandList.Free;
      OptionList.Free;
      Circuits.Free;
-
+//{$IFDEF MSWINDOWS}
      DisposeDSSClasses;
+//{$ENDIF}
      Parser[ActiveActor].Free;
 
      Inherited Destroy;
@@ -228,9 +231,7 @@ begin
             {Now, Start over}
           CreateDSSClasses;
           CreateDefaultDSSItems;
-{$IFDEF MSWINDOWS}
           RebuildHelpForm := True; // because class strings have changed
-{$ENDIF}
           // In case the actor hasn't been destroyed
           if ActorHandle[ActiveActor] <> nil then
           Begin
@@ -241,9 +242,9 @@ begin
           End;
        End;
 
-       {$IFDEF MSWINDOWS}
+{$IFDEF MSWINDOWS}
        If Not IsDLL Then ControlPanel.UpdateElementBox ;
-       {$ENDIF}
+{$ENDIF}
 
        DefaultEarthModel     := DERI;
        LogQueries            := FALSE;
@@ -266,8 +267,8 @@ begin
        CreateDSSClasses;
        Parser[ActiveActor]  :=  Tparser.Create;
        CreateDefaultDSSItems;
-{$IFDEF MSWINDOWS}
        RebuildHelpForm := True; // because class strings have changed
+{$IFDEF MSWINDOWS}
        If Not IsDLL Then ControlPanel.UpdateElementBox ;
 {$ENDIF}
        {Prepare for new variables}

@@ -36,7 +36,7 @@ TYPE
 
       public
 
-        FEdit:         Procedure(s:{$IFDEF MSWINDOWS}pAnsichar{$ELSE}pchar{$ENDIF}; Maxlen:Cardinal); Stdcall; // send string to user model to handle
+        FEdit:         Procedure(s:pUTF8char; Maxlen:Cardinal); Stdcall; // send string to user model to handle
         FInit:         procedure(V, I:pComplexArray);Stdcall;   // For dynamics
         FCalc:         Procedure(V, I:pComplexArray); stdcall; // returns Currents or sets Pshaft
         FIntegrate:    Procedure; stdcall; // Integrates any state vars
@@ -52,7 +52,7 @@ TYPE
         FGetAllVars:   Procedure(Vars:pDoubleArray);StdCall;  // Get all vars
         FGetVariable:  Function(var I:Integer):Double;StdCall;// Get a particular var
         FSetVariable:  Procedure(var i:Integer; var value:Double); StdCall;
-        FGetVarName:   Procedure(var VarNum:Integer; VarName:{$IFDEF MSWINDOWS}pAnsichar{$ELSE}pchar{$ENDIF}; maxlen:Cardinal);StdCall;
+        FGetVarName:   Procedure(var VarNum:Integer; VarName:pUTF8char; maxlen:Cardinal);StdCall;
 
         // this property loads library (if needed), sets the procedure variables, and makes a new instance
         // old reference is freed first
@@ -136,8 +136,7 @@ end;
 
 procedure TPVsystemUserModel.Set_Edit(const Value: String);
 begin
-        If FID <> 0 Then FEdit({$IFDEF MSWINDOWS}pansichar(AnsiString(Value)){$ELSE}
-        pchar(String(Value)){$ENDIF}, Length(Value));
+        If FID <> 0 Then FEdit(pUTF8Char(UTF8String(Value)), Length(Value));
         // Else Ignore
 end;
 

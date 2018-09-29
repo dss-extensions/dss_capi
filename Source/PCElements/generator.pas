@@ -2630,7 +2630,7 @@ Var
     n,
     i2    :integer;
     Buff  :Array[0..BuffSize] of {$IFDEF MSWINDOWS}AnsiChar{$ELSE}char{$ENDIF};
-    pName :{$IFDEF MSWINDOWS}pAnsichar{$ELSE}pChar{$ENDIF};
+    pName :pUTF8char;
     
 begin
     n:=0;
@@ -2650,7 +2650,7 @@ begin
               i2 := i-NumGenVariables;
               If i2 <= n Then
                 Begin
-                 // DLL functions require AnsiString type
+                 // DLL functions require AnsiString (UTF8String) type
                  UserModel.FGetVarName(i2, pName, BuffSize);
                  Result := String(pName);
                  Exit;

@@ -16,7 +16,7 @@ Uses ArrayDef, uComplex;
 VAR
    CallBackRoutines :TDSSCallBacks;
 
-PROCEDURE DoSimpleMsgCallback(S:{$IFDEF MSWINDOWS}pAnsiChar{$ELSE} pChar {$ENDIF}; maxlen:Cardinal); StdCall; // Call back for user-written models
+PROCEDURE DoSimpleMsgCallback(S:pUTF8Char; maxlen:Cardinal); StdCall; // Call back for user-written models
 
 implementation
 
@@ -39,7 +39,7 @@ Var
 
 {====================================================================================================================}
 
-PROCEDURE DoSimpleMsgCallback(S:{$IFDEF MSWINDOWS}pAnsiChar{$ELSE} pChar {$ENDIF}; maxlen:Cardinal); StdCall; // Call back for user-written models
+PROCEDURE DoSimpleMsgCallback(S:pUTF8Char; maxlen:Cardinal); StdCall; // Call back for user-written models
 
 Begin
      DoSimpleMsg(String(s), 9000);
@@ -49,7 +49,7 @@ End;
 
 {====================================================================================================================}
 
-Procedure ParserLoad(S:{$IFDEF MSWINDOWS}pAnsiChar{$ELSE} pChar {$ENDIF}; Maxlen:Cardinal); StdCall;
+Procedure ParserLoad(S:pUTF8Char; Maxlen:Cardinal); StdCall;
 
 Begin
     CallBackParser.CmdString := String(S);
@@ -78,34 +78,32 @@ End;
 
 {====================================================================================================================}
 
-Procedure ParserStrValue(s:{$IFDEF MSWINDOWS}pAnsiChar{$ELSE}pChar{$ENDIF}; Maxlen:Cardinal); StdCall;
+Procedure ParserStrValue(s:pUTF8Char; Maxlen:Cardinal); StdCall;
 
 {Copies null-terminated string into location pointed to by S up to the max chars specified}
 
 Begin
     With CallBackParser Do Begin
-      SysUtils.StrlCopy(s, {$IFDEF MSWINDOWS}pAnsiChar(AnsiString(CB_Param))
-      {$ELSE}pChar(String(CB_Param)){$ENDIF}, Maxlen) ;
+      SysUtils.StrlCopy(s, pUTF8Char(UTF8String(CB_Param)), Maxlen) ;
     End;
 End;
 
 
 {====================================================================================================================}
 
-Function ParserNextParam(ParamName:{$IFDEF MSWINDOWS}pAnsiChar{$ELSE}pChar{$ENDIF}; Maxlen:Cardinal):Integer;Stdcall;
+Function ParserNextParam(ParamName:pUTF8Char; Maxlen:Cardinal):Integer;Stdcall;
 Begin
    With CallBackParser Do Begin
         CB_ParamName  := NextParam ;
         CB_Param      := StrValue;
    End;
-   SysUtils.StrlCopy(ParamName, {$IFDEF MSWINDOWS}pAnsiChar(AnsiString(CB_ParamName))
-   {$ELSE}pChar(String(CB_ParamName)){$ENDIF}, Maxlen) ; // Copies up to Maxlen
+   SysUtils.StrlCopy(ParamName, pUTF8Char(UTF8String(CB_ParamName)), Maxlen) ; // Copies up to Maxlen
    Result := Length(CB_Param);
 End;
 
 {====================================================================================================================}
 
-Procedure DoDSSCommandCallBack(S:{$IFDEF MSWINDOWS}pAnsiChar{$ELSE}pChar{$ENDIF}; Maxlen:Cardinal); StdCall;
+Procedure DoDSSCommandCallBack(S:pUTF8Char; Maxlen:Cardinal); StdCall;
 Begin
      SolutionAbort        := FALSE;
      DSSExecutive.Command := String(S);
@@ -113,29 +111,27 @@ End;
 
 {====================================================================================================================}
 
-Procedure GetActiveElementBusNamesCallBack(Name1:{$IFDEF MSWINDOWS}pAnsiChar{$ELSE}pChar{$ENDIF}; Len1:Cardinal;
-          Name2:{$IFDEF MSWINDOWS}pAnsiChar{$ELSE}pChar{$ENDIF}; Len2:Cardinal); StdCall;
+Procedure GetActiveElementBusNamesCallBack(Name1:pUTF8Char; Len1:Cardinal;
+          Name2:pUTF8Char; Len2:Cardinal); StdCall;
   {Get first two bus names of active Circuit Element for labeling graphs, etc.}
   {Coordinate must be defined else returns null string}
 Var
    CktElement :TDSSCktElement;
    BusIdx     :Integer;
 Begin
-   SysUtils.StrlCopy(Name1, {$IFDEF MSWINDOWS}pAnsiChar(''){$ELSE}pChar(''){$ENDIF}, Len1) ;  // Initialize to null
-   SysUtils.StrlCopy(Name2, {$IFDEF MSWINDOWS}pAnsiChar(''){$ELSE}pChar(''){$ENDIF}, Len2) ;
+   SysUtils.StrlCopy(Name1, pUTF8Char(''), Len1) ;  // Initialize to null
+   SysUtils.StrlCopy(Name2, pUTF8Char(''), Len2) ;
    If ActiveCircuit[ActiveActor] <> Nil Then Begin
      CktElement :=  ActiveCircuit[ActiveActor].Activecktelement ;
      If CktElement <> Nil Then Begin
      {First bus}
        BusIdx := CktElement.Terminals^[1].busref;
        If BusIdx > 0 Then With  ActiveCircuit[ActiveActor].Buses^[BusIdx]  Do
-         If CoordDefined Then SysUtils.StrlCopy(Name1, {$IFDEF MSWINDOWS}pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].BusList.Get(Busidx)))
-                              {$ELSE}pChar(String(ActiveCircuit[ActiveActor].BusList.Get(Busidx))){$ENDIF}, Len1) ;
+         If CoordDefined Then SysUtils.StrlCopy(Name1,pUTF8Char(UTF8String(ActiveCircuit[ActiveActor].BusList.Get(Busidx))), Len1) ;
       {Second bus}
        BusIdx := CktElement.Terminals^[2].busref;
        If BusIdx > 0 Then With  ActiveCircuit[ActiveActor].Buses^[BusIdx] do
-         If CoordDefined Then SysUtils.StrlCopy(Name2, {$IFDEF MSWINDOWS}pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].BusList.Get(Busidx)))
-                              {$ELSE}pChar(String(ActiveCircuit[ActiveActor].BusList.Get(Busidx))){$ENDIF}, Len2) ;
+         If CoordDefined Then SysUtils.StrlCopy(Name2, pUTF8Char(UTF8String(ActiveCircuit[ActiveActor].BusList.Get(Busidx))), Len2) ;
       End; {If CktElement}
    End;  {If ActiveCircuit[ActiveActor]}
 End;
@@ -375,7 +371,7 @@ Begin
 
 End;
 
-Function GetActiveElementNameCallBack(FullName:{$IFDEF MSWINDOWS}pAnsiChar{$ELSE}pChar{$ENDIF}
+Function GetActiveElementNameCallBack(FullName:pUTF8Char
         ; Maxlen:Cardinal; ActorID : Integer) : Integer; StdCall;
 {Maxlen is num of chars the calling program allocates for the string}
 
@@ -388,7 +384,7 @@ Begin
            With ActiveCktElement Do Begin
               S := ParentClass.Name + '.' + Name;
 
-          SysUtils.StrlCopy(FullName, {$IFDEF MSWINDOWS}pAnsiChar(AnsiString(S)){$ELSE}pChar(String(S)){$ENDIF}, Maxlen) ;
+          SysUtils.StrlCopy(FullName, pUTF8Char(UTF8String(S)), Maxlen) ;
           Result := Length(FullName);
         End;
 End;
@@ -403,10 +399,9 @@ Begin
      Result := ActiveCircuit[ActorID].ControlQueue.Push(Hour, Sec, Code, ProxyHdl, Owner, ActorID);
 End;
 
-Procedure GetResultStrCallBack(S:{$IFDEF MSWINDOWS}pAnsiChar{$ELSE}pChar{$ENDIF}; Maxlen:Cardinal); StdCall;
+Procedure GetResultStrCallBack(S:pUTF8Char; Maxlen:Cardinal); StdCall;
 Begin
-     SysUtils.StrlCopy(S, {$IFDEF MSWINDOWS}pAnsiChar(AnsiString( GlobalResult ))
-      {$ELSE}pChar(String( GlobalResult )){$ENDIF}, Maxlen) ;
+     SysUtils.StrlCopy(S, pUTF8Char(UTF8String( GlobalResult )), Maxlen) ;
 End;
 
 {====================================================================================================================}
