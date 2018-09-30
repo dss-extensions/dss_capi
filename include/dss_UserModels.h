@@ -241,7 +241,11 @@ struct TDynamicsRec
 // NOTE: Maxlen argument is to better accommodate Fortran strings.  VB also
 //       Caller must allocate space for pchar values
 
-#define DSS_MODEL_CALLBACK(ret_type, fname) ret_type (__stdcall *fname)
+#ifdef _WIN32
+#    define DSS_MODEL_CALLBACK(ret_type, fname) ret_type (__stdcall *fname)
+#else
+#    define DSS_MODEL_CALLBACK(ret_type,fname ) ret_type (*fname)
+#endif
 
 struct TDSSCallBacks 
 {
@@ -297,9 +301,17 @@ struct TDSSCallBacks
 
 #ifdef __cplusplus
 } // extern "C"
-#define DSS_MODEL_DLL(ret_type) extern "C" __declspec(dllexport) ret_type __stdcall
+#    ifdef _WIN32
+#        define DSS_MODEL_DLL(ret_type) extern "C" __declspec(dllexport) ret_type __stdcall
+#    else
+#        define DSS_MODEL_DLL(ret_type) extern "C" ret_type
+#    endif
 #else
-#define DSS_MODEL_DLL(ret_type) __declspec(dllexport) ret_type __stdcall
+#    ifdef _WIN32
+#        define DSS_MODEL_DLL(ret_type) __declspec(dllexport) ret_type __stdcall
+#    else
+#        define DSS_MODEL_DLL(ret_type) ret_type
+#    endif
 #endif
 
 #undef DSS_MODEL_CALLBACK
