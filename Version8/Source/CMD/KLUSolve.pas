@@ -6,7 +6,11 @@ unit KLUSolve;
 {$IFDEF MSWINDOWS}
 {$DEFINE KLU_CALL:=stdcall;external 'libklusolve'}
 {$ELSE} // Darwin and Unix
-{$linklib klusolve}
+    {$IFDEF DARWIN} 
+        {$linklib libklusolve.dylib}
+    {$ELSE}
+        {$linklib klusolve}
+    {$ENDIF}
 {$DEFINE KLU_CALL:=cdecl;external}
 {$ENDIF}
 
