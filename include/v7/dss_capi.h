@@ -5,6 +5,21 @@
 //#define DSS_CAPI_V7_DLL __declspec(dllimport)
 #define DSS_CAPI_V7_DLL
 #endif
+
+#ifdef __cplusplus
+#    ifdef _MSC_VER
+#       if _MSC_VER == 1500
+#           include "stdint_compat.h"
+#       else
+#           include <cstdint>
+#       endif
+#    else
+#        include <cstdint>
+#    endif
+#else    
+#    include <stdint.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #else
