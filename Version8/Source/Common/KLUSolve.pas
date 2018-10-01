@@ -4,14 +4,9 @@ unit KLUSolve;
   {$MODE Delphi}
   {$MACRO ON}
   {$IFDEF MSWINDOWS}
-  {$DEFINE KLU_CALL:=stdcall;external KLULib}
+      {$DEFINE KLU_CALL:=stdcall;external KLULib}
   {$ELSE} // Darwin and Unix
-      {$IFDEF DARWIN} 
-          {$linklib libklusolve.dylib}
-      {$ELSE}
-          {$linklib klusolve}
-      {$ENDIF}
-  {$DEFINE KLU_CALL:=cdecl;external}
+      {$DEFINE KLU_CALL:=cdecl;external}
   {$ENDIF}
 {$ENDIF}
 
