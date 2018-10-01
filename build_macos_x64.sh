@@ -1,3 +1,5 @@
+export LDFLAGS=-L`pwd`/lib/darwin_x64/
+
 if [ ! -d "build/units_v7_x64" ]; then
     mkdir build/units_v7_x64
 fi

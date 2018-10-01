@@ -5,9 +5,9 @@ os:
 before_install:
     - |
       if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
-          wget https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.0.4/fpc-3.0.4.intel-macosx.dmg/download -Ofpc.dmg
+          wget https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.0.4/fpc-3.0.4a.intel-macosx.dmg/download -Ofpc.dmg
           sudo hdiutil attach fpc.dmg
-          sudo installer -package /Volumes/fpc-3.0.4.intel-macosx/fpc-3.0.4.intel-macosx.pkg -target /
+          sudo installer -package /Volumes/fpc-3.0.4a.intel-macosx/fpc-3.0.4a.intel-macosx.pkg -target /
       fi
     - |
       if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
@@ -32,6 +32,7 @@ script:
     - cmake -DUSE_SYSTEM_SUITESPARSE=OFF ..
     - cmake --build . --config Release
     - cd ../..
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then file lib/darwin_x64/libklusolve.dylib; fi
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sh build_macos_x64.sh; fi
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sh build_linux_x64.sh; fi
     - ls -lR lib
