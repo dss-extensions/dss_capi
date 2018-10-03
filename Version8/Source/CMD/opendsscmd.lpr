@@ -8,7 +8,7 @@ program opendsscmd;
 {$ENDIF}
 
 { ----------------------------------------------------------
-  Copyright (c) 2008-2014, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2018, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 
@@ -121,11 +121,17 @@ uses
   mathutil in '..\Shared\mathutil.pas',
   MeterClass in '..\Meters\MeterClass.pas',
   MeterElement in '..\Meters\MeterElement.pas',
+  
+  MeTIS_Exec in '..\Common\MeTIS_Exec.pas',  
+  
   Monitor in '..\Meters\Monitor.pas',
   MyDSSClassDefs in 'MyDSSClassDefs.Pas',
   NamedObject in '..\General\NamedObject.pas',
   Notes in '..\Common\Notes.pas',
   OHLineConstants in '..\General\OHLineConstants.pas',
+
+  Parallel_Lib in '..\Parallel_Lib\Parallel_Lib.pas',  
+  
   ParserDel in '..\Parser\ParserDel.pas',
   PCClass in '..\PCElements\PCClass.pas',
   PCElement in '..\PCElements\PCElement.pas',
@@ -148,6 +154,7 @@ uses
   Solution in '..\Common\Solution.pas',
   SolutionAlgs in '..\Common\SolutionAlgs.pas',
   Spectrum in '..\General\Spectrum.pas',
+  Sparse_Math in '..\Common\Sparse_Math.pas',
   StackDef in '..\Shared\StackDef.pas',
   Storage in '..\PCElements\Storage.pas',
   StorageController in '..\Controls\StorageController.pas',
@@ -172,6 +179,7 @@ uses
   XfmrCode in '..\General\XfmrCode.pas',
   XYcurve in '..\General\XYcurve.pas',
   Ymatrix in '..\Common\Ymatrix.pas';
+
 
 
 function UserFinished(Cmd:String):boolean;
