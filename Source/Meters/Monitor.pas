@@ -90,7 +90,7 @@ USES
      Command, MeterClass, Meterelement, DSSClass, Arraydef, ucomplex, utilities, Classes;
 
 TYPE
-    TMonitorStrBuffer = Array[1..256] of {$IFDEF MSWINDOWS} AnsiChar {$ELSE} char {$ENDIF};
+    TMonitorStrBuffer = Array[1..256] of AnsiChar;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
    {This has to be named TDSSMonitor because Delphi has a TMonitor Class and the compiler will get confused}
