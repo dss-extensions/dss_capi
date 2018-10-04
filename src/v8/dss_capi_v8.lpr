@@ -1570,6 +1570,9 @@ exports
     LineSpacings_Get_AllNames, 
     LineSpacings_Get_AllNames_GR,
 
+    Loads_Get_Phases,
+    Loads_Set_Phases,
+
     Reactors_Get_AllNames,
     Reactors_Get_AllNames_GR,
     Reactors_Get_Name,

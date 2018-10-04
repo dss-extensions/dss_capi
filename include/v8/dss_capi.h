@@ -5383,6 +5383,9 @@ extern "C" {
     DSS_CAPI_V8_DLL void LineSpacings_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
     DSS_CAPI_V8_DLL void LineSpacings_Get_AllNames_GR(void);
 
+    DSS_CAPI_V8_DLL int32_t Loads_Get_Phases(void);
+    DSS_CAPI_V8_DLL void Loads_Set_Phases(int32_t Integer);
+
     DSS_CAPI_V8_DLL void Reactors_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
     DSS_CAPI_V8_DLL void Reactors_Get_AllNames_GR(void);
     DSS_CAPI_V8_DLL char* Reactors_Get_Name(void);

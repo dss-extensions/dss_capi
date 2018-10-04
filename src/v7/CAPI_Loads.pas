@@ -84,10 +84,50 @@ procedure Loads_Set_pctSeriesRL(Value: Double);cdecl;
 function Loads_Get_RelWeight():Double;cdecl;
 procedure Loads_Set_RelWeight(Value: Double);cdecl;
 
+// API extensions
+FUNCTION Loads_Get_Phases():Integer;cdecl;
+PROCEDURE Loads_Set_Phases(Value: Integer);cdecl;
+
+
 IMPLEMENTATION
 
 USES CAPI_Constants, DSSGlobals, Executive, Load, SysUtils, math;
 
+TYPE
+    LoadProps = (
+        phases=1, bus1=2, kV=3, kW=4, pf=5, model=6, yearly=7, daily=8, duty=9, growth=10, conn=11, kvar=12, 
+        Rneut=13, Xneut=14, status=15, cls=16, Vminpu=17, Vmaxpu=18, Vminnorm=19, Vminemerg=20, xfkVA=21, 
+        allocationfactor=22, kVA=23, pctmean=24, pctstddev=25, CVRwatts=26, CVRvars=27, kwh=28, kwhdays=29, 
+        Cfactor=30, CVRcurve=31, NumCust=32, ZIPV=33, pctSeriesRL=34, RelWeight=35, Vlowpu=36, 
+        puXharm=37, XRhar=38
+    );
+
+//------------------------------------------------------------------------------
+PROCEDURE LoadPropSideEffects(prop: LoadProps; load: TLoadObj); //incomplete
+begin
+  With load do
+  begin
+    // Some specials ...
+    CASE prop OF
+        LoadProps.phases:  Begin
+            // -> SetNcondsForConnection  // Force Reallocation of terminal info
+            CASE Connection OF
+                0: NConds  := Fnphases +1;
+                1: 
+                    CASE Fnphases OF
+                        1,2: NConds := Fnphases +1; // L-L and Open-delta
+                    ELSE
+                        NConds := Fnphases;
+                    End;
+            ELSE  {nada}
+            End;
+            // <- SetNcondsForConnection
+            UpdateVoltageBases;
+        End;
+    END;
+  end;
+end;
+//------------------------------------------------------------------------------
 function ActiveLoad: TLoadObj;
 begin
   Result := nil;
@@ -898,4 +938,32 @@ begin
   if elem <> nil then elem.RelWeighting := Value;
 end;
 //------------------------------------------------------------------------------
+function Loads_Get_Phases():Integer;cdecl;
+var
+    pLoad: TLoadObj;
+begin
+    Result := 0;
+    pLoad := ActiveLoad;
+    if pLoad <> Nil
+    THEN Begin
+        Result := pLoad.Nphases;
+    End
+end;
+//------------------------------------------------------------------------------
+PROCEDURE Loads_Set_Phases(Value: Integer);cdecl;
+var
+    pLoad: TLoadObj;
+begin
+    pLoad := ActiveLoad;
+    if pLoad <> Nil
+    THEN Begin
+        if (Value <> pLoad.NPhases) then
+        begin
+            pLoad.NPhases := Value;
+            LoadPropSideEffects(LoadProps.phases, pLoad);
+        end;
+    End
+end;
+//------------------------------------------------------------------------------
+
 END.
