@@ -198,6 +198,12 @@ procedure TMyApplication.DoRun;
 var
   ErrorMsg, Cmd: String;
 begin
+	{Writes some text to introduce OpenDSS}
+	WriteLn('********************************************************************');
+	WriteLn('*                 OpenDSS for Red Hat Linux                        *');
+	WriteLn('* Copyright (c) 2008-2018, Electric Power Research Institute, Inc. *');
+	WriteLn('*                   All rights reserved.                           *');
+	WriteLn('********************************************************************');
 	NoFormsAllowed := True;
 	DSSExecutive := TExecutive.Create;  // Make a DSS object
 	DSSExecutive.CreateDefaultDSSItems;
@@ -223,17 +229,17 @@ begin
   end;
 
 	if paramcount > 0 then begin
-		Cmd := 'compile ' + ParamStr(1);
-		writeln(Cmd);
-		DSSExecutive.Command := Cmd;
-		writeln('Last Error: ' + DSSExecutive.LastError);
+	  Cmd := 'compile ' + ParamStr(1);
+    writeln(Cmd);
+    DSSExecutive.Command := Cmd;
+		writeln('Output: ' + GlobalResult);
 		Terminate;
 	end else begin
 		repeat begin
 			write('>>');
 			readln(Cmd);
 			DSSExecutive.Command := Cmd;
-			writeln(DSSExecutive.LastError);
+			writeln(GlobalResult);
 		end until UserFinished (Cmd);
 	end;
 
