@@ -482,8 +482,8 @@ Begin
     IntervalHrs   := 1.0;
 
     InitPropertyValues(0);
-    ADiakoptics_Ready   :=  False;   // A-Diakoptics needs to be initialized
-    ActorMA_Msg[ActiveActor]  :=  TEvent.Create(nil, False, False,'');
+    ADiakoptics_Ready         :=  False;   // A-Diakoptics needs to be initialized
+    ActorMA_Msg[ActiveActor]  :=  TEvent.Create(nil, True, False,'');
 End;
 
 // ===========================================================================================
@@ -503,7 +503,7 @@ Begin
 //      SetLogFile ('c:\\temp\\KLU_Log.txt', 0);
 
       Reallocmem(HarmonicList,0);
-
+      ActorMA_Msg[ActiveActor].SetEvent;
       ActorMA_Msg[ActiveActor].Free;
 // Sends a message to the working actor
       if ActorHandle[ActiveActor] <> nil then
@@ -545,10 +545,15 @@ var
 
 Begin
   WaitFlag  :=  True;
-  while WaitFlag do
+  if ActorStatus[ActorID] <> 0 then
   Begin
-    if ActorMA_Msg[ActorID].WaitFor(20000) <> wrTimeout then
-      WaitFlag  :=  False;
+    while WaitFlag do
+    Begin
+        if ActorMA_Msg[ActorID].WaitFor(100) <> wrTimeout then
+          WaitFlag  :=  False
+        else
+          if ActorStatus[ActorID] = 0 then WaitFlag  :=  False;
+    End;
   End;
 End;
 // ===========================================================================================
@@ -612,12 +617,7 @@ Try
       // If the parallel mode is not active, Waits until the actor finishes
       if not Parallel_enabled then
       Begin
-        WaitFlag  :=  True;
-        while WaitFlag do
-        Begin
-          if ActorMA_Msg[ActorID].WaitFor(20000) <> wrTimeout then
-            WaitFlag  :=  False;
-        End;
+        WaitForActor(ActorID);
        {$IFDEF MSWINDOWS}
         if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
         {$ENDIF}
@@ -2451,7 +2451,7 @@ begin
   ActorActive               :=  True;
   Processing                :=  False;
   {$IFDEF MSWINDOWS}              // Only for windows
-//  Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+  Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
   Parallel.Set_Thread_affinity(handle,local_CPU);
   Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
   {$ENDIF}
@@ -2572,7 +2572,7 @@ procedure TSolver.CallCallBack;
 
 procedure TSolver.Notify_Main;
 Begin
-  ActorMA_Msg[ActorID].SetEvent;
+    ActorMA_Msg[ActorID].SetEvent;
 End;
 
 procedure TSolver.DoTerminate;        // Is the end of the thread
@@ -2583,6 +2583,7 @@ begin
     Processing                :=  False;
     ActorStatus[ActorID]      :=  0;      // Global to indicate that the actor is ready
     ActorMA_Msg[ActorID].SetEvent;
+    ActorMsg.SetEvent;
     ActorMsg.Free;
     inherited;
 End;
