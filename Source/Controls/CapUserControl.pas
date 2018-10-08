@@ -55,7 +55,7 @@ TYPE
 
       public
 
-        FEdit:    Procedure(s:pUTF8char; Maxlen:Cardinal); Stdcall; // send string to user model to handle
+        FEdit:    Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
 
         Procedure Select;
         Procedure UpdateModel;
@@ -162,7 +162,7 @@ end;
 
 procedure TCapUserControl.Set_Edit(const Value: String);
 begin
-     If FID <> 0 Then FEdit(pUTF8char(UTF8String(Value)), Length(Value));
+     If FID <> 0 Then FEdit(pAnsichar(AnsiString(Value)), Length(Value));
 end;
 
 procedure TCapUserControl.Set_Name(const Value:String);

@@ -290,11 +290,11 @@ Begin
       ActiveDSSClass[ActiveActor] := DSSClassList[ActiveActor].Get(LastClassReferenced[ActiveActor]);
       RegEx1:=TPerlRegEx.Create;
 //      RegEx1.Options:=[preCaseLess];
-      RegEx1.Expression:=UTF8String(Pattern);
+      RegEx1.Expression:=AnsiString(Pattern);
       If ActiveDSSClass[ActiveActor].First>0 then pObj:=ActiveDSSObject[ActiveActor] else pObj := Nil;
       else  pObj  :=  nil;
       while pObj <> Nil do begin
-        RegEx1.Subject:=UTF8String(pObj.Name);
+        RegEx1.Subject:=AnsiString(pObj.Name);
         if RegEx1.Match then begin
           Parser[ActiveActor].Position:=Params;
           ActiveDSSClass[ActiveActor].Edit(ActiveActor);
@@ -330,7 +330,7 @@ Begin
       ActiveDSSClass[ActiveActor] := DSSClassList[ActiveActor].Get(LastClassReferenced[ActiveActor]);
       RegEx1:=TPerlRegEx.Create;
       RegEx1.Options:=[preCaseLess];
-      RegEx1.RegEx:=Pattern; // UTF8String(Pattern);
+      RegEx1.RegEx:=Pattern; // AnsiString(Pattern);
       If ActiveDSSClass[ActiveActor].First>0 then pObj:=ActiveDSSObject[ActiveActor] else pObj := Nil;
       while pObj <> Nil do begin
         RegEx1.Subject:= pObj.Name; //(pObj.Name);

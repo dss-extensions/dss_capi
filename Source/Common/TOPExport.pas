@@ -40,7 +40,7 @@ TYPE
        Title2,
        Title3,
        Title4,
-       Title5  :Array[0..79] of {$IFDEF MSWINDOWS}UTF8CHAR{$ELSE}Widechar{$ENDIF};  // Fixed length 80-byte string  space
+       Title5  :Array[0..79] of AnsiCHAR;  // Fixed length 80-byte string  space
     End;
 
     TOutFile32 = Class(Tobject)
@@ -54,7 +54,7 @@ TYPE
           {constructor Create(Owner: TObject);}
           Procedure Open;
           Procedure Close;
-          Procedure WriteHeader(const t_start, t_stop,h:Double; const NV, NI,NameSize:Integer; const Title:{$IFDEF MSWINDOWS}UTF8String{$ELSE}string{$ENDIF});
+          Procedure WriteHeader(const t_start, t_stop,h:Double; const NV, NI,NameSize:Integer; const Title:{$IFDEF MSWINDOWS}AnsiString{$ELSE}string{$ENDIF});
           Procedure WriteNames(var Vnames, Cnames:TStringList);
           Procedure WriteData(Const t:Double; Const V, Curr:pDoubleArray);
           Procedure OpenR;  {Open for Read Only}
@@ -133,7 +133,7 @@ BEGIN
 
 END;
 
-Procedure TOutFile32.WriteHeader(const t_start, t_stop, h:Double; const NV, NI,NameSize:Integer; const Title:{$IFDEF MSWINDOWS}UTF8String{$ELSE}string{$ENDIF});
+Procedure TOutFile32.WriteHeader(const t_start, t_stop, h:Double; const NV, NI,NameSize:Integer; const Title:{$IFDEF MSWINDOWS}AnsiString{$ELSE}string{$ENDIF});
 
 VAR
    NumWrite:Integer;
@@ -166,7 +166,7 @@ BEGIN
          IDXData := IDXCurrentNames + NCurrents * CurrNameSize;
          IdxBaseData := 0;
 {$IFDEF MSWINDOWS}
-         sysutils.StrCopy(Title1,pUTF8char(Title));
+         sysutils.StrCopy(Title1,pAnsichar(Title));
 {$ELSE}
          sysutils.StrCopy(Title1,pWidechar(Title));
 {$ENDIF}
@@ -188,14 +188,14 @@ Procedure TOutFile32.WriteNames(var Vnames, Cnames:TStringList);
 VAR
    NumWrite : Integer;
    i:integer;
-   Buf:Array[0..120] of {$IFDEF MSWINDOWS}UTF8Char{$ELSE}WideChar{$ENDIF};  //120 char buffer to hold names  + null terminator
+   Buf:Array[0..120] of {$IFDEF MSWINDOWS}AnsiChar{$ELSE}WideChar{$ENDIF};  //120 char buffer to hold names  + null terminator
 
 BEGIN
 
      If Header.NVoltages > 0 Then
      For i:=0 to Vnames.Count-1 Do Begin
 {$IFDEF MSWINDOWS}
-        Sysutils.StrCopy(Buf, pUTF8Char(UTF8String(Vnames.Strings[i])));    // Assign string to a buffer
+        Sysutils.StrCopy(Buf, pAnsiChar(AnsiString(Vnames.Strings[i])));    // Assign string to a buffer
 {$ELSE}
         Sysutils.StrCopy(Buf, pWideChar(String(Vnames.Strings[i])));    // Linux
 {$ENDIF}
@@ -206,7 +206,7 @@ BEGIN
      If Header.NCurrents > 0 Then
      For i:=0 to Cnames.Count-1 Do Begin
 {$IFDEF MSWINDOWS}
-        Sysutils.StrCopy(Buf, pUTF8char(UTF8String(Cnames.Strings[i])));    // Assign string to a buffer
+        Sysutils.StrCopy(Buf, pAnsichar(AnsiString(Cnames.Strings[i])));    // Assign string to a buffer
 {$ELSE}
         Sysutils.StrCopy(Buf, pWidechar(String(Cnames.Strings[i])));    // Linux
 {$ENDIF}
