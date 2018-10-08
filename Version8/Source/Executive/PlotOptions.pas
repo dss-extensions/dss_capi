@@ -213,8 +213,8 @@ Begin
                'L': PlotType := ptLoadshape;
                'M': IF CompareTextShortest('mon', Param)=0 Then PlotType := ptMonitorplot
                     {$IFDEF MSWINDOWS}ELSE PlotType := ptMatrixplot{$ENDIF};
-               'P': {$IFDEF MSWINDOWS}IF CompareTextShortest('pro', Param)=0 Then PlotType := ptProfile
-                    ELSE PlotType := ptPriceShape{$ENDIF};
+               'P': IF CompareTextShortest('pro', Param)=0 Then PlotType := ptProfile
+                    ELSE PlotType := ptPriceShape;
                'S': {$IFDEF MSWINDOWS}PlotType := ptScatterPlot{$ENDIF};
                'T': {$IFDEF MSWINDOWS}PlotType := ptTshape{$ENDIF};
                'D': Begin

@@ -7,7 +7,7 @@ unit TCP_IP;
 }
 
 interface
-{$IFDEF MSWINDOWS}
+
 uses
   System.Win.ScktComp,SysUtils,System.JSON,ShellApi,TlHelp32,Windows,Winsock,DSSPlot;
 
@@ -46,18 +46,18 @@ type
     procedure MatrixPlotMsg(MatrixType : Integer);
   end;
 
-  function flat_int2str (number:integer): UTF8String;
+  function flat_int2str (number:integer): AnsiString;
   function flatten2JSON (Model: string; Name: string; PlotType: string;
     Xlabel: string; X_axis: pDoubleArray2d; Ylabels: pStringArray1d;
     Y_axis: pDoubleArray2d; Phase: pIntegerArray1d; Z_axis: pDoubleArray2d;
-    PD_Elements: pStringArray2d; Bus_names: pStringArray1d): UTF8String;
+    PD_Elements: pStringArray2d; Bus_names: pStringArray1d): AnsiString;
   function StrippedOfNonAscii(const s: string): string;
   function processExists(exeFileName: string): Boolean;
 var
   DSSConnectObj: TDSSConnect;
-{$ENDIF}
+
 implementation
-{$IFDEF MSWINDOWS}
+
 uses
   Monitor,
   Loadshape,
@@ -185,7 +185,7 @@ begin
   End;
 end;
 
-function flat_int2str (number:integer): UTF8String;
+function flat_int2str (number:integer): AnsiString;
 var
   temp_str : Array of Byte;
 begin
@@ -194,13 +194,13 @@ begin
   temp_str[1]  := byte(number shr 16);
   temp_str[2]  := byte(number shr 8);
   temp_str[3]  := byte(number);
-  SetString(Result, PUTF8Char(temp_str), length(temp_str));
+  SetString(Result, PAnsiChar(temp_str), length(temp_str));
 end;
 
 function flatten2JSON (Model: string; Name: string; PlotType: string;
   Xlabel: string; X_axis: pDoubleArray2d; Ylabels: pStringArray1d;
   Y_axis: pDoubleArray2d; Phase: pIntegerArray1d; Z_axis: pDoubleArray2d;
-  PD_Elements: pStringArray2d; Bus_names: pStringArray1d): UTF8String;
+  PD_Elements: pStringArray2d; Bus_names: pStringArray1d): AnsiString;
 var
   o: TJSONObject;
   x,x2: TJSONArray;
@@ -307,7 +307,7 @@ begin
       bus_n.Add(Bus_names^[i]);
 
   finally
-    Result := UTF8String(o.ToString);
+    Result := AnsiString(o.ToString);
     o.Free;
   end;
 end;
@@ -485,7 +485,7 @@ end;
 //////////////////////////////// MSG functions /////////////////////////////////
 procedure TDSSConnect.MonitorPlotMsg(ObjectName: string);
 var
-  MSG : UTF8String;
+  MSG : AnsiString;
   pMon:TMonitorObj;
   activesave :integer;
   tempS: String;
@@ -650,7 +650,7 @@ end;
 procedure TDSSConnect.LoadshapePlotMsg(ObjectName: string);
 var
   ActiveLSObject: TLoadshapeObj;
-  MSG : UTF8String;
+  MSG : AnsiString;
   sinterfal: double;
   npts: integer;
   i, k: Integer;
@@ -768,7 +768,7 @@ end;
 
 procedure TDSSConnect.ProfilePlotMsg(ObjectName: string);
 var
-  MSG : UTF8String;
+  MSG                :AnsiString;
   iEnergyMeter       :Integer;
   ActiveEnergyMeter  :TEnergyMeterObj;
   PresentCktElement  :TDSSCktElement;
@@ -852,7 +852,7 @@ end;
 
 procedure TDSSConnect.ScatterPlotMsg;
 var
-  MSG : UTF8String;
+  MSG : AnsiString;
   NumBuses,NumPDelements,Nvalues,iV,jj,NodeIdx : integer;
   counter,i,k : integer;
   pBus : TDSSBus;
@@ -968,7 +968,7 @@ end;
 
 procedure TDSSConnect.EvolutionPlotMsg;
 var
-  MSG : UTF8String;
+  MSG : AnsiString;
   ObjClass, ObjName:String;
   handle:Integer;
   load_names: StringArray1d;
@@ -1173,16 +1173,17 @@ end;
 
 procedure TDSSConnect.MatrixPlotMsg(MatrixType : Integer);
 var
-  MSG : UTF8String;
+  MSG : AnsiString;
   ArrSize,IMIdx,i,
   Counter : Integer;
 
   x_axis,y_axis,z_axis: DoubleArray2d;
-  y_labels: StringArray1d;
-  Bus_Names : StringArray1d;
-  phase: IntegerArray1d;
-  PD_Elements: StringArray2d;
-  model_path: string;
+  y_labels            : StringArray1d;
+  Bus_Names           : StringArray1d;
+  phase               : IntegerArray1d;
+  PD_Elements         : StringArray2d;
+  model_path,
+  Title               : string;
 
 begin
   if(MySocket.Socket.Connected=False) then
@@ -1216,6 +1217,7 @@ begin
           End;
           inc(Counter);
         end;
+        Title   :=  'Incidence matrix';
       end
       else                                // Laplacian matrix
       Begin
@@ -1232,6 +1234,7 @@ begin
           End;
           inc(Counter);
         end;
+        Title   :=  'Laplacian matrix';
       End;
     end;
   end;
@@ -1297,7 +1300,7 @@ begin
   End;
 
   model_path:= StringReplace(LastFileCompiled, '\', '\\', [rfReplaceAll]);
-  MSG:=flatten2JSON(model_path,'Incidence matrix',
+  MSG:=flatten2JSON(model_path,Title,
     'matrix','',@x_axis,@y_labels,@y_axis,@phase,@Z_axis,
     @PD_Elements,@Bus_Names);
   MySocket.Socket.SendText(flat_int2str(Length(MSG)));//Sends the length
@@ -1325,5 +1328,5 @@ DSSConnectObj := nil; // Instantiate only if connect command issued
 
 finalization
 If Assigned(DSSConnectObj) then  DSSConnectObj.Free;
-{$ENDIF}
+
 end.
