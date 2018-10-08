@@ -12,10 +12,10 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 52393 $
-// File generated on 9/19/2018 11:40:43 AM from Type Library described below.
+// File generated on 10/8/2018 2:29:14 PM from Type Library described below.
 
 // ************************************************************************  //
-// Type Lib: C:\Users\prdu001\OpenDSS\Source\DLL\OpenDSSengine (1)
+// Type Lib: C:\Users\prdu001\OpenDSS\Version7\Source\DLL\OpenDSSengine (1)
 // LIBID: {8BFDE413-245A-4514-B151-B16DCC243796}
 // LCID: 0
 // Helpfile:
@@ -133,6 +133,8 @@ const
   CLASS_Vsources: TGUID = '{0823B8BD-AD34-452B-974A-F46BA25D49EA}';
   IID_ILineCodes: TGUID = '{43140E77-9EA6-4156-A686-ABFAFFE8A059}';
   CLASS_LineCodes: TGUID = '{B6120B3A-7958-4650-AC18-2A53E89209A8}';
+  IID_IGICSources: TGUID = '{F76B5BDE-9132-44FB-8115-70BF1B065FA4}';
+  CLASS_GICSources: TGUID = '{D0D4455C-A5CA-4B26-ABB4-2CC3798D260E}';
 
 // *********************************************************************//
 // Declaration of Enumerations defined in Type Library
@@ -335,6 +337,8 @@ type
   IVsourcesDisp = dispinterface;
   ILineCodes = interface;
   ILineCodesDisp = dispinterface;
+  IGICSources = interface;
+  IGICSourcesDisp = dispinterface;
 
 // *********************************************************************//
 // Declaration of CoClasses defined in Type Library
@@ -380,6 +384,7 @@ type
   PVSystems = IPVSystems;
   Vsources = IVsources;
   LineCodes = ILineCodes;
+  GICSources = IGICSources;
 
 
 // *********************************************************************//
@@ -3607,6 +3612,78 @@ type
   end;
 
 // *********************************************************************//
+// Interface: IGICSources
+// Flags:     (4416) Dual OleAutomation Dispatchable
+// GUID:      {F76B5BDE-9132-44FB-8115-70BF1B065FA4}
+// *********************************************************************//
+  IGICSources = interface(IDispatch)
+    ['{F76B5BDE-9132-44FB-8115-70BF1B065FA4}']
+    function Get_AllNames: OleVariant; safecall;
+    function Get_Bus1: WideString; safecall;
+    function Get_Bus2: WideString; safecall;
+    function Get_Name: WideString; safecall;
+    procedure Set_Name(const Value: WideString); safecall;
+    function Get_Phases: Integer; safecall;
+    procedure Set_Phases(Value: Integer); safecall;
+    function Get_EN: Double; safecall;
+    procedure Set_EN(Value: Double); safecall;
+    function Get_EE: Double; safecall;
+    procedure Set_EE(Value: Double); safecall;
+    function Get_Lat1: Double; safecall;
+    procedure Set_Lat1(Value: Double); safecall;
+    function Get_Lat2: Double; safecall;
+    procedure Set_Lat2(Value: Double); safecall;
+    function Get_Lon1: Double; safecall;
+    procedure Set_Lon1(Value: Double); safecall;
+    function Get_Lon2: Double; safecall;
+    procedure Set_Lon2(Value: Double); safecall;
+    function Get_Volts: Double; safecall;
+    procedure Set_Volts(Value: Double); safecall;
+    function Get_Count: Integer; safecall;
+    function Get_First: Integer; safecall;
+    function Get_Next: Integer; safecall;
+    property AllNames: OleVariant read Get_AllNames;
+    property Bus1: WideString read Get_Bus1;
+    property Bus2: WideString read Get_Bus2;
+    property Name: WideString read Get_Name write Set_Name;
+    property Phases: Integer read Get_Phases write Set_Phases;
+    property EN: Double read Get_EN write Set_EN;
+    property EE: Double read Get_EE write Set_EE;
+    property Lat1: Double read Get_Lat1 write Set_Lat1;
+    property Lat2: Double read Get_Lat2 write Set_Lat2;
+    property Lon1: Double read Get_Lon1 write Set_Lon1;
+    property Lon2: Double read Get_Lon2 write Set_Lon2;
+    property Volts: Double read Get_Volts write Set_Volts;
+    property Count: Integer read Get_Count;
+    property First: Integer read Get_First;
+    property Next: Integer read Get_Next;
+  end;
+
+// *********************************************************************//
+// DispIntf:  IGICSourcesDisp
+// Flags:     (4416) Dual OleAutomation Dispatchable
+// GUID:      {F76B5BDE-9132-44FB-8115-70BF1B065FA4}
+// *********************************************************************//
+  IGICSourcesDisp = dispinterface
+    ['{F76B5BDE-9132-44FB-8115-70BF1B065FA4}']
+    property AllNames: OleVariant readonly dispid 201;
+    property Bus1: WideString readonly dispid 202;
+    property Bus2: WideString readonly dispid 203;
+    property Name: WideString dispid 204;
+    property Phases: Integer dispid 205;
+    property EN: Double dispid 206;
+    property EE: Double dispid 207;
+    property Lat1: Double dispid 208;
+    property Lat2: Double dispid 209;
+    property Lon1: Double dispid 210;
+    property Lon2: Double dispid 211;
+    property Volts: Double dispid 212;
+    property Count: Integer readonly dispid 213;
+    property First: Integer readonly dispid 214;
+    property Next: Integer readonly dispid 215;
+  end;
+
+// *********************************************************************//
 // The Class CoText provides a Create and CreateRemote method to
 // create instances of the default interface IText exposed by
 // the CoClass Text. The functions are intended to be used by
@@ -4086,6 +4163,18 @@ type
     class function CreateRemote(const MachineName: string): ILineCodes;
   end;
 
+// *********************************************************************//
+// The Class CoGICSources provides a Create and CreateRemote method to
+// create instances of the default interface IGICSources exposed by
+// the CoClass GICSources. The functions are intended to be used by
+// clients wishing to automate the CoClass objects exposed by the
+// server of this typelibrary.
+// *********************************************************************//
+  CoGICSources = class
+    class function Create: IGICSources;
+    class function CreateRemote(const MachineName: string): IGICSources;
+  end;
+
 implementation
 
 uses System.Win.ComObj;
@@ -4488,6 +4577,16 @@ end;
 class function CoLineCodes.CreateRemote(const MachineName: string): ILineCodes;
 begin
   Result := CreateRemoteComObject(MachineName, CLASS_LineCodes) as ILineCodes;
+end;
+
+class function CoGICSources.Create: IGICSources;
+begin
+  Result := CreateComObject(CLASS_GICSources) as IGICSources;
+end;
+
+class function CoGICSources.CreateRemote(const MachineName: string): IGICSources;
+begin
+  Result := CreateRemoteComObject(MachineName, CLASS_GICSources) as IGICSources;
 end;
 
 end.
