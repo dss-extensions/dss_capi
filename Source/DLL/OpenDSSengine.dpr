@@ -216,7 +216,8 @@ uses
   ConnectOptions in '..\Executive\ConnectOptions.pas',
   TCP_IP in '..\TCP_IP\TCP_IP.pas',
   GICsource in '..\PCElements\GICsource.pas',
-  AutoTrans in '..\PDElements\AutoTrans.pas';
+  AutoTrans in '..\PDElements\AutoTrans.pas',
+  ImplGICSources in 'ImplGICSources.pas' {GICSources: CoClass};
 
 exports
   DllGetClassObject,

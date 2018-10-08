@@ -52,10 +52,11 @@ Uses
        ImplIsources,
        DSSClass,
        DSSClassDefs,
-     	 ImplDSSimComs,//Declares the existance of the class
+       ImplDSSimComs,  //Declares the existance of the class
        ImplPVSystems,
        ImplVsources,
        ImplLineCodes,
+       ImplGICSources,
        OpenDSSengine_TLB;
 
 
@@ -102,6 +103,7 @@ Var
    FPVSystems   :IPVSystems; // Added 08-2015
    FVsources    :IVsources;
    FLineCodes   :ILineCodes;
+   FGICSources  :IGICSources;
 
    FPropIndex   :Integer;
    FPropClass   :TDSSClass;
@@ -192,6 +194,8 @@ Begin
      FPVSystems   := TPVSystems.Create;
      FVsources    := TVsources.Create;
      FLineCodes   := TLineCodes.Create;
+     FGICSources  := TGICSources.Create;
+
      FPropIndex := 0;
      FPropClass := Nil;
 
