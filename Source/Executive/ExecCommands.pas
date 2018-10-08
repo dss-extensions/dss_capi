@@ -701,7 +701,7 @@ Begin
         9: CmdResult := DoSetCmd(1);  // changed from DoSolveCmd; //'solve';
        10: CmdResult := DoEnableCmd;
        11: CmdResult := DoDisableCmd;
-       12: CmdResult := {$IFDEF MSWINDOWS}DoPlotCmd{$ELSE}DoPropertyDump{$ENDIF}; //'plot';
+       12: CmdResult := DoPlotCmd; //'plot';
        13: CmdResult := DoResetCmd(ActiveActor); //'resetmonitors';
        15: CmdResult := DoSetCmd(0);  //'set WITH no solve'
        16: CmdResult := DoPropertyDump;
