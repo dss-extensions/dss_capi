@@ -66,9 +66,12 @@ TYPE
         kVA,
         puTap,
         Rpu,      // on transformer MVABase  (1st winding)
+        Rdcpu,    // for GIC solutions; default to 85% of Rpu
+        RdcOhms,
         Rneut,
         Xneut:    Double;
         Y_PPM:    Double;  // Anti Float reactance adder
+        RdcSpecified : Boolean;
 
         {Tap Changer Data}
         TapIncrement,
@@ -103,6 +106,7 @@ TYPE
         // CIM accessors
         FUNCTION  Get_NumTaps(i: Integer): Integer;
         FUNCTION  Get_WdgResistance(i: Integer): Double;
+        FUNCTION  Get_WdgRdc(i: Integer): Double;
         FUNCTION  Get_WdgConnection(i: Integer): Integer;
         FUNCTION  Get_WdgkVA(i: Integer): Double;
         FUNCTION  Get_Xsc(i: Integer): Double;
@@ -200,6 +204,7 @@ TYPE
         Property NumTaps[i:Integer]       :Integer Read Get_NumTaps;
         Property NumberOfWindings         :Integer Read NumWindings;
         Property WdgResistance[i:Integer] :Double  Read Get_WdgResistance;
+        Property WdgRdc[i:Integer]        :Double  Read Get_WdgRdc;
         Property WdgkVA[i:Integer]        :Double  Read Get_WdgkVA;
         Property WdgConnection[i:Integer] :Integer Read Get_WdgConnection;
         Property WdgRneutral[i:Integer]   :Double  Read Get_WdgRneutral;
@@ -238,7 +243,7 @@ USES    DSSClassDefs, DSSGlobals, Sysutils, Utilities, XfmrCode;
 var
    XfmrCodeClass:TXfmrCode;
 
-Const NumPropsThisClass = 46;
+Const NumPropsThisClass = 47;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TTransf.Create;  // Creates superstructure for all Transformer objects
@@ -327,6 +332,7 @@ Begin
      PropertyName[44] := 'LeadLag';
      PropertyName[45] := 'WdgCurrents';
      PropertyName[46] := 'Core';
+     PropertyName[47] := 'RdcOhms';
 
 
      // define Property help values
@@ -415,6 +421,8 @@ Begin
      PropertyHelp[45] := '(Read only) Makes winding currents available via return on query (? Transformer.TX.WdgCurrents). ' +
                          'Order: Phase 1, Wdg 1, Wdg 2, ..., Phase 2 ...';
      PropertyHelp[46] := '{Shell*|5-leg|3-Leg|1-phase} Core Type. Used for GIC analysis';
+     PropertyHelp[47] := 'Winding dc resistance in OHMS. Useful for GIC analysis. From transformer test report. ' +
+                         'Defaults to 85% of %R property';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -514,6 +522,7 @@ Begin
            44: HVLeadsLV := InterpretLeadLag(Param);
            45: PropertyValue[45] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
            46: strCoreType := Param;
+           47: Winding^[ActiveWinding].RdcOhms := Parser.DblValue;
          ELSE
            // Inherited properties
               ClassEdit(ActiveTransfObj, ParamPointer - NumPropsThisClass)
@@ -548,6 +557,7 @@ Begin
           37: pctLoadLoss := (Winding^[1].Rpu + Winding^[2].Rpu) * 100.0;  // Update
           41..43: XHLChanged := True;
           46: CoreType := InterpretCoreType(Param); // Assign integer number
+          47: Winding^[ActiveWinding].RdcSpecified := TRUE;
          ELSE
          End;
 
@@ -787,6 +797,8 @@ Begin
            kVA        := OtherTransf.Winding^[i].kVA;
            puTAP      := OtherTransf.Winding^[i].puTAP;
            Rpu        := OtherTransf.Winding^[i].Rpu;
+           RdcOhms    := OtherTransf.Winding^[i].RdcOhms;
+           RdcSpecified  := OtherTransf.Winding^[i].RdcSpecified;
            RNeut      := OtherTransf.Winding^[i].RNeut;
            Xneut      := OtherTransf.Winding^[i].Xneut;
            // copy the taps
@@ -1024,9 +1036,20 @@ Begin
 
       END;
 
-   {Base rating of Winding 1 }
+  {Base rating of Winding 1 }
      VABase := Winding^[1].kVA * 1000.0;
 
+   // Set Rdc parameters for each winding.
+   For i := 1 to NumWindings Do
+     With Winding^[i] Do Begin
+         if RdcSpecified then Rdcpu := RdcOhms/(SQR(VBase)/ VABase)
+         Else Begin
+            Rdcpu := 0.85 * Rpu;
+            RdcOhms := Rdcpu * SQR(VBase)/ VABase;
+         End;
+     End;
+
+ 
      For i := 1 to NumWindings do Winding^[i].ComputeAntiFloatAdder(ppm_FloatFactor, VABase/FNPhases);
 
    { Normal and Emergency terminal current Rating for UE check}
@@ -1067,8 +1090,8 @@ begin
             3:  Begin   // if WDG= was ever used write out arrays ...
                  For i := 12 to 16 Do
                    Write(F, Format(' %s=%s', [PropertyName^[i], GetPropertyValue(i) ]));
-                 For i := 1 to Numwindings do
-                   Write(F, Format(' wdg=%d %sR=%.7g', [i, '%', Winding^[i].Rpu *100.0]));
+                 For i := 1 to Numwindings do With Winding^[i] Do
+                   Write(F, Format(' wdg=%d %sR=%.7g RdcOhms=%.7g', [i, '%', Rpu *100.0, RdcOhms]));
             End;
             4..9: {do Nothing}; // Ignore these properties; use arrays instead
 
@@ -1189,7 +1212,8 @@ Begin
             Writeln(f,'~ kv=', kVLL:0:2);
             Writeln(f,'~ kVA=', kVA:0:1);
             Writeln(f,'~ tap=', putap:0:3);
-            Writeln(f,'~ %r=', (Rpu*100.0):0:2);
+            Writeln(f,'~ %R=', (Rpu*100.0):0:2);
+            Writeln(f,Format('~ RdcOhms=%.7g', [Rdcohms]));
             Writeln(f,'~ rneut=', rneut:0:3);
             Writeln(f,'~ xneut=', xneut:0:3);
         End;
@@ -1306,6 +1330,9 @@ Begin
      kVA        := 1000.0;
      puTap      := 1.0;
      Rpu        := 0.002;
+     Rdcpu      := Rpu * 0.85;  // default value
+     RdcOhms    := Sqr(kVLL)/ (kVA/1000.0) * Rdcpu;
+     RdcSpecified := FALSE;
      Rneut      := -1.0;    // default to open - make user specify connection
      Xneut      := 0.0;
      ComputeAntiFloatAdder(1.0e-6, kVA/3.0/1000.0);     //  1 PPM
@@ -1354,6 +1381,13 @@ FUNCTION TTransfObj.Get_WdgResistance(i: Integer): Double;
 Begin
      IF (i > 0) and (i <= NumWindings)
      THEN Result := Winding^[i].Rpu
+     ELSE Result := 0.0;
+end;
+
+FUNCTION TTransfObj.Get_WdgRdc(i: Integer): Double;
+Begin
+     IF (i > 0) and (i <= NumWindings)
+     THEN Result := Winding^[i].Rdcohms
      ELSE Result := 0.0;
 end;
 
@@ -1685,6 +1719,7 @@ begin
                    3: Result := '3-leg';
                    5: Result := '5-Leg';
                End;
+           47: Result := Format('%.7g',[Winding^[ActiveWinding].RdcOhms]);
 
         ELSE
           Result := Inherited GetPropertyValue(index);
@@ -1942,7 +1977,8 @@ begin
 
      For i := 1 to NumWindings do  Begin
          BaseZ :=SQR( Winding^[i].kVLL) / (Winding^[i].kVA/1000.0) ;
-         yR := Cmplx(1.0/(Winding^[i].Rpu * BaseZ), 0.0); // convert to Siemens
+         {Use Rdc to build GIC model}
+         yR := Cmplx(1.0/(Winding^[i].Rdcpu * BaseZ), 0.0); // convert to Siemens
          With Y_Term Do Begin
              idx := 2*i-1;
              SetElement(idx,   idx,   yR);
@@ -2199,6 +2235,8 @@ begin
         kVA          := Obj.Winding^[i].kVA;
         puTAP        := Obj.Winding^[i].puTAP;
         Rpu          := Obj.Winding^[i].Rpu;
+        Rdcohms      := Obj.Winding^[i].Rdcohms;
+        RdcSpecified := Obj.Winding^[i].RdcSpecified;
         RNeut        := Obj.Winding^[i].RNeut;
         Xneut        := Obj.Winding^[i].Xneut;
         TapIncrement := Obj.Winding^[i].TapIncrement;
