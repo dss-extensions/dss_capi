@@ -38,12 +38,19 @@ TYPE
         FphaseShift  :Double;
         Bus2Defined  :Boolean;
 
-        Volts       :Double;
         Vmag        :Double;
         Angle       :Double;
         SrcFrequency:Double;
         LineName    :String;
         pLineElem   :TLineObj;  // Pointer to associated Line
+
+        VN, VE      :Double;  // components of vmag
+
+        LineClass :Tline;
+
+        Procedure GetVterminalForSource;
+        Function  Compute_VLine: Double;
+      public
 
         ENorth,
         EEast,
@@ -51,14 +58,8 @@ TYPE
         Lon1,
         Lat2,
         Lon2        :Double;
-        VN, VE      :Double;  // components of vmag
+        Volts       :Double;
         VoltsSpecified :Boolean;
-
-        LineClass :Tline;
-
-        Procedure GetVterminalForSource;
-        Function  Compute_VLine: Double;
-      public
 
         constructor Create(ParClass:TDSSClass; const SourceName:String);
         destructor  Destroy; override;
