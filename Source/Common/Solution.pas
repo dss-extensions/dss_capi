@@ -2485,6 +2485,7 @@ Begin
   ActorCPU[ActorID] :=  CPU;
   {$IFDEF MSWINDOWS}
   Parallel.Set_Thread_affinity(handle,CPU);
+  Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
   {$ENDIF}
 End;
 
@@ -2503,13 +2504,13 @@ var
   begin
     with ActiveCircuit[ActorID].Solution do
     begin
+
       while ActorActive do
       Begin
         if not Processing then
         begin
           ActorMsg.ResetEvent;
           ActorMsg.WaitFor(INFINITE);
-
             Processing                  := True;
             case MsgType of             // Evaluates the incomming message
             SIMULATE  :                 // Simulates the active ciruit on this actor

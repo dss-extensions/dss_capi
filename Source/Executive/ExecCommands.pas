@@ -610,7 +610,7 @@ Begin
                 GlobalResult          :=  inttostr(NumOfActors);
                 ActiveActor           :=  NumOfActors;
                 ActorCPU[ActiveActor] :=  ActiveActor -1;
-                DSSExecutive := TExecutive.Create;  // Make a DSS object
+                DSSExecutive          :=  TExecutive.Create;  // Make a DSS object
                 Parser[ActiveActor]   :=  TParser.Create;
                 DSSExecutive.CreateDefaultDSSItems;
 //                Create_KLU;

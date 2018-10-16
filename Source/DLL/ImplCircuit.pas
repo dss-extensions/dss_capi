@@ -723,10 +723,10 @@ function TCircuit.Get_SystemY: OleVariant;
 {Return System Y matrix, complex form}
 
 Var
-   iV               :LongWord;
-   i,j,p            :LongWord;
+   iV, nBus, nNZ,
+   i,j,p,
    NValues          :LongWord;
-   hY, nBus, nNZ    :NativeUint;
+   hY               :NativeUint;
    ColPtr, RowIdx   :array of LongWord;
    cVals            :array of Complex;
 
