@@ -12,7 +12,7 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 52393 $
-// File generated on 10/12/2018 3:16:26 PM from Type Library described below.
+// File generated on 10/16/2018 2:07:02 PM from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\Users\prdu001\OpenDSS\Version7\Source\DLL\OpenDSSengine (1)
@@ -699,6 +699,7 @@ type
     function Get_PVSystems: IPVSystems; safecall;
     function Get_Vsources: IVsources; safecall;
     function Get_LineCodes: ILineCodes; safecall;
+    function Get_GICsources: GICSources; safecall;
     property Name: WideString read Get_Name;
     property NumCktElements: Integer read Get_NumCktElements;
     property NumBuses: Integer read Get_NumBuses;
@@ -758,6 +759,7 @@ type
     property PVSystems: IPVSystems read Get_PVSystems;
     property Vsources: IVsources read Get_Vsources;
     property LineCodes: ILineCodes read Get_LineCodes;
+    property GICsources: GICSources read Get_GICsources;
   end;
 
 // *********************************************************************//
@@ -843,6 +845,7 @@ type
     property PVSystems: IPVSystems readonly dispid 236;
     property Vsources: IVsources readonly dispid 237;
     property LineCodes: ILineCodes readonly dispid 238;
+    property GICsources: GICSources readonly dispid 239;
   end;
 
 // *********************************************************************//

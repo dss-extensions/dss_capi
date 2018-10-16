@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 10/12/2018 4:24:54 PM (- $Rev: 12980 $, 26278156).
+// File generated on 10/16/2018 2:07:11 PM (- $Rev: 12980 $, 17237203).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -628,6 +628,8 @@ library OpenDSSengine
     HRESULT _stdcall Vsources([out, retval] IVsources** Value);
     [propget, id(0x000000EE), helpstring("Access the Linecodes library in this circuit")]
     HRESULT _stdcall LineCodes([out, retval] ILineCodes** Value);
+    [propget, id(0x000000EF), helpstring("Connect to GICSources Interface")]
+    HRESULT _stdcall GICsources([out, retval] GICSources** Value);
   };
 
   [
