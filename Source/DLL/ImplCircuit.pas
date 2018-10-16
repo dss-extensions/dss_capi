@@ -96,6 +96,7 @@ type
     function Get_PVSystems: IPVSystems; safecall;
     function Get_Vsources: IVsources; safecall;
     function Get_LineCodes: ILineCodes; safecall;
+    function Get_GICsources: GICSources; safecall;
 //    function Get_Loads: ILoads; safecall;  function ICircuit.Get_Loads = ICircuit_Get_Loads;
 
 //  function ICircuit_Get_Loads: IUnknown; safecall;
@@ -1209,6 +1210,11 @@ end;
 function TCircuit.Get_LineCodes: ILineCodes;
 begin
      Result := FLineCodes as ILineCodes;
+end;
+
+function TCircuit.Get_GICsources: GICSources;
+begin
+     Result := FGICsources as IGICSources;
 end;
 
 initialization
