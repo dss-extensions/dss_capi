@@ -203,7 +203,7 @@ begin
     With ControlPanel.SummaryEdit Do Begin
         ActorsRdy :=  True;
         for USIdx := 1 to NumOfActors do
-          ActorsRdy   := ActorsRdy and (ActorStatus[USIdx] = 0);
+          ActorsRdy   := ActorsRdy and (ActorStatus[USIdx] = 1);
 
         if ActorsRdy then
         Begin
