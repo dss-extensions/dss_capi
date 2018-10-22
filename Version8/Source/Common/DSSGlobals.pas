@@ -239,6 +239,7 @@ VAR
    ConcatenateReports : Boolean;
    IncMat_Ordered     : Boolean;
    Parser             : Array of TParser;
+   AllActors          : Boolean;
 
 {*******************************************************************************
 *    Nomenclature:                                                             *
@@ -1038,6 +1039,8 @@ initialization
     FM_MHandle[ActiveActor]           :=  nil;
     DIFilesAreOpen[ActiveActor]       :=  FALSE;
    end;
+
+   Allactors              :=  False;
    ActiveActor            :=  1;
    NumOfActors            :=  1;
    ActorCPU[ActiveActor]  :=  0;
