@@ -915,6 +915,7 @@ Var
 {$ENDIF}
 Begin
   ActorHandle[ActorID] :=  TSolver.Create(false,ActorCPU[ActorID],ActorID,{$IFNDEF DSS_CAPI}ScriptEd.UpdateSummaryForm{$ELSE}nil{$ENDIF});
+  ActorStatus[ActorID]          :=  1;
 End;
 
 {$IFNDEF FPC}
@@ -1027,6 +1028,7 @@ initialization
     ErrorStrings[ActiveActor].Clear;
     ActorHandle[ActiveActor]          :=  nil;
     Parser[ActiveActor]               :=  nil;
+    ActorStatus[ActiveActor]          :=  1;
 
     OV_MHandle[ActiveActor]           :=  nil;
     VR_MHandle[ActiveActor]           :=  nil;
