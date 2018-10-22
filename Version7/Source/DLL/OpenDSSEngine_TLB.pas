@@ -12,7 +12,7 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 52393 $
-// File generated on 10/8/2018 2:29:14 PM from Type Library described below.
+// File generated on 10/12/2018 3:16:26 PM from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\Users\prdu001\OpenDSS\Version7\Source\DLL\OpenDSSengine (1)
@@ -2237,6 +2237,8 @@ type
     function Get_Next: Integer; safecall;
     function Get_AllNames: OleVariant; safecall;
     function Get_Count: Integer; safecall;
+    function Get_RdcOhms: Double; safecall;
+    procedure Set_RdcOhms(Value: Double); safecall;
     property NumWindings: Integer read Get_NumWindings write Set_NumWindings;
     property XfmrCode: WideString read Get_XfmrCode write Set_XfmrCode;
     property Wdg: Integer read Get_Wdg write Set_Wdg;
@@ -2258,6 +2260,7 @@ type
     property Next: Integer read Get_Next;
     property AllNames: OleVariant read Get_AllNames;
     property Count: Integer read Get_Count;
+    property RdcOhms: Double read Get_RdcOhms write Set_RdcOhms;
   end;
 
 // *********************************************************************//
@@ -2288,6 +2291,7 @@ type
     property Next: Integer readonly dispid 219;
     property AllNames: OleVariant readonly dispid 220;
     property Count: Integer readonly dispid 221;
+    property RdcOhms: Double dispid 226;
   end;
 
 // *********************************************************************//
