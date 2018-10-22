@@ -467,7 +467,11 @@ Begin
                   End
                   else
                   Begin
-                    if Parser[ActiveActor].IntValue <= NumOfActors then ActiveActor  :=  Parser[ActiveActor].IntValue
+                    if Parser[ActiveActor].IntValue <= NumOfActors then
+                    Begin
+                      ActiveActor   :=  Parser[ActiveActor].IntValue;
+                      AllActors     :=  False;
+                    End
                     else
                     begin
                       DoSimpleMsg('The actor does not exists',7002);
@@ -693,7 +697,11 @@ Begin
                   End
                   else
                   Begin
-                    if Parser[ActiveActor].IntValue <= NumOfActors then ActiveActor  :=  Parser[ActiveActor].IntValue
+                    if Parser[ActiveActor].IntValue <= NumOfActors then
+                    Begin
+                      ActiveActor   :=  Parser[ActiveActor].IntValue;
+                      AllActors     :=  False;
+                    End
                     else
                     begin
                       DoSimpleMsg('The actor does not exists',7002);
@@ -917,7 +925,12 @@ Begin
               else AppendGlobalResult(Format('%d' ,[CPU_Cores]));
             end;
           111: AppendGlobalResult(Format('%d' ,[NumOfActors]));
-          112: AppendGlobalResult(Format('%d' ,[ActiveActor]));
+          112: Begin
+                  if AllActors then
+                    AppendGlobalResult('All')
+                  else
+                    AppendGlobalResult(Format('%d' ,[ActiveActor]));
+               End;
           113: AppendGlobalResult(Format('%d' ,[ActorCPU[ActiveActor]]));
           {$IFNDEF FPC}114: ScriptEd.UpdateProgressSummary;{$ENDIF}
           115: if parallel_enabled then AppendGlobalResult('Yes') else AppendGlobalResult('No');
@@ -978,7 +991,12 @@ Begin
               else AppendGlobalResult(Format('%d' ,[CPU_Cores]));
             end;
           111: AppendGlobalResult(Format('%d' ,[NumOfActors]));
-          112: AppendGlobalResult(Format('%d' ,[ActiveActor]));
+          112: Begin
+                  if AllActors then
+                    AppendGlobalResult('All')
+                  else
+                    AppendGlobalResult(Format('%d' ,[ActiveActor]));
+               End;
           113: AppendGlobalResult(Format('%d' ,[ActorCPU[ActiveActor]]));
           115: if parallel_enabled then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           116: if ConcatenateReports then AppendGlobalResult('Yes') else AppendGlobalResult('No');
