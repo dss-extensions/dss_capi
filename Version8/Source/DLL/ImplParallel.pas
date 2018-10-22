@@ -113,8 +113,7 @@ begin
     Result := VarArrayCreate([1, NumOfActors], varInteger);
     for idx := 1 to NumOfActors do
     Begin
-      if ActorHandle[idx].Is_Busy then Result[idx] :=  0
-      else Result[idx] :=  1;
+     REsult[idx] := ActorStatus[idx];
     End;
 end;
 
