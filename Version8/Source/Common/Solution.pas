@@ -488,8 +488,8 @@ Begin
     IntervalHrs   := 1.0;
 
     InitPropertyValues(0);
-    ADiakoptics_Ready   :=  False;   // A-Diakoptics needs to be initialized
-    UIMsg     :=  TEvent.Create(nil, True, False, inttostr(ActiveActor));
+    ADiakoptics_Ready         :=  False;   // A-Diakoptics needs to be initialized
+    ActorMA_Msg[ActiveActor]  :=  TEvent.Create(nil, True, False,'');
 End;
 
 // ===========================================================================================
@@ -509,7 +509,7 @@ Begin
 //      SetLogFile ('c:\\temp\\KLU_Log.txt', 0);
 
       Reallocmem(HarmonicList,0);
-
+      ActorMA_Msg[ActiveActor].SetEvent;
       UIMsg.Free;
 // Sends a message to the working actor
       if ActorHandle[ActiveActor] <> nil then
@@ -551,13 +551,15 @@ var
 
 Begin
       EndFlag :=  True;
-      while EndFlag do
-      Begin
-        UIMsg.WaitFor(1);
-        if Not ActorHandle[ActorID].Terminated then
-          EndFlag :=  ActorHandle[ActorID].Is_Busy
+  if ActorStatus[ActorID] <> 0 then
+  Begin
+    while WaitFlag do
+    Begin
+        if ActorMA_Msg[ActorID].WaitFor(100) <> wrTimeout then
+          WaitFlag  :=  False
         else
-          EndFlag :=  False;
+          if ActorStatus[ActorID] = 0 then WaitFlag  :=  False;
+    End;
       End
 End;
 // ===========================================================================================
@@ -566,6 +568,8 @@ PROCEDURE TSolutionObj.Solve(ActorID : Integer);
 var
 ScriptEd  : TScriptEdit;
 {$ENDIF}
+  WaitFlag : Boolean;
+
 Begin
      ActiveCircuit[ActorID].Issolved := False;
      SolutionWasAttempted[ActorID]   := TRUE;
@@ -600,10 +604,11 @@ Try
     // Creates the actor again in case of being terminated due to an error before
     if ActorHandle[ActorID].Terminated or (ActorHandle[ActorID] = nil)  then
     Begin
-      ActorHandle[ActorID].Free;
+      if ActorHandle[ActorID].Terminated then ActorHandle[ActorID].Free;
       New_Actor(ActorID);
     End;
     {CheckFaultStatus;  ???? needed here??}
+
     // Resets the event for receiving messages from the active actor
       // Updates the status of the Actor in the GUI
       ActorStatus[ActorID]      :=  1;    // Global to indicate that the actor is busy
@@ -612,15 +617,20 @@ Try
 {$ENDIF}
       UIMsg.ResetEvent;
       {$IFDEF MSWINDOWS}QueryPerformanceCounter(GStartTime);{$ENDIF}
+      QueryPerformanceCounter(GStartTime);
+      {$ENDIF}
+
+      ActorMA_Msg[ActorID].ResetEvent;
       // Sends message to start the Simulation
       ActorHandle[ActorID].Send_Message(SIMULATE);
       // If the parallel mode is not active, Waits until the actor finishes
       if not Parallel_enabled then
       Begin
         WaitForActor(ActorID);
-{$IFNDEF FPC}
+       {$IFDEF MSWINDOWS}
         if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
-{$ENDIF}
+        {$ENDIF}
+
       End;
 
 Except
@@ -2332,11 +2342,6 @@ begin
 
 end;
 
-procedure TSolutionObj.UI_message;
-Begin
-  UIMsg.SetEvent;
-End;
-
 procedure TSolutionObj.Set_Year(const Value: Integer);
 begin
       If DIFilesAreOpen[ActiveActor] Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
@@ -2499,14 +2504,14 @@ var
   Thpriority  : String;
 begin
   Inherited Create(Susp);
-  FInfoProc       :=  CallBack;
-  FreeOnTerminate :=  False;
-  ActorID         :=  ID;
-  ActorMsg        :=  TEvent.Create(nil, True, False, 'ActorMsg' + inttostr(ActorID));
-  MsgType         :=  -1;
-  ActorActive     :=  True;
-  Processing      :=  False;
-  {$IFNDEF UNIX}              // Only for windows
+  FInfoProc                 :=  CallBack;
+  FreeOnTerminate           :=  False;
+  ActorID                   :=  ID;
+  ActorMsg                  :=  TEvent.Create(nil, True, False, '');
+  MsgType                   :=  -1;
+  ActorActive               :=  True;
+  Processing                :=  False;
+  {$IFDEF MSWINDOWS}              // Only for windows
   Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
   Parallel.Set_Thread_affinity(handle,local_CPU);
   Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
@@ -2564,50 +2569,58 @@ var
         if not Processing then
         begin
           ActorMsg.ResetEvent;
-          ActorMsg.WaitFor(INFINITE); // Keeps waiting for an incomming message (Event)
-          Processing                  := True;
-          case MsgType of             // Evaluates the incomming message
-          SIMULATE  :                 // Simulates the active ciruit on this actor
-            Begin
-            Case Dynavars.SolutionMode OF
-                SNAPSHOT       : SolveSnap(ActorID);
-                YEARLYMODE     : SolveYearly(ActorID);
-                DAILYMODE      : SolveDaily(ActorID);
-                DUTYCYCLE      : SolveDuty(ActorID);
-                DYNAMICMODE    : SolveDynamic(ActorID);
-                MONTECARLO1    : SolveMonte1(ActorID);
-                MONTECARLO2    : SolveMonte2(ActorID);
-                MONTECARLO3    : SolveMonte3(ActorID);
-                PEAKDAY        : SolvePeakDay(ActorID);
-                LOADDURATION1  : SolveLD1(ActorID);
-                LOADDURATION2  : SolveLD2(ActorID);
-                DIRECT         : SolveDirect(ActorID);
-                MONTEFAULT     : SolveMonteFault(ActorID);  // Monte Carlo Fault Cases
-                FAULTSTUDY     : SolveFaultStudy(ActorID);
-                AUTOADDFLAG    : ActiveCircuit[ActorID].AutoAddObj.Solve(ActorID);
-                HARMONICMODE   : SolveHarmonic(ActorID);
-                GENERALTIME    : SolveGeneralTime(ActorID);
-                HARMONICMODET  : SolveHarmonicT(ActorID);  //Declares the Hsequential-time harmonics
-            Else
-                DosimpleMsg('Unknown solution mode.', 481);
+          ActorMsg.WaitFor(INFINITE);
+
+            Processing                  := True;
+            case MsgType of             // Evaluates the incomming message
+            SIMULATE  :                 // Simulates the active ciruit on this actor
+              Begin
+                Case Dynavars.SolutionMode OF
+                    SNAPSHOT       : SolveSnap(ActorID);
+                    YEARLYMODE     : SolveYearly(ActorID);
+                    DAILYMODE      : SolveDaily(ActorID);
+                    DUTYCYCLE      : SolveDuty(ActorID);
+                    DYNAMICMODE    : SolveDynamic(ActorID);
+                    MONTECARLO1    : SolveMonte1(ActorID);
+                    MONTECARLO2    : SolveMonte2(ActorID);
+                    MONTECARLO3    : SolveMonte3(ActorID);
+                    PEAKDAY        : SolvePeakDay(ActorID);
+                    LOADDURATION1  : SolveLD1(ActorID);
+                    LOADDURATION2  : SolveLD2(ActorID);
+                    DIRECT         : SolveDirect(ActorID);
+                    MONTEFAULT     : SolveMonteFault(ActorID);  // Monte Carlo Fault Cases
+                    FAULTSTUDY     : SolveFaultStudy(ActorID);
+                    AUTOADDFLAG    : ActiveCircuit[ActorID].AutoAddObj.Solve(ActorID);
+                    HARMONICMODE   : SolveHarmonic(ActorID);
+                    GENERALTIME    : SolveGeneralTime(ActorID);
+                    HARMONICMODET  : SolveHarmonicT(ActorID);  //Declares the Hsequential-time harmonics
+                Else
+                    DosimpleMsg('Unknown solution mode.', 481);
+                End;
+                {$IFDEF MSWINDOWS}
+                QueryPerformanceCounter(GEndTime);
+                {$ENDIF}
+                Total_Solve_Time_Elapsed  :=  ((GEndTime-GStartTime)/CPU_Freq)*1000000;
+                Total_Time_Elapsed        :=  Total_Time_Elapsed + Total_Solve_Time_Elapsed;
+                Processing                :=  False;
+                FMessage                  :=  '1';
+                ActorStatus[ActorID]      :=  0;      // Global to indicate that the actor is ready
+
+                // Sends a message to Actor Object (UI) to notify that the actor has finised
+                ActorMA_Msg[ActorID].SetEvent;
+              {$IFDEF MSWINDOWS}
+                if Parallel_enabled then
+                  if Not IsDLL then queue(CallCallBack); // Refreshes the GUI if running asynchronously
+              {$ENDIF}
+                End;
+            EXIT_ACTOR:                // Terminates the thread
+              Begin
+                ActorActive  :=  False;
+              End
+            else                       // I don't know what the message is
+              DosimpleMsg('Unknown Message.', 7010);
             End;
-            {$IFDEF MSWINDOWS}QueryPerformanceCounter(GEndTime);{$ENDIF}
-            Total_Solve_Time_Elapsed  :=  ((GEndTime-GStartTime)/CPU_Freq)*1000000;
-            Total_Time_Elapsed        :=  Total_Time_Elapsed + Total_Solve_Time_Elapsed;
-            Processing                :=  False;
-            FMessage                  :=  '1';
-            ActorStatus[ActorID]      :=  0;      // Global to indicate that the actor is ready
-            // If required, sends a message to UI to notify that the actor has finised
-            if Not Parallel_enabled then Notify_Main
-            else if Not IsDLL then queue(CallCallBack); // Refreshes the GUI if running asynchronously
-            End;
-          EXIT_ACTOR:                // Terminates the thread
-            Begin
-              ActorActive  :=  False;
-            End
-          else                       // I don't know what the message is
-            DosimpleMsg('Unknown Message.', 7010);
-          End;
+
         End;
       end;
     end;
@@ -2620,8 +2633,7 @@ procedure TSolver.CallCallBack;
 
 procedure TSolver.Notify_Main;
 Begin
-  With ActiveCircuit[ActorID].Solution do
-    UI_Message;
+    ActorMA_Msg[ActorID].SetEvent;
 End;
 
 procedure TSolver.DoTerminate;        // Is the end of the thread
@@ -2631,8 +2643,9 @@ begin
     ActorActive               :=  False;
     Processing                :=  False;
     ActorStatus[ActorID]      :=  0;      // Global to indicate that the actor is ready
+    ActorMA_Msg[ActorID].SetEvent;
+    ActorMsg.SetEvent;
     ActorMsg.Free;
-
     inherited;
 End;
 
