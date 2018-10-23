@@ -505,7 +505,6 @@ Begin
 
       Reallocmem(HarmonicList,0);
       ActorMA_Msg[ActiveActor].SetEvent;
-      ActorMA_Msg[ActiveActor].Free;
 // Sends a message to the working actor
       if ActorHandle[ActiveActor] <> nil then
       Begin
@@ -514,6 +513,7 @@ Begin
         ActorHandle[ActiveActor].Free;
         ActorHandle[ActiveActor]  :=  nil;
       End;
+      ActorMA_Msg[ActiveActor].Free;
       Inherited Destroy;
 End;
 
@@ -545,7 +545,7 @@ var
   WaitFlag : Boolean;
 
 Begin
-  WaitFlag  :=  True;
+  WaitFlag  :=  True;   
   if ActorStatus[ActorID] = 0 then
   Begin
     while WaitFlag do
@@ -610,13 +610,12 @@ Try
     // Resets the event for receiving messages from the active actor
       // Updates the status of the Actor in the GUI
       ActorStatus[ActorID]      :=  0;    // Global to indicate that the actor is busy
+      ActorMA_Msg[ActorID].ResetEvent;
+      // Sends message to start the Simulation
 {$IFNDEF FPC}
       if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
 {$ENDIF}
       {$IFDEF MSWINDOWS}QueryPerformanceCounter(GStartTime);{$ENDIF}
-
-      ActorMA_Msg[ActorID].ResetEvent;
-      // Sends message to start the Simulation
       ActorHandle[ActorID].Send_Message(SIMULATE);
       // If the parallel mode is not active, Waits until the actor finishes
       if not Parallel_enabled then
@@ -2570,8 +2569,8 @@ var
       Begin
         if not Processing then
         begin
-          ActorMsg.ResetEvent;
           ActorMsg.WaitFor(INFINITE);
+          ActorMsg.ResetEvent;
             Processing                  := True;
             case MsgType of             // Evaluates the incomming message
             SIMULATE  :                 // Simulates the active ciruit on this actor
@@ -2606,7 +2605,7 @@ var
                 Processing                :=  False;
                 FMessage                  :=  '1';
                 ActorStatus[ActorID]      :=  1;      // Global to indicate that the actor is ready
-
+                
                 // Sends a message to Actor Object (UI) to notify that the actor has finised
                 ActorMA_Msg[ActorID].SetEvent;
               {$IFDEF MSWINDOWS}
