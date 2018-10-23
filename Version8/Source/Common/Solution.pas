@@ -613,7 +613,7 @@ Try
 {$IFNDEF FPC}
       if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
 {$ENDIF}
-      QueryPerformanceCounter(GStartTime);
+      {$IFDEF MSWINDOWS}QueryPerformanceCounter(GStartTime);{$ENDIF}
 
       ActorMA_Msg[ActorID].ResetEvent;
       // Sends message to start the Simulation
@@ -2513,7 +2513,7 @@ begin
   {$ELSE}
   Parallel.Set_Thread_Priority(self,THREAD_PRIORITY_TIME_CRITICAL);
   Parallel.Set_Thread_affinity(handle,local_CPU);
-{$ENDIF}  
+  {$ENDIF}  
 
 end;
 
@@ -2543,8 +2543,13 @@ var
   Parallel  : TParallel_Lib;
 Begin
   ActorCPU[ActorID] :=  CPU;
+  {$IFDEF MSWINDOWS}              // Only for windows
   Parallel.Set_Thread_affinity(handle,CPU);
   Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
+  {$ELSE}
+  Parallel.Set_Thread_Priority(self,THREAD_PRIORITY_TIME_CRITICAL);
+  Parallel.Set_Thread_affinity(handle,CPU);
+  {$ENDIF}  
 End;
 
 {*******************************************************************************
