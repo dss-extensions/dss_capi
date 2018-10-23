@@ -70,6 +70,21 @@ Begin
     
 End;
 
+procedure YMatrix_ZeroInjCurr; cdecl;
+Begin
+    IF ActiveCircuit[ActiveActor] <> Nil THEN ActiveCircuit[ActiveActor].Solution.ZeroInjCurr(ActiveActor);
+end;
+
+procedure YMatrix_GetSourceInjCurrents; cdecl;
+Begin
+    IF ActiveCircuit[ActiveActor] <> Nil THEN ActiveCircuit[ActiveActor].Solution.GetSourceInjCurrents(ActiveActor);
+end;
+
+procedure YMatrix_GetPCInjCurr; cdecl;
+Begin
+    IF ActiveCircuit[ActiveActor] <> Nil THEN ActiveCircuit[ActiveActor].Solution.GetPCInjCurr(ActiveActor);
+end;
+
 procedure YMatrix_Set_SystemYChanged(arg: WordBool); cdecl;
 begin
     ActiveCircuit[ActiveActor].Solution.SystemYChanged := arg;
@@ -78,24 +93,6 @@ end;
 function YMatrix_Get_SystemYChanged(): WordBool; cdecl;
 begin
     Result := ActiveCircuit[ActiveActor].Solution.SystemYChanged;
-end;
-
-procedure YMatrix_ZeroInjCurr; cdecl;
-Begin
-    IF (ActiveCircuit[ActiveActor] <> Nil) THEN 
-        ActiveCircuit[ActiveActor].Solution.ZeroInjCurr(ActiveActor);
-end;
-
-procedure YMatrix_GetSourceInjCurrents; cdecl;
-Begin
-    IF (ActiveCircuit[ActiveActor] <> Nil) THEN 
-        ActiveCircuit[ActiveActor].Solution.GetSourceInjCurrents(ActiveActor);
-end;
-
-procedure YMatrix_GetPCInjCurr; cdecl;
-Begin
-    IF (ActiveCircuit[ActiveActor] <> Nil) THEN 
-        ActiveCircuit[ActiveActor].Solution.GetPCInjCurr(ActiveActor);
 end;
 
 procedure YMatrix_BuildYMatrixD(BuildOps, AllocateVI: longint); cdecl;

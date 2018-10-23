@@ -118,7 +118,7 @@ Begin
       Loss := Cmplx(0.0,0.0);
       WHILE pLine<>nil DO
       Begin
-         CAccum(Loss, pLine.Losses[Activeactor]);
+         CAccum(Loss, pLine.Losses[ActiveActor]);
          pLine := Lines.Next;
       End;
       V[0] := Loss.re * 0.001;
@@ -260,7 +260,7 @@ Begin
        Loss := Cmplx(0.0,0.0);
        WHILE pTransf<>nil DO
        Begin
-          IF pTransf.Issubstation THEN Caccum(Loss, pTransf.Losses[Activeactor]);
+          IF pTransf.Issubstation THEN Caccum(Loss, pTransf.Losses[ActiveActor]);
           pTransf := Transformers.Next;
        End;
        Result[0] := Loss.re * 0.001;
@@ -639,7 +639,8 @@ VAR
    iV               :LongWord;
    i,j,p            :LongWord;
    NValues          :LongWord;
-   hY, nBus, nNZ    :NativeUint;
+   hY               :NativeUint;
+   nBus, nNZ        :LongWord;
    ColPtr, RowIdx   :array of LongWord;
    cVals            :array of Complex;
 
@@ -932,7 +933,7 @@ function Circuit_FirstElement():Integer;cdecl;
 Begin
 
       Result := 0;
-      IF (ActiveCircuit[ActiveActor] <> Nil) and Assigned(ActiveDSSClass) THEN
+      IF (ActiveCircuit[ActiveActor] <> Nil) and Assigned(ActiveDSSClass[ActiveActor]) THEN
       Begin
          Result := ActiveDSSClass[ActiveActor].First;
       End

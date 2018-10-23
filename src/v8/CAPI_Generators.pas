@@ -157,7 +157,7 @@ VAR
     k :integer;
 
 Begin
-    GeneratorClass := DssClassList[ActiveActor].Get(Classnames[ActiveActor].Find('Generator'));
+    GeneratorClass := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('Generator'));
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumGenRegisters - 1) + 1);
     For k := 0 to  NumGenRegisters - 1  Do Begin
        Result[k] := DSS_CopyStringAsPChar(GeneratorClass.RegisterNames[k + 1]);

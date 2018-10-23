@@ -26,7 +26,7 @@ procedure DSS_Set_AllowForms(Value: WordBool);cdecl;
 
 IMPLEMENTATION
 
-USES CAPI_Constants, DSSClassDefs, DSSGlobals, DSSClass, Exechelper, sysUtils, Executive, CmdForms;
+USES CAPI_Constants, DSSClassDefs, DSSGlobals, DSSClass, Exechelper, sysUtils, Executive, ParserDel, CmdForms;
 
 
 procedure DSS_NewCircuit(const Value: PAnsiChar);cdecl;
@@ -69,7 +69,14 @@ end;
 function DSS_Start(code: Integer):WordBool;cdecl;
 {Place any start code here}
 begin
-    Result :=  TRUE;
+  Result :=  TRUE;
+ (*      Reverted to original method. 3/1/17. see dpr file
+      InitializeInterfaces;
+      IsDLL := TRUE;
+    {Create one instance of DSS executive whenever the DSS Engine is init'd}
+      DSSExecutive := TExecutive.Create;  // Start the DSS when DSS interface is created
+      DSSExecutive.CreateDefaultDSSItems;
+  *)
 end;
 //------------------------------------------------------------------------------
 PROCEDURE DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
@@ -83,7 +90,7 @@ Begin
    k:=0;
    For i := 1 to NumIntrinsicClasses Do
    Begin
-      Result[k] := DSS_CopyStringAsPChar(TDSSClass(DssClassList[ActiveActor].Get(i)).Name);
+      Result[k] := DSS_CopyStringAsPChar(TDSSClass(DSSClassList[ActiveActor].Get(i)).Name);
       Inc(k);
    End;
 
@@ -107,7 +114,7 @@ Begin
          k:=0;
          For i := NumIntrinsicClasses+1 To DSSClassList[ActiveActor].ListSize   Do
          Begin
-            Result[k] := DSS_CopyStringAsPChar(TDSSClass(DssClassList[ActiveActor].Get(i)).Name);
+            Result[k] := DSS_CopyStringAsPChar(TDSSClass(DSSClassList[ActiveActor].Get(i)).Name);
             Inc(k);
          End;
      End
@@ -150,7 +157,9 @@ end;
 //------------------------------------------------------------------------------
 procedure DSS_Reset();cdecl;
 begin
-        {Put any code here necessary to reset for specific systems};
+     {Put any code here necessary to reset for specific systems};
+ // revert to original -- DSSExecutive.Free;
+
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_DefaultEditor_AnsiString():AnsiString;inline;

@@ -53,16 +53,18 @@ end;
 FUNCTION LineSpacings_Get_Name_AnsiString():AnsiString;inline;
 Var
    pLineSpacing:TLineSpacingObj;
+
 Begin
    Result := '';  // signify no name
    If ActiveCircuit[ActiveActor] <> Nil Then
    Begin
-        pLineSpacing := LineSpacingClass[ActiveActor].GetActiveObj;
+        pLineSpacing := LineSpacingClass[ActiveActor].GetActiveObj ;
         If pLineSpacing <> Nil Then
         Begin
               Result := pLineSpacing.Name;
         End;
    End;
+
 end;
 
 FUNCTION LineSpacings_Get_Name():PAnsiChar;cdecl;

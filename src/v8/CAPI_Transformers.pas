@@ -534,7 +534,7 @@ begin
   elem := ActiveTransformer;
   if elem <> nil then
   Begin
-      Result := elem.GetWindingCurrentsResult(ActiveActor);
+      Result := elem.GetWindingCurrentsResult(ActiveActor) ;
   End;
 end;
 

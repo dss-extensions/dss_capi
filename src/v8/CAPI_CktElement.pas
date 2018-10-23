@@ -493,7 +493,7 @@ Begin
       NValues := NConds*Nterms;
       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues-1) + 1);
       cBuffer := Allocmem(sizeof(Complex)*NValues);
-      GetPhasePower(cBuffer, Activeactor);
+      GetPhasePower(cBuffer, ActiveActor);
       iV :=0;
       For i := 1 to  NValues DO Begin
            Result[iV] := cBuffer^[i].re*0.001;

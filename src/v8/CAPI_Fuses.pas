@@ -287,7 +287,7 @@ Var
   elem: TFuseObj;
 begin
   elem := FuseClass.GetActiveObj ;
-  if elem <> nil then elem.ControlledElement.Closed [0,ActiveActor] := FALSE; // Open all phases
+  if elem <> nil then elem.ControlledElement.Closed[0,ActiveActor] := FALSE; // Open all phases
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Close();cdecl;

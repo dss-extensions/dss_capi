@@ -107,7 +107,7 @@ begin
               Result := RecloserClass.ElementList.ActiveIndex;
           End
           Else pElem := RecloserClass.ElementList.Next;
-        Until (Result > 0) or (pElem = nil);
+        Until (Result >0) or (pElem = nil);
      End;
 end;
 //------------------------------------------------------------------------------

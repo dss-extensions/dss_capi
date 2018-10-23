@@ -26,7 +26,7 @@ VAR
   k:Integer;
 
 Begin
-    If (ActiveCircuit[ActiveActor] <> Nil) and Assigned(ActiveDSSClass) Then
+    If (ActiveCircuit[ActiveActor] <> Nil) and Assigned(ActiveDSSClass[ActiveActor]) Then
      WITH ActiveCircuit[ActiveActor] DO
      Begin
        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (ActiveDSSClass[ActiveActor].ElementCount-1) + 1);
@@ -99,13 +99,13 @@ end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_NumElements():Integer;cdecl;
 begin
-    if Assigned(ActiveDSSClass[ActiveActor]) then  Result := ActiveDSSCLass[ActiveActor].ElementCount
+    if Assigned(ActiveDSSClass[ActiveActor]) then  Result := ActiveDSSClass[ActiveActor].ElementCount
      Else Result := 0;
 end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_ActiveClassName_AnsiString():AnsiString;inline;
 begin
-     if Assigned(ActiveDSSClass[ActiveActor]) then  Result := ActiveDSSCLass[ActiveActor].Name
+     if Assigned(ActiveDSSClass[ActiveActor]) then  Result := ActiveDSSClass[ActiveActor].Name
      Else Result := '';
 end;
 
@@ -116,7 +116,7 @@ end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_Count():Integer;cdecl;
 begin
-     if Assigned(ActiveDSSClass[ActiveActor]) then  Result := ActiveDSSCLass[ActiveActor].ElementCount
+     if Assigned(ActiveDSSClass[ActiveActor]) then  Result := ActiveDSSClass[ActiveActor].ElementCount
      Else Result := 0;
 end;
 //------------------------------------------------------------------------------

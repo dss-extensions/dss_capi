@@ -122,7 +122,7 @@ Begin
    If ActiveCircuit[ActiveActor] <> Nil Then
    Begin
         pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-        If PMon <> Nil Then Result := pMon.Get_FileName(ActiveActor)
+        If PMon <> Nil Then Result := PMon.Get_FileName(ActiveActor)
         Else Result := '';
    End;
 
@@ -299,7 +299,7 @@ Begin
    If ActiveCircuit[ActiveActor] <> Nil Then
    Begin
         pMon := ActiveCircuit[ActiveActor].Monitors.Active;
-        If PMon <> Nil Then PMon.TranslateToCSV(True,ActiveActor);
+        If PMon <> Nil Then PMon.TranslateToCSV(True, ActiveActor);
    End;
 
 end;
@@ -692,7 +692,7 @@ begin
     if PMon <> Nil then Begin
        pMon.ElementName := Value ;
        pMon.PropertyValue [1] := Value;
-       pMon.RecalcElementData(ActiveActor) ;
+       pMon.RecalcElementData(ActiveActor);
     End;
   end;
 
@@ -716,7 +716,7 @@ begin
     pMon := ActiveCircuit[ActiveActor].Monitors.Active;
     if PMon <> Nil then Begin
        pMon.MeteredTerminal  := Value ;
-       pMon.RecalcElementData(ActiveActor) ;
+       pMon.RecalcElementData(ActiveActor);
     End;
   end;
 

@@ -20,7 +20,7 @@ VAR
    k:Integer;
 begin
   Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
-  IF ActiveCircuit <> Nil THEN
+  IF ActiveCircuit[ActiveActor] <> Nil THEN
    WITH ActiveCircuit[ActiveActor] DO
    Begin
      If ActiveDSSObject[ActiveActor]<>Nil THEN
@@ -46,8 +46,8 @@ end;
 //------------------------------------------------------------------------------
 function DSSElement_Get_Name_AnsiString():AnsiString;inline;
 Begin
-   If ActiveCircuit <> Nil Then
-     if ActiveDSSObject <> Nil then
+   If ActiveCircuit[ActiveActor] <> Nil Then
+     if ActiveDSSObject[ActiveActor] <> Nil then
       WITH ActiveDSSObject[ActiveActor] DO
       Begin
         Result := ParentClass.Name + '.' + Name;
@@ -64,7 +64,7 @@ end;
 function DSSElement_Get_NumProperties():Integer;cdecl;
 begin
   Result := 0;
-  IF ActiveCircuit <> Nil THEN
+  IF ActiveCircuit[ActiveActor] <> Nil THEN
    WITH ActiveCircuit[ActiveActor] DO
    Begin
      If ActiveDSSObject[ActiveActor]<>Nil THEN

@@ -153,7 +153,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure TCOMControlProxyObj.DoPendingAction(const Code, ProxyHdl: Integer; ActorID : Integer);
+procedure TCOMControlProxyObj.DoPendingAction(const Code, ProxyHdl:Integer; ActorID : Integer);
 Var
    Action :pAction;
 begin

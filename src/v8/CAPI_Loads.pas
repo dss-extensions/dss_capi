@@ -153,7 +153,7 @@ VAR
 Begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    IF ActiveCircuit <> Nil THEN
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
      WITH ActiveCircuit[ActiveActor] DO
      If Loads.ListSize > 0 Then
      Begin
@@ -236,7 +236,7 @@ Var
 
 Begin
    Result := 0;
-   If ActiveCircuit <> Nil Then
+   If ActiveCircuit[ActiveActor] <> Nil Then
    Begin
         pLoad := ActiveCircuit[ActiveActor].Loads.Next;
         If pLoad <> Nil Then
@@ -371,7 +371,7 @@ begin
              IF ActiveIndex<>0 THEN Begin
                   TLoadObj(Active).kvarBase := Value;
                   TLoadObj(Active).LoadSpecType := 1;
-                  TLoadObj(Active).RecalcElementData(ActiveActor) ;  // set power factor based on kW, kvar
+                  TLoadObj(Active).RecalcElementData(ActiveActor);  // set power factor based on kW, kvar
              End;
          End;
    End;
@@ -384,7 +384,7 @@ begin
              IF ActiveIndex<>0 THEN Begin
                   TLoadObj(Active).kWBase := Value;
                   TLoadObj(Active).LoadSpecType := 0;
-                  TLoadObj(Active).RecalcElementData(ActiveActor) ; // sets kvar based on kW and pF
+                  TLoadObj(Active).RecalcElementData(ActiveActor); // sets kvar based on kW and pF
              End;
          End;
    End;
@@ -397,7 +397,7 @@ begin
              IF ActiveIndex<>0 THEN Begin
                   TLoadObj(Active).PFNominal := Value;
                   TLoadObj(Active).LoadSpecType := 0;
-                  TLoadObj(Active).RecalcElementData(ActiveActor) ; //  sets kvar based on kW and pF
+                  TLoadObj(Active).RecalcElementData(ActiveActor); //  sets kvar based on kW and pF
              End;
          End;
    End;
@@ -965,4 +965,5 @@ begin
     End
 end;
 //------------------------------------------------------------------------------
+
 END.

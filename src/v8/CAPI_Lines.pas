@@ -414,7 +414,7 @@ begin
   THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
        Result := C0/UnitsConvert * 1.0e9;
   End
-  
+
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_C1():Double;cdecl;
@@ -425,7 +425,7 @@ begin
   THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
        Result := C1/UnitsConvert * 1.0e9;
   End;
-
+  
 end;
 //------------------------------------------------------------------------------
 PROCEDURE Lines_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
@@ -441,7 +441,7 @@ begin
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
   THEN Begin
        WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-         Factor  := TwoPi * BaseFrequency * 1.0e-9 * UnitsConvert;
+         Factor  := TwoPi * BaseFrequency  * 1.0e-9 * UnitsConvert;  // corrected 2.9.2018 RCD
          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
          k := 0;
          FOR i := 1 to NPhases DO
@@ -511,7 +511,7 @@ begin
   THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
        Result := X0/UnitsConvert;
   End;
-
+ 
 end;
 //------------------------------------------------------------------------------
 PROCEDURE Lines_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
@@ -953,6 +953,10 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Units(Value: Integer);cdecl;
+{
+ This code assumes the present value of line units is NONE.
+ The Set functions in this interface all set values in this length unit.
+}
 begin
   IF ActiveCircuit[ActiveActor] <> NIL
   THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)

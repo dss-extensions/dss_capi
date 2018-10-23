@@ -147,7 +147,8 @@ begin
   THEN Begin
        pLineGeometry := LineGeometryClass.GetActiveObj ;
        Result := pLineGeometry.NPhases;
-  End;
+  End
+
 end;
 //------------------------------------------------------------------------------
 PROCEDURE LineGeometries_Set_Phases(Value: Integer);cdecl;
@@ -188,6 +189,7 @@ begin
             Inc(k);
         End;
   End;
+
 end;
 PROCEDURE LineGeometries_Get_Cmatrix_GR(Frequency, Length:double; Units:Integer);cdecl;
 // Same as LineGeometries_Get_Cmatrix but uses global result (GR) pointers

@@ -31,7 +31,7 @@ procedure DSSProgress_Set_PctProgress(Value: Integer);cdecl;
 begin
    If NoFormsAllowed Then Exit;
    InitProgressForm(ActiveActor);
-//   ShowPctProgress ( Value, ActiveActor);
+   // ShowPctProgress ( Value, ActiveActor);
 end;
 //------------------------------------------------------------------------------
 procedure DSSProgress_Show();cdecl;
@@ -39,7 +39,7 @@ begin
    If NoFormsAllowed Then Exit;
         InitProgressForm(ActiveActor);
         ProgressFormCaption( ' ', ActiveActor);
-//        ShowPctProgress(0, ActiveActor);
+        // ShowPctProgress(0, ActiveActor);
 
 end;
 //------------------------------------------------------------------------------

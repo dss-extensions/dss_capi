@@ -50,7 +50,7 @@ Var
   elem: TLoadshapeObj;
 Begin
   Result := '';
-  elem := LoadshapeClass[ActiveActor].GetActiveObj;
+  elem := LoadShapeClass[ActiveActor].GetActiveObj;
   If elem <> Nil Then Result := elem.Name;
 
 end;
@@ -66,10 +66,10 @@ procedure LoadShapes_Set_Name(const Value: PAnsiChar);cdecl;
 begin
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-          If LoadshapeClass[ActiveActor].SetActive(Value) Then
+          If LoadShapeClass[ActiveActor].SetActive(Value) Then
           Begin
-               ActiveLSObject                   := LoadshapeClass[ActiveActor].ElementList.Active ;
-               ActiveDSSObject[ActiveActor]     := ActiveLSObject;
+               ActiveLSObject := LoadShapeClass[ActiveActor].ElementList.Active ;
+               ActiveDSSObject[ActiveActor]    := ActiveLSObject;
           End
           Else Begin
               DoSimpleMsg('Relay "'+ Value +'" Not Found in Active Circuit.', 77003);
@@ -82,7 +82,7 @@ function LoadShapes_Get_Count():Integer;cdecl;
 begin
      Result := 0;
      If ActiveCircuit[ActiveActor] <> Nil Then
-        Result := LoadshapeClass[ActiveActor].ElementList.ListSize;
+        Result := LoadShapeClass[ActiveActor].ElementList.ListSize;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_First():Integer;cdecl;
@@ -92,7 +92,7 @@ begin
      Result := 0;
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-        iElem := LoadshapeClass[ActiveActor].First;
+        iElem := LoadShapeClass[ActiveActor].First;
         If iElem <> 0 Then
         Begin
             ActiveLSObject := ActiveDSSObject[ActiveActor] as TLoadShapeObj;
@@ -108,7 +108,7 @@ begin
      Result := 0;
      If ActiveCircuit[ActiveActor] <> Nil Then
      Begin
-        iElem := LoadshapeClass[ActiveActor].Next;
+        iElem := LoadShapeClass[ActiveActor].Next;
         If iElem <> 0 Then
         Begin
             ActiveLSObject := ActiveDSSObject[ActiveActor] as TLoadShapeObj;

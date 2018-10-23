@@ -19,7 +19,7 @@ USES CAPI_Constants, CAPI_Globals, DSSClass, DSSGlobals, Executive, SysUtils;
 function DSSProperty_Get_Description_AnsiString():AnsiString;inline;
 begin
       Result := '';
-      If (ActiveCircuit<> Nil) and (FPropIndex <> 0) {and (FPropClass <> Nil)} Then
+      If (ActiveCircuit[ActiveActor]<> Nil) and (FPropIndex <> 0) {and (FPropClass <> Nil)} Then
       With  ActiveDSSObject[ActiveActor].ParentClass Do
         If FPropIndex <= NumProperties Then
           Result := PropertyHelp^[FPropIndex];
@@ -34,7 +34,7 @@ end;
 function DSSProperty_Get_Name_AnsiString():AnsiString;inline;
 begin
       Result := '';
-      If (ActiveCircuit<> Nil) and (FPropIndex <> 0) {and (FPropClass <> Nil)} Then
+      If (ActiveCircuit[ActiveActor]<> Nil) and (FPropIndex <> 0) {and (FPropClass <> Nil)} Then
         With  ActiveDSSObject[ActiveActor].ParentClass   Do
         If FPropIndex <= NumProperties Then
           Result := PropertyName^[FPropIndex];
@@ -49,7 +49,7 @@ end;
 function DSSProperty_Get_Val_AnsiString():AnsiString;inline;
 begin
        Result := '';
-      If (ActiveCircuit<> Nil)
+      If (ActiveCircuit[ActiveActor]<> Nil)
       THEN  With ActiveDSSObject[ActiveActor] Do
         If FPropIndex <= ParentClass.NumProperties Then
               Result := PropertyValue[ParentClass.PropertyIdxMap[FPropIndex]];
@@ -63,7 +63,7 @@ end;
 //------------------------------------------------------------------------------
 procedure DSSProperty_Set_Val(const Value: PAnsiChar);cdecl;
 begin
-      If (ActiveCircuit<> Nil)
+      If (ActiveCircuit[ActiveActor]<> Nil)
       THEN  With ActiveDSSObject[ActiveActor] Do
         If FPropIndex <= ParentClass.NumProperties Then
               DSSExecutive.Command := 'Edit ' + ParentClass.Name + '.' + Name + ' ' +
