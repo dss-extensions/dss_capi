@@ -44,10 +44,19 @@ procedure Transformers_Set_Xht(Value: Double);cdecl;
 procedure Transformers_Set_Xlt(Value: Double);cdecl;
 procedure Transformers_Set_Xneut(Value: Double);cdecl;
 function Transformers_Get_Count():Integer;cdecl;
+procedure Transformers_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PInteger); cdecl;
+PROCEDURE Transformers_Get_WdgVoltages_GR();cdecl;
+procedure Transformers_Get_WdgCurrents(var ResultPtr: PDouble; ResultCount: PInteger); cdecl;
+PROCEDURE Transformers_Get_WdgCurrents_GR();cdecl;
+function Transformers_Get_strWdgCurrents(): PAnsiChar; cdecl;
+function Transformers_Get_CoreType(): Integer; cdecl;
+procedure Transformers_Set_CoreType(Value: Integer); cdecl;
+function Transformers_Get_RdcOhms(): Double; cdecl;
+procedure Transformers_Set_RdcOhms(Value: Double); cdecl;
 
 IMPLEMENTATION
 
-USES CAPI_Constants, DSSGlobals, Executive, Transformer, SysUtils, PointerList;
+USES CAPI_Constants, DSSGlobals, Executive, Transformer, SysUtils, PointerList, ucomplex;
 
 function ActiveTransformer: TTransfObj;
 begin
@@ -440,6 +449,143 @@ function Transformers_Get_Count():Integer;cdecl;
 begin
      If Assigned(ActiveCircuit) Then
           Result := ActiveCircuit.Transformers.ListSize;
+end;
+//------------------------------------------------------------------------------
+procedure Transformers_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PInteger); cdecl;
+var
+  Result: PDoubleArray;
+  elem: TTransfObj;
+  TempVoltageBuffer:pComplexArray;
+   i,
+   iV : Integer;
+begin
+  elem := ActiveTransformer;
+  if elem <> nil then
+  Begin
+  if (elem.ActiveWinding > 0) and (elem.ActiveWinding <= elem.NumberOfWindings) Then
+    Begin
+       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*elem.nphases-1) + 1);
+       TempVoltageBuffer := AllocMem(Sizeof(Complex)*elem.nphases );
+       elem.GetWindingVoltages( elem.ActiveWinding, TempVoltageBuffer);
+       iV :=0;
+        For i := 1 to  elem.Nphases DO Begin
+             Result[iV] := TempVoltageBuffer^[i].re;
+             Inc(iV);
+             Result[iV] := TempVoltageBuffer^[i].im;
+             Inc(iV);
+        End;
+
+        Reallocmem(TempVoltageBuffer, 0);
+    End Else
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);;
+
+  End Else
+      Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+
+end;
+PROCEDURE Transformers_Get_WdgVoltages_GR();cdecl;
+// Same as Transformers_Get_WdgVoltages but uses global result (GR) pointers
+begin
+   Transformers_Get_WdgVoltages(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
+//------------------------------------------------------------------------------
+procedure Transformers_Get_WdgCurrents(var ResultPtr: PDouble; ResultCount: PInteger); cdecl;
+var
+  Result: PDoubleArray;
+  elem: TTransfObj;
+  TempCurrentBuffer:pComplexArray;
+  NumCurrents,
+   i,
+   iV : Integer;
+begin
+
+  elem := ActiveTransformer;
+  if elem <> nil then
+  Begin
+       NumCurrents := 2*elem.NPhases*elem.NumberOfWindings; // 2 currents per winding
+       Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NumCurrents-1) + 1);
+       TempCurrentBuffer := AllocMem(Sizeof(Complex) * NumCurrents );;
+       elem.GetAllWindingCurrents(TempCurrentBuffer);
+       iV :=0;
+        For i := 1 to  NumCurrents DO Begin
+             Result[iV] := TempCurrentBuffer^[i].re;
+             Inc(iV);
+             Result[iV] := TempCurrentBuffer^[i].im;
+             Inc(iV);
+        End;
+
+        Reallocmem(TempCurrentBuffer, 0);
+
+  End Else
+      Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);;
+end;
+PROCEDURE Transformers_Get_WdgCurrents_GR();cdecl;
+// Same as Transformers_Get_WdgCurrents but uses global result (GR) pointers
+begin
+   Transformers_Get_WdgCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
+//------------------------------------------------------------------------------
+function Transformers_Get_strWdgCurrents_AnsiString(): AnsiString;cdecl;
+var
+  elem: TTransfObj;
+begin
+  elem := ActiveTransformer;
+  if elem <> nil then
+  Begin
+      Result := elem.GetWindingCurrentsResult ;
+  End;
+end;
+
+function Transformers_Get_strWdgCurrents():PAnsiChar;cdecl;
+begin
+    Result := DSS_GetAsPAnsiChar(Transformers_Get_strWdgCurrents_AnsiString());
+end;
+//------------------------------------------------------------------------------
+function Transformers_Get_CoreType(): Integer;cdecl;
+var
+  elem: TTransfObj;
+begin
+  Result := 0;  // default = shell
+  elem := ActiveTransformer;
+  if elem <> nil then
+    Result := elem.CoreType ;
+
+end;
+//------------------------------------------------------------------------------
+procedure Transformers_Set_CoreType(Value: Integer);cdecl;
+var
+  elem: TTransfObj;
+begin
+  elem := ActiveTransformer;
+  if elem <> nil then
+  Begin
+    elem.CoreType := Value;
+    Case Value of
+       1: elem.strCoreType := '1-phase';
+       3: elem.strCoreType := '3-leg';
+       5: elem.strCoreType := '5-leg';
+    Else
+        elem.strCoreType := 'shell';
+    End;
+  End;
+
+end;
+//------------------------------------------------------------------------------
+function Transformers_Get_RdcOhms(): Double;cdecl;
+var
+  elem: TTransfObj;
+begin
+  Result := 0.0;
+  elem := ActiveTransformer;
+  if elem <> nil then
+    Result := elem.WdgRdc[elem.ActiveWinding];
+end;
+//------------------------------------------------------------------------------
+procedure Transformers_Set_RdcOhms(Value: Double);cdecl;
+begin
+   Set_Parameter ('RdcOhms', FloatToStr (Value));
 end;
 //------------------------------------------------------------------------------
 END.
