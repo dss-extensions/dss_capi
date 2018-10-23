@@ -1830,6 +1830,16 @@ library OpenDSSengine
     HRESULT _stdcall AllNames([out, retval] VARIANT* Value);
     [propget, id(0x000000DD)]
     HRESULT _stdcall Count([out, retval] long* Value);
+    [propget, id(0x000000DE), helpstring("Complex array of voltages for active winding")]
+    HRESULT _stdcall WdgVoltages([out, retval] VARIANT* Value);
+    [propget, id(0x000000DF), helpstring("All Winding currents (ph1, wdg1, wdg2,... ph2, wdg1, wdg2 ...)")]
+    HRESULT _stdcall WdgCurrents([out, retval] VARIANT* Value);
+    [propget, id(0x000000E0), helpstring("All winding currents in CSV string form like the WdgCurrents property")]
+    HRESULT _stdcall strWdgCurrents([out, retval] BSTR* Value);
+    [propget, id(0x000000E1), helpstring("Transformer Core Type: 0=shell;1 = 1-phase; 3= 3-leg; 5= 5-leg")]
+    HRESULT _stdcall CoreType([out, retval] long* Value);
+    [propput, id(0x000000E1)]
+    HRESULT _stdcall CoreType([in] long Value);
     [propget, id(0x000000E2)]
     HRESULT _stdcall RdcOhms([out, retval] double* Value);
     [propput, id(0x000000E2), helpstring("dc Resistance of active winding in ohms for GIC analysis")]

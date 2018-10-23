@@ -1,6 +1,6 @@
 program OpenDSS;
 { ----------------------------------------------------------
-  Copyright (c) 2008-2014, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2018,  Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 
@@ -183,7 +183,9 @@ uses
   ESPVLControl in '..\Controls\ESPVLControl.pas',
   IndMach012 in '..\PCElements\IndMach012.pas',
   TCP_IP in '..\TCP_IP\TCP_IP.pas',
-  ConnectOptions in '..\Executive\ConnectOptions.pas';
+  ConnectOptions in '..\Executive\ConnectOptions.pas',
+  GICsource in '..\PCElements\GICsource.pas',
+  AutoTrans in '..\PDElements\AutoTrans.pas';
 
 {$R *.RES}
 

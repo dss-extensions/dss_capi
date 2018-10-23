@@ -22,6 +22,10 @@ Procedure ExportCDPSM (FileNm:String;
   Substation: String;
   SubGeographicRegion: String;
   GeographicRegion: String;
+  FdrGUID: TGuid; 
+  SubGUID: TGuid;
+  SubGeoGUID: TGuid; 
+  RgnGUID: TGuid;
   prf:CIMProfileChoice = Combined);
 
 implementation
@@ -828,8 +832,8 @@ begin
 	pPhase.GUID := GetDevGuid (SolarPhase, pPhase.LocalName, 1);
 	StartInstance (F, 'PowerElectronicsConnectionPhase', pPhase);
 	PhaseKindNode (F, 'PowerElectronicsConnectionPhase', phs);
-	DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p); // TODO - change to p and q as approved for CIM17
-	DoubleNode (F, 'PowerElectronicsConnectionPhase.qfixed', q);
+	DoubleNode (F, 'PowerElectronicsConnectionPhase.p', p); // TODO - change to p and q as approved for CIM17
+	DoubleNode (F, 'PowerElectronicsConnectionPhase.q', q);
 	RefNode (F, 'PowerElectronicsConnectionPhase.PowerElectronicsConnection', pPV);
 	GuidNode (F, 'PowerSystemResource.Location', geoGUID);
 	EndInstance (F, 'PowerElectronicsConnectionPhase');
@@ -869,7 +873,7 @@ begin
     pPhase.GUID := GetDevGuid (SolarPhase, pPhase.LocalName, 1);
     StartInstance (F, 'PowerElectronicsConnectionPhase', pPhase);
     PhaseKindNode (F, 'PowerElectronicsConnectionPhase', phs);
-    DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p); // TODO - change to p and q as approved for CIM17
+    DoubleNode (F, 'PowerElectronicsConnectionPhase.pfixed', p);
     DoubleNode (F, 'PowerElectronicsConnectionPhase.qfixed', q);
     RefNode (F, 'PowerElectronicsConnectionPhase.PowerElectronicsConnection', pPV);
     GuidNode (F, 'PowerSystemResource.Location', geoGUID);
@@ -1284,6 +1288,10 @@ Procedure ExportCDPSM(FileNm:String;
   Substation:String;
   SubGeographicRegion:String;
   GeographicRegion: String;
+  FdrGUID: TGuid; 
+  SubGUID: TGuid;
+  SubGeoGUID: TGuid; 
+  RgnGUID: TGuid;
   prf:CIMProfileChoice);
 Var
   F      : TextFile;
@@ -1394,23 +1402,20 @@ Begin
     EndInstance (F, 'CoordinateSystem');
 
     pRegion := TNamedObject.Create ('GeographicalRegion');
-    CreateGUID (geoGUID);
-    pRegion.GUID := geoGUID;
+    pRegion.GUID := RgnGUID;
     pRegion.LocalName := GeographicRegion;
     StartInstance (F, 'GeographicalRegion', pRegion);
     EndInstance (F, 'GeographicalRegion');
 
     pSubRegion := TNamedObject.Create ('SubGeographicalRegion');
-    CreateGUID (geoGUID);
-    pSubRegion.GUID := geoGUID;
+    pSubRegion.GUID := SubGeoGUID;
     pSubRegion.LocalName := SubGeographicRegion;
     StartInstance (F, 'SubGeographicalRegion', pSubRegion);
     RefNode (F, 'SubGeographicalRegion.Region', pRegion);
     EndInstance (F, 'SubGeographicalRegion');
 
     pSubstation := TNamedObject.Create ('Substation');
-    CreateGUID (geoGUID);
-    pSubstation.GUID := geoGUID;
+    pSubstation.GUID := SubGUID;
     pSubstation.LocalName := Substation;
     StartInstance (F, 'Substation', pSubstation);
     RefNode (F, 'Substation.Region', pSubRegion);
@@ -1424,6 +1429,7 @@ Begin
     GuidNode (F, 'Location.CoordinateSystem', crsGUID);
     EndInstance (F, 'Location');
 
+    ActiveCircuit.GUID := FdrGuid;
     StartInstance (F, 'Feeder', ActiveCircuit);
     RefNode (F, 'Feeder.NormalEnergizingSubstation', pSubstation);
     RefNode (F, 'PowerSystemResource.Location', pLocation);
@@ -2111,9 +2117,9 @@ Begin
                 StartFreeInstance (F, 'PhaseImpedanceData');
                 RefNode (F, 'PhaseImpedanceData.PhaseImpedance', pName1);
                 IntegerNode (F, 'PhaseImpedanceData.sequenceNumber', seq);
-                DoubleNode (F, 'PhaseImpedanceData.r', Z.GetElement(i,j).re);
-                DoubleNode (F, 'PhaseImpedanceData.x', Z.GetElement(i,j).im);
-                DoubleNode (F, 'PhaseImpedanceData.b', YC.GetElement(i,j).im);
+                DoubleNode (F, 'PhaseImpedanceData.r', Z.GetElement(i,j).re / 1609.34);
+                DoubleNode (F, 'PhaseImpedanceData.x', Z.GetElement(i,j).im / 1609.34);
+                DoubleNode (F, 'PhaseImpedanceData.b', YC.GetElement(i,j).im / 1609.34);
                 EndInstance (F, 'PhaseImpedanceData')
               end;
             end;

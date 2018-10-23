@@ -239,6 +239,7 @@ VAR
    ConcatenateReports : Boolean;
    IncMat_Ordered     : Boolean;
    Parser             : Array of TParser;
+   ActorMA_Msg        : Array of TEvent;  // Array to handle the events of each actor
    AllActors          : Boolean;
 
 {*******************************************************************************
@@ -994,6 +995,7 @@ initialization
    setlength(ActiveYPrim,CPU_Cores + 1);
    SetLength(SolutionWasAttempted,CPU_Cores + 1);
    SetLength(ActorStatus,CPU_Cores + 1);
+   SetLength(ActorMA_Msg,CPU_Cores + 1);
 
    // Init pointer repositories for the EnergyMeter in multiple cores
 

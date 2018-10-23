@@ -12,10 +12,10 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 52393 $
-// File generated on 8/3/2018 2:59:32 PM from Type Library described below.
+// File generated on 9/19/2018 5:26:18 PM from Type Library described below.
 
 // ************************************************************************  //
-// Type Lib: C:\OpenDSS\Parallel_Version\Source\DLL\OpenDSSengine (1)
+// Type Lib: C:\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
 // LIBID: {8BFDE413-245A-4514-B151-B16DCC243796}
 // LCID: 0
 // Helpfile:
@@ -2249,6 +2249,11 @@ type
     function Get_Next: Integer; safecall;
     function Get_AllNames: OleVariant; safecall;
     function Get_Count: Integer; safecall;
+    function Get_CoreType: Integer; safecall;
+    procedure Set_CoreType(Value: Integer); safecall;
+    function Get_WdgVoltages: OleVariant; safecall;
+    function Get_WdgCurrents: OleVariant; safecall;
+    function Get_StrWdgCurrents: WideString; safecall;
     property NumWindings: Integer read Get_NumWindings write Set_NumWindings;
     property XfmrCode: WideString read Get_XfmrCode write Set_XfmrCode;
     property Wdg: Integer read Get_Wdg write Set_Wdg;
@@ -2270,6 +2275,10 @@ type
     property Next: Integer read Get_Next;
     property AllNames: OleVariant read Get_AllNames;
     property Count: Integer read Get_Count;
+    property CoreType: Integer read Get_CoreType write Set_CoreType;
+    property WdgVoltages: OleVariant read Get_WdgVoltages;
+    property WdgCurrents: OleVariant read Get_WdgCurrents;
+    property StrWdgCurrents: WideString read Get_StrWdgCurrents;
   end;
 
 // *********************************************************************//
@@ -2300,6 +2309,10 @@ type
     property Next: Integer readonly dispid 219;
     property AllNames: OleVariant readonly dispid 220;
     property Count: Integer readonly dispid 221;
+    property CoreType: Integer dispid 222;
+    property WdgVoltages: OleVariant readonly dispid 223;
+    property WdgCurrents: OleVariant readonly dispid 224;
+    property StrWdgCurrents: WideString readonly dispid 225;
   end;
 
 // *********************************************************************//

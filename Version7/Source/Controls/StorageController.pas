@@ -585,7 +585,18 @@ Begin
 
 //**** fill in private properties
 
-        For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherStorageController.PropertyValue[i];
+        For i := 1 to ParentClass.NumProperties Do
+           // Skip Read only properties
+           Case i of
+                propKWHTOTAL:; {Do Nothing}
+                propKWTOTAL:; {Do Nothing}
+                propKWHACTUAL:; {Do Nothing}
+                propKWACTUAL:; {Do Nothing}
+                propKWNEED:; {Do Nothing}
+           Else
+             PropertyValue[i] := OtherStorageController.PropertyValue[i];
+           End;
+
 
    End
    ELSE  DoSimpleMsg('Error in StorageController MakeLike: "' + StorageControllerName + '" Not Found.', 370);

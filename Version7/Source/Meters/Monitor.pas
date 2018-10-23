@@ -1,7 +1,7 @@
 unit Monitor;
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2018, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -19,6 +19,8 @@ unit Monitor;
    01-19-13 Added flicker meter mode
    08-18-15 Added Solution monitor mode
    08-10-16 Added mode 6 for storing capacitor switching
+   06-04-18 Added modes 7-9
+
 }
 
 {
@@ -72,8 +74,10 @@ unit Monitor;
    3: State Variables
    4: Flicker level and severity index by phase (no modifiers apply)
    5: Solution Variables (Iteration count, etc.)
-   6: Capacitor Switching (Capacitors only)
-   7: Storage variables
+   6: Capacitor
+   7: Storage Variables
+   8: Transformer Winding Currents
+   9: Losses (watts and vars)
 
    +16: Sequence components: V012, I012
    +32: Magnitude Only
@@ -123,8 +127,11 @@ TYPE
        MonBuffer       :pSingleArray;
        Bufptr          :Integer;  // point to present (last) element in buffer must be incremented to add
 
-       CurrentBuffer   :pComplexArray;
-       VoltageBuffer   :pComplexArray;
+       CurrentBuffer     :pComplexArray;
+       VoltageBuffer     :pComplexArray;
+       WdgCurrentsBuffer :pComplexArray;
+       WdgVoltagesBuffer :pComplexArray;
+       NumTransformerCurrents :Integer;
 
        NumStateVars    :Integer;
        StateBuffer     :pDoubleArray;
@@ -133,6 +140,7 @@ TYPE
                                        // then convert to re=flicker level, update every time step
                                        //             and im=Pst, update every 10 minutes
        SolutionBuffer  :pDoubleArray;
+
 
        IncludeResidual :Boolean;
        VIpolar         :Boolean;
@@ -153,8 +161,9 @@ TYPE
        Procedure AddDblToBuffer(const Dbl:Double);
 
        Procedure DoFlickerCalculations;  // call from CloseMonitorStream
-
        function  Get_FileName: String;
+
+
 
      public
        Mode          :Integer;
@@ -184,7 +193,7 @@ TYPE
        Procedure DumpProperties(Var F:TextFile; Complete:Boolean);Override;
        //Property  MonitorFileName:String read BufferFile;
 
-       Property CSVFileName:String Read Get_FileName;
+       Property CSVFileName:String read Get_FileName;
    end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -265,15 +274,17 @@ Begin
      PropertyHelp[3] := 'Bitmask integer designating the values the monitor is to capture: '+CRLF+
                     '0 = Voltages and currents' + CRLF+
                     '1 = Powers'+CRLF+
-                    '2 = Tap Position (Transformers only)'+CRLF+
+                    '2 = Tap Position (Transformer Device only)'+CRLF+
                     '3 = State Variables (PCElements only)' +CRLF+
                     '4 = Flicker level and severity index (Pst) for voltages. No adders apply.' +CRLF+
                     '    Flicker level at simulation time step, Pst at 10-minute time step.' +CRLF+
                     '5 = Solution variables (Iterations, etc).' +CRLF+
+                    '6 = Capacitor Switching (Capacitor Objecs only)'+CRLF+
+                    '7 = Storage state vars (Storage device only)'+CRLF+
+                    '8 = Winding voltages and all winding currents (Transformer device only)'+CRLF+
+                    '9 = Losses, watts and var (of monitored device)'+CRLF+ CRLF+
                     'Normally, these would be actual phasor quantities from solution.' + CRLF+
-                    '6 = Capacitor Switching (Capacitors only)'+CRLF+
-                    '7 = Storage state vars (storage device only)'+CRLF+
-                    'Combine with adders below to achieve other results for terminal quantities:' + CRLF+
+                    'Combine mode with adders below to achieve other results for terminal quantities:' + CRLF+
                     '+16 = Sequence quantities' + CRLF+
                     '+32 = Magnitude only' + CRLF+
                     '+64 = Positive sequence only or avg of all phases' + CRLF+
@@ -523,6 +534,10 @@ Begin
      StateBuffer   := Nil;
      FlickerBuffer := Nil;
      SolutionBuffer:= Nil;
+     WdgCurrentsBuffer := Nil;
+     WdgVoltagesBuffer := Nil;
+
+     NumTransformerCurrents := 0;
 
      Basefrequency := 60.0;
      Hour          := 0;
@@ -597,7 +612,7 @@ Begin
          IF DevIndex>0 THEN Begin                                       // Monitored element must already exist
              MeteredElement := ActiveCircuit.CktElements.Get(DevIndex);
              Case (Mode and MODEMASK) of
-                2: Begin                                                // Must be transformer
+                2,8: Begin                                                // Must be transformer
                           If (MeteredElement.DSSObjType And CLASSMASK) <> XFMR_ELEMENT Then Begin
                             DoSimpleMsg(MeteredElement.Name + ' is not a transformer!', 663);
                             Exit;
@@ -615,12 +630,15 @@ Begin
                             Exit;
                           End;
                    end;
-                7: begin                                                // Checking if the element is a storage device
+
+                 7: begin                                                // Checking if the element is a storage device
                           If (MeteredElement.DSSObjType And CLASSMASK) <> STORAGE_ELEMENT Then Begin
                             DoSimpleMsg(MeteredElement.Name + ' is not a storage device!', 2016002);
                             Exit;
                           End;
                    end;
+
+
              End;
 
              IF MeteredTerminal>MeteredElement.Nterms THEN Begin
@@ -652,6 +670,11 @@ Begin
                          End;
                       5: Begin
                              ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer^[1])*NumSolutionVars);
+                         End;
+                      8: Begin
+                             With  TTransfObj(MeteredElement) Do NumTransformerCurrents := 2* NumberOfWindings * nphases;
+                             ReallocMem(WdgCurrentsBuffer, Sizeof(Complex)*NumTransformerCurrents);
+                             ReallocMem(WdgVoltagesBuffer, Sizeof(Complex)*nphases);
                          End;
                  Else
                      ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
@@ -713,7 +736,7 @@ End;
 Procedure TMonitorObj.ClearMonitorStream;
 
 VAR
-    i           :Integer;
+    i,j         :Integer;
     iMax        :Integer;
     iMin        :Integer;
     IsPosSeq    :Boolean;
@@ -779,16 +802,38 @@ Begin
                   Str_Temp  :=  AnsiString('Step_' + inttostr(i) + ' ');
                   strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
                 end;
-
         End;
      7: Begin
               RecordSize := 5;     // Storage state vars
-              strLcat(strPtr, ('kW output, '), Sizeof(TMonitorStrBuffer));
-              strLcat(strPtr, ('kvar output, '), Sizeof(TMonitorStrBuffer));
-              strLcat(strPtr, ('kW Stored, '), Sizeof(TMonitorStrBuffer));
-              strLcat(strPtr, ('%kW Stored, '), Sizeof(TMonitorStrBuffer));
-              strLcat(strPtr, ('State, '), Sizeof(TMonitorStrBuffer));
+              strLcat(strPtr, pAnsichar('kW output, '), Sizeof(TMonitorStrBuffer));
+              strLcat(strPtr, pAnsichar('kvar output, '), Sizeof(TMonitorStrBuffer));
+              strLcat(strPtr, pAnsichar('kW Stored, '), Sizeof(TMonitorStrBuffer));
+              strLcat(strPtr, pAnsichar('%kW Stored, '), Sizeof(TMonitorStrBuffer));
+              strLcat(strPtr, pAnsichar('State, '), Sizeof(TMonitorStrBuffer));
         End;
+     8: Begin
+              With TTransfObj(MeteredElement) Do
+              Begin
+                  RecordSize := NumTransformerCurrents + 2*Nphases;     // Transformer Winding Currents
+                  For i := 1 to nphases Do
+                    Begin
+                          Str_Temp  :=  AnsiString(Format('V%d,Deg, ', [i] ));
+                          strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                    End;
+                  for i := 1 to Nphases do
+                    Begin
+                      for j := 1 to NumberOfWindings do
+                        begin
+                          Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
+                          strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                        end;
+                    End;
+              End;
+        End;
+     9: Begin // watts vars of meteredElement
+              RecordSize := 2;
+              strLcat(strPtr,  pAnsichar('watts, vars'), Sizeof(TMonitorStrBuffer));
+        End
      Else Begin
          // Compute RecordSize
          // Use same logic as in TakeSample Method
@@ -1008,7 +1053,7 @@ Procedure TMonitorObj.TakeSample;
 VAR
     dHour             :Double;
     dSum              :Double;
-    i                 :Integer;
+    i,k               :Integer;
     IsPower           :Boolean;
     IsSequence        :Boolean;
     NumVI             :Integer;
@@ -1016,6 +1061,7 @@ VAR
     ResidualCurr      :Complex;
     ResidualVolt      :Complex;
     Sum               :Complex;
+    CplxLosses        :Complex;
     V012,I012         :Array[1..3] of Complex;
 
 Begin
@@ -1106,7 +1152,7 @@ Begin
 
         End;
 
-     6: Begin     // Monitor Cap switching
+     6: Begin     // Monitor Capacitor State
 
               With TCapacitorObj(MeteredElement) Do Begin
                   for i := 1 to NumSteps do
@@ -1117,7 +1163,6 @@ Begin
               Exit;  // Done with this mode now.
         End;
      7: Begin     // Monitor Storage Device state variables
-
               With TStorageObj(MeteredElement) Do Begin
                 AddDblToBuffer(PresentkW);
                 AddDblToBuffer(Presentkvar);
@@ -1127,6 +1172,38 @@ Begin
               End;
               Exit;  // Done with this mode now.
         End;
+
+      8: Begin   // Winding Currents
+              // Get all currents in each end of each winding
+              With TTransfobj(MeteredElement) Do
+              Begin
+                GetWindingVoltages(MeteredTerminal, WdgVoltagesBuffer);
+                ConvertComplexArrayToPolar( WdgVoltagesBuffer, Nphases);
+                {Put winding Voltages into Monitor}
+                AddDblsToBuffer(@WdgVoltagesBuffer^[1].re, 2 * Nphases);  // Add Mag, Angle
+
+                GetAllWindingCurrents(WdgCurrentsBuffer);
+                ConvertComplexArrayToPolar( WdgCurrentsBuffer, NumTransformerCurrents);
+
+                // Put every other Current into buffer
+                k := 1;
+                for i := 1 to Nphases*NumberOfWindings  do
+                Begin
+                      AddDblsToBuffer(@WdgCurrentsBuffer^[k].re, 2);  // Add Mag, Angle
+                      k := k + 2;
+                End;
+
+               // AddDblsToBuffer(@WdgCurrentsBuffer^[1].re, NumTransformerCurrents);
+              End;
+              Exit;
+         End;
+
+      9: Begin  // losses
+             CplxLosses := MeteredElement.Losses;
+             AddDblToBuffer(CplxLosses.re);
+             AddDblToBuffer(CplxLosses.im);
+             Exit; // Done with this mode now.
+         End
      Else Exit  // Ignore invalid mask
 
    End;
@@ -1358,26 +1435,26 @@ Procedure TMonitorObj.TranslateToCSV(Show:Boolean);
 
 
 VAR
-    CSVName     :String;
-    F           :TextFile;
-    FSignature  :Integer;
-    Fversion    :Integer;
-    hr          :single;
-    i           :Cardinal;
-    Mode        :Integer;
-    Nread       :Cardinal;
-    pStr        :pAnsichar;
-    RecordBytes :Cardinal;
-    RecordSize  :Cardinal;
-    s           :single;
-    sngBuffer:Array[1..100] of Single;
+    CSVName       :String;
+    F             :TextFile;
+    FSignature    :Integer;
+    Fversion      :Integer;
+    hr            :single;
+    i             :Cardinal;
+    Mode          :Integer;
+    Nread         :Cardinal;
+    pStr          :pAnsichar;
+    RecordBytes   :Cardinal;
+    RecordSize    :Cardinal;
+    s             :single;
+    sngBuffer     :Array[1..100] of Single;
 
 Begin
 
      Save;  // Save present buffer
      CloseMonitorStream;   // Position at beginning
 
-     CSVName := CSVFileName;
+     CSVName := Get_FileName;
 
      TRY
       AssignFile(F, CSVName);    // Make CSV file

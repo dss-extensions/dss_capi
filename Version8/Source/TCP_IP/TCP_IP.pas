@@ -768,7 +768,7 @@ end;
 
 procedure TDSSConnect.ProfilePlotMsg(ObjectName: string);
 var
-  MSG : AnsiString;
+  MSG                :AnsiString;
   iEnergyMeter       :Integer;
   ActiveEnergyMeter  :TEnergyMeterObj;
   PresentCktElement  :TDSSCktElement;
@@ -1178,11 +1178,12 @@ var
   Counter : Integer;
 
   x_axis,y_axis,z_axis: DoubleArray2d;
-  y_labels: StringArray1d;
-  Bus_Names : StringArray1d;
-  phase: IntegerArray1d;
-  PD_Elements: StringArray2d;
-  model_path: string;
+  y_labels            : StringArray1d;
+  Bus_Names           : StringArray1d;
+  phase               : IntegerArray1d;
+  PD_Elements         : StringArray2d;
+  model_path,
+  Title               : string;
 
 begin
   if(MySocket.Socket.Connected=False) then
@@ -1216,6 +1217,7 @@ begin
           End;
           inc(Counter);
         end;
+        Title   :=  'Incidence matrix';
       end
       else                                // Laplacian matrix
       Begin
@@ -1232,6 +1234,7 @@ begin
           End;
           inc(Counter);
         end;
+        Title   :=  'Laplacian matrix';
       End;
     end;
   end;
@@ -1297,7 +1300,7 @@ begin
   End;
 
   model_path:= StringReplace(LastFileCompiled, '\', '\\', [rfReplaceAll]);
-  MSG:=flatten2JSON(model_path,'Incidence matrix',
+  MSG:=flatten2JSON(model_path,Title,
     'matrix','',@x_axis,@y_labels,@y_axis,@phase,@Z_axis,
     @PD_Elements,@Bus_Names);
   MySocket.Socket.SendText(flat_int2str(Length(MSG)));//Sends the length

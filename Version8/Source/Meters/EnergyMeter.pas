@@ -370,7 +370,7 @@ Type
         Procedure ReduceZone(ActorID: integer);  // Reduce Zone by eliminating buses and merging lines
         Procedure SaveZone(const dirname:String);
 
-        Procedure CalcReliabilityIndices(AssumeRestoration:Boolean);
+        Procedure CalcReliabilityIndices(AssumeRestoration:Boolean; ActorID : Integer);
 
         FUNCTION  GetPropertyValue(Index:Integer):String;Override;
         PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
@@ -708,7 +708,9 @@ Begin
        FVBaseLosses   := OtherEnergyMeter.FVBaseLosses;
        FPhaseVoltageReport  := OtherEnergyMeter.FPhaseVoltageReport;
 
-       FOR i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherEnergyMeter.PropertyValue[i];
+       FOR i := 1 to ParentClass.NumProperties Do
+         // Skip Read Only properties
+         If i<20 Then PropertyValue[i] := OtherEnergyMeter.PropertyValue[i];
 
    End
    ELSE  DoSimpleMsg('Error in EnergyMeter MakeLike: "' + EnergyMeterName + '" Not Found.', 521);
@@ -865,7 +867,7 @@ Begin
       // Sample Generator ans Storage Objects, too
       GeneratorClass.SampleAll(ActorID);
       StorageClass[ActorID].SampleAll(ActorID);  // samples energymeter part of storage elements (not update)
-      PVSystemClass[ActorID].SampleAll;
+      PVSystemClass[ActorID].SampleAll(ActorID);
 
 End;
 
@@ -2221,14 +2223,14 @@ begin
          Begin   // Return Excess load as EEN/UE
              If   (Get_ExceedsNormal(ActorID)) Then Load_EEN := kW_Load * EEN_Factor
                                   Else Load_EEN := 0.0;
-             If   (Unserved)      Then Load_UE  := kW_Load * UE_Factor
+             If   (Unserved[ActorID])      Then Load_UE  := kW_Load * UE_Factor
                                   Else Load_UE  := 0.0;
          End
        ELSE
          Begin    // Return TOTAL load as EEN/UE
              If   (Get_ExceedsNormal(ActorID)) Then Load_EEN := kW_Load
                                   Else Load_EEN := 0.0;
-             If   (Unserved)      Then Load_UE  := kW_Load
+             If   (Unserved[ActorID])      Then Load_UE  := kW_Load
                                   Else Load_UE  := 0.0;
          End;
 
@@ -2387,7 +2389,7 @@ end;
 
 
 {-------------------------------------------------------------------------------}
-procedure TEnergyMeterObj.CalcReliabilityIndices(AssumeRestoration:Boolean);
+procedure TEnergyMeterObj.CalcReliabilityIndices(AssumeRestoration:Boolean; ActorID : Integer);
 Var
     PD_Elem : TPDElement;
     pLoad   : TLoadObj;
@@ -2419,7 +2421,7 @@ begin
     // Forward sweep to get number of interruptions
        // Initialize number of interruptions and Duration
        PD_Elem := TPDElement(SequenceList.Get(1));
-       pBus    := ActiveCircuit[ActiveActor].Buses^[PD_Elem.Terminals^[PD_Elem.FromTerminal].BusRef];
+       pBus    := ActiveCircuit[ActorID].Buses^[PD_Elem.Terminals^[PD_Elem.FromTerminal].BusRef];
        pBus.Bus_Num_Interrupt  := Source_NumInterruptions;
        pBus.BusCustInterrupts  := Source_NumInterruptions * pBus.BusTotalNumCustomers;
        pBus.Bus_Int_Duration   := Source_IntDuration;
@@ -2484,7 +2486,7 @@ begin
 
         { Set Bus_int_Duration}
 
-        With ActiveCircuit[ActiveActor]  do
+        With ActiveCircuit[ActorID]  do
         for idx := 1 to NumBuses  do  Begin
            pBus := Buses^[idx];
            If pBus.BusSectionID > 0 Then
@@ -2512,7 +2514,7 @@ begin
        dblkW     := 0.0;
        
        // Use LoadList for SAIFI calculation
-       WITH ActiveCircuit[ActiveActor] do
+       WITH ActiveCircuit[ActorID] do
        For idx := 1 to LoadList.ListSize Do  // all loads in meter zone
            Begin
                 pLoad := TLoadObj(LoadList.Get(idx));

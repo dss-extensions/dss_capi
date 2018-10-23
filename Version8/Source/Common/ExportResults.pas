@@ -2510,7 +2510,7 @@ Begin
            THEN Begin
               DoIt := FALSE;
               IF UE_Only THEN Begin
-                IF pLoad.Unserved THEN DoIt := TRUE; end
+                IF pLoad.Unserved[ActiveActor] THEN DoIt := TRUE; end
               ELSE
                 IF pLoad.Get_ExceedsNormal(ActiveActor) THEN DoIt := TRUE;
 

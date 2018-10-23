@@ -11,12 +11,14 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Menus, ToolWin, ImgList,ScriptEdit, ExtCtrls,
-  PsAPI, System.ImageList
-  {$IF CompilerVersion > 30} // Delphi 2007 or later
-  ,YMatrix;
-  {$ELSE}
-  ;
+  PsAPI
+  {$IFDEF VER320}    // Tokyo
+  ,System.ImageList
   {$ENDIF}
+  {$IFDEF VER300}    // Seattle
+  ,System.ImageList
+  {$ENDIF}
+  ;
 
 type
   TControlPanel = class(TForm)
@@ -975,17 +977,15 @@ begin
   // compiled combo box section
   DSS_Registry.Section := 'Compiled';
   nCompiled := DSS_Registry.ReadInteger('Count', 0);
-  ActiveScriptForm.Editor.Lines.BeginUpdate;
+
   for i:=0 to nCompiled-1 do begin
     TextLine := DSS_Registry.ReadString(Format('Item%d',[i]), '');
     If FileExists(TextLine) Then begin
       CompileCombo.Items.Add(TextLine);
-    End Else Begin
-      if Length (TextLine) > 0 then ActiveScriptForm.Editor.Lines.Add(TextLine);
     End;
   end;
   If Length(LastFileCompiled)>0 Then AddCompiledFile(LastFileCompiled); // Make this first or selected
-  ActiveScriptForm.Editor.Lines.EndUpdate;
+
 
 //  ActiveScriptForm := FormOnTop as TScriptEdit;
 

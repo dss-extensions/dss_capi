@@ -2240,6 +2240,11 @@ type
     function Get_Next: Integer; safecall;
     function Get_AllNames: OleVariant; safecall;
     function Get_Count: Integer; safecall;
+    function Get_WdgVoltages: OleVariant; safecall;
+    function Get_WdgCurrents: OleVariant; safecall;
+    function Get_strWdgCurrents: WideString; safecall;
+    function Get_CoreType: Integer; safecall;
+    procedure Set_CoreType(Value: Integer); safecall;
     function Get_RdcOhms: Double; safecall;
     procedure Set_RdcOhms(Value: Double); safecall;
     property NumWindings: Integer read Get_NumWindings write Set_NumWindings;
@@ -2263,6 +2268,10 @@ type
     property Next: Integer read Get_Next;
     property AllNames: OleVariant read Get_AllNames;
     property Count: Integer read Get_Count;
+    property WdgVoltages: OleVariant read Get_WdgVoltages;
+    property WdgCurrents: OleVariant read Get_WdgCurrents;
+    property strWdgCurrents: WideString read Get_strWdgCurrents;
+    property CoreType: Integer read Get_CoreType write Set_CoreType;
     property RdcOhms: Double read Get_RdcOhms write Set_RdcOhms;
   end;
 
@@ -2294,6 +2303,10 @@ type
     property Next: Integer readonly dispid 219;
     property AllNames: OleVariant readonly dispid 220;
     property Count: Integer readonly dispid 221;
+    property WdgVoltages: OleVariant readonly dispid 222;
+    property WdgCurrents: OleVariant readonly dispid 223;
+    property strWdgCurrents: WideString readonly dispid 224;
+    property CoreType: Integer dispid 225;
     property RdcOhms: Double dispid 226;
   end;
 

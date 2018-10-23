@@ -50,7 +50,6 @@ USES
     EnergyMeter,
     SysUtils,
     Parallel_Lib,
-    CktElement,
 {$IFDEF MSWINDOWS}
     Windows, Dialogs,
 {$ELSE}    
@@ -64,7 +63,8 @@ USES
     System.Classes,
 {$ENDIF}    
     Sparse_Math,
-    SyncObjs;
+    SyncObjs,
+    CktElement;
 
 CONST
 
@@ -100,7 +100,7 @@ TYPE
        FUNCTION NewObject(const ObjName:String):Integer; override;
 
    End;
-   TInfoMessageCall = Procedure(const info:String) of object;  // Creates the procedure for sending a message
+   TInfoMessageCall = Procedure(const info:String) of Object;  // Creates the procedure for sending a message
    TSolver=class(TThread)
       Constructor Create(Susp:Boolean;local_CPU: integer; ID : integer; CallBack: TInfoMessageCall);overload;
       procedure Execute; override;
@@ -135,10 +135,6 @@ TYPE
    end;
 
    TSolutionObj = class(TDSSObject)
-
-     protected
-       UIMsg  :  TEvent;         // Event handler for this actor (Messages)
-
      private
 
        dV :pNodeVArray;   // Array of delta V for Newton iteration
@@ -312,10 +308,9 @@ TYPE
        procedure AddLines2IncMatrix(ActorID : Integer);             // Adds the Lines to the Incidence matrix arrays
        procedure AddXfmr2IncMatrix(ActorID : Integer);              // Adds the Xfmrs to the Incidence matrix arrays
        procedure AddSeriesCap2IncMatrix(ActorID : Integer);         // Adds capacitors in series to the Incidence matrix arrays
-       procedure AddSeriesReac2IncMatrix(ActorID : Integer);         // Adds Reactors in series to the Incidence matrix arrays
-       procedure UI_message;                                        // Message structure for the Actor (1 message initially)
-       procedure WaitForActor(ActorID : Integer);                   // Waits for the actor to finish the latest assigned task
+       procedure AddSeriesReac2IncMatrix(ActorID : Integer);        // Adds Reactors in series to the Incidence matrix arrays
 
+       procedure WaitForActor(ActorID : Integer);                   // Waits for the actor to finish the latest assigned task
    End;
 {==========================================================================}
 
@@ -510,7 +505,7 @@ Begin
 
       Reallocmem(HarmonicList,0);
       ActorMA_Msg[ActiveActor].SetEvent;
-      UIMsg.Free;
+      ActorMA_Msg[ActiveActor].Free;
 // Sends a message to the working actor
       if ActorHandle[ActiveActor] <> nil then
       Begin
@@ -547,25 +542,28 @@ End;
 }
 procedure TSolutionObj.WaitForActor(ActorID : Integer);
 var
-  EndFlag : Boolean;
+  WaitFlag : Boolean;
 
 Begin
-      EndFlag :=  True;
+  WaitFlag  :=  True;
   if ActorStatus[ActorID] = 0 then
   Begin
     while WaitFlag do
     Begin
         if ActorMA_Msg[ActorID].WaitFor(100) <> wrTimeout then
-          WaitFlag  :=  False
+            WaitFlag  :=  False
         else
-          if ActorStatus[ActorID] = 1 then WaitFlag  :=  False;
+            begin
+              if ActorStatus[ActorID] = 1 then 
+                WaitFlag  :=  False;
+            end;
     End;
-      End
+  End;
 End;
 // ===========================================================================================
 PROCEDURE TSolutionObj.Solve(ActorID : Integer);
-{$IFNDEF FPC}
 var
+{$IFNDEF FPC}
 ScriptEd  : TScriptEdit;
 {$ENDIF}
   WaitFlag : Boolean;
@@ -615,10 +613,7 @@ Try
 {$IFNDEF FPC}
       if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
 {$ENDIF}
-      UIMsg.ResetEvent;
-      {$IFDEF MSWINDOWS}QueryPerformanceCounter(GStartTime);{$ENDIF}
       QueryPerformanceCounter(GStartTime);
-      {$ENDIF}
 
       ActorMA_Msg[ActorID].ResetEvent;
       // Sends message to start the Simulation
@@ -627,7 +622,7 @@ Try
       if not Parallel_enabled then
       Begin
         WaitForActor(ActorID);
-       {$IFDEF MSWINDOWS}
+       {$IFNDEF FPC}
         if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
         {$ENDIF}
 
@@ -1835,7 +1830,7 @@ Begin
      Writeln(F, 'Set editor=',   DefaultEditor);
      Writeln(F, 'Set tolerance=', Format('%-g', [ConvergenceTolerance]));
      Writeln(F, 'Set maxiterations=',   MaxIterations:0);
-     Writeln(F, 'Set miniterations=',   MinIterations:0);                                                         
+     Writeln(F, 'Set miniterations=',   MinIterations:0);
      Writeln(F, 'Set loadmodel=', GetLoadModel);
 
      Writeln(F, 'Set loadmult=',    Format('%-g', [ActiveCircuit[ActiveActor].LoadMultiplier]));

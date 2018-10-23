@@ -219,7 +219,9 @@ uses
   ConnectOptions in '..\Executive\ConnectOptions.pas',
   Diakoptics in '..\Common\Diakoptics.pas',
   Sparse_Math in '..\Common\Sparse_Math.pas',
-  MeTIS_Exec in '..\Common\MeTIS_Exec.pas';
+  MeTIS_Exec in '..\Common\MeTIS_Exec.pas',
+  GICsource in '..\PCElements\GICsource.pas',
+  AutoTrans in '..\PDElements\AutoTrans.pas';
 
 exports
   DllGetClassObject,
