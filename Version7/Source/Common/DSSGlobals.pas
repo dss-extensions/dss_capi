@@ -221,6 +221,7 @@ VAR
    CPU_Freq           : int64;          // Used to store the CPU frequency
    CPU_Cores          : integer;
 
+   IncMat_Ordered     : Boolean;
 
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);

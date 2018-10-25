@@ -48,21 +48,22 @@ USES
     DSSObject,
     Dynamics,
     EnergyMeter,
-    SysUtils
+    Sparse_Math,
+    SysUtils,
 {$IFDEF FPC}
     {$IFDEF MSWINDOWS}
-    , Windows;
-    {$ELSE}
-    ;
+    Windows,
     {$ENDIF}
 {$ELSE}
-    , System.Diagnostics, System.TimeSpan;
+    System.Diagnostics, System.TimeSpan,
 {$ENDIF}
-
+    CktElement;
+    
 CONST
 
      NORMALSOLVE = 0;
      NEWTONSOLVE = 1;
+
 
 TYPE
 
@@ -72,8 +73,11 @@ TYPE
    TNodeVarray = Array[0..1000] of Complex;
    pNodeVarray = ^TNodeVarray;
 
+
    TDSSSolution = CLASS(TDSSClass)
-     private
+
+
+   private
 //       CommandList:TCommandlist;
      Protected
        PROCEDURE DefineProperties;
@@ -162,6 +166,9 @@ TYPE
        NodeV    : pNodeVArray;    // Main System Voltage Array   allows NodeV^[0]=0
        Currents : pNodeVArray;      // Main System Currents Array
 
+       IncMat    :  Tsparse_matrix; // Incidence sparse matrix
+       Laplacian :  Tsparse_matrix; // Laplacian sparse matrix
+
 //****************************Timing variables**********************************
        SolveStartTime      : int64;
        SolveEndtime        : int64;
@@ -173,7 +180,28 @@ TYPE
        Total_Solve_Time_Elapsed  : double;
        Step_Time_Elapsed      : double;
 //******************************************************************************
-
+// ActiveCell of the Incidence Matrix:
+// [0] = row
+// [1] = col
+// [2] = value
+      ActiveIncCell  :  Array[0..2] of Integer;
+//******************************************************************************
+// IncMatrix Row and column descriptors
+// Rows array (array of strings that tells what is the order of the PDElements)
+// Columns array (array of strigns with the names of the cols of the Inc matrix)'
+// Levels array (array of integers that describes the proximity level for each
+// bus to the circuit's backbone)
+      Inc_Mat_Rows    :  Array of String;
+      Inc_Mat_Cols    :  Array of String;
+      Inc_Mat_levels  :  Array of Integer;
+      temp_counter    : Integer;
+      Active_Cols     : Array of Integer;
+      Active_Cols_Idx :  Array of Integer;
+//******************************************************************************
+//********************Diakoptics solution mode variables************************
+//      ADiakoptics_ready  : Boolean;
+//      ADiakoptics_Actors :  Integer;
+//******************************************************************************
        constructor Create(ParClass:TDSSClass; const solutionname:String);
        destructor  Destroy; override;
 
@@ -225,13 +253,23 @@ TYPE
        PROCEDURE GetPCInjCurr;
        PROCEDURE GetSourceInjCurrents;
        PROCEDURE ZeroInjCurr;
+       PROCEDURE Upload2IncMatrix;
 
+       PROCEDURE Calc_Inc_Matrix;                // Calculates the incidence matrix for the Circuit
+       PROCEDURE Calc_Inc_Matrix_Org;            // Calculates the incidence matrix hierarchically organized for the Circuit
+
+       function get_IncMatrix_Row(Col : integer): Integer;          // Gets the index of the Row connected to the specified Column
+       function get_IncMatrix_Col(Row : integer): Integer;          // Gets the index of the Column connected to the specified Row
+       function CheckLocationIdx(Idx : Integer): Integer;           // Evaluates the area covered by the tearing point to see if there is a better one
+
+       procedure AddLines2IncMatrix;             // Adds the Lines to the Incidence matrix arrays
+       procedure AddXfmr2IncMatrix;              // Adds the Xfmrs to the Incidence matrix arrays
+       procedure AddSeriesCap2IncMatrix;         // Adds capacitors in series to the Incidence matrix arrays
+       procedure AddSeriesReac2IncMatrix;        // Adds Reactors in series to the Incidence matrix arrays
+
+//       procedure WaitForActor;                   // Waits for the actor to finish the latest assigned task
    End;
-
-
 {==========================================================================}
-
-
 VAR
    ActiveSolutionObj:TSolutionObj;
 
@@ -240,11 +278,12 @@ implementation
 
 USES  SolutionAlgs,
       DSSClassDefs, DSSGlobals, {$IFDEF FPC} CmdForms,{$ELSE} Windows, DSSForms,{$ENDIF}
-      CktElement,  ControlElem, Fault, Executive, AutoAdd,  YMatrix, ParserDel, Generator,
+      PDElement, ControlElem, Fault, Executive, AutoAdd,  YMatrix, ParserDel, Generator,
+      Load, CKtTree, Capacitor, Transformer, Reactor, 
 {$IFDEF DLL_ENGINE}
       ImplGlobals,  // to fire events
 {$ENDIF}
-      Math,  Circuit, Utilities, KLUSolve;
+      Math,  Circuit, Utilities, KLUSolve, PointerList, Line;
 
 Const NumPropsThisClass = 1;
 
@@ -255,7 +294,6 @@ Const NumPropsThisClass = 1;
 {$IFDEF debugtrace}
 var FDebug:TextFile;
 {$ENDIF}
-
 
 // ===========================================================================================
 constructor TDSSSolution.Create;  // Collection of all solution objects
@@ -270,8 +308,6 @@ Begin
 
      CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
      CommandList.Abbrev := True;
-
-
 End;
 
 // ===========================================================================================
@@ -340,7 +376,6 @@ Begin
     MinIterations    := 2;
     MaxControlIterations  := 10;
     ConvergenceTolerance  := 0.0001;
-
     ConvergedFlag   := FALSE;
 
     SampleTheMeters := FALSE;  // Flag to tell solution algorithm to sample the Energymeters
@@ -399,7 +434,7 @@ Begin
     IntervalHrs   := 1.0;
 
     InitPropertyValues(0);
-
+//    ADiakoptics_Ready         :=  False;   // A-Diakoptics needs to be initialized
 End;
 
 // ===========================================================================================
@@ -419,7 +454,6 @@ Begin
 //      SetLogFile ('c:\\temp\\KLU_Log.txt', 0);
 
       Reallocmem(HarmonicList,0);
-
       Inherited Destroy;
 End;
 
@@ -440,12 +474,10 @@ Begin
      End;  {WITH}
 End;
 
-
 // ===========================================================================================
 PROCEDURE TSolutionObj.Solve;
 
 Begin
-
      ActiveCircuit.Issolved := False;
      SolutionWasAttempted   := TRUE;
 
@@ -465,12 +497,8 @@ Begin
          ErrorNumber := CmdResult;
          Exit;
     End;
-
-
 Try
-
 {Main solution Algorithm dispatcher}
-
     WITH ActiveCircuit Do  Begin
     
        CASE Year of
@@ -479,11 +507,9 @@ Try
            DefaultGrowthFactor := IntPower(DefaultGrowthRate, (year-1));
        END;
     End;
-
 {$IFDEF DLL_ENGINE}
     Fire_InitControls;
 {$ENDIF}
-
     {CheckFaultStatus;  ???? needed here??}
      {$IFDEF MSWINDOWS}QueryPerformanceCounter(GStartTime);{$ENDIF}
      Case Dynavars.SolutionMode OF
@@ -528,11 +554,9 @@ FUNCTION TSolutionObj.Converged:Boolean;
 VAR
   i:Integer;
   VMag:Double;
-
 Begin
 
 // base convergence on voltage magnitude
-
     MaxError := 0.0;
     FOR i := 1 to ActiveCircuit.NumNodes Do  Begin
       
@@ -549,6 +573,7 @@ Begin
        if ErrorSaved^[i] > MaxError Then MaxError := ErrorSaved^[i]; // TODO - line above used to compile in FPC
 {$ENDIF}
     End;
+
 
 {$IFDEF debugtrace}
               Assignfile(Fdebug, 'Debugtrace.csv');
@@ -578,6 +603,7 @@ Begin
 
     IF MaxError <= ConvergenceTolerance THEN Result := TRUE
                                         ELSE Result := FALSE;
+
 
     ConvergedFlag := Result;
 End;
@@ -746,8 +772,10 @@ Begin
        GetPCInjCurr;  // Get the injection currents from all the power conversion devices and feeders
 
        // The above call could change the primitive Y matrix, so have to check
-        IF SystemYChanged THEN BuildYMatrix(WHOLEMATRIX, FALSE);  // Does not realloc V, I
-
+        IF SystemYChanged THEN
+        begin
+          BuildYMatrix(WHOLEMATRIX, FALSE);  // Does not realloc V, I
+        end;
         IF UseAuxCurrents THEN AddInAuxCurrents(NORMALSOLVE);
 
       // Solve for voltages                      {Note:NodeV[0] = 0 + j0 always}
@@ -756,7 +784,6 @@ Begin
        LoadsNeedUpdating := FALSE;
 
    Until (Converged and (Iteration >= MinIterations)) or (Iteration >= MaxIterations);
-
 
 End;
 
@@ -803,7 +830,10 @@ Begin
            SumAllCurrents;
 
            // Call to current calc could change YPrim for some devices
-           IF SystemYChanged THEN BuildYMatrix(WHOLEMATRIX, FALSE);   // Does not realloc V, I
+           IF SystemYChanged THEN
+           begin
+              BuildYMatrix(WHOLEMATRIX, FALSE);   // Does not realloc V, I
+           end;
 
            IF UseAuxCurrents THEN AddInAuxCurrents(NEWTONSOLVE);
 
@@ -881,8 +911,10 @@ FUNCTION TSolutionObj.SolveZeroLoadSnapShot:Integer;
 Begin
    Result := 0;
 
-    IF SystemYChanged OR SeriesYInvalid THEN BuildYMatrix(SERIESONLY, TRUE);   // Side Effect: Allocates V
-
+    IF SystemYChanged OR SeriesYInvalid THEN
+    Begin
+        BuildYMatrix(SERIESONLY, TRUE);   // Side Effect: Allocates V
+    End;
     Inc(SolutionCount);    //Unique number for this solution
 
     ZeroInjCurr;   // Side Effect: Allocates InjCurr
@@ -972,7 +1004,10 @@ Begin
                ControlActionsDone := TRUE; // Stop solution process if failure to converge
        End;
 
-       IF SystemYChanged THEN BuildYMatrix(WHOLEMATRIX, FALSE); // Rebuild Y matrix, but V stays same
+       IF SystemYChanged THEN
+       begin
+          BuildYMatrix(WHOLEMATRIX, FALSE); // Rebuild Y matrix, but V stays same
+       end;
 End;
 
 // ===========================================================================================
@@ -990,7 +1025,6 @@ Begin
        Inc(ControlIteration);
 
        Result := SolveCircuit;  // Do circuit solution w/o checking controls
-
        {Now Check controls}
 {$IFDEF DLL_ENGINE}
        Fire_CheckControls;
@@ -1029,7 +1063,10 @@ Begin
    LoadsNeedUpdating := TRUE;  // Force possible update of loads and generators
    {$IFDEF MSWINDOWS}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
 
-   If SystemYChanged THEN BuildYMatrix(WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
+   If SystemYChanged THEN
+   begin
+        BuildYMatrix(WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
+   end;
 
    Inc(SolutionCount);   // Unique number for this solution
 
@@ -1057,7 +1094,6 @@ End;
 
 function TSolutionObj.SolveCircuit: Integer;
 begin
-
        Result := 0;
        IF LoadModel=ADMITTANCE
        Then
@@ -1072,7 +1108,10 @@ begin
             END
        Else  Begin
            TRY
-              IF SystemYChanged THEN BuildYMatrix(WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
+              IF SystemYChanged THEN
+              begin
+                  BuildYMatrix(WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
+              end;
               DoPFLOWsolution;
            EXCEPT
              ON E:EEsolv32Problem
@@ -1092,6 +1131,463 @@ VAR
 Begin
     FOR i := 0 to ActiveCircuit.NumNodes Do Currents^[i] := CZERO;
 End;
+// ===========================================================================================
+PROCEDURE TSolutionObj.Upload2IncMatrix;
+var
+  CIdx  : Integer;
+
+Begin
+  // Uploads the values to the incidence matrix
+  IncMat.insert((ActiveIncCell[0] - 1),(ActiveIncCell[1] - 2),ActiveIncCell[2]);
+  ActiveIncCell[2]  :=  -1;
+End;
+// ===========================================================================================
+procedure TSolutionObj.AddLines2IncMatrix;
+var
+  LineBus       : String;
+  elem          :TLineObj;
+  TermIdx,
+  CIdx,
+  BusdotIdx     : Integer;
+  EndFlag       : Boolean;
+  counter       : Integer;
+begin
+// This rouitne adds the Lines to the incidence matrix vectors
+  with ActiveCircuit do
+  Begin
+    elem        :=  Lines.First;
+//    Counter     :=  0;
+    while elem <> nil do
+    Begin
+      if elem.Enabled then
+      Begin
+        ActiveIncCell[2]  :=  1;
+        inc(temp_counter);
+        setlength(Inc_Mat_Rows,temp_counter);
+        Inc_Mat_Rows[temp_counter - 1]  :=  'Line.'+elem.Name;
+        for TermIdx := 1 to 2 do
+        Begin
+            LineBus           :=  elem.GetBus(TermIdx);
+            BusdotIdx         :=  ansipos('.',LineBus);
+            if BusdotIdx <> 0 then
+              LineBus         :=  Copy(LineBus,0,BusdotIdx-1);  // removes the dot from the Bus Name
+            // Evaluates the position of the Bus in the array
+            ActiveIncCell[1]  :=  1;
+            EndFlag  :=  True;
+            while (ActiveIncCell[1] <= NumBuses) and (EndFlag) DO
+            Begin
+                if LineBus = BusList.Get(ActiveIncCell[1]) then EndFlag := False;
+                ActiveIncCell[1]  :=  ActiveIncCell[1]  + 1;
+            End;
+            Upload2IncMatrix;
+//            inc(Counter);
+        End;
+        inc(ActiveIncCell[0]);
+      End
+      else
+      begin
+        Counter :=0;
+      end;
+      elem  :=  Lines.Next;
+    End;
+//    Counter :=  Counter;
+  End;
+end;
+// ===========================================================================================
+procedure TSolutionObj.AddXfmr2IncMatrix;
+var
+  LineBus      : String;
+  elem         :TTransfObj;
+  TermIdx,
+  BusdotIdx,
+  CIdx        : Integer;
+  EndFlag     : Boolean;
+  lst         : TPointerList;
+  Counter     : Integer;
+
+begin
+// This rouitne adds the Transformers to the incidence matrix vectors
+  with ActiveCircuit do
+  Begin
+    lst := ActiveCircuit.Transformers;
+    elem        :=  lst.First;
+    while elem <> nil do
+    Begin
+      if elem.Enabled then
+      Begin
+        ActiveIncCell[2]       :=  1;
+        inc(temp_counter);
+        setlength(Inc_Mat_Rows,temp_counter);
+        Inc_Mat_Rows[temp_counter - 1]  :=  'Transformer.'+elem.Name;
+        for TermIdx := 1 to elem.NumberOfWindings do
+        Begin
+            LineBus     :=  elem.GetBus(TermIdx);
+            BusdotIdx   :=  ansipos('.',LineBus);
+            if BusdotIdx <> 0 then
+              LineBus   :=  Copy(LineBus,0,BusdotIdx-1);  // removes the dot from the Bus Name
+            // Evaluates the position of the Bus in the array
+            ActiveIncCell[1]  :=  1;
+            EndFlag  :=  True;
+            while (ActiveIncCell[1] <= NumBuses) and (EndFlag) DO
+            Begin
+                if LineBus = BusList.Get(ActiveIncCell[1]) then EndFlag := False;
+                ActiveIncCell[1]  :=  ActiveIncCell[1]  + 1;
+            End;
+            Upload2IncMatrix;
+       End;
+        inc(ActiveIncCell[0]);
+      End;
+      elem  :=  lst.Next;
+    End;
+  End;
+end;
+// ===========================================================================================
+procedure TSolutionObj.AddSeriesCap2IncMatrix;
+var
+  CapBus      : String;
+  elem        : TCapacitorObj;
+  lst         : TPointerList;
+  CapTermIdx,
+  BusdotIdx,
+  CIdx        : Integer;
+  CapEndFlag  : Boolean;
+begin
+// This rouitne adds the series capacitors to the incidence matrix vectors
+  with ActiveCircuit do
+  Begin
+    lst         :=  ShuntCapacitors;
+    elem        := lst.First;
+    while elem <> nil do
+    Begin
+      if elem.NumTerminals > 1 then
+      Begin
+        if elem.Enabled then
+        Begin
+          inc(temp_counter);
+          setlength(Inc_Mat_Rows,temp_counter);
+          Inc_Mat_Rows[temp_counter - 1]  :=  'Capacitor.'+elem.Name;
+          ActiveIncCell[2]  :=  1;
+          for CapTermIdx := 1 to 2 do
+          Begin
+            CapBus      :=  elem.GetBus(CapTermIdx);
+            BusdotIdx   :=  ansipos('.',CapBus);
+            if BusdotIdx <> 0 then
+              CapBus    :=  Copy(CapBus,0,BusdotIdx-1);  // removes the dot from the Bus Name
+            // Evaluates the position of the Bus in the array
+            ActiveIncCell[1]  :=  1;
+            CapEndFlag  :=  True;
+            while (ActiveIncCell[1] <= NumBuses) and (CapEndFlag) DO
+            Begin
+                if CapBus = BusList.Get(ActiveIncCell[1]) then  CapEndFlag := False;
+                ActiveIncCell[1]  :=  ActiveIncCell[1]  + 1;
+            End;
+            Upload2IncMatrix;
+          End;
+          inc(ActiveIncCell[0]);
+        End;
+      End;
+      elem  :=  lst.Next;
+    End;
+  End;
+end;
+// ===========================================================================================
+procedure TSolutionObj.AddSeriesReac2IncMatrix;
+var
+  RBus      : String;
+  elem,
+  DevClassIndex :Integer;
+  TermIdx,
+  BusdotIdx,
+  CIdx     : Integer;
+  EndFlag  : Boolean;
+begin
+// This rouitne adds the series reactors to the incidence matrix vectors
+  with ActiveCircuit do
+  Begin
+    DevClassIndex := ClassNames.Find('reactor');
+    LastClassReferenced := DevClassIndex;
+    ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
+    elem        := ActiveDSSClass.First;
+    while elem <> 0 do
+    Begin
+      RBus        :=  ActiveCktElement.GetBus(2);
+      BusdotIdx   :=  ansipos('.0',RBus);
+      if BusdotIdx = 0 then
+      Begin
+        inc(temp_counter);
+        setlength(Inc_Mat_Rows,temp_counter);
+        Inc_Mat_Rows[temp_counter - 1]  :=  'Reactor.'+ActiveCktElement.Name;
+        ActiveIncCell[2]  :=  1;
+        for TermIdx := 1 to 2 do
+        Begin
+          RBus      :=  ActiveCktElement.GetBus(TermIdx);
+          BusdotIdx   :=  ansipos('.',RBus);
+          if BusdotIdx <> 0 then
+            RBus    :=  Copy(RBus,0,BusdotIdx-1);  // removes the dot from the Bus Name
+          // Evaluates the position of the Bus in the array
+          ActiveIncCell[1]  :=  1;
+          EndFlag  :=  True;
+          while (ActiveIncCell[1] <= NumBuses) and (EndFlag) DO
+          Begin
+              if RBus = BusList.Get(ActiveIncCell[1]) then  EndFlag := False;
+              ActiveIncCell[1]  :=  ActiveIncCell[1]  + 1;
+          End;
+          Upload2IncMatrix;
+        End;
+      End;
+      elem  :=  ActiveDSSClass.Next;
+      inc(ActiveIncCell[0]);
+    End;
+  End;
+end;
+//*********Routine for extracting the Branch to Node incidence matrix***********
+//*     The order depends on the way the lines, xfmr, series cap and reactors  *
+//******************************************************************************
+PROCEDURE TSolutionObj.Calc_Inc_Matrix;
+var
+  dlong : Integer;
+Begin
+  // If the sparse matrix obj doesn't exists creates it, otherwise deletes the content
+  if IncMat = nil then
+    IncMat  :=  Tsparse_matrix.Create
+  else
+    IncMat.reset;
+
+  if ActiveCircuit<>nil then
+    with ActiveCircuit do
+    Begin
+      temp_counter  :=  0;
+      ActiveIncCell[0]  := 1;           // Activates row 1 of the incidence matrix
+      // Now we proceed to evaluate the link branches
+      AddLines2IncMatrix;      // Includes the Lines
+      AddXfmr2IncMatrix;       // Includes the Xfmrs
+      AddSeriesCap2IncMatrix;  // Includes Series Cap
+      AddSeriesReac2IncMatrix; // Includes Series Reactors
+      IncMat_Ordered  :=  False;
+    End;
+End;
+{*******************************************************************************
+* This function delivers the Row index connected to the Column at the input    *
+*                   Inside the B2N incidence Matrix                            *
+********************************************************************************}
+function TSolutionObj.get_IncMatrix_Row(Col:Integer):Integer;
+var
+  Tflag : Boolean;
+  idx_1 : Integer;
+begin
+  Result            :=  -1;
+  Tflag             :=  True;
+  for idx_1 := 1 to (IncMat.NZero - 1) do    //Looks for the Column in the IncMatrix
+  begin
+    if (IncMat.data[idx_1][1] = Col) and Tflag then
+    begin
+      Result :=   IncMat.data[idx_1][0];
+      Tflag  :=   False;
+    end;
+  end;
+end;
+{*******************************************************************************
+* This function delivers the Column index connected to the Row at the input    *
+*                   Inside the B2N incidence Matrix                            *
+********************************************************************************}
+function TSolutionObj.get_IncMatrix_Col(Row:Integer):Integer;
+var
+  Tflag : Boolean;
+  Idx_1 : Integer;
+Begin
+  Result  :=  -1;
+  Tflag   :=  True;    // Detection Flag
+  for Idx_1 := 1 to (IncMat.NZero - 1) do    //Looks for the row in the IncMatrix
+  begin
+    if (IncMat.data[Idx_1][0] = Row) and Tflag then
+    begin
+      setlength(Active_Cols,2);
+      setlength(Active_Cols_Idx,2);
+      Active_Cols[0]      :=  IncMat.data[Idx_1][1];     //Stores the indexes of both columns for the link branch
+      Active_Cols[1]      :=  IncMat.data[Idx_1 + 1][1]; //In case they need to be used in the future by the caller
+      Active_Cols_Idx[0]  :=  IncMat.data[Idx_1 - 1][2]; //Stores the indexes of both columns for the link branch
+      Active_Cols_Idx[1]  :=  IncMat.data[Idx_1][2];     //In case they need to be used in the future by the caller
+      Result :=  IncMat.data[Idx_1][1];
+      Tflag  :=  False;
+    end;
+  end;
+End;
+
+//*********Routine for extracting the Branch to Node incidence matrix***********
+//*     Organized hierarchically. This routine also calculates the             *
+//*     Levels vector for defining the proximity of the bus to the circuit's   *
+//*     Backbone. To do it, this routine uses the CktTree class                *
+//******************************************************************************
+PROCEDURE TSolutionObj.Calc_Inc_Matrix_Org;
+
+Var
+//  Ftree       : TextFile;                           // For debugging
+  pdElem         : TPDElement;
+  topo           : TCktTree;
+//  TreeNm,                                           // For debugging
+//  FileRoot,                                         // For debugging
+  PDE_Name       : String;                            // Name of the PDElement
+  PDE_Buses      : Array of string;                   // Buses of the PDElement
+  Temp_Array     : Array of Integer;                  // Local Shared variable
+  nLevels,                                            // Current number of levels for the active Bus
+  i,                                                  // Default counter
+  j,                                                  // Default counter
+  j2,                                                 // Default counter
+  ZeroLevel,                                          // Number of Zero level Buses
+  BusdotIdx,
+  row,
+  col,
+  val,                                          // Local Shared variable
+  nPDE           : Integer;                           // PDElements index
+Begin
+  Try
+    if ActiveCircuit<>nil then
+    begin
+//      TreeNm := FileRoot + 'TopoTree_Cols.csv';   // For debuging
+      topo := ActiveCircuit.GetTopology;
+      nLevels     := 0;
+      nPDE        := 0;
+      setlength(Inc_Mat_Cols,0);
+      //Init the spaser matrix
+      if IncMat = nil then
+        IncMat  :=  Tsparse_matrix.Create
+      else
+        IncMat.reset;
+
+      ActiveIncCell[0]  := -1;           // Activates row 1 of the incidence matrix
+      If Assigned (topo) Then Begin
+        PDElem                  := topo.First;
+        While Assigned (PDElem) do begin
+          nLevels                 := topo.Level;
+          PDE_Name                :=  PDElem.ParentClass.Name+'.'+PDElem.Name;
+//******************Gets the buses to which the PDE is connected****************
+          With ActiveCircuit do
+          Begin
+            ActiveCircuit.SetElementActive(PDE_Name);
+            SetLength(PDE_Buses,ActiveCktElement.Nterms);
+            For i := 1 to  ActiveCktElement.Nterms Do
+            Begin
+              PDE_Buses[i-1] :=  ActiveCktElement.GetBus(i);
+              BusdotIdx         :=  ansipos('.',PDE_Buses[i-1]);
+              if BusdotIdx <> 0 then
+                PDE_Buses[i-1]  :=  Copy(PDE_Buses[i-1],0,BusdotIdx-1);  // removes the dot from the Bus Name
+            End;
+            if length(Inc_Mat_Cols) = 0 then  //First iteration so the Cols array will be loaded
+            begin
+              setlength(Inc_Mat_Cols,1);
+              setlength(Inc_Mat_Levels,1);
+              Inc_Mat_Cols[0]   :=  PDE_Buses[0];
+              Inc_Mat_levels[0] :=  nLevels;
+            end
+            else                               //The Cols array is populated with something
+            begin
+              inc(nPDE);
+              setlength(Inc_Mat_Rows,nPDE);
+              Inc_Mat_Rows[nPDE-1]    :=  PDE_Name;
+              for j := 0 to ActiveCktElement.Nterms-1 do
+              Begin
+                row :=  ActiveIncCell[0];                 //Sets the row
+                BusdotIdx           :=  -1;               // Flag to not create a new variable
+                for i := 0 to length(Inc_Mat_Cols)-1 do   // Checks if the bus already exists in the Cols array
+                  if Inc_Mat_Cols[i] = PDE_Buses[j] then  BusdotIdx :=  i;
+                if BusdotIdx >= 0 then  col :=  BusdotIdx   //Sets the Col
+                else
+                Begin
+                  setlength(Inc_Mat_Cols,length(Inc_Mat_Cols)+1);
+                  setlength(Inc_Mat_levels,length(Inc_Mat_levels)+1);
+                  Inc_Mat_Cols[length(Inc_Mat_Cols)-1]  :=  PDE_Buses[j];
+                  Inc_Mat_levels[length(Inc_Mat_Cols)-1]:=  nLevels;
+                  col :=  length(Inc_Mat_Cols) - 1; //Sets the Col
+                End;
+                if j = 0 then val  :=  1 //Sets the value
+                else val :=  -1;
+                IncMat.insert(row,col,val);
+              End;
+            end;
+          End;
+          inc(ActiveIncCell[0]);
+          PDElem := topo.GoForward;
+        End;
+      End;
+{*******************************************************************************
+*   Now the levels array needs to be reprocessed to get the 0 level buses,     *
+*   they are on a continuous path from the feeder head to the feeder end       *
+********************************************************************************}
+      BusdotIdx :=  MaxIntValue(Inc_Mat_levels);
+      for i := 0 to length(Inc_Mat_levels) do
+        if Inc_Mat_levels[i] = BusdotIdx then nLevels := i;
+      for j := 1 to BusdotIdx-1 do
+      begin
+        for i := 0 to nLevels do
+        begin
+          if Inc_Mat_levels[i] = j then ZeroLevel := i;
+        end;
+        Inc_Mat_levels[ZeroLevel]  := 0;
+      end;
+//**********Normalize the branches of the level between zero level buses********
+      BusdotIdx :=  0;
+      j         :=  0;
+      ZeroLevel :=  0;
+      SetLength(Temp_Array,0);
+      for i := 0 to high(Inc_Mat_levels) do
+      begin
+          if (Inc_Mat_levels[i] = 0) then
+          begin
+            if length(Temp_Array) > 0 then    // The array subset is large enough for
+            begin                             //Normalizing it
+              BusdotIdx :=  MinIntValue(Temp_Array) - 1;
+              for j2 := ZeroLevel to (length(Temp_Array) + ZeroLevel - 1) do
+                Inc_Mat_levels[j2]  :=  Inc_Mat_levels[j2] - BusdotIdx;
+              SetLength(Temp_Array,0);
+            end;
+            ZeroLevel :=  i + 1;
+          end
+          else
+          begin
+            setlength(Temp_Array,(length(Temp_Array) + 1));
+            Temp_Array[High(Temp_Array)]  :=  Inc_Mat_levels[i];
+          end;
+      end;
+//************Verifies is something else was missing at the end*****************
+      if (ZeroLevel < (length(Inc_Mat_levels) - 1)) then
+      begin
+        BusdotIdx :=  0;                                                // Counter for defining the level
+        j         :=  0;                                                // Stores the previous value (shift reg)
+        for j2 := ZeroLevel to High(Inc_Mat_levels) do
+        begin
+          if Inc_Mat_levels[j2] >= j then inc(BusdotIdx)
+          else
+          begin
+            ActiveIncCell[1]  :=  get_IncMatrix_Row(j2);                //Looks for the Column in the IncMatrix
+            if ActiveIncCell[1] < 0 then                                //Checks if the col was located (just in case)
+              BusdotIdx     :=  1
+            else
+            begin
+              ActiveIncCell[2] := get_IncMatrix_Col(ActiveIncCell[1]);  //Looks for the row in the IncMatrix
+              if Active_Cols[0] = j2 then BusdotIdx :=  Inc_Mat_levels[Active_Cols[1]]  + 1
+              else  BusdotIdx :=  Inc_Mat_levels[ActiveIncCell[2]]  + 1;
+            end;
+          end;
+          j :=  Inc_Mat_levels[j2];
+          Inc_Mat_levels[j2]  :=  BusdotIdx;
+        end;
+      end;
+      IncMat_Ordered  :=  True;
+    end;
+  Finally
+
+  End;
+End;
+
+{*******************************************************************************
+*   This routine evaluates if the current location is the best or if its       *
+*   Necessary to move back one PDE just to cover a wider area                  *
+********************************************************************************}
+function TSolutionObj.CheckLocationIdx(Idx : Integer): Integer;
+begin
+  if Inc_Mat_Levels[Idx - 1] = 0 then  Result :=  idx - 1
+  else Result :=  idx;
+end;
 
 //----------------------------------------------------------------------------
 FUNCTION TDSSSolution.Init(Handle:Integer):Integer;
@@ -1131,7 +1627,7 @@ VAR
    // for dumping the matrix in compressed columns
    p                :LongWord;
    hY               :NativeUInt;
-   nNZ, nBus        :LongWord;
+   nBus, nNZ        :LongWord;
    ColPtr, RowIdx   :array of LongWord;
    cVals            :array of Complex;
 Begin
@@ -1343,7 +1839,6 @@ Begin
                       IF NOT ControlQueue.DoMultiRate(DynaVars.intHour, DynaVars.t)
                       THEN ControlActionsDone := TRUE;
                  End;
-
           END;
       End;
 
@@ -1420,7 +1915,6 @@ begin
    SolutionInitialized := FALSE;   // reinitialize solution when mode set (except dynamics)
    PreserveNodeVoltages := FALSE;  // don't do this unless we have to
    SampleTheMeters := FALSE;
-
    // Reset defaults for solution modes
    Case Dynavars.SolutionMode of
 
@@ -1803,8 +2297,6 @@ Begin
        Then FOR j := 1 to NumNodesThisBus Do NodeV^[GetRef(j)]  := VBus^[j];
 
 end;
-
-
 
 FUNCTION TSolutionObj.SolveYDirect: Integer;
 
