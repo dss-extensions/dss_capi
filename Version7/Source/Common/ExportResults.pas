@@ -58,6 +58,11 @@ Procedure ExportYVoltages(FileNM:String);
 Procedure ExportYCurrents(FileNM:String);
 Procedure ExportSections(FileNM:String; pMeter:TEnergyMeterObj);
 Procedure ExportErrorLog(FileNm:String);
+Procedure ExportIncMatrix(FileNm:String);
+Procedure ExportIncMatrixRows(FileNm:String);
+Procedure ExportIncMatrixCols(FileNm:String);
+Procedure ExportBusLevels(FileNm:String);
+Procedure ExportLaplacian(FileNm:String);
 
 
 IMPLEMENTATION
@@ -2588,7 +2593,7 @@ Var
     i,j,p            :LongWord;
     col,row          :LongWord;
     hY               :NativeUInt;
-    nNZ, nBus        :LongWord;
+    nBus, nNZ        :LongWord;
     ColPtr, RowIdx   :array of LongWord;
     cVals            :array of Complex;
     re, im           :Double;
@@ -2602,9 +2607,9 @@ Begin
      Exit;
   End;
   // this compresses the entries if necessary - no extra work if already solved
-  FactorSparseMatrix (hY);
-  GetNNZ (hY, @nNZ);
-  GetSize (hY, @nBus); // we should already know this
+  FactorSparseMatrix(hY);
+  GetNNZ(hY, @nNZ);
+  GetSize(hY, @nBus); // we should already know this
 
   Try
      Assignfile(F,FileNm);
@@ -2630,8 +2635,10 @@ Begin
        SetLength (RowIdx, nNZ);
        SetLength (cVals, nNZ);
        GetCompressedMatrix (hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
+
        {Write out fully qualified Bus Names}
         With ActiveCircuit Do Begin
+
           Writeln(F, Format('%d, ',[NumNodes]));
   (*        For i := 1 to NumNodes DO BEGIN
              j :=  MapNodeToBus^[i].BusRef;
@@ -2657,13 +2664,20 @@ Begin
              End;
              Writeln(F);
           End;
+
         End;
-     end;
+     end;    
+
 
      GlobalResult := FileNm;
+
   Finally
+
      CloseFile(F);
+
   End;
+
+
 End;
 
 Procedure ExportSeqZ(FileNm:String);
@@ -3065,12 +3079,102 @@ Begin
 End;
 
 Procedure ExportErrorLog(FileNm:String);
-// Export the present set of EventStrings
+// Export the present set of ErrorStrings
 Begin
      ErrorStrings.SaveToFile(FileNm);
      GlobalResult := FileNm;
 End;
 
+Procedure ExportIncMatrix(FileNm:String);
+var
+  F             : TextFile;
+  i             : Integer;
+Begin
+  with ActiveCircuit.Solution do
+  Begin
+    Assignfile(F,FileNm);
+    ReWrite(F);
+    Writeln(F,'Row,Col,Value');
+    for i := 0 to (IncMat.NZero -1) do
+    begin
+      Writeln(F,inttostr(IncMat.data[i][0]) + ',' + inttostr(IncMat.data[i][1]) + ',' + inttostr(IncMat.data[i][2]));
+    end;
+    CloseFile(F);
+  End;
+End;
+
+Procedure ExportIncMatrixRows(FileNm:String);
+var
+  F             : TextFile;
+  i             : Integer;
+Begin
+  with ActiveCircuit.Solution do
+  Begin
+    Assignfile(F,FileNm);
+    ReWrite(F);
+    Writeln(F,'B2N Incidence Matrix Row Names (PDElements)');
+    for i := 0 to (length(Inc_Mat_Rows)-1) do
+    begin
+      Writeln(F,Inc_Mat_Rows[i]);
+    end;
+    CloseFile(F);
+  End;
+End;
+//-------------------------------------------------------------------
+Procedure ExportIncMatrixCols(FileNm:String);
+var
+  F             : TextFile;
+  i             : Integer;
+Begin
+  with ActiveCircuit.Solution do
+  Begin
+    Assignfile(F,FileNm);
+    ReWrite(F);
+    Writeln(F,'B2N Incidence Matrix Column Names (Buses)');
+    for i := 0 to (length(Inc_Mat_Cols)-1) do
+    begin
+      Writeln(F,Inc_Mat_Cols[i]);
+    end;
+    CloseFile(F);
+  End;
+End;
+//-------------------------------------------------------------------
+Procedure ExportBusLevels(FileNm:String);
+var
+  F             : TextFile;
+  i             : Integer;
+Begin
+  with ActiveCircuit.Solution do
+  Begin
+    Assignfile(F,FileNm);
+    ReWrite(F);
+    Writeln(F,'B2N Incidence Matrix Column Names (Buses) and their level within the matrix');
+    Writeln(F,'Bus Name,Bus Level');
+    for i := 0 to (length(Inc_Mat_Cols)-1) do
+    begin
+      Writeln(F,Inc_Mat_Cols[i] + ',' + inttostr(Inc_Mat_levels[i]));
+    end;
+    CloseFile(F);
+  End;
+End;
+//-------------------------------------------------------------------
+Procedure ExportLaplacian(FileNm:String);
+var
+  F             : TextFile;
+  i             : Integer;
+Begin
+  with ActiveCircuit.Solution do
+  Begin
+    Assignfile(F,FileNm);
+    ReWrite(F);
+    Writeln(F,'Row,Col,Value');
+    for i := 0 to (Laplacian.NZero -1) do
+    begin
+      Writeln(F,inttostr(Laplacian.data[i][0]) + ',' + inttostr(Laplacian.data[i][1]) + ',' + inttostr(Laplacian.data[i][2]));
+    end;
+    CloseFile(F);
+  End;
+End;
 //-------------------------------------------------------------------
 Procedure ExportVoltagesElements(FileNm:String);
 
@@ -3537,7 +3641,7 @@ Begin
                     [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
                      FullName(ActiveCircuit.ActiveCktElement)  ]));
                  End;
-            End;
+             End;
              iMeter := EnergyMeterClass.Next;
           End;
 

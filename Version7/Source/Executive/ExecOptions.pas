@@ -166,7 +166,7 @@ Begin
                     CRLF+'  Yearly (follow Yearly curve),'+
                     CRLF+'  DIrect,'+
                     CRLF+'  DUtycycle,'+
-                    CRLF+'  Time, ( see LoadShapeClass, SampleEnergymeters options)' +
+                    CRLF+'  Time, ( see LoadShapeClass option, SampleEnergymeters options)' +
                     CRLF+'  DYnamic,  ( see LoadShapeClass option)'+
                     CRLF+'  Harmonic,'+
                     CRLF+'  HarmonicT,  (sequential Harmonic Mode)'+
@@ -431,8 +431,8 @@ Begin
            73: DefaultBaseFreq  := Parser.DblValue;
           102: UpdateRegistry   := InterpretYesNo(Param);
           111:  begin
-            DSS_Viz_enable  :=  InterpretYesNo(Param);
-          end;
+                  DSS_Viz_enable  :=  InterpretYesNo(Param);
+                end;
          ELSE
             Begin
                 DoSimpleMsg('You must create a new circuit object first: "new circuit.mycktname" to execute this Set command.', 301);

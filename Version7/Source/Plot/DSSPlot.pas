@@ -37,6 +37,7 @@ Type
       ptEvolutionPlot, ptMatrixplot);
    TPlotQuantity = (pqVoltage, pqCurrent, pqPower, pqLosses, pqCapacity,
       pqNone);
+   TMatrixType =  (pIncMatrix, pLaplacian); // The types of matrices that can be plotted
 
    TDSSPlot = class(TObject)
    private
@@ -96,6 +97,7 @@ Type
    public
 
       PlotType: TPlotType;
+      MatrixType: TMatrixType;
       MaxScale, MinScale: Double;
       Dots, Labels, ShowLoops, { applies to Meterzone plots only }
       ShowSubs: Boolean;
@@ -1115,7 +1117,12 @@ begin
     ptEvolutionPlot:
       DSSConnectObj.EvolutionPlotMsg;
     ptMatrixplot:
-      DSSConnectObj.MatrixPlotMsg;
+    Begin
+      if MatrixType = pLaplacian then
+        DSSConnectObj.MatrixPlotMsg(1)
+      else
+        DSSConnectObj.MatrixPlotMsg(0)
+    End;
   End;
 end;
 
@@ -1823,7 +1830,7 @@ begin
                   Else
                   Begin
                      FileName := CaseName + PathDelim + 'di_yr_' + Trim
-                       (IntToStr(CaseYear)) + PathDelim + 'EnergyMeterTotals.CSV';
+                       (IntToStr(CaseYear)) + PathDelim +'EnergyMeterTotals.CSV';
                      SearchForMeterName := TRUE;
                   End;
             End;
@@ -2699,7 +2706,7 @@ begin
                               puV2 := Cabs
                                 (Solution.NodeV^[Bus2.GetRef
                                    (Bus2.FindIdx(iphs))])
-                                / Bus2.kVBase / DenomLN;
+                                 / Bus2.kVBase / DenomLN;
                               AddNewLine(Bus1.DistFromMeter * LenScale, puV1,
                                  Bus2.DistFromMeter * LenScale, puV2, ColorArray[iphs],
                                  2, psSolid, Dots,
@@ -2749,11 +2756,11 @@ begin
                                     puV1 := Cabs
                                       (Solution.NodeV^[Bus1.GetRef
                                         (Bus1.FindIdx(iphs))])
-                                      / Bus1.kVBase / DenomLN;
+                                       / Bus1.kVBase / DenomLN;
                                     puV2 := Cabs
                                       (Solution.NodeV^[Bus2.GetRef
                                         (Bus2.FindIdx(iphs))])
-                                      / Bus2.kVBase / DenomLN;
+                                       / Bus2.kVBase / DenomLN;
                                     AddNewLine(Bus1.DistFromMeter * LenScale, puV1,
                                        Bus2.DistFromMeter * LenScale, puV2, MyColor, 2,
                                        LineType, Dots,

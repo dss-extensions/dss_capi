@@ -231,7 +231,9 @@ Begin
                     'U': Quantity := pqcurrent;
                     End;
                'P': Quantity := pqpower;
-               'L': Quantity := pqlosses;
+               'L': IF CompareTextShortest('los', Param)=0 Then Quantity := pqlosses
+                    ELSE MatrixType :=  pLaplacian;
+               'I': MatrixType :=  pIncMatrix;
              Else
                Quantity := pqNone;
                Valueindex := Parser.IntValue;
@@ -288,10 +290,6 @@ Begin
                   Else if CompareTextShortest(Param, 'llprimary')=0 then PhasesToPlot := PROFILELLPRI
                   Else If Length(Param)=1 then PhasesToPlot := Parser.IntValue;
              End;
-         22: Begin
-              ProfileScale := PROFILEPUKM;
-              if CompareTextShortest (Param, '120KFT') = 0 then ProfileScale := PROFILE120KFT;
-             End;
 
        Else
        End;
@@ -304,26 +302,26 @@ Begin
      If Not ActiveCircuit.Issolved Then DSSPlotObj.Quantity := pqNone;
 
      With DSSPlotObj Do Begin
-        if DSS_Viz_enable then
-        begin
-          if (DSS_Viz_installed and ((
-              PlotType = ptMonitorplot) or (
-              PlotType = ptLoadshape) or (
-              PlotType = ptProfile) or (
-              PlotType = ptScatterPlot) or (
-              PlotType = ptEvolutionPlot) or (
-              PlotType = ptMatrixplot))) then
-            DSSVizPlot; // DSS Visualization tool
-        end
+      if DSS_Viz_enable then
+      begin
+        if (DSS_Viz_installed and ((
+            PlotType = ptMonitorplot) or (
+            PlotType = ptLoadshape) or (
+            PlotType = ptProfile) or (
+            PlotType = ptScatterPlot) or (
+            PlotType = ptEvolutionPlot) or (
+            PlotType = ptMatrixplot))) then
+          DSSVizPlot; // DSS Visualization tool
+      end
+      else
+      begin
+        if (PlotType = ptScatterPlot) or (
+           PlotType = ptEvolutionPlot) or (
+           PlotType = ptMatrixplot) then
+           DoSimpleMsg('The DSS Visualization tool is disabled (Check the DSSVisualizationTool option).',0)
         else
-        begin
-          if (PlotType = ptScatterPlot) or (
-             PlotType = ptEvolutionPlot) or (
-             PlotType = ptMatrixplot) then
-             DoSimpleMsg('The DSS Visualization tool is disabled (Check the DSSVisualizationTool option).',0)
-          else
-             Execute;   // makes a new plot based on these options
-        end;
+           Execute;   // makes a new plot based on these options
+      end;
      End;
 
 End;
