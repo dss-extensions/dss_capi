@@ -4495,6 +4495,38 @@ extern "C" {
     */
     DSS_CAPI_V7_DLL void Solution_Set_MinIterations(int32_t Value);
 
+    DSS_CAPI_V7_DLL void Solution_Get_IncMatrix(int32_t** ResultPtr, int32_t* ResultCount);
+
+    /*
+    Same as Solution_Get_IncMatrix but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void Solution_Get_IncMatrix_GR(void);
+
+    DSS_CAPI_V7_DLL void Solution_Get_Laplacian(int32_t** ResultPtr, int32_t* ResultCount);
+
+    /*
+    Same as Solution_Get_Laplacian but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void Solution_Get_Laplacian_GR(void);
+
+    DSS_CAPI_V7_DLL void Solution_Get_BusLevels(int32_t** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as Solution_Get_BusLevels but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void Solution_Get_BusLevels_GR(void);
+
+    DSS_CAPI_V7_DLL void Solution_Get_IncMatrixRows(char*** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as Solution_Get_IncMatrixRows but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void Solution_Get_IncMatrixRows_GR(void);
+
+    DSS_CAPI_V7_DLL void Solution_Get_IncMatrixCols(char*** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as Solution_Get_IncMatrixCols but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void Solution_Get_IncMatrixCols_GR(void);
+
     /*
     Open or Close the switch. No effect if switch is locked.  However, Reset removes any lock and then closes the switch (shelf state).
     */

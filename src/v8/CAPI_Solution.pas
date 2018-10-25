@@ -467,7 +467,7 @@ end;
 //------------------------------------------------------------------------------
 function Solution_Get_dblHour():Double;cdecl;
 begin
-     If ActiveCircuit <> Nil Then  Begin
+     If ActiveCircuit[ActiveActor] <> Nil Then  Begin
         Result := ActiveCircuit[ActiveActor].Solution.DynaVars.dblHour;
      End;
 end;
@@ -564,7 +564,7 @@ end;
 procedure Solution_SolvePlusControl();cdecl;
 {One Pass Through the solution and then dispatches controls}
 begin
-   If ActiveCircuit <> Nil Then Begin
+   If ActiveCircuit[ActiveActor] <> Nil Then Begin
       With ActiveCircuit[ActiveActor].Solution Do Begin
          SolveCircuit(ActiveActor);
          CheckControls(ActiveActor);
@@ -587,7 +587,7 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Solution_InitSnap();cdecl;
-{Initi some things that are done at the beginning of a snapshot solve}
+{Initi some things that are done at the beginning of a snapshot Solve(ActiveActor)}
 begin
    If ActiveCircuit[ActiveActor] <> Nil Then Begin
       ActiveCircuit[ActiveActor].Solution.SnapShotInit(ActiveActor);
@@ -677,7 +677,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_Cleanup();cdecl;
 begin
-    If ActiveCircuit <> Nil Then
+    If ActiveCircuit[ActiveActor] <> Nil Then
     WITH ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution Do
       Begin
                 EndOfTimeStepCleanup(ActiveActor);
@@ -686,7 +686,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_FinishTimeStep();cdecl;
 begin
-    If ActiveCircuit <> Nil Then
+    If ActiveCircuit[ActiveActor] <> Nil Then
     WITH ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution Do
       Begin
                 MonitorClass[ActiveActor].SampleAll(ActiveActor);  // Make all monitors take a sample
@@ -728,13 +728,13 @@ end;
 //------------------------------------------------------------------------------
 function Solution_Get_MinIterations():Integer;cdecl;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit[ActiveActor].Solution.MinIterations
+     If ActiveCircuit[ActiveActor] <> Nil Then Result := ActiveCircuit[ActiveActor].Solution.MinIterations
      Else Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_MinIterations(Value: Integer);cdecl;
 begin
-    If ActiveCircuit <> Nil Then ActiveCircuit[ActiveActor].Solution.MinIterations  := Value;
+    If ActiveCircuit[ActiveActor] <> Nil Then ActiveCircuit[ActiveActor].Solution.MinIterations  := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_SolveAll();cdecl;
@@ -829,7 +829,7 @@ VAR
   ArrSize : Integer;
 begin
       If ActiveCircuit[ActiveActor] <> Nil Then Begin
-        with ACtiveCircuit[ActiveActor].Solution do
+        with ActiveCircuit[ActiveActor].Solution do
         begin
            ArrSize    :=  length(Inc_Mat_Levels)-1;    // Removes the 3 initial zeros and the extra index
                                                   // Since it starts on 0
@@ -858,7 +858,7 @@ VAR
   ArrSize : Integer;
 begin
       If ActiveCircuit[ActiveActor] <> Nil Then Begin
-        with ACtiveCircuit[ActiveActor].Solution do
+        with ActiveCircuit[ActiveActor].Solution do
         begin
           ArrSize    :=  length(Inc_Mat_Rows)-1;
           Result     :=  DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (ArrSize) + 1);

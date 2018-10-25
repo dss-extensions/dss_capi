@@ -93,10 +93,23 @@ function Solution_Get_IntervalHrs():Double;cdecl;
 procedure Solution_Set_IntervalHrs(Value: Double);cdecl;
 function Solution_Get_MinIterations():Integer;cdecl;
 procedure Solution_Set_MinIterations(Value: Integer);cdecl;
+{V8-ONLY>
+procedure Solution_SolveAll();cdecl;
+<V8-ONLY}
+PROCEDURE Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_IncMatrix_GR();cdecl;
+PROCEDURE Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_Laplacian_GR();cdecl;
+PROCEDURE Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_BusLevels_GR();cdecl;
+PROCEDURE Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_IncMatrixRows_GR();cdecl;
+PROCEDURE Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+PROCEDURE Solution_Get_IncMatrixCols_GR();cdecl;
 
 IMPLEMENTATION
 
-USES CAPI_Constants, DSSGlobals, Math, LoadShape, Utilities, YMatrix, SolutionAlgs, Solution;
+USES CAPI_Constants, DSSGlobals, Math, LoadShape, Utilities, YMatrix, SolutionAlgs, Solution, ExecOptions;
 
 function Solution_Get_Frequency():Double;cdecl;
 begin
@@ -441,7 +454,7 @@ begin
     If ActiveCircuit <> Nil Then Begin
        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (EventStrings.Count-1) + 1);
        For i := 0 to EventStrings.Count-1 Do Begin
-          Result[i] := DSS_CopyStringAsPChar(EventStrings.Strings[i]); 
+          Result[i] := DSS_CopyStringAsPChar(EventStrings.Strings[i]);
        End;
     END
     Else Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);;
@@ -524,7 +537,7 @@ end;
 procedure Solution_CheckFaultStatus();cdecl;
 begin
    If ActiveCircuit <> Nil Then Begin
-      ActiveCircuit.Solution.Check_Fault_Status ;
+      ActiveCircuit.Solution.Check_Fault_Status;
    End;
 end;
 //------------------------------------------------------------------------------
@@ -725,5 +738,186 @@ procedure Solution_Set_MinIterations(Value: Integer);cdecl;
 begin
     If ActiveCircuit <> Nil Then ActiveCircuit.Solution.MinIterations  := Value;
 end;
+{V8-ONLY>
+//------------------------------------------------------------------------------
+procedure Solution_SolveAll();cdecl;
+var
+  i : Integer;
+begin
+  for i := 1 to NumOfActors do
+  begin
+    ActiveActor :=  i;
+    CmdResult   :=  DoSetCmd(1);
+  end;
+end;
+<V8-ONLY}
+//------------------------------------------------------------------------------
+PROCEDURE Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+VAR
+  Result: PIntegerArray;
+  i,
+  Counter,
+  IMIdx,
+  Idx,
+  ArrSize : Integer;
+begin
+    If (ActiveCircuit <> Nil) and (ActiveCircuit.Solution.Laplacian <> Nil) Then Begin
+      with ActiveCircuit.Solution do
+      begin
+         ArrSize    :=  Laplacian.NZero*3;
+         Result     :=  DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ArrSize) + 1);
+         Counter    :=  0;
+         IMIdx      :=  0;
+         while IMIdx  < ArrSize Do
+         Begin
+            for i := 0 to 2 do
+            Begin
+              Result[IMIdx] := Laplacian.data[Counter][i];
+              inc(IMIdx)
+            End;
+            inc(Counter)
+         End;
+      end;
+    END
+    Else Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+end;
+PROCEDURE Solution_Get_Laplacian_GR();cdecl;
+// Same as Solution_Get_Laplacian but uses global result (GR) pointers
+begin
+   Solution_Get_Laplacian(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+end;
+
+//------------------------------------------------------------------------------
+PROCEDURE Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+VAR
+  Result: PIntegerArray;
+  i,
+  Counter,
+  IMIdx,
+  Idx,
+  ArrSize : Integer;
+begin
+    If (ActiveCircuit <> Nil) and (ActiveCircuit.Solution.IncMat <> Nil) Then Begin
+      with ActiveCircuit.Solution do
+      begin
+         ArrSize    :=  IncMat.NZero*3;
+         Result     :=  DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ArrSize) + 1);
+         Counter    :=  0;
+         IMIdx      :=  0;
+         while IMIdx  < ArrSize Do
+         Begin
+            for i := 0 to 2 do
+            Begin
+              Result[IMIdx] := IncMat.data[Counter][i];
+              inc(IMIdx)
+            End;
+            inc(Counter)
+         End;
+      end;
+    END
+    Else Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+end;
+PROCEDURE Solution_Get_IncMatrix_GR();cdecl;
+// Same as Solution_Get_IncMatrix but uses global result (GR) pointers
+begin
+   Solution_Get_IncMatrix(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+end;
+
+//------------------------------------------------------------------------------
+PROCEDURE Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
+VAR
+  Result: PIntegerArray;
+  i,
+  IMIdx,
+  Idx,
+  ArrSize : Integer;
+begin
+      If ActiveCircuit <> Nil Then Begin
+        with ACtiveCircuit.Solution do
+        begin
+           ArrSize    :=  length(Inc_Mat_Levels)-1;    // Removes the 3 initial zeros and the extra index
+                                                  // Since it starts on 0
+           Result     :=  DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ArrSize) + 1);
+           for IMIdx  :=  0 to ArrSize Do
+           Begin
+              Result[IMIdx] := Inc_Mat_levels[IMIdx];
+           End;
+        end;
+      END
+      Else Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+end;
+PROCEDURE Solution_Get_BusLevels_GR();cdecl;
+// Same as Solution_Get_BusLevels but uses global result (GR) pointers
+begin
+   Solution_Get_BusLevels(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+end;
+
+//------------------------------------------------------------------------------
+PROCEDURE Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+VAR
+  Result: PPAnsiCharArray;
+  i,
+  IMIdx,
+  Idx,
+  ArrSize : Integer;
+begin
+      If ActiveCircuit <> Nil Then Begin
+        with ACtiveCircuit.Solution do
+        begin
+          ArrSize    :=  length(Inc_Mat_Rows)-1;
+          Result     :=  DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (ArrSize) + 1);
+          for IMIdx  :=  0 to ArrSize Do
+          Begin
+             Result[IMIdx] := DSS_CopyStringAsPChar(Inc_Mat_Rows[IMIdx]);
+          End;
+        end;
+      END
+      Else Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+end;
+PROCEDURE Solution_Get_IncMatrixRows_GR();cdecl;
+// Same as Solution_Get_IncMatrixRows but uses global result (GR) pointers
+begin
+   Solution_Get_IncMatrixRows(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
+//------------------------------------------------------------------------------
+PROCEDURE Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+VAR
+  Result: PPAnsiCharArray;
+  i,
+  IMIdx,
+  Idx,
+  ArrSize : Integer;
+begin
+     If ActiveCircuit <> Nil Then Begin
+       with ActiveCircuit.Solution,ActiveCircuit  do
+       begin
+        if IncMat_Ordered then
+        begin
+          ArrSize    :=  length(Inc_Mat_Cols)-1;
+          Result     :=  DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (ArrSize) + 1);
+          for IMIdx  :=  0 to ArrSize Do
+          Begin
+             Result[IMIdx] := DSS_CopyStringAsPChar(Inc_Mat_Cols[IMIdx]);
+          End;
+        end
+        else
+        begin
+             Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumBuses-1) + 1);
+             FOR i := 0 to NumBuses-1 DO
+             Begin
+                 Result[i] := DSS_CopyStringAsPChar(BusList.Get(i+1));
+             End;
+        end;
+       end;
+     End
+     Else Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+end;
+PROCEDURE Solution_Get_IncMatrixCols_GR();cdecl;
+// Same as Solution_Get_IncMatrixCols but uses global result (GR) pointers
+begin
+   Solution_Get_IncMatrixCols(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 END.

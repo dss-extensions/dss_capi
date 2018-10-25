@@ -25,7 +25,7 @@ def replace(line, a, b):
     #return re.sub(re.escape(a), re.escape(b), text, flags=re.IGNORECASE)
 
 def v7_to_v8(fn0):
-    if 'CAPI_DSSMain' in fn0 or 'CAPI_Solution' in fn0:
+    if 'CAPI_DSSMain' in fn0:
         return
         
     fn = fn0.replace('v7', 'v8', 1)
@@ -36,12 +36,16 @@ def v7_to_v8(fn0):
             return
 
         for text in fin:
+            if text.strip() in ('{V8-ONLY>', '<V8-ONLY}'):
+                continue
+        
             for k in ['DataDirectory', 'EventStrings', 'YprimInvalid', 'Parser', 'ActiveCircuit', 'DIFilesAreOpen', 'DSSClassList', 'ClassNames', 'ActiveDSSClass', 'ActiveDSSObject', 'LastClassReferenced', 'Losses']:
                 text = replace(text, '{}'.format(k), '{}[ActiveActor]'.format(k))
 
                 
     #        text = re.sub(r'ActiveCircuit[\.\)]', 'ActiveCircuit[ActiveActor].', text, flags=re.IGNORECASE) # why not "If ActiveCircuit[ActiveActor] <> Nil"?
             
+            text = replace(text, 'ActiveCircuit.Solution', 'ActiveCircuit[ActiveActor].Solution')
             text = replace(text, 'ComputeCapacity()', 'ComputeCapacity(ActiveActor)')
             text = replace(text, 'ComputeCapacity ', 'ComputeCapacity(ActiveActor) ')
             
