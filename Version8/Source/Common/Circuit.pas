@@ -915,7 +915,7 @@ const
 
 begin
     // Reads the master file
-    AssignFile(myFile, Path  + '\master.dss');
+    AssignFile(myFile, Path  + PathDelim + 'master.dss');
     Reset(myFile);                                        // Prepares for reading
     setlength(File_Struc,0);
     FS_Idx    :=  0;
@@ -929,7 +929,7 @@ begin
     CloseFile(myFile);
     //  Creates the copy for the interconnected system
     setlength(Xtra,0);
-    AssignFile(myFile, Path  + '\Master_Interconnected.dss');
+    AssignFile(myFile, Path  + PathDelim + 'Master_Interconnected.dss');
     ReWrite(myFile);                                      // Prepares for writing
     for FS_Idx := 0 to High(File_Struc) do
     Begin
@@ -955,7 +955,7 @@ begin
     CloseFile(myFile);
 
     // removes the unnecessary information from the master file (deletes the other zones)
-    AssignFile(myFile, Path  + '\master.dss');
+    AssignFile(myFile, Path  + PathDelim + 'master.dss');
     ReWrite(myFile);                                      // Prepares for writing
     for FS_Idx := 0 to High(File_Struc) do
     Begin
@@ -984,7 +984,7 @@ begin
         Begin
           text    :=  stringreplace(File_Struc[FS_Idx], 'Redirect ', '',[rfReplaceAll, rfIgnoreCase]);
           for FS_Idx1 := 2 to NumCkts do
-            CopyFile(PChar(Path + '\' + text), PChar(Path + '\zone_' + inttostr(FS_Idx1) + '\' + text), true);
+            CopyFile(PChar(Path + PathDelim + text), PChar(Path + PathDelim + 'zone_' + inttostr(FS_Idx1) + PathDelim + text), true);
         End;
         inc(FS_Idx);
       End
@@ -994,7 +994,7 @@ begin
     // Creates the master file for each subcircuit
     for FS_Idx := 2 to NumCkts do
     Begin
-      AssignFile(myFile, Path  + '\zone_' + inttostr(FS_Idx) + '\master.dss');
+      AssignFile(myFile, Path  + PathDelim + 'zone_' + inttostr(FS_Idx) + PathDelim + 'master.dss');
       ReWrite(myFile);
       WriteLn(myFile,'Clear');
       WriteLn(myFile,'New Circuit.Zone_' + inttostr(FS_Idx));
@@ -1015,7 +1015,7 @@ begin
         Local_Temp  :=  ansipos('Redirect zone_' + inttostr(FS_Idx), File_Struc[FS_Idx1]);
         if Local_Temp   <>  0 then
         Begin
-          text    :=  stringreplace(File_Struc[FS_Idx1], 'zone_' + inttostr(FS_Idx) + '\', '',[rfReplaceAll, rfIgnoreCase]);
+          text    :=  stringreplace(File_Struc[FS_Idx1], 'zone_' + inttostr(FS_Idx) + PathDelim, '',[rfReplaceAll, rfIgnoreCase]);
           WriteLn(myFile,text);
         End;
       End;
@@ -1025,7 +1025,7 @@ begin
     FS_Idx1     :=    0;
     for FS_Idx := 2 to NumCkts do
     Begin
-       AssignFile(myFile, Path  + '\zone_' + inttostr(FS_Idx) + '\VSource.dss');
+       AssignFile(myFile, Path  + PathDelim + 'zone_' + inttostr(FS_Idx) + PathDelim + 'VSource.dss');
        ReWrite(myFile);
        for FS_Idx2 := 1 to 3 do
        Begin
@@ -1063,7 +1063,7 @@ var
 Begin
     // Prepares everything to save the base of the torn circuit on a separate folder
     Fileroot              :=  GetCurrentDir;
-    Fileroot              :=  Fileroot  + '\Torn_Circuit';
+    Fileroot              :=  Fileroot  + PathDelim + 'Torn_Circuit';
     CreateDir(Fileroot);                        // Creates the folder for storing the modified circuit
     DelFilesFromDir(Fileroot,'*',True);         // Removes all the files inside the new directory (if exists)
     DssExecutive.Command  :=  'save circuit Dir="' + Fileroot + '"';
