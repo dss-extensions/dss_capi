@@ -51,7 +51,7 @@ USES
     SysUtils,
     Parallel_Lib,
 {$IFDEF MSWINDOWS}
-    Windows, Dialogs,
+    Windows, {$IFNDEF FPC}Dialogs,{$ENDIF}
 {$ELSE}    
     BaseUnix, Unix,
 {$ENDIF}
