@@ -62,8 +62,7 @@ begin
     Result :=  NumOfActors;
   end;
   8: begin  // Parallel.Wait
-    for i := 1 to NumOfActors do
-      With ActiveCircuit[i].Solution do WaitForActor(i);
+     Wait4Actors;
   end;
   9: begin  // Parallel.ActiveParallel Read
     if Parallel_enabled then Result :=  1 else Result  :=  0;
