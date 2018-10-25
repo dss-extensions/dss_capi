@@ -711,20 +711,23 @@ BEGIN
      ParseObjectClassandName(FullObjectName, DevType, DevName);
      DevClassIndex := ClassNames.Find(DevType);
      If DevClassIndex = 0 Then DevClassIndex := LastClassReferenced;
+     if DevName <> '' then
+     begin
      Devindex := DeviceList.Find(DevName);
-     WHILE DevIndex>0 DO BEGIN
-         IF DeviceRef^[Devindex].CktElementClass=DevClassIndex THEN   // we got a match
-          BEGIN
-            ActiveDSSClass := DSSClassList.Get(DevClassIndex);
-            LastClassReferenced := DevClassIndex;
-            Result := DeviceRef^[Devindex].devHandle;
-           // ActiveDSSClass.Active := Result;
-          //  ActiveCktElement := ActiveDSSClass.GetActiveObj;
-            ActiveCktElement := CktElements.Get(Result);
-            Break;
-          END;
-         Devindex := Devicelist.FindNext;   // Could be duplicates
-     END;
+       WHILE DevIndex>0 DO BEGIN
+           IF DeviceRef^[Devindex].CktElementClass=DevClassIndex THEN   // we got a match
+            BEGIN
+              ActiveDSSClass := DSSClassList.Get(DevClassIndex);
+              LastClassReferenced := DevClassIndex;
+              Result := DeviceRef^[Devindex].devHandle;
+             // ActiveDSSClass.Active := Result;
+            //  ActiveCktElement := ActiveDSSClass.GetActiveObj;
+              ActiveCktElement := CktElements.Get(Result);
+              Break;
+            END;
+           Devindex := Devicelist.FindNext;   // Could be duplicates
+       END;
+     end;    
 
      CmdResult := Result;
 
@@ -1442,7 +1445,3 @@ end;
 
 
 end.
-
-
-
-
