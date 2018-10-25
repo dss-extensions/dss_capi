@@ -97,9 +97,10 @@ TYPE
    End;
    TInfoMessageCall = Procedure(const info:String) of Object;  // Creates the procedure for sending a message
    TSolver=class(TThread)
-      Constructor Create(Susp:Boolean;local_CPU: integer; ID : integer; CallBack: TInfoMessageCall);overload;
+      Constructor Create(Susp:Boolean;local_CPU: integer; ID : integer; CallBack: TInfoMessageCall;AEvent: TEvent);overload;
       procedure Execute; override;
       procedure Doterminate; override;
+      destructor Destroy; override;
 
 //*******************************Private components*****************************
     protected
@@ -108,6 +109,7 @@ TYPE
       FInfoProc     : TInfoMessageCall;
       Msg_Cmd       : string;
       ActorID       : integer;
+      UIEvent,
       ActorMsg      : TEvent;
       MsgType       : Integer;
       ActorActive   : Boolean;
@@ -122,7 +124,7 @@ TYPE
     Public
       Procedure Send_Message(Msg  : Integer);
       procedure CallCallBack;
-
+      property Event: TEvent read UIEvent;
 
       property Is_Busy: Boolean read  Get_Processing write Set_Processing;
       property  CPU : Integer read Get_CPU write Set_CPU;
@@ -504,7 +506,7 @@ Begin
 
       Reallocmem(HarmonicList,0);
       ActorMA_Msg[ActiveActor].SetEvent;
-      ActorMA_Msg[ActiveActor].Free;
+
 // Sends a message to the working actor
       if ActorHandle[ActiveActor] <> nil then
       Begin
@@ -513,6 +515,7 @@ Begin
         ActorHandle[ActiveActor].Free;
         ActorHandle[ActiveActor]  :=  nil;
       End;
+      ActorMA_Msg[ActiveActor].Free;
       Inherited Destroy;
 End;
 
@@ -558,11 +561,8 @@ Begin
 End;
 // ===========================================================================================
 PROCEDURE TSolutionObj.Solve(ActorID : Integer);
-{$IFDEF MSWINDOWS}
 var
   ScriptEd    : TScriptEdit;
-{$ENDIF}
-  WaitFlag : Boolean;
 
 Begin
      ActiveCircuit[ActorID].Issolved := False;
@@ -603,26 +603,26 @@ Try
     End;
     {CheckFaultStatus;  ???? needed here??}
 
+
     // Resets the event for receiving messages from the active actor
       // Updates the status of the Actor in the GUI
       ActorStatus[ActorID]      :=  0;    // Global to indicate that the actor is busy
-      {$IFDEF MSWINDOWS}
+      ActorMA_Msg[ActorID].ResetEvent;
+
       if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
       QueryPerformanceCounter(GStartTime);
-      {$ENDIF}
 
-      ActorMA_Msg[ActorID].ResetEvent;
+
       // Sends message to start the Simulation
       ActorHandle[ActorID].Send_Message(SIMULATE);
       // If the parallel mode is not active, Waits until the actor finishes
       if not Parallel_enabled then
       Begin
-        WaitForActor(ActorID);
-       {$IFDEF MSWINDOWS}
+        Wait4Actors;
         if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
-        {$ENDIF}
-
       End;
+
+
 Except
 
     On E:Exception Do Begin
@@ -2436,13 +2436,16 @@ END;
 ********************************************************************************
 }
 
-constructor TSolver.Create(Susp: Boolean; local_CPU: integer; ID : integer; CallBack: TInfoMessageCall);
+constructor TSolver.Create(Susp: Boolean; local_CPU: integer; ID : integer; CallBack: TInfoMessageCall; AEvent: TEvent);
 
 var
   Parallel    : TParallel_Lib;
   Thpriority  : String;
 begin
-  Inherited Create(Susp);
+
+
+
+  UIEvent                   :=  AEvent;
   FInfoProc                 :=  CallBack;
   FreeOnTerminate           :=  False;
   ActorID                   :=  ID;
@@ -2450,11 +2453,14 @@ begin
   MsgType                   :=  -1;
   ActorActive               :=  True;
   Processing                :=  False;
+
+  Inherited Create(Susp);
   {$IFDEF MSWINDOWS}              // Only for windows
-  Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+//  Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
   Parallel.Set_Thread_affinity(handle,local_CPU);
   Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
   {$ENDIF}
+
 end;
 
 Procedure TSolver.Send_Message(Msg  : Integer);
@@ -2504,13 +2510,13 @@ var
   begin
     with ActiveCircuit[ActorID].Solution do
     begin
-
+      ActorMsg.ResetEvent;
       while ActorActive do
       Begin
-        if not Processing then
-        begin
-          ActorMsg.ResetEvent;
-          ActorMsg.WaitFor(INFINITE);
+
+            ActorMsg.WaitFor(INFINITE);
+//          Begin
+            ActorMsg.ResetEvent;
             Processing                  := True;
             case MsgType of             // Evaluates the incomming message
             SIMULATE  :                 // Simulates the active ciruit on this actor
@@ -2537,9 +2543,8 @@ var
                 Else
                     DosimpleMsg('Unknown solution mode.', 481);
                 End;
-                {$IFDEF MSWINDOWS}
                 QueryPerformanceCounter(GEndTime);
-                {$ENDIF}
+
                 Total_Solve_Time_Elapsed  :=  ((GEndTime-GStartTime)/CPU_Freq)*1000000;
                 Total_Time_Elapsed        :=  Total_Time_Elapsed + Total_Solve_Time_Elapsed;
                 Processing                :=  False;
@@ -2547,11 +2552,10 @@ var
                 ActorStatus[ActorID]      :=  1;      // Global to indicate that the actor is ready
 
                 // Sends a message to Actor Object (UI) to notify that the actor has finised
-                ActorMA_Msg[ActorID].SetEvent;
-              {$IFDEF MSWINDOWS}
+                UIEvent.SetEvent;
                 if Parallel_enabled then
                   if Not IsDLL then queue(CallCallBack); // Refreshes the GUI if running asynchronously
-              {$ENDIF}
+
                 End;
             EXIT_ACTOR:                // Terminates the thread
               Begin
@@ -2561,7 +2565,8 @@ var
               DosimpleMsg('Unknown Message.', 7010);
             End;
 
-        End;
+//          End;
+
       end;
     end;
   end;
@@ -2583,10 +2588,15 @@ begin
     ActorActive               :=  False;
     Processing                :=  False;
     ActorStatus[ActorID]      :=  1;      // Global to indicate that the actor is ready
-    ActorMA_Msg[ActorID].SetEvent;
-    ActorMsg.SetEvent;
+    UIEvent.SetEvent;
     ActorMsg.Free;
+//    Freeandnil(UIEvent);
     inherited;
+End;
+
+destructor TSolver.Destroy;
+Begin
+
 End;
 
 initialization

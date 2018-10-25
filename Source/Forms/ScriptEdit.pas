@@ -279,7 +279,7 @@ begin
               Add('Process Status');
               for USIdx := 1 to NumOfActors do
               Begin
-                if (ActorStatus[USIdx] = 1) then TStr :=  'Processing'
+                if (ActorStatus[USIdx] = 0) then TStr :=  'Processing'
                 else TStr :=  'Ready';
                 Add('Actor ' + inttostr(USIdx) + ' CPU ' + inttostr(ActorCPU[USIdx]) + ': ' + TStr);
                 If Not IsDLL Then ControlPanel.UpdateStatus;
