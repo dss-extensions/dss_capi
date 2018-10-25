@@ -9,6 +9,7 @@ unit AutoTrans;
 {
    Change log
    7-14-2018  Created from Transformer
+   9-19-2018  committed
 }
 
 { You can designate a AutoTrans to be a substation by setting the sub=yes parameter}
@@ -466,7 +467,7 @@ Begin
             2: SetNumWindings(Parser[ActorID].IntValue); // Reallocate stuff if bigger
             3: SetActiveWinding(Parser[ActorID].IntValue);
             4: Setbus(ActiveWinding, param);
-            5: InterpretConnection(Param);
+            5: InterpretAutoConnection(Param);
             6: Winding^[ActiveWinding].kVLL  := parser[ActorID].Dblvalue;
             7: Winding^[ActiveWinding].kVA   := parser[ActorID].Dblvalue;
             8: Winding^[ActiveWinding].puTap := parser[ActorID].Dblvalue;
@@ -1373,7 +1374,7 @@ Var
    TempVal :Double;
 
 Begin
-     IF (i > 0) and (i <= NumWindings) THEN
+     IF (i > 0) and (i <= NumWindings) THEN 
        WITH Winding^[i] Do Begin
            {Range Checking}
            TempVal := Value;

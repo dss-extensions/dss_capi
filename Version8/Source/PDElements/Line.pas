@@ -6,8 +6,9 @@ unit Line;
   ----------------------------------------------------------
 }
 
-{  3-1-00 Reactivated line dump
+{  3-1-00   Reactivated line dump
    3-13-03  Fixed bug where terminal quantities were not getting reallocated in FetchCondCode
+   2018	    Added GIC stuff
 }
 
 interface
@@ -71,6 +72,7 @@ TYPE
         Procedure ReallocZandYcMatrices;
 
         PROCEDURE DoLongLine(Frequency:Double);  // Long Line Correction for 1=phase
+        PROCEDURE ConvertZinvToPosSeqR;  // for GIC analysis, primarily
 
       Protected
         Zinv               :TCMatrix;
@@ -980,9 +982,18 @@ Begin
                FOR i := 1 to Norder*Norder Do
                   ZinvValues^[i] := Cmplx((ZValues^[i].re + Rg * (FreqMultiplier - 1.0) )*LengthMultiplier, (ZValues^[i].im - Xgmod)* LengthMultiplier * FreqMultiplier);
                Zinv.Invert;  {Invert Z in place to get values to put in Yprim}
+
+
            End;
 
-         If Zinv.Inverterror>0 Then
+      {At this point have Z and Zinv in proper values including length}
+      {If GIC simulation, convert Zinv back to sym components, R Only }
+
+         if ActiveCircuit[ActorID].Solution.Frequency < 0.51 then     // 0.5 Hz is cutoff
+             ConvertZinvToPosSeqR;
+
+
+         If Zinv.Inverterror > 0 Then
            Begin
                  {If error, put in tiny series conductance}
 // TEMc - shut this up for the CDPSM connectivity profile test, or whenever else it gets annoying
@@ -1005,8 +1016,8 @@ Begin
                    End;
              End;
 
-           
-     End;
+
+     End;   {With Yprim_series}
 
      YPrim.Copyfrom(Yprim_Series);      // Initialize YPrim for series impedances
 
@@ -1819,6 +1830,33 @@ begin
           YPrim_Shunt.Clear;    // zero out YPrim Shunt
           YPrim.Clear;          // zero out YPrim
       End;
+end;
+
+procedure TLineObj.ConvertZinvToPosSeqR;
+
+// For GIC Analysis, use only real part of Z
+
+Var
+  Z1, ZS, Zm:Complex;
+  i,j:Integer;
+
+begin
+
+// re-invert Zinv
+    Zinv.Invert;
+// Now Zinv is back to Z with length included
+
+    // average the diagonal and off-dialgonal elements
+    Zs := Zinv.AvgDiagonal;
+    Zm := Zinv.AvgOffDiagonal;
+    Z1 := CSub(Zs, Zm);
+    Z1.im := 0.0;  // ignore X part
+
+    Zinv.Clear;
+    for i := 1 to Zinv.order do Zinv.SetElement(i, i, Z1);   // Set Diagonals
+
+    Zinv.Invert;  // back to zinv for inserting in Yprim
+
 end;
 
 procedure TLineObj.ResetLengthUnits;
