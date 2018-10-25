@@ -61,7 +61,7 @@ USES
     System.Diagnostics,
     System.TimeSpan,
     System.Classes,
-{$ENDIF}    
+    {$ENDIF}
     Sparse_Math,
     SyncObjs,
     CktElement;
@@ -102,9 +102,10 @@ TYPE
    End;
    TInfoMessageCall = Procedure(const info:String) of Object;  // Creates the procedure for sending a message
    TSolver=class(TThread)
-      Constructor Create(Susp:Boolean;local_CPU: integer; ID : integer; CallBack: TInfoMessageCall);overload;
+      Constructor Create(Susp:Boolean;local_CPU: integer; ID : integer; CallBack: TInfoMessageCall;AEvent: TEvent);overload;
       procedure Execute; override;
       procedure Doterminate; override;
+      destructor Destroy; override;
 
 //*******************************Private components*****************************
     protected
@@ -113,6 +114,7 @@ TYPE
       FInfoProc     : TInfoMessageCall;
       Msg_Cmd       : string;
       ActorID       : integer;
+      UIEvent,
       ActorMsg      : TEvent;
       MsgType       : Integer;
       ActorActive   : Boolean;
@@ -127,7 +129,7 @@ TYPE
     Public
       Procedure Send_Message(Msg  : Integer);
       procedure CallCallBack;
-
+      property Event: TEvent read UIEvent;
 
       property Is_Busy: Boolean read  Get_Processing write Set_Processing;
       property  CPU : Integer read Get_CPU write Set_CPU;
@@ -326,7 +328,7 @@ USES  SolutionAlgs,
       ParserDel, Generator,Capacitor,
 {$IFDEF MSWINDOWS}
       SHELLAPI,
-{$ENDIF}      
+{$ENDIF}
 {$IFDEF DLL_ENGINE}
       ImplGlobals,  // to fire events
 {$ENDIF}
@@ -505,6 +507,7 @@ Begin
 
       Reallocmem(HarmonicList,0);
       ActorMA_Msg[ActiveActor].SetEvent;
+
 // Sends a message to the working actor
       if ActorHandle[ActiveActor] <> nil then
       Begin
@@ -545,29 +548,24 @@ var
   WaitFlag : Boolean;
 
 Begin
-  WaitFlag  :=  True;   
+  WaitFlag  :=  True;
   if ActorStatus[ActorID] = 0 then
   Begin
     while WaitFlag do
     Begin
         if ActorMA_Msg[ActorID].WaitFor(100) <> wrTimeout then
-            WaitFlag  :=  False
+          WaitFlag  :=  False
         else
-            begin
-              if ActorStatus[ActorID] = 1 then 
-                WaitFlag  :=  False;
-            end;
+          if ActorStatus[ActorID] = 1 then WaitFlag  :=  False;
     End;
   End;
 End;
 // ===========================================================================================
 PROCEDURE TSolutionObj.Solve(ActorID : Integer);
-var
 {$IFNDEF FPC}
-ScriptEd  : TScriptEdit;
+var
+  ScriptEd    : TScriptEdit;
 {$ENDIF}
-  WaitFlag : Boolean;
-
 Begin
      ActiveCircuit[ActorID].Issolved := False;
      SolutionWasAttempted[ActorID]   := TRUE;
@@ -607,25 +605,27 @@ Try
     End;
     {CheckFaultStatus;  ???? needed here??}
 
+
     // Resets the event for receiving messages from the active actor
       // Updates the status of the Actor in the GUI
       ActorStatus[ActorID]      :=  0;    // Global to indicate that the actor is busy
       ActorMA_Msg[ActorID].ResetEvent;
-      // Sends message to start the Simulation
 {$IFNDEF FPC}
       if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
 {$ENDIF}
       {$IFDEF MSWINDOWS}QueryPerformanceCounter(GStartTime);{$ENDIF}
+
+      // Sends message to start the Simulation
       ActorHandle[ActorID].Send_Message(SIMULATE);
       // If the parallel mode is not active, Waits until the actor finishes
       if not Parallel_enabled then
       Begin
-        WaitForActor(ActorID);
-       {$IFNDEF FPC}
+        Wait4Actors;
+{$IFNDEF FPC}        
         if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
-        {$ENDIF}
-
+{$ENDIF}        
       End;
+
 
 Except
 
@@ -1111,7 +1111,9 @@ Begin
 //      if Solution then
    SnapShotInit(ActorID);
    TotalIterations    := 0;
-   {$IFDEF MSWINDOWS}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
+  {$IFDEF MSWINDOWS}
+   QueryPerformanceCounter(SolveStartTime);
+   {$ENDIF}
    REPEAT
 
        Inc(ControlIteration);
@@ -1140,7 +1142,9 @@ Begin
 {$IFDEF DLL_ENGINE}
    Fire_StepControls;
 {$ENDIF}
-{$IFDEF MSWINDOWS}QueryPerformanceCounter(SolveEndTime);{$ENDIF}
+  {$IFDEF MSWINDOWS}
+   QueryPerformanceCounter(SolveEndtime);
+   {$ENDIF}
    Solve_Time_Elapsed := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
    Iteration := TotalIterations;  { so that it reports a more interesting number }
 
@@ -1153,7 +1157,9 @@ Begin
    Result := 0;
 
    LoadsNeedUpdating := TRUE;  // Force possible update of loads and generators
-   {$IFDEF MSWINDOWS}QueryPerformanceCounter(SolveStartTime);{$ENDIF}
+   {$IFDEF MSWINDOWS}
+   QueryPerformanceCounter(SolveStartTime);
+   {$ENDIF}
 
    If SystemYChanged THEN
    begin
@@ -1174,8 +1180,9 @@ Begin
        ActiveCircuit[ActorID].IsSolved := TRUE;
        ConvergedFlag := TRUE;
    End;
-
-   {$IFDEF MSWINDOWS}QueryPerformanceCounter(SolveEndTime);{$ENDIF}
+  {$IFDEF MSWINDOWS}
+   QueryPerformanceCounter(SolveEndtime);
+   {$ENDIF}
    Solve_Time_Elapsed  := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
    Total_Time_Elapsed  :=  Total_Time_Elapsed + Solve_Time_Elapsed;
    Iteration := 1;
@@ -1711,7 +1718,7 @@ Begin
         begin
           DeleteFile(Directory + PathDelim + Name);
         end;
-      end;
+end;
     Until FindNext(info) <> 0;
   end;    
   rmdir(Directory);
@@ -2491,13 +2498,16 @@ END;
 ********************************************************************************
 }
 
-constructor TSolver.Create(Susp: Boolean; local_CPU: integer; ID : integer; CallBack: TInfoMessageCall);
+constructor TSolver.Create(Susp: Boolean; local_CPU: integer; ID : integer; CallBack: TInfoMessageCall; AEvent: TEvent);
 
 var
   Parallel    : TParallel_Lib;
   Thpriority  : String;
 begin
-  Inherited Create(Susp);
+
+
+
+  UIEvent                   :=  AEvent;
   FInfoProc                 :=  CallBack;
   FreeOnTerminate           :=  False;
   ActorID                   :=  ID;
@@ -2505,14 +2515,16 @@ begin
   MsgType                   :=  -1;
   ActorActive               :=  True;
   Processing                :=  False;
+
+  Inherited Create(Susp);
   {$IFDEF MSWINDOWS}              // Only for windows
-  Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+  // Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
   Parallel.Set_Thread_affinity(handle,local_CPU);
   Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
   {$ELSE}
   Parallel.Set_Thread_Priority(self,THREAD_PRIORITY_TIME_CRITICAL);
   Parallel.Set_Thread_affinity(handle,local_CPU);
-  {$ENDIF}  
+  {$ENDIF}
 
 end;
 
@@ -2548,7 +2560,7 @@ Begin
   {$ELSE}
   Parallel.Set_Thread_Priority(self,THREAD_PRIORITY_TIME_CRITICAL);
   Parallel.Set_Thread_affinity(handle,CPU);
-  {$ENDIF}  
+  {$ENDIF}
 End;
 
 {*******************************************************************************
@@ -2558,19 +2570,21 @@ End;
 
 procedure TSolver.Execute;
 var
-  {$IFNDEF FPC}ScriptEd  : TScriptEdit;{$ENDIF}
-  idx       : Integer;
+{$IFNDEF FPC}
+  ScriptEd    : TScriptEdit;
+{$ENDIF}
+  idx         : Integer;
 
   begin
     with ActiveCircuit[ActorID].Solution do
     begin
-
+      ActorMsg.ResetEvent;
       while ActorActive do
       Begin
-        if not Processing then
-        begin
-          ActorMsg.WaitFor(INFINITE);
-          ActorMsg.ResetEvent;
+
+            ActorMsg.WaitFor(INFINITE);
+//          Begin
+            ActorMsg.ResetEvent;
             Processing                  := True;
             case MsgType of             // Evaluates the incomming message
             SIMULATE  :                 // Simulates the active ciruit on this actor
@@ -2605,13 +2619,14 @@ var
                 Processing                :=  False;
                 FMessage                  :=  '1';
                 ActorStatus[ActorID]      :=  1;      // Global to indicate that the actor is ready
-                
+
                 // Sends a message to Actor Object (UI) to notify that the actor has finised
-                ActorMA_Msg[ActorID].SetEvent;
               {$IFDEF MSWINDOWS}
+                UIEvent.SetEvent;
                 if Parallel_enabled then
                   if Not IsDLL then queue(CallCallBack); // Refreshes the GUI if running asynchronously
               {$ENDIF}
+
                 End;
             EXIT_ACTOR:                // Terminates the thread
               Begin
@@ -2621,7 +2636,8 @@ var
               DosimpleMsg('Unknown Message.', 7010);
             End;
 
-        End;
+//          End;
+
       end;
     end;
   end;
@@ -2643,10 +2659,15 @@ begin
     ActorActive               :=  False;
     Processing                :=  False;
     ActorStatus[ActorID]      :=  1;      // Global to indicate that the actor is ready
-    ActorMA_Msg[ActorID].SetEvent;
-    ActorMsg.SetEvent;
+    UIEvent.SetEvent;
     ActorMsg.Free;
+//    Freeandnil(UIEvent);
     inherited;
+End;
+
+destructor TSolver.Destroy;
+Begin
+
 End;
 
 initialization

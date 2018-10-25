@@ -314,6 +314,8 @@ Procedure MyReallocMem(Var p:Pointer; newsize:integer);
 Function MyAllocMem(nbytes:Cardinal):Pointer;
 
 procedure New_Actor(ActorID:  Integer);
+procedure Wait4Actors;
+
 procedure Delay(TickTime : Integer);
 
 implementation
@@ -908,6 +910,27 @@ begin
   Result := ini.ReadString(s,k,d);
   FreeAndNil(ini);
 end;
+
+// Waits for all the actors running tasks
+procedure Wait4Actors;
+var
+  i       : Integer;
+  Flag    : Boolean;
+
+Begin
+  for i := 1 to NumOfActors do
+  Begin
+    if ActorStatus[i] = 0 then
+    Begin
+      Flag  :=  true;
+      while Flag do
+        Flag  := ActorMA_Msg[i].WaitFor(10) = TWaitResult.wrTimeout;
+    End;
+  End;
+end;
+
+
+
 // Creates a new actor
 procedure New_Actor(ActorID:  Integer);
 {$IFNDEF DSS_CAPI}
@@ -915,7 +938,7 @@ Var
   ScriptEd    : TScriptEdit;
 {$ENDIF}
 Begin
-  ActorHandle[ActorID] :=  TSolver.Create(false,ActorCPU[ActorID],ActorID,{$IFNDEF DSS_CAPI}ScriptEd.UpdateSummaryForm{$ELSE}nil{$ENDIF});
+  ActorHandle[ActorID] :=  TSolver.Create(false,ActorCPU[ActorID],ActorID,{$IFNDEF DSS_CAPI}ScriptEd.UpdateSummaryForm{$ELSE}nil{$ENDIF},ActorMA_Msg[ActorID]);
   ActorStatus[ActorID]          :=  1;
 End;
 

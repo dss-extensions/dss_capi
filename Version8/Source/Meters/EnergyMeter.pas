@@ -2139,7 +2139,7 @@ begin
                           THEN AllocationFactor := AllocationFactor * SensorObj.PhsAllocationFactor^[ConnectedPhase];
                      End;
                ELSE
-                  WITH LoadElem Do AllocationFactor := AllocationFactor * AvgAllocFactor;
+                  WITH LoadElem Do AllocationFactor := AllocationFactor * SensorObj.AvgAllocFactor;
                End;  {CASE}
          LoadElem := BranchList.NextObject    {Next load at this bus}
          End;   {While Loadelem}
