@@ -91,8 +91,7 @@ procedure TParallel.Wait;
 var
   i : Integer;
 begin
-  for i := 1 to NumOfActors do
-    With ActiveCircuit[i].Solution do WaitForActor(i);
+  Wait4Actors;
 end;
 
 function TParallel.Get_ActorProgress: OleVariant;
