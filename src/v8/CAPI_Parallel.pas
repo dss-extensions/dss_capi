@@ -83,8 +83,7 @@ procedure Parallel_Wait();cdecl;
 var
   i : Integer;
 begin
-  for i := 1 to NumOfActors do
-    with ActiveCircuit[i].Solution do WaitForActor(i);
+  Wait4Actors;
 end;
 //------------------------------------------------------------------------------
 PROCEDURE Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
