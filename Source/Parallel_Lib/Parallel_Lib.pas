@@ -35,8 +35,11 @@ implementation
       Op_Result : {$IFDEF MSWINDOWS}Dword{$ELSE}Cardinal{$ENDIF};
     begin
        CPU_bit    :=  floor(power(2, CPU));
+
        {$IFDEF MSWINDOWS}
        Op_Result  := SetThreadAffinityMask(Hnd,CPU_bit);
+       {$ELSE}
+       Op_Result  :=  1;
        {$ENDIF}
        if Op_Result = 0 then raise Exception.Create('Error setting thread affinity mask : ' + IntToStr(GetLastError));
        Result   :=  Op_Result;
