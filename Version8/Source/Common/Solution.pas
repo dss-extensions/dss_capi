@@ -2578,7 +2578,7 @@ var
   begin
     with ActiveCircuit[ActorID].Solution do
     begin
-      ActorMsg.ResetEvent;
+//      ActorMsg.ResetEvent;
       while ActorActive do
       Begin
 
