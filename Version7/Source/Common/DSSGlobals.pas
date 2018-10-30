@@ -222,6 +222,9 @@ VAR
    CPU_Cores          : integer;
 
    IncMat_Ordered     : Boolean;
+//***********************A-Diakoptics Variables*********************************
+  ADiakoptics             : Boolean;
+
 
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
@@ -836,6 +839,8 @@ end;
 {$ENDIF}
 
 initialization
+
+   ADiakoptics      :=    False;  // Disabled by default
 
    {Various Constants and Switches}
    {$IFDEF FPC}NoFormsAllowed  := TRUE;{$ENDIF}
