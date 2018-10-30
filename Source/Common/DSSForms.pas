@@ -180,8 +180,8 @@ Begin
         If length(msg)<=1024 Then MessageDlg(Msg, mtInformation , [mbOK], 0)
         Else MessageDlg('Message too long; See Result Form.', mtInformation , [mbOK], 0);
      End
-//     else
-//    ScriptEd.PublishMessage(Str);
+     else
+     ScriptEd.PublishMessage(Str);
 End;
 
 
