@@ -2621,8 +2621,8 @@ var
                 ActorStatus[ActorID]      :=  1;      // Global to indicate that the actor is ready
 
                 // Sends a message to Actor Object (UI) to notify that the actor has finised
-              {$IFDEF MSWINDOWS}
                 UIEvent.SetEvent;
+              {$IFDEF MSWINDOWS}
                 if Parallel_enabled then
                   if Not IsDLL then queue(CallCallBack); // Refreshes the GUI if running asynchronously
               {$ENDIF}
