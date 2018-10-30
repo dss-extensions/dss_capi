@@ -126,6 +126,7 @@ uses
     GenUserModel in 'electricdss-src/Version7/Source/PCElements/GenUserModel.pas',
     GICLine in 'electricdss-src/Version7/Source/PCElements/GICLine.pas',
     GICTransformer in 'electricdss-src/Version7/Source/PDElements/GICTransformer.pas',
+    GICsource in 'electricdss-src/Version7/Source/PCElements/GICsource.pas',
     GrowthShape in 'electricdss-src/Version7/Source/General/GrowthShape.pas',
     HashList in 'electricdss-src/Version7/Source/Shared/HashList.pas',
     IniRegSave in 'electricdss-src/Version7/Source/Shared/IniRegSave.pas',
