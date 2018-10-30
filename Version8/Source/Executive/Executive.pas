@@ -143,7 +143,7 @@ Begin
      OptionList.Free;
      Circuits.Free;
 
-     DisposeDSSClasses;
+     DisposeDSSClasses(True);
      Parser[ActiveActor].Free;
 
      Inherited Destroy;
@@ -234,7 +234,7 @@ begin
           ActiveCircuit[ActiveActor] := nil;
           Circuits.Free;
           Circuits := TPointerList.Create(4);   // Make a new list of circuits
-          DisposeDSSClasses;
+          DisposeDSSClasses(False);
             {Now, Start over}
           CreateDSSClasses;
           CreateDefaultDSSItems;
@@ -267,7 +267,7 @@ var
 begin
        {First get rid of all existing stuff}
        ClearAllCircuits;
-       DisposeDSSClasses;
+       DisposeDSSClasses(True);
        {Now, Start over}
        ActiveActor  :=  1;
        CreateDSSClasses;
