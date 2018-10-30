@@ -27,7 +27,8 @@ FUNCTION DoGetCmd_NoCircuit:Boolean;  // Get Commands that do not require a circ
 implementation
 
 Uses DSSClassDefs, DSSGlobals, ParserDel, Math,     Executive,  ExecHelper,
-     LoadShape,    Utilities,  Sysutils, {$IFNDEF FPC}ScriptEdit,{$ENDIF} Solution, Energymeter;
+     LoadShape,    Utilities,  Sysutils, {$IFNDEF FPC}ScriptEdit,{$ENDIF} Solution, Energymeter,
+     Diakoptics;
 
 
 PROCEDURE DefineOptions;
@@ -155,8 +156,8 @@ Begin
      ExecOption[119] := 'Coverage';
      ExecOption[120] := 'Num_SubCircuits';
      ExecOption[121] := 'SampleEnergyMeters';
-     ExecOption[122] := 'MinIterations'; // default is 2
-     ExecOption[123] := 'ADiakoptics';
+     ExecOption[122] := 'ADiakoptics';
+     ExecOption[123] := 'MinIterations'; // default is 2
 
 
      OptionHelp[1]  := 'Sets the active DSS class type.  Same as Class=...';
@@ -427,9 +428,10 @@ Begin
      OptionHelp[121] := '{YES/TRUE | NO/FALSE} Overrides default value for sampling EnergyMeter objects at the end of the solution loop. ' +
                         'Normally Time and Duty modes do not automatically sample EnergyMeters whereas Daily, Yearly, M1, M2, M3, LD1 and LD2 modes do. ' +
                         'Use this Option to turn sampling on or off';
-     OptionHelp[122] := 'Minimum number of iterations required for a solution. Default is 2.';
-     OptionHelp[123] := '{YES/TRUE | NO/FALSE} Activates the A-Diakoptics solution algorithm for using spatial parallelization on the feeder.' + CRLF +
-                        'This parameter only affects Actor 1, no matter from which actor is called';
+     OptionHelp[122] := '{YES/TRUE | NO/FALSE} Activates the A-Diakoptics solution algorithm for using spatial parallelization on the feeder.' + CRLF +
+                        'This parameter only affects Actor 1, no matter from which actor is called. When activated (True), OpenDSS will start the '+ CRLF +
+                        'initialization routine for the A-Diakoptics solution mode';
+     OptionHelp[123] := 'Minimum number of iterations required for a solution. Default is 2.';
 End;
 //----------------------------------------------------------------------------
 FUNCTION DoSetCmd_NoCircuit:Boolean;  // Set Commands that do not require a circuit
@@ -737,13 +739,12 @@ Begin
           120:  Begin
                   ActiveCircuit[ActiveActor].Num_SubCkts :=  Parser[ActiveActor].IntValue;
                 End;
-          121:  Begin
-                  ActiveCircuit[ActiveActor].Solution.SampleTheMeters :=  InterpretYesNo(Param);
-                End;
+          121:  ActiveCircuit[ActiveActor].Solution.SampleTheMeters :=  InterpretYesNo(Param);
           122:  Begin
-                  ActiveCircuit[ActiveActor].solution.MinIterations   := Parser[ActiveActor].IntValue;
+                ADiakoptics :=  InterpretYesNo(Param);
+                ADiakopticsInit();
                 End;
-          123:  ActiveCircuit[1].ADiakoptics :=  InterpretYesNo(Param);
+          123:  ActiveCircuit[ActiveActor].solution.MinIterations   := Parser[ActiveActor].IntValue
          ELSE
            // Ignore excess parameters
          End;
@@ -942,8 +943,8 @@ Begin
           119: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Actual_Coverage]));
           120: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].Num_SubCkts]));
           121: If ActiveCircuit[ActiveActor].Solution.SampleTheMeters Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
-          122: AppendGlobalResult(IntToStr(ActiveCircuit[ActiveActor].solution.MinIterations));
-          123: If ActiveCircuit[1].ADiakoptics Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+          122: If ADiakoptics Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+          123: AppendGlobalResult(IntToStr(ActiveCircuit[ActiveActor].solution.MinIterations));
          ELSE
            // Ignore excess parameters
          End;

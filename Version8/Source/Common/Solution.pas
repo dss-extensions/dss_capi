@@ -312,7 +312,6 @@ TYPE
        procedure AddSeriesCap2IncMatrix(ActorID : Integer);         // Adds capacitors in series to the Incidence matrix arrays
        procedure AddSeriesReac2IncMatrix(ActorID : Integer);        // Adds Reactors in series to the Incidence matrix arrays
 
-       procedure WaitForActor(ActorID : Integer);                   // Waits for the actor to finish the latest assigned task
    End;
 {==========================================================================}
 
@@ -536,30 +535,7 @@ Begin
 
      End;  {WITH}
 End;
-// ===========================================================================================
-{ Waits until the actor finishes the last task
-  This iterative routine was implemented because sometimes the
-  Solving actor is much faster than the calling thread, so, probably the
-  actor sent his response before we were able to wait for it and it may get
-  lost
-}
-procedure TSolutionObj.WaitForActor(ActorID : Integer);
-var
-  WaitFlag : Boolean;
 
-Begin
-  WaitFlag  :=  True;
-  if ActorStatus[ActorID] = 0 then
-  Begin
-    while WaitFlag do
-    Begin
-        if ActorMA_Msg[ActorID].WaitFor(100) <> wrTimeout then
-          WaitFlag  :=  False
-        else
-          if ActorStatus[ActorID] = 1 then WaitFlag  :=  False;
-    End;
-  End;
-End;
 // ===========================================================================================
 PROCEDURE TSolutionObj.Solve(ActorID : Integer);
 {$IFNDEF FPC}
@@ -2518,11 +2494,11 @@ begin
 
   Inherited Create(Susp);
   {$IFDEF MSWINDOWS}              // Only for windows
-  // Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
+//  Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
   Parallel.Set_Thread_affinity(handle,local_CPU);
-  Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
+//  Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
   {$ELSE}
-  Parallel.Set_Thread_Priority(self,THREAD_PRIORITY_TIME_CRITICAL);
+//  Parallel.Set_Thread_Priority(self,THREAD_PRIORITY_TIME_CRITICAL);
   Parallel.Set_Thread_affinity(handle,local_CPU);
   {$ENDIF}
 
@@ -2556,9 +2532,9 @@ Begin
   ActorCPU[ActorID] :=  CPU;
   {$IFDEF MSWINDOWS}              // Only for windows
   Parallel.Set_Thread_affinity(handle,CPU);
-  Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
+//  Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
   {$ELSE}
-  Parallel.Set_Thread_Priority(self,THREAD_PRIORITY_TIME_CRITICAL);
+//  Parallel.Set_Thread_Priority(self,THREAD_PRIORITY_TIME_CRITICAL);
   Parallel.Set_Thread_affinity(handle,CPU);
   {$ENDIF}
 End;

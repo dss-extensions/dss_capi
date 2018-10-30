@@ -21,7 +21,11 @@ unit DSSGlobals;
 interface
 
 Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerList, PDELement,
-     UComplex, Arraydef, CktElement, Circuit, IniRegSave, {$IFNDEF FPC} Graphics, System.IOUtils,{$ENDIF} inifiles,
+     UComplex, Arraydef, CktElement, Circuit, IniRegSave, {$IFNDEF FPC}
+     {$IFDEF MSWINDOWS}
+     Graphics, System.IOUtils,
+     {$ENDIF}
+     {$ENDIF} inifiles,
 
      {Some units which have global vars defined here}
      solution,
@@ -277,6 +281,9 @@ VAR
    EMT_Append             : array of Boolean;
    PHV_Append             : array of Boolean;
    FM_Append              : array of Boolean;
+
+//***********************A-Diakoptics Variables*********************************
+  ADiakoptics             : Boolean;
 
 
 
@@ -939,7 +946,10 @@ Var
 {$ENDIF}
 Begin
   ActorHandle[ActorID] :=  TSolver.Create(false,ActorCPU[ActorID],ActorID,{$IFNDEF DSS_CAPI}ScriptEd.UpdateSummaryForm{$ELSE}nil{$ENDIF},ActorMA_Msg[ActorID]);
-  ActorStatus[ActorID]          :=  1;
+  ActorHandle[ActorID] :=  TSolver.Create(True,ActorCPU[ActorID],ActorID,{$IFNDEF DSS_CAPI}ScriptEd.UpdateSummaryForm{$ELSE}nil{$ENDIF},ActorMA_Msg[ActorID]);
+  ActorHandle[ActorID].Priority :=  tpTimeCritical;
+  ActorHandle[ActorID].Resume;
+  ActorStatus[ActorID] :=  1;
 End;
 
 {$IFNDEF FPC}
@@ -1079,6 +1089,7 @@ initialization
    {$ENDIF}
    DSSFileName      := GetDSSExeFile;
    DSSDirectory     := ExtractFilePath(DSSFileName);
+   ADiakoptics      :=    False;  // Disabled by default
 
    {Various Constants and Switches}
 
