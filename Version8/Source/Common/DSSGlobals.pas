@@ -287,6 +287,9 @@ VAR
    PHV_Append             : array of Boolean;
    FM_Append              : array of Boolean;
 
+//***********************A-Diakoptics Variables*********************************
+  ADiakoptics             : Boolean;
+
 
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
@@ -870,7 +873,9 @@ procedure New_Actor(ActorID:  Integer);
 Var
   ScriptEd    : TScriptEdit;
 Begin
- ActorHandle[ActorID] :=  TSolver.Create(false,ActorCPU[ActorID],ActorID,ScriptEd.UpdateSummaryform,ActorMA_Msg[ActorID]);
+ ActorHandle[ActorID] :=  TSolver.Create(True,ActorCPU[ActorID],ActorID,ScriptEd.UpdateSummaryform,ActorMA_Msg[ActorID]);
+ ActorHandle[ActorID].Priority :=  tpTimeCritical;
+ ActorHandle[ActorID].Resume;
  ActorStatus[ActorID] :=  1;
 End;
 
@@ -1002,9 +1007,10 @@ initialization
    NumOfActors            :=  1;
    ActorCPU[ActiveActor]  :=  0;
    Parser[ActiveActor]    :=  Tparser.Create;
-   ProgramName      := 'OpenDSS';
-   DSSFileName      := GetDSSExeFile;
-   DSSDirectory     := ExtractFilePath(DSSFileName);
+   ProgramName      :=    'OpenDSS';
+   DSSFileName      :=    GetDSSExeFile;
+   DSSDirectory     :=    ExtractFilePath(DSSFileName);
+   ADiakoptics      :=    False;  // Disabled by default
 
    {Various Constants and Switches}
 

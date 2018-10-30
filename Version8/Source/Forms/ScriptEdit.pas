@@ -156,7 +156,7 @@ begin
   Screen.Cursor := crDefault;
 
   If Not IsDLL and (ActorHandle[ActiveActor] <> nil) Then Begin
-    if (ActorStatus[ActiveActor] = 0) then
+    if (ActorStatus[ActiveActor] = 1) then
     begin
       UpdateResultForm;
   //    UpdateSummaryForm(ActiveActor);

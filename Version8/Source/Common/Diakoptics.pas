@@ -3,7 +3,7 @@ unit Diakoptics;
 interface
 
 uses
-  Circuit, Solution, DSSGlobals, SysUtils, DSSClassDefs;
+  Circuit, Solution, DSSGlobals, SysUtils, DSSClassDefs, DSSForms, ScriptEdit;
 
 Function Solve_Diakoptics():Integer;
 procedure ADiakoptics_Tearing();
@@ -167,6 +167,7 @@ Begin
   End;
 End;
 
+
 {*******************************************************************************
 *           Tears the system using considering the number of                   *
 *           available CPUs as reference                                        *
@@ -198,16 +199,35 @@ var
   DIdx,
   Diak_Actors : Integer;
   Dir, Proj_Dir,
+  prog_Str,
   FileRoot    : String;
   Links       : Array of String;                        // List of the Link Branches
+  ScriptEd    : TScriptEdit;
+
 Begin
+  prog_str  :=  '';
   ActiveActor                     :=  1;
-  ActiveCircuit[1].Num_SubCkts    :=  CPU_Cores - 1;
+  if ActiveCircuit[1].Num_SubCkts > (CPU_Cores - 2) then
+    ActiveCircuit[1].Num_SubCkts    :=  CPU_Cores - 2;
+
+  prog_Str    :=  prog_str + '- Creating Sub-Circuits...' + CRLF;
+  ScriptEd.PublishMessage(prog_Str);
+
   ADiakoptics_Tearing();
+  prog_Str    := prog_str + inttostr(ActiveCircuit[1].Num_SubCkts) + ' Sub-Circuits Created' + CRLF;
+  ScriptEd.PublishMessage(prog_Str);
+
   Diak_Actors                     :=  ActiveCircuit[1].Num_SubCkts + 1;
   // Saves the Link Branch list locally
+
+  prog_Str    :=  prog_str + '- Indexing the link branches list' + CRLF;
+  ScriptEd.PublishMessage(prog_Str);
+
   setlength(Links,length(ActiveCircuit[1].Link_Branches));
   for DIdx := 0 to High(Links) do Links[DIdx]   :=  ActiveCircuit[1].Link_Branches[DIdx];
+
+  prog_Str    :=  prog_str + '- Setting up the Actors...' + CRLF;
+  ScriptEd.PublishMessage(prog_Str);
 
   // Clears everything to craete the actors and compile the subsystems
   DSSExecutive.ClearAll;
@@ -232,22 +252,41 @@ Begin
     Proj_Dir              :=  'compile "' + Fileroot + '\Torn_Circuit\' + Dir + 'master.dss"';
     DssExecutive.Command  := Proj_Dir;
   End;
+
+  prog_Str    :=  prog_str + 'Actors Ready' + CRLF;
+  ScriptEd.PublishMessage(prog_Str);
+
+  prog_Str    :=  prog_str + '- Calculating the Contours matrix...' + CRLF;
+  ScriptEd.PublishMessage(prog_Str);
+
   // Calculates the contours matrix
   Calc_C_Matrix(@Links[0], length(Links));
 
+  prog_Str    :=  prog_str + 'Contours matrix Ready' + CRLF;
+  ScriptEd.PublishMessage(prog_Str);
+
+  prog_Str    :=  prog_str + '- Opening link branches...' + CRLF;
+  ScriptEd.PublishMessage(prog_Str);
   // Opens the link branches in the interconnected Circuit and recalculates the YBus
+  // The opening happens by replacing the line with a very high series impedance
   for DIdx := 1 to High(Links) do
   Begin
-    Proj_Dir              :=  'open ' + Links[DIdx] + ' term=1';
+    DssExecutive.Command    :=  Links[DIdx] + '.r0=1000000000';
+    DssExecutive.Command    :=  Links[DIdx] + '.r1=1000000000';
+    DssExecutive.Command    :=  Links[DIdx] + '.x0=0';
+    DssExecutive.Command    :=  Links[DIdx] + '.x1=0';
   End;
-  Ymatrix.BuildYMatrix(SERIESONLY, FALSE,ActiveActor);
+  Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE, ActiveActor);
 
+  prog_Str    :=  prog_str + 'Link branches open' + CRLF;
+  ScriptEd.PublishMessage(prog_Str);
+{
   // Calculates the connection matrix and the lateral matrices
   Calc_ZCT();
   Calc_ZCC();
 
   ActiveActor                     :=  1;
-  GlobalResult                    := 'Sub-Circuits Created: ' + inttostr(Diak_Actors - 1);
+  GlobalResult                    := 'Sub-Circuits Created: ' + inttostr(Diak_Actors - 1);}
 End;
 
 end.
