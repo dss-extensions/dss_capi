@@ -428,12 +428,12 @@ Begin
          End
          Else
            DSSMessageDlg(Msg, TRUE);
-
      End;
 
      LastErrorMessage := Msg;
      ErrorNumber := ErrNum;
      AppendGlobalResultCRLF(Msg);
+     SolutionAbort  :=  True;
 End;
 
 //----------------------------------------------------------------------------
