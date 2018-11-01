@@ -2641,7 +2641,7 @@ Const
 VAR
     n,
     i2    :integer;
-    Buff  :Array[0..BuffSize] of {$IFDEF MSWINDOWS}AnsiChar{$ELSE}Char{$ENDIF};
+    Buff  :Array[0..BuffSize] of AnsiChar;
     pName :pAnsichar;
 
 Begin
