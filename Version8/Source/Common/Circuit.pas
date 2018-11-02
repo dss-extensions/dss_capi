@@ -187,9 +187,10 @@ TYPE
           Locations         : Array of Integer;   // Stores the indexes of the locations
 
           // Variables for Diakoptics
-          Contours         : Array of Array of Complex;
-          ZCT              : Array of Array of Complex;
-          ZCC              : Array of Array of Complex;
+          Contours         : TSparse_Complex;
+          ZLL              : TSparse_Complex;
+          ZCT              : TSparse_Complex;
+          ZCC              : TSparse_Complex;
 
           // Bus and Node stuff
           Buses:    pTBusArray;
@@ -534,10 +535,10 @@ BEGIN
   setlength(Path_size,0);
 
   // Diakoptics variables
-
-  setlength(ZCC,0);
-  setlength(ZCT,0);
-  setlength(Contours,0);
+  Contours  :=  TSparse_Complex.Create;
+  ZLL       :=  TSparse_Complex.Create;
+  ZCC       :=  TSparse_Complex.Create;
+  ZCT       :=  TSparse_Complex.Create;
 
 END;
 
