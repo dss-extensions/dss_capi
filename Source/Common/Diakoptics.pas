@@ -8,14 +8,16 @@ uses
 Function Solve_Diakoptics():Integer;
 procedure ADiakoptics_Tearing();
 procedure ADiakopticsInit();
-procedure Calc_C_Matrix(PLinks : PString; NLinks  : Integer);
+function Calc_C_Matrix(PLinks : PString; NLinks  : Integer):Integer;
+function Calc_ZLL(PLinks : PString; NLinks  : Integer):Integer;
 procedure Calc_ZCT();
 procedure Calc_ZCC();
 
 implementation
 
 Uses
-  ExecHelper, Executive, ParserDel, YMatrix, KLUSolve, Ucomplex;
+  ExecHelper, Executive, ParserDel, YMatrix, KLUSolve, Ucomplex, Sparse_Math,
+  UcMatrix;
 
 Function Solve_Diakoptics():Integer;
 Begin
@@ -58,53 +60,32 @@ Begin
   ActiveActor   :=  1;
   WITH ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution DO
   Begin
-    setlength(ZCT,length(Contours));
-    for LIdx := 0 to High(ZCT) do
-    Begin
-      setlength(ZCT[LIdx],length(Contours[LIdx]));
-      setlength(VContours,length(Contours[LIdx]));
-      setlength(VZCT,length(Contours[LIdx]));
-      for i := 0 to High(Contours[LIdx]) do
-        VContours[i]  :=  Contours[LIdx][i];      // Moves the contour column
-      // Solves the vector
-      Ret := SolveSparseSet(hY, @VZCT[0], @VContours[0]);
-      //  Stores the vector
-      for i := 0 to High(VZCT) do
-        ZCT[LIdx][i]    :=  VZCT[i];
-    End;
-{    // For Debugging
-    temp              :=  GetCurrentDir;
-    AssignFile(myFile, temp  + '\ZCT.txt');
-    ReWrite(myFile);
-    for j := 0 to High(VZCT) do
-    Begin
-      for i := 0 to High(ZCT) do
-        Write(myFile,(floattostr(ZCT[i][j].re) + '+' + floattostr(ZCT[i][j].im) + ' '));
-      WriteLn(myFile,'');
-    End;
-    CloseFile(myFile);  }
+//    setlength(ZCT,length(Contours));
+
   End;
 End;
 
 {*******************************************************************************
 *                   Calculates the contours matrix based                       *
 *             on the location in the graph of the link branches                *
+*             if there is an error returns 0, otherwise 1                      *
 *******************************************************************************}
-procedure Calc_C_Matrix(PLinks : PString; NLinks  : Integer);
+function Calc_C_Matrix(PLinks : PString; NLinks  : Integer):Integer;
 var
   LIdx,k,l,
-  j,
-  i           :     Integer;
+  j,CDirection,
+  i           : Integer;
   Elem_Buses,
   Node_Names  : Array of String;
   temp        : String;
+  Go_Flag     : Boolean;
 
   myFile      : TextFile;         // For debugging
 Begin
   ActiveActor   :=  1;
   WITH ActiveCircuit[ActiveActor] DO
   Begin
-    setlength(Contours,0);
+
     setlength(Elem_Buses,2);
     setlength(Node_Names,0);
     FOR i := 1 to NumNodes DO
@@ -114,8 +95,11 @@ Begin
         Node_Names[High(Node_names)] := Format('%s.%-d',[lowercase(BusList.Get(Busref)), NodeNum]);
     End;
 
+    Contours.sparse_matrix_Cmplx(length(Node_Names),(NLinks - 1)*3);
+
     for LIdx := 1 to (NLinks - 1) do
     Begin
+
       inc(PLinks);                  // Pointing to the Next link branch (starting in 1)
 
       i         :=  SetElementActive(string(PLinks^));
@@ -130,40 +114,128 @@ Begin
       //  Marks the connection point in the contours matrix
       For l :=  1 to ActiveCktElement.NPhases Do
       Begin
-        setlength(Contours,(length(Contours) + 1));
-        setlength(Contours[High(Contours)],length(Node_Names));
+
         for i := 0 to 1 do
         Begin
+
           temp    :=  Elem_Buses[i] + inttostr(l);
-          for j := 0 to High(Node_Names) do
+          Go_Flag :=  True;
+          j       :=  0;
+          while Go_Flag and (j <= High(Node_Names)) do
           Begin
+
             k       :=  ansipos(temp,Node_Names[j]);
             if k  <>  0 then
             Begin
-              if i  = 0 then
-                Contours[High(Contours)][j].re :=  1
-              else
-                Contours[High(Contours)][j].re :=  -1;
-              Contours[High(Contours)][j].im :=  0;
+              if i  = 0 then CDirection :=  1
+              else CDirection :=  -1;
+              Contours.insert(j,(l-1),cmplx(CDirection,0));
+              Go_Flag :=  False;
             End;
+            inc(j);
+
           End;
+
         End;
+
       End;
 
     End;
+    if Contours.NZero <> 0 then Result  :=  1
+    else Result :=  0;
+  End;
 
-    // For Debugging
-{    temp              :=  GetCurrentDir;
-    AssignFile(myFile, temp  + '\Contours.txt');
-    ReWrite(myFile);
-    for j := 0 to High(Node_Names) do
+
+
+End;
+
+{*******************************************************************************
+*            Calculates the Link brnahes matrix for further use                *
+*                if there is an error returns 0, otherwise 1                   *
+*******************************************************************************}
+Function Calc_ZLL(PLinks : PString; NLinks  : Integer):Integer;
+var
+  NValues,
+  idx, k, j,
+  row,col,
+  count,
+  i         : Integer;
+  cValues   : pComplexArray;
+  ErrorFlag : Boolean;
+  localMat  : TSparse_Complex;
+  LinkPrim : TcMatrix;
+Begin
+  dec(NLinks);
+  ErrorFlag :=  False;
+  LinkPrim  :=  TCmatrix.CreateMatrix(3);
+  ActiveActor   :=  1;
+  WITH ActiveCircuit[ActiveActor] DO
+  Begin
+    ZLL.Sparse_matrix_Cmplx(NLinks*3,NLinks*3);
+    for i := 1 to NLinks do
     Begin
-      Write(myFile,Node_Names[j] + ' ');
-      for i := 0 to High(Contours) do
-        Write(myFile,(floattostr(Contours[i][j].re) + '+' + floattostr(Contours[i][j].im) + ' '));
-      WriteLn(myFile,'');
+      inc(PLinks);
+      idx         :=  SetElementActive(string(PLinks^));
+
+      If ActiveCktElement<>Nil THEN
+        WITH ActiveCktElement Do
+        Begin
+          NValues := SQR(Yorder);
+          cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
+          If cValues <> Nil Then
+          Begin
+            k     :=  1;
+            idx   :=  (i-1)*3;
+            row   :=  1;
+            col   :=  1;
+            count :=  0;
+            // Extracts the YPrim of the Link branch
+            FOR j := 1 to  (NValues div 4) DO
+            Begin
+              LinkPrim.SetElement(row,col,cValues^[k]);
+              inc(count);
+              if count > 2 then
+              Begin
+                inc(row);
+                Col   :=  1;
+                Count :=  0;
+                k     :=  k + 4;
+              End
+              else
+              Begin
+                inc(Col);
+                inc(k);
+              End;
+            End;
+            // Inverts the Y primitive
+            LinkPrim.Invert;
+            // Inserts the Z primitive values into ZLL
+            row   :=  0;
+            col   :=  0;
+            count :=  0;
+            FOR j := 1 to  (NValues div 4) DO
+            Begin
+              ZLL.insert((row + idx),(col + idx),LinkPrim.GetElement(row+1,col+1));
+              inc(count);
+              if count > 2 then
+              Begin
+                inc(row);
+                Col   :=  0;
+                Count :=  0;
+              End
+              else
+                inc(Col);
+            End;
+          End
+          else
+            ErrorFlag :=  True;
+
+        End
+
     End;
-    CloseFile(myFile);  }
+    if ErrorFlag then Result  :=  0
+    else Result  :=  1;
+
   End;
 End;
 
@@ -196,42 +268,42 @@ End;
 *******************************************************************************}
 procedure ADiakopticsInit();
 var
+  ErrorCode,
   DIdx,
   Diak_Actors : Integer;
   Dir, Proj_Dir,
   prog_Str,
+  ErrorStr,
   FileRoot    : String;
   Links       : Array of String;                        // List of the Link Branches
   ScriptEd    : TScriptEdit;
 
 Begin
-  prog_str  :=  '';
+  prog_str  :=  'A-Diakoptics initialization sumary:' + CRLF + CRLF;
   ActiveActor                     :=  1;
   if ActiveCircuit[1].Num_SubCkts > (CPU_Cores - 2) then
     ActiveCircuit[1].Num_SubCkts    :=  CPU_Cores - 2;
 
   prog_Str    :=  prog_str + '- Creating Sub-Circuits...' + CRLF;
-  ScriptEd.PublishMessage(prog_Str);
 
   ADiakoptics_Tearing();
-  prog_Str    := prog_str + inttostr(ActiveCircuit[1].Num_SubCkts) + ' Sub-Circuits Created' + CRLF;
-  ScriptEd.PublishMessage(prog_Str);
+  prog_Str    := prog_str + '  ' + inttostr(ActiveCircuit[1].Num_SubCkts) + ' Sub-Circuits Created' + CRLF;
 
   Diak_Actors                     :=  ActiveCircuit[1].Num_SubCkts + 1;
   // Saves the Link Branch list locally
 
-  prog_Str    :=  prog_str + '- Indexing the link branches list' + CRLF;
-  ScriptEd.PublishMessage(prog_Str);
+  prog_Str    :=  prog_str + '- Indexing link branches...';
 
   setlength(Links,length(ActiveCircuit[1].Link_Branches));
   for DIdx := 0 to High(Links) do Links[DIdx]   :=  ActiveCircuit[1].Link_Branches[DIdx];
 
-  prog_Str    :=  prog_str + '- Setting up the Actors...' + CRLF;
-  ScriptEd.PublishMessage(prog_Str);
+  prog_Str    :=  prog_str + 'Done' + CRLF + '- Setting up the Actors...';
 
   // Clears everything to craete the actors and compile the subsystems
   DSSExecutive.ClearAll;
   Fileroot                        :=  GetCurrentDir;    //  Gets the current directory
+  SolutionAbort                   :=  False;
+  DssExecutive.Command            :=  'ClearAll';
 
   // Compiles the interconnected Circuit for further calculations on actor 1
   ActiveActor                     :=  1;
@@ -247,26 +319,32 @@ Begin
     DSSExecutive          :=  TExecutive.Create;  // Make a DSS object
     Parser[ActiveActor]   :=  TParser.Create;
     DSSExecutive.CreateDefaultDSSItems;
+    Parallel_enabled      :=  False;
+
     if DIdx = 2 then  Dir :=  ''
     else  Dir :=  'zone_' + inttostr(DIdx - 1) + '\';
     Proj_Dir              :=  'compile "' + Fileroot + '\Torn_Circuit\' + Dir + 'master.dss"';
     DssExecutive.Command  := Proj_Dir;
+    if DIdx > 2 then
+      DssExecutive.Command  := Links[DIdx - 2] + '.enabled=False';
+    DssExecutive.Command  :=  'solve';
   End;
 
-  prog_Str    :=  prog_str + 'Actors Ready' + CRLF;
-  ScriptEd.PublishMessage(prog_Str);
+  ActiveActor                     :=  1;
+  prog_Str    :=  prog_str + 'Done' + CRLF + '- Building Contour matrix...';
 
-  prog_Str    :=  prog_str + '- Calculating the Contours matrix...' + CRLF;
-  ScriptEd.PublishMessage(prog_Str);
+  // Builds the contour matrix
+  ErrorCode :=  Calc_C_Matrix(@Links[0], length(Links));
+  if ErrorCode = 0 then ErrorStr := 'Error'
+  else ErrorStr :=  'Done';
+  // Builds the ZLL matrix
+  prog_Str    :=  prog_str + ErrorStr + CRLF + '- Building ZLL...';
 
-  // Calculates the contours matrix
-  Calc_C_Matrix(@Links[0], length(Links));
+  ErrorCode :=  Calc_ZLL(@Links[0],length(Links));
+  if ErrorCode = 0 then ErrorStr := 'Error'
+  else ErrorStr :=  'Done';
 
-  prog_Str    :=  prog_str + 'Contours matrix Ready' + CRLF;
-  ScriptEd.PublishMessage(prog_Str);
-
-  prog_Str    :=  prog_str + '- Opening link branches...' + CRLF;
-  ScriptEd.PublishMessage(prog_Str);
+  prog_Str    :=  prog_str + ErrorStr + CRLF + '- Opening link branches...';
   // Opens the link branches in the interconnected Circuit and recalculates the YBus
   // The opening happens by replacing the line with a very high series impedance
   for DIdx := 1 to High(Links) do
@@ -278,15 +356,24 @@ Begin
   End;
   Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE, ActiveActor);
 
-  prog_Str    :=  prog_str + 'Link branches open' + CRLF;
-  ScriptEd.PublishMessage(prog_Str);
-{
-  // Calculates the connection matrix and the lateral matrices
-  Calc_ZCT();
-  Calc_ZCC();
+  // Builds the ZCC matrix
+  prog_Str      :=  prog_str + 'Done' + CRLF + '- Building ZCC...';
+
+//  Calc_ZCT();
+//  Calc_ZCC();
+
+  prog_Str      :=  prog_str + 'Done' + CRLF;
 
   ActiveActor                     :=  1;
-  GlobalResult                    := 'Sub-Circuits Created: ' + inttostr(Diak_Actors - 1);}
+  if ErrorCode = 0 then ErrorStr := 'One or more errors found'
+  else  ErrorStr  :=  'A-Diakoptics initialized';
+
+  prog_Str      :=  prog_str + CRLF + ErrorStr + CRLF;
+  GlobalResult  :=  ErrorStr;
+
+  ScriptEd.PublishMessage(prog_Str);
+  SolutionAbort :=  False;
+
 End;
 
 end.
