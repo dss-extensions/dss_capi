@@ -442,7 +442,7 @@ end;
 
 function TSolution.Get_dblHour: Double;
 begin
-     If ActiveCircuit <> Nil Then  Begin
+     If ActiveCircuit[ActiveActor] <> Nil Then  Begin
         Result := ActiveCircuit[ActiveActor].Solution.DynaVars.dblHour;
      End;
 end;
@@ -539,7 +539,7 @@ end;
 procedure TSolution.SolvePlusControl;
 {One Pass Through the solution and then dispatches controls}
 begin
-   If ActiveCircuit <> Nil Then Begin
+   If ActiveCircuit[ActiveActor] <> Nil Then Begin
       With ActiveCircuit[ActiveActor].Solution Do Begin
          SolveCircuit(ActiveActor);
          CheckControls(ActiveActor);
@@ -654,7 +654,7 @@ end;
 
 procedure TSolution.Cleanup;
 begin
-    If ActiveCircuit <> Nil Then
+    If ActiveCircuit[ActiveActor] <> Nil Then
     WITH ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution Do
       Begin
                 EndOfTimeStepCleanup(ActiveActor);
@@ -663,7 +663,7 @@ end;
 
 procedure TSolution.FinishTimeStep;
 begin
-    If ActiveCircuit <> Nil Then
+    If ActiveCircuit[ActiveActor] <> Nil Then
     WITH ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution Do
       Begin
                 MonitorClass[ActiveActor].SampleAll(ActiveActor);  // Make all monitors take a sample
