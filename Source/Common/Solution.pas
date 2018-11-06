@@ -2496,43 +2496,56 @@ var
             Processing                  := True;
             case MsgType of             // Evaluates the incomming message
             SIMULATE  :                 // Simulates the active ciruit on this actor
-              Begin
-                Case Dynavars.SolutionMode OF
-                    SNAPSHOT       : SolveSnap(ActorID);
-                    YEARLYMODE     : SolveYearly(ActorID);
-                    DAILYMODE      : SolveDaily(ActorID);
-                    DUTYCYCLE      : SolveDuty(ActorID);
-                    DYNAMICMODE    : SolveDynamic(ActorID);
-                    MONTECARLO1    : SolveMonte1(ActorID);
-                    MONTECARLO2    : SolveMonte2(ActorID);
-                    MONTECARLO3    : SolveMonte3(ActorID);
-                    PEAKDAY        : SolvePeakDay(ActorID);
-                    LOADDURATION1  : SolveLD1(ActorID);
-                    LOADDURATION2  : SolveLD2(ActorID);
-                    DIRECT         : SolveDirect(ActorID);
-                    MONTEFAULT     : SolveMonteFault(ActorID);  // Monte Carlo Fault Cases
-                    FAULTSTUDY     : SolveFaultStudy(ActorID);
-                    AUTOADDFLAG    : ActiveCircuit[ActorID].AutoAddObj.Solve(ActorID);
-                    HARMONICMODE   : SolveHarmonic(ActorID);
-                    GENERALTIME    : SolveGeneralTime(ActorID);
-                    HARMONICMODET  : SolveHarmonicT(ActorID);  //Declares the Hsequential-time harmonics
-                Else
-                    DosimpleMsg('Unknown solution mode.', 481);
+              Try
+                Begin
+                  Case Dynavars.SolutionMode OF
+                      SNAPSHOT       : SolveSnap(ActorID);
+                      YEARLYMODE     : SolveYearly(ActorID);
+                      DAILYMODE      : SolveDaily(ActorID);
+                      DUTYCYCLE      : SolveDuty(ActorID);
+                      DYNAMICMODE    : SolveDynamic(ActorID);
+                      MONTECARLO1    : SolveMonte1(ActorID);
+                      MONTECARLO2    : SolveMonte2(ActorID);
+                      MONTECARLO3    : SolveMonte3(ActorID);
+                      PEAKDAY        : SolvePeakDay(ActorID);
+                      LOADDURATION1  : SolveLD1(ActorID);
+                      LOADDURATION2  : SolveLD2(ActorID);
+                      DIRECT         : SolveDirect(ActorID);
+                      MONTEFAULT     : SolveMonteFault(ActorID);  // Monte Carlo Fault Cases
+                      FAULTSTUDY     : SolveFaultStudy(ActorID);
+                      AUTOADDFLAG    : ActiveCircuit[ActorID].AutoAddObj.Solve(ActorID);
+                      HARMONICMODE   : SolveHarmonic(ActorID);
+                      GENERALTIME    : SolveGeneralTime(ActorID);
+                      HARMONICMODET  : SolveHarmonicT(ActorID);  //Declares the Hsequential-time harmonics
+                  Else
+                      DosimpleMsg('Unknown solution mode.', 481);
+                  End;
+                  QueryPerformanceCounter(GEndTime);
+
+                  Total_Solve_Time_Elapsed  :=  ((GEndTime-GStartTime)/CPU_Freq)*1000000;
+                  Total_Time_Elapsed        :=  Total_Time_Elapsed + Total_Solve_Time_Elapsed;
+                  Processing                :=  False;
+                  FMessage                  :=  '1';
+                  ActorStatus[ActorID]      :=  1;      // Global to indicate that the actor is ready
+
+                  // Sends a message to Actor Object (UI) to notify that the actor has finised
+                  UIEvent.SetEvent;
+                  if Parallel_enabled then
+                    if Not IsDLL then queue(CallCallBack); // Refreshes the GUI if running asynchronously
+
+                  End;
+              Except
+                On E:Exception Do
+                Begin
+                  FMessage                  :=  '1';
+                  ActorStatus[ActorID]      :=  1;      // Global to indicate that the actor is ready
+                  SolutionAbort := TRUE;
+                  UIEvent.SetEvent;
+                  if Parallel_enabled then
+                   if Not IsDLL then queue(CallCallBack); // Refreshes the GUI if running asynchronously
+                  DoSimpleMsg('Error Encountered in Solve: ' + E.Message, 482);
                 End;
-                QueryPerformanceCounter(GEndTime);
-
-                Total_Solve_Time_Elapsed  :=  ((GEndTime-GStartTime)/CPU_Freq)*1000000;
-                Total_Time_Elapsed        :=  Total_Time_Elapsed + Total_Solve_Time_Elapsed;
-                Processing                :=  False;
-                FMessage                  :=  '1';
-                ActorStatus[ActorID]      :=  1;      // Global to indicate that the actor is ready
-
-                // Sends a message to Actor Object (UI) to notify that the actor has finised
-                UIEvent.SetEvent;
-                if Parallel_enabled then
-                  if Not IsDLL then queue(CallCallBack); // Refreshes the GUI if running asynchronously
-
-                End;
+              End;
             EXIT_ACTOR:                // Terminates the thread
               Begin
                 ActorActive  :=  False;
