@@ -175,7 +175,7 @@ Begin
   SolutionAbort := FALSE;
   DSSExecutive.Command := S;
   If RecordCommands then Editor.Lines.Append(S);
-  if (ActorStatus[ActiveActor] = 0) then
+  if (ActorStatus[ActiveActor] = 1) then
   begin
     If Not IsDLL Then  Begin
       UpdateResultForm;
