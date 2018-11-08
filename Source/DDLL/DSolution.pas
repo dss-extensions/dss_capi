@@ -293,7 +293,12 @@ begin
      Else Result := 0.0;
   end;
   5: begin  // Solution.StepSize Write
-     If ActiveCircuit[ActiveActor] <> Nil Then ActiveCircuit[ActiveActor].Solution.dynavars.h  := arg;
+     If ActiveCircuit[ActiveActor] <> Nil Then
+     Begin
+      ActiveCircuit[ActiveActor].Solution.dynavars.h  := arg;
+      // Keep IntervalHrs in synch with time step size
+      ActiveCircuit[ActiveActor].Solution.IntervalHrs := arg/3600.0;
+     End;
      Result:=0.0;
   end;
   6: begin  // Solution.LoadMult read
