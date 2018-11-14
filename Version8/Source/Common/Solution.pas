@@ -2394,11 +2394,18 @@ BEGIN
     // new function to log KLUSolve.DLL function calls; same information as stepping through in Delphi debugger
     // SetLogFile ('KLU_Log.txt', 1);
     RetCode := SolveSparseSet(hY, @V^[1], @Currents^[1]);  // Solve for present InjCurr
+{$IFDEF DSS_CAPI}
+   if (DSS_CAPI_INFO_SPARSE_COND) then // Disabled by default with DSS C-API
+   begin
+{$ENDIF}
     // new information functions
     GetFlops(hY, @dRes);
     GetRGrowth(hY, @dRes);
     GetRCond(hY, @dRes);
     // GetCondEst (hY, @dRes); // this can be expensive
+{$IFDEF DSS_CAPI}
+   end;
+{$ENDIF}
     GetSize(hY, @iRes);
     GetNNZ(hY, @iRes);
     GetSparseNNZ(hY, @iRes);

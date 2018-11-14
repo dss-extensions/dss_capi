@@ -115,6 +115,9 @@ VAR
 {$IFNDEF DSS_CAPI} // Disable DSS_Registry completely when building the DSS_CAPI DLL   
    DSS_Registry   :TIniRegSave; // Registry   (See Executive)
 {$ENDIF}
+{$IFDEF DSS_CAPI}
+   DSS_CAPI_INFO_SPARSE_COND : Boolean;
+{$ENDIF}
    // Global variables for the DSS visualization tool
    DSS_Viz_installed   :Boolean=False; // DSS visualization tool (flag of existance)
    DSS_Viz_path: String;
@@ -961,6 +964,9 @@ initialization
    {$IFNDEF FPC}
    DSS_Viz_installed:= CheckDSSVisualizationTool; // DSS visualization tool (flag of existance)
    {$ENDIF}
+{$IFNDEF DSS_CAPI}  
+   DSS_CAPI_INFO_SPARSE_COND := (GetEnvironmentVariable('DSS_CAPI_INFO_SPARSE_COND') = '1');
+{$ENDIF}
 
 Finalization
 
