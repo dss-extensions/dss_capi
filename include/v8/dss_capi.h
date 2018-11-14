@@ -8,8 +8,8 @@
 
 #ifdef __cplusplus
 #    ifdef _MSC_VER
-#       if _MSC_VER == 1500
-#           include "stdint_compat.h"
+#       if _MSC_VER <= 1500
+#           include "../stdint_compat.h"
 #       else
 #           include <cstdint>
 #       endif
@@ -17,7 +17,15 @@
 #        include <cstdint>
 #    endif
 #else
-#    include <stdint.h>
+#    ifdef _MSC_VER
+#       if _MSC_VER <= 1500
+#           include "../stdint_compat.h"
+#       else
+#           include <stdint.h>
+#       endif
+#    else
+#        include <stdint.h>
+#    endif
 #endif
 
 #ifdef __cplusplus

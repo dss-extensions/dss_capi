@@ -3,7 +3,7 @@
 
 #ifdef __cplusplus
 #    ifdef _MSC_VER
-#       if _MSC_VER == 1500
+#       if _MSC_VER <= 1500
 #           include "stdint_compat.h"
 #       else
 #           include <cstdint>
@@ -11,9 +11,21 @@
 #    else
 #        include <cstdint>
 #    endif
-#else    
-#    include <stdbool.h>
-#    include <stdint.h>
+#else
+#    ifdef _MSC_VER
+#       if _MSC_VER <= 1500
+#           include "stdint_compat.h"
+            typedef char bool;
+#           define false (0)
+#           define true (1)
+#       else
+#           include <stdint.h>
+#           include <stdbool.h>
+#       endif
+#    else
+#        include <stdint.h>
+#        include <stdbool.h>
+#    endif
 #endif
 
 
