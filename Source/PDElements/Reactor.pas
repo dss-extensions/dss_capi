@@ -698,6 +698,14 @@ BEGIN
      FYprimFreq := ActiveCircuit.Solution.Frequency ;
      FreqMultiplier := FYprimFreq/BaseFrequency;
 
+     {If GIC simulation, Resistance Only }
+         if ActiveCircuit.Solution.Frequency < 0.51 then Begin    // 0.5 Hz is cutoff
+             if X > 0.0  then
+               if R <= 0.0 then  R := X/50.0;   // Assume X/R = 50
+             FYprimFreq := 0.0;        // Set these to 0.0 for GIC model
+             FreqMultiplier := 0.0;    // sets reactance part to zero
+         End;
+
     { Now, Put in Yprim matrix }
 
      Case SpecType OF
@@ -743,7 +751,9 @@ BEGIN
                 FOR i := 1 to Fnphases Do  BEGIN
                     FOR j := 1 to Fnphases Do  BEGIN
                        idx := (j-1)*Fnphases + i ;
-                       Value := Cmplx(Gmatrix^[idx], Bmatrix^[idx] / FreqMultiplier);
+                       {FreqMultiplier = 0 signifies GIC model where we only need R part}
+                       if FreqMultiplier>0.0 then   Value := Cmplx(Gmatrix^[idx], Bmatrix^[idx] / FreqMultiplier)
+                       else  Value := Cmplx(Gmatrix^[idx], 0.0);
                        SetElement(i,j,Value);
                        SetElement(i+Fnphases, j+Fnphases, Value);
                        SetElemSym(i, j+Fnphases, Cnegate(Value));
