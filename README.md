@@ -146,7 +146,7 @@ Other features that may include more invasive changes in the code base will prob
 
 ## Questions?
 
-If you have any question, feel free to open a ticket on Github or contact me through [Twitter](https://twitter.com/PCMMeira).
+If you have any question, feel free to open a ticket on GitHub or contact me through email (pmeira at ieee.org).
 Please allow me a few days to respond.
 
 
