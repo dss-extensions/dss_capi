@@ -261,6 +261,16 @@ begin
     DSS_Dispose_PDouble(GR_DataPtr_PDouble);
     DSS_Dispose_PInteger(GR_DataPtr_PInteger);
     DSS_Dispose_PPAnsiChar(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar[1]);
+    
+    GR_CountPtr_PPAnsiChar[0] := 0;
+    GR_CountPtr_PDouble[0] := 0;
+    GR_CountPtr_PInteger[0] := 0;
+    GR_CountPtr_PByte[0] := 0;
+    
+    GR_CountPtr_PPAnsiChar[1] := 0;
+    GR_CountPtr_PDouble[1] := 0;
+    GR_CountPtr_PInteger[1] := 0;
+    GR_CountPtr_PByte[1] := 0;
 end;
 //------------------------------------------------------------------------------
 initialization
