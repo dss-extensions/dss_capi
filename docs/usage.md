@@ -175,26 +175,26 @@ Some special functions like `YMatrix_getIpointer` and `YMatrix_getVpointer` prov
 
 These functions are implemented in `CAPI_Utils.pas` and represent direct memory management at the API level.
 
-    - `void DSS_ResetStringBuffer(void)`: Used to reset the global string buffer. It can be useful to call this after reading a very large string from the API.
-    
-    - General memory deallocation, used to free results from the direct result API:
-        - `void DSS_Dispose_PByte(int8_t** p)`
-        - `void DSS_Dispose_PDouble(double** p)`
-        - `void DSS_Dispose_PInteger(int32_t** p)`
-        - `void DSS_Dispose_PPAnsiChar(char ***p, int32_t cnt)`
+- `void DSS_ResetStringBuffer(void)`: Used to reset the global string buffer. It can be useful to call this after reading a very large string from the API.
 
-    - `void DSS_DisposeGRData(void)`: Resets the global result pointers, deallocated the data pointers and resetting the count and capacity values to zero. 
-        
-    - `DSS_GetGRPointers`: Get references to the global result (GR) pointers, used in the `*_GR` variations of most getter functions. The returned values in the DataPtrs will contain pointers to the global variables that contains the actual pointers, hence all the indirections here. Full signature:
-    ```
-    void DSS_GetGRPointers(
-        char**** DataPtr_PPAnsiChar,
-        double*** DataPtr_PDouble,
-        int32_t*** DataPtr_PInteger,
-        int8_t*** DataPtr_PByte,
-        int32_t** CountPtr_PPAnsiChar,
-        int32_t** CountPtr_PDouble,
-        int32_t** CountPtr_PInteger,
-        int32_t** CountPtr_PByte
-    );
-    ```
+- General memory deallocation, used to free results from the direct result API:
+    - `void DSS_Dispose_PByte(int8_t** p)`
+    - `void DSS_Dispose_PDouble(double** p)`
+    - `void DSS_Dispose_PInteger(int32_t** p)`
+    - `void DSS_Dispose_PPAnsiChar(char ***p, int32_t cnt)`
+
+- `void DSS_DisposeGRData(void)`: Resets the global result pointers, deallocated the data pointers and resetting the count and capacity values to zero. 
+    
+- `DSS_GetGRPointers`: Get references to the global result (GR) pointers, used in the `*_GR` variations of most getter functions. The returned values in the DataPtrs will contain pointers to the global variables that contains the actual pointers, hence all the indirections here. Full signature:
+```c
+void DSS_GetGRPointers(
+    char**** DataPtr_PPAnsiChar,
+    double*** DataPtr_PDouble,
+    int32_t*** DataPtr_PInteger,
+    int8_t*** DataPtr_PByte,
+    int32_t** CountPtr_PPAnsiChar,
+    int32_t** CountPtr_PDouble,
+    int32_t** CountPtr_PInteger,
+    int32_t** CountPtr_PByte
+);
+```
