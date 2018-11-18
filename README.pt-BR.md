@@ -1,0 +1,280 @@
+[![Travis-CI: Linux and MacOS build status](https://travis-ci.org/PMeira/dss_capi.svg?branch=master)](https://travis-ci.org/PMeira/dss_capi)
+[![AppVeyor: Windows build status](https://ci.appveyor.com/api/projects/status/vky40m4kj99nlxyc/branch/master?svg=true)](https://ci.appveyor.com/project/PMeira/dss-capi/branch/master)
+
+*For an English version of this file, see [README.md](https://github.com/PMeira/dss_capi/blob/master/README.md).*
+
+# DSS C-API: Uma interface (não oficial) para o OpenDSS do EPRI
+
+Esta biblioteca expõe o motor do OpenDSS/OpenDSS-PM (v7/v8) através de uma interface C plana, que tenta reproduzir a maioria dos métodos COM. De fato, a maior parte do código foi inicialmente derivado dos arquivos da implementação COM. O DLL resultante pode ser usado diretamente ou através de módulos de interface, como o módulo `DSS Python`. DSS Python representa um módulo para linguagem Python que imita a mesma estrutura do módulo COM (como exposto via `win32com` ou `comtypes`), efetivamente nos permitindo alcançar compatilibilidade multi-plataforma a nível de Python. Suporte para um módulo similar em .NET está disponível a partir da versão 0.9.4. Suporte para MATLAB é esperado logo após o lançamento da versão 0.10.0 e outras linguagens como Julia e Java estão sob avaliação.
+
+<p align="center">
+    <img alt="Visão geral dos repositórios relacionados" src="https://raw.githubusercontent.com/PMeira/dss_capi/master/docs/images/repomap.svg?sanitize=true" width=600>
+</p>
+
+Se você está procurando o módulo para Python, veja [DSS Python](http://github.com/PMeira/dss_python/).
+
+Caso procure integração com .NET/C#, o código agora tem seu repositório próprio em [DSS Sharp](http://github.com/PMeira/dss_sharp/).
+
+Versão 0.10.0, baseada no OpenDSS SVN r2395.
+
+Apesar de o objetivo principal (compatibilidade com COM) ter sido alcançado, este é um sempre um trabalho em andamento.
+*Observe que, enquanto a interface clássica (v7 + aprimoramentos) é estável, a interface para o OpenDSS-PM (v8, baseada em atores e execução paralela) ainda é experimental.* Em 0.10.0, a interface v8 está bem mais estável que na versão 0.9.8 da DSS C-API.
+
+Ao invés de usar parâmetros numéricos como na interface DDLL oficial, cada propriedade COM foi exposta como um par de funções. Por exemplo, a propriedade `kVA` das cargas é exposta como:
+
+```
+    double Loads_Get_kva();
+    void Loads_Set_kva(double Value);
+```
+
+Com exceção de detalhes de baixo nível como gerenciamento de memória, a maioria da documentação pode ser usada como referência para este projeto.
+
+**A partir da versão 0.9.8, desabilitamos a criação do `opendsscmd.ini`, visto que causava estranheza entre os usuários. O usuário pode configurar a frequência de base padrão usando a variável de ambiente `DSS_BASE_FREQUENCY`, ou simplesmente através de scripts DSS (opção recomendada por nós). Isto também significa que o `datapath` inicial é configurado automaticamente para o diretório de trabalho corrente.**
+
+Este repositório contém apenas o código fonte da API customizada.
+
+De forma a rastrear as mudanças no repositório SVN oficial, uma versão modificada do código fonte do OpenDSS está disponível em [electricdss-src](https://github.com/PMeira/electricdss-src). Este repositório inclui pequenas melhorias, melhor compatibilidade com Free Pascal e adaptação de novas funcionalidades da versão 8 para a versão 7.
+
+## Mudanças recentes
+
+- **2018-11-17 / versão 0.10.0: Reduz o número de operações de alocação de memória se os buffers atuais forem reutilizados, introduz o mecanismo de Resultado Global, várias extensões de API (`LineGeometry`, `WireData`, `LineSpacing`, `CNData`, `TSData`, `Reactor`) -- veja [o documento de uso](https://github.com/PMeira/dss_capi/blob/master/docs/usage.md)(em inglês) e o [ticket #11](https://github.com/PMeira/dss_capi/issues/11).**
+- 2018-08-10 / versão 0.9.8: Grande reorganização do código fonte, várias pequenas correções, e novos scripts de compilação.
+- 2018-04-05 / versão 0.9.5: Novas funções `Circuit_SetCktElement*` para definir o elemento de circuito ativo.
+- 2018-03-06 / versão 0.9.4: Correções para DSSProperty, inclui os textos de ajuda originais no header C, integra modificações oficiais até a revisão 2152. Esta versão introduz a primeira versão de bindings de .NET para o DLL nativo.
+- 2018-02-16 / versão 0.9.3: Integra correções da interface COM na revisão SVN 2136 (iteração via `First` `Next`)
+- 2018-02-12 / versão 0.9.2: Suporte experimental para OpenDSS-PM and correções da interface COM integradas (OpenDSS revisão 2134)
+- 2018-02-08 / versão 0.9.1: Primeira versão pública (OpenDSS revisão 2123)
+
+## Funcionalidades faltantes e limitações
+
+- Ainda não implementados:
+    - `DSSEvents` de `DLL/ImplEvents.pas`: parece ser muito depende de COM.
+    - Gráficos em geral
+    
+## Funcionalides extras
+
+Além da grande maioria dos métodos da interface COM, alguns dos métodos únicos da DDLL oficial (como acesso a ponteiros internos) foram expostos em formas adaptadas. Entre eles estão métodos de `DYMatrix.pas`, em especial `GetCompressedYMatrix` (veja os headers ou código fonte em Pascal para maiores detalhes).
+
+## Como compilar?
+
+Caso deseje compilar o DLL:
+
+- Instale o compilador [Free Pascal](https://freepascal.org/). Caso já tenha instalado a IDE Lazarus, você já deve ter o compilador instalado. Adicione a pasta contendo o compilador (`fpc.exe`) para sua variável de ambiente PATH.
+
+- Clone este repositório e a versão modificada do repositório do OpenDSS, mantendo-os na mesma pasta:
+```    
+    git clone https://github.com/PMeira/electricdss-src
+    git clone https://github.com/PMeira/dss_capi
+```
+
+### No Windows
+
+Se você precisa apenas do arquivo DLL, lembre-se que ele pode ser baixado na página de "Releases" no GitHub. Pode ser necessário instalar o pacote de [runtime do Microsoft Visual Studio 2017](https://go.microsoft.com/fwlink/?LinkId=746572).
+Caso precisa compilar:
+
+- Instale o compilador x64 do Free Pascal -- veja [a wiki](http://wiki.freepascal.org/Installing_Lazarus#Installing_The_Free_Pascal_Compiler) para maiores informações.
+
+- Caso pretenda utilizar a DLL no Visual Studio, você precisa gerar uma biblioteca de importação. Isto pode ser feito iniciando a próxima etapa em um prompt do Visual Studio, como o "x64 Native Tools Command Prompt for VS 2017" (ou equivalente para sua versão) -- você precisa apenas dos utilitários  `dumpbin.exe` e `lib.exe`.
+
+- Abra um prompt de comando na pasta `dss_capi` que você clonou anteriormente e execute `build_win_x64.bat`
+
+Para o processo de compilação no Windows, o arquivo `KLUSolve.dll` da distribuição/repositório oficial do OpenDSS pode ser usado. Caso prefira compilar, há uma receita para o CMake na subpasta `klusolve`.
+
+Os arquivos de saída do processo são depositados na subpasta `lib/win_x64`. 
+
+Caso precise apenas dos DLLs para versões ainda não lançadas, você pode encontrar os DLLs e LIBs para x64 nos [artefatos da instância do AppVeyor](https://ci.appveyor.com/project/PMeira/dss-capi/branch/master/artifacts). Estes arquivos são criados automaticamente a cada commit neste repositório e são mantidos por 6 meses.
+
+### No Linux
+
+A recomendação atual é que você compile a sua própria KLUSolve, logo precisa instalar suas dependências. Já que a maioria das distribuições de Linux devem incluior pacotes compatíveis da SuiteSparse (que inclui a biblioteca KLU), uma versão modificada KLUSolve, excluindo os arquivos da KLU, está incluida na subpasta `klusolve`. Instruções gerais:
+
+- Instale o CMake e um compilador de C++
+- Instale os pacotes de desenvolvimento da SuiteSparse, de preferência da distribução oficial do seu Linux.
+- Instale o compilador x64 do Free Pascal -- veja [a wiki](http://wiki.freepascal.org/Installing_Lazarus#Installing_The_Free_Pascal_Compiler) para mais instruções.
+- Compile a KLUSolve:
+```
+    cd dss_capi/klusolve
+    cmake .
+    make
+    cd ..
+```
+
+- Como alternativa, caso você não deseje baixar e compilar a SuiteSparse, use estes comandos ao invés dos acima -- o script do CMake assim baixará a SuiteSparse e compilará seus arquivos em conjunto com os da KLUSolve:
+```
+    cd dss_capi/klusolve
+    cmake . -DUSE_SYSTEM_SUITESPARSE=OFF
+    make
+    cd ..
+```
+
+- Compile o projeto principal:
+```
+    bash build_linux_x64.sh
+```
+
+### No MacOS
+
+Para MacOS, você pode copiar o `libklusolve.dylib` do repositório SVN do OpenDSS (ou pode compilar seguindo as mesmas instruções do Linux). Instruções em linhas gerais:
+
+- Instale o compiler x64 do Free Pascal -- veja[the wiki](http://wiki.freepascal.org/Installing_Lazarus#Installing_The_Free_Pascal_Compiler) para mais instruções.
+- Copie libklusolve.dylib para a pasta deste repositório clonado
+- Compile o projeto principal:
+```
+    bash build_macos_x64.sh
+```
+
+
+## Como usar e exemplos
+
+Para entender os principais conceitos da DSS C-API e como ela gerencia memória, veja [o documento de uso](https://github.com/PMeira/dss_capi/blob/master/docs/usage.md)(em inglês).
+
+Dois exemplos mínimos (sem scripts DSS, use um dos seus) estão disponíveis em [examples](examples). Após compilar a DSS C-API, adicione aos parâmetros de compilação a subpasta da pasta `include` apropriada (`include/v7` ou `include/v8`), e a biblioteca da pasta `lib` para seu sistema. O código dos exemplos, com seus comentários traduzidos para português, também estão disponíveis abaixo.
+
+O código fonte da DSS Python e da OpenDSSDirect.py são exemplos de uso mais completos e avançados.
+
+
+```c
+#include <stdint.h>
+#include <stdio.h>
+#include "dss_capi.h"
+
+int main(void)
+{
+    // Para numVoltages, o primeiro `int` representa o número atual de doubles, 
+    // enquant o segundo `int` representa a capacidade alocada.
+    int numVoltages[2] = {0, 0}; 
+    double *voltages = NULL;
+    int numNodes;
+    int i;
+
+    DSS_Start(0);
+    Text_Set_Command("compile master.dss");
+    Solution_Solve();
+    Circuit_Get_AllBusVolts(&voltages, numVoltages);
+
+    if (numVoltages[0] == 0)
+    {
+        return -1;
+    }
+    numNodes = numVoltages[0] / 2;
+    
+    for (i = 0; i < numNodes; ++i)
+    {
+        printf("node %d: %f + j%f\n", i, voltages[2*i], voltages[2*(i + 1)]);
+    }
+
+    // Before v0.10.0, if you needed to recall Circuit_Get_AllBusVolts,
+    // you would need to call
+    
+    // DSS_Dispose_PDouble(&voltages);
+
+    // Desde a versão 0.10.0, mesmo se mudanças ocorreram no circuito, 
+    // ainda podemos reutilizar o ponteiro anterior.
+
+    // Se a memória alocada previamente for suficiente para o número 
+    // de doubles retornado por AllBusVolts, não será necessário
+    // realocar memória!
+    
+    Solution_Solve();
+    Circuit_Get_AllBusVolts(&voltages, numVoltages);
+
+    // Como a memória para voltages é alocada em Pascal, precisamos
+    // liberá-la em Pascal, logo a chamada para DSS_Dispose_PDouble
+    DSS_Dispose_PDouble(&voltages);
+    
+    return 0;
+}
+
+```
+
+Para usar a nova API empregando resultados globais (GR), os pointeiros para os GR precisam ser inicializados. 
+
+```c
+#include <stdint.h>
+#include <stdio.h>
+#include "dss_capi.h"
+
+int main(void)
+{
+    char*** data_PPAnsiChar;
+    double** data_PDouble;
+    int32_t** data_PInteger;
+    int8_t** data_PByte;
+    int32_t* count_PPAnsiChar;
+    int32_t* count_PDouble;
+    int32_t* count_PInteger;
+    int32_t* count_PByte;
+    
+    double* voltages;
+    int numNodes;
+    int i;
+    
+    DSS_Start(0);
+    DSS_GetGRPointers(
+        &data_PPAnsiChar,
+        &data_PDouble,
+        &data_PInteger,
+        &data_PByte,
+        &count_PPAnsiChar,
+        &count_PDouble,
+        &count_PInteger,
+        &count_PByte
+    );
+    
+    Text_Set_Command("compile master.dss");
+    Solution_Solve();
+    Circuit_Get_AllBusVolts_GR();
+    
+    // O resultado da chamada para Circuit_Get_AllBusVolts agora
+    // está disponível em dataPtr_PDouble[0] e countPtr_PDouble
+    
+    // Aqui copiamos apenas o pointeiro para conveniência,
+    // a memória ainda é de responsabilidade do mecanismo GR em 
+    // Pascal
+    voltages = dataPtr_PDouble[0];
+    
+    numNodes = count_PDouble[0]/2;
+    if (numNodes == 0)
+    {
+        return -1;
+    }
+    for (i = 0; i < numVoltages; ++i)
+    {
+        printf("node %d: %f + j%f\n", i, voltages[2*i], voltages[2*(i + 1)]);
+    }
+    
+    return 0;
+}
+
+```
+
+
+## Testes
+
+Atualmente, todos os testes e validação são baseados no [DSS Python](http://github.com/PMeira/dss_python/).
+
+## Planos
+
+Além de correções de problemas, a funcionalidade principal desta biblioteca está pronta. Alguns pontos que pretendemos trabalhar envolvem:
+- Expor os principais métodos e propriedades faltantes, assim como classes
+- Documentação melhor e mais completa. As strings de ajuda dos arquivos de definição IDL/COM já estão reproduzidos nos headers (pasta `include`).
+- Validação automatizada dos binários no Linux (comparação das saídas com a versão Windows e oficial).
+- C++: Expor a API em C++ usando namespaces para organização, métodos com overload, etc.
+
+
+Outras funções desejadas podem necessitar de mudanças invasivas na base de código provavelmente serão desenvolvidas inicialmente em um repositório a parte.
+
+## Perguntas?
+
+Caso tenha alguma pergunta, sinta à vontade para abrir um "issue" no GitHub or me contatar diretamente (pmeira arroba ieee.org).
+Em geral, peço que me dê alguns dias para responder.
+
+
+## Créditos
+
+Este projeto é derivado do OpenDSS, desenvolvido pelo EPRI, e assim mantém a mesma base de licença. Veja `LICENSE` e `OPENDSS_LICENSE`, e também verifique cada subpasta para maiores detalhes.
+
+Note que, já que o OpenDSS depende da biblioteca através da KLUSolve, as condições de licença da KLU (LGPL oou GPL, dependendo de como a KLU for compilada) se aplicam aos binários resultantes; veja os arquivos  `klusolve/COPYING`, `klusolve/lgpl_2_1.txt` e a documentação da SuiteSparse.
+
+Agradeço aos meus colegas do Departamento de Sistemas e Energia, da Faculdade de Engenharia Elétrica e de Computação, na Universidade Estadual de Campinas (UNICAMP), pelos
+comentários e ajuda geral para testar este projeto.

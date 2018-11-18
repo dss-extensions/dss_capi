@@ -1,7 +1,10 @@
 [![Travis-CI: Linux and MacOS build status](https://travis-ci.org/PMeira/dss_capi.svg?branch=master)](https://travis-ci.org/PMeira/dss_capi)
 [![AppVeyor: Windows build status](https://ci.appveyor.com/api/projects/status/vky40m4kj99nlxyc/branch/master?svg=true)](https://ci.appveyor.com/project/PMeira/dss-capi/branch/master)
 
+*Para uma versão em português desde arquivo, veja [README.pt-BR.md](https://github.com/PMeira/dss_capi/blob/master/README.pt-BR.md).*
+
 # DSS C-API: An unofficial C API for EPRI's OpenDSS
+
 
 This library exposes the OpenDSS/OpenDSS-PM engine in a plain C interface that tries to reproduce most of the COM methods. In fact, most of the code is derived from the COM implementation files. The resulting DLL can be using directly or through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level. Support for .NET bindings is available starting in version 0.9.4. MATLAB bindings are expected soon after version 0.10 is released.
 
@@ -15,7 +18,7 @@ If you are looking for the .NET/C# bindings, the code was moved to [DSS Sharp](h
 
 Version 0.10.0, based on OpenDSS SVN r2395.
 
-This is a work-in-progress but it's deemed stable enough to be made public. 
+While the main objective of COM compatibility has been reach, this is still a work-in-progress and is subject to changes. 
 *Note that, while the interface with OpenDSS is stable (v7, classic version), the OpenDSS-PM (v8, actor-based parallel machine version) interface is experimental in our builds.* In 0.10.0, the v8 interface is a lot more stable than in 0.9.8.
 
 Instead of using extra numeric parameters as in the official DDLL interface, each original COM property is exposed as a pair of functions. For example, the load kVA property is exposed as:
@@ -34,7 +37,7 @@ In order to track upstream changes in the official SVN repository, a custom patc
 
 ## Recent changes
 
-- **2018-11-17 / version 0.10.0: Reduce memory allocations if the current buffers are reusable, introduce a Global Result mechanism, many API extensions (`LineGeometry`, `WireData`, `LineSpacing`, `CNData`, `TSData`, `Reactor`) -- see [the usage document](docs/usage.md) and the [issue ticket #11](https://github.com/PMeira/dss_capi/issues/11).**
+- **2018-11-17 / version 0.10.0: Reduce memory allocations if the current buffers are reusable, introduce a Global Result mechanism, many API extensions (`LineGeometry`, `WireData`, `LineSpacing`, `CNData`, `TSData`, `Reactor`) -- see [the usage document](https://github.com/PMeira/dss_capi/blob/master/docs/usage.md) and the [issue ticket #11](https://github.com/PMeira/dss_capi/issues/11).**
 - 2018-08-10 / version 0.9.8: Major reorganization of the source code, many minor fixes, new building scripts.
 - 2018-04-05 / version 0.9.5: New functions `Circuit_SetCktElement*` to set the active circuit element.
 - 2018-03-06 / version 0.9.4: Includes fixes for DSSProperty, includes of the original helpstrings in the C header, integrate upstream changes up to revision 2152. This version introduces a first version of .NET bindings to the native DLL.
@@ -122,11 +125,13 @@ For MacOS, you can copy the relevant libklusolve.dylib from the official OpenDSS
 ```
 
 
-## Usage and example
+## Usage and examples
 
-To understand the main concepts of DSS C-API and how it handles memory, see [the usage document](docs/usage.md).
+To understand the main concepts of DSS C-API and how it handles memory, see [the usage document](https://github.com/PMeira/dss_capi/blob/master/docs/usage.md).
 
-Two minimal samples (without DSS scripts, please bring your own) are available in [examples](examples). Add the appropriate subfolder from `include` and the library from `lib` to the compilation. The source code from DSS Python and OpenDSSDirect.py are more complete and advanced examples of usage.
+Two minimal samples (without DSS scripts, please bring your own) are available in [examples](examples). Add the appropriate subfolder from `include` and the library from `lib` to the compilation. 
+
+The source code from DSS Python and OpenDSSDirect.py are more complete and advanced examples of usage.
 
 ## Testing
 
