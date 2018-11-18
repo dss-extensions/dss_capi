@@ -45,11 +45,11 @@ Here, there are three functions instead of two:
 
 Just like for strings, the caller is responsible for the memory of the setter parameters. The pointer should be the address of the first element of the array, and the count parameter is the number of elements of the array.
 
-The getters present two interfaces: a direct result (classic) and a global result mode.
+The getters present two interfaces: a immediate result (classic) and a global result mode.
 
-### Direct Result (DR, classic, updated in v0.10.0)
+### Immediate Result (IR, classic, updated in v0.10.0)
 
-The direct result getters use two parameters. Its usage is like the follow snippet:
+The immediate/direct result getters use two parameters. Its usage is like the follow snippet:
 
 ```c
     int numZipv[2] = {0, 0}; 
@@ -118,7 +118,7 @@ The global result interface uses a single set of global pointers to pass the res
     - It reduces the memory handling burden (at the cost of a loss of explicit names for the pointers)
     - It removes two arguments of the function call -- it may seem 
     
-It is important to note that the GR mode can be used in conjunction with the DR mode, so you can update you code to use the GR mode where it excels.
+It is important to note that the GR mode can be used in conjunction with the IR mode, so you can update you code to use the GR mode where it excels.
 
 Its usage is simple: call `DSS_GetGRPointers()` once to get the pointer references. There pointers passed as parameters will then be updated with pointers to the global result strucutures created in the Pascal code.
 ```c
@@ -143,7 +143,7 @@ Its usage is simple: call `DSS_GetGRPointers()` once to get the pointer referenc
     );
 ```
 
-Then, instead of calling the DR functions, call the GR flavor. For example, the ZIPV call would be:
+Then, instead of calling the IR functions, call the GR flavor. For example, the ZIPV call would be:
 
 ```c
     // ...
@@ -167,9 +167,9 @@ Remember to be careful to use or copy the data before another GR call of the sam
 
 ## General functions
 
-The general functions use combinations of the previous concepts. For example, if there is a pair of parameters akin to `double** ResultPtr, int32_t* ResultCount`, the same convention of the direct result mode is used. 
+The general functions use combinations of the previous concepts. For example, if there is a pair of parameters akin to `double** ResultPtr, int32_t* ResultCount`, the same convention of the immediate result mode is used. 
 
-Some special functions like `YMatrix_getIpointer` and `YMatrix_getVpointer` provide internal pointers that should not be deallocated by the user. These functions should stand out since they don't folow the DR convention (pointer to data pointer + pointer to counts) and are not provided by the COM interface.
+Some special functions like `YMatrix_getIpointer` and `YMatrix_getVpointer` provide internal pointers that should not be deallocated by the user. These functions should stand out since they don't folow the IR convention (pointer to data pointer + pointer to counts) and are not provided by the COM interface.
 
 ## Memory management functions
 
@@ -177,7 +177,7 @@ These functions are implemented in `CAPI_Utils.pas` and represent direct memory 
 
 - `void DSS_ResetStringBuffer(void)`: Used to reset the global string buffer. It can be useful to call this after reading a very large string from the API.
 
-- General memory deallocation, used to free results from the direct result API:
+- General memory deallocation, used to free results from the immediate result API:
     - `void DSS_Dispose_PByte(int8_t** p)`
     - `void DSS_Dispose_PDouble(double** p)`
     - `void DSS_Dispose_PInteger(int32_t** p)`
