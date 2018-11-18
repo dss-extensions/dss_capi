@@ -1,7 +1,7 @@
 [![Travis-CI: Linux and MacOS build status](https://travis-ci.org/PMeira/dss_capi.svg?branch=master)](https://travis-ci.org/PMeira/dss_capi)
 [![AppVeyor: Windows build status](https://ci.appveyor.com/api/projects/status/vky40m4kj99nlxyc/branch/master?svg=true)](https://ci.appveyor.com/project/PMeira/dss-capi/branch/master)
 
-*Para uma versão em português desde arquivo, veja [README.pt-BR.md](https://github.com/PMeira/dss_capi/blob/master/README.pt-BR.md).*
+*Para uma versão em português deste arquivo, veja [README.pt-BR.md](https://github.com/PMeira/dss_capi/blob/master/README.pt-BR.md).*
 
 # DSS C-API: An unofficial C API for EPRI's OpenDSS
 
