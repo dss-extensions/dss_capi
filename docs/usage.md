@@ -115,8 +115,9 @@ As a side note, it is recommended to avoid using `Circuit_Get_SystemY` (and `Cir
 ### Global Result (GR, new in v0.10.0)
 
 The global result interface uses a single set of global pointers to pass the results. It is useful for double and integer arrays, and tight loops. The GR interface was created to address a couple of concerns:
-    - It reduces the memory handling burden (at the cost of a loss of explicit names for the pointers)
-    - It removes two arguments of the function call -- it may seem 
+
+- It reduces the memory handling burden (at the cost of a loss of explicit names for the pointers)
+- It removes two arguments of the function call -- it may seem an exageration, but it does have an impact on Python, for example
     
 It is important to note that the GR mode can be used in conjunction with the IR mode, so you can update you code to use the GR mode where it excels.
 
