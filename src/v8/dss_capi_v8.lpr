@@ -263,6 +263,7 @@ exports
     DSS_Dispose_PPAnsiChar,
     DSS_DisposeGRData,
     DSS_GetGRPointers,
+    DSS_Get_PAnsiChar,
     
 
     ActiveClass_Get_AllNames,

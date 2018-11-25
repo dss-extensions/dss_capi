@@ -37,6 +37,7 @@ extern "C" {
     DSS_CAPI_V7_DLL void DSS_Dispose_PDouble(double** p);
     DSS_CAPI_V7_DLL void DSS_Dispose_PInteger(int32_t** p);
     DSS_CAPI_V7_DLL void DSS_Dispose_PPAnsiChar(char ***p, int32_t cnt);
+    DSS_CAPI_V7_DLL char* DSS_Get_PAnsiChar(void *p, int32_t index);
 
     /*
     Dispose temporary buffer data in the global result (GR) pointers

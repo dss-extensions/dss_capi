@@ -68,8 +68,9 @@ function DSS_RecreateArray_PDouble(var p: PDouble; cnt: PInteger; Const incount:
 function DSS_RecreateArray_PInteger(var p: PInteger; cnt: PInteger; Const incount: Integer): PIntegerArray;
 function DSS_RecreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PInteger; Const incount: Integer): PPAnsiCharArray;
 
-
-
+// MATLAB doesn't handle pointers that well,
+// this just gets a single string from the pointer of strings
+function DSS_Get_PAnsiChar(var p: Pointer; Index: Integer): PAnsiChar;cdecl;
 
 IMPLEMENTATION
 
@@ -126,6 +127,11 @@ begin
     end;
     FreeMem(p);
     p := nil;
+end;
+
+function DSS_Get_PAnsiChar(var p: Pointer; Index: Integer): PAnsiChar;cdecl;
+begin
+    result := PPAnsiChar(p)[Index];
 end;
 
 //------------------------------------------------------------------------------
