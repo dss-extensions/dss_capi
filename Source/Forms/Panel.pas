@@ -10,8 +10,10 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, Menus, ToolWin, ImgList,ScriptEdit, ExtCtrls,
-  PsAPI
+  StdCtrls, ComCtrls, Menus, ToolWin, ImgList,ScriptEdit, ExtCtrls
+  {$IFDEF MSWINDOWS}
+  ,PsAPI
+  {$ENDIF}
   {$IFDEF VER320}    // Tokyo
   ,System.ImageList
   {$ENDIF}
