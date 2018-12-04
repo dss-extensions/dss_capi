@@ -126,6 +126,7 @@ TYPE
 
 
 
+
       Protected
         NumWindings     :Integer;
         MaxWindings     :Integer;
@@ -1044,7 +1045,7 @@ Begin
      With Winding^[i] Do Begin
          if RdcSpecified then Rdcpu := RdcOhms/(SQR(VBase)/ VABase)
          Else Begin
-            Rdcpu := 0.85 * Rpu;
+            Rdcpu := abs(0.85 * Rpu); // use abs in case this resistance comes out negative.
             RdcOhms := Rdcpu * SQR(VBase)/ VABase;
          End;
      End;
@@ -1493,8 +1494,10 @@ Begin
      ITerm_NL := Allocmem(SizeOf(Complex)*2*NumWindings);
 
      {Load up Vterminal - already allocated for all cktelements}
-     WITH ActiveCircuit.Solution DO
-        FOR i := 1 TO Yorder DO  Vterminal^[i] := NodeV^[NodeRef^[i]];
+      WITH ActiveCircuit.Solution DO
+       if Assigned (NodeV) then
+            FOR i := 1 TO Yorder DO  Vterminal^[i] := NodeV^[NodeRef^[i]]
+       Else FOR i := 1 TO Yorder DO  Vterminal^[i] := CZERO;
 
 
      k := 0;
@@ -1790,6 +1793,7 @@ begin
      PropertyValue[44] := 'Lag';
      PropertyValue[45] := '0';
      PropertyValue[46] := 'shell';
+     PropertyValue[47] := '26.4';  // ohms
 
 
   inherited  InitPropertyValues(NumPropsThisClass);
@@ -1815,6 +1819,7 @@ begin
          Result := 0; // default to shell
      End;
 end;
+
 
 function TTransfObj.RotatePhases(iPhs: integer): Integer;
 // For Delta connections or Line-Line voltages
@@ -1965,7 +1970,6 @@ procedure TTransfObj.GICBuildYTerminal;
 
 Var
    i, j, idx :Integer;
-   BaseZ  :Double;
    yR     :Complex;
    F      :TextFile;
    Yadder :Complex;
@@ -1976,9 +1980,8 @@ begin
      Y_Term_NL.Clear;
 
      For i := 1 to NumWindings do  Begin
-         BaseZ :=SQR( Winding^[i].kVLL) / (Winding^[i].kVA/1000.0) ;
          {Use Rdc to build GIC model}
-         yR := Cmplx(1.0/(Winding^[i].Rdcpu * BaseZ), 0.0); // convert to Siemens
+         yR := Cmplx(1.0/(Winding^[i].Rdcohms), 0.0); // convert to Siemens
          With Y_Term Do Begin
              idx := 2*i-1;
              SetElement(idx,   idx,   yR);
