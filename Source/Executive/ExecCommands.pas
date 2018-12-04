@@ -31,9 +31,9 @@ Uses DSSGlobals, ExecHelper, Executive, ExecOptions, ShowOptions,
      ExportOptions, ParserDel, LoadShape,
      ConnectOptions, sysutils, Utilities, SolutionAlgs,
      DSSClassDefs,
-{$IFDEF MSWINDOWS}
      PlotOptions,
      windows,
+{$IFNDEF FPC}
      DSSForms,
 {$ELSE}
      CmdForms,

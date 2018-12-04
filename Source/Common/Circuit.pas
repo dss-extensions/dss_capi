@@ -327,13 +327,14 @@ USES
      Line, Transformer,  Vsource,
      Utilities, Executive,
      StrUtils
-     {$IFDEF MSWINDOWS}
+     {$IFNDEF FPC}
      ,DSSForms,
+     {$ELSE}
+     ,CmdForms,
+     {$ENDIF}
      SHELLAPI,
      windows;
-     {$ELSE}
-     ,CmdForms;
-     {$ENDIF}
+
 
 //----------------------------------------------------------------------------
 Constructor TDSSCircuit.Create(const aName:String);

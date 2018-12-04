@@ -1,5 +1,6 @@
 unit KLUSolve;
 
+
 interface
 
 uses
@@ -9,6 +10,9 @@ uses
     variants,
     sysutils;
 
+
+
+{$IFDEF MSWindows}
 const
   KLULib = 'klusolve.dll';
 {
@@ -84,6 +88,52 @@ FUNCTION AddMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;
 
 // GetMatrixElement is deprecated, use GetCompressedMatrix or GetTripletMatrix
 FUNCTION GetMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;stdcall;external KLULib;
+{$ELSE}
+Const
+  KLU_CALL ='libklusolve.a';
+  _PU = '';
+
+FUNCTION NewSparseSet(nBus:LongWord):NativeUint;cdecl;external KLU_CALL;
+
+FUNCTION DeleteSparseSet(id:NativeUInt):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION SolveSparseSet(id:NativeUInt; x,b:pComplexArray):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION ZeroSparseSet(id:NativeUInt):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION FactorSparseMatrix(id:NativeUInt):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION GetSize(id:NativeUInt; Res: pLongWord):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION GetFlops(id:NativeUInt; Res: pDouble):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION GetNNZ(id:NativeUInt; Res: pLongWord):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION GetSparseNNZ(id:NativeUInt; Res: pLongWord):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION GetSingularCol(id:NativeUInt; Res: pLongWord):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION GetRGrowth(id:NativeUInt; Res: pDouble):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION GetRCond(id:NativeUInt; Res: pDouble):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION GetCondEst(id:NativeUInt; Res: pDouble):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION AddPrimitiveMatrix(id:NativeUInt; nOrder:LongWord; Nodes: pLongWord; Mat: pComplex):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION SetLogFile(Path: pChar; Action:LongWord):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION GetCompressedMatrix(id:NativeUInt; nColP, nNZ:LongWord; pColP, pRowIdx: pLongWord; Mat: pComplex):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION GetTripletMatrix(id:NativeUInt; nNZ:LongWord; pRows, pCols: pLongWord; Mat: pComplex):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION FindIslands(id:NativeUInt; nOrder:LongWord; pNodes: pLongWord):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION AddMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;cdecl;external KLU_CALL;
+
+FUNCTION GetMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;cdecl;external KLU_CALL;
+{$ENDIF}
+
 
 Implementation
 {
