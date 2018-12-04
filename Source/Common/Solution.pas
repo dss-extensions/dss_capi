@@ -52,10 +52,8 @@ USES
     System.Diagnostics,
     System.TimeSpan,
     System.Classes,
-    {$IFDEF MSWINDOWS}
     Parallel_Lib,
     Windows,
-    {$ENDIF}
     Dialogs,
     Sparse_Math,
     SyncObjs,
@@ -318,8 +316,8 @@ implementation
 
 USES  SolutionAlgs,
       DSSClassDefs, DSSGlobals,
-{$IFDEF MSWINDOWS}
       SHELLAPI,
+{$IFNDEF FPC}
       DSSForms,
 {$ELSE}
       CmdForms,
@@ -586,7 +584,9 @@ Try
       ActorMA_Msg[ActorID].ResetEvent;
 
       if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
+{$IFDEF MSWINDOWS}
       QueryPerformanceCounter(GStartTime);
+{$ENDIF}
 
 
       // Sends message to start the Simulation

@@ -8,7 +8,7 @@ unit ScriptEdit;
 }
 
 interface
-{$IFDEF MSWINDOWS}
+//{$IFDEF MSWINDOWS}
 uses
   Windows,
   Messages,
@@ -66,9 +66,9 @@ var
   ActiveScriptForm  :TScriptEdit;
   ScriptWindowList  :TObjectList;
   RecordCommands    :Boolean;
-{$ENDIF}
+//{$ENDIF}
 implementation
-{$IFDEF MSWINDOWS}
+//{$IFDEF MSWINDOWS}
 Uses RichEdit, Executive, DSSGlobals, DSSForms,  Panel,Utilities, uComplex,
   System.Types, System.UITypes;
 
@@ -506,6 +506,6 @@ begin
       End;
   End;
 end;
-{$ENDIF}
+//{$ENDIF}
 end.
 

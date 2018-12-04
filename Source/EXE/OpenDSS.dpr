@@ -183,7 +183,9 @@ uses
   Parallel_Lib in '..\Parallel_Lib\Parallel_Lib.pas',
   IndMach012 in '..\PCElements\IndMach012.pas',
   ESPVLControl in '..\Controls\ESPVLControl.pas',
+  {$IFDEF MSWINDOWS}
   TCP_IP in '..\TCP_IP\TCP_IP.pas',
+  {$ENDIF}
   ConnectOptions in '..\Executive\ConnectOptions.pas',
   Diakoptics in '..\Common\Diakoptics.pas',
   Sparse_Math in '..\Common\Sparse_Math.pas',
