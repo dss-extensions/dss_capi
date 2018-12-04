@@ -23,7 +23,11 @@ Var
 
 implementation
 
-Uses TCP_IP, DSSGlobals, SysUtils, ParserDel, Utilities;
+Uses
+  {$IFNDEF Linux}
+  TCP_IP,
+  {$ENDIF}
+  DSSGlobals, SysUtils, ParserDel, Utilities;
 
 
 PROCEDURE DefineOptions;
@@ -44,12 +48,13 @@ Begin
   Result := 0;
 
 //    If NoFormsAllowed Then Begin Result :=1; Exit; End;
+  {$IFNDEF Linux}
   If Not Assigned(DSSConnectObj) Then DSSConnectObj := TDSSConnect.Create;
   DSSConnectObj.SetDefaults;
   With DSSConnectObj Do Begin
     Connect;
   End;
-
+  {$ENDIF}
 End;
 
 FUNCTION DoDisConnectCmd:Integer;
@@ -60,13 +65,14 @@ Begin
   Result := 0;
 
 //    If NoFormsAllowed Then Begin Result :=1; Exit; End;
+  {$IFNDEF Linux}
   If Assigned(DSSConnectObj) Then
   begin
     With DSSConnectObj Do Begin
       Disconnect;
     End;
   end;
-
+  {$ENDIF}
 End;
 
 

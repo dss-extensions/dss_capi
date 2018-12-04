@@ -90,7 +90,7 @@ implementation
 USES ExecCommands, ExecOptions,
      {ExecHelper,} DSSClassDefs, DSSGlobals, ParserDel,  SysUtils,
      Utilities, Solution, DSSClass, IniRegSave,
-{$IFDEF MSWINDOWS}
+{$IFNDEF FPC}
      DSSForms,
 {$ELSE}
      CmdForms,

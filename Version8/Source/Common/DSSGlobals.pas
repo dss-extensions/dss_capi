@@ -22,9 +22,9 @@ interface
 
 Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerList, PDELement,
      UComplex, Arraydef, CktElement, Circuit, IniRegSave, {$IFNDEF FPC}
-     {$IFDEF MSWINDOWS}
+//     {$IFDEF MSWINDOWS}
      Graphics, System.IOUtils,
-     {$ENDIF}
+//     {$ENDIF}
      {$ENDIF} inifiles,
 
      {Some units which have global vars defined here}
@@ -49,10 +49,10 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      InvControl,
      ExpControl,
      variants,
-     {$IFDEF MSWINDOWS}
+//     {$IFDEF MSWINDOWS}
      ProgressForm,
      vcl.dialogs,
-     {$ENDIF}
+//     {$ENDIF}
      Strutils,
      Types,
      SyncObjs,
@@ -124,9 +124,9 @@ VAR
    DLLFirstTime   :Boolean=TRUE;
    DLLDebugFile   :TextFile;
    ProgramName    :String;
-   {$IFDEF MSWINDOWS}
+//   {$IFDEF MSWINDOWS}
    DSS_Registry   :TIniRegSave; // Registry   (See Executive)
-   {$ENDIF}
+//   {$ENDIF}
 
    // Global variables for the DSS visualization tool
    DSS_Viz_installed   :Boolean=False; // DSS visualization tool (flag of existance)
@@ -189,9 +189,9 @@ VAR
    DefaultEditor    :String;     // normally, Notepad
    DefaultFontSize  :Integer;
    DefaultFontName  :String;
-   {$IFDEF MSWINDOWS}
+//   {$IFDEF MSWINDOWS}
    DefaultFontStyles :TFontStyles;
-   {$ENDIF}
+//   {$ENDIF}
    DSSFileName      :String;     // Name of current exe or DLL
    DSSDirectory     :String;     // where the current exe resides
    StartupDirectory :String;     // Where we started
@@ -335,10 +335,13 @@ implementation
 
 USES  {Forms,   Controls,}
      SysUtils,
-     {$IFDEF MSWINDOWS}
+//     {$IFDEF MSWINDOWS}
      Windows,
+     {$IFDEF MSWINDOWS}
      SHFolder,
+     {$ENDIF}
      ScriptEdit,
+     {$IFNDEF FPC}
      DSSForms,
      {$ELSE}
      CMDForms,
@@ -874,7 +877,7 @@ Var
   ScriptEd    : TScriptEdit;
 Begin
  ActorHandle[ActorID] :=  TSolver.Create(True,ActorCPU[ActorID],ActorID,ScriptEd.UpdateSummaryform,ActorMA_Msg[ActorID]);
- ActorHandle[ActorID].Priority :=  tpTimeCritical;
+ ActorHandle[ActorID].Priority :=  {$IFDEF MSWINDOWS}tpTimeCritical{$ELSE}6{$ENDIF};
  ActorHandle[ActorID].Resume;
  ActorStatus[ActorID] :=  1;
 End;
@@ -892,7 +895,7 @@ begin
 end;
 // End of visualization tool check
 {$ENDIF}
-{$IFDEF MSWINDOWS}
+//{$IFDEF MSWINDOWS}
 procedure Delay(TickTime : Integer);
  var
  Past: longint;
@@ -902,7 +905,7 @@ procedure Delay(TickTime : Integer);
 
  Until (GetTickCount - Past) >= longint(TickTime);
 end;
-{$ENDIF}
+//{$ENDIF}
 
 
 initialization

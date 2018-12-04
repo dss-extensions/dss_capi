@@ -26,7 +26,7 @@ implementation
 
 Uses ShowResults, ParserDel, Monitor, Utilities,
      DSSGlobals, sysutils,
-{$IFDEF MSWINDOWS}
+{$IFNDEF FPC}
      DSSForms,
 {$ELSE}
      CmdForms,

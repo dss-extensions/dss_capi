@@ -87,7 +87,7 @@ Type
 implementation
 
 Uses  DSSClassDefs, DSSGlobals, PDElement, Utilities, SysUtils, Executive,
-{$IFDEF MSWINDOWS}
+{$IFNDEF FPC}
       DSSForms,
 {$ELSE}
       CmdForms,

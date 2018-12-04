@@ -73,9 +73,8 @@ VAR
 implementation
 
 Uses
-{$IFDEF MSWINDOWS}
     ComObj, AnsiStrings, Dialogs, ActiveX,
-{$ELSE}
+{$IFDEF FPC}
     CMDForms,
 {$ENDIF}
     SysUtils, DSSGlobals;
@@ -165,11 +164,7 @@ BEGIN
          IdxCurrentNames := IdxVoltNames + NVoltages * VoltNameSize;
          IDXData := IDXCurrentNames + NCurrents * CurrNameSize;
          IdxBaseData := 0;
-{$IFDEF MSWINDOWS}
          sysutils.StrCopy(Title1,pAnsichar(Title));
-{$ELSE}
-         sysutils.StrCopy(Title1,pWidechar(Title));
-{$ENDIF}
          Title2[0] := #0;
          Title3[0] := #0;
          Title4[0] := #0;

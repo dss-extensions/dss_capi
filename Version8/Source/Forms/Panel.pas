@@ -11,8 +11,11 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Menus, ToolWin, ImgList,ScriptEdit, ExtCtrls
-  {$IFDEF MSWINDOWS}
+  {$IFNDEF Linux}
   ,PsAPI
+  {$ENDIF}
+  {$IFDEF VER330}    // Rio
+  ,System.ImageList
   {$ENDIF}
   {$IFDEF VER320}    // Tokyo
   ,System.ImageList
@@ -1051,9 +1054,12 @@ end;
 
 procedure TControlPanel.UpdateStatus;
 var
+{$IFNDEF Linux}
   pmc: PPROCESS_MEMORY_COUNTERS;
+{$ENDIF}
   cb: Integer;
 begin
+{$IFNDEF Linux}
   cb := sizeof(_PROCESS_MEMORY_COUNTERS);
   GetMem(pmc, cb);
   pmc^.cb := cb;
@@ -1062,6 +1068,7 @@ begin
   else
     StatusBar1.Panels[0].Text := 'Memory: ?';
   FreeMem(pmc);
+{$ENDIF}
 //     StatusBar1.Panels[1].Text := Format('Blocks: %d',[AllocMemCount]);
   If ActiveCircuit[ActiveActor] <> nil Then  Begin
     With ActiveCircuit[ActiveActor] Do Begin
