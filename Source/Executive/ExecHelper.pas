@@ -144,7 +144,7 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      DSSClass, DSSObject, Utilities, Solution,
      EnergyMeter, Generator, LoadShape, Load, PCElement,   CktElement,
      uComplex,  mathutil,  Bus,  SolutionAlgs,
-     DSSForms,DssPlot, ExecCommands, Executive,
+     {$IFDEF MSWINDOWS}DSSForms,DssPlot,{$ELSE}CmdForms,{$ENDIF} ExecCommands, Executive,
      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
      Classes,  CktElementClass, Sensor,  { ExportCIMXML,} NamedObject,
      {$IFDEF FPC}RegExpr,{$ELSE}RegularExpressionsCore,{$ENDIF} PstCalc,
@@ -268,7 +268,7 @@ FUNCTION DoBatchEditCmd:Integer;
 {$IFDEF FPC}
 VAR
    ObjType, Pattern:String;
-   RegEx1: TPerlRegEx;
+   RegEx1: TRegExpr;
    pObj: TDSSObject;
    Params: Integer;
 Begin
@@ -288,19 +288,18 @@ Begin
     ELSE
       Params:=Parser[ActiveActor].Position;
       ActiveDSSClass[ActiveActor] := DSSClassList[ActiveActor].Get(LastClassReferenced[ActiveActor]);
-      RegEx1:=TPerlRegEx.Create;
+      RegEx1:=TRegExpr.Create;
 //      RegEx1.Options:=[preCaseLess];
-      RegEx1.Expression:=AnsiString(Pattern);
+      RegEx1.Expression:=UTF8String(Pattern);
       If ActiveDSSClass[ActiveActor].First>0 then pObj:=ActiveDSSObject[ActiveActor] else pObj := Nil;
-      else  pObj  :=  nil;
       while pObj <> Nil do begin
-        RegEx1.Subject:=AnsiString(pObj.Name);
-        if RegEx1.Match then begin
+        if RegEx1.Exec(UTF8String(pObj.Name)) then begin
           Parser[ActiveActor].Position:=Params;
           ActiveDSSClass[ActiveActor].Edit(ActiveActor);
         end;
         If ActiveDSSClass[ActiveActor].Next>0 then pObj:=ActiveDSSObject[ActiveActor] else pObj := Nil;
       end;
+      RegEx1.Free;
     End;
   End;
 End;
