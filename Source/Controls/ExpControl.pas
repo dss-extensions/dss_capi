@@ -12,8 +12,8 @@ unit ExpControl;
 INTERFACE
 
   uses
-    System.Generics.Collections, Command, ControlClass, ControlElem,
-    CktElement, DSSClass, PVSystem, Arraydef, ucomplex,
+    {$IFDEF FPC}gqueue{$ELSE}System.Generics.Collections{$ENDIF}, Command,
+    ControlClass, ControlElem, CktElement, DSSClass, PVSystem, Arraydef, ucomplex,
     utilities, Dynamics, PointerList, Classes, StrUtils;
 
   type
@@ -84,7 +84,7 @@ INTERFACE
             // Sample control quantities and set action times in Control Queue
             PROCEDURE   Sample(ActorID : Integer);  Override;
 
-            // ActiveCircuit[ActiveActor] the action that is pending from last sample
+            // Do the action that is pending from last sample
             PROCEDURE   DoPendingAction(Const Code, ProxyHdl:Integer;ActorID : Integer); Override;
 
             PROCEDURE   Reset; Override;  // Reset to initial defined state
@@ -203,7 +203,7 @@ Begin
     WITH ActiveCircuit[ActiveActor] Do
     Begin
       ActiveCktElement := TExpControlObj.Create(Self, ObjName);
-      Result := AddobjectToList(ActiveDSSObject[ActiveActor]);
+      Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
     End;
 End;
 
@@ -219,11 +219,11 @@ Begin
   ActiveExpControlObj := ElementList.Active;
   ActiveCircuit[ActorID].ActiveCktElement := ActiveExpControlObj;
   Result := 0;
-  WITH ActiveExpControlObj do Begin
+  WITH ActiveExpControlObj Do Begin
     ParamPointer := 0;
     ParamName := Parser[ActorID].NextParam;
     Param := Parser[ActorID].StrValue;
-    WHILE Length(Param)>0 do Begin
+    WHILE Length(Param)>0 Do Begin
       IF Length(ParamName) = 0 THEN Inc(ParamPointer)
       ELSE ParamPointer := CommandList.GetCommand(ParamName);
 
@@ -231,13 +231,13 @@ Begin
       THEN PropertyValue[ParamPointer]:= Param;
 
       CASE ParamPointer OF
-        0: doSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
+        0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
         1: begin
            InterpretTStringListArray(Param, FPVSystemNameList);
            FPVSystemPointerList.Clear; // clear this for resetting on first sample
            FListSize := FPVSystemNameList.count;
            end;
-        2: If Parser[ActorID].DblValue > 0 then FVregInit := Parser[ActorID].DblValue;
+        2: If Parser[ActorID].DblValue >= 0 then FVregInit := Parser[ActorID].DblValue;
         3: If Parser[ActorID].DblValue > 0 then FSlope := Parser[ActorID].DblValue;
         4: If Parser[ActorID].DblValue >= 0 then FVregTau := Parser[ActorID].DblValue; // zero means fixed Vreg
         5: FQbias := Parser[ActorID].DblValue;
@@ -267,7 +267,7 @@ Begin
    {See if we can find this ExpControl name in the present collection}
    OtherExpControl := Find(ExpControlName);
    IF OtherExpControl<>Nil THEN
-   WITH ActiveExpControlObj do Begin
+   WITH ActiveExpControlObj Do Begin
 
       NPhases := OtherExpControl.Fnphases;
       NConds  := OtherExpControl.Fnconds; // Force Reallocation of terminal stuff
@@ -289,10 +289,10 @@ Begin
       FQmaxLead                  := OtherExpControl.FQmaxLead;
       FQmaxLag                   := OtherExpControl.FQmaxLag;
       FdeltaQ_factor             := OtherExpControl.FdeltaQ_factor;
-      For j := 1 to ParentClass.NumProperties do PropertyValue[j] := OtherExpControl.PropertyValue[j];
+      For j := 1 to ParentClass.NumProperties Do PropertyValue[j] := OtherExpControl.PropertyValue[j];
 
    End
-   ELSE  doSimpleMsg('Error in ExpControl MakeLike: "' + ExpControlName + '" Not Found.', 370);
+   ELSE  DoSimpleMsg('Error in ExpControl MakeLike: "' + ExpControlName + '" Not Found.', 370);
 
 End;
 
@@ -311,7 +311,7 @@ Begin
 
      {
        Control elements are zero current sources that attach to a terminal of a
-       power-carrying device, but ActiveCircuit[ActiveActor] not alter voltage or current flow.
+       power-carrying device, but do not alter voltage or current flow.
        Define a default number of phases and conductors here and update in
        RecalcElementData routine if necessary. This allocates arrays for voltages
        and currents and gives more direct access to the values, if needed
@@ -342,7 +342,7 @@ Begin
      FPVSystemPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
 
      // user parameters for dynamic Vreg
-     FVregInit := 1.0;
+     FVregInit := 1.0; // 0 means to find it during initialization
      FSlope := 50.0;
      FVregTau := 1200.0;
      FVregs := nil;
@@ -391,10 +391,10 @@ Begin
     for i := 1 to FPVSystemPointerList.ListSize do begin
         // User ControlledElement[] as the pointer to the PVSystem elements
          ControlledElement[i] :=  TPVSystemObj(FPVSystemPointerList.Get(i));  // pointer to i-th PVSystem
-         Nphases := ControlledElement[i].NPhases;  // TEMC TOActiveCircuit[ActiveActor] - what if these are different sizes (same concern exists with InvControl)
+         Nphases := ControlledElement[i].NPhases;  // TEMC TODO - what if these are different sizes (same concern exists with InvControl)
          Nconds  := Nphases;
          if (ControlledElement[i] = nil) then
-            doErrorMsg('ExpControl: "' + Self.Name + '"',
+            DoErrorMsg('ExpControl: "' + Self.Name + '"',
               'Controlled Element "' + FPVSystemNameList.Strings[i-1] + '" Not Found.',
               ' PVSystem object must be defined previously.', 361);
          if ControlledElement[i].Yorder > maxord then maxord := ControlledElement[i].Yorder;
@@ -431,7 +431,7 @@ Var
    i:Integer;
 Begin
 // Control is a zero current source
-  For i := 1 to Fnconds do Curr^[i] := CZERO;
+  For i := 1 to Fnconds Do Curr^[i] := CZERO;
 End;
 
 PROCEDURE TExpControlObj.GetInjCurrents(Curr: pComplexArray; ActorID : Integer);
@@ -439,7 +439,7 @@ Var
    i:Integer;
 Begin
 // Control is a zero current source
-  For i := 1 to Fnconds do Curr^[i] := CZERO;
+  For i := 1 to Fnconds Do Curr^[i] := CZERO;
 End;
 
 PROCEDURE TExpControlObj.DumpProperties(Var F:TextFile; Complete:Boolean);
@@ -448,8 +448,8 @@ VAR
 Begin
     Inherited DumpProperties(F,Complete);
 
-    WITH ParentClass do
-     For i := 1 to NumProperties do
+    WITH ParentClass Do
+     For i := 1 to NumProperties Do
      Begin
         Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[i]);
      End;
@@ -460,12 +460,12 @@ Begin
     End;
 End;
 
-PROCEDURE TExpControlObj.doPendingAction(Const Code, ProxyHdl:Integer;ActorID : Integer);
+PROCEDURE TExpControlObj.DoPendingAction(Const Code, ProxyHdl:Integer;ActorID: Integer);
 VAR
   i             :Integer;
-  Qset, DeltaQ  :double;
-  Qmaxpu, Qpu   :double;
-  Qbase         :double;
+  Qset, DeltaQ  :Double;
+  Qmaxpu, Qpu   :Double;
+  Qbase         :Double;
   Qinvmaxpu     :Double;
   PVSys         :TPVSystemObj;
 BEGIN
@@ -477,13 +477,14 @@ BEGIN
       PVSys.Varmode := VARMODEKVAR;  // Set var mode to VARMODEKVAR to indicate we might change kvar
       FTargetQ[i] := 0.0;
       Qbase  := PVSys.kVARating;
+      Qinvmaxpu := PVSys.kvarLimit / Qbase;
       Qpu := PVSys.Presentkvar / Qbase; // no change for now
 
       if (FWithinTol[i]=False) then begin
         // look up Qpu from the slope crossing at Vreg, and add the bias
         Qpu := -FSlope * (FPresentVpu[i] - FVregs[i]) + FQbias;
         If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+','+PVSys.Name,
-          Format(' Setting Qpu= %.5g at FVreg= %.5g, Vpu= %.5g', [Qpu, FVregs[i],FPresentVpu[i]]),ActorID);
+          Format(' Setting Qpu= %.5g at FVreg= %.5g, Vpu= %.5g', [Qpu, FVregs[i],FPresentVpu[i]]), ActorID);
       end;
 
       // apply limits on Qpu, then define the target in kVAR
@@ -501,13 +502,13 @@ BEGIN
       If PVSys.Presentkvar <> Qset Then PVSys.Presentkvar := Qset;
       If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name +','+ PVSys.Name,
                              Format(' Setting PVSystem output kvar= %.5g',
-                             [PVSys.Presentkvar]),ActorID);
+                             [PVSys.Presentkvar]), ActorID);
       FPriorQ[i] := Qset;
       FPriorVpu[i] := FPresentVpu[i];
       ActiveCircuit[ActorID].Solution.LoadsNeedUpdating := TRUE;
       // Force recalc of power parms
       Set_PendingChange(NONE,i);
-    end
+    end
   end;
 
 end;
@@ -525,39 +526,40 @@ begin
   If (FListSize>0) then Begin
     // If an ExpControl controls more than one PV, control each one
     // separately based on the PVSystem's terminal voltages, etc.
-    for i := 1 to FPVSystemPointerList.ListSize Do begin
+    for i := 1 to FPVSystemPointerList.ListSize do begin
       PVSys := ControlledElement[i];   // Use local variable in loop
       // Calculate the present average voltage  magnitude
       PVSys.ComputeVTerminal(ActorID);
-      for j := 1 to PVSys.Yorder DO cBuffer[j] := PVSys.Vterminal^[j];
+      for j := 1 to PVSys.Yorder do cBuffer[j] := PVSys.Vterminal^[j];
       BasekV := ActiveCircuit[ActorID].Buses^[PVSys.terminals^[1].busRef].kVBase;
       Vpresent := 0;
-      For j := 1 to PVSys.NPhases do Vpresent := Vpresent + Cabs(cBuffer[j]);
+      For j := 1 to PVSys.NPhases Do Vpresent := Vpresent + Cabs(cBuffer[j]);
       FPresentVpu[i] := (Vpresent / PVSys.NPhases) / (basekV * 1000.0);
+      // if initializing with Vreg=0 in static mode, we want to FIND Vreg
+      if (ActiveCircuit[ActorID].Solution.ControlMode = CTRLSTATIC) and (FVregInit <= 0.0) then
+        FVregs[i] := FPresentVpu[i];
       // both errors are in per-unit
       Verr := Abs(FPresentVpu[i] - FPriorVpu[i]);
       Qerr := Abs(PVSys.Presentkvar - FTargetQ[i]) / PVSys.kVARating;
-
       // process the sample
       if (PVSys.InverterON = FALSE) and (PVSys.VarFollowInverter = TRUE) then begin // not injecting
-        if (FVregTau > 0.0) then FVregs[i] := FPresentVpu[i]; // tracking grid voltage while not injecting
+        if (FVregTau > 0.0) and (FVregs[i] <= 0.0) then
+          FVregs[i] := FPresentVpu[i]; // wake up to the grid voltage, otherwise track it while not injecting
         continue;
       end;
       PVSys.VWmode := FALSE;
-      if (FWithinTol[i] = False) then begin
-        if ((Verr > FVoltageChangeTolerance) or (Qerr > FVarChangeTolerance) or
+      if ((Verr > FVoltageChangeTolerance) or (Qerr > FVarChangeTolerance) or
           (ActiveCircuit[ActorID].Solution.ControlIteration = 1)) then begin
-          FWithinTol[i] := False;
-          Set_PendingChange(CHANGEVARLEVEL,i);
-          With  ActiveCircuit[ActorID].Solution.DynaVars do
-            ControlActionHandle := ActiveCircuit[ActorID].ControlQueue.Push (intHour, t + TimeDelay, PendingChange[i], 0, Self, ActorID);
-          If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
-            (' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]),ActorID);
-        end else begin
-          if ((Verr <= FVoltageChangeTolerance) and (Qerr <= FVarChangeTolerance)) then FWithinTol[i] := True;
-          If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
-            (' within Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]),ActorID);
-        end;
+        FWithinTol[i] := False;
+        Set_PendingChange(CHANGEVARLEVEL,i);
+        With  ActiveCircuit[ActorID].Solution.DynaVars Do
+          ControlActionHandle := ActiveCircuit[ActorID].ControlQueue.Push (intHour, t + TimeDelay, PendingChange[i], 0, Self, ActorID);
+        If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
+          (' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]), ActorID);
+      end else begin
+        FWithinTol[i] := True;
+        If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
+          (' within Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]), ActorID);
       end;
     end;  {For}
   end; {If FlistSize}
@@ -596,13 +598,13 @@ begin
     SetLength(FTargetQ,FListSize+1);
     SetLength(FWithinTol, FListSize+1);
     SetLength(FVregs, FListSize+1);
-    For i := 1 to FListSize do Begin
+    For i := 1 to FListSize Do Begin
       PVSys := PVSysClass.Find(FPVSystemNameList.Strings[i-1]);
       If Assigned(PVSys) and PVSys.Enabled Then FPVSystemPointerList.New := PVSys;
     End;
   End Else Begin
      {Search through the entire circuit for enabled pvsysten objects and add them to the list}
-         For i := 1 to PVSysClass.ElementCount do Begin
+         For i := 1 to PVSysClass.ElementCount Do Begin
             PVSys :=  PVSysClass.ElementList.Get(i);
             If PVSys.Enabled Then FPVSystemPointerList.New := PVSys;
             FPVSystemNameList.Add(PVSys.Name);
@@ -622,9 +624,9 @@ begin
     End;  {Else}
 
   //Initialize arrays
-  For i := 1 to FlistSize do begin
+  For i := 1 to FlistSize Do begin
 //    PVSys := PVSysClass.Find(FPVSystemNameList.Strings[i-1]);
-//    Set_NTerms(PVSys.NTerms); // TOActiveCircuit[ActiveActor] - what is this for?
+//    Set_NTerms(PVSys.NTerms); // TODO - what is this for?
     FPriorVpu[i] := 0.0;
     FPresentVpu[i] := 0.0;
     FPriorQ[i] := -1.0;
@@ -671,7 +673,7 @@ Begin
     Exit;
   End;
   Result := '['+ FPVSystemNameList.Strings[0];
-  For i := 1 to FListSize-1 do Begin
+  For i := 1 to FListSize-1 Do Begin
     Result := Result + ', ' + FPVSystemNameList.Strings[i];
   End;
   Result := Result + ']';  // terminate the array
@@ -697,10 +699,9 @@ Var
 begin
   for j := 1 to FPVSystemPointerList.ListSize do begin
     PVSys := ControlledElement[j];
-    FWithinTol[j] := False;
     if FVregTau > 0.0 then begin
       dt :=  ActiveCircuit[ActorID].Solution.Dynavars.h;
-      Verr := FPresentVpu[j] - FVregs[j];
+      Verr := FPresentVpu[j] - FVregs[j];
       FVregs[j] := FVregs[j] + Verr * (1 - Exp (-dt / FVregTau));
     end else begin
       Verr := 0.0;
