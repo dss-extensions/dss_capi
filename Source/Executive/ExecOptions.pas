@@ -27,7 +27,7 @@ FUNCTION DoGetCmd_NoCircuit:Boolean;  // Get Commands that do not require a circ
 implementation
 
 Uses DSSClassDefs, DSSGlobals, ParserDel, Math,     Executive,  ExecHelper,
-     LoadShape,    Utilities,  Sysutils, ScriptEdit,  Solution, Energymeter,
+     LoadShape,    Utilities,  Sysutils, {$IFNDEF FPC}ScriptEdit,{$ENDIF}  Solution, Energymeter,
      Diakoptics;
 
 
