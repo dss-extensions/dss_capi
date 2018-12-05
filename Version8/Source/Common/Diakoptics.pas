@@ -3,7 +3,8 @@ unit Diakoptics;
 interface
 
 uses
-  Circuit, Solution, DSSGlobals, SysUtils, DSSClassDefs, DSSForms, ScriptEdit;
+  Circuit, Solution, DSSGlobals, SysUtils, DSSClassDefs, 
+  {$IFDEF FPC}CmdForms{$ELSE}DSSForms, ScriptEdit{$ENDIF};
 
 Function Solve_Diakoptics():Integer;
 procedure ADiakoptics_Tearing();
@@ -276,7 +277,9 @@ var
   ErrorStr,
   FileRoot    : String;
   Links       : Array of String;                        // List of the Link Branches
+  {$IFNDEF FPC}
   ScriptEd    : TScriptEdit;
+  {$ENDIF}
 
 Begin
   prog_str  :=  'A-Diakoptics initialization sumary:' + CRLF + CRLF;
@@ -371,7 +374,10 @@ Begin
   prog_Str      :=  prog_str + CRLF + ErrorStr + CRLF;
   GlobalResult  :=  ErrorStr;
 
+  {$IFNDEF FPC}
   ScriptEd.PublishMessage(prog_Str);
+  {$ENDIF}
+  // TEMc: TODO: should we report something here under FPC?
   SolutionAbort :=  False;
 
 End;
