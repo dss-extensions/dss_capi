@@ -153,27 +153,27 @@ end;
 
 procedure ShowGeneralHelp;
 begin
-	writeln('This is a console-mode version of OpenDSS, available for Windows, Linux and Mac OS X');
-	writeln('Enter a command at the >> prompt, followed by any required command parameters');
-	writeln('Enter either a carriage return, "exit" or "q(uit)" to exit the program');
-	writeln('For specific help, enter:');
-	writeln('  "help command [cmd]" lists all executive commands, or');
-	writeln('                       if [cmd] provided, details on that command');
-	writeln('  "help option [opt]"  lists all simulator options, or');
-	writeln('                       if [opt] provided, details on that option');
-	writeln('  "help show [opt]"    lists the options to "show" various outputs, or');
-	writeln('                       if [opt] provided, details on that output');
-	writeln('  "help export [fmt]"  lists the options to "export" in various formats, or');
-	writeln('                       if [fmt] provided, details on that format');
-	writeln('  "help class [cls]"   lists the names of all available circuit model classes, or');
-	writeln('                       if [cls] provided, details on that class');
+  writeln('This is a console-mode version of OpenDSS, available for Windows, Linux and Mac OS X');
+  writeln('Enter a command at the >> prompt, followed by any required command parameters');
+  writeln('Enter either a carriage return, "exit" or "q(uit)" to exit the program');
+  writeln('For specific help, enter:');
+  writeln('  "help command [cmd]" lists all executive commands, or');
+  writeln('                       if [cmd] provided, details on that command');
+  writeln('  "help option [opt]"  lists all simulator options, or');
+  writeln('                       if [opt] provided, details on that option');
+  writeln('  "help show [opt]"    lists the options to "show" various outputs, or');
+  writeln('                       if [opt] provided, details on that output');
+  writeln('  "help export [fmt]"  lists the options to "export" in various formats, or');
+  writeln('                       if [fmt] provided, details on that format');
+  writeln('  "help class [cls]"   lists the names of all available circuit model classes, or');
+  writeln('                       if [cls] provided, details on that class');
   writeln('You may truncate any help topic name, which returns all matching entries');
   writeln('// begins a comment, which is ignored by the parser (including help)');
 end;
 
 procedure ShowAnyHelp (const num:integer; cmd:pStringArray; hlp:pStringArray; const opt:String);
 VAR
-	i: integer;
+  i: integer;
   lst: TStringList;
 begin
   if Length(opt) < 1 then begin
@@ -182,7 +182,7 @@ begin
     lst.Sort;
   	for i :=  1 to num do
       if ((i mod numcols) = 0) then
-         writeln (lst[i-1])
+        writeln (lst[i-1])
       else
         write (lst[i-1] + ' ');
     lst.Free;
@@ -233,27 +233,27 @@ PROCEDURE ShowHelpForm;
 VAR
   Param, OptName:String;
 Begin
-	Parser.NextParam;
+  Parser.NextParam;
   Param := LowerCase(Parser.StrValue);
-	Parser.NextParam;
+  Parser.NextParam;
   OptName := LowerCase(Parser.StrValue);
-	if ANSIStartsStr ('com', param) then
-		ShowAnyHelp (NumExecCommands, @ExecCommand, @CommandHelp, OptName)
-	else if ANSIStartsStr ('op', param) then
-		ShowAnyHelp (NumExecOptions, @ExecOption, @OptionHelp, OptName)
-	else if ANSIStartsStr ('sh', param) then
-		ShowAnyHelp (NumShowOptions, @ShowOption, @ShowHelp, OptName)
-	else if ANSIStartsStr ('e', param) then
-		ShowAnyHelp (NumExportOptions, @ExportOption, @ExportHelp, OptName)
-	else if ANSIStartsStr ('cl', param) then
-		ShowClassHelp (OptName)
-	else
-		ShowGeneralHelp;
+  if ANSIStartsStr ('com', param) then
+  	ShowAnyHelp (NumExecCommands, @ExecCommand, @CommandHelp, OptName)
+  else if ANSIStartsStr ('op', param) then
+  	ShowAnyHelp (NumExecOptions, @ExecOption, @OptionHelp, OptName)
+  else if ANSIStartsStr ('sh', param) then
+  	ShowAnyHelp (NumShowOptions, @ShowOption, @ShowHelp, OptName)
+  else if ANSIStartsStr ('e', param) then
+  	ShowAnyHelp (NumExportOptions, @ExportOption, @ExportHelp, OptName)
+  else if ANSIStartsStr ('cl', param) then
+  	ShowClassHelp (OptName)
+  else
+  	ShowGeneralHelp;
 end;
 
 Procedure ShowMessageForm(S:TStrings);
 begin
-	writeln(s.text);
+  writeln(s.text);
 End;
 
 Procedure ShowPropEditForm;
