@@ -1,7 +1,5 @@
 unit CmdForms;
 
-{$IFDEF FPC}{$MODE Delphi}{$ENDIF}
-
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -35,13 +33,13 @@ VAR
    PROCEDURE ShowPropEditForm;
    PROCEDURE ShowPctProgress(Count:Integer);
    Procedure ShowMessageForm(S:TStrings);
-   Procedure ShowMessage(S:String);
    FUNCTION  DSSMessageDlg(const Msg:String;err:boolean):Integer;
    PROCEDURE DSSInfoMessageDlg(const Msg:String);
    FUNCTION  GetDSSExeFile: String;
    PROCEDURE CloseDownForms;
    Procedure ShowTreeView(Const Fname:String);
    FUNCTION  MakeChannelSelection(NumFieldsToSkip:Integer; const Filename:String):Boolean;
+   procedure ShowHeapUsage; // copied from Lazarus form; not used in command line yet
 
 implementation
 
@@ -49,6 +47,16 @@ Uses ExecCommands, ExecOptions, ShowOptions, ExportOptions,
 	DSSGlobals, DSSClass, DSSClassDefs, ParserDel, Sysutils, Strutils, ArrayDef;
 
 const colwidth = 25; numcols = 4;  // for listing commands to the console
+
+procedure ShowHeapUsage;
+var
+   hstat: TFPCHeapStatus;
+   s: string;
+begin
+  hstat := GetFPCHeapStatus;
+  s := Format('Heap Memory Used: %dK',[hstat.CurrHeapUsed div 1024]);
+  DSSInfoMessageDlg(s);
+end;
 
 Procedure InitProgressForm;
 begin
@@ -76,8 +84,8 @@ Procedure ShowAboutBox;
 begin
 	writeln ('Console OpenDSS (Electric Power Distribution System Simulator)');
 	writeln (VersionString);
-	writeln ('Copyright (c) 2008-2016, Electric Power Research Institute, Inc.');
-	writeln ('Copyright (c) 2016, Battelle Memorial Institute');
+	writeln ('Copyright (c) 2008-2017, Electric Power Research Institute, Inc.');
+	writeln ('Copyright (c) 2016-2017, Battelle Memorial Institute');
 	writeln ('All rights reserved.');
 End;
 
@@ -126,7 +134,7 @@ Var
   pDSSClass :TDSSClass;
   i,j       :Integer;
 begin
-	HelpList := TList.Create();
+  HelpList := TList.Create();
   pDSSClass := DSSClassList[ActiveActor].First;
   WHILE pDSSClass<>Nil DO Begin
     If (pDSSClass.DSSClassType AND BASECLASSMASK) = BaseClass Then HelpList.Add (pDSSClass);
@@ -145,36 +153,36 @@ end;
 
 procedure ShowGeneralHelp;
 begin
-	writeln('This is a console-mode version of OpenDSS, available for Windows, Linux and Mac OS X');
-	writeln('Enter a command at the >> prompt, followed by any required command parameters');
-	writeln('Enter either a carriage return, "exit" or "q(uit)" to exit the program');
-	writeln('For specific help, enter:');
-	writeln('  "help command [cmd]" lists all executive commands, or');
-	writeln('                       if [cmd] provided, details on that command');
-	writeln('  "help option [opt]"  lists all simulator options, or');
-	writeln('                       if [opt] provided, details on that option');
-	writeln('  "help show [opt]"    lists the options to "show" various outputs, or');
-	writeln('                       if [opt] provided, details on that output');
-	writeln('  "help export [fmt]"  lists the options to "export" in various formats, or');
-	writeln('                       if [fmt] provided, details on that format');
-	writeln('  "help class [cls]"   lists the names of all available circuit model classes, or');
-	writeln('                       if [cls] provided, details on that class');
+  writeln('This is a console-mode version of OpenDSS, available for Windows, Linux and Mac OS X');
+  writeln('Enter a command at the >> prompt, followed by any required command parameters');
+  writeln('Enter either a carriage return, "exit" or "q(uit)" to exit the program');
+  writeln('For specific help, enter:');
+  writeln('  "help command [cmd]" lists all executive commands, or');
+  writeln('                       if [cmd] provided, details on that command');
+  writeln('  "help option [opt]"  lists all simulator options, or');
+  writeln('                       if [opt] provided, details on that option');
+  writeln('  "help show [opt]"    lists the options to "show" various outputs, or');
+  writeln('                       if [opt] provided, details on that output');
+  writeln('  "help export [fmt]"  lists the options to "export" in various formats, or');
+  writeln('                       if [fmt] provided, details on that format');
+  writeln('  "help class [cls]"   lists the names of all available circuit model classes, or');
+  writeln('                       if [cls] provided, details on that class');
   writeln('You may truncate any help topic name, which returns all matching entries');
   writeln('// begins a comment, which is ignored by the parser (including help)');
 end;
 
 procedure ShowAnyHelp (const num:integer; cmd:pStringArray; hlp:pStringArray; const opt:String);
 VAR
-	i: integer;
+  i: integer;
   lst: TStringList;
 begin
   if Length(opt) < 1 then begin
     lst := TStringList.Create;
-//  	for i := 1 to num do lst.Add (PadRight (cmd[i], colwidth));
+  	for i := 1 to num do lst.Add (PadRight (cmd[i], colwidth));
     lst.Sort;
   	for i :=  1 to num do
       if ((i mod numcols) = 0) then
-         writeln (lst[i-1])
+        writeln (lst[i-1])
       else
         write (lst[i-1] + ' ');
     lst.Free;
@@ -225,32 +233,27 @@ PROCEDURE ShowHelpForm;
 VAR
   Param, OptName:String;
 Begin
-	Parser[ActiveActor].NextParam;
+  Parser[ActiveActor].NextParam;
   Param := LowerCase(Parser[ActiveActor].StrValue);
-	Parser[ActiveActor].NextParam;
+  Parser[ActiveActor].NextParam;
   OptName := LowerCase(Parser[ActiveActor].StrValue);
-	if ANSIStartsStr ('com', param) then
-		ShowAnyHelp (NumExecCommands, @ExecCommand, @CommandHelp, OptName)
-	else if ANSIStartsStr ('op', param) then
-		ShowAnyHelp (NumExecOptions, @ExecOption, @OptionHelp, OptName)
-	else if ANSIStartsStr ('sh', param) then
-		ShowAnyHelp (NumShowOptions, @ShowOption, @ShowHelp, OptName)
-	else if ANSIStartsStr ('e', param) then
-		ShowAnyHelp (NumExportOptions, @ExportOption, @ExportHelp, OptName)
-	else if ANSIStartsStr ('cl', param) then
-		ShowClassHelp (OptName)
-	else
-		ShowGeneralHelp;
+  if ANSIStartsStr ('com', param) then
+  	ShowAnyHelp (NumExecCommands, @ExecCommand, @CommandHelp, OptName)
+  else if ANSIStartsStr ('op', param) then
+  	ShowAnyHelp (NumExecOptions, @ExecOption, @OptionHelp, OptName)
+  else if ANSIStartsStr ('sh', param) then
+  	ShowAnyHelp (NumShowOptions, @ShowOption, @ShowHelp, OptName)
+  else if ANSIStartsStr ('e', param) then
+  	ShowAnyHelp (NumExportOptions, @ExportOption, @ExportHelp, OptName)
+  else if ANSIStartsStr ('cl', param) then
+  	ShowClassHelp (OptName)
+  else
+  	ShowGeneralHelp;
 end;
 
 Procedure ShowMessageForm(S:TStrings);
 begin
-	writeln(s.text);
-End;
-
-Procedure ShowMessage(S:String);
-begin
-	writeln(s);
+  writeln(s.text);
 End;
 
 Procedure ShowPropEditForm;
