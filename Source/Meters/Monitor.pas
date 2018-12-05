@@ -21,6 +21,7 @@ unit Monitor;
    08-10-16 Added mode 6 for storing capacitor switching
    06-04-18 Added modes 7-9
    11-29-18 Added mode 10; revised mode 8
+   12-4-18  Added link to AutoTransformer
 
 }
 
@@ -210,7 +211,7 @@ implementation
 
 USES
 
-    ParserDel, DSSClassDefs, DSSGlobals, Circuit, CktElement,Transformer, PCElement,
+    ParserDel, DSSClassDefs, DSSGlobals, Circuit, CktElement,Transformer, AutoTrans, PCElement,
     {$IFNDEF FPC}AnsiStrings, {$ENDIF}Sysutils, ucmatrix, showresults, mathUtil,
     PointerList, TOPExport, Dynamics, PstCalc, Capacitor, Storage;
 
@@ -623,7 +624,9 @@ Begin
              MeteredElement := ActiveCircuit.CktElements.Get(DevIndex);
              Case (Mode and MODEMASK) of
                 2,8, 10: Begin                                                // Must be transformer
-                          If (MeteredElement.DSSObjType And CLASSMASK) <> XFMR_ELEMENT Then Begin
+                          If (MeteredElement.DSSObjType And CLASSMASK) <> XFMR_ELEMENT Then
+                          If (MeteredElement.DSSObjType And CLASSMASK) <> AUTOTRANS_ELEMENT Then
+                          Begin
                             DoSimpleMsg(MeteredElement.Name + ' is not a transformer!', 663);
                             Exit;
                           End;
@@ -682,11 +685,15 @@ Begin
                              ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer^[1])*NumSolutionVars);
                          End;
                       8: Begin
-                             With  TTransfObj(MeteredElement) Do NumTransformerCurrents := 2* NumberOfWindings * nphases;
+                             If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
+                             Then With  TAutoTransObj(MeteredElement) Do NumTransformerCurrents := 2* NumberOfWindings * nphases
+                             Else With  TTransfObj(MeteredElement)    Do NumTransformerCurrents := 2* NumberOfWindings * nphases;
                              ReallocMem(WdgCurrentsBuffer, Sizeof(Complex)*NumTransformerCurrents);
                          End;
                      10: Begin
-                             With  TTransfObj(MeteredElement) Do NumWindingVoltages :=  NumberOfWindings * nphases;
+                             If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
+                             Then With  TAutoTransObj(MeteredElement) Do NumWindingVoltages :=  NumberOfWindings * nphases
+                             ELse With  TTransfObj(MeteredElement)    Do NumWindingVoltages :=  NumberOfWindings * nphases;
                              ReallocMem(WdgVoltagesBuffer, Sizeof(Complex)*NumWindingVoltages);   // total all phases, all windings
                              ReallocMem(PhsVoltagesBuffer, Sizeof(Complex)*nphases);
                          End;
@@ -826,36 +833,62 @@ Begin
               strLcat(strPtr, pAnsichar('State, '), Sizeof(TMonitorStrBuffer));
         End;
      8: Begin   // All winding Currents
-              With TTransfObj(MeteredElement) Do
-              Begin
-                  RecordSize := NumTransformerCurrents;     // Transformer Winding Currents
-                  for i := 1 to Nphases do
-                    Begin
-                      for j := 1 to NumberOfWindings do
-                        begin
-                          Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
-                          strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
-                        end;
-                    End;
-              End;
+              If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
+              Then With TAutoTransObj(MeteredElement) Do
+                Begin
+                    RecordSize := NumTransformerCurrents;     // Transformer Winding Currents
+                    for i := 1 to Nphases do
+                      Begin
+                        for j := 1 to NumberOfWindings do
+                          begin
+                            Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
+                            strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                          end;
+                      End;
+                End
+              Else With TTransfObj(MeteredElement) Do
+                Begin
+                    RecordSize := NumTransformerCurrents;     // Transformer Winding Currents
+                    for i := 1 to Nphases do
+                      Begin
+                        for j := 1 to NumberOfWindings do
+                          begin
+                            Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
+                            strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                          end;
+                      End;
+                End;
         End;
      9: Begin // watts vars of meteredElement
               RecordSize := 2;
               strLcat(strPtr,  pAnsichar('watts, vars'), Sizeof(TMonitorStrBuffer));
         End;
     10: Begin // All Winding Voltages
-              With TTransfObj(MeteredElement) Do
-              Begin
-                  RecordSize := 2 * NumberOfWindings * Nphases;     // Transformer Winding woltages
-                  for i := 1 to Nphases do
-                    Begin
-                      for j := 1 to NumberOfWindings do
-                        begin
-                          Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
-                          strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
-                        end;
-                    End;
-              End;
+              If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
+              Then With TAutoTransObj(MeteredElement) Do
+                 Begin
+                    RecordSize := 2 * NumberOfWindings * Nphases;     // Transformer Winding woltages
+                    for i := 1 to Nphases do
+                      Begin
+                        for j := 1 to NumberOfWindings do
+                          begin
+                            Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
+                            strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                          end;
+                      End;
+                 End
+              Else With TTransfObj(MeteredElement) Do
+                 Begin
+                    RecordSize := 2 * NumberOfWindings * Nphases;     // Transformer Winding woltages
+                    for i := 1 to Nphases do
+                      Begin
+                        for j := 1 to NumberOfWindings do
+                          begin
+                            Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
+                            strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                          end;
+                      End;
+                 End;
         End;
 
      Else Begin
@@ -1135,10 +1168,10 @@ Begin
        End;
 
      2: Begin     // Monitor Transformer Tap Position
+             If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
+             Then With TAutoTransObj(MeteredElement) Do AddDblToBuffer(PresentTap[MeteredTerminal])
+             Else With TTransfObj(MeteredElement)    Do AddDblToBuffer(PresentTap[MeteredTerminal]);
 
-              With TTransfObj(MeteredElement) Do Begin
-                   AddDblToBuffer(PresentTap[MeteredTerminal]);
-              End;
               Exit;  // Done with this mode now.
         End;
 
@@ -1200,23 +1233,34 @@ Begin
 
       8: Begin   // Winding Currents
               // Get all currents in each end of each winding
-              With TTransfobj(MeteredElement) Do
-              Begin
-
-                GetAllWindingCurrents(WdgCurrentsBuffer);
-                ConvertComplexArrayToPolar( WdgCurrentsBuffer, NumTransformerCurrents);
-
-                // Put every other Current into buffer
-                // Current magnitude is same in each end
-                k := 1;
-                for i := 1 to Nphases*NumberOfWindings  do
+             If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
+             Then With TAutoTransObj(MeteredElement) Do
                 Begin
-                      AddDblsToBuffer(@WdgCurrentsBuffer^[k].re, 2);  // Add Mag, Angle
-                      k := k + 2;
+                  GetAllWindingCurrents(WdgCurrentsBuffer);
+                  ConvertComplexArrayToPolar( WdgCurrentsBuffer, NumTransformerCurrents);
+                  // Put every other Current into buffer
+                  // Current magnitude is same in each end
+                  k := 1;
+                  for i := 1 to Nphases*NumberOfWindings  do
+                  Begin
+                        AddDblsToBuffer(@WdgCurrentsBuffer^[k].re, 2);  // Add Mag, Angle
+                        k := k + 2;
+                  End;
+                End
+             Else With TTransfobj(MeteredElement) Do
+                Begin
+                  GetAllWindingCurrents(WdgCurrentsBuffer);
+                  ConvertComplexArrayToPolar( WdgCurrentsBuffer, NumTransformerCurrents);
+                  // Put every other Current into buffer
+                  // Current magnitude is same in each end
+                  k := 1;
+                  for i := 1 to Nphases*NumberOfWindings  do
+                  Begin
+                        AddDblsToBuffer(@WdgCurrentsBuffer^[k].re, 2);  // Add Mag, Angle
+                        k := k + 2;
+                  End;
+                 // AddDblsToBuffer(@WdgCurrentsBuffer^[1].re, NumTransformerCurrents);
                 End;
-
-               // AddDblsToBuffer(@WdgCurrentsBuffer^[1].re, NumTransformerCurrents);
-              End;
               Exit;
          End;
 
@@ -1229,14 +1273,25 @@ Begin
 
      10: Begin   // Winding Voltages
               // Get all Voltages across each winding and put into buffer
-              With TTransfobj(MeteredElement) Do
+             If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
+             Then With TAutoTransObj(MeteredElement) Do
               Begin
                   For i := 1 to NumberOfWindings Do  Begin
+                    GetAutoWindingVoltages(i, PhsVoltagesBuffer);
+                    For j := 1 to nphases Do
+                       WdgVoltagesBuffer^[i + (j-1)*NumberofWindings] := PhsVoltagesBuffer^[j];
+                  End;
+                  ConvertComplexArrayToPolar( WdgVoltagesBuffer, NumWindingVoltages);
+                  {Put winding Voltages into Monitor}
+                  AddDblsToBuffer(@WdgVoltagesBuffer^[1].re, 2 * NumWindingVoltages);  // Add Mag, Angle each winding
+              End
 
+             Else With TTransfobj(MeteredElement) Do
+              Begin
+                  For i := 1 to NumberOfWindings Do  Begin
                     GetWindingVoltages(i, PhsVoltagesBuffer);
                     For j := 1 to nphases Do
                        WdgVoltagesBuffer^[i + (j-1)*NumberofWindings] := PhsVoltagesBuffer^[j];
-
                   End;
                   ConvertComplexArrayToPolar( WdgVoltagesBuffer, NumWindingVoltages);
                   {Put winding Voltages into Monitor}
