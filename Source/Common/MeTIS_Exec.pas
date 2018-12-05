@@ -32,9 +32,27 @@ Function GetNumEdges(MeTISSrc : string): String;
 
 implementation
 
+{$IFDEF FPC}
+uses
+  StrUtils;
+
+// the default string in FPC is AnsiString, at least with {$H+}, so data could be lost
+// FPC does not have IOUtils, so TFileSearchReplace would have to be rewritten
+function ContainsText(BufStr, AFrom: string): Boolean;
+begin
+  Result := AnsiContainsText (BufStr, AFrom);
+end;
+
+function ContainsStr(BufStr, AFrom: string): Boolean;
+begin
+  Result := AnsiContainsStr (BufStr, AFrom);
+end;
+
+{$ELSE}
 uses
   System.IOUtils,
   System.StrUtils;
+{$ENDIF}
 
 function Max(const A, B: Integer): Integer;
 begin
