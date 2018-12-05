@@ -1,0 +1,8 @@
+#time	topic	value
+2	output	redirect IEEE13Base.dss
+1802	output	solve
+5402	output	export y triplet base_ysparse.csv
+16202	output	export ynodelist base_nodelist.csv
+19802	output	export summary base_summary.csv
+21402	output	help
+21502	output	quit

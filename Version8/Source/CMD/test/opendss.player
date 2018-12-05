@@ -1,0 +1,8 @@
+#time	topic		value
+0	command	redirect IEEE13Base.dss
+1800000000000	command	solve
+5400000000000	command	export y triplet base_ysparse.csv
+16200000000000	command	export ynodelist base_nodelist.csv
+19800000000000	command	export summary base_summary.csv
+21400000000000	command help
+21500000000000	command quit
