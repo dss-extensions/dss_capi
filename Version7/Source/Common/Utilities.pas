@@ -54,6 +54,7 @@ FUNCTION  InterpretEarthModel(const s:string):Integer;
 FUNCTION  InterpretColorName(const s:string):Integer;
 FUNCTION  InterpretComplex(const s:String):Complex;
 FUNCTION  ConstructElemName(const Param:string):string;
+FUNCTION  InterpretCoreType(const str:String):Integer;
 
 FUNCTION GetSolutionModeID:String;
 FUNCTION GetSolutionModeIDName(idx:Integer):String;
@@ -1033,6 +1034,17 @@ Begin
        End;
 
 End;
+
+FUNCTION InterpretCoreType(const str: String): Integer;
+begin
+     Case str[1] of
+          '1':Result := 1;  // 1-phase
+          '3':Result := 3;  // 3-Leg
+          '5':Result := 5;  // 5-Leg
+     Else
+         Result := 0; // default to shell
+     End;
+end;
 
 //----------------------------------------------------------------------------
 PROCEDURE ParseObjectClassandName(const FullObjName:String; Var ClassName, ObjName:String);

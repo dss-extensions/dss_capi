@@ -179,7 +179,7 @@ TYPE
         PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
         PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
         PROCEDURE SaveWrite(Var F:TextFile);Override;
-        PROCEDURE GeTAutoWindingVoltages(iWind:Integer; VBuffer:pComplexArray);
+        PROCEDURE GetAutoWindingVoltages(iWind:Integer; VBuffer:pComplexArray);
         PROCEDURE GetAllWindingCurrents(CurrBuffer: pComplexArray);
 
 
@@ -226,7 +226,7 @@ VAR
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 IMPLEMENTATION
 
-{$DEFINE AUTOTRANDEBUG}  {NOAUTOTRANDEBUG}
+{$DEFINE NOAUTOTRANDEBUG}  {AUTOTRANDEBUG}
 
 USES    DSSClassDefs, DSSGlobals, Sysutils, Utilities, XfmrCode;
 
@@ -1041,7 +1041,7 @@ Begin
         1:      VBase := kVLL * 1000.0;     // delta
         2: Begin                            // Series winding for Auto  Should be Winding[1]
              case Fnphases of
-                2,3: kVseries := (kVLL - Winding^[2].kVLL) / SQRT3;
+                  2,3: kVseries := (kVLL - Winding^[2].kVLL) / SQRT3;
              Else
                      kVseries := kVLL - Winding^[2].kVLL;
              end;
@@ -1528,7 +1528,7 @@ Begin
      Begin
         For iWind := 1 to NumWindings do
         Begin
-
+           i := 2 * iWind -1;
            CASE Winding^[iWind].Connection OF
               0:Begin   // Wye  (Common winding usually)
                     VTerm^[i]   := Vterminal^[iphase + (iWind-1)*FNconds];
