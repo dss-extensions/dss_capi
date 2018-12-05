@@ -49,11 +49,16 @@ USES
     Dynamics,
     EnergyMeter,
     SysUtils,
+    {$IFDEF FPC}
+    Classes,
+    {$ENDIF}
+    {$IFDEF MSWINDOWS}
     System.Diagnostics,
     System.TimeSpan,
     System.Classes,
     Parallel_Lib,
     Windows,
+    {$ENDIF}
     Dialogs,
     Sparse_Math,
     SyncObjs,
@@ -316,9 +321,10 @@ implementation
 
 USES  SolutionAlgs,
       DSSClassDefs, DSSGlobals,
-      SHELLAPI,
 {$IFNDEF FPC}
+      SHELLAPI,
       DSSForms,
+      ScriptEdit, 
 {$ELSE}
       CmdForms,
 {$ENDIF}
@@ -328,7 +334,7 @@ USES  SolutionAlgs,
 {$IFDEF DLL_ENGINE}
       ImplGlobals,  // to fire events
 {$ENDIF}
-      Math,  Circuit, Utilities, KLUSolve, ScriptEdit, PointerList, Line,
+      Math,  Circuit, Utilities, KLUSolve, PointerList, Line,
       Transformer, Reactor
 ;
 
@@ -535,9 +541,10 @@ End;
 
 // ===========================================================================================
 PROCEDURE TSolutionObj.Solve(ActorID : Integer);
+{$IFNDEF FPC}
 var
   ScriptEd    : TScriptEdit;
-
+{$ENDIF}
 Begin
      ActiveCircuit[ActorID].Issolved := False;
      SolutionWasAttempted[ActorID]   := TRUE;
@@ -583,10 +590,12 @@ Try
       ActorStatus[ActorID]      :=  0;    // Global to indicate that the actor is busy
       ActorMA_Msg[ActorID].ResetEvent;
 
+      {$IFNDEF FPC}
       if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
-{$IFDEF MSWINDOWS}
       QueryPerformanceCounter(GStartTime);
-{$ENDIF}
+      {$ELSE}
+      GStartTime := GetTickCount64;
+      {$ENDIF}
 
 
       // Sends message to start the Simulation
@@ -595,7 +604,7 @@ Try
       if not Parallel_enabled then
       Begin
         Wait4Actors;
-        if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
+        {$IFNDEF FPC}if Not IsDLL then ScriptEd.UpdateSummaryForm('1');{$ENDIF}
       End;
 
 
@@ -1083,6 +1092,8 @@ Begin
    TotalIterations    := 0;
   {$IFDEF MSWINDOWS}
    QueryPerformanceCounter(SolveStartTime);
+   {$ELSE}
+   SolveStartTime := GetTickCount64;
    {$ENDIF}
    REPEAT
 
@@ -1114,6 +1125,8 @@ Begin
 {$ENDIF}
   {$IFDEF MSWINDOWS}
    QueryPerformanceCounter(SolveEndtime);
+   {$ELSE}
+   SolveEndTime := GetTickCount64;
    {$ENDIF}
    Solve_Time_Elapsed := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
    Iteration := TotalIterations;  { so that it reports a more interesting number }
@@ -1129,6 +1142,8 @@ Begin
    LoadsNeedUpdating := TRUE;  // Force possible update of loads and generators
    {$IFDEF MSWINDOWS}
    QueryPerformanceCounter(SolveStartTime);
+   {$ELSE}
+   SolveStartTime := GetTickCount64;
    {$ENDIF}
 
    If SystemYChanged THEN
@@ -1152,6 +1167,8 @@ Begin
    End;
   {$IFDEF MSWINDOWS}
    QueryPerformanceCounter(SolveEndtime);
+   {$ELSE}
+   SolveEndTime := GetTickCount64;
    {$ENDIF}
    Solve_Time_Elapsed  := ((SolveEndtime-SolveStartTime)/CPU_Freq)*1000000;
    Total_Time_Elapsed  :=  Total_Time_Elapsed + Solve_Time_Elapsed;
@@ -2361,6 +2378,8 @@ begin
 // Timer is based on beginning of SolveSnap time
    {$IFDEF MSWINDOWS}
    QueryPerformanceCounter(LoopEndtime);
+   {$ELSE}
+   LoopEndTime := GetTickCount64;
    {$ENDIF}
    Step_Time_Elapsed  := ((LoopEndtime-SolveStartTime)/CPU_Freq)*1000000;
 
@@ -2412,15 +2431,12 @@ END;
 ********************************************************************************
 }
 
+{$IFNDEF FPC}
 constructor TSolver.Create(Susp: Boolean; local_CPU: integer; ID : integer; CallBack: TInfoMessageCall; AEvent: TEvent);
-
 var
   Parallel    : TParallel_Lib;
   Thpriority  : String;
 begin
-
-
-
   UIEvent                   :=  AEvent;
   FInfoProc                 :=  CallBack;
   FreeOnTerminate           :=  False;
@@ -2436,8 +2452,21 @@ begin
   Parallel.Set_Thread_affinity(handle,local_CPU);
 //  Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
   {$ENDIF}
-
 end;
+{$ELSE}
+constructor TSolver.Create(Susp: Boolean; local_CPU: integer; ID : integer; CallBack: TInfoMessageCall; AEvent: TEvent);
+begin
+  UIEvent                   :=  AEvent;
+  FInfoProc                 :=  CallBack;
+  FreeOnTerminate           :=  False;
+  ActorID                   :=  ID;
+  ActorMsg                  :=  TEvent.Create(nil, True, False, '');
+  MsgType                   :=  -1;
+  ActorActive               :=  True;
+  Processing                :=  False;
+  Inherited Create(Susp);
+end;
+{$ENDIF}
 
 Procedure TSolver.Send_Message(Msg  : Integer);
 Begin
@@ -2460,6 +2489,7 @@ Begin
   Result  :=  ActorCPU[ActorID];
 End;
 
+{$IFNDEF FPC}
 procedure TSolver.Set_CPU(CPU : Integer);
 var
   Parallel  : TParallel_Lib;
@@ -2470,6 +2500,12 @@ Begin
 //  Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
   {$ENDIF}
 End;
+{$ELSE}
+procedure TSolver.Set_CPU(CPU : Integer);
+Begin
+  ActorCPU[ActorID] :=  CPU;
+End;
+{$ENDIF}
 
 {*******************************************************************************
 *             executes the selected solution algorithm                         *
@@ -2520,7 +2556,11 @@ var
                   Else
                       DosimpleMsg('Unknown solution mode.', 481);
                   End;
+                  {$IFNDEF FPC}
                   QueryPerformanceCounter(GEndTime);
+                  {$ELSE}
+                  GEndTime := GetTickCount64;
+                  {$ENDIF}
 
                   Total_Solve_Time_Elapsed  :=  ((GEndTime-GStartTime)/CPU_Freq)*1000000;
                   Total_Time_Elapsed        :=  Total_Time_Elapsed + Total_Solve_Time_Elapsed;

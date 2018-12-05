@@ -49,10 +49,10 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      InvControl,
      ExpControl,
      variants,
-//     {$IFDEF MSWINDOWS}
+     {$IFDEF MSWINDOWS}
      ProgressForm,
      vcl.dialogs,
-//     {$ENDIF}
+     {$ENDIF}
      Strutils,
      Types,
      SyncObjs,
@@ -124,9 +124,7 @@ VAR
    DLLFirstTime   :Boolean=TRUE;
    DLLDebugFile   :TextFile;
    ProgramName    :String;
-//   {$IFDEF MSWINDOWS}
    DSS_Registry   :TIniRegSave; // Registry   (See Executive)
-//   {$ENDIF}
 
    // Global variables for the DSS visualization tool
    DSS_Viz_installed   :Boolean=False; // DSS visualization tool (flag of existance)
@@ -189,9 +187,7 @@ VAR
    DefaultEditor    :String;     // normally, Notepad
    DefaultFontSize  :Integer;
    DefaultFontName  :String;
-//   {$IFDEF MSWINDOWS}
-   DefaultFontStyles :TFontStyles;
-//   {$ENDIF}
+   DefaultFontStyles :{$IFNDEF FPC}TFontStyles{$ELSE}Integer{$ENDIF};
    DSSFileName      :String;     // Name of current exe or DLL
    DSSDirectory     :String;     // where the current exe resides
    StartupDirectory :String;     // Where we started
@@ -240,7 +236,9 @@ VAR
    ActorCPU           : Array of integer;
    ActorStatus        : Array of integer;
    ActorProgressCount : Array of integer;
+   {$IFNDEF FPC}
    ActorProgress      : Array of TProgress;
+   {$ENDIF}
    ActorPctProgress   : Array of integer;
    ActorHandle        : Array of TSolver;
    Parallel_enabled   : Boolean;
@@ -335,33 +333,51 @@ implementation
 
 USES  {Forms,   Controls,}
      SysUtils,
-//     {$IFDEF MSWINDOWS}
-     Windows,
      {$IFDEF MSWINDOWS}
+     Windows,
      SHFolder,
-     {$ENDIF}
      ScriptEdit,
-     {$IFNDEF FPC}
      DSSForms,
+     Parallel_Lib,
      {$ELSE}
-     CMDForms,
+     resource, versiontypes, versionresource, dynlibs, CMDForms,
      {$ENDIF}
-
-     Executive,
-     Parallel_Lib;
+     Executive;
      {Intrinsic Ckt Elements}
 
 TYPE
 
-   THandle = NativeUint;
+   THandle = Integer;
 
    TDSSRegister = function(var ClassName: pchar):Integer;  // Returns base class 1 or 2 are defined
    // Users can only define circuit elements at present
+
 VAR
 
    LastUserDLLHandle: THandle;
    DSSRegisterProc:TDSSRegister;   // of last library loaded
 
+{$IFDEF FPC}
+FUNCTION GetDefaultDataDirectory: String;
+Begin
+{$IFDEF UNIX}
+  Result := GetEnvironmentVariable('HOME') + '/Documents';
+{$ENDIF}
+{$IF (defined(Windows) or defined(MSWindows))}
+  Result := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH') + '\Documents';
+{$ENDIF}
+end;
+
+FUNCTION GetDefaultScratchDirectory: String;
+Begin
+  {$IFDEF UNIX}
+  Result := '/tmp';
+  {$ENDIF}
+  {$IF (defined(Windows) or defined(MSWindows))}
+  Result := GetEnvironmentVariable('LOCALAPPDATA');
+  {$ENDIF}
+End;
+{$ELSE}
 FUNCTION GetDefaultDataDirectory: String;
 Var
   ThePath:Array[0..MAX_PATH] of char;
@@ -383,6 +399,7 @@ Begin
   {$ENDIF}
   Result := ThePath;
 End;
+{$ENDIF}
 
 function GetOutputDirectory:String;
 begin
@@ -431,6 +448,7 @@ Begin
          End
          Else
            DSSMessageDlg(Msg, TRUE);
+
      End;
 
      LastErrorMessage := Msg;
@@ -637,9 +655,44 @@ Begin
 End;
 
 
-
+{$IFDEF FPC}
 FUNCTION GetDSSVersion: String;
-{$IFDEF MSWINDOWS}
+(* Unlike most of AboutText (below), this takes significant activity at run-    *)
+ (* time to extract version/release/build numbers from resource information      *)
+ (* appended to the binary.                                                      *)
+
+VAR     Stream: TResourceStream;
+         vr: TVersionResource;
+         fi: TVersionFixedInfo;
+
+BEGIN
+   RESULT:= 'Unknown.';
+   TRY
+
+ (* This raises an exception if version info has not been incorporated into the  *)
+ (* binary (Lazarus Project -> Project Options -> Version Info -> Version        *)
+ (* numbering).                                                                  *)
+
+     Stream:= TResourceStream.CreateFromID(HINSTANCE, 1, PChar(RT_VERSION));
+     TRY
+       vr:= TVersionResource.Create;
+       TRY
+         vr.SetCustomRawDataStream(Stream);
+         fi:= vr.FixedInfo;
+         RESULT := 'Version ' + IntToStr(fi.FileVersion[0]) + '.' + IntToStr(fi.FileVersion[1]) +
+                ' release ' + IntToStr(fi.FileVersion[2]) + ' build ' + IntToStr(fi.FileVersion[3]) + LineEnding;
+         vr.SetCustomRawDataStream(nil)
+       FINALLY
+         vr.Free
+       END
+     FINALLY
+       Stream.Free
+     END
+   EXCEPT
+   END
+End;
+{$ELSE}
+FUNCTION GetDSSVersion: String;
 var
   InfoSize, Wnd: DWORD;
   VerBuf: Pointer;
@@ -647,9 +700,7 @@ var
   VerSize: DWORD;
   MajorVer, MinorVer, BuildNo, RelNo :DWORD;
   iLastError: DWord;
-{$ENDIF}
 Begin
-{$IFDEF MSWINDOWS}
     Result := 'Unknown.' ;
 
     InfoSize := GetFileVersionInfoSize(PChar(DSSFileName), Wnd);
@@ -675,9 +726,8 @@ Begin
       Result := Format('GetFileVersionInfo failed: (%d) %s',
                [iLastError, SysErrorMessage(iLastError)]);
     end;
-{$ENDIF}
 End;
-
+{$ENDIF}
 
 PROCEDURE WriteDLLDebugFile(Const S:String);
 
@@ -698,14 +748,10 @@ function IsDirectoryWritable(const Dir: String): Boolean;
 var
   TempFile: array[0..MAX_PATH] of Char;
 begin
-{$IFDEF MSWINDOWS}
   if GetTempFileName(PChar(Dir), 'DA', 0, TempFile) <> 0 then
-    Result := Windows.DeleteFile(TempFile)
+    {$IFDEF FPC}Result := DeleteFile(TempFile){$ELSE}Result := Windows.DeleteFile(TempFile){$ENDIF}
   else
     Result := False;
-{$ELSE}
-    Result  :=  True;
-{$ENDIF}
 end;
 
 PROCEDURE SetDataPath(const PathName:String);
@@ -726,14 +772,24 @@ BEGIN
   // Put a \ on the end if not supplied. Allow a null specification.
   If Length(DataDirectory) > 0 Then Begin
     ChDir(DataDirectory[ActiveActor]);   // Change to specified directory
+    {$IF (defined(Windows) or defined(MSWindows))}
     If DataDirectory[ActiveActor][Length(DataDirectory[ActiveActor])] <> '\' Then DataDirectory[ActiveActor] := DataDirectory[ActiveActor] + '\';
+    {$ENDIF}
+    {$IFDEF UNIX}
+    If DataDirectory[ActiveActor][Length(DataDirectory[ActiveActor])] <> '/' Then DataDirectory[ActiveActor] := DataDirectory[ActiveActor] + '/';
+    {$ENDIF}
   End;
 
   // see if DataDirectory is writable. If not, set OutputDirectory to the user's appdata
   if IsDirectoryWritable(DataDirectory[ActiveActor]) then begin
     OutputDirectory[ActiveActor] := DataDirectory[ActiveActor];
   end else begin
+    {$IF (defined(Windows) or defined(MSWindows))}
     ScratchPath := GetDefaultScratchDirectory + '\' + ProgramName + '\';
+    {$ENDIF}
+    {$IFDEF UNIX}
+    ScratchPath := GetDefaultScratchDirectory + '/' + ProgramName + '/';
+    {$ENDIF}
     if not DirectoryExists(ScratchPath) then CreateDir(ScratchPath);
     OutputDirectory[ActiveActor] := ScratchPath;
   end;
@@ -742,38 +798,50 @@ END;
 PROCEDURE ReadDSS_Registry;
 Var  TestDataDirectory:string;
 Begin
-{$IFDEF MSWINDOWS}
   DSS_Registry.Section := 'MainSect';
-  DefaultEditor    := DSS_Registry.ReadString('Editor', 'Notepad.exe' );
-  DefaultFontSize  := StrToInt(DSS_Registry.ReadString('ScriptFontSize', '8' ));
-  DefaultFontName  := DSS_Registry.ReadString('ScriptFontName', 'MS Sans Serif' );
-  DefaultFontStyles := [];
-  If DSS_Registry.ReadBool('ScriptFontBold', TRUE)    Then DefaultFontStyles := DefaultFontStyles + [fsbold];
-  If DSS_Registry.ReadBool('ScriptFontItalic', FALSE) Then DefaultFontStyles := DefaultFontStyles + [fsItalic];
+  {$IFDEF Darwin}
+     DefaultEditor    := DSS_Registry.ReadString('Editor', 'open -t');
+     DefaultFontSize  := StrToInt(DSS_Registry.ReadString('ScriptFontSize', '12'));
+     DefaultFontName  := DSS_Registry.ReadString('ScriptFontName', 'Geneva');
+  {$ENDIF}
+  {$IFDEF Linux}
+     DefaultEditor    := DSS_Registry.ReadString('Editor', 'xdg-open');
+     DefaultFontSize  := StrToInt(DSS_Registry.ReadString('ScriptFontSize', '10'));
+     DefaultFontName  := DSS_Registry.ReadString('ScriptFontName', 'Arial');
+  {$ENDIF}
+  {$IF (defined(Windows) or defined(MSWindows))}
+     DefaultEditor    := DSS_Registry.ReadString('Editor', 'Notepad.exe' );
+     DefaultFontSize  := StrToInt(DSS_Registry.ReadString('ScriptFontSize', '8' ));
+     DefaultFontName  := DSS_Registry.ReadString('ScriptFontName', 'MS Sans Serif' );
+  {$ENDIF}
+  {$IFDEF FPC}
+     DefaultFontStyles := 1;
+  {$ELSE}
+     DefaultFontStyles := [];
+     If DSS_Registry.ReadBool('ScriptFontBold', TRUE)    Then DefaultFontStyles := DefaultFontStyles + [fsbold];
+     If DSS_Registry.ReadBool('ScriptFontItalic', FALSE) Then DefaultFontStyles := DefaultFontStyles + [fsItalic];
+  {$ENDIF}
   DefaultBaseFreq  := StrToInt(DSS_Registry.ReadString('BaseFrequency', '60' ));
   LastFileCompiled := DSS_Registry.ReadString('LastFile', '' );
   TestDataDirectory :=   DSS_Registry.ReadString('DataPath', DataDirectory[ActiveActor]);
   If SysUtils.DirectoryExists (TestDataDirectory) Then SetDataPath (TestDataDirectory)
                                         Else SetDataPath (DataDirectory[ActiveActor]);
-{$ENDIF}
 End;
 
 
 PROCEDURE WriteDSS_Registry;
 Begin
-{$IFDEF MSWINDOWS}
   If UpdateRegistry Then  Begin
       DSS_Registry.Section := 'MainSect';
       DSS_Registry.WriteString('Editor',        DefaultEditor);
       DSS_Registry.WriteString('ScriptFontSize', Format('%d',[DefaultFontSize]));
       DSS_Registry.WriteString('ScriptFontName', Format('%s',[DefaultFontName]));
-      DSS_Registry.WriteBool('ScriptFontBold',   (fsBold in DefaultFontStyles));
-      DSS_Registry.WriteBool('ScriptFontItalic', (fsItalic in DefaultFontStyles));
+      DSS_Registry.WriteBool('ScriptFontBold', {$IFDEF FPC}False{$ELSE}(fsBold in DefaultFontStyles){$ENDIF});
+      DSS_Registry.WriteBool('ScriptFontItalic', {$IFDEF FPC}False{$ELSE}(fsItalic in DefaultFontStyles){$ENDIF});
       DSS_Registry.WriteString('BaseFrequency', Format('%d',[Round(DefaultBaseFreq)]));
       DSS_Registry.WriteString('LastFile',      LastFileCompiled);
       DSS_Registry.WriteString('DataPath', DataDirectory[ActiveActor]);
   End;
-{$ENDIF}
 End;
 
 PROCEDURE ResetQueryLogFile;
@@ -873,14 +941,23 @@ end;
 
 // Creates a new actor
 procedure New_Actor(ActorID:  Integer);
-Var
-  ScriptEd    : TScriptEdit;
+{$IFDEF FPC}
+Begin
+ ActorHandle[ActorID] :=  TSolver.Create(True,ActorCPU[ActorID],ActorID,nil,ActorMA_Msg[ActorID]); // TEMC: TODO: text-mode callback
+ ActorHandle[ActorID].Priority :=  tpTimeCritical;
+ ActorHandle[ActorID].Resume;  // TEMC: TODO: this reportedly does nothing on Unix and Mac
+ ActorStatus[ActorID] :=  1;
+End;
+{$ELSE}
+var
+ ScriptEd    : TScriptEdit;
 Begin
  ActorHandle[ActorID] :=  TSolver.Create(True,ActorCPU[ActorID],ActorID,ScriptEd.UpdateSummaryform,ActorMA_Msg[ActorID]);
  ActorHandle[ActorID].Priority :=  {$IFDEF MSWINDOWS}tpTimeCritical{$ELSE}6{$ENDIF};
  ActorHandle[ActorID].Resume;
  ActorStatus[ActorID] :=  1;
 End;
+{$ENDIF}
 
 {$IFNDEF FPC}
 function CheckDSSVisualizationTool: Boolean;
@@ -907,7 +984,6 @@ procedure Delay(TickTime : Integer);
 end;
 //{$ENDIF}
 
-
 initialization
 
 //***************Initialization for Parallel Processing*************************
@@ -915,7 +991,7 @@ initialization
    CPU_Cores        :=  CPUCount;
 
    setlength(ActiveCircuit,CPU_Cores + 1);
-   setlength(ActorProgress,CPU_Cores + 1);
+   {$IFNDEF FPC}setlength(ActorProgress,CPU_Cores + 1);{$ENDIF}
    setlength(ActorCPU,CPU_Cores + 1);
    setlength(ActorProgressCount,CPU_Cores + 1);
    setlength(ActiveDSSClass,CPU_Cores + 1);
@@ -983,7 +1059,7 @@ initialization
    for ActiveActor := 1 to CPU_Cores do
    begin
     ActiveCircuit[ActiveActor]        :=  nil;
-    ActorProgress[ActiveActor]        :=  nil;
+    {$IFNDEF FPC}ActorProgress[ActiveActor]        :=  nil; {$ENDIF}
     ActiveDSSClass[ActiveActor]       :=  nil;
     EventStrings[ActiveActor]         := TStringList.Create;
     SavedFileList[ActiveActor]        := TStringList.Create;
@@ -1016,6 +1092,7 @@ initialization
    ADiakoptics      :=    False;  // Disabled by default
 
    {Various Constants and Switches}
+   {$IFDEF FPC}NoFormsAllowed  := TRUE;{$ENDIF}
 
    CALPHA                := Cmplx(-0.5, -0.866025); // -120 degrees phase shift
    SQRT2                 := Sqrt(2.0);
@@ -1050,7 +1127,13 @@ initialization
 
    {Initialize filenames and directories}
 
-
+   {$IFDEF FPC}
+   ProgramName      := 'OpenDSSCmd';  // for now...
+   {$ELSE}
+   ProgramName      := 'OpenDSS';
+   {$ENDIF}
+   DSSFileName      := GetDSSExeFile;
+   DSSDirectory     := ExtractFilePath(DSSFileName);
    // want to know if this was built for 64-bit, not whether running on 64 bits
    // (i.e. we could have a 32-bit build running on 64 bits; not interested in that
 {$IFDEF CPUX64}
@@ -1058,39 +1141,59 @@ initialization
 {$ELSE ! CPUX86}
    VersionString    := 'Version ' + GetDSSVersion + ' (32-bit build)';
 {$ENDIF}
-{$IFDEF MSWINDOWS}
+
+{$IFNDEF FPC}
+   StartupDirectory := GetCurrentDir+'\';
+   SetDataPath (GetDefaultDataDirectory + '\' + ProgramName + '\');
+   DSS_Registry     := TIniRegSave.Create('\Software\' + ProgramName);
+
+
+{$ELSE}
+{$IFDEF WINDOWS} // deliberately different from MSWindows (Delphi)
         StartupDirectory := GetCurrentDir+'\';
         SetDataPath (GetDefaultDataDirectory + '\' + ProgramName + '\');
-        DSS_Registry     := TIniRegSave.Create(DataDirectory[ActiveActor] + 'opendss.ini');
-{$ELSE}
+        DSS_Registry     := TIniRegSave.Create(DataDirectory[ActiveActor] + 'opendsscmd.ini');
+{$ENDIF}
+{$IFDEF UNIX}
         StartupDirectory := GetCurrentDir+'/';
         SetDataPath (GetDefaultDataDirectory + '/' + ProgramName + '/');
-//      DSS_Registry     := TIniRegSave.Create(DataDirectory + 'opendss.ini');
+        DSS_Registry     := TIniRegSave.Create(DataDirectory[ActiveActor] + 'opendsscmd.ini');
 {$ENDIF}
+{$ENDIF}
+
    AuxParser        := TParser.Create;
 
-{$IFDEF MSWINDOWS}
-   DefaultEditor   := 'NotePad';
-   DefaultFontSize := 8;
-   DefaultFontName := 'MS Sans Serif';
-{$ELSE}
-   DefaultEditor   := 'xdg-open';
-   DefaultFontSize := 10;
-   DefaultFontName := 'Arial';
-{$ENDIF}
+   {$IFDEF Darwin}
+      DefaultEditor   := 'open -t';
+      DefaultFontSize := 12;
+      DefaultFontName := 'Geneva';
+   {$ENDIF}
+   {$IFDEF Linux}
+      DefaultEditor   := 'xdg-open';
+      DefaultFontSize := 10;
+      DefaultFontName := 'Arial';
+   {$ENDIF}
+   {$IF (defined(Windows) or defined(MSWindows))}
+      DefaultEditor   := 'NotePad.exe';
+      DefaultFontSize := 8;
+      DefaultFontName := 'MS Sans Serif';
+   {$ENDIF}
 
-   NoFormsAllowed   := FALSE;
+   {$IFNDEF FPC}NoFormsAllowed   := FALSE;{$ENDIF}
 
    LogQueries       := FALSE;
    QueryLogFileName := '';
    UpdateRegistry   := TRUE;
-   {$IFDEF MSWINDOWS}
+   {$IFDEF FPC}
+   CPU_Freq := 1000; // until we can query it
+   {$ELSE}
    QueryPerformanceFrequency(CPU_Freq);
    {$ENDIF}
+   CPU_Cores        :=  CPUCount;
 
-//   YBMatrix.Start_Ymatrix_Critical;   // Initializes the critical segment for the YMatrix class
 
    //WriteDLLDebugFile('DSSGlobals');
+
 {$IFNDEF FPC}
   DSS_Viz_installed:= CheckDSSVisualizationTool; // DSS visualization tool (flag of existance)
 {$ENDIF}
@@ -1109,19 +1212,10 @@ Finalization
   With DSSExecutive Do If RecorderOn Then Recorderon := FALSE;
   ClearAllCircuits;
   DSSExecutive.Free;  {Writes to Registry}
-  {$IFDEF MSWINDOWS}
   DSS_Registry.Free;  {Close Registry}
-  {$ENDIF}
-
-// Free all the Actors
-{  for ActiveActor := 1 to NumOfActors do
-  Begin
-    if ActorHandle[Activeactor] <> nil then
-    Begin
-      ActorHandle[Activeactor].Free
-    End;
-  End;
-}
+  for ActiveActor := 1 to NumOfActors do
+    if ActorHandle[ActiveActor] <> nil then
+      ActorHandle[Activeactor].Free;
 End.
 
 
