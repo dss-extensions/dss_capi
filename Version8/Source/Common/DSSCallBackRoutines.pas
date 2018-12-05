@@ -8,8 +8,12 @@ unit DSSCallBackRoutines;
 
 interface
 
-Uses ArrayDef, uComplex;
+Uses 
+  ArrayDef, uComplex;
 
+{$IF not declared (pUTF8Char)}
+type pUTF8Char = ^AnsiChar;
+{$ENDIF}
 {$INCLUDE DSSCallBackStructDef.pas}
 
 
@@ -24,7 +28,9 @@ Uses
   ParserDel,
   DSSGlobals,
   Executive,
+  {$IFDEF MSWINDOWS}
   AnsiStrings,
+  {$ENDIF}
   SysUtils,
   CktElement,
   Math,

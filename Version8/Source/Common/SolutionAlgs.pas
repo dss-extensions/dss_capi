@@ -46,11 +46,10 @@ Uses
     ArrayDef, DSSGlobals,
 {$IFNDEF FPC}
     DSSForms,
-{$ELSE}
-    CmdForms,
+    System.Classes,
 {$ENDIF}
     Utilities, SysUtils, MathUtil, Math, Fault, uComplex, YMatrix,
-    PCElement, Spectrum, Vsource, Isource, KLUSolve, System.Classes;
+    PCElement, Spectrum, Vsource, Isource, KLUSolve;
 
 VAR ProgressCount:Integer;
 

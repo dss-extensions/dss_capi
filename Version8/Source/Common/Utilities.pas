@@ -155,8 +155,8 @@ Procedure BackwardSweepAllFeeders;
 implementation
 
 Uses
-        Windows,ShellAPI,  Dialogs, Graphics,
 {$IFNDEF FPC}
+     Windows, ShellAPI, Dialogs, Graphics,
      DSSForms,
 {$ELSE}
      CmdForms,

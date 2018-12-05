@@ -25,9 +25,9 @@ interface
 USES
      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
-     AutoAdd, EnergyMeter, NamedObject, CktTree, math,     Sparse_Math,
-     {$IFDEF MSWINDOWS}Graphics, vcl.dialogs,{$ENDIF} MeTIS_Exec;
-
+     AutoAdd, EnergyMeter, NamedObject, CktTree, 
+     {$IFDEF MSWINDOWS}Graphics, vcl.dialogs, {$ENDIF}{$IFNDEF FPC}MeTIS_Exec, {$ENDIF}
+     math, Sparse_Math;
 
 TYPE
     TReductionStrategy = (rsDefault, rsStubs, {rsTapEnds,} rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches, rsLaterals);
@@ -139,6 +139,9 @@ TYPE
           ShuntCapacitors,
           Feeders,
           Reactors,
+          Relays,
+          Fuses,
+          Reclosers,
           SwtControls        :PointerList.TPointerList;
           CktElements        : PointerList.TPointerList;
 
@@ -326,14 +329,14 @@ USES
      ParserDel,  DSSClassDefs, DSSGlobals, Dynamics,
      Line, Transformer,  Vsource,
      Utilities, Executive,
-     StrUtils
+     StrUtils,
      {$IFNDEF FPC}
-     ,DSSForms,
-     {$ELSE}
-     ,CmdForms,
-     {$ENDIF}
+     DSSForms,
      SHELLAPI,
      windows;
+     {$ELSE}
+     CmdForms;
+     {$ENDIF}
 
 
 //----------------------------------------------------------------------------
@@ -397,7 +400,10 @@ BEGIN
      Lines           := TPointerList.Create(1000);
      Loads           := TPointerList.Create(1000);
      ShuntCapacitors := TPointerList.Create(20);
-     	 Reactors        := TPointerList.Create(5);
+     Reactors        := TPointerList.Create(5);
+     Reclosers       := TPointerList.Create(10);
+     Relays          := TPointerList.Create(10);
+     Fuses           := TPointerList.Create(50);
 
      Buses        := Allocmem(Sizeof(Buses^[1])        * Maxbuses);
      MapNodeToBus := Allocmem(Sizeof(MapNodeToBus^[1]) * MaxNodes);
@@ -599,7 +605,10 @@ BEGIN
      Loads.Free;
      Lines.Free;
      ShuntCapacitors.Free;
-     	 Reactors.Free;
+     Reactors.Free;
+     Reclosers.Free;
+     Relays.Free;
+     Fuses.Free;
 
      ControlQueue.Free;
 
@@ -796,9 +805,9 @@ Begin
         End;
       end;
       //  Checks the coverage index to stablish if is necessary to keep tracing paths to increase the coverage
-      DBLTemp         :=  0;
+      DBLTemp         :=  0.0;
       for i := Low(Buses_covered) to High(Buses_covered) do
-        DBLtemp         :=  DBLTemp + double(Buses_Covered[i]);
+        DBLtemp         :=  DBLTemp + (0.0+Buses_Covered[i]);
       DBLtemp         :=  DBLTemp/Sys_Size;
 {      If the New coverage is different from the previous one and is below the expected coverage keep going
        The first criteria is to avoid keep working on a path that will not contribute to improve the coverage}
@@ -993,6 +1002,12 @@ End;
 *         available in the local computer (in the best case)                   *
 ********************************************************************************}
 function TDSSCircuit.Tear_Circuit(): Integer;
+{$IFDEF FPC}
+begin
+  DoErrorMsg('Tear_Circuit','MeTIS cannot start.',
+             'The MeTIS program is not supported in FPC; TFileSearchReplace is unavailable.', 7006)
+end;
+{$ELSE}
 var
   FileCreated   : Boolean;
   Ftree,
@@ -1208,6 +1223,7 @@ Begin
     End;
   End;
 End;
+{$ENDIF}
 //----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
@@ -1423,6 +1439,9 @@ BEGIN
        LOAD_ELEMENT     :Loads.Add(ActiveCktElement);
        CAP_ELEMENT      :ShuntCapacitors.Add(ActiveCktElement);
        REACTOR_ELEMENT  :Reactors.Add(ActiveCktElement);
+       RELAY_CONTROL    :Relays.Add(ActiveCktElement);
+       FUSE_CONTROL     :Fuses.Add(ActiveCktElement);
+       RECLOSER_CONTROL :Reclosers.Add(ActiveCktElement);
 
        { Keep Lines, Transformer, and Lines and Faults in PDElements and separate lists
          so we can find them quickly.}
