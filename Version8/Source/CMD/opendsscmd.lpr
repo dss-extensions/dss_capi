@@ -1,14 +1,12 @@
 program opendsscmd;
 
-{$IFDEF FPC}{$MODE Delphi}{$ENDIF}
-
 {$IFDEF Darwin}
 {$linkframework CoreFoundation}
 {$linkframework Carbon}
 {$ENDIF}
 
 { ----------------------------------------------------------
-  Copyright (c) 2008-2018, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2014, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 
@@ -48,9 +46,9 @@ program opendsscmd;
 }
 
 uses
-  {$IFDEF UNIX}{$IFDEF UseCThreads}
+  {$IFDEF UNIX}
   cthreads,
-  {$ENDIF}{$ENDIF}
+  {$ENDIF}
   SysUtils,
   Classes,
   CustApp,
@@ -109,7 +107,7 @@ uses
   IniRegSave in '..\Shared\IniRegSave.pas',
   InvControl in '..\Controls\InvControl.pas',
   Isource in '..\PCElements\Isource.pas',
-  KLUSolve in '..\Common\KLUSolve.pas',
+  KLUSolve in 'KLUSolve.pas',
   Line in '..\PDElements\Line.pas',
   LineCode in '..\General\LineCode.pas',
   LineConstants in '..\General\LineConstants.pas',
@@ -119,19 +117,14 @@ uses
   Load in '..\PCElements\Load.pas',
   LoadShape in '..\General\LoadShape.pas',
   mathutil in '..\Shared\mathutil.pas',
+  MemoryMap_lib in '..\Meters\MemoryMap_lib.pas',
   MeterClass in '..\Meters\MeterClass.pas',
   MeterElement in '..\Meters\MeterElement.pas',
-  
-  MeTIS_Exec in '..\Common\MeTIS_Exec.pas',  
-  
   Monitor in '..\Meters\Monitor.pas',
   MyDSSClassDefs in 'MyDSSClassDefs.Pas',
   NamedObject in '..\General\NamedObject.pas',
   Notes in '..\Common\Notes.pas',
   OHLineConstants in '..\General\OHLineConstants.pas',
-
-  Parallel_Lib in '..\Parallel_Lib\Parallel_Lib.pas',  
-  
   ParserDel in '..\Parser\ParserDel.pas',
   PCClass in '..\PCElements\PCClass.pas',
   PCElement in '..\PCElements\PCElement.pas',
@@ -154,7 +147,6 @@ uses
   Solution in '..\Common\Solution.pas',
   SolutionAlgs in '..\Common\SolutionAlgs.pas',
   Spectrum in '..\General\Spectrum.pas',
-  Sparse_Math in '..\Common\Sparse_Math.pas',
   StackDef in '..\Shared\StackDef.pas',
   Storage in '..\PCElements\Storage.pas',
   StorageController in '..\Controls\StorageController.pas',
@@ -178,8 +170,10 @@ uses
   WireData in '..\General\WireData.pas',
   XfmrCode in '..\General\XfmrCode.pas',
   XYcurve in '..\General\XYcurve.pas',
-  Ymatrix in '..\Common\Ymatrix.pas';
-
+  Ymatrix in '..\Common\Ymatrix.pas',
+  FNCS in 'fncs.pas',
+//  editline in 'editline.pas',
+  linenoise in 'linenoise.pas';
 
 
 function UserFinished(Cmd:String):boolean;
@@ -194,6 +188,39 @@ Begin
 		result := true;
 End;
 
+procedure SaveCommandHistory;
+var
+  i: integer;
+  pc: Pchar;
+begin
+  DSS_Registry.Section := 'CommandHistory';
+  for i:= 0 to 1000 do begin
+    pc := linenoiseHistoryLine (i);
+    if pc = nil then begin
+      break;
+    end else begin
+      DSS_Registry.WriteString ('Line' + IntToStr(i), pc);
+      linenoiseFree (pc);
+    end;
+  end;
+  DSS_Registry.WriteInteger ('Length', i);
+end;
+
+procedure LoadCommandHistory;
+var
+  i, n: integer;
+  s: string;
+begin
+  DSS_Registry.Section := 'CommandHistory';
+  n := DSS_Registry.ReadInteger ('Length', 0);
+  i := 0;
+  while i < n do begin
+    s := DSS_Registry.ReadString ('Line' + IntToStr(i), 'help');
+    linenoiseHistoryAdd(PChar(s));
+    Inc(i);
+  end;
+end;
+
 type
   TMyApplication = class(TCustomApplication)
   protected
@@ -207,20 +234,34 @@ type
 procedure TMyApplication.DoRun;
 var
   ErrorMsg, Cmd: String;
+  LNresult: Pchar;
+  FNCSconn: TFNCS;
 begin
-	NoFormsAllowed := True;
-	DSSExecutive := TExecutive.Create;  // Make a DSS object
-	DSSExecutive.CreateDefaultDSSItems;
-	writeln('Startup Directory: ', StartupDirectory);
-	DataDirectory := StartupDirectory;
-	OutputDirectory := StartupDirectory;
+  NoFormsAllowed := True;
+  DSSExecutive := TExecutive.Create;  // Make a DSS object
+  DSSExecutive.CreateDefaultDSSItems;
+//	writeln('Startup Directory: ', StartupDirectory);
+//	writeln('Data Directory: ', DataDirectory);
+//	writeln('Output Directory: ', OutputDirectory);
+//	writeln('GetCurrentDir: ', GetCurrentDir);
+  DataDirectory[ActiveActor] := StartupDirectory;
+  OutputDirectory[ActiveActor] := StartupDirectory;
+  SetCurrentDir(DataDirectory[ActiveActor]);
 
-	NoFormsAllowed := False;  // messages will go to the console
+  NoFormsAllowed := False;  // messages will go to the console
+
+  FNCSconn := TFNCS.Create;
+  if FNCSconn.IsReady then begin
+    writeln('FNCS available');
+  end else begin
+    writeln('FNCS not available');
+  end;
 
 	// quick check parameters
-  ErrorMsg:=CheckOptions('h', 'help');
+  ErrorMsg:=CheckOptions('hf', 'help fncs');
   if ErrorMsg<>'' then begin
-    ShowException(Exception.Create(ErrorMsg));
+    writeln(ErrorMsg);
+//    ShowException(Exception.Create(ErrorMsg));
     Terminate;
     Exit;
   end;
@@ -232,6 +273,28 @@ begin
     Exit;
   end;
 
+  if HasOption('f', 'fncs') then begin
+    if FNCSconn.IsReady then begin
+      if paramcount > 1 then begin
+    	  Cmd := 'compile ' + ParamStr(2);
+        writeln(Cmd);
+        DSSExecutive.Command := Cmd;
+        if DSSExecutive.Error <> 0 then begin
+    		  writeln('Last Error: ' + DSSExecutive.LastError);
+          writeln('FNCS option failed: the optional filename would not compile first');
+          Terminate;
+          Exit;
+        end;
+      end;
+      writeln ('Starting FNCS loop');
+      FNCSconn.RunFNCSLoop;
+    end else begin
+      writeln ('FNCS option failed: the FNCS library could not be loaded');
+    end;
+    Terminate;
+    Exit;
+  end;
+
 	if paramcount > 0 then begin
 	  Cmd := 'compile ' + ParamStr(1);
     writeln(Cmd);
@@ -239,13 +302,39 @@ begin
 		writeln('Last Error: ' + DSSExecutive.LastError);
 		Terminate;
 	end else begin
-		repeat begin
+{		repeat begin  // this has no command history
 			write('>>');
 			readln(Cmd);
 			DSSExecutive.Command := Cmd;
 			writeln(DSSExecutive.LastError);
 		end until UserFinished (Cmd);
-	end;
+}
+ // the linenoise-ng library seems to be "sluggish" dropping typed characters on Windows
+    LoadCommandHistory;
+    repeat begin
+      LNresult := linenoise.linenoise('>>');
+      if LNResult <> nil then begin
+        Cmd := LNResult;
+        DSSExecutive.Command := Cmd;
+        linenoiseHistoryAdd (LNResult);
+        linenoiseFree (LNResult);
+      end;
+    end until (LNResult = nil) or UserFinished (Cmd);
+    SaveCommandHistory;
+
+{ // the editline library won't capture at all on Windows!!
+      repeat begin
+        LNresult := editline.readline('>>');
+        writeln (LNResult);
+        if LNResult <> nil then begin
+          Cmd := LNResult;
+          DSSExecutive.Command := Cmd;
+          editline.add_history (LNResult);
+          editline.rl_free (LNResult);
+        end;
+      end until (LNResult = nil) or UserFinished (Cmd);
+}
+  end;
 
   // stop program loop
   Terminate;
@@ -264,14 +353,19 @@ end;
 
 procedure TMyApplication.WriteHelp;
 begin
-  { add your help code here }
-  writeln('Usage: ', ExeName, ' -h');
+  writeln('Usage: ', ExeName, ' [-h | -f] [filename]');
+  writeln(' [filename] optional DSS command file. If provided, runs this file and exits.');
+  writeln('      If provided, runs this file and exits.');
+  writeln('      If not provided, accepts user commands at the >> prompt.');
+  writeln(' -h displays this message and exits');
+  writeln(' -f starts in FNCS co-simulation mode, after reading optional filename');
+  writeln('    (requires FNCS installation and opendss.yaml file)');
 end;
 
 var
   Application: TMyApplication;
 
-{$R *.res}
+// {$R *.res}
 
 begin
   Application:=TMyApplication.Create(nil);

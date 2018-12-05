@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="10"/>
+    <Version Value="9"/>
     <PathDelim Value="\"/>
     <General>
       <SessionStorage Value="InProjectDir"/>
@@ -30,7 +30,7 @@
         <CommandLineParams Value="IEEE13Nodeckt.dss"/>
       </local>
     </RunParams>
-    <Units Count="122">
+    <Units Count="119">
       <Unit0>
         <Filename Value="opendsscmd.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -510,19 +510,6 @@
         <Filename Value="KLUSolve.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit118>
-      <Unit119>
-        <Filename Value="fncs.pas"/>
-        <IsPartOfProject Value="True"/>
-        <UnitName Value="FNCS"/>
-      </Unit119>
-      <Unit120>
-        <Filename Value="editline.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit120>
-      <Unit121>
-        <Filename Value="linenoise.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit121>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -556,6 +543,7 @@
         <GenerateDebugInfo Value="False"/>
       </Debugging>
       <Options>
+        <PassLinkerOptions Value="True"/>
         <LinkerOptions Value="-lc -lm -lgcc_s -lstdc++"/>
       </Options>
     </Linking>
