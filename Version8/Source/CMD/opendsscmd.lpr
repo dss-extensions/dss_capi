@@ -147,6 +147,7 @@ uses
   ShowResults in '..\Common\ShowResults.pas',
   Solution in '..\Common\Solution.pas',
   SolutionAlgs in '..\Common\SolutionAlgs.pas',
+  Sparse_Math in '..\Common\Sparse_Math.pas',
   Spectrum in '..\General\Spectrum.pas',
   StackDef in '..\Shared\StackDef.pas',
   Storage in '..\PCElements\Storage.pas',
