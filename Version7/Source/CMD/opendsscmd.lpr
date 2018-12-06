@@ -253,9 +253,9 @@ begin
 
   FNCSconn := TFNCS.Create;
   if FNCSconn.IsReady then begin
-    writeln('FNCS connected');
+    writeln('FNCS available');
   end else begin
-    writeln('FNCS not connected');
+    writeln('FNCS not available');
   end;
 
 	// quick check parameters

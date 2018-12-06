@@ -135,7 +135,7 @@ USES
      UPFCControl,
      ESPVLControl,
      IndMach012,
-     GICSource,
+     GICsource,
      AutoTrans
 ;
 
