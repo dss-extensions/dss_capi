@@ -278,7 +278,7 @@ Initialization
     TOP_Inited := FALSE;
     TOPTransferFile:= TOutFile32.Create;
     TOPTransferFile.Fname := 'DSSTransfer.STO';
-{$IFDEF MSWINDOWS}
+{$IFNDEF FPC}
     CoInitialize(Nil);
 {$ENDIF}
 end.

@@ -159,7 +159,7 @@ Uses
      Windows, ShellAPI, Dialogs, Graphics,
      DSSForms,
 {$ELSE}
-     CmdForms,
+     Process, CmdForms,
 {$ENDIF}
      SysUtils, DSSClassDefs,
      DSSGlobals, Dynamics, Executive, ExecCommands, ExecOptions,
@@ -244,6 +244,44 @@ BEGIN
     Result := Copy(S, dotpos+1, Length(S));
 End;
 
+{$IFDEF FPC}
+Procedure FireOffEditor(FileNm:String);
+Var
+   s: string;
+Begin
+  TRY
+  If FileExists(FileNm) Then
+  Begin
+{$IF (defined(Windows) or defined(MSWindows))}
+      RunCommand (DefaultEditor, [FileNm], s);
+{$ELSE}
+      RunCommand ('/bin/bash',['-c', DefaultEditor + ' ' + FileNm],s);
+{$ENDIF}
+  End;
+  EXCEPT
+      On E: Exception DO
+        DoErrorMsg('FireOffEditor.', E.Message,
+                   'Default Editor correctly specified???', 704);
+  END;
+End;
+
+Procedure DoDOSCmd(CmdString:String);
+Var //Handle:Word;
+   s: string;
+Begin
+  TRY
+{$IF (defined(Windows) or defined(MSWindows))}
+    RunCommand('cmd',['/c',CmdString],s);
+{$ELSE}
+    RunCommand('/bin/bash',['-c',CmdString],s);
+{$ENDIF}
+  EXCEPT
+      On E: Exception DO
+        DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"',[E.Message, CmdString]), 704);
+  END;
+End;
+
+{$ELSE}
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 Procedure FireOffEditor(FileNm:String);
 Var retval:Word;
@@ -286,6 +324,7 @@ Begin
         DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"',[E.Message, CmdString]), 704);
   END;
 End;
+{$ENDIF}
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 Function IntArrayToString( iarray:pIntegerArray; count:integer):String;
@@ -2805,8 +2844,10 @@ End;
 
 
 FUNCTION  InterpretColorName(const s:string):Integer;
-
 Begin
+{$IFDEF FPC}
+        Result := 0; // RGB for black
+{$ELSE}
 
         Result := {$IFDEF MSWINDOWS}clBlue{$ELSE}$FF0000{$ENDIF};  // default color
         Try
@@ -2832,7 +2873,7 @@ Begin
         Except
            On E:Exception Do DoSimpleMsg('Invalid Color Specification: "' + S + '".', 724);
         End;
-
+{$ENDIF}
 End;
 
 Function MakeNewCktElemName(const oldname:string):string;

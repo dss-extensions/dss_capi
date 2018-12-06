@@ -49,7 +49,7 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      InvControl,
      ExpControl,
      variants,
-     {$IFDEF MSWINDOWS}
+     {$IFNDEF FPC}
      ProgressForm,
      vcl.dialogs,
      {$ENDIF}
@@ -333,7 +333,7 @@ implementation
 
 USES  {Forms,   Controls,}
      SysUtils,
-     {$IFDEF MSWINDOWS}
+     {$IFNDEF FPC}
      Windows,
      SHFolder,
      ScriptEdit,

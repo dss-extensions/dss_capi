@@ -26,7 +26,7 @@ USES
      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
      AutoAdd, EnergyMeter, NamedObject, CktTree, 
-     {$IFDEF MSWINDOWS}Graphics, vcl.dialogs, {$ENDIF}{$IFNDEF FPC}MeTIS_Exec, {$ENDIF}
+     {$IFNDEF FPC}MeTIS_Exec, {$IFDEF MSWINDOWS}Graphics, vcl.dialogs, {$ENDIF} {$ENDIF}
      math, Sparse_Math;
 
 TYPE
@@ -48,7 +48,7 @@ TYPE
 
     public
       BusName: String;
-      {$IFDEF MSWINDOWS}
+      {$IFNDEF FPC}
       AddMarkerColor: Tcolor;
       {$ELSE}
       AddMarkerColor,
@@ -626,13 +626,13 @@ END;
 *           Routine created to empty a recently created folder                 *
 ********************************************************************************}
 procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
-{$IFDEF MSWINDOWS}
+{$IFNDEF FPC}
 var
   SourceLst: string;
   FOS: TSHFileOpStruct;
 {$ENDIF}
 begin
-{$IFDEF MSWINDOWS}
+{$IFNDEF FPC}
   FillChar(FOS, SizeOf(FOS), 0);
   FOS.wFunc := FO_DELETE;
   SourceLst := Directory + '\' + FileMask + #0;
@@ -907,7 +907,7 @@ begin
         if Local_temp <> 0 then
         Begin
           text    :=  stringreplace(File_Struc[FS_Idx], 'Redirect ', '',[rfReplaceAll, rfIgnoreCase]);
-          {$IFDEF MSWINDOWS}
+          {$IFNDEF FPC}
           for FS_Idx1 := 2 to NumCkts do
             CopyFile(PChar(Path + '\' + text), PChar(Path + '\zone_' + inttostr(FS_Idx1) + '\' + text), true);
           {$ENDIF}
@@ -2093,7 +2093,7 @@ constructor TBusMarker.Create;
 begin
   inherited;
   BusName := '';
-  AddMarkerColor := {$IFDEF MSWINDOWS}clBlack{$ELSE}0{$ENDIF};
+  AddMarkerColor := {$IFNDEF FPC}clBlack{$ELSE}0{$ENDIF};
   AddMarkerCode := 4;
   AddMarkerSize := 1;
 end;
