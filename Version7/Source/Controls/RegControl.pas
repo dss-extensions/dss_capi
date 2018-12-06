@@ -611,12 +611,11 @@ Begin
          IF Length(RegulatedBus)=0 Then UsingRegulatedBus := FALSE Else  UsingRegulatedBus := TRUE;
 
          Devindex := GetCktElementIndex(ElementName); // Global FUNCTION
-         if DevIndex = 0 then Begin // Try AutoTrans instead of Transformer
-              TransName := StripClassName(ElementName);
+         if DevIndex = 0 then Begin // Try 'AutoTrans' instead of Transformer
+              TransName      := StripClassName(ElementName);
               NewElementName := 'autotrans.' + TransName;
-              Devindex := GetCktElementIndex(NewElementName);
+              Devindex       := GetCktElementIndex(NewElementName);
               if Devindex>0 then ElementName := NewElementName;
-
          End;
 
          IF   DevIndex>0  THEN
@@ -637,7 +636,7 @@ Begin
                    End;
              End;
 
-             IF  (Comparetext(ControlledElement.DSSClassName, 'transformer') = 0) and
+             IF  (Comparetext(ControlledElement.DSSClassName, 'transformer') = 0) or  // either should work
                  (Comparetext(ControlledElement.DSSClassName, 'autotrans') = 0)
              THEN
                Begin
@@ -1384,7 +1383,9 @@ begin
       Else
         Nphases := ControlledElement.NPhases;
       Nconds := FNphases;
-      IF Comparetext(ControlledElement.DSSClassName, 'transformer') = 0 THEN
+      IF (Comparetext(ControlledElement.DSSClassName, 'transformer') = 0) or   // either should work
+         (Comparetext(ControlledElement.DSSClassName, 'autotrans') = 0 )
+      THEN
       Begin
         // Sets name of i-th terminal's connected bus in RegControl's buslist
         // This value will be used to set the NodeRef array (see Sample function)
