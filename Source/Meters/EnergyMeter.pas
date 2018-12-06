@@ -3303,8 +3303,13 @@ begin
   Integrate(kWh, cPower.re, dkwh, ActorID);
   Integrate(kvarh, cPower.im, dkvarh, ActorID);
   
+	{$IFNDEF FPC} // TODO TEMc
   PeakkW := Max(cPower.re, PeakkW);
   Peakkva := Max(Cabs(cPower), Peakkva);
+	{$ELSE}
+	PeakkW := 0.0;
+	PeakkVA := 0.0;
+	{$ENDIF}
 
   {Get total circuit losses}
    cLosses := ActiveCircuit[ActorID].Losses[ActorID];  // PD Elements except shunts
@@ -3313,7 +3318,11 @@ begin
    Integrate(Losseskwh, cLosses.re, dLosseskwh, ActorID);
    Integrate(Losseskvarh, cLosses.im, dLosseskvarh, ActorID);
    
+	{$IFNDEF FPC} // TODO TEMc
   PeakLosseskW := Max(cLosses.re, PeakLosseskW);
+	{$ELSE}
+	PeakLosseskW := 0.0;
+	{$ENDIF}
 
   FirstSampleAfterReset := FALSE;
   IF This_Meter_DIFileIsOpen then WriteDemandIntervalData(ActorID);

@@ -144,10 +144,10 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      DSSClass, DSSObject, Utilities, Solution,
      EnergyMeter, Generator, LoadShape, Load, PCElement,   CktElement,
      uComplex,  mathutil,  Bus,  SolutionAlgs,
-     {$IFDEF MSWINDOWS}DSSForms,DssPlot,{$ELSE}CmdForms,{$ENDIF} ExecCommands, Executive,
+     {$IFNDEF FPC}DSSForms,DssPlot,{$ELSE}CmdForms,{$ENDIF} ExecCommands, Executive,
      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
      Classes,  CktElementClass, Sensor,  { ExportCIMXML,} NamedObject,
-     {$IFDEF FPC}RegExpr,{$ELSE}RegularExpressionsCore,{$ENDIF} PstCalc,
+     {$IFNDEF FPC}RegularExpressionsCore,{$ELSE}RegExpr,{$ENDIF} PstCalc,
      PDELement, ReduceAlgs;
 
 Var
@@ -3057,9 +3057,7 @@ Var
 Begin
 {$IF not (defined(DLL_ENGINE) or defined(FPC))}
      IF DIFilesAreOpen[ActiveActor] Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
-{$IFDEF MSWINDOWS}
      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;
-{$ENDIF}
      {Defaults}
      NumRegs:=1;
      SetLength(IRegisters, NumRegs);
@@ -3095,13 +3093,10 @@ Begin
          ParamName := Parser[ActiveActor].NextParam;
          Param := Parser[ActiveActor].StrValue;
      End;
-{$IFDEF MSWINDOWS}
      DSSPlotObj.DoDI_Plot(CaseName, CaseYear, iRegisters, PeakDay, MeterName);
-{$ENDIF}
      iRegisters := Nil;
 {$ENDIF}
      Result := 0;
-
 End;
 
 FUNCTION DoCompareCasesCmd:Integer;
@@ -3115,11 +3110,9 @@ Var
     CaseName2, WhichFile:String;
 {$ENDIF}
 Begin
-{$IFNDEF DLL_ENGINE}
+{$IF not (defined(DLL_ENGINE) or defined(FPC))}
      IF DIFilesAreOpen[ActiveActor] Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
-{$IFDEF MSWINDOWS}
      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;
-{$ENDIF}
      CaseName1 := 'base';
      CaseName2 := '';
      Reg := 9;    // Overload EEN
@@ -3155,16 +3148,13 @@ Begin
          ParamName := UpperCase(Parser[ActiveActor].NextParam);
          Param := Parser[ActiveActor].StrValue;
      End;
-{$IFDEF MSWINDOWS}
      DSSPlotObj.DoCompareCases(CaseName1, CaseName2, WhichFile,  Reg);
 {$ENDIF}
-{$ENDIF}
      Result := 0;
-
 End;
 
 FUNCTION DoYearlyCurvesCmd:Integer;
-{$IFNDEF DLL_ENGINE}
+{$IF not (defined(DLL_ENGINE) or defined(FPC))}
 Var
     ParamName, Param:String;
     ParamPointer, i:Integer;
@@ -3176,11 +3166,9 @@ Var
     WhichFile:String;
 {$ENDIF}
 Begin
-{$IFNDEF DLL_ENGINE}
+{$IF not (defined(DLL_ENGINE) or defined(FPC))}
      IF DIFilesAreOpen[ActiveActor] Then EnergyMeterClass[ActiveActor].CloseAllDIFiles(ActiveActor);
-{$IFDEF MSWINDOWS}
      If Not Assigned(DSSPlotObj) Then DSSPlotObj := TDSSPlot.Create;
-{$ENDIF}
 
      Nregs := 1;
      SetLength(iRegisters, Nregs);
@@ -3230,9 +3218,7 @@ Begin
          ParamName := Parser[ActiveActor].NextParam;
          Param := Parser[ActiveActor].StrValue;
      End;
-{$IFDEF MSWINDOWS}
      DSSPlotObj.DoYearlyCurvePlot(CaseNames, WhichFile,  iRegisters);
-{$ENDIF}
      iRegisters := Nil;
      CaseNames.Free;
 {$ENDIF}
@@ -3240,6 +3226,7 @@ Begin
 End;
 
 FUNCTION DoVisualizeCmd:Integer;
+{$IF not defined(FPC)}
 Var
     DevIndex    :integer;
     Param       :String;
@@ -3249,8 +3236,10 @@ Var
     Quantity    :Integer;
     ElemName    :String;
     pElem       :TDSSObject;
+{$ENDIF}
 Begin
      Result := 0;
+{$IF not defined(FPC)}
      // Abort if no circuit or solution
      If not assigned(ActiveCircuit[ActiveActor]) Then
      Begin
@@ -3262,11 +3251,8 @@ Begin
           DoSimpleMsg('The circuit must be solved before you can do this.',24722);
           Exit;
      End;
-{$IFDEF MSWINDOWS}
      Quantity := vizCURRENT;
-{$ELSE}
      Quantity := 1;
-{$ENDIF}
      ElemName := '';
       {Parse rest of command line}
      ParamPointer := 0;
@@ -3310,16 +3296,15 @@ Begin
      Devindex := GetCktElementIndex(ElemName); // Global function
      IF DevIndex > 0 THEN Begin  //  element must already exist
         pElem := ActiveCircuit[ActiveActor].CktElements.Get(DevIndex);
-{$IFDEF MSWINDOWS}
         If pElem is TDSSCktElement Then Begin
            DSSPlotObj.DoVisualizationPlot(TDSSCktElement(pElem), Quantity);
         End Else Begin
           DoSimpleMsg(pElem.Name + ' must be a circuit element type!', 282);   // Wrong type
         End;
-{$ENDIF}
      End Else Begin
         DoSimpleMsg('Requested Circuit Element: "' + ElemName + '" Not Found.',282 ); // Did not find it ..
      End;
+{$ENDIF}
 End;
 
 FUNCTION DoCloseDICmd:Integer;
