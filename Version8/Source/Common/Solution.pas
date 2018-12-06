@@ -51,8 +51,8 @@ USES
     SysUtils,
     {$IFDEF FPC}
     Classes,
-    {$ENDIF}
-    {$IFDEF MSWINDOWS}
+    {$ELSE}
+//    {$IFDEF MSWINDOWS}
     System.Diagnostics,
     System.TimeSpan,
     System.Classes,
@@ -1090,7 +1090,7 @@ Begin
 //      if Solution then
    SnapShotInit(ActorID);
    TotalIterations    := 0;
-  {$IFDEF MSWINDOWS}
+   {$IFNDEF FPC}
    QueryPerformanceCounter(SolveStartTime);
    {$ELSE}
    SolveStartTime := GetTickCount64;
@@ -1123,7 +1123,7 @@ Begin
 {$IFDEF DLL_ENGINE}
    Fire_StepControls;
 {$ENDIF}
-  {$IFDEF MSWINDOWS}
+   {$IFNDEF FPC}
    QueryPerformanceCounter(SolveEndtime);
    {$ELSE}
    SolveEndTime := GetTickCount64;
@@ -1140,7 +1140,7 @@ Begin
    Result := 0;
 
    LoadsNeedUpdating := TRUE;  // Force possible update of loads and generators
-   {$IFDEF MSWINDOWS}
+   {$IFNDEF FPC}
    QueryPerformanceCounter(SolveStartTime);
    {$ELSE}
    SolveStartTime := GetTickCount64;
@@ -1165,7 +1165,7 @@ Begin
        ActiveCircuit[ActorID].IsSolved := TRUE;
        ConvergedFlag := TRUE;
    End;
-  {$IFDEF MSWINDOWS}
+   {$IFNDEF FPC}
    QueryPerformanceCounter(SolveEndtime);
    {$ELSE}
    SolveEndTime := GetTickCount64;
@@ -1668,13 +1668,13 @@ End;
 *           Routine created to empty a recently created folder                 *
 ********************************************************************************}
 procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
-{$IFDEF MSWINDOWS}
+{$IFNDEF FPC}
 var
   SourceLst: string;
   FOS: TSHFileOpStruct;
 {$ENDIF}
 begin
-{$IFDEF MSWINDOWS}
+{$IFNDEF FPC}
   FillChar(FOS, SizeOf(FOS), 0);
   FOS.wFunc := FO_DELETE;
   SourceLst := Directory + '\' + FileMask + #0;
@@ -2376,7 +2376,7 @@ begin
 
 // Update Loop time is called from end of time step cleanup
 // Timer is based on beginning of SolveSnap time
-   {$IFDEF MSWINDOWS}
+   {$IFNDEF FPC}
    QueryPerformanceCounter(LoopEndtime);
    {$ELSE}
    LoopEndTime := GetTickCount64;
@@ -2514,7 +2514,7 @@ End;
 
 procedure TSolver.Execute;
 var
-{$IFDEF MSWINDOWS}
+{$IFNDEF FPC}
   ScriptEd    : TScriptEdit;
 {$ENDIF}
   idx         : Integer;

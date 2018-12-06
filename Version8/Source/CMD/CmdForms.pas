@@ -24,9 +24,9 @@ VAR
    PROCEDURE CreateControlPanel;
    PROCEDURE ExitControlPanel;
    PROCEDURE InitProgressForm;
-   Procedure ProgressCaption(const S:String);
-   Procedure ProgressFormCaption(const S:String);
-   Procedure ProgressHide;
+   Procedure ProgressCaption(const S:String; ActorID:Integer);
+   Procedure ProgressFormCaption(const S:String; ActorID:Integer);
+   Procedure ProgressHide(ActorID:Integer);
    PROCEDURE ShowControlPanel;
    PROCEDURE ShowHelpForm ;
    PROCEDURE ShowAboutBox;
@@ -66,17 +66,17 @@ PROCEDURE ShowPctProgress(Count:Integer);
 Begin
 End;
 
-Procedure ProgressCaption(const S:String);
+Procedure ProgressCaption(const S:String; ActorID:Integer);
 Begin
 	Writeln('Progress: ', S);
 End;
 
-Procedure ProgressFormCaption(const S:String);
+Procedure ProgressFormCaption(const S:String; ActorID:Integer);
 begin
 	Writeln('Progress: ', S);
 End;
 
-Procedure ProgressHide;
+Procedure ProgressHide(ActorID:Integer);
 Begin
 End;
 

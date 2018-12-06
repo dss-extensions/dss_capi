@@ -29,7 +29,7 @@ USES
   ucmatrix,
   ucomplex,
   Spectrum,
-  {$IFDEF MSWINDOWS}
+  {$IFNDEF FPC}
   StdVcl,
   {$ENDIF}
   Loadshape;

@@ -434,14 +434,14 @@ Begin
 
 
                    {Progress meter}
-                   {$IFDEF MSWINDOWS}
+//                   {$IFDEF MSWINDOWS}
                    ProgressCaption( 'AutoAdding Generators', ActorID);
-                   {$ENDIF}
+//                   {$ENDIF}
                    ProgressMax := BusIdxListSize;
                    ProgressCount := 0;
-                   {$IFDEF MSWINDOWS}
+//                   {$IFDEF MSWINDOWS}
                    ProgressFormCaption( Format('Testing %d buses. Please Wait... ',[BusIdxListSize]), ActorID);
-                  {$ENDIF}
+//                  {$ENDIF}
 //                   ShowPctProgress(0, ActorID);
 
 
@@ -540,9 +540,9 @@ Begin
                    // be picked up through the result string of the COM interface
                    GlobalResult := BusList.Get(MinLossBus) +
                                    Format(', %-g',[MaxLossImproveFactor]);
-                   {$IFDEF MSWINDOWS}
+                   //{$IFDEF MSWINDOWS}
                    ProgressHide(ActorID);
-                   {$ENDIF}
+                   //{$ENDIF}
 
                    // note that the command that added the generator can be
                    // picked up from the Command property of the COM interface.
