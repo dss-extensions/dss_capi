@@ -2010,6 +2010,7 @@ Var
     AT         :TcMatrix;
     Yadder     :Complex;
     Rmult      :Double;
+    ZCorrected     :Double;
 {$IFDEF AUTOTRANDEBUG}
    F        :Textfile;
 {$ENDIF}
@@ -2036,9 +2037,15 @@ begin
   // Construct ZBMatrix;
        ZB.Clear;
        ZBase := 1.0/(VABase/Fnphases); // base ohms on 1.0 volt basis
-       FOR i := 1 to Numwindings-1 Do
+       // Adjust specified XSC by SQR(1 + Vcommon/Vseries)
+       ZCorrected := ZBase * SQR(1.0 + Winding^[2].vbase/Winding^[1].Vbase); // Correction factor for Series
+       FOR i := 1 to Numwindings-1 Do Begin
           { convert pu to ohms on one volt base as we go... }
-           ZB.SetElement(i, i, CmulReal(Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i+1].Rpu), Freqmult*puXSC^[i]), ZBase));
+          if i=1 then
+              ZB.SetElement(i, i, CmulReal(Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i+1].Rpu), Freqmult*puXSC^[i]), ZCorrected))
+          Else
+              ZB.SetElement(i, i, CmulReal(Cmplx(Rmult * (Winding^[1].Rpu + Winding^[i+1].Rpu), Freqmult*puXSC^[i]), Zbase));
+       End;
 
        // Off diagonals
        k := NumWindings;
