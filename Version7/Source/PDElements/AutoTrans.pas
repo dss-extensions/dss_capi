@@ -2254,6 +2254,7 @@ begin
     HSrise           := Obj.HSrise;
     pctLoadLoss      := Obj.pctLoadLoss;
     pctNoLoadLoss    := Obj.pctNoLoadLoss;
+    pctImag          := Obj.pctImag;  // Omission corrected 12-14-18
     NormMaxHkVA      := Obj.NormMaxHkVA;
     EmergMaxHkVA     := Obj.EmergMaxHkVA;
     ppm_FloatFactor  := Obj.ppm_FloatFactor;
