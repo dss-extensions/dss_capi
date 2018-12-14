@@ -2234,10 +2234,13 @@ begin
         NumTaps      := Obj.Winding^[i].NumTaps;
       end;
     SetTermRef;
+
+    // Parameters for all windings
     XHL := Obj.XHL;
     XHT := Obj.XHT;
     XLT := Obj.XLT;
     for i := 1 to (NumWindings*(NumWindings-1) div 2) do XSc^[i] := Obj.XSC^[i];
+
     ThermalTimeConst := Obj.ThermalTimeConst;
     n_thermal        := Obj.n_thermal;
     m_thermal        := Obj.m_thermal;
@@ -2245,6 +2248,7 @@ begin
     HSrise           := Obj.HSrise;
     pctLoadLoss      := Obj.pctLoadLoss;
     pctNoLoadLoss    := Obj.pctNoLoadLoss;
+    pctImag          := Obj.pctImag;  // Omission corrected 12-14-18
     NormMaxHkVA      := Obj.NormMaxHkVA;
     EmergMaxHkVA     := Obj.EmergMaxHkVA;
     ppm_FloatFactor  := Obj.ppm_FloatFactor;
