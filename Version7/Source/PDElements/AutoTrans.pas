@@ -496,7 +496,7 @@ Begin
            36: ppm_FloatFactor  := Parser.DblValue * 1.0e-6;
            37: InterpretAllRs(Param);
            38: {XfmrBank := Param};
-           39: {FetchXfmrCode (Param)};    // Do nothing until we define auto code
+           39: FetchXfmrCode (Param);    // Do nothing until we define auto code
            40: XRConst := InterpretYesNo(Param);
            41: HVLeadsLV := InterpretLeadLag(Param);
            42: PropertyValue[45] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
