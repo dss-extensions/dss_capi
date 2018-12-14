@@ -61,14 +61,17 @@ TYPE
    TWinding = class(Tobject)
      Public
         Connection:Integer;
-        KVLL,
+        kVLL,
         VBase,
-        KVA,
+        kVA,
         puTap,
         Rpu,      // on transformer MVABase  (1st winding)
+        Rdcpu,    // for GIC solutions; default to 85% of Rpu
+        RdcOhms,
         Rneut,
         Xneut:    Double;
         Y_PPM:    Double;  // Anti Float reactance adder
+        RdcSpecified : Boolean;
 
         {Tap Changer Data}
         TapIncrement,
@@ -93,7 +96,7 @@ TYPE
         pctImag                :Double;
         XRConst                :Boolean;
 
-        FUNCTION  Get_PresentTap(i: Integer;ActorID: integer): double;
+        FUNCTION  Get_PresentTap(i: Integer; ActorID: integer): double;
         PROCEDURE Set_PresentTap(i: Integer; ActorID: integer; const Value: double);
         FUNCTION  Get_MinTap(i: Integer): Double;
         FUNCTION  Get_MaxTap(i: Integer): Double;
@@ -103,8 +106,9 @@ TYPE
         // CIM accessors
         FUNCTION  Get_NumTaps(i: Integer): Integer;
         FUNCTION  Get_WdgResistance(i: Integer): Double;
+        FUNCTION  Get_WdgRdc(i: Integer): Double;
         FUNCTION  Get_WdgConnection(i: Integer): Integer;
-        FUNCTION  Get_WdgKVA(i: Integer): Double;
+        FUNCTION  Get_WdgkVA(i: Integer): Double;
         FUNCTION  Get_Xsc(i: Integer): Double;
         FUNCTION  Get_WdgRneutral(i: Integer): Double;
         FUNCTION  Get_WdgXneutral(i: Integer): Double;
@@ -118,7 +122,7 @@ TYPE
 
         PROCEDURE FetchXfmrCode(Const Code:String);
 
-        FUNCTION InterpretCoreType(const str:String):Integer;
+
 
       Protected
         NumWindings     :Integer;
@@ -138,8 +142,8 @@ TYPE
 
         Y_Terminal_Freqmult:Double;
 
-        NormMaxHKVA       :Double;
-        EmergMaxHKVA      :Double;
+        NormMaxHkVA       :Double;
+        EmergMaxHkVA      :Double;
         ThermalTimeConst  :Double;  {hr}
         n_thermal         :Double;
         m_thermal         :Double;  {Exponents}
@@ -184,20 +188,22 @@ TYPE
         PROCEDURE GetAllWindingCurrents(CurrBuffer: pComplexArray; ActorID: Integer);  // All Winding currents in complex array
         Function  GetWindingCurrentsResult(ActorID: Integer):String;  // All winding currents in string
 
+
         PROCEDURE MakePosSequence(ActorID : Integer);Override;  // Make a positive Sequence Model
 
-        Property PresentTap[i:Integer;ActorID: integer]:Double read Get_PresentTap write Set_PresentTap;
+        Property PresentTap[i, ActorID:Integer]   :Double read Get_PresentTap write Set_PresentTap;
         Property Mintap[i:Integer]       :Double Read Get_MinTap;
         Property Maxtap[i:Integer]       :Double Read Get_MaxTap;
         Property TapIncrement[i:Integer] :Double Read Get_TapIncrement;
-        Property BaseVoltage[i:Integer]  :Double Read Get_BaseVoltage;  // Winding Vbase
-        Property BasekVLL[i:Integer]     :Double Read Get_BasekVLL;  // Winding Vbase
+        Property BaseVoltage[i:Integer]  :Double Read Get_BaseVoltage;  // Winding VBase
+        Property BasekVLL[i:Integer]     :Double Read Get_BasekVLL;  // Winding VBase
 
         // CIM accessors
         Property NumTaps[i:Integer]       :Integer Read Get_NumTaps;
         Property NumberOfWindings         :Integer Read NumWindings;
         Property WdgResistance[i:Integer] :Double  Read Get_WdgResistance;
-        Property WdgKVA[i:Integer]        :Double  Read Get_WdgKVA;
+        Property WdgRdc[i:Integer]        :Double  Read Get_WdgRdc;
+        Property WdgkVA[i:Integer]        :Double  Read Get_WdgkVA;
         Property WdgConnection[i:Integer] :Integer Read Get_WdgConnection;
         Property WdgRneutral[i:Integer]   :Double  Read Get_WdgRneutral;
         Property WdgXneutral[i:Integer]   :Double  Read Get_WdgXneutral;
@@ -206,8 +212,8 @@ TYPE
         Property XhlVal:Double Read Xhl;
         Property XhtVal:Double Read Xht;
         Property XltVal:Double Read Xlt;
-        Property NormalHkVA: Double Read NormMaxHKVA;
-        Property EmergHkVA: Double Read EmergMaxHKVA;
+        Property NormalHkVA: Double Read NormMaxHkVA;
+        Property EmergHkVA: Double Read EmergMaxHkVA;
         Property thTau: Double Read ThermalTimeConst;
         Property thN: Double Read n_thermal;
         Property thM: Double Read m_thermal;
@@ -228,14 +234,14 @@ VAR
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 IMPLEMENTATION
 
-{$DEFINE NOTRANSDEBUG}    {TRANSDEBUG}
+{$DEFINE NOTRANSDEBUG}  {TRANSDEBUG}
 
 USES    DSSClassDefs, DSSGlobals, Sysutils, Utilities, XfmrCode;
 
 var
    XfmrCodeClass:TXfmrCode;
 
-Const NumPropsThisClass = 46;
+Const NumPropsThisClass = 47;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TTransf.Create;  // Creates superstructure for all Transformer objects
@@ -293,9 +299,9 @@ Begin
      PropertyName[14] := 'kVs';
      PropertyName[15] := 'kVAs';
      PropertyName[16] := 'taps';
-     PropertyName[17] := 'Xhl';
-     PropertyName[18] := 'Xht';
-     PropertyName[19] := 'Xlt';
+     PropertyName[17] := 'XHL';
+     PropertyName[18] := 'XHT';
+     PropertyName[19] := 'XLT';
      PropertyName[20] := 'Xscarray';  // x12 13 14... 23 24.. 34 ..
      PropertyName[21] := 'thermal';
      PropertyName[22] := 'n';
@@ -324,6 +330,8 @@ Begin
      PropertyName[44] := 'LeadLag';
      PropertyName[45] := 'WdgCurrents';
      PropertyName[46] := 'Core';
+     PropertyName[47] := 'RdcOhms';
+
 
      // define Property help values
      PropertyHelp[1] := 'Number of phases this transformer. Default is 3.';
@@ -332,19 +340,21 @@ Begin
    // Winding Definition
      PropertyHelp[3] := 'Set this = to the number of the winding you wish to define.  Then set '+
                     'the values for this winding.  Repeat for each winding.  Alternatively, use '+
-                    'the array collections (buses, kvas, etc.) to define the windings.  Note: '+
+                    'the array collections (buses, kVAs, etc.) to define the windings.  Note: '+
                     'reactances are BETWEEN pairs of windings; they are not the property of a single winding.';
      PropertyHelp[4] := 'Bus connection spec for this winding.';
-     PropertyHelp[5] := 'Connection of this winding {wye*, Delta, LN, LL}. Default is "wye" with the neutral solidly grounded.';
+     PropertyHelp[5] := 'Connection of this winding {wye*, Delta, LN, LL}. Default is "wye" with the neutral solidly grounded. ';
      PropertyHelp[6] := 'For 2-or 3-phase, enter phase-phase kV rating.  Otherwise, kV rating of the actual winding';
-     PropertyHelp[7] := 'Base kVA rating of the winding. Side effect: forces change of max normal and emerg kva ratings.' +
+     PropertyHelp[7] := 'Base kVA rating of the winding. Side effect: forces change of max normal and emerg kVA ratings.' +
                         'If 2-winding transformer, forces other winding to same value. ' +
                         'When winding 1 is defined, all other windings are defaulted to the same rating ' +
                         'and the first two winding resistances are defaulted to the %loadloss value.';
      PropertyHelp[8] := 'Per unit tap that this winding is on.';
      PropertyHelp[9] := 'Percent resistance this winding.  (half of total for a 2-winding).';
-     PropertyHelp[10] := 'Default = -1. Neutral resistance of wye (star)-connected winding in actual ohms.' +
-                         'If entered as a negative value, the neutral is assumed to be open, or floating.';
+     PropertyHelp[10] := 'Default = -1. Neutral resistance of wye (star)-connected winding in actual ohms. ' +
+                         'If entered as a negative value, the neutral is assumed to be open, or floating. ' +
+                         'To solidly ground the neutral, connect the neutral conductor to Node 0 in the Bus property spec for this winding. ' +
+                         'For example: Bus=MyBusName.1.2.3.0, which is generally the default connection.';
      PropertyHelp[11] := 'Neutral reactance of wye(star)-connected winding in actual ohms.  May be + or -.';
 
    // General Data
@@ -361,7 +371,7 @@ Begin
      PropertyHelp[15] := 'Use this to specify the kVA ratings of all windings at once using an array.';
      PropertyHelp[16] := 'Use this to specify the p.u. tap of all windings at once using an array.';
      PropertyHelp[17] := 'Use this to specify the percent reactance, H-L (winding 1 to winding 2).  Use '+
-                         'for 2- or 3-winding transformers. On the kva base of winding 1. See also X12.';
+                         'for 2- or 3-winding transformers. On the kVA base of winding 1. See also X12.';
      PropertyHelp[18] := 'Use this to specify the percent reactance, H-T (winding 1 to winding 3).  Use '+
                          'for 3-winding transformers only. On the kVA base of winding 1. See also X13.';
      PropertyHelp[19] := 'Use this to specify the percent reactance, L-T (winding 2 to winding 3).  Use '+
@@ -392,7 +402,7 @@ Begin
      PropertyHelp[36] := 'Default=1 ppm.  Parts per million of transformer winding VA rating connected to ground to protect against accidentally floating a winding without a reference. ' +
                          'If positive then the effect is adding a very large reactance to ground.  If negative, then a capacitor.';
      PropertyHelp[37] := 'Use this property to specify all the winding %resistances using an array. Example:'+CRLF+CRLF+
-                         'New Transformer.T1 buses="Hibus, lowbus" '+
+                         'New Transformer.T1 buses="Hibus, lowbus" ' +
                          '~ %Rs=(0.2  0.3)';
      PropertyHelp[38] := 'Name of the bank this transformer is part of, for CIM, MultiSpeak, and other interfaces.';
      PropertyHelp[39] := 'Name of a library entry for transformer properties. The named XfmrCode must already be defined.';
@@ -409,6 +419,8 @@ Begin
      PropertyHelp[45] := '(Read only) Makes winding currents available via return on query (? Transformer.TX.WdgCurrents). ' +
                          'Order: Phase 1, Wdg 1, Wdg 2, ..., Phase 2 ...';
      PropertyHelp[46] := '{Shell*|5-leg|3-Leg|1-phase} Core Type. Used for GIC analysis';
+     PropertyHelp[47] := 'Winding dc resistance in OHMS. Useful for GIC analysis. From transformer test report. ' +
+                         'Defaults to 85% of %R property';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -467,7 +479,7 @@ Begin
             3: SetActiveWinding(Parser[ActorID].IntValue);
             4: Setbus(ActiveWinding, param);
             5: InterpretConnection(Param);
-            6: Winding^[ActiveWinding].kvll  := parser[ActorID].Dblvalue;
+            6: Winding^[ActiveWinding].kVLL  := parser[ActorID].Dblvalue;
             7: Winding^[ActiveWinding].kVA   := parser[ActorID].Dblvalue;
             8: Winding^[ActiveWinding].puTap := parser[ActorID].Dblvalue;
             9: Winding^[ActiveWinding].Rpu   := parser[ActorID].Dblvalue * 0.01;  // %R
@@ -508,6 +520,7 @@ Begin
            44: HVLeadsLV := InterpretLeadLag(Param);
            45: PropertyValue[45] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
            46: strCoreType := Param;
+           47: Winding^[ActiveWinding].RdcOhms := Parser[ActorID].DblValue;
          ELSE
            // Inherited properties
               ClassEdit(ActiveTransfObj, ParamPointer - NumPropsThisClass)
@@ -516,7 +529,7 @@ Begin
          {Take care of properties that require some additional work,}
          CASE ParamPointer OF
            1: NConds := Fnphases+1;  // Force redefinition of number of conductors and reallocation of matrices
-          // default all winding kvas to first winding so latter Donot have to be specified
+          // default all winding kVAs to first winding so latter Donot have to be specified
            7:IF (ActiveWinding = 1) THEN
              Begin
                  FOR i := 2 to NumWindings Do Winding^[i].kVA := Winding^[1].kVA;
@@ -542,6 +555,7 @@ Begin
           37: pctLoadLoss := (Winding^[1].Rpu + Winding^[2].Rpu) * 100.0;  // Update
           41..43: XHLChanged := True;
           46: CoreType := InterpretCoreType(Param); // Assign integer number
+          47: Winding^[ActiveWinding].RdcSpecified := TRUE;
          ELSE
          End;
 
@@ -652,6 +666,7 @@ Begin
 
 End;
 
+
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 FUNCTION TTransf.InterpretLeadLag(const S:String):Boolean;
 //  routine expecting all winding bus connections expressed in one array of strings
@@ -660,9 +675,10 @@ Begin
     Result := FALSE;   // default to ANSI 30 Deg Lag if can't understand S
 
     if CompareTextShortest(S, 'lead')=0       then Result := TRUE
-    Else if CompareTextShortest(S, 'euro')=0  then   Result := TRUE;
+    Else if CompareTextShortest(S, 'euro')=0  then Result := TRUE;
 
 End;
+
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 PROCEDURE TTransf.InterpretAllkVRatings(const S:String);
@@ -680,7 +696,7 @@ Begin
            ActiveWinding := i;
            AuxParser.NextParam; // ignore any parameter name  not expecting any
            DataStr := AuxParser.StrValue;
-           IF Length(DataStr) > 0 THEN Winding^[ActiveWinding].KVLL := AuxParser.Dblvalue;
+           IF Length(DataStr) > 0 THEN Winding^[ActiveWinding].kVLL := AuxParser.Dblvalue;
       End;
 
 End;
@@ -701,7 +717,7 @@ Begin
          ActiveWinding := i;
          AuxParser.NextParam; // ignore any parameter name  not expecting any
          DataStr := AuxParser.StrValue;
-         IF Length(DataStr) > 0 THEN Winding^[ActiveWinding].KVA := AuxParser.Dblvalue;
+         IF Length(DataStr) > 0 THEN Winding^[ActiveWinding].kVA := AuxParser.Dblvalue;
       End;
 
 End;
@@ -774,11 +790,13 @@ Begin
        WITH Winding^[i] Do
          Begin
            Connection := OtherTransf.Winding^[i].Connection;
-           kvll       := OtherTransf.Winding^[i].KVLL;
-           Vbase      := OtherTransf.Winding^[i].Vbase;
-           kva        := OtherTransf.Winding^[i].KVA;
+           kVLL       := OtherTransf.Winding^[i].kVLL;
+           VBase      := OtherTransf.Winding^[i].VBase;
+           kVA        := OtherTransf.Winding^[i].kVA;
            puTAP      := OtherTransf.Winding^[i].puTAP;
            Rpu        := OtherTransf.Winding^[i].Rpu;
+           RdcOhms    := OtherTransf.Winding^[i].RdcOhms;
+           RdcSpecified  := OtherTransf.Winding^[i].RdcSpecified;
            RNeut      := OtherTransf.Winding^[i].RNeut;
            Xneut      := OtherTransf.Winding^[i].Xneut;
            // copy the taps
@@ -901,6 +919,8 @@ Begin
   RecalcElementData(ActiveActor);
 End;
 
+
+
 PROCEDURE TTransfObj.SetNumWindings(N:Integer);
 VAR
   i          :Integer;
@@ -964,7 +984,6 @@ VAR
    ihvolt   :Integer;
    VFactor  :Double;
 
-
 Begin
 
   // Determine Delta Direction
@@ -972,7 +991,7 @@ Begin
    // If high voltage is wye, delta lags wye
    If Winding^[1].connection = Winding^[2].connection Then DeltaDirection := 1
    Else Begin
-     If Winding^[1].KVLL >= Winding^[2].KVLL Then iHvolt:=1 else iHVolt := 2;
+     If Winding^[1].kVLL >= Winding^[2].kVLL Then iHvolt:=1 else iHVolt := 2;
      CASE Winding^[iHvolt].Connection of
        0:  If HVLeadsLV then DeltaDirection := -1 Else DeltaDirection := 1;
        1:  If HVLeadsLV then DeltaDirection := 1  Else DeltaDirection := -1;
@@ -1007,33 +1026,45 @@ Begin
     WITH Winding^[i] Do  // Get the actual turns voltage base for each winding
       CASE Connection of
         0:Case Fnphases of   // Wye
-            2,3:VBase := KVLL * InvSQRT3x1000;   // assume 3-phase for 2-phase designation
+            2,3:VBase := kVLL * InvSQRT3x1000;   // assume 3-phase for 2-phase designation
           ELSE
-                VBase := KVLL * 1000.0;
+                VBase := kVLL * 1000.0;
           End;
-        1:      VBase := KVLL * 1000.0;     // delta
+        1:      VBase := kVLL * 1000.0;     // delta
+
       END;
 
-   {Base rating of Winding 1 }
+  {Base rating of Winding 1 }
      VABase := Winding^[1].kVA * 1000.0;
 
+   // Set Rdc parameters for each winding.
+   For i := 1 to NumWindings Do
+     With Winding^[i] Do Begin
+         if RdcSpecified then Rdcpu := RdcOhms/(SQR(VBase)/ VABase)
+         Else Begin
+            Rdcpu := abs(0.85 * Rpu); // use abs in case this resistance comes out negative.
+            RdcOhms := Rdcpu * SQR(VBase)/ VABase;
+         End;
+     End;
+
+ 
      For i := 1 to NumWindings do Winding^[i].ComputeAntiFloatAdder(ppm_FloatFactor, VABase/FNPhases);
 
    { Normal and Emergency terminal current Rating for UE check}
      Vfactor := 1.0;  // ensure initialization
      Case Winding^[1].connection Of
-        0:        VFactor := Winding^[1].vbase*0.001;   // wye
+        0:        VFactor := Winding^[1].VBase * 0.001;   // wye
         1:Case Fnphases of
-             1:   VFactor := Winding^[1].vbase * 0.001;
-             2,3: VFactor := Winding^[1].vbase * 0.001 / SQRT3;
+             1:   VFactor := Winding^[1].VBase * 0.001;
+             2,3: VFactor := Winding^[1].VBase * 0.001 / SQRT3;
              Else
-                  VFactor := Winding^[1].vbase * 0.001 * 0.5 / sin(pi/Fnphases);
+                  VFactor := Winding^[1].VBase * 0.001 * 0.5 / sin(pi/Fnphases);
           End;
      End;
 
-     {Divide per phase kva by voltage to neutral}
-     NormAmps  := NormMaxHKVA  / Fnphases / Vfactor;
-     EmergAmps := EmergMaxHKVA / Fnphases / Vfactor;
+     {Divide per phase kVA by voltage to neutral}
+     NormAmps  := NormMaxHkVA  / Fnphases / Vfactor;
+     EmergAmps := EmergMaxHkVA / Fnphases / Vfactor;
 
      CalcY_Terminal(1.0);   // Calc Y_Terminal at base frequency
 End;
@@ -1057,8 +1088,8 @@ begin
             3:  Begin   // if WDG= was ever used write out arrays ...
                  For i := 12 to 16 Do
                    Write(F, Format(' %s=%s', [PropertyName^[i], GetPropertyValue(i) ]));
-                 For i := 1 to Numwindings do
-                   Write(F, Format(' wdg=%d %sR=%.7g', [i, '%', Winding^[i].Rpu *100.0]));
+                 For i := 1 to Numwindings do With Winding^[i] Do
+                   Write(F, Format(' wdg=%d %sR=%.7g RdcOhms=%.7g', [i, '%', Rpu *100.0, RdcOhms]));
             End;
             4..9: {do Nothing}; // Ignore these properties; use arrays instead
 
@@ -1100,7 +1131,7 @@ Begin
                 1: Begin   // Delta
                             TermRef^[k] := (j-1) * fNconds + i;
                     Inc(k); TermRef^[k] := (j-1) * fNconds + RotatePhases(i);  // connect to next phase in sequence
-                   End
+                   End;
               END; {CASE connection}
           End;
        End;
@@ -1176,10 +1207,11 @@ Begin
                 0: Writeln(f,'~ conn=wye');
                 1: Writeln(f,'~ conn=delta');
             End;
-            Writeln(f,'~ kv=', KVLL:0:2);
-            Writeln(f,'~ kva=', KVA:0:1);
+            Writeln(f,'~ kv=', kVLL:0:2);
+            Writeln(f,'~ kVA=', kVA:0:1);
             Writeln(f,'~ tap=', putap:0:3);
-            Writeln(f,'~ %r=', (Rpu*100.0):0:2);
+            Writeln(f,'~ %R=', (Rpu*100.0):0:2);
+            Writeln(f,Format('~ RdcOhms=%.7g', [Rdcohms]));
             Writeln(f,'~ rneut=', rneut:0:3);
             Writeln(f,'~ xneut=', xneut:0:3);
         End;
@@ -1291,14 +1323,17 @@ Constructor TWinding.Create;
 Begin
      Inherited Create;
      Connection := 0;
-     KVLL       := 12.47;
-     VBase      := kvll/SQRT3*1000.0;
-     KVA        := 1000.0;
+     kVLL       := 12.47;
+     VBase      := kVLL/SQRT3*1000.0;
+     kVA        := 1000.0;
      puTap      := 1.0;
      Rpu        := 0.002;
+     Rdcpu      := Rpu * 0.85;  // default value
+     RdcOhms    := Sqr(kVLL)/ (kVA/1000.0) * Rdcpu;
+     RdcSpecified := FALSE;
      Rneut      := -1.0;    // default to open - make user specify connection
      Xneut      := 0.0;
-     ComputeAntiFloatAdder(1.0e-6, KVA/3.0/1000.0);     //  1 PPM
+     ComputeAntiFloatAdder(1.0e-6, kVA/3.0/1000.0);     //  1 PPM
 
      TapIncrement := 0.00625;
      NumTaps      := 32;
@@ -1312,7 +1347,7 @@ Begin
     Inherited Destroy;
 End;
 
-FUNCTION TTransfObj.Get_PresentTap(i: Integer;ActorID: integer): double;
+FUNCTION TTransfObj.Get_PresentTap(i: Integer; ActorID: integer): double;
 Begin
      IF (i > 0) and (i <= NumWindings)
          THEN Result := Winding^[i].puTap
@@ -1325,7 +1360,7 @@ Var
    TempVal :Double;
 
 Begin
-     IF (i > 0) and (i <= NumWindings) THEN
+     IF (i > 0) and (i <= NumWindings) THEN 
        WITH Winding^[i] Do Begin
            {Range Checking}
            TempVal := Value;
@@ -1347,10 +1382,17 @@ Begin
      ELSE Result := 0.0;
 end;
 
-FUNCTION TTransfObj.Get_WdgKVA(i: Integer): Double;
+FUNCTION TTransfObj.Get_WdgRdc(i: Integer): Double;
 Begin
      IF (i > 0) and (i <= NumWindings)
-     THEN Result := Winding^[i].KVA
+     THEN Result := Winding^[i].Rdcohms
+     ELSE Result := 0.0;
+end;
+
+FUNCTION TTransfObj.Get_WdgkVA(i: Integer): Double;
+Begin
+     IF (i > 0) and (i <= NumWindings)
+     THEN Result := Winding^[i].kVA
      ELSE Result := 0.0;
 end;
 
@@ -1384,6 +1426,8 @@ Begin
   THEN Result := XSC^[i]
   ELSE Result := 0.0;
 end;
+
+
 
 FUNCTION TTransfObj.Get_WdgConnection(i: Integer): Integer;
 Begin
@@ -1447,8 +1491,10 @@ Begin
      ITerm_NL := Allocmem(SizeOf(Complex)*2*NumWindings);
 
      {Load up Vterminal - already allocated for all cktelements}
-     WITH ActiveCircuit[ActorID].Solution DO
-        FOR i := 1 TO Yorder DO  Vterminal^[i] := NodeV^[NodeRef^[i]];
+      WITH ActiveCircuit[ActorID].Solution DO
+       if Assigned (NodeV) then
+            FOR i := 1 TO Yorder DO  Vterminal^[i] := NodeV^[NodeRef^[i]]
+       Else FOR i := 1 TO Yorder DO  Vterminal^[i] := CZERO;
 
 
      k := 0;
@@ -1543,16 +1589,16 @@ Begin
 
      {return Zero if winding number improperly specified}
      If (iWind<1) OR (iWind > NumWindings) THEN  Begin
-          FOR i := 1 to fNconds DO VBuffer^[i] := CZERO;
+          FOR i := 1 to FNconds DO VBuffer^[i] := CZERO;
           Exit;
      End;
 
      {Load up VTerminal - already allocated for all cktelements}
      WITH ActiveCircuit[ActorID].Solution DO
      FOR i := 1 TO Yorder DO  Vterminal^[i] := NodeV^[NodeRef^[i]];
-      
 
-     k := (iWind-1)*fNconds;    // Offset for winding
+
+     k := (iWind-1)*FNconds;    // Offset for winding
      NeutTerm := Fnphases+k+1;
      FOR i := 1 to Fnphases Do
          CASE Winding^[iWind].Connection OF
@@ -1577,8 +1623,8 @@ end;
 FUNCTION TTransfObj.Get_BaseVoltage(i: Integer): Double;
 begin
      If   (i<1) OR (i > NumWindings)
-     THEN Result := Winding^[1].vbase
-     ELSE Result := Winding^[i].vbase;
+     THEN Result := Winding^[1].VBase
+     ELSE Result := Winding^[i].VBase;
 end;
 
 {============================== GetLosses Override ===============================}
@@ -1594,7 +1640,7 @@ begin
   TotalLosses := Losses[ActorID];   // Side effect: computes Iterminal
 
   {Compute No load losses in Yprim_Shunt}
-  cTempIterminal := AllocMem(Sizeof(cTempIterminal^[1])* Yorder);
+  cTempIterminal := AllocMem(Sizeof(Complex)* Yorder);
   ComputeVterminal(ActorID);
   Yprim_Shunt.MVmult(cTempIterminal, Vterminal) ;
   {No Load Losses are sum of all powers coming into YPrim_Shunt from each terminal}
@@ -1631,8 +1677,8 @@ begin
                    1: Result := 'Delta ';
                ELSE
                END;
-            6: Result := Format('%.7g',[Winding^[ActiveWinding].KVLL]);
-            7: Result := Format('%.7g',[Winding^[ActiveWinding].KVA]);
+            6: Result := Format('%.7g',[Winding^[ActiveWinding].kVLL]);
+            7: Result := Format('%.7g',[Winding^[ActiveWinding].kVA]);
             8: Result := Format('%.7g',[Winding^[ActiveWinding].puTap]);
             9: Result := Format('%.7g',[Winding^[ActiveWinding].Rpu * 100.0]);   // %R
            10: Result := Format('%.7g',[Winding^[ActiveWinding].Rneut]);
@@ -1645,7 +1691,7 @@ begin
                      1: Result := Result + 'delta, ';
                  ELSE
                  END;
-           14: FOR i := 1 to NumWindings Do Result := Result + Format('%.7g, ',[Winding^[i].KVLL]);
+           14: FOR i := 1 to NumWindings Do Result := Result + Format('%.7g, ',[Winding^[i].kVLL]);
            15: FOR i := 1 to NumWindings Do Result := Result + Format('%.7g, ',[Winding^[i].kVA]);
            16: FOR i := 1 to NumWindings Do Result := Result + Format('%.7g, ',[Winding^[i].puTap]);// InterpretAllTaps(Param);
            17: Result := Format('%.7g', [XHL * 100.0]);
@@ -1654,8 +1700,8 @@ begin
            20: FOR i := 1 to (NumWindings-1)*NumWindings div 2 Do Result := Result + Format('%-g, ',[ Xsc^[i]*100.0]);// Parser.ParseAsVector(((NumWindings - 1)*NumWindings div 2), Xsc);
            26: Result := Format('%.7g',[pctLoadLoss]);
            27: Result := Format('%.7g',[pctNoLoadLoss]);
-           28: Result := Format('%.7g',[NormMaxHkva]);
-           29: Result := Format('%.7g',[EmergMaxHkva]);
+           28: Result := Format('%.7g',[NormMaxHkVA]);
+           29: Result := Format('%.7g',[EmergMaxHkVA]);
            31: Result := Format('%.7g',[Winding^[ActiveWinding].MaxTap]);
            32: Result := Format('%.7g',[Winding^[ActiveWinding].MinTap]);
            33: Result := Format('%-d',[Winding^[ActiveWinding].NumTaps]);
@@ -1674,6 +1720,7 @@ begin
                    3: Result := '3-leg';
                    5: Result := '5-Leg';
                End;
+           47: Result := Format('%.7g',[Winding^[ActiveWinding].RdcOhms]);
 
         ELSE
           Result := Inherited GetPropertyValue(index);
@@ -1744,6 +1791,8 @@ begin
      PropertyValue[44] := 'Lag';
      PropertyValue[45] := '0';
      PropertyValue[46] := 'shell';
+     PropertyValue[47] := '26.4';  // ohms
+
 
   inherited  InitPropertyValues(NumPropsThisClass);
 
@@ -1758,16 +1807,6 @@ begin
 
 end;
 
-function TTransfObj.InterpretCoreType(const str: String): Integer;
-begin
-     Case str[1] of
-          '1':Result := 1;  // 1-phase
-          '3':Result := 3;  // 3-Leg
-          '5':Result := 5;  // 5-Leg
-     Else
-         Result := 0; // default to shell
-     End;
-end;
 
 function TTransfObj.RotatePhases(iPhs: integer): Integer;
 // For Delta connections or Line-Line voltages
@@ -1831,7 +1870,7 @@ begin
 
    For i := 1 to NumWindings Do
      With Winding^[i] Do
-        S := S + Format(' %-.5g',[KVA/FNPhases]);
+        S := S + Format(' %-.5g',[kVA/FNPhases]);
    S := S + ')';
 
    S := S + ' NormHkVA='+Format(' %-.5g %-.5g',[NormMaxHkVA/FNPhases, EmergMaxHkVA/FNPhases]);
@@ -1907,20 +1946,17 @@ begin
   end;
 end;
 
-
-
-
 function TTransfObj.Get_BasekVLL(i: Integer): Double;
 begin
-        Result := Winding^[i].KVLL;
+        Result := Winding^[i].kVLL;
 end;
+
 
 procedure TTransfObj.GICBuildYTerminal;
 // Build YTerminal considering on resistance and no coupling to other winding.
 
 Var
    i, j, idx :Integer;
-   BaseZ  :Double;
    yR     :Complex;
    F      :TextFile;
    Yadder :Complex;
@@ -1931,8 +1967,8 @@ begin
      Y_Term_NL.Clear;
 
      For i := 1 to NumWindings do  Begin
-         BaseZ :=SQR( Winding^[i].kVLL) / (Winding^[i].kVA/1000.0) ;
-         yR := Cmplx(1.0/(Winding^[i].Rpu * BaseZ), 0.0); // convert to Siemens
+         {Use Rdc to build GIC model}
+         yR := Cmplx(1.0/(Winding^[i].Rdcohms), 0.0); // convert to Siemens
          With Y_Term Do Begin
              idx := 2*i-1;
              SetElement(idx,   idx,   yR);
@@ -2164,6 +2200,7 @@ begin
    End;
 
      Y_Terminal_FreqMult := Freqmult;
+
 end;
 
 PROCEDURE TTransfObj.FetchXfmrCode(Const Code:String);
@@ -2183,11 +2220,13 @@ begin
     for i := 1 to NumWindings do
       with Winding^[i] do begin
         Connection   := Obj.Winding^[i].Connection;
-        KVLL         := Obj.Winding^[i].kvll;
-        Vbase        := Obj.Winding^[i].Vbase;
-        KVA          := Obj.Winding^[i].kva;
+        kVLL         := Obj.Winding^[i].kVLL;
+        VBase        := Obj.Winding^[i].VBase;
+        kVA          := Obj.Winding^[i].kVA;
         puTAP        := Obj.Winding^[i].puTAP;
         Rpu          := Obj.Winding^[i].Rpu;
+        Rdcohms      := Obj.Winding^[i].Rdcohms;
+        RdcSpecified := Obj.Winding^[i].RdcSpecified;
         RNeut        := Obj.Winding^[i].RNeut;
         Xneut        := Obj.Winding^[i].Xneut;
         TapIncrement := Obj.Winding^[i].TapIncrement;
@@ -2196,10 +2235,13 @@ begin
         NumTaps      := Obj.Winding^[i].NumTaps;
       end;
     SetTermRef;
+
+    // Parameters for all windings
     XHL := Obj.XHL;
     XHT := Obj.XHT;
     XLT := Obj.XLT;
     for i := 1 to (NumWindings*(NumWindings-1) div 2) do XSc^[i] := Obj.XSC^[i];
+
     ThermalTimeConst := Obj.ThermalTimeConst;
     n_thermal        := Obj.n_thermal;
     m_thermal        := Obj.m_thermal;
@@ -2207,6 +2249,7 @@ begin
     HSrise           := Obj.HSrise;
     pctLoadLoss      := Obj.pctLoadLoss;
     pctNoLoadLoss    := Obj.pctNoLoadLoss;
+    pctImag          := Obj.pctImag;  // Omission corrected 12-14-18
     NormMaxHkVA      := Obj.NormMaxHkVA;
     EmergMaxHkVA     := Obj.EmergMaxHkVA;
     ppm_FloatFactor  := Obj.ppm_FloatFactor;

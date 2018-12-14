@@ -54,6 +54,7 @@ FUNCTION  InterpretEarthModel(const s:string):Integer;
 FUNCTION  InterpretColorName(const s:string):Integer;
 FUNCTION  InterpretComplex(const s:String):Complex;
 FUNCTION  ConstructElemName(const Param:string):string;
+FUNCTION  InterpretCoreType(const str:String):Integer;
 
 FUNCTION GetSolutionModeID:String;
 FUNCTION GetSolutionModeIDName(idx:Integer):String;
@@ -142,6 +143,7 @@ Procedure GoForwardAndRephase(FromLine:TPDElement; const PhaseString, EditStr, S
 Procedure MakeDistributedGenerators(kW, PF:double; How:String; Skip:Integer; Fname:String; DoGenerators:Boolean);
 
 Procedure Obfuscate;
+
 
 {Feeder Utilities} // not currently used
 Procedure EnableFeeders;
@@ -465,7 +467,7 @@ Begin
       'o': Result := CONTROLSOFF;
       'e': Result := EVENTDRIVEN;    // "event"
       't': Result := TIMEDRIVEN;     // "time"
-      'm': Result := MULTIRATE;     // "time"
+      'm': Result := MULTIRATE;     // "MultiRate"
     ELSE
        Result := CTRLSTATIC;
     End;
@@ -574,7 +576,7 @@ Begin
 
     If CompareText( SLC, 'ne')=0
     Then  Result := NEWTONSOLVE
-    ELSE  Result := NORMALSOLVE
+    ELSE  Result := NORMALSOLVE;
 
 End;
 
@@ -1041,6 +1043,17 @@ Begin
        End;
 
 End;
+
+FUNCTION InterpretCoreType(const str: String): Integer;
+begin
+     Case str[1] of
+          '1':Result := 1;  // 1-phase
+          '3':Result := 3;  // 3-Leg
+          '5':Result := 5;  // 5-Leg
+     Else
+         Result := 0; // default to shell
+     End;
+end;
 
 //----------------------------------------------------------------------------
 PROCEDURE ParseObjectClassandName(const FullObjName:String; Var ClassName, ObjName:String);
