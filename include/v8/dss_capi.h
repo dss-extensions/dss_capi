@@ -1104,12 +1104,12 @@ extern "C" {
     /*
     For PCElement, get the value of a variable by name. If Code>0 Then no variable by this name or not a PCelement.
     */
-    DSS_CAPI_V8_DLL double CktElement_Get_Variable(char* MyVarName, int32_t Code);
+    DSS_CAPI_V8_DLL double CktElement_Get_Variable(char* MyVarName, int32_t *Code);
 
     /*
     For PCElement, get the value of a variable by integer index.
     */
-    DSS_CAPI_V8_DLL double CktElement_Get_Variablei(int32_t Idx, int32_t Code);
+    DSS_CAPI_V8_DLL double CktElement_Get_Variablei(int32_t Idx, int32_t *Code);
 
     /*
     Array of integer containing the node numbers (representing phases, for example) for each conductor of each terminal.
