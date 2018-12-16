@@ -964,7 +964,7 @@ initialization
    {$IFNDEF FPC}
    DSS_Viz_installed:= CheckDSSVisualizationTool; // DSS visualization tool (flag of existance)
    {$ENDIF}
-{$IFNDEF DSS_CAPI}  
+{$IFDEF DSS_CAPI}
    DSS_CAPI_INFO_SPARSE_COND := (GetEnvironmentVariable('DSS_CAPI_INFO_SPARSE_COND') = '1');
 {$ENDIF}
 
