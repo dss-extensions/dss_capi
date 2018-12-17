@@ -49,7 +49,11 @@ TYPE
     public
       BusName: String;
       {$IFNDEF FPC}
-      AddMarkerColor: Tcolor;
+        {$IFDEF MSWINDOWS}
+        AddMarkerColor: Tcolor;
+        {$ELSE}
+        AddMarkerColor,
+        {$ENDIF}
       {$ELSE}
       AddMarkerColor,
       {$ENDIF}
@@ -2093,7 +2097,7 @@ constructor TBusMarker.Create;
 begin
   inherited;
   BusName := '';
-  AddMarkerColor := {$IFNDEF FPC}clBlack{$ELSE}0{$ENDIF};
+  AddMarkerColor := {$IFNDEF FPC}{$IFDEF MSWINDOWS}clBlack{$ELSE}0{$ENDIF}{$ELSE}0{$ENDIF};
   AddMarkerCode := 4;
   AddMarkerSize := 1;
 end;
