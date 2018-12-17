@@ -335,7 +335,9 @@ USES  {Forms,   Controls,}
      SysUtils,
      {$IFNDEF FPC}
      Windows,
+     {$IFDEF MSWINDOWS}
      SHFolder,
+     {$ENDIF}
      ScriptEdit,
      DSSForms,
      Parallel_Lib,

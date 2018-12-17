@@ -165,11 +165,11 @@ BEGIN
 {$IFDEF FPC}
         StrCopy(Title1,pAnsiChar(Title));
 {$ELSE}
-    {$IFDEF MSWINDOWS}
+//    {$IFDEF MSWINDOWS}
          sysutils.StrCopy(Title1,pAnsichar(Title));
-    {$ELSE}
-         sysutils.StrCopy(Title1,pWidechar(Title));
-    {$ENDIF}
+//    {$ELSE}
+//         sysutils.StrCopy(Title1,pWidechar(Title));
+//    {$ENDIF}
 {$ENDIF}
          Title2[0] := #0;
          Title3[0] := #0;
