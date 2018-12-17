@@ -136,53 +136,7 @@ FUNCTION GetMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;
 
 
 Implementation
-{
-procedure Create_KLU;
-var
-  Local_Cmd : String;
-Begin
-  Local_Cmd := 'KLUSolve.dll';
-  if ActiveActor <> 1 then
-  Begin
-    CopyFile(PChar(DSSDirectory + 'KLUSolve.dll'), PChar(DSSDirectory + 'KLUSolve' + inttostr(ActiveActor) + '.dll'), true);
-    Local_Cmd := 'KLUSolve' + inttostr(ActiveActor) +'.dll';
-  End;
-  ActorKLU[ActiveActor]             := LoadLibrary(pchar(DSSDirectory + Local_cmd));
-  @NewSparseSet[ActiveActor]        := GetProcAddress(ActorKLU[ActiveActor],'NewSparseSet') ;
-  @DeleteSparseSet[ActiveActor]     := GetProcAddress(ActorKLU[ActiveActor],'DeleteSparseSet') ;
-  @SolveSparseSet[ActiveActor]      := GetProcAddress(ActorKLU[ActiveActor],'SolveSparseSet') ;
-  @ZeroSparseSet[ActiveActor]       := GetProcAddress(ActorKLU[ActiveActor],'ZeroSparseSet') ;
-  @FactorSparseMatrix[ActiveActor]  := GetProcAddress(ActorKLU[ActiveActor],'FactorSparseMatrix') ;
-  @GetSize[ActiveActor]             := GetProcAddress(ActorKLU[ActiveActor],'GetSize') ;
-  @GetFlops[ActiveActor]            := GetProcAddress(ActorKLU[ActiveActor],'GetFlops') ;
-  @GetNNZ[ActiveActor]              := GetProcAddress(ActorKLU[ActiveActor],'GetNNZ') ;
-  @GetSparseNNZ[ActiveActor]        := GetProcAddress(ActorKLU[ActiveActor],'GetSparseNNZ') ;
-  @GetSingularCol[ActiveActor]      := GetProcAddress(ActorKLU[ActiveActor],'GetSingularCol') ;
-  @GetRGrowth[ActiveActor]          := GetProcAddress(ActorKLU[ActiveActor],'GetRGrowth') ;
-  @GetRCond[ActiveActor]            := GetProcAddress(ActorKLU[ActiveActor],'GetRCond') ;
-  @GetCondEst[ActiveActor]          := GetProcAddress(ActorKLU[ActiveActor],'GetCondEst') ;
-  @AddPrimitiveMatrix[ActiveActor]  := GetProcAddress(ActorKLU[ActiveActor],'AddPrimitiveMatrix') ;
-  @SetLogFile[ActiveActor]          := GetProcAddress(ActorKLU[ActiveActor],'SetLogFile') ;
-  @GetCompressedMatrix[ActiveActor] := GetProcAddress(ActorKLU[ActiveActor],'GetCompressedMatrix') ;
-  @GetTripletMatrix[ActiveActor]    := GetProcAddress(ActorKLU[ActiveActor],'GetTripletMatrix') ;
-  @FindIslands[ActiveActor]         := GetProcAddress(ActorKLU[ActiveActor],'FindIslands') ;
-  @AddMatrixElement[ActiveActor]    := GetProcAddress(ActorKLU[ActiveActor],'AddMatrixElement') ;
-  @GetMatrixElement[ActiveActor]    := GetProcAddress(ActorKLU[ActiveActor],'GetMatrixElement') ;
-End;
 
-procedure DestroyAll_KLU;
-var
-  idx : Integer;
-Begin
-  for idx := 1 to NumOfActors do
-     freelibrary(ActorKLU[idx]);
-  if NumOfActors  > 1 then
-  Begin
-    for idx := 2 to NumOfActors do
-      deletefile(pchar(DSSDirectory + 'KLUSolve' + inttostr(idx) +'.dll'));
-  End;
-End;
-}
 initialization
 
   IsMultiThread :=  True;
