@@ -37,7 +37,7 @@ Begin
 
       ConnectHelp[ 1] := 'Address is a string containing the IP address of a particular system with which OpenDSS should form a connection';
       ConnectHelp[ 2] := 'Port is the ID of the desired server connection:'+ CRLF +
-                      '47625 = DSS Visualization Tool';
+                      '47625 = OpenDSS Viewer';
 End;
 
 FUNCTION DoConnectCmd:Integer;
