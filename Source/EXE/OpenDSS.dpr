@@ -185,13 +185,17 @@ uses
   ESPVLControl in '..\Controls\ESPVLControl.pas',
   {$IFDEF MSWINDOWS}
   TCP_IP in '..\TCP_IP\TCP_IP.pas',
-  {$ENDIF}
+  {$ENDIF }
   ConnectOptions in '..\Executive\ConnectOptions.pas',
   Diakoptics in '..\Common\Diakoptics.pas',
   Sparse_Math in '..\Common\Sparse_Math.pas',
   MeTIS_Exec in '..\Common\MeTIS_Exec.pas',
   AutoTrans in '..\PDElements\AutoTrans.pas',
-  GICsource in '..\PCElements\GICsource.pas';
+  GICsource in '..\PCElements\GICsource.pas',
+  Generic5OrderMach in '..\PCElements\Generic5OrderMach.pas',
+  fMonitor in '..\Meters\fMonitor.pas',
+  LD_fm_infos in '..\Meters\LD_fm_infos.pas',
+  VLNodeVars in '..\Meters\VLNodeVars.pas';
 
 {$R *.RES}
 
