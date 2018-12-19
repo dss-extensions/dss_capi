@@ -130,6 +130,10 @@ TYPE
           MeterElements,
           Sensors,
           Monitors,
+          //by dahei
+          FMonitors,
+          //Generic5OrderMach,
+          //
           EnergyMeters,
           Generators,
           StorageElements,
@@ -390,6 +394,9 @@ BEGIN
      Sources         := TPointerList.Create(10);
      MeterElements   := TPointerList.Create(20);
      Monitors        := TPointerList.Create(20);
+     {by Dahei}
+     FMonitors        := TPointerList.Create(20);
+     {}
      EnergyMeters    := TPointerList.Create(5);
      Sensors         := TPointerList.Create(5);
      Generators      := TPointerList.Create(5);
@@ -610,6 +617,9 @@ BEGIN
      Lines.Free;
      ShuntCapacitors.Free;
      Reactors.Free;
+     {by Dahei}
+     FMonitors.Free;
+     {}
      Reclosers.Free;
      Relays.Free;
      Fuses.Free;
@@ -1446,6 +1456,7 @@ BEGIN
        RELAY_CONTROL    :Relays.Add(ActiveCktElement);
        FUSE_CONTROL     :Fuses.Add(ActiveCktElement);
        RECLOSER_CONTROL :Reclosers.Add(ActiveCktElement);
+       FMON_ELEMENT     :FMonitors.Add(ActiveCktElement);
 
        { Keep Lines, Transformer, and Lines and Faults in PDElements and separate lists
          so we can find them quickly.}
