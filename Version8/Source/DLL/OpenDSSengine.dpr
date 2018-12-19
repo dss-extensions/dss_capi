@@ -1,7 +1,7 @@
 library OpenDSSengine;
 
 { ----------------------------------------------------------
-  Copyright (c) 2008-2016, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 
@@ -221,7 +221,11 @@ uses
   Sparse_Math in '..\Common\Sparse_Math.pas',
   MeTIS_Exec in '..\Common\MeTIS_Exec.pas',
   GICsource in '..\PCElements\GICsource.pas',
-  AutoTrans in '..\PDElements\AutoTrans.pas';
+  AutoTrans in '..\PDElements\AutoTrans.pas',
+  fMonitor in '..\Meters\fMonitor.pas',
+  LD_fm_infos in '..\Meters\LD_fm_infos.pas',
+  VLNodeVars in '..\Meters\VLNodeVars.pas',
+  Generic5OrderMach in '..\PCElements\Generic5OrderMach.pas';
 
 exports
   DllGetClassObject,
