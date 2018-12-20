@@ -149,7 +149,8 @@ Begin
       PlotHelp[22] := 'PUKM | 120KFT, default is PUKM' + CRLF +
                       'PUKM = per-unit voltage vs. distance in km' + CRLF +
                       '120KFT = voltage on 120-V base vs. distance in kft.';
-      PlotHelp[23] := 'Plot identifier for dynamic update of a scatter plot in the OpenDSS Viewer. When multiple "plot scatter" commands are executed with the same PlotID, the same figure will be updated with the most recent simulation results.' +CRLF+CRLF+
+      PlotHelp[23] := 'Plot identifier for dynamic updates of "profile" and "scatter" plots in the OpenDSS Viewer (See "plot type" for more details).' +
+                      'When multiple "plot" commands are executed with the same PlotID, the same figure will be updated with the most recent simulation results.' +CRLF+CRLF+
                       'This identifier could be declared as an integer number or a string without spaces.'+CRLF+CRLF+
                       'Example:'+CRLF+CRLF+
                       'set OpenDSSViewer=true ! OpenDSS Viewer enabled' + CRLF +
