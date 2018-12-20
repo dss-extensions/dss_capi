@@ -1322,7 +1322,7 @@ BEGIN
                   Qnew[k] := sign(QNew[k])*0.99*PVSys.kvarLimit;
                   FHitkvarLimit[k] := True;
                 end;
-
+              QTemp2 := Qnew[k];
               //Convert output from CalcVoltWatt_pu to kW
               PVSys.VWmode  := TRUE;
               PVSys.VWYAxis := FVoltwattYAxis;
@@ -1391,7 +1391,6 @@ BEGIN
                         end;
                 end;
 
-              PTemp := PVSys.PresentkW;
               // if the desired kW and desired kvar exceed the kva rating of the PVSystem's inverter then...
               PVSys.SetNominalPVSystemOuput(ActorID);
               PTemp := PVSys.PresentkW;
