@@ -291,7 +291,6 @@ Begin
   TRY
   If FileExists(FileNm) Then
   Begin
-{$IFDEF MSWINDOWS}
       retval := ShellExecute (0, Nil, PChar(encloseQuotes(DefaultEditor)), PChar(encloseQuotes(FileNm)), Nil, SW_SHOW);
       SetLastResultFile( FileNm);
 
@@ -302,7 +301,6 @@ Begin
                                             +CRLF+'Did you set complete path name?', 702);
           ERROR_PATH_NOT_FOUND: DoSimpleMsg('Path for Editor "'+DefaultEditor+'" Not Found.', 703);
       End;
-{$ENDIF}
   End;
   EXCEPT
       On E: Exception DO
@@ -318,9 +316,7 @@ Var Handle:Word;
 Begin
   TRY
       Handle := 0;
-{$IFDEF MSWINDOWS}
       ShellExecute(Handle, 'open', PChar('cmd.exe'), PChar(CmdString), nil, SW_SHOW);
-{$ENDIF}
   EXCEPT
       On E: Exception DO
         DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"',[E.Message, CmdString]), 704);

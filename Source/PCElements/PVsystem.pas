@@ -69,7 +69,7 @@ TYPE
         NumPhases       :Integer;   {Number of phases}
         NumConductors   :Integer;{Total Number of conductors (wye-connected will have 4)}
         Conn            :Integer;   // 0 = wye; 1 = Delta
-
+        P_Priority      :Boolean;  // default False // added 10/30/2018
 
    End;
 
@@ -307,7 +307,7 @@ TYPE
         Property kVARating    :Double  Read PVSystemVars.FkVARating      Write Set_kVARating;
         Property Pmpp         :Double  read PVSystemVars.FPmpp;
         Property puPmpp       :Double  read PVSystemVars.FpuPmpp         Write Set_puPmpp;
-        Property Varmode      :Integer read Get_Varmode     Write Set_Varmode;  // 0=constat PF; 1=kvar specified
+        Property Varmode      :Integer read Get_Varmode     Write Set_Varmode;  // 0=constant PF; 1=kvar specified
         Property VWmode       :Boolean read Get_VWmode      Write Set_VWmode;
         Property VWYAxis      :Integer read Get_VWYAxis     Write Set_VWYAxis;
         Property InverterON   :Boolean read Get_InverterON  Write Set_InverterON;
@@ -373,8 +373,9 @@ Const
     propVarFollowInverter      = 33;
     propkvarLimit    = 34;
     propDutyStart   = 35;
+    propPpriority   = 36;
 
-    NumPropsThisClass = 35; // Make this agree with the last property constant
+    NumPropsThisClass = 36; // Make this agree with the last property constant
 
 VAR
 
@@ -560,6 +561,8 @@ Begin
                               'Un-signed numerical variable Defaults to kVA rating of the inverter.   Indicates the maximum reactive power generation/absorption (in kvar) for the PVSystem (as an un-signed value).');
      AddProperty('DutyStart', propDutyStart,
         'Starting time offset [hours] into the duty cycle shape for this PVSystem, defaults to 0');
+     AddProperty('WattPriority', propPPriority,
+        '{Yes/No*/True/False} Set inverter to watt priority instead of the default var priority');
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -735,9 +738,9 @@ Begin
                propLimited      : CurrentLimited := InterpretYesNo(Param);
                propVarFollowInverter
                                 : FVarFollowInverter := InterpretYesNo(Param);
-               propkvarLimit      : PVSystemVars.Fkvarlimit     := Abs(Parser[ActorID].DblValue);
-               propDutyStart: DutyStart := Parser[ActorID].DblValue;
-
+               propkvarLimit    : PVSystemVars.Fkvarlimit     := Abs(Parser[ActorID].DblValue);
+               propDutyStart    : DutyStart := Parser[ActorID].DblValue;
+               propPPriority    : PVSystemVars.P_priority := InterpretYesNo(Param);  // set watt priority flag
 
 
 
@@ -992,6 +995,7 @@ Begin
          FpuPmpp       := 1.0;    // full on
          Vreg := 1.0;
          Fkvarlimit      := FkVArating;
+         P_Priority    := FALSE;    // This is a change from older versions
      End;
 
      FpctCutIn         := 20.0;
@@ -1078,6 +1082,7 @@ Begin
      PropertyValue[propBalanced]  := 'NO';
      PropertyValue[propLimited]   := 'NO';
      PropertyValue[propkvarLimit]       := Format('%-g', [Fkvarlimit]);
+     PropertyValue[propPpriority] := 'NO'
      
    End;
 
@@ -1517,17 +1522,36 @@ Begin
       if (FInverterON = FALSE) and (FVarFollowInverter = TRUE) then kvar_out := 0.0;
 
 
-      // Limit kvar so that kVA of inverter is not exceeded
+      // Limit kvar and kW so that kVA of inverter is not exceeded
        kVA_Gen := Sqrt(Sqr(kW_out) + Sqr(kvar_out));
        If kVA_Gen > FkVArating
        Then Begin
+         If P_Priority Then
+         Begin  // back off the kvar
            If kW_out > FkVArating
            Then Begin
                 kW_out   := FkVArating;
                 kvar_out := 0.0;
            End
            ELSE kvar_Out :=  Sqrt(SQR(FkVArating) - SQR(kW_Out)) * sign(kvar_Out);
+         End
+         Else
+         Begin  // Q Priority   (Default) back off the kW
+           If abs(kvar_out) > Fkvarlimit Then
+            Begin
+            // first, back off the kvar to the kvar limit if necessary
+              kvar_out   := Fkvarlimit * sign(kvar_out);
+            End;
 
+            // Back the kvar down to the kVA rating if necessary
+            if abs(kvar_out) > FkVArating then Begin
+              kvar_Out := FkVArating * sign(kvar_out);
+              kW_out := 0.0;
+            End
+              // Now, set the kW so kVA output is within rating
+           Else kW_Out :=  Sqrt(SQR(FkVArating) - SQR(kvar_Out)) * sign(kW_Out);
+
+         End;
        End;
       if (FInverterON = FALSE) and (FVarFollowInverter = TRUE) then kvar_out := 0.0;
 
@@ -2593,7 +2617,7 @@ Const
 VAR
     n,
     i2    :integer;
-    Buff  :Array[0..BuffSize] of {$IFDEF MSWINDOWS}AnsiChar{$ELSE}Char{$ENDIF};
+    Buff  :Array[0..BuffSize] of AnsiChar;
     pName :pAnsichar;
 
 Begin
