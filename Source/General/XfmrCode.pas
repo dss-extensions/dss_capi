@@ -599,10 +599,10 @@ Begin
                 0: Writeln(f,'~ conn=wye');
                 1: Writeln(f,'~ conn=delta');
             End;
-            Writeln(f,'~ kv=', kvll:0:2);
-            Writeln(f,'~ kva=', kva:0:1);
+            Writeln(f,'~ kV=', kvll:0:2);
+            Writeln(f,'~ kVA=', kva:0:1);
             Writeln(f,'~ tap=', putap:0:3);
-            Writeln(f,'~ %r=', (Rpu*100.0):0:2);
+            Writeln(f,'~ %R=', (Rpu*100.0):0:2);
             Writeln(f,Format('~ RdcOhms=%.7g', [Rdcohms]));
             Writeln(f,'~ rneut=', rneut:0:3);
             Writeln(f,'~ xneut=', xneut:0:3);

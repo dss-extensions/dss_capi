@@ -223,6 +223,15 @@ begin
   end;
   21: begin  // Transformers.Xlt write
       Set_Parameter ('Xlt', FloatToStr (arg));
+  end;
+  22: begin  // Transformers.RdCOhms read
+      Result := 0.0;
+      elem := ActiveTransformer;
+      if elem <> nil then
+        Result := elem.WdgRdc[elem.ActiveWinding];
+  end;
+  23: begin  // Transformers.RdCOhms write
+      Set_Parameter ('RdcOhms', FloatToStr (arg));
   end
   else
       Result:=-1.0;
