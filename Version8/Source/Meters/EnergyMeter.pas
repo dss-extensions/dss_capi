@@ -71,6 +71,7 @@ unit EnergyMeter;
 9/18/08 Added load loss and no load loss registers  and aux registers
 11/8/08 Revamped TakeSample to fix bugs with Demand Interval reporting
 8/8/13  Added initial reliability calcs
+3/27/2018 Corrected SAIDI calcs
 }
 
 {$WARN UNIT_PLATFORM OFF}

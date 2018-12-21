@@ -2616,7 +2616,7 @@ Begin
      ReWrite(F);
 
      if TripletOpt then begin
-       SetLength (ColPtr, nBus + 1);
+       SetLength (ColPtr, nNZ);
        SetLength (RowIdx, nNZ);
        SetLength (cVals, nNZ);
        GetTripletMatrix (hY, nNZ, @RowIdx[0], @ColPtr[0], @cVals[0]);
@@ -3623,11 +3623,10 @@ Begin
              With MyMeterPtr Do Begin
                  for i  := 1 to SectionCount  do
                     With FeederSections^[i] Do Begin
-                        ActiveCircuit[ActiveActor].ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
-                        Writeln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
-                            [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, 
-                            AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
-                            FullName(ActiveCircuit[ActiveActor].ActiveCktElement)  ]));
+                      ActiveCircuit[ActiveActor].ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
+                      Writeln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
+                      [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
+                      FullName(ActiveCircuit[ActiveActor].ActiveCktElement)  ]));
                     End;
                 iMeter := EnergyMeterClass[ActiveActor].Next;
             End;

@@ -58,6 +58,8 @@ type
     function Get_WdgCurrents: OleVariant; safecall;
     function Get_WdgVoltages: OleVariant; safecall;
     function Get_StrWdgCurrents: WideString; safecall;
+    function Get_RdcOhms: Double; safecall;
+    procedure Set_RdcOhms(Value: Double); safecall;
   end;
 
 implementation
@@ -541,6 +543,21 @@ begin
   Begin
       Result := elem.GetWindingCurrentsResult(ActiveActor) ;
   End;
+end;
+
+function TTransformers.Get_RdcOhms: Double;
+var
+  elem: TTransfObj;
+begin
+  Result := 0.0;
+  elem := ActiveTransformer;
+  if elem <> nil then
+    Result := elem.WdgRdc[elem.ActiveWinding];
+end;
+
+procedure TTransformers.Set_RdcOhms(Value: Double);
+begin
+  Set_Parameter ('RdcOhms', FloatToStr (Value));
 end;
 
 initialization

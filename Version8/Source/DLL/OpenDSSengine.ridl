@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 10/16/2018 4:10:41 PM (- $Rev: 12980 $, 13115546).
+// File generated on 12/21/2018 6:30:05 AM (- $Rev: 12980 $, 165949093).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -1844,6 +1844,10 @@ library OpenDSSengine
     HRESULT _stdcall WdgCurrents([out, retval] VARIANT* Value);
     [propget, id(0x000000E1)]
     HRESULT _stdcall StrWdgCurrents([out, retval] BSTR* Value);
+    [propget, id(0x000000E2)]
+    HRESULT _stdcall RdcOhms([out, retval] double* Value);
+    [propput, id(0x000000E2), helpstring("dc Resistance of active winding in ohms for GIC analysis")]
+    HRESULT _stdcall RdcOhms([in] double Value);
   };
 
   [
