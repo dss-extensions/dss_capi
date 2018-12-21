@@ -12,7 +12,7 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 52393 $
-// File generated on 9/19/2018 5:26:18 PM from Type Library described below.
+// File generated on 12/21/2018 6:29:48 AM from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
@@ -24,8 +24,6 @@ unit OpenDSSengine_TLB;
 //   (1) v2.0 stdole, (C:\Windows\SysWOW64\stdole2.tlb)
 //   (2) v1.0 stdole, (stdole32.tlb)
 // SYS_KIND: SYS_WIN32
-// Errors:
-//   Hint: Member 'Class' of 'ILoads' changed to 'Class_'
 // ************************************************************************ //
 {$TYPEDADDRESS OFF} // Unit must be compiled without type-checked pointers.
 {$WARN SYMBOL_PLATFORM OFF}
@@ -2254,6 +2252,8 @@ type
     function Get_WdgVoltages: OleVariant; safecall;
     function Get_WdgCurrents: OleVariant; safecall;
     function Get_StrWdgCurrents: WideString; safecall;
+    function Get_RdcOhms: Double; safecall;
+    procedure Set_RdcOhms(Value: Double); safecall;
     property NumWindings: Integer read Get_NumWindings write Set_NumWindings;
     property XfmrCode: WideString read Get_XfmrCode write Set_XfmrCode;
     property Wdg: Integer read Get_Wdg write Set_Wdg;
@@ -2279,6 +2279,7 @@ type
     property WdgVoltages: OleVariant read Get_WdgVoltages;
     property WdgCurrents: OleVariant read Get_WdgCurrents;
     property StrWdgCurrents: WideString read Get_StrWdgCurrents;
+    property RdcOhms: Double read Get_RdcOhms write Set_RdcOhms;
   end;
 
 // *********************************************************************//
@@ -2313,6 +2314,7 @@ type
     property WdgVoltages: OleVariant readonly dispid 223;
     property WdgCurrents: OleVariant readonly dispid 224;
     property StrWdgCurrents: WideString readonly dispid 225;
+    property RdcOhms: Double dispid 226;
   end;
 
 // *********************************************************************//
