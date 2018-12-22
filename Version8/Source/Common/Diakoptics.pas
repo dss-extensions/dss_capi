@@ -269,6 +269,8 @@ End;
 *******************************************************************************}
 procedure ADiakopticsInit();
 var
+  Local_State,
+  Num_States,
   ErrorCode,
   DIdx,
   Diak_Actors : Integer;
@@ -277,95 +279,125 @@ var
   ErrorStr,
   FileRoot    : String;
   Links       : Array of String;                        // List of the Link Branches
+  MQuit       : Boolean;                                // To quit the State Machine
   {$IFNDEF FPC}
   ScriptEd    : TScriptEdit;
   {$ENDIF}
 
 Begin
+// The program is built as a state machine to facilitate the error detection
+// and quitting the routines after an error is detected wihtout killing the prog
+  MQuit       :=  False;
+  Num_States  :=  6;
+  Local_State :=  0;
   prog_str  :=  'A-Diakoptics initialization sumary:' + CRLF + CRLF;
   ActiveActor                     :=  1;
   if ActiveCircuit[1].Num_SubCkts > (CPU_Cores - 2) then
     ActiveCircuit[1].Num_SubCkts    :=  CPU_Cores - 2;
 
-  prog_Str    :=  prog_str + '- Creating Sub-Circuits...' + CRLF;
-
-  ADiakoptics_Tearing();
-  prog_Str    := prog_str + '  ' + inttostr(ActiveCircuit[1].Num_SubCkts) + ' Sub-Circuits Created' + CRLF;
-
-  Diak_Actors                     :=  ActiveCircuit[1].Num_SubCkts + 1;
-  // Saves the Link Branch list locally
-
-  prog_Str    :=  prog_str + '- Indexing link branches...';
-
-  setlength(Links,length(ActiveCircuit[1].Link_Branches));
-  for DIdx := 0 to High(Links) do Links[DIdx]   :=  ActiveCircuit[1].Link_Branches[DIdx];
-
-  prog_Str    :=  prog_str + 'Done' + CRLF + '- Setting up the Actors...';
-
-  // Clears everything to craete the actors and compile the subsystems
-  DSSExecutive.ClearAll;
-  Fileroot                        :=  GetCurrentDir;    //  Gets the current directory
-  SolutionAbort                   :=  False;
-  DssExecutive.Command            :=  'ClearAll';
-
-  // Compiles the interconnected Circuit for further calculations on actor 1
-  ActiveActor                     :=  1;
-  Proj_Dir                        :=  'compile "' + Fileroot + '\Torn_Circuit\master_interconnected.dss"';
-  DssExecutive.Command            :=  Proj_Dir;
-
-  // Creates the other actors
-  for DIdx := 2 to Diak_Actors do
+  while(not MQuit) do
   Begin
-    inc(NumOfActors);
-    ActiveActor           :=  NumOfActors;
-    ActorCPU[ActiveActor] :=  ActiveActor -1;
-    DSSExecutive          :=  TExecutive.Create;  // Make a DSS object
-    Parser[ActiveActor]   :=  TParser.Create;
-    DSSExecutive.CreateDefaultDSSItems;
-    Parallel_enabled      :=  False;
+    case Local_State of
+      0: Begin                       // Create subcircuits
+        prog_Str    :=  prog_str + '- Creating SubCircuits...' + CRLF;
 
-    if DIdx = 2 then  Dir :=  ''
-    else  Dir :=  'zone_' + inttostr(DIdx - 1) + '\';
-    Proj_Dir              :=  'compile "' + Fileroot + '\Torn_Circuit\' + Dir + 'master.dss"';
-    DssExecutive.Command  := Proj_Dir;
-    if DIdx > 2 then
-      DssExecutive.Command  := Links[DIdx - 2] + '.enabled=False';
-    DssExecutive.Command  :=  'solve';
+        ADiakoptics_Tearing();
+        prog_Str    := prog_str + '  ' + inttostr(ActiveCircuit[1].Num_SubCkts) + ' Sub-Circuits Created' + CRLF;
+
+      End;
+      1:  Begin                      // Saves the Link Branch list locally
+        Diak_Actors                     :=  ActiveCircuit[1].Num_SubCkts + 1;
+        prog_Str    :=  prog_str + '- Indexing link branches...';
+
+        setlength(Links,length(ActiveCircuit[1].Link_Branches));
+        for DIdx := 0 to High(Links) do Links[DIdx]   :=  ActiveCircuit[1].Link_Branches[DIdx];
+
+        prog_Str    :=  prog_str + 'Done';
+
+      End;
+      2:  Begin                      // Compile subsystems
+        prog_Str    :=  prog_str + CRLF + '- Setting up the Actors...';
+        // Clears everything to craete the actors and compile the subsystems
+        DSSExecutive.ClearAll;
+        Fileroot                        :=  GetCurrentDir;    //  Gets the current directory
+        SolutionAbort                   :=  False;
+        DssExecutive.Command            :=  'ClearAll';
+
+        // Compiles the interconnected Circuit for further calculations on actor 1
+        ActiveActor                     :=  1;
+        Proj_Dir                        :=  'compile "' + Fileroot + '\Torn_Circuit\master_interconnected.dss"';
+        DssExecutive.Command            :=  Proj_Dir;
+
+        // Creates the other actors
+        for DIdx := 2 to Diak_Actors do
+        Begin
+          inc(NumOfActors);
+          ActiveActor           :=  NumOfActors;
+          ActorCPU[ActiveActor] :=  ActiveActor -1;
+          DSSExecutive          :=  TExecutive.Create;  // Make a DSS object
+          Parser[ActiveActor]   :=  TParser.Create;
+          DSSExecutive.CreateDefaultDSSItems;
+          Parallel_enabled      :=  False;
+
+          if DIdx = 2 then  Dir :=  ''
+          else  Dir :=  'zone_' + inttostr(DIdx - 1) + '\';
+          Proj_Dir              :=  'compile "' + Fileroot + '\Torn_Circuit\' + Dir + 'master.dss"';
+          DssExecutive.Command  := Proj_Dir;
+          if DIdx > 2 then
+            DssExecutive.Command  := Links[DIdx - 2] + '.enabled=False';
+          DssExecutive.Command  :=  'solve';
+        End;
+        prog_Str    :=  prog_str + 'Done';
+
+      end;
+      3:  Begin                      // Creates the contours matrix
+        ActiveActor                     :=  1;
+        prog_Str    :=  prog_str + CRLF + '- Building Contour matrix...';
+        // Builds the contour matrix
+        ErrorCode :=  Calc_C_Matrix(@Links[0], length(Links));
+        if ErrorCode = 0 then ErrorStr := 'Error'
+        else ErrorStr :=  'Done';
+        prog_Str    :=  prog_str + ErrorStr;
+
+      end;
+      4: Begin                       // Builds the ZLL matrix
+        prog_Str    :=  prog_str + CRLF + '- Building ZLL...';
+        ErrorCode :=  Calc_ZLL(@Links[0],length(Links));
+        if ErrorCode = 0 then ErrorStr := 'Error'
+        else ErrorStr :=  'Done';
+        prog_Str    :=  prog_str + ErrorStr;
+
+      end;
+      5:  Begin
+        // Opens the link branches in the interconnected Circuit and recalculates the YBus
+        // The opening happens by replacing the line with a very high series impedance
+        prog_Str    :=  prog_str + CRLF + '- Opening link branches...';
+        for DIdx := 1 to High(Links) do
+        Begin
+          DssExecutive.Command    :=  Links[DIdx] + '.r0=1000000000';
+          DssExecutive.Command    :=  Links[DIdx] + '.r1=1000000000';
+          DssExecutive.Command    :=  Links[DIdx] + '.x0=0';
+          DssExecutive.Command    :=  Links[DIdx] + '.x1=0';
+        End;
+        Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE, ActiveActor);
+        prog_Str      :=  prog_str + 'Done';
+
+      end;
+      6:  Begin                      // Builds the ZCC matrix
+        prog_Str      :=  prog_str + CRLF + '- Building ZCC...';
+        //  Calc_ZCT();
+        //  Calc_ZCC();
+        prog_Str      :=  prog_str + 'Done' + CRLF;
+
+      End
+      else
+      Begin
+
+      End;
+    end;
+    inc(Local_State);
+    MQuit := (Local_State > Num_States) or (ErrorCode = 0);
   End;
-
-  ActiveActor                     :=  1;
-  prog_Str    :=  prog_str + 'Done' + CRLF + '- Building Contour matrix...';
-
-  // Builds the contour matrix
-  ErrorCode :=  Calc_C_Matrix(@Links[0], length(Links));
-  if ErrorCode = 0 then ErrorStr := 'Error'
-  else ErrorStr :=  'Done';
-  // Builds the ZLL matrix
-  prog_Str    :=  prog_str + ErrorStr + CRLF + '- Building ZLL...';
-
-  ErrorCode :=  Calc_ZLL(@Links[0],length(Links));
-  if ErrorCode = 0 then ErrorStr := 'Error'
-  else ErrorStr :=  'Done';
-
-  prog_Str    :=  prog_str + ErrorStr + CRLF + '- Opening link branches...';
-  // Opens the link branches in the interconnected Circuit and recalculates the YBus
-  // The opening happens by replacing the line with a very high series impedance
-  for DIdx := 1 to High(Links) do
-  Begin
-    DssExecutive.Command    :=  Links[DIdx] + '.r0=1000000000';
-    DssExecutive.Command    :=  Links[DIdx] + '.r1=1000000000';
-    DssExecutive.Command    :=  Links[DIdx] + '.x0=0';
-    DssExecutive.Command    :=  Links[DIdx] + '.x1=0';
-  End;
-  Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE, ActiveActor);
-
-  // Builds the ZCC matrix
-  prog_Str      :=  prog_str + 'Done' + CRLF + '- Building ZCC...';
-
-//  Calc_ZCT();
-//  Calc_ZCC();
-
-  prog_Str      :=  prog_str + 'Done' + CRLF;
 
   ActiveActor                     :=  1;
   if ErrorCode = 0 then ErrorStr := 'One or more errors found'
@@ -375,9 +407,16 @@ Begin
   GlobalResult  :=  ErrorStr;
 
   {$IFNDEF FPC}
-  ScriptEd.PublishMessage(prog_Str);
+  if not IsDLL
+  then
+    ScriptEd.PublishMessage(prog_Str)
+  else
+    GlobalResult  :=  prog_str;
+  {$ELSE}
+    GlobalResult  :=  prog_str;
   {$ENDIF}
   // TEMc: TODO: should we report something here under FPC?
+  // Davis: Done: This will add the needed report
   SolutionAbort :=  False;
 
 End;
