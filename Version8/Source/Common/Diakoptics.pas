@@ -7,11 +7,10 @@ uses
   {$IFDEF FPC}CmdForms{$ELSE}DSSForms, ScriptEdit{$ENDIF};
 
 Function Solve_Diakoptics():Integer;
-procedure ADiakoptics_Tearing();
+Function ADiakoptics_Tearing(): Integer;
 procedure ADiakopticsInit();
 function Calc_C_Matrix(PLinks : PString; NLinks  : Integer):Integer;
 function Calc_ZLL(PLinks : PString; NLinks  : Integer):Integer;
-procedure Calc_ZCT();
 procedure Calc_ZCC();
 
 implementation
@@ -23,7 +22,10 @@ Uses
 Function Solve_Diakoptics():Integer;
 Begin
   {Space left empty to implement the simplified Diakoptics algorithm}
+  With ActiveCircuit[1].Solution do
+  Begin
 
+  End;
   Result  :=  0;
 End;
 
@@ -33,35 +35,19 @@ End;
 *                      contours-contours domain                                *
 *******************************************************************************}
 procedure Calc_ZCC();
-Begin
-  ActiveActor   :=  1;
-  WITH ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution DO
-  Begin
-  {Space left empty to implement the simplified Diakoptics algorithm}
-  End;
-End;
-
-
-{*******************************************************************************
-*                   Calculates the Lateral matrix ZCT in                       *
-*                         contours-trees domain                                *
-*******************************************************************************}
-
-  {Probably to be removed}
-procedure Calc_ZCT();
 var
-  i,j,
-  Ret,
-  LIdx        : Integer;
-  VContours,
-  VZCT        : Array of Complex;
-  temp        : String;
-  myFile      : TextFile;         // For debugging
+  idx       : Integer;
+  MSize     : LongWord;
+  CVector,
+  ZVector   : pNodeVArray;
 Begin
-  ActiveActor   :=  1;
-  WITH ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution DO
+  WITH ActiveCircuit[1], ActiveCircuit[1].Solution DO
   Begin
-//    setlength(ZCT,length(Contours));
+    GetSize(hY, @MSize);
+    for idx := 1 to MSize do CVector^[idx] :=  cmplx(0,0);
+
+    
+
 
   End;
 End;
@@ -142,8 +128,8 @@ Begin
       End;
 
     End;
-    if Contours.NZero <> 0 then Result  :=  1
-    else Result :=  0;
+    if Contours.NZero <> 0 then Result  :=  0
+    else Result :=  1;
   End;
 
 
@@ -234,8 +220,8 @@ Begin
         End
 
     End;
-    if ErrorFlag then Result  :=  0
-    else Result  :=  1;
+    if ErrorFlag then Result  :=  1
+    else Result  :=  0;
 
   End;
 End;
@@ -245,7 +231,7 @@ End;
 *           Tears the system using considering the number of                   *
 *           available CPUs as reference                                        *
 *******************************************************************************}
-procedure ADiakoptics_Tearing();
+Function ADiakoptics_Tearing(): Integer;
 var
   Prev_Mode,                              // Stores the previous solution mode
   Num_Ckts    : Integer;                  // Stores the number of Sub-Circuits created
@@ -260,6 +246,7 @@ Begin
     Dynavars.SolutionMode         :=  Prev_mode;  // Goes back to the previous solution mode
     ActiveCircuit[1].Num_SubCkts  :=  Num_Ckts;
     GlobalResult                  := 'Sub-Circuits Created: ' + inttostr(Num_Ckts);
+    Result                        :=  0;          // No error handling here
   End;
 End;
 
@@ -301,8 +288,8 @@ Begin
       0: Begin                       // Create subcircuits
         prog_Str    :=  prog_str + '- Creating SubCircuits...' + CRLF;
 
-        ADiakoptics_Tearing();
-        prog_Str    := prog_str + '  ' + inttostr(ActiveCircuit[1].Num_SubCkts) + ' Sub-Circuits Created' + CRLF;
+        ErrorCode   :=  ADiakoptics_Tearing();
+        prog_Str    :=  prog_str + '  ' + inttostr(ActiveCircuit[1].Num_SubCkts) + ' Sub-Circuits Created' + CRLF;
 
       End;
       1:  Begin                      // Saves the Link Branch list locally
@@ -313,6 +300,7 @@ Begin
         for DIdx := 0 to High(Links) do Links[DIdx]   :=  ActiveCircuit[1].Link_Branches[DIdx];
 
         prog_Str    :=  prog_str + 'Done';
+        ErrorCode   :=  0;          // No error handling here
 
       End;
       2:  Begin                      // Compile subsystems
@@ -348,14 +336,14 @@ Begin
           DssExecutive.Command  :=  'solve';
         End;
         prog_Str    :=  prog_str + 'Done';
-
+        ErrorCode   :=  0;
       end;
       3:  Begin                      // Creates the contours matrix
         ActiveActor                     :=  1;
         prog_Str    :=  prog_str + CRLF + '- Building Contour matrix...';
         // Builds the contour matrix
         ErrorCode :=  Calc_C_Matrix(@Links[0], length(Links));
-        if ErrorCode = 0 then ErrorStr := 'Error'
+        if ErrorCode <> 0 then ErrorStr := 'Error'
         else ErrorStr :=  'Done';
         prog_Str    :=  prog_str + ErrorStr;
 
@@ -363,7 +351,7 @@ Begin
       4: Begin                       // Builds the ZLL matrix
         prog_Str    :=  prog_str + CRLF + '- Building ZLL...';
         ErrorCode :=  Calc_ZLL(@Links[0],length(Links));
-        if ErrorCode = 0 then ErrorStr := 'Error'
+        if ErrorCode <> 0 then ErrorStr := 'Error'
         else ErrorStr :=  'Done';
         prog_Str    :=  prog_str + ErrorStr;
 
@@ -381,12 +369,11 @@ Begin
         End;
         Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE, ActiveActor);
         prog_Str      :=  prog_str + 'Done';
-
+        ErrorCode     :=  0;          // No error handling here
       end;
       6:  Begin                      // Builds the ZCC matrix
         prog_Str      :=  prog_str + CRLF + '- Building ZCC...';
-        //  Calc_ZCT();
-        //  Calc_ZCC();
+        Calc_ZCC();
         prog_Str      :=  prog_str + 'Done' + CRLF;
 
       End
@@ -396,11 +383,11 @@ Begin
       End;
     end;
     inc(Local_State);
-    MQuit := (Local_State > Num_States) or (ErrorCode = 0);
+    MQuit := (Local_State > Num_States) or (ErrorCode <> 0);
   End;
 
   ActiveActor                     :=  1;
-  if ErrorCode = 0 then ErrorStr := 'One or more errors found'
+  if ErrorCode <> 0 then ErrorStr := 'One or more errors found'
   else  ErrorStr  :=  'A-Diakoptics initialized';
 
   prog_Str      :=  prog_str + CRLF + ErrorStr + CRLF;
