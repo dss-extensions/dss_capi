@@ -233,10 +233,10 @@ begin
        Begin
           {First get rid of all existing stuff}
           ActiveCircuit[ActiveActor].NumCircuits := 0; // <<<< added
-          ActiveCircuit[ActiveActor].Free; // <<<< added
+          ActiveCircuit[ActiveActor].Free;             // <<<< added
           ActiveCircuit[ActiveActor] := nil;
           Circuits.Free;
-          Circuits := TPointerList.Create(4);   // Make a new list of circuits
+          Circuits := TPointerList.Create(4);         // Make a new list of circuits
           DisposeDSSClasses(False);
             {Now, Start over}
           CreateDSSClasses;

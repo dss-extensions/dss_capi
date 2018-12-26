@@ -1,7 +1,7 @@
 unit Ymatrix;
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -17,9 +17,7 @@ interface
 uses
   uComplex,
   SysUtils,
-  {$IFDEF MSWINDOWS}
   windows,
-  {$ENDIF}
   DSSClass,
   DSSObject;
 
