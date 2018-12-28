@@ -1427,9 +1427,14 @@ extern "C" {
     DSS_CAPI_V8_DLL char* Error_Get_Description(void);
 
     /*
-    Error Number
+    Error Number (returns current value and then resets to zero)
     */
     DSS_CAPI_V8_DLL int32_t Error_Get_Number(void);
+
+    /*
+    Integer pointer to the Error Number. Remember to reset its value to zero after the error treatment.
+    */
+    DSS_CAPI_V8_DLL int32_t* Error_Get_NumberPtr(void);
 
     /*
     Array of strings containing names of all Fuses in the circuit

@@ -513,6 +513,7 @@ exports
     DSS_Executive_Get_OptionValue,
     Error_Get_Description,
     Error_Get_Number,
+    Error_Get_NumberPtr, // API extension
     Fuses_Get_AllNames,
     Fuses_Get_Count,
     Fuses_Get_First,

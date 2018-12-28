@@ -7,6 +7,7 @@ USES CAPI_Utils;
 
 function Error_Get_Description():PAnsiChar;cdecl;
 function Error_Get_Number():Integer;cdecl;
+function Error_Get_NumberPtr():PInteger;cdecl;
 
 IMPLEMENTATION
 
@@ -27,6 +28,11 @@ function Error_Get_Number():Integer;cdecl;
 begin
     Result := ErrorNumber;
     ErrorNumber := 0;  // Reset after retrieving ErrorNumber
+end;
+//------------------------------------------------------------------------------
+function Error_Get_NumberPtr():PInteger;cdecl;
+begin
+    Result := @ErrorNumber; // Remember to reset it to zero after the error treatment!
 end;
 //------------------------------------------------------------------------------
 END.
