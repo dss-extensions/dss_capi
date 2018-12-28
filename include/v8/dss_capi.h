@@ -5573,6 +5573,14 @@ extern "C" {
     */
     DSS_CAPI_V8_DLL int32_t Bus_Get_Next(void);
 
+    /* 
+    Gets/sets the DSS script error-handling behavior. If a warning or error 
+    occurs and early abortion is enabled (default), the processing of the 
+    script is always halted. Otherwise, the processing of the script continues
+    until a major error occurs or it finishes.
+    */
+    DSS_CAPI_V8_DLL uint16_t Error_Get_EarlyAbort(void);
+    DSS_CAPI_V8_DLL void Error_Set_EarlyAbort(uint16_t Value);
 
 #ifdef __cplusplus
 } // extern "C"

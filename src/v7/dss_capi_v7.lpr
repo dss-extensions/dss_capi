@@ -514,6 +514,8 @@ exports
     Error_Get_Description,
     Error_Get_Number,
     Error_Get_NumberPtr, // API extension
+    Error_Get_EarlyAbort, // API extension
+    Error_Set_EarlyAbort, // API extension
     Fuses_Get_AllNames,
     Fuses_Get_Count,
     Fuses_Get_First,

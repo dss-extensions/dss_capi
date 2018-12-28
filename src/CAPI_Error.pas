@@ -8,6 +8,8 @@ USES CAPI_Utils;
 function Error_Get_Description():PAnsiChar;cdecl;
 function Error_Get_Number():Integer;cdecl;
 function Error_Get_NumberPtr():PInteger;cdecl;
+function Error_Get_EarlyAbort(): WordBool;cdecl;
+procedure Error_Set_EarlyAbort(Value: WordBool);cdecl;
 
 IMPLEMENTATION
 
@@ -33,6 +35,16 @@ end;
 function Error_Get_NumberPtr():PInteger;cdecl;
 begin
     Result := @ErrorNumber; // Remember to reset it to zero after the error treatment!
+end;
+//------------------------------------------------------------------------------
+function Error_Get_EarlyAbort(): WordBool;cdecl;
+begin
+    Result := DSS_CAPI_EARLY_ABORT;
+end;
+//------------------------------------------------------------------------------
+procedure Error_Set_EarlyAbort(Value: WordBool);cdecl;
+begin
+    DSS_CAPI_EARLY_ABORT := Value;
 end;
 //------------------------------------------------------------------------------
 END.
