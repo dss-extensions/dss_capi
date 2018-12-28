@@ -127,6 +127,7 @@ VAR
 {$ENDIF}
 {$IFDEF DSS_CAPI}
    DSS_CAPI_INFO_SPARSE_COND : Boolean;
+   DSS_CAPI_EARLY_ABORT : Boolean;
 {$ENDIF}
    // Global variables for the DSS visualization tool
    DSS_Viz_installed   :Boolean=False; // DSS visualization tool (flag of existance)
@@ -451,6 +452,13 @@ Begin
          Else
            DSSMessageDlg(Msg, TRUE);
 
+     End
+     Else
+     Begin
+        {$IFDEF DSS_CAPI}
+        if DSS_CAPI_EARLY_ABORT then
+            Redirect_Abort := True;
+        {$ENDIF}
      End;
 
      LastErrorMessage := Msg;
@@ -475,22 +483,33 @@ PROCEDURE DoSimpleMsg(Const S:String; ErrNum:Integer);
 VAR
     Retval:Integer;
 Begin
+    IF Not NoFormsAllowed Then Begin
+        IF In_Redirect THEN 
+        Begin
+            RetVal := DSSMessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]), FALSE);
+            {$IFDEF DSS_CAPI}
+            if DSS_CAPI_EARLY_ABORT then
+                Redirect_Abort := True;
+            {$ENDIF}
+            IF RetVal = -1 THEN 
+                Redirect_Abort := True;
+        End
+        ELSE
+            DSSInfoMessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]));
+    End
+    Else
+    Begin
+        {$IFDEF DSS_CAPI}
+        if DSS_CAPI_EARLY_ABORT then
+            Redirect_Abort := True;
+        {$ENDIF}
+    End;
 
-      IF Not NoFormsAllowed Then Begin
-       IF   In_Redirect
-       THEN Begin
-         RetVal := DSSMessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]), FALSE);
-         IF   RetVal = -1
-         THEN Redirect_Abort := True;
-       End
-       ELSE
-         DSSInfoMessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]));
-      End;
-
-     LastErrorMessage := S;
-     ErrorNumber := ErrNum;
-     AppendGlobalResultCRLF(S);
+    LastErrorMessage := S;
+    ErrorNumber := ErrNum;
+    AppendGlobalResultCRLF(S);
 End;
+
 
 
 //----------------------------------------------------------------------------
@@ -1201,8 +1220,9 @@ initialization
 {$IFNDEF FPC}
   DSS_Viz_installed:= CheckDSSVisualizationTool; // DSS visualization tool (flag of existance)
 {$ENDIF}
-{$IFNDEF DSS_CAPI}  
+{$IFDEF DSS_CAPI}  
    DSS_CAPI_INFO_SPARSE_COND := (GetEnvironmentVariable('DSS_CAPI_INFO_SPARSE_COND') = '1');
+   DSS_CAPI_EARLY_ABORT := True;
 {$ENDIF}
 
 Finalization

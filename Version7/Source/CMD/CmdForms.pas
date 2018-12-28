@@ -113,6 +113,10 @@ End;
 function DSSMessageDlg(const Msg:String;err:boolean):Integer;
 Begin
 	result := 0;
+{$IFDEF DSS_CAPI}
+    if DSS_CAPI_EARLY_ABORT then
+        result := -1;
+{$ENDIF}
     if NoFormsAllowed then Exit;
 	if err then write ('** Error: ');
 	writeln (Msg);
