@@ -11,6 +11,7 @@ unit AutoTrans;
    7-14-2018  Created from Transformer
    9-19-2018  committed
    12-4-2018  Corrected indices for mapping into Yprim
+   1-3-2019   Default last nphase nodes of X terminal (2) to same as first neutral node
 }
 
 { You can designate a AutoTrans to be a substation by setting the sub=yes parameter}
@@ -31,7 +32,7 @@ TYPE
        PROCEDURE SetActiveWinding(w:Integer);
        PROCEDURE InterpretAutoConnection(const S:String);
        PROCEDURE InterpretAllConns(const S:String);
-       PROCEDURE InterpretAllBuses(const S:String);
+       PROCEDURE InterpretAllBuses(const S:String; ActorID:Integer);
        PROCEDURE InterpretAllTaps(const S:String);
        PROCEDURE InterpretAllkVRatings(const S:String);
        PROCEDURE InterpretAllkVARatings(const S:String);
@@ -113,6 +114,8 @@ TYPE
         PROCEDURE FetchXfmrCode(Const Code:String);
 
         Function  GeTAutoWindingCurrentsResult(ActorID : Integer):String;
+
+        PROCEDURE SetBusAuto(iwdg: Integer; const s: String; ActorID : Integer);
 
       Protected
         NumWindings     :Integer;
@@ -461,7 +464,7 @@ Begin
             1: Nphases   := Parser[ActorID].IntValue;
             2: SetNumWindings(Parser[ActorID].IntValue); // Reallocate stuff if bigger
             3: SetActiveWinding(Parser[ActorID].IntValue);
-            4: Setbus(ActiveWinding, param);
+            4: SetbusAuto(ActiveWinding, param, ActorID);
             5: InterpretAutoConnection(Param);
             6: Winding^[ActiveWinding].kVLL  := parser[ActorID].Dblvalue;
             7: Winding^[ActiveWinding].kVA   := parser[ActorID].Dblvalue;
@@ -469,7 +472,7 @@ Begin
             9: Winding^[ActiveWinding].Rpu   := parser[ActorID].Dblvalue * 0.01;  // %R
            10: Winding^[ActiveWinding].RdcOhms := Parser[ActorID].DblValue;
            11: strCoreType := Param;
-           12: InterpretAllBuses(Param);
+           12: InterpretAllBuses(Param, ActorID);
            13: InterpretAllConns(Param);
            14: InterpretAllkVRatings(Param);
            15: InterpretAllkVARatings(Param);
@@ -632,7 +635,7 @@ Begin
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-PROCEDURE TAutoTrans.InterpretAllBuses(const S:String);
+PROCEDURE TAutoTrans.InterpretAllBuses(const S:String; ActorID:Integer);
 //  routine expecting all winding bus connections expressed in one array of strings
 VAR
     BusNam  :String;
@@ -647,7 +650,7 @@ Begin
            ActiveWinding := i;
            AuxParser.NextParam; // ignore any parameter name  not expecting any
            BusNam := AuxParser.StrValue;
-           IF Length(BusNam)>0 THEN SetBus(ActiveWinding, BusNam);
+           IF Length(BusNam)>0 THEN SetBusAuto(ActiveWinding, BusNam, ActorID);
       End;
 
 End;
@@ -900,6 +903,49 @@ Begin
   InitPropertyValues(0);
   RecalcElementData(ActiveActor);
 End;
+
+procedure TAutoTransObj.SetBusAuto(iwdg: Integer; const s: String; ActorID : Integer);
+// Added Jan 3, 2019
+Var
+    NNodes    : Array[1..50] of Integer; // big integer buffer
+    NumNodes  : Integer;
+    DotPos    : Integer;
+    FirstNeut : Integer; // First Neutral Node
+    ii        : Integer;
+    strBusName,
+    strNewBusName : String;
+begin
+// For winding 2 set all nodes on second end of winding to same as 1st value
+// so all neutral ends of common winding get connected to same neutral node
+
+    case iwdg of
+
+        2: Begin
+
+              For ii := 1 to nphases DO NNodes[ii] := ii; // set up buffer with defaults
+               // Default all other conductors to a ground connection
+               // If user wants them ungrounded, must be specified explicitly!
+              For ii := nphases + 1 to NConds DO NNodes[ii] := 0;
+
+              Auxparser.Token := s; // load up AuxParser
+              strBusName := AuxParser.ParseAsBusName(NumNodes, @NNodes, ActorID);
+
+              // Check for non-zero neutral specification
+              if NNodes[nphases+1]>0 then  Begin
+                  // Reconstruct new bus name
+                  strNewBusName := strBusName;
+                  for ii := 1         to Nphases do strNewBusName := strNewBusName + Format('.%d', [NNodes[ii]]);
+                  for ii := nphases+1 to Nconds  do strNewBusName := strNewBusName + Format('.%d', [NNodes[nphases+1]]);
+                  SetBus(iwdg, strNewBusName);
+              End
+              Else SetBus(iwdg, s);
+
+           End;
+    Else
+        Setbus(iwdg, s);  // all other windings
+    end;
+
+end;
 
 procedure TAutoTransObj.SetNodeRef(iTerm: Integer; NodeRefArray: pIntegerArray);
 // Overrides standard function
@@ -1867,7 +1913,7 @@ Var
         i,
         N         :Integer;
         S         :String;
-        Nodes     :Array[1..5] of Integer; // integer buffer
+        Nodes     :Array[1..50] of Integer; // big integer buffer
         OnPhase1  :Boolean;
 begin
 
