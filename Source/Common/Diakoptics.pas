@@ -12,6 +12,7 @@ procedure ADiakopticsInit();
 function Calc_C_Matrix(PLinks : PString; NLinks  : Integer):Integer;
 function Calc_ZLL(PLinks : PString; NLinks  : Integer):Integer;
 procedure Calc_ZCC(Links : Integer);
+procedure Calc_Y4();
 
 implementation
 
@@ -27,6 +28,24 @@ Begin
 
   End;
   Result  :=  0;
+End;
+
+{*******************************************************************************
+*              Inverts ZCC to obtain its admittance equivalent Y4              *
+*                      This is the heart of ADiakoptics                        *
+*******************************************************************************}
+procedure Calc_Y4();
+var
+  TempMat   : TcMatrix;
+// 4 Debugging
+  myFile    : TextFile;
+  Text      : String;
+
+Begin
+  WITH ActiveCircuit[1], ActiveCircuit[1].Solution DO
+  Begin
+    TempMat  :=  TCmatrix.CreateMatrix(3);
+  End;
 End;
 
 
@@ -53,9 +72,9 @@ Begin
   WITH ActiveCircuit[1], ActiveCircuit[1].Solution DO
   Begin
     GetSize(hY, @NumNodes);
-    col   :=  NumNodes;
+    col       :=  NumNodes;
     dec(Links);
-    ZCT.sparse_matrix_Cmplx(NumNodes,Links*3);
+    ZCT.sparse_matrix_Cmplx(Links*3,NumNodes);
     CVector   :=  allocmem(NumNodes*2);                    // Real and imag parts
     ZVector   :=  allocmem(NumNodes*2);
     idx3      :=  Links*3 - 1;
@@ -63,28 +82,29 @@ Begin
     for idx2 := 0 to idx3 do
     Begin
 
-      for idx := 1 to NumNodes do CVector^[idx] :=  cZERO; // Make it zero
+      for idx := 1 to NumNodes do CVector^[idx] :=  cZERO;  // Makes it zero
 
       for idx := 1 to length(Contours.CData) do
       Begin
         if Contours.CData[idx - 1].col = idx2 then
         Begin
           row                 := Contours.CData[idx - 1].row + 1;
-          CVector^[row]        := Contours.CData[idx-1].Value;
+          CVector^[row]       := Contours.CData[idx-1].Value;
         End;
       End;
       SolveSparseSet(hy,@ZVector^[1],@CVector^[1]);
 
-      for idx := 1 to col do           // inserts result into the ZCT' matrix
+      for idx := 1 to col do           // inserts result into the ZCT matrix
       Begin
         CTemp   :=  ZVector^[idx];
         if (CTemp.re <> 0) and (CTemp.im <> 0) then
-           ZCT.insert((idx-1),idx2,ZVector[idx]);
+           ZCT.insert(idx2,(idx-1),ZVector[idx]);
       End;
+
     End;
-    ZCT :=  ZCT.Transpose;
-    ZCC :=  ZCT.multiply(Contours);    // Calculates ZCC with no Links impedance
-    ZCC :=  ZCC.Add(ZLL);              // Adds the link impedance
+
+    ZCC   :=  ZCT.multiply(Contours);    // Calculates ZCC with no Link impedances
+    ZCC   :=  ZCC.Add(ZLL);              // Adds the link impedance
 
 {
 //********************Dbug************************************
@@ -102,7 +122,7 @@ Begin
         WriteLn(myFile,Text);
     End;
     CloseFile(myFile);
- }
+}
 
   End;
 End;
@@ -205,7 +225,7 @@ var
   cValues   : pComplexArray;
   ErrorFlag : Boolean;
   localMat  : TSparse_Complex;
-  LinkPrim : TcMatrix;
+  LinkPrim  : TcMatrix;
 Begin
   dec(NLinks);
   ErrorFlag :=  False;
@@ -284,7 +304,7 @@ End;
 
 {*******************************************************************************
 *           Tears the system using considering the number of                   *
-*           available CPUs as reference                                        *
+*           circuits specified by the user                                     *
 *******************************************************************************}
 Function ADiakoptics_Tearing(): Integer;
 var
@@ -430,7 +450,11 @@ Begin
         prog_Str      :=  prog_str + CRLF + '- Building ZCC...';
         Calc_ZCC(length(Links));
         prog_Str      :=  prog_str + 'Done' + CRLF;
-
+      End;
+      7:  Begin                      // Inverts ZCC to get Y4
+        prog_Str      :=  prog_str + CRLF + '- Building Y4 ...';
+        Calc_Y4();
+        prog_Str      :=  prog_str + 'Done' + CRLF;
       End
       else
       Begin
@@ -442,7 +466,11 @@ Begin
   End;
 
   ActiveActor                     :=  1;
-  if ErrorCode <> 0 then ErrorStr := 'One or more errors found'
+  if ErrorCode <> 0 then
+  Begin
+    ErrorStr := 'One or more errors found';
+    ADiakoptics :=  False;
+  End
   else  ErrorStr  :=  'A-Diakoptics initialized';
 
   prog_Str      :=  prog_str + CRLF + ErrorStr + CRLF;
