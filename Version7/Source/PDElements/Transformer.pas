@@ -1832,7 +1832,7 @@ Var
         i,
         N         :Integer;
         S         :String;
-        Nodes     :Array[1..5] of Integer; // integer buffer
+        Nodes     :Array[1..50] of Integer; // Big integer buffer
         OnPhase1  :Boolean;
 begin
 
