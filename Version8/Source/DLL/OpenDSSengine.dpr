@@ -225,7 +225,8 @@ uses
   fMonitor in '..\Meters\fMonitor.pas',
   LD_fm_infos in '..\Meters\LD_fm_infos.pas',
   VLNodeVars in '..\Meters\VLNodeVars.pas',
-  Generic5OrderMach in '..\PCElements\Generic5OrderMach.pas';
+  Generic5OrderMach in '..\PCElements\Generic5OrderMach.pas',
+  ImplGICSources in 'ImplGICSources.pas';
 
 exports
   DllGetClassObject,

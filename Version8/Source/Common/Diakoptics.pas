@@ -36,6 +36,8 @@ End;
 *******************************************************************************}
 procedure Calc_Y4();
 var
+  col,
+  idx       : Integer;
   TempMat   : TcMatrix;
 // 4 Debugging
   myFile    : TextFile;
@@ -44,10 +46,40 @@ var
 Begin
   WITH ActiveCircuit[1], ActiveCircuit[1].Solution DO
   Begin
-    TempMat  :=  TCmatrix.CreateMatrix(3);
+    //  Moves ZCC into an equivalent compatible with TcMatrix
+    TempMat  :=  TCmatrix.CreateMatrix(ZCC.NRows);
+    for idx := 0 to High(ZCC.CData) do
+    Begin
+      TempMat.SetElement(ZCC.CData[idx].Row + 1,ZCC.CData[idx].Col + 1,ZCC.CData[idx].Value);
+    End;
+    //  Inverts the ZCC equivalent
+    TempMat.Invert;
+    Y4.sparse_matrix_Cmplx(ZCC.NRows,ZCC.NCols);
+    // Moves the inverse into Y4 for furhter use
+    for idx := 0 to (ZCC.NRows - 1) do
+    Begin
+      for col := 0 to ZCC.NCols - 1 do
+        Y4.insert(idx,col,TempMat.GetElement(idx+1,col+1));
+    End;
+{
+//********************Dbug************************************
+    AssignFile(myFile, 'C:\Temp\Y4Mat.csv');
+    ReWrite(myFile);
+    Text        :=  '';
+    for idx := 0 to (length(Y4.CData)- 1) do
+    Begin
+        Text  :=  inttostr(Y4.CData[idx].Row) + ',' + inttostr(Y4.CData[idx].Col) +
+        ',' + floattostr(Y4.CData[idx].Value.re);
+        if Y4.CData[idx].Value.im < 0 then
+          Text  :=  Text  + '-i' +  floattostr(-1*Y4.CData[idx].Value.im)
+        else
+          Text  :=  Text  + '+i' +  floattostr(Y4.CData[idx].Value.im);
+        WriteLn(myFile,Text);
+    End;
+    CloseFile(myFile);
+}
   End;
 End;
-
 
 {*******************************************************************************
 *              Calculates the Connections matrix ZCC in the                    *
@@ -105,7 +137,6 @@ Begin
 
     ZCC   :=  ZCT.multiply(Contours);    // Calculates ZCC with no Link impedances
     ZCC   :=  ZCC.Add(ZLL);              // Adds the link impedance
-
 {
 //********************Dbug************************************
     AssignFile(myFile, 'C:\Temp\ZCCMat.csv');
@@ -206,9 +237,6 @@ Begin
     if Contours.NZero <> 0 then Result  :=  0
     else Result :=  1;
   End;
-
-
-
 End;
 
 {*******************************************************************************
@@ -350,10 +378,11 @@ Begin
 // The program is built as a state machine to facilitate the error detection
 // and quitting the routines after an error is detected wihtout killing the prog
   MQuit       :=  False;
-  Num_States  :=  6;
-  Local_State :=  0;
-  prog_str  :=  'A-Diakoptics initialization sumary:' + CRLF + CRLF;
-  ActiveActor                     :=  1;
+  Num_States  :=  7;                          // Number of states of the machine
+  Local_State :=  0;                          // Current state
+  prog_str    :=  'A-Diakoptics initialization sumary:' + CRLF + CRLF;
+  ActiveActor :=  1;
+  // Checks if the number of actors is within a reasonable limit
   if ActiveCircuit[1].Num_SubCkts > (CPU_Cores - 2) then
     ActiveCircuit[1].Num_SubCkts    :=  CPU_Cores - 2;
 
@@ -399,6 +428,7 @@ Begin
           ActorCPU[ActiveActor] :=  ActiveActor -1;
           DSSExecutive          :=  TExecutive.Create;  // Make a DSS object
           Parser[ActiveActor]   :=  TParser.Create;
+          AuxParser[ActiveActor]:=  TParser.Create;
           DSSExecutive.CreateDefaultDSSItems;
           Parallel_enabled      :=  False;
 
@@ -449,7 +479,7 @@ Begin
       6:  Begin                      // Builds the ZCC matrix
         prog_Str      :=  prog_str + CRLF + '- Building ZCC...';
         Calc_ZCC(length(Links));
-        prog_Str      :=  prog_str + 'Done' + CRLF;
+        prog_Str      :=  prog_str + 'Done';
       End;
       7:  Begin                      // Inverts ZCC to get Y4
         prog_Str      :=  prog_str + CRLF + '- Building Y4 ...';

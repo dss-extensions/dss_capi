@@ -697,13 +697,13 @@ VAR
     i:Integer;
 Begin
 
-    AuxParser.CmdString := S;  // Load up Parser
+    AuxParser[ActiveActor].CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
     WITH ActiveEquivalentObj DO
     FOR i := 1 to FNterms Do  Begin
-         S1 := AuxParser.NextParam; // ignore any parameter name  not expecting any
-         BusNam := AuxParser.StrValue;
+         S1 := AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+         BusNam := AuxParser[ActiveActor].StrValue;
          IF Length(BusNam)>0 THEN SetBus(i, BusNam);
     End;
 

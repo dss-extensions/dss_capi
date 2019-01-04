@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 12/21/2018 6:30:05 AM (- $Rev: 12980 $, 165949093).
+// File generated on 1/4/2019 5:38:01 PM (- $Rev: 12980 $, 102136765).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -103,6 +103,8 @@ library OpenDSSengine
   coclass Parallel;
   interface ILineCodes;
   coclass LineCodes;
+  interface IGICSources;
+  coclass GICSources;
 
 
   [
@@ -2922,6 +2924,64 @@ library OpenDSSengine
   };
 
   [
+    uuid(9CD30253-86C0-4339-B86E-745C912E8B15),
+    helpstring("COM interface for GICSources class"),
+    dual,
+    oleautomation
+  ]
+  interface IGICSources: IDispatch
+  {
+    [propget, id(0x000000C9)]
+    HRESULT _stdcall AllNames([out, retval] VARIANT* Value);
+    [propget, id(0x000000CA)]
+    HRESULT _stdcall Bus1([out, retval] BSTR* Value);
+    [propget, id(0x000000CB)]
+    HRESULT _stdcall Bus2([out, retval] BSTR* Value);
+    [propget, id(0x000000CC)]
+    HRESULT _stdcall Name([out, retval] BSTR* Value);
+    [propput, id(0x000000CC)]
+    HRESULT _stdcall Name([in] BSTR Value);
+    [propget, id(0x000000CD)]
+    HRESULT _stdcall Phases([out, retval] long* Value);
+    [propput, id(0x000000CD)]
+    HRESULT _stdcall Phases([in] long Value);
+    [propget, id(0x000000CE)]
+    HRESULT _stdcall EN([out, retval] double* Value);
+    [propput, id(0x000000CE)]
+    HRESULT _stdcall EN([in] double Value);
+    [propget, id(0x000000CF)]
+    HRESULT _stdcall EE([out, retval] double* Value);
+    [propput, id(0x000000CF)]
+    HRESULT _stdcall EE([in] double Value);
+    [propget, id(0x000000D0)]
+    HRESULT _stdcall Lat1([out, retval] double* Value);
+    [propput, id(0x000000D0)]
+    HRESULT _stdcall Lat1([in] double Value);
+    [propget, id(0x000000D1)]
+    HRESULT _stdcall Lat2([out, retval] double* Value);
+    [propput, id(0x000000D1)]
+    HRESULT _stdcall Lat2([in] double Value);
+    [propget, id(0x000000D2)]
+    HRESULT _stdcall Lon1([out, retval] double* Value);
+    [propput, id(0x000000D2)]
+    HRESULT _stdcall Lon1([in] double Value);
+    [propget, id(0x000000D3)]
+    HRESULT _stdcall Lon2([out, retval] double* Value);
+    [propput, id(0x000000D3)]
+    HRESULT _stdcall Lon2([in] double Value);
+    [propget, id(0x000000D4)]
+    HRESULT _stdcall Volts([out, retval] double* Value);
+    [propput, id(0x000000D4)]
+    HRESULT _stdcall Volts([in] double Value);
+    [propget, id(0x000000D5)]
+    HRESULT _stdcall Count([out, retval] long* Value);
+    [propget, id(0x000000D6)]
+    HRESULT _stdcall First([out, retval] long* Value);
+    [propget, id(0x000000D7)]
+    HRESULT _stdcall Next([out, retval] long* Value);
+  };
+
+  [
     uuid(AE501F77-F7F0-4201-A9AD-6AB385262203),
     helpstring("Events interface for DSSEvents Object")
   ]
@@ -3328,6 +3388,14 @@ library OpenDSSengine
   coclass LineCodes
   {
     [default] interface ILineCodes;
+  };
+
+  [
+    uuid(D8715F4F-25F5-4EF8-A6F8-8E790628702C)
+  ]
+  coclass GICSources
+  {
+    [default] interface IGICSources;
   };
 
 };

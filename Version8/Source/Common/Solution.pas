@@ -245,10 +245,10 @@ TYPE
        LD_FM : array [0..3] of TLDs_sys_fms;
        bCurtl : boolean;
 //****************************Timing variables**********************************
-       SolveStartTime      : int64;
-       SolveEndtime        : int64;
-       GStartTime     : int64;
-       Gendtime       : int64;
+       SolveStartTime         : int64;
+       SolveEndtime           : int64;
+       GStartTime             : int64;
+       Gendtime               : int64;
        LoopEndtime            : int64;
        Total_Time_Elapsed     : double;
        Solve_Time_Elapsed     : double;
@@ -280,7 +280,7 @@ TYPE
        constructor Create(ParClass:TDSSClass; const solutionname:String);
        destructor  Destroy; override;
 
-       PROCEDURE ZeroAuxCurrents;
+       PROCEDURE ZeroAuxCurrents(ActorID: Integer);
        FUNCTION  SolveZeroLoadSnapShot(ActorID : Integer) :Integer;
        PROCEDURE DoPFLOWsolution(ActorID : Integer);
 
@@ -529,7 +529,8 @@ End;
 // ===========================================================================================
 destructor TSolutionObj.Destroy;
 Begin
-      Reallocmem(AuxCurrents, 0);
+
+//      Reallocmem(AuxCurrents, 0);
       Reallocmem(Currents, 0);
       Reallocmem(dV, 0);
       Reallocmem(ErrorSaved, 0);
@@ -559,6 +560,8 @@ Begin
         ActorHandle[ActiveActor]  :=  nil;
       End;
       ActorMA_Msg[ActiveActor].Free;
+
+
       Inherited Destroy;
 End;
 
@@ -2161,14 +2164,14 @@ BEGIN
     {FOR i := 1 to ActiveCircuit[ActiveActor].NumNodes Do Caccum(Currents^[i], AuxCurrents^[i]);}
     // For Now, only AutoAdd Obj uses this
 
-    IF Dynavars.SolutionMode = AUTOADDFLAG THEN ActiveCircuit[ActiveActor].AutoAddObj.AddCurrents(SolveType, ActorID);
+    IF Dynavars.SolutionMode = AUTOADDFLAG THEN ActiveCircuit[ActorID].AutoAddObj.AddCurrents(SolveType, ActorID);
 
 END;
 
-PROCEDURE TSolutionObj.ZeroAuxCurrents;
+PROCEDURE TSolutionObj.ZeroAuxCurrents(ActorID: Integer);
 VAR i:Integer;
 BEGIN
-    FOR i := 1 to ActiveCircuit[ActiveActor].NumNodes Do AuxCurrents^[i] := CZERO;
+//    FOR i := 1 to ActiveCircuit[ActorID].NumNodes Do AuxCurrents^[i] := CZERO;
 END;
 
 PROCEDURE TSolutionObj.Check_Fault_Status(ActorID : Integer);
