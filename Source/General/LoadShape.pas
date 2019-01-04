@@ -500,7 +500,7 @@ BEGIN
             Inc(i);
             Readln(F, s); // read entire line  and parse with AuxParser
             {AuxParser allows commas or white space}
-            With AuxParser Do Begin
+            With AuxParser[ActiveActor] Do Begin
                 CmdString := s;
                 IF Interval=0.0 THEN Begin
                    NextParam; Hours^[i] := DblValue;
@@ -550,7 +550,7 @@ BEGIN
             Inc(i);
             Readln(F, s); // read entire line  and parse with AuxParser
             {AuxParser allows commas or white space}
-            With AuxParser Do Begin
+            With AuxParser[ActiveActor] Do Begin
                 CmdString := s;
                 IF Interval=0.0 THEN Begin
                    NextParam; Hours^[i] := DblValue;

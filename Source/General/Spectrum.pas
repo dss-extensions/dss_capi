@@ -348,7 +348,7 @@ BEGIN
          WHILE (NOT EOF(F)) AND (i < NumHarm) DO BEGIN
           Inc(i);
           Readln(F, S);  // Use Auxparser, which allows for formats
-          With AuxParser Do Begin
+          With AuxParser[ActiveActor] Do Begin
               CmdString := S;
               NextParam;  HarmArray^[i]  := DblValue;
               NextParam;  puMagArray^[i] := DblValue * 0.01;

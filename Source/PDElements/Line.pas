@@ -1633,15 +1633,15 @@ begin
       istart := FLineSpacingObj.NPhases + 1;
     end;
 
-  AuxParser.CmdString := Code;
+  AuxParser[ActiveActor].CmdString := Code;
   for i := istart to FLineSpacingObj.NWires do
     begin
-      AuxParser.NextParam; // ignore any parameter name  not expecting any
-      WireDataClass[ActiveActor].code := AuxParser.StrValue;
+      AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+      WireDataClass[ActiveActor].code := AuxParser[ActiveActor].StrValue;
       if Assigned(ActiveConductorDataObj) then
         FLineWireData^[i] := ActiveConductorDataObj
       else
-        DoSimpleMsg ('Wire "' + AuxParser.StrValue + '" was not defined first (LINE.'+name+').', 18103);
+        DoSimpleMsg ('Wire "' + AuxParser[ActiveActor].StrValue + '" was not defined first (LINE.'+name+').', 18103);
     end;
 
 end;
@@ -1657,15 +1657,15 @@ begin
 
   FPhaseChoice := ConcentricNeutral;
   FLineWireData := Allocmem(Sizeof(FLineWireData^[1]) * FLineSpacingObj.NWires);
-  AuxParser.CmdString := Code;
+  AuxParser[ActiveActor].CmdString := Code;
   for i := 1 to FLineSpacingObj.NPhases do
     begin // fill extra neutrals later
-      AuxParser.NextParam; // ignore any parameter name  not expecting any
-      CNDataClass[ActiveActor].code := AuxParser.StrValue;
+      AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+      CNDataClass[ActiveActor].code := AuxParser[ActiveActor].StrValue;
       if Assigned(ActiveConductorDataObj) then
         FLineWireData^[i] := ActiveConductorDataObj
       else
-        DoSimpleMsg ('CN cable ' + AuxParser.StrValue + ' was not defined first.(LINE.'+Name+')', 18105);
+        DoSimpleMsg ('CN cable ' + AuxParser[ActiveActor].StrValue + ' was not defined first.(LINE.'+Name+')', 18105);
     end;
 end;
 
@@ -1680,15 +1680,15 @@ begin
 
   FPhaseChoice := TapeShield;
   FLineWireData := Allocmem(Sizeof(FLineWireData^[1]) * FLineSpacingObj.NWires);
-  AuxParser.CmdString := Code;
+  AuxParser[ActiveActor].CmdString := Code;
   for i := 1 to FLineSpacingObj.NPhases do
     begin // fill extra neutrals later
-      AuxParser.NextParam; // ignore any parameter name  not expecting any
-      TSDataClass[ActiveActor].code := AuxParser.StrValue;
+      AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+      TSDataClass[ActiveActor].code := AuxParser[ActiveActor].StrValue;
       if Assigned(ActiveConductorDataObj) then
         FLineWireData^[i] := ActiveConductorDataObj
       else
-        DoSimpleMsg ('TS cable ' + AuxParser.StrValue + ' was not defined first. (LINE.'+Name+')', 18107);
+        DoSimpleMsg ('TS cable ' + AuxParser[ActiveActor].StrValue + ' was not defined first. (LINE.'+Name+')', 18107);
     end;
 end;
 

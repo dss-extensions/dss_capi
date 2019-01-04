@@ -2043,20 +2043,20 @@ begin
       On E:Exception Do DoSimpleMsg('Error with General Bus Data File:' +E.Message, 5444);
     END;
 
-       SaveDelims := AuxParser.Delimiters;
-       AuxParser.Delimiters := ',=' + #9;
-       AuxParser.CmdString := Line;
-       AuxParser.AutoIncrement := FALSE;
-       AuxParser.NextParam;
-       AuxParser.NextParam;
+       SaveDelims := AuxParser[ActiveActor].Delimiters;
+       AuxParser[ActiveActor].Delimiters := ',=' + #9;
+       AuxParser[ActiveActor].CmdString := Line;
+       AuxParser[ActiveActor].AutoIncrement := FALSE;
+       AuxParser[ActiveActor].NextParam;
+       AuxParser[ActiveActor].NextParam;
 
        With TListBoxForm.Create(nil) Do Begin
             Caption := 'Field to Plot';
-            FieldName := AuxParser.StrValue;
+            FieldName := AuxParser[ActiveActor].StrValue;
             While Length(FieldName)>0 Do Begin
                ComboBox1.Items.Add(FieldName);
-               AuxParser.NextParam;
-               FieldName := AuxParser.StrValue;
+               AuxParser[ActiveActor].NextParam;
+               FieldName := AuxParser[ActiveActor].StrValue;
             End;
 
             ComboBox1.ItemIndex := 0;
@@ -2066,7 +2066,7 @@ begin
             Else FieldIndex := ComboBox1.ItemIndex + 1;
             Free;
        End;
-       AuxParser.Delimiters := SaveDelims;
+       AuxParser[ActiveActor].Delimiters := SaveDelims;
 
        MaxScale :=' 0 ';
        With TValueEntryForm.Create(Nil) Do
@@ -2448,20 +2448,20 @@ begin
       On E:Exception Do DoSimpleMsg('Error with General Line Data File:' +E.Message, 5444);
     END;
 
-       SaveDelims := AuxParser.Delimiters;
-       AuxParser.Delimiters := ',=' + #9;
-       AuxParser.CmdString := Line;
-       AuxParser.AutoIncrement := FALSE;
-       AuxParser.NextParam;
-       AuxParser.NextParam;
+       SaveDelims := AuxParser[ActiveActor].Delimiters;
+       AuxParser[ActiveActor].Delimiters := ',=' + #9;
+       AuxParser[ActiveActor].CmdString := Line;
+       AuxParser[ActiveActor].AutoIncrement := FALSE;
+       AuxParser[ActiveActor].NextParam;
+       AuxParser[ActiveActor].NextParam;
 
        With TListBoxForm.Create(nil) Do Begin
             Caption := 'Field to Plot';
-            FieldName := AuxParser.StrValue;
+            FieldName := AuxParser[ActiveActor].StrValue;
             While Length(FieldName)>0 Do Begin
                ComboBox1.Items.Add(FieldName);
-               AuxParser.NextParam;
-               FieldName := AuxParser.StrValue;
+               AuxParser[ActiveActor].NextParam;
+               FieldName := AuxParser[ActiveActor].StrValue;
             End;
 
             ComboBox1.ItemIndex := 0;
@@ -2471,7 +2471,7 @@ begin
             Else FieldIndex := ComboBox1.ItemIndex + 1;
             Free;
        End;
-       AuxParser.Delimiters := SaveDelims;
+       AuxParser[ActiveActor].Delimiters := SaveDelims;
 
        MaxScale :=' 1 ';
        With TValueEntryForm.Create(Nil) Do

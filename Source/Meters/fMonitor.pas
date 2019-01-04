@@ -941,13 +941,13 @@ var
     Datahgh, datalw:double;
     iPhasenum : integer;
 begin
-    AuxParser.CmdString := strParam;  // Load up Parser
-    AuxParser.NextParam; // the first entry is the No. of iNode
-    iPhasenum := AuxParser.IntValue; //node number defined in cluster
-    AuxParser.NextParam; // high limit
-    Datahgh :=  AuxParser.DblValue;
-    AuxParser.NextParam; // low limit
-    Datalw :=  AuxParser.DblValue;
+    AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
+    AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
+    iPhasenum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
+    AuxParser[ActiveActor].NextParam; // high limit
+    Datahgh :=  AuxParser[ActiveActor].DblValue;
+    AuxParser[ActiveActor].NextParam; // low limit
+    Datalw :=  AuxParser[ActiveActor].DblValue;
 
     case iPhaseNum of
     0: begin
@@ -967,16 +967,16 @@ VAR
     iNodeNum : integer;
 Begin
 
-    AuxParser.CmdString := strParam;  // Load up Parser
+    AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
     //iMin := min(Nodes, )
     {Loop for no more than the expected number of windings;  Ignore omitted values}
 
-            AuxParser.NextParam; // the first entry is the No. of iNode
-            iNodeNum := AuxParser.IntValue; //node number defined in cluster
+            AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
+            iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
           FOR i := 2 to Nodes+1 Do  Begin
-               AuxParser.NextParam; // ignore any parameter name  not expecting any
-               DataStr := AuxParser.StrValue;
-               IF Length(DataStr) > 0 THEN pCommMatrix^[(iNodeNum-1)*Nodes+ i-1] := AuxParser.intValue;
+               AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+               DataStr := AuxParser[ActiveActor].StrValue;
+               IF Length(DataStr) > 0 THEN pCommMatrix^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].intValue;
           End;
 
 end;
@@ -987,16 +987,16 @@ VAR
     iNodeNum : integer;
 Begin
 
-    AuxParser.CmdString := strParam;  // Load up Parser
+    AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
     //iMin := min(Nodes, )
     {Loop for no more than the expected number of windings;  Ignore omitted values}
 
-            AuxParser.NextParam; // the first entry is the No. of iNode
-            iNodeNum := AuxParser.IntValue; //node number defined in cluster
+            AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
+            iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
           FOR i := 2 to Nodes+1 Do  Begin
-               AuxParser.NextParam; // ignore any parameter name  not expecting any
-               DataStr := AuxParser.StrValue;
-               IF Length(DataStr) > 0 THEN pCommDelayMatrix^[(iNodeNum-1)*Nodes+ i-1] := AuxParser.DblValue;
+               AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+               DataStr := AuxParser[ActiveActor].StrValue;
+               IF Length(DataStr) > 0 THEN pCommDelayMatrix^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].DblValue;
           End;
     ResetDelaySteps(iNodeNum);  //Use pCommDelayMatrix^ to calculate pCommDelaySteps^
 end;
@@ -1007,27 +1007,27 @@ VAR
     i:Integer;
     iNodeNum : integer;
 Begin
-    AuxParser.CmdString := strParam;  // Load up Parser
+    AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
 
     //WITH ActiveFMonitorObj DO
       //begin
        // for i := 1 to Nodes do
         //  begin
-               AuxParser.NextParam; // the first entry is the number of the iNode
-               iNodeNum := AuxParser.IntValue; //node number defined in the cluster
-               AuxParser.NextParam; // the first entry is the number of the iNode
-               pNodeFMs^[iNodeNum].vl_strBusName := AuxParser.strValue; //node number defined in the cluster
-               AuxParser.NextParam;
-               pNodeFMs^[iNodeNum].vl_strMeasuredName := AuxParser.StrValue; //Element name load into data str
+               AuxParser[ActiveActor].NextParam; // the first entry is the number of the iNode
+               iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in the cluster
+               AuxParser[ActiveActor].NextParam; // the first entry is the number of the iNode
+               pNodeFMs^[iNodeNum].vl_strBusName := AuxParser[ActiveActor].strValue; //node number defined in the cluster
+               AuxParser[ActiveActor].NextParam;
+               pNodeFMs^[iNodeNum].vl_strMeasuredName := AuxParser[ActiveActor].StrValue; //Element name load into data str
                //
                //pNodeFMs^[iNodeNum].vl_strName_dg := pNodeFMs^[iNodeNum].vl_strMeasuredName;
                //
-               AuxParser.NextParam;
-               pNodeFMs^[iNodeNum].vl_terminalNum := AuxParser.IntValue;  //Terminal number load into data str
-               AuxParser.NextParam;
-               pNodeFMs^[iNodeNum].vl_V_ref_dg := 1000*AuxParser.dblValue;
-               AuxParser.NextParam;
-               pNodeFMs^[iNodeNum].vl_kc_ul_dg := AuxParser.dblValue;
+               AuxParser[ActiveActor].NextParam;
+               pNodeFMs^[iNodeNum].vl_terminalNum := AuxParser[ActiveActor].IntValue;  //Terminal number load into data str
+               AuxParser[ActiveActor].NextParam;
+               pNodeFMs^[iNodeNum].vl_V_ref_dg := 1000*AuxParser[ActiveActor].dblValue;
+               AuxParser[ActiveActor].NextParam;
+               pNodeFMs^[iNodeNum].vl_kc_ul_dg := AuxParser[ActiveActor].dblValue;
                //2.402
           //end;
 
