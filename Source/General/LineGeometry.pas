@@ -303,10 +303,10 @@ BEGIN
                   istart := FNPhases + 1;
               end;
 
-              AuxParser.CmdString := Parser[ActorID].StrValue;
+              AuxParser[ActorID].CmdString := Parser[ActorID].StrValue;
               for i := istart to istop do begin
-                AuxParser.NextParam; // ignore any parameter name  not expecting any
-                FCondName[i] := AuxParser.StrValue;
+                AuxParser[ActorID].NextParam; // ignore any parameter name  not expecting any
+                FCondName[i] := AuxParser[ActorID].StrValue;
                 if ParamPointer=15 then
                   CNDataClass[ActorID].code := FCondName[i]
                 else if ParamPointer=16 then

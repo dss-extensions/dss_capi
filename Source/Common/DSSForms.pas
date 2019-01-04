@@ -306,17 +306,17 @@ Begin
    Readln(F, S);  // Read first line in file
    CloseFile(F);
 
-   SaveWhiteSpaceChars := AuxParser.Whitespace;
-   AuxParser.Whitespace := #9;
-   AuxParser.CmdString := S;  // Load up Parser
+   SaveWhiteSpaceChars := AuxParser[ActiveActor].Whitespace;
+   AuxParser[ActiveActor].Whitespace := #9;
+   AuxParser[ActiveActor].CmdString := S;  // Load up Parser
    // Skip specified number of columns in CSV file
-   For i:= 1 to NumFieldsToSkip Do Auxparser.NextParam;
+   For i:= 1 to NumFieldsToSkip Do Auxparser[ActiveActor].NextParam;
    With ChannelSelectForm.ListBox1 Do Begin
      Clear;
      iCounter := 0;
      Repeat
-       Auxparser.NextParam;
-       S := Auxparser.StrValue;
+       Auxparser[ActiveActor].NextParam;
+       S := Auxparser[ActiveActor].StrValue;
        If Length(S)>0 Then Begin
            iCounter := iCounter + 1;
            AddItem(Format('%d. %s',[iCounter, S]), nil);
@@ -324,7 +324,7 @@ Begin
      Until Length(S)=0;
    End;
    If ChannelSelectForm.ShowModal = mrOK Then Result := TRUE Else Result := FALSE;
-   AuxParser.Whitespace := SaveWhiteSpaceChars ;
+   AuxParser[ActiveActor].Whitespace := SaveWhiteSpaceChars ;
 End;
 
 

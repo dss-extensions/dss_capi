@@ -271,19 +271,19 @@ var
   Str:String;
   i:Integer;
 begin
-  AuxParser.CmdString := S;
+  AuxParser[ActiveActor].CmdString := S;
   with ActiveXfmrCodeObj do begin
     for i := 1 to Numwindings do begin
       ActiveWinding := i;
-      AuxParser.NextParam; // ignore any parameter name  not expecting any
-      Str := AuxParser.StrValue;
+      AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+      Str := AuxParser[ActiveActor].StrValue;
       if Length(Str) > 0 then
         case which of
           Conn: Winding^[ActiveWinding].Connection := InterpretConnection (Str);
-          kV:   Winding^[ActiveWinding].kvll := AuxParser.Dblvalue;
-          kVA:  Winding^[ActiveWinding].kva := AuxParser.Dblvalue;
-          R:    Winding^[ActiveWinding].Rpu := 0.01 * AuxParser.Dblvalue;
-          Tap:  Winding^[ActiveWinding].puTap := AuxParser.Dblvalue;
+          kV:   Winding^[ActiveWinding].kvll := AuxParser[ActiveActor].Dblvalue;
+          kVA:  Winding^[ActiveWinding].kva := AuxParser[ActiveActor].Dblvalue;
+          R:    Winding^[ActiveWinding].Rpu := 0.01 * AuxParser[ActiveActor].Dblvalue;
+          Tap:  Winding^[ActiveWinding].puTap := AuxParser[ActiveActor].Dblvalue;
         end;
     end;
   end;

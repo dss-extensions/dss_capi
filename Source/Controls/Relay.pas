@@ -407,9 +407,9 @@ Begin
                       'c': PropertyValue[14] := '(0.5, 2.0, 2.0)';
                       'v': PropertyValue[14] := '(5.0)';
                     END;
-                    AuxParser.CmdString := PropertyValue[14];
-                    ParamName := AuxParser.NextParam;
-                    NumReclose := AuxParser.ParseAsVector(4, RecloseIntervals);
+                    AuxParser[ActorID].CmdString := PropertyValue[14];
+                    ParamName := AuxParser[ActorID].NextParam;
+                    NumReclose := AuxParser[ActorID].ParseAsVector(4, RecloseIntervals);
                  End;
          END;
 
