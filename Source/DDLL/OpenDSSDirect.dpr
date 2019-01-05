@@ -210,7 +210,8 @@ uses
   fMonitor in '..\Meters\fMonitor.pas',
   LD_fm_infos in '..\Meters\LD_fm_infos.pas',
   VLNodeVars in '..\Meters\VLNodeVars.pas',
-  Generic5OrderMach in '..\PCElements\Generic5OrderMach.pas';
+  Generic5OrderMach in '..\PCElements\Generic5OrderMach.pas',
+  DGICSources in 'DGICSources.pas';
 
 //**************************end of the functions*************************************
 exports
@@ -254,7 +255,7 @@ exports
    InitAndGetYparams,GetCompressedYMatrix,ZeroInjCurr,GetSourceInjCurrents,GetPCInjCurr,
    SystemYChanged,BuildYMatrixD,UseAuxCurrents,AddInAuxCurrents,getIpointer,
    getVpointer,SolveSystem,ParallelI,ParallelV,LineCodesI,LineCodesF,LineCodesS,
-   LineCodesV;
+   LineCodesV, GICSourcesI,GICSourcesF,GICSourcesS,GICSourcesV;
 
    {$R *.RES}
 
