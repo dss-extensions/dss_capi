@@ -373,21 +373,21 @@ begin
                ListSize := Header.RecordSize;
                VarArrayRedim(arg, ListSize-1);
                k:=0;
-               SaveDelims := AuxParser.Delimiters;
-               AuxParser.Delimiters := ',';
-               SaveWhiteSpace := AuxParser.Whitespace;
-               AuxParser.Whitespace := '';
-               AuxParser.CmdString := String(Header.StrBuffer);
-               AuxParser.AutoIncrement := TRUE;
-               AuxParser.StrValue;  // Get rid of first two columns
-               AuxParser.StrValue;
+               SaveDelims := AuxParser[ActiveActor].Delimiters;
+               AuxParser[ActiveActor].Delimiters := ',';
+               SaveWhiteSpace := AuxParser[ActiveActor].Whitespace;
+               AuxParser[ActiveActor].Whitespace := '';
+               AuxParser[ActiveActor].CmdString := String(Header.StrBuffer);
+               AuxParser[ActiveActor].AutoIncrement := TRUE;
+               AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
+               AuxParser[ActiveActor].StrValue;
                WHILE k < ListSize DO Begin
-                  arg[k] := AuxParser.StrValue;
+                  arg[k] := AuxParser[ActiveActor].StrValue;
                   Inc(k);
                End;
-               AuxParser.AutoIncrement := FALSE; // be a good citizen
-               AuxParser.Delimiters := SaveDelims;
-               AuxParser.Whitespace := SaveWhiteSpace;
+               AuxParser[ActiveActor].AutoIncrement := FALSE; // be a good citizen
+               AuxParser[ActiveActor].Delimiters := SaveDelims;
+               AuxParser[ActiveActor].Whitespace := SaveWhiteSpace;
            End;
        End;
   end;
@@ -397,10 +397,10 @@ begin
         If pMon.SampleCount >0 Then Begin
                arg := VarArrayCreate([0, pMon.SampleCount-1], varDouble);
                ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-               AuxParser.CmdString := string(Header.StrBuffer);
-               AuxParser.AutoIncrement := TRUE;
-               FirstCol := AuxParser.StrValue;  // Get rid of first two columns
-               AuxParser.AutoIncrement := FALSE;
+               AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+               AuxParser[ActiveActor].AutoIncrement := TRUE;
+               FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
+               AuxParser[ActiveActor].AutoIncrement := FALSE;
                // check first col to see if it is "Hour"
                If System.Sysutils.CompareText(FirstCol, 'hour') = 0  Then Begin
                     AllocSize :=  Sizeof(SngBuffer^[1]) * Header.RecordSize;
@@ -431,10 +431,10 @@ begin
         If pMon.SampleCount >0 Then Begin
                arg := VarArrayCreate([0, pMon.SampleCount-1], varDouble);
                ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-               AuxParser.CmdString := string(Header.StrBuffer);
-               AuxParser.AutoIncrement := TRUE;
-               FirstCol := AuxParser.StrValue;  // Get rid of first two columns
-               AuxParser.AutoIncrement := FALSE;
+               AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+               AuxParser[ActiveActor].AutoIncrement := TRUE;
+               FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
+               AuxParser[ActiveActor].AutoIncrement := FALSE;
                // check first col to see if it is "Freq" for harmonics solution
                If System.Sysutils.CompareText(FirstCol, 'freq') = 0  Then Begin
                     AllocSize :=  Sizeof(SngBuffer^[1]) * Header.RecordSize;
@@ -466,10 +466,10 @@ begin
                index:=integer(arg);
                arg := VarArrayCreate([0, pMon.SampleCount-1], varDouble);
                ReadMonitorHeader(Header, FALSE);   // FALSE = leave at beginning of data
-               AuxParser.CmdString := string(Header.StrBuffer);
-               AuxParser.AutoIncrement := TRUE;
-               FirstCol := AuxParser.StrValue;  // Get rid of first two columns
-               AuxParser.AutoIncrement := FALSE;
+               AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+               AuxParser[ActiveActor].AutoIncrement := TRUE;
+               FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
+               AuxParser[ActiveActor].AutoIncrement := FALSE;
                 AllocSize :=  Sizeof(SngBuffer^[1]) * Header.RecordSize;
                 SngBuffer := Allocmem(AllocSize);
                 k := 0;
