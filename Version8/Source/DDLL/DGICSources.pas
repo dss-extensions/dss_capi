@@ -161,19 +161,19 @@ Begin
     0: begin  // GICSources.Bus1
       IF ActiveCircuit[ActiveActor] <> NIL
       THEN Begin
-           Result := pAnsiChar(ActiveCircuit[ActiveActor].ActiveCktElement.GetBus(1));
+           Result := pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].ActiveCktElement.GetBus(1)));
       End
     end;
     1: begin  // GICSources.Bus2
       IF ActiveCircuit[ActiveActor] <> NIL
       THEN Begin
-           Result := pAnsiChar(ActiveCircuit[ActiveActor].ActiveCktElement.GetBus(2));
+           Result := pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].ActiveCktElement.GetBus(2)));
       End
     end;
     2: begin  // GICSources.Name read
       IF ActiveCircuit[ActiveActor] <> NIL
       THEN Begin
-           Result := pAnsiChar(ActiveCircuit[ActiveActor].ActiveCktElement.Name);
+           Result := pAnsiChar(AnsiString(ActiveCircuit[ActiveActor].ActiveCktElement.Name));
       End
     end;
     3: begin  // GICSources.Name write
