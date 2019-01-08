@@ -81,7 +81,7 @@ TYPE
 
 VAR
 
-    DSSExecutive:TExecutive;
+    DSSExecutive: TExecutive;
 
 
 implementation
@@ -144,9 +144,7 @@ Begin
      CommandList.Free;
      OptionList.Free;
      Circuits.Free;
-//{$IFDEF MSWINDOWS}
      DisposeDSSClasses(True);
-//{$ENDIF}
      Parser[ActiveActor].Free;
 
      Inherited Destroy;

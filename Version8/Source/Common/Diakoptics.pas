@@ -36,6 +36,7 @@ End;
 *******************************************************************************}
 procedure Calc_Y4();
 var
+  value     : Complex;
   col,
   idx       : Integer;
   TempMat   : TcMatrix;
@@ -59,7 +60,11 @@ Begin
     for idx := 0 to (ZCC.NRows - 1) do
     Begin
       for col := 0 to ZCC.NCols - 1 do
-        Y4.insert(idx,col,TempMat.GetElement(idx+1,col+1));
+      Begin
+        value :=  TempMat.GetElement(idx+1,col+1);
+        if (value.re <> 0) and (value.re <> 0) then
+          Y4.insert(idx,col,value);
+      End;
     End;
 {
 //********************Dbug************************************
@@ -222,7 +227,7 @@ Begin
             Begin
               if i  = 0 then CDirection :=  1
               else CDirection :=  -1;
-              Contours.insert(j,(l-1),cmplx(CDirection,0));
+              Contours.insert(j,((l-1) + (LIdx -1)*3),cmplx(CDirection,0));
               Go_Flag :=  False;
             End;
             inc(j);
@@ -240,7 +245,7 @@ Begin
 End;
 
 {*******************************************************************************
-*            Calculates the Link brnahes matrix for further use                *
+*            Calculates the Link branches matrix for further use                *
 *                if there is an error returns <> 0                             *
 *******************************************************************************}
 Function Calc_ZLL(PLinks : PString; NLinks  : Integer):Integer;
@@ -409,28 +414,22 @@ Begin
       End;
       2:  Begin                      // Compile subsystems
         prog_Str    :=  prog_str + CRLF + '- Setting up the Actors...';
-        // Clears everything to craete the actors and compile the subsystems
+        // Clears everything to create the actors and compile the subsystems
+        Parallel_enabled                :=  False;
         DSSExecutive.ClearAll;
         Fileroot                        :=  GetCurrentDir;    //  Gets the current directory
         SolutionAbort                   :=  False;
-        DssExecutive.Command            :=  'ClearAll';
 
         // Compiles the interconnected Circuit for further calculations on actor 1
         ActiveActor                     :=  1;
         Proj_Dir                        :=  'compile "' + Fileroot + '\Torn_Circuit\master_interconnected.dss"';
         DssExecutive.Command            :=  Proj_Dir;
+        DoSolveCmd;
 
         // Creates the other actors
         for DIdx := 2 to Diak_Actors do
         Begin
-          inc(NumOfActors);
-          ActiveActor           :=  NumOfActors;
-          ActorCPU[ActiveActor] :=  ActiveActor -1;
-          DSSExecutive          :=  TExecutive.Create;  // Make a DSS object
-          Parser[ActiveActor]   :=  TParser.Create;
-          AuxParser[ActiveActor]:=  TParser.Create;
-          DSSExecutive.CreateDefaultDSSItems;
-          Parallel_enabled      :=  False;
+          New_Actor_Slot();
 
           if DIdx = 2 then  Dir :=  ''
           else  Dir :=  'zone_' + inttostr(DIdx - 1) + '\';
@@ -438,7 +437,7 @@ Begin
           DssExecutive.Command  := Proj_Dir;
           if DIdx > 2 then
             DssExecutive.Command  := Links[DIdx - 2] + '.enabled=False';
-          DssExecutive.Command  :=  'solve';
+          DoSolveCmd;
         End;
         prog_Str    :=  prog_str + 'Done';
         ErrorCode   :=  0;
@@ -485,6 +484,9 @@ Begin
         prog_Str      :=  prog_str + CRLF + '- Building Y4 ...';
         Calc_Y4();
         prog_Str      :=  prog_str + 'Done' + CRLF;
+        // Moves back the link branches list into actor 1 for further use
+        setlength(ActiveCircuit[1].Link_Branches,length(Links));
+        for DIdx := 0 to High(Links) do ActiveCircuit[1].Link_Branches[DIdx] := Links[DIdx];
       End
       else
       Begin
@@ -517,6 +519,7 @@ Begin
   {$ENDIF}
   // TEMc: TODO: should we report something here under FPC?
   // Davis: Done: This will add the needed report
+
   SolutionAbort :=  False;
 
 End;
