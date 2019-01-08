@@ -22,9 +22,7 @@ interface
 
 Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerList, PDELement,
      UComplex, Arraydef, CktElement, Circuit, IniRegSave, {$IFNDEF FPC}
-//     {$IFDEF MSWINDOWS}
      Graphics, System.IOUtils,
-//     {$ENDIF}
      {$ENDIF} inifiles,
 
      {Some units which have global vars defined here}
@@ -323,6 +321,7 @@ Function GetOutputDirectory:String;
 Procedure MyReallocMem(Var p:Pointer; newsize:integer);
 Function MyAllocMem(nbytes:Cardinal):Pointer;
 
+procedure New_Actor_Slot();
 procedure New_Actor(ActorID:  Integer);
 procedure Wait4Actors;
 
@@ -706,7 +705,7 @@ var
   iLastError: DWord;
 Begin
     Result := 'Unknown.' ;
-
+    {$IFDEF MSWINDOWS}
     InfoSize := GetFileVersionInfoSize(PChar(DSSFileName), Wnd);
     if InfoSize <> 0 then
     begin
@@ -730,6 +729,7 @@ Begin
       Result := Format('GetFileVersionInfo failed: (%d) %s',
                [iLastError, SysErrorMessage(iLastError)]);
     end;
+    {$ENDIF}
 End;
 {$ENDIF}
 
@@ -753,7 +753,11 @@ var
   TempFile: array[0..MAX_PATH] of Char;
 begin
   if GetTempFileName(PChar(Dir), 'DA', 0, TempFile) <> 0 then
-    {$IFDEF FPC}Result := DeleteFile(TempFile){$ELSE}Result := Windows.DeleteFile(TempFile){$ENDIF}
+    {$IFDEF FPC}Result := DeleteFile(TempFile){$ELSE}
+    {$IFDEF MSWINDOWS}
+      Result := Windows.DeleteFile(TempFile)
+    {$ENDIF}
+    {$ENDIF}
   else
     Result := False;
 end;
@@ -941,7 +945,22 @@ Begin
   End;
 end;
 
-
+// Prepares memory to host a new actor
+procedure New_Actor_Slot();
+Begin
+  if NumOfActors < CPU_Cores then
+  begin
+    inc(NumOfActors);
+    GlobalResult              :=  inttostr(NumOfActors);
+    ActiveActor               :=  NumOfActors;
+    ActorCPU[ActiveActor]     :=  ActiveActor -1;
+    DSSExecutive              :=  TExecutive.Create;  // Make a DSS object
+    Parser[ActiveActor]       :=  TParser.Create;
+    AuxParser[ActiveActor]    :=  TParser.Create;
+    DSSExecutive.CreateDefaultDSSItems;
+  end
+  else DoSimpleMsg('There are no more CPUs available', 7001)
+End;
 
 // Creates a new actor
 procedure New_Actor(ActorID:  Integer);
