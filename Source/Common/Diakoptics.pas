@@ -37,6 +37,8 @@ End;
 procedure Calc_Y4();
 var
   value     : Complex;
+  NumRows,
+  NumCols,
   col,
   idx       : Integer;
   TempMat   : TcMatrix;
@@ -56,10 +58,12 @@ Begin
     //  Inverts the ZCC equivalent
     TempMat.Invert;
     Y4.sparse_matrix_Cmplx(ZCC.NRows,ZCC.NCols);
+    NumRows   :=  ZCC.NRows - 1;
+    NumCols   :=  ZCC.NCols - 1;
     // Moves the inverse into Y4 for furhter use
-    for idx := 0 to (ZCC.NRows - 1) do
+    for idx := 0 to NumRows do
     Begin
-      for col := 0 to ZCC.NCols - 1 do
+      for col := 0 to NumCols do
       Begin
         value :=  TempMat.GetElement(idx+1,col+1);
         if (value.re <> 0) and (value.re <> 0) then
@@ -111,9 +115,11 @@ Begin
     GetSize(hY, @NumNodes);
     col       :=  NumNodes;
     dec(Links);
-    ZCT.sparse_matrix_Cmplx(Links*3,NumNodes);
-    CVector   :=  allocmem(NumNodes*2);                    // Real and imag parts
-    ZVector   :=  allocmem(NumNodes*2);
+    ZCT.sparse_matrix_Cmplx(Links*3,col);
+    ReAllocMem(CVector, SizeOf(CVector^[1]) * (NumNodes+1));
+    ReAllocMem(ZVector, SizeOf(ZVector^[1]) * (NumNodes+1));
+//    CVector   :=  allocmem(col*8 + 2);                    // Real and imag parts
+//    ZVector   :=  allocmem(col*8 + 2);
     idx3      :=  Links*3 - 1;
 
     for idx2 := 0 to idx3 do
@@ -137,11 +143,14 @@ Begin
         if (CTemp.re <> 0) and (CTemp.im <> 0) then
            ZCT.insert(idx2,(idx-1),ZVector[idx]);
       End;
-
+      idx :=  col;
     End;
 
     ZCC   :=  ZCT.multiply(Contours);    // Calculates ZCC with no Link impedances
     ZCC   :=  ZCC.Add(ZLL);              // Adds the link impedance
+
+    ReAllocMem(CVector,0);
+    ReAllocMem(ZVector,0);
 {
 //********************Dbug************************************
     AssignFile(myFile, 'C:\Temp\ZCCMat.csv');
