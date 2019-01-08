@@ -1,7 +1,7 @@
 unit ExportOptions;
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-        NumExportOptions = 57;
+        NumExportOptions = 61;
 
 FUNCTION DoExportCmd:Integer;
 
@@ -93,6 +93,10 @@ Begin
       ExportOption[55] := 'IncMatrixCols';
       ExportOption[56] := 'BusLevels';
       ExportOption[57] := 'Laplacian';
+      ExportOption[58] := 'ZLL';
+      ExportOption[59] := 'ZCC';
+      ExportOption[60] := 'Contours';
+      ExportOption[61] := 'Y4';
 
       ExportHelp[ 1] := '(Default file = EXP_VOLTAGES.CSV) Voltages to ground by bus/node.';
       ExportHelp[ 2] := '(Default file = EXP_SEQVOLTAGES.CSV) Sequence voltages.';
@@ -160,6 +164,10 @@ Begin
       ExportHelp[56] := 'Exports the names and the level of each Bus inside the Circuit based on its topology information. The level value defines' +
                         'how far or close is the bus from the circuits backbone (0 means that the bus is at the backbone)';
       ExportHelp[57] := 'Exports the Laplacian matrix calculated using the branch-to-node Incidence matrix in compressed coordinated format (Row,Col,Value)';
+      ExportHelp[58] := 'Exports the Link branches matrix (ZLL) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates. If A-Diakoptics is not initialized this command does nothing';
+      ExportHelp[59] := 'Exports the connectivity matrix (ZCC) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates.  If A-Diakoptics is not initialized this command does nothing';
+      ExportHelp[60] := 'Exports the Contours matrix (C) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are integers.  If A-Diakoptics is not initialized this command does nothing';
+      ExportHelp[61] := 'Exports the inverse of Z4 (ZCC) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates.  If A-Diakoptics is not initialized this command does nothing';
 End;
 
 //----------------------------------------------------------------------------
@@ -366,6 +374,10 @@ Begin
          55: FileName := 'Inc_Matrix_Cols.csv';
          56: FileName := 'Bus_Levels.csv';
          57: FileName := 'Laplacian.csv';
+         58: FileName := 'ZLL.csv';
+         59: FileName := 'ZCC.csv';
+         60: FileName := 'C.csv';
+         61: FileName := 'Y4.csv';
 
        ELSE
              FileName := 'EXP_VOLTAGES.CSV';    // default
@@ -451,6 +463,10 @@ Begin
      55: ExportIncMatrixCols(FileName);
      56: ExportBusLevels(FileName);
      57: ExportLaplacian(FileName);
+     58: ExportZLL(FileName);
+     59: ExportZCC(FileName);
+     60: ExportC(FileName);
+     61: ExportY4(FileName);
 
    ELSE
         // ExportVoltages(FileName);    // default

@@ -603,19 +603,7 @@ Begin
 
        101: DoVarCmd;
        105: begin
-              if NumOfActors < CPU_Cores then
-              begin
-                inc(NumOfActors);
-                GlobalResult          :=  inttostr(NumOfActors);
-                ActiveActor           :=  NumOfActors;
-                ActorCPU[ActiveActor] :=  ActiveActor -1;
-                DSSExecutive          :=  TExecutive.Create;  // Make a DSS object
-                Parser[ActiveActor]   :=  TParser.Create;
-                AuxParser[ActiveActor]:=  TParser.Create;
-                DSSExecutive.CreateDefaultDSSItems;
-//                Create_KLU;
-              end
-              else DoSimpleMsg('There are no more CPUs available', 7001)
+              New_Actor_Slot();
             end;
        106: DoClearAllCmd;
        107: begin

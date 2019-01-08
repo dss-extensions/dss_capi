@@ -1982,8 +1982,9 @@ Begin
 
      CloseFile(F);
 
+     {$IFDEF MSWINDOWS}
      If Nrecords>0 Then SavedFileList[ActiveActor].Add(FileName) else DeleteFile(FileName);
-
+     {$ENDIF}
      DSS_Class.Saved := TRUE;
 
    Except

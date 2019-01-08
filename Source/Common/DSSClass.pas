@@ -102,7 +102,7 @@ TYPE
    END;
 
 VAR
-   DSSClasses         :TDSSClasses;
+   DSSClasses         : TDSSClasses;
 
 
 implementation
