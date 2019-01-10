@@ -62,6 +62,7 @@ USES
     Dialogs,
     Sparse_Math,
     SyncObjs,
+    ExecHelper,
     CktElement;
 
 CONST
@@ -72,7 +73,8 @@ CONST
      SIMULATE    = 0;
      EXIT_ACTOR  = 1;
 
-
+     ALL_ACTORS  = 0; // Wait flag for all the actors
+     AD_ACTORS   = 1; // Wait flag to wait only for the A-Diakoptics actors
 TYPE
 
    EControlProblem = class(Exception);
@@ -126,15 +128,16 @@ TYPE
 
 //*******************************Private components*****************************
     protected
-      FMessage      : String;
+      FMessage,
+      Msg_Cmd       : string;
       UINotifier,
       FInfoProc     : TInfoMessageCall;
-      Msg_Cmd       : string;
-      ActorID       : integer;
+      ActorID,
+      MsgType       : Integer;
       UIEvent,
       ActorMsg      : TEvent;
-      MsgType       : Integer;
-      ActorActive   : Boolean;
+      AD_Init,          // used to know if the actors require a partial solution
+      ActorActive,
       Processing    : Boolean;
 
       procedure Notify_Main;
@@ -229,10 +232,15 @@ TYPE
        VmagSaved : pDoubleArray;
        VoltageBaseChanged : Boolean;
 
-        {Voltage and Current Arrays}
-       NodeV    : pNodeVArray;    // Main System Voltage Array   allows NodeV^[0]=0
-       Currents : pNodeVArray;      // Main System Currents Array
+       {Voltage and Current Arrays}
+       NodeV     : pNodeVArray;     // Main System Voltage Array   allows NodeV^[0]=0
+       Currents  : pNodeVArray;     // Main System Currents Array
 
+       {A-Diakoptics variables}
+       Node_dV   : pNodeVArray;     // Used to store the partial solution voltage
+
+
+//******************************************************************************
        IncMat    :  Tsparse_matrix; // Incidence sparse matrix
        Laplacian :  Tsparse_matrix; // Laplacian sparse matrix
        {by Dahei for FMonitor}
@@ -533,18 +541,18 @@ Begin
 //      Reallocmem(AuxCurrents, 0);
       Reallocmem(Currents, 0);
       Reallocmem(dV, 0);
-      Reallocmem(ErrorSaved, 0);
+{      Reallocmem(ErrorSaved, 0);
       Reallocmem(NodeV, 0);
       Reallocmem(NodeVbase, 0);
-      Reallocmem(VMagSaved, 0);
+      Reallocmem(VMagSaved, 0);  }
 
       If hYsystem <> 0 THEN DeleteSparseSet(hYsystem);
       If hYseries <> 0 THEN DeleteSparseSet(hYseries);
       {by Dahei: }
-      Reallocmem(NodeYii, 0);  // for bii
+{      Reallocmem(NodeYii, 0);  // for bii
       Reallocmem(pColIdx_Yii, 0);
       Reallocmem(pRowIdx_Yii, 0);
-      Reallocmem(pcVals_Yii, 0);
+      Reallocmem(pcVals_Yii, 0);      }
       {---------------------------}
 //      SetLogFile ('c:\\temp\\KLU_Log.txt', 0);
 
@@ -654,7 +662,7 @@ Try
       // If the parallel mode is not active, Waits until the actor finishes
       if not Parallel_enabled then
       Begin
-        Wait4Actors;
+        Wait4Actors(ALL_ACTORS);
         {$IFNDEF FPC}
         if Not ADiakoptics then
         Begin
@@ -2585,6 +2593,7 @@ begin
   MsgType                   :=  -1;
   ActorActive               :=  True;
   Processing                :=  False;
+  AD_Init                   :=  False;    // This is used only by the A-Diakoptics coordiantor (ID = 1)
 
   Inherited Create(Susp);
   {$IFDEF MSWINDOWS}              // Only for windows
@@ -2604,6 +2613,7 @@ begin
   MsgType                   :=  -1;
   ActorActive               :=  True;
   Processing                :=  False;
+  AD_Init                   :=  False;    // This is used only by the A-Diakoptics coordiantor (ID = 1)
   Inherited Create(Susp);
 end;
 {$ENDIF}
@@ -2657,6 +2667,8 @@ var
 {$IFNDEF FPC}
   ScriptEd    : TScriptEdit;
 {$ENDIF}
+  i,
+  j,
   idx         : Integer;
 
   begin
@@ -2667,35 +2679,74 @@ var
       Begin
 
             ActorMsg.WaitFor(INFINITE);
-//          Begin
             ActorMsg.ResetEvent;
             Processing                  := True;
             case MsgType of             // Evaluates the incomming message
-            SIMULATE  :                 // Simulates the active ciruit on this actor
-              Try
+              SIMULATE  :               // Simulates the active ciruit on this actor
+                Try
                 Begin
-                  Case Dynavars.SolutionMode OF
-                      SNAPSHOT       : SolveSnap(ActorID);
-                      YEARLYMODE     : SolveYearly(ActorID);
-                      DAILYMODE      : SolveDaily(ActorID);
-                      DUTYCYCLE      : SolveDuty(ActorID);
-                      DYNAMICMODE    : SolveDynamic(ActorID);
-                      MONTECARLO1    : SolveMonte1(ActorID);
-                      MONTECARLO2    : SolveMonte2(ActorID);
-                      MONTECARLO3    : SolveMonte3(ActorID);
-                      PEAKDAY        : SolvePeakDay(ActorID);
-                      LOADDURATION1  : SolveLD1(ActorID);
-                      LOADDURATION2  : SolveLD2(ActorID);
-                      DIRECT         : SolveDirect(ActorID);
-                      MONTEFAULT     : SolveMonteFault(ActorID);  // Monte Carlo Fault Cases
-                      FAULTSTUDY     : SolveFaultStudy(ActorID);
-                      AUTOADDFLAG    : ActiveCircuit[ActorID].AutoAddObj.Solve(ActorID);
-                      HARMONICMODE   : SolveHarmonic(ActorID);
-                      GENERALTIME    : SolveGeneralTime(ActorID);
-                      HARMONICMODET  : SolveHarmonicT(ActorID);  //Declares the Hsequential-time harmonics
-                  Else
-                      DosimpleMsg('Unknown solution mode.', 481);
-                  End;
+                  if ADiakoptics and (ActorID = 1) then
+                  Begin
+                  // This is the coordinator actor in A-Diakoptics mode
+                    if AD_Init then
+                    Begin
+                    // Loads the partial solution into actors considering the previous iteration
+
+                    End
+                    else
+                    Begin
+                    // Setups the other actors to match the options of the coordinator
+                      for i := 2 to NumOfActors do
+                      Begin
+                        ActiveCircuit[i].Solution.Mode                  :=  ActiveCircuit[1].Solution.Mode;
+                        ActiveCircuit[i].solution.DynaVars.h            :=  ActiveCircuit[1].solution.DynaVars.h;
+                        ActiveCircuit[i].solution.DynaVars.intHour      :=  ActiveCircuit[1].solution.DynaVars.intHour;
+                        ActiveCircuit[i].solution.DynaVars.t            :=  ActiveCircuit[1].solution.DynaVars.t;
+                        ActiveCircuit[i].solution.MaxIterations         :=  ActiveCircuit[1].solution.MaxIterations;
+                        ActiveCircuit[i].solution.MaxControlIterations  :=  ActiveCircuit[1].solution.MaxControlIterations;
+                        ActiveCircuit[i].solution.ControlMode           :=  ActiveCircuit[1].solution.ControlMode;
+                        ActiveCircuit[i].solution.NumberOfTimes         :=  1;
+                      End;
+                      AD_Init   :=  True;
+                    End;
+                    // Starts the simulation
+                    FOR i := 1 TO NumberOfTimes Do
+                    Begin
+                      Increment_time;
+                      for j := 2 to NumOfActors do
+                      Begin
+                        ActiveActor :=  j;
+                        CmdResult   :=  DoSolveCmd;
+                      End;
+                      Wait4Actors(AD_Actors);
+                    End;
+                    ActiveActor :=  1;    // Returns the control to Actor 1
+                  End
+                  else
+                  Begin
+                    Case Dynavars.SolutionMode OF
+                        SNAPSHOT       : SolveSnap(ActorID);
+                        YEARLYMODE     : SolveYearly(ActorID);
+                        DAILYMODE      : SolveDaily(ActorID);
+                        DUTYCYCLE      : SolveDuty(ActorID);
+                        DYNAMICMODE    : SolveDynamic(ActorID);
+                        MONTECARLO1    : SolveMonte1(ActorID);
+                        MONTECARLO2    : SolveMonte2(ActorID);
+                        MONTECARLO3    : SolveMonte3(ActorID);
+                        PEAKDAY        : SolvePeakDay(ActorID);
+                        LOADDURATION1  : SolveLD1(ActorID);
+                        LOADDURATION2  : SolveLD2(ActorID);
+                        DIRECT         : SolveDirect(ActorID);
+                        MONTEFAULT     : SolveMonteFault(ActorID);  // Monte Carlo Fault Cases
+                        FAULTSTUDY     : SolveFaultStudy(ActorID);
+                        AUTOADDFLAG    : ActiveCircuit[ActorID].AutoAddObj.Solve(ActorID);
+                        HARMONICMODE   : SolveHarmonic(ActorID);
+                        GENERALTIME    : SolveGeneralTime(ActorID);
+                        HARMONICMODET  : SolveHarmonicT(ActorID);  //Declares the Hsequential-time harmonics
+                    Else
+                        DosimpleMsg('Unknown solution mode.', 481);
+                    End;
+                  end;
                   {$IFNDEF FPC}
                   QueryPerformanceCounter(GEndTime);
                   {$ELSE}
@@ -2707,6 +2758,9 @@ var
                   Processing                :=  False;
                   FMessage                  :=  '1';
                   ActorStatus[ActorID]      :=  1;      // Global to indicate that the actor is ready
+
+                  // If this is an A-Diakoptics actor reports the results to the coordinator (Actor 1)
+                  if ADiakoptics and (ActorID <> 1) then Notify_Main;
 
                   // Sends a message to Actor Object (UI) to notify that the actor has finised
                   UIEvent.SetEvent;
@@ -2737,19 +2791,18 @@ var
                   Begin
                     if (Parallel_enabled and (ActorID = 1)) then
                       if Not IsDLL then queue(CallCallBack); // Refreshes the GUI if running asynchronously
-                  End;                  if Parallel_enabled then
+                  End;
+                if not Parallel_enabled then
                   DoSimpleMsg('Error Encountered in Solve: ' + E.Message, 482);
                 End;
               End;
-            EXIT_ACTOR:                // Terminates the thread
+              EXIT_ACTOR:                // Terminates the thread
               Begin
                 ActorActive  :=  False;
               End
-            else                       // I don't know what the message is
+              else                       // I don't know what the message is
               DosimpleMsg('Unknown Message.', 7010);
             End;
-
-//          End;
 
       end;
     end;
@@ -2762,7 +2815,7 @@ procedure TSolver.CallCallBack;
 
 procedure TSolver.Notify_Main;
 Begin
-    ActorMA_Msg[ActorID].SetEvent;
+    // Will do something
 End;
 
 procedure TSolver.DoTerminate;        // Is the end of the thread

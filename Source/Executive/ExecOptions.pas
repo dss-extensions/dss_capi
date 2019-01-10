@@ -741,8 +741,8 @@ Begin
                 End;
           121:  ActiveCircuit[ActiveActor].Solution.SampleTheMeters :=  InterpretYesNo(Param);
           122:  Begin
-                ADiakoptics :=  InterpretYesNo(Param);
-                if ADIakoptics then ADiakopticsInit();  // Initalizes the parallel environment if enabled
+                  if InterpretYesNo(Param) then ADiakopticsInit()  // Initalizes the parallel environment if enabled
+                  else ADiakoptics :=  False;
                 End;
           123:  ActiveCircuit[ActiveActor].solution.MinIterations   := Parser[ActiveActor].IntValue
          ELSE

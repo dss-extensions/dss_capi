@@ -3,7 +3,7 @@ unit Diakoptics;
 interface
 
 uses
-  Circuit, Solution, DSSGlobals, SysUtils, DSSClassDefs, 
+  Circuit, Solution, DSSGlobals, SysUtils, DSSClassDefs, EnergyMeter,
   {$IFDEF FPC}CmdForms{$ELSE}DSSForms, ScriptEdit{$ENDIF};
 
 Function Solve_Diakoptics():Integer;
@@ -43,8 +43,8 @@ var
   idx       : Integer;
   TempMat   : TcMatrix;
 // 4 Debugging
-  myFile    : TextFile;
-  Text      : String;
+//  myFile    : TextFile;
+//  Text      : String;
 
 Begin
   WITH ActiveCircuit[1], ActiveCircuit[1].Solution DO
@@ -101,31 +101,29 @@ var
   idx3,
   idx2,
   idx       : Integer;
-  NumNodes  : LongWord;
+  NNodes    : LongWord;
   CVector,
   ZVector   : pComplexArray;
   Ctemp     : Complex;
 // 4 Debugging
-  myFile    : TextFile;
-  Text      : String;
+//  myFile    : TextFile;
+//  Text      : String;
 
 Begin
   WITH ActiveCircuit[1], ActiveCircuit[1].Solution DO
   Begin
-    GetSize(hY, @NumNodes);
-    col       :=  NumNodes;
+    GetSize(hY, @NNodes);
+    col       :=  NNodes;
     dec(Links);
     ZCT.sparse_matrix_Cmplx(Links*3,col);
-    ReAllocMem(CVector, SizeOf(CVector^[1]) * (NumNodes+1));
-    ReAllocMem(ZVector, SizeOf(ZVector^[1]) * (NumNodes+1));
-//    CVector   :=  allocmem(col*8 + 2);                    // Real and imag parts
-//    ZVector   :=  allocmem(col*8 + 2);
+    CVector   :=  Allocmem(SizeOf(CVector^[1]) * (col+1));
+    ZVector   :=  Allocmem(SizeOf(ZVector^[1]) * (col+1));
     idx3      :=  Links*3 - 1;
 
     for idx2 := 0 to idx3 do
     Begin
 
-      for idx := 1 to NumNodes do CVector^[idx] :=  cZERO;  // Makes it zero
+      for idx := 1 to col do CVector^[idx] :=  cZERO;  // Makes it zero
 
       for idx := 1 to length(Contours.CData) do
       Begin
@@ -149,8 +147,8 @@ Begin
     ZCC   :=  ZCT.multiply(Contours);    // Calculates ZCC with no Link impedances
     ZCC   :=  ZCC.Add(ZLL);              // Adds the link impedance
 
-    ReAllocMem(CVector,0);
-    ReAllocMem(ZVector,0);
+    FreeMem(CVector);
+    FreeMem(ZVector);
 {
 //********************Dbug************************************
     AssignFile(myFile, 'C:\Temp\ZCCMat.csv');
@@ -181,6 +179,7 @@ function Calc_C_Matrix(PLinks : PString; NLinks  : Integer):Integer;
 var
   LIdx,k,l,
   j,CDirection,
+  NumPhases,
   i           : Integer;
   Elem_Buses,
   Node_Names  : Array of String;
@@ -192,7 +191,7 @@ Begin
   ActiveActor   :=  1;
   WITH ActiveCircuit[ActiveActor] DO
   Begin
-
+    Result    :=  0;
     setlength(Elem_Buses,2);
     setlength(Node_Names,0);
     FOR i := 1 to NumNodes DO
@@ -208,48 +207,64 @@ Begin
     Begin
 
       inc(PLinks);                  // Pointing to the Next link branch (starting in 1)
-
-      i         :=  SetElementActive(string(PLinks^));
-      // Gest the names of the buses fot this PDElement
-      For i := 1 to  ActiveCktElement.Nterms Do
+      temp      :=  string(PLinks^);
+      j         :=  ansipos('.',temp);
+      temp      :=  lowercase(copy(temp,0,(j - 1)));
+      if (temp = 'line') then
       Begin
-        Elem_Buses[i-1] := ActiveCktElement.GetBus(i);
-        j               :=  ansipos('.',Elem_Buses[i-1]);
-        if j <> 0 then
-          Elem_Buses[i-1] :=  copy(Elem_Buses[i-1],0,j);
-      End;
-      //  Marks the connection point in the contours matrix
-      For l :=  1 to ActiveCktElement.NPhases Do
-      Begin
-
-        for i := 0 to 1 do
+        i         :=  SetElementActive(string(PLinks^));
+        // Gest the names of the buses fot this PDElement
+        // If it is something different from a Transformer reports an error
+        // Since a link branch cannot be a transformer
+        For i := 1 to  ActiveCktElement.Nterms Do
+        Begin
+          Elem_Buses[i-1] := ActiveCktElement.GetBus(i);
+          j               :=  ansipos('.',Elem_Buses[i-1]);
+          if j <> 0 then
+            Elem_Buses[i-1] :=  copy(Elem_Buses[i-1],0,j)
+          else
+            Elem_Buses[i-1] :=  Elem_Buses[i-1] + '.';
+        End;
+        //  Marks the connection point in the contours matrix
+        NumPhases   :=  ActiveCktElement.NPhases;
+        For l :=  1 to NumPhases Do
         Begin
 
-          temp    :=  Elem_Buses[i] + inttostr(l);
-          Go_Flag :=  True;
-          j       :=  0;
-          while Go_Flag and (j <= High(Node_Names)) do
+          for i := 0 to 1 do
           Begin
 
-            k       :=  ansipos(temp,Node_Names[j]);
-            if k  <>  0 then
+            temp    :=  Elem_Buses[i] + inttostr(l);
+            Go_Flag :=  True;
+            j       :=  0;
+            while Go_Flag and (j <= High(Node_Names)) do
             Begin
-              if i  = 0 then CDirection :=  1
-              else CDirection :=  -1;
-              Contours.insert(j,((l-1) + (LIdx -1)*3),cmplx(CDirection,0));
-              Go_Flag :=  False;
+
+              k       :=  ansipos(temp,Node_Names[j]);
+              if k  <>  0 then
+              Begin
+                if i  = 0 then CDirection :=  1
+                else CDirection :=  -1;
+                Contours.insert(j,((l-1) + (LIdx -1)*3),cmplx(CDirection,0));
+                Go_Flag :=  False;
+              End;
+              inc(j);
+
             End;
-            inc(j);
 
           End;
-
         End;
-
+      End
+      else
+      Begin
+        Result  :=  -1; // There was an error when selecting the link branches (MeTIS)
+        exit;  // Abort
       End;
-
     End;
-    if Contours.NZero <> 0 then Result  :=  0
-    else Result :=  1;
+    // More error checking
+    if Result = 0 then
+      if Contours.NZero <> 0 then Result  :=  0
+      else Result :=  1;
+
   End;
 End;
 
@@ -350,20 +365,32 @@ End;
 *******************************************************************************}
 Function ADiakoptics_Tearing(): Integer;
 var
+
   Prev_Mode,                              // Stores the previous solution mode
   Num_Ckts    : Integer;                  // Stores the number of Sub-Circuits created
 Begin
-  With ActiveCircuit[ActiveActor].Solution do
+  With ActiveCircuit[ActiveActor],ActiveCircuit[ActiveActor].Solution do
   Begin
+    ActiveActor                   :=  1;
     Num_Ckts                      :=  ActiveCircuit[ActiveActor].Tear_Circuit();
     Prev_mode                     :=  Dynavars.SolutionMode;
     Dynavars.SolutionMode         :=  0;          // Shapshot mode
-    solve(ActiveActor);
-    ActiveCircuit[ActiveActor].Save_SubCircuits();
-    Dynavars.SolutionMode         :=  Prev_mode;  // Goes back to the previous solution mode
-    ActiveCircuit[1].Num_SubCkts  :=  Num_Ckts;
-    GlobalResult                  := 'Sub-Circuits Created: ' + inttostr(Num_Ckts);
-    Result                        :=  0;          // No error handling here
+    DSSExecutive.Command          :=  'set controlmode=off';
+    Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE, ActiveActor);
+//    DoSolveCmd();
+    if not SolutionAbort then
+    Begin
+      Save_SubCircuits();
+      Dynavars.SolutionMode         :=  Prev_mode;  // Goes back to the previous solution mode
+      ActiveCircuit[1].Num_SubCkts  :=  Num_Ckts;
+      GlobalResult                  :=  'Sub-Circuits Created: ' + inttostr(Num_Ckts);
+      Result                        :=  0;
+    End
+    else
+    Begin
+      GlobalResult                  := 'There was an error when tearing the circuit ';
+      Result                        :=  1;
+    End;
   End;
 End;
 
@@ -373,6 +400,8 @@ End;
 *******************************************************************************}
 procedure ADiakopticsInit();
 var
+  EMeter      : TEnergyMeterObj;
+  j,
   Local_State,
   Num_States,
   ErrorCode,
@@ -404,13 +433,19 @@ Begin
   Begin
     case Local_State of
       0: Begin                       // Create subcircuits
+
         prog_Str    :=  prog_str + '- Creating SubCircuits...' + CRLF;
 
         ErrorCode   :=  ADiakoptics_Tearing();
-        prog_Str    :=  prog_str + '  ' + inttostr(ActiveCircuit[1].Num_SubCkts) + ' Sub-Circuits Created' + CRLF;
+        if ErrorCode <> 0 then ErrorStr := 'Error' + CRLF
+                        + 'The circuit cannot be decomposed' + CRLF
+        else
+        ErrorStr    :=  '  ' + inttostr(ActiveCircuit[1].Num_SubCkts) + ' Sub-Circuits Created' + CRLF;
+        prog_Str    :=  prog_str + ErrorStr;
 
       End;
       1:  Begin                      // Saves the Link Branch list locally
+
         Diak_Actors                     :=  ActiveCircuit[1].Num_SubCkts + 1;
         prog_Str    :=  prog_str + '- Indexing link branches...';
 
@@ -422,6 +457,8 @@ Begin
 
       End;
       2:  Begin                      // Compile subsystems
+
+        ErrorCode   :=  0;
         prog_Str    :=  prog_str + CRLF + '- Setting up the Actors...';
         // Clears everything to create the actors and compile the subsystems
         Parallel_enabled                :=  False;
@@ -433,6 +470,19 @@ Begin
         ActiveActor                     :=  1;
         Proj_Dir                        :=  'compile "' + Fileroot + '\Torn_Circuit\master_interconnected.dss"';
         DssExecutive.Command            :=  Proj_Dir;
+        DssExecutive.Command            :=  'set controlmode=Off';
+        // Disables the Energymeters for the zones
+        with ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution do
+        Begin
+          EMeter    := EnergyMeters.First;
+          while EMeter  <> Nil do
+          begin
+            j               :=  ansipos('zone_',EMeter.Name);
+            if j <> 0 then  EMeter.Enabled  :=  False;
+            EMeter          :=  EnergyMeters.Next;
+          end;
+        End;
+        Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE, ActiveActor);
         DoSolveCmd;
 
         // Creates the other actors
@@ -446,22 +496,34 @@ Begin
           DssExecutive.Command  := Proj_Dir;
           if DIdx > 2 then
             DssExecutive.Command  := Links[DIdx - 2] + '.enabled=False';
+          DssExecutive.Command  :=  'set controlmode=Off';
           DoSolveCmd;
+          if SolutionAbort then
+          Begin
+            ErrorCode :=  1;
+            Exit;
+          End;
         End;
-        prog_Str    :=  prog_str + 'Done';
-        ErrorCode   :=  0;
+        if ErrorCode <> 0 then ErrorStr := 'Error' + CRLF
+                        + 'One or sub-systems cannot be compiled' + CRLF
+        else ErrorStr :=  'Done';
+        prog_Str    :=  prog_str + ErrorStr;
+
       end;
       3:  Begin                      // Creates the contours matrix
+
         ActiveActor                     :=  1;
-        prog_Str    :=  prog_str + CRLF + '- Building Contour matrix...';
+        prog_Str    :=  prog_str + CRLF + '- Building Contours...';
         // Builds the contour matrix
         ErrorCode :=  Calc_C_Matrix(@Links[0], length(Links));
-        if ErrorCode <> 0 then ErrorStr := 'Error'
+        if ErrorCode <> 0 then ErrorStr := 'Error' + CRLF
+                        + 'One or more link branches are not lines' + CRLF
         else ErrorStr :=  'Done';
         prog_Str    :=  prog_str + ErrorStr;
 
       end;
       4: Begin                       // Builds the ZLL matrix
+
         prog_Str    :=  prog_str + CRLF + '- Building ZLL...';
         ErrorCode :=  Calc_ZLL(@Links[0],length(Links));
         if ErrorCode <> 0 then ErrorStr := 'Error'
@@ -483,13 +545,17 @@ Begin
         Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE, ActiveActor);
         prog_Str      :=  prog_str + 'Done';
         ErrorCode     :=  0;          // No error handling here
+
       end;
       6:  Begin                      // Builds the ZCC matrix
+
         prog_Str      :=  prog_str + CRLF + '- Building ZCC...';
         Calc_ZCC(length(Links));
         prog_Str      :=  prog_str + 'Done';
+
       End;
       7:  Begin                      // Inverts ZCC to get Y4
+
         prog_Str      :=  prog_str + CRLF + '- Building Y4 ...';
         Calc_Y4();
         prog_Str      :=  prog_str + 'Done' + CRLF;
@@ -509,10 +575,15 @@ Begin
   ActiveActor                     :=  1;
   if ErrorCode <> 0 then
   Begin
-    ErrorStr := 'One or more errors found';
-    ADiakoptics :=  False;
+    ErrorStr          := 'One or more errors found';
+    ADiakoptics       :=  False;
   End
-  else  ErrorStr  :=  'A-Diakoptics initialized';
+  else
+  Begin
+    ErrorStr          :=  'A-Diakoptics initialized';
+    Parallel_enabled  :=  True;
+    ADiakoptics       :=  True;
+  End;
 
   prog_Str      :=  prog_str + CRLF + ErrorStr + CRLF;
   GlobalResult  :=  ErrorStr;
