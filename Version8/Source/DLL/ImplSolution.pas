@@ -516,6 +516,7 @@ end;
 
 procedure TSolution.SolveDirect;
 begin
+   IsSolveAll :=  False;
    If ActiveCircuit[ActiveActor] <> Nil Then Begin
       ActiveCircuit[ActiveActor].Solution.SolveDirect(ActiveActor);
    End;
@@ -524,6 +525,7 @@ end;
 procedure TSolution.SolveNoControl;
 {Solves without checking controls}
 begin
+   IsSolveAll :=  False;
    If ActiveCircuit[ActiveActor] <> Nil Then Begin
       ActiveCircuit[ActiveActor].Solution.SolveCircuit(ActiveActor);
    End;
@@ -531,6 +533,7 @@ end;
 
 procedure TSolution.SolvePflow;
 begin
+   IsSolveAll :=  False;
    If ActiveCircuit[ActiveActor] <> Nil Then Begin
       ActiveCircuit[ActiveActor].Solution.DoPflowSolution(ActiveActor);
    End;
@@ -539,6 +542,7 @@ end;
 procedure TSolution.SolvePlusControl;
 {One Pass Through the solution and then dispatches controls}
 begin
+   IsSolveAll :=  False;
    If ActiveCircuit[ActiveActor] <> Nil Then Begin
       With ActiveCircuit[ActiveActor].Solution Do Begin
          SolveCircuit(ActiveActor);
@@ -549,6 +553,7 @@ end;
 
 procedure TSolution.SolveSnap;
 begin
+   IsSolveAll :=  False;
    If ActiveCircuit[ActiveActor] <> Nil Then Begin
       ActiveCircuit[ActiveActor].Solution.SolveSnap(ActiveActor);
    End;
@@ -707,6 +712,7 @@ procedure TSolution.SolveAll;
 var
   i : Integer;
 begin
+  IsSolveAll :=  True;
   for i := 1 to NumOfActors do
   begin
     ActiveActor :=  i;

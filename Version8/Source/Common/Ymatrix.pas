@@ -216,6 +216,8 @@ Begin
          NodeYii      := AllocMem(Sizeof(NodeYii^[1]) * NumNodes);  // zero fill //Bii  {by Dahei -> UCF}
          NodeYiiEmpty := true;                                                          {by Dahei -> UCF}
          InitializeNodeVbase(ActorID);
+         {A-Diakoptics vectors memory allocation}
+         ReAllocMem(Node_dV,    SizeOf(NodeV^[1])        * (NumNodes+1)); // Allocate the partial solution voltage
 
      End;
 
