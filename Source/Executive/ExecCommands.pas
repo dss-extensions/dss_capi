@@ -607,9 +607,10 @@ Begin
             end;
        106: DoClearAllCmd;
        107: begin
-              Wait4Actors;
+              Wait4Actors(0);
             end;
        108: begin
+              IsSolveAll  :=  True;
               for i := 1 to NumOfActors do
               begin
                 ActiveActor :=  i;
@@ -680,7 +681,10 @@ Begin
         6: CmdResult := DoSelectCmd;
         7: CmdResult := DoSaveCmd; //'save';
         8: CmdResult := DoShowCmd; //'show';
-        9: CmdResult := DoSetCmd(1);  // changed from DoSolveCmd; //'solve';
+        9: Begin
+          IsSolveAll :=  False;
+          CmdResult := DoSetCmd(1);  // changed from DoSolveCmd; //'solve';
+        End;
        10: CmdResult := DoEnableCmd;
        11: CmdResult := DoDisableCmd;
        {$IFNDEF FPC}
@@ -750,12 +754,21 @@ Begin
        77: CmdResult := DoReconductorCmd;
        {Step solution commands}
        78: ActiveCircuit[ActiveActor].Solution.SnapShotInit(ActiveActor);
-       79: ActiveCircuit[ActiveActor].Solution.SolveCircuit(ActiveActor);
+       79: Begin
+         IsSolveAll :=  False;
+         ActiveCircuit[ActiveActor].Solution.SolveCircuit(ActiveActor);
+       End;
        80: ActiveCircuit[ActiveActor].Solution.SampleControlDevices(ActiveActor);
        81: ActiveCircuit[ActiveActor].Solution.DoControlActions(ActiveActor);
        82: ActiveCircuit[ActiveActor].ControlQueue.ShowQueue(DSSDirectory + CircuitName_[ActiveActor]+'ControlQueue.csv');
-       83: ActiveCircuit[ActiveActor].Solution.SolveDirect(ActiveActor);
-       84: ActiveCircuit[ActiveActor].Solution.DoPFLOWsolution(ActiveActor);
+       83: Begin
+         IsSolveAll :=  False;
+         ActiveCircuit[ActiveActor].Solution.SolveDirect(ActiveActor);
+       End;
+       84: Begin
+         IsSolveAll :=  False;
+         ActiveCircuit[ActiveActor].Solution.DoPFLOWsolution(ActiveActor);
+       End;
        85: CmdResult := DoAddMarkerCmd;
        86: CmdResult := DoGuidsCmd;
        87: CmdResult := DoSetLoadAndGenKVCmd;
