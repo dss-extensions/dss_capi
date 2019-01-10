@@ -10,14 +10,20 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls, Menus, ToolWin, ImgList, ScriptEdit, ExtCtrls, PsAPI
-{$IFDEF VER320}    // Tokyo
+  StdCtrls, ComCtrls, Menus, ToolWin, ImgList,ScriptEdit, ExtCtrls
+  {$IFNDEF Linux}
+  ,PsAPI
+  {$ENDIF}
+  {$IFDEF VER330}    // Rio
   ,System.ImageList
-{$ENDIF}
-{$IFDEF VER300}    // Seattle
+  {$ENDIF}
+  {$IFDEF VER320}    // Tokyo
   ,System.ImageList
-{$ENDIF}
-;
+  {$ENDIF}
+  {$IFDEF VER300}    // Seattle
+  ,System.ImageList
+  {$ENDIF}
+  ;
 
 type
   TControlPanel = class(TForm)
@@ -1022,8 +1028,9 @@ begin
 
 // If a command line file name give, attempt to execute the script
   If CmdLineFileFound Then Begin
-    ActiveScriptForm.Editor.SelectAll;
-    ToolButton2Click(nil);   // Execute all the commands in the window
+    DSSExecutive.Command := 'compile ' + CmdLineFileName;
+ //   ActiveScriptForm.Editor.SelectAll;
+ //   ToolButton2Click(nil);   // Execute all the commands in the window
   End;
 
 
