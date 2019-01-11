@@ -1031,7 +1031,7 @@ begin
 
 // If a command line file name give, attempt to execute the script
   If CmdLineFileFound Then Begin
-    DSSExecutive.Command := 'compile ' + CmdLineFileName;
+    DSSExecutive.Command := 'compile ' + EncloseQuotes(CmdLineFileName);
  //   ActiveScriptForm.Editor.SelectAll;
  //   ToolButton2Click(nil);   // Execute all the commands in the window
   End;
