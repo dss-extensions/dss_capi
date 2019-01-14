@@ -1979,7 +1979,7 @@ Var
 
 Begin
 
-     If PVSystemClass = NIL THEN Exit;  // oops somewhere!!
+     If PVSystemClass[ActiveActor] = NIL THEN Exit;  // oops somewhere!!
      Separator := ', ';
 
      pElem := ActiveCircuit[ActiveActor].PVSystems.First;
@@ -2035,7 +2035,7 @@ Var
 Begin
 
 
-  If PVSystemClass = NIL THEN Exit;  // oops somewhere!!
+  If PVSystemClass[ActiveActor] = NIL THEN Exit;  // oops somewhere!!
   Separator := ', ';
 
 

@@ -48,6 +48,7 @@ USES
     DSSObject,
     Dynamics,
     EnergyMeter,
+    VSource,
     SysUtils,
     {$IFDEF FPC}
     Classes,
@@ -140,6 +141,7 @@ TYPE
       ActorActive,
       Processing    : Boolean;
 
+      procedure Start_Diakoptics();
       procedure Notify_Main;
       function Get_Processing(): Boolean;
       procedure Set_Processing(Nval : Boolean);
@@ -238,20 +240,20 @@ TYPE
 
        {A-Diakoptics variables}
        Node_dV   : pNodeVArray;     // Used to store the partial solution voltage
-
+       Ic_Local  : pNodeVArray;     // Used to store the complementary curret
 
 //******************************************************************************
-       IncMat    :  Tsparse_matrix; // Incidence sparse matrix
-       Laplacian :  Tsparse_matrix; // Laplacian sparse matrix
+       IncMat                 :  Tsparse_matrix; // Incidence sparse matrix
+       Laplacian              :  Tsparse_matrix; // Laplacian sparse matrix
        {by Dahei for FMonitor}
               {------------------}
-       NodeYii : pNodeVArray;         // Main System Y = G + jB, Bii for all nodes
+       NodeYii                : pNodeVArray;         // Main System Y = G + jB, Bii for all nodes
 
-       NodeYiiEmpty : Boolean;
+       NodeYiiEmpty           : Boolean;
        {Leaders of all FMonitors}
        clstr_num_hghst, clstr_num_lwst: integer;
-       LD_FM : array [0..3] of TLDs_sys_fms;
-       bCurtl : boolean;
+       LD_FM                  : array [0..3] of TLDs_sys_fms;
+       bCurtl                 : boolean;
 //****************************Timing variables**********************************
        SolveStartTime         : int64;
        SolveEndtime           : int64;
@@ -378,7 +380,7 @@ USES  SolutionAlgs,
       ImplGlobals,  // to fire events
 {$ENDIF}
       Math,  Circuit, Utilities, KLUSolve, PointerList, Line,
-      Transformer, Reactor
+      Transformer, Reactor, Diakoptics
 ;
 
 Const NumPropsThisClass = 1;
@@ -2593,7 +2595,6 @@ begin
   MsgType                   :=  -1;
   ActorActive               :=  True;
   Processing                :=  False;
-  AD_Init                   :=  False;    // This is used only by the A-Diakoptics coordiantor (ID = 1)
 
   Inherited Create(Susp);
   {$IFDEF MSWINDOWS}              // Only for windows
@@ -2613,7 +2614,6 @@ begin
   MsgType                   :=  -1;
   ActorActive               :=  True;
   Processing                :=  False;
-  AD_Init                   :=  False;    // This is used only by the A-Diakoptics coordiantor (ID = 1)
   Inherited Create(Susp);
 end;
 {$ENDIF}
@@ -2670,60 +2670,27 @@ var
   i,
   j,
   idx         : Integer;
+  VSourceObj  : TVsourceObj;
+  Volts       : Polar;
 
   begin
-    with ActiveCircuit[ActorID].Solution do
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
     begin
-//      ActorMsg.ResetEvent;
       while ActorActive do
       Begin
-
             ActorMsg.WaitFor(INFINITE);
             ActorMsg.ResetEvent;
             Processing                  := True;
             case MsgType of             // Evaluates the incomming message
               SIMULATE  :               // Simulates the active ciruit on this actor
                 Try
-                Begin
-                  if ADiakoptics and (ActorID = 1) then
-                  Begin
-                  // This is the coordinator actor in A-Diakoptics mode
-                    if AD_Init then
-                    Begin
-                    // Loads the partial solution into actors considering the previous iteration
-
-                    End
-                    else
-                    Begin
-                    // Setups the other actors to match the options of the coordinator
-                      for i := 2 to NumOfActors do
-                      Begin
-                        ActiveCircuit[i].Solution.Mode                  :=  ActiveCircuit[1].Solution.Mode;
-                        ActiveCircuit[i].solution.DynaVars.h            :=  ActiveCircuit[1].solution.DynaVars.h;
-                        ActiveCircuit[i].solution.DynaVars.intHour      :=  ActiveCircuit[1].solution.DynaVars.intHour;
-                        ActiveCircuit[i].solution.DynaVars.t            :=  ActiveCircuit[1].solution.DynaVars.t;
-                        ActiveCircuit[i].solution.MaxIterations         :=  ActiveCircuit[1].solution.MaxIterations;
-                        ActiveCircuit[i].solution.MaxControlIterations  :=  ActiveCircuit[1].solution.MaxControlIterations;
-                        ActiveCircuit[i].solution.ControlMode           :=  ActiveCircuit[1].solution.ControlMode;
-                        ActiveCircuit[i].solution.NumberOfTimes         :=  1;
-                      End;
-                      AD_Init   :=  True;
-                    End;
-                    // Starts the simulation
-                    FOR i := 1 TO NumberOfTimes Do
-                    Begin
-                      Increment_time;
-                      for j := 2 to NumOfActors do
-                      Begin
-                        ActiveActor :=  j;
-                        CmdResult   :=  DoSolveCmd;
-                      End;
-                      Wait4Actors(AD_Actors);
-                    End;
-                    ActiveActor :=  1;    // Returns the control to Actor 1
-                  End
+                Begin                   // Checks if this is the coordinator actor in A-Diakoptics mode
+                  if ADiakoptics and (ActorID = 1) then  Solve_Diakoptics() // If so, it coordinates
                   else
                   Begin
+                  // Verifies if there is an A-Diakoptics simulation running to update the local Vsources
+                    if ADiakoptics then Start_Diakoptics();
+                  // Normal solution routine
                     Case Dynavars.SolutionMode OF
                         SNAPSHOT       : SolveSnap(ActorID);
                         YEARLYMODE     : SolveYearly(ActorID);
@@ -2813,9 +2780,77 @@ procedure TSolver.CallCallBack;
     if Assigned(FInfoProc) then  FInfoProc(FMessage);
   end;
 
-procedure TSolver.Notify_Main;
+// Initializes the variables of the A-Diakoptics worker
+procedure TSolver.Start_Diakoptics();
+var
+  row,
+  j,
+  i           : Integer;
+  VSource     : TVsourceObj;
+  Volts       : Polar;
+  CNum        : Complex;
 Begin
-    // Will do something
+  with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+  Begin
+    j   :=  ActiveCircuit[1].Ic.NZero - 1;    // Brings the number of Non-Zero elements from Ic
+    if j  > 0 then
+    Begin
+      // Clears the local Ic vector
+      for i := 1 to NumNodes do Ic_Local^[i]  :=  cZERO;  // probably not necessary
+      // Brings the section of the vector needed for this actor
+      for i := 0 to j do
+      Begin
+        if ActiveCircuit[1].Ic.CData[i].row >= VIndex then
+        Begin
+          row                 :=  ActiveCircuit[1].Ic.CData[i].row;
+          Ic_Local^[row - VIndex + 1]  :=  ActiveCircuit[1].Ic.CData[i].Value;
+        End;
+      End;
+      // Solves to find the total solution
+      SolveSparseSet(hY, @Node_dV^[1], @Ic_Local^[1]);
+      // Sends the total voltage for this part to the coordinator
+      for i := 1 to NumNodes do
+      Begin
+        CNum                                          :=  cadd(NodeV^[i],Node_dV^[i]);
+        ActiveCircuit[1].Solution.NodeV^[i + VIndex]  :=  CNum;
+      End;
+
+      // Sets the voltage at the feeder head
+      VSource       := ActiveVSource[ActorID].ElementList.First;
+      for i := 1 to 3 do
+      Begin
+        CNum              :=  cadd(NodeV^[i],Node_dV^[i]);
+        Volts             :=  ctopolardeg(CNum);
+        VSource.kVBase    :=  Volts.mag / 1000;   // is in kV
+        VSource.Angle     :=  Volts.ang;
+        VSource           :=  ActiveVSource[ActorID].ElementList.Next;
+      End;
+    End;
+  End;
+End;
+
+procedure TSolver.Notify_Main;
+var
+  CNum  : Complex;
+  i,j,
+  idx   : Integer;
+Begin
+  // Will do something
+  With ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+  Begin
+    i   :=  NumNodes;
+    for idx := 1 to i do
+    Begin
+      // if it doesn't includes any power injection element (Isource, VSource)
+      // returns dV to correct the interconnection equation
+      if ActorID > 2 then
+        CNum  :=  csub(NodeV^[idx],Node_dV^[idx])
+      else
+        CNum  :=  NodeV^[idx];
+      ActiveCircuit[1].Ic.Insert((idx + VIndex - 1),0,CNum);
+    End;
+  End;
+
 End;
 
 procedure TSolver.DoTerminate;        // Is the end of the thread

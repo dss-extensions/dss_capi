@@ -218,6 +218,7 @@ Begin
          InitializeNodeVbase(ActorID);
          {A-Diakoptics vectors memory allocation}
          ReAllocMem(Node_dV,    SizeOf(NodeV^[1])        * (NumNodes+1)); // Allocate the partial solution voltage
+         ReAllocMem(Ic_Local,   SizeOf(NodeV^[1])        * (NumNodes+1)); // Allocate the Complementary currents
 
      End;
 
