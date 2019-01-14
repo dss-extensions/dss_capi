@@ -114,8 +114,8 @@ TYPE
    End;
 
 VAR
-    ActiveVsourceObj:TVsourceObj;
-    VSourceClass : TVsource;
+    ActiveVsourceObj: TVsourceObj;
+    VSourceClass    : TVsource;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation

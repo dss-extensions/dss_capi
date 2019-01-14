@@ -683,7 +683,8 @@ Begin
         8: CmdResult := DoShowCmd; //'show';
         9: Begin
           IsSolveAll :=  False;
-          CmdResult := DoSetCmd(1);  // changed from DoSolveCmd; //'solve';
+          ActiveCircuit[1].AD_Init    :=   False;
+          CmdResult  := DoSetCmd(1);  // changed from DoSolveCmd; //'solve';
         End;
        10: CmdResult := DoEnableCmd;
        11: CmdResult := DoDisableCmd;
