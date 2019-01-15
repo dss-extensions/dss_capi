@@ -78,18 +78,19 @@ Begin
     // Starts the simulation
       for j := 2 to NumOfActors do
       Begin
-        Increment_time;
         ActiveActor :=  j;
         CmdResult   :=  DoSolveCmd;
       End;
       Wait4Actors(AD_Actors);
       // The other routines
       ActorPctProgress[1]  :=  (i*100) div NumberofTimes;
-      if SolutionAbort then break;
+      if SolutionAbort then break
+      else ActiveCircuit[1].Issolved :=  True;
+      Increment_time;
     End;
   End;
 
-  if not SolutionAbort then ActiveCircuit[1].Issolved :=  True;
+  if SolutionAbort then ActiveCircuit[1].Issolved :=  False;
   ActiveActor :=  1;    // Returns the control to Actor 1
   Result  :=  0;
 End;
