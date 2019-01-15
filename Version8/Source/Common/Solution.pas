@@ -2685,11 +2685,11 @@ var
               SIMULATE  :               // Simulates the active ciruit on this actor
                 Try
                 Begin                   // Checks if this is the coordinator actor in A-Diakoptics mode
-                  if ADiakoptics and (ActorID = 1) then  Solve_Diakoptics() // If so, it coordinates
+                  if ((ADiakoptics and (ActorID = 1)) and not IsSolveAll) then  Solve_Diakoptics()
                   else
                   Begin
                   // Verifies if there is an A-Diakoptics simulation running to update the local Vsources
-                    if ADiakoptics then Start_Diakoptics();
+                    if (ADiakoptics and not IsSolveAll) then Start_Diakoptics();
                   // Normal solution routine
                     Case Dynavars.SolutionMode OF
                         SNAPSHOT       : SolveSnap(ActorID);
@@ -2847,7 +2847,7 @@ Begin
         CNum  :=  csub(NodeV^[idx],Node_dV^[idx])
       else
         CNum  :=  NodeV^[idx];
-      ActiveCircuit[1].Ic.Insert((idx + VIndex - 1),0,CNum);
+      ActiveCircuit[1].V_0.Insert((idx + VIndex - 1),0,CNum);
     End;
   End;
 

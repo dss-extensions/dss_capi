@@ -203,6 +203,7 @@ TYPE
           ZCT              :  TSparse_Complex;    //  The transformation matrix (to go from one to other domain)
           ZCC              :  TSparse_Complex;    //  Interconnections matrix
           Y4               :  TSparse_Complex;    //  The inverse of the interconnections matrix
+          V_0              :  TSparse_Complex;    //  The voltages of the partial solutions
           Ic               :  TSparse_Complex;    //  The complementary Currents vector
           VIndex           :  Integer;  // To store the index of the sub-circuit in the interconnected system
           VLength          :  Integer;  // To store the length of the sub-circuit in the interconnected system
@@ -563,6 +564,7 @@ BEGIN
   ZCC       :=  TSparse_Complex.Create;
   ZCT       :=  TSparse_Complex.Create;
   Y4        :=  TSparse_Complex.Create;
+  V_0       :=  TSparse_Complex.Create;
   Ic        :=  TSparse_Complex.Create;
 
 END;
@@ -647,6 +649,7 @@ BEGIN
      ZCC.Free;
      ZCT.Free;
      Y4.Free;
+     V_0.Free;
      Ic.Free;
 
      Inherited Destroy;
