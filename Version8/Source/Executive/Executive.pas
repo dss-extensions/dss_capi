@@ -259,8 +259,8 @@ begin
        MaxAllocationIterations := 2;
 
        {Prepare for new variables}
-       ParserVars.Free;
-       ParserVars := TParserVar.Create(100);  // start with space for 100 variables
+//       ParserVars.Free;
+//       ParserVars := TParserVar.Create(100);  // start with space for 100 variables
 end;
 
 procedure TExecutive.ClearAll;
