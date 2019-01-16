@@ -58,17 +58,7 @@ end;
 
 procedure TParallel.CreateActor;
 begin
-  if NumOfActors < CPU_Cores then
-  begin
-    inc(NumOfActors);
-    GlobalResult  :=  inttostr(NumOfActors);
-    ActiveActor   :=  NumOfActors;
-    ActorCPU[ActiveActor] :=  ActiveActor -1;
-    DSSExecutive := TExecutive.Create;  // Make a DSS object
-    Parser[ActiveActor]   :=  ParserDel.TParser.Create;
-    DSSExecutive.CreateDefaultDSSItems;
-  end
-  else DoSimpleMsg('There are no more CPUs available', 7001);
+  New_Actor_Slot();
 end;
 
 function TParallel.Get_ActorCPU: Integer;
@@ -91,7 +81,7 @@ procedure TParallel.Wait;
 var
   i : Integer;
 begin
-  Wait4Actors;
+  if Parallel_enabled then Wait4Actors(0);
 end;
 
 function TParallel.Get_ActorProgress: OleVariant;
