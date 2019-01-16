@@ -33,18 +33,7 @@ begin
     else  DoSimpleMsg('The actor does not exists',7002);
   end;
   4: begin  // Parallel.CreateActor Write
-    if NumOfActors < CPU_Cores then
-    begin
-      inc(NumOfActors);
-      GlobalResult  :=  inttostr(NumOfActors);
-      ActiveActor   :=  NumOfActors;
-      ActorCPU[ActiveActor] :=  ActiveActor -1;
-      DSSExecutive := TExecutive.Create;  // Make a DSS object
-      Parser[ActiveActor]   :=  ParserDel.TParser.Create;
-      DSSExecutive.CreateDefaultDSSItems;
-      Result  :=  NumOfActors;
-    end
-    else DoSimpleMsg('There are no more CPUs available', 7001);
+     New_Actor_Slot();
   end;
   5: begin  // Parallel.ActorCPU Read
     Result  :=  ActorCPU[ActiveActor];
@@ -62,7 +51,7 @@ begin
     Result :=  NumOfActors;
   end;
   8: begin  // Parallel.Wait
-     Wait4Actors;
+     if Parallel_enabled then Wait4Actors(0);
   end;
   9: begin  // Parallel.ActiveParallel Read
     if Parallel_enabled then Result :=  1 else Result  :=  0;
