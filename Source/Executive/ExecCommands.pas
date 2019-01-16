@@ -607,7 +607,7 @@ Begin
             end;
        106: DoClearAllCmd;
        107: begin
-              Wait4Actors(0);
+              if Parallel_enabled then Wait4Actors(0);
             end;
        108: begin
               IsSolveAll  :=  True;
