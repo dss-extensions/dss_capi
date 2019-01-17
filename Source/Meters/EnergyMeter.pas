@@ -2411,15 +2411,16 @@ end;
 
 
 
-{-------------------------------------------------------------------------------}
+{--------------------------- CalcReliabilityIndices ----------------------------}
+
 procedure TEnergyMeterObj.CalcReliabilityIndices(AssumeRestoration: Boolean);
 Var
-  PD_Elem: TPDElement;
-  pLoad: TLoadObj;
-  idx: Integer;
-  pBus: TDSSBus;
+  PD_Elem  : TPDElement;
+  pSection : TFeederSection;
+  idx      : Integer;
+  pBus     : TDSSBus;
   dblNcusts: Double;
-  dblkW: Double;
+  dblkW    : Double;
 
 begin
 
@@ -2449,15 +2450,14 @@ begin
   pBus := ActiveCircuit.Buses^[PD_Elem.Terminals^[PD_Elem.FromTerminal].BusRef];
   pBus.Bus_Num_Interrupt := Source_NumInterruptions;
   pBus.BusCustInterrupts := Source_NumInterruptions * pBus.BusTotalNumCustomers;
-  pBus.Bus_Int_Duration := Source_IntDuration;
+  pBus.Bus_Int_Duration  := Source_IntDuration;
 
   // init for defining sections
   SectionCount := 0;
   pBus.BusSectionID := SectionCount; // section before 1st OCP device is zero
 
   For idx := 1 to SequenceList.ListSize Do
-    TPDElement(SequenceList.Get(idx)).CalcNum_Int(SectionCount,
-      AssumeRestoration);
+    TPDElement(SequenceList.Get(idx)).CalcNum_Int(SectionCount, AssumeRestoration);
 
   If SectionCount = 0 Then
   Begin // Error - no OCP devices
@@ -2472,15 +2472,15 @@ begin
   for idx := 1 to SectionCount do
     With FeederSections^[idx] Do      // Initialize all Section data
     Begin
-      OCPDeviceType := 0; // 1=Fuse; 2=Recloser; 3=Relay
-      AverageRepairTime := 0.0;
-      SumFltRatesXRepairHrs := 0.0;
-      SumBranchFltRates := 0.0;
-      NCustomers := 0;
-      TotalCustomers := 0;
-      SectFaultRate := 0.0;
-      NBranches := 0;
-      SeqIndex := 0;
+        OCPDeviceType := 0; // 1=Fuse; 2=Recloser; 3=Relay
+        AverageRepairTime := 0.0;
+        SumFltRatesXRepairHrs := 0.0;
+        SumBranchFltRates := 0.0;
+        NCustomers := 0;
+        TotalCustomers := 0;
+        SectFaultRate := 0.0;
+        NBranches := 0;
+        SeqIndex := 0;
     End;
 
   // Now do Backward sweep calculating N*Fault rates
@@ -2489,22 +2489,20 @@ begin
     PD_Elem := SequenceList.Get(idx);
     PD_Elem.CalcCustInterrupts;
 
-    With FeederSections^[PD_Elem.BranchSectionID] Do
+    // Populate the Section properties
+    pSection := FeederSections^[PD_Elem.BranchSectionID];
     Begin
-      Inc(NCustomers, PD_Elem.BranchNumCustomers);
-      // Sum up num Customers on this Section
-      Inc(NBranches, 1); // Sum up num branches on this Section
-      pBus := ActiveCircuit.Buses^
-        [PD_Elem.Terminals^[PD_Elem.ToTerminal].BusRef];
-      DblInc(SumBranchFltRates, pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate);
-      DblInc(SumFltRatesXRepairHrs,
-        (pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate * PD_Elem.HrsToRepair));
+      Inc(pSection.NCustomers, PD_Elem.BranchNumCustomers); // Sum up num Customers on this Section
+      Inc(pSection.NBranches, 1); // Sum up num branches on this Section
+      pBus := ActiveCircuit.Buses^[PD_Elem.Terminals^[PD_Elem.ToTerminal].BusRef];
+      DblInc(pSection.SumBranchFltRates,     pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate);
+      DblInc(pSection.SumFltRatesXRepairHrs,(pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate * PD_Elem.HrsToRepair));
       If PD_Elem.HasOCPDevice Then
-      Begin
-        OCPDeviceType := GetOCPDeviceType(PD_Elem);
-        SeqIndex := idx;  // index of pdelement with OCP device at head of section
-        TotalCustomers := PD_Elem.BranchTotalCustomers;
-        SectFaultRate := PD_Elem.AccumulatedBrFltRate;
+      Begin  // set Section properties
+          pSection.OCPDeviceType  := GetOCPDeviceType(PD_Elem);
+          pSection.SeqIndex       := idx;  // index of pdelement with OCP device at head of section
+          pSection.TotalCustomers := PD_Elem.BranchTotalCustomers;
+          pSection.SectFaultRate  := PD_Elem.AccumulatedBrFltRate;
       End;
     End;
 
@@ -2527,7 +2525,7 @@ begin
   { Compute Avg Interruption duration of each Section }
   for idx := 1 to SectionCount do
     With FeederSections^[idx] Do
-      AverageRepairTime := SumFltRatesXRepairHrs / SumBranchFltRates;
+         AverageRepairTime := SumFltRatesXRepairHrs / SumBranchFltRates;
 
   { Set Bus_int_Duration }
 
@@ -2553,32 +2551,33 @@ begin
   { Compute SAIFI based on numcustomers and load kW }
   { SAIFI is weighted by specified load weights }
   { SAIFI is for the EnergyMeter Zone }
-  SAIFI := 0.0;
-  CAIDI := 0.0;
+  SAIFI   := 0.0;
+  CAIDI   := 0.0;
   SAIFIkW := 0.0;
-  CustInterrupts := 0.0;
   dblNcusts := 0.0;
-  dblkW := 0.0;
+  dblkW     := 0.0;
+  CustInterrupts := 0.0;
 
   // Use LoadList for SAIFI calculation
   WITH ActiveCircuit do
+  Begin
     For idx := 1 to LoadList.ListSize Do // all loads in meter zone
     Begin
-      pLoad := TLoadObj(LoadList.Get(idx));
-      WITH pLoad Do
-      Begin
-        pBus := Buses^[Terminals^[1].BusRef]; // pointer to bus
-        CustInterrupts := CustInterrupts + NumCustomers * RelWeighting *
-          pBus.Bus_Num_Interrupt;
-        SAIFIkW := SAIFIkW + kWBase * RelWeighting * pBus.Bus_Num_Interrupt;
-        DblInc(dblNcusts, NumCustomers * RelWeighting);
-        // total up weighted numcustomers
-        DblInc(dblkW, kWBase * RelWeighting); // total up weighted kW
-        // Set BusCustDurations for Branch reliability export
-        pBus.BusCustDurations := (pBus.BusTotalNumCustomers + NumCustomers) *
-               RelWeighting * pBus.Bus_Int_Duration * pBus.Bus_Num_Interrupt;
-      End;
+      // Compute CustInterrupts based on interrupts at each load
+      WITH TLoadObj( LoadList.Get(idx) ) Do
+        Begin
+          pBus := Buses^[Terminals^[1].BusRef]; // pointer to Load's bus
+          CustInterrupts := CustInterrupts + (NumCustomers * RelWeighting * pBus.Bus_Num_Interrupt);
+          SAIFIkW := SAIFIkW + kWBase * RelWeighting * pBus.Bus_Num_Interrupt;
+          DblInc(dblNcusts, NumCustomers * RelWeighting);
+          // total up weighted numcustomers
+          DblInc(dblkW, kWBase * RelWeighting); // total up weighted kW
+          // Set BusCustDurations for Branch reliability export
+          pBus.BusCustDurations := (pBus.BusTotalNumCustomers + NumCustomers) *
+                 RelWeighting * pBus.Bus_Int_Duration * pBus.Bus_Num_Interrupt;
+        End;
     End;
+  End;
 
   // Compute SAIDI from Sections list
   SAIDI := 0.0;
@@ -2593,6 +2592,7 @@ begin
       SAIFI := CustInterrupts / dblNcusts; // Normalize to total number of customers
       SAIDI := SAIDI / dblNcusts; // Normalize to total number of customers
     End;
+
   If SAIFI > 0.0 Then
     CAIDI := SAIDI / SAIFI;
 
