@@ -114,7 +114,8 @@ Begin
       ExportHelp[13] := '(Default file = EXP_LOADS.CSV) Report on loads from most recent solution.';
       ExportHelp[14] := '(Default file = EXP_METERS.CSV) Energy meter exports. Adding the switch "/multiple" or "/m" will ' +
                         ' cause a separate file to be written for each meter.';
-      ExportHelp[15] := '(file name is assigned by Monitor export) Monitor values.';
+      ExportHelp[15] := '(file name is assigned by Monitor export) Monitor values. The argument is the name of the monitor (e.g. Export Monitor XYZ, XYZ is the name of the monitor).' + CRLF +
+                        'The argument can be ALL, which means that all the monitors will be exported';
       ExportHelp[16] := '(Default file = EXP_YPRIMS.CSV) All primitive Y matrices.';
       ExportHelp[17] := '(Default file = EXP_Y.CSV) [triplets] [Filename] System Y matrix, defaults to non-sparse format.';
       ExportHelp[18] := '(Default file = EXP_SEQZ.CSV) Equivalent sequence Z1, Z0 to each bus.';
@@ -178,7 +179,7 @@ VAR
    Parm1,
    Parm2,
    FileName :String;
-
+   i,
    MVAopt               :Integer;
    UEonlyOpt            :Boolean;
    TripletOpt   :Boolean;
@@ -402,7 +403,6 @@ Begin
      14: ExportMeters(FileName);
      15: IF   Length(Parm2) > 0 THEN
          Begin
-
           if ConcatenateReports then // In case of being activated, the export will be made for all actors
           begin
             InitP :=  1;
@@ -415,9 +415,25 @@ Begin
           end;
           for idxP := InitP to FinalP do
           begin
-           pMon:=MonitorClass[idxP].Find(Parm2);
-           IF   pMon <> NIL  THEN Begin pMon.TranslateToCSV(False, idxP); FileName := GlobalResult; End
-                             ELSE DoSimpleMsg('Monitor "'+Parm2+'" not found.'+ CRLF + parser[ActiveActor].CmdString, 250);
+            if Parm2 = 'all' then
+            Begin
+              pMon :=  ActiveCircuit[idxP].Monitors.First;
+              while pMon <> nil do
+              Begin
+                IF   pMon <> NIL  THEN
+                Begin
+                  pMon.TranslateToCSV(False, idxP);
+                  FileName := GlobalResult;
+                End;
+                pMon :=  ActiveCircuit[idxP].Monitors.Next;
+              End;
+            End
+            else
+            Begin
+              pMon:=MonitorClass[idxP].Find(Parm2);
+              IF   pMon <> NIL  THEN Begin pMon.TranslateToCSV(False, idxP); FileName := GlobalResult; End
+                                 ELSE DoSimpleMsg('Monitor "'+Parm2+'" not found.'+ CRLF + parser[ActiveActor].CmdString, 250);
+            End;
           end;
          End
          ELSE   DoSimpleMsg('Monitor Name Not Specified.'+ CRLF + parser[ActiveActor].CmdString, 251);
