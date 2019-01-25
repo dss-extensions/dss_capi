@@ -1837,10 +1837,12 @@ Begin
                 PCElementType := (pPCelem.DSSObjType and CLASSMASK);
                 IF (PCElementType = LOAD_ELEMENT)
                 OR (PCElementType = GEN_ELEMENT)
-                OR (PCElementType = CAP_ELEMENT)
+                OR (PCElementType = PVSYSTEM_ELEMENT)
+                OR (PCElementType = STORAGE_ELEMENT)
+                OR (PCElementType = CAP_ELEMENT)  // Capacitor and Reactor put on the PC list if IsShunt=TRUE
                 OR (PCElementType = REACTOR_ELEMENT) Then Begin
-                      BranchList.NewObject      := pPCelem;
-                      pPCelem.Checked           := TRUE;  // So we don't pick this element up again
+                      BranchList.NewObject      := pPCelem; // This adds element to the Shunt list in CktTree
+                      pPCelem.Checked           := TRUE;    // So we don't pick this element up again
                       pPCelem.IsIsolated        := FALSE;
                       pPCelem.ActiveTerminalIdx := 1;
                       {Totalize Number of Customers if Load Type}
