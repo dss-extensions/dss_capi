@@ -348,10 +348,12 @@ Begin
      CRLF+CRLF+'In Schedule mode, the Tup, TFlat, and Tdn properties specify the up ramp duration, flat duration, and down ramp duration for the schedule. ' +
      'The schedule start time is set by TimeDischargeTrigger and the rate of discharge for the flat part is determined by RatekW.';
     PropertyHelp[propMODECHARGE]          :=
-     '{Loadshape | Time*} Mode of operation for the CHARGE FUNCTION of this controller. ' +
-     'In Loadshape mode, both charging and discharging precisely follows the per unit loadshape. ' +
+     '{Loadshape | Time* | PeakShaveLow} Mode of operation for the CHARGE FUNCTION of this controller. ' +
+      CRLF+CRLF+'In Loadshape mode, both charging and discharging precisely follows the per unit loadshape. ' +
      'Storage is charged when the loadshape value is negative. ' +
-     'In Time mode, the storage charging FUNCTION is triggered at the specified %RateCharge at the specified sharge trigger time in fractional hours.';
+      CRLF+CRLF+'In Time mode, the storage charging FUNCTION is triggered at the specified %RateCharge at the specified sharge trigger time in fractional hours.' +
+      CRLF+CRLF+'In PeakShaveLow mode, the charging operation will charge the storage fleet when the power at a' +
+     'monitored element is bellow a specified KW target (kWTarget_low). The storage will charge as much power as necessary to keep the power within the deadband around kWTarget_low.';
     PropertyHelp[propTIMEDISCHARGETRIGGER]:=
      'Default time of day (hr) for initiating Discharging of the fleet. During Follow or Time mode discharging is triggered at a fixed time ' +
      'each day at this hour. If Follow mode, storage will be discharged to attempt to hold the load at or below the power level at the time of triggering. ' +
