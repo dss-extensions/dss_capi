@@ -1,39 +1,52 @@
 language: cpp
-os: 
-    - linux
-    - osx
-before_install:
-    - |
-      if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then 
+
+matrix:
+  include:
+    - name: "linux_x64"
+      os: linux
+      sudo: required
+      env: DOCKER_IMAGE=pmeira/manylinux_wheel_cmake_fpc
+      services:
+        - docker
+      install:
+        - docker pull $DOCKER_IMAGE
+      script: 
+        - cd ..
+        - mkdir artifacts
+        - mkdir artifacts/linux-64
+        - git clone https://github.com/PMeira/electricdss-src ../electricdss-src
+        - wget http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-5.3.0.tar.gz -O suitesparse.tar.gz -q
+        - tar zxf suitesparse.tar.gz
+        - mv SuiteSparse ..
+        - docker run --rm -v `pwd`/..:/io $DOCKER_IMAGE bash /io/dss_capi/ci/build_linux_x64.sh
+        - ls -lR lib
+        
+    - name: "osx_x64"
+      os: osx
+      before_install:
+        - |
           wget https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.0.4/fpc-3.0.4a.intel-macosx.dmg/download -Ofpc.dmg
           sudo hdiutil attach fpc.dmg
           sudo installer -package /Volumes/fpc-3.0.4a.intel-macosx/fpc-3.0.4a.intel-macosx.pkg -target /
-      fi
-    - |
-      if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then 
-        wget https://sourceforge.net/projects/freepascal/files/Linux/3.0.4/fpc-3.0.4.x86_64-linux.tar/download -Ofpc.tar
-        tar xf fpc.tar
-        cd fpc-3.0.4.x86_64-linux
-        echo > fpc_install_options.txt
-        echo n >> fpc_install_options.txt
-        echo n >> fpc_install_options.txt
-        echo n >> fpc_install_options.txt
-        sh ./install.sh < fpc_install_options.txt
-        cd ..
-        rm -rf fpc-3.0.4.x86_64-linux
-        export PATH=$PATH:~/fpc-3.0.4/bin
-      fi
+      install: true
+      script: 
+        - git clone https://github.com/PMeira/electricdss-src ../electricdss-src
+        - mkdir klusolve/build
+        - cd klusolve/build
+        - cmake -DUSE_SYSTEM_SUITESPARSE=OFF ..
+        - cmake --build . --config Release
+        - cd ../..
+        - file lib/darwin_x64/libklusolve.dylib
+        - build_macos_x64.sh
+        - ls -lR lib
 
-install: true
-script:
-    - git clone https://github.com/PMeira/electricdss-src ../electricdss-src
-    - mkdir klusolve/build
-    - cd klusolve/build
-    - cmake -DUSE_SYSTEM_SUITESPARSE=OFF ..
-    - cmake --build . --config Release
-    - cd ../..
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then file lib/darwin_x64/libklusolve.dylib; fi
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then sh build_macos_x64.sh; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sh build_linux_x64.sh; fi
-    - ls -lR lib
-
+deploy:
+    provider: releases
+    api_key:
+        secure: "m7cQYWAMe6enMYD0ZDeSkDMRqmOnmg58WjV7IMD0qt6jThP+ZuLkJeTlnNq8W13f/n+bI6qkdPLJY/cW3Xxd4WnngkZN0kt4BQortB4UWBr24Kk8re5BlYbhVKL731Ro0Jp76FlndIzm1bKuHHdUzlg8W7IVqEgVg5BtoZTlTY/FTyojl5UCF0sgkCOox/eU8rExLeuuiotm3SsJZym+yfxzD1n3zUves0P2XoeZIU6rFru38C+EoTzZb5IfHMvKngNfhp04wlXUKylP+sdQwKRsipEwHS9a1gac480gZtEcGn3BPMcpBRB0rGuVSLUCz/aJ+7IUws8+tUbA9VS96Dl7Ubg/yRu1k6VmLTX4VUOI8g6w7IBnfRocyupshxu/H/iNr5id4avOAIY3Ki/V+LRW5nbcGWiu9A8dPTQpQbPWQeBoa8yE1Uzg6Ni8JF99lmHMYzjnYM9kjOIJvWtB4vbUhne+INtuAqN4Eaw4bTAJFvTtvW/DrEOISiGGPaIh4vciMvCF/WvBIvcVpCx4RhQ9W61CZMdkJ8gLFP9q+UKt77aYdNx9HUv0FL6k6URC04EAcPZAe64S6K25v599gkUT1QxWB9K/Qik74HbeoXk0TFy1W3Pf9AsIfKdnLmeK68vL1pW+ymZZKiXlhLGdfeEid3ngJJl+SSujjFucsbw="
+    file_glob: true
+    file: release/*
+    draft: true
+    on:
+        repo: PMeira/dss_capi
+        tags: true

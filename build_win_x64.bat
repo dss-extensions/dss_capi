@@ -74,3 +74,21 @@ if exist ..\electricdss-src\Version7\Source\Common\DSSGlobals.pas (
     echo ERROR: Did you forget to clone https://github.com/PMeira/electricdss-src ?
     exit /B 1
 )
+
+SETLOCAL ENABLEEXTENSIONS
+
+IF DEFINED APPVEYOR_REPO_TAG_NAME (
+    mkdir release
+    mkdir dss_capi
+    xcopy /E lib\win_x64 release\dss_capi\lib\win_x64\
+    xcopy /E include release\dss_capi\include\
+    REM xcopy /E examples release\dss_capi\examples\
+    copy LICENSE release\dss_capi\
+    copy OPENDSS_LICENSE release\dss_capi\
+    copy klusolve\LICENSE release\dss_capi\KLUSOLVE_LICENSE
+    cd release
+    7z a "dss_capi_%APPVEYOR_REPO_TAG_NAME%_win_x64.zip" dss_capi
+    cd ..
+    rd /s /q release\dss_capi
+    appveyor PushArtifact "release\dss_capi_%APPVEYOR_REPO_TAG_NAME%_win_x64.zip"
+)
