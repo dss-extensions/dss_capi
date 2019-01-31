@@ -1,4 +1,5 @@
 @echo off
+@SETLOCAL
 
 where /q fpc
 if errorlevel 1 (
