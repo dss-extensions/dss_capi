@@ -44,6 +44,7 @@ deploy:
     file_glob: true
     file: release/*
     draft: true
+    skip_cleanup: true
     on:
         repo: PMeira/dss_capi
         tags: true
