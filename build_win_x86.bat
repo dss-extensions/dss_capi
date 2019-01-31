@@ -39,7 +39,7 @@ if exist ..\electricdss-src\Version7\Source\Common\DSSGlobals.pas (
         del /s lib\win_x86\v7\exports.txt
 
         REM copy /Y ..\electricdss-src\Distrib\x86\klusolve.dll lib\libklusolve.dll
-        echo TODO: COPY KLUSOLVE DLL!
+        REM echo TODO: COPY KLUSOLVE DLL!
     ) else (
         echo ERROR: DSS_CAPI_V7.DLL file not found. Check previous messages for possible causes.
         exit /B 1
@@ -65,7 +65,7 @@ if exist ..\electricdss-src\Version7\Source\Common\DSSGlobals.pas (
         del /s lib\win_x86\v8\exports.txt
         
         REM copy /Y ..\electricdss-src\Distrib\x86\klusolve.dll lib\libklusolve.dll
-        echo TODO: COPY KLUSOLVE DLL!
+        REM echo TODO: COPY KLUSOLVE DLL!
     ) else (
         echo ERROR: DSS_CAPI_V8.DLL file not found. Check previous messages for possible causes.
     )
@@ -90,5 +90,5 @@ IF DEFINED APPVEYOR_REPO_TAG_NAME (
     7z a "dss_capi_%APPVEYOR_REPO_TAG_NAME%_win_x86.zip" dss_capi
     cd ..
     rd /s /q release\dss_capi
-    appveyor PushArtifact "release\dss_capi_%APPVEYOR_REPO_TAG_NAME%_win_x86.zip"
+    appveyor PushArtifact "c:\dss_capi\release\dss_capi_%APPVEYOR_REPO_TAG_NAME%_win_x86.zip"
 )

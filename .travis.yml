@@ -11,9 +11,6 @@ matrix:
       install:
         - docker pull $DOCKER_IMAGE
       script: 
-        - cd ..
-        - mkdir artifacts
-        - mkdir artifacts/linux-64
         - git clone https://github.com/PMeira/electricdss-src ../electricdss-src
         - wget http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-5.3.0.tar.gz -O suitesparse.tar.gz -q
         - tar zxf suitesparse.tar.gz
@@ -37,7 +34,7 @@ matrix:
         - cmake --build . --config Release
         - cd ../..
         - file lib/darwin_x64/libklusolve.dylib
-        - build_macos_x64.sh
+        - bash build_macos_x64.sh
         - ls -lR lib
 
 deploy:
