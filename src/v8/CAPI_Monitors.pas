@@ -440,10 +440,10 @@ begin
 
              Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMon.SampleCount-1) + 1);
              ReadMonitorHeader(Header, FALSE);   // FALSE = leave at beginning of data
-             AuxParser.CmdString := string(Header.StrBuffer);
-             AuxParser.AutoIncrement := TRUE;
-             FirstCol := AuxParser.StrValue;  // Get rid of first two columns
-             AuxParser.AutoIncrement := FALSE;
+             AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+             AuxParser[ActiveActor].AutoIncrement := TRUE;
+             FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
+             AuxParser[ActiveActor].AutoIncrement := FALSE;
 
               AllocSize :=  Sizeof(Single) * Header.RecordSize;
               SngBuffer := Allocmem(AllocSize);
@@ -493,10 +493,10 @@ begin
       If pMon.SampleCount >0 Then Begin
              Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMon.SampleCount-1) + 1);
              ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-             AuxParser.CmdString := string(Header.StrBuffer);
-             AuxParser.AutoIncrement := TRUE;
-             FirstCol := AuxParser.StrValue;  // Get rid of first two columns
-             AuxParser.AutoIncrement := FALSE;
+             AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+             AuxParser[ActiveActor].AutoIncrement := TRUE;
+             FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
+             AuxParser[ActiveActor].AutoIncrement := FALSE;
              // check first col to see if it is "Freq" for harmonics solution
              If Sysutils.CompareText(FirstCol, 'freq') = 0  Then Begin
                   AllocSize :=  Sizeof(Single) * Header.RecordSize;
@@ -552,10 +552,10 @@ begin
       If pMon.SampleCount >0 Then Begin
              Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMon.SampleCount-1) + 1);
              ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-             AuxParser.CmdString := string(Header.StrBuffer);
-             AuxParser.AutoIncrement := TRUE;
-             FirstCol := AuxParser.StrValue;  // Get rid of first two columns
-             AuxParser.AutoIncrement := FALSE;
+             AuxParser[ActiveActor].CmdString := string(Header.StrBuffer);
+             AuxParser[ActiveActor].AutoIncrement := TRUE;
+             FirstCol := AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
+             AuxParser[ActiveActor].AutoIncrement := FALSE;
              // check first col to see if it is "Hour"
              If Sysutils.CompareText(FirstCol, 'hour') = 0  Then Begin
                   AllocSize :=  Sizeof(Single) * Header.RecordSize;
@@ -622,21 +622,21 @@ begin
              ListSize := Header.RecordSize;
              DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (ListSize-1) + 1);
              k:=0;
-             SaveDelims := AuxParser.Delimiters;
-             AuxParser.Delimiters := ',';
-             SaveWhiteSpace := AuxParser.Whitespace;
-             AuxParser.Whitespace := '';
-             AuxParser.CmdString := String(Header.StrBuffer);
-             AuxParser.AutoIncrement := TRUE;
-             AuxParser.StrValue;  // Get rid of first two columns
-             AuxParser.StrValue;
+             SaveDelims := AuxParser[ActiveActor].Delimiters;
+             AuxParser[ActiveActor].Delimiters := ',';
+             SaveWhiteSpace := AuxParser[ActiveActor].Whitespace;
+             AuxParser[ActiveActor].Whitespace := '';
+             AuxParser[ActiveActor].CmdString := String(Header.StrBuffer);
+             AuxParser[ActiveActor].AutoIncrement := TRUE;
+             AuxParser[ActiveActor].StrValue;  // Get rid of first two columns
+             AuxParser[ActiveActor].StrValue;
              WHILE k < ListSize DO Begin
-                Result[k] := DSS_CopyStringAsPChar(AuxParser.StrValue);
+                Result[k] := DSS_CopyStringAsPChar(AuxParser[ActiveActor].StrValue);
                 Inc(k);
              End;
-             AuxParser.AutoIncrement := FALSE; // be a good citizen
-             AuxParser.Delimiters := SaveDelims;
-             AuxParser.Whitespace := SaveWhiteSpace;
+             AuxParser[ActiveActor].AutoIncrement := FALSE; // be a good citizen
+             AuxParser[ActiveActor].Delimiters := SaveDelims;
+             AuxParser[ActiveActor].Whitespace := SaveWhiteSpace;
          End;
      End;
 

@@ -50,17 +50,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Parallel_CreateActor();cdecl;
 begin
-  if NumOfActors < CPU_Cores then
-  begin
-    inc(NumOfActors);
-    GlobalResult  :=  inttostr(NumOfActors);
-    ActiveActor   :=  NumOfActors;
-    ActorCPU[ActiveActor] :=  ActiveActor -1;
-    DSSExecutive := TExecutive.Create;  // Make a DSS object
-    Parser[ActiveActor]   :=  ParserDel.TParser.Create;
-    DSSExecutive.CreateDefaultDSSItems;
-  end
-  else DoSimpleMsg('There are no more CPUs available', 7001);
+  New_Actor_Slot();
 end;
 //------------------------------------------------------------------------------
 function Parallel_Get_ActorCPU():Integer;cdecl;
@@ -83,7 +73,7 @@ procedure Parallel_Wait();cdecl;
 var
   i : Integer;
 begin
-  Wait4Actors;
+  if Parallel_enabled then Wait4Actors(0);
 end;
 //------------------------------------------------------------------------------
 PROCEDURE Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
@@ -91,10 +81,10 @@ VAR
   Result: PIntegerArray; 
   idx : Integer;
 begin
-    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (NumOfActors) - (1) + 1);
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, NumOfActors);
     for idx := 1 to NumOfActors do
     Begin
-      Result[(idx) - (1)] :=  ActorPctProgress[idx];
+      Result[idx - 1] :=  ActorPctProgress[idx];
     End;
 end;
 PROCEDURE Parallel_Get_ActorProgress_GR();cdecl;
@@ -109,11 +99,11 @@ VAR
   Result: PIntegerArray; 
   idx : Integer;
 begin
-    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (NumOfActors) - (1) + 1);
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, NumOfActors);
     for idx := 1 to NumOfActors do
     Begin
-      if ActorHandle[idx].Is_Busy then Result[(idx) - (1)] :=  0
-      else Result[(idx) - (1)] :=  1;
+      if ActorHandle[idx].Is_Busy then Result[idx - 1] :=  0
+      else Result[idx - 1] :=  1;
     End;
 end;
 PROCEDURE Parallel_Get_ActorStatus_GR();cdecl;
@@ -130,7 +120,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Parallel_Set_ActiveParallel(Value: Integer);cdecl;
 begin
-  if Value = 1 then Parallel_enabled :=  True else Parallel_enabled :=  False;
+  Parallel_enabled := (Value = 1);
 end;
 //------------------------------------------------------------------------------
 function Parallel_Get_ConcatenateReports():Integer;cdecl;
@@ -140,7 +130,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Parallel_Set_ConcatenateReports(Value: Integer);cdecl;
 begin
-  if Value = 1 then ConcatenateReports  :=  True else ConcatenateReports  :=  False;
+  ConcatenateReports := (Value = 1);
 end;
 //------------------------------------------------------------------------------
 END.

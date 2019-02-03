@@ -541,6 +541,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_SolveDirect();cdecl;
 begin
+   IsSolveAll :=  False;
    If ActiveCircuit[ActiveActor] <> Nil Then Begin
       ActiveCircuit[ActiveActor].Solution.SolveDirect(ActiveActor);
    End;
@@ -549,6 +550,7 @@ end;
 procedure Solution_SolveNoControl();cdecl;
 {Solves without checking controls}
 begin
+   IsSolveAll :=  False;
    If ActiveCircuit[ActiveActor] <> Nil Then Begin
       ActiveCircuit[ActiveActor].Solution.SolveCircuit(ActiveActor);
    End;
@@ -556,6 +558,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_SolvePflow();cdecl;
 begin
+   IsSolveAll :=  False;
    If ActiveCircuit[ActiveActor] <> Nil Then Begin
       ActiveCircuit[ActiveActor].Solution.DoPflowSolution(ActiveActor);
    End;
@@ -564,6 +567,7 @@ end;
 procedure Solution_SolvePlusControl();cdecl;
 {One Pass Through the solution and then dispatches controls}
 begin
+   IsSolveAll :=  False;
    If ActiveCircuit[ActiveActor] <> Nil Then Begin
       With ActiveCircuit[ActiveActor].Solution Do Begin
          SolveCircuit(ActiveActor);
@@ -574,6 +578,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_SolveSnap();cdecl;
 begin
+   IsSolveAll :=  False;
    If ActiveCircuit[ActiveActor] <> Nil Then Begin
       ActiveCircuit[ActiveActor].Solution.SolveSnap(ActiveActor);
    End;
@@ -741,6 +746,7 @@ procedure Solution_SolveAll();cdecl;
 var
   i : Integer;
 begin
+  IsSolveAll :=  True;
   for i := 1 to NumOfActors do
   begin
     ActiveActor :=  i;
