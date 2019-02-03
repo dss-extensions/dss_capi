@@ -522,11 +522,13 @@ end;
 function Circuit_SetActiveElement(const FullName: PAnsiChar):Integer;cdecl;
 begin
    Result := -1;
-   IF ActiveCircuit[ActiveActor] <> NIL
-   THEN Begin
-       Result := ActiveCircuit[ActiveActor].SetElementActive(FullName) - 1;   // make zero based to be compatible with collections and variant arrays
-   End
-   ELSE DoSimpleMsg('Create a circuit before trying to set an element active!', 5015);
+   IF ActiveCircuit[ActiveActor] = NIL then
+   begin
+      DoSimpleMsg('Create a circuit before trying to set an element active!', 5015);
+      Exit;
+   end;
+   
+   Result := ActiveCircuit[ActiveActor].SetElementActive(FullName) - 1;   // make zero based to be compatible with collections and variant arrays
 end;
 //------------------------------------------------------------------------------
 function Circuit_Capacity(Start, Increment: Double):Double;cdecl;
@@ -1077,21 +1079,27 @@ end;
 //------------------------------------------------------------------------------
 procedure Circuit_SetCktElementIndex(const Value: Integer);cdecl;
 begin
-   If ActiveCircuit[ActiveActor] <> Nil Then With ActiveCircuit[ActiveActor] Do 
+   If ActiveCircuit[ActiveActor] = Nil Then 
+   begin
+      DoSimpleMsg('Create a circuit before trying to set an element active!', 5015);
+      Exit;
+   end;
+   
+   With ActiveCircuit[ActiveActor] Do 
    Begin
       If NumDevices > Value Then
-      Begin
-         ActiveCktElement := CktElements.Get(Value+1);
-      End;
+         ActiveCktElement := CktElements.Get(Value+1)
+      Else
+        DoSimpleMsg('Invalid CktElement index', 5030);
    End;
 end;
 
 procedure Circuit_SetCktElementName(const Value: PAnsiChar);cdecl;
 begin
-   If ActiveCircuit[ActiveActor] <> Nil Then With ActiveCircuit[ActiveActor] Do 
-   Begin
-      ActiveCircuit[ActiveActor].SetElementActive(Value); // By name
-   End;
+    if Circuit_SetActiveElement(Value) = -1 then
+    begin
+        DoSimpleMsg(Format('Invalid CktElement name "%s"', [Value]), 5031);
+    end;
 end;
 //------------------------------------------------------------------------------
 END.
