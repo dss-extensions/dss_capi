@@ -871,22 +871,23 @@ end;
 procedure Loads_Set_ZIPV(ValuePtr: PDouble; ValueCount: Integer);cdecl;
 VAR
   Value: PDoubleArray;
-  elem:TLoadObj;
-  i, k, LoopLimit: Integer;
-
+  elem: TLoadObj;
+  i, k: Integer;
 begin
+    if ValueCount <> 7 then
+    begin
+        DoSimpleMsg(Format('ZIPV requires 7 elements, %d were provided!', [ValueCount]), 5890);    
+        Exit;
+    end;
+
     Value := PDoubleArray(ValuePtr);
     elem := ActiveLoad;
     If elem <> nil Then
     Begin
          // allocate space for 7
          elem.nZIPV := 7;
-         // only put as many elements as proviced up to nZIPV
-         LoopLimit := (ValueCount - 1);
-         If (LoopLimit - (0) + 1) > 7 Then   LoopLimit :=  (0) + 6;
-
          k := 1;
-         for i := (0) to LoopLimit do
+         for i := 0 to 6 do
          Begin
              elem.ZIPV^[k] := Value[i];
              inc(k);
