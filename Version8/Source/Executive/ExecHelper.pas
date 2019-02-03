@@ -289,7 +289,7 @@ Begin
       Params:=Parser[ActiveActor].Position;
       ActiveDSSClass[ActiveActor] := DSSClassList[ActiveActor].Get(LastClassReferenced[ActiveActor]);
       RegEx1:=TRegExpr.Create;
-//      RegEx1.Options:=[preCaseLess];
+      RegEx1.ModifierI := True; // equivalent to RegEx1.Options:=[preCaseLess]
       RegEx1.Expression:=UTF8String(Pattern);
       If ActiveDSSClass[ActiveActor].First>0 then pObj:=ActiveDSSObject[ActiveActor] else pObj := Nil;
       while pObj <> Nil do begin

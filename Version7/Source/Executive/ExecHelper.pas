@@ -288,7 +288,7 @@ Begin
       Params:=Parser.Position;
       ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
       RegEx1:=TRegExpr.Create;
-//      RegEx1.Options:=[preCaseLess];RegEx1.
+      RegEx1.ModifierI := True; // equivalent to RegEx1.Options:=[preCaseLess]
       RegEx1.Expression:=UTF8String(Pattern);
       If ActiveDSSClass.First>0 then pObj:=ActiveDSSObject else pObj := Nil;
       while pObj <> Nil do begin
