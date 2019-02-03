@@ -1,6 +1,16 @@
-export DSS_CAPI_VERSION=`grep DSS_CAPI_V7_VERSION include/v7/dss_capi.h | grep -o '".*"' | grep -o '[^"]*'`
+if [ -n "$TRAVIS_TAG" ]; then
+    export DSS_CAPI_VERSION=$TRAVIS_TAG
+elif [ -n "$APPVEYOR_REPO_TAG_NAME" ]; then
+    export DSS_CAPI_VERSION=$APPVEYOR_REPO_TAG_NAME
+else
+    export DSS_CAPI_VERSION=`grep DSS_CAPI_V7_VERSION include/v7/dss_capi.h | grep -o '".*"' | tr -d '"'`
+fi
+
 export DSS_CAPI_REV=`git rev-parse HEAD`
 export DSS_CAPI_SVN_REV=`git --git-dir=../electricdss-src/.git log | grep -m 1 -E "trunk@[0-9]+" -o | grep -E "[0-9]+" -o`
+
+# echo 'Updating src/CAPI_Metadata.pas...'
+# cat src/CAPI_Metadata.pas
 
 echo "UNIT CAPI_metadata;" > src/CAPI_Metadata.pas
 echo "INTERFACE" >> src/CAPI_Metadata.pas
@@ -13,3 +23,8 @@ echo "" >> src/CAPI_Metadata.pas
 echo "IMPLEMENTATION" >> src/CAPI_Metadata.pas
 echo "" >> src/CAPI_Metadata.pas
 echo "END." >> src/CAPI_Metadata.pas
+
+echo 'Updated src/CAPI_Metadata.pas'
+echo '// --->'
+cat src/CAPI_Metadata.pas
+echo '// <---'

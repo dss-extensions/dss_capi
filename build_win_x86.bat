@@ -1,4 +1,5 @@
 @echo off
+@SETLOCAL
 
 where /q fpc
 if errorlevel 1 (
@@ -39,7 +40,7 @@ if exist ..\electricdss-src\Version7\Source\Common\DSSGlobals.pas (
         del /s lib\win_x86\v7\exports.txt
 
         REM copy /Y ..\electricdss-src\Distrib\x86\klusolve.dll lib\libklusolve.dll
-        echo TODO: COPY KLUSOLVE DLL!
+        REM echo TODO: COPY KLUSOLVE DLL!
     ) else (
         echo ERROR: DSS_CAPI_V7.DLL file not found. Check previous messages for possible causes.
         exit /B 1
@@ -65,7 +66,7 @@ if exist ..\electricdss-src\Version7\Source\Common\DSSGlobals.pas (
         del /s lib\win_x86\v8\exports.txt
         
         REM copy /Y ..\electricdss-src\Distrib\x86\klusolve.dll lib\libklusolve.dll
-        echo TODO: COPY KLUSOLVE DLL!
+        REM echo TODO: COPY KLUSOLVE DLL!
     ) else (
         echo ERROR: DSS_CAPI_V8.DLL file not found. Check previous messages for possible causes.
     )
@@ -73,4 +74,22 @@ if exist ..\electricdss-src\Version7\Source\Common\DSSGlobals.pas (
 ) else (
     echo ERROR: Did you forget to clone https://github.com/PMeira/electricdss-src ?
     exit /B 1
+)
+
+SETLOCAL ENABLEEXTENSIONS
+
+IF DEFINED APPVEYOR_REPO_TAG_NAME (
+    mkdir release
+    mkdir dss_capi
+    xcopy /E lib\win_x86 release\dss_capi\lib\win_x86\
+    xcopy /E include release\dss_capi\include\
+    REM xcopy /E examples release\dss_capi\examples\
+    copy LICENSE release\dss_capi\
+    copy OPENDSS_LICENSE release\dss_capi\
+    copy klusolve\LICENSE release\dss_capi\KLUSOLVE_LICENSE
+    cd release
+    7z a "dss_capi_%APPVEYOR_REPO_TAG_NAME%_win_x86.zip" dss_capi
+    cd ..
+    rd /s /q release\dss_capi
+    appveyor PushArtifact "c:\dss_capi\release\dss_capi_%APPVEYOR_REPO_TAG_NAME%_win_x86.zip"
 )
