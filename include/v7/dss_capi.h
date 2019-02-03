@@ -1724,6 +1724,130 @@ extern "C" {
     DSS_CAPI_V7_DLL void Generators_Set_Vminpu(double Value);
 
     /*
+    Names of all GICSource Objects
+    */
+    DSS_CAPI_V7_DLL void GICSources_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as GICSources_Get_AllNames but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void GICSources_Get_AllNames_GR(void);
+
+    /*
+    Number of GICSource objects in Active Circuit.
+    */
+    DSS_CAPI_V7_DLL int32_t GICSources_Get_Count(void);
+
+    /*
+    Invoking this property sets the first element active.  Returns 0 if no GICSources.  Otherwise, index of the GICSource element.
+    */
+    DSS_CAPI_V7_DLL int32_t GICSources_Get_First(void);
+
+    /*
+    Invoking this property advances to the next GICSource element active.  Returns 0 if no more GICSources.  Otherwise, index of the GICSource element.
+    */
+    DSS_CAPI_V7_DLL int32_t GICSources_Get_Next(void);
+
+    /*
+    Specify the name of the GICSource element to set it active.
+    */
+    DSS_CAPI_V7_DLL char* GICSources_Get_Name(void);
+
+    /*
+    Specify the name of the GICSource element to set it active.
+    */
+    DSS_CAPI_V7_DLL void GICSources_Set_Name(char* Value);
+
+    /*
+    Number of Phases, this GICSource element.
+    */
+    DSS_CAPI_V7_DLL int32_t GICSources_Get_Phases(void);
+
+    /*
+    Number of Phases, this GICSource element.
+    */
+    DSS_CAPI_V7_DLL void GICSources_Set_Phases(int32_t Value);
+
+    /*
+    First bus name of GICSource (Created name)
+    */
+    DSS_CAPI_V7_DLL char* GICSources_Get_Bus1(void);
+
+    /*
+    Second bus name
+    */
+    DSS_CAPI_V7_DLL char* GICSources_Get_Bus2(void);
+
+    /*
+    Northward E Field V/km
+    */
+    DSS_CAPI_V7_DLL double GICSources_Get_EN(void);
+
+    /*
+    Northward E Field V/km
+    */
+    DSS_CAPI_V7_DLL void GICSources_Set_EN(double Value);
+
+    /*
+    Eastward E Field, V/km
+    */
+    DSS_CAPI_V7_DLL double GICSources_Get_EE(void);
+
+    /*
+    Eastward E Field, V/km
+    */
+    DSS_CAPI_V7_DLL void GICSources_Set_EE(double Value);
+
+    /*
+    Latitude of Bus1 (degrees)
+    */
+    DSS_CAPI_V7_DLL double GICSources_Get_Lat1(void);
+
+    /*
+    Latitude of Bus1 (degrees)
+    */
+    DSS_CAPI_V7_DLL void GICSources_Set_Lat1(double Value);
+
+    /*
+    Latitude of Bus2 (degrees)
+    */
+    DSS_CAPI_V7_DLL double GICSources_Get_Lat2(void);
+
+    /*
+    Latitude of Bus2 (degrees)
+    */
+    DSS_CAPI_V7_DLL void GICSources_Set_Lat2(double Value);
+
+    /*
+    Longitude of Bus1 (Degrees)
+    */
+    DSS_CAPI_V7_DLL double GICSources_Get_Lon1(void);
+
+    /*
+    Longitude of Bus1 (Degrees)
+    */
+    DSS_CAPI_V7_DLL void GICSources_Set_Lon1(double Value);
+
+    /*
+    Longitude of Bus2 (Degrees)
+    */
+    DSS_CAPI_V7_DLL double GICSources_Get_Lon2(void);
+
+    /*
+    Longitude of Bus2 (Degrees)
+    */
+    DSS_CAPI_V7_DLL void GICSources_Set_Lon2(double Value);
+
+    /*
+    Specify dc voltage directly
+    */
+    DSS_CAPI_V7_DLL double GICSources_Get_Volts(void);
+
+    /*
+    Specify dc voltage directly
+    */
+    DSS_CAPI_V7_DLL void GICSources_Set_Volts(double Value);
+    
+    /*
     Array of strings containing names of all ISOURCE elements.
     */
     DSS_CAPI_V7_DLL void ISources_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
