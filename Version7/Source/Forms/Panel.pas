@@ -11,13 +11,13 @@ interface
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Menus, ToolWin, ImgList, ScriptEdit, ExtCtrls, PsAPI
-{$IFDEF VER320}    // Tokyo
+  {$IFDEF VER320}    // Tokyo
   ,System.ImageList
-{$ENDIF}
-{$IFDEF VER300}    // Seattle
+  {$ENDIF}
+  {$IFDEF VER300}    // Seattle
   ,System.ImageList
-{$ENDIF}
-;
+  {$ENDIF}
+  ;
 
 type
   TControlPanel = class(TForm)

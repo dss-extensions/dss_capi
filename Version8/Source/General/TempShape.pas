@@ -420,7 +420,7 @@ Begin
             Inc(i);
             Readln(F, s); // read entire line  and parse with AuxParser
             {AuxParser allows commas or white space}
-            WITH AuxParser Do Begin
+            WITH AuxParser[Activeactor] Do Begin
                 CmdString := s;
                 IF Interval=0.0 Then Begin  NextParam; Hours^[i] := DblValue; End;
                 NextParam; TValues^[i] := DblValue;

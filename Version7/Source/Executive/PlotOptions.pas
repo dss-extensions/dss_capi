@@ -290,6 +290,10 @@ Begin
                   Else if CompareTextShortest(Param, 'llprimary')=0 then PhasesToPlot := PROFILELLPRI
                   Else If Length(Param)=1 then PhasesToPlot := Parser.IntValue;
              End;
+         22: Begin
+              ProfileScale := PROFILEPUKM;
+              if CompareTextShortest (Param, '120KFT') = 0 then ProfileScale := PROFILE120KFT;
+             End;
 
        Else
        End;

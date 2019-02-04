@@ -336,7 +336,7 @@ BEGIN
          WHILE (NOT EOF(F)) AND (i<Npts) DO BEGIN
           Inc(i);
           Readln(F, s);  {Use AuxParser to allow flexible formats}
-          With AuxParser Do Begin
+          With AuxParser[ActiveActor] Do Begin
              // Readln(F,Year^[i], Multiplier^[i]);
              CmdString := S;
              NextParam; Year^[i] := IntValue;

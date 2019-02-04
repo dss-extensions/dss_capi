@@ -63,11 +63,15 @@ Procedure ExportIncMatrixRows(FileNm:String);
 Procedure ExportIncMatrixCols(FileNm:String);
 Procedure ExportBusLevels(FileNm:String);
 Procedure ExportLaplacian(FileNm:String);
+Procedure ExportZLL(FileNm:String);
+Procedure ExportZCC(FileNm:String);
+Procedure ExportY4(FileNm:String);
+Procedure ExportC(FileNm:String);
 
 
 IMPLEMENTATION
 
-Uses uComplex,  Arraydef, sysutils,   Circuit, DSSClassDefs, DSSGlobals,
+Uses uComplex,  Arraydef, Sysutils,   Circuit, DSSClassDefs, DSSGlobals,
      uCMatrix,  solution, CktElement, Utilities, Bus, MathUtil, DSSClass,
      PDElement, PCElement, Generator,  Sensor, Load, RegControl, Transformer,
      ParserDel, Math, Ymatrix, LineGeometry, WireData, LineCode, XfmrCode, NamedObject,
@@ -1975,7 +1979,7 @@ Var
 
 Begin
 
-     If PVSystemClass = NIL THEN Exit;  // oops somewhere!!
+     If PVSystemClass[ActiveActor] = NIL THEN Exit;  // oops somewhere!!
      Separator := ', ';
 
      pElem := ActiveCircuit[ActiveActor].PVSystems.First;
@@ -2031,7 +2035,7 @@ Var
 Begin
 
 
-  If PVSystemClass = NIL THEN Exit;  // oops somewhere!!
+  If PVSystemClass[ActiveActor] = NIL THEN Exit;  // oops somewhere!!
   Separator := ', ';
 
 
@@ -2635,10 +2639,8 @@ Begin
        SetLength (RowIdx, nNZ);
        SetLength (cVals, nNZ);
        GetCompressedMatrix (hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
-
        {Write out fully qualified Bus Names}
         With ActiveCircuit[ActiveActor] Do Begin
-
           Writeln(F, Format('%d, ',[NumNodes]));
   (*        For i := 1 to NumNodes DO BEGIN
              j :=  MapNodeToBus^[i].BusRef;
@@ -2664,20 +2666,13 @@ Begin
              End;
              Writeln(F);
           End;
-
         End;
      end;    
 
-
      GlobalResult := FileNm;
-
   Finally
-
      CloseFile(F);
-
   End;
-
-
 End;
 
 Procedure ExportSeqZ(FileNm:String);
@@ -3099,6 +3094,7 @@ Begin
     begin
       Writeln(F,inttostr(IncMat.data[i][0]) + ',' + inttostr(IncMat.data[i][1]) + ',' + inttostr(IncMat.data[i][2]));
     end;
+    GlobalResult := FileNm;
     CloseFile(F);
   End;
 End;
@@ -3117,6 +3113,7 @@ Begin
     begin
       Writeln(F,Inc_Mat_Rows[i]);
     end;
+    GlobalResult := FileNm;
     CloseFile(F);
   End;
 End;
@@ -3135,6 +3132,7 @@ Begin
     begin
       Writeln(F,Inc_Mat_Cols[i]);
     end;
+    GlobalResult := FileNm;
     CloseFile(F);
   End;
 End;
@@ -3154,6 +3152,7 @@ Begin
     begin
       Writeln(F,Inc_Mat_Cols[i] + ',' + inttostr(Inc_Mat_levels[i]));
     end;
+    GlobalResult := FileNm;
     CloseFile(F);
   End;
 End;
@@ -3172,7 +3171,96 @@ Begin
     begin
       Writeln(F,inttostr(Laplacian.data[i][0]) + ',' + inttostr(Laplacian.data[i][1]) + ',' + inttostr(Laplacian.data[i][2]));
     end;
+    GlobalResult := FileNm;
     CloseFile(F);
+  End;
+End;
+//-------------------------------------------------------------------
+Procedure ExportZLL(FileNm:String);
+var
+  F             : TextFile;
+  i             : Integer;
+Begin
+  if ADiakoptics then
+  Begin
+    with ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution do
+    Begin
+      Assignfile(F,FileNm);
+      ReWrite(F);
+      Writeln(F,'Row,Col,Value(Real), Value(Imag)');
+      for i := 0 to (ZLL.NZero -1) do
+      begin
+        Writeln(F,inttostr(ZLL.CData[i].Row) + ',' + inttostr(ZLL.CData[i].Col) + ',' + floattostr(ZLL.CData[i].Value.Re)+ ',' + floattostr(ZLL.CData[i].Value.Im));
+      end;
+      GlobalResult := FileNm;
+      CloseFile(F);
+    End;
+  End;
+End;
+//-------------------------------------------------------------------
+Procedure ExportZCC(FileNm:String);
+var
+  F             : TextFile;
+  i             : Integer;
+Begin
+  if ADiakoptics then
+  Begin
+    with ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution do
+    Begin
+      Assignfile(F,FileNm);
+      ReWrite(F);
+      Writeln(F,'Row,Col,Value(Real), Value(Imag)');
+      for i := 0 to (ZCC.NZero -1) do
+      begin
+        Writeln(F,inttostr(ZCC.CData[i].Row) + ',' + inttostr(ZCC.CData[i].Col) + ',' + floattostr(ZCC.CData[i].Value.Re)+ ',' + floattostr(ZCC.CData[i].Value.Im));
+      end;
+      GlobalResult := FileNm;
+      CloseFile(F);
+    End;
+  End;
+End;
+//-------------------------------------------------------------------
+Procedure ExportY4(FileNm:String);
+var
+  F             : TextFile;
+  i             : Integer;
+Begin
+  if ADiakoptics then
+  Begin
+    with ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution do
+    Begin
+      Assignfile(F,FileNm);
+      ReWrite(F);
+      Writeln(F,'Row,Col,Value(Real), Value(Imag)');
+      for i := 0 to (Y4.NZero -1) do
+      begin
+        Writeln(F,inttostr(Y4.CData[i].Row) + ',' + inttostr(Y4.CData[i].Col) + ',' + floattostr(Y4.CData[i].Value.Re)+ ',' + floattostr(Y4.CData[i].Value.Im));
+      end;
+      GlobalResult := FileNm;
+      CloseFile(F);
+    End;
+  End;
+End;
+//-------------------------------------------------------------------
+Procedure ExportC(FileNm:String);
+var
+  F             : TextFile;
+  i             : Integer;
+Begin
+  if ADiakoptics then
+  Begin
+    with ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution do
+    Begin
+      Assignfile(F,FileNm);
+      ReWrite(F);
+      Writeln(F,'Row,Col,Value');
+      for i := 0 to (Contours.NZero -1) do
+      begin
+        Writeln(F,inttostr(Contours.CData[i].Row) + ',' + inttostr(Contours.CData[i].Col) + ',' + floattostr(Contours.CData[i].Value.Re));
+      end;
+      GlobalResult := FileNm;
+      CloseFile(F);
+    End;
   End;
 End;
 //-------------------------------------------------------------------
@@ -3615,8 +3703,7 @@ Begin
 
    If Assigned(pMeter) Then
      // If a meter is specified, export that meter only
-     With pMeter Do
-     Begin
+     With pMeter Do Begin
          for i  := 1 to SectionCount  do
            With FeederSections^[i] Do Begin
               ActiveCircuit[ActiveActor].ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
@@ -3627,13 +3714,10 @@ Begin
      End
    Else    // export sections for all meters
      Begin
-
         iMeter := EnergyMeterClass[ActiveActor].First;
-        while iMeter>0 do
-          Begin
+        while iMeter>0 do Begin
              MyMeterPtr:=EnergyMeterClass[ActiveActor].GetActiveObj;
-             With MyMeterPtr Do
-             Begin
+             With MyMeterPtr Do Begin
                  for i  := 1 to SectionCount  do
                  With FeederSections^[i] Do Begin
                     ActiveCircuit[ActiveActor].ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
@@ -3641,10 +3725,9 @@ Begin
                     [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
                      FullName(ActiveCircuit[ActiveActor].ActiveCktElement)  ]));
                  End;
+                iMeter := EnergyMeterClass[ActiveActor].Next;
              End;
-             iMeter := EnergyMeterClass[ActiveActor].Next;
           End;
-
      End;
 
      GlobalResult := FileNm;

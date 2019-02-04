@@ -13,6 +13,7 @@ unit RegControl;
    12/17/01 Added LDC logic
    12/18/01 Added MaxTapChange property and logic
    6/18/11 Updated Rev Power logic
+   12/4/2018  Added autotransformer control
 }
 
 {
@@ -30,7 +31,7 @@ interface
 
 USES
      Command, ControlClass, ControlElem, DSSClass, Arraydef, ucomplex,
-     Transformer, utilities;
+     Transformer, AutoTrans, utilities;
 
 TYPE
 
@@ -272,8 +273,8 @@ Begin
      PropertyName[31] := 'rev_Z';
      PropertyName[32] := 'Cogen';
 
-     PropertyHelp[1] := 'Name of Transformer element to which the RegControl is connected. '+
-                        'Do not specify the full object name; "Transformer" is assumed for '  +
+     PropertyHelp[1] := 'Name of Transformer or AutoTrans element to which the RegControl is connected. '+
+                        'Do not specify the full object name; "Transformer" or "AutoTrans" is assumed for '  +
                         'the object class.  Example:'+CRLF+CRLF+
                         'Transformer=Xfmr1';
      PropertyHelp[2] := 'Number of the winding of the transformer element that the RegControl is monitoring. '+
@@ -605,12 +606,20 @@ PROCEDURE TRegControlObj.RecalcElementData(ActorID : Integer);
 
 VAR
    DevIndex :Integer;
+   TransName, NewElementName :String;
 
 Begin
          IF (R<>0.0) or (X<>0.0) or (LDC_Z>0.0)Then LDCActive := TRUE else LDCActive := FALSE;
          IF Length(RegulatedBus)=0 Then UsingRegulatedBus := FALSE Else  UsingRegulatedBus := TRUE;
 
          Devindex := GetCktElementIndex(ElementName); // Global FUNCTION
+         if DevIndex = 0 then Begin // Try 'AutoTrans' instead of Transformer
+              TransName      := StripClassName(ElementName);
+              NewElementName := 'autotrans.' + TransName;
+              Devindex       := GetCktElementIndex(NewElementName);
+              if Devindex>0 then ElementName := NewElementName;
+         End;
+
          IF   DevIndex>0  THEN
          Begin  // RegControled element must already exist
              ControlledElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
@@ -629,7 +638,9 @@ Begin
                    End;
              End;
 
-             IF  Comparetext(ControlledElement.DSSClassName, 'transformer') = 0  THEN
+             IF  (Comparetext(ControlledElement.DSSClassName, 'transformer') = 0) or  // either should work
+                 (Comparetext(ControlledElement.DSSClassName, 'autotrans') = 0)
+             THEN
              Begin
                    IF ElementTerminal > ControlledElement.Nterms  THEN
                    Begin
@@ -880,6 +891,7 @@ begin
                               IF   PendingTapChange <> 0.0 THEN ControlQueue.Push(DynaVars.intHour, DynaVars.t + TapDelay, 0, 0, Self, ActorID)
                               ELSE Armed := FALSE;
                           End;
+
                        MULTIRATE:
                           Begin
                               TapChangeToMake := OneInDirectionOf(FPendingTapChange, TapIncrement[TapWinding],ActorID);
@@ -891,13 +903,14 @@ begin
                               IF   PendingTapChange <> 0.0 THEN ControlQueue.Push(DynaVars.intHour, DynaVars.t + TapDelay, 0, 0, Self, ActorID)
                               ELSE Armed := FALSE;
                           End;
+
                     End;
                  End;
             End;
         End;  {ACTION_TAPCHANGE}
 
       ACTION_REVERSE:
-        Begin  // Toggle reverse mode flag
+        Begin  // Toggle reverse mode or Cogen mode flag
              If (DebugTrace) Then RegWriteDebugRecord(Format('Handling Reverse Action, ReversePending=%s, InReverseMode=%s',
                                   [BoolToStr(ReversePending, TRUE), BoolToStr(InReverseMode, TRUE)]));
              If ReversePending Then        // check to see if action has reset
@@ -945,7 +958,7 @@ begin
         Exit;
      end;
 
-     LookingForward := (not InReverseMode) OR InCogenMode;
+     LookingForward := (not InReverseMode) OR InCogenMode; // Always looking forward in cogen mode
 
      {First, check the direction of power flow to see if we need to reverse direction}
      {Don't do this if using regulated bus logic}
@@ -1103,8 +1116,9 @@ begin
             Vactual := Vactual /  PresentTap[TapWinding,ActorID];
             VregTest := RevVreg;
             BandTest := RevBandwidth;
-         End Else
-         Begin
+           End
+         Else
+           Begin   // Forward or Cogen Modes
             VregTest := Vreg;
             BandTest := Bandwidth;
          End;
@@ -1123,7 +1137,7 @@ begin
                 Increment        := TapIncrement[TapWinding];
                 PendingTapChange := Round(BoostNeeded / Increment) * Increment;  // Make sure it is an even increment
 
-                {If Tap is another winding or in reverse mode, it has to move the other way to accomplish the change}
+                {If Tap is another winding or in REVERSE MODE, it has to move the other way to accomplish the change}
                 If (TapWinding <> ElementTerminal) or InReverseMode Then PendingTapChange := -PendingTapChange;
 
                 // Send Initial Tap Change message to control queue
@@ -1190,8 +1204,7 @@ if ControlledElement <> nil then
     Result := round((PresentTap[ictrldWinding,ActiveActor] - (MaxTap[ictrldWinding] + MinTap[ictrldWinding])/2.0) / TapIncrement[ictrldWinding]);
 
   end
-  else
-    Result := 0;
+      else Result := 0;
 end;
 
 Function TRegControlObj.Get_MinTap :Double;
@@ -1373,7 +1386,9 @@ begin
       Else
         Nphases := ControlledElement.NPhases;
       Nconds := FNphases;
-      IF Comparetext(ControlledElement.DSSClassName, 'transformer') = 0 THEN
+      IF (Comparetext(ControlledElement.DSSClassName, 'transformer') = 0) or   // either should work
+         (Comparetext(ControlledElement.DSSClassName, 'autotrans') = 0 )
+      THEN
       Begin
         // Sets name of i-th terminal's connected bus in RegControl's buslist
         // This value will be used to set the NodeRef array (see Sample function)

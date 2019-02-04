@@ -87,15 +87,15 @@ begin
 {$IFNDEF DSS_CAPI}
 	writeln ('Console OpenDSS (Electric Power Distribution System Simulator)');
 	writeln (VersionString);
-	writeln ('Copyright (c) 2008-2017, Electric Power Research Institute, Inc.');
+	writeln ('Copyright (c) 2008-2019, Electric Power Research Institute, Inc.');
 	writeln ('Copyright (c) 2016-2017, Battelle Memorial Institute');
 	writeln ('All rights reserved.');
 {$ELSE}
 	writeln ('OpenDSS (Electric Power Distribution System Simulator), DSS C-API library version, v7/classic branch');
 	writeln (VersionString);
-	writeln ('Copyright (c) 2008-2017, Electric Power Research Institute, Inc.');
+	writeln ('Copyright (c) 2008-2019, Electric Power Research Institute, Inc.');
 	writeln ('Copyright (c) 2016-2017, Battelle Memorial Institute');
-	writeln ('Copyright (c) 2017-2018, Paulo Meira');
+	writeln ('Copyright (c) 2017-2019, Paulo Meira');
 	writeln ('All rights reserved.');
 {$ENDIF}    
 End;

@@ -122,8 +122,6 @@ TYPE
 
         PROCEDURE FetchXfmrCode(Const Code:String);
 
-        FUNCTION InterpretCoreType(const str:String):Integer;
-
 
 
       Protected
@@ -1044,7 +1042,7 @@ Begin
      With Winding^[i] Do Begin
          if RdcSpecified then Rdcpu := RdcOhms/(SQR(VBase)/ VABase)
          Else Begin
-            Rdcpu := 0.85 * Rpu;
+            Rdcpu := abs(0.85 * Rpu); // use abs in case this resistance comes out negative.
             RdcOhms := Rdcpu * SQR(VBase)/ VABase;
          End;
      End;
@@ -1494,7 +1492,9 @@ Begin
 
      {Load up Vterminal - already allocated for all cktelements}
      WITH ActiveCircuit.Solution DO
-        FOR i := 1 TO Yorder DO  Vterminal^[i] := NodeV^[NodeRef^[i]];
+       if Assigned (NodeV) then
+            FOR i := 1 TO Yorder DO  Vterminal^[i] := NodeV^[NodeRef^[i]]
+       Else FOR i := 1 TO Yorder DO  Vterminal^[i] := CZERO;
 
 
      k := 0;
@@ -1790,6 +1790,7 @@ begin
      PropertyValue[44] := 'Lag';
      PropertyValue[45] := '0';
      PropertyValue[46] := 'shell';
+     PropertyValue[47] := '26.4';  // ohms
 
 
   inherited  InitPropertyValues(NumPropsThisClass);
@@ -1805,16 +1806,6 @@ begin
 
 end;
 
-function TTransfObj.InterpretCoreType(const str: String): Integer;
-begin
-     Case str[1] of
-          '1':Result := 1;  // 1-phase
-          '3':Result := 3;  // 3-Leg
-          '5':Result := 5;  // 5-Leg
-     Else
-         Result := 0; // default to shell
-     End;
-end;
 
 function TTransfObj.RotatePhases(iPhs: integer): Integer;
 // For Delta connections or Line-Line voltages
@@ -1841,7 +1832,7 @@ Var
         i,
         N         :Integer;
         S         :String;
-        Nodes     :Array[1..5] of Integer; // integer buffer
+        Nodes     :Array[1..50] of Integer; // Big integer buffer
         OnPhase1  :Boolean;
 begin
 
@@ -1965,7 +1956,6 @@ procedure TTransfObj.GICBuildYTerminal;
 
 Var
    i, j, idx :Integer;
-   BaseZ  :Double;
    yR     :Complex;
    F      :TextFile;
    Yadder :Complex;
@@ -1976,9 +1966,8 @@ begin
      Y_Term_NL.Clear;
 
      For i := 1 to NumWindings do  Begin
-         BaseZ :=SQR( Winding^[i].kVLL) / (Winding^[i].kVA/1000.0) ;
          {Use Rdc to build GIC model}
-         yR := Cmplx(1.0/(Winding^[i].Rdcpu * BaseZ), 0.0); // convert to Siemens
+         yR := Cmplx(1.0/(Winding^[i].Rdcohms), 0.0); // convert to Siemens
          With Y_Term Do Begin
              idx := 2*i-1;
              SetElement(idx,   idx,   yR);
@@ -2245,10 +2234,13 @@ begin
         NumTaps      := Obj.Winding^[i].NumTaps;
       end;
     SetTermRef;
+
+    // Parameters for all windings
     XHL := Obj.XHL;
     XHT := Obj.XHT;
     XLT := Obj.XLT;
     for i := 1 to (NumWindings*(NumWindings-1) div 2) do XSc^[i] := Obj.XSC^[i];
+
     ThermalTimeConst := Obj.ThermalTimeConst;
     n_thermal        := Obj.n_thermal;
     m_thermal        := Obj.m_thermal;
@@ -2256,6 +2248,7 @@ begin
     HSrise           := Obj.HSrise;
     pctLoadLoss      := Obj.pctLoadLoss;
     pctNoLoadLoss    := Obj.pctNoLoadLoss;
+    pctImag          := Obj.pctImag;  // Omission corrected 12-14-18
     NormMaxHkVA      := Obj.NormMaxHkVA;
     EmergMaxHkVA     := Obj.EmergMaxHkVA;
     ppm_FloatFactor  := Obj.ppm_FloatFactor;

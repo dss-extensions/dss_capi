@@ -166,7 +166,7 @@ Begin
                     CRLF+'  Yearly (follow Yearly curve),'+
                     CRLF+'  DIrect,'+
                     CRLF+'  DUtycycle,'+
-                    CRLF+'  Time, ( see LoadShapeClass option, SampleEnergymeters options)' +
+                    CRLF+'  Time, ( see LoadShapeClass, SampleEnergymeters options)' +
                     CRLF+'  DYnamic,  ( see LoadShapeClass option)'+
                     CRLF+'  Harmonic,'+
                     CRLF+'  HarmonicT,  (sequential Harmonic Mode)'+

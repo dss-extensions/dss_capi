@@ -13,7 +13,7 @@ Uses Command;
 
 
 CONST
-        NumPlotOptions = 22;
+        NumPlotOptions = 23;
 
 FUNCTION DoPlotCmd:Integer;
 
@@ -57,9 +57,10 @@ Begin
       PlotOption[20] := '1phLinestyle';
       PlotOption[21] := 'phases';
       PlotOption[22] := 'profilescale';
+      PlotOption[23] := 'PlotID';
 
 
-      PlotHelp[ 1] := 'One of {Circuit | Monitor | Daisy | Zones | AutoAdd | '+ CRLF +
+      PlotHelp[ 1] := 'One of {Circuit | Monitor | Daisy | Zones | AutoAdd | '+
                       'General (bus data) | Loadshape | Tshape | Priceshape |Profile} ' +   CRLF +
                       'A "Daisy" plot is a special circuit plot that places a marker at each Generator location ' +
                       'or at buses in the BusList property, if defined. ' +
@@ -76,7 +77,15 @@ Begin
                       'Plot Tshape object=mytemperatureshape'  +CRLF+
                       'Plot Priceshape object=mypriceshape'  +CRLF+
                       'Plot Profile'  +CRLF+
-                      'Plot Profile Phases=Primary';
+                      'Plot Profile Phases=Primary'+CRLF+CRLF+
+                      'Additional plots with the OpenDSS Viewer (These plots are enabled with the OpenDSSViewer option):' + CRLF +
+                      '- Plot evolution  ! Probabilistic density evolution plot with the line-to-ground magnitude of all load voltages in per unit base.' + CRLF +
+                      '- Plot loadshape object=myLoadshape  ! Loadshapes with the OpenDSS Viewer functionalities.' +CRLF+
+                      '- Plot matrix incidence  ! Incidence matrix plot (Requires: CalcIncMatrix or CalcIncMatrix_O).' +CRLF+
+                      '- Plot matrix laplacian  ! Laplacian matrix plot (Requires: CalcLaplacian).' +CRLF+
+                      '- Plot monitor object=myMonitor  ! Monitors with the OpenDSS Viewer functionalities. All channels are included in this plot.' +CRLF+
+                      '- Plot profile  ! 3D and 2D versions of the voltage profile.' +CRLF+
+                      '- Plot scatter  ! Scatter plot with geovisualization of line-to-ground bus voltage magnitudes in per unit.';
       PlotHelp[ 2] := 'One of {Voltage | Current | Power | Losses | Capacity | (Value Index for General, AutoAdd, or Circuit[w/ file]) }';
       PlotHelp[ 3] := 'Enter 0 (the default value) or the value corresponding to max scale or line thickness in the circuit plots. '+
                       'Power and Losses in kW. Also, use this to specify the max value corresponding to color C2 in General plots.';
@@ -140,6 +149,19 @@ Begin
       PlotHelp[22] := 'PUKM | 120KFT, default is PUKM' + CRLF +
                       'PUKM = per-unit voltage vs. distance in km' + CRLF +
                       '120KFT = voltage on 120-V base vs. distance in kft.';
+      PlotHelp[23] := 'Plot identifier for dynamic updates of "profile" and "scatter" plots in the OpenDSS Viewer (See "plot type" for more details).' +
+                      'When multiple "plot" commands are executed with the same PlotID, the same figure will be updated with the most recent simulation results.' +CRLF+CRLF+
+                      'This identifier could be declared as an integer number or a string without spaces.'+CRLF+CRLF+
+                      'Example:'+CRLF+CRLF+
+                      'set OpenDSSViewer=true ! OpenDSS Viewer enabled' + CRLF +
+                      'solve' + CRLF +
+                      'plot scatter PlotID=plotA  !Generates a new scatter plot' + CRLF +
+                      'solve' + CRLF +
+                      'plot scatter PlotID=plotB  !Generates a new scatter plot' + CRLF +
+                      'solve' + CRLF +
+                      'plot scatter PlotID=plotA  !Updates the data in plotA' + CRLF +
+                      'solve' + CRLF +
+                      'plot scatter PlotID=plotA  !Updates the data in plotA' + CRLF;
 
 End;
 
@@ -208,15 +230,15 @@ Begin
                      ValueIndex := 2;
                     End;
                'C': PlotType := ptCircuitplot;
-               'E': PlotType := ptEvolutionPlot;
+               'E': {$IFDEF MSWINDOWS}PlotType := ptEvolutionPlot{$ENDIF};
                'G': PlotType := ptGeneralDataPlot;
                'L': PlotType := ptLoadshape;
                'M': IF CompareTextShortest('mon', Param)=0 Then PlotType := ptMonitorplot
-                    ELSE PlotType := ptMatrixplot;
+                    {$IFDEF MSWINDOWS}ELSE PlotType := ptMatrixplot{$ENDIF};
                'P': IF CompareTextShortest('pro', Param)=0 Then PlotType := ptProfile
                     ELSE PlotType := ptPriceShape;
-               'S': PlotType := ptScatterPlot;
-               'T': PlotType := ptTshape;
+               'S': {$IFDEF MSWINDOWS}PlotType := ptScatterPlot{$ENDIF};
+               'T': {$IFDEF MSWINDOWS}PlotType := ptTshape{$ENDIF};
                'D': Begin
                       PlotType := ptDaisyplot;
                       DaisyBusList.Clear;
@@ -231,9 +253,9 @@ Begin
                     'U': Quantity := pqcurrent;
                     End;
                'P': Quantity := pqpower;
-               'L': IF CompareTextShortest('los', Param)=0 Then Quantity := pqlosses
-                    ELSE MatrixType :=  pLaplacian;
-               'I': MatrixType :=  pIncMatrix;
+               'L': {$IFDEF MSWINDOWS}IF CompareTextShortest('los', Param)=0 Then Quantity := pqlosses
+                    ELSE MatrixType :=  pLaplacian{$ENDIF};
+               'I': {$IFDEF MSWINDOWS}MatrixType :=  pIncMatrix{$ENDIF};
              Else
                Quantity := pqNone;
                Valueindex := Parser[ActiveActor].IntValue;
@@ -275,12 +297,15 @@ Begin
          16: MaxLineThickness := Parser[ActiveActor].IntValue ;
          17: InterpretTStringListArray(Param,  DaisyBusList);  {read in Bus list}
          18: Begin
+                {$IFDEF MSWINDOWS}
                  MinScale := Parser[ActiveActor].DblValue;
                  MinScaleIsSpecified := TRUE;    // Indicate the user wants a particular value
+                {$ENDIF}
              End;
-         19: ThreePhLineStyle  := Parser[ActiveActor].IntValue;
-         20: SinglePhLineStyle := Parser[ActiveActor].IntValue;
+         19: {$IFDEF MSWINDOWS}ThreePhLineStyle  := Parser[ActiveActor].IntValue{$ENDIF};
+         20: {$IFDEF MSWINDOWS}SinglePhLineStyle := Parser[ActiveActor].IntValue{$ENDIF};
          21: Begin  // Parse off phase(s) to plot
+             {$IFDEF MSWINDOWS}
                   PhasesToPlot := PROFILE3PH; // the default
                   if      CompareTextShortest(Param, 'default')=0 then PhasesToPlot := PROFILE3PH
                   Else if CompareTextShortest(Param, 'all')=0     then PhasesToPlot := PROFILEALL
@@ -289,8 +314,13 @@ Begin
                   Else if CompareTextShortest(Param, 'llall')=0   then PhasesToPlot := PROFILELLALL
                   Else if CompareTextShortest(Param, 'llprimary')=0 then PhasesToPlot := PROFILELLPRI
                   Else If Length(Param)=1 then PhasesToPlot := Parser[ActiveActor].IntValue;
+             {$ENDIF}
              End;
-
+         22: Begin
+              ProfileScale := PROFILEPUKM;
+              if CompareTextShortest (Param, '120KFT') = 0 then ProfileScale := PROFILE120KFT;
+             End;
+         23: PlotID := Parser[ActiveActor].StrValue ;
        Else
        End;
 
@@ -304,6 +334,7 @@ Begin
      With DSSPlotObj Do Begin
       if DSS_Viz_enable then
       begin
+      {$IFDEF MSWINDOWS}
         if (DSS_Viz_installed and ((
             PlotType = ptMonitorplot) or (
             PlotType = ptLoadshape) or (
@@ -311,16 +342,19 @@ Begin
             PlotType = ptScatterPlot) or (
             PlotType = ptEvolutionPlot) or (
             PlotType = ptMatrixplot))) then
-          DSSVizPlot; // DSS Visualization tool
+          DSSVizPlot; // OpenDSS Viewer
+      {$ENDIF}
       end
       else
       begin
+      {$IFDEF MSWINDOWS}
         if (PlotType = ptScatterPlot) or (
            PlotType = ptEvolutionPlot) or (
            PlotType = ptMatrixplot) then
-           DoSimpleMsg('The DSS Visualization tool is disabled (Check the DSSVisualizationTool option).',0)
+           DoSimpleMsg('The OpenDSS Viewer is disabled (Check the OpenDSSViewer option in the help).',0)
         else
            Execute;   // makes a new plot based on these options
+      {$ENDIF}
       end;
      End;
 

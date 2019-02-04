@@ -152,10 +152,10 @@ Begin
      PropertyHelp[4] := 'Number of phases.  Defaults to 3. All three phases are assumed in phase (zero sequence)';
      PropertyHelp[5] := 'Northward Electric field (V/km). If specified, Voltage and Angle are computed from EN, EE, lat and lon values.';
      PropertyHelp[6] := 'Eastward Electric field (V/km).  If specified, Voltage and Angle are computed from EN, EE, lat and lon values.';
-     PropertyHelp[7] := 'Latitude of Bus1 (degrees)';
-     PropertyHelp[8] := 'Longitude of Bus1 (degrees)';
-     PropertyHelp[9] := 'Latitude of Bus2 (degrees)';
-     PropertyHelp[10] := 'Longitude of Bus2 (degrees)';
+     PropertyHelp[7] := 'Latitude of Bus1 of the line(degrees)';
+     PropertyHelp[8] := 'Longitude of Bus1 of the line (degrees)';
+     PropertyHelp[9] := 'Latitude of Bus2 of the line (degrees)';
+     PropertyHelp[10] := 'Longitude of Bus2 of the line (degrees)';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -234,7 +234,7 @@ Begin
          Param     := Parser.StrValue;
      End;
 
-     RecalcElementData;
+     RecalcElementData;   // Updates Volts
      YPrimInvalid := True;
   End;
 
@@ -349,8 +349,8 @@ Var
 
 begin
      Phi := (Lat2 + Lat1)/2.0 * (pi/180.0);   // deg to radians
-     DeltaLat := Lat2 - Lat1;
-     DeltaLon := Lon2 - Lon1;
+     DeltaLat := Lat1 - Lat2; // switched 11-20 to get pos GIC for pos ENorth
+     DeltaLon := Lon1 - Lon2;
      VE    := (111.133 - 0.56    * cos(2.0*phi) )* DeltaLat * ENorth;
      VN    := (111.5065 - 0.1872 * cos(2.0*phi)) * Cos(phi) * DeltaLon * EEast ;
      Result := VN + VE;
@@ -483,7 +483,7 @@ Begin
            IF abs(Frequency - SrcFrequency) < EPSILON2 THEN Vmag := Volts Else Vmag := 0.0;
            For i := 1 to Fnphases do
               Begin
-                Vterminal^[i] :=  pdegtocomplex(Vmag, (360.0 + Angle) );   // all the same for zero sequence
+                Vterminal^[i] :=  pdegtocomplex(Vmag, (Angle) );   // all the same for zero sequence
                  // bottom part of the vector is zero
                 VTerminal^[i+Fnphases] := CZERO;    // See comments in GetInjCurrents
               End;

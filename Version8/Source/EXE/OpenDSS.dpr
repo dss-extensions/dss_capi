@@ -1,17 +1,17 @@
 program OpenDSS;
 { ----------------------------------------------------------
-  Copyright (c) 2008-2016, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2018, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 
   Redistribution and use in source and binary forms, with or without modification,
   are permitted provided that the following conditions are met:
-•	Redistributions of source code must retain the above copyright notice,
+ï¿½	Redistributions of source code must retain the above copyright notice,
    this list of conditions and the following disclaimer.
-•	Redistributions in binary form must reproduce the above copyright notice,
+ï¿½	Redistributions in binary form must reproduce the above copyright notice,
   this list of conditions and the following disclaimer in the documentation
   and/or other materials provided with the distribution.
-•	Neither the name of the Electric Power Research Institute, Inc.,
+ï¿½	Neither the name of the Electric Power Research Institute, Inc.,
   nor the names of its contributors may be used to endorse or promote products
   derived from this software without specific prior written permission.
 
@@ -183,11 +183,19 @@ uses
   Parallel_Lib in '..\Parallel_Lib\Parallel_Lib.pas',
   IndMach012 in '..\PCElements\IndMach012.pas',
   ESPVLControl in '..\Controls\ESPVLControl.pas',
+  {$IFDEF MSWINDOWS}
   TCP_IP in '..\TCP_IP\TCP_IP.pas',
+  {$ENDIF }
   ConnectOptions in '..\Executive\ConnectOptions.pas',
   Diakoptics in '..\Common\Diakoptics.pas',
   Sparse_Math in '..\Common\Sparse_Math.pas',
-  MeTIS_Exec in '..\Common\MeTIS_Exec.pas';
+  MeTIS_Exec in '..\Common\MeTIS_Exec.pas',
+  AutoTrans in '..\PDElements\AutoTrans.pas',
+  GICsource in '..\PCElements\GICsource.pas',
+  Generic5OrderMach in '..\PCElements\Generic5OrderMach.pas',
+  fMonitor in '..\Meters\fMonitor.pas',
+  LD_fm_infos in '..\Meters\LD_fm_infos.pas',
+  VLNodeVars in '..\Meters\VLNodeVars.pas';
 
 {$R *.RES}
 

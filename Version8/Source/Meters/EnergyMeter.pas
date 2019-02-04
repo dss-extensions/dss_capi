@@ -1814,10 +1814,12 @@ Begin
                 PCElementType := (pPCelem.DSSObjType and CLASSMASK);
                 IF (PCElementType = LOAD_ELEMENT)
                 OR (PCElementType = GEN_ELEMENT)
-                OR (PCElementType = CAP_ELEMENT)
+                OR (PCElementType = PVSYSTEM_ELEMENT)
+                OR (PCElementType = STORAGE_ELEMENT)
+                OR (PCElementType = CAP_ELEMENT)  // Capacitor and Reactor put on the PC list if IsShunt=TRUE
                 OR (PCElementType = REACTOR_ELEMENT) Then Begin
-                      BranchList.NewObject      := pPCelem;
-                      pPCelem.Checked           := TRUE;  // So we don't pick this element up again
+                      BranchList.NewObject      := pPCelem; // This adds element to the Shunt list in CktTree
+                      pPCelem.Checked           := TRUE;    // So we don't pick this element up again
                       pPCelem.IsIsolated        := FALSE;
                       pPCelem.ActiveTerminalIdx := 1;
                       {Totalize Number of Customers if Load Type}
@@ -2051,13 +2053,13 @@ VAR
    S1, S2 :String;
 begin
 
-    AuxParser.CmdString := Opts;  // Load up aux Parser
+    AuxParser[ActiveActor].CmdString := Opts;  // Load up aux Parser
 
     {Loop until no more options found}
     WITH ActiveEnergymeterObj DO
     REPEAT
-         S1 := AuxParser.NextParam; // ignore any parameter name  not expecting any
-         S2 := lowercase(AuxParser.StrValue);
+         S1 := AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+         S2 := lowercase(AuxParser[ActiveActor].StrValue);
          IF Length(S2)>0 THEN
          CASE s2[1] of
               'e': ExcessFlag    := TRUE;
@@ -2388,31 +2390,34 @@ end;
 
 
 
-{-------------------------------------------------------------------------------}
+{--------------------------- CalcReliabilityIndices ----------------------------}
+
 procedure TEnergyMeterObj.CalcReliabilityIndices(AssumeRestoration:Boolean; ActorID : Integer);
 Var
-    PD_Elem : TPDElement;
-    pLoad   : TLoadObj;
-    idx     : Integer;
-    pBus    : TDSSBus;
-    dblNcusts  : Double;
-    dblkW      : Double;
+  PD_Elem  : TPDElement;
+  pSection : TFeederSection;
+  idx      : Integer;
+  pBus     : TDSSBus;
+  dblNcusts: Double;
+  dblkW    : Double;
 
 begin
 
-       If not assigned (SequenceList) Then Begin
-           DoSimpleMsg('Energymeter.' + Name + ' Zone not defined properly.', 52901);
-           Exit;
-       End;
+  If not Assigned(SequenceList) Then
+  Begin
+    DoSimpleMsg('Energymeter.' + Name + ' Zone not defined properly.', 52901);
+    Exit;
+  End;
 
-    // Zero reliability accumulators
-       For idx := SequenceList.ListSize downto 1 Do
-           TPDElement(SequenceList.Get(idx)).ZeroReliabilityAccums ;
+  // Zero reliability accumulators
+  For idx := SequenceList.ListSize downto 1 Do
+    TPDElement(SequenceList.Get(idx)).ZeroReliabilityAccums;
 
     // Backward sweep calculating failure rates
        For idx := SequenceList.ListSize downto 1 Do
            Begin
-               With TPDElement(SequenceList.Get(idx)) do Begin
+               With TPDElement(SequenceList.Get(idx)) do
+               Begin
                    CalcFltRate;    // Calc failure rate for this element
                    AccumFltRate;
                End;
@@ -2442,7 +2447,7 @@ begin
        // Now have number of sections  so allocate FeederSections array
        Reallocmem(FeederSections, Sizeof(FeederSections^[1])*SectionCount);
        for idx := 1 to SectionCount do
-            With FeederSections^[idx] Do      // Initialize all Section data
+            With FeederSections^[idx] Do
             Begin
                 OCPDeviceType         := 0;    // 1=Fuse; 2=Recloser; 3=Relay
                 AverageRepairTime     := 0.0;
@@ -2461,21 +2466,20 @@ begin
            Begin
                PD_Elem := SequenceList.Get(idx);
                PD_Elem.CalcCustInterrupts;
-
-               With FeederSections^[PD_Elem.BranchSectionID] Do 
+              // Populate the Section properties
+              pSection := FeederSections^[PD_Elem.BranchSectionID];
                Begin
-                    Inc(NCustomers, PD_Elem.BranchNumCustomers); // Sum up num Customers on this Section
-                    Inc(NBranches, 1); // Sum up num branches on this Section
-                    
-                    pBus := ActiveCircuit[ActiveActor].Buses^[PD_Elem.Terminals^[PD_Elem.ToTerminal].BusRef];
-                    DblInc(SumBranchFltRates, pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate);
-                    DblInc(SumFltRatesXRepairHrs, (pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate * PD_Elem.HrsToRepair));
+                Inc(pSection.NCustomers, PD_Elem.BranchNumCustomers); // Sum up num Customers on this Section
+                Inc(pSection.NBranches, 1); // Sum up num branches on this Section
+                pBus := ActiveCircuit[ActorID].Buses^[PD_Elem.Terminals^[PD_Elem.ToTerminal].BusRef];
+                DblInc(pSection.SumBranchFltRates,     pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate);
+                DblInc(pSection.SumFltRatesXRepairHrs,(pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate * PD_Elem.HrsToRepair));
                     If PD_Elem.HasOCPDevice Then
-                    Begin
-                       OCPDeviceType := GetOCPDeviceType(PD_Elem);
-                       SeqIndex := idx;  // index of pdelement with OCP device at head of section
-                       TotalCustomers := PD_Elem.BranchTotalCustomers;
-                       SectFaultRate := PD_Elem.AccumulatedBrFltRate;
+                Begin  // set Section properties
+                    pSection.OCPDeviceType  := GetOCPDeviceType(PD_Elem);
+                    pSection.SeqIndex       := idx;  // index of pdelement with OCP device at head of section
+                    pSection.TotalCustomers := PD_Elem.BranchTotalCustomers;
+                    pSection.SectFaultRate  := PD_Elem.AccumulatedBrFltRate;
                     End;
                End;
            End;
@@ -2506,22 +2510,22 @@ begin
        {Compute SAIFI based on numcustomers and load kW}
        {SAIFI is weighted by specified load weights}
        {SAIFI is for the EnergyMeter Zone}
-       SAIFI     := 0.0;
-       CAIDI     := 0.0;
+        SAIFI   := 0.0;
+        CAIDI   := 0.0;
        SAIFIkW   := 0.0;
-       CustInterrupts := 0.0;
        dblNcusts := 0.0;
-       dblkW     := 0.0;
+        dblkW     := 0.0;
+        CustInterrupts := 0.0;
        
        // Use LoadList for SAIFI calculation
        WITH ActiveCircuit[ActorID] do
        For idx := 1 to LoadList.ListSize Do  // all loads in meter zone
            Begin
-                pLoad := TLoadObj(LoadList.Get(idx));
-                WITH pLoad Do
+      // Compute CustInterrupts based on interrupts at each load
+           WITH TLoadObj( LoadList.Get(idx) ) Do
                   Begin
-                       pBus := Buses^[Terminals^[1].BusRef];  // pointer to bus
-                       CustInterrupts   := CustInterrupts + NumCustomers * RelWeighting * pBus.Bus_Num_Interrupt;
+              pBus := Buses^[Terminals^[1].BusRef]; // pointer to Load's bus
+              CustInterrupts := CustInterrupts + NumCustomers * RelWeighting * pBus.Bus_Num_Interrupt;
                        SAIFIkW := SAIFIkW + kWBase     * RelWeighting * pBus.Bus_Num_Interrupt;
                        DblInc(dblNcusts, NumCustomers * RelWeighting);   // total up weighted numcustomers
                        DblInc(dblkW,     kWBase       * RelWeighting);   // total up weighted kW

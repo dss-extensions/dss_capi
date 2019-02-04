@@ -2593,7 +2593,7 @@ Var
     i,j,p            :LongWord;
     col,row          :LongWord;
     hY               :NativeUInt;
-    nBus, nNZ        :LongWord;
+    nNZ, nBus        :LongWord;
     ColPtr, RowIdx   :array of LongWord;
     cVals            :array of Complex;
     re, im           :Double;
@@ -2635,10 +2635,8 @@ Begin
        SetLength (RowIdx, nNZ);
        SetLength (cVals, nNZ);
        GetCompressedMatrix (hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
-
        {Write out fully qualified Bus Names}
         With ActiveCircuit Do Begin
-
           Writeln(F, Format('%d, ',[NumNodes]));
   (*        For i := 1 to NumNodes DO BEGIN
              j :=  MapNodeToBus^[i].BusRef;
@@ -2664,20 +2662,13 @@ Begin
              End;
              Writeln(F);
           End;
-
         End;
      end;    
 
-
      GlobalResult := FileNm;
-
   Finally
-
      CloseFile(F);
-
   End;
-
-
 End;
 
 Procedure ExportSeqZ(FileNm:String);

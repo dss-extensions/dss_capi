@@ -55,6 +55,7 @@ uses
 //	KeyEvents, // or a linkframework Carbon statement above?
   Arraydef in '..\Shared\Arraydef.pas',
   AutoAdd in '..\Common\AutoAdd.pas',
+  AutoTrans in '..\PDElements\AutoTrans.pas',
   Bus in '..\Common\Bus.pas',
   CableConstants in '..\General\CableConstants.pas',
   CableData in '..\General\CableData.pas',
@@ -252,9 +253,9 @@ begin
 
   FNCSconn := TFNCS.Create;
   if FNCSconn.IsReady then begin
-    writeln('FNCS connected');
+    writeln('FNCS available');
   end else begin
-    writeln('FNCS not connected');
+    writeln('FNCS not available');
   end;
 
 	// quick check parameters

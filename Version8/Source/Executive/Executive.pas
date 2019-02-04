@@ -81,7 +81,7 @@ TYPE
 
 VAR
 
-    DSSExecutive:TExecutive;
+    DSSExecutive: TExecutive;
 
 
 implementation
@@ -142,7 +142,6 @@ Begin
      CommandList.Free;
      OptionList.Free;
      Circuits.Free;
-
      DisposeDSSClasses(True);
      Parser[ActiveActor].Free;
 
@@ -230,10 +229,10 @@ begin
        Begin
           {First get rid of all existing stuff}
           ActiveCircuit[ActiveActor].NumCircuits := 0; // <<<< added
-          ActiveCircuit[ActiveActor].Free; // <<<< added
+          ActiveCircuit[ActiveActor].Free;             // <<<< added
           ActiveCircuit[ActiveActor] := nil;
           Circuits.Free;
-          Circuits := TPointerList.Create(4);   // Make a new list of circuits
+          Circuits := TPointerList.Create(4);         // Make a new list of circuits
           DisposeDSSClasses(False);
             {Now, Start over}
           CreateDSSClasses;
@@ -257,8 +256,8 @@ begin
        MaxAllocationIterations := 2;
 
        {Prepare for new variables}
-       ParserVars.Free;
-       ParserVars := TParserVar.Create(100);  // start with space for 100 variables
+//       ParserVars.Free;
+//       ParserVars := TParserVar.Create(100);  // start with space for 100 variables
 end;
 
 procedure TExecutive.ClearAll;
@@ -271,7 +270,8 @@ begin
        {Now, Start over}
        ActiveActor  :=  1;
        CreateDSSClasses;
-       Parser[ActiveActor]  :=  Tparser.Create;
+       Parser[ActiveActor]    :=  Tparser.Create;
+       AuxParser[ActiveActor] :=  Tparser.Create;
        CreateDefaultDSSItems;
        RebuildHelpForm := True; // because class strings have changed
 

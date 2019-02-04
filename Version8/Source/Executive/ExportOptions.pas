@@ -1,7 +1,7 @@
 unit ExportOptions;
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-        NumExportOptions = 57;
+        NumExportOptions = 61;
 
 FUNCTION DoExportCmd:Integer;
 
@@ -25,6 +25,12 @@ implementation
 
 Uses ExportResults, Monitor, EnergyMeter, ParserDel, sysutils, DSSGlobals, ExportCIMXML, Utilities;
 
+function AssignNewGUID (val: String): TGuid;
+begin
+  if Pos ('{', val) < 1 then
+    val := '{' + val + '}';
+  result := StringToGuid (val);
+end;
 
 Procedure DefineOptions;
 
@@ -87,6 +93,10 @@ Begin
       ExportOption[55] := 'IncMatrixCols';
       ExportOption[56] := 'BusLevels';
       ExportOption[57] := 'Laplacian';
+      ExportOption[58] := 'ZLL';
+      ExportOption[59] := 'ZCC';
+      ExportOption[60] := 'Contours';
+      ExportOption[61] := 'Y4';
 
       ExportHelp[ 1] := '(Default file = EXP_VOLTAGES.CSV) Voltages to ground by bus/node.';
       ExportHelp[ 2] := '(Default file = EXP_SEQVOLTAGES.CSV) Sequence voltages.';
@@ -104,13 +114,15 @@ Begin
       ExportHelp[13] := '(Default file = EXP_LOADS.CSV) Report on loads from most recent solution.';
       ExportHelp[14] := '(Default file = EXP_METERS.CSV) Energy meter exports. Adding the switch "/multiple" or "/m" will ' +
                         ' cause a separate file to be written for each meter.';
-      ExportHelp[15] := '(file name is assigned by Monitor export) Monitor values.';
+      ExportHelp[15] := '(file name is assigned by Monitor export) Monitor values. The argument is the name of the monitor (e.g. Export Monitor XYZ, XYZ is the name of the monitor).' + CRLF +
+                        'The argument can be ALL, which means that all the monitors will be exported';
       ExportHelp[16] := '(Default file = EXP_YPRIMS.CSV) All primitive Y matrices.';
       ExportHelp[17] := '(Default file = EXP_Y.CSV) [triplets] [Filename] System Y matrix, defaults to non-sparse format.';
       ExportHelp[18] := '(Default file = EXP_SEQZ.CSV) Equivalent sequence Z1, Z0 to each bus.';
       ExportHelp[19] := '(Default file = EXP_P_BYPHASE.CSV) [MVA] [Filename] Power by phase. Default is kVA.';
       ExportHelp[20] := '(Default file = CIM17x.XML) (IEC 61968-13, CIM v17 extended, CDPSM Combined (unbalanced load flow) profile)' + CRLF
-                      + ' [Substation=subname SubGeographicRegion=subgeoname GeographicRegion=geoname File=filename]';
+                      + ' [File=filename fid=_guidstring Substation=subname sid=_guidstring' + CRLF
+                      + ' SubGeographicRegion=subgeoname sgrid=_guidstring GeographicRegion=geoname rgnid=_guidstring]';
       ExportHelp[21] := '** Deprecated ** (IEC 61968-13, CDPSM Functional profile)';
       ExportHelp[22] := '** Deprecated ** (IEC 61968-13, CDPSM Asset profile)';
       ExportHelp[23] := '[Default file = EXP_BUSCOORDS.CSV] Bus coordinates in csv form.';
@@ -153,6 +165,10 @@ Begin
       ExportHelp[56] := 'Exports the names and the level of each Bus inside the Circuit based on its topology information. The level value defines' +
                         'how far or close is the bus from the circuits backbone (0 means that the bus is at the backbone)';
       ExportHelp[57] := 'Exports the Laplacian matrix calculated using the branch-to-node Incidence matrix in compressed coordinated format (Row,Col,Value)';
+      ExportHelp[58] := 'Exports the Link branches matrix (ZLL) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates. If A-Diakoptics is not initialized this command does nothing';
+      ExportHelp[59] := 'Exports the connectivity matrix (ZCC) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates.  If A-Diakoptics is not initialized this command does nothing';
+      ExportHelp[60] := 'Exports the Contours matrix (C) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are integers.  If A-Diakoptics is not initialized this command does nothing';
+      ExportHelp[61] := 'Exports the inverse of Z4 (ZCC) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates.  If A-Diakoptics is not initialized this command does nothing';
 End;
 
 //----------------------------------------------------------------------------
@@ -163,7 +179,7 @@ VAR
    Parm1,
    Parm2,
    FileName :String;
-
+   i,
    MVAopt               :Integer;
    UEonlyOpt            :Boolean;
    TripletOpt           :Boolean;
@@ -173,12 +189,12 @@ VAR
    PhasesToPlot         :Integer;
    AbortExport          :Boolean;
    Substation, GeographicRegion, SubGeographicRegion: String; // for CIM export
+   FdrGuid, SubGuid, SubGeoGuid, RgnGuid: TGuid;              // for CIM export
    InitP, FinalP, idxP  : Integer; // Variables created for concatenating options
 
 Begin
    Result := 0;
    AbortExport := FALSE;
-   FileName := '';
 
    ParamName := Parser[ActiveActor].NextParam;
    Parm1 := LowerCase(Parser[ActiveActor].StrValue);
@@ -210,6 +226,10 @@ Begin
    Substation := ActiveCircuit[ActiveActor].Name + '_Substation';
    SubGeographicRegion := ActiveCircuit[ActiveActor].Name + '_SubRegion';
    GeographicRegion := ActiveCircuit[ActiveActor].Name + '_Region';
+   FdrGuid := ActiveCircuit[ActiveActor].GUID;  // default is to not change the feeder mrid 
+   CreateGuid (SubGuid);      // these next 3 are created on the fly for CIM export
+   CreateGuid (SubGeoGuid); 
+   CreateGuid (RgnGuid);
 
    CASE ParamPointer OF
       9, 19: Begin { Trap export powers command and look for MVA/kVA option }
@@ -248,8 +268,16 @@ Begin
                 SubGeographicRegion := Parm2
               else if CompareTextShortest(ParamName, 'g')=0 then
                 GeographicRegion := Parm2
-              else if CompareTextShortest(ParamName, 'f')=0 then
-                FileName := Parm2;
+              else if CompareTextShortest(ParamName, 'fil')=0 then
+                FileName := Parm2
+              else if CompareTextShortest(ParamName, 'fid')=0 then
+                FdrGuid := AssignNewGUID (Parm2)
+              else if CompareTextShortest(ParamName, 'sid')=0 then
+                SubGuid := AssignNewGUID (Parm2)
+              else if CompareTextShortest(ParamName, 'sg')=0 then
+                SubGeoGuid := AssignNewGUID (Parm2)
+              else if CompareTextShortest(ParamName, 'rg')=0 then
+                RgnGuid := AssignNewGUID (Parm2);
               ParamName := LowerCase (parser[ActiveActor].nextParam);
               Parm2 := Parser[ActiveActor].strValue;
             end;
@@ -347,6 +375,10 @@ Begin
          55: FileName := 'Inc_Matrix_Cols.csv';
          56: FileName := 'Bus_Levels.csv';
          57: FileName := 'Laplacian.csv';
+         58: FileName := 'ZLL.csv';
+         59: FileName := 'ZCC.csv';
+         60: FileName := 'C.csv';
+         61: FileName := 'Y4.csv';
 
        ELSE
              FileName := 'EXP_VOLTAGES.CSV';    // default
@@ -371,7 +403,6 @@ Begin
      14: ExportMeters(FileName);
      15: IF   Length(Parm2) > 0 THEN
          Begin
-
           if ConcatenateReports then // In case of being activated, the export will be made for all actors
           begin
             InitP :=  1;
@@ -384,9 +415,25 @@ Begin
           end;
           for idxP := InitP to FinalP do
           begin
-           pMon:=MonitorClass[idxP].Find(Parm2);
-           IF   pMon <> NIL  THEN Begin pMon.TranslateToCSV(False, idxP); FileName := GlobalResult; End
-                             ELSE DoSimpleMsg('Monitor "'+Parm2+'" not found.'+ CRLF + parser[ActiveActor].CmdString, 250);
+            if Parm2 = 'all' then
+            Begin
+              pMon :=  ActiveCircuit[idxP].Monitors.First;
+              while pMon <> nil do
+              Begin
+                IF   pMon <> NIL  THEN
+                Begin
+                  pMon.TranslateToCSV(False, idxP);
+                  FileName := GlobalResult;
+                End;
+                pMon :=  ActiveCircuit[idxP].Monitors.Next;
+              End;
+            End
+            else
+            Begin
+              pMon:=MonitorClass[idxP].Find(Parm2);
+              IF   pMon <> NIL  THEN Begin pMon.TranslateToCSV(False, idxP); FileName := GlobalResult; End
+                                 ELSE DoSimpleMsg('Monitor "'+Parm2+'" not found.'+ CRLF + parser[ActiveActor].CmdString, 250);
+            End;
           end;
          End
          ELSE   DoSimpleMsg('Monitor Name Not Specified.'+ CRLF + parser[ActiveActor].CmdString, 251);
@@ -394,7 +441,7 @@ Begin
      17: ExportY(Filename, TripletOpt);
      18: ExportSeqZ(Filename);
      19: ExportPbyphase(Filename, MVAOpt);
-     20: ExportCDPSM (Filename, Substation, SubGeographicRegion, GeographicRegion, Combined);
+     20: ExportCDPSM (Filename, Substation, SubGeographicRegion, GeographicRegion, FdrGuid, SubGuid, SubGeoGuid, RgnGuid, Combined);
      21: DoSimpleMsg ('Functional export no longer supported; use Combined', 252);
      22: DoSimpleMsg ('Asset export no longer supported; use Combined', 252);
      23: ExportBusCoords(Filename);
@@ -432,6 +479,10 @@ Begin
      55: ExportIncMatrixCols(FileName);
      56: ExportBusLevels(FileName);
      57: ExportLaplacian(FileName);
+     58: ExportZLL(FileName);
+     59: ExportZCC(FileName);
+     60: ExportC(FileName);
+     61: ExportY4(FileName);
 
    ELSE
         // ExportVoltages(FileName);    // default

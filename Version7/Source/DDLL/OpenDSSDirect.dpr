@@ -198,7 +198,9 @@ uses
   ESPVLControl in '..\Controls\ESPVLControl.pas',
   IndMach012 in '..\PCElements\IndMach012.pas',
   ConnectOptions in '..\Executive\ConnectOptions.pas',
-  TCP_IP in '..\TCP_IP\TCP_IP.pas';
+  TCP_IP in '..\TCP_IP\TCP_IP.pas',
+  GICsource in '..\PCElements\GICsource.pas',
+  AutoTrans in '..\PDElements\AutoTrans.pas';
 
 //**************************end of the functions*************************************
 
