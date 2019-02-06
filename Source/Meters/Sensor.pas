@@ -76,6 +76,7 @@ TYPE
         Function RotatePhases(const j:Integer):Integer;
         Function LimitToPlusMinusOne(const i:Integer):Integer;
         procedure ClearSensor;
+        procedure UpdateCurrentVector;
         function Get_WLSCurrentError: Double;
         function Get_WLSVoltageError: Double;
 
@@ -259,8 +260,16 @@ Begin
             4: ClearSpecified := InterpretYesNo(Param);
             5: Parser[ActorID].ParseAsVector(Fnphases, SensorVoltage);  // Inits to zero
             6: Parser[ActorID].ParseAsVector(Fnphases, SensorCurrent);  // Inits to zero
-            7: Parser[ActorID].ParseAsVector(Fnphases, SensorkW );
-            8: Parser[ActorID].ParseAsVector(Fnphases, Sensorkvar );
+            7: Begin
+                Parser[ActorID].ParseAsVector(Fnphases, SensorkW );
+                Pspecified := True;
+                UpdateCurrentVector;
+               End;
+            8: Begin
+                Parser[ActorID].ParseAsVector(Fnphases, Sensorkvar );
+                Qspecified := True;
+                UpdateCurrentVector;
+               End;
             9: Conn         := InterpretConnection(Param);
            10: FDeltaDirection := LimitToPlusMinusOne(Parser[ActorID].IntValue);
            11: pctError     := Parser[ActorID].dblValue;
@@ -646,6 +655,29 @@ Var i:Integer;
 Begin
      FOR i := 1 to Fnconds DO Curr^[i] := cZero;
 End;
+
+Procedure TSensorObj.UpdateCurrentVector;
+{Updates the currentvector when P and Q are defined
+ as the input vectors for the sensor}
+Var
+   kVA :Double;
+   i   :Integer;
+begin
+{Convert P and Q specification to Currents}
+    If Pspecified then  Begin    // compute currents assuming vbase
+       If Qspecified then  Begin
+         For i := 1 to FNPhases Do Begin
+           kVA := Cabs(Cmplx(SensorkW^[i], Sensorkvar^[i]));
+           SensorCurrent^[i] := kVA * 1000.0/Vbase;
+         End;
+       End Else Begin    // No Q just use P
+         For i := 1 to FNPhases Do Begin
+           SensorCurrent^[i] := SensorkW^[i] * 1000.0/Vbase;
+         End;
+       End;
+       Ispecified := TRUE;    // Overrides current specification
+    End;
+end;
 
 function TSensorObj.Get_WLSCurrentError: Double;
 {
