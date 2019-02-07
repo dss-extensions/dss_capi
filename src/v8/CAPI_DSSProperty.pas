@@ -48,12 +48,13 @@ end;
 //------------------------------------------------------------------------------
 function DSSProperty_Get_Val_AnsiString():AnsiString;inline;
 begin
-       Result := '';
-      If (ActiveCircuit[ActiveActor]<> Nil)
-      THEN  With ActiveDSSObject[ActiveActor] Do
+    Result := '';
+    If ActiveCircuit[ActiveActor] = Nil then Exit;
+    With ActiveDSSObject[ActiveActor] Do
+    begin
         If FPropIndex <= ParentClass.NumProperties Then
-              Result := PropertyValue[ParentClass.PropertyIdxMap[FPropIndex]];
-
+            Result := PropertyValue[ParentClass.PropertyIdxMap[FPropIndex]];
+    end;
 end;
 
 function DSSProperty_Get_Val():PAnsiChar;cdecl;
@@ -63,12 +64,22 @@ end;
 //------------------------------------------------------------------------------
 procedure DSSProperty_Set_Val(const Value: PAnsiChar);cdecl;
 begin
-      If (ActiveCircuit[ActiveActor]<> Nil)
-      THEN  With ActiveDSSObject[ActiveActor] Do
-        If FPropIndex <= ParentClass.NumProperties Then
-              DSSExecutive.Command := 'Edit ' + ParentClass.Name + '.' + Name + ' ' +
-                     ParentClass.PropertyName^[FPropIndex] + '=' +
-                     String(Value);
+    If ActiveCircuit[ActiveActor] = Nil then Exit;
+    
+    With ActiveDSSObject[ActiveActor] Do
+    begin
+        If (FPropIndex > ParentClass.NumProperties) or (FPropIndex < 1) Then
+        begin
+            DoSimpleMsg(Format(
+                'Invalid property index %d for "%s.%s"', 
+                [FPropIndex, ParentClass.Name, Name]
+            ), 33001);
+            Exit;
+        end;
+        DSSExecutive.Command := 
+            'Edit ' + ParentClass.Name + '.' + Name + ' ' + 
+            ParentClass.PropertyName^[FPropIndex] + '=' + String(Value);
+    end;
 End;
 //------------------------------------------------------------------------------
 procedure DSSProperty_Set_Index(const Value: Integer);cdecl;
