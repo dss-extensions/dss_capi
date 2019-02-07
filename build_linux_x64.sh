@@ -1,3 +1,5 @@
+set -e -x
+
 if [ ! -d "build/units_v7_x64" ]; then
     mkdir build/units_v7_x64
 fi
