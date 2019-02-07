@@ -961,10 +961,11 @@ begin
 end;
 Procedure TFMonitorObj.Set_CommVector( strParam: string);
 VAR
-    DataStr:String;
-    i:Integer;
-    iMin : integer; // the min if Nodes or the length of the vector
-    iNodeNum : integer;
+    TempStr,
+    DataStr       :String;
+    i,j,
+    iMin,                      // the min if Nodes or the length of the vector
+    iNodeNum      : integer;
 Begin
 
     AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
@@ -973,18 +974,35 @@ Begin
 
             AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
             iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
-          FOR i := 2 to Nodes+1 Do  Begin
+          FOR i := 2 to (Nodes + 1) Do  Begin
                AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
                DataStr := AuxParser[ActiveActor].StrValue;
                IF Length(DataStr) > 0 THEN pCommMatrix^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].intValue;
           End;
 
+// Updates the value of the property for future queries
+// Added y Davis 02072019
+    TempStr     :=  '';
+    for j := 1 to Nodes do
+    Begin
+      iNodeNum    :=  j;
+      TempStr :=  TempStr + inttostr(iNodeNum) + ',';
+      for i := 2 to (Nodes + 1) do
+        TempStr :=  TempStr + inttostr(pCommMatrix^[(iNodeNum-1)*Nodes+ i-1]) + ',';
+
+      TempStr :=  TempStr + '|';
+    End;
+    ActiveDSSObject[ActiveActor].PropertyValue[15]  :=  TempStr;
+
+
 end;
+
 Procedure TFMonitorObj.Set_CommDelayVector( strParam: string);
 VAR
-    DataStr:String;
-    i:Integer;
-    iNodeNum : integer;
+    TEmpStr,
+    DataStr       :String;
+    i, j,
+    iNodeNum      : integer;
 Begin
 
     AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
@@ -993,46 +1011,67 @@ Begin
 
             AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
             iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
-          FOR i := 2 to Nodes+1 Do  Begin
+          FOR i := 2 to (Nodes + 1) Do  Begin
                AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
                DataStr := AuxParser[ActiveActor].StrValue;
                IF Length(DataStr) > 0 THEN pCommDelayMatrix^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].DblValue;
           End;
+
     ResetDelaySteps(iNodeNum);  //Use pCommDelayMatrix^ to calculate pCommDelaySteps^
+
+// Updates the value of the property for future queries
+// Added y Davis 02072019
+    TempStr     :=  '';
+    for j := 1 to Nodes do
+    Begin
+      iNodeNum    :=  j;
+      TempStr :=  TempStr + inttostr(iNodeNum) + ',';
+      for i := 2 to (Nodes + 1) do
+        TempStr :=  TempStr + floattostr(pCommDelayMatrix^[(iNodeNum-1)*Nodes+ i-1]) + ',';
+
+      TempStr :=  TempStr + '|';
+    End;
+    ActiveDSSObject[ActiveActor].PropertyValue[18]  :=  TempStr;
 end;
 {--------------------------------------------------------------------------}
 Procedure TFMonitorObj.Set_ElemTable_line( strParam: string);
 VAR
-    DataStr:String;
-    i:Integer;
-    iNodeNum : integer;
+    TempStr,
+    DataStr   :String;
+    i         :Integer;
+    iNodeNum  : integer;
 Begin
-    AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
-
-    //WITH ActiveFMonitorObj DO
-      //begin
-       // for i := 1 to Nodes do
-        //  begin
-               AuxParser[ActiveActor].NextParam; // the first entry is the number of the iNode
-               iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in the cluster
-               AuxParser[ActiveActor].NextParam; // the first entry is the number of the iNode
-               pNodeFMs^[iNodeNum].vl_strBusName := AuxParser[ActiveActor].strValue; //node number defined in the cluster
-               AuxParser[ActiveActor].NextParam;
-               pNodeFMs^[iNodeNum].vl_strMeasuredName := AuxParser[ActiveActor].StrValue; //Element name load into data str
+    AuxParser[ActiveActor].CmdString        := strParam;  // Load up Parser
+    AuxParser[ActiveActor].NextParam; // the first entry is the number of the iNode
+    iNodeNum                                := AuxParser[ActiveActor].IntValue; //node number defined in the cluster
+    AuxParser[ActiveActor].NextParam; // the first entry is the number of the iNode
+    pNodeFMs^[iNodeNum].vl_strBusName       := AuxParser[ActiveActor].strValue; //node number defined in the cluster
+    AuxParser[ActiveActor].NextParam;
+    pNodeFMs^[iNodeNum].vl_strMeasuredName  := AuxParser[ActiveActor].StrValue; //Element name load into data str
                //
                //pNodeFMs^[iNodeNum].vl_strName_dg := pNodeFMs^[iNodeNum].vl_strMeasuredName;
                //
-               AuxParser[ActiveActor].NextParam;
-               pNodeFMs^[iNodeNum].vl_terminalNum := AuxParser[ActiveActor].IntValue;  //Terminal number load into data str
-               AuxParser[ActiveActor].NextParam;
-               pNodeFMs^[iNodeNum].vl_V_ref_dg := 1000*AuxParser[ActiveActor].dblValue;
-               AuxParser[ActiveActor].NextParam;
-               pNodeFMs^[iNodeNum].vl_kc_ul_dg := AuxParser[ActiveActor].dblValue;
+    AuxParser[ActiveActor].NextParam;
+    pNodeFMs^[iNodeNum].vl_terminalNum := AuxParser[ActiveActor].IntValue;  //Terminal number load into data str
+    AuxParser[ActiveActor].NextParam;
+    pNodeFMs^[iNodeNum].vl_V_ref_dg := 1000*AuxParser[ActiveActor].dblValue;
+    AuxParser[ActiveActor].NextParam;
+    pNodeFMs^[iNodeNum].vl_kc_ul_dg := AuxParser[ActiveActor].dblValue;
                //2.402
-          //end;
-
-     // end;
     Init_nodeFM(iNodeNum, ActiveActor);
+// Updates the value of the property for future queries
+// Added y Davis 02072019
+    TempStr     :=  '';
+    for i := 1 to iNodeNum do
+    Begin
+      TempStr :=  TempStr + inttostr(i)                 + ',' +
+                  pNodeFMs^[i].vl_strBusName            + ',' +
+                  pNodeFMs^[i].vl_strMeasuredName       + ',' +
+                  inttostr(pNodeFMs^[i].vl_terminalNum) + ',' +
+                  floattostr(pNodeFMs^[i].vl_V_ref_dg)  + ',' +
+                  floattostr(pNodeFMs^[iNodeNum].vl_kc_ul_dg) + '|';
+    End;
+    ActiveDSSObject[ActiveActor].PropertyValue[16]  :=  TempStr;
 end;
 Procedure TFMonitorObj.Get_PQ_DI(i_NodeNum : integer; ActorID : Integer);
 var
