@@ -2662,7 +2662,18 @@ extern "C" {
     */
     DSS_CAPI_V8_DLL double LoadShapes_Get_MinInterval(void);
 
-    DSS_CAPI_V8_DLL double LoadShapes_Get_sInterval(void);
+    /*
+    Fixed interval data time interval, seconds
+    */
+    DSS_CAPI_V8_DLL double LoadShapes_Get_SInterval(void);
+    
+    /*
+    Fixed interval data time interval, seconds
+    */
+    DSS_CAPI_V8_DLL void LoadShapes_Set_SInterval(double Value);
+    
+    DSS_CAPI_V8_DLL double LoadShapes_Get_sInterval(void); // deprecated, see #24
+    DSS_CAPI_V8_DLL void LoadShapes_Set_Sinterval(double Value); // deprecated, see #24
 
     /*
     Fixed interval time value, hours.
@@ -2673,11 +2684,6 @@ extern "C" {
     Fixed Interval time value, in minutes
     */
     DSS_CAPI_V8_DLL void LoadShapes_Set_MinInterval(double Value);
-
-    /*
-    Fixed interval data time interval, seconds
-    */
-    DSS_CAPI_V8_DLL void LoadShapes_Set_Sinterval(double Value);
 
     DSS_CAPI_V8_DLL int32_t LoadShapes_New(char* Name);
 
