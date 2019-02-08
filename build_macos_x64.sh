@@ -28,8 +28,8 @@ install_name_tool -change "$CURRENT_LIBKLUSOLVE" "$NEW_LIBKLUSOLVE" "$DSS_CAPI_L
 install_name_tool -id "@loader_path/./libdss_capi_v8.dylib" "$DSS_CAPI_LIB"
 
 if [ -n "$TRAVIS_TAG" ]; then
-    mkdir -p release/dss_capi/
-    cp -R lib/darwin_x64 release/dss_capi/lib/
+    mkdir -p release/dss_capi/lib
+    cp -R lib/darwin_x64 release/dss_capi/lib/darwin_x64
     cp -R include release/dss_capi/
     # cp -R examples release/dss_capi/
     cp LICENSE release/dss_capi/
