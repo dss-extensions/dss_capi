@@ -358,6 +358,7 @@ Type
         Procedure GetCurrents(Curr: pComplexArray; ActorID : Integer); Override; //Get present value of terminal Curr
         Procedure GetInjCurrents(Curr: pComplexArray; ActorID : Integer); Override;   // Returns Injextion currents
 
+        Function CheckBranchList(code: Integer): Boolean;
         Procedure ResetRegisters;
         Procedure TakeSample(ActorID : Integer);Override;
         Procedure SaveRegisters(ActorID: integer);
@@ -1292,6 +1293,7 @@ VAR
    puV  :Double;
 
 Begin
+     if not CheckBranchList(545) then Exit;
 
 // Compute energy in branch  to which meter is connected
 
@@ -1609,12 +1611,7 @@ Var
   CktElem:TPDElement;
 
 begin
-
-    If Not Assigned(BranchList) Then
-    Begin
-        DoSimpleMsg('Meter Zone Lists need to be built. Do Solve or Makebuslist first!', 529);
-        Exit;
-    End;
+    if not CheckBranchList(529) then Exit;
 
     {Init totsls and checked flag}
     CktElem := SequenceList.First;
@@ -2271,6 +2268,18 @@ begin
 
 end;
 
+Function TEnergyMeterObj.CheckBranchList(code: Integer): Boolean;
+begin
+  If Not Assigned(BranchList) Then
+  Begin
+      Result := False;
+      DoSimpleMsg('Meter Zone Lists need to be built. Do Solve or Makebuslist first!', code);
+      Exit;
+  End;
+  Result := True;
+end;
+
+
 procedure TEnergyMeterObj.InterpolateCoordinates;
 {Start at the ends of the zone and work toward the start
  interpolating between known coordinates}
@@ -2282,11 +2291,8 @@ Var
   CktElem:TDSSCktElement;
 
 begin
-  If Not Assigned(BranchList) Then
-  Begin
-      DoSimpleMsg('Meter Zone Lists need to be built. Do Solve or Makebuslist first!', 529);
-      Exit;
-  End;
+  if not CheckBranchList(529) then Exit;
+
   With ActiveCircuit[ActiveActor] Do
    Begin
 
