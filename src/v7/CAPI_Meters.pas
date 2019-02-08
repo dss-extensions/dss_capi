@@ -631,18 +631,20 @@ VAR
   elem : TDSSCktElement;
   node : TCktTreeNode;
 Begin
-  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
-  IF ActiveCircuit <> Nil THEN WITH ActiveCircuit DO Begin
+  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+  IF ActiveCircuit = Nil THEN Exit;
+  WITH ActiveCircuit DO Begin
     pMeterObj := EnergyMeters.Active;
-    if pMeterObj <> Nil then begin
-      last := pMeterObj.BranchList.ZoneEndsList.NumEnds - 1;
-      DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (last) + 1);
-      for k := 0 to last do begin
-        pMeterObj.BranchList.ZoneEndsList.Get(k+1, node);
-        elem := node.CktObject;
-        Result[k] := DSS_CopyStringAsPChar(Format ('%s.%s', [elem.ParentClass.Name, elem.Name]));
-      end;
+    if pMeterObj = Nil then Exit;
+    if not pMeterObj.CheckBranchList(5502) then Exit;
+    last := pMeterObj.BranchList.ZoneEndsList.NumEnds - 1;
+    DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (last) + 1);
+    for k := 0 to last do begin
+      pMeterObj.BranchList.ZoneEndsList.Get(k+1, node);
+      elem := node.CktObject;
+      Result[k] := DSS_CopyStringAsPChar(Format ('%s.%s', [elem.ParentClass.Name, elem.Name]));
     end;
+    
   End;
 end;
 PROCEDURE Meters_Get_AllEndElements_GR();cdecl;
@@ -654,15 +656,14 @@ end;
 //------------------------------------------------------------------------------
 function Meters_Get_CountEndElements():Integer;cdecl;
 Var
-  pMeterObj :TEnergyMeterObj;
+    pMeterObj :TEnergyMeterObj;
 begin
-  Result := 0;
-  if ActiveCircuit <> Nil then begin
-    pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-    If pMeterObj <> Nil Then Begin
-      Result := pMeterObj.BranchList.ZoneEndsList.NumEnds;
-    End;
-  End;
+    Result := 0;
+    if ActiveCircuit = Nil then Exit;
+    pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+    If pMeterObj = Nil Then Exit;
+    if not pMeterObj.CheckBranchList(5500) then Exit;
+    Result := pMeterObj.BranchList.ZoneEndsList.NumEnds;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_Count():Integer;cdecl;
@@ -679,23 +680,28 @@ VAR
   BranchCount :Integer;
   pElem       :TDSSCktElement;
 Begin
-  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
-  IF ActiveCircuit <> Nil THEN WITH ActiveCircuit DO Begin
+  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+  if ActiveCircuit = Nil then Exit;
+  
+  WITH ActiveCircuit DO Begin
     pMeterObj := EnergyMeters.Active;
-    if pMeterObj <> Nil then begin
-      // Get count of branches
-      BranchCount := Meters_Get_CountBranches;
-      If BranchCount > 0 Then Begin
-          DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (BranchCount-1) + 1);
-          pElem := pMeterObj.BranchList.First;
-          k := 0;
-          while pElem <> Nil do   Begin
-             Result[k] := DSS_CopyStringAsPChar(Format ('%s.%s', [pElem.ParentClass.Name, pElem.Name]));
-             inc(k);
-             pElem := pMeterObj.BranchList.GoForward;
-          End;
-      End;
-    end;
+    if pMeterObj = Nil then Exit;
+    // Get count of branches
+    if not pMeterObj.CheckBranchList(5501) then Exit;
+    
+    BranchCount := Meters_Get_CountBranches;
+    If BranchCount > 0 Then 
+    Begin
+        DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, BranchCount);
+        pElem := pMeterObj.BranchList.First;
+        k := 0;
+        while pElem <> Nil do
+        Begin
+           Result[k] := DSS_CopyStringAsPChar(Format ('%s.%s', [pElem.ParentClass.Name, pElem.Name]));
+           inc(k);
+           pElem := pMeterObj.BranchList.GoForward;
+        End;
+    End;
   End;
 
 end;
