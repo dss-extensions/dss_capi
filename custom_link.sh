@@ -12,7 +12,7 @@ if [[ $1 == *"linux"* ]]; then
 else
     echo '-alias_list' >> $1/link.res
     echo 'src/darwin_alias_list.txt' >> $1/link.res
-    cut -d " " -f 1 'src/darwin_alias_list.txt' >> $1/linksyms.fpc
+    cut -d " " -f 2 'src/darwin_alias_list.txt' >> $1/linksyms.fpc
 fi
 
 $1/ppas.sh
