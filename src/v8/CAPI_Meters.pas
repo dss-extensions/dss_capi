@@ -80,6 +80,12 @@ uses
     PDElement,
     CktTree;
 
+//------------------------------------------------------------------------------
+procedure InvalidActiveSection(); inline;
+begin
+    DoSimpleMsg('Invalid active section. Has SetActiveSection been called?', 5055);
+end;
+//------------------------------------------------------------------------------
 procedure Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
@@ -817,9 +823,7 @@ begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
             begin
-
                 Result := pMeterObj.SAIFI;
-
             end;
         end;
 end;
@@ -873,9 +877,7 @@ begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
             begin
-
                 Result := pMeterObj.SAIFIkW;
-
             end;
         end;
 end;
@@ -1018,7 +1020,9 @@ begin
                 with pMeterObj do
                 begin
                     if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].AverageRepairTime;
+                        Result := FeederSections^[ActiveSection].AverageRepairTime
+                    else
+                        InvalidActiveSection();
                 end;
         end;
 end;
@@ -1036,7 +1040,9 @@ begin
                 with pMeterObj do
                 begin
                     if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].SumFltRatesXRepairHrs;
+                        Result := FeederSections^[ActiveSection].SumFltRatesXRepairHrs
+                    else
+                        InvalidActiveSection();
                 end;
         end;
 end;
@@ -1054,7 +1060,9 @@ begin
                 with pMeterObj do
                 begin
                     if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].NBranches;
+                        Result := FeederSections^[ActiveSection].NBranches
+                    else
+                        InvalidActiveSection();
                 end;
         end;
 end;
@@ -1072,7 +1080,9 @@ begin
                 with pMeterObj do
                 begin
                     if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].NCustomers;
+                        Result := FeederSections^[ActiveSection].NCustomers
+                    else
+                        InvalidActiveSection();
                 end;
         end;
 end;
@@ -1090,7 +1100,9 @@ begin
                 with pMeterObj do
                 begin
                     if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].OCPDeviceType;
+                        Result := FeederSections^[ActiveSection].OCPDeviceType
+                    else
+                        InvalidActiveSection();
                 end;
         end;
 end;
@@ -1108,7 +1120,9 @@ begin
                 with pMeterObj do
                 begin
                     if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].SumBranchFltRates;
+                        Result := FeederSections^[ActiveSection].SumBranchFltRates
+                    else
+                        InvalidActiveSection();
                 end;
         end;
 
@@ -1127,7 +1141,9 @@ begin
                 with pMeterObj do
                 begin
                     if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].SeqIndex;
+                        Result := FeederSections^[ActiveSection].SeqIndex
+                    else
+                        InvalidActiveSection();
                 end;
         end;
 
@@ -1146,7 +1162,9 @@ begin
                 with pMeterObj do
                 begin
                     if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].TotalCustomers;
+                        Result := FeederSections^[ActiveSection].TotalCustomers
+                    else
+                        InvalidActiveSection();
                 end;
         end;
 
