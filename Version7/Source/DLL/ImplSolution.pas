@@ -1,4 +1,5 @@
 unit ImplSolution;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008, Electric Power Research Institute, Inc.
@@ -9,567 +10,675 @@ unit ImplSolution;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSEngine_TLB, StdVcl;
+    ComObj,
+    ActiveX,
+    OpenDSSEngine_TLB,
+    StdVcl;
 
 type
-  TSolution = class(TAutoObject, ISolution)
-  protected
-    function Get_Frequency: Double; safecall;
-    function Get_Hour: Integer; safecall;
-    function Get_Iterations: Integer; safecall;
-    function Get_LoadMult: Double; safecall;
-    function Get_MaxIterations: Integer; safecall;
-    function Get_Mode: Integer; safecall;
-    function Get_Number: Integer; safecall;
-    function Get_Random: Integer; safecall;
-    function Get_Seconds: Double; safecall;
-    function Get_StepSize: Double; safecall;
-    function Get_Tolerance: Double; safecall;
-    function Get_Year: Integer; safecall;
-    procedure Set_Frequency(Value: Double); safecall;
-    procedure Set_Hour(Value: Integer); safecall;
-    procedure Set_LoadMult(Value: Double); safecall;
-    procedure Set_MaxIterations(Value: Integer); safecall;
-    procedure Set_Mode(Mode: Integer); safecall;
-    procedure Set_Number(Value: Integer); safecall;
-    procedure Set_Random(Random: Integer); safecall;
-    procedure Set_Seconds(Value: Double); safecall;
-    procedure Set_StepSize(Value: Double); safecall;
-    procedure Set_Tolerance(Value: Double); safecall;
-    procedure Set_Year(Value: Integer); safecall;
-    procedure Solve; safecall;
-    function Get_ModeID: WideString; safecall;
-    function Get_LoadModel: Integer; safecall;
-    procedure Set_LoadModel(Value: Integer); safecall;
-    function Get_LDCurve: WideString; safecall;
-    procedure Set_LDCurve(const Value: WideString); safecall;
-    function Get_pctGrowth: Double; safecall;
-    procedure Set_pctGrowth(Value: Double); safecall;
-    function Get_AddType: Integer; safecall;
-    procedure Set_AddType(Value: Integer); safecall;
-    function Get_GenkW: Double; safecall;
-    procedure Set_GenkW(Value: Double); safecall;
-    function Get_GenPF: Double; safecall;
-    procedure Set_GenPF(Value: Double); safecall;
-    function Get_Capkvar: Double; safecall;
-    procedure Set_Capkvar(Value: Double); safecall;
-    function Get_Algorithm: Integer; safecall;
-    procedure Set_Algorithm(Value: Integer); safecall;
-    function Get_ControlMode: Integer; safecall;
-    procedure Set_ControlMode(Value: Integer); safecall;
-    function Get_GenMult: Double; safecall;
-    procedure Set_GenMult(Value: Double); safecall;
-    function Get_DefaultDaily: WideString; safecall;
-    function Get_DefaultYearly: WideString; safecall;
-    procedure Set_DefaultDaily(const Value: WideString); safecall;
-    procedure Set_DefaultYearly(const Value: WideString); safecall;
-    function Get_EventLog: OleVariant; safecall;
-    function Get_dblHour: Double; safecall;
-    procedure Set_dblHour(Value: Double); safecall;
-    procedure Set_StepsizeHr(Value: Double); safecall;
-    procedure Set_StepsizeMin(Value: Double); safecall;
-    function Get_ControlIterations: Integer; safecall;
-    function Get_MaxControlIterations: Integer; safecall;
-    procedure Sample_DoControlActions; safecall;
-    procedure Set_ControlIterations(Value: Integer); safecall;
-    procedure Set_MaxControlIterations(Value: Integer); safecall;
-    procedure CheckFaultStatus; safecall;
-    procedure SolveDirect; safecall;
-    procedure SolveNoControl; safecall;
-    procedure SolvePflow; safecall;
-    procedure SolvePlusControl; safecall;
-    procedure SolveSnap; safecall;
-    procedure CheckControls; safecall;
-    procedure InitSnap; safecall;
-    function Get_SystemYChanged: WordBool; safecall;
-    procedure BuildYMatrix(BuildOption, AllocateVI: Integer); safecall;
-    procedure DoControlActions; safecall;
-    procedure SampleControlDevices; safecall;
-    function Get_Converged: WordBool; safecall;
-    procedure Set_Converged(Value: WordBool); safecall;
-    function Get_Totaliterations: Integer; safecall;
-    function Get_MostIterationsDone: Integer; safecall;
-    function Get_ControlActionsDone: WordBool; safecall;
-    procedure Set_ControlActionsDone(Value: WordBool); safecall;
-    procedure Cleanup; safecall;
-    procedure FinishTimeStep; safecall;
-    function Get_Process_Time: Double; safecall;
-    function Get_Total_Time: Double; safecall;
-    procedure Set_Total_Time(Value: Double); safecall;
-    function Get_Time_of_Step: Double; safecall;
-    function Get_IntervalHrs: Double; safecall;
-    procedure Set_IntervalHrs(Value: Double); safecall;
-    function Get_MinIterations: Integer; safecall;
-    procedure Set_MinIterations(Value: Integer); safecall;
-  end;
+    TSolution = class(TAutoObject, ISolution)
+    PROTECTED
+        function Get_Frequency: Double; SAFECALL;
+        function Get_Hour: Integer; SAFECALL;
+        function Get_Iterations: Integer; SAFECALL;
+        function Get_LoadMult: Double; SAFECALL;
+        function Get_MaxIterations: Integer; SAFECALL;
+        function Get_Mode: Integer; SAFECALL;
+        function Get_Number: Integer; SAFECALL;
+        function Get_Random: Integer; SAFECALL;
+        function Get_Seconds: Double; SAFECALL;
+        function Get_StepSize: Double; SAFECALL;
+        function Get_Tolerance: Double; SAFECALL;
+        function Get_Year: Integer; SAFECALL;
+        procedure Set_Frequency(Value: Double); SAFECALL;
+        procedure Set_Hour(Value: Integer); SAFECALL;
+        procedure Set_LoadMult(Value: Double); SAFECALL;
+        procedure Set_MaxIterations(Value: Integer); SAFECALL;
+        procedure Set_Mode(Mode: Integer); SAFECALL;
+        procedure Set_Number(Value: Integer); SAFECALL;
+        procedure Set_Random(Random: Integer); SAFECALL;
+        procedure Set_Seconds(Value: Double); SAFECALL;
+        procedure Set_StepSize(Value: Double); SAFECALL;
+        procedure Set_Tolerance(Value: Double); SAFECALL;
+        procedure Set_Year(Value: Integer); SAFECALL;
+        procedure Solve; SAFECALL;
+        function Get_ModeID: Widestring; SAFECALL;
+        function Get_LoadModel: Integer; SAFECALL;
+        procedure Set_LoadModel(Value: Integer); SAFECALL;
+        function Get_LDCurve: Widestring; SAFECALL;
+        procedure Set_LDCurve(const Value: Widestring); SAFECALL;
+        function Get_pctGrowth: Double; SAFECALL;
+        procedure Set_pctGrowth(Value: Double); SAFECALL;
+        function Get_AddType: Integer; SAFECALL;
+        procedure Set_AddType(Value: Integer); SAFECALL;
+        function Get_GenkW: Double; SAFECALL;
+        procedure Set_GenkW(Value: Double); SAFECALL;
+        function Get_GenPF: Double; SAFECALL;
+        procedure Set_GenPF(Value: Double); SAFECALL;
+        function Get_Capkvar: Double; SAFECALL;
+        procedure Set_Capkvar(Value: Double); SAFECALL;
+        function Get_Algorithm: Integer; SAFECALL;
+        procedure Set_Algorithm(Value: Integer); SAFECALL;
+        function Get_ControlMode: Integer; SAFECALL;
+        procedure Set_ControlMode(Value: Integer); SAFECALL;
+        function Get_GenMult: Double; SAFECALL;
+        procedure Set_GenMult(Value: Double); SAFECALL;
+        function Get_DefaultDaily: Widestring; SAFECALL;
+        function Get_DefaultYearly: Widestring; SAFECALL;
+        procedure Set_DefaultDaily(const Value: Widestring); SAFECALL;
+        procedure Set_DefaultYearly(const Value: Widestring); SAFECALL;
+        function Get_EventLog: Olevariant; SAFECALL;
+        function Get_dblHour: Double; SAFECALL;
+        procedure Set_dblHour(Value: Double); SAFECALL;
+        procedure Set_StepsizeHr(Value: Double); SAFECALL;
+        procedure Set_StepsizeMin(Value: Double); SAFECALL;
+        function Get_ControlIterations: Integer; SAFECALL;
+        function Get_MaxControlIterations: Integer; SAFECALL;
+        procedure Sample_DoControlActions; SAFECALL;
+        procedure Set_ControlIterations(Value: Integer); SAFECALL;
+        procedure Set_MaxControlIterations(Value: Integer); SAFECALL;
+        procedure CheckFaultStatus; SAFECALL;
+        procedure SolveDirect; SAFECALL;
+        procedure SolveNoControl; SAFECALL;
+        procedure SolvePflow; SAFECALL;
+        procedure SolvePlusControl; SAFECALL;
+        procedure SolveSnap; SAFECALL;
+        procedure CheckControls; SAFECALL;
+        procedure InitSnap; SAFECALL;
+        function Get_SystemYChanged: Wordbool; SAFECALL;
+        procedure BuildYMatrix(BuildOption, AllocateVI: Integer); SAFECALL;
+        procedure DoControlActions; SAFECALL;
+        procedure SampleControlDevices; SAFECALL;
+        function Get_Converged: Wordbool; SAFECALL;
+        procedure Set_Converged(Value: Wordbool); SAFECALL;
+        function Get_Totaliterations: Integer; SAFECALL;
+        function Get_MostIterationsDone: Integer; SAFECALL;
+        function Get_ControlActionsDone: Wordbool; SAFECALL;
+        procedure Set_ControlActionsDone(Value: Wordbool); SAFECALL;
+        procedure Cleanup; SAFECALL;
+        procedure FinishTimeStep; SAFECALL;
+        function Get_Process_Time: Double; SAFECALL;
+        function Get_Total_Time: Double; SAFECALL;
+        procedure Set_Total_Time(Value: Double); SAFECALL;
+        function Get_Time_of_Step: Double; SAFECALL;
+        function Get_IntervalHrs: Double; SAFECALL;
+        procedure Set_IntervalHrs(Value: Double); SAFECALL;
+        function Get_MinIterations: Integer; SAFECALL;
+        procedure Set_MinIterations(Value: Integer); SAFECALL;
+    end;
 
 implementation
 
-uses ComServ, DSSGlobals, Math, LoadShape, Utilities, YMatrix, Variants, SolutionAlgs, Solution;
+uses
+    ComServ,
+    DSSGlobals,
+    Math,
+    LoadShape,
+    Utilities,
+    YMatrix,
+    Variants,
+    SolutionAlgs,
+    Solution;
 
 function TSolution.Get_Frequency: Double;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.Frequency
-     Else Result := 0.0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.Frequency
+    else
+        Result := 0.0;
 end;
 
 function TSolution.Get_Hour: Integer;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.DynaVars.intHour
-     Else Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.DynaVars.intHour
+    else
+        Result := 0;
 end;
 
 function TSolution.Get_Iterations: Integer;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.Iteration
-     Else Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.Iteration
+    else
+        Result := 0;
 end;
 
 function TSolution.Get_LoadMult: Double;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.LoadMultiplier
-     Else Result := 0.0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.LoadMultiplier
+    else
+        Result := 0.0;
 end;
 
 function TSolution.Get_MaxIterations: Integer;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.MaxIterations
-     Else Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.MaxIterations
+    else
+        Result := 0;
 end;
 
 function TSolution.Get_Mode: Integer;
 begin
      //If ActiveCircuit <> Nil Then Result := GetSolutionModeID      changed to integer 8/16/00
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.Mode
-     Else Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.Mode
+    else
+        Result := 0;
 end;
 
 function TSolution.Get_Number: Integer;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.NumberOfTimes
-     Else Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.NumberOfTimes
+    else
+        Result := 0;
 end;
 
 function TSolution.Get_Random: Integer;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.RandomType
-     Else Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.RandomType
+    else
+        Result := 0;
 end;
 
 function TSolution.Get_Seconds: Double;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.dynavars.t
-     Else Result := 0.0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.dynavars.t
+    else
+        Result := 0.0;
 end;
 
 function TSolution.Get_StepSize: Double;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.dynavars.h
-     Else Result := 0.0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.dynavars.h
+    else
+        Result := 0.0;
 end;
 
 function TSolution.Get_Tolerance: Double;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.ConvergenceTolerance
-     Else Result := 0.0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.ConvergenceTolerance
+    else
+        Result := 0.0;
 end;
 
 function TSolution.Get_Year: Integer;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.Year
-     Else Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.Year
+    else
+        Result := 0;
 end;
 
 procedure TSolution.Set_Frequency(Value: Double);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.Solution.Frequency  := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.Frequency := Value;
 end;
 
 procedure TSolution.Set_Hour(Value: Integer);
 begin
-     If ActiveCircuit <> Nil Then With  ActiveCircuit.Solution Do Begin
-        DynaVars.intHour  := Value;
-        Update_dblHour;
-     End;
+    if ActiveCircuit <> NIL then
+        with  ActiveCircuit.Solution do
+        begin
+            DynaVars.intHour := Value;
+            Update_dblHour;
+        end;
 end;
 
 procedure TSolution.Set_LoadMult(Value: Double);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.LoadMultiplier  := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.LoadMultiplier := Value;
 end;
 
 procedure TSolution.Set_MaxIterations(Value: Integer);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.Solution.MaxIterations  := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.MaxIterations := Value;
 end;
 
 procedure TSolution.Set_Mode(Mode: Integer);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.Solution.Mode := Mode; //InterpretSolveMode(Value);
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.Mode := Mode; //InterpretSolveMode(Value);
 end;
 
 procedure TSolution.Set_Number(Value: Integer);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.Solution.NumberOfTimes  := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.NumberOfTimes := Value;
 end;
 
 procedure TSolution.Set_Random(Random: Integer);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.Solution.RandomType := Random;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.RandomType := Random;
 end;
 
 procedure TSolution.Set_Seconds(Value: Double);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.Solution.dynavars.t  := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.dynavars.t := Value;
 end;
 
 procedure TSolution.Set_StepSize(Value: Double);
 begin
-     If ActiveCircuit <> Nil Then Begin
-         ActiveCircuit.Solution.dynavars.h  := Value;
-         Set_IntervalHrs(Value/3600.0);     // Keep IntervalHrs in synch with time step size
-     End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.dynavars.h := Value;
+        Set_IntervalHrs(Value / 3600.0);     // Keep IntervalHrs in synch with time step size
+    end;
 end;
 
 procedure TSolution.Set_Tolerance(Value: Double);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.Solution.ConvergenceTolerance  := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.ConvergenceTolerance := Value;
 end;
 
 procedure TSolution.Set_Year(Value: Integer);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.Solution.Year  := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.Year := Value;
 end;
 
 procedure TSolution.Solve;
 begin
-  IF ActiveCircuit <> Nil THEN ActiveCircuit.Solution.Solve;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.Solve;
 end;
 
-function TSolution.Get_ModeID: WideString;
+function TSolution.Get_ModeID: Widestring;
 begin
-    If ActiveCircuit <> Nil Then Result := GetSolutionModeID
-    ELSE Result := '';
+    if ActiveCircuit <> NIL then
+        Result := GetSolutionModeID
+    else
+        Result := '';
 end;
 
 function TSolution.Get_LoadModel: Integer;
 begin
-    If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.LoadModel
-    ELSE Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.LoadModel
+    else
+        Result := 0;
 end;
 
 procedure TSolution.Set_LoadModel(Value: Integer);
 begin
 
-   If ActiveCircuit <> Nil Then  WITH ActiveCircuit.Solution Do Begin
-      LoadModel := Value;
-      DefaultLoadModel := LoadModel;
-   End;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit.Solution do
+        begin
+            LoadModel := Value;
+            DefaultLoadModel := LoadModel;
+        end;
 
 end;
 
-function TSolution.Get_LDCurve: WideString;
+function TSolution.Get_LDCurve: Widestring;
 begin
-     IF ActiveCircuit <> Nil Then Result := ActiveCircuit.LoadDurCurve
-     ELSE Result := '';
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.LoadDurCurve
+    else
+        Result := '';
 end;
 
-procedure TSolution.Set_LDCurve(const Value: WideString);
+procedure TSolution.Set_LDCurve(const Value: Widestring);
 begin
-      IF ActiveCircuit <> Nil
-      THEN With ActiveCircuit DO
-      Begin
-            LoadDurCurve    := Value;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+        begin
+            LoadDurCurve := Value;
             LoadDurCurveObj := LoadShapeClass.Find(LoadDurCurve);
-            IF LoadDurCurveObj=NIL THEN
-             DoSimpleMsg('Load-Duration Curve not found.', 5001);
-      End;
+            if LoadDurCurveObj = NIL then
+                DoSimpleMsg('Load-Duration Curve not found.', 5001);
+        end;
 
 end;
 
 function TSolution.Get_pctGrowth: Double;
 begin
-     IF ActiveCircuit <> NIL
-     THEN With ActiveCircuit DO
-     Begin
-        Result := (DefaultGrowthRate-1.0)*100.0
-     End;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+        begin
+            Result := (DefaultGrowthRate - 1.0) * 100.0
+        end;
 end;
 
 procedure TSolution.Set_pctGrowth(Value: Double);
 begin
-     IF ActiveCircuit <> NIL
-     THEN With ActiveCircuit DO
-     Begin
-        DefaultGrowthRate := 1.0 + Value/100.0;
-        DefaultGrowthFactor :=  IntPower(DefaultGrowthRate, (Solution.Year-1));
-     End;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+        begin
+            DefaultGrowthRate := 1.0 + Value / 100.0;
+            DefaultGrowthFactor := IntPower(DefaultGrowthRate, (Solution.Year - 1));
+        end;
 end;
 
 function TSolution.Get_AddType: Integer;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.AutoAddObj.AddType
-     Else Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.AutoAddObj.AddType
+    else
+        Result := 0;
 end;
 
 procedure TSolution.Set_AddType(Value: Integer);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.AutoAddObj.AddType := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.AutoAddObj.AddType := Value;
 end;
 
 function TSolution.Get_GenkW: Double;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.AutoAddObj.GenkW
-     Else Result := 0.0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.AutoAddObj.GenkW
+    else
+        Result := 0.0;
 end;
 
 procedure TSolution.Set_GenkW(Value: Double);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.AutoAddObj.GenkW := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.AutoAddObj.GenkW := Value;
 end;
 
 function TSolution.Get_GenPF: Double;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.AutoAddObj.GenPF
-     Else Result := 0.0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.AutoAddObj.GenPF
+    else
+        Result := 0.0;
 end;
 
 procedure TSolution.Set_GenPF(Value: Double);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.AutoAddObj.GenPF := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.AutoAddObj.GenPF := Value;
 end;
 
 function TSolution.Get_Capkvar: Double;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.AutoAddObj.Capkvar
-     Else Result := 0.0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.AutoAddObj.Capkvar
+    else
+        Result := 0.0;
 end;
 
 procedure TSolution.Set_Capkvar(Value: Double);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.AutoAddObj.Capkvar := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.AutoAddObj.Capkvar := Value;
 end;
 
 function TSolution.Get_Algorithm: Integer;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.Algorithm
-     Else Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.Algorithm
+    else
+        Result := 0;
 end;
 
 procedure TSolution.Set_Algorithm(Value: Integer);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.Solution.Algorithm := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.Algorithm := Value;
 end;
 
 function TSolution.Get_ControlMode: Integer;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.ControlMode
-     Else Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.ControlMode
+    else
+        Result := 0;
 end;
 
 procedure TSolution.Set_ControlMode(Value: Integer);
 begin
-    If ActiveCircuit <> Nil Then With ActiveCircuit.Solution Do Begin
-         ControlMode := Value;
-         DefaultControlMode := ControlMode;
-    End;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit.Solution do
+        begin
+            ControlMode := Value;
+            DefaultControlMode := ControlMode;
+        end;
 end;
 
 function TSolution.Get_GenMult: Double;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.GenMultiplier
-     Else Result := 0.0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.GenMultiplier
+    else
+        Result := 0.0;
 end;
 
 procedure TSolution.Set_GenMult(Value: Double);
 begin
-    If ActiveCircuit <> Nil Then ActiveCircuit.GenMultiplier := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.GenMultiplier := Value;
 end;
 
-function TSolution.Get_DefaultDaily: WideString;
+function TSolution.Get_DefaultDaily: Widestring;
 begin
-     IF   ActiveCircuit <> Nil
-     THEN Result := ActiveCircuit.DefaultDailyShapeObj.Name
-     ELSE Result := '';
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.DefaultDailyShapeObj.Name
+    else
+        Result := '';
 end;
 
-function TSolution.Get_DefaultYearly: WideString;
+function TSolution.Get_DefaultYearly: Widestring;
 begin
-     IF   ActiveCircuit <> Nil
-     THEN Result := ActiveCircuit.DefaultYearlyShapeObj.Name
-     ELSE Result := '';
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.DefaultYearlyShapeObj.Name
+    else
+        Result := '';
 end;
 
-procedure TSolution.Set_DefaultDaily(const Value: WideString);
-Var  TestLoadShapeObj :TLoadShapeObj;
+procedure TSolution.Set_DefaultDaily(const Value: Widestring);
+var
+    TestLoadShapeObj: TLoadShapeObj;
 begin
-     If ActiveCircuit <> Nil
-     Then
-     Begin
-           TestLoadShapeObj := LoadShapeClass.Find(Value);
-           IF TestLoadShapeObj <> NIL THEN ActiveCircuit.DefaultDailyShapeObj  := TestLoadShapeObj;
-     END;
+    if ActiveCircuit <> NIL then
+    begin
+        TestLoadShapeObj := LoadShapeClass.Find(Value);
+        if TestLoadShapeObj <> NIL then
+            ActiveCircuit.DefaultDailyShapeObj := TestLoadShapeObj;
+    end;
 end;
 
-procedure TSolution.Set_DefaultYearly(const Value: WideString);
-Var  TestLoadShapeObj :TLoadShapeObj;
+procedure TSolution.Set_DefaultYearly(const Value: Widestring);
+var
+    TestLoadShapeObj: TLoadShapeObj;
 begin
-     If ActiveCircuit <> Nil
-     Then
-     Begin
-           TestLoadShapeObj := LoadShapeClass.Find(Value);
-           IF TestLoadShapeObj <> NIL THEN ActiveCircuit.DefaultYearlyShapeObj  := TestLoadShapeObj;
-     END;
+    if ActiveCircuit <> NIL then
+    begin
+        TestLoadShapeObj := LoadShapeClass.Find(Value);
+        if TestLoadShapeObj <> NIL then
+            ActiveCircuit.DefaultYearlyShapeObj := TestLoadShapeObj;
+    end;
 
 end;
 
-function TSolution.Get_EventLog: OleVariant;
-Var i:Integer;
+function TSolution.Get_EventLog: Olevariant;
+var
+    i: Integer;
 begin
-    If ActiveCircuit <> Nil Then Begin
-       Result := VarArrayCreate([0, EventStrings.Count-1], varOleStr);
-       For i := 0 to EventStrings.Count-1 Do Begin
-          Result[i] := EventStrings.Strings[i]; 
-       End;
-    END
-    Else Result := VarArrayCreate([0,0], varOleStr);;
+    if ActiveCircuit <> NIL then
+    begin
+        Result := VarArrayCreate([0, EventStrings.Count - 1], varOleStr);
+        for i := 0 to EventStrings.Count - 1 do
+        begin
+            Result[i] := EventStrings.Strings[i];
+        end;
+    end
+    else
+        Result := VarArrayCreate([0, 0], varOleStr);
+    ;
 
 end;
 
 function TSolution.Get_dblHour: Double;
 begin
-     If ActiveCircuit <> Nil Then  Begin
+    if ActiveCircuit <> NIL then
+    begin
         Result := ActiveCircuit.Solution.DynaVars.dblHour;
-     End;
+    end;
 end;
 
 procedure TSolution.Set_dblHour(Value: Double);
 begin
-  If ActiveCircuit <> Nil Then With ActiveCircuit.Solution Do Begin
-      DynaVars.intHour := Trunc(Value);
-      DynaVars.dblHour := Value;
-      Dynavars.t := (Value - DynaVars.intHour) * 3600.0;
-  End;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit.Solution do
+        begin
+            DynaVars.intHour := Trunc(Value);
+            DynaVars.dblHour := Value;
+            Dynavars.t := (Value - DynaVars.intHour) * 3600.0;
+        end;
 end;
 
 procedure TSolution.Set_StepsizeHr(Value: Double);
 begin
-  If ActiveCircuit <> Nil Then Begin
-      ActiveCircuit.Solution.Dynavars.h := Value * 3600.0;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.Dynavars.h := Value * 3600.0;
+    end;
 end;
 
 procedure TSolution.Set_StepsizeMin(Value: Double);
 begin
 
-  If ActiveCircuit <> Nil Then Begin
-      ActiveCircuit.Solution.Dynavars.h := Value * 60.0;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.Dynavars.h := Value * 60.0;
+    end;
 
 end;
 
 function TSolution.Get_ControlIterations: Integer;
 begin
-     If ActiveCircuit <> Nil Then  Begin
+    if ActiveCircuit <> NIL then
+    begin
         Result := ActiveCircuit.Solution.ControlIteration;
-     End;
+    end;
 end;
 
 function TSolution.Get_MaxControlIterations: Integer;
 begin
-     If ActiveCircuit <> Nil Then  Begin
+    if ActiveCircuit <> NIL then
+    begin
         Result := ActiveCircuit.Solution.MaxControlIterations;
-     End;
+    end;
 end;
 
 procedure TSolution.Sample_DoControlActions;
 begin
-    If ActiveCircuit <> Nil Then Begin
-      ActiveCircuit.Solution.Sample_DoControlActions  ;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.Sample_DoControlActions;
+    end;
 end;
 
 procedure TSolution.Set_ControlIterations(Value: Integer);
 begin
-    If ActiveCircuit <> Nil Then Begin
-      ActiveCircuit.Solution.ControlIteration := Value;
-    End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.ControlIteration := Value;
+    end;
 end;
 
 procedure TSolution.Set_MaxControlIterations(Value: Integer);
 begin
-    If ActiveCircuit <> Nil Then Begin
-      ActiveCircuit.Solution.MaxControlIterations := Value;
-    End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.MaxControlIterations := Value;
+    end;
 end;
 
 procedure TSolution.CheckFaultStatus;
 begin
-   If ActiveCircuit <> Nil Then Begin
-      ActiveCircuit.Solution.Check_Fault_Status ;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.Check_Fault_Status;
+    end;
 end;
 
 procedure TSolution.SolveDirect;
 begin
-   If ActiveCircuit <> Nil Then Begin
-      ActiveCircuit.Solution.SolveDirect;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.SolveDirect;
+    end;
 end;
 
 procedure TSolution.SolveNoControl;
 {Solves without checking controls}
 begin
-   If ActiveCircuit <> Nil Then Begin
-      ActiveCircuit.Solution.SolveCircuit;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.SolveCircuit;
+    end;
 end;
 
 procedure TSolution.SolvePflow;
 begin
-   If ActiveCircuit <> Nil Then Begin
-      ActiveCircuit.Solution.DoPflowSolution;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.DoPflowSolution;
+    end;
 end;
 
 procedure TSolution.SolvePlusControl;
 {One Pass Through the solution and then dispatches controls}
 begin
-   If ActiveCircuit <> Nil Then Begin
-      With ActiveCircuit.Solution Do Begin
-         SolveCircuit;
-         CheckControls;
-      End;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        with ActiveCircuit.Solution do
+        begin
+            SolveCircuit;
+            CheckControls;
+        end;
+    end;
 end;
 
 procedure TSolution.SolveSnap;
 begin
-   If ActiveCircuit <> Nil Then Begin
-      ActiveCircuit.Solution.SolveSnap;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.SolveSnap;
+    end;
 end;
 
 procedure TSolution.CheckControls;
 begin
-   If ActiveCircuit <> Nil Then Begin
-      ActiveCircuit.Solution.CheckControls;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.CheckControls;
+    end;
 end;
 
 procedure TSolution.InitSnap;
 {Initi some things that are done at the beginning of a snapshot solve}
 begin
-   If ActiveCircuit <> Nil Then Begin
-      ActiveCircuit.Solution.SnapShotInit;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.SnapShotInit;
+    end;
 end;
 
-function TSolution.Get_SystemYChanged: WordBool;
+function TSolution.Get_SystemYChanged: Wordbool;
 begin
-   If ActiveCircuit <> Nil Then Begin
-      Result := ActiveCircuit.Solution.SystemYChanged;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        Result := ActiveCircuit.Solution.SystemYChanged;
+    end;
 end;
 
 procedure TSolution.BuildYMatrix(BuildOption, AllocateVI: Integer);
@@ -583,44 +692,49 @@ procedure TSolution.BuildYMatrix(BuildOption, AllocateVI: Integer);
     FALSE: Do not Reallocate VI; leave as is
 }
 begin
-  If ActiveCircuit <> Nil then  Begin
-    If AllocateVI = 0 then
-       Ymatrix.BuildYMatrix(BuildOption, FALSE)
-    else
-       Ymatrix.BuildYMatrix(BuildOption, TRUE)
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        if AllocateVI = 0 then
+            Ymatrix.BuildYMatrix(BuildOption, FALSE)
+        else
+            Ymatrix.BuildYMatrix(BuildOption, TRUE)
+    end;
 end;
 
 procedure TSolution.DoControlActions;
 begin
-   If ActiveCircuit <> Nil Then Begin
-      ActiveCircuit.Solution.DoControlActions;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.DoControlActions;
+    end;
 end;
 
 procedure TSolution.SampleControlDevices;
 begin
-    If ActiveCircuit <> Nil Then Begin
-      ActiveCircuit.Solution.SampleControlDevices;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.SampleControlDevices;
+    end;
 end;
 
-function TSolution.Get_Converged: WordBool;
+function TSolution.Get_Converged: Wordbool;
 begin
-   If ActiveCircuit <> Nil Then Begin
-      Result := ActiveCircuit.Issolved;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        Result := ActiveCircuit.Issolved;
+    end;
 end;
 
-procedure TSolution.Set_Converged(Value: WordBool);
+procedure TSolution.Set_Converged(Value: Wordbool);
 
 {Set the flag directly to force its setting}
 begin
 
-   If ActiveCircuit <> Nil Then Begin
-     ActiveCircuit.Solution.ConvergedFlag := Value;
-     ActiveCircuit.Issolved := Value;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.Solution.ConvergedFlag := Value;
+        ActiveCircuit.Issolved := Value;
+    end;
 end;
 
 function TSolution.Get_Totaliterations: Integer;
@@ -628,88 +742,103 @@ function TSolution.Get_Totaliterations: Integer;
 // Same as Iterations interface
 
 begin
-    If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.Iteration
-     Else Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.Iteration
+    else
+        Result := 0;
 end;
 
 function TSolution.Get_MostIterationsDone: Integer;
 begin
-   If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.MostIterationsDone
-     Else Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.MostIterationsDone
+    else
+        Result := 0;
 end;
 
-function TSolution.Get_ControlActionsDone: WordBool;
+function TSolution.Get_ControlActionsDone: Wordbool;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.ControlActionsDone;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.ControlActionsDone;
 end;
 
-procedure TSolution.Set_ControlActionsDone(Value: WordBool);
+procedure TSolution.Set_ControlActionsDone(Value: Wordbool);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.Solution.ControlActionsDone := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.ControlActionsDone := Value;
 end;
 
 procedure TSolution.Cleanup;
 begin
-    If ActiveCircuit <> Nil Then
-    WITH ActiveCircuit, ActiveCircuit.Solution Do
-      Begin
-                EndOfTimeStepCleanup;
-    End;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit, ActiveCircuit.Solution do
+        begin
+            EndOfTimeStepCleanup;
+        end;
 end;
 
 procedure TSolution.FinishTimeStep;
 begin
-    If ActiveCircuit <> Nil Then
-    WITH ActiveCircuit, ActiveCircuit.Solution Do
-      Begin
-                MonitorClass.SampleAll;  // Make all monitors take a sample
-                EndOfTimeStepCleanup;
-                Increment_time;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit, ActiveCircuit.Solution do
+        begin
+            MonitorClass.SampleAll;  // Make all monitors take a sample
+            EndOfTimeStepCleanup;
+            Increment_time;
  //               DefaultHourMult := DefaultDailyShapeObj.getmult(TDynamicsrec.dblHour);
-    End;
+        end;
 end;
 
 function TSolution.Get_Process_Time: Double;
 begin
-    If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.Time_Solve;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.Time_Solve;
 end;
 
 function TSolution.Get_Total_Time: Double;
 begin
-    If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.Total_Time;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.Total_Time;
 end;
 
 procedure TSolution.Set_Total_Time(Value: Double);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.Solution.Total_Time   :=  Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.Total_Time := Value;
 end;
 
 function TSolution.Get_Time_of_Step: Double;
 begin
-    If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.Time_Step;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.Time_Step;
 end;
 
 function TSolution.Get_IntervalHrs: Double;
 begin
-    If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.IntervalHrs;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.IntervalHrs;
 end;
 
 procedure TSolution.Set_IntervalHrs(Value: Double);
 begin
-     If ActiveCircuit <> Nil Then ActiveCircuit.Solution.IntervalHrs := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.IntervalHrs := Value;
 end;
 
 function TSolution.Get_MinIterations: Integer;
 begin
-     If ActiveCircuit <> Nil Then Result := ActiveCircuit.Solution.MinIterations
-     Else Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Solution.MinIterations
+    else
+        Result := 0;
 end;
 
 procedure TSolution.Set_MinIterations(Value: Integer);
 begin
-    If ActiveCircuit <> Nil Then ActiveCircuit.Solution.MinIterations  := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.MinIterations := Value;
 end;
 
 initialization
-  TAutoObjectFactory.Create(ComServer, TSolution, Class_Solution, ciInternal, tmApartment);
+    TAutoObjectFactory.Create(ComServer, TSolution, Class_Solution, ciInternal, tmApartment);
 end.

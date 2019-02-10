@@ -5,30 +5,34 @@ unit MathutilInterface;
 
 interface
 
- Uses uComplex;
+uses
+    uComplex;
 
   {Define interface for VBA}
-   Procedure I0(Var Result, A:Complex);StdCall;
-   Procedure I1(Var Result, A:Complex);StdCall;
+procedure I0(var Result, A: Complex); STDCALL;
+procedure I1(var Result, A: Complex); STDCALL;
+
 implementation
 
-Uses MathUtil, cbess1, cbess2, ZComplex;
+uses
+    MathUtil,
+    cbess1,
+    cbess2,
+    ZComplex;
 
-
-Procedure I0(Var Result, A:Complex);StdCall;
-Begin
+procedure I0(var Result, A: Complex); STDCALL;
+begin
     Result := Bessel_I0(A);
-End;
+end;
 
-Procedure I1(Var Result, A:Complex);StdCall;
-Begin
+procedure I1(var Result, A: Complex); STDCALL;
+begin
     Result := Bessel_I1(A);
-End;
+end;
 
 
-
-Procedure ZBESJ(ZR, ZI, FNU:double; KODE, N: integer; Var CYR, CYI: VEC;
-               var NZ, IERR:integer);
+procedure ZBESJ(ZR, ZI, FNU: Double; KODE, N: Integer; var CYR, CYI: VEC;
+    var NZ, IERR: Integer);
 {***BEGIN PROLOGUE  ZBESJ
 !***DATE WRITTEN   830501   (YYMMDD)  (Original Fortran 77 version).
 !***REVISION DATE  830501   (YYMMDD)
@@ -175,21 +179,26 @@ Procedure ZBESJ(ZR, ZI, FNU:double; KODE, N: integer; Var CYR, CYI: VEC;
 !***END PROLOGUE  ZBESJ
 !
 !     COMPLEX CI,CSGN,CY,Z,ZN }
-Label 40, 50, 130, 140, 260, Return;
-Var
-      AA, ALIM, ARG, CII, CSGNI, CSGNR, DIG, ELIM, FNUL,
-      HPI, RL, R1M5, STR, TOL, ZNI, ZNR, BB, FN, AZ: double;
-      I, INU, INUH, IR, K, K1, K2, NL: Integer;
-Begin
+label
+    40, 50, 130, 140, 260, Return;
+var
+    AA, ALIM, ARG, CII, CSGNI, CSGNR, DIG, ELIM, FNUL,
+    HPI, RL, R1M5, STR, TOL, ZNI, ZNR, BB, FN, AZ: Double;
+    I, INU, INUH, IR, K, K1, K2, NL: Integer;
+begin
 
 {***FIRST EXECUTABLE STATEMENT  ZBESJ }
-      HPI := PI/2.0;
-      IERR := 0;
-      NZ:=0;
-      IF FNU < 0.0 THEN IERR:=1;
-      IF (KODE < 1) OR (KODE > 2) THEN IERR:=1;
-      IF N < 1 THEN IERR:=1;
-      IF IERR <> 0 THEN GOTO RETURN;
+    HPI := PI / 2.0;
+    IERR := 0;
+    NZ := 0;
+    if FNU < 0.0 then
+        IERR := 1;
+    if (KODE < 1) or (KODE > 2) then
+        IERR := 1;
+    if N < 1 then
+        IERR := 1;
+    if IERR <> 0 then
+        goto RETURN;
 {-----------------------------------------------------------------------
 !     SET PARAMETERS RELATED TO MACHINE CONSTANTS.
 !     TOL IS THE APPROXIMATE UNIT ROUNDOFF LIMITED TO 1.0E-18.
@@ -201,80 +210,95 @@ Begin
 !     DIG := NUMBER OF BASE 10 DIGITS IN TOL = 10^(-DIG).
 !     FNUL IS THE LOWER BOUNDARY OF THE ASYMPTOTIC SERIES FOR LARGE FNU.
 !----------------------------------------------------------------------}
-      TOL := DMAX(D1MACH(4),1E-18);
-      K1 := I1MACH(15);
-      K2 := I1MACH(16);
-      R1M5 := D1MACH(5);
-      K := IMIN(ABS(K1),ABS(K2));
-      ELIM := 2.303*(K*R1M5-3.0);
-      K1 := I1MACH(14) - 1;
-      AA := R1M5*K1;
-      DIG := DMIN(AA,18.0);
-      AA := AA*2.303;
-      ALIM := ELIM + DMAX(-AA,-41.45);
-      RL := 1.2*DIG + 3.0;
-      FNUL := 10.0 + 6.0*(DIG-3.0);
+    TOL := DMAX(D1MACH(4), 1E-18);
+    K1 := I1MACH(15);
+    K2 := I1MACH(16);
+    R1M5 := D1MACH(5);
+    K := IMIN(ABS(K1), ABS(K2));
+    ELIM := 2.303 * (K * R1M5 - 3.0);
+    K1 := I1MACH(14) - 1;
+    AA := R1M5 * K1;
+    DIG := DMIN(AA, 18.0);
+    AA := AA * 2.303;
+    ALIM := ELIM + DMAX(-AA, -41.45);
+    RL := 1.2 * DIG + 3.0;
+    FNUL := 10.0 + 6.0 * (DIG - 3.0);
 {-----------------------------------------------------------------------
 !     TEST FOR PROPER RANGE
 !----------------------------------------------------------------------}
-      AZ := ZABS(ZR,ZI);
-      FN := FNU+1.0*(N-1);
-      AA := 0.5/TOL;
-      BB:=I1MACH(9)*0.5;
-      AA := DMIN(AA,BB);
-      IF AZ > AA THEN GOTO 260;
-      IF FN > AA THEN GOTO 260;
-      AA := SQRT(AA);
-      IF AZ > AA THEN IERR:=3;
-      IF FN > AA THEN IERR:=3;
+    AZ := ZABS(ZR, ZI);
+    FN := FNU + 1.0 * (N - 1);
+    AA := 0.5 / TOL;
+    BB := I1MACH(9) * 0.5;
+    AA := DMIN(AA, BB);
+    if AZ > AA then
+        goto 260;
+    if FN > AA then
+        goto 260;
+    AA := SQRT(AA);
+    if AZ > AA then
+        IERR := 3;
+    if FN > AA then
+        IERR := 3;
 {-----------------------------------------------------------------------
 !     CALCULATE CSGN=EXP(FNU*HPI*I) TO MINIMIZE LOSSES OF SIGNIFICANCE
 !     WHEN FNU IS LARGE
 !----------------------------------------------------------------------}
-      CII := 1.0;
-      INU := Round(FNU);
-      INUH := INU Div 2;
-      IR := INU - 2*INUH;
-      ARG := (FNU-1.0*(INU-IR))*HPI;
-      CSGNR := COS(ARG);
-      CSGNI := SIN(ARG);
-      IF (INUH Mod 2) = 0 THEN GOTO 40;
-      CSGNR := -CSGNR;
-      CSGNI := -CSGNI;
+    CII := 1.0;
+    INU := Round(FNU);
+    INUH := INU div 2;
+    IR := INU - 2 * INUH;
+    ARG := (FNU - 1.0 * (INU - IR)) * HPI;
+    CSGNR := COS(ARG);
+    CSGNI := SIN(ARG);
+    if (INUH mod 2) = 0 then
+        goto 40;
+    CSGNR := -CSGNR;
+    CSGNI := -CSGNI;
 {-----------------------------------------------------------------------
 !     ZN IS IN THE RIGHT HALF PLANE
 !----------------------------------------------------------------------}
-40:   ZNR := ZI;
-      ZNI := -ZR;
-      IF ZI >= 0.0 THEN GOTO 50;
-      ZNR := -ZNR;
-      ZNI := -ZNI;
-      CSGNI := -CSGNI;
-      CII := -CII;
-50:   ZBINU(ZNR, ZNI, FNU, KODE, N, CYR, CYI, NZ, RL, FNUL, TOL, ELIM, ALIM);
-      IF NZ < 0 THEN GOTO 130;
-      NL := N - NZ;
-      IF NL = 0 THEN GOTO RETURN;
-      For I:=1 to NL do
-      begin
-        STR := CYR[I]*CSGNR - CYI[I]*CSGNI;
-        CYI[I] := CYR[I]*CSGNI + CYI[I]*CSGNR;
+    40:
+        ZNR := ZI;
+    ZNI := -ZR;
+    if ZI >= 0.0 then
+        goto 50;
+    ZNR := -ZNR;
+    ZNI := -ZNI;
+    CSGNI := -CSGNI;
+    CII := -CII;
+    50:
+        ZBINU(ZNR, ZNI, FNU, KODE, N, CYR, CYI, NZ, RL, FNUL, TOL, ELIM, ALIM);
+    if NZ < 0 then
+        goto 130;
+    NL := N - NZ;
+    if NL = 0 then
+        goto RETURN;
+    for I := 1 to NL do
+    begin
+        STR := CYR[I] * CSGNR - CYI[I] * CSGNI;
+        CYI[I] := CYR[I] * CSGNI + CYI[I] * CSGNR;
         CYR[I] := STR;
-        STR := -CSGNI*CII;
-        CSGNI := CSGNR*CII;
+        STR := -CSGNI * CII;
+        CSGNI := CSGNR * CII;
         CSGNR := STR
-      end;
-      GOTO RETURN;
-130:  IF NZ = -2 THEN GOTO 140;
-      NZ := 0;
-      IERR := 2;
-      GOTO RETURN;
-140:  NZ:=0;
-      IERR:=5;
-      GOTO RETURN;
-260:  NZ:=0;
-      IERR:=4;
-Return:End; {ZBESJ}
+    end;
+    goto RETURN;
+    130:
+        if NZ = -2 then
+            goto 140;
+    NZ := 0;
+    IERR := 2;
+    goto RETURN;
+    140:
+        NZ := 0;
+    IERR := 5;
+    goto RETURN;
+    260:
+        NZ := 0;
+    IERR := 4;
+    Return:
+end; {ZBESJ}
 
 
  {

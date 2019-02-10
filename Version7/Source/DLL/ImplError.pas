@@ -1,4 +1,5 @@
 unit ImplError;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -9,20 +10,25 @@ unit ImplError;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSEngine_TLB, StdVcl;
+    ComObj,
+    ActiveX,
+    OpenDSSEngine_TLB,
+    StdVcl;
 
 type
-  TError = class(TAutoObject,  IError)
-  protected
-    function Get_Description: WideString; safecall;
-    function Get_Number: Integer; safecall;
-  end;
+    TError = class(TAutoObject, IError)
+    PROTECTED
+        function Get_Description: Widestring; SAFECALL;
+        function Get_Number: Integer; SAFECALL;
+    end;
 
 implementation
 
-uses ComServ, DSSGlobals;
+uses
+    ComServ,
+    DSSGlobals;
 
-function TError.Get_Description: WideString;
+function TError.Get_Description: Widestring;
 begin
     Result := LastErrorMessage;
     LastErrorMessage := ''; // Reset after retrieving message
@@ -35,5 +41,5 @@ begin
 end;
 
 initialization
-  TAutoObjectFactory.Create(ComServer, TError, Class_Error, ciInternal, tmApartment);
+    TAutoObjectFactory.Create(ComServer, TError, Class_Error, ciInternal, tmApartment);
 end.

@@ -10,104 +10,111 @@ unit PCClass;
 
 interface
 
-USES
+uses
     CktElementClass;
 
-TYPE
+type
     TPCClass = class(TCktElementClass)
-    private
+    PRIVATE
 
-    protected
-      Function ClassEdit(Const ActivePCObj:Pointer; Const ParamPointer:Integer):Integer;
-      Procedure ClassMakeLike(Const OtherObj:Pointer);
+    PROTECTED
+        function ClassEdit(const ActivePCObj: Pointer; const ParamPointer: Integer): Integer;
+        procedure ClassMakeLike(const OtherObj: Pointer);
 
-      Procedure CountProperties;  // Add no. of intrinsic properties
-      Procedure DefineProperties;  // Add Properties of this class to propName
+        procedure CountProperties;  // Add no. of intrinsic properties
+        procedure DefineProperties;  // Add Properties of this class to propName
 
-    public
-      NumPCClassProps :Integer;
-      constructor Create;
-      destructor Destroy; override;
-    published 
+    PUBLIC
+        NumPCClassProps: Integer;
+        constructor Create;
+        destructor Destroy; OVERRIDE;
+    PUBLISHED
 
     end;
 
 
 implementation
 
-Uses PCElement, ParserDel, DSSClassDefs, DSSGlobals, Utilities;
+uses
+    PCElement,
+    ParserDel,
+    DSSClassDefs,
+    DSSGlobals,
+    Utilities;
 
 constructor TPCClass.Create;
 begin
 
-     Inherited Create;
-     NumPCClassProps := 1;
-     DSSClassType := PC_ELEMENT;
+    inherited Create;
+    NumPCClassProps := 1;
+    DSSClassType := PC_ELEMENT;
 end;
 
 destructor TPCClass.Destroy;
 
 begin
-     Inherited Destroy;
-End;
+    inherited Destroy;
+end;
 
-Procedure TPCClass.CountProperties;
-Begin
-     NumProperties := NumProperties + NumPCClassProps;
-     Inherited CountProperties;
-End;
+procedure TPCClass.CountProperties;
+begin
+    NumProperties := NumProperties + NumPCClassProps;
+    inherited CountProperties;
+end;
 
-Procedure TPCClass.DefineProperties;
+procedure TPCClass.DefineProperties;
 
 // Define the properties for the base power delivery element class
 
-Begin
+begin
 
-     PropertyName^[ActiveProperty + 1] := 'spectrum';
+    PropertyName^[ActiveProperty + 1] := 'spectrum';
 
-     PropertyHelp^[ActiveProperty + 1] := 'Name of harmonic spectrum for this device.';
+    PropertyHelp^[ActiveProperty + 1] := 'Name of harmonic spectrum for this device.';
 
-     ActiveProperty := ActiveProperty + NumPCClassProps;
+    ActiveProperty := ActiveProperty + NumPCClassProps;
 
-     Inherited DefineProperties;
-End;
+    inherited DefineProperties;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TPCClass.ClassEdit(Const ActivePCObj:Pointer; Const ParamPointer:Integer):Integer;
+function TPCClass.ClassEdit(const ActivePCObj: Pointer; const ParamPointer: Integer): Integer;
 
 
-BEGIN
-  Result := 0;
+begin
+    Result := 0;
   // continue parsing with contents of Parser
-  If ParamPointer > 0 Then
-  WITH TPCElement(ActivePCObj) DO BEGIN
+    if ParamPointer > 0 then
+        with TPCElement(ActivePCObj) do
+        begin
 
-      CASE ParamPointer OF
-          1: Spectrum := Parser[ActiveActor].StrValue;
-      ELSE
-        Inherited ClassEdit(ActivePCObj, ParamPointer - NumPCClassProps)
-      END;
-  End;
+            case ParamPointer of
+                1:
+                    Spectrum := Parser[ActiveActor].StrValue;
+            else
+                inherited ClassEdit(ActivePCObj, ParamPointer - NumPCClassProps)
+            end;
+        end;
 
-End;
+end;
 
-Procedure TPCClass.ClassMakeLike(Const OtherObj:Pointer);
+procedure TPCClass.ClassMakeLike(const OtherObj: Pointer);
 
-Var
-   OtherPCObj : TPCElement;
-Begin
+var
+    OtherPCObj: TPCElement;
+begin
 
-     OtherPCObj := TPCElement(OtherObj);
+    OtherPCObj := TPCElement(OtherObj);
 
-     With TPCElement(ActiveDSSObject[ActiveActor]) Do
-     Begin
-       Spectrum     := OtherPCObj.Spectrum;
-       SpectrumObj  := OtherPCObj.SpectrumObj;
-     End;
+    with TPCElement(ActiveDSSObject[ActiveActor]) do
+    begin
+        Spectrum := OtherPCObj.Spectrum;
+        SpectrumObj := OtherPCObj.SpectrumObj;
+    end;
 
-     Inherited ClassMakeLike(OtherObj);
+    inherited ClassMakeLike(OtherObj);
 
-End;
+end;
 
 
 end.

@@ -1,4 +1,5 @@
 unit Capacitor;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -43,789 +44,895 @@ unit Capacitor;
 
 }
 interface
-USES
-   Command, DSSClass, PDClass, PDElement, UcMatrix, ArrayDef;
 
-TYPE
+uses
+    Command,
+    DSSClass,
+    PDClass,
+    PDElement,
+    UcMatrix,
+    ArrayDef;
 
-   TCapacitor = class(TPDClass)
-     private
-        Procedure DoCmatrix(ActorID : Integer);
+type
 
-        Procedure InterpretConnection(const S:String);
-        Procedure CapSetBus1( const s:String);
-     Protected
-        Function  MakeLike(Const CapacitorName:String):Integer;Override;
-        Procedure DefineProperties;  // Add Properties of this class to propName
-     public
+    TCapacitor = class(TPDClass)
+    PRIVATE
+        procedure DoCmatrix(ActorID: Integer);
+
+        procedure InterpretConnection(const S: String);
+        procedure CapSetBus1(const s: String);
+    PROTECTED
+        function MakeLike(const CapacitorName: String): Integer; OVERRIDE;
+        procedure DefineProperties;  // Add Properties of this class to propName
+    PUBLIC
         constructor Create;
-        destructor  Destroy; override;
+        destructor Destroy; OVERRIDE;
 
-        Function Edit(ActorID : Integer):Integer; override;     // uses global parser
-        Function Init(Handle:Integer; ActorID : Integer):Integer; override;
-        Function NewObject(const ObjName:String):Integer; override;
-   end;
+        function Edit(ActorID: Integer): Integer; OVERRIDE;     // uses global parser
+        function Init(Handle: Integer; ActorID: Integer): Integer; OVERRIDE;
+        function NewObject(const ObjName: String): Integer; OVERRIDE;
+    end;
 
-   TCapacitorObj = class(TPDElement)
-      Private
+    TCapacitorObj = class(TPDElement)
+    PRIVATE
         FC,
         FXL,
         Fkvarrating,
         FR,
-        FHarm :pDoubleArray;  // single C per phase (line rating) if Cmatrix not specified
-        FStates:pIntegerArray;
+        FHarm: pDoubleArray;  // single C per phase (line rating) if Cmatrix not specified
+        FStates: pIntegerArray;
 
         Ftotalkvar,
-        kvrating:Double;
+        kvrating: Double;
         FNumSteps,
-        FLastStepInService :Integer;
-        Cmatrix  :pDoubleArray;  // If not nil then overrides C
+        FLastStepInService: Integer;
+        Cmatrix: pDoubleArray;  // If not nil then overrides C
 
-        DoHarmonicRecalc:Boolean;
-        Bus2Defined     :Boolean;
+        DoHarmonicRecalc: Boolean;
+        Bus2Defined: Boolean;
 
-        SpecType        :Integer;
-        NumTerm         : Integer;   // Flag used to indicate The number of terminals
+        SpecType: Integer;
+        NumTerm: Integer;   // Flag used to indicate The number of terminals
 
-        function  get_States(Idx: Integer; ActorID: Integer): Integer;
+        function get_States(Idx: Integer; ActorID: Integer): Integer;
         procedure set_States(Idx: Integer; ActorID: Integer; const Value: Integer);
         procedure set_LastStepInService(const Value: Integer);
 
-        Procedure ProcessHarmonicSpec(const Param:String);
-        Procedure ProcessStatesSpec(const Param:String);
-        Procedure MakeYprimWork(YprimWork:TcMatrix; iStep:Integer;ActorID : Integer);
+        procedure ProcessHarmonicSpec(const Param: String);
+        procedure ProcessStatesSpec(const Param: String);
+        procedure MakeYprimWork(YprimWork: TcMatrix; iStep: Integer; ActorID: Integer);
 
         procedure set_NumSteps(const Value: Integer); // 1=kvar, 2=Cuf, 3=Cmatrix
 
 
-      Public
+    PUBLIC
 
-        Connection :Integer;   // 0 or 1 for wye (default) or delta, respectively
-        constructor Create(ParClass:TDSSClass; const CapacitorName:String);
-        destructor  Destroy; override;
+        Connection: Integer;   // 0 or 1 for wye (default) or delta, respectively
+        constructor Create(ParClass: TDSSClass; const CapacitorName: String);
+        destructor Destroy; OVERRIDE;
 
-        Procedure RecalcElementData(ActorID : Integer);Override;
-        Procedure CalcYPrim(ActorID : Integer);        Override;
+        procedure RecalcElementData(ActorID: Integer); OVERRIDE;
+        procedure CalcYPrim(ActorID: Integer); OVERRIDE;
 
-        PROCEDURE MakePosSequence(ActorID : Integer);Override;  // Make a positive Sequence Model
+        procedure MakePosSequence(ActorID: Integer); OVERRIDE;  // Make a positive Sequence Model
 
-        PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
-        PROCEDURE DumpProperties(Var F:TextFile;Complete:Boolean);Override;
-        FUNCTION  GetPropertyValue(Index:Integer):String;Override;
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
+        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
-        FUNCTION AddStep(ActorID:integer):Boolean;
-        FUNCTION SubtractStep(ActorID:Integer):Boolean;
-        FUNCTION AvailableSteps:Integer;
-        PROCEDURE FindLastStepInService;
-        Property NumSteps:Integer  Read FNumSteps write set_NumSteps;
-        Property States[Idx:Integer;ActorID:Integer]:Integer Read get_States write set_States;
-        Property Totalkvar:Double Read FTotalkvar;
-        Property NomKV:Double Read kvrating;
-        Property LastStepInService:Integer Read FLastStepInService Write set_LastStepInService;
+        function AddStep(ActorID: Integer): Boolean;
+        function SubtractStep(ActorID: Integer): Boolean;
+        function AvailableSteps: Integer;
+        procedure FindLastStepInService;
+        property NumSteps: Integer READ FNumSteps WRITE set_NumSteps;
+        property States[Idx: Integer;ActorID: Integer]: Integer READ get_States WRITE set_States;
+        property Totalkvar: Double READ FTotalkvar;
+        property NomKV: Double READ kvrating;
+        property LastStepInService: Integer READ FLastStepInService WRITE set_LastStepInService;
 
-        Property NumTerminals:Integer Read NumTerm;   // Property to know if the capacitor has 2 terminals
+        property NumTerminals: Integer READ NumTerm;   // Property to know if the capacitor has 2 terminals
 
-   end;
+    end;
 
-VAR
-   ActiveCapacitorObj:TCapacitorObj;
-   CapacitorClass : TCapacitor;
+var
+    ActiveCapacitorObj: TCapacitorObj;
+    CapacitorClass: TCapacitor;
 
 implementation
 
-USES  ParserDel,  DSSClassDefs, DSSGlobals, Sysutils, Ucomplex,  Utilities;
+uses
+    ParserDel,
+    DSSClassDefs,
+    DSSGlobals,
+    Sysutils,
+    Ucomplex,
+    Utilities;
 
-Const NumPropsThisClass = 13;
+const
+    NumPropsThisClass = 13;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TCapacitor.Create;  // Creates superstructure for all Capacitor objects
-BEGIN
-     Inherited Create;
-     Class_Name := 'Capacitor';
-     DSSClassType := DSSClassType + CAP_ELEMENT;
+begin
+    inherited Create;
+    Class_Name := 'Capacitor';
+    DSSClassType := DSSClassType + CAP_ELEMENT;
 
-     ActiveElement := 0;
+    ActiveElement := 0;
 
-     DefineProperties;
+    DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
-     CommandList.Abbrev           := TRUE;
-     CapacitorClass               := Self;
-END;
+    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList.Abbrev := TRUE;
+    CapacitorClass := Self;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Destructor TCapacitor.Destroy;
+destructor TCapacitor.Destroy;
 
-BEGIN
+begin
     // ElementList and  CommandList freed in inherited destroy
-    Inherited Destroy;
-END;
+    inherited Destroy;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TCapacitor.DefineProperties;
-Begin
+procedure TCapacitor.DefineProperties;
+begin
 
-     Numproperties := NumPropsThisClass;
-     CountProperties;   // Get inherited property count
-     AllocatePropertyArrays;
+    Numproperties := NumPropsThisClass;
+    CountProperties;   // Get inherited property count
+    AllocatePropertyArrays;
 
 
      // Define Property names
-     PropertyName^[1] := 'bus1';
-     PropertyName^[2] := 'bus2';
-     PropertyName^[3] := 'phases';
-     PropertyName^[4] := 'kvar';
-     PropertyName^[5] := 'kv';
-     PropertyName^[6] := 'conn';
-     PropertyName^[7] := 'cmatrix';
-     PropertyName^[8] := 'cuf';
-     PropertyName^[9] := 'R';
-     PropertyName^[10] := 'XL';
-     PropertyName^[11] := 'Harm';
-     PropertyName^[12] := 'Numsteps';
-     PropertyName^[13] := 'states';
+    PropertyName^[1] := 'bus1';
+    PropertyName^[2] := 'bus2';
+    PropertyName^[3] := 'phases';
+    PropertyName^[4] := 'kvar';
+    PropertyName^[5] := 'kv';
+    PropertyName^[6] := 'conn';
+    PropertyName^[7] := 'cmatrix';
+    PropertyName^[8] := 'cuf';
+    PropertyName^[9] := 'R';
+    PropertyName^[10] := 'XL';
+    PropertyName^[11] := 'Harm';
+    PropertyName^[12] := 'Numsteps';
+    PropertyName^[13] := 'states';
 
      // define Property help values
 
-     PropertyHelp^[1] := 'Name of first bus of 2-terminal capacitor. Examples:' + CRLF +
-                         'bus1=busname' + CRLF + 'bus1=busname.1.2.3'+CRLF+CRLF+
-                         'If only one bus specified, Bus2 will default to this bus, Node 0, ' +
-                         'and the capacitor will be a Yg shunt bank.';
-     PropertyHelp^[2] := 'Name of 2nd bus. Defaults to all phases connected '+
-                         'to first bus, node 0, (Shunt Wye Connection) ' +
-                         'except when Bus2 explicitly specified. ' +CRLF+CRLF+
-                         'Not necessary to specify for delta (LL) connection.';
-     PropertyHelp^[3] := 'Number of phases.';
-     PropertyHelp^[4] := 'Total kvar, if one step, or ARRAY of kvar ratings for each step.  Evenly divided among phases. See rules for NUMSTEPS.';
-     PropertyHelp^[5] := 'For 2, 3-phase, kV phase-phase. Otherwise specify actual can rating.';
-     PropertyHelp^[6] := '={wye | delta |LN |LL}  Default is wye, which is equivalent to LN';
-     PropertyHelp^[7] := 'Nodal cap. matrix, lower triangle, microfarads, of the following form:'+CRLF+CRLF+
-                         'cmatrix="c11 | -c21 c22 | -c31 -c32 c33"'+CRLF+CRLF+
-                         'All steps are assumed the same if this property is used.';
-     PropertyHelp^[8] := 'ARRAY of Capacitance, each phase, for each step, microfarads.'+CRLF+
-                         'See Rules for NumSteps.';
-     PropertyHelp^[9] := 'ARRAY of series resistance in each phase (line), ohms. Default is 0.0';
-     PropertyHelp^[10] := 'ARRAY of series inductive reactance(s) in each phase (line) for filter, ohms at base frequency. Use this OR "h" property to define filter. Default is 0.0.';
-     PropertyHelp^[11] := 'ARRAY of harmonics to which each step is tuned. Zero is interpreted as meaning zero reactance (no filter). Default is zero.';
-     PropertyHelp^[12] := 'Number of steps in this capacitor bank. Default = 1. Forces reallocation of the capacitance, reactor, and states array.  Rules: '+
-                          'If this property was previously =1, the value in the kvar property is divided equally among the steps. The kvar property ' +
-                          'does not need to be reset if that is accurate.  If the Cuf or Cmatrix property was used previously, all steps are set to the value of the first step. ' +
-                          'The states property is set to all steps on. All filter steps are set to the same harmonic. ' +
-                          'If this property was previously >1, the arrays are reallocated, but no values are altered. You must SUBSEQUENTLY assign all array properties.';
-     PropertyHelp^[13] := 'ARRAY of integers {1|0} states representing the state of each step (on|off). Defaults to 1 when reallocated (on). '+
-                          'Capcontrol will modify this array as it turns steps on or off.';
+    PropertyHelp^[1] := 'Name of first bus of 2-terminal capacitor. Examples:' + CRLF +
+        'bus1=busname' + CRLF + 'bus1=busname.1.2.3' + CRLF + CRLF +
+        'If only one bus specified, Bus2 will default to this bus, Node 0, ' +
+        'and the capacitor will be a Yg shunt bank.';
+    PropertyHelp^[2] := 'Name of 2nd bus. Defaults to all phases connected ' +
+        'to first bus, node 0, (Shunt Wye Connection) ' +
+        'except when Bus2 explicitly specified. ' + CRLF + CRLF +
+        'Not necessary to specify for delta (LL) connection.';
+    PropertyHelp^[3] := 'Number of phases.';
+    PropertyHelp^[4] := 'Total kvar, if one step, or ARRAY of kvar ratings for each step.  Evenly divided among phases. See rules for NUMSTEPS.';
+    PropertyHelp^[5] := 'For 2, 3-phase, kV phase-phase. Otherwise specify actual can rating.';
+    PropertyHelp^[6] := '={wye | delta |LN |LL}  Default is wye, which is equivalent to LN';
+    PropertyHelp^[7] := 'Nodal cap. matrix, lower triangle, microfarads, of the following form:' + CRLF + CRLF +
+        'cmatrix="c11 | -c21 c22 | -c31 -c32 c33"' + CRLF + CRLF +
+        'All steps are assumed the same if this property is used.';
+    PropertyHelp^[8] := 'ARRAY of Capacitance, each phase, for each step, microfarads.' + CRLF +
+        'See Rules for NumSteps.';
+    PropertyHelp^[9] := 'ARRAY of series resistance in each phase (line), ohms. Default is 0.0';
+    PropertyHelp^[10] := 'ARRAY of series inductive reactance(s) in each phase (line) for filter, ohms at base frequency. Use this OR "h" property to define filter. Default is 0.0.';
+    PropertyHelp^[11] := 'ARRAY of harmonics to which each step is tuned. Zero is interpreted as meaning zero reactance (no filter). Default is zero.';
+    PropertyHelp^[12] := 'Number of steps in this capacitor bank. Default = 1. Forces reallocation of the capacitance, reactor, and states array.  Rules: ' +
+        'If this property was previously =1, the value in the kvar property is divided equally among the steps. The kvar property ' +
+        'does not need to be reset if that is accurate.  If the Cuf or Cmatrix property was used previously, all steps are set to the value of the first step. ' +
+        'The states property is set to all steps on. All filter steps are set to the same harmonic. ' +
+        'If this property was previously >1, the arrays are reallocated, but no values are altered. You must SUBSEQUENTLY assign all array properties.';
+    PropertyHelp^[13] := 'ARRAY of integers {1|0} states representing the state of each step (on|off). Defaults to 1 when reallocated (on). ' +
+        'Capcontrol will modify this array as it turns steps on or off.';
 
-     ActiveProperty := NumPropsThisClass;
-     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
+    ActiveProperty := NumPropsThisClass;
+    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
-End;
+end;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TCapacitor.NewObject(const ObjName:String):Integer;
-BEGIN
+function TCapacitor.NewObject(const ObjName: String): Integer;
+begin
    // create a new object of this class and add to list
-    With ActiveCircuit[ActiveActor] Do
-    Begin
-      ActiveCktElement := TCapacitorObj.Create(Self, ObjName);
-      Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
-    End;
-END;
+    with ActiveCircuit[ActiveActor] do
+    begin
+        ActiveCktElement := TCapacitorObj.Create(Self, ObjName);
+        Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
+    end;
+end;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TCapacitor.DoCmatrix(ActorID : Integer);
-VAR
-    OrderFound, j:Integer;
-    MatBuffer:pDoubleArray;
+procedure TCapacitor.DoCmatrix(ActorID: Integer);
+var
+    OrderFound, j: Integer;
+    MatBuffer: pDoubleArray;
 
-BEGIN
-   WITH ActiveCapacitorObj DO BEGIN
-     MatBuffer := Allocmem(Sizeof(double)*Fnphases*Fnphases);
-     OrderFound := Parser[ActorID].ParseAsSymMatrix(Fnphases, MatBuffer);
+begin
+    with ActiveCapacitorObj do
+    begin
+        MatBuffer := Allocmem(Sizeof(Double) * Fnphases * Fnphases);
+        OrderFound := Parser[ActorID].ParseAsSymMatrix(Fnphases, MatBuffer);
 
-     If OrderFound>0 THEN    // Parse was successful
-     BEGIN    {C}
-        Reallocmem(Cmatrix,Sizeof(Cmatrix^[1])*Fnphases*Fnphases);
-        FOR j := 1 to Fnphases*Fnphases DO Cmatrix^[j] := 1.0e-6 * MatBuffer^[j];
-     END;
+        if OrderFound > 0 then    // Parse was successful
+        begin    {C}
+            Reallocmem(Cmatrix, Sizeof(Cmatrix^[1]) * Fnphases * Fnphases);
+            for j := 1 to Fnphases * Fnphases do
+                Cmatrix^[j] := 1.0e-6 * MatBuffer^[j];
+        end;
 
-     Freemem(MatBuffer, Sizeof(double)*Fnphases*Fnphases);
-   END;
-END;
+        Freemem(MatBuffer, Sizeof(Double) * Fnphases * Fnphases);
+    end;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TCapacitor.InterpretConnection(const S:String);
+procedure TCapacitor.InterpretConnection(const S: String);
 
 // Accepts
 //    delta or LL           (Case insensitive)
 //    Y, wye, or LN
-VAR
-    TestS:String;
+var
+    TestS: String;
 
-BEGIN
-    WITH ActiveCapacitorObj DO BEGIN
+begin
+    with ActiveCapacitorObj do
+    begin
         TestS := lowercase(S);
-        CASE TestS[1] OF
-          'y','w': Connection := 0;  {Wye}
-          'd': Connection := 1;  {Delta or line-Line}
-          'l': CASE Tests[2] OF
-               'n': Connection := 0;
-               'l': Connection := 1;
-               END;
+        case TestS[1] of
+            'y', 'w':
+                Connection := 0;  {Wye}
+            'd':
+                Connection := 1;  {Delta or line-Line}
+            'l':
+                case Tests[2] of
+                    'n':
+                        Connection := 0;
+                    'l':
+                        Connection := 1;
+                end;
 
-        END;
-      CASE Connection of
-        1: Nterms := 1;  // Force reallocation of terminals
-        0: IF Fnterms<>2 THEN Nterms := 2;
-      END;
-    END;
-END;
+        end;
+        case Connection of
+            1:
+                Nterms := 1;  // Force reallocation of terminals
+            0:
+                if Fnterms <> 2 then
+                    Nterms := 2;
+        end;
+    end;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TCapacitor.CapSetBus1( const s:String);
+procedure TCapacitor.CapSetBus1(const s: String);
 
-Var
-   s2:String;
-   i, dotpos:Integer;
+var
+    s2: String;
+    i, dotpos: Integer;
 
    // Special handling for Bus 1
    // Set Bus2 = Bus1.0.0.0
 
-BEGIN
-   WITH ActiveCapacitorObj DO BEGIN
-     SetBus(1, S);
+begin
+    with ActiveCapacitorObj do
+    begin
+        SetBus(1, S);
 
      // Default Bus2 to zero node of Bus1 unless it is previously defined. (Grounded-Y connection)
 
-     If Not Bus2Defined Then
-     Begin
+        if not Bus2Defined then
+        begin
        // Strip node designations from S
-       dotpos := Pos('.',S);
-       IF dotpos>0 THEN S2 := Copy(S,1,dotpos-1)
-                   ELSE S2 := Copy(S,1,Length(S));  // copy up to Dot
-       FOR i := 1 to Fnphases DO S2 := S2 + '.0';   // append series of ".0"'s
+            dotpos := Pos('.', S);
+            if dotpos > 0 then
+                S2 := Copy(S, 1, dotpos - 1)
+            else
+                S2 := Copy(S, 1, Length(S));  // copy up to Dot
+            for i := 1 to Fnphases do
+                S2 := S2 + '.0';   // append series of ".0"'s
 
-       SetBus(2, S2);    // default setting for Bus2
-       IsShunt := True;
-     End;
-   END;
-END;
+            SetBus(2, S2);    // default setting for Bus2
+            IsShunt := TRUE;
+        end;
+    end;
+end;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TCapacitor.Edit(ActorID : Integer):Integer;
+function TCapacitor.Edit(ActorID: Integer): Integer;
 
-VAR
-   ParamPointer:Integer;
-   ParamName:String;
-   Param:String;
-   i:Integer;
+var
+    ParamPointer: Integer;
+    ParamName: String;
+    Param: String;
+    i: Integer;
 
-BEGIN
-  Result := 0;
+begin
+    Result := 0;
   // continue parsing with contents of Parser
-  ActiveCapacitorObj := ElementList.Active;
-  ActiveCircuit[ActorID].ActiveCktElement := ActiveCapacitorObj;  // use property to set this value
+    ActiveCapacitorObj := ElementList.Active;
+    ActiveCircuit[ActorID].ActiveCktElement := ActiveCapacitorObj;  // use property to set this value
 
 
-  WITH ActiveCapacitorObj DO BEGIN
+    with ActiveCapacitorObj do
+    begin
 
-     ParamPointer := 0;
-     ParamName := Parser[ActorID].NextParam;
-     Param := Parser[ActorID].StrValue;
-     WHILE Length(Param)>0 DO BEGIN
-         IF Length(ParamName) = 0 THEN Inc(ParamPointer)
-         ELSE ParamPointer := CommandList.GetCommand(ParamName);
+        ParamPointer := 0;
+        ParamName := Parser[ActorID].NextParam;
+        Param := Parser[ActorID].StrValue;
+        while Length(Param) > 0 do
+        begin
+            if Length(ParamName) = 0 then
+                Inc(ParamPointer)
+            else
+                ParamPointer := CommandList.GetCommand(ParamName);
 
-         If (ParamPointer>0) and (ParamPointer<=NumProperties) Then PropertyValue[ParamPointer]:= Param;
+            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
+                PropertyValue[ParamPointer] := Param;
 
-         CASE ParamPointer OF
-            0: DoSimpleMsg('Unknown parameter "'+ParamName+'" for Object "Capacitor.'+Name+'"', 450);
-            1: CapSetbus1(param);
-            2: Begin
-                Setbus(2, param);
-                NumTerm :=  2;    // Specifies that the capacitor is not connected to ground
-               End;
-            3:{ Numphases := Parser.IntValue};  // see below
-            4: InterpretDblArray (Param, FNumSteps, FkvarRating);
-            5: kvRating := Parser[ActorID].Dblvalue;
-            6: InterpretConnection(Param);
-            7: DoCMatrix(ActorID);
-            8: InterpretDblArray (Param, FNumSteps, FC);
-            9: InterpretDblArray (Param, FNumSteps, FR);
-           10: InterpretDblArray (Param, FNumSteps, FXL);
-           11: ProcessHarmonicSpec(Param);
-           12: NumSteps := Parser[ActorID].IntValue;
-           13: ProcessStatesSpec(Param);
-         ELSE
+            case ParamPointer of
+                0:
+                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "Capacitor.' + Name + '"', 450);
+                1:
+                    CapSetbus1(param);
+                2:
+                begin
+                    Setbus(2, param);
+                    NumTerm := 2;    // Specifies that the capacitor is not connected to ground
+                end;
+                3:
+{ Numphases := Parser.IntValue};  // see below
+                4:
+                    InterpretDblArray(Param, FNumSteps, FkvarRating);
+                5:
+                    kvRating := Parser[ActorID].Dblvalue;
+                6:
+                    InterpretConnection(Param);
+                7:
+                    DoCMatrix(ActorID);
+                8:
+                    InterpretDblArray(Param, FNumSteps, FC);
+                9:
+                    InterpretDblArray(Param, FNumSteps, FR);
+                10:
+                    InterpretDblArray(Param, FNumSteps, FXL);
+                11:
+                    ProcessHarmonicSpec(Param);
+                12:
+                    NumSteps := Parser[ActorID].IntValue;
+                13:
+                    ProcessStatesSpec(Param);
+            else
             // Inherited Property Edits
-            ClassEdit(ActiveCapacitorObj, ParamPointer - NumPropsThisClass)
-         END;
+                ClassEdit(ActiveCapacitorObj, ParamPointer - NumPropsThisClass)
+            end;
 
          // Some specials ...
-         CASE ParamPointer OF
-          1:Begin
-              PropertyValue[2] := GetBus(2);   // this gets modified
-              PrpSequence^[2] := 0; // Reset this for save function
-            End;
-          2:If CompareText(StripExtension(GetBus(1)), StripExtension(GetBus(2))) <> 0
-            Then Begin
-              IsShunt     := FALSE;
-              Bus2Defined := TRUE;
-            End;
-          3: IF Fnphases <> Parser[ActorID].IntValue
-             THEN BEGIN
-               Nphases := Parser[ActorID].IntValue ;
-               NConds := Fnphases;  // Force Reallocation of terminal info
-               Yorder := Fnterms*Fnconds;
-             END;
-          4: SpecType := 1;
-          7: SpecType := 3;
-          8: Begin SpecType := 2; For i := 1 to Fnumsteps Do FC^[i] := FC^[i] * 1.0e-6; End;
-          10: Begin
-                For i := 1 to Fnumsteps Do If FXL^[i] <> 0.0 Then If FR^[i] = 0.0 Then FR^[i] := Abs(FXL^[i]) / 1000.0;  // put in something so it doesn't fail
-                DoHarmonicRecalc := FALSE;  // XL is specified
-              End;
-         ELSE
-         END;
+            case ParamPointer of
+                1:
+                begin
+                    PropertyValue[2] := GetBus(2);   // this gets modified
+                    PrpSequence^[2] := 0; // Reset this for save function
+                end;
+                2:
+                    if CompareText(StripExtension(GetBus(1)), StripExtension(GetBus(2))) <> 0 then
+                    begin
+                        IsShunt := FALSE;
+                        Bus2Defined := TRUE;
+                    end;
+                3:
+                    if Fnphases <> Parser[ActorID].IntValue then
+                    begin
+                        Nphases := Parser[ActorID].IntValue;
+                        NConds := Fnphases;  // Force Reallocation of terminal info
+                        Yorder := Fnterms * Fnconds;
+                    end;
+                4:
+                    SpecType := 1;
+                7:
+                    SpecType := 3;
+                8:
+                begin
+                    SpecType := 2;
+                    for i := 1 to Fnumsteps do
+                        FC^[i] := FC^[i] * 1.0e-6;
+                end;
+                10:
+                begin
+                    for i := 1 to Fnumsteps do
+                        if FXL^[i] <> 0.0 then
+                            if FR^[i] = 0.0 then
+                                FR^[i] := Abs(FXL^[i]) / 1000.0;  // put in something so it doesn't fail
+                    DoHarmonicRecalc := FALSE;  // XL is specified
+                end;
+            else
+            end;
 
          //YPrim invalidation on anything that changes impedance values
-         CASE ParamPointer OF
-             3..8: YprimInvalid[ActorID] := True;
-             12,13: YprimInvalid[ActorID] := True;
-         ELSE
-         END;
+            case ParamPointer of
+                3..8:
+                    YprimInvalid[ActorID] := TRUE;
+                12, 13:
+                    YprimInvalid[ActorID] := TRUE;
+            else
+            end;
 
 
-         ParamName := Parser[ActorID].NextParam;
-         Param := Parser[ActorID].StrValue;
-     END;
+            ParamName := Parser[ActorID].NextParam;
+            Param := Parser[ActorID].StrValue;
+        end;
 
-     RecalcElementData(ActorID);
-  END;
+        RecalcElementData(ActorID);
+    end;
 
-END;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TCapacitor.MakeLike(Const CapacitorName:String):Integer;
-VAR
-   OtherCapacitor:TCapacitorObj;
-   i:Integer;
-BEGIN
-   Result := 0;
+function TCapacitor.MakeLike(const CapacitorName: String): Integer;
+var
+    OtherCapacitor: TCapacitorObj;
+    i: Integer;
+begin
+    Result := 0;
    {See if we can find this Capacitor name in the present collection}
-   OtherCapacitor := Find(CapacitorName);
-   IF OtherCapacitor<>Nil THEN
-   WITH ActiveCapacitorObj DO
-   BEGIN
+    OtherCapacitor := Find(CapacitorName);
+    if OtherCapacitor <> NIL then
+        with ActiveCapacitorObj do
+        begin
 
-       IF Fnphases <> OtherCapacitor.Fnphases THEN
-       BEGIN
-         NPhases := OtherCapacitor.Fnphases;
-         NConds := Fnphases; // force reallocation of terminals and conductors
+            if Fnphases <> OtherCapacitor.Fnphases then
+            begin
+                NPhases := OtherCapacitor.Fnphases;
+                NConds := Fnphases; // force reallocation of terminals and conductors
 
-         Yorder := Fnconds*Fnterms;
-         YprimInvalid[ActiveActor] := True;
+                Yorder := Fnconds * Fnterms;
+                YprimInvalid[ActiveActor] := TRUE;
 
-       END;
+            end;
 
-       NumSteps := OtherCapacitor.NumSteps;
+            NumSteps := OtherCapacitor.NumSteps;
 
-       For i := 1 to FNumSteps Do Begin
-         FC^[i] := OtherCapacitor.FC^[i];
-         Fkvarrating^[i] := OtherCapacitor.Fkvarrating^[i];
-         FR^[i]   :=  OtherCapacitor.FR^[i];
-         FXL^[i]  :=  OtherCapacitor.FXL^[i];
-         FXL^[i]  :=  OtherCapacitor.FXL^[i];
-         FHarm^[i]  :=  OtherCapacitor.FHarm^[i];
-         Fstates^[i]  :=  OtherCapacitor.Fstates^[i];
-       End;
+            for i := 1 to FNumSteps do
+            begin
+                FC^[i] := OtherCapacitor.FC^[i];
+                Fkvarrating^[i] := OtherCapacitor.Fkvarrating^[i];
+                FR^[i] := OtherCapacitor.FR^[i];
+                FXL^[i] := OtherCapacitor.FXL^[i];
+                FXL^[i] := OtherCapacitor.FXL^[i];
+                FHarm^[i] := OtherCapacitor.FHarm^[i];
+                Fstates^[i] := OtherCapacitor.Fstates^[i];
+            end;
 
-       kvrating := OtherCapacitor.kvrating;
-       Connection := OtherCapacitor.Connection;
-       SpecType := OtherCapacitor.SpecType;
+            kvrating := OtherCapacitor.kvrating;
+            Connection := OtherCapacitor.Connection;
+            SpecType := OtherCapacitor.SpecType;
 
-       If OtherCapacitor.Cmatrix=Nil Then
-          Reallocmem(Cmatrix, 0)
-       ELSE
-       BEGIN
-           Reallocmem(Cmatrix, SizeOf(Cmatrix^[1])*Fnphases*Fnphases);
-           For i := 1 to Fnphases*Fnphases DO Cmatrix^[i] := OtherCapacitor.Cmatrix^[i];
-       END;
+            if OtherCapacitor.Cmatrix = NIL then
+                Reallocmem(Cmatrix, 0)
+            else
+            begin
+                Reallocmem(Cmatrix, SizeOf(Cmatrix^[1]) * Fnphases * Fnphases);
+                for i := 1 to Fnphases * Fnphases do
+                    Cmatrix^[i] := OtherCapacitor.Cmatrix^[i];
+            end;
 
-       ClassMakeLike(OtherCapacitor);  // Take care of inherited class properties
+            ClassMakeLike(OtherCapacitor);  // Take care of inherited class properties
 
-       For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherCapacitor.PropertyValue[i];
-       Result := 1;
-   END
-   ELSE  DoSimpleMsg('Error in Capacitor MakeLike: "' + CapacitorName + '" Not Found.', 451);
+            for i := 1 to ParentClass.NumProperties do
+                PropertyValue[i] := OtherCapacitor.PropertyValue[i];
+            Result := 1;
+        end
+    else
+        DoSimpleMsg('Error in Capacitor MakeLike: "' + CapacitorName + '" Not Found.', 451);
 
 
-
-END;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TCapacitor.Init(Handle:Integer; ActorID : Integer):Integer;
+function TCapacitor.Init(Handle: Integer; ActorID: Integer): Integer;
 
-BEGIN
-   DoSimpleMsg('Need to implement TCapacitor.Init', 452);
-   Result := 0;
-END;
+begin
+    DoSimpleMsg('Need to implement TCapacitor.Init', 452);
+    Result := 0;
+end;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //      TCapacitor Obj
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-constructor TCapacitorObj.Create(ParClass:TDSSClass; const CapacitorName:String);
+constructor TCapacitorObj.Create(ParClass: TDSSClass; const CapacitorName: String);
 
 
-BEGIN
-     Inherited Create(ParClass);
-     Name := LowerCase(CapacitorName);
-     DSSObjType := ParClass.DSSClassType;
-     
-     NPhases := 3;  // Directly set conds and phases
-     Fnconds := 3;
-     Nterms := 2;  // Force allocation of terminals and conductors
+begin
+    inherited Create(ParClass);
+    Name := LowerCase(CapacitorName);
+    DSSObjType := ParClass.DSSClassType;
 
-     Setbus(2, (GetBus(1) + '.0.0.0'));  // Default to grounded wye
+    NPhases := 3;  // Directly set conds and phases
+    Fnconds := 3;
+    Nterms := 2;  // Force allocation of terminals and conductors
 
-     IsShunt := True;  // defaults to shunt capacitor
+    Setbus(2, (GetBus(1) + '.0.0.0'));  // Default to grounded wye
 
-     Cmatrix := nil;
+    IsShunt := TRUE;  // defaults to shunt capacitor
+
+    Cmatrix := NIL;
 
      {Initialize these pointers to Nil so reallocmem will work reliably}
-     FC := nil;
-     FXL := nil;
-     Fkvarrating := nil;
-     FR := nil;
-     FHarm := nil;
-     FStates := nil;
+    FC := NIL;
+    FXL := NIL;
+    Fkvarrating := NIL;
+    FR := NIL;
+    FHarm := NIL;
+    FStates := NIL;
 
-     NumSteps := 1;  // Initial Allocation for the Arrays, too
-     LastStepInService := FNumSteps;
+    NumSteps := 1;  // Initial Allocation for the Arrays, too
+    LastStepInService := FNumSteps;
 
-     InitDblArray(FNumSteps, FR, 0.0);
-     InitDblArray(FNumSteps, FXL, 0.0);
-     InitDblArray(FNumSteps, FHarm, 0.0);
-     InitDblArray(FNumSteps, Fkvarrating, 1200.0);
-     
-     Fstates^[1] := 1;
+    InitDblArray(FNumSteps, FR, 0.0);
+    InitDblArray(FNumSteps, FXL, 0.0);
+    InitDblArray(FNumSteps, FHarm, 0.0);
+    InitDblArray(FNumSteps, Fkvarrating, 1200.0);
 
-     kvrating := 12.47;
-     InitDblArray(FNumSteps, FC, 1.0/(TwoPi*BaseFrequency* SQR(kvrating)*1000.0/Fkvarrating^[1]));
+    Fstates^[1] := 1;
 
-     Connection:=0;   // 0 or 1 for wye (default) or delta, respectively
-     SpecType := 1; // 1=kvar, 2=Cuf, 3=Cmatrix
+    kvrating := 12.47;
+    InitDblArray(FNumSteps, FC, 1.0 / (TwoPi * BaseFrequency * SQR(kvrating) * 1000.0 / Fkvarrating^[1]));
 
-     NormAmps := FkvarRating^[1]*SQRT3/kvrating * 1.35;   // 135%
-     EmergAmps := NormAmps * 1.8/1.35;   //180%
-     FaultRate := 0.0005;
-     PctPerm:=   100.0;
-     HrsToRepair := 3.0;
-     Yorder := Fnterms * Fnconds;
+    Connection := 0;   // 0 or 1 for wye (default) or delta, respectively
+    SpecType := 1; // 1=kvar, 2=Cuf, 3=Cmatrix
 
-     DoHarmonicRecalc := FALSE;
-     Bus2Defined      := FALSE;
+    NormAmps := FkvarRating^[1] * SQRT3 / kvrating * 1.35;   // 135%
+    EmergAmps := NormAmps * 1.8 / 1.35;   //180%
+    FaultRate := 0.0005;
+    PctPerm := 100.0;
+    HrsToRepair := 3.0;
+    Yorder := Fnterms * Fnconds;
 
-     RecalcElementData(ActiveActor);
-     NumTerm  :=  1;
+    DoHarmonicRecalc := FALSE;
+    Bus2Defined := FALSE;
 
-     InitPropertyValues(0);
-END;
+    RecalcElementData(ActiveActor);
+    NumTerm := 1;
+
+    InitPropertyValues(0);
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TCapacitorObj.Destroy;
-BEGIN
-    ReallocMem(  Cmatrix,0);
+begin
+    ReallocMem(Cmatrix, 0);
 
-    Reallocmem(  FC, 0);
-    Reallocmem(  FXL, 0);
-    Reallocmem(  Fkvarrating, 0);
-    Reallocmem(  FR, 0);
-    Reallocmem(  FHarm, 0);
-    Reallocmem(  FStates, 0);
+    Reallocmem(FC, 0);
+    Reallocmem(FXL, 0);
+    Reallocmem(Fkvarrating, 0);
+    Reallocmem(FR, 0);
+    Reallocmem(FHarm, 0);
+    Reallocmem(FStates, 0);
 
-    Inherited destroy;
-END;
+    inherited destroy;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TCapacitorObj.RecalcElementData(ActorID : Integer);
-VAR
-   KvarPerPhase, PhasekV, w: double;
-   i:Integer;
+procedure TCapacitorObj.RecalcElementData(ActorID: Integer);
+var
+    KvarPerPhase, PhasekV, w: Double;
+    i: Integer;
 
-BEGIN
-     Ftotalkvar := 0.0;
-     PhasekV := 1.0;
-     w :=  TwoPi*BaseFrequency;
-     CASE SpecType OF
+begin
+    Ftotalkvar := 0.0;
+    PhasekV := 1.0;
+    w := TwoPi * BaseFrequency;
+    case SpecType of
 
-     1:BEGIN // kvar
+        1:
+        begin // kvar
 
-          Case Connection OF
-            1:  BEGIN  // Line-to-Line
+            case Connection of
+                1:
+                begin  // Line-to-Line
                     PhasekV := kVRating;
-                END;
-          ELSE BEGIN  //  line-to-neutral
-                 CASE Fnphases of
-                 2,3:PhasekV := kVRating / SQRT3;  // Assume three phase system
-                 ELSE
+                end;
+            else
+            begin  //  line-to-neutral
+                case Fnphases of
+                    2, 3:
+                        PhasekV := kVRating / SQRT3;  // Assume three phase system
+                else
                     PhasekV := kVRating;
-                 END;
-               END;
-          END;
-          
-          For i := 1 to FNumSteps Do FC^[i] := 1.0/(w*SQR(PhasekV)*1000.0/(FkvarRating^[1]/Fnphases));
-          For i := 1 to FNumSteps Do Ftotalkvar := Ftotalkvar + FkvarRating^[i];
-       END;
-     2:BEGIN // Cuf
-          Case Connection OF
-            1:  BEGIN  // Line-to-Line
+                end;
+            end;
+            end;
+
+            for i := 1 to FNumSteps do
+                FC^[i] := 1.0 / (w * SQR(PhasekV) * 1000.0 / (FkvarRating^[1] / Fnphases));
+            for i := 1 to FNumSteps do
+                Ftotalkvar := Ftotalkvar + FkvarRating^[i];
+        end;
+        2:
+        begin // Cuf
+            case Connection of
+                1:
+                begin  // Line-to-Line
                     PhasekV := kVRating;
-                END;
-          ELSE BEGIN  //  line-to-neutral
-                 CASE Fnphases of
-                 2,3:PhasekV := kVRating / SQRT3;  // Assume three phase system
-                 ELSE
+                end;
+            else
+            begin  //  line-to-neutral
+                case Fnphases of
+                    2, 3:
+                        PhasekV := kVRating / SQRT3;  // Assume three phase system
+                else
                     PhasekV := kVRating;
-                 END;
-               END;
-          END;
-          For i := 1 to FNumSteps Do Ftotalkvar := Ftotalkvar + w*FC^[i]*SQR(PhasekV)/1000.0;
-       END;
-     3:BEGIN // Cmatrix
+                end;
+            end;
+            end;
+            for i := 1 to FNumSteps do
+                Ftotalkvar := Ftotalkvar + w * FC^[i] * SQR(PhasekV) / 1000.0;
+        end;
+        3:
+        begin // Cmatrix
            // Nothing to do
 
-       END;
-     END;
+        end;
+    end;
 
-     If DoHarmonicRecalc Then  // If harmonic specified, compute filter reactance
-     For i := 1 to FNumsteps Do Begin
-         IF FHarm^[i] <> 0.0 THEN FXL^[i] := (1.0/(w*FC^[i])) / SQR(FHarm^[i])
-         ELSE FXL^[i] := 0.0;   // Assume 0 harmonic means no filter
-         IF FR^[i]=0.0 Then FR^[i] := FXL^[i]/1000.0;
-     End;
-
-
-
-
-    kvarPerPhase := Ftotalkvar/Fnphases;
-    NormAmps := kvarPerPhase/PhasekV * 1.35;
-    EmergAmps := NormAmps * 1.8/1.35;
+    if DoHarmonicRecalc then  // If harmonic specified, compute filter reactance
+        for i := 1 to FNumsteps do
+        begin
+            if FHarm^[i] <> 0.0 then
+                FXL^[i] := (1.0 / (w * FC^[i])) / SQR(FHarm^[i])
+            else
+                FXL^[i] := 0.0;   // Assume 0 harmonic means no filter
+            if FR^[i] = 0.0 then
+                FR^[i] := FXL^[i] / 1000.0;
+        end;
 
 
-END;
+    kvarPerPhase := Ftotalkvar / Fnphases;
+    NormAmps := kvarPerPhase / PhasekV * 1.35;
+    EmergAmps := NormAmps * 1.8 / 1.35;
+
+
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TCapacitorObj.CalcYPrim(ActorID : Integer);
+procedure TCapacitorObj.CalcYPrim(ActorID: Integer);
 
-VAR
-   i:Integer;
-   YPrimTemp, YPrimWork :TCMatrix;
+var
+    i: Integer;
+    YPrimTemp, YPrimWork: TCMatrix;
 
-BEGIN
+begin
 
 // Normally build only Yprim Shunt, but if there are 2 terminals and
 // Bus1 <> Bus 2
 
 
-    If YprimInvalid[ActorID]
-    THEN Begin    // Reallocate YPrim if something has invalidated old allocation
-       IF YPrim_Shunt <> nil THEN  YPrim_Shunt.Free;
-       YPrim_Shunt := TcMatrix.CreateMatrix(Yorder);
-       IF Yprim_Series <> nil THEN  Yprim_Series.Free;
-       Yprim_Series := TcMatrix.CreateMatrix(Yorder);
-       IF YPrim <> nil THEN  YPrim.Free;
-       YPrim := TcMatrix.CreateMatrix(Yorder);
-    END
-    ELSE Begin
-         YPrim_Series.Clear; // zero out YPrim
-         YPrim_Shunt.Clear; // zero out YPrim
-         Yprim.Clear;
-    End;
+    if YprimInvalid[ActorID] then
+    begin    // Reallocate YPrim if something has invalidated old allocation
+        if YPrim_Shunt <> NIL then
+            YPrim_Shunt.Free;
+        YPrim_Shunt := TcMatrix.CreateMatrix(Yorder);
+        if Yprim_Series <> NIL then
+            Yprim_Series.Free;
+        Yprim_Series := TcMatrix.CreateMatrix(Yorder);
+        if YPrim <> NIL then
+            YPrim.Free;
+        YPrim := TcMatrix.CreateMatrix(Yorder);
+    end
+    else
+    begin
+        YPrim_Series.Clear; // zero out YPrim
+        YPrim_Shunt.Clear; // zero out YPrim
+        Yprim.Clear;
+    end;
 
-    IF   IsShunt
-    THEN YPrimTemp := YPrim_Shunt
-    ELSE YPrimTemp := Yprim_Series;
+    if IsShunt then
+        YPrimTemp := YPrim_Shunt
+    else
+        YPrimTemp := Yprim_Series;
 
     YPrimWork := TcMatrix.CreateMatrix(Yorder);
 
-    For i := 1 to FNumSteps Do If FStates^[i] = 1 Then Begin
-       MakeYprimWork(YprimWork, i, ActorID);
-       YprimTemp.AddFrom(YprimWork);
-    End;
+    for i := 1 to FNumSteps do
+        if FStates^[i] = 1 then
+        begin
+            MakeYprimWork(YprimWork, i, ActorID);
+            YprimTemp.AddFrom(YprimWork);
+        end;
 
     YPrimWork.Free;
 
    // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages doesn't fail
-    If IsShunt Then For i := 1 to Yorder Do Yprim_Series.SetElement(i, i, CmulReal(Yprim_Shunt.Getelement(i, i), 1.0e-10));
+    if IsShunt then
+        for i := 1 to Yorder do
+            Yprim_Series.SetElement(i, i, CmulReal(Yprim_Shunt.Getelement(i, i), 1.0e-10));
 
 
     Yprim.Copyfrom(YPrimTemp);
 
     {Don't Free YPrimTemp - It's just a pointer to an existing complex matrix}
 
-    Inherited CalcYPrim(ActorID);
+    inherited CalcYPrim(ActorID);
 
-    YprimInvalid[ActorID] := False;
-END;
+    YprimInvalid[ActorID] := FALSE;
+end;
 
-Procedure TCapacitorObj.DumpProperties(Var F:TextFile; Complete:Boolean);
+procedure TCapacitorObj.DumpProperties(var F: TextFile; Complete: Boolean);
 
-VAR
-   i,j :Integer;
+var
+    i, j: Integer;
 
-BEGIN
-    Inherited DumpProperties(F, Complete);
+begin
+    inherited DumpProperties(F, Complete);
 
-    With ParentClass Do
-    Begin
-        Writeln(F,'~ ',PropertyName^[1],'=',firstbus);
-        Writeln(F,'~ ',PropertyName^[2],'=',nextbus);
+    with ParentClass do
+    begin
+        Writeln(F, '~ ', PropertyName^[1], '=', firstbus);
+        Writeln(F, '~ ', PropertyName^[2], '=', nextbus);
 
-        Writeln(F,'~ ',PropertyName^[3],'=',Fnphases:0);
-        Writeln(F,'~ ',PropertyName^[4],'=', GetPropertyValue(4));
+        Writeln(F, '~ ', PropertyName^[3], '=', Fnphases: 0);
+        Writeln(F, '~ ', PropertyName^[4], '=', GetPropertyValue(4));
 
-        Writeln(F,'~ ',PropertyName^[5],'=',kVRating:0:3);
-        CASE Connection of
-          0: Writeln(F,'~ ',PropertyName^[6],'=wye');
-          1: Writeln(F,'~ ',PropertyName^[6],'=delta');
-        END;
-        IF Cmatrix<>Nil THEN BEGIN
-           Write(F, PropertyName^[7],'= (');
-           For i := 1 to Fnphases DO BEGIN
-              FOR j := 1 to i DO Write(F, (CMatrix^[(i-1)*Fnphases + j] * 1.0e6):0:3,' ');
-              IF i<>Fnphases THEN Write(F, '|');
-           END;
-           Writeln(F,')');
-        END;
+        Writeln(F, '~ ', PropertyName^[5], '=', kVRating: 0: 3);
+        case Connection of
+            0:
+                Writeln(F, '~ ', PropertyName^[6], '=wye');
+            1:
+                Writeln(F, '~ ', PropertyName^[6], '=delta');
+        end;
+        if Cmatrix <> NIL then
+        begin
+            Write(F, PropertyName^[7], '= (');
+            for i := 1 to Fnphases do
+            begin
+                for j := 1 to i do
+                    Write(F, (CMatrix^[(i - 1) * Fnphases + j] * 1.0e6): 0: 3, ' ');
+                if i <> Fnphases then
+                    Write(F, '|');
+            end;
+            Writeln(F, ')');
+        end;
 
-        Writeln(F,'~ ',PropertyName^[8],'=', GetPropertyValue(8));
-        Writeln(F,'~ ',PropertyName^[9],'=', GetPropertyValue(9));
-        Writeln(F,'~ ',PropertyName^[10],'=', GetPropertyValue(10));
-        Writeln(F,'~ ',PropertyName^[11],'=', GetPropertyValue(11));
-        Writeln(F,'~ ', PropertyName^[12],'=', FNumSteps);
-        Writeln(F,'~ ',PropertyName^[13],'=', GetPropertyValue(13));
+        Writeln(F, '~ ', PropertyName^[8], '=', GetPropertyValue(8));
+        Writeln(F, '~ ', PropertyName^[9], '=', GetPropertyValue(9));
+        Writeln(F, '~ ', PropertyName^[10], '=', GetPropertyValue(10));
+        Writeln(F, '~ ', PropertyName^[11], '=', GetPropertyValue(11));
+        Writeln(F, '~ ', PropertyName^[12], '=', FNumSteps);
+        Writeln(F, '~ ', PropertyName^[13], '=', GetPropertyValue(13));
 
-         For i := NumPropsthisClass+1 to NumProperties Do
-         Begin
-            Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[i]);
-         End;
+        for i := NumPropsthisClass + 1 to NumProperties do
+        begin
+            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+        end;
 
-        If Complete then  BEGIN
-           Writeln(F,'SpecType=',SpecType:0);
-        END;
-   End;
+        if Complete then
+        begin
+            Writeln(F, 'SpecType=', SpecType: 0);
+        end;
+    end;
 
-END;
+end;
 
 
 procedure TCapacitorObj.InitPropertyValues(ArrayOffset: Integer);
 begin
 
-     PropertyValue[1] := GetBus(1);
-     PropertyValue[2] := GetBus(2);
-     PropertyValue[3] := '3';
-     PropertyValue[4] := '1200';
-     PropertyValue[5] := '12.47';
-     PropertyValue[6] := 'wye';
-     PropertyValue[7] := '';
-     PropertyValue[8] := '';
-     PropertyValue[9] := '0';
-     PropertyValue[10] := '0';
-     PropertyValue[11] := '0';
-     PropertyValue[12] := '1';
-     PropertyValue[13] := '1'; // states
+    PropertyValue[1] := GetBus(1);
+    PropertyValue[2] := GetBus(2);
+    PropertyValue[3] := '3';
+    PropertyValue[4] := '1200';
+    PropertyValue[5] := '12.47';
+    PropertyValue[6] := 'wye';
+    PropertyValue[7] := '';
+    PropertyValue[8] := '';
+    PropertyValue[9] := '0';
+    PropertyValue[10] := '0';
+    PropertyValue[11] := '0';
+    PropertyValue[12] := '1';
+    PropertyValue[13] := '1'; // states
 
 
-     inherited  InitPropertyValues(NumPropsThisClass);
+    inherited  InitPropertyValues(NumPropsThisClass);
 
        // Override Inherited properties
        //  Override Inherited properties
-     PropertyValue[NumPropsThisClass + 1] := Format('%g',[Normamps]  );
-     PropertyValue[NumPropsThisClass + 2] := Format('%g',[Emergamps]  );
-     PropertyValue[NumPropsThisClass + 3] := Str_Real(FaultRate, 0    );
-     PropertyValue[NumPropsThisClass + 4] := Str_Real(PctPerm, 0      );
-     PropertyValue[NumPropsThisClass + 5] := Str_Real(HrsToRepair, 0 );
-     ClearPropSeqArray;
+    PropertyValue[NumPropsThisClass + 1] := Format('%g', [Normamps]);
+    PropertyValue[NumPropsThisClass + 2] := Format('%g', [Emergamps]);
+    PropertyValue[NumPropsThisClass + 3] := Str_Real(FaultRate, 0);
+    PropertyValue[NumPropsThisClass + 4] := Str_Real(PctPerm, 0);
+    PropertyValue[NumPropsThisClass + 5] := Str_Real(HrsToRepair, 0);
+    ClearPropSeqArray;
 end;
 
-procedure TCapacitorObj.MakePosSequence(ActorID : Integer);
-Var
-        S:String;
-        kvarperphase,phasekV, Cs, Cm:Double;
-        i,j:Integer;
+procedure TCapacitorObj.MakePosSequence(ActorID: Integer);
+var
+    S: String;
+    kvarperphase, phasekV, Cs, Cm: Double;
+    i, j: Integer;
 
 begin
     {If FnPhases>1 Then -- do same for 1-phase, too}
-    Begin
+    begin
 
         S := ' ';
-        CASE SpecType OF
+        case SpecType of
 
-         1:BEGIN // kvar
+            1:
+            begin // kvar
 
-              If (FnPhases>1) or ( Connection <> 0) Then  PhasekV := kVRating / SQRT3
-              Else PhasekV := kVRating;
+                if (FnPhases > 1) or (Connection <> 0) then
+                    PhasekV := kVRating / SQRT3
+                else
+                    PhasekV := kVRating;
 
-              S := 'Phases=1 ' + Format(' kV=%-.5g kvar=(',[PhasekV]);
+                S := 'Phases=1 ' + Format(' kV=%-.5g kvar=(', [PhasekV]);
 
               // 1-6-16  do caps Like load ...
-              For i := 1 to FNumSteps Do Begin
-                kvarPerPhase := FkvarRating^[i]/3.0;  // divide the total kvar equally among3 phases.../Fnphases;
-                S := S+ Format(' %-.5g',[kvarPerPhase]);
-              End;
+                for i := 1 to FNumSteps do
+                begin
+                    kvarPerPhase := FkvarRating^[i] / 3.0;  // divide the total kvar equally among3 phases.../Fnphases;
+                    S := S + Format(' %-.5g', [kvarPerPhase]);
+                end;
 
-              S := S +')';
+                S := S + ')';
 
               {Leave R as specified}
 
-           END;
-         2:BEGIN //
-              S := 'Phases=1 ';
-           END;
-         3:If FnPhases>1 Then BEGIN //  C Matrix
-              S := 'Phases=1 ';
+            end;
+            2:
+            begin //
+                S := 'Phases=1 ';
+            end;
+            3:
+                if FnPhases > 1 then
+                begin //  C Matrix
+                    S := 'Phases=1 ';
               // R1
-              Cs := 0.0;   // Avg Self
-              For i := 1 to FnPhases Do Cs := Cs + Cmatrix^[(i-1)*Fnphases + i];
-              Cs := Cs/FnPhases;
-              
-              Cm := 0.0;     //Avg mutual
-              For i := 2 to FnPhases Do
-              For j := i to FnPhases Do Cm := Cm + Cmatrix^[(i-1)*Fnphases + j];
-              Cm := Cm/(FnPhases*(Fnphases-1.0)/2.0);
+                    Cs := 0.0;   // Avg Self
+                    for i := 1 to FnPhases do
+                        Cs := Cs + Cmatrix^[(i - 1) * Fnphases + i];
+                    Cs := Cs / FnPhases;
 
-              S := S + Format(' Cuf=%-.5g',[(Cs-Cm)]);
+                    Cm := 0.0;     //Avg mutual
+                    for i := 2 to FnPhases do
+                        for j := i to FnPhases do
+                            Cm := Cm + Cmatrix^[(i - 1) * Fnphases + j];
+                    Cm := Cm / (FnPhases * (Fnphases - 1.0) / 2.0);
 
-           END;
-         END;
+                    S := S + Format(' Cuf=%-.5g', [(Cs - Cm)]);
 
-       Parser[ActorID].CmdString := S;
-       Edit(ActorID);
+                end;
+        end;
 
-    End;
+        Parser[ActorID].CmdString := S;
+        Edit(ActorID);
 
-  inherited;
+    end;
+
+    inherited;
 
 end;
 
 
 function TCapacitorObj.get_States(Idx: Integer; ActorID: Integer): Integer;
 begin
-        Result := FStates^[Idx];
+    Result := FStates^[Idx];
 end;
 
 procedure TCapacitorObj.set_States(Idx: Integer; ActorID: Integer; const Value: Integer);
 begin
-      If FStates^[Idx] <> Value Then Begin
-          FStates^[Idx] := Value;
-          YprimInvalid[ActorID] := True;
-      End;
-End;
+    if FStates^[Idx] <> Value then
+    begin
+        FStates^[Idx] := Value;
+        YprimInvalid[ActorID] := TRUE;
+    end;
+end;
 
 procedure TCapacitorObj.set_NumSteps(const Value: Integer);
 
@@ -833,282 +940,339 @@ procedure TCapacitorObj.set_NumSteps(const Value: Integer);
  Special case for changing from 1 to more ..  Automatically make a new bank
 }
 
-Var
-   StepSize, RStep, XLstep:Double;
-   i:integer;
+var
+    StepSize, RStep, XLstep: Double;
+    i: Integer;
 begin
   {reallocate all arrays associated with steps }
 
-  If (FNumSteps <> Value) and (Value>0) Then Begin
-      Rstep := 0.0;
-      XLstep := 0.0;
-      If FNumSteps = 1 Then Begin
+    if (FNumSteps <> Value) and (Value > 0) then
+    begin
+        Rstep := 0.0;
+        XLstep := 0.0;
+        if FNumSteps = 1 then
+        begin
           {Save total values to be divided up}
-          FTotalkvar := Fkvarrating^[1];
-          Rstep  := FR^[1] *Value;
-          XLstep := FXL^[1]*Value;
-      End;
+            FTotalkvar := Fkvarrating^[1];
+            Rstep := FR^[1] * Value;
+            XLstep := FXL^[1] * Value;
+        end;
 
       // Reallocate arrays  (Must be initialized to nil for first call)
-      Reallocmem(  FC, Sizeof(FC^[1]) * Value);
-      Reallocmem(  FXL, Sizeof(FXL^[1]) * Value);
-      Reallocmem(  Fkvarrating, Sizeof(Fkvarrating^[1]) * Value);
-      Reallocmem(  FR, Sizeof(FR^[1]) * Value);
-      Reallocmem(  FHarm, Sizeof(FHarm^[1]) * Value);
-      Reallocmem(  FStates, Sizeof(FStates^[1]) * Value);
+        Reallocmem(FC, Sizeof(FC^[1]) * Value);
+        Reallocmem(FXL, Sizeof(FXL^[1]) * Value);
+        Reallocmem(Fkvarrating, Sizeof(Fkvarrating^[1]) * Value);
+        Reallocmem(FR, Sizeof(FR^[1]) * Value);
+        Reallocmem(FHarm, Sizeof(FHarm^[1]) * Value);
+        Reallocmem(FStates, Sizeof(FStates^[1]) * Value);
 
       // Special case for FNumSteps=1
 
-      If FNumSteps = 1 Then Begin
-          Case SpecType of
+        if FNumSteps = 1 then
+        begin
+            case SpecType of
 
-            1: Begin  // kvar        {We'll make a multi-step bank of same net size as at present}
-                 StepSize :=  FTotalkvar / Value;
-                 For i := 1 to Value Do FkvarRating^[i] :=  StepSize;
-               End;
+                1:
+                begin  // kvar        {We'll make a multi-step bank of same net size as at present}
+                    StepSize := FTotalkvar / Value;
+                    for i := 1 to Value do
+                        FkvarRating^[i] := StepSize;
+                end;
 
-            2: Begin  // Cuf           {We'll make a multi-step bank with all the same as first}
-                 For i := 2 to Value Do FC^[i] := FC^[1];  // Make same as first step
-               End;
+                2:
+                begin  // Cuf           {We'll make a multi-step bank with all the same as first}
+                    for i := 2 to Value do
+                        FC^[i] := FC^[1];  // Make same as first step
+                end;
 
-            3: Begin  // Cmatrix  {We'll make a multi-step bank with all the same as first}
+                3:
+                begin  // Cmatrix  {We'll make a multi-step bank with all the same as first}
                  // Nothing to do since all will be the same
-               End;
+                end;
 
-          End;
+            end;
 
-          Case SpecType of
+            case SpecType of
 
-          1: Begin
-              For i := 1 to Value Do FR^[i]  := Rstep;
-              For i := 1 to Value Do FXL^[i] := XLstep;
-             End;
+                1:
+                begin
+                    for i := 1 to Value do
+                        FR^[i] := Rstep;
+                    for i := 1 to Value do
+                        FXL^[i] := XLstep;
+                end;
 
-          2,3: Begin   // Make R and XL same as first step
-              For i := 2 to Value Do FR^[i]  := FR^[1];
-              For i := 2 to Value Do FXL^[i] := FXL^[1];
-             End;
+                2, 3:
+                begin   // Make R and XL same as first step
+                    for i := 2 to Value do
+                        FR^[i] := FR^[1];
+                    for i := 2 to Value do
+                        FXL^[i] := FXL^[1];
+                end;
 
-          End;
+            end;
 
-          For i := 1 to Value Do Fstates^[i] := 1;   // turn 'em all ON
-          LastStepInService := Value;
-          For i := 2 to Value Do FHarm^[i] := FHarm^[1];  // tune 'em all the same as first
+            for i := 1 to Value do
+                Fstates^[i] := 1;   // turn 'em all ON
+            LastStepInService := Value;
+            for i := 2 to Value do
+                FHarm^[i] := FHarm^[1];  // tune 'em all the same as first
 
-      End;
+        end;
 
-  End;
+    end;
 
-  FNumSteps := Value;
+    FNumSteps := Value;
 end;
 
 procedure TCapacitorObj.ProcessHarmonicSpec(const Param: String);
 begin
-     InterpretDblArray(Param, FNumsteps, FHarm);
+    InterpretDblArray(Param, FNumsteps, FHarm);
 
-     DoHarmonicRecalc := TRUE;
+    DoHarmonicRecalc := TRUE;
 end;
 
 procedure TCapacitorObj.FindLastStepInService;
 // Find the last step energized
-Var i:Integer;
-Begin
-     FLastStepInService := 0;
+var
+    i: Integer;
+begin
+    FLastStepInService := 0;
 
-     For i := FNumsteps downto 1 Do Begin
-         If Fstates^[i]=1 then Begin
+    for i := FNumsteps downto 1 do
+    begin
+        if Fstates^[i] = 1 then
+        begin
             FLastStepInService := i;
             Break;
-         End;
-     End;
-End;
+        end;
+    end;
+end;
 
 procedure TCapacitorObj.set_LastStepInService(const Value: Integer);
 // force the last step in service to be a certain value
-Var i:integer;
-Begin
+var
+    i: Integer;
+begin
 
-     for i := 1 to Value do FStates^[i] := 1;
+    for i := 1 to Value do
+        FStates^[i] := 1;
      // set remainder steps, if any, to 0
-     for i := Value+1 to FNumSteps do  FStates^[i] := 0;
+    for i := Value + 1 to FNumSteps do
+        FStates^[i] := 0;
 
      // Force rebuild of YPrims if necessary.
-     If Value <> FLastStepInService Then YprimInvalid[ActiveActor] := TRUE;
+    if Value <> FLastStepInService then
+        YprimInvalid[ActiveActor] := TRUE;
 
-     FLastStepInService := Value;
-End;
+    FLastStepInService := Value;
+end;
 
 procedure TCapacitorObj.ProcessStatesSpec(const Param: String);
 
 begin
-     InterpretIntArray(Param, FNumsteps, FStates);
-     FindLastStepInService;
+    InterpretIntArray(Param, FNumsteps, FStates);
+    FindLastStepInService;
 end;
 
-procedure TCapacitorObj.MakeYprimWork(YprimWork: TcMatrix; iStep:Integer;ActorID : Integer);
+procedure TCapacitorObj.MakeYprimWork(YprimWork: TcMatrix; iStep: Integer; ActorID: Integer);
 
 { call this routine only if step is energized}
 
 var
-   Value, Value2,
-   ZL :Complex;
-   i,j,  ioffset:Integer;
-   w, FreqMultiple:Double;
-   HasZL :Boolean;
-   
+    Value, Value2,
+    ZL: Complex;
+    i, j, ioffset: Integer;
+    w, FreqMultiple: Double;
+    HasZL: Boolean;
+
 begin
 
-    WITH YprimWork DO
-    BEGIN
+    with YprimWork do
+    begin
 
-     FYprimFreq := ActiveCircuit[ActorID].Solution.Frequency ;
-     FreqMultiple := FYprimFreq/BaseFrequency;
-     w := TwoPi * FYprimFreq;
+        FYprimFreq := ActiveCircuit[ActorID].Solution.Frequency;
+        FreqMultiple := FYprimFreq / BaseFrequency;
+        w := TwoPi * FYprimFreq;
 
-     If (FR^[iStep] + Abs(FXL^[iSTep])) >0.0 Then HasZL := TRUE else HasZL := FALSE;
+        if (FR^[iStep] + Abs(FXL^[iSTep])) > 0.0 then
+            HasZL := TRUE
+        else
+            HasZL := FALSE;
 
-     If HasZL Then Begin
-        ZL := Cmplx(FR^[iSTep], FXL^[iSTep] * FreqMultiple);
-     End;
+        if HasZL then
+        begin
+            ZL := Cmplx(FR^[iSTep], FXL^[iSTep] * FreqMultiple);
+        end;
 
     { Now, Put C into in Yprim matrix }
 
-     Case SpecType OF
+        case SpecType of
 
-       1, 2: BEGIN
+            1, 2:
+            begin
 
-           Value := Cmplx(0.0, FC^[iSTep] * w);
-           CASE Connection of
-           1: BEGIN   // Line-Line
-                Value2 := CmulReal(Value, 2.0);
-                Value := cnegate(Value);
-                FOR i := 1 to Fnphases Do  BEGIN
-                    SetElement(i, i, Value2);
-                    FOR j := 1 to i-1 DO
-                             SetElemSym(i, j, Value);
-                END;
+                Value := Cmplx(0.0, FC^[iSTep] * w);
+                case Connection of
+                    1:
+                    begin   // Line-Line
+                        Value2 := CmulReal(Value, 2.0);
+                        Value := cnegate(Value);
+                        for i := 1 to Fnphases do
+                        begin
+                            SetElement(i, i, Value2);
+                            for j := 1 to i - 1 do
+                                SetElemSym(i, j, Value);
+                        end;
                 // Remainder of the matrix is all zero
-              END;
-           ELSE BEGIN // Wye
-                If HasZL then Value := Cinv(Cadd(ZL, Cinv(Value))); // add in ZL
-                Value2 := cnegate(Value);
-                FOR i := 1 to Fnphases Do  BEGIN
-                    SetElement(i, i, Value);     // Elements are only on the diagonals
-                    SetElement(i + Fnphases, i + Fnphases, Value);
-                    SetElemSym(i, i + Fnphases, Value2);
-                END;
-              END;
-           END;
-          END;
-       3: BEGIN    // C matrix specified
-           FOR i := 1 to Fnphases Do BEGIN
-             ioffset := (i-1) * Fnphases;
-             FOR j := 1 to Fnphases Do BEGIN
-               Value := Cmplx(0.0,Cmatrix^[(iOffset + j)] * w);
-               SetElement(i,j, Value);
-               SetElement(i + Fnphases, j + Fnphases, Value);
-               Value := cnegate(Value);
-               SetElemSym(i, j + Fnphases, Value);
-             END;
-           END;
-          END;
-      END;
+                    end;
+                else
+                begin // Wye
+                    if HasZL then
+                        Value := Cinv(Cadd(ZL, Cinv(Value))); // add in ZL
+                    Value2 := cnegate(Value);
+                    for i := 1 to Fnphases do
+                    begin
+                        SetElement(i, i, Value);     // Elements are only on the diagonals
+                        SetElement(i + Fnphases, i + Fnphases, Value);
+                        SetElemSym(i, i + Fnphases, Value2);
+                    end;
+                end;
+                end;
+            end;
+            3:
+            begin    // C matrix specified
+                for i := 1 to Fnphases do
+                begin
+                    ioffset := (i - 1) * Fnphases;
+                    for j := 1 to Fnphases do
+                    begin
+                        Value := Cmplx(0.0, Cmatrix^[(iOffset + j)] * w);
+                        SetElement(i, j, Value);
+                        SetElement(i + Fnphases, j + Fnphases, Value);
+                        Value := cnegate(Value);
+                        SetElemSym(i, j + Fnphases, Value);
+                    end;
+                end;
+            end;
+        end;
 
       {Add line reactance for filter reactor, if any}
-      If HasZL Then
-      Case SpecType of
+        if HasZL then
+            case SpecType of
 
-          1,2:   Case Connection of
-                  1: {Line-Line}
-                      Begin
+                1, 2:
+                    case Connection of
+                        1: {Line-Line}
+                        begin
                          {Add a little bit to each phase so it will invert}
-                         For i := 1 to Fnphases Do Begin
-                             SetElement(i,i, CmulReal(GetElement(i,i), 1.000001));
-                         End;
-                         Invert;
-                         For i := 1 to Fnphases Do Begin
-                           Value := Cadd(ZL, GetElement(i,i));
-                           SetElement(i,i,Value);
-                         End;
-                         Invert;
-                      End;
-                  ELSE {WYE - just put ZL in series}
+                            for i := 1 to Fnphases do
+                            begin
+                                SetElement(i, i, CmulReal(GetElement(i, i), 1.000001));
+                            end;
+                            Invert;
+                            for i := 1 to Fnphases do
+                            begin
+                                Value := Cadd(ZL, GetElement(i, i));
+                                SetElement(i, i, Value);
+                            end;
+                            Invert;
+                        end;
+                    else {WYE - just put ZL in series}
                       {DO Nothing; Already in - see above}
-                  END;
+                    end;
 
-          3: BEGIN
-                Invert;
-                For i := 1 to Fnphases Do Begin
-                    Value := Cadd(ZL, GetElement(i,i));
-                    SetElement(i,i,Value);
-                End;
-                Invert;
-             END;
-      END;
+                3:
+                begin
+                    Invert;
+                    for i := 1 to Fnphases do
+                    begin
+                        Value := Cadd(ZL, GetElement(i, i));
+                        SetElement(i, i, Value);
+                    end;
+                    Invert;
+                end;
+            end;
 
-    END; {With YPRIM}
+    end; {With YPRIM}
 
 
 end;
 
 function TCapacitorObj.GetPropertyValue(Index: Integer): String;
 
-Var
-        i:Integer;
-        FTemp:pDoubleArray;
+var
+    i: Integer;
+    FTemp: pDoubleArray;
 begin
 
     Result := '';
-    CASE Index of  // Special cases
-       1:  Result := GetBus(1);
-       2:  Result := GetBus(2);
-       4:  Result  := GetDSSArray_Real(FNumSteps, Fkvarrating);
-       8:  Begin
-               FTemp := Allocmem(SizeOf(Double)*FNumSteps);
-               For i := 1 to FNumSteps Do FTemp^[i] := FC^[i] * 1.0e6;  // To microfarads
-               Result  := GetDSSArray_Real(FNumSteps, FTemp);
-               Reallocmem(FTemp, 0); // throw away temp storage
-           End;
-       9:  Result  := GetDSSArray_Real(FNumSteps, FR);
-       10: Result := GetDSSArray_Real(FNumSteps, FXL);
-       11: Result := GetDSSArray_Real(FNumSteps, Fharm);
-       13: Result  := GetDSSArray_Integer(FNumSteps, FStates);
-       14: Result := Format('%g',[Normamps]  );
-       15: Result := Format('%g',[Emergamps]  );
-    ELSE
-       Result := Inherited GetPropertyValue(index);
-    END;
+    case Index of  // Special cases
+        1:
+            Result := GetBus(1);
+        2:
+            Result := GetBus(2);
+        4:
+            Result := GetDSSArray_Real(FNumSteps, Fkvarrating);
+        8:
+        begin
+            FTemp := Allocmem(SizeOf(Double) * FNumSteps);
+            for i := 1 to FNumSteps do
+                FTemp^[i] := FC^[i] * 1.0e6;  // To microfarads
+            Result := GetDSSArray_Real(FNumSteps, FTemp);
+            Reallocmem(FTemp, 0); // throw away temp storage
+        end;
+        9:
+            Result := GetDSSArray_Real(FNumSteps, FR);
+        10:
+            Result := GetDSSArray_Real(FNumSteps, FXL);
+        11:
+            Result := GetDSSArray_Real(FNumSteps, Fharm);
+        13:
+            Result := GetDSSArray_Integer(FNumSteps, FStates);
+        14:
+            Result := Format('%g', [Normamps]);
+        15:
+            Result := Format('%g', [Emergamps]);
+    else
+        Result := inherited GetPropertyValue(index);
+    end;
 
 end;
 
-function TCapacitorObj.AddStep(ActorID:Integer): Boolean;
+function TCapacitorObj.AddStep(ActorID: Integer): Boolean;
 begin
      // Start with last step in service and see if we can add more.  If not return FALSE
 
-     If LastStepInService=FNumSteps Then
+    if LastStepInService = FNumSteps then
         Result := FALSE
-     ELSE Begin
-         Inc(FLastStepInService);
-         States[FLastStepInService,ActorID] := 1;
-         Result := TRUE;
-     END;
+    else
+    begin
+        Inc(FLastStepInService);
+        States[FLastStepInService, ActorID] := 1;
+        Result := TRUE;
+    end;
 end;
 
-function TCapacitorObj.SubtractStep(ActorID:Integer): Boolean;
+function TCapacitorObj.SubtractStep(ActorID: Integer): Boolean;
 begin
-     If LastStepInService=0 Then
+    if LastStepInService = 0 then
         Result := FALSE
-     ELSE Begin
-         States[FLastStepInService,ActorID] := 0;
-         Dec(FLastStepInService);
-         IF LastStepInService=0 Then Result := FALSE Else Result := TRUE;   // signify bank OPEN
-     END;
+    else
+    begin
+        States[FLastStepInService, ActorID] := 0;
+        Dec(FLastStepInService);
+        if LastStepInService = 0 then
+            Result := FALSE
+        else
+            Result := TRUE;   // signify bank OPEN
+    end;
 
 end;
 
 function TCapacitorObj.AvailableSteps: Integer;
 begin
-     Result := FNumsteps - LastStepInService;
+    Result := FNumsteps - LastStepInService;
 end;
 
 end.

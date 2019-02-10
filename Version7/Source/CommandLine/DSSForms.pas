@@ -4,191 +4,196 @@ unit DSSForms;
 
 interface
 
-uses Classes;
+uses
+    Classes;
 
+var
 
-
-VAR
-
-   ControlPanelCreated     :Boolean;  // signify whether this is the DLL or EXE
+    ControlPanelCreated: Boolean;  // signify whether this is the DLL or EXE
   // ControlPanel: TControlPanel;
 
-   RebuildHelpForm:Boolean;
+    RebuildHelpForm: Boolean;
 
 
-   PROCEDURE CreateControlPanel;
-   PROCEDURE ExitControlPanel;
-   PROCEDURE InitProgressForm;
-   Procedure ProgressCaption(const S:String);
-   Procedure ProgressFormCaption(const S:String);
-   Procedure ProgressHide;
-   PROCEDURE ShowControlPanel;
-   PROCEDURE ShowHelpForm ;
-   PROCEDURE ShowAboutBox;
-   PROCEDURE ShowPropEditForm;
-   Procedure ShowTreeView(const FileNm:string);
-   Procedure ShowMessageForm(S:TStrings);
-   PROCEDURE ShowPctProgress(Count:Integer);
-   FUNCTION  DSSMessageDlg(const Msg:String;err:boolean):Integer;
-   PROCEDURE DSSInfoMessageDlg(const Msg:String);
-   FUNCTION  DSSInputQuery(Const S1, S2: String;Var Value:String):Boolean;
-   FUNCTION  GetDSSExeFile: String;
-   Procedure CloseDownForms;
-   Procedure ShowRegistrationForm;
+procedure CreateControlPanel;
+procedure ExitControlPanel;
+procedure InitProgressForm;
+procedure ProgressCaption(const S: String);
+procedure ProgressFormCaption(const S: String);
+procedure ProgressHide;
+procedure ShowControlPanel;
+procedure ShowHelpForm;
+procedure ShowAboutBox;
+procedure ShowPropEditForm;
+procedure ShowTreeView(const FileNm: String);
+procedure ShowMessageForm(S: TStrings);
+procedure ShowPctProgress(Count: Integer);
+function DSSMessageDlg(const Msg: String; err: Boolean): Integer;
+procedure DSSInfoMessageDlg(const Msg: String);
+function DSSInputQuery(const S1, S2: String; var Value: String): Boolean;
+function GetDSSExeFile: String;
+procedure CloseDownForms;
+procedure ShowRegistrationForm;
 
 
 implementation
 
-Uses      Windows, {Forms, Controls, Dialogs,}
-          DSSGlobals,Executive, DSSClass,ParserDel,
+uses
+    Windows, {Forms, Controls, Dialogs,}
+    DSSGlobals,
+    Executive,
+    DSSClass,
+    ParserDel,
           {ProgressForm,
           Helpform,
           PropEdit,
           About,
           ComCtrls,   }
-          Sysutils{, Registry, Validation};
+    Sysutils{, Registry, Validation};
 
+procedure InitProgressForm;
 
-Procedure InitProgressForm;
-
-Begin
+begin
 
     // Do nothing
 
-End;
+end;
 
-PROCEDURE ShowPctProgress(Count:Integer);
+procedure ShowPctProgress(Count: Integer);
 
-Begin
+begin
     // Do nothing
 
-End;
+end;
 
-Procedure ShowTreeView(const FileNm:string);
+procedure ShowTreeView(const FileNm: String);
 
-Begin
+begin
       // Do nothing
-End;
+end;
 
 
-Procedure ProgressCaption(const S:String);
+procedure ProgressCaption(const S: String);
 
-Begin
-
-         // Do nothing
-
-End;
-
-Procedure ProgressFormCaption(const S:String);
-
-Begin
+begin
 
          // Do nothing
 
-End;
-Procedure ProgressHide;
-Begin
+end;
+
+procedure ProgressFormCaption(const S: String);
+
+begin
+
          // Do nothing
 
-End;
+end;
 
-Procedure ShowAboutBox;
+procedure ProgressHide;
+begin
+         // Do nothing
 
-Begin
+end;
 
-End;
+procedure ShowAboutBox;
 
-FUNCTION GetDSSExeFile: String;
+begin
 
-Var
-     TheFileName:Array[0..MAX_PATH] of char;
+end;
 
-Begin
+function GetDSSExeFile: String;
+
+var
+    TheFileName: array[0..MAX_PATH] of Char;
+
+begin
 
     FillChar(TheFileName, SizeOF(TheFileName), #0);  // Fill it with nulls
     GetModuleFileName(HInstance, TheFileName, SizeOF(TheFileName));
     Result := TheFileName;
 
-    If IsLibrary then IsDLL := TRUE;
-
-        
-End;
+    if IsLibrary then
+        IsDLL := TRUE;
 
 
-FUNCTION DSSMessageDlg(const Msg:String;err:boolean):Integer;
+end;
 
-Begin
-     WriteLn(Msg);
+
+function DSSMessageDlg(const Msg: String; err: Boolean): Integer;
+
+begin
+    WriteLn(Msg);
      // Do Nothing
-     Result := 0;
-End;
+    Result := 0;
+end;
 
-Procedure DSSInfoMessageDlg(const Msg:String);
-Begin
-   WriteLn(Msg);
+procedure DSSInfoMessageDlg(const Msg: String);
+begin
+    WriteLn(Msg);
    // Do Nothing
-End;
+end;
 
-Function DSSInputQuery(Const S1, S2: String;Var Value:String):Boolean;
+function DSSInputQuery(const S1, S2: String; var Value: String): Boolean;
 
-Begin
+begin
       // Do Nothing
-      Result := TRUE;
-End;
+    Result := TRUE;
+end;
 
 
-PROCEDURE CreateControlPanel;
+procedure CreateControlPanel;
 
-Begin
+begin
     // Do Nothing
-End;
+end;
 
-PROCEDURE ExitControlPanel;
+procedure ExitControlPanel;
 
-Begin
+begin
     // Do Nothing
-End;
+end;
 
-PROCEDURE ShowControlPanel;
+procedure ShowControlPanel;
 
-Begin
+begin
     DoSimpleMsg('Illegal command: Show Control Panel.', 9904);
-End;
+end;
 
-PROCEDURE ShowHelpForm;
-Var ParamName,Param:String;
+procedure ShowHelpForm;
+var
+    ParamName, Param: String;
 
-Begin
-     ParamName := Parser.NextParam;
-     Param := Parser.StrValue;
-     DoSimpleMsg('Illegal command: Show Help Form.', 9903);
+begin
+    ParamName := Parser.NextParam;
+    Param := Parser.StrValue;
+    DoSimpleMsg('Illegal command: Show Help Form.', 9903);
 
-End;
+end;
 
-Procedure ShowMessageForm(S:TStrings);
+procedure ShowMessageForm(S: TStrings);
 
-Begin
+begin
        // Do nothing
-End;
+end;
 
-Procedure ShowPropEditForm;
+procedure ShowPropEditForm;
 
-Begin
-       DoSimpleMsg('Illegal command: Show Property Edit Form.', 9902);
-End;
+begin
+    DoSimpleMsg('Illegal command: Show Property Edit Form.', 9902);
+end;
 
 
-Procedure CloseDownForms;
+procedure CloseDownForms;
 
-Begin
-     DoSimpleMsg( 'No Forms to Close.', 9901);
-End;
+begin
+    DoSimpleMsg('No Forms to Close.', 9901);
+end;
 
-Procedure ShowRegistrationForm;
+procedure ShowRegistrationForm;
 
-Begin
+begin
     DoSimpleMsg('Registration Form Not Valid for this Version', 9900);
-End;
+end;
 
 {
 Procedure MessageDlg(const Message  : string; DialogType  : TMsgDlgType; Buttons : TMsgDlgButtons; HelpContext : Longint ) : Integer;;
@@ -204,12 +209,11 @@ Const mbOK := 0;
 initialization
 
 
-  ControlPanelCreated := FALSE;
+    ControlPanelCreated := FALSE;
   //WriteDLLDebugFile('DSSForms');
-  RebuildHelpForm := TRUE;
+    RebuildHelpForm := TRUE;
 
 finalization
-
 
 
 end.

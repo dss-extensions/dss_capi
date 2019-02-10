@@ -1,4 +1,5 @@
 unit dlgNumber;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -7,27 +8,35 @@ unit dlgNumber;
 }
 interface
 
-uses Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls, 
-  Buttons, ExtCtrls;
+uses
+    Windows,
+    SysUtils,
+    Classes,
+    Graphics,
+    Forms,
+    Controls,
+    StdCtrls,
+    Buttons,
+    ExtCtrls;
 
 type
-  TValueEntryForm = class(TForm)
-    OKBtn: TButton;
-    CancelBtn: TButton;
-    Bevel1: TBevel;
-    Edit1: TEdit;
-    ValueLabel: TLabel;
-    procedure OKBtnClick(Sender: TObject);
-    procedure CancelBtnClick(Sender: TObject);
-  private
+    TValueEntryForm = class(TForm)
+        OKBtn: TButton;
+        CancelBtn: TButton;
+        Bevel1: TBevel;
+        Edit1: TEdit;
+        ValueLabel: TLabel;
+        procedure OKBtnClick(Sender: TObject);
+        procedure CancelBtnClick(Sender: TObject);
+    PRIVATE
     { Private declarations }
-  public
+    PUBLIC
     { Public declarations }
-    OKPressed :Boolean;
-  end;
+        OKPressed: Boolean;
+    end;
 
 var
-  ValueEntryForm: TValueEntryForm;
+    ValueEntryForm: TValueEntryForm;
 
 implementation
 
@@ -35,14 +44,14 @@ implementation
 
 procedure TValueEntryForm.OKBtnClick(Sender: TObject);
 begin
-       OKPressed := True;
-       Close;
+    OKPressed := TRUE;
+    Close;
 end;
 
 procedure TValueEntryForm.CancelBtnClick(Sender: TObject);
 begin
-        OKPressed := False;
-        Close;
+    OKPressed := FALSE;
+    Close;
 end;
 
 end.

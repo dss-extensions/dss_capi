@@ -1,4 +1,5 @@
 unit ImplRegControls;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -10,509 +11,561 @@ unit ImplRegControls;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSengine_TLB, StdVcl;
+    ComObj,
+    ActiveX,
+    OpenDSSengine_TLB,
+    StdVcl;
 
 type
-  TRegControls = class(TAutoObject, IRegControls)
-  protected
-    function Get_AllNames: OleVariant; safecall;
-    function Get_CTPrimary: Double; safecall;
-    function Get_Delay: Double; safecall;
-    function Get_First: Integer; safecall;
-    function Get_ForwardBand: Double; safecall;
-    function Get_ForwardR: Double; safecall;
-    function Get_ForwardVreg: Double; safecall;
-    function Get_ForwardX: Double; safecall;
-    function Get_IsInverseTime: WordBool; safecall;
-    function Get_IsReversible: WordBool; safecall;
-    function Get_MaxTapChange: Integer; safecall;
-    function Get_MonitoredBus: WideString; safecall;
-    function Get_Name: WideString; safecall;
-    function Get_Next: Integer; safecall;
-    function Get_PTratio: Double; safecall;
-    function Get_ReverseBand: Double; safecall;
-    function Get_ReverseR: Double; safecall;
-    function Get_ReverseVreg: Double; safecall;
-    function Get_ReverseX: Double; safecall;
-    function Get_TapDelay: Double; safecall;
-    function Get_TapWinding: Integer; safecall;
-    function Get_Transformer: WideString; safecall;
-    function Get_VoltageLimit: Double; safecall;
-    function Get_Winding: Integer; safecall;
-    function Get_TapNumber: Integer; safecall;
-    procedure Set_CTPrimary(Value: Double); safecall;
-    procedure Set_Delay(Value: Double); safecall;
-    procedure Set_ForwardBand(Value: Double); safecall;
-    procedure Set_ForwardR(Value: Double); safecall;
-    procedure Set_ForwardVreg(Value: Double); safecall;
-    procedure Set_ForwardX(Value: Double); safecall;
-    procedure Set_IsInverseTime(Value: WordBool); safecall;
-    procedure Set_IsReversible(Value: WordBool); safecall;
-    procedure Set_MaxTapChange(Value: Integer); safecall;
-    procedure Set_MonitoredBus(const Value: WideString); safecall;
-    procedure Set_Name(const Value: WideString); safecall;
-    procedure Set_PTratio(Value: Double); safecall;
-    procedure Set_ReverseBand(Value: Double); safecall;
-    procedure Set_ReverseR(Value: Double); safecall;
-    procedure Set_ReverseVreg(Value: Double); safecall;
-    procedure Set_ReverseX(Value: Double); safecall;
-    procedure Set_TapDelay(Value: Double); safecall;
-    procedure Set_TapWinding(Value: Integer); safecall;
-    procedure Set_Transformer(const Value: WideString); safecall;
-    procedure Set_VoltageLimit(Value: Double); safecall;
-    procedure Set_Winding(Value: Integer); safecall;
-    procedure Set_TapNumber(Value: Integer); safecall;
+    TRegControls = class(TAutoObject, IRegControls)
+    PROTECTED
+        function Get_AllNames: Olevariant; SAFECALL;
+        function Get_CTPrimary: Double; SAFECALL;
+        function Get_Delay: Double; SAFECALL;
+        function Get_First: Integer; SAFECALL;
+        function Get_ForwardBand: Double; SAFECALL;
+        function Get_ForwardR: Double; SAFECALL;
+        function Get_ForwardVreg: Double; SAFECALL;
+        function Get_ForwardX: Double; SAFECALL;
+        function Get_IsInverseTime: Wordbool; SAFECALL;
+        function Get_IsReversible: Wordbool; SAFECALL;
+        function Get_MaxTapChange: Integer; SAFECALL;
+        function Get_MonitoredBus: Widestring; SAFECALL;
+        function Get_Name: Widestring; SAFECALL;
+        function Get_Next: Integer; SAFECALL;
+        function Get_PTratio: Double; SAFECALL;
+        function Get_ReverseBand: Double; SAFECALL;
+        function Get_ReverseR: Double; SAFECALL;
+        function Get_ReverseVreg: Double; SAFECALL;
+        function Get_ReverseX: Double; SAFECALL;
+        function Get_TapDelay: Double; SAFECALL;
+        function Get_TapWinding: Integer; SAFECALL;
+        function Get_Transformer: Widestring; SAFECALL;
+        function Get_VoltageLimit: Double; SAFECALL;
+        function Get_Winding: Integer; SAFECALL;
+        function Get_TapNumber: Integer; SAFECALL;
+        procedure Set_CTPrimary(Value: Double); SAFECALL;
+        procedure Set_Delay(Value: Double); SAFECALL;
+        procedure Set_ForwardBand(Value: Double); SAFECALL;
+        procedure Set_ForwardR(Value: Double); SAFECALL;
+        procedure Set_ForwardVreg(Value: Double); SAFECALL;
+        procedure Set_ForwardX(Value: Double); SAFECALL;
+        procedure Set_IsInverseTime(Value: Wordbool); SAFECALL;
+        procedure Set_IsReversible(Value: Wordbool); SAFECALL;
+        procedure Set_MaxTapChange(Value: Integer); SAFECALL;
+        procedure Set_MonitoredBus(const Value: Widestring); SAFECALL;
+        procedure Set_Name(const Value: Widestring); SAFECALL;
+        procedure Set_PTratio(Value: Double); SAFECALL;
+        procedure Set_ReverseBand(Value: Double); SAFECALL;
+        procedure Set_ReverseR(Value: Double); SAFECALL;
+        procedure Set_ReverseVreg(Value: Double); SAFECALL;
+        procedure Set_ReverseX(Value: Double); SAFECALL;
+        procedure Set_TapDelay(Value: Double); SAFECALL;
+        procedure Set_TapWinding(Value: Integer); SAFECALL;
+        procedure Set_Transformer(const Value: Widestring); SAFECALL;
+        procedure Set_VoltageLimit(Value: Double); SAFECALL;
+        procedure Set_Winding(Value: Integer); SAFECALL;
+        procedure Set_TapNumber(Value: Integer); SAFECALL;
 
-    function Get_Count: Integer; safecall;
-    procedure Reset; safecall;
+        function Get_Count: Integer; SAFECALL;
+        procedure Reset; SAFECALL;
 
-  end;
+    end;
 
 implementation
 
-uses ComServ, DSSGlobals, Executive, ControlElem, RegControl, Variants, SysUtils, PointerList;
+uses
+    ComServ,
+    DSSGlobals,
+    Executive,
+    ControlElem,
+    RegControl,
+    Variants,
+    SysUtils,
+    PointerList;
 
 function ActiveRegControl: TRegControlObj;
 begin
-  Result := nil;
-  if ActiveCircuit <> Nil then Result := ActiveCircuit.RegControls.Active;
+    Result := NIL;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.RegControls.Active;
 end;
 
-procedure Set_Parameter(const parm: string; const val: string);
+procedure Set_Parameter(const parm: String; const val: String);
 var
-  cmd: string;
+    cmd: String;
 begin
-  if not Assigned (ActiveCircuit) then exit;
-  SolutionAbort := FALSE;  // Reset for commands entered from outside
-  cmd := Format ('regcontrol.%s.%s=%s', [ActiveRegControl.Name, parm, val]);
-  DSSExecutive.Command := cmd;
+    if not Assigned(ActiveCircuit) then
+        exit;
+    SolutionAbort := FALSE;  // Reset for commands entered from outside
+    cmd := Format('regcontrol.%s.%s=%s', [ActiveRegControl.Name, parm, val]);
+    DSSExecutive.Command := cmd;
 end;
 
-function TRegControls.Get_AllNames: OleVariant;
-Var
-  elem: TRegControlObj;
-  lst: TPointerList;
-  k: Integer;
-Begin
-  Result := VarArrayCreate([0, 0], varOleStr);
-  Result[0] := 'NONE';
-  IF ActiveCircuit <> Nil THEN WITH ActiveCircuit DO Begin
-    lst := RegControls;
-    If lst.ListSize > 0 Then Begin
-      VarArrayRedim(Result, lst.ListSize-1);
-      k:=0;
-      elem := lst.First;
-      WHILE elem<>Nil DO Begin
-        Result[k] := elem.Name;
-        Inc(k);
-        elem := lst.Next;
-      End;
-    End;
-  End;
+function TRegControls.Get_AllNames: Olevariant;
+var
+    elem: TRegControlObj;
+    lst: TPointerList;
+    k: Integer;
+begin
+    Result := VarArrayCreate([0, 0], varOleStr);
+    Result[0] := 'NONE';
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+        begin
+            lst := RegControls;
+            if lst.ListSize > 0 then
+            begin
+                VarArrayRedim(Result, lst.ListSize - 1);
+                k := 0;
+                elem := lst.First;
+                while elem <> NIL do
+                begin
+                    Result[k] := elem.Name;
+                    Inc(k);
+                    elem := lst.Next;
+                end;
+            end;
+        end;
 end;
 
 function TRegControls.Get_CTPrimary: Double;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0.0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.CT;
+    Result := 0.0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.CT;
 end;
 
 function TRegControls.Get_Delay: Double;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0.0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.InitialDelay;
+    Result := 0.0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.InitialDelay;
 end;
 
 function TRegControls.Get_First: Integer;
-Var
-  elem: TRegControlObj;
-  lst: TPointerList;
-Begin
-  Result := 0;
-  If ActiveCircuit <> Nil Then begin
-    lst := ActiveCircuit.RegControls;
-    elem := lst.First;
-    If elem <> Nil Then Begin
-      Repeat
-        If elem.Enabled Then Begin
-          ActiveCircuit.ActiveCktElement := elem;
-          Result := 1;
-        End
-        Else elem := lst.Next;
-      Until (Result = 1) or (elem = nil);
-    End;
-  End;
+var
+    elem: TRegControlObj;
+    lst: TPointerList;
+begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        lst := ActiveCircuit.RegControls;
+        elem := lst.First;
+        if elem <> NIL then
+        begin
+            repeat
+                if elem.Enabled then
+                begin
+                    ActiveCircuit.ActiveCktElement := elem;
+                    Result := 1;
+                end
+                else
+                    elem := lst.Next;
+            until (Result = 1) or (elem = NIL);
+        end;
+    end;
 end;
 
 function TRegControls.Get_ForwardBand: Double;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0.0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.BandVoltage;
+    Result := 0.0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.BandVoltage;
 end;
 
 function TRegControls.Get_ForwardR: Double;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0.0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.LineDropR;
+    Result := 0.0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.LineDropR;
 end;
 
 function TRegControls.Get_ForwardVreg: Double;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0.0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.TargetVoltage;
+    Result := 0.0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.TargetVoltage;
 end;
 
 function TRegControls.Get_ForwardX: Double;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0.0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.LineDropX;
+    Result := 0.0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.LineDropX;
 end;
 
-function TRegControls.Get_IsInverseTime: WordBool;
+function TRegControls.Get_IsInverseTime: Wordbool;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := FALSE;
-  elem := ActiveRegControl;
-  if elem <> nil then
-    if elem.IsInverseTime then Result := TRUE;
+    Result := FALSE;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        if elem.IsInverseTime then
+            Result := TRUE;
 end;
 
-function TRegControls.Get_IsReversible: WordBool;
+function TRegControls.Get_IsReversible: Wordbool;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := FALSE;
-  elem := ActiveRegControl;
-  if elem <> nil then
-    if elem.UseReverseDrop then Result := TRUE;
+    Result := FALSE;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        if elem.UseReverseDrop then
+            Result := TRUE;
 end;
 
 function TRegControls.Get_MaxTapChange: Integer;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.MaxTapChange;
+    Result := 0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.MaxTapChange;
 end;
 
-function TRegControls.Get_MonitoredBus: WideString;
+function TRegControls.Get_MonitoredBus: Widestring;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := '';
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.ControlledBusName;
+    Result := '';
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.ControlledBusName;
 end;
 
-function TRegControls.Get_Name: WideString;
+function TRegControls.Get_Name: Widestring;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := '';
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.Name;
+    Result := '';
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.Name;
 end;
 
 function TRegControls.Get_Next: Integer;
-Var
-  elem: TRegControlObj;
-  lst: TPointerList;
-Begin
-  Result := 0;
-  If ActiveCircuit <> Nil Then Begin
-    lst := ActiveCircuit.RegControls;
-    elem := lst.Next;
-    if elem <> nil then begin
-      Repeat
-        If elem.Enabled Then Begin
-          ActiveCircuit.ActiveCktElement := elem;
-          Result := lst.ActiveIndex;
-        End
-        Else elem := lst.Next;
-      Until (Result > 0) or (elem = nil);
-    End
-  End;
+var
+    elem: TRegControlObj;
+    lst: TPointerList;
+begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        lst := ActiveCircuit.RegControls;
+        elem := lst.Next;
+        if elem <> NIL then
+        begin
+            repeat
+                if elem.Enabled then
+                begin
+                    ActiveCircuit.ActiveCktElement := elem;
+                    Result := lst.ActiveIndex;
+                end
+                else
+                    elem := lst.Next;
+            until (Result > 0) or (elem = NIL);
+        end
+    end;
 end;
 
 function TRegControls.Get_PTratio: Double;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0.0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.PT;
+    Result := 0.0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.PT;
 end;
 
 function TRegControls.Get_ReverseBand: Double;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0.0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.RevBandVoltage;
+    Result := 0.0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.RevBandVoltage;
 end;
 
 function TRegControls.Get_ReverseR: Double;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0.0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.RevLineDropR;
+    Result := 0.0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.RevLineDropR;
 end;
 
 function TRegControls.Get_ReverseVreg: Double;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0.0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.RevTargetVoltage;
+    Result := 0.0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.RevTargetVoltage;
 end;
 
 function TRegControls.Get_ReverseX: Double;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0.0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.RevLineDropX;
+    Result := 0.0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.RevLineDropX;
 end;
 
 function TRegControls.Get_TapDelay: Double;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0.0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.SubsequentDelay;
+    Result := 0.0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.SubsequentDelay;
 end;
 
 function TRegControls.Get_TapWinding: Integer;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.TrWinding;  // has the taps
+    Result := 0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.TrWinding;  // has the taps
 end;
 
-function TRegControls.Get_Transformer: WideString;
+function TRegControls.Get_Transformer: Widestring;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := '';
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.Transformer.Name;
+    Result := '';
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.Transformer.Name;
 end;
 
 function TRegControls.Get_VoltageLimit: Double;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0.0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.VoltageLimit;
+    Result := 0.0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.VoltageLimit;
 end;
 
 function TRegControls.Get_Winding: Integer;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.ElementTerminal;  // monitored winding
+    Result := 0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.ElementTerminal;  // monitored winding
 end;
 
 function TRegControls.Get_TapNumber: Integer;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  Result := 0;
-  elem := ActiveRegControl;
-  if elem <> nil then Result := elem.TapNum;  // tap number on the controlled-winding of the transformer controlled by this regcontrol
+    Result := 0;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+        Result := elem.TapNum;  // tap number on the controlled-winding of the transformer controlled by this regcontrol
 end;
 
 
 procedure TRegControls.Set_CTPrimary(Value: Double);
 begin
-  Set_Parameter ('CTprim', FloatToStr (Value));
+    Set_Parameter('CTprim', FloatToStr(Value));
 end;
 
 procedure TRegControls.Set_Delay(Value: Double);
 begin
-  Set_Parameter ('Delay', FloatToStr (Value));
+    Set_Parameter('Delay', FloatToStr(Value));
 end;
 
 procedure TRegControls.Set_ForwardBand(Value: Double);
 begin
-  Set_Parameter ('Band', FloatToStr (Value));
+    Set_Parameter('Band', FloatToStr(Value));
 end;
 
 procedure TRegControls.Set_ForwardR(Value: Double);
 begin
-  Set_Parameter ('R', FloatToStr (Value));
+    Set_Parameter('R', FloatToStr(Value));
 end;
 
 procedure TRegControls.Set_ForwardVreg(Value: Double);
 begin
-  Set_Parameter ('Vreg', FloatToStr (Value));
+    Set_Parameter('Vreg', FloatToStr(Value));
 end;
 
 procedure TRegControls.Set_ForwardX(Value: Double);
 begin
-  Set_Parameter ('X', FloatToStr (Value));
+    Set_Parameter('X', FloatToStr(Value));
 end;
 
-procedure TRegControls.Set_IsInverseTime(Value: WordBool);
+procedure TRegControls.Set_IsInverseTime(Value: Wordbool);
 begin
-  if Value = TRUE then
-    Set_Parameter ('InverseTime', 'y')
-  else
-    Set_Parameter ('InverseTime', 'n');
+    if Value = TRUE then
+        Set_Parameter('InverseTime', 'y')
+    else
+        Set_Parameter('InverseTime', 'n');
 end;
 
-procedure TRegControls.Set_IsReversible(Value: WordBool);
+procedure TRegControls.Set_IsReversible(Value: Wordbool);
 begin
-  if Value = TRUE then
-    Set_Parameter ('Reversible', 'y')
-  else
-    Set_Parameter ('Reversible', 'n');
+    if Value = TRUE then
+        Set_Parameter('Reversible', 'y')
+    else
+        Set_Parameter('Reversible', 'n');
 end;
 
 procedure TRegControls.Set_MaxTapChange(Value: Integer);
 begin
-  Set_Parameter ('MaxTapChange', IntToStr (Value));
+    Set_Parameter('MaxTapChange', IntToStr(Value));
 end;
 
-procedure TRegControls.Set_MonitoredBus(const Value: WideString);
+procedure TRegControls.Set_MonitoredBus(const Value: Widestring);
 begin
-  Set_Parameter ('Bus', Value);
+    Set_Parameter('Bus', Value);
 end;
 
-procedure TRegControls.Set_Name(const Value: WideString);
+procedure TRegControls.Set_Name(const Value: Widestring);
 var
-  ActiveSave : Integer;
-  S: String;
-  Found :Boolean;
-  elem: TRegControlObj;
-  lst: TPointerList;
-Begin
-  IF ActiveCircuit <> NIL THEN Begin
-    lst := ActiveCircuit.RegControls;
-    S := Value;  // Convert to Pascal String
-    Found := FALSE;
-    ActiveSave := lst.ActiveIndex;
-    elem := lst.First;
-    While elem <> NIL Do Begin
-      IF (CompareText(elem.Name, S) = 0) THEN Begin
-        ActiveCircuit.ActiveCktElement := elem;
-        Found := TRUE;
-        Break;
-      End;
-      elem := lst.Next;
-    End;
-    IF NOT Found THEN Begin
-      DoSimpleMsg('RegControl "'+S+'" Not Found in Active Circuit.', 5003);
-      elem := lst.Get(ActiveSave);    // Restore active Load
-      ActiveCircuit.ActiveCktElement := elem;
-    End;
-  End;
+    ActiveSave: Integer;
+    S: String;
+    Found: Boolean;
+    elem: TRegControlObj;
+    lst: TPointerList;
+begin
+    if ActiveCircuit <> NIL then
+    begin
+        lst := ActiveCircuit.RegControls;
+        S := Value;  // Convert to Pascal String
+        Found := FALSE;
+        ActiveSave := lst.ActiveIndex;
+        elem := lst.First;
+        while elem <> NIL do
+        begin
+            if (CompareText(elem.Name, S) = 0) then
+            begin
+                ActiveCircuit.ActiveCktElement := elem;
+                Found := TRUE;
+                Break;
+            end;
+            elem := lst.Next;
+        end;
+        if not Found then
+        begin
+            DoSimpleMsg('RegControl "' + S + '" Not Found in Active Circuit.', 5003);
+            elem := lst.Get(ActiveSave);    // Restore active Load
+            ActiveCircuit.ActiveCktElement := elem;
+        end;
+    end;
 end;
 
 procedure TRegControls.Set_PTratio(Value: Double);
 begin
-  Set_Parameter ('PTratio', FloatToStr (Value));
+    Set_Parameter('PTratio', FloatToStr(Value));
 end;
 
 procedure TRegControls.Set_ReverseBand(Value: Double);
 begin
-  Set_Parameter ('RevBand', FloatToStr (Value));
+    Set_Parameter('RevBand', FloatToStr(Value));
 end;
 
 procedure TRegControls.Set_ReverseR(Value: Double);
 begin
-  Set_Parameter ('RevR', FloatToStr (Value));
+    Set_Parameter('RevR', FloatToStr(Value));
 end;
 
 procedure TRegControls.Set_ReverseVreg(Value: Double);
 begin
-  Set_Parameter ('RevVreg', FloatToStr (Value));
+    Set_Parameter('RevVreg', FloatToStr(Value));
 end;
 
 procedure TRegControls.Set_ReverseX(Value: Double);
 begin
-  Set_Parameter ('RevX', FloatToStr (Value));
+    Set_Parameter('RevX', FloatToStr(Value));
 end;
 
 procedure TRegControls.Set_TapDelay(Value: Double);
 begin
-  Set_Parameter ('TapDelay', FloatToStr (Value));
+    Set_Parameter('TapDelay', FloatToStr(Value));
 end;
 
 procedure TRegControls.Set_TapWinding(Value: Integer);
 begin
-  Set_Parameter ('TapWinding', IntToStr (Value));
+    Set_Parameter('TapWinding', IntToStr(Value));
 end;
 
-procedure TRegControls.Set_Transformer(const Value: WideString);
+procedure TRegControls.Set_Transformer(const Value: Widestring);
 begin
-  Set_Parameter ('Transformer', Value);
+    Set_Parameter('Transformer', Value);
 end;
 
 procedure TRegControls.Set_VoltageLimit(Value: Double);
 begin
-  Set_Parameter ('Vlimit', FloatToStr (Value));
+    Set_Parameter('Vlimit', FloatToStr(Value));
 end;
 
 procedure TRegControls.Set_Winding(Value: Integer);
 begin
-  Set_Parameter ('Winding', IntToStr (Value));
+    Set_Parameter('Winding', IntToStr(Value));
 end;
 
 procedure TRegControls.Set_TapNumber(Value: Integer);
 begin
-  Set_Parameter ('TapNum', IntToStr (Value));
+    Set_Parameter('TapNum', IntToStr(Value));
 end;
 
 function TRegControls.Get_Count: Integer;
 begin
-  If Assigned(Activecircuit) Then
-     Result := ActiveCircuit.RegControls.ListSize;
+    if Assigned(Activecircuit) then
+        Result := ActiveCircuit.RegControls.ListSize;
 end;
 
 procedure TRegControls.Reset;
 var
-  elem: TRegControlObj;
+    elem: TRegControlObj;
 begin
-  elem   := ActiveRegControl;
-  if elem <> nil then begin
-      elem.Reset;
-  end;
+    elem := ActiveRegControl;
+    if elem <> NIL then
+    begin
+        elem.Reset;
+    end;
 
 end;
 
 initialization
-  TAutoObjectFactory.Create(ComServer, TRegControls, Class_RegControls,
-    ciInternal, tmApartment);
+    TAutoObjectFactory.Create(ComServer, TRegControls, Class_RegControls,
+        ciInternal, tmApartment);
 end.

@@ -3,414 +3,471 @@ unit DLineCodes;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSengine_TLB, StdVcl, LineCode;
+    ComObj,
+    ActiveX,
+    OpenDSSengine_TLB,
+    StdVcl,
+    LineCode;
 
-function LineCodesI(mode: longint; arg: longint): longint; cdecl;
-function LineCodesF(mode: longint; arg: double): double; cdecl;
-function LineCodesS(mode: longint; arg: pAnsiChar): pAnsiChar; cdecl;
-procedure LineCodesV(mode: longint; out arg:variant);cdecl;
+function LineCodesI(mode: Longint; arg: Longint): Longint; CDECL;
+function LineCodesF(mode: Longint; arg: Double): Double; CDECL;
+function LineCodesS(mode: Longint; arg: pAnsiChar): pAnsiChar; CDECL;
+procedure LineCodesV(mode: Longint; out arg: Variant); CDECL;
 
 implementation
 
-uses ComServ, sysutils, DSSGlobals, LineUnits, ParserDel, Variants, Ucomplex;
+uses
+    ComServ,
+    sysutils,
+    DSSGlobals,
+    LineUnits,
+    ParserDel,
+    Variants,
+    Ucomplex;
 
 //*****************************Integer interface***************************************
 
-function LineCodesI(mode: longint; arg: longint): longint; cdecl;
+function LineCodesI(mode: Longint; arg: Longint): Longint; CDECL;
 
-Var
-   pLineCode:TLineCodeObj;
+var
+    pLineCode: TLineCodeObj;
 
 begin
-  Result:=0;
-  case mode of
-  0:  begin  // LineCodes.Count
-        If ActiveCircuit[ActiveActor] <> Nil Then
-          Result := LineCodeClass.ElementCount;
-      end;
-  1:  begin  // LineCodes.First
-        If ActiveCircuit[ActiveActor] <> Nil Then
-          Result := LineCodeClass.First;
-      end;
-  2:  begin  // LineCodes.Next
-        If ActiveCircuit[ActiveActor] <> Nil Then
-          Result := LineCodeClass.Next;
-      end;
-  3:  begin  // LineCodes.Units Read
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             Result := pLineCode.Units;
-        End
-      end;
-  4:  begin  // LineCodes.Units Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-            pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode Do Begin
-                if arg < dssLineUnitsMaxnum  then
-                  begin
-                     Parser[ActiveActor].CmdString := Format('units=%s', [LineUnitsStr(arg)]);
-                     Edit(ActiveActor);
-                  end
-                else
-                  DoSimpleMsg('Invalid line units integer sent via COM interface.  Please enter a value within range.',183);
+    Result := 0;
+    case mode of
+        0:
+        begin  // LineCodes.Count
+            if ActiveCircuit[ActiveActor] <> NIL then
+                Result := LineCodeClass.ElementCount;
+        end;
+        1:
+        begin  // LineCodes.First
+            if ActiveCircuit[ActiveActor] <> NIL then
+                Result := LineCodeClass.First;
+        end;
+        2:
+        begin  // LineCodes.Next
+            if ActiveCircuit[ActiveActor] <> NIL then
+                Result := LineCodeClass.Next;
+        end;
+        3:
+        begin  // LineCodes.Units Read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                Result := pLineCode.Units;
+            end
+        end;
+        4:
+        begin  // LineCodes.Units Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                with pLineCode do
+                begin
+                    if arg < dssLineUnitsMaxnum then
+                    begin
+                        Parser[ActiveActor].CmdString := Format('units=%s', [LineUnitsStr(arg)]);
+                        Edit(ActiveActor);
+                    end
+                    else
+                        DoSimpleMsg('Invalid line units integer sent via COM interface.  Please enter a value within range.', 183);
 
-             END;
-        End;
-      end;
-  5:  begin  // LineCodes.Phases Read
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             Result := pLineCode.FNPhases;
-        End
-      end;
-  6:  begin  // LineCodes.Phases Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             pLineCode.NumPhases := arg;   // use property value to force reallocations
-        End
-      end;
-  7:  begin  // LineCodes.IsZ1Z0
-        Result  :=  1;
-        If ActiveCircuit[ActiveActor] <> Nil Then
-        Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             If pLineCode <> Nil Then
-             Begin
-                   if pLineCode.SymComponentsModel then Result:= 1
-                   else Result  :=  0;
-             End;
-        End;
-      end
-  else
-      begin
-        Result  :=  -1;
-      end;
-  end;
+                end;
+            end;
+        end;
+        5:
+        begin  // LineCodes.Phases Read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                Result := pLineCode.FNPhases;
+            end
+        end;
+        6:
+        begin  // LineCodes.Phases Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                pLineCode.NumPhases := arg;   // use property value to force reallocations
+            end
+        end;
+        7:
+        begin  // LineCodes.IsZ1Z0
+            Result := 1;
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                if pLineCode <> NIL then
+                begin
+                    if pLineCode.SymComponentsModel then
+                        Result := 1
+                    else
+                        Result := 0;
+                end;
+            end;
+        end
+    else
+    begin
+        Result := -1;
+    end;
+    end;
 end;
 
 //*****************************Floating point interface***************************************
 
-function LineCodesF(mode: longint; arg: double): double; cdecl;
-Var
-   pLineCode:TLineCodeObj;
+function LineCodesF(mode: Longint; arg: Double): Double; CDECL;
+var
+    pLineCode: TLineCodeObj;
 
 begin
-  Result:=0.0;
-  case mode of
-  0:  begin  // LineCodes.R1 Read
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             Result := pLineCode.R1 ;
-        End
-      end;
-  1:  begin  // LineCodes.R1 Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-            pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode Do Begin
-                     Parser[ActiveActor].CmdString := Format('R1=%g', [arg]);
-                     Edit(ActiveActor);
-             END;
-        End;
-      end;
-  2:  begin  // LineCodes.X1 Read
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             Result := pLineCode.X1 ;
-        End
-      end;
-  3:  begin  // LineCodes.X1 Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-            pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode Do Begin
-                     Parser[ActiveActor].CmdString := Format('X1=%g', [arg]);
-                     Edit(ActiveActor);
-             END;
-        End;
-      end;
-  4:  begin  // LineCodes.R0 Read
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             Result := pLineCode.R0 ;
-        End
-      end;
-  5:  begin  // LineCodes.R0 Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-            pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode Do Begin
-                     Parser[ActiveActor].CmdString := Format('R0=%g', [arg]);
-                     Edit(ActiveActor);
-             END;
-        End;
-      end;
-  6:  begin  // LineCodes.X0 Read
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             Result := pLineCode.X0 ;
-        End
-      end;
-  7:  begin  // LineCodes.X0 Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-            pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode Do Begin
-                     Parser[ActiveActor].CmdString := Format('X0=%g', [arg]);
-                     Edit(ActiveActor);
-             END;
-        End;
-      end;
-  8:  begin  // LineCodes.C1 Read
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             Result := pLineCode.C1 ;
-        End
-      end;
-  9:  begin  // LineCodes.C1 Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-            pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode Do Begin
-                     Parser[ActiveActor].CmdString := Format('C1=%g', [arg]);
-                     Edit(ActiveActor);
-             END;
-        End;
-      end;
-  10: begin  // LineCodes.C0 Read
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             Result := pLineCode.C0 ;
-        End
-      end;
-  11: begin  // LineCodes.C0 Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-            pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode Do Begin
-                     Parser[ActiveActor].CmdString := Format('C0=%g', [arg]);
-                     Edit(ActiveActor);
-             END;
-        End;
-      end;
-  12: begin  // LineCodes.NormAmps Read
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-          pLineCode := LineCodeClass.GetActiveObj ;
-          Result := pLineCode.NormAmps  ;
-        End
-      end;
-  13: begin  // LineCodes.NormAmps Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             pLineCode.NormAmps  := arg;
-        End
-      end;
-  14: begin  // LineCodes.EmergAmps Read
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             Result := pLineCode.EmergAmps   ;
-        End
-      end;
-  15: begin  // LineCodes.NormAmps Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             pLineCode.EmergAmps := arg   ;
-        End
-      end
-  else
-      begin
-      Result  :=  -1.0;
-      end;
-  end;
+    Result := 0.0;
+    case mode of
+        0:
+        begin  // LineCodes.R1 Read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                Result := pLineCode.R1;
+            end
+        end;
+        1:
+        begin  // LineCodes.R1 Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                with pLineCode do
+                begin
+                    Parser[ActiveActor].CmdString := Format('R1=%g', [arg]);
+                    Edit(ActiveActor);
+                end;
+            end;
+        end;
+        2:
+        begin  // LineCodes.X1 Read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                Result := pLineCode.X1;
+            end
+        end;
+        3:
+        begin  // LineCodes.X1 Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                with pLineCode do
+                begin
+                    Parser[ActiveActor].CmdString := Format('X1=%g', [arg]);
+                    Edit(ActiveActor);
+                end;
+            end;
+        end;
+        4:
+        begin  // LineCodes.R0 Read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                Result := pLineCode.R0;
+            end
+        end;
+        5:
+        begin  // LineCodes.R0 Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                with pLineCode do
+                begin
+                    Parser[ActiveActor].CmdString := Format('R0=%g', [arg]);
+                    Edit(ActiveActor);
+                end;
+            end;
+        end;
+        6:
+        begin  // LineCodes.X0 Read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                Result := pLineCode.X0;
+            end
+        end;
+        7:
+        begin  // LineCodes.X0 Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                with pLineCode do
+                begin
+                    Parser[ActiveActor].CmdString := Format('X0=%g', [arg]);
+                    Edit(ActiveActor);
+                end;
+            end;
+        end;
+        8:
+        begin  // LineCodes.C1 Read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                Result := pLineCode.C1;
+            end
+        end;
+        9:
+        begin  // LineCodes.C1 Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                with pLineCode do
+                begin
+                    Parser[ActiveActor].CmdString := Format('C1=%g', [arg]);
+                    Edit(ActiveActor);
+                end;
+            end;
+        end;
+        10:
+        begin  // LineCodes.C0 Read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                Result := pLineCode.C0;
+            end
+        end;
+        11:
+        begin  // LineCodes.C0 Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                with pLineCode do
+                begin
+                    Parser[ActiveActor].CmdString := Format('C0=%g', [arg]);
+                    Edit(ActiveActor);
+                end;
+            end;
+        end;
+        12:
+        begin  // LineCodes.NormAmps Read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                Result := pLineCode.NormAmps;
+            end
+        end;
+        13:
+        begin  // LineCodes.NormAmps Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                pLineCode.NormAmps := arg;
+            end
+        end;
+        14:
+        begin  // LineCodes.EmergAmps Read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                Result := pLineCode.EmergAmps;
+            end
+        end;
+        15:
+        begin  // LineCodes.NormAmps Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                pLineCode.EmergAmps := arg;
+            end
+        end
+    else
+    begin
+        Result := -1.0;
+    end;
+    end;
 end;
 
 //*****************************String interface***************************************
 
-function LineCodesS(mode: longint; arg: pAnsiChar): pAnsiChar; cdecl;
-Var
-   pLineCode:TLineCodeObj;
+function LineCodesS(mode: Longint; arg: pAnsiChar): pAnsiChar; CDECL;
+var
+    pLineCode: TLineCodeObj;
 
 begin
-  Result:='';
-  case mode of
-  0:  begin  // LineCodes.Name Read
-         If ActiveCircuit[ActiveActor] <> Nil Then
-         Begin
-              pLineCode := LineCodeClass.GetActiveObj ;
-              If pLineCode <> Nil Then
-              Begin
-                    Result := pAnsiChar(AnsiString(pLineCode.Name));
-              End;
-         End;
-      end;
-  1:  begin  // LineCodes.Name Write
-         If ActiveCircuit[ActiveActor] <> Nil Then
-         Begin
-              If Not LineCodeClass.SetActive (arg) Then
-               DoSimpleMsg('LineCode "'+ arg +'" Not Found in Active Circuit.', 51008);
+    Result := '';
+    case mode of
+        0:
+        begin  // LineCodes.Name Read
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                if pLineCode <> NIL then
+                begin
+                    Result := pAnsiChar(Ansistring(pLineCode.Name));
+                end;
+            end;
+        end;
+        1:
+        begin  // LineCodes.Name Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                if not LineCodeClass.SetActive(arg) then
+                    DoSimpleMsg('LineCode "' + arg + '" Not Found in Active Circuit.', 51008);
 
                // Still same active object if not found
-         End;
-      end
-  else
-      begin
-        Result:=pAnsiChar(AnsiString('Parameter not identified'));
-      end;
-  end;
+            end;
+        end
+    else
+    begin
+        Result := pAnsiChar(Ansistring('Parameter not identified'));
+    end;
+    end;
 end;
 
 //*****************************Variants interface***************************************
 
-procedure LineCodesV(mode: longint; out arg:variant);cdecl;
-Var
-   pLineCode:TLineCodeObj;
-   i,j, k:Integer;
-   Ztemp:complex;
-   Factor:Double;
+procedure LineCodesV(mode: Longint; out arg: Variant); CDECL;
+var
+    pLineCode: TLineCodeObj;
+    i, j, k: Integer;
+    Ztemp: complex;
+    Factor: Double;
 
 begin
-  case mode of
-  0:  begin  // LineCodes.Rmatrix Read
-        arg := VarArrayCreate([0, 0], varDouble);
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN
-          Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode DO
-              Begin
-                arg := VarArrayCreate([0, Sqr(FNphases) - 1], varDouble);
-                k := 0;
-                FOR i := 1 to FNPhases DO
-                FOR j := 1 to FNphases DO
-                Begin
-                   arg[k] :=  Z.GetElement(i,j).re;
-                   Inc(k);
-                End;
-              End;
-          End;
-      end;
-  1:  begin  // LineCodes.Rmatrix Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode DO Begin
-               k := VarArrayLowBound(arg, 1);
-               FOR i := 1 to FNPhases DO
-                FOR j := 1 to FNphases DO
-                Begin
-                   ZTemp := Z.GetElement(i,j);
-                   Z.SetElement(i,j, Cmplx( arg[k], ZTemp.im));
-                   Inc(k);
-                End;
-             End;
-        End;
-      end;
-  2:  begin  // LineCodes.Xmatrix Read
-        arg := VarArrayCreate([0, 0], varDouble);
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode DO Begin
-               arg := VarArrayCreate([0, Sqr(FNphases) - 1], varDouble);
-               k := 0;
-               FOR i := 1 to FNPhases DO
-                FOR j := 1 to FNphases DO
-                Begin
-                   arg[k] :=  Z.GetElement(i,j).im;
-                   Inc(k);
-                End;
-             End;
-        End;
-      end;
-  3:  begin  // LineCodes.Xmatrix Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode DO Begin
-               k := VarArrayLowBound(arg, 1);
-               FOR i := 1 to FNPhases DO
-                FOR j := 1 to FNphases DO
-                Begin
-                   ZTemp := Z.GetElement(i,j);
-                   Z.SetElement(i,j, Cmplx( ZTemp.re, arg[k] ));
-                   Inc(k);
-                End;
-             End;
-        End;
-      end;
-  4:  begin  // LineCodes.Cmatrix Read
-        arg := VarArrayCreate([0, 0], varDouble);
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode DO Begin
-               Factor := (TwoPi * BaseFrequency  * 1.0e-9);
-               arg := VarArrayCreate([0, Sqr(FNphases) - 1], varDouble);
-               k := 0;
-               FOR i := 1 to FNPhases DO
-                FOR j := 1 to FNphases DO
-                Begin
-                   arg[k] :=  YC.GetElement(i,j).im/Factor;
-                   Inc(k);
-                End;
-             End;
-        End;
-      end;
-  5:  begin  // LineCodes.Cmatrix Write
-        IF ActiveCircuit[ActiveActor] <> NIL
-        THEN Begin
-             pLineCode := LineCodeClass.GetActiveObj ;
-             WITH pLineCode DO Begin
-               Factor  := TwoPi * BaseFrequency  * 1.0e-9;
-               k := VarArrayLowBound(arg, 1);
-               FOR i := 1 to FNPhases DO
-                FOR j := 1 to FNphases DO
-                Begin
-                   Yc.SetElement(i,j, Cmplx(0.0, arg[k]*Factor));
-                   Inc(k);
-                End;
-             End;
-        End;
-      end;
-  6:  begin  // LineCodes.AllNames
-        arg := VarArrayCreate([0, 0], varOleStr);
-        arg[0] := 'NONE';
-        IF ActiveCircuit[ActiveActor] <> Nil THEN
-         WITH ActiveCircuit[ActiveActor] DO
-         If LineCodeClass.ElementList.ListSize  >0 Then
-         Begin
-           VarArrayRedim(arg, LineCodeClass.ElementList.ListSize-1);
-           k:=0;
-           pLineCode := LineCodeClass.ElementList.First;
-           WHILE pLineCode<>Nil DO
-           Begin
-              arg[k] := pLineCode.Name;
-              Inc(k);
-              pLineCode := LineCodeClass.ElementList.Next;
-           End;
-         End;
-      end
-  else
-      begin
+    case mode of
+        0:
+        begin  // LineCodes.Rmatrix Read
+            arg := VarArrayCreate([0, 0], varDouble);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                with pLineCode do
+                begin
+                    arg := VarArrayCreate([0, Sqr(FNphases) - 1], varDouble);
+                    k := 0;
+                    for i := 1 to FNPhases do
+                        for j := 1 to FNphases do
+                        begin
+                            arg[k] := Z.GetElement(i, j).re;
+                            Inc(k);
+                        end;
+                end;
+            end;
+        end;
+        1:
+        begin  // LineCodes.Rmatrix Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                with pLineCode do
+                begin
+                    k := VarArrayLowBound(arg, 1);
+                    for i := 1 to FNPhases do
+                        for j := 1 to FNphases do
+                        begin
+                            ZTemp := Z.GetElement(i, j);
+                            Z.SetElement(i, j, Cmplx(arg[k], ZTemp.im));
+                            Inc(k);
+                        end;
+                end;
+            end;
+        end;
+        2:
+        begin  // LineCodes.Xmatrix Read
+            arg := VarArrayCreate([0, 0], varDouble);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                with pLineCode do
+                begin
+                    arg := VarArrayCreate([0, Sqr(FNphases) - 1], varDouble);
+                    k := 0;
+                    for i := 1 to FNPhases do
+                        for j := 1 to FNphases do
+                        begin
+                            arg[k] := Z.GetElement(i, j).im;
+                            Inc(k);
+                        end;
+                end;
+            end;
+        end;
+        3:
+        begin  // LineCodes.Xmatrix Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                with pLineCode do
+                begin
+                    k := VarArrayLowBound(arg, 1);
+                    for i := 1 to FNPhases do
+                        for j := 1 to FNphases do
+                        begin
+                            ZTemp := Z.GetElement(i, j);
+                            Z.SetElement(i, j, Cmplx(ZTemp.re, arg[k]));
+                            Inc(k);
+                        end;
+                end;
+            end;
+        end;
+        4:
+        begin  // LineCodes.Cmatrix Read
+            arg := VarArrayCreate([0, 0], varDouble);
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                with pLineCode do
+                begin
+                    Factor := (TwoPi * BaseFrequency * 1.0e-9);
+                    arg := VarArrayCreate([0, Sqr(FNphases) - 1], varDouble);
+                    k := 0;
+                    for i := 1 to FNPhases do
+                        for j := 1 to FNphases do
+                        begin
+                            arg[k] := YC.GetElement(i, j).im / Factor;
+                            Inc(k);
+                        end;
+                end;
+            end;
+        end;
+        5:
+        begin  // LineCodes.Cmatrix Write
+            if ActiveCircuit[ActiveActor] <> NIL then
+            begin
+                pLineCode := LineCodeClass.GetActiveObj;
+                with pLineCode do
+                begin
+                    Factor := TwoPi * BaseFrequency * 1.0e-9;
+                    k := VarArrayLowBound(arg, 1);
+                    for i := 1 to FNPhases do
+                        for j := 1 to FNphases do
+                        begin
+                            Yc.SetElement(i, j, Cmplx(0.0, arg[k] * Factor));
+                            Inc(k);
+                        end;
+                end;
+            end;
+        end;
+        6:
+        begin  // LineCodes.AllNames
+            arg := VarArrayCreate([0, 0], varOleStr);
+            arg[0] := 'NONE';
+            if ActiveCircuit[ActiveActor] <> NIL then
+                with ActiveCircuit[ActiveActor] do
+                    if LineCodeClass.ElementList.ListSize > 0 then
+                    begin
+                        VarArrayRedim(arg, LineCodeClass.ElementList.ListSize - 1);
+                        k := 0;
+                        pLineCode := LineCodeClass.ElementList.First;
+                        while pLineCode <> NIL do
+                        begin
+                            arg[k] := pLineCode.Name;
+                            Inc(k);
+                            pLineCode := LineCodeClass.ElementList.Next;
+                        end;
+                    end;
+        end
+    else
+    begin
         arg := VarArrayCreate([0, 0], varOleStr);
         arg[0] := 'Parameter not identified';
-      end;
+    end;
 
-  end;
+    end;
 end;
 
 end.

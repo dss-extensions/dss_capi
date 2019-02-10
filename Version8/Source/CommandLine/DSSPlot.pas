@@ -7,86 +7,89 @@ unit DSSPlot;
 
 interface
 
-Uses Line,Transformer, {Graphics,} Classes, CktElement;
+uses
+    Line,
+    Transformer, {Graphics,} Classes,
+    CktElement;
 
-Const
-     vizCURRENT = 1;
-     vizVOLTAGE = 2;
-     vizPOWER   = 3;
+const
+    vizCURRENT = 1;
+    vizVOLTAGE = 2;
+    vizPOWER = 3;
 
-Type
-     TPlotType = (ptAutoAddLogPlot, ptCircuitplot, ptGeneralDataPlot, ptGeneralCircuitPlot, ptmonitorplot, ptdaisyplot, ptMeterZones, ptLoadShape) ;
-     TPlotQuantity = (pqVoltage, pqCurrent, pqPower, pqLosses, pqCapacity, pqNone );
-     TColor = Integer;
-     
-     TDSSPlot = class(TObject)
-     private
+type
+    TPlotType = (ptAutoAddLogPlot, ptCircuitplot, ptGeneralDataPlot, ptGeneralCircuitPlot, ptmonitorplot, ptdaisyplot, ptMeterZones, ptLoadShape);
+    TPlotQuantity = (pqVoltage, pqCurrent, pqPower, pqLosses, pqCapacity, pqNone);
+    TColor = Integer;
 
-     protected
+    TDSSPlot = class(TObject)
+    PRIVATE
 
-     public
+    PROTECTED
 
-       PlotType:TPlotType;
-       MaxScale:Double;
-       Dots,
-       Labels,
-       ShowLoops          :Boolean;  // applies to Meterzone plots only
-       Quantity:TPlotQuantity;
-       ObjectName,
-       FeederName:String;
-       ValueIndex,
-       MarkerIdx:Integer;  {For General & AutoAdd}
+    PUBLIC
 
-       Channels:Array of Cardinal;  // for Monitor Plot
-       Bases:Array of Double;
+        PlotType: TPlotType;
+        MaxScale: Double;
+        Dots,
+        Labels,
+        ShowLoops: Boolean;  // applies to Meterzone plots only
+        Quantity: TPlotQuantity;
+        ObjectName,
+        FeederName: String;
+        ValueIndex,
+        MarkerIdx: Integer;  {For General & AutoAdd}
 
-       Color1,
-       Color2,
-       Color3:Integer {TColor};
-       
-       DaisyBusList:    TStringList;
-       
-       ShowSubs: Boolean;
-       MaxLineThickness:Integer;
-                                     
+        Channels: array of Cardinal;  // for Monitor Plot
+        Bases: array of Double;
+
+        Color1,
+        Color2,
+        Color3: Integer {TColor};
+
+        DaisyBusList: TStringList;
+
+        ShowSubs: Boolean;
+        MaxLineThickness: Integer;
+
        {Tri-color plots}
-       TriColorMax, TriColorMid:Double;
+        TriColorMax, TriColorMid: Double;
 
-       MaxScaleIsSpecified:Boolean;
+        MaxScaleIsSpecified: Boolean;
 
-       constructor Create;
-       destructor Destroy; override;
+        constructor Create;
+        destructor Destroy; OVERRIDE;
 
-       Procedure Execute;
-       Procedure SetDefaults;
+        procedure Execute;
+        procedure SetDefaults;
 
-       Procedure DoLoadShapePlot(Const LoadShapeName:String);
-       Procedure DoDI_Plot(Const CaseName: String; CaseYear: Integer; iRegisters: array of integer; PeakDay: Boolean;const MeterName:String);
-       Procedure DoCompareCases(CaseName1, CaseName2, Whichfile:String; Reg:Integer);
-       Procedure DoYearlyCurvePlot(CaseNames:TStringList; Whichfile:String; iRegisters:Array of Integer);
-       Procedure DoVisualizationPlot(Element:TDSSCktElement; Quantity:Integer);
+        procedure DoLoadShapePlot(const LoadShapeName: String);
+        procedure DoDI_Plot(const CaseName: String; CaseYear: Integer; iRegisters: array of Integer; PeakDay: Boolean; const MeterName: String);
+        procedure DoCompareCases(CaseName1, CaseName2, Whichfile: String; Reg: Integer);
+        procedure DoYearlyCurvePlot(CaseNames: TStringList; Whichfile: String; iRegisters: array of Integer);
+        procedure DoVisualizationPlot(Element: TDSSCktElement; Quantity: Integer);
 
-     end;
-     Procedure AddNewMarker(X, Y:Double; Color:TColor; Symbol, Size:byte);
-     Procedure ShowGraph;
+    end;
 
-Var
-     DSSPlotObj :TDSSPlot;
-     AddMarkerColor :Integer{TColor};
-     AddMarkerCode, AddMarkerSize:Integer;
+procedure AddNewMarker(X, Y: Double; Color: TColor; Symbol, Size: Byte);
+procedure ShowGraph;
+
+var
+    DSSPlotObj: TDSSPlot;
+    AddMarkerColor: Integer{TColor};
+    AddMarkerCode, AddMarkerSize: Integer;
 
 implementation
 
-Procedure ShowGraph;
-begin
-       {Do Nothing}
-end;
-Procedure AddNewMarker(X, Y:Double; Color:TColor; Symbol, Size:byte);
+procedure ShowGraph;
 begin
        {Do Nothing}
 end;
 
-
+procedure AddNewMarker(X, Y: Double; Color: TColor; Symbol, Size: Byte);
+begin
+       {Do Nothing}
+end;
 
 
 {
@@ -96,58 +99,49 @@ TDSSPlot
 {Var
     DssGraph:TDSSGraphFormSDL;   }
 
-Procedure AllocateBusLabels;
-Begin
+procedure AllocateBusLabels;
+begin
          {Do Nothing}
 
-End;
+end;
 
-Procedure FreeBusLabels;
+procedure FreeBusLabels;
 
-Begin
+begin
         {Do Nothing}
 
-End;
-
-
-
-
-
+end;
 
 
 constructor TDSSPlot.Create;
 begin
-     SetDefaults;
+    SetDefaults;
 end;
 
 destructor TDSSPlot.Destroy;
 begin
 
-  inherited;
+    inherited;
 
 end;
-
 
 
 procedure TDSSPlot.Execute;
 
 
-Begin
+begin
       {Do Nothing}
 
 end;
 
 
-
-
-Function InterpByte(b1, b2:Integer):Integer;
-Begin
+function InterpByte(b1, b2: Integer): Integer;
+begin
          {Do Nothing}
 
-         Result := 0;
+    Result := 0;
 
-End;
-
+end;
 
 
 procedure TDSSPlot.SetDefaults;
@@ -161,16 +155,14 @@ end;
 procedure TDSSPlot.DoLoadShapePlot(const LoadShapeName: String);
 
 
-
 begin
        {Do Nothing}
 
 
-
 end;
 
-procedure TDSSPlot.DoDI_Plot(Const CaseName: String; CaseYear: Integer;
-  iRegisters: array of integer; PeakDay: Boolean;const MeterName:String);
+procedure TDSSPlot.DoDI_Plot(const CaseName: String; CaseYear: Integer;
+    iRegisters: array of Integer; PeakDay: Boolean; const MeterName: String);
 
 
 begin
@@ -179,7 +171,7 @@ begin
 end;
 
 procedure TDSSPlot.DoCompareCases(CaseName1, CaseName2, Whichfile: String;
-  Reg: Integer);
+    Reg: Integer);
 
 {Compare a register from to cases in the Totals.CSV file, compute horiz distance,
  plot vs 1st register of totals.csv file}
@@ -190,33 +182,32 @@ begin
 
 end;
 
-procedure TDSSPlot.DoYearlyCurvePlot(CaseNames: TStringList; Whichfile:String;
-  iRegisters: array of Integer);
+procedure TDSSPlot.DoYearlyCurvePlot(CaseNames: TStringList; Whichfile: String;
+    iRegisters: array of Integer);
 
    {Plot yearly results from specified cases and registers in Totals.CSV files
      Vs Register 1}
 
 
-
 begin
        {Do Nothing}
 
 
 end;
 
-procedure TDSSPlot.DoVisualizationPlot(Element:TDSSCktElement; Quantity:Integer);
+procedure TDSSPlot.DoVisualizationPlot(Element: TDSSCktElement; Quantity: Integer);
 begin
        {Do Nothing}
 end;
-
 
 
 initialization
 
-    DSSPlotObj := nil;   // Instantiate only if Plot command issued
+    DSSPlotObj := NIL;   // Instantiate only if Plot command issued
 
 finalization
 
-    If Assigned(DSSPlotObj) then DSSPlotObj.Free;
+    if Assigned(DSSPlotObj) then
+        DSSPlotObj.Free;
 
 end.

@@ -1,4 +1,5 @@
 unit GICsource;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2018, Electric Power Research Institute, Inc.
@@ -13,426 +14,470 @@ unit GICsource;
 
 interface
 
-USES DSSClass, PCClass,PCElement, ucmatrix, ucomplex,  Line ;
+uses
+    DSSClass,
+    PCClass,
+    PCElement,
+    ucmatrix,
+    ucomplex,
+    Line;
 
-TYPE
+type
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-   TGICsource = CLASS(TPCClass)
-     private
-     Protected
-       Procedure DefineProperties;
-       Function  MakeLike(Const OtherSource:STring):Integer;Override;
-     public
-       constructor Create;
-       destructor  Destroy; override;
+    TGICsource = class(TPCClass)
+    PRIVATE
+    PROTECTED
+        procedure DefineProperties;
+        function MakeLike(const OtherSource: String): Integer; OVERRIDE;
+    PUBLIC
+        constructor Create;
+        destructor Destroy; OVERRIDE;
 
-       Function Edit:Integer; override;
-       Function Init(Handle:Integer):Integer; override;
-       Function NewObject(const ObjName:String):Integer; override;
-   End;
+        function Edit: Integer; OVERRIDE;
+        function Init(Handle: Integer): Integer; OVERRIDE;
+        function NewObject(const ObjName: String): Integer; OVERRIDE;
+    end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-   TGICSourceObj = class(TPCElement)
-     private
+    TGICSourceObj = class(TPCElement)
+    PRIVATE
 
-        FphaseShift  :Double;
-        Bus2Defined  :Boolean;
+        FphaseShift: Double;
+        Bus2Defined: Boolean;
 
-        Vmag        :Double;
-        Angle       :Double;
-        SrcFrequency:Double;
-        LineName    :String;
-        pLineElem   :TLineObj;  // Pointer to associated Line
+        Vmag: Double;
+        Angle: Double;
+        SrcFrequency: Double;
+        LineName: String;
+        pLineElem: TLineObj;  // Pointer to associated Line
 
-        VN, VE      :Double;  // components of vmag
+        VN, VE: Double;  // components of vmag
 
-        LineClass :Tline;
+        LineClass: Tline;
 
-        Procedure GetVterminalForSource;
-        Function  Compute_VLine: Double;
-      public
+        procedure GetVterminalForSource;
+        function Compute_VLine: Double;
+    PUBLIC
 
         ENorth,
         EEast,
         Lat1,
         Lon1,
         Lat2,
-        Lon2        :Double;
-        Volts       :Double;
-        VoltsSpecified :Boolean;
+        Lon2: Double;
+        Volts: Double;
+        VoltsSpecified: Boolean;
 
-        constructor Create(ParClass:TDSSClass; const SourceName:String);
-        destructor  Destroy; override;
+        constructor Create(ParClass: TDSSClass; const SourceName: String);
+        destructor Destroy; OVERRIDE;
 
-        Procedure RecalcElementData; Override;
-        Procedure CalcYPrim; Override;
+        procedure RecalcElementData; OVERRIDE;
+        procedure CalcYPrim; OVERRIDE;
 
-        PROCEDURE MakePosSequence;Override;  // Make a positive Sequence Model
+        procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
 
-        Function  InjCurrents:Integer; Override;
-        Procedure GetInjCurrents(Curr:pComplexArray); Override;
-        Procedure GetCurrents(Curr: pComplexArray);Override;
-        PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
-        Procedure DumpProperties(Var F:TextFile; Complete:Boolean); Override;
-        FUNCTION  GetPropertyValue(Index:Integer):String;Override;
+        function InjCurrents: Integer; OVERRIDE;
+        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
+        procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
+        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
-   End;
+    end;
 
-VAR
-    ActiveGICsourceObj:TGICSourceObj;
-    GICsourceClass:TGICsource;
+var
+    ActiveGICsourceObj: TGICSourceObj;
+    GICsourceClass: TGICsource;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
 
-USES  ParserDel, Circuit, DSSClassDefs, DSSGlobals, Utilities, Sysutils, Command, dynamics;
+uses
+    ParserDel,
+    Circuit,
+    DSSClassDefs,
+    DSSGlobals,
+    Utilities,
+    Sysutils,
+    Command,
+    dynamics;
 
-Var  NumPropsThisClass:Integer;
-
+var
+    NumPropsThisClass: Integer;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TGICsource.Create;  // Creates superstructure for all Line objects
-Begin
-     Inherited Create;
-     Class_Name := 'GICsource';
-     DSSClassType := SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
+begin
+    inherited Create;
+    Class_Name := 'GICsource';
+    DSSClassType := SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
 
-     ActiveElement := 0;
+    ActiveElement := 0;
 
-     DefineProperties;
+    DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
-     CommandList.Abbrev := TRUE;
+    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList.Abbrev := TRUE;
 
-     GICsourceClass := Self;
-End;
+    GICsourceClass := Self;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Destructor TGICsource.Destroy;
+destructor TGICsource.Destroy;
 
-Begin
+begin
     // ElementList and  CommandList freed in inherited destroy
-    Inherited Destroy;
+    inherited Destroy;
 
-End;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TGICsource.DefineProperties;
-Begin
-     NumPropsThisClass := 10;
+procedure TGICsource.DefineProperties;
+begin
+    NumPropsThisClass := 10;
 
-     Numproperties := NumPropsThisClass;
-     CountProperties;   // Get inherited property count
-     AllocatePropertyArrays;
+    Numproperties := NumPropsThisClass;
+    CountProperties;   // Get inherited property count
+    AllocatePropertyArrays;
 
 
      // Define Property names
-     PropertyName[1]  := 'Volts';
-     PropertyName[2]  := 'angle';
-     PropertyName[3]  := 'frequency';
-     PropertyName[4]  := 'phases';
-     PropertyName[5]  := 'EN';
-     PropertyName[6]  := 'EE';
-     PropertyName[7]  := 'Lat1';
-     PropertyName[8]  := 'Lon1';
-     PropertyName[9]  := 'Lat2';
-     PropertyName[10] := 'Lon2';
+    PropertyName[1] := 'Volts';
+    PropertyName[2] := 'angle';
+    PropertyName[3] := 'frequency';
+    PropertyName[4] := 'phases';
+    PropertyName[5] := 'EN';
+    PropertyName[6] := 'EE';
+    PropertyName[7] := 'Lat1';
+    PropertyName[8] := 'Lon1';
+    PropertyName[9] := 'Lat2';
+    PropertyName[10] := 'Lon2';
 
      // define Property help values
-     PropertyHelp[1] := 'Voltage magnitude, in volts, of the GIC voltage induced across the associated line. ' +
-                        'When specified, induced voltage is assumed defined by Voltage and Angle properties. ' + CRLF+CRLF+
-                        'Specify this value' + CRLF + CRLF + 'OR' + CRLF + CRLF +
-                        'EN, EE, lat1, lon1, lat2, lon2. ' + CRLF + CRLF +
-                        'Not both!!  Last one entered will take precedence. ' +
-                        'Assumed identical in each phase of the Line object.';
-     PropertyHelp[2] := 'Phase angle in degrees of first phase. Default=0.0.  See Voltage property';
-     PropertyHelp[3] := 'Source frequency.  Defaults to  0.1 Hz. So GICSource=0 at power frequency.';
-     PropertyHelp[4] := 'Number of phases.  Defaults to 3. All three phases are assumed in phase (zero sequence)';
-     PropertyHelp[5] := 'Northward Electric field (V/km). If specified, Voltage and Angle are computed from EN, EE, lat and lon values.';
-     PropertyHelp[6] := 'Eastward Electric field (V/km).  If specified, Voltage and Angle are computed from EN, EE, lat and lon values.';
-     PropertyHelp[7] := 'Latitude of Bus1 of the line(degrees)';
-     PropertyHelp[8] := 'Longitude of Bus1 of the line (degrees)';
-     PropertyHelp[9] := 'Latitude of Bus2 of the line (degrees)';
-     PropertyHelp[10] := 'Longitude of Bus2 of the line (degrees)';
+    PropertyHelp[1] := 'Voltage magnitude, in volts, of the GIC voltage induced across the associated line. ' +
+        'When specified, induced voltage is assumed defined by Voltage and Angle properties. ' + CRLF + CRLF +
+        'Specify this value' + CRLF + CRLF + 'OR' + CRLF + CRLF +
+        'EN, EE, lat1, lon1, lat2, lon2. ' + CRLF + CRLF +
+        'Not both!!  Last one entered will take precedence. ' +
+        'Assumed identical in each phase of the Line object.';
+    PropertyHelp[2] := 'Phase angle in degrees of first phase. Default=0.0.  See Voltage property';
+    PropertyHelp[3] := 'Source frequency.  Defaults to  0.1 Hz. So GICSource=0 at power frequency.';
+    PropertyHelp[4] := 'Number of phases.  Defaults to 3. All three phases are assumed in phase (zero sequence)';
+    PropertyHelp[5] := 'Northward Electric field (V/km). If specified, Voltage and Angle are computed from EN, EE, lat and lon values.';
+    PropertyHelp[6] := 'Eastward Electric field (V/km).  If specified, Voltage and Angle are computed from EN, EE, lat and lon values.';
+    PropertyHelp[7] := 'Latitude of Bus1 of the line(degrees)';
+    PropertyHelp[8] := 'Longitude of Bus1 of the line (degrees)';
+    PropertyHelp[9] := 'Latitude of Bus2 of the line (degrees)';
+    PropertyHelp[10] := 'Longitude of Bus2 of the line (degrees)';
 
-     ActiveProperty := NumPropsThisClass;
-     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
+    ActiveProperty := NumPropsThisClass;
+    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
      // Override help string
-     PropertyHelp[NumPropsThisClass+1] := 'Not used.';
-     PropertyHelp[NumPropsThisClass+2] := 'Not used.';
+    PropertyHelp[NumPropsThisClass + 1] := 'Not used.';
+    PropertyHelp[NumPropsThisClass + 2] := 'Not used.';
 
-End;
+end;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TGICsource.NewObject(const ObjName:String):Integer;
-Begin
+function TGICsource.NewObject(const ObjName: String): Integer;
+begin
     // Make a new voltage source and add it to GICsource class list
-    With ActiveCircuit Do
-    Begin
-      ActiveCktElement := TGICSourceObj.Create(Self, ObjName);
-      Result := AddObjectToList(ActiveDSSObject);
-    End;
-End;
+    with ActiveCircuit do
+    begin
+        ActiveCktElement := TGICSourceObj.Create(Self, ObjName);
+        Result := AddObjectToList(ActiveDSSObject);
+    end;
+end;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TGICsource.Edit:Integer;
-VAR
-   ParamPointer :Integer;
-   ParamName,
-   Param        :String;
-
-Begin
-  // continue parsing with contents of Parser
-  ActiveGICsourceObj            := ElementList.Active;
-  ActiveCircuit.ActiveCktElement := ActiveGICsourceObj;
-
-  Result := 0;
-
-  WITH ActiveGICsourceObj DO Begin
-
-     ParamPointer := 0;
-     ParamName := Parser.NextParam;
-     Param     := Parser.StrValue;
-     WHILE Length(Param) > 0 DO Begin
-         IF Length(ParamName) = 0 THEN Inc(ParamPointer)
-         ELSE ParamPointer := CommandList.GetCommand(ParamName);
-
-         If (ParamPointer > 0) and (ParamPointer <= NumProperties) Then PropertyValue[ParamPointer] := Param;
-
-         CASE ParamPointer OF
-            0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 330);
-            1: Volts     := Parser.DblValue;
-            2: Angle     := Parser.DblValue; // Ang
-            3: SrcFrequency    := Parser.DblValue; // freq   Usually 0.1 Hz
-            4: Begin
-                   Nphases     := Parser.IntValue; // num phases
-                   FphaseShift := 0.0;     // Zero Sequence
-                   NConds      := Fnphases;  // Force Reallocation of terminal info
-               End;
-            5: ENorth := Parser.DblValue;
-            6: EEast  := Parser.DblValue;
-            7: Lat1   := Parser.DblValue;
-            8: Lon1   := Parser.DblValue;
-            9: Lat2   := Parser.DblValue;
-           10: Lon2   := Parser.DblValue;
-
-         ELSE
-            ClassEdit(ActiveGICsourceObj, ParamPointer - NumPropsThisClass);
-         End;
-
-         CASE ParamPointer of
-              1, 2:   VoltsSpecified := TRUE;
-              5..10:  VoltsSpecified := FALSE;
-         END;
-
-         ParamName := Parser.NextParam;
-         Param     := Parser.StrValue;
-     End;
-
-     RecalcElementData;   // Updates Volts
-     YPrimInvalid := True;
-  End;
-
-End;
-
-//----------------------------------------------------------------------------
-Function TGICsource.MakeLike(Const OtherSource:String):Integer;
-VAR
-   OtherGICsource :TGICSourceObj;
-   i :Integer;
-
-Begin
-   Result := 0;
-   {See if we can find this line name in the present collection}
-   OtherGICsource := Find(OtherSource);
-   IF   OtherGICsource <> Nil THEN
-   WITH ActiveGICsourceObj DO Begin
-
-       IF Fnphases <> OtherGICsource.Fnphases THEN Begin
-           Nphases := OtherGICsource.Fnphases;
-           NConds  := Fnphases;  // Forces reallocation of terminal stuff
-
-           Yorder := Fnconds * Fnterms;
-           YPrimInvalid := True;
-       End;
-
-       Volts           := OtherGICsource.Volts;
-       Angle           := OtherGICsource.Angle;
-       SrcFrequency    := OtherGICsource.SrcFrequency;
-       LineName        := OtherGICsource.LineName;
-
-       ENorth          := OtherGICsource.ENorth;
-       EEast           := OtherGICsource.EEast;
-       Lat1            := OtherGICsource.Lat1;
-       Lon1            := OtherGICsource.Lon1;
-       Lat2            := OtherGICsource.Lat2;
-       Lon2            := OtherGICsource.Lon2;
-
-       Bus2Defined     := OtherGICsource.Bus2Defined;
-
-       ClassMakeLike(OtherGICsource); // set spectrum,  base frequency
-
-       Spectrum := '';  // Spectrum not allowed
-       SpectrumObj := Nil;
-
-       For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherGICsource.PropertyValue[i];
-       Result := 1;
-   End
-   ELSE  DoSimpleMsg('Error in GICsource MakeLike: "' + OtherSource + '" Not Found.', 332);
-
-End;
-
-//----------------------------------------------------------------------------
-Function TGICsource.Init(Handle:Integer):Integer;
-
-Begin
-   DoSimpleMsg('Need to implement TGICsource.Init', -1);
-   Result := 0;
-End;
-
-
-//----------------------------------------------------------------------------
-Constructor TGICSourceObj.Create(ParClass:TDSSClass; const SourceName:String);
-Begin
-     Inherited create(ParClass);
-     Name := LowerCase(SourceName);
-     DSSObjType := ParClass.DSSClassType; // SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
-     LineName := Name;  // GICsource name must be same as associated Line
-
-     LineClass := DSSClassList.Get(ClassNames.Find('Line'));
-     Nphases := 3;
-     Fnconds := 3;
-     Nterms  := 2;   // 4/27/2018 made a 2-terminal I source
-
-     Volts    := 0.0;
-     Angle    := 0.0;
-
-     ENorth := 1.0;
-     EEast := 1.0;
-     Lat1  :=  33.613499;
-     Lon1  := -87.373673;
-     Lat2  :=  33.547885;
-     Lon2  := -86.074605;
-
-     VoltsSpecified := FALSE;
-     SrcFrequency  := 0.1;   // this is the GIC source
-     FphaseShift   := 0.0;    // always zero sequence
-     Bus2Defined   := FALSE;
-     InitPropertyValues(0);
-
-     Yorder := Fnterms * Fnconds;
-    // Don't do This here RecalcElementData;
-
-     Spectrum := '';  // Spectrum not allowed
-     SpectrumObj := Nil;
-
-End;
-
-
-//----------------------------------------------------------------------------
-Destructor TGICSourceObj.Destroy;
-Begin
-    LineName := '';
-    Inherited Destroy;
-End;
-
-//=============================================================================
-function TGICSourceObj.Compute_VLine: Double;
-Var
-   Phi : Double;
-   DeltaLat, DeltaLon : Double;
+function TGICsource.Edit: Integer;
+var
+    ParamPointer: Integer;
+    ParamName,
+    Param: String;
 
 begin
-     Phi := (Lat2 + Lat1)/2.0 * (pi/180.0);   // deg to radians
-     DeltaLat := Lat1 - Lat2; // switched 11-20 to get pos GIC for pos ENorth
-     DeltaLon := Lon1 - Lon2;
-     VE    := (111.133 - 0.56    * cos(2.0*phi) )* DeltaLat * ENorth;
-     VN    := (111.5065 - 0.1872 * cos(2.0*phi)) * Cos(phi) * DeltaLon * EEast ;
-     Result := VN + VE;
+  // continue parsing with contents of Parser
+    ActiveGICsourceObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := ActiveGICsourceObj;
+
+    Result := 0;
+
+    with ActiveGICsourceObj do
+    begin
+
+        ParamPointer := 0;
+        ParamName := Parser.NextParam;
+        Param := Parser.StrValue;
+        while Length(Param) > 0 do
+        begin
+            if Length(ParamName) = 0 then
+                Inc(ParamPointer)
+            else
+                ParamPointer := CommandList.GetCommand(ParamName);
+
+            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
+                PropertyValue[ParamPointer] := Param;
+
+            case ParamPointer of
+                0:
+                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 330);
+                1:
+                    Volts := Parser.DblValue;
+                2:
+                    Angle := Parser.DblValue; // Ang
+                3:
+                    SrcFrequency := Parser.DblValue; // freq   Usually 0.1 Hz
+                4:
+                begin
+                    Nphases := Parser.IntValue; // num phases
+                    FphaseShift := 0.0;     // Zero Sequence
+                    NConds := Fnphases;  // Force Reallocation of terminal info
+                end;
+                5:
+                    ENorth := Parser.DblValue;
+                6:
+                    EEast := Parser.DblValue;
+                7:
+                    Lat1 := Parser.DblValue;
+                8:
+                    Lon1 := Parser.DblValue;
+                9:
+                    Lat2 := Parser.DblValue;
+                10:
+                    Lon2 := Parser.DblValue;
+
+            else
+                ClassEdit(ActiveGICsourceObj, ParamPointer - NumPropsThisClass);
+            end;
+
+            case ParamPointer of
+                1, 2:
+                    VoltsSpecified := TRUE;
+                5..10:
+                    VoltsSpecified := FALSE;
+            end;
+
+            ParamName := Parser.NextParam;
+            Param := Parser.StrValue;
+        end;
+
+        RecalcElementData;   // Updates Volts
+        YPrimInvalid := TRUE;
+    end;
+
 end;
 
 //----------------------------------------------------------------------------
-Procedure TGICSourceObj.RecalcElementData;
+function TGICsource.MakeLike(const OtherSource: String): Integer;
+var
+    OtherGICsource: TGICSourceObj;
+    i: Integer;
 
-Var
-   GICBus : String;
-   LineBus2 : String;
+begin
+    Result := 0;
+   {See if we can find this line name in the present collection}
+    OtherGICsource := Find(OtherSource);
+    if OtherGICsource <> NIL then
+        with ActiveGICsourceObj do
+        begin
 
-Begin
+            if Fnphases <> OtherGICsource.Fnphases then
+            begin
+                Nphases := OtherGICsource.Fnphases;
+                NConds := Fnphases;  // Forces reallocation of terminal stuff
 
-      pLineElem := LineClass.Find(LineName);
+                Yorder := Fnconds * Fnterms;
+                YPrimInvalid := TRUE;
+            end;
 
-      IF pLineElem=NIL Then Begin
-          DoSimpleMsg('Line Object "' + LineName + '" associated with GICsource.'+Name+' Not Found. Make sure you define it first.', 333);
-      End
-      Else Begin
+            Volts := OtherGICsource.Volts;
+            Angle := OtherGICsource.Angle;
+            SrcFrequency := OtherGICsource.SrcFrequency;
+            LineName := OtherGICsource.LineName;
 
-         LineBus2 := pLineElem.GetBus(2);
+            ENorth := OtherGICsource.ENorth;
+            EEast := OtherGICsource.EEast;
+            Lat1 := OtherGICsource.Lat1;
+            Lon1 := OtherGICsource.Lon1;
+            Lat2 := OtherGICsource.Lat2;
+            Lon2 := OtherGICsource.Lon2;
+
+            Bus2Defined := OtherGICsource.Bus2Defined;
+
+            ClassMakeLike(OtherGICsource); // set spectrum,  base frequency
+
+            Spectrum := '';  // Spectrum not allowed
+            SpectrumObj := NIL;
+
+            for i := 1 to ParentClass.NumProperties do
+                PropertyValue[i] := OtherGICsource.PropertyValue[i];
+            Result := 1;
+        end
+    else
+        DoSimpleMsg('Error in GICsource MakeLike: "' + OtherSource + '" Not Found.', 332);
+
+end;
+
+//----------------------------------------------------------------------------
+function TGICsource.Init(Handle: Integer): Integer;
+
+begin
+    DoSimpleMsg('Need to implement TGICsource.Init', -1);
+    Result := 0;
+end;
+
+
+//----------------------------------------------------------------------------
+constructor TGICSourceObj.Create(ParClass: TDSSClass; const SourceName: String);
+begin
+    inherited create(ParClass);
+    Name := LowerCase(SourceName);
+    DSSObjType := ParClass.DSSClassType; // SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
+    LineName := Name;  // GICsource name must be same as associated Line
+
+    LineClass := DSSClassList.Get(ClassNames.Find('Line'));
+    Nphases := 3;
+    Fnconds := 3;
+    Nterms := 2;   // 4/27/2018 made a 2-terminal I source
+
+    Volts := 0.0;
+    Angle := 0.0;
+
+    ENorth := 1.0;
+    EEast := 1.0;
+    Lat1 := 33.613499;
+    Lon1 := -87.373673;
+    Lat2 := 33.547885;
+    Lon2 := -86.074605;
+
+    VoltsSpecified := FALSE;
+    SrcFrequency := 0.1;   // this is the GIC source
+    FphaseShift := 0.0;    // always zero sequence
+    Bus2Defined := FALSE;
+    InitPropertyValues(0);
+
+    Yorder := Fnterms * Fnconds;
+    // Don't do This here RecalcElementData;
+
+    Spectrum := '';  // Spectrum not allowed
+    SpectrumObj := NIL;
+
+end;
+
+
+//----------------------------------------------------------------------------
+destructor TGICSourceObj.Destroy;
+begin
+    LineName := '';
+    inherited Destroy;
+end;
+
+//=============================================================================
+function TGICSourceObj.Compute_VLine: Double;
+var
+    Phi: Double;
+    DeltaLat, DeltaLon: Double;
+
+begin
+    Phi := (Lat2 + Lat1) / 2.0 * (pi / 180.0);   // deg to radians
+    DeltaLat := Lat1 - Lat2; // switched 11-20 to get pos GIC for pos ENorth
+    DeltaLon := Lon1 - Lon2;
+    VE := (111.133 - 0.56 * cos(2.0 * phi)) * DeltaLat * ENorth;
+    VN := (111.5065 - 0.1872 * cos(2.0 * phi)) * Cos(phi) * DeltaLon * EEast;
+    Result := VN + VE;
+end;
+
+//----------------------------------------------------------------------------
+procedure TGICSourceObj.RecalcElementData;
+
+var
+    GICBus: String;
+    LineBus2: String;
+
+begin
+
+    pLineElem := LineClass.Find(LineName);
+
+    if pLineElem = NIL then
+    begin
+        DoSimpleMsg('Line Object "' + LineName + '" associated with GICsource.' + Name + ' Not Found. Make sure you define it first.', 333);
+    end
+    else
+    begin
+
+        LineBus2 := pLineElem.GetBus(2);
 
          // If LineBus2 already begins with GIC, Don't insert the GIC Bis
 
-         if CompareTextShortest('GIC_', LineBus2)<>0 then
-         Begin
+        if CompareTextShortest('GIC_', LineBus2) <> 0 then
+        begin
              // Define buses -- inserting a new bus GIC_{LineName}
-             GICBus := 'GIC_'+LineName;
-             SetBus(1, GICBus);
-             SetBus(2, LineBus2);
+            GICBus := 'GIC_' + LineName;
+            SetBus(1, GICBus);
+            SetBus(2, LineBus2);
              // Redefine the bus2 spec for LineElem
-             Parser.CmdString := 'Bus2=' + GICBus;
-             pLineElem.Edit;  // invoke the Line's editor to process Parser
-         End;
+            Parser.CmdString := 'Bus2=' + GICBus;
+            pLineElem.Edit;  // invoke the Line's editor to process Parser
+        end;
 
-         Bus2Defined   := TRUE;
-         If Not VoltsSpecified Then Volts := Compute_VLine;
+        Bus2Defined := TRUE;
+        if not VoltsSpecified then
+            Volts := Compute_VLine;
 
-      End;
+    end;
 
-      Reallocmem(InjCurrent, SizeOf(InjCurrent^[1])*Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-Procedure TGICSourceObj.CalcYPrim;
+procedure TGICSourceObj.CalcYPrim;
 
-Var Rs, Rm, Rzero : Double;
-    i  : Integer;
-    Value : Complex;
-    NegValue : Complex;
+var
+    Rs, Rm, Rzero: Double;
+    i: Integer;
+    Value: Complex;
+    NegValue: Complex;
 
-Begin
+begin
 
  // Build only YPrim Series
-     IF YPrimInvalid THEN Begin
-       IF YPrim_Series <> nil Then YPrim_Series.Free;
-       YPrim_Series := TcMatrix.CreateMatrix(Yorder);
-       IF YPrim <> nil Then YPrim.Free;
-       YPrim := TcMatrix.CreateMatrix(Yorder);
-     End
-     ELSE Begin
-          YPrim_Series.Clear;
-          YPrim.Clear;
-     End;
+    if YPrimInvalid then
+    begin
+        if YPrim_Series <> NIL then
+            YPrim_Series.Free;
+        YPrim_Series := TcMatrix.CreateMatrix(Yorder);
+        if YPrim <> NIL then
+            YPrim.Free;
+        YPrim := TcMatrix.CreateMatrix(Yorder);
+    end
+    else
+    begin
+        YPrim_Series.Clear;
+        YPrim.Clear;
+    end;
 
 
      {
        Assume 0.0001 ohms resistance for GIC Source
      }
-     Value := Cmplx(10000.0, 0.0);
-     NegValue := Cnegate(Value);
-     With YPrim_Series Do
-       FOR i := 1 to Fnphases Do
-       Begin
-           SetElement(i,i, Value);
-           SetElement(i+Fnphases,i+Fnphases, Value);
-           SetElemSym(i, i+Fnphases, NegValue);
-       End;
+    Value := Cmplx(10000.0, 0.0);
+    NegValue := Cnegate(Value);
+    with YPrim_Series do
+        for i := 1 to Fnphases do
+        begin
+            SetElement(i, i, Value);
+            SetElement(i + Fnphases, i + Fnphases, Value);
+            SetElemSym(i, i + Fnphases, NegValue);
+        end;
 
-       YPrim.Copyfrom(Yprim_Series);      // Initialize YPrim for series impedances
+    YPrim.Copyfrom(Yprim_Series);      // Initialize YPrim for series impedances
 (* ****************************************************************************
     {
        Compute R0 of associated line
@@ -462,84 +507,90 @@ Begin
 
      {Now Account for Open Conductors}
      {For any conductor that is open, zero out row and column}
-     Inherited CalcYPrim;
+    inherited CalcYPrim;
 
-     YPrimInvalid := False;
+    YPrimInvalid := FALSE;
 
-End;
+end;
 
-Procedure TGICSourceObj.GetVterminalForSource;
+procedure TGICSourceObj.GetVterminalForSource;
 
-Var
-   Vmag        : Double;
-   i           : Integer;
+var
+    Vmag: Double;
+    i: Integer;
 
-Begin
+begin
 
-  TRY
+    try
      // If the solution frequency not 0.1 Hz, source is shorted.
-      WITH ActiveCircuit.Solution Do
-      Begin
-           IF abs(Frequency - SrcFrequency) < EPSILON2 THEN Vmag := Volts Else Vmag := 0.0;
-           For i := 1 to Fnphases do
-              Begin
-                Vterminal^[i] :=  pdegtocomplex(Vmag, (Angle) );   // all the same for zero sequence
+        with ActiveCircuit.Solution do
+        begin
+            if abs(Frequency - SrcFrequency) < EPSILON2 then
+                Vmag := Volts
+            else
+                Vmag := 0.0;
+            for i := 1 to Fnphases do
+            begin
+                Vterminal^[i] := pdegtocomplex(Vmag, (Angle));   // all the same for zero sequence
                  // bottom part of the vector is zero
-                VTerminal^[i+Fnphases] := CZERO;    // See comments in GetInjCurrents
-              End;
-       End;
+                VTerminal^[i + Fnphases] := CZERO;    // See comments in GetInjCurrents
+            end;
+        end;
 
-  EXCEPT
-      DoSimpleMsg('Error computing current for GICsource.'+Name+'. Check specification. Aborting.', 334);
-      IF In_Redirect Then Redirect_Abort := TRUE;
-  END;
+    except
+        DoSimpleMsg('Error computing current for GICsource.' + Name + '. Check specification. Aborting.', 334);
+        if In_Redirect then
+            Redirect_Abort := TRUE;
+    end;
 
-End;
+end;
 
-Function TGICSourceObj.InjCurrents:Integer;
+function TGICSourceObj.InjCurrents: Integer;
 
 {Sum Currents directly into solution array}
 
-Begin
+begin
 
-  GetInjCurrents(InjCurrent);
+    GetInjCurrents(InjCurrent);
 
-  Result := Inherited Injcurrents;  // Adds into system array
+    Result := inherited Injcurrents;  // Adds into system array
 
-End;
+end;
 
-Procedure TGICSourceObj.GetCurrents(Curr: pComplexArray);
+procedure TGICSourceObj.GetCurrents(Curr: pComplexArray);
 
 {Total currents into a device}
 
-VAR
-   i:Integer;
+var
+    i: Integer;
 
-Begin
+begin
 
-  TRY
-   WITH    ActiveCircuit.Solution  Do
-   Begin
+    try
+        with    ActiveCircuit.Solution do
+        begin
 
-       FOR     i := 1 TO Yorder DO  Vterminal^[i] := NodeV^[NodeRef^[i]];
+            for     i := 1 to Yorder do
+                Vterminal^[i] := NodeV^[NodeRef^[i]];
 
-       YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
+            YPrim.MVMult(Curr, Vterminal);  // Current from Elements in System Y
 
-       GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
+            GetInjCurrents(ComplexBuffer);  // Get present value of inj currents
       // Add Together  with yprim currents
-       FOR i := 1 TO Yorder DO Curr^[i] := Csub(Curr^[i], ComplexBuffer^[i]);
+            for i := 1 to Yorder do
+                Curr^[i] := Csub(Curr^[i], ComplexBuffer^[i]);
 
-   End;  {With}
+        end;  {With}
 
-  EXCEPT
-    On E: Exception
-    Do DoErrorMsg(('GetCurrents for GICsource Element: ' + Name + '.'), E.Message,
-        'Inadequate storage allotted for circuit element?', 335);
-  End;
+    except
+        On E: Exception do
+            DoErrorMsg(('GetCurrents for GICsource Element: ' + Name + '.'), E.Message,
+                'Inadequate storage allotted for circuit element?', 335);
+    end;
 
-End;
+end;
 
-Procedure TGICSourceObj.GetInjCurrents(Curr:pComplexArray);
+procedure TGICSourceObj.GetInjCurrents(Curr: pComplexArray);
 
   { source injection currents given by this formula:
      _     _           _         _
@@ -549,60 +600,64 @@ Procedure TGICSourceObj.GetInjCurrents(Curr:pComplexArray);
      _     _           _         _
    }
 
-Begin
-       GetVterminalForSource;    // only at 0.1 Hz
-       YPrim.MVMult(Curr, Vterminal);
+begin
+    GetVterminalForSource;    // only at 0.1 Hz
+    YPrim.MVMult(Curr, Vterminal);
 
-       ITerminalUPdated := FALSE;
-End;
+    ITerminalUPdated := FALSE;
+end;
 
 function TGICSourceObj.GetPropertyValue(Index: Integer): String;
 begin
     begin
-        Case Index of
-          1 : Result := Format('%.8g',[Volts]);
-          2 : Result := Format('%.8g',[Angle]);
-          3 : Result := Format('%.8g',[SrcFrequency]);
-        Else
-          Result := Inherited GetPropertyValue(Index);
-        End;
+        case Index of
+            1:
+                Result := Format('%.8g', [Volts]);
+            2:
+                Result := Format('%.8g', [Angle]);
+            3:
+                Result := Format('%.8g', [SrcFrequency]);
+        else
+            Result := inherited GetPropertyValue(Index);
+        end;
     end;
 end;
 
-Procedure TGICSourceObj.DumpProperties(Var F:TextFile; Complete:Boolean);
+procedure TGICSourceObj.DumpProperties(var F: TextFile; Complete: Boolean);
 
-VAR
-   i:Integer;
+var
+    i: Integer;
 
-Begin
-    Inherited DumpProperties(F,Complete);
+begin
+    inherited DumpProperties(F, Complete);
 
-    With ParentClass Do
-     For i := 1 to NumProperties Do
-     Begin
-        Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[i]);
-     End;
+    with ParentClass do
+        for i := 1 to NumProperties do
+        begin
+            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+        end;
 
-    If Complete Then Begin
+    if Complete then
+    begin
         Writeln(F);
         Writeln(F);
-    End;
+    end;
 
-End;
+end;
 
 procedure TGICSourceObj.InitPropertyValues(ArrayOffset: Integer);
 begin
 
-     PropertyValue[1]  := '0';
-     PropertyValue[2]  := '0';
-     PropertyValue[3]  := Format('%-.6g',[SrcFrequency]);
-     PropertyValue[4]  := '3';
-     PropertyValue[5]  := '1.0';
-     PropertyValue[6]  := '1.0';
-     PropertyValue[7]  := '33.613499';
-     PropertyValue[8]  := '-87.373673';
-     PropertyValue[9]  := '33.547885';
-     PropertyValue[10] := '-86.074605';
+    PropertyValue[1] := '0';
+    PropertyValue[2] := '0';
+    PropertyValue[3] := Format('%-.6g', [SrcFrequency]);
+    PropertyValue[4] := '3';
+    PropertyValue[5] := '1.0';
+    PropertyValue[6] := '1.0';
+    PropertyValue[7] := '33.613499';
+    PropertyValue[8] := '-87.373673';
+    PropertyValue[9] := '33.547885';
+    PropertyValue[10] := '-86.074605';
 
     inherited  InitPropertyValues(NumPropsThisClass);
 
@@ -611,17 +666,16 @@ end;
 procedure TGICSourceObj.MakePosSequence;
 begin
 
-  If Fnphases>1 Then
-  Begin
-     Parser.CmdString := 'phases=1';
-     Edit;
-  End;
-  inherited;
+    if Fnphases > 1 then
+    begin
+        Parser.CmdString := 'phases=1';
+        Edit;
+    end;
+    inherited;
 
 end;
 
 
-
-Initialization
+initialization
 
 end.

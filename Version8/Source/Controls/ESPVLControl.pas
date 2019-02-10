@@ -1,4 +1,5 @@
 unit ESPVLControl;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2016, Electric Power Research Institute, Inc.
@@ -20,320 +21,361 @@ unit ESPVLControl;
  
 }
 
-INTERFACE
+interface
 
-USES
-     Command, ControlClass, ControlElem, CktElement, DSSClass, Arraydef, ucomplex,
-     utilities, PointerList, Classes, Loadshape;
+uses
+    Command,
+    ControlClass,
+    ControlElem,
+    CktElement,
+    DSSClass,
+    Arraydef,
+    ucomplex,
+    utilities,
+    PointerList,
+    Classes,
+    Loadshape;
 
-TYPE
-
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-   TESPVLControl = class(TControlClass)
-     private
-
-     protected
-        PROCEDURE DefineProperties;
-        FUNCTION MakeLike(const ESPVLControlName:String):Integer;Override;
-     public
-       constructor Create;
-       destructor Destroy; override;
-
-       FUNCTION Edit(ActorID : Integer):Integer; override;     // uses global parser
-       FUNCTION NewObject(const ObjName:String):Integer; override;
-
-   end;
+type
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-   TESPVLControlObj = class(TControlElem)
-     private
+    TESPVLControl = class(TControlClass)
+    PRIVATE
 
-            Ftype : Integer;   {1=System controller; 2=Local controller}
+    PROTECTED
+        procedure DefineProperties;
+        function MakeLike(const ESPVLControlName: String): Integer; OVERRIDE;
+    PUBLIC
+        constructor Create;
+        destructor Destroy; OVERRIDE;
+
+        function Edit(ActorID: Integer): Integer; OVERRIDE;     // uses global parser
+        function NewObject(const ObjName: String): Integer; OVERRIDE;
+
+    end;
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+    TESPVLControlObj = class(TControlElem)
+    PRIVATE
+
+        Ftype: Integer;   {1=System controller; 2=Local controller}
 
      {System Controller Variables}
 
             // Local Controllers under supervision of System Controller
-            FLocalControlListSize:Integer;
-            FLocalControlNameList:TStringList;
-            FLocalControlPointerList:PointerList.TPointerList;
-            FLocalControlWeights:pDoubleArray;
+        FLocalControlListSize: Integer;
+        FLocalControlNameList: TStringList;
+        FLocalControlPointerList: PointerList.TPointerList;
+        FLocalControlWeights: pDoubleArray;
 
 
      {Local Controller Variables}
 
              // PVSystems under supervision of this Local Controller
-            FPVsystemListSize:Integer;
-            FPVsystemNameList:TStringList;
-            FPVsystemPointerList:PointerList.TPointerList;
-            FPVSystemWeights:pDoubleArray;
+        FPVsystemListSize: Integer;
+        FPVsystemNameList: TStringList;
+        FPVsystemPointerList: PointerList.TPointerList;
+        FPVSystemWeights: pDoubleArray;
 
              // Storage Devices under supervision of this Local Controller
-            FStorageListSize:Integer;
-            FStorageNameList:TStringList;
-            FStoragePointerList:PointerList.TPointerList;
-            FStorageWeights:pDoubleArray;
+        FStorageListSize: Integer;
+        FStorageNameList: TStringList;
+        FStoragePointerList: PointerList.TPointerList;
+        FStorageWeights: pDoubleArray;
 
 // dead band control parameters
-            FkWLimit,
-            FkWBand,
-            HalfkWBand,
-            FkvarLimit,
-            TotalWeight   :Double;
-
+        FkWLimit,
+        FkWBand,
+        HalfkWBand,
+        FkvarLimit,
+        TotalWeight: Double;
 
 
   //          YearlyShape     :String;  // ='fixed' means no variation  on all the time
    //         YearlyShapeObj  :TLoadShapeObj;  // Shape for this Storage element
-            DailyForecastShape       :String;  // Daily (24 HR) Storage element shape
-            DailyForecasstShapeObj   :TLoadShapeObj;  // Daily Storage element Shape for this load
+        DailyForecastShape: String;  // Daily (24 HR) Storage element shape
+        DailyForecasstShapeObj: TLoadShapeObj;  // Daily Storage element Shape for this load
   //          DutyShape       :String;  // Duty cycle load shape for changes typically less than one hour
   //          DutyShapeObj    :TLoadShapeObj;  // Shape for this Storage element
 
-            LoadShapeMult   :Complex;
+        LoadShapeMult: Complex;
 
-            MonitoredElement :TDSSCktElement;
+        MonitoredElement: TDSSCktElement;
 
-     public
+    PUBLIC
 
-       constructor Create(ParClass:TDSSClass; const ESPVLControlName:String);
-       destructor Destroy; override;
+        constructor Create(ParClass: TDSSClass; const ESPVLControlName: String);
+        destructor Destroy; OVERRIDE;
 
-       PROCEDURE MakePosSequence(ActorID : Integer); Override;  // Make a positive Sequence Model
-       PROCEDURE RecalcElementData(ActorID : Integer); Override;
-       PROCEDURE CalcYPrim(ActorID : Integer); Override;    // Always Zero for a ESPVLControl
+        procedure MakePosSequence(ActorID: Integer); OVERRIDE;  // Make a positive Sequence Model
+        procedure RecalcElementData(ActorID: Integer); OVERRIDE;
+        procedure CalcYPrim(ActorID: Integer); OVERRIDE;    // Always Zero for a ESPVLControl
 
-       PROCEDURE Sample(ActorID : Integer);  Override;    // Sample control quantities and set action times in Control Queue
-       PROCEDURE DoPendingAction(Const Code, ProxyHdl:Integer; ActorID : Integer); Override;   // Do the action that is pending from last sample
-       PROCEDURE Reset; Override;  // Reset to initial defined state
+        procedure Sample(ActorID: Integer); OVERRIDE;    // Sample control quantities and set action times in Control Queue
+        procedure DoPendingAction(const Code, ProxyHdl: Integer; ActorID: Integer); OVERRIDE;   // Do the action that is pending from last sample
+        procedure Reset; OVERRIDE;  // Reset to initial defined state
 
-       PROCEDURE GetCurrents(Curr: pComplexArray; ActorID : Integer); Override; // Get present value of terminal Curr
-       PROCEDURE GetInjCurrents(Curr: pComplexArray; ActorID : Integer); Override;   // Returns Injextion currents
+        procedure GetCurrents(Curr: pComplexArray; ActorID: Integer); OVERRIDE; // Get present value of terminal Curr
+        procedure GetInjCurrents(Curr: pComplexArray; ActorID: Integer); OVERRIDE;   // Returns Injextion currents
 
-       PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
-       PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
+        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
 
-       FUNCTION MakeLocalControlList:Boolean;
-   end;
+        function MakeLocalControlList: Boolean;
+    end;
 
 
-VAR
-    ESPVLControlClass : TESPVLControl;
-    ActiveESPVLControlObj:TESPVLControlObj;
+var
+    ESPVLControlClass: TESPVLControl;
+    ActiveESPVLControlObj: TESPVLControlObj;
 
 {--------------------------------------------------------------------------}
-IMPLEMENTATION
+implementation
 
-USES
+uses
+    ParserDel,
+    DSSClassDefs,
+    DSSGlobals,
+    Circuit,
+    Generator,
+    Sysutils,
+    uCmatrix,
+    MathUtil,
+    Math;
 
-    ParserDel, DSSClassDefs, DSSGlobals, Circuit,  Generator, Sysutils, uCmatrix, MathUtil, Math;
-
-CONST
+const
 
     NumPropsThisClass = 12;
 
 
 {--------------------------------------------------------------------------}
 constructor TESPVLControl.Create;  // Creates superstructure for all ESPVLControl objects
-Begin
-     Inherited Create;
+begin
+    inherited Create;
 
-     Class_name   := 'ESPVLControl';
-     DSSClassType := DSSClassType + ESPVL_CONTROL;
+    Class_name := 'ESPVLControl';
+    DSSClassType := DSSClassType + ESPVL_CONTROL;
 
-     DefineProperties;
+    DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
-     CommandList.Abbrev := TRUE;
-     ESPVLControlClass := Self;
-End;
+    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList.Abbrev := TRUE;
+    ESPVLControlClass := Self;
+end;
 
 {--------------------------------------------------------------------------}
 destructor TESPVLControl.Destroy;
 
-Begin
-     Inherited Destroy;
-End;
+begin
+    inherited Destroy;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-PROCEDURE TESPVLControl.DefineProperties;
-Begin
+procedure TESPVLControl.DefineProperties;
+begin
 
-     Numproperties := NumPropsThisClass;
-     CountProperties;   // Get inherited property count
-     AllocatePropertyArrays;
+    Numproperties := NumPropsThisClass;
+    CountProperties;   // Get inherited property count
+    AllocatePropertyArrays;
 
      // Define Property names
 
-     PropertyName[1] := 'Element';
-     PropertyName[2] := 'Terminal';
-     PropertyName[3] := 'Type';
-     PropertyName[4] := 'kWBand';
-     PropertyName[5] := 'kvarlimit';
-     PropertyName[6] := 'LocalControlList';
-     PropertyName[7] := 'LocalControlWeights';
-     PropertyName[8] := 'PVSystemList';
-     PropertyName[9] := 'PVSystemWeights';
-     PropertyName[10] := 'StorageList';
-     PropertyName[11] := 'StorageWeights';
-     PropertyName[12] := 'Forecast';
+    PropertyName[1] := 'Element';
+    PropertyName[2] := 'Terminal';
+    PropertyName[3] := 'Type';
+    PropertyName[4] := 'kWBand';
+    PropertyName[5] := 'kvarlimit';
+    PropertyName[6] := 'LocalControlList';
+    PropertyName[7] := 'LocalControlWeights';
+    PropertyName[8] := 'PVSystemList';
+    PropertyName[9] := 'PVSystemWeights';
+    PropertyName[10] := 'StorageList';
+    PropertyName[11] := 'StorageWeights';
+    PropertyName[12] := 'Forecast';
 
-     PropertyHelp[1] := 'Full object name of the circuit element, typically a line or transformer, '+
-                        'which the control is monitoring. There is no default; must be specified.';
-     PropertyHelp[2] := 'Number of the terminal of the circuit element to which the ESPVLControl control is connected. '+
-                        '1 or 2, typically.  Default is 1. Make sure you have the direction on the power matching the sign of kWLimit.';
-     PropertyHelp[3] := 'Type of controller.  1= System Controller; 2= Local controller. ';
-     PropertyHelp[4] := 'Bandwidth (kW) of the dead band around the target limit.' +
-                        'No dispatch changes are attempted if the power in the monitored terminal stays within this band.';
-     PropertyHelp[5] := 'Max kvar to be delivered through the element.  Uses same dead band as kW.';
-     PropertyHelp[6] := 'Array list of ESPVLControl local controller objects to be dispatched by System Controller. ' +
-                        'If not specified, all ESPVLControl devices with type=local in the circuit not attached to another '+
-                        'controller are assumed to be part of this controller''s fleet.';
-     PropertyHelp[7] := 'Array of proportional weights corresponding to each ESPVLControl local controller in the LocalControlList.';                        ;
-     PropertyHelp[8] := 'Array list of PVSystem objects to be dispatched by a Local Controller. ' ;
-     PropertyHelp[9] := 'Array of proportional weights corresponding to each PVSystem in the PVSystemList.';                        ;
-     PropertyHelp[10] := 'Array list of Storage objects to be dispatched by Local Controller. ' ;
-     PropertyHelp[11] := 'Array of proportional weights corresponding to each Storage object in the StorageControlList.';
-     PropertyHelp[12] := 'Loadshape object containing daily forecast.';                       ;
+    PropertyHelp[1] := 'Full object name of the circuit element, typically a line or transformer, ' +
+        'which the control is monitoring. There is no default; must be specified.';
+    PropertyHelp[2] := 'Number of the terminal of the circuit element to which the ESPVLControl control is connected. ' +
+        '1 or 2, typically.  Default is 1. Make sure you have the direction on the power matching the sign of kWLimit.';
+    PropertyHelp[3] := 'Type of controller.  1= System Controller; 2= Local controller. ';
+    PropertyHelp[4] := 'Bandwidth (kW) of the dead band around the target limit.' +
+        'No dispatch changes are attempted if the power in the monitored terminal stays within this band.';
+    PropertyHelp[5] := 'Max kvar to be delivered through the element.  Uses same dead band as kW.';
+    PropertyHelp[6] := 'Array list of ESPVLControl local controller objects to be dispatched by System Controller. ' +
+        'If not specified, all ESPVLControl devices with type=local in the circuit not attached to another ' +
+        'controller are assumed to be part of this controller''s fleet.';
+    PropertyHelp[7] := 'Array of proportional weights corresponding to each ESPVLControl local controller in the LocalControlList.';
+    ;
+    PropertyHelp[8] := 'Array list of PVSystem objects to be dispatched by a Local Controller. ';
+    PropertyHelp[9] := 'Array of proportional weights corresponding to each PVSystem in the PVSystemList.';
+    ;
+    PropertyHelp[10] := 'Array list of Storage objects to be dispatched by Local Controller. ';
+    PropertyHelp[11] := 'Array of proportional weights corresponding to each Storage object in the StorageControlList.';
+    PropertyHelp[12] := 'Loadshape object containing daily forecast.';
+    ;
 
-     ActiveProperty  := NumPropsThisClass;
-     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
+    ActiveProperty := NumPropsThisClass;
+    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
-End;
+end;
 
 {--------------------------------------------------------------------------}
-FUNCTION TESPVLControl.NewObject(const ObjName:String):Integer;
-Begin
+function TESPVLControl.NewObject(const ObjName: String): Integer;
+begin
     // Make a new ESPVLControl and add it to ESPVLControl class list
-    WITH ActiveCircuit[ActiveActor] Do
-    Begin
-      ActiveCktElement := TESPVLControlObj.Create(Self, ObjName);
-      Result := AddObjectToList(ActiveDSSObject);
-    End;
-End;
+    with ActiveCircuit[ActiveActor] do
+    begin
+        ActiveCktElement := TESPVLControlObj.Create(Self, ObjName);
+        Result := AddObjectToList(ActiveDSSObject);
+    end;
+end;
 
 {--------------------------------------------------------------------------}
-FUNCTION TESPVLControl.Edit(ActorID : Integer):Integer;
-VAR
-   ParamPointer:Integer;
-   ParamName:String;
-   Param:String;
-   i:Integer;
+function TESPVLControl.Edit(ActorID: Integer): Integer;
+var
+    ParamPointer: Integer;
+    ParamName: String;
+    Param: String;
+    i: Integer;
 
-Begin
+begin
 
   // continue parsing WITH contents of Parser
-  ActiveESPVLControlObj := ElementList.Active;
-  ActiveCircuit[ActorID].ActiveCktElement := ActiveESPVLControlObj;
+    ActiveESPVLControlObj := ElementList.Active;
+    ActiveCircuit[ActorID].ActiveCktElement := ActiveESPVLControlObj;
 
-  Result := 0;
+    Result := 0;
 
-  WITH ActiveESPVLControlObj Do Begin
+    with ActiveESPVLControlObj do
+    begin
 
-     ParamPointer := 0;
-     ParamName := Parser[ActorID].NextParam;
-     Param := Parser[ActorID].StrValue;
-     WHILE Length(Param)>0 Do Begin
-         IF Length(ParamName) = 0 THEN Inc(ParamPointer)
-         ELSE ParamPointer := CommandList.GetCommand(ParamName);
+        ParamPointer := 0;
+        ParamName := Parser[ActorID].NextParam;
+        Param := Parser[ActorID].StrValue;
+        while Length(Param) > 0 do
+        begin
+            if Length(ParamName) = 0 then
+                Inc(ParamPointer)
+            else
+                ParamPointer := CommandList.GetCommand(ParamName);
 
-         If (ParamPointer>0) and (ParamPointer<=NumProperties)
-         THEN PropertyValue[ParamPointer]:= Param;
+            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
+                PropertyValue[ParamPointer] := Param;
 
-         CASE ParamPointer OF
-            0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
-            1: ElementName     := lowercase(param);
-            2: ElementTerminal := Parser[ActorID].IntValue;
-            3: Case Lowercase(Param)[1] of
-                  's': Ftype:=1;    {for System Controller}
-                  'l': Ftype:=2;    {for Local Controller}
-               End;
+            case ParamPointer of
+                0:
+                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 364);
+                1:
+                    ElementName := lowercase(param);
+                2:
+                    ElementTerminal := Parser[ActorID].IntValue;
+                3:
+                    case Lowercase(Param)[1] of
+                        's':
+                            Ftype := 1;    {for System Controller}
+                        'l':
+                            Ftype := 2;    {for Local Controller}
+                    end;
 
 
-            4: FkWBand := Parser[ActorID].DblValue;
-            5: FkvarLimit := Parser[ActorID].DblValue;
-            6: InterpretTStringListArray(Param, FLocalControlNameList);
-            7: Begin
-                 FLocalControlListSize := FLocalControlNameList.count;
-                 IF FLocalControlListSize>0 Then Begin
-                 Reallocmem(FLocalControlWeights, Sizeof(FLocalControlWeights^[1])*FLocalControlListSize);
-                 InterpretDblArray(Param, FLocalControlListSize, FLocalControlWeights);
-                 End;
-               End;
-            8: InterpretTStringListArray(Param, FPVSystemNameList);
-            9: Begin
-                 FPVSystemListSize := FPVSystemNameList.count;
-                 IF FPVSystemListSize>0 Then Begin
-                 Reallocmem(FPVSystemWeights, Sizeof(FPVSystemWeights^[1])*FPVSystemListSize);
-                 InterpretDblArray(Param, FPVSystemListSize, FPVSystemWeights);
-                 End;
-               End;
-            10: InterpretTStringListArray(Param, FStorageNameList);
-            11: Begin
-                 FStorageListSize := FStorageNameList.count;
-                 IF FStorageListSize>0 Then Begin
-                 Reallocmem(FStorageWeights, Sizeof(FStorageWeights^[1])*FStorageListSize);
-                 InterpretDblArray(Param, FStorageListSize, FStorageWeights);
-                 End;
-               End;
+                4:
+                    FkWBand := Parser[ActorID].DblValue;
+                5:
+                    FkvarLimit := Parser[ActorID].DblValue;
+                6:
+                    InterpretTStringListArray(Param, FLocalControlNameList);
+                7:
+                begin
+                    FLocalControlListSize := FLocalControlNameList.count;
+                    if FLocalControlListSize > 0 then
+                    begin
+                        Reallocmem(FLocalControlWeights, Sizeof(FLocalControlWeights^[1]) * FLocalControlListSize);
+                        InterpretDblArray(Param, FLocalControlListSize, FLocalControlWeights);
+                    end;
+                end;
+                8:
+                    InterpretTStringListArray(Param, FPVSystemNameList);
+                9:
+                begin
+                    FPVSystemListSize := FPVSystemNameList.count;
+                    if FPVSystemListSize > 0 then
+                    begin
+                        Reallocmem(FPVSystemWeights, Sizeof(FPVSystemWeights^[1]) * FPVSystemListSize);
+                        InterpretDblArray(Param, FPVSystemListSize, FPVSystemWeights);
+                    end;
+                end;
+                10:
+                    InterpretTStringListArray(Param, FStorageNameList);
+                11:
+                begin
+                    FStorageListSize := FStorageNameList.count;
+                    if FStorageListSize > 0 then
+                    begin
+                        Reallocmem(FStorageWeights, Sizeof(FStorageWeights^[1]) * FStorageListSize);
+                        InterpretDblArray(Param, FStorageListSize, FStorageWeights);
+                    end;
+                end;
 
-         ELSE
+            else
            // Inherited parameters
-           ClassEdit( ActiveESPVLControlObj, ParamPointer - NumPropsthisClass)
-         End;
+                ClassEdit(ActiveESPVLControlObj, ParamPointer - NumPropsthisClass)
+            end;
 
          // Side Effects
-         CASE ParamPointer OF
-            6: Begin   // levelize the list
-                 FLocalControlPointerList.Clear;  // clear this for resetting on first sample
-                 FLocalControlListSize := FLocalControlNameList.count;
-                 Reallocmem(FLocalControlWeights, Sizeof(FLocalControlWeights^[1])*FLocalControlListSize);
-                 For i := 1 to FLocalControlListSize Do FLocalControlWeights^[i] := 1.0;
-               End;
-         ELSE
+            case ParamPointer of
+                6:
+                begin   // levelize the list
+                    FLocalControlPointerList.Clear;  // clear this for resetting on first sample
+                    FLocalControlListSize := FLocalControlNameList.count;
+                    Reallocmem(FLocalControlWeights, Sizeof(FLocalControlWeights^[1]) * FLocalControlListSize);
+                    for i := 1 to FLocalControlListSize do
+                        FLocalControlWeights^[i] := 1.0;
+                end;
+            else
 
-         END;
+            end;
 
-         ParamName := Parser[ActorID].NextParam;
-         Param := Parser[ActorID].StrValue;
-     End;
+            ParamName := Parser[ActorID].NextParam;
+            Param := Parser[ActorID].StrValue;
+        end;
 
-     RecalcElementData(ActorID);
-  End;
+        RecalcElementData(ActorID);
+    end;
 
-End;
-
+end;
 
 
 {--------------------------------------------------------------------------}
-FUNCTION TESPVLControl.MakeLike(const ESPVLControlName:String):Integer;
-VAR
-   OtherESPVLControl:TESPVLControlObj;
-   i:Integer;
-Begin
-   Result := 0;
+function TESPVLControl.MakeLike(const ESPVLControlName: String): Integer;
+var
+    OtherESPVLControl: TESPVLControlObj;
+    i: Integer;
+begin
+    Result := 0;
    {See if we can find this ESPVLControl name in the present collection}
-   OtherESPVLControl := Find(ESPVLControlName);
-   IF OtherESPVLControl<>Nil THEN
-   WITH ActiveESPVLControlObj Do Begin
+    OtherESPVLControl := Find(ESPVLControlName);
+    if OtherESPVLControl <> NIL then
+        with ActiveESPVLControlObj do
+        begin
 
-        NPhases := OtherESPVLControl.Fnphases;
-        NConds  := OtherESPVLControl.Fnconds; // Force Reallocation of terminal stuff
+            NPhases := OtherESPVLControl.Fnphases;
+            NConds := OtherESPVLControl.Fnconds; // Force Reallocation of terminal stuff
 
-        ElementName       := OtherESPVLControl.ElementName;
-        ControlledElement := OtherESPVLControl.ControlledElement;  // Pointer to target circuit element
-        MonitoredElement  := OtherESPVLControl.MonitoredElement;  // Pointer to target circuit element
+            ElementName := OtherESPVLControl.ElementName;
+            ControlledElement := OtherESPVLControl.ControlledElement;  // Pointer to target circuit element
+            MonitoredElement := OtherESPVLControl.MonitoredElement;  // Pointer to target circuit element
 
-        ElementTerminal   := OtherESPVLControl.ElementTerminal;
-
-
-        For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherESPVLControl.PropertyValue[i];
-
-   End
-   ELSE  DoSimpleMsg('Error in ESPVLControl MakeLike: "' + ESPVLControlName + '" Not Found.', 370);
-
-End;
+            ElementTerminal := OtherESPVLControl.ElementTerminal;
 
 
+            for i := 1 to ParentClass.NumProperties do
+                PropertyValue[i] := OtherESPVLControl.PropertyValue[i];
+
+        end
+    else
+        DoSimpleMsg('Error in ESPVLControl MakeLike: "' + ESPVLControlName + '" Not Found.', 370);
+
+end;
 
 
 {==========================================================================}
@@ -341,201 +383,207 @@ End;
 {==========================================================================}
 
 
-
 {--------------------------------------------------------------------------}
-constructor TESPVLControlObj.Create(ParClass:TDSSClass; const ESPVLControlName:String);
+constructor TESPVLControlObj.Create(ParClass: TDSSClass; const ESPVLControlName: String);
 
-Begin
-     Inherited Create(ParClass);
-     Name := LowerCase(ESPVLControlName);
-     DSSObjType := ParClass.DSSClassType;
+begin
+    inherited Create(ParClass);
+    Name := LowerCase(ESPVLControlName);
+    DSSObjType := ParClass.DSSClassType;
 
-     NPhases := 3;  // Directly set conds and phases
-     Fnconds := 3;
-     Nterms  := 1;  // this forces allocation of terminals and conductors
+    NPhases := 3;  // Directly set conds and phases
+    Fnconds := 3;
+    Nterms := 1;  // this forces allocation of terminals and conductors
                          // in base class
 
 
+    ElementName := '';
+    ControlledElement := NIL;  // not used in this control
+    ElementTerminal := 1;
+    MonitoredElement := NIL;
 
-     ElementName   := '';
-     ControlledElement := nil;  // not used in this control
-     ElementTerminal  := 1;
-     MonitoredElement := Nil;
+    FLocalControlNameList := TSTringList.Create;
+    FLocalControlWeights := NIL;
+    FLocalControlPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
+    FLocalControlListSize := 0;
 
-     FLocalControlNameList := TSTringList.Create;
-     FLocalControlWeights   := Nil;
-     FLocalControlPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
-     FLocalControlListSize   := 0;
+    FPVSystemNameList := TSTringList.Create;
+    FPVSystemWeights := NIL;
+    FPVSystemPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
+    FPVSystemListSize := 0;
 
-     FPVSystemNameList := TSTringList.Create;
-     FPVSystemWeights   := Nil;
-     FPVSystemPointerList := PointerList.TPointerList.Create(20);  // Default size and increment
-     FPVSystemListSize   := 0;
+    FStorageNameList := TSTringList.Create;
+    FStorageWeights := NIL;
+    FStoragePointerList := PointerList.TPointerList.Create(20);  // Default size and increment
+    FStorageListSize := 0;
 
-     FStorageNameList := TSTringList.Create;
-     FStorageWeights   := Nil;
-     FStoragePointerList := PointerList.TPointerList.Create(20);  // Default size and increment
-     FStorageListSize   := 0;
-
-     FkWLimit    := 8000.0;
-     FkWBand     := 100.0;
-     TotalWeight := 1.0;
-     HalfkWBand  := FkWBand/2.0;
-     InitPropertyValues(0);
-     FkvarLimit  := FkWLimit/2.0;
+    FkWLimit := 8000.0;
+    FkWBand := 100.0;
+    TotalWeight := 1.0;
+    HalfkWBand := FkWBand / 2.0;
+    InitPropertyValues(0);
+    FkvarLimit := FkWLimit / 2.0;
 
 
    //  RecalcElementData;
 
-End;
+end;
 
 destructor TESPVLControlObj.Destroy;
-Begin
-     ElementName := '';
-     Inherited Destroy;
-End;
+begin
+    ElementName := '';
+    inherited Destroy;
+end;
 
 {--------------------------------------------------------------------------}
-PROCEDURE TESPVLControlObj.RecalcElementData(ActorID : Integer);
+procedure TESPVLControlObj.RecalcElementData(ActorID: Integer);
 
-VAR
-   DevIndex :Integer;
+var
+    DevIndex: Integer;
 
-Begin
+begin
 
 
 {Check for existence of monitored element}
 
-         Devindex := GetCktElementIndex(ElementName); // Global function
-         IF   DevIndex>0  THEN Begin
-             MonitoredElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
-             IF ElementTerminal > MonitoredElement.Nterms
-             THEN Begin
-                 DoErrorMsg('ESPVLControl: "' + Name + '"',
-                                 'Terminal no. "' +'" does not exist.',
-                                 'Re-specify terminal no.', 371);
-             End
-             ELSE Begin
+    Devindex := GetCktElementIndex(ElementName); // Global function
+    if DevIndex > 0 then
+    begin
+        MonitoredElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
+        if ElementTerminal > MonitoredElement.Nterms then
+        begin
+            DoErrorMsg('ESPVLControl: "' + Name + '"',
+                'Terminal no. "' + '" does not exist.',
+                'Re-specify terminal no.', 371);
+        end
+        else
+        begin
                // Sets name of i-th terminal's connected bus in ESPVLControl's buslist
-                 Setbus(1, MonitoredElement.GetBus(ElementTerminal));
-             End;
-         End
-         ELSE DoSimpleMsg('Monitored Element in ESPVLControl.'+Name+ ' does not exist:"'+ElementName+'"', 372);
+            Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+        end;
+    end
+    else
+        DoSimpleMsg('Monitored Element in ESPVLControl.' + Name + ' does not exist:"' + ElementName + '"', 372);
 
 
-End;
+end;
 
 procedure TESPVLControlObj.MakePosSequence;
 begin
-  if MonitoredElement <> Nil then begin
-    Nphases := ControlledElement.NPhases;
-    Nconds := FNphases;
-    Setbus(1, MonitoredElement.GetBus(ElementTerminal));
-  end;
-  inherited;
+    if MonitoredElement <> NIL then
+    begin
+        Nphases := ControlledElement.NPhases;
+        Nconds := FNphases;
+        Setbus(1, MonitoredElement.GetBus(ElementTerminal));
+    end;
+    inherited;
 end;
 
 {--------------------------------------------------------------------------}
-PROCEDURE TESPVLControlObj.CalcYPrim;
-Begin
+procedure TESPVLControlObj.CalcYPrim;
+begin
   // leave YPrims as nil and they will be ignored
   // Yprim is zeroed when created.  Leave it as is.
   //  IF YPrim=nil THEN YPrim := TcMatrix.CreateMatrix(Yorder);
-End;
-
-
-
-
+end;
 
 
 {--------------------------------------------------------------------------}
-PROCEDURE TESPVLControlObj.GetCurrents(Curr: pComplexArray; ActorID : Integer);
-VAR
-   i:Integer;
-Begin
+procedure TESPVLControlObj.GetCurrents(Curr: pComplexArray; ActorID: Integer);
+var
+    i: Integer;
+begin
 
-  For i := 1 to Fnconds Do Curr^[i] := CZERO;
+    for i := 1 to Fnconds do
+        Curr^[i] := CZERO;
 
-End;
+end;
 
-PROCEDURE TESPVLControlObj.GetInjCurrents(Curr: pComplexArray; ActorID : Integer);
-Var i:Integer;
-Begin
-     FOR i := 1 to Fnconds Do Curr^[i] := CZERO;
-End;
-
-{--------------------------------------------------------------------------}
-PROCEDURE TESPVLControlObj.DumpProperties(Var F:TextFile; Complete:Boolean);
-
-VAR
-   i:Integer;
-
-Begin
-    Inherited DumpProperties(F,Complete);
-
-    WITH ParentClass Do
-     For i := 1 to NumProperties Do
-     Begin
-        Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[i]);
-     End;
-
-    If Complete THEN
-    Begin
-      Writeln(F);
-    End;
-
-End;
-
+procedure TESPVLControlObj.GetInjCurrents(Curr: pComplexArray; ActorID: Integer);
+var
+    i: Integer;
+begin
+    for i := 1 to Fnconds do
+        Curr^[i] := CZERO;
+end;
 
 {--------------------------------------------------------------------------}
-PROCEDURE TESPVLControlObj.DoPendingAction;
+procedure TESPVLControlObj.DumpProperties(var F: TextFile; Complete: Boolean);
+
+var
+    i: Integer;
+
+begin
+    inherited DumpProperties(F, Complete);
+
+    with ParentClass do
+        for i := 1 to NumProperties do
+        begin
+            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+        end;
+
+    if Complete then
+    begin
+        Writeln(F);
+    end;
+
+end;
+
+
+{--------------------------------------------------------------------------}
+procedure TESPVLControlObj.DoPendingAction;
 begin
 
         {Do Nothing}
 end;
 
 {--------------------------------------------------------------------------}
-PROCEDURE TESPVLControlObj.Sample;
+procedure TESPVLControlObj.Sample;
 
-VAR
-   i           :Integer;
-   PDiff,
-   QDiff       :Double;
-   S           :Complex ;
-   Gen         :TGeneratorObj;
-   GenkWChanged, Genkvarchanged: Boolean;
-   GenkW, Genkvar :Double;
+var
+    i: Integer;
+    PDiff,
+    QDiff: Double;
+    S: Complex;
+    Gen: TGeneratorObj;
+    GenkWChanged, Genkvarchanged: Boolean;
+    GenkW, Genkvar: Double;
 
 begin
      // If list is not define, go make one from all generators in circuit
-     IF FLocalControlPointerList.ListSize=0 Then  MakeLocalControlList;
+    if FLocalControlPointerList.ListSize = 0 then
+        MakeLocalControlList;
 
-     If FLocalControlListSize>0 Then Begin
+    if FLocalControlListSize > 0 then
+    begin
 
        //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
-       S := MonitoredElement.Power[ElementTerminal,ActorID];  // Power in active terminal
+        S := MonitoredElement.Power[ElementTerminal, ActorID];  // Power in active terminal
 
-       PDiff := S.re * 0.001 - FkWLimit;
+        PDiff := S.re * 0.001 - FkWLimit;
 
-       QDiff := S.im * 0.001 - FkvarLimit;
+        QDiff := S.im * 0.001 - FkvarLimit;
 
        // Redispatch the vars.
 
-       GenkWChanged := FALSE;
-       GenkvarChanged := FALSE;
+        GenkWChanged := FALSE;
+        GenkvarChanged := FALSE;
 
-       If Abs(PDiff) > HalfkWBand Then Begin // Redispatch Generators
+        if Abs(PDiff) > HalfkWBand then
+        begin // Redispatch Generators
           // PDiff is kW needed to get back into band
-          For i := 1 to FLocalControlListSize Do Begin
-              Gen := FLocalControlPointerList.Get(i);
+            for i := 1 to FLocalControlListSize do
+            begin
+                Gen := FLocalControlPointerList.Get(i);
               // compute new dispatch value for this generator ...
-              GenkW := Max(1.0, (Gen.kWBase + PDiff *(FLocalControlWeights^[i]/TotalWeight)));
-              If GenkW <> Gen.kWBase Then Begin
-                  Gen.kWBase := GenkW;
-                  GenkWChanged := TRUE;
-              End;
-          End;
-       End;
+                GenkW := Max(1.0, (Gen.kWBase + PDiff * (FLocalControlWeights^[i] / TotalWeight)));
+                if GenkW <> Gen.kWBase then
+                begin
+                    Gen.kWBase := GenkW;
+                    GenkWChanged := TRUE;
+                end;
+            end;
+        end;
       (*
        If Abs(QDiff) > HalfkWBand Then Begin // Redispatch Generators
           // QDiff is kvar needed to get back into band
@@ -559,7 +607,7 @@ begin
       *)
 
        {Else just continue}
-    End;
+    end;
 
 
 end;
@@ -568,63 +616,71 @@ end;
 procedure TESPVLControlObj.InitPropertyValues(ArrayOffset: Integer);
 begin
 
-     PropertyValue[1]  := '';   //'element';
-     PropertyValue[2]  := '1';   //'terminal';
-     PropertyValue[3]  := '8000';
-     PropertyValue[4]  := '100';
-     PropertyValue[5]  := '0';
-     PropertyValue[6]  := '';
-     PropertyValue[7]  := '';
+    PropertyValue[1] := '';   //'element';
+    PropertyValue[2] := '1';   //'terminal';
+    PropertyValue[3] := '8000';
+    PropertyValue[4] := '100';
+    PropertyValue[5] := '0';
+    PropertyValue[6] := '';
+    PropertyValue[7] := '';
 
 
-
-  inherited  InitPropertyValues(NumPropsThisClass);
+    inherited  InitPropertyValues(NumPropsThisClass);
 
 end;
 
-Function TESPVLControlObj.MakeLocalControlList:Boolean;
+function TESPVLControlObj.MakeLocalControlList: Boolean;
 
-VAR
-   pESPVLControl:TESPVLControlObj;
-   i:Integer;
+var
+    pESPVLControl: TESPVLControlObj;
+    i: Integer;
 
 begin
 
-   Result := FALSE;
-   if Ftype = 1 then Begin    // only for System controller
+    Result := FALSE;
+    if Ftype = 1 then
+    begin    // only for System controller
 
 
-       If FLocalControlListSize>0 Then Begin    // Name list is defined - Use it
+        if FLocalControlListSize > 0 then
+        begin    // Name list is defined - Use it
 
-         For i := 1 to FLocalControlListSize Do Begin
-             pESPVLControl := ESPVLControlClass.Find(FLocalControlNameList.Strings[i-1]);
-             If Assigned(pESPVLControl) and pESPVLControl.Enabled Then FLocalControlPointerList.New := pESPVLControl;
-         End;
+            for i := 1 to FLocalControlListSize do
+            begin
+                pESPVLControl := ESPVLControlClass.Find(FLocalControlNameList.Strings[i - 1]);
+                if Assigned(pESPVLControl) and pESPVLControl.Enabled then
+                    FLocalControlPointerList.New := pESPVLControl;
+            end;
 
-       End
-       Else Begin
+        end
+        else
+        begin
          {Search through the entire circuit for enabled generators and add them to the list}
 
-         For i := 1 to ESPVLControlClass.ElementCount Do Begin
-            pESPVLControl :=  ESPVLControlClass.ElementList.Get(i);
-            If pESPVLControl.Enabled Then FLocalControlPointerList.New := pESPVLControl;
-         End;
+            for i := 1 to ESPVLControlClass.ElementCount do
+            begin
+                pESPVLControl := ESPVLControlClass.ElementList.Get(i);
+                if pESPVLControl.Enabled then
+                    FLocalControlPointerList.New := pESPVLControl;
+            end;
 
          {Allocate uniform weights}
-         FLocalControlListSize := FLocalControlPointerList.ListSize;
-         Reallocmem(FLocalControlWeights, Sizeof(FLocalControlWeights^[1])*FLocalControlListSize);
-         For i := 1 to FLocalControlListSize Do FLocalControlWeights^[i] := 1.0;
+            FLocalControlListSize := FLocalControlPointerList.ListSize;
+            Reallocmem(FLocalControlWeights, Sizeof(FLocalControlWeights^[1]) * FLocalControlListSize);
+            for i := 1 to FLocalControlListSize do
+                FLocalControlWeights^[i] := 1.0;
 
-       End;
+        end;
 
        // Add up total weights    ??????
-       TotalWeight := 0.0;
-       For i := 1 to FLocalControlListSize Do  TotalWeight := TotalWeight + FLocalControlWeights^[i];
+        TotalWeight := 0.0;
+        for i := 1 to FLocalControlListSize do
+            TotalWeight := TotalWeight + FLocalControlWeights^[i];
 
-       If FLocalControlPointerList.ListSize>0 Then Result := TRUE;
-   End;
+        if FLocalControlPointerList.ListSize > 0 then
+            Result := TRUE;
+    end;
 end;
-
 
 
 procedure TESPVLControlObj.Reset;
@@ -634,10 +690,7 @@ begin
 end;
 
 
-
-INITIALIZATION
-
-
+initialization
 
 
 end.
