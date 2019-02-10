@@ -76,7 +76,7 @@ unit Monitor;
    3: State Variables
    4: Flicker level and severity index by phase (no modifiers apply)
    5: Solution Variables (Iteration count, etc.)
-   6: Capacitor
+   6: Capacitor Switching (Capacitors only)
    7: Storage Variables
    8: Transformer Winding Currents
    9: Losses (watts and vars)
@@ -284,10 +284,11 @@ Begin
                     '4 = Flicker level and severity index (Pst) for voltages. No adders apply.' +CRLF+
                     '    Flicker level at simulation time step, Pst at 10-minute time step.' +CRLF+
                     '5 = Solution variables (Iterations, etc).' +CRLF+
-                    '6 = Capacitor Switching (Capacitor Objecs only)'+CRLF+
+                    'Normally, these would be actual phasor quantities from solution.' + CRLF+
+                    '6 = Capacitor Switching (Capacitors only)'+CRLF+
                     '7 = Storage state vars (Storage device only)'+CRLF+
                     '8 = All winding currents (Transformer device only)'+CRLF+
-                    '9 = Losses, watts and var (of monitored device)'+CRLF+
+                    '9 = Losses, watts and var (of monitored device)'+CRLF+ CRLF+
                     '10 = All Winding voltages (Transformer device only)'+CRLF+ CRLF+
                     'Normally, these would be actual phasor quantities from solution.' + CRLF+
                     'Combine mode with adders below to achieve other results for terminal quantities:' + CRLF+

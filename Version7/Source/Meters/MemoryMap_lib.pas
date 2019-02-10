@@ -42,7 +42,7 @@ var
 begin
   Mem_Space :=  TBytesStream.Create();
 {$IFNDEF FPC}
-  Mem_Space.WriteData($01A0);
+  Mem_Space.WriteData($01A0);   // Header for identifying String type data
 {$ELSE}
   wordBuf := $01A0;
   Mem_Space.Write(wordBuf,2);
@@ -56,7 +56,7 @@ end;
 procedure WriteintoMemStr(Mem_Space : TBytesStream; Content: string); overload;
 begin
 {$IFNDEF FPC}
-  Mem_Space.WriteData($01A0);
+  Mem_Space.WriteData($01A0);   // Header for identifying String type data
 {$ELSE}
   wordBuf := $01A0;
   Mem_Space.Write(wordBuf,2);
@@ -69,7 +69,7 @@ end;
 procedure WriteintoMem(Mem_Space : TBytesStream; Content: Double); overload;
 begin
 {$IFNDEF FPC}
-  Mem_Space.WriteData($02A0);
+  Mem_Space.WriteData($02A0);   // Header for identifying a double type data
   Mem_Space.WriteData(Content);
 {$ELSE}
   wordBuf := $02A0;

@@ -766,7 +766,7 @@ begin
    
    If Fnphases>1 then Begin
         Try
-          NewZ  := Z.Kron(FNeutralConductor);       // Perform Kron Reductions into new TCMatrix; return pointer to it.
+          NewZ  := Z.Kron(FNeutralConductor);       // Perform Kron Reductions into temp space
         { Have to invert the Y matrix to eliminate properly}
           YC.Invert;  // Vn = 0 not In
           NewYC := YC.Kron(FNeutralConductor);

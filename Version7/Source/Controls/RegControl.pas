@@ -965,7 +965,7 @@ begin
          If IsReversible or CogenEnabled Then
          Begin
 
-              If LookingForward and NOT InCogenMode Then   // If looking forward, check to see if we should reverse
+              If LookingForward and (NOT InCogenMode) Then   // If looking forward, check to see if we should reverse
                 Begin
                   FwdPower := -ControlledTransformer.Power[ElementTerminal].re;  // watts
                   If (Not ReversePending) Then  // If reverse is already pending, don't send any more messages

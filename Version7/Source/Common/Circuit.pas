@@ -69,15 +69,12 @@ TYPE
           SavedBuses          :pTBusArray;
           SavedBusNames       :pStringArray;
           SavedNumBuses       :Integer;
-
           FLoadMultiplier     :Double;  // global multiplier for every load
 
           AbortBusProcess     :Boolean;
 
           Branch_List         : TCktTree; // topology from the first source, lazy evaluation
           BusAdjPC, BusAdjPD  : TAdjArray; // bus adjacency lists of PD and PC elements
-
-
 
           Procedure AddDeviceHandle(Handle:Integer);
           Procedure AddABus;
@@ -96,7 +93,7 @@ TYPE
           Function SaveBusCoords:Boolean;
           Function SaveVoltageBases:Boolean;
 
-          Procedure ReallocDeviceList;
+          procedure ReallocDeviceList;
           procedure Set_CaseName(const Value: String);
 
           function Get_Name:String;
@@ -118,7 +115,6 @@ TYPE
 
           // lists of pointers to different elements by class
           Faults,
-          CktElements,
           PDElements,
           PCElements,
           DSSControls,
@@ -143,6 +139,7 @@ TYPE
           Reclosers, // added for CIM XML export
           Feeders,
           SwtControls        :PointerList.TPointerList;
+          CktElements        : PointerList.TPointerList;
 
           ControlQueue:TControlQueue;
 
@@ -189,9 +186,16 @@ TYPE
           Locations         : Array of Integer;   // Stores the indexes of the locations
 
           // Variables for Diakoptics
-          Contours         : Array of Array of Complex;
-          ZCT              : Array of Array of Complex;
-          ZCC              : Array of Array of Complex;
+          Contours         :  TSparse_Complex;    //  Contours matrix
+          ZLL              :  TSparse_Complex;    //  Link branch matrix
+          ZCT              :  TSparse_Complex;    //  The transformation matrix (to go from one to other domain)
+          ZCC              :  TSparse_Complex;    //  Interconnections matrix
+          Y4               :  TSparse_Complex;    //  The inverse of the interconnections matrix
+          V_0              :  TSparse_Complex;    //  The voltages of the partial solutions
+          Ic               :  TSparse_Complex;    //  The complementary Currents vector
+          VIndex           :  Integer;  // To store the index of the sub-circuit in the interconnected system
+          VLength          :  Integer;  // To store the length of the sub-circuit in the interconnected system
+          AD_Init          :  Boolean;    // This is used only by the A-Diakoptics coordiantor (ID = 1)
 
           // Bus and Node stuff
           Buses:    pTBusArray;
@@ -531,10 +535,13 @@ BEGIN
   setlength(Path_size,0);
 
   // Diakoptics variables
-
-  setlength(ZCC,0);
-  setlength(ZCT,0);
-  setlength(Contours,0);
+  Contours  :=  TSparse_Complex.Create;
+  ZLL       :=  TSparse_Complex.Create;
+  ZCC       :=  TSparse_Complex.Create;
+  ZCT       :=  TSparse_Complex.Create;
+  Y4        :=  TSparse_Complex.Create;
+  V_0       :=  TSparse_Complex.Create;
+  Ic        :=  TSparse_Complex.Create;
 
 END;
 
@@ -597,7 +604,7 @@ BEGIN
      Reactors.Free;
      Reclosers.Free;
      Relays.Free;
-     Fuses.Free;     
+     Fuses.Free;
 
      ControlQueue.Free;
 
@@ -607,6 +614,16 @@ BEGIN
      AutoAddObj.Free;
 
      FreeTopology;
+
+//  Release all ADiakoptics matrixes
+
+     Contours.Free;
+     ZLL.Free;
+     ZCC.Free;
+     ZCT.Free;
+     Y4.Free;
+     V_0.Free;
+     Ic.Free;
 
      Inherited Destroy;
 END;
@@ -632,7 +649,7 @@ begin
   FOS.fFlags := FOS.fFlags OR FOF_SILENT;
   SHFileOperation(FOS);
 end;
-{$ENDIF}
+  {$ENDIF}
 {$IFDEF UNIX}
 procedure DeltreeDir(Directory: string);
 var 
@@ -850,14 +867,9 @@ Begin
         End;
       end;
       //  Checks the coverage index to stablish if is necessary to keep tracing paths to increase the coverage
-      DBLTemp         :=  0;
+      DBLTemp         :=  0.0;
       for i := Low(Buses_covered) to High(Buses_covered) do
-{$IFDEF FPC}
-        DBLtemp         :=  DBLTemp + Buses_Covered[i];
-{$ELSE}
-        DBLtemp         :=  DBLTemp + double(Buses_Covered[i]);
-{$ENDIF}
-        
+        DBLtemp         :=  DBLTemp + (0.0+Buses_Covered[i]);
       DBLtemp         :=  DBLTemp/Sys_Size;
 {      If the New coverage is different from the previous one and is below the expected coverage keep going
        The first criteria is to avoid keep working on a path that will not contribute to improve the coverage}
@@ -983,7 +995,7 @@ begin
         if Local_temp <> 0 then
         Begin
           text    :=  stringreplace(File_Struc[FS_Idx], 'Redirect ', '',[rfReplaceAll, rfIgnoreCase]);
-          for FS_Idx1 := 2 to NumCkts do
+            for FS_Idx1 := 2 to NumCkts do
             CopyFile(PChar(Path + PathDelim + text), PChar(Path + PathDelim + 'zone_' + inttostr(FS_Idx1) + PathDelim + text), true);
         End;
         inc(FS_Idx);
@@ -1023,9 +1035,13 @@ begin
     End;
     // Sets the properties of the VSource on each subcricuit based on the latest voltage measured
     FS_Idx1     :=    0;
-    for FS_Idx := 2 to NumCkts do
+    for FS_Idx := 1 to NumCkts do
     Begin
-       AssignFile(myFile, Path  + PathDelim + 'zone_' + inttostr(FS_Idx) + PathDelim + 'VSource.dss');
+       if FS_Idx = 1 then
+         AssignFile(myFile, Path  +  PathDelim + 'VSource.dss')
+       else
+         AssignFile(myFile, Path  +  PathDelim + 'zone_' + inttostr(FS_Idx) + PathDelim + 'VSource.dss');
+
        ReWrite(myFile);
        for FS_Idx2 := 1 to 3 do
        Begin
@@ -1151,7 +1167,7 @@ Begin
       TextCmd  :=  RunMeTIS(DSSDirectory + MeTISCmd + ' ' + FileName + ' ' + inttostr(Num_pieces));  // Executes MeTIS
 {$ELSE}
       Process.RunCommand(DSSDirectory + MeTISCmd, [Filename, inttostr(Num_pieces)], TextCmd); // Executes MeTIS
-{$ENDIF}
+      {$ENDIF}
       Flag      :=  {$IFDEF FPC}ANSIContainsText{$ELSE}ContainsText{$ENDIF}(TextCmd,'I detected an error');
       if Flag then       // The # of edges was wrong, use the one proposed by MeTIS
       Begin
@@ -1226,9 +1242,9 @@ Begin
       setlength(PConn_Names,length(Locations));             //  Sets the memory space for storing the Bus names
       SolutionAbort := FALSE;
       j             :=  0;
-      for i := 1 to High(Locations) do
+      for i := 0 to High(Locations) do
       begin
-        if Locations[i] >= 0 then
+        if Locations[i] > 0 then
         Begin
           inc(Result);
           // Gets the name of the PDE for placing the EnergyMeter
@@ -1281,6 +1297,28 @@ Begin
            End;
           // Generates the OpenDSS Command;
           DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
+        End
+        else
+        Begin
+          if Locations[i] = 0 then    // The reference bus (Actor 1)
+          Begin
+             BusName          :=  Inc_Mat_Cols[0];
+             PConn_Names[i]   :=  BusName;
+             SetActiveBus(BusName);           // Activates the Bus
+             pBus             :=  Buses^[ActiveBusIndex];
+             // Stores the voltages for the Reference bus first
+             for jj := 1 to 3 do
+             Begin
+               // this code so nodes come out in order from smallest to larges
+               NodeIdx := pBus.FindIdx(jj);   // Get the index of the Node that matches jj
+
+               Volts              := ctopolardeg(Solution.NodeV^[pBus.GetRef(NodeIdx)]);  // referenced to pBus
+               PConn_Voltages[j]  :=  (Volts.mag/1000);
+               inc(j);
+               PConn_Voltages[j]  :=  Volts.ang;
+               inc(j);
+             End;
+          End;
         End;
       end;
     End

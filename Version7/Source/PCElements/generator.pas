@@ -41,6 +41,7 @@ unit generator;
     3-17-03  Revised user-written models and harmonic models
     5-11-09  Added properties to support kW, kvar, PV, and kV  through COM
     8-28-13 Forced re-initializing solution if Model 3 generator added.
+    7-??-18 Corrected Generator Model 7 1-phase Model
 }
 {
   The generator is essentially a negative load that can be dispatched.

@@ -303,10 +303,10 @@ VAR
 FUNCTION GetDefaultDataDirectory: String;
 Begin
 {$IFDEF UNIX}
-  Result := GetEnvironmentVariable('HOME') + '/Documents';
+  Result := GetEnvironmentVariable('HOME') + PathDelim + 'Documents';
 {$ENDIF}
 {$IF (defined(Windows) or defined(MSWindows))}
-  Result := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH') + '\Documents';
+  Result := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH') + PathDelim + 'Documents';
 {$ENDIF}
 end;
 
@@ -399,6 +399,7 @@ Begin
      LastErrorMessage := Msg;
      ErrorNumber := ErrNum;
      AppendGlobalResultCRLF(Msg);
+     SolutionAbort  :=  True;
 End;
 
 //----------------------------------------------------------------------------
@@ -824,7 +825,7 @@ Begin
      ReallocMem(p, newsize);
 End;
 
-// Advance visualization tool check
+// Function to validate the installation and path of the OpenDSS Viewer
 function GetIni(s,k: string; d: string; f: string=''): string; overload;
 var
   ini: TMemIniFile;
@@ -849,14 +850,17 @@ begin
 end;
 
 {$IFNDEF FPC}
-function CheckDSSVisualizationTool: Boolean;
+// Validates the installation and path of the OpenDSS Viewer
+function CheckOpenDSSViewer: Boolean;
+var FileName: string;
 begin
-  DSS_Viz_path:=GetIni('Application','path','', TPath.GetHomePath+'\OpenDSS Visualization Tool\settings.ini');
-  Result:=true;
-  if DSS_Viz_path='' then
-    Result:=false;
+  DSS_Viz_path:=GetIni('Application','path','', TPath.GetHomePath+'\OpenDSS_Viewer\settings.ini');
+  // to make it compatible with the function
+  FileName  :=  stringreplace(DSS_Viz_path, '\\' ,'\',[rfReplaceAll, rfIgnoreCase]);
+  FileName  :=  stringreplace(FileName, '"' ,'',[rfReplaceAll, rfIgnoreCase]);
+  // returns true only if the executable exists
+  Result:=fileexists(FileName);
 end;
-// End of visualization tool check
 {$ENDIF}
 
 initialization
@@ -883,7 +887,7 @@ initialization
    IsDLL                 := FALSE;
    LastCommandWasCompile := FALSE;
    LastErrorMessage      := '';
-   MaxCircuits           := 1;  //  This version only allows one circuit at a time
+   MaxCircuits           := 1;  //  Not required anymore. planning to remove it
    MaxAllocationIterations := 2;
    SolutionAbort         := FALSE;
    AutoShowExport        := FALSE;
