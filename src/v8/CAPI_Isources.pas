@@ -1,186 +1,207 @@
-UNIT CAPI_ISources;
+unit CAPI_ISources;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils;
+uses
+    CAPI_Utils;
 
-PROCEDURE ISources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-PROCEDURE ISources_Get_AllNames_GR();cdecl;
-function ISources_Get_Count():Integer;cdecl;
-function ISources_Get_First():Integer;cdecl;
-function ISources_Get_Next():Integer;cdecl;
-function ISources_Get_Name():PAnsiChar;cdecl;
-procedure ISources_Set_Name(const Value: PAnsiChar);cdecl;
-function ISources_Get_Amps():Double;cdecl;
-procedure ISources_Set_Amps(Value: Double);cdecl;
-function ISources_Get_AngleDeg():Double;cdecl;
-function ISources_Get_Frequency():Double;cdecl;
-procedure ISources_Set_AngleDeg(Value: Double);cdecl;
-procedure ISources_Set_Frequency(Value: Double);cdecl;
+procedure ISources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure ISources_Get_AllNames_GR(); CDECL;
+function ISources_Get_Count(): Integer; CDECL;
+function ISources_Get_First(): Integer; CDECL;
+function ISources_Get_Next(): Integer; CDECL;
+function ISources_Get_Name(): PAnsiChar; CDECL;
+procedure ISources_Set_Name(const Value: PAnsiChar); CDECL;
+function ISources_Get_Amps(): Double; CDECL;
+procedure ISources_Set_Amps(Value: Double); CDECL;
+function ISources_Get_AngleDeg(): Double; CDECL;
+function ISources_Get_Frequency(): Double; CDECL;
+procedure ISources_Set_AngleDeg(Value: Double); CDECL;
+procedure ISources_Set_Frequency(Value: Double); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, PointerList, Isource, DSSGlobals, CktElement;
+uses
+    CAPI_Constants,
+    PointerList,
+    Isource,
+    DSSGlobals,
+    CktElement;
 
-PROCEDURE ISources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-VAR
-  Result: PPAnsiCharArray;
-  elem: TIsourceObj;
-  pList: TPointerList;
-  k: Integer;
+procedure ISources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+var
+    Result: PPAnsiCharArray;
+    elem: TIsourceObj;
+    pList: TPointerList;
+    k: Integer;
 
-Begin
+begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-        If IsourceClass.ElementList.ListSize > 0 then
-        Begin
-          pList := IsourceClass.ElementList;
-          DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize -1) + 1);
-          k:=0;
-          elem := pList.First;
-          WHILE elem<>Nil DO Begin
-              Result[k] := DSS_CopyStringAsPChar(elem.Name);
-              Inc(k);
-              elem := pList.next ;
-          End;
-        End;
-    End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        if IsourceClass.ElementList.ListSize > 0 then
+        begin
+            pList := IsourceClass.ElementList;
+            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize - 1) + 1);
+            k := 0;
+            elem := pList.First;
+            while elem <> NIL do
+            begin
+                Result[k] := DSS_CopyStringAsPChar(elem.Name);
+                Inc(k);
+                elem := pList.next;
+            end;
+        end;
+    end;
 
 end;
-PROCEDURE ISources_Get_AllNames_GR();cdecl;
+
+procedure ISources_Get_AllNames_GR(); CDECL;
 // Same as ISources_Get_AllNames but uses global result (GR) pointers
 begin
-   ISources_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    ISources_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 
 //------------------------------------------------------------------------------
-function ISources_Get_Count():Integer;cdecl;
-Begin
-     Result := 0;
-     If ActiveCircuit[ActiveActor] <> Nil Then
+function ISources_Get_Count(): Integer; CDECL;
+begin
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
         Result := IsourceClass.ElementList.ListSize;
 end;
 //------------------------------------------------------------------------------
-function ISources_Get_First():Integer;cdecl;
-Var
-   pElem : TIsourceObj;
+function ISources_Get_First(): Integer; CDECL;
+var
+    pElem: TIsourceObj;
 begin
-     Result := 0;
-     If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pElem := IsourceClass.ElementList.First;
-        If pElem <> Nil Then
-        Repeat
-          If pElem.Enabled Then Begin
-              ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-              Result := 1;
-          End
-          Else pElem := IsourceClass.ElementList.Next;
-        Until (Result = 1) or (pElem = nil);
-     End;
+        if pElem <> NIL then
+            repeat
+                if pElem.Enabled then
+                begin
+                    ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
+                    Result := 1;
+                end
+                else
+                    pElem := IsourceClass.ElementList.Next;
+            until (Result = 1) or (pElem = NIL);
+    end;
 end;
 //------------------------------------------------------------------------------
-function ISources_Get_Next():Integer;cdecl;
-Var
-   pElem : TIsourceObj;
+function ISources_Get_Next(): Integer; CDECL;
+var
+    pElem: TIsourceObj;
 begin
-     Result := 0;
-     If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pElem := IsourceClass.ElementList.Next;
-        If pElem <> Nil Then
-        Repeat
-          If pElem.Enabled Then Begin
-              ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-              Result := IsourceClass.ElementList.ActiveIndex;
-          End
-          Else pElem := IsourceClass.ElementList.Next;
-        Until (Result > 0) or (pElem = nil);
-     End;
+        if pElem <> NIL then
+            repeat
+                if pElem.Enabled then
+                begin
+                    ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
+                    Result := IsourceClass.ElementList.ActiveIndex;
+                end
+                else
+                    pElem := IsourceClass.ElementList.Next;
+            until (Result > 0) or (pElem = NIL);
+    end;
 end;
 //------------------------------------------------------------------------------
-function ISources_Get_Name_AnsiString():AnsiString;inline;
-Var
-   elem: TDSSCktElement;
-Begin
+function ISources_Get_Name_AnsiString(): Ansistring; inline;
+var
+    elem: TDSSCktElement;
+begin
     Result := '';
     elem := ActiveCircuit[ActiveActor].ActiveCktElement;
-    If elem <> Nil Then Result := elem.Name;
+    if elem <> NIL then
+        Result := elem.Name;
 end;
 
-function ISources_Get_Name():PAnsiChar;cdecl;
+function ISources_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(ISources_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
-procedure ISources_Set_Name(const Value: PAnsiChar);cdecl;
+procedure ISources_Set_Name(const Value: PAnsiChar); CDECL;
 // Set element active by name
 
 begin
-     If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
-          If IsourceClass.SetActive(Value) Then
-          Begin
-               ActiveCircuit[ActiveActor].ActiveCktElement := IsourceClass.ElementList.Active ;
-          End
-          Else Begin
-              DoSimpleMsg('Isource "'+ Value +'" Not Found in Active Circuit.', 77003);
-          End;
-     End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        if IsourceClass.SetActive(Value) then
+        begin
+            ActiveCircuit[ActiveActor].ActiveCktElement := IsourceClass.ElementList.Active;
+        end
+        else
+        begin
+            DoSimpleMsg('Isource "' + Value + '" Not Found in Active Circuit.', 77003);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-function ISources_Get_Amps():Double;cdecl;
+function ISources_Get_Amps(): Double; CDECL;
 var
-  elem: TIsourceObj;
+    elem: TIsourceObj;
 begin
-  Result := 0.0;
-  elem := IsourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.Amps   ;
+    Result := 0.0;
+    elem := IsourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.Amps;
 end;
 //------------------------------------------------------------------------------
-procedure ISources_Set_Amps(Value: Double);cdecl;
+procedure ISources_Set_Amps(Value: Double); CDECL;
 var
-  elem: TIsourceObj;
+    elem: TIsourceObj;
 begin
-  elem := IsourceClass.GetActiveObj ;
-  if elem <> nil then elem.Amps := Value;
+    elem := IsourceClass.GetActiveObj;
+    if elem <> NIL then
+        elem.Amps := Value;
 end;
 //------------------------------------------------------------------------------
-function ISources_Get_AngleDeg():Double;cdecl;
+function ISources_Get_AngleDeg(): Double; CDECL;
 var
-  elem: TIsourceObj;
+    elem: TIsourceObj;
 begin
-  Result := 0.0;
-  elem := IsourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.Angle ;
+    Result := 0.0;
+    elem := IsourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.Angle;
 end;
 //------------------------------------------------------------------------------
-function ISources_Get_Frequency():Double;cdecl;
+function ISources_Get_Frequency(): Double; CDECL;
 var
-  elem: TIsourceObj;
+    elem: TIsourceObj;
 begin
-  Result := 0.0;
-  elem := IsourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.SrcFrequency  ;
+    Result := 0.0;
+    elem := IsourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.SrcFrequency;
 end;
 //------------------------------------------------------------------------------
-procedure ISources_Set_AngleDeg(Value: Double);cdecl;
+procedure ISources_Set_AngleDeg(Value: Double); CDECL;
 var
-  elem: TIsourceObj;
+    elem: TIsourceObj;
 begin
-  elem := IsourceClass.GetActiveObj ;
-  if elem <> nil then elem.Angle := Value;
+    elem := IsourceClass.GetActiveObj;
+    if elem <> NIL then
+        elem.Angle := Value;
 end;
 //------------------------------------------------------------------------------
-procedure ISources_Set_Frequency(Value: Double);cdecl;
+procedure ISources_Set_Frequency(Value: Double); CDECL;
 var
-  elem: TIsourceObj;
+    elem: TIsourceObj;
 begin
-  elem := IsourceClass.GetActiveObj ;
-  if elem <> nil then elem.SrcFrequency := Value;
+    elem := IsourceClass.GetActiveObj;
+    if elem <> NIL then
+        elem.SrcFrequency := Value;
 end;
 //------------------------------------------------------------------------------
-END.
+end.

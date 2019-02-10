@@ -1,46 +1,55 @@
-UNIT CAPI_DSSProgress;
+unit CAPI_DSSProgress;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils;
+uses
+    CAPI_Utils;
 
-procedure DSSProgress_Close();cdecl;
-procedure DSSProgress_Set_Caption(const Value: PAnsiChar);cdecl;
-procedure DSSProgress_Set_PctProgress(Value: Integer);cdecl;
-procedure DSSProgress_Show();cdecl;
+procedure DSSProgress_Close(); CDECL;
+procedure DSSProgress_Set_Caption(const Value: PAnsiChar); CDECL;
+procedure DSSProgress_Set_PctProgress(Value: Integer); CDECL;
+procedure DSSProgress_Show(); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, DSSGlobals, CmdForms;
+uses
+    CAPI_Constants,
+    DSSGlobals,
+    CmdForms;
 
-procedure DSSProgress_Close();cdecl;
+procedure DSSProgress_Close(); CDECL;
 begin
-   If NoFormsAllowed Then Exit;
-   ProgressHide;
+    if NoFormsAllowed then
+        Exit;
+    ProgressHide;
 end;
 //------------------------------------------------------------------------------
-procedure DSSProgress_Set_Caption(const Value: PAnsiChar);cdecl;
+procedure DSSProgress_Set_Caption(const Value: PAnsiChar); CDECL;
 begin
-   If NoFormsAllowed Then Exit;
-   InitProgressForm;
-   ProgressCaption ( Value);
+    if NoFormsAllowed then
+        Exit;
+    InitProgressForm;
+    ProgressCaption(Value);
 end;
 //------------------------------------------------------------------------------
-procedure DSSProgress_Set_PctProgress(Value: Integer);cdecl;
+procedure DSSProgress_Set_PctProgress(Value: Integer); CDECL;
 begin
-   If NoFormsAllowed Then Exit;
-   InitProgressForm;
-   ShowPctProgress ( Value);
+    if NoFormsAllowed then
+        Exit;
+    InitProgressForm;
+    ShowPctProgress(Value);
 end;
 //------------------------------------------------------------------------------
-procedure DSSProgress_Show();cdecl;
+procedure DSSProgress_Show(); CDECL;
 begin
-   If NoFormsAllowed Then Exit;
-        InitProgressForm;
-        ProgressFormCaption( ' ');
-        ShowPctProgress(0);
+    if NoFormsAllowed then
+        Exit;
+    InitProgressForm;
+    ProgressFormCaption(' ');
+    ShowPctProgress(0);
 
 end;
 //------------------------------------------------------------------------------
-END.
+end.

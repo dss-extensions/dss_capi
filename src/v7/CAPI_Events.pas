@@ -1,15 +1,17 @@
-UNIT CAPI_DSSEvents;
+unit CAPI_DSSEvents;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils, AxCtrls, Classes;
+uses
+    CAPI_Utils,
+    AxCtrls,
+    Classes;
 
+implementation
 
+uses
+    CAPI_Constants;
 
-IMPLEMENTATION
-
-USES CAPI_Constants;
-
-
-END.
+end.

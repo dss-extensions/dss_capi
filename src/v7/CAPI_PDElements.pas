@@ -1,349 +1,396 @@
-UNIT CAPI_PDElements;
+unit CAPI_PDElements;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils;
+uses
+    CAPI_Utils;
 
-function PDElements_Get_Count():Integer;cdecl;
-function PDElements_Get_FaultRate():Double;cdecl;
-function PDElements_Get_First():Integer;cdecl;
-function PDElements_Get_IsShunt():WordBool;cdecl;
-function PDElements_Get_Next():Integer;cdecl;
-function PDElements_Get_pctPermanent():Double;cdecl;
-procedure PDElements_Set_FaultRate(Value: Double);cdecl;
-procedure PDElements_Set_pctPermanent(Value: Double);cdecl;
-function PDElements_Get_Name():PAnsiChar;cdecl;
-procedure PDElements_Set_Name(const Value: PAnsiChar);cdecl;
-function PDElements_Get_AccumulatedL():Double;cdecl;
-function PDElements_Get_Lambda():Double;cdecl;
-function PDElements_Get_Numcustomers():Integer;cdecl;
-function PDElements_Get_ParentPDElement():Integer;cdecl;
-function PDElements_Get_RepairTime():Double;cdecl;
-function PDElements_Get_Totalcustomers():Integer;cdecl;
-function PDElements_Get_FromTerminal():Integer;cdecl;
-function PDElements_Get_TotalMiles():Double;cdecl;
-function PDElements_Get_SectionID():Integer;cdecl;
-procedure PDElements_Set_RepairTime(Value: Double);cdecl;
+function PDElements_Get_Count(): Integer; CDECL;
+function PDElements_Get_FaultRate(): Double; CDECL;
+function PDElements_Get_First(): Integer; CDECL;
+function PDElements_Get_IsShunt(): Wordbool; CDECL;
+function PDElements_Get_Next(): Integer; CDECL;
+function PDElements_Get_pctPermanent(): Double; CDECL;
+procedure PDElements_Set_FaultRate(Value: Double); CDECL;
+procedure PDElements_Set_pctPermanent(Value: Double); CDECL;
+function PDElements_Get_Name(): PAnsiChar; CDECL;
+procedure PDElements_Set_Name(const Value: PAnsiChar); CDECL;
+function PDElements_Get_AccumulatedL(): Double; CDECL;
+function PDElements_Get_Lambda(): Double; CDECL;
+function PDElements_Get_Numcustomers(): Integer; CDECL;
+function PDElements_Get_ParentPDElement(): Integer; CDECL;
+function PDElements_Get_RepairTime(): Double; CDECL;
+function PDElements_Get_Totalcustomers(): Integer; CDECL;
+function PDElements_Get_FromTerminal(): Integer; CDECL;
+function PDElements_Get_TotalMiles(): Double; CDECL;
+function PDElements_Get_SectionID(): Integer; CDECL;
+procedure PDElements_Set_RepairTime(Value: Double); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, DSSGlobals, PDElement, PDClass, SysUtils, Bus;
+uses
+    CAPI_Constants,
+    DSSGlobals,
+    PDElement,
+    PDClass,
+    SysUtils,
+    Bus;
 
-function PDElements_Get_Count():Integer;cdecl;
+function PDElements_Get_Count(): Integer; CDECL;
 begin
-      Result := 0;
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          Result := PDElements.ListSize ;
-      End;
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            Result := PDElements.ListSize;
+        end;
 end;
 //------------------------------------------------------------------------------
-function PDElements_Get_FaultRate():Double;cdecl;
-Var
-   ActivePDElement :TPDElement;
+function PDElements_Get_FaultRate(): Double; CDECL;
+var
+    ActivePDElement: TPDElement;
 begin
-      Result := 0.0;
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.Faultrate;
-          End;
-      End;
-end;
-//------------------------------------------------------------------------------
-function PDElements_Get_First():Integer;cdecl;
-Var
-   ActivePDElement :TPDElement;
-begin
-      Result := 0;
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-           ActivePDElement := PDElements.First;
-           IF ActivePDElement <> Nil THEN
-             Begin
-                  Repeat
-                    If ActivePDElement.enabled  Then
-                    Begin
-                        Result := 1;
-                        ActiveCktElement := ActivePDElement;
-                    end
-                    Else  ActivePDElement := PDElements.Next;
-                  Until (Result = 1) or (ActivePDELement = nil);
-             End;
-      End;
-end;
-//------------------------------------------------------------------------------
-function PDElements_Get_IsShunt():WordBool;cdecl;
-Var
-   ActivePDElement :TPDElement;
-begin
-      Result := FALSE;
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.IsShunt;
-          End;
-      End;
-end;
-//------------------------------------------------------------------------------
-function PDElements_Get_Next():Integer;cdecl;
-Var
-   ActivePDElement :TPDElement;
-begin
-      Result := 0;
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-           ActivePDElement := PDElements.Next;
-           IF ActivePDElement <> Nil THEN
-             Begin
-                  Repeat
-                    If ActivePDElement.enabled  Then
-                    Begin
-                        Result := 1;
-                        ActiveCktElement := ActivePDElement;
-                    end
-                    Else  ActivePDElement := PDElements.Next;
-                  Until (Result = 1) or (ActivePDELement = nil);
-             End;
-      End;
-end;
-//------------------------------------------------------------------------------
-function PDElements_Get_pctPermanent():Double;cdecl;
-Var
-   ActivePDElement :TPDElement;
-begin
-      Result := 0.0;
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.PctPerm;
-          End;
-      End;
-end;
-//------------------------------------------------------------------------------
-procedure PDElements_Set_FaultRate(Value: Double);cdecl;
-Var
-   ActivePDElement :TPDElement;
-begin
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              ActivePDElement.FaultRate := Value;
-          End;
-      End;
-end;
-//------------------------------------------------------------------------------
-procedure PDElements_Set_pctPermanent(Value: Double);cdecl;
-Var
-   ActivePDElement :TPDElement;
-begin
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              ActivePDElement.PctPerm := Value;
-          End;
-      End;
-end;
-//------------------------------------------------------------------------------
-function PDElements_Get_Name_AnsiString():AnsiString;inline;
-Var
-   ActivePDElement :TPDElement;
-begin
-     Result := '';   // return null if not a PD element
-      If Assigned(ActiveCircuit) Then
-        With ActiveCircuit Do Begin
-            If ActiveCktElement is TPDElement Then Begin
+    Result := 0.0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
                 ActivePDElement := ActiveCktelement as TPDElement;
-                With ActivePDElement Do
-                     Result := Format('%s.%s',[Parentclass.Name, Name]);  // full name
-            End;
-        End;
+                Result := ActivePDElement.Faultrate;
+            end;
+        end;
+end;
+//------------------------------------------------------------------------------
+function PDElements_Get_First(): Integer; CDECL;
+var
+    ActivePDElement: TPDElement;
+begin
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            ActivePDElement := PDElements.First;
+            if ActivePDElement <> NIL then
+            begin
+                repeat
+                    if ActivePDElement.enabled then
+                    begin
+                        Result := 1;
+                        ActiveCktElement := ActivePDElement;
+                    end
+                    else
+                        ActivePDElement := PDElements.Next;
+                until (Result = 1) or (ActivePDELement = NIL);
+            end;
+        end;
+end;
+//------------------------------------------------------------------------------
+function PDElements_Get_IsShunt(): Wordbool; CDECL;
+var
+    ActivePDElement: TPDElement;
+begin
+    Result := FALSE;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
+                ActivePDElement := ActiveCktelement as TPDElement;
+                Result := ActivePDElement.IsShunt;
+            end;
+        end;
+end;
+//------------------------------------------------------------------------------
+function PDElements_Get_Next(): Integer; CDECL;
+var
+    ActivePDElement: TPDElement;
+begin
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            ActivePDElement := PDElements.Next;
+            if ActivePDElement <> NIL then
+            begin
+                repeat
+                    if ActivePDElement.enabled then
+                    begin
+                        Result := 1;
+                        ActiveCktElement := ActivePDElement;
+                    end
+                    else
+                        ActivePDElement := PDElements.Next;
+                until (Result = 1) or (ActivePDELement = NIL);
+            end;
+        end;
+end;
+//------------------------------------------------------------------------------
+function PDElements_Get_pctPermanent(): Double; CDECL;
+var
+    ActivePDElement: TPDElement;
+begin
+    Result := 0.0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
+                ActivePDElement := ActiveCktelement as TPDElement;
+                Result := ActivePDElement.PctPerm;
+            end;
+        end;
+end;
+//------------------------------------------------------------------------------
+procedure PDElements_Set_FaultRate(Value: Double); CDECL;
+var
+    ActivePDElement: TPDElement;
+begin
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
+                ActivePDElement := ActiveCktelement as TPDElement;
+                ActivePDElement.FaultRate := Value;
+            end;
+        end;
+end;
+//------------------------------------------------------------------------------
+procedure PDElements_Set_pctPermanent(Value: Double); CDECL;
+var
+    ActivePDElement: TPDElement;
+begin
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
+                ActivePDElement := ActiveCktelement as TPDElement;
+                ActivePDElement.PctPerm := Value;
+            end;
+        end;
+end;
+//------------------------------------------------------------------------------
+function PDElements_Get_Name_AnsiString(): Ansistring; inline;
+var
+    ActivePDElement: TPDElement;
+begin
+    Result := '';   // return null if not a PD element
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
+                ActivePDElement := ActiveCktelement as TPDElement;
+                with ActivePDElement do
+                    Result := Format('%s.%s', [Parentclass.Name, Name]);  // full name
+            end;
+        end;
 end;
 
-function PDElements_Get_Name():PAnsiChar;cdecl;
+function PDElements_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(PDElements_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
-procedure PDElements_Set_Name(const Value: PAnsiChar);cdecl;
-Var
-   ActivePDElement :TPDElement;
-   TestString : String;
+procedure PDElements_Set_Name(const Value: PAnsiChar); CDECL;
+var
+    ActivePDElement: TPDElement;
+    TestString: String;
 
 begin
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          TestString := Value;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            TestString := Value;
           // Search through list of PD Elements until we find this one
-          ActivePDElement := PDElements.First;
-          While Assigned(ActivePDElement) do
-          With ActivePDelement Do
-          Begin
-              If (CompareText(TestString, Format('%s.%s',[Parentclass.Name, Name]) ) = 0)  Then Begin
-                 ActiveCktElement := ActivePDElement;
-                 Break;
-              End;
-              ActivePDElement := PDElements.Next;
-          End;
-      End;
+            ActivePDElement := PDElements.First;
+            while Assigned(ActivePDElement) do
+                with ActivePDelement do
+                begin
+                    if (CompareText(TestString, Format('%s.%s', [Parentclass.Name, Name])) = 0) then
+                    begin
+                        ActiveCktElement := ActivePDElement;
+                        Break;
+                    end;
+                    ActivePDElement := PDElements.Next;
+                end;
+        end;
 end;
 //------------------------------------------------------------------------------
-function PDElements_Get_AccumulatedL():Double;cdecl;
-Var
-   ActivePDElement :TPDElement;
+function PDElements_Get_AccumulatedL(): Double; CDECL;
+var
+    ActivePDElement: TPDElement;
 begin
-      Result := 0.0;
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.AccumulatedBrFltRate ;
-          End;
-      End;
+    Result := 0.0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
+                ActivePDElement := ActiveCktelement as TPDElement;
+                Result := ActivePDElement.AccumulatedBrFltRate;
+            end;
+        end;
 
 end;
 //------------------------------------------------------------------------------
-function PDElements_Get_Lambda():Double;cdecl;
-Var
-   ActivePDElement :TPDElement;
+function PDElements_Get_Lambda(): Double; CDECL;
+var
+    ActivePDElement: TPDElement;
 begin
-      Result := 0.0;
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.BranchFltRate;
-          End;
-      End;
+    Result := 0.0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
+                ActivePDElement := ActiveCktelement as TPDElement;
+                Result := ActivePDElement.BranchFltRate;
+            end;
+        end;
 
 end;
 //------------------------------------------------------------------------------
-function PDElements_Get_Numcustomers():Integer;cdecl;
-Var
-   ActivePDElement :TPDElement;
+function PDElements_Get_Numcustomers(): Integer; CDECL;
+var
+    ActivePDElement: TPDElement;
 begin
-      Result := 0;
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.BranchNumCustomers;
-          End;
-      End;
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
+                ActivePDElement := ActiveCktelement as TPDElement;
+                Result := ActivePDElement.BranchNumCustomers;
+            end;
+        end;
 
 end;
 //------------------------------------------------------------------------------
-function PDElements_Get_ParentPDElement():Integer;cdecl;
-Var
-   ActivePDElement :TPDElement;
+function PDElements_Get_ParentPDElement(): Integer; CDECL;
+var
+    ActivePDElement: TPDElement;
 begin
-      Result := 0;
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              If ActivePDElement.ParentPDElement <> Nil Then    // leaves ActiveCktElement as is
-              Begin
-                  ActiveCktElement := ActivePDElement.ParentPDElement;
-                  Result := ActivecktElement.ClassIndex ;
-              End;
-          End;
-      End;
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
+                ActivePDElement := ActiveCktelement as TPDElement;
+                if ActivePDElement.ParentPDElement <> NIL then    // leaves ActiveCktElement as is
+                begin
+                    ActiveCktElement := ActivePDElement.ParentPDElement;
+                    Result := ActivecktElement.ClassIndex;
+                end;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-function PDElements_Get_RepairTime():Double;cdecl;
-Var
-   ActivePDElement :TPDElement;
+function PDElements_Get_RepairTime(): Double; CDECL;
+var
+    ActivePDElement: TPDElement;
 begin
-      Result := 0.0;
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.HrsToRepair;
-          End;
-      End;
+    Result := 0.0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
+                ActivePDElement := ActiveCktelement as TPDElement;
+                Result := ActivePDElement.HrsToRepair;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-function PDElements_Get_Totalcustomers():Integer;cdecl;
-Var
-   ActivePDElement :TPDElement;
+function PDElements_Get_Totalcustomers(): Integer; CDECL;
+var
+    ActivePDElement: TPDElement;
 begin
-      Result := 0;
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.BranchTotalCustomers;
-          End;
-      End;
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
+                ActivePDElement := ActiveCktelement as TPDElement;
+                Result := ActivePDElement.BranchTotalCustomers;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-function PDElements_Get_FromTerminal():Integer;cdecl;
-Var
-   ActivePDElement :TPDElement;
+function PDElements_Get_FromTerminal(): Integer; CDECL;
+var
+    ActivePDElement: TPDElement;
 begin
-      Result := 0;
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.FromTerminal ;
-          End;
-      End;
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
+                ActivePDElement := ActiveCktelement as TPDElement;
+                Result := ActivePDElement.FromTerminal;
+            end;
+        end;
 
 end;
 //------------------------------------------------------------------------------
-function PDElements_Get_TotalMiles():Double;cdecl;
+function PDElements_Get_TotalMiles(): Double; CDECL;
 // Total miles of line from here on down to the end of the feeder
 
-Var
-   ActivePDElement : TPDElement;
+var
+    ActivePDElement: TPDElement;
 
 begin
-      Result := 0.0;
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.AccumulatedMilesDownStream;
-          End;
-      End;
+    Result := 0.0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
+                ActivePDElement := ActiveCktelement as TPDElement;
+                Result := ActivePDElement.AccumulatedMilesDownStream;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-function PDElements_Get_SectionID():Integer;cdecl;
-Var
-   ActivePDElement : TPDElement;
+function PDElements_Get_SectionID(): Integer; CDECL;
+var
+    ActivePDElement: TPDElement;
 
 begin
-      Result := 0;
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              Result := ActivePDElement.BranchSectionID ;
-          End;
-      End;
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
+                ActivePDElement := ActiveCktelement as TPDElement;
+                Result := ActivePDElement.BranchSectionID;
+            end;
+        end;
 
 end;
 //------------------------------------------------------------------------------
-procedure PDElements_Set_RepairTime(Value: Double);cdecl;
-Var
-   ActivePDElement :TPDElement;
+procedure PDElements_Set_RepairTime(Value: Double); CDECL;
+var
+    ActivePDElement: TPDElement;
 begin
-      If Assigned(ActiveCircuit) Then
-      With ActiveCircuit Do Begin
-          If ActiveCktElement is TPDElement Then Begin
-              ActivePDElement := ActiveCktelement as TPDElement;
-              ActivePDElement.HrsToRepair := Value;
-          End;
-      End;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            if ActiveCktElement is TPDElement then
+            begin
+                ActivePDElement := ActiveCktelement as TPDElement;
+                ActivePDElement.HrsToRepair := Value;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-END.
+end.

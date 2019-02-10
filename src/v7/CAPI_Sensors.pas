@@ -1,456 +1,516 @@
-UNIT CAPI_Sensors;
+unit CAPI_Sensors;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils;
+uses
+    CAPI_Utils;
 
-PROCEDURE Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-PROCEDURE Sensors_Get_AllNames_GR();cdecl;
-function Sensors_Get_Count():Integer;cdecl;
-PROCEDURE Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-PROCEDURE Sensors_Get_Currents_GR();cdecl;
-function Sensors_Get_First():Integer;cdecl;
-function Sensors_Get_IsDelta():WordBool;cdecl;
-PROCEDURE Sensors_Get_kVARS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-PROCEDURE Sensors_Get_kVARS_GR();cdecl;
-PROCEDURE Sensors_Get_kVS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-PROCEDURE Sensors_Get_kVS_GR();cdecl;
-PROCEDURE Sensors_Get_kWS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-PROCEDURE Sensors_Get_kWS_GR();cdecl;
-function Sensors_Get_MeteredElement():PAnsiChar;cdecl;
-function Sensors_Get_MeteredTerminal():Integer;cdecl;
-function Sensors_Get_Name():PAnsiChar;cdecl;
-function Sensors_Get_Next():Integer;cdecl;
-function Sensors_Get_PctError():Double;cdecl;
-function Sensors_Get_ReverseDelta():WordBool;cdecl;
-function Sensors_Get_Weight():Double;cdecl;
-procedure Sensors_Reset();cdecl;
-procedure Sensors_ResetAll();cdecl;
-procedure Sensors_Set_Currents(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-procedure Sensors_Set_IsDelta(Value: WordBool);cdecl;
-procedure Sensors_Set_kVARS(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-procedure Sensors_Set_kVS(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-procedure Sensors_Set_kWS(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-procedure Sensors_Set_MeteredElement(const Value: PAnsiChar);cdecl;
-procedure Sensors_Set_MeteredTerminal(Value: Integer);cdecl;
-procedure Sensors_Set_Name(const Value: PAnsiChar);cdecl;
-procedure Sensors_Set_PctError(Value: Double);cdecl;
-procedure Sensors_Set_ReverseDelta(Value: WordBool);cdecl;
-procedure Sensors_Set_Weight(Value: Double);cdecl;
-function Sensors_Get_kVbase():Double;cdecl;
-procedure Sensors_Set_kVbase(Value: Double);cdecl;
+procedure Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Sensors_Get_AllNames_GR(); CDECL;
+function Sensors_Get_Count(): Integer; CDECL;
+procedure Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Sensors_Get_Currents_GR(); CDECL;
+function Sensors_Get_First(): Integer; CDECL;
+function Sensors_Get_IsDelta(): Wordbool; CDECL;
+procedure Sensors_Get_kVARS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Sensors_Get_kVARS_GR(); CDECL;
+procedure Sensors_Get_kVS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Sensors_Get_kVS_GR(); CDECL;
+procedure Sensors_Get_kWS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Sensors_Get_kWS_GR(); CDECL;
+function Sensors_Get_MeteredElement(): PAnsiChar; CDECL;
+function Sensors_Get_MeteredTerminal(): Integer; CDECL;
+function Sensors_Get_Name(): PAnsiChar; CDECL;
+function Sensors_Get_Next(): Integer; CDECL;
+function Sensors_Get_PctError(): Double; CDECL;
+function Sensors_Get_ReverseDelta(): Wordbool; CDECL;
+function Sensors_Get_Weight(): Double; CDECL;
+procedure Sensors_Reset(); CDECL;
+procedure Sensors_ResetAll(); CDECL;
+procedure Sensors_Set_Currents(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Sensors_Set_IsDelta(Value: Wordbool); CDECL;
+procedure Sensors_Set_kVARS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Sensors_Set_kVS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Sensors_Set_kWS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Sensors_Set_MeteredElement(const Value: PAnsiChar); CDECL;
+procedure Sensors_Set_MeteredTerminal(Value: Integer); CDECL;
+procedure Sensors_Set_Name(const Value: PAnsiChar); CDECL;
+procedure Sensors_Set_PctError(Value: Double); CDECL;
+procedure Sensors_Set_ReverseDelta(Value: Wordbool); CDECL;
+procedure Sensors_Set_Weight(Value: Double); CDECL;
+function Sensors_Get_kVbase(): Double; CDECL;
+procedure Sensors_Set_kVbase(Value: Double); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, Sensor, DSSGlobals, PointerList, Executive, SysUtils;
+uses
+    CAPI_Constants,
+    Sensor,
+    DSSGlobals,
+    PointerList,
+    Executive,
+    SysUtils;
 
 function ActiveSensor: TSensorObj;
 begin
-  Result := nil;
-  if ActiveCircuit <> Nil then Result := ActiveCircuit.Sensors.Active;
+    Result := NIL;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Sensors.Active;
 end;
 //------------------------------------------------------------------------------
-procedure Set_Parameter(const parm: string; const val: string);
+procedure Set_Parameter(const parm: String; const val: String);
 var
-  cmd: string;
+    cmd: String;
 begin
-  if not Assigned (ActiveCircuit) then exit;
-  SolutionAbort := FALSE;  // Reset for commands entered from outside
-  cmd := Format ('capacitor.%s.%s=%s', [ActiveSensor.Name, parm, val]);
-  DSSExecutive.Command := cmd;
+    if not Assigned(ActiveCircuit) then
+        exit;
+    SolutionAbort := FALSE;  // Reset for commands entered from outside
+    cmd := Format('capacitor.%s.%s=%s', [ActiveSensor.Name, parm, val]);
+    DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-VAR
-  Result: PPAnsiCharArray;
-  elem:TSensorObj;
-  k:Integer;
-Begin
-  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
-  Result[0] := DSS_CopyStringAsPChar('NONE');
-  IF ActiveCircuit <> Nil THEN
-    WITH ActiveCircuit DO
-      If Sensors.ListSize>0 Then Begin
-        DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (Sensors.ListSize-1) + 1);
-        k:=0;
-        elem := Sensors.First;
-        WHILE elem<>Nil DO Begin
-          Result[k] := DSS_CopyStringAsPChar(elem.Name);
-          Inc(k);
-          elem := Sensors.Next;
-        End;
-      End;
+procedure Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+var
+    Result: PPAnsiCharArray;
+    elem: TSensorObj;
+    k: Integer;
+begin
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result[0] := DSS_CopyStringAsPChar('NONE');
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+            if Sensors.ListSize > 0 then
+            begin
+                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (Sensors.ListSize - 1) + 1);
+                k := 0;
+                elem := Sensors.First;
+                while elem <> NIL do
+                begin
+                    Result[k] := DSS_CopyStringAsPChar(elem.Name);
+                    Inc(k);
+                    elem := Sensors.Next;
+                end;
+            end;
 end;
-PROCEDURE Sensors_Get_AllNames_GR();cdecl;
+
+procedure Sensors_Get_AllNames_GR(); CDECL;
 // Same as Sensors_Get_AllNames but uses global result (GR) pointers
 begin
-   Sensors_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Sensors_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 
 //------------------------------------------------------------------------------
-function Sensors_Get_Count():Integer;cdecl;
+function Sensors_Get_Count(): Integer; CDECL;
 begin
-  If Assigned(ActiveCircuit) Then
-    Result := ActiveCircuit.Sensors.ListSize;
+    if Assigned(ActiveCircuit) then
+        Result := ActiveCircuit.Sensors.ListSize;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-VAR
-  Result: PDoubleArray;
-  elem :TSensorObj;
-  k    :Integer;
-Begin
-  elem := ActiveSensor;
-  if elem <> Nil then begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases -1) + 1);
-    for k := 0 to elem.NPhases-1 do Result[k] := elem.SensorCurrent^[k+1];
-  end else
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+procedure Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+var
+    Result: PDoubleArray;
+    elem: TSensorObj;
+    k: Integer;
+begin
+    elem := ActiveSensor;
+    if elem <> NIL then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases - 1) + 1);
+        for k := 0 to elem.NPhases - 1 do
+            Result[k] := elem.SensorCurrent^[k + 1];
+    end
+    else
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
-PROCEDURE Sensors_Get_Currents_GR();cdecl;
+
+procedure Sensors_Get_Currents_GR(); CDECL;
 // Same as Sensors_Get_Currents but uses global result (GR) pointers
 begin
-   Sensors_Get_Currents(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Sensors_Get_Currents(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 
 //------------------------------------------------------------------------------
-function Sensors_Get_First():Integer;cdecl;
-Var
-  elem: TSensorObj;
-  lst: TPointerList;
-Begin
-  Result := 0;
-  If ActiveCircuit <> Nil Then begin
-    lst := ActiveCircuit.Sensors;
-    elem := lst.First;
-    If elem <> Nil Then Begin
-      Repeat
-        If elem.Enabled Then Begin
-          ActiveCircuit.ActiveCktElement := elem;
-          Result := 1;
-        End
-        Else elem := lst.Next;
-      Until (Result = 1) or (elem = nil);
-    End;
-  End;
-end;
-//------------------------------------------------------------------------------
-function Sensors_Get_IsDelta():WordBool;cdecl;
+function Sensors_Get_First(): Integer; CDECL;
 var
-  elem: TSensorObj;
+    elem: TSensorObj;
+    lst: TPointerList;
 begin
-  Result := FALSE;
-  elem := ActiveSensor;
-  if elem <> nil then
-    if elem.Conn > 0 then Result := TRUE;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        lst := ActiveCircuit.Sensors;
+        elem := lst.First;
+        if elem <> NIL then
+        begin
+            repeat
+                if elem.Enabled then
+                begin
+                    ActiveCircuit.ActiveCktElement := elem;
+                    Result := 1;
+                end
+                else
+                    elem := lst.Next;
+            until (Result = 1) or (elem = NIL);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Sensors_Get_kVARS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-VAR
-  Result: PDoubleArray;
-  elem :TSensorObj;
-  k    :Integer;
-Begin
-  elem := ActiveSensor;
-  if elem <> Nil then begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases -1) + 1);
-    for k := 0 to elem.NPhases-1 do Result[k] := elem.SensorQ^[k+1];
-  end else
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+function Sensors_Get_IsDelta(): Wordbool; CDECL;
+var
+    elem: TSensorObj;
+begin
+    Result := FALSE;
+    elem := ActiveSensor;
+    if elem <> NIL then
+        if elem.Conn > 0 then
+            Result := TRUE;
 end;
-PROCEDURE Sensors_Get_kVARS_GR();cdecl;
+//------------------------------------------------------------------------------
+procedure Sensors_Get_kVARS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+var
+    Result: PDoubleArray;
+    elem: TSensorObj;
+    k: Integer;
+begin
+    elem := ActiveSensor;
+    if elem <> NIL then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases - 1) + 1);
+        for k := 0 to elem.NPhases - 1 do
+            Result[k] := elem.SensorQ^[k + 1];
+    end
+    else
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+end;
+
+procedure Sensors_Get_kVARS_GR(); CDECL;
 // Same as Sensors_Get_kVARS but uses global result (GR) pointers
 begin
-   Sensors_Get_kVARS(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Sensors_Get_kVARS(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 
 //------------------------------------------------------------------------------
-PROCEDURE Sensors_Get_kVS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-VAR
-  Result: PDoubleArray;
-  elem :TSensorObj;
-  k    :Integer;
-Begin
-  elem := ActiveSensor;
-  if elem <> Nil then begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases -1) + 1);
-    for k := 0 to elem.NPhases-1 do Result[k] := elem.SensorVoltage^[k+1];
-  end else
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+procedure Sensors_Get_kVS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+var
+    Result: PDoubleArray;
+    elem: TSensorObj;
+    k: Integer;
+begin
+    elem := ActiveSensor;
+    if elem <> NIL then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases - 1) + 1);
+        for k := 0 to elem.NPhases - 1 do
+            Result[k] := elem.SensorVoltage^[k + 1];
+    end
+    else
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
-PROCEDURE Sensors_Get_kVS_GR();cdecl;
+
+procedure Sensors_Get_kVS_GR(); CDECL;
 // Same as Sensors_Get_kVS but uses global result (GR) pointers
 begin
-   Sensors_Get_kVS(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Sensors_Get_kVS(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 
 //------------------------------------------------------------------------------
-PROCEDURE Sensors_Get_kWS(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-VAR
-  Result: PDoubleArray;
-  elem :TSensorObj;
-  k    :Integer;
-Begin
-  elem := ActiveSensor;
-  if elem <> Nil then begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases -1) + 1);
-    for k := 0 to elem.NPhases-1 do Result[k] := elem.SensorP^[k+1];
-  end else
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+procedure Sensors_Get_kWS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+var
+    Result: PDoubleArray;
+    elem: TSensorObj;
+    k: Integer;
+begin
+    elem := ActiveSensor;
+    if elem <> NIL then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases - 1) + 1);
+        for k := 0 to elem.NPhases - 1 do
+            Result[k] := elem.SensorP^[k + 1];
+    end
+    else
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
-PROCEDURE Sensors_Get_kWS_GR();cdecl;
+
+procedure Sensors_Get_kWS_GR(); CDECL;
 // Same as Sensors_Get_kWS but uses global result (GR) pointers
 begin
-   Sensors_Get_kWS(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Sensors_Get_kWS(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 
 //------------------------------------------------------------------------------
-function Sensors_Get_MeteredElement_AnsiString():AnsiString;inline;
-Var
-  elem: TSensorObj;
-Begin
-  Result := '';
-  elem := ActiveSensor;
-  If elem <> Nil Then Result := elem.ElementName;
+function Sensors_Get_MeteredElement_AnsiString(): Ansistring; inline;
+var
+    elem: TSensorObj;
+begin
+    Result := '';
+    elem := ActiveSensor;
+    if elem <> NIL then
+        Result := elem.ElementName;
 end;
 
-function Sensors_Get_MeteredElement():PAnsiChar;cdecl;
+function Sensors_Get_MeteredElement(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(Sensors_Get_MeteredElement_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function Sensors_Get_MeteredTerminal():Integer;cdecl;
-Var
-  elem: TSensorObj;
-Begin
-  Result := 0;
-  elem := ActiveSensor;
-  If elem <> Nil Then Result := elem.MeteredTerminal;
+function Sensors_Get_MeteredTerminal(): Integer; CDECL;
+var
+    elem: TSensorObj;
+begin
+    Result := 0;
+    elem := ActiveSensor;
+    if elem <> NIL then
+        Result := elem.MeteredTerminal;
 end;
 //------------------------------------------------------------------------------
-function Sensors_Get_Name_AnsiString():AnsiString;inline;
-Var
-  elem: TSensorObj;
-Begin
-  Result := '';
-  elem := ActiveSensor;
-  If elem <> Nil Then Result := elem.Name;
+function Sensors_Get_Name_AnsiString(): Ansistring; inline;
+var
+    elem: TSensorObj;
+begin
+    Result := '';
+    elem := ActiveSensor;
+    if elem <> NIL then
+        Result := elem.Name;
 end;
 
-function Sensors_Get_Name():PAnsiChar;cdecl;
+function Sensors_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(Sensors_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function Sensors_Get_Next():Integer;cdecl;
-Var
-  elem: TSensorObj;
-  lst: TPointerList;
-Begin
-  Result := 0;
-  If ActiveCircuit <> Nil Then Begin
-    lst := ActiveCircuit.Sensors;
-    elem := lst.Next;
-    if elem <> nil then begin
-      Repeat
-        If elem.Enabled Then Begin
-          ActiveCircuit.ActiveCktElement := elem;
-          Result := lst.ActiveIndex;
-        End
-        Else elem := lst.Next;
-      Until (Result > 0) or (elem = nil);
-    End
-  End;
-end;
-//------------------------------------------------------------------------------
-function Sensors_Get_PctError():Double;cdecl;
-Var
-  elem: TSensorObj;
-Begin
-  Result := 0.0;
-  elem := ActiveSensor;
-  If elem <> Nil Then Result := elem.pctError;
-end;
-//------------------------------------------------------------------------------
-function Sensors_Get_ReverseDelta():WordBool;cdecl;
+function Sensors_Get_Next(): Integer; CDECL;
 var
-  elem: TSensorObj;
+    elem: TSensorObj;
+    lst: TPointerList;
 begin
-  Result := FALSE;
-  elem := ActiveSensor;
-  if elem <> nil then
-    if elem.DeltaDirection < 0 then Result := TRUE;
-end;
-//------------------------------------------------------------------------------
-function Sensors_Get_Weight():Double;cdecl;
-Var
-  elem: TSensorObj;
-Begin
-  Result := 0.0;
-  elem := ActiveSensor;
-  If elem <> Nil Then Result := elem.Weight;
-end;
-//------------------------------------------------------------------------------
-procedure Sensors_Reset();cdecl;
-Var
-  elem: TSensorObj;
-Begin
-  elem := ActiveSensor;
-  If elem <> Nil Then elem.ResetIt;
-end;
-//------------------------------------------------------------------------------
-procedure Sensors_ResetAll();cdecl;
-begin
-  if assigned(ActiveCircuit) then SensorClass.ResetAll;
-end;
-//------------------------------------------------------------------------------
-procedure Sensors_Set_Currents(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-VAR
-  Value: PDoubleArray;
-  elem: TSensorObj;
-  i, k: Integer;
-begin
-    Value := PDoubleArray(ValuePtr);
-  elem := ActiveSensor;
-  if elem <> nil then begin
-    k := (0);
-    for i := 1 to elem.NPhases do begin
-      elem.SensorCurrent^[i] := Value[k];
-      inc(k);
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        lst := ActiveCircuit.Sensors;
+        elem := lst.Next;
+        if elem <> NIL then
+        begin
+            repeat
+                if elem.Enabled then
+                begin
+                    ActiveCircuit.ActiveCktElement := elem;
+                    Result := lst.ActiveIndex;
+                end
+                else
+                    elem := lst.Next;
+            until (Result > 0) or (elem = NIL);
+        end
     end;
-  end;
 end;
 //------------------------------------------------------------------------------
-procedure Sensors_Set_IsDelta(Value: WordBool);cdecl;
+function Sensors_Get_PctError(): Double; CDECL;
 var
-  elem: TSensorObj;
+    elem: TSensorObj;
 begin
-  elem := ActiveSensor;
-  if elem <> nil then elem.Conn := Integer (Value);
+    Result := 0.0;
+    elem := ActiveSensor;
+    if elem <> NIL then
+        Result := elem.pctError;
 end;
 //------------------------------------------------------------------------------
-procedure Sensors_Set_kVARS(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-VAR
-  Value: PDoubleArray;
-  elem: TSensorObj;
-  i, k: Integer;
-begin
-    Value := PDoubleArray(ValuePtr);
-  elem := ActiveSensor;
-  if elem <> nil then begin
-    k := (0);
-    for i := 1 to elem.NPhases do begin
-      elem.SensorQ^[i] := Value[k];
-      inc(k);
-    end;
-  end;
-end;
-//------------------------------------------------------------------------------
-procedure Sensors_Set_kVS(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-VAR
-  Value: PDoubleArray;
-  elem: TSensorObj;
-  i, k: Integer;
-begin
-    Value := PDoubleArray(ValuePtr);
-  elem := ActiveSensor;
-  if elem <> nil then begin
-    k := (0);
-    for i := 1 to elem.NPhases do begin
-      elem.SensorVoltage^[i] := Value[k];
-      inc(k);
-    end;
-  end;
-end;
-//------------------------------------------------------------------------------
-procedure Sensors_Set_kWS(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-VAR
-  Value: PDoubleArray;
-  elem: TSensorObj;
-  i, k: Integer;
-begin
-    Value := PDoubleArray(ValuePtr);
-  elem := ActiveSensor;
-  if elem <> nil then begin
-    k := (0);
-    for i := 1 to elem.NPhases do begin
-      elem.SensorP^[i] := Value[k];
-      inc(k);
-    end;
-  end;
-end;
-//------------------------------------------------------------------------------
-procedure Sensors_Set_MeteredElement(const Value: PAnsiChar);cdecl;
-begin
-  Set_Parameter ('element', Value);
-end;
-//------------------------------------------------------------------------------
-procedure Sensors_Set_MeteredTerminal(Value: Integer);cdecl;
-begin
-  Set_Parameter ('terminal', IntToStr(Value));
-end;
-//------------------------------------------------------------------------------
-procedure Sensors_Set_Name(const Value: PAnsiChar);cdecl;
+function Sensors_Get_ReverseDelta(): Wordbool; CDECL;
 var
-  ActiveSave : Integer;
-  S: String;
-  Found :Boolean;
-  elem: TSensorObj;
-  lst: TPointerList;
+    elem: TSensorObj;
 begin
-  IF ActiveCircuit <> NIL THEN Begin
-    lst := ActiveCircuit.Sensors;
-    S := Value;  // Convert to Pascal String
-    Found := FALSE;
-    ActiveSave := lst.ActiveIndex;
-    elem := lst.First;
-    While elem <> NIL Do Begin
-      IF (CompareText(elem.Name, S) = 0) THEN Begin
-        ActiveCircuit.ActiveCktElement := elem;
-        Found := TRUE;
-        Break;
-      End;
-      elem := lst.Next;
-    End;
-    IF NOT Found THEN Begin
-      DoSimpleMsg('Sensor "'+S+'" Not Found in Active Circuit.', 5003);
-      elem := lst.Get(ActiveSave);
-      ActiveCircuit.ActiveCktElement := elem;
-    End;
-  End;
+    Result := FALSE;
+    elem := ActiveSensor;
+    if elem <> NIL then
+        if elem.DeltaDirection < 0 then
+            Result := TRUE;
 end;
 //------------------------------------------------------------------------------
-procedure Sensors_Set_PctError(Value: Double);cdecl;
+function Sensors_Get_Weight(): Double; CDECL;
+var
+    elem: TSensorObj;
 begin
-  Set_Parameter ('%error', FloatToStr(Value));
+    Result := 0.0;
+    elem := ActiveSensor;
+    if elem <> NIL then
+        Result := elem.Weight;
 end;
 //------------------------------------------------------------------------------
-procedure Sensors_Set_ReverseDelta(Value: WordBool);cdecl;
+procedure Sensors_Reset(); CDECL;
+var
+    elem: TSensorObj;
 begin
-  if Value = TRUE then
-    Set_Parameter ('DeltaDirection', '-1')
-  else
-    Set_Parameter ('DeltaDirection', '1');
+    elem := ActiveSensor;
+    if elem <> NIL then
+        elem.ResetIt;
 end;
 //------------------------------------------------------------------------------
-procedure Sensors_Set_Weight(Value: Double);cdecl;
+procedure Sensors_ResetAll(); CDECL;
 begin
-  Set_Parameter ('weight', FloatToStr(Value));
+    if assigned(ActiveCircuit) then
+        SensorClass.ResetAll;
 end;
 //------------------------------------------------------------------------------
-function Sensors_Get_kVbase():Double;cdecl;
-Var
-  elem: TSensorObj;
-Begin
-  Result := 0.0;
-  elem := ActiveSensor;
-  If elem <> Nil Then Result := elem.BaseKV;
-end;
-//------------------------------------------------------------------------------
-procedure Sensors_Set_kVbase(Value: Double);cdecl;
+procedure Sensors_Set_Currents(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+var
+    Value: PDoubleArray;
+    elem: TSensorObj;
+    i, k: Integer;
 begin
-  Set_Parameter ('kvbase', FloatToStr(Value));
+    Value := PDoubleArray(ValuePtr);
+    elem := ActiveSensor;
+    if elem <> NIL then
+    begin
+        k := (0);
+        for i := 1 to elem.NPhases do
+        begin
+            elem.SensorCurrent^[i] := Value[k];
+            inc(k);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-END.
+procedure Sensors_Set_IsDelta(Value: Wordbool); CDECL;
+var
+    elem: TSensorObj;
+begin
+    elem := ActiveSensor;
+    if elem <> NIL then
+        elem.Conn := Integer(Value);
+end;
+//------------------------------------------------------------------------------
+procedure Sensors_Set_kVARS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+var
+    Value: PDoubleArray;
+    elem: TSensorObj;
+    i, k: Integer;
+begin
+    Value := PDoubleArray(ValuePtr);
+    elem := ActiveSensor;
+    if elem <> NIL then
+    begin
+        k := (0);
+        for i := 1 to elem.NPhases do
+        begin
+            elem.SensorQ^[i] := Value[k];
+            inc(k);
+        end;
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure Sensors_Set_kVS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+var
+    Value: PDoubleArray;
+    elem: TSensorObj;
+    i, k: Integer;
+begin
+    Value := PDoubleArray(ValuePtr);
+    elem := ActiveSensor;
+    if elem <> NIL then
+    begin
+        k := (0);
+        for i := 1 to elem.NPhases do
+        begin
+            elem.SensorVoltage^[i] := Value[k];
+            inc(k);
+        end;
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure Sensors_Set_kWS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+var
+    Value: PDoubleArray;
+    elem: TSensorObj;
+    i, k: Integer;
+begin
+    Value := PDoubleArray(ValuePtr);
+    elem := ActiveSensor;
+    if elem <> NIL then
+    begin
+        k := (0);
+        for i := 1 to elem.NPhases do
+        begin
+            elem.SensorP^[i] := Value[k];
+            inc(k);
+        end;
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure Sensors_Set_MeteredElement(const Value: PAnsiChar); CDECL;
+begin
+    Set_Parameter('element', Value);
+end;
+//------------------------------------------------------------------------------
+procedure Sensors_Set_MeteredTerminal(Value: Integer); CDECL;
+begin
+    Set_Parameter('terminal', IntToStr(Value));
+end;
+//------------------------------------------------------------------------------
+procedure Sensors_Set_Name(const Value: PAnsiChar); CDECL;
+var
+    ActiveSave: Integer;
+    S: String;
+    Found: Boolean;
+    elem: TSensorObj;
+    lst: TPointerList;
+begin
+    if ActiveCircuit <> NIL then
+    begin
+        lst := ActiveCircuit.Sensors;
+        S := Value;  // Convert to Pascal String
+        Found := FALSE;
+        ActiveSave := lst.ActiveIndex;
+        elem := lst.First;
+        while elem <> NIL do
+        begin
+            if (CompareText(elem.Name, S) = 0) then
+            begin
+                ActiveCircuit.ActiveCktElement := elem;
+                Found := TRUE;
+                Break;
+            end;
+            elem := lst.Next;
+        end;
+        if not Found then
+        begin
+            DoSimpleMsg('Sensor "' + S + '" Not Found in Active Circuit.', 5003);
+            elem := lst.Get(ActiveSave);
+            ActiveCircuit.ActiveCktElement := elem;
+        end;
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure Sensors_Set_PctError(Value: Double); CDECL;
+begin
+    Set_Parameter('%error', FloatToStr(Value));
+end;
+//------------------------------------------------------------------------------
+procedure Sensors_Set_ReverseDelta(Value: Wordbool); CDECL;
+begin
+    if Value = TRUE then
+        Set_Parameter('DeltaDirection', '-1')
+    else
+        Set_Parameter('DeltaDirection', '1');
+end;
+//------------------------------------------------------------------------------
+procedure Sensors_Set_Weight(Value: Double); CDECL;
+begin
+    Set_Parameter('weight', FloatToStr(Value));
+end;
+//------------------------------------------------------------------------------
+function Sensors_Get_kVbase(): Double; CDECL;
+var
+    elem: TSensorObj;
+begin
+    Result := 0.0;
+    elem := ActiveSensor;
+    if elem <> NIL then
+        Result := elem.BaseKV;
+end;
+//------------------------------------------------------------------------------
+procedure Sensors_Set_kVbase(Value: Double); CDECL;
+begin
+    Set_Parameter('kvbase', FloatToStr(Value));
+end;
+//------------------------------------------------------------------------------
+end.

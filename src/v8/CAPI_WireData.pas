@@ -1,426 +1,457 @@
-UNIT CAPI_WireData;
+unit CAPI_WireData;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils, WireData, ConductorData;
+uses
+    CAPI_Utils,
+    WireData,
+    ConductorData;
 
 type
   //TODO: create a simple script to extract this directly from the Pascal files from electricdss-src
-  ConductorProps = (Rdc=1, Rac, Runits, GMRac, GMRunits, radius, radunits, normamps, emergamps, diam);
+    ConductorProps = (Rdc = 1, Rac, Runits, GMRac, GMRunits, radius, radunits, normamps, emergamps, diam);
 
-  
-FUNCTION WireData_Get_Count():Integer;cdecl;
-FUNCTION WireData_Get_First():Integer;cdecl;
-FUNCTION WireData_Get_Next():Integer;cdecl;
-FUNCTION WireData_Get_Name():PAnsiChar;cdecl;
-PROCEDURE WireData_Set_Name(const Value: PAnsiChar);cdecl;
-PROCEDURE WireData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-PROCEDURE WireData_Get_AllNames_GR();cdecl;
-FUNCTION WireData_Get_Rdc():Double;cdecl;
-PROCEDURE WireData_Set_Rdc(Value: Double);cdecl;
-FUNCTION WireData_Get_Rac():Double;cdecl;
-PROCEDURE WireData_Set_Rac(Value: Double);cdecl;
-FUNCTION WireData_Get_GMRac():Double;cdecl;
-PROCEDURE WireData_Set_GMRac(Value: Double);cdecl;
-FUNCTION WireData_Get_GMRUnits():Integer;cdecl;
-PROCEDURE WireData_Set_GMRUnits(Value: Integer);cdecl;
-FUNCTION WireData_Get_Radius():Double;cdecl;
-PROCEDURE WireData_Set_Radius(Value: Double);cdecl;
-FUNCTION WireData_Get_RadiusUnits():Integer;cdecl;
-PROCEDURE WireData_Set_RadiusUnits(Value: Integer);cdecl;
-FUNCTION WireData_Get_ResistanceUnits():Integer;cdecl;
-PROCEDURE WireData_Set_ResistanceUnits(Value: Integer);cdecl;
-FUNCTION WireData_Get_Diameter():Double;cdecl;
-PROCEDURE WireData_Set_Diameter(Value: Double);cdecl;
-FUNCTION WireData_Get_NormAmps():Double;cdecl;
-PROCEDURE WireData_Set_NormAmps(Value: Double);cdecl;
-FUNCTION WireData_Get_EmergAmps():Double;cdecl;
-PROCEDURE WireData_Set_EmergAmps(Value: Double);cdecl;
- 
+
+function WireData_Get_Count(): Integer; CDECL;
+function WireData_Get_First(): Integer; CDECL;
+function WireData_Get_Next(): Integer; CDECL;
+function WireData_Get_Name(): PAnsiChar; CDECL;
+procedure WireData_Set_Name(const Value: PAnsiChar); CDECL;
+procedure WireData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure WireData_Get_AllNames_GR(); CDECL;
+function WireData_Get_Rdc(): Double; CDECL;
+procedure WireData_Set_Rdc(Value: Double); CDECL;
+function WireData_Get_Rac(): Double; CDECL;
+procedure WireData_Set_Rac(Value: Double); CDECL;
+function WireData_Get_GMRac(): Double; CDECL;
+procedure WireData_Set_GMRac(Value: Double); CDECL;
+function WireData_Get_GMRUnits(): Integer; CDECL;
+procedure WireData_Set_GMRUnits(Value: Integer); CDECL;
+function WireData_Get_Radius(): Double; CDECL;
+procedure WireData_Set_Radius(Value: Double); CDECL;
+function WireData_Get_RadiusUnits(): Integer; CDECL;
+procedure WireData_Set_RadiusUnits(Value: Integer); CDECL;
+function WireData_Get_ResistanceUnits(): Integer; CDECL;
+procedure WireData_Set_ResistanceUnits(Value: Integer); CDECL;
+function WireData_Get_Diameter(): Double; CDECL;
+procedure WireData_Set_Diameter(Value: Double); CDECL;
+function WireData_Get_NormAmps(): Double; CDECL;
+procedure WireData_Set_NormAmps(Value: Double); CDECL;
+function WireData_Get_EmergAmps(): Double; CDECL;
+procedure WireData_Set_EmergAmps(Value: Double); CDECL;
+
 procedure ConductorSetDefaults(prop: ConductorProps; conductor: TConductorDataObj);
 
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, sysutils, DSSGlobals, LineUnits;
+uses
+    CAPI_Constants,
+    sysutils,
+    DSSGlobals,
+    LineUnits;
 
 procedure ConductorSetDefaults(prop: ConductorProps; conductor: TConductorDataObj);
 begin
   {Set defaults}
-  With conductor do
-  begin
-    CASE prop OF
-      ConductorProps.Rdc:       If FR60<0.0       Then FR60 := 1.02* FRDC;
-      ConductorProps.Rac:       If FRDC<0.0       Then FRDC := FR60 / 1.02;
-      ConductorProps.GMRac:     If Fradius<0.0    Then Fradius := FGMR60 / 0.7788;
-      ConductorProps.GMRunits:  If FradiusUnits=0 Then FradiusUnits := FGMRunits;
-      ConductorProps.radius:    If FGMR60<0.0     Then FGMR60 := 0.7788 * FRadius;
-      ConductorProps.radunits:  If FGMRUnits=0    Then FGMRunits := FradiusUnits;
-      ConductorProps.normamps:  IF EmergAmps<0.0  Then EmergAmps := 1.5*NormAmps;
-      ConductorProps.emergamps: If NormAmps<0.0   Then NormAmps := EmergAmps/1.5;
-      ConductorProps.diam:      If FGMR60<0.0     Then FGMR60 := 0.7788 * FRadius;
-    END;
+    with conductor do
+    begin
+        case prop of
+            ConductorProps.Rdc:
+                if FR60 < 0.0 then
+                    FR60 := 1.02 * FRDC;
+            ConductorProps.Rac:
+                if FRDC < 0.0 then
+                    FRDC := FR60 / 1.02;
+            ConductorProps.GMRac:
+                if Fradius < 0.0 then
+                    Fradius := FGMR60 / 0.7788;
+            ConductorProps.GMRunits:
+                if FradiusUnits = 0 then
+                    FradiusUnits := FGMRunits;
+            ConductorProps.radius:
+                if FGMR60 < 0.0 then
+                    FGMR60 := 0.7788 * FRadius;
+            ConductorProps.radunits:
+                if FGMRUnits = 0 then
+                    FGMRunits := FradiusUnits;
+            ConductorProps.normamps:
+                if EmergAmps < 0.0 then
+                    EmergAmps := 1.5 * NormAmps;
+            ConductorProps.emergamps:
+                if NormAmps < 0.0 then
+                    NormAmps := EmergAmps / 1.5;
+            ConductorProps.diam:
+                if FGMR60 < 0.0 then
+                    FGMR60 := 0.7788 * FRadius;
+        end;
     {Check for critical errors}
-    CASE prop OF
-      ConductorProps.GMRac: If (Fradius = 0.0)  Then DoSimpleMsg('Error: Radius is specified as zero for ConductorData.' + Name,999);
-      ConductorProps.radius: If (FGMR60 = 0.0)   Then DoSimpleMsg('Error: GMR is specified as zero for ConductorData.' + Name,999);
-    END;
-  end;
+        case prop of
+            ConductorProps.GMRac:
+                if (Fradius = 0.0) then
+                    DoSimpleMsg('Error: Radius is specified as zero for ConductorData.' + Name, 999);
+            ConductorProps.radius:
+                if (FGMR60 = 0.0) then
+                    DoSimpleMsg('Error: GMR is specified as zero for ConductorData.' + Name, 999);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION WireData_Get_Count():Integer;cdecl;
+function WireData_Get_Count(): Integer; CDECL;
 begin
-      Result := 0;
-      If ActiveCircuit[ActiveActor] <> Nil Then
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
         Result := WireDataClass[ActiveActor].ElementCount;
 end;
 //------------------------------------------------------------------------------
-FUNCTION WireData_Get_First():Integer;cdecl;
+function WireData_Get_First(): Integer; CDECL;
 begin
-      Result := 0;
-      If ActiveCircuit[ActiveActor] <> Nil Then
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
         Result := WireDataClass[ActiveActor].First;
 end;
 //------------------------------------------------------------------------------
-FUNCTION WireData_Get_Next():Integer;cdecl;
+function WireData_Get_Next(): Integer; CDECL;
 begin
-      Result := 0;
-      If ActiveCircuit[ActiveActor] <> Nil Then
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
         Result := WireDataClass[ActiveActor].Next;
 end;
 //------------------------------------------------------------------------------
-FUNCTION WireData_Get_Name_AnsiString():AnsiString;inline;
-Var
-   pWireData:TWireDataObj;
+function WireData_Get_Name_AnsiString(): Ansistring; inline;
+var
+    pWireData: TWireDataObj;
 
-Begin
-   Result := '';  // signify no name
-   If ActiveCircuit[ActiveActor] <> Nil Then
-   Begin
-        pWireData := WireDataClass[ActiveActor].GetActiveObj ;
-        If pWireData <> Nil Then
-        Begin
-              Result := pWireData.Name;
-        End;
-   End;
+begin
+    Result := '';  // signify no name
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        if pWireData <> NIL then
+        begin
+            Result := pWireData.Name;
+        end;
+    end;
 
 end;
 
-FUNCTION WireData_Get_Name():PAnsiChar;cdecl;
+function WireData_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(WireData_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
-PROCEDURE WireData_Set_Name(const Value: PAnsiChar);cdecl;
+procedure WireData_Set_Name(const Value: PAnsiChar); CDECL;
 // set LineCode active by name
 
-Begin
-   If ActiveCircuit[ActiveActor] <> Nil Then
-   Begin
-        If Not WireDataClass[ActiveActor].SetActive (Value) Then
-         DoSimpleMsg('WireData "'+ Value +'" Not Found in Active Circuit.', 51008);
+begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        if not WireDataClass[ActiveActor].SetActive(Value) then
+            DoSimpleMsg('WireData "' + Value + '" Not Found in Active Circuit.', 51008);
 
          // Still same active object if not found
-   End;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE WireData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-VAR
-  Result: PPAnsiCharArray;
-  WireDataElem:TWireDataObj;
-  k:Integer;
+procedure WireData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+var
+    Result: PPAnsiCharArray;
+    WireDataElem: TWireDataObj;
+    k: Integer;
 
-Begin
+begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     If WireDataClass[ActiveActor].ElementList.ListSize  >0 Then
-     Begin
-       DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (WireDataClass[ActiveActor].ElementList.ListSize-1) + 1);
-       k:=0;
-       WireDataElem := WireDataClass[ActiveActor].ElementList.First;
-       WHILE WireDataElem<>Nil DO
-       Begin
-          Result[k] := DSS_CopyStringAsPChar(WireDataElem.Name);
-          Inc(k);
-          WireDataElem := WireDataClass[ActiveActor].ElementList.Next;
-       End;
-     End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        with ActiveCircuit[ActiveActor] do
+            if WireDataClass[ActiveActor].ElementList.ListSize > 0 then
+            begin
+                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (WireDataClass[ActiveActor].ElementList.ListSize - 1) + 1);
+                k := 0;
+                WireDataElem := WireDataClass[ActiveActor].ElementList.First;
+                while WireDataElem <> NIL do
+                begin
+                    Result[k] := DSS_CopyStringAsPChar(WireDataElem.Name);
+                    Inc(k);
+                    WireDataElem := WireDataClass[ActiveActor].ElementList.Next;
+                end;
+            end;
 
 end;
-PROCEDURE WireData_Get_AllNames_GR();cdecl;
+
+procedure WireData_Get_AllNames_GR(); CDECL;
 // Same as WireData_Get_AllNames but uses global result (GR) pointers
 begin
-   WireData_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    WireData_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 //------------------------------------------------------------------------------
-FUNCTION WireData_Get_NormAmps():Double;cdecl;
-Var
-   pWireData:TWireDataObj;
+function WireData_Get_NormAmps(): Double; CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       Result := pWireData.NormAmps;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        Result := pWireData.NormAmps;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE WireData_Set_NormAmps(Value: Double);cdecl;
-Var
-   pWireData:TWireDataObj;
+procedure WireData_Set_NormAmps(Value: Double); CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       pWireData.NormAmps := Value;
-       ConductorSetDefaults(ConductorProps.NormAmps, pWireData);
-  End
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        pWireData.NormAmps := Value;
+        ConductorSetDefaults(ConductorProps.NormAmps, pWireData);
+    end
 
 end;
 //------------------------------------------------------------------------------
-FUNCTION WireData_Get_EmergAmps():Double;cdecl;
-Var
-   pWireData:TWireDataObj;
+function WireData_Get_EmergAmps(): Double; CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       Result := pWireData.EmergAmps;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        Result := pWireData.EmergAmps;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE WireData_Set_EmergAmps(Value: Double);cdecl;
-Var
-   pWireData:TWireDataObj;
+procedure WireData_Set_EmergAmps(Value: Double); CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       pWireData.EmergAmps := Value;
-       ConductorSetDefaults(ConductorProps.EmergAmps, pWireData);
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        pWireData.EmergAmps := Value;
+        ConductorSetDefaults(ConductorProps.EmergAmps, pWireData);
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION WireData_Get_Diameter():Double;cdecl;
-Var
-   pWireData:TWireDataObj;
+function WireData_Get_Diameter(): Double; CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       Result := pWireData.FRadius * 2.0;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        Result := pWireData.FRadius * 2.0;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE WireData_Set_Diameter(Value: Double);cdecl;
-Var
-   pWireData:TWireDataObj;
+procedure WireData_Set_Diameter(Value: Double); CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       with pWireData do 
-       begin
-          FRadius := Value / 2.0;
-          ConductorSetDefaults(ConductorProps.diam, pWireData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        with pWireData do
+        begin
+            FRadius := Value / 2.0;
+            ConductorSetDefaults(ConductorProps.diam, pWireData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION WireData_Get_Radius():Double;cdecl;
-Var
-   pWireData:TWireDataObj;
+function WireData_Get_Radius(): Double; CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       Result := pWireData.FRadius;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        Result := pWireData.FRadius;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE WireData_Set_Radius(Value: Double);cdecl;
-Var
-   pWireData:TWireDataObj;
+procedure WireData_Set_Radius(Value: Double); CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       with pWireData do 
-       begin
-          FRadius := Value;
-          ConductorSetDefaults(ConductorProps.Radius, pWireData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        with pWireData do
+        begin
+            FRadius := Value;
+            ConductorSetDefaults(ConductorProps.Radius, pWireData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION WireData_Get_GMRac():Double;cdecl;
-Var
-   pWireData:TWireDataObj;
+function WireData_Get_GMRac(): Double; CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       Result := pWireData.FGMR60;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        Result := pWireData.FGMR60;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE WireData_Set_GMRac(Value: Double);cdecl;
-Var
-   pWireData:TWireDataObj;
+procedure WireData_Set_GMRac(Value: Double); CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       with pWireData do 
-       begin
-          FGMR60 := Value;
-          ConductorSetDefaults(ConductorProps.GMRac, pWireData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        with pWireData do
+        begin
+            FGMR60 := Value;
+            ConductorSetDefaults(ConductorProps.GMRac, pWireData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION WireData_Get_Rac():Double;cdecl;
-Var
-   pWireData:TWireDataObj;
+function WireData_Get_Rac(): Double; CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       Result := pWireData.FR60;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        Result := pWireData.FR60;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE WireData_Set_Rac(Value: Double);cdecl;
-Var
-   pWireData:TWireDataObj;
+procedure WireData_Set_Rac(Value: Double); CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       with pWireData do 
-       begin
-          FR60 := Value;
-          ConductorSetDefaults(ConductorProps.Rac, pWireData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        with pWireData do
+        begin
+            FR60 := Value;
+            ConductorSetDefaults(ConductorProps.Rac, pWireData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION WireData_Get_Rdc():Double;cdecl;
-Var
-   pWireData:TWireDataObj;
+function WireData_Get_Rdc(): Double; CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       Result := pWireData.FRDC;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        Result := pWireData.FRDC;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE WireData_Set_Rdc(Value: Double);cdecl;
-Var
-   pWireData:TWireDataObj;
+procedure WireData_Set_Rdc(Value: Double); CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       with pWireData do 
-       begin
-          FRDC := Value;
-          ConductorSetDefaults(ConductorProps.Rdc, pWireData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        with pWireData do
+        begin
+            FRDC := Value;
+            ConductorSetDefaults(ConductorProps.Rdc, pWireData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION WireData_Get_GMRUnits():Integer;cdecl;
-Var
-   pWireData:TWireDataObj;
+function WireData_Get_GMRUnits(): Integer; CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       Result := pWireData.FGMRUnits;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        Result := pWireData.FGMRUnits;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE WireData_Set_GMRUnits(Value: Integer);cdecl;
-Var
-   pWireData:TWireDataObj;
+procedure WireData_Set_GMRUnits(Value: Integer); CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       with pWireData do 
-       begin
-          FGMRUnits := Value;
-          ConductorSetDefaults(ConductorProps.GMRunits, pWireData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        with pWireData do
+        begin
+            FGMRUnits := Value;
+            ConductorSetDefaults(ConductorProps.GMRunits, pWireData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION WireData_Get_RadiusUnits():Integer;cdecl;
-Var
-   pWireData:TWireDataObj;
+function WireData_Get_RadiusUnits(): Integer; CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       Result := pWireData.FRadiusUnits;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        Result := pWireData.FRadiusUnits;
+    end;
 end;
 
 //------------------------------------------------------------------------------
-PROCEDURE WireData_Set_RadiusUnits(Value: Integer);cdecl;
-Var
-   pWireData:TWireDataObj;
+procedure WireData_Set_RadiusUnits(Value: Integer); CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       with pWireData do 
-       begin
-          FRadiusUnits := Value;
-          ConductorSetDefaults(ConductorProps.radunits, pWireData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        with pWireData do
+        begin
+            FRadiusUnits := Value;
+            ConductorSetDefaults(ConductorProps.radunits, pWireData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION WireData_Get_ResistanceUnits():Integer;cdecl;
-Var
-   pWireData:TWireDataObj;
+function WireData_Get_ResistanceUnits(): Integer; CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       Result := pWireData.FResistanceUnits;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        Result := pWireData.FResistanceUnits;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE WireData_Set_ResistanceUnits(Value: Integer);cdecl;
-Var
-   pWireData:TWireDataObj;
+procedure WireData_Set_ResistanceUnits(Value: Integer); CDECL;
+var
+    pWireData: TWireDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pWireData := WireDataClass[ActiveActor].GetActiveObj;
-       with pWireData do 
-       begin
-          FResistanceUnits := Value;
-          ConductorSetDefaults(ConductorProps.Runits, pWireData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pWireData := WireDataClass[ActiveActor].GetActiveObj;
+        with pWireData do
+        begin
+            FResistanceUnits := Value;
+            ConductorSetDefaults(ConductorProps.Runits, pWireData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-END.
+end.

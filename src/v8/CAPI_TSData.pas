@@ -1,622 +1,640 @@
-UNIT CAPI_TSData;
+unit CAPI_TSData;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils, TSData, CableData;
+uses
+    CAPI_Utils,
+    TSData,
+    CableData;
 
 type
-  TSDataProps = (DiaShield=1, TapeLayer, TapeLap);
+    TSDataProps = (DiaShield = 1, TapeLayer, TapeLap);
 
 // Common to all classes
-FUNCTION TSData_Get_Count():Integer;cdecl;
-FUNCTION TSData_Get_First():Integer;cdecl;
-FUNCTION TSData_Get_Next():Integer;cdecl;
-FUNCTION TSData_Get_Name():PAnsiChar;cdecl;
-PROCEDURE TSData_Set_Name(const Value: PAnsiChar);cdecl;
-PROCEDURE TSData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-PROCEDURE TSData_Get_AllNames_GR();cdecl;
+function TSData_Get_Count(): Integer; CDECL;
+function TSData_Get_First(): Integer; CDECL;
+function TSData_Get_Next(): Integer; CDECL;
+function TSData_Get_Name(): PAnsiChar; CDECL;
+procedure TSData_Set_Name(const Value: PAnsiChar); CDECL;
+procedure TSData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure TSData_Get_AllNames_GR(); CDECL;
 
 // From ConductorData
-FUNCTION TSData_Get_Rdc():Double;cdecl;
-PROCEDURE TSData_Set_Rdc(Value: Double);cdecl;
-FUNCTION TSData_Get_Rac():Double;cdecl;
-PROCEDURE TSData_Set_Rac(Value: Double);cdecl;
-FUNCTION TSData_Get_GMRac():Double;cdecl;
-PROCEDURE TSData_Set_GMRac(Value: Double);cdecl;
-FUNCTION TSData_Get_GMRUnits():Integer;cdecl;
-PROCEDURE TSData_Set_GMRUnits(Value: Integer);cdecl;
-FUNCTION TSData_Get_Radius():Double;cdecl;
-PROCEDURE TSData_Set_Radius(Value: Double);cdecl;
-FUNCTION TSData_Get_RadiusUnits():Integer;cdecl;
-PROCEDURE TSData_Set_RadiusUnits(Value: Integer);cdecl;
-FUNCTION TSData_Get_ResistanceUnits():Integer;cdecl;
-PROCEDURE TSData_Set_ResistanceUnits(Value: Integer);cdecl;
-FUNCTION TSData_Get_Diameter():Double;cdecl;
-PROCEDURE TSData_Set_Diameter(Value: Double);cdecl;
-FUNCTION TSData_Get_NormAmps():Double;cdecl;
-PROCEDURE TSData_Set_NormAmps(Value: Double);cdecl;
-FUNCTION TSData_Get_EmergAmps():Double;cdecl;
-PROCEDURE TSData_Set_EmergAmps(Value: Double);cdecl;
+function TSData_Get_Rdc(): Double; CDECL;
+procedure TSData_Set_Rdc(Value: Double); CDECL;
+function TSData_Get_Rac(): Double; CDECL;
+procedure TSData_Set_Rac(Value: Double); CDECL;
+function TSData_Get_GMRac(): Double; CDECL;
+procedure TSData_Set_GMRac(Value: Double); CDECL;
+function TSData_Get_GMRUnits(): Integer; CDECL;
+procedure TSData_Set_GMRUnits(Value: Integer); CDECL;
+function TSData_Get_Radius(): Double; CDECL;
+procedure TSData_Set_Radius(Value: Double); CDECL;
+function TSData_Get_RadiusUnits(): Integer; CDECL;
+procedure TSData_Set_RadiusUnits(Value: Integer); CDECL;
+function TSData_Get_ResistanceUnits(): Integer; CDECL;
+procedure TSData_Set_ResistanceUnits(Value: Integer); CDECL;
+function TSData_Get_Diameter(): Double; CDECL;
+procedure TSData_Set_Diameter(Value: Double); CDECL;
+function TSData_Get_NormAmps(): Double; CDECL;
+procedure TSData_Set_NormAmps(Value: Double); CDECL;
+function TSData_Get_EmergAmps(): Double; CDECL;
+procedure TSData_Set_EmergAmps(Value: Double); CDECL;
 
 // From CableData
-FUNCTION TSData_Get_EpsR():Double;cdecl;
-PROCEDURE TSData_Set_EpsR(Value: Double);cdecl;
-FUNCTION TSData_Get_InsLayer():Double;cdecl;
-PROCEDURE TSData_Set_InsLayer(Value: Double);cdecl;
-FUNCTION TSData_Get_DiaIns():Double;cdecl;
-PROCEDURE TSData_Set_DiaIns(Value: Double);cdecl;
-FUNCTION TSData_Get_DiaCable():Double;cdecl;
-PROCEDURE TSData_Set_DiaCable(Value: Double);cdecl;
-        
+function TSData_Get_EpsR(): Double; CDECL;
+procedure TSData_Set_EpsR(Value: Double); CDECL;
+function TSData_Get_InsLayer(): Double; CDECL;
+procedure TSData_Set_InsLayer(Value: Double); CDECL;
+function TSData_Get_DiaIns(): Double; CDECL;
+procedure TSData_Set_DiaIns(Value: Double); CDECL;
+function TSData_Get_DiaCable(): Double; CDECL;
+procedure TSData_Set_DiaCable(Value: Double); CDECL;
+
 // From TSData
-FUNCTION TSData_Get_DiaShield():Double;cdecl;
-PROCEDURE TSData_Set_DiaShield(Value: Double);cdecl;
-FUNCTION TSData_Get_TapeLayer():Double;cdecl;
-PROCEDURE TSData_Set_TapeLayer(Value: Double);cdecl;
-FUNCTION TSData_Get_TapeLap():Double;cdecl;
-PROCEDURE TSData_Set_TapeLap(Value: Double);cdecl;
+function TSData_Get_DiaShield(): Double; CDECL;
+procedure TSData_Set_DiaShield(Value: Double); CDECL;
+function TSData_Get_TapeLayer(): Double; CDECL;
+procedure TSData_Set_TapeLayer(Value: Double); CDECL;
+function TSData_Get_TapeLap(): Double; CDECL;
+procedure TSData_Set_TapeLap(Value: Double); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, sysutils, DSSGlobals, LineUnits, ConductorData, CAPI_WireData, CAPI_CNData;
+uses
+    CAPI_Constants,
+    sysutils,
+    DSSGlobals,
+    LineUnits,
+    ConductorData,
+    CAPI_WireData,
+    CAPI_CNData;
 
 //------------------------------------------------------------------------------  
 procedure TSDataSetDefaults(prop: TSDataProps; conductor: TTSDataObj);
 begin
   {Set defaults}
-  With conductor do
-  begin
+    with conductor do
+    begin
     {Check for critical errors}
-    CASE prop OF
-      TSDataProps.DiaShield: If (FDiaShield <= 0.0) Then DoSimpleMsg('Error: Diameter over shield must be positive for TapeShieldData ' + Name,999);
-      TSDataProps.TapeLayer: If (FTapeLayer <= 0.0) Then DoSimpleMsg('Error: Tape shield thickness must be positive for TapeShieldData ' + Name,999);
-      TSDataProps.TapeLap: If ((FTapeLap < 0.0) Or (FTapeLap > 100.0)) Then DoSimpleMsg('Error: Tap lap must range from 0 to 100 for TapeShieldData ' + Name,999);
-    END;
-  end;
+        case prop of
+            TSDataProps.DiaShield:
+                if (FDiaShield <= 0.0) then
+                    DoSimpleMsg('Error: Diameter over shield must be positive for TapeShieldData ' + Name, 999);
+            TSDataProps.TapeLayer:
+                if (FTapeLayer <= 0.0) then
+                    DoSimpleMsg('Error: Tape shield thickness must be positive for TapeShieldData ' + Name, 999);
+            TSDataProps.TapeLap:
+                if ((FTapeLap < 0.0) or (FTapeLap > 100.0)) then
+                    DoSimpleMsg('Error: Tap lap must range from 0 to 100 for TapeShieldData ' + Name, 999);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_Count():Integer;cdecl;
+function TSData_Get_Count(): Integer; CDECL;
 begin
-      Result := 0;
-      If ActiveCircuit[ActiveActor] <> Nil Then
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
         Result := TSDataClass[ActiveActor].ElementCount;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_First():Integer;cdecl;
+function TSData_Get_First(): Integer; CDECL;
 begin
-      Result := 0;
-      If ActiveCircuit[ActiveActor] <> Nil Then
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
         Result := TSDataClass[ActiveActor].First;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_Next():Integer;cdecl;
+function TSData_Get_Next(): Integer; CDECL;
 begin
-      Result := 0;
-      If ActiveCircuit[ActiveActor] <> Nil Then
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
         Result := TSDataClass[ActiveActor].Next;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_Name_AnsiString():AnsiString;inline;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_Name_AnsiString(): Ansistring; inline;
+var
+    pTSData: TTSDataObj;
 
-Begin
-   Result := '';  // signify no name
-   If ActiveCircuit[ActiveActor] <> Nil Then
-   Begin
-        pTSData := TSDataClass[ActiveActor].GetActiveObj ;
-        If pTSData <> Nil Then
-        Begin
-              Result := pTSData.Name;
-        End;
-   End;
+begin
+    Result := '';  // signify no name
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        if pTSData <> NIL then
+        begin
+            Result := pTSData.Name;
+        end;
+    end;
 
 end;
 
-FUNCTION TSData_Get_Name():PAnsiChar;cdecl;
+function TSData_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(TSData_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_Name(const Value: PAnsiChar);cdecl;
+procedure TSData_Set_Name(const Value: PAnsiChar); CDECL;
 // set LineCode active by name
 
-Begin
-   If ActiveCircuit[ActiveActor] <> Nil Then
-   Begin
-        If Not TSDataClass[ActiveActor].SetActive (Value) Then
-         DoSimpleMsg('TSData "'+ Value +'" Not Found in Active Circuit.', 51008);
+begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        if not TSDataClass[ActiveActor].SetActive(Value) then
+            DoSimpleMsg('TSData "' + Value + '" Not Found in Active Circuit.', 51008);
 
          // Still same active object if not found
-   End;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-VAR
-  Result: PPAnsiCharArray;
-  TSDataElem:TTSDataObj;
-  k:Integer;
+procedure TSData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+var
+    Result: PPAnsiCharArray;
+    TSDataElem: TTSDataObj;
+    k: Integer;
 
-Begin
+begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     If TSDataClass[ActiveActor].ElementList.ListSize  >0 Then
-     Begin
-       DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (TSDataClass[ActiveActor].ElementList.ListSize-1) + 1);
-       k:=0;
-       TSDataElem := TSDataClass[ActiveActor].ElementList.First;
-       WHILE TSDataElem<>Nil DO
-       Begin
-          Result[k] := DSS_CopyStringAsPChar(TSDataElem.Name);
-          Inc(k);
-          TSDataElem := TSDataClass[ActiveActor].ElementList.Next;
-       End;
-     End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        with ActiveCircuit[ActiveActor] do
+            if TSDataClass[ActiveActor].ElementList.ListSize > 0 then
+            begin
+                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (TSDataClass[ActiveActor].ElementList.ListSize - 1) + 1);
+                k := 0;
+                TSDataElem := TSDataClass[ActiveActor].ElementList.First;
+                while TSDataElem <> NIL do
+                begin
+                    Result[k] := DSS_CopyStringAsPChar(TSDataElem.Name);
+                    Inc(k);
+                    TSDataElem := TSDataClass[ActiveActor].ElementList.Next;
+                end;
+            end;
 
 end;
-PROCEDURE TSData_Get_AllNames_GR();cdecl;
+
+procedure TSData_Get_AllNames_GR(); CDECL;
 // Same as TSData_Get_AllNames but uses global result (GR) pointers
 begin
-   TSData_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    TSData_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_NormAmps():Double;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_NormAmps(): Double; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.NormAmps;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.NormAmps;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_NormAmps(Value: Double);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_NormAmps(Value: Double); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       pTSData.NormAmps := Value;
-       ConductorSetDefaults(ConductorProps.NormAmps, pTSData);
-  End
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        pTSData.NormAmps := Value;
+        ConductorSetDefaults(ConductorProps.NormAmps, pTSData);
+    end
 
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_EmergAmps():Double;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_EmergAmps(): Double; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.EmergAmps;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.EmergAmps;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_EmergAmps(Value: Double);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_EmergAmps(Value: Double); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       pTSData.EmergAmps := Value;
-       ConductorSetDefaults(ConductorProps.EmergAmps, pTSData);
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        pTSData.EmergAmps := Value;
+        ConductorSetDefaults(ConductorProps.EmergAmps, pTSData);
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_Diameter():Double;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_Diameter(): Double; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.FRadius * 2.0;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.FRadius * 2.0;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_Diameter(Value: Double);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_Diameter(Value: Double); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       with pTSData do 
-       begin
-          FRadius := Value / 2.0;
-          ConductorSetDefaults(ConductorProps.diam, pTSData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        with pTSData do
+        begin
+            FRadius := Value / 2.0;
+            ConductorSetDefaults(ConductorProps.diam, pTSData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_Radius():Double;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_Radius(): Double; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.FRadius;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.FRadius;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_Radius(Value: Double);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_Radius(Value: Double); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       with pTSData do 
-       begin
-          FRadius := Value;
-          ConductorSetDefaults(ConductorProps.Radius, pTSData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        with pTSData do
+        begin
+            FRadius := Value;
+            ConductorSetDefaults(ConductorProps.Radius, pTSData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_GMRac():Double;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_GMRac(): Double; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.FGMR60;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.FGMR60;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_GMRac(Value: Double);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_GMRac(Value: Double); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       with pTSData do 
-       begin
-          FGMR60 := Value;
-          ConductorSetDefaults(ConductorProps.GMRac, pTSData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        with pTSData do
+        begin
+            FGMR60 := Value;
+            ConductorSetDefaults(ConductorProps.GMRac, pTSData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_Rac():Double;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_Rac(): Double; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.FR60;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.FR60;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_Rac(Value: Double);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_Rac(Value: Double); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       with pTSData do 
-       begin
-          FR60 := Value;
-          ConductorSetDefaults(ConductorProps.Rac, pTSData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        with pTSData do
+        begin
+            FR60 := Value;
+            ConductorSetDefaults(ConductorProps.Rac, pTSData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_Rdc():Double;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_Rdc(): Double; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.FRDC;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.FRDC;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_Rdc(Value: Double);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_Rdc(Value: Double); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       with pTSData do 
-       begin
-          FRDC := Value;
-          ConductorSetDefaults(ConductorProps.Rdc, pTSData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        with pTSData do
+        begin
+            FRDC := Value;
+            ConductorSetDefaults(ConductorProps.Rdc, pTSData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_GMRUnits():Integer;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_GMRUnits(): Integer; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.FGMRUnits;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.FGMRUnits;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_GMRUnits(Value: Integer);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_GMRUnits(Value: Integer); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       with pTSData do 
-       begin
-          FGMRUnits := Value;
-          ConductorSetDefaults(ConductorProps.GMRunits, pTSData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        with pTSData do
+        begin
+            FGMRUnits := Value;
+            ConductorSetDefaults(ConductorProps.GMRunits, pTSData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_RadiusUnits():Integer;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_RadiusUnits(): Integer; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.FRadiusUnits;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.FRadiusUnits;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_RadiusUnits(Value: Integer);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_RadiusUnits(Value: Integer); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       with pTSData do 
-       begin
-          FRadiusUnits := Value;
-          ConductorSetDefaults(ConductorProps.radunits, pTSData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        with pTSData do
+        begin
+            FRadiusUnits := Value;
+            ConductorSetDefaults(ConductorProps.radunits, pTSData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_ResistanceUnits():Integer;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_ResistanceUnits(): Integer; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.FResistanceUnits;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.FResistanceUnits;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_ResistanceUnits(Value: Integer);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_ResistanceUnits(Value: Integer); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       with pTSData do 
-       begin
-          FResistanceUnits := Value;
-          ConductorSetDefaults(ConductorProps.Runits, pTSData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        with pTSData do
+        begin
+            FResistanceUnits := Value;
+            ConductorSetDefaults(ConductorProps.Runits, pTSData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_EpsR():Double;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_EpsR(): Double; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.FEpsR;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.FEpsR;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_EpsR(Value: Double);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_EpsR(Value: Double); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       with pTSData do 
-       begin
-          FEpsR := Value;
-          CableDataSetDefaults(CableDataProps.EpsR, pTSData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        with pTSData do
+        begin
+            FEpsR := Value;
+            CableDataSetDefaults(CableDataProps.EpsR, pTSData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_InsLayer():Double;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_InsLayer(): Double; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.FInsLayer;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.FInsLayer;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_InsLayer(Value: Double);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_InsLayer(Value: Double); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       with pTSData do 
-       begin
-          FInsLayer := Value;
-          CableDataSetDefaults(CableDataProps.InsLayer, pTSData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        with pTSData do
+        begin
+            FInsLayer := Value;
+            CableDataSetDefaults(CableDataProps.InsLayer, pTSData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_DiaIns():Double;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_DiaIns(): Double; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.FDiaIns;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.FDiaIns;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_DiaIns(Value: Double);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_DiaIns(Value: Double); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       with pTSData do 
-       begin
-          FDiaIns := Value;
-          CableDataSetDefaults(CableDataProps.DiaIns, pTSData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        with pTSData do
+        begin
+            FDiaIns := Value;
+            CableDataSetDefaults(CableDataProps.DiaIns, pTSData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_DiaCable():Double;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_DiaCable(): Double; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.FDiaCable;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.FDiaCable;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_DiaCable(Value: Double);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_DiaCable(Value: Double); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       with pTSData do 
-       begin
-          FDiaCable := Value;
-          CableDataSetDefaults(CableDataProps.DiaCable, pTSData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        with pTSData do
+        begin
+            FDiaCable := Value;
+            CableDataSetDefaults(CableDataProps.DiaCable, pTSData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_DiaShield():Double;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_DiaShield(): Double; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.FDiaShield;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.FDiaShield;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_DiaShield(Value: Double);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_DiaShield(Value: Double); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       with pTSData do 
-       begin
-          FDiaShield:= Value;
-          TSDataSetDefaults(TSDataProps.DiaShield, pTSData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        with pTSData do
+        begin
+            FDiaShield := Value;
+            TSDataSetDefaults(TSDataProps.DiaShield, pTSData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_TapeLayer():Double;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_TapeLayer(): Double; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.FTapeLayer;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.FTapeLayer;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_TapeLayer(Value: Double);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_TapeLayer(Value: Double); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       with pTSData do 
-       begin
-          FTapeLayer:= Value;
-          TSDataSetDefaults(TSDataProps.TapeLayer, pTSData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        with pTSData do
+        begin
+            FTapeLayer := Value;
+            TSDataSetDefaults(TSDataProps.TapeLayer, pTSData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION TSData_Get_TapeLap():Double;cdecl;
-Var
-   pTSData:TTSDataObj;
+function TSData_Get_TapeLap(): Double; CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       Result := pTSData.FTapeLap;
-  End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        Result := pTSData.FTapeLap;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE TSData_Set_TapeLap(Value: Double);cdecl;
-Var
-   pTSData:TTSDataObj;
+procedure TSData_Set_TapeLap(Value: Double); CDECL;
+var
+    pTSData: TTSDataObj;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin
-       pTSData := TSDataClass[ActiveActor].GetActiveObj;
-       with pTSData do 
-       begin
-          FTapeLap:= Value;
-          TSDataSetDefaults(TSDataProps.TapeLap, pTSData);
-       end;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pTSData := TSDataClass[ActiveActor].GetActiveObj;
+        with pTSData do
+        begin
+            FTapeLap := Value;
+            TSDataSetDefaults(TSDataProps.TapeLap, pTSData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
 
-END.
+end.

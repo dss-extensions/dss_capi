@@ -1,227 +1,252 @@
-UNIT CAPI_Vsources;
+unit CAPI_Vsources;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils;
+uses
+    CAPI_Utils;
 
-PROCEDURE Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-PROCEDURE Vsources_Get_AllNames_GR();cdecl;
-function Vsources_Get_Count():Integer;cdecl;
-function Vsources_Get_First():Integer;cdecl;
-function Vsources_Get_Next():Integer;cdecl;
-function Vsources_Get_Name():PAnsiChar;cdecl;
-procedure Vsources_Set_Name(const Value: PAnsiChar);cdecl;
-function Vsources_Get_BasekV():Double;cdecl;
-function Vsources_Get_pu():Double;cdecl;
-procedure Vsources_Set_BasekV(Value: Double);cdecl;
-procedure Vsources_Set_pu(Value: Double);cdecl;
-function Vsources_Get_AngleDeg():Double;cdecl;
-function Vsources_Get_Frequency():Double;cdecl;
-function Vsources_Get_Phases():Integer;cdecl;
-procedure Vsources_Set_AngleDeg(Value: Double);cdecl;
-procedure Vsources_Set_Frequency(Value: Double);cdecl;
-procedure Vsources_Set_Phases(Value: Integer);cdecl;
+procedure Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Vsources_Get_AllNames_GR(); CDECL;
+function Vsources_Get_Count(): Integer; CDECL;
+function Vsources_Get_First(): Integer; CDECL;
+function Vsources_Get_Next(): Integer; CDECL;
+function Vsources_Get_Name(): PAnsiChar; CDECL;
+procedure Vsources_Set_Name(const Value: PAnsiChar); CDECL;
+function Vsources_Get_BasekV(): Double; CDECL;
+function Vsources_Get_pu(): Double; CDECL;
+procedure Vsources_Set_BasekV(Value: Double); CDECL;
+procedure Vsources_Set_pu(Value: Double); CDECL;
+function Vsources_Get_AngleDeg(): Double; CDECL;
+function Vsources_Get_Frequency(): Double; CDECL;
+function Vsources_Get_Phases(): Integer; CDECL;
+procedure Vsources_Set_AngleDeg(Value: Double); CDECL;
+procedure Vsources_Set_Frequency(Value: Double); CDECL;
+procedure Vsources_Set_Phases(Value: Integer); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, Vsource, PointerList, DSSGlobals, CktElement;
+uses
+    CAPI_Constants,
+    Vsource,
+    PointerList,
+    DSSGlobals,
+    CktElement;
 
-PROCEDURE Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-VAR
-  Result: PPAnsiCharArray;
-  elem: TVsourceObj;
-  pList: TPointerList;
-  k: Integer;
+procedure Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+var
+    Result: PPAnsiCharArray;
+    elem: TVsourceObj;
+    pList: TPointerList;
+    k: Integer;
 
-Begin
+begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    IF ActiveCircuit <> Nil THEN
-    Begin
-        If VsourceClass.ElementList.ListSize > 0 then
-        Begin
-          pList := VsourceClass.ElementList;
-          DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize -1) + 1);
-          k:=0;
-          elem := pList.First;
-          WHILE elem<>Nil DO Begin
-              Result[k] := DSS_CopyStringAsPChar(elem.Name);
-              Inc(k);
-              elem := pList.next ;
-          End;
-        End;
-    End;
+    if ActiveCircuit <> NIL then
+    begin
+        if VsourceClass.ElementList.ListSize > 0 then
+        begin
+            pList := VsourceClass.ElementList;
+            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize - 1) + 1);
+            k := 0;
+            elem := pList.First;
+            while elem <> NIL do
+            begin
+                Result[k] := DSS_CopyStringAsPChar(elem.Name);
+                Inc(k);
+                elem := pList.next;
+            end;
+        end;
+    end;
 
 end;
-PROCEDURE Vsources_Get_AllNames_GR();cdecl;
+
+procedure Vsources_Get_AllNames_GR(); CDECL;
 // Same as Vsources_Get_AllNames but uses global result (GR) pointers
 begin
-   Vsources_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Vsources_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 
 //------------------------------------------------------------------------------
-function Vsources_Get_Count():Integer;cdecl;
+function Vsources_Get_Count(): Integer; CDECL;
 begin
-     Result := 0;
-     If ActiveCircuit <> Nil Then
+    Result := 0;
+    if ActiveCircuit <> NIL then
         Result := VsourceClass.ElementList.ListSize;
 end;
 //------------------------------------------------------------------------------
-function Vsources_Get_First():Integer;cdecl;
-Var
-   pElem : TVsourceObj;
+function Vsources_Get_First(): Integer; CDECL;
+var
+    pElem: TVsourceObj;
 begin
-     Result := 0;
-     If ActiveCircuit <> Nil Then
-     Begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
         pElem := VsourceClass.ElementList.First;
-        If pElem <> Nil Then
-        Repeat
-          If pElem.Enabled Then Begin
-              ActiveCircuit.ActiveCktElement := pElem;
-              Result := 1;
-          End
-          Else pElem := VsourceClass.ElementList.Next;
-        Until (Result = 1) or (pElem = nil);
-     End;
+        if pElem <> NIL then
+            repeat
+                if pElem.Enabled then
+                begin
+                    ActiveCircuit.ActiveCktElement := pElem;
+                    Result := 1;
+                end
+                else
+                    pElem := VsourceClass.ElementList.Next;
+            until (Result = 1) or (pElem = NIL);
+    end;
 end;
 //------------------------------------------------------------------------------
-function Vsources_Get_Next():Integer;cdecl;
-Var
-   pElem : TVsourceObj;
+function Vsources_Get_Next(): Integer; CDECL;
+var
+    pElem: TVsourceObj;
 begin
-     Result := 0;
-     If ActiveCircuit <> Nil Then
-     Begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
         pElem := VsourceClass.ElementList.Next;
-        If pElem <> Nil Then
-        Repeat
-          If pElem.Enabled Then Begin
-              ActiveCircuit.ActiveCktElement := pElem;
-              Result := VsourceClass.ElementList.ActiveIndex;
-          End
-          Else pElem := VsourceClass.ElementList.Next;
-        Until (Result > 0) or (pElem = nil);
-     End;
+        if pElem <> NIL then
+            repeat
+                if pElem.Enabled then
+                begin
+                    ActiveCircuit.ActiveCktElement := pElem;
+                    Result := VsourceClass.ElementList.ActiveIndex;
+                end
+                else
+                    pElem := VsourceClass.ElementList.Next;
+            until (Result > 0) or (pElem = NIL);
+    end;
 end;
 //------------------------------------------------------------------------------
-function Vsources_Get_Name_AnsiString():AnsiString;inline;
-Var
-   elem: TDSSCktElement;
-Begin
+function Vsources_Get_Name_AnsiString(): Ansistring; inline;
+var
+    elem: TDSSCktElement;
+begin
     Result := '';
     elem := ActiveCircuit.ActiveCktElement;
-    If elem <> Nil Then Result := elem.Name;
+    if elem <> NIL then
+        Result := elem.Name;
 end;
 
-function Vsources_Get_Name():PAnsiChar;cdecl;
+function Vsources_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(Vsources_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
-procedure Vsources_Set_Name(const Value: PAnsiChar);cdecl;
+procedure Vsources_Set_Name(const Value: PAnsiChar); CDECL;
 // Set element active by name
 
 begin
-     If ActiveCircuit <> Nil Then
-     Begin
-          If VsourceClass.SetActive(Value) Then
-          Begin
-               ActiveCircuit.ActiveCktElement := VsourceClass.ElementList.Active ;
-          End
-          Else Begin
-              DoSimpleMsg('Vsource "'+ Value +'" Not Found in Active Circuit.', 77003);
-          End;
-     End;
+    if ActiveCircuit <> NIL then
+    begin
+        if VsourceClass.SetActive(Value) then
+        begin
+            ActiveCircuit.ActiveCktElement := VsourceClass.ElementList.Active;
+        end
+        else
+        begin
+            DoSimpleMsg('Vsource "' + Value + '" Not Found in Active Circuit.', 77003);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-function Vsources_Get_BasekV():Double;cdecl;
+function Vsources_Get_BasekV(): Double; CDECL;
 var
-  elem: TVsourceObj;
+    elem: TVsourceObj;
 begin
-  Result := 0.0;
-  elem := VsourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.kVBase ;
+    Result := 0.0;
+    elem := VsourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.kVBase;
 end;
 //------------------------------------------------------------------------------
-function Vsources_Get_pu():Double;cdecl;
+function Vsources_Get_pu(): Double; CDECL;
 var
-  elem: TVsourceObj;
+    elem: TVsourceObj;
 begin
-  Result := 0.0;
-  elem := VsourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.perunit ;
+    Result := 0.0;
+    elem := VsourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.perunit;
 end;
 //------------------------------------------------------------------------------
-procedure Vsources_Set_BasekV(Value: Double);cdecl;
+procedure Vsources_Set_BasekV(Value: Double); CDECL;
 var
-  elem: TVsourceObj;
+    elem: TVsourceObj;
 begin
-  elem := VsourceClass.GetActiveObj ;
-  if elem <> nil then elem.kVBase := Value;
+    elem := VsourceClass.GetActiveObj;
+    if elem <> NIL then
+        elem.kVBase := Value;
 end;
 //------------------------------------------------------------------------------
-procedure Vsources_Set_pu(Value: Double);cdecl;
+procedure Vsources_Set_pu(Value: Double); CDECL;
 var
-  elem: TVsourceObj;
+    elem: TVsourceObj;
 begin
-  elem := VsourceClass.GetActiveObj ;
-  if elem <> nil then elem.PerUnit := Value;
+    elem := VsourceClass.GetActiveObj;
+    if elem <> NIL then
+        elem.PerUnit := Value;
 end;
 //------------------------------------------------------------------------------
-function Vsources_Get_AngleDeg():Double;cdecl;
+function Vsources_Get_AngleDeg(): Double; CDECL;
 var
-  elem: TVsourceObj;
+    elem: TVsourceObj;
 begin
-  Result := 0.0;
-  elem := VsourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.angle ;
+    Result := 0.0;
+    elem := VsourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.angle;
 
 end;
 //------------------------------------------------------------------------------
-function Vsources_Get_Frequency():Double;cdecl;
+function Vsources_Get_Frequency(): Double; CDECL;
 var
-  elem: TVsourceObj;
+    elem: TVsourceObj;
 begin
-  Result := 0.0;
-  elem := VsourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.SrcFrequency  ;
+    Result := 0.0;
+    elem := VsourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.SrcFrequency;
 
 end;
 //------------------------------------------------------------------------------
-function Vsources_Get_Phases():Integer;cdecl;
+function Vsources_Get_Phases(): Integer; CDECL;
 var
-  elem: TVsourceObj;
+    elem: TVsourceObj;
 begin
-  Result := 0;
-  elem := VsourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.NPhases ;
+    Result := 0;
+    elem := VsourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.NPhases;
 
 end;
 //------------------------------------------------------------------------------
-procedure Vsources_Set_AngleDeg(Value: Double);cdecl;
+procedure Vsources_Set_AngleDeg(Value: Double); CDECL;
 var
-  elem: TVsourceObj;
+    elem: TVsourceObj;
 begin
-  elem := VsourceClass.GetActiveObj ;
-  if elem <> nil then elem.Angle := Value;
+    elem := VsourceClass.GetActiveObj;
+    if elem <> NIL then
+        elem.Angle := Value;
 end;
 //------------------------------------------------------------------------------
-procedure Vsources_Set_Frequency(Value: Double);cdecl;
+procedure Vsources_Set_Frequency(Value: Double); CDECL;
 var
-  elem: TVsourceObj;
+    elem: TVsourceObj;
 begin
-  elem := VsourceClass.GetActiveObj ;
-  if elem <> nil then elem.SrcFrequency := Value;
+    elem := VsourceClass.GetActiveObj;
+    if elem <> NIL then
+        elem.SrcFrequency := Value;
 end;
 //------------------------------------------------------------------------------
-procedure Vsources_Set_Phases(Value: Integer);cdecl;
+procedure Vsources_Set_Phases(Value: Integer); CDECL;
 var
-  elem: TVsourceObj;
+    elem: TVsourceObj;
 begin
-  elem := VsourceClass.GetActiveObj ;
-  if elem <> nil then elem.Nphases := Value;
+    elem := VsourceClass.GetActiveObj;
+    if elem <> NIL then
+        elem.Nphases := Value;
 end;
 //------------------------------------------------------------------------------
-END.
+end.

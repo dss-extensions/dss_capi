@@ -1,673 +1,700 @@
-UNIT CAPI_CNData;
+unit CAPI_CNData;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils, CNData, CableData;
+uses
+    CAPI_Utils,
+    CNData,
+    CableData;
 
 type
-  CableDataProps = (EpsR=1, InsLayer, DiaIns, DiaCable);
-  CNDataProps = (k=1, DiaStrand, GmrStrand, Rstrand);
+    CableDataProps = (EpsR = 1, InsLayer, DiaIns, DiaCable);
+    CNDataProps = (k = 1, DiaStrand, GmrStrand, Rstrand);
 
 procedure CableDataSetDefaults(prop: CableDataProps; conductor: TCableDataObj);
 
 // Common to all classes
-FUNCTION CNData_Get_Count():Integer;cdecl;
-FUNCTION CNData_Get_First():Integer;cdecl;
-FUNCTION CNData_Get_Next():Integer;cdecl;
-FUNCTION CNData_Get_Name():PAnsiChar;cdecl;
-PROCEDURE CNData_Set_Name(const Value: PAnsiChar);cdecl;
-PROCEDURE CNData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-PROCEDURE CNData_Get_AllNames_GR();cdecl;
+function CNData_Get_Count(): Integer; CDECL;
+function CNData_Get_First(): Integer; CDECL;
+function CNData_Get_Next(): Integer; CDECL;
+function CNData_Get_Name(): PAnsiChar; CDECL;
+procedure CNData_Set_Name(const Value: PAnsiChar); CDECL;
+procedure CNData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure CNData_Get_AllNames_GR(); CDECL;
 
 // From ConductorData
-FUNCTION CNData_Get_Rdc():Double;cdecl;
-PROCEDURE CNData_Set_Rdc(Value: Double);cdecl;
-FUNCTION CNData_Get_Rac():Double;cdecl;
-PROCEDURE CNData_Set_Rac(Value: Double);cdecl;
-FUNCTION CNData_Get_GMRac():Double;cdecl;
-PROCEDURE CNData_Set_GMRac(Value: Double);cdecl;
-FUNCTION CNData_Get_GMRUnits():Integer;cdecl;
-PROCEDURE CNData_Set_GMRUnits(Value: Integer);cdecl;
-FUNCTION CNData_Get_Radius():Double;cdecl;
-PROCEDURE CNData_Set_Radius(Value: Double);cdecl;
-FUNCTION CNData_Get_RadiusUnits():Integer;cdecl;
-PROCEDURE CNData_Set_RadiusUnits(Value: Integer);cdecl;
-FUNCTION CNData_Get_ResistanceUnits():Integer;cdecl;
-PROCEDURE CNData_Set_ResistanceUnits(Value: Integer);cdecl;
-FUNCTION CNData_Get_Diameter():Double;cdecl;
-PROCEDURE CNData_Set_Diameter(Value: Double);cdecl;
-FUNCTION CNData_Get_NormAmps():Double;cdecl;
-PROCEDURE CNData_Set_NormAmps(Value: Double);cdecl;
-FUNCTION CNData_Get_EmergAmps():Double;cdecl;
-PROCEDURE CNData_Set_EmergAmps(Value: Double);cdecl;
+function CNData_Get_Rdc(): Double; CDECL;
+procedure CNData_Set_Rdc(Value: Double); CDECL;
+function CNData_Get_Rac(): Double; CDECL;
+procedure CNData_Set_Rac(Value: Double); CDECL;
+function CNData_Get_GMRac(): Double; CDECL;
+procedure CNData_Set_GMRac(Value: Double); CDECL;
+function CNData_Get_GMRUnits(): Integer; CDECL;
+procedure CNData_Set_GMRUnits(Value: Integer); CDECL;
+function CNData_Get_Radius(): Double; CDECL;
+procedure CNData_Set_Radius(Value: Double); CDECL;
+function CNData_Get_RadiusUnits(): Integer; CDECL;
+procedure CNData_Set_RadiusUnits(Value: Integer); CDECL;
+function CNData_Get_ResistanceUnits(): Integer; CDECL;
+procedure CNData_Set_ResistanceUnits(Value: Integer); CDECL;
+function CNData_Get_Diameter(): Double; CDECL;
+procedure CNData_Set_Diameter(Value: Double); CDECL;
+function CNData_Get_NormAmps(): Double; CDECL;
+procedure CNData_Set_NormAmps(Value: Double); CDECL;
+function CNData_Get_EmergAmps(): Double; CDECL;
+procedure CNData_Set_EmergAmps(Value: Double); CDECL;
 
 // From CableData
-FUNCTION CNData_Get_EpsR():Double;cdecl;
-PROCEDURE CNData_Set_EpsR(Value: Double);cdecl;
-FUNCTION CNData_Get_InsLayer():Double;cdecl;
-PROCEDURE CNData_Set_InsLayer(Value: Double);cdecl;
-FUNCTION CNData_Get_DiaIns():Double;cdecl;
-PROCEDURE CNData_Set_DiaIns(Value: Double);cdecl;
-FUNCTION CNData_Get_DiaCable():Double;cdecl;
-PROCEDURE CNData_Set_DiaCable(Value: Double);cdecl;
-        
+function CNData_Get_EpsR(): Double; CDECL;
+procedure CNData_Set_EpsR(Value: Double); CDECL;
+function CNData_Get_InsLayer(): Double; CDECL;
+procedure CNData_Set_InsLayer(Value: Double); CDECL;
+function CNData_Get_DiaIns(): Double; CDECL;
+procedure CNData_Set_DiaIns(Value: Double); CDECL;
+function CNData_Get_DiaCable(): Double; CDECL;
+procedure CNData_Set_DiaCable(Value: Double); CDECL;
+
 // From CNData
-FUNCTION CNData_Get_k():Integer;cdecl;
-PROCEDURE CNData_Set_k(Value: Integer);cdecl;
-FUNCTION CNData_Get_DiaStrand():Double;cdecl;
-PROCEDURE CNData_Set_DiaStrand(Value: Double);cdecl;
-FUNCTION CNData_Get_GmrStrand():Double;cdecl;
-PROCEDURE CNData_Set_GmrStrand(Value: Double);cdecl;
-FUNCTION CNData_Get_RStrand():Double;cdecl;
-PROCEDURE CNData_Set_RStrand(Value: Double);cdecl;
+function CNData_Get_k(): Integer; CDECL;
+procedure CNData_Set_k(Value: Integer); CDECL;
+function CNData_Get_DiaStrand(): Double; CDECL;
+procedure CNData_Set_DiaStrand(Value: Double); CDECL;
+function CNData_Get_GmrStrand(): Double; CDECL;
+procedure CNData_Set_GmrStrand(Value: Double); CDECL;
+function CNData_Get_RStrand(): Double; CDECL;
+procedure CNData_Set_RStrand(Value: Double); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, sysutils, DSSGlobals, LineUnits, ConductorData, CAPI_WireData;
+uses
+    CAPI_Constants,
+    sysutils,
+    DSSGlobals,
+    LineUnits,
+    ConductorData,
+    CAPI_WireData;
 
 //------------------------------------------------------------------------------  
 procedure CableDataSetDefaults(prop: CableDataProps; conductor: TCableDataObj);
 begin
   {Set defaults}
-  With conductor do
-  begin
+    with conductor do
+    begin
       {Check for critical errors}
-      CASE prop OF
-        CableDataProps.EpsR: If (FEpsR < 1.0) Then DoSimpleMsg('Error: Insulation permittivity must be greater than one for CableData ' + Name, 999);
-        CableDataProps.InsLayer: If (FInsLayer <= 0.0) Then DoSimpleMsg('Error: Insulation layer thickness must be positive for CableData ' + Name, 999);
-        CableDataProps.DiaIns: If (FDiaIns   <= 0.0) Then DoSimpleMsg('Error: Diameter over insulation layer must be positive for CableData ' + Name, 999);
-        CableDataProps.DiaCable: If (FDiaCable <= 0.0) Then DoSimpleMsg('Error: Diameter over cable must be positive for CableData ' + Name, 999);
-      END;
-  end;
+        case prop of
+            CableDataProps.EpsR:
+                if (FEpsR < 1.0) then
+                    DoSimpleMsg('Error: Insulation permittivity must be greater than one for CableData ' + Name, 999);
+            CableDataProps.InsLayer:
+                if (FInsLayer <= 0.0) then
+                    DoSimpleMsg('Error: Insulation layer thickness must be positive for CableData ' + Name, 999);
+            CableDataProps.DiaIns:
+                if (FDiaIns <= 0.0) then
+                    DoSimpleMsg('Error: Diameter over insulation layer must be positive for CableData ' + Name, 999);
+            CableDataProps.DiaCable:
+                if (FDiaCable <= 0.0) then
+                    DoSimpleMsg('Error: Diameter over cable must be positive for CableData ' + Name, 999);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------  
 procedure CNDataSetDefaults(prop: CNDataProps; conductor: TCNDataObj);
 begin
   {Set defaults}
-  With conductor do
-  begin
+    with conductor do
+    begin
     {Set defaults}
-    CASE prop OF
-        CNDataProps.DiaStrand: If FGmrStrand <=0.0 Then FGmrStrand := 0.7788 * 0.5 * FDiaStrand;
-    END;
-    
+        case prop of
+            CNDataProps.DiaStrand:
+                if FGmrStrand <= 0.0 then
+                    FGmrStrand := 0.7788 * 0.5 * FDiaStrand;
+        end;
+
     {Check for critical errors}
-    CASE prop OF
-        CNDataProps.k: If (FkStrand < 2) Then DoSimpleMsg('Error: Must have at least 2 concentric neutral strands for CNData ' + Name,999);
-        CNDataProps.DiaStrand: If (FDiaStrand <= 0.0) Then DoSimpleMsg('Error: Neutral strand diameter must be positive for CNData ' + Name,999);
-        CNDataProps.GmrStrand: If (FGmrStrand <= 0.0) Then DoSimpleMsg('Error: Neutral strand GMR must be positive for CNData ' + Name,999);
-    END;
-  end;
+        case prop of
+            CNDataProps.k:
+                if (FkStrand < 2) then
+                    DoSimpleMsg('Error: Must have at least 2 concentric neutral strands for CNData ' + Name, 999);
+            CNDataProps.DiaStrand:
+                if (FDiaStrand <= 0.0) then
+                    DoSimpleMsg('Error: Neutral strand diameter must be positive for CNData ' + Name, 999);
+            CNDataProps.GmrStrand:
+                if (FGmrStrand <= 0.0) then
+                    DoSimpleMsg('Error: Neutral strand GMR must be positive for CNData ' + Name, 999);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_Count():Integer;cdecl;
+function CNData_Get_Count(): Integer; CDECL;
 begin
-      Result := 0;
-      If ActiveCircuit <> Nil Then
+    Result := 0;
+    if ActiveCircuit <> NIL then
         Result := CNDataClass.ElementCount;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_First():Integer;cdecl;
+function CNData_Get_First(): Integer; CDECL;
 begin
-      Result := 0;
-      If ActiveCircuit <> Nil Then
+    Result := 0;
+    if ActiveCircuit <> NIL then
         Result := CNDataClass.First;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_Next():Integer;cdecl;
+function CNData_Get_Next(): Integer; CDECL;
 begin
-      Result := 0;
-      If ActiveCircuit <> Nil Then
+    Result := 0;
+    if ActiveCircuit <> NIL then
         Result := CNDataClass.Next;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_Name_AnsiString():AnsiString;inline;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_Name_AnsiString(): Ansistring; inline;
+var
+    pCNData: TCNDataObj;
 
-Begin
-   Result := '';  // signify no name
-   If ActiveCircuit <> Nil Then
-   Begin
-        pCNData := CNDataClass.GetActiveObj ;
-        If pCNData <> Nil Then
-        Begin
-              Result := pCNData.Name;
-        End;
-   End;
+begin
+    Result := '';  // signify no name
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        if pCNData <> NIL then
+        begin
+            Result := pCNData.Name;
+        end;
+    end;
 
 end;
 
-FUNCTION CNData_Get_Name():PAnsiChar;cdecl;
+function CNData_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(CNData_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_Name(const Value: PAnsiChar);cdecl;
+procedure CNData_Set_Name(const Value: PAnsiChar); CDECL;
 // set LineCode active by name
 
-Begin
-   If ActiveCircuit <> Nil Then
-   Begin
-        If Not CNDataClass.SetActive (Value) Then
-         DoSimpleMsg('CNData "'+ Value +'" Not Found in Active Circuit.', 51008);
+begin
+    if ActiveCircuit <> NIL then
+    begin
+        if not CNDataClass.SetActive(Value) then
+            DoSimpleMsg('CNData "' + Value + '" Not Found in Active Circuit.', 51008);
 
          // Still same active object if not found
-   End;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-VAR
-  Result: PPAnsiCharArray;
-  CNDataElem:TCNDataObj;
-  k:Integer;
+procedure CNData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+var
+    Result: PPAnsiCharArray;
+    CNDataElem: TCNDataObj;
+    k: Integer;
 
-Begin
+begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    IF ActiveCircuit <> Nil THEN
-     WITH ActiveCircuit DO
-     If CNDataClass.ElementList.ListSize  >0 Then
-     Begin
-       DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (CNDataClass.ElementList.ListSize-1) + 1);
-       k:=0;
-       CNDataElem := CNDataClass.ElementList.First;
-       WHILE CNDataElem<>Nil DO
-       Begin
-          Result[k] := DSS_CopyStringAsPChar(CNDataElem.Name);
-          Inc(k);
-          CNDataElem := CNDataClass.ElementList.Next;
-       End;
-     End;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+            if CNDataClass.ElementList.ListSize > 0 then
+            begin
+                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (CNDataClass.ElementList.ListSize - 1) + 1);
+                k := 0;
+                CNDataElem := CNDataClass.ElementList.First;
+                while CNDataElem <> NIL do
+                begin
+                    Result[k] := DSS_CopyStringAsPChar(CNDataElem.Name);
+                    Inc(k);
+                    CNDataElem := CNDataClass.ElementList.Next;
+                end;
+            end;
 
 end;
-PROCEDURE CNData_Get_AllNames_GR();cdecl;
+
+procedure CNData_Get_AllNames_GR(); CDECL;
 // Same as CNData_Get_AllNames but uses global result (GR) pointers
 begin
-   CNData_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    CNData_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_NormAmps():Double;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_NormAmps(): Double; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.NormAmps;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.NormAmps;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_NormAmps(Value: Double);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_NormAmps(Value: Double); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       pCNData.NormAmps := Value;
-       ConductorSetDefaults(ConductorProps.NormAmps, pCNData);
-  End
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        pCNData.NormAmps := Value;
+        ConductorSetDefaults(ConductorProps.NormAmps, pCNData);
+    end
 
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_EmergAmps():Double;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_EmergAmps(): Double; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.EmergAmps;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.EmergAmps;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_EmergAmps(Value: Double);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_EmergAmps(Value: Double); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       pCNData.EmergAmps := Value;
-       ConductorSetDefaults(ConductorProps.EmergAmps, pCNData);
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        pCNData.EmergAmps := Value;
+        ConductorSetDefaults(ConductorProps.EmergAmps, pCNData);
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_Diameter():Double;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_Diameter(): Double; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FRadius * 2.0;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FRadius * 2.0;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_Diameter(Value: Double);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_Diameter(Value: Double); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FRadius := Value / 2.0;
-          ConductorSetDefaults(ConductorProps.diam, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FRadius := Value / 2.0;
+            ConductorSetDefaults(ConductorProps.diam, pCNData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_Radius():Double;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_Radius(): Double; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FRadius;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FRadius;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_Radius(Value: Double);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_Radius(Value: Double); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FRadius := Value;
-          ConductorSetDefaults(ConductorProps.Radius, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FRadius := Value;
+            ConductorSetDefaults(ConductorProps.Radius, pCNData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_GMRac():Double;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_GMRac(): Double; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FGMR60;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FGMR60;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_GMRac(Value: Double);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_GMRac(Value: Double); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FGMR60 := Value;
-          ConductorSetDefaults(ConductorProps.GMRac, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FGMR60 := Value;
+            ConductorSetDefaults(ConductorProps.GMRac, pCNData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_Rac():Double;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_Rac(): Double; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FR60;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FR60;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_Rac(Value: Double);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_Rac(Value: Double); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FR60 := Value;
-          ConductorSetDefaults(ConductorProps.Rac, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FR60 := Value;
+            ConductorSetDefaults(ConductorProps.Rac, pCNData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_Rdc():Double;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_Rdc(): Double; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FRDC;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FRDC;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_Rdc(Value: Double);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_Rdc(Value: Double); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FRDC := Value;
-          ConductorSetDefaults(ConductorProps.Rdc, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FRDC := Value;
+            ConductorSetDefaults(ConductorProps.Rdc, pCNData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_GMRUnits():Integer;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_GMRUnits(): Integer; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FGMRUnits;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FGMRUnits;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_GMRUnits(Value: Integer);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_GMRUnits(Value: Integer); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FGMRUnits := Value;
-          ConductorSetDefaults(ConductorProps.GMRunits, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FGMRUnits := Value;
+            ConductorSetDefaults(ConductorProps.GMRunits, pCNData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_RadiusUnits():Integer;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_RadiusUnits(): Integer; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FRadiusUnits;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FRadiusUnits;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_RadiusUnits(Value: Integer);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_RadiusUnits(Value: Integer); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FRadiusUnits := Value;
-          ConductorSetDefaults(ConductorProps.radunits, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FRadiusUnits := Value;
+            ConductorSetDefaults(ConductorProps.radunits, pCNData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_ResistanceUnits():Integer;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_ResistanceUnits(): Integer; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FResistanceUnits;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FResistanceUnits;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_ResistanceUnits(Value: Integer);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_ResistanceUnits(Value: Integer); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FResistanceUnits := Value;
-          ConductorSetDefaults(ConductorProps.Runits, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FResistanceUnits := Value;
+            ConductorSetDefaults(ConductorProps.Runits, pCNData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_EpsR():Double;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_EpsR(): Double; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FEpsR;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FEpsR;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_EpsR(Value: Double);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_EpsR(Value: Double); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FEpsR := Value;
-          CableDataSetDefaults(CableDataProps.EpsR, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FEpsR := Value;
+            CableDataSetDefaults(CableDataProps.EpsR, pCNData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_InsLayer():Double;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_InsLayer(): Double; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FInsLayer;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FInsLayer;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_InsLayer(Value: Double);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_InsLayer(Value: Double); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FInsLayer := Value;
-          CableDataSetDefaults(CableDataProps.InsLayer, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FInsLayer := Value;
+            CableDataSetDefaults(CableDataProps.InsLayer, pCNData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_DiaIns():Double;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_DiaIns(): Double; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FDiaIns;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FDiaIns;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_DiaIns(Value: Double);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_DiaIns(Value: Double); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FDiaIns := Value;
-          CableDataSetDefaults(CableDataProps.DiaIns, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FDiaIns := Value;
+            CableDataSetDefaults(CableDataProps.DiaIns, pCNData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_DiaCable():Double;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_DiaCable(): Double; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FDiaCable;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FDiaCable;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_DiaCable(Value: Double);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_DiaCable(Value: Double); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FDiaCable := Value;
-          CableDataSetDefaults(CableDataProps.DiaCable, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FDiaCable := Value;
+            CableDataSetDefaults(CableDataProps.DiaCable, pCNData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_k():Integer;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_k(): Integer; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FkStrand;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FkStrand;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_k(Value: Integer);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_k(Value: Integer); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FkStrand := Value;
-          CNDataSetDefaults(CNDataProps.k, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FkStrand := Value;
+            CNDataSetDefaults(CNDataProps.k, pCNData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_DiaStrand():Double;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_DiaStrand(): Double; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FDiaStrand;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FDiaStrand;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_DiaStrand(Value: Double);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_DiaStrand(Value: Double); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FDiaStrand := Value;
-          CNDataSetDefaults(CNDataProps.DiaStrand, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FDiaStrand := Value;
+            CNDataSetDefaults(CNDataProps.DiaStrand, pCNData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_GmrStrand():Double;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_GmrStrand(): Double; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FGmrStrand;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FGmrStrand;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_GmrStrand(Value: Double);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_GmrStrand(Value: Double); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FGmrStrand := Value;
-          CNDataSetDefaults(CNDataProps.GmrStrand, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FGmrStrand := Value;
+            CNDataSetDefaults(CNDataProps.GmrStrand, pCNData);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-FUNCTION CNData_Get_RStrand():Double;cdecl;
-Var
-   pCNData:TCNDataObj;
+function CNData_Get_RStrand(): Double; CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  Result := 0;
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       Result := pCNData.FRStrand;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        Result := pCNData.FRStrand;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CNData_Set_RStrand(Value: Double);cdecl;
-Var
-   pCNData:TCNDataObj;
+procedure CNData_Set_RStrand(Value: Double); CDECL;
+var
+    pCNData: TCNDataObj;
 begin
-  IF ActiveCircuit <> NIL
-  THEN Begin
-       pCNData := CNDataClass.GetActiveObj;
-       with pCNData do 
-       begin
-          FRStrand:= Value;
-          CNDataSetDefaults(CNDataProps.RStrand, pCNData);
-       end;
-  End;
+    if ActiveCircuit <> NIL then
+    begin
+        pCNData := CNDataClass.GetActiveObj;
+        with pCNData do
+        begin
+            FRStrand := Value;
+            CNDataSetDefaults(CNDataProps.RStrand, pCNData);
+        end;
+    end;
 end;
 
-END.
+end.

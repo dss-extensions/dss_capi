@@ -1,111 +1,124 @@
-UNIT CAPI_DSSProperty;
+unit CAPI_DSSProperty;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils;
+uses
+    CAPI_Utils;
 
-function DSSProperty_Get_Description():PAnsiChar;cdecl;
-function DSSProperty_Get_Name():PAnsiChar;cdecl;
-function DSSProperty_Get_Val():PAnsiChar;cdecl;
-procedure DSSProperty_Set_Val(const Value: PAnsiChar);cdecl;
-procedure DSSProperty_Set_Index(const Value: Integer);cdecl;
-procedure DSSProperty_Set_Name(const Value: PAnsiChar);cdecl;
+function DSSProperty_Get_Description(): PAnsiChar; CDECL;
+function DSSProperty_Get_Name(): PAnsiChar; CDECL;
+function DSSProperty_Get_Val(): PAnsiChar; CDECL;
+procedure DSSProperty_Set_Val(const Value: PAnsiChar); CDECL;
+procedure DSSProperty_Set_Index(const Value: Integer); CDECL;
+procedure DSSProperty_Set_Name(const Value: PAnsiChar); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, CAPI_Globals, DSSClass, DSSGlobals, Executive, SysUtils;
+uses
+    CAPI_Constants,
+    CAPI_Globals,
+    DSSClass,
+    DSSGlobals,
+    Executive,
+    SysUtils;
 
-function DSSProperty_Get_Description_AnsiString():AnsiString;inline;
+function DSSProperty_Get_Description_AnsiString(): Ansistring; inline;
 begin
-      Result := '';
-      If (ActiveCircuit[ActiveActor]<> Nil) and (FPropIndex <> 0) {and (FPropClass <> Nil)} Then
-      With  ActiveDSSObject[ActiveActor].ParentClass Do
-        If FPropIndex <= NumProperties Then
-          Result := PropertyHelp^[FPropIndex];
+    Result := '';
+    if (ActiveCircuit[ActiveActor] <> NIL) and (FPropIndex <> 0) {and (FPropClass <> Nil)} then
+        with  ActiveDSSObject[ActiveActor].ParentClass do
+            if FPropIndex <= NumProperties then
+                Result := PropertyHelp^[FPropIndex];
 
 end;
 
-function DSSProperty_Get_Description():PAnsiChar;cdecl;
+function DSSProperty_Get_Description(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(DSSProperty_Get_Description_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function DSSProperty_Get_Name_AnsiString():AnsiString;inline;
+function DSSProperty_Get_Name_AnsiString(): Ansistring; inline;
 begin
-      Result := '';
-      If (ActiveCircuit[ActiveActor]<> Nil) and (FPropIndex <> 0) {and (FPropClass <> Nil)} Then
-        With  ActiveDSSObject[ActiveActor].ParentClass   Do
-        If FPropIndex <= NumProperties Then
-          Result := PropertyName^[FPropIndex];
+    Result := '';
+    if (ActiveCircuit[ActiveActor] <> NIL) and (FPropIndex <> 0) {and (FPropClass <> Nil)} then
+        with  ActiveDSSObject[ActiveActor].ParentClass do
+            if FPropIndex <= NumProperties then
+                Result := PropertyName^[FPropIndex];
 
 end;
 
-function DSSProperty_Get_Name():PAnsiChar;cdecl;
+function DSSProperty_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(DSSProperty_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function DSSProperty_Get_Val_AnsiString():AnsiString;inline;
+function DSSProperty_Get_Val_AnsiString(): Ansistring; inline;
 begin
     Result := '';
-    If ActiveCircuit[ActiveActor] = Nil then Exit;
-    With ActiveDSSObject[ActiveActor] Do
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    with ActiveDSSObject[ActiveActor] do
     begin
-        If FPropIndex <= ParentClass.NumProperties Then
+        if FPropIndex <= ParentClass.NumProperties then
             Result := PropertyValue[ParentClass.PropertyIdxMap[FPropIndex]];
     end;
 end;
 
-function DSSProperty_Get_Val():PAnsiChar;cdecl;
+function DSSProperty_Get_Val(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(DSSProperty_Get_Val_AnsiString());
 end;
 //------------------------------------------------------------------------------
-procedure DSSProperty_Set_Val(const Value: PAnsiChar);cdecl;
+procedure DSSProperty_Set_Val(const Value: PAnsiChar); CDECL;
 begin
-    If ActiveCircuit[ActiveActor] = Nil then Exit;
-    
-    With ActiveDSSObject[ActiveActor] Do
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+
+    with ActiveDSSObject[ActiveActor] do
     begin
-        If (FPropIndex > ParentClass.NumProperties) or (FPropIndex < 1) Then
+        if (FPropIndex > ParentClass.NumProperties) or (FPropIndex < 1) then
         begin
             DoSimpleMsg(Format(
-                'Invalid property index %d for "%s.%s"', 
+                'Invalid property index %d for "%s.%s"',
                 [FPropIndex, ParentClass.Name, Name]
-            ), 33001);
+                ), 33001);
             Exit;
         end;
-        DSSExecutive.Command := 
-            'Edit ' + ParentClass.Name + '.' + Name + ' ' + 
+        DSSExecutive.Command :=
+            'Edit ' + ParentClass.Name + '.' + Name + ' ' +
             ParentClass.PropertyName^[FPropIndex] + '=' + String(Value);
     end;
-End;
-//------------------------------------------------------------------------------
-procedure DSSProperty_Set_Index(const Value: Integer);cdecl;
-begin
-  If ActiveCircuit[ActiveActor] <> Nil Then
-  Begin
-     FPropIndex := Value + 1;
-  End;
 end;
 //------------------------------------------------------------------------------
-procedure DSSProperty_Set_Name(const Value: PAnsiChar);cdecl;
-var i: integer;
+procedure DSSProperty_Set_Index(const Value: Integer); CDECL;
 begin
-  If ActiveCircuit[ActiveActor] <> Nil Then
-  Begin
-    FPropClass := ActiveDSSObject[ActiveActor].ParentClass;
-    FPropIndex := 0;
-    If FPropClass <> Nil Then
-     With FPropClass Do
-     For i := 1 to NumProperties Do Begin
-         If CompareText(Value, PropertyName^[i]) = 0 Then Begin
-             FPropIndex := i;
-             Break;
-         End;
-     End;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        FPropIndex := Value + 1;
+    end;
 end;
 //------------------------------------------------------------------------------
-END.
+procedure DSSProperty_Set_Name(const Value: PAnsiChar); CDECL;
+var
+    i: Integer;
+begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        FPropClass := ActiveDSSObject[ActiveActor].ParentClass;
+        FPropIndex := 0;
+        if FPropClass <> NIL then
+            with FPropClass do
+                for i := 1 to NumProperties do
+                begin
+                    if CompareText(Value, PropertyName^[i]) = 0 then
+                    begin
+                        FPropIndex := i;
+                        Break;
+                    end;
+                end;
+    end;
+end;
+//------------------------------------------------------------------------------
+end.

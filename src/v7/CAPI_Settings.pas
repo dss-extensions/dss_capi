@@ -1,435 +1,469 @@
-UNIT CAPI_Settings;
+unit CAPI_Settings;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils;
+uses
+    CAPI_Utils;
 
-function Settings_Get_AllowDuplicates():WordBool;cdecl;
-function Settings_Get_AutoBusList():PAnsiChar;cdecl;
-function Settings_Get_CktModel():Integer;cdecl;
-function Settings_Get_EmergVmaxpu():Double;cdecl;
-function Settings_Get_EmergVminpu():Double;cdecl;
-function Settings_Get_NormVmaxpu():Double;cdecl;
-function Settings_Get_NormVminpu():Double;cdecl;
-function Settings_Get_ZoneLock():WordBool;cdecl;
-procedure Settings_Set_AllocationFactors(Value: Double);cdecl;
-procedure Settings_Set_AllowDuplicates(Value: WordBool);cdecl;
-procedure Settings_Set_AutoBusList(const Value: PAnsiChar);cdecl;
-procedure Settings_Set_CktModel(Value: Integer);cdecl;
-procedure Settings_Set_EmergVmaxpu(Value: Double);cdecl;
-procedure Settings_Set_EmergVminpu(Value: Double);cdecl;
-procedure Settings_Set_NormVmaxpu(Value: Double);cdecl;
-procedure Settings_Set_NormVminpu(Value: Double);cdecl;
-procedure Settings_Set_ZoneLock(Value: WordBool);cdecl;
-PROCEDURE Settings_Get_LossRegs(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
-PROCEDURE Settings_Get_LossRegs_GR();cdecl;
-function Settings_Get_LossWeight():Double;cdecl;
-function Settings_Get_Trapezoidal():WordBool;cdecl;
-PROCEDURE Settings_Get_UEregs(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
-PROCEDURE Settings_Get_UEregs_GR();cdecl;
-function Settings_Get_UEweight():Double;cdecl;
-procedure Settings_Set_LossRegs(ValuePtr: PInteger; ValueCount: Integer);cdecl;
-procedure Settings_Set_LossWeight(Value: Double);cdecl;
-procedure Settings_Set_Trapezoidal(Value: WordBool);cdecl;
-procedure Settings_Set_UEregs(ValuePtr: PInteger; ValueCount: Integer);cdecl;
-procedure Settings_Set_UEweight(Value: Double);cdecl;
-function Settings_Get_ControlTrace():WordBool;cdecl;
-PROCEDURE Settings_Get_VoltageBases(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-PROCEDURE Settings_Get_VoltageBases_GR();cdecl;
-procedure Settings_Set_ControlTrace(Value: WordBool);cdecl;
-procedure Settings_Set_VoltageBases(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-function Settings_Get_PriceCurve():PAnsiChar;cdecl;
-function Settings_Get_PriceSignal():Double;cdecl;
-procedure Settings_Set_PriceCurve(const Value: PAnsiChar);cdecl;
-procedure Settings_Set_PriceSignal(Value: Double);cdecl;
+function Settings_Get_AllowDuplicates(): Wordbool; CDECL;
+function Settings_Get_AutoBusList(): PAnsiChar; CDECL;
+function Settings_Get_CktModel(): Integer; CDECL;
+function Settings_Get_EmergVmaxpu(): Double; CDECL;
+function Settings_Get_EmergVminpu(): Double; CDECL;
+function Settings_Get_NormVmaxpu(): Double; CDECL;
+function Settings_Get_NormVminpu(): Double; CDECL;
+function Settings_Get_ZoneLock(): Wordbool; CDECL;
+procedure Settings_Set_AllocationFactors(Value: Double); CDECL;
+procedure Settings_Set_AllowDuplicates(Value: Wordbool); CDECL;
+procedure Settings_Set_AutoBusList(const Value: PAnsiChar); CDECL;
+procedure Settings_Set_CktModel(Value: Integer); CDECL;
+procedure Settings_Set_EmergVmaxpu(Value: Double); CDECL;
+procedure Settings_Set_EmergVminpu(Value: Double); CDECL;
+procedure Settings_Set_NormVmaxpu(Value: Double); CDECL;
+procedure Settings_Set_NormVminpu(Value: Double); CDECL;
+procedure Settings_Set_ZoneLock(Value: Wordbool); CDECL;
+procedure Settings_Get_LossRegs(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Settings_Get_LossRegs_GR(); CDECL;
+function Settings_Get_LossWeight(): Double; CDECL;
+function Settings_Get_Trapezoidal(): Wordbool; CDECL;
+procedure Settings_Get_UEregs(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Settings_Get_UEregs_GR(); CDECL;
+function Settings_Get_UEweight(): Double; CDECL;
+procedure Settings_Set_LossRegs(ValuePtr: PInteger; ValueCount: Integer); CDECL;
+procedure Settings_Set_LossWeight(Value: Double); CDECL;
+procedure Settings_Set_Trapezoidal(Value: Wordbool); CDECL;
+procedure Settings_Set_UEregs(ValuePtr: PInteger; ValueCount: Integer); CDECL;
+procedure Settings_Set_UEweight(Value: Double); CDECL;
+function Settings_Get_ControlTrace(): Wordbool; CDECL;
+procedure Settings_Get_VoltageBases(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Settings_Get_VoltageBases_GR(); CDECL;
+procedure Settings_Set_ControlTrace(Value: Wordbool); CDECL;
+procedure Settings_Set_VoltageBases(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+function Settings_Get_PriceCurve(): PAnsiChar; CDECL;
+function Settings_Get_PriceSignal(): Double; CDECL;
+procedure Settings_Set_PriceCurve(const Value: PAnsiChar); CDECL;
+procedure Settings_Set_PriceSignal(Value: Double); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, DSSGlobals, ExecHelper;
+uses
+    CAPI_Constants,
+    DSSGlobals,
+    ExecHelper;
 
-function Settings_Get_AllowDuplicates():WordBool;cdecl;
+function Settings_Get_AllowDuplicates(): Wordbool; CDECL;
 begin
 
-    IF ActiveCircuit <> NIL THEN
+    if ActiveCircuit <> NIL then
 
-      Result := ActiveCircuit.DuplicatesAllowed
+        Result := ActiveCircuit.DuplicatesAllowed
 
-    ELSE Result := FALSE;
+    else
+        Result := FALSE;
 
 end;
 //------------------------------------------------------------------------------
-function Settings_Get_AutoBusList_AnsiString():AnsiString;inline;
-VAR
-   i:Integer;
+function Settings_Get_AutoBusList_AnsiString(): Ansistring; inline;
+var
+    i: Integer;
 begin
-    IF ActiveCircuit <> NIL THEN
-     WITH ActiveCircuit.AutoAddBusList Do
-     Begin
-       FOR i := 1 to ListSize Do AppendGlobalResult(Get(i));
-       Result := GlobalResult;
-     End
-    ELSE Result := '';
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit.AutoAddBusList do
+        begin
+            for i := 1 to ListSize do
+                AppendGlobalResult(Get(i));
+            Result := GlobalResult;
+        end
+    else
+        Result := '';
 
 end;
 
-function Settings_Get_AutoBusList():PAnsiChar;cdecl;
+function Settings_Get_AutoBusList(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(Settings_Get_AutoBusList_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function Settings_Get_CktModel():Integer;cdecl;
+function Settings_Get_CktModel(): Integer; CDECL;
 begin
 
-    IF ActiveCircuit <> NIL THEN  Begin
+    if ActiveCircuit <> NIL then
+    begin
 
-      If ActiveCircuit.PositiveSequence
-      THEN  Result := dssPositiveSeq
-      ELSE  Result := dssMultiPhase;
-    End
-    ELSE Result := 0;
-
-end;
-//------------------------------------------------------------------------------
-function Settings_Get_EmergVmaxpu():Double;cdecl;
-begin
-     IF   ActiveCircuit <> NIL
-     THEN Result := ActiveCircuit.EmergMaxVolts
-     ELSE Result := 0.0;;
+        if ActiveCircuit.PositiveSequence then
+            Result := dssPositiveSeq
+        else
+            Result := dssMultiPhase;
+    end
+    else
+        Result := 0;
 
 end;
 //------------------------------------------------------------------------------
-function Settings_Get_EmergVminpu():Double;cdecl;
+function Settings_Get_EmergVmaxpu(): Double; CDECL;
 begin
-     IF   ActiveCircuit <> NIL
-     THEN Result := ActiveCircuit.EmergMinVolts
-     ELSE Result := 0.0;;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.EmergMaxVolts
+    else
+        Result := 0.0;
+    ;
 
 end;
 //------------------------------------------------------------------------------
-function Settings_Get_NormVmaxpu():Double;cdecl;
+function Settings_Get_EmergVminpu(): Double; CDECL;
 begin
-     IF   ActiveCircuit <> NIL
-     THEN Result := ActiveCircuit.NormalMaxVolts
-     ELSE Result := 0.0;;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.EmergMinVolts
+    else
+        Result := 0.0;
+    ;
+
+end;
+//------------------------------------------------------------------------------
+function Settings_Get_NormVmaxpu(): Double; CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.NormalMaxVolts
+    else
+        Result := 0.0;
+    ;
 
 
 end;
 //------------------------------------------------------------------------------
-function Settings_Get_NormVminpu():Double;cdecl;
+function Settings_Get_NormVminpu(): Double; CDECL;
 begin
-     IF   ActiveCircuit <> NIL
-     THEN Result := ActiveCircuit.NormalMinVolts
-     ELSE Result := 0.0;;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.NormalMinVolts
+    else
+        Result := 0.0;
+    ;
 end;
 //------------------------------------------------------------------------------
-function Settings_Get_ZoneLock():WordBool;cdecl;
+function Settings_Get_ZoneLock(): Wordbool; CDECL;
 begin
-   IF ActiveCircuit <> NIL
-   THEN Begin
-       Result := ActiveCircuit.ZonesLocked ;
-   END
-   ELSE    Result := FALSE;
+    if ActiveCircuit <> NIL then
+    begin
+        Result := ActiveCircuit.ZonesLocked;
+    end
+    else
+        Result := FALSE;
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_AllocationFactors(Value: Double);cdecl;
+procedure Settings_Set_AllocationFactors(Value: Double); CDECL;
 begin
-     IF ActiveCircuit <> NIL
-     THEN   DoSetAllocationFactors(Value);
+    if ActiveCircuit <> NIL then
+        DoSetAllocationFactors(Value);
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_AllowDuplicates(Value: WordBool);cdecl;
+procedure Settings_Set_AllowDuplicates(Value: Wordbool); CDECL;
 begin
-    IF ActiveCircuit <> NIL THEN
-      ActiveCircuit.DuplicatesAllowed := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.DuplicatesAllowed := Value;
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_AutoBusList(const Value: PAnsiChar);cdecl;
+procedure Settings_Set_AutoBusList(const Value: PAnsiChar); CDECL;
 begin
-     IF ActiveCircuit <> NIL
-     THEN DoAutoAddBusList(Value);
+    if ActiveCircuit <> NIL then
+        DoAutoAddBusList(Value);
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_CktModel(Value: Integer);cdecl;
+procedure Settings_Set_CktModel(Value: Integer); CDECL;
 begin
 
-    IF ActiveCircuit <> NIL THEN
+    if ActiveCircuit <> NIL then
 
-      CASE Value of
-           dssPositiveSeq : ActiveCircuit.PositiveSequence:= TRUE;
-      ELSE
-           ActiveCircuit.PositiveSequence:= FALSE;
-      END;
+        case Value of
+            dssPositiveSeq:
+                ActiveCircuit.PositiveSequence := TRUE;
+        else
+            ActiveCircuit.PositiveSequence := FALSE;
+        end;
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_EmergVmaxpu(Value: Double);cdecl;
+procedure Settings_Set_EmergVmaxpu(Value: Double); CDECL;
 begin
-     IF ActiveCircuit <> NIL
-     THEN ActiveCircuit.EmergMaxVolts := Value;
-
-end;
-//------------------------------------------------------------------------------
-procedure Settings_Set_EmergVminpu(Value: Double);cdecl;
-begin
-     IF ActiveCircuit <> NIL
-     THEN ActiveCircuit.EmergMinVolts := Value;
-end;
-//------------------------------------------------------------------------------
-procedure Settings_Set_NormVmaxpu(Value: Double);cdecl;
-begin
-     IF ActiveCircuit <> NIL
-     THEN ActiveCircuit.NormalMaxVolts := Value;
-end;
-//------------------------------------------------------------------------------
-procedure Settings_Set_NormVminpu(Value: Double);cdecl;
-begin
-     IF ActiveCircuit <> NIL
-     THEN ActiveCircuit.NormalMinVolts := Value;
-end;
-//------------------------------------------------------------------------------
-procedure Settings_Set_ZoneLock(Value: WordBool);cdecl;
-begin
-      If Activecircuit <> NIL THEN ActiveCircuit.ZonesLocked := Value;
-end;
-//------------------------------------------------------------------------------
-PROCEDURE Settings_Get_LossRegs(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
-VAR
-  Result: PIntegerArray;
-   i:Integer;
-begin
-   If ActiveCircuit <> NIL
-   THEN Begin
-       Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ActiveCircuit.NumLossRegs - 1) + 1);
-       FOR i := 0 to ActiveCircuit.NumLossRegs - 1 DO
-       Begin
-           Result[i] := ActiveCircuit.LossRegs^[i+1]
-       End;
-   END
-   ELSE    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.EmergMaxVolts := Value;
 
 end;
-PROCEDURE Settings_Get_LossRegs_GR();cdecl;
+//------------------------------------------------------------------------------
+procedure Settings_Set_EmergVminpu(Value: Double); CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.EmergMinVolts := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Settings_Set_NormVmaxpu(Value: Double); CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.NormalMaxVolts := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Settings_Set_NormVminpu(Value: Double); CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.NormalMinVolts := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Settings_Set_ZoneLock(Value: Wordbool); CDECL;
+begin
+    if Activecircuit <> NIL then
+        ActiveCircuit.ZonesLocked := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Settings_Get_LossRegs(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+var
+    Result: PIntegerArray;
+    i: Integer;
+begin
+    if ActiveCircuit <> NIL then
+    begin
+        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ActiveCircuit.NumLossRegs - 1) + 1);
+        for i := 0 to ActiveCircuit.NumLossRegs - 1 do
+        begin
+            Result[i] := ActiveCircuit.LossRegs^[i + 1]
+        end;
+    end
+    else
+        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+
+end;
+
+procedure Settings_Get_LossRegs_GR(); CDECL;
 // Same as Settings_Get_LossRegs but uses global result (GR) pointers
 begin
-   Settings_Get_LossRegs(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+    Settings_Get_LossRegs(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
 end;
 
 //------------------------------------------------------------------------------
-function Settings_Get_LossWeight():Double;cdecl;
+function Settings_Get_LossWeight(): Double; CDECL;
 begin
-   IF ActiveCircuit <> NIL
-   THEN Begin
-        Result := ActiveCircuit.LossWeight ;
-   END
-   ELSE    Result := 0.0;
+    if ActiveCircuit <> NIL then
+    begin
+        Result := ActiveCircuit.LossWeight;
+    end
+    else
+        Result := 0.0;
 end;
 //------------------------------------------------------------------------------
-function Settings_Get_Trapezoidal():WordBool;cdecl;
+function Settings_Get_Trapezoidal(): Wordbool; CDECL;
 begin
 
-   IF ActiveCircuit <> NIL
-   THEN Begin
-        Result := ActiveCircuit.TrapezoidalIntegration ;
-   END
-   ELSE    Result := FALSE;
+    if ActiveCircuit <> NIL then
+    begin
+        Result := ActiveCircuit.TrapezoidalIntegration;
+    end
+    else
+        Result := FALSE;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Settings_Get_UEregs(var ResultPtr: PInteger; ResultCount: PInteger);cdecl;
-VAR
-  Result: PIntegerArray;
-   i:Integer;
+procedure Settings_Get_UEregs(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+var
+    Result: PIntegerArray;
+    i: Integer;
 begin
-   IF ActiveCircuit <> NIL
-   THEN Begin
-       Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ActiveCircuit.NumUERegs - 1) + 1);
-       FOR i := 0 to ActiveCircuit.NumUERegs - 1 DO
-       Begin
-           Result[i] := ActiveCircuit.UERegs^[i+1]
-       End;
-   END
-   ELSE    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+    if ActiveCircuit <> NIL then
+    begin
+        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ActiveCircuit.NumUERegs - 1) + 1);
+        for i := 0 to ActiveCircuit.NumUERegs - 1 do
+        begin
+            Result[i] := ActiveCircuit.UERegs^[i + 1]
+        end;
+    end
+    else
+        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
 end;
-PROCEDURE Settings_Get_UEregs_GR();cdecl;
+
+procedure Settings_Get_UEregs_GR(); CDECL;
 // Same as Settings_Get_UEregs but uses global result (GR) pointers
 begin
-   Settings_Get_UEregs(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+    Settings_Get_UEregs(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
 end;
 
 //------------------------------------------------------------------------------
-function Settings_Get_UEweight():Double;cdecl;
+function Settings_Get_UEweight(): Double; CDECL;
 begin
-   IF ActiveCircuit <> NIL
-   THEN Begin
-           Result := ActiveCircuit.UEWeight
-   END
-   ELSE    Result := 0.0;
+    if ActiveCircuit <> NIL then
+    begin
+        Result := ActiveCircuit.UEWeight
+    end
+    else
+        Result := 0.0;
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_LossRegs(ValuePtr: PInteger; ValueCount: Integer);cdecl;
-VAR
-  Value: PIntegerArray;
-   i, j:Integer;
+procedure Settings_Set_LossRegs(ValuePtr: PInteger; ValueCount: Integer); CDECL;
+var
+    Value: PIntegerArray;
+    i, j: Integer;
 begin
     Value := PIntegerArray(ValuePtr);
-   IF ActiveCircuit <> NIL
-   THEN Begin
-       ReAllocMem(ActiveCircuit.LossRegs, Sizeof(ActiveCircuit.LossRegs^[1])*(1 - (0) + (ValueCount - 1)));
-       j:=1;
-       FOR i := (0) to (ValueCount - 1) DO
-       Begin
+    if ActiveCircuit <> NIL then
+    begin
+        ReAllocMem(ActiveCircuit.LossRegs, Sizeof(ActiveCircuit.LossRegs^[1]) * (1 - (0) + (ValueCount - 1)));
+        j := 1;
+        for i := (0) to (ValueCount - 1) do
+        begin
             ActiveCircuit.LossRegs^[j] := Value[i];
             Inc(j);
-       End;
-   End;
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_LossWeight(Value: Double);cdecl;
+procedure Settings_Set_LossWeight(Value: Double); CDECL;
 begin
-   IF ActiveCircuit <> NIL
-   THEN Begin
-       ActiveCircuit.LossWeight := Value
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.LossWeight := Value
+    end;
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_Trapezoidal(Value: WordBool);cdecl;
+procedure Settings_Set_Trapezoidal(Value: Wordbool); CDECL;
 begin
-   IF ActiveCircuit <> NIL
-   THEN Begin
-      ActiveCircuit.TrapezoidalIntegration  := Value
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.TrapezoidalIntegration := Value
+    end;
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_UEregs(ValuePtr: PInteger; ValueCount: Integer);cdecl;
-VAR
-  Value: PIntegerArray;
-   i,j:Integer ;
+procedure Settings_Set_UEregs(ValuePtr: PInteger; ValueCount: Integer); CDECL;
+var
+    Value: PIntegerArray;
+    i, j: Integer;
 begin
     Value := PIntegerArray(ValuePtr);
-   IF ActiveCircuit <> NIL
-   THEN Begin
-       ReAllocMem(ActiveCircuit.UERegs, Sizeof(ActiveCircuit.UERegs^[1])*(1 - (0) + (ValueCount - 1)));
-       j:=1;
-       FOR i := (0) to (ValueCount - 1) DO
-       Begin
+    if ActiveCircuit <> NIL then
+    begin
+        ReAllocMem(ActiveCircuit.UERegs, Sizeof(ActiveCircuit.UERegs^[1]) * (1 - (0) + (ValueCount - 1)));
+        j := 1;
+        for i := (0) to (ValueCount - 1) do
+        begin
             ActiveCircuit.UERegs^[j] := Value[i];
             Inc(j);
-       End;
-   End;
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_UEweight(Value: Double);cdecl;
+procedure Settings_Set_UEweight(Value: Double); CDECL;
 begin
-   IF ActiveCircuit <> NIL
-   THEN Begin
-       ActiveCircuit.UEWeight := Value
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        ActiveCircuit.UEWeight := Value
+    end;
 end;
 //------------------------------------------------------------------------------
-function Settings_Get_ControlTrace():WordBool;cdecl;
+function Settings_Get_ControlTrace(): Wordbool; CDECL;
 begin
-     If ActiveCircuit <> NIL
-     THEN Result := ActiveCircuit.ControlQueue.TraceLog;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.ControlQueue.TraceLog;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Settings_Get_VoltageBases(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-VAR
-  Result: PDoubleArray;
-   i, Count :Integer;
+procedure Settings_Get_VoltageBases(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+var
+    Result: PDoubleArray;
+    i, Count: Integer;
 begin
-  IF ActiveCircuit <> NIL
-  THEN With ActiveCircuit Do
-  Begin
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+        begin
       {Count the number of voltagebases specified}
-      i := 0;
-      Repeat
-            Inc(i);
-      Until LegalVoltageBases^[i] = 0.0;
-      Count := i-1;
+            i := 0;
+            repeat
+                Inc(i);
+            until LegalVoltageBases^[i] = 0.0;
+            Count := i - 1;
 
-      Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Count-1) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Count - 1) + 1);
 
-      FOR i := 0 to Count-1 Do Result[i] := LegalVoltageBases^[i+1];
+            for i := 0 to Count - 1 do
+                Result[i] := LegalVoltageBases^[i + 1];
 
-  END
-  ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        end
+    else
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
 end;
-PROCEDURE Settings_Get_VoltageBases_GR();cdecl;
+
+procedure Settings_Get_VoltageBases_GR(); CDECL;
 // Same as Settings_Get_VoltageBases but uses global result (GR) pointers
 begin
-   Settings_Get_VoltageBases(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Settings_Get_VoltageBases(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 
 //------------------------------------------------------------------------------
-procedure Settings_Set_ControlTrace(Value: WordBool);cdecl;
+procedure Settings_Set_ControlTrace(Value: Wordbool); CDECL;
 begin
 
-     If ActiveCircuit <> NIL
-     THEN ActiveCircuit.ControlQueue.TraceLog := Value;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.ControlQueue.TraceLog := Value;
 
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_VoltageBases(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-VAR
-  Value: PDoubleArray;
-   i, j, Num   :Integer;
+procedure Settings_Set_VoltageBases(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+var
+    Value: PDoubleArray;
+    i, j, Num: Integer;
 
-Begin
-     Value := PDoubleArray(ValuePtr);
-     Num   := (ValueCount - 1) - (0) + 1;
+begin
+    Value := PDoubleArray(ValuePtr);
+    Num := (ValueCount - 1) - (0) + 1;
 
      {LegalVoltageBases is a zero-terminated array, so we have to allocate
       one more than the number of actual values}
 
-     WITH ActiveCircuit Do
-     Begin
-       Reallocmem(LegalVoltageBases, Sizeof(LegalVoltageBases^[1])*(Num+1));
-       j := 1;
-       FOR i := (0) to (ValueCount - 1) Do
-       Begin
-         LegalVoltageBases^[j] := Value[i];
-         Inc(j)
-       End;
-       LegalVoltageBases^[Num+1] := 0.0;
-     End;
+    with ActiveCircuit do
+    begin
+        Reallocmem(LegalVoltageBases, Sizeof(LegalVoltageBases^[1]) * (Num + 1));
+        j := 1;
+        for i := (0) to (ValueCount - 1) do
+        begin
+            LegalVoltageBases^[j] := Value[i];
+            Inc(j)
+        end;
+        LegalVoltageBases^[Num + 1] := 0.0;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-function Settings_Get_PriceCurve_AnsiString():AnsiString;inline;
+function Settings_Get_PriceCurve_AnsiString(): Ansistring; inline;
 begin
-    IF ActiveCircuit <> NIL
-    THEN Result := ActiveCircuit.PriceCurve
-    ELSE Result := '';
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.PriceCurve
+    else
+        Result := '';
 end;
 
-function Settings_Get_PriceCurve():PAnsiChar;cdecl;
+function Settings_Get_PriceCurve(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(Settings_Get_PriceCurve_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function Settings_Get_PriceSignal():Double;cdecl;
+function Settings_Get_PriceSignal(): Double; CDECL;
 begin
-    IF ActiveCircuit <> NIL
-    THEN Result := ActiveCircuit.Pricesignal
-    ELSE Result := 0.0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Pricesignal
+    else
+        Result := 0.0;
 
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_PriceCurve(const Value: PAnsiChar);cdecl;
+procedure Settings_Set_PriceCurve(const Value: PAnsiChar); CDECL;
 begin
-    IF ActiveCircuit <> NIL
-    THEN WITH ActiveCircuit DO
-               Begin
-                  PriceCurve    := Value;
-                  PriceCurveObj := LoadShapeClass.Find(Pricecurve);
-                  IF PriceCurveObj=nil THEN
-                   DoSimpleMsg('Price Curve: "' +Pricecurve+ '" not found.', 5006);
-               End;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+        begin
+            PriceCurve := Value;
+            PriceCurveObj := LoadShapeClass.Find(Pricecurve);
+            if PriceCurveObj = NIL then
+                DoSimpleMsg('Price Curve: "' + Pricecurve + '" not found.', 5006);
+        end;
 end;
 //------------------------------------------------------------------------------
-procedure Settings_Set_PriceSignal(Value: Double);cdecl;
+procedure Settings_Set_PriceSignal(Value: Double); CDECL;
 begin
-   IF ActiveCircuit <> NIL
-    THEN ActiveCircuit.PriceSignal := Value ;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.PriceSignal := Value;
 end;
 //------------------------------------------------------------------------------
-END.
+end.

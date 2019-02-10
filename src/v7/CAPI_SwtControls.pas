@@ -1,350 +1,405 @@
-UNIT CAPI_SwtControls;
+unit CAPI_SwtControls;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils;
+uses
+    CAPI_Utils;
 
-function SwtControls_Get_Action():Integer;cdecl;
-PROCEDURE SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-PROCEDURE SwtControls_Get_AllNames_GR();cdecl;
-function SwtControls_Get_Delay():Double;cdecl;
-function SwtControls_Get_First():Integer;cdecl;
-function SwtControls_Get_IsLocked():WordBool;cdecl;
-function SwtControls_Get_Name():PAnsiChar;cdecl;
-function SwtControls_Get_Next():Integer;cdecl;
-function SwtControls_Get_SwitchedObj():PAnsiChar;cdecl;
-function SwtControls_Get_SwitchedTerm():Integer;cdecl;
-procedure SwtControls_Set_Action(Value: Integer);cdecl;
-procedure SwtControls_Set_Delay(Value: Double);cdecl;
-procedure SwtControls_Set_IsLocked(Value: WordBool);cdecl;
-procedure SwtControls_Set_Name(const Value: PAnsiChar);cdecl;
-procedure SwtControls_Set_SwitchedObj(const Value: PAnsiChar);cdecl;
-procedure SwtControls_Set_SwitchedTerm(Value: Integer);cdecl;
-function SwtControls_Get_Count():Integer;cdecl;
-function SwtControls_Get_NormalState():Integer;cdecl;
-procedure SwtControls_Set_NormalState(Value: Integer);cdecl;
-function SwtControls_Get_State():Integer;cdecl;
-procedure SwtControls_Set_State(Value: Integer);cdecl;
-procedure SwtControls_Reset();cdecl;
+function SwtControls_Get_Action(): Integer; CDECL;
+procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure SwtControls_Get_AllNames_GR(); CDECL;
+function SwtControls_Get_Delay(): Double; CDECL;
+function SwtControls_Get_First(): Integer; CDECL;
+function SwtControls_Get_IsLocked(): Wordbool; CDECL;
+function SwtControls_Get_Name(): PAnsiChar; CDECL;
+function SwtControls_Get_Next(): Integer; CDECL;
+function SwtControls_Get_SwitchedObj(): PAnsiChar; CDECL;
+function SwtControls_Get_SwitchedTerm(): Integer; CDECL;
+procedure SwtControls_Set_Action(Value: Integer); CDECL;
+procedure SwtControls_Set_Delay(Value: Double); CDECL;
+procedure SwtControls_Set_IsLocked(Value: Wordbool); CDECL;
+procedure SwtControls_Set_Name(const Value: PAnsiChar); CDECL;
+procedure SwtControls_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
+procedure SwtControls_Set_SwitchedTerm(Value: Integer); CDECL;
+function SwtControls_Get_Count(): Integer; CDECL;
+function SwtControls_Get_NormalState(): Integer; CDECL;
+procedure SwtControls_Set_NormalState(Value: Integer); CDECL;
+function SwtControls_Get_State(): Integer; CDECL;
+procedure SwtControls_Set_State(Value: Integer); CDECL;
+procedure SwtControls_Reset(); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, DSSGlobals, Executive, ControlElem, SwtControl, SysUtils, PointerList;
+uses
+    CAPI_Constants,
+    DSSGlobals,
+    Executive,
+    ControlElem,
+    SwtControl,
+    SysUtils,
+    PointerList;
 
 function ActiveSwtControl: TSwtControlObj;
 begin
-  Result := nil;
-  if ActiveCircuit <> Nil then Result := ActiveCircuit.SwtControls.Active;
+    Result := NIL;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.SwtControls.Active;
 end;
 //------------------------------------------------------------------------------
-procedure Set_Parameter(const parm: string; const val: string);
+procedure Set_Parameter(const parm: String; const val: String);
 var
-  cmd: string;
+    cmd: String;
 begin
-  if not Assigned (ActiveCircuit) then exit;
-  SolutionAbort := FALSE;  // Reset for commands entered from outside
-  cmd := Format ('swtcontrol.%s.%s=%s', [ActiveSwtControl.Name, parm, val]);
-  DSSExecutive.Command := cmd;
+    if not Assigned(ActiveCircuit) then
+        exit;
+    SolutionAbort := FALSE;  // Reset for commands entered from outside
+    cmd := Format('swtcontrol.%s.%s=%s', [ActiveSwtControl.Name, parm, val]);
+    DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-function SwtControls_Get_Action():Integer;cdecl;
+function SwtControls_Get_Action(): Integer; CDECL;
 var
-  elem: TSwtControlObj;
+    elem: TSwtControlObj;
 begin
-  Result := dssActionNone;
-  elem := ActiveSwtControl;
-  if elem <> nil then begin
-    Case elem.CurrentAction of
-      CTRL_OPEN: Result := dssActionOpen;
-      CTRL_CLOSE: Result := dssActionClose;
-    End;
-  end;
+    Result := dssActionNone;
+    elem := ActiveSwtControl;
+    if elem <> NIL then
+    begin
+        case elem.CurrentAction of
+            CTRL_OPEN:
+                Result := dssActionOpen;
+            CTRL_CLOSE:
+                Result := dssActionClose;
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-VAR
-  Result: PPAnsiCharArray;
-  elem: TSwtControlObj;
-  lst: TPointerList;
-  k: Integer;
-Begin
-  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
-  Result[0] := DSS_CopyStringAsPChar('NONE');
-  IF ActiveCircuit <> Nil THEN WITH ActiveCircuit DO
-  If SwtControls.ListSize > 0 Then
-  Begin
-    lst := SwtControls;
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (lst.ListSize-1) + 1);
-    k:=0;
-    elem := lst.First;
-    WHILE elem<>Nil DO Begin
-      Result[k] := DSS_CopyStringAsPChar(elem.Name);
-      Inc(k);
-      elem := lst.Next;
-    End;
-  End;
+procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+var
+    Result: PPAnsiCharArray;
+    elem: TSwtControlObj;
+    lst: TPointerList;
+    k: Integer;
+begin
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result[0] := DSS_CopyStringAsPChar('NONE');
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+            if SwtControls.ListSize > 0 then
+            begin
+                lst := SwtControls;
+                Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (lst.ListSize - 1) + 1);
+                k := 0;
+                elem := lst.First;
+                while elem <> NIL do
+                begin
+                    Result[k] := DSS_CopyStringAsPChar(elem.Name);
+                    Inc(k);
+                    elem := lst.Next;
+                end;
+            end;
 end;
-PROCEDURE SwtControls_Get_AllNames_GR();cdecl;
+
+procedure SwtControls_Get_AllNames_GR(); CDECL;
 // Same as SwtControls_Get_AllNames but uses global result (GR) pointers
 begin
-   SwtControls_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    SwtControls_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 
 //------------------------------------------------------------------------------
-function SwtControls_Get_Delay():Double;cdecl;
+function SwtControls_Get_Delay(): Double; CDECL;
 var
-  elem: TSwtControlObj;
+    elem: TSwtControlObj;
 begin
-  Result := 0.0;
-  elem := ActiveSwtControl;
-  if elem <> nil then Result := elem.TimeDelay;
+    Result := 0.0;
+    elem := ActiveSwtControl;
+    if elem <> NIL then
+        Result := elem.TimeDelay;
 end;
 //------------------------------------------------------------------------------
-function SwtControls_Get_First():Integer;cdecl;
-Var
-  elem: TSwtControlObj;
-  lst:  TPointerList;
-Begin
-  Result := 0;
-  If ActiveCircuit <> Nil Then begin
-    lst := ActiveCircuit.SwtControls;
-    elem := lst.First;
-    If elem <> Nil Then Begin
-      Repeat
-        If elem.Enabled Then Begin
-          ActiveCircuit.ActiveCktElement := elem;
-          Result := 1;
-        End
-        Else elem := lst.Next;
-      Until (Result = 1) or (elem = nil);
-    End;
-  End;
+function SwtControls_Get_First(): Integer; CDECL;
+var
+    elem: TSwtControlObj;
+    lst: TPointerList;
+begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        lst := ActiveCircuit.SwtControls;
+        elem := lst.First;
+        if elem <> NIL then
+        begin
+            repeat
+                if elem.Enabled then
+                begin
+                    ActiveCircuit.ActiveCktElement := elem;
+                    Result := 1;
+                end
+                else
+                    elem := lst.Next;
+            until (Result = 1) or (elem = NIL);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-function SwtControls_Get_IsLocked():WordBool;cdecl;
+function SwtControls_Get_IsLocked(): Wordbool; CDECL;
 var
-  elem: TSwtControlObj;
+    elem: TSwtControlObj;
 begin
-  Result := FALSE;
-  elem := ActiveSwtControl;
-  if elem <> nil then Result := elem.IsLocked;   // Fixed bug here
+    Result := FALSE;
+    elem := ActiveSwtControl;
+    if elem <> NIL then
+        Result := elem.IsLocked;   // Fixed bug here
 end;
 //------------------------------------------------------------------------------
-function SwtControls_Get_Name_AnsiString():AnsiString;inline;
+function SwtControls_Get_Name_AnsiString(): Ansistring; inline;
 var
-  elem: TSwtControlObj;
+    elem: TSwtControlObj;
 begin
-  Result := '';
-  elem := ActiveSwtControl;
-  if elem <> nil then Result := elem.Name;
+    Result := '';
+    elem := ActiveSwtControl;
+    if elem <> NIL then
+        Result := elem.Name;
 end;
 
-function SwtControls_Get_Name():PAnsiChar;cdecl;
+function SwtControls_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(SwtControls_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function SwtControls_Get_Next():Integer;cdecl;
-Var
-  elem: TSwtControlObj;
-  lst: TPointerList;
-Begin
-  Result := 0;
-  If ActiveCircuit <> Nil Then Begin
-    lst := ActiveCircuit.SwtControls;
-    elem := lst.Next;
-    if elem <> nil then begin
-      Repeat
-        If elem.Enabled Then Begin
-          ActiveCircuit.ActiveCktElement := elem;
-          Result := lst.ActiveIndex;
-        End
-        Else elem := lst.Next;
-      Until (Result > 0) or (elem = nil);
-    End
-  End;
+function SwtControls_Get_Next(): Integer; CDECL;
+var
+    elem: TSwtControlObj;
+    lst: TPointerList;
+begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        lst := ActiveCircuit.SwtControls;
+        elem := lst.Next;
+        if elem <> NIL then
+        begin
+            repeat
+                if elem.Enabled then
+                begin
+                    ActiveCircuit.ActiveCktElement := elem;
+                    Result := lst.ActiveIndex;
+                end
+                else
+                    elem := lst.Next;
+            until (Result > 0) or (elem = NIL);
+        end
+    end;
 end;
 //------------------------------------------------------------------------------
-function SwtControls_Get_SwitchedObj_AnsiString():AnsiString;inline;
+function SwtControls_Get_SwitchedObj_AnsiString(): Ansistring; inline;
 var
-  elem: TSwtControlObj;
+    elem: TSwtControlObj;
 begin
-  Result := '';
-  elem := ActiveSwtControl;
-  if elem <> nil then Result := elem.ElementName;
+    Result := '';
+    elem := ActiveSwtControl;
+    if elem <> NIL then
+        Result := elem.ElementName;
 end;
 
-function SwtControls_Get_SwitchedObj():PAnsiChar;cdecl;
+function SwtControls_Get_SwitchedObj(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(SwtControls_Get_SwitchedObj_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function SwtControls_Get_SwitchedTerm():Integer;cdecl;
+function SwtControls_Get_SwitchedTerm(): Integer; CDECL;
 var
-  elem: TSwtControlObj;
+    elem: TSwtControlObj;
 begin
-  Result := 0;
-  elem := ActiveSwtControl;
-  if elem <> nil then Result := elem.ElementTerminal;
+    Result := 0;
+    elem := ActiveSwtControl;
+    if elem <> NIL then
+        Result := elem.ElementTerminal;
 end;
 //------------------------------------------------------------------------------
-procedure SwtControls_Set_Action(Value: Integer);cdecl;
+procedure SwtControls_Set_Action(Value: Integer); CDECL;
 var
-  elem: TSwtControlObj;
+    elem: TSwtControlObj;
 begin
-  elem := ActiveSwtControl;
-  if elem <> nil then begin
-    Case Value of
-      dssActionOpen:  elem.CurrentAction := CTRL_OPEN;
-      dssActionClose: elem.CurrentAction := CTRL_CLOSE;
-      dssActionReset: elem.Reset;
-      dssActionLock:  elem.Locked := TRUE;
-      dssActionUnlock: elem.Locked := FALSE;
-      else // TapUp, TapDown, None have no effect
-    End;
+    elem := ActiveSwtControl;
+    if elem <> NIL then
+    begin
+        case Value of
+            dssActionOpen:
+                elem.CurrentAction := CTRL_OPEN;
+            dssActionClose:
+                elem.CurrentAction := CTRL_CLOSE;
+            dssActionReset:
+                elem.Reset;
+            dssActionLock:
+                elem.Locked := TRUE;
+            dssActionUnlock:
+                elem.Locked := FALSE;
+        else // TapUp, TapDown, None have no effect
+        end;
     // Make sure the NormalState has an initial value  before taking action
-    if elem.NormalState = CTRL_NONE then
-       case value of
-          dssActionOpen:  elem.NormalState := CTRL_OPEN;
-          dssActionClose: elem.NormalState := CTRL_CLOSE;
-       end;
-  end;
+        if elem.NormalState = CTRL_NONE then
+            case value of
+                dssActionOpen:
+                    elem.NormalState := CTRL_OPEN;
+                dssActionClose:
+                    elem.NormalState := CTRL_CLOSE;
+            end;
+    end;
 end;
 //------------------------------------------------------------------------------
-procedure SwtControls_Set_Delay(Value: Double);cdecl;
+procedure SwtControls_Set_Delay(Value: Double); CDECL;
 var
-  elem: TSwtControlObj;
+    elem: TSwtControlObj;
 begin
-  elem := ActiveSwtControl;
-  if elem <> nil then begin
-      elem.TimeDelay  := Value;
-  end;
+    elem := ActiveSwtControl;
+    if elem <> NIL then
+    begin
+        elem.TimeDelay := Value;
+    end;
 end;
 //------------------------------------------------------------------------------
-procedure SwtControls_Set_IsLocked(Value: WordBool);cdecl;
+procedure SwtControls_Set_IsLocked(Value: Wordbool); CDECL;
 var
-  elem: TSwtControlObj;
+    elem: TSwtControlObj;
 begin
-  elem := ActiveSwtControl;
-  if elem <> nil then begin
-      elem.Locked := Value;
-  end;
+    elem := ActiveSwtControl;
+    if elem <> NIL then
+    begin
+        elem.Locked := Value;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-procedure SwtControls_Set_Name(const Value: PAnsiChar);cdecl;
+procedure SwtControls_Set_Name(const Value: PAnsiChar); CDECL;
 var
-  ActiveSave : Integer;
-  S: String;
-  Found :Boolean;
-  elem: TSwtControlObj;
-  lst: TPointerList;
-Begin
-  IF ActiveCircuit <> NIL THEN Begin
-    lst := ActiveCircuit.SwtControls;
-    S := Value;  // Convert to Pascal String
-    Found := FALSE;
-    ActiveSave := lst.ActiveIndex;
-    elem := lst.First;
-    While elem <> NIL Do Begin
-      IF (CompareText(elem.Name, S) = 0) THEN Begin
-        ActiveCircuit.ActiveCktElement := elem;
-        Found := TRUE;
-        Break;
-      End;
-      elem := lst.Next;
-    End;
-    IF NOT Found THEN Begin
-      DoSimpleMsg('SwtControl "'+S+'" Not Found in Active Circuit.', 5003);
-      elem := lst.Get(ActiveSave);    // Restore active Load
-      ActiveCircuit.ActiveCktElement := elem;
-    End;
-  End;
+    ActiveSave: Integer;
+    S: String;
+    Found: Boolean;
+    elem: TSwtControlObj;
+    lst: TPointerList;
+begin
+    if ActiveCircuit <> NIL then
+    begin
+        lst := ActiveCircuit.SwtControls;
+        S := Value;  // Convert to Pascal String
+        Found := FALSE;
+        ActiveSave := lst.ActiveIndex;
+        elem := lst.First;
+        while elem <> NIL do
+        begin
+            if (CompareText(elem.Name, S) = 0) then
+            begin
+                ActiveCircuit.ActiveCktElement := elem;
+                Found := TRUE;
+                Break;
+            end;
+            elem := lst.Next;
+        end;
+        if not Found then
+        begin
+            DoSimpleMsg('SwtControl "' + S + '" Not Found in Active Circuit.', 5003);
+            elem := lst.Get(ActiveSave);    // Restore active Load
+            ActiveCircuit.ActiveCktElement := elem;
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-procedure SwtControls_Set_SwitchedObj(const Value: PAnsiChar);cdecl;
+procedure SwtControls_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 begin
-  Set_Parameter ('SwitchedObj', Value);
+    Set_Parameter('SwitchedObj', Value);
 end;
 //------------------------------------------------------------------------------
-procedure SwtControls_Set_SwitchedTerm(Value: Integer);cdecl;
+procedure SwtControls_Set_SwitchedTerm(Value: Integer); CDECL;
 begin
-  Set_Parameter ('SwitchedTerm', IntToStr (Value));
+    Set_Parameter('SwitchedTerm', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
-function SwtControls_Get_Count():Integer;cdecl;
+function SwtControls_Get_Count(): Integer; CDECL;
 begin
-     If Assigned(ActiveCircuit) Then
-             Result := ActiveCircuit.SwtControls.ListSize;
+    if Assigned(ActiveCircuit) then
+        Result := ActiveCircuit.SwtControls.ListSize;
 end;
 //------------------------------------------------------------------------------
-function SwtControls_Get_NormalState():Integer;cdecl;
-Var
-  elem: TSwtControlObj;
+function SwtControls_Get_NormalState(): Integer; CDECL;
+var
+    elem: TSwtControlObj;
 begin
-  elem := ActiveSwtControl;
-  if elem <> nil then begin
-      case elem.NormalState  of
-        CTRL_OPEN: Result := dssActionOpen;
-      else
-        Result := dssActionClose;
-      end;
-  end;
+    elem := ActiveSwtControl;
+    if elem <> NIL then
+    begin
+        case elem.NormalState of
+            CTRL_OPEN:
+                Result := dssActionOpen;
+        else
+            Result := dssActionClose;
+        end;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-procedure SwtControls_Set_NormalState(Value: Integer);cdecl;
-Var
-  elem: TSwtControlObj;
+procedure SwtControls_Set_NormalState(Value: Integer); CDECL;
+var
+    elem: TSwtControlObj;
 begin
-  elem := ActiveSwtControl;
-  if elem <> nil then begin
-     case Value of
-         dssActionOpen:  elem.NormalState := CTRL_OPEN;
-     else
-         elem.NormalState := CTRL_CLOSE;
-     end;
-  end;
+    elem := ActiveSwtControl;
+    if elem <> NIL then
+    begin
+        case Value of
+            dssActionOpen:
+                elem.NormalState := CTRL_OPEN;
+        else
+            elem.NormalState := CTRL_CLOSE;
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-function SwtControls_Get_State():Integer;cdecl;
+function SwtControls_Get_State(): Integer; CDECL;
 var
-  elem: TSwtControlObj;
+    elem: TSwtControlObj;
 begin
-  Result := dssActionNone;
-  elem   := ActiveSwtControl;
-  if elem <> nil then begin
-    Case elem.PresentState   of
-      CTRL_OPEN:  Result := dssActionOpen;
-      CTRL_CLOSE: Result := dssActionClose;
-    End;
-  end;
+    Result := dssActionNone;
+    elem := ActiveSwtControl;
+    if elem <> NIL then
+    begin
+        case elem.PresentState of
+            CTRL_OPEN:
+                Result := dssActionOpen;
+            CTRL_CLOSE:
+                Result := dssActionClose;
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-procedure SwtControls_Set_State(Value: Integer);cdecl;
+procedure SwtControls_Set_State(Value: Integer); CDECL;
 var
-  elem: TSwtControlObj;
+    elem: TSwtControlObj;
 begin
-  elem   := ActiveSwtControl;
-  if elem <> nil then begin
-    Case value   of
-      dssActionOpen:  elem.PresentState := CTRL_OPEN;
-      dssActionClose: elem.PresentState := CTRL_CLOSE;
-    End;
-  end;
+    elem := ActiveSwtControl;
+    if elem <> NIL then
+    begin
+        case value of
+            dssActionOpen:
+                elem.PresentState := CTRL_OPEN;
+            dssActionClose:
+                elem.PresentState := CTRL_CLOSE;
+        end;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-procedure SwtControls_Reset();cdecl;
+procedure SwtControls_Reset(); CDECL;
 var
-  elem: TSwtControlObj;
+    elem: TSwtControlObj;
 begin
-  elem   := ActiveSwtControl;
-  if elem <> nil then begin
-      elem.Locked := FALSE;
-      elem.Reset;
-  end;
+    elem := ActiveSwtControl;
+    if elem <> NIL then
+    begin
+        elem.Locked := FALSE;
+        elem.Reset;
+    end;
 end;
 //------------------------------------------------------------------------------
-END.
+end.

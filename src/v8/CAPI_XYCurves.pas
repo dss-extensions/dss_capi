@@ -1,457 +1,522 @@
-UNIT CAPI_XYCurves;
+unit CAPI_XYCurves;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils, XYCurve, DSSClass;
+uses
+    CAPI_Utils,
+    XYCurve,
+    DSSClass;
 
-function XYCurves_Get_Count():Integer;cdecl;
-function XYCurves_Get_First():Integer;cdecl;
-function XYCurves_Get_Name():PAnsiChar;cdecl;
-function XYCurves_Get_Next():Integer;cdecl;
-procedure XYCurves_Set_Name(const Value: PAnsiChar);cdecl;
-function XYCurves_Get_Npts():Integer;cdecl;
-PROCEDURE XYCurves_Get_Xarray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-PROCEDURE XYCurves_Get_Xarray_GR();cdecl;
-procedure XYCurves_Set_Npts(Value: Integer);cdecl;
-procedure XYCurves_Set_Xarray(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-function XYCurves_Get_x():Double;cdecl;
-function XYCurves_Get_y():Double;cdecl;
-PROCEDURE XYCurves_Get_Yarray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-PROCEDURE XYCurves_Get_Yarray_GR();cdecl;
-procedure XYCurves_Set_x(Value: Double);cdecl;
-procedure XYCurves_Set_y(Value: Double);cdecl;
-procedure XYCurves_Set_Yarray(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-function XYCurves_Get_Xscale():Double;cdecl;
-function XYCurves_Get_Xshift():Double;cdecl;
-function XYCurves_Get_Yscale():Double;cdecl;
-function XYCurves_Get_Yshift():Double;cdecl;
-procedure XYCurves_Set_Xscale(Value: Double);cdecl;
-procedure XYCurves_Set_Xshift(Value: Double);cdecl;
-procedure XYCurves_Set_Yscale(Value: Double);cdecl;
-procedure XYCurves_Set_Yshift(Value: Double);cdecl;
+function XYCurves_Get_Count(): Integer; CDECL;
+function XYCurves_Get_First(): Integer; CDECL;
+function XYCurves_Get_Name(): PAnsiChar; CDECL;
+function XYCurves_Get_Next(): Integer; CDECL;
+procedure XYCurves_Set_Name(const Value: PAnsiChar); CDECL;
+function XYCurves_Get_Npts(): Integer; CDECL;
+procedure XYCurves_Get_Xarray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure XYCurves_Get_Xarray_GR(); CDECL;
+procedure XYCurves_Set_Npts(Value: Integer); CDECL;
+procedure XYCurves_Set_Xarray(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+function XYCurves_Get_x(): Double; CDECL;
+function XYCurves_Get_y(): Double; CDECL;
+procedure XYCurves_Get_Yarray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure XYCurves_Get_Yarray_GR(); CDECL;
+procedure XYCurves_Set_x(Value: Double); CDECL;
+procedure XYCurves_Set_y(Value: Double); CDECL;
+procedure XYCurves_Set_Yarray(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+function XYCurves_Get_Xscale(): Double; CDECL;
+function XYCurves_Get_Xshift(): Double; CDECL;
+function XYCurves_Get_Yscale(): Double; CDECL;
+function XYCurves_Get_Yshift(): Double; CDECL;
+procedure XYCurves_Set_Xscale(Value: Double); CDECL;
+procedure XYCurves_Set_Xshift(Value: Double); CDECL;
+procedure XYCurves_Set_Yscale(Value: Double); CDECL;
+procedure XYCurves_Set_Yshift(Value: Double); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, DSSGlobals, DSSObject;
+uses
+    CAPI_Constants,
+    DSSGlobals,
+    DSSObject;
 
-function XYCurves_Get_Count():Integer;cdecl;
+function XYCurves_Get_Count(): Integer; CDECL;
 begin
-      Result := 0;
-      If ActiveCircuit[ActiveActor] <> Nil Then
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
         Result := XYCurveClass[ActiveActor].ElementCount;
 end;
 //------------------------------------------------------------------------------
-function XYCurves_Get_First():Integer;cdecl;
+function XYCurves_Get_First(): Integer; CDECL;
 begin
-      Result := 0;
-      If ActiveCircuit[ActiveActor] <> Nil Then
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
         Result := XYCurveClass[ActiveActor].First;
 end;
 //------------------------------------------------------------------------------
-function XYCurves_Get_Name_AnsiString():AnsiString;inline;
-Var
-   pXYCurve:TXYCurveObj;
+function XYCurves_Get_Name_AnsiString(): Ansistring; inline;
+var
+    pXYCurve: TXYCurveObj;
 
-Begin
-   Result := '';  // signify no name
-   If ActiveCircuit[ActiveActor] <> Nil Then
-   Begin
-        pXYCurve := XYCurveClass[ActiveActor].GetActiveObj ;
-        If pXYCurve <> Nil Then
-        Begin
-              Result := pXYCurve.Name;
-        End;
-   End;
+begin
+    Result := '';  // signify no name
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
+        if pXYCurve <> NIL then
+        begin
+            Result := pXYCurve.Name;
+        end;
+    end;
 
 end;
 
-function XYCurves_Get_Name():PAnsiChar;cdecl;
+function XYCurves_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(XYCurves_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function XYCurves_Get_Next():Integer;cdecl;
+function XYCurves_Get_Next(): Integer; CDECL;
 begin
-      Result := 0;
-      If ActiveCircuit[ActiveActor] <> Nil Then
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
         Result := XYCurveClass[ActiveActor].Next;
 end;
 //------------------------------------------------------------------------------
-procedure XYCurves_Set_Name(const Value: PAnsiChar);cdecl;
+procedure XYCurves_Set_Name(const Value: PAnsiChar); CDECL;
 // set XYCurve active by name
 
-Begin
-   If ActiveCircuit[ActiveActor] <> Nil Then
-   Begin
-        If Not XYCurveClass[ActiveActor].SetActive (Value) Then
-         DoSimpleMsg('XYCurve "'+ Value +'" Not Found in Active Circuit.', 51008);
+begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        if not XYCurveClass[ActiveActor].SetActive(Value) then
+            DoSimpleMsg('XYCurve "' + Value + '" Not Found in Active Circuit.', 51008);
 
          // Still same active object if not found
-   End;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-function XYCurves_Get_Npts():Integer;cdecl;
-Var
-   pXYCurve:TXYCurveObj;
+function XYCurves_Get_Npts(): Integer; CDECL;
+var
+    pXYCurve: TXYCurveObj;
 
 begin
     Result := 0;
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
             Result := pXYCurve.NumPoints;
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51009);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51009);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE XYCurves_Get_Xarray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-VAR
-  Result: PDoubleArray;
-   pXYCurve:TXYCurveObj;
-   k:Integer;
+procedure XYCurves_Get_Xarray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+var
+    Result: PDoubleArray;
+    pXYCurve: TXYCurveObj;
+    k: Integer;
 
 begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-        Result[0] := 0.0;  // error condition: one element array=0
-        If ActiveCircuit[ActiveActor] <> Nil Then
-         Begin
-            pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-            If pXYCurve <> Nil Then Begin
-                 DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, (pXYCurve.NumPoints-1) + 1);
-                 For k:=0 to pXYCurve.NumPoints-1 Do
-                      Result[k] := pXYCurve.XValue_pt[k+1];
-            End Else Begin
-               DoSimpleMsg('No active XYCurve Object found.',51013);
-            End;
-         End;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    Result[0] := 0.0;  // error condition: one element array=0
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
+        if pXYCurve <> NIL then
+        begin
+            DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, (pXYCurve.NumPoints - 1) + 1);
+            for k := 0 to pXYCurve.NumPoints - 1 do
+                Result[k] := pXYCurve.XValue_pt[k + 1];
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51013);
+        end;
+    end;
 end;
-PROCEDURE XYCurves_Get_Xarray_GR();cdecl;
+
+procedure XYCurves_Get_Xarray_GR(); CDECL;
 // Same as XYCurves_Get_Xarray but uses global result (GR) pointers
 begin
-   XYCurves_Get_Xarray(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    XYCurves_Get_Xarray(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 
 //------------------------------------------------------------------------------
-procedure XYCurves_Set_Npts(Value: Integer);cdecl;
-Var
-   pXYCurve:TXYCurveObj;
+procedure XYCurves_Set_Npts(Value: Integer); CDECL;
+var
+    pXYCurve: TXYCurveObj;
 
 begin
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
             pXYCurve.NumPoints := Value;
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51014);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51014);
+        end;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-procedure XYCurves_Set_Xarray(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-VAR
-  Value: PDoubleArray;
-   pXYCurve:TXYCurveObj;
-   i, k, LoopLimit: Integer;
+procedure XYCurves_Set_Xarray(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+var
+    Value: PDoubleArray;
+    pXYCurve: TXYCurveObj;
+    i, k, LoopLimit: Integer;
 
 begin
     Value := PDoubleArray(ValuePtr);
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
 
         // Only put in as many points as we have allocated
-         LoopLimit := (ValueCount - 1);
-         If (LoopLimit - (0) + 1) > pXYCurve.NumPoints  Then   LoopLimit :=  (0) + pXYCurve.NumPoints - 1;
+            LoopLimit := (ValueCount - 1);
+            if (LoopLimit - (0) + 1) > pXYCurve.NumPoints then
+                LoopLimit := (0) + pXYCurve.NumPoints - 1;
 
-         k := 1;
-         for i := (0) to LoopLimit do
-         Begin
-             pXYCurve.XValue_pt[k] := Value[i];
-             inc(k);
-         End;
+            k := 1;
+            for i := (0) to LoopLimit do
+            begin
+                pXYCurve.XValue_pt[k] := Value[i];
+                inc(k);
+            end;
 
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51015);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51015);
+        end;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-function XYCurves_Get_x():Double;cdecl;
-Var
-   pXYCurve:TXYCurveObj;
+function XYCurves_Get_x(): Double; CDECL;
+var
+    pXYCurve: TXYCurveObj;
 
 begin
     Result := 0;
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
             Result := pXYCurve.X;
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51010);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51010);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-function XYCurves_Get_y():Double;cdecl;
-Var
-   pXYCurve:TXYCurveObj;
+function XYCurves_Get_y(): Double; CDECL;
+var
+    pXYCurve: TXYCurveObj;
 
 begin
     Result := 0;
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
             Result := pXYCurve.Y;
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51011);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51011);
+        end;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE XYCurves_Get_Yarray(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-VAR
-  Result: PDoubleArray;
-   pXYCurve:TXYCurveObj;
-   k:Integer;
+procedure XYCurves_Get_Yarray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+var
+    Result: PDoubleArray;
+    pXYCurve: TXYCurveObj;
+    k: Integer;
 
 begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-        Result[0] := 0.0;  // error condition: one element array=0
-        If ActiveCircuit[ActiveActor] <> Nil Then
-         Begin
-            pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-            If pXYCurve <> Nil Then Begin
-                 DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, (pXYCurve.NumPoints-1) + 1);
-                 For k:=0 to pXYCurve.NumPoints-1 Do
-                      Result[k] := pXYCurve.YValue_pt[k+1];
-            End Else Begin
-               DoSimpleMsg('No active XYCurve Object found.',51013);
-            End;
-         End;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    Result[0] := 0.0;  // error condition: one element array=0
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
+        if pXYCurve <> NIL then
+        begin
+            DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, (pXYCurve.NumPoints - 1) + 1);
+            for k := 0 to pXYCurve.NumPoints - 1 do
+                Result[k] := pXYCurve.YValue_pt[k + 1];
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51013);
+        end;
+    end;
 
 end;
-PROCEDURE XYCurves_Get_Yarray_GR();cdecl;
+
+procedure XYCurves_Get_Yarray_GR(); CDECL;
 // Same as XYCurves_Get_Yarray but uses global result (GR) pointers
 begin
-   XYCurves_Get_Yarray(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    XYCurves_Get_Yarray(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 
 //------------------------------------------------------------------------------
-procedure XYCurves_Set_x(Value: Double);cdecl;
-Var
-   pXYCurve:TXYCurveObj;
+procedure XYCurves_Set_x(Value: Double); CDECL;
+var
+    pXYCurve: TXYCurveObj;
 
 begin
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
             pXYCurve.X := Value;
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51010);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51010);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-procedure XYCurves_Set_y(Value: Double);cdecl;
-Var
-   pXYCurve:TXYCurveObj;
+procedure XYCurves_Set_y(Value: Double); CDECL;
+var
+    pXYCurve: TXYCurveObj;
 
 begin
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
             pXYCurve.Y := Value;
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51010);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51010);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-procedure XYCurves_Set_Yarray(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-VAR
-  Value: PDoubleArray;
-   pXYCurve:TXYCurveObj;
-   i, k, LoopLimit: Integer;
+procedure XYCurves_Set_Yarray(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+var
+    Value: PDoubleArray;
+    pXYCurve: TXYCurveObj;
+    i, k, LoopLimit: Integer;
 
 begin
     Value := PDoubleArray(ValuePtr);
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
 
         // Only put in as many points as we have allocated
-         LoopLimit := (ValueCount - 1);
-         If (LoopLimit - (0) + 1) > pXYCurve.NumPoints  Then   LoopLimit :=  (0) + pXYCurve.NumPoints - 1;
+            LoopLimit := (ValueCount - 1);
+            if (LoopLimit - (0) + 1) > pXYCurve.NumPoints then
+                LoopLimit := (0) + pXYCurve.NumPoints - 1;
 
-         k := 1;
-         for i := (0) to LoopLimit do
-         Begin
-             pXYCurve.YValue_pt[k] := Value[i];
-             inc(k);
-         End;
+            k := 1;
+            for i := (0) to LoopLimit do
+            begin
+                pXYCurve.YValue_pt[k] := Value[i];
+                inc(k);
+            end;
 
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51016);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51016);
+        end;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-function XYCurves_Get_Xscale():Double;cdecl;
-Var
-   pXYCurve:TXYCurveObj;
+function XYCurves_Get_Xscale(): Double; CDECL;
+var
+    pXYCurve: TXYCurveObj;
 
 begin
     Result := 0;
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
             Result := pXYCurve.FXscale;
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51011);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51011);
+        end;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-function XYCurves_Get_Xshift():Double;cdecl;
-Var
-   pXYCurve:TXYCurveObj;
+function XYCurves_Get_Xshift(): Double; CDECL;
+var
+    pXYCurve: TXYCurveObj;
 
 begin
     Result := 0;
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
             Result := pXYCurve.FXshift;
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51011);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51011);
+        end;
+    end;
 
 
 end;
 //------------------------------------------------------------------------------
-function XYCurves_Get_Yscale():Double;cdecl;
-Var
-   pXYCurve:TXYCurveObj;
+function XYCurves_Get_Yscale(): Double; CDECL;
+var
+    pXYCurve: TXYCurveObj;
 
 begin
     Result := 0;
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
             Result := pXYCurve.FYscale;
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51011);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51011);
+        end;
+    end;
 
 
 end;
 //------------------------------------------------------------------------------
-function XYCurves_Get_Yshift():Double;cdecl;
-Var
-   pXYCurve:TXYCurveObj;
+function XYCurves_Get_Yshift(): Double; CDECL;
+var
+    pXYCurve: TXYCurveObj;
 
 begin
     Result := 0;
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
             Result := pXYCurve.FYshift;
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51011);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51011);
+        end;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-procedure XYCurves_Set_Xscale(Value: Double);cdecl;
-Var
-   pXYCurve:TXYCurveObj;
+procedure XYCurves_Set_Xscale(Value: Double); CDECL;
+var
+    pXYCurve: TXYCurveObj;
 
 begin
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
             pXYCurve.FXScale := Value;
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51010);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51010);
+        end;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-procedure XYCurves_Set_Xshift(Value: Double);cdecl;
-Var
-   pXYCurve:TXYCurveObj;
+procedure XYCurves_Set_Xshift(Value: Double); CDECL;
+var
+    pXYCurve: TXYCurveObj;
 
 begin
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
             pXYCurve.FXShift := Value;
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51010);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51010);
+        end;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-procedure XYCurves_Set_Yscale(Value: Double);cdecl;
-Var
-   pXYCurve:TXYCurveObj;
+procedure XYCurves_Set_Yscale(Value: Double); CDECL;
+var
+    pXYCurve: TXYCurveObj;
 
 begin
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
             pXYCurve.FYScale := Value;
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51010);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51010);
+        end;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-procedure XYCurves_Set_Yshift(Value: Double);cdecl;
-Var
-   pXYCurve:TXYCurveObj;
+procedure XYCurves_Set_Yshift(Value: Double); CDECL;
+var
+    pXYCurve: TXYCurveObj;
 
 begin
-    If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pXYCurve := XYCurveClass[ActiveActor].GetActiveObj;
-        If pXYCurve <> Nil Then Begin
+        if pXYCurve <> NIL then
+        begin
             pXYCurve.FYShift := Value;
-        End Else Begin
-           DoSimpleMsg('No active XYCurve Object found.',51010);
-        End;
-     End;
+        end
+        else
+        begin
+            DoSimpleMsg('No active XYCurve Object found.', 51010);
+        end;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-END.
+end.

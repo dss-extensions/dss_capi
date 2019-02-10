@@ -1,46 +1,55 @@
-UNIT CAPI_DSSProgress;
+unit CAPI_DSSProgress;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils;
+uses
+    CAPI_Utils;
 
-procedure DSSProgress_Close();cdecl;
-procedure DSSProgress_Set_Caption(const Value: PAnsiChar);cdecl;
-procedure DSSProgress_Set_PctProgress(Value: Integer);cdecl;
-procedure DSSProgress_Show();cdecl;
+procedure DSSProgress_Close(); CDECL;
+procedure DSSProgress_Set_Caption(const Value: PAnsiChar); CDECL;
+procedure DSSProgress_Set_PctProgress(Value: Integer); CDECL;
+procedure DSSProgress_Show(); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, DSSGlobals, CmdForms;
+uses
+    CAPI_Constants,
+    DSSGlobals,
+    CmdForms;
 
-procedure DSSProgress_Close();cdecl;
+procedure DSSProgress_Close(); CDECL;
 begin
-   If NoFormsAllowed Then Exit;
-   ProgressHide(ActiveActor);
+    if NoFormsAllowed then
+        Exit;
+    ProgressHide(ActiveActor);
 end;
 //------------------------------------------------------------------------------
-procedure DSSProgress_Set_Caption(const Value: PAnsiChar);cdecl;
+procedure DSSProgress_Set_Caption(const Value: PAnsiChar); CDECL;
 begin
-   If NoFormsAllowed Then Exit;
-   InitProgressForm(ActiveActor);
-   ProgressCaption ( Value, ActiveActor);
+    if NoFormsAllowed then
+        Exit;
+    InitProgressForm(ActiveActor);
+    ProgressCaption(Value, ActiveActor);
 end;
 //------------------------------------------------------------------------------
-procedure DSSProgress_Set_PctProgress(Value: Integer);cdecl;
+procedure DSSProgress_Set_PctProgress(Value: Integer); CDECL;
 begin
-   If NoFormsAllowed Then Exit;
-   InitProgressForm(ActiveActor);
+    if NoFormsAllowed then
+        Exit;
+    InitProgressForm(ActiveActor);
    // ShowPctProgress ( Value, ActiveActor);
 end;
 //------------------------------------------------------------------------------
-procedure DSSProgress_Show();cdecl;
+procedure DSSProgress_Show(); CDECL;
 begin
-   If NoFormsAllowed Then Exit;
-        InitProgressForm(ActiveActor);
-        ProgressFormCaption( ' ', ActiveActor);
+    if NoFormsAllowed then
+        Exit;
+    InitProgressForm(ActiveActor);
+    ProgressFormCaption(' ', ActiveActor);
         // ShowPctProgress(0, ActiveActor);
 
 end;
 //------------------------------------------------------------------------------
-END.
+end.

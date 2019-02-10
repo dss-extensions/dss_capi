@@ -1,50 +1,54 @@
-UNIT CAPI_Error;
+unit CAPI_Error;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils;
+uses
+    CAPI_Utils;
 
-function Error_Get_Description():PAnsiChar;cdecl;
-function Error_Get_Number():Integer;cdecl;
-function Error_Get_NumberPtr():PInteger;cdecl;
-function Error_Get_EarlyAbort(): WordBool;cdecl;
-procedure Error_Set_EarlyAbort(Value: WordBool);cdecl;
+function Error_Get_Description(): PAnsiChar; CDECL;
+function Error_Get_Number(): Integer; CDECL;
+function Error_Get_NumberPtr(): PInteger; CDECL;
+function Error_Get_EarlyAbort(): Wordbool; CDECL;
+procedure Error_Set_EarlyAbort(Value: Wordbool); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, DSSGlobals;
+uses
+    CAPI_Constants,
+    DSSGlobals;
 
-function Error_Get_Description_AnsiString():AnsiString;inline;
+function Error_Get_Description_AnsiString(): Ansistring; inline;
 begin
     Result := LastErrorMessage;
     LastErrorMessage := ''; // Reset after retrieving message
 end;
 
-function Error_Get_Description():PAnsiChar;cdecl;
+function Error_Get_Description(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(Error_Get_Description_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function Error_Get_Number():Integer;cdecl;
+function Error_Get_Number(): Integer; CDECL;
 begin
     Result := ErrorNumber;
     ErrorNumber := 0;  // Reset after retrieving ErrorNumber
 end;
 //------------------------------------------------------------------------------
-function Error_Get_NumberPtr():PInteger;cdecl;
+function Error_Get_NumberPtr(): PInteger; CDECL;
 begin
     Result := @ErrorNumber; // Remember to reset it to zero after the error treatment!
 end;
 //------------------------------------------------------------------------------
-function Error_Get_EarlyAbort(): WordBool;cdecl;
+function Error_Get_EarlyAbort(): Wordbool; CDECL;
 begin
     Result := DSS_CAPI_EARLY_ABORT;
 end;
 //------------------------------------------------------------------------------
-procedure Error_Set_EarlyAbort(Value: WordBool);cdecl;
+procedure Error_Set_EarlyAbort(Value: Wordbool); CDECL;
 begin
     DSS_CAPI_EARLY_ABORT := Value;
 end;
 //------------------------------------------------------------------------------
-END.
+end.

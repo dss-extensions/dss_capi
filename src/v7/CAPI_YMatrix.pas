@@ -5,48 +5,57 @@ unit CAPI_YMatrix;
 
 interface
 
-Uses Arraydef, UComplex, Solution;
+uses
+    Arraydef,
+    UComplex,
+    Solution;
 
-Procedure YMatrix_GetCompressedYMatrix(factor: wordbool; var nBus, nNz:Longword; var ColPtr, RowIdxPtr:pInteger; var cValsPtr: PDouble); cdecl;
+procedure YMatrix_GetCompressedYMatrix(factor: Wordbool; var nBus, nNz: Longword; var ColPtr, RowIdxPtr: pInteger; var cValsPtr: PDouble); CDECL;
 
-procedure YMatrix_ZeroInjCurr; cdecl;
-procedure YMatrix_GetSourceInjCurrents; cdecl;
-procedure YMatrix_GetPCInjCurr; cdecl;
-procedure YMatrix_BuildYMatrixD(BuildOps, AllocateVI: longint); cdecl;
-procedure YMatrix_AddInAuxCurrents(SType: integer); cdecl;
-procedure YMatrix_getIpointer(var IvectorPtr: pNodeVarray);cdecl;
-procedure YMatrix_getVpointer(var VvectorPtr: pNodeVarray);cdecl;
-function YMatrix_SolveSystem(var NodeV:pNodeVarray): integer; cdecl;
+procedure YMatrix_ZeroInjCurr; CDECL;
+procedure YMatrix_GetSourceInjCurrents; CDECL;
+procedure YMatrix_GetPCInjCurr; CDECL;
+procedure YMatrix_BuildYMatrixD(BuildOps, AllocateVI: Longint); CDECL;
+procedure YMatrix_AddInAuxCurrents(SType: Integer); CDECL;
+procedure YMatrix_getIpointer(var IvectorPtr: pNodeVarray); CDECL;
+procedure YMatrix_getVpointer(var VvectorPtr: pNodeVarray); CDECL;
+function YMatrix_SolveSystem(var NodeV: pNodeVarray): Integer; CDECL;
 
-procedure YMatrix_Set_SystemYChanged(arg: WordBool); cdecl;
-function YMatrix_Get_SystemYChanged(): WordBool; cdecl;
-procedure YMatrix_Set_UseAuxCurrents(arg: WordBool); cdecl;
-function YMatrix_Get_UseAuxCurrents(): WordBool; cdecl;
+procedure YMatrix_Set_SystemYChanged(arg: Wordbool); CDECL;
+function YMatrix_Get_SystemYChanged(): Wordbool; CDECL;
+procedure YMatrix_Set_UseAuxCurrents(arg: Wordbool); CDECL;
+function YMatrix_Get_UseAuxCurrents(): Wordbool; CDECL;
 
 
 implementation
 
-Uses DSSGlobals, Ymatrix, KLUSolve, CAPI_Utils;
+uses
+    DSSGlobals,
+    Ymatrix,
+    KLUSolve,
+    CAPI_Utils;
 
-Procedure YMatrix_GetCompressedYMatrix(factor: wordbool; var nBus, nNz:Longword; Var ColPtr, RowIdxPtr:pInteger; Var cValsPtr: PDouble); cdecl;
+procedure YMatrix_GetCompressedYMatrix(factor: Wordbool; var nBus, nNz: Longword; var ColPtr, RowIdxPtr: pInteger; var cValsPtr: PDouble); CDECL;
 {Returns Pointers to column and row and matrix values}
-Var 
+var
     Yhandle: NativeUInt;
-    NumNZ, NumBuses: LongWord;
+    NumNZ, NumBuses: Longword;
     YColumns, YRows: pIntegerArray;
-  
+
     //tmpColPtrN, tmpRowIdxPtrN, tmpValsPtrN: PInteger;
-    tmpCnt: array[0..1] of integer;
-Begin
-    If ActiveCircuit=Nil then Exit;
+    tmpCnt: array[0..1] of Integer;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
     Yhandle := ActiveCircuit.Solution.hY;
-    If Yhandle <= 0 Then 
-    Begin
+    if Yhandle <= 0 then
+    begin
         DoSimpleMsg('Y Matrix not Built.', 222);
         Exit;
-    End;
-     
-    if factor then FactorSparseMatrix(Yhandle);
+    end;
+
+    if factor then
+        FactorSparseMatrix(Yhandle);
 
     GetNNZ(Yhandle, @NumNz);
     GetSize(Yhandle, @NumBuses);
@@ -54,81 +63,82 @@ Begin
     YColumns := Arraydef.PIntegerArray(DSS_CreateArray_PInteger(ColPtr, @tmpCnt[0], NumBuses + 1));
     YRows := Arraydef.PIntegerArray(DSS_CreateArray_PInteger(RowIdxPtr, @tmpCnt[0], NumNZ));
     DSS_CreateArray_PDouble(cValsPtr, @tmpCnt[0], 2 * NumNZ);
-    
+
     nBus := NumBuses;
-    nNZ  := NumNZ;
-    
+    nNZ := NumNZ;
+
     // Fill in the memory
     GetCompressedMatrix(
-        Yhandle, 
-        NumBuses + 1, 
-        NumNZ, 
-        @ColPtr[0], 
-        @RowIdxPtr[0], 
+        Yhandle,
+        NumBuses + 1,
+        NumNZ, @ColPtr[0], @RowIdxPtr[0],
         pComplex(cValsPtr)
-    );
-    
-End;
+        );
 
-procedure YMatrix_ZeroInjCurr; cdecl;
-Begin
-    IF ActiveCircuit <> Nil THEN ActiveCircuit.Solution.ZeroInjCurr;
 end;
 
-procedure YMatrix_GetSourceInjCurrents; cdecl;
-Begin
-    IF ActiveCircuit <> Nil THEN ActiveCircuit.Solution.GetSourceInjCurrents;
+procedure YMatrix_ZeroInjCurr; CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.ZeroInjCurr;
 end;
 
-procedure YMatrix_GetPCInjCurr; cdecl;
-Begin
-    IF ActiveCircuit <> Nil THEN ActiveCircuit.Solution.GetPCInjCurr;
+procedure YMatrix_GetSourceInjCurrents; CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.GetSourceInjCurrents;
 end;
 
-procedure YMatrix_Set_SystemYChanged(arg: WordBool); cdecl;
+procedure YMatrix_GetPCInjCurr; CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.GetPCInjCurr;
+end;
+
+procedure YMatrix_Set_SystemYChanged(arg: Wordbool); CDECL;
 begin
     ActiveCircuit.Solution.SystemYChanged := arg;
 end;
 
-function YMatrix_Get_SystemYChanged(): WordBool; cdecl;
+function YMatrix_Get_SystemYChanged(): Wordbool; CDECL;
 begin
     Result := ActiveCircuit.Solution.SystemYChanged;
 end;
 
-procedure YMatrix_BuildYMatrixD(BuildOps, AllocateVI: longint); cdecl;
+procedure YMatrix_BuildYMatrixD(BuildOps, AllocateVI: Longint); CDECL;
 var
-    AllocateV: boolean;
+    AllocateV: Boolean;
 begin
     AllocateV := (AllocateVI <> 0);
     BuildYMatrix(BuildOps, AllocateV);
 end;
 
-procedure YMatrix_Set_UseAuxCurrents(arg: WordBool); cdecl;
+procedure YMatrix_Set_UseAuxCurrents(arg: Wordbool); CDECL;
 begin
     ActiveCircuit.Solution.UseAuxCurrents := arg;
 end;
 
-function YMatrix_Get_UseAuxCurrents(): WordBool; cdecl;
+function YMatrix_Get_UseAuxCurrents(): Wordbool; CDECL;
 begin
     Result := ActiveCircuit.Solution.UseAuxCurrents;
 end;
 
-procedure YMatrix_AddInAuxCurrents(SType: integer); cdecl;
+procedure YMatrix_AddInAuxCurrents(SType: Integer); CDECL;
 begin
     ActiveCircuit.Solution.AddInAuxCurrents(SType);
 end;
 
-procedure YMatrix_getIpointer(var IvectorPtr: pNodeVarray);cdecl;
+procedure YMatrix_getIpointer(var IvectorPtr: pNodeVarray); CDECL;
 begin
     IVectorPtr := ActiveCircuit.Solution.Currents;
 end;
 
-procedure YMatrix_getVpointer(var VvectorPtr: pNodeVarray);cdecl;
+procedure YMatrix_getVpointer(var VvectorPtr: pNodeVarray); CDECL;
 begin
     VVectorPtr := ActiveCircuit.Solution.NodeV;
 end;
 
-function YMatrix_SolveSystem(var NodeV: pNodeVarray): integer; cdecl;
+function YMatrix_SolveSystem(var NodeV: pNodeVarray): Integer; CDECL;
 begin
     Result := ActiveCircuit.Solution.SolveSystem(NodeV);
 end;

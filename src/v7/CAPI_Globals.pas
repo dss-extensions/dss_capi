@@ -1,16 +1,17 @@
-UNIT CAPI_Globals;
+unit CAPI_Globals;
 
-INTERFACE
+interface
 
-USES DSSClass;
+uses
+    DSSClass;
 
-VAR
-   FPropIndex   :Integer;
-   FPropClass   :TDSSClass;
+var
+    FPropIndex: Integer;
+    FPropClass: TDSSClass;
 
-IMPLEMENTATION
+implementation
 
-Initialization
+initialization
     FPropIndex := 0;
-    FPropClass := Nil;
-END.
+    FPropClass := NIL;
+end.

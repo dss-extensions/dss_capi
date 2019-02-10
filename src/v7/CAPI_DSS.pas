@@ -1,75 +1,86 @@
-UNIT CAPI_DSS;
+unit CAPI_DSS;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils;
+uses
+    CAPI_Utils;
 
-procedure DSS_NewCircuit(const Value: PAnsiChar);cdecl;
-function DSS_Get_NumCircuits():Integer;cdecl;
-procedure DSS_ClearAll();cdecl;
-function DSS_Get_Version():PAnsiChar;cdecl;
-function DSS_Start(code: Integer):WordBool;cdecl;
-PROCEDURE DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-PROCEDURE DSS_Get_Classes_GR();cdecl;
-PROCEDURE DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-PROCEDURE DSS_Get_UserClasses_GR();cdecl;
-function DSS_Get_NumClasses():Integer;cdecl;
-function DSS_Get_NumUserClasses():Integer;cdecl;
-function DSS_Get_DataPath():PAnsiChar;cdecl;
-procedure DSS_Set_DataPath(const Value: PAnsiChar);cdecl;
-procedure DSS_Reset();cdecl;
-function DSS_Get_DefaultEditor():PAnsiChar;cdecl;
-function DSS_SetActiveClass(const ClassName: PAnsiChar):Integer;cdecl;
-function DSS_Get_AllowForms: WordBool;cdecl;
-procedure DSS_Set_AllowForms(Value: WordBool);cdecl;
+procedure DSS_NewCircuit(const Value: PAnsiChar); CDECL;
+function DSS_Get_NumCircuits(): Integer; CDECL;
+procedure DSS_ClearAll(); CDECL;
+function DSS_Get_Version(): PAnsiChar; CDECL;
+function DSS_Start(code: Integer): Wordbool; CDECL;
+procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure DSS_Get_Classes_GR(); CDECL;
+procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure DSS_Get_UserClasses_GR(); CDECL;
+function DSS_Get_NumClasses(): Integer; CDECL;
+function DSS_Get_NumUserClasses(): Integer; CDECL;
+function DSS_Get_DataPath(): PAnsiChar; CDECL;
+procedure DSS_Set_DataPath(const Value: PAnsiChar); CDECL;
+procedure DSS_Reset(); CDECL;
+function DSS_Get_DefaultEditor(): PAnsiChar; CDECL;
+function DSS_SetActiveClass(const ClassName: PAnsiChar): Integer; CDECL;
+function DSS_Get_AllowForms: Wordbool; CDECL;
+procedure DSS_Set_AllowForms(Value: Wordbool); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, DSSClassDefs, DSSGlobals, DSSClass, Exechelper, sysUtils, Executive, ParserDel, CmdForms;
+uses
+    CAPI_Constants,
+    DSSClassDefs,
+    DSSGlobals,
+    DSSClass,
+    Exechelper,
+    sysUtils,
+    Executive,
+    ParserDel,
+    CmdForms;
 
-
-procedure DSS_NewCircuit(const Value: PAnsiChar);cdecl;
+procedure DSS_NewCircuit(const Value: PAnsiChar); CDECL;
 begin
     MakeNewCircuit(Value);
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_AllowForms: WordBool;cdecl;
+function DSS_Get_AllowForms: Wordbool; CDECL;
 begin
-     Result := Not NoFormsAllowed;
+    Result := not NoFormsAllowed;
 end;
 //------------------------------------------------------------------------------
-procedure DSS_Set_AllowForms(Value: WordBool);cdecl;
+procedure DSS_Set_AllowForms(Value: Wordbool); CDECL;
 begin
-     {If Not Value Then} NoFormsAllowed := Not Value;
-     If NoFormsAllowed Then CloseDownForms;  // DSSForms
+     {If Not Value Then} NoFormsAllowed := not Value;
+    if NoFormsAllowed then
+        CloseDownForms;  // DSSForms
 
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_NumCircuits():Integer;cdecl;
+function DSS_Get_NumCircuits(): Integer; CDECL;
 begin
     Result := NumCircuits;
 end;
 //------------------------------------------------------------------------------
-procedure DSS_ClearAll();cdecl;
+procedure DSS_ClearAll(); CDECL;
 begin
     DoClearCmd;
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_Version_AnsiString():AnsiString;inline;
+function DSS_Get_Version_AnsiString(): Ansistring; inline;
 begin
-     Result := VersionString +'; License Status: Open ' ;
+    Result := VersionString + '; License Status: Open ';
 end;
 
-function DSS_Get_Version():PAnsiChar;cdecl;
+function DSS_Get_Version(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(DSS_Get_Version_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function DSS_Start(code: Integer):WordBool;cdecl;
+function DSS_Start(code: Integer): Wordbool; CDECL;
 {Place any start code here}
 begin
-  Result :=  TRUE;
+    Result := TRUE;
  (*      Reverted to original method. 3/1/17. see dpr file
       InitializeInterfaces;
       IsDLL := TRUE;
@@ -79,115 +90,118 @@ begin
   *)
 end;
 //------------------------------------------------------------------------------
-PROCEDURE DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-VAR
-  Result: PPAnsiCharArray;
-  i,k:Integer;
+procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+var
+    Result: PPAnsiCharArray;
+    i, k: Integer;
 
-Begin
+begin
 
-   Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumIntrinsicClasses-1) + 1);
-   k:=0;
-   For i := 1 to NumIntrinsicClasses Do
-   Begin
-      Result[k] := DSS_CopyStringAsPChar(TDSSClass(DssClassList.Get(i)).Name);
-      Inc(k);
-   End;
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumIntrinsicClasses - 1) + 1);
+    k := 0;
+    for i := 1 to NumIntrinsicClasses do
+    begin
+        Result[k] := DSS_CopyStringAsPChar(TDSSClass(DssClassList.Get(i)).Name);
+        Inc(k);
+    end;
 
 end;
-PROCEDURE DSS_Get_Classes_GR();cdecl;
+
+procedure DSS_Get_Classes_GR(); CDECL;
 // Same as DSS_Get_Classes but uses global result (GR) pointers
 begin
-   DSS_Get_Classes(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    DSS_Get_Classes(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 
 //------------------------------------------------------------------------------
-PROCEDURE DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-VAR
-  Result: PPAnsiCharArray;
-  i,k:Integer;
+procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+var
+    Result: PPAnsiCharArray;
+    i, k: Integer;
 
-Begin
-     If NumUserClasses > 0 Then
-     Begin
-         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumUserClasses-1) + 1);
-         k:=0;
-         For i := NumIntrinsicClasses+1 To DSSClassList.ListSize   Do
-         Begin
+begin
+    if NumUserClasses > 0 then
+    begin
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumUserClasses - 1) + 1);
+        k := 0;
+        for i := NumIntrinsicClasses + 1 to DSSClassList.ListSize do
+        begin
             Result[k] := DSS_CopyStringAsPChar(TDSSClass(DssClassList.Get(i)).Name);
             Inc(k);
-         End;
-     End
-     Else
-     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+        end;
+    end
+    else
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
 end;
-PROCEDURE DSS_Get_UserClasses_GR();cdecl;
+
+procedure DSS_Get_UserClasses_GR(); CDECL;
 // Same as DSS_Get_UserClasses but uses global result (GR) pointers
 begin
-   DSS_Get_UserClasses(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    DSS_Get_UserClasses(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 
 //------------------------------------------------------------------------------
-function DSS_Get_NumClasses():Integer;cdecl;
+function DSS_Get_NumClasses(): Integer; CDECL;
 begin
 
-        Result := NumIntrinsicClasses;
+    Result := NumIntrinsicClasses;
 
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_NumUserClasses():Integer;cdecl;
+function DSS_Get_NumUserClasses(): Integer; CDECL;
 begin
-     Result := NumUserClasses;
+    Result := NumUserClasses;
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_DataPath_AnsiString():AnsiString;inline;
+function DSS_Get_DataPath_AnsiString(): Ansistring; inline;
 begin
-     Result := DataDirectory;
+    Result := DataDirectory;
 end;
 
-function DSS_Get_DataPath():PAnsiChar;cdecl;
+function DSS_Get_DataPath(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(DSS_Get_DataPath_AnsiString());
 end;
 //------------------------------------------------------------------------------
-procedure DSS_Set_DataPath(const Value: PAnsiChar);cdecl;
+procedure DSS_Set_DataPath(const Value: PAnsiChar); CDECL;
 begin
     SetDataPath(Value);
 end;
 //------------------------------------------------------------------------------
-procedure DSS_Reset();cdecl;
+procedure DSS_Reset(); CDECL;
 begin
      {Put any code here necessary to reset for specific systems};
  // revert to original -- DSSExecutive.Free;
 
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_DefaultEditor_AnsiString():AnsiString;inline;
+function DSS_Get_DefaultEditor_AnsiString(): Ansistring; inline;
 begin
-     Result := DSSGlobals.DefaultEditor;
+    Result := DSSGlobals.DefaultEditor;
 end;
 
-function DSS_Get_DefaultEditor():PAnsiChar;cdecl;
+function DSS_Get_DefaultEditor(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(DSS_Get_DefaultEditor_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function DSS_SetActiveClass(const ClassName: PAnsiChar):Integer;cdecl;
-Var
-   DevClassIndex :Integer;
+function DSS_SetActiveClass(const ClassName: PAnsiChar): Integer; CDECL;
+var
+    DevClassIndex: Integer;
 
 begin
-     Result := 0;
-     DevClassIndex := ClassNames.Find(ClassName);
-     If DevClassIndex = 0 Then  Begin
-        DoSimplemsg('Error: Class ' + ClassName + ' not found.' , 5016);
+    Result := 0;
+    DevClassIndex := ClassNames.Find(ClassName);
+    if DevClassIndex = 0 then
+    begin
+        DoSimplemsg('Error: Class ' + ClassName + ' not found.', 5016);
         Exit;
-     End;
+    end;
 
-     LastClassReferenced := DevClassIndex;
-     ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
-     Result := LastClassReferenced;
+    LastClassReferenced := DevClassIndex;
+    ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
+    Result := LastClassReferenced;
 
 end;
 //------------------------------------------------------------------------------
-END.
+end.

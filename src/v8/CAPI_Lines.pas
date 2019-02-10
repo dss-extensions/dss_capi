@@ -1,978 +1,1037 @@
-UNIT CAPI_Lines;
+unit CAPI_Lines;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils;
+uses
+    CAPI_Utils;
 
-PROCEDURE Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-PROCEDURE Lines_Get_AllNames_GR();cdecl;
-function Lines_Get_Bus1():PAnsiChar;cdecl;
-function Lines_Get_Bus2():PAnsiChar;cdecl;
-function Lines_Get_First():Integer;cdecl;
-function Lines_Get_Length():Double;cdecl;
-function Lines_Get_LineCode():PAnsiChar;cdecl;
-function Lines_Get_Name():PAnsiChar;cdecl;
-function Lines_Get_Next():Integer;cdecl;
-function Lines_Get_Phases():Integer;cdecl;
-function Lines_Get_R1():Double;cdecl;
-function Lines_Get_X1():Double;cdecl;
-function Lines_New(const Name: PAnsiChar):Integer;cdecl;
-procedure Lines_Set_Bus1(const Value: PAnsiChar);cdecl;
-procedure Lines_Set_Bus2(const Value: PAnsiChar);cdecl;
-procedure Lines_Set_Length(Value: Double);cdecl;
-procedure Lines_Set_LineCode(const Value: PAnsiChar);cdecl;
-procedure Lines_Set_Name(const Value: PAnsiChar);cdecl;
-procedure Lines_Set_Phases(Value: Integer);cdecl;
-procedure Lines_Set_R1(Value: Double);cdecl;
-procedure Lines_Set_X1(Value: Double);cdecl;
-function Lines_Get_C0():Double;cdecl;
-function Lines_Get_C1():Double;cdecl;
-PROCEDURE Lines_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-PROCEDURE Lines_Get_Cmatrix_GR();cdecl;
-function Lines_Get_R0():Double;cdecl;
-PROCEDURE Lines_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-PROCEDURE Lines_Get_Rmatrix_GR();cdecl;
-function Lines_Get_X0():Double;cdecl;
-PROCEDURE Lines_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-PROCEDURE Lines_Get_Xmatrix_GR();cdecl;
-procedure Lines_Set_C0(Value: Double);cdecl;
-procedure Lines_Set_C1(Value: Double);cdecl;
-procedure Lines_Set_Cmatrix(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-procedure Lines_Set_R0(Value: Double);cdecl;
-procedure Lines_Set_Rmatrix(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-procedure Lines_Set_X0(Value: Double);cdecl;
-procedure Lines_Set_Xmatrix(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-function Lines_Get_EmergAmps():Double;cdecl;
-function Lines_Get_NormAmps():Double;cdecl;
-procedure Lines_Set_EmergAmps(Value: Double);cdecl;
-procedure Lines_Set_NormAmps(Value: Double);cdecl;
-function Lines_Get_Geometry():PAnsiChar;cdecl;
-procedure Lines_Set_Geometry(const Value: PAnsiChar);cdecl;
-function Lines_Get_Rg():Double;cdecl;
-function Lines_Get_Rho():Double;cdecl;
-function Lines_Get_Xg():Double;cdecl;
-procedure Lines_Set_Rg(Value: Double);cdecl;
-procedure Lines_Set_Rho(Value: Double);cdecl;
-procedure Lines_Set_Xg(Value: Double);cdecl;
-PROCEDURE Lines_Get_Yprim(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-PROCEDURE Lines_Get_Yprim_GR();cdecl;
-procedure Lines_Set_Yprim(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-function Lines_Get_NumCust():Integer;cdecl;
-function Lines_Get_TotalCust():Integer;cdecl;
-function Lines_Get_Parent():Integer;cdecl;
-function Lines_Get_Count():Integer;cdecl;
-function Lines_Get_Spacing():PAnsiChar;cdecl;
-procedure Lines_Set_Spacing(const Value: PAnsiChar);cdecl;
-function Lines_Get_Units():Integer;cdecl;
-procedure Lines_Set_Units(Value: Integer);cdecl;
+procedure Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Lines_Get_AllNames_GR(); CDECL;
+function Lines_Get_Bus1(): PAnsiChar; CDECL;
+function Lines_Get_Bus2(): PAnsiChar; CDECL;
+function Lines_Get_First(): Integer; CDECL;
+function Lines_Get_Length(): Double; CDECL;
+function Lines_Get_LineCode(): PAnsiChar; CDECL;
+function Lines_Get_Name(): PAnsiChar; CDECL;
+function Lines_Get_Next(): Integer; CDECL;
+function Lines_Get_Phases(): Integer; CDECL;
+function Lines_Get_R1(): Double; CDECL;
+function Lines_Get_X1(): Double; CDECL;
+function Lines_New(const Name: PAnsiChar): Integer; CDECL;
+procedure Lines_Set_Bus1(const Value: PAnsiChar); CDECL;
+procedure Lines_Set_Bus2(const Value: PAnsiChar); CDECL;
+procedure Lines_Set_Length(Value: Double); CDECL;
+procedure Lines_Set_LineCode(const Value: PAnsiChar); CDECL;
+procedure Lines_Set_Name(const Value: PAnsiChar); CDECL;
+procedure Lines_Set_Phases(Value: Integer); CDECL;
+procedure Lines_Set_R1(Value: Double); CDECL;
+procedure Lines_Set_X1(Value: Double); CDECL;
+function Lines_Get_C0(): Double; CDECL;
+function Lines_Get_C1(): Double; CDECL;
+procedure Lines_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Lines_Get_Cmatrix_GR(); CDECL;
+function Lines_Get_R0(): Double; CDECL;
+procedure Lines_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Lines_Get_Rmatrix_GR(); CDECL;
+function Lines_Get_X0(): Double; CDECL;
+procedure Lines_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Lines_Get_Xmatrix_GR(); CDECL;
+procedure Lines_Set_C0(Value: Double); CDECL;
+procedure Lines_Set_C1(Value: Double); CDECL;
+procedure Lines_Set_Cmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Lines_Set_R0(Value: Double); CDECL;
+procedure Lines_Set_Rmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+procedure Lines_Set_X0(Value: Double); CDECL;
+procedure Lines_Set_Xmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+function Lines_Get_EmergAmps(): Double; CDECL;
+function Lines_Get_NormAmps(): Double; CDECL;
+procedure Lines_Set_EmergAmps(Value: Double); CDECL;
+procedure Lines_Set_NormAmps(Value: Double); CDECL;
+function Lines_Get_Geometry(): PAnsiChar; CDECL;
+procedure Lines_Set_Geometry(const Value: PAnsiChar); CDECL;
+function Lines_Get_Rg(): Double; CDECL;
+function Lines_Get_Rho(): Double; CDECL;
+function Lines_Get_Xg(): Double; CDECL;
+procedure Lines_Set_Rg(Value: Double); CDECL;
+procedure Lines_Set_Rho(Value: Double); CDECL;
+procedure Lines_Set_Xg(Value: Double); CDECL;
+procedure Lines_Get_Yprim(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Lines_Get_Yprim_GR(); CDECL;
+procedure Lines_Set_Yprim(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+function Lines_Get_NumCust(): Integer; CDECL;
+function Lines_Get_TotalCust(): Integer; CDECL;
+function Lines_Get_Parent(): Integer; CDECL;
+function Lines_Get_Count(): Integer; CDECL;
+function Lines_Get_Spacing(): PAnsiChar; CDECL;
+procedure Lines_Set_Spacing(const Value: PAnsiChar); CDECL;
+function Lines_Get_Units(): Integer; CDECL;
+procedure Lines_Set_Units(Value: Integer); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, Line, DSSClassDefs, DSSGlobals, CktElement, uComplex, ExecHelper, Sysutils, ParserDel, Math, LineUnits;
+uses
+    CAPI_Constants,
+    Line,
+    DSSClassDefs,
+    DSSGlobals,
+    CktElement,
+    uComplex,
+    ExecHelper,
+    Sysutils,
+    ParserDel,
+    Math,
+    LineUnits;
 
-Function IsLine(Const CktElem:TDSSCktElement):Boolean;
+function IsLine(const CktElem: TDSSCktElement): Boolean;
 
-Begin
-      Result := ((CktElem.DssObjtype AND CLASSMASK) = LINE_ELEMENT);
-      If Not Result THEN
-       DoSimpleMsg('Line Type Expected, but another found. Dss Class=' + CktElem.DSSClassName + CRLF +
-       'Element name='+ CktElem.Name, 5007) ;
-END;
+begin
+    Result := ((CktElem.DssObjtype and CLASSMASK) = LINE_ELEMENT);
+    if not Result then
+        DoSimpleMsg('Line Type Expected, but another found. Dss Class=' + CktElem.DSSClassName + CRLF +
+            'Element name=' + CktElem.Name, 5007);
+end;
 //------------------------------------------------------------------------------
-PROCEDURE Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-VAR
-  Result: PPAnsiCharArray;
-  LineElem:TLineObj;
-  k:Integer;
+procedure Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+var
+    Result: PPAnsiCharArray;
+    LineElem: TLineObj;
+    k: Integer;
 
-Begin
+begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     If Lines.ListSize>0 Then
-     Begin
-       DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (Lines.ListSize-1) + 1);
-       k:=0;
-       LineElem := Lines.First;
-       WHILE LineElem<>Nil DO
-       Begin
-          Result[k] := DSS_CopyStringAsPChar(LineElem.Name);
-          Inc(k);
-          LineElem := Lines.Next;
-       End;
-     End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        with ActiveCircuit[ActiveActor] do
+            if Lines.ListSize > 0 then
+            begin
+                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (Lines.ListSize - 1) + 1);
+                k := 0;
+                LineElem := Lines.First;
+                while LineElem <> NIL do
+                begin
+                    Result[k] := DSS_CopyStringAsPChar(LineElem.Name);
+                    Inc(k);
+                    LineElem := Lines.Next;
+                end;
+            end;
 
 end;
-PROCEDURE Lines_Get_AllNames_GR();cdecl;
+
+procedure Lines_Get_AllNames_GR(); CDECL;
 // Same as Lines_Get_AllNames but uses global result (GR) pointers
 begin
-   Lines_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Lines_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 
 //------------------------------------------------------------------------------
-function Lines_Get_Bus1_AnsiString():AnsiString;inline;
+function Lines_Get_Bus1_AnsiString(): Ansistring; inline;
 begin
-  Result := '';
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := ActiveCircuit[ActiveActor].ActiveCktElement.GetBus(1);
-  End
+    Result := '';
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            Result := ActiveCircuit[ActiveActor].ActiveCktElement.GetBus(1);
+        end
 
 end;
 
-function Lines_Get_Bus1():PAnsiChar;cdecl;
+function Lines_Get_Bus1(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(Lines_Get_Bus1_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Bus2_AnsiString():AnsiString;inline;
+function Lines_Get_Bus2_AnsiString(): Ansistring; inline;
 begin
-  Result := '';
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := ActiveCircuit[ActiveActor].ActiveCktElement.GetBus(2);
-  End
+    Result := '';
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            Result := ActiveCircuit[ActiveActor].ActiveCktElement.GetBus(2);
+        end
 end;
 
-function Lines_Get_Bus2():PAnsiChar;cdecl;
+function Lines_Get_Bus2(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(Lines_Get_Bus2_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_First():Integer;cdecl;
-Var
-   pLine:TLineObj;
+function Lines_Get_First(): Integer; CDECL;
+var
+    pLine: TLineObj;
 
-Begin
+begin
 
-   Result := 0;
-   If ActiveCircuit[ActiveActor] <> Nil Then
-   Begin
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pLine := ActiveCircuit[ActiveActor].Lines.First;
-        If pLine <> Nil Then
-        Begin
-          Repeat
-            If pLine.Enabled
-            Then Begin
-              ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
-              Result := 1;
-            End
-            Else pLine := ActiveCircuit[ActiveActor].Lines.Next;
-          Until (Result = 1) or (pLine = nil);
-        End
-        Else
+        if pLine <> NIL then
+        begin
+            repeat
+                if pLine.Enabled then
+                begin
+                    ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
+                    Result := 1;
+                end
+                else
+                    pLine := ActiveCircuit[ActiveActor].Lines.Next;
+            until (Result = 1) or (pLine = NIL);
+        end
+        else
             Result := 0;  // signify no more
-   End;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Length():Double;cdecl;
+function Lines_Get_Length(): Double; CDECL;
 begin
-  Result := 0.0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).Len;
-  End
+    Result := 0.0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).Len;
+        end
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_LineCode_AnsiString():AnsiString;inline;
+function Lines_Get_LineCode_AnsiString(): Ansistring; inline;
 begin
-  Result := '';
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).CondCode;
-  End
+    Result := '';
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).CondCode;
+        end
 
 end;
 
-function Lines_Get_LineCode():PAnsiChar;cdecl;
+function Lines_Get_LineCode(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(Lines_Get_LineCode_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Name_AnsiString():AnsiString;inline;
-Var
-   pLine:TDSSCktElement;
+function Lines_Get_Name_AnsiString(): Ansistring; inline;
+var
+    pLine: TDSSCktElement;
 
-Begin
-   Result := '';  // signify no name
-   If ActiveCircuit[ActiveActor] <> Nil Then
-   Begin
+begin
+    Result := '';  // signify no name
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pLine := ActiveCircuit[ActiveActor].ActiveCktElement;
-        If pLine <> Nil Then
-        Begin
-          Result := pLine.Name;
-        End;
-   End;
+        if pLine <> NIL then
+        begin
+            Result := pLine.Name;
+        end;
+    end;
 
 end;
 
-function Lines_Get_Name():PAnsiChar;cdecl;
+function Lines_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(Lines_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Next():Integer;cdecl;
-Var
-   pLine:TLineObj;
+function Lines_Get_Next(): Integer; CDECL;
+var
+    pLine: TLineObj;
 
-Begin
+begin
 
-   Result := 0;
-   If ActiveCircuit[ActiveActor] <> Nil Then
-   Begin
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pLine := ActiveCircuit[ActiveActor].Lines.Next;
-        If pLine <> Nil Then
-        Begin
-          Repeat
-            If pLine.Enabled
-            Then Begin
-              ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
-              Result := ActiveCircuit[ActiveActor].Lines.ActiveIndex;
-            End
-            Else pLine := ActiveCircuit[ActiveActor].Lines.Next;
-          Until (Result > 0) or (pLine = nil);
-        End
-        Else
+        if pLine <> NIL then
+        begin
+            repeat
+                if pLine.Enabled then
+                begin
+                    ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
+                    Result := ActiveCircuit[ActiveActor].Lines.ActiveIndex;
+                end
+                else
+                    pLine := ActiveCircuit[ActiveActor].Lines.Next;
+            until (Result > 0) or (pLine = NIL);
+        end
+        else
             Result := 0;  // signify no more
-   End;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Phases():Integer;cdecl;
+function Lines_Get_Phases(): Integer; CDECL;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := ActiveCircuit[ActiveActor].ActiveCktElement.Nphases;
-  End
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            Result := ActiveCircuit[ActiveActor].ActiveCktElement.Nphases;
+        end
 
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_R1():Double;cdecl;
+function Lines_Get_R1(): Double; CDECL;
 begin
-  Result := 0.0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-       Result := R1/UnitsConvert;
-  End;
+    Result := 0.0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Result := R1 / UnitsConvert;
+            end;
 
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_X1():Double;cdecl;
+function Lines_Get_X1(): Double; CDECL;
 begin
-  Result := 0.0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-       Result := X1/UnitsConvert;
-  End;
+    Result := 0.0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Result := X1 / UnitsConvert;
+            end;
 
 end;
 //------------------------------------------------------------------------------
-function Lines_New(const Name: PAnsiChar):Integer;cdecl;
+function Lines_New(const Name: PAnsiChar): Integer; CDECL;
 begin
-      Result := AddObject('line', Name);    // Returns handle to object
+    Result := AddObject('line', Name);    // Returns handle to object
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Bus1(const Value: PAnsiChar);cdecl;
+procedure Lines_Set_Bus1(const Value: PAnsiChar); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-         SetBus(1, Value);
-       END;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                SetBus(1, Value);
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Bus2(const Value: PAnsiChar);cdecl;
+procedure Lines_Set_Bus2(const Value: PAnsiChar); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-         SetBus(2, Value);
-       END;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                SetBus(2, Value);
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Length(Value: Double);cdecl;
+procedure Lines_Set_Length(Value: Double); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-         Len := Value;
-         YprimInvalid[ActiveActor] := True;
-       END;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Len := Value;
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_LineCode(const Value: PAnsiChar);cdecl;
+procedure Lines_Set_LineCode(const Value: PAnsiChar); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) DO Begin
-         FetchLineCode(Value);
-         YprimInvalid[ActiveActor] := True;
-       End;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                FetchLineCode(Value);
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Name(const Value: PAnsiChar);cdecl;
-VAR
-    activesave :integer;
-    pLine:TLineObj;
+procedure Lines_Set_Name(const Value: PAnsiChar); CDECL;
+var
+    activesave: Integer;
+    pLine: TLineObj;
     S: String;
-    Found :Boolean;
-Begin
+    Found: Boolean;
+begin
 
 
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN Begin      // Search list of Lines in active circuit for name
-       WITH ActiveCircuit[ActiveActor].Lines DO
-         Begin
-             S := Value;  // Convert to Pascal String
-             Found := FALSE;
-             ActiveSave := ActiveIndex;
-             pLine := First;
-             While pLine <> NIL Do
-             Begin
-                IF (CompareText(pLine.Name, S) = 0)
-                THEN Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin      // Search list of Lines in active circuit for name
+        with ActiveCircuit[ActiveActor].Lines do
+        begin
+            S := Value;  // Convert to Pascal String
+            Found := FALSE;
+            ActiveSave := ActiveIndex;
+            pLine := First;
+            while pLine <> NIL do
+            begin
+                if (CompareText(pLine.Name, S) = 0) then
+                begin
                     ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
                     Found := TRUE;
                     Break;
-                End;
+                end;
                 pLine := Next;
-             End;
-             IF NOT Found
-             THEN Begin
-                 DoSimpleMsg('Line "'+S+'" Not Found in Active Circuit.', 5008);
-                 pLine := Get(ActiveSave);    // Restore active Line
-                 ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
-             End;
-         End;
-  End;
+            end;
+            if not Found then
+            begin
+                DoSimpleMsg('Line "' + S + '" Not Found in Active Circuit.', 5008);
+                pLine := Get(ActiveSave);    // Restore active Line
+                ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
+            end;
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Phases(Value: Integer);cdecl;
+procedure Lines_Set_Phases(Value: Integer); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)Do Begin
-         Nphases := Value;
-         YprimInvalid[ActiveActor] := True;
-       End;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Nphases := Value;
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_R1(Value: Double);cdecl;
+procedure Lines_Set_R1(Value: Double); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-         R1 := Value;
-         SymComponentsChanged := True;
-         YprimInvalid[ActiveActor] := True;
-       END;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                R1 := Value;
+                SymComponentsChanged := TRUE;
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_X1(Value: Double);cdecl;
+procedure Lines_Set_X1(Value: Double); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) DO Begin
-         X1 := Value;
-         SymComponentsChanged := True;
-         YprimInvalid[ActiveActor] := True;
-       END;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                X1 := Value;
+                SymComponentsChanged := TRUE;
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_C0():Double;cdecl;
+function Lines_Get_C0(): Double; CDECL;
 begin
-  Result := 0.0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-       Result := C0/UnitsConvert * 1.0e9;
-  End
+    Result := 0.0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Result := C0 / UnitsConvert * 1.0e9;
+            end
 
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_C1():Double;cdecl;
+function Lines_Get_C1(): Double; CDECL;
 begin
-  Result := 0.0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-       Result := C1/UnitsConvert * 1.0e9;
-  End;
-  
+    Result := 0.0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Result := C1 / UnitsConvert * 1.0e9;
+            end;
+
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Lines_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-VAR
-  Result: PDoubleArray;
-   i,j, k:Integer;
-   Factor :Double;
+procedure Lines_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+var
+    Result: PDoubleArray;
+    i, j, k: Integer;
+    Factor: Double;
 
 begin
 
-  Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-         Factor  := TwoPi * BaseFrequency  * 1.0e-9 * UnitsConvert;  // corrected 2.9.2018 RCD
-         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
-         k := 0;
-         FOR i := 1 to NPhases DO
-          FOR j := 1 to Nphases DO
-          Begin
-             Result[k] :=  Yc.GetElement(i,j).im / Factor;
-             Inc(k);
-          End;
-       End;
-  End;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Factor := TwoPi * BaseFrequency * 1.0e-9 * UnitsConvert;  // corrected 2.9.2018 RCD
+                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
+                k := 0;
+                for i := 1 to NPhases do
+                    for j := 1 to Nphases do
+                    begin
+                        Result[k] := Yc.GetElement(i, j).im / Factor;
+                        Inc(k);
+                    end;
+            end;
+        end;
 
 end;
-PROCEDURE Lines_Get_Cmatrix_GR();cdecl;
+
+procedure Lines_Get_Cmatrix_GR(); CDECL;
 // Same as Lines_Get_Cmatrix but uses global result (GR) pointers
 begin
-   Lines_Get_Cmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Lines_Get_Cmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 
 //------------------------------------------------------------------------------
-function Lines_Get_R0():Double;cdecl;
+function Lines_Get_R0(): Double; CDECL;
 begin
-  Result := 0.0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-       Result := R0/UnitsConvert;
-  End;
+    Result := 0.0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Result := R0 / UnitsConvert;
+            end;
 
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Lines_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-VAR
-  Result: PDoubleArray;
-   i,j, k:Integer;
+procedure Lines_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+var
+    Result: PDoubleArray;
+    i, j, k: Integer;
 
 begin
-  Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
-         k := 0;
-         FOR i := 1 to NPhases DO
-          FOR j := 1 to Nphases DO
-          Begin
-             Result[k] :=  Z.GetElement(i,j).Re/UnitsConvert;
-             Inc(k);
-          End;
-       End;
-  End;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
+                k := 0;
+                for i := 1 to NPhases do
+                    for j := 1 to Nphases do
+                    begin
+                        Result[k] := Z.GetElement(i, j).Re / UnitsConvert;
+                        Inc(k);
+                    end;
+            end;
+        end;
 end;
-PROCEDURE Lines_Get_Rmatrix_GR();cdecl;
+
+procedure Lines_Get_Rmatrix_GR(); CDECL;
 // Same as Lines_Get_Rmatrix but uses global result (GR) pointers
 begin
-   Lines_Get_Rmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Lines_Get_Rmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 
 //------------------------------------------------------------------------------
-function Lines_Get_X0():Double;cdecl;
+function Lines_Get_X0(): Double; CDECL;
 begin
 
-  Result := 0.0;
+    Result := 0.0;
 
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN With TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-       Result := X0/UnitsConvert;
-  End;
- 
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Result := X0 / UnitsConvert;
+            end;
+
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Lines_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-VAR
-  Result: PDoubleArray;
-   i,j, k:Integer;
+procedure Lines_Get_Xmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+var
+    Result: PDoubleArray;
+    i, j, k: Integer;
 begin
-  Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
-         k := 0;
-         FOR i := 1 to NPhases DO
-          FOR j := 1 to Nphases DO
-          Begin
-             Result[k] :=  Z.GetElement(i,j).im/UnitsConvert;
-             Inc(k);
-          End;
-       End;
-  End;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
+                k := 0;
+                for i := 1 to NPhases do
+                    for j := 1 to Nphases do
+                    begin
+                        Result[k] := Z.GetElement(i, j).im / UnitsConvert;
+                        Inc(k);
+                    end;
+            end;
+        end;
 end;
-PROCEDURE Lines_Get_Xmatrix_GR();cdecl;
+
+procedure Lines_Get_Xmatrix_GR(); CDECL;
 // Same as Lines_Get_Xmatrix but uses global result (GR) pointers
 begin
-   Lines_Get_Xmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Lines_Get_Xmatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 
 //------------------------------------------------------------------------------
-procedure Lines_Set_C0(Value: Double);cdecl;
+procedure Lines_Set_C0(Value: Double); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) DO Begin
-         C0 := Value * 1.0e-9;
-         SymComponentsChanged := True;
-         YprimInvalid[ActiveActor] := True;
-       End;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                C0 := Value * 1.0e-9;
+                SymComponentsChanged := TRUE;
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_C1(Value: Double);cdecl;
+procedure Lines_Set_C1(Value: Double); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) DO Begin
-         C1 := Value * 1.0e-9;
-         SymComponentsChanged := True;
-         YprimInvalid[ActiveActor] := True;
-       End;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                C1 := Value * 1.0e-9;
+                SymComponentsChanged := TRUE;
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Cmatrix(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-VAR
-  Value: PDoubleArray;
-   i,j, k:Integer;
-   Factor:Double;
+procedure Lines_Set_Cmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+var
+    Value: PDoubleArray;
+    i, j, k: Integer;
+    Factor: Double;
 begin
     Value := PDoubleArray(ValuePtr);
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-         Factor  := TwoPi * BaseFrequency  * 1.0e-9;
-         k := (0);
-         FOR i := 1 to NPhases DO
-          FOR j := 1 to Nphases DO
-          Begin
-             Yc.SetElement(i,j, Cmplx(0.0, Value[k]*Factor));
-             Inc(k);
-          End;
-         YprimInvalid[ActiveActor] := True;
-       End;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Factor := TwoPi * BaseFrequency * 1.0e-9;
+                k := (0);
+                for i := 1 to NPhases do
+                    for j := 1 to Nphases do
+                    begin
+                        Yc.SetElement(i, j, Cmplx(0.0, Value[k] * Factor));
+                        Inc(k);
+                    end;
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_R0(Value: Double);cdecl;
+procedure Lines_Set_R0(Value: Double); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-           R0 := Value;
-           SymComponentsChanged := True;
-           YprimInvalid[ActiveActor] := True;
-       END;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                R0 := Value;
+                SymComponentsChanged := TRUE;
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Rmatrix(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-VAR
-  Value: PDoubleArray;
-   i,j, k:Integer;
-   Ztemp:complex;
+procedure Lines_Set_Rmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+var
+    Value: PDoubleArray;
+    i, j, k: Integer;
+    Ztemp: complex;
 begin
     Value := PDoubleArray(ValuePtr);
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-         k := (0);
-         FOR i := 1 to NPhases DO
-          FOR j := 1 to Nphases DO
-          Begin
-             ZTemp := Z.GetElement(i,j);
-             Z.SetElement(i,j, Cmplx( Value[k], ZTemp.im));
-             Inc(k);
-          End;
-         YprimInvalid[ActiveActor] := True;
-       End;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                k := (0);
+                for i := 1 to NPhases do
+                    for j := 1 to Nphases do
+                    begin
+                        ZTemp := Z.GetElement(i, j);
+                        Z.SetElement(i, j, Cmplx(Value[k], ZTemp.im));
+                        Inc(k);
+                    end;
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_X0(Value: Double);cdecl;
+procedure Lines_Set_X0(Value: Double); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-         X0 := Value;
-         SymComponentsChanged := True;
-         YprimInvalid[ActiveActor] := True;
-       End;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                X0 := Value;
+                SymComponentsChanged := TRUE;
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Xmatrix(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-VAR
-  Value: PDoubleArray;
-   i,j, k:Integer;
-   Ztemp:complex;
+procedure Lines_Set_Xmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+var
+    Value: PDoubleArray;
+    i, j, k: Integer;
+    Ztemp: complex;
 begin
     Value := PDoubleArray(ValuePtr);
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement)DO Begin
-         k := (0);
-         FOR i := 1 to NPhases DO
-          FOR j := 1 to Nphases DO
-          Begin
-             ZTemp := Z.GetElement(i,j);
-             Z.SetElement(i,j, Cmplx(Ztemp.re, Value[k]));
-             Inc(k);
-          End;
-          YprimInvalid[ActiveActor] := True;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                k := (0);
+                for i := 1 to NPhases do
+                    for j := 1 to Nphases do
+                    begin
+                        ZTemp := Z.GetElement(i, j);
+                        Z.SetElement(i, j, Cmplx(Ztemp.re, Value[k]));
+                        Inc(k);
+                    end;
+                YprimInvalid[ActiveActor] := TRUE;
 
-       End;
-  End;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_EmergAmps():Double;cdecl;
+function Lines_Get_EmergAmps(): Double; CDECL;
 begin
-   Result := 0.0;
-   IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).EmergAmps;
-  End
- 
+    Result := 0.0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).EmergAmps;
+        end
+
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_NormAmps():Double;cdecl;
+function Lines_Get_NormAmps(): Double; CDECL;
 begin
-  Result := 0.0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NormAmps;
-  End
+    Result := 0.0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NormAmps;
+        end
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_EmergAmps(Value: Double);cdecl;
+procedure Lines_Set_EmergAmps(Value: Double); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-         EmergAmps := Value;
-       END;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                EmergAmps := Value;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_NormAmps(Value: Double);cdecl;
+procedure Lines_Set_NormAmps(Value: Double); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-         NormAmps := Value;
-       END;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                NormAmps := Value;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Geometry_AnsiString():AnsiString;inline;
+function Lines_Get_Geometry_AnsiString(): Ansistring; inline;
 begin
-  Result := '';
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).GeometryCode;
-  End
+    Result := '';
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).GeometryCode;
+        end
 end;
 
-function Lines_Get_Geometry():PAnsiChar;cdecl;
+function Lines_Get_Geometry(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(Lines_Get_Geometry_AnsiString());
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Geometry(const Value: PAnsiChar);cdecl;
+procedure Lines_Set_Geometry(const Value: PAnsiChar); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-         Parser[ActiveActor].CmdString := 'geometry='+Value;
-         Edit(ActiveActor);
-         YprimInvalid[ActiveActor] := True;
-       END;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Parser[ActiveActor].CmdString := 'geometry=' + Value;
+                Edit(ActiveActor);
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Rg():Double;cdecl;
+function Lines_Get_Rg(): Double; CDECL;
 begin
-  Result := 0.0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).Rg;
-  End
+    Result := 0.0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).Rg;
+        end
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Rho():Double;cdecl;
+function Lines_Get_Rho(): Double; CDECL;
 begin
-  Result := 0.0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).rho;
-  End
+    Result := 0.0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).rho;
+        end
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Xg():Double;cdecl;
+function Lines_Get_Xg(): Double; CDECL;
 begin
-  Result := 0.0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).Xg;
-  End
+    Result := 0.0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).Xg;
+        end
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Rg(Value: Double);cdecl;
+procedure Lines_Set_Rg(Value: Double); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-         Parser[ActiveActor].CmdString := Format('rg=%.7g', [Value]);
-         Edit(ActiveActor);
-         YprimInvalid[ActiveActor] := True;
-       END;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Parser[ActiveActor].CmdString := Format('rg=%.7g', [Value]);
+                Edit(ActiveActor);
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Rho(Value: Double);cdecl;
+procedure Lines_Set_Rho(Value: Double); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-         Parser[ActiveActor].CmdString := Format('rho=%.7g', [Value]);
-         Edit(ActiveActor);
-         YprimInvalid[ActiveActor] := True;
-       END;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Parser[ActiveActor].CmdString := Format('rho=%.7g', [Value]);
+                Edit(ActiveActor);
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Xg(Value: Double);cdecl;
+procedure Lines_Set_Xg(Value: Double); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL THEN
-  If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-         Parser[ActiveActor].CmdString := Format('xg=%.7g', [Value]);
-         Edit(ActiveActor);
-         YprimInvalid[ActiveActor] := True;
-       END;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Parser[ActiveActor].CmdString := Format('xg=%.7g', [Value]);
+                Edit(ActiveActor);
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Lines_Get_Yprim(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+procedure Lines_Get_Yprim(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 { Return the YPrim matrix for this element }
 
-VAR
-  Result: PDoubleArray;
-   iV      : Integer;
-   i       : Integer;
-   NValues : Integer;
-   cValues : pComplexArray;
+var
+    Result: PDoubleArray;
+    iV: Integer;
+    i: Integer;
+    NValues: Integer;
+    cValues: pComplexArray;
 
 begin
-   IF ActiveCircuit[ActiveActor] = nil Then Begin
+    if ActiveCircuit[ActiveActor] = NIL then
+    begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-   End
-   ELSE With ActiveCircuit[ActiveActor] Do
-      If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) THEN
-      WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do  Begin
-          NValues := SQR(Yorder);
-          cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
-          If cValues=Nil Then Begin   // check for unassigned array
-                            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
-                            Exit;  // Get outta here
-                         End;
-          Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2*NValues -1) + 1);  // Make variant array
-          iV := 0;
+    end
+    else
+        with ActiveCircuit[ActiveActor] do
+            if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+                with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+                begin
+                    NValues := SQR(Yorder);
+                    cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
+                    if cValues = NIL then
+                    begin   // check for unassigned array
+                        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
+                        Exit;  // Get outta here
+                    end;
+                    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2 * NValues - 1) + 1);  // Make variant array
+                    iV := 0;
 
-          FOR i := 1 to  NValues DO  Begin    // Plunk the values in the variant array
-              Result[iV] := cValues^[i].re;
-              Inc(iV);
-              Result[iV] := cValues^[i].im;
-              Inc(iV);
-          End;
-      End
-      ELSE Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
+                    for i := 1 to NValues do
+                    begin    // Plunk the values in the variant array
+                        Result[iV] := cValues^[i].re;
+                        Inc(iV);
+                        Result[iV] := cValues^[i].im;
+                        Inc(iV);
+                    end;
+                end
+            else
+                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);  // just return null array
 
 end;
-PROCEDURE Lines_Get_Yprim_GR();cdecl;
+
+procedure Lines_Get_Yprim_GR(); CDECL;
 // Same as Lines_Get_Yprim but uses global result (GR) pointers
 begin
-   Lines_Get_Yprim(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Lines_Get_Yprim(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 
 //------------------------------------------------------------------------------
-procedure Lines_Set_Yprim(ValuePtr: PDouble; ValueCount: Integer);cdecl;
-VAR
+procedure Lines_Set_Yprim(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+var
     Value: PDoubleArray;
 
 begin
     Value := PDoubleArray(ValuePtr);
-     IF ActiveCircuit[ActiveActor] <> NIL Then  Begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
        {Do Nothing for now}
-     End;
+    end;
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_NumCust():Integer;cdecl;
+function Lines_Get_NumCust(): Integer; CDECL;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).BranchNumCustomers  ;
-  End
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).BranchNumCustomers;
+        end
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_TotalCust():Integer;cdecl;
+function Lines_Get_TotalCust(): Integer; CDECL;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).BranchTotalCustomers  ;
-  End
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).BranchTotalCustomers;
+        end
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Parent():Integer;cdecl;
+function Lines_Get_Parent(): Integer; CDECL;
 { Sets the Active Line to the immediately upline Line obj, if any}
 { Returns line index  or 0 if it fails or no more lines}
 
-Var
-   pLine:TLineObj;
+var
+    pLine: TLineObj;
 
-Begin
+begin
 
-   Result := 0;
-   If ActiveCircuit[ActiveActor] <> Nil Then
-     If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
-     Begin
-          pLine := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement);
-          If pLine.ParentPDelement <> Nil Then
-          Begin
-              If (pLine.ParentPDelement.Enabled) and (IsLine(pLine.ParentPDelement)) Then
-              Begin
-                ActiveCircuit[ActiveActor].ActiveCktElement := pLine.ParentPDElement;
-                Result := ActiveCircuit[ActiveActor].Lines.ActiveIndex;
-              End;
-          End;
-     End;
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            pLine := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement);
+            if pLine.ParentPDelement <> NIL then
+            begin
+                if (pLine.ParentPDelement.Enabled) and (IsLine(pLine.ParentPDelement)) then
+                begin
+                    ActiveCircuit[ActiveActor].ActiveCktElement := pLine.ParentPDElement;
+                    Result := ActiveCircuit[ActiveActor].Lines.ActiveIndex;
+                end;
+            end;
+        end;
 
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Count():Integer;cdecl;
+function Lines_Get_Count(): Integer; CDECL;
 begin
-    If Assigned(ActiveCircuit[ActiveActor]) Then
-          Result := ActiveCircuit[ActiveActor].Lines.ListSize ;
+    if Assigned(ActiveCircuit[ActiveActor]) then
+        Result := ActiveCircuit[ActiveActor].Lines.ListSize;
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Spacing_AnsiString():AnsiString;inline;
+function Lines_Get_Spacing_AnsiString(): Ansistring; inline;
 begin
-  Result := '';
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).SpacingCode;
-  End
+    Result := '';
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).SpacingCode;
+        end
 end;
 
-function Lines_Get_Spacing():PAnsiChar;cdecl;
+function Lines_Get_Spacing(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(Lines_Get_Spacing_AnsiString());
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Spacing(const Value: PAnsiChar);cdecl;
+procedure Lines_Set_Spacing(const Value: PAnsiChar); CDECL;
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-         Parser[ActiveActor].CmdString := 'spacing='+Value;
-         Edit(ActiveActor);
-         YprimInvalid[ActiveActor] := True;
-       END;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
+            begin
+                Parser[ActiveActor].CmdString := 'spacing=' + Value;
+                Edit(ActiveActor);
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Units():Integer;cdecl;
+function Lines_Get_Units(): Integer; CDECL;
 begin
-  Result := 0;
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).LengthUnits;
-  End
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).LengthUnits;
+        end
 
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_Units(Value: Integer);cdecl;
+procedure Lines_Set_Units(Value: Integer); CDECL;
 {
  This code assumes the present value of line units is NONE.
  The Set functions in this interface all set values in this length unit.
 }
 begin
-  IF ActiveCircuit[ActiveActor] <> NIL
-  THEN If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement)
-  THEN Begin
-       WITH TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) Do Begin
-          if Value < dssLineUnitsMaxnum  then
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+        begin
+            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
             begin
-               Parser[ActiveActor].CmdString := Format('units=%s', [LineUnitsStr(Value)]);
-               Edit(ActiveActor);
-               YprimInvalid[ActiveActor] := True;
-            end
-          else
-            DoSimpleMsg('Invalid line units integer sent via COM interface.  Please enter a value within range.',183);
+                if Value < dssLineUnitsMaxnum then
+                begin
+                    Parser[ActiveActor].CmdString := Format('units=%s', [LineUnitsStr(Value)]);
+                    Edit(ActiveActor);
+                    YprimInvalid[ActiveActor] := TRUE;
+                end
+                else
+                    DoSimpleMsg('Invalid line units integer sent via COM interface.  Please enter a value within range.', 183);
 
-       END;
-  End;
+            end;
+        end;
 end;
 //------------------------------------------------------------------------------
-END.
+end.

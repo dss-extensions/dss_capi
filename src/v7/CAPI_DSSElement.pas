@@ -1,78 +1,85 @@
-UNIT CAPI_DSSElement;
+unit CAPI_DSSElement;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils;
+uses
+    CAPI_Utils;
 
-PROCEDURE DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-PROCEDURE DSSElement_Get_AllPropertyNames_GR();cdecl;
-function DSSElement_Get_Name():PAnsiChar;cdecl;
-function DSSElement_Get_NumProperties():Integer;cdecl;
+procedure DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure DSSElement_Get_AllPropertyNames_GR(); CDECL;
+function DSSElement_Get_Name(): PAnsiChar; CDECL;
+function DSSElement_Get_NumProperties(): Integer; CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, DSSGlobals, Sysutils;
+uses
+    CAPI_Constants,
+    DSSGlobals,
+    Sysutils;
 
-PROCEDURE DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-VAR
-  Result: PPAnsiCharArray;
-   k:Integer;
+procedure DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+var
+    Result: PPAnsiCharArray;
+    k: Integer;
 begin
-  Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
-  IF ActiveCircuit <> Nil THEN
-   WITH ActiveCircuit DO
-   Begin
-     If ActiveDSSObject<>Nil THEN
-     WITH ActiveDSSObject DO
-     Begin
-          WITH ParentClass Do
-          Begin
-              Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumProperties-1) + 1);
-              For k := 1 to NumProperties DO Begin
-                  Result[k-1] := DSS_CopyStringAsPChar(PropertyName^[k]);
-              End;
-          End;
-     End
-   End;
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+        begin
+            if ActiveDSSObject <> NIL then
+                with ActiveDSSObject do
+                begin
+                    with ParentClass do
+                    begin
+                        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumProperties - 1) + 1);
+                        for k := 1 to NumProperties do
+                        begin
+                            Result[k - 1] := DSS_CopyStringAsPChar(PropertyName^[k]);
+                        end;
+                    end;
+                end
+        end;
 
 end;
-PROCEDURE DSSElement_Get_AllPropertyNames_GR();cdecl;
+
+procedure DSSElement_Get_AllPropertyNames_GR(); CDECL;
 // Same as DSSElement_Get_AllPropertyNames but uses global result (GR) pointers
 begin
-   DSSElement_Get_AllPropertyNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    DSSElement_Get_AllPropertyNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 
 //------------------------------------------------------------------------------
-function DSSElement_Get_Name_AnsiString():AnsiString;inline;
-Begin
-   If ActiveCircuit <> Nil Then
-     if ActiveDSSObject <> Nil then
-      WITH ActiveDSSObject DO
-      Begin
-        Result := ParentClass.Name + '.' + Name;
-      End
-   Else
-      Result := '';
+function DSSElement_Get_Name_AnsiString(): Ansistring; inline;
+begin
+    if ActiveCircuit <> NIL then
+        if ActiveDSSObject <> NIL then
+            with ActiveDSSObject do
+            begin
+                Result := ParentClass.Name + '.' + Name;
+            end
+        else
+            Result := '';
 end;
 
-function DSSElement_Get_Name():PAnsiChar;cdecl;
+function DSSElement_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(DSSElement_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function DSSElement_Get_NumProperties():Integer;cdecl;
+function DSSElement_Get_NumProperties(): Integer; CDECL;
 begin
-  Result := 0;
-  IF ActiveCircuit <> Nil THEN
-   WITH ActiveCircuit DO
-   Begin
-     If ActiveDSSObject<>Nil THEN
-     WITH ActiveDSSObject DO
-     Begin
-          Result := ParentClass.NumProperties ;
-     End
-   End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+        begin
+            if ActiveDSSObject <> NIL then
+                with ActiveDSSObject do
+                begin
+                    Result := ParentClass.NumProperties;
+                end
+        end;
 end;
 //------------------------------------------------------------------------------
-END.
+end.

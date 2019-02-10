@@ -1,179 +1,200 @@
-UNIT CAPI_CtrlQueue;
+unit CAPI_CtrlQueue;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils, Classes;
+uses
+    CAPI_Utils,
+    Classes;
 
-procedure CtrlQueue_ClearQueue();cdecl;
-procedure CtrlQueue_Delete(ActionHandle: Integer);cdecl;
-function CtrlQueue_Get_ActionCode():Integer;cdecl;
-function CtrlQueue_Get_DeviceHandle():Integer;cdecl;
-function CtrlQueue_Get_NumActions():Integer;cdecl;
-procedure CtrlQueue_Show();cdecl;
-procedure CtrlQueue_ClearActions();cdecl;
-function CtrlQueue_Get_PopAction():Integer;cdecl;
-procedure CtrlQueue_Set_Action(Param1: Integer);cdecl;
-function CtrlQueue_Get_QueueSize():Integer;cdecl;
-procedure CtrlQueue_DoAllQueue();cdecl;
-PROCEDURE CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-PROCEDURE CtrlQueue_Get_Queue_GR();cdecl;
+procedure CtrlQueue_ClearQueue(); CDECL;
+procedure CtrlQueue_Delete(ActionHandle: Integer); CDECL;
+function CtrlQueue_Get_ActionCode(): Integer; CDECL;
+function CtrlQueue_Get_DeviceHandle(): Integer; CDECL;
+function CtrlQueue_Get_NumActions(): Integer; CDECL;
+procedure CtrlQueue_Show(); CDECL;
+procedure CtrlQueue_ClearActions(); CDECL;
+function CtrlQueue_Get_PopAction(): Integer; CDECL;
+procedure CtrlQueue_Set_Action(Param1: Integer); CDECL;
+function CtrlQueue_Get_QueueSize(): Integer; CDECL;
+procedure CtrlQueue_DoAllQueue(); CDECL;
+procedure CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure CtrlQueue_Get_Queue_GR(); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, DSSGlobals, ControlQueue, ControlElem, DSSClass, sysutils, Utilities;
+uses
+    CAPI_Constants,
+    DSSGlobals,
+    ControlQueue,
+    ControlElem,
+    DSSClass,
+    sysutils,
+    Utilities;
 
 
 {Define class for proxy control object}
 
-Type
-  pAction = ^Taction;
-  TAction = Record
-       ActionCode :Integer;
-       DeviceHandle :Integer;
-  End;
+type
+    pAction = ^Taction;
 
-  TCOMControlProxyObj = class(TControlElem)
-     private
-       ActionList :TList;
-       Procedure ClearActionList;
-       Function PopAction: Boolean;
-     public
+    TAction = record
+        ActionCode: Integer;
+        DeviceHandle: Integer;
+    end;
 
-       constructor Create(ParClass:TDSSClass; const COMProxyName:String);
-       destructor Destroy; override;
+    TCOMControlProxyObj = class(TControlElem)
+    PRIVATE
+        ActionList: TList;
+        procedure ClearActionList;
+        function PopAction: Boolean;
+    PUBLIC
 
-       PROCEDURE DoPendingAction(Const Code, ProxyHdl:Integer; ActorID : Integer); Override;   // Do the action that is pending from last sample
-       PROCEDURE Reset; Override;  // Reset to initial defined state
-  end;
+        constructor Create(ParClass: TDSSClass; const COMProxyName: String);
+        destructor Destroy; OVERRIDE;
 
-Var
-    COMControlProxyObj :TCOMControlProxyObj;
-    ActiveAction       :pAction;
-   
-procedure CtrlQueue_ClearQueue();cdecl;
+        procedure DoPendingAction(const Code, ProxyHdl: Integer; ActorID: Integer); OVERRIDE;   // Do the action that is pending from last sample
+        procedure Reset; OVERRIDE;  // Reset to initial defined state
+    end;
+
+var
+    COMControlProxyObj: TCOMControlProxyObj;
+    ActiveAction: pAction;
+
+procedure CtrlQueue_ClearQueue(); CDECL;
 begin
-   If ActiveCircuit[ActiveActor] <> Nil then Begin
-      ActiveCircuit[ActiveActor].ControlQueue.Clear;
-   End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        ActiveCircuit[ActiveActor].ControlQueue.Clear;
+    end;
 end;
 //------------------------------------------------------------------------------
-procedure CtrlQueue_Delete(ActionHandle: Integer);cdecl;
+procedure CtrlQueue_Delete(ActionHandle: Integer); CDECL;
 begin
-    If ActiveCircuit[ActiveActor] <> Nil then Begin
-      ActiveCircuit[ActiveActor].ControlQueue.Delete(ActionHandle, ActiveActor);
-   End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        ActiveCircuit[ActiveActor].ControlQueue.Delete(ActionHandle, ActiveActor);
+    end;
 end;
 //------------------------------------------------------------------------------
-function CtrlQueue_Get_ActionCode():Integer;cdecl;
+function CtrlQueue_Get_ActionCode(): Integer; CDECL;
 begin
-   Result := 0;
-    If ActiveAction<> NIl then   Result := ActiveAction^.ActionCode ;
+    Result := 0;
+    if ActiveAction <> NIL then
+        Result := ActiveAction^.ActionCode;
 end;
 //------------------------------------------------------------------------------
-function CtrlQueue_Get_DeviceHandle():Integer;cdecl;
+function CtrlQueue_Get_DeviceHandle(): Integer; CDECL;
 begin
-   Result := 0;
-    If ActiveAction<> NIl then   Result := ActiveAction^.DeviceHandle;
+    Result := 0;
+    if ActiveAction <> NIL then
+        Result := ActiveAction^.DeviceHandle;
 end;
 //------------------------------------------------------------------------------
-function CtrlQueue_Get_NumActions():Integer;cdecl;
+function CtrlQueue_Get_NumActions(): Integer; CDECL;
 begin
-   Result := 0;
-     Result := COMControlProxyObj.ActionList.Count;
+    Result := 0;
+    Result := COMControlProxyObj.ActionList.Count;
 end;
 //------------------------------------------------------------------------------
-procedure CtrlQueue_Show();cdecl;
+procedure CtrlQueue_Show(); CDECL;
 begin
-     If ActiveCircuit[ActiveActor] <> Nil then
+    if ActiveCircuit[ActiveActor] <> NIL then
         ActiveCircuit[ActiveActor].ControlQueue.ShowQueue(DSSDirectory + 'COMProxy_ControlQueue.CSV');
 end;
 
 { TCOMControlProxyObj }
 //------------------------------------------------------------------------------
-procedure CtrlQueue_ClearActions();cdecl;
+procedure CtrlQueue_ClearActions(); CDECL;
 begin
-      COMControlProxyObj.ClearActionList;
+    COMControlProxyObj.ClearActionList;
 end;
 //------------------------------------------------------------------------------
-function CtrlQueue_Get_PopAction():Integer;cdecl;
+function CtrlQueue_Get_PopAction(): Integer; CDECL;
 begin
-     Result := COMControlProxyObj.ActionList.Count;
-     COMControlProxyObj.PopAction;
+    Result := COMControlProxyObj.ActionList.Count;
+    COMControlProxyObj.PopAction;
 end;
 //------------------------------------------------------------------------------
-procedure CtrlQueue_Set_Action(Param1: Integer);cdecl;
+procedure CtrlQueue_Set_Action(Param1: Integer); CDECL;
 begin
-    With COMControlProxyObj Do
-     If Param1 < ActionList.Count then Begin
-       ActiveAction := ActionList.Items[Param1 - 1];
-     End;
+    with COMControlProxyObj do
+        if Param1 < ActionList.Count then
+        begin
+            ActiveAction := ActionList.Items[Param1 - 1];
+        end;
 end;
 //------------------------------------------------------------------------------
-function CtrlQueue_Get_QueueSize():Integer;cdecl;
+function CtrlQueue_Get_QueueSize(): Integer; CDECL;
 begin
-   If ActiveCircuit[ActiveActor] <> Nil then Begin
-      Result := ActiveCircuit[ActiveActor].ControlQueue.QueueSize;
-   End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        Result := ActiveCircuit[ActiveActor].ControlQueue.QueueSize;
+    end;
 end;
 //------------------------------------------------------------------------------
-procedure CtrlQueue_DoAllQueue();cdecl;
+procedure CtrlQueue_DoAllQueue(); CDECL;
 begin
-    If ActiveCircuit[ActiveActor] <> Nil then Begin
-      ActiveCircuit[ActiveActor].ControlQueue.DoAllActions(ActiveActor);
-   End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        ActiveCircuit[ActiveActor].ControlQueue.DoAllActions(ActiveActor);
+    end;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
+procedure CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 // returns entire queue in CSV file format as a variant array of strings
-VAR
-  Result: PPAnsiCharArray;
-  i     : integer;
-  Qsize : integer;
+var
+    Result: PPAnsiCharArray;
+    i: Integer;
+    Qsize: Integer;
 
 begin
-      Result  := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
-      QSize   := CtrlQueue_Get_queuesize;
-      if QSize > 0 then
-      begin
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    QSize := CtrlQueue_Get_queuesize;
+    if QSize > 0 then
+    begin
         DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (QSize) + 1);
-        Result[0]:=DSS_CopyStringAsPChar('Handle, Hour, Sec, ActionCode, ProxyDevRef, Device');
-        For i := 0 to QSize-1 do
-          Begin
-            Result[i+1]:= DSS_CopyStringAsPChar(ActiveCircuit[ActiveActor].ControlQueue.QueueItem(i));
-          End;
-      end
-      else Result[0]:=DSS_CopyStringAsPChar('No events');
+        Result[0] := DSS_CopyStringAsPChar('Handle, Hour, Sec, ActionCode, ProxyDevRef, Device');
+        for i := 0 to QSize - 1 do
+        begin
+            Result[i + 1] := DSS_CopyStringAsPChar(ActiveCircuit[ActiveActor].ControlQueue.QueueItem(i));
+        end;
+    end
+    else
+        Result[0] := DSS_CopyStringAsPChar('No events');
 
 end;
-PROCEDURE CtrlQueue_Get_Queue_GR();cdecl;
+
+procedure CtrlQueue_Get_Queue_GR(); CDECL;
 // Same as CtrlQueue_Get_Queue but uses global result (GR) pointers
 begin
-   CtrlQueue_Get_Queue(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    CtrlQueue_Get_Queue(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 
 //------------------------------------------------------------------------------
-procedure TCOMControlProxyObj.DoPendingAction(const Code, ProxyHdl:Integer; ActorID : Integer);
-Var
-   Action :pAction;
+procedure TCOMControlProxyObj.DoPendingAction(const Code, ProxyHdl: Integer; ActorID: Integer);
+var
+    Action: pAction;
 begin
-     Action := Allocmem(SizeOf(TAction));
-     With Action^ Do Begin         // Capture the Action
-          ActionCode := Code;
-          DeviceHandle := ProxyHdl;
-     End;
-     ActionList.Add(Action);
-end;                
-                
+    Action := Allocmem(SizeOf(TAction));
+    with Action^ do
+    begin         // Capture the Action
+        ActionCode := Code;
+        DeviceHandle := ProxyHdl;
+    end;
+    ActionList.Add(Action);
+end;
+
 { TCOMControlProxyObj }
 
 procedure TCOMControlProxyObj.ClearActionList;
 begin
-   while PopAction do   ;  // spin until it is done
+    while PopAction do ;  // spin until it is done
 end;
 
 constructor TCOMControlProxyObj.Create(ParClass: TDSSClass;
-  const COMProxyName: String);
+    const COMProxyName: String);
 begin
     Name := COMProxyName;
     ActionList := TList.Create;
@@ -181,33 +202,37 @@ end;
 
 destructor TCOMControlProxyObj.Destroy;
 begin
-  ClearActionList;
-  ActionList.Free;
-  inherited;
+    ClearActionList;
+    ActionList.Free;
+    inherited;
 end;
 
 function TCOMControlProxyObj.PopAction: Boolean;
 begin
-    If ActiveAction <> Nil then  Begin
-      Freemem(ActiveAction, Sizeof(TAction));
-      ActiveAction := Nil;
-    End;
+    if ActiveAction <> NIL then
+    begin
+        Freemem(ActiveAction, Sizeof(TAction));
+        ActiveAction := NIL;
+    end;
     Result := TRUE;
-    If ActionList.Count>0 then Begin
-       ActiveAction := ActionList.Items[0];
-       ActionList.Delete(0);
-    End Else Result := FALSE;
+    if ActionList.Count > 0 then
+    begin
+        ActiveAction := ActionList.Items[0];
+        ActionList.Delete(0);
+    end
+    else
+        Result := FALSE;
 end;
 
 procedure TCOMControlProxyObj.Reset;
 begin
-  ClearActionList;
+    ClearActionList;
 
 end;
-            
-initialization            
+
+initialization
  {Make a Proxy Control Object to receiving control actions}
-    COMControlProxyObj := TCOMControlProxyObj.Create(Nil, 'COM_Proxy');
-    ActiveAction := Nil;
-            
-END.
+    COMControlProxyObj := TCOMControlProxyObj.Create(NIL, 'COM_Proxy');
+    ActiveAction := NIL;
+
+end.

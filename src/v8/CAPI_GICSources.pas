@@ -1,334 +1,362 @@
-UNIT CAPI_GICSources;
+unit CAPI_GICSources;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils;
+uses
+    CAPI_Utils;
 
-PROCEDURE GICSources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-PROCEDURE GICSources_Get_AllNames_GR();cdecl;
-function GICSources_Get_Count():Integer;cdecl;
-function GICSources_Get_First():Integer;cdecl;
-function GICSources_Get_Next():Integer;cdecl;
-function GICSources_Get_Name():PAnsiChar;cdecl;
-procedure GICSources_Set_Name(const Value: PAnsiChar);cdecl;
-function GICSources_Get_Phases():Integer;cdecl;
-procedure GICSources_Set_Phases(Value: Integer);cdecl;
-function GICSources_Get_Bus1():PAnsiChar;cdecl;
-function GICSources_Get_Bus2():PAnsiChar;cdecl;
-function GICSources_Get_EN():Double;cdecl;
-procedure GICSources_Set_EN(Value: Double);cdecl;
-function GICSources_Get_EE():Double;cdecl;
-procedure GICSources_Set_EE(Value: Double);cdecl;
-function GICSources_Get_Lat1():Double;cdecl;
-procedure GICSources_Set_Lat1(Value: Double);cdecl;
-function GICSources_Get_Lat2():Double;cdecl;
-procedure GICSources_Set_Lat2(Value: Double);cdecl;
-function GICSources_Get_Lon1():Double;cdecl;
-procedure GICSources_Set_Lon1(Value: Double);cdecl;
-function GICSources_Get_Lon2():Double;cdecl;
-procedure GICSources_Set_Lon2(Value: Double);cdecl;
-function GICSources_Get_Volts():Double;cdecl;
-procedure GICSources_Set_Volts(Value: Double);cdecl;
+procedure GICSources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure GICSources_Get_AllNames_GR(); CDECL;
+function GICSources_Get_Count(): Integer; CDECL;
+function GICSources_Get_First(): Integer; CDECL;
+function GICSources_Get_Next(): Integer; CDECL;
+function GICSources_Get_Name(): PAnsiChar; CDECL;
+procedure GICSources_Set_Name(const Value: PAnsiChar); CDECL;
+function GICSources_Get_Phases(): Integer; CDECL;
+procedure GICSources_Set_Phases(Value: Integer); CDECL;
+function GICSources_Get_Bus1(): PAnsiChar; CDECL;
+function GICSources_Get_Bus2(): PAnsiChar; CDECL;
+function GICSources_Get_EN(): Double; CDECL;
+procedure GICSources_Set_EN(Value: Double); CDECL;
+function GICSources_Get_EE(): Double; CDECL;
+procedure GICSources_Set_EE(Value: Double); CDECL;
+function GICSources_Get_Lat1(): Double; CDECL;
+procedure GICSources_Set_Lat1(Value: Double); CDECL;
+function GICSources_Get_Lat2(): Double; CDECL;
+procedure GICSources_Set_Lat2(Value: Double); CDECL;
+function GICSources_Get_Lon1(): Double; CDECL;
+procedure GICSources_Set_Lon1(Value: Double); CDECL;
+function GICSources_Get_Lon2(): Double; CDECL;
+procedure GICSources_Set_Lon2(Value: Double); CDECL;
+function GICSources_Get_Volts(): Double; CDECL;
+procedure GICSources_Set_Volts(Value: Double); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, GICsource, PointerList, DSSGlobals, CktElement;
+uses
+    CAPI_Constants,
+    GICsource,
+    PointerList,
+    DSSGlobals,
+    CktElement;
 //------------------------------------------------------------------------------
-PROCEDURE GICSources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-VAR
-  Result: PPAnsiCharArray;
-  elem: TGICSourceObj;
-  pList: TPointerList;
-  k: Integer;
+procedure GICSources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+var
+    Result: PPAnsiCharArray;
+    elem: TGICSourceObj;
+    pList: TPointerList;
+    k: Integer;
 
-Begin
+begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-        If GICsourceClass.ElementList.ListSize > 0 then
-        Begin
-          pList := GICsourceClass.ElementList;
-          DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize -1) + 1);
-          k:=0;
-          elem := pList.First;
-          WHILE elem<>Nil DO Begin
-              Result[k] := DSS_CopyStringAsPChar(elem.Name);
-              Inc(k);
-              elem := pList.next;
-          End;
-        End;
-    End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        if GICsourceClass.ElementList.ListSize > 0 then
+        begin
+            pList := GICsourceClass.ElementList;
+            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize - 1) + 1);
+            k := 0;
+            elem := pList.First;
+            while elem <> NIL do
+            begin
+                Result[k] := DSS_CopyStringAsPChar(elem.Name);
+                Inc(k);
+                elem := pList.next;
+            end;
+        end;
+    end;
 
 end;
-PROCEDURE GICSources_Get_AllNames_GR();cdecl;
+
+procedure GICSources_Get_AllNames_GR(); CDECL;
 // Same as GICSources_Get_AllNames but uses global result (GR) pointers
 begin
-   GICSources_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    GICSources_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Count():Integer;cdecl;
+function GICSources_Get_Count(): Integer; CDECL;
 begin
-     Result := 0;
-     If ActiveCircuit[ActiveActor] <> Nil Then
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
         Result := GICsourceClass.ElementList.ListSize;
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_First():Integer;cdecl;
-Var
-   pElem : TGICSourceObj;
+function GICSources_Get_First(): Integer; CDECL;
+var
+    pElem: TGICSourceObj;
 begin
-     Result := 0;
-     If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pElem := GICsourceClass.ElementList.First;
-        If pElem <> Nil Then
-        Repeat
-          If pElem.Enabled Then Begin
-              ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-              Result := 1;
-          End
-          Else pElem := GICsourceClass.ElementList.Next;
-        Until (Result = 1) or (pElem = nil);
-     End;
+        if pElem <> NIL then
+            repeat
+                if pElem.Enabled then
+                begin
+                    ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
+                    Result := 1;
+                end
+                else
+                    pElem := GICsourceClass.ElementList.Next;
+            until (Result = 1) or (pElem = NIL);
+    end;
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Next():Integer;cdecl;
-Var
-   pElem : TGICSourceObj;
+function GICSources_Get_Next(): Integer; CDECL;
+var
+    pElem: TGICSourceObj;
 begin
-     Result := 0;
-     If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pElem := GICsourceClass.ElementList.Next;
-        If pElem <> Nil Then
-        Repeat
-          If pElem.Enabled Then Begin
-              ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-              Result := GICsourceClass.ElementList.ActiveIndex;
-          End
-          Else pElem := GICsourceClass.ElementList.Next;
-        Until (Result > 0) or (pElem = nil);
-     End;
+        if pElem <> NIL then
+            repeat
+                if pElem.Enabled then
+                begin
+                    ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
+                    Result := GICsourceClass.ElementList.ActiveIndex;
+                end
+                else
+                    pElem := GICsourceClass.ElementList.Next;
+            until (Result > 0) or (pElem = NIL);
+    end;
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Name_AnsiString():AnsiString;inline;
-Var
-   elem: TDSSCktElement;
-Begin
+function GICSources_Get_Name_AnsiString(): Ansistring; inline;
+var
+    elem: TDSSCktElement;
+begin
     Result := '';
-    If ActiveCircuit[ActiveActor] = Nil Then Exit;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
     elem := ActiveCircuit[ActiveActor].ActiveCktElement;
-    If elem <> Nil Then Result := elem.Name;
+    if elem <> NIL then
+        Result := elem.Name;
 end;
 
-function GICSources_Get_Name():PAnsiChar;cdecl;
+function GICSources_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(GICSources_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
-procedure GICSources_Set_Name(const Value: PAnsiChar);cdecl;
+procedure GICSources_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-  If ActiveCircuit[ActiveActor] = Nil Then Exit;
-  If GICsourceClass.SetActive(Value) Then
-  Begin
-       ActiveCircuit[ActiveActor].ActiveCktElement := GICsourceClass.ElementList.Active;
-  End
-  Else 
-  Begin
-      DoSimpleMsg('GICSource "'+ Value +'" Not Found in Active Circuit.', 77003);
-  End;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    if GICsourceClass.SetActive(Value) then
+    begin
+        ActiveCircuit[ActiveActor].ActiveCktElement := GICsourceClass.ElementList.Active;
+    end
+    else
+    begin
+        DoSimpleMsg('GICSource "' + Value + '" Not Found in Active Circuit.', 77003);
+    end;
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Phases():Integer;cdecl;
+function GICSources_Get_Phases(): Integer; CDECL;
 var
-  elem: TGICSourceObj;
+    elem: TGICSourceObj;
 begin
-  Result := 0;
-  elem := GICsourceClass.ElementList.Active;
-  if elem <> nil then Result := elem.NPhases;
+    Result := 0;
+    elem := GICsourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.NPhases;
 end;
 //------------------------------------------------------------------------------
-procedure GICSources_Set_Phases(Value: Integer);cdecl;
+procedure GICSources_Set_Phases(Value: Integer); CDECL;
 var
-  elem: TGICSourceObj;
+    elem: TGICSourceObj;
 begin
-  elem := GICsourceClass.GetActiveObj;
-  if elem <> nil then
-  Begin
-    elem.nphases := Value;
-    Elem.NConds := Value;  // Force reallocation of terminal info
-  End;
+    elem := GICsourceClass.GetActiveObj;
+    if elem <> NIL then
+    begin
+        elem.nphases := Value;
+        Elem.NConds := Value;  // Force reallocation of terminal info
+    end;
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Bus1_AnsiString():AnsiString;inline;
+function GICSources_Get_Bus1_AnsiString(): Ansistring; inline;
 begin
-  Result := '';
-  If ActiveCircuit[ActiveActor] = Nil Then Exit;  
-  Result := ActiveCircuit[ActiveActor].ActiveCktElement.GetBus(1);
+    Result := '';
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    Result := ActiveCircuit[ActiveActor].ActiveCktElement.GetBus(1);
 end;
 
-function GICSources_Get_Bus1():PAnsiChar;cdecl;
+function GICSources_Get_Bus1(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(GICSources_Get_Bus1_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Bus2_AnsiString():AnsiString;inline;
+function GICSources_Get_Bus2_AnsiString(): Ansistring; inline;
 begin
-  Result := '';
-  If ActiveCircuit[ActiveActor] = Nil Then Exit;
-  Result := ActiveCircuit[ActiveActor].ActiveCktElement.GetBus(2);
+    Result := '';
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    Result := ActiveCircuit[ActiveActor].ActiveCktElement.GetBus(2);
 end;
 
-function GICSources_Get_Bus2():PAnsiChar;cdecl;
+function GICSources_Get_Bus2(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(GICSources_Get_Bus2_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_EN():Double;cdecl;
+function GICSources_Get_EN(): Double; CDECL;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  Result := 0.0;
-  elem := GICSourceClass.ElementList.Active;
-  if elem <> nil then Result := elem.ENorth;
+    Result := 0.0;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.ENorth;
 end;
 //------------------------------------------------------------------------------
-procedure GICSources_Set_EN(Value: Double);cdecl;
+procedure GICSources_Set_EN(Value: Double); CDECL;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  elem := GICSourceClass.ElementList.Active;
-  if elem <> nil then elem.ENorth := Value;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        elem.ENorth := Value;
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_EE():Double;cdecl;
+function GICSources_Get_EE(): Double; CDECL;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  Result := 0.0;
-  elem := GICSourceClass.ElementList.Active;
-  if elem <> nil then Result := elem.EEast;
+    Result := 0.0;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.EEast;
 end;
 //------------------------------------------------------------------------------
-procedure GICSources_Set_EE(Value: Double);cdecl;
+procedure GICSources_Set_EE(Value: Double); CDECL;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  elem := GICSourceClass.ElementList.Active;
-  if elem <> nil then elem.EEast := Value;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        elem.EEast := Value;
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Lat1():Double;cdecl;
+function GICSources_Get_Lat1(): Double; CDECL;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  Result := 0.0;
-  elem := GICSourceClass.ElementList.Active;
-  if elem <> nil then Result := elem.Lat1;
+    Result := 0.0;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.Lat1;
 
 end;
 //------------------------------------------------------------------------------
-procedure GICSources_Set_Lat1(Value: Double);cdecl;
+procedure GICSources_Set_Lat1(Value: Double); CDECL;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  elem := GICSourceClass.ElementList.Active;
-  if elem <> nil then 
-  Begin
-     elem.Lat1 := Value;
-     elem.VoltsSpecified := FALSE;
-  End;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+    begin
+        elem.Lat1 := Value;
+        elem.VoltsSpecified := FALSE;
+    end;
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Lat2():Double;cdecl;
+function GICSources_Get_Lat2(): Double; CDECL;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  Result := 0.0;
-  elem := GICSourceClass.ElementList.Active;
-  if elem <> nil then Result := elem.Lat2;
+    Result := 0.0;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.Lat2;
 
 end;
 //------------------------------------------------------------------------------
-procedure GICSources_Set_Lat2(Value: Double);cdecl;
+procedure GICSources_Set_Lat2(Value: Double); CDECL;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  elem := GICSourceClass.ElementList.Active;
-  if elem <> nil then
-  Begin
-     elem.Lat2 := Value;
-     elem.VoltsSpecified := FALSE;
-  End;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+    begin
+        elem.Lat2 := Value;
+        elem.VoltsSpecified := FALSE;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Lon1():Double;cdecl;
+function GICSources_Get_Lon1(): Double; CDECL;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  Result := 0.0;
-  elem := GICSourceClass.ElementList.Active;
-  if elem <> nil then Result := elem.Lon1;
+    Result := 0.0;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.Lon1;
 
 end;
 //------------------------------------------------------------------------------
-procedure GICSources_Set_Lon1(Value: Double);cdecl;
+procedure GICSources_Set_Lon1(Value: Double); CDECL;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  elem := GICSourceClass.ElementList.Active;
-  if elem <> nil then 
-  Begin
-     elem.Lon1 := Value;
-     elem.VoltsSpecified := FALSE;
-  End;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+    begin
+        elem.Lon1 := Value;
+        elem.VoltsSpecified := FALSE;
+    end;
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Lon2():Double;cdecl;
+function GICSources_Get_Lon2(): Double; CDECL;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  Result := 0.0;
-  elem := GICSourceClass.ElementList.Active;
-  if elem <> nil then Result := elem.Lon2;
+    Result := 0.0;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.Lon2;
 
 end;
 //------------------------------------------------------------------------------
-procedure GICSources_Set_Lon2(Value: Double);cdecl;
+procedure GICSources_Set_Lon2(Value: Double); CDECL;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  elem := GICSourceClass.ElementList.Active;
-  if elem <> nil then
-  Begin
-     elem.Lon2 := Value;
-     elem.VoltsSpecified := FALSE;
-  End;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+    begin
+        elem.Lon2 := Value;
+        elem.VoltsSpecified := FALSE;
+    end;
 
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Volts():Double;cdecl;
+function GICSources_Get_Volts(): Double; CDECL;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  Result := 0.0;
-  elem := GICSourceClass.ElementList.Active;
-  if elem <> nil then Result := elem.Volts;
+    Result := 0.0;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.Volts;
 end;
 //------------------------------------------------------------------------------
-procedure GICSources_Set_Volts(Value: Double);cdecl;
+procedure GICSources_Set_Volts(Value: Double); CDECL;
 var
-  elem: TGICsourceObj;
+    elem: TGICsourceObj;
 begin
-  elem := GICSourceClass.ElementList.Active;
-  if elem <> nil then 
-  Begin
-     elem.Volts := Value;
-     elem.VoltsSpecified := TRUE;
-  End;
+    elem := GICSourceClass.ElementList.Active;
+    if elem <> NIL then
+    begin
+        elem.Volts := Value;
+        elem.VoltsSpecified := TRUE;
+    end;
 end;
 //------------------------------------------------------------------------------
-END.
+end.

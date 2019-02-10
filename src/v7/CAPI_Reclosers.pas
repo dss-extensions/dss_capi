@@ -1,407 +1,453 @@
-UNIT CAPI_Reclosers;
+unit CAPI_Reclosers;
+
 {$inline on}
 
-INTERFACE
+interface
 
-USES CAPI_Utils;
+uses
+    CAPI_Utils;
 
-PROCEDURE Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-PROCEDURE Reclosers_Get_AllNames_GR();cdecl;
-function Reclosers_Get_Count():Integer;cdecl;
-function Reclosers_Get_First():Integer;cdecl;
-function Reclosers_Get_Name():PAnsiChar;cdecl;
-function Reclosers_Get_Next():Integer;cdecl;
-procedure Reclosers_Set_Name(const Value: PAnsiChar);cdecl;
-function Reclosers_Get_MonitoredTerm():Integer;cdecl;
-procedure Reclosers_Set_MonitoredTerm(Value: Integer);cdecl;
-function Reclosers_Get_SwitchedObj():PAnsiChar;cdecl;
-procedure Reclosers_Set_SwitchedObj(const Value: PAnsiChar);cdecl;
-function Reclosers_Get_MonitoredObj():PAnsiChar;cdecl;
-function Reclosers_Get_SwitchedTerm():Integer;cdecl;
-procedure Reclosers_Set_MonitoredObj(const Value: PAnsiChar);cdecl;
-procedure Reclosers_Set_SwitchedTerm(Value: Integer);cdecl;
-function Reclosers_Get_NumFast():Integer;cdecl;
-PROCEDURE Reclosers_Get_RecloseIntervals(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
-PROCEDURE Reclosers_Get_RecloseIntervals_GR();cdecl;
-function Reclosers_Get_Shots():Integer;cdecl;
-procedure Reclosers_Set_NumFast(Value: Integer);cdecl;
-procedure Reclosers_Set_Shots(Value: Integer);cdecl;
-function Reclosers_Get_PhaseTrip():Double;cdecl;
-procedure Reclosers_Set_PhaseTrip(Value: Double);cdecl;
-function Reclosers_Get_GroundInst():Double;cdecl;
-function Reclosers_Get_GroundTrip():Double;cdecl;
-function Reclosers_Get_PhaseInst():Double;cdecl;
-procedure Reclosers_Set_GroundInst(Value: Double);cdecl;
-procedure Reclosers_Set_GroundTrip(Value: Double);cdecl;
-procedure Reclosers_Set_PhaseInst(Value: Double);cdecl;
-procedure Reclosers_Close();cdecl;
-procedure Reclosers_Open();cdecl;
-function Reclosers_Get_idx():Integer;cdecl;
-procedure Reclosers_Set_idx(Value: Integer);cdecl;
+procedure Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Reclosers_Get_AllNames_GR(); CDECL;
+function Reclosers_Get_Count(): Integer; CDECL;
+function Reclosers_Get_First(): Integer; CDECL;
+function Reclosers_Get_Name(): PAnsiChar; CDECL;
+function Reclosers_Get_Next(): Integer; CDECL;
+procedure Reclosers_Set_Name(const Value: PAnsiChar); CDECL;
+function Reclosers_Get_MonitoredTerm(): Integer; CDECL;
+procedure Reclosers_Set_MonitoredTerm(Value: Integer); CDECL;
+function Reclosers_Get_SwitchedObj(): PAnsiChar; CDECL;
+procedure Reclosers_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
+function Reclosers_Get_MonitoredObj(): PAnsiChar; CDECL;
+function Reclosers_Get_SwitchedTerm(): Integer; CDECL;
+procedure Reclosers_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
+procedure Reclosers_Set_SwitchedTerm(Value: Integer); CDECL;
+function Reclosers_Get_NumFast(): Integer; CDECL;
+procedure Reclosers_Get_RecloseIntervals(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Reclosers_Get_RecloseIntervals_GR(); CDECL;
+function Reclosers_Get_Shots(): Integer; CDECL;
+procedure Reclosers_Set_NumFast(Value: Integer); CDECL;
+procedure Reclosers_Set_Shots(Value: Integer); CDECL;
+function Reclosers_Get_PhaseTrip(): Double; CDECL;
+procedure Reclosers_Set_PhaseTrip(Value: Double); CDECL;
+function Reclosers_Get_GroundInst(): Double; CDECL;
+function Reclosers_Get_GroundTrip(): Double; CDECL;
+function Reclosers_Get_PhaseInst(): Double; CDECL;
+procedure Reclosers_Set_GroundInst(Value: Double); CDECL;
+procedure Reclosers_Set_GroundTrip(Value: Double); CDECL;
+procedure Reclosers_Set_PhaseInst(Value: Double); CDECL;
+procedure Reclosers_Close(); CDECL;
+procedure Reclosers_Open(); CDECL;
+function Reclosers_Get_idx(): Integer; CDECL;
+procedure Reclosers_Set_idx(Value: Integer); CDECL;
 
-IMPLEMENTATION
+implementation
 
-USES CAPI_Constants, Executive, Sysutils, Recloser, PointerList, DSSGlobals, DSSClassDefs;
+uses
+    CAPI_Constants,
+    Executive,
+    Sysutils,
+    Recloser,
+    PointerList,
+    DSSGlobals,
+    DSSClassDefs;
 
-procedure Set_Parameter(const parm: string; const val: string);
+procedure Set_Parameter(const parm: String; const val: String);
 var
-  cmd: string;
+    cmd: String;
 begin
-  if not Assigned (ActiveCircuit) then exit;
-  SolutionAbort := FALSE;  // Reset for commands entered from outside
-  cmd := Format ('recloser.%s.%s=%s', [TRecloserObj(RecloserClass.GetActiveObj).Name, parm, val]);
-  DSSExecutive.Command := cmd;
+    if not Assigned(ActiveCircuit) then
+        exit;
+    SolutionAbort := FALSE;  // Reset for commands entered from outside
+    cmd := Format('recloser.%s.%s=%s', [TRecloserObj(RecloserClass.GetActiveObj).Name, parm, val]);
+    DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);cdecl;
-VAR
-  Result: PPAnsiCharArray;
-  elem: TRecloserObj;
-  pList: TPointerList;
-  k: Integer;
-Begin
+procedure Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+var
+    Result: PPAnsiCharArray;
+    elem: TRecloserObj;
+    pList: TPointerList;
+    k: Integer;
+begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    IF ActiveCircuit <> Nil THEN
-    Begin
-        If RecloserClass.ElementList.ListSize > 0 then
-        Begin
-          pList := RecloserClass.ElementList;
-          DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize -1) + 1);
-          k:=0;
-          elem := pList.First;
-          WHILE elem<>Nil DO Begin
-              Result[k] := DSS_CopyStringAsPChar(elem.Name);
-              Inc(k);
-              elem := pList.next        ;
-          End;
-        End;
-    End;
+    if ActiveCircuit <> NIL then
+    begin
+        if RecloserClass.ElementList.ListSize > 0 then
+        begin
+            pList := RecloserClass.ElementList;
+            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize - 1) + 1);
+            k := 0;
+            elem := pList.First;
+            while elem <> NIL do
+            begin
+                Result[k] := DSS_CopyStringAsPChar(elem.Name);
+                Inc(k);
+                elem := pList.next;
+            end;
+        end;
+    end;
 end;
-PROCEDURE Reclosers_Get_AllNames_GR();cdecl;
+
+procedure Reclosers_Get_AllNames_GR(); CDECL;
 // Same as Reclosers_Get_AllNames but uses global result (GR) pointers
 begin
-   Reclosers_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+    Reclosers_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 
 //------------------------------------------------------------------------------
-function Reclosers_Get_Count():Integer;cdecl;
+function Reclosers_Get_Count(): Integer; CDECL;
 begin
-     Result := 0;
-     If ActiveCircuit <> Nil Then
+    Result := 0;
+    if ActiveCircuit <> NIL then
         Result := RecloserClass.ElementList.ListSize;
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_First():Integer;cdecl;
-Var
-   pElem : TRecloserObj;
+function Reclosers_Get_First(): Integer; CDECL;
+var
+    pElem: TRecloserObj;
 begin
-     Result := 0;
-     If ActiveCircuit <> Nil Then
-     Begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
         pElem := RecloserClass.ElementList.First;
-        If pElem <> Nil Then
-        Repeat
-          If pElem.Enabled Then Begin
-              ActiveCircuit.ActiveCktElement := pElem;
-              Result := RecloserClass.ElementList.ActiveIndex;
-          End
-          Else pElem := RecloserClass.ElementList.Next;
-        Until (Result >0) or (pElem = nil);
-     End;
+        if pElem <> NIL then
+            repeat
+                if pElem.Enabled then
+                begin
+                    ActiveCircuit.ActiveCktElement := pElem;
+                    Result := RecloserClass.ElementList.ActiveIndex;
+                end
+                else
+                    pElem := RecloserClass.ElementList.Next;
+            until (Result > 0) or (pElem = NIL);
+    end;
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_Name_AnsiString():AnsiString;inline;
-Var
-  elem: TRecloserObj;
-Begin
-  Result := '';
-  elem := RecloserClass.GetActiveObj;
-  If elem <> Nil Then Result := elem.Name;
+function Reclosers_Get_Name_AnsiString(): Ansistring; inline;
+var
+    elem: TRecloserObj;
+begin
+    Result := '';
+    elem := RecloserClass.GetActiveObj;
+    if elem <> NIL then
+        Result := elem.Name;
 end;
 
-function Reclosers_Get_Name():PAnsiChar;cdecl;
+function Reclosers_Get_Name(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(Reclosers_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_Next():Integer;cdecl;
-Var
-   pElem : TRecloserObj;
+function Reclosers_Get_Next(): Integer; CDECL;
+var
+    pElem: TRecloserObj;
 begin
-     Result := 0;
-     If ActiveCircuit <> Nil Then
-     Begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
         pElem := RecloserClass.ElementList.Next;
-        If pElem <> Nil Then
-        Repeat
-          If pElem.Enabled Then Begin
-              ActiveCircuit.ActiveCktElement := pElem;
-              Result := RecloserClass.ElementList.ActiveIndex;
-          End
-          Else pElem := RecloserClass.ElementList.Next;
-        Until (Result > 0) or (pElem = nil);
-     End;
+        if pElem <> NIL then
+            repeat
+                if pElem.Enabled then
+                begin
+                    ActiveCircuit.ActiveCktElement := pElem;
+                    Result := RecloserClass.ElementList.ActiveIndex;
+                end
+                else
+                    pElem := RecloserClass.ElementList.Next;
+            until (Result > 0) or (pElem = NIL);
+    end;
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Set_Name(const Value: PAnsiChar);cdecl;
+procedure Reclosers_Set_Name(const Value: PAnsiChar); CDECL;
 // Set element active by name
 
 begin
-     If ActiveCircuit <> Nil Then
-     Begin
-          If RecloserClass.SetActive(Value) Then
-          Begin
-               ActiveCircuit.ActiveCktElement := RecloserClass.ElementList.Active ;
-          End
-          Else Begin
-              DoSimpleMsg('Recloser "'+ Value +'" Not Found in Active Circuit.', 77003);
-          End;
-     End;
+    if ActiveCircuit <> NIL then
+    begin
+        if RecloserClass.SetActive(Value) then
+        begin
+            ActiveCircuit.ActiveCktElement := RecloserClass.ElementList.Active;
+        end
+        else
+        begin
+            DoSimpleMsg('Recloser "' + Value + '" Not Found in Active Circuit.', 77003);
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_MonitoredTerm():Integer;cdecl;
+function Reclosers_Get_MonitoredTerm(): Integer; CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  Result := 0;
-  elem := RecloserClass.GetActiveObj  ;
-  if elem <> nil then Result := elem.MonitoredElementTerminal ;
+    Result := 0;
+    elem := RecloserClass.GetActiveObj;
+    if elem <> NIL then
+        Result := elem.MonitoredElementTerminal;
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Set_MonitoredTerm(Value: Integer);cdecl;
+procedure Reclosers_Set_MonitoredTerm(Value: Integer); CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  elem := RecloserClass.GetActiveObj ;
-  if elem <> nil then Set_parameter('monitoredterm', IntToStr(Value));
+    elem := RecloserClass.GetActiveObj;
+    if elem <> NIL then
+        Set_parameter('monitoredterm', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_SwitchedObj_AnsiString():AnsiString;inline;
+function Reclosers_Get_SwitchedObj_AnsiString(): Ansistring; inline;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  Result := '';
-  elem := RecloserClass.ElementList.Active ;
-  if elem <> nil then Result := elem.ElementName  ;
+    Result := '';
+    elem := RecloserClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.ElementName;
 end;
 
-function Reclosers_Get_SwitchedObj():PAnsiChar;cdecl;
+function Reclosers_Get_SwitchedObj(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(Reclosers_Get_SwitchedObj_AnsiString());
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Set_SwitchedObj(const Value: PAnsiChar);cdecl;
+procedure Reclosers_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  elem := RecloserClass.GetActiveObj ;
-  if elem <> nil then Set_parameter('SwitchedObj', Value);
+    elem := RecloserClass.GetActiveObj;
+    if elem <> NIL then
+        Set_parameter('SwitchedObj', Value);
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_MonitoredObj_AnsiString():AnsiString;inline;
+function Reclosers_Get_MonitoredObj_AnsiString(): Ansistring; inline;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  Result := '';
-  elem := RecloserClass.GetActiveObj  ;
-  if elem <> nil then Result := elem.MonitoredElementName;
+    Result := '';
+    elem := RecloserClass.GetActiveObj;
+    if elem <> NIL then
+        Result := elem.MonitoredElementName;
 end;
 
-function Reclosers_Get_MonitoredObj():PAnsiChar;cdecl;
+function Reclosers_Get_MonitoredObj(): PAnsiChar; CDECL;
 begin
     Result := DSS_GetAsPAnsiChar(Reclosers_Get_MonitoredObj_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_SwitchedTerm():Integer;cdecl;
+function Reclosers_Get_SwitchedTerm(): Integer; CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  Result := 0;
-  elem := RecloserClass.GetActiveObj  ;
-  if elem <> nil then Result := elem.ElementTerminal  ;
+    Result := 0;
+    elem := RecloserClass.GetActiveObj;
+    if elem <> NIL then
+        Result := elem.ElementTerminal;
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Set_MonitoredObj(const Value: PAnsiChar);cdecl;
+procedure Reclosers_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  elem := RecloserClass.GetActiveObj ;
-  if elem <> nil then Set_parameter('monitoredObj', Value);
+    elem := RecloserClass.GetActiveObj;
+    if elem <> NIL then
+        Set_parameter('monitoredObj', Value);
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Set_SwitchedTerm(Value: Integer);cdecl;
+procedure Reclosers_Set_SwitchedTerm(Value: Integer); CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  elem := RecloserClass.GetActiveObj ;
-  if elem <> nil then Set_parameter('SwitchedTerm', IntToStr(Value));
+    elem := RecloserClass.GetActiveObj;
+    if elem <> NIL then
+        Set_parameter('SwitchedTerm', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_NumFast():Integer;cdecl;
+function Reclosers_Get_NumFast(): Integer; CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  Result := 0;
-  elem := RecloserClass.ElementList.Active;  ;
-  if elem <> nil then Result := elem.NumFast ;
+    Result := 0;
+    elem := RecloserClass.ElementList.Active;
+    ;
+    if elem <> NIL then
+        Result := elem.NumFast;
 end;
 //------------------------------------------------------------------------------
-PROCEDURE Reclosers_Get_RecloseIntervals(var ResultPtr: PDouble; ResultCount: PInteger);cdecl;
+procedure Reclosers_Get_RecloseIntervals(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 // return reclose intervals in seconds
-VAR
-  Result: PDoubleArray;
-  elem: TRecloserObj;
-  i, k: Integer;
-Begin
-  Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-  Result[0] := -1.0;
-  IF ActiveCircuit <> Nil THEN
-  Begin
-      elem := RecloserClass.ElementList.Active;
-      If elem <> Nil Then
-      Begin
-        DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, (elem.NumReclose-1) + 1);
-        k:=0;
-        for i := 1 to elem.NumReclose  do
-        Begin
-            Result[k] := elem.RecloseIntervals ^[i];
-            Inc(k);
-        End;
-      End;
-  End;
+var
+    Result: PDoubleArray;
+    elem: TRecloserObj;
+    i, k: Integer;
+begin
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    Result[0] := -1.0;
+    if ActiveCircuit <> NIL then
+    begin
+        elem := RecloserClass.ElementList.Active;
+        if elem <> NIL then
+        begin
+            DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, (elem.NumReclose - 1) + 1);
+            k := 0;
+            for i := 1 to elem.NumReclose do
+            begin
+                Result[k] := elem.RecloseIntervals^[i];
+                Inc(k);
+            end;
+        end;
+    end;
 end;
-PROCEDURE Reclosers_Get_RecloseIntervals_GR();cdecl;
+
+procedure Reclosers_Get_RecloseIntervals_GR(); CDECL;
 // Same as Reclosers_Get_RecloseIntervals but uses global result (GR) pointers
 begin
-   Reclosers_Get_RecloseIntervals(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    Reclosers_Get_RecloseIntervals(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 
 //------------------------------------------------------------------------------
-function Reclosers_Get_Shots():Integer;cdecl;
+function Reclosers_Get_Shots(): Integer; CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  Result := 0;
-  elem := RecloserClass.ElementList.Active;  ;
-  if elem <> nil then Result := elem.NumReclose + 1;
+    Result := 0;
+    elem := RecloserClass.ElementList.Active;
+    ;
+    if elem <> NIL then
+        Result := elem.NumReclose + 1;
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Set_NumFast(Value: Integer);cdecl;
+procedure Reclosers_Set_NumFast(Value: Integer); CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  elem := RecloserClass.ElementList.Active  ;
-  if elem <> nil then Set_parameter('numfast', IntToStr(Value));
+    elem := RecloserClass.ElementList.Active;
+    if elem <> NIL then
+        Set_parameter('numfast', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Set_Shots(Value: Integer);cdecl;
+procedure Reclosers_Set_Shots(Value: Integer); CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  elem := RecloserClass.ElementList.Active  ;
-  if elem <> nil then Set_parameter('shots', IntToStr(Value));
+    elem := RecloserClass.ElementList.Active;
+    if elem <> NIL then
+        Set_parameter('shots', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_PhaseTrip():Double;cdecl;
+function Reclosers_Get_PhaseTrip(): Double; CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  Result := 0;
-  elem := RecloserClass.ElementList.Active;
-  if elem <> nil then Result := elem.PhaseTrip;
+    Result := 0;
+    elem := RecloserClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.PhaseTrip;
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Set_PhaseTrip(Value: Double);cdecl;
+procedure Reclosers_Set_PhaseTrip(Value: Double); CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  elem := RecloserClass.ElementList.Active  ;
-  if elem <> nil then Set_parameter('PhaseTrip', Format('%.g',[Value]));
+    elem := RecloserClass.ElementList.Active;
+    if elem <> NIL then
+        Set_parameter('PhaseTrip', Format('%.g', [Value]));
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_GroundInst():Double;cdecl;
+function Reclosers_Get_GroundInst(): Double; CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  Result := 0;
-  elem := RecloserClass.ElementList.Active;
-  if elem <> nil then Result := elem.GroundInst;
+    Result := 0;
+    elem := RecloserClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.GroundInst;
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_GroundTrip():Double;cdecl;
+function Reclosers_Get_GroundTrip(): Double; CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  Result := 0;
-  elem := RecloserClass.ElementList.Active;
-  if elem <> nil then Result := elem.GroundTrip;
+    Result := 0;
+    elem := RecloserClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.GroundTrip;
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_PhaseInst():Double;cdecl;
+function Reclosers_Get_PhaseInst(): Double; CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  Result := 0;
-  elem := RecloserClass.ElementList.Active;
-  if elem <> nil then Result := elem.PhaseInst;
+    Result := 0;
+    elem := RecloserClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.PhaseInst;
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Set_GroundInst(Value: Double);cdecl;
+procedure Reclosers_Set_GroundInst(Value: Double); CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  elem := RecloserClass.ElementList.Active  ;
-  if elem <> nil then Set_parameter('GroundInst', Format('%.g',[Value]));
+    elem := RecloserClass.ElementList.Active;
+    if elem <> NIL then
+        Set_parameter('GroundInst', Format('%.g', [Value]));
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Set_GroundTrip(Value: Double);cdecl;
+procedure Reclosers_Set_GroundTrip(Value: Double); CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  elem := RecloserClass.ElementList.Active  ;
-  if elem <> nil then Set_parameter('GroundTrip', Format('%.g',[Value]));
+    elem := RecloserClass.ElementList.Active;
+    if elem <> NIL then
+        Set_parameter('GroundTrip', Format('%.g', [Value]));
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Set_PhaseInst(Value: Double);cdecl;
+procedure Reclosers_Set_PhaseInst(Value: Double); CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  elem := RecloserClass.ElementList.Active  ;
-  if elem <> nil then Set_parameter('Phaseinst', Format('%.g',[Value]));
+    elem := RecloserClass.ElementList.Active;
+    if elem <> NIL then
+        Set_parameter('Phaseinst', Format('%.g', [Value]));
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Close();cdecl;
+procedure Reclosers_Close(); CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  elem := RecloserClass.ElementList.Active  ;
-  if elem <> nil then Set_parameter('Action', 'close');
+    elem := RecloserClass.ElementList.Active;
+    if elem <> NIL then
+        Set_parameter('Action', 'close');
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Open();cdecl;
+procedure Reclosers_Open(); CDECL;
 var
-  elem: TRecloserObj;
+    elem: TRecloserObj;
 begin
-  elem := RecloserClass.ElementList.Active  ;
-  if elem <> nil then Set_parameter('Action', 'open');
+    elem := RecloserClass.ElementList.Active;
+    if elem <> NIL then
+        Set_parameter('Action', 'open');
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_idx():Integer;cdecl;
+function Reclosers_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> Nil then
-       Result := RecloserClass.ElementList.ActiveIndex
-    else Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := RecloserClass.ElementList.ActiveIndex
+    else
+        Result := 0;
 end;
 //------------------------------------------------------------------------------
-procedure Reclosers_Set_idx(Value: Integer);cdecl;
-Var
-    pRecloser:TRecloserObj;
+procedure Reclosers_Set_idx(Value: Integer); CDECL;
+var
+    pRecloser: TRecloserObj;
 begin
-    if ActiveCircuit <> Nil then   Begin
+    if ActiveCircuit <> NIL then
+    begin
         pRecloser := RecloserClass.Elementlist.Get(Value);
-        If pRecloser <> Nil Then ActiveCircuit.ActiveCktElement := pRecloser;
-    End;
+        if pRecloser <> NIL then
+            ActiveCircuit.ActiveCktElement := pRecloser;
+    end;
 end;
 //------------------------------------------------------------------------------
-END.
+end.
