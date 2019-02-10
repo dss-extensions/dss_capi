@@ -55,7 +55,6 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      Types,
      SyncObjs,
      YMatrix,
-     fMonitor,     // by Dahei
      VSource
 ;
 
@@ -214,7 +213,6 @@ VAR
    SpectrumClass      :Array of TSpectrum;
    SolutionClass      :Array of TDSSClass;
    EnergyMeterClass   :Array of TEnergyMeter;
-   FMonitorClass      :Array of TDSSFMonitor;      // By dahei UCF
    // FeederClass        :TFeeder;
    MonitorClass       :Array of TDSSMonitor;
    SensorClass        :Array of TSensor;
@@ -1104,7 +1102,6 @@ initialization
    SetLength(ActorMA_Msg,CPU_Cores + 1);
    SetLength(ActiveVSource,CPU_Cores + 1);
 
-   setlength(FMonitorClass,CPU_Cores + 1);    // by Dahei UCF
    // Init pointer repositories for the EnergyMeter in multiple cores
 
    SetLength(OV_MHandle,CPU_Cores + 1);

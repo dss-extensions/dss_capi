@@ -10,7 +10,7 @@ unit PCElement;
 
 interface
 
-USES CktElement, ucomplex, DSSClass, Spectrum, Arraydef, Meterelement,Fmonitor;
+USES CktElement, ucomplex, DSSClass, Spectrum, Arraydef, Meterelement;
 
 TYPE
    TPCElement = class(TDSSCktElement)
@@ -30,14 +30,6 @@ TYPE
 
        MeterObj,  {Upline Energymeter}
        SensorObj  :TMeterElement; // Upline Sensor for this element
-       {by Dahei}
-       FMonObj : TFMonitorObj;
-       cluster_num : integer;
-       NdNumInCluster : integer;
-       nVLeaders : integer;   // How many virtual leaders for this pcelement
-       FMonObj2 : TFMonitorObj;
-       cluster_num2 : integer;
-       NdNumInCluster2 : integer;
 
        InjCurrent:pComplexArray;
 

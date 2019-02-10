@@ -138,11 +138,7 @@ USES
      ESPVLControl,
      IndMach012,
      GICsource,
-     AutoTrans,
-     //by Dahei
-     Generic5OrderMach,
-     // By Dahei
-     FMonitor
+     AutoTrans
 ;
 
 
@@ -221,9 +217,6 @@ Begin
      DSSClasses.New               := TUPFCControl.Create;
      DSSClasses.New               := TESPVLControl.Create;
      DSSClasses.New               := TIndMach012.Create;
-     {by Dahei}
-     DSSClasses.New               := TGeneric5.Create;
-
      DSSClasses.New               := TGICsource.Create; // GIC source
      DSSClasses.New               := TAutoTrans.Create; // Auto Transformer
 
@@ -255,10 +248,6 @@ Begin
      NumUserClasses := 0;
 
    {Add user-defined objects}
-   //by Dahei
-       FMonitorClass[ActiveActor]   := TDSSFMonitor.Create;  // Have to do this AFTER Generator
-       DSSClasses.New               := FMonitorClass[ActiveActor];
-
 
    {This feature has been disabled - doesn't work in IIS}
 
