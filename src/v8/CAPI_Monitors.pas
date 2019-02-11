@@ -658,7 +658,7 @@ var
 begin
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-
+        ReadMonitorHeader(Header, TRUE);
         Result := Header.Version;
     end;
 
