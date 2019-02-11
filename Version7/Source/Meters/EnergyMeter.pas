@@ -2697,7 +2697,7 @@ end;
 procedure TEnergyMeterObj.CalcReliabilityIndices(AssumeRestoration: Boolean);
 var
     PD_Elem: TPDElement;
-    pSection: TFeederSection;
+    pSection: ^TFeederSection;
     idx: Integer;
     pBus: TDSSBus;
     dblNcusts: Double;
@@ -2770,21 +2770,19 @@ begin
         PD_Elem := SequenceList.Get(idx);
         PD_Elem.CalcCustInterrupts;
 
-    // Populate the Section properties
-        pSection := FeederSections^[PD_Elem.BranchSectionID];
-        begin
-            Inc(pSection.NCustomers, PD_Elem.BranchNumCustomers); // Sum up num Customers on this Section
-            Inc(pSection.NBranches, 1); // Sum up num branches on this Section
-            pBus := ActiveCircuit.Buses^[PD_Elem.Terminals^[PD_Elem.ToTerminal].BusRef];
-            DblInc(pSection.SumBranchFltRates, pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate);
-            DblInc(pSection.SumFltRatesXRepairHrs, (pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate * PD_Elem.HrsToRepair));
-            if PD_Elem.HasOCPDevice then
-            begin  // set Section properties
-                pSection.OCPDeviceType := GetOCPDeviceType(PD_Elem);
-                pSection.SeqIndex := idx;  // index of pdelement with OCP device at head of section
-                pSection.TotalCustomers := PD_Elem.BranchTotalCustomers;
-                pSection.SectFaultRate := PD_Elem.AccumulatedBrFltRate;
-            end;
+        // Populate the Section properties
+        pSection := @FeederSections^[PD_Elem.BranchSectionID];
+        Inc(pSection.NCustomers, PD_Elem.BranchNumCustomers); // Sum up num Customers on this Section
+        Inc(pSection.NBranches, 1); // Sum up num branches on this Section
+        pBus := ActiveCircuit.Buses^[PD_Elem.Terminals^[PD_Elem.ToTerminal].BusRef];
+        DblInc(pSection.SumBranchFltRates, pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate);
+        DblInc(pSection.SumFltRatesXRepairHrs, (pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate * PD_Elem.HrsToRepair));
+        if PD_Elem.HasOCPDevice then
+        begin  // set Section properties
+            pSection.OCPDeviceType := GetOCPDeviceType(PD_Elem);
+            pSection.SeqIndex := idx;  // index of pdelement with OCP device at head of section
+            pSection.TotalCustomers := PD_Elem.BranchTotalCustomers;
+            pSection.SectFaultRate := PD_Elem.AccumulatedBrFltRate;
         end;
 
 {$IFDEF DEBUG}
