@@ -1410,7 +1410,7 @@ Begin
        SkipkWCharge     := FALSE;
 
        //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
-       S := MonitoredElement.Power[ElementTerminal, ActorID];  // Power in active terminal
+       S := MonitoredElement.MaxPower[ElementTerminal, ActorID];  // Power in active terminal
        PDiff  := S.re * 0.001 - FkWTargetLow;  // Assume S.re is normally positive
 
        ActualkW := FleetkW;
