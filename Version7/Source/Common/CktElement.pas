@@ -41,6 +41,7 @@ TYPE
       FUNCTION  Get_NextBus:String;
       FUNCTION  Get_Losses:Complex;   // Get total losses for property...
       FUNCTION  Get_Power(idxTerm:Integer):Complex;    // Get total complex power in active terminal
+      FUNCTION  Get_MaxPower(idxTerm:Integer):Complex;    // Get eauivalent total complex power in active terminal based on phase with max current
 
       PROCEDURE DoYprimCalcs(Ymatrix: TCMatrix);
 
@@ -142,6 +143,7 @@ TYPE
       Property NextBus:String         read Get_NextBus;    // null string if no more values
       Property Losses:Complex         read Get_Losses;
       Property Power[idxTerm:Integer]:Complex  read Get_Power;  // Total power in active terminal
+      Property MaxPower[idxTerm:Integer]:Complex  read Get_MaxPower;  // Total power in active terminal
       Property ActiveTerminalIdx:Integer       read FActiveTerminal      write Set_ActiveTerminal;
       Property Closed[Index:Integer]:Boolean   read Get_ConductorClosed  write Set_ConductorClosed;
       PROCEDURE SumCurrents;
@@ -687,6 +689,57 @@ Begin
    Result := cLoss;
 
 End;
+
+function TDSSCktElement.Get_MaxPower(idxTerm: Integer): Complex;
+{Get power in the phase with the max current and return equivalent power as if it were balanced in all phases
+ 2/12/2019}
+VAR
+   cPower    : Complex;
+   i, k,
+   nref      : Integer;
+   MaxCurr,
+   CurrMag   : Double;
+   MaxPhase  : Integer;
+
+Begin
+
+   ActiveTerminalIdx := idxTerm;   // set active Terminal
+
+   If FEnabled Then Begin
+       ComputeIterminal;
+
+    // Method: Get power in the phase with max current of active terminal
+    // Multiply by Nphases and return
+
+       MaxCurr := 0.0;
+       MaxPhase := 1;  // Init this so it has a non zero value
+       k := (idxTerm -1)*Fnconds; // starting index of terminal
+       For i := 1 to Fnphases do Begin
+          CurrMag := Cabs(Iterminal[k+i]);
+          If CurrMag > MaxCurr Then Begin
+             MaxCurr := CurrMag;
+             MaxPhase := i
+          End;
+       End;
+
+       nref := ActiveTerminal.TermNodeRef^[k+MaxPhase]; // grounded node will give zero
+       WITH ActiveCircuit.Solution DO     // Get power into max phase of active terminal
+          Cpower := Cmul(NodeV^[nref], conjg(Iterminal[k+MaxPhase]) ) ;
+
+       // Compute equivalent total power of all phases assuming equal to max power in all phases
+       With Cpower Do Begin
+           re := re * Fnphases;  // let compiler handle type coercion
+           im := im * Fnphases;
+       End;
+
+       {If this is a positive sequence circuit (Fnphases=1),
+        then we need to multiply by 3 to get the 3-phase power}
+        IF   ActiveCircuit.PositiveSequence
+        THEN cPower := cMulReal(cPower, 3.0);
+   End;
+
+   Result := cPower;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 PROCEDURE TDSSCktElement.GetPhasePower( PowerBuffer:pComplexArray);
