@@ -1199,7 +1199,8 @@ Begin
        SkipkWDispatch   := FALSE;
 
        //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
-       S := MonitoredElement.Power[ElementTerminal];  // Power in active terminal
+       S := MonitoredElement.MaxPower[ElementTerminal];  // Total Power in active terminal
+                                                         // based on max phase current
        CASE  DischargeMode of
              // Following Load; try to keep load below kW Target
              MODEFOLLOW: Begin
