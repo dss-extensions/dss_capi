@@ -1,24 +1,27 @@
-[![Travis-CI: Linux and MacOS build status](https://travis-ci.org/PMeira/dss_capi.svg?branch=master)](https://travis-ci.org/PMeira/dss_capi)
-[![AppVeyor: Windows build status](https://ci.appveyor.com/api/projects/status/vky40m4kj99nlxyc/branch/master?svg=true)](https://ci.appveyor.com/project/PMeira/dss-capi/branch/master)
+[![Travis-CI: estado de compilação em Linux e MacOS](https://travis-ci.com/dss-extensions/dss_capi.svg?branch=master)](https://travis-ci.com/dss-extensions/dss_capi)
+[![AppVeyor: estado de compilação em Windows](https://ci.appveyor.com/api/projects/status/vky40m4kj99nlxyc/branch/master?svg=true)](https://ci.appveyor.com/project/dss-extensions/dss-capi/branch/master)
 
-*For an English version of this file, see [README.md](https://github.com/PMeira/dss_capi/blob/master/README.md).*
+*For an English version of this file, see [README.md](https://github.com/dss-extensions/dss_capi/blob/master/README.md).*
 
 # DSS C-API: Uma interface (não oficial) para o OpenDSS do EPRI
 
-Esta biblioteca expõe o motor do OpenDSS/OpenDSS-PM (v7/v8) através de uma interface C plana, que tenta reproduzir a maioria dos métodos COM. De fato, a maior parte do código foi inicialmente derivado dos arquivos da implementação COM. O DLL resultante pode ser usado diretamente ou através de módulos de interface, como o módulo `DSS Python`. DSS Python representa um módulo para linguagem Python que imita a mesma estrutura do módulo COM (como exposto via `win32com` ou `comtypes`), efetivamente nos permitindo alcançar compatilibilidade multi-plataforma a nível de Python. Suporte para um módulo similar em .NET está disponível a partir da versão 0.9.4. Suporte para MATLAB é esperado logo após o lançamento da versão 0.10.0 e outras linguagens como Julia e Java estão sob avaliação.
+Esta biblioteca expõe o motor do OpenDSS/OpenDSS-PM (v7/v8) através de uma interface C plana, que tenta reproduzir a maioria dos métodos COM. De fato, a maior parte do código foi inicialmente derivado dos arquivos da implementação COM. O DLL resultante pode ser usado diretamente ou através de módulos de interface, como o módulo `DSS Python`. DSS Python representa um módulo para linguagem Python que imita a mesma estrutura do módulo COM (como exposto via `win32com` ou `comtypes`), efetivamente nos permitindo alcançar compatilibilidade multi-plataforma a nível de Python. Também há suporte para outras linguagens diversas -- caso tenha interesse numa linguagem não suportada, abra um novo "issue".
 
 <p align="center">
-    <img alt="Visão geral dos repositórios relacionados" src="https://raw.githubusercontent.com/PMeira/dss_capi/master/docs/images/repomap.svg?sanitize=true" width=600>
+    <img alt="Visão geral dos repositórios relacionados" src="https://raw.githubusercontent.com/dss-extensions/dss_capi/master/docs/images/repomap.svg?sanitize=true" width=600>
 </p>
 
-Se você está procurando o módulo para Python, veja [DSS Python](http://github.com/PMeira/dss_python/).
+Caso procure integração com outras linguagens de programação:
 
-Caso procure integração com .NET/C#, o código agora tem seu repositório próprio em [DSS Sharp](http://github.com/PMeira/dss_sharp/).
+- [DSS Python](http://github.com/dss-extensions/dss_python/) é o módulo Python multi-plataforma (Windows, Linux, MacOS) bastante compatível com o módulo COM. Veja também [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) caso não precise de compatibilidade com COM, ou deseje empregar as funcionalidades extras do módulo (inclusive em conjunto).
+- [OpenDSSDirect.jl](http://github.com/dss-extensions/OpenDSSDirect.jl/) é um módulo em Julia, criado por Tom Short, que recentemente passou a empregar DSS C-API no lugar do DLL direto.
+- [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) para .NET/C#, no momento apenas Windows. Em breve também será possível usá-lo via COM.
+- [DSS MATLAB](http://github.com/dss-extensions/dss_sharp/) permite integração multi-plataforma (Windows, Linux, MacOS) bastante compatível com o módulo COM, de fato contorna algumas dificuldades de COM.
 
-Versão 0.10.0, baseada no OpenDSS SVN r2395.
+Versão 0.10.1, baseada no OpenDSS SVN r2504.
 
 Apesar de o objetivo principal (compatibilidade com COM) ter sido alcançado, este é um sempre um trabalho em andamento.
-*Observe que, enquanto a interface clássica (v7 + aprimoramentos) é estável, a interface para o OpenDSS-PM (v8, baseada em atores e execução paralela) ainda é experimental.* Em 0.10.0, a interface v8 está bem mais estável que na versão 0.9.8 da DSS C-API.
+*Observe que, enquanto a interface clássica (v7 + aprimoramentos) é estável, a interface para o OpenDSS-PM (v8, baseada em atores e execução paralela) ainda é experimental.* A partir da versão 0.10, a interface v8 está bem mais estável que na versão 0.9.8 da DSS C-API.
 
 Ao invés de usar parâmetros numéricos como na interface DDLL oficial, cada propriedade COM foi exposta como um par de funções. Por exemplo, a propriedade `kVA` das cargas é exposta como:
 
@@ -33,11 +36,12 @@ Com exceção de detalhes de baixo nível como gerenciamento de memória, a maio
 
 Este repositório contém apenas o código fonte da API customizada.
 
-De forma a rastrear as mudanças no repositório SVN oficial, uma versão modificada do código fonte do OpenDSS está disponível em [electricdss-src](https://github.com/PMeira/electricdss-src). Este repositório inclui pequenas melhorias, melhor compatibilidade com Free Pascal e adaptação de novas funcionalidades da versão 8 para a versão 7.
+De forma a rastrear as mudanças no repositório SVN oficial, uma versão modificada do código fonte do OpenDSS está disponível em [electricdss-src](https://github.com/dss-extensions/electricdss-src). Este repositório inclui pequenas melhorias, melhor compatibilidade com Free Pascal e adaptação de novas funcionalidades da versão 8 para a versão 7.
 
 ## Mudanças recentes
 
-- **2018-11-17 / versão 0.10.0: Reduz o número de operações de alocação de memória se os buffers atuais forem reutilizados, introduz o mecanismo de Resultado Global, várias extensões de API (`LineGeometry`, `WireData`, `LineSpacing`, `CNData`, `TSData`, `Reactor`) -- veja [o documento de uso](https://github.com/PMeira/dss_capi/blob/master/docs/usage.md)(em inglês) e o [ticket #11](https://github.com/PMeira/dss_capi/issues/11).**
+- **2019-02-12 / version 0.10.1: Verificação de erros mais ampla, introdução da função `Error_Get_NumberPtr`, correções e melhor tratamento em `Meters`. Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) para listagem detalhada.**
+- 2018-11-17 / versão 0.10.0: Reduz o número de operações de alocação de memória se os buffers atuais forem reutilizados, introduz o mecanismo de Resultado Global, várias extensões de API (`LineGeometry`, `WireData`, `LineSpacing`, `CNData`, `TSData`, `Reactor`) -- veja [o documento de uso](https://github.com/dss-extensions/dss_capi/blob/master/docs/usage.md)(em inglês) e o [ticket #11](https://github.com/dss-extensions/dss_capi/issues/11).
 - 2018-08-10 / versão 0.9.8: Grande reorganização do código fonte, várias pequenas correções, e novos scripts de compilação.
 - 2018-04-05 / versão 0.9.5: Novas funções `Circuit_SetCktElement*` para definir o elemento de circuito ativo.
 - 2018-03-06 / versão 0.9.4: Correções para DSSProperty, inclui os textos de ajuda originais no header C, integra modificações oficiais até a revisão 2152. Esta versão introduz a primeira versão de bindings de .NET para o DLL nativo.
@@ -48,12 +52,16 @@ De forma a rastrear as mudanças no repositório SVN oficial, uma versão modifi
 ## Funcionalidades faltantes e limitações
 
 - Ainda não implementados:
-    - `DSSEvents` de `DLL/ImplEvents.pas`: parece ser muito depende de COM.
+    - `DSSEvents` de `DLL/ImplEvents.pas`: parece ser muito dependente de COM.
     - Gráficos em geral
     
 ## Funcionalides extras
 
 Além da grande maioria dos métodos da interface COM, alguns dos métodos únicos da DDLL oficial (como acesso a ponteiros internos) foram expostos em formas adaptadas. Entre eles estão métodos de `DYMatrix.pas`, em especial `GetCompressedYMatrix` (veja os headers ou código fonte em Pascal para maiores detalhes).
+
+## Download
+
+[Siga aqui](https://github.com/dss-extensions/dss_capi/releases). Disponibilizados downloads pré-compilados para Windows, Linux e MacOS. 
 
 ## Como compilar?
 
@@ -63,8 +71,8 @@ Caso deseje compilar o DLL:
 
 - Clone este repositório e a versão modificada do repositório do OpenDSS, mantendo-os na mesma pasta:
 ```    
-    git clone https://github.com/PMeira/electricdss-src
-    git clone https://github.com/PMeira/dss_capi
+    git clone https://github.com/dss-extensions/electricdss-src
+    git clone https://github.com/dss-extensions/dss_capi
 ```
 
 ### No Windows
@@ -82,7 +90,7 @@ Para o processo de compilação no Windows, o arquivo `KLUSolve.dll` da distribu
 
 Os arquivos de saída do processo são depositados na subpasta `lib/win_x64`. 
 
-Caso precise apenas dos DLLs para versões ainda não lançadas, você pode encontrar os DLLs e LIBs para x64 nos [artefatos da instância do AppVeyor](https://ci.appveyor.com/project/PMeira/dss-capi/branch/master/artifacts). Estes arquivos são criados automaticamente a cada commit neste repositório e são mantidos por 6 meses.
+Caso precise apenas dos DLLs para versões ainda não lançadas, você pode encontrar os DLLs e LIBs para x64 nos [artefatos da instância do AppVeyor](https://ci.appveyor.com/project/dss-extensions/dss-capi/branch/master/artifacts). Estes arquivos são criados automaticamente a cada commit neste repositório e são mantidos por 6 meses.
 
 ### No Linux
 
@@ -126,7 +134,7 @@ Para MacOS, você pode copiar o `libklusolve.dylib` do repositório SVN do OpenD
 
 ## Como usar e exemplos
 
-Para entender os principais conceitos da DSS C-API e como ela gerencia memória, veja [o documento de uso](https://github.com/PMeira/dss_capi/blob/master/docs/usage.md)(em inglês).
+Para entender os principais conceitos da DSS C-API e como ela gerencia memória, veja [o documento de uso](https://github.com/dss-extensions/dss_capi/blob/master/docs/usage.md)(em inglês).
 
 Dois exemplos mínimos (sem scripts DSS, use um dos seus) estão disponíveis em [examples](examples). Após compilar a DSS C-API, adicione aos parâmetros de compilação a subpasta da pasta `include` apropriada (`include/v7` ou `include/v8`), e a biblioteca da pasta `lib` para seu sistema. O código dos exemplos, com seus comentários traduzidos para português, também estão disponíveis abaixo.
 
@@ -251,16 +259,15 @@ int main(void)
 
 ## Testes
 
-Atualmente, todos os testes e validação são baseados no [DSS Python](http://github.com/PMeira/dss_python/).
+Atualmente, todos os testes e validação são baseados no [DSS Python](http://github.com/dss-extensions/dss_python/). Outros projetos como [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) e [OpenDSSDirect.jl](http://github.com/dss-extensions/OpenDSSDirect.jl/) contêm testes que foram importantes para encontrar e corrigir bugs.
 
 ## Planos
 
 Além de correções de problemas, a funcionalidade principal desta biblioteca está pronta. Alguns pontos que pretendemos trabalhar envolvem:
-- Expor os principais métodos e propriedades faltantes, assim como classes
-- Documentação melhor e mais completa. As strings de ajuda dos arquivos de definição IDL/COM já estão reproduzidos nos headers (pasta `include`).
+- Expor os principais métodos e propriedades faltantes (não presentes nem mesmo na interface COM), assim como classes.
+- Documentação melhor e mais completa. As strings de ajuda dos arquivos de definição IDL/COM já estão reproduzidos nos headers (pasta `include`), mas apenas em inglês.
 - Validação automatizada dos binários no Linux (comparação das saídas com a versão Windows e oficial).
 - C++: Expor a API em C++ usando namespaces para organização, métodos com overload, etc.
-
 
 Outras funções desejadas podem necessitar de mudanças invasivas na base de código provavelmente serão desenvolvidas inicialmente em um repositório a parte.
 

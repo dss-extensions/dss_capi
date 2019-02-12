@@ -1,6 +1,6 @@
 #ifndef DSS_CAPI_V8_DLL_H
 #define DSS_CAPI_V8_DLL_H
-#define DSS_CAPI_V8_VERSION "0.10.0"
+#define DSS_CAPI_V8_VERSION "0.10.1"
 #ifndef DSS_CAPI_V8_DLL
 //#define DSS_CAPI_V8_DLL __declspec(dllimport)
 #define DSS_CAPI_V8_DLL
