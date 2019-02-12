@@ -713,8 +713,8 @@ VAR
 
 Begin
 
-   ActiveTerminalIdx := idxTerm;   // set active Terminal
-
+   ActiveTerminalIdx  :=  idxTerm;   // set active Terminal
+   Cpower             :=  CZERO;
    If FEnabled Then Begin
        ComputeIterminal(ActorID);
 
