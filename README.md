@@ -5,7 +5,7 @@
 
 # DSS C-API: An unofficial C API for EPRI's OpenDSS
 
-This library exposes the OpenDSS/OpenDSS-PM engine in a plain C interface that tries to reproduce most of the COM methods. In fact, most of the code is derived from the COM implementation files. The resulting DLL can be using directly or through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level. There is also support for some other programming languages -- if you need support for a language not listed below, please open a new issue and we will evaluate that language.
+This library exposes the OpenDSS/OpenDSS-PM engine in a plain C interface that tries to reproduce most of the COM methods. In fact, most of the code is derived from the COM implementation files. The resulting DLL can be using directly or through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level. There is also support for some other programming languages — if you need support for a language not listed below, please open a new issue and we will evaluate that language.
 
 <p align="center">
     <img alt="Overview of related repositories" src="https://raw.githubusercontent.com/dss-extensions/dss_capi/master/docs/images/repomap.svg?sanitize=true" width=600>
@@ -13,7 +13,7 @@ This library exposes the OpenDSS/OpenDSS-PM engine in a plain C interface that t
 
 If you are looking for the bindings to other languages:
 
-- [DSS Python](http://github.com/dss-extensions/dss_python/) is a multi-platform Python module (Windows, Linux, MacOS) very compatible with the original COM DLL. See also [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) if you don't need COM compatibility, or just would like to check its extra funcionalities (you can mix DSS Python and OpenDSSDirect.py).
+- [DSS Python](http://github.com/dss-extensions/dss_python/) is a multi-platform Python module (Windows, Linux, MacOS) very compatible with the original COM DLL. See also [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) if you don't need COM compatibility, or just would like to check its extra functionalities (you can mix DSS Python and OpenDSSDirect.py).
 - [OpenDSSDirect.jl](http://github.com/dss-extensions/OpenDSSDirect.jl/) is a Julia module, created by Tom Short (@tshort), recently migrated with the help of Dheepak Krishnamurthy (@kdheepak) to DSS C-API instead of the DDLL.
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) is available for .NET/C#, also mimics the COM classes, but Windows-only at the moment. Soon it will be possible to use it via COM too.
 - [DSS MATLAB](http://github.com/dss-extensions/dss_sharp/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible bastante with the COM classes.
@@ -34,7 +34,7 @@ Besides low-level details such as memory management, most of the COM documentati
 
 **Starting in version 0.9.8, we disabled the `opendsscmd.ini` creation. You can set the default base frequency using the environment variable DSS_BASE_FREQUENCY, or just set it in the DSS scripts (recommended). This also means that the initial datapath is set to the current working directory.**
 
-This repository contains only the the custom API source code.
+This repository contains only the custom API source code.
 In order to track upstream changes in the official SVN repository, a custom patched version of the source code with changes to build v8/OpenDSS-PM with Free Pascal, as well as port recent features to the v7/Classic version, is maintained in the repository at [electricdss-src](https://github.com/dss-extensions/electricdss-src).
 
 ## Recent changes
@@ -162,7 +162,7 @@ If you have any question, feel free to open a ticket on GitHub or contact me thr
 Please allow me a few days to respond.
 
 
-## Credits / Acknowlegement
+## Credits / Acknowledgment
 
 This project is derived from EPRI's OpenDSS and the same license is used. See `LICENSE` and `OPENDSS_LICENSE`, also check each subfolder for more details.
 
