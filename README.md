@@ -1,5 +1,5 @@
 [![Travis-CI: Linux and MacOS build status](https://travis-ci.com/dss-extensions/dss_capi.svg?branch=master)](https://travis-ci.com/dss-extensions/dss_capi)
-[![AppVeyor: Windows build status](https://ci.appveyor.com/api/projects/status/vky40m4kj99nlxyc/branch/master?svg=true)](https://ci.appveyor.com/project/dss-extensions/dss-capi/branch/master)
+[![AppVeyor: Windows build status](https://ci.appveyor.com/api/projects/status/eekf7ry9d0cy4k1b?svg=true)](https://ci.appveyor.com/project/PMeira/dss-capi-u9ben)
 
 *Para uma versão em português deste arquivo, veja [README.pt-BR.md](https://github.com/dss-extensions/dss_capi/blob/master/README.pt-BR.md).*
 
