@@ -141,7 +141,7 @@ Type
         TotalCustomers       : Integer;
         SeqIndex             : Integer;  // index of pdelement with OCP device at head of section
         AverageRepairTime    : double;
-        SectFaultRate       : Double;
+        SectFaultRate        : Double;
         SumFltRatesXRepairHrs: double;
         SumBranchFltRates    : double;
     End;
@@ -2276,13 +2276,13 @@ begin
 
     Case ActiveCircuit.ReductionStrategy of
 
-         rsStubs:         DoReduceStubs(BranchList);    {See ReduceAlgs.Pas}
+         rsShortlines:         DoReduceShortLines(BranchList);    {See ReduceAlgs.Pas}
          {rsTapEnds:       DoReduceTapEnds (BranchList);}
          rsMergeParallel: DoMergeParallelLines(BranchList);
          rsDangling:      DoReduceDangling(BranchList);
          rsBreakLoop:     DoBreakLoops(BranchList);
          rsSwitches:      DoReduceSwitches(BranchList);
-         rsLaterals:      DoReduceLaterals(BranchList);
+         rsLaterals:      DoRemoveAll_1ph_Laterals(BranchList);
     Else
        {Default}
        DoReduceDefault(BranchList);
