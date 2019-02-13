@@ -14,7 +14,7 @@ Esta biblioteca expõe o motor do OpenDSS/OpenDSS-PM (v7/v8) através de uma int
 Caso procure integração com outras linguagens de programação:
 
 - [DSS Python](http://github.com/dss-extensions/dss_python/) é o módulo Python multi-plataforma (Windows, Linux, MacOS) bastante compatível com o módulo COM. Veja também [OpenDSSDirect.py](http://github.com/dss-extensions/OpenDSSDirect.py/) caso não precise de compatibilidade com COM, ou deseje empregar as funcionalidades extras do módulo (inclusive em conjunto).
-- [OpenDSSDirect.jl](http://github.com/dss-extensions/OpenDSSDirect.jl/) é um módulo em Julia, criado por Tom Short, que recentemente passou a empregar DSS C-API no lugar do DLL direto.
+- [OpenDSSDirect.jl](http://github.com/dss-extensions/OpenDSSDirect.jl/) é um módulo em Julia, criado por Tom Short (@tshort), que recentemente passou a empregar DSS C-API no lugar do DLL direto com a ajuda de Dheepak Krishnamurthy (@kdheepak).
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) para .NET/C#, no momento apenas Windows. Em breve também será possível usá-lo via COM.
 - [DSS MATLAB](http://github.com/dss-extensions/dss_sharp/) permite integração multi-plataforma (Windows, Linux, MacOS) bastante compatível com o módulo COM, de fato contorna algumas dificuldades de COM.
 
