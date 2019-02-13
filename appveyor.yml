@@ -2,7 +2,7 @@ image: Visual Studio 2017
 clone_folder: c:\dss_capi
 build_script:
 - cmd: >-
-    git clone https://github.com/PMeira/electricdss-src.git c:\electricdss-src
+    git clone https://github.com/dss-extensions/electricdss-src.git c:\electricdss-src
 
     "c:\Program Files\Git\bin\bash" -c "bash ./make_metadata.sh"
 
