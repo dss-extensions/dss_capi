@@ -704,7 +704,7 @@ VAR
 Begin
 
    ActiveTerminalIdx := idxTerm;   // set active Terminal
-
+   cPower	     := CZERO;
    If FEnabled Then Begin
        ComputeIterminal;
 

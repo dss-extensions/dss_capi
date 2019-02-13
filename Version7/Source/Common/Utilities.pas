@@ -75,7 +75,7 @@ FUNCTION  GetCktElementIndex(const FullObjName :String) :Integer;
 FUNCTION  IsShuntElement(const Elem:TDSSCktElement):Boolean;
 FUNCTION  IsLineElement(const Elem:TDSSCktElement):Boolean;
 FUNCTION  IsTransformerElement(const Elem:TDSSCktElement):Boolean;
-Function  IsStubLine(const Elem:TDSSCktElement):Boolean;
+// --- moved to ReduceAlgs 2/13/19 Function  IsStubLine(const Elem:TDSSCktElement):Boolean;
 FUNCTION  CheckParallel(const Line1, Line2:TDSSCktElement): Boolean;
 FUNCTION  AllTerminalsClosed(ThisElement:TDSSCktElement):Boolean;
 FUNCTION  Str_Real(Const Value :Double; NumDecimals :Integer) :String;
@@ -1220,24 +1220,7 @@ Begin
 
 End;
 
-Function IsStubLine(const Elem:TDSSCktElement):Boolean;
-Var
-   Ztest:Double;
-   LineElement: TLineObj;
-   
-Begin
-     LineElement :=  TLineObj(Elem);
-     {Get Positive Sequence or equivalent from matrix}
-     If LineElement.SymComponentsModel Then With LineElement Do Ztest := Cabs(Cmplx(R1, X1)) * Len
-     Else {Get impedance from Z matrix}  {Zs - Zm}
-         With LineElement Do Begin
-            If NPhases>1 Then Ztest := Cabs(Csub(Z.Getelement(1,1), Z.GetElement(1,2))) * Len
-            Else Ztest := Cabs(Z.Getelement(1,1)) * Len;
-         End;
 
-     If Ztest <= ActiveCircuit.ReductionZmag Then Result := True Else Result := False;
-
-End;
 
 //----------------------------------------------------------------------------
 FUNCTION  GetCktElementIndex(const FullObjName:String):Integer;
