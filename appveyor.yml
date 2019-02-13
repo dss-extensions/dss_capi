@@ -42,7 +42,7 @@ build_script:
 deploy:
 - provider: GitHub
   auth_token:
-    secure: L6m26mQzEqO+j2OyLZGzerFWTQAwHyO2S9dKC2SRMwJkqQo8PazeZpXj/kkWsHK+
+    secure: 1eYtGksCZWZwjLNNMl5yjUoCDdEg9z1/6DdnR7fSU2wWUcKkp0Hpy0K2uvVYYEWK
   artifact: /.*\.zip/
   draft: true
   force_update: true
