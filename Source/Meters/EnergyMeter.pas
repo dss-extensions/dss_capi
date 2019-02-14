@@ -2258,7 +2258,7 @@ begin
 
     Case ActiveCircuit[ActorID].ReductionStrategy of
 
-         rsStubs:         DoReduceStubs(BranchList);    {See ReduceAlgs.Pas}
+         rsShortlines:    DoReduceShortlines(BranchList);    {See ReduceAlgs.Pas}
          {rsTapEnds:       DoReduceTapEnds (BranchList);}
          rsMergeParallel: DoMergeParallelLines(BranchList);
          rsDangling:      DoReduceDangling(BranchList);

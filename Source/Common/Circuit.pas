@@ -30,7 +30,7 @@ USES
      math, Sparse_Math;
 
 TYPE
-    TReductionStrategy = (rsDefault, rsStubs, {rsTapEnds,} rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches, rsLaterals);
+    TReductionStrategy = (rsDefault, rsShortlines, {rsTapEnds,} rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches, rsLaterals);
 
     CktElementDef = RECORD
         CktElementClass:Integer;
