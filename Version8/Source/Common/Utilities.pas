@@ -20,6 +20,7 @@ Procedure FireOffEditor(FileNm:String);
 Procedure DoDOSCmd(CmdString:String);
 Function  StripExtension(const S:String):String;
 Function  StripClassName(const S:String):String;  // Return only element name sans class.
+Function  GetNodeString(const Busname:String):String;
 Function  Pad(Const S:String; Width:Integer):String;
 Function  PadDots(Const S:String; Width:Integer):String;
 Function  PadTrunc(Const S:String; Width:Integer):String;
@@ -3120,6 +3121,17 @@ Begin
      Else
          Result := 'Unknown';
      end;
+End;
+
+Function GetNodeString(const Busname:String):String;
+Var
+   dotpos:Integer;
+
+Begin
+      dotpos     := pos('.', BusName);
+      If dotpos = 0
+         Then  Result := ''
+         Else  Result := Copy(BusName, dotpos, length(BusName));    // preserve node designations if any
 End;
 
 initialization
