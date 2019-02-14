@@ -145,7 +145,7 @@ procedure DoReduceShortlines( Var BranchList:TCktTree );
 {Eliminate short lines and merge with lines on either side}
 Var
    LineElement1, LineElement2:TLineObj;
-   LoadElement:TLoadObj;
+   ShuntElement : TDSSCktElement;
    ParentNode:TCktTreeNode;
 
 begin
@@ -186,11 +186,11 @@ begin
                                If LineElement2.MergeWith(LineElement1, TRUE) Then {Move any loads to ToBus Reference of downline branch}
                                 If ParentNode.NumShuntObjects>0 Then Begin
                                    {Redefine bus connection for PC elements hanging on the bus that is eliminated}
-                                   LoadElement :=  ParentNode.FirstShuntObject;
-                                   While LoadElement <> Nil Do  Begin
-                                     Parser[ActiveActor].CmdString := 'bus1="' +ActiveCircuit[ActiveActor].BusList.Get(ToBusReference)+'"';
-                                     LoadElement.Edit(ActiveActor);
-                                     LoadElement :=  ParentNode.NextShuntObject;
+                                   ShuntElement :=  ParentNode.FirstShuntObject;
+                                   While ShuntElement <> Nil Do  Begin
+                                     Parser[ActiveActor].CmdString := 'bus1="' +ActiveCircuit[ActiveActor].BusList.Get(ToBusReference) + GetNodeString(ShuntElement.GetBus(1) ) + '"';
+                                     ShuntElement.Edit(ActiveActor);
+                                     ShuntElement :=  ParentNode.NextShuntObject;
                                    End;  {While}
                                 End; {IF}
                           End; {IF}
@@ -205,11 +205,11 @@ begin
                          If LineElement2.MergeWith(LineElement1, TRUE) Then
                           If FirstChildBranch.NumShuntObjects>0 Then Begin
                                {Redefine bus connection to upline bus}
-                               LoadElement :=  FirstChildBranch.FirstShuntObject;
-                               While LoadElement <> Nil Do Begin
-                                 Parser[ActiveActor].CmdString := 'bus1="' +ActiveCircuit[ActiveActor].BusList.Get(FromBusReference)+'"';
-                                 LoadElement.Edit(ActiveActor);
-                                 LoadElement :=  FirstChildBranch.NextShuntObject;
+                               ShuntElement :=  FirstChildBranch.FirstShuntObject;
+                               While ShuntElement <> Nil Do Begin
+                                 Parser[ActiveActor].CmdString := 'bus1="' +ActiveCircuit[ActiveActor].BusList.Get(FromBusReference) + GetNodeString(ShuntElement.GetBus(1) ) + '"';
+                                 ShuntElement.Edit(ActiveActor);
+                                 ShuntElement :=  FirstChildBranch.NextShuntObject;
                                End;  {While}
                           End; {IF}
                      End; {IF not}
