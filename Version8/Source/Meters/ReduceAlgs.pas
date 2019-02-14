@@ -15,7 +15,7 @@ interface
 Uses CktTree, PDELement;
 
   procedure DoReduceDefault(Var BranchList:TCktTree);
-  procedure DoReduceStubs( Var BranchList:TCktTree );
+  procedure DoReduceShortlines( Var BranchList:TCktTree );
   procedure DoReduceDangling(var BranchList:TCktTree);
 {  procedure DoReduceTapEnds(var BranchList:TCktTree);}
   procedure DoBreakLoops(var BranchList:TCktTree);
@@ -122,9 +122,27 @@ begin
 
 end;
 
+Function IsShortLine(const Elem:TDSSCktElement):Boolean;
+Var
+   Ztest:Double;
+   LineElement: TLineObj;
 
-procedure DoReduceStubs( Var BranchList:TCktTree );
-{Eliminate short stubs and merge with lines on either side}
+Begin
+     LineElement :=  TLineObj(Elem);
+     {Get Positive Sequence or equivalent from matrix}
+     If LineElement.SymComponentsModel Then With LineElement Do Ztest := Cabs(Cmplx(R1, X1)) * Len
+     Else {Get impedance from Z matrix}  {Zs - Zm}
+         With LineElement Do Begin
+            If NPhases>1 Then Ztest := Cabs(Csub(Z.Getelement(1,1), Z.GetElement(1,2))) * Len
+            Else Ztest := Cabs(Z.Getelement(1,1)) * Len;
+         End;
+
+     If Ztest <= ActiveCircuit[ActiveActor].ReductionZmag Then Result := True Else Result := False;
+
+End;
+
+procedure DoReduceShortlines( Var BranchList:TCktTree );
+{Eliminate short lines and merge with lines on either side}
 Var
    LineElement1, LineElement2:TLineObj;
    LoadElement:TLoadObj;
@@ -137,7 +155,7 @@ begin
         LineElement1 := BranchList.GoForward; // Always keep the first element
          WHILE LineElement1 <> NIL Do  Begin
              If IsLineElement(LineElement1) Then  Begin
-                 If IsStubLine(LineElement1)
+                 If IsShortLine(LineElement1)
                  Then LineElement1.Flag := TRUE   {Too small: Mark for merge with something}
                  Else  LineElement1.Flag := FALSE;
              End; {IF}

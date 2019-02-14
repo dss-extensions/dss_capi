@@ -153,6 +153,7 @@ begin
    While iProp >0 Do
      Begin
       str:= trim(PropertyValue[iProp]);
+      if Comparetext(str, '----')=0 then str:=''; // set to ignore this property
       if Length(str)>0 then  Begin
           With ParentClass Do Write(F,' ', PropertyName^[RevPropertyIdxMap[iProp]]);
           Write(F, '=', CheckForBlanks(str));
