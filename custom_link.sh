@@ -16,3 +16,5 @@ else
 fi
 
 $1/ppas.sh
+rm -f $1/ppas.sh $1/link.res $1/linksyms.fpc
+
