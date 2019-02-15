@@ -307,15 +307,9 @@ Begin
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+{$IF NOT (Defined(CPUX64) or Defined(Darwin) or Defined(Unix))}
 function RCDSUM( Data:Pointer; Count:Integer): Extended; register;
-
-{$IF (Defined(CPUX64) or Defined(Darwin))}
-
-begin
-  Result := 0.0;
-end;
-
-{$ELSE ! CPUX86}
 
 // Sums an array of doubles quickly
 
@@ -376,7 +370,7 @@ BEGIN
     StdDev := Data^[1];
     Exit;
   end;
-{$IF (Defined(CPUX64) or Defined(Darwin))}
+{$IF (Defined(CPUX64) or Defined(Darwin) or Defined(Unix))}
   Mean := 0.0;
   for i := 1 to NData do Mean := Mean + Data^[i];
   Mean := Mean / Ndata;
