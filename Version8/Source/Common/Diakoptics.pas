@@ -13,7 +13,7 @@ interface
 
 uses
   Circuit, Solution, DSSGlobals, SysUtils, DSSClassDefs, EnergyMeter,
-  SolutionAlgs,
+  SolutionAlgs, Line,
   {$IFDEF FPC}CmdForms{$ELSE}DSSForms, ScriptEdit{$ENDIF};
 
 Function Solve_Diakoptics():Integer;
@@ -31,6 +31,8 @@ implementation
 Uses
   ExecHelper, Executive, ParserDel, YMatrix, KLUSolve, Ucomplex, Sparse_Math,
   UcMatrix, math;
+
+
 
 {*******************************************************************************
 *              This is the A-Diakoptics algorithm executed by the              *
