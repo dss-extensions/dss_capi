@@ -1,8 +1,8 @@
 # electricdss-src
-This includes a filtered copy of the [OpenDSS SVN repository](https://svn.code.sf.net/p/electricdss/code/trunk), including only the relevant source-code for the [dss_capi](https://github.com/PMeira/dss_capi/) project.
+This includes a filtered copy of the [OpenDSS SVN repository](https://svn.code.sf.net/p/electricdss/code/trunk), including only the relevant source-code for the [dss_capi](https://github.com/dss-extensions/dss_capi/) project.
 
 <p align="center">
-    <img alt="Overview of related repositories" src="https://raw.githubusercontent.com/PMeira/electricdss-src/master/docs/images/repomap.svg?sanitize=true" width=600>
+    <img alt="Overview of related repositories" src="https://raw.githubusercontent.com/dss-extensions/electricdss-src/master/docs/images/repomap.svg?sanitize=true" width=600>
 </p>
 
 The upstream copy is on branch `opendss-official-svn`, while the `master` branch will contain specific modifications, including:
@@ -26,4 +26,4 @@ git svn fetch -r2162:HEAD
 
 This will skip those bad revisions. If you need the full history, you can just remove the long `--ignore-paths="..."` parameter. For fetching new SVN branches, you can use `git svn rebase`.
 
-For an equivalent repository containing only DSS scripts (tests and examples), see [electricdss-tst](https://github.com/PMeira/electricdss-tst/).
+For an equivalent repository containing only DSS scripts (tests and examples), see [electricdss-tst](https://github.com/dss-extensions/electricdss-tst/).
