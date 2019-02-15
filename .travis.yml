@@ -16,7 +16,22 @@ matrix:
         - tar zxf suitesparse.tar.gz
         - mv SuiteSparse ..
         - docker run --rm -v `pwd`/..:/io -e TRAVIS_TAG="${TRAVIS_TAG}" $DOCKER_IMAGE bash /io/dss_capi/ci/build_linux_x64.sh
-#        - docker run --rm -v `pwd`/..:/io -e TRAVIS_TAG="${TRAVIS_TAG}" $DOCKER_IMAGE bash /io/dss_capi/ci/build_linux_x86.sh
+        - ls -lR lib
+        
+    - name: "linux_x86"
+      os: linux
+      sudo: required
+      env: DOCKER_IMAGE=pmeira/manylinux_wheel_cmake_fpc_i686
+      services:
+        - docker
+      install:
+        - docker pull $DOCKER_IMAGE
+      script: 
+        - git clone https://github.com/dss-extensions/electricdss-src ../electricdss-src
+        - wget http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-5.3.0.tar.gz -O suitesparse.tar.gz -q
+        - tar zxf suitesparse.tar.gz
+        - mv SuiteSparse ..
+        - docker run --rm -v `pwd`/..:/io -e TRAVIS_TAG="${TRAVIS_TAG}" $DOCKER_IMAGE bash /io/dss_capi/ci/build_linux_x86.sh
         - ls -lR lib
         
     - name: "osx_x64"
