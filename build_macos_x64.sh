@@ -5,7 +5,7 @@ export LDFLAGS=-L`pwd`/lib/darwin_x64/
 if [ ! -d "build/units_v7_x64" ]; then
     mkdir build/units_v7_x64
 fi
-fpc -Px86_64 @src/v7/darwin-x64.cfg -B src/v7/dss_capi_v7.lpr
+fpc @src/v7/darwin-x64.cfg -B src/v7/dss_capi_v7.lpr
 bash custom_link.sh lib/darwin_x64
 
 # Make the lib look in the same folder for KLUSolve
@@ -18,7 +18,7 @@ install_name_tool -id "@loader_path/./libdss_capi_v7.dylib" "$DSS_CAPI_LIB"
 if [ ! -d "build/units_v8_x64" ]; then
     mkdir build/units_v8_x64
 fi
-fpc -Px86_64 @src/v8/darwin-x64.cfg -B src/v8/dss_capi_v8.lpr
+fpc @src/v8/darwin-x64.cfg -B src/v8/dss_capi_v8.lpr
 bash custom_link.sh lib/darwin_x64
 
 DSS_CAPI_LIB="lib/darwin_x64/libdss_capi_v8.dylib"

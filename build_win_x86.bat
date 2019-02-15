@@ -20,7 +20,7 @@ if not exist .\build\units_v8_x86 (
 ) 
 
 if exist ..\electricdss-src\Version7\Source\Common\DSSGlobals.pas (
-    fpc -Pi386 @src\v7\windows-x86.cfg -B src\v7\dss_capi_v7.lpr
+    fpc @src\v7\windows-x86.cfg -B src\v7\dss_capi_v7.lpr
     if errorlevel 1 exit /B 1
     if exist lib\win_x86\dss_capi_v7.dll (
         where /q dumpbin
@@ -43,7 +43,7 @@ if exist ..\electricdss-src\Version7\Source\Common\DSSGlobals.pas (
         exit /B 1
     )
 
-    fpc -Pi386 @src\v8\windows-x86.cfg -B src\v8\dss_capi_v8.lpr
+    fpc @src\v8\windows-x86.cfg -B src\v8\dss_capi_v8.lpr
     if errorlevel 1 exit /B 1
     if exist lib\win_x86\dss_capi_v8.dll (
         where /q dumpbin

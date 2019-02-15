@@ -16,6 +16,7 @@ matrix:
         - tar zxf suitesparse.tar.gz
         - mv SuiteSparse ..
         - docker run --rm -v `pwd`/..:/io -e TRAVIS_TAG="${TRAVIS_TAG}" $DOCKER_IMAGE bash /io/dss_capi/ci/build_linux_x64.sh
+#        - docker run --rm -v `pwd`/..:/io -e TRAVIS_TAG="${TRAVIS_TAG}" $DOCKER_IMAGE bash /io/dss_capi/ci/build_linux_x86.sh
         - ls -lR lib
         
     - name: "osx_x64"
