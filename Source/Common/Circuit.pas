@@ -25,7 +25,7 @@ interface
 USES
      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
      DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
-     AutoAdd, EnergyMeter, NamedObject, CktTree, 
+     AutoAdd, EnergyMeter, NamedObject, CktTree,
      {$IFNDEF FPC}MeTIS_Exec, {$IFDEF MSWINDOWS}Graphics, vcl.dialogs, {$ENDIF} {$ENDIF}
      math, Sparse_Math;
 
@@ -320,6 +320,7 @@ TYPE
           Function GetBusAdjacentPCLists(ActorID: integer): TAdjArray;
           function Tear_Circuit(): Integer;                            // Tears the circuit considering the number of Buses of the original Circuit
           procedure Save_SubCircuits();
+          function get_Line_Bus(LName: String; NBus: Integer):String;
           procedure  get_longest_path();
           function Append2PathsArray(New_Path :  array of integer): Integer;//  appends a new path to the array and returns the index(1D)
           procedure Normalize_graph();
@@ -1039,6 +1040,52 @@ Begin
 End;
 
 {*******************************************************************************
+*       Delivers the name of the bus at the specific line and terminal         *
+*******************************************************************************}
+Function TDSSCircuit.get_Line_Bus(LName: String; NBus: Integer):String;
+VAR
+    i,
+    activesave  : integer;
+    pLine       : TLineObj;
+    S           : String;
+    Found       : Boolean;
+    NBuses      : Array of String;
+Begin
+
+  setlength(NBuses,2);
+  IF ActiveCircuit[ActiveActor] <> NIL THEN
+  Begin      // Search list of Lines in active circuit for name
+    WITH ActiveCircuit[ActiveActor].Lines DO
+    Begin
+      S := LName;  // Convert to Pascal String
+      Found := FALSE;
+      ActiveSave := ActiveIndex;
+      pLine := First;
+      While pLine <> NIL Do
+      Begin
+        IF (CompareText(pLine.Name, S) = 0) THEN
+        Begin
+          ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
+          Found := TRUE;
+          Break;
+        End;
+        pLine := Next;
+      End;
+      IF NOT Found THEN
+      Begin
+        DoSimpleMsg('Line "'+S+'" Not Found in Active Circuit.', 5008);
+        pLine := Get(ActiveSave);    // Restore active Line
+        ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
+      End;
+    End;
+    For i := 1 to  ActiveCircuit[ActiveActor].ActiveCktElement.Nterms Do
+        NBuses[i-1] := ActiveCircuit[ActiveActor].ActiveCktElement.GetBus(i);
+    // returns the name of the desired bus
+    Result  :=  NBuses[NBus - 1];
+  End;
+end;
+
+{*******************************************************************************
 *         This routine tears the circuit into many pieces as CPUs are          *
 *         available in the local computer (in the best case)                   *
 ********************************************************************************}
@@ -1227,10 +1274,14 @@ Begin
 
         // Determines the best place to connect the EnergyMeter
              Term_volts[0]      :=  Term_volts[0] - Term_volts[1];
-             if Term_volts[0] >= 0 then jj  :=  0
-             else   jj  :=  1;
-             BusName          :=  Inc_Mat_Cols[Active_Cols[jj]];
-             Terminal         :=  'terminal=' + inttostr(jj + 1);
+//             if Term_volts[0] >= 0 then jj  :=  0   // Forces to use always the first terminal
+//             else   jj  :=  1;                            // removes the line.
+             jj               :=  ansipos('.',Link_Branches[i]);
+             BusName          :=  get_line_bus(Link_Branches[i].Substring(jj),2);
+             jj               :=  ansipos('.',BusName);     // removes the dot
+             if jj > 0 then
+               BusName          :=  BusName.Substring(0,jj - 1);
+             Terminal         :=  'terminal=1';
 
              PConn_Names[i]   :=  BusName;
              SetActiveBus(BusName);           // Activates the Bus
