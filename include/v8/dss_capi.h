@@ -5453,6 +5453,7 @@ extern "C" {
         ControlModes_Static = 0, // Control Mode option - Static
         ControlModes_Event = 1, // Control Mode Option - Event driven solution mode
         ControlModes_Time = 2, // Control mode option - Time driven mode
+        ControlModes_Multirate = 3 // Control mode option - Multirate mode
         ControlModes_ControlOff = -1 // Control Mode OFF
     };
 
