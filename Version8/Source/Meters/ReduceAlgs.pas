@@ -30,6 +30,10 @@ implementation
 
 Uses Line, Utilities, DSSGlobals, Load, uComplex, ParserDel, CktElement, sysutils, ExecHelper, Bus;
 
+Const
+     SERIESMERGE:Boolean = True;
+     PARALLELMERGE:Boolean = False;
+
 procedure DoMergeParallelLines(var BranchList:TCktTree);
 {Merge all lines in this zone that are marked in parallel}
 
@@ -166,54 +170,62 @@ begin
         LineElement1 := BranchList.GoForward; // Always keep the first element
          WHILE LineElement1 <> NIL Do
           Begin
-             If LineElement1.Flag Then  // Merge this element out
+             if LineElement1.enabled then    // else skip
+
+             If LineElement1.Flag Then  // too short; Merge this element out
              Begin
-               With BranchList.PresentBranch Do
+               With BranchList Do
                Begin
-                 If (NumChildBranches=0) and (NumShuntObjects=0) Then  LineElement1.Enabled := False     // just discard it
+                 If (PresentBranch.NumChildBranches=0) and (PresentBranch.NumShuntObjects=0) Then  LineElement1.Enabled := False     // just discard it
                  Else
-                 If (NumChildBranches=0) OR (NumChildBranches>1) then
-                 {Merge with Parent and move loads on parent to To node}
-                   Begin
-                      ParentNode := ParentBranch;
-                      If ParentNode <> Nil Then Begin
-                          If ParentNode.NumChildBranches=1 Then   // only works for in-line
-                          If Not ActiveCircuit[ActiveActor].Buses^[ParentNode.ToBusReference].Keep Then Begin
-                             {Let's consider merging}
-                             LineElement2 := ParentNode.CktObject;
-                             If LineElement2.enabled Then  // Check to make sure it hasn't been merged out
-                             If IsLineElement(LineElement2) Then
-                               If LineElement2.MergeWith(LineElement1, TRUE) Then {Move any loads to ToBus Reference of downline branch}
-                                If ParentNode.NumShuntObjects>0 Then Begin
-                                   {Redefine bus connection for PC elements hanging on the bus that is eliminated}
-                                   ShuntElement :=  ParentNode.FirstShuntObject;
-                                   While ShuntElement <> Nil Do  Begin
-                                     Parser[ActiveActor].CmdString := 'bus1="' +ActiveCircuit[ActiveActor].BusList.Get(ToBusReference) + GetNodeString(ShuntElement.GetBus(1) ) + '"';
-                                     ShuntElement.Edit(ActiveActor);
-                                     ShuntElement :=  ParentNode.NextShuntObject;
-                                   End;  {While}
-                                End; {IF}
-                          End; {IF}
-                      End; {IF ParentNode}
-                   End
-                 Else Begin{Merge with child}
-                    IF Not ActiveCircuit[ActiveActor].Buses^[ToBusReference].Keep then
+                  If (PresentBranch.NumChildBranches=0) {****OR (PresentBranch.NumChildBranches>1)**} then                    {Merge with Parent and move shunt elements to TO node on parent branch}
                      Begin
-                       {Let's consider merging}
-                        LineElement2 := FirstChildBranch.CktObject;
-                        If IsLineElement(LineElement2) Then
-                         If LineElement2.MergeWith(LineElement1, TRUE) Then
-                          If FirstChildBranch.NumShuntObjects>0 Then Begin
-                               {Redefine bus connection to upline bus}
-                               ShuntElement :=  FirstChildBranch.FirstShuntObject;
-                               While ShuntElement <> Nil Do Begin
-                                 Parser[ActiveActor].CmdString := 'bus1="' +ActiveCircuit[ActiveActor].BusList.Get(FromBusReference) + GetNodeString(ShuntElement.GetBus(1) ) + '"';
-                                 ShuntElement.Edit(ActiveActor);
-                                 ShuntElement :=  FirstChildBranch.NextShuntObject;
-                               End;  {While}
-                          End; {IF}
-                     End; {IF not}
-                  End; {ELSE}
+                        ParentNode := PresentBranch.ParentBranch;
+                        If ParentNode <> Nil Then Begin
+                            If ParentNode.NumChildBranches=1 Then   // only works for in-line
+                              If Not ActiveCircuit[ActiveActor].Buses^[PresentBranch.ToBusReference].Keep Then Begin     // Check Keeplist
+                                 {Let's consider merging}
+                                 LineElement2 := ParentNode.CktObject;
+                                 If LineElement2.enabled Then  // Check to make sure it hasn't been merged out
+                                 If IsLineElement(LineElement2) Then
+                                   If LineElement2.MergeWith(LineElement1, SERIESMERGE) Then Begin {Move any loads to ToBus Reference of parent branch}
+                                      If ParentNode.NumShuntObjects>0 Then Begin
+                                         {Redefine bus connection for PC elements hanging on the bus that is eliminated}
+                                         ShuntElement :=  ParentNode.FirstShuntObject;
+                                         While ShuntElement <> Nil Do  Begin
+                                           Parser[ActiveActor].CmdString := 'bus1="' +ActiveCircuit[ActiveActor].BusList.Get(PresentBranch.ToBusReference) + GetNodeString(ShuntElement.GetBus(1) ) + '"';
+                                           ShuntElement.Edit(ActiveActor);
+                                          ShuntElement :=  ParentNode.NextShuntObject;
+                                         End;  {While}
+                                      End; {IF}
+                                   //+++ LineElement1 := BranchList.GoForward; // skip to next branch since we eliminated a bus
+                                   End;
+                              End; {IF}
+                        End; {IF ParentNode}
+                     End
+                  Else
+                    If (PresentBranch.NumChildBranches=1) Then {Merge with child}
+                     Begin
+                      IF Not ActiveCircuit[ActiveActor].Buses^[PresentBranch.ToBusReference].Keep then    // check keeplist
+                       Begin
+                         {Let's consider merging}
+                          LineElement2 := PresentBranch.FirstChildBranch.CktObject; // child of PresentBranch
+                          If LineElement2.enabled Then  // Check to make sure it hasn't been merged out
+                          If IsLineElement(LineElement2) Then
+                           If LineElement2.MergeWith(LineElement1, SERIESMERGE) Then Begin
+                                If PresentBranch.NumShuntObjects>0 Then Begin
+                                 {Redefine bus connection to upline bus}
+                                 ShuntElement :=  PresentBranch.FirstShuntObject;
+                                 While ShuntElement <> Nil Do Begin
+                                   Parser[ActiveActor].CmdString := 'bus1="' + ActiveCircuit[ActiveActor].BusList.Get(PresentBranch.FromBusReference) + GetNodeString(ShuntElement.GetBus(1) ) + '"';
+                                   ShuntElement.Edit(ActiveActor);
+                                   ShuntElement :=  PresentBranch.NextShuntObject;
+                                 End;  {While}
+                             End; {IF}
+                             LineElement1 := BranchList.GoForward; // skip to next branch since we eliminated a bus
+                           End;
+                       End; {IF not}
+                     End; {ELSE}
                End;
              End;
            LineElement1 := BranchList.GoForward;
