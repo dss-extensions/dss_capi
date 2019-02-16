@@ -1846,7 +1846,7 @@ extern "C" {
     Specify dc voltage directly
     */
     DSS_CAPI_V8_DLL void GICSources_Set_Volts(double Value);
-
+    
     /*
     Array of strings containing names of all ISOURCE elements.
     */
@@ -1911,62 +1911,104 @@ extern "C" {
     */
     DSS_CAPI_V8_DLL void ISources_Set_Frequency(double Value);
 
+    /*
+    Number of LineCodes
+    */
     DSS_CAPI_V8_DLL int32_t LineCodes_Get_Count(void);
 
     DSS_CAPI_V8_DLL int32_t LineCodes_Get_First(void);
 
     DSS_CAPI_V8_DLL int32_t LineCodes_Get_Next(void);
 
+    /*
+    Name of active LineCode
+    */
     DSS_CAPI_V8_DLL char* LineCodes_Get_Name(void);
 
     DSS_CAPI_V8_DLL void LineCodes_Set_Name(char* Value);
 
+    /*
+    Flag denoting whether impedance data were entered in symmetrical components
+    */
     DSS_CAPI_V8_DLL uint16_t LineCodes_Get_IsZ1Z0(void);
 
     DSS_CAPI_V8_DLL int32_t LineCodes_Get_Units(void);
 
     DSS_CAPI_V8_DLL void LineCodes_Set_Units(int32_t Value);
 
+    /*
+    Number of Phases
+    */
     DSS_CAPI_V8_DLL int32_t LineCodes_Get_Phases(void);
 
+    /*
+    Number of Phases
+    */
     DSS_CAPI_V8_DLL void LineCodes_Set_Phases(int32_t Value);
 
+    /*
+    Positive-sequence resistance ohms per unit length
+    */
     DSS_CAPI_V8_DLL double LineCodes_Get_R1(void);
 
     DSS_CAPI_V8_DLL void LineCodes_Set_R1(double Value);
 
+    /*
+    Posiive-sequence reactance, ohms per unit length
+    */
     DSS_CAPI_V8_DLL double LineCodes_Get_X1(void);
 
     DSS_CAPI_V8_DLL void LineCodes_Set_X1(double Value);
 
+    /*
+    Zero-Sequence Resistance, ohms per unit length
+    */
     DSS_CAPI_V8_DLL double LineCodes_Get_R0(void);
 
+    /*
+    Zero Sequence Reactance, Ohms per unit length
+    */
     DSS_CAPI_V8_DLL double LineCodes_Get_X0(void);
 
     DSS_CAPI_V8_DLL void LineCodes_Set_R0(double Value);
 
     DSS_CAPI_V8_DLL void LineCodes_Set_X0(double Value);
 
+    /*
+    Zero-sequence capacitance, nF per unit length
+    */
     DSS_CAPI_V8_DLL double LineCodes_Get_C0(void);
 
+    /*
+    Positive-sequence capacitance, nF per unit length
+    */
     DSS_CAPI_V8_DLL double LineCodes_Get_C1(void);
 
     DSS_CAPI_V8_DLL void LineCodes_Set_C0(double Value);
 
     DSS_CAPI_V8_DLL void LineCodes_Set_C1(double Value);
 
+    /*
+    Capacitance matrix, nF per unit length
+    */
     DSS_CAPI_V8_DLL void LineCodes_Get_Cmatrix(double** ResultPtr, int32_t* ResultCount);
     /*
     Same as LineCodes_Get_Cmatrix but using the global buffer interface for results
     */
     DSS_CAPI_V8_DLL void LineCodes_Get_Cmatrix_GR(void);
 
+    /*
+    Resistance matrix, ohms per unit length
+    */
     DSS_CAPI_V8_DLL void LineCodes_Get_Rmatrix(double** ResultPtr, int32_t* ResultCount);
     /*
     Same as LineCodes_Get_Rmatrix but using the global buffer interface for results
     */
     DSS_CAPI_V8_DLL void LineCodes_Get_Rmatrix_GR(void);
 
+    /*
+    Reactance matrix, ohms per unit length
+    */
     DSS_CAPI_V8_DLL void LineCodes_Get_Xmatrix(double** ResultPtr, int32_t* ResultCount);
     /*
     Same as LineCodes_Get_Xmatrix but using the global buffer interface for results
@@ -1979,14 +2021,23 @@ extern "C" {
 
     DSS_CAPI_V8_DLL void LineCodes_Set_Xmatrix(double* ValuePtr, int32_t ValueCount);
 
+    /*
+    Normal Ampere rating
+    */
     DSS_CAPI_V8_DLL double LineCodes_Get_NormAmps(void);
 
     DSS_CAPI_V8_DLL void LineCodes_Set_NormAmps(double Value);
 
+    /*
+    Emergency ampere rating
+    */
     DSS_CAPI_V8_DLL double LineCodes_Get_EmergAmps(void);
 
     DSS_CAPI_V8_DLL void LineCodes_Set_EmergAmps(double Value);
 
+    /*
+    Array of strings with names of all devices
+    */
     DSS_CAPI_V8_DLL void LineCodes_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
     /*
     Same as LineCodes_Get_AllNames but using the global buffer interface for results
@@ -2368,12 +2419,12 @@ extern "C" {
     DSS_CAPI_V8_DLL char* Loads_Get_CVRcurve(void);
 
     /*
-    Percent reduction in Q for percent reduction in V. Must be used with dssLoadModelCVR.
+    Percent reduction in Q for percent reduction in V. Must be used with LoadModelCVR.
     */
     DSS_CAPI_V8_DLL double Loads_Get_CVRvars(void);
 
     /*
-    Percent reduction in P for percent reduction in V. Must be used with dssLoadModelCVR.
+    Percent reduction in P for percent reduction in V. Must be used with LoadModelCVR.
     */
     DSS_CAPI_V8_DLL double Loads_Get_CVRwatts(void);
 
@@ -2684,6 +2735,7 @@ extern "C" {
     Fixed Interval time value, in minutes
     */
     DSS_CAPI_V8_DLL void LoadShapes_Set_MinInterval(double Value);
+
 
     DSS_CAPI_V8_DLL int32_t LoadShapes_New(char* Name);
 
@@ -4098,9 +4150,11 @@ extern "C" {
     DSS_CAPI_V8_DLL char* Settings_Get_AutoBusList(void);
 
     /*
-    {dssMultiphase * | dssPositiveSeq} IIndicate if the circuit model is positive sequence.
+    {Multiphase * | PositiveSeq} Indicate if the circuit model is positive sequence.
     */
     DSS_CAPI_V8_DLL int32_t Settings_Get_CktModel(void);
+
+    DSS_CAPI_V8_DLL void Settings_Set_CktModel(int32_t Value);
 
     /*
     Per Unit maximum voltage for Emergency conditions.
@@ -4141,11 +4195,6 @@ extern "C" {
     List of Buses or (File=xxxx) syntax for the AutoAdd solution mode.
     */
     DSS_CAPI_V8_DLL void Settings_Set_AutoBusList(char* Value);
-
-    /*
-    {dssMultiphase * | dssPositiveSeq} IIndicate if the circuit model is positive sequence.
-    */
-    DSS_CAPI_V8_DLL void Settings_Set_CktModel(int32_t Value);
 
     /*
     Per Unit maximum voltage for Emergency conditions.
@@ -4309,8 +4358,14 @@ extern "C" {
     */
     DSS_CAPI_V8_DLL int32_t Solution_Get_Number(void);
 
+
     /*
-    Randomization mode for random variables "Gaussian" or "Uniform"
+    Randomization mode for random variables "Gaussian", "Uniform" or "LogNormal"
+    */
+    DSS_CAPI_V8_DLL void Solution_Set_Random(int32_t Random);
+
+    /*
+    Randomization mode for random variables "Gaussian", "Uniform" or "LogNormal"
     */
     DSS_CAPI_V8_DLL int32_t Solution_Get_Random(void);
 
@@ -4365,11 +4420,6 @@ extern "C" {
     DSS_CAPI_V8_DLL void Solution_Set_Number(int32_t Value);
 
     /*
-    Randomization mode for random variables "Gaussian" or "Uniform"
-    */
-    DSS_CAPI_V8_DLL void Solution_Set_Random(int32_t Random);
-
-    /*
     Seconds from top of the hour.
     */
     DSS_CAPI_V8_DLL void Solution_Set_Seconds(double Value);
@@ -4397,12 +4447,12 @@ extern "C" {
     DSS_CAPI_V8_DLL char* Solution_Get_ModeID(void);
 
     /*
-    Load Model: {dssPowerFlow (default) | dssAdmittance}
+    Load Model: {PowerFlow (default) | Admittance}
     */
     DSS_CAPI_V8_DLL int32_t Solution_Get_LoadModel(void);
 
     /*
-    Load Model: {dssPowerFlow (default) | dssAdmittance}
+    Load Model: {PowerFlow (default) | Admittance}
     */
     DSS_CAPI_V8_DLL void Solution_Set_LoadModel(int32_t Value);
 
@@ -4427,13 +4477,10 @@ extern "C" {
     DSS_CAPI_V8_DLL void Solution_Set_pctGrowth(double Value);
 
     /*
-    Type of device to add in AutoAdd Mode: {dssGen (Default) | dssCap}
+    Type of device to add in AutoAdd Mode: {AddGen (Default) | AddCap}
     */
     DSS_CAPI_V8_DLL int32_t Solution_Get_AddType(void);
 
-    /*
-    Type of device to add in AutoAdd Mode: {dssGen (Default) | dssCap}
-    */
     DSS_CAPI_V8_DLL void Solution_Set_AddType(int32_t Value);
 
     /*
@@ -4441,9 +4488,6 @@ extern "C" {
     */
     DSS_CAPI_V8_DLL double Solution_Get_GenkW(void);
 
-    /*
-    Generator kW for AutoAdd mode
-    */
     DSS_CAPI_V8_DLL void Solution_Set_GenkW(double Value);
 
     /*
@@ -4467,23 +4511,20 @@ extern "C" {
     DSS_CAPI_V8_DLL void Solution_Set_Capkvar(double Value);
 
     /*
-    Base Solution algorithm: {dssNormalSolve | dssNewtonSolve}
+    Base Solution algorithm: {NormalSolve | NewtonSolve}
     */
     DSS_CAPI_V8_DLL int32_t Solution_Get_Algorithm(void);
 
     /*
-    Base Solution algorithm: {dssNormalSolve | dssNewtonSolve}
+    Base Solution algorithm: {NormalSolve | NewtonSolve}
     */
     DSS_CAPI_V8_DLL void Solution_Set_Algorithm(int32_t Value);
 
     /*
-    {dssStatic* | dssEvent | dssTime}  Modes for control devices
+    {Static* | Event | Time | Off} Modes for control devices (see ControlModes)
     */
     DSS_CAPI_V8_DLL int32_t Solution_Get_ControlMode(void);
-
-    /*
-    {dssStatic* | dssEvent | dssTime}  Modes for control devices
-    */
+    
     DSS_CAPI_V8_DLL void Solution_Set_ControlMode(int32_t Value);
 
     /*
@@ -4781,13 +4822,10 @@ extern "C" {
     DSS_CAPI_V8_DLL int32_t SwtControls_Get_Count(void);
 
     /*
-    Get Normal state of switch
+    Normal state of switch (see ActionCodes) ActionOpen or ActionClose
     */
     DSS_CAPI_V8_DLL int32_t SwtControls_Get_NormalState(void);
 
-    /*
-    set Normal state of switch  (see actioncodes) dssActionOpen or dssActionClose
-    */
     DSS_CAPI_V8_DLL void SwtControls_Set_NormalState(int32_t Value);
 
     /*
@@ -5373,99 +5411,114 @@ extern "C" {
 
 
     enum MonitorModes {
-        MonitorModes_VI = 0x00000000,
-        MonitorModes_Power = 0x00000001,
-        MonitorModes_Sequence = 0x00000010,
-        MonitorModes_Magnitude = 0x00000020,
-        MonitorModes_PosOnly = 0x00000040,
-        MonitorModes_Taps = 0x00000002,
-        MonitorModes_States = 0x00000003
+        MonitorModes_VI = 0x00000000, // Monitor records Voltage and Current at the terminal (Default)
+        MonitorModes_Power = 0x00000001, // Monitor records kW, kvar or kVA, angle values, etc. at the terminal to which it is connected.
+        MonitorModes_Taps = 0x00000002, // For monitoring Regulator and Transformer taps
+        MonitorModes_States = 0x00000003, // For monitoring State Variables (for PC Elements only)
+        MonitorModes_Sequence = 0x00000010, // Reports the monitored quantities as sequence quantities
+        MonitorModes_Magnitude = 0x00000020, // Reports the monitored quantities in Magnitude Only
+        MonitorModes_PosOnly = 0x00000040 // Reports the Positive Seq only or avg of all phases
     };
 
     enum SolveModes {
-        SolveModes_SnapShot = 0x00000000,
-        SolveModes_DutyCycle = 0x00000006,
-        SolveModes_Direct = 0x00000007,
-        SolveModes_Daily = 0x00000001,
-        SolveModes_Monte1 = 0x00000003,
-        SolveModes_Monte2 = 0x0000000A,
-        SolveModes_Monte3 = 0x0000000B,
-        SolveModes_FaultStudy = 0x00000009,
-        SolveModes_Yearly = 0x00000002,
-        SolveModes_MonteFault = 0x00000008,
-        SolveModes_PeakDay = 0x00000005,
-        SolveModes_LD1 = 0x00000004,
-        SolveModes_LD2 = 0x0000000C,
-        SolveModes_AutoAdd = 0x0000000D,
-        SolveModes_Harmonic = 0x0000000F,
-        SolveModes_Dynamic = 0x0000000E
+        SolveModes_SnapShot = 0, // Solve a single snapshot power flow
+        SolveModes_Daily = 1, // Solve following Daily load shapes
+        SolveModes_Yearly = 2, // Solve following Yearly load shapes
+        SolveModes_Monte1 = 3, // Monte Carlo Mode 1
+        SolveModes_LD1 = 4, // Load-duration Mode 1
+        SolveModes_PeakDay = 5, // Solves for Peak Day using Daily load curve
+        SolveModes_DutyCycle = 6, // Solve following Duty Cycle load shapes
+        SolveModes_Direct = 7, // Solve direct (forced admittance model)
+        SolveModes_MonteFault = 8, // Monte carlo Fault Study
+        SolveModes_FaultStudy = 9, // Fault study at all buses
+        SolveModes_Monte2 = 10, // Monte Carlo Mode 2
+        SolveModes_Monte3 = 11, // Monte Carlo Mode 3
+        SolveModes_LD2 = 12, // Load-Duration Mode 2
+        SolveModes_AutoAdd = 13, // Auto add generators or capacitors
+        SolveModes_Dynamic = 14, // Solve for dynamics
+        SolveModes_Harmonic = 15 // Harmonic solution mode
     };
 
-    enum Options {
-        Options_PowerFlow = 0x00000001,
-        Options_Admittance = 0x00000002,
-        Options_NormalSolve = 0x00000000,
-        Options_NewtonSolve = 0x00000001,
-        Options_Static = 0x00000000,
-        Options_Event = 0x00000001,
-        Options_Time = 0x00000002,
-        Options_Multiphase = 0x00000000,
-        Options_PositiveSeq = 0x00000001,
-        Options_Gaussian = 0x00000001,
-        Options_Uniform = 0x00000002,
-        Options_LogNormal = 0x00000003,
-        Options_AddGen = 0x00000001,
-        Options_AddCap = 0x00000002,
-        Options_ControlOFF = 0xFFFFFFFF
+    enum SolutionLoadModels { // Solution_[Get/Set]_LoadModel
+        SolutionLoadModels_PowerFlow = 1, // Power Flow load model option
+        SolutionLoadModels_Admittance = 2 // Admittance load model option
+    };
+
+    enum SolutionAlgorithms { // Solution_[Get/Set]_Algorithm
+        SolutionAlgorithms_NormalSolve = 0, // Solution algorithm option - Normal solution mode
+        SolutionAlgorithms_NewtonSolve = 1 // Solution algorithm option - Newton solution
+    };
+
+    enum ControlModes { // Solution_[Get/Set]_ControlMode
+        ControlModes_Static = 0, // Control Mode option - Static
+        ControlModes_Event = 1, // Control Mode Option - Event driven solution mode
+        ControlModes_Time = 2, // Control mode option - Time driven mode
+        ControlModes_ControlOff = -1 // Control Mode OFF
+    };
+
+    enum CktModels { // Settings_[Get/Set]_CktModel
+        CktModels_Multiphase = 0, // Circuit model is multiphase (default)
+        CktModels_PositiveSeq = 1 // Circuit model is positive sequence model only
+    };
+
+    enum RandomModes { // Solution_[Get/Set]_Random
+        RandomModes_Gaussian = 1, // Gaussian
+        RandomModes_Uniform = 2, // Uniform
+        RandomModes_LogNormal = 3 // Log normal
+    };
+
+    enum AutoAddTypes { // Solution_[Get/Set]_AddType
+        AutoAddTypes_AddGen = 1, // Add generators in AutoAdd mode
+        AutoAddTypes_AddCap = 2 // Add capacitors in AutoAdd mode
     };
 
     enum CapControlModes {
-        CapControlModes_Voltage = 0x00000001,
-        CapControlModes_KVAR = 0x00000002,
-        CapControlModes_Current = 0x00000000,
-        CapControlModes_PF = 0x00000004,
-        CapControlModes_Time = 0x00000003
+        CapControlModes_Current = 0, // Current control, ON and OFF settings on CT secondary
+        CapControlModes_Voltage = 1, // Voltage control, ON and OFF settings on the PT secondary base
+        CapControlModes_KVAR = 2, // kVAR control, ON and OFF settings on PT / CT base
+        CapControlModes_Time = 3, // Time control, ON and OFF settings are seconds from midnight
+        CapControlModes_PF = 4 // ON and OFF settings are power factor, negative for leading
     };
 
     enum ActionCodes {
-        ActionCodes_none = 0x00000000,
-        ActionCodes_Open = 0x00000001,
-        ActionCodes_Close = 0x00000002,
-        ActionCodes_Reset = 0x00000003,
-        ActionCodes_Lock = 0x00000004,
-        ActionCodes_Unlock = 0x00000005,
-        ActionCodes_TapUp = 0x00000006,
-        ActionCodes_TapDown = 0x00000007
+        ActionCodes_none = 0, // No action
+        ActionCodes_Open = 1, // Open a switch
+        ActionCodes_Close = 2, // Close a switch
+        ActionCodes_Reset = 3, // Reset to the shelf state (unlocked, closed for a switch)
+        ActionCodes_Lock = 4, // Lock a switch, prventing both manual and automatic operation
+        ActionCodes_Unlock = 5, // Unlock a switch, permitting both manual and automatic operation
+        ActionCodes_TapUp = 6, // Move a regulator tap up
+        ActionCodes_TapDown = 7 // Move a regulator tap down
     };
 
     enum LoadStatus {
-        LoadStatus_Variable = 0x00000000,
-        LoadStatus_Fixed = 0x00000001,
-        LoadStatus_Exempt = 0x00000002
+        LoadStatus_Variable = 0,
+        LoadStatus_Fixed = 1,
+        LoadStatus_Exempt = 2
     };
 
     enum LoadModels {
-        LoadModels_ConstPQ = 0x00000001,
-        LoadModels_ConstZ = 0x00000002,
-        LoadModels_Motor = 0x00000003,
-        LoadModels_CVR = 0x00000004,
-        LoadModels_ConstI = 0x00000005,
-        LoadModels_ConstPFixedQ = 0x00000006,
-        LoadModels_ConstPFixedX = 0x00000007,
-        LoadModels_ZIPV = 0x00000008
+        LoadModels_ConstPQ = 1,
+        LoadModels_ConstZ = 2,
+        LoadModels_Motor = 3,
+        LoadModels_CVR = 4,
+        LoadModels_ConstI = 5,
+        LoadModels_ConstPFixedQ = 6,
+        LoadModels_ConstPFixedX = 7,
+        LoadModels_ZIPV = 8
     };
 
     enum LineUnits {
-        LineUnits_none = 0x00000000,
-        LineUnits_Miles = 0x00000001,
-        LineUnits_kFt = 0x00000002,
-        LineUnits_km = 0x00000003,
-        LineUnits_meter = 0x00000004,
-        LineUnits_ft = 0x00000005,
-        LineUnits_inch = 0x00000006,
-        LineUnits_cm = 0x00000007,
-        LineUnits_mm = 0x00000008,
-        LineUnits_Maxnum = 0x00000009
+        LineUnits_none = 0, // No line length unit.
+        LineUnits_Miles = 1, // Line length units in miles.
+        LineUnits_kFt = 2, // Line length units are in thousand feet.
+        LineUnits_km = 3, // Line length units are km.
+        LineUnits_meter = 4, // Line length units are meters.
+        LineUnits_ft = 5, // Line units in feet.
+        LineUnits_inch = 6, // Line length units are inches.
+        LineUnits_cm = 7, // Line units are cm.
+        LineUnits_mm = 8, // Line length units are mm.
+        LineUnits_Maxnum = 9 // Maximum number of line units constants.
     };
 
     // Experimental API extensions
