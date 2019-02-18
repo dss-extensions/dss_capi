@@ -20,7 +20,7 @@ interface
  }
 
 USES
-   Command, DSSClass, DSSObject;
+   Command, DSSClass, DSSObject, ArrayDef;
 
 TYPE
   ConductorChoice = (Overhead, ConcentricNeutral, TapeShield, Unknown);
@@ -44,16 +44,18 @@ TYPE
 
   TConductorDataObj = class(TDSSObject)
     private
-      FRDC              :Double;
-      FR60              :Double;
-      FGMR60            :Double;
-      Fradius           :Double;
-      FGMRUnits         :Integer;
-      FResistanceUnits  :Integer;
-      FRadiusUnits      :Integer;
+      FRDC              : Double;
+      FR60              : Double;
+      FGMR60            : Double;
+      Fradius           : Double;
+      FGMRUnits         : Integer;
+      FResistanceUnits  : Integer;
+      FRadiusUnits      : Integer;
+      Nratings          : Integer;
     public
-      NormAmps          :Double;
-      EmergAmps         :Double;
+      NormAmps          : Double;
+      EmergAmps         : Double;
+      ratings           : pDoubleArray;
 
       constructor Create(ParClass:TDSSClass; const ConductorDataName:String);
       destructor Destroy; override;
@@ -77,7 +79,7 @@ VAR
 
 implementation
 
-USES  ParserDel,  DSSGlobals, DSSClassDefs, Sysutils, Ucomplex, Arraydef,  LineUNits;
+USES  ParserDel,  DSSGlobals, DSSClassDefs, Sysutils, Ucomplex,  LineUNits, Utilities;
 
 Const
   LineUnitsHelp = '{mi|kft|km|m|Ft|in|cm|mm} Default=none.';
@@ -86,7 +88,7 @@ Const
 constructor TConductorData.Create;  // Creates superstructure for all Line objects
 BEGIN
   Inherited Create;
-  NumConductorClassProps := 10;
+  NumConductorClassProps := 12;
   DSSClassType := DSS_OBJECT;
 END;
 
@@ -112,7 +114,9 @@ Begin
   PropertyName^[ActiveProperty + 7] := 'radunits';
   PropertyName^[ActiveProperty + 8] := 'normamps';
   PropertyName^[ActiveProperty + 9] := 'emergamps';
-  PropertyName^[ActiveProperty + 10] := 'diam';
+  PropertyName^[ActiveProperty + 10]:= 'diam';
+  PropertyName^[ActiveProperty + 11]:= 'Seasons';
+  PropertyName^[ActiveProperty + 12]:= 'Ratings';
 
   PropertyHelp^[ActiveProperty + 1] := 'dc Resistance, ohms per unit length (see Runits). Defaults to Rac/1.02 if not specified.';
   PropertyHelp^[ActiveProperty + 2] := 'Resistance at 60 Hz per unit length. Defaults to 1.02*Rdc if not specified.';
@@ -123,7 +127,10 @@ Begin
   PropertyHelp^[ActiveProperty + 7] := 'Units for outside radius: ' + LineUnitsHelp;
   PropertyHelp^[ActiveProperty + 8] := 'Normal ampacity, amperes. Defaults to Emergency amps/1.5 if not specified.';
   PropertyHelp^[ActiveProperty + 9] := 'Emergency ampacity, amperes. Defaults to 1.5 * Normal Amps if not specified.';
-  PropertyHelp^[ActiveProperty + 10] := 'Diameter; Alternative method for entering radius.';
+  PropertyHelp^[ActiveProperty + 10]:= 'Diameter; Alternative method for entering radius.';
+  PropertyHelp^[ActiveProperty + 11]:= 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
+  PropertyHelp^[ActiveProperty + 12]:= 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
+                                        CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
 
   ActiveProperty := ActiveProperty + NumConductorClassProps;
   Inherited DefineProperties;
@@ -131,36 +138,51 @@ End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Function TConductorData.ClassEdit (Const ActiveObj:Pointer; Const ParamPointer:Integer):Integer;
+var
+  Param : String;
 BEGIN
   Result := 0;
   // continue parsing with contents of Parser
   If ParamPointer > 0 Then
     WITH TConductorDataObj(ActiveObj) DO BEGIN
       CASE ParamPointer OF
-        1: FRDC             := Parser[ActiveActor].Dblvalue;
-        2: FR60             := Parser[ActiveActor].DblValue;
-        3: FresistanceUnits := GetUnitsCode(Parser[ActiveActor].StrValue);
-        4: FGMR60           := Parser[ActiveActor].DblValue;
-        5: FGMRUnits        := GetUnitsCode(Parser[ActiveActor].StrValue);
-        6: Fradius          := Parser[ActiveActor].DblValue;
-        7: FRadiusUnits     := GetUnitsCode(Parser[ActiveActor].StrValue);
-        8: NormAmps         := Parser[ActiveActor].DblValue ;
-        9: EmergAmps        := Parser[ActiveActor].DblValue ;
-       10: Fradius          := Parser[ActiveActor].DblValue / 2.0;
+        1:  FRDC             :=  Parser[ActiveActor].Dblvalue;
+        2:  FR60             :=  Parser[ActiveActor].DblValue;
+        3:  FresistanceUnits :=  GetUnitsCode(Parser[ActiveActor].StrValue);
+        4:  FGMR60           :=  Parser[ActiveActor].DblValue;
+        5:  FGMRUnits        :=  GetUnitsCode(Parser[ActiveActor].StrValue);
+        6:  Fradius          :=  Parser[ActiveActor].DblValue;
+        7:  FRadiusUnits     :=  GetUnitsCode(Parser[ActiveActor].StrValue);
+        8:  NormAmps         :=  Parser[ActiveActor].DblValue ;
+        9:  EmergAmps        :=  Parser[ActiveActor].DblValue ;
+       10:  Fradius          :=  Parser[ActiveActor].DblValue / 2.0;
+       11:  Begin
+              Nratings         :=  Parser[ActiveActor].IntValue;
+              ReAllocmem(ratings, Sizeof(ratings^[1])*Nratings);
+            End;
+       12:  Begin
+              Param := Parser[ActiveActor].StrValue;
+              InterpretDblArray(Param, Nratings, ratings);
+            End
       ELSE
         Inherited ClassEdit(ActiveObj, ParamPointer - NumConductorClassProps)
       END;
       {Set defaults}
       CASE ParamPointer OF
-        1: If FR60<0.0      Then FR60 := 1.02* FRDC;
-        2: If FRDC<0.0      Then FRDC := FR60 / 1.02;
-        4: If Fradius<0.0   Then Fradius := FGMR60 / 0.7788;
-        5: If FradiusUnits =0 Then FradiusUnits := FGMRunits;
-        6: If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
-        7: If FGMRUnits=0   Then FGMRunits := FradiusUnits;
-        8: IF EmergAmps<0.0 Then EmergAmps := 1.5*NormAmps;
-        9: If NormAmps<0.0  Then NormAmps := EmergAmps/1.5;
-       10: If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
+        1 : If FR60<0.0      Then FR60 := 1.02* FRDC;
+        2 : If FRDC<0.0      Then FRDC := FR60 / 1.02;
+        4 : If Fradius<0.0   Then Fradius := FGMR60 / 0.7788;
+        5 : If FradiusUnits =0 Then FradiusUnits := FGMRunits;
+        6 : If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
+        7 : If FGMRUnits=0   Then FGMRunits := FradiusUnits;
+        8 : IF EmergAmps<0.0 Then EmergAmps := 1.5*NormAmps;
+        9 : If NormAmps<0.0  Then NormAmps := EmergAmps/1.5;
+       10 : If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
+       11 : NRatings  :=  1;
+       12 : Begin
+              ReAllocmem(ratings, Sizeof(ratings^[1])*Nratings);
+              ratings^[1]  :=  NormAmps;
+            End;
       END;
       {Check for critical errors}
       CASE ParamPointer OF
@@ -210,6 +232,9 @@ BEGIN
 
   Normamps    := -1.0;
   EmergAmps   :=-1.0;
+  Nratings    :=  1;
+  ReAllocmem(ratings, Sizeof(ratings^[1])*Nratings);
+  ratings^[1]  :=  NormAmps;  
 END;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -220,23 +245,33 @@ END;
 
 PROCEDURE TConductorDataObj.DumpProperties(var F: TextFile; Complete: Boolean);
 Var
-  i :Integer;
+  j,
+  i       : Integer;
+  TempStr : String;
 Begin
   Inherited DumpProperties(F, Complete);
   WITH ParentClass Do Begin
     For i := 1 to NumProperties Do Begin
       Write(F,'~ ',PropertyName^[i],'=');
       Case i of
-        1: Writeln(F, Format('%.6g',[FRDC]));
-        2: Writeln(F, Format('%.6g',[FR60]));
-        3: Writeln(F, Format('%s',[LineUnitsStr(FresistanceUnits)]));
-        4: Writeln(F, Format('%.6g',[FGMR60]));
-        5: Writeln(F, Format('%s',[LineUnitsStr(FGMRUnits)]));
-        6: Writeln(F, Format('%.6g',[Fradius]));
-        7: Writeln(F, Format('%s',[LineUnitsStr(FRadiusUnits)]));
-        8: Writeln(F, Format('%.6g',[NormAmps]));
-        9: Writeln(F, Format('%.6g',[EmergAmps]));
-       10: Writeln(F, Format('%.6g',[radius*2.0]));
+        1 : Writeln(F, Format('%.6g',[FRDC]));
+        2 : Writeln(F, Format('%.6g',[FR60]));
+        3 : Writeln(F, Format('%s',[LineUnitsStr(FresistanceUnits)]));
+        4 : Writeln(F, Format('%.6g',[FGMR60]));
+        5 : Writeln(F, Format('%s',[LineUnitsStr(FGMRUnits)]));
+        6 : Writeln(F, Format('%.6g',[Fradius]));
+        7 : Writeln(F, Format('%s',[LineUnitsStr(FRadiusUnits)]));
+        8 : Writeln(F, Format('%.6g',[NormAmps]));
+        9 : Writeln(F, Format('%.6g',[EmergAmps]));
+       10 : Writeln(F, Format('%.6g',[radius*2.0]));
+       11 : Writeln(F, Format('%d',[Nratings]));       
+       12 : Begin
+              TempStr   :=  '[';
+              for  j:= 1 to Nratings do
+                TempStr :=  TempStr + floattoStrf(ratings^[j],ffcurrency,8,4) + ','; 
+              TempStr   :=  TempStr + ']';
+              Writeln(F, TempStr);
+            End;
       END;
     End;
   End;
@@ -254,6 +289,8 @@ begin
   PropertyValue[ArrayOffset + 8] :=  '-1';
   PropertyValue[ArrayOffset + 9] :=  '-1';
   PropertyValue[ArrayOffset + 10] :=  '-1';
+  PropertyValue[ArrayOffset + 11] :=  '1';
+  PropertyValue[ArrayOffset + 12] :=  '[-1]';    
   inherited InitPropertyValues(ArrayOffset + 10);
 end;
 

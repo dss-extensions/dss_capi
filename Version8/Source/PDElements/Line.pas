@@ -14,7 +14,7 @@ unit Line;
 interface
 
 USES
-   Command, DSSClass, Circuit, PDElement, UcMatrix, LineCode,
+   Command, DSSClass, Circuit, PDElement, UcMatrix, LineCode,ArrayDef,
    LineGeometry, LineSpacing, ConductorData, PDClass, Ucomplex;
 
 
@@ -102,6 +102,9 @@ TYPE
         SymComponentsModel   :Boolean;
         IsSwitch             :Boolean;
 
+        NRatings             : Integer;
+        ratings              : pDoubleArray;
+
         PROCEDURE GetLosses(Var TotalLosses, LoadLosses, NoLoadLosses:Complex; ActorID : Integer);        Override;
         PROCEDURE GetSeqLosses(Var PosSeqLosses, NegSeqLosses, ZeroSeqLosses:complex; ActorID : Integer); Override;
 
@@ -146,10 +149,10 @@ VAR
 
 IMPLEMENTATION
 
-USES  ParserDel,  DSSClassDefs, DSSGlobals, Sysutils,  ArrayDef,
+USES  ParserDel,  DSSClassDefs, DSSGlobals, Sysutils,
       Utilities, Mathutil, ControlElem, LineUnits;
 
-Const NumPropsThisClass = 27;
+Const NumPropsThisClass = 29;
     //  MaxPhases = 20; // for fixed buffers
 
 VAR
@@ -220,6 +223,8 @@ Begin
      PropertyName[25] := 'tscables';
      PropertyName[26] := 'B1';
      PropertyName[27] := 'B0';
+     PropertyName[28] := 'Seasons';
+     PropertyName[29] := 'Ratings';
 
      // define Property help values
 
@@ -296,6 +301,9 @@ Begin
                           'You may later specify "nconds-nphases" wires for separate neutrals';
      PropertyHelp[26] := 'Alternate way to specify C1. MicroS per unit length' ;
      PropertyHelp[27] := 'Alternate way to specify C0. MicroS per unit length' ;
+     PropertyHelp[28] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
+     PropertyHelp[29] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
+                         CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -317,7 +325,17 @@ Begin
 End;
 
 procedure TLineObj.UpdatePDProperties;
+var
+  TempStr : String;
+  j       : Integer;
 begin
+  PropertyValue[28]                    := Format('%-d', [Nratings]);
+  TempStr   :=  '[';
+  for  j:= 1 to Nratings do
+   TempStr :=  TempStr + floattoStrf(ratings^[j],ffcurrency,8,4) + ',';
+  TempStr   :=  TempStr + ']';
+  PropertyValue[29] := TempStr;
+
   PropertyValue[NumPropsThisClass + 1] := Format('%-g', [Normamps]);
   PropertyValue[NumPropsThisClass + 2] := Format('%-g', [EmergAmps]);
   // commented out 8/26/2014
@@ -371,6 +389,9 @@ Begin
 
        NormAmps  := LineCodeObj.NormAmps;
        EmergAmps := LineCodeObj.EmergAmps;
+
+       Nratings   :=  LineCodeObj.NRatings;
+       ratings    :=  LineCodeObj.ratings;
 
        // These three properties should not come from the Linecode
        //   But can vary from line section to line section
@@ -575,6 +596,14 @@ Begin
            25: FetchTSCableList(Param);
            26: Begin c1 := Parser[ActorID].Dblvalue / (twopi * BaseFrequency) * 1.0e-6; FCapSpecified := TRUE; End;
            27: Begin c0 := Parser[ActorID].Dblvalue / (twopi * BaseFrequency) * 1.0e-6; FCapSpecified := TRUE; End;
+           28: Begin
+                 Nratings         :=  Parser[ActorID].IntValue;
+                 ReAllocmem(ratings, Sizeof(ratings^[1])*Nratings);
+               End;
+           29: Begin
+                 Param := Parser[ActorID].StrValue;
+                 InterpretDblArray(Param, Nratings, ratings);
+               End
          ELSE
             // Inherited Property Edits
              ClassEdit(ActiveLineObj, ParamPointer - NumPropsThisClass)
@@ -783,6 +812,10 @@ Begin
 
      Yorder := Fnterms * Fnconds;
      RecalcElementData(ActiveActor);
+
+     NRatings  :=  1;
+     ReAllocmem(ratings, Sizeof(ratings^[1])*Nratings);
+     ratings^[1]  :=  NormAmps;
      
 
 End;
@@ -1145,8 +1178,10 @@ end;
 
 FUNCTION TLineObj.GetPropertyValue(Index: Integer): String;
 VAR
-   i, j: Integer;
-   Factor: double;
+   k,
+   i, j     : Integer;
+   Factor   : double;
+   TempStr  : String;
 begin
 
 
@@ -1209,6 +1244,14 @@ begin
            23: Result := GetEarthModel(FEarthModel);
            26: If SymComponentsModel Then Result := Format('%.7g', [twopi * Basefrequency * C1 * 1.0e6]) else Result := '----';
            27: If SymComponentsModel Then Result := Format('%.7g', [twopi * Basefrequency * C0 * 1.0e6]) else Result := '----';
+           28  : Result := inttostr(Nratings);
+           29  : Begin
+                   TempStr   :=  '[';
+                   for  k:= 1 to Nratings do
+                    TempStr :=  TempStr + floattoStrf(ratings^[k],ffcurrency,8,4) + ',';
+                   TempStr   :=  TempStr + ']';
+                   Result  :=  TempStr;
+                 End;
 
            // Intercept FaultRate, PctPerm, and HourstoRepair
            30:Result := Format('%-g', [FaultRate]);
@@ -1299,6 +1342,8 @@ begin
      PropertyValue[25] := '';
      PropertyValue[26] := '1.2818'; // B1  microS
      PropertyValue[27] := '0.60319'; // B0  microS
+     PropertyValue[28] := '1';      // 1 Season
+     PropertyValue[29] := '[400]';  // 1 Season
 
 
     inherited InitPropertyValues(NumPropsThisClass);
