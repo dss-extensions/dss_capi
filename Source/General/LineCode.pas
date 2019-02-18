@@ -21,7 +21,7 @@ interface
  }
 
 USES
-   Command, DSSClass, DSSObject, UcMatrix;
+   Command, DSSClass, DSSObject, UcMatrix, Arraydef;
 
 
 TYPE
@@ -69,16 +69,17 @@ TYPE
         Function get_CMatrix: string;
 
       public
-        FNPhases:Integer;
+        NRatings,
+        FNPhases            :Integer;
 
         SymComponentsModel,
-        ReduceByKron:Boolean;
+        ReduceByKron        :Boolean;
 
         Z,         // Base Frequency Series Z matrix
         Zinv,
-        YC:    TCMatrix;  // Shunt capacitance matrix at Base frequency.
+        YC                  :    TCMatrix;  // Shunt capacitance matrix at Base frequency.
 
-        BaseFrequency:Double;
+        BaseFrequency       :Double;
 
         R1,
         X1,
@@ -93,7 +94,8 @@ TYPE
         HrsToRepair,
         Rg,
         Xg,
-        rho:   Double;
+        rho               : Double;
+        ratings           : pDoubleArray;
 
         Units:Integer;  {See LineUnits}
 
@@ -114,9 +116,9 @@ VAR
 
 implementation
 
-USES  ParserDel,  DSSClassDefs, DSSGlobals, Sysutils, Ucomplex, Arraydef, Utilities, LineUnits;
+USES  ParserDel,  DSSClassDefs, DSSGlobals, Sysutils, Ucomplex, Utilities, LineUnits;
 
-Const      NumPropsThisClass = 24;
+Const      NumPropsThisClass = 26;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TLineCode.Create;  // Creates superstructure for all Line objects
@@ -174,6 +176,8 @@ Begin
      PropertyName[22] := 'neutral';
      PropertyName[23] := 'B1';
      PropertyName[24] := 'B0';
+     PropertyName[25] := 'Seasons';
+     PropertyName[26] := 'Ratings';
 
 
      PropertyHelp[1] := 'Number of phases in the line this line code data represents.  Setting this property reinitializes the line code.  Impedance matrix is reset for default symmetrical component.';
@@ -229,6 +233,9 @@ Begin
 
      PropertyHelp[23] := 'Alternate way to specify C1. MicroS per unit length' ;
      PropertyHelp[24] := 'Alternate way to specify C0. MicroS per unit length' ;
+     PropertyHelp[25] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
+     PropertyHelp[26] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
+                         CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -420,6 +427,14 @@ BEGIN
            22: FNeutralConductor := Parser[ActorID].IntValue;
            23: SetZ1Z0(5, Parser[ActorID].Dblvalue / (twopi * BaseFrequency) * 1.0e-6); {B1 -> C1}
            24: SetZ1Z0(6, Parser[ActorID].Dblvalue / (twopi * BaseFrequency) * 1.0e-6); {B0 -> C0}
+           25: Begin
+                 Nratings         :=  Parser[ActorID].IntValue;
+                 ReAllocmem(ratings, Sizeof(ratings^[1])*Nratings);
+               End;
+           26: Begin
+                 Param := Parser[ActorID].StrValue;
+                 InterpretDblArray(Param, Nratings, ratings);
+               End
          ELSE
            ClassEdit(ActiveLineCodeObj, Parampointer - NumPropsThisClass)
          END;
@@ -570,7 +585,11 @@ BEGIN
      ReduceByKron := FALSE;
      CalcMatricesFromZ1Z0;  // put some reasonable values in
 
-     InitPropertyValues(0);
+    NRatings  :=  1;
+    ReAllocmem(ratings, Sizeof(ratings^[1])*Nratings);
+    ratings^[1]  :=  NormAmps;
+
+    InitPropertyValues(0);
 END;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -642,7 +661,9 @@ END;
 PROCEDURE TLineCodeObj.DumpProperties(var F: TextFile; Complete: Boolean);
 
 Var
+   k,
    i,j :Integer;
+   TempStr  : String;
 
 Begin
     Inherited DumpProperties(F, Complete);
@@ -690,33 +711,51 @@ Begin
          End;
 
          Writeln(F, Format('~ %s=%d',[PropertyName^[22], FNeutralConductor]));
+         Writeln(F, Format('~ %s=%d',[PropertyName^[25], Nratings]));
+         TempStr   :=  '[';
+         for  k:= 1 to Nratings do
+          TempStr :=  TempStr + floattoStrf(ratings^[k],ffcurrency,8,4) + ',';
+         TempStr   :=  TempStr + ']';
+         Writeln(F, Format('~ %s=%d',[PropertyName^[26]]) + TempStr);
+
 
      End;
 
 end;
 
 function TLineCodeObj.GetPropertyValue(Index: Integer): String;
+var
+  TempStr : String;
+  j       : Integer;
 begin
      case Index of
-         1: Result := Format('%d', [FnPhases]);
-         2: If SymComponentsModel Then Result := Format('%.5g', [R1]) else Result := '----';
-         3: If SymComponentsModel Then Result := Format('%.5g', [X1]) else Result := '----';
-         4: If SymComponentsModel Then Result := Format('%.5g', [R0]) else Result := '----';
-         5: If SymComponentsModel Then Result := Format('%.5g', [X0]) else Result := '----';
-         6: If SymComponentsModel Then Result := Format('%.5g', [C1*1.0e9]) else Result := '----';
-         7: If SymComponentsModel Then Result := Format('%.5g', [C0*1.0e9]) else Result := '----';
-         8: Result := LineUnitsStr(Units);
-         9: Result  := Get_Rmatrix;
-        10: Result  := Get_Xmatrix;
-        11:  Result := get_Cmatrix;
-        12: Result := Format('%.g',[Basefrequency]); //  was defaultbasefrequency ??? 'baseFreq';
-        18: If ReduceByKron  then Result := 'Y' Else Result := 'N';
-        19: Result := Format('%.5g',[Rg]);
-        20: Result := Format('%.5g',[Xg]);
-        21: Result := Format('%.5g',[Rho]); 
-        22: Result := IntToStr(FNeutralConductor);
-        23: If SymComponentsModel Then Result := Format('%.5g', [twopi * Basefrequency * C1 * 1.0e6]) else Result := '----';
-        24: If SymComponentsModel Then Result := Format('%.5g', [twopi * Basefrequency * C0 * 1.0e6]) else Result := '----';
+         1  : Result := Format('%d', [FnPhases]);
+         2  : If SymComponentsModel Then Result := Format('%.5g', [R1]) else Result := '----';
+         3  : If SymComponentsModel Then Result := Format('%.5g', [X1]) else Result := '----';
+         4  : If SymComponentsModel Then Result := Format('%.5g', [R0]) else Result := '----';
+         5  : If SymComponentsModel Then Result := Format('%.5g', [X0]) else Result := '----';
+         6  : If SymComponentsModel Then Result := Format('%.5g', [C1*1.0e9]) else Result := '----';
+         7  : If SymComponentsModel Then Result := Format('%.5g', [C0*1.0e9]) else Result := '----';
+         8  : Result := LineUnitsStr(Units);
+         9  : Result  := Get_Rmatrix;
+        10  : Result  := Get_Xmatrix;
+        11  :  Result := get_Cmatrix;
+        12  : Result := Format('%.g',[Basefrequency]); //  was defaultbasefrequency ??? 'baseFreq';
+        18  : If ReduceByKron  then Result := 'Y' Else Result := 'N';
+        19  : Result := Format('%.5g',[Rg]);
+        20  : Result := Format('%.5g',[Xg]);
+        21  : Result := Format('%.5g',[Rho]);
+        22  : Result := IntToStr(FNeutralConductor);
+        23  : If SymComponentsModel Then Result := Format('%.5g', [twopi * Basefrequency * C1 * 1.0e6]) else Result := '----';
+        24  : If SymComponentsModel Then Result := Format('%.5g', [twopi * Basefrequency * C0 * 1.0e6]) else Result := '----';
+        25  : Result := inttostr(Nratings);
+        26  : Begin
+                TempStr   :=  '[';
+                for  j:= 1 to Nratings do
+                  TempStr :=  TempStr + floattoStrf(ratings^[j],ffcurrency,8,4) + ',';
+                TempStr   :=  TempStr + ']';
+                Result  :=  TempStr;
+              End;
      Else
         Result := Inherited GetPropertyValue(index);
      end;
@@ -749,6 +788,8 @@ begin
      PropertyValue[22] :=  '3'; // 'Neutral';
      PropertyValue[23] :=  '1.2818'; // B1  microS
      PropertyValue[24] :=  '0.60319'; // B0  microS
+     PropertyValue[25] :=  '1'; // 1 season
+     PropertyValue[26] :=  '[400]'; // 1 rating
 
     inherited  InitPropertyValues(NumPropsThisClass);
 
