@@ -91,8 +91,10 @@ TYPE
 
       public
 
-        NormAmps          :Double;
-        EmergAmps         :Double;
+        NormAmps          : Double;
+        EmergAmps         : Double;
+        NRatings          : Integer;
+        ratings           : pDoubleArray;
 
         constructor Create(ParClass:TDSSClass; const LineGeometryName:String);
         destructor Destroy; override;
@@ -131,7 +133,7 @@ implementation
 USES  ParserDel,  DSSClassDefs,  DSSGlobals, Ucomplex, Utilities,  LineUnits,
       OHLineConstants, CNLineConstants, TSLineConstants;
 
-Const      NumPropsThisClass = 16;
+Const      NumPropsThisClass = 18;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TLineGeometry.Create;  // Creates superstructure for all Line objects
@@ -179,6 +181,8 @@ Begin
      PropertyName[14] := 'tscable';
      PropertyName[15] := 'cncables';
      PropertyName[16] := 'tscables';
+     PropertyName[17] := 'Seasons';
+     PropertyName[18] := 'Ratings';
 
      PropertyHelp[1] := 'Number of conductors in this geometry. Default is 3. Triggers memory allocations. Define first!';
      PropertyHelp[2] := 'Number of phases. Default =3; All other conductors are considered neutrals and might be reduced out.';
@@ -211,6 +215,9 @@ Begin
      PropertyHelp[16] := 'Array of TSData names for cable parameter calculation.' + CRLF +
                          'All must be previously defined, and match "nphases" for this geometry.' + CRLF +
                          'You can later define "nconds-nphases" wires for bare neutral conductors.';
+     PropertyHelp[17] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
+     PropertyHelp[18] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
+                         CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -327,7 +334,15 @@ BEGIN
                   else
                     DoSimpleMsg('WireData Object "' + FCondName[i] + '" not defined. Must be previously defined.', 10103);
               end
-           End
+           End;
+           17: Begin
+                 Nratings         :=  Parser[ActorID].IntValue;
+                 ReAllocmem(ratings, Sizeof(ratings^[1])*Nratings);
+               End;
+           18: Begin
+                 Param := Parser[ActorID].StrValue;
+                 InterpretDblArray(Param, Nratings, ratings);
+               End
          ELSE
            // Inherited parameters
            ClassEdit(ActiveLineGeometryObj, Parampointer - NumPropsThisClass)
@@ -484,6 +499,10 @@ BEGIN
 
       FReduce := FALSE;
 
+      NRatings  :=  1;
+      ReAllocmem(ratings, Sizeof(ratings^[1])*Nratings);
+      ratings^[1]  :=  NormAmps;
+
      InitPropertyValues(0);
 END;
 
@@ -534,23 +553,32 @@ end;
 
 function TLineGeometryObj.GetPropertyValue(Index: Integer): String;
 var
-  i: Integer;
-
+  j,
+  i       : Integer;
+  TempStr : String;
 {Return Property Value for Active index}
 
 begin
 
   CASE Index OF
-      3: Result       := Format('%d',[FActiveCond]);
+      3   : Result       := Format('%d',[FActiveCond]);
       4,13,14: Result := FCondName^[FActiveCond];
-      5: Result       := Format('%-g',[FX^[FActiveCond]]);
-      6: Result       := Format('%-g',[FY^[FActiveCond]]);
-      7: Result       := LineUnitsStr(FUnits^[FActiveCond]);
+      5   : Result       := Format('%-g',[FX^[FActiveCond]]);
+      6   : Result       := Format('%-g',[FY^[FActiveCond]]);
+      7   : Result       := LineUnitsStr(FUnits^[FActiveCond]);
       12,15,16: Begin
         Result := '[';
         for i:= 1 to FNConds do Result := Result + FCondName^[i] + ' ';
         Result := Result + ']';
-      End
+      End;
+      17  : Result := inttostr(Nratings);
+      18  : Begin
+              TempStr   :=  '[';
+              for  j:= 1 to Nratings do
+                TempStr :=  TempStr + floattoStrf(ratings^[j],ffcurrency,8,4) + ',';
+              TempStr   :=  TempStr + ']';
+              Result  :=  TempStr;
+            End;
    ELSE
      // Inherited parameters
      Result     := Inherited GetPropertyValue(Index);
@@ -612,15 +640,17 @@ end;
 procedure TLineGeometryObj.InitPropertyValues(ArrayOffset: Integer);
 begin
 
-     PropertyValue[1] := '3';
-     PropertyValue[2] :=  '3';
-     PropertyValue[3] :=  '1';
-     PropertyValue[4] :=  '';
-     PropertyValue[5] :=  '0';
-     PropertyValue[6] :=  '32';
-     PropertyValue[7] :=  'ft';
-     PropertyValue[8] :=  '0';
-     PropertyValue[9] :=  '0';
+     PropertyValue[1]  := '3';
+     PropertyValue[2]  :=  '3';
+     PropertyValue[3]  :=  '1';
+     PropertyValue[4]  :=  '';
+     PropertyValue[5]  :=  '0';
+     PropertyValue[6]  :=  '32';
+     PropertyValue[7]  :=  'ft';
+     PropertyValue[8]  :=  '0';
+     PropertyValue[9]  :=  '0';
+     PropertyValue[17] :=  '1'; // 1 season
+     PropertyValue[18] :=  '[400]'; // 1 rating
 
     inherited  InitPropertyValues(NumPropsThisClass);
 
@@ -631,8 +661,10 @@ procedure TLineGeometryObj.SaveWrite(var F: TextFile);
 { Override standard SaveWrite}
 {Linegeometry structure not conducive to standard means of saving}
 var
-   iprop :Integer;
-   i     :Integer;
+   TempStr  : String;
+   j,
+   iprop    :Integer;
+   i        :Integer;
 
 begin
    {Write only properties that were explicitly set in the
@@ -654,6 +686,13 @@ begin
             8: Writeln(F, Format('~ normamps=%.4g', [NormAmps]));
             9: Writeln(F, Format('~ emergamps=%.4g', [EmergAmps]));
             10: If FReduce then  Writeln(F, '~ Reduce=Yes');
+            18: Begin
+                  TempStr   :=  '[';
+                  for  j:= 1 to Nratings do
+                    TempStr :=  TempStr + floattoStrf(ratings^[j],ffcurrency,8,4) + ',';
+                  TempStr   :=  TempStr + ']';
+                  Writeln(F,'ratings=' + TempStr);
+                End;
 
         ELSE
           Writeln(F,Format('~ %s=%s', [PropertyName^[RevPropertyIdxMap[iProp]],CheckForBlanks(PropertyValue[iProp])] ));
