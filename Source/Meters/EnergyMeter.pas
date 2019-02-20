@@ -90,6 +90,7 @@ Uses DSSClass,
      Feeder,
      Load,
      Generator,
+     XYCurve,
      Command;
 
 Const
@@ -3092,32 +3093,78 @@ end;
 
 procedure TEnergyMeter.WriteOverloadReport(ActorID : Integer);
 Var
-   PDelem   :TPDelement;
-   Cmax     :double;
-   mtr      : TEnergyMeterObj;
+   PDelem     :TPDelement;
+   EmergAmps,
+   NormAmps,
+   Cmax       :double;
+   mtr        : TEnergyMeterObj;
+   ClassName  : String;
+   RSignal    : TXYCurveObj;
+   RatingIdx  : Integer;
+   ElemCurr   : pComplexArray;
 
 begin
 {
   Scans the active circuit for overloaded PD elements and writes each to a file
   This is called only if in Demand Interval (DI) mode and the file is open.
 }
+{    Prepares everything for using seasonal ratings if required}
+  if SeasonalRating then
+  Begin
+    if SeasonSignal <> '' then
+    Begin
+      RSignal     :=  XYCurveClass[ActorID].Find(SeasonSignal);
+      if RSignal <> nil then
+        RatingIdx   :=  trunc(RSignal.GetYValue(ActiveCircuit[ActorID].Solution.DynaVars.intHour)) + 1
+      else
+        SeasonalRating  := False;   // The XYCurve defined doesn't exist
+    End
+    else
+      SeasonalRating  :=  False;    // The user didn't define the seasonal signal
+  End;
 
  { CHECK PDELEMENTS ONLY}
      PDelem :=  ActiveCircuit[ActorID].PDElements.First;
      WHILE PDelem<>nil DO Begin
        IF (PDelem.Enabled)and (Not PDelem.IsShunt)  THEN Begin   // Ignore shunts
 
-          IF (PdElem.Normamps > 0.0) OR (PdElem.Emergamps>0.0) THEN Begin
+          IF (PdElem.Normamps > 0.0) OR (PdElem.Emergamps>0.0) THEN
+          Begin
              PDelem.ComputeIterminal(ActorID);
-             Cmax := PDelem.MaxTerminalOneImag(ActorID); // For now, check only terminal 1 for overloads
-             IF (Cmax > PDElem.NormAmps) OR (Cmax > pdelem.EmergAmps) THEN Begin
+             Cmax       := PDelem.MaxTerminalOneImag(ActorID); // For now, check only terminal 1 for overloads
+
+             // Section introduced in 02/20/2019 for allowing the automatic change of ratings
+             // when the seasonal ratings option is active
+             ClassName :=  lowercase(PDElem.DSSClassName);
+             if SeasonalRating and (ClassName = 'line') and (PDElem.NRatings > 1) then
+             Begin
+                if RatingIdx > PDElem.NRatings then
+                Begin
+                  NormAmps   :=  PDElem.NormAmps;
+                  EmergAmps  :=  pdelem.EmergAmps;
+                End
+                else
+                Begin
+                  NormAmps    :=  PDElem.ratings^[RatingIdx];
+                  EmergAmps   :=  PDElem.ratings^[RatingIdx];
+                End;
+             End
+             else
+             Begin
+               NormAmps   :=  PDElem.NormAmps;
+               EmergAmps  :=  pdelem.EmergAmps;
+             End;
+
+
+             IF (Cmax > NormAmps) OR (Cmax > EmergAmps) THEN
+             Begin
                   With ActiveCircuit[ActorID].Solution Do WriteintoMem(OV_MHandle[ActorID],DynaVars.dblHour);
                   WriteintoMemStr(OV_MHandle[ActorID],', ' + FullName(PDelem));
-                  WriteintoMem(OV_MHandle[ActorID],PDElem.NormAmps);
-                  WriteintoMem(OV_MHandle[ActorID],pdelem.EmergAmps);
-                 IF PDElem.Normamps > 0.0  THEN WriteintoMem(OV_MHandle[ActorID],Cmax/PDElem.Normamps*100.0)
+                  WriteintoMem(OV_MHandle[ActorID],NormAmps);
+                  WriteintoMem(OV_MHandle[ActorID],EmergAmps);
+                 IF PDElem.Normamps > 0.0  THEN WriteintoMem(OV_MHandle[ActorID],Cmax/Normamps*100.0)
                                            ELSE WriteintoMem(OV_MHandle[ActorID], 0.0);
-                 IF PDElem.Emergamps > 0.0 THEN WriteintoMem(OV_MHandle[ActorID],Cmax/PDElem.Emergamps*100.0)
+                 IF PDElem.Emergamps > 0.0 THEN WriteintoMem(OV_MHandle[ActorID],Cmax/Emergamps*100.0)
                                            ELSE WriteintoMem(OV_MHandle[ActorID], 0.0);
                  With ActiveCircuit[ActorID] Do // Find bus of first terminal
                    WriteintoMem(OV_MHandle[ActorID],Buses^[MapNodeToBus^[PDElem.NodeRef^[1]].BusRef].kVBase);

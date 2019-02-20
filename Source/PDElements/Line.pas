@@ -102,8 +102,8 @@ TYPE
         SymComponentsModel   :Boolean;
         IsSwitch             :Boolean;
 
-        NRatings             : Integer;
-        ratings              : pDoubleArray;
+//        NRatings             : Integer;
+//        ratings              : pDoubleArray;
 
         PROCEDURE GetLosses(Var TotalLosses, LoadLosses, NoLoadLosses:Complex; ActorID : Integer);        Override;
         PROCEDURE GetSeqLosses(Var PosSeqLosses, NegSeqLosses, ZeroSeqLosses:complex; ActorID : Integer); Override;

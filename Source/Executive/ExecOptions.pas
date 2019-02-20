@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-        NumExecOptions = 126;
+        NumExecOptions = 128;
 
 VAR
          ExecOption,
@@ -161,6 +161,8 @@ Begin
      ExecOption[124] := 'LinkBranches';
      ExecOption[125] := 'KeepLoad';
      ExecOption[126] := 'Zmag';
+     ExecOption[127] := 'SeasonRating';
+     ExecOption[128] := 'SeasonSignal';
 
 
      OptionHelp[1]  := 'Sets the active DSS class type.  Same as Class=...';
@@ -436,6 +438,9 @@ Begin
                         'If ADiakoptics is not initialized, this isntruction will retunr an error message';
      OptionHelp[125] := 'Keeploads = Y/N option for ReduceOption Laterals option';
      OptionHelp[126] := 'Sets the Zmag option (in Ohms) for ReduceOption Shortlines option. Lines have less line mode impedance are reduced.';
+     OptionHelp[127] := 'Enables/disables the seasonal selection of the rating for determining if an element is overloaded. When enabled, the energy meter will' + CRLF +
+                        'look for the rating (NormAmps) using the SeasonSignal  to eavluate if the element is overloaded';
+     OptionHelp[128] := 'Is the name of the XY curve defining the seasonal change when performing QSTS simulations.';
 End;
 //----------------------------------------------------------------------------
 FUNCTION DoSetCmd_NoCircuit:Boolean;  // Set Commands that do not require a circuit
@@ -751,6 +756,8 @@ Begin
           123:  ActiveCircuit[ActiveActor].solution.MinIterations   := Parser[ActiveActor].IntValue;
           125: ActiveCircuit[ActiveActor].ReduceLateralsKeepLoad := InterpretYesNo(Param);
           126: ActiveCircuit[ActiveActor].ReductionZmag := Parser[ActiveActor].DblValue;
+          127: SeasonalRating := InterpretYesNo(Param);
+          128: SeasonSignal   :=  Param;
          ELSE
            // Ignore excess parameters
          End;
@@ -965,6 +972,8 @@ Begin
             End;
           125: If ActiveCircuit[ActiveActor].ReduceLateralsKeepLoad  Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           126: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].ReductionZmag]));
+          127: if SeasonalRating then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+          128: AppendGlobalResult(SeasonSignal);
          ELSE
            // Ignore excess parameters
          End;
