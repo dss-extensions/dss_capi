@@ -107,6 +107,8 @@ TYPE
 
             MonitoredElement :TDSSCktElement;
 
+            Wait4Step       : Boolean;
+
            // PROCEDURE SetPctReserve;
             PROCEDURE SetAllFleetValues;
             PROCEDURE SetFleetkWRate(pctkw:Double);
@@ -696,7 +698,7 @@ Begin
      FlatTime      := 2.0;
      DnrampTime    := 0.25;
      LastpctDischargeRate := 0.0;
-
+     Wait4Step     := False;     // for sync discharge with charge when there is a transition
 
      InitPropertyValues(0);
 
@@ -1298,6 +1300,8 @@ Begin
                         PushTimeOntoControlQueue(STORE_IDLING, ActorID);  // force a new power flow solution
                         ChargingAllowed := TRUE;
                         SkipkWDispatch  := TRUE;
+                        Wait4Step       := TRUE; // To tell to the charging section to wait for the next sim step
+                                                 // useful when workin with large simulation time steps
                   End;
            END;
        End;
@@ -1420,11 +1424,15 @@ Begin
        kWNeeded := Pdiff + FleetkW;
 
        CASE  FleetState of
-          STORE_IDLING: If (PDiff > 0.0) or (ActualkWh>=TotalRatingkWh) Then
-                Begin  // Don't bother trying to charge
-                     ChargingAllowed := FALSE;
-                     SkipkWCharge  := TRUE;
-                End;
+          STORE_IDLING:
+                        If (PDiff > 0.0) or (ActualkWh>=TotalRatingkWh) or Wait4Step Then
+                        Begin  // Don't bother trying to charge
+                             ChargingAllowed  := FALSE;
+                             SkipkWCharge     := TRUE;
+                             Wait4Step        :=  False;
+                        End
+                        else
+                             ChargingAllowed := ChargingAllowed;
           STORE_CHARGING: If (kWNeeded > 0.0) or (ActualkWh>=TotalRatingkWh) Then
                 Begin   // desired decrease is greater then present output; just cancel
                       SetFleetToIdle;   // also sets presentkW = 0
@@ -1487,7 +1495,7 @@ Begin
 {
   Check discharge mode first. Then if not discharging, we can check for charging
 }
-
+       Wait4Step    :=  FALSE;        // Initializes the variable for the new control step
        CASE DischargeMode of
             MODEFOLLOW:    Begin
                                 DoTimeMode(1, ActorID);
