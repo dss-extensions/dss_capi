@@ -291,9 +291,9 @@ VAR
    PHV_Append             : array of Boolean;
    FM_Append              : array of Boolean;
 
-//***********************A-Diakoptics Variables*********************************
-
-
+//***********************Seasonal QSTS variables********************************
+   SeasonalRating         : Boolean;    // Tells the energy meter if the seasonal rating feature is active
+   SeasonSignal           : String;     // Stores the name of the signal for selecting the rating dynamically
 
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
@@ -1124,10 +1124,13 @@ initialization
    NumOfActors            :=  1;
    ActorCPU[ActiveActor]  :=  0;
    Parser[ActiveActor]    :=  Tparser.Create;
-   ProgramName      :=    'OpenDSS';
-   DSSFileName      :=    GetDSSExeFile;
-   DSSDirectory     :=    ExtractFilePath(DSSFileName);
-   ADiakoptics      :=    False;  // Disabled by default
+   ProgramName            :=  'OpenDSS';
+   DSSFileName            :=  GetDSSExeFile;
+   DSSDirectory           :=  ExtractFilePath(DSSFileName);
+   ADiakoptics            :=  False;  // Disabled by default
+
+   SeasonalRating         :=  False;
+   SeasonSignal           :=  '';
 
    {Various Constants and Switches}
    {$IFDEF FPC}NoFormsAllowed  := TRUE;{$ENDIF}

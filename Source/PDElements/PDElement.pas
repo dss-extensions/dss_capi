@@ -15,7 +15,7 @@ unit PDElement;
 
 interface
 
-USES CktElement, ucomplex, ucmatrix, DSSClass, MeterElement;
+USES CktElement, ucomplex, ucmatrix, DSSClass, MeterElement, Arraydef;
 
 TYPE
 
@@ -54,6 +54,9 @@ TYPE
 
        Overload_UE,
        OverLoad_EEN  :double;  // Indicate amount of branch overload
+
+        NRatings             : Integer;
+        ratings              : pDoubleArray;
 
        constructor Create(ParClass:TDSSClass);
        destructor Destroy; override;
