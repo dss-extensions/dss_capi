@@ -1659,7 +1659,10 @@ end;
 
 procedure TLineObj.FetchWireList(const Code: string);
 var
-  i, istart: Integer;
+  RatingsInc    : Boolean;
+  NewNumRat,
+  i, istart     : Integer;
+  NewRatings    : pDoubleArray;
 begin
   if not assigned (FLineSpacingObj) then
     DoSimpleMsg ('You must assign the LineSpacing before the Wires Property (LINE.'+name+').', 18102);
@@ -1679,15 +1682,32 @@ begin
     end;
 
   AuxParser[ActiveActor].CmdString := Code;
+
+  NewNumRat     :=  1;
+  RatingsInc    := False;             // So far we don't know if there are seasonal ratings
   for i := istart to FLineSpacingObj.NWires do
-    begin
-      AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
-      WireDataClass[ActiveActor].code := AuxParser[ActiveActor].StrValue;
-      if Assigned(ActiveConductorDataObj) then
-        FLineWireData^[i] := ActiveConductorDataObj
-      else
-        DoSimpleMsg ('Wire "' + AuxParser[ActiveActor].StrValue + '" was not defined first (LINE.'+name+').', 18103);
-    end;
+  begin
+    AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+    WireDataClass[ActiveActor].code := AuxParser[ActiveActor].StrValue;
+    if Assigned(ActiveConductorDataObj) then
+    Begin
+      FLineWireData^[i] := ActiveConductorDataObj;
+      if FLineWireData^[i].Nratings > NewNumRat then
+      Begin
+        NewNumRat   :=  FLineWireData^[i].Nratings;
+        NewRatings  :=  FLineWireData^[i].ratings;
+        RatingsInc  :=  True;         // Yes, there are seasonal ratings
+      End;
+    End
+    else
+      DoSimpleMsg ('Wire "' + AuxParser[ActiveActor].StrValue + '" was not defined first (LINE.'+name+').', 18103);
+  end;
+
+  if RatingsInc then
+  Begin
+    Nratings      :=  NewNumRat;
+    ratings       :=  NewRatings;
+  End;
 
 end;
 
@@ -1762,6 +1782,9 @@ Begin
          Nconds        := FNPhases;  // Force Reallocation of terminal info
          Yorder        := Fnconds * Fnterms;
          YprimInvalid[ActiveActor]  := True;       // Force Rebuild of Y matrix
+
+         Nratings      :=  FLineGeometryObj.NRatings;
+         ratings       :=  FLineGeometryObj.ratings;
 
      End
    ELSE
