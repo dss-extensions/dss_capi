@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 117;
+     NumExecCommands = 118;
 
 Var
 
@@ -164,6 +164,7 @@ Begin
      ExecCommand[115] := 'Remove';
      ExecCommand[116] := 'Abort';
      ExecCommand[117] := 'CalcLaplacian';
+     ExecCommand[118] := 'Clone';
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
                          'active object' + CRLF +
@@ -509,7 +510,10 @@ Begin
      CommandHelp[116] := 'Aborts all the simulations running';
      CommandHelp[117] := 'Calculate the laplacian matrix using the incidence matrix' + CRLF +
                          'previously calculated, this means that before calling this command' + CRLF +
-                         'the incidence matrix needs to be calculated using calcincmatrix/calcincmatrix_o';
+                         'the incidence matrix needs to be calculated using calcincmatrix/calcincmatrix_o.';
+     CommandHelp[118] := 'Clones the active circuit. This command creates as many copies of the active cirucit as indicated in the argument' + CRLF +
+                         'if the number of requested clones does not overpasses the number of local CPUs. The form of this command is clone X where' + CRLF +
+                         'X is the number of clones to be created';
 
 End;
 
@@ -798,6 +802,7 @@ Begin
 {$ENDIF}
       115: DoRemoveCmd;
       116: SolutionAbort := TRUE;
+      118: DoClone;
      ELSE
        // Ignore excess parameters
      End;
