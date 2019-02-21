@@ -70,13 +70,14 @@ type
     procedure Set_Spacing(const Value: WideString); safecall;
     function Get_Units: Integer; safecall;
     procedure Set_Units(Value: Integer); safecall;
+    function Get_SeasonRating: Double; safecall;
 
     { Protected declarations }
   end;
 
 implementation
 
-uses ComServ, Line, DSSClassDefs, DSSGlobals, CktElement,
+uses ComServ, Line, DSSClassDefs, DSSGlobals, CktElement, XYCurve,
   uComplex, ExecHelper, dialogs, Sysutils, ParserDel, Variants, Math, LineUnits;
 
 Function IsLine(Const CktElem:TDSSCktElement):Boolean;
@@ -909,6 +910,35 @@ begin
        END;
   End;
 end;
+
+function TLines.Get_SeasonRating: Double;
+var
+   RatingIdx  : Integer;
+   RSignal    : TXYCurveObj;
+begin
+  If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) THEN
+  Begin
+    if SeasonalRating then
+    Begin
+      if SeasonSignal <> '' then
+      Begin
+        RSignal     :=  XYCurveClass[ActiveActor].Find(SeasonSignal);
+        if RSignal <> nil then
+          RatingIdx   :=  trunc(RSignal.GetYValue(ActiveCircuit[ActiveActor].Solution.DynaVars.intHour)) + 1;
+        // Just in case
+        if RatingIdx > TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NRatings then
+          Result  :=  TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NormAmps
+        else
+          Result  :=  TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).ratings^[RatingIdx];
+      End
+      else
+        Result  := 0.0;
+    End;
+  End
+  else
+    Result  :=  0.0;
+
+  end;
 
 initialization
   TAutoObjectFactory.Create(ComServer, TLines, Class_Lines,
