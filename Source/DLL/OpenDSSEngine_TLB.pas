@@ -12,7 +12,7 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 52393 $
-// File generated on 1/4/2019 5:37:56 PM from Type Library described below.
+// File generated on 2/21/2019 11:54:30 AM from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
@@ -1775,6 +1775,7 @@ type
     procedure Set_Spacing(const Value: WideString); safecall;
     function Get_Units: Integer; safecall;
     procedure Set_Units(Value: Integer); safecall;
+    function Get_SeasonRating: Double; safecall;
     property Name: WideString read Get_Name write Set_Name;
     property AllNames: OleVariant read Get_AllNames;
     property First: Integer read Get_First;
@@ -1806,6 +1807,7 @@ type
     property Count: Integer read Get_Count;
     property Spacing: WideString read Get_Spacing write Set_Spacing;
     property Units: Integer read Get_Units write Set_Units;
+    property SeasonRating: Double read Get_SeasonRating;
   end;
 
 // *********************************************************************//
@@ -1847,6 +1849,7 @@ type
     property Count: Integer readonly dispid 204;
     property Spacing: WideString dispid 205;
     property Units: Integer dispid 206;
+    property SeasonRating: Double readonly dispid 207;
   end;
 
 // *********************************************************************//

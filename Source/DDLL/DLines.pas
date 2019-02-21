@@ -9,7 +9,7 @@ procedure LinesV(mode: longint; out arg: Variant);cdecl;
 
 implementation
 
-uses Line, DSSClassDefs, DSSGlobals, CktElement,
+uses Line, DSSClassDefs, DSSGlobals, CktElement, XYCurve,
   uComplex, ExecHelper, dialogs, Sysutils, ParserDel, Variants, Math, LineUnits;
 
 Function IsLine(Const CktElem:TDSSCktElement):Boolean;
@@ -146,6 +146,9 @@ end;
 
 //******************************floating point type properties*************************
 function LinesF(mode: longint; arg: double): double; cdecl;
+var
+   RatingIdx  : Integer;
+   RSignal    : TXYCurveObj;
 begin
   Result:=0.0;
   case mode of
@@ -370,7 +373,30 @@ begin
              YprimInvalid[ActiveActor] := True;
            END;
       End;
-  end
+  end;
+  24: Begin  // Lines.SeasonRating
+      If IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) THEN
+      Begin
+        if SeasonalRating then
+        Begin
+          if SeasonSignal <> '' then
+          Begin
+            RSignal     :=  XYCurveClass[ActiveActor].Find(SeasonSignal);
+            if RSignal <> nil then
+              RatingIdx   :=  trunc(RSignal.GetYValue(ActiveCircuit[ActiveActor].Solution.DynaVars.intHour)) + 1;
+            // Just in case
+            if RatingIdx > TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NRatings then
+              Result  :=  TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NormAmps
+            else
+              Result  :=  TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).ratings^[RatingIdx];
+          End
+          else
+            Result  := 0.0;
+        End;
+      End
+      else
+        Result  :=  0.0;
+  End
   else
       Result:=-1.0;
   end;

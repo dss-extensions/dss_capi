@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 2/6/2019 1:06:46 PM (- $Rev: 12980 $, 7077828).
+// File generated on 2/21/2019 12:31:12 PM (- $Rev: 12980 $, 14640015).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -1450,6 +1450,8 @@ library OpenDSSengine
     HRESULT _stdcall Units([out, retval] long* Value);
     [propput, id(0x000000CE)]
     HRESULT _stdcall Units([in] long Value);
+    [propget, id(0x000000CF), helpstring("Delivers the rating for the current season (in Amps)  if the SeasonalRatings option is active")]
+    HRESULT _stdcall SeasonRating([out, retval] double* Value);
   };
 
   [
