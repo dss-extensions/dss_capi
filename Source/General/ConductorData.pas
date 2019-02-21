@@ -51,10 +51,10 @@ TYPE
       FGMRUnits         : Integer;
       FResistanceUnits  : Integer;
       FRadiusUnits      : Integer;
-      Nratings          : Integer;
     public
       NormAmps          : Double;
       EmergAmps         : Double;
+      Nratings          : Integer;
       ratings           : pDoubleArray;
 
       constructor Create(ParClass:TDSSClass; const ConductorDataName:String);
@@ -178,11 +178,6 @@ BEGIN
         8 : IF EmergAmps<0.0 Then EmergAmps := 1.5*NormAmps;
         9 : If NormAmps<0.0  Then NormAmps := EmergAmps/1.5;
        10 : If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
-       11 : NRatings  :=  1;
-       12 : Begin
-              ReAllocmem(ratings, Sizeof(ratings^[1])*Nratings);
-              ratings^[1]  :=  NormAmps;
-            End;
       END;
       {Check for critical errors}
       CASE ParamPointer OF
