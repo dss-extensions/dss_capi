@@ -3096,12 +3096,14 @@ Var
    PDelem     :TPDelement;
    EmergAmps,
    NormAmps,
-   Cmax       :double;
+   Cmax       : double;
    mtr        : TEnergyMeterObj;
    ClassName  : String;
    RSignal    : TXYCurveObj;
+   i, j, k,
    RatingIdx  : Integer;
-   ElemCurr   : pComplexArray;
+   cVector,
+   cBuffer    : pDoubleArray;
 
 begin
 {
@@ -3131,7 +3133,7 @@ begin
           IF (PdElem.Normamps > 0.0) OR (PdElem.Emergamps>0.0) THEN
           Begin
              PDelem.ComputeIterminal(ActorID);
-             Cmax       := PDelem.MaxTerminalOneImag(ActorID); // For now, check only terminal 1 for overloads
+             Cmax       := PDElem.MaxTerminalOneImag(ActorID); // For now, check only terminal 1 for overloads
 
              // Section introduced in 02/20/2019 for allowing the automatic change of ratings
              // when the seasonal ratings option is active
@@ -3158,17 +3160,56 @@ begin
 
              IF (Cmax > NormAmps) OR (Cmax > EmergAmps) THEN
              Begin
-                  With ActiveCircuit[ActorID].Solution Do WriteintoMem(OV_MHandle[ActorID],DynaVars.dblHour);
-                  WriteintoMemStr(OV_MHandle[ActorID],', ' + FullName(PDelem));
-                  WriteintoMem(OV_MHandle[ActorID],NormAmps);
-                  WriteintoMem(OV_MHandle[ActorID],EmergAmps);
-                 IF PDElem.Normamps > 0.0  THEN WriteintoMem(OV_MHandle[ActorID],Cmax/Normamps*100.0)
-                                           ELSE WriteintoMem(OV_MHandle[ActorID], 0.0);
-                 IF PDElem.Emergamps > 0.0 THEN WriteintoMem(OV_MHandle[ActorID],Cmax/Emergamps*100.0)
-                                           ELSE WriteintoMem(OV_MHandle[ActorID], 0.0);
-                 With ActiveCircuit[ActorID] Do // Find bus of first terminal
-                   WriteintoMem(OV_MHandle[ActorID],Buses^[MapNodeToBus^[PDElem.NodeRef^[1]].BusRef].kVBase);
-                 WriteintoMemStr(OV_MHandle[ActorID], ' ' + char(10));
+
+              // Gets the currents for the active Element
+              cBuffer := Allocmem(sizeof(cBuffer^[1])*PDElem.NPhases*PDElem.NTerms);
+              PDElem.Get_Current_Mags(cBuffer,ActorID);
+              cVector := Allocmem(sizeof(cBuffer^[1])*3); // for storing
+              for i := 1 to 3 do cVector^[i]  :=  0.0;
+              if PDElem.NPhases < 3 then
+              Begin
+                ClassName :=  PDElem.FirstBus;
+                j         :=  ansipos('.',ClassName);     // Removes the name of the bus
+                ClassName :=  ClassName.Substring(j);
+                for i:= 1 to 3 do
+                Begin
+                  j         :=  ansipos('.',ClassName);   // goes for the phase Number
+                  if j = 0 then
+                  Begin
+                    k         :=  strtoint(ClassName);
+                    cVector^[k] :=  cBuffer^[i];
+                    break
+                  End
+                  else
+                  Begin
+                    k           :=  strtoint(ClassName.Substring(0,j - 1));
+                    cVector^[k] :=  cBuffer^[i];
+                    ClassName   :=  ClassName.Substring(j);
+                  End;
+                End;
+              End
+              else
+              Begin
+                for i := 1 to 3 do cVector^[i]  :=  cBuffer^[i];
+              End;
+
+              With ActiveCircuit[ActorID].Solution Do WriteintoMem(OV_MHandle[ActorID],DynaVars.dblHour);
+              WriteintoMemStr(OV_MHandle[ActorID],', ' + FullName(PDelem));
+              WriteintoMem(OV_MHandle[ActorID],NormAmps);
+              WriteintoMem(OV_MHandle[ActorID],EmergAmps);
+
+              IF PDElem.Normamps > 0.0  THEN WriteintoMem(OV_MHandle[ActorID],Cmax/Normamps*100.0)
+                                        ELSE WriteintoMem(OV_MHandle[ActorID], 0.0);
+              IF PDElem.Emergamps > 0.0 THEN WriteintoMem(OV_MHandle[ActorID],Cmax/Emergamps*100.0)
+                                        ELSE WriteintoMem(OV_MHandle[ActorID], 0.0);
+              With ActiveCircuit[ActorID] Do // Find bus of first terminal
+                WriteintoMem(OV_MHandle[ActorID],Buses^[MapNodeToBus^[PDElem.NodeRef^[1]].BusRef].kVBase);
+              // Adds the currents in Amps per phase at the end of the report
+              for i := 1 to 3 do
+                WriteintoMem(OV_MHandle[ActorID],cVector^[i]);
+
+              WriteintoMemStr(OV_MHandle[ActorID], ' ' + char(10));
+
              END;
           End; { }
        End;
@@ -3707,7 +3748,7 @@ begin
       IF OverloadFileIsOpen Then OV_MHandle[ActorID].Free;
       OverloadFileIsOpen := TRUE;
       if OV_MHandle[ActorID] <> nil then OV_MHandle[ActorID].free;
-      OV_MHandle[ActorID]  :=  Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase"' + Char(10));
+      OV_MHandle[ActorID]  :=  Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase", "I1(A)", "I2(A)", "I3(A)"' + Char(10));
   Except
       On E:Exception Do DosimpleMsg('Error creating memory space (Overload report) for writing.'+CRLF+E.Message, 541);
   End;
