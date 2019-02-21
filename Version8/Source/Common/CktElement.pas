@@ -44,6 +44,7 @@ TYPE
       FUNCTION  Get_Power(idxTerm:Integer; ActorID: integer):Complex;    // Get total complex power in active terminal
       FUNCTION  Get_MaxPower(idxTerm:Integer; ActorID: integer):Complex;    // Get eauivalent total complex power in active terminal based on phase with max current
 
+
       PROCEDURE DoYprimCalcs(Ymatrix: TCMatrix);
 
     Protected
@@ -148,6 +149,8 @@ TYPE
       Property ActiveTerminalIdx:Integer       read FActiveTerminal      write Set_ActiveTerminal;
       Property Closed[Index:Integer;ActorID:Integer]:Boolean   read Get_ConductorClosed  write Set_ConductorClosed;
       PROCEDURE SumCurrents(ActorID: Integer);
+
+      PROCEDURE Get_Current_Mags(cMBuffer : pDoubleArray; ACtorID : Integer); // Returns the Currents vector in magnitude
 
   End;
 
@@ -630,6 +633,14 @@ Begin
     If FEnabled Then
       For i := 1 to Fnphases DO Result := max(Result, cabs(Iterminal^[i]));
 //    Result := Sqrt(MaxI);  // just do the sqrt once and save a little time
+End;
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+PROCEDURE TDSSCktElement.Get_Current_Mags(cMBuffer : pDoubleArray; ACtorID : Integer);
+VAR
+   i    : Integer;
+Begin
+  For i := 1 to Fnphases DO cMBuffer^[i] := cabs(Iterminal^[i]);
 End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
