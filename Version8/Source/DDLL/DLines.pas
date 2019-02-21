@@ -391,7 +391,7 @@ begin
               Result  :=  TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).ratings^[RatingIdx];
           End
           else
-            Result  := 0.0;
+            Result  := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NormAmps;
         End;
       End
       else
