@@ -331,6 +331,8 @@ procedure New_Actor_Slot();
 procedure New_Actor(ActorID:  Integer);
 procedure Wait4Actors(WType : Integer);
 
+procedure DoClone();
+
 procedure Delay(TickTime : Integer);
 
 
@@ -953,6 +955,33 @@ Begin
     End;
   End;
 end;
+
+// Clones the active Circuit as many times as requested if possible
+procedure DoClone();
+var
+  i,
+  NumClones   : Integer;
+Begin
+    Parser[ActiveActor].NextParam;
+    NumClones           := Parser[ActiveActor].IntValue;
+    Parallel_enabled    := False;
+    if ((NumOfActors + NumClones) <= CPU_Cores) and (NumClones > 0) then
+    Begin
+      for i := 1 to NumClones do
+      Begin
+        New_Actor_Slot;
+        DSSExecutive.Command          :=  'compile "' + LastFileCompiled + '"';
+        DSSExecutive.Command          :=  'solve';
+      End;
+    End
+    else
+    Begin
+      if NumClones > 0 then
+        DoSimpleMsg('There are no more CPUs available', 7001)
+      else
+        DoSimpleMsg('The number of clones requested is invalid', 7004)
+    End;
+End;
 
 // Prepares memory to host a new actor
 procedure New_Actor_Slot();
