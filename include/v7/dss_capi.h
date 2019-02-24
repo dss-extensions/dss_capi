@@ -1232,6 +1232,11 @@ extern "C" {
     */
     DSS_CAPI_V7_DLL int32_t CtrlQueue_Get_NumActions(void);
 
+    /*
+    Push a control action onto the DSS control queue by time, action code, and device handle (user defined). Returns Control Queue handle.
+    */
+    DSS_CAPI_V7_DLL int32_t CtrlQueue_Push(int32_t Hour, double Seconds, int32_t ActionCode, int32_t DeviceHandle);
+
     DSS_CAPI_V7_DLL void CtrlQueue_Show(void);
 
     DSS_CAPI_V7_DLL void CtrlQueue_ClearActions(void);
@@ -5374,7 +5379,7 @@ extern "C" {
         ControlModes_Static = 0, // Control Mode option - Static
         ControlModes_Event = 1, // Control Mode Option - Event driven solution mode
         ControlModes_Time = 2, // Control mode option - Time driven mode
-        ControlModes_Multirate = 3 // Control mode option - Multirate mode
+        ControlModes_Multirate = 3, // Control mode option - Multirate mode
         ControlModes_ControlOff = -1 // Control Mode OFF
     };
 

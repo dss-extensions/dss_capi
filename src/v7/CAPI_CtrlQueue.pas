@@ -13,6 +13,7 @@ procedure CtrlQueue_Delete(ActionHandle: Integer); CDECL;
 function CtrlQueue_Get_ActionCode(): Integer; CDECL;
 function CtrlQueue_Get_DeviceHandle(): Integer; CDECL;
 function CtrlQueue_Get_NumActions(): Integer; CDECL;
+function CtrlQueue_Push(Hour: Integer; Seconds: Double; ActionCode, DeviceHandle: Integer): Integer; CDECL;
 procedure CtrlQueue_Show(); CDECL;
 procedure CtrlQueue_ClearActions(); CDECL;
 function CtrlQueue_Get_PopAction(): Integer; CDECL;
@@ -98,13 +99,21 @@ begin
     Result := COMControlProxyObj.ActionList.Count;
 end;
 //------------------------------------------------------------------------------
+function CtrlQueue_Push(Hour: Integer; Seconds: Double; ActionCode, DeviceHandle: Integer): Integer; CDECL;
+// returns handle on control queue
+begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        Result := ActiveCircuit.ControlQueue.push(Hour, Seconds, ActionCode, DeviceHandle, COMControlProxyObj);
+    end;
+end;
+//------------------------------------------------------------------------------
 procedure CtrlQueue_Show(); CDECL;
 begin
     if ActiveCircuit <> NIL then
         ActiveCircuit.ControlQueue.ShowQueue(DSSDirectory + 'COMProxy_ControlQueue.CSV');
 end;
-
-{ TCOMControlProxyObj }
 //------------------------------------------------------------------------------
 procedure CtrlQueue_ClearActions(); CDECL;
 begin
@@ -173,6 +182,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+{ TCOMControlProxyObj }
 procedure TCOMControlProxyObj.DoPendingAction(const Code, ProxyHdl: Integer);
 var
     Action: pAction;

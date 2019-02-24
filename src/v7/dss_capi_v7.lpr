@@ -464,6 +464,7 @@ exports
     CtrlQueue_Get_ActionCode,
     CtrlQueue_Get_DeviceHandle,
     CtrlQueue_Get_NumActions,
+    CtrlQueue_Push,
     CtrlQueue_Show,
     CtrlQueue_ClearActions,
     CtrlQueue_Get_PopAction,
