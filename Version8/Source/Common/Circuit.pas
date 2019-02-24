@@ -161,7 +161,7 @@ TYPE
 
           CapacityStart,
           CapacityIncrement:  Double;
-                                   
+
           TrapezoidalIntegration,   // flag for trapezoidal integratio
           LogEvents  :Boolean;
 
@@ -334,7 +334,7 @@ USES
      PDElement, CktElementClass,
      ParserDel,  DSSClassDefs, DSSGlobals, Dynamics,
      Line, Transformer,  Vsource,
-     Utilities, {$IFDEF FPC}CmdForms,{$ELSE}DSSForms, {$ENDIF} 
+     Utilities, {$IFDEF FPC}CmdForms,{$ELSE}DSSForms, {$ENDIF}
      {$IFDEF MSWINDOWS}Windows,  SHELLAPI, {$ELSE} BaseUnix, Unix, {$ENDIF} Executive, StrUtils;
 //----------------------------------------------------------------------------
 Constructor TDSSCircuit.Create(const aName:String);
@@ -662,7 +662,7 @@ end;
   {$ENDIF}
 {$IFDEF UNIX}
 procedure DeltreeDir(Directory: string);
-var 
+var
   Info: TSearchRec;
 Begin
   If FindFirst(Directory + PathDelim + '*', faAnyFile and faDirectory, Info) = 0 then
@@ -681,12 +681,12 @@ Begin
         end;
       end;
     Until FindNext(info) <> 0;
-  end;    
+  end;
   rmdir(Directory);
 end;
 
 procedure DelFilesFromDir(Directory, FileMask: string; DelSubDirs: Boolean);
-var 
+var
   Info: TSearchRec;
   flags: LongInt;
 Begin
@@ -694,7 +694,7 @@ Begin
     flags := faAnyFile and faDirectory
   else
     flags := faAnyFile;
-  
+
   If FindFirst(Directory + PathDelim + FileMask, flags, Info) = 0 then
   begin
     Repeat
@@ -735,7 +735,7 @@ begin
   Graph_size  :=  length(graph_in);
   while (End_Flag) and (Local_idx < Graph_Size) do
   Begin
-    if graph_in[Local_idx] = element then 
+    if graph_in[Local_idx] = element then
     Begin
       End_Flag  :=  False;
       Found     :=  True;
@@ -755,7 +755,7 @@ end;
 procedure  TDSSCircuit.get_longest_path();
 var
   End_flag        : Boolean;    //  Terminates the process
-  Current_Idx,                  //  Stores the Index value of the current level   
+  Current_Idx,                  //  Stores the Index value of the current level
   Current_level   : Integer;    //  Stores the current level traced
 Begin
   with solution do
@@ -1959,10 +1959,17 @@ begin
     If Success Then Success := SaveBusCoords;
     If Success Then Success := SaveMasterFile;
 
+    If Success Then
+    Begin
+{$IFDEF DSS_CAPI}
+        GlobalResult := 'Circuit saved in directory: ' + GetCurrentDir;
+{$ELSE}
+        DoSimpleMsg('Circuit saved in directory: ' + GetCurrentDir, 433)
+{$ENDIF}
+    End
+    Else
+        DoSimpleMsg('Error attempting to save circuit in ' + GetCurrentDir, 434);
 
-
-    If Success Then DoSimpleMsg('Circuit saved in directory: ' + GetCurrentDir, 433)
-               Else DoSimpleMsg('Error attempting to save circuit in ' + GetCurrentDir, 434);
     // Return to Original directory
     SetCurrentDir(SaveDir);
 
@@ -2095,7 +2102,7 @@ begin
              End;
         End;
     End;  {For}
-    
+
 end;
 
 function TDSSCircuit.SaveBusCoords: Boolean;
