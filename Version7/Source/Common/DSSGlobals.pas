@@ -118,6 +118,7 @@ VAR
 {$IFDEF DSS_CAPI}
    DSS_CAPI_INFO_SPARSE_COND : Boolean;
    DSS_CAPI_EARLY_ABORT : Boolean;
+   DSS_CAPI_ALLOW_EDITOR: Boolean;
 {$ENDIF}
    // Global variables for the DSS visualization tool
    DSS_Viz_installed   :Boolean=False; // DSS visualization tool (flag of existance)
@@ -949,12 +950,18 @@ initialization
    AuxParser        := TParser.Create;
 
    {$IFDEF Darwin}
-      DefaultEditor   := 'open -t';
+      DefaultEditor := GetEnvironmentVariable('EDITOR');
+      // If there is no EDITOR environment variable, keep the old behavior
+      if (DefaultEditor = '') then
+          DefaultEditor   := 'open -t';
       DefaultFontSize := 12;
       DefaultFontName := 'Geneva';
    {$ENDIF}
    {$IFDEF Linux}
-      DefaultEditor   := 'xdg-open';
+      DefaultEditor := GetEnvironmentVariable('EDITOR');
+      // If there is no EDITOR environment variable, keep the old behavior
+      if (DefaultEditor = '') then
+          DefaultEditor := 'xdg-open';
       DefaultFontSize := 10;
       DefaultFontName := 'Arial';
    {$ENDIF}
@@ -986,9 +993,14 @@ initialization
    {$IFNDEF FPC}
    DSS_Viz_installed:= CheckDSSVisualizationTool; // DSS visualization tool (flag of existance)
    {$ENDIF}
-{$IFDEF DSS_CAPI}
+{$IFDEF DSS_CAPI}  
    DSS_CAPI_INFO_SPARSE_COND := (GetEnvironmentVariable('DSS_CAPI_INFO_SPARSE_COND') = '1');
-   DSS_CAPI_EARLY_ABORT := True;
+   
+   // Default is True, disable at initialization only when DSS_CAPI_EARLY_ABORT = 0
+   DSS_CAPI_EARLY_ABORT := not (GetEnvironmentVariable('DSS_CAPI_EARLY_ABORT') <> '0'); 
+   
+   // Default is False, enable at initialization when DSS_CAPI_EARLY_ABORT = 1
+   DSS_CAPI_ALLOW_EDITOR := (GetEnvironmentVariable('DSS_CAPI_ALLOW_EDITOR') = '1');
 {$ENDIF}
 
 Finalization

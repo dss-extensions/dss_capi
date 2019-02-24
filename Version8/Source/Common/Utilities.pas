@@ -278,37 +278,58 @@ end;
 procedure FireOffEditor(FileNm: String);
 var
     s: String;
+    gotError: Boolean;
+    msg: String;
 begin
+{$IFDEF DSS_CAPI}
+    if not DSS_CAPI_ALLOW_EDITOR then Exit; // just ignore if Show is not allowed
+{$ENDIF}
+
+    gotError := False;
+    msg := 'Unknown error in process.';
     try
         if FileExists(FileNm) then
         begin
 {$IF (defined(Windows) or defined(MSWindows))}
-            RunCommand(DefaultEditor, [FileNm], s);
+            gotError := not RunCommand(DefaultEditor, [FileNm], s);
 {$ELSE}
-            RunCommand('/bin/bash', ['-c', DefaultEditor + ' ' + FileNm], s);
+            gotError := not RunCommand('/bin/bash', ['-c', DefaultEditor + ' ' + FileNm], s);
 {$ENDIF}
         end;
     except
         On E: Exception do
-            DoErrorMsg('FireOffEditor.', E.Message,
-                'Default Editor correctly specified???', 704);
+        begin
+            gotError := True;
+            msg := E.Message;
+        end;
     end;
+    if gotError then
+        DoErrorMsg('FireOffEditor.', msg, 'Editor could not be started. Is the editor correctly specified?', 704);
 end;
 
 procedure DoDOSCmd(CmdString: String);
 var //Handle:Word;
     s: String;
+    gotError: Boolean;
+    msg: String;
 begin
+    gotError := False;
+    msg := 'Unknown error in command.';
     try
 {$IF (defined(Windows) or defined(MSWindows))}
-        RunCommand('cmd', ['/c', CmdString], s);
+        gotError := not RunCommand('cmd', ['/c', CmdString], s);
 {$ELSE}
-        RunCommand('/bin/bash', ['-c', CmdString], s);
+        gotError := not RunCommand('/bin/bash', ['-c', CmdString], s);
 {$ENDIF}
     except
         On E: Exception do
-            DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"', [E.Message, CmdString]), 704);
+        begin
+            gotError := True;
+            msg := E.Message;
+        end;
     end;
+    if gotError then
+        DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"', [msg, CmdString]), 704);
 end;
 
 {$ELSE}
