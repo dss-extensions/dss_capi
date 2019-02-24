@@ -488,6 +488,8 @@ exports
     DSS_SetActiveClass,
     DSS_Get_AllowForms,
     DSS_Set_AllowForms,
+    DSS_Get_AllowEditor,
+    DSS_Set_AllowEditor,
     DSSElement_Get_AllPropertyNames,
     DSSElement_Get_Name,
     DSSElement_Get_NumProperties,

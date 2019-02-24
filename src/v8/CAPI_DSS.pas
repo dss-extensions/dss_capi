@@ -25,6 +25,8 @@ function DSS_Get_DefaultEditor(): PAnsiChar; CDECL;
 function DSS_SetActiveClass(const ClassName: PAnsiChar): Integer; CDECL;
 function DSS_Get_AllowForms: Wordbool; CDECL;
 procedure DSS_Set_AllowForms(Value: Wordbool); CDECL;
+function DSS_Get_AllowEditor: Wordbool; CDECL;
+procedure DSS_Set_AllowEditor(Value: Wordbool); CDECL;
 
 implementation
 
@@ -55,6 +57,16 @@ begin
     if NoFormsAllowed then
         CloseDownForms;  // DSSForms
 
+end;
+//------------------------------------------------------------------------------
+function DSS_Get_AllowEditor: Wordbool; CDECL;
+begin
+    Result := DSS_CAPI_ALLOW_EDITOR;
+end;
+//------------------------------------------------------------------------------
+procedure DSS_Set_AllowEditor(Value: Wordbool); CDECL;
+begin
+    DSS_CAPI_ALLOW_EDITOR := not (not Value);
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_NumCircuits(): Integer; CDECL;

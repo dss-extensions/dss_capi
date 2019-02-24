@@ -1331,6 +1331,16 @@ extern "C" {
     DSS_CAPI_V8_DLL void DSS_Set_AllowForms(uint16_t Value);
 
     /*
+    Sets/gets the AllowEditor mode.
+
+    AllowEditor controls whether the external editor is used in commands like "Show".
+    If you set to 0 (false), the editor is not executed. Note that other side effects,
+    such as the creation of files, are not affected.
+    */
+    DSS_CAPI_V8_DLL uint16_t DSS_Get_AllowEditor(void);
+    DSS_CAPI_V8_DLL void DSS_Set_AllowEditor(uint16_t Value);
+
+    /*
     Array of strings containing the names of all properties for the active DSS object.
     */
     DSS_CAPI_V8_DLL void DSSElement_Get_AllPropertyNames(char*** ResultPtr, int32_t* ResultCount);
