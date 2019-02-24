@@ -1,3 +1,10 @@
+# Version 0.10.2
+
+(not released)
+
+- `CtrlQueue`: Add the missing function `CtrlQueue_Push`.
+
+
 # Version 0.10.1
 
 *Besides `CktElement_Get_Variable` and `CktElement_Get_Variablei`, version 0.10.1 should be API and ABI compatible with 0.10.0.*
