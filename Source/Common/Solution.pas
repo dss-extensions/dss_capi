@@ -2474,10 +2474,12 @@ Var
    i, j:Integer;
 Begin
    WITH ActiveCircuit[ActorID] Do
+   Begin
     FOR i := 1 to NumBuses Do
      WITH Buses^[i] Do
        If Assigned(Vbus)
        Then FOR j := 1 to NumNodesThisBus Do  VBus^[j] := NodeV^[GetRef(j)];
+   End;
 End;
 
 procedure TSolutionObj.RestoreNodeVfromVbus;
