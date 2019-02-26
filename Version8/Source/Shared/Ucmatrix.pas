@@ -76,7 +76,7 @@ implementation
        inherited Create;
        Norder := N;
        InvertError := 0;
-       getmem(Values, Sizeof(Complex)*Norder*Norder);    {Allocate}
+       getmem(Values,Sizeof(Complex)*Norder*Norder);    {Allocate}
        For i := 1 to (Norder*Norder) Do values^[i] := Cmplx(0.0,0.0);
 
      Except
