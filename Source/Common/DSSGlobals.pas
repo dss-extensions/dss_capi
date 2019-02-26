@@ -961,7 +961,9 @@ procedure DoClone();
 var
   i,
   NumClones   : Integer;
+  Ref_Ckt     : String;
 Begin
+    Ref_Ckt             := LastFileCompiled;
     Parser[ActiveActor].NextParam;
     NumClones           := Parser[ActiveActor].IntValue;
     Parallel_enabled    := False;
@@ -970,9 +972,9 @@ Begin
       for i := 1 to NumClones do
       Begin
         New_Actor_Slot;
-        DSSExecutive.Command          :=  'compile "' + LastFileCompiled + '"';
-        DSSExecutive.Command          :=  'solve';
+        DSSExecutive.Command          :=  'compile "' + Ref_Ckt + '"';
       End;
+      DSSExecutive.Command          :=  'SolveAll';
     End
     else
     Begin

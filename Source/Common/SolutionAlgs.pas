@@ -871,32 +871,32 @@ Begin
 //   ShowPctProgress( 0, ActorID);
 //   ProgressCaption( 'Computing Open-Circuit Voltages', ActorID);
 
-   With ActiveCircuit[ActorID].solution Do
-   Begin
-      LoadModel := ADMITTANCE;
-      DisableAllFaults(ActorID);
+     With ActiveCircuit[ActorID].solution Do
+     Begin
+        LoadModel := ADMITTANCE;
+        DisableAllFaults(ActorID);
 
-      SolveDirect(ActorID);   // This gets the open circuit voltages and bus lists corrected
+        SolveDirect(ActorID);   // This gets the open circuit voltages and bus lists corrected
 
-      AllocateAllSCParms(ActorID);   // Reallocate bus quantities
-      UpdateVBus(ActorID);  // Put present solution Voc's in bus quantities
-   End;
+        AllocateAllSCParms(ActorID);   // Reallocate bus quantities
+        UpdateVBus(ActorID);  // Put present solution Voc's in bus quantities
+     End;
 
-    ActorPctProgress[ActorID] :=  30;
-{   ProgressCaption ('Computing Ysc Matrices for Each Bus', ActorID);
-   ShowPctProgress (30, ActorID);}
-   ComputeAllYsc(ActorID);
+     ActorPctProgress[ActorID] :=  30;
+  {   ProgressCaption ('Computing Ysc Matrices for Each Bus', ActorID);
+     ShowPctProgress (30, ActorID);}
+     ComputeAllYsc(ActorID);
 
-    ActorPctProgress[ActorID] :=  80;
-{   ProgressCaption( 'Computing Short-circuit currents.', ActorID);
-   ShowPctProgress (80, ActorID);}
-   ComputeIsc(ActorID);
+     ActorPctProgress[ActorID] :=  80;
+  {   ProgressCaption( 'Computing Short-circuit currents.', ActorID);
+     ShowPctProgress (80, ActorID);}
+     ComputeIsc(ActorID);
 
-    ActorPctProgress[ActorID] :=  100;
-{   ShowPctProgress ( 100, ActorID);
-   ProgressCaption ('Done.', ActorID);}
-//   ProgressHide(ActorID);
-   // Now should have all we need to make a short circuit report
+     ActorPctProgress[ActorID] :=  100;
+  {   ShowPctProgress ( 100, ActorID);
+     ProgressCaption ('Done.', ActorID);}
+  //   ProgressHide(ActorID);
+     // Now should have all we need to make a short circuit report
 
 End;
 
