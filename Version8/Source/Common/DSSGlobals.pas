@@ -973,6 +973,9 @@ Begin
       Begin
         New_Actor_Slot;
         DSSExecutive.Command          :=  'compile "' + Ref_Ckt + '"';
+        // sets the previous maxiterations and controliterations
+        ActiveCircuit[i + 1].solution.MaxIterations         :=  ActiveCircuit[1].solution.MaxIterations;
+        ActiveCircuit[i + 1].solution.MaxControlIterations  :=  ActiveCircuit[1].solution.MaxControlIterations;
       End;
       DSSExecutive.Command          :=  'SolveAll';
     End
