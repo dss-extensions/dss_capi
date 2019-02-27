@@ -630,7 +630,7 @@ Begin
            {Create a default Circuit}
            SolutionABort              := FALSE;
            {Voltage source named "source" connected to SourceBus}
-           DSSExecutive.Command       := 'New object=vsource.source Bus1=SourceBus ' + S;  // Load up the parser as if it were read in
+           DSSExecutive[ActiveActor].Command       := 'New object=vsource.source Bus1=SourceBus ' + S;  // Load up the parser as if it were read in
            // Creates the thread for the actor if not created before
            If ActorHandle[ActiveActor]  = nil then New_Actor(ActiveActor);
 
@@ -972,12 +972,15 @@ Begin
       for i := 1 to NumClones do
       Begin
         New_Actor_Slot;
-        DSSExecutive.Command          :=  'compile "' + Ref_Ckt + '"';
+        DSSExecutive[ActiveActor].Command          :=  'compile "' + Ref_Ckt + '"';
         // sets the previous maxiterations and controliterations
-        ActiveCircuit[i + 1].solution.MaxIterations         :=  ActiveCircuit[1].solution.MaxIterations;
-        ActiveCircuit[i + 1].solution.MaxControlIterations  :=  ActiveCircuit[1].solution.MaxControlIterations;
+        ActiveCircuit[ActiveActor].solution.MaxIterations         :=  ActiveCircuit[1].solution.MaxIterations;
+        ActiveCircuit[ActiveACtor].solution.MaxControlIterations  :=  ActiveCircuit[1].solution.MaxControlIterations;
+        // Solves the circuit
+        ActiveSolutionObj := ActiveCircuit[ActiveActor].Solution;
+        SolutionClass[ActiveActor].Edit(ActiveActor);
       End;
-      DSSExecutive.Command          :=  'SolveAll';
+
     End
     else
     Begin
@@ -997,10 +1000,10 @@ Begin
     GlobalResult              :=  inttostr(NumOfActors);
     ActiveActor               :=  NumOfActors;
     ActorCPU[ActiveActor]     :=  ActiveActor -1;
-    DSSExecutive              :=  TExecutive.Create;  // Make a DSS object
+    DSSExecutive[ActiveActor] :=  TExecutive.Create;  // Make a DSS object
     Parser[ActiveActor]       :=  TParser.Create;
     AuxParser[ActiveActor]    :=  TParser.Create;
-    DSSExecutive.CreateDefaultDSSItems;
+    DSSExecutive[ActiveActor].CreateDefaultDSSItems;
   end
   else DoSimpleMsg('There are no more CPUs available', 7001)
 End;
@@ -1125,6 +1128,8 @@ initialization
    SetLength(PHV_Append,CPU_Cores + 1);
    SetLength(FM_Append,CPU_Cores + 1);
    SetLength(DIFilesAreOpen,CPU_Cores + 1);
+   SetLength(DSSExecutive,CPU_Cores + 1);
+
 
    for ActiveActor := 1 to CPU_Cores do
    begin
@@ -1281,9 +1286,9 @@ Finalization
 
 
 
-  With DSSExecutive Do If RecorderOn Then Recorderon := FALSE;
+  With DSSExecutive[ActiveActor] Do If RecorderOn Then Recorderon := FALSE;
   ClearAllCircuits;
-  DSSExecutive.Free;  {Writes to Registry}
+  DSSExecutive[ActiveActor].Free;  {Writes to Registry}
   DSS_Registry.Free;  {Close Registry}
   for ActiveActor := 1 to NumOfActors do
   Begin

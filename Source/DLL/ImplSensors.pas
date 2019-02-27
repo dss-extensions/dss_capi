@@ -65,7 +65,7 @@ begin
   if not Assigned (ActiveCircuit[ActiveActor]) then exit;
   SolutionAbort := FALSE;  // Reset for commands entered from outside
   cmd := Format ('capacitor.%s.%s=%s', [ActiveSensor.Name, parm, val]);
-  DSSExecutive.Command := cmd;
+  DSSExecutive[ActiveActor].Command := cmd;
 end;
 
 function TSensors.Get_AllNames: OleVariant;

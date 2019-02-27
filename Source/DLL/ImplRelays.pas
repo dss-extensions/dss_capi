@@ -45,7 +45,7 @@ begin
   if not Assigned (ActiveCircuit[ActiveActor]) then exit;
   SolutionAbort := FALSE;  // Reset for commands entered from outside
   cmd := Format ('Relay.%s.%s=%s', [TRelayObj(RelayClass.GetActiveObj).Name, parm, val]);
-  DSSExecutive.Command := cmd;
+  DSSExecutive[ActiveActor].Command := cmd;
 end;
 
 function TRelays.Get_AllNames: OleVariant;

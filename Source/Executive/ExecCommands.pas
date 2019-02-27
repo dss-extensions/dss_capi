@@ -553,17 +553,17 @@ Begin
    // Check first for Compile or Redirect and get outta here
      CASE ParamPointer of
         14: Begin
-                With DSSExecutive Do If RecorderOn Then  Write_to_RecorderFile(CRLF+'!*********'+CmdLine);
+                With DSSExecutive[ActiveActor] Do If RecorderOn Then  Write_to_RecorderFile(CRLF+'!*********'+CmdLine);
                 CmdResult := DoRedirect(TRUE);
                 Exit;
             End;//'Compile';
         20: Begin
-                With DSSExecutive Do If RecorderOn Then  Write_to_RecorderFile(CRLF+'!*********'+CmdLine);
+                With DSSExecutive[ActiveActor] Do If RecorderOn Then  Write_to_RecorderFile(CRLF+'!*********'+CmdLine);
                 CmdResult := DoRedirect(FALSE);
                 Exit;
             End; //'Redirect';
      ELSE   // Write everything direct to recorder, if ON
-        With DSSExecutive Do If RecorderOn Then  Write_to_RecorderFile(CmdLine);
+        With DSSExecutive[ActiveActor] Do If RecorderOn Then  Write_to_RecorderFile(CmdLine);
      END;
 
    // Things that are OK to do before a circuit is defined

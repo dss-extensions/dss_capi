@@ -81,7 +81,7 @@ TYPE
 
 VAR
 
-    DSSExecutive: TExecutive;
+    DSSExecutive: Array of TExecutive;
 
 
 implementation
