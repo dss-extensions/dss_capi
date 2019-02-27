@@ -100,7 +100,6 @@ type
         // Function Get_FirstMult:Double;
         // Function Get_NextMult :Double;
         function Get_Interval: Double;
-        procedure Set_NumPoints(const Value: Integer);
         procedure SaveToDblFile;
         procedure SaveToSngFile;
         procedure CalcMeanandStdDev;
@@ -115,7 +114,7 @@ type
         Interval: Double;  //=0.0 then random interval     (hr)
         Hours,          // Time values (hr) if Interval > 0.0  Else nil
         PMultipliers,
-        QMultipliers: pDoubleArray;  // Multipliers
+        QMultipliers: Array of Double;  // Multipliers
 
         MaxP,
         MaxQ,
@@ -137,7 +136,7 @@ type
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
         procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
 
-        property NumPoints: Integer READ FNumPoints WRITE Set_NumPoints;
+        property NumPoints: Integer READ FNumPoints WRITE FNumPoints;
         property PresentInterval: Double READ Get_Interval;
         property Mean: Double READ Get_Mean WRITE Set_Mean;
         property StdDev: Double READ Get_StdDev WRITE Set_StdDev;
@@ -162,6 +161,9 @@ uses
     TOPExport,
     Math,
     PointerList;
+
+type 
+    ELoadShapeError = class(Exception);  // Raised to abort solution
 
 const
     NumPropsThisClass = 20;
@@ -337,14 +339,14 @@ begin
                     Interval := Parser[ActorID].DblValue;
                 3:
                 begin
-                    ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
-                 // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
-                    NumPoints := InterpretDblArray(Param, NumPoints, PMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
+                    SetLength(PMultipliers, NumPoints);
+                    // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
+                    NumPoints := InterpretDblArray(Param, NumPoints, pDoubleArray(PMultipliers));   // Parser.ParseAsVector(Npts, Multipliers);
                 end;
                 4:
                 begin
-                    ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
-                    InterpretDblArray(Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
+                    SetLength(Hours, NumPoints);
+                    InterpretDblArray(Param, NumPoints, pDoubleArray(Hours));   // Parser.ParseAsVector(Npts, Hours);
                     Interval := 0.0;
                 end;
                 5:
@@ -368,8 +370,8 @@ begin
                     end;
                 11:
                 begin
-                    ReAllocmem(QMultipliers, Sizeof(QMultipliers^[1]) * NumPoints);
-                    InterpretDblArray(Param, NumPoints, QMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
+                    SetLength(QMultipliers, NumPoints);
+                    InterpretDblArray(Param, NumPoints, pDoubleArray(QMultipliers));   // Parser.ParseAsVector(Npts, Multipliers);
                 end;
                 12:
                     UseActual := InterpretYesNo(Param);
@@ -387,9 +389,9 @@ begin
                     BaseQ := Parser[ActorID].DblValue;
                 19:
                 begin   // same as mult
-                    ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
-                 // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
-                    NumPoints := InterpretDblArray(Param, NumPoints, PMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
+                    SetLength(PMultipliers, NumPoints);
+                    // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
+                    NumPoints := InterpretDblArray(Param, NumPoints, pDoubleArray(PMultipliers));   // Parser.ParseAsVector(Npts, Multipliers);
                 end;
                 20:
                     Do2ColCSVFile(Param);
@@ -442,22 +444,21 @@ begin
         begin
             NumPoints := OtherLoadShape.NumPoints;
             Interval := OtherLoadShape.Interval;
-            ReallocMem(PMultipliers, SizeOf(PMultipliers^[1]) * NumPoints);
-            for i := 1 to NumPoints do
-                PMultipliers^[i] := OtherLoadShape.PMultipliers^[i];
+            
+            SetLength(PMultipliers, Length(OtherLoadShape.PMultipliers));
+            Move(OtherLoadShape.PMultipliers[0], PMultipliers[0], Length(OtherLoadShape.PMultipliers) * SizeOf(Double));
+            
             if Assigned(OtherLoadShape.Qmultipliers) then
             begin
-                ReallocMem(QMultipliers, SizeOf(QMultipliers^[1]) * NumPoints);
-                for i := 1 to NumPoints do
-                    QMultipliers^[i] := OtherLoadShape.QMultipliers^[i];
+                SetLength(QMultipliers, Length(OtherLoadShape.QMultipliers));
+                Move(OtherLoadShape.QMultipliers[0], QMultipliers[0], Length(OtherLoadShape.QMultipliers) * SizeOf(Double));
             end;
             if Interval > 0.0 then
-                ReallocMem(Hours, 0)
+                SetLength(Hours, 0)
             else
             begin
-                ReallocMem(Hours, SizeOf(Hours^[1]) * NumPoints);
-                for i := 1 to NumPoints do
-                    Hours^[i] := OtherLoadShape.Hours^[i];
+                SetLength(Hours, Length(OtherLoadShape.Hours));
+                Move(OtherLoadShape.Hours[0], Hours[0], Length(OtherLoadShape.Hours) * SizeOf(Double));
             end;
             SetMaxPandQ;
             UseActual := OtherLoadShape.UseActual;
@@ -551,10 +552,10 @@ begin
         with ActiveLoadShapeObj do
         begin
          // Allocate both P and Q multipliers
-            ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
-            ReAllocmem(QMultipliers, Sizeof(QMultipliers^[1]) * NumPoints);
+            SetLength(PMultipliers, NumPoints);
+            SetLength(QMultipliers, NumPoints);
             if Interval = 0.0 then
-                ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
+                SetLength(Hours, NumPoints);
             i := 0;
             while (not EOF(F)) and (i < FNumPoints) do
             begin
@@ -567,12 +568,12 @@ begin
                     if Interval = 0.0 then
                     begin
                         NextParam;
-                        Hours^[i] := DblValue;
+                        Hours[i - 1] := DblValue;
                     end;
                     NextParam;
-                    PMultipliers^[i] := DblValue;  // first parm
+                    PMultipliers[i - 1] := DblValue;  // first parm
                     NextParam;
-                    QMultipliers^[i] := DblValue;  // second parm
+                    QMultipliers[i - 1] := DblValue;  // second parm
                 end;
             end;
             CloseFile(F);
@@ -612,9 +613,9 @@ begin
 
         with ActiveLoadShapeObj do
         begin
-            ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
+            SetLength(PMultipliers, NumPoints);
             if Interval = 0.0 then
-                ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
+                SetLength(Hours, NumPoints);
             i := 0;
             while (not EOF(F)) and (i < FNumPoints) do
             begin
@@ -627,10 +628,10 @@ begin
                     if Interval = 0.0 then
                     begin
                         NextParam;
-                        Hours^[i] := DblValue;
+                        Hours[i - 1] := DblValue;
                     end;
                     NextParam;
-                    PMultipliers^[i] := DblValue;
+                    PMultipliers[i - 1] := DblValue;
                 end;
             end;
             CloseFile(F);
@@ -669,9 +670,9 @@ begin
     try
         with ActiveLoadShapeObj do
         begin
-            ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
+            SetLength(PMultipliers, NumPoints);
             if Interval = 0.0 then
-                ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
+                SetLength(Hours, NumPoints);
             i := 0;
             while (not EOF(F)) and (i < FNumPoints) do
             begin
@@ -679,10 +680,10 @@ begin
                 if Interval = 0.0 then
                 begin
                     Read(F, Hr);
-                    Hours^[i] := Hr;
+                    Hours[i - 1] := Hr;
                 end;
                 Read(F, M);
-                PMultipliers^[i] := M;
+                PMultipliers[i - 1] := M;
             end;
             CloseFile(F);
             if i <> FNumPoints then
@@ -715,16 +716,16 @@ begin
     try
         with ActiveLoadShapeObj do
         begin
-            ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
+            SetLength(PMultipliers, NumPoints);
             if Interval = 0.0 then
-                ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
+                SetLength(Hours, NumPoints);
             i := 0;
             while (not EOF(F)) and (i < FNumPoints) do
             begin
                 Inc(i);
                 if Interval = 0.0 then
-                    Read(F, Hours^[i]);
-                Read(F, PMultipliers^[i]);
+                    Read(F, Hours[i]);
+                Read(F, PMultipliers[i]);
             end;
             CloseFile(F);
             if i <> FNumPoints then
@@ -774,12 +775,9 @@ end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TLoadShapeObj.Destroy;
 begin
-
-    ReallocMem(Hours, 0);
-    if Assigned(PMultipliers) then
-        ReallocMem(PMultipliers, 0);
-    if Assigned(QMultipliers) then
-        ReallocMem(QMultipliers, 0);
+    SetLength(Hours, 0);
+    SetLength(PMultipliers, 0);
+    SetLength(QMultipliers, 0);
     inherited destroy;
 end;
 
@@ -807,16 +805,27 @@ var
     end;
 
 begin
-
     Result.re := 1.0;
     Result.im := 1.0;    // default return value if no points in curve
+
+    if (Length(PMultipliers) <> NumPoints) or 
+       (Assigned(QMultipliers) and (Length(QMultipliers) <> NumPoints)) or
+       ((Interval = 0.0) and Assigned(Hours) and (Length(Hours) <> NumPoints)) then
+    begin
+       if (not Assigned(QMultipliers)) and (Interval = 0.0) then
+           raise ELoadShapeError.Create('PMult length is inconsistent with NPts!')
+       else if (Assigned(QMultipliers)) and (Interval = 0.0) then
+           raise ELoadShapeError.Create('PMult and/or QMult lengths are inconsistent with NPts!')
+       else // if (Assigned(QMultipliers)) and (Interval <> 0.0) then
+           raise ELoadShapeError.Create('PMult, QMult and/or Hour lengths are inconsistent with NPts!');
+    end;
 
     if FNumPoints > 0 then         // Handle Exceptional cases
         if FNumPoints = 1 then
         begin
-            Result.re := PMultipliers^[1];
+            Result.re := PMultipliers[0];
             if Assigned(QMultipliers) then
-                Result.im := QMultipliers^[1]
+                Result.im := QMultipliers[0]
             else
                 Result.im := Set_Result_im(Result.re);
         end
@@ -829,9 +838,9 @@ begin
                     Index := Index mod FNumPoints;  // Wrap around using remainder
                 if Index = 0 then
                     Index := FNumPoints;
-                Result.re := PMultipliers^[Index];
+                Result.Re := PMultipliers[Index - 1];
                 if Assigned(QMultipliers) then
-                    Result.im := QMultipliers^[Index]
+                    Result.im := QMultipliers[Index - 1]
                 else
                     Result.im := Set_Result_im(Result.re);
             end
@@ -843,36 +852,36 @@ begin
           of the time, this function will be called sequentially}
 
           {Normalize Hr to max hour in curve to get wraparound}
-                if Hr > Hours^[FNumPoints] then
+                if Hr > Hours[FNumPoints - 1] then
                 begin
-                    Hr := Hr - Trunc(Hr / Hours^[FNumPoints]) * Hours^[FNumPoints];
+                    Hr := Hr - Trunc(Hr / Hours[FNumPoints - 1]) * Hours[FNumPoints - 1];
                 end;
 
-                if Hours^[LastValueAccessed] > Hr then
+                if Hours[LastValueAccessed - 1] > Hr then
                     LastValueAccessed := 1;  // Start over from beginning
                 for i := LastValueAccessed + 1 to FNumPoints do
                 begin
-                    if Abs(Hours^[i] - Hr) < 0.00001 then  // If close to an actual point, just use it.
+                    if Abs(Hours[i - 1] - Hr) < 0.00001 then  // If close to an actual point, just use it.
                     begin
-                        Result.re := PMultipliers^[i];
+                        Result.re := PMultipliers[i - 1];
                         if Assigned(QMultipliers) then
-                            Result.im := QMultipliers^[i]
+                            Result.im := QMultipliers[i - 1]
                         else
                             Result.im := Set_Result_im(Result.re);
                         LastValueAccessed := i;
                         Exit;
                     end
                     else
-                    if Hours^[i] > Hr then      // Interpolate for multiplier
+                    if Hours[i - 1] > Hr then      // Interpolate for multiplier
                     begin
                         LastValueAccessed := i - 1;
-                        Result.re := PMultipliers^[LastValueAccessed] +
-                            (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed]) *
-                            (PMultipliers^[i] - PMultipliers^[LastValueAccessed]);
+                        Result.re := PMultipliers[LastValueAccessed - 1] +
+                            (Hr - Hours[LastValueAccessed - 1]) / (Hours[i - 1] - Hours[LastValueAccessed - 1]) *
+                            (PMultipliers[i - 1] - PMultipliers[LastValueAccessed - 1]);
                         if Assigned(QMultipliers) then
-                            Result.im := QMultipliers^[LastValueAccessed] +
-                                (Hr - Hours^[LastValueAccessed]) / (Hours^[i] - Hours^[LastValueAccessed]) *
-                                (QMultipliers^[i] - QMultipliers^[LastValueAccessed])
+                            Result.im := QMultipliers[LastValueAccessed - 1] +
+                                (Hr - Hours[LastValueAccessed - 1]) / (Hours[i - 1] - Hours[LastValueAccessed - 1]) *
+                                (QMultipliers[i - 1] - QMultipliers[LastValueAccessed - 1])
                         else
                             Result.im := Set_Result_im(Result.re);
                         Exit;
@@ -881,9 +890,9 @@ begin
 
            // If we fall through the loop, just use last value
                 LastValueAccessed := FNumPoints - 1;
-                Result.re := PMultipliers^[FNumPoints];
+                Result.re := PMultipliers[min(FNumPoints, Length(PMultipliers)) - 1];
                 if Assigned(QMultipliers) then
-                    Result.im := QMultipliers^[FNumPoints]
+                    Result.im := QMultipliers[min(FNumPoints, Length(QMultipliers)) - 1]
                 else
                     Result.im := Set_Result_im(Result.re);
             end;
@@ -898,32 +907,32 @@ procedure TLoadShapeObj.Normalize;
 var
     MaxMult: Double;
 
-    procedure DoNormalize(Multipliers: pDoubleArray);
+    procedure DoNormalize(Multipliers: pDoubleArray; Num: Integer);
     var
         i: Integer;
     begin
-        if FNumPoints > 0 then
+        if Num > 0 then
         begin
             if MaxMult <= 0.0 then
             begin
                 MaxMult := Abs(Multipliers^[1]);
-                for i := 2 to FNumPoints do
+                for i := 2 to Num do
                     MaxMult := Max(MaxMult, Abs(Multipliers^[i]));
             end;
             if MaxMult = 0.0 then
                 MaxMult := 1.0; // Avoid divide by zero
-            for i := 1 to FNumPoints do
+            for i := 1 to Num do
                 Multipliers^[i] := Multipliers^[i] / MaxMult;
         end;
     end;
 
 begin
     MaxMult := BaseP;
-    DoNormalize(PMultipliers);
+    DoNormalize(pDoubleArray(PMultipliers), Length(PMultipliers));
     if Assigned(QMultipliers) then
     begin
         MaxMult := BaseQ;
-        DoNormalize(QMultipliers);
+        DoNormalize(pDoubleArray(QMultipliers), Length(QMultipliers));
     end;
     UseActual := FALSE;  // not likely that you would want to use the actual if you normalized it.
 end;
@@ -935,9 +944,15 @@ begin
 
     if FNumPoints > 0 then
         if Interval > 0.0 then
-            RCDMeanandStdDev(PMultipliers, FNumPoints, FMean, FStdDev)
+            RCDMeanandStdDev(pDoubleArray(PMultipliers), Length(PMultipliers), FMean, FStdDev)
         else
-            CurveMeanAndStdDev(PMultipliers, Hours, FNumPoints, FMean, FStdDev);
+            CurveMeanAndStdDev(
+                pDoubleArray(PMultipliers), 
+                pDoubleArray(Hours), 
+                Min(FNumPoints, Min(Length(PMultipliers), Length(Hours))), 
+                FMean, 
+                FStdDev
+            );
 
     PropertyValue[5] := Format('%.8g', [FMean]);
     PropertyValue[6] := Format('%.8g', [FStdDev]);
@@ -984,7 +999,7 @@ begin
     else
     begin
         if LastValueAccessed > 1 then
-            Result := Hours^[LastValueAccessed] - Hours^[LastValueAccessed - 1]
+            Result := Hours[LastValueAccessed - 1] - Hours[LastValueAccessed - 2]
         else
             Result := 0.0;
     end;
@@ -1011,7 +1026,7 @@ begin
 
     if (i <= FNumPoints) and (i > 0) then
     begin
-        Result := PMultipliers^[i];
+        Result := PMultipliers[i - 1];
         LastValueAccessed := i;
     end
     else
@@ -1026,7 +1041,7 @@ begin
     begin
         if (i <= FNumPoints) and (i > 0) then
         begin
-            Result := Hours^[i];
+            Result := Hours[i - 1];
             LastValueAccessed := i;
         end
         else
@@ -1034,7 +1049,7 @@ begin
     end
     else
     begin
-        Result := Hours^[i] * Interval;
+        Result := Hours[i - 1] * Interval;
         LastValueAccessed := i;
     end;
 
@@ -1063,20 +1078,22 @@ begin
     Result := '';
 
     case Index of
+        1:
+            Result := IntToStr(FNumPoints);
         2:
             Result := Format('%.8g', [Interval]);
         3:
-            Result := GetDSSArray_Real(FNumPoints, PMultipliers);
+            Result := GetDSSArray_Real(Length(PMultipliers), pDoubleArray(PMultipliers));
         4:
             if Hours <> NIL then
-                Result := GetDSSArray_Real(FNumPoints, Hours);
+                Result := GetDSSArray_Real(Length(Hours), pDoubleArray(Hours));
         5:
             Result := Format('%.8g', [Mean]);
         6:
             Result := Format('%.8g', [StdDev]);
         11:
             if Assigned(QMultipliers) then
-                Result := GetDSSArray_Real(FNumPoints, QMultipliers);
+                Result := GetDSSArray_Real(Length(QMultipliers), pDoubleArray(QMultipliers));
         12:
             if UseActual then
                 Result := 'Yes'
@@ -1095,7 +1112,7 @@ begin
         18:
             Result := Format('%.8g', [BaseQ]);
         19:
-            Result := GetDSSArray_Real(FNumPoints, PMultipliers);
+            Result := GetDSSArray_Real(Length(PMultipliers), pDoubleArray(PMultipliers[0]));
     else
         Result := inherited GetPropertyValue(index);
     end;
@@ -1253,8 +1270,8 @@ begin
             FName := Format('%s_P.dbl', [Name]);
             AssignFile(F, Fname);
             Rewrite(F);
-            for i := 1 to NumPoints do
-                Write(F, PMultipliers^[i]);
+            for i := 0 to NumPoints-1 do
+                Write(F, PMultipliers[i]);
             GlobalResult := 'mult=[dblfile=' + FName + ']';
         finally
             CloseFile(F);
@@ -1266,8 +1283,8 @@ begin
                 FName := Format('%s_Q.dbl', [Name]);
                 AssignFile(F, Fname);
                 Rewrite(F);
-                for i := 1 to NumPoints do
-                    Write(F, QMultipliers^[i]);
+                for i := 0 to NumPoints-1 do
+                    Write(F, QMultipliers[i]);
                 AppendGlobalResult(' Qmult=[dblfile=' + FName + ']');
             finally
                 CloseFile(F);
@@ -1294,9 +1311,9 @@ begin
             FName := Format('%s_P.sng', [Name]);
             AssignFile(F, Fname);
             Rewrite(F);
-            for i := 1 to NumPoints do
+            for i := 0 to NumPoints-1 do
             begin
-                Temp := PMultipliers^[i];
+                Temp := PMultipliers[i];
                 Write(F, Temp);
             end;
             GlobalResult := 'mult=[sngfile=' + FName + ']';
@@ -1310,9 +1327,9 @@ begin
                 FName := Format('%s_Q.sng', [Name]);
                 AssignFile(F, Fname);
                 Rewrite(F);
-                for i := 1 to NumPoints do
+                for i := 0 to NumPoints-1 do
                 begin
-                    Temp := QMultipliers^[i];
+                    Temp := QMultipliers[i];
                     Write(F, Temp);
                 end;
                 AppendGlobalResult(' Qmult=[sngfile=' + FName + ']');
@@ -1330,13 +1347,13 @@ end;
 
 procedure TLoadShapeObj.SetMaxPandQ;
 begin
-    iMaxP := iMaxAbsdblArrayValue(NumPoints, PMultipliers);
+    iMaxP := iMaxAbsdblArrayValue(Length(PMultipliers), pDoubleArray(PMultipliers));
     if iMaxP > 0 then
     begin
-        MaxP := PMultipliers^[iMaxP];
+        MaxP := PMultipliers[iMaxP - 1];
         if not MaxQSpecified then
             if Assigned(QMultipliers) then
-                MaxQ := QMultipliers^[iMaxP]
+                MaxQ := QMultipliers[iMaxP - 1]
             else
                 MaxQ := 0.0;
     end;
@@ -1346,22 +1363,6 @@ procedure TLoadShapeObj.Set_Mean(const Value: Double);
 begin
     FStdDevCalculated := TRUE;
     FMean := Value;
-end;
-
-procedure TLoadShapeObj.Set_NumPoints(const Value: Integer);
-begin
-
-    PropertyValue[1] := IntToStr(Value);   // Update property list variable
-
-        // Reset array property values to keep them in propoer order in Save
-
-    if ArrayPropertyIndex > 0 then
-        PropertyValue[ArrayPropertyIndex] := PropertyValue[ArrayPropertyIndex];
-    if Assigned(Qmultipliers) then
-        PropertyValue[11] := PropertyValue[11];
-
-    FNumPoints := Value;   // Now assign the value
-
 end;
 
 procedure TLoadShapeObj.Set_StdDev(const Value: Double);

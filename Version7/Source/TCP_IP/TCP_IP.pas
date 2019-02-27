@@ -744,9 +744,9 @@ begin
             begin
                 if ActiveLSObject.hours <> NIL then
                 begin
-                    SetLength(time, 1, ActiveLSObject.NumPoints);
-                    for k := 0 to ActiveLSObject.NumPoints - 1 do
-                        time[0, k] := ActiveLSObject.Hours^[k + 1];
+                    SetLength(time, 1, Min(length(ActiveLSObject.Hours), ActiveLSObject.NumPoints));
+                    for k := 0 to Min(length(ActiveLSObject.Hours), ActiveLSObject.NumPoints) - 1 do
+                        time[0, k] := ActiveLSObject.Hours[k];
                     x_label := 'Time (h)';
                 end
             end
@@ -774,9 +774,9 @@ begin
     begin
         if ActiveLSObject <> NIL then
         begin
-            SetLength(channel, 1, ActiveLSObject.NumPoints);
-            for k := 0 to ActiveLSObject.NumPoints - 1 do
-                channel[0, k] := ActiveLSObject.PMultipliers^[k + 1];
+            SetLength(channel, 1, Min(length(ActiveLSObject.PMultipliers), ActiveLSObject.NumPoints));
+            for k := 0 to Min(length(ActiveLSObject.PMultipliers), ActiveLSObject.NumPoints) - 1 do
+                channel[0, k] := ActiveLSObject.PMultipliers[k];
             SetLength(y_labels, 1);
             y_labels[0] := 'Mult.';
         end
@@ -793,9 +793,9 @@ begin
         begin
             if assigned(ActiveLSObject.QMultipliers) then
             begin
-                SetLength(channel, 2, ActiveLSObject.NumPoints);
-                for k := 0 to ActiveLSObject.NumPoints - 1 do
-                    channel[1, k] := ActiveLSObject.QMultipliers^[k + 1];
+                SetLength(channel, 2, Min(length(ActiveLSObject.QMultipliers), ActiveLSObject.NumPoints));
+                for k := 0 to Min(length(ActiveLSObject.QMultipliers), ActiveLSObject.NumPoints) - 1 do
+                    channel[1, k] := ActiveLSObject.QMultipliers[k];
                 SetLength(y_labels, 2);
                 y_labels[0] := 'P Mult.';
                 y_labels[1] := 'Q Mult.';

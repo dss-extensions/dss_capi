@@ -185,7 +185,7 @@ begin
         begin
             VarArrayRedim(Result, ActiveLSObject.NumPoints - 1);
             for k := 0 to ActiveLSObject.NumPoints - 1 do
-                Result[k] := ActiveLSObject.PMultipliers^[k + 1];
+                Result[k] := ActiveLSObject.PMultipliers[k];
         end
         else
         begin
@@ -209,7 +209,7 @@ begin
             begin
                 VarArrayRedim(Result, ActiveLSObject.NumPoints - 1);
                 for k := 0 to ActiveLSObject.NumPoints - 1 do
-                    Result[k] := ActiveLSObject.QMultipliers^[k + 1];
+                    Result[k] := ActiveLSObject.QMultipliers[k];
             end;
         end
         else
@@ -242,11 +242,11 @@ begin
                 if (LoopLimit - VarArrayLowBound(Value, 1) + 1) > NumPoints then
                     LoopLimit := VarArrayLowBound(Value, 1) + NumPoints - 1;
 
-                ReallocMem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
-                k := 1;
+                ReallocMem(PMultipliers, Sizeof(Double) * NumPoints);
+                k := 0;
                 for i := VarArrayLowBound(Value, 1) to LoopLimit do
                 begin
-                    ActiveLSObject.Pmultipliers^[k] := Value[i];
+                    ActiveLSObject.Pmultipliers[k] := Value[i];
                     inc(k);
                 end;
 
@@ -274,11 +274,11 @@ begin
                 if (LoopLimit - VarArrayLowBound(Value, 1) + 1) > NumPoints then
                     LoopLimit := VarArrayLowBound(Value, 1) + NumPoints - 1;
 
-                ReallocMem(QMultipliers, Sizeof(QMultipliers^[1]) * NumPoints);
-                k := 1;
+                ReallocMem(QMultipliers, Sizeof(Double) * NumPoints);
+                k := 0;
                 for i := VarArrayLowBound(Value, 1) to LoopLimit do
                 begin
-                    ActiveLSObject.Qmultipliers^[k] := Value[i];
+                    ActiveLSObject.Qmultipliers[k] := Value[i];
                     inc(k);
                 end;
 
@@ -313,7 +313,7 @@ begin
             begin
                 VarArrayRedim(Result, ActiveLSObject.NumPoints - 1);
                 for k := 0 to ActiveLSObject.NumPoints - 1 do
-                    Result[k] := ActiveLSObject.Hours^[k + 1];
+                    Result[k] := ActiveLSObject.Hours[k];
             end
         end
         else
@@ -339,11 +339,11 @@ begin
                 if (LoopLimit - VarArrayLowBound(Value, 1) + 1) > NumPoints then
                     LoopLimit := VarArrayLowBound(Value, 1) + NumPoints - 1;
 
-                ReallocMem(Hours, Sizeof(Hours^[1]) * NumPoints);
-                k := 1;
+                ReallocMem(Hours, Sizeof(Double) * NumPoints);
+                k := 0;
                 for i := VarArrayLowBound(Value, 1) to LoopLimit do
                 begin
-                    ActiveLSObject.Hours^[k] := Value[i];
+                    ActiveLSObject.Hours[k] := Value[i];
                     inc(k);
                 end;
 
