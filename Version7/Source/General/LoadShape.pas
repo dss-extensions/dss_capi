@@ -1112,7 +1112,7 @@ begin
         18:
             Result := Format('%.8g', [BaseQ]);
         19:
-            Result := GetDSSArray_Real(Length(PMultipliers), pDoubleArray(PMultipliers[0]));
+            Result := GetDSSArray_Real(Length(PMultipliers), pDoubleArray(PMultipliers));
     else
         Result := inherited GetPropertyValue(index);
     end;
