@@ -259,9 +259,9 @@ begin
 
 
 {Create one instance of DSS executive whenever the DSS Engine is init'd}
-
-  DSSExecutive := TExecutive.Create;  // Start the DSS when DSS interface is created
-  DSSExecutive.CreateDefaultDSSItems;
+  SetLength(DSSExecutive,CPU_Cores + 1);
+  DSSExecutive[ActiveActor] := TExecutive.Create;  // Start the DSS when DSS interface is created
+  DSSExecutive[ActiveActor].CreateDefaultDSSItems;
 
   //WriteDLLDebugFile(DSSDirectory);
 

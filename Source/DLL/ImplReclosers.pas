@@ -60,7 +60,7 @@ begin
   if not Assigned (ActiveCircuit[ActiveActor]) then exit;
   SolutionAbort := FALSE;  // Reset for commands entered from outside
   cmd := Format ('recloser.%s.%s=%s', [TRecloserObj(RecloserClass.GetActiveObj).Name, parm, val]);
-  DSSExecutive.Command := cmd;
+  DSSExecutive[ActiveActor].Command := cmd;
 end;
 
 function TReclosers.Get_AllNames: OleVariant;

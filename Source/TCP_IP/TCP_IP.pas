@@ -1037,12 +1037,12 @@ begin
         if SetElementActive('moitor.v_'+load_names[k])<>0 then        
         //IF ActiveDSSClass[ActiveActor].SetActive('V_'+load_names[k]) THEN
         begin  // IF object already exists.
-          DssExecutive.Command := 'edit monitor.V_'+load_names[k]+
+          DssExecutive[ActiveActor].Command := 'edit monitor.V_'+load_names[k]+
             ' element=load.'+load_names[k]+' terminal=1 mode=32';
         end
         else
         begin // IF object does not exist.
-          DssExecutive.Command := 'new monitor.V_'+load_names[k]+
+          DssExecutive[ActiveActor].Command := 'new monitor.V_'+load_names[k]+
             ' element=load.'+load_names[k]+' terminal=1 mode=32';
         end;
      End;

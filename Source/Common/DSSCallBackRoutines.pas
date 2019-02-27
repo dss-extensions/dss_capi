@@ -110,7 +110,7 @@ End;
 Procedure DoDSSCommandCallBack(S:pAnsiChar; Maxlen:Cardinal); StdCall;
 Begin
      SolutionAbort        := FALSE;
-     DSSExecutive.Command := String(S);
+     DSSExecutive[ActiveActor].Command := String(S);
 End;
 
 {====================================================================================================================}

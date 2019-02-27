@@ -24,7 +24,7 @@ begin
   if not Assigned (ActiveCircuit[ActiveActor]) then exit;
   SolutionAbort := FALSE;  // Reset for commands entered from outside
   cmd := Format ('transformer.%s.%s=%s', [ActiveTransformer.Name, parm, val]);
-  DSSExecutive.Command := cmd;
+  DSSExecutive[ActiveActor].Command := cmd;
 end;
 
 function TransformersI(mode: longint; arg: longint):longint; cdecl;

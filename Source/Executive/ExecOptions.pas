@@ -469,7 +469,7 @@ Begin
             0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Set Command ', 130);
            15: DefaultEditor := Param;     // 'Editor='
            57: SetDataPath(Param);  // Set a legal data path
-           67: DSSExecutive.RecorderOn := InterpretYesNo(Param);
+           67: DSSExecutive[ActiveActor].RecorderOn := InterpretYesNo(Param);
            73: DefaultBaseFreq  := Parser[ActiveActor].DblValue;
           102: UpdateRegistry   := InterpretYesNo(Param);
           112:  Begin
@@ -655,7 +655,7 @@ Begin
            64: ActiveCircuit[ActiveActor].NodeMarkerCode  := Parser[ActiveActor].IntValue;
            65: ActiveCircuit[ActiveActor].NodeMarkerWidth := Parser[ActiveActor].IntValue;
            66: ActiveCircuit[ActiveActor].LogEvents       := InterpretYesNo(Param);
-           67: DSSExecutive.RecorderOn       := InterpretYesNo(Param);
+           67: DSSExecutive[ActiveActor].RecorderOn       := InterpretYesNo(Param);
            68: EnergyMeterClass[ActiveActor].Do_OverloadReport := InterpretYesNo(Param);
            69: EnergyMeterClass[ActiveActor].Do_VoltageExceptionReport := InterpretYesNo(Param);
            70: DoSetCFactors(Parser[ActiveActor].DblValue);
@@ -893,7 +893,7 @@ Begin
            64: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].NodeMarkerCode]));
            65: AppendGlobalResult(Format('%d' ,[ActiveCircuit[ActiveActor].NodeMarkerWidth]));
            66: If ActiveCircuit[ActiveActor].LogEvents Then  AppendGlobalResult('Yes') else AppendGlobalResult('No');
-           67: If DSSExecutive.RecorderON Then  AppendGlobalResult('Yes') else AppendGlobalResult('No');
+           67: If DSSExecutive[ActiveActor].RecorderON Then  AppendGlobalResult('Yes') else AppendGlobalResult('No');
            68: If EnergyMeterClass[ActiveActor].Do_OverloadReport Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
            69: If EnergyMeterClass[ActiveActor].Do_VoltageExceptionReport Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
            70: AppendGlobalResult('Get function not applicable.');
