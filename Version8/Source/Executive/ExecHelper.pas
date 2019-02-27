@@ -642,7 +642,7 @@ FUNCTION DoClearCmd:Integer;
 
 Begin
 
-      DSSExecutive.Clear;
+      DSSExecutive[ActiveActor].Clear;
 
       Result := 0;
 
@@ -652,7 +652,7 @@ FUNCTION DoClearAllCmd:Integer;
 
 Begin
 
-      DSSExecutive.ClearAll;
+      DSSExecutive[ActiveActor].ClearAll;
 
       Result := 0;
 
@@ -3321,8 +3321,8 @@ Begin
     DoAllocateLoadsCmd(ActiveActor);
 
     {Let's look to see how well we did}
-     If not AutoShowExport Then DSSExecutive.Command := 'Set showexport=yes';
-     DSSExecutive.Command := 'Export Estimation';
+     If not AutoShowExport Then DSSExecutive[ActiveActor].Command := 'Set showexport=yes';
+     DSSExecutive[ActiveActor].Command := 'Export Estimation';
 
 End;
 

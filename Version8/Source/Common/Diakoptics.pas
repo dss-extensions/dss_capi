@@ -521,7 +521,7 @@ Begin
     Num_Ckts                      :=  ActiveCircuit[ActiveActor].Tear_Circuit();
     Prev_mode                     :=  Dynavars.SolutionMode;
     Dynavars.SolutionMode         :=  0;          // Shapshot mode
-    DSSExecutive.Command          :=  'set controlmode=off';
+    DSSExecutive[ActiveActor].Command          :=  'set controlmode=off';
     Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE, ActiveActor);
 //    DoSolveCmd();
     if not SolutionAbort then
@@ -608,15 +608,15 @@ Begin
         prog_Str    :=  prog_str + CRLF + '- Setting up the Actors...';
         // Clears everything to create the actors and compile the subsystems
         Parallel_enabled                :=  False;
-        DSSExecutive.ClearAll;
+        DSSExecutive[ActiveActor].ClearAll;
         Fileroot                        :=  GetCurrentDir;    //  Gets the current directory
         SolutionAbort                   :=  False;
 
         // Compiles the interconnected Circuit for further calculations on actor 1
         ActiveActor                     :=  1;
         Proj_Dir                        :=  'compile "' + Fileroot + '\Torn_Circuit\master_interconnected.dss"';
-        DssExecutive.Command            :=  Proj_Dir;
-        DssExecutive.Command            :=  'set controlmode=Off';
+        DssExecutive[ActiveActor].Command            :=  Proj_Dir;
+        DssExecutive[ActiveActor].Command            :=  'set controlmode=Off';
         // Disables the Energymeters for the zones
         with ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution do
         Begin
@@ -639,10 +639,10 @@ Begin
           if DIdx = 2 then  Dir :=  ''
           else  Dir :=  'zone_' + inttostr(DIdx - 1) + '\';
           Proj_Dir              :=  'compile "' + Fileroot + '\Torn_Circuit\' + Dir + 'master.dss"';
-          DssExecutive.Command  := Proj_Dir;
+          DssExecutive[ActiveActor].Command  := Proj_Dir;
           if DIdx > 2 then
-            DssExecutive.Command  := Links[DIdx - 2] + '.enabled=False';
-          DssExecutive.Command  :=  'set controlmode=Off';
+            DssExecutive[ActiveActor].Command  := Links[DIdx - 2] + '.enabled=False';
+          DssExecutive[ActiveActor].Command  :=  'set controlmode=Off';
           DoSolveCmd;
           if SolutionAbort then
           Begin
@@ -683,10 +683,10 @@ Begin
         prog_Str    :=  prog_str + CRLF + '- Opening link branches...';
         for DIdx := 1 to High(Links) do
         Begin
-          DssExecutive.Command    :=  Links[DIdx] + '.r0=10000000';
-          DssExecutive.Command    :=  Links[DIdx] + '.r1=10000000';
-          DssExecutive.Command    :=  Links[DIdx] + '.x0=0';
-          DssExecutive.Command    :=  Links[DIdx] + '.x1=0';
+          DssExecutive[ActiveActor].Command    :=  Links[DIdx] + '.r0=10000000';
+          DssExecutive[ActiveActor].Command    :=  Links[DIdx] + '.r1=10000000';
+          DssExecutive[ActiveActor].Command    :=  Links[DIdx] + '.x0=0';
+          DssExecutive[ActiveActor].Command    :=  Links[DIdx] + '.x1=0';
         End;
         Ymatrix.BuildYMatrix(WHOLEMATRIX, FALSE, ActiveActor);
         prog_Str      :=  prog_str + 'Done';

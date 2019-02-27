@@ -40,7 +40,7 @@ begin
        If (ActiveCircuit[ActiveActor]<> Nil)
         THEN  With ActiveDSSObject[ActiveActor] Do
           If FPropIndex <= ParentClass.NumProperties Then
-                DSSExecutive.Command := 'Edit ' + ParentClass.Name + '.' + Name + ' ' +
+                DSSExecutive[ActiveActor].Command := 'Edit ' + ParentClass.Name + '.' + Name + ' ' +
                        ParentClass.PropertyName^[FPropIndex] + '=' +
                        string(arg);
                 Result:=pAnsiChar(AnsiString(''));

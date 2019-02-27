@@ -51,7 +51,7 @@ begin
   end;
   4: begin // DSS_Executive.OptionValue
      i:=StrToInt(widestring(arg));
-     DSSExecutive.Command := 'get ' + ExecOption[i];
+     DSSExecutive[ActiveActor].Command := 'get ' + ExecOption[i];
      Result := pAnsiChar(AnsiString(GlobalResult));
   end
   else

@@ -18,7 +18,7 @@ begin
   if not Assigned (ActiveCircuit[ActiveActor]) then exit;
   SolutionAbort := FALSE;  // Reset for commands entered from outside
   cmd := Format ('Fuse.%s.%s=%s', [TFuseObj(FuseClass.GetActiveObj).Name, parm, val]);
-  DSSExecutive.Command := cmd;
+  DSSExecutive[ActiveActor].Command := cmd;
 end;
 
 function FusesI(mode:longint;arg:longint):longint;cdecl;

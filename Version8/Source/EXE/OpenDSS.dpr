@@ -204,10 +204,10 @@ begin
   Application.Title := 'OpenDSS: Distribution System Simulator';
 
   {Have to Start DSSExecutive before Creating the Control Panel}
-  DSSExecutive := TExecutive.Create;  // Make a DSS object
+  DSSExecutive[ActiveActor] := TExecutive.Create;  // Make a DSS object
 
   {Create default loadshapes, Growthshapes, etc.}
-  DSSExecutive.CreateDefaultDSSItems;
+  DSSExecutive[ActiveActor].CreateDefaultDSSItems;
 
   if (ParamCount > 0) and FindCmdLineSwitch ('nogui') then begin
     // Application.MessageBox(CmdLine, PChar(Application.Title), MB_ICONINFORMATION or MB_OK);
@@ -215,8 +215,8 @@ begin
     NoFormsAllowed := True;
     DataDirectory[ActiveActor] := StartupDirectory;
     OutputDirectory[ActiveActor] := StartupDirectory;
-    DSSExecutive.Command := 'compile ' + ParamStr(1);
-    ExitCode := DSSExecutive.Error;
+    DSSExecutive[ActiveActor].Command := 'compile ' + ParamStr(1);
+    ExitCode := DSSExecutive[ActiveActor].Error;
     If ExitCode <> 0 Then Begin
     {write error log to a file}
            If ActiveActor > 0 Then ErrorStrings[ActiveActor].SaveToFile(Format('STDERR_Actor_%d.Txt', [ActiveActor]))

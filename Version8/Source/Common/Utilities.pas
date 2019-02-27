@@ -2146,8 +2146,8 @@ End;
 Function DoExecutiveCommand(const s:String):Integer;
 
 Begin
-    DSSExecutive.command := S;
-    Result := DSSExecutive.Error;
+    DSSExecutive[ActiveActor].command := S;
+    Result := DSSExecutive[ActiveActor].Error;
 End;
 
 

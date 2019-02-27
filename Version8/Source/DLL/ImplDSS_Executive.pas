@@ -61,7 +61,7 @@ end;
 
 function TDSS_Executive.Get_OptionValue(i: Integer): WideString;
 begin
-     DSSExecutive.Command := 'get ' + ExecOption[i];
+     DSSExecutive[ActiveActor].Command := 'get ' + ExecOption[i];
      Result := GlobalResult;
 end;
 

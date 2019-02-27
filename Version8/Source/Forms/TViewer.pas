@@ -14,7 +14,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  ComCtrls, Menus, StdCtrls;
+  ComCtrls, Menus, StdCtrls,DSSGlobals;
 
 type
   TTViewForm = class(TForm)
@@ -129,7 +129,7 @@ begin
                S := Node.Text;
                ParaPos :=  pos('(',Node.Text);
                If ParaPos>0 Then S := Copy(S, 1, ParaPos-1) ;
-               DssExecutive.Command := 'FormEdit "'+ S + '"';
+               DssExecutive[ActiveActor].Command := 'FormEdit "'+ S + '"';
              End;
            End;
          End

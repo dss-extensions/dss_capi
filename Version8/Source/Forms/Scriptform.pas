@@ -175,7 +175,7 @@ begin
   Screen.Cursor := crHourglass;
   for i := 0 to imax do begin
     If Not SolutionAbort Then Begin  // If script involves step that gets aborted, just flush the script
-      DSSExecutive.Command := ActiveScriptForm.cmdList.Strings[i];
+      DSSExecutive[ActiveActor].Command := ActiveScriptForm.cmdList.Strings[i];
       If LastCommandWasCompile and Not IsDLL Then Begin
          ControlPanel.AddCompiledFile(LastFileCompiled);
          ControlPanel.UpdateElementBox;
@@ -200,7 +200,7 @@ end;
 Procedure TMainEditForm.ExecuteDSSCommand(Const S:String);
 Begin
   SolutionAbort := FALSE;
-  DSSExecutive.Command := S;
+  DSSExecutive[ActiveActor].Command := S;
   If RecordCommands then Editor.Lines.Append(S);
 
   If Not IsDLL Then  Begin
