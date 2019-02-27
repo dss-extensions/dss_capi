@@ -47,7 +47,9 @@ uses
     Loadshape,
     DSSGlobals,
     PointerList,
-    ExecHelper;
+    ExecHelper,
+    SysUtils,
+    Math;
 
 var
     ActiveLSObject: TLoadshapeObj;
@@ -132,16 +134,15 @@ var
     elem: TLoadshapeObj;
     pList: TPointerList;
     k: Integer;
-
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
         if LoadShapeClass[ActiveActor].ElementList.ListSize > 0 then
         begin
             pList := LoadShapeClass[ActiveActor].ElementList;
-            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize - 1) + 1);
+            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pList.ListSize);
             k := 0;
             elem := pList.First;
             while elem <> NIL do
@@ -173,18 +174,17 @@ end;
 procedure LoadShapes_Get_Pmult(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
     Result: PDoubleArray;
-    k: Integer;
-
+    ActualNumPoints: Integer;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     Result[0] := 0.0;  // error condition: one element array=0
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
         if ActiveLSObject <> NIL then
         begin
-            DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, (ActiveLSObject.NumPoints - 1) + 1);
-            for k := 0 to ActiveLSObject.NumPoints - 1 do
-                Result[k] := ActiveLSObject.PMultipliers^[k + 1];
+            ActualNumPoints := Min(Length(ActiveLSObject.PMultipliers), ActiveLSObject.NumPoints);
+            DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
+            Move(ActiveLSObject.PMultipliers[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
         end
         else
         begin
@@ -203,21 +203,18 @@ end;
 procedure LoadShapes_Get_Qmult(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
     Result: PDoubleArray;
-    k: Integer;
-
+    ActualNumPoints: Integer;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     Result[0] := 0.0;  // error condition: one element array=0
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
         if ActiveLSObject <> NIL then
         begin
-            if assigned(ActiveLSObject.QMultipliers) then
-            begin
-                DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, (ActiveLSObject.NumPoints - 1) + 1);
-                for k := 0 to ActiveLSObject.NumPoints - 1 do
-                    Result[k] := ActiveLSObject.QMultipliers^[k + 1];
-            end;
+            if not assigned(ActiveLSObject.QMultipliers) then Exit;
+            ActualNumPoints := Min(Length(ActiveLSObject.QMultipliers), ActiveLSObject.NumPoints);
+            DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
+            Move(ActiveLSObject.QMultipliers[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
         end
         else
         begin
@@ -252,20 +249,16 @@ begin
         if ActiveLSObject <> NIL then
             with ActiveLSObject do
             begin
-
-        // Only put in as many points as we have allocated
-                LoopLimit := (ValueCount - 1);
-                if (LoopLimit - (0) + 1) > NumPoints then
-                    LoopLimit := (0) + NumPoints - 1;
-
-                ReallocMem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
-                k := 1;
-                for i := (0) to LoopLimit do
+                // Only accept the new data when the number of points match
+                if ValueCount <> NumPoints then
                 begin
-                    ActiveLSObject.Pmultipliers^[k] := Value[i];
-                    inc(k);
+                    DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61100);
+                    Exit;
                 end;
 
+                SetLength(PMultipliers, 0);
+                SetLength(PMultipliers, ValueCount);
+                Move(ValuePtr[0], PMultipliers[0], ValueCount * SizeOf(Double));
             end
         else
         begin
@@ -286,20 +279,16 @@ begin
         if ActiveLSObject <> NIL then
             with ActiveLSObject do
             begin
-
-        // Only put in as many points as we have allocated
-                LoopLimit := (ValueCount - 1);
-                if (LoopLimit - (0) + 1) > NumPoints then
-                    LoopLimit := (0) + NumPoints - 1;
-
-                ReallocMem(QMultipliers, Sizeof(QMultipliers^[1]) * NumPoints);
-                k := 1;
-                for i := (0) to LoopLimit do
+                // Only accept the new data when the number of points match
+                if ValueCount <> NumPoints then
                 begin
-                    ActiveLSObject.Qmultipliers^[k] := Value[i];
-                    inc(k);
+                    DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61101);
+                    Exit;
                 end;
 
+                SetLength(QMultipliers, 0);
+                SetLength(QMultipliers, ValueCount);
+                Move(ValuePtr[0], QMultipliers[0], ValueCount * SizeOf(Double));
             end
         else
         begin
@@ -310,7 +299,6 @@ end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Normalize(); CDECL;
 begin
-
     if ActiveCircuit[ActiveActor] <> NIL then
         if ActiveLSObject <> NIL then
             ActiveLSObject.Normalize;
@@ -319,21 +307,19 @@ end;
 procedure LoadShapes_Get_TimeArray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
     Result: PDoubleArray;
-    k: Integer;
+    ActualNumPoints: Integer;
 
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     Result[0] := 0.0;  // error condition: one element array=0
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
         if ActiveLSObject <> NIL then
         begin
-            if ActiveLSObject.hours <> NIL then
-            begin
-                DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, (ActiveLSObject.NumPoints - 1) + 1);
-                for k := 0 to ActiveLSObject.NumPoints - 1 do
-                    Result[k] := ActiveLSObject.Hours^[k + 1];
-            end
+            if ActiveLSObject.Hours = NIL then Exit;
+            ActualNumPoints := Min(Length(ActiveLSObject.Hours), ActiveLSObject.NumPoints);
+            DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
+            Move(ActiveLSObject.Hours[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
         end
         else
         begin
@@ -361,27 +347,22 @@ begin
         if ActiveLSObject <> NIL then
             with ActiveLSObject do
             begin
-
-        // Only put in as many points as we have allocated
-                LoopLimit := (ValueCount - 1);
-                if (LoopLimit - (0) + 1) > NumPoints then
-                    LoopLimit := (0) + NumPoints - 1;
-
-                ReallocMem(Hours, Sizeof(Hours^[1]) * NumPoints);
-                k := 1;
-                for i := (0) to LoopLimit do
+                // Only accept the new data when the number of points match
+                if ValueCount <> NumPoints then
                 begin
-                    ActiveLSObject.Hours^[k] := Value[i];
-                    inc(k);
+                    DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61102);
+                    Exit;
                 end;
 
+                SetLength(Hours, 0);
+                SetLength(Hours, ValueCount);
+                Move(ValuePtr[0], Hours[0], ValueCount * SizeOf(Double));
             end
         else
         begin
             DoSimpleMsg('No active Loadshape Object found.', 61002);
         end;
     end;
-
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_HrInterval(): Double; CDECL;
