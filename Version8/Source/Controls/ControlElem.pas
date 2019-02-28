@@ -19,8 +19,10 @@ TYPE
 
    private
        FControlledElement:TDSSCktElement;
+       FMonitoredElement:TDSSCktElement;
        procedure Set_ControlledElement(const Value: TDSSCktElement);  // Pointer to target circuit element
        procedure RemoveSelfFromControlelementList(CktElem:TDSSCktElement);
+    procedure Set_MonitoredElement(const Value: TDSSCktElement);
    public
 
        ElementName:String;
@@ -41,6 +43,7 @@ TYPE
        PROCEDURE Reset; Virtual;
 
        Property ControlledElement:TDSSCktElement Read FControlledElement Write Set_ControlledElement;
+       Property MonitoredElement:TDSSCktElement Read FMonitoredElement Write Set_MonitoredElement;
 
    end;
 
@@ -124,6 +127,13 @@ begin
          ControlElementList.Add(Self);
       End;
   End;
+end;
+
+procedure TControlElem.Set_MonitoredElement(const Value: TDSSCktElement);
+begin
+  FMonitoredElement := Value;
+  if Assigned(FMonitoredElement) then
+     FMonitoredElement.IsMonitored := TRUE;
 end;
 
 end.

@@ -105,8 +105,6 @@ TYPE
 
             LoadShapeMult   :Complex;
 
-            MonitoredElement :TDSSCktElement;
-
             Wait4Step       : Boolean;
 
            // PROCEDURE SetPctReserve;
