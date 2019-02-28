@@ -153,6 +153,17 @@ begin
       End;
     End;
   end;
+
+  if Not ADiakoptics then
+  Begin
+    if Not IsDLL then UpdateSummaryForm('1');
+  End
+  else
+  Begin
+  if ActiveActor = 1 then
+    if Not IsDLL then UpdateSummaryForm('1');
+  End;
+
   Screen.Cursor := crDefault;
 
   If Not IsDLL and (ActorHandle[ActiveActor] <> nil) Then Begin
