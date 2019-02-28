@@ -91,7 +91,6 @@ TYPE
 
             LoadShapeMult   :Complex;
 
-            MonitoredElement :TDSSCktElement;
 
      public
 

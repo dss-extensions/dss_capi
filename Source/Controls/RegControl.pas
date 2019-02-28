@@ -623,6 +623,7 @@ Begin
          IF   DevIndex>0  THEN
          Begin  // RegControled element must already exist
              ControlledElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
+             Monitoredelement := ControlledElement;  // same for this controller
 
              If   UsingRegulatedBus Then
              Begin
