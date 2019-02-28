@@ -118,8 +118,6 @@ TYPE
             OverTrip,
             UnderTrip:Double;
 
-            MonitoredElement         :TDSSCktElement;
-
             PresentState   :EControlAction;
 
             OperationCount :Integer;

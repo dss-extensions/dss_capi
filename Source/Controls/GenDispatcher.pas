@@ -54,8 +54,6 @@ TYPE
             FGenPointerList:PointerList.TPointerList;
             FWeights:pDoubleArray;
 
-            MonitoredElement :TDSSCktElement;
-
      public
 
        constructor Create(ParClass:TDSSClass; const GenDispatcherName:String);
