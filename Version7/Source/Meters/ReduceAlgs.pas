@@ -28,7 +28,7 @@ Uses CktTree, PDElement;
   
 implementation
 
-Uses Line, Utilities, DSSGlobals, Load, uComplex, ParserDel, CktElement, sysutils, ExecHelper, Bus;
+Uses Line, Utilities, DSSGlobals, DSSClassDefs, Load, uComplex, ParserDel, CktElement, sysutils, ExecHelper, Bus;
 
 Const
      SERIESMERGE:Boolean = True;
@@ -155,6 +155,7 @@ Var
    LineElement1, LineElement2 : TLineObj;
    ShuntElement : TDSSCktElement;
    ParentNode   : TCktTreeNode;
+   MergeOK      : Boolean;
 
 begin
     IF BranchList <> NIL Then  Begin  {eliminate really short lines}
@@ -172,13 +173,12 @@ begin
         LineElement1 := BranchList.GoForward; // Always keep the first element in the Tree
          WHILE LineElement1 <> NIL Do
           Begin
-             if LineElement1.enabled then    // else skip
+           if LineElement1.enabled then    // else skip
 
-             // Skip if control element or meter is monitoring ,,,
+            If Not LineElement1.HasControl then
+             If Not LineElement1.IsMonitored then   // Skip if controlled element or control is monitoring ,,,
 
-             If Not LineElement1.IsMonitored then
-
-             If LineElement1.Flag Then  // too short; Merge this element out
+             If LineElement1.Flag Then  // too short; Try to merge this element out
              Begin
                With BranchList Do
                Begin
@@ -191,7 +191,21 @@ begin
                         If ParentNode <> Nil Then Begin
                             If ParentNode.NumChildBranches=1 Then   // only works for in-line
                               If Not ActiveCircuit.Buses^[PresentBranch.ToBusReference].Keep Then Begin     // Check Keeplist
-                                 {Let's consider merging}
+                               {Let's consider merging}
+                                {First Check for any Capacitors. Skip if any}
+                                MergeOK := TRUE;
+                                If ParentNode.NumShuntObjects > 0 Then Begin
+                                   ShuntElement :=  ParentNode.FirstShuntObject;
+                                   While ShuntElement <> Nil Do Begin
+                                     If (ShuntElement.DSSObjType and CLASSMASK) = CAP_ELEMENT Then Begin
+                                        MergeOK := FALSE;
+                                        Break;  // outta loop
+                                     End;
+                                     ShuntElement :=  PresentBranch.NextShuntObject;
+                                   End;  {While}
+                                End;
+
+                                if MergeOK then  Begin
                                  LineElement2 := ParentNode.CktObject;
                                  If LineElement2.enabled Then  // Check to make sure it hasn't been merged out
                                  If IsLineElement(LineElement2) Then
@@ -209,32 +223,50 @@ begin
                                       End; {IF}
                                    //+++ LineElement1 := BranchList.GoForward; // skip to next branch since we eliminated a bus
                                    End;
+                                End;
                               End; {IF}
                         End; {IF ParentNode}
                      End
+
                   Else
+
                     If (PresentBranch.NumChildBranches=1) Then {Merge with child}
                      Begin
                       IF Not ActiveCircuit.Buses^[PresentBranch.ToBusReference].Keep then    // check keeplist
                        Begin
                          {Let's consider merging}
-                          LineElement2 := PresentBranch.FirstChildBranch.CktObject; // child of PresentBranch
-                          If LineElement2.enabled Then  // Check to make sure it hasn't been merged out
-                          If IsLineElement(LineElement2) Then
-                           If LineElement2.MergeWith(LineElement1, SERIESMERGE) Then Begin
-                    //  {****} WriteDLLDebugFile(Format('BOT Loop: Eliminating Line %s and merging into Line %s ',[Uppercase(LineElement1.Name), Uppercase(LineElement2.Name)]));
-                                If PresentBranch.NumShuntObjects>0 Then Begin
-                                 {Redefine bus connection to upline bus}
-                                 ShuntElement :=  PresentBranch.FirstShuntObject;
-                                 While ShuntElement <> Nil Do Begin
-                                   Parser.CmdString := 'bus1="' + ActiveCircuit.BusList.Get(PresentBranch.FromBusReference) + GetNodeString(ShuntElement.GetBus(1) ) + '"';
-                //  {****} WriteDLLDebugFile(Format('Moving Load.%s from %s to %s ',[ShuntElement.Name, ShuntElement.GetBus(1), Parser.CmdString ]));
-                                   ShuntElement.Edit;
-                                   ShuntElement :=  PresentBranch.NextShuntObject;
-                                 End;  {While}
-                             End; {IF}
-                             LineElement1 := BranchList.GoForward; // skip to next branch since we eliminated a bus
-                           End;
+                          {First Check for any Capacitors. Skip if any}
+                          MergeOK := TRUE;
+                          If PresentBranch.NumShuntObjects > 0 Then Begin
+                             ShuntElement :=  PresentBranch.FirstShuntObject;
+                             While ShuntElement <> Nil Do Begin
+                               If (ShuntElement.DSSObjType and CLASSMASK) = CAP_ELEMENT Then Begin
+                                  MergeOK := FALSE;
+                                  Break;  // outta loop
+                               End;
+                               ShuntElement :=  PresentBranch.NextShuntObject;
+                             End;  {While}
+                          End;
+
+                          if MergeOK then Begin
+                            LineElement2 := PresentBranch.FirstChildBranch.CktObject; // child of PresentBranch
+                            If LineElement2.enabled Then  // Check to make sure it hasn't been merged out
+                            If IsLineElement(LineElement2) Then
+                             If LineElement2.MergeWith(LineElement1, SERIESMERGE) Then Begin
+                      //  {****} WriteDLLDebugFile(Format('BOT Loop: Eliminating Line %s and merging into Line %s ',[Uppercase(LineElement1.Name), Uppercase(LineElement2.Name)]));
+                                  If PresentBranch.NumShuntObjects>0 Then Begin
+                                   {Redefine bus connection to upline bus}
+                                   ShuntElement :=  PresentBranch.FirstShuntObject;
+                                   While ShuntElement <> Nil Do Begin
+                                     Parser.CmdString := 'bus1="' + ActiveCircuit.BusList.Get(PresentBranch.FromBusReference) + GetNodeString(ShuntElement.GetBus(1) ) + '"';
+                  //  {****} WriteDLLDebugFile(Format('Moving Shunt.%s from %s to %s ',[ShuntElement.Name, ShuntElement.GetBus(1), Parser.CmdString ]));
+                                     ShuntElement.Edit;
+                                     ShuntElement :=  PresentBranch.NextShuntObject;
+                                   End;  {While}
+                               End; {IF}
+                               LineElement1 := BranchList.GoForward; // skip to next branch since we eliminated a bus
+                             End;
+                          End;
                        End; {IF not}
                      End; {ELSE}
                End;
@@ -308,7 +340,9 @@ begin
        Begin
 
            If IsLineElement(LineElement1) Then
-           If Not LineElement1.IsSwitch Then
+           If Not LineElement1.IsSwitch Then         // Exceptions
+           if Not LineElement1.HasControl Then
+           if Not LineElement1.IsMonitored Then
            If LineElement1.Enabled Then   // maybe we threw it away already
            With BranchList Do
              Begin
