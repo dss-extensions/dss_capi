@@ -34,7 +34,6 @@ INTERFACE
       private
             ControlActionHandle: Integer;
             ControlledElement: Array of TPVSystemObj;    // list of pointers to controlled PVSystem elements
-            MonitoredElement : TDSSCktElement;  // First PVSystem element for now
 
             // PVSystemList information
             FListSize:Integer;

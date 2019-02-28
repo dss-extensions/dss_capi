@@ -99,7 +99,6 @@ TYPE
 
             LoadShapeMult   :Complex;
 
-            MonitoredElement :TDSSCktElement;
 
            // PROCEDURE SetPctReserve;
             PROCEDURE SetAllFleetValues;

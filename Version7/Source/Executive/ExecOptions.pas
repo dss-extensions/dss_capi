@@ -810,6 +810,8 @@ Begin
           109: If ActiveCircuit.Solution.SampleTheMeters Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           110: AppendGlobalResult(IntToStr(ActiveCircuit.solution.MinIterations));
           111: if DSS_Viz_enable then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+          112: If ActiveCircuit.ReduceLateralsKeepLoad  Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+          113: AppendGlobalResult(Format('%-g' ,[ActiveCircuit.ReductionZmag]));
 
          ELSE
            // Ignore excess parameters

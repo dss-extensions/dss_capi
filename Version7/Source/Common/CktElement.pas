@@ -79,6 +79,7 @@ TYPE
       HasSensorObj,
       IsIsolated,
       HasControl,
+      IsMonitored,
       IsPartofFeeder,
       Drawn    : Boolean;  // Flag used in tree searches etc
 
@@ -189,6 +190,7 @@ Begin
      HasAutoOCPDevice  := FALSE;
      HasSwtControl  := FALSE;
      HasControl     := FALSE;
+     IsMonitored    := FALSE; // indicates some control is monitoring this element
      IsPartofFeeder := False;
      IsIsolated     := FALSE;
 

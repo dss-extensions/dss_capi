@@ -325,6 +325,7 @@ begin
    IF ActiveCircuit<> NIL THEN Begin
          WITH ActiveCircuit.PVSystems Do Begin
              IF ActiveIndex<>0 THEN Begin
+                  TPVSystemObj(Active).Varmode := 0;
                   TPVSystemObj(Active).PowerFactor  := Value;
              End;
          End;
@@ -336,6 +337,7 @@ begin
    IF ActiveCircuit<> NIL THEN Begin
          WITH ActiveCircuit.PVSystems Do Begin
              IF ActiveIndex<>0 THEN Begin
+                  TPVSystemObj(Active).Varmode := VARMODEKVAR;
                   TPVSystemObj(Active).Presentkvar := Value;
              End;
          End;

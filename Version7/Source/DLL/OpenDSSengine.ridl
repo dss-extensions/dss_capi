@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 11/1/2018 11:04:10 AM (- $Rev: 12980 $, 5269453).
+// File generated on 2/27/2019 11:50:29 AM (- $Rev: 12980 $, 5072343).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -103,6 +103,8 @@ library OpenDSSengine
   coclass LineCodes;
   interface IGICSources;
   coclass GICSources;
+  interface IReduce;
+  coclass Reduce;
 
 
   [
@@ -630,6 +632,8 @@ library OpenDSSengine
     HRESULT _stdcall LineCodes([out, retval] ILineCodes** Value);
     [propget, id(0x000000EF), helpstring("Connect to GICSources Interface")]
     HRESULT _stdcall GICsources([out, retval] GICSources** Value);
+    [propget, id(0x000000F0)]
+    HRESULT _stdcall Reduce([out, retval] Reduce** Value);
   };
 
   [
@@ -2940,6 +2944,54 @@ library OpenDSSengine
   };
 
   [
+    uuid(02386435-8D77-4804-8ADB-89DDFBBE2BC0),
+    helpstring("Dispatch interface for Reduce Object"),
+    dual,
+    oleautomation
+  ]
+  interface IReduce: IDispatch
+  {
+    [propget, id(0x000000C9), helpstring("Zmag for Short Line Reduction Algorithm")]
+    HRESULT _stdcall Zmag([out, retval] double* Value);
+    [propput, id(0x000000C9), helpstring("Zmag (ohms) for Reduce Option for Z of short lines")]
+    HRESULT _stdcall Zmag([in] double Value);
+    [propget, id(0x000000CA), helpstring("Keep load flag (T/F) for Reduction options that remove branches")]
+    HRESULT _stdcall KeepLoad([out, retval] VARIANT_BOOL* Value);
+    [propput, id(0x000000CA), helpstring("Keep Load Flag (T/F) for  Reduction options that remove branches")]
+    HRESULT _stdcall KeepLoad([in] VARIANT_BOOL Value);
+    [propget, id(0x000000CB), helpstring("Edit String for Remove Branches function")]
+    HRESULT _stdcall EditString([out, retval] BSTR* Value);
+    [propput, id(0x000000CB), helpstring("Edit String for RemoveBranches functions")]
+    HRESULT _stdcall EditString([in] BSTR Value);
+    [propget, id(0x000000CC), helpstring("Start element for Remove Branch functions")]
+    HRESULT _stdcall StartPDElement([out, retval] BSTR* Value);
+    [propput, id(0x000000CC), helpstring("Start Element for Remove branch functions")]
+    HRESULT _stdcall StartPDElement([in] BSTR Value);
+    [propget, id(0x000000CD), helpstring("Name of Energymeter to use for reduction")]
+    HRESULT _stdcall EnergyMeter([out, retval] BSTR* Value);
+    [propput, id(0x000000CD), helpstring("Name of Energymeter to use for reduction")]
+    HRESULT _stdcall EnergyMeter([in] BSTR Value);
+    [id(0x000000CE), helpstring("Save present (reduced) circuit")]
+    HRESULT _stdcall SaveCircuit([in] BSTR CktName);
+    [id(0x000000CF), helpstring("Do Default Reduction algorithm")]
+    HRESULT _stdcall DoDefault(void);
+    [id(0x000000D0), helpstring("Do ShortLines algorithm: Set Zmag first if you don't want the default")]
+    HRESULT _stdcall DoShortLines(void);
+    [id(0x000000D1), helpstring("Reduce Dangling Algorithm; branches with nothing connected")]
+    HRESULT _stdcall DoDangling(void);
+    [id(0x000000D2)]
+    HRESULT _stdcall DoLoopBreak(void);
+    [id(0x000000D3)]
+    HRESULT _stdcall DoParallelLines(void);
+    [id(0x000000D4)]
+    HRESULT _stdcall DoSwitches(void);
+    [id(0x000000D5)]
+    HRESULT _stdcall Do1phLaterals(void);
+    [id(0x000000D6)]
+    HRESULT _stdcall DoBranchRemove(void);
+  };
+
+  [
     uuid(AE501F77-F7F0-4201-A9AD-6AB385262203),
     helpstring("Events interface for DSSEvents Object")
   ]
@@ -3348,6 +3400,15 @@ library OpenDSSengine
   coclass GICSources
   {
     [default] interface IGICSources;
+  };
+
+  [
+    uuid(553148EA-97CB-4559-933A-A734250E95C6),
+    helpstring("Reduce Object")
+  ]
+  coclass Reduce
+  {
+    [default] interface IReduce;
   };
 
 };

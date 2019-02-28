@@ -2276,13 +2276,14 @@ begin
 
     Case ActiveCircuit.ReductionStrategy of
 
-         rsShortlines:         DoReduceShortLines(BranchList);    {See ReduceAlgs.Pas}
+         rsShortlines:    DoReduceShortLines(BranchList);    {See ReduceAlgs.Pas}
          {rsTapEnds:       DoReduceTapEnds (BranchList);}
          rsMergeParallel: DoMergeParallelLines(BranchList);
          rsDangling:      DoReduceDangling(BranchList);
          rsBreakLoop:     DoBreakLoops(BranchList);
          rsSwitches:      DoReduceSwitches(BranchList);
          rsLaterals:      DoRemoveAll_1ph_Laterals(BranchList);
+
     Else
        {Default}
        DoReduceDefault(BranchList);

@@ -91,8 +91,6 @@ TYPE
 
             LoadShapeMult   :Complex;
 
-            MonitoredElement :TDSSCktElement;
-
      public
 
        constructor Create(ParClass:TDSSClass; const ESPVLControlName:String);

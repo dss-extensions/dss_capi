@@ -54,7 +54,6 @@ TYPE
             FGenPointerList:PointerList.TPointerList;
             FWeights:pDoubleArray;
 
-            MonitoredElement :TDSSCktElement;
 
      public
 

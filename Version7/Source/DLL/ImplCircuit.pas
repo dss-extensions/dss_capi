@@ -97,6 +97,7 @@ type
     function Get_Vsources: IVsources; safecall;
     function Get_LineCodes: ILineCodes; safecall;
     function Get_GICsources: GICSources; safecall;
+    function Get_Reduce: Reduce; safecall;
 //    function Get_Loads: ILoads; safecall;  function ICircuit.Get_Loads = ICircuit_Get_Loads;
 
 //  function ICircuit_Get_Loads: IUnknown; safecall;
@@ -1215,6 +1216,11 @@ end;
 function TCircuit.Get_GICsources: GICSources;
 begin
      Result := FGICsources as IGICSources;
+end;
+
+function TCircuit.Get_Reduce: Reduce;
+begin
+    Result := FReduce as IReduce;
 end;
 
 initialization
