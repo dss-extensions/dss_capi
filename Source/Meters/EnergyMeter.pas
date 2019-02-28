@@ -2265,7 +2265,7 @@ begin
          rsDangling:      DoReduceDangling(BranchList);
          rsBreakLoop:     DoBreakLoops(BranchList);
          rsSwitches:      DoReduceSwitches(BranchList);
-         rsLaterals:      DoReduceLaterals(BranchList);
+         rsLaterals:      DoRemoveAll_1ph_Laterals(BranchList);
     Else
        {Default}
        DoReduceDefault(BranchList);
