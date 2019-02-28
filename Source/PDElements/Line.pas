@@ -1439,14 +1439,13 @@ begin
                   2: S := 'Bus2="'+OtherLine.GetBus(1)+'"';
                 End;
            End;
-
            Parser.cmdstring := S;
            Edit;
 
       End; {If Series}
 
       {Rename the line}
-       If Series Then NewName := StripExtension(GetBus(1)) + '~'  + StripExtension(GetBus(2))
+       If Series Then NewName := OtherLine.Name + '~' + Name //(GetBus(1)) + '~'  + StripExtension(GetBus(2))
                  Else NewName := StripExtension(GetBus(1)) + '||' + StripExtension(GetBus(2));
 
        {Update ControlElement Connections to This Line}

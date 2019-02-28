@@ -217,7 +217,8 @@ uses
   TCP_IP in '..\TCP_IP\TCP_IP.pas',
   GICsource in '..\PCElements\GICsource.pas',
   AutoTrans in '..\PDElements\AutoTrans.pas',
-  ImplGICSources in 'ImplGICSources.pas' {GICSources: CoClass};
+  ImplGICSources in 'ImplGICSources.pas' {GICSources: CoClass},
+  ImplReduce in 'ImplReduce.pas' {Reduce: CoClass};
 
 exports
   DllGetClassObject,
