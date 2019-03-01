@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 2/21/2019 12:31:12 PM (- $Rev: 12980 $, 14640015).
+// File generated on 3/1/2019 12:45:31 AM (- $Rev: 12980 $, 55780312).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -105,6 +105,8 @@ library OpenDSSengine
   coclass LineCodes;
   interface IGICSources;
   coclass GICSources;
+  interface IReduce;
+  coclass Reduce;
 
 
   [
@@ -630,8 +632,12 @@ library OpenDSSengine
     HRESULT _stdcall Vsources([out, retval] IVsources** Value);
     [propget, id(0x000000EE), helpstring("Delivers a handler for the Parallel Dispatch interface")]
     HRESULT _stdcall Parallel([out, retval] IParallel** Value);
-    [propget, id(0x000000EF), helpstring("LineCodes Object Collection")]
+    [propget, id(0x000000EF), helpstring("Access the Linecodes library in this circuit")]
     HRESULT _stdcall LineCodes([out, retval] ILineCodes** Value);
+    [propget, id(0x000000F0), helpstring("Connect to GICSources Interface")]
+    HRESULT _stdcall GICsources([out, retval] IGICSources** Value);
+    [propget, id(0x000000F1), helpstring("Connect to the Circuit Reduction Interface")]
+    HRESULT _stdcall Reduce([out, retval] IReduce** Value);
   };
 
   [
@@ -958,18 +964,26 @@ library OpenDSSengine
     HRESULT _stdcall Process_Time([out, retval] double* Value);
     [propget, id(0x000000E3), helpstring("Get the solution process time + sample time for time step")]
     HRESULT _stdcall Time_of_Step([out, retval] double* Value);
-    [id(0x000000E4), helpstring("Solves the circuits for all the Actors created")]
+    [propget, id(0x000000E4), helpstring("Get/Set the Solution.IntervalHrs variable used for devices that integrate")]
+    HRESULT _stdcall IntervalHrs([out, retval] double* Value);
+    [propput, id(0x000000E4), helpstring("Get/Set the Solution.IntervalHrs variable for custom solution algorithms")]
+    HRESULT _stdcall IntervalHrs([in] double Value);
+    [id(0x000000E5), helpstring("Solves the circuits for all the Actors created")]
     HRESULT _stdcall SolveAll(void);
-    [propget, id(0x000000E5)]
-    HRESULT _stdcall IncMatrix([out, retval] VARIANT* Value);
     [propget, id(0x000000E6)]
-    HRESULT _stdcall IncMatrixRows([out, retval] VARIANT* Value);
+    HRESULT _stdcall IncMatrix([out, retval] VARIANT* Value);
     [propget, id(0x000000E7)]
-    HRESULT _stdcall IncMatrixCols([out, retval] VARIANT* Value);
+    HRESULT _stdcall IncMatrixRows([out, retval] VARIANT* Value);
     [propget, id(0x000000E8)]
-    HRESULT _stdcall BusLevels([out, retval] VARIANT* Value);
+    HRESULT _stdcall IncMatrixCols([out, retval] VARIANT* Value);
     [propget, id(0x000000E9)]
+    HRESULT _stdcall BusLevels([out, retval] VARIANT* Value);
+    [propget, id(0x000000EA)]
     HRESULT _stdcall Laplacian([out, retval] VARIANT* Value);
+    [propget, id(0x000000EB), helpstring("Minimum number of iterations required for a power flow solution.")]
+    HRESULT _stdcall MinIterations([out, retval] long* Value);
+    [propput, id(0x000000EB), helpstring("Mininum number of iterations required for a power flow solution.")]
+    HRESULT _stdcall MinIterations([in] long Value);
   };
 
   [
@@ -1838,16 +1852,16 @@ library OpenDSSengine
     HRESULT _stdcall AllNames([out, retval] VARIANT* Value);
     [propget, id(0x000000DD)]
     HRESULT _stdcall Count([out, retval] long* Value);
-    [propget, id(0x000000DE)]
-    HRESULT _stdcall CoreType([out, retval] long* Value);
-    [propput, id(0x000000DE)]
-    HRESULT _stdcall CoreType([in] long Value);
-    [propget, id(0x000000DF)]
+    [propget, id(0x000000DE), helpstring("Complex array of voltages for active winding")]
     HRESULT _stdcall WdgVoltages([out, retval] VARIANT* Value);
-    [propget, id(0x000000E0)]
+    [propget, id(0x000000DF), helpstring("All Winding currents (ph1, wdg1, wdg2,... ph2, wdg1, wdg2 ...)")]
     HRESULT _stdcall WdgCurrents([out, retval] VARIANT* Value);
-    [propget, id(0x000000E1)]
-    HRESULT _stdcall StrWdgCurrents([out, retval] BSTR* Value);
+    [propget, id(0x000000E0), helpstring("All winding currents in CSV string form like the WdgCurrents property")]
+    HRESULT _stdcall strWdgCurrents([out, retval] BSTR* Value);
+    [propget, id(0x000000E1), helpstring("Transformer Core Type: 0=shell;1 = 1-phase; 3= 3-leg; 5= 5-leg")]
+    HRESULT _stdcall CoreType([out, retval] long* Value);
+    [propput, id(0x000000E1)]
+    HRESULT _stdcall CoreType([in] long Value);
     [propget, id(0x000000E2)]
     HRESULT _stdcall RdcOhms([out, retval] double* Value);
     [propput, id(0x000000E2), helpstring("dc Resistance of active winding in ohms for GIC analysis")]
@@ -1984,6 +1998,8 @@ library OpenDSSengine
     HRESULT _stdcall DeadTime([in] double Value);
     [propget, id(0x000000DB), helpstring("Number of CapControls in Active Circuit\0ep. Control may reset before actually switching.\0 actually operating the switch.\0lf state).\0etc.)\0eturns 0 if no more.\0llElementNames.\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")]
     HRESULT _stdcall Count([out, retval] long* Value);
+    [id(0x000000DC), helpstring("Force a Reset of this CapControl")]
+    HRESULT _stdcall Reset(void);
   };
 
   [
@@ -2091,6 +2107,8 @@ library OpenDSSengine
     HRESULT _stdcall TapNumber([out, retval] long* Value);
     [propput, id(0x000000E2), helpstring("Integer number of the tap that the controlled transformer winding is currentliy on.")]
     HRESULT _stdcall TapNumber([in] long Value);
+    [id(0x000000E3), helpstring("Force Reset of this RegControl element")]
+    HRESULT _stdcall Reset(void);
   };
 
   [
@@ -2850,94 +2868,94 @@ library OpenDSSengine
   };
 
   [
-    uuid(519DBEAC-F1D5-4770-A890-3C8A7BB5E54D),
-    helpstring("COM interface for LineCodes class"),
+    uuid(43140E77-9EA6-4156-A686-ABFAFFE8A059),
+    helpstring("Dispatch interface for LineCodes Object"),
     dual,
     oleautomation
   ]
   interface ILineCodes: IDispatch
   {
-    [propget, id(0x000000C9)]
+    [propget, id(0x000000C9), helpstring("Number of LineCodes")]
     HRESULT _stdcall Count([out, retval] long* Value);
     [propget, id(0x000000CA)]
     HRESULT _stdcall First([out, retval] long* Value);
     [propget, id(0x000000CB)]
     HRESULT _stdcall Next([out, retval] long* Value);
-    [propget, id(0x000000CC)]
+    [propget, id(0x000000CC), helpstring("Name of active LineCode")]
     HRESULT _stdcall Name([out, retval] BSTR* Value);
     [propput, id(0x000000CC)]
     HRESULT _stdcall Name([in] BSTR Value);
-    [propget, id(0x000000CD)]
+    [propget, id(0x000000CD), helpstring("Flag denoting whether impedance data were entered in symmetrical components")]
     HRESULT _stdcall IsZ1Z0([out, retval] VARIANT_BOOL* Value);
     [propget, id(0x000000CE)]
     HRESULT _stdcall Units([out, retval] long* Value);
     [propput, id(0x000000CE)]
     HRESULT _stdcall Units([in] long Value);
-    [propget, id(0x000000CF)]
+    [propget, id(0x000000CF), helpstring("Number of Phases")]
     HRESULT _stdcall Phases([out, retval] long* Value);
-    [propput, id(0x000000CF)]
+    [propput, id(0x000000CF), helpstring("Number of Phases")]
     HRESULT _stdcall Phases([in] long Value);
-    [propget, id(0x000000D0)]
+    [propget, id(0x000000D1), helpstring("Positive-sequence resistance ohms per unit length")]
     HRESULT _stdcall R1([out, retval] double* Value);
-    [propput, id(0x000000D0)]
-    HRESULT _stdcall R1([in] double Value);
-    [propget, id(0x000000D1)]
-    HRESULT _stdcall X1([out, retval] double* Value);
     [propput, id(0x000000D1)]
+    HRESULT _stdcall R1([in] double Value);
+    [propget, id(0x000000D0), helpstring("Posiive-sequence reactance, ohms per unit length")]
+    HRESULT _stdcall X1([out, retval] double* Value);
+    [propput, id(0x000000D0)]
     HRESULT _stdcall X1([in] double Value);
-    [propget, id(0x000000D2)]
+    [propget, id(0x000000D2), helpstring("Zero-Sequence Resistance, ohms per unit length")]
     HRESULT _stdcall R0([out, retval] double* Value);
     [propput, id(0x000000D2)]
     HRESULT _stdcall R0([in] double Value);
-    [propget, id(0x000000D3)]
+    [propget, id(0x000000D3), helpstring("Zero Sequence Reactance, Ohms per unit length")]
     HRESULT _stdcall X0([out, retval] double* Value);
     [propput, id(0x000000D3)]
     HRESULT _stdcall X0([in] double Value);
-    [propget, id(0x000000D4)]
+    [propget, id(0x000000D4), helpstring("Positive-sequence capacitance, nF per unit length")]
     HRESULT _stdcall C1([out, retval] double* Value);
     [propput, id(0x000000D4)]
     HRESULT _stdcall C1([in] double Value);
-    [propget, id(0x000000D5)]
+    [propget, id(0x000000D5), helpstring("Zero-sequence capacitance, nF per unit length")]
     HRESULT _stdcall C0([out, retval] double* Value);
     [propput, id(0x000000D5)]
     HRESULT _stdcall C0([in] double Value);
-    [propget, id(0x000000D6)]
+    [propget, id(0x000000D6), helpstring("Resistance matrix, ohms per unit length")]
     HRESULT _stdcall Rmatrix([out, retval] VARIANT* Value);
     [propput, id(0x000000D6)]
     HRESULT _stdcall Rmatrix([in] VARIANT Value);
-    [propget, id(0x000000D7)]
+    [propget, id(0x000000D7), helpstring("Reactance matrix, ohms per unit length")]
     HRESULT _stdcall Xmatrix([out, retval] VARIANT* Value);
     [propput, id(0x000000D7)]
     HRESULT _stdcall Xmatrix([in] VARIANT Value);
-    [propget, id(0x000000D8)]
+    [propget, id(0x000000D8), helpstring("Capacitance matrix, nF per unit length")]
     HRESULT _stdcall Cmatrix([out, retval] VARIANT* Value);
     [propput, id(0x000000D8)]
     HRESULT _stdcall Cmatrix([in] VARIANT Value);
-    [propget, id(0x000000D9)]
+    [propget, id(0x000000D9), helpstring("Normal Ampere rating")]
     HRESULT _stdcall NormAmps([out, retval] double* Value);
     [propput, id(0x000000D9)]
     HRESULT _stdcall NormAmps([in] double Value);
-    [propget, id(0x000000DA)]
+    [propget, id(0x000000DA), helpstring("Emergency ampere rating")]
     HRESULT _stdcall EmergAmps([out, retval] double* Value);
     [propput, id(0x000000DA)]
     HRESULT _stdcall EmergAmps([in] double Value);
-    [propget, id(0x000000DB)]
+    [propget, id(0x000000DB), helpstring("Variant array of strings with names of all devices")]
     HRESULT _stdcall AllNames([out, retval] VARIANT* Value);
   };
 
   [
-    uuid(9CD30253-86C0-4339-B86E-745C912E8B15),
-    helpstring("COM interface for GICSources class"),
+    uuid(F76B5BDE-9132-44FB-8115-70BF1B065FA4),
+    helpstring("Dispatch interface for GICSources Object"),
     dual,
     oleautomation
   ]
   interface IGICSources: IDispatch
   {
-    [propget, id(0x000000C9)]
+    [propget, id(0x000000C9), helpstring("All GICSourceNames")]
     HRESULT _stdcall AllNames([out, retval] VARIANT* Value);
-    [propget, id(0x000000CA)]
+    [propget, id(0x000000CA), helpstring("First bus name of GICSource (Created name)")]
     HRESULT _stdcall Bus1([out, retval] BSTR* Value);
-    [propget, id(0x000000CB)]
+    [propget, id(0x000000CB), helpstring("Second bus name")]
     HRESULT _stdcall Bus2([out, retval] BSTR* Value);
     [propget, id(0x000000CC)]
     HRESULT _stdcall Name([out, retval] BSTR* Value);
@@ -2947,40 +2965,88 @@ library OpenDSSengine
     HRESULT _stdcall Phases([out, retval] long* Value);
     [propput, id(0x000000CD)]
     HRESULT _stdcall Phases([in] long Value);
-    [propget, id(0x000000CE)]
+    [propget, id(0x000000CE), helpstring("Northward E Field V/km")]
     HRESULT _stdcall EN([out, retval] double* Value);
     [propput, id(0x000000CE)]
     HRESULT _stdcall EN([in] double Value);
-    [propget, id(0x000000CF)]
+    [propget, id(0x000000CF), helpstring("Eastward E Field, V/km")]
     HRESULT _stdcall EE([out, retval] double* Value);
     [propput, id(0x000000CF)]
     HRESULT _stdcall EE([in] double Value);
-    [propget, id(0x000000D0)]
+    [propget, id(0x000000D0), helpstring("Latitude of Bus1 (degrees)")]
     HRESULT _stdcall Lat1([out, retval] double* Value);
     [propput, id(0x000000D0)]
     HRESULT _stdcall Lat1([in] double Value);
-    [propget, id(0x000000D1)]
+    [propget, id(0x000000D1), helpstring("Latitude of Bus2 (degrees)")]
     HRESULT _stdcall Lat2([out, retval] double* Value);
     [propput, id(0x000000D1)]
     HRESULT _stdcall Lat2([in] double Value);
-    [propget, id(0x000000D2)]
+    [propget, id(0x000000D2), helpstring("Longitude of Bus1")]
     HRESULT _stdcall Lon1([out, retval] double* Value);
     [propput, id(0x000000D2)]
     HRESULT _stdcall Lon1([in] double Value);
-    [propget, id(0x000000D3)]
+    [propget, id(0x000000D3), helpstring("Longitude of Bus2 (Degrees)")]
     HRESULT _stdcall Lon2([out, retval] double* Value);
     [propput, id(0x000000D3)]
     HRESULT _stdcall Lon2([in] double Value);
-    [propget, id(0x000000D4)]
+    [propget, id(0x000000D4), helpstring("Specify dc voltage directly")]
     HRESULT _stdcall Volts([out, retval] double* Value);
     [propput, id(0x000000D4)]
     HRESULT _stdcall Volts([in] double Value);
     [propget, id(0x000000D5)]
     HRESULT _stdcall Count([out, retval] long* Value);
-    [propget, id(0x000000D6)]
+    [propget, id(0x000000D6), helpstring("Set first GIC Source Active")]
     HRESULT _stdcall First([out, retval] long* Value);
-    [propget, id(0x000000D7)]
+    [propget, id(0x000000D7), helpstring("Set Next GICSource Active")]
     HRESULT _stdcall Next([out, retval] long* Value);
+  };
+
+  [
+    uuid(02386435-8D77-4804-8ADB-89DDFBBE2BC0),
+    helpstring("Dispatch interface for Reduce Object"),
+    dual,
+    oleautomation
+  ]
+  interface IReduce: IDispatch
+  {
+    [propget, id(0x000000C9), helpstring("Zmag for Short Line Reduction Algorithm")]
+    HRESULT _stdcall Zmag([out, retval] double* Value);
+    [propput, id(0x000000C9), helpstring("Zmag (ohms) for Reduce Option for Z of short lines")]
+    HRESULT _stdcall Zmag([in] double Value);
+    [propget, id(0x000000CA), helpstring("Keep load flag (T/F) for Reduction options that remove branches")]
+    HRESULT _stdcall KeepLoad([out, retval] VARIANT_BOOL* Value);
+    [propput, id(0x000000CA), helpstring("Keep Load Flag (T/F) for  Reduction options that remove branches")]
+    HRESULT _stdcall KeepLoad([in] VARIANT_BOOL Value);
+    [propget, id(0x000000CB), helpstring("Edit String for Remove Branches function")]
+    HRESULT _stdcall EditString([out, retval] BSTR* Value);
+    [propput, id(0x000000CB), helpstring("Edit String for RemoveBranches functions")]
+    HRESULT _stdcall EditString([in] BSTR Value);
+    [propget, id(0x000000CC), helpstring("Start element for Remove Branch functions")]
+    HRESULT _stdcall StartPDElement([out, retval] BSTR* Value);
+    [propput, id(0x000000CC), helpstring("Start Element for Remove branch functions")]
+    HRESULT _stdcall StartPDElement([in] BSTR Value);
+    [propget, id(0x000000CD), helpstring("Name of Energymeter to use for reduction")]
+    HRESULT _stdcall EnergyMeter([out, retval] BSTR* Value);
+    [propput, id(0x000000CD), helpstring("Name of Energymeter to use for reduction")]
+    HRESULT _stdcall EnergyMeter([in] BSTR Value);
+    [id(0x000000CE), helpstring("Save present (reduced) circuit")]
+    HRESULT _stdcall SaveCircuit([in] BSTR CktName);
+    [id(0x000000CF), helpstring("Do Default Reduction algorithm")]
+    HRESULT _stdcall DoDefault(void);
+    [id(0x000000D0), helpstring("Do ShortLines algorithm: Set Zmag first if you don't want the default")]
+    HRESULT _stdcall DoShortLines(void);
+    [id(0x000000D1), helpstring("Reduce Dangling Algorithm; branches with nothing connected")]
+    HRESULT _stdcall DoDangling(void);
+    [id(0x000000D2)]
+    HRESULT _stdcall DoLoopBreak(void);
+    [id(0x000000D3)]
+    HRESULT _stdcall DoParallelLines(void);
+    [id(0x000000D4)]
+    HRESULT _stdcall DoSwitches(void);
+    [id(0x000000D5)]
+    HRESULT _stdcall Do1phLaterals(void);
+    [id(0x000000D6)]
+    HRESULT _stdcall DoBranchRemove(void);
   };
 
   [
@@ -3385,7 +3451,8 @@ library OpenDSSengine
   };
 
   [
-    uuid(0657EE75-F8CF-41D0-8672-2ADACD195591)
+    uuid(B6120B3A-7958-4650-AC18-2A53E89209A8),
+    helpstring("LineCodes Object")
   ]
   coclass LineCodes
   {
@@ -3393,11 +3460,21 @@ library OpenDSSengine
   };
 
   [
-    uuid(D8715F4F-25F5-4EF8-A6F8-8E790628702C)
+    uuid(D0D4455C-A5CA-4B26-ABB4-2CC3798D260E),
+    helpstring("GICSources Object")
   ]
   coclass GICSources
   {
     [default] interface IGICSources;
+  };
+
+  [
+    uuid(553148EA-97CB-4559-933A-A734250E95C6),
+    helpstring("Reduce Object")
+  ]
+  coclass Reduce
+  {
+    [default] interface IReduce;
   };
 
 };

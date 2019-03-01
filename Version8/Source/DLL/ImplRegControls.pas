@@ -64,6 +64,7 @@ type
     procedure Set_TapNumber(Value: Integer); safecall;
 
     function Get_Count: Integer; safecall;
+    procedure Reset; safecall;
 
   end;
 
@@ -498,6 +499,17 @@ function TRegControls.Get_Count: Integer;
 begin
   If Assigned(ActiveCircuit[ActiveActor]) Then
      Result := ActiveCircuit[ActiveActor].RegControls.ListSize;
+end;
+
+procedure TRegControls.Reset;
+var
+  elem: TRegControlObj;
+begin
+  elem   := ActiveRegControl;
+  if elem <> nil then begin
+      elem.Reset;
+  end;
+
 end;
 
 initialization

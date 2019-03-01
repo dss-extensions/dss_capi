@@ -105,6 +105,8 @@ type
     function Get_IncMatrixRows: OleVariant; safecall;
     function Get_IncMatrixCols: OleVariant; safecall;
     function Get_Laplacian: OleVariant; safecall;
+    function Get_MinIterations: Integer; safecall;
+    procedure Set_MinIterations(Value: Integer); safecall;
   end;
 
 implementation
@@ -851,6 +853,17 @@ begin
       end;
     END
     Else Result := VarArrayCreate([0,0], varInteger);
+end;
+
+function TSolution.Get_MinIterations: Integer;
+begin
+     If ActiveCircuit[ActiveActor] <> Nil Then Result := ActiveCircuit[ActiveActor].Solution.MinIterations
+     Else Result := 0;
+end;
+
+procedure TSolution.Set_MinIterations(Value: Integer);
+begin
+    If ActiveCircuit[ActiveActor] <> Nil Then ActiveCircuit[ActiveActor].Solution.MinIterations  := Value;
 end;
 
 initialization
