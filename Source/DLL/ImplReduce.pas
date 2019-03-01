@@ -92,6 +92,7 @@ end;
 procedure TReduce.SaveCircuit(const CktName: WideString);
 begin
       DSSExecutive.Command := 'Save Circuit Dir=' + CktName;
+   // Master file name is returned in DSSText.Result
 end;
 
 procedure TReduce.Set_EnergyMeter(const Value: WideString);
