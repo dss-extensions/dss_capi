@@ -3,6 +3,7 @@
 - `CtrlQueue`: Add the missing function `CtrlQueue_Push`.
 - New `DSS_Get_AllowEditor` and `DSS_Set_AllowEditor`:  AllowEditor controls whether the external editor is used in commands like `Show`. If you set to 0 (false), the editor is not executed. Note that other side effects, such as the creation of files, are not affected.
 - `LoadShapes` code reworked: more validation, fix potential memory issues after resizing using `Npts`, and faster reads and writes (up to 3x).
+- The ouput libraries/DLLs have been moved from `lib/v7` and `lib/v8` to just `lib` since the libraries already have different names. The previous organization was due to expectations that we would keep only the OpenDSS Version 8 line of code but at the moment the main development is focused of DSS C-API on Version 7.
 
 # Version 0.10.1
 
