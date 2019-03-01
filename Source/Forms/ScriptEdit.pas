@@ -154,23 +154,13 @@ begin
     End;
   end;
 
-  if Not ADiakoptics then
-  Begin
-    if Not IsDLL then UpdateSummaryForm('1');
-  End
-  else
-  Begin
-  if ActiveActor = 1 then
-    if Not IsDLL then UpdateSummaryForm('1');
-  End;
-
   Screen.Cursor := crDefault;
 
-  If Not IsDLL and (ActorHandle[ActiveActor] <> nil) Then Begin
+  If Not IsDLL and (ActorHandle[1] <> nil) Then Begin
     if (ActorStatus[ActiveActor] = 1) then
     begin
       UpdateResultForm;
-  //    UpdateSummaryForm(ActiveActor);
+      UpdateSummaryForm('1');
       If Assigned(ActiveCircuit[ActiveActor]) Then With ActiveCircuit[ActiveActor] Do
         if (SolutionWasAttempted[ActiveActor]) and (Not IsSolved) then Begin
           Beep;
@@ -186,11 +176,11 @@ Begin
   SolutionAbort := FALSE;
   DSSExecutive[ActiveActor].Command := S;
   If RecordCommands then Editor.Lines.Append(S);
-  if (ActorStatus[ActiveActor] = 1) then
+  if (ActorStatus[1] = 1) then
   begin
     If Not IsDLL Then  Begin
       UpdateResultForm;
-      UpdateSummaryForm(inttostr(ActiveActor));
+      UpdateSummaryForm('1');
     End;
   end;
 End;
@@ -212,12 +202,13 @@ Var
   TStr            : String;
 begin
     With ControlPanel.SummaryEdit Do Begin
+
         ActorsRdy :=  True;
         for USIdx := 1 to NumOfActors do
           ActorsRdy   := ActorsRdy and (ActorStatus[USIdx] = 1);
-
         if ActorsRdy then
         Begin
+          cLosses :=  CZERO;
           Clear;
           for USIdx := 1 to NumOfActors do
           Begin
@@ -260,9 +251,10 @@ begin
                       cLosses := CmulReal(ActiveCircuit[ActiveActor].Losses[ActiveActor], 0.000001);
                       If cPower.re <> 0.0 Then
                         Add(Format('Total Active Losses:   %-.6g MW, (%-.4g %%)',[cLosses.re,(Closses.re/cPower.re*100.0)]))
-                      Else
+                      Else Begin
                         Add('Total Active Losses:   ****** MW, (**** %%)');
-                      Add(Format('Total Reactive Losses: %-.6g Mvar',[cLosses.im]));
+                      End;
+                      Add(Format('Total Reactive Losses: %-.6n Mvar',[cLosses.im]));
                       Add(Format('Frequency = %-g Hz',[ActiveCircuit[ActiveActor].Solution.Frequency]));
                       Add('Mode = '+GetSolutionModeID);
                       Add('Control Mode = '+GetControlModeID);
