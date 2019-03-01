@@ -1,7 +1,5 @@
 # Version 0.10.2
 
-(not released)
-
 - `CtrlQueue`: Add the missing function `CtrlQueue_Push`.
 - New `DSS_Get_AllowEditor` and `DSS_Set_AllowEditor`:  AllowEditor controls whether the external editor is used in commands like `Show`. If you set to 0 (false), the editor is not executed. Note that other side effects, such as the creation of files, are not affected.
 - `LoadShapes` code reworked: more validation, fix potential memory issues after resizing using `Npts`, and faster reads and writes (up to 3x).

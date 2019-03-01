@@ -18,7 +18,7 @@ Caso procure integração com outras linguagens de programação:
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) para .NET/C#, no momento apenas Windows. Em breve também será possível usá-lo via COM.
 - [DSS MATLAB](http://github.com/dss-extensions/dss_sharp/) permite integração multi-plataforma (Windows, Linux, MacOS) bastante compatível com o módulo COM, de fato contorna algumas dificuldades de COM.
 
-Esta é a versão 0.11.0 em desenvolvimento, atualmente baseada no OpenDSS SVN r2504. Veja [0.10.1](https://github.com/dss-extensions/dss_capi/tree/0.10.1) para o código da última versão lançada.
+Esta é a versão 0.10.2, baseada no OpenDSS SVN r2504. 
 
 Apesar de o objetivo principal (compatibilidade com COM) ter sido alcançado, este é um sempre um trabalho em andamento.
 *Observe que, enquanto a interface clássica (v7 + aprimoramentos) é estável, a interface para o OpenDSS-PM (v8, baseada em atores e execução paralela) ainda é experimental.* A partir da versão 0.10, a interface v8 está bem mais estável que na versão 0.9.8 da DSS C-API.
@@ -30,7 +30,7 @@ Ao invés de usar parâmetros numéricos como na interface DDLL oficial, cada pr
     void Loads_Set_kva(double Value);
 ```
 
-Com exceção de detalhes de baixo nível como gerenciamento de memória, a maioria da documentação pode ser usada como referência para este projeto.
+Com exceção de detalhes de baixo nível como gerenciamento de memória, a maioria da documentação do módulo COM pode ser usada como referência para este projeto.
 
 **A partir da versão 0.9.8, desabilitamos a criação do `opendsscmd.ini`, visto que causava estranheza entre os usuários. O usuário pode configurar a frequência de base padrão usando a variável de ambiente `DSS_BASE_FREQUENCY`, ou simplesmente através de scripts DSS (opção recomendada por nós). Isto também significa que o `datapath` inicial é configurado automaticamente para o diretório de trabalho corrente.**
 
@@ -40,7 +40,10 @@ De forma a rastrear as mudanças no repositório SVN oficial, uma versão modifi
 
 ## Mudanças recentes
 
-- **2019-02-12 / version 0.10.1: Verificação de erros mais ampla, introdução da função `Error_Get_NumberPtr`, correções e melhor tratamento em `Meters`. Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) para listagem detalhada.**
+Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) para listagem detalhada.
+
+- **2019-02-28 / version 0.10.2: Implementa a função `CtrlQueue_Push` (faltante na versão anterior); modificações em `LoadShapes` para melhor desempenho e mais validação; introduz `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` para (desa)ativar chamadas ao editor externo.**
+- 2019-02-12 / version 0.10.1: Verificação de erros mais ampla, introdução da função `Error_Get_NumberPtr`, correções e melhor tratamento em `Meters`.
 - 2018-11-17 / versão 0.10.0: Reduz o número de operações de alocação de memória se os buffers atuais forem reutilizados, introduz o mecanismo de Resultado Global, várias extensões de API (`LineGeometry`, `WireData`, `LineSpacing`, `CNData`, `TSData`, `Reactor`) -- veja [o documento de uso](https://github.com/dss-extensions/dss_capi/blob/master/docs/usage.md)(em inglês) e o [ticket #11](https://github.com/dss-extensions/dss_capi/issues/11).
 - 2018-08-10 / versão 0.9.8: Grande reorganização do código fonte, várias pequenas correções, e novos scripts de compilação.
 - 2018-04-05 / versão 0.9.5: Novas funções `Circuit_SetCktElement*` para definir o elemento de circuito ativo.
