@@ -77,7 +77,7 @@ type
     ReactorProps = (bus1 = 1, bus2, phases, kvar, kv, conn, Rmatrix, Xmatrix, Parallel, R, X, Rp, Z1, Z2, Z0, Z, RCurve, LCurve, LmH);
 
 //------------------------------------------------------------------------------
-function ActiveReactor(var e: TReactorObj): TReactorObj; inline;
+function ActiveReactor(out e: TReactorObj): TReactorObj; inline;
 begin
     e := NIL;
     if ActiveCircuit <> NIL then
@@ -296,6 +296,7 @@ end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Count(): Integer; CDECL;
 begin
+    Result := 0;
     if Assigned(ActiveCircuit) then
         Result := ActiveCircuit.Reactors.ListSize;
 end;
@@ -629,15 +630,16 @@ var
     pReactor: TReactorObj;
 begin
     Value := PDoubleArray(ValuePtr);
-    if (ActiveReactor(pReactor) <> NIL) and (Sqr(pReactor.Nphases) = ValueCount) then
-        with pReactor do
-        begin
-            for k := 0 to ValueCount do
+    if (ActiveReactor(pReactor) <> NIL) then
+        if (Sqr(pReactor.Nphases) = ValueCount) then
+            with pReactor do
             begin
-                Rmatrix[k + 1] := ValuePtr[k];
+                for k := 0 to ValueCount do
+                begin
+                    Rmatrix[k + 1] := ValuePtr[k];
+                end;
+                ReactorPropSideEffects(ReactorProps.Rmatrix, pReactor);
             end;
-            ReactorPropSideEffects(ReactorProps.Rmatrix, pReactor);
-        end;
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Xmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
@@ -647,15 +649,16 @@ var
     pReactor: TReactorObj;
 begin
     Value := PDoubleArray(ValuePtr);
-    if (ActiveReactor(pReactor) <> NIL) and (Sqr(pReactor.Nphases) = ValueCount) then
-        with pReactor do
-        begin
-            for k := 0 to ValueCount do
+    if (ActiveReactor(pReactor) <> NIL) then
+        if (Sqr(pReactor.Nphases) = ValueCount) then
+            with pReactor do
             begin
-                Xmatrix[k + 1] := ValuePtr[k];
+                for k := 0 to ValueCount do
+                begin
+                    Xmatrix[k + 1] := ValuePtr[k];
+                end;
+                ReactorPropSideEffects(ReactorProps.Xmatrix, pReactor);
             end;
-            ReactorPropSideEffects(ReactorProps.Xmatrix, pReactor);
-        end;
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -665,15 +668,16 @@ var
     pReactor: TReactorObj;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if (ActiveReactor(pReactor) <> NIL) and (pReactor.Rmatrix <> NIL) then
-        with pReactor do
-        begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
-            for k := 0 to ResultCount[0] do
+    if (ActiveReactor(pReactor) <> NIL) then
+        if (pReactor.Rmatrix <> NIL) then
+            with pReactor do
             begin
-                ResultPtr[k] := Rmatrix[k + 1];
+                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
+                for k := 0 to ResultCount[0] do
+                begin
+                    ResultPtr[k] := Rmatrix[k + 1];
+                end;
             end;
-        end;
 end;
 
 procedure Reactors_Get_Rmatrix_GR(); CDECL;
@@ -690,15 +694,16 @@ var
     pReactor: TReactorObj;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if (ActiveReactor(pReactor) <> NIL) and (pReactor.Xmatrix <> NIL) then
-        with pReactor do
-        begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
-            for k := 0 to ResultCount[0] do
+    if (ActiveReactor(pReactor) <> NIL) then
+        if (pReactor.Xmatrix <> NIL) then
+            with pReactor do
             begin
-                ResultPtr[k] := Xmatrix[k + 1];
+                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
+                for k := 0 to ResultCount[0] do
+                begin
+                    ResultPtr[k] := Xmatrix[k + 1];
+                end;
             end;
-        end;
 end;
 
 procedure Reactors_Get_Xmatrix_GR(); CDECL;
