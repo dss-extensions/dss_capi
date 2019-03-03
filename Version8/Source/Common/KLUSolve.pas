@@ -22,6 +22,10 @@ const
   KLULib = 'libklusolve';
 {$ENDIF}
 
+{$IFDEF DSS_CAPI_MVMULT}
+procedure mvmult(N: integer; b, A, x: pComplexArray);{$IFNDEF FPC}cdecl;external 'klusolve.dll';{$ELSE}KLU_CALL;{$ENDIF}
+{$ENDIF}
+
 // in general, KLU arrays are 0-based
 // function calls return 0 to indicate failure, 1 for success
 

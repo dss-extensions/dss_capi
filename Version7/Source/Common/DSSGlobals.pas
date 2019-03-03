@@ -24,7 +24,7 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      UComplex, Arraydef, CktElement, Circuit, IniRegSave, {$IFNDEF FPC}Graphics, System.IOUtils, {$ENDIF}inifiles,
 
      {$IFDEF UNIX}BaseUnix,{$ENDIF}
-     
+
      {Some units which have global vars defined here}
      Spectrum,
      LoadShape,
@@ -112,7 +112,7 @@ VAR
    DLLFirstTime   :Boolean=TRUE;
    DLLDebugFile   :TextFile;
    ProgramName    :String;
-{$IFNDEF DSS_CAPI} // Disable DSS_Registry completely when building the DSS_CAPI DLL   
+{$IFNDEF DSS_CAPI} // Disable DSS_Registry completely when building the DSS_CAPI DLL
    DSS_Registry   :TIniRegSave; // Registry   (See Executive)
 {$ENDIF}
 {$IFDEF DSS_CAPI}
@@ -421,14 +421,14 @@ VAR
     Retval:Integer;
 Begin
     IF Not NoFormsAllowed Then Begin
-        IF In_Redirect THEN 
+        IF In_Redirect THEN
         Begin
             RetVal := DSSMessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]), FALSE);
             {$IFDEF DSS_CAPI}
             if DSS_CAPI_EARLY_ABORT then
                 Redirect_Abort := True;
             {$ENDIF}
-            IF RetVal = -1 THEN 
+            IF RetVal = -1 THEN
                 Redirect_Abort := True;
         End
         ELSE
@@ -587,10 +587,14 @@ End;
 {$IFDEF DSS_CAPI}
 FUNCTION GetDSSVersion: String;
 BEGIN
-    Result := 'DSS C-API Library version ' + DSS_CAPI_VERSION + 
-              ' revision ' + DSS_CAPI_REV + 
+    Result := 'DSS C-API Library version ' + DSS_CAPI_VERSION +
+              ' revision ' + DSS_CAPI_REV +
               ' based on OpenDSS SVN ' + DSS_CAPI_SVN_REV +
-              ' (v7/classic variation)';
+              ' (v7/classic variation)'
+    {$IFDEF DSS_CAPI_MVMULT}
+              + ' MVMULT'
+    {$ENDIF}
+              ;
 END;
 {$ELSE}
 {$IFDEF FPC}
@@ -913,7 +917,7 @@ initialization
    DSSDirectory     := ExtractFilePath(DSSFileName);
    // want to know if this was built for 64-bit, not whether running on 64 bits
    // (i.e. we could have a 32-bit build running on 64 bits; not interested in that
-{$IFDEF DSS_CAPI}   
+{$IFDEF DSS_CAPI}
 {$IFDEF CPUX64}
    VersionString    := GetDSSVersion + ' (64-bit build)';
 {$ELSE ! CPUX86}
@@ -932,7 +936,7 @@ initialization
    SetDataPath (GetDefaultDataDirectory + PathDelim + ProgramName + PathDelim);
 {$ELSE} // Use the current working directory as the initial datapath when using DSS_CAPI
    SetDataPath (StartupDirectory);
-{$ENDIF} 
+{$ENDIF}
 
 {$IFNDEF DSS_CAPI}
    {$IFNDEF FPC}
@@ -993,14 +997,14 @@ initialization
    {$IFNDEF FPC}
    DSS_Viz_installed:= CheckDSSVisualizationTool; // DSS visualization tool (flag of existance)
    {$ENDIF}
-{$IFDEF DSS_CAPI}  
+{$IFDEF DSS_CAPI}
    DSS_CAPI_INFO_SPARSE_COND := (GetEnvironmentVariable('DSS_CAPI_INFO_SPARSE_COND') = '1');
-   
+
    // Default is True, disable at initialization only when DSS_CAPI_EARLY_ABORT = 0
-   DSS_CAPI_EARLY_ABORT := not (GetEnvironmentVariable('DSS_CAPI_EARLY_ABORT') <> '0'); 
-   
+   DSS_CAPI_EARLY_ABORT := not (GetEnvironmentVariable('DSS_CAPI_EARLY_ABORT') <> '0');
+
    // Default is True, enable at initialization when DSS_CAPI_ALLOW_EDITOR = 0
-   DSS_CAPI_ALLOW_EDITOR := (GetEnvironmentVariable('DSS_CAPI_ALLOW_EDITOR') <> '0'); 
+   DSS_CAPI_ALLOW_EDITOR := (GetEnvironmentVariable('DSS_CAPI_ALLOW_EDITOR') <> '0');
 {$ENDIF}
 
 Finalization
@@ -1015,7 +1019,7 @@ Finalization
   With DSSExecutive Do If RecorderOn Then Recorderon := FALSE;
 
   DSSExecutive.Free;  {Writes to Registry}
-{$IFNDEF DSS_CAPI}  
+{$IFNDEF DSS_CAPI}
   DSS_Registry.Free;  {Close Registry}
 {$ENDIF}
 

@@ -42,9 +42,9 @@ type
         procedure AddElemsym(i, j: Integer; Value: Complex);
         function GetElement(i, j: Integer): Complex;
         function GetErrorCode: Integer;
-        function SumBlock(row1, row2, col1, col2: Integer): Complex;
-        procedure MVmult(b, x: pComplexArray);  {b = Ax}
-        procedure MVmultAccum(b, x: pComplexArray);  {b = Ax}
+        // function SumBlock(row1, row2, col1, col2: Integer): Complex;
+        procedure MVmult(b, x: pComplexArray); inline; {b = Ax}
+        // procedure MVmultAccum(b, x: pComplexArray);  {b = Ax}
         function GetValuesArrayPtr(var Order: Integer): pComplexArray;
         procedure ZeroRow(iRow: Integer);
         procedure ZeroCol(iCol: Integer);
@@ -62,6 +62,9 @@ type
 
 
 implementation
+
+uses 
+    KLUSolve;
 
 {$R-}  { Turn off range checking}
 {--------------------------------------------------------------------------}
@@ -106,12 +109,16 @@ begin
 end;
 
 {--------------------------------------------------------------------------}
-procedure TcMatrix.MvMult(b, x: pComplexArray);
+procedure TcMatrix.MvMult(b, x: pComplexArray); inline;
+{$IFDEF DSS_CAPI_MVMULT}
+begin
+    KLUSolve.mvmult(Norder, b, values, x);
+end;
+{$ELSE}
 var
     Sum: Complex;
     i, j: Integer;
 begin
-
     for i := 1 to Norder do
     begin
         Sum := Cmplx(0.0, 0.0);
@@ -121,29 +128,29 @@ begin
         end;
         b^[i] := Sum;
     end;
-
 end;
+{$ENDIF}
 
- {--------------------------------------------------------------------------}
-procedure TcMatrix.MvMultAccum(b, x: pComplexArray);
-   // Same as MVMult except accumulates b
-var
-    Sum: Complex;
-    i, j: Integer;
-begin
-
-    for i := 1 to Norder do
-    begin
-        Sum := Cmplx(0.0, 0.0);
-        for j := 1 to Norder do
-        begin
-            Caccum(Sum, cmul(Values^[((j - 1) * Norder + i)], x^[j]));
-        end;
-        Caccum(b^[i], Sum);
-    end;
-
-end;
-
+{--------------------------------------------------------------------------}
+// procedure TcMatrix.MvMultAccum(b, x: pComplexArray);
+//    // Same as MVMult except accumulates b
+// var
+//     Sum: Complex;
+//     i, j: Integer;
+// begin
+// 
+//     for i := 1 to Norder do
+//     begin
+//         Sum := Cmplx(0.0, 0.0);
+//         for j := 1 to Norder do
+//         begin
+//             Caccum(Sum, cmul(Values^[((j - 1) * Norder + i)], x^[j]));
+//         end;
+//         Caccum(b^[i], Sum);
+//     end;
+// 
+// end;
+// 
 {--------------------------------------------------------------------------}
 procedure TcMatrix.Invert;
 type
@@ -282,27 +289,27 @@ begin
 end;
 
 {--------------------------------------------------------------------------}
-function TcMatrix.SumBlock(row1, row2, col1, col2: Integer): Complex;
-    { Sum all elements in a given block of the matrix}
-
-var
-    i, j, rowstart: Integer;
-    Sum: Complex;
-
-begin
-    Sum := Cmplx(0.0, 0.0);
-
-    for j := col1 to col2 do
-    begin
-        Rowstart := (j - 1) * Norder;
-        for i := (rowstart + row1) to (rowstart + row2) do
-            Sum := Cadd(Sum, Values^[i]);
-    end;
-
-    Result := Sum;
-
-end;
-
+// function TcMatrix.SumBlock(row1, row2, col1, col2: Integer): Complex;
+//     { Sum all elements in a given block of the matrix}
+// 
+// var
+//     i, j, rowstart: Integer;
+//     Sum: Complex;
+// 
+// begin
+//     Sum := Cmplx(0.0, 0.0);
+// 
+//     for j := col1 to col2 do
+//     begin
+//         Rowstart := (j - 1) * Norder;
+//         for i := (rowstart + row1) to (rowstart + row2) do
+//             Sum := Cadd(Sum, Values^[i]);
+//     end;
+// 
+//     Result := Sum;
+// 
+// end;
+// 
 {--------------------------------------------------------------------------}
 procedure TcMatrix.CopyFrom(OtherMatrix: TcMatrix);
 var
