@@ -44,10 +44,9 @@ function DSSProperty_Get_Description_AnsiString(): Ansistring; inline;
 begin
     Result := '';
     if (ActiveCircuit <> NIL) and (FPropIndex <> 0) {and (FPropClass <> Nil)} then
-        with  ActiveDSSObject.ParentClass do
-            if FPropIndex <= NumProperties then
+        with ActiveDSSObject.ParentClass do
+            if not IsPropIndexInvalid(33006) then
                 Result := PropertyHelp^[FPropIndex];
-
 end;
 
 function DSSProperty_Get_Description(): PAnsiChar; CDECL;
