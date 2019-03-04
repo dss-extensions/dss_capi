@@ -72,7 +72,7 @@ if exist ..\electricdss-src\Version7\Source\Common\DSSGlobals.pas (
 
 SETLOCAL ENABLEEXTENSIONS
 
-IF DEFINED APPVEYOR_REPO_TAG_NAME (
+IF DEFINED APPVEYOR (
     mkdir release
     mkdir dss_capi
     xcopy /E lib\win_x86 release\dss_capi\lib\win_x86\
