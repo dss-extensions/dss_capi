@@ -8,36 +8,25 @@ build_script:
 
     appveyor downloadfile https://sourceforge.net/projects/dss-capi/files/FPC/FPC-win32-win64-3.0.4.7z/download -FileName FPC-win32-win64-3.0.4.7z
 
+    appveyor downloadfile https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_win_x86-gcc5.3.zip -FileName klusolve_x86.zip
+    
+    appveyor downloadfile https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_win_x64-gcc8.1.zip -FileName klusolve_x64.zip
+
     7z x -oC:\ FPC-win32-win64-3.0.4.7z
 
-    set PATH=%PATH%;C:\FPC\3.0.4\bin\i386-win32
+    7z x -y -oC:\dss_capi\ klusolve_x86.zip
 
+    7z x -y -oC:\dss_capi\ klusolve_x64.zip
+    
+    xcopy /E c:\dss_capi\klusolve\lib c:\dss_capi\lib
+
+    set PATH=%PATH%;C:\FPC\3.0.4\bin\i386-win32
+    
     set PATH=%PATH%;C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\bin
 
-    mkdir c:\dss_capi\klusolve\build_x86
-
-    cd c:\dss_capi\klusolve\build_x86
-
-    cmake .. -DUSE_SYSTEM_SUITESPARSE=OFF -G"Visual Studio 15 2017"
-
-    cmake --build . --config Release
-
-    cd c:\dss_capi
-    
     call build_win_x86.bat
     
-    mkdir c:\dss_capi\klusolve\build_x64
-
-    cd c:\dss_capi\klusolve\build_x64
-
-    cmake .. -DUSE_SYSTEM_SUITESPARSE=OFF -G"Visual Studio 15 2017 Win64"
-
-    cmake --build . --config Release
-
-    cd c:\dss_capi
-
     call build_win_x64.bat
-
     
 deploy:
 - provider: GitHub
@@ -48,4 +37,3 @@ deploy:
   force_update: true
   on:
     APPVEYOR_REPO_TAG: true
-    

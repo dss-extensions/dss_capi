@@ -5,51 +5,54 @@ matrix:
     - name: "linux_x64"
       os: linux
       sudo: required
-      env: DOCKER_IMAGE=pmeira/manylinux_wheel_cmake_fpc
+      env: 
+        - DOCKER_IMAGE=pmeira/manylinux_wheel_cmake_fpc
+        - KLUSOLVE_URL=https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_linux_x64.tar.gz
       services:
         - docker
       install:
         - docker pull $DOCKER_IMAGE
       script: 
+        - wget "${KLUSOLVE_URL}" -Oklusolve.tar.gz -q
+        - tar zxf klusolve.tar.gz
+        - cp -r klusolve/lib ./lib
         - git clone https://github.com/dss-extensions/electricdss-src ../electricdss-src
-        - wget http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-5.3.0.tar.gz -O suitesparse.tar.gz -q
-        - tar zxf suitesparse.tar.gz
-        - mv SuiteSparse ..
         - docker run --rm -v `pwd`/..:/io -e TRAVIS_TAG="${TRAVIS_TAG}" $DOCKER_IMAGE bash /io/dss_capi/ci/build_linux_x64.sh
         - ls -lR lib
         
     - name: "linux_x86"
       os: linux
       sudo: required
-      env: DOCKER_IMAGE=pmeira/manylinux_wheel_cmake_fpc_i686
+      env: 
+        - DOCKER_IMAGE=pmeira/manylinux_wheel_cmake_fpc_i686
+        - KLUSOLVE_URL=https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_linux_x86.tar.gz
       services:
         - docker
       install:
         - docker pull $DOCKER_IMAGE
       script: 
+        - wget "${KLUSOLVE_URL}" -Oklusolve.tar.gz -q
+        - tar zxf klusolve.tar.gz
+        - cp -r klusolve/lib ./lib
         - git clone https://github.com/dss-extensions/electricdss-src ../electricdss-src
-        - wget http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-5.3.0.tar.gz -O suitesparse.tar.gz -q
-        - tar zxf suitesparse.tar.gz
-        - mv SuiteSparse ..
         - docker run --rm -v `pwd`/..:/io -e TRAVIS_TAG="${TRAVIS_TAG}" $DOCKER_IMAGE bash /io/dss_capi/ci/build_linux_x86.sh
         - ls -lR lib
         
     - name: "osx_x64"
       os: osx
+      env:
+        - KLUSOLVE_URL=https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_darwin_x64.tar.gz
       before_install:
         - |
-          wget https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.0.4/fpc-3.0.4a.intel-macosx.dmg/download -Ofpc.dmg
+          wget https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.0.4/fpc-3.0.4a.intel-macosx.dmg/download -Ofpc.dmg -q
           sudo hdiutil attach fpc.dmg
           sudo installer -package /Volumes/fpc-3.0.4a.intel-macosx/fpc-3.0.4a.intel-macosx.pkg -target /
       install: true
       script: 
+        - wget "${KLUSOLVE_URL}" -Oklusolve.tar.gz -q
+        - tar zxf klusolve.tar.gz
+        - cp -r klusolve/lib ./lib
         - git clone https://github.com/dss-extensions/electricdss-src ../electricdss-src
-        - mkdir klusolve/build
-        - cd klusolve/build
-        - cmake -DUSE_SYSTEM_SUITESPARSE=OFF ..
-        - cmake --build . --config Release
-        - cd ../..
-        - file lib/darwin_x64/libklusolve.dylib
         - bash make_metadata.sh
         - bash build_macos_x64.sh
         - ls -lR lib
