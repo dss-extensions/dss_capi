@@ -216,7 +216,7 @@ BEGIN
             2: BEGIN
                  ReAllocmem(Year, Sizeof(Year^[1])*Npts);
                  YrBuffer := Allocmem(Sizeof(YrBuffer^[1])*Npts);
-                 InterpretDblArray(Param, Npts, YrBuffer);  // Parser.ParseAsVector(Npts, Yrbuffer);
+                 Npts := InterpretDblArray(Param, Npts, YrBuffer);  // Parser.ParseAsVector(Npts, Yrbuffer);
                  
                  FOR i := 1 to Npts DO Year^[i] := Round(YrBuffer^[i]);
                  BaseYear := Year^[1];
@@ -224,7 +224,7 @@ BEGIN
                END;
             3: BEGIN
                  ReAllocmem(Multiplier, Sizeof(Multiplier^[1])*Npts);
-                 InterpretDblArray(Param, Npts, Multiplier);   //Parser.ParseAsVector(Npts, Multiplier);
+                 Npts := InterpretDblArray(Param, Npts, Multiplier);   //Parser.ParseAsVector(Npts, Multiplier);
                  
                END;
             4: DoCSVFile(Param);

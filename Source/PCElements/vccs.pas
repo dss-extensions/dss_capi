@@ -327,6 +327,7 @@ Begin
   if SpectrumObj=NIL Then Begin
     DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device VCCS.'+Name+' Not Found.', 333);
   end;
+  if Assigned(InjCurrent) then  Reallocmem(InjCurrent, 0); // if already allocated, clean it up
   Reallocmem(InjCurrent, SizeOf(InjCurrent^[1])*Yorder);
   BaseCurr := 0.01 * Ppct * Prated / Vrated / FNphases;
   if Length (Ffilter_name) > 0 then begin

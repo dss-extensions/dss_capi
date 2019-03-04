@@ -277,7 +277,7 @@ Begin
                End;
             4: Begin
                    ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
-                   InterpretDblArray(Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
+                   NumPoints := InterpretDblArray(Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
                End;
             5: Mean   := Parser[ActorID].DblValue;
             6: StdDev := Parser[ActorID].DblValue;

@@ -183,16 +183,16 @@ BEGIN
                END;
             2: BEGIN
                  ReAllocmem(HarmArray, Sizeof(HarmArray^[1])*NumHarm);
-                 InterpretDblArray(Param, NumHarm, HarmArray);
+                 NumHarm := InterpretDblArray(Param, NumHarm, HarmArray);
                END;
             3: BEGIN
                  ReAllocmem(puMagArray, Sizeof(puMagArray^[1])*NumHarm);
-                 InterpretDblArray(Param, NumHarm, puMagArray);
+                 NumHarm := InterpretDblArray(Param, NumHarm, puMagArray);
                  FOR i := 1 to NumHarm Do puMagArray^[i] := puMagArray^[i] * 0.01;  // convert to per unit
                END;
             4: BEGIN
                  ReAllocmem(AngleArray, Sizeof(AngleArray^[1])*NumHarm);
-                 InterpretDblArray(Param, NumHarm, AngleArray);
+                 NumHarm := InterpretDblArray(Param, NumHarm, AngleArray);
                END;
             5: DoCSVFile(Param);
          ELSE

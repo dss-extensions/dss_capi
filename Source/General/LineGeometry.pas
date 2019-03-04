@@ -341,7 +341,7 @@ BEGIN
                End;
            18: Begin
                  Param := Parser[ActorID].StrValue;
-                 InterpretDblArray(Param, Nratings, ratings);
+                 Nratings := InterpretDblArray(Param, Nratings, ratings);
                End
          ELSE
            // Inherited parameters
@@ -555,7 +555,6 @@ function TLineGeometryObj.GetPropertyValue(Index: Integer): String;
 var
   j,
   i       : Integer;
-  TempStr : String;
 {Return Property Value for Active index}
 
 begin
@@ -567,17 +566,16 @@ begin
       6   : Result       := Format('%-g',[FY^[FActiveCond]]);
       7   : Result       := LineUnitsStr(FUnits^[FActiveCond]);
       12,15,16: Begin
-        Result := '[';
-        for i:= 1 to FNConds do Result := Result + FCondName^[i] + ' ';
-        Result := Result + ']';
-      End;
+                  Result := '[';
+                  for i:= 1 to FNConds do Result := Result + FCondName^[i] + ' ';
+                  Result := Result + ']';
+                End;
       17  : Result := inttostr(Nratings);
       18  : Begin
-              TempStr   :=  '[';
+              Result   :=  '[';
               for  j:= 1 to Nratings do
-                TempStr :=  TempStr + floattoStrf(ratings^[j],ffgeneral,8,4) + ',';
-              TempStr   :=  TempStr + ']';
-              Result  :=  TempStr;
+                Result :=  Result + floattoStrf(ratings^[j],ffgeneral,8,4) + ',';
+              Result   :=  Result + ']';
             End;
    ELSE
      // Inherited parameters

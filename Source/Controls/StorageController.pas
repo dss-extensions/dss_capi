@@ -465,7 +465,7 @@ Begin
                            FleetSize := FStorageNameList.count;
                            IF FleetSize>0 Then Begin
                            Reallocmem(FWeights, Sizeof(FWeights^[1])*FleetSize);
-                           InterpretDblArray(Param, FleetSize, FWeights);
+                           FleetSize := InterpretDblArray(Param, FleetSize, FWeights);
                            End;
                          End;
             propMODEDISCHARGE: DisChargeMode := InterpretMode(propMODEDISCHARGE, Param);

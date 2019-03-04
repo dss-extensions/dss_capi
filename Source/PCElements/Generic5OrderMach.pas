@@ -1068,7 +1068,7 @@ Begin
     if Assigned(dX_vardtn) then Reallocmem(dX_vardtn, 0);
     if Assigned(Y_out_var) then Reallocmem(Y_out_var, 0);
     if Assigned(V_in_var) then Reallocmem(V_in_var, 0);
-    ReAllocMem(pV_f_cc, 0 );
+    if Assigned(pV_f_cc) then ReAllocMem(pV_f_cc, 0 );
 
     Inherited Destroy;   // This will take care of most common circuit element arrays, etc.
 

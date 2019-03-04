@@ -177,6 +177,8 @@ END;
 
 destructor TWireDataObj.Destroy;
 BEGIN
+  if Assigned(ratings) then ReallocMem(ratings, 0);
+
   Inherited destroy;
 END;
 
