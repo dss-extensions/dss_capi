@@ -1,3 +1,10 @@
+# Version 0.10.3
+
+**not released**
+
+- The KLUSolve code has been moved to a new repository at https://github.com/dss-extensions/klusolve/ -- to avoid confunsion with the upstream project (which hasn't seen any development for a couple of years), we refer to it by "DSS-Extensions KLUSolve". 
+
+
 # Version 0.10.2
 
 - `CtrlQueue`: Add the missing function `CtrlQueue_Push`.
