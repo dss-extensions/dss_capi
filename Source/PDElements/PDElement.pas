@@ -194,6 +194,7 @@ Begin
     MeterObj          := NIL;
     ParentPDElement   := NIL;
     DSSObjType        := PD_ELEMENT;
+    Ratings           := Nil;
 
 
 End;
