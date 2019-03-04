@@ -224,7 +224,7 @@ BEGIN
   FGMRUnits         := 0;
   FResistanceUnits  := 0;
   FRadiusUnits      := 0;
-
+  ratings     :=  Nil;
   Normamps    := -1.0;
   EmergAmps   :=-1.0;
   Nratings    :=  1;
@@ -263,7 +263,7 @@ Begin
        12 : Begin
               TempStr   :=  '[';
               for  j:= 1 to Nratings do
-                TempStr :=  TempStr + floattoStrf(ratings^[j],ffcurrency,8,4) + ','; 
+                TempStr :=  TempStr + floattoStrf(ratings^[j],ffgeneral,8,4) + ',';
               TempStr   :=  TempStr + ']';
               Writeln(F, TempStr);
             End;

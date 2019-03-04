@@ -497,8 +497,8 @@ BEGIN
       Normamps    := 0.0;
       EmergAmps   := 0.0;
 
-      FReduce := FALSE;
-
+      FReduce     := FALSE;
+      ratings     :=  Nil;
       NRatings  :=  1;
       ReAllocmem(ratings, Sizeof(ratings^[1])*Nratings);
       ratings^[1]  :=  NormAmps;
@@ -575,7 +575,7 @@ begin
       18  : Begin
               TempStr   :=  '[';
               for  j:= 1 to Nratings do
-                TempStr :=  TempStr + floattoStrf(ratings^[j],ffcurrency,8,4) + ',';
+                TempStr :=  TempStr + floattoStrf(ratings^[j],ffgeneral,8,4) + ',';
               TempStr   :=  TempStr + ']';
               Result  :=  TempStr;
             End;
@@ -689,7 +689,7 @@ begin
             18: Begin
                   TempStr   :=  '[';
                   for  j:= 1 to Nratings do
-                    TempStr :=  TempStr + floattoStrf(ratings^[j],ffcurrency,8,4) + ',';
+                    TempStr :=  TempStr + floattoStrf(ratings^[j],ffgeneral,8,4) + ',';
                   TempStr   :=  TempStr + ']';
                   Writeln(F,'ratings=' + TempStr);
                 End;

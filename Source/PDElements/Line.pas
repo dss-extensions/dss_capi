@@ -332,7 +332,7 @@ begin
   PropertyValue[28]                    := Format('%-d', [Nratings]);
   TempStr   :=  '[';
   for  j:= 1 to Nratings do
-   TempStr :=  TempStr + floattoStrf(ratings^[j],ffcurrency,8,4) + ',';
+   TempStr :=  TempStr + floattoStrf(ratings^[j],ffgeneral,8,4) + ',';
   TempStr   :=  TempStr + ']';
   PropertyValue[29] := TempStr;
 
@@ -828,6 +828,7 @@ Begin
     If Assigned(Zinv) Then Zinv.Free;
     If Assigned(Yc) Then Yc.Free;
     Reallocmem (FLineWireData, 0);
+    Reallocmem (ratings, 0);
     Inherited destroy;
 End;
 
