@@ -183,7 +183,7 @@ begin
           time^[0,k] := hr*3600 + s;
           inc(k);
         End;
-        Reallocmem(SngBuffer, 0);  // Dispose of buffer
+        If Assigned(SngBuffer) Then Reallocmem(SngBuffer, 0);  // Dispose of buffer
       End Else Begin   // Not time solution, so return nil array
         time^ := nil;
         pMon.MonitorStream.Seek(0, soFromEnd) ; // leave stream at end
@@ -572,7 +572,7 @@ begin
           time[0,k] := hr*3600 + s;
           inc(k);
         End;
-        Reallocmem(SngBuffer, 0);  // Dispose of buffer
+        If Assigned(SngBuffer) Then Reallocmem(SngBuffer, 0);  // Dispose of buffer
       End Else Begin   // Not time solution, so return nil array
         time := nil;
         pMon.MonitorStream.Seek(0, soFromEnd) ; // leave stream at end
@@ -639,7 +639,7 @@ begin
           channel[index,k] := sngBuffer^[index+1];
           inc(k);
         End;
-        Reallocmem(SngBuffer, 0);  // Dispose of buffer
+        If Assigned(SngBuffer) Then Reallocmem(SngBuffer, 0);  // Dispose of buffer
       end;
     End
     Else channel := nil;
@@ -1155,7 +1155,7 @@ begin
               End;
               y_labels[index]:=load_names[load_counter]+'.'+IntToStr(counter);
               inc(counter);
-              Reallocmem(SngBuffer, 0);  // Dispose of buffer
+              If Assigned(SngBuffer) Then Reallocmem(SngBuffer, 0);  // Dispose of buffer
             end;
           End
           Else

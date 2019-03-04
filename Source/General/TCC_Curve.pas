@@ -190,8 +190,8 @@ BEGIN
          CASE ParamPointer OF
             0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 420);
             1: Npts := Parser[ActorID].Intvalue;
-            2: InterpretDblArray(Param, Npts, C_Values);   // Parser.ParseAsVector(Npts, Multipliers);
-            3: InterpretDblArray(Param, Npts, T_values);   // Parser.ParseAsVector(Npts, Hours);
+            2: Npts := InterpretDblArray(Param, Npts, C_Values);   // Parser.ParseAsVector(Npts, Multipliers);
+            3: Npts := InterpretDblArray(Param, Npts, T_values);   // Parser.ParseAsVector(Npts, Hours);
          ELSE
            // Inherited parameters
              ClassEdit( ActiveTCC_CurveObj, ParamPointer - NumPropsThisClass)

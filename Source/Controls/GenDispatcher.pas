@@ -201,7 +201,7 @@ Begin
                  FListSize := FGeneratorNameList.count;
                  IF FListSize>0 Then Begin
                  Reallocmem(FWeights, Sizeof(FWeights^[1])*FListSize);
-                 InterpretDblArray(Param, FListSize, FWeights);
+                 FListSize := InterpretDblArray(Param, FListSize, FWeights);
                  End;
                End;
 

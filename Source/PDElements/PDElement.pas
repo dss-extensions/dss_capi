@@ -188,20 +188,20 @@ Begin
     FromTerminal     := 1;
     BranchNumCustomers     := 0;
     BranchTotalCustomers   := 0;
-    AccumulatedBrFltRate := 0.0;
+    AccumulatedBrFltRate   := 0.0;
     MilesThisLine     := 0.0;
     SensorObj         := NIL;
     MeterObj          := NIL;
     ParentPDElement   := NIL;
     DSSObjType        := PD_ELEMENT;
-    Ratings           := Nil;
+    Ratings           := Nil;  // Initialized here
 
 
 End;
 
 destructor TPDElement.Destroy;
 Begin
-
+    if Assigned(Ratings) then  Reallocmem(Ratings, 0);  // Dispose of array and set Ratings := nil
     Inherited Destroy;
 End;
 
