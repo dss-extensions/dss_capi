@@ -98,7 +98,7 @@ type
     function Get_Parallel: IParallel; safecall;
     function Get_LineCodes: ILineCodes; safecall;
     function Get_GICsources: IGICSources; safecall;
-    function Get_Reduce: IReduce; safecall;
+    function Get_ReduceCkt: IReduceCkt; safecall;
 //    function Get_Loads: ILoads; safecall;  function ICircuit.Get_Loads = ICircuit_Get_Loads;
 
 //  function ICircuit_Get_Loads: IUnknown; safecall;
@@ -1223,10 +1223,12 @@ begin
      Result := FLineCodes as ILineCodes;
 end;
 
-function TCircuit.Get_Reduce: IReduce;
+function TCircuit.Get_ReduceCkt: IReduceCkt;
 begin
-    Result := FReduce as IReduce;
+    Result := FReduceCkt as IReduceCkt;
 end;
+
+
 
 initialization
   TAutoObjectFactory.Create(ComServer, TCircuit, Class_Circuit, ciInternal, tmApartment);

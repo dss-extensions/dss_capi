@@ -255,7 +255,7 @@ Begin
                  FLocalControlListSize := FLocalControlNameList.count;
                  IF FLocalControlListSize>0 Then Begin
                  Reallocmem(FLocalControlWeights, Sizeof(FLocalControlWeights^[1])*FLocalControlListSize);
-                 InterpretDblArray(Param, FLocalControlListSize, FLocalControlWeights);
+                 FLocalControlListSize := InterpretDblArray(Param, FLocalControlListSize, FLocalControlWeights);
                  End;
                End;
             8: InterpretTStringListArray(Param, FPVSystemNameList);
@@ -263,7 +263,7 @@ Begin
                  FPVSystemListSize := FPVSystemNameList.count;
                  IF FPVSystemListSize>0 Then Begin
                  Reallocmem(FPVSystemWeights, Sizeof(FPVSystemWeights^[1])*FPVSystemListSize);
-                 InterpretDblArray(Param, FPVSystemListSize, FPVSystemWeights);
+                 FPVSystemListSize := InterpretDblArray(Param, FPVSystemListSize, FPVSystemWeights);
                  End;
                End;
             10: InterpretTStringListArray(Param, FStorageNameList);
@@ -271,7 +271,7 @@ Begin
                  FStorageListSize := FStorageNameList.count;
                  IF FStorageListSize>0 Then Begin
                  Reallocmem(FStorageWeights, Sizeof(FStorageWeights^[1])*FStorageListSize);
-                 InterpretDblArray(Param, FStorageListSize, FStorageWeights);
+                 FStorageListSize := InterpretDblArray(Param, FStorageListSize, FStorageWeights);
                  End;
                End;
 

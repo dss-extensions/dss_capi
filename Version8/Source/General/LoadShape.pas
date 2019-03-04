@@ -319,7 +319,7 @@ BEGIN
                END;
             4: BEGIN
                  ReAllocmem(Hours, Sizeof(Hours^[1])*NumPoints);
-                 InterpretDblArray(Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
+                 NumPoints := InterpretDblArray(Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
                  Interval := 0.0;
                END;
             5: Mean := Parser[ActorID].DblValue;
@@ -334,7 +334,7 @@ BEGIN
                END;
            11: BEGIN
                  ReAllocmem(QMultipliers, Sizeof(QMultipliers^[1])*NumPoints);
-                 InterpretDblArray(Param, NumPoints, QMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
+                 NumPoints := InterpretDblArray(Param, NumPoints, QMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
                END;
            12: UseActual := InterpretYesNo(Param);
            13: MaxP := Parser[ActorID].DblValue;
