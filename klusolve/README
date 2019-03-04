@@ -1,4 +1,0 @@
-This is a repackaging of the original KLUSolve to use system SuiteSparse libraries using CMake.
-See the original at https://sourceforge.net/p/klusolve/code/HEAD/tree/ and, as explicit in COPYING, this work uses the same license, LGPL 2.1 or later.
-
-The modifications target only the building system. In the near future, we will try to use the upstream KLUSolve, providing only the CMake instructions.
