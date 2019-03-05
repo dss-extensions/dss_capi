@@ -55,3 +55,9 @@ dkms.conf
 # Recommended KLUSolve build folder
 klusolve/build
 
+*.dcu
+__recovery
+*.identcache
+*.stat
+*.dproj.local
+__history

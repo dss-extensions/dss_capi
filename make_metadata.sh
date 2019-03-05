@@ -7,7 +7,7 @@ else
 fi
 
 export DSS_CAPI_REV=`git rev-parse HEAD`
-export DSS_CAPI_SVN_REV=`git --git-dir=../electricdss-src/.git log | grep -m 1 -E "trunk@[0-9]+" -o | grep -E "[0-9]+" -o`
+export DSS_CAPI_SVN_REV=`git log | grep -m 1 -E "trunk@[0-9]+" -o | grep -E "[0-9]+" -o`
 
 # echo 'Updating src/CAPI_Metadata.pas...'
 # cat src/CAPI_Metadata.pas
