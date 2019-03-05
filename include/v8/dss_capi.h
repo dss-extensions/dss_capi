@@ -5537,6 +5537,11 @@ extern "C" {
         LineUnits_Maxnum = 9 // Maximum number of line units constants.
     };
 
+    enum YMatrixModes { // Solution_BuildYMatrix
+        YMatrixModes_SeriesOnly = 0,
+        YMatrixModes_WholeMatrix = 1
+    };
+
     // Experimental API extensions
     DSS_CAPI_V8_DLL int32_t CNData_Get_Count(void);
     DSS_CAPI_V8_DLL int32_t CNData_Get_First(void);
