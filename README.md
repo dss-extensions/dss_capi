@@ -5,7 +5,7 @@
 
 # DSS C-API: An unofficial C API for EPRI's OpenDSS
 
-This library exposes the OpenDSS/OpenDSS-PM engine in a plain C interface that tries to reproduce most of the COM methods. In fact, most of the code is derived from the COM implementation files. The resulting DLL can be using directly or through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level. There is also support for some other programming languages — if you need support for a language not listed below, please open a new issue and we will evaluate that language.
+This library exposes the OpenDSS/OpenDSS-PM (OpenDSS Version 7 and Version 8, respectively) engine in a plain C interface that tries to reproduce most of the COM methods. In fact, most of the code is derived from the COM implementation files. The resulting DLL can be using directly or through the `dss_python` module in Python, a module that mimics the COM structure (as exposed via `win32com` or `comtypes`), effectively enabling multi-platform compatibility at Python level. There is also support for some other programming languages — if you need support for a language not listed below, please open a new issue and we will evaluate that language.
 
 <p align="center">
     <img alt="Overview of related repositories" src="https://raw.githubusercontent.com/dss-extensions/dss_capi/master/docs/images/repomap.svg?sanitize=true" width=600>
@@ -34,13 +34,13 @@ Besides low-level details such as memory management, most of the COM documentati
 
 **Starting in version 0.9.8, we disabled the `opendsscmd.ini` creation. You can set the default base frequency using the environment variable DSS_BASE_FREQUENCY, or just set it in the DSS scripts (recommended). This also means that the initial datapath is set to the current working directory.**
 
-This repository contains only the custom API source code.
-In order to track upstream changes in the official SVN repository, a custom patched version of the source code with changes to build v8/OpenDSS-PM with Free Pascal, as well as port recent features to the v7/Classic version, is maintained in the repository at [electricdss-src](https://github.com/dss-extensions/electricdss-src).
+Since 2019-03-05, this repository contains all the Pascal code used to build DSS C-API. The API code is at the `src/` folder, while the main OpenDSS code is kept in `Version7/` and `Version8/`. The upstream/official code is kept in the branch named `opendss-official-svn` and is periodically merged -- see also the [upstream branch](https://github.com/dss-extensions/dss_capi/blob/master/docs/upstream_branch.md) document.
 
 ## Recent changes
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) for a detailed list.
 
+- 2019-03-05: the Git repository `electricdss-src` was merged into `dss_capi`.
 - **2019-02-28 / version 0.10.2: Highlights: implements the missing `CtrlQueue_Push`; reworks `LoadShapes` for performance and validation; introduces `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` to toggle the editor calls.**
 - 2019-02-12 / version 0.10.1: Highlights: more error checking, introduction of `Error_Get_NumberPtr`, fixes and better handling of Meters.
 - 2018-11-17 / version 0.10.0: Reduce memory allocations if the current buffers are reusable, introduce a Global Result mechanism, many API extensions (`LineGeometry`, `WireData`, `LineSpacing`, `CNData`, `TSData`, `Reactor`) -- see [the usage document](https://github.com/dss-extensions/dss_capi/blob/master/docs/usage.md) and the [issue ticket #11](https://github.com/dss-extensions/dss_capi/issues/11).
@@ -71,11 +71,15 @@ To build the DLL yourself:
 
 - Install the [Free Pascal compiler](https://freepascal.org/). If you have the Lazarus IDE installed, you most likely already have the compiler too. Add the folder containing the compiler (`fpc.exe`) to your PATH environment variable.
 
+- Download the DSS-Extensions KLUSolve files, either build the library from source code or download the pre-built binaries from https://github.com/dss-extensions/klusolve
+
 - Get this repository and the patched OpenDSS source code in the root folder:
 ```    
-    git clone https://github.com/dss-extensions/electricdss-src
     git clone https://github.com/dss-extensions/dss_capi
 ```
+
+- Merge the `lib/` output folder from KLUSolve into the `lib/` output folder in `dss_capi`
+
 
 ### On Windows
 
@@ -88,8 +92,6 @@ Otherwise:
 
 - Open a command prompt on the `dss_capi` folder and run `build_win_x64.bat`
 
-For the Windows build process, the `KLUSolve.dll` from the official OpenDSS repository/distribution can be used. If you prefer to build it yourself, there is a CMake recipe in the `klusolve` subfolder.
-
 The output files will be placed into the `lib/win_x64` folder. 
 
 If you just need the DLLs, you can also find the x64 DLLs and LIBs in [the artifacts from the AppVeyor instance](https://ci.appveyor.com/project/dss-extensions/dss-capi/branch/master/artifacts). These files are built after each commit to this repository and are kept for 6 months.
@@ -98,25 +100,7 @@ If you just need the DLLs, you can also find the x64 DLLs and LIBs in [the artif
 
 The current recommendation is to build your own KLUSolve, so you need to download and install its dependencies. Since most distributions should include compatible SuiteSparse packages (which include the KLU library), a modified version of KLUSolve is included in the `klusolve` subfolder. Overall instructions:
 
-- Install CMake and a C++ compiler
-- Install the SuiteSparse development packages, preferably from your official distribution
 - Install the x64 Free Pascal compiler -- see [the wiki](http://wiki.freepascal.org/Installing_Lazarus#Installing_The_Free_Pascal_Compiler) for further instructions.
-- Build KLUSolve:
-```
-    cd dss_capi/klusolve
-    cmake .
-    make
-    cd ..
-```
-
-Alternatively, if you don't want to download and build SuiteSparse yourself, use these instead -- the script will download SuiteSparse and build it:
-```
-    cd dss_capi/klusolve
-    cmake . -DUSE_SYSTEM_SUITESPARSE=OFF
-    make
-    cd ..
-```
-
 
 - Build the main project:
 ```
@@ -128,12 +112,10 @@ Alternatively, if you don't want to download and build SuiteSparse yourself, use
 For MacOS, you can copy the relevant libklusolve.dylib from the official OpenDSS SVN repository. Overall instructions:
 
 - Install the x64 Free Pascal compiler -- see [the wiki](http://wiki.freepascal.org/Installing_Lazarus#Installing_The_Free_Pascal_Compiler) for further instructions.
-- Copy libklusolve.dylib
 - Build the main project:
 ```
     bash build_macos_x64.sh
 ```
-
 
 ## Usage and examples
 
@@ -161,7 +143,7 @@ Other features that may include more invasive changes in the code base will prob
 
 ## Questions?
 
-If you have any question, feel free to open a ticket on GitHub or contact me through email (pmeira at ieee.org).
+If you have any question related to the deveopment this project, feel free to open a ticket on GitHub or contact me through email (pmeira at ieee.org).
 Please allow me a few days to respond.
 
 

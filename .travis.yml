@@ -16,7 +16,6 @@ matrix:
         - wget "${KLUSOLVE_URL}" -Oklusolve.tar.gz -q
         - tar zxf klusolve.tar.gz
         - cp -r klusolve/lib/* ./lib/
-        - git clone https://github.com/dss-extensions/electricdss-src ../electricdss-src
         - docker run --rm -v `pwd`/..:/io -e TRAVIS_TAG="${TRAVIS_TAG}" $DOCKER_IMAGE bash /io/dss_capi/ci/build_linux_x64.sh
         - ls -lR lib
         
@@ -34,7 +33,6 @@ matrix:
         - wget "${KLUSOLVE_URL}" -Oklusolve.tar.gz -q
         - tar zxf klusolve.tar.gz
         - cp -r klusolve/lib/* ./lib/
-        - git clone https://github.com/dss-extensions/electricdss-src ../electricdss-src
         - docker run --rm -v `pwd`/..:/io -e TRAVIS_TAG="${TRAVIS_TAG}" $DOCKER_IMAGE bash /io/dss_capi/ci/build_linux_x86.sh
         - ls -lR lib
         
@@ -52,7 +50,6 @@ matrix:
         - wget "${KLUSOLVE_URL}" -Oklusolve.tar.gz -q
         - tar zxf klusolve.tar.gz
         - cp -r klusolve/lib/* ./lib/
-        - git clone https://github.com/dss-extensions/electricdss-src ../electricdss-src
         - bash make_metadata.sh
         - bash build_macos_x64.sh
         - ls -lR lib

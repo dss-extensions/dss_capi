@@ -36,12 +36,13 @@ Com exceção de detalhes de baixo nível como gerenciamento de memória, a maio
 
 Este repositório contém apenas o código fonte da API customizada.
 
-De forma a rastrear as mudanças no repositório SVN oficial, uma versão modificada do código fonte do OpenDSS está disponível em [electricdss-src](https://github.com/dss-extensions/electricdss-src). Este repositório inclui pequenas melhorias, melhor compatibilidade com Free Pascal e adaptação de novas funcionalidades da versão 8 para a versão 7.
+A partir de 2019-03-05, este repositório contém todo o código fonte em linguagem Pascal necessário para compilar a DSS C-API. O código da API é mantido na pasta `src/`, enquanto o código principal do OpenDSS (com modificações) é mantido em `Version7/` e `Version8/`. O código fonte da versão oficial é mantido no branch `opendss-official-svn` e é integrado periodicamente -- veja o documento [upstream branch](https://github.com/dss-extensions/dss_capi/blob/master/docs/upstream_branch.md) (em inglês) para mais informações.
 
 ## Mudanças recentes
 
 Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) para listagem detalhada.
 
+- 2019-03-05: o repositório Git `electricdss-src` foi integrado diretamente em `dss_capi`.
 - **2019-02-28 / version 0.10.2: Implementa a função `CtrlQueue_Push` (faltante na versão anterior); modificações em `LoadShapes` para melhor desempenho e mais validação; introduz `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` para (desa)ativar chamadas ao editor externo.**
 - 2019-02-12 / version 0.10.1: Verificação de erros mais ampla, introdução da função `Error_Get_NumberPtr`, correções e melhor tratamento em `Meters`.
 - 2018-11-17 / versão 0.10.0: Reduz o número de operações de alocação de memória se os buffers atuais forem reutilizados, introduz o mecanismo de Resultado Global, várias extensões de API (`LineGeometry`, `WireData`, `LineSpacing`, `CNData`, `TSData`, `Reactor`) -- veja [o documento de uso](https://github.com/dss-extensions/dss_capi/blob/master/docs/usage.md)(em inglês) e o [ticket #11](https://github.com/dss-extensions/dss_capi/issues/11).
@@ -72,51 +73,30 @@ Caso deseje compilar o DLL:
 
 - Instale o compilador [Free Pascal](https://freepascal.org/). Caso já tenha instalado a IDE Lazarus, você já deve ter o compilador instalado. Adicione a pasta contendo o compilador (`fpc.exe`) para sua variável de ambiente PATH.
 
-- Clone este repositório e a versão modificada do repositório do OpenDSS, mantendo-os na mesma pasta:
+- Baixe (e compile) o código, ou baixe os binários já compilados, do projeto DSS-Extensions KLUSolve de https://github.com/dss-extensions/klusolve
+
+- Clone este repositório:
 ```    
-    git clone https://github.com/dss-extensions/electricdss-src
     git clone https://github.com/dss-extensions/dss_capi
 ```
+
+- Sobreponha uma cópia do diretório `lib/` da KLUSolve sobre a pasta  `lib/` da `dss_capi`.
+
 
 ### No Windows
 
 Se você precisa apenas do arquivo DLL, lembre-se que ele pode ser baixado na página de "Releases" no GitHub. Pode ser necessário instalar o pacote de [runtime do Microsoft Visual Studio 2017](https://go.microsoft.com/fwlink/?LinkId=746572).
 Caso precisa compilar:
 
-- Instale o compilador x64 do Free Pascal -- veja [a wiki](http://wiki.freepascal.org/Installing_Lazarus#Installing_The_Free_Pascal_Compiler) para maiores informações.
-
 - Caso pretenda utilizar a DLL no Visual Studio, você precisa gerar uma biblioteca de importação. Isto pode ser feito iniciando a próxima etapa em um prompt do Visual Studio, como o "x64 Native Tools Command Prompt for VS 2017" (ou equivalente para sua versão) -- você precisa apenas dos utilitários  `dumpbin.exe` e `lib.exe`.
 
 - Abra um prompt de comando na pasta `dss_capi` que você clonou anteriormente e execute `build_win_x64.bat`
-
-Para o processo de compilação no Windows, o arquivo `KLUSolve.dll` da distribuição/repositório oficial do OpenDSS pode ser usado. Caso prefira compilar, há uma receita para o CMake na subpasta `klusolve`.
 
 Os arquivos de saída do processo são depositados na subpasta `lib/win_x64`. 
 
 Caso precise apenas dos DLLs para versões ainda não lançadas, você pode encontrar os DLLs e LIBs para x64 nos [artefatos da instância do AppVeyor](https://ci.appveyor.com/project/dss-extensions/dss-capi/branch/master/artifacts). Estes arquivos são criados automaticamente a cada commit neste repositório e são mantidos por 6 meses.
 
 ### No Linux
-
-A recomendação atual é que você compile a sua própria KLUSolve, logo precisa instalar suas dependências. Já que a maioria das distribuições de Linux devem incluior pacotes compatíveis da SuiteSparse (que inclui a biblioteca KLU), uma versão modificada KLUSolve, excluindo os arquivos da KLU, está incluida na subpasta `klusolve`. Instruções gerais:
-
-- Instale o CMake e um compilador de C++
-- Instale os pacotes de desenvolvimento da SuiteSparse, de preferência da distribução oficial do seu Linux.
-- Instale o compilador x64 do Free Pascal -- veja [a wiki](http://wiki.freepascal.org/Installing_Lazarus#Installing_The_Free_Pascal_Compiler) para mais instruções.
-- Compile a KLUSolve:
-```
-    cd dss_capi/klusolve
-    cmake .
-    make
-    cd ..
-```
-
-- Como alternativa, caso você não deseje baixar e compilar a SuiteSparse, use estes comandos ao invés dos acima -- o script do CMake assim baixará a SuiteSparse e compilará seus arquivos em conjunto com os da KLUSolve:
-```
-    cd dss_capi/klusolve
-    cmake . -DUSE_SYSTEM_SUITESPARSE=OFF
-    make
-    cd ..
-```
 
 - Compile o projeto principal:
 ```
@@ -125,15 +105,10 @@ A recomendação atual é que você compile a sua própria KLUSolve, logo precis
 
 ### No MacOS
 
-Para MacOS, você pode copiar o `libklusolve.dylib` do repositório SVN do OpenDSS (ou pode compilar seguindo as mesmas instruções do Linux). Instruções em linhas gerais:
-
-- Instale o compiler x64 do Free Pascal -- veja[the wiki](http://wiki.freepascal.org/Installing_Lazarus#Installing_The_Free_Pascal_Compiler) para mais instruções.
-- Copie libklusolve.dylib para a pasta deste repositório clonado
 - Compile o projeto principal:
 ```
     bash build_macos_x64.sh
 ```
-
 
 ## Como usar e exemplos
 

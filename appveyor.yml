@@ -2,8 +2,6 @@ image: Visual Studio 2017
 clone_folder: c:\dss_capi
 build_script:
 - cmd: >-
-    git clone https://github.com/dss-extensions/electricdss-src.git c:\electricdss-src
-
     "c:\Program Files\Git\bin\bash" -c "bash ./make_metadata.sh"
 
     appveyor downloadfile https://sourceforge.net/projects/dss-capi/files/FPC/FPC-win32-win64-3.0.4.7z/download -FileName FPC-win32-win64-3.0.4.7z
