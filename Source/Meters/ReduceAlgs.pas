@@ -197,7 +197,8 @@ begin
                                 If ParentNode.NumShuntObjects > 0 Then Begin
                                    ShuntElement :=  ParentNode.FirstShuntObject;
                                    While ShuntElement <> Nil Do Begin
-                                     If (ShuntElement.DSSObjType and CLASSMASK) = CAP_ELEMENT Then Begin
+                                     If ((ShuntElement.DSSObjType and CLASSMASK) = CAP_ELEMENT) OR
+                                        ((ShuntElement.DSSObjType and CLASSMASK) = REACTOR_ELEMENT) Then Begin
                                         MergeOK := FALSE;
                                         Break;  // outta loop
                                      End;
@@ -240,7 +241,8 @@ begin
                           If PresentBranch.NumShuntObjects > 0 Then Begin
                              ShuntElement :=  PresentBranch.FirstShuntObject;
                              While ShuntElement <> Nil Do Begin
-                               If (ShuntElement.DSSObjType and CLASSMASK) = CAP_ELEMENT Then Begin
+                               If ((ShuntElement.DSSObjType and CLASSMASK) = CAP_ELEMENT) OR
+                                  ((ShuntElement.DSSObjType and CLASSMASK) = REACTOR_ELEMENT) Then Begin
                                   MergeOK := FALSE;
                                   Break;  // outta loop
                                End;
@@ -490,7 +492,7 @@ Begin
              With BranchList Do  Begin
                  BusName     := PDElem.GetBus(PresentBranch.FromTerminal);
                  // Make sure there is a node reference .. default to 1
-                 if Pos('.', BusName, 1) = 0 then BusName := BusName + '.1';
+                 if Pos('.', BusName) = 0 then BusName := BusName + '.1';
 
                  {Pick up the kV Base for the From bus}
                  HeadBus     :=  ActiveCircuit.Buses^[PresentBranch.FromBusReference];
