@@ -5537,9 +5537,9 @@ extern "C" {
         LineUnits_Maxnum = 9 // Maximum number of line units constants.
     };
 
-    enum YMatrixModes { // Solution_BuildYMatrix
-        YMatrixModes_SeriesOnly = 0,
-        YMatrixModes_WholeMatrix = 1
+    enum YMatrixModes { // Solution_BuildYMatrix, YMatrix_BuildYMatrixD
+        YMatrixModes_SeriesOnly = 1,
+        YMatrixModes_WholeMatrix = 2
     };
 
     // Experimental API extensions
