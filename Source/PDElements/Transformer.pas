@@ -917,6 +917,7 @@ Begin
   Yorder := fNTerms * fNconds;
   InitPropertyValues(0);
   RecalcElementData(ActiveActor);
+  ratings :=  Nil;
 End;
 
 
