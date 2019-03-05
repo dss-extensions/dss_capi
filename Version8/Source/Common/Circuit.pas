@@ -581,9 +581,9 @@ BEGIN
      For i := 1 to NumDevices Do Begin
            TRY
               pCktElem := TDSSCktElement(CktElements.Get(i));
-              ElemName := pCktElem.ParentClass.name + '.' + pCktElem.Name;
-              pCktElem.Free;
-
+//                ElemName := pCktElem.ParentClass.name + '.' + pCktElem.Name;
+                ElemName := pCktElem.DSSClassName + '.' + pCktElem.Name;
+                pCktElem.Free;
            EXCEPT
              ON E: Exception Do
                DoSimpleMsg('Exception Freeing Circuit Element:'  + ElemName + CRLF + E.Message, 423);

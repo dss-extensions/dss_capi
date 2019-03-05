@@ -204,6 +204,8 @@ begin
   Application.Title := 'OpenDSS: Distribution System Simulator';
 
   {Have to Start DSSExecutive before Creating the Control Panel}
+//  SetLength(DSSExecutive,CPU_Cores + 1);
+  ActiveActor               :=  1;
   DSSExecutive[ActiveActor] := TExecutive.Create;  // Make a DSS object
 
   {Create default loadshapes, Growthshapes, etc.}
