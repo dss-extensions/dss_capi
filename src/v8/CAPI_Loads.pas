@@ -89,6 +89,8 @@ procedure Loads_Set_RelWeight(Value: Double); CDECL;
 // API extensions
 function Loads_Get_Phases(): Integer; CDECL;
 procedure Loads_Set_Phases(Value: Integer); CDECL;
+function Loads_Get_Bus1(): PAnsiChar; CDECL;
+procedure Loads_Set_Bus1(const Value: PAnsiChar); CDECL;
 
 
 implementation
@@ -115,7 +117,8 @@ procedure LoadPropSideEffects(prop: LoadProps; load: TLoadObj); //incomplete
 begin
     with load do
     begin
-    // Some specials ...
+    // << SIDE EFFECTS >>
+    // keep kvar nominal up to date WITH kW and PF
         case prop of
             LoadProps.phases:
             begin
@@ -135,6 +138,60 @@ begin
             // <- SetNcondsForConnection
                 UpdateVoltageBases;
             end;
+
+            LoadProps.kV:
+                UpdateVoltageBases;
+
+            LoadProps.kW:
+                LoadSpecType := 0;
+            LoadProps.pf:
+            begin
+                PFChanged := TRUE;
+                PFSpecified := TRUE;
+            end;
+    {Set shape objects;  returns nil if not valid}
+    {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
+            LoadProps.yearly:
+            begin
+                YearlyShapeObj := LoadShapeClass[ActiveActor].Find(YearlyShape);
+                if Assigned(YearlyShapeObj) then
+                    with YearlyShapeObj do
+                        if UseActual then
+                            SetkWkvar(MaxP, MaxQ);
+            end;
+            LoadProps.daily:
+            begin
+                DailyShapeObj := LoadShapeClass[ActiveActor].Find(DailyShape);
+                if Assigned(DailyShapeObj) then
+                    with DailyShapeObj do
+                        if UseActual then
+                            SetkWkvar(MaxP, MaxQ);
+                {If Yearly load shape is not yet defined, make it the same as Daily}
+                if YearlyShapeObj = NIL then
+                    YearlyShapeObj := DailyShapeObj;
+            end;
+            LoadProps.duty:
+            begin
+                DutyShapeObj := LoadShapeClass[ActiveActor].Find(DutyShape);
+                if Assigned(DutyShapeObj) then
+                    with DutyShapeObj do
+                        if UseActual then
+                            SetkWkvar(MaxP, MaxQ);
+            end;
+            LoadProps.growth:
+                GrowthShapeObj := GrowthShapeClass[ActiveActor].Find(GrowthShape);
+
+            LoadProps.kvar:
+            begin
+                LoadSpecType := 1;
+                PFSpecified := FALSE;
+            end;// kW, kvar
+ {*** see set_xfkva, etc           21, 22: LoadSpectype := 3;  // XFKVA*AllocationFactor, PF  }
+            LoadProps.pctMean:
+                LoadSpecType := 2;  // kVA, PF
+ {*** see set_kwh, etc           28..30: LoadSpecType := 4;  // kWh, days, cfactor, PF }
+            LoadProps.CVRCurve:
+                CVRShapeObj := LoadShapeClass[ActiveActor].Find(CVRshape);
         end;
     end;
 end;
@@ -219,10 +276,21 @@ end;
 //------------------------------------------------------------------------------
 function Loads_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit[ActiveActor] <> NIL then
-        Result := ActiveCircuit[ActiveActor].Loads.ActiveIndex
-    else
-        Result := 0;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    Result := ActiveCircuit[ActiveActor].Loads.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure Loads_Set_idx(Value: Integer); CDECL;
+var
+    pLoad: TLoadObj;
+begin
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    pLoad := ActiveCircuit[ActiveActor].Loads.Get(Value);
+    if pLoad = NIL then
+        Exit;
+    ActiveCircuit[ActiveActor].ActiveCktElement := pLoad;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Name_AnsiString(): Ansistring; inline;
@@ -274,53 +342,18 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-procedure Loads_Set_idx(Value: Integer); CDECL;
-var
-    pLoad: TLoadObj;
-begin
-    if ActiveCircuit[ActiveActor] <> NIL then
-    begin
-        pLoad := ActiveCircuit[ActiveActor].Loads.Get(Value);
-        if pLoad <> NIL then
-            ActiveCircuit[ActiveActor].ActiveCktElement := pLoad;
-    end;
-end;
-//------------------------------------------------------------------------------
 procedure Loads_Set_Name(const Value: PAnsiChar); CDECL;
-var
-    ActiveSave: Integer;
-    pLoad: TLoadObj;
-    S: String;
-    Found: Boolean;
 begin
-
-    if ActiveCircuit[ActiveActor] <> NIL then
-    begin      // Search list of Loads in active circuit for name
-        with ActiveCircuit[ActiveActor].Loads do
-        begin
-            S := Value;  // Convert to Pascal String
-            Found := FALSE;
-            ActiveSave := ActiveIndex;
-            pLoad := First;
-            while pLoad <> NIL do
-            begin
-                if (CompareText(pLoad.Name, S) = 0) then
-                begin
-                    ActiveCircuit[ActiveActor].ActiveCktElement := pLoad;
-                    Found := TRUE;
-                    Break;
-                end;
-                pLoad := Next;
-            end;
-            if not Found then
-            begin
-                DoSimpleMsg('Load "' + S + '" Not Found in Active Circuit.', 5003);
-                pLoad := Get(ActiveSave);    // Restore active Load
-                ActiveCircuit[ActiveActor].ActiveCktElement := pLoad;
-            end;
-        end;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    if LoadClass[ActiveActor].SetActive(Value) then
+    begin
+        ActiveCircuit[ActiveActor].ActiveCktElement := LoadClass[ActiveActor].ElementList.Active;
+    end
+    else
+    begin
+        DoSimpleMsg('Load "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
-
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_kV(): Double; CDECL;
@@ -1055,5 +1088,30 @@ begin
     end
 end;
 //------------------------------------------------------------------------------
+function Loads_Get_Bus1_AnsiString(): Ansistring; inline;
+var
+    pLoad: TLoadObj;
+begin
+    pLoad := ActiveLoad;
+    if pLoad = NIL then
+        exit;
+    Result := pLoad.GetBus(1);
+end;
 
+function Loads_Get_Bus1(): PAnsiChar; CDECL;
+begin
+    Result := DSS_GetAsPAnsiChar(Loads_Get_Bus1_AnsiString());
+end;
+//------------------------------------------------------------------------------
+procedure Loads_Set_Bus1(const Value: PAnsiChar); CDECL;
+var
+    pLoad: TLoadObj;
+begin
+    pLoad := ActiveLoad;
+    if pLoad = NIL then
+        exit;
+    pLoad.SetBus(1, Value);
+    // LoadPropSideEffects(LoadProps.bus1, pLoad); -- Nothing
+end;
+//------------------------------------------------------------------------------
 end.

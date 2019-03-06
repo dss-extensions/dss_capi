@@ -112,7 +112,6 @@ type
     end;
 
 var
-    LineCodeClass: TLineCode;
     ActiveLineCodeObj: TLineCodeObj;
 
 implementation
@@ -142,8 +141,6 @@ begin
 
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
-
-    LineCodeClass := Self;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

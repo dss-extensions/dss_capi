@@ -74,7 +74,11 @@ type
     end;
 
     TCapacitorObj = class(TPDElement)
+{$IFDEF DSS_CAPI}
+    PUBLIC
+{$ELSE}
     PRIVATE
+{$ENDIF}
         FC,
         FXL,
         Fkvarrating,
@@ -137,7 +141,6 @@ type
 
 var
     ActiveCapacitorObj: TCapacitorObj;
-    CapacitorClass: TCapacitor;
 
 implementation
 
@@ -165,7 +168,6 @@ begin
 
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
-    CapacitorClass := Self;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -3251,16 +3251,15 @@ begin
         Writeln(F2, Format('!--- Frequency = %.6g Hz, Earth resistivity = %.6g ohm-m', [Freq, Rho]));
         Writeln(F2, '!--- Earth Model = ', GetEarthModel(DefaultEarthModel));
 
-        LineGeometryClass := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('LineGeometry'));
         Z := NIL;
         YC := NIL;
 
         ActiveEarthModel[ActiveActor] := DefaultEarthModel;
 
-        p := LineGeometryClass.first;
+        p := LineGeometryClass[ActiveActor].first;
         while p > 0 do
         begin
-            Pelem := LineGeometryClass.GetActiveObj;
+            Pelem := LineGeometryClass[ActiveActor].GetActiveObj;
             Z.Free;
             YC.Free;
 
@@ -3448,7 +3447,7 @@ begin
                 Writeln(F);
             end;
 
-            p := LineGeometryClass.Next;
+            p := LineGeometryClass[ActiveActor].Next;
         end;
 
     finally

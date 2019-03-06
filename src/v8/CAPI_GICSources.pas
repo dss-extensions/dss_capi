@@ -54,9 +54,9 @@ begin
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        if GICsourceClass.ElementList.ListSize > 0 then
+        if GICsourceClass[ActiveActor].ElementList.ListSize > 0 then
         begin
-            pList := GICsourceClass.ElementList;
+            pList := GICsourceClass[ActiveActor].ElementList;
             DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize - 1) + 1);
             k := 0;
             elem := pList.First;
@@ -81,7 +81,7 @@ function GICSources_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
-        Result := GICsourceClass.ElementList.ListSize;
+        Result := GICsourceClass[ActiveActor].ElementList.ListSize;
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_First(): Integer; CDECL;
@@ -91,7 +91,7 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pElem := GICsourceClass.ElementList.First;
+        pElem := GICsourceClass[ActiveActor].ElementList.First;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
@@ -100,7 +100,7 @@ begin
                     Result := 1;
                 end
                 else
-                    pElem := GICsourceClass.ElementList.Next;
+                    pElem := GICsourceClass[ActiveActor].ElementList.Next;
             until (Result = 1) or (pElem = NIL);
     end;
 end;
@@ -112,16 +112,16 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pElem := GICsourceClass.ElementList.Next;
+        pElem := GICsourceClass[ActiveActor].ElementList.Next;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
                 begin
                     ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-                    Result := GICsourceClass.ElementList.ActiveIndex;
+                    Result := GICsourceClass[ActiveActor].ElementList.ActiveIndex;
                 end
                 else
-                    pElem := GICsourceClass.ElementList.Next;
+                    pElem := GICsourceClass[ActiveActor].ElementList.Next;
             until (Result > 0) or (pElem = NIL);
     end;
 end;
@@ -147,9 +147,9 @@ procedure GICSources_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit[ActiveActor] = NIL then
         Exit;
-    if GICsourceClass.SetActive(Value) then
+    if GICsourceClass[ActiveActor].SetActive(Value) then
     begin
-        ActiveCircuit[ActiveActor].ActiveCktElement := GICsourceClass.ElementList.Active;
+        ActiveCircuit[ActiveActor].ActiveCktElement := GICsourceClass[ActiveActor].ElementList.Active;
     end
     else
     begin
@@ -162,7 +162,7 @@ var
     elem: TGICSourceObj;
 begin
     Result := 0;
-    elem := GICsourceClass.ElementList.Active;
+    elem := GICsourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.NPhases;
 end;
@@ -171,7 +171,7 @@ procedure GICSources_Set_Phases(Value: Integer); CDECL;
 var
     elem: TGICSourceObj;
 begin
-    elem := GICsourceClass.GetActiveObj;
+    elem := GICsourceClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
     begin
         elem.nphases := Value;
@@ -210,7 +210,7 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
+    elem := GICsourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.ENorth;
 end;
@@ -219,7 +219,7 @@ procedure GICSources_Set_EN(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
+    elem := GICsourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         elem.ENorth := Value;
 end;
@@ -229,7 +229,7 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
+    elem := GICsourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.EEast;
 end;
@@ -238,7 +238,7 @@ procedure GICSources_Set_EE(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
+    elem := GICsourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         elem.EEast := Value;
 end;
@@ -248,7 +248,7 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
+    elem := GICsourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.Lat1;
 
@@ -258,7 +258,7 @@ procedure GICSources_Set_Lat1(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
+    elem := GICsourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
     begin
         elem.Lat1 := Value;
@@ -271,7 +271,7 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
+    elem := GICsourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.Lat2;
 
@@ -281,7 +281,7 @@ procedure GICSources_Set_Lat2(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
+    elem := GICsourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
     begin
         elem.Lat2 := Value;
@@ -295,7 +295,7 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
+    elem := GICsourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.Lon1;
 
@@ -305,7 +305,7 @@ procedure GICSources_Set_Lon1(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
+    elem := GICsourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
     begin
         elem.Lon1 := Value;
@@ -318,7 +318,7 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
+    elem := GICsourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.Lon2;
 
@@ -328,7 +328,7 @@ procedure GICSources_Set_Lon2(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
+    elem := GICsourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
     begin
         elem.Lon2 := Value;
@@ -342,7 +342,7 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
+    elem := GICsourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.Volts;
 end;
@@ -351,7 +351,7 @@ procedure GICSources_Set_Volts(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
+    elem := GICsourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
     begin
         elem.Volts := Value;

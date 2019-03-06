@@ -126,7 +126,6 @@ type
 
 
 var
-    ESPVLControlClass: TESPVLControl;
     ActiveESPVLControlObj: TESPVLControlObj;
 
 {--------------------------------------------------------------------------}
@@ -160,7 +159,6 @@ begin
 
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
-    ESPVLControlClass := Self;
 end;
 
 {--------------------------------------------------------------------------}

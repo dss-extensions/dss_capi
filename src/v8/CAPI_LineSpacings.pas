@@ -28,6 +28,10 @@ procedure LineSpacings_Set_Ycoords(ValuePtr: PDouble; ValueCount: Integer); CDEC
 procedure LineSpacings_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 procedure LineSpacings_Get_AllNames_GR(); CDECL;
 
+function LineSpacings_Get_idx(): Integer; CDECL;
+procedure LineSpacings_Set_idx(Value: Integer); CDECL;
+
+
 implementation
 
 uses
@@ -320,5 +324,17 @@ begin
     LineSpacings_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 
+//------------------------------------------------------------------------------
+function LineSpacings_Get_idx(): Integer; CDECL;
+begin
+    Result := LineSpacingClass[ActiveActor].ElementList.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure LineSpacings_Set_idx(Value: Integer); CDECL;
+var
+    pLineSpacing: TLineSpacingObj;
+begin
+    pLineSpacing := LineSpacingClass[ActiveActor].ElementList.Get(Value);
+end;
 //------------------------------------------------------------------------------
 end.

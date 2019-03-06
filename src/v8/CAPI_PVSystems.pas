@@ -233,41 +233,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Name(const Value: PAnsiChar); CDECL;
-var
-    activesave: Integer;
-    PVSystem: TPVSystemObj;
-    S: String;
-    Found: Boolean;
 begin
-
-
-    if ActiveCircuit[ActiveActor] <> NIL then
-    begin      // Search list of PVSystems in active circuit for name
-        with ActiveCircuit[ActiveActor].PVSystems do
-        begin
-            S := Value;  // Convert to Pascal String
-            Found := FALSE;
-            ActiveSave := ActiveIndex;
-            PVSystem := First;
-            while PVSystem <> NIL do
-            begin
-                if (CompareText(PVSystem.Name, S) = 0) then
-                begin
-                    ActiveCircuit[ActiveActor].ActiveCktElement := PVSystem;
-                    Found := TRUE;
-                    Break;
-                end;
-                PVSystem := Next;
-            end;
-            if not Found then
-            begin
-                DoSimpleMsg('PVSystem "' + S + '" Not Found in Active Circuit.', 5003);
-                PVSystem := Get(ActiveSave);    // Restore active PVSystem
-                ActiveCircuit[ActiveActor].ActiveCktElement := PVSystem;
-            end;
-        end;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    if PVSystemClass[ActiveActor].SetActive(Value) then
+    begin
+        ActiveCircuit[ActiveActor].ActiveCktElement := PVSystemClass[ActiveActor].ElementList.Active;
+    end
+    else
+    begin
+        DoSimpleMsg('PVSystem "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
-
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Irradiance(): Double; CDECL;

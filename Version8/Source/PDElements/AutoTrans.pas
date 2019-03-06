@@ -231,8 +231,6 @@ type
 
 var
     ActiveAutoTransObj: TAutoTransObj;
-    AutoTransClass: TAutoTrans;
-
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -269,7 +267,6 @@ begin
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;     {Allow property list abbreviations}
 
-    AutoTransClass := Self;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

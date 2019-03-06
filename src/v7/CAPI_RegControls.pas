@@ -58,6 +58,10 @@ procedure RegControls_Set_TapNumber(Value: Integer); CDECL;
 function RegControls_Get_Count(): Integer; CDECL;
 procedure RegControls_Reset(); CDECL;
 
+// API extensions
+function RegControls_Get_idx(): Integer; CDECL;
+procedure RegControls_Set_idx(Value: Integer); CDECL;
+
 implementation
 
 uses
@@ -466,36 +470,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_Name(const Value: PAnsiChar); CDECL;
-var
-    ActiveSave: Integer;
-    S: String;
-    Found: Boolean;
-    elem: TRegControlObj;
-    lst: TPointerList;
 begin
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+    if RegControlClass.SetActive(Value) then
     begin
-        lst := ActiveCircuit.RegControls;
-        S := Value;  // Convert to Pascal String
-        Found := FALSE;
-        ActiveSave := lst.ActiveIndex;
-        elem := lst.First;
-        while elem <> NIL do
-        begin
-            if (CompareText(elem.Name, S) = 0) then
-            begin
-                ActiveCircuit.ActiveCktElement := elem;
-                Found := TRUE;
-                Break;
-            end;
-            elem := lst.Next;
-        end;
-        if not Found then
-        begin
-            DoSimpleMsg('RegControl "' + S + '" Not Found in Active Circuit.', 5003);
-            elem := lst.Get(ActiveSave);    // Restore active Load
-            ActiveCircuit.ActiveCktElement := elem;
-        end;
+        ActiveCircuit.ActiveCktElement := RegControlClass.ElementList.Active;
+        ActiveCircuit.RegControls.Get(RegControlClass.Active);
+    end
+    else
+    begin
+        DoSimpleMsg('RegControl "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -570,6 +555,25 @@ begin
         elem.Reset;
     end;
 
+end;
+//------------------------------------------------------------------------------
+function RegControls_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    Result := ActiveCircuit.RegControls.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure RegControls_Set_idx(Value: Integer); CDECL;
+var
+    pRegControl: TRegControlObj;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    pRegControl := ActiveCircuit.RegControls.Get(Value);
+    if pRegControl = NIL then
+        Exit;
+    ActiveCircuit.ActiveCktElement := pRegControl;
 end;
 //------------------------------------------------------------------------------
 end.

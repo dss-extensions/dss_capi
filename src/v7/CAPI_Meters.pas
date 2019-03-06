@@ -68,6 +68,11 @@ function Meters_Get_SumBranchFltRates(): Double; CDECL;
 function Meters_Get_SectSeqIdx(): Integer; CDECL;
 function Meters_Get_SectTotalCust(): Integer; CDECL;
 
+// API extensions
+function Meters_Get_idx(): Integer; CDECL;
+procedure Meters_Set_idx(Value: Integer); CDECL;
+
+
 implementation
 
 uses
@@ -1169,6 +1174,25 @@ begin
         end;
 
 
+end;
+//------------------------------------------------------------------------------
+function Meters_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    Result := ActiveCircuit.EnergyMeters.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure Meters_Set_idx(Value: Integer); CDECL;
+var
+    pEnergyMeter: TEnergyMeterObj;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    pEnergyMeter := ActiveCircuit.EnergyMeters.Get(Value);
+    if pEnergyMeter = NIL then
+        Exit;
+    ActiveCircuit.ActiveCktElement := pEnergyMeter;
 end;
 //------------------------------------------------------------------------------
 end.

@@ -264,7 +264,6 @@ type
     end;
 
 var
-    IndMach012Class: TIndMach012;
     ActiveIndMach012Obj: TIndMach012Obj;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -343,8 +342,6 @@ begin
      // PropertyName is an array of String defined in DefineProperties
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
-
-    IndMach012Class := Self;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

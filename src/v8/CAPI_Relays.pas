@@ -43,7 +43,7 @@ begin
     if not Assigned(ActiveCircuit[ActiveActor]) then
         exit;
     SolutionAbort := FALSE;  // Reset for commands entered from outside
-    cmd := Format('Relay.%s.%s=%s', [TRelayObj(RelayClass.GetActiveObj).Name, parm, val]);
+    cmd := Format('Relay.%s.%s=%s', [TRelayObj(RelayClass[ActiveActor].GetActiveObj).Name, parm, val]);
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
@@ -58,9 +58,9 @@ begin
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        if RelayClass.ElementList.ListSize > 0 then
+        if RelayClass[ActiveActor].ElementList.ListSize > 0 then
         begin
-            pList := RelayClass.ElementList;
+            pList := RelayClass[ActiveActor].ElementList;
             DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize - 1) + 1);
             k := 0;
             elem := pList.First;
@@ -86,7 +86,7 @@ function Relays_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
-        Result := RelayClass.ElementList.ListSize;
+        Result := RelayClass[ActiveActor].ElementList.ListSize;
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_First(): Integer; CDECL;
@@ -96,7 +96,7 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pElem := RelayClass.ElementList.First;
+        pElem := RelayClass[ActiveActor].ElementList.First;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
@@ -105,7 +105,7 @@ begin
                     Result := 1;
                 end
                 else
-                    pElem := RelayClass.ElementList.Next;
+                    pElem := RelayClass[ActiveActor].ElementList.Next;
             until (Result = 1) or (pElem = NIL);
     end;
 end;
@@ -115,7 +115,7 @@ var
     elem: TRelayObj;
 begin
     Result := '';
-    elem := RelayClass.GetActiveObj;
+    elem := RelayClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Result := elem.Name;
 end;
@@ -132,16 +132,16 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pElem := RelayClass.ElementList.Next;
+        pElem := RelayClass[ActiveActor].ElementList.Next;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
                 begin
                     ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-                    Result := RelayClass.ElementList.ActiveIndex;
+                    Result := RelayClass[ActiveActor].ElementList.ActiveIndex;
                 end
                 else
-                    pElem := RelayClass.ElementList.Next;
+                    pElem := RelayClass[ActiveActor].ElementList.Next;
             until (Result > 0) or (pElem = NIL);
     end;
 end;
@@ -152,9 +152,9 @@ procedure Relays_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        if RelayClass.SetActive(Value) then
+        if RelayClass[ActiveActor].SetActive(Value) then
         begin
-            ActiveCircuit[ActiveActor].ActiveCktElement := RelayClass.ElementList.Active;
+            ActiveCircuit[ActiveActor].ActiveCktElement := RelayClass[ActiveActor].ElementList.Active;
         end
         else
         begin
@@ -168,7 +168,7 @@ var
     elem: TRelayObj;
 begin
     Result := '';
-    elem := RelayClass.GetActiveObj;
+    elem := RelayClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Result := elem.MonitoredElementName;
 end;
@@ -182,7 +182,7 @@ procedure Relays_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
 var
     elem: TRelayObj;
 begin
-    elem := RelayClass.GetActiveObj;
+    elem := RelayClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Set_parameter('monitoredObj', Value);
 end;
@@ -192,7 +192,7 @@ var
     elem: TRelayObj;
 begin
     Result := 0;
-    elem := RelayClass.GetActiveObj;
+    elem := RelayClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Result := elem.MonitoredElementTerminal;
 end;
@@ -202,7 +202,7 @@ var
     elem: TRelayObj;
 begin
     Result := '';
-    elem := RelayClass.ElementList.Active;
+    elem := RelayClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.ElementName;
 
@@ -217,7 +217,7 @@ procedure Relays_Set_MonitoredTerm(Value: Integer); CDECL;
 var
     elem: TRelayObj;
 begin
-    elem := RelayClass.GetActiveObj;
+    elem := RelayClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Set_parameter('monitoredterm', IntToStr(Value));
 
@@ -227,7 +227,7 @@ procedure Relays_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 var
     elem: TRelayObj;
 begin
-    elem := RelayClass.GetActiveObj;
+    elem := RelayClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Set_parameter('SwitchedObj', Value);
 
@@ -238,7 +238,7 @@ var
     elem: TRelayObj;
 begin
     Result := 0;
-    elem := RelayClass.ElementList.Active;
+    elem := RelayClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.ElementTerminal;
 end;
@@ -247,7 +247,7 @@ procedure Relays_Set_SwitchedTerm(Value: Integer); CDECL;
 var
     elem: TRelayObj;
 begin
-    elem := RelayClass.GetActiveObj;
+    elem := RelayClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Set_parameter('SwitchedTerm', IntToStr(Value));
 end;
@@ -255,7 +255,7 @@ end;
 function Relays_Get_idx(): Integer; CDECL;
 begin
     if ActiveCircuit[ActiveActor] <> NIL then
-        Result := RelayClass.ElementList.ActiveIndex
+        Result := RelayClass[ActiveActor].ElementList.ActiveIndex
     else
         Result := 0;
 end;
@@ -266,7 +266,7 @@ var
 begin
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pRelay := Relayclass.Elementlist.Get(Value);
+        pRelay := RelayClass[ActiveActor].Elementlist.Get(Value);
         if pRelay <> NIL then
             ActiveCircuit[ActiveActor].ActiveCktElement := pRelay;
     end;

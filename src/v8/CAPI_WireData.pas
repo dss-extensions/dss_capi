@@ -44,6 +44,9 @@ procedure WireData_Set_EmergAmps(Value: Double); CDECL;
 
 procedure ConductorSetDefaults(prop: ConductorProps; conductor: TConductorDataObj);
 
+function WireData_Get_idx(): Integer; CDECL;
+procedure WireData_Set_idx(Value: Integer); CDECL;
+
 
 implementation
 
@@ -452,6 +455,18 @@ begin
             ConductorSetDefaults(ConductorProps.Runits, pWireData);
         end;
     end;
+end;
+//------------------------------------------------------------------------------
+function WireData_Get_idx(): Integer; CDECL;
+begin
+    Result := WireDataClass[ActiveActor].ElementList.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure WireData_Set_idx(Value: Integer); CDECL;
+var
+    pWireData: TWireDataObj;
+begin
+    pWireData := WireDataClass[ActiveActor].ElementList.Get(Value);
 end;
 //------------------------------------------------------------------------------
 end.

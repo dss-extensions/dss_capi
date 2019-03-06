@@ -31,6 +31,10 @@ procedure Capacitors_Set_States(ValuePtr: PInteger; ValueCount: Integer); CDECL;
 procedure Capacitors_Open(); CDECL;
 procedure Capacitors_Close(); CDECL;
 
+// API Extensions
+function Capacitors_Get_idx(): Integer; CDECL;
+procedure Capacitors_Set_idx(Value: Integer); CDECL;
+
 implementation
 
 uses
@@ -393,7 +397,25 @@ begin
                         States[i] := 1;
                 end;
         end;
-
+end;
+//------------------------------------------------------------------------------
+function Capacitors_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    Result := ActiveCircuit.ShuntCapacitors.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure Capacitors_Set_idx(Value: Integer); CDECL;
+var
+    pCapacitor: TCapacitorObj;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    pCapacitor := ActiveCircuit.ShuntCapacitors.Get(Value);
+    if pCapacitor = NIL then
+        Exit;
+    ActiveCircuit.ActiveCktElement := pCapacitor;
 end;
 //------------------------------------------------------------------------------
 end.

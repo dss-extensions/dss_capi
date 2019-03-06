@@ -46,6 +46,9 @@ procedure LineCodes_Set_EmergAmps(Value: Double); CDECL;
 procedure LineCodes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 procedure LineCodes_Get_AllNames_GR(); CDECL;
 
+function LineCodes_Get_idx(): Integer; CDECL;
+procedure LineCodes_Set_idx(Value: Integer); CDECL;
+
 implementation
 
 uses
@@ -645,5 +648,17 @@ begin
     LineCodes_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 
+//------------------------------------------------------------------------------
+function LineCodes_Get_idx(): Integer; CDECL;
+begin
+    Result := LineCodeClass.ElementList.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure LineCodes_Set_idx(Value: Integer); CDECL;
+var
+    pLineCode: TLineCodeObj;
+begin
+    pLineCode := LineCodeClass.ElementList.Get(Value);
+end;
 //------------------------------------------------------------------------------
 end.

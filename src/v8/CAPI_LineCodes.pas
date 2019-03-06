@@ -46,6 +46,9 @@ procedure LineCodes_Set_EmergAmps(Value: Double); CDECL;
 procedure LineCodes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 procedure LineCodes_Get_AllNames_GR(); CDECL;
 
+function LineCodes_Get_idx(): Integer; CDECL;
+procedure LineCodes_Set_idx(Value: Integer); CDECL;
+
 implementation
 
 uses
@@ -60,21 +63,21 @@ function LineCodes_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
-        Result := LineCodeClass.ElementCount;
+        Result := LineCodeClass[ActiveActor].ElementCount;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_First(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
-        Result := LineCodeClass.First;
+        Result := LineCodeClass[ActiveActor].First;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
-        Result := LineCodeClass.Next;
+        Result := LineCodeClass[ActiveActor].Next;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_Name_AnsiString(): Ansistring; inline;
@@ -85,7 +88,7 @@ begin
     Result := '';  // signify no name
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         if pLineCode <> NIL then
         begin
             Result := pLineCode.Name;
@@ -105,7 +108,7 @@ procedure LineCodes_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        if not LineCodeClass.SetActive(Value) then
+        if not LineCodeClass[ActiveActor].SetActive(Value) then
             DoSimpleMsg('LineCode "' + Value + '" Not Found in Active Circuit.', 51008);
 
          // Still same active object if not found
@@ -121,7 +124,7 @@ begin
     Result := TRUE;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         if pLineCode <> NIL then
         begin
             Result := pLineCode.SymComponentsModel;
@@ -136,7 +139,7 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         Result := pLineCode.Units;
     end
 end;
@@ -149,7 +152,7 @@ begin
 
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         with pLineCode do
         begin
             if Value < dssLineUnitsMaxnum then
@@ -171,7 +174,7 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         Result := pLineCode.FNPhases;
     end
 
@@ -183,7 +186,7 @@ var
 begin
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         pLineCode.NumPhases := Value;   // use property value to force reallocations
     end
 
@@ -196,7 +199,7 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         Result := pLineCode.R1;
     end
 
@@ -210,7 +213,7 @@ begin
 
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         with pLineCode do
         begin
             Parser[ActiveActor].CmdString := Format('R1=%g', [Value]);
@@ -227,7 +230,7 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         Result := pLineCode.X1;
     end
 
@@ -241,7 +244,7 @@ begin
 
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         with pLineCode do
         begin
             Parser[ActiveActor].CmdString := Format('X1=%g', [Value]);
@@ -258,7 +261,7 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         Result := pLineCode.R0;
     end
 
@@ -272,7 +275,7 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         Result := pLineCode.X0;
     end
 
@@ -286,7 +289,7 @@ begin
 
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         with pLineCode do
         begin
             Parser[ActiveActor].CmdString := Format('R0=%g', [Value]);
@@ -304,7 +307,7 @@ begin
 
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         with pLineCode do
         begin
             Parser[ActiveActor].CmdString := Format('X0=%g', [Value]);
@@ -321,7 +324,7 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         Result := pLineCode.C0;
     end
 
@@ -334,7 +337,7 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         Result := pLineCode.C1;
     end
 
@@ -348,7 +351,7 @@ begin
 
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         with pLineCode do
         begin
             Parser[ActiveActor].CmdString := Format('C0=%g', [Value]);
@@ -366,7 +369,7 @@ begin
 
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         with pLineCode do
         begin
             Parser[ActiveActor].CmdString := Format('C1=%g', [Value]);
@@ -388,7 +391,7 @@ begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         with pLineCode do
         begin
             Factor := (TwoPi * BaseFrequency * 1.0e-9);
@@ -423,7 +426,7 @@ begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         with pLineCode do
         begin
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(FNphases) - 1) + 1);
@@ -456,7 +459,7 @@ begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         with pLineCode do
         begin
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(FNphases) - 1) + 1);
@@ -491,7 +494,7 @@ begin
 
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         with pLineCode do
         begin
             Factor := TwoPi * BaseFrequency * 1.0e-9;
@@ -519,7 +522,7 @@ begin
 
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         with pLineCode do
         begin
             k := (0);
@@ -547,7 +550,7 @@ begin
 
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         with pLineCode do
         begin
             k := (0);
@@ -570,7 +573,7 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         Result := pLineCode.NormAmps;
     end
 
@@ -582,7 +585,7 @@ var
 begin
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         pLineCode.NormAmps := Value;
     end
 
@@ -595,7 +598,7 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         Result := pLineCode.EmergAmps;
     end
 
@@ -607,7 +610,7 @@ var
 begin
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
+        pLineCode := LineCodeClass[ActiveActor].GetActiveObj;
         pLineCode.EmergAmps := Value;
     end
 
@@ -624,16 +627,16 @@ begin
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit[ActiveActor] <> NIL then
         with ActiveCircuit[ActiveActor] do
-            if LineCodeClass.ElementList.ListSize > 0 then
+            if LineCodeClass[ActiveActor].ElementList.ListSize > 0 then
             begin
-                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (LineCodeClass.ElementList.ListSize - 1) + 1);
+                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (LineCodeClass[ActiveActor].ElementList.ListSize - 1) + 1);
                 k := 0;
-                LineCodeElem := LineCodeClass.ElementList.First;
+                LineCodeElem := LineCodeClass[ActiveActor].ElementList.First;
                 while LineCodeElem <> NIL do
                 begin
                     Result[k] := DSS_CopyStringAsPChar(LineCodeElem.Name);
                     Inc(k);
-                    LineCodeElem := LineCodeClass.ElementList.Next;
+                    LineCodeElem := LineCodeClass[ActiveActor].ElementList.Next;
                 end;
             end;
 
@@ -645,5 +648,17 @@ begin
     LineCodes_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 
+//------------------------------------------------------------------------------
+function LineCodes_Get_idx(): Integer; CDECL;
+begin
+    Result := LineCodeClass[ActiveActor].ElementList.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure LineCodes_Set_idx(Value: Integer); CDECL;
+var
+    pLineCode: TLineCodeObj;
+begin
+    pLineCode := LineCodeClass[ActiveActor].ElementList.Get(Value);
+end;
 //------------------------------------------------------------------------------
 end.

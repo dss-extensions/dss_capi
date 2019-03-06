@@ -126,7 +126,6 @@ type
 
 
 var
-    ESPVLControlClass: TESPVLControl;
     ActiveESPVLControlObj: TESPVLControlObj;
 
 {--------------------------------------------------------------------------}
@@ -160,7 +159,6 @@ begin
 
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
-    ESPVLControlClass := Self;
 end;
 
 {--------------------------------------------------------------------------}
@@ -647,7 +645,7 @@ begin
 
             for i := 1 to FLocalControlListSize do
             begin
-                pESPVLControl := ESPVLControlClass.Find(FLocalControlNameList.Strings[i - 1]);
+                pESPVLControl := ESPVLControlClass[ActiveActor].Find(FLocalControlNameList.Strings[i - 1]);
                 if Assigned(pESPVLControl) and pESPVLControl.Enabled then
                     FLocalControlPointerList.New := pESPVLControl;
             end;
@@ -657,9 +655,9 @@ begin
         begin
          {Search through the entire circuit for enabled generators and add them to the list}
 
-            for i := 1 to ESPVLControlClass.ElementCount do
+            for i := 1 to ESPVLControlClass[ActiveActor].ElementCount do
             begin
-                pESPVLControl := ESPVLControlClass.ElementList.Get(i);
+                pESPVLControl := ESPVLControlClass[ActiveActor].ElementList.Get(i);
                 if pESPVLControl.Enabled then
                     FLocalControlPointerList.New := pESPVLControl;
             end;

@@ -25,6 +25,10 @@ procedure Vsources_Set_AngleDeg(Value: Double); CDECL;
 procedure Vsources_Set_Frequency(Value: Double); CDECL;
 procedure Vsources_Set_Phases(Value: Integer); CDECL;
 
+function Vsources_Get_idx(): Integer; CDECL;
+procedure Vsources_Set_idx(Value: Integer); CDECL;
+
+
 implementation
 
 uses
@@ -46,9 +50,9 @@ begin
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        if VsourceClass.ElementList.ListSize > 0 then
+        if VSourceClass[ActiveActor].ElementList.ListSize > 0 then
         begin
-            pList := VsourceClass.ElementList;
+            pList := VSourceClass[ActiveActor].ElementList;
             DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize - 1) + 1);
             k := 0;
             elem := pList.First;
@@ -74,7 +78,7 @@ function Vsources_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
-        Result := VsourceClass.ElementList.ListSize;
+        Result := VSourceClass[ActiveActor].ElementList.ListSize;
 end;
 //------------------------------------------------------------------------------
 function Vsources_Get_First(): Integer; CDECL;
@@ -84,7 +88,7 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pElem := VsourceClass.ElementList.First;
+        pElem := VSourceClass[ActiveActor].ElementList.First;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
@@ -93,7 +97,7 @@ begin
                     Result := 1;
                 end
                 else
-                    pElem := VsourceClass.ElementList.Next;
+                    pElem := VSourceClass[ActiveActor].ElementList.Next;
             until (Result = 1) or (pElem = NIL);
     end;
 end;
@@ -105,16 +109,16 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pElem := VsourceClass.ElementList.Next;
+        pElem := VSourceClass[ActiveActor].ElementList.Next;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
                 begin
                     ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-                    Result := VsourceClass.ElementList.ActiveIndex;
+                    Result := VSourceClass[ActiveActor].ElementList.ActiveIndex;
                 end
                 else
-                    pElem := VsourceClass.ElementList.Next;
+                    pElem := VSourceClass[ActiveActor].ElementList.Next;
             until (Result > 0) or (pElem = NIL);
     end;
 end;
@@ -140,9 +144,9 @@ procedure Vsources_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        if VsourceClass.SetActive(Value) then
+        if VSourceClass[ActiveActor].SetActive(Value) then
         begin
-            ActiveCircuit[ActiveActor].ActiveCktElement := VsourceClass.ElementList.Active;
+            ActiveCircuit[ActiveActor].ActiveCktElement := VSourceClass[ActiveActor].ElementList.Active;
         end
         else
         begin
@@ -156,7 +160,7 @@ var
     elem: TVsourceObj;
 begin
     Result := 0.0;
-    elem := VsourceClass.ElementList.Active;
+    elem := VSourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.kVBase;
 end;
@@ -166,7 +170,7 @@ var
     elem: TVsourceObj;
 begin
     Result := 0.0;
-    elem := VsourceClass.ElementList.Active;
+    elem := VSourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.perunit;
 end;
@@ -175,7 +179,7 @@ procedure Vsources_Set_BasekV(Value: Double); CDECL;
 var
     elem: TVsourceObj;
 begin
-    elem := VsourceClass.GetActiveObj;
+    elem := VSourceClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         elem.kVBase := Value;
 end;
@@ -184,7 +188,7 @@ procedure Vsources_Set_pu(Value: Double); CDECL;
 var
     elem: TVsourceObj;
 begin
-    elem := VsourceClass.GetActiveObj;
+    elem := VSourceClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         elem.PerUnit := Value;
 end;
@@ -194,7 +198,7 @@ var
     elem: TVsourceObj;
 begin
     Result := 0.0;
-    elem := VsourceClass.ElementList.Active;
+    elem := VSourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.angle;
 
@@ -205,7 +209,7 @@ var
     elem: TVsourceObj;
 begin
     Result := 0.0;
-    elem := VsourceClass.ElementList.Active;
+    elem := VSourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.SrcFrequency;
 
@@ -216,7 +220,7 @@ var
     elem: TVsourceObj;
 begin
     Result := 0;
-    elem := VsourceClass.ElementList.Active;
+    elem := VSourceClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.NPhases;
 
@@ -226,7 +230,7 @@ procedure Vsources_Set_AngleDeg(Value: Double); CDECL;
 var
     elem: TVsourceObj;
 begin
-    elem := VsourceClass.GetActiveObj;
+    elem := VSourceClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         elem.Angle := Value;
 end;
@@ -235,7 +239,7 @@ procedure Vsources_Set_Frequency(Value: Double); CDECL;
 var
     elem: TVsourceObj;
 begin
-    elem := VsourceClass.GetActiveObj;
+    elem := VSourceClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         elem.SrcFrequency := Value;
 end;
@@ -244,9 +248,28 @@ procedure Vsources_Set_Phases(Value: Integer); CDECL;
 var
     elem: TVsourceObj;
 begin
-    elem := VsourceClass.GetActiveObj;
+    elem := VSourceClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         elem.Nphases := Value;
+end;
+//------------------------------------------------------------------------------
+function Vsources_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    Result := VSourceClass[ActiveActor].ElementList.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure Vsources_Set_idx(Value: Integer); CDECL;
+var
+    pVsource: TVsourceObj;
+begin
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    pVsource := VSourceClass[ActiveActor].ElementList.Get(Value);
+    if pVsource = NIL then
+        Exit;
+    ActiveCircuit[ActiveActor].ActiveCktElement := pVsource;
 end;
 //------------------------------------------------------------------------------
 end.

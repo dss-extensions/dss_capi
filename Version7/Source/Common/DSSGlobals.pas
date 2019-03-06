@@ -44,7 +44,34 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      Storage,
      PVSystem,
      InvControl,
-     ExpControl;
+     ExpControl,
+     
+     LineCode,
+     Line,
+     VSource,
+     ISource,
+     VCCS,
+     Load,
+     Transformer,
+     RegControl,
+     Capacitor,
+     Reactor,
+     CapControl,
+     Fault,
+     Generator,
+     GenDispatcher,
+     StorageController,
+     Relay,
+     Recloser,
+     Fuse,
+     SwtControl,
+     UPFC,
+     UPFCControl,
+     ESPVLControl,
+     IndMach012,
+     GICsource, // GIC source
+     AutoTrans, // Auto Transformer
+     VSConverter;
 
 
 CONST
@@ -210,10 +237,37 @@ VAR
    CNDataClass        :TCNData;
    TSDataClass        :TTSData;
    LineSpacingClass   :TLineSpacing;
+   LineCodeClass      :TLineCode;
    StorageClass       :TStorage;
    PVSystemClass      :TPVSystem;
    InvControlClass     :TInvControl;
    ExpControlClass    :TExpControl;
+
+   LineClass          :TLine;
+   VSourceClass       :TVSource;
+   ISourceClass       :TISource;
+   VCSSClass          :TVCCS;
+   LoadClass          :TLoad;
+   TransformerClass   :TTransf;
+   RegControlClass    :TRegControl;
+   CapacitorClass     :TCapacitor;
+   ReactorClass       :TReactor;
+   CapControlClass    :TCapControl;
+   FaultClass         :TFault;
+   GeneratorClass     :TGenerator;
+   GenDispatcherClass :TGenDispatcher;
+   StorageControllerClass: TStorageController;
+   RelayClass         :TRelay;
+   RecloserClass      :TRecloser;
+   FuseClass          :TFuse;
+   SwtControlClass    :TSwtControl;
+   UPFCClass          :TUPFC;
+   UPFCControlClass   :TUPFCControl;
+   ESPVLControlClass  :TESPVLControl;
+   IndMach012Class    :TIndMach012;
+   GICsourceClass     :TGICsource; // GIC source
+   AutoTransClass     :TAutoTrans; // Auto Transformer
+   VSConverterClass   :TVSConverter;
 
    EventStrings: TStringList;
    SavedFileList:TStringList;

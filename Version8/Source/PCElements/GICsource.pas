@@ -87,7 +87,6 @@ type
 
 var
     ActiveGICsourceObj: TGICSourceObj;
-    GICsourceClass: TGICsource;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
@@ -120,8 +119,6 @@ begin
 
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
-
-    GICsourceClass := Self;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

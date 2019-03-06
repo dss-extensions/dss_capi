@@ -5707,6 +5707,47 @@ extern "C" {
     DSS_CAPI_V7_DLL uint16_t Error_Get_EarlyAbort(void);
     DSS_CAPI_V7_DLL void Error_Set_EarlyAbort(uint16_t Value);
 
+    DSS_CAPI_V7_DLL int32_t CNData_Get_idx(void);
+    DSS_CAPI_V7_DLL void CNData_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t CapControls_Get_idx(void);
+    DSS_CAPI_V7_DLL void CapControls_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t Capacitors_Get_idx(void);
+    DSS_CAPI_V7_DLL void Capacitors_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t ISources_Get_idx(void);
+    DSS_CAPI_V7_DLL void ISources_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t LineCodes_Get_idx(void);
+    DSS_CAPI_V7_DLL void LineCodes_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t LineGeometries_Get_idx(void);
+    DSS_CAPI_V7_DLL void LineGeometries_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t LineSpacings_Get_idx(void);
+    DSS_CAPI_V7_DLL void LineSpacings_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t Lines_Get_idx(void);
+    DSS_CAPI_V7_DLL void Lines_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t LoadShapes_Get_idx(void);
+    DSS_CAPI_V7_DLL void LoadShapes_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t Meters_Get_idx(void);
+    DSS_CAPI_V7_DLL void Meters_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t Monitors_Get_idx(void);
+    DSS_CAPI_V7_DLL void Monitors_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t Reactors_Get_idx(void);
+    DSS_CAPI_V7_DLL void Reactors_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t RegControls_Get_idx(void);
+    DSS_CAPI_V7_DLL void RegControls_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t Sensors_Get_idx(void);
+    DSS_CAPI_V7_DLL void Sensors_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t SwtControls_Get_idx(void);
+    DSS_CAPI_V7_DLL void SwtControls_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t TSData_Get_idx(void);
+    DSS_CAPI_V7_DLL void TSData_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t Transformers_Get_idx(void);
+    DSS_CAPI_V7_DLL void Transformers_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t Vsources_Get_idx(void);
+    DSS_CAPI_V7_DLL void Vsources_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t WireData_Get_idx(void);
+    DSS_CAPI_V7_DLL void WireData_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t XYCurves_Get_idx(void);
+    DSS_CAPI_V7_DLL void XYCurves_Set_idx(int32_t Value);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

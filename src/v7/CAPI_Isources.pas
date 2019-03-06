@@ -21,6 +21,10 @@ function ISources_Get_Frequency(): Double; CDECL;
 procedure ISources_Set_AngleDeg(Value: Double); CDECL;
 procedure ISources_Set_Frequency(Value: Double); CDECL;
 
+// API Extensions
+function ISources_Get_idx(): Integer; CDECL;
+procedure ISources_Set_idx(Value: Integer); CDECL;
+
 implementation
 
 uses
@@ -202,6 +206,25 @@ begin
     elem := IsourceClass.GetActiveObj;
     if elem <> NIL then
         elem.SrcFrequency := Value;
+end;
+//------------------------------------------------------------------------------
+function ISources_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    Result := ISourceClass.ElementList.ActiveIndex;
+end;
+//------------------------------------------------------------------------------
+procedure ISources_Set_idx(Value: Integer); CDECL;
+var
+    pISource: TISourceObj;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    pISource := ISourceClass.ElementList.Get(Value);
+    if pISource = NIL then
+        Exit;
+    ActiveCircuit.ActiveCktElement := pISource;
 end;
 //------------------------------------------------------------------------------
 end.

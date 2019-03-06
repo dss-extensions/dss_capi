@@ -59,14 +59,14 @@ def v7_to_v8(fn0):
             for k in functions:
                 text = replace(text, '{}'.format(k), '{}(ActiveActor)'.format(k))
             
-            text = replace(text, 'States[i]', 'States[i,ActiveActor]')
-            text = replace(text, 'States[k]', 'States[k,ActiveActor]')
-            text = replace(text, 'Closed[0]', 'Closed[0,ActiveActor]')
-            text = replace(text, 'Closed [0]', 'Closed[0,ActiveActor]')
-            text = replace(text, 'Closed[i]', 'Closed[i,ActiveActor]')
-            text = replace(text, 'Closed[Phs]', 'Closed[Phs,ActiveActor]')
-            text = replace(text, 'Power[1]', 'Power[1,ActiveActor]')
-            text = replace(text, 'PresentTap[elem.ActiveWinding]', 'PresentTap[elem.ActiveWinding,ActiveActor]')
+            text = replace(text, 'States[i]', 'States[i, ActiveActor]')
+            text = replace(text, 'States[k]', 'States[k, ActiveActor]')
+            text = replace(text, 'Closed[0]', 'Closed[0, ActiveActor]')
+            text = replace(text, 'Closed [0]', 'Closed[0, ActiveActor]')
+            text = replace(text, 'Closed[i]', 'Closed[i, ActiveActor]')
+            text = replace(text, 'Closed[Phs]', 'Closed[Phs, ActiveActor]')
+            text = replace(text, 'Power[1]', 'Power[1, ActiveActor]')
+            text = replace(text, 'PresentTap[elem.ActiveWinding]', 'PresentTap[elem.ActiveWinding, ActiveActor]')
             text = text.replace('ProxyHdl: Integer)', 'ProxyHdl:Integer; ActorID : Integer)')
             text = text.replace('ProxyHdl:Integer)', 'ProxyHdl:Integer; ActorID : Integer)')
             
@@ -93,7 +93,7 @@ def v7_to_v8(fn0):
                 text = replace(text, '{})'.format(k), '{}, ActiveActor)'.format(k))
             
             
-            for k in ['PVSystem', 'CNData', 'LineSpacing', 'Monitor', 'EnergyMeter', 'Storage', 'XYCurve', 'WireData', 'TSData', 'LoadShape', 'Sensor']:
+            for k in ['PVSystem', 'CNData', 'LineSpacing', 'Monitor', 'EnergyMeter', 'Storage', 'XYCurve', 'WireData', 'TSData', 'LoadShape', 'Sensor', 'GICsource']:
                 text = replace(text, '{}Class'.format(k), '{}Class[ActiveActor]'.format(k))
                 
             text = replace(text, 'Result := NumCircuits;', 'Result := ActiveCircuit[ActiveActor].NumCircuits;')

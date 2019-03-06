@@ -35,6 +35,11 @@ procedure XYCurves_Set_Xshift(Value: Double); CDECL;
 procedure XYCurves_Set_Yscale(Value: Double); CDECL;
 procedure XYCurves_Set_Yshift(Value: Double); CDECL;
 
+// API Extensions
+function XYCurves_Get_idx(): Integer; CDECL;
+procedure XYCurves_Set_idx(Value: Integer); CDECL;
+
+
 implementation
 
 uses
@@ -517,6 +522,18 @@ begin
         end;
     end;
 
+end;
+//------------------------------------------------------------------------------
+function XYCurves_Get_idx(): Integer; CDECL;
+begin
+    Result := XYCurveClass.ElementList.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure XYCurves_Set_idx(Value: Integer); CDECL;
+var
+    pXYCurve: TXYCurveObj;
+begin
+    pXYCurve := XYCurveClass.ElementList.Get(Value);
 end;
 //------------------------------------------------------------------------------
 end.

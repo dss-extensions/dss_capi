@@ -52,7 +52,7 @@ begin
     if not Assigned(ActiveCircuit[ActiveActor]) then
         exit;
     SolutionAbort := FALSE;  // Reset for commands entered from outside
-    cmd := Format('Fuse.%s.%s=%s', [TFuseObj(FuseClass.GetActiveObj).Name, parm, val]);
+    cmd := Format('Fuse.%s.%s=%s', [TFuseObj(FuseClass[ActiveActor].GetActiveObj).Name, parm, val]);
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
@@ -68,9 +68,9 @@ begin
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        if FuseClass.ElementList.ListSize > 0 then
+        if FuseClass[ActiveActor].ElementList.ListSize > 0 then
         begin
-            pList := FuseClass.ElementList;
+            pList := FuseClass[ActiveActor].ElementList;
             DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize - 1) + 1);
             k := 0;
             elem := pList.First;
@@ -96,7 +96,7 @@ function Fuses_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
-        Result := FuseClass.ElementList.ListSize;
+        Result := FuseClass[ActiveActor].ElementList.ListSize;
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_First(): Integer; CDECL;
@@ -106,7 +106,7 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pElem := FuseClass.ElementList.First;
+        pElem := FuseClass[ActiveActor].ElementList.First;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
@@ -115,7 +115,7 @@ begin
                     Result := 1;
                 end
                 else
-                    pElem := FuseClass.ElementList.Next;
+                    pElem := FuseClass[ActiveActor].ElementList.Next;
             until (Result = 1) or (pElem = NIL);
     end;
 end;
@@ -125,7 +125,7 @@ var
     elem: TFuseObj;
 begin
     Result := '';
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Result := elem.Name;
 end;
@@ -142,16 +142,16 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pElem := FuseClass.ElementList.Next;
+        pElem := FuseClass[ActiveActor].ElementList.Next;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
                 begin
                     ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-                    Result := FuseClass.ElementList.ActiveIndex;
+                    Result := FuseClass[ActiveActor].ElementList.ActiveIndex;
                 end
                 else
-                    pElem := FuseClass.ElementList.Next;
+                    pElem := FuseClass[ActiveActor].ElementList.Next;
             until (Result > 0) or (pElem = NIL);
     end;
 end;
@@ -162,9 +162,9 @@ procedure Fuses_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        if FuseClass.SetActive(Value) then
+        if FuseClass[ActiveActor].SetActive(Value) then
         begin
-            ActiveCircuit[ActiveActor].ActiveCktElement := FuseClass.ElementList.Active;
+            ActiveCircuit[ActiveActor].ActiveCktElement := FuseClass[ActiveActor].ElementList.Active;
         end
         else
         begin
@@ -178,7 +178,7 @@ var
     elem: TFuseObj;
 begin
     Result := '';
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Result := elem.MonitoredElementName;
 end;
@@ -193,7 +193,7 @@ var
     elem: TFuseObj;
 begin
     Result := 0;
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Result := elem.MonitoredElementTerminal;
 end;
@@ -203,7 +203,7 @@ var
     elem: TFuseObj;
 begin
     Result := '';
-    elem := FuseClass.ElementList.Active;
+    elem := FuseClass[ActiveActor].ElementList.Active;
     if elem <> NIL then
         Result := elem.ElementName;
 end;
@@ -217,7 +217,7 @@ procedure Fuses_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
 var
     elem: TFuseObj;
 begin
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Set_parameter('monitoredObj', Value);
 end;
@@ -226,7 +226,7 @@ procedure Fuses_Set_MonitoredTerm(Value: Integer); CDECL;
 var
     elem: TFuseObj;
 begin
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Set_parameter('monitoredterm', IntToStr(Value));
 end;
@@ -235,7 +235,7 @@ procedure Fuses_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 var
     elem: TFuseObj;
 begin
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Set_parameter('SwitchedObj', Value);
 end;
@@ -245,7 +245,7 @@ var
     elem: TFuseObj;
 begin
     Result := 0;
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Result := elem.ElementTerminal;
 end;
@@ -254,7 +254,7 @@ procedure Fuses_Set_SwitchedTerm(Value: Integer); CDECL;
 var
     elem: TFuseObj;
 begin
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Set_parameter('SwitchedTerm', IntToStr(Value));
 end;
@@ -263,7 +263,7 @@ function Fuses_Get_TCCcurve_AnsiString(): Ansistring; inline;
 var
     elem: TFuseObj;
 begin
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Result := elem.FuseCurve.Name
     else
@@ -279,7 +279,7 @@ procedure Fuses_Set_TCCcurve(const Value: PAnsiChar); CDECL;
 var
     elem: TFuseObj;
 begin
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Set_parameter('FuseCurve', Value);
 end;
@@ -288,7 +288,7 @@ function Fuses_Get_RatedCurrent(): Double; CDECL;
 var
     elem: TFuseObj;
 begin
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Result := elem.RatedCurrent
     else
@@ -299,7 +299,7 @@ procedure Fuses_Set_RatedCurrent(Value: Double); CDECL;
 var
     elem: TFuseObj;
 begin
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Set_parameter('RatedCurrent', Format('%.8g ', [Value]));
 end;
@@ -308,7 +308,7 @@ function Fuses_Get_Delay(): Double; CDECL;
 var
     elem: TFuseObj;
 begin
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Result := elem.DelayTime
     else
@@ -319,7 +319,7 @@ procedure Fuses_Open(); CDECL;
 var
     elem: TFuseObj;
 begin
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         elem.ControlledElement.Closed[0, ActiveActor] := FALSE; // Open all phases
 end;
@@ -328,7 +328,7 @@ procedure Fuses_Close(); CDECL;
 var
     elem: TFuseObj;
 begin
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         elem.Reset;
 end;
@@ -337,7 +337,7 @@ procedure Fuses_Set_Delay(Value: Double); CDECL;
 var
     elem: TFuseObj;
 begin
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
         Set_parameter('Delay', Format('%.8g ', [Value]));
 end;
@@ -349,7 +349,7 @@ var
     i: Integer;
 begin
     Result := FALSE;
-    elem := FuseClass.GetActiveObj;
+    elem := FuseClass[ActiveActor].GetActiveObj;
     if elem <> NIL then
     begin
         for i := 1 to elem.nphases do
@@ -361,7 +361,7 @@ end;
 function Fuses_Get_idx(): Integer; CDECL;
 begin
     if ActiveCircuit[ActiveActor] <> NIL then
-        Result := FuseClass.ElementList.ActiveIndex
+        Result := FuseClass[ActiveActor].ElementList.ActiveIndex
     else
         Result := 0;
 end;
@@ -372,7 +372,7 @@ var
 begin
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pFuse := FuseClass.Elementlist.Get(Value);
+        pFuse := FuseClass[ActiveActor].Elementlist.Get(Value);
         if pFuse <> NIL then
             ActiveCircuit[ActiveActor].ActiveCktElement := pFuse;
     end;
@@ -385,7 +385,7 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pFuse := FuseClass.GetActiveObj;
+        pFuse := FuseClass[ActiveActor].GetActiveObj;
         if pFuse <> NIL then
             Result := pFuse.NPhases;
     end;

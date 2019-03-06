@@ -73,7 +73,11 @@ type
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     TLoadObj = class(TPCElement)
+{$IFDEF DSS_CAPI}
+    PUBLIC
+{$ELSE}
     PRIVATE
+{$ENDIF}
         PFChanged: Boolean;
         FAllocationFactor: Double;   // For all types of allocation
         FkVAAllocationFactor: Double;   // for connected kVA specification

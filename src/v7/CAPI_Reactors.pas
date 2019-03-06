@@ -59,6 +59,8 @@ procedure Reactors_Set_Z2(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 procedure Reactors_Get_Z0(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure Reactors_Get_Z0_GR(); CDECL;
 procedure Reactors_Set_Z0(ValuePtr: PDouble; ValueCount: Integer); CDECL;
+function Reactors_Get_idx(): Integer; CDECL;
+procedure Reactors_Set_idx(Value: Integer); CDECL;
 
 
 implementation
@@ -172,21 +174,23 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-            if Reactors.ListSize > 0 then
+    if ActiveCircuit = NIL then
+        exit;
+
+    with ActiveCircuit do
+        if Reactors.ListSize > 0 then
+        begin
+            lst := Reactors;
+            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (lst.ListSize - 1) + 1);
+            k := 0;
+            elem := lst.First;
+            while elem <> NIL do
             begin
-                lst := Reactors;
-                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (lst.ListSize - 1) + 1);
-                k := 0;
-                elem := lst.First;
-                while elem <> NIL do
-                begin
-                    Result[k] := DSS_CopyStringAsPChar(elem.Name);
-                    Inc(k);
-                    elem := lst.Next;
-                end;
+                Result[k] := DSS_CopyStringAsPChar(elem.Name);
+                Inc(k);
+                elem := lst.Next;
             end;
+        end;
 end;
 
 procedure Reactors_Get_AllNames_GR(); CDECL;
@@ -202,22 +206,21 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then
+        exit;
+    lst := ActiveCircuit.Reactors;
+    elem := lst.First;
+    if elem <> NIL then
     begin
-        lst := ActiveCircuit.Reactors;
-        elem := lst.First;
-        if elem <> NIL then
-        begin
-            repeat
-                if elem.Enabled then
-                begin
-                    ActiveCircuit.ActiveCktElement := elem;
-                    Result := 1;
-                end
-                else
-                    elem := lst.Next;
-            until (Result = 1) or (elem = NIL);
-        end;
+        repeat
+            if elem.Enabled then
+            begin
+                ActiveCircuit.ActiveCktElement := elem;
+                Result := 1;
+            end
+            else
+                elem := lst.Next;
+        until (Result = 1) or (elem = NIL);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -226,8 +229,9 @@ var
     elem: TReactorObj;
 begin
     Result := '';
-    if ActiveReactor(elem) <> NIL then
-        Result := elem.Name;
+    if ActiveReactor(elem) = NIL then
+        exit;
+    Result := elem.Name;
 end;
 
 function Reactors_Get_Name(): PAnsiChar; CDECL;
@@ -236,36 +240,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Name(const Value: PAnsiChar); CDECL;
-var
-    ActiveSave: Integer;
-    S: String;
-    Found: Boolean;
-    elem: TReactorObj;
-    lst: TPointerList;
 begin
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+    if ReactorClass.SetActive(Value) then
     begin
-        lst := ActiveCircuit.Reactors;
-        S := Value;  // Convert to Pascal String
-        Found := FALSE;
-        ActiveSave := lst.ActiveIndex;
-        elem := lst.First;
-        while elem <> NIL do
-        begin
-            if (CompareText(elem.Name, S) = 0) then
-            begin
-                ActiveCircuit.ActiveCktElement := elem;
-                Found := TRUE;
-                Break;
-            end;
-            elem := lst.Next;
-        end;
-        if not Found then
-        begin
-            DoSimpleMsg('Reactor "' + S + '" Not Found in Active Circuit.', 5003);
-            elem := lst.Get(ActiveSave);    // Restore active Reactor
-            ActiveCircuit.ActiveCktElement := elem;
-        end;
+        ActiveCircuit.ActiveCktElement := ReactorClass.ElementList.Active;
+        ActiveCircuit.Reactors.Get(ReactorClass.Active);
+    end
+    else
+    begin
+        DoSimpleMsg('Reactor "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -296,7 +281,6 @@ end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Count(): Integer; CDECL;
 begin
-    Result := 0;
     if Assigned(ActiveCircuit) then
         Result := ActiveCircuit.Reactors.ListSize;
 end;
@@ -305,11 +289,9 @@ function Reactors_Get_Bus1_AnsiString(): Ansistring; inline;
 var
     pReactor: TReactorObj;
 begin
-    Result := '';
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        Result := pReactor.GetBus(1);
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    Result := pReactor.GetBus(1);
 end;
 
 function Reactors_Get_Bus1(): PAnsiChar; CDECL;
@@ -321,11 +303,9 @@ function Reactors_Get_Bus2_AnsiString(): Ansistring; inline;
 var
     pReactor: TReactorObj;
 begin
-    Result := '';
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        Result := pReactor.GetBus(2);
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    Result := pReactor.GetBus(2);
 end;
 
 function Reactors_Get_Bus2(): PAnsiChar; CDECL;
@@ -338,10 +318,9 @@ var
     pReactor: TReactorObj;
 begin
     Result := '';
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        Result := pReactor.LCurve;
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    Result := pReactor.LCurve;
 end;
 
 function Reactors_Get_LCurve(): PAnsiChar; CDECL;
@@ -354,10 +333,9 @@ var
     pReactor: TReactorObj;
 begin
     Result := '';
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        Result := pReactor.RCurve;
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    Result := pReactor.RCurve;
 end;
 
 function Reactors_Get_RCurve(): PAnsiChar; CDECL;
@@ -370,10 +348,9 @@ var
     pReactor: TReactorObj;
 begin
     Result := FALSE;
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        Result := pReactor.IsParallel;
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    Result := pReactor.IsParallel;
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_IsDelta(): Wordbool; CDECL;
@@ -381,11 +358,10 @@ var
     pReactor: TReactorObj;
 begin
     Result := FALSE;
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        if pReactor.Connection > 0 then
-            Result := TRUE;
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    if pReactor.Connection > 0 then
+        Result := TRUE;
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_kV(): Double; CDECL;
@@ -393,11 +369,12 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0.0;
-    if ActiveReactor(pReactor) <> NIL then
-        with pReactor do
-        begin
-            Result := kvrating;
-        end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    with pReactor do
+    begin
+        Result := kvrating;
+    end
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_kvar(): Double; CDECL;
@@ -405,10 +382,9 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0.0;
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        Result := pReactor.kvarRating;
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    Result := pReactor.kvarRating;
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_LmH(): Double; CDECL;
@@ -416,10 +392,9 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0.0;
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        Result := pReactor.L * 1000.0;
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    Result := pReactor.L * 1000.0;
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Phases(): Integer; CDECL;
@@ -427,10 +402,9 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0;
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        Result := pReactor.Nphases;
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    Result := pReactor.Nphases;
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_SpecType(): Integer; CDECL;
@@ -438,10 +412,9 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0;
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        Result := pReactor.SpecType;
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    Result := pReactor.SpecType;
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_R(): Double; CDECL;
@@ -449,10 +422,9 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0.0;
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        Result := pReactor.R;
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    Result := pReactor.R;
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_X(): Double; CDECL;
@@ -460,10 +432,9 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0.0;
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        Result := pReactor.X;
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    Result := pReactor.X;
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Rp(): Double; CDECL;
@@ -471,156 +442,168 @@ var
     pReactor: TReactorObj;
 begin
     Result := 0.0;
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        Result := pReactor.Rp;
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    Result := pReactor.Rp;
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_IsDelta(Value: Wordbool); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        pReactor.Connection := Integer(Value);
-        ReactorPropSideEffects(ReactorProps.conn, pReactor);
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    pReactor.Connection := Integer(Value);
+    ReactorPropSideEffects(ReactorProps.conn, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Parallel(Value: Wordbool); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if ActiveReactor(pReactor) <> NIL then
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    pReactor.IsParallel := Value;
+    ReactorPropSideEffects(ReactorProps.Parallel, pReactor);
+end;
+//------------------------------------------------------------------------------
+procedure _ReactorSetbus1(pReactor: TReactorObj; const s: String);
+var
+    s2: String;
+    i, dotpos: Integer;
+   // Special handling for Bus 1
+   // Set Bus2 = Bus1.0.0.0
+begin
+    with pReactor do
     begin
-        pReactor.IsParallel := Value;
-        ReactorPropSideEffects(ReactorProps.Parallel, pReactor);
-    end
+        SetBus(1, S);
+     // Default Bus2 to zero node of Bus1 if not already defined. (Wye Grounded connection)
+        if not Bus2Defined then
+        begin
+         // Strip node designations from S
+            dotpos := Pos('.', S);
+            if dotpos > 0 then
+                S2 := Copy(S, 1, dotpos - 1)
+            else
+                S2 := Copy(S, 1, Length(S));  // copy up to Dot
+            for i := 1 to Fnphases do
+                S2 := S2 + '.0';
+            SetBus(2, S2);
+            IsShunt := TRUE;
+        end;
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Bus1(const Value: PAnsiChar); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        pReactor.SetBus(1, Value);
-        ReactorPropSideEffects(ReactorProps.bus1, pReactor);
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    _ReactorSetbus1(pReactor, Value);
+    ReactorPropSideEffects(ReactorProps.bus1, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Bus2(const Value: PAnsiChar); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        pReactor.SetBus(2, Value);
-        ReactorPropSideEffects(ReactorProps.bus2, pReactor);
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    pReactor.SetBus(2, Value);
+    ReactorPropSideEffects(ReactorProps.bus2, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_LCurve(const Value: PAnsiChar); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        pReactor.LCurve := Value;
-        ReactorPropSideEffects(ReactorProps.LCurve, pReactor);
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    pReactor.LCurve := Value;
+    ReactorPropSideEffects(ReactorProps.LCurve, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_RCurve(const Value: PAnsiChar); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        pReactor.RCurve := Value;
-        ReactorPropSideEffects(ReactorProps.RCurve, pReactor);
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    pReactor.RCurve := Value;
+    ReactorPropSideEffects(ReactorProps.RCurve, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_kV(Value: Double); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        pReactor.kvrating := Value;
-        ReactorPropSideEffects(ReactorProps.kv, pReactor);
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    pReactor.kvrating := Value;
+    ReactorPropSideEffects(ReactorProps.kv, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_kvar(Value: Double); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        pReactor.kvarRating := Value;
-        ReactorPropSideEffects(ReactorProps.kvar, pReactor);
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    pReactor.kvarRating := Value;
+    ReactorPropSideEffects(ReactorProps.kvar, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_LmH(Value: Double); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        pReactor.L := Value / 1000.0;
-        ReactorPropSideEffects(ReactorProps.LmH, pReactor);
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    pReactor.L := Value / 1000.0;
+    ReactorPropSideEffects(ReactorProps.LmH, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Phases(Value: Integer); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        if (Value <> pReactor.NPhases) then
-        begin
-            pReactor.NPhases := Value;
-            ReactorPropSideEffects(ReactorProps.phases, pReactor);
-        end;
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    if Value = pReactor.NPhases then
+        exit;
+    pReactor.NPhases := Value;
+    ReactorPropSideEffects(ReactorProps.phases, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_R(Value: Double); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        pReactor.R := Value;
-        ReactorPropSideEffects(ReactorProps.R, pReactor);
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    pReactor.R := Value;
+    ReactorPropSideEffects(ReactorProps.R, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_X(Value: Double); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        pReactor.X := Value;
-        ReactorPropSideEffects(ReactorProps.X, pReactor);
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    pReactor.X := Value;
+    ReactorPropSideEffects(ReactorProps.X, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Rp(Value: Double); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if ActiveReactor(pReactor) <> NIL then
-    begin
-        pReactor.Rp := Value;
-        ReactorPropSideEffects(ReactorProps.Rp, pReactor);
-    end
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    pReactor.Rp := Value;
+    ReactorPropSideEffects(ReactorProps.Rp, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Rmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
@@ -630,16 +613,15 @@ var
     pReactor: TReactorObj;
 begin
     Value := PDoubleArray(ValuePtr);
-    if (ActiveReactor(pReactor) <> NIL) then
-        if (Sqr(pReactor.Nphases) = ValueCount) then
-            with pReactor do
+    if (ActiveReactor(pReactor) <> NIL) and (Sqr(pReactor.Nphases) = ValueCount) then
+        with pReactor do
+        begin
+            for k := 0 to ValueCount do
             begin
-                for k := 0 to ValueCount do
-                begin
-                    Rmatrix[k + 1] := ValuePtr[k];
-                end;
-                ReactorPropSideEffects(ReactorProps.Rmatrix, pReactor);
+                Rmatrix[k + 1] := ValuePtr[k];
             end;
+            ReactorPropSideEffects(ReactorProps.Rmatrix, pReactor);
+        end;
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Xmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
@@ -649,16 +631,15 @@ var
     pReactor: TReactorObj;
 begin
     Value := PDoubleArray(ValuePtr);
-    if (ActiveReactor(pReactor) <> NIL) then
-        if (Sqr(pReactor.Nphases) = ValueCount) then
-            with pReactor do
+    if (ActiveReactor(pReactor) <> NIL) and (Sqr(pReactor.Nphases) = ValueCount) then
+        with pReactor do
+        begin
+            for k := 0 to ValueCount do
             begin
-                for k := 0 to ValueCount do
-                begin
-                    Xmatrix[k + 1] := ValuePtr[k];
-                end;
-                ReactorPropSideEffects(ReactorProps.Xmatrix, pReactor);
+                Xmatrix[k + 1] := ValuePtr[k];
             end;
+            ReactorPropSideEffects(ReactorProps.Xmatrix, pReactor);
+        end;
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Get_Rmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -668,16 +649,15 @@ var
     pReactor: TReactorObj;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if (ActiveReactor(pReactor) <> NIL) then
-        if (pReactor.Rmatrix <> NIL) then
-            with pReactor do
+    if (ActiveReactor(pReactor) <> NIL) and (pReactor.Rmatrix <> NIL) then
+        with pReactor do
+        begin
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
+            for k := 0 to ResultCount[0] do
             begin
-                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
-                for k := 0 to ResultCount[0] do
-                begin
-                    ResultPtr[k] := Rmatrix[k + 1];
-                end;
+                ResultPtr[k] := Rmatrix[k + 1];
             end;
+        end;
 end;
 
 procedure Reactors_Get_Rmatrix_GR(); CDECL;
@@ -694,16 +674,15 @@ var
     pReactor: TReactorObj;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if (ActiveReactor(pReactor) <> NIL) then
-        if (pReactor.Xmatrix <> NIL) then
-            with pReactor do
+    if (ActiveReactor(pReactor) <> NIL) and (pReactor.Xmatrix <> NIL) then
+        with pReactor do
+        begin
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
+            for k := 0 to ResultCount[0] do
             begin
-                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
-                for k := 0 to ResultCount[0] do
-                begin
-                    ResultPtr[k] := Xmatrix[k + 1];
-                end;
+                ResultPtr[k] := Xmatrix[k + 1];
             end;
+        end;
 end;
 
 procedure Reactors_Get_Xmatrix_GR(); CDECL;
@@ -719,13 +698,14 @@ var
     pReactor: TReactorObj;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if ActiveReactor(pReactor) <> NIL then
-        with pReactor do
-        begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-            Result[0] := Z1.Re;
-            Result[1] := Z1.Im;
-        end;
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    with pReactor do
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+        Result[0] := Z1.Re;
+        Result[1] := Z1.Im;
+    end;
 end;
 
 procedure Reactors_Get_Z1_GR(); CDECL;
@@ -741,13 +721,14 @@ var
     pReactor: TReactorObj;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if ActiveReactor(pReactor) <> NIL then
-        with pReactor do
-        begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-            Result[0] := Z2.Re;
-            Result[1] := Z2.Im;
-        end;
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    with pReactor do
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+        Result[0] := Z2.Re;
+        Result[1] := Z2.Im;
+    end;
 end;
 
 procedure Reactors_Get_Z2_GR(); CDECL;
@@ -763,13 +744,14 @@ var
     pReactor: TReactorObj;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if ActiveReactor(pReactor) <> NIL then
-        with pReactor do
-        begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-            Result[0] := Z0.Re;
-            Result[1] := Z0.Im;
-        end;
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    with pReactor do
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+        Result[0] := Z0.Re;
+        Result[1] := Z0.Im;
+    end;
 end;
 
 procedure Reactors_Get_Z0_GR(); CDECL;
@@ -785,13 +767,14 @@ var
     pReactor: TReactorObj;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if ActiveReactor(pReactor) <> NIL then
-        with pReactor do
-        begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-            Result[0] := R;
-            Result[1] := X;
-        end;
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    with pReactor do
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+        Result[0] := R;
+        Result[1] := X;
+    end;
 end;
 
 procedure Reactors_Get_Z_GR(); CDECL;
@@ -857,5 +840,23 @@ begin
         end;
 end;
 //------------------------------------------------------------------------------
-
+function Reactors_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    Result := ActiveCircuit.Reactors.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure Reactors_Set_idx(Value: Integer); CDECL;
+var
+    pReactor: TReactorObj;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    pReactor := ActiveCircuit.Reactors.Get(Value);
+    if pReactor = NIL then
+        Exit;
+    ActiveCircuit.ActiveCktElement := pReactor;
+end;
+//------------------------------------------------------------------------------
 end.

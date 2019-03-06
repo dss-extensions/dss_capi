@@ -25,6 +25,10 @@ procedure Vsources_Set_AngleDeg(Value: Double); CDECL;
 procedure Vsources_Set_Frequency(Value: Double); CDECL;
 procedure Vsources_Set_Phases(Value: Integer); CDECL;
 
+function Vsources_Get_idx(): Integer; CDECL;
+procedure Vsources_Set_idx(Value: Integer); CDECL;
+
+
 implementation
 
 uses
@@ -247,6 +251,25 @@ begin
     elem := VsourceClass.GetActiveObj;
     if elem <> NIL then
         elem.Nphases := Value;
+end;
+//------------------------------------------------------------------------------
+function Vsources_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    Result := VsourceClass.ElementList.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure Vsources_Set_idx(Value: Integer); CDECL;
+var
+    pVsource: TVsourceObj;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    pVsource := VsourceClass.ElementList.Get(Value);
+    if pVsource = NIL then
+        Exit;
+    ActiveCircuit.ActiveCktElement := pVsource;
 end;
 //------------------------------------------------------------------------------
 end.

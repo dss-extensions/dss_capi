@@ -69,6 +69,11 @@ procedure Lines_Set_Spacing(const Value: PAnsiChar); CDECL;
 function Lines_Get_Units(): Integer; CDECL;
 procedure Lines_Set_Units(Value: Integer); CDECL;
 
+// API Extensions
+function Lines_Get_idx(): Integer; CDECL;
+procedure Lines_Set_idx(Value: Integer); CDECL;
+
+
 implementation
 
 uses
@@ -353,39 +358,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Name(const Value: PAnsiChar); CDECL;
-var
-    activesave: Integer;
-    pLine: TLineObj;
-    S: String;
-    Found: Boolean;
 begin
-
-
-    if ActiveCircuit <> NIL then
-    begin      // Search list of Lines in active circuit for name
-        with ActiveCircuit.Lines do
-        begin
-            S := Value;  // Convert to Pascal String
-            Found := FALSE;
-            ActiveSave := ActiveIndex;
-            pLine := First;
-            while pLine <> NIL do
-            begin
-                if (CompareText(pLine.Name, S) = 0) then
-                begin
-                    ActiveCircuit.ActiveCktElement := pLine;
-                    Found := TRUE;
-                    Break;
-                end;
-                pLine := Next;
-            end;
-            if not Found then
-            begin
-                DoSimpleMsg('Line "' + S + '" Not Found in Active Circuit.', 5008);
-                pLine := Get(ActiveSave);    // Restore active Line
-                ActiveCircuit.ActiveCktElement := pLine;
-            end;
-        end;
+    if ActiveCircuit = NIL then
+        Exit;
+    if LineClass.SetActive(Value) then
+    begin
+        ActiveCircuit.ActiveCktElement := LineClass.ElementList.Active;
+        ActiveCircuit.Lines.Get(LineClass.Active);
+    end
+    else
+    begin
+        DoSimpleMsg('Line "' + Value + '" Not Found in Active Circuit.', 5008);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -1032,6 +1015,25 @@ begin
 
             end;
         end;
+end;
+//------------------------------------------------------------------------------
+function Lines_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    Result := ActiveCircuit.Lines.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure Lines_Set_idx(Value: Integer); CDECL;
+var
+    pLine: TLineObj;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    pLine := ActiveCircuit.Lines.Get(Value);
+    if pLine = NIL then
+        Exit;
+    ActiveCircuit.ActiveCktElement := pLine;
 end;
 //------------------------------------------------------------------------------
 end.

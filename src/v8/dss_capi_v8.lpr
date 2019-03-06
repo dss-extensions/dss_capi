@@ -1742,9 +1742,51 @@ exports
     WireData_Set_NormAmps,
     WireData_Get_EmergAmps,
     WireData_Set_EmergAmps,
-    
-    Bus_Get_Next;
-    
+
+    Bus_Get_Next,
+
+
+    CNData_Get_idx,
+    CNData_Set_idx,
+    CapControls_Get_idx,
+    CapControls_Set_idx,
+    Capacitors_Get_idx,
+    Capacitors_Set_idx,
+    ISources_Get_idx,
+    ISources_Set_idx,
+    LineCodes_Get_idx,
+    LineCodes_Set_idx,
+    LineGeometries_Get_idx,
+    LineGeometries_Set_idx,
+    LineSpacings_Get_idx,
+    LineSpacings_Set_idx,
+    Lines_Get_idx,
+    Lines_Set_idx,
+    LoadShapes_Get_idx,
+    LoadShapes_Set_idx,
+    Meters_Get_idx,
+    Meters_Set_idx,
+    Monitors_Get_idx,
+    Monitors_Set_idx,
+    Reactors_Get_idx,
+    Reactors_Set_idx,
+    RegControls_Get_idx,
+    RegControls_Set_idx,
+    Sensors_Get_idx,
+    Sensors_Set_idx,
+    SwtControls_Get_idx,
+    SwtControls_Set_idx,
+    TSData_Get_idx,
+    TSData_Set_idx,
+    Transformers_Get_idx,
+    Transformers_Set_idx,
+    Vsources_Get_idx,
+    Vsources_Set_idx,
+    WireData_Get_idx,
+    WireData_Set_idx,
+    XYCurves_Get_idx,
+    XYCurves_Set_idx;
+
 begin
   IsDLL := TRUE;
   IsMultiThread := True;

@@ -1,6 +1,5 @@
 
 unit DSSClass;
-
 {
     ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -14,44 +13,40 @@ unit DSSClass;
 
 interface
 
-uses
-    PointerList,
-    Command,
-    Arraydef,
-    Hashlist;
+USES
+    PointerList, Command,  Arraydef, {$IFDEF DSS_CAPI_HASHLIST}Contnrs{$ELSE}Hashlist{$ENDIF};
 
-type
-
+TYPE
    // Collection of all DSS Classes
     TDSSClasses = class(Tobject)
-    PRIVATE
-        procedure Set_New(Value: Pointer);
+   private
+     PROCEDURE Set_New(Value:Pointer);
 
-    PUBLIC
+   public
         constructor Create;
-        destructor Destroy; OVERRIDE;
+     destructor Destroy; override;
 
-        property New: pointer WRITE Set_New;
+     Property New :pointer Write Set_New;
 
-    end;
+   End;
 
    // Base for all collection classes
     TDSSClass = class(TObject)
-    PRIVATE
+     private
 
-        procedure Set_Active(value: Integer);
+          Procedure Set_Active(value:Integer);
         function Get_ElementCount: Integer;
         function Get_First: Integer;
         function Get_Next: Integer;
 
-        procedure ResynchElementNameList;
+          Procedure ResynchElementNameList;
 
     PROTECTED
         Class_Name: String;
         ActiveElement: Integer;   // index of present ActiveElement
         CommandList: TCommandlist;
         ActiveProperty: Integer;
-        ElementNameList: THashList;
+        ElementNameList:{$IFDEF DSS_CAPI_HASHLIST}TFPHashList;{$ELSE}THashList;{$ENDIF}
 
 
         function AddObjectToList(Obj: Pointer): Integer;  // Used by NewObject
@@ -104,7 +99,7 @@ type
         property Next: Integer READ Get_Next;
         property Name: String READ Class_Name;
     end;
-
+         
 var
     DSSClasses: TDSSClasses;
 
@@ -112,27 +107,22 @@ var
 implementation
 
 
-uses
-    DSSGlobals,
-    SysUtils,
-    DSSObject,
-    ParserDel,
-    CktElement;
+USES DSSGlobals, SysUtils, DSSObject, ParserDel, CktElement;
 
 {--------------------------------------------------------------}
 { DSSClasses Implementation
 {--------------------------------------------------------------}
-constructor TDSSClasses.Create;
+Constructor TDSSClasses.Create;
 
-begin
-    inherited Create;
-end;
+Begin
+     Inherited Create;
+End;
 
 {--------------------------------------------------------------}
-destructor TDSSClasses.Destroy;
-begin
-    inherited Destroy;
-end;
+Destructor TDSSClasses.Destroy;
+Begin
+     Inherited Destroy;
+End;
 
 {--------------------------------------------------------------}
 procedure TDSSClasses.Set_New(Value: Pointer);
@@ -146,37 +136,35 @@ end;
 {--------------------------------------------------------------}
 {  DSSClass Implementation
 {--------------------------------------------------------------}
-constructor TDSSClass.Create;
+Constructor TDSSClass.Create;
 
-begin
-    inherited Create;
+BEGIN
+    Inherited Create;
     ElementList := TPointerList.Create(20);  // Init size and increment
-    PropertyName := NIL;
-    PropertyHelp := NIL;
-    PropertyIdxMap := NIL;
-    RevPropertyIdxMap := NIL;
+    PropertyName := nil;
+    PropertyHelp := Nil;
+    PropertyIdxMap  := Nil;
+    RevPropertyIdxMap := Nil;
 
     ActiveElement := 0;
     ActiveProperty := 0;
 
 
-    ElementNameList := THashList.Create(100);
+    ElementNameList := {$IFDEF DSS_CAPI_HASHLIST}TFPHashList.Create();{$ELSE}THashList.Create(100);{$ENDIF}
     ElementNamesOutOfSynch := FALSE;
 
-end;
+END;
 
 {--------------------------------------------------------------}
-destructor TDSSClass.Destroy;
+Destructor TDSSClass.Destroy;
 
-var
-    i: Integer;
+VAR
+   i:INTEGER;
 
-begin
+BEGIN
     // Get rid of space occupied by strings
-    for i := 1 to NumProperties do
-        PropertyName[i] := '';
-    for i := 1 to NumProperties do
-        PropertyHelp[i] := '';
+    For i := 1 to NumProperties DO PropertyName[i] := '';
+    For i := 1 to NumProperties DO PropertyHelp[i] := '';
     Reallocmem(PropertyName, 0);
     Reallocmem(PropertyHelp, 0);
     Reallocmem(PropertyIdxMap, 0);
@@ -184,18 +172,18 @@ begin
     ElementList.Free;
     ElementNameList.Free;
     CommandList.Free;
-    inherited Destroy;
-end;
+    Inherited Destroy;
+END;
 
 
 {--------------------------------------------------------------}
-function TDSSClass.NewObject(const ObjName: String): Integer;
-begin
+Function TDSSClass.NewObject(const ObjName:String):Integer;
+BEGIN
     Result := 0;
     DoErrorMsg('Reached base class of TDSSClass for device "' + ObjName + '"',
         'N/A',
         'Should be overridden.', 780);
-end;
+END;
 
 procedure TDSSClass.Set_Active(value: Integer);
 begin
@@ -223,53 +211,62 @@ begin
     DoSimpleMsg('virtual function TDSSClass.Init called.  Should be overriden.', 782);
 end;
 
-function TDSSClass.AddObjectToList(Obj: Pointer): Integer;
-begin
+Function TDSSClass.AddObjectToList(Obj:Pointer):Integer;
+BEGIN
     ElementList.New := Obj; // Stuff it in this collection's element list
+{$IFNDEF DSS_CAPI_HASHLIST}
     ElementNameList.Add(TDSSObject(Obj).Name);
-
-    if Cardinal(ElementList.ListSize) > 2 * ElementNameList.InitialAllocation then
-        ReallocateElementNameList;
-
+    If Cardinal(ElementList.ListSize) > 2* ElementNameList.InitialAllocation Then ReallocateElementNameList;
+{$ELSE}    
+    ElementNameList.Add(LowerCase(TDSSObject(Obj).Name), Pointer(ElementList.ListSize));
+{$ENDIF}
     ActiveElement := ElementList.ListSize;
     Result := ActiveElement; // Return index of object in list
-end;
+END;
 
-function TDSSClass.SetActive(const ObjName: String): Boolean;
-var
+Function TDSSClass.SetActive(const ObjName:String):Boolean;
+VAR
     idx: Integer;
 
-begin
-    Result := FALSE;
+BEGIN
+    Result := False;
     // Faster to look in hash list 7/7/03
-    if ElementNamesOutOfSynch then
-        ResynchElementNameList;
+    If ElementNamesOutOfSynch Then ResynchElementNameList;
+    {$IFDEF DSS_CAPI_HASHLIST}
+    idx := LongInt(ElementNameList.Find(LowerCase(ObjName)));
+    {$ELSE}
     idx := ElementNameList.Find(ObjName);
-    if idx > 0 then
-    begin
+    {$ENDIF}
+    
+    If idx>0 Then
+    Begin
         ActiveElement := idx;
         ActiveDSSObject[ActiveActor] := ElementList.get(idx);
         Result := TRUE;
-    end;
+    End;
 
-end;
+END;
 
-function TDSSClass.Find(const ObjName: String): Pointer;
-var
+Function TDSSClass.Find(const ObjName:String):Pointer;
+VAR
     idx: Integer;
 
-begin
-    Result := NIL;
-    if ElementNamesOutOfSynch then
-        ResynchElementNameList;
+BEGIN
+    Result := Nil;
+    If ElementNamesOutOfSynch Then ResynchElementNameList;
     // Faster to look in hash list 7/7/03
+    {$IFDEF DSS_CAPI_HASHLIST}
+    idx := LongInt(ElementNameList.Find(LowerCase(ObjName)));
+    {$ELSE}
     idx := ElementNameList.Find(ObjName);
-    if idx > 0 then
-    begin
+    {$ENDIF}
+    
+    If idx>0 Then
+    Begin
         ActiveElement := idx;
         Result := ElementList.get(idx);
-    end;
-end;
+    End;
+END;
 
 function TDSSClass.GetActiveObj: Pointer; // Get address of active obj of this class
 begin
@@ -403,7 +400,7 @@ end;
 
 procedure TDSSClass.AllocatePropertyArrays;
 var
-    i: Integer;
+    i:Integer;
 begin
     PropertyName := Allocmem(SizeOf(PropertyName^[1]) * NumProperties);
     PropertyHelp := Allocmem(SizeOf(PropertyHelp^[1]) * NumProperties);
@@ -424,13 +421,16 @@ var
 begin
   {Reallocate the device name list to improve the performance of searches}
     ElementNameList.Free; // Throw away the old one.
-    ElementNameList := THashList.Create(2 * ElementList.ListSize);  // make a new one
+    ElementNameList := {$IFDEF DSS_CAPI_HASHLIST}TFPHashList.Create();{$ELSE}THashList.Create(2*ElementList.ListSize);{$ENDIF} // make a new one
 
     // Do this using the Names of the Elements rather than the old list because it might be
     // messed up if an element gets renamed
 
-    for i := 1 to ElementList.ListSize do
-        ElementNameList.Add(TDSSObject(ElementList.Get(i)).Name);
+    {$IFDEF DSS_CAPI_HASHLIST}
+    For i := 1 to ElementList.ListSize Do ElementNameList.Add(LowerCase(TDSSObject(ElementList.Get(i)).Name), Pointer(i));
+    {$ELSE}
+    For i := 1 to ElementList.ListSize Do ElementNameList.Add(TDSSObject(ElementList.Get(i)).Name);
+    {$ENDIF}
 
 end;
 

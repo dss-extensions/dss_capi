@@ -45,6 +45,11 @@ procedure Monitors_Set_Element(const Value: PAnsiChar); CDECL;
 function Monitors_Get_Terminal(): Integer; CDECL;
 procedure Monitors_Set_Terminal(Value: Integer); CDECL;
 
+// API extensions
+function Monitors_Get_idx(): Integer; CDECL;
+procedure Monitors_Set_idx(Value: Integer); CDECL;
+
+
 implementation
 
 uses
@@ -330,42 +335,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Set_Name(const Value: PAnsiChar); CDECL;
-var
-    activesave: Integer;
-    Mon: TMonitorObj;
-    S: String;
-    Found: Boolean;
 begin
-
-
-    if ActiveCircuit[ActiveActor] <> NIL then
-    begin      // Search list of monitors in active circuit for name
-        with ActiveCircuit[ActiveActor].Monitors do
-        begin
-            S := Value;  // Convert to Pascal String
-            Found := FALSE;
-            ActiveSave := ActiveIndex;
-            Mon := First;
-            while Mon <> NIL do
-            begin
-                if (CompareText(Mon.Name, S) = 0) then
-                begin
-                    ActiveCircuit[ActiveActor].ActiveCktElement := Mon;
-                    Found := TRUE;
-                    Break;
-                end;
-                Mon := Next;
-            end;
-            if not Found then
-            begin
-                DoSimpleMsg('Monitor "' + S + '" Not Found in Active Circuit.', 5004);
-                Mon := Get(ActiveSave);    // Restore active Monerator
-                ActiveCircuit[ActiveActor].ActiveCktElement := Mon;
-            end;
-        end;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    if MonitorClass[ActiveActor].SetActive(Value) then
+    begin
+        ActiveCircuit[ActiveActor].ActiveCktElement := MonitorClass[ActiveActor].ElementList.Active;
+    end
+    else
+    begin
+        DoSimpleMsg('Monitor "' + Value + '" Not Found in Active Circuit.', 5004);
     end;
-
-
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Get_ByteStream(var ResultPtr: PByte; ResultCount: PInteger); CDECL;
@@ -798,6 +778,25 @@ begin
         end;
     end;
 
+end;
+//------------------------------------------------------------------------------
+function Monitors_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    Result := ActiveCircuit[ActiveActor].Monitors.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure Monitors_Set_idx(Value: Integer); CDECL;
+var
+    pMonitor: TMonitorObj;
+begin
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    pMonitor := ActiveCircuit[ActiveActor].Monitors.Get(Value);
+    if pMonitor = NIL then
+        Exit;
+    ActiveCircuit[ActiveActor].ActiveCktElement := pMonitor;
 end;
 //------------------------------------------------------------------------------
 end.

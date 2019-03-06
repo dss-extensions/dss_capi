@@ -165,15 +165,14 @@ end;
 procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    GeneratorClass: TGenerator;
+    GeneratorCls: TGenerator;
     k: Integer;
-
 begin
-    GeneratorClass := DssClassList.Get(Classnames.Find('Generator'));
+    GeneratorCls := GeneratorClass;
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumGenRegisters - 1) + 1);
     for k := 0 to NumGenRegisters - 1 do
     begin
-        Result[k] := DSS_CopyStringAsPChar(GeneratorClass.RegisterNames[k + 1]);
+        Result[k] := DSS_CopyStringAsPChar(GeneratorCls.RegisterNames[k + 1]);
     end;
 
 end;
@@ -253,39 +252,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Name(const Value: PAnsiChar); CDECL;
-var
-    activesave: Integer;
-    Gen: TGeneratorObj;
-    S: String;
-    Found: Boolean;
 begin
-
-
-    if ActiveCircuit <> NIL then
-    begin      // Search list of generators in active circuit for name
-        with ActiveCircuit.Generators do
-        begin
-            S := Value;  // Convert to Pascal String
-            Found := FALSE;
-            ActiveSave := ActiveIndex;
-            Gen := First;
-            while Gen <> NIL do
-            begin
-                if (CompareText(Gen.Name, S) = 0) then
-                begin
-                    ActiveCircuit.ActiveCktElement := Gen;
-                    Found := TRUE;
-                    Break;
-                end;
-                Gen := Next;
-            end;
-            if not Found then
-            begin
-                DoSimpleMsg('Generator "' + S + '" Not Found in Active Circuit.', 5003);
-                Gen := Get(ActiveSave);    // Restore active generator
-                ActiveCircuit.ActiveCktElement := Gen;
-            end;
-        end;
+    if ActiveCircuit = NIL then
+        Exit;
+    if GeneratorClass.SetActive(Value) then
+    begin
+        ActiveCircuit.ActiveCktElement := GeneratorClass.ElementList.Active;
+        ActiveCircuit.Generators.Get(GeneratorClass.Active);
+    end
+    else
+    begin
+        DoSimpleMsg('Generator "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
