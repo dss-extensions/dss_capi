@@ -1175,8 +1175,13 @@ begin
 
 
 
-    If Success Then DoSimpleMsg('Circuit saved in directory: ' + GetCurrentDir, 433)
+    {
+      If Success Then DoSimpleMsg('Circuit saved in directory: ' + GetCurrentDir, 433)
                Else DoSimpleMsg('Error attempting to save circuit in ' + GetCurrentDir, 434);
+    }
+    If Success Then GlobalResult := GetCurrentDir + '\Master.DSS'
+               Else GlobalResult := 'Error 434 attempting to save circuit in ' + GetCurrentDir;
+
     // Return to Original directory
     SetCurrentDir(SaveDir);
 
