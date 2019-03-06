@@ -12,7 +12,7 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 52393 $
-// File generated on 2/22/2019 3:34:04 PM from Type Library described below.
+// File generated on 3/6/2019 2:32:03 PM from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\Users\prdu001\OpenDSS\Version7\Source\DLL\OpenDSSengine (1)
@@ -135,8 +135,8 @@ const
   CLASS_LineCodes: TGUID = '{B6120B3A-7958-4650-AC18-2A53E89209A8}';
   IID_IGICSources: TGUID = '{F76B5BDE-9132-44FB-8115-70BF1B065FA4}';
   CLASS_GICSources: TGUID = '{D0D4455C-A5CA-4B26-ABB4-2CC3798D260E}';
-  IID_IReduce: TGUID = '{02386435-8D77-4804-8ADB-89DDFBBE2BC0}';
-  CLASS_Reduce: TGUID = '{553148EA-97CB-4559-933A-A734250E95C6}';
+  IID_IReduceCkt: TGUID = '{02386435-8D77-4804-8ADB-89DDFBBE2BC0}';
+  CLASS_ReduceCkt: TGUID = '{553148EA-97CB-4559-933A-A734250E95C6}';
 
 // *********************************************************************//
 // Declaration of Enumerations defined in Type Library
@@ -341,8 +341,8 @@ type
   ILineCodesDisp = dispinterface;
   IGICSources = interface;
   IGICSourcesDisp = dispinterface;
-  IReduce = interface;
-  IReduceDisp = dispinterface;
+  IReduceCkt = interface;
+  IReduceCktDisp = dispinterface;
 
 // *********************************************************************//
 // Declaration of CoClasses defined in Type Library
@@ -389,7 +389,7 @@ type
   Vsources = IVsources;
   LineCodes = ILineCodes;
   GICSources = IGICSources;
-  Reduce = IReduce;
+  ReduceCkt = IReduceCkt;
 
 
 // *********************************************************************//
@@ -705,7 +705,7 @@ type
     function Get_Vsources: IVsources; safecall;
     function Get_LineCodes: ILineCodes; safecall;
     function Get_GICsources: GICSources; safecall;
-    function Get_Reduce: Reduce; safecall;
+    function Get_ReduceCkt: ReduceCkt; safecall;
     property Name: WideString read Get_Name;
     property NumCktElements: Integer read Get_NumCktElements;
     property NumBuses: Integer read Get_NumBuses;
@@ -766,7 +766,7 @@ type
     property Vsources: IVsources read Get_Vsources;
     property LineCodes: ILineCodes read Get_LineCodes;
     property GICsources: GICSources read Get_GICsources;
-    property Reduce: Reduce read Get_Reduce;
+    property ReduceCkt: ReduceCkt read Get_ReduceCkt;
   end;
 
 // *********************************************************************//
@@ -853,7 +853,7 @@ type
     property Vsources: IVsources readonly dispid 237;
     property LineCodes: ILineCodes readonly dispid 238;
     property GICsources: GICSources readonly dispid 239;
-    property Reduce: Reduce readonly dispid 240;
+    property ReduceCkt: ReduceCkt readonly dispid 240;
   end;
 
 // *********************************************************************//
@@ -3699,11 +3699,11 @@ type
   end;
 
 // *********************************************************************//
-// Interface: IReduce
+// Interface: IReduceCkt
 // Flags:     (4416) Dual OleAutomation Dispatchable
 // GUID:      {02386435-8D77-4804-8ADB-89DDFBBE2BC0}
 // *********************************************************************//
-  IReduce = interface(IDispatch)
+  IReduceCkt = interface(IDispatch)
     ['{02386435-8D77-4804-8ADB-89DDFBBE2BC0}']
     function Get_Zmag: Double; safecall;
     procedure Set_Zmag(Value: Double); safecall;
@@ -3732,11 +3732,11 @@ type
   end;
 
 // *********************************************************************//
-// DispIntf:  IReduceDisp
+// DispIntf:  IReduceCktDisp
 // Flags:     (4416) Dual OleAutomation Dispatchable
 // GUID:      {02386435-8D77-4804-8ADB-89DDFBBE2BC0}
 // *********************************************************************//
-  IReduceDisp = dispinterface
+  IReduceCktDisp = dispinterface
     ['{02386435-8D77-4804-8ADB-89DDFBBE2BC0}']
     property Zmag: Double dispid 201;
     property KeepLoad: WordBool dispid 202;
@@ -4247,15 +4247,15 @@ type
   end;
 
 // *********************************************************************//
-// The Class CoReduce provides a Create and CreateRemote method to
-// create instances of the default interface IReduce exposed by
-// the CoClass Reduce. The functions are intended to be used by
+// The Class CoReduceCkt provides a Create and CreateRemote method to
+// create instances of the default interface IReduceCkt exposed by
+// the CoClass ReduceCkt. The functions are intended to be used by
 // clients wishing to automate the CoClass objects exposed by the
 // server of this typelibrary.
 // *********************************************************************//
-  CoReduce = class
-    class function Create: IReduce;
-    class function CreateRemote(const MachineName: string): IReduce;
+  CoReduceCkt = class
+    class function Create: IReduceCkt;
+    class function CreateRemote(const MachineName: string): IReduceCkt;
   end;
 
 implementation
@@ -4672,14 +4672,14 @@ begin
   Result := CreateRemoteComObject(MachineName, CLASS_GICSources) as IGICSources;
 end;
 
-class function CoReduce.Create: IReduce;
+class function CoReduceCkt.Create: IReduceCkt;
 begin
-  Result := CreateComObject(CLASS_Reduce) as IReduce;
+  Result := CreateComObject(CLASS_ReduceCkt) as IReduceCkt;
 end;
 
-class function CoReduce.CreateRemote(const MachineName: string): IReduce;
+class function CoReduceCkt.CreateRemote(const MachineName: string): IReduceCkt;
 begin
-  Result := CreateRemoteComObject(MachineName, CLASS_Reduce) as IReduce;
+  Result := CreateRemoteComObject(MachineName, CLASS_ReduceCkt) as IReduceCkt;
 end;
 
 end.
