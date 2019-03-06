@@ -1250,7 +1250,7 @@ begin
            29  : Begin
                    TempStr   :=  '[';
                    for  k:= 1 to Nratings do
-                    TempStr :=  TempStr + floattoStrf(ratings^[k],ffcurrency,8,4) + ',';
+                    TempStr :=  TempStr + floattoStrf(ratings^[k],ffGeneral,8,4) + ',';
                    TempStr   :=  TempStr + ']';
                    Result  :=  TempStr;
                  End;
