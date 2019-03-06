@@ -259,25 +259,23 @@ VAR
 *    Nomenclature:                                                             *
 *                  OV_ Overloads                                               *
 *                  VR_ Voltage report                                          *
-*                  DI_ Demand interval                                         *
-*                  SI_ System Demand interval                                  *
+*                  DI_ Demand interval for each meter. Moved to EnergyMeter.pas*
+*                  SDI_ System Demand interval                                 *
 *                  TDI_ DI Totals                                              *
 *                  FM_  Meter Totals                                           *
-*                  SM_  System Mater                                           *
+*                  SM_  System Meter                                           *
 *                  EMT_  Energy Meter Totals                                   *
-*                  PHV_  Phase Voltage Report                                  *
+*                  PHV_  Phase Voltage Report. Moved to EnergyMeter.pas        *
 *     These prefixes are applied to the variables of each file mapped into     *
 *     Memory using the MemoryMap_Lib                                           *
 ********************************************************************************
 }
    OV_MHandle             : array of TBytesStream;  // a. Handle to the file in memory
    VR_MHandle             : array of TBytesStream;
-   DI_MHandle             : array of TBytesStream;
    SDI_MHandle            : array of TBytesStream;
    TDI_MHandle            : array of TBytesStream;
    SM_MHandle             : array of TBytesStream;
    EMT_MHandle            : array of TBytesStream;
-   PHV_MHandle            : array of TBytesStream;
    FM_MHandle             : array of TBytesStream;
 
 //*********** Flags for appending Files*****************************************
@@ -1111,12 +1109,10 @@ initialization
 
    SetLength(OV_MHandle,CPU_Cores + 1);
    SetLength(VR_MHandle,CPU_Cores + 1);
-   SetLength(DI_MHandle,CPU_Cores + 1);
    SetLength(SDI_MHandle,CPU_Cores + 1);
    SetLength(TDI_MHandle,CPU_Cores + 1);
    SetLength(SM_MHandle,CPU_Cores + 1);
    SetLength(EMT_MHandle,CPU_Cores + 1);
-   SetLength(PHV_MHandle,CPU_Cores + 1);
    SetLength(FM_MHandle,CPU_Cores + 1);
    SetLength(OV_Append,CPU_Cores + 1);
    SetLength(VR_Append,CPU_Cores + 1);
@@ -1146,12 +1142,10 @@ initialization
 
     OV_MHandle[ActiveActor]           :=  nil;
     VR_MHandle[ActiveActor]           :=  nil;
-    DI_MHandle[ActiveActor]           :=  nil;
     SDI_MHandle[ActiveActor]          :=  nil;
     TDI_MHandle[ActiveActor]          :=  nil;
     SM_MHandle[ActiveActor]           :=  nil;
     EMT_MHandle[ActiveActor]          :=  nil;
-    PHV_MHandle[ActiveActor]          :=  nil;
     FM_MHandle[ActiveActor]           :=  nil;
     DIFilesAreOpen[ActiveActor]       :=  FALSE;
 
