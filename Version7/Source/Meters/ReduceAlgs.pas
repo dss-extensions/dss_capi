@@ -17,7 +17,7 @@ Uses CktTree, PDElement;
   procedure DoReduceDefault(Var BranchList:TCktTree);
   procedure DoReduceShortLines( Var BranchList:TCktTree );
   procedure DoReduceDangling(var BranchList:TCktTree);
-  {{procedure DoReduceTapEnds(var BranchList:TCktTree);}
+  {procedure DoReduceTapEnds(var BranchList:TCktTree);}
   procedure DoBreakLoops(var BranchList:TCktTree);
   procedure DoMergeParallelLines(var BranchList:TCktTree);
   procedure DoReduceSwitches(Var Branchlist:TCktTree);
