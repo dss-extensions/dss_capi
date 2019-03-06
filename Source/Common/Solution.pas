@@ -1726,8 +1726,8 @@ FUNCTION TSolutionObj.SolveSystem(V:pNodeVArray): Integer;
 
 Var
   RetCode:Integer;
-  iRes: LongWord;
-  dRes: Double;
+//***  iRes: LongWord;
+//***  dRes: Double;
 
 BEGIN
 
@@ -1737,6 +1737,7 @@ BEGIN
     // new function to log KLUSolve.DLL function calls; same information as stepping through in Delphi debugger
     // SetLogFile ('KLU_Log.txt', 1);
     RetCode := SolveSparseSet(hY, @V^[1], @Currents^[1]);  // Solve for present InjCurr
+  (* Commented out because results are not logged currently -- but left in just in case
     // new information functions
     GetFlops (hY, @dRes);
     GetRGrowth (hY, @dRes);
@@ -1746,6 +1747,7 @@ BEGIN
     GetNNZ (hY, @iRes);
     GetSparseNNZ (hY, @iRes);
     GetSingularCol (hY, @iRes);
+  *)
   Except
     On E:Exception Do Raise  EEsolv32Problem.Create('Error Solving System Y Matrix.  Sparse matrix solver reports numerical error: '
                    +E.Message);
