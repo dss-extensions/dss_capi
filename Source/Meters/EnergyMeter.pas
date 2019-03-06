@@ -147,7 +147,7 @@ Type
     End;
 
     pFeederSections = ^FeederSectionArray;
-    FeederSectionArray = Array[1..1] of TFeederSection;
+    FeederSectionArray = Array[1..100] of TFeederSection;   // Dummy dimension
     //  --------- Feeder Section Definition -----------
 
    TSystemMeter = Class(Tobject)
@@ -997,17 +997,23 @@ Begin
      VBaseLoad           := NIL;
      VBaseCount          := 0;
      MaxVBaseCount       := (NumEMRegisters - Reg_VBaseStart) div 5;
-     ReallocMem(VBaseList, MaxVBaseCount * SizeOf(VBaseList^[1]));
-     ReallocMem(VBaseTotalLosses, MaxVBaseCount * SizeOf(VBaseTotalLosses^[1]));
-     ReallocMem(VBaseLineLosses, MaxVBaseCount * SizeOf(VBaseLineLosses^[1]));
-     ReallocMem(VBaseLoadLosses, MaxVBaseCount * SizeOf(VBaseLoadLosses^[1]));
+     ReallocMem(VBaseList,         MaxVBaseCount * SizeOf(VBaseList^[1]));
+     ReallocMem(VBaseTotalLosses,  MaxVBaseCount * SizeOf(VBaseTotalLosses^[1]));
+     ReallocMem(VBaseLineLosses,   MaxVBaseCount * SizeOf(VBaseLineLosses^[1]));
+     ReallocMem(VBaseLoadLosses,   MaxVBaseCount * SizeOf(VBaseLoadLosses^[1]));
      ReallocMem(VBaseNoLoadLosses, MaxVBaseCount * SizeOf(VBaseNoLoadLosses^[1]));
-     ReallocMem(VBaseLoad, MaxVBaseCount * SizeOf(VBaseLoad^[1]));
+     ReallocMem(VBaseLoad,         MaxVBaseCount * SizeOf(VBaseLoad^[1]));
+
+//  Init pointers to Nil before allocating
+     VphaseMax              := NIL;
+     VPhaseMin              := NIL;
+     VPhaseAccum            := NIL;
+     VPhaseAccumCount       := NIL;
 
      // Arrays for phase voltage report
-     ReallocMem(VphaseMax, MaxVBaseCount * 3 * SizeOf(double));
-     ReallocMem(VPhaseMin, MaxVBaseCount * 3 * SizeOf(double));
-     ReallocMem(VPhaseAccum, MaxVBaseCount * 3 * SizeOf(double));
+     ReallocMem(VphaseMax,        MaxVBaseCount * 3 * SizeOf(double));
+     ReallocMem(VPhaseMin,        MaxVBaseCount * 3 * SizeOf(double));
+     ReallocMem(VPhaseAccum,      MaxVBaseCount * 3 * SizeOf(double));
      ReallocMem(VPhaseAccumCount, MaxVBaseCount * 3 * SizeOf(Integer));
 
      LocalOnly           := FALSE;
@@ -1088,9 +1094,9 @@ Begin
     If Assigned (VBaseNoLoadLosses)then Reallocmem(VBaseNoLoadLosses, 0);
     If Assigned (VBaseLoad)        then Reallocmem(VBaseLoad, 0);
      // Arrays for phase voltage report
-    If Assigned (VphaseMax)   then  ReallocMem(VphaseMax, 0);
-    If Assigned (VPhaseMin)   then  ReallocMem(VPhaseMin, 0);
-    If Assigned (VPhaseAccum) then  ReallocMem(VPhaseAccum, 0);
+    If Assigned (VphaseMax)        then  ReallocMem(VphaseMax, 0);
+    If Assigned (VPhaseMin)        then  ReallocMem(VPhaseMin, 0);
+    If Assigned (VPhaseAccum)      then  ReallocMem(VPhaseAccum, 0);
     If Assigned (VPhaseAccumCount) then  ReallocMem(VPhaseAccumCount, 0);
 
     for i := 1 to NumEMRegisters do RegisterNames[i] := '';
@@ -2471,20 +2477,20 @@ begin
   End;
 
   // Now have number of sections  so allocate FeederSections array
-  ReallocMem(FeederSections, SizeOf(FeederSections^[1]) * SectionCount);
+  ReallocMem(FeederSections, SizeOf(TFeederSection) * SectionCount);
   for idx := 1 to SectionCount do
     With FeederSections^[idx] Do      // Initialize all Section data
-    Begin
-        OCPDeviceType := 0; // 1=Fuse; 2=Recloser; 3=Relay
-        AverageRepairTime := 0.0;
-        SumFltRatesXRepairHrs := 0.0;
-        SumBranchFltRates := 0.0;
-        NCustomers := 0;
-        TotalCustomers := 0;
-        SectFaultRate := 0.0;
-        NBranches := 0;
-        SeqIndex := 0;
-    End;
+      Begin
+          OCPDeviceType         := 0; // 1=Fuse; 2=Recloser; 3=Relay
+          AverageRepairTime     := 0.0;
+          SumFltRatesXRepairHrs := 0.0;
+          SumBranchFltRates     := 0.0;
+          NCustomers            := 0;
+          TotalCustomers        := 0;
+          SectFaultRate         := 0.0;
+          NBranches             := 0;
+          SeqIndex              := 0;
+      End;
 
   // Now do Backward sweep calculating N*Fault rates
   For idx := SequenceList.ListSize downto 1 Do
@@ -2493,7 +2499,7 @@ begin
     PD_Elem.CalcCustInterrupts;
 
     // Populate the Section properties
-    pSection := FeederSections^[PD_Elem.BranchSectionID];
+    pSection := FeederSections^[PD_Elem.BranchSectionID];  // temp local copy of Section structure
     Begin
       Inc(pSection.NCustomers, PD_Elem.BranchNumCustomers); // Sum up num Customers on this Section
       Inc(pSection.NBranches, 1); // Sum up num branches on this Section
@@ -2508,6 +2514,7 @@ begin
           pSection.SectFaultRate  := PD_Elem.AccumulatedBrFltRate;
       End;
     End;
+    FeederSections^[PD_Elem.BranchSectionID] := pSection;  // put it back
 
 {$IFDEF DEBUG}
     If idx = SequenceList.ListSize then
@@ -2523,12 +2530,17 @@ begin
         pBus.Bus_Num_Interrupt]));
 {$ENDIF}
 
+//   {****} pSection := FeederSections^[PD_Elem.BranchSectionID];
+//   {****} WriteDLLDebugFile(Format('%s.%s ID=%d, %-.g ', [PD_Elem.ParentClass.Name, PD_Elem.Name,PD_Elem.BranchSectionID,pSection.SumFltRatesXRepairHrs  ]));
+
   End;
 
   { Compute Avg Interruption duration of each Section }
-  for idx := 1 to SectionCount do
-    With FeederSections^[idx] Do
+  for idx := 1 to SectionCount do Begin
+    With FeederSections^[idx] Do Begin
          AverageRepairTime := SumFltRatesXRepairHrs / SumBranchFltRates;
+    End;
+  End;
 
   { Set Bus_int_Duration }
 
