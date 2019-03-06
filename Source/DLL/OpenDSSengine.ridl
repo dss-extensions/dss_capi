@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 3/1/2019 12:45:31 AM (- $Rev: 12980 $, 55780312).
+// File generated on 3/3/2019 10:56:29 PM (- $Rev: 12980 $, 10233812).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -105,8 +105,8 @@ library OpenDSSengine
   coclass LineCodes;
   interface IGICSources;
   coclass GICSources;
-  interface IReduce;
-  coclass Reduce;
+  interface IReduceCkt;
+  coclass ReduceCkt;
 
 
   [
@@ -637,7 +637,7 @@ library OpenDSSengine
     [propget, id(0x000000F0), helpstring("Connect to GICSources Interface")]
     HRESULT _stdcall GICsources([out, retval] IGICSources** Value);
     [propget, id(0x000000F1), helpstring("Connect to the Circuit Reduction Interface")]
-    HRESULT _stdcall Reduce([out, retval] IReduce** Value);
+    HRESULT _stdcall ReduceCkt([out, retval] IReduceCkt** Value);
   };
 
   [
@@ -3007,7 +3007,7 @@ library OpenDSSengine
     dual,
     oleautomation
   ]
-  interface IReduce: IDispatch
+  interface IReduceCkt: IDispatch
   {
     [propget, id(0x000000C9), helpstring("Zmag for Short Line Reduction Algorithm")]
     HRESULT _stdcall Zmag([out, retval] double* Value);
@@ -3043,7 +3043,7 @@ library OpenDSSengine
     HRESULT _stdcall DoParallelLines(void);
     [id(0x000000D4)]
     HRESULT _stdcall DoSwitches(void);
-    [id(0x000000D5)]
+    [id(0x000000D5), helpstring("Eliminate all 1-phase laterals in the circuit")]
     HRESULT _stdcall Do1phLaterals(void);
     [id(0x000000D6)]
     HRESULT _stdcall DoBranchRemove(void);
@@ -3472,9 +3472,9 @@ library OpenDSSengine
     uuid(553148EA-97CB-4559-933A-A734250E95C6),
     helpstring("Reduce Object")
   ]
-  coclass Reduce
+  coclass ReduceCkt
   {
-    [default] interface IReduce;
+    [default] interface IReduceCkt;
   };
 
 };
