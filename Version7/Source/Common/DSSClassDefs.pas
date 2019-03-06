@@ -155,64 +155,127 @@ begin
      {Generic Object classes first in case others refer to them}
     DSSClasses.New := TDSSSolution.Create;
     SolutionClass := ActiveDSSClass;     // this is a special class
-    DSSClasses.New := TLineCode.Create;
+
+    LineCodeClass := TLineCode.Create;
+    DSSClasses.New := LineCodeClass;
+
     LoadShapeClass := TLoadShape.Create;
     DSSClasses.New := LoadShapeClass;
+
     TShapeClass := TTShape.Create;
     DSSClasses.New := TShapeClass;
+
     PriceShapeClass := TPriceShape.Create;
     DSSClasses.New := PriceShapeClass;
+
     XYCurveClass := TXYCurve.Create;
     DSSClasses.New := XYCurveClass;
+
     GrowthShapeClass := TGrowthShape.Create;
     DSSClasses.New := GrowthShapeClass;
+
     TCC_CurveClass := TTCC_Curve.Create;
     DSSClasses.New := TCC_CurveClass;
+
     SpectrumClass := TSpectrum.Create;
     DSSClasses.New := SpectrumClass;
+
     WireDataClass := TWireData.Create;
     DSSClasses.New := WireDataClass;
+
     CNDataClass := TCNData.Create;
     DSSClasses.New := CNDataClass;
+
     TSDataClass := TTSData.Create;
     DSSClasses.New := TSDataClass;
+
     DSSClasses.New := TLineGeometry.Create;
     LineSpacingClass := TLineSpacing.Create;
+
     DSSClasses.New := LineSpacingClass;
     DSSClasses.New := TXfmrCode.Create;
 
      {Circuit Element Classes}
-    DSSClasses.New := TLine.Create;
-    DSSClasses.New := TVSource.Create;    // 2-terminal Vsource
-    DSSClasses.New := TISource.Create;    // 2-terminal Isource
-    DSSClasses.New := TVCCS.Create;
-    DSSClasses.New := TLoad.Create;
-    DSSClasses.New := TTransf.Create;
-    DSSClasses.New := TRegControl.Create;
-    DSSClasses.New := TCapacitor.Create;
-    DSSClasses.New := TReactor.Create;
-    DSSClasses.New := TCapControl.Create;
-    DSSClasses.New := TFault.Create;
-    DSSClasses.New := TGenerator.Create;
-    DSSClasses.New := TGenDispatcher.Create;
+    LineClass := TLine.Create;
+    DSSClasses.New := LineClass;
+
+    VSourceClass := TVSource.Create;    // 2-terminal Vsource
+    DSSClasses.New := VSourceClass;
+
+    ISourceClass := TISource.Create;    // 2-terminal Isource
+    DSSClasses.New := ISourceClass;
+
+    VCSSClass := TVCCS.Create;
+    DSSClasses.New := VCSSClass;
+
+    LoadClass := TLoad.Create;
+    DSSClasses.New := LoadClass;
+
+    TransformerClass := TTransf.Create;
+    DSSClasses.New := TransformerClass;
+
+    RegControlClass := TRegControl.Create;
+    DSSClasses.New := RegControlClass;
+
+    CapacitorClass := TCapacitor.Create;
+    DSSClasses.New := CapacitorClass;
+
+    ReactorClass := TReactor.Create;
+    DSSClasses.New := ReactorClass;
+
+    CapControlClass := TCapControl.Create;
+    DSSClasses.New := CapControlClass;
+
+    FaultClass := TFault.Create;
+    DSSClasses.New := FaultClass;
+
+    GeneratorClass := TGenerator.Create;
+    DSSClasses.New := GeneratorClass;
+
+    GenDispatcherClass := TGenDispatcher.Create;
+    DSSClasses.New := GenDispatcherClass;
+
     StorageClass := TStorage.Create;
     DSSClasses.New := StorageClass;
-    DSSClasses.New := TStorageController.Create;
-    DSSClasses.New := TRelay.Create;
-    DSSClasses.New := TRecloser.Create;
-    DSSClasses.New := TFuse.Create;
+
+    StorageControllerClass := TStorageController.Create;
+    DSSClasses.New := StorageControllerClass;
+
+    RelayClass := TRelay.Create;
+    DSSClasses.New := RelayClass;
+
+    RecloserClass := TRecloser.Create;
+    DSSClasses.New := RecloserClass;
+
+    FuseClass := TFuse.Create;
+    DSSClasses.New := FuseClass;
+
 //     FeederClass    := TFeeder.Create;
 //     DSSClasses.New := FeederClass;
-    DSSClasses.New := TSwtControl.Create;
+
+    SwtControlClass := TSwtControl.Create;
+    DSSClasses.New := SwtControlClass;
+
     PVSystemClass := TPVSystem.Create;
     DSSClasses.New := PVSystemClass;
-    DSSClasses.New := TUPFC.Create;
-    DSSClasses.New := TUPFCControl.Create;
-    DSSClasses.New := TESPVLControl.Create;
-    DSSClasses.New := TIndMach012.Create;
-    DSSClasses.New := TGICsource.Create; // GIC source
-    DSSClasses.New := TAutoTrans.Create; // Auto Transformer
 
+    UPFCClass := TUPFC.Create;
+    DSSClasses.New := UPFCClass;
+
+    UPFCControlClass := TUPFCControl.Create;
+    DSSClasses.New := UPFCControlClass;
+
+    ESPVLControlClass := TESPVLControl.Create;
+    DSSClasses.New := ESPVLControlClass;
+
+    IndMach012Class := TIndMach012.Create;
+    DSSClasses.New := IndMach012Class;
+
+    GICsourceClass := TGICsource.Create; // GIC source
+    DSSClasses.New := GICsourceClass;
+
+    AutoTransClass := TAutoTrans.Create; // Auto Transformer
+    DSSClasses.New := AutoTransClass;
 
     InvControlClass := TInvControl.Create;
     DSSClasses.New := InvControlClass;
@@ -223,12 +286,15 @@ begin
     DSSClasses.New := TGICLine.Create;
     DSSClasses.New := TGICTransformer.Create;
 
-    DSSClasses.New := TVSConverter.Create;
+    VSConverterClass := TVSConverter.Create;
+    DSSClasses.New := VSConverterClass;
 
     MonitorClass := TDSSMonitor.Create;  // Have to do this AFTER Generator
     DSSClasses.New := MonitorClass;
+
     EnergyMeterClass := TEnergyMeter.Create;  // Have to do this AFTER Generator
     DSSClasses.New := EnergyMeterClass;
+
     SensorClass := TSensor.Create;      // Create state estimation sensors
     DSSClasses.New := SensorClass;
 

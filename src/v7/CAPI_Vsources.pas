@@ -25,6 +25,10 @@ procedure Vsources_Set_AngleDeg(Value: Double); CDECL;
 procedure Vsources_Set_Frequency(Value: Double); CDECL;
 procedure Vsources_Set_Phases(Value: Integer); CDECL;
 
+function Vsources_Get_idx(): Integer; CDECL;
+procedure Vsources_Set_idx(Value: Integer); CDECL;
+
+
 implementation
 
 uses
@@ -32,7 +36,8 @@ uses
     Vsource,
     PointerList,
     DSSGlobals,
-    CktElement;
+    CktElement,
+    SysUtils;
 
 procedure Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
@@ -247,6 +252,29 @@ begin
     elem := VsourceClass.GetActiveObj;
     if elem <> NIL then
         elem.Nphases := Value;
+end;
+//------------------------------------------------------------------------------
+function Vsources_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        Result := VsourceClass.ElementList.ActiveIndex
+    else
+        Result := 0;
+end;
+//------------------------------------------------------------------------------
+procedure Vsources_Set_idx(Value: Integer); CDECL;
+var
+    pVsource: TVsourceObj;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    pVsource := VsourceClass.ElementList.Get(Value);
+    if pVsource = NIL then
+    begin
+        DoSimpleMsg('Invalid VSource index: "' + IntToStr(Value) + '".', 656565);
+        Exit;
+    end;
+    ActiveCircuit.ActiveCktElement := pVsource;
 end;
 //------------------------------------------------------------------------------
 end.

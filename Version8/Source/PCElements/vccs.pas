@@ -98,7 +98,6 @@ type
 
 var
     ActiveVCCSObj: TVCCSObj;
-    VCCSClass: TVCCS;
 
 implementation
 
@@ -143,8 +142,6 @@ begin
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
     XY_CurveClass := GetDSSClassPtr('XYCurve');
-
-    VCCSClass := Self;
 end;
 
 destructor TVCCS.Destroy;

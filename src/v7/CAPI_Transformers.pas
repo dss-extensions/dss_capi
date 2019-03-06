@@ -56,6 +56,11 @@ procedure Transformers_Set_CoreType(Value: Integer); CDECL;
 function Transformers_Get_RdcOhms(): Double; CDECL;
 procedure Transformers_Set_RdcOhms(Value: Double); CDECL;
 
+// API extensions
+function Transformers_Get_idx(): Integer; CDECL;
+procedure Transformers_Set_idx(Value: Integer); CDECL;
+
+
 implementation
 
 uses
@@ -383,36 +388,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_Name(const Value: PAnsiChar); CDECL;
-var
-    ActiveSave: Integer;
-    S: String;
-    Found: Boolean;
-    elem: TTransfObj;
-    lst: TPointerList;
 begin
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+    if TransformerClass.SetActive(Value) then
     begin
-        lst := ActiveCircuit.Transformers;
-        S := Value;  // Convert to Pascal String
-        Found := FALSE;
-        ActiveSave := lst.ActiveIndex;
-        elem := lst.First;
-        while elem <> NIL do
-        begin
-            if (CompareText(elem.Name, S) = 0) then
-            begin
-                ActiveCircuit.ActiveCktElement := elem;
-                Found := TRUE;
-                Break;
-            end;
-            elem := lst.Next;
-        end;
-        if not Found then
-        begin
-            DoSimpleMsg('Transformer "' + S + '" Not Found in Active Circuit.', 5003);
-            elem := lst.Get(ActiveSave);    // Restore active Load
-            ActiveCircuit.ActiveCktElement := elem;
-        end;
+        ActiveCircuit.ActiveCktElement := TransformerClass.ElementList.Active;
+        ActiveCircuit.Transformers.Get(TransformerClass.Active);
+    end
+    else
+    begin
+        DoSimpleMsg('Transformer "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -634,6 +620,29 @@ end;
 procedure Transformers_Set_RdcOhms(Value: Double); CDECL;
 begin
     Set_Parameter('RdcOhms', FloatToStr(Value));
+end;
+//------------------------------------------------------------------------------
+function Transformers_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Transformers.ActiveIndex
+    else
+        Result := 0;
+end;
+//------------------------------------------------------------------------------
+procedure Transformers_Set_idx(Value: Integer); CDECL;
+var
+    pTransformer: TTransfObj;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    pTransformer := ActiveCircuit.Transformers.Get(Value);
+    if pTransformer = NIL then
+    begin
+        DoSimpleMsg('Invalid Transformer index: "' + IntToStr(Value) + '".', 656565);
+        Exit;
+    end;
+    ActiveCircuit.ActiveCktElement := pTransformer;
 end;
 //------------------------------------------------------------------------------
 end.

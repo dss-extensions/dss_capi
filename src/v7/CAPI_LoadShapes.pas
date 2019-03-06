@@ -40,6 +40,11 @@ procedure LoadShapes_Set_Qbase(Value: Double); CDECL;
 function LoadShapes_Get_UseActual(): Wordbool; CDECL;
 procedure LoadShapes_Set_UseActual(Value: Wordbool); CDECL;
 
+// API extensions
+function LoadShapes_Get_idx(): Integer; CDECL;
+procedure LoadShapes_Set_idx(Value: Integer); CDECL;
+
+
 implementation
 
 uses
@@ -51,18 +56,15 @@ uses
     SysUtils,
     Math;
 
-var
-    ActiveLSObject: TLoadshapeObj;
-
 function LoadShapes_Get_Name_AnsiString(): Ansistring; inline;
 var
     elem: TLoadshapeObj;
 begin
     Result := '';
     elem := LoadshapeClass.GetActiveObj;
-    if elem <> NIL then
-        Result := elem.Name;
-
+    if elem = NIL then
+        Exit;
+    Result := elem.Name;
 end;
 
 function LoadShapes_Get_Name(): PAnsiChar; CDECL;
@@ -72,60 +74,36 @@ end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_Name(const Value: PAnsiChar); CDECL;
 // Set element active by name
-
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        if LoadshapeClass.SetActive(Value) then
-        begin
-            ActiveLSObject := LoadshapeClass.ElementList.Active;
-            ActiveDSSObject := ActiveLSObject;
-        end
-        else
-        begin
-            DoSimpleMsg('Relay "' + Value + '" Not Found in Active Circuit.', 77003);
-        end;
-    end;
-
+    if ActiveCircuit = NIL then
+        Exit;
+    if LoadshapeClass.SetActive(Value) then
+        Exit;
+    DoSimpleMsg('LoadShape "' + Value + '" Not Found in Active Circuit.', 77003);
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := LoadshapeClass.ElementList.ListSize;
+    if ActiveCircuit = NIL then
+        Exit;
+    Result := LoadshapeClass.ElementList.ListSize;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_First(): Integer; CDECL;
-var
-    iElem: Integer;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        iElem := LoadshapeClass.First;
-        if iElem <> 0 then
-        begin
-            ActiveLSObject := ActiveDSSObject as TLoadShapeObj;
-            Result := 1;
-        end
-    end;
+    if ActiveCircuit = NIL then
+        Exit;
+    Result := LoadshapeClass.First;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_Next(): Integer; CDECL;
-var
-    iElem: Integer;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        iElem := LoadshapeClass.Next;
-        if iElem <> 0 then
-        begin
-            ActiveLSObject := ActiveDSSObject as TLoadShapeObj;
-            Result := iElem;
-        end
-    end;
+    if ActiveCircuit = NIL then
+        Exit;
+    Result := LoadshapeClass.Next;
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -135,25 +113,23 @@ var
     pList: TPointerList;
     k: Integer;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+    if LoadShapeClass.ElementList.ListSize > 0 then
     begin
-        if LoadShapeClass.ElementList.ListSize > 0 then
+        pList := LoadShapeClass.ElementList;
+        DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize - 1) + 1);
+        k := 0;
+        elem := pList.First;
+        while elem <> NIL do
         begin
-            pList := LoadShapeClass.ElementList;
-            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pList.ListSize);
-            k := 0;
-            elem := pList.First;
-            while elem <> NIL do
-            begin
-                Result[k] := DSS_CopyStringAsPChar(elem.Name);
-                Inc(k);
-                elem := pList.next;
-            end;
+            Result[k] := DSS_CopyStringAsPChar(elem.Name);
+            Inc(k);
+            elem := pList.next;
         end;
     end;
-
 end;
 
 procedure LoadShapes_Get_AllNames_GR(); CDECL;
@@ -164,33 +140,37 @@ end;
 
 //------------------------------------------------------------------------------
 function LoadShapes_Get_Npts(): Integer; CDECL;
+var
+    elem: TLoadshapeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        if ActiveLSObject <> NIL then
-            Result := ActiveLSObject.NumPoints;
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
+        Exit;
+    Result := elem.NumPoints;
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Get_Pmult(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
+    elem: TLoadshapeObj;
     Result: PDoubleArray;
     ActualNumPoints: Integer;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     Result[0] := 0.0;  // error condition: one element array=0
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
     begin
-        if ActiveLSObject <> NIL then
-        begin
-            ActualNumPoints := Min(Length(ActiveLSObject.PMultipliers), ActiveLSObject.NumPoints);
-            DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-            Move(ActiveLSObject.PMultipliers[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
-        end
-        else
-        begin
-            DoSimpleMsg('No active Loadshape Object found.', 61001);
-        end;
+        DoSimpleMsg('No active Loadshape Object found.', 61001);
+        Exit;
     end;
+    ActualNumPoints := Min(Length(elem.PMultipliers), elem.NumPoints);
+    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
+    Move(elem.PMultipliers[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_Pmult_GR(); CDECL;
@@ -202,25 +182,23 @@ end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Get_Qmult(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
+    elem: TLoadshapeObj;
     Result: PDoubleArray;
     ActualNumPoints: Integer;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     Result[0] := 0.0;  // error condition: one element array=0
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
     begin
-        if ActiveLSObject <> NIL then
-        begin
-            if not assigned(ActiveLSObject.QMultipliers) then Exit;
-            ActualNumPoints := Min(Length(ActiveLSObject.QMultipliers), ActiveLSObject.NumPoints);
-            DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-            Move(ActiveLSObject.QMultipliers[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
-        end
-        else
-        begin
-            DoSimpleMsg('No active Loadshape Object found.', 61001);
-        end;
+        DoSimpleMsg('No active Loadshape Object found.', 61001);
     end;
+    if not assigned(elem.QMultipliers) then Exit;
+    ActualNumPoints := Min(Length(elem.QMultipliers), elem.NumPoints);
+    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
+    Move(elem.QMultipliers[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_Qmult_GR(); CDECL;
@@ -231,101 +209,118 @@ end;
 
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_Npts(Value: Integer); CDECL;
+var
+    elem: TLoadshapeObj;
 begin
-    if ActiveCircuit <> NIL then
-        if ActiveLSObject <> NIL then
-            ActiveLSObject.NumPoints := Value;
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
+    begin
+        DoSimpleMsg('No active Loadshape Object found.', 61001);
+        Exit;
+    end;
+    elem.NumPoints := Value;
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_Pmult(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 var
+    elem: TLoadshapeObj;
     Value: PDoubleArray;
     i, k, LoopLimit: Integer;
-
 begin
-    Value := PDoubleArray(ValuePtr);
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
     begin
-        if ActiveLSObject <> NIL then
-            with ActiveLSObject do
-            begin
-                // Only accept the new data when the number of points match
-                if ValueCount <> NumPoints then
-                begin
-                    DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61100);
-                    Exit;
-                end;
+        DoSimpleMsg('No active Loadshape Object found.', 61002);
+        Exit;
+    end;
 
-                SetLength(PMultipliers, 0);
-                SetLength(PMultipliers, ValueCount);
-                Move(ValuePtr[0], PMultipliers[0], ValueCount * SizeOf(Double));
-            end
-        else
+    Value := PDoubleArray(ValuePtr);
+    with elem do
+    begin
+        // Only accept the new data when the number of points match
+        if ValueCount <> NumPoints then
         begin
-            DoSimpleMsg('No active Loadshape Object found.', 61002);
+            DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61100);
+            Exit;
         end;
+
+        SetLength(PMultipliers, 0);
+        SetLength(PMultipliers, ValueCount);
+        Move(ValuePtr[0], PMultipliers[0], ValueCount * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_Qmult(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 var
+    elem: TLoadshapeObj;
     Value: PDoubleArray;
-    i, k, LoopLimit: Integer;
-
 begin
     Value := PDoubleArray(ValuePtr);
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
     begin
-        if ActiveLSObject <> NIL then
-            with ActiveLSObject do
-            begin
-                // Only accept the new data when the number of points match
-                if ValueCount <> NumPoints then
-                begin
-                    DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61101);
-                    Exit;
-                end;
+        DoSimpleMsg('No active Loadshape Object found.', 61002);
+        Exit;
+    end;
 
-                SetLength(QMultipliers, 0);
-                SetLength(QMultipliers, ValueCount);
-                Move(ValuePtr[0], QMultipliers[0], ValueCount * SizeOf(Double));
-            end
-        else
+    with elem do
+    begin
+        // Only accept the new data when the number of points match
+        if ValueCount <> NumPoints then
         begin
-            DoSimpleMsg('No active Loadshape Object found.', 61002);
+            DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61101);
+            Exit;
         end;
+
+        SetLength(QMultipliers, 0);
+        SetLength(QMultipliers, ValueCount);
+        Move(ValuePtr[0], QMultipliers[0], ValueCount * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Normalize(); CDECL;
+var
+    elem: TLoadshapeObj;
 begin
-    if ActiveCircuit <> NIL then
-        if ActiveLSObject <> NIL then
-            ActiveLSObject.Normalize;
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
+    begin
+        DoSimpleMsg('No active Loadshape Object found.', 61003);
+        Exit;
+    end;
+    elem.Normalize;
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Get_TimeArray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
+    elem: TLoadshapeObj;
     Result: PDoubleArray;
     ActualNumPoints: Integer;
 
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     Result[0] := 0.0;  // error condition: one element array=0
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
     begin
-        if ActiveLSObject <> NIL then
-        begin
-            if ActiveLSObject.Hours = NIL then Exit;
-            ActualNumPoints := Min(Length(ActiveLSObject.Hours), ActiveLSObject.NumPoints);
-            DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-            Move(ActiveLSObject.Hours[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
-        end
-        else
-        begin
-            DoSimpleMsg('No active Loadshape Object found.', 61001);
-        end;
+        DoSimpleMsg('No active Loadshape Object found.', 61003);
+        Exit;
     end;
+    
+    if elem.Hours = NIL then Exit;
+    ActualNumPoints := Min(Length(elem.Hours), elem.NumPoints);
+    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
+    Move(elem.Hours[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_TimeArray_GR(); CDECL;
@@ -337,129 +332,233 @@ end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_TimeArray(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 var
+    elem: TLoadshapeObj;
     Value: PDoubleArray;
-    i, k, LoopLimit: Integer;
-
 begin
     Value := PDoubleArray(ValuePtr);
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
     begin
-        if ActiveLSObject <> NIL then
-            with ActiveLSObject do
-            begin
-                // Only accept the new data when the number of points match
-                if ValueCount <> NumPoints then
-                begin
-                    DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61102);
-                    Exit;
-                end;
-
-                SetLength(Hours, 0);
-                SetLength(Hours, ValueCount);
-                Move(ValuePtr[0], Hours[0], ValueCount * SizeOf(Double));
-            end
-        else
+        DoSimpleMsg('No active Loadshape Object found.', 61002);
+        Exit;
+    end;
+    with elem do
+    begin
+        // Only accept the new data when the number of points match
+        if ValueCount <> NumPoints then
         begin
-            DoSimpleMsg('No active Loadshape Object found.', 61002);
+            DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61102);
+            Exit;
         end;
+
+        SetLength(Hours, 0);
+        SetLength(Hours, ValueCount);
+        Move(ValuePtr[0], Hours[0], ValueCount * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_HrInterval(): Double; CDECL;
+var
+    elem: TLoadshapeObj;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
-        if ActiveLSObject <> NIL then
-            Result := ActiveLSObject.Interval;
-
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
+    begin
+        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        Exit;
+    end;
+    Result := elem.Interval;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_MinInterval(): Double; CDECL;
+var
+    elem: TLoadshapeObj;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
-        if ActiveLSObject <> NIL then
-            Result := ActiveLSObject.Interval * 60.0;
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
+    begin
+        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        Exit;
+    end;
+    Result := elem.Interval * 60.0;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_sInterval(): Double; CDECL;
+var
+    elem: TLoadshapeObj;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
-        if ActiveLSObject <> NIL then
-            Result := ActiveLSObject.Interval * 3600.0;
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
+    begin
+        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        Exit;
+    end;
+    Result := elem.Interval * 3600.0;
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_HrInterval(Value: Double); CDECL;
+var
+    elem: TLoadshapeObj;
 begin
-    if ActiveCircuit <> NIL then
-        if ActiveLSObject <> NIL then
-            ActiveLSObject.Interval := Value;
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
+    begin
+        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        Exit;
+    end;
+    elem.Interval := Value;
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_MinInterval(Value: Double); CDECL;
+var
+    elem: TLoadshapeObj;
 begin
-    if ActiveCircuit <> NIL then
-        if ActiveLSObject <> NIL then
-            ActiveLSObject.Interval := Value / 60.0;
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
+    begin
+        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        Exit;
+    end;
+    elem.Interval := Value / 60.0;
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_Sinterval(Value: Double); CDECL;
+var
+    elem: TLoadshapeObj;
 begin
-    if ActiveCircuit <> NIL then
-        if ActiveLSObject <> NIL then
-            ActiveLSObject.Interval := Value / 3600.0;
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
+    begin
+        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        Exit;
+    end;
+    elem.Interval := Value / 3600.0;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_New(const Name: PAnsiChar): Integer; CDECL;
 begin
     Result := AddObject('loadshape', Name);    // Returns handle to object
-    ActiveLSObject := ActiveDSSObject as TLoadShapeObj;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_PBase(): Double; CDECL;
+var
+    elem: TLoadshapeObj;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
-        if ActiveLSObject <> NIL then
-            Result := ActiveLSObject.baseP;
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
+    begin
+        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        Exit;
+    end;
+    Result := elem.baseP;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_Qbase(): Double; CDECL;
+var
+    elem: TLoadshapeObj;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
-        if ActiveLSObject <> NIL then
-            Result := ActiveLSObject.baseQ;
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
+    begin
+        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        Exit;
+    end;
+    Result := elem.baseQ;
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_PBase(Value: Double); CDECL;
+var
+    elem: TLoadshapeObj;
 begin
-    if ActiveCircuit <> NIL then
-        if ActiveLSObject <> NIL then
-            ActiveLSObject.baseP := Value;
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
+    begin
+        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        Exit;
+    end;
+    elem.baseP := Value;
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_Qbase(Value: Double); CDECL;
+var
+    elem: TLoadshapeObj;
 begin
-    if ActiveCircuit <> NIL then
-        if ActiveLSObject <> NIL then
-            ActiveLSObject.baseQ := Value;
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
+    begin
+        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        Exit;
+    end;
+    elem.baseQ := Value;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_UseActual(): Wordbool; CDECL;
+var
+    elem: TLoadshapeObj;
 begin
     Result := FALSE;
-    if ActiveCircuit <> NIL then
-        if ActiveLSObject <> NIL then
-            Result := ActiveLSObject.UseActual;
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadShapeClass.GetActiveObj;
+    if elem = NIL then
+    begin
+        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        Exit;
+    end;
+    Result := elem.UseActual;
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_UseActual(Value: Wordbool); CDECL;
+var
+    elem: TLoadshapeObj;
 begin
-    if ActiveCircuit <> NIL then
-        if ActiveLSObject <> NIL then
-            ActiveLSObject.UseActual := Value;
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadshapeClass.GetActiveObj;
+    if elem = NIL then
+    begin
+        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        Exit;
+    end;
+    elem.UseActual := Value;
+end;
+//------------------------------------------------------------------------------
+function LoadShapes_Get_idx(): Integer; CDECL;
+begin
+    Result := LoadShapeClass.ElementList.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure LoadShapes_Set_idx(Value: Integer); CDECL;
+begin
+    if LoadShapeClass.ElementList.Get(Value) = NIL then
+        DoSimpleMsg('Invalid LoadShape index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

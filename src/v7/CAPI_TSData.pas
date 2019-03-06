@@ -20,6 +20,8 @@ function TSData_Get_Name(): PAnsiChar; CDECL;
 procedure TSData_Set_Name(const Value: PAnsiChar); CDECL;
 procedure TSData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 procedure TSData_Get_AllNames_GR(); CDECL;
+function TSData_Get_idx(): Integer; CDECL;
+procedure TSData_Set_idx(Value: Integer); CDECL;
 
 // From ConductorData
 function TSData_Get_Rdc(): Double; CDECL;
@@ -636,5 +638,15 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-
+function TSData_Get_idx(): Integer; CDECL;
+begin
+    Result := TSDataClass.ElementList.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure TSData_Set_idx(Value: Integer); CDECL;
+begin
+    if TSDataClass.ElementList.Get(Value) = NIL then
+        DoSimpleMsg('Invalid TSData index: "' + IntToStr(Value) + '".', 656565);
+end;
+//------------------------------------------------------------------------------
 end.

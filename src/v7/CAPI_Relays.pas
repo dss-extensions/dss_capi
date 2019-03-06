@@ -43,7 +43,7 @@ begin
     if not Assigned(ActiveCircuit) then
         exit;
     SolutionAbort := FALSE;  // Reset for commands entered from outside
-    cmd := Format('Relay.%s.%s=%s', [TRelayObj(RelayClass.GetActiveObj).Name, parm, val]);
+    cmd := Format('Relay.%s.%s=%s', [TRelayObj(ActiveCircuit.Relays.Active).Name, parm, val]);
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
@@ -51,28 +51,26 @@ procedure Relays_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger);
 var
     Result: PPAnsiCharArray;
     elem: TRelayObj;
-    pList: TPointerList;
+    lst: TPointerList;
     k: Integer;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit <> NIL then
-    begin
-        if RelayClass.ElementList.ListSize > 0 then
+    if ActiveCircuit = NIL then Exit;
+    with ActiveCircuit do
+        if Relays.ListSize > 0 then
         begin
-            pList := RelayClass.ElementList;
-            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize - 1) + 1);
+            lst := Relays;
+            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, lst.ListSize);
             k := 0;
-            elem := pList.First;
+            elem := lst.First;
             while elem <> NIL do
             begin
                 Result[k] := DSS_CopyStringAsPChar(elem.Name);
                 Inc(k);
-                elem := pList.next;
+                elem := lst.Next;
             end;
         end;
-    end;
-
 end;
 
 procedure Relays_Get_AllNames_GR(); CDECL;
@@ -86,7 +84,7 @@ function Relays_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit <> NIL then
-        Result := RelayClass.ElementList.ListSize;
+        Result := ActiveCircuit.Relays.ListSize;
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_First(): Integer; CDECL;
@@ -94,20 +92,18 @@ var
     pElem: TRelayObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pElem := RelayClass.ElementList.First;
-        if pElem <> NIL then
-            repeat
-                if pElem.Enabled then
-                begin
-                    ActiveCircuit.ActiveCktElement := pElem;
-                    Result := 1;
-                end
-                else
-                    pElem := RelayClass.ElementList.Next;
-            until (Result = 1) or (pElem = NIL);
-    end;
+    if ActiveCircuit = NIL then Exit;
+    pElem := ActiveCircuit.Relays.First;
+    if pElem <> NIL then
+        repeat
+            if pElem.Enabled then
+            begin
+                ActiveCircuit.ActiveCktElement := pElem;
+                Result := 1;
+            end
+            else
+                pElem := ActiveCircuit.Relays.Next;
+        until (Result = 1) or (pElem = NIL);
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_Name_AnsiString(): Ansistring; inline;
@@ -115,7 +111,7 @@ var
     elem: TRelayObj;
 begin
     Result := '';
-    elem := RelayClass.GetActiveObj;
+    elem := ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Result := elem.Name;
 end;
@@ -130,36 +126,33 @@ var
     pElem: TRelayObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pElem := RelayClass.ElementList.Next;
-        if pElem <> NIL then
-            repeat
-                if pElem.Enabled then
-                begin
-                    ActiveCircuit.ActiveCktElement := pElem;
-                    Result := RelayClass.ElementList.ActiveIndex;
-                end
-                else
-                    pElem := RelayClass.ElementList.Next;
-            until (Result > 0) or (pElem = NIL);
-    end;
+    if ActiveCircuit = NIL then Exit;
+    pElem := ActiveCircuit.Relays.Next;
+    if pElem <> NIL then
+        repeat
+            if pElem.Enabled then
+            begin
+                ActiveCircuit.ActiveCktElement := pElem;
+                Result := ActiveCircuit.Relays.ActiveIndex;
+            end
+            else
+                pElem := ActiveCircuit.Relays.Next;
+        until (Result > 0) or (pElem = NIL);
 end;
 //------------------------------------------------------------------------------
 procedure Relays_Set_Name(const Value: PAnsiChar); CDECL;
 // Set element active by name
 
 begin
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then Exit;
+    if RelayClass.SetActive(Value) then
     begin
-        if RelayClass.SetActive(Value) then
-        begin
-            ActiveCircuit.ActiveCktElement := RelayClass.ElementList.Active;
-        end
-        else
-        begin
-            DoSimpleMsg('Relay "' + Value + '" Not Found in Active Circuit.', 77003);
-        end;
+        ActiveCircuit.ActiveCktElement := RelayClass.ElementList.Active;
+        ActiveCircuit.Relays.Get(RelayClass.Active);
+    end
+    else
+    begin
+        DoSimpleMsg('Relay "' + Value + '" Not Found in Active Circuit.', 77003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -168,7 +161,8 @@ var
     elem: TRelayObj;
 begin
     Result := '';
-    elem := RelayClass.GetActiveObj;
+    if ActiveCircuit = NIL then Exit;
+    elem := ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Result := elem.MonitoredElementName;
 end;
@@ -182,7 +176,8 @@ procedure Relays_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
 var
     elem: TRelayObj;
 begin
-    elem := RelayClass.GetActiveObj;
+    if ActiveCircuit = NIL then Exit;
+    elem := ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Set_parameter('monitoredObj', Value);
 end;
@@ -192,7 +187,8 @@ var
     elem: TRelayObj;
 begin
     Result := 0;
-    elem := RelayClass.GetActiveObj;
+    if ActiveCircuit = NIL then Exit;
+    elem := ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Result := elem.MonitoredElementTerminal;
 end;
@@ -202,10 +198,10 @@ var
     elem: TRelayObj;
 begin
     Result := '';
-    elem := RelayClass.ElementList.Active;
+    if ActiveCircuit = NIL then Exit;
+    elem := ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Result := elem.ElementName;
-
 end;
 
 function Relays_Get_SwitchedObj(): PAnsiChar; CDECL;
@@ -217,7 +213,8 @@ procedure Relays_Set_MonitoredTerm(Value: Integer); CDECL;
 var
     elem: TRelayObj;
 begin
-    elem := RelayClass.GetActiveObj;
+    if ActiveCircuit = NIL then Exit;
+    elem := ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Set_parameter('monitoredterm', IntToStr(Value));
 
@@ -227,7 +224,8 @@ procedure Relays_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 var
     elem: TRelayObj;
 begin
-    elem := RelayClass.GetActiveObj;
+    if ActiveCircuit = NIL then Exit;
+    elem := ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Set_parameter('SwitchedObj', Value);
 
@@ -238,7 +236,8 @@ var
     elem: TRelayObj;
 begin
     Result := 0;
-    elem := RelayClass.ElementList.Active;
+    if ActiveCircuit = NIL then Exit;
+    elem := ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Result := elem.ElementTerminal;
 end;
@@ -247,7 +246,8 @@ procedure Relays_Set_SwitchedTerm(Value: Integer); CDECL;
 var
     elem: TRelayObj;
 begin
-    elem := RelayClass.GetActiveObj;
+    if ActiveCircuit = NIL then Exit;
+    elem := ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Set_parameter('SwitchedTerm', IntToStr(Value));
 end;
@@ -255,7 +255,7 @@ end;
 function Relays_Get_idx(): Integer; CDECL;
 begin
     if ActiveCircuit <> NIL then
-        Result := RelayClass.ElementList.ActiveIndex
+        Result := ActiveCircuit.Relays.ActiveIndex
     else
         Result := 0;
 end;
@@ -264,12 +264,13 @@ procedure Relays_Set_idx(Value: Integer); CDECL;
 var
     pRelay: TRelayObj;
 begin
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then Exit;
+    pRelay := ActiveCircuit.Relays.Get(Value);
+    if pRelay = NIL then
     begin
-        pRelay := Relayclass.Elementlist.Get(Value);
-        if pRelay <> NIL then
-            ActiveCircuit.ActiveCktElement := pRelay;
+        DoSimpleMsg('Invalid Relay index: "' + IntToStr(Value) + '".', 656565);
     end;
+    ActiveCircuit.ActiveCktElement := pRelay;
 end;
 //------------------------------------------------------------------------------
 end.

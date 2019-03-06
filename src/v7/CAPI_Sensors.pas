@@ -43,6 +43,11 @@ procedure Sensors_Set_Weight(Value: Double); CDECL;
 function Sensors_Get_kVbase(): Double; CDECL;
 procedure Sensors_Set_kVbase(Value: Double); CDECL;
 
+// API extensions
+function Sensors_Get_idx(): Integer; CDECL;
+procedure Sensors_Set_idx(Value: Integer); CDECL;
+
+
 implementation
 
 uses
@@ -447,36 +452,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_Name(const Value: PAnsiChar); CDECL;
-var
-    ActiveSave: Integer;
-    S: String;
-    Found: Boolean;
-    elem: TSensorObj;
-    lst: TPointerList;
 begin
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+    if SensorClass.SetActive(Value) then
     begin
-        lst := ActiveCircuit.Sensors;
-        S := Value;  // Convert to Pascal String
-        Found := FALSE;
-        ActiveSave := lst.ActiveIndex;
-        elem := lst.First;
-        while elem <> NIL do
-        begin
-            if (CompareText(elem.Name, S) = 0) then
-            begin
-                ActiveCircuit.ActiveCktElement := elem;
-                Found := TRUE;
-                Break;
-            end;
-            elem := lst.Next;
-        end;
-        if not Found then
-        begin
-            DoSimpleMsg('Sensor "' + S + '" Not Found in Active Circuit.', 5003);
-            elem := lst.Get(ActiveSave);
-            ActiveCircuit.ActiveCktElement := elem;
-        end;
+        ActiveCircuit.ActiveCktElement := SensorClass.ElementList.Active;
+        ActiveCircuit.Sensors.Get(SensorClass.Active);
+    end
+    else
+    begin
+        DoSimpleMsg('Sensor "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -511,6 +497,29 @@ end;
 procedure Sensors_Set_kVbase(Value: Double); CDECL;
 begin
     Set_Parameter('kvbase', FloatToStr(Value));
+end;
+//------------------------------------------------------------------------------
+function Sensors_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Sensors.ActiveIndex
+    else
+        Result := 0;
+end;
+//------------------------------------------------------------------------------
+procedure Sensors_Set_idx(Value: Integer); CDECL;
+var
+    pSensor: TSensorObj;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    pSensor := ActiveCircuit.Sensors.Get(Value);
+    if pSensor = NIL then
+    begin
+        DoSimpleMsg('Invalid Sensor index: "' + IntToStr(Value) + '".', 656565);
+        Exit;
+    end;
+    ActiveCircuit.ActiveCktElement := pSensor;
 end;
 //------------------------------------------------------------------------------
 end.

@@ -32,6 +32,8 @@ function GICSources_Get_Lon2(): Double; CDECL;
 procedure GICSources_Set_Lon2(Value: Double); CDECL;
 function GICSources_Get_Volts(): Double; CDECL;
 procedure GICSources_Set_Volts(Value: Double); CDECL;
+function GICSources_Get_idx(): Integer; CDECL;
+procedure GICSources_Set_idx(Value: Integer); CDECL;
 
 implementation
 
@@ -40,7 +42,8 @@ uses
     GICsource,
     PointerList,
     DSSGlobals,
-    CktElement;
+    CktElement,
+    SysUtils;
 //------------------------------------------------------------------------------
 procedure GICSources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
@@ -357,6 +360,30 @@ begin
         elem.Volts := Value;
         elem.VoltsSpecified := TRUE;
     end;
+end;
+//------------------------------------------------------------------------------
+function GICSources_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        Result := GICSourceClass.ElementList.ActiveIndex
+    else
+        Result := 0
+end;
+//------------------------------------------------------------------------------
+procedure GICSources_Set_idx(Value: Integer); CDECL;
+var
+    elem: TGICsourceObj;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+        
+    elem := GICSourceClass.ElementList.Get(Value);
+    if elem = NIL then
+    begin
+        DoSimpleMsg('Invalid GICSource index: "' + IntToStr(Value) + '".', 656565);
+        Exit;
+    end;
+    ActiveCircuit.ActiveCktElement := elem;
 end;
 //------------------------------------------------------------------------------
 end.

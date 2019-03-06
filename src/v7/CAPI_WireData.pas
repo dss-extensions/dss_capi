@@ -44,6 +44,9 @@ procedure WireData_Set_EmergAmps(Value: Double); CDECL;
 
 procedure ConductorSetDefaults(prop: ConductorProps; conductor: TConductorDataObj);
 
+function WireData_Get_idx(): Integer; CDECL;
+procedure WireData_Set_idx(Value: Integer); CDECL;
+
 
 implementation
 
@@ -452,6 +455,17 @@ begin
             ConductorSetDefaults(ConductorProps.Runits, pWireData);
         end;
     end;
+end;
+//------------------------------------------------------------------------------
+function WireData_Get_idx(): Integer; CDECL;
+begin
+    Result := WireDataClass.ElementList.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure WireData_Set_idx(Value: Integer); CDECL;
+begin
+    if WireDataClass.ElementList.Get(Value) = NIL then
+        DoSimpleMsg('Invalid WireData index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

@@ -23,6 +23,9 @@ function CNData_Get_Name(): PAnsiChar; CDECL;
 procedure CNData_Set_Name(const Value: PAnsiChar); CDECL;
 procedure CNData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 procedure CNData_Get_AllNames_GR(); CDECL;
+function CNData_Get_idx(): Integer; CDECL;
+procedure CNData_Set_idx(Value: Integer); CDECL;
+
 
 // From ConductorData
 function CNData_Get_Rdc(): Double; CDECL;
@@ -696,5 +699,16 @@ begin
         end;
     end;
 end;
-
+//------------------------------------------------------------------------------
+function CNData_Get_idx(): Integer; CDECL;
+begin
+    Result := CNDataClass[ActiveActor].ElementList.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure CNData_Set_idx(Value: Integer); CDECL;
+begin
+    if CNDataClass[ActiveActor].ElementList.Get(Value) = NIL then
+        DoSimpleMsg('Invalid CNData index: "' + IntToStr(Value) + '".', 656565);
+end;
+//------------------------------------------------------------------------------
 end.

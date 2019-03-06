@@ -69,6 +69,11 @@ procedure Lines_Set_Spacing(const Value: PAnsiChar); CDECL;
 function Lines_Get_Units(): Integer; CDECL;
 procedure Lines_Set_Units(Value: Integer); CDECL;
 
+// API Extensions
+function Lines_Get_idx(): Integer; CDECL;
+procedure Lines_Set_idx(Value: Integer); CDECL;
+
+
 implementation
 
 uses
@@ -353,39 +358,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Name(const Value: PAnsiChar); CDECL;
-var
-    activesave: Integer;
-    pLine: TLineObj;
-    S: String;
-    Found: Boolean;
 begin
-
-
-    if ActiveCircuit[ActiveActor] <> NIL then
-    begin      // Search list of Lines in active circuit for name
-        with ActiveCircuit[ActiveActor].Lines do
-        begin
-            S := Value;  // Convert to Pascal String
-            Found := FALSE;
-            ActiveSave := ActiveIndex;
-            pLine := First;
-            while pLine <> NIL do
-            begin
-                if (CompareText(pLine.Name, S) = 0) then
-                begin
-                    ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
-                    Found := TRUE;
-                    Break;
-                end;
-                pLine := Next;
-            end;
-            if not Found then
-            begin
-                DoSimpleMsg('Line "' + S + '" Not Found in Active Circuit.', 5008);
-                pLine := Get(ActiveSave);    // Restore active Line
-                ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
-            end;
-        end;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    if LineClass[ActiveActor].SetActive(Value) then
+    begin
+        ActiveCircuit[ActiveActor].ActiveCktElement := LineClass[ActiveActor].ElementList.Active;
+        ActiveCircuit[ActiveActor].Lines.Get(LineClass[ActiveActor].Active);
+    end
+    else
+    begin
+        DoSimpleMsg('Line "' + Value + '" Not Found in Active Circuit.', 5008);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -1032,6 +1015,29 @@ begin
 
             end;
         end;
+end;
+//------------------------------------------------------------------------------
+function Lines_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+        Result := ActiveCircuit[ActiveActor].Lines.ActiveIndex
+    else
+        Result := 0;
+end;
+//------------------------------------------------------------------------------
+procedure Lines_Set_idx(Value: Integer); CDECL;
+var
+    pLine: TLineObj;
+begin
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    pLine := ActiveCircuit[ActiveActor].Lines.Get(Value);
+    if pLine = NIL then
+    begin
+        DoSimpleMsg('Invalid Line index: "' + IntToStr(Value) + '".', 656565);
+        Exit;
+    end;
+    ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
 end;
 //------------------------------------------------------------------------------
 end.

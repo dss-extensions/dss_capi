@@ -96,7 +96,6 @@ type
 
 var
     ActiveIsourceObj: TIsourceObj;
-    IsourceClass: TISource;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
@@ -129,7 +128,6 @@ begin
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
 
-    IsourceClass := Self;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

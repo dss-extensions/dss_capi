@@ -47,6 +47,10 @@ procedure LineGeometries_Set_EmergAmps(Value: Double); CDECL;
 procedure LineGeometries_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 procedure LineGeometries_Get_AllNames_GR(); CDECL;
 
+function LineGeometries_Get_idx(): Integer; CDECL;
+procedure LineGeometries_Set_idx(Value: Integer); CDECL;
+
+
 implementation
 
 uses
@@ -615,5 +619,21 @@ begin
     LineGeometries_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 
+//------------------------------------------------------------------------------
+function LineGeometries_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        Result := LineGeometryClass.ElementList.ActiveIndex
+    else
+        Result := 0
+end;
+//------------------------------------------------------------------------------
+procedure LineGeometries_Set_idx(Value: Integer); CDECL;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    if LineGeometryClass.ElementList.Get(Value) = NIL then
+        DoSimpleMsg('Invalid LineGeometry index: "' + IntToStr(Value) + '".', 656565);
+end;
 //------------------------------------------------------------------------------
 end.

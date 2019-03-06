@@ -59,7 +59,7 @@ begin
     if not Assigned(ActiveCircuit[ActiveActor]) then
         exit;
     SolutionAbort := FALSE;  // Reset for commands entered from outside
-    cmd := Format('recloser.%s.%s=%s', [TRecloserObj(RecloserClass.GetActiveObj).Name, parm, val]);
+    cmd := Format('recloser.%s.%s=%s', [TRecloserObj(ActiveCircuit[ActiveActor].Reclosers.Active).Name, parm, val]);
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
@@ -70,14 +70,14 @@ var
     pList: TPointerList;
     k: Integer;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit[ActiveActor] <> NIL then
-    begin
-        if RecloserClass.ElementList.ListSize > 0 then
+    if ActiveCircuit[ActiveActor] = NIL then Exit;
+    with ActiveCircuit[ActiveActor] do
+        if Reclosers.ListSize > 0 then
         begin
-            pList := RecloserClass.ElementList;
-            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize - 1) + 1);
+            pList := Reclosers;
+            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pList.ListSize);
             k := 0;
             elem := pList.First;
             while elem <> NIL do
@@ -87,7 +87,6 @@ begin
                 elem := pList.next;
             end;
         end;
-    end;
 end;
 
 procedure Reclosers_Get_AllNames_GR(); CDECL;
@@ -101,7 +100,7 @@ function Reclosers_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
-        Result := RecloserClass.ElementList.ListSize;
+        Result := ActiveCircuit[ActiveActor].Reclosers.ListSize;
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_First(): Integer; CDECL;
@@ -111,16 +110,16 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pElem := RecloserClass.ElementList.First;
+        pElem := ActiveCircuit[ActiveActor].Reclosers.First;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
                 begin
                     ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-                    Result := RecloserClass.ElementList.ActiveIndex;
+                    Result := ActiveCircuit[ActiveActor].Reclosers.ActiveIndex;
                 end
                 else
-                    pElem := RecloserClass.ElementList.Next;
+                    pElem := ActiveCircuit[ActiveActor].Reclosers.Next;
             until (Result > 0) or (pElem = NIL);
     end;
 end;
@@ -130,7 +129,7 @@ var
     elem: TRecloserObj;
 begin
     Result := '';
-    elem := RecloserClass.GetActiveObj;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Result := elem.Name;
 end;
@@ -147,16 +146,16 @@ begin
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        pElem := RecloserClass.ElementList.Next;
+        pElem := ActiveCircuit[ActiveActor].Reclosers.Next;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
                 begin
                     ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-                    Result := RecloserClass.ElementList.ActiveIndex;
+                    Result := ActiveCircuit[ActiveActor].Reclosers.ActiveIndex;
                 end
                 else
-                    pElem := RecloserClass.ElementList.Next;
+                    pElem := ActiveCircuit[ActiveActor].Reclosers.Next;
             until (Result > 0) or (pElem = NIL);
     end;
 end;
@@ -167,9 +166,10 @@ procedure Reclosers_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        if RecloserClass.SetActive(Value) then
+        if RecloserClass[ActiveActor].SetActive(Value) then
         begin
-            ActiveCircuit[ActiveActor].ActiveCktElement := RecloserClass.ElementList.Active;
+            ActiveCircuit[ActiveActor].ActiveCktElement := RecloserClass[ActiveActor].ElementList.Active;
+            ActiveCircuit[ActiveActor].Reclosers.Get(RecloserClass[ActiveActor].Active);
         end
         else
         begin
@@ -183,7 +183,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    elem := RecloserClass.GetActiveObj;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Result := elem.MonitoredElementTerminal;
 end;
@@ -192,7 +192,7 @@ procedure Reclosers_Set_MonitoredTerm(Value: Integer); CDECL;
 var
     elem: TRecloserObj;
 begin
-    elem := RecloserClass.GetActiveObj;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Set_parameter('monitoredterm', IntToStr(Value));
 end;
@@ -202,7 +202,7 @@ var
     elem: TRecloserObj;
 begin
     Result := '';
-    elem := RecloserClass.ElementList.Active;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Result := elem.ElementName;
 end;
@@ -216,7 +216,7 @@ procedure Reclosers_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 var
     elem: TRecloserObj;
 begin
-    elem := RecloserClass.GetActiveObj;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Set_parameter('SwitchedObj', Value);
 end;
@@ -226,7 +226,7 @@ var
     elem: TRecloserObj;
 begin
     Result := '';
-    elem := RecloserClass.GetActiveObj;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Result := elem.MonitoredElementName;
 end;
@@ -241,7 +241,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    elem := RecloserClass.GetActiveObj;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Result := elem.ElementTerminal;
 end;
@@ -250,7 +250,7 @@ procedure Reclosers_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
 var
     elem: TRecloserObj;
 begin
-    elem := RecloserClass.GetActiveObj;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Set_parameter('monitoredObj', Value);
 end;
@@ -259,7 +259,7 @@ procedure Reclosers_Set_SwitchedTerm(Value: Integer); CDECL;
 var
     elem: TRecloserObj;
 begin
-    elem := RecloserClass.GetActiveObj;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Set_parameter('SwitchedTerm', IntToStr(Value));
 end;
@@ -269,7 +269,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    elem := RecloserClass.ElementList.Active;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     ;
     if elem <> NIL then
         Result := elem.NumFast;
@@ -286,7 +286,7 @@ begin
     Result[0] := -1.0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
-        elem := RecloserClass.ElementList.Active;
+        elem := ActiveCircuit[ActiveActor].Reclosers.Active;
         if elem <> NIL then
         begin
             DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, (elem.NumReclose - 1) + 1);
@@ -312,7 +312,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    elem := RecloserClass.ElementList.Active;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     ;
     if elem <> NIL then
         Result := elem.NumReclose + 1;
@@ -322,7 +322,7 @@ procedure Reclosers_Set_NumFast(Value: Integer); CDECL;
 var
     elem: TRecloserObj;
 begin
-    elem := RecloserClass.ElementList.Active;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Set_parameter('numfast', IntToStr(Value));
 end;
@@ -331,7 +331,7 @@ procedure Reclosers_Set_Shots(Value: Integer); CDECL;
 var
     elem: TRecloserObj;
 begin
-    elem := RecloserClass.ElementList.Active;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Set_parameter('shots', IntToStr(Value));
 end;
@@ -341,7 +341,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    elem := RecloserClass.ElementList.Active;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Result := elem.PhaseTrip;
 end;
@@ -350,7 +350,7 @@ procedure Reclosers_Set_PhaseTrip(Value: Double); CDECL;
 var
     elem: TRecloserObj;
 begin
-    elem := RecloserClass.ElementList.Active;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Set_parameter('PhaseTrip', Format('%.g', [Value]));
 end;
@@ -360,7 +360,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    elem := RecloserClass.ElementList.Active;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Result := elem.GroundInst;
 end;
@@ -370,7 +370,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    elem := RecloserClass.ElementList.Active;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Result := elem.GroundTrip;
 end;
@@ -380,7 +380,7 @@ var
     elem: TRecloserObj;
 begin
     Result := 0;
-    elem := RecloserClass.ElementList.Active;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Result := elem.PhaseInst;
 end;
@@ -389,7 +389,7 @@ procedure Reclosers_Set_GroundInst(Value: Double); CDECL;
 var
     elem: TRecloserObj;
 begin
-    elem := RecloserClass.ElementList.Active;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Set_parameter('GroundInst', Format('%.g', [Value]));
 end;
@@ -398,7 +398,7 @@ procedure Reclosers_Set_GroundTrip(Value: Double); CDECL;
 var
     elem: TRecloserObj;
 begin
-    elem := RecloserClass.ElementList.Active;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Set_parameter('GroundTrip', Format('%.g', [Value]));
 end;
@@ -407,7 +407,7 @@ procedure Reclosers_Set_PhaseInst(Value: Double); CDECL;
 var
     elem: TRecloserObj;
 begin
-    elem := RecloserClass.ElementList.Active;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Set_parameter('Phaseinst', Format('%.g', [Value]));
 end;
@@ -416,7 +416,7 @@ procedure Reclosers_Close(); CDECL;
 var
     elem: TRecloserObj;
 begin
-    elem := RecloserClass.ElementList.Active;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Set_parameter('Action', 'close');
 end;
@@ -425,7 +425,7 @@ procedure Reclosers_Open(); CDECL;
 var
     elem: TRecloserObj;
 begin
-    elem := RecloserClass.ElementList.Active;
+    elem := ActiveCircuit[ActiveActor].Reclosers.Active;
     if elem <> NIL then
         Set_parameter('Action', 'open');
 end;
@@ -433,7 +433,7 @@ end;
 function Reclosers_Get_idx(): Integer; CDECL;
 begin
     if ActiveCircuit[ActiveActor] <> NIL then
-        Result := RecloserClass.ElementList.ActiveIndex
+        Result := ActiveCircuit[ActiveActor].Reclosers.ActiveIndex
     else
         Result := 0;
 end;
@@ -442,12 +442,14 @@ procedure Reclosers_Set_idx(Value: Integer); CDECL;
 var
     pRecloser: TRecloserObj;
 begin
-    if ActiveCircuit[ActiveActor] <> NIL then
+    if ActiveCircuit[ActiveActor] = NIL then Exit;
+    pRecloser := ActiveCircuit[ActiveActor].Reclosers.Get(Value);
+    if pRecloser = NIL then
     begin
-        pRecloser := RecloserClass.Elementlist.Get(Value);
-        if pRecloser <> NIL then
-            ActiveCircuit[ActiveActor].ActiveCktElement := pRecloser;
+        DoSimpleMsg('Invalid Recloser index: "' + IntToStr(Value) + '".', 656565);
+        Exit;
     end;
+    ActiveCircuit[ActiveActor].ActiveCktElement := pRecloser;
 end;
 //------------------------------------------------------------------------------
 end.

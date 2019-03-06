@@ -31,6 +31,10 @@ procedure Capacitors_Set_States(ValuePtr: PInteger; ValueCount: Integer); CDECL;
 procedure Capacitors_Open(); CDECL;
 procedure Capacitors_Close(); CDECL;
 
+// API Extensions
+function Capacitors_Get_idx(): Integer; CDECL;
+procedure Capacitors_Set_idx(Value: Integer); CDECL;
+
 implementation
 
 uses
@@ -218,36 +222,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Set_Name(const Value: PAnsiChar); CDECL;
-var
-    ActiveSave: Integer;
-    S: String;
-    Found: Boolean;
-    elem: TCapacitorObj;
-    lst: TPointerList;
 begin
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+    if CapacitorClass.SetActive(Value) then
     begin
-        lst := ActiveCircuit.ShuntCapacitors;
-        S := Value;  // Convert to Pascal String
-        Found := FALSE;
-        ActiveSave := lst.ActiveIndex;
-        elem := lst.First;
-        while elem <> NIL do
-        begin
-            if (CompareText(elem.Name, S) = 0) then
-            begin
-                ActiveCircuit.ActiveCktElement := elem;
-                Found := TRUE;
-                Break;
-            end;
-            elem := lst.Next;
-        end;
-        if not Found then
-        begin
-            DoSimpleMsg('Capacitor "' + S + '" Not Found in Active Circuit.', 5003);
-            elem := lst.Get(ActiveSave);    // Restore active Capacitor
-            ActiveCircuit.ActiveCktElement := elem;
-        end;
+        ActiveCircuit.ActiveCktElement := CapacitorClass.ElementList.Active;
+        ActiveCircuit.ShuntCapacitors.Get(CapacitorClass.Active);
+    end
+    else
+    begin
+        DoSimpleMsg('Capacitor "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -393,7 +378,29 @@ begin
                         States[i] := 1;
                 end;
         end;
-
+end;
+//------------------------------------------------------------------------------
+function Capacitors_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.ShuntCapacitors.ActiveIndex
+    else
+        Result := 0
+end;
+//------------------------------------------------------------------------------
+procedure Capacitors_Set_idx(Value: Integer); CDECL;
+var
+    pCapacitor: TCapacitorObj;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    pCapacitor := ActiveCircuit.ShuntCapacitors.Get(Value);
+    if pCapacitor = NIL then
+    begin
+        DoSimpleMsg('Invalid Capacitor index: "' + IntToStr(Value) + '".', 656565);
+        Exit;
+    end;
+    ActiveCircuit.ActiveCktElement := pCapacitor;
 end;
 //------------------------------------------------------------------------------
 end.

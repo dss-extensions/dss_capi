@@ -1,6 +1,5 @@
 
 unit DSSClass;
-
 {
     ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -14,57 +13,52 @@ unit DSSClass;
 
 interface
 
-uses
-    PointerList,
-    Command,
-    Arraydef,
-    Hashlist;
+USES
+    PointerList, Command,  Arraydef, {$IFDEF DSS_CAPI_HASHLIST}Contnrs{$ELSE}Hashlist{$ENDIF};
 
-type
-
+TYPE
    // Collection of all DSS Classes
     TDSSClasses = class(Tobject)
-    PRIVATE
-        procedure Set_New(Value: Pointer);
+   private
+     PROCEDURE Set_New(Value:Pointer);
 
-    PUBLIC
+   public
         constructor Create;
-        destructor Destroy; OVERRIDE;
+     destructor Destroy; override;
 
-        property New: pointer WRITE Set_New;
+     Property New :pointer Write Set_New;
 
-    end;
+   End;
 
    // Base for all collection classes
     TDSSClass = class(TObject)
-    PRIVATE
+     private
 
-        procedure Set_Active(value: Integer);
+          Procedure Set_Active(value:Integer);
         function Get_ElementCount: Integer;
         function Get_First: Integer;
         function Get_Next: Integer;
 
-        procedure ResynchElementNameList;
+          Procedure ResynchElementNameList;
 
-    PROTECTED
+     Protected
         Class_Name: String;
         ActiveElement: Integer;   // index of present ActiveElement
         CommandList: TCommandlist;
         ActiveProperty: Integer;
-        ElementNameList: THashList;
+         ElementNameList:{$IFDEF DSS_CAPI_HASHLIST}TFPHashList;{$ELSE}THashList;{$ENDIF}
 
+         Function AddObjectToList(Obj:Pointer):Integer;  // Used by NewObject
+         Function Get_FirstPropertyName:String;
+         Function Get_NextPropertyName:String;
+         Function MakeLike(Const ObjName:String):Integer; Virtual;
 
-        function AddObjectToList(Obj: Pointer): Integer;  // Used by NewObject
-        function Get_FirstPropertyName: String;
-        function Get_NextPropertyName: String;
-        function MakeLike(const ObjName: String): Integer; VIRTUAL;
+         Procedure CountProperties;  // Add no. of intrinsic properties
+         Procedure AllocatePropertyArrays;
+         Procedure DefineProperties;  // Add Properties of this class to propName
+         Function ClassEdit(Const ActiveObj:Pointer; Const ParamPointer:Integer):Integer;
 
-        procedure CountProperties;  // Add no. of intrinsic properties
-        procedure AllocatePropertyArrays;
-        procedure DefineProperties;  // Add Properties of this class to propName
-        function ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer): Integer;
-
-    PUBLIC
+     public
         NumProperties: Integer;
         PropertyName,
         PropertyHelp: pStringArray;
@@ -80,103 +74,96 @@ type
         Saved: Boolean;
 
         constructor Create;
-        destructor Destroy; OVERRIDE;
+         destructor Destroy; override;
 
          {Helper routine for building Property strings}
-        procedure AddProperty(const PropName: String; CmdMapIndex: Integer; const HelpString: String);
-        procedure ReallocateElementNameList;
+         Procedure AddProperty(const PropName:String; CmdMapIndex:Integer; const HelpString:String);
+         Procedure ReallocateElementNameList;
+         
+         Function Edit:Integer;Virtual;      // uses global parser
+         Function Init(Handle:Integer):Integer; Virtual;
+         Function NewObject(const ObjName:String):Integer; Virtual;
 
-        function Edit: Integer; VIRTUAL;      // uses global parser
-        function Init(Handle: Integer): Integer; VIRTUAL;
-        function NewObject(const ObjName: String): Integer; VIRTUAL;
+         Function SetActive(const ObjName:String):Boolean; Virtual;
+         Function GetActiveObj:Pointer; // Get address of active obj of this class
+         Function Find(const ObjName:String):Pointer; Virtual;  // Find an obj of this class by name
 
-        function SetActive(const ObjName: String): Boolean; VIRTUAL;
-        function GetActiveObj: Pointer; // Get address of active obj of this class
-        function Find(const ObjName: String): Pointer; VIRTUAL;  // Find an obj of this class by name
+         Function PropertyIndex(Const Prop:String):Integer;
+         Property FirstPropertyName:String read Get_FirstPropertyName;
+         Property NextPropertyName:String read Get_NextPropertyName;
 
-        function PropertyIndex(const Prop: String): Integer;
-        property FirstPropertyName: String READ Get_FirstPropertyName;
-        property NextPropertyName: String READ Get_NextPropertyName;
+         Property Active:Integer read ActiveElement write Set_Active;
+         Property ElementCount:Integer read Get_ElementCount;
+         Property First:Integer read Get_First;
+         Property Next:Integer read Get_Next;
+         Property Name:String read Class_Name;
+   END;
 
-        property Active: Integer READ ActiveElement WRITE Set_Active;
-        property ElementCount: Integer READ Get_ElementCount;
-        property First: Integer READ Get_First;
-        property Next: Integer READ Get_Next;
-        property Name: String READ Class_Name;
-    end;
-
-var
+VAR
     DSSClasses: TDSSClasses;
 
 
 implementation
 
 
-uses
-    DSSGlobals,
-    SysUtils,
-    DSSObject,
-    ParserDel,
-    CktElement;
+USES DSSGlobals, SysUtils, DSSObject, ParserDel, CktElement;
 
 {--------------------------------------------------------------}
 { DSSClasses Implementation
 {--------------------------------------------------------------}
-constructor TDSSClasses.Create;
+Constructor TDSSClasses.Create;
 
-begin
-    inherited Create;
-end;
-
-{--------------------------------------------------------------}
-destructor TDSSClasses.Destroy;
-begin
-    inherited Destroy;
-end;
+Begin
+     Inherited Create;
+End;
 
 {--------------------------------------------------------------}
-procedure TDSSClasses.Set_New(Value: Pointer);
+Destructor TDSSClasses.Destroy;
+Begin
+     Inherited Destroy;
+End;
 
-begin
+{--------------------------------------------------------------}
+PROCEDURE TDSSClasses.Set_New(Value:Pointer);
+
+Begin
     DSSClassList.New := Value; // Add to pointer list
     ActiveDSSClass := Value;   // Declare to be active
     ClassNames.Add(ActiveDSSClass.Name); // Add to classname list
-end;
+End;
 
 {--------------------------------------------------------------}
 {  DSSClass Implementation
 {--------------------------------------------------------------}
-constructor TDSSClass.Create;
+Constructor TDSSClass.Create;
 
-begin
-    inherited Create;
+BEGIN
+    Inherited Create;
     ElementList := TPointerList.Create(20);  // Init size and increment
-    PropertyName := NIL;
-    PropertyHelp := NIL;
-    PropertyIdxMap := NIL;
-    RevPropertyIdxMap := NIL;
+    PropertyName := nil;
+    PropertyHelp := Nil;
+    PropertyIdxMap  := Nil;
+    RevPropertyIdxMap := Nil;
 
     ActiveElement := 0;
     ActiveProperty := 0;
 
 
-    ElementNameList := THashList.Create(100);
+    ElementNameList := {$IFDEF DSS_CAPI_HASHLIST}TFPHashList.Create();{$ELSE}THashList.Create(100);{$ENDIF}
     ElementNamesOutOfSynch := FALSE;
 
-end;
+END;
 
 {--------------------------------------------------------------}
-destructor TDSSClass.Destroy;
+Destructor TDSSClass.Destroy;
 
-var
-    i: Integer;
+VAR
+   i:INTEGER;
 
-begin
+BEGIN
     // Get rid of space occupied by strings
-    for i := 1 to NumProperties do
-        PropertyName[i] := '';
-    for i := 1 to NumProperties do
-        PropertyHelp[i] := '';
+    For i := 1 to NumProperties DO PropertyName[i] := '';
+    For i := 1 to NumProperties DO PropertyHelp[i] := '';
     Reallocmem(PropertyName, 0);
     Reallocmem(PropertyHelp, 0);
     Reallocmem(PropertyIdxMap, 0);
@@ -184,173 +171,178 @@ begin
     ElementList.Free;
     ElementNameList.Free;
     CommandList.Free;
-    inherited Destroy;
-end;
+    Inherited Destroy;
+END;
 
 
 {--------------------------------------------------------------}
-function TDSSClass.NewObject(const ObjName: String): Integer;
-begin
+Function TDSSClass.NewObject(const ObjName:String):Integer;
+BEGIN
     Result := 0;
     DoErrorMsg('Reached base class of TDSSClass for device "' + ObjName + '"',
         'N/A',
         'Should be overridden.', 780);
-end;
+END;
 
-procedure TDSSClass.Set_Active(value: Integer);
-begin
-    if (Value > 0) and (Value <= ElementList.ListSize) then
-    begin
+Procedure TDSSClass.Set_Active(value:Integer);
+BEGIN
+     If (Value > 0) and (Value<= ElementList.ListSize)
+     THEN
+       Begin
         ActiveElement := Value;
         ActiveDSSObject := ElementList.Get(ActiveElement);
          // Make sure Active Ckt Element agrees if is a ckt element
          // So COM interface will work
         if ActiveDSSObject is TDSSCktElement then
             ActiveCircuit.ActiveCktElement := TDSSCktElement(ActiveDSSObject);
-    end;
-end;
+       End;
+END;
 
-function TDSSClass.Edit: Integer;
-begin
+Function TDSSClass.Edit:Integer;
+BEGIN
     Result := 0;
     DoSimpleMsg('virtual function TDSSClass.Edit called.  Should be overriden.', 781);
-end;
+END;
 
 
-function TDSSClass.Init(Handle: Integer): Integer;
-begin
+Function TDSSClass.Init(Handle:Integer):Integer;
+BEGIN
     Result := 0;
     DoSimpleMsg('virtual function TDSSClass.Init called.  Should be overriden.', 782);
-end;
+END;
 
-function TDSSClass.AddObjectToList(Obj: Pointer): Integer;
-begin
+Function TDSSClass.AddObjectToList(Obj:Pointer):Integer;
+BEGIN
     ElementList.New := Obj; // Stuff it in this collection's element list
+{$IFNDEF DSS_CAPI_HASHLIST}
     ElementNameList.Add(TDSSObject(Obj).Name);
-
-    if Cardinal(ElementList.ListSize) > 2 * ElementNameList.InitialAllocation then
-        ReallocateElementNameList;
-
+    If Cardinal(ElementList.ListSize) > 2* ElementNameList.InitialAllocation Then ReallocateElementNameList;
+{$ELSE}    
+    ElementNameList.Add(LowerCase(TDSSObject(Obj).Name), Pointer(ElementList.ListSize));
+{$ENDIF}
     ActiveElement := ElementList.ListSize;
     Result := ActiveElement; // Return index of object in list
-end;
+END;
 
-function TDSSClass.SetActive(const ObjName: String): Boolean;
-var
+Function TDSSClass.SetActive(const ObjName:String):Boolean;
+VAR
     idx: Integer;
 
-begin
-    Result := FALSE;
+BEGIN
+    Result := False;
     // Faster to look in hash list 7/7/03
-    if ElementNamesOutOfSynch then
-        ResynchElementNameList;
+    If ElementNamesOutOfSynch Then ResynchElementNameList;
+    {$IFDEF DSS_CAPI_HASHLIST}
+    idx := LongInt(ElementNameList.Find(LowerCase(ObjName)));
+    {$ELSE}
     idx := ElementNameList.Find(ObjName);
-    if idx > 0 then
-    begin
+    {$ENDIF}
+    
+    If idx>0 Then
+    Begin
         ActiveElement := idx;
         ActiveDSSObject := ElementList.get(idx);
         Result := TRUE;
-    end;
+    End;
 
-end;
+END;
 
-function TDSSClass.Find(const ObjName: String): Pointer;
-var
+Function TDSSClass.Find(const ObjName:String):Pointer;
+VAR
     idx: Integer;
 
-begin
-    Result := NIL;
-    if ElementNamesOutOfSynch then
-        ResynchElementNameList;
+BEGIN
+    Result := Nil;
+    If ElementNamesOutOfSynch Then ResynchElementNameList;
     // Faster to look in hash list 7/7/03
+    {$IFDEF DSS_CAPI_HASHLIST}
+    idx := LongInt(ElementNameList.Find(LowerCase(ObjName)));
+    {$ELSE}
     idx := ElementNameList.Find(ObjName);
-    if idx > 0 then
-    begin
+    {$ENDIF}
+    
+    If idx>0 Then
+    Begin
         ActiveElement := idx;
         Result := ElementList.get(idx);
-    end;
-end;
+    End;
+END;
 
-function TDSSClass.GetActiveObj: Pointer; // Get address of active obj of this class
-begin
+Function TDSSClass.GetActiveObj:Pointer; // Get address of active obj of this class
+BEGIN
     ActiveElement := ElementList.ActiveIndex;
-    if ActiveElement > 0 then
+    If ActiveElement>0 THEN
         Result := ElementList.Get(ActiveElement)
-    else
-        Result := NIL;
-end;
+    Else
+       Result := Nil;
+END;
 
-function TDSSClass.Get_FirstPropertyName: String;
-begin
+Function TDSSClass.Get_FirstPropertyName:String;
+BEGIN
     ActiveProperty := 0;
     Result := Get_NextPropertyName;
-end;
+END;
 
-function TDSSClass.Get_NextPropertyName: String;
-begin
+Function TDSSClass.Get_NextPropertyName:String;
+BEGIN
     Inc(ActiveProperty);
-    if ActiveProperty <= NumProperties then
+    IF ActiveProperty<=NumProperties THEN
         Result := PropertyName^[ActiveProperty]
-    else
-        Result := '';
-end;
+    ELSE Result := '';
+END;
 
-function TDSSClass.PropertyIndex(const Prop: String): Integer;
+Function TDSSClass.PropertyIndex(Const Prop:String):Integer;
 // find property value by string
 
-var
+VAR
     i: Integer;
-begin
+BEGIN
 
     Result := 0;  // Default result if not found
-    for i := 1 to NumProperties do
-    begin
-        if CompareText(Prop, PropertyName[i]) = 0 then
-        begin
+     For i := 1 to NumProperties DO BEGIN
+        IF CompareText(Prop, PropertyName[i])=0 THEN BEGIN
             Result := PropertyIdxMap[i];
             Break;
-        end;
-    end;
-end;
+        END;
+     END;
+END;
 
-procedure TDSSClass.CountProperties;
-begin
+Procedure TDSSClass.CountProperties;
+Begin
     NumProperties := NumProperties + 1;
-end;
+End;
 
-procedure TDSSClass.DefineProperties;
-begin
+Procedure TDSSClass.DefineProperties;
+Begin
     ActiveProperty := ActiveProperty + 1;
     PropertyName^[ActiveProperty] := 'like';
     PropertyHelp^[ActiveProperty] := 'Make like another object, e.g.:' + CRLF + CRLF +
         'New Capacitor.C2 like=c1  ...';
-end;
+End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TDSSClass.ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer): Integer;
+Function TDSSClass.ClassEdit(Const ActiveObj:Pointer; Const ParamPointer:Integer):Integer;
 
 
-begin
+BEGIN
   // continue parsing with contents of Parser
 
     Result := 0;
-    if ParamPointer > 0 then
-        with TDSSObject(ActiveObj) do
-        begin
+  If ParamPointer > 0 Then
+  WITH TDSSObject(ActiveObj) DO BEGIN
 
-            case ParamPointer of
-                1:
-                    MakeLike(Parser.StrValue);    // Like command (virtual)
-            end;
+      CASE ParamPointer OF
+       1: MakeLike(Parser.StrValue);    // Like command (virtual)
+      END;
 
-        end;
-end;
+  End;
+End;
 
-function TDSSClass.MakeLike(const ObjName: String): Integer;
-begin
+Function  TDSSClass.MakeLike(Const ObjName:String):Integer;
+Begin
     Result := 0;
     DoSimpleMsg('virtual function TDSSClass.MakeLike called.  Should be overriden.', 784);
-end;
+End;
 
 function TDSSClass.Get_ElementCount: Integer;
 begin
@@ -359,11 +351,9 @@ end;
 
 function TDSSClass.Get_First: Integer;
 begin
-    if ElementList.ListSize = 0 then
-        Result := 0
+    IF ElementList.ListSize=0   THEN Result := 0
 
-    else
-    begin
+    ELSE Begin
         ActiveElement := 1;
         ActiveDSSObject := ElementList.First;
       // Make sure Active Ckt Element agrees if is a ckt element
@@ -371,23 +361,22 @@ begin
         if ActiveDSSObject is TDSSCktElement then
             ActiveCircuit.ActiveCktElement := TDSSCktElement(ActiveDSSObject);
         Result := ActiveElement;
-    end;
+    End;
 end;
 
 function TDSSClass.Get_Next: Integer;
 begin
     Inc(ActiveElement);
-    if ActiveElement > ElementList.ListSize then
-        Result := 0
-    else
-    begin
+    IF ActiveElement > ElementList.ListSize
+    THEN Result := 0
+    ELSE Begin
         ActiveDSSObject := ElementList.Next;
       // Make sure Active Ckt Element agrees if is a ckt element
       // So COM interface will work
         if ActiveDSSObject is TDSSCktElement then
             ActiveCircuit.ActiveCktElement := TDSSCktElement(ActiveDSSObject);
         Result := ActiveElement;
-    end;
+    End;
 
 end;
 
@@ -402,8 +391,8 @@ begin
 end;
 
 procedure TDSSClass.AllocatePropertyArrays;
-var
-    i: Integer;
+Var 
+    i:Integer;
 begin
     PropertyName := Allocmem(SizeOf(PropertyName^[1]) * NumProperties);
     PropertyHelp := Allocmem(SizeOf(PropertyHelp^[1]) * NumProperties);
@@ -411,35 +400,33 @@ begin
     RevPropertyIdxMap := Allocmem(SizeOf(RevPropertyIdxMap^[1]) * NumProperties);
     ActiveProperty := 0;    // initialize for AddPropert
      {initialize PropertyIdxMap to take care of legacy items}
-    for i := 1 to NumProperties do
-        PropertyIDXMap^[i] := i;
-    for i := 1 to NumProperties do
-        RevPropertyIDXMap^[i] := i;
+     For i := 1 to NumProperties Do PropertyIDXMap^[i] := i;
+     For i := 1 to NumProperties Do RevPropertyIDXMap^[i] := i;
 end;
 
 procedure TDSSClass.ReallocateElementNameList;
-var
+Var
     i: Integer;
-
 begin
   {Reallocate the device name list to improve the performance of searches}
     ElementNameList.Free; // Throw away the old one.
-    ElementNameList := THashList.Create(2 * ElementList.ListSize);  // make a new one
+    ElementNameList := {$IFDEF DSS_CAPI_HASHLIST}TFPHashList.Create();{$ELSE}THashList.Create(2*ElementList.ListSize);{$ENDIF} // make a new one
 
     // Do this using the Names of the Elements rather than the old list because it might be
     // messed up if an element gets renamed
 
-    for i := 1 to ElementList.ListSize do
-        ElementNameList.Add(TDSSObject(ElementList.Get(i)).Name);
+    {$IFDEF DSS_CAPI_HASHLIST}
+    For i := 1 to ElementList.ListSize Do ElementNameList.Add(LowerCase(TDSSObject(ElementList.Get(i)).Name), Pointer(i));
+    {$ELSE}
+    For i := 1 to ElementList.ListSize Do ElementNameList.Add(TDSSObject(ElementList.Get(i)).Name);
+    {$ENDIF}
 
 end;
 
 procedure TDSSClass.ResynchElementNameList;
 begin
-
     ReallocateElementNameList;
-    ElementNamesOutOfSynch := FALSE;
-
+    ElementNamesOutOfSynch := False;
 end;
 
 end.

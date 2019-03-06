@@ -127,8 +127,6 @@ type
 
 var
     ActiveRecloserObj: TRecloserObj;
-    RecloserClass: TRecloser;
-
 
 {--------------------------------------------------------------------------}
 implementation
@@ -181,7 +179,6 @@ begin
     CommandList.Abbrev := TRUE;
 
     TCC_CurveClass := GetDSSClassPtr('TCC_Curve');
-    RecloserClass := Self;
 end;
 
 {--------------------------------------------------------------------------}

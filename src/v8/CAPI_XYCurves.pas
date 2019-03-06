@@ -35,12 +35,18 @@ procedure XYCurves_Set_Xshift(Value: Double); CDECL;
 procedure XYCurves_Set_Yscale(Value: Double); CDECL;
 procedure XYCurves_Set_Yshift(Value: Double); CDECL;
 
+// API Extensions
+function XYCurves_Get_idx(): Integer; CDECL;
+procedure XYCurves_Set_idx(Value: Integer); CDECL;
+
+
 implementation
 
 uses
     CAPI_Constants,
     DSSGlobals,
-    DSSObject;
+    DSSObject,
+    SysUtils;
 
 function XYCurves_Get_Count(): Integer; CDECL;
 begin
@@ -517,6 +523,17 @@ begin
         end;
     end;
 
+end;
+//------------------------------------------------------------------------------
+function XYCurves_Get_idx(): Integer; CDECL;
+begin
+    Result := XYCurveClass[ActiveActor].ElementList.ActiveIndex
+end;
+//------------------------------------------------------------------------------
+procedure XYCurves_Set_idx(Value: Integer); CDECL;
+begin
+    if XYCurveClass[ActiveActor].ElementList.Get(Value) = NIL then
+        DoSimpleMsg('Invalid XYCurve index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

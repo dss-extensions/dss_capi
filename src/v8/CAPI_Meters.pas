@@ -68,6 +68,11 @@ function Meters_Get_SumBranchFltRates(): Double; CDECL;
 function Meters_Get_SectSeqIdx(): Integer; CDECL;
 function Meters_Get_SectTotalCust(): Integer; CDECL;
 
+// API extensions
+function Meters_Get_idx(): Integer; CDECL;
+procedure Meters_Set_idx(Value: Integer); CDECL;
+
+
 implementation
 
 uses
@@ -170,9 +175,7 @@ end;
 function Meters_Get_Next(): Integer; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
-
 begin
-
     Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
     begin
@@ -192,7 +195,6 @@ begin
         else
             Result := 0;  // signify no more
     end;
-
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -312,41 +314,18 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Set_Name(const Value: PAnsiChar); CDECL;
-var
-    activesave: Integer;
-    pMeterObj: TEnergyMeterObj;
-    TestStr: String;
-    Found: Boolean;
 begin
-
-
-    if ActiveCircuit[ActiveActor] <> NIL then
-    begin      // Search list of EnergyMeters in active circuit for name
-        with ActiveCircuit[ActiveActor].EnergyMeters do
-        begin
-            TestStr := Value;  // Convert to Pascal String for testing
-            Found := FALSE;
-            ActiveSave := ActiveIndex;
-            pMeterObj := First;
-            while pMeterObj <> NIL do
-            begin
-                if (CompareText(pMeterObj.Name, TestStr) = 0) then
-                begin
-                    ActiveCircuit[ActiveActor].ActiveCktElement := pMeterObj;
-                    Found := TRUE;
-                    Break;
-                end;
-                pMeterObj := Next;
-            end;
-            if not Found then
-            begin
-                DoSimpleMsg('EnergyMeter "' + TestStr + '" Not Found in Active Circuit.', 5005);
-                pMeterObj := Get(ActiveSave);    // Restore active Meter
-                ActiveCircuit[ActiveActor].ActiveCktElement := pMeterObj;
-            end;
-        end;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    if EnergyMeterClass[ActiveActor].SetActive(Value) then
+    begin
+        ActiveCircuit[ActiveActor].ActiveCktElement := EnergyMeterClass[ActiveActor].ElementList.Active;
+        ActiveCircuit[ActiveActor].EnergyMeters.Get(EnergyMeterClass[ActiveActor].Active);
+    end
+    else
+    begin
+        DoSimpleMsg('EnergyMeter "' + Value + '" Not Found in Active Circuit.', 5005);
     end;
-
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_Totals(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -1169,6 +1148,29 @@ begin
         end;
 
 
+end;
+//------------------------------------------------------------------------------
+function Meters_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+        Result := ActiveCircuit[ActiveActor].EnergyMeters.ActiveIndex
+    else
+        Result := 0
+end;
+//------------------------------------------------------------------------------
+procedure Meters_Set_idx(Value: Integer); CDECL;
+var
+    pEnergyMeter: TEnergyMeterObj;
+begin
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    pEnergyMeter := ActiveCircuit[ActiveActor].EnergyMeters.Get(Value);
+    if pEnergyMeter = NIL then
+    begin
+        DoSimpleMsg('Invalid Meter index: "' + IntToStr(Value) + '".', 656565);
+        Exit;
+    end;
+    ActiveCircuit[ActiveActor].ActiveCktElement := pEnergyMeter;
 end;
 //------------------------------------------------------------------------------
 end.

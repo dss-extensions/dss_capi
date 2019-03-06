@@ -44,6 +44,10 @@ procedure CapControls_Set_Vmin(Value: Double); CDECL;
 function CapControls_Get_Count(): Integer; CDECL;
 procedure CapControls_Reset(); CDECL;
 
+// API Extensions
+function CapControls_Get_idx(): Integer; CDECL;
+procedure CapControls_Set_idx(Value: Integer); CDECL;
+
 implementation
 
 uses
@@ -81,23 +85,23 @@ var
     lst: TPointerList;
     k: Integer;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit[ActiveActor] <> NIL then
-        with ActiveCircuit[ActiveActor] do
-            if CapControls.ListSize > 0 then
+    if ActiveCircuit[ActiveActor] = NIL then Exit;
+    with ActiveCircuit[ActiveActor] do
+        if CapControls.ListSize > 0 then
+        begin
+            lst := CapControls;
+            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, lst.ListSize);
+            k := 0;
+            elem := lst.First;
+            while elem <> NIL do
             begin
-                lst := CapControls;
-                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (lst.ListSize - 1) + 1);
-                k := 0;
-                elem := lst.First;
-                while elem <> NIL do
-                begin
-                    Result[k] := DSS_CopyStringAsPChar(elem.Name);
-                    Inc(k);
-                    elem := lst.Next;
-                end;
+                Result[k] := DSS_CopyStringAsPChar(elem.Name);
+                Inc(k);
+                elem := lst.Next;
             end;
+        end;
 end;
 
 procedure CapControls_Get_AllNames_GR(); CDECL;
@@ -396,36 +400,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Name(const Value: PAnsiChar); CDECL;
-var
-    ActiveSave: Integer;
-    S: String;
-    Found: Boolean;
-    elem: TCapControlObj;
-    lst: TPointerList;
 begin
-    if ActiveCircuit[ActiveActor] <> NIL then
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    if CapControlClass[ActiveActor].SetActive(Value) then
     begin
-        lst := ActiveCircuit[ActiveActor].CapControls;
-        S := Value;  // Convert to Pascal String
-        Found := FALSE;
-        ActiveSave := lst.ActiveIndex;
-        elem := lst.First;
-        while elem <> NIL do
-        begin
-            if (CompareText(elem.Name, S) = 0) then
-            begin
-                ActiveCircuit[ActiveActor].ActiveCktElement := elem;
-                Found := TRUE;
-                Break;
-            end;
-            elem := lst.Next;
-        end;
-        if not Found then
-        begin
-            DoSimpleMsg('CapControl "' + S + '" Not Found in Active Circuit.', 5003);
-            elem := lst.Get(ActiveSave);    // Restore active Load
-            ActiveCircuit[ActiveActor].ActiveCktElement := elem;
-        end;
+        ActiveCircuit[ActiveActor].ActiveCktElement := CapControlClass[ActiveActor].ElementList.Active;
+        ActiveCircuit[ActiveActor].CapControls.Get(CapControlClass[ActiveActor].Active);
+    end
+    else
+    begin
+        DoSimpleMsg('CapControl "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -478,6 +463,29 @@ begin
         elem.Reset;
     end;
 
+end;
+//------------------------------------------------------------------------------
+function CapControls_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+        Result := ActiveCircuit[ActiveActor].CapControls.ActiveIndex
+    else
+        Result := 0
+end;
+//------------------------------------------------------------------------------
+procedure CapControls_Set_idx(Value: Integer); CDECL;
+var
+    pCapControl: TCapControlObj;
+begin
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    pCapControl := ActiveCircuit[ActiveActor].CapControls.Get(Value);
+    if pCapControl = NIL then
+    begin
+        DoSimpleMsg('Invalid CapControl index: "' + IntToStr(Value) + '".', 656565);
+        Exit;
+    end;
+    ActiveCircuit[ActiveActor].ActiveCktElement := pCapControl;
 end;
 //------------------------------------------------------------------------------
 end.

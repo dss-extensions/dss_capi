@@ -184,7 +184,6 @@ type
 
 var
     ActiveRelayObj: TRelayObj;
-    RelayClass: TRelay;
 
 {--------------------------------------------------------------------------}
 implementation
@@ -224,7 +223,6 @@ begin
     CommandList.Abbrev := TRUE;
 
     TCC_CurveClass := GetDSSClassPtr('TCC_Curve');
-    RelayClass := Self;
 end;
 
 {--------------------------------------------------------------------------}

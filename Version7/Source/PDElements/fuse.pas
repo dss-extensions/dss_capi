@@ -103,7 +103,6 @@ type
 
 var
     ActiveFuseObj: TFuseObj;
-    FuseClass: TFuse;
 
 {--------------------------------------------------------------------------}
 implementation
@@ -152,7 +151,6 @@ begin
     CommandList.Abbrev := TRUE;
 
     TCC_CurveClass := GetDSSClassPtr('TCC_Curve');
-    FuseClass := Self;
 end;
 
 {--------------------------------------------------------------------------}

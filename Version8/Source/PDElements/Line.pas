@@ -51,7 +51,11 @@ type
     end;
 
     TLineObj = class(TPDElement)
+{$IFDEF DSS_CAPI}
+    PUBLIC
+{$ELSE}
     PRIVATE
+{$ENDIF}
         FZFrequency: Double; // keep track of last frequency computed for geometry
         FLineCodeUnits: Integer;
         FUnitsConvert: Double; // conversion factor
@@ -151,7 +155,6 @@ type
 
 var
     ActiveLineObj: TLineObj;
-    LineGeometryClass: TLineGeometry;  // public to show line constant results
 
 implementation
 
@@ -172,7 +175,6 @@ const
 
 var
     CAP_EPSILON: Complex;
-    LineCodeClass: TLineCode;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TLine.Create;  // Creates superstructure for all Line objects
@@ -182,8 +184,6 @@ begin
     DSSClassType := DSSClassType + LINE_ELEMENT; // in both PDElement list and Linesection lists
 
     ActiveElement := 0;
-    LineCodeClass := NIL;
-    LineGeometryClass := NIL;
 
     DefineProperties;
 
@@ -350,13 +350,10 @@ var
     LineCodeObj: TLineCodeObj;
 
 begin
-    if LineCodeClass = NIL then
-        LineCodeClass := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('linecode'));
-
-    if LineCodeClass.SetActive(Code) then
+    if LineCodeClass[ActiveActor].SetActive(Code) then
     begin
 
-        LineCodeObj := LineCodeClass.GetActiveObj;
+        LineCodeObj := LineCodeClass[ActiveActor].GetActiveObj;
 
         CondCode := LowerCase(Code);
 
@@ -1939,15 +1936,12 @@ end;
 procedure TLineObj.FetchGeometryCode(const Code: String);
 
 begin
-    if LineGeometryClass = NIL then
-        LineGeometryClass := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('LineGeometry'));
-
-    if LineGeometryClass.SetActive(Code) then
+    if LineGeometryClass[ActiveActor].SetActive(Code) then
     begin
         FLineCodeSpecified := FALSE;  // Cancel this flag
         SpacingSpecified := FALSE;
 
-        FLineGeometryObj := LineGeometryClass.GetActiveObj;
+        FLineGeometryObj := LineGeometryClass[ActiveActor].GetActiveObj;
         FZFrequency := -1.0;  // Init to signify not computed
 
         GeometryCode := LowerCase(Code);
@@ -2037,9 +2031,7 @@ begin
     end;
 
   // make a temporary LineGeometry to calculate line constants
-    if LineGeometryClass = NIL then
-        LineGeometryClass := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('LineGeometry'));
-    pGeo := TLineGeometryObj.Create(LineGeometryClass, Name);
+    pGeo := TLineGeometryObj.Create(LineGeometryClass[ActiveActor], Name);
     pGeo.LoadSpacingAndWires(FLineSpacingObj, FLineWireData); // this sets OH, CN, or TS
 
     if FrhoSpecified then

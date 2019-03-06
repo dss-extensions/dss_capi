@@ -98,7 +98,11 @@ type
     pWindingArray = ^WindingArray;
 
     TTransfObj = class(TPDElement)
+{$IFDEF DSS_CAPI}
+    PUBLIC
+{$ELSE}
     PRIVATE
+{$ENDIF}
 
         DeltaDirection: Integer;
         ppm_FloatFactor: Double; //  parts per million winding float factor

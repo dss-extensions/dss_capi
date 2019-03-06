@@ -30,6 +30,10 @@ function SwtControls_Get_State(): Integer; CDECL;
 procedure SwtControls_Set_State(Value: Integer); CDECL;
 procedure SwtControls_Reset(); CDECL;
 
+// API extensions
+function SwtControls_Get_idx(): Integer; CDECL;
+procedure SwtControls_Set_idx(Value: Integer); CDECL;
+
 implementation
 
 uses
@@ -274,36 +278,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure SwtControls_Set_Name(const Value: PAnsiChar); CDECL;
-var
-    ActiveSave: Integer;
-    S: String;
-    Found: Boolean;
-    elem: TSwtControlObj;
-    lst: TPointerList;
 begin
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+    if SwtControlClass.SetActive(Value) then
     begin
-        lst := ActiveCircuit.SwtControls;
-        S := Value;  // Convert to Pascal String
-        Found := FALSE;
-        ActiveSave := lst.ActiveIndex;
-        elem := lst.First;
-        while elem <> NIL do
-        begin
-            if (CompareText(elem.Name, S) = 0) then
-            begin
-                ActiveCircuit.ActiveCktElement := elem;
-                Found := TRUE;
-                Break;
-            end;
-            elem := lst.Next;
-        end;
-        if not Found then
-        begin
-            DoSimpleMsg('SwtControl "' + S + '" Not Found in Active Circuit.', 5003);
-            elem := lst.Get(ActiveSave);    // Restore active Load
-            ActiveCircuit.ActiveCktElement := elem;
-        end;
+        ActiveCircuit.ActiveCktElement := SwtControlClass.ElementList.Active;
+        ActiveCircuit.SwtControls.Get(SwtControlClass.Active);
+    end
+    else
+    begin
+        DoSimpleMsg('SwtControl "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -400,6 +385,29 @@ begin
         elem.Locked := FALSE;
         elem.Reset;
     end;
+end;
+//------------------------------------------------------------------------------
+function SwtControls_Get_idx(): Integer; CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.SwtControls.ActiveIndex
+    else
+        Result := 0;
+end;
+//------------------------------------------------------------------------------
+procedure SwtControls_Set_idx(Value: Integer); CDECL;
+var
+    pSwtControl: TSwtControlObj;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    pSwtControl := ActiveCircuit.SwtControls.Get(Value);
+    if pSwtControl = NIL then
+    begin
+        DoSimpleMsg('Invalid SwtControl index: "' + IntToStr(Value) + '".', 656565);
+        Exit;
+    end;
+    ActiveCircuit.ActiveCktElement := pSwtControl;
 end;
 //------------------------------------------------------------------------------
 end.

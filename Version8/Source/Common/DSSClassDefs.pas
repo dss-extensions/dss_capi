@@ -158,65 +158,130 @@ begin
      {Generic Object classes first in case others refer to them}
     DSSClasses.New := TDSSSolution.Create;
     SolutionClass[ActiveActor] := ActiveDSSClass[ActiveActor];     // this is a special class
-    DSSClasses.New := TLineCode.Create;
+
+    LineCodeClass[ActiveActor] := TLineCode.Create;
+    DSSClasses.New := LineCodeClass[ActiveActor];
+
     LoadShapeClass[ActiveActor] := TLoadShape.Create;
     DSSClasses.New := LoadShapeClass[ActiveActor];
+
     TShapeClass[ActiveActor] := TTShape.Create;
     DSSClasses.New := TShapeClass[ActiveActor];
+
     PriceShapeClass[ActiveActor] := TPriceShape.Create;
     DSSClasses.New := PriceShapeClass[ActiveActor];
+
     XYCurveClass[ActiveActor] := TXYCurve.Create;
     DSSClasses.New := XYCurveClass[ActiveActor];
+
     GrowthShapeClass[ActiveActor] := TGrowthShape.Create;
     DSSClasses.New := GrowthShapeClass[ActiveActor];
+
     TCC_CurveClass[ActiveActor] := TTCC_Curve.Create;
     DSSClasses.New := TCC_CurveClass[ActiveActor];
+
     SpectrumClass[ActiveActor] := TSpectrum.Create;
     DSSClasses.New := SpectrumClass[ActiveActor];
+
     WireDataClass[ActiveActor] := TWireData.Create;
     DSSClasses.New := WireDataClass[ActiveActor];
+
     CNDataClass[ActiveActor] := TCNData.Create;
     DSSClasses.New := CNDataClass[ActiveActor];
+
     TSDataClass[ActiveActor] := TTSData.Create;
     DSSClasses.New := TSDataClass[ActiveActor];
-    DSSClasses.New := TLineGeometry.Create;
+
+    LineGeometryClass[ActiveActor] := TLineGeometry.Create;
+    DSSClasses.New := LineGeometryClass[ActiveActor];
+
     LineSpacingClass[ActiveActor] := TLineSpacing.Create;
     DSSClasses.New := LineSpacingClass[ActiveActor];
-    DSSClasses.New := TXfmrCode.Create;
+
+    XfmrCodeClass[ActiveActor] := TXfmrCode.Create;
+    DSSClasses.New := XfmrCodeClass[ActiveActor];
 
      {Circuit Element Classes}
-    DSSClasses.New := TLine.Create;
-    ActiveVSource[ActiveActor] := TVSource.Create;
-    DSSClasses.New := ActiveVSource[ActiveActor];   // 2-terminal Vsource
-    DSSClasses.New := TISource.Create;              // 2-terminal Isource
-    DSSClasses.New := TVCCS.Create;
-    DSSClasses.New := TLoad.Create;
-    DSSClasses.New := TTransf.Create;
-    DSSClasses.New := TRegControl.Create;
-    DSSClasses.New := TCapacitor.Create;
-    DSSClasses.New := TReactor.Create;
-    DSSClasses.New := TCapControl.Create;
-    DSSClasses.New := TFault.Create;
-    DSSClasses.New := TGenerator.Create;
-    DSSClasses.New := TGenDispatcher.Create;
+    LineClass[ActiveActor] := TLine.Create;
+    DSSClasses.New := LineClass[ActiveActor];
+
+    VSourceClass[ActiveActor] := TVSource.Create;    // 2-terminal Vsource
+    DSSClasses.New := VSourceClass[ActiveActor];
+
+    ISourceClass[ActiveActor] := TISource.Create;    // 2-terminal Isource
+    DSSClasses.New := ISourceClass[ActiveActor];
+
+    VCSSClass[ActiveActor] := TVCCS.Create;
+    DSSClasses.New := VCSSClass[ActiveActor];
+
+    LoadClass[ActiveActor] := TLoad.Create;
+    DSSClasses.New := LoadClass[ActiveActor];
+
+    TransformerClass[ActiveActor] := TTransf.Create;
+    DSSClasses.New := TransformerClass[ActiveActor];
+
+    RegControlClass[ActiveActor] := TRegControl.Create;
+    DSSClasses.New := RegControlClass[ActiveActor];
+
+    CapacitorClass[ActiveActor] := TCapacitor.Create;
+    DSSClasses.New := CapacitorClass[ActiveActor];
+
+    ReactorClass[ActiveActor] := TReactor.Create;
+    DSSClasses.New := ReactorClass[ActiveActor];
+
+    CapControlClass[ActiveActor] := TCapControl.Create;
+    DSSClasses.New := CapControlClass[ActiveActor];
+
+    FaultClass[ActiveActor] := TFault.Create;
+    DSSClasses.New := FaultClass[ActiveActor];
+
+    GeneratorClass[ActiveActor] := TGenerator.Create;
+    DSSClasses.New := GeneratorClass[ActiveActor];
+
+    GenDispatcherClass[ActiveActor] := TGenDispatcher.Create;
+    DSSClasses.New := GenDispatcherClass[ActiveActor];
+
     StorageClass[ActiveActor] := TStorage.Create;
     DSSClasses.New := StorageClass[ActiveActor];
-    DSSClasses.New := TStorageController.Create;
-    DSSClasses.New := TRelay.Create;
-    DSSClasses.New := TRecloser.Create;
-    DSSClasses.New := TFuse.Create;
-//     FeederClass    := TFeeder.Create;
-//     DSSClasses.New := FeederClass;
-    DSSClasses.New := TSwtControl.Create;
+
+    StorageControllerClass[ActiveActor] := TStorageController.Create;
+    DSSClasses.New := StorageControllerClass[ActiveActor];
+
+    RelayClass[ActiveActor] := TRelay.Create;
+    DSSClasses.New := RelayClass[ActiveActor];
+
+    RecloserClass[ActiveActor] := TRecloser.Create;
+    DSSClasses.New := RecloserClass[ActiveActor];
+
+    FuseClass[ActiveActor] := TFuse.Create;
+    DSSClasses.New := FuseClass[ActiveActor];
+
+//     FeederClass[ActiveActor]    := TFeeder.Create;
+//     DSSClasses.New := FeederClass[ActiveActor];
+
+    SwtControlClass[ActiveActor] := TSwtControl.Create;
+    DSSClasses.New := SwtControlClass[ActiveActor];
+
     PVSystemClass[ActiveActor] := TPVSystem.Create;
     DSSClasses.New := PVSystemClass[ActiveActor];
-    DSSClasses.New := TUPFC.Create;
-    DSSClasses.New := TUPFCControl.Create;
-    DSSClasses.New := TESPVLControl.Create;
-    DSSClasses.New := TIndMach012.Create;
-    DSSClasses.New := TGICsource.Create; // GIC source
-    DSSClasses.New := TAutoTrans.Create; // Auto Transformer
 
+    UPFCClass[ActiveActor] := TUPFC.Create;
+    DSSClasses.New := UPFCClass[ActiveActor];
+
+    UPFCControlClass[ActiveActor] := TUPFCControl.Create;
+    DSSClasses.New := UPFCControlClass[ActiveActor];
+
+    ESPVLControlClass[ActiveActor] := TESPVLControl.Create;
+    DSSClasses.New := ESPVLControlClass[ActiveActor];
+
+    IndMach012Class[ActiveActor] := TIndMach012.Create;
+    DSSClasses.New := IndMach012Class[ActiveActor];
+
+    GICsourceClass[ActiveActor] := TGICsource.Create; // GIC source
+    DSSClasses.New := GICsourceClass[ActiveActor];
+
+    AutoTransClass[ActiveActor] := TAutoTrans.Create; // Auto Transformer
+    DSSClasses.New := AutoTransClass[ActiveActor];
 
     InvControlClass[ActiveActor] := TInvControl.Create;
     DSSClasses.New := InvControlClass[ActiveActor];
@@ -224,15 +289,21 @@ begin
     ExpControlClass[ActiveActor] := TExpControl.Create;
     DSSClasses.New := ExpControlClass[ActiveActor];
 
-    DSSClasses.New := TGICLine.Create;
-    DSSClasses.New := TGICTransformer.Create;
+    GICLineClass[ActiveActor] := TGICLine.Create;
+    DSSClasses.New := GICLineClass[ActiveActor];
 
-    DSSClasses.New := TVSConverter.Create;
+    GICTransformerClass[ActiveActor] := TGICTransformer.Create;
+    DSSClasses.New := GICTransformerClass[ActiveActor];
+
+    VSConverterClass[ActiveActor] := TVSConverter.Create;
+    DSSClasses.New := VSConverterClass[ActiveActor];
 
     MonitorClass[ActiveActor] := TDSSMonitor.Create;  // Have to do this AFTER Generator
     DSSClasses.New := MonitorClass[ActiveActor];
+
     EnergyMeterClass[ActiveActor] := TEnergyMeter.Create;  // Have to do this AFTER Generator
-    DSSClasses.New := EnergyMeterClass[ActiveActor];
+    DSSClasses.New := EnergyMeterClass;
+
     SensorClass[ActiveActor] := TSensor.Create;      // Create state estimation sensors
     DSSClasses.New := SensorClass[ActiveActor];
 

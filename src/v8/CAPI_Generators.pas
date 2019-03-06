@@ -165,15 +165,14 @@ end;
 procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    GeneratorClass: TGenerator;
+    GeneratorCls: TGenerator;
     k: Integer;
-
 begin
-    GeneratorClass := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('Generator'));
+    GeneratorCls := GeneratorClass[ActiveActor];
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumGenRegisters - 1) + 1);
     for k := 0 to NumGenRegisters - 1 do
     begin
-        Result[k] := DSS_CopyStringAsPChar(GeneratorClass.RegisterNames[k + 1]);
+        Result[k] := DSS_CopyStringAsPChar(GeneratorCls.RegisterNames[k + 1]);
     end;
 
 end;
@@ -253,39 +252,17 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Name(const Value: PAnsiChar); CDECL;
-var
-    activesave: Integer;
-    Gen: TGeneratorObj;
-    S: String;
-    Found: Boolean;
 begin
-
-
-    if ActiveCircuit[ActiveActor] <> NIL then
-    begin      // Search list of generators in active circuit for name
-        with ActiveCircuit[ActiveActor].Generators do
-        begin
-            S := Value;  // Convert to Pascal String
-            Found := FALSE;
-            ActiveSave := ActiveIndex;
-            Gen := First;
-            while Gen <> NIL do
-            begin
-                if (CompareText(Gen.Name, S) = 0) then
-                begin
-                    ActiveCircuit[ActiveActor].ActiveCktElement := Gen;
-                    Found := TRUE;
-                    Break;
-                end;
-                Gen := Next;
-            end;
-            if not Found then
-            begin
-                DoSimpleMsg('Generator "' + S + '" Not Found in Active Circuit.', 5003);
-                Gen := Get(ActiveSave);    // Restore active generator
-                ActiveCircuit[ActiveActor].ActiveCktElement := Gen;
-            end;
-        end;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    if GeneratorClass[ActiveActor].SetActive(Value) then
+    begin
+        ActiveCircuit[ActiveActor].ActiveCktElement := GeneratorClass[ActiveActor].ElementList.Active;
+        ActiveCircuit[ActiveActor].Generators.Get(GeneratorClass[ActiveActor].Active);
+    end
+    else
+    begin
+        DoSimpleMsg('Generator "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -454,13 +431,14 @@ procedure Generators_Set_idx(Value: Integer); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if ActiveCircuit[ActiveActor] <> NIL then
+    if ActiveCircuit[ActiveActor] = NIL then Exit;
+    pGen := ActiveCircuit[ActiveActor].Generators.Get(Value);
+    if pGen = NIL then
     begin
-        pGen := ActiveCircuit[ActiveActor].Generators.Get(Value);
-        if pGen <> NIL then
-            ActiveCircuit[ActiveActor].ActiveCktElement := pGen;
+        DoSimpleMsg('Invalid Generator index: "' + IntToStr(Value) + '".', 656565);
+        Exit;
     end;
-
+    ActiveCircuit[ActiveActor].ActiveCktElement := pGen;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Model(): Integer; CDECL;

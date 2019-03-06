@@ -55,8 +55,37 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      Types,
      SyncObjs,
      YMatrix,
-     VSource
-;
+
+     XfmrCode,
+     Line,
+     LineCode,
+     LineGeometry,
+     VSource,
+     ISource,
+     VCCS,
+     Load,
+     Transformer,
+     RegControl,
+     Capacitor,
+     Reactor,
+     CapControl,
+     Fault,
+     Generator,
+     GenDispatcher,
+     StorageController,
+     Relay,
+     Recloser,
+     Fuse,
+     SwtControl,
+     UPFC,
+     UPFCControl,
+     ESPVLControl,
+     IndMach012,
+     GICsource, // GIC source
+     AutoTrans, // Auto Transformer
+     VSConverter,
+     GICLine,
+     GICTransformer;
 
 
 CONST
@@ -222,10 +251,41 @@ VAR
    CNDataClass        :Array of TCNData;
    TSDataClass        :Array of TTSData;
    LineSpacingClass   :Array of TLineSpacing;
+   LineCodeClass      :Array of TLineCode;
+   LineGeometryClass      :Array of TLineGeometry;
    StorageClass       :Array of TStorage;
    PVSystemClass      :Array of TPVSystem;
    InvControlClass    :Array of TInvControl;
    ExpControlClass    :Array of TExpControl;
+   
+   XfmrCodeClass      :Array of TXfmrCode;
+   LineClass          :Array of TLine;
+   VSourceClass       :Array of TVSource;
+   ISourceClass       :Array of TISource;
+   VCSSClass          :Array of TVCCS;
+   LoadClass          :Array of TLoad;
+   TransformerClass   :Array of TTransf;
+   RegControlClass    :Array of TRegControl;
+   CapacitorClass     :Array of TCapacitor;
+   ReactorClass       :Array of TReactor;
+   CapControlClass    :Array of TCapControl;
+   FaultClass         :Array of TFault;
+   GeneratorClass     :Array of TGenerator;
+   GenDispatcherClass :Array of TGenDispatcher;
+   StorageControllerClass: Array of TStorageController;
+   RelayClass         :Array of TRelay;
+   RecloserClass      :Array of TRecloser;
+   FuseClass          :Array of TFuse;
+   SwtControlClass    :Array of TSwtControl;
+   UPFCClass          :Array of TUPFC;
+   UPFCControlClass   :Array of TUPFCControl;
+   ESPVLControlClass  :Array of TESPVLControl;
+   IndMach012Class    :Array of TIndMach012;
+   GICsourceClass     :Array of TGICsource; // GIC source
+   AutoTransClass     :Array of TAutoTrans; // Auto Transformer
+   VSConverterClass   :Array of TVSConverter;
+   GICTransformerClass:Array of TGICTransformer;
+   GICLineClass       :Array of TGICLine;
    ActiveVSource      :Array of TVsource;   // created on 01/14/2019 to facilitate actors to modify VSources while simulating
 
    EventStrings       :Array of TStringList;
@@ -1105,6 +1165,33 @@ initialization
    SetLength(SolutionWasAttempted,CPU_Cores + 1);
    SetLength(ActorStatus,CPU_Cores + 1);
    SetLength(ActorMA_Msg,CPU_Cores + 1);
+
+   setlength(LineClass,CPU_Cores + 1);
+   setlength(VSourceClass,CPU_Cores + 1);
+   setlength(ISourceClass,CPU_Cores + 1);
+   setlength(VCSSClass,CPU_Cores + 1);
+   setlength(LoadClass,CPU_Cores + 1);
+   setlength(TransformerClass,CPU_Cores + 1);
+   setlength(RegControlClass,CPU_Cores + 1);
+   setlength(CapacitorClass,CPU_Cores + 1);
+   setlength(ReactorClass,CPU_Cores + 1);
+   setlength(CapControlClass,CPU_Cores + 1);
+   setlength(FaultClass,CPU_Cores + 1);
+   setlength(GeneratorClass,CPU_Cores + 1);
+   setlength(GenDispatcherClass,CPU_Cores + 1);
+   setlength(StorageControllerClass,CPU_Cores + 1);
+   setlength(RelayClass,CPU_Cores + 1);
+   setlength(RecloserClass,CPU_Cores + 1);
+   setlength(FuseClass,CPU_Cores + 1);
+   setlength(SwtControlClass,CPU_Cores + 1);
+   setlength(UPFCClass,CPU_Cores + 1);
+   setlength(UPFCControlClass,CPU_Cores + 1);
+   setlength(ESPVLControlClass,CPU_Cores + 1);
+   setlength(IndMach012Class,CPU_Cores + 1);
+   setlength(GICsourceClass,CPU_Cores + 1);
+   setlength(AutoTransClass,CPU_Cores + 1);
+   setlength(VSConverterClass,CPU_Cores + 1);
+   
    SetLength(ActiveVSource,CPU_Cores + 1);
 
    // Init pointer repositories for the EnergyMeter in multiple cores
