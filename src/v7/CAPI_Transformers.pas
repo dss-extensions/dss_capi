@@ -624,9 +624,10 @@ end;
 //------------------------------------------------------------------------------
 function Transformers_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit = NIL then
-        Exit;
-    Result := ActiveCircuit.Transformers.ActiveIndex
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Transformers.ActiveIndex
+    else
+        Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_idx(Value: Integer); CDECL;
@@ -637,7 +638,10 @@ begin
         Exit;
     pTransformer := ActiveCircuit.Transformers.Get(Value);
     if pTransformer = NIL then
+    begin
+        DoSimpleMsg('Invalid Transformer index: "' + IntToStr(Value) + '".', 656565);
         Exit;
+    end;
     ActiveCircuit.ActiveCktElement := pTransformer;
 end;
 //------------------------------------------------------------------------------

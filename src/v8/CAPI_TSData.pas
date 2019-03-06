@@ -644,10 +644,9 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_idx(Value: Integer); CDECL;
-var
-    pTSData: TTSDataObj;
 begin
-    pTSData := TSDataClass[ActiveActor].ElementList.Get(Value);
+    if TSDataClass[ActiveActor].ElementList.Get(Value) = NIL then
+        DoSimpleMsg('Invalid TSData index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

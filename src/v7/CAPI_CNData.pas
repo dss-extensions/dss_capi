@@ -706,10 +706,9 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_idx(Value: Integer); CDECL;
-var
-    pCNData: TCNDataObj;
 begin
-    pCNData := CNDataClass.ElementList.Get(Value);
+    if CNDataClass.ElementList.Get(Value) = NIL then
+        DoSimpleMsg('Invalid CNData index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

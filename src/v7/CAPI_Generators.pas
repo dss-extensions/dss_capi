@@ -431,13 +431,14 @@ procedure Generators_Set_idx(Value: Integer); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then Exit;
+    pGen := ActiveCircuit.Generators.Get(Value);
+    if pGen = NIL then
     begin
-        pGen := ActiveCircuit.Generators.Get(Value);
-        if pGen <> NIL then
-            ActiveCircuit.ActiveCktElement := pGen;
+        DoSimpleMsg('Invalid Generator index: "' + IntToStr(Value) + '".', 656565);
+        Exit;
     end;
-
+    ActiveCircuit.ActiveCktElement := pGen;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Model(): Integer; CDECL;

@@ -71,16 +71,16 @@ def v7_to_v8(fn0):
             text = text.replace('ProxyHdl:Integer)', 'ProxyHdl:Integer; ActorID : Integer)')
             
             for k in [
-                "ProgressFormCaption( ' '",
+                "ProgressFormCaption(' '",
                 'ControlQueue.Delete(ActionHandle',
                 'BuildYMatrix(BuildOps, AllocateV',
                 'BuildYMatrix(BuildOption, FALSE',
                 'BuildYMatrix(BuildOption, TRUE',
-                'ProgressCaption ( Value',
-                'ShowPctProgress ( Value',
+                'ProgressCaption (Value',
+                'ShowPctProgress (Value',
                 'ShowPctProgress (0',
                 'ShowPctProgress(0',
-                'GetPhaseLosses( NValues, cBuffer',
+                'GetPhaseLosses(NValues, cBuffer',
                 'GetPhasePower(cBuffer',
                 'TranslateToCSV(True',
                 'CalcReliabilityIndices(AssumeRestoration',
@@ -88,12 +88,12 @@ def v7_to_v8(fn0):
                 'SolveSystem(NodeV',
                 'GetCurrents(cBuffer',
                 'GetAllWindingCurrents(TempCurrentBuffer',
-                'GetWindingVoltages( elem.ActiveWinding, TempVoltageBuffer',
+                'GetWindingVoltages(elem.ActiveWinding, TempVoltageBuffer',
             ]:
                 text = replace(text, '{})'.format(k), '{}, ActiveActor)'.format(k))
             
             
-            for k in ['PVSystem', 'CNData', 'LineSpacing', 'Monitor', 'EnergyMeter', 'Storage', 'XYCurve', 'WireData', 'TSData', 'LoadShape', 'Sensor', 'GICsource']:
+            for k in ['PVSystem', 'CNData', 'LineSpacing', 'Monitor', 'EnergyMeter', 'Storage', 'XYCurve', 'WireData', 'TSData', 'LoadShape', 'Sensor', 'GICsource', 'VSource', 'Transformer', 'SwtControl', 'GrowthShape', 'LineGeometry', 'LineCode', 'Line', 'ISource', 'Generator', 'Fuse', 'Capacitor', 'CapControl', 'Reactor', 'RegControl', 'Load', 'Recloser', 'Relay']:
                 text = replace(text, '{}Class'.format(k), '{}Class[ActiveActor]'.format(k))
                 
             text = replace(text, 'Result := NumCircuits;', 'Result := ActiveCircuit[ActiveActor].NumCircuits;')

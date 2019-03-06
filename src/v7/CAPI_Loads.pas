@@ -276,9 +276,10 @@ end;
 //------------------------------------------------------------------------------
 function Loads_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit = NIL then
-        Exit;
-    Result := ActiveCircuit.Loads.ActiveIndex
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Loads.ActiveIndex
+    else
+        Result := 0
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_idx(Value: Integer); CDECL;
@@ -289,7 +290,10 @@ begin
         Exit;
     pLoad := ActiveCircuit.Loads.Get(Value);
     if pLoad = NIL then
+    begin
+        DoSimpleMsg('Invalid Load index: "' + IntToStr(Value) + '".', 656565);
         Exit;
+    end;
     ActiveCircuit.ActiveCktElement := pLoad;
 end;
 //------------------------------------------------------------------------------

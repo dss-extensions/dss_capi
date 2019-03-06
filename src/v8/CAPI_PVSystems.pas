@@ -200,12 +200,13 @@ procedure PVSystems_Set_idx(Value: Integer); CDECL;
 var
     pPVSystem: TPVSystemObj;
 begin
-    if ActiveCircuit[ActiveActor] <> NIL then
+    if ActiveCircuit[ActiveActor] = NIL then Exit;
+    pPVSystem := ActiveCircuit[ActiveActor].PVSystems.Get(Value);
+    if pPVSystem = NIL then
     begin
-        pPVSystem := ActiveCircuit[ActiveActor].PVSystems.Get(Value);
-        if pPVSystem <> NIL then
-            ActiveCircuit[ActiveActor].ActiveCktElement := pPVSystem;
+        DoSimpleMsg('Invalid PVSystem index: "' + IntToStr(Value) + '".', 656565);
     end;
+    ActiveCircuit[ActiveActor].ActiveCktElement := pPVSystem;
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Name_AnsiString(): Ansistring; inline;
@@ -239,6 +240,7 @@ begin
     if PVSystemClass[ActiveActor].SetActive(Value) then
     begin
         ActiveCircuit[ActiveActor].ActiveCktElement := PVSystemClass[ActiveActor].ElementList.Active;
+        ActiveCircuit[ActiveActor].PVSystems.Get(PVSystemClass[ActiveActor].Active);
     end
     else
     begin

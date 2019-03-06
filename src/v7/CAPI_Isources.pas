@@ -32,7 +32,8 @@ uses
     PointerList,
     Isource,
     DSSGlobals,
-    CktElement;
+    CktElement,
+    SysUtils;
 
 procedure ISources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
@@ -146,7 +147,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('Isource "' + Value + '" Not Found in Active Circuit.', 77003);
+            DoSimpleMsg('ISource "' + Value + '" Not Found in Active Circuit.', 77003);
         end;
     end;
 end;
@@ -210,9 +211,10 @@ end;
 //------------------------------------------------------------------------------
 function ISources_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit = NIL then
-        Exit;
-    Result := ISourceClass.ElementList.ActiveIndex;
+    if ActiveCircuit <> NIL then
+        Result := ISourceClass.ElementList.ActiveIndex
+    else
+        Result := 0
 end;
 //------------------------------------------------------------------------------
 procedure ISources_Set_idx(Value: Integer); CDECL;
@@ -223,7 +225,10 @@ begin
         Exit;
     pISource := ISourceClass.ElementList.Get(Value);
     if pISource = NIL then
+    begin
+        DoSimpleMsg('Invalid ISource index: "' + IntToStr(Value) + '".', 656565);
         Exit;
+    end;
     ActiveCircuit.ActiveCktElement := pISource;
 end;
 //------------------------------------------------------------------------------

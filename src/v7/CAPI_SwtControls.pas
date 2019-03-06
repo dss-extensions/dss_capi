@@ -389,9 +389,10 @@ end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit = NIL then
-        Exit;
-    Result := ActiveCircuit.SwtControls.ActiveIndex
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.SwtControls.ActiveIndex
+    else
+        Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure SwtControls_Set_idx(Value: Integer); CDECL;
@@ -402,7 +403,10 @@ begin
         Exit;
     pSwtControl := ActiveCircuit.SwtControls.Get(Value);
     if pSwtControl = NIL then
+    begin
+        DoSimpleMsg('Invalid SwtControl index: "' + IntToStr(Value) + '".', 656565);
         Exit;
+    end;
     ActiveCircuit.ActiveCktElement := pSwtControl;
 end;
 //------------------------------------------------------------------------------

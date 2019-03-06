@@ -364,6 +364,7 @@ begin
     if LineClass[ActiveActor].SetActive(Value) then
     begin
         ActiveCircuit[ActiveActor].ActiveCktElement := LineClass[ActiveActor].ElementList.Active;
+        ActiveCircuit[ActiveActor].Lines.Get(LineClass[ActiveActor].Active);
     end
     else
     begin
@@ -1018,9 +1019,10 @@ end;
 //------------------------------------------------------------------------------
 function Lines_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit[ActiveActor] = NIL then
-        Exit;
-    Result := ActiveCircuit[ActiveActor].Lines.ActiveIndex
+    if ActiveCircuit[ActiveActor] <> NIL then
+        Result := ActiveCircuit[ActiveActor].Lines.ActiveIndex
+    else
+        Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_idx(Value: Integer); CDECL;
@@ -1031,7 +1033,10 @@ begin
         Exit;
     pLine := ActiveCircuit[ActiveActor].Lines.Get(Value);
     if pLine = NIL then
+    begin
+        DoSimpleMsg('Invalid Line index: "' + IntToStr(Value) + '".', 656565);
         Exit;
+    end;
     ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
 end;
 //------------------------------------------------------------------------------

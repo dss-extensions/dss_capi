@@ -1725,6 +1725,8 @@ exports
     CapControls_Set_idx,
     Capacitors_Get_idx,
     Capacitors_Set_idx,
+    GICSources_Get_idx,
+    GICSources_Set_idx,
     ISources_Get_idx,
     ISources_Set_idx,
     LineCodes_Get_idx,

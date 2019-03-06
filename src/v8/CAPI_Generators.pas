@@ -258,6 +258,7 @@ begin
     if GeneratorClass[ActiveActor].SetActive(Value) then
     begin
         ActiveCircuit[ActiveActor].ActiveCktElement := GeneratorClass[ActiveActor].ElementList.Active;
+        ActiveCircuit[ActiveActor].Generators.Get(GeneratorClass[ActiveActor].Active);
     end
     else
     begin
@@ -430,13 +431,14 @@ procedure Generators_Set_idx(Value: Integer); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if ActiveCircuit[ActiveActor] <> NIL then
+    if ActiveCircuit[ActiveActor] = NIL then Exit;
+    pGen := ActiveCircuit[ActiveActor].Generators.Get(Value);
+    if pGen = NIL then
     begin
-        pGen := ActiveCircuit[ActiveActor].Generators.Get(Value);
-        if pGen <> NIL then
-            ActiveCircuit[ActiveActor].ActiveCktElement := pGen;
+        DoSimpleMsg('Invalid Generator index: "' + IntToStr(Value) + '".', 656565);
+        Exit;
     end;
-
+    ActiveCircuit[ActiveActor].ActiveCktElement := pGen;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Model(): Integer; CDECL;

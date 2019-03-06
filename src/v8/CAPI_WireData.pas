@@ -463,10 +463,9 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure WireData_Set_idx(Value: Integer); CDECL;
-var
-    pWireData: TWireDataObj;
 begin
-    pWireData := WireDataClass[ActiveActor].ElementList.Get(Value);
+    if WireDataClass[ActiveActor].ElementList.Get(Value) = NIL then
+        DoSimpleMsg('Invalid WireData index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

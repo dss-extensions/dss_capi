@@ -149,8 +149,8 @@ begin
                 PFChanged := TRUE;
                 PFSpecified := TRUE;
             end;
-    {Set shape objects;  returns nil if not valid}
-    {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
+            {Set shape objects;  returns nil if not valid}
+            {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
             LoadProps.yearly:
             begin
                 YearlyShapeObj := LoadShapeClass[ActiveActor].Find(YearlyShape);
@@ -276,9 +276,10 @@ end;
 //------------------------------------------------------------------------------
 function Loads_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit[ActiveActor] = NIL then
-        Exit;
-    Result := ActiveCircuit[ActiveActor].Loads.ActiveIndex
+    if ActiveCircuit[ActiveActor] <> NIL then
+        Result := ActiveCircuit[ActiveActor].Loads.ActiveIndex
+    else
+        Result := 0
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_idx(Value: Integer); CDECL;
@@ -289,7 +290,10 @@ begin
         Exit;
     pLoad := ActiveCircuit[ActiveActor].Loads.Get(Value);
     if pLoad = NIL then
+    begin
+        DoSimpleMsg('Invalid Load index: "' + IntToStr(Value) + '".', 656565);
         Exit;
+    end;
     ActiveCircuit[ActiveActor].ActiveCktElement := pLoad;
 end;
 //------------------------------------------------------------------------------
@@ -349,6 +353,7 @@ begin
     if LoadClass[ActiveActor].SetActive(Value) then
     begin
         ActiveCircuit[ActiveActor].ActiveCktElement := LoadClass[ActiveActor].ElementList.Active;
+        ActiveCircuit[ActiveActor].Loads.Get(LoadClass[ActiveActor].Active);
     end
     else
     begin
@@ -872,8 +877,14 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_kwh(Value: Double); CDECL;
+var
+    elem: TLoadObj;
 begin
-    Set_Parameter('kwh', FloatToStr(Value));
+    elem := ActiveLoad;
+    if elem = NIL then
+        Exit;
+    elem.Set_kWh(Value);
+  //LoadPropSideEffects(LoadProps.kwh, elem);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_kwhdays(Value: Double); CDECL;

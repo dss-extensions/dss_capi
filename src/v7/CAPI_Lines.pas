@@ -1019,9 +1019,10 @@ end;
 //------------------------------------------------------------------------------
 function Lines_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit = NIL then
-        Exit;
-    Result := ActiveCircuit.Lines.ActiveIndex
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Lines.ActiveIndex
+    else
+        Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_idx(Value: Integer); CDECL;
@@ -1032,7 +1033,10 @@ begin
         Exit;
     pLine := ActiveCircuit.Lines.Get(Value);
     if pLine = NIL then
+    begin
+        DoSimpleMsg('Invalid Line index: "' + IntToStr(Value) + '".', 656565);
         Exit;
+    end;
     ActiveCircuit.ActiveCktElement := pLine;
 end;
 //------------------------------------------------------------------------------

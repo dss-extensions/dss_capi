@@ -246,6 +246,7 @@ begin
     if ReactorClass[ActiveActor].SetActive(Value) then
     begin
         ActiveCircuit[ActiveActor].ActiveCktElement := ReactorClass[ActiveActor].ElementList.Active;
+        ActiveCircuit[ActiveActor].Reactors.Get(ReactorClass[ActiveActor].Active);
     end
     else
     begin
@@ -841,9 +842,10 @@ end;
 //------------------------------------------------------------------------------
 function Reactors_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit[ActiveActor] = NIL then
-        Exit;
-    Result := ActiveCircuit[ActiveActor].Reactors.ActiveIndex
+    if ActiveCircuit[ActiveActor] <> NIL then
+        Result := ActiveCircuit[ActiveActor].Reactors.ActiveIndex
+    else
+        Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_idx(Value: Integer); CDECL;
@@ -854,7 +856,10 @@ begin
         Exit;
     pReactor := ActiveCircuit[ActiveActor].Reactors.Get(Value);
     if pReactor = NIL then
+    begin
+        DoSimpleMsg('Invalid Reactor index: "' + IntToStr(Value) + '".', 656565);
         Exit;
+    end;
     ActiveCircuit[ActiveActor].ActiveCktElement := pReactor;
 end;
 //------------------------------------------------------------------------------

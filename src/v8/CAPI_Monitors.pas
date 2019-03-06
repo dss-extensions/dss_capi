@@ -329,7 +329,7 @@ begin
     begin
         pMon := ActiveCircuit[ActiveActor].Monitors.Active;
         if PMon <> NIL then
-            PMon.TranslateToCSV(TRUE, ActiveActor);
+            PMon.TranslateToCSV(True, ActiveActor);
     end;
 
 end;
@@ -341,6 +341,7 @@ begin
     if MonitorClass[ActiveActor].SetActive(Value) then
     begin
         ActiveCircuit[ActiveActor].ActiveCktElement := MonitorClass[ActiveActor].ElementList.Active;
+        ActiveCircuit[ActiveActor].Monitors.Get(MonitorClass[ActiveActor].Active);
     end
     else
     begin
@@ -782,9 +783,10 @@ end;
 //------------------------------------------------------------------------------
 function Monitors_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit[ActiveActor] = NIL then
-        Exit;
-    Result := ActiveCircuit[ActiveActor].Monitors.ActiveIndex
+    if ActiveCircuit[ActiveActor] <> NIL then
+        Result := ActiveCircuit[ActiveActor].Monitors.ActiveIndex
+    else
+        Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Set_idx(Value: Integer); CDECL;
@@ -795,7 +797,10 @@ begin
         Exit;
     pMonitor := ActiveCircuit[ActiveActor].Monitors.Get(Value);
     if pMonitor = NIL then
+    begin
+        DoSimpleMsg('Invalid Monitor index: "' + IntToStr(Value) + '".', 656565);
         Exit;
+    end;
     ActiveCircuit[ActiveActor].ActiveCktElement := pMonitor;
 end;
 //------------------------------------------------------------------------------

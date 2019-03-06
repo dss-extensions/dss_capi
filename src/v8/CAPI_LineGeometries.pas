@@ -622,18 +622,18 @@ end;
 //------------------------------------------------------------------------------
 function LineGeometries_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit[ActiveActor] = NIL then
-        Exit;
-    Result := LineGeometryClass[ActiveActor].ElementList.ActiveIndex
+    if ActiveCircuit[ActiveActor] <> NIL then
+        Result := LineGeometryClass[ActiveActor].ElementList.ActiveIndex
+    else
+        Result := 0
 end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Set_idx(Value: Integer); CDECL;
-var
-    pLineGeometry: TLineGeometryObj;
 begin
     if ActiveCircuit[ActiveActor] = NIL then
         Exit;
-    pLineGeometry := LineGeometryClass[ActiveActor].ElementList.Get(Value);
+    if LineGeometryClass[ActiveActor].ElementList.Get(Value) = NIL then
+        DoSimpleMsg('Invalid LineGeometry index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

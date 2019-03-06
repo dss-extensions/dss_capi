@@ -458,6 +458,7 @@ begin
     if SensorClass[ActiveActor].SetActive(Value) then
     begin
         ActiveCircuit[ActiveActor].ActiveCktElement := SensorClass[ActiveActor].ElementList.Active;
+        ActiveCircuit[ActiveActor].Sensors.Get(SensorClass[ActiveActor].Active);
     end
     else
     begin
@@ -500,9 +501,10 @@ end;
 //------------------------------------------------------------------------------
 function Sensors_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit[ActiveActor] = NIL then
-        Exit;
-    Result := ActiveCircuit[ActiveActor].Sensors.ActiveIndex
+    if ActiveCircuit[ActiveActor] <> NIL then
+        Result := ActiveCircuit[ActiveActor].Sensors.ActiveIndex
+    else
+        Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_idx(Value: Integer); CDECL;
@@ -513,7 +515,10 @@ begin
         Exit;
     pSensor := ActiveCircuit[ActiveActor].Sensors.Get(Value);
     if pSensor = NIL then
+    begin
+        DoSimpleMsg('Invalid Sensor index: "' + IntToStr(Value) + '".', 656565);
         Exit;
+    end;
     ActiveCircuit[ActiveActor].ActiveCktElement := pSensor;
 end;
 //------------------------------------------------------------------------------

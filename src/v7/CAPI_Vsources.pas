@@ -36,7 +36,8 @@ uses
     Vsource,
     PointerList,
     DSSGlobals,
-    CktElement;
+    CktElement,
+    SysUtils;
 
 procedure Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
@@ -255,9 +256,10 @@ end;
 //------------------------------------------------------------------------------
 function Vsources_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit = NIL then
-        Exit;
-    Result := VsourceClass.ElementList.ActiveIndex
+    if ActiveCircuit <> NIL then
+        Result := VsourceClass.ElementList.ActiveIndex
+    else
+        Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Vsources_Set_idx(Value: Integer); CDECL;
@@ -268,7 +270,10 @@ begin
         Exit;
     pVsource := VsourceClass.ElementList.Get(Value);
     if pVsource = NIL then
+    begin
+        DoSimpleMsg('Invalid VSource index: "' + IntToStr(Value) + '".', 656565);
         Exit;
+    end;
     ActiveCircuit.ActiveCktElement := pVsource;
 end;
 //------------------------------------------------------------------------------

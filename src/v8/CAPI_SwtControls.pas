@@ -284,6 +284,7 @@ begin
     if SwtControlClass[ActiveActor].SetActive(Value) then
     begin
         ActiveCircuit[ActiveActor].ActiveCktElement := SwtControlClass[ActiveActor].ElementList.Active;
+        ActiveCircuit[ActiveActor].SwtControls.Get(SwtControlClass[ActiveActor].Active);
     end
     else
     begin
@@ -388,9 +389,10 @@ end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit[ActiveActor] = NIL then
-        Exit;
-    Result := ActiveCircuit[ActiveActor].SwtControls.ActiveIndex
+    if ActiveCircuit[ActiveActor] <> NIL then
+        Result := ActiveCircuit[ActiveActor].SwtControls.ActiveIndex
+    else
+        Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure SwtControls_Set_idx(Value: Integer); CDECL;
@@ -401,7 +403,10 @@ begin
         Exit;
     pSwtControl := ActiveCircuit[ActiveActor].SwtControls.Get(Value);
     if pSwtControl = NIL then
+    begin
+        DoSimpleMsg('Invalid SwtControl index: "' + IntToStr(Value) + '".', 656565);
         Exit;
+    end;
     ActiveCircuit[ActiveActor].ActiveCktElement := pSwtControl;
 end;
 //------------------------------------------------------------------------------

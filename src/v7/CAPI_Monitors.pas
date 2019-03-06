@@ -783,9 +783,10 @@ end;
 //------------------------------------------------------------------------------
 function Monitors_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit = NIL then
-        Exit;
-    Result := ActiveCircuit.Monitors.ActiveIndex
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.Monitors.ActiveIndex
+    else
+        Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Set_idx(Value: Integer); CDECL;
@@ -796,7 +797,10 @@ begin
         Exit;
     pMonitor := ActiveCircuit.Monitors.Get(Value);
     if pMonitor = NIL then
+    begin
+        DoSimpleMsg('Invalid Monitor index: "' + IntToStr(Value) + '".', 656565);
         Exit;
+    end;
     ActiveCircuit.ActiveCktElement := pMonitor;
 end;
 //------------------------------------------------------------------------------

@@ -559,9 +559,10 @@ end;
 //------------------------------------------------------------------------------
 function RegControls_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit = NIL then
-        Exit;
-    Result := ActiveCircuit.RegControls.ActiveIndex
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.RegControls.ActiveIndex
+    else
+        Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_idx(Value: Integer); CDECL;
@@ -572,7 +573,10 @@ begin
         Exit;
     pRegControl := ActiveCircuit.RegControls.Get(Value);
     if pRegControl = NIL then
+    begin
+        DoSimpleMsg('Invalid RegControl index: "' + IntToStr(Value) + '".', 656565);
         Exit;
+    end;
     ActiveCircuit.ActiveCktElement := pRegControl;
 end;
 //------------------------------------------------------------------------------

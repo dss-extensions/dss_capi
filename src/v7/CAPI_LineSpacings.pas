@@ -331,10 +331,9 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Set_idx(Value: Integer); CDECL;
-var
-    pLineSpacing: TLineSpacingObj;
 begin
-    pLineSpacing := LineSpacingClass.ElementList.Get(Value);
+    if LineSpacingClass.ElementList.Get(Value) = NIL then
+        DoSimpleMsg('Invalid LineSpacing index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

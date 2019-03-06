@@ -655,10 +655,9 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_idx(Value: Integer); CDECL;
-var
-    pLineCode: TLineCodeObj;
 begin
-    pLineCode := LineCodeClass.ElementList.Get(Value);
+    if LineCodeClass.ElementList.Get(Value) = NIL then
+        DoSimpleMsg('Invalid LineCode index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

@@ -557,7 +557,8 @@ end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_idx(Value: Integer); CDECL;
 begin
-    LoadShapeClass[ActiveActor].ElementList.Get(Value);
+    if LoadShapeClass[ActiveActor].ElementList.Get(Value) = NIL then
+        DoSimpleMsg('Invalid LoadShape index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

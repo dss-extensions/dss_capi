@@ -45,7 +45,8 @@ implementation
 uses
     CAPI_Constants,
     DSSGlobals,
-    DSSObject;
+    DSSObject,
+    SysUtils;
 
 function XYCurves_Get_Count(): Integer; CDECL;
 begin
@@ -530,10 +531,9 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure XYCurves_Set_idx(Value: Integer); CDECL;
-var
-    pXYCurve: TXYCurveObj;
 begin
-    pXYCurve := XYCurveClass.ElementList.Get(Value);
+    if XYCurveClass.ElementList.Get(Value) = NIL then
+        DoSimpleMsg('Invalid XYCurve index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

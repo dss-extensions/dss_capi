@@ -5713,6 +5713,8 @@ extern "C" {
     DSS_CAPI_V7_DLL void CapControls_Set_idx(int32_t Value);
     DSS_CAPI_V7_DLL int32_t Capacitors_Get_idx(void);
     DSS_CAPI_V7_DLL void Capacitors_Set_idx(int32_t Value);
+    DSS_CAPI_V7_DLL int32_t GICSources_Get_idx(void);
+    DSS_CAPI_V7_DLL void GICSources_Set_idx(int32_t Value);
     DSS_CAPI_V7_DLL int32_t ISources_Get_idx(void);
     DSS_CAPI_V7_DLL void ISources_Set_idx(int32_t Value);
     DSS_CAPI_V7_DLL int32_t LineCodes_Get_idx(void);
