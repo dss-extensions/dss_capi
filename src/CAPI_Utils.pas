@@ -19,6 +19,11 @@ type
     PPByte = ^PByte;
     PPPAnsiChar = ^PPAnsiChar;
 
+    Float32Array = array[0..0] of Single;
+    PFloat32Array = ^Float32Array;
+    PFloat32 = ^Single;
+    PPFloat32 = ^PFloat32;
+
 var
     GR_DataPtr_PPAnsiChar: PPAnsiChar;
     GR_DataPtr_PDouble: PDouble;
@@ -42,6 +47,7 @@ procedure DSS_GetGRPointers(
     var CountPtr_PDouble: PInteger;
     var CountPtr_PInteger: PInteger;
     var CountPtr_PByte: PInteger); CDECL;
+    
 procedure DSS_DisposeGRData(); CDECL;
 
 function DSS_GetAsPAnsiChar(s: Ansistring): PAnsiChar; inline;

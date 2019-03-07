@@ -67,8 +67,8 @@ def v7_to_v8(fn0):
             text = replace(text, 'Closed[Phs]', 'Closed[Phs, ActiveActor]')
             text = replace(text, 'Power[1]', 'Power[1, ActiveActor]')
             text = replace(text, 'PresentTap[elem.ActiveWinding]', 'PresentTap[elem.ActiveWinding, ActiveActor]')
-            text = text.replace('ProxyHdl: Integer)', 'ProxyHdl:Integer; ActorID : Integer)')
-            text = text.replace('ProxyHdl:Integer)', 'ProxyHdl:Integer; ActorID : Integer)')
+            text = text.replace('ProxyHdl: Integer)', 'ProxyHdl: Integer; ActorID: Integer)')
+            text = text.replace('ProxyHdl:Integer)', 'ProxyHdl: Integer; ActorID: Integer)')
             
             for k in [
                 "ProgressFormCaption(' '",
@@ -103,6 +103,6 @@ def v7_to_v8(fn0):
             fout.write(text)
             
 
-for fn in glob('v7/*.pas'):
+for fn in glob('v7/CAPI_monitors.pas'):
     v7_to_v8(fn)
     
