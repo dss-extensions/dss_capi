@@ -56,7 +56,7 @@ TYPE
        OverLoad_EEN  :double;  // Indicate amount of branch overload
 
         NRatings             : Integer;
-        ratings              : pDoubleArray;
+        ratings              : Array of Double;
 
        constructor Create(ParClass:TDSSClass);
        destructor Destroy; override;
@@ -194,14 +194,14 @@ Begin
     MeterObj          := NIL;
     ParentPDElement   := NIL;
     DSSObjType        := PD_ELEMENT;
-    Ratings           := Nil;  // Initialized here
+    setlength(Ratings,1);  // Initialized here
+    Ratings[0]        :=  -1;
 
 
 End;
 
 destructor TPDElement.Destroy;
 Begin
-//    if Assigned(Ratings) then  Reallocmem(Ratings, 0);  // Dispose of array and set Ratings := nil
     Inherited Destroy;
 End;
 
