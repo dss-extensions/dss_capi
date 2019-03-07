@@ -13,7 +13,7 @@ uses
     Command;
 
 const
-    NumExecCommands = 107;
+    NumExecCommands = 111;
 
 var
 
@@ -161,7 +161,10 @@ begin
     ExecCommand[105] := 'Connect';
     ExecCommand[106] := 'Disconnect';
     ExecCommand[107] := 'Remove';
-
+    ExecCommand[108] := 'CalcIncMatrix';
+    ExecCommand[109] := 'CalcIncMatrix_O';
+    ExecCommand[110] := 'Refine_BusLevels';
+    ExecCommand[111] := 'CalcLaplacian';
 
     CommandHelp[1] := 'Create a new object within the DSS. Object becomes the ' +
         'active object' + CRLF +
@@ -490,6 +493,14 @@ begin
         'Remove Line.Lin3021' + CRLF +
         'Remove Line.L22 Editstring="Daily=Dailycurve Duty=SolarShape' + CRLF +
         'Remove Line.L333 KeepLoad=No';
+    CommandHelp[108] := 'Calculates the incidence matrix of the Active Circuit';
+    CommandHelp[109] := 'Calculates the incidence matrix of the Active Circuit. However, in this case the matrix will be calculated by considering its hierarchical order,' +
+        'which means that the buses order will be generated considering their distribution from the substation to the last load in a radial hierarchy';
+    CommandHelp[110] := 'This function takes the bus levels array and traces all the possible paths considering the longest paths from the substation to the longest branches' +
+        ' within the circuit. Then, the new paths are filled with 0 to complement the oroginal levels proposed by the calcincmatrix_o command.';
+    CommandHelp[111] := 'Calculate the laplacian matrix using the incidence matrix' + CRLF +
+        'previously calculated, this means that before calling this command' + CRLF +
+        'the incidence matrix needs to be calculated using calcincmatrix/calcincmatrix_o';
 
 end;
 
@@ -610,7 +621,27 @@ begin
             101:
                 DoVarCmd;
 
-
+            108: // CalcIncMatrix
+            begin
+                ActiveCircuit.Solution.Calc_Inc_Matrix();
+            end;
+            109: // CalcIncMatrix_O
+            begin
+                ActiveCircuit.Solution.Calc_Inc_Matrix_Org();
+            end;
+            110: // Refine_BusLevels
+            begin
+                ActiveCircuit.Get_paths_4_Coverage();
+                GlobalResult := inttostr(length(ActiveCircuit.Path_Idx) - 1) + ' new paths detected';
+            end;
+            111: // CalcLaplacian
+            begin
+                with ActiveCircuit.Solution do
+                begin
+                    Laplacian := IncMat.Transpose();          // Transposes the Incidence Matrix
+                    Laplacian := Laplacian.multiply(IncMat);  // IncMatT*IncMat
+                end;
+            end
         else
             if ActiveCircuit = NIL then
             begin
