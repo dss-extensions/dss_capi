@@ -828,7 +828,6 @@ Begin
     If Assigned(Zinv) Then Zinv.Free;
     If Assigned(Yc) Then Yc.Free;
     Reallocmem (FLineWireData, 0);
-//    if Assigned(Ratings) then Reallocmem(Ratings, 0);
 
     Inherited destroy;
 End;
