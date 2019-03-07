@@ -684,7 +684,7 @@ END;
 destructor TLoadShapeObj.Destroy;
 BEGIN
 
-    ReallocMem(Hours, 0);
+    If Assigned(Hours)        Then  ReallocMem(Hours, 0);
     If Assigned(PMultipliers) Then  ReallocMem(PMultipliers, 0);
     If Assigned(QMultipliers) Then  ReallocMem(QMultipliers, 0);
     Inherited destroy;
