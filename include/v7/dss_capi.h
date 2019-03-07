@@ -5217,6 +5217,16 @@ extern "C" {
     */
     DSS_CAPI_V7_DLL void Vsources_Set_Phases(int32_t Value);
 
+
+    /*
+    Array of strings with all XYCurve names.
+    */
+    DSS_CAPI_V7_DLL void XYCurves_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as XYCurves_Get_AllNames but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void XYCurves_Get_AllNames_GR(void);
+
     /*
     Number of XYCurve Objects
     */

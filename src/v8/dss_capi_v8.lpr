@@ -1332,6 +1332,7 @@ exports
     Vsources_Set_AngleDeg,
     Vsources_Set_Frequency,
     Vsources_Set_Phases,
+    XYCurves_Get_AllNames,
     XYCurves_Get_Count,
     XYCurves_Get_First,
     XYCurves_Get_Name,
@@ -1510,6 +1511,7 @@ exports
     Transformers_Get_WdgCurrents_GR,
     Transformers_Get_WdgVoltages_GR,
     Vsources_Get_AllNames_GR,
+    XYCurves_Get_AllNames_GR,
     XYCurves_Get_Xarray_GR,
     XYCurves_Get_Yarray_GR,
     

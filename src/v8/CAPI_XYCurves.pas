@@ -34,6 +34,8 @@ procedure XYCurves_Set_Xscale(Value: Double); CDECL;
 procedure XYCurves_Set_Xshift(Value: Double); CDECL;
 procedure XYCurves_Set_Yscale(Value: Double); CDECL;
 procedure XYCurves_Set_Yshift(Value: Double); CDECL;
+procedure XYCurves_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure XYCurves_Get_AllNames_GR(); CDECL;
 
 // API Extensions
 function XYCurves_Get_idx(): Integer; CDECL;
@@ -534,6 +536,37 @@ procedure XYCurves_Set_idx(Value: Integer); CDECL;
 begin
     if XYCurveClass[ActiveActor].ElementList.Get(Value) = NIL then
         DoSimpleMsg('Invalid XYCurve index: "' + IntToStr(Value) + '".', 656565);
+end;
+//------------------------------------------------------------------------------
+procedure XYCurves_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+var
+    Result: PPAnsiCharArray;
+    XYCurveElem: TXYCurveObj;
+    k: Integer;
+
+begin
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result[0] := DSS_CopyStringAsPChar('NONE');
+    if ActiveCircuit[ActiveActor] = NIL then Exit;
+    if XYCurveClass[ActiveActor].ElementList.ListSize <= 0 then Exit;
+    with ActiveCircuit[ActiveActor] do
+    begin
+        DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, XYCurveClass[ActiveActor].ElementList.ListSize);
+        k := 0;
+        XYCurveElem := XYCurveClass[ActiveActor].ElementList.First;
+        while XYCurveElem <> NIL do
+        begin
+            Result[k] := DSS_CopyStringAsPChar(XYCurveElem.Name);
+            Inc(k);
+            XYCurveElem := XYCurveClass[ActiveActor].ElementList.Next;
+        end;
+    end;
+end;
+
+procedure XYCurves_Get_AllNames_GR(); CDECL;
+// Same as XYCurves_Get_AllNames but uses global result (GR) pointers
+begin
+    XYCurves_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 //------------------------------------------------------------------------------
 end.
