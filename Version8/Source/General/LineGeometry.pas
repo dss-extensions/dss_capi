@@ -94,7 +94,7 @@ TYPE
         NormAmps          : Double;
         EmergAmps         : Double;
         NRatings          : Integer;
-        ratings           : pDoubleArray;
+        Ratings           : Array of Double;
 
         constructor Create(ParClass:TDSSClass; const LineGeometryName:String);
         destructor Destroy; override;
@@ -337,11 +337,12 @@ BEGIN
            End;
            17: Begin
                  Nratings         :=  Parser[ActorID].IntValue;
-                 ReAllocmem(ratings, Sizeof(ratings^[1])*Nratings);
+                 setlength(Ratings,NRatings);
                End;
            18: Begin
+                 setlength(Ratings,NRatings);
                  Param := Parser[ActorID].StrValue;
-                 Nratings := InterpretDblArray(Param, Nratings, ratings);
+                 Nratings := InterpretDblArray(Param, Nratings, Pointer(Ratings));
                End
          ELSE
            // Inherited parameters
@@ -499,9 +500,9 @@ BEGIN
 
       FReduce     := FALSE;
       ratings     :=  Nil;
-      NRatings  :=  1;
-      ReAllocmem(ratings, Sizeof(ratings^[1])*Nratings);
-      ratings^[1]  :=  NormAmps;
+      NRatings    :=  1;
+      setlength(ratings,Nratings);
+      ratings[0]  :=  NormAmps;
 
      InitPropertyValues(0);
 END;
@@ -574,7 +575,7 @@ begin
       18  : Begin
               Result   :=  '[';
               for  j:= 1 to Nratings do
-                Result :=  Result + floattoStrf(ratings^[j],ffgeneral,8,4) + ',';
+                Result :=  Result + floattoStrf(ratings[j-1],ffgeneral,8,4) + ',';
               Result   :=  Result + ']';
             End;
    ELSE
@@ -687,7 +688,7 @@ begin
             18: Begin
                   TempStr   :=  '[';
                   for  j:= 1 to Nratings do
-                    TempStr :=  TempStr + floattoStrf(ratings^[j],ffgeneral,8,4) + ',';
+                    TempStr :=  TempStr + floattoStrf(ratings[j-1],ffgeneral,8,4) + ',';
                   TempStr   :=  TempStr + ']';
                   Writeln(F,'ratings=' + TempStr);
                 End;

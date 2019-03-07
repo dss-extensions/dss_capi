@@ -95,7 +95,7 @@ TYPE
         Rg,
         Xg,
         rho               : Double;
-        ratings           : pDoubleArray;
+        ratings           : Array of Double;
 
         Units:Integer;  {See LineUnits}
 
@@ -429,11 +429,12 @@ BEGIN
            24: SetZ1Z0(6, Parser[ActorID].Dblvalue / (twopi * BaseFrequency) * 1.0e-6); {B0 -> C0}
            25: Begin
                  Nratings         :=  Parser[ActorID].IntValue;
-                 ReAllocmem(ratings, Sizeof(ratings^[1])*Nratings);
+                 setlength(Ratings,Nratings);
                End;
            26: Begin
-                 Param := Parser[ActorID].StrValue;
-                 Nratings := InterpretDblArray(Param, Nratings, ratings);
+               setlength(Ratings,Nratings);
+               Param := Parser[ActiveActor].StrValue;
+               Nratings := InterpretDblArray(Param, Nratings, Pointer(Ratings));
                End
          ELSE
            ClassEdit(ActiveLineCodeObj, Parampointer - NumPropsThisClass)
@@ -587,8 +588,8 @@ BEGIN
 
     ratings := Nil;  // init prior to Reallocmem call
     NRatings  :=  1;
-    ReAllocmem(ratings, Sizeof(ratings^[1])*Nratings);
-    ratings^[1]  :=  NormAmps;
+    setlength(Ratings,Nratings);
+    ratings[0]  :=  NormAmps;
 
     InitPropertyValues(0);
 END;
@@ -599,8 +600,6 @@ BEGIN
     Z.Free;
     Zinv.Free;
     Yc.Free;
-
-    ReAllocmem(ratings, 0);   // dispose of array
 
     Inherited destroy;
 END;
@@ -718,7 +717,7 @@ Begin
          Writeln(F, Format('~ %s=%d',[PropertyName^[25], Nratings]));
          TempStr   :=  '[';
          for  k:= 1 to Nratings do
-          TempStr :=  TempStr + floattoStrf(ratings^[k],ffGeneral,8,4) + ',';
+          TempStr :=  TempStr + floattoStrf(ratings[k-1],ffGeneral,8,4) + ',';
          TempStr   :=  TempStr + ']';
          Writeln(F, Format('~ %s=%s',[PropertyName^[26]]) + TempStr);
 
@@ -755,7 +754,7 @@ begin
         26  : Begin
                 Result   :=  '[';
                 for  j:= 1 to Nratings do
-                  Result :=  Result + floattoStrf(ratings^[j],ffgeneral,8,4) + ',';
+                  Result :=  Result + floattoStrf(ratings[j-1],ffgeneral,8,4) + ',';
                 Result   :=  Result + ']';
               End;
      Else
