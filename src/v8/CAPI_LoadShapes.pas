@@ -195,7 +195,8 @@ begin
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61001);
     end;
-    if not assigned(elem.QMultipliers) then Exit;
+    if not assigned(elem.QMultipliers) then
+        Exit;
     ActualNumPoints := Min(Length(elem.QMultipliers), elem.NumPoints);
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
     Move(elem.QMultipliers[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
@@ -316,8 +317,9 @@ begin
         DoSimpleMsg('No active Loadshape Object found.', 61003);
         Exit;
     end;
-    
-    if elem.Hours = NIL then Exit;
+
+    if elem.Hours = NIL then
+        Exit;
     ActualNumPoints := Min(Length(elem.Hours), elem.NumPoints);
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
     Move(elem.Hours[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));

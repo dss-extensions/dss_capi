@@ -149,7 +149,7 @@ type
     end;
 
     pFeederSections = ^FeederSectionArray;
-    FeederSectionArray = array[1..1] of TFeederSection;
+    FeederSectionArray = array[1..100] of TFeederSection;   // Dummy dimension
     //  --------- Feeder Section Definition -----------
 
     TSystemMeter = class(Tobject)
@@ -478,11 +478,11 @@ begin
     FSaveDemandInterval := FALSE;
     FDI_Verbose := FALSE;
 
+    Do_OverloadReport := FALSE;  // FSaveDemandInterval must be true for this to have an effect
     OverLoadFileIsOpen := FALSE;
     VoltageFileIsOpen := FALSE;
 
 
-    Do_OverloadReport := FALSE;
     Do_VoltageExceptionReport := FALSE;
 
     DI_Dir := '';
@@ -1101,6 +1101,12 @@ begin
     ReallocMem(VBaseLoadLosses, MaxVBaseCount * SizeOf(VBaseLoadLosses^[1]));
     ReallocMem(VBaseNoLoadLosses, MaxVBaseCount * SizeOf(VBaseNoLoadLosses^[1]));
     ReallocMem(VBaseLoad, MaxVBaseCount * SizeOf(VBaseLoad^[1]));
+
+//  Init pointers to Nil before allocating
+    VphaseMax := NIL;
+    VPhaseMin := NIL;
+    VPhaseAccum := NIL;
+    VPhaseAccumCount := NIL;
 
      // Arrays for phase voltage report
     ReallocMem(VphaseMax, MaxVBaseCount * 3 * SizeOf(Double));
@@ -2535,8 +2541,8 @@ begin
 
     case ActiveCircuit.ReductionStrategy of
 
-        rsStubs:
-            DoReduceStubs(BranchList);    {See ReduceAlgs.Pas}
+        rsShortlines:
+            DoReduceShortLines(BranchList);    {See ReduceAlgs.Pas}
          {rsTapEnds:       DoReduceTapEnds (BranchList);}
         rsMergeParallel:
             DoMergeParallelLines(BranchList);
@@ -2547,7 +2553,8 @@ begin
         rsSwitches:
             DoReduceSwitches(BranchList);
         rsLaterals:
-            DoReduceLaterals(BranchList);
+            DoRemoveAll_1ph_Laterals(BranchList);
+
     else
        {Default}
         DoReduceDefault(BranchList);
@@ -2770,8 +2777,9 @@ begin
         PD_Elem := SequenceList.Get(idx);
         PD_Elem.CalcCustInterrupts;
 
-        if PD_Elem.BranchSectionID <= 0 then continue;
-        
+        if PD_Elem.BranchSectionID <= 0 then
+            continue;
+
         // Populate the Section properties
         pSection := @FeederSections^[PD_Elem.BranchSectionID];
         Inc(pSection.NCustomers, PD_Elem.BranchNumCustomers); // Sum up num Customers on this Section

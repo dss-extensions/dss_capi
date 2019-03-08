@@ -41,6 +41,7 @@ uses
 
 var
     As2p, Ap2s, ClarkeF, ClarkeR: TcMatrix;
+
 {Symmetrical Component Conversion Matrices}
    // Sqrt23:Double;
 

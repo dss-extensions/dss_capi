@@ -114,7 +114,7 @@ end;
 procedure DoDSSCommandCallBack(S: pAnsiChar; Maxlen: Cardinal); STDCALL;
 begin
     SolutionAbort := FALSE;
-    DSSExecutive.Command := String(S);
+    DSSExecutive[ActiveActor].Command := String(S);
 end;
 
 {====================================================================================================================}

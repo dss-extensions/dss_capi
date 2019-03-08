@@ -47,7 +47,7 @@ procedure DSS_GetGRPointers(
     var CountPtr_PDouble: PInteger;
     var CountPtr_PInteger: PInteger;
     var CountPtr_PByte: PInteger); CDECL;
-    
+
 procedure DSS_DisposeGRData(); CDECL;
 
 function DSS_GetAsPAnsiChar(s: Ansistring): PAnsiChar; inline;

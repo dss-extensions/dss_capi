@@ -60,7 +60,7 @@ begin
         exit;
     SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('recloser.%s.%s=%s', [TRecloserObj(ActiveCircuit[ActiveActor].Reclosers.Active).Name, parm, val]);
-    DSSExecutive.Command := cmd;
+    DSSExecutive[ActiveActor].Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -72,7 +72,8 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit[ActiveActor] = NIL then Exit;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
     with ActiveCircuit[ActiveActor] do
         if Reclosers.ListSize > 0 then
         begin
@@ -442,7 +443,8 @@ procedure Reclosers_Set_idx(Value: Integer); CDECL;
 var
     pRecloser: TRecloserObj;
 begin
-    if ActiveCircuit[ActiveActor] = NIL then Exit;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
     pRecloser := ActiveCircuit[ActiveActor].Reclosers.Get(Value);
     if pRecloser = NIL then
     begin

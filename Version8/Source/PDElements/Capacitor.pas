@@ -389,7 +389,7 @@ begin
                 3:
 { Numphases := Parser.IntValue};  // see below
                 4:
-                    InterpretDblArray(Param, FNumSteps, FkvarRating);
+                    FNumSteps := InterpretDblArray(Param, FNumSteps, FkvarRating);
                 5:
                     kvRating := Parser[ActorID].Dblvalue;
                 6:
@@ -397,11 +397,11 @@ begin
                 7:
                     DoCMatrix(ActorID);
                 8:
-                    InterpretDblArray(Param, FNumSteps, FC);
+                    FNumSteps := InterpretDblArray(Param, FNumSteps, FC);
                 9:
-                    InterpretDblArray(Param, FNumSteps, FR);
+                    FNumSteps := InterpretDblArray(Param, FNumSteps, FR);
                 10:
-                    InterpretDblArray(Param, FNumSteps, FXL);
+                    FNumSteps := InterpretDblArray(Param, FNumSteps, FXL);
                 11:
                     ProcessHarmonicSpec(Param);
                 12:
@@ -1029,7 +1029,7 @@ end;
 
 procedure TCapacitorObj.ProcessHarmonicSpec(const Param: String);
 begin
-    InterpretDblArray(Param, FNumsteps, FHarm);
+    FNumsteps := InterpretDblArray(Param, FNumsteps, FHarm);
 
     DoHarmonicRecalc := TRUE;
 end;
@@ -1073,7 +1073,7 @@ end;
 procedure TCapacitorObj.ProcessStatesSpec(const Param: String);
 
 begin
-    InterpretIntArray(Param, FNumsteps, FStates);
+    FNumsteps := InterpretIntArray(Param, FNumsteps, FStates);
     FindLastStepInService;
 end;
 

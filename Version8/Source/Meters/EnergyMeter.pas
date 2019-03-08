@@ -92,7 +92,9 @@ uses
     Feeder,
     Load,
     Generator,
-    Command;
+    XYCurve,
+    Command,
+    Classes;
 
 const
     NumEMVbase = 7;
@@ -149,7 +151,7 @@ type
     end;
 
     pFeederSections = ^FeederSectionArray;
-    FeederSectionArray = array[1..1] of TFeederSection;
+    FeederSectionArray = array[1..100] of TFeederSection;   // Dummy dimension
     //  --------- Feeder Section Definition -----------
 
     TSystemMeter = class(Tobject)
@@ -267,7 +269,6 @@ type
         FSeqLosses: Boolean;
         F3PhaseLosses: Boolean;
         FVBaseLosses: Boolean;
-        FPhaseVoltageReport: Boolean;
 
         FeederObj: TFeederObj;   // not used at present
         DefinedZoneList: pStringArray;
@@ -324,7 +325,11 @@ type
         procedure AppendDemandIntervalFile(ActorID: Integer);
 
     PUBLIC
+        DI_MHandle: TBytesStream;
+        PHV_MHandle: TBytesStream;
+
         RegisterNames: array[1..NumEMregisters] of String;
+        FPhaseVoltageReport: Boolean;
 
         BranchList: TCktTree;      // Pointers to all circuit elements in meter's zone
         SequenceList: PointerList.TPointerList;  // Pointers to branches in sequence from meter to ends
@@ -401,13 +406,12 @@ uses
     Line,
     LineUnits,
     ReduceAlgs,
-    Math,
-    MemoryMap_Lib,
-    Sysutils,
-{$IFNDEF FPC}
+{$IFDEF MSWINDOWS}
     Windows,
 {$ENDIF}
-    Classes;
+    Math,
+    MemoryMap_Lib,
+    Sysutils;
 
 //{$UNDEF DEBUG}
 
@@ -1042,6 +1046,12 @@ begin
     ReallocMem(VBaseNoLoadLosses, MaxVBaseCount * SizeOf(VBaseNoLoadLosses^[1]));
     ReallocMem(VBaseLoad, MaxVBaseCount * SizeOf(VBaseLoad^[1]));
 
+//  Init pointers to Nil before allocating
+    VphaseMax := NIL;
+    VPhaseMin := NIL;
+    VPhaseAccum := NIL;
+    VPhaseAccumCount := NIL;
+
      // Arrays for phase voltage report
     ReallocMem(VphaseMax, MaxVBaseCount * 3 * SizeOf(Double));
     ReallocMem(VPhaseMin, MaxVBaseCount * 3 * SizeOf(Double));
@@ -1114,14 +1124,11 @@ begin
     FeederSections := NIL;
     ActiveSection := 0;
 
-    OV_MHandle[ActiveActor] := NIL;
-    VR_MHandle[ActiveActor] := NIL;
-    DI_MHandle[ActiveActor] := NIL;
-    SDI_MHandle[ActiveActor] := NIL;
+    DI_MHandle := NIL;
     TDI_MHandle[ActiveActor] := NIL;
     SM_MHandle[ActiveActor] := NIL;
     EMT_MHandle[ActiveActor] := NIL;
-    PHV_MHandle[ActiveActor] := NIL;
+    PHV_MHandle := NIL;
     FM_MHandle[ActiveActor] := NIL;
 
     // RecalcElementData;
@@ -1167,22 +1174,14 @@ begin
     if Assigned(FeederSections) then
         Reallocmem(FeederSections, 0);
 
-    if OV_MHandle[ActiveActor] <> NIL then
-        OV_MHandle[ActiveActor].Free;
-    if VR_MHandle[ActiveActor] <> NIL then
-        VR_MHandle[ActiveActor].Free;
-    if DI_MHandle[ActiveActor] <> NIL then
-        DI_MHandle[ActiveActor].Free;
-    if SDI_MHandle[ActiveActor] <> NIL then
-        SDI_MHandle[ActiveActor].Free;
-    if TDI_MHandle[ActiveActor] <> NIL then
-        TDI_MHandle[ActiveActor].Free;
+    if DI_MHandle <> NIL then
+        DI_MHandle.Free;
     if SM_MHandle[ActiveActor] <> NIL then
         SM_MHandle[ActiveActor].Free;
     if EMT_MHandle[ActiveActor] <> NIL then
         EMT_MHandle[ActiveActor].Free;
-    if PHV_MHandle[ActiveActor] <> NIL then
-        PHV_MHandle[ActiveActor].Free;
+    if PHV_MHandle <> NIL then
+        PHV_MHandle.Free;
     if FM_MHandle[ActiveActor] <> NIL then
         FM_MHandle[ActiveActor].Free;
 
@@ -2504,8 +2503,8 @@ begin
 
     case ActiveCircuit[ActorID].ReductionStrategy of
 
-        rsStubs:
-            DoReduceStubs(BranchList);    {See ReduceAlgs.Pas}
+        rsShortlines:
+            DoReduceShortlines(BranchList);    {See ReduceAlgs.Pas}
          {rsTapEnds:       DoReduceTapEnds (BranchList);}
         rsMergeParallel:
             DoMergeParallelLines(BranchList);
@@ -2516,7 +2515,8 @@ begin
         rsSwitches:
             DoReduceSwitches(BranchList);
         rsLaterals:
-            DoReduceLaterals(BranchList);
+            DoRemoveAll_1ph_Laterals(BranchList);
+
     else
        {Default}
         DoReduceDefault(BranchList);
@@ -2635,7 +2635,15 @@ begin
         X := Buses^[FirstCoordref].X;
         Y := Buses^[FirstCoordref].Y;
 
-       {Either start with the "to" end of StartNode or the "from" end;}
+       {***Debug}
+   (*    If ((X<10.0) and (y<10.0)) or
+          ((Buses^[SecondCoordRef].X<10.0) and (Buses^[SecondCoordRef].Y<10.0)) Then
+       Begin
+          X := y;  // Stopping point
+       End;
+     *)
+
+     {Either start with the "to" end of StartNode or the "from" end;}
         if FirstCoordRef <> StartBranch.FromBusReference then
         begin  // Start with "to" end
             X := X - Xinc;
@@ -2736,9 +2744,10 @@ begin
     begin
         PD_Elem := SequenceList.Get(idx);
         PD_Elem.CalcCustInterrupts;
-        
-        if PD_Elem.BranchSectionID <= 0 then continue;
-        
+
+        if PD_Elem.BranchSectionID <= 0 then
+            continue;
+
         // Populate the Section properties
         pSection := @FeederSections^[PD_Elem.BranchSectionID];
         Inc(pSection.NCustomers, PD_Elem.BranchNumCustomers); // Sum up num Customers on this Section
@@ -3108,7 +3117,6 @@ begin
             SavedFileList[ActiveActor].Add(dirname + PathDelim + 'Capacitors.dss')
         else
             DeleteFile('Capacitors.dss');
-
     end; {IF}
 
 end;
@@ -3126,20 +3134,17 @@ end;
 procedure TEnergyMeterObj.CloseDemandIntervalFile(ActorID: Integer);
 var
     i: Integer;
-
 begin
 
     try
         if This_Meter_DIFileIsOpen then
         begin
-            if DI_MHandle[ActorID] <> NIL then
-                CloseMHandler(DI_MHandle[ActorID], MakeDIFileName(ActorID), DI_Append[ActorID]);
-            DI_MHandle[ActorID] := NIL;
+            if DI_MHandle <> NIL then
+                CloseMHandler(DI_MHandle, MakeDIFileName(ActorID), DI_Append[ActorID]);
             This_Meter_DIFileIsOpen := FALSE;
             if PHV_MHandle <> NIL then
                 if VPhaseReportFileIsOpen then
-                    CloseMHandler(PHV_MHandle[ActorID], MakeVPhaseReportFileName(ActorID), PHV_Append[ActorID]);
-            PHV_MHandle[ActorID] := NIL;
+                    CloseMHandler(PHV_MHandle, MakeVPhaseReportFileName(ActorID), PHV_Append[ActorID]);
             VPhaseReportFileIsOpen := FALSE;
         end;
     except
@@ -3173,19 +3178,19 @@ begin
         begin
 
             This_Meter_DIFileIsOpen := TRUE;
-            if DI_MHandle[ActorID] <> NIL then
-                DI_MHandle[ActorID].free;
-            DI_MHandle[ActorID] := Create_Meter_Space('"Hour"');
+            if DI_MHandle <> NIL then
+                DI_MHandle.free;
+            DI_MHandle := Create_Meter_Space('"Hour"');
             for i := 1 to NumEMRegisters do
-                WriteintoMemStr(DI_MHandle[ActorID], ', "' + RegisterNames[i] + '"');
-            WriteintoMemStr(DI_MHandle[ActorID], Char(10));
+                WriteintoMemStr(DI_MHandle, ', "' + RegisterNames[i] + '"');
+            WriteintoMemStr(DI_MHandle, Char(10));
 
          {Phase Voltage Report, if requested}
             if FPhaseVoltageReport then
             begin
-                if PHV_MHandle[ActorID] <> NIL then
-                    PHV_MHandle[ActorID].free;
-                PHV_MHandle[ActorID] := Create_Meter_Space('"Hour"');
+                if PHV_MHandle <> NIL then
+                    PHV_MHandle.free;
+                PHV_MHandle := Create_Meter_Space('"Hour"');
                 VPhaseReportFileIsOpen := TRUE;
                 for i := 1 to MaxVBaseCount do
                 begin
@@ -3193,14 +3198,15 @@ begin
                     if Vbase > 0.0 then
                     begin
                         for j := 1 to 3 do
-                            WriteintoMemStr(PHV_MHandle[ActorID], Format(', %.3gkV_Phs_%d_Max', [vbase, j]));
+                            WriteintoMemStr(PHV_MHandle, Format(', %.3gkV_Phs_%d_Max', [vbase, j]));
                         for j := 1 to 3 do
-                            WriteintoMemStr(PHV_MHandle[ActorID], Format(', %.3gkV_Phs_%d_Min', [vbase, j]));
+                            WriteintoMemStr(PHV_MHandle, Format(', %.3gkV_Phs_%d_Min', [vbase, j]));
                         for j := 1 to 3 do
-                            WriteintoMemStr(PHV_MHandle[ActorID], Format(', %.3gkV_Phs_%d_Avg', [vbase, j]));
+                            WriteintoMemStr(PHV_MHandle, Format(', %.3gkV_Phs_%d_Avg', [vbase, j]));
                     end;
                 end;
-                WriteintoMemStr(PHV_MHandle[ActorID], ', Min Bus, MaxBus' + Char(10));
+              // WriteintoMemStr(PHV_MHandle, ', Min Bus, MaxBus' + Char(10));  // This has not been recorded
+                WriteintoMemStr(PHV_MHandle, Char(10));  // This has not been recorded
             end;
 
         end;
@@ -3227,10 +3233,10 @@ begin
     if EnergyMeterClass[ActorID].DI_Verbose[ActorID] and This_Meter_DIFileIsOpen then
     begin
         with ActiveCircuit[ActorID].Solution do
-            WriteintoMem(DI_MHandle[ActorID], DynaVars.dblHour);
+            WriteintoMem(DI_MHandle, DynaVars.dblHour);
         for i := 1 to NumEMRegisters do
-            WriteintoMem(DI_MHandle[ActorID], Derivatives[i]);
-        WriteIntoMemStr(DI_MHandle[ActorID], Char(10));
+            WriteintoMem(DI_MHandle, Derivatives[i]);
+        WriteIntoMemStr(DI_MHandle, Char(10));
     end;
 
       {Add to Class demand interval registers}
@@ -3243,18 +3249,18 @@ begin
     if VPhaseReportFileIsOpen then
     begin
         with ActiveCircuit[ActorID].Solution do
-            WriteintoMem(PHV_MHandle[ActorID], DynaVars.dblHour);
+            WriteintoMem(PHV_MHandle, DynaVars.dblHour);
         for i := 1 to MaxVBaseCount do
             if VBaseList^[i] > 0.0 then
             begin
                 for j := 1 to 3 do
-                    WriteintoMem(PHV_MHandle[ActorID], 0.001 * VPhaseMax^[jiIndex(j, i)]);
+                    WriteintoMem(PHV_MHandle, 0.001 * VPhaseMax^[jiIndex(j, i)]);
                 for j := 1 to 3 do
-                    WriteintoMem(PHV_MHandle[ActorID], 0.001 * VPhaseMin^[jiIndex(j, i)]);
+                    WriteintoMem(PHV_MHandle, 0.001 * VPhaseMin^[jiIndex(j, i)]);
                 for j := 1 to 3 do
-                    WriteintoMem(PHV_MHandle[ActorID], 0.001 * MyCount_Avg(VPhaseAccum^[jiIndex(j, i)], VPhaseAccumCount^[jiIndex(j, i)]));
+                    WriteintoMem(PHV_MHandle, 0.001 * MyCount_Avg(VPhaseAccum^[jiIndex(j, i)], VPhaseAccumCount^[jiIndex(j, i)]));
             end;
-        WriteintoMemStr(PHV_MHandle[ActorID], Char(10));
+        WriteintoMemStr(PHV_MHandle, Char(10));
     end;
 
 end;
@@ -3291,20 +3297,17 @@ begin
         EMT_MHandle[ActorID] := NIL;
         if TDI_MHandle[ActorID] <> NIL then
             CloseMHandler(TDI_MHandle[ActorID], DI_Dir + PathDelim + 'DI_Totals_' + inttostr(ActorID) + '.CSV', TDI_Append[ActorID]);
-        TDI_MHandle[ActorID] := NIL;
         DIFilesAreOpen[ActorID] := FALSE;
         if OverloadFileIsOpen then
         begin
             if OV_MHandle[ActorID] <> NIL then
                 CloseMHandler(OV_MHandle[ActorID], EnergyMeterClass[ActorID].DI_Dir + PathDelim + 'DI_Overloads_' + inttostr(ActorID) + '.CSV', OV_Append[ActorID]);
-            OV_MHandle[ActorID] := NIL;
             OverloadFileIsOpen := FALSE;
         end;
         if VoltageFileIsOpen then
         begin
             if VR_MHandle[ActorID] <> NIL then
                 CloseMHandler(VR_MHandle[ActorID], EnergyMeterClass[ActorID].DI_Dir + PathDelim + 'DI_VoltExceptions_' + inttostr(ActorID) + '.CSV', VR_Append[ActorID]);
-            VR_MHandle[ActorID] := NIL;
             VoltageFileIsOpen := FALSE;
         end;
     end;
@@ -3329,9 +3332,9 @@ begin
                 DI_Append[ActorID] := TRUE
             else
                 DI_Append[ActorID] := FALSE;
-            if DI_MHandle[ActorID] <> NIL then
-                DI_MHandle[ActorID].free;
-            DI_MHandle[ActorID] := Create_Meter_Space(' ');
+            if DI_MHandle <> NIL then
+                DI_MHandle.free;
+            DI_MHandle := Create_Meter_Space(' ');
             This_Meter_DIFileIsOpen := TRUE;
         end;
     except
@@ -3435,14 +3438,36 @@ end;
 procedure TEnergyMeter.WriteOverloadReport(ActorID: Integer);
 var
     PDelem: TPDelement;
+    EmergAmps,
+    NormAmps,
     Cmax: Double;
     mtr: TEnergyMeterObj;
+    ClassName: String;
+    RSignal: TXYCurveObj;
+    i, j, k,
+    RatingIdx: Integer;
+    cVector,
+    cBuffer: pDoubleArray;
 
 begin
 {
   Scans the active circuit for overloaded PD elements and writes each to a file
   This is called only if in Demand Interval (DI) mode and the file is open.
 }
+{    Prepares everything for using seasonal ratings if required}
+    if SeasonalRating then
+    begin
+        if SeasonSignal <> '' then
+        begin
+            RSignal := XYCurveClass[ActorID].Find(SeasonSignal);
+            if RSignal <> NIL then
+                RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit[ActorID].Solution.DynaVars.intHour)) + 1
+            else
+                SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
+        end
+        else
+            SeasonalRating := FALSE;    // The user didn't define the seasonal signal
+    end;
 
  { CHECK PDELEMENTS ONLY}
     PDelem := ActiveCircuit[ActorID].PDElements.First;
@@ -3454,25 +3479,90 @@ begin
             if (PdElem.Normamps > 0.0) or (PdElem.Emergamps > 0.0) then
             begin
                 PDelem.ComputeIterminal(ActorID);
-                Cmax := PDelem.MaxTerminalOneImag(ActorID); // For now, check only terminal 1 for overloads
-                if (Cmax > PDElem.NormAmps) or (Cmax > pdelem.EmergAmps) then
+                Cmax := PDElem.MaxTerminalOneImag(ActorID); // For now, check only terminal 1 for overloads
+
+             // Section introduced in 02/20/2019 for allowing the automatic change of ratings
+             // when the seasonal ratings option is active
+                ClassName := lowercase(PDElem.DSSClassName);
+                if SeasonalRating and (ClassName = 'line') and (PDElem.NRatings > 1) then
                 begin
+                    if RatingIdx > PDElem.NRatings then
+                    begin
+                        NormAmps := PDElem.NormAmps;
+                        EmergAmps := pdelem.EmergAmps;
+                    end
+                    else
+                    begin
+                        NormAmps := PDElem.ratings^[RatingIdx];
+                        EmergAmps := PDElem.ratings^[RatingIdx];
+                    end;
+                end
+                else
+                begin
+                    NormAmps := PDElem.NormAmps;
+                    EmergAmps := pdelem.EmergAmps;
+                end;
+
+
+                if (Cmax > NormAmps) or (Cmax > EmergAmps) then
+                begin
+
+              // Gets the currents for the active Element
+                    cBuffer := Allocmem(sizeof(cBuffer^[1]) * PDElem.NPhases * PDElem.NTerms);
+                    PDElem.Get_Current_Mags(cBuffer, ActorID);
+                    cVector := Allocmem(sizeof(cBuffer^[1]) * 3); // for storing
+                    for i := 1 to 3 do
+                        cVector^[i] := 0.0;
+                    if PDElem.NPhases < 3 then
+                    begin
+                        ClassName := PDElem.FirstBus;
+                        j := ansipos('.', ClassName);     // Removes the name of the bus
+                        ClassName := ClassName.Substring(j);
+                        for i := 1 to 3 do
+                        begin
+                            j := ansipos('.', ClassName);   // goes for the phase Number
+                            if j = 0 then
+                            begin
+                                k := strtoint(ClassName);
+                                cVector^[k] := cBuffer^[i];
+                                break
+                            end
+                            else
+                            begin
+                                k := strtoint(ClassName.Substring(0, j - 1));
+                                cVector^[k] := cBuffer^[i];
+                                ClassName := ClassName.Substring(j);
+                            end;
+                        end;
+                    end
+                    else
+                    begin
+                        for i := 1 to 3 do
+                            cVector^[i] := cBuffer^[i];
+                    end;
+
                     with ActiveCircuit[ActorID].Solution do
                         WriteintoMem(OV_MHandle[ActorID], DynaVars.dblHour);
                     WriteintoMemStr(OV_MHandle[ActorID], ', ' + FullName(PDelem));
-                    WriteintoMem(OV_MHandle[ActorID], PDElem.NormAmps);
-                    WriteintoMem(OV_MHandle[ActorID], pdelem.EmergAmps);
+                    WriteintoMem(OV_MHandle[ActorID], NormAmps);
+                    WriteintoMem(OV_MHandle[ActorID], EmergAmps);
+
                     if PDElem.Normamps > 0.0 then
-                        WriteintoMem(OV_MHandle[ActorID], Cmax / PDElem.Normamps * 100.0)
+                        WriteintoMem(OV_MHandle[ActorID], Cmax / Normamps * 100.0)
                     else
                         WriteintoMem(OV_MHandle[ActorID], 0.0);
                     if PDElem.Emergamps > 0.0 then
-                        WriteintoMem(OV_MHandle[ActorID], Cmax / PDElem.Emergamps * 100.0)
+                        WriteintoMem(OV_MHandle[ActorID], Cmax / Emergamps * 100.0)
                     else
                         WriteintoMem(OV_MHandle[ActorID], 0.0);
                     with ActiveCircuit[ActorID] do // Find bus of first terminal
                         WriteintoMem(OV_MHandle[ActorID], Buses^[MapNodeToBus^[PDElem.NodeRef^[1]].BusRef].kVBase);
+              // Adds the currents in Amps per phase at the end of the report
+                    for i := 1 to 3 do
+                        WriteintoMem(OV_MHandle[ActorID], cVector^[i]);
+
                     WriteintoMemStr(OV_MHandle[ActorID], ' ' + Char(10));
+
                 end;
             end; { }
         end;
@@ -3569,7 +3659,6 @@ begin
     begin
         File_Path := EnergyMeterClass[ActorID].DI_Dir + PathDelim + 'DI_SystemMeter_' + inttostr(ActorID) + '.CSV';
         CloseMHandler(SDI_MHandle[ActorID], File_Path, SDI_Append[ActorID]);
-        SDI_MHandle[ActorID] := NIL;
         This_Meter_DIFileIsOpen := FALSE;
     end;
 end;
@@ -3578,10 +3667,21 @@ constructor TSystemMeter.Create;
 begin
     Clear;
     This_Meter_DIFileIsOpen := FALSE;
+    SDI_MHandle[ActiveActor] := NIL;
+    VR_MHandle[ActiveActor] := NIL;
+    OV_MHandle[ActiveActor] := NIL;
 end;
 
 destructor TSystemMeter.Destroy;
 begin
+    if SDI_MHandle[ActiveActor] <> NIL then
+        SDI_MHandle[ActiveActor].Free;
+    if TDI_MHandle[ActiveActor] <> NIL then
+        TDI_MHandle[ActiveActor].Free;
+    if VR_MHandle[ActiveActor] <> NIL then
+        VR_MHandle[ActiveActor].Free;
+    if OV_MHandle[ActiveActor] <> NIL then
+        OV_MHandle[ActiveActor].Free;
     inherited;
 
 end;
@@ -4054,7 +4154,7 @@ begin
         OverloadFileIsOpen := TRUE;
         if OV_MHandle[ActorID] <> NIL then
             OV_MHandle[ActorID].free;
-        OV_MHandle[ActorID] := Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase"' + Char(10));
+        OV_MHandle[ActorID] := Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase", "I1(A)", "I2(A)", "I3(A)"' + Char(10));
     except
         On E: Exception do
             DosimpleMsg('Error creating memory space (Overload report) for writing.' + CRLF + E.Message, 541);

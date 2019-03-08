@@ -28,6 +28,7 @@ procedure FireOffEditor(FileNm: String);
 procedure DoDOSCmd(CmdString: String);
 function StripExtension(const S: String): String;
 function StripClassName(const S: String): String;  // Return only element name sans class.
+function GetNodeString(const Busname: String): String;
 function Pad(const S: String; Width: Integer): String;
 function PadDots(const S: String; Width: Integer): String;
 function PadTrunc(const S: String; Width: Integer): String;
@@ -282,10 +283,11 @@ var
     msg: String;
 begin
 {$IFDEF DSS_CAPI}
-    if not DSS_CAPI_ALLOW_EDITOR then Exit; // just ignore if Show is not allowed
+    if not DSS_CAPI_ALLOW_EDITOR then
+        Exit; // just ignore if Show is not allowed
 {$ENDIF}
 
-    gotError := False;
+    gotError := FALSE;
     msg := 'Unknown error in process.';
     try
         if FileExists(FileNm) then
@@ -299,7 +301,7 @@ begin
     except
         On E: Exception do
         begin
-            gotError := True;
+            gotError := TRUE;
             msg := E.Message;
         end;
     end;
@@ -313,7 +315,7 @@ var //Handle:Word;
     gotError: Boolean;
     msg: String;
 begin
-    gotError := False;
+    gotError := FALSE;
     msg := 'Unknown error in command.';
     try
 {$IF (defined(Windows) or defined(MSWindows))}
@@ -324,7 +326,7 @@ begin
     except
         On E: Exception do
         begin
-            gotError := True;
+            gotError := TRUE;
             msg := E.Message;
         end;
     end;
@@ -2392,8 +2394,8 @@ end;
 function DoExecutiveCommand(const s: String): Integer;
 
 begin
-    DSSExecutive.command := S;
-    Result := DSSExecutive.Error;
+    DSSExecutive[ActiveActor].command := S;
+    Result := DSSExecutive[ActiveActor].Error;
 end;
 
 
@@ -3539,7 +3541,18 @@ begin
     else
         Result := 'Unknown';
     end;
-end;
+End;
+
+Function GetNodeString(const Busname:String):String;
+Var
+   dotpos:Integer;
+
+Begin
+      dotpos     := pos('.', BusName);
+      If dotpos = 0
+         Then  Result := ''
+         Else  Result := Copy(BusName, dotpos, length(BusName));    // preserve node designations if any
+End;
 
 initialization
 

@@ -27,7 +27,7 @@ uses
 //------------------------------------------------------------------------------
 function IsPropIndexInvalid(errorNum: Integer): Boolean;
 begin
-    Result := False;
+    Result := FALSE;
 
     if (FPropIndex > ActiveDSSObject[ActiveActor].ParentClass.NumProperties) or (FPropIndex < 1) then
     begin
@@ -35,8 +35,8 @@ begin
             'Invalid property index "%d" for "%s.%s"',
             [FPropIndex, ActiveDSSObject[ActiveActor].ParentClass.Name, ActiveDSSObject[ActiveActor].Name]),
             errorNum
-        );
-        Result := True;
+            );
+        Result := TRUE;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -60,7 +60,8 @@ begin
     if (ActiveCircuit[ActiveActor] <> NIL) and (FPropIndex <> 0) {and (FPropClass <> Nil)} then
         with ActiveDSSObject[ActiveActor].ParentClass do
         begin
-            if IsPropIndexInvalid(33005) then Exit;
+            if IsPropIndexInvalid(33005) then
+                Exit;
             Result := PropertyName^[FPropIndex];
         end;
 end;
@@ -77,7 +78,8 @@ begin
         Exit;
     with ActiveDSSObject[ActiveActor] do
     begin
-        if IsPropIndexInvalid(33004) then Exit;
+        if IsPropIndexInvalid(33004) then
+            Exit;
         Result := PropertyValue[ParentClass.PropertyIdxMap[FPropIndex]];
     end;
 end;
@@ -94,8 +96,9 @@ begin
 
     with ActiveDSSObject[ActiveActor] do
     begin
-        if IsPropIndexInvalid(33001) then Exit;
-        DSSExecutive.Command := 'Edit ' + ParentClass.Name + '.' + Name + ' ' + ParentClass.PropertyName^[FPropIndex] + '=' + (Value);
+        if IsPropIndexInvalid(33001) then
+            Exit;
+        DSSExecutive[ActiveActor].Command := 'Edit ' + ParentClass.Name + '.' + Name + ' ' + ParentClass.PropertyName^[FPropIndex] + '=' + (Value);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -105,7 +108,8 @@ begin
     begin
         FPropIndex := Value + 1;
         FPropClass := ActiveDSSObject[ActiveActor].ParentClass;
-        if IsPropIndexInvalid(33002) then Exit;
+        if IsPropIndexInvalid(33002) then
+            Exit;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -132,7 +136,7 @@ begin
             'Invalid property name "%s" for "%s.%s"',
             [String(Value), FPropClass.Name, ActiveDSSObject[ActiveActor].Name]),
             33003
-        );
+            );
     end;
 end;
 //------------------------------------------------------------------------------

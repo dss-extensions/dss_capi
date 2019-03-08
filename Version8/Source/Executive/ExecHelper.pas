@@ -641,7 +641,7 @@ FUNCTION DoClearCmd:Integer;
 
 Begin
 
-      DSSExecutive.Clear;
+      DSSExecutive[ActiveActor].Clear;
 
       Result := 0;
 
@@ -651,7 +651,7 @@ FUNCTION DoClearAllCmd:Integer;
 
 Begin
 
-      DSSExecutive.ClearAll;
+      DSSExecutive[ActiveActor].ClearAll;
 
       Result := 0;
 
@@ -2632,33 +2632,23 @@ End;
 
 PROCEDURE DoSetReduceStrategy(Const S:String);
 
-Var
-    ParamName, Param, Param2:String;
 
    Function AtLeast(i,j:Integer):Integer;
    Begin If j<i Then Result := i Else Result := j; End;
 
 Begin
      ActiveCircuit[ActiveActor].ReductionStrategyString := S;
-     AuxParser[ActiveActor].CmdString := S;
-     paramName := Auxparser[ActiveActor].NextParam;
-     Param := UpperCase(AuxParser[ActiveActor].StrValue);
-     paramName := Auxparser[ActiveActor].NextParam;
-     Param2 := AuxParser[ActiveActor].StrValue;
 
      ActiveCircuit[ActiveActor].ReductionStrategy := rsDefault;
-     IF Length(Param)=0 Then Exit;  {No option given}
+     IF Length(S)=0 Then Exit;  {No option given}
 
-     Case Param[1] of
+     Case UpperCase(S)[1] of
 
        'B': ActiveCircuit[ActiveActor].ReductionStrategy := rsBreakLoop;
        'D': ActiveCircuit[ActiveActor].ReductionStrategy := rsDefault;  {Default}
        'E': ActiveCircuit[ActiveActor].ReductionStrategy := rsDangling;  {Ends}
        'L': Begin {Laterals}
                ActiveCircuit[ActiveActor].ReductionStrategy := rsLaterals;
-               if Length(Param2) > 0 then  Begin
-                  ActiveCircuit[ActiveActor].ReduceLateralsKeepLoad := InterpretYesNo(Param2)
-               End;
             End;
        'M': ActiveCircuit[ActiveActor].ReductionStrategy := rsMergeParallel;
         {*
@@ -2668,13 +2658,12 @@ Begin
               If Length(param2) > 0 Then  ActiveCircuit[ActiveActor].ReductionMaxAngle := Auxparser.DblValue;
             End;
             *}
-       'S': Begin  {Stubs}
-              IF CompareTextShortest(Param, 'SWITCH')=0 Then Begin
+       'S': Begin  {Shortlines or Switch}
+              IF CompareTextShortest(S, 'SWITCH')=0 Then Begin
                   ActiveCircuit[ActiveActor].ReductionStrategy := rsSwitches;
               End ELSE Begin
-                  ActiveCircuit[ActiveActor].ReductionZmag := 0.02;
-                  ActiveCircuit[ActiveActor].ReductionStrategy := rsStubs;
-                  If Length(param2) > 0 Then  ActiveCircuit[ActiveActor].ReductionZmag := Auxparser[ActiveActor].DblValue;
+                 { ActiveCircuit.ReductionZmag is now set in main ExecOptions     }
+                  ActiveCircuit[ActiveActor].ReductionStrategy := rsShortlines;
               End;
             End;
      ELSE
@@ -3235,7 +3224,7 @@ Begin
 End;
 
 FUNCTION DoVisualizeCmd:Integer;
-{$IF not defined(FPC)}                      
+{$IF not defined(FPC)}
 Var
     DevIndex    :integer;
     Param       :String;
@@ -3245,7 +3234,7 @@ Var
     Quantity    :Integer;
     ElemName    :String;
     pElem       :TDSSObject;
-{$ENDIF}        
+{$ENDIF}
 Begin
      Result := 0;
 {$IF not defined(FPC)}
@@ -3335,8 +3324,8 @@ Begin
     DoAllocateLoadsCmd(ActiveActor);
 
     {Let's look to see how well we did}
-     If not AutoShowExport Then DSSExecutive.Command := 'Set showexport=yes';
-     DSSExecutive.Command := 'Export Estimation';
+     If not AutoShowExport Then DSSExecutive[ActiveActor].Command := 'Set showexport=yes';
+     DSSExecutive[ActiveActor].Command := 'Export Estimation';
 
 End;
 

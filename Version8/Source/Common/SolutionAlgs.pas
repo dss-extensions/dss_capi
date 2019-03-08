@@ -46,9 +46,7 @@ implementation
 uses
     ArrayDef,
     DSSGlobals,
-{$IFDEF FPC}
-    CmdForms,
-{$ELSE}
+{$IFNDEF FPC}
     DSSForms,
     System.Classes,
 {$ENDIF}

@@ -71,7 +71,6 @@ type
 
         ControlVars: TCapControlVars;
 
-        MonitoredElement: TDSSCktElement;
         ControlledCapacitor: TCapacitorObj;
 
         cBuffer: pComplexArray;    // Complexarray buffer

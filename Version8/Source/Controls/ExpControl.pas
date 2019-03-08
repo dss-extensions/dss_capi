@@ -34,7 +34,7 @@ INTERFACE
       private
             ControlActionHandle: Integer;
             ControlledElement: Array of TPVSystemObj;    // list of pointers to controlled PVSystem elements
-            MonitoredElement : TDSSCktElement;  // First PVSystem element for now
+             // MonitoredElement is First PVSystem element for now
 
             // PVSystemList information
             FListSize:Integer;
@@ -391,7 +391,7 @@ Begin
     for i := 1 to FPVSystemPointerList.ListSize do begin
         // User ControlledElement[] as the pointer to the PVSystem elements
          ControlledElement[i] :=  TPVSystemObj(FPVSystemPointerList.Get(i));  // pointer to i-th PVSystem
-         Nphases := ControlledElement[i].NPhases;  // TEMC TOActiveCircuit[ActiveActor] - what if these are different sizes (same concern exists with InvControl)
+         Nphases := ControlledElement[i].NPhases;  // TEMC TODO - what if these are different sizes (same concern exists with InvControl)
          Nconds  := Nphases;
          if (ControlledElement[i] = nil) then
             doErrorMsg('ExpControl: "' + Self.Name + '"',
@@ -477,7 +477,7 @@ BEGIN
       PVSys.Varmode := VARMODEKVAR;  // Set var mode to VARMODEKVAR to indicate we might change kvar
       FTargetQ[i] := 0.0;
       Qbase  := PVSys.kVARating;
-      Qinvmaxpu := PVSys.kvarLimit / Qbase;                                     
+      Qinvmaxpu := PVSys.kvarLimit / Qbase;
       Qpu := PVSys.Presentkvar / Qbase; // no change for now
 
       if (FWithinTol[i]=False) then begin

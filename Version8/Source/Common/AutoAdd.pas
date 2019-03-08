@@ -99,10 +99,10 @@ uses
     Utilities,
     SysUtils,
     Executive,
-{$IFDEF FPC}
-    CmdForms,
-{$ELSE}
+{$IFNDEF FPC}
     DSSForms,
+{$ELSE}
+    CmdForms,
 {$ENDIF}
       {ProgressForm, Forms,} Solution;
 
@@ -543,7 +543,7 @@ begin
                 UseAuxCurrents := FALSE;
 
                 if MinLossBus > 0 then
-                    with DSSExecutive do
+                    with DSSExecutive[ActorID] do
                     begin
 
                         if MinBusPhases >= 3 then
@@ -665,7 +665,7 @@ begin
                 UseAuxCurrents := FALSE;
 
                 if MinLossBus > 0 then
-                    with DSSExecutive do
+                    with DSSExecutive[ActorID] do
                     begin
 
                         if MinBusPhases >= 3 then

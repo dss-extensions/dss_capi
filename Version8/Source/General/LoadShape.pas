@@ -114,7 +114,7 @@ type
         Interval: Double;  //=0.0 then random interval     (hr)
         Hours,          // Time values (hr) if Interval > 0.0  Else nil
         PMultipliers,
-        QMultipliers: Array of Double;  // Multipliers
+        QMultipliers: array of Double;  // Multipliers
 
         MaxP,
         MaxQ,
@@ -162,7 +162,7 @@ uses
     Math,
     PointerList;
 
-type 
+type
     ELoadShapeError = class(Exception);  // Raised to abort solution
 
 const
@@ -444,10 +444,10 @@ begin
         begin
             NumPoints := OtherLoadShape.NumPoints;
             Interval := OtherLoadShape.Interval;
-            
+
             SetLength(PMultipliers, Length(OtherLoadShape.PMultipliers));
             Move(OtherLoadShape.PMultipliers[0], PMultipliers[0], Length(OtherLoadShape.PMultipliers) * SizeOf(Double));
-            
+
             if Assigned(OtherLoadShape.Qmultipliers) then
             begin
                 SetLength(QMultipliers, Length(OtherLoadShape.QMultipliers));
@@ -808,16 +808,17 @@ begin
     Result.re := 1.0;
     Result.im := 1.0;    // default return value if no points in curve
 
-    if (Length(PMultipliers) <> NumPoints) or 
-       (Assigned(QMultipliers) and (Length(QMultipliers) <> NumPoints)) or
-       ((Interval = 0.0) and Assigned(Hours) and (Length(Hours) <> NumPoints)) then
+    if (Length(PMultipliers) <> NumPoints) or
+        (Assigned(QMultipliers) and (Length(QMultipliers) <> NumPoints)) or
+        ((Interval = 0.0) and Assigned(Hours) and (Length(Hours) <> NumPoints)) then
     begin
-       if (not Assigned(QMultipliers)) and (Interval = 0.0) then
-           raise ELoadShapeError.Create('PMult length is inconsistent with NPts!')
-       else if (Assigned(QMultipliers)) and (Interval = 0.0) then
-           raise ELoadShapeError.Create('PMult and/or QMult lengths are inconsistent with NPts!')
-       else // if (Assigned(QMultipliers)) and (Interval <> 0.0) then
-           raise ELoadShapeError.Create('PMult, QMult and/or Hour lengths are inconsistent with NPts!');
+        if (not Assigned(QMultipliers)) and (Interval = 0.0) then
+            raise ELoadShapeError.Create('PMult length is inconsistent with NPts!')
+        else
+        if (Assigned(QMultipliers)) and (Interval = 0.0) then
+            raise ELoadShapeError.Create('PMult and/or QMult lengths are inconsistent with NPts!')
+        else // if (Assigned(QMultipliers)) and (Interval <> 0.0) then
+            raise ELoadShapeError.Create('PMult, QMult and/or Hour lengths are inconsistent with NPts!');
     end;
 
     if FNumPoints > 0 then         // Handle Exceptional cases
@@ -947,12 +948,12 @@ begin
             RCDMeanandStdDev(pDoubleArray(PMultipliers), Length(PMultipliers), FMean, FStdDev)
         else
             CurveMeanAndStdDev(
-                pDoubleArray(PMultipliers), 
-                pDoubleArray(Hours), 
-                Min(FNumPoints, Min(Length(PMultipliers), Length(Hours))), 
-                FMean, 
+                pDoubleArray(PMultipliers),
+                pDoubleArray(Hours),
+                Min(FNumPoints, Min(Length(PMultipliers), Length(Hours))),
+                FMean,
                 FStdDev
-            );
+                );
 
     PropertyValue[5] := Format('%.8g', [FMean]);
     PropertyValue[6] := Format('%.8g', [FStdDev]);
@@ -1270,7 +1271,7 @@ begin
             FName := Format('%s_P.dbl', [Name]);
             AssignFile(F, Fname);
             Rewrite(F);
-            for i := 0 to NumPoints-1 do
+            for i := 0 to NumPoints - 1 do
                 Write(F, PMultipliers[i]);
             GlobalResult := 'mult=[dblfile=' + FName + ']';
         finally
@@ -1283,7 +1284,7 @@ begin
                 FName := Format('%s_Q.dbl', [Name]);
                 AssignFile(F, Fname);
                 Rewrite(F);
-                for i := 0 to NumPoints-1 do
+                for i := 0 to NumPoints - 1 do
                     Write(F, QMultipliers[i]);
                 AppendGlobalResult(' Qmult=[dblfile=' + FName + ']');
             finally
@@ -1311,7 +1312,7 @@ begin
             FName := Format('%s_P.sng', [Name]);
             AssignFile(F, Fname);
             Rewrite(F);
-            for i := 0 to NumPoints-1 do
+            for i := 0 to NumPoints - 1 do
             begin
                 Temp := PMultipliers[i];
                 Write(F, Temp);
@@ -1327,7 +1328,7 @@ begin
                 FName := Format('%s_Q.sng', [Name]);
                 AssignFile(F, Fname);
                 Rewrite(F);
-                for i := 0 to NumPoints-1 do
+                for i := 0 to NumPoints - 1 do
                 begin
                     Temp := QMultipliers[i];
                     Write(F, Temp);

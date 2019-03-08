@@ -12,7 +12,7 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 52393 $
-// File generated on 10/16/2018 2:07:02 PM from Type Library described below.
+// File generated on 3/6/2019 2:32:03 PM from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\Users\prdu001\OpenDSS\Version7\Source\DLL\OpenDSSengine (1)
@@ -142,6 +142,8 @@ const
     CLASS_LineCodes: TGUID = '{B6120B3A-7958-4650-AC18-2A53E89209A8}';
     IID_IGICSources: TGUID = '{F76B5BDE-9132-44FB-8115-70BF1B065FA4}';
     CLASS_GICSources: TGUID = '{D0D4455C-A5CA-4B26-ABB4-2CC3798D260E}';
+    IID_IReduceCkt: TGUID = '{02386435-8D77-4804-8ADB-89DDFBBE2BC0}';
+    CLASS_ReduceCkt: TGUID = '{553148EA-97CB-4559-933A-A734250E95C6}';
 
 // *********************************************************************//
 // Declaration of Enumerations defined in Type Library
@@ -354,6 +356,8 @@ type
     ILineCodesDisp = dispinterface;
     IGICSources = interface;
     IGICSourcesDisp = dispinterface;
+    IReduceCkt = interface;
+    IReduceCktDisp = dispinterface;
 
 // *********************************************************************//
 // Declaration of CoClasses defined in Type Library
@@ -400,6 +404,7 @@ type
     Vsources = IVsources;
     LineCodes = ILineCodes;
     GICSources = IGICSources;
+    ReduceCkt = IReduceCkt;
 
 
 // *********************************************************************//
@@ -715,6 +720,7 @@ type
         function Get_Vsources: IVsources; SAFECALL;
         function Get_LineCodes: ILineCodes; SAFECALL;
         function Get_GICsources: GICSources; SAFECALL;
+        function Get_ReduceCkt: ReduceCkt; SAFECALL;
         property Name: Widestring READ Get_Name;
         property NumCktElements: Integer READ Get_NumCktElements;
         property NumBuses: Integer READ Get_NumBuses;
@@ -775,6 +781,7 @@ type
         property Vsources: IVsources READ Get_Vsources;
         property LineCodes: ILineCodes READ Get_LineCodes;
         property GICsources: GICSources READ Get_GICsources;
+        property ReduceCkt: ReduceCkt READ Get_ReduceCkt;
     end;
 
 // *********************************************************************//
@@ -861,6 +868,7 @@ type
         property Vsources: IVsources READONLY DISPID 237;
         property LineCodes: ILineCodes READONLY DISPID 238;
         property GICsources: GICSources READONLY DISPID 239;
+        property ReduceCkt: ReduceCkt READONLY DISPID 240;
     end;
 
 // *********************************************************************//
@@ -3706,6 +3714,62 @@ type
     end;
 
 // *********************************************************************//
+// Interface: IReduceCkt
+// Flags:     (4416) Dual OleAutomation Dispatchable
+// GUID:      {02386435-8D77-4804-8ADB-89DDFBBE2BC0}
+// *********************************************************************//
+    IReduceCkt = interface(IDispatch)
+        ['{02386435-8D77-4804-8ADB-89DDFBBE2BC0}']
+        function Get_Zmag: Double; SAFECALL;
+        procedure Set_Zmag(Value: Double); SAFECALL;
+        function Get_KeepLoad: Wordbool; SAFECALL;
+        procedure Set_KeepLoad(Value: Wordbool); SAFECALL;
+        function Get_EditString: Widestring; SAFECALL;
+        procedure Set_EditString(const Value: Widestring); SAFECALL;
+        function Get_StartPDElement: Widestring; SAFECALL;
+        procedure Set_StartPDElement(const Value: Widestring); SAFECALL;
+        function Get_EnergyMeter: Widestring; SAFECALL;
+        procedure Set_EnergyMeter(const Value: Widestring); SAFECALL;
+        procedure SaveCircuit(const CktName: Widestring); SAFECALL;
+        procedure DoDefault; SAFECALL;
+        procedure DoShortLines; SAFECALL;
+        procedure DoDangling; SAFECALL;
+        procedure DoLoopBreak; SAFECALL;
+        procedure DoParallelLines; SAFECALL;
+        procedure DoSwitches; SAFECALL;
+        procedure Do1phLaterals; SAFECALL;
+        procedure DoBranchRemove; SAFECALL;
+        property Zmag: Double READ Get_Zmag WRITE Set_Zmag;
+        property KeepLoad: Wordbool READ Get_KeepLoad WRITE Set_KeepLoad;
+        property EditString: Widestring READ Get_EditString WRITE Set_EditString;
+        property StartPDElement: Widestring READ Get_StartPDElement WRITE Set_StartPDElement;
+        property EnergyMeter: Widestring READ Get_EnergyMeter WRITE Set_EnergyMeter;
+    end;
+
+// *********************************************************************//
+// DispIntf:  IReduceCktDisp
+// Flags:     (4416) Dual OleAutomation Dispatchable
+// GUID:      {02386435-8D77-4804-8ADB-89DDFBBE2BC0}
+// *********************************************************************//
+    IReduceCktDisp = dispinterface
+        ['{02386435-8D77-4804-8ADB-89DDFBBE2BC0}']
+        property Zmag: Double DISPID 201;
+        property KeepLoad: Wordbool DISPID 202;
+        property EditString: Widestring DISPID 203;
+        property StartPDElement: Widestring DISPID 204;
+        property EnergyMeter: Widestring DISPID 205;
+        procedure SaveCircuit(const CktName: Widestring); DISPID 206;
+        procedure DoDefault; DISPID 207;
+        procedure DoShortLines; DISPID 208;
+        procedure DoDangling; DISPID 209;
+        procedure DoLoopBreak; DISPID 210;
+        procedure DoParallelLines; DISPID 211;
+        procedure DoSwitches; DISPID 212;
+        procedure Do1phLaterals; DISPID 213;
+        procedure DoBranchRemove; DISPID 214;
+    end;
+
+// *********************************************************************//
 // The Class CoText provides a Create and CreateRemote method to
 // create instances of the default interface IText exposed by
 // the CoClass Text. The functions are intended to be used by
@@ -4197,6 +4261,18 @@ type
         class function CreateRemote(const MachineName: String): IGICSources;
     end;
 
+// *********************************************************************//
+// The Class CoReduceCkt provides a Create and CreateRemote method to
+// create instances of the default interface IReduceCkt exposed by
+// the CoClass ReduceCkt. The functions are intended to be used by
+// clients wishing to automate the CoClass objects exposed by the
+// server of this typelibrary.
+// *********************************************************************//
+    CoReduceCkt = class
+        class function Create: IReduceCkt;
+        class function CreateRemote(const MachineName: String): IReduceCkt;
+    end;
+
 implementation
 
 uses
@@ -4610,6 +4686,16 @@ end;
 class function CoGICSources.CreateRemote(const MachineName: String): IGICSources;
 begin
     Result := CreateRemoteComObject(MachineName, CLASS_GICSources) as IGICSources;
+end;
+
+class function CoReduceCkt.Create: IReduceCkt;
+begin
+    Result := CreateComObject(CLASS_ReduceCkt) as IReduceCkt;
+end;
+
+class function CoReduceCkt.CreateRemote(const MachineName: String): IReduceCkt;
+begin
+    Result := CreateRemoteComObject(MachineName, CLASS_ReduceCkt) as IReduceCkt;
 end;
 
 end.

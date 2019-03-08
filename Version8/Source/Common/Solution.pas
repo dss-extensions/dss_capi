@@ -1268,6 +1268,8 @@ begin
     LoadsNeedUpdating := TRUE;  // Force possible update of loads and generators
    {$IFDEF MSWINDOWS}
     QueryPerformanceCounter(SolveStartTime);
+   {$ELSE}
+    SolveStartTime := GetTickCount64;
    {$ENDIF}
 
     if SystemYChanged then
@@ -2858,6 +2860,8 @@ begin
                             end;
                 {$IFDEF MSWINDOWS}
                             QueryPerformanceCounter(GEndTime);
+                {$ELSE}
+                            GEndTime := GetTickCount64;
                 {$ENDIF}
                             Total_Solve_Time_Elapsed := ((GEndTime - GStartTime) / CPU_Freq) * 1000000;
                             Total_Time_Elapsed := Total_Time_Elapsed + Total_Solve_Time_Elapsed;

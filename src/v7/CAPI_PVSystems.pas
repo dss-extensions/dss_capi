@@ -200,7 +200,8 @@ procedure PVSystems_Set_idx(Value: Integer); CDECL;
 var
     pPVSystem: TPVSystemObj;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     pPVSystem := ActiveCircuit.PVSystems.Get(Value);
     if pPVSystem = NIL then
     begin
@@ -359,6 +360,7 @@ begin
         begin
             if ActiveIndex <> 0 then
             begin
+                TPVSystemObj(Active).Varmode := 0;
                 TPVSystemObj(Active).PowerFactor := Value;
             end;
         end;
@@ -373,6 +375,7 @@ begin
         begin
             if ActiveIndex <> 0 then
             begin
+                TPVSystemObj(Active).Varmode := VARMODEKVAR;
                 TPVSystemObj(Active).Presentkvar := Value;
             end;
         end;

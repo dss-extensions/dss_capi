@@ -376,7 +376,7 @@ var
 begin
     if ActiveCircuit[ActiveActor] = NIL then
         Exit;
-        
+
     elem := GICsourceClass[ActiveActor].ElementList.Get(Value);
     if elem = NIL then
     begin

@@ -47,6 +47,8 @@ type
         function Get_NextBus: String;
         function Get_Losses(ACtorID: Integer): Complex;   // Get total losses for property...
         function Get_Power(idxTerm: Integer; ActorID: Integer): Complex;    // Get total complex power in active terminal
+        function Get_MaxPower(idxTerm: Integer; ActorID: Integer): Complex;    // Get eauivalent total complex power in active terminal based on phase with max current
+
 
         procedure DoYprimCalcs(Ymatrix: TCMatrix);
 
@@ -88,6 +90,7 @@ type
         HasSensorObj,
         IsIsolated,
         HasControl,
+        IsMonitored,
         IsPartofFeeder,
         Drawn: Boolean;  // Flag used in tree searches etc
 
@@ -152,9 +155,12 @@ type
         property NextBus: String READ Get_NextBus;    // null string if no more values
         property Losses[ActorID: Integer]: Complex READ Get_Losses;
         property Power[idxTerm: Integer; ActorID: Integer]: Complex READ Get_Power;  // Total power in active terminal
+        property MaxPower[idxTerm: Integer; ActorID: Integer]: Complex READ Get_MaxPower;  // Total power in active terminal
         property ActiveTerminalIdx: Integer READ FActiveTerminal WRITE Set_ActiveTerminal;
         property Closed[Index: Integer;ActorID: Integer]: Boolean READ Get_ConductorClosed WRITE Set_ConductorClosed;
         procedure SumCurrents(ActorID: Integer);
+
+        procedure Get_Current_Mags(cMBuffer: pDoubleArray; ACtorID: Integer); // Returns the Currents vector in magnitude
 
     end;
 
@@ -203,6 +209,7 @@ begin
     HasAutoOCPDevice := FALSE;
     HasSwtControl := FALSE;
     HasControl := FALSE;
+    IsMonitored := FALSE;
     IsPartofFeeder := FALSE;
     IsIsolated := FALSE;
 
@@ -692,6 +699,15 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+procedure TDSSCktElement.Get_Current_Mags(cMBuffer: pDoubleArray; ACtorID: Integer);
+var
+    i: Integer;
+begin
+    for i := 1 to Fnphases do
+        cMBuffer^[i] := cabs(Iterminal^[i]);
+end;
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function TDSSCktElement.Get_Power(idxTerm: Integer; ActorID: Integer): Complex;    // Get total complex power in active terminal
 
 var
@@ -763,6 +779,61 @@ begin
 
     Result := cLoss;
 
+end;
+
+function TDSSCktElement.Get_MaxPower(idxTerm: Integer; ActorID: Integer): Complex;
+{Get power in the phase with the max current and return equivalent power as if it were balanced in all phases
+ 2/12/2019}
+var
+    cPower: Complex;
+    i, k,
+    nref: Integer;
+    MaxCurr,
+    CurrMag: Double;
+    MaxPhase: Integer;
+
+begin
+
+    ActiveTerminalIdx := idxTerm;   // set active Terminal
+    Cpower := CZERO;
+    if FEnabled then
+    begin
+        ComputeIterminal(ActorID);
+
+    // Method: Get power in the phase with max current of active terminal
+    // Multiply by Nphases and return
+
+        MaxCurr := 0.0;
+        MaxPhase := 1;  // Init this so it has a non zero value
+        k := (idxTerm - 1) * Fnconds; // starting index of terminal
+        for i := 1 to Fnphases do
+        begin
+            CurrMag := Cabs(Iterminal[k + i]);
+            if CurrMag > MaxCurr then
+            begin
+                MaxCurr := CurrMag;
+                MaxPhase := i
+            end;
+        end;
+
+        nref := ActiveTerminal.TermNodeRef^[k + MaxPhase]; // grounded node will give zero
+        with ActiveCircuit[ActorID].Solution do     // Get power into max phase of active terminal
+            Cpower := Cmul(NodeV^[nref], conjg(Iterminal[k + MaxPhase]));
+
+       // Compute equivalent total power of all phases assuming equal to max power in all phases
+        with Cpower do
+        begin
+            re := re * Fnphases;  // let compiler handle type coercion
+            im := im * Fnphases;
+        end;
+
+       {If this is a positive sequence circuit (Fnphases=1),
+        then we need to multiply by 3 to get the 3-phase power}
+        if ActiveCircuit[ActorID].PositiveSequence then
+            cPower := cMulReal(cPower, 3.0);
+    end;
+
+    Result := cPower;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

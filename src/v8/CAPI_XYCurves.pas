@@ -547,8 +547,10 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit[ActiveActor] = NIL then Exit;
-    if XYCurveClass[ActiveActor].ElementList.ListSize <= 0 then Exit;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    if XYCurveClass[ActiveActor].ElementList.ListSize <= 0 then
+        Exit;
     with ActiveCircuit[ActiveActor] do
     begin
         DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, XYCurveClass[ActiveActor].ElementList.ListSize);

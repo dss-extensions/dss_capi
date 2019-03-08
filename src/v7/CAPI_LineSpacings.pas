@@ -301,8 +301,10 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then Exit;
-    if LineSpacingClass.ElementList.ListSize <= 0 then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
+    if LineSpacingClass.ElementList.ListSize <= 0 then
+        Exit;
     with ActiveCircuit do
     begin
         DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, LineSpacingClass.ElementList.ListSize);

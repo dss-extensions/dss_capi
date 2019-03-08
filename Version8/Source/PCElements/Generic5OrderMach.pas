@@ -1,4 +1,4 @@
-﻿unit Generic5OrderMach;
+unit Generic5OrderMach;
 
 {   Change Log
 
@@ -1157,7 +1157,8 @@ begin
         Reallocmem(Y_out_var, 0);
     if Assigned(V_in_var) then
         Reallocmem(V_in_var, 0);
-    ReAllocMem(pV_f_cc, 0);
+    if Assigned(pV_f_cc) then
+        ReAllocMem(pV_f_cc, 0);
 
     inherited Destroy;   // This will take care of most common circuit element arrays, etc.
 

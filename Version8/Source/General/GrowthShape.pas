@@ -235,7 +235,7 @@ begin
                 begin
                     ReAllocmem(Year, Sizeof(Year^[1]) * Npts);
                     YrBuffer := Allocmem(Sizeof(Double) * Npts);
-                    InterpretDblArray(Param, Npts, YrBuffer);  // Parser.ParseAsVector(Npts, Yrbuffer);
+                    Npts := InterpretDblArray(Param, Npts, YrBuffer);  // Parser.ParseAsVector(Npts, Yrbuffer);
 
                     for i := 1 to Npts do
                         Year^[i] := Round(YrBuffer^[i]);
@@ -245,7 +245,7 @@ begin
                 3:
                 begin
                     ReAllocmem(Multiplier, Sizeof(Multiplier^[1]) * Npts);
-                    InterpretDblArray(Param, Npts, Multiplier);   //Parser.ParseAsVector(Npts, Multiplier);
+                    Npts := InterpretDblArray(Param, Npts, Multiplier);   //Parser.ParseAsVector(Npts, Multiplier);
 
                 end;
                 4:

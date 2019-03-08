@@ -1953,7 +1953,7 @@ procedure TControlPanel.Stubs1Click(Sender: TObject);
 begin
     if ActiveCircuit <> NIL then
     begin
-        ActiveScriptForm.ExecuteDSSCommand('Set reduceoption=Stubs');
+        ActiveScriptForm.ExecuteDSSCommand('Set reduceoption=Shortlines');
         ActiveScriptForm.ExecuteDSSCommand('reduce');
     end;
 

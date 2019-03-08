@@ -226,7 +226,8 @@ uses
     LD_fm_infos in '..\Meters\LD_fm_infos.pas',
     VLNodeVars in '..\Meters\VLNodeVars.pas',
     Generic5OrderMach in '..\PCElements\Generic5OrderMach.pas',
-    ImplGICSources in 'ImplGICSources.pas';
+    ImplGICSources in 'ImplGICSources.pas',
+    ImplReduce in 'ImplReduce.pas';
 
 exports
     DllGetClassObject,
@@ -257,9 +258,9 @@ begin
 
 
 {Create one instance of DSS executive whenever the DSS Engine is init'd}
-
-    DSSExecutive := TExecutive.Create;  // Start the DSS when DSS interface is created
-    DSSExecutive.CreateDefaultDSSItems;
+    SetLength(DSSExecutive, CPU_Cores + 1);
+    DSSExecutive[ActiveActor] := TExecutive.Create;  // Start the DSS when DSS interface is created
+    DSSExecutive[ActiveActor].CreateDefaultDSSItems;
 
   //WriteDLLDebugFile(DSSDirectory);
 

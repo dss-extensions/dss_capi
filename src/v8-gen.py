@@ -30,7 +30,7 @@ def v7_to_v8(fn0):
         
     fn = fn0.replace('v7', 'v8', 1)
     print(fn)
-    with open(fn0, 'r') as fin, open(fn, 'w') as fout:
+    with open(fn0, 'r', newline='\n') as fin, open(fn, 'w', newline='\n') as fout:
         if 'CAPI_Parser' in fn:
             fout.write(fin.read())
             return
@@ -89,6 +89,7 @@ def v7_to_v8(fn0):
                 'GetCurrents(cBuffer',
                 'GetAllWindingCurrents(TempCurrentBuffer',
                 'GetWindingVoltages(elem.ActiveWinding, TempVoltageBuffer',
+                'Hour, Seconds, ActionCode, DeviceHandle, COMControlProxyObj'
             ]:
                 text = replace(text, '{})'.format(k), '{}, ActiveActor)'.format(k))
             
@@ -99,10 +100,11 @@ def v7_to_v8(fn0):
             text = replace(text, 'Result := NumCircuits;', 'Result := ActiveCircuit[ActiveActor].NumCircuits;')
             text = replace(text, 'CSVFileName', 'Get_FileName(ActiveActor)')
             text = replace(text, 'ShowPctProgress', '// ShowPctProgress')
+            text = replace(text, 'DSSExecutive', 'DSSExecutive[ActiveActor]')
         
             fout.write(text)
             
 
-for fn in glob('v7/CAPI_monitors.pas'):
+for fn in glob('v7/*.pas'):
     v7_to_v8(fn)
     

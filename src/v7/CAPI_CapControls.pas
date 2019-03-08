@@ -87,7 +87,8 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     with ActiveCircuit do
         if CapControls.ListSize > 0 then
         begin

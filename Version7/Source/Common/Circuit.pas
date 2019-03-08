@@ -30,7 +30,7 @@ USES
 
 
 TYPE
-    TReductionStrategy = (rsDefault, rsStubs, {rsTapEnds,} rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches, rsLaterals);
+    TReductionStrategy = (rsDefault, rsShortlines, {rsTapEnds,} rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches, rsLaterals);
 
     CktElementDef = RECORD
         CktElementClass:Integer;
@@ -2006,7 +2006,6 @@ Begin
         DSSExecutive.Command := 'get voltagebases';
         VBases := GlobalResult;
         Writeln(F, 'Set Voltagebases='+VBases);
-        Writeln(F, 'CalcVoltagebases');
         CloseFile(F);
         Result := TRUE;
      Except

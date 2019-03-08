@@ -365,6 +365,7 @@ begin
         begin
             if ActiveIndex <> 0 then
             begin
+                TPVSystemObj(Active).Varmode := 0;
                 TPVSystemObj(Active).PowerFactor := Value;
             end;
         end;
@@ -379,6 +380,7 @@ begin
         begin
             if ActiveIndex <> 0 then
             begin
+                TPVSystemObj(Active).Varmode := VARMODEKVAR;
                 TPVSystemObj(Active).Presentkvar := Value;
             end;
         end;

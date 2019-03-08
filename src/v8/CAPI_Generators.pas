@@ -431,7 +431,8 @@ procedure Generators_Set_idx(Value: Integer); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if ActiveCircuit[ActiveActor] = NIL then Exit;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
     pGen := ActiveCircuit[ActiveActor].Generators.Get(Value);
     if pGen = NIL then
     begin

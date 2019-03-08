@@ -9,6 +9,7 @@ unit DSSForms;
 
 interface
 
+{$IFNDEF CMD}
 uses
     Panel,
     Classes;
@@ -40,9 +41,10 @@ procedure CloseDownForms;
 procedure ShowTreeView(const Fname: String);
 function MakeChannelSelection(NumFieldsToSkip: Integer; const Filename: String): Boolean;
 
-
+{$ENDIF}
 implementation
 
+{$IFNDEF CMD}
 uses
     ExecCommands,
     ExecOptions,
@@ -188,6 +190,7 @@ begin
 //     else
 //      ScriptEd.PublishMessage(Str);
     Result := -1;
+    SolutionAbort := TRUE;
 end;
 
 procedure DSSInfoMessageDlg(const Msg: String);
@@ -206,9 +209,10 @@ begin
             MessageDlg(Msg, mtInformation, [mbOK], 0)
         else
             MessageDlg('Message too long; See Result Form.', mtInformation, [mbOK], 0);
-    end
-    else
-        ScriptEd.PublishMessage(Str);
+    end;
+//     else
+//     ScriptEd.PublishMessage(Str);
+    SolutionAbort := TRUE;
 end;
 
 
@@ -393,5 +397,5 @@ finalization
             TViewForm.Free;
 //    If Assigned(MessageForm1) Then MessageForm1.Free;
     end;
-
+{$ENDIF}
 end.

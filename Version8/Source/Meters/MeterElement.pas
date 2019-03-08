@@ -102,11 +102,16 @@ end;
 
 destructor TMeterElement.Destroy;
 begin
-    Reallocmem(SensorCurrent, 0);
-    Reallocmem(SensorVoltage, 0);
-    Reallocmem(CalculatedCurrent, 0);
-    Reallocmem(CalculatedVoltage, 0);
-    Reallocmem(PhsAllocationFactor, 0);
+    if assigned(SensorCurrent) then
+        Reallocmem(SensorCurrent, 0);
+    if assigned(SensorVoltage) then
+        Reallocmem(SensorVoltage, 0);
+    if assigned(CalculatedCurrent) then
+        Reallocmem(CalculatedCurrent, 0);
+    if assigned(CalculatedVoltage) then
+        Reallocmem(CalculatedVoltage, 0);
+    if assigned(PhsAllocationFactor) then
+        Reallocmem(PhsAllocationFactor, 0);
 
     inherited Destroy;
 end;

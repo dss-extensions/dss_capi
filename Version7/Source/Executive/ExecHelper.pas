@@ -2623,33 +2623,25 @@ End;
 
 PROCEDURE DoSetReduceStrategy(Const S:String);
 
-Var
-    ParamName, Param, Param2:String;
 
    Function AtLeast(i,j:Integer):Integer;
    Begin If j<i Then Result := i Else Result := j; End;
 
 Begin
      ActiveCircuit.ReductionStrategyString := S;
-     AuxParser.CmdString := S;
-     paramName := Auxparser.NextParam;
-     Param := UpperCase(AuxParser.StrValue);
-     paramName := Auxparser.NextParam;
-     Param2 := AuxParser.StrValue;
 
      ActiveCircuit.ReductionStrategy := rsDefault;
-     IF Length(Param)=0 Then Exit;  {No option given}
+     IF Length(S)=0 Then Exit;  {No option given}
 
-     Case Param[1] of
+     AuxParser.CmdString := Parser.Remainder;  // so we don't mess up Set Command
+
+     Case UpperCase(S)[1] of
 
        'B': ActiveCircuit.ReductionStrategy := rsBreakLoop;
        'D': ActiveCircuit.ReductionStrategy := rsDefault;  {Default}
        'E': ActiveCircuit.ReductionStrategy := rsDangling;  {Ends}
        'L': Begin {Laterals}
                ActiveCircuit.ReductionStrategy := rsLaterals;
-               if Length(Param2) > 0 then  Begin
-                  ActiveCircuit.ReduceLateralsKeepLoad := InterpretYesNo(Param2)
-               End;
             End;
        'M': ActiveCircuit.ReductionStrategy := rsMergeParallel;
        (*
@@ -2659,13 +2651,12 @@ Begin
               If Length(param2) > 0 Then  ActiveCircuit.ReductionMaxAngle := Auxparser.DblValue;
             End;
             *)
-       'S': Begin  {Stubs}
-              IF CompareTextShortest(Param, 'SWITCH')=0 Then Begin
+       'S': Begin  {Shortlines or Switch}
+              IF CompareTextShortest(S, 'SWITCH')=0 Then Begin
                   activeCircuit.ReductionStrategy := rsSwitches;
               End ELSE Begin
-                  ActiveCircuit.ReductionZmag := 0.02;
-                  ActiveCircuit.ReductionStrategy := rsStubs;
-                  If Length(param2) > 0 Then  ActiveCircuit.ReductionZmag := Auxparser.DblValue;
+                  ActiveCircuit.ReductionStrategy := rsShortlines;
+                  { ActiveCircuit.ReductionZmag is now set in main ExecOptions     }
               End;
             End;
      ELSE

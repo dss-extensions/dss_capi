@@ -101,6 +101,7 @@ type
         function Get_Vsources: IVsources; SAFECALL;
         function Get_LineCodes: ILineCodes; SAFECALL;
         function Get_GICsources: GICSources; SAFECALL;
+        function Get_ReduceCkt: ReduceCkt; SAFECALL;
 //    function Get_Loads: ILoads; safecall;  function ICircuit.Get_Loads = ICircuit_Get_Loads;
 
 //  function ICircuit_Get_Loads: IUnknown; safecall;
@@ -1300,6 +1301,11 @@ end;
 function TCircuit.Get_GICsources: GICSources;
 begin
     Result := FGICsources as IGICSources;
+end;
+
+function TCircuit.Get_ReduceCkt: ReduceCkt;
+begin
+
 end;
 
 initialization

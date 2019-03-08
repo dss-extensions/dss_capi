@@ -89,7 +89,7 @@ begin
         exit;
     SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('transformer.%s.%s=%s', [ActiveTransformer.Name, parm, val]);
-    DSSExecutive.Command := cmd;
+    DSSExecutive[ActiveActor].Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;

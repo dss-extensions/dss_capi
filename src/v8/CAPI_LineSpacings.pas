@@ -301,21 +301,22 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit[ActiveActor] <> NIL then
-        with ActiveCircuit[ActiveActor] do
-            if LineSpacingClass[ActiveActor].ElementList.ListSize > 0 then
-            begin
-                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (LineSpacingClass[ActiveActor].ElementList.ListSize - 1) + 1);
-                k := 0;
-                LineSpacingElem := LineSpacingClass[ActiveActor].ElementList.First;
-                while LineSpacingElem <> NIL do
-                begin
-                    Result[k] := DSS_CopyStringAsPChar(LineSpacingElem.Name);
-                    Inc(k);
-                    LineSpacingElem := LineSpacingClass[ActiveActor].ElementList.Next;
-                end;
-            end;
-
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    if LineSpacingClass[ActiveActor].ElementList.ListSize <= 0 then
+        Exit;
+    with ActiveCircuit[ActiveActor] do
+    begin
+        DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, LineSpacingClass[ActiveActor].ElementList.ListSize);
+        k := 0;
+        LineSpacingElem := LineSpacingClass[ActiveActor].ElementList.First;
+        while LineSpacingElem <> NIL do
+        begin
+            Result[k] := DSS_CopyStringAsPChar(LineSpacingElem.Name);
+            Inc(k);
+            LineSpacingElem := LineSpacingClass[ActiveActor].ElementList.Next;
+        end;
+    end;
 end;
 
 procedure LineSpacings_Get_AllNames_GR(); CDECL;
@@ -323,7 +324,6 @@ procedure LineSpacings_Get_AllNames_GR(); CDECL;
 begin
     LineSpacings_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
-
 //------------------------------------------------------------------------------
 function LineSpacings_Get_idx(): Integer; CDECL;
 begin

@@ -13,7 +13,7 @@ uses
     Command;
 
 const
-    NumExecOptions = 111;
+    NumExecOptions = 113;
 
 var
     ExecOption,
@@ -155,6 +155,8 @@ begin
     ExecOption[109] := 'SampleEnergyMeters';
     ExecOption[110] := 'MinIterations'; // default is 2
     ExecOption[111] := 'DSSVisualizationTool';
+    ExecOption[112] := 'KeepLoad';
+    ExecOption[113] := 'Zmag';
 
 
     OptionHelp[1] := 'Sets the active DSS class type.  Same as Class=...';
@@ -329,9 +331,9 @@ begin
         'Reset Keeplist (sets all buses to FALSE (no keep))' + CRLF +
         'Set KeepList=(bus1, bus2, bus3, ... )' + CRLF +
         'Set KeepList=(file=buslist.txt)';
-    OptionHelp[59] := '{ Default or [null] | Stubs [Zmag=nnn] | MergeParallel | BreakLoops | Switches | Ends | Laterals}  Strategy for reducing feeders. ' +
+    OptionHelp[59] := '{ Default or [null] | Shortlines [Zmag=nnn] | MergeParallel | BreakLoops | Switches | Ends | Laterals}  Strategy for reducing feeders. ' +
         'Default is to eliminate all dangling end buses and buses without load, caps, or taps. ' + CRLF +
-        '"Stubs [Zmag=0.02]" merges short branches with impedance less than Zmag (default = 0.02 ohms) ' + CRLF +
+        '"Shortlines [Zmag=0.02]" merges short branches with impedance less than Zmag (default = 0.02 ohms) ' + CRLF +
         '"MergeParallel" merges lines that have been found to be in parallel ' + CRLF +
         '"Breakloops" disables one of the lines at the head of a loop. ' + CRLF +
         '"Ends" eliminates dangling ends only.' + CRLF +
@@ -408,6 +410,8 @@ begin
         'Use this Option to turn sampling on or off';
     OptionHelp[110] := 'Minimum number of iterations required for a solution. Default is 2.';
     OptionHelp[111] := 'Activates/Deactivates the extended version of the plot command for figures with the DSS Visualization Tool.';
+    OptionHelp[112] := 'Keeploads = Y/N option for ReduceOption Laterals option';
+    OptionHelp[113] := 'Sets the Zmag option (in Ohms) for ReduceOption Shortlines option. Lines have less line mode impedance are reduced.';
 
 end;
 //----------------------------------------------------------------------------
@@ -765,6 +769,10 @@ begin
                 ActiveCircuit.solution.MinIterations := Parser.IntValue;
             111:
                 DSS_Viz_enable := InterpretYesNo(Param);
+            112:
+                ActiveCircuit.ReduceLateralsKeepLoad := InterpretYesNo(Param);
+            113:
+                ActiveCircuit.ReductionZmag := Parser.DblValue;
 
         else
            // Ignore excess parameters
@@ -1144,6 +1152,13 @@ begin
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
+                112:
+                    if ActiveCircuit.ReduceLateralsKeepLoad then
+                        AppendGlobalResult('Yes')
+                    else
+                        AppendGlobalResult('No');
+                113:
+                    AppendGlobalResult(Format('%-g', [ActiveCircuit.ReductionZmag]));
 
             else
            // Ignore excess parameters

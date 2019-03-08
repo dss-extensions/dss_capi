@@ -58,6 +58,7 @@ uses
     ImplVsources,
     ImplLineCodes,
     ImplGICSources,
+    ImplReduce,
     OpenDSSengine_TLB;
 
 var
@@ -104,6 +105,7 @@ var
     FVsources: IVsources;
     FLineCodes: ILineCodes;
     FGICSources: IGICSources;
+    FreduceCkt: IReduceCkt;
 
     FPropIndex: Integer;
     FPropClass: TDSSClass;
@@ -205,6 +207,7 @@ begin
     FVsources := TVsources.Create;
     FLineCodes := TLineCodes.Create;
     FGICSources := TGICSources.Create;
+    FReduceCkt := TReduceCkt.Create;
 
     FPropIndex := 0;
     FPropClass := NIL;

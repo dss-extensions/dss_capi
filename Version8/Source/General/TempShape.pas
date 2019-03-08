@@ -300,7 +300,7 @@ begin
                 4:
                 begin
                     ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
-                    InterpretDblArray(Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
+                    NumPoints := InterpretDblArray(Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
                 end;
                 5:
                     Mean := Parser[ActorID].DblValue;

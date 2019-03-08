@@ -1794,6 +1794,9 @@ exports
 begin
   IsDLL := TRUE;
   IsMultiThread := True;
-  DSSExecutive := TExecutive.Create;
-  DSSExecutive.CreateDefaultDSSItems;
+  
+  {Create one instance of DSS executive whenever the DSS Engine is init'd}
+  SetLength(DSSExecutive, CPU_Cores + 1);
+  DSSExecutive[ActiveActor] := TExecutive.Create;  // Start the DSS when DSS interface is created
+  DSSExecutive[ActiveActor].CreateDefaultDSSItems;
 end.

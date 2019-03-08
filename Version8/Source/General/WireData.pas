@@ -195,10 +195,14 @@ begin
     Name := LowerCase(WireDataName);
     DSSObjType := ParClass.DSSClassType;
     InitPropertyValues(0);
+    ratings := NIL;
 end;
 
 destructor TWireDataObj.Destroy;
 begin
+    if Assigned(ratings) then
+        ReallocMem(ratings, 0);
+
     inherited destroy;
 end;
 

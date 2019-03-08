@@ -30,7 +30,7 @@ USES
 
 
 TYPE
-    TReductionStrategy = (rsDefault, rsStubs, {rsTapEnds,} rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches, rsLaterals);
+    TReductionStrategy = (rsDefault, rsShortlines, {rsTapEnds,} rsMergeParallel, rsBreakLoop, rsDangling, rsSwitches, rsLaterals);
 
     CktElementDef = RECORD
         CktElementClass:Integer;
@@ -312,6 +312,7 @@ TYPE
           Function GetBusAdjacentPCLists(ActorID: integer): TAdjArray;
           function Tear_Circuit(): Integer;                            // Tears the circuit considering the number of Buses of the original Circuit
           procedure Save_SubCircuits();
+          function get_Line_Bus(LName: String; NBus: Integer):String;
           procedure  get_longest_path();
           function Append2PathsArray(New_Path :  array of integer): Integer;//  appends a new path to the array and returns the index(1D)
           procedure Normalize_graph();
@@ -563,9 +564,9 @@ BEGIN
      For i := 1 to NumDevices Do Begin
            TRY
               pCktElem := TDSSCktElement(CktElements.Get(i));
-              ElemName := pCktElem.ParentClass.name + '.' + pCktElem.Name;
-              pCktElem.Free;
-
+//                ElemName := pCktElem.ParentClass.name + '.' + pCktElem.Name;
+                ElemName := pCktElem.DSSClassName + '.' + pCktElem.Name;
+                pCktElem.Free;
            EXCEPT
              ON E: Exception Do
                DoSimpleMsg('Exception Freeing Circuit Element:'  + ElemName + CRLF + E.Message, 423);
@@ -1092,10 +1093,56 @@ Begin
     Fileroot              :=  Fileroot  + PathDelim + 'Torn_Circuit';
     CreateDir(Fileroot);                        // Creates the folder for storing the modified circuit
     DelFilesFromDir(Fileroot,'*',True);         // Removes all the files inside the new directory (if exists)
-    DssExecutive.Command  :=  'save circuit Dir="' + Fileroot + '"';
+    DssExecutive[ActiveActor].Command  :=  'save circuit Dir="' + Fileroot + '"';
     // This routine extracts and modifies the file content to separate the subsystems as OpenDSS projects indepedently
     Format_SubCircuits(FileRoot, length(Locations));
 End;
+
+{*******************************************************************************
+*       Delivers the name of the bus at the specific line and terminal         *
+*******************************************************************************}
+Function TDSSCircuit.get_Line_Bus(LName: String; NBus: Integer):String;
+VAR
+    i,
+    activesave  : integer;
+    pLine       : TLineObj;
+    S           : String;
+    Found       : Boolean;
+    NBuses      : Array of String;
+Begin
+
+  setlength(NBuses,2);
+  IF ActiveCircuit[ActiveActor] <> NIL THEN
+  Begin      // Search list of Lines in active circuit for name
+    WITH ActiveCircuit[ActiveActor].Lines DO
+    Begin
+      S := LName;  // Convert to Pascal String
+      Found := FALSE;
+      ActiveSave := ActiveIndex;
+      pLine := First;
+      While pLine <> NIL Do
+      Begin
+        IF (CompareText(pLine.Name, S) = 0) THEN
+        Begin
+          ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
+          Found := TRUE;
+          Break;
+        End;
+        pLine := Next;
+      End;
+      IF NOT Found THEN
+      Begin
+        DoSimpleMsg('Line "'+S+'" Not Found in Active Circuit.', 5008);
+        pLine := Get(ActiveSave);    // Restore active Line
+        ActiveCircuit[ActiveActor].ActiveCktElement := pLine;
+      End;
+    End;
+    For i := 1 to  ActiveCircuit[ActiveActor].ActiveCktElement.Nterms Do
+        NBuses[i-1] := ActiveCircuit[ActiveActor].ActiveCktElement.GetBus(i);
+    // returns the name of the desired bus
+    Result  :=  NBuses[NBus - 1];
+  End;
+end;
 
 {*******************************************************************************
 *         This routine tears the circuit into many pieces as CPUs are          *
@@ -1306,7 +1353,7 @@ Begin
 
            End;
           // Generates the OpenDSS Command;
-          DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
+          DssExecutive[ActiveActor].Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
         End
         else
         Begin
@@ -2014,7 +2061,7 @@ Begin
 //        For i := 1 to NumBuses do
 //          If Buses^[i].kVBase > 0.0 Then
 //            Writeln(F, Format('SetkVBase Bus=%s  kvln=%.7g ', [BusList.Get(i), Buses^[i].kVBase]));
-        DSSExecutive.Command := 'get voltagebases';
+        DSSExecutive[ActiveActor].Command := 'get voltagebases';
         VBases := GlobalResult;
         Writeln(F, 'Set Voltagebases='+VBases);
         Writeln(F, 'CalcVoltagebases');

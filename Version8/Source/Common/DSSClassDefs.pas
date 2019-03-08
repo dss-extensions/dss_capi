@@ -302,8 +302,7 @@ begin
     DSSClasses.New := MonitorClass[ActiveActor];
 
     EnergyMeterClass[ActiveActor] := TEnergyMeter.Create;  // Have to do this AFTER Generator
-    DSSClasses.New := EnergyMeterClass;
-
+    DSSClasses.New := EnergyMeterClass[ActiveActor];
     SensorClass[ActiveActor] := TSensor.Create;      // Create state estimation sensors
     DSSClasses.New := SensorClass[ActiveActor];
 
@@ -344,7 +343,7 @@ begin
             for i := 1 to DSSObjs[ActiveActor].ListSize do
             begin
                 DSSObj := DSSObjs[ActiveActor].Get(i);
-                TraceName := DSSObj.ParentClass.Name + '.' + DSSObj.Name;
+                TraceName := DSSObj.DSSClassName + '.' + DSSObj.Name;
                 DSSObj.Free;
                 SuccessFree := TraceName;
             end;

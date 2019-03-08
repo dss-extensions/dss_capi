@@ -323,25 +323,23 @@ VAR
 *    Nomenclature:                                                             *
 *                  OV_ Overloads                                               *
 *                  VR_ Voltage report                                          *
-*                  DI_ Demand interval                                         *
-*                  SI_ System Demand interval                                  *
+*                  DI_ Demand interval for each meter. Moved to EnergyMeter.pas*
+*                  SDI_ System Demand interval                                 *
 *                  TDI_ DI Totals                                              *
 *                  FM_  Meter Totals                                           *
-*                  SM_  System Mater                                           *
+*                  SM_  System Meter                                           *
 *                  EMT_  Energy Meter Totals                                   *
-*                  PHV_  Phase Voltage Report                                  *
+*                  PHV_  Phase Voltage Report. Moved to EnergyMeter.pas        *
 *     These prefixes are applied to the variables of each file mapped into     *
 *     Memory using the MemoryMap_Lib                                           *
 ********************************************************************************
 }
    OV_MHandle             : array of TBytesStream;  // a. Handle to the file in memory
    VR_MHandle             : array of TBytesStream;
-   DI_MHandle             : array of TBytesStream;
    SDI_MHandle            : array of TBytesStream;
    TDI_MHandle            : array of TBytesStream;
    SM_MHandle             : array of TBytesStream;
    EMT_MHandle            : array of TBytesStream;
-   PHV_MHandle            : array of TBytesStream;
    FM_MHandle             : array of TBytesStream;
 
 //*********** Flags for appending Files*****************************************
@@ -355,9 +353,9 @@ VAR
    PHV_Append             : array of Boolean;
    FM_Append              : array of Boolean;
 
-//***********************A-Diakoptics Variables*********************************
-
-
+//***********************Seasonal QSTS variables********************************
+   SeasonalRating         : Boolean;    // Tells the energy meter if the seasonal rating feature is active
+   SeasonSignal           : String;     // Stores the name of the signal for selecting the rating dynamically
 
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
@@ -396,6 +394,8 @@ Function MyAllocMem(nbytes:Cardinal):Pointer;
 procedure New_Actor_Slot();
 procedure New_Actor(ActorID:  Integer);
 procedure Wait4Actors(WType : Integer);
+
+procedure DoClone();
 
 procedure Delay(TickTime : Integer);
 
@@ -717,7 +717,7 @@ Begin
            {Create a default Circuit}
            SolutionABort              := FALSE;
            {Voltage source named "source" connected to SourceBus}
-           DSSExecutive.Command       := 'New object=vsource.source Bus1=SourceBus ' + S;  // Load up the parser as if it were read in
+           DSSExecutive[ActiveActor].Command       := 'New object=vsource.source Bus1=SourceBus ' + S;  // Load up the parser as if it were read in
            // Creates the thread for the actor if not created before
            If ActorHandle[ActiveActor]  = nil then New_Actor(ActiveActor);
 
@@ -1046,6 +1046,41 @@ Begin
   End;
 end;
 
+// Clones the active Circuit as many times as requested if possible
+procedure DoClone();
+var
+  i,
+  NumClones   : Integer;
+  Ref_Ckt     : String;
+Begin
+    Ref_Ckt             := LastFileCompiled;
+    Parser[ActiveActor].NextParam;
+    NumClones           := Parser[ActiveActor].IntValue;
+    Parallel_enabled    := False;
+    if ((NumOfActors + NumClones) <= CPU_Cores) and (NumClones > 0) then
+    Begin
+      for i := 1 to NumClones do
+      Begin
+        New_Actor_Slot;
+        DSSExecutive[ActiveActor].Command          :=  'compile "' + Ref_Ckt + '"';
+        // sets the previous maxiterations and controliterations
+        ActiveCircuit[ActiveActor].solution.MaxIterations         :=  ActiveCircuit[1].solution.MaxIterations;
+        ActiveCircuit[ActiveACtor].solution.MaxControlIterations  :=  ActiveCircuit[1].solution.MaxControlIterations;
+        // Solves the circuit
+        ActiveSolutionObj := ActiveCircuit[ActiveActor].Solution;
+        SolutionClass[ActiveActor].Edit(ActiveActor);
+      End;
+
+    End
+    else
+    Begin
+      if NumClones > 0 then
+        DoSimpleMsg('There are no more CPUs available', 7001)
+      else
+        DoSimpleMsg('The number of clones requested is invalid', 7004)
+    End;
+End;
+
 // Prepares memory to host a new actor
 procedure New_Actor_Slot();
 Begin
@@ -1055,10 +1090,10 @@ Begin
     GlobalResult              :=  inttostr(NumOfActors);
     ActiveActor               :=  NumOfActors;
     ActorCPU[ActiveActor]     :=  ActiveActor -1;
-    DSSExecutive              :=  TExecutive.Create;  // Make a DSS object
+    DSSExecutive[ActiveActor] :=  TExecutive.Create;  // Make a DSS object
     Parser[ActiveActor]       :=  TParser.Create;
     AuxParser[ActiveActor]    :=  TParser.Create;
-    DSSExecutive.CreateDefaultDSSItems;
+    DSSExecutive[ActiveActor].CreateDefaultDSSItems;
   end
   else DoSimpleMsg('There are no more CPUs available', 7001)
 End;
@@ -1198,12 +1233,10 @@ initialization
 
    SetLength(OV_MHandle,CPU_Cores + 1);
    SetLength(VR_MHandle,CPU_Cores + 1);
-   SetLength(DI_MHandle,CPU_Cores + 1);
    SetLength(SDI_MHandle,CPU_Cores + 1);
    SetLength(TDI_MHandle,CPU_Cores + 1);
    SetLength(SM_MHandle,CPU_Cores + 1);
    SetLength(EMT_MHandle,CPU_Cores + 1);
-   SetLength(PHV_MHandle,CPU_Cores + 1);
    SetLength(FM_MHandle,CPU_Cores + 1);
    SetLength(OV_Append,CPU_Cores + 1);
    SetLength(VR_Append,CPU_Cores + 1);
@@ -1215,6 +1248,8 @@ initialization
    SetLength(PHV_Append,CPU_Cores + 1);
    SetLength(FM_Append,CPU_Cores + 1);
    SetLength(DIFilesAreOpen,CPU_Cores + 1);
+   SetLength(DSSExecutive,CPU_Cores + 1);
+
 
    for ActiveActor := 1 to CPU_Cores do
    begin
@@ -1231,12 +1266,10 @@ initialization
 
     OV_MHandle[ActiveActor]           :=  nil;
     VR_MHandle[ActiveActor]           :=  nil;
-    DI_MHandle[ActiveActor]           :=  nil;
     SDI_MHandle[ActiveActor]          :=  nil;
     TDI_MHandle[ActiveActor]          :=  nil;
     SM_MHandle[ActiveActor]           :=  nil;
     EMT_MHandle[ActiveActor]          :=  nil;
-    PHV_MHandle[ActiveActor]          :=  nil;
     FM_MHandle[ActiveActor]           :=  nil;
     DIFilesAreOpen[ActiveActor]       :=  FALSE;
 
@@ -1251,11 +1284,14 @@ initialization
    {$IFDEF FPC}
    ProgramName      := 'OpenDSSCmd';  // for now...
    {$ELSE}
-   ProgramName      :=    'OpenDSS';
+   ProgramName            :=  'OpenDSS';
    {$ENDIF}
-   DSSFileName      :=    GetDSSExeFile;
-   DSSDirectory     :=    ExtractFilePath(DSSFileName);
-   ADiakoptics      :=    False;  // Disabled by default
+   DSSFileName            :=  GetDSSExeFile;
+   DSSDirectory           :=  ExtractFilePath(DSSFileName);
+   ADiakoptics            :=  False;  // Disabled by default
+
+   SeasonalRating         :=  False;
+   SeasonSignal           :=  '';
 
    {Various Constants and Switches}
    {$IFDEF FPC}NoFormsAllowed  := TRUE;{$ENDIF}
@@ -1337,7 +1373,7 @@ initialization
 
       // If there is no EDITOR environment variable, keep the old behavior
       if (DefaultEditor = '') then
-          DefaultEditor   := 'open -t';
+      DefaultEditor   := 'open -t';
       DefaultFontSize := 12;
       DefaultFontName := 'Geneva';
    {$ENDIF}
@@ -1346,7 +1382,7 @@ initialization
 
       // If there is no EDITOR environment variable, keep the old behavior
       if (DefaultEditor = '') then
-          DefaultEditor := 'xdg-open';
+      DefaultEditor   := 'xdg-open';
       DefaultFontSize := 10;
       DefaultFontName := 'Arial';
    {$ENDIF}
@@ -1392,10 +1428,10 @@ Finalization
 
 
 
-  With DSSExecutive Do If RecorderOn Then Recorderon := FALSE;
+  With DSSExecutive[ActiveActor] Do If RecorderOn Then Recorderon := FALSE;
   ClearAllCircuits;
-  DSSExecutive.Free;  {Writes to Registry}
 {$IFNDEF DSS_CAPI}
+  DSSExecutive[ActiveActor].Free;  {Writes to Registry}
   DSS_Registry.Free;  {Close Registry}
 {$ENDIF}
 

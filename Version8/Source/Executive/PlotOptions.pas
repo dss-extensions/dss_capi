@@ -81,12 +81,18 @@ begin
         'Plot Priceshape object=mypriceshape' + CRLF +
         'Plot Profile' + CRLF +
         'Plot Profile Phases=Primary' + CRLF + CRLF +
-        'Additional plots with the OpenDSS Viewer (These plots are enabled with the OpenDSSViewer option):' + CRLF +
+        'Additional plots with the OpenDSS Viewer (These plots are enabled with the "OpenDSSViewer" option):' + CRLF +
         '- Plot evolution  ! Probabilistic density evolution plot with the line-to-ground magnitude of all load voltages in per unit base.' + CRLF +
+        '- Plot energymeter object=system  ! System energy meter plot. The "DemandInterval" option is required.' + CRLF +
+        '- Plot energymeter object=Totals  ! Totals energy meter plot. The "DemandInterval" option is required.' + CRLF +
+        '- Plot energymeter object=voltexception  ! Voltage exception plot. The "DemandInterval" and "VoltExceptionReport" options are required.' + CRLF +
+        '- Plot energymeter object=overloads  ! Overload report plot. The "DemandInterval" and "OverloadReport" options are required.' + CRLF +
+        '- Plot energymeter object=myMeter  ! Energy meter plot. The "DemandInterval" and "DIVerbose" options are required.' + CRLF +
         '- Plot loadshape object=myLoadshape  ! Loadshapes with the OpenDSS Viewer functionalities.' + CRLF +
         '- Plot matrix incidence  ! Incidence matrix plot (Requires: CalcIncMatrix or CalcIncMatrix_O).' + CRLF +
         '- Plot matrix laplacian  ! Laplacian matrix plot (Requires: CalcLaplacian).' + CRLF +
         '- Plot monitor object=myMonitor  ! Monitors with the OpenDSS Viewer functionalities. All channels are included in this plot.' + CRLF +
+        '- Plot phasevoltage object=myMeter  ! Phase voltage plot associated to an energy meter. The "DemandInterval", "DIVerbose" options and the "PhaseVoltageReport" parameter are required.' + CRLF +
         '- Plot profile  ! 3D and 2D versions of the voltage profile.' + CRLF +
         '- Plot scatter  ! Scatter plot with geovisualization of line-to-ground bus voltage magnitudes in per unit.';
     PlotHelp[2] := 'One of {Voltage | Current | Power | Losses | Capacity | (Value Index for General, AutoAdd, or Circuit[w/ file]) }';
@@ -247,7 +253,10 @@ begin
                             PlotType := ptCircuitplot;
                         'E':
 {$IFDEF MSWINDOWS}
-                            PlotType := ptEvolutionPlot
+                            if CompareTextShortest('ener', Param) = 0 then
+                                PlotType := ptEnergyPlot
+                            else
+                                PlotType := ptEvolutionPlot
 {$ENDIF}
                             ;
                         'G':
@@ -266,7 +275,14 @@ begin
                             if CompareTextShortest('pro', Param) = 0 then
                                 PlotType := ptProfile
                             else
-                                PlotType := ptPriceShape;
+                            begin
+                      {$IFDEF MSWINDOWS}
+                                if CompareTextShortest('phas', Param) = 0 then
+                                    PlotType := ptPhaseVoltage
+                                else
+{$ENDIF}
+                                    PlotType := ptPriceShape;
+                            end;
                         'S':
 {$IFDEF MSWINDOWS}
                             PlotType := ptScatterPlot
@@ -448,6 +464,8 @@ begin
                 PlotType = ptProfile) or (
                 PlotType = ptScatterPlot) or (
                 PlotType = ptEvolutionPlot) or (
+                PlotType = ptEnergyPlot) or (
+                PlotType = ptPhaseVoltage) or (
                 PlotType = ptMatrixplot))) then
                 DSSVizPlot; // OpenDSS Viewer
       {$ENDIF}

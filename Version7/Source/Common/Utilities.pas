@@ -28,6 +28,7 @@ procedure FireOffEditor(FileNm: String);
 procedure DoDOSCmd(CmdString: String);
 function StripExtension(const S: String): String;
 function StripClassName(const S: String): String;  // Return only element name sans class.
+function GetNodeString(const Busname: String): String;
 function Pad(const S: String; Width: Integer): String;
 function PadDots(const S: String; Width: Integer): String;
 function PadTrunc(const S: String; Width: Integer): String;
@@ -83,7 +84,7 @@ function GetCktElementIndex(const FullObjName: String): Integer;
 function IsShuntElement(const Elem: TDSSCktElement): Boolean;
 function IsLineElement(const Elem: TDSSCktElement): Boolean;
 function IsTransformerElement(const Elem: TDSSCktElement): Boolean;
-function IsStubLine(const Elem: TDSSCktElement): Boolean;
+// --- moved to ReduceAlgs 2/13/19 Function  IsStubLine(const Elem:TDSSCktElement):Boolean;
 function CheckParallel(const Line1, Line2: TDSSCktElement): Boolean;
 function AllTerminalsClosed(ThisElement: TDSSCktElement): Boolean;
 function Str_Real(const Value: Double; NumDecimals: Integer): String;
@@ -282,10 +283,11 @@ var
     msg: String;
 begin
 {$IFDEF DSS_CAPI}
-    if not DSS_CAPI_ALLOW_EDITOR then Exit; // just ignore if Show is not allowed
+    if not DSS_CAPI_ALLOW_EDITOR then
+        Exit; // just ignore if Show is not allowed
 {$ENDIF}
 
-    gotError := False;
+    gotError := FALSE;
     msg := 'Unknown error in process.';
     try
         if FileExists(FileNm) then
@@ -299,7 +301,7 @@ begin
     except
         On E: Exception do
         begin
-            gotError := True;
+            gotError := TRUE;
             msg := E.Message;
         end;
     end;
@@ -313,7 +315,7 @@ var //Handle:Word;
     gotError: Boolean;
     msg: String;
 begin
-    gotError := False;
+    gotError := FALSE;
     msg := 'Unknown error in command.';
     try
 {$IF (defined(Windows) or defined(MSWindows))}
@@ -324,7 +326,7 @@ begin
     except
         On E: Exception do
         begin
-            gotError := True;
+            gotError := TRUE;
             msg := E.Message;
         end;
     end;
@@ -1394,32 +1396,6 @@ begin
 
 end;
 
-function IsStubLine(const Elem: TDSSCktElement): Boolean;
-var
-    Ztest: Double;
-    LineElement: TLineObj;
-
-begin
-    LineElement := TLineObj(Elem);
-     {Get Positive Sequence or equivalent from matrix}
-    if LineElement.SymComponentsModel then
-        with LineElement do
-            Ztest := Cabs(Cmplx(R1, X1)) * Len
-    else {Get impedance from Z matrix}  {Zs - Zm}
-        with LineElement do
-        begin
-            if NPhases > 1 then
-                Ztest := Cabs(Csub(Z.Getelement(1, 1), Z.GetElement(1, 2))) * Len
-            else
-                Ztest := Cabs(Z.Getelement(1, 1)) * Len;
-        end;
-
-    if Ztest <= ActiveCircuit.ReductionZmag then
-        Result := TRUE
-    else
-        Result := FALSE;
-
-end;
 
 //----------------------------------------------------------------------------
 function GetCktElementIndex(const FullObjName: String): Integer;
@@ -3540,6 +3516,18 @@ begin
     else
         Result := 'Unknown';
     end;
+end;
+
+function GetNodeString(const Busname: String): String;
+var
+    dotpos: Integer;
+
+begin
+    dotpos := pos('.', BusName);
+    if dotpos = 0 then
+        Result := ''
+    else
+        Result := Copy(BusName, dotpos, length(BusName));    // preserve node designations if any
 end;
 
 initialization

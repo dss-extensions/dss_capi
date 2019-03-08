@@ -46,15 +46,16 @@ program opendsscmd;
 }
 
 uses
-  {$IFDEF UNIX}{$IFDEF UseCThreads}
+  {$IFDEF UNIX}
   cthreads,
-  {$ENDIF}{$ENDIF}
+  {$ENDIF}
   SysUtils,
   Classes,
   CustApp,
 //	KeyEvents, // or a linkframework Carbon statement above?
   Arraydef in '..\Shared\Arraydef.pas',
   AutoAdd in '..\Common\AutoAdd.pas',
+  AutoTrans in '..\PDElements\AutoTrans.pas',
   Bus in '..\Common\Bus.pas',
   CableConstants in '..\General\CableConstants.pas',
   CableData in '..\General\CableData.pas',
@@ -146,6 +147,7 @@ uses
   ShowResults in '..\Common\ShowResults.pas',
   Solution in '..\Common\Solution.pas',
   SolutionAlgs in '..\Common\SolutionAlgs.pas',
+  Sparse_Math in '..\Common\Sparse_Math.pas',
   Spectrum in '..\General\Spectrum.pas',
   StackDef in '..\Shared\StackDef.pas',
   Storage in '..\PCElements\Storage.pas',
@@ -237,24 +239,24 @@ var
   LNresult: Pchar;
   FNCSconn: TFNCS;
 begin
-	NoFormsAllowed := True;
-	DSSExecutive := TExecutive.Create;  // Make a DSS object
-	DSSExecutive.CreateDefaultDSSItems;
+  NoFormsAllowed := True;
+  DSSExecutive := TExecutive.Create;  // Make a DSS object
+  DSSExecutive.CreateDefaultDSSItems;
 //	writeln('Startup Directory: ', StartupDirectory);
 //	writeln('Data Directory: ', DataDirectory);
 //	writeln('Output Directory: ', OutputDirectory);
 //	writeln('GetCurrentDir: ', GetCurrentDir);
-	DataDirectory := StartupDirectory;
-	OutputDirectory := StartupDirectory;
-  SetCurrentDir(DataDirectory);
+  DataDirectory[ActiveActor] := StartupDirectory;
+  OutputDirectory[ActiveActor] := StartupDirectory;
+  SetCurrentDir(DataDirectory[ActiveActor]);
 
-	NoFormsAllowed := False;  // messages will go to the console
+  NoFormsAllowed := False;  // messages will go to the console
 
   FNCSconn := TFNCS.Create;
   if FNCSconn.IsReady then begin
-    writeln('FNCS connected');
+    writeln('FNCS available');
   end else begin
-    writeln('FNCS not connected');
+    writeln('FNCS not available');
   end;
 
 	// quick check parameters

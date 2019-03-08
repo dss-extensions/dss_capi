@@ -76,7 +76,7 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_OptionValue_AnsiString(i: Integer): Ansistring; inline;
 begin
-    DSSExecutive.Command := 'get ' + ExecOption[i];
+    DSSExecutive[ActiveActor].Command := 'get ' + ExecOption[i];
     Result := GlobalResult;
 end;
 

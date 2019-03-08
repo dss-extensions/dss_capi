@@ -74,6 +74,7 @@ type
         procedure Set_Spacing(const Value: Widestring); SAFECALL;
         function Get_Units: Integer; SAFECALL;
         procedure Set_Units(Value: Integer); SAFECALL;
+        function Get_SeasonRating: Double; SAFECALL;
 
     { Protected declarations }
     end;
@@ -86,6 +87,7 @@ uses
     DSSClassDefs,
     DSSGlobals,
     CktElement,
+    XYCurve,
     uComplex,
     ExecHelper,
     dialogs,
@@ -260,10 +262,9 @@ begin
     Result := 0.0;
     if ActiveCircuit[ActiveActor] <> NIL then
         if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
-            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
-            begin
-                Result := R1 / UnitsConvert;
-            end;
+        begin
+            Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).R1;
+        end
 
 end;
 
@@ -272,10 +273,9 @@ begin
     Result := 0.0;
     if ActiveCircuit[ActiveActor] <> NIL then
         if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
-            with TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement) do
-            begin
-                Result := X1 / UnitsConvert;
-            end;
+        begin
+            Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).X1;
+        end
 
 end;
 
@@ -965,6 +965,35 @@ begin
                 YprimInvalid[ActiveActor] := TRUE;
             end;
         end;
+end;
+
+function TLines.Get_SeasonRating: Double;
+var
+    RatingIdx: Integer;
+    RSignal: TXYCurveObj;
+begin
+    if IsLine(ActiveCircuit[ActiveActor].ActiveCktElement) then
+    begin
+        if SeasonalRating then
+        begin
+            if SeasonSignal <> '' then
+            begin
+                RSignal := XYCurveClass[ActiveActor].Find(SeasonSignal);
+                if RSignal <> NIL then
+                    RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit[ActiveActor].Solution.DynaVars.intHour)) + 1;
+        // Just in case
+                if RatingIdx > TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NRatings then
+                    Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NormAmps
+                else
+                    Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).ratings^[RatingIdx];
+            end
+            else
+                Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NormAmps;
+        end;
+    end
+    else
+        Result := 0.0;
+
 end;
 
 initialization

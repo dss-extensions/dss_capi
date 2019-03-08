@@ -72,7 +72,8 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     with ActiveCircuit do
         if Reclosers.ListSize > 0 then
         begin
@@ -442,7 +443,8 @@ procedure Reclosers_Set_idx(Value: Integer); CDECL;
 var
     pRecloser: TRecloserObj;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     pRecloser := ActiveCircuit.Reclosers.Get(Value);
     if pRecloser = NIL then
     begin

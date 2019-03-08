@@ -24,7 +24,7 @@ const
 
 function Text_Get_Command_AnsiString(): Ansistring; inline;
 begin
-    Result := DSSExecutive.Command;
+    Result := DSSExecutive[ActiveActor].Command;
 end;
 
 function Text_Get_Command(): PAnsiChar; CDECL;
@@ -35,7 +35,7 @@ end;
 procedure Text_Set_Command(const Value: PAnsiChar); CDECL;
 begin
     SolutionAbort := FALSE;  // Reset for commands entered from outside
-    DSSExecutive.Command := Value;  {Convert to String}
+    DSSExecutive[ActiveActor].Command := Value;  {Convert to String}
 end;
 //------------------------------------------------------------------------------
 function Text_Get_Result_AnsiString(): Ansistring; inline;

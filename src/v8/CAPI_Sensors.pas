@@ -73,7 +73,7 @@ begin
         exit;
     SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('capacitor.%s.%s=%s', [ActiveSensor.Name, parm, val]);
-    DSSExecutive.Command := cmd;
+    DSSExecutive[ActiveActor].Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;

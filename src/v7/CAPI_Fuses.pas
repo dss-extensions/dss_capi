@@ -65,7 +65,8 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     if ActiveCircuit.Fuses.ListSize > 0 then
     begin
         pList := ActiveCircuit.Fuses;
@@ -100,7 +101,8 @@ var
     pElem: TFuseObj;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     pElem := ActiveCircuit.Fuses.First;
     if pElem <> NIL then
         repeat
@@ -119,7 +121,8 @@ var
     elem: TFuseObj;
 begin
     Result := '';
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         Result := elem.Name;
@@ -135,7 +138,8 @@ var
     pElem: TFuseObj;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     pElem := ActiveCircuit.Fuses.Next;
     if pElem <> NIL then
         repeat
@@ -152,7 +156,8 @@ end;
 procedure Fuses_Set_Name(const Value: PAnsiChar); CDECL;
 // Set element active by name
 begin
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     if FuseClass.SetActive(Value) then
     begin
         ActiveCircuit.ActiveCktElement := FuseClass.ElementList.Active;
@@ -169,7 +174,8 @@ var
     elem: TFuseObj;
 begin
     Result := '';
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         Result := elem.MonitoredElementName;
@@ -185,7 +191,8 @@ var
     elem: TFuseObj;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         Result := elem.MonitoredElementTerminal;
@@ -196,7 +203,8 @@ var
     elem: TFuseObj;
 begin
     Result := '';
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         Result := elem.ElementName;
@@ -211,7 +219,8 @@ procedure Fuses_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
 var
     elem: TFuseObj;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         Set_parameter('monitoredObj', Value);
@@ -221,7 +230,8 @@ procedure Fuses_Set_MonitoredTerm(Value: Integer); CDECL;
 var
     elem: TFuseObj;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         Set_parameter('monitoredterm', IntToStr(Value));
@@ -231,7 +241,8 @@ procedure Fuses_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 var
     elem: TFuseObj;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         Set_parameter('SwitchedObj', Value);
@@ -242,7 +253,8 @@ var
     elem: TFuseObj;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         Result := elem.ElementTerminal;
@@ -252,7 +264,8 @@ procedure Fuses_Set_SwitchedTerm(Value: Integer); CDECL;
 var
     elem: TFuseObj;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         Set_parameter('SwitchedTerm', IntToStr(Value));
@@ -263,7 +276,8 @@ var
     elem: TFuseObj;
 begin
     Result := '';
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         Result := elem.FuseCurve.Name
@@ -280,7 +294,8 @@ procedure Fuses_Set_TCCcurve(const Value: PAnsiChar); CDECL;
 var
     elem: TFuseObj;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         Set_parameter('FuseCurve', Value);
@@ -290,7 +305,8 @@ function Fuses_Get_RatedCurrent(): Double; CDECL;
 var
     elem: TFuseObj;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         Result := elem.RatedCurrent
@@ -302,7 +318,8 @@ procedure Fuses_Set_RatedCurrent(Value: Double); CDECL;
 var
     elem: TFuseObj;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         Set_parameter('RatedCurrent', Format('%.8g ', [Value]));
@@ -312,7 +329,8 @@ function Fuses_Get_Delay(): Double; CDECL;
 var
     elem: TFuseObj;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         Result := elem.DelayTime
@@ -324,7 +342,8 @@ procedure Fuses_Open(); CDECL;
 var
     elem: TFuseObj;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         elem.ControlledElement.Closed[0] := FALSE; // Open all phases
@@ -334,7 +353,8 @@ procedure Fuses_Close(); CDECL;
 var
     elem: TFuseObj;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         elem.Reset;
@@ -344,7 +364,8 @@ procedure Fuses_Set_Delay(Value: Double); CDECL;
 var
     elem: TFuseObj;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
         Set_parameter('Delay', Format('%.8g ', [Value]));
@@ -357,7 +378,8 @@ var
     i: Integer;
 begin
     Result := FALSE;
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     elem := ActiveCircuit.Fuses.Active;
     if elem <> NIL then
     begin
@@ -379,7 +401,8 @@ procedure Fuses_Set_idx(Value: Integer); CDECL;
 var
     pFuse: TFuseObj;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if ActiveCircuit = NIL then
+        Exit;
     pFuse := ActiveCircuit.Fuses.Get(Value);
     if pFuse = NIL then
     begin

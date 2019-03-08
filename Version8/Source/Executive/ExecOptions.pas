@@ -13,7 +13,7 @@ uses
     Command;
 
 const
-    NumExecOptions = 124;
+    NumExecOptions = 128;
 
 var
     ExecOption,
@@ -173,6 +173,10 @@ begin
     ExecOption[122] := 'ADiakoptics';
     ExecOption[123] := 'MinIterations'; // default is 2
     ExecOption[124] := 'LinkBranches';
+    ExecOption[125] := 'KeepLoad';
+    ExecOption[126] := 'Zmag';
+    ExecOption[127] := 'SeasonRating';
+    ExecOption[128] := 'SeasonSignal';
 
 
     OptionHelp[1] := 'Sets the active DSS class type.  Same as Class=...';
@@ -194,7 +198,7 @@ begin
         CRLF + '  Yearly (follow Yearly curve),' +
         CRLF + '  DIrect,' +
         CRLF + '  DUtycycle,' +
-        CRLF + '  Time, ( see LoadShapeClass option, SampleEnergymeters options)' +
+        CRLF + '  Time, ( see LoadShapeClass option)' +
         CRLF + '  DYnamic,  ( see LoadShapeClass option)' +
         CRLF + '  Harmonic,' +
         CRLF + '  HarmonicT,  (sequential Harmonic Mode)' +
@@ -296,7 +300,7 @@ begin
         'Examples:' + Crlf + CRlf +
         'Set autobuslist=(bus1, bus2, bus3, ... )' + CRLF +
         'Set autobuslist=(file=buslist.txt)';
-    OptionHelp[43] := '{OFF | STATIC |EVENT | TIME | MULTIRATE}  Default is "STATIC".  Control mode for the solution. ' +
+    OptionHelp[43] := '{OFF | STATIC |EVENT | TIME}  Default is "STATIC".  Control mode for the solution. ' +
         'Set to OFF to prevent controls from changing.' + CRLF +
         'STATIC = Time does not advance.  Control actions are executed in order of shortest time to act ' +
         'until all actions are cleared from the control queue.  Use this mode for power flow solutions which may require several ' +
@@ -305,9 +309,6 @@ begin
         'are executed and the time is advanced automatically to the time of the event. ' + crlf + crlf +
         'TIME = solution is time driven.  Control actions are executed when the time for the pending ' +
         'action is reached or surpassed.' + CRLF + CRLF +
-        'MULTIRATE = solution is time driven.  Control actions are executed when the time for the pending ' +
-        'action is reached or surpassed. In this control mode a solution is performed after each control action' +
-        'is performed to reduce the error accumulated when the time step is to long' + CRLF + CRLF +
         'Controls may reset and may choose not to act when it comes their time. ' + CRLF +
         'Use TIME mode when modeling a control externally to the DSS and a solution mode such as ' +
         'DAILY or DUTYCYCLE that advances time, or set the time (hour and sec) explicitly from the external program. ';
@@ -350,9 +351,9 @@ begin
         'Reset Keeplist (sets all buses to FALSE (no keep))' + CRLF +
         'Set KeepList=(bus1, bus2, bus3, ... )' + CRLF +
         'Set KeepList=(file=buslist.txt)';
-    OptionHelp[59] := '{ Default or [null] | Stubs [Zmag=nnn] | MergeParallel | BreakLoops | Switches | Ends | Laterals}  Strategy for reducing feeders. ' +
+    OptionHelp[59] := '{ Default or [null] | Shortlines [Zmag=nnn] | MergeParallel | BreakLoops | Switches | Ends | Laterals}  Strategy for reducing feeders. ' +
         'Default is to eliminate all dangling end buses and buses without load, caps, or taps. ' + CRLF +
-        '"Stubs [Zmag=0.02]" merges short branches with impedance less than Zmag (default = 0.02 ohms) ' + CRLF +
+        '"Shortlines [Zmag=0.02]" merges short branches with impedance less than Zmag (default = 0.02 ohms) ' + CRLF +
         '"MergeParallel" merges lines that have been found to be in parallel ' + CRLF +
         '"Breakloops" disables one of the lines at the head of a loop. ' + CRLF +
         '"Ends" eliminates dangling ends only.' + CRLF +
@@ -449,6 +450,11 @@ begin
     OptionHelp[123] := 'Minimum number of iterations required for a solution. Default is 2.';
     OptionHelp[124] := 'Returns the names of the link branches used for tearing the circuit after initializing using set ADiakoptics = True. Using this instruction will set the Active Actor = 1' + CRLF +
         'If ADiakoptics is not initialized, this isntruction will retunr an error message';
+    OptionHelp[125] := 'Keeploads = Y/N option for ReduceOption Laterals option';
+    OptionHelp[126] := 'Sets the Zmag option (in Ohms) for ReduceOption Shortlines option. Lines have less line mode impedance are reduced.';
+    OptionHelp[127] := 'Enables/disables the seasonal selection of the rating for determining if an element is overloaded. When enabled, the energy meter will' + CRLF +
+        'look for the rating (NormAmps) using the SeasonSignal  to eavluate if the element is overloaded';
+    OptionHelp[128] := 'Is the name of the XY curve defining the seasonal change when performing QSTS simulations.';
 end;
 //----------------------------------------------------------------------------
 function DoSetCmd_NoCircuit: Boolean;  // Set Commands that do not require a circuit
@@ -483,7 +489,7 @@ begin
             57:
                 SetDataPath(Param);  // Set a legal data path
             67:
-                DSSExecutive.RecorderOn := InterpretYesNo(Param);
+                DSSExecutive[ActiveActor].RecorderOn := InterpretYesNo(Param);
             73:
                 DefaultBaseFreq := Parser[ActiveActor].DblValue;
             102:
@@ -753,7 +759,7 @@ begin
             66:
                 ActiveCircuit[ActiveActor].LogEvents := InterpretYesNo(Param);
             67:
-                DSSExecutive.RecorderOn := InterpretYesNo(Param);
+                DSSExecutive[ActiveActor].RecorderOn := InterpretYesNo(Param);
             68:
                 EnergyMeterClass[ActiveActor].Do_OverloadReport := InterpretYesNo(Param);
             69:
@@ -903,7 +909,15 @@ begin
                     ADiakoptics := FALSE;
             end;
             123:
-                ActiveCircuit[ActiveActor].solution.MinIterations := Parser[ActiveActor].IntValue
+                ActiveCircuit[ActiveActor].solution.MinIterations := Parser[ActiveActor].IntValue;
+            125:
+                ActiveCircuit[ActiveActor].ReduceLateralsKeepLoad := InterpretYesNo(Param);
+            126:
+                ActiveCircuit[ActiveActor].ReductionZmag := Parser[ActiveActor].DblValue;
+            127:
+                SeasonalRating := InterpretYesNo(Param);
+            128:
+                SeasonSignal := Param;
         else
            // Ignore excess parameters
         end;
@@ -911,9 +925,6 @@ begin
         case ParamPointer of
             3, 4:
                 ActiveCircuit[ActiveActor].Solution.Update_dblHour;
-              // Update IntervalHrs for devices that integrate
-            7, 18:
-                ActiveCircuit[ActiveActor].Solution.IntervalHrs := ActiveCircuit[ActiveActor].Solution.DynaVars.h / 3600.0;
         end;
 
         ParamName := Parser[ActiveActor].NextParam;
@@ -939,7 +950,7 @@ var
     Param: String;
    {$IFNDEF FPC}
     ScriptEd: TScriptEdit;
-{$ENDIF}
+   {$ENDIF}
 
 begin
 
@@ -1144,7 +1155,7 @@ begin
                     else
                         AppendGlobalResult('No');
                 67:
-                    if DSSExecutive.RecorderON then
+                    if DSSExecutive[ActiveActor].RecorderON then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
@@ -1256,10 +1267,7 @@ begin
                 101:
                     AppendGlobalResult(Format('%d', [ActiveCircuit[ActiveActor].RecloserMarkerSize]));
                 102:
-                    if UpdateRegistry then
-                        AppendGlobalResult('Yes')
-                    else
-                        AppendGlobalResult('No');
+                    UpdateRegistry := InterpretYesNo(Param);
                 103:
                     if ActiveCircuit[ActiveActor].MarkRelays then
                         AppendGlobalResult('Yes')
@@ -1295,10 +1303,11 @@ begin
                 end;
                 113:
                     AppendGlobalResult(Format('%d', [ActorCPU[ActiveActor]]));
-          {$IFNDEF FPC}
                 114:
-                    ScriptEd.UpdateProgressSummary;
+{$IFNDEF FPC}
+                    ScriptEd.UpdateProgressSummary
 {$ENDIF}
+                    ;
                 115:
                     if parallel_enabled then
                         AppendGlobalResult('Yes')
@@ -1345,7 +1354,21 @@ begin
                     end
                     else
                         AppendGlobalResult('Initialize A-Diakoptics first!');
-                end
+                end;
+                125:
+                    if ActiveCircuit[ActiveActor].ReduceLateralsKeepLoad then
+                        AppendGlobalResult('Yes')
+                    else
+                        AppendGlobalResult('No');
+                126:
+                    AppendGlobalResult(Format('%-g', [ActiveCircuit[ActiveActor].ReductionZmag]));
+                127:
+                    if SeasonalRating then
+                        AppendGlobalResult('Yes')
+                    else
+                        AppendGlobalResult('No');
+                128:
+                    AppendGlobalResult(SeasonSignal);
             else
            // Ignore excess parameters
             end;

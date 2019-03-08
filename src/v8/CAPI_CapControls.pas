@@ -75,7 +75,7 @@ begin
         exit;
     SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('capcontrol.%s.%s=%s', [ActiveCapControl.Name, parm, val]);
-    DSSExecutive.Command := cmd;
+    DSSExecutive[ActiveActor].Command := cmd;
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -87,7 +87,8 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit[ActiveActor] = NIL then Exit;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
     with ActiveCircuit[ActiveActor] do
         if CapControls.ListSize > 0 then
         begin
