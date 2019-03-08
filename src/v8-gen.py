@@ -101,6 +101,7 @@ def v7_to_v8(fn0):
             text = replace(text, 'CSVFileName', 'Get_FileName(ActiveActor)')
             text = replace(text, 'ShowPctProgress', '// ShowPctProgress')
             text = replace(text, 'DSSExecutive', 'DSSExecutive[ActiveActor]')
+            text = replace(text, 'MakeMeterZoneLists()', 'MakeMeterZoneLists(ActiveActor)')
         
             fout.write(text)
             

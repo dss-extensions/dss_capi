@@ -1861,7 +1861,7 @@ extern "C" {
     Specify dc voltage directly
     */
     DSS_CAPI_V8_DLL void GICSources_Set_Volts(double Value);
-    
+
     /*
     Array of strings containing names of all ISOURCE elements.
     */
@@ -2732,12 +2732,12 @@ extern "C" {
     Fixed interval data time interval, seconds
     */
     DSS_CAPI_V8_DLL double LoadShapes_Get_SInterval(void);
-    
+
     /*
     Fixed interval data time interval, seconds
     */
     DSS_CAPI_V8_DLL void LoadShapes_Set_SInterval(double Value);
-    
+
     DSS_CAPI_V8_DLL double LoadShapes_Get_sInterval(void); // deprecated, see #24
     DSS_CAPI_V8_DLL void LoadShapes_Set_Sinterval(double Value); // deprecated, see #24
 
@@ -4539,7 +4539,7 @@ extern "C" {
     {Static* | Event | Time | Off} Modes for control devices (see ControlModes)
     */
     DSS_CAPI_V8_DLL int32_t Solution_Get_ControlMode(void);
-    
+
     DSS_CAPI_V8_DLL void Solution_Set_ControlMode(int32_t Value);
 
     /*
@@ -5434,6 +5434,63 @@ extern "C" {
     DSS_CAPI_V8_DLL void YMatrix_Set_UseAuxCurrents(uint16_t arg);
     DSS_CAPI_V8_DLL uint16_t YMatrix_Get_UseAuxCurrents(void);
 
+    /*
+    Zmag (ohms) for Reduce Option for Z of short lines
+    */
+    DSS_CAPI_V8_DLL double ReduceCkt_Get_Zmag(void);
+    DSS_CAPI_V8_DLL void ReduceCkt_Set_Zmag(double Value);
+
+    /*
+    Keep load flag (T/F) for Reduction options that remove branches
+    */
+    DSS_CAPI_V8_DLL uint16_t ReduceCkt_Get_KeepLoad(void);
+    DSS_CAPI_V8_DLL void ReduceCkt_Set_KeepLoad(uint16_t Value);
+
+    /*
+    Edit String for RemoveBranches functions
+    */
+    DSS_CAPI_V8_DLL char *ReduceCkt_Get_EditString(void);
+    DSS_CAPI_V8_DLL void ReduceCkt_Set_EditString(char *Value);
+
+    /*
+    Start element for Remove Branch function
+    */
+    DSS_CAPI_V8_DLL char *ReduceCkt_Get_StartPDElement(void);
+    DSS_CAPI_V8_DLL void ReduceCkt_Set_StartPDElement(char *Value);
+
+    /*
+    Name of Energymeter to use for reduction
+    */
+    DSS_CAPI_V8_DLL char *ReduceCkt_Get_EnergyMeter(void);
+    DSS_CAPI_V8_DLL void ReduceCkt_Set_EnergyMeter(char *Value);
+
+    /*
+    Save present (reduced) circuit
+    Filename is listed in the Text Result interface
+    */
+    DSS_CAPI_V8_DLL void ReduceCkt_SaveCircuit(char *CktName);
+
+    /*
+    Do Default Reduction algorithm
+    */
+    DSS_CAPI_V8_DLL void ReduceCkt_DoDefault(void);
+
+    /*
+    Do ShortLines algorithm: Set Zmag first if you don't want the default
+    */
+    DSS_CAPI_V8_DLL void ReduceCkt_DoShortLines(void);
+
+    /*
+    Reduce Dangling Algorithm; branches with nothing connected
+    */
+    DSS_CAPI_V8_DLL void ReduceCkt_DoDangling(void);
+
+    DSS_CAPI_V8_DLL void ReduceCkt_DoLoopBreak(void);
+    DSS_CAPI_V8_DLL void ReduceCkt_DoParallelLines(void);
+    DSS_CAPI_V8_DLL void ReduceCkt_DoSwitches(void);
+    DSS_CAPI_V8_DLL void ReduceCkt_Do1phLaterals(void);
+    DSS_CAPI_V8_DLL void ReduceCkt_DoBranchRemove(void);
+
 
     enum MonitorModes {
         MonitorModes_VI = 0x00000000, // Monitor records Voltage and Current at the terminal (Default)
@@ -5787,9 +5844,9 @@ extern "C" {
     */
     DSS_CAPI_V8_DLL int32_t Bus_Get_Next(void);
 
-    /* 
-    Gets/sets the DSS script error-handling behavior. If a warning or error 
-    occurs and early abortion is enabled (default), the processing of the 
+    /*
+    Gets/sets the DSS script error-handling behavior. If a warning or error
+    occurs and early abortion is enabled (default), the processing of the
     script is always halted. Otherwise, the processing of the script continues
     until a major error occurs or it finishes.
     */
