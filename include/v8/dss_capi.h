@@ -2339,6 +2339,11 @@ extern "C" {
     DSS_CAPI_V8_DLL void Lines_Set_Units(int32_t Value);
 
     /*
+    Delivers the rating for the current season (in Amps)  if the "SeasonalRatings" option is active
+    */
+    DSS_CAPI_V8_DLL double Lines_Get_SeasonRating(void);
+
+    /*
     Array of strings containing all Load names
     */
     DSS_CAPI_V8_DLL void Loads_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);

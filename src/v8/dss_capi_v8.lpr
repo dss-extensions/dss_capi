@@ -710,6 +710,7 @@ exports
     Lines_Set_Spacing,
     Lines_Get_Units,
     Lines_Set_Units,
+    Lines_Get_SeasonRating,
     Loads_Get_AllNames,
     Loads_Get_First,
     Loads_Get_idx,
