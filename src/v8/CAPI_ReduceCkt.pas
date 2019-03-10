@@ -33,7 +33,6 @@ uses
     CAPI_Constants,
     Circuit,
     DSSGlobals,
-    ComServ,
     Executive,
     EnergyMeter,
     ReduceAlgs,
