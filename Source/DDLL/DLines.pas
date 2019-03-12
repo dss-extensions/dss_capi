@@ -383,12 +383,12 @@ begin
           Begin
             RSignal     :=  XYCurveClass[ActiveActor].Find(SeasonSignal);
             if RSignal <> nil then
-              RatingIdx   :=  trunc(RSignal.GetYValue(ActiveCircuit[ActiveActor].Solution.DynaVars.intHour)) + 1;
+              RatingIdx   :=  trunc(RSignal.GetYValue(ActiveCircuit[ActiveActor].Solution.DynaVars.intHour));
             // Just in case
             if RatingIdx > TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NRatings then
               Result  :=  TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NormAmps
             else
-              Result  :=  TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).ratings^[RatingIdx];
+              Result  :=  TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).ratings[RatingIdx];
           End
           else
             Result  := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NormAmps;
