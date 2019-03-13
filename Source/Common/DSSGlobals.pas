@@ -251,9 +251,13 @@ VAR
    ADiakoptics,
    Parallel_enabled,
    ConcatenateReports,
+
+   ProgressCmd,
    IncMat_Ordered     : Boolean;
    Parser             : Array of TParser;
    ActorMA_Msg        : Array of TEvent;  // Array to handle the events of each actor
+
+
 
 
 {*******************************************************************************
@@ -296,7 +300,7 @@ VAR
 
    DSSExecutive: Array of TExecutive;
 
-   DSSClasses         : TDSSClasses;
+   DSSClasses             : TDSSClasses;
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
 PROCEDURE DoSimpleMsg(Const S :String; ErrNum:Integer);
@@ -1157,6 +1161,7 @@ initialization
    end;
 
    DSSClasses             :=  nil;
+   ProgressCmd            :=  False;
 
    Allactors              :=  False;
    ActiveActor            :=  1;
