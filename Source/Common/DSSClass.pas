@@ -101,8 +101,8 @@ TYPE
          Property Name:String read Class_Name;
    END;
 
-VAR
-   DSSClasses         : TDSSClasses;
+//VAR
+//   DSSClasses         : TDSSClasses;
 
 
 implementation

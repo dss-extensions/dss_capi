@@ -79,9 +79,9 @@ TYPE
 
      end;
 
-VAR
+//VAR
 
-    DSSExecutive: Array of TExecutive;
+//    DSSExecutive: Array of TExecutive;
 
 
 implementation
@@ -277,7 +277,7 @@ begin
        Parser[ActiveActor]    :=  Tparser.Create;
        AuxParser[ActiveActor] :=  Tparser.Create;
        CreateDefaultDSSItems;
-       RebuildHelpForm := True; // because class strings have changed
+       RebuildHelpForm        := True; // because class strings have changed
 {$IFNDEF FPC}
        If Not IsDLL Then ControlPanel.UpdateElementBox ;
 {$ENDIF}
