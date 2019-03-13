@@ -56,7 +56,8 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      SyncObjs,
      YMatrix,
      fMonitor,     // by Dahei
-     VSource
+     VSource,
+     Executive
 ;
 
 
@@ -293,6 +294,9 @@ VAR
    SeasonalRating         : Boolean;    // Tells the energy meter if the seasonal rating feature is active
    SeasonSignal           : String;     // Stores the name of the signal for selecting the rating dynamically
 
+   DSSExecutive: Array of TExecutive;
+
+   DSSClasses         : TDSSClasses;
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
 PROCEDURE DoSimpleMsg(Const S :String; ErrNum:Integer);
@@ -339,7 +343,7 @@ implementation
 
 
 USES  {Forms,   Controls,}
-     SysUtils,
+
      {$IFNDEF FPC}
      Windows,
      {$IFDEF MSWINDOWS}
@@ -351,7 +355,7 @@ USES  {Forms,   Controls,}
      {$ELSE}
      resource, versiontypes, versionresource, dynlibs, CMDForms,
      {$ENDIF}
-     Executive;
+     SysUtils;
      {Intrinsic Ckt Elements}
 
 TYPE
@@ -1152,6 +1156,8 @@ initialization
     ActiveVSource[Activeactor]        :=  nil;
    end;
 
+   DSSClasses             :=  nil;
+
    Allactors              :=  False;
    ActiveActor            :=  1;
    NumOfActors            :=  1;
@@ -1280,14 +1286,17 @@ Finalization
 
 
 
-  With DSSExecutive[ActiveActor] Do If RecorderOn Then Recorderon := FALSE;
   ClearAllCircuits;
-  DSSExecutive[ActiveActor].Free;  {Writes to Registry}
-  DSS_Registry.Free;  {Close Registry}
+
   for ActiveActor := 1 to NumOfActors do
   Begin
     if ActorHandle[ActiveActor] <> nil then
     Begin
+      With DSSExecutive[ActiveActor] Do If RecorderOn Then Recorderon := FALSE;
+
+      DSSExecutive[ActiveActor].Free;  {Writes to Registry}
+      DSS_Registry.Free;  {Close Registry}
+
       EventStrings[ActiveActor].Free;
       SavedFileList[ActiveActor].Free;
       ErrorStrings[ActiveActor].Free;
@@ -1295,6 +1304,7 @@ Finalization
       Auxparser[ActiveActor].Free;
     End;
   End;
+
 End.
 
 
