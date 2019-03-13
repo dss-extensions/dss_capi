@@ -156,9 +156,10 @@ begin
 
   Screen.Cursor := crDefault;
 
-  If Not IsDLL and (ActorHandle[1] <> nil) Then Begin
-    if (ActorStatus[ActiveActor] = 1) then
-    begin
+  If Not IsDLL and (ActorHandle[1] <> nil) Then
+  Begin
+//    if (ActorStatus[ActiveActor] = 1) then
+//    begin
       UpdateResultForm;
       UpdateSummaryForm('1');
       If Assigned(ActiveCircuit[ActiveActor]) Then With ActiveCircuit[ActiveActor] Do
@@ -167,7 +168,7 @@ begin
           ControlPanel.ResultPages.ActivePage := ControlPanel.SummaryTab;
         End;
       ControlPanel.UpdateStatus;
-    end;
+//    end;
   end;
 end;
 
