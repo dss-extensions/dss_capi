@@ -161,7 +161,9 @@ begin
 //    if (ActorStatus[ActiveActor] = 1) then
 //    begin
       UpdateResultForm;
-      UpdateSummaryForm('1');
+      if not ProgressCmd then
+        UpdateSummaryForm('1');
+
       If Assigned(ActiveCircuit[ActiveActor]) Then With ActiveCircuit[ActiveActor] Do
         if (SolutionWasAttempted[ActiveActor]) and (Not IsSolved) then Begin
           Beep;
@@ -202,6 +204,7 @@ Var
   USIdx           : Integer;
   TStr            : String;
 begin
+    ProgressCmd :=  False;
     With ControlPanel.SummaryEdit Do Begin
 
         ActorsRdy :=  True;
@@ -496,6 +499,7 @@ begin
             Lines.EndUpdate;
           End;
       End;
+      ProgressCmd   :=  True;
   End;
 end;
 
