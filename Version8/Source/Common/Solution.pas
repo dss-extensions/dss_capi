@@ -551,10 +551,10 @@ Begin
       If hYsystem <> 0 THEN DeleteSparseSet(hYsystem);
       If hYseries <> 0 THEN DeleteSparseSet(hYseries);
       {by Dahei: }
-{      Reallocmem(NodeYii, 0);  // for bii
+      Reallocmem(NodeYii, 0);  // for bii
       Reallocmem(pColIdx_Yii, 0);
       Reallocmem(pRowIdx_Yii, 0);
-      Reallocmem(pcVals_Yii, 0);}
+      Reallocmem(pcVals_Yii, 0);
       {---------------------------}
 //      SetLogFile ('c:\\temp\\KLU_Log.txt', 0);
 
@@ -2870,7 +2870,7 @@ End;
 
 destructor TSolver.Destroy;
 Begin
-
+  inherited destroy;
 End;
 
 initialization
