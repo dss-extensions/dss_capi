@@ -155,7 +155,7 @@ Begin
      Classnames[ActiveActor]      := THashList.Create(25);   // Makes 5 sub lists
      DSSClassList[ActiveActor]    := TPointerList.Create(10);  // 10 is initial size and increment
      if not Assigned(DSSClasses) then
-        DSSClasses                   := TDSSClasses.Create;  // class to handle junk for defining DSS classes
+       DSSClasses                   := TDSSClasses.Create;  // class to handle junk for defining DSS classes
 
      {General DSS objects, not circuit elements}
      DSSObjs[ActiveActor]         := TPointerList.Create(25);  // 25 is initial size and increment
@@ -221,8 +221,6 @@ Begin
      DSSClasses.New               := TUPFCControl.Create;
      DSSClasses.New               := TESPVLControl.Create;
      DSSClasses.New               := TIndMach012.Create;
-     {by Dahei}
-     DSSClasses.New               := TGeneric5.Create;
 
      DSSClasses.New               := TGICsource.Create; // GIC source
      DSSClasses.New               := TAutoTrans.Create; // Auto Transformer
@@ -247,6 +245,11 @@ Begin
      DSSClasses.New               := SensorClass[ActiveActor];
 
 
+   {Add user-defined objects}
+   //by Dahei (UCF)
+     FMonitorClass[ActiveActor]   := TDSSFMonitor.Create;  // Have to do this AFTER Generator
+     DSSClasses.New               := FMonitorClass[ActiveActor];
+     DSSClasses.New               := TGeneric5.Create;
 
  { Create Classes for custom implementations }
      CreateMyDSSClasses;
@@ -254,10 +257,6 @@ Begin
      NumIntrinsicClasses := DSSClassList[ActiveActor].ListSize;
      NumUserClasses := 0;
 
-   {Add user-defined objects}
-   //by Dahei
-       FMonitorClass[ActiveActor]   := TDSSFMonitor.Create;  // Have to do this AFTER Generator
-       DSSClasses.New               := FMonitorClass[ActiveActor];
 
 
    {This feature has been disabled - doesn't work in IIS}
@@ -274,11 +273,12 @@ End;
 PROCEDURE   DisposeDSSClasses(AllActors: Boolean);
 
 VAR
-    i :Integer;
-    DSSObj :TDSSObject;
-    TraceName :String;
-    SuccessFree :String;
-    DSSCidx,temp     : Integer;
+    DSSCidx,
+    temp,
+    i                 : Integer;
+    DSSObj            : TDSSObject;
+    TraceName,
+    SuccessFree       : String;
 
 BEGIN
   if not AllActors then
@@ -302,16 +302,18 @@ BEGIN
     END;
 
     TRY
-       For i := 1 to DSSClassList[ActiveActor].ListSize Do TDSSClass(DSSClassList[ActiveActor].Get(i)).Free;
-       TraceName := '(DSS Class List)';
+//       For i := 1 to DSSClassList[ActiveActor].ListSize Do TDSSClass(DSSClassList[ActiveActor].Get(i)).Free;
+       TraceName                  :=  '(DSS Class List)';
        DSSClassList[ActiveActor].Free;
-       TraceName := '(ClassNames)';
+       DSSClassList[ActiveActor]  :=  nil;
+       TraceName                  :=  '(ClassNames)';
        ClassNames[ActiveActor].Free;
+       ClassNames[ActiveActor]    :=  nil;
+       TraceName                  :=  '(DSS Classes)';
     EXCEPT
         On E: Exception Do
           Dosimplemsg('Exception disposing of DSS Class"'+TraceName+'". '+CRLF + E.Message, 902);
     END;
-
 
   end
   else
@@ -322,10 +324,10 @@ BEGIN
       ActiveActor := DSSCidx;
       DisposeDSSClasses(False);
     End;
-    TraceName := '(DSS Classes)';
+
     DSSClasses.Free;
-    DSSClasses := nil;
-    ActiveActor :=  temp;
+    DSSClasses    :=  nil;
+    ActiveActor   :=  1;
   end;
 End;
 
