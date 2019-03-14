@@ -533,7 +533,8 @@ Begin
 
     InitPropertyValues(0);
     ADiakoptics_Ready         :=  False;   // A-Diakoptics needs to be initialized
-    ActorMA_Msg[ActiveActor]  :=  TEvent.Create(nil, True, False,'');
+    if not Assigned(ActorMA_Msg[ActiveActor]) then
+      ActorMA_Msg[ActiveActor]  :=  TEvent.Create(nil, True, False,'');
 End;
 
 // ===========================================================================================
@@ -566,11 +567,10 @@ Begin
       Begin
         ActorHandle[ActiveActor].Send_Message(EXIT_ACTOR);
         ActorHandle[ActiveActor].WaitFor;
-        ActorHandle[ActiveActor].Free;
-        ActorHandle[ActiveActor]  :=  nil;
+        FreeandNil(ActorHandle[ActiveActor]);
       End;
       ActorMA_Msg[ActiveActor].Free;
-
+      ActorMA_Msg[ActiveActor]  :=  nil;
 
       Inherited Destroy;
 End;
