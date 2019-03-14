@@ -756,6 +756,7 @@ Begin
   // Davis: Done: This will add the needed report
 
   SolutionAbort :=  False;
+  ProgressCmd   :=  True;
 
 End;
 
