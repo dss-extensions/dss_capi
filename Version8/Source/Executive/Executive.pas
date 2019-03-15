@@ -259,7 +259,6 @@ begin
        DefaultEarthModel     := DERI;
        LogQueries            := FALSE;
        MaxAllocationIterations := 2;
-       ActiveActor           :=  1;
 
        {Prepare for new variables}
        ParserVars.Free;
