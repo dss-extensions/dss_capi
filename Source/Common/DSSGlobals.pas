@@ -589,22 +589,19 @@ Begin
       begin
         ActiveActor   :=  I;
         ActiveCircuit[I].NumCircuits := 0;
-        ActiveCircuit[I].Free;
-        ActiveCircuit[I]  :=  nil;
-        Parser[I].Free;
-        Parser[I] :=  nil;
+        FreeAndNil(ActiveCircuit[I]);
+
         // In case the actor hasn't been destroyed
         if ActorHandle[I] <> nil then
         Begin
           ActorHandle[I].Send_Message(EXIT_ACTOR);
           ActorHandle[I].WaitFor;
-          ActorHandle[I].Free;
-          ActorHandle[I]  :=  nil;
+          FreeAndNil(ActorHandle[I]);
         End;
       end;
     end;
     Circuits.Free;
-    Circuits := TPointerList.Create(4);   // Make a new list of circuits
+    Circuits              := TPointerList.Create(2);   // Make a new list of circuits
     // Revert on key global flags to Original States
     DefaultEarthModel     := DERI;
     LogQueries            := FALSE;
@@ -627,8 +624,8 @@ Begin
     begin
        If ActiveCircuit[ActiveActor] = nil Then
        Begin
-           ActiveCircuit[ActiveActor] := TDSSCircuit.Create(Name);
-           ActiveDSSObject[ActiveActor]:= ActiveSolutionObj;
+           ActiveCircuit[ActiveActor]   := TDSSCircuit.Create(Name);
+           ActiveDSSObject[ActiveActor] := ActiveSolutionObj;
            {*Handle := *}
            Circuits.Add(ActiveCircuit[ActiveActor]);
            Inc(ActiveCircuit[ActiveActor].NumCircuits);
