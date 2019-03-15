@@ -218,8 +218,8 @@ Begin
          VMagSaved      := AllocMem(Sizeof(VMagSaved^[1])  * NumNodes);  // zero fill
          ErrorSaved     := AllocMem(Sizeof(ErrorSaved^[1]) * NumNodes);  // zero fill
          NodeVBase      := AllocMem(Sizeof(NodeVBase^[1]) * NumNodes);  // zero fill
-         NodeYii      := AllocMem(Sizeof(NodeYii^[1]) * (NumNodes + 1));  // zero fill //Bii  {by Dahei -> UCF}
-         NodeYiiEmpty := true;                                                          {by Dahei -> UCF}
+         NodeYii        := AllocMem(Sizeof(NodeYii^[1]) * (NumNodes + 1));  // zero fill //Bii  {by Dahei -> UCF}
+         NodeYiiEmpty   := true;                                                          {by Dahei -> UCF}
          InitializeNodeVbase(ActorID);
 
 
