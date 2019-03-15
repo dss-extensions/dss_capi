@@ -2965,7 +2965,7 @@ Begin
          cLosses := CmulReal(ActiveCircuit[ActiveActor].Losses[ActiveActor], 0.000001);
          If cPower.re <> 0.0 Then S := S + Format('Total Active Losses:   %-.6g MW, (%-.4g %%)',[cLosses.re,(Closses.re/cPower.re*100.0)]) + CRLF
                              Else S := S + 'Total Active Losses:   ****** MW, (**** %%)' + CRLF;
-         S := S + Format('Total Reactive Losses: %-.6g Mvar',[cLosses.im]) + CRLF;
+         S := S + Format('Total Reactive Losses: %-.6n Mvar',[cLosses.im]) + CRLF;
          S := S + Format('Frequency = %-g Hz',[ActiveCircuit[ActiveActor].Solution.Frequency]) + CRLF;
          S := S + 'Mode = '+GetSolutionModeID + CRLF;
          S := S + 'Control Mode = '+GetControlModeID + CRLF;

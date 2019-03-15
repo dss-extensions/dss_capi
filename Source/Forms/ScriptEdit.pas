@@ -258,7 +258,7 @@ begin
                       Else Begin
                         Add('Total Active Losses:   ****** MW, (**** %%)');
                       End;
-                      Add(Format('Total Reactive Losses: %-.6n Mvar',[cLosses.im]));
+                      Add(Format('Total Reactive Losses: %-.6g Mvar',[cLosses.im]));
                       Add(Format('Frequency = %-g Hz',[ActiveCircuit[ActiveActor].Solution.Frequency]));
                       Add('Mode = '+GetSolutionModeID);
                       Add('Control Mode = '+GetControlModeID);
