@@ -2850,7 +2850,7 @@ Begin
           Write(F, Format(', %-.5g', [GetMinPUVoltage(TRUE)]));
           cPower :=  CmulReal(GetTotalPowerFromSources(ActiveActor), 0.000001);  // MVA
           Write(F, Format(', %-.6g', [cPower.re]));
-          Write(F, Format(', %-.6g', [cPower.im]));
+          Write(F, Format(', %-.6n', [cPower.im]));
           cLosses := CmulReal(ActiveCircuit[ActiveActor].Losses[ActiveActor], 0.000001);
           If cPower.re <> 0.0 Then Write(F, Format(', %-.6g, %-.4g',[cLosses.re,(Closses.re/cPower.re*100.0)]))
           Else Write(F, 'Total Active Losses:   ****** MW, (**** %%)');
