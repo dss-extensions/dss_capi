@@ -123,7 +123,6 @@ uses
   RegControl in '..\Controls\RegControl.pas',
   Relay in '..\Controls\Relay.pas',
   RPN in '..\Parser\RPN.pas',
-  Scriptform in '..\Forms\Scriptform.pas' {MainEditForm},
   Sensor in '..\Meters\Sensor.pas',
   ShowOptions in '..\Executive\ShowOptions.pas',
   ShowResults in '..\Common\ShowResults.pas',
