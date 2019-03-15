@@ -74,7 +74,6 @@ uses
   Panel in '..\Forms\Panel.pas' {ControlPanel},
   ProgressForm in '..\Forms\ProgressForm.pas' {Progress},
   PropEdit in '..\Forms\PropEdit.pas' {PropEditForm},
-  Scriptform in '..\Forms\Scriptform.pas' {MainEditForm},
   ScriptformNormal in '..\Forms\ScriptformNormal.pas' {MainEditFormNormal},
   TViewer in '..\Forms\TViewer.pas' {TViewForm},
   CableConstants in '..\General\CableConstants.pas',
