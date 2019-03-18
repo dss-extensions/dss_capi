@@ -45,8 +45,9 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      PVSystem,
      InvControl,
      ExpControl,
-     
+
      LineCode,
+     LineGeometry,
      Line,
      VSource,
      ISource,
@@ -236,6 +237,7 @@ VAR
    WireDataClass      :TWireData;
    CNDataClass        :TCNData;
    TSDataClass        :TTSData;
+   LineGeometryClass  :TLineGeometry;
    LineSpacingClass   :TLineSpacing;
    LineCodeClass      :TLineCode;
    StorageClass       :TStorage;

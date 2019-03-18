@@ -189,10 +189,12 @@ begin
     TSDataClass := TTSData.Create;
     DSSClasses.New := TSDataClass;
 
-    DSSClasses.New := TLineGeometry.Create;
+    LineGeometryClass := TLineGeometry.Create;
+    DSSClasses.New := LineGeometryClass;
+    
     LineSpacingClass := TLineSpacing.Create;
-
     DSSClasses.New := LineSpacingClass;
+
     DSSClasses.New := TXfmrCode.Create;
 
      {Circuit Element Classes}

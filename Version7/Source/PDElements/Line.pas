@@ -151,7 +151,6 @@ type
 
 var
     ActiveLineObj: TLineObj;
-    LineGeometryClass: TLineGeometry;  // public to show line constant results
 
 implementation
 
@@ -183,7 +182,6 @@ begin
 
     ActiveElement := 0;
     LineCodeClass := NIL;
-    LineGeometryClass := NIL;
 
     DefineProperties;
 
@@ -1940,9 +1938,6 @@ end;
 procedure TLineObj.FetchGeometryCode(const Code: String);
 
 begin
-    if LineGeometryClass = NIL then
-        LineGeometryClass := DSSClassList.Get(ClassNames.Find('LineGeometry'));
-
     if LineGeometryClass.SetActive(Code) then
     begin
         FLineCodeSpecified := FALSE;  // Cancel this flag
@@ -2038,8 +2033,6 @@ begin
     end;
 
   // make a temporary LineGeometry to calculate line constants
-    if LineGeometryClass = NIL then
-        LineGeometryClass := DSSClassList.Get(ClassNames.Find('LineGeometry'));
     pGeo := TLineGeometryObj.Create(LineGeometryClass, Name);
     pGeo.LoadSpacingAndWires(FLineSpacingObj, FLineWireData); // this sets OH, CN, or TS
 

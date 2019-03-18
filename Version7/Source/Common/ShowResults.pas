@@ -3249,7 +3249,6 @@ begin
         Writeln(F2, Format('!--- Frequency = %.6g Hz, Earth resistivity = %.6g ohm-m', [Freq, Rho]));
         Writeln(F2, '!--- Earth Model = ', GetEarthModel(DefaultEarthModel));
 
-        LineGeometryClass := DSSClassList.Get(ClassNames.Find('LineGeometry'));
         Z := NIL;
         YC := NIL;
 
