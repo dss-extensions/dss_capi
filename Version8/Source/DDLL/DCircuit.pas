@@ -392,7 +392,7 @@ begin
            For j := 1 to Buses^[i].NumNodesThisBus  DO
            Begin
              VoltsD := Cabs(ActiveCircuit[ActiveActor].Solution.NodeV^[Buses^[i].GetRef(j)]);
-             arg[k] := VoltsD/BaseFactor;
+             arg[k] := VoltsD;
              Inc(k);
            End;
        End;
