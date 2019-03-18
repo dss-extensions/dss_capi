@@ -183,7 +183,8 @@ Begin
   begin
     If Not IsDLL Then  Begin
       UpdateResultForm;
-      UpdateSummaryForm('1');
+      if not ProgressCmd then
+        UpdateSummaryForm('1');
     End;
   end;
 End;
