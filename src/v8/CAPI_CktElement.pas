@@ -437,22 +437,20 @@ var
     Result: PDoubleArray;
     LossValue: complex;
 begin
-
     if ActiveCircuit[ActiveActor] <> NIL then
         with ActiveCircuit[ActiveActor] do
         begin
             if ActiveCktElement <> NIL then
             begin
-                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
+                Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
                 LossValue := ActiveCktElement.Losses[ActiveActor];
                 Result[0] := LossValue.re;
                 Result[1] := LossValue.im;
+                Exit;
             end;
-        end
-    else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-
-
+        end;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    Result[0] := 0;
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
@@ -526,34 +524,22 @@ procedure CktElement_Get_Powers(var ResultPtr: PDouble; ResultCount: PInteger); 
 // Return complex kW, kvar in each conductor for each terminal
 var
     Result: PDoubleArray;
-    cBuffer: pComplexArray;
     NValues,
-    i,
-    iV: Integer;
-
+    i: Integer;
 begin
-
     if ActiveCircuit[ActiveActor] <> NIL then
         with ActiveCircuit[ActiveActor].ActiveCktElement do
         begin
             NValues := NConds * Nterms;
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2 * NValues - 1) + 1);
-            cBuffer := Allocmem(sizeof(Complex) * NValues);
-            GetPhasePower(cBuffer, ActiveActor);
-            iV := 0;
-            for i := 1 to NValues do
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
+            GetPhasePower(pComplexArray(ResultPtr), ActiveActor);
+            for i := 0 to (2 * NValues) - 1 do
             begin
-                Result[iV] := cBuffer^[i].re * 0.001;
-                Inc(iV);
-                Result[iV] := cBuffer^[i].im * 0.001;
-                Inc(iV);
+                Result[i] := Result[i] * 0.001;
             end;
-            Reallocmem(cBuffer, 0);
         end
     else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-
-
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}

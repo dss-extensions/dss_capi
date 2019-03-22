@@ -172,14 +172,14 @@ begin
 
     if ActiveCircuit <> NIL then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
         LossValue := ActiveCircuit.Losses;
         Result[0] := LossValue.re;
         Result[1] := LossValue.im;
-    end
-    else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-
+        Exit;
+    end;
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    Result[0] := 0;
 end;
 
 procedure Circuit_Get_Losses_GR(); CDECL;
@@ -523,24 +523,19 @@ end;
 procedure Circuit_Get_AllElementLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
     Result: PDoubleArray;
+    CResultPtr: pComplex;
     pCktElem: TDSSCktElement;
-    cLoss: Complex;
-    k: Integer;
-
 begin
     if ActiveCircuit <> NIL then
         with ActiveCircuit do
         begin
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2 * NumDevices - 1) + 1);
-            k := 0;
+            CResultPtr := pComplex(ResultPtr);
             pCktElem := CktElements.First;
             while pCktElem <> NIL do
             begin
-                cLoss := pCktElem.Losses;
-                Result[k] := cLoss.re * 0.001;
-                Inc(k);
-                Result[k] := cLoss.im * 0.001;
-                Inc(k);
+                CResultPtr^ := cmulreal(pCktElem.Losses, 0.001);
+                Inc(CResultPtr);
                 pCktElem := CktElements.Next;
             end;
         end
