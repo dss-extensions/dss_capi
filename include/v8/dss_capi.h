@@ -914,7 +914,7 @@ extern "C" {
     DSS_CAPI_V8_DLL uint16_t CktElement_Get_Enabled(void);
 
     /*
-    Total losses in the element: two-element complex array
+    Total losses in the element: two-element complex array, in VA
     */
     DSS_CAPI_V8_DLL void CktElement_Get_Losses(double** ResultPtr, int32_t* ResultCount);
     /*
@@ -5216,6 +5216,24 @@ extern "C" {
     dc Resistance of active winding in ohms for GIC analysis
     */
     DSS_CAPI_V8_DLL void Transformers_Set_RdcOhms(double Value);
+
+    /*
+    Returns a complex array of the 3 types of losses (total losses, load losses, no-load losses) for the active transformer, in VA
+    */
+    DSS_CAPI_V8_DLL void Transformers_Get_LossesByType(double** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as Transformers_Get_LossesByType but using the global buffer interface for results
+    */
+    DSS_CAPI_V8_DLL void Transformers_Get_LossesByType_GR(void);
+    
+    /*
+    Returns a complex array of the 3 types of losses (total losses, load losses, no-load losses) concatenated for the all transformers, in VA
+    */
+    DSS_CAPI_V8_DLL void Transformers_Get_AllLossesByType(double** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as Transformers_Get_AllLossesByType but using the global buffer interface for results
+    */
+    DSS_CAPI_V8_DLL void Transformers_Get_AllLossesByType_GR(void);
 
     /*
     Names of all Vsource objects in the circuit

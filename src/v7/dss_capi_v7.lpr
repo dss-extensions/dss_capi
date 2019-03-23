@@ -1295,6 +1295,8 @@ exports
     Transformers_Set_CoreType,
     Transformers_Get_RdcOhms,
     Transformers_Set_RdcOhms,
+    Transformers_Get_LossesByType, // API Extension
+    Transformers_Get_AllLossesByType, // API Extension
     Vsources_Get_AllNames,
     Vsources_Get_Count,
     Vsources_Get_First,
@@ -1484,7 +1486,9 @@ exports
     Topology_Get_AllIsolatedBranches_GR,
     Topology_Get_AllLoopedPairs_GR,
     Topology_Get_AllIsolatedLoads_GR,
+    Transformers_Get_AllLossesByType_GR,
     Transformers_Get_AllNames_GR,
+    Transformers_Get_LossesByType_GR,
     Transformers_Get_WdgCurrents_GR,
     Transformers_Get_WdgVoltages_GR,
     Vsources_Get_AllNames_GR,

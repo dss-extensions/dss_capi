@@ -59,6 +59,10 @@ procedure Transformers_Set_RdcOhms(Value: Double); CDECL;
 // API extensions
 function Transformers_Get_idx(): Integer; CDECL;
 procedure Transformers_Set_idx(Value: Integer); CDECL;
+procedure Transformers_Get_LossesByType(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Transformers_Get_LossesByType_GR(); CDECL;
+procedure Transformers_Get_AllLossesByType(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Transformers_Get_AllLossesByType_GR(); CDECL;
 
 
 implementation
@@ -468,6 +472,7 @@ end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Count(): Integer; CDECL;
 begin
+    Result := 0;
     if Assigned(ActiveCircuit) then
         Result := ActiveCircuit.Transformers.ListSize;
 end;
@@ -566,7 +571,9 @@ begin
     if elem <> NIL then
     begin
         Result := elem.GetWindingCurrentsResult;
+        Exit;
     end;
+    Result := '';
 end;
 
 function Transformers_Get_strWdgCurrents(): PAnsiChar; CDECL;
@@ -620,6 +627,77 @@ end;
 procedure Transformers_Set_RdcOhms(Value: Double); CDECL;
 begin
     Set_Parameter('RdcOhms', FloatToStr(Value));
+end;
+//------------------------------------------------------------------------------
+procedure Transformers_Get_LossesByType(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+// Returns an array with (TotalLosses, LoadLosses, NoLoadLosses) for the current active transformer, in VA
+var 
+    Result: PDoubleArray;
+    CResult: PComplexArray; // this array is one-based, see Ucomplex
+    elem: TTransfObj;
+    k: Integer;
+begin
+    elem := ActiveTransformer();
+    if (elem = NIL) then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Result[0] := 0;
+    end;
+    
+    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, 2 * 3);
+    CResult := PComplexArray(ResultPtr);
+    elem.GetLosses(CResult[1], CResult[2], CResult[3]);
+    
+    // Keep the results in VA for consistency with CktElement_Get_Losses
+    // for k := 0 to ResultCount[0] - 1 do
+    // begin
+    //     Result[k] := Result[k] * 1e-3;
+    // end
+end;
+
+procedure Transformers_Get_LossesByType_GR(); CDECL;
+begin
+    Transformers_Get_LossesByType(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
+//------------------------------------------------------------------------------
+procedure Transformers_Get_AllLossesByType(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+// Returns an array with (TotalLosses, LoadLosses, NoLoadLosses) for all transformers, in VA
+var
+    Result: PDoubleArray;
+    CResult: PComplexArray; // this array is one-based, see Ucomplex
+    elem: TTransfObj;
+    lst: TPointerList;
+    k: Integer;
+begin
+    if (ActiveCircuit = NIL) or (ActiveCircuit.Transformers.ListSize <= 0) then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Result[0] := 0;
+    end;
+    
+    lst := ActiveCircuit.Transformers;
+    DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, lst.ListSize * 2 * 3);
+    CResult := PComplexArray(ResultPtr);
+    k := 1;
+    elem := lst.First;
+    while elem <> NIL do
+    begin
+        elem.GetLosses(CResult[k], CResult[k + 1], CResult[k + 2]);
+        elem := lst.Next;
+        Inc(k, 3);
+    end;
+    
+    // Keep the results in VA for consistency with CktElement_Get_Losses
+    // for k := 0 to ResultCount[0] - 1 do
+    // begin
+    //     Result[k] := Result[k] * 1e-3;
+    // end
+end;
+
+procedure Transformers_Get_AllLossesByType_GR(); CDECL;
+begin
+    Transformers_Get_AllLossesByType(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_idx(): Integer; CDECL;
