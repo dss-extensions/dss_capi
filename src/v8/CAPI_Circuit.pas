@@ -525,19 +525,22 @@ var
     Result: PDoubleArray;
     CResultPtr: pComplex;
     pCktElem: TDSSCktElement;
+    i: Integer;
 begin
     if ActiveCircuit[ActiveActor] <> NIL then
         with ActiveCircuit[ActiveActor] do
         begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2 * NumDevices - 1) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumDevices);
             CResultPtr := pComplex(ResultPtr);
             pCktElem := CktElements.First;
             while pCktElem <> NIL do
             begin
-                CResultPtr^ := cmulreal(pCktElem.Losses[ActiveActor], 0.001);
+                CResultPtr^ := pCktElem.Losses[ActiveActor];
                 Inc(CResultPtr);
                 pCktElem := CktElements.Next;
             end;
+            for i := 0 to 2*NumDevices - 1 do
+                Result[i] := Result[i] * 0.001;
         end
     else
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
