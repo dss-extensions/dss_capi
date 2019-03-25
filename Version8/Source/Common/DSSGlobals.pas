@@ -161,6 +161,7 @@ VAR
    // Global variables for the OpenDSS Viewer
    DSS_CAPI_EARLY_ABORT : Boolean;
    DSS_CAPI_ALLOW_EDITOR: Boolean;
+   DSS_CAPI_LOADS_TERMINAL_CHECK: Boolean = True;
 {$ENDIF}
    DSS_Viz_installed   :Boolean=False; // OpenDSS viewer (flag to mark a local installation)
    DSS_Viz_path: String;

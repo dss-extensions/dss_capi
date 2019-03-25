@@ -4267,6 +4267,13 @@ extern "C" {
     DSS_CAPI_V7_DLL void Settings_Set_PriceSignal(double Value);
 
     /*
+    Controls whether the terminals are checked when updating the currents in Load component. Defaults to True.
+    If the loads are guaranteed to have their terminals closed throughout the simulation, this can be set to False to save some time.
+    */
+    DSS_CAPI_V7_DLL uint16_t Settings_Get_LoadsTerminalCheck(void);
+    DSS_CAPI_V7_DLL void Settings_Set_LoadsTerminalCheck(uint16_t Value);
+
+    /*
     Set the Frequency for next solution
     */
     DSS_CAPI_V7_DLL double Solution_Get_Frequency(void);

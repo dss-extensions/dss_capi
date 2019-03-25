@@ -2091,7 +2091,7 @@ begin
 
 // IF a terminal is open, THEN standard load models don't apply, so check it out first
 
-    if AllTerminalsClosed then
+    if {$IFDEF DSS_CAPI}(not DSS_CAPI_LOADS_TERMINAL_CHECK) OR {$ENDIF} AllTerminalsClosed then
     begin
 
 // Now Get Injection Currents

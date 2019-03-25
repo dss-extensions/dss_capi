@@ -1136,6 +1136,8 @@ exports
     Settings_Get_PriceSignal,
     Settings_Set_PriceCurve,
     Settings_Set_PriceSignal,
+    Settings_Get_LoadsTerminalCheck, // API extension
+    Settings_Set_LoadsTerminalCheck, // API extension
     Solution_Get_Frequency,
     Solution_Get_Hour,
     Solution_Get_Iterations,

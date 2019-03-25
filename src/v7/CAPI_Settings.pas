@@ -46,6 +46,10 @@ function Settings_Get_PriceSignal(): Double; CDECL;
 procedure Settings_Set_PriceCurve(const Value: PAnsiChar); CDECL;
 procedure Settings_Set_PriceSignal(Value: Double); CDECL;
 
+// API extensions
+function Settings_Get_LoadsTerminalCheck(): Wordbool; CDECL;
+procedure Settings_Set_LoadsTerminalCheck(Value: Wordbool); CDECL;
+
 implementation
 
 uses
@@ -394,10 +398,8 @@ end;
 //------------------------------------------------------------------------------
 procedure Settings_Set_ControlTrace(Value: Wordbool); CDECL;
 begin
-
     if ActiveCircuit <> NIL then
         ActiveCircuit.ControlQueue.TraceLog := Value;
-
 end;
 //------------------------------------------------------------------------------
 procedure Settings_Set_VoltageBases(ValuePtr: PDouble; ValueCount: Integer); CDECL;
@@ -464,6 +466,16 @@ procedure Settings_Set_PriceSignal(Value: Double); CDECL;
 begin
     if ActiveCircuit <> NIL then
         ActiveCircuit.PriceSignal := Value;
+end;
+//------------------------------------------------------------------------------
+function Settings_Get_LoadsTerminalCheck(): Wordbool; CDECL;
+begin
+    Result := DSS_CAPI_LOADS_TERMINAL_CHECK;
+end;
+//------------------------------------------------------------------------------
+procedure Settings_Set_LoadsTerminalCheck(Value: Wordbool); CDECL;
+begin
+    DSS_CAPI_LOADS_TERMINAL_CHECK := Value;
 end;
 //------------------------------------------------------------------------------
 end.
