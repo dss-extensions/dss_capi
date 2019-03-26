@@ -35,6 +35,8 @@ if exist lib\win_x64\dss_capi_v7.dll (
     echo EXPORTS >> lib\win_x64\dss_capi_v7.def
     for /f "skip=19 tokens=4" %%A in (lib\win_x64\exports.txt) do echo %%A >> lib\win_x64\dss_capi_v7.def
     lib /def:lib\win_x64\dss_capi_v7.def /out:lib\win_x64\dss_capi_v7.lib /machine:X64
+    dlltool --as-flags=--64 -d lib\win_x64\dss_capi_v7.def -m i386:x86-64 -l lib\win_x64\dss_capi_v7.dll.a
+    
     del /s lib\win_x64\dss_capi_v7.exp
     del /s lib\win_x64\dss_capi_v7.def
     del /s lib\win_x64\exports.txt
@@ -58,6 +60,8 @@ if exist lib\win_x64\dss_capi_v8.dll (
     echo EXPORTS >> lib\win_x64\dss_capi_v8.def
     for /f "skip=19 tokens=4" %%A in (lib\win_x64\exports.txt) do echo %%A >> lib\win_x64\dss_capi_v8.def
     lib /def:lib\win_x64\dss_capi_v8.def /out:lib\win_x64\dss_capi_v8.lib /machine:X64
+    dlltool --as-flags=--64 -d lib\win_x64\dss_capi_v8.def -m i386:x86-64 -l lib\win_x64\dss_capi_v8.dll.a
+    
     del /s lib\win_x64\dss_capi_v8.exp
     del /s lib\win_x64\dss_capi_v8.def
     del /s lib\win_x64\exports.txt

@@ -24,6 +24,8 @@ build_script:
 
     call build_win_x86.bat
     
+    set PATH=C:\cygwin64\bin;%PATH%
+    
     call build_win_x64.bat
     
 deploy:
