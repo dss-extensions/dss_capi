@@ -63,7 +63,11 @@ type
 
 
     TLineGeometryObj = class(TDSSObject)
+{$IFNDEF DSS_CAPI}
     PRIVATE
+{$ELSE}
+    PUBLIC
+{$ENDIF}
         FPhaseChoice: ConductorChoice;
         FNConds: Integer;
         FNPhases: Integer;
@@ -931,6 +935,12 @@ procedure TLineGeometryObj.set_Nconds(const Value: Integer);
 var
     i: Integer;
 begin
+    if Value < 1 then
+    begin
+        DoSimpleMsg('Invalid number of conductors sent via DSS command. Please enter a value within range.', 185);
+        Exit;
+    end;
+
     if Assigned(FCondName) then
         FreestringArray(FCondName, FNConds);  // dispose of old allocation
 
@@ -962,6 +972,12 @@ end;
 
 procedure TLineGeometryObj.set_Nphases(const Value: Integer);
 begin
+    if Value < 1 then
+    begin
+        DoSimpleMsg('Invalid number of phases sent via DSS command. Please enter a value within range.', 186);
+        Exit;
+    end;
+
     FNphases := Value;
     FLineData.Nphases := Value;
 end;
