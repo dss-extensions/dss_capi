@@ -21,7 +21,7 @@ type
     PROTECTED
         procedure CountProperties;
         procedure DefineProperties;
-        function ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer): Integer;
+        procedure ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer);
         procedure ClassMakeLike(const OtherObj: Pointer);
     PUBLIC
         NumCableClassProps: Integer;
@@ -101,9 +101,8 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TCableData.ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer): Integer;
+procedure TCableData.ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer);
 begin
-    Result := 0;
   // continue parsing with contents of Parser
     if ParamPointer > 0 then
         with TCableDataObj(ActiveObj) do

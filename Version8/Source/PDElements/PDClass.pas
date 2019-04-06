@@ -19,7 +19,7 @@ type
     PRIVATE
 
     PROTECTED
-        function ClassEdit(const ActivePDObj: Pointer; const ParamPointer: Integer): Integer;
+        procedure ClassEdit(const ActivePDObj: Pointer; const ParamPointer: Integer);
         procedure ClassMakeLike(const OtherObj: Pointer);
         procedure CountProperties;  // Add no. of intrinsic properties
         procedure DefineProperties;  // Add Properties of this class to propName
@@ -85,11 +85,8 @@ end;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TPDClass.ClassEdit(const ActivePDObj: Pointer; const ParamPointer: Integer): Integer;
-
-
+procedure TPDClass.ClassEdit(const ActivePDObj: Pointer; const ParamPointer: Integer);
 begin
-    Result := 0;
   // continue parsing with contents of Parser
 
     if ParamPointer > 0 then

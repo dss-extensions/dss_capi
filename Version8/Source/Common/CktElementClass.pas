@@ -20,7 +20,7 @@ type
     PRIVATE
 
     PROTECTED
-        function ClassEdit(const ActiveCktElemObj: Pointer; const ParamPointer: Integer): Integer;
+        procedure ClassEdit(const ActiveCktElemObj: Pointer; const ParamPointer: Integer);
         procedure ClassMakeLike(const OtherObj: Pointer);
 
         procedure CountProperties;  // Add no. of intrinsic properties
@@ -44,11 +44,9 @@ uses
 
 { TCktElementClass }
 
-function TCktElementClass.ClassEdit(const ActiveCktElemObj: Pointer;
-    const ParamPointer: Integer): Integer;
+procedure TCktElementClass.ClassEdit(const ActiveCktElemObj: Pointer; const ParamPointer: Integer);
 
 begin
-    Result := 0;
   // continue parsing with contents of Parser
     if ParamPointer > 0 then
         with TDSSCktElement(ActiveCktElemObj) do

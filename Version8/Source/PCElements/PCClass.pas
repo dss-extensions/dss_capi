@@ -18,7 +18,7 @@ type
     PRIVATE
 
     PROTECTED
-        function ClassEdit(const ActivePCObj: Pointer; const ParamPointer: Integer): Integer;
+        procedure ClassEdit(const ActivePCObj: Pointer; const ParamPointer: Integer);
         procedure ClassMakeLike(const OtherObj: Pointer);
 
         procedure CountProperties;  // Add no. of intrinsic properties
@@ -78,16 +78,12 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TPCClass.ClassEdit(const ActivePCObj: Pointer; const ParamPointer: Integer): Integer;
-
-
+procedure TPCClass.ClassEdit(const ActivePCObj: Pointer; const ParamPointer: Integer);
 begin
-    Result := 0;
   // continue parsing with contents of Parser
     if ParamPointer > 0 then
         with TPCElement(ActivePCObj) do
         begin
-
             case ParamPointer of
                 1:
                     Spectrum := Parser[ActiveActor].StrValue;
@@ -95,7 +91,6 @@ begin
                 inherited ClassEdit(ActivePCObj, ParamPointer - NumPCClassProps)
             end;
         end;
-
 end;
 
 procedure TPCClass.ClassMakeLike(const OtherObj: Pointer);

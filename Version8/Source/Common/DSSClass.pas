@@ -57,7 +57,7 @@ TYPE
         procedure CountProperties;  // Add no. of intrinsic properties
         procedure AllocatePropertyArrays;
         procedure DefineProperties;  // Add Properties of this class to propName
-        function ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer): Integer;
+        procedure ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer);
 
     PUBLIC
         NumProperties: Integer;
@@ -324,22 +324,16 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TDSSClass.ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer): Integer;
-
-
+procedure TDSSClass.ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer);
 begin
   // continue parsing with contents of Parser
-
-    Result := 0;
     if ParamPointer > 0 then
         with TDSSObject(ActiveObj) do
         begin
-
             case ParamPointer of
                 1:
                     MakeLike(Parser[ActiveActor].StrValue);    // Like command (virtual)
             end;
-
         end;
 end;
 

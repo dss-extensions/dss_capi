@@ -23,7 +23,7 @@ type
     PRIVATE
 
     PROTECTED
-        function ClassEdit(const ActiveMeterObj: Pointer; const ParamPointer: Integer): Integer;
+        procedure ClassEdit(const ActiveMeterObj: Pointer; const ParamPointer: Integer);
         procedure ClassMakeLike(const OtherObj: Pointer);
 
         procedure CountProperties;  // Add no. of intrinsic properties
@@ -85,11 +85,8 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-function TMeterClass.ClassEdit(const ActiveMeterObj: Pointer; const ParamPointer: Integer): Integer;
-
-
+procedure TMeterClass.ClassEdit(const ActiveMeterObj: Pointer; const ParamPointer: Integer);
 begin
-    Result := 0;
   // continue parsing with contents of Parser
     if ParamPointer > 0 then
         with TMeterElement(ActiveMeterObj) do
@@ -101,7 +98,6 @@ begin
             inherited ClassEdit(ActiveMeterObj, ParamPointer - NumMeterClassProps)
       //END;
         end;
-
 end;
 
 procedure TMeterClass.ClassMakeLike(const OtherObj: Pointer);
