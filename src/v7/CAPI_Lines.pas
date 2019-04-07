@@ -389,7 +389,7 @@ var
     i, j, k: Integer;
     Factor: Double;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 0);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     Result[0] := 0;
     if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
         Exit;
@@ -430,7 +430,7 @@ var
     Result: PDoubleArray;
     i, j, k: Integer;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 0);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     Result[0] := 0;
     if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
         Exit;
