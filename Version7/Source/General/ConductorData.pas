@@ -23,7 +23,8 @@ interface
 uses
     Command,
     DSSClass,
-    DSSObject;
+    DSSObject,
+    ArrayDef;
 
 type
     ConductorChoice = (Overhead, ConcentricNeutral, TapeShield, Unknown);
@@ -61,6 +62,8 @@ type
     PUBLIC
         NormAmps: Double;
         EmergAmps: Double;
+        Nratings: Integer;
+        ratings: array of Double;
 
         constructor Create(ParClass: TDSSClass; const ConductorDataName: String);
         destructor Destroy; OVERRIDE;
@@ -91,8 +94,8 @@ uses
     DSSClassDefs,
     Sysutils,
     Ucomplex,
-    Arraydef,
-    LineUNits;
+    LineUNits,
+    Utilities;
 
 const
     LineUnitsHelp = '{mi|kft|km|m|Ft|in|cm|mm} Default=none.';
@@ -101,7 +104,7 @@ const
 constructor TConductorData.Create;  // Creates superstructure for all Line objects
 begin
     inherited Create;
-    NumConductorClassProps := 10;
+    NumConductorClassProps := 12;
     DSSClassType := DSS_OBJECT;
 end;
 
@@ -128,6 +131,8 @@ begin
     PropertyName^[ActiveProperty + 8] := 'normamps';
     PropertyName^[ActiveProperty + 9] := 'emergamps';
     PropertyName^[ActiveProperty + 10] := 'diam';
+    PropertyName^[ActiveProperty + 11] := 'Seasons';
+    PropertyName^[ActiveProperty + 12] := 'Ratings';
 
     PropertyHelp^[ActiveProperty + 1] := 'dc Resistance, ohms per unit length (see Runits). Defaults to Rac/1.02 if not specified.';
     PropertyHelp^[ActiveProperty + 2] := 'Resistance at 60 Hz per unit length. Defaults to 1.02*Rdc if not specified.';
@@ -139,6 +144,9 @@ begin
     PropertyHelp^[ActiveProperty + 8] := 'Normal ampacity, amperes. Defaults to Emergency amps/1.5 if not specified.';
     PropertyHelp^[ActiveProperty + 9] := 'Emergency ampacity, amperes. Defaults to 1.5 * Normal Amps if not specified.';
     PropertyHelp^[ActiveProperty + 10] := 'Diameter; Alternative method for entering radius.';
+    PropertyHelp^[ActiveProperty + 11] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
+    PropertyHelp^[ActiveProperty + 12] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
+        CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
 
     ActiveProperty := ActiveProperty + NumConductorClassProps;
     inherited DefineProperties;
@@ -146,6 +154,8 @@ end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TConductorData.ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer);
+var
+    Param: String;
 begin
   // continue parsing with contents of Parser
     if ParamPointer > 0 then
@@ -172,6 +182,17 @@ begin
                     EmergAmps := Parser.DblValue;
                 10:
                     Fradius := Parser.DblValue / 2.0;
+                11:
+                begin
+                    Nratings := Parser.IntValue;
+                    setlength(Ratings, Nratings);
+                end;
+                12:
+                begin
+                    setlength(Ratings, Nratings);
+                    Param := Parser.StrValue;
+                    Nratings := InterpretDblArray(Param, Nratings, pointer(Ratings));
+                end
             else
                 inherited ClassEdit(ActiveObj, ParamPointer - NumConductorClassProps)
             end;
@@ -255,9 +276,12 @@ begin
     FGMRUnits := 0;
     FResistanceUnits := 0;
     FRadiusUnits := 0;
-
     Normamps := -1.0;
     EmergAmps := -1.0;
+    ratings := NIL;
+    Nratings := 1;
+    setlength(Ratings, NRatings);
+    ratings[0] := NormAmps;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -268,7 +292,9 @@ end;
 
 procedure TConductorDataObj.DumpProperties(var F: TextFile; Complete: Boolean);
 var
+    j,
     i: Integer;
+    TempStr: String;
 begin
     inherited DumpProperties(F, Complete);
     with ParentClass do
@@ -297,6 +323,16 @@ begin
                     Writeln(F, Format('%.6g', [EmergAmps]));
                 10:
                     Writeln(F, Format('%.6g', [radius * 2.0]));
+                11:
+                    Writeln(F, Format('%d', [Nratings]));
+                12:
+                begin
+                    TempStr := '[';
+                    for  j := 1 to Nratings do
+                        TempStr := TempStr + floattoStrf(ratings[j - 1], ffgeneral, 8, 4) + ',';
+                    TempStr := TempStr + ']';
+                    Writeln(F, TempStr);
+                end;
             end;
         end;
     end;
@@ -314,6 +350,8 @@ begin
     PropertyValue[ArrayOffset + 8] := '-1';
     PropertyValue[ArrayOffset + 9] := '-1';
     PropertyValue[ArrayOffset + 10] := '-1';
+    PropertyValue[ArrayOffset + 11] := '1';
+    PropertyValue[ArrayOffset + 12] := '[-1]';
     inherited InitPropertyValues(ArrayOffset + 10);
 end;
 

@@ -66,7 +66,7 @@ begin
     ExportOption[18] := 'seqz';
     ExportOption[19] := 'P_byphase';
     ExportOption[20] := 'CDPSMCombined';
-    ExportOption[21] := 'CDPSMFunc';
+    ExportOption[21] := 'CIM100';
     ExportOption[22] := 'CDPSMAsset';
     ExportOption[23] := 'Buscoords';
     ExportOption[24] := 'Losses';
@@ -130,8 +130,8 @@ begin
     ExportHelp[17] := '(Default file = EXP_Y.CSV) [triplets] [Filename] System Y matrix, defaults to non-sparse format.';
     ExportHelp[18] := '(Default file = EXP_SEQZ.CSV) Equivalent sequence Z1, Z0 to each bus.';
     ExportHelp[19] := '(Default file = EXP_P_BYPHASE.CSV) [MVA] [Filename] Power by phase. Default is kVA.';
-    ExportHelp[20] := '(Default file = CIM17x.XML) (IEC 61968-13, CIM v17 extended, CDPSM Combined (unbalanced load flow) profile)' + CRLF + ' [File=filename fid=_guidstring Substation=subname sid=_guidstring' + CRLF + ' SubGeographicRegion=subgeoname sgrid=_guidstring GeographicRegion=geoname rgnid=_guidstring]';
-    ExportHelp[21] := '** Deprecated ** (IEC 61968-13, CDPSM Functional profile)';
+    ExportHelp[20] := '** Deprecated ** (IEC 61968-13, CIM16-17 version of the CDPSM Combined profile)';
+    ExportHelp[21] := '(Default file = CIM100x.XML) (IEC 61968-13, CIM100 for unbalanced load flow profile)' + CRLF + ' [File=filename fid=_guidstring Substation=subname sid=_guidstring' + CRLF + ' SubGeographicRegion=subgeoname sgrid=_guidstring GeographicRegion=geoname rgnid=_guidstring]';
     ExportHelp[22] := '** Deprecated ** (IEC 61968-13, CDPSM Asset profile)';
     ExportHelp[23] := '[Default file = EXP_BUSCOORDS.CSV] Bus coordinates in csv form.';
     ExportHelp[24] := '[Default file = EXP_LOSSES.CSV] Losses for each element.';
@@ -203,6 +203,7 @@ var
 begin
     Result := 0;
     AbortExport := FALSE;
+    FileName := '';
 
     ParamName := Parser[ActiveActor].NextParam;
     Parm1 := LowerCase(Parser[ActiveActor].StrValue);
@@ -276,7 +277,7 @@ begin
                     TripletOpt := TRUE;
         end;
 
-        20:
+        20, 21:
         begin {user-supplied substation and regions}
             ParamName := LowerCase(parser[ActiveActor].nextParam);
             Parm2 := Parser[ActiveActor].strValue;
@@ -402,7 +403,7 @@ begin
             20:
                 FileName := 'CIM17x.XML';
             21:
-                FileName := 'CDPSM_Functional.XML';
+                FileName := 'CIM100x.XML';
             22:
                 FileName := 'CDPSM_Asset.XML';
             23:
@@ -571,11 +572,11 @@ begin
         19:
             ExportPbyphase(Filename, MVAOpt);
         20:
-            ExportCDPSM(Filename, Substation, SubGeographicRegion, GeographicRegion, FdrGuid, SubGuid, SubGeoGuid, RgnGuid, Combined);
+            DoSimpleMsg('CDPSMCombined (CIM17) export no longer supported; use Export CIM100', 252);
         21:
-            DoSimpleMsg('Functional export no longer supported; use Combined', 252);
+            ExportCDPSM(Filename, Substation, SubGeographicRegion, GeographicRegion, FdrGuid, SubGuid, SubGeoGuid, RgnGuid, Combined);
         22:
-            DoSimpleMsg('Asset export no longer supported; use Combined', 252);
+            DoSimpleMsg('Asset export no longer supported; use Export CIM100', 252);
         23:
             ExportBusCoords(Filename);
         24:
@@ -587,13 +588,13 @@ begin
         27:
             ExportSummary(Filename);
         28:
-            DoSimpleMsg('ElectricalProperties export no longer supported; use Combined', 252);
+            DoSimpleMsg('ElectricalProperties export no longer supported; use Export CIM100', 252);
         29:
-            DoSimpleMsg('Geographical export no longer supported; use Combined', 252);
+            DoSimpleMsg('Geographical export no longer supported; use Export CIM100', 252);
         30:
-            DoSimpleMsg('Topology export no longer supported; use Combined', 252);
+            DoSimpleMsg('Topology export no longer supported; use Export CIM100', 252);
         31:
-            DoSimpleMsg('StateVariables export no longer supported; use Combined', 252);
+            DoSimpleMsg('StateVariables export no longer supported; use Export CIM100', 252);
         32:
             ExportProfile(FileName, PhasesToPlot);
         33:

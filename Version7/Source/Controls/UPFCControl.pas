@@ -63,8 +63,6 @@ type
         FGenPointerList: PointerList.TPointerList;
         FWeights: pDoubleArray;
 
-        MonitoredElement: TDSSCktElement;
-
     PUBLIC
 
         constructor Create(ParClass: TDSSClass; const UPFCControlName: String);
@@ -232,7 +230,7 @@ begin
                     if FListSize > 0 then
                     begin
                         Reallocmem(FWeights, Sizeof(FWeights^[1]) * FListSize);
-                        InterpretDblArray(Param, FListSize, FWeights);
+                        FListSize := InterpretDblArray(Param, FListSize, FWeights);
                     end;
                 end;
 

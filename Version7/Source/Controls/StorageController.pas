@@ -115,7 +115,7 @@ type
 
         LoadShapeMult: Complex;
 
-        MonitoredElement: TDSSCktElement;
+        Wait4Step: Boolean;
 
            // PROCEDURE SetPctReserve;
         procedure SetAllFleetValues;
@@ -500,7 +500,7 @@ begin
                     if FleetSize > 0 then
                     begin
                         Reallocmem(FWeights, Sizeof(FWeights^[1]) * FleetSize);
-                        InterpretDblArray(Param, FleetSize, FWeights);
+                        FleetSize := InterpretDblArray(Param, FleetSize, FWeights);
                     end;
                 end;
                 propMODEDISCHARGE:
@@ -759,7 +759,7 @@ begin
     FlatTime := 2.0;
     DnrampTime := 0.25;
     LastpctDischargeRate := 0.0;
-
+    Wait4Step := FALSE;     // for sync discharge with charge when there is a transition
 
     InitPropertyValues(0);
 
@@ -1390,7 +1390,8 @@ begin
         SkipkWDispatch := FALSE;
 
        //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
-        S := MonitoredElement.Power[ElementTerminal];  // Power in active terminal
+        S := MonitoredElement.MaxPower[ElementTerminal];  // Power in active terminal
+                                                         // based on max phase current
         case DischargeMode of
              // Following Load; try to keep load below kW Target
             MODEFOLLOW:
@@ -1451,6 +1452,8 @@ begin
                         PushTimeOntoControlQueue(STORE_IDLING);  // force a new power flow solution
                         ChargingAllowed := TRUE;
                         SkipkWDispatch := TRUE;
+                        Wait4Step := TRUE; // To tell to the charging section to wait for the next sim step
+                                                 // useful when workin with large simulation time steps
                     end;
             end;
         end;
@@ -1572,7 +1575,7 @@ begin
         SkipkWCharge := FALSE;
 
        //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
-        S := MonitoredElement.Power[ElementTerminal];  // Power in active terminal
+        S := MonitoredElement.MaxPower[ElementTerminal];  // Power in active terminal
         PDiff := S.re * 0.001 - FkWTargetLow;  // Assume S.re is normally positive
 
         ActualkW := FleetkW;
@@ -1583,11 +1586,14 @@ begin
 
         case FleetState of
             STORE_IDLING:
-                if (PDiff > 0.0) or (ActualkWh >= TotalRatingkWh) then
+                if (PDiff > 0.0) or (ActualkWh >= TotalRatingkWh) or Wait4Step then
                 begin  // Don't bother trying to charge
                     ChargingAllowed := FALSE;
                     SkipkWCharge := TRUE;
-                end;
+                    Wait4Step := FALSE;
+                end
+                else
+                    ChargingAllowed := ChargingAllowed;
             STORE_CHARGING:
                 if (kWNeeded > 0.0) or (ActualkWh >= TotalRatingkWh) then
                 begin   // desired decrease is greater then present output; just cancel
@@ -1655,7 +1661,7 @@ begin
 {
   Check discharge mode first. Then if not discharging, we can check for charging
 }
-
+    Wait4Step := FALSE;        // Initializes the variable for the new control step
     case DischargeMode of
         MODEFOLLOW:
         begin

@@ -21,6 +21,7 @@ uses
     PDElement,
     UcMatrix,
     LineCode,
+    ArrayDef,
     LineGeometry,
     LineSpacing,
     ConductorData,
@@ -166,7 +167,6 @@ uses
     DSSClassDefs,
     DSSGlobals,
     Sysutils,
-    ArrayDef,
     Utilities,
     Mathutil,
     ControlElem,
@@ -349,7 +349,7 @@ begin
     PropertyValue[28] := Format('%-d', [Nratings]);
     TempStr := '[';
     for  j := 1 to Nratings do
-        TempStr := TempStr + floattoStrf(ratings^[j], ffgeneral, 8, 4) + ',';
+        TempStr := TempStr + floattoStrf(ratings[j - 1], ffgeneral, 8, 4) + ',';
     TempStr := TempStr + ']';
     PropertyValue[29] := TempStr;
 
@@ -365,6 +365,7 @@ end;
 procedure TLineObj.FetchLineCode(const Code: String);
 var
     LineCodeObj: TLineCodeObj;
+    i: Integer;
 
 begin
     if LineCodeClass[ActiveActor].SetActive(Code) then
@@ -406,8 +407,10 @@ begin
         NormAmps := LineCodeObj.NormAmps;
         EmergAmps := LineCodeObj.EmergAmps;
 
-        Nratings := LineCodeObj.NRatings;
-        ratings := LineCodeObj.ratings;
+        NRatings := LineCodeObj.NRatings;
+        setlength(Ratings, NRatings);
+        for i := 0 to High(Ratings) do
+            Ratings[i] := LineCodeObj.ratings[i];
 
        // These three properties should not come from the Linecode
        //   But can vary from line section to line section
@@ -672,12 +675,13 @@ begin
                 28:
                 begin
                     Nratings := Parser[ActorID].IntValue;
-                    ReAllocmem(ratings, Sizeof(ratings^[1]) * Nratings);
+                    setlength(Ratings, Nratings);
                 end;
                 29:
                 begin
-                    Param := Parser[ActorID].StrValue;
-                    Nratings := InterpretDblArray(Param, Nratings, ratings);
+                    setlength(Ratings, Nratings);
+                    Param := Parser[ActiveActor].StrValue;
+                    Nratings := InterpretDblArray(Param, Nratings, Pointer(Ratings));
                 end
             else
             // Inherited Property Edits
@@ -925,8 +929,8 @@ begin
     RecalcElementData(ActiveActor);
 
     NRatings := 1;
-    ReAllocmem(ratings, Sizeof(ratings^[1]) * Nratings);
-    ratings^[1] := NormAmps;
+    setlength(Ratings, NRatings);
+    Ratings[0] := NormAmps;
 
 
 end;
@@ -1449,7 +1453,7 @@ begin
         begin
             TempStr := '[';
             for  k := 1 to Nratings do
-                TempStr := TempStr + floattoStrf(ratings^[k], ffGeneral, 8, 4) + ',';
+                TempStr := TempStr + floattoStrf(ratings[k - 1], ffGeneral, 8, 4) + ',';
             TempStr := TempStr + ']';
             Result := TempStr;
         end;
@@ -1720,7 +1724,7 @@ begin
 
       {Rename the line}
         if Series then
-            NewName := StripExtension(GetBus(1)) + '~' + StripExtension(GetBus(2))
+            NewName := OtherLine.Name + '~' + Name //(GetBus(1)) + '~'  + StripExtension(GetBus(2))
         else
             NewName := StripExtension(GetBus(1)) + '||' + StripExtension(GetBus(2));
 
@@ -1905,8 +1909,9 @@ procedure TLineObj.FetchWireList(const Code: String);
 var
     RatingsInc: Boolean;
     NewNumRat,
+    j,
     i, istart: Integer;
-    NewRatings: pDoubleArray;
+    NewRatings: array of Double;
 begin
     if not assigned(FLineSpacingObj) then
         DoSimpleMsg('You must assign the LineSpacing before the Wires Property (LINE.' + name + ').', 18102);
@@ -1939,7 +1944,9 @@ begin
             if FLineWireData^[i].Nratings > NewNumRat then
             begin
                 NewNumRat := FLineWireData^[i].Nratings;
-                NewRatings := FLineWireData^[i].ratings;
+                setlength(NewRatings, NewNumRat);
+                for j := 0 to High(NewRatings) do
+                    NewRatings[j] := FLineWireData^[i].ratings[j];
                 RatingsInc := TRUE;         // Yes, there are seasonal ratings
             end;
         end
@@ -1949,8 +1956,10 @@ begin
 
     if RatingsInc then
     begin
-        Nratings := NewNumRat;
-        ratings := NewRatings;
+        NRatings := NewNumRat;
+        setlength(Ratings, NRatings);
+        for j := 0 to High(Ratings) do
+            Ratings[j] := NewRatings[j];
     end;
 
 end;
@@ -2002,7 +2011,8 @@ begin
 end;
 
 procedure TLineObj.FetchGeometryCode(const Code: String);
-
+var
+    i: Integer;
 begin
     if LineGeometryClass[ActiveActor].SetActive(Code) then
     begin
@@ -2027,7 +2037,9 @@ begin
         YprimInvalid[ActiveActor] := TRUE;       // Force Rebuild of Y matrix
 
         Nratings := FLineGeometryObj.NRatings;
-        ratings := FLineGeometryObj.ratings;
+        setlength(Ratings, NRatings);
+        for i := 0 to High(Ratings) do
+            Ratings[i] := FLineGeometryObj.ratings[i];
 
     end
     else

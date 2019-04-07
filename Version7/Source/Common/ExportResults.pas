@@ -3436,6 +3436,7 @@ begin
         begin
             Writeln(F, inttostr(IncMat.data[i][0]) + ',' + inttostr(IncMat.data[i][1]) + ',' + inttostr(IncMat.data[i][2]));
         end;
+        GlobalResult := FileNm;
         CloseFile(F);
     end;
 end;
@@ -3454,6 +3455,7 @@ begin
         begin
             Writeln(F, Inc_Mat_Rows[i]);
         end;
+        GlobalResult := FileNm;
         CloseFile(F);
     end;
 end;
@@ -3472,6 +3474,7 @@ begin
         begin
             Writeln(F, Inc_Mat_Cols[i]);
         end;
+        GlobalResult := FileNm;
         CloseFile(F);
     end;
 end;
@@ -3491,6 +3494,7 @@ begin
         begin
             Writeln(F, Inc_Mat_Cols[i] + ',' + inttostr(Inc_Mat_levels[i]));
         end;
+        GlobalResult := FileNm;
         CloseFile(F);
     end;
 end;
@@ -3509,6 +3513,7 @@ begin
         begin
             Writeln(F, inttostr(Laplacian.data[i][0]) + ',' + inttostr(Laplacian.data[i][1]) + ',' + inttostr(Laplacian.data[i][2]));
         end;
+        GlobalResult := FileNm;
         CloseFile(F);
     end;
 end;

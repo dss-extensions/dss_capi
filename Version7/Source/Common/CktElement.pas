@@ -157,6 +157,8 @@ type
         property ActiveTerminalIdx: Integer READ FActiveTerminal WRITE Set_ActiveTerminal;
         property Closed[Index: Integer]: Boolean READ Get_ConductorClosed WRITE Set_ConductorClosed;
         procedure SumCurrents;
+        
+        procedure Get_Current_Mags(cMBuffer: pDoubleArray); // Returns the Currents vector in magnitude
 
     end;
 
@@ -684,6 +686,15 @@ begin
             with Iterminal^[i] do
                 Result := Max(Result, SQR(re) + SQR(im));
     Result := Sqrt(Result);  // just do the sqrt once and save a little time
+end;
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+procedure TDSSCktElement.Get_Current_Mags(cMBuffer: pDoubleArray);
+var
+    i: Integer;
+begin
+    for i := 1 to Fnphases do
+        cMBuffer^[i] := cabs(Iterminal^[i]);
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

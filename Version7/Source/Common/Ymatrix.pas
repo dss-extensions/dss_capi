@@ -234,7 +234,7 @@ begin
             ReAllocMem(NodeV, SizeOf(NodeV^[1]) * (NumNodes + 1)); // Allocate System Voltage array - allow for zero element
             NodeV^[0] := CZERO;
             ReAllocMem(Currents, SizeOf(Currents^[1]) * (NumNodes + 1)); // Allocate System current array
-            ReAllocMem(AuxCurrents, SizeOf(AuxCurrents^[1]) * NumNodes); // Allocate System current array
+            ReAllocMem(AuxCurrents, SizeOf(AuxCurrents^[1]) * (NumNodes + 1)); // Allocate System current array
             if (VMagSaved <> NIL) then
                 ReallocMem(VMagSaved, 0);
             if (ErrorSaved <> NIL) then

@@ -287,6 +287,9 @@ VAR
 //***********************A-Diakoptics Variables*********************************
   ADiakoptics             : Boolean;
 
+//***********************Seasonal QSTS variables********************************
+   SeasonalRating         : Boolean;    // Tells the energy meter if the seasonal rating feature is active
+   SeasonSignal           : String;     // Stores the name of the signal for selecting the rating dynamically
 
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
@@ -928,6 +931,9 @@ end;
 initialization
 
    ADiakoptics      :=    False;  // Disabled by default
+
+   SeasonalRating         :=  False;
+   SeasonSignal           :=  '';
 
    {Various Constants and Switches}
    {$IFDEF FPC}NoFormsAllowed  := TRUE;{$ENDIF}

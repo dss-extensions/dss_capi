@@ -100,7 +100,6 @@ type
 
         LoadShapeMult: Complex;
 
-        MonitoredElement: TDSSCktElement;
 
     PUBLIC
 
@@ -288,7 +287,7 @@ begin
                     if FLocalControlListSize > 0 then
                     begin
                         Reallocmem(FLocalControlWeights, Sizeof(FLocalControlWeights^[1]) * FLocalControlListSize);
-                        InterpretDblArray(Param, FLocalControlListSize, FLocalControlWeights);
+                        FLocalControlListSize := InterpretDblArray(Param, FLocalControlListSize, FLocalControlWeights);
                     end;
                 end;
                 8:
@@ -299,7 +298,7 @@ begin
                     if FPVSystemListSize > 0 then
                     begin
                         Reallocmem(FPVSystemWeights, Sizeof(FPVSystemWeights^[1]) * FPVSystemListSize);
-                        InterpretDblArray(Param, FPVSystemListSize, FPVSystemWeights);
+                        FPVSystemListSize := InterpretDblArray(Param, FPVSystemListSize, FPVSystemWeights);
                     end;
                 end;
                 10:
@@ -310,7 +309,7 @@ begin
                     if FStorageListSize > 0 then
                     begin
                         Reallocmem(FStorageWeights, Sizeof(FStorageWeights^[1]) * FStorageListSize);
-                        InterpretDblArray(Param, FStorageListSize, FStorageWeights);
+                        FStorageListSize := InterpretDblArray(Param, FStorageListSize, FStorageWeights);
                     end;
                 end;
 

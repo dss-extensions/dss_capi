@@ -13,7 +13,7 @@ uses
     Command;
 
 const
-    NumExecOptions = 113;
+    NumExecOptions = 115;
 
 var
     ExecOption,
@@ -157,6 +157,8 @@ begin
     ExecOption[111] := 'DSSVisualizationTool';
     ExecOption[112] := 'KeepLoad';
     ExecOption[113] := 'Zmag';
+    ExecOption[114] := 'SeasonRating';
+    ExecOption[115] := 'SeasonSignal';
 
 
     OptionHelp[1] := 'Sets the active DSS class type.  Same as Class=...';
@@ -412,7 +414,9 @@ begin
     OptionHelp[111] := 'Activates/Deactivates the extended version of the plot command for figures with the DSS Visualization Tool.';
     OptionHelp[112] := 'Keeploads = Y/N option for ReduceOption Laterals option';
     OptionHelp[113] := 'Sets the Zmag option (in Ohms) for ReduceOption Shortlines option. Lines have less line mode impedance are reduced.';
-
+    OptionHelp[114] := 'Enables/disables the seasonal selection of the rating for determining if an element is overloaded. When enabled, the energy meter will' + CRLF +
+        'look for the rating (NormAmps) using the SeasonSignal to eavluate if the element is overloaded';
+    OptionHelp[115] := 'Is the name of the XY curve defining the seasonal change when performing QSTS simulations.';
 end;
 //----------------------------------------------------------------------------
 function DoSetCmd_NoCircuit: Boolean;  // Set Commands that do not require a circuit
@@ -773,6 +777,10 @@ begin
                 ActiveCircuit.ReduceLateralsKeepLoad := InterpretYesNo(Param);
             113:
                 ActiveCircuit.ReductionZmag := Parser.DblValue;
+            114:
+                SeasonalRating := InterpretYesNo(Param);
+            115:
+                SeasonSignal := Param;
 
         else
            // Ignore excess parameters
@@ -1159,7 +1167,13 @@ begin
                         AppendGlobalResult('No');
                 113:
                     AppendGlobalResult(Format('%-g', [ActiveCircuit.ReductionZmag]));
-
+                114:
+                    if SeasonalRating then
+                        AppendGlobalResult('Yes')
+                    else
+                        AppendGlobalResult('No');
+                115:
+                    AppendGlobalResult(SeasonSignal);
             else
            // Ignore excess parameters
             end;

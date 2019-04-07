@@ -92,7 +92,9 @@ uses
     Feeder,
     Load,
     Generator,
-    Command;
+    XYCurve,
+    Command,
+    Classes;
 
 const
     NumEMVbase = 7;
@@ -326,8 +328,8 @@ type
         RegisterNames: array[1..NumEMregisters] of String;
 
         BranchList: TCktTree;      // Pointers to all circuit elements in meter's zone
-        SequenceList: TPointerList;  // Pointers to branches in sequence from meter to ends
-        LoadList: TPointerList;  // Pointers to Loads in the Meter zone to aid reliability calcs
+        SequenceList: PointerList.TPointerList;  // Pointers to branches in sequence from meter to ends
+        LoadList: PointerList.TPointerList;  // Pointers to Loads in the Meter zone to aid reliability calcs
 
         Registers: TRegisterArray;
         Derivatives: TRegisterArray;
@@ -399,7 +401,6 @@ uses
     Circuit,
     Line,
     LineUnits,
-    Classes,
     ReduceAlgs,
 {$IFNDEF FPC}
     Windows,
@@ -3494,13 +3495,36 @@ end;
 procedure TEnergyMeter.WriteOverloadReport;
 var
     PDelem: TPDelement;
+    EmergAmps,
+    NormAmps,
     Cmax: Double;
+    mtr: TEnergyMeterObj;
+    ClassName: String;
+    RSignal: TXYCurveObj;
+    i, j, k,
+    RatingIdx: Integer;
+    cVector,
+    cBuffer: pDoubleArray;
 
 begin
 {
   Scans the active circuit for overloaded PD elements and writes each to a file
   This is called only if in Demand Interval (DI) mode and the file is open.
 }
+{    Prepares everything for using seasonal ratings if required}
+    if SeasonalRating then
+    begin
+        if SeasonSignal <> '' then
+        begin
+            RSignal := XYCurveClass.Find(SeasonSignal);
+            if RSignal <> NIL then
+                RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour))
+            else
+                SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
+        end
+        else
+            SeasonalRating := FALSE;    // The user didn't define the seasonal signal
+    end;
 
  { CHECK PDELEMENTS ONLY}
     PDelem := ActiveCircuit.PDElements.First;
@@ -3513,24 +3537,89 @@ begin
             begin
                 PDelem.ComputeIterminal;
                 Cmax := PDelem.MaxTerminalOneImag; // For now, check only terminal 1 for overloads
-                if (Cmax > PDElem.NormAmps) or (Cmax > pdelem.EmergAmps) then
+                
+             // Section introduced in 02/20/2019 for allowing the automatic change of ratings
+             // when the seasonal ratings option is active
+                ClassName := lowercase(PDElem.DSSClassName);
+                if SeasonalRating and (ClassName = 'line') and (PDElem.NRatings > 1) then
                 begin
+                    if RatingIdx > PDElem.NRatings then
+                    begin
+                        NormAmps := PDElem.NormAmps;
+                        EmergAmps := pdelem.EmergAmps;
+                    end
+                    else
+                    begin
+                        NormAmps := PDElem.ratings[RatingIdx];
+                        EmergAmps := PDElem.ratings[RatingIdx];
+                    end;
+                end
+                else
+                begin
+                    NormAmps := PDElem.NormAmps;
+                    EmergAmps := pdelem.EmergAmps;
+                end;
+
+
+                if (Cmax > NormAmps) or (Cmax > EmergAmps) then
+                begin
+
+              // Gets the currents for the active Element
+                    cBuffer := Allocmem(sizeof(cBuffer^[1]) * PDElem.NPhases * PDElem.NTerms);
+                    PDElem.Get_Current_Mags(cBuffer);
+                    cVector := Allocmem(sizeof(cBuffer^[1]) * 3); // for storing
+                    for i := 1 to 3 do
+                        cVector^[i] := 0.0;
+                    if PDElem.NPhases < 3 then
+                    begin
+                        ClassName := PDElem.FirstBus;
+                        j := ansipos('.', ClassName);     // Removes the name of the bus
+                        ClassName := ClassName.Substring(j);
+                        for i := 1 to 3 do
+                        begin
+                            j := ansipos('.', ClassName);   // goes for the phase Number
+                            if j = 0 then
+                            begin
+                                k := strtoint(ClassName);
+                                cVector^[k] := cBuffer^[i];
+                                break
+                            end
+                            else
+                            begin
+                                k := strtoint(ClassName.Substring(0, j - 1));
+                                cVector^[k] := cBuffer^[i];
+                                ClassName := ClassName.Substring(j);
+                            end;
+                        end;
+                    end
+                    else
+                    begin
+                        for i := 1 to 3 do
+                            cVector^[i] := cBuffer^[i];
+                    end;
+
                     with ActiveCircuit.Solution do
                         WriteintoMem(OV_MHandle, DynaVars.dblHour);
                     WriteintoMemStr(OV_MHandle, ', ' + FullName(PDelem));
-                    WriteintoMem(OV_MHandle, PDElem.NormAmps);
-                    WriteintoMem(OV_MHandle, pdelem.EmergAmps);
+                    WriteintoMem(OV_MHandle, NormAmps);
+                    WriteintoMem(OV_MHandle, EmergAmps);
+
                     if PDElem.Normamps > 0.0 then
-                        WriteintoMem(OV_MHandle, Cmax / PDElem.Normamps * 100.0)
+                        WriteintoMem(OV_MHandle, Cmax / Normamps * 100.0)
                     else
                         WriteintoMem(OV_MHandle, 0.0);
                     if PDElem.Emergamps > 0.0 then
-                        WriteintoMem(OV_MHandle, Cmax / PDElem.Emergamps * 100.0)
+                        WriteintoMem(OV_MHandle, Cmax / Emergamps * 100.0)
                     else
                         WriteintoMem(OV_MHandle, 0.0);
                     with ActiveCircuit do // Find bus of first terminal
                         WriteintoMem(OV_MHandle, Buses^[MapNodeToBus^[PDElem.NodeRef^[1]].BusRef].kVBase);
+              // Adds the currents in Amps per phase at the end of the report
+                    for i := 1 to 3 do
+                        WriteintoMem(OV_MHandle, cVector^[i]);
+
                     WriteintoMemStr(OV_MHandle, ' ' + Char(10));
+
                 end;
             end; { }
         end;
@@ -4104,7 +4193,7 @@ begin
         OverloadFileIsOpen := TRUE;
         if OV_MHandle <> NIL then
             OV_MHandle.free;
-        OV_MHandle := Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase"' + Char(10));
+        OV_MHandle := Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase", "I1(A)", "I2(A)", "I3(A)"' + Char(10));
     except
         On E: Exception do
             DosimpleMsg('Error creating memory space (Overload report) for writing.' + CRLF + E.Message, 541);

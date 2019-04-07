@@ -28,6 +28,7 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      {$ENDIF} inifiles,
 
      {Some units which have global vars defined here}
+     Executive,
      solution,
      Spectrum,
      LoadShape,
@@ -315,6 +316,8 @@ VAR
    ADiakoptics,
    Parallel_enabled,
    ConcatenateReports,
+
+   ProgressCmd,
    IncMat_Ordered     : Boolean;
    Parser             : Array of TParser;
    ActorMA_Msg        : Array of TEvent;  // Array to handle the events of each actor
@@ -358,6 +361,9 @@ VAR
    SeasonalRating         : Boolean;    // Tells the energy meter if the seasonal rating feature is active
    SeasonSignal           : String;     // Stores the name of the signal for selecting the rating dynamically
 
+   DSSExecutive: Array of TExecutive;
+
+   DSSClasses             : TDSSClasses;
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
 PROCEDURE DoSimpleMsg(Const S :String; ErrNum:Integer);
@@ -422,7 +428,6 @@ USES  {Forms,   Controls,}
      DSSForms, SHFolder,
      ScriptEdit,
      {$ENDIF}
-     Executive,
      Parallel_Lib;
      {Intrinsic Ckt Elements}
 
@@ -671,8 +676,7 @@ Begin
       begin
         ActiveActor   :=  I;
         ActiveCircuit[I].NumCircuits := 0;
-        ActiveCircuit[I].Free;
-        ActiveCircuit[I]  :=  nil;
+        FreeAndNil(ActiveCircuit[I]);
         Parser[I].Free;
         Parser[I] :=  nil;
         // In case the actor hasn't been destroyed
@@ -680,13 +684,12 @@ Begin
         Begin
           ActorHandle[I].Send_Message(EXIT_ACTOR);
           ActorHandle[I].WaitFor;
-          ActorHandle[I].Free;
-          ActorHandle[I]  :=  nil;
+          FreeAndNil(ActorHandle[I]);
         End;
       end;
     end;
     Circuits.Free;
-    Circuits := TPointerList.Create(4);   // Make a new list of circuits
+    Circuits := TPointerList.Create(2);   // Make a new list of circuits
     // Revert on key global flags to Original States
     DefaultEarthModel     := DERI;
     LogQueries            := FALSE;
@@ -899,7 +902,7 @@ BEGIN
   DataDirectory[ActiveActor] := PathName;
 
   // Put a \ on the end if not supplied. Allow a null specification.
-  If Length(DataDirectory) > 0 Then Begin
+  If Length(DataDirectory[ActiveActor]) > 0 Then Begin
     ChDir(DataDirectory[ActiveActor]);   // Change to specified directory
     If DataDirectory[ActiveActor][Length(DataDirectory[ActiveActor])] <> PathDelim Then DataDirectory[ActiveActor] := DataDirectory[ActiveActor] + PathDelim;
   End;
@@ -1038,11 +1041,16 @@ Begin
 // between actors when a simulation is performed using A-Diakoptics
   for i := (WType +1) to NumOfActors do
   Begin
-    if ActorStatus[i] = 0 then
-    Begin
-      Flag  :=  true;
-      while Flag do
-        Flag  := ActorMA_Msg[i].WaitFor(10) = TWaitResult.wrTimeout;
+    Try
+      if ActorStatus[i] = 0 then
+      Begin
+        Flag  :=  true;
+        while Flag do
+          Flag  := ActorMA_Msg[i].WaitFor(10) = TWaitResult.wrTimeout;
+      End;
+    Except
+      On EOutOfMemory Do
+          Dosimplemsg('Exception Waiting for the parallel thread to finish a job"', 7006);
     End;
   End;
 end;
@@ -1275,7 +1283,12 @@ initialization
     DIFilesAreOpen[ActiveActor]       :=  FALSE;
 
     ActiveVSource[Activeactor]        :=  nil;
+    DSSObjs[ActiveActor]              :=  nil;
+    DSSClassList[ActiveActor]         :=  nil;
    end;
+
+   DSSClasses             :=  nil;
+   ProgressCmd            :=  False;
 
    Allactors              :=  False;
    ActiveActor            :=  1;
@@ -1429,17 +1442,18 @@ Finalization
 
 
 
-  With DSSExecutive[ActiveActor] Do If RecorderOn Then Recorderon := FALSE;
   ClearAllCircuits;
-{$IFNDEF DSS_CAPI}
-  DSSExecutive[ActiveActor].Free;  {Writes to Registry}
-  DSS_Registry.Free;  {Close Registry}
-{$ENDIF}
 
   for ActiveActor := 1 to NumOfActors do
   Begin
     if ActorHandle[ActiveActor] <> nil then
     Begin
+      With DSSExecutive[ActiveActor] Do If RecorderOn Then Recorderon := FALSE;
+{$IFNDEF DSS_CAPI}
+      DSSExecutive[ActiveActor].Free;  {Writes to Registry}
+      DSS_Registry.Free;  {Close Registry}
+{$ENDIF}
+
       EventStrings[ActiveActor].Free;
       SavedFileList[ActiveActor].Free;
       ErrorStrings[ActiveActor].Free;

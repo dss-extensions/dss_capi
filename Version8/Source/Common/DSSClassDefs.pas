@@ -329,11 +329,13 @@ end;
 procedure DisposeDSSClasses(AllActors: Boolean);
 
 var
+    DSSCidx,
+    temp,
     i: Integer;
     DSSObj: TDSSObject;
-    TraceName: String;
+    DSSClass_idx: TDSSClass;
+    TraceName,
     SuccessFree: String;
-    DSSCidx, temp: Integer;
 
 begin
     if not AllActors then
@@ -348,7 +350,7 @@ begin
                 SuccessFree := TraceName;
             end;
             TraceName := '(DSSObjs Class)';
-            DSSObjs[ActiveActor].Free;
+            FreeAndNil(DSSObjs[ActiveActor]);
         except
             On E: Exception do
                 Dosimplemsg('Exception disposing of DSS Obj "' + TraceName + '". ' + CRLF +
@@ -358,15 +360,20 @@ begin
 
         try
             for i := 1 to DSSClassList[ActiveActor].ListSize do
-                TDSSClass(DSSClassList[ActiveActor].Get(i)).Free;
+            begin
+                DSSClass_idx := DSSClassList[ActiveActor].Get(i);
+                FreeAndNil(DSSClass_idx);
+            end;
             TraceName := '(DSS Class List)';
-            DSSClassList[ActiveActor].Free;
+            FreeAndNil(DSSClassList[ActiveActor]);
             TraceName := '(ClassNames)';
-            ClassNames[ActiveActor].Free;
+            FreeAndNil(ClassNames[ActiveActor]);
+
         except
             On E: Exception do
                 Dosimplemsg('Exception disposing of DSS Class"' + TraceName + '". ' + CRLF + E.Message, 902);
         end;
+
     end
     else
     begin
@@ -377,9 +384,8 @@ begin
             DisposeDSSClasses(FALSE);
         end;
         TraceName := '(DSS Classes)';
-        DSSClasses.Free;
-        DSSClasses := NIL;
-        ActiveActor := temp;
+        FreeAndNil(DSSClasses);
+        ActiveActor := 1;
     end;
 end;
 

@@ -71,7 +71,6 @@ type
 
         ControlVars: TCapControlVars;
 
-        MonitoredElement: TDSSCktElement;
         ControlledCapacitor: TCapacitorObj;
 
         cBuffer: pComplexArray;    // Complexarray buffer
@@ -394,7 +393,6 @@ begin
                         Reset;
                         PropertyValue[22] := 'n'; // so it gets reported properly
                     end;
-
             else
            // Inherited parameters
                 ClassEdit(ActiveCapControlObj, ParamPointer - NumPropsthisClass)
@@ -1120,7 +1118,6 @@ begin
                                 end
                             end;
                         end;
-
                     end;
 
                 end;

@@ -895,28 +895,27 @@ var
     RSignal: TXYCurveObj;
 begin
     Result := 0;
-    DoSimpleMsg('Not implemented.', 999999);
-//    if not IsLine(ActiveCircuit.ActiveCktElement) then 
-//        Exit;
-//        
-//    if not SeasonalRating then 
-//        Exit;
-//        
-//    if SeasonSignal <> '' then
-//    begin
-//        RSignal := XYCurveClass.Find(SeasonSignal);
-//        
-//        if RSignal <> NIL then
-//            RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour)) + 1;
-//        
-//        // Just in case
-//        if RatingIdx > TLineObj(ActiveCircuit.ActiveCktElement).NRatings then
-//            Result := TLineObj(ActiveCircuit.ActiveCktElement).NormAmps
-//        else
-//            Result := TLineObj(ActiveCircuit.ActiveCktElement).ratings^[RatingIdx];
-//    end
-//    else
-//        Result := TLineObj(ActiveCircuit.ActiveCktElement).NormAmps;
+    if not IsLine(ActiveCircuit.ActiveCktElement) then 
+        Exit;
+        
+    if not SeasonalRating then 
+        Exit;
+        
+    if SeasonSignal <> '' then
+    begin
+        RSignal := XYCurveClass.Find(SeasonSignal);
+        
+        if RSignal <> NIL then
+            RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));
+        
+        // Just in case
+        if RatingIdx >= TLineObj(ActiveCircuit.ActiveCktElement).NRatings then
+            Result := TLineObj(ActiveCircuit.ActiveCktElement).NormAmps
+        else
+            Result := TLineObj(ActiveCircuit.ActiveCktElement).ratings[RatingIdx];
+    end
+    else
+        Result := TLineObj(ActiveCircuit.ActiveCktElement).NormAmps;
 end;
 //------------------------------------------------------------------------------
 end.

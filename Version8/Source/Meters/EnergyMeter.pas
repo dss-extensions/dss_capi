@@ -3461,7 +3461,7 @@ begin
         begin
             RSignal := XYCurveClass[ActorID].Find(SeasonSignal);
             if RSignal <> NIL then
-                RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit[ActorID].Solution.DynaVars.intHour)) + 1
+                RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit[ActorID].Solution.DynaVars.intHour))
             else
                 SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
         end
@@ -3493,8 +3493,8 @@ begin
                     end
                     else
                     begin
-                        NormAmps := PDElem.ratings^[RatingIdx];
-                        EmergAmps := PDElem.ratings^[RatingIdx];
+                        NormAmps := PDElem.ratings[RatingIdx];
+                        EmergAmps := PDElem.ratings[RatingIdx];
                     end;
                 end
                 else

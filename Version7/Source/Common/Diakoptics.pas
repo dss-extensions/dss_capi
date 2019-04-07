@@ -13,7 +13,7 @@ interface
 
 uses
   Circuit, Solution, DSSGlobals, SysUtils, DSSClassDefs, EnergyMeter,
-  SolutionAlgs,
+  SolutionAlgs, Line,
   {$IFDEF FPC}CmdForms{$ELSE}DSSForms, ScriptEdit{$ENDIF};
 
 Function Solve_Diakoptics():Integer;
@@ -31,6 +31,8 @@ implementation
 Uses
   ExecHelper, Executive, ParserDel, YMatrix, KLUSolve, Ucomplex, Sparse_Math,
   UcMatrix, math;
+
+
 
 {*******************************************************************************
 *              This is the A-Diakoptics algorithm executed by the              *
@@ -725,7 +727,7 @@ Begin
     MQuit := (Local_State > Num_States) or (ErrorCode <> 0);
   End;
 
-  ActiveActor                     :=  1;
+  ActiveActor   :=  1;
   if ErrorCode <> 0 then
   Begin
     ErrorStr          := 'One or more errors found';
@@ -737,7 +739,7 @@ Begin
     Parallel_enabled  :=  True;
     ADiakoptics       :=  True;
   End;
-
+  ProgressCmd   :=  True;
   prog_Str      :=  CRLF + prog_str + CRLF + ErrorStr + CRLF;
   GlobalResult  :=  ErrorStr;
 

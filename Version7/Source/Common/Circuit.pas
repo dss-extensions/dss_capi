@@ -308,6 +308,7 @@ TYPE
           Function GetBusAdjacentPCLists: TAdjArray;
           function Tear_Circuit(): Integer;                            // Tears the circuit considering the number of Buses of the original Circuit
           procedure Save_SubCircuits();
+          function get_Line_Bus(LName: String; NBus: Integer):String;
           procedure  get_longest_path();
           function Append2PathsArray(New_Path :  array of integer): Integer;//  appends a new path to the array and returns the index(1D)
           procedure Normalize_graph();
@@ -1086,6 +1087,52 @@ Begin
     // This routine extracts and modifies the file content to separate the subsystems as OpenDSS projects indepedently
     Format_SubCircuits(FileRoot, length(Locations));
 End;
+
+{*******************************************************************************
+*       Delivers the name of the bus at the specific line and terminal         *
+*******************************************************************************}
+Function TDSSCircuit.get_Line_Bus(LName: String; NBus: Integer):String;
+VAR
+    i,
+    activesave  : integer;
+    pLine       : TLineObj;
+    S           : String;
+    Found       : Boolean;
+    NBuses      : Array of String;
+Begin
+
+  setlength(NBuses,2);
+  IF ActiveCircuit <> NIL THEN
+  Begin      // Search list of Lines in active circuit for name
+    WITH ActiveCircuit.Lines DO
+    Begin
+      S := LName;  // Convert to Pascal String
+      Found := FALSE;
+      ActiveSave := ActiveIndex;
+      pLine := First;
+      While pLine <> NIL Do
+      Begin
+        IF (CompareText(pLine.Name, S) = 0) THEN
+        Begin
+          ActiveCircuit.ActiveCktElement := pLine;
+          Found := TRUE;
+          Break;
+        End;
+        pLine := Next;
+      End;
+      IF NOT Found THEN
+      Begin
+        DoSimpleMsg('Line "'+S+'" Not Found in Active Circuit.', 5008);
+        pLine := Get(ActiveSave);    // Restore active Line
+        ActiveCircuit.ActiveCktElement := pLine;
+      End;
+    End;
+    For i := 1 to  ActiveCircuit.ActiveCktElement.Nterms Do
+        NBuses[i-1] := ActiveCircuit.ActiveCktElement.GetBus(i);
+    // returns the name of the desired bus
+    Result  :=  NBuses[NBus - 1];
+  End;
+end;
 
 {*******************************************************************************
 *         This routine tears the circuit into many pieces as CPUs are          *

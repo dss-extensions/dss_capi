@@ -210,9 +210,9 @@ begin
                 1:
                     Npts := Parser.Intvalue;
                 2:
-                    InterpretDblArray(Param, Npts, C_Values);   // Parser.ParseAsVector(Npts, Multipliers);
+                    Npts := InterpretDblArray(Param, Npts, C_Values);   // Parser.ParseAsVector(Npts, Multipliers);
                 3:
-                    InterpretDblArray(Param, Npts, T_values);   // Parser.ParseAsVector(Npts, Hours);
+                    Npts := InterpretDblArray(Param, Npts, T_values);   // Parser.ParseAsVector(Npts, Hours);
             else
            // Inherited parameters
                 ClassEdit(ActiveTCC_CurveObj, ParamPointer - NumPropsThisClass)

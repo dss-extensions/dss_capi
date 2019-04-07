@@ -530,20 +530,21 @@ begin
 
     InitPropertyValues(0);
     ADiakoptics_Ready := FALSE;   // A-Diakoptics needs to be initialized
-    ActorMA_Msg[ActiveActor] := TEvent.Create(NIL, TRUE, FALSE, '');
+    if not Assigned(ActorMA_Msg[ActiveActor]) then
+        ActorMA_Msg[ActiveActor] := TEvent.Create(NIL, TRUE, FALSE, '');
 end;
 
 // ===========================================================================================
 destructor TSolutionObj.Destroy;
 begin
 
-//      Reallocmem(AuxCurrents, 0);
+    Reallocmem(AuxCurrents, 0);
     Reallocmem(Currents, 0);
     Reallocmem(dV, 0);
-{      Reallocmem(ErrorSaved, 0);
-      Reallocmem(NodeV, 0);
-      Reallocmem(NodeVbase, 0);
-      Reallocmem(VMagSaved, 0);  }
+    Reallocmem(ErrorSaved, 0);
+    Reallocmem(NodeV, 0);
+    Reallocmem(NodeVbase, 0);
+    Reallocmem(VMagSaved, 0);
 
     if hYsystem <> 0 then
         DeleteSparseSet(hYsystem);
@@ -560,11 +561,10 @@ begin
     begin
         ActorHandle[ActiveActor].Send_Message(EXIT_ACTOR);
         ActorHandle[ActiveActor].WaitFor;
-        ActorHandle[ActiveActor].Free;
-        ActorHandle[ActiveActor] := NIL;
+        FreeandNil(ActorHandle[ActiveActor]);
     end;
     ActorMA_Msg[ActiveActor].Free;
-
+    ActorMA_Msg[ActiveActor] := NIL;
 
     inherited Destroy;
 end;
@@ -716,12 +716,9 @@ begin
             ErrorSaved^[i] := Abs(1.0 - VmagSaved^[i] / Vmag);
 
         VMagSaved^[i] := Vmag;  // for next go-'round
-{$IFNDEF FPC}
+
         MaxError := Max(MaxError, ErrorSaved^[i]);  // update max error
-{$ELSE}
-        if ErrorSaved^[i] > MaxError then
-            MaxError := ErrorSaved^[i]; // TODO - line above used to compile in FPC
-{$ENDIF}
+
     end;
 
 
@@ -2675,11 +2672,13 @@ var
     i, j: Integer;
 begin
     with ActiveCircuit[ActorID] do
+    begin
         for i := 1 to NumBuses do
             with Buses^[i] do
                 if Assigned(Vbus) then
                     for j := 1 to NumNodesThisBus do
                         VBus^[j] := NodeV^[GetRef(j)];
+    end;
 end;
 
 procedure TSolutionObj.RestoreNodeVfromVbus;
@@ -3020,7 +3019,7 @@ end;
 
 destructor TSolver.Destroy;
 begin
-
+    inherited destroy;
 end;
 
 initialization
