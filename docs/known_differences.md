@@ -29,10 +29,13 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
     - The `DSS_CAPI_ALLOW_EDITOR` environment variable (also controlled through `DSS_Set_AllowEditor`): defaults to `1` (true, set to `0` to disable),  controls whether DSS commands like `Show` can trigger the external editor. 
     - The `DSS_CAPI_EARLY_ABORT` environment variable (also controlled through `DSS_Set_EarlyAbort`):  Controls the DSS script error-handling behavior. If a warning or error occurs and early abortion is enabled (default), the processing of the
     script is always halted. Otherwise, the processing of the script continues until a major error occurs or it finishes.
-    -  `Settings_Set_LoadsTerminalCheck`/`Settings_Get_LoadsTerminalCheck`: Use with care! Controls whether the terminals are checked when updating the currents in Load component. Defaults to True (that is, no change from the official OpenDSS). If the loads are guaranteed to have their terminals closed throughout the simulation, this can be set to False to save some precious simulation time.
+    - `Settings_Set_LoadsTerminalCheck`/`Settings_Get_LoadsTerminalCheck`: Use with care! Controls whether the terminals are checked when updating the currents in Load component. Defaults to True (that is, no change from the official OpenDSS). If the loads are guaranteed to have their terminals closed throughout the simulation, this can be set to False to save some precious simulation time.
 
 - The symmetric component transformation matrix uses more decimal places (a bit more precise) and its inverse is also more precise. This might explain some small differences in systems that use sequence values.
 
+- The DSS command `var` (which lists current DSS language variables) returns all variables in a string in the global result (`Text_Get_Result()`), which is equivalent to the COM property `DSS.Text.Result`. In COM, this uses a message form.
+
+- The DSS commands `dump buslist`, `dump commands` and `dump devicelist` are allowed to run when `AllowForms` is false. The user can disable the editor with `DSS_Set_AllowEditor` and still get the relevant results in the output text files. After each of the `dump` commands, the output file name is copied to the global result, enabling easier automation.
 
 - Version 7 include the following ported from Version 8: 
     - `StorageController`: `PeakShaveLow` mode

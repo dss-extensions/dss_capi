@@ -870,26 +870,38 @@ Begin
  Begin
 
     IF CompareText(Param, 'commands')=0 THEN
-    If Not NoFormsAllowed Then Begin
+{$IFNDEF DSS_CAPI}
+    If Not NoFormsAllowed Then 
+{$ENDIF}
+    Begin
         DumpAllDSSCommands(FileName);
+{$IFDEF DSS_CAPI}GlobalResult := FileName;{$ENDIF}
         FireOffEditor(FileName);
         Exit;
     End;
 
     {dump bus names hash list}
     if CompareText(Param, 'buslist')=0 then
-    If Not NoFormsAllowed Then Begin
+{$IFNDEF DSS_CAPI}
+    If Not NoFormsAllowed Then 
+{$ENDIF}
+    Begin
         FileName := GetOutputDirectory +  'Bus_Hash_List.Txt';
         ActiveCircuit[ActiveActor].BusList.DumpToFile(FileName);
+{$IFDEF DSS_CAPI}GlobalResult := FileName;{$ENDIF}
         FireOffEditor(FileName);
         Exit;
     End;
 
     {dump device names hash list}
     if CompareText(Param, 'devicelist')=0 then
-    If Not NoFormsAllowed Then Begin
+{$IFNDEF DSS_CAPI}
+    If Not NoFormsAllowed Then 
+{$ENDIF}
+    Begin
         FileName := GetOutputDirectory +  'Device_Hash_List.Txt';
         ActiveCircuit[ActiveActor].DeviceList.DumpToFile(FileName);
+{$IFDEF DSS_CAPI}GlobalResult := FileName;{$ENDIF}
         FireOffEditor(FileName);
         Exit;
     End;
@@ -898,6 +910,7 @@ Begin
     Begin
         FileName :=GetOutputDirectory + 'AllocationFactors.Txt';
         DumpAllocationFactors(FileName);
+{$IFDEF DSS_CAPI}GlobalResult := FileName;{$ENDIF}
         FireOffEditor(FileName);
         Exit;
     End;
@@ -1006,7 +1019,9 @@ Begin
          CloseFile(F);
   END;  {TRY}
 
-  FireOffEditor(GetOutputDirectory + CircuitName_[ActiveActor] + 'PropertyDump.Txt');
+  FileName := GetOutputDirectory + CircuitName_[ActiveActor] + 'PropertyDump.Txt';
+{$IFDEF DSS_CAPI}GlobalResult := FileName;{$ENDIF}
+  FireOffEditor(FileName);
 
 End;
 
@@ -3910,7 +3925,9 @@ Begin
 
       If Length(Param)=0 Then  // show all vars
       Begin
+{$IFNDEF DSS_CAPI}
           If NoFormsAllowed Then Exit;
+{$ENDIF}
           {
           MsgStrings := TStringList.Create;
           MsgStrings.Add('Variable, Value');
@@ -3922,9 +3939,11 @@ Begin
           for iVar := 1 to ParserVars.NumVariables do
             Str := Str + ParserVars.VarString[iVar]+CRLF;
 
+{$IFNDEF DSS_CAPI}
           DoSimpleMsg(Str, 999345);
-
-
+{$ELSE}
+          GlobalResult := Str;
+{$ENDIF}
       End Else if Length(ParamName)=0 then   // show value of this var
       Begin
            GlobalResult := Param;  // Parser substitutes @var with value
