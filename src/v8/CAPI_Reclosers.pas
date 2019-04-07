@@ -66,28 +66,12 @@ end;
 procedure Reclosers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    elem: TRecloserObj;
-    pList: TPointerList;
-    k: Integer;
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit[ActiveActor] = NIL then
         Exit;
-    with ActiveCircuit[ActiveActor] do
-        if Reclosers.ListSize > 0 then
-        begin
-            pList := Reclosers;
-            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pList.ListSize);
-            k := 0;
-            elem := pList.First;
-            while elem <> NIL do
-            begin
-                Result[k] := DSS_CopyStringAsPChar(elem.Name);
-                Inc(k);
-                elem := pList.next;
-            end;
-        end;
+    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit[ActiveActor].Reclosers, False);
 end;
 
 procedure Reclosers_Get_AllNames_GR(); CDECL;

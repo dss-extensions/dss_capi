@@ -155,27 +155,12 @@ end;
 procedure TSData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    TSDataElem: TTSDataObj;
-    k: Integer;
-
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit[ActiveActor] <> NIL then
-        with ActiveCircuit[ActiveActor] do
-            if TSDataClass[ActiveActor].ElementList.ListSize > 0 then
-            begin
-                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (TSDataClass[ActiveActor].ElementList.ListSize - 1) + 1);
-                k := 0;
-                TSDataElem := TSDataClass[ActiveActor].ElementList.First;
-                while TSDataElem <> NIL do
-                begin
-                    Result[k] := DSS_CopyStringAsPChar(TSDataElem.Name);
-                    Inc(k);
-                    TSDataElem := TSDataClass[ActiveActor].ElementList.Next;
-                end;
-            end;
-
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    Generic_Get_AllNames(ResultPtr, ResultCount, TSDataClass[ActiveActor].ElementList, False);
 end;
 
 procedure TSData_Get_AllNames_GR(); CDECL;

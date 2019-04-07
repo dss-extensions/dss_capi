@@ -162,27 +162,12 @@ end;
 procedure WireData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    WireDataElem: TWireDataObj;
-    k: Integer;
-
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit[ActiveActor] <> NIL then
-        with ActiveCircuit[ActiveActor] do
-            if WireDataClass[ActiveActor].ElementList.ListSize > 0 then
-            begin
-                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (WireDataClass[ActiveActor].ElementList.ListSize - 1) + 1);
-                k := 0;
-                WireDataElem := WireDataClass[ActiveActor].ElementList.First;
-                while WireDataElem <> NIL do
-                begin
-                    Result[k] := DSS_CopyStringAsPChar(WireDataElem.Name);
-                    Inc(k);
-                    WireDataElem := WireDataClass[ActiveActor].ElementList.Next;
-                end;
-            end;
-
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    Generic_Get_AllNames(ResultPtr, ResultCount, WireDataClass[ActiveActor].ElementList, False);
 end;
 
 procedure WireData_Get_AllNames_GR(); CDECL;

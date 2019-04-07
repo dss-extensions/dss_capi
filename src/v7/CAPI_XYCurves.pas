@@ -541,28 +541,12 @@ end;
 procedure XYCurves_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    XYCurveElem: TXYCurveObj;
-    k: Integer;
-
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit = NIL then
         Exit;
-    if XYCurveClass.ElementList.ListSize <= 0 then
-        Exit;
-    with ActiveCircuit do
-    begin
-        DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, XYCurveClass.ElementList.ListSize);
-        k := 0;
-        XYCurveElem := XYCurveClass.ElementList.First;
-        while XYCurveElem <> NIL do
-        begin
-            Result[k] := DSS_CopyStringAsPChar(XYCurveElem.Name);
-            Inc(k);
-            XYCurveElem := XYCurveClass.ElementList.Next;
-        end;
-    end;
+    Generic_Get_AllNames(ResultPtr, ResultCount, XYCurveClass.ElementList, False);
 end;
 
 procedure XYCurves_Get_AllNames_GR(); CDECL;

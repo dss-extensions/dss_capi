@@ -41,26 +41,12 @@ uses
 procedure PVSystems_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    PVSystemElem: TPVSystemObj;
-    k: Integer;
-
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit[ActiveActor] <> NIL then
-        with ActiveCircuit[ActiveActor] do
-            if PVSystems.ListSize > 0 then
-            begin
-                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (PVSystems.ListSize - 1) + 1);
-                k := 0;
-                PVSystemElem := PVSystems.First;
-                while PVSystemElem <> NIL do
-                begin
-                    Result[k] := DSS_CopyStringAsPChar(PVSystemElem.Name);
-                    Inc(k);
-                    PVSystemElem := PVSystems.Next;
-                end;
-            end;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit[ActiveActor].PVSystems, False);
 end;
 
 procedure PVSystems_Get_AllNames_GR(); CDECL;

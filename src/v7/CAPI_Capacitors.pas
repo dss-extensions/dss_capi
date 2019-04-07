@@ -66,27 +66,12 @@ end;
 procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    elem: TCapacitorObj;
-    lst: TPointerList;
-    k: Integer;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-            if ShuntCapacitors.ListSize > 0 then
-            begin
-                lst := ShuntCapacitors;
-                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (lst.ListSize - 1) + 1);
-                k := 0;
-                elem := lst.First;
-                while elem <> NIL do
-                begin
-                    Result[k] := DSS_CopyStringAsPChar(elem.Name);
-                    Inc(k);
-                    elem := lst.Next;
-                end;
-            end;
+    if ActiveCircuit = NIL then
+        Exit;
+    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.ShuntCapacitors, False);
 end;
 
 procedure Capacitors_Get_AllNames_GR(); CDECL;

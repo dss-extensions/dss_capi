@@ -536,23 +536,12 @@ end;
 procedure LineGeometries_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    LineGeometryElem: TLineGeometryObj;
-    k: Integer;
-
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then Exit;
-    if LineGeometryClass.ElementList.ListSize <= 0 then Exit;
-    DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, LineGeometryClass.ElementList.ListSize);
-    k := 0;
-    LineGeometryElem := LineGeometryClass.ElementList.First;
-    while LineGeometryElem <> NIL do
-    begin
-        Result[k] := DSS_CopyStringAsPChar(LineGeometryElem.Name);
-        Inc(k);
-        LineGeometryElem := LineGeometryClass.ElementList.Next;
-    end;
+    if ActiveCircuit = NIL then
+        Exit;
+    Generic_Get_AllNames(ResultPtr, ResultCount, LineGeometryClass.ElementList, False);
 end;
 
 procedure LineGeometries_Get_AllNames_GR(); CDECL;

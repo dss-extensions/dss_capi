@@ -103,27 +103,12 @@ end;
 procedure Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    LineElem: TLineObj;
-    k: Integer;
-
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit[ActiveActor] = NIL then
         Exit;
-    with ActiveCircuit[ActiveActor] do
-    begin
-        if Lines.ListSize <= 0 then Exit;
-        DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, Lines.ListSize);
-        k := 0;
-        LineElem := Lines.First;
-        while LineElem <> NIL do
-        begin
-            Result[k] := DSS_CopyStringAsPChar(LineElem.Name);
-            Inc(k);
-            LineElem := Lines.Next;
-        end;
-    end;
+    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit[ActiveActor].Lines, False);
 end;
 
 procedure Lines_Get_AllNames_GR(); CDECL;

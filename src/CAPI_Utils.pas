@@ -5,7 +5,8 @@ unit CAPI_Utils;
 interface
 
 uses
-    sysutils;
+    sysutils,
+    PointerList;
 
 type
     DoubleArray = array[0..0] of Double;
@@ -79,7 +80,11 @@ function DSS_RecreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PInteger; const in
 // this just gets a single string from the pointer of strings
 function DSS_Get_PAnsiChar(var p: Pointer; Index: Integer): PAnsiChar; CDECL;
 
+procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger; pList: TPointerList; Restore: Boolean); inline;
+
 implementation
+
+Uses DSSObject;
 
 var
     tempBuffer: Ansistring;
@@ -287,6 +292,29 @@ begin
     GR_CountPtr_PDouble[1] := 0;
     GR_CountPtr_PInteger[1] := 0;
     GR_CountPtr_PByte[1] := 0;
+end;
+//------------------------------------------------------------------------------
+procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger; pList: TPointerList; Restore: Boolean); inline;
+var
+    Result: PPAnsiCharArray;
+    idx_before, k: Integer;
+    elem: TDSSObject;
+begin
+    if pList.ListSize <= 0 then
+        Exit;
+    DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pList.ListSize);
+    if Restore then 
+        idx_before := pList.ActiveIndex;
+    k := 0;
+    elem := pList.First;
+    while elem <> NIL do
+    begin
+        Result[k] := DSS_CopyStringAsPChar(elem.Name);
+        Inc(k);
+        elem := pList.Next;
+    end;
+    if Restore then 
+        pList.Get(idx_before);
 end;
 //------------------------------------------------------------------------------
 initialization

@@ -295,28 +295,12 @@ end;
 procedure LineSpacings_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    LineSpacingElem: TLineSpacingObj;
-    k: Integer;
-
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit[ActiveActor] = NIL then
         Exit;
-    if LineSpacingClass[ActiveActor].ElementList.ListSize <= 0 then
-        Exit;
-    with ActiveCircuit[ActiveActor] do
-    begin
-        DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, LineSpacingClass[ActiveActor].ElementList.ListSize);
-        k := 0;
-        LineSpacingElem := LineSpacingClass[ActiveActor].ElementList.First;
-        while LineSpacingElem <> NIL do
-        begin
-            Result[k] := DSS_CopyStringAsPChar(LineSpacingElem.Name);
-            Inc(k);
-            LineSpacingElem := LineSpacingClass[ActiveActor].ElementList.Next;
-        end;
-    end;
+    Generic_Get_AllNames(ResultPtr, ResultCount, LineSpacingClass[ActiveActor].ElementList, False);
 end;
 
 procedure LineSpacings_Get_AllNames_GR(); CDECL;

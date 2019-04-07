@@ -35,7 +35,7 @@ begin
     if (ActiveCircuit[ActiveActor] <> NIL) and Assigned(ActiveDSSClass[ActiveActor]) then
         with ActiveCircuit[ActiveActor] do
         begin
-            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (ActiveDSSClass[ActiveActor].ElementCount - 1) + 1);
+            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, ActiveDSSClass[ActiveActor].ElementCount);
             k := 0;
             idx := ActiveDSSClass[ActiveActor].First;
             while idx > 0 do
@@ -46,7 +46,7 @@ begin
             end;
         end
     else
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
 
 end;
 

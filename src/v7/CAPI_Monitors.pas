@@ -101,26 +101,12 @@ end;
 procedure Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    MonitorElem: TMonitorObj;
-    k: Integer;
-
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-            if Monitors.ListSize > 0 then
-            begin
-                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (Monitors.ListSize - 1) + 1);
-                k := 0;
-                MonitorElem := Monitors.First;
-                while MonitorElem <> NIL do
-                begin
-                    Result[k] := DSS_CopyStringAsPChar(MonitorElem.Name);
-                    Inc(k);
-                    MonitorElem := Monitors.Next;
-                end;
-            end;
+    if ActiveCircuit = NIL then
+        Exit;
+    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Monitors, False);
 end;
 
 procedure Monitors_Get_AllNames_GR(); CDECL;

@@ -619,27 +619,12 @@ end;
 procedure LineCodes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    LineCodeElem: TLineCodeObj;
-    k: Integer;
-
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit[ActiveActor] <> NIL then
-        with ActiveCircuit[ActiveActor] do
-            if LineCodeClass[ActiveActor].ElementList.ListSize > 0 then
-            begin
-                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (LineCodeClass[ActiveActor].ElementList.ListSize - 1) + 1);
-                k := 0;
-                LineCodeElem := LineCodeClass[ActiveActor].ElementList.First;
-                while LineCodeElem <> NIL do
-                begin
-                    Result[k] := DSS_CopyStringAsPChar(LineCodeElem.Name);
-                    Inc(k);
-                    LineCodeElem := LineCodeClass[ActiveActor].ElementList.Next;
-                end;
-            end;
-
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    Generic_Get_AllNames(ResultPtr, ResultCount, LineCodeClass[ActiveActor].ElementList, False);
 end;
 
 procedure LineCodes_Get_AllNames_GR(); CDECL;

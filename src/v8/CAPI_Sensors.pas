@@ -79,25 +79,12 @@ end;
 procedure Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    elem: TSensorObj;
-    k: Integer;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit[ActiveActor] <> NIL then
-        with ActiveCircuit[ActiveActor] do
-            if Sensors.ListSize > 0 then
-            begin
-                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (Sensors.ListSize - 1) + 1);
-                k := 0;
-                elem := Sensors.First;
-                while elem <> NIL do
-                begin
-                    Result[k] := DSS_CopyStringAsPChar(elem.Name);
-                    Inc(k);
-                    elem := Sensors.Next;
-                end;
-            end;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit[ActiveActor].Sensors, False);
 end;
 
 procedure Sensors_Get_AllNames_GR(); CDECL;

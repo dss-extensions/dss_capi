@@ -168,29 +168,12 @@ end;
 procedure Reactors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    elem: TReactorObj;
-    lst: TPointerList;
-    k: Integer;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit = NIL then
-        exit;
-
-    with ActiveCircuit do
-        if Reactors.ListSize > 0 then
-        begin
-            lst := Reactors;
-            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (lst.ListSize - 1) + 1);
-            k := 0;
-            elem := lst.First;
-            while elem <> NIL do
-            begin
-                Result[k] := DSS_CopyStringAsPChar(elem.Name);
-                Inc(k);
-                elem := lst.Next;
-            end;
-        end;
+        Exit;
+    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Reactors, False);
 end;
 
 procedure Reactors_Get_AllNames_GR(); CDECL;

@@ -81,28 +81,12 @@ end;
 procedure CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    elem: TCapControlObj;
-    lst: TPointerList;
-    k: Integer;
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit[ActiveActor] = NIL then
         Exit;
-    with ActiveCircuit[ActiveActor] do
-        if CapControls.ListSize > 0 then
-        begin
-            lst := CapControls;
-            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, lst.ListSize);
-            k := 0;
-            elem := lst.First;
-            while elem <> NIL do
-            begin
-                Result[k] := DSS_CopyStringAsPChar(elem.Name);
-                Inc(k);
-                elem := lst.Next;
-            end;
-        end;
+    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit[ActiveActor].CapControls, False);
 end;
 
 procedure CapControls_Get_AllNames_GR(); CDECL;

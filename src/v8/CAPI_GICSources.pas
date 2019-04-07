@@ -48,30 +48,12 @@ uses
 procedure GICSources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    elem: TGICSourceObj;
-    pList: TPointerList;
-    k: Integer;
-
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit[ActiveActor] <> NIL then
-    begin
-        if GICsourceClass[ActiveActor].ElementList.ListSize > 0 then
-        begin
-            pList := GICsourceClass[ActiveActor].ElementList;
-            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize - 1) + 1);
-            k := 0;
-            elem := pList.First;
-            while elem <> NIL do
-            begin
-                Result[k] := DSS_CopyStringAsPChar(elem.Name);
-                Inc(k);
-                elem := pList.next;
-            end;
-        end;
-    end;
-
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    Generic_Get_AllNames(ResultPtr, ResultCount, GICsourceClass[ActiveActor].ElementList, True);
 end;
 
 procedure GICSources_Get_AllNames_GR(); CDECL;

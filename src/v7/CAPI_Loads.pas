@@ -217,26 +217,12 @@ end;
 procedure Loads_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    LoadElem: TLoadObj;
-    k: Integer;
-
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-            if Loads.ListSize > 0 then
-            begin
-                DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (Loads.ListSize - 1) + 1);
-                k := 0;
-                LoadElem := Loads.First;
-                while LoadElem <> NIL do
-                begin
-                    Result[k] := DSS_CopyStringAsPChar(LoadElem.Name);
-                    Inc(k);
-                    LoadElem := Loads.Next;
-                end;
-            end;
+    if ActiveCircuit = NIL then
+        Exit;
+    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Loads, False);
 end;
 
 procedure Loads_Get_AllNames_GR(); CDECL;

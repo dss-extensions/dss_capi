@@ -59,27 +59,12 @@ end;
 procedure Fuses_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    elem: TFuseObj;
-    pList: TPointerList;
-    k: Integer;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit = NIL then
         Exit;
-    if ActiveCircuit.Fuses.ListSize > 0 then
-    begin
-        pList := ActiveCircuit.Fuses;
-        DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (pList.ListSize - 1) + 1);
-        k := 0;
-        elem := pList.First;
-        while elem <> NIL do
-        begin
-            Result[k] := DSS_CopyStringAsPChar(elem.Name);
-            Inc(k);
-            elem := pList.next;
-        end;
-    end;
+    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Fuses, False);
 end;
 
 procedure Fuses_Get_AllNames_GR(); CDECL;
