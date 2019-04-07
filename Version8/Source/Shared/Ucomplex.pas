@@ -33,11 +33,11 @@ function ctopolardeg(const a: complex): polar;  // complex to polar, degrees
 function cadd(const a, b: complex): complex; inline;
 procedure caccum(var a: complex; const b: complex); inline; {a := a + b}
 function csub(const a, b: complex): complex; inline;
-function cmul(const a, b: complex): complex; inline;
+function cmul(a, b: complex): complex; inline;
 procedure caccumarray(a, b: pComplexArray; N: Smallint);
 function cmulreal(const a: complex; const b: Double): Complex; inline; { := a*b }
 procedure cmulrealaccum(var a: complex; const b: Double); inline; { a=a*b}
-function cdiv(const a, b: complex): complex; inline;
+function cdiv(a, b: complex): complex; inline;
 function cdivreal(const a: complex; const b: Double): Complex; inline; { := a /b}
 function conjg(const a: complex): complex; inline;
 function cnegate(const a: complex): complex; inline;
@@ -165,7 +165,7 @@ begin
     Result.IM := A.IM - B.IM
 end;
 
-function CMUL(const a, b: complex): complex; inline;
+function CMUL(a, b: complex): complex; inline;
 begin
     Result.RE := A.RE * B.RE - A.IM * B.IM;
     Result.IM := A.RE * B.IM + A.IM * B.RE
@@ -183,7 +183,7 @@ begin
     a.im := a.im * b;
 end;
 
-function CDIV(const a, b: complex): complex; inline;
+function CDIV(a, b: complex): complex; inline;
 var
     DNOM: Double;
 begin

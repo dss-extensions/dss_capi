@@ -504,11 +504,10 @@ begin
 
 end;
 
-function Cube(const X: Double): Double;
-
-begin
-    Result := X * X * X;
-end;
+// function Cube(const X: Double): Double;
+// begin
+//     Result := X * X * X;
+// end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TFaultObj.Randomize;

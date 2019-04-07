@@ -1447,38 +1447,9 @@ end;
 
 // - - - - - --------------------------------------------------
 function ReplaceCRLF(const S: String): String;
-
-var
-    nPos: Integer;
-
 begin
     {Replace CRLF with a \n character sequence}
-    Result := S;
-    nPos := Pos(CRLF, Result);
-    while nPos > 0 do
-    begin
-        Result[nPos] := '\';
-        Result[nPos + 1] := 'n';
-        nPos := Pos(CRLF, Result);
-    end;
-end;
-
-// - - - - - --------------------------------------------------
-function RestoreCRLF(const S: String): String;
-
-var
-    nPos: Integer;
-
-begin
-    {Replace CRLF with a \n character sequence}
-    Result := S;
-    nPos := Pos('\n', Result);
-    while nPos > 0 do
-    begin
-        Result[nPos] := chr(13);
-        Result[nPos + 1] := chr(10);
-        nPos := Pos('\n', Result);
-    end;
+    Result := StringReplace(S, CRLF, '\n', [rfReplaceAll]);
 end;
 
 // - - - - - --------------------------------------------------

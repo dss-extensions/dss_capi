@@ -36,18 +36,11 @@ implementation
 uses
 {$IFNDEF FPC}
   System.IOUtils,
-  System.StrUtils;
+  System.StrUtils,
 {$ELSE}  
-  StrUtils;
+  StrUtils,
 {$ENDIF}  
-
-function Max(const A, B: Integer): Integer;
-begin
-  if A > B then
-    Result := A
-  else
-    Result := B;
-end;
+  Math;
 
 { TFileSearchReplace }
 

@@ -60,7 +60,7 @@ function flatten2JSON(Model: String; Name: String; PlotType: String;
     Xlabel: String; X_axis: pDoubleArray2d; Ylabels: pStringArray1d;
     Y_axis: pDoubleArray2d; Phase: pIntegerArray1d; Z_axis: pDoubleArray2d;
     PD_Elements: pStringArray2d; Bus_names: pStringArray1d; PlotID: String): Ansistring;
-function StrippedOfNonAscii(const s: String): String;
+function StrippedOfNonAscii(s: String): String;
 function processExists(exeFileName: String): Boolean;
 
 var
@@ -335,7 +335,7 @@ begin
     end;
 end;
 
-function StrippedOfNonAscii(const s: String): String;
+function StrippedOfNonAscii(s: String): String;
 var
     i, Count: Integer;
 begin
