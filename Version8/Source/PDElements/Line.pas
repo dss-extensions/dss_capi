@@ -1459,13 +1459,14 @@ begin
         end;
 
            // Intercept FaultRate, PctPerm, and HourstoRepair
-        30:
+        (NumPropsThisClass + 3):
             Result := Format('%-g', [FaultRate]);
-        31:
-            Result := Format('%-g', [PctPerm]);
-        32:
-            Result := Format('%-g', [HrsToRepair]);
 
+        (NumPropsThisClass + 4):
+            Result := Format('%-g', [PctPerm]);
+
+        (NumPropsThisClass + 5):
+            Result := Format('%-g', [HrsToRepair]);
 
     else
         Result := inherited GetPropertyValue(index);
