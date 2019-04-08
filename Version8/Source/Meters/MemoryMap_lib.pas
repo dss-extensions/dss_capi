@@ -34,8 +34,10 @@ implementation
 uses
     {$IFDEF MSWINDOWS}
     windows,
+    {$IFNDEF FPC}
     Dialogs,
-     {$ENDIF}
+    {$ENDIF}
+    {$ENDIF}
     sysutils,
     math,
     DSSGlobals;
