@@ -1064,7 +1064,7 @@ initialization
    DSS_CAPI_INFO_SPARSE_COND := (GetEnvironmentVariable('DSS_CAPI_INFO_SPARSE_COND') = '1');
 
    // Default is True, disable at initialization only when DSS_CAPI_EARLY_ABORT = 0
-   DSS_CAPI_EARLY_ABORT := not (GetEnvironmentVariable('DSS_CAPI_EARLY_ABORT') <> '0');
+   DSS_CAPI_EARLY_ABORT := (GetEnvironmentVariable('DSS_CAPI_EARLY_ABORT') <> '0');
 
    // Default is True, enable at initialization when DSS_CAPI_ALLOW_EDITOR = 0
    DSS_CAPI_ALLOW_EDITOR := (GetEnvironmentVariable('DSS_CAPI_ALLOW_EDITOR') <> '0');
