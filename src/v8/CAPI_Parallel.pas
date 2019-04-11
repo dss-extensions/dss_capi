@@ -74,9 +74,12 @@ end;
 procedure Parallel_Set_ActorCPU(Value: Integer); CDECL;
 begin
     if Value < CPU_Cores then
-        ActorCPU[ActiveActor] := Value
-    else
-        DoSimpleMsg('The CPU does not exists', 7004);
+    begin
+        ActorCPU[ActiveActor] := value;
+        if ActorHandle[ActiveActor] <> nil then
+            ActorHandle[ActiveActor].CPU := ActorCPU[ActiveActor];
+    end
+    else DoSimpleMsg('The CPU does not exist', 7004);
 end;
 //------------------------------------------------------------------------------
 function Parallel_Get_NumOfActors(): Integer; CDECL;

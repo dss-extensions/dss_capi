@@ -64,6 +64,7 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      VSource,
      ISource,
      VCCS,
+     ExecOptions,
      Load,
      Transformer,
      RegControl,
@@ -1076,8 +1077,7 @@ Begin
         ActiveCircuit[ActiveActor].solution.MaxIterations         :=  ActiveCircuit[1].solution.MaxIterations;
         ActiveCircuit[ActiveACtor].solution.MaxControlIterations  :=  ActiveCircuit[1].solution.MaxControlIterations;
         // Solves the circuit
-        ActiveSolutionObj := ActiveCircuit[ActiveActor].Solution;
-        SolutionClass[ActiveActor].Edit(ActiveActor);
+        CmdResult := ExecOptions.DoSetCmd(1);
       End;
 
     End

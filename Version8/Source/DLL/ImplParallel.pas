@@ -85,10 +85,13 @@ end;
 
 procedure TParallel.Set_ActorCPU(Value: Integer);
 begin
-    if Value < CPU_Cores then
-        ActorCPU[ActiveActor] := Value
-    else
-        DoSimpleMsg('The CPU does not exists', 7004);
+    if value < CPU_Cores  then
+    Begin
+        ActorCPU[ActiveActor] := value;
+        if ActorHandle[ActiveActor] <> nil then
+            ActorHandle[ActiveActor].CPU := ActorCPU[ActiveActor];
+    End
+    else DoSimpleMsg('The CPU does not exist', 7004);
 end;
 
 function TParallel.Get_NumOfActors: Integer;
