@@ -427,8 +427,8 @@ Begin
      ActiveElement := 0;
 
      {Initialice demand interval options to off}
-     FSaveDemandInterval := FALSE;
-     FDI_Verbose         := FALSE;
+     FSaveDemandInterval              := FALSE;
+     FDI_Verbose                      := FALSE;
 
      OverLoadFileIsOpen               :=  FALSE;
      VoltageFileIsOpen                :=  FALSE;
