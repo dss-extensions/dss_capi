@@ -57,7 +57,8 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      YMatrix,
      fMonitor,     // by Dahei
      VSource,
-     Executive
+     Executive,
+     ExecOptions
 ;
 
 
@@ -985,8 +986,7 @@ Begin
         ActiveCircuit[ActiveActor].solution.MaxIterations         :=  ActiveCircuit[1].solution.MaxIterations;
         ActiveCircuit[ActiveACtor].solution.MaxControlIterations  :=  ActiveCircuit[1].solution.MaxControlIterations;
         // Solves the circuit
-        ActiveSolutionObj := ActiveCircuit[ActiveActor].Solution;
-        SolutionClass[ActiveActor].Edit(ActiveActor);
+        CmdResult   :=  ExecOptions.DoSetCmd(1);
       End;
 
     End
