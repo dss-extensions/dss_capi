@@ -46,7 +46,7 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
 
 
 CONST
-      CRLF = #13#10;
+      CRLF = sLineBreak; // cross-platform
 
       PI =  3.14159265359;
 
