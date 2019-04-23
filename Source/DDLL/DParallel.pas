@@ -43,7 +43,10 @@ begin
     Begin
       ActorCPU[ActiveActor] :=  arg;
       if ActorHandle[ActiveActor] <> nil then
+      Begin
         ActorHandle[ActiveActor].CPU :=  ActorCPU[ActiveActor];
+        ActorHandle[ActiveActor].Priority :=  {$IFDEF MSWINDOWS}tpTimeCritical{$ELSE}6{$ENDIF};
+      End;
     End
     else DoSimpleMsg('The CPU does not exists',7004);
   end;
