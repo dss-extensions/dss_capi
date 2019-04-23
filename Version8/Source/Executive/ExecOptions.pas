@@ -28,7 +28,7 @@ implementation
 
 Uses DSSClassDefs, DSSGlobals, ParserDel, Math,     Executive,  ExecHelper,
      LoadShape,    Utilities,  Sysutils, {$IFNDEF FPC}ScriptEdit,{$ENDIF}  Solution, Energymeter,
-     Diakoptics;
+     Diakoptics, Classes;
 
 
 PROCEDURE DefineOptions;
@@ -496,7 +496,10 @@ Begin
                   Begin
                     ActorCPU[ActiveActor]  :=  Parser[ActiveActor].IntValue;
                     if ActorHandle[ActiveActor] <> nil then
-                      ActorHandle[ActiveActor].CPU :=  ActorCPU[ActiveActor];
+                    Begin
+                      ActorHandle[ActiveActor].CPU      :=  ActorCPU[ActiveActor];
+                      ActorHandle[ActiveActor].Priority :=  {$IFDEF MSWINDOWS}tpTimeCritical{$ELSE}6{$ENDIF};
+                    End;
                   End
                   else
                   begin
@@ -726,7 +729,10 @@ Begin
                   Begin
                     ActorCPU[ActiveActor]  :=  Parser[ActiveActor].IntValue;
                     if ActorHandle[ActiveActor] <> nil then
+                    Begin
                       ActorHandle[ActiveActor].CPU :=  ActorCPU[ActiveActor];
+                      ActorHandle[ActiveActor].Priority :=  {$IFDEF MSWINDOWS}tpTimeCritical{$ELSE}6{$ENDIF};
+                    End;
                   End
                   else
                   begin

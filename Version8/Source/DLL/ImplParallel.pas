@@ -9,7 +9,7 @@ unit ImplParallel;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSEngine_TLB, StdVcl;
+  ComObj, ActiveX, OpenDSSEngine_TLB, StdVcl, Windows;
 type
   TParallel = class(TAutoObject, IParallel)
   protected
@@ -72,7 +72,10 @@ begin
     Begin
       ActorCPU[ActiveActor] :=  value;
       if ActorHandle[ActiveActor] <> nil then
-        ActorHandle[ActiveActor].CPU :=  ActorCPU[ActiveActor];
+      Begin
+        ActorHandle[ActiveActor].CPU       :=  ActorCPU[ActiveActor];
+        ActorHandle[ActiveActor].Priority  :=  {$IFDEF MSWINDOWS}tptimecritical{$ELSE}6{$ENDIF};
+      End;
     End
   else DoSimpleMsg('The CPU does not exists',7004);
 end;

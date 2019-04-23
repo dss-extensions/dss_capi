@@ -391,9 +391,9 @@ VAR
 implementation
 USES  ParserDel, DSSClassDefs, DSSGlobals, Bus,  MathUtil,  UCMatrix,
       Utilities, PCElement,  StackDef, Circuit, Line, LineUnits,
-      ReduceAlgs, Math, MemoryMap_Lib, Sysutils,
+      ReduceAlgs, Math, MemoryMap_Lib, Sysutils
       {$IFDEF MSWINDOWS}
-      Windows
+      ,Windows
       {$ENDIF};
 
 //{$UNDEF DEBUG}

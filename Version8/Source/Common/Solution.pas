@@ -2602,7 +2602,7 @@ begin
   {$IFDEF MSWINDOWS}              // Only for windows
 //  Parallel.Set_Process_Priority(GetCurrentProcess(), REALTIME_PRIORITY_CLASS);
   Parallel.Set_Thread_affinity(handle,local_CPU);
-//  Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
+//  Set_Priority(THREAD_PRIORITY_TIME_CRITICAL);
   {$ENDIF}
 end;
 {$ELSE}
