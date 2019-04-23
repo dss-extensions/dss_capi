@@ -1030,7 +1030,7 @@ var
  ScriptEd    : TScriptEdit;
 Begin
  ActorHandle[ActorID] :=  TSolver.Create(True,ActorCPU[ActorID],ActorID,ScriptEd.UpdateSummaryform,ActorMA_Msg[ActorID]);
- ActorHandle[ActorID].Priority :=  {$IFDEF MSWINDOWS}tpTimeCritical{$ELSE}6{$ENDIF};
+ ActorHandle[ActorID].Priority  :=  {$IFDEF MSWINDOWS}tptimecritical{$ELSE}6{$ENDIF};
  ActorHandle[ActorID].Resume;
  ActorStatus[ActorID] :=  1;
 End;

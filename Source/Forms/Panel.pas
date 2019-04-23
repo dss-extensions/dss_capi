@@ -12,7 +12,9 @@ uses
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
   StdCtrls, ComCtrls, Menus, ToolWin, ImgList,ScriptEdit, ExtCtrls
   {$IFNDEF Linux}
+  {$IFDEF MSWINDOWS}
   ,PsAPI
+  {$ENDIF}
   {$ENDIF}
   {$IFDEF VER330}    // Rio
   ,System.ImageList
