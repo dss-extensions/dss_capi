@@ -586,7 +586,7 @@ BEGIN
      ReduceByKron := FALSE;
      CalcMatricesFromZ1Z0;  // put some reasonable values in
 
-    ratings := Nil;  // init prior to Reallocmem call
+    {Initialize dynamic array for ratings}
     NRatings  :=  1;
     setlength(Ratings,Nratings);
     ratings[0]  :=  NormAmps;
