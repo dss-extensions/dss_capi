@@ -69,7 +69,7 @@ TYPE
         Function get_CMatrix: string;
 
       public
-        NRatings,
+        NumAmpRatings,
         FNPhases            :Integer;
 
         SymComponentsModel,
@@ -95,7 +95,7 @@ TYPE
         Rg,
         Xg,
         rho               : Double;
-        ratings           : Array of Double;
+        AmpRatings        : TRatingsArray;
 
         Units:Integer;  {See LineUnits}
 
@@ -428,13 +428,13 @@ BEGIN
            23: SetZ1Z0(5, Parser[ActorID].Dblvalue / (twopi * BaseFrequency) * 1.0e-6); {B1 -> C1}
            24: SetZ1Z0(6, Parser[ActorID].Dblvalue / (twopi * BaseFrequency) * 1.0e-6); {B0 -> C0}
            25: Begin
-                 Nratings         :=  Parser[ActorID].IntValue;
-                 setlength(Ratings,Nratings);
+                 NumAmpRatings         :=  Parser[ActorID].IntValue;
+                 setlength(AmpRatings,NumAmpRatings);
                End;
            26: Begin
-               setlength(Ratings,Nratings);
+               setlength(AmpRatings,NumAmpRatings);
                Param := Parser[ActiveActor].StrValue;
-               Nratings := InterpretDblArray(Param, Nratings, Pointer(Ratings));
+               NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
                End
          ELSE
            ClassEdit(ActiveLineCodeObj, Parampointer - NumPropsThisClass)
@@ -587,9 +587,9 @@ BEGIN
      CalcMatricesFromZ1Z0;  // put some reasonable values in
 
     {Initialize dynamic array for ratings}
-    NRatings  :=  1;
-    setlength(Ratings,Nratings);
-    ratings[0]  :=  NormAmps;
+    NumAmpRatings  :=  1;
+    setlength(AmpRatings,NumAmpRatings);
+    AmpRatings[0]  :=  NormAmps;
 
     InitPropertyValues(0);
 END;
@@ -714,10 +714,10 @@ Begin
          End;
 
          Writeln(F, Format('~ %s=%d',[PropertyName^[22], FNeutralConductor]));
-         Writeln(F, Format('~ %s=%d',[PropertyName^[25], Nratings]));
+         Writeln(F, Format('~ %s=%d',[PropertyName^[25], NumAmpRatings]));
          TempStr   :=  '[';
-         for  k:= 1 to Nratings do
-          TempStr :=  TempStr + floattoStrf(ratings[k-1],ffGeneral,8,4) + ',';
+         for  k:= 1 to NumAmpRatings do
+          TempStr :=  TempStr + floattoStrf(AmpRatings[k-1],ffGeneral,8,4) + ',';
          TempStr   :=  TempStr + ']';
          Writeln(F, Format('~ %s=%s',[PropertyName^[26]]) + TempStr);
 
@@ -750,11 +750,11 @@ begin
         22  : Result := IntToStr(FNeutralConductor);
         23  : If SymComponentsModel Then Result := Format('%.5g', [twopi * Basefrequency * C1 * 1.0e6]) else Result := '----';
         24  : If SymComponentsModel Then Result := Format('%.5g', [twopi * Basefrequency * C0 * 1.0e6]) else Result := '----';
-        25  : Result := inttostr(Nratings);
+        25  : Result := inttostr(NumAmpRatings);
         26  : Begin
                 Result   :=  '[';
-                for  j:= 1 to Nratings do
-                  Result :=  Result + floattoStrf(ratings[j-1],ffgeneral,8,4) + ',';
+                for  j:= 1 to NumAmpRatings do
+                  Result :=  Result + floattoStrf(AmpRatings[j-1],ffgeneral,8,4) + ',';
                 Result   :=  Result + ']';
               End;
      Else
