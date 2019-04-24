@@ -9,7 +9,7 @@ unit Arraydef;
 interface
 
 Type
-
+    TRatingsArray = Array of Double;
 { Define arrays with dummy dimension of 100 so we can hard code
   constants for accessing small order elements;  Otherwise, always
   allocate arrays of these types before using}

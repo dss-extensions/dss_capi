@@ -54,8 +54,8 @@ TYPE
     public
       NormAmps          : Double;
       EmergAmps         : Double;
-      Nratings          : Integer;
-      ratings           : Array of Double;
+      NumAmpRatings     : Integer;
+      AmpRatings        : TRatingsArray;
 
       constructor Create(ParClass:TDSSClass; const ConductorDataName:String);
       destructor Destroy; override;
@@ -157,13 +157,13 @@ BEGIN
         9:  EmergAmps        :=  Parser[ActiveActor].DblValue ;
        10:  Fradius          :=  Parser[ActiveActor].DblValue / 2.0;
        11:  Begin
-              Nratings         :=  Parser[ActiveActor].IntValue;
-              setlength(Ratings,Nratings);
+              NumAmpRatings         :=  Parser[ActiveActor].IntValue;
+              setlength(AmpRatings,NumAmpRatings);
             End;
        12:  Begin
-              setlength(Ratings,Nratings);
+              setlength(AmpRatings,NumAmpRatings);
               Param := Parser[ActiveActor].StrValue;
-              Nratings := InterpretDblArray(Param, Nratings, pointer(Ratings));
+              NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, pointer(AmpRatings));
             End
       ELSE
         Inherited ClassEdit(ActiveObj, ParamPointer - NumConductorClassProps)
@@ -228,9 +228,9 @@ BEGIN
   Normamps    := -1.0;
   EmergAmps   := -1.0;
   {Initialize dynamic array for ratings}
-  Nratings    :=  1;
-  setlength(Ratings,NRatings);
-  ratings[0]  :=  NormAmps;
+  NumAmpRatings    :=  1;
+  setlength(AmpRatings,NumAmpRatings);
+  AmpRatings[0]  :=  NormAmps;
 END;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -260,11 +260,11 @@ Begin
         8 : Writeln(F, Format('%.6g',[NormAmps]));
         9 : Writeln(F, Format('%.6g',[EmergAmps]));
        10 : Writeln(F, Format('%.6g',[radius*2.0]));
-       11 : Writeln(F, Format('%d',[Nratings]));       
+       11 : Writeln(F, Format('%d',[NumAmpRatings]));
        12 : Begin
               TempStr   :=  '[';
-              for  j:= 1 to Nratings do
-                TempStr :=  TempStr + floattoStrf(ratings[j-1],ffgeneral,8,4) + ',';
+              for  j:= 1 to NumAmpRatings do
+                TempStr :=  TempStr + floattoStrf(AmpRatings[j-1],ffgeneral,8,4) + ',';
               TempStr   :=  TempStr + ']';
               Writeln(F, TempStr);
             End;

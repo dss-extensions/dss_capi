@@ -19,6 +19,7 @@ USES CktElement, ucomplex, ucmatrix, DSSClass, MeterElement, Arraydef;
 
 TYPE
 
+
    TPDElement = class(TDSSCktElement)
      private
 
@@ -55,8 +56,8 @@ TYPE
        Overload_UE,
        OverLoad_EEN  :double;  // Indicate amount of branch overload
 
-        NRatings             : Integer;
-        Ratings              : Array of Double;
+        NumAmpRatings           : Integer;
+        AmpRatings              : TRatingsArray;
 
        constructor Create(ParClass:TDSSClass);
        destructor Destroy; override;
@@ -194,9 +195,9 @@ Begin
     MeterObj          := NIL;
     ParentPDElement   := NIL;
     DSSObjType        := PD_ELEMENT;
-    NRatings          :=  1;
-    setlength(Ratings,1);  // Initialized here
-    Ratings[0]        :=  1000;
+    NumAmpRatings          :=  1;
+    setlength(AmpRatings,1);  // Initialized here
+    AmpRatings[0]        :=  1000;
 
 
 End;
