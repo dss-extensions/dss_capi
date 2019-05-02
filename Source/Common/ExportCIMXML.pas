@@ -1977,7 +1977,7 @@ Begin
         DoubleNode (F, 'TapChanger.subsequentDelay', SubsequentDelay);
         BooleanNode (F, 'TapChanger.ltcFlag', True);
         BooleanNode (F, 'TapChanger.controlEnabled', pReg.Enabled);
-        DoubleNode (F, 'TapChanger.step', Transformer.PresentTap[TrWinding]);
+        DoubleNode (F, 'TapChanger.step', TapNum);
         GuidNode (F, 'PowerSystemResource.Location',
           GetDevGuid (XfLoc, Transformer.Name, 1));
         EndInstance (F, 'RatioTapChanger');
