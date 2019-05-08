@@ -425,7 +425,7 @@ end;
 
 procedure DoubleNode (var F: TextFile; Node: String; val: Double);
 begin
-  Writeln (F, Format ('  <cim:%s>%g</cim:%s>', [Node, val, Node]));
+  Writeln (F, Format ('  <cim:%s>%.8g</cim:%s>', [Node, val, Node]));
 end;
 
 procedure IntegerNode (var F: TextFile; Node: String; val: Integer);
@@ -1496,7 +1496,7 @@ Begin
     pPV := ActiveCircuit.PVSystems.First;
     while pPV <> nil do begin
       if pPV.Enabled then begin
-        pName1.LocalName := pPV.Name + '_PVPanels';
+        pName1.LocalName := pPV.Name; // + '_PVPanels';
         CreateGuid (geoGUID);
         pName1.GUID := geoGUID;
         StartInstance (F, 'PhotovoltaicUnit', pName1);
@@ -1527,7 +1527,7 @@ Begin
     pBat := ActiveCircuit.StorageElements.First;
     while pBat <> nil do begin
       if pBat.Enabled then begin
-        pName1.LocalName := pBat.Name + '_Cells';
+        pName1.LocalName := pBat.Name; // + '_Cells';
         CreateGuid (geoGUID);
         pName1.GUID := geoGUID;
         StartInstance (F, 'BatteryUnit', pName1);
