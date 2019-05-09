@@ -1,6 +1,6 @@
 {
  ----------------------------------------------------------
-  Copyright (c) 2017 Battelle Memorial Institute
+  Copyright (c) 2017-2019 Battelle Memorial Institute
  ----------------------------------------------------------
 }
 unit FNCS;
@@ -89,17 +89,52 @@ type
 
   public
     function IsReady:Boolean;
-    procedure RunFNCSLoop;
+    procedure RunFNCSLoop (const s:string);
     constructor Create();
     destructor Destroy; override;
+    function FncsTimeRequest (next_fncs:fncs_time):Boolean;
   end;
+
+var
+  ActiveFNCS:TFNCS;
 
 implementation
 
-//uses
-//  dynlibs;
+FUNCTION  InterpretStopTimeForFNCS(const s:string):fncs_time;
+Var
+  Code :Integer;
+  ch :char;
+  s2 :String;
+Begin
+  {Adapted from InterpretTimeStepSize}
+  val(s,Result, Code);
+  If Code = 0 then Exit; // Only a number was specified, so must be seconds
 
-procedure TFNCS.RunFNCSLoop;
+  {Error occurred so must have a units specifier}
+  ch := s[Length(s)];  // get last character
+  s2 := copy(s, 1, Length(s)-1);
+  Val(S2, Result, Code);
+  If Code>0 then Begin
+    writeln('Error in FNCS Stop Time: ' + s);
+    Exit;
+  End;
+  case ch of
+    'd': Result := Result * 86400;
+    'h': Result := Result * 3600;
+    'm': Result := Result * 60;
+    's':; // still seconds
+  Else
+    writeln('Error in FNCS Stop Time: "' + s +'" Units can only be d, h, m, or s (single char only)');
+  end;
+End;
+
+function TFNCS.FncsTimeRequest (next_fncs:fncs_time): Boolean;
+begin
+  writeln('  FNCS time is ' + format('%u', [next_fncs]));
+  Result := True;
+end;
+
+procedure TFNCS.RunFNCSLoop (const s:string);
 var
   time_granted, time_stop: fncs_time;
   events: ppchar;
@@ -108,11 +143,12 @@ var
   ilast: size_t;
 begin
   time_granted := 0;
-  time_stop := 6 * 3600;
+  time_stop := InterpretStopTimeForFNCS(s);
+  writeln(Format('Starting FNCS loop to run %s or %u seconds', [s, time_stop]));
   fncs_initialize;
 
   Try
-    while time_granted < time_stop do begin
+    while time_granted >= 0 do begin
       time_granted := fncs_time_request (time_stop);
       ilast := fncs_get_events_size();
       if ilast > 0 then begin
@@ -120,6 +156,7 @@ begin
         for i := 0 to ilast-1 do begin
           key := events[i];
           value := fncs_get_value(key);
+          writeln(Format('FNCS dispatch %s at %u', [value, time_granted]));
           DSSExecutive.Command := value;
           fncs_publish ('output', value);
         end;
