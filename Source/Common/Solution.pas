@@ -1659,7 +1659,7 @@ begin
     if Assigned (ActiveFNCS) then begin
       if ActiveFNCS.IsReady then begin
         next_fncs := fncs_time (intHour) * fncs_time (3600) + Trunc(t);
-        writeln('Loop time is ' + format('%d', [intHour]) + ':' + format('%d', [Trunc(t)]));
+//        writeln('Loop time is ' + format('%d', [intHour]) + ':' + format('%d', [Trunc(t)]));
         ActiveFNCS.FncsTimeRequest (next_fncs);
       end;
     end;
