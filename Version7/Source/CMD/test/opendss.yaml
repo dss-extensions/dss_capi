@@ -5,4 +5,5 @@ values:
     command:
         topic: player/command
         default: 0
+        list: true
 
