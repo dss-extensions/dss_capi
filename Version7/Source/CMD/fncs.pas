@@ -130,7 +130,7 @@ End;
 
 function TFNCS.FncsTimeRequest (next_fncs:fncs_time): Boolean;
 begin
-  writeln('  FNCS time is ' + format('%u', [next_fncs]));
+//  writeln('  FNCS time is ' + format('%u', [next_fncs]));
   Result := True;
 end;
 
@@ -141,6 +141,8 @@ var
   key, value: pchar;
   i: integer;
   ilast: size_t;
+  nvalues, ival: size_t;
+  values: ppchar;
 begin
   time_granted := 0;
   time_stop := InterpretStopTimeForFNCS(s);
@@ -155,10 +157,14 @@ begin
         events := fncs_get_events();
         for i := 0 to ilast-1 do begin
           key := events[i];
-          value := fncs_get_value(key);
-          writeln(Format('FNCS dispatch %s at %u', [value, time_granted]));
-          DSSExecutive.Command := value;
-          fncs_publish ('output', value);
+          nvalues := fncs_get_values_size (key);
+          values := fncs_get_values (key);
+          for ival := 0 to nvalues-1 do begin
+            value := values[ival]; // fncs_get_value(key);
+            writeln(Format('FNCS command %s at %u', [value, time_granted]));
+            DSSExecutive.Command := value;
+            fncs_publish ('output', value);
+          end;
         end;
       end;
     end;
