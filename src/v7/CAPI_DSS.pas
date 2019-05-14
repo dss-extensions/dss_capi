@@ -5,6 +5,9 @@ unit CAPI_DSS;
 interface
 
 uses
+{$IFDEF WINDOWS}
+    Windows,
+{$ENDIF}
     CAPI_Utils;
 
 procedure DSS_NewCircuit(const Value: PAnsiChar); CDECL;
@@ -53,7 +56,15 @@ end;
 //------------------------------------------------------------------------------
 procedure DSS_Set_AllowForms(Value: Wordbool); CDECL;
 begin
-     {If Not Value Then} NoFormsAllowed := not Value;
+{$IFDEF WINDOWS}
+    if (Value) and (GetConsoleWindow() = 0) then
+    begin
+        DoSimplemsg('Cannot activate output with no console available!', 5096);
+        Exit;
+    end;
+{$ENDIF}
+
+    NoFormsAllowed := not Value;
     if NoFormsAllowed then
         CloseDownForms;  // DSSForms
 
