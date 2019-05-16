@@ -182,6 +182,7 @@ function LineSpacings_Get_Units(): Integer; CDECL;
 var
     pLineSpacing: TLineSpacingObj;
 begin
+    Result := 0;
     if ActiveCircuit <> NIL then
     begin
         pLineSpacing := LineSpacingClass.GetActiveObj;

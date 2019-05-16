@@ -96,6 +96,7 @@ end;
 //------------------------------------------------------------------------------
 function Sensors_Get_Count(): Integer; CDECL;
 begin
+    Result := 0;
     if Assigned(ActiveCircuit[ActiveActor]) then
         Result := ActiveCircuit[ActiveActor].Sensors.ListSize;
 end;

@@ -412,10 +412,10 @@ begin
             begin
                 with ActiveCktElement as TPDElement do
                     Result := EmergAmps;
+                Exit;
             end
-            else
-                Result := 0.0;
         end;
+    Result := 0.0;
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
@@ -470,10 +470,11 @@ begin
             begin
                 with ActiveCktElement as TPDElement do
                     Result := NormAmps;
+
+                Exit;
             end
-            else
-                Result := 0.0;
         end;
+    Result := 0.0;
 end;
 
 { - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}

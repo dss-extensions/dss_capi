@@ -120,12 +120,14 @@ end;
 //------------------------------------------------------------------------------
 function Circuit_Get_NumCktElements(): Integer; CDECL;
 begin
+    Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
         Result := ActiveCircuit[ActiveActor].NumDevices;
 end;
 //------------------------------------------------------------------------------
 function Circuit_Get_NumNodes(): Integer; CDECL;
 begin
+    Result := 0;
     if ActiveCircuit[ActiveActor] <> NIL then
         Result := ActiveCircuit[ActiveActor].NumNodes;
 end;
@@ -1032,10 +1034,8 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Circuit_FirstElement(): Integer; CDECL;
-{ Sets first  element in active class to be active}
-
+{ Sets first element in active class to be active}
 begin
-
     Result := 0;
     if (ActiveCircuit[ActiveActor] <> NIL) and Assigned(ActiveDSSClass[ActiveActor]) then
     begin
@@ -1043,14 +1043,11 @@ begin
     end
     else
         Result := 0;
-
 end;
 //------------------------------------------------------------------------------
 function Circuit_NextElement(): Integer; CDECL;
-{ Sets next  element in active class to be active}
-
+{ Sets next element in active class to be active}
 begin
-
     Result := 0;
     if (ActiveCircuit[ActiveActor] <> NIL) and Assigned(ActiveDSSClass[ActiveActor]) then
     begin
@@ -1058,7 +1055,6 @@ begin
     end
     else
         Result := 0;
-
 end;
 //------------------------------------------------------------------------------
 procedure Circuit_UpdateStorage(); CDECL;
@@ -1071,8 +1067,10 @@ function Circuit_Get_ParentPDElement(): Integer; CDECL;
 var
     ActivePDElement: TPDElement;
 begin
-
     Result := 0;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+
     with ActiveCircuit[ActiveActor] do
         if ActiveCktElement is TPDElement then
         begin

@@ -362,8 +362,10 @@ begin
     if ActiveCircuit <> NIL then
         with ActiveCircuit do
         begin
-            Result := (DefaultGrowthRate - 1.0) * 100.0
+            Result := (DefaultGrowthRate - 1.0) * 100.0;
+            Exit;
         end;
+    Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_pctGrowth(Value: Double); CDECL;
@@ -526,7 +528,6 @@ begin
         if TestLoadShapeObj <> NIL then
             ActiveCircuit.DefaultYearlyShapeObj := TestLoadShapeObj;
     end;
-
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -541,11 +542,9 @@ begin
         begin
             Result[i] := DSS_CopyStringAsPChar(EventStrings.Strings[i]);
         end;
-    end
-    else
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
-    ;
-
+        Exit;
+    end;
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
 end;
 
 procedure Solution_Get_EventLog_GR(); CDECL;
@@ -557,6 +556,7 @@ end;
 //------------------------------------------------------------------------------
 function Solution_Get_dblHour(): Double; CDECL;
 begin
+    Result := 0;
     if ActiveCircuit <> NIL then
     begin
         Result := ActiveCircuit.Solution.DynaVars.dblHour;
@@ -584,16 +584,15 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_StepsizeMin(Value: Double); CDECL;
 begin
-
     if ActiveCircuit <> NIL then
     begin
         ActiveCircuit.Solution.Dynavars.h := Value * 60.0;
     end;
-
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_ControlIterations(): Integer; CDECL;
 begin
+    Result := 0;
     if ActiveCircuit <> NIL then
     begin
         Result := ActiveCircuit.Solution.ControlIteration;
@@ -602,6 +601,7 @@ end;
 //------------------------------------------------------------------------------
 function Solution_Get_MaxControlIterations(): Integer; CDECL;
 begin
+    Result := 0;
     if ActiveCircuit <> NIL then
     begin
         Result := ActiveCircuit.Solution.MaxControlIterations;
@@ -681,17 +681,13 @@ end;
 procedure Solution_SolveSnap(); CDECL;
 begin
     if ActiveCircuit <> NIL then
-    begin
         ActiveCircuit.Solution.SolveSnap;
-    end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_CheckControls(); CDECL;
 begin
     if ActiveCircuit <> NIL then
-    begin
         ActiveCircuit.Solution.CheckControls;
-    end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_InitSnap(); CDECL;
@@ -705,6 +701,7 @@ end;
 //------------------------------------------------------------------------------
 function Solution_Get_SystemYChanged(): Wordbool; CDECL;
 begin
+    Result := False;
     if ActiveCircuit <> NIL then
     begin
         Result := ActiveCircuit.Solution.SystemYChanged;
@@ -734,25 +731,20 @@ end;
 procedure Solution_DoControlActions(); CDECL;
 begin
     if ActiveCircuit <> NIL then
-    begin
         ActiveCircuit.Solution.DoControlActions;
-    end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_SampleControlDevices(); CDECL;
 begin
     if ActiveCircuit <> NIL then
-    begin
         ActiveCircuit.Solution.SampleControlDevices;
-    end;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Converged(): Wordbool; CDECL;
 begin
+    Result := False;
     if ActiveCircuit <> NIL then
-    begin
         Result := ActiveCircuit.Issolved;
-    end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Converged(Value: Wordbool); CDECL;
@@ -786,6 +778,7 @@ end;
 //------------------------------------------------------------------------------
 function Solution_Get_ControlActionsDone(): Wordbool; CDECL;
 begin
+    Result := False;
     if ActiveCircuit <> NIL then
         Result := ActiveCircuit.Solution.ControlActionsDone;
 end;
@@ -819,12 +812,14 @@ end;
 //------------------------------------------------------------------------------
 function Solution_Get_Process_Time(): Double; CDECL;
 begin
+    Result := 0;
     if ActiveCircuit <> NIL then
         Result := ActiveCircuit.Solution.Time_Solve;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Total_Time(): Double; CDECL;
 begin
+    Result := 0;
     if ActiveCircuit <> NIL then
         Result := ActiveCircuit.Solution.Total_Time;
 end;
@@ -837,12 +832,14 @@ end;
 //------------------------------------------------------------------------------
 function Solution_Get_Time_of_Step(): Double; CDECL;
 begin
+    Result := 0;
     if ActiveCircuit <> NIL then
         Result := ActiveCircuit.Solution.Time_Step;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_IntervalHrs(): Double; CDECL;
 begin
+    Result := 0;
     if ActiveCircuit <> NIL then
         Result := ActiveCircuit.Solution.IntervalHrs;
 end;
@@ -907,10 +904,11 @@ begin
                 end;
                 inc(Counter)
             end;
+            Exit;
         end;
-    end
-    else
-        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+    end;
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+    Result[0] := 0;
 end;
 
 procedure Solution_Get_Laplacian_GR(); CDECL;
@@ -946,10 +944,11 @@ begin
                 end;
                 inc(Counter)
             end;
+            Exit;
         end;
-    end
-    else
-        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+    end;
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+    Result[0] := 0;
 end;
 
 procedure Solution_Get_IncMatrix_GR(); CDECL;
@@ -969,7 +968,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        with ACtiveCircuit.Solution do
+        with ActiveCircuit.Solution do
         begin
             ArrSize := length(Inc_Mat_Levels) - 1;    // Removes the 3 initial zeros and the extra index
                                                   // Since it starts on 0
@@ -978,10 +977,11 @@ begin
             begin
                 Result[IMIdx] := Inc_Mat_levels[IMIdx];
             end;
+            Exit;
         end;
-    end
-    else
-        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
+    end;
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+    Result[0] := 0;
 end;
 
 procedure Solution_Get_BusLevels_GR(); CDECL;
@@ -1001,7 +1001,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        with ACtiveCircuit.Solution do
+        with ActiveCircuit.Solution do
         begin
             ArrSize := length(Inc_Mat_Rows) - 1;
             Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (ArrSize) + 1);
@@ -1009,10 +1009,10 @@ begin
             begin
                 Result[IMIdx] := DSS_CopyStringAsPChar(Inc_Mat_Rows[IMIdx]);
             end;
+            Exit;
         end;
-    end
-    else
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    end;
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
 end;
 
 procedure Solution_Get_IncMatrixRows_GR(); CDECL;
@@ -1051,10 +1051,10 @@ begin
                     Result[i] := DSS_CopyStringAsPChar(BusList.Get(i + 1));
                 end;
             end;
+            Exit;
         end;
-    end
-    else
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+    end;
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
 end;
 
 procedure Solution_Get_IncMatrixCols_GR(); CDECL;

@@ -524,6 +524,7 @@ end;
 //------------------------------------------------------------------------------
 function RegControls_Get_Count(): Integer; CDECL;
 begin
+    Result := 0;
     if Assigned(Activecircuit) then
         Result := ActiveCircuit.RegControls.ListSize;
 end;

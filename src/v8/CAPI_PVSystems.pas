@@ -170,6 +170,7 @@ end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Count(): Integer; CDECL;
 begin
+    Result := 0;
     if Assigned(ActiveCircuit[ActiveActor]) then
         Result := ActiveCircuit[ActiveActor].PVSystems.ListSize;
 end;

@@ -228,6 +228,7 @@ end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_Count(): Integer; CDECL;
 begin
+    Result := 0;
     if Assigned(ActiveCircuit) then
         Result := ActiveCircuit.ShuntCapacitors.ListSize;
 end;

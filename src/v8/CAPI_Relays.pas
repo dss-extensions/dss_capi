@@ -97,6 +97,7 @@ var
     elem: TRelayObj;
 begin
     Result := '';
+    if ActiveCircuit[ActiveActor] = NIL then Exit;
     elem := ActiveCircuit[ActiveActor].Relays.Active;
     if elem <> NIL then
         Result := elem.Name;

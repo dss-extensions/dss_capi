@@ -309,13 +309,11 @@ begin
             p := ResultPtr;
             pmon.MonitorStream.Read(p^, pmon.MonitorStream.Size);   // Move it all over
           // leaves stream at the end
+            Exit;
         end
-        else
-        begin
-            Result := DSS_RecreateArray_PByte(ResultPtr, ResultCount, 1);
-            Result[0] := 0;
-        end;
     end;
+    Result := DSS_RecreateArray_PByte(ResultPtr, ResultCount, 1);
+    Result[0] := 0;
 end;
 
 procedure Monitors_Get_ByteStream_GR(); CDECL;
@@ -558,8 +556,9 @@ begin
     begin
         ReadMonitorHeader(Header, TRUE);
         Result := Header.Version;
+        Exit;
     end;
-
+    Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Get_Header(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -670,6 +669,7 @@ function Monitors_Get_Terminal(): Integer; CDECL;
 var
     pMon: TMonitorObj;
 begin
+    Result := 0;
     if ActiveCircuit = NIL then
         Exit;
     pMon := ActiveCircuit.Monitors.Active;

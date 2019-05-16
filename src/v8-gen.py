@@ -1,7 +1,7 @@
 '''
 Generate most of the DSS C-API v8 files from v7.
 This script only needs to be run when there are changes in the C-API v7 files. 
-Note that the output needs to be validated before commiting it.
+Note that the output needs to be validated before committing it.
 '''
 from glob import glob
 import re

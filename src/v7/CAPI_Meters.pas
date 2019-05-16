@@ -189,17 +189,21 @@ var
     k: Integer;
 
 begin
-    pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-    if Assigned(pMeterObj) then
+    if ActiveCircuit <> NIL then 
     begin
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumEMRegisters - 1) + 1);
-        for k := 0 to NumEMRegisters - 1 do
+        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        if Assigned(pMeterObj) then
         begin
-            Result[k] := DSS_CopyStringAsPChar(pMeterObj.RegisterNames[k + 1]);
+            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumEMRegisters);
+            for k := 0 to NumEMRegisters - 1 do
+            begin
+                Result[k] := DSS_CopyStringAsPChar(pMeterObj.RegisterNames[k + 1]);
+            end;
+            Exit;
         end;
-    end
-    else
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1); // null array
+    end;
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1); // null array
+    Result[0] := nil;
 end;
 
 procedure Meters_Get_RegisterNames_GR(); CDECL;
@@ -607,6 +611,7 @@ end;
 //------------------------------------------------------------------------------
 function Meters_Get_DIFilesAreOpen(): Wordbool; CDECL;
 begin
+    Result := False;
     if ActiveCircuit <> NIL then
     begin
         Result := DIFilesAreOpen;    // Global variable
@@ -699,6 +704,7 @@ end;
 //------------------------------------------------------------------------------
 function Meters_Get_Count(): Integer; CDECL;
 begin
+    Result := 0;
     if Assigned(ActiveCircuit) then
         Result := ActiveCircuit.EnergyMeters.ListSize;
 end;

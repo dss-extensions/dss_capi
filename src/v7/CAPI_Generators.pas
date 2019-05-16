@@ -401,6 +401,7 @@ end;
 //------------------------------------------------------------------------------
 function Generators_Get_Count(): Integer; CDECL;
 begin
+    Result := 0;
     if Assigned(Activecircuit) then
         Result := ActiveCircuit.Generators.ListSize;
 end;

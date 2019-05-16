@@ -66,17 +66,13 @@ var
 procedure CtrlQueue_ClearQueue(); CDECL;
 begin
     if ActiveCircuit <> NIL then
-    begin
         ActiveCircuit.ControlQueue.Clear;
-    end;
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_Delete(ActionHandle: Integer); CDECL;
 begin
     if ActiveCircuit <> NIL then
-    begin
         ActiveCircuit.ControlQueue.Delete(ActionHandle);
-    end;
 end;
 //------------------------------------------------------------------------------
 function CtrlQueue_Get_ActionCode(): Integer; CDECL;
@@ -96,6 +92,7 @@ end;
 function CtrlQueue_Get_NumActions(): Integer; CDECL;
 begin
     Result := 0;
+    if ActiveCircuit = NIL then Exit;
     Result := COMControlProxyObj.ActionList.Count;
 end;
 //------------------------------------------------------------------------------
@@ -117,38 +114,37 @@ end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_ClearActions(); CDECL;
 begin
+    if ActiveCircuit = NIL then Exit;
     COMControlProxyObj.ClearActionList;
 end;
 //------------------------------------------------------------------------------
 function CtrlQueue_Get_PopAction(): Integer; CDECL;
 begin
+    Result := 0;
+    if ActiveCircuit = NIL then Exit;
     Result := COMControlProxyObj.ActionList.Count;
     COMControlProxyObj.PopAction;
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_Set_Action(Param1: Integer); CDECL;
 begin
+    if ActiveCircuit = NIL then Exit;
     with COMControlProxyObj do
         if Param1 < ActionList.Count then
-        begin
             ActiveAction := ActionList.Items[Param1 - 1];
-        end;
 end;
 //------------------------------------------------------------------------------
 function CtrlQueue_Get_QueueSize(): Integer; CDECL;
 begin
+    Result := 0;
     if ActiveCircuit <> NIL then
-    begin
         Result := ActiveCircuit.ControlQueue.QueueSize;
-    end;
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_DoAllQueue(); CDECL;
 begin
     if ActiveCircuit <> NIL then
-    begin
         ActiveCircuit.ControlQueue.DoAllActions;
-    end;
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -159,20 +155,22 @@ var
     Qsize: Integer;
 
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
-    QSize := CtrlQueue_Get_queuesize;
-    if QSize > 0 then
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+    if ActiveCircuit <> NIL then
     begin
-        DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (QSize) + 1);
-        Result[0] := DSS_CopyStringAsPChar('Handle, Hour, Sec, ActionCode, ProxyDevRef, Device');
-        for i := 0 to QSize - 1 do
+        QSize := CtrlQueue_Get_queuesize;
+        if QSize > 0 then
         begin
-            Result[i + 1] := DSS_CopyStringAsPChar(ActiveCircuit.ControlQueue.QueueItem(i));
+            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (QSize) + 1);
+            Result[0] := DSS_CopyStringAsPChar('Handle, Hour, Sec, ActionCode, ProxyDevRef, Device');
+            for i := 0 to QSize - 1 do
+            begin
+                Result[i + 1] := DSS_CopyStringAsPChar(ActiveCircuit.ControlQueue.QueueItem(i));
+            end;
+            Exit;
         end;
-    end
-    else
-        Result[0] := DSS_CopyStringAsPChar('No events');
-
+    end;
+    Result[0] := DSS_CopyStringAsPChar('No events');
 end;
 
 procedure CtrlQueue_Get_Queue_GR(); CDECL;

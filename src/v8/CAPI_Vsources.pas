@@ -111,6 +111,7 @@ var
     elem: TDSSCktElement;
 begin
     Result := '';
+    if ActiveCircuit[ActiveActor] = NIL then Exit;
     elem := ActiveCircuit[ActiveActor].ActiveCktElement;
     if elem <> NIL then
         Result := elem.Name;

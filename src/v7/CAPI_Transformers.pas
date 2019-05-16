@@ -627,6 +627,7 @@ begin
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Result[0] := 0;
+        Exit;
     end;
     
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, 2 * 3);
@@ -659,6 +660,7 @@ begin
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Result[0] := 0;
+        Exit;
     end;
     
     lst := ActiveCircuit.Transformers;

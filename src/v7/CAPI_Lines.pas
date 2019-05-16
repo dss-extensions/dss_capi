@@ -806,6 +806,7 @@ end;
 //------------------------------------------------------------------------------
 function Lines_Get_Count(): Integer; CDECL;
 begin
+    Result := 0;
     if Assigned(Activecircuit) then
         Result := ActiveCircuit.Lines.ListSize;
 end;
@@ -895,6 +896,9 @@ var
     RSignal: TXYCurveObj;
 begin
     Result := 0;
+    if ActiveCircuit = NIL then
+        Exit;
+
     if not IsLine(ActiveCircuit.ActiveCktElement) then 
         Exit;
         

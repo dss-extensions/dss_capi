@@ -264,6 +264,7 @@ end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Count(): Integer; CDECL;
 begin
+    Result := 0;
     if Assigned(ActiveCircuit) then
         Result := ActiveCircuit.Reactors.ListSize;
 end;
