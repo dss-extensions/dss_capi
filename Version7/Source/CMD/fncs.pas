@@ -9,7 +9,8 @@ unit FNCS;
 
 {$MACRO ON}
 {$IFDEF Windows}
-{$DEFINE FNCS_CALL:=stdcall}
+//{$DEFINE FNCS_CALL:=stdcall}
+{$DEFINE FNCS_CALL:=cdecl}
 {$ELSE} // Darwin and Unix
 {$DEFINE FNCS_CALL:=cdecl}
 {$ENDIF}
@@ -150,7 +151,7 @@ begin
   fncs_initialize;
 
   Try
-    while time_granted >= 0 do begin
+    while time_granted < time_stop do begin
       time_granted := fncs_time_request (time_stop);
       ilast := fncs_get_events_size();
       if ilast > 0 then begin
@@ -190,12 +191,12 @@ end;
 
 constructor TFNCS.Create;
 begin
-  FLibHandle := LoadLibrary ('libfncs.' + SharedSuffix); // prefix for Darwin/Unix
-//  writeln(FLibHandle);
+  FLibHandle := SafeLoadLibrary ('libfncs.' + SharedSuffix);
+  writeln(FLibHandle);
   if FLibHandle <> DynLibs.NilHandle then begin
     FuncError := False;
     @fncs_initialize := find_fncs_function ('fncs_initialize');
-//    writeln (HexStr(PtrUInt(@fncs_initialize),8));
+    writeln (HexStr(PtrUInt(@fncs_initialize),8));
     if not FuncError then @fncs_initialize_config := find_fncs_function ('fncs_initialize_config');
     if not FuncError then @fncs_agentRegister := find_fncs_function ('fncs_agentRegister');
     if not FuncError then @fncs_agentRegisterConfig := find_fncs_function ('fncs_agentRegisterConfig');

@@ -1,6 +1,6 @@
 #time	topic		value
 0	command	redirect IEEE13Base.dss
-1 command new loadshape.pvshape npts=1441 sinterval=60 mult=(file=pvshape.dat) action=normalize
+1 command new loadshape.pvshape npts=86401 sinterval=1 mult=(file=pvshape.dat) action=normalize
 2 command new pvsystem.pv1 bus1=634 phases=3 kV=0.48 irradiance=1 pmpp=285 kVA=300 daily=pvshape
 3 command new monitor.pv1v  element=pvsystem.pv1 terminal=1 mode=96
 4 command new monitor.pv1pq element=pvsystem.pv1 terminal=1 mode=65 PPolar=NO
