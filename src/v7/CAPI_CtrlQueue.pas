@@ -112,7 +112,7 @@ end;
 procedure CtrlQueue_Show(); CDECL;
 begin
     if ActiveCircuit <> NIL then
-        ActiveCircuit.ControlQueue.ShowQueue(DSSDirectory + 'COMProxy_ControlQueue.CSV');
+        ActiveCircuit.ControlQueue.ShowQueue(GetOutputDirectory + 'COMProxy_ControlQueue.CSV');
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_ClearActions(); CDECL;

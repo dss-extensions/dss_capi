@@ -828,7 +828,7 @@ begin
             81:
                 ActiveCircuit.Solution.DoControlActions;
             82:
-                ActiveCircuit.ControlQueue.ShowQueue(DSSDirectory + CircuitName_ + 'ControlQueue.csv');
+                ActiveCircuit.ControlQueue.ShowQueue(GetOutputDirectory + CircuitName_ + 'ControlQueue.csv');
             83:
                 ActiveCircuit.Solution.SolveDirect;
             84:

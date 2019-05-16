@@ -893,7 +893,7 @@ begin
             81:
                 ActiveCircuit[ActiveActor].Solution.DoControlActions(ActiveActor);
             82:
-                ActiveCircuit[ActiveActor].ControlQueue.ShowQueue(DSSDirectory + CircuitName_[ActiveActor] + 'ControlQueue.csv');
+                ActiveCircuit[ActiveActor].ControlQueue.ShowQueue(GetOutputDirectory + CircuitName_[ActiveActor] + 'ControlQueue.csv');
             83:
             begin
                 IsSolveAll := FALSE;
