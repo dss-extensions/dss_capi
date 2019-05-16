@@ -62,6 +62,14 @@ extern "C" {
         int32_t** CountPtr_PByte
     );
 
+    /* Functions to get the current GR pointers individually, used in MATLAB */
+    DSS_CAPI_V8_DLL double* DSS_GR_DataPtr_PDouble(void);
+    DSS_CAPI_V8_DLL int32_t* DSS_GR_DataPtr_PInteger(void);
+    DSS_CAPI_V8_DLL int8_t* DSS_GR_DataPtr_PByte(void);
+    DSS_CAPI_V8_DLL int32_t* DSS_GR_CountPtr_PDouble(void);
+    DSS_CAPI_V8_DLL int32_t* DSS_GR_CountPtr_PInteger(void);
+    DSS_CAPI_V8_DLL int32_t* DSS_GR_CountPtr_PByte(void);
+
 
     DSS_CAPI_V8_DLL void DSS_NewCircuit(char* Value);
 

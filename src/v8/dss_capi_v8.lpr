@@ -266,6 +266,12 @@ exports
     DSS_Dispose_PPAnsiChar,
     DSS_DisposeGRData,
     DSS_GetGRPointers,
+    DSS_GR_DataPtr_PDouble,
+    DSS_GR_DataPtr_PInteger,
+    DSS_GR_DataPtr_PByte,
+    DSS_GR_CountPtr_PDouble,
+    DSS_GR_CountPtr_PInteger,
+    DSS_GR_CountPtr_PByte,
     DSS_Get_PAnsiChar,
     
 

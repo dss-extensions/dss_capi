@@ -49,6 +49,16 @@ procedure DSS_GetGRPointers(
     var CountPtr_PInteger: PInteger;
     var CountPtr_PByte: PInteger); CDECL;
 
+
+// Separate simple functions for MATLAB, which return the current pointer
+// directly, instead of a pointer to pointer.
+function DSS_GR_DataPtr_PDouble(): PDouble; CDECL;
+function DSS_GR_DataPtr_PInteger(): PInteger; CDECL;
+function DSS_GR_DataPtr_PByte(): PByte; CDECL;
+function DSS_GR_CountPtr_PDouble(): PInteger; CDECL;
+function DSS_GR_CountPtr_PInteger(): PInteger; CDECL;
+function DSS_GR_CountPtr_PByte(): PInteger; CDECL;
+
 procedure DSS_DisposeGRData(); CDECL;
 
 function DSS_GetAsPAnsiChar(s: Ansistring): PAnsiChar; inline;
@@ -266,14 +276,42 @@ procedure DSS_GetGRPointers(
     var CountPtr_PInteger: PInteger;
     var CountPtr_PByte: PInteger); CDECL;
 begin
-    DataPtr_PPAnsiChar := @GR_DataPtr_PPAnsiChar;
-    DataPtr_PDouble := @GR_DataPtr_PDouble;
-    DataPtr_PInteger := @GR_DataPtr_PInteger;
-    DataPtr_PByte := @GR_DataPtr_PByte;
-    CountPtr_PPAnsiChar := GR_CountPtr_PPAnsiChar;
-    CountPtr_PDouble := GR_CountPtr_PDouble;
-    CountPtr_PInteger := GR_CountPtr_PInteger;
-    CountPtr_PByte := GR_CountPtr_PByte;
+    if (@DataPtr_PPAnsiChar <> nil) then DataPtr_PPAnsiChar := @GR_DataPtr_PPAnsiChar;
+    if (@DataPtr_PDouble <> nil) then DataPtr_PDouble := @GR_DataPtr_PDouble;
+    if (@DataPtr_PInteger <> nil) then DataPtr_PInteger := @GR_DataPtr_PInteger;
+    if (@DataPtr_PByte <> nil) then DataPtr_PByte := @GR_DataPtr_PByte;
+    if (@CountPtr_PPAnsiChar <> nil) then CountPtr_PPAnsiChar := GR_CountPtr_PPAnsiChar;
+    if (@CountPtr_PDouble <> nil) then CountPtr_PDouble := GR_CountPtr_PDouble;
+    if (@CountPtr_PInteger <> nil) then CountPtr_PInteger := GR_CountPtr_PInteger;
+    if (@CountPtr_PByte <> nil) then CountPtr_PByte := GR_CountPtr_PByte;
+end;
+//------------------------------------------------------------------------------
+// Separate simple functions for MATLAB, which return the current pointer
+// directly, instead of a pointer to pointer.
+
+function DSS_GR_DataPtr_PDouble(): PDouble; CDECL;
+begin
+    Result := GR_DataPtr_PDouble;
+end;
+function DSS_GR_DataPtr_PInteger(): PInteger; CDECL;
+begin
+    Result := GR_DataPtr_PInteger;
+end;
+function DSS_GR_DataPtr_PByte(): PByte; CDECL;
+begin
+    Result := GR_DataPtr_PByte;
+end;
+function DSS_GR_CountPtr_PDouble(): PInteger; CDECL;
+begin
+    Result := GR_CountPtr_PDouble;
+end;
+function DSS_GR_CountPtr_PInteger(): PInteger; CDECL;
+begin
+    Result := GR_CountPtr_PInteger;
+end;
+function DSS_GR_CountPtr_PByte(): PInteger; CDECL;
+begin
+    Result := GR_CountPtr_PByte;
 end;
 //------------------------------------------------------------------------------
 procedure DSS_DisposeGRData(); CDECL;
