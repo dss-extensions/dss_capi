@@ -926,10 +926,10 @@ begin
         if RSignal <> nil then
           RatingIdx   :=  trunc(RSignal.GetYValue(ActiveCircuit[ActiveActor].Solution.DynaVars.intHour));
         // Just in case
-        if RatingIdx > (TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NRatings - 1) then
+        if RatingIdx > (TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NumAmpRatings - 1) then
           Result  :=  TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NormAmps
         else
-          Result  :=  TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).ratings[RatingIdx];
+          Result  :=  TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).AmpRatings[RatingIdx];
       End
       else
         Result  := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NormAmps;

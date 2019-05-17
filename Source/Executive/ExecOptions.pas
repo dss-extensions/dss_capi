@@ -944,8 +944,7 @@ Begin
           109: AppendGlobalResult(Format('%d' ,[CPU_Cores]));
           110:
             begin
-              if CPU_Cores < 64 then AppendGlobalResult(Format('%-g' ,[CPU_Cores/2]))
-              else AppendGlobalResult(Format('%d' ,[CPU_Cores]));
+              AppendGlobalResult(Format('%d' ,[CPU_Physical]));
             end;
           111: AppendGlobalResult(Format('%d' ,[NumOfActors]));
           112: Begin

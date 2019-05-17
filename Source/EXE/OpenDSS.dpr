@@ -194,7 +194,8 @@ uses
   Generic5OrderMach in '..\PCElements\Generic5OrderMach.pas',
   fMonitor in '..\Meters\fMonitor.pas',
   LD_fm_infos in '..\Meters\LD_fm_infos.pas',
-  VLNodeVars in '..\Meters\VLNodeVars.pas';
+  VLNodeVars in '..\Meters\VLNodeVars.pas',
+  uSMBIOS in '..\Common\uSMBIOS.pas';
 
 {$R *.RES}
 

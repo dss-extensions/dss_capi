@@ -58,7 +58,8 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      fMonitor,     // by Dahei
      VSource,
      Executive,
-     ExecOptions
+     ExecOptions,
+     Parallel_Lib
 ;
 
 
@@ -123,7 +124,7 @@ CONST
       PROFILE120KFT = 9992;  // not mutually exclusive to the other choices 9999..9994
 
 VAR
-
+   LibParallel    : TParallel_Lib;
    DLLFirstTime   :Boolean=TRUE;
    DLLDebugFile   :TextFile;
    ProgramName    :String;
@@ -236,6 +237,7 @@ VAR
    UpdateRegistry     :Boolean;  // update on program exit
    CPU_Freq           : int64;          // Used to store the CPU frequency
    CPU_Cores          : integer;
+   CPU_Physical       : integer;
    ActiveActor        : integer;
    NumOfActors        : integer;
    ActorCPU           : Array of integer;
@@ -356,7 +358,6 @@ USES  {Forms,   Controls,}
      {$ENDIF}
      ScriptEdit,
      DSSForms,
-     Parallel_Lib,
      {$ELSE}
      resource, versiontypes, versionresource, dynlibs, CMDForms,
      {$ENDIF}
@@ -741,6 +742,9 @@ Begin
       Result := Format('GetFileVersionInfo failed: (%d) %s',
                [iLastError, SysErrorMessage(iLastError)]);
     end;
+    {$ELSE}
+      // Adds the version info as a constant (for now)
+      Result := '8.5.10';
     {$ENDIF}
 End;
 {$ENDIF}
@@ -1066,7 +1070,8 @@ initialization
 
 //***************Initialization for Parallel Processing*************************
 
-   CPU_Cores        :=  CPUCount;
+   CPU_Physical     :=  LibParallel.Get_Processor_Info(NumCore);
+   CPU_Cores        :=  LibParallel.Get_Processor_Info(NumCPU);
 
    setlength(ActiveCircuit,CPU_Cores + 1);
    {$IFNDEF FPC}setlength(ActorProgress,CPU_Cores + 1);{$ENDIF}
