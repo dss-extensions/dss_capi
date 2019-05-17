@@ -14,8 +14,25 @@ unit Parallel_Lib;
 interface
 
 uses
-  {$IFDEF MSWINDOWS}Winapi.Windows, Winapi.Messages,{$ENDIF} System.SysUtils, System.Variants, System.Classes
-  , math{$IFDEF MSWINDOWS}, vcl.Dialogs{$ENDIF};
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows,
+  Winapi.Messages,
+  {$ENDIF}
+  System.SysUtils,
+  System.Variants,
+  System.Classes
+  ,math
+  {$IFDEF MSWINDOWS}
+  ,vcl.Dialogs
+  {$ENDIF}
+  ,TypInfo
+  ,uSMBIOS;
+
+  CONST
+
+     NumCPU     = 0;
+     NumCore    = 1;
+     NumSocket  = 2;
 
 type
   TParallel_Lib = class(TObject)
@@ -25,6 +42,7 @@ type
     function Set_Thread_Priority(Hnd: THandle; T_priority : integer): Integer;
     function Get_Thread_Priority(Hnd: THandle): String;
     function Get_Number_of_CPUs(): Integer;
+    function Get_Processor_Info(InfoType: Integer): Integer;
   end;
 
 implementation
@@ -94,4 +112,29 @@ implementation
     begin
       Result  :=  CPUCount;
     end;
+    function TParallel_Lib.Get_Processor_Info(InfoType: Integer): Integer;
+    Var
+      SMBios             : TSMBios;
+      LProcessorInfo     : TProcessorInformation;
+      LSRAMTypes         : TCacheSRAMTypes;
+    Begin
+      SMBios:=TSMBios.Create;
+      try
+        if SMBios.HasProcessorInfo then
+        Begin
+          for LProcessorInfo in SMBios.ProcessorInfo do
+          Begin
+            case InfoType of
+              NumCPU:     Result  := LProcessorInfo.RAWProcessorInformation.ThreadCount; // gets the number of CPUs (Threads)
+              NumCore:    Result  := LProcessorInfo.RAWProcessorInformation^.CoreCount;   // gets the number of physical cores
+              NumSocket:  Result  :=  1
+            end;
+          End;
+        End
+        else
+          Result  := -1;
+      finally
+        SMBios.Free;
+      end;
+    End;
 end.

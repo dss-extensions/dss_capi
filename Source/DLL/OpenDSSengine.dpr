@@ -226,7 +226,8 @@ uses
   VLNodeVars in '..\Meters\VLNodeVars.pas',
   Generic5OrderMach in '..\PCElements\Generic5OrderMach.pas',
   ImplGICSources in 'ImplGICSources.pas',
-  ImplReduce in 'ImplReduce.pas';
+  ImplReduce in 'ImplReduce.pas',
+  uSMBIOS in '..\Common\uSMBIOS.pas';
 
 exports
   DllGetClassObject,
