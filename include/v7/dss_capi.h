@@ -1167,7 +1167,8 @@ extern "C" {
     DSS_CAPI_V7_DLL void CktElement_Get_VoltagesMagAng_GR(void);
 
     /*
-    Returns true if the current active element is isolated
+    Returns true if the current active element is isolated.
+    Note that this only fetches the current value. See also the Topology interface.
     */
     DSS_CAPI_V7_DLL uint16_t CktElement_Get_IsIsolated(void);
 
