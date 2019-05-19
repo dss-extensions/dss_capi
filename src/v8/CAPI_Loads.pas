@@ -144,6 +144,7 @@ begin
 
             LoadProps.kW:
                 LoadSpecType := 0;
+
             LoadProps.pf:
             begin
                 PFChanged := TRUE;
@@ -235,29 +236,22 @@ end;
 function Loads_Get_First(): Integer; CDECL;
 var
     pLoad: TLoadObj;
-
 begin
-
     Result := 0;
-    if ActiveCircuit[ActiveActor] <> NIL then
-    begin
-        pLoad := ActiveCircuit[ActiveActor].Loads.First;
-        if pLoad <> NIL then
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    pLoad := ActiveCircuit[ActiveActor].Loads.First;
+    if pLoad = NIL then
+        Exit;
+    repeat
+        if pLoad.Enabled then
         begin
-            repeat
-                if pLoad.Enabled then
-                begin
-                    ActiveCircuit[ActiveActor].ActiveCktElement := pLoad;
-                    Result := 1;
-                end
-                else
-                    pLoad := ActiveCircuit[ActiveActor].Loads.Next;
-            until (Result = 1) or (pLoad = NIL);
+            ActiveCircuit[ActiveActor].ActiveCktElement := pLoad;
+            Result := 1;
         end
         else
-            Result := 0;  // signify no more
-    end;
-
+            pLoad := ActiveCircuit[ActiveActor].Loads.Next;
+    until (Result = 1) or (pLoad = NIL);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_idx(): Integer; CDECL;
@@ -286,18 +280,16 @@ end;
 function Loads_Get_Name_AnsiString(): Ansistring; inline;
 var
     pLoad: TLoadObj;
-
 begin
     Result := '';
-    if ActiveCircuit[ActiveActor] <> NIL then
-    begin
-        pLoad := ActiveCircuit[ActiveActor].Loads.Active;
-        if pLoad <> NIL then
-            Result := pLoad.Name
-        else
-            Result := '';  // signify no name
-    end;
+    if ActiveCircuit[ActiveActor] = NIL then 
+        Exit;
 
+    pLoad := ActiveCircuit[ActiveActor].Loads.Active;
+    if pLoad <> NIL then
+        Result := pLoad.Name
+    else
+        Result := '';  // signify no name
 end;
 
 function Loads_Get_Name(): PAnsiChar; CDECL;
@@ -308,28 +300,20 @@ end;
 function Loads_Get_Next(): Integer; CDECL;
 var
     pLoad: TLoadObj;
-
 begin
     Result := 0;
-    if ActiveCircuit[ActiveActor] <> NIL then
-    begin
-        pLoad := ActiveCircuit[ActiveActor].Loads.Next;
-        if pLoad <> NIL then
+    if ActiveCircuit[ActiveActor] = NIL then Exit;
+    pLoad := ActiveCircuit[ActiveActor].Loads.Next;
+    if pLoad = NIL then Exit;
+    repeat
+        if pLoad.Enabled then
         begin
-            repeat
-                if pLoad.Enabled then
-                begin
-                    ActiveCircuit[ActiveActor].ActiveCktElement := pLoad;
-                    Result := ActiveCircuit[ActiveActor].Loads.ActiveIndex;
-                end
-                else
-                    pLoad := ActiveCircuit[ActiveActor].Loads.Next;
-            until (Result > 0) or (pLoad = NIL);
+            ActiveCircuit[ActiveActor].ActiveCktElement := pLoad;
+            Result := ActiveCircuit[ActiveActor].Loads.ActiveIndex;
         end
         else
-            Result := 0;  // signify no more
-    end;
-
+            pLoad := ActiveCircuit[ActiveActor].Loads.Next;
+    until (Result > 0) or (pLoad = NIL);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Name(const Value: PAnsiChar); CDECL;
@@ -505,7 +489,7 @@ begin
     Result := 0;
     elem := ActiveLoad;
     if elem <> NIL then
-        Result := elem.LoadClass;
+        Result := elem.LoadClass[ActiveActor];
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_CVRcurve_AnsiString(): Ansistring; inline;
@@ -835,18 +819,54 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_daily(const Value: PAnsiChar); CDECL;
+var
+    elem: TLoadObj;
 begin
-    Set_Parameter('Daily', Value);
+    if ActiveCircuit[ActiveActor] = nil then
+        Exit;
+    if ActiveCircuit[ActiveActor].Loads.ActiveIndex = 0 then
+        Exit;
+        
+    elem := TLoadObj(ActiveCircuit[ActiveActor].Loads.Active);
+    with elem do
+    begin
+        DailyShape := Value;
+        LoadPropSideEffects(LoadProps.daily, elem);
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_duty(const Value: PAnsiChar); CDECL;
+var
+    elem: TLoadObj;
 begin
-    Set_Parameter('Duty', Value);
+    if ActiveCircuit[ActiveActor] = nil then
+        Exit;
+    if ActiveCircuit[ActiveActor].Loads.ActiveIndex = 0 then
+        Exit;
+        
+    elem := TLoadObj(ActiveCircuit[ActiveActor].Loads.Active);
+    with elem do
+    begin
+        DutyShape := Value;
+        LoadPropSideEffects(LoadProps.duty, elem);
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Growth(const Value: PAnsiChar); CDECL;
+var
+    elem: TLoadObj;
 begin
-    Set_Parameter('Growth', Value);
+    if ActiveCircuit[ActiveActor] = nil then
+        Exit;
+    if ActiveCircuit[ActiveActor].Loads.ActiveIndex = 0 then
+        Exit;
+        
+    elem := TLoadObj(ActiveCircuit[ActiveActor].Loads.Active);
+    with elem do
+    begin
+        GrowthShape := Value;
+        LoadPropSideEffects(LoadProps.growth, elem);
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_IsDelta(Value: Wordbool); CDECL;
@@ -956,8 +976,20 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Yearly(const Value: PAnsiChar); CDECL;
+var
+    elem: TLoadObj;
 begin
-    Set_Parameter('Yearly', Value);
+    if ActiveCircuit[ActiveActor] = nil then
+        Exit;
+    if ActiveCircuit[ActiveActor].Loads.ActiveIndex = 0 then
+        Exit;
+        
+    elem := TLoadObj(ActiveCircuit[ActiveActor].Loads.Active);
+    with elem do
+    begin
+        YearlyShape := Value;
+        LoadPropSideEffects(LoadProps.yearly, elem);
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Get_ZIPV(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -965,18 +997,15 @@ var
     Result: PDoubleArray;
     elem: TLoadObj;
     k: Integer;
-
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     Result[0] := 0.0;  // error condition: one element array=0
     elem := ActiveLoad;
     if elem <> NIL then
     begin
-        DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, (elem.nZIPV - 1) + 1);
-        for k := 0 to elem.nZIPV - 1 do
-            Result[k] := elem.ZipV^[k + 1];
+        DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, elem.nZIPV);
+        Move(elem.ZipV[1], ResultPtr[0], elem.nZIPV * SizeOf(Double));
     end;
-
 end;
 
 procedure Loads_Get_ZIPV_GR(); CDECL;
@@ -984,7 +1013,6 @@ procedure Loads_Get_ZIPV_GR(); CDECL;
 begin
     Loads_Get_ZIPV(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
-
 //------------------------------------------------------------------------------
 procedure Loads_Set_ZIPV(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 var
@@ -1002,21 +1030,15 @@ begin
     elem := ActiveLoad;
     if elem <> NIL then
     begin
-         // allocate space for 7
+        // allocate space for 7
         elem.nZIPV := 7;
-        k := 1;
-        for i := 0 to 6 do
-        begin
-            elem.ZIPV^[k] := Value[i];
-            inc(k);
-        end;
+        Move(ValuePtr[0], elem.ZIPV[1], elem.nZIPV * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_pctSeriesRL(): Double; CDECL;
 var
     elem: TLoadObj;
-
 begin
     Result := -1.0; // signify  bad request
     elem := ActiveLoad;
@@ -1029,7 +1051,6 @@ end;
 procedure Loads_Set_pctSeriesRL(Value: Double); CDECL;
 var
     elem: TLoadObj;
-
 begin
     elem := ActiveLoad;
 
@@ -1047,7 +1068,6 @@ begin
     elem := ActiveLoad;
     if elem <> NIL then
         Result := elem.RelWeighting;
-
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_RelWeight(Value: Double); CDECL;
