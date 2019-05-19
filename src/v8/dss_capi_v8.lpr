@@ -32,7 +32,7 @@ library dss_capi_v8;
 }
 
 {
-Copyright (c) 2017-2018, Paulo Meira
+Copyright (c) 2017-2019, Paulo Meira
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -466,6 +466,7 @@ exports
     CktElement_Get_OCPDevType,
     CktElement_Get_CurrentsMagAng,
     CktElement_Get_VoltagesMagAng,
+    CktElement_Get_IsIsolated,
     CmathLib_Get_cmplx,
     CmathLib_Get_cabs,
     CmathLib_Get_cdang,
@@ -717,6 +718,8 @@ exports
     Lines_Get_Units,
     Lines_Set_Units,
     Lines_Get_SeasonRating,
+    Lines_Get_IsSwitch,
+    Lines_Set_IsSwitch,
     Loads_Get_AllNames,
     Loads_Get_First,
     Loads_Get_idx,

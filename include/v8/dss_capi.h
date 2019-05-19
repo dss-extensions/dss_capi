@@ -1167,6 +1167,12 @@ extern "C" {
     DSS_CAPI_V8_DLL void CktElement_Get_VoltagesMagAng_GR(void);
 
     /*
+    Returns true if the current active element is isolated
+    */
+    DSS_CAPI_V8_DLL uint16_t CktElement_Get_IsIsolated(void);
+
+
+    /*
     Convert real and imaginary doubles to Array of doubles
     */
     DSS_CAPI_V8_DLL void CmathLib_Get_cmplx(double** ResultPtr, int32_t* ResultCount, double RealPart, double ImagPart);
@@ -2350,6 +2356,12 @@ extern "C" {
     Delivers the rating for the current season (in Amps)  if the "SeasonalRatings" option is active
     */
     DSS_CAPI_V8_DLL double Lines_Get_SeasonRating(void);
+
+    /*
+    Sets/gets the Line element switch status. Setting it has side-effects to the line parameters.
+    */
+    DSS_CAPI_V8_DLL uint16_t Lines_Get_IsSwitch(void);
+    DSS_CAPI_V8_DLL void Lines_Set_IsSwitch(uint16_t Value);
 
     /*
     Array of strings containing all Load names

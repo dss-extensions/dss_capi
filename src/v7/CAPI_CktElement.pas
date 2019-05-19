@@ -75,6 +75,9 @@ procedure CktElement_Get_CurrentsMagAng_GR(); CDECL;
 procedure CktElement_Get_VoltagesMagAng(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure CktElement_Get_VoltagesMagAng_GR(); CDECL;
 
+// API Extensions
+function CktElement_Get_IsIsolated(): Wordbool; CDECL;
+
 implementation
 
 uses
@@ -418,7 +421,6 @@ begin
     Result := 0.0;
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
 function CktElement_Get_Enabled(): Wordbool; CDECL;
 begin
@@ -430,7 +432,6 @@ begin
 
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
 procedure CktElement_Get_Losses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
@@ -1582,6 +1583,13 @@ procedure CktElement_Get_VoltagesMagAng_GR(); CDECL;
 begin
     CktElement_Get_VoltagesMagAng(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
-
+//------------------------------------------------------------------------------
+function CktElement_Get_IsIsolated(): Wordbool; CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.ActiveCktElement.IsIsolated
+    else
+        Result := FALSE;
+end;
 //------------------------------------------------------------------------------
 end.

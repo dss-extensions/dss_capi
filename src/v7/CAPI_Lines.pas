@@ -73,7 +73,8 @@ function Lines_Get_SeasonRating(): Double; CDECL;
 // API Extensions
 function Lines_Get_idx(): Integer; CDECL;
 procedure Lines_Set_idx(Value: Integer); CDECL;
-
+function Lines_Get_IsSwitch(): Wordbool; CDECL;
+procedure Lines_Set_IsSwitch(Value: Wordbool); CDECL;
 
 implementation
 
@@ -920,6 +921,48 @@ begin
     end
     else
         Result := TLineObj(ActiveCircuit.ActiveCktElement).NormAmps;
+end;
+//------------------------------------------------------------------------------
+procedure Lines_Set_IsSwitch(Value: Wordbool); CDECL;
+begin
+    if ActiveCircuit = NIL then 
+        Exit;
+        
+    if not IsLine(ActiveCircuit.ActiveCktElement) then 
+        Exit;
+        
+    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    begin
+        IsSwitch := Value;
+        if not Value then Exit;
+        
+        // Side effects from Line.pas
+        SymComponentsChanged := TRUE;
+        YprimInvalid := TRUE;
+        GeometrySpecified := FALSE;
+        SpacingSpecified := FALSE;
+        r1 := 1.0;
+        x1 := 1.0;
+        r0 := 1.0;
+        x0 := 1.0;
+        c1 := 1.1 * 1.0e-9;
+        c0 := 1.0 * 1.0e-9;
+        len := 0.001;
+        ResetLengthUnits;
+    end;
+end;
+//------------------------------------------------------------------------------
+function Lines_Get_IsSwitch(): Wordbool; CDECL;
+begin
+    Result := FALSE;
+    
+    if ActiveCircuit = NIL then 
+        Exit;
+        
+    if not IsLine(ActiveCircuit.ActiveCktElement) then 
+        Exit;
+    
+    Result := TLineObj(ActiveCircuit.ActiveCktElement).IsSwitch;
 end;
 //------------------------------------------------------------------------------
 end.
