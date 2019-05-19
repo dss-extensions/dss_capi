@@ -155,7 +155,7 @@ uses
     Notes in 'Version8/Source/Common/Notes.pas',
     OHLineConstants in 'Version8/Source/General/OHLineConstants.pas',
     ParserDel in 'Version8/Source/Parser/ParserDel.pas',
-    Parallel_Lib in 'Version8/Source/Parallel_Lib/Parallel_Lib.pas',    
+    Parallel_Lib in 'Version8/Source/Parallel_Lib/Parallel_Lib.pas',
     PCClass in 'Version8/Source/PCElements/PCClass.pas',
     PCElement in 'Version8/Source/PCElements/PCElement.pas',
     PDClass in 'Version8/Source/PDElements/PDClass.pas',
@@ -202,10 +202,10 @@ uses
     XfmrCode in 'Version8/Source/General/XfmrCode.pas',
     XYcurve in 'Version8/Source/General/XYcurve.pas',
     Ymatrix in 'Version8/Source/Common/Ymatrix.pas',
-  
+
     CAPI_Utils in 'CAPI_Utils.pas',
     CAPI_Metadata in 'CAPI_Metadata.pas',
-  
+
     CAPI_ActiveClass in 'CAPI_ActiveClass.pas',
     CAPI_Bus in 'CAPI_Bus.pas',
     CAPI_Capacitors in 'CAPI_Capacitors.pas',
@@ -273,7 +273,7 @@ exports
     DSS_GR_CountPtr_PInteger,
     DSS_GR_CountPtr_PByte,
     DSS_Get_PAnsiChar,
-    
+
 
     ActiveClass_Get_AllNames,
     ActiveClass_Get_First,
@@ -984,6 +984,18 @@ exports
     PVSystems_Get_kW,
     PVSystems_Get_PF,
     PVSystems_Set_PF,
+    PVSystems_Get_daily,
+    PVSystems_Set_daily,
+    PVSystems_Get_duty,
+    PVSystems_Set_duty,
+    PVSystems_Get_yearly,
+    PVSystems_Set_yearly,
+    PVSystems_Get_Tdaily,
+    PVSystems_Set_Tdaily,
+    PVSystems_Get_Tduty,
+    PVSystems_Set_Tduty,
+    PVSystems_Get_Tyearly,
+    PVSystems_Set_Tyearly,
     Reclosers_Get_AllNames,
     Reclosers_Get_Count,
     Reclosers_Get_First,
@@ -1371,7 +1383,7 @@ exports
     XYCurves_Set_Yscale,
     XYCurves_Set_Yshift,
     XYCurves_Set_Yarray,
-    
+
     YMatrix_GetCompressedYMatrix,
     YMatrix_ZeroInjCurr,
     YMatrix_GetSourceInjCurrents,
@@ -1385,7 +1397,7 @@ exports
     YMatrix_Get_SystemYChanged,
     YMatrix_Set_UseAuxCurrents,
     YMatrix_Get_UseAuxCurrents,
-    
+
     // *_GR -- Global Result variations
     ActiveClass_Get_AllNames_GR,
     Bus_Get_SeqVoltages_GR,
@@ -1531,7 +1543,7 @@ exports
     XYCurves_Get_AllNames_GR,
     XYCurves_Get_Xarray_GR,
     XYCurves_Get_Yarray_GR,
-    
+
     // Experimental API extensions
     CNData_Get_Count,
     CNData_Get_First,
@@ -1576,7 +1588,7 @@ exports
     CNData_Set_GmrStrand,
     CNData_Get_RStrand,
     CNData_Set_RStrand,
-    
+
     LineGeometries_Get_Count,
     LineGeometries_Get_First,
     LineGeometries_Get_Next,
@@ -1615,25 +1627,25 @@ exports
     LineGeometries_Set_EmergAmps,
     LineGeometries_Get_AllNames,
     LineGeometries_Get_AllNames_GR,
-    
-    LineSpacings_Get_Count, 
-    LineSpacings_Get_First, 
-    LineSpacings_Get_Next, 
-    LineSpacings_Get_Name, 
-    LineSpacings_Set_Name, 
-    LineSpacings_Get_Nconds, 
-    LineSpacings_Set_Nconds, 
-    LineSpacings_Get_Phases, 
-    LineSpacings_Set_Phases, 
-    LineSpacings_Get_Units, 
-    LineSpacings_Set_Units, 
-    LineSpacings_Get_Xcoords, 
-    LineSpacings_Get_Xcoords_GR, 
-    LineSpacings_Set_Xcoords, 
-    LineSpacings_Get_Ycoords, 
-    LineSpacings_Get_Ycoords_GR, 
-    LineSpacings_Set_Ycoords, 
-    LineSpacings_Get_AllNames, 
+
+    LineSpacings_Get_Count,
+    LineSpacings_Get_First,
+    LineSpacings_Get_Next,
+    LineSpacings_Get_Name,
+    LineSpacings_Set_Name,
+    LineSpacings_Get_Nconds,
+    LineSpacings_Set_Nconds,
+    LineSpacings_Get_Phases,
+    LineSpacings_Set_Phases,
+    LineSpacings_Get_Units,
+    LineSpacings_Set_Units,
+    LineSpacings_Get_Xcoords,
+    LineSpacings_Get_Xcoords_GR,
+    LineSpacings_Set_Xcoords,
+    LineSpacings_Get_Ycoords,
+    LineSpacings_Get_Ycoords_GR,
+    LineSpacings_Set_Ycoords,
+    LineSpacings_Get_AllNames,
     LineSpacings_Get_AllNames_GR,
 
     Loads_Get_Phases,
@@ -1753,7 +1765,7 @@ exports
     TSData_Set_TapeLayer,
     TSData_Get_TapeLap,
     TSData_Set_TapeLap,
-    
+
     WireData_Get_Count,
     WireData_Get_First,
     WireData_Get_Next,
@@ -1831,7 +1843,7 @@ exports
 begin
   IsDLL := TRUE;
   IsMultiThread := True;
-  
+
   {Create one instance of DSS executive whenever the DSS Engine is init'd}
   SetLength(DSSExecutive, CPU_Cores + 1);
   DSSExecutive[ActiveActor] := TExecutive.Create;  // Start the DSS when DSS interface is created

@@ -3524,6 +3524,62 @@ extern "C" {
     DSS_CAPI_V7_DLL void PVSystems_Set_kvar(double Value);
 
     /*
+    Name of the dispatch shape to use for daily simulations. Must be previously
+    defined as a Loadshape object of 24 hrs, typically. In the default dispatch
+    mode, the PVSystem element uses this loadshape to trigger State changes.
+    */
+    DSS_CAPI_V7_DLL char* PVSystems_Get_daily(void);
+    DSS_CAPI_V7_DLL void PVSystems_Set_daily(char* Value);
+
+    /*
+    Name of the load shape to use for duty cycle dispatch simulations such as
+    for solar ramp rate studies. Must be previously defined as a Loadshape
+    object. Typically would have time intervals of 1-5 seconds.
+    */
+    DSS_CAPI_V7_DLL char* PVSystems_Get_duty(void);
+    DSS_CAPI_V7_DLL void PVSystems_Set_duty(char* Value);
+
+    /*
+    Dispatch shape to use for yearly simulations. Must be previously defined
+    as a Loadshape object. If this is not specified, the Daily dispatch shape,
+    if any, is repeated during Yearly solution modes. In the default dispatch
+    mode, the PVSystem element uses this loadshape to trigger State changes.
+    */
+    DSS_CAPI_V7_DLL char* PVSystems_Get_yearly(void);
+    DSS_CAPI_V7_DLL void PVSystems_Set_yearly(char* Value);
+
+    /*
+    Temperature shape to use for daily simulations. Must be previously defined
+    as a TShape object of 24 hrs, typically. The PVSystem element uses this
+    TShape to determine the Pmpp from the Pmpp vs T curve. Units must agree
+    with the Pmpp vs T curve.
+    */
+    DSS_CAPI_V7_DLL char* PVSystems_Get_Tdaily(void);
+    DSS_CAPI_V7_DLL void PVSystems_Set_Tdaily(char* Value);
+
+    /*
+    Temperature shape to use for duty cycle dispatch simulations such as for
+    solar ramp rate studies. Must be previously defined as a TShape object.
+    Typically would have time intervals of 1-5 seconds. Designate the number
+    of points to solve using the Set Number=xxxx command. If there are fewer
+    points in the actual shape, the shape is assumed to repeat. The PVSystem
+    model uses this TShape to determine the Pmpp from the Pmpp vs T curve.
+    Units must agree with the Pmpp vs T curve.
+    */
+    DSS_CAPI_V7_DLL char* PVSystems_Get_Tduty(void);
+    DSS_CAPI_V7_DLL void PVSystems_Set_Tduty(char* Value);
+
+    /*
+    Temperature shape to use for yearly simulations. Must be previously defined
+    as a TShape object. If this is not specified, the Daily dispatch shape, if
+    any, is repeated during Yearly solution modes. The PVSystem element uses
+    this TShape to determine the Pmpp from the Pmpp vs T curve. Units must
+    agree with the Pmpp vs T curve.
+    */
+    DSS_CAPI_V7_DLL char* PVSystems_Get_Tyearly(void);
+    DSS_CAPI_V7_DLL void PVSystems_Set_Tyearly(char* Value);
+
+    /*
     Array of strings with names of all Reclosers in Active Circuit
     */
     DSS_CAPI_V7_DLL void Reclosers_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
@@ -5173,7 +5229,7 @@ extern "C" {
     Same as Transformers_Get_LossesByType but using the global buffer interface for results
     */
     DSS_CAPI_V7_DLL void Transformers_Get_LossesByType_GR(void);
-    
+
     /*
     Returns a complex array of the 3 types of losses (total losses, load losses, no-load losses) concatenated for the all transformers, in VA
     */

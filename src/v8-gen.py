@@ -94,7 +94,7 @@ def v7_to_v8(fn0):
                 text = replace(text, '{})'.format(k), '{}, ActiveActor)'.format(k))
             
             
-            for k in ['PVSystem', 'CNData', 'LineSpacing', 'Monitor', 'EnergyMeter', 'Storage', 'XYCurve', 'WireData', 'TSData', 'LoadShape', 'Sensor', 'GICsource', 'VSource', 'Transformer', 'SwtControl', 'GrowthShape', 'LineGeometry', 'LineCode', 'Line', 'ISource', 'Generator', 'Fuse', 'Capacitor', 'CapControl', 'Reactor', 'RegControl', 'Load', 'Recloser', 'Relay']:
+            for k in ['PVSystem', 'CNData', 'LineSpacing', 'Monitor', 'EnergyMeter', 'Storage', 'XYCurve', 'WireData', 'TSData', 'LoadShape', 'Sensor', 'GICsource', 'VSource', 'Transformer', 'SwtControl', 'GrowthShape', 'LineGeometry', 'LineCode', 'Line', 'ISource', 'Generator', 'Fuse', 'Capacitor', 'CapControl', 'Reactor', 'RegControl', 'Load', 'Recloser', 'Relay', 'TShape']:
                 text = replace(text, '{}Class'.format(k), '{}Class[ActiveActor]'.format(k))
                 
             text = replace(text, 'Result := NumCircuits;', 'Result := ActiveCircuit[ActiveActor].NumCircuits;')

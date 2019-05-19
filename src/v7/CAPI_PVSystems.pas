@@ -30,6 +30,20 @@ procedure PVSystems_Set_kVArated(Value: Double); CDECL;
 procedure PVSystems_Set_PF(Value: Double); CDECL;
 procedure PVSystems_Set_kvar(Value: Double); CDECL;
 
+// API Extensions
+function PVSystems_Get_daily(): PAnsiChar; CDECL;
+procedure PVSystems_Set_daily(const Value: PAnsiChar); CDECL;
+function PVSystems_Get_duty(): PAnsiChar; CDECL;
+procedure PVSystems_Set_duty(const Value: PAnsiChar); CDECL;
+function PVSystems_Get_yearly(): PAnsiChar; CDECL;
+procedure PVSystems_Set_yearly(const Value: PAnsiChar); CDECL;
+function PVSystems_Get_Tdaily(): PAnsiChar; CDECL;
+procedure PVSystems_Set_Tdaily(const Value: PAnsiChar); CDECL;
+function PVSystems_Get_Tduty(): PAnsiChar; CDECL;
+procedure PVSystems_Set_Tduty(const Value: PAnsiChar); CDECL;
+function PVSystems_Get_Tyearly(): PAnsiChar; CDECL;
+procedure PVSystems_Set_Tyearly(const Value: PAnsiChar); CDECL;
+
 implementation
 
 uses
@@ -366,6 +380,192 @@ begin
                 TPVSystemObj(Active).Presentkvar := Value;
             end;
         end;
+    end;
+end;
+//------------------------------------------------------------------------------
+function PVSystems_Get_daily(): PAnsiChar; CDECL;
+begin
+    Result := nil;
+    if ActiveCircuit = nil then
+        Exit;
+    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+        Exit;
+        
+    with ActiveCircuit.PVSystems do
+    begin
+        Result := DSS_GetAsPAnsiChar(TPVSystemObj(Active).DailyShape);
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure PVSystems_Set_daily(const Value: PAnsiChar); CDECL;
+var
+    elem: TPVSystemObj;
+begin
+    if ActiveCircuit = nil then
+        Exit;
+    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+        Exit;
+        
+    elem := TPVSystemObj(ActiveCircuit.PVSystems.Active);
+    with elem do
+    begin
+        DailyShape := Value;
+        DailyShapeObj := LoadShapeClass.Find(DailyShape);
+    end;
+end;
+//------------------------------------------------------------------------------
+function PVSystems_Get_duty(): PAnsiChar; CDECL;
+begin
+    Result := nil;
+    if ActiveCircuit = nil then
+        Exit;
+    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+        Exit;
+        
+    with ActiveCircuit.PVSystems do
+    begin
+        Result := DSS_GetAsPAnsiChar(TPVSystemObj(Active).DutyShape);
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure PVSystems_Set_duty(const Value: PAnsiChar); CDECL;
+var
+    elem: TPVSystemObj;
+begin
+    if ActiveCircuit = nil then
+        Exit;
+    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+        Exit;
+        
+    elem := TPVSystemObj(ActiveCircuit.PVSystems.Active);
+    with elem do
+    begin
+        DutyShape := Value;
+        DutyShapeObj := LoadShapeClass.Find(DutyShape);
+    end;
+end;
+//------------------------------------------------------------------------------
+function PVSystems_Get_yearly(): PAnsiChar; CDECL;
+begin
+    Result := nil;
+    if ActiveCircuit = nil then
+        Exit;
+    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+        Exit;
+        
+    with ActiveCircuit.PVSystems do
+    begin
+        Result := DSS_GetAsPAnsiChar(TPVSystemObj(Active).YearlyShape);
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure PVSystems_Set_yearly(const Value: PAnsiChar); CDECL;
+var
+    elem: TPVSystemObj;
+begin
+    if ActiveCircuit = nil then
+        Exit;
+    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+        Exit;
+        
+    elem := TPVSystemObj(ActiveCircuit.PVSystems.Active);
+    with elem do
+    begin
+        YearlyShape := Value;
+        YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+    end;
+end;
+//------------------------------------------------------------------------------
+function PVSystems_Get_Tdaily(): PAnsiChar; CDECL;
+begin
+    Result := nil;
+    if ActiveCircuit = nil then
+        Exit;
+    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+        Exit;
+        
+    with ActiveCircuit.PVSystems do
+    begin
+        Result := DSS_GetAsPAnsiChar(TPVSystemObj(Active).DailyTShape);
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure PVSystems_Set_Tdaily(const Value: PAnsiChar); CDECL;
+var
+    elem: TPVSystemObj;
+begin
+    if ActiveCircuit = nil then
+        Exit;
+    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+        Exit;
+        
+    elem := TPVSystemObj(ActiveCircuit.PVSystems.Active);
+    with elem do
+    begin
+        DailyTShape := Value;
+        DailyTShapeObj := TShapeClass.Find(DailyTShape);
+    end;
+end;
+//------------------------------------------------------------------------------
+function PVSystems_Get_Tduty(): PAnsiChar; CDECL;
+begin
+    Result := nil;
+    if ActiveCircuit = nil then
+        Exit;
+    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+        Exit;
+        
+    with ActiveCircuit.PVSystems do
+    begin
+        Result := DSS_GetAsPAnsiChar(TPVSystemObj(Active).DutyTShape);
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure PVSystems_Set_Tduty(const Value: PAnsiChar); CDECL;
+var
+    elem: TPVSystemObj;
+begin
+    if ActiveCircuit = nil then
+        Exit;
+    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+        Exit;
+        
+    elem := TPVSystemObj(ActiveCircuit.PVSystems.Active);
+    with elem do
+    begin
+        DutyTShape := Value;
+        DutyTShapeObj := TShapeClass.Find(DutyTShape);
+    end;
+end;
+//------------------------------------------------------------------------------
+function PVSystems_Get_Tyearly(): PAnsiChar; CDECL;
+begin
+    Result := nil;
+    if ActiveCircuit = nil then
+        Exit;
+    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+        Exit;
+        
+    with ActiveCircuit.PVSystems do
+    begin
+        Result := DSS_GetAsPAnsiChar(TPVSystemObj(Active).YearlyTShape);
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure PVSystems_Set_Tyearly(const Value: PAnsiChar); CDECL;
+var
+    elem: TPVSystemObj;
+begin
+    if ActiveCircuit = nil then
+        Exit;
+    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+        Exit;
+        
+    elem := TPVSystemObj(ActiveCircuit.PVSystems.Active);
+    with elem do
+    begin
+        YearlyTShape := Value;
+        YearlyTShapeObj := TShapeClass.Find(YearlyTShape);
     end;
 end;
 //------------------------------------------------------------------------------
