@@ -1237,6 +1237,12 @@ initialization
    setlength(VSConverterClass,CPU_Cores + 1);
    
    SetLength(ActiveVSource,CPU_Cores + 1);
+   
+   setlength(LineCodeClass,CPU_Cores + 1);
+   setlength(LineGeometryClass,CPU_Cores + 1);
+   setlength(XfmrCodeClass,CPU_Cores + 1);
+   setlength(GICLineClass,CPU_Cores + 1);
+   setlength(GICTransformerClass,CPU_Cores + 1);
 
    // Init pointer repositories for the EnergyMeter in multiple cores
 

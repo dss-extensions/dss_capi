@@ -489,7 +489,7 @@ begin
     Result := 0;
     elem := ActiveLoad;
     if elem <> NIL then
-        Result := elem.LoadClass[ActiveActor];
+        Result := elem.LoadClass;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_CVRcurve_AnsiString(): Ansistring; inline;
