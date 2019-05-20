@@ -897,6 +897,8 @@ var
     RSignal: TXYCurveObj;
 begin
     Result := 0;
+    RatingIdx := -1;
+
     if ActiveCircuit[ActiveActor] = NIL then
         Exit;
 
@@ -914,7 +916,7 @@ begin
             RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit[ActiveActor].Solution.DynaVars.intHour));
         
         // Just in case
-        if RatingIdx >= TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NRatings then
+        if (RatingIdx >= TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NRatings) or (RatingIdx < 0) then
             Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NormAmps
         else
             Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).ratings[RatingIdx];
