@@ -62,8 +62,9 @@ INTERFACE
             FQmaxLead: Double;
             FQmaxLag: Double;
             FdeltaQ_factor: Double;
-            FVoltageChangeTolerance: Double; // hard-wire now?
-            FVarChangeTolerance: Double;     // hard-wire now?
+            FVoltageChangeTolerance: Double; // no user adjustment
+            FVarChangeTolerance: Double;     // no user adjustment
+            FPreferQ: Boolean;
 
             PROCEDURE Set_PendingChange(Value: Integer;DevIndex: Integer);
             FUNCTION  Get_PendingChange(DevIndex: Integer):Integer;
@@ -113,7 +114,7 @@ USES
 
 CONST
 
-    NumPropsThisClass = 11;
+    NumPropsThisClass = 12;
 
     NONE = 0;
     CHANGEVARLEVEL = 1;
@@ -157,6 +158,7 @@ Begin
      PropertyName[9] := 'QmaxLag';
      PropertyName[10] := 'EventLog';
      PropertyName[11] := 'DeltaQ_factor';
+     PropertyName[12] := 'PreferQ';
 
      PropertyHelp[1] := 'Array list of PVSystems to be controlled.'+CRLF+CRLF+
                         'If not specified, all PVSystems in the circuit are assumed to be controlled by this ExpControl.';
@@ -190,6 +192,10 @@ Begin
                          'this is an indication of numerical instability (use the EventLog to diagnose). '+
                          'If the maximum control iterations are exceeded, and no numerical instability is seen in the EventLog of via monitors, then try increasing the value of this parameter to reduce the number '+
                          'of control iterations needed to achieve the control criteria, and move to the power flow solution.';
+     PropertyHelp[12] := '{Yes/True* | No/False} Default is No for ExpControl.' + CRLF + CRLF +
+                         'Curtails real power output as needed to meet the reactive power requirement. ' +
+                         'IEEE1547-2018 requires Yes, but earlier versions of OpenDSS only implemented No, ' +
+                         'so the default is No for backward compatibility of OpenDSS models.';
 
      ActiveProperty  := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -246,6 +252,7 @@ Begin
         9: If Parser.DblValue >= 0 then FQmaxLag := Parser.DblValue;
        10: ShowEventLog := InterpretYesNo(param);
        11: FdeltaQ_factor := Parser.DblValue;
+       12: FPreferQ := InterpretYesNo(param);
       ELSE
         // Inherited parameters
         ClassEdit( ActiveExpControlObj, ParamPointer - NumPropsthisClass)
@@ -288,6 +295,7 @@ Begin
       FQmaxLead                  := OtherExpControl.FQmaxLead;
       FQmaxLag                   := OtherExpControl.FQmaxLag;
       FdeltaQ_factor             := OtherExpControl.FdeltaQ_factor;
+      FPreferQ                   := OtherExpControl.FPreferQ;
       For j := 1 to ParentClass.NumProperties Do PropertyValue[j] := OtherExpControl.PropertyValue[j];
 
    End
@@ -351,6 +359,7 @@ Begin
      FQmaxLead := 0.44;
      FQmaxLag := 0.44;
      FdeltaQ_factor := 0.7; // only on control iterations, not the final solution
+     FPreferQ := FALSE;
 
      //generic for control
      FPendingChange         := nil;
@@ -466,6 +475,7 @@ VAR
   Qmaxpu, Qpu   :Double;
   Qbase         :Double;
   Qinvmaxpu     :Double;
+  Plimit        :Double;
   PVSys         :TPVSystemObj;
 BEGIN
   for i := 1 to FPVSystemPointerList.ListSize do begin
@@ -487,12 +497,25 @@ BEGIN
       end;
 
       // apply limits on Qpu, then define the target in kVAR
-      Qmaxpu := Sqrt(1 - Sqr(PVSys.PresentkW/Qbase)); // dynamic headroom
+      PVSys.SetNominalPVSystemOuput; // as does InvControl
+      if FPreferQ then
+        Qmaxpu := 1.0
+      else
+        Qmaxpu := Sqrt(1 - Sqr(PVSys.PresentkW/Qbase)); // dynamic headroom
       if Qmaxpu > Qinvmaxpu then Qmaxpu := Qinvmaxpu;
       if Abs(Qpu) > Qmaxpu then Qpu := QmaxPu * Sign(Qpu);
       if Qpu < -FQmaxLead then Qpu := -FQmaxLead;
       if Qpu > FQmaxLag then Qpu := FQmaxLag;
       FTargetQ[i] := Qbase * Qpu;
+      if FPreferQ then begin
+        Plimit := Qbase * Sqrt (1 - Qpu * Qpu);
+        if Plimit < PVSys.PresentkW then begin
+          If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+','+PVSys.Name,
+            Format(' curtailing %.3f to %.3f kW', [PVSys.PresentkW, Plimit]));
+          PVSys.PresentkW := Plimit;
+          PVSys.puPmpp := Plimit/PVSys.Pmpp;
+        end;
+      end;
 
       // only move the non-bias component by deltaQ_factor in this control iteration
       DeltaQ := FTargetQ[i] - FPriorQ[i];
@@ -577,6 +600,7 @@ begin
   PropertyValue[9]  := '0.44';     // Qmax lagging
   PropertyValue[10] := 'no';    // write event log?
   PropertyValue[11] := '0.7';   // DeltaQ_factor
+  PropertyValue[12] := 'no';    // PreferQ
   inherited  InitPropertyValues(NumPropsThisClass);
 end;
 
@@ -657,6 +681,7 @@ Begin
     8   : Result := Format('%.6g', [FQmaxLead]);
     9   : Result := Format('%.6g', [FQmaxLag]);
     11  : Result := Format('%.6g', [FdeltaQ_factor]);
+    12  : if FPreferQ then Result := 'yes' else Result := 'no';
     // 10 skipped, EventLog always went to the default handler
   ELSE  // take the generic handler
     Result := Inherited GetPropertyValue(index);
