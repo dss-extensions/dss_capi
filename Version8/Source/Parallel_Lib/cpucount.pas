@@ -12,7 +12,7 @@ uses windows;
 {$endif}
  
 {$IF defined(darwin)}
-uses ctypes, sysctl;
+uses ctypes, sysctl, unixtype;
 {$endif} 
  
 {$IFDEF Linux}
@@ -47,21 +47,16 @@ begin
     Result := SystemInfo.dwNumberOfProcessors;
   end;
 end;
-{$ELSEIF defined(UNTESTEDsolaris)}
-  begin
-    t = sysconf(_SC_NPROC_ONLN);
-  end;
 {$ELSEIF defined(freebsd) or defined(darwin)}
+const
+  param: string = 'hw.logicalcpu';
 var
-  mib: array[0..1] of cint;
   len: cint;
-  t: cint;
+  t: size_t;
 begin
-  mib[0] := CTL_HW;
-  mib[1] := HW_NCPU;
   len := sizeof(t);
-  fpsysctl(pchar(@mib), 2, @t, @len, Nil, 0);
-  Result:=t;
+  fpsysctlbyname(pchar(param), @t, @len, nil, 0);
+  Result := t;
 end;
 {$ELSEIF defined(linux)}
   begin

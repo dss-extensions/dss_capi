@@ -422,9 +422,9 @@ USES  {Forms,   Controls,}
      {$ENDIF}
      {$IFDEF FPC}
      resource, versiontypes, versionresource, dynlibs, CmdForms,
-       {$IFDEF Linux}
+       {$IFNDEF WINDOWS}
        cpucount,
-     {$ENDIF}
+       {$ENDIF}
      {$ELSE}
      DSSForms, SHFolder,
      ScriptEdit,
@@ -1117,7 +1117,7 @@ Var
 Begin
  ActorHandle[ActorID] :=  TSolver.Create(True,ActorCPU[ActorID],ActorID,nil,ActorMA_Msg[ActorID]); // TEMC: TODO: text-mode callback
  ActorHandle[ActorID].Priority :=  tpTimeCritical;
- ActorHandle[ActorID].Resume;  // TEMC: TODO: this reportedly does nothing on Unix and Mac
+ ActorHandle[ActorID].Start;
  ActorStatus[ActorID] :=  1;
 End;
 {$ELSE}
@@ -1149,10 +1149,10 @@ procedure Delay(TickTime : Integer);
  var
  Past: longint;
  begin
- Past := GetTickCount;
+ Past := GetTickCount64;
  repeat
 
- Until (GetTickCount - Past) >= longint(TickTime);
+ Until (GetTickCount64 - Past) >= longint(TickTime);
 end;
 
 
@@ -1160,7 +1160,7 @@ end;
 initialization
 
 //***************Initialization for Parallel Processing*************************
-{$IFNDEF LINUX}
+{$IFDEF WINDOWS}
    CPU_Cores        :=  CPUCount;
 {$ELSE}
    CPU_Cores        :=  GetLogicalCpuCount; // FreePascal's CPUCount returns 1 on Linux
