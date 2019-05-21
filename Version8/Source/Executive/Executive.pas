@@ -79,13 +79,8 @@ TYPE
 
      end;
 
-VAR
-
-    DSSExecutive: array of TExecutive;
-
 
 implementation
-
 
 USES ExecCommands, ExecOptions,
      {ExecHelper,} DSSClassDefs, DSSGlobals, ParserDel,  SysUtils,

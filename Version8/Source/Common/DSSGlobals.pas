@@ -1301,6 +1301,11 @@ initialization
    NumOfActors            :=  1;
    ActorCPU[ActiveActor]  :=  0;
    Parser[ActiveActor]    :=  Tparser.Create;
+
+//   ActiveActor            :=  0;
+//   NumOfActors            :=  0;
+//   New_Actor_Slot();
+
    {$IFDEF FPC}
    ProgramName      := 'OpenDSSCmd';  // for now...
    {$ELSE}
