@@ -117,8 +117,8 @@ type
 {$ENDIF}
         NormAmps: Double;
         EmergAmps: Double;
-        NRatings: Integer;
-        Ratings: array of Double;
+        NumAmpRatings: Integer;
+        AmpRatings: array of Double;
 
         constructor Create(ParClass: TDSSClass; const LineGeometryName: String);
         destructor Destroy; OVERRIDE;
@@ -431,14 +431,14 @@ begin
                 end;
                 17:
                 begin
-                    Nratings := Parser[ActorID].IntValue;
-                    setlength(Ratings, NRatings);
+                    NumAmpRatings := Parser[ActorID].IntValue;
+                    setlength(AmpRatings, NumAmpRatings);
                 end;
                 18:
                 begin
-                    setlength(Ratings, NRatings);
+                    setlength(AmpRatings, NumAmpRatings);
                     Param := Parser[ActorID].StrValue;
-                    Nratings := InterpretDblArray(Param, Nratings, Pointer(Ratings));
+                    NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
                 end
             else
            // Inherited parameters
@@ -617,10 +617,9 @@ begin
     EmergAmps := 0.0;
 
     FReduce := FALSE;
-    ratings := NIL;
-    NRatings := 1;
-    setlength(ratings, Nratings);
-    ratings[0] := NormAmps;
+    NumAmpRatings := 1;
+    setlength(AmpRatings, NumAmpRatings);
+    AmpRatings[0] := NormAmps;
 
     InitPropertyValues(0);
 end;
@@ -699,12 +698,12 @@ begin
             Result := Result + ']';
         end;
         17:
-            Result := inttostr(Nratings);
+            Result := inttostr(NumAmpRatings);
         18:
         begin
             Result := '[';
-            for  j := 1 to Nratings do
-                Result := Result + floattoStrf(ratings[j - 1], ffgeneral, 8, 4) + ',';
+            for  j := 1 to NumAmpRatings do
+                Result := Result + floattoStrf(AmpRatings[j - 1], ffgeneral, 8, 4) + ',';
             Result := Result + ']';
         end;
     else
@@ -867,8 +866,8 @@ begin
                 18:
                 begin
                     TempStr := '[';
-                    for  j := 1 to Nratings do
-                        TempStr := TempStr + floattoStrf(ratings[j - 1], ffgeneral, 8, 4) + ',';
+                    for  j := 1 to NumAmpRatings do
+                        TempStr := TempStr + floattoStrf(AmpRatings[j - 1], ffgeneral, 8, 4) + ',';
                     TempStr := TempStr + ']';
                     Writeln(F, 'ratings=' + TempStr);
                 end;

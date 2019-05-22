@@ -858,7 +858,8 @@ begin
                         CurrIn := CZERO;
                         Ctemp := conjg(cmul(cdiv(Vbout, Vbin), conjg(SR0^[Cond]))); //Balancing powers
                         Losses := CalcUPFCLosses(Cabs(Vbin) / (VRef * 1000));
-                        CurrIn := cnegate(cmplx((Ctemp.re * Losses), SR0^[Cond].im));
+                        // CurrIn := cnegate(cmplx((Ctemp.re * Losses), SR0^[Cond].im));
+                        CurrIn := cnegate(cmplx(Losses * SR0^[Cond].re, SR0^[Cond].im));
                         SR1^[Cond] := CurrIn;
                     end;
                     2:
@@ -875,7 +876,8 @@ begin
                         CurrIn := CZERO;
                         Ctemp := conjg(cmul(cdiv(Vbout, Vbin), conjg(SR0^[Cond]))); //Balancing powers
                         Losses := CalcUPFCLosses(Cabs(Vbin) / (VRef * 1000));
-                        CurrIn := cnegate(cmplx((Ctemp.re * Losses), SR0^[Cond].im));
+                        // CurrIn := cnegate(cmplx((Ctemp.re * Losses), SR0^[Cond].im));
+                        CurrIn := cnegate(cmplx(Losses * SR0^[Cond].re, SR0^[Cond].im));
                         SR1^[Cond] := CurrIn;
                         if SyncFlag then
                         begin
@@ -896,7 +898,8 @@ begin
                             CurrIn := CZERO;
                             Ctemp := conjg(cmul(cdiv(Vbout, Vbin), conjg(SR0^[Cond]))); //Balancing powers
                             Losses := CalcUPFCLosses(Cabs(Vbin) / (VRefD * 1000));
-                            CurrIn := cnegate(cmplx((Ctemp.re * Losses), SR0^[Cond].im));
+                            // CurrIn := cnegate(cmplx((Ctemp.re * Losses), SR0^[Cond].im));
+                            CurrIn := cnegate(cmplx(Losses * SR0^[Cond].re, SR0^[Cond].im));
                             SR1^[Cond] := CurrIn;
                         end
                         else
@@ -913,7 +916,8 @@ begin
                             CurrIn := CZERO;
                             Ctemp := conjg(cmul(cdiv(Vbout, Vbin), conjg(SR0^[Cond]))); //Balancing powers
                             Losses := CalcUPFCLosses(Cabs(Vbin) / (VRefD * 1000));
-                            CurrIn := cnegate(cmplx((Ctemp.re * Losses), SR0^[Cond].im));
+                            // CurrIn := cnegate(cmplx((Ctemp.re * Losses), SR0^[Cond].im));
+                            CurrIn := cnegate(cmplx(Losses * SR0^[Cond].re, SR0^[Cond].im));
                             SR1^[Cond] := CurrIn;
                         end
                         else
@@ -925,7 +929,7 @@ begin
                     //Always corrects PF
                         if SyncFlag then
                         begin
-                    // Starts Power Calculations to copensate the reactive power
+                    // Starts Power Calculations to compensate the reactive power
                             UPFC_Power := CalcUPFCPowers(1, Cond);
                             S := abs(UPFC_Power.re) / pf;
                             QIdeal := UPFC_Power.im - sqrt(1 - pf * pf) * S;   //This is the expected compensating reactive power

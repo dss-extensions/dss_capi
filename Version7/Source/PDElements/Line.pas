@@ -346,10 +346,10 @@ var
     TempStr: String;
     j: Integer;
 begin
-    PropertyValue[28] := Format('%-d', [Nratings]);
+    PropertyValue[28] := Format('%-d', [NumAmpRatings]);
     TempStr := '[';
-    for  j := 1 to Nratings do
-        TempStr := TempStr + floattoStrf(ratings[j - 1], ffgeneral, 8, 4) + ',';
+    for  j := 1 to NumAmpRatings do
+        TempStr := TempStr + floattoStrf(AmpRatings[j - 1], ffgeneral, 8, 4) + ',';
     TempStr := TempStr + ']';
     PropertyValue[29] := TempStr;
 
@@ -410,10 +410,10 @@ begin
         NormAmps := LineCodeObj.NormAmps;
         EmergAmps := LineCodeObj.EmergAmps;
 
-        NRatings := LineCodeObj.NRatings;
-        setlength(Ratings, NRatings);
-        for i := 0 to High(Ratings) do
-            Ratings[i] := LineCodeObj.ratings[i];
+        NumAmpRatings := LineCodeObj.NumAmpRatings;
+        setlength(AmpRatings, NumAmpRatings);
+        for i := 0 to High(AmpRatings) do
+            AmpRatings[i] := LineCodeObj.AmpRatings[i];
 
        // These three properties should not come from the Linecode
        //   But can vary from line section to line section
@@ -677,14 +677,14 @@ begin
                 end;
                 28:
                 begin
-                    Nratings := Parser.IntValue;
-                    setlength(Ratings, Nratings);
+                    NumAmpRatings := Parser.IntValue;
+                    setlength(AmpRatings, NumAmpRatings);
                 end;
                 29:
                 begin
-                    setlength(Ratings, Nratings);
+                    setlength(AmpRatings, NumAmpRatings);
                     Param := Parser.StrValue;
-                    Nratings := InterpretDblArray(Param, Nratings, Pointer(Ratings));
+                    NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
                 end
             else
             // Inherited Property Edits
@@ -931,9 +931,9 @@ begin
     Yorder := Fnterms * Fnconds;
     RecalcElementData;
 
-    NRatings := 1;
-    setlength(Ratings, NRatings);
-    Ratings[0] := NormAmps;
+    NumAmpRatings := 1;
+    setlength(AmpRatings, NumAmpRatings);
+    AmpRatings[0] := NormAmps;
 
 
 end;
@@ -1452,12 +1452,12 @@ begin
             else
                 Result := '----';
         28:
-            Result := inttostr(Nratings);
+            Result := inttostr(NumAmpRatings);
         29:
         begin
             TempStr := '[';
-            for  k := 1 to Nratings do
-                TempStr := TempStr + floattoStrf(ratings[k - 1], ffGeneral, 8, 4) + ',';
+            for  k := 1 to NumAmpRatings do
+                TempStr := TempStr + floattoStrf(AmpRatings[k - 1], ffGeneral, 8, 4) + ',';
             TempStr := TempStr + ']';
             Result := TempStr;
         end;
@@ -1946,12 +1946,12 @@ begin
         if Assigned(ActiveConductorDataObj) then
         begin
             FLineWireData^[i] := ActiveConductorDataObj;
-            if FLineWireData^[i].Nratings > NewNumRat then
+            if FLineWireData^[i].NumAmpRatings > NewNumRat then
             begin
-                NewNumRat := FLineWireData^[i].Nratings;
+                NewNumRat := FLineWireData^[i].NumAmpRatings;
                 setlength(NewRatings, NewNumRat);
                 for j := 0 to High(NewRatings) do
-                    NewRatings[j] := FLineWireData^[i].ratings[j];
+                    NewRatings[j] := FLineWireData^[i].AmpRatings[j];
                 RatingsInc := TRUE;         // Yes, there are seasonal ratings
             end;
         end
@@ -1961,10 +1961,10 @@ begin
 
     if RatingsInc then
     begin
-        NRatings := NewNumRat;
-        setlength(Ratings, NRatings);
-        for j := 0 to High(Ratings) do
-            Ratings[j] := NewRatings[j];
+        NumAmpRatings := NewNumRat;
+        setlength(AmpRatings, NumAmpRatings);
+        for j := 0 to High(AmpRatings) do
+            AmpRatings[j] := NewRatings[j];
     end;
 
 end;
@@ -2041,10 +2041,10 @@ begin
         Yorder := Fnconds * Fnterms;
         YPrimInvalid := TRUE;       // Force Rebuild of Y matrix
 
-        Nratings := FLineGeometryObj.NRatings;
-        setlength(Ratings, NRatings);
-        for i := 0 to High(Ratings) do
-            Ratings[i] := FLineGeometryObj.ratings[i];
+        NumAmpRatings := FLineGeometryObj.NumAmpRatings;
+        setlength(AmpRatings, NumAmpRatings);
+        for i := 0 to High(AmpRatings) do
+            AmpRatings[i] := FLineGeometryObj.AmpRatings[i];
 
     end
     else

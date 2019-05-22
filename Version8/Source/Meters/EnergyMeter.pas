@@ -3484,17 +3484,17 @@ begin
              // Section introduced in 02/20/2019 for allowing the automatic change of ratings
              // when the seasonal ratings option is active
                 ClassName := lowercase(PDElem.DSSClassName);
-                if SeasonalRating and (ClassName = 'line') and (PDElem.NRatings > 1) then
+                if SeasonalRating and (ClassName = 'line') and (PDElem.NumAmpRatings > 1) then
                 begin
-                    if RatingIdx > PDElem.NRatings then
+                    if RatingIdx > PDElem.NumAmpRatings then
                     begin
                         NormAmps := PDElem.NormAmps;
                         EmergAmps := pdelem.EmergAmps;
                     end
                     else
                     begin
-                        NormAmps := PDElem.ratings[RatingIdx];
-                        EmergAmps := PDElem.ratings[RatingIdx];
+                        NormAmps := PDElem.AmpRatings[RatingIdx];
+                        EmergAmps := PDElem.AmpRatings[RatingIdx];
                     end;
                 end
                 else

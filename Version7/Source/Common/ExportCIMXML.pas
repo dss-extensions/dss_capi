@@ -559,7 +559,7 @@ end;
 
 procedure DoubleNode(var F: TextFile; Node: String; val: Double);
 begin
-    Writeln(F, Format('  <cim:%s>%g</cim:%s>', [Node, val, Node]));
+    Writeln(F, Format('  <cim:%s>%.8g</cim:%s>', [Node, val, Node]));
 end;
 
 procedure IntegerNode(var F: TextFile; Node: String; val: Integer);
@@ -1706,7 +1706,7 @@ begin
         begin
             if pPV.Enabled then
             begin
-                pName1.LocalName := pPV.Name + '_PVPanels';
+                pName1.LocalName := pPV.Name; // + '_PVPanels';
                 CreateGuid(geoGUID);
                 pName1.GUID := geoGUID;
                 StartInstance(F, 'PhotovoltaicUnit', pName1);
@@ -1739,7 +1739,7 @@ begin
         begin
             if pBat.Enabled then
             begin
-                pName1.LocalName := pBat.Name + '_Cells';
+                pName1.LocalName := pBat.Name; // + '_Cells';
                 CreateGuid(geoGUID);
                 pName1.GUID := geoGUID;
                 StartInstance(F, 'BatteryUnit', pName1);
@@ -2260,7 +2260,7 @@ begin
                 DoubleNode(F, 'TapChanger.subsequentDelay', SubsequentDelay);
                 BooleanNode(F, 'TapChanger.ltcFlag', TRUE);
                 BooleanNode(F, 'TapChanger.controlEnabled', pReg.Enabled);
-                DoubleNode(F, 'TapChanger.step', Transformer.PresentTap[TrWinding]);
+                DoubleNode(F, 'TapChanger.step', TapNum);
                 GuidNode(F, 'PowerSystemResource.Location',
                     GetDevGuid(XfLoc, Transformer.Name, 1));
                 EndInstance(F, 'RatioTapChanger');

@@ -73,7 +73,7 @@ type
         function get_CMatrix: String;
 
     PUBLIC
-        NRatings,
+        NumAmpRatings,
         FNPhases: Integer;
 
         SymComponentsModel,
@@ -99,7 +99,7 @@ type
         Rg,
         Xg,
         rho: Double;
-        ratings: array of Double;
+        AmpRatings: array of Double;
 
         Units: Integer;  {See LineUnits}
 
@@ -485,14 +485,14 @@ begin
                     SetZ1Z0(6, Parser.Dblvalue / (twopi * BaseFrequency) * 1.0e-6); {B0 -> C0}
                 25:
                 begin
-                    Nratings := Parser.IntValue;
-                    setlength(Ratings, Nratings);
+                    NumAmpRatings := Parser.IntValue;
+                    setlength(AmpRatings, NumAmpRatings);
                 end;
                 26:
                 begin
-                    setlength(Ratings, Nratings);
+                    setlength(AmpRatings, NumAmpRatings);
                     Param := Parser.StrValue;
-                    Nratings := InterpretDblArray(Param, Nratings, Pointer(Ratings));
+                    NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
                 end
             else
                 ClassEdit(ActiveLineCodeObj, Parampointer - NumPropsThisClass)
@@ -658,10 +658,9 @@ begin
     ReduceByKron := FALSE;
     CalcMatricesFromZ1Z0;  // put some reasonable values in
 
-    ratings := NIL;  // init prior to Reallocmem call
-    NRatings := 1;
-    setlength(Ratings, Nratings);
-    ratings[0] := NormAmps;
+    NumAmpRatings := 1;
+    setlength(AmpRatings, NumAmpRatings);
+    AmpRatings[0] := NormAmps;
 
     InitPropertyValues(0);
 end;
@@ -799,10 +798,10 @@ begin
         end;
 
         Writeln(F, Format('~ %s=%d', [PropertyName^[22], FNeutralConductor]));
-        Writeln(F, Format('~ %s=%d', [PropertyName^[25], Nratings]));
+        Writeln(F, Format('~ %s=%d', [PropertyName^[25], NumAmpRatings]));
         TempStr := '[';
-        for  k := 1 to Nratings do
-            TempStr := TempStr + floattoStrf(ratings[k - 1], ffGeneral, 8, 4) + ',';
+        for  k := 1 to NumAmpRatings do
+            TempStr := TempStr + floattoStrf(AmpRatings[k - 1], ffGeneral, 8, 4) + ',';
         TempStr := TempStr + ']';
         Writeln(F, Format('~ %s=%s', [PropertyName^[26]]) + TempStr);
 
@@ -882,12 +881,12 @@ begin
             else
                 Result := '----';
         25:
-            Result := inttostr(Nratings);
+            Result := inttostr(NumAmpRatings);
         26:
         begin
             Result := '[';
-            for  j := 1 to Nratings do
-                Result := Result + floattoStrf(ratings[j - 1], ffgeneral, 8, 4) + ',';
+            for  j := 1 to NumAmpRatings do
+                Result := Result + floattoStrf(AmpRatings[j - 1], ffgeneral, 8, 4) + ',';
             Result := Result + ']';
         end;
     else

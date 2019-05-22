@@ -62,8 +62,8 @@ type
         Overload_UE,
         OverLoad_EEN: Double;  // Indicate amount of branch overload
 
-        NRatings: Integer;
-        Ratings: array of Double;
+        NumAmpRatings: Integer;
+        AmpRatings: array of Double;
 
         constructor Create(ParClass: TDSSClass);
         destructor Destroy; OVERRIDE;
@@ -217,9 +217,9 @@ begin
     MeterObj := NIL;
     ParentPDElement := NIL;
     DSSObjType := PD_ELEMENT;
-    NRatings := 1;
-    setlength(Ratings, 1);  // Initialized here
-    Ratings[0] := 1000;
+    NumAmpRatings := 1;
+    setlength(AmpRatings, 1);  // Initialized here
+    AmpRatings[0] := 1000;
 
 
 end;

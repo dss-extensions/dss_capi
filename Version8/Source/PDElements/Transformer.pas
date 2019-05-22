@@ -1033,7 +1033,6 @@ begin
     Yorder := fNTerms * fNconds;
     InitPropertyValues(0);
     RecalcElementData(ActiveActor);
-    ratings := NIL;
 end;
 
 
