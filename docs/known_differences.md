@@ -20,6 +20,7 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
 - This library contains fixes for user-written DLLs ("UserModels" and "UserControls" for elements like Generators and CapUserControls) which include truncated pointers and correct support for the DSS language `Edit` command.
 - Free Pascal hashlists are used for tracking elements. This means that accessing elements by name is usually faster in DSS C-API and present a linear behavior.
 - A custom version of the KLUSolve library is used. It generalizes the original code to use the upstream SuiteSparse code and adds extra functions to achieve better performance. It is also compatible with MATLAB on Linux.
+- Optimized (small, dense) matrix-vector multiplication.
 - Settings like the default circuit frequency are not saved to disk. 
     - Unlike the OpenDSS COM API, DSS C-API doesn't save and change the current working directory when you start it. The `Compile` command will still change to the script directory though.
     - On Linux and macOS, the default editor can be customized using the `EDITOR` environment variable, which is a common convention for other software.
@@ -47,5 +48,7 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
     - Experimental access to the following classes: `WireData`, `TSData`, `Reactors`, `LineSpacings`, `LineGeometries`, `CNData`.
     - `Error_Get_NumberPtr` returns a pointer to the global error number variable. This can be used to get for errors with lower overhead.
     - `Transformers_Get_LossesByType` and `Transformers_Get_AllLossesByType` return [total losses, load losses, no-load losses] for one or all transformers, respectively.
+    - `Lines_Get_IsSwitch`/`Lines_Set_IsSwitch`
     - `Loads_Get_Phases`/`Loads_Set_Phases`
     - `XYCurves_Get_AllNames` (was missing)
+    - `CktElement_Get_IsIsolated`

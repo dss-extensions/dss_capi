@@ -144,6 +144,8 @@ Its usage is simple: call `DSS_GetGRPointers()` once to get the pointer referenc
     );
 ```
 
+*Note: since version 0.10.3, you can also use the `DSS_GR_DataPtr_P*` and `DSS_GR_CountPtr_P*` family of functions to get each pointer individually.*
+
 Then, instead of calling the IR functions, call the GR flavor. For example, the ZIPV call would be:
 
 ```c

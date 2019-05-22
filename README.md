@@ -18,7 +18,7 @@ If you are looking for the bindings to other languages:
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) is available for .NET/C#, also mimics the COM classes, but Windows-only at the moment. Soon it will be possible to use it via COM too.
 - [DSS MATLAB](http://github.com/dss-extensions/dss_sharp/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible bastante with the COM classes.
 
-Version 0.10.3 **in development**, based on OpenDSS SVN r2504. 
+Version 0.10.3, based on OpenDSS revision 2609 (which is slightly newer than OpenDSS v8.5.9.1 and v7.6.5.86)
 
 While the main objective of COM compatibility has been reach, this is still a work-in-progress and is subject to changes. 
 *Note that, while the interface with OpenDSS is stable (v7, classic version), the OpenDSS-PM (v8, actor-based parallel machine version) interface is experimental in our builds.* From version 0.10, the v8 interface is a lot more stable than in 0.9.8.
@@ -34,14 +34,15 @@ Besides low-level details such as memory management, most of the COM documentati
 
 **Starting in version 0.9.8, we disabled the `opendsscmd.ini` creation. You can set the default base frequency using the environment variable DSS_BASE_FREQUENCY, or just set it in the DSS scripts (recommended). This also means that the initial datapath is set to the current working directory.**
 
-Since 2019-03-05, this repository contains all the Pascal code used to build DSS C-API. The API code is at the `src/` folder, while the main OpenDSS code is kept in `Version7/` and `Version8/`. The upstream/official code is kept in the branch named `opendss-official-svn` and is periodically merged -- see also the [upstream branch](https://github.com/dss-extensions/dss_capi/blob/master/docs/upstream_branch.md) document.
+Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to build DSS C-API. The API code is at the `src/` folder, while the main OpenDSS code is kept in `Version7/` and `Version8/`. The upstream/official code is kept in the branch named `opendss-official-svn` and is periodically merged -- see also the [upstream branch](https://github.com/dss-extensions/dss_capi/blob/master/docs/upstream_branch.md) document.
 
 ## Recent changes
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) for a detailed list.
 
+- **2019-05-22 / version 0.10.3: Some important fixes, better general performance, new API extensions, new features ported from COM and the OpenDSS version 8 codebase.**
 - 2019-03-05: the Git repository `electricdss-src` was merged into `dss_capi`.
-- **2019-02-28 / version 0.10.2: Highlights: implements the missing `CtrlQueue_Push`; reworks `LoadShapes` for performance and validation; introduces `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` to toggle the editor calls.**
+- 2019-02-28 / version 0.10.2: Highlights: implements the missing `CtrlQueue_Push`; reworks `LoadShapes` for performance and validation; introduces `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` to toggle the editor calls.**
 - 2019-02-12 / version 0.10.1: Highlights: more error checking, introduction of `Error_Get_NumberPtr`, fixes and better handling of Meters.
 - 2018-11-17 / version 0.10.0: Reduce memory allocations if the current buffers are reusable, introduce a Global Result mechanism, many API extensions (`LineGeometry`, `WireData`, `LineSpacing`, `CNData`, `TSData`, `Reactor`) -- see [the usage document](https://github.com/dss-extensions/dss_capi/blob/master/docs/usage.md) and the [issue ticket #11](https://github.com/dss-extensions/dss_capi/issues/11).
 - 2018-08-10 / version 0.9.8: Major reorganization of the source code, many minor fixes, new building scripts.
@@ -59,7 +60,7 @@ See [the changelog](https://github.com/dss-extensions/dss_capi/blob/master/docs/
     
 ## Extra features
 
-Besides most of the COM methods, some of the unique DDLL methods are also exposed in adapted forms, namely the methods from `DYMatrix.pas`, especially `GetCompressedYMatrix` (check the source files for more information).
+Besides most of the COM methods, some of the unique DDLL methods are also exposed in adapted forms, namely the methods from `DYMatrix.pas`, especially `GetCompressedYMatrix` (check the source files for more information). Also check the [list of known differences](https://github.com/dss-extensions/dss_capi/blob/master/docs/known_differences.md) for extra methods and options.
 
 ## Download
 
@@ -83,8 +84,7 @@ To build the DLL yourself:
 
 ### On Windows
 
-If you just need the DLL, you can download it from the releases page. You might need to install the [runtime for Microsoft Visual Studio 2017](https://go.microsoft.com/fwlink/?LinkId=746572).
-Otherwise:
+If you just need the DLL, you can download it from the releases page. Otherwise:
 
 - Install the x64 Free Pascal compiler -- see [the wiki](http://wiki.freepascal.org/Installing_Lazarus#Installing_The_Free_Pascal_Compiler) for further instructions.
 
@@ -98,7 +98,7 @@ If you just need the DLLs, you can also find the x64 DLLs and LIBs in [the artif
 
 ### On Linux
 
-The current recommendation is to build your own KLUSolve, so you need to download and install its dependencies. Since most distributions should include compatible SuiteSparse packages (which include the KLU library), a modified version of KLUSolve is included in the `klusolve` subfolder. Overall instructions:
+If the provided DLLs are not compatible with your distribution, the current recommendation is to build your own KLUSolve, so you need to download and install its dependencies. Since most distributions should include compatible SuiteSparse packages (which include the KLU library), a modified version of KLUSolve is included in the `klusolve` subfolder. Overall instructions:
 
 - Install the x64 Free Pascal compiler -- see [the wiki](http://wiki.freepascal.org/Installing_Lazarus#Installing_The_Free_Pascal_Compiler) for further instructions.
 
@@ -109,7 +109,7 @@ The current recommendation is to build your own KLUSolve, so you need to downloa
 
 ### On MacOS
 
-For MacOS, you can copy the relevant libklusolve.dylib from the official OpenDSS SVN repository. Overall instructions:
+After taking care of KLUSolve and placing a copy of it in the same folder, overall instructions:
 
 - Install the x64 Free Pascal compiler -- see [the wiki](http://wiki.freepascal.org/Installing_Lazarus#Installing_The_Free_Pascal_Compiler) for further instructions.
 - Build the main project:
@@ -135,8 +135,8 @@ Currently most testing/validation is based on [DSS Python](http://github.com/dss
 Besides bug fixes, the main funcionality of this library is mostly done. Notable desirable features that may be implemented are:
 - Expose more classes and important methods/properties for all classes
 - More and better documentation. We already integrated the help strings from the IDL/COM definition files in the header files.
-- Automate validation of the Linux binaries (compare the outputs to the Windows version).
-- C++ wrappers: Expose the API to C++ using namespaces for organization, overload methods, etc.
+- Automate validation of the Linux binaries (compare the outputs to the Windows version). Currently this is a manual process.
+- C++ wrappers: Expose the API to C++ using namespaces for organization, overload methods, etc. We expect this as soon as the API gets stable.
 
 Other features that may include more invasive changes in the code base will probably be developed in another repository.
 
@@ -149,8 +149,8 @@ Please allow me a few days to respond.
 
 ## Credits / Acknowledgment
 
-This project is derived from EPRI's OpenDSS and the same license is used. See `LICENSE` and `OPENDSS_LICENSE`, also check each subfolder for more details.
+This project is derived from EPRI's OpenDSS and the same style of license is used. See `LICENSE` and `OPENDSS_LICENSE`, also check each subfolder for more details.
 
-Note that, since OpenDSS depends on KLU via KLUSolve, the KLU licensing conditions (LGPL or GPL, depending on how you build KLU) apply to the resulting binaries; check the files `klusolve/COPYING`, `klusolve/lgpl_2_1.txt` and the SuiteSparse documentation.
+Note that, since OpenDSS depends on KLU via KLUSolve, the KLU licensing conditions (LGPL or GPL, depending on how you build KLU) apply to the resulting binaries; from the DSS-Extension KLUSolve repository, check the files `klusolve/COPYING`, `klusolve/lgpl_2_1.txt`, the SuiteSparse documentation and the Eigen3 documentation.
 
-I thank my colleagues at the University of Campinas, Brazil, for providing feedback and helping me test this project.
+Thanks to colleagues at the University of Campinas, Brazil, for providing feedback and helping me test this project, as well as everyone that reported issues and helped the development.

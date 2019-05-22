@@ -1,9 +1,45 @@
-# Version 0.10.3
+# Version 0.11
 
 **not released**
 
-- The KLUSolve code has been moved to a new repository at https://github.com/dss-extensions/klusolve/ -- to avoid confunsion with the upstream project (which hasn't seen any development for a couple of years), we refer to it by "DSS-Extensions KLUSolve". 
+- **Planned**:
+    - drop the GR API for strings (bytes, ints and floats will continue)
+    - extend the API to work with 64-bit integers where appropriate
+    - simplify the types used by the interface. For example, dropping the `uint16_t` type (used for booleans) and using int32_t instead -- this was an artifact from the COM code.
+    - complement the API with the missing classes
+    - initial work on the plotting and extended reporting API
+    - potentially unify the v7 and v8 codebases into a single library. Since v8 is unstable and hard to debug, it might be dropped due to lack of time.
+    
+# Version 0.10.3
 
+- Updated up to revision 2609 of the official OpenDSS code. Most of the new features have been ported and tested successfully.
+- The KLUSolve code has been moved to a new repository at https://github.com/dss-extensions/klusolve/ -- to avoid confunsion with the upstream project (which hasn't seen any development for a couple of years), we refer to it by "DSS-Extensions KLUSolve". 
+- The repository `electricdss-src` was merged into `dss_capi`. That is, the main repository for DSS C-API now contains most of the relevant OpenDSS code side-by-side with the API code. This simplified management and also makes it easier to build the library.
+- The default packages use GCC-based DLLs for Windows. If you encounter issues with your application, our [KLUSolve](https://github.com/dss-extensions/klusolve/releases) also distributes MSVC2017 DLLs.
+- On Windows, besides the original MSVC import libraries, the default packages now also include GCC import libraries.
+- Fixes issue with the line parameters on Linux and macOS due to memory-address aliasing issues.
+- Correctly enables DSS_CAPI_EARLY_ABORT by default.
+- Extra validation has been added for many functions. This should avoid some crashes due to uninitialized states or user errors. The Error API is used extensively for this -- remember to check for errors periodically!
+- v8: Several fixes, working on both macOS and Linux, including validation. On Windows there might be threading issues. Please open an issue if you'd like to use it on Windows (there are a couple of workarounds).
+- Optimized (small, dense) matrix-vector multiplication, up to 20% time-savings
+- The APIs for most classes now include `*_Get_idx` and `*_Set_idx` functions. 
+- The `*_Set_Name` functions are now faster by default, as well as present linear behavior with the system size.
+- `XYCurves`: Add `XYCurves_Get_AllNames`
+- Ported to v7: the DSS commands `CalcIncMatrix`, `CalcIncMatrix_O`, `Refine_BusLevels`, `CalcLaplacian`, and related export options: `IncMatrix`, `IncMatrixRows`, `IncMatrixCols`, `BusLevels`, `Laplacian`, `ZLL`, `ZCC`, `Contours`, `Y4`
+
+- General optimization of copies in the API-level code, avoiding extra copies or loops where possible
+- `Transformers`: new `Transformers_Get_LossesByType` and `Transformers_Get_AllLossesByType` to get total losses, load losses and no-load losses for the transformers.
+- New `Settings_Get_LoadsTerminalCheck` and `Settings_Set_LoadsTerminalCheck`: can be used for static scenarios (no open terminals for loads) to toggle the costly checks for open terminals. If set to false, it can save around 25% of simulation time, depending on the circuit characteristics.
+- New `CktElement_Get_IsIsolated` (fetches the current value for a single element, see the Topology API for more info).
+- New `Lines_Get_IsSwitch`/`Lines_Set_IsSwitch`, equivalent to the `switch=y/n` via DSS command.
+- `PVSystems`: expose some requested properties (daily, duty, yearly, Tdaily, Tduty, Tyearly). Still missing some more properties.
+- New `DSS_GR_DataPtr_P*` and `DSS_GR_CountPtr_P*`: alternative Global Result API functions, needed for [DSS_MATLAB](https://github.com/dss-extensions/dss_matlab).
+- `DSS_Set_AllowForms`: on Windows, only allow enabling the console output if there is a console available.
+
+Some highlights from the upstream OpenDSS changes:
+- `ReduceCkt`: new interface with circuit reduction methods
+- `Lines`: new seasonal ratings mechanism that allows changing the current rating through the simulation
+- `ExpControl`: new `PreferQ` option
 
 # Version 0.10.2
 

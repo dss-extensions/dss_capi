@@ -18,7 +18,7 @@ Caso procure integração com outras linguagens de programação:
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) para .NET/C#, no momento apenas Windows. Em breve também será possível usá-lo via COM.
 - [DSS MATLAB](http://github.com/dss-extensions/dss_sharp/) permite integração multi-plataforma (Windows, Linux, MacOS) bastante compatível com o módulo COM, de fato contorna algumas dificuldades de COM.
 
-Esta é a versão 0.10.3 **em desenvolvimento**, baseada no OpenDSS SVN r2504. 
+Esta é a versão 0.10.3, baseada no OpenDSS sVN r2609 (um pouco nova que o OpenDSS v8.5.9.1 e v7.6.5.86).
 
 Apesar de o objetivo principal (compatibilidade com COM) ter sido alcançado, este é um sempre um trabalho em andamento.
 *Observe que, enquanto a interface clássica (v7 + aprimoramentos) é estável, a interface para o OpenDSS-PM (v8, baseada em atores e execução paralela) ainda é experimental.* A partir da versão 0.10, a interface v8 está bem mais estável que na versão 0.9.8 da DSS C-API.
@@ -42,8 +42,9 @@ A partir de 2019-03-05, este repositório contém todo o código fonte em lingua
 
 Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) para listagem detalhada.
 
+- **2019-05-22 / version 0.10.3: Algumas correções importantes, desempenho geral bastante melhorado, e novas funcionalidadesSome important fixes, better general performance, novas funções estendidas, e novas funcionalidades portadas do módulo COM e da versão atual do OpenDSS.**
 - 2019-03-05: o repositório Git `electricdss-src` foi integrado diretamente em `dss_capi`.
-- **2019-02-28 / version 0.10.2: Implementa a função `CtrlQueue_Push` (faltante na versão anterior); modificações em `LoadShapes` para melhor desempenho e mais validação; introduz `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` para (desa)ativar chamadas ao editor externo.**
+- 2019-02-28 / version 0.10.2: Implementa a função `CtrlQueue_Push` (faltante na versão anterior); modificações em `LoadShapes` para melhor desempenho e mais validação; introduz `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` para (desa)ativar chamadas ao editor externo.
 - 2019-02-12 / version 0.10.1: Verificação de erros mais ampla, introdução da função `Error_Get_NumberPtr`, correções e melhor tratamento em `Meters`.
 - 2018-11-17 / versão 0.10.0: Reduz o número de operações de alocação de memória se os buffers atuais forem reutilizados, introduz o mecanismo de Resultado Global, várias extensões de API (`LineGeometry`, `WireData`, `LineSpacing`, `CNData`, `TSData`, `Reactor`) -- veja [o documento de uso](https://github.com/dss-extensions/dss_capi/blob/master/docs/usage.md)(em inglês) e o [ticket #11](https://github.com/dss-extensions/dss_capi/issues/11).
 - 2018-08-10 / versão 0.9.8: Grande reorganização do código fonte, várias pequenas correções, e novos scripts de compilação.
@@ -62,6 +63,8 @@ Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions
 ## Funcionalides extras
 
 Além da grande maioria dos métodos da interface COM, alguns dos métodos únicos da DDLL oficial (como acesso a ponteiros internos) foram expostos em formas adaptadas. Entre eles estão métodos de `DYMatrix.pas`, em especial `GetCompressedYMatrix` (veja os headers ou código fonte em Pascal para maiores detalhes).
+
+Veja também (em inglês) o documento de diferenças conhecidas, [list of known differences](https://github.com/dss-extensions/dss_capi/blob/master/docs/known_differences.md), para métodos e opções extras não disponíveis no OpenDSS oficial.
 
 ## Download
 
@@ -244,7 +247,7 @@ Atualmente, todos os testes e validação são baseados no [DSS Python](http://g
 Além de correções de problemas, a funcionalidade principal desta biblioteca está pronta. Alguns pontos que pretendemos trabalhar envolvem:
 - Expor os principais métodos e propriedades faltantes (não presentes nem mesmo na interface COM), assim como classes.
 - Documentação melhor e mais completa. As strings de ajuda dos arquivos de definição IDL/COM já estão reproduzidos nos headers (pasta `include`), mas apenas em inglês.
-- Validação automatizada dos binários no Linux (comparação das saídas com a versão Windows e oficial).
+- Validação automatizada dos binários no Linux (comparação das saídas com a versão Windows e oficial). Atualmente a validação é rodada manualmente.
 - C++: Expor a API em C++ usando namespaces para organização, métodos com overload, etc.
 
 Outras funções desejadas podem necessitar de mudanças invasivas na base de código provavelmente serão desenvolvidas inicialmente em um repositório a parte.
@@ -261,5 +264,4 @@ Este projeto é derivado do OpenDSS, desenvolvido pelo EPRI, e assim mantém a m
 
 Note que, já que o OpenDSS depende da biblioteca através da KLUSolve, as condições de licença da KLU (LGPL oou GPL, dependendo de como a KLU for compilada) se aplicam aos binários resultantes; veja os arquivos  `klusolve/COPYING`, `klusolve/lgpl_2_1.txt` e a documentação da SuiteSparse.
 
-Agradeço aos meus colegas do Departamento de Sistemas e Energia, da Faculdade de Engenharia Elétrica e de Computação, na Universidade Estadual de Campinas (UNICAMP), pelos
-comentários e ajuda geral para testar este projeto.
+Agradecimentos aos colegas do Departamento de Sistemas e Energia, da Faculdade de Engenharia Elétrica e de Computação, na Universidade Estadual de Campinas (UNICAMP), pelos comentários e ajuda geral para testar este projeto.
