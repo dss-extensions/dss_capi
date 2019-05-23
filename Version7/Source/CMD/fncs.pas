@@ -129,9 +129,37 @@ Begin
   end;
 End;
 
+// called from ActiveSolution.Increment_time
 function TFNCS.FncsTimeRequest (next_fncs:fncs_time): Boolean;
-begin
-//  writeln('  FNCS time is ' + format('%u', [next_fncs]));
+var
+  time_granted: fncs_time;
+  events: ppchar;
+  key, value: pchar;
+  i: integer;
+  ilast: size_t;
+  nvalues, ival: size_t;
+  values: ppchar;
+begin { TFNCS.FncsTimeRequest }
+//  writeln('  FNCS next time is ' + format('%u', [next_fncs]));
+  // execution blocks here, until FNCS permits the time step loop to continue
+  time_granted := fncs_time_request (next_fncs);
+//  writeln('  FNCS time granted is ' + format('%u', [time_granted]));
+  ilast := fncs_get_events_size();
+  // TODO: executing OpenDSS commands here may cause unwanted interactions
+  if ilast > 0 then begin
+    events := fncs_get_events();
+    for i := 0 to ilast-1 do begin
+      key := events[i];
+      nvalues := fncs_get_values_size (key);
+      values := fncs_get_values (key);
+      for ival := 0 to nvalues-1 do begin
+        value := values[ival];
+        writeln(Format('  FNCSTimeRequest command %s at %u', [value, time_granted]));
+        DSSExecutive.Command := value;
+        fncs_publish ('output', value);
+      end;
+    end;
+  end;
   Result := True;
 end;
 
@@ -161,7 +189,7 @@ begin
           nvalues := fncs_get_values_size (key);
           values := fncs_get_values (key);
           for ival := 0 to nvalues-1 do begin
-            value := values[ival]; // fncs_get_value(key);
+            value := values[ival];
             writeln(Format('FNCS command %s at %u', [value, time_granted]));
             DSSExecutive.Command := value;
             fncs_publish ('output', value);
@@ -192,11 +220,11 @@ end;
 constructor TFNCS.Create;
 begin
   FLibHandle := SafeLoadLibrary ('libfncs.' + SharedSuffix);
-  writeln(FLibHandle);
+//  writeln(FLibHandle);
   if FLibHandle <> DynLibs.NilHandle then begin
     FuncError := False;
     @fncs_initialize := find_fncs_function ('fncs_initialize');
-    writeln (HexStr(PtrUInt(@fncs_initialize),8));
+//    writeln (HexStr(PtrUInt(@fncs_initialize),8));
     if not FuncError then @fncs_initialize_config := find_fncs_function ('fncs_initialize_config');
     if not FuncError then @fncs_agentRegister := find_fncs_function ('fncs_agentRegister');
     if not FuncError then @fncs_agentRegisterConfig := find_fncs_function ('fncs_agentRegisterConfig');
