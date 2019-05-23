@@ -45,7 +45,8 @@ INTERFACE
             FPresentVpu: Array of Double;
             FPendingChange: Array of Integer;
             FVregs: Array of Double;
-            FPriorQ: Array of Double;
+            FLastIterQ: Array of Double; // for DeltaQFactor
+            FLastStepQ: Array of Double; // for FOpenTau
             FTargetQ: Array of Double;
             FWithinTol: Array of Boolean;
 
@@ -65,6 +66,7 @@ INTERFACE
             FVoltageChangeTolerance: Double; // no user adjustment
             FVarChangeTolerance: Double;     // no user adjustment
             FPreferQ: Boolean;
+            FTresponse, FOpenTau: Double;
 
             PROCEDURE Set_PendingChange(Value: Integer;DevIndex: Integer);
             FUNCTION  Get_PendingChange(DevIndex: Integer):Integer;
@@ -114,7 +116,7 @@ USES
 
 CONST
 
-    NumPropsThisClass = 12;
+    NumPropsThisClass = 13;
 
     NONE = 0;
     CHANGEVARLEVEL = 1;
@@ -159,6 +161,7 @@ Begin
      PropertyName[10] := 'EventLog';
      PropertyName[11] := 'DeltaQ_factor';
      PropertyName[12] := 'PreferQ';
+     PropertyName[13] := 'Tresponse';
 
      PropertyHelp[1] := 'Array list of PVSystems to be controlled.'+CRLF+CRLF+
                         'If not specified, all PVSystems in the circuit are assumed to be controlled by this ExpControl.';
@@ -172,7 +175,8 @@ Begin
                         'When the control injects or absorbs reactive power due to a voltage deviation from the Q=0 crossing of the volt-var curve, '+
                         'the Q=0 crossing will move toward the actual terminal voltage with this time constant. '+
                         'Over time, the effect is to gradually bring inverter reactive power to zero as the grid voltage changes due to non-solar effects. '+
-                        'If zero, then Vreg stays fixed';
+                        'If zero, then Vreg stays fixed. ' +
+                        'IEEE1547-2018 requires adjustability from 300s to 5000s';
      PropertyHelp[5] := 'Equilibrium per-unit reactive power when V=Vreg; defaults to 0.'+CRLF+CRLF+
                         'Enter > 0 for lagging (capacitive) bias, < 0 for leading (inductive) bias.';
      PropertyHelp[6] := 'Lower limit on adaptive Vreg; defaults to 0.95 per-unit';
@@ -194,8 +198,15 @@ Begin
                          'of control iterations needed to achieve the control criteria, and move to the power flow solution.';
      PropertyHelp[12] := '{Yes/True* | No/False} Default is No for ExpControl.' + CRLF + CRLF +
                          'Curtails real power output as needed to meet the reactive power requirement. ' +
-                         'IEEE1547-2018 requires Yes, but earlier versions of OpenDSS only implemented No, ' +
-                         'so the default is No for backward compatibility of OpenDSS models.';
+                         'IEEE1547-2018 requires Yes, but the default is No for backward compatibility of OpenDSS models.';
+     PropertyHelp[13] := 'Open-loop response time for changes in Q.' + CRLF + CRLF +
+                         'The value of Q reaches 90% of the target change within Tresponse, which ' +
+                         'corresponds to a low-pass filter having tau = Tresponse / 2.3026. ' +
+                         'The behavior is similar to LPFTAU in InvControl, but here the response time is ' +
+                         'input instead of the time constant. ' +
+                         'IEEE1547-2018 default is 10s for Catagory A and 5s for Category B, ' +
+                         'adjustable from 1s to 90s for both categories. However, the default is 0 for ' +
+                         'backward compatibility of OpenDSS models.';
 
      ActiveProperty  := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -253,6 +264,7 @@ Begin
        10: ShowEventLog := InterpretYesNo(param);
        11: FdeltaQ_factor := Parser.DblValue;
        12: FPreferQ := InterpretYesNo(param);
+       13: if Parser.DblValue >= 0 then FTresponse := Parser.DblValue;
       ELSE
         // Inherited parameters
         ClassEdit( ActiveExpControlObj, ParamPointer - NumPropsthisClass)
@@ -296,6 +308,8 @@ Begin
       FQmaxLag                   := OtherExpControl.FQmaxLag;
       FdeltaQ_factor             := OtherExpControl.FdeltaQ_factor;
       FPreferQ                   := OtherExpControl.FPreferQ;
+      FTresponse                 := OtherExpControl.FTresponse;
+      FOpenTau := FTresponse / 2.3026;  // not sure if RecalcElementData will be invoked from the call stack
       For j := 1 to ParentClass.NumProperties Do PropertyValue[j] := OtherExpControl.PropertyValue[j];
 
    End
@@ -338,7 +352,8 @@ Begin
      FPriorVpu                := nil;
      FPresentVpu              := nil;
      FPendingChange           := nil;
-     FPriorQ                  := nil;
+     FLastIterQ               := nil;
+     FLastStepQ               := nil;
      FTargetQ                 := nil;
      FWithinTol               := nil;
 
@@ -360,6 +375,8 @@ Begin
      FQmaxLag := 0.44;
      FdeltaQ_factor := 0.7; // only on control iterations, not the final solution
      FPreferQ := FALSE;
+     FTresponse := 0.0;
+     FOpenTau := 0.0;
 
      //generic for control
      FPendingChange         := nil;
@@ -375,7 +392,8 @@ Begin
      Finalize(FPriorVpu);
      Finalize(FPresentVpu);
      Finalize(FPendingChange);
-     Finalize(FPriorQ);
+     Finalize(FLastIterQ);
+     Finalize(FLastStepQ);
      Finalize(FTargetQ);
      Finalize(FWithinTol);
      Finalize(FVregs);
@@ -387,6 +405,7 @@ VAR
    i      :Integer;
    maxord :Integer;
 Begin
+    FOpenTau := FTresponse / 2.3026;
     IF FPVSystemPointerList.ListSize = 0 Then  MakePVSystemList;
 
     IF FPVSystemPointerList.ListSize > 0  Then begin
@@ -476,6 +495,7 @@ VAR
   Qbase         :Double;
   Qinvmaxpu     :Double;
   Plimit        :Double;
+  dt            :Double;
   PVSys         :TPVSystemObj;
 BEGIN
   for i := 1 to FPVSystemPointerList.ListSize do begin
@@ -517,15 +537,21 @@ BEGIN
         end;
       end;
 
+      // put FTargetQ through the low-pass open-loop filter
+      if FOpenTau > 0.0 then begin
+        dt :=  ActiveCircuit.Solution.Dynavars.h;
+        FTargetQ[i] := FLastStepQ[i] + (FTargetQ[i] - FLastStepQ[i]) * (1 - Exp (-dt / FOpenTau)); // TODO - precalculate?
+      end;
+
       // only move the non-bias component by deltaQ_factor in this control iteration
-      DeltaQ := FTargetQ[i] - FPriorQ[i];
-      Qset := FPriorQ[i] + DeltaQ * FdeltaQ_factor;
+      DeltaQ := FTargetQ[i] - FLastIterQ[i];
+      Qset := FLastIterQ[i] + DeltaQ * FdeltaQ_factor;
  //     Qset := FQbias * Qbase;
       If PVSys.Presentkvar <> Qset Then PVSys.Presentkvar := Qset;
       If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name +','+ PVSys.Name,
                              Format(' Setting PVSystem output kvar= %.5g',
                              [PVSys.Presentkvar]));
-      FPriorQ[i] := Qset;
+      FLastIterQ[i] := Qset;
       FPriorVpu[i] := FPresentVpu[i];
       ActiveCircuit.Solution.LoadsNeedUpdating := TRUE;
       // Force recalc of power parms
@@ -592,15 +618,16 @@ begin
   PropertyValue[1]  := '';      // PVSystem list
   PropertyValue[2]  := '1';     // initial Vreg
   PropertyValue[3]  := '50';    // slope
-  PropertyValue[4] := '1200.0'; // VregTau
+  PropertyValue[4]  := '1200.0';// VregTau
   PropertyValue[5]  := '0';     // Q bias
   PropertyValue[6]  := '0.95';  // Vreg min
   PropertyValue[7]  := '1.05';  // Vreg max
-  PropertyValue[8]  := '0.44';     // Qmax leading
-  PropertyValue[9]  := '0.44';     // Qmax lagging
+  PropertyValue[8]  := '0.44';  // Qmax leading
+  PropertyValue[9]  := '0.44';  // Qmax lagging
   PropertyValue[10] := 'no';    // write event log?
   PropertyValue[11] := '0.7';   // DeltaQ_factor
   PropertyValue[12] := 'no';    // PreferQ
+  PropertyValue[13] := '0';     // TResponse
   inherited  InitPropertyValues(NumPropsThisClass);
 end;
 
@@ -617,7 +644,8 @@ begin
     SetLength(FPriorVpu, FListSize+1);
     SetLength(FPresentVpu, FListSize+1);
     SetLength(FPendingChange,FListSize+1);
-    SetLength(FPriorQ,FListSize+1);
+    SetLength(FLastIterQ,FListSize+1);
+    SetLength(FLastStepQ,FListSize+1);
     SetLength(FTargetQ,FListSize+1);
     SetLength(FWithinTol, FListSize+1);
     SetLength(FVregs, FListSize+1);
@@ -640,7 +668,8 @@ begin
          SetLength(FPresentVpu, FListSize+1);
 
          SetLength(FPendingChange,FListSize+1);
-         SetLength(FPriorQ,FListSize+1);
+         SetLength(FLastIterQ,FListSize+1);
+         SetLength(FLastStepQ,FListSize+1);
          SetLength(FTargetQ,FListSize+1);
          SetLength(FWithinTol, FListSize+1);
          SetLength(FVregs, FListSize+1);
@@ -652,7 +681,8 @@ begin
 //    Set_NTerms(PVSys.NTerms); // TODO - what is this for?
     FPriorVpu[i] := 0.0;
     FPresentVpu[i] := 0.0;
-    FPriorQ[i] := -1.0;
+    FLastIterQ[i] := -1.0;
+    FLastStepQ[i] := -1.0;
     FTargetQ[i] :=0.0;
     FWithinTol[i] := False;
     FVregs[i] := FVregInit;
@@ -682,6 +712,7 @@ Begin
     9   : Result := Format('%.6g', [FQmaxLag]);
     11  : Result := Format('%.6g', [FdeltaQ_factor]);
     12  : if FPreferQ then Result := 'yes' else Result := 'no';
+    13  : Result := Format('%.6g', [FTresponse]);
     // 10 skipped, EventLog always went to the default handler
   ELSE  // take the generic handler
     Result := Inherited GetPropertyValue(index);
@@ -723,10 +754,11 @@ Var
 begin
   for j := 1 to FPVSystemPointerList.ListSize do begin
     PVSys := ControlledElement[j];
+    FLastStepQ[j] := PVSys.Presentkvar;
     if FVregTau > 0.0 then begin
       dt :=  ActiveCircuit.Solution.Dynavars.h;
       Verr := FPresentVpu[j] - FVregs[j];
-      FVregs[j] := FVregs[j] + Verr * (1 - Exp (-dt / FVregTau));
+      FVregs[j] := FVregs[j] + Verr * (1 - Exp (-dt / FVregTau)); // TODO - precalculate?
     end else begin
       Verr := 0.0;
     end;
