@@ -9,8 +9,8 @@ unit FNCS;
 
 {$MACRO ON}
 {$IFDEF Windows}
-//{$DEFINE FNCS_CALL:=stdcall}
-{$DEFINE FNCS_CALL:=cdecl}
+{$DEFINE FNCS_CALL:=stdcall}
+//{$DEFINE FNCS_CALL:=cdecl}
 {$ELSE} // Darwin and Unix
 {$DEFINE FNCS_CALL:=cdecl}
 {$ENDIF}
