@@ -4,11 +4,14 @@
 2 command new pvsystem.pv1 bus1=634 phases=3 kV=0.48 irradiance=1 pmpp=285 kVA=300 daily=pvshape
 3 command new monitor.pv1v  element=pvsystem.pv1 terminal=1 mode=96
 4 command new monitor.pv1pq element=pvsystem.pv1 terminal=1 mode=65 PPolar=NO
-5 command solve
+5 command new monitor.fdrpq element=line.650632 terminal=1 mode=65 PPolar=NO
+6 command solve
 7 command	export summary pvsnap_summary.csv
 8 command	set controlmode=static
 9 command	set maxcontroliter=1000
 10 command	solve mode=daily stepsize=1s number=86400
+42401500000000 command open Line.671692 1
 86401000000000 command export monitors pv1v
 86401000000000 command export monitors pv1pq
+86401000000000 command export monitors fdrpq
 86401000000000 command quit
