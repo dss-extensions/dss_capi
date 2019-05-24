@@ -645,7 +645,6 @@ begin
     {$IFDEF FPC}Result := DeleteFile(TempFile){$ELSE}Result := Windows.DeleteFile(TempFile){$ENDIF}
   else
     Result := False;
-  Result := (FpAccess(PChar(Dir), X_OK or W_OK) = 0);
 end;
 {$ENDIF}
 
