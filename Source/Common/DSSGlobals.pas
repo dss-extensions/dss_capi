@@ -264,6 +264,9 @@ USES  {Forms,   Controls,}
      {$ELSE}
      Windows, DSSForms, SHFolder,
      {$ENDIF}
+     {$IFDEF UNIX}
+     BaseUnix,
+     {$ENDIF}
      Solution,
      Executive;
      {Intrinsic Ckt Elements}
@@ -628,6 +631,12 @@ Begin
 
 End;
 
+{$IFDEF UNIX}
+function IsDirectoryWritable(const Dir: String): Boolean;
+begin
+  Result := (FpAccess(PChar(Dir), X_OK or W_OK) = 0);
+end;
+{$ELSE}
 function IsDirectoryWritable(const Dir: String): Boolean;
 var
   TempFile: array[0..MAX_PATH] of Char;
@@ -636,7 +645,9 @@ begin
     {$IFDEF FPC}Result := DeleteFile(TempFile){$ELSE}Result := Windows.DeleteFile(TempFile){$ENDIF}
   else
     Result := False;
+  Result := (FpAccess(PChar(Dir), X_OK or W_OK) = 0);
 end;
+{$ENDIF}
 
 PROCEDURE SetDataPath(const PathName:String);
 var
