@@ -5,5 +5,4 @@
 16200000000000	command	export ynodelist base_nodelist.csv
 19800000000000	command	export summary base_summary.csv
 21400000000000	command help
-21450000000000	command solve mode=daily stepsize=1s number=50
 21700000000000	command quit
