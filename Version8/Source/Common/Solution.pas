@@ -750,7 +750,7 @@ begin
 {$ENDIF}
     ;
 
-    if MaxError <= ConvergenceTolerance then
+    if (MaxError <= ConvergenceTolerance) and (not IsNaN(MaxError)) then
         Result := TRUE
     else
         Result := FALSE;
