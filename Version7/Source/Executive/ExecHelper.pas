@@ -116,6 +116,8 @@ interface
          FUNCTION DoNodeListCmd:Integer;
          FUNCTION DoRemoveCmd:Integer;
 
+         function DoFNCSPubCmd:Integer;
+
          PROCEDURE DoSetNormal(pctNormal:Double);
 
 
@@ -147,12 +149,12 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
      Classes,  CktElementClass, Sensor,  { ExportCIMXML,} NamedObject,
      {$IFDEF FPC}RegExpr,{$ELSE}RegularExpressionsCore,{$ENDIF} PstCalc,
-     PDELement, ReduceAlgs;
+     PDELement, ReduceAlgs, Fncs;
 
 Var
    SaveCommands, DistributeCommands,  DI_PlotCommands,
    ReconductorCommands, RephaseCommands, AddMarkerCommands,
-   SetBusXYCommands, PstCalcCommands, RemoveCommands   :TCommandList;
+   SetBusXYCommands, PstCalcCommands, RemoveCommands, FNCSPubCommands :TCommandList;
 
 
 
@@ -3770,6 +3772,37 @@ Begin
 
 End;
 
+
+FUNCTION DoFNCSPubCmd:Integer;
+Var
+  Param          :String;
+  ParamName      :String;
+  ParamPointer   :Integer;
+  FileName       :String;
+Begin
+  Result := 0;
+  ParamName      := Parser.NextParam;
+  Param          := Parser.StrValue;
+  ParamPointer   := 0;
+  while Length(Param) > 0 do Begin
+    IF Length(ParamName) = 0 THEN Inc(ParamPointer)
+    ELSE ParamPointer := FNCSPubCommands.GetCommand(ParamName);
+
+    Case ParamPointer of
+       1: FileName := Param;
+    Else
+       DoSimpleMsg('Error: Unknown Parameter on command line: '+Param, 28721);
+    End;
+    ParamName := Parser.NextParam;
+    Param := Parser.StrValue;
+  End;
+  if Assigned (ActiveFNCS) then begin
+    if ActiveFNCS.IsReady then begin
+      ActiveFNCS.ReadFncsPubConfig (FileName);
+    end;
+  end;
+End;
+
 FUNCTION DoUpdateStorageCmd:Integer;
 
 Begin
@@ -4042,6 +4075,9 @@ initialization
     PstCalcCommands := TCommandList.Create(['Npts', 'Voltages', 'dt', 'Frequency', 'lamp']);
     PstCalcCommands.abbrev := True;
 
+    FNCSPubCommands := TCommandList.Create(['Fname']);
+    FNCSPubCommands.abbrev := True;
+
     RemoveCommands := TCommandList.Create(['ElementName', 'KeepLoad', 'Editstring']);
     RemoveCommands.abbrev := True;
 
@@ -4055,6 +4091,7 @@ finalization
     RephaseCommands.Free;
     SetBusXYCommands.Free;
     PstCalcCommands.Free;
+    FNCSPubCommands.Free;
     RemoveCommands.Free;
 
 end.
