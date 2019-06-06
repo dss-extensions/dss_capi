@@ -94,6 +94,7 @@ type
     constructor Create();
     destructor Destroy; override;
     function FncsTimeRequest (next_fncs:fncs_time):Boolean;
+    procedure ReadFncsPubConfig (fname: string);
   end;
 
 var
@@ -128,6 +129,11 @@ Begin
     writeln('Error in FNCS Stop Time: "' + s +'" Units can only be d, h, m, or s (single char only)');
   end;
 End;
+
+procedure TFNCS.ReadFncsPubConfig(fname: string);
+begin
+  writeln('This is where we read FNCS publication requests from: ' + fname);
+end;
 
 // called from ActiveSolution.Increment_time
 function TFNCS.FncsTimeRequest (next_fncs:fncs_time): Boolean;
