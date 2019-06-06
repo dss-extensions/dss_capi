@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 107;
+     NumExecCommands = 108;
 
 Var
 
@@ -145,6 +145,7 @@ Begin
      ExecCommand[105] := 'Connect';
      ExecCommand[106] := 'Disconnect';
      ExecCommand[107] := 'Remove';
+     ExecCommand[108] := 'FNCSPublish';
 
 
 
@@ -475,6 +476,7 @@ Begin
                          'Remove Line.Lin3021' + CRLF +
                          'Remove Line.L22 Editstring="Daily=Dailycurve Duty=SolarShape' + CRLF +
                          'Remove Line.L333 KeepLoad=No';
+     CommandHelp[108] := 'Read FNCS publication topics from a JSON file';
 
 End;
 
@@ -709,6 +711,7 @@ Begin
       106: begin DSSInfoMessageDlg ('Winsock TCP/IP disconnection is not supported in FPC version');CmdResult := 0; end;
       {$ENDIF}
       107: DoRemoveCmd;
+      108: DoFNCSPubCmd;
      ELSE
        // Ignore excess parameters
      End;
