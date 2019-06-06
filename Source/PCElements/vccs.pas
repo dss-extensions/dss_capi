@@ -43,6 +43,8 @@ TYPE
         Irated: double; // line current at full output
         Fkv: double; // scale voltage to HW pu input
         Fki: double; // scale HW pu output to current
+        FrmsMode: Boolean; // indicates a phasor-domain PLL simulation
+        FmaxIpu: double; // maximum RMS current in per-unit of rated
 
         // Support for Dynamics Mode - PU of Vrated and BaseCurr
         sVwave: double;
@@ -60,6 +62,8 @@ TYPE
         sIdxU: integer; // ring buffer index for z and whist
         sIdxY: integer; // ring buffer index for y2 (rms current)
         y2sum: double;
+        procedure IntegratePhasorStates;
+
      protected
         Function  Get_Variable(i: Integer): Double; Override;
         procedure Set_Variable(i: Integer; Value: Double); Override;
@@ -136,7 +140,7 @@ End;
 
 Procedure TVCCS.DefineProperties;
 Begin
-     NumPropsThisClass := 9;
+     NumPropsThisClass := 11;
 
      Numproperties := NumPropsThisClass;
      CountProperties;   // Get inherited property count
@@ -152,6 +156,8 @@ Begin
      PropertyName[7] := 'bp2';
      PropertyName[8] := 'filter';
      PropertyName[9] := 'fsample';
+     PropertyName[10] := 'rmsmode';
+     PropertyName[11] := 'imaxpu';
 
      // define Property help values
      PropertyHelp[1] := 'Name of bus to which source is connected.'+CRLF+'bus1=busname'+CRLF+'bus1=busname.1.2.3';
@@ -163,6 +169,8 @@ Begin
      PropertyHelp[7] := 'XYCurve defining the output piece-wise linear block.';
      PropertyHelp[8] := 'XYCurve defining the digital filter coefficients (x numerator, y denominator).';
      PropertyHelp[9] := 'Sample frequency [Hz} for the digital filter.';
+     PropertyHelp[10]:= 'True if only Hz is used to represent a phase-locked loop (PLL), ignoring the BP1, BP2 and time-domain transformations. Default is no.';
+     PropertyHelp[11]:= 'Maximum output current in per-unit of rated; defaults to 1.1';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -229,6 +237,8 @@ Begin
                   end;
                End;
             9: FsampleFreq := Parser.DblValue;
+            10: FrmsMode := InterpretYesNo(Param);
+            11: FmaxIpu := Parser.DblValue;
          ELSE
             ClassEdit(ActiveVCCSObj, ParamPointer - NumPropsThisClass)
          End;
@@ -268,6 +278,8 @@ Begin
       Fbp2_name := OtherVCCS.Fbp2_name;
       Ffilter_name := OtherVCCS.Ffilter_name;
       FsampleFreq := OtherVCCS.FsampleFreq;
+      FrmsMode := OtherVCCS.FrmsMode;
+      FmaxIpu := OtherVCCS.FmaxIpu;
 
       ClassMakeLike(OtherVCCS); // set spectrum,  base frequency
 
@@ -299,6 +311,8 @@ Begin
   FsampleFreq := 5000.0;
   Fkv := 1.0;
   Fki := 1.0;
+  FrmsMode := FALSE;
+  FmaxIpu := 1.1;
 
   Fwinlen := 0;
   Ffilter_name := '';
@@ -437,6 +451,8 @@ begin
   PropertyValue[7] := 'NONE';
   PropertyValue[8] := 'NONE';
   PropertyValue[9] := '5000';
+  PropertyValue[10]:= 'no';
+  PropertyValue[11]:= '1.1';
   inherited  InitPropertyValues(NumPropsThisClass);
 end;
 
@@ -494,6 +510,23 @@ begin
   sIdxY := 0;
 end;
 
+procedure TVCCSObj.IntegratePhasorStates;
+var
+  vpu, irms, imax: double;
+begin
+  ComputeIterminal;
+  vpu := cabs (Vterminal^[1]) / Vrated;
+  if vpu > 0.0 then begin
+    irms := BaseCurr / vpu;
+    imax := FmaxIpu * Irated;
+    if irms > imax then irms := imax;
+    sIrms := irms / BaseCurr;
+    if sIrms > sIpeak then sIpeak := sIrms;
+  end;
+  sVwave := 0.0;
+  sIwave := 0.0;
+end;
+
 // this is called twice per dynamic time step; predictor then corrector
 procedure TVCCSObj.IntegrateStates;
 var
@@ -503,6 +536,11 @@ var
   vnow: complex;
   iu, iy: integer; // local copies of sIdxU and sIdxY for predictor
 begin
+  if FrmsMode then begin
+    IntegratePhasorStates;
+    exit;
+  end;
+
   ComputeIterminal;
 
   t := ActiveSolutionObj.DynaVars.t;
