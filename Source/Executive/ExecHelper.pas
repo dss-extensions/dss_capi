@@ -149,7 +149,7 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
      Classes,  CktElementClass, Sensor,  { ExportCIMXML,} NamedObject,
      {$IFDEF FPC}RegExpr,{$ELSE}RegularExpressionsCore,{$ENDIF} PstCalc,
-     PDELement, ReduceAlgs, Fncs;
+     PDELement, ReduceAlgs{$IFDEF FPC}, Fncs{$ENDIF};
 
 Var
    SaveCommands, DistributeCommands,  DI_PlotCommands,
@@ -3774,6 +3774,7 @@ End;
 
 
 FUNCTION DoFNCSPubCmd:Integer;
+{$IFDEF FPC}
 Var
   Param          :String;
   ParamName      :String;
@@ -3791,7 +3792,7 @@ Begin
     Case ParamPointer of
        1: FileName := Param;
     Else
-       DoSimpleMsg('Error: Unknown Parameter on command line: '+Param, 28721);
+       DoSimpleMsg('Error: Unknown Parameter on command line: '+Param, 28728);
     End;
     ParamName := Parser.NextParam;
     Param := Parser.StrValue;
@@ -3801,6 +3802,10 @@ Begin
       ActiveFNCS.ReadFncsPubConfig (FileName);
     end;
   end;
+{$ELSE}
+Begin
+  DoSimpleMsg('Error: FNCS only supported in the Free Pascal version', 28728);
+{$ENDIF}
 End;
 
 FUNCTION DoUpdateStorageCmd:Integer;
