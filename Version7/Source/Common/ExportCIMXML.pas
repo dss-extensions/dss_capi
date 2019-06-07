@@ -1968,10 +1968,10 @@ Begin
         GuidNode (F, 'TapChanger.TapChangerControl', pName2.GUID);
         DoubleNode (F, 'RatioTapChanger.stepVoltageIncrement', 100.0 * TapIncrement);
         TransformerControlEnum (F, 'volt');
-        IntegerNode (F, 'TapChanger.highStep', NumTaps);
-        IntegerNode (F, 'TapChanger.lowStep', 0);
-        IntegerNode (F, 'TapChanger.neutralStep', NumTaps div 2);
-        IntegerNode (F, 'TapChanger.normalStep', NumTaps div 2);
+        IntegerNode (F, 'TapChanger.highStep', NumTaps div 2);
+        IntegerNode (F, 'TapChanger.lowStep', -NumTaps div 2);
+        IntegerNode (F, 'TapChanger.neutralStep', 0);
+        IntegerNode (F, 'TapChanger.normalStep', 0);
         DoubleNode (F, 'TapChanger.neutralU', 120.0 * PT);
         DoubleNode (F, 'TapChanger.initialDelay', InitialDelay);
         DoubleNode (F, 'TapChanger.subsequentDelay', SubsequentDelay);
