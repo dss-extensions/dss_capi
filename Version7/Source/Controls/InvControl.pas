@@ -2884,8 +2884,11 @@ begin
              priorDRCRollAvgWindow[j] := FDRCRollAvgWindow[j].Get_AvgVal;
              // compute the present terminal voltage
              localControlledElement.ComputeVterminal;
-             PVSys.Set_Variable(5,FDRCRollAvgWindow[j].Get_AvgVal); // save rolling average voltage in monitor
-
+             // save the applicable rolling average voltage in monitor
+             if (ControlMode = 'VOLTVAR') and (FVAvgWindowLengthSec > 0.0) then
+               PVSys.Set_Variable(5,FRollAvgWindow[j].Get_AvgVal)
+             else
+               PVSys.Set_Variable(5,FDRCRollAvgWindow[j].Get_AvgVal);
 
              for k := 1 to localControlledElement.Yorder do tempVbuffer[k] := localControlledElement.Vterminal^[k];
 
