@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-        NumExecOptions = 128;
+        NumExecOptions = 129;
 
 VAR
          ExecOption,
@@ -163,6 +163,7 @@ Begin
      ExecOption[126] := 'Zmag';
      ExecOption[127] := 'SeasonRating';
      ExecOption[128] := 'SeasonSignal';
+     ExecOption[129] := 'NUMANodes';
 
 
      OptionHelp[1]  := 'Sets the active DSS class type.  Same as Class=...';
@@ -441,6 +442,8 @@ Begin
      OptionHelp[127] := 'Enables/disables the seasonal selection of the rating for determining if an element is overloaded. When enabled, the energy meter will' + CRLF +
                         'look for the rating (NormAmps) using the SeasonSignal  to eavluate if the element is overloaded';
      OptionHelp[128] := 'Is the name of the XY curve defining the seasonal change when performing QSTS simulations.';
+     OptionHelp[129] := 'Delivers the number of Non-uniform memory access nodes (NUMA Nodes) available on the machine (read Only). This information is vital when working' + CRLF +
+                        'with processor clusters (HPC). It will help you know the number of processors in the cluster';
 End;
 //----------------------------------------------------------------------------
 FUNCTION DoSetCmd_NoCircuit:Boolean;  // Set Commands that do not require a circuit
@@ -942,10 +945,7 @@ Begin
           107: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Solution.Total_Time]));
           108: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].Solution.Time_Step]));
           109: AppendGlobalResult(Format('%d' ,[CPU_Cores]));
-          110:
-            begin
-              AppendGlobalResult(Format('%d' ,[CPU_Physical]));
-            end;
+          110: AppendGlobalResult(Format('%d' ,[CPU_Physical]));
           111: AppendGlobalResult(Format('%d' ,[NumOfActors]));
           112: Begin
                   if AllActors then
@@ -979,6 +979,7 @@ Begin
           126: AppendGlobalResult(Format('%-g' ,[ActiveCircuit[ActiveActor].ReductionZmag]));
           127: if SeasonalRating then AppendGlobalResult('Yes') else AppendGlobalResult('No');
           128: AppendGlobalResult(SeasonSignal);
+          129: AppendGlobalResult(Format('%d' ,[NumNUMA]));
          ELSE
            // Ignore excess parameters
          End;
