@@ -1967,8 +1967,7 @@ begin
               begin
                   if ((FHitkVALimit[i] = True) or (FHitkvarLimit[i] = True)) and (ActiveCircuit[ActorID].Solution.Dynavars.dblHour>0.0) then exit;
                   // if inverter is off then exit
-                  if (ControlledElement[i].InverterON = FALSE) and (ControlledElement[i].VarFollowInverter = TRUE) then exit;
-
+                  if (ControlledElement[i].InverterON = FALSE) and (ControlledElement[i].VarFollowInverter = TRUE) then continue;
                   // if the volt-var curve does not exist, exit
                   if Length(Fvvc_curvename) = 0 then
                     begin
@@ -2049,7 +2048,7 @@ begin
 //                  if ((FHitkVALimit[i] = True) or (FHitkvarLimit[i] = True)) and (ActiveCircuit[ActorID].Solution.Dynavars.dblHour=0.0) and ((ActiveCircuit[ActorID].Solution.ControlIteration) >= (0.5*ActiveCircuit[ActorID].Solution.MaxControlIterations)) then exit;
                   // if inverter is off then exit
 //                  if (ControlledElement[i].InverterON = FALSE) then exit;
-                  if (ControlledElement[i].InverterON = FALSE) and (ControlledElement[i].VarFollowInverter = TRUE) then exit;
+                  if (ControlledElement[i].InverterON = FALSE) and (ControlledElement[i].VarFollowInverter = TRUE) then continue;
 
                   // if volt-watt curve does not exist, exit
                   if Length(Fvoltwatt_curvename) = 0 then
@@ -2058,7 +2057,7 @@ begin
                       exit
                     end;
                   // if inverter is off and varfollowinverter is true, then exit.
-                  if (ControlledElement[i].InverterON = FALSE) and (ControlledElement[i].VarFollowInverter = TRUE) then exit;
+                  if (ControlledElement[i].InverterON = FALSE) and (ControlledElement[i].VarFollowInverter = TRUE) then continue;
 
                   // if the volt-var curve does not exist, exit
                   if Length(Fvvc_curvename) = 0 then
@@ -2144,7 +2143,7 @@ begin
 
             if ControlMode = 'VOLTWATT' then  // volt-watt control mode
                 begin
-                  if (ControlledElement[i].InverterON = FALSE) then exit;
+                  if (ControlledElement[i].InverterON = FALSE) then continue;
 
                   if Length(Fvoltwatt_curvename) = 0 then
                   begin
@@ -2202,7 +2201,7 @@ begin
                 if ControlMode = 'VOLTVAR' then // volt-var control mode
                 begin
 
-                    if (ControlledElement[i].InverterON = FALSE) and (ControlledElement[i].VarFollowInverter = TRUE) then exit;
+                    if (ControlledElement[i].InverterON = FALSE) and (ControlledElement[i].VarFollowInverter = TRUE) then continue;
                     ControlledElement[i].VWmode := FALSE;
                     if Length(Fvvc_curvename) = 0 then
                       begin
@@ -2262,7 +2261,7 @@ begin
 
                 if ControlMode = 'DYNAMICREACCURR' then // dynamic reactive current control mode
                 begin
-                if (ControlledElement[i].InverterON = FALSE) and (ControlledElement[i].VarFollowInverter = TRUE) then exit;
+                if (ControlledElement[i].InverterON = FALSE) and (ControlledElement[i].VarFollowInverter = TRUE) then continue;
                 ControlledElement[i].VWmode := FALSE;
                   //DRC triggers
                   if(priorDRCRollAvgWindow[i] = 0.0) then
@@ -2880,8 +2879,11 @@ begin
              priorDRCRollAvgWindow[j] := FDRCRollAvgWindow[j].Get_AvgVal;
              // compute the present terminal voltage
              localControlledElement.ComputeVterminal(ActorID);
-             PVSys.Set_Variable(5,FDRCRollAvgWindow[j].Get_AvgVal); // save rolling average voltage in monitor
-
+             // save the applicable rolling average voltage in monitor
+             if (ControlMode = 'VOLTVAR') and (FVAvgWindowLengthSec > 0.0) then
+               PVSys.Set_Variable(5,FRollAvgWindow[j].Get_AvgVal)
+             else
+               PVSys.Set_Variable(5,FDRCRollAvgWindow[j].Get_AvgVal);
 
              for k := 1 to localControlledElement.Yorder do tempVbuffer[k] := localControlledElement.Vterminal^[k];
 

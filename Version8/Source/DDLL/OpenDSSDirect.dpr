@@ -210,8 +210,7 @@ uses
   LD_fm_infos in '..\Meters\LD_fm_infos.pas',
   VLNodeVars in '..\Meters\VLNodeVars.pas',
   Generic5OrderMach in '..\PCElements\Generic5OrderMach.pas',
-  DGICSources in 'DGICSources.pas',
-  uSMBIOS in '..\Common\uSMBIOS.pas';
+  DGICSources in 'DGICSources.pas';
 
 //**************************end of the functions*************************************
 exports

@@ -56,7 +56,7 @@ Begin
       ExportOption[18] := 'seqz';
       ExportOption[19] := 'P_byphase';
       ExportOption[20] := 'CDPSMCombined';
-      ExportOption[21] := 'CDPSMFunc';
+      ExportOption[21] := 'CIM100';
       ExportOption[22] := 'CDPSMAsset';
       ExportOption[23] := 'Buscoords';
       ExportOption[24] := 'Losses';
@@ -120,10 +120,10 @@ Begin
       ExportHelp[17] := '(Default file = EXP_Y.CSV) [triplets] [Filename] System Y matrix, defaults to non-sparse format.';
       ExportHelp[18] := '(Default file = EXP_SEQZ.CSV) Equivalent sequence Z1, Z0 to each bus.';
       ExportHelp[19] := '(Default file = EXP_P_BYPHASE.CSV) [MVA] [Filename] Power by phase. Default is kVA.';
-      ExportHelp[20] := '(Default file = CIM17x.XML) (IEC 61968-13, CIM v17 extended, CDPSM Combined (unbalanced load flow) profile)' + CRLF
+      ExportHelp[20] := '** Deprecated ** (IEC 61968-13, CIM16-17 version of the CDPSM Combined profile)';
+      ExportHelp[21] := '(Default file = CIM100x.XML) (IEC 61968-13, CIM100 for unbalanced load flow profile)' + CRLF
                       + ' [File=filename fid=_guidstring Substation=subname sid=_guidstring' + CRLF
                       + ' SubGeographicRegion=subgeoname sgrid=_guidstring GeographicRegion=geoname rgnid=_guidstring]';
-      ExportHelp[21] := '** Deprecated ** (IEC 61968-13, CDPSM Functional profile)';
       ExportHelp[22] := '** Deprecated ** (IEC 61968-13, CDPSM Asset profile)';
       ExportHelp[23] := '[Default file = EXP_BUSCOORDS.CSV] Bus coordinates in csv form.';
       ExportHelp[24] := '[Default file = EXP_LOSSES.CSV] Losses for each element.';
@@ -258,7 +258,7 @@ Begin
             IF Length(Parm2) > 0 THEN IF Parm2[1]='t' THEN TripletOpt := TRUE;
           End;
 
-      20: Begin {user-supplied substation and regions}
+      20,21: Begin {user-supplied substation and regions}
             ParamName := LowerCase (parser[ActiveActor].nextParam);
             Parm2 := Parser[ActiveActor].strValue;
             while Length(ParamName) > 0 do begin
@@ -338,7 +338,7 @@ Begin
          18: Filename := 'EXP_SEQZ.CSV';
          19: Filename := 'EXP_P_BYPHASE.CSV';
          20: FileName := 'CIM17x.XML';
-         21: FileName := 'CDPSM_Functional.XML';
+         21: FileName := 'CIM100x.XML';
          22: FileName := 'CDPSM_Asset.XML';
          23: FileName := 'EXP_BUSCOORDS.CSV';
          24: FileName := 'EXP_LOSSES.CSV';
@@ -441,18 +441,18 @@ Begin
      17: ExportY(Filename, TripletOpt);
      18: ExportSeqZ(Filename);
      19: ExportPbyphase(Filename, MVAOpt);
-     20: ExportCDPSM (Filename, Substation, SubGeographicRegion, GeographicRegion, FdrGuid, SubGuid, SubGeoGuid, RgnGuid, Combined);
-     21: DoSimpleMsg ('Functional export no longer supported; use Combined', 252);
-     22: DoSimpleMsg ('Asset export no longer supported; use Combined', 252);
+     20: DoSimpleMsg ('CDPSMCombined (CIM17) export no longer supported; use Export CIM100', 252);
+     21: ExportCDPSM (Filename, Substation, SubGeographicRegion, GeographicRegion, FdrGuid, SubGuid, SubGeoGuid, RgnGuid, Combined);
+     22: DoSimpleMsg ('Asset export no longer supported; use Export CIM100', 252);
      23: ExportBusCoords(Filename);
      24: ExportLosses(Filename);
      25: ExportGuids(Filename);
      26: ExportCounts(Filename);
      27: ExportSummary(Filename);
-     28: DoSimpleMsg ('ElectricalProperties export no longer supported; use Combined', 252);
-     29: DoSimpleMsg ('Geographical export no longer supported; use Combined', 252);
-     30: DoSimpleMsg ('Topology export no longer supported; use Combined', 252);
-     31: DoSimpleMsg ('StateVariables export no longer supported; use Combined', 252);
+     28: DoSimpleMsg ('ElectricalProperties export no longer supported; use Export CIM100', 252);
+     29: DoSimpleMsg ('Geographical export no longer supported; use Export CIM100', 252);
+     30: DoSimpleMsg ('Topology export no longer supported; use Export CIM100', 252);
+     31: DoSimpleMsg ('StateVariables export no longer supported; use Export CIM100', 252);
      32: ExportProfile(FileName, PhasesToPlot);
      33: ExportEventLog(FileName);
      34: DumpAllocationFactors(FileName);

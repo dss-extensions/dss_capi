@@ -117,6 +117,8 @@ interface
          FUNCTION DoNodeListCmd:Integer;
          FUNCTION DoRemoveCmd:Integer;
 
+         function DoFNCSPubCmd:Integer;
+
          PROCEDURE DoSetNormal(pctNormal:Double);
 
 
@@ -148,12 +150,12 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
      Classes,  CktElementClass, Sensor,  { ExportCIMXML,} NamedObject,
      {$IFNDEF FPC}RegularExpressionsCore,{$ELSE}RegExpr,{$ENDIF} PstCalc,
-     PDELement, ReduceAlgs;
+     PDELement, ReduceAlgs{$IFDEF FPC}, Fncs{$ENDIF};
 
 Var
    SaveCommands, DistributeCommands,  DI_PlotCommands,
    ReconductorCommands, RephaseCommands, AddMarkerCommands,
-   SetBusXYCommands, PstCalcCommands, RemoveCommands   :TCommandList;
+   SetBusXYCommands, PstCalcCommands, RemoveCommands, FNCSPubCommands   :TCommandList;
 
 
 
@@ -3774,6 +3776,43 @@ Begin
 
 End;
 
+
+FUNCTION DoFNCSPubCmd:Integer;
+{$IFDEF FPC}
+Var
+  Param          :String;
+  ParamName      :String;
+  ParamPointer   :Integer;
+  FileName       :String;
+Begin
+  Result := 0;
+  ParamName      := Parser[ActiveActor].NextParam;
+  Param          := Parser[ActiveActor].StrValue;
+  ParamPointer   := 0;
+  while Length(Param) > 0 do Begin
+    IF Length(ParamName) = 0 THEN Inc(ParamPointer)
+    ELSE ParamPointer := FNCSPubCommands.GetCommand(ParamName);
+
+    Case ParamPointer of
+       1: FileName := Param;
+    Else
+       DoSimpleMsg('Error: Unknown Parameter on command line: '+Param, 28728);
+    End;
+    ParamName := Parser[ActiveActor].NextParam;
+    Param := Parser[ActiveActor].StrValue;
+  End;
+  if Assigned (ActiveFNCS) then begin
+    if ActiveFNCS.IsReady then begin
+      ActiveFNCS.ReadFncsPubConfig (FileName);
+    end;
+  end;
+{$ELSE}
+Begin
+  DoSimpleMsg('Error: FNCS only supported in the Free Pascal version', 28728);
+{$ENDIF}
+End;
+
+
 FUNCTION DoUpdateStorageCmd:Integer;
 
 Begin
@@ -4045,6 +4084,9 @@ initialization
     PstCalcCommands := TCommandList.Create(['Npts', 'Voltages', 'dt', 'Frequency', 'lamp']);
     PstCalcCommands.abbrev := True;
 
+    FNCSPubCommands := TCommandList.Create(['Fname']);
+    FNCSPubCommands.abbrev := True;
+
     RemoveCommands := TCommandList.Create(['ElementName', 'KeepLoad', 'Editstring']);
     RemoveCommands.abbrev := True;
 
@@ -4058,6 +4100,7 @@ finalization
     RephaseCommands.Free;
     SetBusXYCommands.Free;
     PstCalcCommands.Free;
+    FNCSPubCommands.Free;
     RemoveCommands.Free;
 
 end.

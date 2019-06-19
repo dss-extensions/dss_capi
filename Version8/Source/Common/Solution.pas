@@ -379,6 +379,9 @@ USES  SolutionAlgs,
 {$IFDEF DLL_ENGINE}
       ImplGlobals,  // to fire events
 {$ENDIF}
+{$IFDEF FPC}
+      FNCS, // to check for messages at the end of each time step
+{$ENDIF}
       Math,  Circuit, Utilities, KLUSolve, PointerList, Line,
       Transformer, Reactor, Diakoptics
 ;
@@ -2333,17 +2336,28 @@ begin
 end;
 
 procedure TSolutionObj.Increment_time;
+{$IFDEF FPC}
+var
+  next_fncs: fncs_time;
+{$ENDIF}
 begin
-       With Dynavars
-       Do Begin
-            t := t+h;
-            while t >= 3600.0
-            do Begin
-                  Inc(intHour);
-                  t := t - 3600.0;
-            End;
-            Update_dblHour;
-       End;
+  With Dynavars Do Begin
+    t := t+h;
+    while t >= 3600.0 do Begin
+      Inc(intHour);
+      t := t - 3600.0;
+    End;
+    Update_dblHour;
+  {$IFDEF FPC}
+    if Assigned (ActiveFNCS) then begin
+      if ActiveFNCS.IsReady then begin
+        next_fncs := fncs_time (intHour) * fncs_time (3600) + Trunc(t);
+//        writeln('Loop time is ' + format('%d', [intHour]) + ':' + format('%d', [Trunc(t)]));
+        ActiveFNCS.FncsTimeRequest (next_fncs);
+      end;
+    end;
+  {$ENDIF}
+  End;
 end;
 
 procedure TSolutionObj.InitPropertyValues(ArrayOffset: Integer);

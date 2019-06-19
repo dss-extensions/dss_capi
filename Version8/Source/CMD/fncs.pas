@@ -1,6 +1,6 @@
 {
  ----------------------------------------------------------
-  Copyright (c) 2017 Battelle Memorial Institute
+  Copyright (c) 2017-2019 Battelle Memorial Institute
  ----------------------------------------------------------
 }
 unit FNCS;
@@ -10,6 +10,7 @@ unit FNCS;
 {$MACRO ON}
 {$IFDEF Windows}
 {$DEFINE FNCS_CALL:=stdcall}
+//{$DEFINE FNCS_CALL:=cdecl}
 {$ELSE} // Darwin and Unix
 {$DEFINE FNCS_CALL:=cdecl}
 {$ENDIF}
@@ -89,26 +90,98 @@ type
 
   public
     function IsReady:Boolean;
-    procedure RunFNCSLoop;
+    procedure RunFNCSLoop (const s:string);
     constructor Create();
     destructor Destroy; override;
+    function FncsTimeRequest (next_fncs:fncs_time):Boolean;
+    procedure ReadFncsPubConfig (fname: string);
   end;
+
+var
+  ActiveFNCS:TFNCS;
 
 implementation
 
-//uses
-//  dynlibs;
+FUNCTION  InterpretStopTimeForFNCS(const s:string):fncs_time;
+Var
+  Code :Integer;
+  ch :char;
+  s2 :String;
+Begin
+  {Adapted from InterpretTimeStepSize}
+  val(s,Result, Code);
+  If Code = 0 then Exit; // Only a number was specified, so must be seconds
 
-procedure TFNCS.RunFNCSLoop;
+  {Error occurred so must have a units specifier}
+  ch := s[Length(s)];  // get last character
+  s2 := copy(s, 1, Length(s)-1);
+  Val(S2, Result, Code);
+  If Code>0 then Begin
+    writeln('Error in FNCS Stop Time: ' + s);
+    Exit;
+  End;
+  case ch of
+    'd': Result := Result * 86400;
+    'h': Result := Result * 3600;
+    'm': Result := Result * 60;
+    's':; // still seconds
+  Else
+    writeln('Error in FNCS Stop Time: "' + s +'" Units can only be d, h, m, or s (single char only)');
+  end;
+End;
+
+procedure TFNCS.ReadFncsPubConfig(fname: string);
+begin
+  writeln('This is where we read FNCS publication requests from: ' + fname);
+end;
+
+// called from ActiveSolution.Increment_time
+function TFNCS.FncsTimeRequest (next_fncs:fncs_time): Boolean;
+var
+  time_granted: fncs_time;
+  events: ppchar;
+  key, value: pchar;
+  i: integer;
+  ilast: size_t;
+  nvalues, ival: size_t;
+  values: ppchar;
+begin { TFNCS.FncsTimeRequest }
+//  writeln('  FNCS next time is ' + format('%u', [next_fncs]));
+  // execution blocks here, until FNCS permits the time step loop to continue
+  time_granted := fncs_time_request (next_fncs);
+//  writeln('  FNCS time granted is ' + format('%u', [time_granted]));
+  ilast := fncs_get_events_size();
+  // TODO: executing OpenDSS commands here may cause unwanted interactions
+  if ilast > 0 then begin
+    events := fncs_get_events();
+    for i := 0 to ilast-1 do begin
+      key := events[i];
+      nvalues := fncs_get_values_size (key);
+      values := fncs_get_values (key);
+      for ival := 0 to nvalues-1 do begin
+        value := values[ival];
+        writeln(Format('  FNCSTimeRequest command %s at %u', [value, time_granted]));
+        DSSExecutive.Command := value;
+        fncs_publish ('output', value);
+      end;
+    end;
+  end;
+  Result := True;
+end;
+
+procedure TFNCS.RunFNCSLoop (const s:string);
 var
   time_granted, time_stop: fncs_time;
   events: ppchar;
   key, value: pchar;
   i: integer;
   ilast: size_t;
+  nvalues, ival: size_t;
+  values: ppchar;
 begin
   time_granted := 0;
-  time_stop := 6 * 3600;
+  time_stop := InterpretStopTimeForFNCS(s);
+  writeln(Format('Starting FNCS loop to run %s or %u seconds', [s, time_stop]));
   fncs_initialize;
 
   Try
@@ -119,9 +192,14 @@ begin
         events := fncs_get_events();
         for i := 0 to ilast-1 do begin
           key := events[i];
-          value := fncs_get_value(key);
-          DSSExecutive.Command := value;
-          fncs_publish ('output', value);
+          nvalues := fncs_get_values_size (key);
+          values := fncs_get_values (key);
+          for ival := 0 to nvalues-1 do begin
+            value := values[ival];
+            writeln(Format('FNCS command %s at %u', [value, time_granted]));
+            DSSExecutive.Command := value;
+            fncs_publish ('output', value);
+          end;
         end;
       end;
     end;
@@ -147,7 +225,7 @@ end;
 
 constructor TFNCS.Create;
 begin
-  FLibHandle := LoadLibrary ('libfncs.' + SharedSuffix); // prefix for Darwin/Unix
+  FLibHandle := SafeLoadLibrary ('libfncs.' + SharedSuffix);
 //  writeln(FLibHandle);
   if FLibHandle <> DynLibs.NilHandle then begin
     FuncError := False;

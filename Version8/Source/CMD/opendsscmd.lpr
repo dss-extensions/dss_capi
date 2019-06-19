@@ -46,9 +46,9 @@ program opendsscmd;
 }
 
 uses
-  {$IFDEF UNIX}
+  {$IFDEF UNIX}{$IFDEF UseCThreads}
   cthreads,
-  {$ENDIF}
+  {$ENDIF}{$ENDIF}
   SysUtils,
   Classes,
   CustApp,
@@ -147,7 +147,6 @@ uses
   ShowResults in '..\Common\ShowResults.pas',
   Solution in '..\Common\Solution.pas',
   SolutionAlgs in '..\Common\SolutionAlgs.pas',
-  Sparse_Math in '..\Common\Sparse_Math.pas',
   Spectrum in '..\General\Spectrum.pas',
   StackDef in '..\Shared\StackDef.pas',
   Storage in '..\PCElements\Storage.pas',
@@ -237,23 +236,22 @@ procedure TMyApplication.DoRun;
 var
   ErrorMsg, Cmd: String;
   LNresult: Pchar;
-  FNCSconn: TFNCS;
 begin
-  NoFormsAllowed := True;
-  DSSExecutive := TExecutive.Create;  // Make a DSS object
-  DSSExecutive.CreateDefaultDSSItems;
+	NoFormsAllowed := True;
+	DSSExecutive := TExecutive.Create;  // Make a DSS object
+	DSSExecutive.CreateDefaultDSSItems;
 //	writeln('Startup Directory: ', StartupDirectory);
 //	writeln('Data Directory: ', DataDirectory);
 //	writeln('Output Directory: ', OutputDirectory);
 //	writeln('GetCurrentDir: ', GetCurrentDir);
-  DataDirectory[ActiveActor] := StartupDirectory;
-  OutputDirectory[ActiveActor] := StartupDirectory;
-  SetCurrentDir(DataDirectory[ActiveActor]);
+	DataDirectory := StartupDirectory;
+	OutputDirectory := StartupDirectory;
+  SetCurrentDir(DataDirectory);
 
-  NoFormsAllowed := False;  // messages will go to the console
+	NoFormsAllowed := False;  // messages will go to the console
 
-  FNCSconn := TFNCS.Create;
-  if FNCSconn.IsReady then begin
+  ActiveFNCS := TFNCS.Create;
+  if ActiveFNCS.IsReady then begin
     writeln('FNCS available');
   end else begin
     writeln('FNCS not available');
@@ -276,9 +274,9 @@ begin
   end;
 
   if HasOption('f', 'fncs') then begin
-    if FNCSconn.IsReady then begin
-      if paramcount > 1 then begin
-    	  Cmd := 'compile ' + ParamStr(2);
+    if ActiveFNCS.IsReady and (paramcount > 1) then begin // ParamStr(2) is the required stop time
+      if paramcount > 2 then begin
+    	  Cmd := 'compile ' + ParamStr(3);
         writeln(Cmd);
         DSSExecutive.Command := Cmd;
         if DSSExecutive.Error <> 0 then begin
@@ -288,8 +286,7 @@ begin
           Exit;
         end;
       end;
-      writeln ('Starting FNCS loop');
-      FNCSconn.RunFNCSLoop;
+      ActiveFNCS.RunFNCSLoop (ParamStr(2));
     end else begin
       writeln ('FNCS option failed: the FNCS library could not be loaded');
     end;
@@ -355,13 +352,16 @@ end;
 
 procedure TMyApplication.WriteHelp;
 begin
-  writeln('Usage: ', ExeName, ' [-h | -f] [filename]');
+  writeln('Usage: ', ExeName, ' [-h | -f] [stop_time] [filename]');
   writeln(' [filename] optional DSS command file. If provided, runs this file and exits.');
   writeln('      If provided, runs this file and exits.');
   writeln('      If not provided, accepts user commands at the >> prompt.');
   writeln(' -h displays this message and exits');
-  writeln(' -f starts in FNCS co-simulation mode, after reading optional filename');
-  writeln('    (requires FNCS installation and opendss.yaml file)');
+  writeln(' -f stop_time [filename] starts in FNCS co-simulation mode');
+	writeln('      stop_time is the co-simulation stopping time in seconds');
+	writeln('        may also append a single character d(ay), h(our) or m(inute) for units');
+	writeln('      if filename is provided, that will be compiled before starting FNCS');
+  writeln('      This option requires FNCS installation and opendss.yaml file');
 end;
 
 var

@@ -64,7 +64,7 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
 
 
 CONST
-      CRLF = #13#10;
+      CRLF = sLineBreak; // cross-platform
 
       PI =  3.14159265359;
 
@@ -237,6 +237,7 @@ VAR
    UpdateRegistry     :Boolean;  // update on program exit
    CPU_Freq           : int64;          // Used to store the CPU frequency
    CPU_Cores          : integer;
+   NumNUMA            : integer;        // To store the number of NUMA nodes (should be the same as sockets)
    CPU_Physical       : integer;
    ActiveActor        : integer;
    NumOfActors        : integer;
@@ -360,6 +361,9 @@ USES  {Forms,   Controls,}
      DSSForms,
      {$ELSE}
      resource, versiontypes, versionresource, dynlibs, CMDForms,
+     {$ENDIF}
+     {$IFDEF UNIX}
+     BaseUnix,
      {$ENDIF}
      SysUtils;
      {Intrinsic Ckt Elements}
@@ -764,19 +768,27 @@ Begin
 
 End;
 
+
+{$IFDEF UNIX}
+function IsDirectoryWritable(const Dir: String): Boolean;
+begin
+  Result := (FpAccess(PChar(Dir), X_OK or W_OK) = 0);
+end;
+{$ELSE}
 function IsDirectoryWritable(const Dir: String): Boolean;
 var
   TempFile: array[0..MAX_PATH] of Char;
 begin
   if GetTempFileName(PChar(Dir), 'DA', 0, TempFile) <> 0 then
     {$IFDEF FPC}Result := DeleteFile(TempFile){$ELSE}
-    {$IFDEF MSWINDOWS}
+      {$IFDEF MSWINDOWS}
       Result := Windows.DeleteFile(TempFile)
-    {$ENDIF}
+      {$ENDIF}
     {$ENDIF}
   else
     Result := False;
 end;
+{$ENDIF}
 
 PROCEDURE SetDataPath(const PathName:String);
 var
@@ -1070,8 +1082,9 @@ initialization
 
 //***************Initialization for Parallel Processing*************************
 
-   CPU_Physical     :=  LibParallel.Get_Processor_Info(NumCore);
-   CPU_Cores        :=  LibParallel.Get_Processor_Info(NumCPU);
+   NumNUMA          :=  LibParallel.Get_Processor_Info(NumSocket);
+   CPU_Physical     :=  LibParallel.Get_Processor_Info(NumCore)*NumNUMA;
+   CPU_Cores        :=  LibParallel.Get_Processor_Info(NumCPU)*NumNUMA;
 
    setlength(ActiveCircuit,CPU_Cores + 1);
    {$IFNDEF FPC}setlength(ActorProgress,CPU_Cores + 1);{$ENDIF}
