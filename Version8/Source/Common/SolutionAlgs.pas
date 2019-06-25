@@ -357,6 +357,10 @@ Begin
           MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
           FmonitorClass[ActorID].update_sys_ld_info(ActorID);//get current value in INFO Broker -> UCF
 
+          // attack and defense -> UCF
+          FmonitorClass[ActorID].update_atks(ActorID);
+          FmonitorClass[ActorID].update_defense_layer(ActorID);
+          //-------------------------------
           EndOfTimeStepCleanup(ActorID);
 
         End;

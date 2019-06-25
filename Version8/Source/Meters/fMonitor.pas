@@ -45,6 +45,10 @@ TYPE
        Procedure SaveAll(ActorID : Integer);    Override;   // Force all monitors to save their buffers to disk
        {update FM leader information}
        Procedure  update_sys_ld_info(ActorID : Integer); //all FMs
+       Procedure  Calc_P_freq(ActorID: Integer);// calculte frequency for each cluster
+       //attack and defense
+       Procedure  update_atks(ActorID: Integer);
+       Procedure  update_defense_layer(ActorID: Integer);
 
    end;
 
@@ -108,21 +112,40 @@ TYPE
        pCommDelayMatrix : pDoubleArray;  //
        pCommDelaySteps : pSmallIntArray;// Communication delay step matrix of this cluster
 
+       // define properties for equivalent generator for simulate frequency
+       //eg_defed : boolean; //moved to public
+       kVA_fm, M_fm, D_fm, Tau_fm, Ki_fm,
+       Pm_fm,
+       init_time,               //default 0.5s to flat the initial condition
+       k_dltP,                  // determine the input of PV: u_i = k_dltP * \Delta P + omg_fm
        //delay to uppper level
-       up_dly : double;    //in seconds
-       nup_dlys : integer; //nup_dlys := up_dly / t_intvl_smpl;
-       virtual_Ld_Nd : integer;// denotes which node talks to upper level
-                               // default by 1;
+       up_dly : double;         //in seconds
+       nup_dlys,                //nup_dlys := up_dly / t_intvl_smpl;
+       virtual_Ld_Nd : integer; // denotes which node talks to upper level
+                                // default by 1;
 
-       Bus_code  :Integer;
-       NodeNum : Integer;
-       Node_Ref : Integer;
+       // attack and defense
+       d_atk_inited,
+       z_dfs_inited       : boolean;        // for attack initialization if attack is dynamic
+       atk_node_num       : integer;        //default no. 1;
+       atk_time,                            //when the attack starts to work, default by 0.5s.
+       beta_dfs,                            //defense index
+       D_beta,                              //parameter for Kc (gradient control)
+       D_p,                                 //attack on gradient control: 1: no attack; -1: make the gradient control work to the oppesite
+       dlt_z0             : double;
+       pCommHide          : pSmallIntArray; // communication matrix of this cluster
+       pCommNode_Hide     : pSmallIntArray; // communication matrix of this cluster
+
+       //
+       Bus_code,
+       NodeNum,
+       Node_Ref           : Integer;
        {------------}
        BufferFile      :String;  // Name of file for catching buffer overflow
 
-       IsFileOpen      :Boolean;
-       ValidMonitor    :Boolean;
-       IsProcessed     :Boolean;
+       IsFileOpen,
+       ValidMonitor,
+       IsProcessed        :Boolean;
 
        //Procedure AddDblsToBuffer(Dbl:pDoubleArray; Ndoubles:Integer);
        //Procedure AddDblToBuffer(const Dbl:Double);
@@ -130,11 +153,24 @@ TYPE
        //Procedure DoFlickerCalculations;  // call from CloseMonitorStream
        Procedure Set_nodes_for_fm(intNodes : integer);//initiate the structure of this FMon
        Procedure Set_CommVector( strParam: string);
+       Procedure Set_CommVector_Hide( strParam: string);
+       Procedure Set_CommVector_NodeHide( strParam: string);
+       //
        Procedure Set_volt_lmt_clstr( strParam: string);
 
        Procedure Set_CommDelayVector( strParam: string);
        Procedure ResetDelaySteps(iNodeNum: integer);
 
+       //attack and defense
+       Procedure  update_attack(ActorID: integer); // update d_i
+       Procedure  update_defense(ActorID: integer);// update z_i
+       Function   organise_dfs_node(j : integer):double;// update z_i
+
+       //Function  fm_defense(i : integer): double;    // calculate K_i z
+       Procedure  Set_atk_dfs(strParam : string);
+
+       Procedure Set_EquivalentGenerator(strParam : string) ;
+       //
        Procedure Set_ElemTable_line( strParam: string);
        Procedure Init_nodeFM(iNodeNum : integer; ActorID: integer);
        //Procedure push_voltage;
@@ -146,9 +182,12 @@ TYPE
        Procedure  Get_PQ_DI(i_NodeNum : integer; ActorID : Integer);
        Function  Calc_Grdt_for_Alpha(NodeNuminClstr, phase_num,ActorID:Integer):Double;
        Function  Calc_Grdt_for_Alpha_vivj(NodeNuminClstr, phase_num,ActorID : Integer):Double;
+       function  Getgradient(j, phase_num : integer; Bii,Volt_Trhd:double):double ;
 
-       Function  Calc_GP_AlphaP(NodeNuminClstr, phase_num, ActorID:Integer):Double;
+       Function  Calc_GP_AlphaP(phase_num, ActorID:Integer):Double;
        Function  Get_power_trans(ActorID : Integer) :Double;
+
+       function Coef_Phi(x : double): double;  // a coeffient
       public
        pNodeFMs : pNodeArray;
 
@@ -157,6 +196,14 @@ TYPE
        SampleCount   :Integer;  // This is the number of samples taken
        {-- overview information about this cluster--}
        ld_fm_info : array [0..3] of TLD_fm_infos;
+       // define properties for equivalent generator for simulate frequency
+       eg_defed : boolean; //moved to public
+       dlt_fm, omg_fm : double;
+       comp_omg : double; //
+
+       // define properties for attack and defense
+       atk : boolean; //default = false
+       dfs : boolean; //default = false
 
        constructor Create(ParClass:TDSSClass; const MonitorName:String);
        destructor Destroy; override;
@@ -188,15 +235,19 @@ TYPE
        //Zero seq.
        Function Calc_fm_ul_0(NodeNumofDG, phase_num:Integer; dbNodeRef: integer; Bii,beta,Volt_Trhd: double; ActorID: integer): double;
        Function Calc_fm_us_0(NodeNumofDG, phase_num:Integer; dbNodeRef: integer; Bii,beta,Volt_Trhd: double; ActorID: integer): double;
+
+       //
        Procedure Agnt_smpl(NodeNumofDG, phase_num,ActorID:Integer); // sample data of this node at each  t_intvl_smpl
        Procedure Init_delay_array(NodeNumofDG, ActorID:Integer);
        {For real power control-dynamic simu}
        Function Calc_ul_P(NodeNuminClstr, phase_num:Integer):Double;
        Function Calc_Gradient_ct_P(NodeNuminClstr, phase_num, ActorID:Integer):Double;  // curtailment
        {--}
-       Procedure  update_ld_info( ActorID: integer); //all nodes in the cluster
+       Procedure  update_node_info_each_time_step( ActorID: integer); //all nodes in the cluster
+       //Procedure  update_ld_info( ActorID: integer); //all nodes in the cluster
        Procedure  update_ld_dly( ActorID: integer); // all nodes in this cluster with delay
-       //       Procedure TranslateToCSV(Show:Boolean);
+       Procedure  Calc_P_freq_fm( ActorID: Integer);// calculte frequency for each cluster
+
 
        Procedure GetCurrents(Curr: pComplexArray; ActorID : Integer);                Override; // Get present value of terminal Curr
        Procedure GetInjCurrents(Curr: pComplexArray; ActorID : Integer);             Override;   // Returns Injextion currents
@@ -228,7 +279,7 @@ CONST
     POSSEQONLYMASK = 64;
     MODEMASK = 15;
 
-    NumPropsThisClass = 24;//22;//21;//20;//17; //12;// 9; //8;//7;//add P_ref_one
+    NumPropsThisClass = 28;//22;//21;//20;//17; //12;// 9; //8;//7;//add P_ref_one
     NumSolutionVars = 12;
 
 VAR
@@ -290,6 +341,10 @@ Begin
      PropertyName[22] := 'b_Curt_Ctrl';// set P curtailment on/off
      PropertyName[23] := 'up_dly';// delay time to communicate to upper level
      PropertyName[24] := 'virtual_ld_node';// delay time to communicate to upper level
+     PropertyName[25] := 'EGen';//equivalent generator: Egen = {kVA, M, D, Tau, K_i}
+     PropertyName[26] := 'attack_defense'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
+     PropertyName[27] := 'Comm_hide'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
+     PropertyName[28] := 'Comm_node_hide'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
 
      PropertyHelp[1] := 'Name (Full Object name) of element to which the monitor is connected.';
      PropertyHelp[2] := 'Number of the terminal of the circuit element to which the monitor is connected. '+
@@ -369,6 +424,24 @@ Begin
      PropertyHelp[23] := 'up_dly: delay time to upper level. For example: "up_dly := 0.05"'
                          + CRLF+ 'It can be used to simulate the time delay between clusters';
      PropertyName[24] := 'virtual_ld_node: which node talks to upper level. virtual_ld_node=1';
+     PropertyHelp[25] := ' EGen = {kVA_fm, M_fm, D_fm, Tau_fm, Ki_fm,init_time}'
+                          + CRLF+'where equations are:'
+                          + CRLF+'(1):delta''''=omega'
+                          + CRLF+'(1):M_fm * omega''''=puPm - puPe - D_fm*omega'
+                          + CRLF+'(1):Tau_fm*Pm ''''=Ki_fm * omega '
+                          + CRLF+'puPm = Pm / kVA_fm, puPe = Pe/ kVAM_fm;'
+                          + CRLF+'everything is zero within init_time(default value is 0.5s);'
+                          + CRLF+'k_dltP is the coordinator for PV control input: u_i = k_dltP * pu_DltP + omg_fm.';
+     PropertyHelp[26] := 'Define attack and defense:  attack_defense = {atk , dfs , atk_time , atk_node_num  , d_atk0  , beta_dfs, D_beta, D_p }.'
+                          + CRLF+'attack_defense has to be defined after ''''nodes''.'
+                          + CRLF+'Example: attack_defense = { true , false , 0.5 , 1 , 0.1 , 5, 1 , 1}.'
+                          + CRLF+'Example: (1) under attack); (2) defense is off; (3) attack starts at 0.5s; (4) attack is on node 1;'
+                          + CRLF+'(5) initial value of attack: d_0 = 0.1; (6) beta = 5;'
+                          + CRLF+'(7) D_bata is used as a multiplier on \phi;'
+                          + CRLF+'(8) D_p is used as the attack on gradient contol: D_p = 1, which is normal; D_p=-1, gradient control work on the oppesite.';
+     PropertyHelp[27] := 'Comm_hide={...}. It is defined like CommVector.'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
+     PropertyHelp[28] := 'Comm_node_hide={...}. It is defined like CommVector.'; // define attack and defense:  attack_defense = {atk = true , dfs = false , atk_time = 0.5 , atk_node_num = 1 , d_atk0 = 0.1 , beta_dfs = 30, D_beta = 1}
+
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
@@ -464,6 +537,10 @@ Begin
                     else nUp_dlys :=0;
             end;
             24: virtual_Ld_Nd := Parser[ActorID].IntValue;
+            25:Set_EquivalentGenerator(Param);
+            26:Set_atk_dfs(Param);
+            27:Set_CommVector_Hide(Param);//
+            28:Set_CommVector_NodeHide(Param);//
          ELSE
            // Inherited parameters
            ClassEdit( ActiveFMonitorObj, ParamPointer - NumPropsthisClass)
@@ -514,7 +591,6 @@ Procedure  TDSSFMonitor.update_sys_ld_info(ActorID:integer); //all FMs
 VAR
    FMon:TFMonitorObj;
    vtemp, dv_lwst : double;
-// sample all monitors except mode 5 monitors
 Begin
      ActiveCircuit[ActorID].Solution.LD_FM[0].volt_hghst := -999999;
      ActiveCircuit[ActorID].Solution.LD_FM[0].volt_lwst  := 9999999;
@@ -524,8 +600,10 @@ Begin
               //synchronous: voltage to agents
               //asynchronous: aphga, ahphaP, highest/lowest voltage
           If FMon.enabled Then
-              //FMon.update_ld_info;
+          begin
+              FMon.update_node_info_each_time_step(ActorID); //update old z_dfs, vl_alpha_dgn
               FMon.update_ld_dly(ActorID); //with delay
+          end;
           //
           {Update cluster info to center}
           if ActiveCircuit[ActorID].Solution.LD_FM[0].volt_hghst < FMon.ld_fm_info[0].volt_hghst then
@@ -564,6 +642,49 @@ Begin
           begin
               activecircuit[ActorID].Solution.bCurtl := false;//dont need curtailment
           end;
+
+End;
+Procedure  TDSSFMonitor.Calc_P_freq(ActorID: Integer);// calculte frequency for each cluster
+VAR
+   FMon:TFMonitorObj;
+Begin
+     //ActiveCircuit[ActorID].Solution.LD_FM[0].freq  := 0; //saved for system frequency
+     //ActiveCircuit[ActorID].Solution.LD_FM[0].delta := 0; //saved for angle of the inertia center of a cluster
+     FMon := ActiveCircuit[ActorID].FMonitors.First;
+      WHILE FMon<>Nil DO  Begin
+          If FMon.enabled Then
+              if FMon.eg_defed = true then
+                  FMon.Calc_P_freq_fm(ActorID); //w
+          FMon := ActiveCircuit[ActorID].FMonitors.Next;
+          //
+      end;
+
+End;
+Procedure  TDSSFMonitor.update_atks(ActorID: Integer);
+VAR
+   FMon:TFMonitorObj;
+Begin
+     FMon := ActiveCircuit[ActorID].FMonitors.First;
+      WHILE FMon<>Nil DO  Begin
+          If FMon.enabled and (FMon.atk = true) then
+                  FMon.update_attack(ActorID); //w
+          FMon := ActiveCircuit[ActorID].FMonitors.Next;
+          //
+      end;
+
+End;
+
+Procedure  TDSSFMonitor.update_defense_layer(ActorID: Integer);
+VAR
+   FMon:TFMonitorObj;
+Begin
+     FMon := ActiveCircuit[ActorID].FMonitors.First;
+      WHILE FMon<>Nil DO  Begin
+          If FMon.enabled and (FMon.dfs = true)  then
+                  FMon.update_defense(ActorID); //w
+          FMon := ActiveCircuit[ActorID].FMonitors.Next;
+          //
+      end;
 
 End;
 
@@ -717,6 +838,8 @@ Begin
       MaxLocalMem := 10;
       ReAllocMem(pCommDelayMatrix,  Nodes *Nodes * sizeof(pCommDelayMatrix^[1]));
       ReAllocMem(pCommDelaySteps,  Nodes *Nodes * sizeof(pCommDelaySteps^[1]));
+      ReAllocMem(pCommHide,  Nodes *Nodes * sizeof(pCommHide^[1]));
+      ReAllocMem(pCommNode_Hide,  Nodes *Nodes * sizeof(pCommNode_Hide^[1]));
 
      {leader information}
      for i := 0 to 3 do
@@ -735,12 +858,28 @@ Begin
       ld_fm_info[i].volt_avg := 0.0;
       ld_fm_info[i].total_pg := 0.0;
       ld_fm_info[i].total_pl := 0.0;
-      ld_fm_info[i].b_Curt_Ctrl := true;
+      ld_fm_info[i].b_Curt_Ctrl := false;
      end;
      virtual_Ld_Nd := 1;
      nUp_dlys := 0;
      //bCurtl_Clstr := false;
      {end of leader initialization}
+     //virtual generator for frequency
+     eg_defed := false;
+     kVA_fm := 0.0; M_fm := 0.0; D_fm := 0.0; Tau_fm := 0.0; Ki_fm := 0.0;
+     dlt_fm := 0.0; omg_fm := 0.0;
+     Pm_fm := 0.0;
+     init_time := 0.5;
+     comp_omg := 0.0;
+     // when the attack time starts
+     atk := false;
+     atk_time := 0.5;
+     atk_node_num := 1;
+     d_atk_inited := false;
+     z_dfs_inited := false;
+     D_beta := 1;
+     D_p := 1;
+     dlt_z0 := 0.0;
 End;
 
 destructor TFMonitorObj.Destroy;
@@ -762,6 +901,9 @@ Begin
      ReAllocMem(pCommMatrix,0);
      ReAllocMem(pCommDelayMatrix, 0);
      ReAllocMem(pCommDelaySteps, 0);
+     //
+     ReAllocMem(pCommHide,0);
+     ReAllocMem(pCommNode_Hide,0);
      Inherited Destroy;
 End;
 
@@ -924,9 +1066,14 @@ begin
       if pCommMatrix<>nil then ReAllocMem(pCommMatrix,0);
       if pCommDelayMatrix<>nil then ReAllocMem(pCommDelayMatrix,0);
       if pCommDelaySteps<>nil then ReAllocMem(pCommDelaySteps,0);
+      if pCommHide<>nil then ReAllocMem(pCommHide,0);
+      if pCommNode_Hide<>nil then ReAllocMem(pCommNode_Hide,0);
        //
       pNodeFMs := AllocMem( Sizeof(pNodeFMs^[1] )* intNodes);
       ReAllocMem(pCommMatrix, intNodes *intNodes * sizeof(pCommMatrix^[1]));
+      ReAllocMem(pCommHide, intNodes *intNodes * sizeof(pCommHide^[1]));
+      ReAllocMem(pCommNode_Hide, intNodes *intNodes * sizeof(pCommNode_Hide^[1]));
+
       ReAllocMem(pCommDelayMatrix, intNodes *intNodes * sizeof(pCommDelayMatrix^[1]));
       ReAllocMem(pCommDelaySteps, intNodes *intNodes * sizeof(pCommDelaySteps^[1]));
       for i:=1 to nodes do
@@ -974,11 +1121,16 @@ Begin
 
             AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
             iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
-          FOR i := 2 to (Nodes + 1) Do  Begin
-               AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
-               DataStr := AuxParser[ActiveActor].StrValue;
-               IF Length(DataStr) > 0 THEN pCommMatrix^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].intValue;
-          End;
+            FOR i := 2 to Nodes+1 Do  Begin
+                 AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+                 DataStr := AuxParser[ActiveActor].StrValue;
+                 IF Length(DataStr) > 0 THEN
+                 begin
+                    pCommMatrix^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].intValue;
+                    pCommHide^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].intValue;       //default
+                    pCommNode_Hide^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].intValue;  //default
+                 end;
+            End;
 
 // Updates the value of the property for future queries
 // Added y Davis 02072019
@@ -996,7 +1148,48 @@ Begin
 
 
 end;
+Procedure TFMonitorObj.Set_CommVector_hide( strParam: string);
+VAR
+    DataStr:String;
+    i:Integer;
+    iMin : integer; // the min if Nodes or the length of the vector
+    iNodeNum : integer;
+Begin
 
+    AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
+    //iMin := min(Nodes, )
+    {Loop for no more than the expected number of windings;  Ignore omitted values}
+
+            AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
+            iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
+          FOR i := 2 to Nodes+1 Do  Begin
+               AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+               DataStr := AuxParser[ActiveActor].StrValue;
+               IF Length(DataStr) > 0 THEN pCommHide^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].intValue;
+          End;
+
+end;
+Procedure TFMonitorObj.Set_CommVector_Nodehide( strParam: string);
+VAR
+    DataStr:String;
+    i:Integer;
+    iMin : integer; // the min if Nodes or the length of the vector
+    iNodeNum : integer;
+Begin
+
+    AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
+    //iMin := min(Nodes, )
+    {Loop for no more than the expected number of windings;  Ignore omitted values}
+
+            AuxParser[ActiveActor].NextParam; // the first entry is the No. of iNode
+            iNodeNum := AuxParser[ActiveActor].IntValue; //node number defined in cluster
+          FOR i := 2 to Nodes+1 Do  Begin
+               AuxParser[ActiveActor].NextParam; // ignore any parameter name  not expecting any
+               DataStr := AuxParser[ActiveActor].StrValue;
+               IF Length(DataStr) > 0 THEN pCommNode_Hide^[(iNodeNum-1)*Nodes+ i-1] := AuxParser[ActiveActor].intValue;
+          End;
+
+end;
 Procedure TFMonitorObj.Set_CommDelayVector( strParam: string);
 VAR
     TEmpStr,
@@ -1032,6 +1225,59 @@ Begin
       TempStr :=  TempStr + '|';
     End;
     ActiveDSSObject[ActiveActor].PropertyValue[18]  :=  TempStr;
+end;
+
+Procedure TFMonitorObj.Set_EquivalentGenerator(strParam : string) ;
+VAR
+    DataStr:String;
+    i:Integer;
+    iNodeNum : integer;
+begin
+     AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
+     AuxParser[ActiveActor].NextParam; // the first entry is kVA
+     kVA_fm := AuxParser[ActiveActor].DblValue;
+     AuxParser[ActiveActor].NextParam; //
+     M_fm := AuxParser[ActiveActor].DblValue;
+     AuxParser[ActiveActor].NextParam; //
+     D_fm := AuxParser[ActiveActor].DblValue;
+     AuxParser[ActiveActor].NextParam; //
+     Tau_fm := AuxParser[ActiveActor].DblValue;
+     AuxParser[ActiveActor].NextParam; //
+     Ki_fm := AuxParser[ActiveActor].DblValue;
+     AuxParser[ActiveActor].NextParam; // init_time
+     init_time := AuxParser[ActiveActor].DblValue;
+     AuxParser[ActiveActor].NextParam; // k_dltP is the coordinator
+     k_dltP := AuxParser[ActiveActor].DblValue;
+     if kVA_fm*M_fm*D_fm*Tau_fm*Ki_fm <>0.0 then
+        eg_defed := true; //eg_defed := false by default
+
+end;
+Procedure  TFMonitorObj.Set_atk_dfs(strParam : string);
+VAR
+    DataStr:String;
+    i:Integer;
+    iNodeNum : integer;
+begin
+     AuxParser[ActiveActor].CmdString := strParam;  // Load up Parser
+     AuxParser[ActiveActor].NextParam; //       atk
+     DataStr:= AuxParser[ActiveActor].StrValue;
+     atk := InterpretYesNo(dataStr);
+     AuxParser[ActiveActor].NextParam; //       dfs
+     DataStr:= AuxParser[ActiveActor].StrValue;
+     dfs := InterpretYesNo(dataStr);
+     AuxParser[ActiveActor].NextParam; //       atk_time
+     atk_time := AuxParser[ActiveActor].DblValue;
+     AuxParser[ActiveActor].NextParam; //       atk_node_num
+     atk_node_num := AuxParser[ActiveActor].intValue;
+     AuxParser[ActiveActor].NextParam; //       d_atk0
+     pNodeFMs^[atk_node_num].d_atk0 := AuxParser[ActiveActor].DblValue;
+     AuxParser[ActiveActor].NextParam; //       beta_dfs
+     beta_dfs := AuxParser[ActiveActor].DblValue;
+     AuxParser[ActiveActor].NextParam; //       D_beta
+     D_beta := AuxParser[ActiveActor].DblValue;
+     AuxParser[ActiveActor].NextParam; //       direction of gradient control
+     D_p := AuxParser[ActiveActor].DblValue;
+
 end;
 {--------------------------------------------------------------------------}
 Procedure TFMonitorObj.Set_ElemTable_line( strParam: string);
@@ -1373,10 +1619,12 @@ begin
         vl_CC_switch_dg :=false; // cooperate control switch. true, cooperate control is on
         vl_PF_flag_dg :=0 ;//1, real power control is on
         vl_QV_flag_dg :=0;//1, volt/var control is on
+        vl_volt_thrd_dg := 0.03;
         vl_Alpha_dg:=0;
         vl_Alpha1_dg:=0;vl_Alpha2_dg:=0;vl_Alpha3_dg:=0;
         vl_Gradient_dg:=0;vl_Gradient1_dg:=0;vl_Gradient2_dg:=0;vl_Gradient3_dg:=0;
         vl_AlphaP_dg:=0;
+        vl_Alpha_dgn:=0;
         vl_AlphaP1_dg:=0;vl_AlphaP2_dg:=0;vl_AlphaP3_dg:=0;
         vl_GradientP_dg:=0;vl_GradientP1_dg:=0;vl_GradientP2_dg:=0;vl_GradientP3_dg:=0;
         vl_Pmax_dg:=0; vl_Qmax_dg:=0;
@@ -1393,6 +1641,11 @@ begin
         vl_P_Di3 := 0.0;
         vl_smplCnt := 0;
         vl_crnt_smp_time := 0.0;
+        // attack and defense
+        d_atk := 0.0;
+        z_dfs := 0.0;
+        z_dfsn := 0.0;
+        d_atk0 := 0.0;
     end;
 end;
 Procedure  TFMonitorObj.Get_PDElem_terminal_voltage(nd_num_in_cluster: integer ;devName: string; Tern_num: integer ; ActorID: integer);
@@ -2395,7 +2648,7 @@ begin
 end;
 
 
-Function TFMonitorObj.Calc_GP_AlphaP(NodeNuminClstr, phase_num, ActorID:Integer):Double;  // NodeNuminClstr: node number in cluster
+Function TFMonitorObj.Calc_GP_AlphaP( phase_num, ActorID:Integer):Double;  // NodeNuminClstr: node number in cluster
 var
   PGtemp, ptemp : double;
 
@@ -2409,10 +2662,11 @@ begin
       //if pNodeFMs^[NodeNuminClstr].vl_Pmax_dg<>0.0 then
         //PGtemp  := -(p_trans_ref - ptemp )//-(p_trans_ref - ptemp )/pNodeFMs^[NodeNuminClstr].vl_Pmax_dg  // should use the total load
         //else  PGtemp  := 0.0 ;
-      PGtemp  := -(p_trans_ref - ptemp );
-      if PGtemp>0 then PGtemp := 1
-      else if PGtemp<0 then PGtemp := -1
-      else PGtemp := 0.0;
+        if eg_defed = true then
+                  PGtemp  := - (p_trans_ref - ptemp )/(kVA_fm*1000 ) * k_dltP // D_fm is damping plus droop
+        else
+          PGtemp  := -(p_trans_ref - ptemp )/1000*k_dltP; // kVA_fm = 1 kVA
+
          case phase_num of //pos seq
          0: begin
               result := PGtemp; //
@@ -2432,40 +2686,44 @@ end;
 {-------------------------}
 Function TFMonitorObj.Calc_AlphaP(NodeNuminClstr, phase_num,ActorID:Integer):Double;  // NodeNuminClstr: node number in cluster
 var
-  j : integer;
+  nn,
+  j                 : integer;
   den_dij,TempAlpha : Double;
-
 begin
-     //alphaP = sum (alphaP) + Beta * Gp
-
-     with pNodeFMs^[NodeNuminClstr] do
-      begin
+     //alphaP = avg (alphaP) + Beta * Gp
+     nn := NodeNuminClstr;
          case phase_num of //pos seq
          0:  begin
               //1.calculate d_ij*alpha_j summation
                 den_dij := 0;
                 TempAlpha := 0;
                 for j := 1 to Nodes do
-                   begin
+                begin
                             if (pnodeFMs^[j].vl_ndphases_dg = 3) then   //only 3 phase nodes
                             begin
-                                    //if pnodeFMs^[j].vl_nodeType = 1 then // only DG nodes
-                                    //begin
-                                        den_dij := den_dij+pCommMatrix^[(NodeNuminClstr-1)*Nodes+ j];
-                                        TempAlpha := TempAlpha + pcommmatrix^[(NodeNuminClstr-1)*nodes +j]*pnodeFMs^[j].vl_AlphaP_dg;
-                                    //end;
+                              den_dij := den_dij+pCommMatrix^[(nn-1)*Nodes+ j];
+                              TempAlpha := TempAlpha + pcommmatrix^[(nn-1)*nodes +j]*pnodeFMs^[j].vl_AlphaP_dg;
                             end;
-                   end;
+                end;
                 if den_dij=0  then  TempAlpha := 0.0 else
                 begin
                      TempAlpha := TempAlpha/den_dij;
                 end;
-                vl_gradient_dg := Calc_GP_AlphaP(NodeNuminClstr,phase_num, ActorID);
-                vl_alphaP_dg :=TempAlpha + vl_kcd_dg * vl_gradient_dg/activecircuit[ActorID].Solution.Iteration;
-                if vl_alphaP_dg >1 then vl_alphaP_dg := 1;
-                if vl_alphaP_dg <-1 then vl_alphaP_dg := -1;
-                result := vl_alphaP_dg;
+                pNodeFMs^[nn].vl_gradient_dg := self.Calc_GP_AlphaP(phase_num, ActorID);
+                pNodeFMs^[nn].vl_alphaP_dg :=TempAlpha
+                  + pNodeFMs^[nn].vl_kcd_dg * pNodeFMs^[nn].vl_gradient_dg/activecircuit[ActorID].Solution.Iteration;
+
+                //disturbance
+                pNodeFMs^[nn].vl_alphaP_dg := pNodeFMs^[nn].vl_alphaP_dg ;
+
+                if pNodeFMs^[nn].vl_alphaP_dg >1 then pNodeFMs^[nn].vl_alphaP_dg := 1;
+                if pNodeFMs^[nn].vl_alphaP_dg <0 then pNodeFMs^[nn].vl_alphaP_dg := 0;
+                result := pNodeFMs^[NodeNuminClstr].vl_alphaP_dg;
             end;
+         end;
+    with pNodeFMs^[nn] do
+      begin
+         case phase_num of //pos seq
          1:  begin
               //1.calculate d_ij*alpha_j summation
                 den_dij := 0;
@@ -2486,7 +2744,7 @@ begin
                 begin
                      TempAlpha := TempAlpha/den_dij;
                 end;
-                vl_gradientP1_dg := Calc_GP_AlphaP(NodeNuminClstr,phase_num,ActorID);
+                vl_gradientP1_dg := Calc_GP_AlphaP(phase_num,ActorID);
                 vl_alphaP1_dg :=TempAlpha + vl_kcd_dg * vl_gradientP1_dg/activecircuit[ActorID].Solution.Iteration;
                 if vl_alphaP1_dg >1 then vl_alphaP1_dg := 1;
                 if vl_alphaP1_dg <-1 then vl_alphaP1_dg := -1;
@@ -2512,7 +2770,7 @@ begin
                   begin
                       TempAlpha := TempAlpha/den_dij;
                   end;
-                  vl_gradientP2_dg := Calc_GP_AlphaP(NodeNuminClstr,phase_num,ActorID);
+                  vl_gradientP2_dg := Calc_GP_AlphaP(phase_num,ActorID);
                   vl_alphaP2_dg :=TempAlpha + vl_kcd_dg * vl_gradientP2_dg/activecircuit[ActorID].Solution.Iteration;
                   if vl_alphaP2_dg >1 then vl_alphaP2_dg := 1;
                   if vl_alphaP2_dg <-1 then vl_alphaP2_dg := -1;
@@ -2540,7 +2798,7 @@ begin
                    begin
                        TempAlpha := TempAlpha/den_dij;
                   end;
-                  vl_gradientP3_dg := Calc_GP_AlphaP(NodeNuminClstr,phase_num,ActorID);
+                  vl_gradientP3_dg := Calc_GP_AlphaP(phase_num,ActorID);
                   vl_alphaP3_dg :=TempAlpha + vl_kcd_dg * vl_gradientP3_dg/activecircuit[ActorID].Solution.Iteration;
                   if vl_alphaP3_dg >1 then vl_alphaP3_dg := 1;
                   if vl_alphaP3_dg <-1 then vl_alphaP3_dg := -1;
@@ -2561,19 +2819,7 @@ var
   tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7: double;
 
 begin
-     //update_all_nodes_info;
-     //needs to update Q_Di here(Find a way)
-     {
 
-     1.need beta or kcq here
-     2. is Bii calculated for each phases
-     3.what is phase 0?
-     4.in the function look at communication vector
-
-     }
-
-     //j := ActiveCircuit.Solution.Iteration;
-      
       update_all_nodes_info(ActorID);     // update voltages on all buses
 
       with pNodeFMs^[NodeNumofDG] do
@@ -3167,138 +3413,326 @@ end;
 
 function TFMonitorObj.Calc_fm_ul_0(NodeNumofDG, phase_num:Integer; dbNodeRef: integer; Bii,beta,Volt_Trhd: double; ActorID:integer): double;
 var
+  dly,
   i,j : integer;
-  den : double;
-  den_dij,TempAlpha : Double;
-  tmp : double;
-  dly : integer;
-begin
+  den,
+  den_dij,TempAlpha,
+  tmp,
+  dfs_hide: double;
+  begin
 
-      //update_all_nodes_info;     // update voltages on all buses
-      //with pNodeFMs^[NodeNumofDG] do
-     // begin
-   case phase_num of //pos seq
-   0:  begin
-        //1.calculate d_ij*alpha_j summation
-          den_dij := 0;
-          TempAlpha := 0;
-          {-----------------------------------}
-          //no delay
-          if T_intvl_smpl=0.0  then
-          begin
-              for j := 1 to Nodes do
-               begin
-                   if (pnodeFMs^[j].vl_ndphases_dg = 3)   //only 3 phase nodes
-                        and ((pnodeFMs^[j].vl_nodeType_phase[1]+pnodeFMs^[j].vl_nodeType_phase[2]+pnodeFMs^[j].vl_nodeType_phase[3]) = 3)
-                   then //this phase has DG
-                   begin
-                       den_dij := den_dij+pCommMatrix^[(NodeNumofDG-1)*Nodes+ j];
-                       TempAlpha := TempAlpha + pcommmatrix^[(NodeNumofDG-1)*nodes
-                                      +j]*pnodeFMs^[j].vl_Alpha_dg;
-                   end;
-
-               end;
-          end
-          //with delay
-          else begin
-              for j := 1 to NodeNumofDG-1 do
-               begin
-                   if (pnodeFMs^[j].vl_ndphases_dg = 3)   //only 3 phase nodes
-                        and ((pnodeFMs^[j].vl_nodeType_phase[1]+pnodeFMs^[j].vl_nodeType_phase[2]+pnodeFMs^[j].vl_nodeType_phase[3]) = 3)
-                   then //this phase has DG
-                   begin
-                       den_dij := den_dij+pCommMatrix^[(NodeNumofDG-1)*Nodes+ j];
-                       //how many steps of delay from node j to node 'NodeNumofDG'
-                       dly :=  pcommDelaysteps^[(NodeNumofDG-1)*nodes +j];
-                       if dly=0 then
-                       begin
-                          TempAlpha := TempAlpha
-                                  + pcommmatrix^[(NodeNumofDG-1)*nodes +j]*pnodeFMs^[j].vl_Alpha_dg;
-                       end
-                       else begin
-                          TempAlpha := TempAlpha
-                                + pcommmatrix^[(NodeNumofDG-1)*nodes +j]*pnodeFMs^[j].vl_smpl_dg[1][dly];
-                       end;
-                   end;
-
-               end;
-
-               j := NodeNumofDG;
-                   if (pnodeFMs^[j].vl_ndphases_dg = 3)   //only 3 phase nodes
-                        and ((pnodeFMs^[j].vl_nodeType_phase[1]+pnodeFMs^[j].vl_nodeType_phase[2]+pnodeFMs^[j].vl_nodeType_phase[3]) = 3)
-                   then //this phase has DG
-                   begin
+        //update_all_nodes_info;     // update voltages on all buses
+        //with pNodeFMs^[NodeNumofDG] do
+       // begin
+     case phase_num of //pos seq
+     0:  begin
+          //1.calculate d_ij*alpha_j summation
+            den_dij := 0;
+            TempAlpha := 0.0;
+            {-----------------------------------}
+            //no delay
+            if T_intvl_smpl=0.0  then
+            begin
+                // communication
+                for j := 1 to Nodes do
+                 begin
+                     if (pnodeFMs^[j].vl_ndphases_dg = 3)   //only 3 phase nodes
+                          and ((pnodeFMs^[j].vl_nodeType_phase[1]+pnodeFMs^[j].vl_nodeType_phase[2]+pnodeFMs^[j].vl_nodeType_phase[3]) = 3)
+                     then //this phase has DG
+                     begin
                          den_dij := den_dij+pCommMatrix^[(NodeNumofDG-1)*Nodes+ j];
-                         TempAlpha := TempAlpha
+
+                         if j<>atk_node_num then // regular nodes
+                         begin
+                             //Sumation of all alpha s
+                             TempAlpha := TempAlpha
+                                  + pcommmatrix^[(NodeNumofDG-1)*nodes+j]*pnodeFMs^[j].vl_Alpha_dgn;
+                         end else
+                         // attack and defense -------------------------------------
+                         begin   // node under attack
+                             //Sumation of all alpha s
+                             if (atk = true) and(ActiveCircuit[ActorID].Solution.DynaVars.t >= atk_time)then
+                                 TempAlpha := TempAlpha
+                                      + D_p * pcommmatrix^[(NodeNumofDG-1)*nodes+j] * pnodeFMs^[j].vl_Alpha_dgn
+                             else  // attack starts from here
+                                 TempAlpha := TempAlpha
+                                      +  pcommmatrix^[(NodeNumofDG-1)*nodes+j] * pnodeFMs^[j].vl_Alpha_dgn
+
+                         end; {--attack and defense ends---------------------------------}
+                         // attack and defense
+                         {-----------------------------------}
+                         if (atk = true) and(ActiveCircuit[ActorID].Solution.DynaVars.t >= atk_time)then
+                            //and (ActiveCircuit[ActorID].Solution.DynaVars.IterationFlag = 1)
+                         begin
+                              // if being attacked
+                              TempAlpha := TempAlpha +  pnodeFMs^[j].d_atk;      // attack is added on
+                         end;
+                         {--attack and defense ends---------------------------------}
+                     end;
+                 end;
+
+            end
+            //with delay
+            else begin
+                for j := 1 to NodeNumofDG-1 do
+                 begin
+                     if (pnodeFMs^[j].vl_ndphases_dg = 3)   //only 3 phase nodes
+                          and ((pnodeFMs^[j].vl_nodeType_phase[1]+pnodeFMs^[j].vl_nodeType_phase[2]+pnodeFMs^[j].vl_nodeType_phase[3]) = 3)
+                     then //this phase has DG
+                     begin
+                         den_dij := den_dij+pCommMatrix^[(NodeNumofDG-1)*Nodes+ j];
+                         //how many steps of delay from node j to node 'NodeNumofDG'
+                         dly :=  pcommDelaysteps^[(NodeNumofDG-1)*nodes +j];
+                         if dly=0 then
+                         begin
+                            TempAlpha := TempAlpha
                                     + pcommmatrix^[(NodeNumofDG-1)*nodes +j]*pnodeFMs^[j].vl_Alpha_dg;
-                    end;
+                         end
+                         else begin
+                            TempAlpha := TempAlpha
+                                  + pcommmatrix^[(NodeNumofDG-1)*nodes +j]*pnodeFMs^[j].vl_smpl_dg[1][dly];
+                         end;
+                     end;
 
-               for j := NodeNumofDG + 1 to Nodes do
-               begin
-                   if (pnodeFMs^[j].vl_ndphases_dg = 3)   //only 3 phase nodes
-                        and ((pnodeFMs^[j].vl_nodeType_phase[1]+pnodeFMs^[j].vl_nodeType_phase[2]+pnodeFMs^[j].vl_nodeType_phase[3]) = 3)
-                   then //this phase has DG
-                   begin
-                       den_dij := den_dij+pCommMatrix^[(NodeNumofDG-1)*Nodes+ j];
-                       dly :=  pcommDelaysteps^[(NodeNumofDG-1)*nodes +j];
-                       if dly=0 then
-                       begin
-                          TempAlpha := TempAlpha
-                                  + pcommmatrix^[(NodeNumofDG-1)*nodes +j]*pnodeFMs^[j].vl_Alpha_dg;
-                       end
-                       else begin
-                          TempAlpha := TempAlpha
-                                + pcommmatrix^[(NodeNumofDG-1)*nodes +j]*pnodeFMs^[j].vl_smpl_dg[1][dly];
-                       end;
-                   end;
+                 end;
 
-               end;
-          end;
-          {-----------------------------------}
+                 j := NodeNumofDG;
+                     if (pnodeFMs^[j].vl_ndphases_dg = 3)   //only 3 phase nodes
+                          and ((pnodeFMs^[j].vl_nodeType_phase[1]+pnodeFMs^[j].vl_nodeType_phase[2]+pnodeFMs^[j].vl_nodeType_phase[3]) = 3)
+                     then //this phase has DG
+                     begin
+                           den_dij := den_dij+pCommMatrix^[(NodeNumofDG-1)*Nodes+ j];
+                           TempAlpha := TempAlpha
+                                      + pcommmatrix^[(NodeNumofDG-1)*nodes +j]*pnodeFMs^[j].vl_Alpha_dg;
+                      end;
 
-          if den_dij=0  then  TempAlpha := 0.0 else
-          begin
-               TempAlpha := TempAlpha/den_dij;
-          end;
+                 for j := NodeNumofDG + 1 to Nodes do
+                 begin
+                     if (pnodeFMs^[j].vl_ndphases_dg = 3)   //only 3 phase nodes
+                          and ((pnodeFMs^[j].vl_nodeType_phase[1]+pnodeFMs^[j].vl_nodeType_phase[2]+pnodeFMs^[j].vl_nodeType_phase[3]) = 3)
+                     then //this phase has DG
+                     begin
+                         den_dij := den_dij+pCommMatrix^[(NodeNumofDG-1)*Nodes+ j];
+                         dly :=  pcommDelaysteps^[(NodeNumofDG-1)*nodes +j];
+                         if dly=0 then
+                         begin
+                            TempAlpha := TempAlpha
+                                    + pcommmatrix^[(NodeNumofDG-1)*nodes +j]*pnodeFMs^[j].vl_Alpha_dg;
+                         end
+                         else begin
+                            TempAlpha := TempAlpha
+                                  + pcommmatrix^[(NodeNumofDG-1)*nodes +j]*pnodeFMs^[j].vl_smpl_dg[1][dly];
+                         end;
+                     end;
 
-          tmp := (TempAlpha - pNodeFMs^[NodeNumofDG].vl_Alpha_dg);
-          //Tolerance of alpha_i alpha_j
-          if abs(tmp)< 0.002 then
-               Result := 0.0
-          else
-               Result := tmp * pNodeFMs^[NodeNumofDG].vl_kc_ul_dg;
-      end;
-
-  end;
-     //end;
-     //result := 0;
-end;
-Function TFMonitorObj.Calc_fm_us_0(NodeNumofDG, phase_num:Integer; dbNodeRef: integer; Bii,beta,Volt_Trhd: double; ActorID: integer): double;
-var
-  i,j : integer;
-  den : double;
-
-begin
-      //update voltage
-      Get_PDElem_terminal_voltage(NodeNumofDG,pNodeFMs^[NodeNumofDG].vl_strMeasuredName,pNodeFMs^[NodeNumofDG].vl_terminalNum,ActorID ) ;
-      //calc gradient
-      with pNodeFMs^[NodeNumofDG] do
-      begin
-         case phase_num of //pos seq
-         0:  begin
-                    den := abs(vl_Q_DG - vl_Q_Di- vl_V*vl_V* Bii);   // pos ctrl: Bii use the first one
-                    if abs(den)<epsilon then den := epsilon ;
-                    vl_gradient_dg := (vl_V_ref_dg-vl_v)*vl_V/(den)/(vl_V_ref_dg*vl_V_ref_dg);//*vl_Qmax_dg;//
-                    vl_gradient_dg := (beta*vl_V_ref_dg*vl_V_ref_dg)* abs(Bii)*vl_gradient_dg;
-                if abs(vl_V_ref_dg-vl_v)<= Volt_Trhd*vl_V_ref_dg then vl_gradient_dg := 0.0;
-                if vl_gradient_dg >1 then vl_gradient_dg := 1;
-                if vl_gradient_dg <-1 then vl_gradient_dg := -1;
-                result := vl_gradient_dg ;
+                 end;
             end;
 
+            {-----------------------------------}
+            // from sumation to ul
+            if den_dij=0  then  TempAlpha := 0.0 else
+            begin
+                 TempAlpha := TempAlpha/den_dij;
+            end;
+            // if this node is the node under attack, change the sign of that
+            if (NodeNumofDG = atk_node_num )
+              and (atk = true)
+              and(ActiveCircuit[ActorID].Solution.DynaVars.t >= atk_time)then
+            begin
+                tmp := (TempAlpha - d_p * pNodeFMs^[NodeNumofDG].vl_Alpha_dgn);
+            end
+            else
+                tmp := (TempAlpha - pNodeFMs^[NodeNumofDG].vl_Alpha_dgn);
+
+                 // attack and defense
+                 {-----------------------------------}
+            if (atk = true)
+              and(ActiveCircuit[ActorID].Solution.DynaVars.t >= atk_time)then
+            begin
+                dfs_hide :=  organise_dfs_node(NodeNumofDG);  // x_i'  =  A_i x + {{ \beta K_i z }}+ \beta B_i x_0 + d_i
+                     //TempAlpha := TempAlpha + beta_dfs * tmp;  // defense is added on
+                     {--attack and defense ends---------------------------------}
+                tmp := tmp + beta_dfs * dfs_hide;
+            end;
+            //Tolerance of alpha_i alpha_j
+            if abs(tmp)<= 	Volt_Trhd * 0.01 then
+                 //Result := 0.0
+            else
+                 Result := tmp * pNodeFMs^[NodeNumofDG].vl_kc_ul_dg;
+            // if there is attck
+
         end;
-     end;
-end;
+
+    end;
+       //end;
+       //result := 0;
+  end;
+  Function TFMonitorObj.Calc_fm_us_0(NodeNumofDG, phase_num:Integer; dbNodeRef: integer; Bii,beta,Volt_Trhd: double; ActorID: integer): double;
+  var
+    i,j : integer;
+    den : double;
+    tmp : double;
+    v, vref : double;
+    den_dij, tempUl : double;
+    phi : double;
+  begin
+        //update voltage
+        j := NodeNumofDG ;
+        Get_PDElem_terminal_voltage(NodeNumofDG,pNodeFMs^[NodeNumofDG].vl_strMeasuredName,pNodeFMs^[NodeNumofDG].vl_terminalNum,ActorID ) ;
+        //calc gradient
+        //with pNodeFMs^[NodeNumofDG] do
+        //begin
+        v := pNodeFMs^[NodeNumofDG].vl_V;
+        vref := pNodeFMs^[NodeNumofDG].vl_V_ref_dg;
+
+           case phase_num of //pos seq
+           0:  begin
+                 den := abs(pNodeFMs^[NodeNumofDG].vl_Q_DG
+                              - pNodeFMs^[NodeNumofDG].vl_Q_Di
+                              - v*V* Bii);   // pos ctrl: Bii use the first one
+                 if abs(den)<epsilon then den := epsilon ;
+                 pNodeFMs^[NodeNumofDG].vl_gradient_dg :=
+                          (Vref-v)*V/(den) / (vref*vref);//*vl_Qmax_dg;//
+                 pNodeFMs^[NodeNumofDG].vl_gradient_dg :=
+                        (beta*vref *vref)* abs(Bii)*100
+                        *pNodeFMs^[NodeNumofDG].vl_gradient_dg;
+
+                  //(beta* abs(Bii)*100/j)/vl_Qmax_phase_dg*
+
+                  if abs(vref - v)<= Volt_Trhd*vref then pNodeFMs^[NodeNumofDG].vl_gradient_dg := 0.0;
+                  tmp := abs( vref - v);
+                  if pNodeFMs^[NodeNumofDG].vl_gradient_dg >1 then pNodeFMs^[NodeNumofDG].vl_gradient_dg := 1;
+                  if pNodeFMs^[NodeNumofDG].vl_gradient_dg <-1 then pNodeFMs^[NodeNumofDG].vl_gradient_dg := -1;
+                  result := pNodeFMs^[NodeNumofDG].vl_gradient_dg ;
+
+
+                  // the following only works for the node under attack
+                  if j = atk_node_num then
+                  begin
+                    // in dynamic simulation
+                    if ActiveCircuit[actorID].Solution.Dynavars.SolutionMode = DYNAMICMODE then
+                    begin
+                       // attack and defense has been set
+                       if (atk=true) and (dfs = true) then
+                       begin
+                        //if current time is over attack time
+                          if ActiveCircuit[actorID].Solution.Dynavars.t > atk_time then
+                          begin
+                            // if the attack is of the second type, then phi =0
+                              if pNodeFMs^[atk_node_num].d_atk0 =0 then
+                                  phi := 0.0
+                              else
+                              // if the attack is of the first type, then phi =0
+                              begin
+                                    if BETA_DFS <> 0 then
+                                          //Set a coeffient for beta_dfs
+                                          //if NodeNumofDG<>atk_node_num then // only for those nodes not attacked
+                                    begin
+                                          den_dij := 0 ;
+                                          tempUl := 0.0;
+                                          for i := 1 to Nodes do
+                                          begin
+                                               if (pnodeFMs^[i].vl_ndphases_dg = 3)   //only 3 phase nodes
+                                                 and ((pnodeFMs^[i].vl_nodeType_phase[1]+pnodeFMs^[i].vl_nodeType_phase[2]
+                                                        +pnodeFMs^[i].vl_nodeType_phase[3]) = 3)
+                                              then //this phase has DG
+                                              begin
+                                                 //Sumation of all Z and alpha s
+
+                                                 den_dij := den_dij+pCommMatrix^[(j-1)*Nodes+ i];
+                                                 tempUl :=  tempUl + pcommmatrix^[(j-1)*nodes+i]*pnodeFMs^[i].vl_Alpha_dgn;
+                                              end;
+                                              ///
+                                          end;
+                                          // average
+                                          if den_dij=0  then  begin tempUl := 0.0 ;end
+                                            else
+                                          begin
+                                               tempUl := tempUl/den_dij;
+                                          end;
+
+                                          tempUl := (tempUl - pNodeFMs^[j].vl_Alpha_dgn);
+                                          // calculate phi
+                                          phi := Coef_Phi(abs(tempUl));
+                                    end;
+                              end;
+                                    //
+                              result :=d_p * (1+ phi*beta_dfs)* pNodeFMs^[NodeNumofDG].vl_gradient_dg ;
+                          end;
+                       end;
+                    end;
+                  end;
+
+                  //if result >1 then result := 1 ;
+                  //if result <-1 then result := -1 ;
+              end;
+
+
+          end;
+       //end;
+  end;
+  function TFMonitorObj.Coef_Phi(x : double): double;
+  Var
+    x1, x2, x3,
+    y1, y2, y3 : double;
+    y0 : double;
+    overall : double;
+  begin
+      overall := d_beta;
+      x1 := 0.005 ;
+      x2 := 0.01 ;
+      x3 := 0.05 ;
+
+      y1 := 1.0 ;
+      y2 := 0.5 ;
+      y3 := 0.0 ;
+
+      y0 := 1.0;
+      if x <= x1 then
+        result := x*(y1-y0)/x1 +y0
+        else
+        if x <= x2 then
+          result := y1 + (x-x1)*(y2-y1)/(x2-x1)
+        else
+          if x <= x3 then
+            result := y2 + (x-x2)*(y3-y2)/(x3-x2)
+          else
+            result := y1;
+
+
+     //result := 1.0 ;
+     result := overall * result;
+
+  end;
+  function TFMonitorObj.GetGradient(j, phase_num : integer; Bii,Volt_Trhd:double):double ;
+  var
+    v, vref, den : double;
+    tmp : double;
+  begin
+        v := pNodeFMs^[j].vl_V;
+        vref := pNodeFMs^[j].vl_V_ref_dg;
+
+           case phase_num of //pos seq
+           0:  begin
+                 den := abs(pNodeFMs^[j].vl_Q_DG
+                              - pNodeFMs^[j].vl_Q_Di
+                              - v*V* Bii);   // pos ctrl: Bii use the first one
+                 if abs(den)<epsilon then den := epsilon ;
+                 tmp := (Vref-v)*V/(den) / (vref*vref);//*vl_Qmax_dg;//
+
+
+                   //(beta* abs(Bii)*100/j)/vl_Qmax_phase_dg*
+
+                  //if abs(vref - v)<= Volt_Trhd*vref then tmp := 0.0;
+
+                  if tmp >1 then tmp := 1;
+                  if tmp <-1 then tmp := -1;
+                  result := tmp ;
+              end;
+
+          end;
+  end;
+
 Procedure TFMonitorObj.Agnt_smpl(NodeNumofDG, phase_num,ActorID:Integer); //abandoned
 Var
   crnt_time: double;
@@ -3508,42 +3942,56 @@ begin
          end;
      // end;
 end;
-
-Procedure  TFMonitorObj.update_ld_info(ActorID: integer); //all nodes , p.u. value
+Procedure  TFMonitorObj.update_node_info_each_time_step(ActorID: integer); //all nodes , p.u. value
 var
+  den,
   i : integer;
   v0_tmp : double;
 begin
-
-     ld_fm_info[0].volt_avg := 0.0; //recalculate voltage average
-     ld_fm_info[0].volt_lwst  := 999999; //search new value at each round
-     ld_fm_info[0].volt_hghst := -99999;
+     dlt_z0 := 0.0;
+     den := 0;
      for i := 1 to nodes do
      begin
-           //update all nodes voltage into agents
-           Get_PDElem_terminal_voltage(i, pnodefms^[i].vl_strMeasuredName, pnodefms^[i].vl_terminalNum , ActorID) ;
-           //
-           //synchronous sampling
-           v0_tmp := pnodefms^[i].vl_V/(pnodefms^[i].vl_basevolt);
-           //update highest voltage
-           if  ld_fm_info[0].volt_hghst < v0_tmp then
-           begin
-             ld_fm_info[0].volt_hghst := v0_tmp;
-             ld_fm_info[0].ndnum_hghst := i;
-           end;
-           //update lowest voltage
-           if  ld_fm_info[0].volt_lwst > v0_tmp then
-           begin
-             ld_fm_info[0].volt_lwst := v0_tmp;
-             ld_fm_info[0].ndnum_lwst := i;
-           end;
-
-           //other information should be updated?
-           //
-           ld_fm_info[0].volt_avg := ld_fm_info[0].volt_avg + v0_tmp;  //p.u.
+         if (pnodeFMs^[i].vl_ndphases_dg = 3)   //only 3 phase nodes
+                             and ((pnodeFMs^[i].vl_nodeType_phase[1]+pnodeFMs^[i].vl_nodeType_phase[2]
+                                    +pnodeFMs^[i].vl_nodeType_phase[3]) = 3) then
+          begin
+               pnodefms^[i].vl_Alpha_dgn := pnodefms^[i].vl_Alpha_dg;
+               pnodefms^[i].z_dfsn := pnodefms^[i].z_dfs;
+               dlt_z0 :=  dlt_z0 + pnodefms^[i].vl_Gradient_dg;
+          end;
+          den := den +1 ;
       end;
 
-      ld_fm_info[0].volt_avg := ld_fm_info[0].volt_avg / nodes;
+     //sumation or average
+     if den <> 0 then  dlt_z0 := -dlt_z0 /den; // gredient (v-vref)
+
+end;
+//Calculate equivalent omega and delta
+Procedure  TFMonitorObj.Calc_P_freq_fm(ActorID: Integer);
+var
+  domg, ddlt, dPm : double;
+  DeltaP, tmp : double;
+begin
+      //first time initialization
+      if ActiveCircuit[ActorID].Solution.DynaVars.t < init_time then
+                         pm_fm := self.Get_power_trans(ActorID);
+
+      //preparation : calculate Delta P
+      tmp := self.Get_power_trans(ActorID);
+      DeltaP := pm_fm - tmp;
+      //derivatives
+      //ddlt := omg_fm;
+      domg := (DeltaP / (kVA_fm*1000) - D_fm* omg_fm)/M_fm;
+      dpm := -ki_fm * omg_fm * ( kva_fm * 1000)/ tau_fm;
+      //integral
+      if ActiveCircuit[ActorID].Solution.Mode = DYNAMICMODE then
+      begin
+          //dlt_fm := dlt_fm + ddlt * ActiveCircuit[ActorID].Solution.DynaVars.h;
+          Pm_fm  := Pm_fm  + dpm * ActiveCircuit[ActorID].Solution.DynaVars.h;
+          omg_fm := omg_fm + domg * ActiveCircuit[ActorID].Solution.DynaVars.h;
+      end;
+      comp_omg := omg_fm + DeltaP / (kVA_fm*1000)/D_fm; //comp_omg is (\Delta f + \Delta P / B)
 end;
 Procedure  TFMonitorObj.update_ld_dly( ActorID: integer); //all nodes , p.u. value
 var
@@ -3613,7 +4061,8 @@ begin
                  // delay steps from agent to virtual leader
                  ndlys :=  pcommDelaysteps^[(virtual_Ld_Nd - 1)*Nodes +i];
                  // total delay steps: ndlys+nup_dlys
-                 v0_tmp := pnodefms^[i].vl_smpl_dg[3][ndlys+nUp_dlys]/(pnodefms^[i].vl_basevolt);
+                 //if pnodefms^[i].vl_basevolt <> 0.0 then
+                   v0_tmp := pnodefms^[i].vl_smpl_dg[3][ndlys+nUp_dlys]/(pnodefms^[i].vl_basevolt);
            end;
            //update highest voltage
             if  ld_fm_info[0].volt_hghst < v0_tmp then
@@ -3634,6 +4083,195 @@ begin
      end;
      //avg of valtage
      ld_fm_info[0].volt_avg := ld_fm_info[0].volt_avg / nodes;
+end;
+
+//attack and defense
+Procedure  TFMonitorObj.update_attack(ActorID: integer); // update d_i
+Var
+   dlt_d :double;
+   j : integer;
+begin
+      //attack and defense at this step
+       {-----------------------------------}
+        if atk = false then exit;
+       dlt_d := 0.0; // no dynamic for now
+
+       if (atk = true) AND (ActiveCircuit[ActorID].Solution.DynaVars.SolutionMode = DYNAMICMODE)
+       AND (ActiveCircuit[ActorID].Solution.DynaVars.t >= atk_time) then
+       begin
+           // initialization first, only once
+           if d_atk_inited = false then
+           BEGIN
+               for j := 1 to Nodes do
+               begin
+                   if j = atk_node_num then // only the node being attacked is affected
+                   begin
+                        pNodeFMs[j].d_atk := pNodeFMs[atk_node_num].d_atk0 ; //the
+                   end;
+               end;
+               d_atk_inited := TRUE;
+           END;
+           // attack
+           for j := 1 to Nodes do
+           begin
+               if j = atk_node_num then // only the node being attacked is affected
+                   begin
+                         pNodeFMs[j].d_atk := pNodeFMs[j].d_atk + ActiveCircuit[ActorID].Solution.DynaVars.h * dlt_d;
+                   end;
+           end;
+       end else
+           // no attack
+           for j := 1 to Nodes do
+                pNodeFMs[j].d_atk := 0.0;
+end;
+
+Procedure TFMonitorObj.update_defense(ActorID: integer);// update z_i
+var
+     dlt_z : double;
+     j : integer;
+     Bii : double;
+     den_dij ,den_dij_z : integer;
+     tempZ, tempAlpha : double;
+     Devindex, ndref : integer;
+     tempElement : TDSSCktElement ;
+     tempTerminal : TPowerTerminal;
+     i : integer;
+begin
+  if (dfs = false)                                           // if no defense
+     //or (ActiveCircuit[ActorID].Solution.DynaVars.t < atk_time) // if no attack
+  then exit;
+  if (ActiveCircuit[ActorID].Solution.DynaVars.SolutionMode = DYNAMICMODE)  then
+  begin
+        if (ActiveCircuit[ActorID].Solution.DynaVars.t <= atk_time) then
+        begin
+             // IF THERE IS NO ATTACK YET, Z FOLLOWS ALPHA
+             for j := 1 to Nodes do
+             begin
+                  pNodeFMs[j].z_dfs := pNodeFMs[j].vl_alpha_dg ; //the let z : alpha
+                  pNodeFMs[j].z_dfsn := pNodeFMs[j].z_dfs ;
+             end;
+        end;
+
+        if (ActiveCircuit[ActorID].Solution.DynaVars.t >= atk_time) then
+        begin
+              //calculate the initial value for z_dfs
+               if z_dfs_inited = false then
+                 BEGIN
+                     for j := 1 to Nodes do
+                     begin
+                              pNodeFMs[j].z_dfs := pNodeFMs[j].vl_alpha_dgn ; //the let z : alpha
+                              pNodeFMs[j].z_dfsn := pNodeFMs[j].z_dfs ;
+                     end;
+                     // has been initiated
+                     z_dfs_inited := TRUE;
+                 END;
+
+
+              //update for each node
+              for j := 1 to Nodes do
+              begin
+                  // x_i'  =  A_i x + \beta K_i z + \beta B_i x_0 + d_i
+                  // z_i'  =  H_i Z + \beta G_i x + \beta D_i x_0
+                  // calculate z_i
+                  //////////////////////
+                  // derivative calculation
+                                dlt_z := dlt_z0; //dlt_z0 will be update at each time step by average of gradient     actually this is -us_i
+                                {
+                                dlt_z := 0.0;
+              //(1)/\beta D_i x_0
+                                ndref := 1;
+
+                                Bii := 1.0;
+                                Devindex := GetCktElementIndex(pNodeFMs[j].vl_strMeasuredName) ;                   // Global function
+                                IF DevIndex>0 THEN Begin                                       // Monitored element must already exist
+                                    tempElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex) ;
+                                    tempTerminal := tempElement.Terminals^[pNodeFMs[j].vl_terminalNum] ;
+                                    ndref := tempTerminal.TermNodeRef^[1] ;
+                                    Bii := ActiveCircuit[ActorID].Solution.NodeYii[tempTerminal.TermNodeRef^[1] ].im ;
+                                end;
+
+                                //D_beta := 0.05;
+
+                                dlt_z :=  Getgradient(j,0,Bii,pNodeFMs[j].vl_volt_thrd_dg) ;
+                                }
+
+              //(2,3)/////(2)/ /  calculate H_i Z ; H_i = A_i;  //(3)/  calculate  \beta G_i x ; G_i = A_i
+                  // j is the outer loop
+                  // pCommMatrix is used as the matrix for H_i , G_i, K_i
+                  den_dij := 0 ;
+                  TempZ := 0.0 ;
+                  tempAlpha := 0.0;
+                  for i := 1 to Nodes do
+                  begin
+                       if (pnodeFMs^[i].vl_ndphases_dg = 3)   //only 3 phase nodes
+                         and ((pnodeFMs^[i].vl_nodeType_phase[1]+pnodeFMs^[i].vl_nodeType_phase[2]
+                                +pnodeFMs^[i].vl_nodeType_phase[3]) = 3)
+                      then //this phase has DG
+                      begin
+                         //Sumation of all Z and alpha s
+                         den_dij_z := den_dij+pCommHide^[(j-1)*Nodes+ i];
+                         TempZ := TempZ + pCommHide^[(j-1)*nodes+i]*pnodeFMs^[i].z_dfsn;
+
+                         den_dij := den_dij+pCommMatrix^[(j-1)*Nodes+ i];
+                         tempAlpha :=  tempAlpha + pcommmatrix^[(j-1)*nodes+i]*pnodeFMs^[i].vl_Alpha_dgn;
+                      end;
+                      ///
+                  end;
+                  // average
+                  if den_dij=0  then  begin TempZ := 0.0; TempAlpha := 0.0 ;end
+                    else
+                  begin
+                       TempZ := TempZ/den_dij_z;
+                       TempAlpha := TempAlpha/den_dij;
+                  end;
+                  TempZ :=  (TempZ - pNodeFMs^[j].z_dfsn);
+                  TempAlpha := (TempAlpha - pNodeFMs^[j].vl_Alpha_dgn);
+
+                  // z_i'  =  H_i Z + \beta G_i x + \beta D_i x_0
+                  dlt_z := TempZ + beta_dfs * TempAlpha ;//- beta_dfs *dlt_z0;// - pNodeFMs^[j].z_dfsn/den_dij;// - 0.1* pNodeFMs[j].z_dfs ; //+ pNodeFMs[j].vl_kcq_dg*dlt_z0 ;
+                  // integration
+                  //if abs(dlt_z) < 0.003 then dlt_z := 0.0 ;
+
+                  pNodeFMs[j].z_dfs := pNodeFMs[j].z_dfsn + dlt_z * ActiveCircuit[ActorID].Solution.DynaVars.h ;
+              end;
+        end;
+  end;
+end;
+
+Function  TFMonitorObj.organise_dfs_node(j : integer): double;    // calculate K_i z  // x_i'  =  A_i x + \beta K_i z + \beta B_i x_0 + d_i
+var
+  i : integer;
+  den_dij : integer;
+  tempZ : double;
+begin
+      // x_i'  =  A_i x - \beta K_i z + \beta B_i x_0 + d_i
+      // z_i'  =  H_i Z + \beta G_i x + \beta D_i x_0
+
+      // this function is to calculate
+      // K_i z
+      den_dij := 0;
+      TempZ := 0.0;
+      for i := 1 to Nodes do
+      begin
+          if (pnodeFMs^[i].vl_ndphases_dg = 3)   //only 3 phase nodes
+             and ((pnodeFMs^[i].vl_nodeType_phase[1]+pnodeFMs^[i].vl_nodeType_phase[2]
+                    +pnodeFMs^[i].vl_nodeType_phase[3]) = 3)
+          then //this phase has DG
+          begin
+             den_dij := den_dij+pCommMatrix^[(j-1)*Nodes+ i];
+             TempZ := TempZ + pcommmatrix^[(j-1)*nodes+i]*pnodeFMs^[i].z_dfsn;
+          end;
+      end;
+
+      //average
+      if den_dij=0  then  TempZ := 0.0 else
+      begin
+           TempZ := TempZ/den_dij;
+      end;
+      result := - (TempZ - pNodeFMs^[j].z_dfsn);// - pNodeFMs^[j].z_dfsn/den_dij; // should be ZERO at last
+      //result := TempZ;
+      //what if defens is zdfs
+      //result := pNodeFMs^[j].z_dfs;
 end;
 
 initialization
