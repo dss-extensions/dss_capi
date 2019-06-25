@@ -121,7 +121,7 @@ TYPE
         {}
         Id, Iq :double; //Id related to P ; Iq related to Q
         flag_dyna_Id_chg  : boolean;
-        
+
         dIddt,dIqdt :double;
         Idn, Iqn, dIddtn,dIqdtn :double; //save last time step for integration.
         {the input for control purpose}
@@ -177,7 +177,11 @@ TYPE
           //Alpha, // Alpha := Q_DG/Qmax;
           //dAlpha,
           //Gradient: double;
-        {----------------------}
+          {----------------------}
+            //equivalent frequency
+            freq: double;
+            z_dfs_plot : double;
+          {----------------------}
         FirstIteration, FixedSlip:Boolean;
 
         //var_Remembered  :Double; //Q remembered of last calc
@@ -365,7 +369,7 @@ USES  ParserDel,     // DSS parser
 
 CONST
      NumPropsThisClass = 48;//44;//24;//23; // Set this constant to the actual number of properties you define   add grpnum
-     NumGeneric5Variables = 34;//33;//25;//24;
+     NumGeneric5Variables = 36;//33;//25;//24;
      nOrder = 6;
 
 VAR  // Define any useful module vars here, for example:
@@ -1043,6 +1047,8 @@ Begin
      CC_switch := false;
      flag_dyna_Id_chg := false;
 
+     z_dfs_plot := 0.0;
+
      RecalcElementData(ActiveActor);
 
 End;
@@ -1068,7 +1074,7 @@ Begin
     if Assigned(dX_vardtn) then Reallocmem(dX_vardtn, 0);
     if Assigned(Y_out_var) then Reallocmem(Y_out_var, 0);
     if Assigned(V_in_var) then Reallocmem(V_in_var, 0);
-    if Assigned(pV_f_cc) then ReAllocMem(pV_f_cc, 0 );
+    ReAllocMem(pV_f_cc, 0 );
 
     Inherited Destroy;   // This will take care of most common circuit element arrays, etc.
 
@@ -1610,10 +1616,11 @@ end;
 
 PROCEDURE TGeneric5Obj.update_pV_f_CC(ActorID: integer); //used in dynamic mode to update alpha
 var
-  j : integer;
+  p_mode,
+  j,
   num_vleader : integer;
-  Bii : double;
-  us_i, ul_i : double;
+  Bii,
+  us_i, ul_i  : double;
 begin
       if cc_switch = false then    //no control at all   //local gradient control will be set by communication matrix
       begin
@@ -1630,55 +1637,77 @@ begin
             num_vleader := 1;
             /////////////////////////////////
             if ctrl_mode=0 then begin
-                       //u = gradient + pV_f_CC; pV_f_CC = -alpha + sum(alpha_j)
-                        Bii := ActiveCircuit[ActorID].Solution.NodeYii^[NodeRef^[1]].im;
+              p_mode := 0;
+              if fmonobj <> nil then p_mode := fmonobj.Get_P_mode(ActorID);
+             //u = gradient + pV_f_CC; pV_f_CC = -alpha + sum(alpha_j)
+              Bii := ActiveCircuit[ActorID].Solution.NodeYii^[NodeRef^[1]].im;
 
-                       if  ActiveCircuit[ActorID].Solution.DynaVars.SolutionMode = DYNAMICMODE then Begin
-                              //Ip control
-                              ul_i := FmonObj.Calc_ul_P(ndNumincluster, 0);
-                              us_i := kcd *FmonObj.Calc_Gradient_ct_P(ndNumincluster, 0,ActorID);
-                              GradientP := us_i;
-                              if cc_switch = false then   //local
-                                       pV_f_CC^[1] := 0.0
-                              else begin
-                                  pV_f_CC^[1] := ul_i +  us_i ;
-                                  pV_f_CC^[1] := pV_f_CC^[1] *Pmax/v_DG ;
-                              end;
+              if  ActiveCircuit[ActorID].Solution.DynaVars.SolutionMode = DYNAMICMODE then Begin
+                    //Ip control
+                    if  FmonObj.ld_fm_info[0].b_Curt_Ctrl = true then // curtailment algorithm
+                    begin
+                      ul_i := FmonObj.Calc_ul_P(ndNumincluster, 0);
+                      us_i := kcd *FmonObj.Calc_Gradient_ct_P(ndNumincluster, 0,ActorID);
+                      GradientP := us_i;
+                      if cc_switch = false then   //local
+                               pV_f_CC^[1] := 0.0
+                      else begin
+                          pV_f_CC^[1] := ul_i +  us_i ;
+                          pV_f_CC^[1] := pV_f_CC^[1] *Pmax/v_DG ;
+                      end;
+                    end;
 
-                              //Iq control
-                              ul_i := FmonObj.Calc_fm_ul_0(ndNumincluster,0,NodeRef^[1],Bii,kcq,Volt_Trhd, ActorID);
-                              us_i := FmonObj.Calc_fm_us_0(ndNumincluster,0,NodeRef^[1],Bii,kcq,Volt_Trhd, ActorID);
-                              Gradient :=  us_i;
+                    //if pMode then
 
-                              if FmonObj.ld_fm_info[0].b_Curt_Ctrl = false then
-                              begin // if curtailment for this cluster is off
+                    if ( p_mode = 1) and (cc_switch = true) then //if delta P = p_trans_ref - p_trans
+                    begin //balance p_trans
+                           pV_f_CC^[1] :=  FmonObj.Calc_AlphaP(ndNumincluster,0,ActorID);//new alfa_p
+                           pV_f_CC^[1] :=  pV_f_CC^[1] - AlphaP ; //derivative of alfa_p
+                           //use us_i to calculate the frequncy
+                           us_i := - FmonObj.omg_fm; //frequency droop
+                           pV_f_CC^[1] := ( pV_f_CC^[1] + us_i) * Pmax / v_DG; // derivative of Ip in dynamic mode,
+                           //use us_i to
+                    end ;
 
-                              end else
-                              begin // if curtailment for this cluster is on
-                                  //Q will try to boost the voltage while P is decreasing
-                                  if (ActiveCircuit[ActorID].Solution.bCurtl=true) and (Gradient=0.0) then
-                                    us_i := - GradientP*Pmax/Qmax ;
-                              end;
+                    //Iq control
+                    ul_i := FmonObj.Calc_fm_ul_0(ndNumincluster,0,NodeRef^[1],Bii,kcq,Volt_Trhd, ActorID);
+                    us_i := FmonObj.Calc_fm_us_0(ndNumincluster,0,NodeRef^[1],Bii,kcq,Volt_Trhd, ActorID);
+                    Gradient :=  us_i;
+
+                    if FmonObj.ld_fm_info[0].b_Curt_Ctrl = false then
+                    begin // if curtailment for this cluster is off
+
+                    end else
+                    begin // if curtailment for this cluster is on
+                        //Q will try to boost the voltage while P is decreasing
+                        if (ActiveCircuit[ActorID].Solution.bCurtl=true) and (Gradient=0.0) then
+                          us_i := - GradientP*Pmax/Qmax ;
+                    end;
 
 
-                              if cc_switch = false then   //local
-                              begin
-                                pV_f_CC^[2] :=  us_i;
-                              end
-                              else begin
-                                 pV_f_CC^[2] := ul_i + us_i ; //cc
-                              end;
-                              pV_f_CC^[2] := pV_f_CC^[2]*Qmax/v_DG;
+                    if cc_switch = false then   //local
+                    begin
+                      pV_f_CC^[2] :=  us_i;
+                    end
+                    else begin  // cc_switch is on
+                       pV_f_CC^[2] := ul_i + us_i ; //cc  //attack comes in ul_i (FmonObj.Calc_fm_ul_0)
+                    end;
+                    pV_f_CC^[2] := pV_f_CC^[2]*Qmax/v_DG;
 
-                        end else  //power flow
-                        begin
-                              //alphaP: p ratio
-                              pV_f_CC^[1] := 0.0;
-                              //alpha : q ratio
-                              pV_f_CC^[2] := FmonObj.Calc_Alpha_M2(ndNumincluster,0,NodeRef^[1],Bii,kcq,Volt_Trhd, ActorID); // for dIddt, diqdt
-                        
-                        end;
-            end
+               end else  //power flow
+               begin
+                    //alphaP: p ratio
+
+                    //if pMode then
+                    if (p_mode = 1) or (FmonObj.ld_fm_info[0].b_Curt_Ctrl = true) then
+                            pV_f_CC^[1] := FmonObj.Calc_AlphaP(ndNumincluster,0,ActorID)
+                    else
+                            pV_f_CC^[1] := 0.0;
+                    //alpha : q ratio
+                    pV_f_CC^[2] := FmonObj.Calc_Alpha_M2(ndNumincluster,0,NodeRef^[1],Bii,kcq,Volt_Trhd, ActorID); // for dIddt, diqdt
+
+               end;
+            end;
       end;
 
 end;
@@ -1730,8 +1759,10 @@ begin
                     vl_alphaP_dg :=  alphaP;
                     //
                     vl_V_ref_dg := V_ref;
-                    if ActiveCircuit[ActorID].Solution.DynaVars.SolutionMode = DYNAMICMODE then Begin
-                                 End;
+                    if ActiveCircuit[ActorID].Solution.DynaVars.SolutionMode = DYNAMICMODE then
+                    Begin
+                      z_dfs_plot := z_dfs; // defense value
+                    End;
             end;
             4:begin
                     vl_V1 := V_DG1;//Phase A or the first phase if there are less than 3 phases
@@ -1766,6 +1797,7 @@ begin
           vl_QV_flag_dg := QV_flag;
            vl_kcd_dg  := kcd;
            vl_kcq_dg  := kcq;
+           vl_volt_thrd_dg := Volt_Trhd;
          end;
     end;
     if FmonObj2<>nil then
@@ -1954,12 +1986,21 @@ begin
 
            if Q_DG >= Qmax then
            begin
-               Q_DG := Qmax;
-               //Iq := Q_DG/V_DG;
+             Q_DG := Qmax;
+             Iq := Q_DG/V_DG;
+             Iqn := Iq;
+             X_var[2]:= Iq;
+             X_varn[2]:= Iqn;
+             dX_vardtn[1] := 0.0;
            end else
                if Q_DG <= Qmin then
            begin
-               Q_DG := Qmin;
+             Q_DG := Qmin;
+             Iq := Q_DG/V_DG;
+             Iqn := Iq;
+             X_var[2]:= Iq;
+             X_varn[2]:= Iqn;
+             dX_vardtn[1] := 0.0;
            end;
 
 
@@ -2112,13 +2153,14 @@ Var
 
 //   i  : Integer;
 //   DQ : Double;
-   Curr:Complex;
+     Curr:Complex;
+     p_mode : integer;
 begin
        if ctrl_mode=0 then   //duplicate all codes as avg ctrl, under V120, I120
        begin
              V1 := V012[1];   // Save for variable calcs
              V2 := V012[2];
-
+             if cabs(V1)=0.0 then V1 := Cmplx(1,0);   //in Case the first step
              InDynamics := FALSE;
              // Guess at a new var output value
              V_DG := cabs(V1);
@@ -2127,10 +2169,32 @@ begin
              //TGeneric5Obj.RememberQV
              //TGeneric5Obj.CalcDQDV
              //
+
              {----real power is control by Pref in DG----}
-             P_DG :=  fnphases * P_ref;
+             update_pV_f_CC(ActorID);  //AlphaP, Alpha
+             p_mode := 0;
+             if fmonobj <> nil then p_mode := fmonobj.Get_P_mode(ActorID);
+             if ( p_mode = 1) and (cc_switch = true) then //if delta P = p_trans_ref - p_trans
+             begin //balance p_trans
+                   AlphaP :=     pV_f_CC^[1]; //alpha_p
+                   p_DG := Pmax * AlphaP;
+             end
+             else
+             begin
+                  P_DG :=  fnphases * P_ref; // local
+
+             end;
+             if (p_DG>Pmax) then
+                    begin
+                          P_DG := Pmax;
+                    end
+                      else if (P_DG<Pmin) then begin
+                          P_DG := Pmin;
+                      end;
+              AlphaP := P_DG / Pmax;
+             {--- real power is controled above --}
              IF QV_flag=0 THEN    //P_ref, Q_ref
-                Curr :=  Conjg( Cdiv( Cmplx(P_ref, Q_ref), V1))
+                Curr :=  Conjg( Cdiv( Cmplx(P_DG/3.0, Q_ref), V1))
              ELSE                 //P_ref, V_ref
              begin
                 if  ActiveCircuit[ActorID].Solution.Iteration=1 then
@@ -2138,10 +2202,10 @@ begin
                         Iq :=0; //In power flow, start value of Iq for each power flow
                   end;
 
-                    update_pV_f_CC(ActorID);  //Alpha
-                    Alpha :=  pV_f_CC^[2];  // only when not dynamode
-                    Q_DG :=  Qmax * Alpha;
-                    Curr :=  Conjg( Cdiv( Cmplx(P_DG/3.0, Q_DG/3.0), V1));
+                  //update_pV_f_CC(ActorID);  //Alpha
+                  Alpha :=  pV_f_CC^[2];  // only when not dynamode
+                  Q_DG :=  Qmax * Alpha;
+                  Curr :=  Conjg( Cdiv( Cmplx(P_DG/3.0, Q_DG/3.0), V1));
                   {----------------}
              end;
 
@@ -2718,7 +2782,8 @@ begin
                //Q_DG := 0-Power[1].im/3.0;
                Q_DG := 0-Power[1,ActorID].im;
                //V_ref := V_DG ; //1;//
-               //P_ref:= P_DG;
+               P_ref:= P_DG/3;
+               Q_ref:= Q_DG/3;
 
                InitModel(V012, I012); // E2, etc , Id Iq etc
                //init alpha array
@@ -3636,6 +3701,8 @@ begin
        32: Result := 'Id' ;
        33: Result := 'Iq' ;
        34: Result := 'P_set';
+       35: Result := 'Frequency';
+       36: Result := 'Defense';
     Else
     End;
 
@@ -3684,6 +3751,17 @@ begin
       32: Result := Id;
       33: Result := Iq;
       34: Result := P_ref * 3.0;
+      35: begin
+              freq := ActiveCircuit[ActiveActor].solution.Frequency;
+              if fmonobj<>nil then
+                 freq := freq + fmonobj.omg_fm;//fmonobj.comp_omg;//fmonobj.omg_fm;  //
+              Result := freq ;
+          end;
+      36: begin
+              result := 0.0;
+              if fmonobj<>nil then
+                 Result := z_dfs_plot ;
+          end;
     Else
 
     End;

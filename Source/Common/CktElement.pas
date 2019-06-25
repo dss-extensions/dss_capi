@@ -43,6 +43,7 @@ TYPE
       FUNCTION  Get_Losses(ACtorID: Integer):Complex;   // Get total losses for property...
       FUNCTION  Get_Power(idxTerm:Integer; ActorID: integer):Complex;    // Get total complex power in active terminal
       FUNCTION  Get_MaxPower(idxTerm:Integer; ActorID: integer):Complex;    // Get eauivalent total complex power in active terminal based on phase with max current
+      FUNCTION  Get_MaxCurrent(idxTerm:Integer; ActorID: integer):Double;    // Get eauivalent total complex current on phase with max current
 
 
       PROCEDURE DoYprimCalcs(Ymatrix: TCMatrix);
@@ -147,6 +148,7 @@ TYPE
       Property Losses[ActorID: Integer]:Complex         read Get_Losses;
       Property Power[idxTerm:Integer; ActorID: integer]:Complex  read Get_Power;  // Total power in active terminal
       Property MaxPower[idxTerm:Integer; ActorID: integer]:Complex  read Get_MaxPower;  // Total power in active terminal
+      Property MaxCurrent[idxTerm:Integer; ActorID: integer]:Double  read Get_MaxCurrent;  // Max current in active terminal
       Property ActiveTerminalIdx:Integer       read FActiveTerminal      write Set_ActiveTerminal;
       Property Closed[Index:Integer;ActorID:Integer]:Boolean   read Get_ConductorClosed  write Set_ConductorClosed;
       PROCEDURE SumCurrents(ActorID: Integer);
@@ -763,6 +765,35 @@ Begin
 
    Result := cPower;
 end;
+
+FUNCTION  TDSSCktElement.Get_MaxCurrent(idxTerm:Integer; ActorID: integer):Double;
+VAR
+   i, k,
+   nref      : Integer;
+   MaxCurr,
+   CurrMag   : Double;
+   MaxPhase  : Integer;
+
+Begin
+   ActiveTerminalIdx  :=  idxTerm;   // set active Terminal
+   MaxCurr            :=  0.0;
+   If FEnabled Then Begin
+       ComputeIterminal(ActorID);
+    // Method: Get max current at terminal (magnitude)
+       MaxCurr := 0.0;
+       MaxPhase := 1;  // Init this so it has a non zero value
+       k := (idxTerm -1)*Fnconds; // starting index of terminal
+       For i := 1 to Fnphases do Begin
+          CurrMag := Cabs(Iterminal[k+i]);
+          If CurrMag > MaxCurr Then Begin
+             MaxCurr := CurrMag;
+             MaxPhase := i
+          End;
+       End;
+   End;
+
+    Result  :=  MaxCurr;
+End;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 PROCEDURE TDSSCktElement.GetPhasePower( PowerBuffer:pComplexArray; ActorID: Integer);
