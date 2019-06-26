@@ -347,7 +347,7 @@ Begin
      CRLF+CRLF+'In Schedule mode, the Tup, TFlat, and Tdn properties specify the up ramp duration, flat duration, and down ramp duration for the schedule. ' +
      'The schedule start time is set by TimeDischargeTrigger and the rate of discharge for the flat part is determined by RatekW.' +
      CRLF+CRLF+'In I-PeakShave mode, the control attempts to discharge storage to keep current in the monitored element below the target given in k-amps ' +
-     '(thousands of amps), when this control mode is active, the property kWTarget will contained the target in k-amps. ';
+     '(thousands of amps), when this control mode is active, the property kWTarget will  be expressed in k-amps. ';
     PropertyHelp[propMODECHARGE]          :=
      '{Loadshape | Time* | PeakShaveLow | I-PeakShaveLow} Mode of operation for the CHARGE FUNCTION of this controller. ' +
       CRLF+CRLF+'In Loadshape mode, both charging and discharging precisely follows the per unit loadshape. ' +
@@ -357,7 +357,7 @@ Begin
      'monitored element is bellow a specified KW target (kWTarget_low). The storage will charge as much power as necessary to keep the power within the deadband around kWTarget_low.' +
       CRLF+CRLF+'In I-PeakShaveLow mode, the charging operation will charge the storage fleet when the current (Amps) at a' +
      'monitored element is below a specified amps target (kWTarget_low). The storage will charge as much power as necessary to keep the amps within the deadband around kWTarget_low. ' +
-     'When this control mode is active, the property kWTarget_low will contained the target in k-amps and all the other parameters will be adjusted to match the amps (current) control criteria.';
+     'When this control mode is active, the property kWTarget_low will be expressed in k-amps and all the other parameters will be adjusted to match the amps (current) control criteria.';
     PropertyHelp[propTIMEDISCHARGETRIGGER]:=
      'Default time of day (hr) for initiating Discharging of the fleet. During Follow or Time mode discharging is triggered at a fixed time ' +
      'each day at this hour. If Follow mode, storage will be discharged to attempt to hold the load at or below the power level at the time of triggering. ' +
