@@ -484,20 +484,20 @@ Begin
                          'NodeList' + CRLF +
                          'NodeList Line.Myline';
      CommandHelp[105] := 'This command creates a new actor (OpenDSS Instance) and sets the new actor as the active actor. '+
-                         'There can be only 1 circuit per actor. The NewActor Instruction will increment the variable NumOfActors;'+
+                         'There can be only 1 circuit per actor. The NewActor command will increment the variable NumOfActors;'+
                          ' however, if the number of actors is the same as the number of available CPUs the new actor will not be created ' +
                          'generating an error message. This instruction will deliver the ID of the active actor. This command does not requires a precedent command.';
      CommandHelp[106] := 'Clears all the circuits and all the actors, after this instruction there will be only 1 actor (actor 1) and will be the active actor';
-     CommandHelp[107] := 'Pauses the script thread until all the active actors are Ready to receive new commands (Under Testing)';
-     CommandHelp[108] := 'Solves all the circuits loaded into memory';
+     CommandHelp[107] := 'Pauses the scripting thread until all the active actors are Ready to receive new commands (have finished all their tasks and are ready to receive new simulation orders).';
+     CommandHelp[108] := 'Solves all the circuits (Actors) loaded into memory by the user';
      CommandHelp[109] := 'Calculates the incidence matrix of the Active Circuit';
-     CommandHelp[110] := 'Calculates the incidence matrix of the Active Circuit. However, in this case the matrix will be calculated by considering its hierarchical order,'+
-                         'which means that the buses order will be generated considering their distribution from the substation to the last load in a radial hierarchy';
-     CommandHelp[111] := 'Estimates the buses for tearing the system in many parts as CPUs - 1 are in the local computer, is used for creating a balanced distribution of' +
-                         'Distribution of subsystems for the A-Diakoptics algorithm';
+     CommandHelp[110] := 'Calculates the incidence matrix of the Active Circuit. However, in this case the matrix will be calculated considering its hierarchical order,'+
+                         'listing the buses starting from the substation to the farthest load in the model';
+     CommandHelp[111] := 'Estimates the buses for tearing the system in many parts as CPUs - 1 are in the local computer, is used for tearing the interconnected circuit into a' +
+                         ' balanced (same number of nodes) collection of subsystems for the A-Diakoptics algorithm';
      CommandHelp[112] := 'Request to create a TCP/IP socket to communicate data with external modules. This function requires the host address and TCP port to connect.';
      CommandHelp[113] := 'Request to terminate a TCP/IP socket. This function requires the host address and TCP port to disconnect.';
-     CommandHelp[114] := 'This function takes the bus levels array and traces all the possible paths considering the longest paths from the substation to the longest branches' +
+     CommandHelp[114] := 'This function takes the bus levels array and traces all the possible paths considering the longest paths from the substation to the farthest branches' +
                          ' within the circuit. Then, the new paths are filled with 0 to complement the oroginal levels proposed by the calcincmatrix_o command.';
      CommandHelp[115] := '{ElementName=} [KeepLoad=Y*/N] [EditString="..."] ' +
                          'Remove (disable) all branches downline from the PDelement named by "ElementName" property. Circuit must have an Energymeter on this branch. ' +
@@ -509,11 +509,11 @@ Begin
                          'Remove Line.L22 Editstring="Daily=Dailycurve Duty=SolarShape' + CRLF +
                          'Remove Line.L333 KeepLoad=No';
      CommandHelp[116] := 'Aborts all the simulations running';
-     CommandHelp[117] := 'Calculate the laplacian matrix using the incidence matrix' + CRLF +
-                         'previously calculated, this means that before calling this command' + CRLF +
+     CommandHelp[117] := 'Calculate the laplacian matrix using the incidence matrix ' +
+                         'previously calculated. Before calling this command ' +
                          'the incidence matrix needs to be calculated using calcincmatrix/calcincmatrix_o.';
-     CommandHelp[118] := 'Clones the active circuit. This command creates as many copies of the active cirucit as indicated in the argument' + CRLF +
-                         'if the number of requested clones does not overpasses the number of local CPUs. The form of this command is clone X where' + CRLF +
+     CommandHelp[118] := 'Clones the active circuit. This command creates as many copies of the active cirucit as indicated in the argument ' +
+                         'if the number of requested clones does not overpasses the number of local CPUs. The form of this command is clone X where' +
                          'X is the number of clones to be created';
      CommandHelp[119] := 'Read FNCS publication topics from a JSON file';
 
