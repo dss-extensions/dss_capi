@@ -204,7 +204,8 @@ Begin
                     'resets the time step, etc. to defaults for each mode.  After the initial reset, the user ' +
                     'must explicitly reset the monitors and/or meters until another Set Mode= command.';
      OptionHelp[9]  := 'One of [Uniform | Gaussian | Lognormal | None ] for Monte Carlo Variables.';
-     OptionHelp[10] := 'Number of solutions to perform for Monte Carlo or dutycycle solutions.';
+     OptionHelp[10] := 'Number of solutions or time steps to perform for each Solve command. Defaults for selected modes: '+CRLF+CRLF+
+                       'Daily = 14'+CRLF+'Yearly = 8760' +CRLF+'Duty = 100';
      OptionHelp[11] := 'Specify the solution start time as an array:'+CRLF+
                         'time=(hour, secs)';
      OptionHelp[12] := 'Synonym for Type=. (See above)';
