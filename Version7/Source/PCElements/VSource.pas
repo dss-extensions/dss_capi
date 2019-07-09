@@ -55,6 +55,7 @@ TYPE
         X0R0    : Double;
         BaseMVA : Double;
         puZ1, puZ0, puZ2 : Complex;
+        puZideal : Complex;
         ZBase   : Double;
 
         Bus2Defined   : Boolean;
@@ -64,6 +65,7 @@ TYPE
         puZ2Specified : Boolean;
         Z2Specified   : Boolean;
         Z0Specified   : Boolean;
+        IsQuasiIdeal  : Boolean;  // Use puZideal for power flow
 
         ScanType     : Integer;
         SequenceType : Integer;
@@ -75,6 +77,8 @@ TYPE
         PROCEDURE CalcDailyMult(Hr:double);
         PROCEDURE CalcDutyMult(Hr:double);
         PROCEDURE CalcYearlyMult(Hr:double);
+
+        Function InterpretSourceModel(const s:String):Boolean;
 
       public
 
@@ -123,7 +127,7 @@ implementation
 
 USES  ParserDel, Circuit, DSSClassDefs, DSSGlobals, Dynamics, Utilities, Sysutils, Command;
 
-Const NumPropsThisClass = 29;
+Const NumPropsThisClass = 31;
 
 Var CDOUBLEONE: Complex;
 
@@ -191,6 +195,9 @@ Begin
      PropertyName[27] := 'Yearly';
      PropertyName[28] := 'Daily';
      PropertyName[29] := 'Duty';
+     PropertyName[30] := 'Model';
+     PropertyName[31] := 'puZideal';
+
 
      // define Property help values
      PropertyHelp[1] := 'Name of bus to which the main terminal (1) is connected.'+CRLF+'bus1=busname'+CRLF+'bus1=busname.1.2.3' +CRLF+CRLF+
@@ -267,6 +274,10 @@ Begin
                           'Defaults to Daily load shape when Daily is defined.   '+
                           'Set to NONE to reset to no loadahape for Yearly mode. ' +
                           'The default is no variation.';
+     PropertyHelp[30]  := '{Thevenin* | Ideal}  Specifies whether the Vsource is to be considered a Thevenin short circuit model or a quasi-ideal voltage source. If Thevenin, the Vsource uses the impedances defined for all calculations. ' +
+                          'If "Ideal", the model uses a small impedance on the diagonal of the impedance matrix for the fundamental base frequency power flow only. Then switches to actual Thevenin model for other frequencies. ';
+     PropertyHelp[31]  := '2-element array: e.g., [1  2]. The pu impedance to use for the quasi-ideal voltage source model. Should be a very small impedances. Default is [1e-6, 0.001]. Per-unit impedance on base of Vsource BasekV and BaseMVA. ' +
+                          'If too small, solution may not work. Be sure to check the voltage values and powers.';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -389,6 +400,8 @@ Begin
            27: YearlyShape  := Param;
            28: DailyShape   := Param;
            29: DutyShape    := Param;
+           30: IsQuasiIdeal := InterpretSourceModel(Param);
+           31: puZideal  := InterpretComplex(Param);
          ELSE
             ClassEdit(ActiveVsourceObj, ParamPointer - NumPropsThisClass)
          End;
@@ -535,6 +548,8 @@ Begin
         puZ0Specified  := OtherVsource.puZ0Specified;
         puZ1Specified  := OtherVsource.puZ1Specified;
         puZ2Specified  := OtherVsource.puZ2Specified;
+        IsQuasiIdeal   := OtherVsource.IsQuasiIdeal;
+        puZideal       := OtherVsource.puZideal;
 
         {Loadshape stuff}
         ShapeIsActual  := OtherVsource.ShapeIsActual;
@@ -606,6 +621,9 @@ Begin
      puZ0Specified := FALSE;
      puZ2Specified := FALSE;
      puZ1Specified := FALSE;
+     IsQuasiIdeal  := FALSE;  // you have to turn this flag ON
+
+     puZideal := Cmplx(1.0e-6, 0.001);  // default ideal source pu impedance
 
      Spectrum := 'defaultvsource';
 
@@ -633,6 +651,17 @@ Begin
     Zinv.Free;
 
     Inherited Destroy;
+End;
+
+//----------------------------------------------------------------------------
+Function TVsourceObj.InterpretSourceModel(const s:String):Boolean;
+
+// interpret Model type
+
+
+Begin
+     if CompareTextShortest(S, 'ideal')=0 then Result := TRUE
+     Else Result := FALSE;
 End;
 
 //=============================================================================
@@ -860,17 +889,35 @@ Begin
           YPrim.Clear;
      End;
 
-     FYprimFreq := ActiveCircuit.Solution.Frequency  ;
-     FreqMultiplier := FYprimFreq / BaseFrequency;
+     With ActiveCircuit.Solution Do
+     Begin
+       FYprimFreq := Frequency  ;
+       FreqMultiplier := FYprimFreq / BaseFrequency;
 
-     { Put in Series RL Adjusted for frequency }
-     For i := 1 to Fnphases Do Begin
-         For j := 1 to Fnphases Do Begin
-           Value    := Z.GetElement(i, j);
-           Value.im := Value.im * FreqMultiplier;  {Modify from base freq}
-           Zinv.SetElement(i, j, value);
+       {**** Quasi Ideal Source for fundamental power flow****}
+
+       if ((FreqMultiplier - 1.0) < Epsilon ) and IsQuasiIdeal and (Not IsHarmonicModel) Then
+         Begin
+            // Ideal Source approximation -- impedance matrix is diagonal matrix only
+             Zinv.Clear;
+             Value := CmulReal(puZIdeal, Zbase);  // convert to ohms
+             for i := 1 to Fnphases do
+                 Zinv.SetElement(i, i, value);
+         End
+
+       Else
+
+       {**** Normal Thevenin Source ****}
+         { Put in Series RL Adjusted for frequency -- Use actual values }
+         For i := 1 to Fnphases Do Begin
+             For j := 1 to Fnphases Do Begin
+               Value    := Z.GetElement(i, j);
+               Value.im := Value.im * FreqMultiplier;  {Modify from base freq}
+               Zinv.SetElement(i, j, value);
+             End;
          End;
      End;
+
 
      Zinv.Invert;  {Invert in place}
 
@@ -1137,6 +1184,8 @@ begin
      PropertyValue[27]  := '';
      PropertyValue[28]  := '';
      PropertyValue[29]  := '';
+     PropertyValue[30]  := 'Thevenin';
+     PropertyValue[31]  := '[1.0e-6, 0.001]';
 
 
 
@@ -1165,6 +1214,8 @@ begin
           24 : Result := Format('[%-.8g, %-.8g]',[ puZ0.re , puZ0.im ]);
           25 : Result := Format('[%-.8g, %-.8g]',[ puZ2.re , puZ2.im ]);
           26 : Result := Format('%-.5g',[BaseMVA]);
+          31 : Result := Format('[%-.8g, %-.8g]',[ puZideal.re , puZideal.im ]);
+
         Else
           Result := Inherited GetPropertyValue(Index);
         End;
