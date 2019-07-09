@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="10"/>
+    <Version Value="11"/>
     <PathDelim Value="\"/>
     <General>
       <SessionStorage Value="InProjectDir"/>
@@ -26,11 +26,18 @@
     </PublishOptions>
     <RunParams>
       <local>
-        <FormatVersion Value="1"/>
         <CommandLineParams Value="IEEE13Nodeckt.dss"/>
       </local>
+      <FormatVersion Value="2"/>
+      <Modes Count="1">
+        <Mode0 Name="default">
+          <local>
+            <CommandLineParams Value="IEEE13Nodeckt.dss"/>
+          </local>
+        </Mode0>
+      </Modes>
     </RunParams>
-    <Units Count="122">
+    <Units Count="123">
       <Unit0>
         <Filename Value="opendsscmd.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -523,6 +530,10 @@
         <Filename Value="linenoise.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit121>
+      <Unit122>
+        <Filename Value="..\PDElements\AutoTrans.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit122>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -534,7 +545,7 @@
     <SearchPaths>
       <IncludeFiles Value="..\Shared;..\Common;..\PDElements;..\Controls;..\General;..\Plot;..\Meters;..\PCElements;..\Executive;..\Parser;$(ProjOutDir)"/>
       <Libraries Value="lib"/>
-      <OtherUnitFiles Value="..\Shared;..\Common;..\PDElements;..\Controls;..\General;..\Meters;..\PCElements;..\Executive;..\Parser"/>
+      <OtherUnitFiles Value="..\Shared;..\Common;..\PDElements;..\Controls;..\General;..\Meters;..\PCElements;..\Executive;..\Parser;..\generics.collections"/>
       <UnitOutputDirectory Value="units\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
