@@ -47,7 +47,7 @@ int main(void)
     }
     for (i = 0; i < numNodes; ++i)
     {
-        printf("node %d: %f + j%f\n", i, voltages[2*i], voltages[2*(i + 1)]);
+        printf("node %d: %f + j%f\n", i, voltages[2*i], voltages[2*i + 1]);
     }
     
     return 0;
