@@ -2142,9 +2142,9 @@ begin
                            DynaVars.h    := 3600.0;
                            NumberOfTimes := 1;  // just one time step per Solve call expected
                       End;
-       MONTECARLO1:   Begin IntervalHrs    := 1.0;  SampleTheMeters := TRUE; End;
-       MONTECARLO2:   Begin DynaVars.h     := 3600.0;  SampleTheMeters := TRUE; End;
-       MONTECARLO3:   Begin IntervalHrs    := 1.0; SampleTheMeters := TRUE;  End;
+       MONTECARLO1:   Begin IntervalHrs    := 1.0;      SampleTheMeters := TRUE; End;
+       MONTECARLO2:   Begin DynaVars.h     := 3600.0;   SampleTheMeters := TRUE; End;
+       MONTECARLO3:   Begin IntervalHrs    := 1.0;      SampleTheMeters := TRUE;  End;
        MONTEFAULT:    Begin IsDynamicModel := TRUE;  END;
        FAULTSTUDY:    Begin
                             IsDynamicModel := TRUE;
