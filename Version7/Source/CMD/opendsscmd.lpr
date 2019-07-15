@@ -173,6 +173,12 @@ uses
   XYcurve in '..\General\XYcurve.pas',
   Ymatrix in '..\Common\Ymatrix.pas',
   FNCS in 'fncs.pas',
+	generics.collections in '..\..\..\generics.collections\src\generics.collections.pas',
+	generics.defaults in '..\..\..\generics.collections\src\generics.defaults.pas',
+	generics.hashes in '..\..\..\generics.collections\src\generics.hashes.pas',
+	generics.helpers in '..\..\..\generics.collections\src\generics.helpers.pas',
+	generics.memoryexpanders in '..\..\..\generics.collections\src\generics.memoryexpanders.pas',
+	generics.strings in '..\..\..\generics.collections\src\generics.strings.pas',
 //  editline in 'editline.pas',
   linenoise in 'linenoise.pas';
 

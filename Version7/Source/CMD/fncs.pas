@@ -20,7 +20,8 @@ interface
 
 uses
   Classes, SysUtils, Executive, {$IFDEF Unix} unix, {$ENDIF} dynlibs, fpjson, jsonparser, DSSGlobals,
-  UComplex, generics.collections, CktElement, Utilities,math,RegControl,ControlElem;
+  UComplex, generics.collections, CktElement, Utilities, math,
+  RegControl,ControlElem;
 
 type
   fncs_time = qword;
@@ -205,7 +206,6 @@ End;
      
 procedure TFNCS.GetValuesForTopics;
 //var index:Integer;
-
 Begin
   //if AttributeToPublish.Find('Voltages', index) Then
   //  GetVoltageValuesForTopics
@@ -226,6 +226,7 @@ Begin
   if AttributeToPublish.count=0 then
     Writeln('No topics need to be published.');
 end;
+
 procedure TFNCS.GetVoltageValuesForTopics;
   VAR
      i,j,k:Integer;
@@ -277,6 +278,7 @@ procedure TFNCS.GetVoltageValuesForTopics;
        End
       ELSE setLength(re, 0);
 end;
+
 procedure TFNCS.GetCurrentValuesForTopics;
   Var
       F          :TextFile;
@@ -336,6 +338,7 @@ procedure TFNCS.GetCurrentValuesForTopics;
        If Assigned(cBuffer) Then Freemem(cBuffer);
     End;
   End;
+
 PROCEDURE TFNCS.AddCurrentsToDict(pelem:TDSSCktElement; Cbuffer:pComplexArray; topics:ClassObjectDict);
 VAr
     i,j,k:Integer;
@@ -367,6 +370,7 @@ Begin
            k:=k+pElem.NConds
        END;
 End;
+
 procedure TFNCS.GetCurrentValuesForTopics2;
   Var
       F          :TextFile;
@@ -412,6 +416,7 @@ procedure TFNCS.GetCurrentValuesForTopics2;
     FINALLY
     End;
   End;
+
 PROCEDURE TFNCS.AddCurrentsToDict2(pElem:TDSSCktElement; topics:ClassObjectDict);
 
 Var
@@ -469,6 +474,7 @@ BEGIN
     If Assigned(cBuffer) Then Freemem(cBuffer);
   End;
 END;
+
 procedure TFNCS.GetPowerValuesForTopics;
 Var
     pElem :TDSSCktElement;
@@ -497,6 +503,7 @@ Begin
        pElem := ActiveCircuit.PCElements.Next;
      End;
 end;
+
 procedure TFNCS.AddPowersToDict(pElem:TDSSCktElement; topics:ClassObjectDict);
 var
   c_Buffer:pComplexArray;
@@ -553,6 +560,7 @@ begin
      If Assigned(c_Buffer) then Freemem(c_Buffer);
   End;
 end;
+
 function TFNCS.RoundToSignificantFigure(value:double;digit:Integer):double;
 var
   factor:double=1.0;
@@ -565,6 +573,7 @@ begin
         exit;
      RoundToSignificantFigure:=round(value*factor)/factor;
 end;
+
 procedure TFNCS.GetTapPositionsForTopics;
 Var
    iWind :Integer;
@@ -590,6 +599,7 @@ Begin
   FINALLY
   End;
 end;
+
 PROCEDURE TFNCS.GetControlStatusForTopics;
 
 Var
@@ -628,6 +638,7 @@ Begin
     End;
 
 End;
+
 procedure TFNCS.GetLineSwitchStateForTopics;
 var
     elem:TDSSCktElement;
@@ -786,6 +797,7 @@ begin
   end;
   writeln('Done! This is where we read FNCS publication requests from: ' + fname);
 end;
+
 function TFNCS.TopicsToJsonFormat;
 var
   formatedString,objName,propertyName:string;
@@ -850,6 +862,7 @@ begin
   formatedString:=formatedString+'}}';
   TopicsToJsonFormat:=formatedString
 end;
+
 // called from ActiveSolution.Increment_time
 function TFNCS.FncsTimeRequest (next_fncs:fncs_time): Boolean;
 var
