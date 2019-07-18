@@ -8,7 +8,6 @@ uses
     CAPI_Utils;
 
 procedure ISources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure ISources_Get_AllNames_GR(); CDECL;
 function ISources_Get_Count(): Integer; CDECL;
 function ISources_Get_First(): Integer; CDECL;
 function ISources_Get_Next(): Integer; CDECL;
@@ -45,13 +44,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, IsourceClass.ElementList, True);
 end;
-
-procedure ISources_Get_AllNames_GR(); CDECL;
-// Same as ISources_Get_AllNames but uses global result (GR) pointers
-begin
-    ISources_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function ISources_Get_Count(): Integer; CDECL;
 begin

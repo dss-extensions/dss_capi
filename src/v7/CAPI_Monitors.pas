@@ -8,7 +8,6 @@ uses
     CAPI_Utils;
 
 procedure Monitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Monitors_Get_AllNames_GR(); CDECL;
 function Monitors_Get_FileName(): PAnsiChar; CDECL;
 function Monitors_Get_First(): Integer; CDECL;
 function Monitors_Get_Mode(): Integer; CDECL;
@@ -37,7 +36,6 @@ procedure Monitors_Get_dblHour(var ResultPtr: PDouble; ResultCount: PInteger); C
 procedure Monitors_Get_dblHour_GR(); CDECL;
 function Monitors_Get_FileVersion(): Integer; CDECL;
 procedure Monitors_Get_Header(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Monitors_Get_Header_GR(); CDECL;
 function Monitors_Get_NumChannels(): Integer; CDECL;
 function Monitors_Get_RecordSize(): Integer; CDECL;
 function Monitors_Get_Element(): PAnsiChar; CDECL;
@@ -108,13 +106,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Monitors, False);
 end;
-
-procedure Monitors_Get_AllNames_GR(); CDECL;
-// Same as Monitors_Get_AllNames but uses global result (GR) pointers
-begin
-    Monitors_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function Monitors_Get_FileName_AnsiString(): Ansistring; inline;
 var
@@ -604,13 +595,6 @@ begin
         AuxParser.Whitespace := SaveWhiteSpace;
     end;
 end;
-
-procedure Monitors_Get_Header_GR(); CDECL;
-// Same as Monitors_Get_Header but uses global result (GR) pointers
-begin
-    Monitors_Get_Header(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function Monitors_Get_NumChannels(): Integer; CDECL;
 var

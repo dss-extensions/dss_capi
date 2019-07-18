@@ -9,7 +9,6 @@ uses
 
 function SwtControls_Get_Action(): Integer; CDECL;
 procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure SwtControls_Get_AllNames_GR(); CDECL;
 function SwtControls_Get_Delay(): Double; CDECL;
 function SwtControls_Get_First(): Integer; CDECL;
 function SwtControls_Get_IsLocked(): Wordbool; CDECL;
@@ -90,13 +89,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit[ActiveActor].SwtControls, False);
 end;
-
-procedure SwtControls_Get_AllNames_GR(); CDECL;
-// Same as SwtControls_Get_AllNames but uses global result (GR) pointers
-begin
-    SwtControls_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function SwtControls_Get_Delay(): Double; CDECL;
 var

@@ -8,7 +8,6 @@ uses
     CAPI_Utils;
 
 procedure Loads_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Loads_Get_AllNames_GR(); CDECL;
 function Loads_Get_First(): Integer; CDECL;
 function Loads_Get_idx(): Integer; CDECL;
 function Loads_Get_Name(): PAnsiChar; CDECL;
@@ -225,13 +224,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Loads, False);
 end;
-
-procedure Loads_Get_AllNames_GR(); CDECL;
-// Same as Loads_Get_AllNames but uses global result (GR) pointers
-begin
-    Loads_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function Loads_Get_First(): Integer; CDECL;
 var

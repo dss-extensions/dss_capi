@@ -8,7 +8,6 @@ uses
     CAPI_Utils;
 
 procedure Reactors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Reactors_Get_AllNames_GR(); CDECL;
 function Reactors_Get_Name(): PAnsiChar; CDECL;
 procedure Reactors_Set_Name(const Value: PAnsiChar); CDECL;
 function Reactors_Get_First(): Integer; CDECL;
@@ -175,13 +174,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Reactors, False);
 end;
-
-procedure Reactors_Get_AllNames_GR(); CDECL;
-// Same as Reactors_Get_AllNames but uses global result (GR) pointers
-begin
-    Reactors_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function Reactors_Get_First(): Integer; CDECL;
 var

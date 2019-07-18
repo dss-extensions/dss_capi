@@ -8,7 +8,6 @@ uses
     CAPI_Utils;
 
 procedure RegControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure RegControls_Get_AllNames_GR(); CDECL;
 function RegControls_Get_CTPrimary(): Double; CDECL;
 function RegControls_Get_Delay(): Double; CDECL;
 function RegControls_Get_First(): Integer; CDECL;
@@ -101,13 +100,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.RegControls, False);
 end;
-
-procedure RegControls_Get_AllNames_GR(); CDECL;
-// Same as RegControls_Get_AllNames but uses global result (GR) pointers
-begin
-    RegControls_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function RegControls_Get_CTPrimary(): Double; CDECL;
 var

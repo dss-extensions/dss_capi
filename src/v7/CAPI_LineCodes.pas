@@ -44,7 +44,6 @@ procedure LineCodes_Set_NormAmps(Value: Double); CDECL;
 function LineCodes_Get_EmergAmps(): Double; CDECL;
 procedure LineCodes_Set_EmergAmps(Value: Double); CDECL;
 procedure LineCodes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure LineCodes_Get_AllNames_GR(); CDECL;
 
 function LineCodes_Get_idx(): Integer; CDECL;
 procedure LineCodes_Set_idx(Value: Integer); CDECL;
@@ -626,13 +625,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, LineCodeClass.ElementList, False);
 end;
-
-procedure LineCodes_Get_AllNames_GR(); CDECL;
-// Same as LineCodes_Get_AllNames but uses global result (GR) pointers
-begin
-    LineCodes_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function LineCodes_Get_idx(): Integer; CDECL;
 begin

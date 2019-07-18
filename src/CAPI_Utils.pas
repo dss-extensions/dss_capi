@@ -18,7 +18,6 @@ type
     PPDouble = ^PDouble;
     PPInteger = ^PInteger;
     PPByte = ^PByte;
-    PPPAnsiChar = ^PPAnsiChar;
 
     Float32Array = array[0..$effffff] of Single;
     PFloat32Array = ^Float32Array;
@@ -38,13 +37,11 @@ var
 
 procedure DSS_GetGRPointers(
     // Pointers to the global variables that contains the actual pointers.
-    var DataPtr_PPAnsiChar: PPPAnsiChar;
     var DataPtr_PDouble: PPDouble;
     var DataPtr_PInteger: PPInteger;
     var DataPtr_PByte: PPByte;
 
     // These are not reallocated during the execution, can return the actual pointer values
-    var CountPtr_PPAnsiChar: PInteger;
     var CountPtr_PDouble: PInteger;
     var CountPtr_PInteger: PInteger;
     var CountPtr_PByte: PInteger); CDECL;
@@ -267,20 +264,16 @@ end;
 
 //------------------------------------------------------------------------------
 procedure DSS_GetGRPointers(
-    var DataPtr_PPAnsiChar: PPPAnsiChar;
     var DataPtr_PDouble: PPDouble;
     var DataPtr_PInteger: PPInteger;
     var DataPtr_PByte: PPByte;
-    var CountPtr_PPAnsiChar: PInteger;
     var CountPtr_PDouble: PInteger;
     var CountPtr_PInteger: PInteger;
     var CountPtr_PByte: PInteger); CDECL;
 begin
-    if (@DataPtr_PPAnsiChar <> nil) then DataPtr_PPAnsiChar := @GR_DataPtr_PPAnsiChar;
     if (@DataPtr_PDouble <> nil) then DataPtr_PDouble := @GR_DataPtr_PDouble;
     if (@DataPtr_PInteger <> nil) then DataPtr_PInteger := @GR_DataPtr_PInteger;
     if (@DataPtr_PByte <> nil) then DataPtr_PByte := @GR_DataPtr_PByte;
-    if (@CountPtr_PPAnsiChar <> nil) then CountPtr_PPAnsiChar := GR_CountPtr_PPAnsiChar;
     if (@CountPtr_PDouble <> nil) then CountPtr_PDouble := GR_CountPtr_PDouble;
     if (@CountPtr_PInteger <> nil) then CountPtr_PInteger := GR_CountPtr_PInteger;
     if (@CountPtr_PByte <> nil) then CountPtr_PByte := GR_CountPtr_PByte;
