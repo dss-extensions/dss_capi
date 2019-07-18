@@ -3,7 +3,9 @@
 **not released**
 
 - **Done**:
-    - drop the GR API for strings (bytes, ints and floats will continue)
+- The C headers for the two variantes (v7 and v8) have been unified into a single header. The old header files in `include/v7/dss_capi.h` and include/v8/dss_capi.h` have been modified to use this new header (`include/dss_capi.h`). Functions specific to v8 are ifdef'ed and also marked with a `/*V8*/` comment to make it easier to filter in automated tools.
+- The GR API for string arrays was dropped since it didn't bring benefits (GR arrays of bytes, ints and floats will continue).
+
 
 - **Planned**:
     - extend the API to work with 64-bit integers where appropriate

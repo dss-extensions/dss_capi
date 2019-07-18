@@ -8,7 +8,6 @@ uses
     CAPI_Utils;
 
 procedure Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Transformers_Get_AllNames_GR(); CDECL;
 function Transformers_Get_First(): Integer; CDECL;
 function Transformers_Get_IsDelta(): Wordbool; CDECL;
 function Transformers_Get_kV(): Double; CDECL;
@@ -106,13 +105,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit[ActiveActor].Transformers, False);
 end;
-
-procedure Transformers_Get_AllNames_GR(); CDECL;
-// Same as Transformers_Get_AllNames but uses global result (GR) pointers
-begin
-    Transformers_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function Transformers_Get_First(): Integer; CDECL;
 var

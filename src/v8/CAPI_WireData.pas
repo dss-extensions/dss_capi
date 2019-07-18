@@ -20,7 +20,6 @@ function WireData_Get_Next(): Integer; CDECL;
 function WireData_Get_Name(): PAnsiChar; CDECL;
 procedure WireData_Set_Name(const Value: PAnsiChar); CDECL;
 procedure WireData_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure WireData_Get_AllNames_GR(); CDECL;
 function WireData_Get_Rdc(): Double; CDECL;
 procedure WireData_Set_Rdc(Value: Double); CDECL;
 function WireData_Get_Rac(): Double; CDECL;
@@ -168,12 +167,6 @@ begin
     if ActiveCircuit[ActiveActor] = NIL then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, WireDataClass[ActiveActor].ElementList, False);
-end;
-
-procedure WireData_Get_AllNames_GR(); CDECL;
-// Same as WireData_Get_AllNames but uses global result (GR) pointers
-begin
-    WireData_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_NormAmps(): Double; CDECL;

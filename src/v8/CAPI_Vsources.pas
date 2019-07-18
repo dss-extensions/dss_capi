@@ -8,7 +8,6 @@ uses
     CAPI_Utils;
 
 procedure Vsources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Vsources_Get_AllNames_GR(); CDECL;
 function Vsources_Get_Count(): Integer; CDECL;
 function Vsources_Get_First(): Integer; CDECL;
 function Vsources_Get_Next(): Integer; CDECL;
@@ -49,13 +48,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, VSourceClass[ActiveActor].ElementList, False);
 end;
-
-procedure Vsources_Get_AllNames_GR(); CDECL;
-// Same as Vsources_Get_AllNames but uses global result (GR) pointers
-begin
-    Vsources_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function Vsources_Get_Count(): Integer; CDECL;
 begin

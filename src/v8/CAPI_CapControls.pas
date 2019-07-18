@@ -8,7 +8,6 @@ uses
     CAPI_Utils;
 
 procedure CapControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure CapControls_Get_AllNames_GR(); CDECL;
 function CapControls_Get_Capacitor(): PAnsiChar; CDECL;
 function CapControls_Get_CTratio(): Double; CDECL;
 function CapControls_Get_DeadTime(): Double; CDECL;
@@ -88,13 +87,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit[ActiveActor].CapControls, False);
 end;
-
-procedure CapControls_Get_AllNames_GR(); CDECL;
-// Same as CapControls_Get_AllNames but uses global result (GR) pointers
-begin
-    CapControls_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function CapControls_Get_Capacitor_AnsiString(): Ansistring; inline;
 var

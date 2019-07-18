@@ -8,7 +8,6 @@ uses
     CAPI_Utils;
 
 procedure Lines_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Lines_Get_AllNames_GR(); CDECL;
 function Lines_Get_Bus1(): PAnsiChar; CDECL;
 function Lines_Get_Bus2(): PAnsiChar; CDECL;
 function Lines_Get_First(): Integer; CDECL;
@@ -111,13 +110,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Lines, False);
 end;
-
-procedure Lines_Get_AllNames_GR(); CDECL;
-// Same as Lines_Get_AllNames but uses global result (GR) pointers
-begin
-    Lines_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function Lines_Get_Bus1_AnsiString(): Ansistring; inline;
 begin

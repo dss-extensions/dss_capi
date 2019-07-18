@@ -8,7 +8,6 @@ uses
     CAPI_Utils;
 
 procedure Sensors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Sensors_Get_AllNames_GR(); CDECL;
 function Sensors_Get_Count(): Integer; CDECL;
 procedure Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure Sensors_Get_Currents_GR(); CDECL;
@@ -86,13 +85,6 @@ begin
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Sensors, False);
 end;
-
-procedure Sensors_Get_AllNames_GR(); CDECL;
-// Same as Sensors_Get_AllNames but uses global result (GR) pointers
-begin
-    Sensors_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function Sensors_Get_Count(): Integer; CDECL;
 begin

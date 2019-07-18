@@ -65,11 +65,9 @@ extern "C" {
     The CountPtrs are not reallocated during the execution, so the returned values contain the actual pointer values.
     */
     DSS_CAPI_DLL void DSS_GetGRPointers(
-        char**** DataPtr_PPAnsiChar,
         double*** DataPtr_PDouble,
         int32_t*** DataPtr_PInteger,
         int8_t*** DataPtr_PByte,
-        int32_t** CountPtr_PPAnsiChar,
         int32_t** CountPtr_PDouble,
         int32_t** CountPtr_PInteger,
         int32_t** CountPtr_PByte
@@ -90,10 +88,6 @@ extern "C" {
     Array of strings consisting of all element names in the active class.
     */
     DSS_CAPI_DLL void ActiveClass_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as ActiveClass_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void ActiveClass_Get_AllNames_GR(void);
 
     /*
     Sets first element in the active class to be the active DSS object. If object is a CktElement, ActiveCktELment also points to this element. Returns 0 if none.
@@ -355,10 +349,6 @@ extern "C" {
     Array of strings with all Capacitor names in the circuit.
     */
     DSS_CAPI_DLL void Capacitors_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Capacitors_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Capacitors_Get_AllNames_GR(void);
 
     /*
     Sets the first Capacitor active. Returns 0 if no more.
@@ -456,10 +446,6 @@ extern "C" {
     Array of strings with all CapControl names.
     */
     DSS_CAPI_DLL void CapControls_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as CapControls_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void CapControls_Get_AllNames_GR(void);
 
     /*
     Name of the Capacitor that is controlled.
@@ -682,10 +668,6 @@ extern "C" {
     Array of strings containing Full Name of all elements.
     */
     DSS_CAPI_DLL void Circuit_Get_AllElementNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Circuit_Get_AllElementNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Circuit_Get_AllElementNames_GR(void);
 
     /*
     Complex losses in all transformers designated to substations.
@@ -721,10 +703,6 @@ extern "C" {
     Array of strings containing names of all buses in circuit (see AllNodeNames).
     */
     DSS_CAPI_DLL void Circuit_Get_AllBusNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Circuit_Get_AllBusNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Circuit_Get_AllBusNames_GR(void);
 
     /*
     Array of total losses (complex) in each circuit element
@@ -770,10 +748,6 @@ extern "C" {
     Array of strings containing full name of each node in system in same order as returned by AllBusVolts, etc.
     */
     DSS_CAPI_DLL void Circuit_Get_AllNodeNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Circuit_Get_AllNodeNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Circuit_Get_AllNodeNames_GR(void);
 
     /*
     System Y matrix (after a solution has been performed)
@@ -833,10 +807,6 @@ extern "C" {
     Return array of strings of the node names for the By Phase criteria. Sequence corresponds to other ByPhase properties.
     */
     DSS_CAPI_DLL void Circuit_Get_AllNodeNamesByPhase(char*** ResultPtr, int32_t* ResultCount, int32_t Phase);
-    /*
-    Same as Circuit_Get_AllNodeNamesByPhase but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Circuit_Get_AllNodeNamesByPhase_GR(int32_t Phase);
 
     DSS_CAPI_DLL int32_t Circuit_SetActiveClass(char* ClassName);
 
@@ -857,10 +827,6 @@ extern "C" {
     Array of strings containing the names of the nodes in the same order as the Y matrix
     */
     DSS_CAPI_DLL void Circuit_Get_YNodeOrder(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Circuit_Get_YNodeOrder but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Circuit_Get_YNodeOrder_GR(void);
 
     /*
     Array of doubles containing complex injection currents for the present solution. Is is the "I" vector of I=YV
@@ -886,10 +852,6 @@ extern "C" {
     Array of strings. Get  Bus definitions to which each terminal is connected. 0-based array.
     */
     DSS_CAPI_DLL void CktElement_Get_BusNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as CktElement_Get_BusNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void CktElement_Get_BusNames_GR(void);
 
     /*
     Full Name of Active Circuit Element
@@ -1028,10 +990,6 @@ extern "C" {
     Array containing all property names of the active device.
     */
     DSS_CAPI_DLL void CktElement_Get_AllPropertyNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as CktElement_Get_AllPropertyNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void CktElement_Get_AllPropertyNames_GR(void);
 
     /*
     Number of Properties this Circuit Element.
@@ -1118,10 +1076,6 @@ extern "C" {
     Array of strings listing all the published variable names, if a PCElement. Otherwise, null string.
     */
     DSS_CAPI_DLL void CktElement_Get_AllVariableNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as CktElement_Get_AllVariableNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void CktElement_Get_AllVariableNames_GR(void);
 
     /*
     Array of doubles. Values of state variables of active element if PC element.
@@ -1300,10 +1254,6 @@ extern "C" {
     Array of strings containing the entire queue in CSV format
     */
     DSS_CAPI_DLL void CtrlQueue_Get_Queue(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as CtrlQueue_Get_Queue but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void CtrlQueue_Get_Queue_GR(void);
 
     /*
     Number of Circuits currently defined
@@ -1323,19 +1273,11 @@ extern "C" {
     List of DSS intrinsic classes (names of the classes)
     */
     DSS_CAPI_DLL void DSS_Get_Classes(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as DSS_Get_Classes but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void DSS_Get_Classes_GR(void);
 
     /*
     List of user-defined classes
     */
     DSS_CAPI_DLL void DSS_Get_UserClasses(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as DSS_Get_UserClasses but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void DSS_Get_UserClasses_GR(void);
 
     /*
     Number of DSS intrinsic classes
@@ -1382,10 +1324,6 @@ extern "C" {
     Array of strings containing the names of all properties for the active DSS object.
     */
     DSS_CAPI_DLL void DSSElement_Get_AllPropertyNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as DSSElement_Get_AllPropertyNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void DSSElement_Get_AllPropertyNames_GR(void);
 
     /*
     Full Name of Active DSS Object (general element or circuit element).
@@ -1493,10 +1431,6 @@ extern "C" {
     Array of strings containing names of all Fuses in the circuit
     */
     DSS_CAPI_DLL void Fuses_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Fuses_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Fuses_Get_AllNames_GR(void);
 
     /*
     Number of Fuse elements in the circuit
@@ -1618,10 +1552,6 @@ extern "C" {
     Array of names of all Generator objects.
     */
     DSS_CAPI_DLL void Generators_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Generators_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Generators_Get_AllNames_GR(void);
 
     /*
     Sets first Generator to be active.  Returns 0 if none.
@@ -1642,10 +1572,6 @@ extern "C" {
     Array of Names of all generator energy meter registers
     */
     DSS_CAPI_DLL void Generators_Get_RegisterNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Generators_Get_RegisterNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Generators_Get_RegisterNames_GR(void);
 
     /*
     Array of valus in generator energy meter registers.
@@ -1780,10 +1706,6 @@ extern "C" {
     Names of all GICSource Objects
     */
     DSS_CAPI_DLL void GICSources_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as GICSources_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void GICSources_Get_AllNames_GR(void);
 
     /*
     Number of GICSource objects in Active Circuit.
@@ -1904,10 +1826,6 @@ extern "C" {
     Array of strings containing names of all ISOURCE elements.
     */
     DSS_CAPI_DLL void ISources_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as ISources_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void ISources_Get_AllNames_GR(void);
 
     /*
     Count: Number of ISOURCE elements.
@@ -2092,19 +2010,11 @@ extern "C" {
     Array of strings with names of all devices
     */
     DSS_CAPI_DLL void LineCodes_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as LineCodes_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void LineCodes_Get_AllNames_GR(void);
 
     /*
     Names of all Line Objects
     */
     DSS_CAPI_DLL void Lines_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Lines_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Lines_Get_AllNames_GR(void);
 
     /*
     Name of bus for terminal 1.
@@ -2391,10 +2301,6 @@ extern "C" {
     Array of strings containing all Load names
     */
     DSS_CAPI_DLL void Loads_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Loads_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Loads_Get_AllNames_GR(void);
 
     /*
     Set first Load element to be active; returns 0 if none.
@@ -2708,10 +2614,6 @@ extern "C" {
     Array of strings containing names of all Loadshape objects currently defined.
     */
     DSS_CAPI_DLL void LoadShapes_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as LoadShapes_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void LoadShapes_Get_AllNames_GR(void);
 
     /*
     Get Number of points in active Loadshape.
@@ -2831,10 +2733,6 @@ extern "C" {
     Array of all energy Meter names
     */
     DSS_CAPI_DLL void Meters_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Meters_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Meters_Get_AllNames_GR(void);
 
     /*
     Set the first energy Meter active. Returns 0 if none.
@@ -2855,10 +2753,6 @@ extern "C" {
     Array of strings containing the names of the registers.
     */
     DSS_CAPI_DLL void Meters_Get_RegisterNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Meters_Get_RegisterNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Meters_Get_RegisterNames_GR(void);
 
     /*
     Array of all the values contained in the Meter registers for the active Meter.
@@ -2970,10 +2864,6 @@ extern "C" {
     Array of names of all zone end elements.
     */
     DSS_CAPI_DLL void Meters_Get_AllEndElements(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Meters_Get_AllEndElements but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Meters_Get_AllEndElements_GR(void);
 
     /*
     Number of zone end elements in the active meter zone.
@@ -2989,10 +2879,6 @@ extern "C" {
     Wide string list of all branches in zone of the active energymeter object.
     */
     DSS_CAPI_DLL void Meters_Get_AllBranchesInZone(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Meters_Get_AllBranchesInZone but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Meters_Get_AllBranchesInZone_GR(void);
 
     /*
     Number of branches in Active energymeter zone. (Same as sequencelist size)
@@ -3092,10 +2978,6 @@ extern "C" {
     Array of all Monitor Names
     */
     DSS_CAPI_DLL void Monitors_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Monitors_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Monitors_Get_AllNames_GR(void);
 
     /*
     Name of CSV file associated with active Monitor.
@@ -3205,10 +3087,6 @@ extern "C" {
     Header string;  Array of strings containing Channel names
     */
     DSS_CAPI_DLL void Monitors_Get_Header(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Monitors_Get_Header but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Monitors_Get_Header_GR(void);
 
     /*
     Number of Channels in the active Monitor
@@ -3523,19 +3401,11 @@ extern "C" {
     Vairant array of strings with all PVSystem names
     */
     DSS_CAPI_DLL void PVSystems_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as PVSystems_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void PVSystems_Get_AllNames_GR(void);
 
     /*
     Variant Array of PVSYSTEM energy meter register names
     */
     DSS_CAPI_DLL void PVSystems_Get_RegisterNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as PVSystems_Get_RegisterNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void PVSystems_Get_RegisterNames_GR(void);
 
     /*
     Array of doubles containing values in PVSystem registers.
@@ -3686,10 +3556,6 @@ extern "C" {
     Array of strings with names of all Reclosers in Active Circuit
     */
     DSS_CAPI_DLL void Reclosers_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Reclosers_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Reclosers_Get_AllNames_GR(void);
 
     /*
     Number of Reclosers in active circuit.
@@ -3819,10 +3685,6 @@ extern "C" {
     Array of strings containing all RegControl names
     */
     DSS_CAPI_DLL void RegControls_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as RegControls_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void RegControls_Get_AllNames_GR(void);
 
     /*
     CT primary ampere rating (secondary is 0.2 amperes)
@@ -4062,10 +3924,6 @@ extern "C" {
     Array of strings containing names of all Relay elements
     */
     DSS_CAPI_DLL void Relays_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Relays_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Relays_Get_AllNames_GR(void);
 
     /*
     Number of Relays in circuit
@@ -4134,10 +3992,6 @@ extern "C" {
     Array of Sensor names.
     */
     DSS_CAPI_DLL void Sensors_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Sensors_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Sensors_Get_AllNames_GR(void);
 
     /*
     Number of Sensors in Active Circuit.
@@ -4690,10 +4544,6 @@ extern "C" {
     Array of strings containing the Event Log
     */
     DSS_CAPI_DLL void Solution_Get_EventLog(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Solution_Get_EventLog but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Solution_Get_EventLog_GR(void);
 
     /*
     Hour as a double, including fractional part
@@ -4860,16 +4710,8 @@ extern "C" {
     DSS_CAPI_DLL void Solution_Get_BusLevels_GR(void);
 
     DSS_CAPI_DLL void Solution_Get_IncMatrixRows(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Solution_Get_IncMatrixRows but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Solution_Get_IncMatrixRows_GR(void);
 
     DSS_CAPI_DLL void Solution_Get_IncMatrixCols(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Solution_Get_IncMatrixCols but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Solution_Get_IncMatrixCols_GR(void);
 
     /*
     Open or Close the switch. No effect if switch is locked.  However, Reset removes any lock and then closes the switch (shelf state).
@@ -4880,10 +4722,6 @@ extern "C" {
     Array of strings with all SwtControl names in the active circuit.
     */
     DSS_CAPI_DLL void SwtControls_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as SwtControls_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void SwtControls_Get_AllNames_GR(void);
 
     /*
     Time delay [s] betwen arming and opening or closing the switch.  Control may reset before actually operating the switch.
@@ -5000,19 +4838,11 @@ extern "C" {
     Array of all isolated branch names.
     */
     DSS_CAPI_DLL void Topology_Get_AllIsolatedBranches(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Topology_Get_AllIsolatedBranches but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Topology_Get_AllIsolatedBranches_GR(void);
 
     /*
     Array of all looped element names, by pairs.
     */
     DSS_CAPI_DLL void Topology_Get_AllLoopedPairs(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Topology_Get_AllLoopedPairs but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Topology_Get_AllLoopedPairs_GR(void);
 
     /*
     MOve back toward the source, return index of new active branch, or 0 if no more.
@@ -5060,10 +4890,6 @@ extern "C" {
     Array of all isolated load names.
     */
     DSS_CAPI_DLL void Topology_Get_AllIsolatedLoads(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Topology_Get_AllIsolatedLoads but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Topology_Get_AllIsolatedLoads_GR(void);
 
     /*
     First load at the active branch, return index or 0 if none.
@@ -5096,10 +4922,6 @@ extern "C" {
     Array of strings with all Transformer names in the active circuit.
     */
     DSS_CAPI_DLL void Transformers_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Transformers_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Transformers_Get_AllNames_GR(void);
 
     /*
     Sets the first Transformer active. Returns 0 if no more.
@@ -5350,10 +5172,6 @@ extern "C" {
     Names of all Vsource objects in the circuit
     */
     DSS_CAPI_DLL void Vsources_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as Vsources_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void Vsources_Get_AllNames_GR(void);
 
     /*
     Number of Vsource Object
@@ -5435,10 +5253,6 @@ extern "C" {
     Array of strings with all XYCurve names.
     */
     DSS_CAPI_DLL void XYCurves_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    /*
-    Same as XYCurves_Get_AllNames but using the global buffer interface for results
-    */
-    DSS_CAPI_DLL void XYCurves_Get_AllNames_GR(void);
 
     /*
     Number of XYCurve Objects
@@ -5750,7 +5564,6 @@ extern "C" {
     DSS_CAPI_DLL char *CNData_Get_Name(void);
     DSS_CAPI_DLL void CNData_Set_Name(char *Value);
     DSS_CAPI_DLL void CNData_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    DSS_CAPI_DLL void CNData_Get_AllNames_GR(void);
     DSS_CAPI_DLL double CNData_Get_Rdc(void);
     DSS_CAPI_DLL void CNData_Set_Rdc(double Value);
     DSS_CAPI_DLL double CNData_Get_Rac(void);
@@ -5815,7 +5628,6 @@ extern "C" {
     DSS_CAPI_DLL void LineGeometries_Get_Ycoords_GR(void);
     DSS_CAPI_DLL void LineGeometries_Set_Ycoords(double* ValuePtr, int32_t ValueCount);
     DSS_CAPI_DLL void LineGeometries_Get_Conductors(char*** ResultPtr, int32_t* ResultCount);
-    DSS_CAPI_DLL void LineGeometries_Get_Conductors_GR(void);
     DSS_CAPI_DLL uint16_t LineGeometries_Get_Reduce(void);
     DSS_CAPI_DLL void LineGeometries_Set_Reduce(uint16_t Value);
     DSS_CAPI_DLL double LineGeometries_Get_RhoEarth(void);
@@ -5825,7 +5637,6 @@ extern "C" {
     DSS_CAPI_DLL double LineGeometries_Get_EmergAmps(void);
     DSS_CAPI_DLL void LineGeometries_Set_EmergAmps(double Value);
     DSS_CAPI_DLL void LineGeometries_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    DSS_CAPI_DLL void LineGeometries_Get_AllNames_GR(void);
 
     DSS_CAPI_DLL int32_t LineSpacings_Get_Count(void);
     DSS_CAPI_DLL int32_t LineSpacings_Get_First(void);
@@ -5845,13 +5656,11 @@ extern "C" {
     DSS_CAPI_DLL void LineSpacings_Get_Ycoords_GR(void);
     DSS_CAPI_DLL void LineSpacings_Set_Ycoords(double* ValuePtr, int32_t ValueCount);
     DSS_CAPI_DLL void LineSpacings_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    DSS_CAPI_DLL void LineSpacings_Get_AllNames_GR(void);
 
     DSS_CAPI_DLL int32_t Loads_Get_Phases(void);
     DSS_CAPI_DLL void Loads_Set_Phases(int32_t Integer);
 
     DSS_CAPI_DLL void Reactors_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    DSS_CAPI_DLL void Reactors_Get_AllNames_GR(void);
     DSS_CAPI_DLL char* Reactors_Get_Name(void);
     DSS_CAPI_DLL void Reactors_Set_Name(char *Value);
     DSS_CAPI_DLL int32_t Reactors_Get_First(void);
@@ -5909,7 +5718,6 @@ extern "C" {
     DSS_CAPI_DLL char *TSData_Get_Name(void);
     DSS_CAPI_DLL void TSData_Set_Name(char *Value);
     DSS_CAPI_DLL void TSData_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    DSS_CAPI_DLL void TSData_Get_AllNames_GR(void);
     DSS_CAPI_DLL double TSData_Get_Rdc(void);
     DSS_CAPI_DLL void TSData_Set_Rdc(double Value);
     DSS_CAPI_DLL double TSData_Get_Rac(void);
@@ -5951,7 +5759,6 @@ extern "C" {
     DSS_CAPI_DLL char* WireData_Get_Name(void);
     DSS_CAPI_DLL void WireData_Set_Name(char* Value);
     DSS_CAPI_DLL void WireData_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
-    DSS_CAPI_DLL void WireData_Get_AllNames_GR(void);
     DSS_CAPI_DLL double WireData_Get_Rdc(void);
     DSS_CAPI_DLL void WireData_Set_Rdc(double Value);
     DSS_CAPI_DLL double WireData_Get_Rac(void);
