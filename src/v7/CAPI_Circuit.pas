@@ -5,7 +5,6 @@ unit CAPI_Circuit;
 interface
 
 uses
-    ArrayDef,
     CAPI_Utils;
 
 function Circuit_Get_Name(): PAnsiChar; CDECL;
@@ -545,7 +544,7 @@ begin
                 Result[i] := Result[i] * 0.001;
         end
     else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
 end;
 
 procedure Circuit_Get_AllElementLosses_GR(); CDECL;
@@ -838,36 +837,35 @@ procedure Circuit_Get_AllNodeDistancesByPhase(var ResultPtr: PDouble; ResultCoun
 var
     Result: PDoubleArray;
     i, k, NodeIdx: Integer;
-    Temp: ArrayDef.PDoubleArray;
-
+    Temp: PDoubleArray;
 begin
     if ActiveCircuit <> NIL then
         with ActiveCircuit do
         begin
-       // Make a Temporary Array big enough to hold all nodes
+            // Make a Temporary Array big enough to hold all nodes
             Temp := AllocMem(SizeOF(Double) * NumNodes);
 
-       // Find nodes connected to specified phase
+            // Find nodes connected to specified phase
             k := 0;
             for i := 1 to NumBuses do
             begin
                 NodeIdx := Buses^[i].FindIdx(Phase);
                 if NodeIdx > 0 then   // Node found with this phase number
                 begin
-                    Inc(k);
                     Temp^[k] := Buses^[i].DistFromMeter;
+                    Inc(k);
                 end;
             end;
 
-       // Assign to result and free temp array
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (k - 1) + 1);
+            // Assign to result and free temp array
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, k);
             for i := 0 to k - 1 do
-                Result[i] := Temp^[i + 1];
+                Result[i] := Temp^[i];
 
             Freemem(Temp, SizeOF(Double) * NumNodes);
         end
     else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
 
 end;
 
@@ -882,7 +880,7 @@ procedure Circuit_Get_AllNodeVmagByPhase(var ResultPtr: PDouble; ResultCount: PI
 var
     Result: PDoubleArray;
     i, k, NodeIdx: Integer;
-    Temp: ArrayDef.PDoubleArray;
+    Temp: PDoubleArray;
 
 begin
     if ActiveCircuit <> NIL then
@@ -898,20 +896,20 @@ begin
                 NodeIdx := Buses^[i].FindIdx(Phase);
                 if NodeIdx > 0 then   // Node found with this phase number
                 begin
-                    Inc(k);
                     Temp^[k] := Cabs(ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(NodeIdx)]);
+                    Inc(k);
                 end;
             end;
 
        // Assign to result and free temp array
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (k - 1) + 1);
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, k);
             for i := 0 to k - 1 do
-                Result[i] := Temp^[i + 1];
+                Result[i] := Temp^[i];
 
             Freemem(Temp, SizeOF(Double) * NumNodes);
         end
     else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
 
 end;
 
@@ -926,17 +924,17 @@ procedure Circuit_Get_AllNodeVmagPUByPhase(var ResultPtr: PDouble; ResultCount: 
 var
     Result: PDoubleArray;
     i, k, NodeIdx: Integer;
-    Temp: ArrayDef.PDoubleArray;
+    Temp: PDoubleArray;
     BaseFactor: Double;
 
 begin
     if ActiveCircuit <> NIL then
         with ActiveCircuit do
         begin
-       // Make a Temporary Array big enough to hold all nodes
+            // Make a Temporary Array big enough to hold all nodes
             Temp := AllocMem(SizeOF(Double) * NumNodes);
 
-       // Find nodes connected to specified phase
+            // Find nodes connected to specified phase
             k := 0;
             for i := 1 to NumBuses do
             begin
@@ -947,20 +945,20 @@ begin
                         BaseFactor := 1000.0 * Buses^[i].kVBase
                     else
                         BaseFactor := 1.0;
-                    Inc(k);
                     Temp^[k] := Cabs(ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(NodeIdx)]) / Basefactor;
+                    Inc(k);
                 end;
             end;
 
-       // Assign to result and free temp array
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (k - 1) + 1);
+            // Assign to result and free temp array
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, k);
             for i := 0 to k - 1 do
-                Result[i] := Temp^[i + 1];
+                Result[i] := Temp^[i];
 
             Freemem(Temp, SizeOF(Double) * NumNodes);
         end
     else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
 
 end;
 
@@ -975,36 +973,36 @@ procedure Circuit_Get_AllNodeNamesByPhase(var ResultPtr: PPAnsiChar; ResultCount
 var
     Result: PPAnsiCharArray;
     i, k, NodeIdx: Integer;
-    Temp: pStringArray;
+    Temp: Array of String;
 
 begin
     if ActiveCircuit <> NIL then
         with ActiveCircuit do
         begin
-       // Make a Temporary Array big enough to hold all nodes
-            Temp := AllocStringArray(NumNodes);
+            // Make a Temporary Array big enough to hold all nodes
+            SetLength(Temp, NumNodes);
 
-       // Find nodes connected to specified phase
+            // Find nodes connected to specified phase
             k := 0;
             for i := 1 to NumBuses do
             begin
                 NodeIdx := Buses^[i].FindIdx(Phase);
                 if NodeIdx > 0 then   // Node found with this phase number
                 begin
+                    Temp[k] := Format('%s.%d', [BusList.Get(i), Phase]);
                     Inc(k);
-                    Temp^[k] := Format('%s.%d', [BusList.Get(i), Phase]);
                 end;
             end;
 
-       // Assign to result and free temp array
-            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (k - 1) + 1);
+            // Assign to result and free temp array
+            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, k);
             for i := 0 to k - 1 do
-                Result[i] := DSS_CopyStringAsPChar(Temp^[i + 1]);
+                Result[i] := DSS_CopyStringAsPChar(Temp[i]);
 
-            FreeStringArray(Temp, NumNodes);
+            SetLength(Temp, 0);
         end
     else
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
 
 end;
 

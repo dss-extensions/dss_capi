@@ -6,7 +6,6 @@ unit CAPI_YMatrix;
 interface
 
 uses
-    Arraydef,
     UComplex,
     Solution;
 
@@ -40,9 +39,6 @@ procedure YMatrix_GetCompressedYMatrix(factor: Wordbool; var nBus, nNz: Longword
 var
     Yhandle: NativeUInt;
     NumNZ, NumBuses: Longword;
-    YColumns, YRows: pIntegerArray;
-
-    //tmpColPtrN, tmpRowIdxPtrN, tmpValsPtrN: PInteger;
     tmpCnt: array[0..1] of Integer;
 begin
     if ActiveCircuit = NIL then
@@ -60,8 +56,8 @@ begin
     GetNNZ(Yhandle, @NumNz);
     GetSize(Yhandle, @NumBuses);
 
-    YColumns := Arraydef.PIntegerArray(DSS_CreateArray_PInteger(ColPtr, @tmpCnt[0], NumBuses + 1));
-    YRows := Arraydef.PIntegerArray(DSS_CreateArray_PInteger(RowIdxPtr, @tmpCnt[0], NumNZ));
+    DSS_CreateArray_PInteger(ColPtr, @tmpCnt[0], NumBuses + 1);
+    DSS_CreateArray_PInteger(RowIdxPtr, @tmpCnt[0], NumNZ);
     DSS_CreateArray_PDouble(cValsPtr, @tmpCnt[0], 2 * NumNZ);
 
     nBus := NumBuses;
@@ -73,8 +69,7 @@ begin
         NumBuses + 1,
         NumNZ, @ColPtr[0], @RowIdxPtr[0],
         pComplex(cValsPtr)
-        );
-
+    );
 end;
 
 procedure YMatrix_ZeroInjCurr; CDECL;

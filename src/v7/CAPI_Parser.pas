@@ -5,7 +5,6 @@ unit CAPI_Parser;
 interface
 
 uses
-    ArrayDef,
     CAPI_Utils;
 
 function Parser_Get_CmdString(): PAnsiChar; CDECL;
@@ -165,17 +164,14 @@ procedure Parser_Get_Vector(var ResultPtr: PDouble; ResultCount: PInteger; Expec
 var
     Result: PDoubleArray;
     i, ActualSize: Integer;
-    VectorBuffer: ArrayDef.PDoubleArray;
+    VectorBuffer: Array of Double;
 
 begin
-    VectorBuffer := Allocmem(SizeOf(Double) * ExpectedSize);
-    ActualSize := ComParser.ParseAsVector(ExpectedSize, VectorBuffer);
-
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ((ActualSize - 1)) + 1);
-    for i := 0 to (ActualSize - 1) do
-        Result[i] := VectorBuffer^[i + 1];
-
-    Reallocmem(VectorBuffer, 0);
+    SetLength(VectorBuffer, ExpectedSize);
+    ActualSize := ComParser.ParseAsVector(VectorBuffer);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ActualSize);
+    Move(VectorBuffer[0], ResultPtr[0], ActualSize * SizeOf(Double));
+    SetLength(VectorBuffer, 0);
 end;
 
 procedure Parser_Get_Vector_GR(ExpectedSize: Integer); CDECL;
@@ -189,18 +185,14 @@ procedure Parser_Get_Matrix(var ResultPtr: PDouble; ResultCount: PInteger; Expec
 var
     Result: PDoubleArray;
     i, MatrixSize: Integer;
-    MatrixBuffer: ArrayDef.PDoubleArray;
-
+    MatrixBuffer: Array of Double;
 begin
     MatrixSize := ExpectedOrder * ExpectedOrder;
-    MatrixBuffer := Allocmem(SizeOf(Double) * MatrixSize);
-    ComParser.ParseAsMatrix(ExpectedOrder, MatrixBuffer);
-
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ((MatrixSize - 1)) + 1);
-    for i := 0 to (MatrixSize - 1) do
-        Result[i] := MatrixBuffer^[i + 1];
-
-    Reallocmem(MatrixBuffer, 0);
+    SetLength(MatrixBuffer, MatrixSize);
+    ComParser.ParseAsMatrix(MatrixBuffer);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, MatrixSize);
+    Move(MatrixBuffer[0], ResultPtr[0], MatrixSize * SizeOf(Double));
+    SetLength(MatrixBuffer, 0);
 end;
 
 procedure Parser_Get_Matrix_GR(ExpectedOrder: Integer); CDECL;
@@ -214,19 +206,14 @@ procedure Parser_Get_SymMatrix(var ResultPtr: PDouble; ResultCount: PInteger; Ex
 var
     Result: PDoubleArray;
     i, MatrixSize: Integer;
-    MatrixBuffer: ArrayDef.PDoubleArray;
-
+    MatrixBuffer: Array of Double;
 begin
     MatrixSize := ExpectedOrder * ExpectedOrder;
-    MatrixBuffer := Allocmem(SizeOf(Double) * MatrixSize);
-    ComParser.ParseAsSymMatrix(ExpectedOrder, MatrixBuffer);
-
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ((MatrixSize - 1)) + 1);
-    for i := 0 to (MatrixSize - 1) do
-        Result[i] := MatrixBuffer^[i + 1];
-
-    Reallocmem(MatrixBuffer, 0);
-
+    SetLength(MatrixBuffer, MatrixSize);
+    ComParser.ParseAsSymMatrix(MatrixBuffer);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, MatrixSize);
+    Move(MatrixBuffer[0], ResultPtr[0], MatrixSize * SizeOf(Double));
+    SetLength(MatrixBuffer, 0);
 end;
 
 procedure Parser_Get_SymMatrix_GR(ExpectedOrder: Integer); CDECL;
