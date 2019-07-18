@@ -9,10 +9,10 @@ uses
     PointerList;
 
 type
-    DoubleArray = array[0..0] of Double;
+    DoubleArray = array[0..$effffff] of Double;
     PDoubleArray = ^DoubleArray;
 
-    PAnsiCharArray = array[0..0] of PAnsiChar;
+    PAnsiCharArray = array[0..$effffff] of PAnsiChar;
     PPAnsiCharArray = ^PAnsiCharArray;
 
     PPDouble = ^PDouble;
@@ -20,7 +20,7 @@ type
     PPByte = ^PByte;
     PPPAnsiChar = ^PPAnsiChar;
 
-    Float32Array = array[0..0] of Single;
+    Float32Array = array[0..$effffff] of Single;
     PFloat32Array = ^Float32Array;
     PFloat32 = ^Single;
     PPFloat32 = ^PFloat32;

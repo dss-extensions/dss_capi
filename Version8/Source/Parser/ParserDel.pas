@@ -100,8 +100,11 @@ type
         property NextParam: String READ GetNextParam;
         function ParseAsBusName(var NumNodes: Integer; NodeArray: pIntegerArray; actorID: Integer): String;
         function ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray): Integer;
+        function ParseAsVector(VectorBuffer: Array of Double): Integer;
         function ParseAsMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
+        function ParseAsMatrix(MatrixBuffer: Array of Double): Integer;
         function ParseAsSymMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
+        function ParseAsSymMatrix(MatrixBuffer: Array of Double): Integer;
         procedure ResetDelims;   // resets delimiters to default
         procedure CheckforVar(var TokenBuffer: String);
     PUBLISHED
@@ -586,6 +589,10 @@ begin
 end;
 
 {=======================================================================================================================}
+function TParser.ParseAsVector(VectorBuffer: Array of Double): Integer;
+begin
+    Result := ParseAsVector(Length(VectorBuffer), pDoubleArray(VectorBuffer[0]));
+end;
 
 function TParser.ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray): Integer;
 var
@@ -638,6 +645,10 @@ begin
 end;
 
 {=======================================================================================================================}
+function TParser.ParseAsMatrix(MatrixBuffer: Array of Double): Integer;
+begin
+    Result := ParseAsMatrix(Length(MatrixBuffer), pDoubleArray(MatrixBuffer[0]));
+end;
 
 function TParser.ParseAsMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
 
@@ -684,6 +695,10 @@ begin
 end;
 
 {=======================================================================================================================}
+function TParser.ParseAsSymMatrix(MatrixBuffer: Array of Double): Integer;
+begin
+    Result := ParseAsSymMatrix(Length(MatrixBuffer), pDoubleArray(MatrixBuffer[0]));
+end;
 
 function TParser.ParseAsSymMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
 
