@@ -73,6 +73,9 @@ procedure Circuit_Get_YNodeVarray(var ResultPtr: PDouble; ResultCount: PInteger)
 procedure Circuit_Get_YNodeVarray_GR(); CDECL;
 procedure Circuit_SetCktElementIndex(const Value: Integer); CDECL;
 procedure Circuit_SetCktElementName(const Value: PAnsiChar); CDECL;
+procedure Circuit_Get_ElementLosses(var ResultPtr: PDouble; ResultCount: PInteger; ElementsPtr: PInteger; ElementsCount: Integer); CDECL;
+procedure Circuit_Get_ElementLosses_GR(ElementsPtr: PInteger; ElementsCount: Integer); CDECL;
+
 
 implementation
 
@@ -551,6 +554,41 @@ procedure Circuit_Get_AllElementLosses_GR(); CDECL;
 // Same as Circuit_Get_AllElementLosses but uses global result (GR) pointers
 begin
     Circuit_Get_AllElementLosses(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+end;
+
+//------------------------------------------------------------------------------
+procedure Circuit_Get_ElementLosses(var ResultPtr: PDouble; ResultCount: PInteger; ElementsPtr: PInteger; ElementsCount: Integer); CDECL;
+var
+    Result: PDoubleArray;
+    Elements: PIntegerArray;
+    CResultPtr: pComplex;
+    pCktElem: TDSSCktElement;
+    i: Integer;
+begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+    end;
+    
+    Elements := PIntegerArray(ElementsPtr);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * ElementsCount);
+    CResultPtr := pComplex(ResultPtr);
+
+    for i := 0 to ElementsCount - 1 do
+    begin
+        pCktElem := ActiveCircuit[ActiveActor].CktElements.Get(Elements[i]);
+        CResultPtr^ := pCktElem.Losses[ActiveActor];
+        Inc(CResultPtr);
+    end;
+        
+    for i := 0 to 2*ElementsCount - 1 do
+        Result[i] := Result[i] * 0.001;
+end;
+
+procedure Circuit_Get_ElementLosses_GR(ElementsPtr: PInteger; ElementsCount: Integer); CDECL;
+// Same as Circuit_Get_ElementLosses but uses global result (GR) pointers for output
+begin
+    Circuit_Get_ElementLosses(GR_DataPtr_PDouble, GR_CountPtr_PDouble, ElementsPtr, ElementsCount)
 end;
 
 //------------------------------------------------------------------------------
