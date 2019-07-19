@@ -1,6 +1,6 @@
 import re
 
-props = dict(
+LoadProp = dict(
     INVALID = 0,
     phases = 1,
     bus1 = 2,
@@ -55,48 +55,91 @@ LoadModels = dict(
 )
 
 
-rprops = {str(x[1]): x[0] for x in props.items()}
-rLoadModels = {str(x[1]): x[0] for x in props.items()}
+ReactorProp = dict(
+    INVALID = 0,   
+    bus1 = 1,
+    bus2 = 2, 
+    phases = 3, 
+    kvar = 4, 
+    kv = 5, 
+    conn = 6, 
+    Rmatrix = 7, 
+    Xmatrix = 8, 
+    Parallel = 9, 
+    R = 10, 
+    X = 11, 
+    Rp = 12, 
+    Z1 = 13, 
+    Z2 = 14, 
+    Z0 = 15, 
+    Z = 16, 
+    RCurve = 17, 
+    LCurve = 18, 
+    LmH = 19
+)
 
-text = open('Load.pas', 'r').read()
-with open('Load.pas', 'w', newline='\n') as o:
+ReactorConnection = dict(
+    Wye = 0, // wye, star, line-neutral connection
+    Delta = 1 // delta, line-line connection
+);
+
+
+rLoadProp = {str(x[1]): x[0] for x in LoadProp.items()}
+rLoadModels = {str(x[1]): x[0] for x in LoadModels.items()}
+
+rReactorProp = {str(x[1]): x[0] for x in ReactorProp.items()}
+
+fn = 'Z:/dss/dss_capi/Version7/Source/PCElements/Load.pas'
+fn = 'Z:/dss/dss_capi/Version7/Source/PDElements/Reactor.pas'
+
+if fn.endswith('Load.pas'):
+    cls = 'Load'
+    props = LoadProp
+    rprops = rLoadProp
+elif fn.endswith('Reactor.pas'):
+    cls = 'Reactor'
+    props = ReactorProp
+    rprops = rReactorProp
+
+
+text = open(fn, 'r').read()
+with open(fn, 'w', newline='\n') as o:
+
     # We can safely replace these two
     text = re.sub(
         r'PropertyHelp\[(\d+)\]', 
-        lambda x: f'PropertyHelp[ord(props.{rprops[x.group(1)]})]',
+        lambda x: f'PropertyHelp[ord(T{cls}Prop.{rprops[x.group(1)]})]',
         text
     )
     text = re.sub(
         r'PropertyValue\[(\d+)\]', 
-        lambda x: f'PropertyValue[ord(props.{rprops[x.group(1)]})]',
+        lambda x: f'PropertyValue[ord(T{cls}Prop.{rprops[x.group(1)]})]',
         text
     )
     
     # DumpProperties?
     
-    m = re.search('(function TLoadObj.GetPropertyValue.*?^end;)', text, flags=re.MULTILINE|re.DOTALL)
+    m = re.search(f'(function T{cls}Obj.GetPropertyValue.*?^end;)', text, flags=re.MULTILINE|re.DOTALL)
     sample = m.group(1)
     fixed_sample = re.sub(
         r'(\s+)(\d+):', 
-        lambda x: f'{x.group(1)}props.{rprops[x.group(2)]}:' if x.group(2) in rprops else x.group(0),
+        lambda x: f'{x.group(1)}T{cls}Prop.{rprops[x.group(2)]}:' if x.group(2) in rprops else x.group(0),
         sample
     ).replace('case Index of', 'case props(Index) of')
     text = text.replace(sample, fixed_sample)
     
     
-    m = re.search('(function TLoad\.Edit: Integer;.*?^end;)', text, flags=re.MULTILINE|re.DOTALL)
+    m = re.search(f'(function T{cls}\.Edit: Integer;.*?^end;)', text, flags=re.MULTILINE|re.DOTALL)
     sample = m.group(1)
     fixed_sample = re.sub(
         r'(\s+)(\d+):', 
-        lambda x: f'{x.group(1)}props.{rprops[x.group(2)]}:' if x.group(2) in rprops else x.group(0),
+        lambda x: f'{x.group(1)}T{cls}Prop.{rprops[x.group(2)]}:' if x.group(2) in rprops else x.group(0),
         sample
     )
     
     text = text.replace(sample, fixed_sample)
-    text = text.replace('case ParamPointer of', 'case props(ParamPointer) of')
+    text = text.replace('case ParamPointer of', f'case T{cls}Prop(ParamPointer) of')
     
     print(fixed_sample)
     
     o.write(text)
-
-#TODO: explicit enum for Solution.Mode

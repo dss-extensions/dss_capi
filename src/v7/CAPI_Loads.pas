@@ -103,14 +103,14 @@ uses
     math;
     
 //------------------------------------------------------------------------------
-procedure LoadPropSideEffects(prop: Load.Props; load: TLoadObj); //incomplete
+procedure LoadPropSideEffects(prop: TLoadProp; load: TLoadObj); //incomplete
 begin
     with load do
     begin
     // << SIDE EFFECTS >>
     // keep kvar nominal up to date WITH kW and PF
         case prop of
-            props.phases:
+            TLoadProp.phases:
             begin
             // -> SetNcondsForConnection  // Force Reallocation of terminal info
                 case Connection of
@@ -129,20 +129,20 @@ begin
                 UpdateVoltageBases;
             end;
 
-            props.kV:
+            TLoadProp.kV:
                 UpdateVoltageBases;
 
-            props.kW:
+            TLoadProp.kW:
                 LoadSpecType := TLoadSpec.kW_PF;
 
-            props.pf:
+            TLoadProp.pf:
             begin
                 PFChanged := TRUE;
                 PFSpecified := TRUE;
             end;
             {Set shape objects;  returns nil if not valid}
             {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
-            props.yearly:
+            TLoadProp.yearly:
             begin
                 YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
                 if Assigned(YearlyShapeObj) then
@@ -150,7 +150,7 @@ begin
                         if UseActual then
                             SetkWkvar(MaxP, MaxQ);
             end;
-            props.daily:
+            TLoadProp.daily:
             begin
                 DailyShapeObj := LoadShapeClass.Find(DailyShape);
                 if Assigned(DailyShapeObj) then
@@ -161,7 +161,7 @@ begin
                 if YearlyShapeObj = NIL then
                     YearlyShapeObj := DailyShapeObj;
             end;
-            props.duty:
+            TLoadProp.duty:
             begin
                 DutyShapeObj := LoadShapeClass.Find(DutyShape);
                 if Assigned(DutyShapeObj) then
@@ -169,19 +169,19 @@ begin
                         if UseActual then
                             SetkWkvar(MaxP, MaxQ);
             end;
-            props.growth:
+            TLoadProp.growth:
                 GrowthShapeObj := GrowthShapeClass.Find(GrowthShape);
 
-            props.kvar:
+            TLoadProp.kvar:
             begin
                 LoadSpecType := TLoadSpec.kW_kvar;
                 PFSpecified := FALSE;
             end;// kW, kvar
  {*** see set_xfkva, etc           21, 22: LoadSpectype := 3;  // XFKVA*AllocationFactor, PF  }
-            props.pctMean:
+            TLoadProp.pctMean:
                 LoadSpecType := TLoadSpec.kva_PF;  // kVA, PF
  {*** see set_kwh, etc           28..30: LoadSpecType := 4;  // kWh, days, cfactor, PF }
-            props.CVRCurve:
+            TLoadProp.CVRCurve:
                 CVRShapeObj := LoadShapeClass.Find(CVRshape);
         end;
     end;
@@ -814,7 +814,7 @@ begin
     with elem do
     begin
         DailyShape := Value;
-        LoadPropSideEffects(props.daily, elem);
+        LoadPropSideEffects(TLoadProp.daily, elem);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -831,7 +831,7 @@ begin
     with elem do
     begin
         DutyShape := Value;
-        LoadPropSideEffects(props.duty, elem);
+        LoadPropSideEffects(TLoadProp.duty, elem);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -848,7 +848,7 @@ begin
     with elem do
     begin
         GrowthShape := Value;
-        LoadPropSideEffects(props.growth, elem);
+        LoadPropSideEffects(TLoadProp.growth, elem);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -877,7 +877,7 @@ begin
     if elem = NIL then
         Exit;
     elem.Set_kWh(Value);
-  //LoadPropSideEffects(props.kwh, elem);
+  //LoadPropSideEffects(TLoadProp.kwh, elem);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_kwhdays(Value: Double); CDECL;
@@ -980,7 +980,7 @@ begin
     with elem do
     begin
         YearlyShape := Value;
-        LoadPropSideEffects(props.yearly, elem);
+        LoadPropSideEffects(TLoadProp.yearly, elem);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -1093,7 +1093,7 @@ begin
         if (Value <> pLoad.NPhases) then
         begin
             pLoad.NPhases := Value;
-            LoadPropSideEffects(props.phases, pLoad);
+            LoadPropSideEffects(TLoadProp.phases, pLoad);
         end;
     end
 end;
@@ -1121,7 +1121,7 @@ begin
     if pLoad = NIL then
         exit;
     pLoad.SetBus(1, Value);
-    // LoadPropSideEffects(props.bus1, pLoad); -- Nothing
+    // LoadPropSideEffects(TLoadProp.bus1, pLoad); -- Nothing
 end;
 //------------------------------------------------------------------------------
 end.
