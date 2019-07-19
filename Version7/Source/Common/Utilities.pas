@@ -21,6 +21,7 @@ uses
     UComplex,
     UcMatrix,
     DSSClass,
+    Dynamics,
     Classes{, StdCtrls};
 
 function CompareTextShortest(const S1, S2: String): Integer;
@@ -42,7 +43,7 @@ function FullName(pElem: TDSSCktElement): String;
 {Parsing Utilities}
 procedure ParseObjectClassandName(const FullObjName: String; var ClassName, ObjName: String);
 procedure ParseIntArray(var iarray: pIntegerArray; var count: Integer; const s: String);
-function InterpretSolveMode(const s: String): Integer;
+function InterpretSolveMode(const s: String): TSolveMode;
 function InterpretControlMode(const s: String): Integer;
 function InterpretLoadModel(const s: String): Integer;
 function InterpretYesNo(const s: String): Boolean;
@@ -66,7 +67,7 @@ function ConstructElemName(const Param: String): String;
 function InterpretCoreType(const str: String): Integer;
 
 function GetSolutionModeID: String;
-function GetSolutionModeIDName(idx: Integer): String;
+function GetSolutionModeIDName(idx: TSolveMode): String;
 function GetControlModeID: String;
 function GetRandomModeID: String;
 function GetLoadModel: String;
@@ -178,7 +179,6 @@ uses
     SysUtils,
     DSSClassDefs,
     DSSGlobals,
-    Dynamics,
     Executive,
     ExecCommands,
     ExecOptions,
@@ -453,7 +453,7 @@ end;
 
 
 //----------------------------------------------------------------------------
-function InterpretSolveMode(const s: String): Integer;
+function InterpretSolveMode(const s: String): TSolveMode;
 
 // interpret solution mode
 // could be "nominal" "daily"  "yearly" "montecarlo" "dutycycle"  "loadduration" "peakdays" , etc.
@@ -465,65 +465,65 @@ begin
 
     case SLC[1] of
         's':
-            Result := SNAPSHOT;
+            Result := TSolveMode.SNAPSHOT;
         'd':
             case SLC[2] of
                 'u':
-                    Result := DUTYCYCLE;
+                    Result := TSolveMode.DUTYCYCLE;
                 'i':
-                    Result := DIRECT;
+                    Result := TSolveMode.DIRECT;
                 'y':
-                    Result := DYNAMICMODE;
+                    Result := TSolveMode.DYNAMICMODE;
             else
-                Result := DAILYMODE;
+                Result := TSolveMode.DAILYMODE;
             end;
         'f':
-            Result := FAULTSTUDY;
+            Result := TSolveMode.FAULTSTUDY;
         'h':
             case SLC[9] of                   //Modification added by Davis Montenegro 25/06/2014
                 't':
-                    Result := HARMONICMODET;     // For adding the harmoncis mode in time domain
+                    Result := TSolveMode.HARMONICMODET;     // For adding the harmoncis mode in time domain
             else
-                Result := HARMONICMODE;
+                Result := TSolveMode.HARMONICMODE;
             end;
         'y':
-            Result := YEARLYMODE;
+            Result := TSolveMode.YEARLYMODE;
         'm':
             case SLC[2] of
                 '1':
-                    Result := MONTECARLO1;
+                    Result := TSolveMode.MONTECARLO1;
                 '2':
-                    Result := MONTECARLO2;
+                    Result := TSolveMode.MONTECARLO2;
                 '3':
-                    Result := MONTECARLO3;
+                    Result := TSolveMode.MONTECARLO3;
                 'f':
-                    Result := MONTEFAULT;
+                    Result := TSolveMode.MONTEFAULT;
             else
-                Result := MONTECARLO1;
+                Result := TSolveMode.MONTECARLO1;
             end;
         'p':
-            Result := PEAKDAY;
+            Result := TSolveMode.PEAKDAY;
         'a':
-            Result := AUTOADDFLAG;
+            Result := TSolveMode.AUTOADDFLAG;
         'l':
             case SLC[2] of
                 'd':
                     case SLC[3] of
                         '1':
-                            Result := LOADDURATION1;
+                            Result := TSolveMode.LOADDURATION1;
                         '2':
-                            Result := LOADDURATION2;
+                            Result := TSolveMode.LOADDURATION2;
                     else
-                        Result := LOADDURATION1;
+                        Result := TSolveMode.LOADDURATION1;
                     end;
             else
-                Result := LOADDURATION1;
+                Result := TSolveMode.LOADDURATION1;
             end;
         't':
-            Result := GENERALTIME;
+            Result := TSolveMode.GENERALTIME;
 
     else
-        Result := SNAPSHOT;
+        Result := TSolveMode.SNAPSHOT;
     end;
 
 
@@ -1215,46 +1215,46 @@ begin
 
 end;
 
-function GetSolutionModeIDName(idx: Integer): String;
+function GetSolutionModeIDName(idx: TSolveMode): String;
 begin
 
     case idx of
 
-        SNAPSHOT:
+        TSolveMode.SNAPSHOT:
             Result := 'Snap';
-        DAILYMODE:
+        TSolveMode.DAILYMODE:
             Result := 'Daily';
-        YEARLYMODE:
+        TSolveMode.YEARLYMODE:
             Result := 'Yearly';
-        MONTECARLO1:
+        TSolveMode.MONTECARLO1:
             Result := 'M1';
-        MONTECARLO2:
+        TSolveMode.MONTECARLO2:
             Result := 'M2';
-        MONTECARLO3:
+        TSolveMode.MONTECARLO3:
             Result := 'M3';
-        LOADDURATION1:
+        TSolveMode.LOADDURATION1:
             Result := 'LD1';
-        LOADDURATION2:
+        TSolveMode.LOADDURATION2:
             Result := 'LD2';
-        PEAKDAY:
+        TSolveMode.PEAKDAY:
             Result := 'Peakday';
-        DUTYCYCLE:
+        TSolveMode.DUTYCYCLE:
             Result := 'DUtycycle';
-        DIRECT:
+        TSolveMode.DIRECT:
             Result := 'DIrect';
-        DYNAMICMODE:
+        TSolveMode.DYNAMICMODE:
             Result := 'DYnamic';
-        MONTEFAULT:
+        TSolveMode.MONTEFAULT:
             Result := 'MF';
-        FAULTSTUDY:
+        TSolveMode.FAULTSTUDY:
             Result := 'Faultstudy';
-        AUTOADDFLAG:
+        TSolveMode.AUTOADDFLAG:
             Result := 'Autoadd';
-        HARMONICMODE:
+        TSolveMode.HARMONICMODE:
             Result := 'Harmonic';
-        HARMONICMODET:
+        TSolveMode.HARMONICMODET:
             Result := 'HarmonicT';
-        GENERALTIME:
+        TSolveMode.GENERALTIME:
             Result := 'Time';
     else
         Result := 'UNKNOWN'

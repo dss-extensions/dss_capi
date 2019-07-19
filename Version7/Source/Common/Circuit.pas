@@ -1887,7 +1887,7 @@ begin
        Exit;
      End;
 
-     Solution.Mode := SNAPSHOT;
+     Solution.Mode := TSolveMode.SNAPSHOT;
      LoadMultiplier  := CapacityStart;
      CapacityFound := False;
 

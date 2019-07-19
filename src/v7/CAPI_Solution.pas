@@ -120,7 +120,8 @@ uses
     YMatrix,
     SolutionAlgs,
     Solution,
-    ExecOptions;
+    ExecOptions,
+    Dynamics;
 
 function Solution_Get_Frequency(): Double; CDECL;
 begin
@@ -166,7 +167,7 @@ function Solution_Get_Mode(): Integer; CDECL;
 begin
      //If ActiveCircuit <> Nil Then Result := GetSolutionModeID      changed to integer 8/16/00
     if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.Mode
+        Result := Ord(ActiveCircuit.Solution.Mode)
     else
         Result := 0;
 end;
@@ -249,8 +250,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Mode(Mode: Integer); CDECL;
 begin
+    //TODO: validate Mode
     if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.Mode := Mode; //InterpretSolveMode(Value);
+        ActiveCircuit.Solution.Mode := TSolveMode(Mode); //InterpretSolveMode(Value);
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Number(Value: Integer); CDECL;

@@ -1980,15 +1980,15 @@ begin
 
     with ActiveCircuit.Solution do
         case Mode of
-            DAILYMODE:
+            TSolveMode.DAILYMODE:
                 CalcDailyMult(DynaVars.dblHour); // Daily dispatch curve
-            YEARLYMODE:
+            TSolveMode.YEARLYMODE:
                 CalcYearlyMult(DynaVars.dblHour);
-            LOADDURATION2:
+            TSolveMode.LOADDURATION2:
                 CalcDailyMult(DynaVars.dblHour);
-            PEAKDAY:
+            TSolveMode.PEAKDAY:
                 CalcDailyMult(DynaVars.dblHour);
-            DUTYCYCLE:
+            TSolveMode.DUTYCYCLE:
                 CalcDutyMult(DynaVars.dblHour);
         end;
 

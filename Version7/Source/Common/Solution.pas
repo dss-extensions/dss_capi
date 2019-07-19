@@ -101,8 +101,8 @@ type
         FFrequency: Double;
 
         function Converged: Boolean;
-        function OK_for_Dynamics(const Value: Integer): Boolean;
-        function OK_for_Harmonics(const Value: Integer): Boolean;
+        function OK_for_Dynamics(const Value: TSolveMode): Boolean;
+        function OK_for_Harmonics(const Value: TSolveMode): Boolean;
 
 
         procedure DoNewtonSolution;
@@ -111,7 +111,7 @@ type
         procedure SetGeneratordQdV;
         procedure SumAllCurrents;
         procedure Set_Frequency(const Value: Double);
-        procedure Set_Mode(const Value: Integer);
+        procedure Set_Mode(const Value: TSolveMode);
         procedure Set_Year(const Value: Integer);
         procedure Set_Total_Time(const Value: Double);
 
@@ -240,7 +240,7 @@ type
 
         procedure UpdateLoopTime;
 
-        property Mode: Integer READ dynavars.SolutionMode WRITE Set_Mode;
+        property Mode: TSolveMode READ dynavars.SolutionMode WRITE Set_Mode;
         property Frequency: Double READ FFrequency WRITE Set_Frequency;
         property Year: Integer READ FYear WRITE Set_Year;
         property Time_Solve: Double READ Solve_Time_Elapsed;
@@ -454,7 +454,7 @@ begin
 
     SolutionCount := 0;
 
-    Dynavars.SolutionMode := SNAPSHOT;
+    Dynavars.SolutionMode := TSolveMode.SNAPSHOT;
     ControlMode := CTRLSTATIC;
     DefaultControlMode := ControlMode;
     Algorithm := NORMALSOLVE;
@@ -552,41 +552,41 @@ begin
         QueryPerformanceCounter(GStartTime);
 {$ENDIF}
         case Dynavars.SolutionMode of
-            SNAPSHOT:
+            TSolveMode.SNAPSHOT:
                 SolveSnap;
-            YEARLYMODE:
+            TSolveMode.YEARLYMODE:
                 SolveYearly;
-            DAILYMODE:
+            TSolveMode.DAILYMODE:
                 SolveDaily;
-            DUTYCYCLE:
+            TSolveMode.DUTYCYCLE:
                 SolveDuty;
-            DYNAMICMODE:
+            TSolveMode.DYNAMICMODE:
                 SolveDynamic;
-            MONTECARLO1:
+            TSolveMode.MONTECARLO1:
                 SolveMonte1;
-            MONTECARLO2:
+            TSolveMode.MONTECARLO2:
                 SolveMonte2;
-            MONTECARLO3:
+            TSolveMode.MONTECARLO3:
                 SolveMonte3;
-            PEAKDAY:
+            TSolveMode.PEAKDAY:
                 SolvePeakDay;
-            LOADDURATION1:
+            TSolveMode.LOADDURATION1:
                 SolveLD1;
-            LOADDURATION2:
+            TSolveMode.LOADDURATION2:
                 SolveLD2;
-            DIRECT:
+            TSolveMode.DIRECT:
                 SolveDirect;
-            MONTEFAULT:
+            TSolveMode.MONTEFAULT:
                 SolveMonteFault;  // Monte Carlo Fault Cases
-            FAULTSTUDY:
+            TSolveMode.FAULTSTUDY:
                 SolveFaultStudy;
-            AUTOADDFLAG:
+            TSolveMode.AUTOADDFLAG:
                 ActiveCircuit.AutoAddObj.Solve;
-            HARMONICMODE:
+            TSolveMode.HARMONICMODE:
                 SolveHarmonic;
-            GENERALTIME:
+            TSolveMode.GENERALTIME:
                 SolveGeneralTime;
-            HARMONICMODET:
+            TSolveMode.HARMONICMODET:
                 SolveHarmonicT;  //Declares the Hsequential-time harmonics
         else
             DosimpleMsg('Unknown solution mode.', 481);
@@ -712,41 +712,41 @@ begin
     with ActiveCircuit do
         case Dynavars.SolutionMode of
 
-            SNAPSHOT:
+            TSolveMode.SNAPSHOT:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor;
-            YEARLYMODE:
+            TSolveMode.YEARLYMODE:
                 GeneratorDispatchReference := DefaultGrowthFactor * DefaultHourMult.re;
-            DAILYMODE:
+            TSolveMode.DAILYMODE:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            DUTYCYCLE:
+            TSolveMode.DUTYCYCLE:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            GENERALTIME:
+            TSolveMode.GENERALTIME:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            DYNAMICMODE:
+            TSolveMode.DYNAMICMODE:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor;
-            HARMONICMODE:
+            TSolveMode.HARMONICMODE:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor;
-            MONTECARLO1:
+            TSolveMode.MONTECARLO1:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor;
-            MONTECARLO2:
+            TSolveMode.MONTECARLO2:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            MONTECARLO3:
+            TSolveMode.MONTECARLO3:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            PEAKDAY:
+            TSolveMode.PEAKDAY:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            LOADDURATION1:
+            TSolveMode.LOADDURATION1:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            LOADDURATION2:
+            TSolveMode.LOADDURATION2:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
-            DIRECT:
+            TSolveMode.DIRECT:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor;
-            MONTEFAULT:
+            TSolveMode.MONTEFAULT:
                 GeneratorDispatchReference := 1.0;  // Monte Carlo Fault Cases solve  at peak load only base case
-            FAULTSTUDY:
+            TSolveMode.FAULTSTUDY:
                 GeneratorDispatchReference := 1.0;
-            AUTOADDFLAG:
+            TSolveMode.AUTOADDFLAG:
                 GeneratorDispatchReference := DefaultGrowthFactor;   // peak load only
-            HARMONICMODET:
+            TSolveMode.HARMONICMODET:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
         else
             DosimpleMsg('Unknown solution mode.', 483);
@@ -2060,7 +2060,7 @@ begin
 
 end;
 
-procedure TSolutionObj.Set_Mode(const Value: Integer);
+procedure TSolutionObj.Set_Mode(const Value: TSolveMode);
 
 
 begin
@@ -2089,91 +2089,91 @@ begin
    // Reset defaults for solution modes
     case Dynavars.SolutionMode of
 
-        PEAKDAY,
-        DAILYMODE:
+        TSolveMode.PEAKDAY,
+        TSolveMode.DAILYMODE:
         begin
             DynaVars.h := 3600.0;
             NumberOfTimes := 24;
             SampleTheMeters := TRUE;
         end;
-        SNAPSHOT:
+        TSolveMode.SNAPSHOT:
         begin
             IntervalHrs := 1.0;
             NumberOfTimes := 1;
         end;
-        YEARLYMODE:
+        TSolveMode.YEARLYMODE:
         begin
             IntervalHrs := 1.0;
             DynaVars.h := 3600.0;
             NumberOfTimes := 8760;
             SampleTheMeters := TRUE;
         end;
-        DUTYCYCLE:
+        TSolveMode.DUTYCYCLE:
         begin
             DynaVars.h := 1.0;
             ControlMode := TIMEDRIVEN;
         end;
-        DYNAMICMODE:
+        TSolveMode.DYNAMICMODE:
         begin
             DynaVars.h := 0.001;
             ControlMode := TIMEDRIVEN;
             IsDynamicModel := TRUE;
             PreserveNodeVoltages := TRUE;  // need to do this in case Y changes during this mode
         end;
-        GENERALTIME:
+        TSolveMode.GENERALTIME:
         begin
             IntervalHrs := 1.0;
             DynaVars.h := 3600.0;
             NumberOfTimes := 1;  // just one time step per Solve call expected
         end;
-        MONTECARLO1:
+        TSolveMode.MONTECARLO1:
         begin
             IntervalHrs := 1.0;
             SampleTheMeters := TRUE;
         end;
-        MONTECARLO2:
+        TSolveMode.MONTECARLO2:
         begin
             DynaVars.h := 3600.0;
             SampleTheMeters := TRUE;
         end;
-        MONTECARLO3:
+        TSolveMode.MONTECARLO3:
         begin
             IntervalHrs := 1.0;
             SampleTheMeters := TRUE;
         end;
-        MONTEFAULT:
+        TSolveMode.MONTEFAULT:
         begin
             IsDynamicModel := TRUE;
         end;
-        FAULTSTUDY:
+        TSolveMode.FAULTSTUDY:
         begin
             IsDynamicModel := TRUE;
         end;
-        LOADDURATION1:
+        TSolveMode.LOADDURATION1:
         begin
             DynaVars.h := 3600.0;
             ActiveCircuit.TrapezoidalIntegration := TRUE;
             SampleTheMeters := TRUE;
         end;
-        LOADDURATION2:
+        TSolveMode.LOADDURATION2:
         begin
             DynaVars.intHour := 1;
             ActiveCircuit.TrapezoidalIntegration := TRUE;
             SampleTheMeters := TRUE;
         end;
-        AUTOADDFLAG:
+        TSolveMode.AUTOADDFLAG:
         begin
             IntervalHrs := 1.0;
             ActiveCircuit.AutoAddObj.ModeChanged := TRUE;
         end;
-        HARMONICMODE:
+        TSolveMode.HARMONICMODE:
         begin
             ControlMode := CONTROLSOFF;
             IsHarmonicModel := TRUE;
             LoadModel := ADMITTANCE;
             PreserveNodeVoltages := TRUE;  // need to do this in case Y changes during this mode
         end;
-        HARMONICMODET:
+        TSolveMode.HARMONICMODET:
         begin
             IntervalHrs := 1.0;
             DynaVars.h := 3600.0;
@@ -2201,7 +2201,7 @@ begin
     {FOR i := 1 to ActiveCircuit.NumNodes Do Caccum(Currents^[i], AuxCurrents^[i]);}
     // For Now, only AutoAdd Obj uses this
 
-    if Dynavars.SolutionMode = AUTOADDFLAG then
+    if Dynavars.SolutionMode = TSolveMode.AUTOADDFLAG then
         ActiveCircuit.AutoAddObj.AddCurrents(SolveType);
 
 end;
@@ -2259,7 +2259,7 @@ begin
 end;
 }
 
-function TSolutionObj.OK_for_Dynamics(const Value: Integer): Boolean;
+function TSolutionObj.OK_for_Dynamics(const Value: TSolveMode): Boolean;
 
 var
     ValueIsDynamic: Boolean;
@@ -2269,9 +2269,9 @@ begin
     Result := TRUE;
 
     case Value of
-        MONTEFAULT,
-        DYNAMICMODE,
-        FAULTSTUDY:
+        TSolveMode.MONTEFAULT,
+        TSolveMode.DYNAMICMODE,
+        TSolveMode.FAULTSTUDY:
             ValueIsDynamic := TRUE;
     else
         ValueIsDynamic := FALSE;
@@ -2299,20 +2299,20 @@ begin
 
 end;
 
-function TSolutionObj.OK_for_Harmonics(const Value: Integer): Boolean;
+function TSolutionObj.OK_for_Harmonics(const Value: TSolveMode): Boolean;
 
  {When we go in and out of Harmonics mode, we have to do some special things}
 begin
 
     Result := TRUE;
 
-    if IsHarmonicModel and not ((Value = HARMONICMODE) or (Value = HARMONICMODET)) then
+    if IsHarmonicModel and not ((Value = TSolveMode.HARMONICMODE) or (Value = TSolveMode.HARMONICMODET)) then
     begin
         InvalidateAllPCELEMENTS;  // Force Recomp of YPrims when we leave Harmonics mode
         Frequency := ActiveCircuit.Fundamental;   // Resets everything to norm
     end;
 
-    if not IsHarmonicModel and ((Value = HARMONICMODE) or (Value = HARMONICMODET)) then
+    if not IsHarmonicModel and ((Value = TSolveMode.HARMONICMODE) or (Value = TSolveMode.HARMONICMODET)) then
     begin   // see if conditions right for going into Harmonics
 
         if (ActiveCircuit.IsSolved) and (Frequency = ActiveCircuit.Fundamental) then
