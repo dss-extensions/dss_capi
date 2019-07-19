@@ -79,8 +79,8 @@ ReactorProp = dict(
 )
 
 ReactorConnection = dict(
-    Wye = 0, // wye, star, line-neutral connection
-    Delta = 1 // delta, line-line connection
+    Wye = 0, # wye, star, line-neutral connection
+    Delta = 1 # delta, line-line connection
 );
 
 
@@ -104,6 +104,7 @@ elif fn.endswith('Reactor.pas'):
 
 text = open(fn, 'r').read()
 with open(fn, 'w', newline='\n') as o:
+# if True:
 
     # We can safely replace these two
     text = re.sub(
@@ -121,25 +122,49 @@ with open(fn, 'w', newline='\n') as o:
     
     m = re.search(f'(function T{cls}Obj.GetPropertyValue.*?^end;)', text, flags=re.MULTILINE|re.DOTALL)
     sample = m.group(1)
+    fixed_sample = sample
+    fixed_sample = re.sub(
+        r'(\s+)(\d+), (\d+):', 
+        lambda x: f'{x.group(1)}T{cls}Prop.{rprops[x.group(2)]}, T{cls}Prop.{rprops[x.group(3)]}:' if x.group(2) in rprops and x.group(3) in rprops else x.group(0),
+        fixed_sample
+    ).replace('case Index of', f'case T{cls}Prop(Index) of')
+    fixed_sample = re.sub(
+        r'(\s+)(\d+)\.\.(\d+):', 
+        lambda x: f'{x.group(1)}T{cls}Prop.{rprops[x.group(2)]}..T{cls}Prop.{rprops[x.group(3)]}:' if x.group(2) in rprops and x.group(3) in rprops else x.group(0),
+        fixed_sample
+    ).replace('case Index of', f'case T{cls}Prop(Index) of')
     fixed_sample = re.sub(
         r'(\s+)(\d+):', 
         lambda x: f'{x.group(1)}T{cls}Prop.{rprops[x.group(2)]}:' if x.group(2) in rprops else x.group(0),
-        sample
-    ).replace('case Index of', 'case props(Index) of')
+        fixed_sample
+    )
     text = text.replace(sample, fixed_sample)
-    
     
     m = re.search(f'(function T{cls}\.Edit: Integer;.*?^end;)', text, flags=re.MULTILINE|re.DOTALL)
     sample = m.group(1)
+    fixed_sample = sample
+    fixed_sample = re.sub(
+        r'(\s+)(\d+), (\d+):', 
+        lambda x: f'{x.group(1)}T{cls}Prop.{rprops[x.group(2)]}, T{cls}Prop.{rprops[x.group(3)]}:' if x.group(2) in rprops and x.group(3) in rprops else x.group(0),
+        fixed_sample
+    )
+    fixed_sample = re.sub(
+        r'(\s+)(\d+)\.\.(\d+):', 
+        lambda x: f'{x.group(1)}T{cls}Prop.{rprops[x.group(2)]}..T{cls}Prop.{rprops[x.group(3)]}:' if x.group(2) in rprops and x.group(3) in rprops else x.group(0),
+        fixed_sample
+    )
     fixed_sample = re.sub(
         r'(\s+)(\d+):', 
         lambda x: f'{x.group(1)}T{cls}Prop.{rprops[x.group(2)]}:' if x.group(2) in rprops else x.group(0),
-        sample
+        fixed_sample
     )
-    
     text = text.replace(sample, fixed_sample)
+    
     text = text.replace('case ParamPointer of', f'case T{cls}Prop(ParamPointer) of')
     
-    print(fixed_sample)
+    # print(fixed_sample)
+                
+                
+    
     
     o.write(text)
