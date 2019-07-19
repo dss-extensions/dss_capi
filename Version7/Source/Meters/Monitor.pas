@@ -1393,7 +1393,7 @@ begin
                     SolutionBuffer^[5] := 0;
                 SolutionBuffer^[6] := IntervalHrs;
                 SolutionBuffer^[7] := SolutionCount;
-                SolutionBuffer^[8] := Mode;
+                SolutionBuffer^[8] := Ord(Mode);
                 SolutionBuffer^[9] := Frequency;
                 SolutionBuffer^[10] := Year;
                 SolutionBuffer^[11] := Time_Solve;
@@ -2091,7 +2091,7 @@ begin
                 Hours := FALSE;
 
             case ActiveCircuit.Solution.DynaVars.SolutionMode of
-                HARMONICMODE:
+                TSolveMode.HARMONICMODE:
                     Time := hr;
             else
                 if Hours then
@@ -2112,7 +2112,7 @@ begin
                 end;
 
             case ActiveCircuit.Solution.DynaVars.SolutionMode of
-                HARMONICMODE:
+                TSolveMode.HARMONICMODE:
                     MaxTime := hr;
             else
                 if Hours then
@@ -2143,7 +2143,7 @@ begin
                     if Nread < RecordBytes then
                         Break;
                     case ActiveCircuit.Solution.DynaVars.SolutionMode of
-                        HARMONICMODE:
+                        TSolveMode.HARMONICMODE:
                             Time := hr;
                     else
                         if Hours then

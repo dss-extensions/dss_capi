@@ -2209,7 +2209,7 @@ begin
          LoadMultiplier := 1.0;   // Property .. has side effects
          With Solution Do
          Begin
-             If Mode <> SNAPSHOT Then Mode := SNAPSHOT;   // Resets meters, etc. if not in snapshot mode
+             If Mode <> TSolveMode.SNAPSHOT Then Mode := TSolveMode.SNAPSHOT;   // Resets meters, etc. if not in snapshot mode
              Solve;  {Make guess based on present allocationfactors}
          End;
 

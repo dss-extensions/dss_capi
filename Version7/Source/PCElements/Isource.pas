@@ -528,23 +528,23 @@ begin
             begin
                 case Mode of
                {Uses same logic as LOAD}
-                    DAILYMODE:
+                    TSolveMode.DAILYMODE:
                     begin
                         CalcDailyMult(DynaVars.dblHour);
                     end;
-                    YEARLYMODE:
+                    TSolveMode.YEARLYMODE:
                     begin
                         CalcYearlyMult(DynaVars.dblHour);
                     end;
-                    DUTYCYCLE:
+                    TSolveMode.DUTYCYCLE:
                     begin
                         CalcDutyMult(DynaVars.dblHour);
                     end;
                 end;
                 NAmps := Amps;
-                if (Mode = DAILYMODE) or     {If a loadshape mode simulation}
-                    (Mode = YEARLYMODE) or
-                    (Mode = DUTYCYCLE) then
+                if (Mode = TSolveMode.DAILYMODE) or     {If a loadshape mode simulation}
+                    (Mode = TSolveMode.YEARLYMODE) or
+                    (Mode = TSolveMode.DUTYCYCLE) then
                     NAmps := Amps * ShapeFactor.re;
                 if abs(Frequency - SrcFrequency) < EPSILON2 then
                     Result := pdegtocomplex(NAmps, Angle)
