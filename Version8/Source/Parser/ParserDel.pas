@@ -591,7 +591,7 @@ end;
 {=======================================================================================================================}
 function TParser.ParseAsVector(VectorBuffer: Array of Double): Integer;
 begin
-    Result := ParseAsVector(Length(VectorBuffer), pDoubleArray(VectorBuffer[0]));
+    Result := ParseAsVector(Length(VectorBuffer), pDoubleArray(@VectorBuffer[0]));
 end;
 
 function TParser.ParseAsVector(ExpectedSize: Integer; VectorBuffer: pDoubleArray): Integer;
@@ -647,7 +647,7 @@ end;
 {=======================================================================================================================}
 function TParser.ParseAsMatrix(MatrixBuffer: Array of Double): Integer;
 begin
-    Result := ParseAsMatrix(Length(MatrixBuffer), pDoubleArray(MatrixBuffer[0]));
+    Result := ParseAsMatrix(Length(MatrixBuffer), pDoubleArray(@MatrixBuffer[0]));
 end;
 
 function TParser.ParseAsMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
@@ -697,7 +697,7 @@ end;
 {=======================================================================================================================}
 function TParser.ParseAsSymMatrix(MatrixBuffer: Array of Double): Integer;
 begin
-    Result := ParseAsSymMatrix(Length(MatrixBuffer), pDoubleArray(MatrixBuffer[0]));
+    Result := ParseAsSymMatrix(Length(MatrixBuffer), pDoubleArray(@MatrixBuffer[0]));
 end;
 
 function TParser.ParseAsSymMatrix(ExpectedOrder: Integer; MatrixBuffer: pDoubleArray): Integer;
