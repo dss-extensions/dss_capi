@@ -32,7 +32,7 @@ function Loads_Get_CVRwatts(): Double; CDECL;
 function Loads_Get_daily(): PAnsiChar; CDECL;
 function Loads_Get_duty(): PAnsiChar; CDECL;
 function Loads_Get_Growth(): PAnsiChar; CDECL;
-function Loads_Get_IsDelta(): Wordbool; CDECL;
+function Loads_Get_IsDelta(): Boolean; CDECL;
 function Loads_Get_kva(): Double; CDECL;
 function Loads_Get_kwh(): Double; CDECL;
 function Loads_Get_kwhdays(): Double; CDECL;
@@ -59,7 +59,7 @@ procedure Loads_Set_CVRwatts(Value: Double); CDECL;
 procedure Loads_Set_daily(const Value: PAnsiChar); CDECL;
 procedure Loads_Set_duty(const Value: PAnsiChar); CDECL;
 procedure Loads_Set_Growth(const Value: PAnsiChar); CDECL;
-procedure Loads_Set_IsDelta(Value: Wordbool); CDECL;
+procedure Loads_Set_IsDelta(Value: Boolean); CDECL;
 procedure Loads_Set_kva(Value: Double); CDECL;
 procedure Loads_Set_kwh(Value: Double); CDECL;
 procedure Loads_Set_kwhdays(Value: Double); CDECL;
@@ -564,7 +564,7 @@ begin
     Result := DSS_GetAsPAnsiChar(Loads_Get_Growth_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function Loads_Get_IsDelta(): Wordbool; CDECL;
+function Loads_Get_IsDelta(): Boolean; CDECL;
 var
     elem: TLoadObj;
 begin
@@ -861,7 +861,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Loads_Set_IsDelta(Value: Wordbool); CDECL;
+procedure Loads_Set_IsDelta(Value: Boolean); CDECL;
 var
     elem: TLoadObj;
 begin

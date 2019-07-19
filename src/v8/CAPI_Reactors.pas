@@ -20,10 +20,10 @@ procedure Reactors_Set_kvar(Value: Double); CDECL;
 function Reactors_Get_Phases(): Integer; CDECL;
 procedure Reactors_Set_Phases(Value: Integer); CDECL;
 function Reactors_Get_SpecType(): Integer; CDECL;
-function Reactors_Get_IsDelta(): Wordbool; CDECL;
-procedure Reactors_Set_IsDelta(Value: Wordbool); CDECL;
-function Reactors_Get_Parallel(): Wordbool; CDECL;
-procedure Reactors_Set_Parallel(Value: Wordbool); CDECL;
+function Reactors_Get_IsDelta(): Boolean; CDECL;
+procedure Reactors_Set_IsDelta(Value: Boolean); CDECL;
+function Reactors_Get_Parallel(): Boolean; CDECL;
+procedure Reactors_Set_Parallel(Value: Boolean); CDECL;
 function Reactors_Get_LmH(): Double; CDECL;
 procedure Reactors_Set_LmH(Value: Double); CDECL;
 function Reactors_Get_Bus1(): PAnsiChar; CDECL;
@@ -319,7 +319,7 @@ begin
     Result := DSS_GetAsPAnsiChar(Reactors_Get_RCurve_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function Reactors_Get_Parallel(): Wordbool; CDECL;
+function Reactors_Get_Parallel(): Boolean; CDECL;
 var
     pReactor: TReactorObj;
 begin
@@ -329,7 +329,7 @@ begin
     Result := pReactor.IsParallel;
 end;
 //------------------------------------------------------------------------------
-function Reactors_Get_IsDelta(): Wordbool; CDECL;
+function Reactors_Get_IsDelta(): Boolean; CDECL;
 var
     pReactor: TReactorObj;
 begin
@@ -423,7 +423,7 @@ begin
     Result := pReactor.Rp;
 end;
 //------------------------------------------------------------------------------
-procedure Reactors_Set_IsDelta(Value: Wordbool); CDECL;
+procedure Reactors_Set_IsDelta(Value: Boolean); CDECL;
 var
     pReactor: TReactorObj;
 begin
@@ -433,7 +433,7 @@ begin
     ReactorPropSideEffects(ReactorProps.conn, pReactor);
 end;
 //------------------------------------------------------------------------------
-procedure Reactors_Set_Parallel(Value: Wordbool); CDECL;
+procedure Reactors_Set_Parallel(Value: Boolean); CDECL;
 var
     pReactor: TReactorObj;
 begin

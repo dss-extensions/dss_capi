@@ -9,7 +9,7 @@ uses
     UComplex,
     Solution;
 
-procedure YMatrix_GetCompressedYMatrix(factor: Wordbool; var nBus, nNz: Longword; var ColPtr, RowIdxPtr: pInteger; var cValsPtr: PDouble); CDECL;
+procedure YMatrix_GetCompressedYMatrix(factor: Boolean; var nBus, nNz: Longword; var ColPtr, RowIdxPtr: pInteger; var cValsPtr: PDouble); CDECL;
 
 procedure YMatrix_ZeroInjCurr; CDECL;
 procedure YMatrix_GetSourceInjCurrents; CDECL;
@@ -20,10 +20,10 @@ procedure YMatrix_getIpointer(var IvectorPtr: pNodeVarray); CDECL;
 procedure YMatrix_getVpointer(var VvectorPtr: pNodeVarray); CDECL;
 function YMatrix_SolveSystem(var NodeV: pNodeVarray): Integer; CDECL;
 
-procedure YMatrix_Set_SystemYChanged(arg: Wordbool); CDECL;
-function YMatrix_Get_SystemYChanged(): Wordbool; CDECL;
-procedure YMatrix_Set_UseAuxCurrents(arg: Wordbool); CDECL;
-function YMatrix_Get_UseAuxCurrents(): Wordbool; CDECL;
+procedure YMatrix_Set_SystemYChanged(arg: Boolean); CDECL;
+function YMatrix_Get_SystemYChanged(): Boolean; CDECL;
+procedure YMatrix_Set_UseAuxCurrents(arg: Boolean); CDECL;
+function YMatrix_Get_UseAuxCurrents(): Boolean; CDECL;
 
 
 implementation
@@ -34,7 +34,7 @@ uses
     KLUSolve,
     CAPI_Utils;
 
-procedure YMatrix_GetCompressedYMatrix(factor: Wordbool; var nBus, nNz: Longword; var ColPtr, RowIdxPtr: pInteger; var cValsPtr: PDouble); CDECL;
+procedure YMatrix_GetCompressedYMatrix(factor: Boolean; var nBus, nNz: Longword; var ColPtr, RowIdxPtr: pInteger; var cValsPtr: PDouble); CDECL;
 {Returns Pointers to column and row and matrix values}
 var
     Yhandle: NativeUInt;
@@ -90,12 +90,12 @@ begin
         ActiveCircuit[ActiveActor].Solution.GetPCInjCurr(ActiveActor);
 end;
 
-procedure YMatrix_Set_SystemYChanged(arg: Wordbool); CDECL;
+procedure YMatrix_Set_SystemYChanged(arg: Boolean); CDECL;
 begin
     ActiveCircuit[ActiveActor].Solution.SystemYChanged := arg;
 end;
 
-function YMatrix_Get_SystemYChanged(): Wordbool; CDECL;
+function YMatrix_Get_SystemYChanged(): Boolean; CDECL;
 begin
     Result := ActiveCircuit[ActiveActor].Solution.SystemYChanged;
 end;
@@ -108,12 +108,12 @@ begin
     BuildYMatrix(BuildOps, AllocateV, ActiveActor);
 end;
 
-procedure YMatrix_Set_UseAuxCurrents(arg: Wordbool); CDECL;
+procedure YMatrix_Set_UseAuxCurrents(arg: Boolean); CDECL;
 begin
     ActiveCircuit[ActiveActor].Solution.UseAuxCurrents := arg;
 end;
 
-function YMatrix_Get_UseAuxCurrents(): Wordbool; CDECL;
+function YMatrix_Get_UseAuxCurrents(): Boolean; CDECL;
 begin
     Result := ActiveCircuit[ActiveActor].Solution.UseAuxCurrents;
 end;

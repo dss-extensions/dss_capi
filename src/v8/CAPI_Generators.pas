@@ -14,8 +14,8 @@ function Generators_Get_Next(): Integer; CDECL;
 procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 procedure Generators_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure Generators_Get_RegisterValues_GR(); CDECL;
-function Generators_Get_ForcedON(): Wordbool; CDECL;
-procedure Generators_Set_ForcedON(Value: Wordbool); CDECL;
+function Generators_Get_ForcedON(): Boolean; CDECL;
+procedure Generators_Set_ForcedON(Value: Boolean); CDECL;
 procedure Generators_Set_Name(const Value: PAnsiChar); CDECL;
 function Generators_Get_kV(): Double; CDECL;
 function Generators_Get_kvar(): Double; CDECL;
@@ -190,7 +190,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function Generators_Get_ForcedON(): Wordbool; CDECL;
+function Generators_Get_ForcedON(): Boolean; CDECL;
 begin
     Result := FALSE;
     if ActiveCircuit[ActiveActor] <> NIL then
@@ -205,7 +205,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Generators_Set_ForcedON(Value: Wordbool); CDECL;
+procedure Generators_Set_ForcedON(Value: Boolean); CDECL;
 begin
 
     if ActiveCircuit[ActiveActor] <> NIL then

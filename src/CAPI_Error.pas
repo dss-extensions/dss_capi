@@ -10,8 +10,8 @@ uses
 function Error_Get_Description(): PAnsiChar; CDECL;
 function Error_Get_Number(): Integer; CDECL;
 function Error_Get_NumberPtr(): PInteger; CDECL;
-function Error_Get_EarlyAbort(): Wordbool; CDECL;
-procedure Error_Set_EarlyAbort(Value: Wordbool); CDECL;
+function Error_Get_EarlyAbort(): Boolean; CDECL;
+procedure Error_Set_EarlyAbort(Value: Boolean); CDECL;
 
 implementation
 
@@ -41,12 +41,12 @@ begin
     Result := @ErrorNumber; // Remember to reset it to zero after the error treatment!
 end;
 //------------------------------------------------------------------------------
-function Error_Get_EarlyAbort(): Wordbool; CDECL;
+function Error_Get_EarlyAbort(): Boolean; CDECL;
 begin
     Result := DSS_CAPI_EARLY_ABORT;
 end;
 //------------------------------------------------------------------------------
-procedure Error_Set_EarlyAbort(Value: Wordbool); CDECL;
+procedure Error_Set_EarlyAbort(Value: Boolean); CDECL;
 begin
     DSS_CAPI_EARLY_ABORT := Value;
 end;

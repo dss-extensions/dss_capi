@@ -11,14 +11,14 @@ function SwtControls_Get_Action(): Integer; CDECL;
 procedure SwtControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 function SwtControls_Get_Delay(): Double; CDECL;
 function SwtControls_Get_First(): Integer; CDECL;
-function SwtControls_Get_IsLocked(): Wordbool; CDECL;
+function SwtControls_Get_IsLocked(): Boolean; CDECL;
 function SwtControls_Get_Name(): PAnsiChar; CDECL;
 function SwtControls_Get_Next(): Integer; CDECL;
 function SwtControls_Get_SwitchedObj(): PAnsiChar; CDECL;
 function SwtControls_Get_SwitchedTerm(): Integer; CDECL;
 procedure SwtControls_Set_Action(Value: Integer); CDECL;
 procedure SwtControls_Set_Delay(Value: Double); CDECL;
-procedure SwtControls_Set_IsLocked(Value: Wordbool); CDECL;
+procedure SwtControls_Set_IsLocked(Value: Boolean); CDECL;
 procedure SwtControls_Set_Name(const Value: PAnsiChar); CDECL;
 procedure SwtControls_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 procedure SwtControls_Set_SwitchedTerm(Value: Integer); CDECL;
@@ -125,7 +125,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function SwtControls_Get_IsLocked(): Wordbool; CDECL;
+function SwtControls_Get_IsLocked(): Boolean; CDECL;
 var
     elem: TSwtControlObj;
 begin
@@ -242,7 +242,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure SwtControls_Set_IsLocked(Value: Wordbool); CDECL;
+procedure SwtControls_Set_IsLocked(Value: Boolean); CDECL;
 var
     elem: TSwtControlObj;
 begin

@@ -9,8 +9,8 @@ uses
 
 function ReduceCkt_Get_Zmag(): Double; CDECL;
 procedure ReduceCkt_Set_Zmag(Value: Double); CDECL;
-function ReduceCkt_Get_KeepLoad(): Wordbool; CDECL;
-procedure ReduceCkt_Set_KeepLoad(Value: Wordbool); CDECL;
+function ReduceCkt_Get_KeepLoad(): Boolean; CDECL;
+procedure ReduceCkt_Set_KeepLoad(Value: Boolean); CDECL;
 function ReduceCkt_Get_EditString(): PAnsiChar; CDECL;
 procedure ReduceCkt_Set_EditString(const Value: PAnsiChar); CDECL;
 function ReduceCkt_Get_StartPDElement(): PAnsiChar; CDECL;
@@ -75,13 +75,13 @@ begin
         ActiveCircuit.ReductionZmag := Value;
 end;
 //------------------------------------------------------------------------------
-function ReduceCkt_Get_KeepLoad(): Wordbool; CDECL;
+function ReduceCkt_Get_KeepLoad(): Boolean; CDECL;
 begin
     if Assigned(ActiveCircuit) then
         Result := ActiveCircuit.ReduceLateralsKeepLoad;
 end;
 //------------------------------------------------------------------------------
-procedure ReduceCkt_Set_KeepLoad(Value: Wordbool); CDECL;
+procedure ReduceCkt_Set_KeepLoad(Value: Boolean); CDECL;
 begin
     if Assigned(ActiveCircuit) then
         ActiveCircuit.ReduceLateralsKeepLoad := Value;

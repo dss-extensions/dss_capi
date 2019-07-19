@@ -36,8 +36,8 @@ function LoadShapes_Get_PBase(): Double; CDECL;
 function LoadShapes_Get_Qbase(): Double; CDECL;
 procedure LoadShapes_Set_PBase(Value: Double); CDECL;
 procedure LoadShapes_Set_Qbase(Value: Double); CDECL;
-function LoadShapes_Get_UseActual(): Wordbool; CDECL;
-procedure LoadShapes_Set_UseActual(Value: Wordbool); CDECL;
+function LoadShapes_Get_UseActual(): Boolean; CDECL;
+procedure LoadShapes_Set_UseActual(Value: Boolean); CDECL;
 
 // API extensions
 function LoadShapes_Get_idx(): Integer; CDECL;
@@ -498,7 +498,7 @@ begin
     elem.baseQ := Value;
 end;
 //------------------------------------------------------------------------------
-function LoadShapes_Get_UseActual(): Wordbool; CDECL;
+function LoadShapes_Get_UseActual(): Boolean; CDECL;
 var
     elem: TLoadshapeObj;
 begin
@@ -514,7 +514,7 @@ begin
     Result := elem.UseActual;
 end;
 //------------------------------------------------------------------------------
-procedure LoadShapes_Set_UseActual(Value: Wordbool); CDECL;
+procedure LoadShapes_Set_UseActual(Value: Boolean); CDECL;
 var
     elem: TLoadshapeObj;
 begin

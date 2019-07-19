@@ -34,7 +34,7 @@ function Meters_Get_MeteredElement(): PAnsiChar; CDECL;
 function Meters_Get_MeteredTerminal(): Integer; CDECL;
 procedure Meters_Set_MeteredElement(const Value: PAnsiChar); CDECL;
 procedure Meters_Set_MeteredTerminal(Value: Integer); CDECL;
-function Meters_Get_DIFilesAreOpen(): Wordbool; CDECL;
+function Meters_Get_DIFilesAreOpen(): Boolean; CDECL;
 procedure Meters_CloseAllDIFiles(); CDECL;
 procedure Meters_OpenAllDIFiles(); CDECL;
 procedure Meters_SampleAll(); CDECL;
@@ -48,7 +48,7 @@ function Meters_Get_SAIFI(): Double; CDECL;
 function Meters_Get_SequenceIndex(): Integer; CDECL;
 procedure Meters_Set_SequenceIndex(Value: Integer); CDECL;
 function Meters_Get_SAIFIKW(): Double; CDECL;
-procedure Meters_DoReliabilityCalc(AssumeRestoration: Wordbool); CDECL;
+procedure Meters_DoReliabilityCalc(AssumeRestoration: Boolean); CDECL;
 function Meters_Get_SeqListSize(): Integer; CDECL;
 function Meters_Get_TotalCustomers(): Integer; CDECL;
 function Meters_Get_SAIDI(): Double; CDECL;
@@ -591,7 +591,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-function Meters_Get_DIFilesAreOpen(): Wordbool; CDECL;
+function Meters_Get_DIFilesAreOpen(): Boolean; CDECL;
 begin
     Result := False;
     if ActiveCircuit <> NIL then
@@ -820,7 +820,7 @@ begin
         end;
 end;
 //------------------------------------------------------------------------------
-procedure Meters_DoReliabilityCalc(AssumeRestoration: Wordbool); CDECL;
+procedure Meters_DoReliabilityCalc(AssumeRestoration: Boolean); CDECL;
 var
     pMeterObj: TEnergyMeterObj;
 
