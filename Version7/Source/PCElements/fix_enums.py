@@ -84,6 +84,32 @@ ReactorConnection = dict(
 );
 
 
+LoadShapeProp = (
+    INVALID = 0,
+    npts = 1,     # Number of points to expect
+    interval = 2, # default = 1.0
+    mult = 3,     # vector of power multiplier values
+    hour = 4,     # vextor of hour values
+    mean = 5,     # set the mean (otherwise computed)
+    stddev = 6,   # set the std dev (otherwise computed)
+    csvfile = 7,  # Switch input to a csvfile
+    sngfile = 8,  # switch input to a binary file of singles
+    dblfile = 9,  # switch input to a binary file of singles
+    action = 10,  # actions  Normalize
+    qmult = 11,   # Q multiplier
+    UseActual = 12, # Flag to signify to use actual value
+    Pmax = 13,    # MaxP value
+    Qmax = 14,    # MaxQ
+    sinterval = 15, # Interval in seconds
+    minterval = 16, # Interval in minutes
+    Pbase = 17,   # for normalization, use peak if 0
+    Qbase = 18,   # for normalization, use peak if 0
+    Pmult = 19,   # synonym for Mult
+    PQCSVFile = 20 # Redirect to a file with p, q pairs
+);
+
+rLoadShapeProp = {str(x[1]): x[0] for x in LoadShapeProp.items()}
+
 rLoadProp = {str(x[1]): x[0] for x in LoadProp.items()}
 rLoadModels = {str(x[1]): x[0] for x in LoadModels.items()}
 
@@ -92,12 +118,11 @@ rReactorProp = {str(x[1]): x[0] for x in ReactorProp.items()}
 fn = 'Z:/dss/dss_capi/Version7/Source/PCElements/Load.pas'
 fn = 'Z:/dss/dss_capi/Version7/Source/PDElements/Reactor.pas'
 
+cls = fn.split('/')[-1].split('.pas')[0]
 if fn.endswith('Load.pas'):
-    cls = 'Load'
     props = LoadProp
     rprops = rLoadProp
 elif fn.endswith('Reactor.pas'):
-    cls = 'Reactor'
     props = ReactorProp
     rprops = rReactorProp
 
