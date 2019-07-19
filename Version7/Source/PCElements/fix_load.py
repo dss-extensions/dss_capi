@@ -42,20 +42,33 @@ props = dict(
     XRharm = 38 # X/R at fundamental for series R-L model for hamonics
 )
 
-rprops = {str(x[1]): x[0] for x in props.items()}
+#TODO: use dss.enums.LoadsModels directly
+LoadModels = dict(
+    ConstPQ = 1,
+    ConstZ = 2,
+    Motor = 3,
+    CVR = 4,
+    ConstI = 5,
+    ConstPFixedQ = 6,
+    ConstPFixedX = 7,
+    ZIPV = 8
+)
 
-with open('Load.pas', 'w', newline='\n') as o, open('Load.original.pas', 'r') as i:
-    text = i.read()
-    
+
+rprops = {str(x[1]): x[0] for x in props.items()}
+rLoadModels = {str(x[1]): x[0] for x in props.items()}
+
+text = open('Load.pas', 'r').read()
+with open('Load.pas', 'w', newline='\n') as o:
     # We can safely replace these two
     text = re.sub(
         r'PropertyHelp\[(\d+)\]', 
-        lambda x: f'PropertyHelp[ord(Props.{rprops[x.group(1)]})]',
+        lambda x: f'PropertyHelp[ord(props.{rprops[x.group(1)]})]',
         text
     )
     text = re.sub(
         r'PropertyValue\[(\d+)\]', 
-        lambda x: f'PropertyValue[ord(Props.{rprops[x.group(1)]})]',
+        lambda x: f'PropertyValue[ord(props.{rprops[x.group(1)]})]',
         text
     )
     
@@ -65,9 +78,9 @@ with open('Load.pas', 'w', newline='\n') as o, open('Load.original.pas', 'r') as
     sample = m.group(1)
     fixed_sample = re.sub(
         r'(\s+)(\d+):', 
-        lambda x: f'{x.group(1)}Props.{rprops[x.group(2)]}:' if x.group(2) in rprops else x.group(0),
+        lambda x: f'{x.group(1)}props.{rprops[x.group(2)]}:' if x.group(2) in rprops else x.group(0),
         sample
-    ).replace('case Index of', 'case Props(Index) of')
+    ).replace('case Index of', 'case props(Index) of')
     text = text.replace(sample, fixed_sample)
     
     
@@ -75,14 +88,12 @@ with open('Load.pas', 'w', newline='\n') as o, open('Load.original.pas', 'r') as
     sample = m.group(1)
     fixed_sample = re.sub(
         r'(\s+)(\d+):', 
-        lambda x: f'{x.group(1)}Props.{rprops[x.group(2)]}:' if x.group(2) in rprops else x.group(0),
+        lambda x: f'{x.group(1)}props.{rprops[x.group(2)]}:' if x.group(2) in rprops else x.group(0),
         sample
     )
     
     text = text.replace(sample, fixed_sample)
-    text = text.replace('case ParamPointer of', 'case Props(ParamPointer) of')
-    
-    
+    text = text.replace('case ParamPointer of', 'case props(ParamPointer) of')
     
     print(fixed_sample)
     
