@@ -53,6 +53,49 @@ uses
     ArrayDef;
 
 type
+{$SCOPEDENUMS ON}
+    Props = (
+        INVALID = 0,
+        phases = 1,
+        bus1 = 2,
+        kV = 3,
+        kW = 4,
+        pf = 5,
+        model = 6,
+        yearly = 7,
+        daily = 8,
+        duty = 9, 
+        growth = 10, 
+        conn = 11, 
+        kvar = 12, 
+        Rneut = 13, // IF entered -, assume open
+        Xneut = 14, 
+        status = 15, // fixed or variable
+        cls = 16, // integer
+        Vminpu = 17, // Min pu voltage for which model applies
+        Vmaxpu = 18, // Max pu voltage for which model applies
+        Vminnorm = 19, // Min pu voltage normal load
+        Vminemerg = 20, // Min pu voltage emergency rating
+        xfkVA = 21, // Service transformer rated kVA
+        allocationfactor = 22, // allocation factor  for xfkVA
+        kVA = 23, // specify load in kVA and PF
+        pctmean = 24, // per cent default mean
+        pctstddev = 25, // per cent default standard deviation
+        CVRwatts = 26, // Percent watts reduction per 1% reduction in voltage from nominal
+        CVRvars = 27, // Percent vars reduction per 1% reduction in voltage from nominal
+        kwh = 28, // kwh billing
+        kwhdays = 29, // kwh billing period (24-hr days)
+        Cfactor = 30, // multiplier from kWh avg to peak kW
+        CVRcurve = 31, // name of curve to use for yearly CVR simulations
+        NumCust = 32, // Number of customers, this load
+        ZIPV = 33, // array of 7 coefficients
+        pctSeriesRL = 34, // pct of Load that is series R-L
+        RelWeight = 35, // Weighting factor for reliability
+        Vlowpu = 36, // Below this value resort to constant Z model = Yeq
+        puXharm = 37, // pu Reactance for Harmonics, if specifies
+        XRharm = 38 // X/R at fundamental for series R-L model for hamonics
+    );
+{$SCOPEDENUMS OFF}
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
     TLoad = class(TPCClass)
     PRIVATE
@@ -281,7 +324,8 @@ uses
     Command,
     Math,
     MathUtil,
-    Utilities;
+    Utilities,
+    TypInfo;
 
 const
     NumPropsThisClass = 38;
@@ -315,53 +359,26 @@ end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TLoad.DefineProperties;
+var 
+    i: Integer;
+    propName: String;
 begin
 
     Numproperties := NumPropsThisClass;
     CountProperties;   // Get inherited property count
     AllocatePropertyArrays;
 
-
-     // Define Property names
-
-    PropertyName[1] := 'phases';
-    PropertyName[2] := 'bus1';
-    PropertyName[3] := 'kV';  //
-    PropertyName[4] := 'kW';
-    PropertyName[5] := 'pf';
-    PropertyName[6] := 'model';
-    PropertyName[7] := 'yearly';
-    PropertyName[8] := 'daily';
-    PropertyName[9] := 'duty';
-    PropertyName[10] := 'growth';
-    PropertyName[11] := 'conn';
-    PropertyName[12] := 'kvar';
-    PropertyName[13] := 'Rneut'; // IF entered -, assume open
-    PropertyName[14] := 'Xneut';
-    PropertyName[15] := 'status';  // fixed or variable
-    PropertyName[16] := 'class';  // integer
-    PropertyName[17] := 'Vminpu';  // Min pu voltage for which model applies
-    PropertyName[18] := 'Vmaxpu';  // Max pu voltage for which model applies
-    PropertyName[19] := 'Vminnorm';  // Min pu voltage normal load
-    PropertyName[20] := 'Vminemerg';  // Min pu voltage emergency rating
-    PropertyName[21] := 'xfkVA';  // Service transformer rated kVA
-    PropertyName[22] := 'allocationfactor';  // allocation factor  for xfkVA
-    PropertyName[23] := 'kVA';  // specify load in kVA and PF
-    PropertyName[24] := '%mean';  // per cent default mean
-    PropertyName[25] := '%stddev';  // per cent default standard deviation
-    PropertyName[26] := 'CVRwatts';  // Percent watts reduction per 1% reduction in voltage from nominal
-    PropertyName[27] := 'CVRvars';  // Percent vars reduction per 1% reduction in voltage from nominal
-    PropertyName[28] := 'kwh';   // kwh billing
-    PropertyName[29] := 'kwhdays';   // kwh billing period (24-hr days)
-    PropertyName[30] := 'Cfactor';   // multiplier from kWh avg to peak kW
-    PropertyName[31] := 'CVRcurve';   // name of curve to use for yearly CVR simulations
-    PropertyName[32] := 'NumCust';   // Number of customers, this load
-    PropertyName[33] := 'ZIPV';      // array of 7 coefficients
-    PropertyName[34] := '%SeriesRL';      // pct of Load that is series R-L
-    PropertyName[35] := 'RelWeight';      // Weighting factor for reliability
-    PropertyName[36] := 'Vlowpu';      // Below this value resort to constant Z model = Yeq
-    PropertyName[37] := 'puXharm';      // pu Reactance for Harmonics, if specifies
-    PropertyName[38] := 'XRharm';      // X/R at fundamental for series R-L model for hamonics
+    // Define Property names
+    for i := 1 to Ord(High(Props)) do
+    begin
+        propName := GetEnumName(TypeInfo(Props), Ord(i));
+        if propName = 'cls' then
+            propName := 'class'
+        else if LeftStr(propName, 3) = 'pct' then
+            propName := '%' + Copy(propName, 3, Length(propName) - 3);
+            
+        PropertyName[i] := propName;
+    end;    
 (*
   Typical Motor Parameters for motor
       Xpu = 0.20
