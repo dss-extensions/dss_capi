@@ -98,6 +98,5 @@ with open('Load.pas', 'w', newline='\n') as o:
     print(fixed_sample)
     
     o.write(text)
-    #o.write('\n')
-#TODO: LoadModel, LoadSpec, Connection
-#      Solution.Mode
+
+#TODO: explicit enum for Solution.Mode
