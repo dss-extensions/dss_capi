@@ -53,6 +53,31 @@ uses
     Arraydef;
 
 type
+{$SCOPEDENUMS ON}
+    TLoadShapeProp = (
+        INVALID = 0,
+        npts = 1,     // Number of points to expect
+        interval = 2, // default = 1.0
+        mult = 3,     // vector of power multiplier values
+        hour = 4,     // vextor of hour values
+        mean = 5,     // set the mean (otherwise computed)
+        stddev = 6,   // set the std dev (otherwise computed)
+        csvfile = 7,  // Switch input to a csvfile
+        sngfile = 8,  // switch input to a binary file of singles
+        dblfile = 9,  // switch input to a binary file of singles
+        action = 10,  // actions  Normalize
+        qmult = 11,   // Q multiplier
+        UseActual = 12, // Flag to signify to use actual value
+        Pmax = 13,    // MaxP value
+        Qmax = 14,    // MaxQ
+        sinterval = 15, // Interval in seconds
+        minterval = 16, // Interval in minutes
+        Pbase = 17,   // for normalization, use peak if 0
+        Qbase = 18,   // for normalization, use peak if 0
+        Pmult = 19,   // synonym for Mult
+        PQCSVFile = 20 // Redirect to a file with p, q pairs
+    );
+{$SCOPEDENUMS OFF}
 
     TLoadShape = class(TDSSClass)
     PRIVATE
@@ -160,7 +185,8 @@ uses
     Classes,
     TOPExport,
     Math,
-    PointerList;
+    PointerList,
+    TypInfo;
 
 type
     ELoadShapeError = class(Exception);  // Raised to abort solution
@@ -192,37 +218,21 @@ begin
 end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TLoadShape.DefineProperties;
+var
+    i: Integer;
 begin
 
     Numproperties := NumPropsThisClass;
     CountProperties;   // Get inherited property count
     AllocatePropertyArrays;
 
+    // Define Property names
+    for i := 1 to Ord(High(TLoadShapeProp)) do
+    begin
+        PropertyName[i] := GetEnumName(TypeInfo(TLoadShapeProp), Ord(i));;
+    end;
 
-     // Define Property names
-    PropertyName[1] := 'npts';     // Number of points to expect
-    PropertyName[2] := 'interval'; // default = 1.0;
-    PropertyName[3] := 'mult';     // vector of power multiplier values
-    PropertyName[4] := 'hour';     // vextor of hour values
-    PropertyName[5] := 'mean';     // set the mean (otherwise computed)
-    PropertyName[6] := 'stddev';   // set the std dev (otherwise computed)
-    PropertyName[7] := 'csvfile';  // Switch input to a csvfile
-    PropertyName[8] := 'sngfile';  // switch input to a binary file of singles
-    PropertyName[9] := 'dblfile';  // switch input to a binary file of singles
-    PropertyName[10] := 'action';  // actions  Normalize
-    PropertyName[11] := 'qmult';   // Q multiplier
-    PropertyName[12] := 'UseActual'; // Flag to signify to use actual value
-    PropertyName[13] := 'Pmax'; // MaxP value
-    PropertyName[14] := 'Qmax'; // MaxQ
-    PropertyName[15] := 'sinterval'; // Interval in seconds
-    PropertyName[16] := 'minterval'; // Interval in minutes
-    PropertyName[17] := 'Pbase'; // for normalization, use peak if 0
-    PropertyName[18] := 'Qbase'; // for normalization, use peak if 0
-    PropertyName[19] := 'Pmult'; // synonym for Mult
-    PropertyName[20] := 'PQCSVFile'; // Redirect to a file with p, q pairs
-
-     // define Property help values
-
+    // define Property help values
     PropertyHelp[1] := 'Max number of points to expect in load shape vectors. This gets reset to the number of multiplier values found (in files only) if less than specified.';     // Number of points to expect
     PropertyHelp[2] := 'Time interval for fixed interval data, hrs. Default = 1. ' +
         'If Interval = 0 then time data (in hours) may be at either regular or  irregular intervals and time value must be specified using either the Hour property or input files. ' +
