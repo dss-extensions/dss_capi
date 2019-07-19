@@ -54,7 +54,7 @@ uses
 
 type
 {$SCOPEDENUMS ON}
-    props = (
+    TLoadProp = (
         INVALID = 0,
         phases = 1,
         bus1 = 2,
@@ -385,16 +385,16 @@ begin
     AllocatePropertyArrays;
 
     // Define Property names
-    for i := 1 to Ord(High(Props)) do
+    for i := 1 to Ord(High(TLoadProp)) do
     begin
-        propName := GetEnumName(TypeInfo(Props), Ord(i));
+        propName := GetEnumName(TypeInfo(TLoadProp), Ord(i));
         if propName = 'cls' then
             propName := 'class'
         else if LeftStr(propName, 3) = 'pct' then
             propName := '%' + Copy(propName, 3, Length(propName) - 3);
             
         PropertyName[i] := propName;
-    end;    
+    end;
 (*
   Typical Motor Parameters for motor
       Xpu = 0.20
@@ -402,13 +402,13 @@ begin
 *)
 
      // define Property help values
-    PropertyHelp[ord(props.phases)] := 'Number of Phases, this load.  Load is evenly divided among phases.';
-    PropertyHelp[ord(props.bus1)] := 'Bus to which the load is connected.  May include specific node specification.';
-    PropertyHelp[ord(props.kV)] := 'Nominal rated (1.0 per unit) voltage, kV, for load. For 2- and 3-phase loads, specify phase-phase kV. ' +
+    PropertyHelp[ord(TLoadProp.phases)] := 'Number of Phases, this load.  Load is evenly divided among phases.';
+    PropertyHelp[ord(TLoadProp.bus1)] := 'Bus to which the load is connected.  May include specific node specification.';
+    PropertyHelp[ord(TLoadProp.kV)] := 'Nominal rated (1.0 per unit) voltage, kV, for load. For 2- and 3-phase loads, specify phase-phase kV. ' +
         'Otherwise, specify actual kV across each branch of the load. ' +
         'If wye (star), specify phase-neutral kV. ' +
         'If delta or phase-phase connected, specify phase-phase kV.';  // line-neutral voltage
-    PropertyHelp[ord(props.kW)] := 'Total base kW for the load.  Normally, you would enter the maximum kW for the load for the first year ' +
+    PropertyHelp[ord(TLoadProp.kW)] := 'Total base kW for the load.  Normally, you would enter the maximum kW for the load for the first year ' +
         'and allow it to be adjusted by the load shapes, growth shapes, and global load multiplier.' + CRLF + CRLF +
         'Legal ways to define base load:' + CRLF +
         'kW, PF' + CRLF +
@@ -416,8 +416,8 @@ begin
         'kVA, PF' + CRLF +
         'XFKVA * Allocationfactor, PF' + CRLF +
         'kWh/(kWhdays*24) * Cfactor, PF';
-    PropertyHelp[ord(props.pf)] := 'Load power factor.  Enter negative for leading powerfactor (when kW and kvar have opposite signs.)';
-    PropertyHelp[ord(props.model)] := 'Integer code for the model to use for load variation with voltage. ' +
+    PropertyHelp[ord(TLoadProp.pf)] := 'Load power factor.  Enter negative for leading powerfactor (when kW and kvar have opposite signs.)';
+    PropertyHelp[ord(TLoadProp.model)] := 'Integer code for the model to use for load variation with voltage. ' +
         'Valid values are:' + CRLF + CRLF +
         '1:Standard constant P+jQ load. (Default)' + CRLF +
         '2:Constant impedance load. ' + CRLF +
@@ -428,101 +428,101 @@ begin
         '7:Const P, Fixed Impedance Q' + CRLF +
         '8:ZIPV (7 values)' + CRLF + CRLF +
         'For Types 6 and 7, only the P is modified by load multipliers.';
-    PropertyHelp[ord(props.yearly)] := 'LOADSHAPE object to use for yearly simulations.  Must be previously defined ' +
+    PropertyHelp[ord(TLoadProp.yearly)] := 'LOADSHAPE object to use for yearly simulations.  Must be previously defined ' +
         'as a Loadshape object. Is set to the Daily load shape ' +
         ' when Daily is defined.  The daily load shape is repeated in this case. ' +
         'Set Status=Fixed to ignore Loadshape designation. ' +
         'Set to NONE to reset to no loadahape. ' +
         'The default is no variation.';
-    PropertyHelp[ord(props.daily)] := 'LOADSHAPE object to use for daily simulations.  Must be previously defined ' +
+    PropertyHelp[ord(TLoadProp.daily)] := 'LOADSHAPE object to use for daily simulations.  Must be previously defined ' +
         'as a Loadshape object of 24 hrs, typically. ' +
         'Set Status=Fixed to ignore Loadshape designation. ' +
         'Set to NONE to reset to no loadahape. ' +
         'Default is no variation (constant) if not defined. ' +
         'Side effect: Sets Yearly load shape if not already defined.';
-    PropertyHelp[ord(props.duty)] := 'LOADSHAPE object to use for duty cycle simulations.  Must be previously defined ' +
+    PropertyHelp[ord(TLoadProp.duty)] := 'LOADSHAPE object to use for duty cycle simulations.  Must be previously defined ' +
         'as a Loadshape object.  Typically would have time intervals less than 1 hr. ' +
         'Designate the number of points to solve using the Set Number=xxxx command. ' +
         'If there are fewer points in the actual shape, the shape is assumed to repeat.' +
         'Set to NONE to reset to no loadahape. ' +
         'Set Status=Fixed to ignore Loadshape designation. ' +
         ' Defaults to Daily curve If not specified.';
-    PropertyHelp[ord(props.growth)] := 'Characteristic  to use for growth factors by years.  Must be previously defined ' +
+    PropertyHelp[ord(TLoadProp.growth)] := 'Characteristic  to use for growth factors by years.  Must be previously defined ' +
         'as a Growthshape object. Defaults to circuit default growth factor (see Set Growth command).';
-    PropertyHelp[ord(props.conn)] := '={wye or LN | delta or LL}.  Default is wye.';
-    PropertyHelp[ord(props.kvar)] := 'Specify the base kvar for specifying load as kW & kvar.  Assumes kW has been already defined.  Alternative to specifying the power factor.  Side effect: ' +
+    PropertyHelp[ord(TLoadProp.conn)] := '={wye or LN | delta or LL}.  Default is wye.';
+    PropertyHelp[ord(TLoadProp.kvar)] := 'Specify the base kvar for specifying load as kW & kvar.  Assumes kW has been already defined.  Alternative to specifying the power factor.  Side effect: ' +
         ' the power factor and kVA is altered to agree.';
-    PropertyHelp[ord(props.Rneut)] := 'Default is -1. Neutral resistance of wye (star)-connected load in actual ohms. ' +
+    PropertyHelp[ord(TLoadProp.Rneut)] := 'Default is -1. Neutral resistance of wye (star)-connected load in actual ohms. ' +
         'If entered as a negative value, the neutral can be open, or floating, or it can be connected to ' +
         'node 0 (ground), which is the usual default. ' +
         'If >=0 be sure to explicitly specify the node connection for the neutral, or last, conductor. ' +
         'Otherwise, the neutral impedance will be shorted to ground.';
-    PropertyHelp[ord(props.Xneut)] := 'Neutral reactance of wye(star)-connected load in actual ohms.  May be + or -.';
-    PropertyHelp[ord(props.status)] := '={Variable | Fixed | Exempt}.  Default is variable. If Fixed, no load multipliers apply;  however, growth ' +
+    PropertyHelp[ord(TLoadProp.Xneut)] := 'Neutral reactance of wye(star)-connected load in actual ohms.  May be + or -.';
+    PropertyHelp[ord(TLoadProp.status)] := '={Variable | Fixed | Exempt}.  Default is variable. If Fixed, no load multipliers apply;  however, growth ' +
         'multipliers do apply.  All multipliers apply to Variable loads.  Exempt loads are not ' +
         'modified by the global load multiplier, such as in load duration curves, etc.  Daily multipliers ' +
         'do apply, so setting this property to Exempt is a good way to represent industrial load that stays the same' +
         ' day-after-day for the period study.';  // fixed or variable
-    PropertyHelp[ord(props.cls)] := 'An arbitrary integer number representing the class of load so that load values may ' +
+    PropertyHelp[ord(TLoadProp.cls)] := 'An arbitrary integer number representing the class of load so that load values may ' +
         'be segregated by load value. Default is 1; not used internally.';
-    PropertyHelp[ord(props.Vminpu)] := 'Default = 0.95.  Minimum per unit voltage for which the MODEL is assumed to apply. Lower end of normal voltage range.' +
+    PropertyHelp[ord(TLoadProp.Vminpu)] := 'Default = 0.95.  Minimum per unit voltage for which the MODEL is assumed to apply. Lower end of normal voltage range.' +
         'Below this value, the load model reverts to a constant impedance model that matches the model at the transition voltage. ' +
         'See also "Vlowpu" which causes the model to match Model=2 below the transition voltage.';
-    PropertyHelp[ord(props.Vmaxpu)] := 'Default = 1.05.  Maximum per unit voltage for which the MODEL is assumed to apply. ' +
+    PropertyHelp[ord(TLoadProp.Vmaxpu)] := 'Default = 1.05.  Maximum per unit voltage for which the MODEL is assumed to apply. ' +
         'Above this value, the load model reverts to a constant impedance model.';
-    PropertyHelp[ord(props.Vminnorm)] := 'Minimum per unit voltage for load EEN evaluations, Normal limit.  Default = 0, which defaults to system "vminnorm" ' +
+    PropertyHelp[ord(TLoadProp.Vminnorm)] := 'Minimum per unit voltage for load EEN evaluations, Normal limit.  Default = 0, which defaults to system "vminnorm" ' +
         'property (see Set Command under Executive).  If this property is specified, it ALWAYS ' +
         'overrides the system specification. This allows you to have different criteria for different loads. ' +
         'Set to zero to revert to the default system value.';
-    PropertyHelp[ord(props.Vminemerg)] := 'Minimum per unit voltage for load UE evaluations, Emergency limit.  Default = 0, which defaults to system "vminemerg" ' +
+    PropertyHelp[ord(TLoadProp.Vminemerg)] := 'Minimum per unit voltage for load UE evaluations, Emergency limit.  Default = 0, which defaults to system "vminemerg" ' +
         'property (see Set Command under Executive).  If this property is specified, it ALWAYS ' +
         'overrides the system specification. This allows you to have different criteria for different loads. ' +
         'Set to zero to revert to the default system value.';
-    PropertyHelp[ord(props.xfkVA)] := 'Default = 0.0.  Rated kVA of service transformer for allocating loads based on connected kVA ' +
+    PropertyHelp[ord(TLoadProp.xfkVA)] := 'Default = 0.0.  Rated kVA of service transformer for allocating loads based on connected kVA ' +
         'at a bus. Side effect:  kW, PF, and kvar are modified. See help on kVA.';
-    PropertyHelp[ord(props.allocationfactor)] := 'Default = 0.5.  Allocation factor for allocating loads based on connected kVA ' +
+    PropertyHelp[ord(TLoadProp.allocationfactor)] := 'Default = 0.5.  Allocation factor for allocating loads based on connected kVA ' +
         'at a bus. Side effect:  kW, PF, and kvar are modified by multiplying this factor times the XFKVA (if > 0).';
-    PropertyHelp[ord(props.kVA)] := 'Specify base Load in kVA (and power factor)' + CRLF + CRLF +
+    PropertyHelp[ord(TLoadProp.kVA)] := 'Specify base Load in kVA (and power factor)' + CRLF + CRLF +
         'Legal ways to define base load:' + CRLF +
         'kW, PF' + CRLF +
         'kW, kvar' + CRLF +
         'kVA, PF' + CRLF +
         'XFKVA * Allocationfactor, PF' + CRLF +
         'kWh/(kWhdays*24) * Cfactor, PF';
-    PropertyHelp[ord(props.pctmean)] := 'Percent mean value for load to use for monte carlo studies if no loadshape is assigned to this load. Default is 50.';
-    PropertyHelp[ord(props.pctstddev)] := 'Percent Std deviation value for load to use for monte carlo studies if no loadshape is assigned to this load. Default is 10.';
-    PropertyHelp[ord(props.CVRwatts)] := 'Percent reduction in active power (watts) per 1% reduction in voltage from 100% rated. Default=1. ' + CRLF +
+    PropertyHelp[ord(TLoadProp.pctmean)] := 'Percent mean value for load to use for monte carlo studies if no loadshape is assigned to this load. Default is 50.';
+    PropertyHelp[ord(TLoadProp.pctstddev)] := 'Percent Std deviation value for load to use for monte carlo studies if no loadshape is assigned to this load. Default is 10.';
+    PropertyHelp[ord(TLoadProp.CVRwatts)] := 'Percent reduction in active power (watts) per 1% reduction in voltage from 100% rated. Default=1. ' + CRLF +
         ' Typical values range from 0.4 to 0.8. Applies to Model=4 only.' + CRLF +
         ' Intended to represent conservation voltage reduction or voltage optimization measures.';
-    PropertyHelp[ord(props.CVRvars)] := 'Percent reduction in reactive power (vars) per 1% reduction in voltage from 100% rated. Default=2. ' + CRLF +
+    PropertyHelp[ord(TLoadProp.CVRvars)] := 'Percent reduction in reactive power (vars) per 1% reduction in voltage from 100% rated. Default=2. ' + CRLF +
         ' Typical values range from 2 to 3. Applies to Model=4 only.' + CRLF +
         ' Intended to represent conservation voltage reduction or voltage optimization measures.';
-    PropertyHelp[ord(props.kwh)] := 'kWh billed for this period. Default is 0. See help on kVA and Cfactor and kWhDays.';
-    PropertyHelp[ord(props.kwhdays)] := 'Length of kWh billing period in days (24 hr days). Default is 30. Average demand is computed using this value.';   // kwh billing period (24-hr days)
-    PropertyHelp[ord(props.Cfactor)] := 'Factor relating average kW to peak kW. Default is 4.0. See kWh and kWhdays. See kVA.';   // multiplier from kWh avg to peak kW
-    PropertyHelp[ord(props.CVRcurve)] := 'Default is NONE. Curve describing both watt and var factors as a function of time. ' +
+    PropertyHelp[ord(TLoadProp.kwh)] := 'kWh billed for this period. Default is 0. See help on kVA and Cfactor and kWhDays.';
+    PropertyHelp[ord(TLoadProp.kwhdays)] := 'Length of kWh billing period in days (24 hr days). Default is 30. Average demand is computed using this value.';   // kwh billing period (24-hr days)
+    PropertyHelp[ord(TLoadProp.Cfactor)] := 'Factor relating average kW to peak kW. Default is 4.0. See kWh and kWhdays. See kVA.';   // multiplier from kWh avg to peak kW
+    PropertyHelp[ord(TLoadProp.CVRcurve)] := 'Default is NONE. Curve describing both watt and var factors as a function of time. ' +
         'Refers to a LoadShape object with both Mult and Qmult defined. ' +
         'Define a Loadshape to agree with yearly or daily curve according to the type of analysis being done. ' +
         'If NONE, the CVRwatts and CVRvars factors are used and assumed constant.';
-    PropertyHelp[ord(props.NumCust)] := 'Number of customers, this load. Default is 1.';
-    PropertyHelp[ord(props.ZIPV)] := 'Array of 7 coefficients:' + CRLF + CRLF +
+    PropertyHelp[ord(TLoadProp.NumCust)] := 'Number of customers, this load. Default is 1.';
+    PropertyHelp[ord(TLoadProp.ZIPV)] := 'Array of 7 coefficients:' + CRLF + CRLF +
         ' First 3 are ZIP weighting factors for real power (should sum to 1)' + CRLF +
         ' Next 3 are ZIP weighting factors for reactive power (should sum to 1)' + CRLF +
         ' Last 1 is cut-off voltage in p.u. of base kV; load is 0 below this cut-off' + CRLF +
         ' No defaults; all coefficients must be specified if using model=8.';
-    PropertyHelp[ord(props.pctSeriesRL)] := 'Percent of load that is series R-L for Harmonic studies. Default is 50. Remainder is assumed to be parallel R and L. ' +
+    PropertyHelp[ord(TLoadProp.pctSeriesRL)] := 'Percent of load that is series R-L for Harmonic studies. Default is 50. Remainder is assumed to be parallel R and L. ' +
         'This can have a significant impact on the amount of damping observed in Harmonics solutions.';
-    PropertyHelp[ord(props.RelWeight)] := 'Relative weighting factor for reliability calcs. Default = 1. Used to designate high priority loads such as hospitals, etc. ' + CRLF + CRLF +
+    PropertyHelp[ord(TLoadProp.RelWeight)] := 'Relative weighting factor for reliability calcs. Default = 1. Used to designate high priority loads such as hospitals, etc. ' + CRLF + CRLF +
         'Is multiplied by number of customers and load kW during reliability calcs.';
-    PropertyHelp[ord(props.Vlowpu)] := 'Default = 0.50.  Per unit voltage at which the model switches to same as constant Z model (model=2). ' +
+    PropertyHelp[ord(TLoadProp.Vlowpu)] := 'Default = 0.50.  Per unit voltage at which the model switches to same as constant Z model (model=2). ' +
         'This allows more consistent convergence at very low voltaes due to opening switches or solving for fault situations.';
-    PropertyHelp[ord(props.puXharm)] := 'Special reactance, pu (based on kVA, kV properties), for the series impedance branch in the load model for HARMONICS analysis. ' +
+    PropertyHelp[ord(TLoadProp.puXharm)] := 'Special reactance, pu (based on kVA, kV properties), for the series impedance branch in the load model for HARMONICS analysis. ' +
         'Generally used to represent motor load blocked rotor reactance. ' +
         'If not specified (that is, set =0, the default value), the series branch is computed from the percentage of the ' +
         'nominal load at fundamental frequency specified by the %SERIESRL property. ' + CRLF + CRLF +
         'Applies to load model in HARMONICS mode only.' + CRLF + CRLF +
         'A typical value would be approximately 0.20 pu based on kVA * %SeriesRL / 100.0.';
-    PropertyHelp[ord(props.XRharm)] := 'X/R ratio of the special harmonics mode reactance specified by the puXHARM property at fundamental frequency. Default is 6. ';
+    PropertyHelp[ord(TLoadProp.XRharm)] := 'X/R ratio of the special harmonics mode reactance specified by the puXHARM property at fundamental frequency. Default is 6. ';
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -641,38 +641,38 @@ begin
             if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
                 PropertyValue[ParamPointer] := Param;
 
-            case props(ParamPointer) of
-                props.INVALID:
+            case TLoadProp(ParamPointer) of
+                TLoadProp.INVALID:
                     DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 580);
-                props.phases:
+                TLoadProp.phases:
                     Nphases := Parser.Intvalue; // num phases
-                props.bus1:
+                TLoadProp.bus1:
                     SetBus(1, param);
-                props.kV:
+                TLoadProp.kV:
                     kVLoadBase := Parser.DblValue;
-                props.kW:
+                TLoadProp.kW:
                     kWBase := Parser.DblValue;
-                props.pf:
+                TLoadProp.pf:
                     PFNominal := Parser.DblValue;
-                props.model:
+                TLoadProp.model:
                     FLoadModel := TLoadModel(Parser.IntValue);
-                props.yearly:
+                TLoadProp.yearly:
                     YearlyShape := Param;
-                props.daily:
+                TLoadProp.daily:
                     DailyShape := Param;
-                props.duty:
+                TLoadProp.duty:
                     DutyShape := Param;
-                props.growth:
+                TLoadProp.growth:
                     GrowthShape := Param;
-                props.conn:
+                TLoadProp.conn:
                     InterpretConnection(Param);
-                props.kvar:
+                TLoadProp.kvar:
                     kvarBase := Parser.DblValue;
-                props.Rneut:
+                TLoadProp.Rneut:
                     Rneut := Parser.DblValue;
-                props.Xneut:
+                TLoadProp.Xneut:
                     Xneut := Parser.DblValue;
-                props.status:
+                TLoadProp.status:
                     case lowercase(Param)[1] of
                         'f':
                         begin
@@ -688,54 +688,54 @@ begin
                         Fixed := FALSE;
                         ExemptFromLDCurve := FALSE;
                     end;
-                props.cls:
+                TLoadProp.cls:
                     LoadClass := Parser.IntValue;
-                props.Vminpu:
+                TLoadProp.Vminpu:
                     VMinPu := Parser.DblValue;
-                props.Vmaxpu:
+                TLoadProp.Vmaxpu:
                     VMaxPu := Parser.DblValue;
-                props.Vminnorm:
+                TLoadProp.Vminnorm:
                     VminNormal := Parser.DblValue;
-                props.Vminemerg:
+                TLoadProp.Vminemerg:
                     VminEmerg := Parser.DblValue;
-                props.xfkVA:
+                TLoadProp.xfkVA:
                     ConnectedkVA := Parser.DblValue;
-                props.allocationfactor:
+                TLoadProp.allocationfactor:
                     kVAAllocationFactor := Parser.DblValue;
-                props.kVA:
+                TLoadProp.kVA:
                     kVABase := Parser.DblValue;
-                props.pctmean:
+                TLoadProp.pctmean:
                     FpuMean := Parser.DblValue / 100.0;
-                props.pctstddev:
+                TLoadProp.pctstddev:
                     FpuStdDev := Parser.DblValue / 100.0;
-                props.CVRwatts:
+                TLoadProp.CVRwatts:
                     FCVRwattFactor := Parser.DblValue;
-                props.CVRvars:
+                TLoadProp.CVRvars:
                     FCVRvarFactor := Parser.DblValue;
-                props.kwh:
+                TLoadProp.kwh:
                     kWh := Parser.DblValue;
-                props.kwhdays:
+                TLoadProp.kwhdays:
                     kWhdays := Parser.DblValue;
-                props.Cfactor:
+                TLoadProp.Cfactor:
                     Cfactor := Parser.DblValue;
-                props.CVRcurve:
+                TLoadProp.CVRcurve:
                     CVRShape := Param;
-                props.NumCust:
+                TLoadProp.NumCust:
                     NumCustomers := Parser.IntValue;
-                props.ZIPV:
+                TLoadProp.ZIPV:
                 begin
                     SetZIPVSize(7);
                     Parser.ParseAsVector(7, ZIPV);
                 end;
-                props.pctSeriesRL:
+                TLoadProp.pctSeriesRL:
                     puSeriesRL := Parser.DblValue / 100.0;
-                props.RelWeight:
+                TLoadProp.RelWeight:
                     RelWeighting := Parser.DblValue;
-                props.Vlowpu:
+                TLoadProp.Vlowpu:
                     VLowpu := Parser.DblValue;
-                props.puXharm:
+                TLoadProp.puXharm:
                     FpuXHarm := Parser.DblValue;  // 0 means not set
-                props.XRharm:
+                TLoadProp.XRharm:
                     FXRharmRatio := Parser.DblValue;
 
             else
@@ -745,25 +745,25 @@ begin
 
          // << SIDE EFFECTS >>
          // keep kvar nominal up to date WITH kW and PF
-            case props(ParamPointer) of
-                props.phases:
+            case TLoadProp(ParamPointer) of
+                TLoadProp.phases:
                 begin
                     SetNcondsForConnection;  // Force Reallocation of terminal info
                     UpdateVoltageBases;
                 end;
-                props.kV:
+                TLoadProp.kV:
                     UpdateVoltageBases;
 
-                props.kW:
+                TLoadProp.kW:
                     LoadSpecType := TLoadSpec.kW_PF;
-                props.pf:
+                TLoadProp.pf:
                 begin
                     PFChanged := TRUE;
                     PFSpecified := TRUE;
                 end;
     {Set shape objects;  returns nil if not valid}
     {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
-                props.yearly:
+                TLoadProp.yearly:
                 begin
                     YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
                     if Assigned(YearlyShapeObj) then
@@ -771,7 +771,7 @@ begin
                             if UseActual then
                                 SetkWkvar(MaxP, MaxQ);
                 end;
-                props.daily:
+                TLoadProp.daily:
                 begin
                     DailyShapeObj := LoadShapeClass.Find(DailyShape);
                     if Assigned(DailyShapeObj) then
@@ -782,7 +782,7 @@ begin
                     if YearlyShapeObj = NIL then
                         YearlyShapeObj := DailyShapeObj;
                 end;
-                props.duty:
+                TLoadProp.duty:
                 begin
                     DutyShapeObj := LoadShapeClass.Find(DutyShape);
                     if Assigned(DutyShapeObj) then
@@ -790,19 +790,19 @@ begin
                             if UseActual then
                                 SetkWkvar(MaxP, MaxQ);
                 end;
-                props.growth:
+                TLoadProp.growth:
                     GrowthShapeObj := GrowthShapeClass.Find(GrowthShape);
 
-                props.kvar:
+                TLoadProp.kvar:
                 begin
                     LoadSpecType := TLoadSpec.kW_kvar;
                     PFSpecified := FALSE;
                 end;// kW, kvar
- {*** see set_xfkva, etc           21, props.allocationfactor: LoadSpectype := 3;  // XFKVA*AllocationFactor, PF  }
-                props.kVA:
+ {*** see set_xfkva, etc           21, TLoadProp.allocationfactor: LoadSpectype := 3;  // XFKVA*AllocationFactor, PF  }
+                TLoadProp.kVA:
                     LoadSpecType := TLoadSpec.kVA_PF;  // kVA, PF
  {*** see set_kwh, etc           28..30: LoadSpecType := 4;  // kWh, days, cfactor, PF }
-                props.CVRcurve:
+                TLoadProp.CVRcurve:
                     CVRShapeObj := LoadShapeClass.Find(CVRshape);
             end;
 
@@ -2566,44 +2566,44 @@ procedure TLoadObj.InitPropertyValues(ArrayOffset: Integer);
 
 begin
 
-    PropertyValue[ord(props.phases)] := '3';              //'phases';
-    PropertyValue[ord(props.bus1)] := Getbus(1);         //'bus1';
-    PropertyValue[ord(props.kV)] := '12.47';
-    PropertyValue[ord(props.kW)] := '10';
-    PropertyValue[ord(props.pf)] := '.88';
-    PropertyValue[ord(props.model)] := '1';
-    PropertyValue[ord(props.yearly)] := '';
-    PropertyValue[ord(props.daily)] := '';
-    PropertyValue[ord(props.duty)] := '';
-    PropertyValue[ord(props.growth)] := '';
-    PropertyValue[ord(props.conn)] := 'wye';
-    PropertyValue[ord(props.kvar)] := '5';
-    PropertyValue[ord(props.Rneut)] := '-1'; // 'rneut'; // IF entered -, assume open or user defined
-    PropertyValue[ord(props.Xneut)] := '0';  //'xneut';
-    PropertyValue[ord(props.status)] := 'variable'; //'status';  // fixed or variable
-    PropertyValue[ord(props.cls)] := '1'; //class
-    PropertyValue[ord(props.Vminpu)] := '0.95';
-    PropertyValue[ord(props.Vmaxpu)] := '1.05';
-    PropertyValue[ord(props.Vminnorm)] := '0.0';
-    PropertyValue[ord(props.Vminemerg)] := '0.0';
-    PropertyValue[ord(props.xfkVA)] := '0.0';
-    PropertyValue[ord(props.allocationfactor)] := '0.5';  // Allocation Factor
-    PropertyValue[ord(props.kVA)] := '11.3636';
-    PropertyValue[ord(props.pctmean)] := '50';
-    PropertyValue[ord(props.pctstddev)] := '10';
-    PropertyValue[ord(props.CVRwatts)] := '1';  // CVR watt factor
-    PropertyValue[ord(props.CVRvars)] := '2';  // CVR var factor
-    PropertyValue[ord(props.kwh)] := '0';  // kwh bulling
-    PropertyValue[ord(props.kwhdays)] := '30';  // kwhdays
-    PropertyValue[ord(props.Cfactor)] := '4';  // Cfactor
-    PropertyValue[ord(props.CVRcurve)] := '';  // CVRCurve
-    PropertyValue[ord(props.NumCust)] := '1';  // NumCust
-    PropertyValue[ord(props.ZIPV)] := '';  // ZIPV coefficient array
-    PropertyValue[ord(props.pctSeriesRL)] := '50';  // %SeriesRL
-    PropertyValue[ord(props.RelWeight)] := '1';  // RelWeighting
-    PropertyValue[ord(props.Vlowpu)] := '0.5';  // VZpu
-    PropertyValue[ord(props.puXharm)] := '0.0';  // puXharm
-    PropertyValue[ord(props.XRharm)] := '6.0';  // XRHarm
+    PropertyValue[ord(TLoadProp.phases)] := '3';              //'phases';
+    PropertyValue[ord(TLoadProp.bus1)] := Getbus(1);         //'bus1';
+    PropertyValue[ord(TLoadProp.kV)] := '12.47';
+    PropertyValue[ord(TLoadProp.kW)] := '10';
+    PropertyValue[ord(TLoadProp.pf)] := '.88';
+    PropertyValue[ord(TLoadProp.model)] := '1';
+    PropertyValue[ord(TLoadProp.yearly)] := '';
+    PropertyValue[ord(TLoadProp.daily)] := '';
+    PropertyValue[ord(TLoadProp.duty)] := '';
+    PropertyValue[ord(TLoadProp.growth)] := '';
+    PropertyValue[ord(TLoadProp.conn)] := 'wye';
+    PropertyValue[ord(TLoadProp.kvar)] := '5';
+    PropertyValue[ord(TLoadProp.Rneut)] := '-1'; // 'rneut'; // IF entered -, assume open or user defined
+    PropertyValue[ord(TLoadProp.Xneut)] := '0';  //'xneut';
+    PropertyValue[ord(TLoadProp.status)] := 'variable'; //'status';  // fixed or variable
+    PropertyValue[ord(TLoadProp.cls)] := '1'; //class
+    PropertyValue[ord(TLoadProp.Vminpu)] := '0.95';
+    PropertyValue[ord(TLoadProp.Vmaxpu)] := '1.05';
+    PropertyValue[ord(TLoadProp.Vminnorm)] := '0.0';
+    PropertyValue[ord(TLoadProp.Vminemerg)] := '0.0';
+    PropertyValue[ord(TLoadProp.xfkVA)] := '0.0';
+    PropertyValue[ord(TLoadProp.allocationfactor)] := '0.5';  // Allocation Factor
+    PropertyValue[ord(TLoadProp.kVA)] := '11.3636';
+    PropertyValue[ord(TLoadProp.pctmean)] := '50';
+    PropertyValue[ord(TLoadProp.pctstddev)] := '10';
+    PropertyValue[ord(TLoadProp.CVRwatts)] := '1';  // CVR watt factor
+    PropertyValue[ord(TLoadProp.CVRvars)] := '2';  // CVR var factor
+    PropertyValue[ord(TLoadProp.kwh)] := '0';  // kwh bulling
+    PropertyValue[ord(TLoadProp.kwhdays)] := '30';  // kwhdays
+    PropertyValue[ord(TLoadProp.Cfactor)] := '4';  // Cfactor
+    PropertyValue[ord(TLoadProp.CVRcurve)] := '';  // CVRCurve
+    PropertyValue[ord(TLoadProp.NumCust)] := '1';  // NumCust
+    PropertyValue[ord(TLoadProp.ZIPV)] := '';  // ZIPV coefficient array
+    PropertyValue[ord(TLoadProp.pctSeriesRL)] := '50';  // %SeriesRL
+    PropertyValue[ord(TLoadProp.RelWeight)] := '1';  // RelWeighting
+    PropertyValue[ord(TLoadProp.Vlowpu)] := '0.5';  // VZpu
+    PropertyValue[ord(TLoadProp.puXharm)] := '0.0';  // puXharm
+    PropertyValue[ord(TLoadProp.XRharm)] := '6.0';  // XRHarm
 
 
     inherited  InitPropertyValues(NumPropsThisClass);
@@ -2655,44 +2655,44 @@ function TLoadObj.GetPropertyValue(Index: Integer): String;
 var
     i: Integer;
 begin
-    case props(Index) of
-        props.bus1:
+    case TLoadProp(Index) of
+        TLoadProp.bus1:
             Result := GetBus(1);
-        props.kV:
+        TLoadProp.kV:
             Result := Format('%-g', [kVLoadBase]);
-        props.kW:
+        TLoadProp.kW:
             Result := Format('%-g', [kwBase]);
-        props.pf:
+        TLoadProp.pf:
             Result := Format('%-.4g', [PFNominal]);
-        props.yearly:
+        TLoadProp.yearly:
             Result := Yearlyshape;
-        props.daily:
+        TLoadProp.daily:
             Result := Dailyshape;
-        props.duty:
+        TLoadProp.duty:
             Result := Dutyshape;
-        props.kvar:
+        TLoadProp.kvar:
             Result := Format('%-g', [kvarbase]);
-        props.allocationfactor:
+        TLoadProp.allocationfactor:
             Result := Format('%-g', [FkVAAllocationFactor]);
-        props.kVA:
+        TLoadProp.kVA:
             Result := Format('%-g', [kVABase]);
-        props.Cfactor:
+        TLoadProp.Cfactor:
             Result := Format('%-.4g', [FCFactor]);
-        props.ZIPV:
+        TLoadProp.ZIPV:
         begin
             Result := '';
             for i := 1 to nZIPV do
                 Result := Result + Format(' %-g', [ZIPV^[i]]);
         end;
-        props.pctSeriesRL:
+        TLoadProp.pctSeriesRL:
             Result := Format('%-g', [puSeriesRL * 100.0]);
-        props.RelWeight:
+        TLoadProp.RelWeight:
             Result := Format('%-g', [RelWeighting]);
-        props.Vlowpu:
+        TLoadProp.Vlowpu:
             Result := Format('%-g', [VLowpu]);
-        props.puXharm:
+        TLoadProp.puXharm:
             Result := Format('%-g', [FpuXHarm]);
-        props.XRharm:
+        TLoadProp.XRharm:
             Result := Format('%-g', [FXRHarmRatio]);
     else
         Result := inherited GetPropertyValue(index);

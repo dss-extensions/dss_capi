@@ -68,6 +68,36 @@ uses
     XYCurve;
 
 type
+{$SCOPEDENUMS ON}
+    TReactorProp = (
+        INVALID = 0,   
+        bus1 = 1,
+        bus2 = 2, 
+        phases = 3, 
+        kvar = 4, 
+        kv = 5, 
+        conn = 6, 
+        Rmatrix = 7, 
+        Xmatrix = 8, 
+        Parallel = 9, 
+        R = 10, 
+        X = 11, 
+        Rp = 12, 
+        Z1 = 13, 
+        Z2 = 14, 
+        Z0 = 15, 
+        Z = 16, 
+        RCurve = 17, 
+        LCurve = 18, 
+        LmH = 19
+    );
+    
+    TReactorConnection = (
+        Wye = 0, // wye, star, line-neutral connection
+        Delta = 1 // delta, line-line connection
+    );
+    
+{$SCOPEDENUMS OFF}
 
     TReactor = class(TPDClass)
     PRIVATE
@@ -101,7 +131,7 @@ type
         Rmatrix, Gmatrix,
         XMatrix, Bmatrix: pDoubleArray;  // If not nil then overrides C
 
-        Connection: Integer;   // 0 or 1 for wye (default) or delta, respectively
+        Connection: TReactorConnection;   // 0 or 1 for wye (default) or delta, respectively
         SpecType: Integer;   // 1=kvar, 2=R+jX, 3=R and X matrices, 4=sym components
 
         IsParallel: Boolean;
@@ -148,7 +178,8 @@ uses
     DSSGlobals,
     Sysutils,
     Mathutil,
-    Utilities;
+    Utilities,
+    TypInfo;
 
 const
     NumPropsThisClass = 19;
@@ -178,6 +209,8 @@ end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TReactor.DefineProperties;
+var 
+    i: Integer;
 begin
 
     Numproperties := NumPropsThisClass;
@@ -185,29 +218,13 @@ begin
     AllocatePropertyArrays;
 
 
-     // Define Property names
-    PropertyName^[1] := 'bus1';
-    PropertyName^[2] := 'bus2';
-    PropertyName^[3] := 'phases';
-    PropertyName^[4] := 'kvar';
-    PropertyName^[5] := 'kv';
-    PropertyName^[6] := 'conn';
-    PropertyName^[7] := 'Rmatrix';
-    PropertyName^[8] := 'Xmatrix';
-    PropertyName^[9] := 'Parallel';
-    PropertyName^[10] := 'R';
-    PropertyName^[11] := 'X';
-    PropertyName^[12] := 'Rp';
-    PropertyName^[13] := 'Z1';
-    PropertyName^[14] := 'Z2';
-    PropertyName^[15] := 'Z0';
-    PropertyName^[16] := 'Z';
-    PropertyName^[17] := 'RCurve';
-    PropertyName^[18] := 'LCurve';
-    PropertyName^[19] := 'LmH';
+    // Define Property names
+    for i := 1 to Ord(High(TReactorProp)) do
+    begin
+        PropertyName[i] := GetEnumName(TypeInfo(TReactorProp), Ord(i));
+    end;    
 
-     // define Property help values
-
+    // define Property help values
     PropertyHelp^[1] := 'Name of first bus. Examples:' + CRLF +
         'bus1=busname' + CRLF +
         'bus1=busname.1.2.3' + CRLF + CRLF +
@@ -309,22 +326,22 @@ begin
         TestS := lowercase(S);
         case TestS[1] of
             'y', 'w':
-                Connection := 0;  {Wye}
+                Connection := TReactorConnection.Wye;  {Wye}
             'd':
-                Connection := 1;  {Delta or line-Line}
+                Connection := TReactorConnection.Delta;  {Delta or line-Line}
             'l':
                 case Tests[2] of
                     'n':
-                        Connection := 0;
+                        Connection := TReactorConnection.Wye;
                     'l':
-                        Connection := 1;
+                        Connection := TReactorConnection.Delta;
                 end;
 
         end;
         case Connection of
-            1:
+            TReactorConnection.Wye:
                 Nterms := 1;  // Force reallocation of terminals
-            0:
+            TReactorConnection.Delta:
                 if Fnterms <> 2 then
                     Nterms := 2;
         end;
@@ -646,7 +663,7 @@ begin
     Bus2Defined := FALSE;
     Z2Specified := FALSE;
     Z0Specified := FALSE;
-    Connection := 0;   // 0 or 1 for wye (default) or delta, respectively
+    Connection := TReactorConnection.Wye;   // 0 or 1 for wye (default) or delta, respectively
     SpecType := 1; // 1=kvar, 2=Cuf, 3=Cmatrix
     NormAmps := kvarRating * SQRT3 / kvrating;
     EmergAmps := NormAmps * 1.35;
@@ -689,7 +706,7 @@ begin
         begin // kvar
             kvarPerPhase := kvarRating / Fnphases;
             case Connection of
-                1:
+                TReactorConnection.Delta:
                 begin  // Line-to-Line
                     PhasekV := kVRating;
                 end;
@@ -841,7 +858,7 @@ begin
                     Caccum(Value, Cmplx(Gp, 0.0));
 
                 case Connection of
-                    1:
+                    TReactorConnection.Delta:
                     begin   // Line-Line
                         Value2 := CmulReal(Value, 2.0);
                         Value := cnegate(Value);
@@ -1252,7 +1269,7 @@ begin
             1:
             begin // kvar
                 kvarPerPhase := kvarRating / 3.0;  // divide among 3 phases Fnphases;
-                if (FnPhases > 1) or (Connection <> 0) then
+                if (FnPhases > 1) or (Connection <> TReactorConnection.Wye) then
                     PhasekV := kVRating / SQRT3
                 else
                     PhasekV := kVRating;

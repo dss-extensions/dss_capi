@@ -74,9 +74,6 @@ uses
     Utilities,
     ucomplex;
 
-type
-    ReactorProps = (bus1 = 1, bus2, phases, kvar, kv, conn, Rmatrix, Xmatrix, Parallel, R, X, Rp, Z1, Z2, Z0, Z, RCurve, LCurve, LmH);
-
 //------------------------------------------------------------------------------
 function ActiveReactor(out e: TReactorObj): TReactorObj; inline;
 begin
@@ -86,38 +83,38 @@ begin
     Result := e;
 end;
 //------------------------------------------------------------------------------
-procedure ReactorPropSideEffects(prop: ReactorProps; reactor: TReactorObj);
+procedure ReactorPropSideEffects(prop: TReactorProp; reactor: TReactorObj);
 begin
     with reactor do
     begin
     // Some specials ...
         case prop of
-            ReactorProps.bus1:
+            TReactorProp.bus1:
             begin
                 PropertyValue[2] := GetBus(2);   // this gets modified
                 PrpSequence^[2] := 0;       // Reset this for save function
             end;
-            ReactorProps.bus2:
+            TReactorProp.bus2:
                 if CompareText(StripExtension(GetBus(1)), StripExtension(GetBus(2))) <> 0 then
                 begin
                     IsShunt := FALSE;
                     Bus2Defined := TRUE;
                 end;
-            ReactorProps.phases: //IF Fnphases <> Parser.IntValue THEN 
+            TReactorProp.phases: //IF Fnphases <> Parser.IntValue THEN 
             begin
             // Nphases := Parser.IntValue ;
                 NConds := nphases;  // Force Reallocation of terminal info
                 Yorder := Fnterms * Fnconds;
             end;
-            ReactorProps.kvar:
+            TReactorProp.kvar:
                 SpecType := 1;   // X specified by kvar, kV
-            ReactorProps.Rmatrix, ReactorProps.Xmatrix:
+            TReactorProp.Rmatrix, TReactorProp.Xmatrix:
                 SpecType := 3;
-            ReactorProps.X:
+            TReactorProp.X:
                 SpecType := 2;   // X specified directly rather than computed from kvar
-            ReactorProps.Rp:
+            TReactorProp.Rp:
                 RpSpecified := TRUE;
-            ReactorProps.Z1:
+            TReactorProp.Z1:
             begin
                 SpecType := 4;    // have to set Z1 to get this mode
                 if not Z2Specified then
@@ -125,21 +122,21 @@ begin
                 if not Z0Specified then
                     Z0 := Z1;
             end;
-            ReactorProps.Z2:
+            TReactorProp.Z2:
                 Z2Specified := TRUE;
-            ReactorProps.Z0:
+            TReactorProp.Z0:
                 Z0Specified := TRUE;
-            ReactorProps.Z:
+            TReactorProp.Z:
             begin
                 R := Z.re;
                 X := Z.im;
                 SpecType := 2;
             end;
-            ReactorProps.RCurve:
+            TReactorProp.RCurve:
                 RCurveObj := XYCurveClass.Find(RCurve);
-            ReactorProps.LCurve:
+            TReactorProp.LCurve:
                 LCurveObj := XYCurveClass.Find(LCurve);
-            ReactorProps.LmH:
+            TReactorProp.LmH:
             begin
                 SpecType := 2;
                 X := L * TwoPi * BaseFrequency;
@@ -149,15 +146,15 @@ begin
 
     //YPrim invalidation on anything that changes impedance values
         case prop of
-            ReactorProps.phases..ReactorProps.Z:
+            TReactorProp.phases..TReactorProp.Z:
                 YprimInvalid := TRUE;
-            ReactorProps.RCurve:
+            TReactorProp.RCurve:
                 if RCurveObj = NIL then
                     DoSimpleMsg('Resistance-frequency curve XYCurve.' + RCurve + ' not Found.', 2301);
-            ReactorProps.LCurve:
+            TReactorProp.LCurve:
                 if LCurveObj = NIL then
                     DoSimpleMsg('Inductance-frequency curve XYCurve.' + LCurve + ' not Found.', 2301);
-            ReactorProps.LmH:
+            TReactorProp.LmH:
                 YprimInvalid := TRUE;
         else
         end;
@@ -336,7 +333,7 @@ begin
     Result := FALSE;
     if ActiveReactor(pReactor) = NIL then
         exit;
-    if pReactor.Connection > 0 then
+    if pReactor.Connection <> TReactorConnection.Wye then
         Result := TRUE;
 end;
 //------------------------------------------------------------------------------
@@ -429,8 +426,11 @@ var
 begin
     if ActiveReactor(pReactor) = NIL then
         exit;
-    pReactor.Connection := Integer(Value);
-    ReactorPropSideEffects(ReactorProps.conn, pReactor);
+    if Value then
+        pReactor.Connection := TReactorConnection.Delta
+    else    
+        pReactor.Connection := TReactorConnection.Wye;
+    ReactorPropSideEffects(TReactorProp.conn, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Parallel(Value: Boolean); CDECL;
@@ -440,7 +440,7 @@ begin
     if ActiveReactor(pReactor) = NIL then
         exit;
     pReactor.IsParallel := Value;
-    ReactorPropSideEffects(ReactorProps.Parallel, pReactor);
+    ReactorPropSideEffects(TReactorProp.Parallel, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure _ReactorSetbus1(pReactor: TReactorObj; const s: String);
@@ -477,7 +477,7 @@ begin
     if ActiveReactor(pReactor) = NIL then
         exit;
     _ReactorSetbus1(pReactor, Value);
-    ReactorPropSideEffects(ReactorProps.bus1, pReactor);
+    ReactorPropSideEffects(TReactorProp.bus1, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Bus2(const Value: PAnsiChar); CDECL;
@@ -487,7 +487,7 @@ begin
     if ActiveReactor(pReactor) = NIL then
         exit;
     pReactor.SetBus(2, Value);
-    ReactorPropSideEffects(ReactorProps.bus2, pReactor);
+    ReactorPropSideEffects(TReactorProp.bus2, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_LCurve(const Value: PAnsiChar); CDECL;
@@ -497,7 +497,7 @@ begin
     if ActiveReactor(pReactor) = NIL then
         exit;
     pReactor.LCurve := Value;
-    ReactorPropSideEffects(ReactorProps.LCurve, pReactor);
+    ReactorPropSideEffects(TReactorProp.LCurve, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_RCurve(const Value: PAnsiChar); CDECL;
@@ -507,7 +507,7 @@ begin
     if ActiveReactor(pReactor) = NIL then
         exit;
     pReactor.RCurve := Value;
-    ReactorPropSideEffects(ReactorProps.RCurve, pReactor);
+    ReactorPropSideEffects(TReactorProp.RCurve, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_kV(Value: Double); CDECL;
@@ -517,7 +517,7 @@ begin
     if ActiveReactor(pReactor) = NIL then
         exit;
     pReactor.kvrating := Value;
-    ReactorPropSideEffects(ReactorProps.kv, pReactor);
+    ReactorPropSideEffects(TReactorProp.kv, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_kvar(Value: Double); CDECL;
@@ -527,7 +527,7 @@ begin
     if ActiveReactor(pReactor) = NIL then
         exit;
     pReactor.kvarRating := Value;
-    ReactorPropSideEffects(ReactorProps.kvar, pReactor);
+    ReactorPropSideEffects(TReactorProp.kvar, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_LmH(Value: Double); CDECL;
@@ -537,7 +537,7 @@ begin
     if ActiveReactor(pReactor) = NIL then
         exit;
     pReactor.L := Value / 1000.0;
-    ReactorPropSideEffects(ReactorProps.LmH, pReactor);
+    ReactorPropSideEffects(TReactorProp.LmH, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Phases(Value: Integer); CDECL;
@@ -549,7 +549,7 @@ begin
     if Value = pReactor.NPhases then
         exit;
     pReactor.NPhases := Value;
-    ReactorPropSideEffects(ReactorProps.phases, pReactor);
+    ReactorPropSideEffects(TReactorProp.phases, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_R(Value: Double); CDECL;
@@ -559,7 +559,7 @@ begin
     if ActiveReactor(pReactor) = NIL then
         exit;
     pReactor.R := Value;
-    ReactorPropSideEffects(ReactorProps.R, pReactor);
+    ReactorPropSideEffects(TReactorProp.R, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_X(Value: Double); CDECL;
@@ -569,7 +569,7 @@ begin
     if ActiveReactor(pReactor) = NIL then
         exit;
     pReactor.X := Value;
-    ReactorPropSideEffects(ReactorProps.X, pReactor);
+    ReactorPropSideEffects(TReactorProp.X, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Rp(Value: Double); CDECL;
@@ -579,7 +579,7 @@ begin
     if ActiveReactor(pReactor) = NIL then
         exit;
     pReactor.Rp := Value;
-    ReactorPropSideEffects(ReactorProps.Rp, pReactor);
+    ReactorPropSideEffects(TReactorProp.Rp, pReactor);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Rmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
@@ -596,7 +596,7 @@ begin
             begin
                 Rmatrix[k + 1] := ValuePtr[k];
             end;
-            ReactorPropSideEffects(ReactorProps.Rmatrix, pReactor);
+            ReactorPropSideEffects(TReactorProp.Rmatrix, pReactor);
         end;
 end;
 //------------------------------------------------------------------------------
@@ -614,7 +614,7 @@ begin
             begin
                 Xmatrix[k + 1] := ValuePtr[k];
             end;
-            ReactorPropSideEffects(ReactorProps.Xmatrix, pReactor);
+            ReactorPropSideEffects(TReactorProp.Xmatrix, pReactor);
         end;
 end;
 //------------------------------------------------------------------------------
@@ -770,7 +770,7 @@ begin
         with pReactor do
         begin
             Z2 := Cmplx(Value[0], Value[1]);
-            ReactorPropSideEffects(ReactorProps.Z2, pReactor);
+            ReactorPropSideEffects(TReactorProp.Z2, pReactor);
         end;
 end;
 //------------------------------------------------------------------------------
@@ -784,7 +784,7 @@ begin
         with pReactor do
         begin
             Z1 := Cmplx(Value[0], Value[1]);
-            ReactorPropSideEffects(ReactorProps.Z1, pReactor);
+            ReactorPropSideEffects(TReactorProp.Z1, pReactor);
         end;
 end;
 //------------------------------------------------------------------------------
@@ -798,7 +798,7 @@ begin
         with pReactor do
         begin
             Z0 := Cmplx(Value[0], Value[1]);
-            ReactorPropSideEffects(ReactorProps.Z0, pReactor);
+            ReactorPropSideEffects(TReactorProp.Z0, pReactor);
         end;
 end;
 //------------------------------------------------------------------------------
@@ -812,7 +812,7 @@ begin
         with pReactor do
         begin
             Z := Cmplx(Value[0], Value[1]);
-            ReactorPropSideEffects(ReactorProps.Z, pReactor);
+            ReactorPropSideEffects(TReactorProp.Z, pReactor);
         end;
 end;
 //------------------------------------------------------------------------------
