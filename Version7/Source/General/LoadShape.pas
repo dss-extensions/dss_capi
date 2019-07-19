@@ -233,12 +233,12 @@ begin
     end;
 
     // define Property help values
-    PropertyHelp[1] := 'Max number of points to expect in load shape vectors. This gets reset to the number of multiplier values found (in files only) if less than specified.';     // Number of points to expect
-    PropertyHelp[2] := 'Time interval for fixed interval data, hrs. Default = 1. ' +
+    PropertyHelp[ord(TLoadShapeProp.npts)] := 'Max number of points to expect in load shape vectors. This gets reset to the number of multiplier values found (in files only) if less than specified.';     // Number of points to expect
+    PropertyHelp[ord(TLoadShapeProp.interval)] := 'Time interval for fixed interval data, hrs. Default = 1. ' +
         'If Interval = 0 then time data (in hours) may be at either regular or  irregular intervals and time value must be specified using either the Hour property or input files. ' +
         'Then values are interpolated when Interval=0, but not for fixed interval data.  ' + CRLF + CRLF +
         'See also "sinterval" and "minterval".'; // default = 1.0;
-    PropertyHelp[3] := 'Array of multiplier values for active power (P) or other key value (such as pu V for Vsource). ' + CRLF + CRLF +
+    PropertyHelp[ord(TLoadShapeProp.mult)] := 'Array of multiplier values for active power (P) or other key value (such as pu V for Vsource). ' + CRLF + CRLF +
         'You can also use the syntax: ' + CRLF + CRLF +
         'mult = (file=filename)     !for text file one value per line' + CRLF +
         'mult = (dblfile=filename)  !for packed file of doubles' + CRLF +
@@ -246,52 +246,52 @@ begin
         'mult = (file=MyCSVFile.CSV, col=3, header=yes)  !for multicolumn CSV files ' + CRLF + CRLF +
         'Note: this property will reset Npts if the  number of values in the files are fewer.' + CRLF + CRLF +
         'Same as Pmult';     // vector of power multiplier values
-    PropertyHelp[4] := 'Array of hour values. Only necessary to define for variable interval data (Interval=0).' +
+    PropertyHelp[ord(TLoadShapeProp.hour)] := 'Array of hour values. Only necessary to define for variable interval data (Interval=0).' +
         ' If you set Interval>0 to denote fixed interval data, DO NOT USE THIS PROPERTY. ' +
         'You can also use the syntax: ' + CRLF +
         'hour = (file=filename)     !for text file one value per line' + CRLF +
         'hour = (dblfile=filename)  !for packed file of doubles' + CRLF +
         'hour = (sngfile=filename)  !for packed file of singles ';     // vextor of hour values
-    PropertyHelp[5] := 'Mean of the active power multipliers.  This is computed on demand the first time a ' +
+    PropertyHelp[ord(TLoadShapeProp.mean)] := 'Mean of the active power multipliers.  This is computed on demand the first time a ' +
         'value is needed.  However, you may set it to another value independently. ' +
         'Used for Monte Carlo load simulations.';     // set the mean (otherwise computed)
-    PropertyHelp[6] := 'Standard deviation of active power multipliers.  This is computed on demand the first time a ' +
+    PropertyHelp[ord(TLoadShapeProp.stddev)] := 'Standard deviation of active power multipliers.  This is computed on demand the first time a ' +
         'value is needed.  However, you may set it to another value independently.' +
         'Is overwritten if you subsequently read in a curve' + CRLF + CRLF +
         'Used for Monte Carlo load simulations.';   // set the std dev (otherwise computed)
-    PropertyHelp[7] := 'Switch input of active power load curve data to a CSV text file ' +
+    PropertyHelp[ord(TLoadShapeProp.csvfile)] := 'Switch input of active power load curve data to a CSV text file ' +
         'containing (hour, mult) points, or simply (mult) values for fixed time interval data, one per line. ' +
         'NOTE: This action may reset the number of points to a lower value.';   // Switch input to a csvfile
-    PropertyHelp[8] := 'Switch input of active power load curve data to a binary file of singles ' +
+    PropertyHelp[ord(TLoadShapeProp.sngfile)] := 'Switch input of active power load curve data to a binary file of singles ' +
         'containing (hour, mult) points, or simply (mult) values for fixed time interval data, packed one after another. ' +
         'NOTE: This action may reset the number of points to a lower value.';  // switch input to a binary file of singles
-    PropertyHelp[9] := 'Switch input of active power load curve data to a binary file of doubles ' +
+    PropertyHelp[ord(TLoadShapeProp.dblfile)] := 'Switch input of active power load curve data to a binary file of doubles ' +
         'containing (hour, mult) points, or simply (mult) values for fixed time interval data, packed one after another. ' +
         'NOTE: This action may reset the number of points to a lower value.';   // switch input to a binary file of singles
-    PropertyHelp[10] := '{NORMALIZE | DblSave | SngSave} After defining load curve data, setting action=normalize ' +
+    PropertyHelp[ord(TLoadShapeProp.action)] := '{NORMALIZE | DblSave | SngSave} After defining load curve data, setting action=normalize ' +
         'will modify the multipliers so that the peak is 1.0. ' +
         'The mean and std deviation are recomputed.' + CRLF + CRLF +
         'Setting action=DblSave or SngSave will cause the present mult and qmult values to be written to ' +
         'either a packed file of double or single. The filename is the loadshape name. The mult array will have a ' +
         '"_P" appended on the file name and the qmult array, if it exists, will have "_Q" appended.'; // Action
-    PropertyHelp[11] := 'Array of multiplier values for reactive power (Q).  You can also use the syntax: ' + CRLF +
+    PropertyHelp[ord(TLoadShapeProp.qmult)] := 'Array of multiplier values for reactive power (Q).  You can also use the syntax: ' + CRLF +
         'qmult = (file=filename)     !for text file one value per line' + CRLF +
         'qmult = (dblfile=filename)  !for packed file of doubles' + CRLF +
         'qmult = (sngfile=filename)  !for packed file of singles ' + CRLF +     // vector of qmultiplier values
         'qmult = (file=MyCSVFile.CSV, col=4, header=yes)  !for multicolumn CSV files ';
-    PropertyHelp[12] := '{Yes | No* | True | False*} If true, signifies to Load, Generator, Vsource, or other objects to ' +
+    PropertyHelp[ord(TLoadShapeProp.UseActual)] := '{Yes | No* | True | False*} If true, signifies to Load, Generator, Vsource, or other objects to ' +
         'use the return value as the actual kW, kvar, kV, or other value rather than a multiplier. ' +
         'Nominally for AMI Load data but may be used for other functions.';
-    PropertyHelp[13] := 'kW value at the time of max power. Is automatically set upon reading in a loadshape. ' +
+    PropertyHelp[ord(TLoadShapeProp.Pmax)] := 'kW value at the time of max power. Is automatically set upon reading in a loadshape. ' +
         'Use this property to override the value automatically computed or to retrieve the value computed.';
-    PropertyHelp[14] := 'kvar value at the time of max kW power. Is automatically set upon reading in a loadshape. ' +
+    PropertyHelp[ord(TLoadShapeProp.Qmax)] := 'kvar value at the time of max kW power. Is automatically set upon reading in a loadshape. ' +
         'Use this property to override the value automatically computed or to retrieve the value computed.';
-    PropertyHelp[15] := 'Specify fixed interval in SECONDS. Alternate way to specify Interval property.';
-    PropertyHelp[16] := 'Specify fixed interval in MINUTES. Alternate way to specify Interval property.';
-    PropertyHelp[17] := 'Base P value for normalization. Default is zero, meaning the peak will be used.';
-    PropertyHelp[18] := 'Base Q value for normalization. Default is zero, meaning the peak will be used.';
-    PropertyHelp[19] := 'Synonym for "mult".';
-    PropertyHelp[20] := 'Switch input to a CSV text file containing (active, reactive) power (P, Q) multiplier pairs, one per row. ' + CRLF +
+    PropertyHelp[ord(TLoadShapeProp.sinterval)] := 'Specify fixed interval in SECONDS. Alternate way to specify Interval property.';
+    PropertyHelp[ord(TLoadShapeProp.minterval)] := 'Specify fixed interval in MINUTES. Alternate way to specify Interval property.';
+    PropertyHelp[ord(TLoadShapeProp.Pbase)] := 'Base P value for normalization. Default is zero, meaning the peak will be used.';
+    PropertyHelp[ord(TLoadShapeProp.Qbase)] := 'Base Q value for normalization. Default is zero, meaning the peak will be used.';
+    PropertyHelp[ord(TLoadShapeProp.Pmult)] := 'Synonym for "mult".';
+    PropertyHelp[ord(TLoadShapeProp.PQCSVFile)] := 'Switch input to a CSV text file containing (active, reactive) power (P, Q) multiplier pairs, one per row. ' + CRLF +
         'If the interval=0, there should be 3 items on each line: (hour, Pmult, Qmult)';
 
     ActiveProperty := NumPropsThisClass;
@@ -340,36 +340,36 @@ begin
             if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
                 PropertyValue[ParamPointer] := Param;
 
-            case ParamPointer of
-                0:
+            case TLoadShapeProp(ParamPointer) of
+                TLoadShapeProp.INVALID:
                     DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 610);
-                1:
+                TLoadShapeProp.npts:
                     NumPoints := Parser.Intvalue;
-                2:
+                TLoadShapeProp.interval:
                     Interval := Parser.DblValue;
-                3:
+                TLoadShapeProp.mult:
                 begin
                     SetLength(PMultipliers, NumPoints);
                     // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
                     NumPoints := InterpretDblArray(Param, NumPoints, pDoubleArray(PMultipliers));   // Parser.ParseAsVector(Npts, Multipliers);
                 end;
-                4:
+                TLoadShapeProp.hour:
                 begin
                     SetLength(Hours, NumPoints);
                     InterpretDblArray(Param, NumPoints, pDoubleArray(Hours));   // Parser.ParseAsVector(Npts, Hours);
                     Interval := 0.0;
                 end;
-                5:
+                TLoadShapeProp.mean:
                     Mean := Parser.DblValue;
-                6:
+                TLoadShapeProp.stddev:
                     StdDev := Parser.DblValue;
-                7:
+                TLoadShapeProp.csvfile:
                     DoCSVFile(Param);
-                8:
+                TLoadShapeProp.sngfile:
                     DoSngFile(Param);
-                9:
+                TLoadShapeProp.dblfile:
                     DoDblFile(Param);
-                10:
+                TLoadShapeProp.action:
                     case lowercase(Param)[1] of
                         'n':
                             Normalize;
@@ -378,32 +378,32 @@ begin
                         's':
                             SaveToSngFile;
                     end;
-                11:
+                TLoadShapeProp.qmult:
                 begin
                     SetLength(QMultipliers, NumPoints);
                     InterpretDblArray(Param, NumPoints, pDoubleArray(QMultipliers));   // Parser.ParseAsVector(Npts, Multipliers);
                 end;
-                12:
+                TLoadShapeProp.UseActual:
                     UseActual := InterpretYesNo(Param);
-                13:
+                TLoadShapeProp.Pmax:
                     MaxP := Parser.DblValue;
-                14:
+                TLoadShapeProp.Qmax:
                     MaxQ := Parser.DblValue;
-                15:
+                TLoadShapeProp.sinterval:
                     Interval := Parser.DblValue / 3600.0;  // Convert seconds to hr
-                16:
+                TLoadShapeProp.minterval:
                     Interval := Parser.DblValue / 60.0;  // Convert minutes to hr
-                17:
+                TLoadShapeProp.Pbase:
                     BaseP := Parser.DblValue;
-                18:
+                TLoadShapeProp.Qbase:
                     BaseQ := Parser.DblValue;
-                19:
+                TLoadShapeProp.Pmult:
                 begin   // same as mult
                     SetLength(PMultipliers, NumPoints);
                     // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
                     NumPoints := InterpretDblArray(Param, NumPoints, pDoubleArray(PMultipliers));   // Parser.ParseAsVector(Npts, Multipliers);
                 end;
-                20:
+                TLoadShapeProp.PQCSVFile:
                     Do2ColCSVFile(Param);
 
             else
@@ -411,14 +411,14 @@ begin
                 ClassEdit(ActiveLoadShapeObj, ParamPointer - NumPropsThisClass)
             end;
 
-            case ParamPointer of
-                3, 7, 8, 9, 11:
+            case TLoadShapeProp(ParamPointer) of
+                TLoadShapeProp.mult, TLoadShapeProp.csvfile, TLoadShapeProp.sngfile, TLoadShapeProp.dblfile:
                 begin
                     FStdDevCalculated := FALSE;   // now calculated on demand
                     ArrayPropertyIndex := ParamPointer;
                     NumPoints := FNumPoints;  // Keep Properties in order for save command
                 end;
-                14:
+                TLoadShapeProp.Qmax:
                     MaxQSpecified := TRUE;
 
             end;
@@ -965,8 +965,8 @@ begin
                 FStdDev
                 );
 
-    PropertyValue[5] := Format('%.8g', [FMean]);
-    PropertyValue[6] := Format('%.8g', [FStdDev]);
+    PropertyValue[ord(TLoadShapeProp.mean)] := Format('%.8g', [FMean]);
+    PropertyValue[ord(TLoadShapeProp.stddev)] := Format('%.8g', [FStdDev]);
 
     FStdDevCalculated := TRUE;
    { No Action is taken on Q multipliers}
@@ -1088,41 +1088,41 @@ function TLoadShapeObj.GetPropertyValue(Index: Integer): String;
 begin
     Result := '';
 
-    case Index of
-        1:
+    case TLoadShapeProp(Index) of
+        TLoadShapeProp.npts:
             Result := IntToStr(FNumPoints);
-        2:
+        TLoadShapeProp.interval:
             Result := Format('%.8g', [Interval]);
-        3:
+        TLoadShapeProp.mult:
             Result := GetDSSArray_Real(Length(PMultipliers), pDoubleArray(PMultipliers));
-        4:
+        TLoadShapeProp.hour:
             if Hours <> NIL then
                 Result := GetDSSArray_Real(Length(Hours), pDoubleArray(Hours));
-        5:
+        TLoadShapeProp.mean:
             Result := Format('%.8g', [Mean]);
-        6:
+        TLoadShapeProp.stddev:
             Result := Format('%.8g', [StdDev]);
-        11:
+        TLoadShapeProp.qmult:
             if Assigned(QMultipliers) then
                 Result := GetDSSArray_Real(Length(QMultipliers), pDoubleArray(QMultipliers));
-        12:
+        TLoadShapeProp.UseActual:
             if UseActual then
                 Result := 'Yes'
             else
                 Result := 'No';
-        13:
+        TLoadShapeProp.Pmax:
             Result := Format('%.8g', [MaxP]);
-        14:
+        TLoadShapeProp.Qmax:
             Result := Format('%.8g', [MaxQ]);
-        15:
+        TLoadShapeProp.sinterval:
             Result := Format('%.8g', [Interval * 3600.0]);
-        16:
+        TLoadShapeProp.minterval:
             Result := Format('%.8g', [Interval * 60.0]);
-        17:
+        TLoadShapeProp.Pbase:
             Result := Format('%.8g', [BaseP]);
-        18:
+        TLoadShapeProp.Qbase:
             Result := Format('%.8g', [BaseQ]);
-        19:
+        TLoadShapeProp.Pmult:
             Result := GetDSSArray_Real(Length(PMultipliers), pDoubleArray(PMultipliers));
     else
         Result := inherited GetPropertyValue(index);
@@ -1133,26 +1133,26 @@ end;
 procedure TLoadShapeObj.InitPropertyValues(ArrayOffset: Integer);
 begin
 
-    PropertyValue[1] := '0';     // Number of points to expect
-    PropertyValue[2] := '1'; // default = 1.0 hr;
-    PropertyValue[3] := '';     // vector of multiplier values
-    PropertyValue[4] := '';     // vextor of hour values
-    PropertyValue[5] := '0';     // set the mean (otherwise computed)
-    PropertyValue[6] := '0';   // set the std dev (otherwise computed)
-    PropertyValue[7] := '';   // Switch input to a csvfile
-    PropertyValue[8] := '';  // switch input to a binary file of singles
-    PropertyValue[9] := '';   // switch input to a binary file of singles
-    PropertyValue[10] := ''; // action option .
-    PropertyValue[11] := ''; // Qmult.
-    PropertyValue[12] := 'No';
-    PropertyValue[13] := '0';
-    PropertyValue[14] := '0';
-    PropertyValue[15] := '3600';   // seconds
-    PropertyValue[16] := '60';     // minutes
-    PropertyValue[17] := '0';
-    PropertyValue[18] := '0';
-    PropertyValue[19] := '';   // same as 3
-    PropertyValue[20] := '';  // switch input to csv file of P, Q pairs
+    PropertyValue[ord(TLoadShapeProp.npts)] := '0';     // Number of points to expect
+    PropertyValue[ord(TLoadShapeProp.interval)] := '1'; // default = 1.0 hr;
+    PropertyValue[ord(TLoadShapeProp.mult)] := '';     // vector of multiplier values
+    PropertyValue[ord(TLoadShapeProp.hour)] := '';     // vextor of hour values
+    PropertyValue[ord(TLoadShapeProp.mean)] := '0';     // set the mean (otherwise computed)
+    PropertyValue[ord(TLoadShapeProp.stddev)] := '0';   // set the std dev (otherwise computed)
+    PropertyValue[ord(TLoadShapeProp.csvfile)] := '';   // Switch input to a csvfile
+    PropertyValue[ord(TLoadShapeProp.sngfile)] := '';  // switch input to a binary file of singles
+    PropertyValue[ord(TLoadShapeProp.dblfile)] := '';   // switch input to a binary file of singles
+    PropertyValue[ord(TLoadShapeProp.action)] := ''; // action option .
+    PropertyValue[ord(TLoadShapeProp.qmult)] := ''; // Qmult.
+    PropertyValue[ord(TLoadShapeProp.UseActual)] := 'No';
+    PropertyValue[ord(TLoadShapeProp.Pmax)] := '0';
+    PropertyValue[ord(TLoadShapeProp.Qmax)] := '0';
+    PropertyValue[ord(TLoadShapeProp.sinterval)] := '3600';   // seconds
+    PropertyValue[ord(TLoadShapeProp.minterval)] := '60';     // minutes
+    PropertyValue[ord(TLoadShapeProp.Pbase)] := '0';
+    PropertyValue[ord(TLoadShapeProp.Qbase)] := '0';
+    PropertyValue[ord(TLoadShapeProp.Pmult)] := '';   // same as 3
+    PropertyValue[ord(TLoadShapeProp.PQCSVFile)] := '';  // switch input to csv file of P, Q pairs
 
 
     inherited  InitPropertyValues(NumPropsThisClass);
