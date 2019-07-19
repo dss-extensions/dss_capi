@@ -14,7 +14,7 @@ procedure DSS_NewCircuit(const Value: PAnsiChar); CDECL;
 function DSS_Get_NumCircuits(): Integer; CDECL;
 procedure DSS_ClearAll(); CDECL;
 function DSS_Get_Version(): PAnsiChar; CDECL;
-function DSS_Start(code: Integer): Wordbool; CDECL;
+function DSS_Start(code: Integer): Boolean; CDECL;
 procedure DSS_Get_Classes(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 procedure DSS_Get_Classes_GR(); CDECL;
 procedure DSS_Get_UserClasses(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -26,10 +26,10 @@ procedure DSS_Set_DataPath(const Value: PAnsiChar); CDECL;
 procedure DSS_Reset(); CDECL;
 function DSS_Get_DefaultEditor(): PAnsiChar; CDECL;
 function DSS_SetActiveClass(const ClassName: PAnsiChar): Integer; CDECL;
-function DSS_Get_AllowForms: Wordbool; CDECL;
-procedure DSS_Set_AllowForms(Value: Wordbool); CDECL;
-function DSS_Get_AllowEditor: Wordbool; CDECL;
-procedure DSS_Set_AllowEditor(Value: Wordbool); CDECL;
+function DSS_Get_AllowForms: Boolean; CDECL;
+procedure DSS_Set_AllowForms(Value: Boolean); CDECL;
+function DSS_Get_AllowEditor: Boolean; CDECL;
+procedure DSS_Set_AllowEditor(Value: Boolean); CDECL;
 
 implementation
 
@@ -49,12 +49,12 @@ begin
     MakeNewCircuit(Value);
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_AllowForms: Wordbool; CDECL;
+function DSS_Get_AllowForms: Boolean; CDECL;
 begin
     Result := not NoFormsAllowed;
 end;
 //------------------------------------------------------------------------------
-procedure DSS_Set_AllowForms(Value: Wordbool); CDECL;
+procedure DSS_Set_AllowForms(Value: Boolean); CDECL;
 begin
 {$IFDEF WINDOWS}
     if (Value) and (GetConsoleWindow() = 0) then
@@ -70,12 +70,12 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_AllowEditor: Wordbool; CDECL;
+function DSS_Get_AllowEditor: Boolean; CDECL;
 begin
     Result := DSS_CAPI_ALLOW_EDITOR;
 end;
 //------------------------------------------------------------------------------
-procedure DSS_Set_AllowEditor(Value: Wordbool); CDECL;
+procedure DSS_Set_AllowEditor(Value: Boolean); CDECL;
 begin
     DSS_CAPI_ALLOW_EDITOR := not (not Value);
 end;
@@ -100,7 +100,7 @@ begin
     Result := DSS_GetAsPAnsiChar(DSS_Get_Version_AnsiString());
 end;
 //------------------------------------------------------------------------------
-function DSS_Start(code: Integer): Wordbool; CDECL;
+function DSS_Start(code: Integer): Boolean; CDECL;
 {Place any start code here}
 begin
     Result := TRUE;

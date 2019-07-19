@@ -28,10 +28,10 @@ procedure Bus_Get_Zsc1(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure Bus_Get_Zsc1_GR(); CDECL;
 procedure Bus_Get_ZscMatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure Bus_Get_ZscMatrix_GR(); CDECL;
-function Bus_ZscRefresh(): Wordbool; CDECL;
+function Bus_ZscRefresh(): Boolean; CDECL;
 procedure Bus_Get_YscMatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure Bus_Get_YscMatrix_GR(); CDECL;
-function Bus_Get_Coorddefined(): Wordbool; CDECL;
+function Bus_Get_Coorddefined(): Boolean; CDECL;
 function Bus_Get_x(): Double; CDECL;
 procedure Bus_Set_x(Value: Double); CDECL;
 function Bus_Get_y(): Double; CDECL;
@@ -531,7 +531,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function Bus_ZscRefresh(): Wordbool; CDECL;
+function Bus_ZscRefresh(): Boolean; CDECL;
 begin
 
     Result := FALSE;   // Init in case of failure
@@ -598,7 +598,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function Bus_Get_Coorddefined(): Wordbool; CDECL;
+function Bus_Get_Coorddefined(): Boolean; CDECL;
 begin
     Result := FALSE;
     if (ActiveCircuit[ActiveActor] <> NIL) then

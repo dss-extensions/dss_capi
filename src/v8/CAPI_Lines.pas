@@ -72,8 +72,8 @@ function Lines_Get_SeasonRating(): Double; CDECL;
 // API Extensions
 function Lines_Get_idx(): Integer; CDECL;
 procedure Lines_Set_idx(Value: Integer); CDECL;
-function Lines_Get_IsSwitch(): Wordbool; CDECL;
-procedure Lines_Set_IsSwitch(Value: Wordbool); CDECL;
+function Lines_Get_IsSwitch(): Boolean; CDECL;
+procedure Lines_Set_IsSwitch(Value: Boolean); CDECL;
 
 implementation
 
@@ -917,7 +917,7 @@ begin
         Result := TLineObj(ActiveCircuit[ActiveActor].ActiveCktElement).NormAmps;
 end;
 //------------------------------------------------------------------------------
-procedure Lines_Set_IsSwitch(Value: Wordbool); CDECL;
+procedure Lines_Set_IsSwitch(Value: Boolean); CDECL;
 begin
     if ActiveCircuit[ActiveActor] = NIL then 
         Exit;
@@ -946,7 +946,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_IsSwitch(): Wordbool; CDECL;
+function Lines_Get_IsSwitch(): Boolean; CDECL;
 begin
     Result := FALSE;
     

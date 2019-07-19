@@ -10,7 +10,7 @@ uses
 function PDElements_Get_Count(): Integer; CDECL;
 function PDElements_Get_FaultRate(): Double; CDECL;
 function PDElements_Get_First(): Integer; CDECL;
-function PDElements_Get_IsShunt(): Wordbool; CDECL;
+function PDElements_Get_IsShunt(): Boolean; CDECL;
 function PDElements_Get_Next(): Integer; CDECL;
 function PDElements_Get_pctPermanent(): Double; CDECL;
 procedure PDElements_Set_FaultRate(Value: Double); CDECL;
@@ -88,7 +88,7 @@ begin
         end;
 end;
 //------------------------------------------------------------------------------
-function PDElements_Get_IsShunt(): Wordbool; CDECL;
+function PDElements_Get_IsShunt(): Boolean; CDECL;
 var
     ActivePDElement: TPDElement;
 begin

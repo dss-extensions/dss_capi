@@ -12,7 +12,7 @@ function Sensors_Get_Count(): Integer; CDECL;
 procedure Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure Sensors_Get_Currents_GR(); CDECL;
 function Sensors_Get_First(): Integer; CDECL;
-function Sensors_Get_IsDelta(): Wordbool; CDECL;
+function Sensors_Get_IsDelta(): Boolean; CDECL;
 procedure Sensors_Get_kVARS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure Sensors_Get_kVARS_GR(); CDECL;
 procedure Sensors_Get_kVS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -24,12 +24,12 @@ function Sensors_Get_MeteredTerminal(): Integer; CDECL;
 function Sensors_Get_Name(): PAnsiChar; CDECL;
 function Sensors_Get_Next(): Integer; CDECL;
 function Sensors_Get_PctError(): Double; CDECL;
-function Sensors_Get_ReverseDelta(): Wordbool; CDECL;
+function Sensors_Get_ReverseDelta(): Boolean; CDECL;
 function Sensors_Get_Weight(): Double; CDECL;
 procedure Sensors_Reset(); CDECL;
 procedure Sensors_ResetAll(); CDECL;
 procedure Sensors_Set_Currents(ValuePtr: PDouble; ValueCount: Integer); CDECL;
-procedure Sensors_Set_IsDelta(Value: Wordbool); CDECL;
+procedure Sensors_Set_IsDelta(Value: Boolean); CDECL;
 procedure Sensors_Set_kVARS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 procedure Sensors_Set_kVS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 procedure Sensors_Set_kWS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
@@ -37,7 +37,7 @@ procedure Sensors_Set_MeteredElement(const Value: PAnsiChar); CDECL;
 procedure Sensors_Set_MeteredTerminal(Value: Integer); CDECL;
 procedure Sensors_Set_Name(const Value: PAnsiChar); CDECL;
 procedure Sensors_Set_PctError(Value: Double); CDECL;
-procedure Sensors_Set_ReverseDelta(Value: Wordbool); CDECL;
+procedure Sensors_Set_ReverseDelta(Value: Boolean); CDECL;
 procedure Sensors_Set_Weight(Value: Double); CDECL;
 function Sensors_Get_kVbase(): Double; CDECL;
 procedure Sensors_Set_kVbase(Value: Double); CDECL;
@@ -142,7 +142,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function Sensors_Get_IsDelta(): Wordbool; CDECL;
+function Sensors_Get_IsDelta(): Boolean; CDECL;
 var
     elem: TSensorObj;
 begin
@@ -300,7 +300,7 @@ begin
         Result := elem.pctError;
 end;
 //------------------------------------------------------------------------------
-function Sensors_Get_ReverseDelta(): Wordbool; CDECL;
+function Sensors_Get_ReverseDelta(): Boolean; CDECL;
 var
     elem: TSensorObj;
 begin
@@ -355,7 +355,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-procedure Sensors_Set_IsDelta(Value: Wordbool); CDECL;
+procedure Sensors_Set_IsDelta(Value: Boolean); CDECL;
 var
     elem: TSensorObj;
 begin
@@ -451,7 +451,7 @@ begin
     Set_Parameter('%error', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
-procedure Sensors_Set_ReverseDelta(Value: Wordbool); CDECL;
+procedure Sensors_Set_ReverseDelta(Value: Boolean); CDECL;
 begin
     if Value = TRUE then
         Set_Parameter('DeltaDirection', '-1')

@@ -9,7 +9,7 @@ uses
 
 procedure Transformers_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 function Transformers_Get_First(): Integer; CDECL;
-function Transformers_Get_IsDelta(): Wordbool; CDECL;
+function Transformers_Get_IsDelta(): Boolean; CDECL;
 function Transformers_Get_kV(): Double; CDECL;
 function Transformers_Get_kVA(): Double; CDECL;
 function Transformers_Get_MaxTap(): Double; CDECL;
@@ -27,7 +27,7 @@ function Transformers_Get_Xhl(): Double; CDECL;
 function Transformers_Get_Xht(): Double; CDECL;
 function Transformers_Get_Xlt(): Double; CDECL;
 function Transformers_Get_Xneut(): Double; CDECL;
-procedure Transformers_Set_IsDelta(Value: Wordbool); CDECL;
+procedure Transformers_Set_IsDelta(Value: Boolean); CDECL;
 procedure Transformers_Set_kV(Value: Double); CDECL;
 procedure Transformers_Set_kVA(Value: Double); CDECL;
 procedure Transformers_Set_MaxTap(Value: Double); CDECL;
@@ -131,7 +131,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function Transformers_Get_IsDelta(): Wordbool; CDECL;
+function Transformers_Get_IsDelta(): Boolean; CDECL;
 var
     elem: TTransfObj;
 begin
@@ -340,7 +340,7 @@ begin
         Result := elem.WdgXneutral[elem.ActiveWinding];
 end;
 //------------------------------------------------------------------------------
-procedure Transformers_Set_IsDelta(Value: Wordbool); CDECL;
+procedure Transformers_Set_IsDelta(Value: Boolean); CDECL;
 begin
     if Value = TRUE then
         Set_Parameter('Conn', 'Delta')

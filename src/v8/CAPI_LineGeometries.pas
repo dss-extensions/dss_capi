@@ -35,8 +35,8 @@ procedure LineGeometries_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PInteg
 procedure LineGeometries_Get_Ycoords_GR(); CDECL;
 procedure LineGeometries_Set_Ycoords(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 procedure LineGeometries_Get_Conductors(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-function LineGeometries_Get_Reduce(): Wordbool; CDECL;
-procedure LineGeometries_Set_Reduce(Value: Wordbool); CDECL;
+function LineGeometries_Get_Reduce(): Boolean; CDECL;
+procedure LineGeometries_Set_Reduce(Value: Boolean); CDECL;
 function LineGeometries_Get_RhoEarth(): Double; CDECL;
 procedure LineGeometries_Set_RhoEarth(Value: Double); CDECL;
 function LineGeometries_Get_NormAmps(): Double; CDECL;
@@ -289,7 +289,7 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function LineGeometries_Get_Reduce(): Wordbool; CDECL;
+function LineGeometries_Get_Reduce(): Boolean; CDECL;
 var
     pLineGeometry: TLineGeometryObj;
 begin
@@ -299,7 +299,7 @@ begin
     Result := pLineGeometry.FReduce;
 end;
 //------------------------------------------------------------------------------
-procedure LineGeometries_Set_Reduce(Value: Wordbool); CDECL;
+procedure LineGeometries_Set_Reduce(Value: Boolean); CDECL;
 var
     pLineGeometry: TLineGeometryObj;
 

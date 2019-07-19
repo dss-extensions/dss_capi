@@ -15,8 +15,8 @@ function RegControls_Get_ForwardBand(): Double; CDECL;
 function RegControls_Get_ForwardR(): Double; CDECL;
 function RegControls_Get_ForwardVreg(): Double; CDECL;
 function RegControls_Get_ForwardX(): Double; CDECL;
-function RegControls_Get_IsInverseTime(): Wordbool; CDECL;
-function RegControls_Get_IsReversible(): Wordbool; CDECL;
+function RegControls_Get_IsInverseTime(): Boolean; CDECL;
+function RegControls_Get_IsReversible(): Boolean; CDECL;
 function RegControls_Get_MaxTapChange(): Integer; CDECL;
 function RegControls_Get_MonitoredBus(): PAnsiChar; CDECL;
 function RegControls_Get_Name(): PAnsiChar; CDECL;
@@ -38,8 +38,8 @@ procedure RegControls_Set_ForwardBand(Value: Double); CDECL;
 procedure RegControls_Set_ForwardR(Value: Double); CDECL;
 procedure RegControls_Set_ForwardVreg(Value: Double); CDECL;
 procedure RegControls_Set_ForwardX(Value: Double); CDECL;
-procedure RegControls_Set_IsInverseTime(Value: Wordbool); CDECL;
-procedure RegControls_Set_IsReversible(Value: Wordbool); CDECL;
+procedure RegControls_Set_IsInverseTime(Value: Boolean); CDECL;
+procedure RegControls_Set_IsReversible(Value: Boolean); CDECL;
 procedure RegControls_Set_MaxTapChange(Value: Integer); CDECL;
 procedure RegControls_Set_MonitoredBus(const Value: PAnsiChar); CDECL;
 procedure RegControls_Set_Name(const Value: PAnsiChar); CDECL;
@@ -186,7 +186,7 @@ begin
         Result := elem.LineDropX;
 end;
 //------------------------------------------------------------------------------
-function RegControls_Get_IsInverseTime(): Wordbool; CDECL;
+function RegControls_Get_IsInverseTime(): Boolean; CDECL;
 var
     elem: TRegControlObj;
 begin
@@ -197,7 +197,7 @@ begin
             Result := TRUE;
 end;
 //------------------------------------------------------------------------------
-function RegControls_Get_IsReversible(): Wordbool; CDECL;
+function RegControls_Get_IsReversible(): Boolean; CDECL;
 var
     elem: TRegControlObj;
 begin
@@ -418,7 +418,7 @@ begin
     Set_Parameter('X', FloatToStr(Value));
 end;
 //------------------------------------------------------------------------------
-procedure RegControls_Set_IsInverseTime(Value: Wordbool); CDECL;
+procedure RegControls_Set_IsInverseTime(Value: Boolean); CDECL;
 begin
     if Value = TRUE then
         Set_Parameter('InverseTime', 'y')
@@ -426,7 +426,7 @@ begin
         Set_Parameter('InverseTime', 'n');
 end;
 //------------------------------------------------------------------------------
-procedure RegControls_Set_IsReversible(Value: Wordbool); CDECL;
+procedure RegControls_Set_IsReversible(Value: Boolean); CDECL;
 begin
     if Value = TRUE then
         Set_Parameter('Reversible', 'y')

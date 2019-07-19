@@ -29,7 +29,7 @@ function Fuses_Get_Delay(): Double; CDECL;
 procedure Fuses_Open(); CDECL;
 procedure Fuses_Close(); CDECL;
 procedure Fuses_Set_Delay(Value: Double); CDECL;
-function Fuses_IsBlown(): Wordbool; CDECL;
+function Fuses_IsBlown(): Boolean; CDECL;
 function Fuses_Get_idx(): Integer; CDECL;
 procedure Fuses_Set_idx(Value: Integer); CDECL;
 function Fuses_Get_NumPhases(): Integer; CDECL;
@@ -348,7 +348,7 @@ begin
         Set_parameter('Delay', Format('%.8g ', [Value]));
 end;
 //------------------------------------------------------------------------------
-function Fuses_IsBlown(): Wordbool; CDECL;
+function Fuses_IsBlown(): Boolean; CDECL;
 // Return TRUE if any phase blown
 var
     elem: TFuseObj;

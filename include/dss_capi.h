@@ -22,7 +22,7 @@
 #ifdef __cplusplus
 #    ifdef _MSC_VER
 #       if _MSC_VER <= 1500
-#           include "../stdint_compat.h"
+#           include "./stdint_compat.h"
 #       else
 #           include <cstdint>
 #       endif
@@ -32,7 +32,7 @@
 #else
 #    ifdef _MSC_VER
 #       if _MSC_VER <= 1500
-#           include "../stdint_compat.h"
+#           include "./stdint_compat.h"
 #       else
 #           include <stdint.h>
 #       endif
@@ -217,7 +217,7 @@ extern "C" {
     */
     DSS_CAPI_DLL void Bus_Get_ZscMatrix_GR(void);
 
-    DSS_CAPI_DLL uint16_t Bus_ZscRefresh(void);
+    DSS_CAPI_DLL int8_t Bus_ZscRefresh(void);
 
     /*
     Complex array of Ysc matrix at bus. Column by column.
@@ -231,7 +231,7 @@ extern "C" {
     /*
     False=0 else True. Indicates whether a coordinate has been defined for this bus
     */
-    DSS_CAPI_DLL uint16_t Bus_Get_Coorddefined(void);
+    DSS_CAPI_DLL int8_t Bus_Get_Coorddefined(void);
 
     /*
     X Coordinate for bus (double)
@@ -358,7 +358,7 @@ extern "C" {
     /*
     Delta connection or wye?
     */
-    DSS_CAPI_DLL uint16_t Capacitors_Get_IsDelta(void);
+    DSS_CAPI_DLL int8_t Capacitors_Get_IsDelta(void);
 
     /*
     Bank kV rating. Use LL for 2 or 3 phases, or actual can rating for 1 phase.
@@ -388,7 +388,7 @@ extern "C" {
     /*
     Delta connection or wye?
     */
-    DSS_CAPI_DLL void Capacitors_Set_IsDelta(uint16_t Value);
+    DSS_CAPI_DLL void Capacitors_Set_IsDelta(int8_t Value);
 
     /*
     Bank kV rating. Use LL for 2 or 3 phases, or actual can rating for 1 phase.
@@ -415,9 +415,9 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t Capacitors_Get_Count(void);
 
-    DSS_CAPI_DLL uint16_t Capacitors_AddStep(void);
+    DSS_CAPI_DLL int8_t Capacitors_AddStep(void);
 
-    DSS_CAPI_DLL uint16_t Capacitors_SubtractStep(void);
+    DSS_CAPI_DLL int8_t Capacitors_SubtractStep(void);
 
     /*
     Number of Steps available in cap bank to be switched ON.
@@ -517,7 +517,7 @@ extern "C" {
     /*
     Enables Vmin and Vmax to override the control Mode
     */
-    DSS_CAPI_DLL uint16_t CapControls_Get_UseVoltOverride(void);
+    DSS_CAPI_DLL int8_t CapControls_Get_UseVoltOverride(void);
 
     /*
     With VoltOverride, swtich off whenever PT voltage exceeds this level.
@@ -589,7 +589,7 @@ extern "C" {
     /*
     Enables Vmin and Vmax to override the control Mode
     */
-    DSS_CAPI_DLL void CapControls_Set_UseVoltOverride(uint16_t Value);
+    DSS_CAPI_DLL void CapControls_Set_UseVoltOverride(int8_t Value);
 
     /*
     With VoltOverride, swtich off whenever PT voltage exceeds this level.
@@ -904,7 +904,7 @@ extern "C" {
     /*
     Boolean indicating that element is currently in the circuit.
     */
-    DSS_CAPI_DLL uint16_t CktElement_Get_Enabled(void);
+    DSS_CAPI_DLL int8_t CktElement_Get_Enabled(void);
 
     /*
     Total losses in the element: two-element complex array, in VA
@@ -977,14 +977,14 @@ extern "C" {
     /*
     Boolean indicating that element is currently in the circuit.
     */
-    DSS_CAPI_DLL void CktElement_Set_Enabled(uint16_t Value);
+    DSS_CAPI_DLL void CktElement_Set_Enabled(int8_t Value);
 
     /*
     Normal ampere rating
     */
     DSS_CAPI_DLL void CktElement_Set_NormalAmps(double Value);
 
-    DSS_CAPI_DLL uint16_t CktElement_IsOpen(int32_t Term, int32_t Phs);
+    DSS_CAPI_DLL int8_t CktElement_IsOpen(int32_t Term, int32_t Phs);
 
     /*
     Array containing all property names of the active device.
@@ -1047,12 +1047,12 @@ extern "C" {
     /*
     This element has a CapControl or RegControl attached.
     */
-    DSS_CAPI_DLL uint16_t CktElement_Get_HasVoltControl(void);
+    DSS_CAPI_DLL int8_t CktElement_Get_HasVoltControl(void);
 
     /*
     This element has a SwtControl attached.
     */
-    DSS_CAPI_DLL uint16_t CktElement_Get_HasSwitchControl(void);
+    DSS_CAPI_DLL int8_t CktElement_Get_HasSwitchControl(void);
 
     /*
     Complex double array of Sequence Voltage for all terminals of active circuit element.
@@ -1108,7 +1108,7 @@ extern "C" {
     /*
     True if a recloser, relay, or fuse controlling this ckt element. OCP = Overcurrent Protection
     */
-    DSS_CAPI_DLL uint16_t CktElement_Get_HasOCPDevice(void);
+    DSS_CAPI_DLL int8_t CktElement_Get_HasOCPDevice(void);
 
     /*
     Number of controls connected to this device. Use to determine valid range for index into Controller array.
@@ -1147,7 +1147,7 @@ extern "C" {
     Returns true if the current active element is isolated.
     Note that this only fetches the current value. See also the Topology interface.
     */
-    DSS_CAPI_DLL uint16_t CktElement_Get_IsIsolated(void);
+    DSS_CAPI_DLL int8_t CktElement_Get_IsIsolated(void);
 
 
     /*
@@ -1267,7 +1267,7 @@ extern "C" {
     */
     DSS_CAPI_DLL char* DSS_Get_Version(void);
 
-    DSS_CAPI_DLL uint16_t DSS_Start(int32_t code);
+    DSS_CAPI_DLL int8_t DSS_Start(int32_t code);
 
     /*
     List of DSS intrinsic classes (names of the classes)
@@ -1307,8 +1307,8 @@ extern "C" {
     DSS_CAPI_DLL char* DSS_Get_DefaultEditor(void);
 
     DSS_CAPI_DLL int32_t DSS_SetActiveClass(char* ClassName);
-    DSS_CAPI_DLL uint16_t DSS_Get_AllowForms(void);
-    DSS_CAPI_DLL void DSS_Set_AllowForms(uint16_t Value);
+    DSS_CAPI_DLL int8_t DSS_Get_AllowForms(void);
+    DSS_CAPI_DLL void DSS_Set_AllowForms(int8_t Value);
 
     /*
     Sets/gets the AllowEditor mode.
@@ -1317,8 +1317,8 @@ extern "C" {
     If you set to 0 (false), the editor is not executed. Note that other side effects,
     such as the creation of files, are not affected.
     */
-    DSS_CAPI_DLL uint16_t DSS_Get_AllowEditor(void);
-    DSS_CAPI_DLL void DSS_Set_AllowEditor(uint16_t Value);
+    DSS_CAPI_DLL int8_t DSS_Get_AllowEditor(void);
+    DSS_CAPI_DLL void DSS_Set_AllowEditor(int8_t Value);
 
     /*
     Array of strings containing the names of all properties for the active DSS object.
@@ -1531,7 +1531,7 @@ extern "C" {
     */
     DSS_CAPI_DLL void Fuses_Set_Delay(double Value);
 
-    DSS_CAPI_DLL uint16_t Fuses_IsBlown(void);
+    DSS_CAPI_DLL int8_t Fuses_IsBlown(void);
 
     /*
     Get/set active fuse by index into the list of fuses. 1 based: 1..count
@@ -1585,12 +1585,12 @@ extern "C" {
     /*
     Indicates whether the generator is forced ON regardles of other dispatch criteria.
     */
-    DSS_CAPI_DLL uint16_t Generators_Get_ForcedON(void);
+    DSS_CAPI_DLL int8_t Generators_Get_ForcedON(void);
 
     /*
     Indicates whether the generator is forced ON regardles of other dispatch criteria.
     */
-    DSS_CAPI_DLL void Generators_Set_ForcedON(uint16_t Value);
+    DSS_CAPI_DLL void Generators_Set_ForcedON(int8_t Value);
 
     /*
     Sets a generator active by name.
@@ -1901,7 +1901,7 @@ extern "C" {
     /*
     Flag denoting whether impedance data were entered in symmetrical components
     */
-    DSS_CAPI_DLL uint16_t LineCodes_Get_IsZ1Z0(void);
+    DSS_CAPI_DLL int8_t LineCodes_Get_IsZ1Z0(void);
 
     DSS_CAPI_DLL int32_t LineCodes_Get_Units(void);
 
@@ -2294,8 +2294,8 @@ extern "C" {
     /*
     Sets/gets the Line element switch status. Setting it has side-effects to the line parameters.
     */
-    DSS_CAPI_DLL uint16_t Lines_Get_IsSwitch(void);
-    DSS_CAPI_DLL void Lines_Set_IsSwitch(uint16_t Value);
+    DSS_CAPI_DLL int8_t Lines_Get_IsSwitch(void);
+    DSS_CAPI_DLL void Lines_Set_IsSwitch(int8_t Value);
 
     /*
     Array of strings containing all Load names
@@ -2416,7 +2416,7 @@ extern "C" {
     /*
     Delta loads are connected line-to-line.
     */
-    DSS_CAPI_DLL uint16_t Loads_Get_IsDelta(void);
+    DSS_CAPI_DLL int8_t Loads_Get_IsDelta(void);
 
     /*
     Base load kva. Also defined kw and kvar or pf input, or load allocation by kwh or xfkva.
@@ -2521,7 +2521,7 @@ extern "C" {
 
     DSS_CAPI_DLL void Loads_Set_Growth(char* Value);
 
-    DSS_CAPI_DLL void Loads_Set_IsDelta(uint16_t Value);
+    DSS_CAPI_DLL void Loads_Set_IsDelta(int8_t Value);
 
     DSS_CAPI_DLL void Loads_Set_kva(double Value);
 
@@ -2722,12 +2722,12 @@ extern "C" {
     /*
     T/F flag to let Loads know to use the actual value in the curve rather than use the value as a multiplier.
     */
-    DSS_CAPI_DLL uint16_t LoadShapes_Get_UseActual(void);
+    DSS_CAPI_DLL int8_t LoadShapes_Get_UseActual(void);
 
     /*
     T/F flag to let Loads know to use the actual value in the curve rather than use the value as a multiplier.
     */
-    DSS_CAPI_DLL void LoadShapes_Set_UseActual(uint16_t Value);
+    DSS_CAPI_DLL void LoadShapes_Set_UseActual(int8_t Value);
 
     /*
     Array of all energy Meter names
@@ -2850,7 +2850,7 @@ extern "C" {
     /*
     Global Flag in the DSS to indicate if Demand Interval (DI) files have been properly opened.
     */
-    DSS_CAPI_DLL uint16_t Meters_Get_DIFilesAreOpen(void);
+    DSS_CAPI_DLL int8_t Meters_Get_DIFilesAreOpen(void);
 
     DSS_CAPI_DLL void Meters_CloseAllDIFiles(void);
 
@@ -2905,7 +2905,7 @@ extern "C" {
     */
     DSS_CAPI_DLL double Meters_Get_SAIFIKW(void);
 
-    DSS_CAPI_DLL void Meters_DoReliabilityCalc(uint16_t AssumeRestoration);
+    DSS_CAPI_DLL void Meters_DoReliabilityCalc(int8_t AssumeRestoration);
 
     /*
     Size of Sequence List
@@ -3215,12 +3215,12 @@ extern "C" {
     /*
     Default is FALSE. If TRUE parser automatically advances to next token after DblValue, IntValue, or StrValue. Simpler when you don't need to check for parameter names.
     */
-    DSS_CAPI_DLL uint16_t Parser_Get_AutoIncrement(void);
+    DSS_CAPI_DLL int8_t Parser_Get_AutoIncrement(void);
 
     /*
     Default is FALSE. If TRUE parser automatically advances to next token after DblValue, IntValue, or StrValue. Simpler when you don't need to check for parameter names.
     */
-    DSS_CAPI_DLL void Parser_Set_AutoIncrement(uint16_t Value);
+    DSS_CAPI_DLL void Parser_Set_AutoIncrement(int8_t Value);
 
     /*
     Return next parameter as a double.
@@ -3324,7 +3324,7 @@ extern "C" {
     /*
     Variant boolean indicating of PD element should be treated as a shunt element rather than a series element. Applies to Capacitor and Reactor elements in particular.
     */
-    DSS_CAPI_DLL uint16_t PDElements_Get_IsShunt(void);
+    DSS_CAPI_DLL int8_t PDElements_Get_IsShunt(void);
 
     /*
     Advance to the next PD element in the circuit. Enabled elements only. Returns 0 when no more elements.
@@ -3724,12 +3724,12 @@ extern "C" {
     /*
     Time delay is inversely adjsuted, proportinal to the amount of voltage outside the regulating band.
     */
-    DSS_CAPI_DLL uint16_t RegControls_Get_IsInverseTime(void);
+    DSS_CAPI_DLL int8_t RegControls_Get_IsInverseTime(void);
 
     /*
     Regulator can use different settings in the reverse direction.  Usually not applicable to substation transformers.
     */
-    DSS_CAPI_DLL uint16_t RegControls_Get_IsReversible(void);
+    DSS_CAPI_DLL int8_t RegControls_Get_IsReversible(void);
 
     /*
     Maximum tap change per iteration in STATIC solution mode. 1 is more realistic, 16 is the default for a faster soluiton.
@@ -3836,12 +3836,12 @@ extern "C" {
     /*
     Time delay is inversely adjsuted, proportinal to the amount of voltage outside the regulating band.
     */
-    DSS_CAPI_DLL void RegControls_Set_IsInverseTime(uint16_t Value);
+    DSS_CAPI_DLL void RegControls_Set_IsInverseTime(int8_t Value);
 
     /*
     Regulator can use different settings in the reverse direction.  Usually not applicable to substation transformers.
     */
-    DSS_CAPI_DLL void RegControls_Set_IsReversible(uint16_t Value);
+    DSS_CAPI_DLL void RegControls_Set_IsReversible(int8_t Value);
 
     /*
     Maximum tap change per iteration in STATIC solution mode. 1 is more realistic, 16 is the default for a faster soluiton.
@@ -4015,7 +4015,7 @@ extern "C" {
     /*
     True if measured voltages are line-line. Currents are always line currents.
     */
-    DSS_CAPI_DLL uint16_t Sensors_Get_IsDelta(void);
+    DSS_CAPI_DLL int8_t Sensors_Get_IsDelta(void);
 
     /*
     Array of doubles for Q measurements. Overwrites Currents with a new estimate using kWS.
@@ -4072,7 +4072,7 @@ extern "C" {
     /*
     True if voltage measurements are 1-3, 3-2, 2-1.
     */
-    DSS_CAPI_DLL uint16_t Sensors_Get_ReverseDelta(void);
+    DSS_CAPI_DLL int8_t Sensors_Get_ReverseDelta(void);
 
     /*
     Weighting factor for this Sensor measurement with respect to other Sensors. Default is 1.
@@ -4085,7 +4085,7 @@ extern "C" {
 
     DSS_CAPI_DLL void Sensors_Set_Currents(double* ValuePtr, int32_t ValueCount);
 
-    DSS_CAPI_DLL void Sensors_Set_IsDelta(uint16_t Value);
+    DSS_CAPI_DLL void Sensors_Set_IsDelta(int8_t Value);
 
     DSS_CAPI_DLL void Sensors_Set_kVARS(double* ValuePtr, int32_t ValueCount);
 
@@ -4104,7 +4104,7 @@ extern "C" {
 
     DSS_CAPI_DLL void Sensors_Set_PctError(double Value);
 
-    DSS_CAPI_DLL void Sensors_Set_ReverseDelta(uint16_t Value);
+    DSS_CAPI_DLL void Sensors_Set_ReverseDelta(int8_t Value);
 
     DSS_CAPI_DLL void Sensors_Set_Weight(double Value);
 
@@ -4118,7 +4118,7 @@ extern "C" {
     /*
     {True | False*} Designates whether to allow duplicate names of objects
     */
-    DSS_CAPI_DLL uint16_t Settings_Get_AllowDuplicates(void);
+    DSS_CAPI_DLL int8_t Settings_Get_AllowDuplicates(void);
 
     /*
     List of Buses or (File=xxxx) syntax for the AutoAdd solution mode.
@@ -4155,7 +4155,7 @@ extern "C" {
     /*
     {True | False*}  Locks Zones on energy meters to prevent rebuilding if a circuit change occurs.
     */
-    DSS_CAPI_DLL uint16_t Settings_Get_ZoneLock(void);
+    DSS_CAPI_DLL int8_t Settings_Get_ZoneLock(void);
 
     /*
     Sets all load allocation factors for all loads defined by XFKVA property to this value.
@@ -4165,7 +4165,7 @@ extern "C" {
     /*
     {True | False*} Designates whether to allow duplicate names of objects
     */
-    DSS_CAPI_DLL void Settings_Set_AllowDuplicates(uint16_t Value);
+    DSS_CAPI_DLL void Settings_Set_AllowDuplicates(int8_t Value);
 
     /*
     List of Buses or (File=xxxx) syntax for the AutoAdd solution mode.
@@ -4195,7 +4195,7 @@ extern "C" {
     /*
     {True | False*}  Locks Zones on energy meters to prevent rebuilding if a circuit change occurs.
     */
-    DSS_CAPI_DLL void Settings_Set_ZoneLock(uint16_t Value);
+    DSS_CAPI_DLL void Settings_Set_ZoneLock(int8_t Value);
 
     /*
     Integer array defining which energy meter registers to use for computing losses
@@ -4214,7 +4214,7 @@ extern "C" {
     /*
     {True | False *} Gets value of trapezoidal integration flag in energy meters.
     */
-    DSS_CAPI_DLL uint16_t Settings_Get_Trapezoidal(void);
+    DSS_CAPI_DLL int8_t Settings_Get_Trapezoidal(void);
 
     /*
     Array of Integers defining energy meter registers to use for computing UE
@@ -4243,7 +4243,7 @@ extern "C" {
     /*
     {True | False *} Gets value of trapezoidal integration flag in energy meters.
     */
-    DSS_CAPI_DLL void Settings_Set_Trapezoidal(uint16_t Value);
+    DSS_CAPI_DLL void Settings_Set_Trapezoidal(int8_t Value);
 
     /*
     Array of Integers defining energy meter registers to use for computing UE
@@ -4258,7 +4258,7 @@ extern "C" {
     /*
     {True | False*} Denotes whether to trace the control actions to a file.
     */
-    DSS_CAPI_DLL uint16_t Settings_Get_ControlTrace(void);
+    DSS_CAPI_DLL int8_t Settings_Get_ControlTrace(void);
 
     /*
     Array of doubles defining the legal voltage bases in kV L-L
@@ -4272,7 +4272,7 @@ extern "C" {
     /*
     {True | False*} Denotes whether to trace the control actions to a file.
     */
-    DSS_CAPI_DLL void Settings_Set_ControlTrace(uint16_t Value);
+    DSS_CAPI_DLL void Settings_Set_ControlTrace(int8_t Value);
 
     /*
     Array of doubles defining the legal voltage bases in kV L-L
@@ -4303,8 +4303,8 @@ extern "C" {
     Controls whether the terminals are checked when updating the currents in Load component. Defaults to True.
     If the loads are guaranteed to have their terminals closed throughout the simulation, this can be set to False to save some time.
     */
-    DSS_CAPI_DLL uint16_t Settings_Get_LoadsTerminalCheck(void);
-    DSS_CAPI_DLL void Settings_Set_LoadsTerminalCheck(uint16_t Value);
+    DSS_CAPI_DLL int8_t Settings_Get_LoadsTerminalCheck(void);
+    DSS_CAPI_DLL void Settings_Set_LoadsTerminalCheck(int8_t Value);
 
     /*
     Set the Frequency for next solution
@@ -4606,7 +4606,7 @@ extern "C" {
     /*
     Flag that indicates if elements of the System Y have been changed by recent activity.
     */
-    DSS_CAPI_DLL uint16_t Solution_Get_SystemYChanged(void);
+    DSS_CAPI_DLL int8_t Solution_Get_SystemYChanged(void);
 
     DSS_CAPI_DLL void Solution_BuildYMatrix(int32_t BuildOption, int32_t AllocateVI);
 
@@ -4617,12 +4617,12 @@ extern "C" {
     /*
     Flag to indicate whether the circuit solution converged
     */
-    DSS_CAPI_DLL uint16_t Solution_Get_Converged(void);
+    DSS_CAPI_DLL int8_t Solution_Get_Converged(void);
 
     /*
     Flag to indicate whether the circuit solution converged
     */
-    DSS_CAPI_DLL void Solution_Set_Converged(uint16_t Value);
+    DSS_CAPI_DLL void Solution_Set_Converged(int8_t Value);
 
     /*
     Total iterations including control iterations for most recent solution.
@@ -4637,9 +4637,9 @@ extern "C" {
     /*
     Flag indicating the control actions are done.
     */
-    DSS_CAPI_DLL uint16_t Solution_Get_ControlActionsDone(void);
+    DSS_CAPI_DLL int8_t Solution_Get_ControlActionsDone(void);
 
-    DSS_CAPI_DLL void Solution_Set_ControlActionsDone(uint16_t Value);
+    DSS_CAPI_DLL void Solution_Set_ControlActionsDone(int8_t Value);
 
     DSS_CAPI_DLL void Solution_Cleanup(void);
 
@@ -4736,7 +4736,7 @@ extern "C" {
     /*
     The lock prevents both manual and automatic switch operation.
     */
-    DSS_CAPI_DLL uint16_t SwtControls_Get_IsLocked(void);
+    DSS_CAPI_DLL int8_t SwtControls_Get_IsLocked(void);
 
     /*
     Sets a SwtControl active by Name.
@@ -4771,7 +4771,7 @@ extern "C" {
     /*
     The lock prevents both manual and automatic switch operation.
     */
-    DSS_CAPI_DLL void SwtControls_Set_IsLocked(uint16_t Value);
+    DSS_CAPI_DLL void SwtControls_Set_IsLocked(int8_t Value);
 
     /*
     Sets a SwtControl active by Name.
@@ -4931,7 +4931,7 @@ extern "C" {
     /*
     Active Winding delta or wye connection?
     */
-    DSS_CAPI_DLL uint16_t Transformers_Get_IsDelta(void);
+    DSS_CAPI_DLL int8_t Transformers_Get_IsDelta(void);
 
     /*
     Active Winding kV rating.  Phase-phase for 2 or 3 phases, actual winding kV for 1 phase transformer.
@@ -5021,7 +5021,7 @@ extern "C" {
     /*
     Active Winding delta or wye connection?
     */
-    DSS_CAPI_DLL void Transformers_Set_IsDelta(uint16_t Value);
+    DSS_CAPI_DLL void Transformers_Set_IsDelta(int8_t Value);
 
     /*
     Active Winding kV rating.  Phase-phase for 2 or 3 phases, actual winding kV for 1 phase transformer.
@@ -5368,7 +5368,7 @@ extern "C" {
 
     DSS_CAPI_DLL void XYCurves_Set_Yshift(double Value);
 
-    DSS_CAPI_DLL void YMatrix_GetCompressedYMatrix(uint16_t factor, uint32_t *nBus, uint32_t *nNz, int32_t **ColPtr, int32_t **RowIdxPtr, double **cValsPtr);
+    DSS_CAPI_DLL void YMatrix_GetCompressedYMatrix(int8_t factor, uint32_t *nBus, uint32_t *nNz, int32_t **ColPtr, int32_t **RowIdxPtr, double **cValsPtr);
     DSS_CAPI_DLL void YMatrix_ZeroInjCurr(void);
     DSS_CAPI_DLL void YMatrix_GetSourceInjCurrents(void);
     DSS_CAPI_DLL void YMatrix_GetPCInjCurr(void);
@@ -5377,10 +5377,10 @@ extern "C" {
     DSS_CAPI_DLL void YMatrix_getIpointer(double **IvectorPtr);
     DSS_CAPI_DLL void YMatrix_getVpointer(double **VvectorPtr);
     DSS_CAPI_DLL int32_t YMatrix_SolveSystem(double **NodeVPtr);
-    DSS_CAPI_DLL void YMatrix_Set_SystemYChanged(uint16_t arg);
-    DSS_CAPI_DLL uint16_t YMatrix_Get_SystemYChanged(void);
-    DSS_CAPI_DLL void YMatrix_Set_UseAuxCurrents(uint16_t arg);
-    DSS_CAPI_DLL uint16_t YMatrix_Get_UseAuxCurrents(void);
+    DSS_CAPI_DLL void YMatrix_Set_SystemYChanged(int8_t arg);
+    DSS_CAPI_DLL int8_t YMatrix_Get_SystemYChanged(void);
+    DSS_CAPI_DLL void YMatrix_Set_UseAuxCurrents(int8_t arg);
+    DSS_CAPI_DLL int8_t YMatrix_Get_UseAuxCurrents(void);
 
 
     /*
@@ -5392,8 +5392,8 @@ extern "C" {
     /*
     Keep load flag (T/F) for Reduction options that remove branches
     */
-    DSS_CAPI_DLL uint16_t ReduceCkt_Get_KeepLoad(void);
-    DSS_CAPI_DLL void ReduceCkt_Set_KeepLoad(uint16_t Value);
+    DSS_CAPI_DLL int8_t ReduceCkt_Get_KeepLoad(void);
+    DSS_CAPI_DLL void ReduceCkt_Set_KeepLoad(int8_t Value);
 
     /*
     Edit String for RemoveBranches functions
@@ -5628,8 +5628,8 @@ extern "C" {
     DSS_CAPI_DLL void LineGeometries_Get_Ycoords_GR(void);
     DSS_CAPI_DLL void LineGeometries_Set_Ycoords(double* ValuePtr, int32_t ValueCount);
     DSS_CAPI_DLL void LineGeometries_Get_Conductors(char*** ResultPtr, int32_t* ResultCount);
-    DSS_CAPI_DLL uint16_t LineGeometries_Get_Reduce(void);
-    DSS_CAPI_DLL void LineGeometries_Set_Reduce(uint16_t Value);
+    DSS_CAPI_DLL int8_t LineGeometries_Get_Reduce(void);
+    DSS_CAPI_DLL void LineGeometries_Set_Reduce(int8_t Value);
     DSS_CAPI_DLL double LineGeometries_Get_RhoEarth(void);
     DSS_CAPI_DLL void LineGeometries_Set_RhoEarth(double Value);
     DSS_CAPI_DLL double LineGeometries_Get_NormAmps(void);
@@ -5672,10 +5672,10 @@ extern "C" {
     DSS_CAPI_DLL void Reactors_Set_kvar(double Value);
     DSS_CAPI_DLL int32_t Reactors_Get_Phases(void);
     DSS_CAPI_DLL void Reactors_Set_Phases(int32_t Integer);
-    DSS_CAPI_DLL uint16_t Reactors_Get_IsDelta(void);
-    DSS_CAPI_DLL void Reactors_Set_IsDelta(uint16_t Value);
-    DSS_CAPI_DLL uint16_t Reactors_Get_Parallel(void);
-    DSS_CAPI_DLL void Reactors_Set_Parallel(uint16_t Value);
+    DSS_CAPI_DLL int8_t Reactors_Get_IsDelta(void);
+    DSS_CAPI_DLL void Reactors_Set_IsDelta(int8_t Value);
+    DSS_CAPI_DLL int8_t Reactors_Get_Parallel(void);
+    DSS_CAPI_DLL void Reactors_Set_Parallel(int8_t Value);
     DSS_CAPI_DLL double Reactors_Get_LmH(void);
     DSS_CAPI_DLL void Reactors_Set_LmH(double Value);
     DSS_CAPI_DLL char* Reactors_Get_Bus1(void);
@@ -5791,8 +5791,8 @@ extern "C" {
     script is always halted. Otherwise, the processing of the script continues
     until a major error occurs or it finishes.
     */
-    DSS_CAPI_DLL uint16_t Error_Get_EarlyAbort(void);
-    DSS_CAPI_DLL void Error_Set_EarlyAbort(uint16_t Value);
+    DSS_CAPI_DLL int8_t Error_Get_EarlyAbort(void);
+    DSS_CAPI_DLL void Error_Set_EarlyAbort(int8_t Value);
 
     DSS_CAPI_DLL int32_t CNData_Get_idx(void);
     DSS_CAPI_DLL void CNData_Set_idx(int32_t Value);

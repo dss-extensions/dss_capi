@@ -9,20 +9,20 @@ uses
 
 procedure Capacitors_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 function Capacitors_Get_First(): Integer; CDECL;
-function Capacitors_Get_IsDelta(): Wordbool; CDECL;
+function Capacitors_Get_IsDelta(): Boolean; CDECL;
 function Capacitors_Get_kV(): Double; CDECL;
 function Capacitors_Get_kvar(): Double; CDECL;
 function Capacitors_Get_Name(): PAnsiChar; CDECL;
 function Capacitors_Get_Next(): Integer; CDECL;
 function Capacitors_Get_NumSteps(): Integer; CDECL;
-procedure Capacitors_Set_IsDelta(Value: Wordbool); CDECL;
+procedure Capacitors_Set_IsDelta(Value: Boolean); CDECL;
 procedure Capacitors_Set_kV(Value: Double); CDECL;
 procedure Capacitors_Set_kvar(Value: Double); CDECL;
 procedure Capacitors_Set_Name(const Value: PAnsiChar); CDECL;
 procedure Capacitors_Set_NumSteps(Value: Integer); CDECL;
 function Capacitors_Get_Count(): Integer; CDECL;
-function Capacitors_AddStep(): Wordbool; CDECL;
-function Capacitors_SubtractStep(): Wordbool; CDECL;
+function Capacitors_AddStep(): Boolean; CDECL;
+function Capacitors_SubtractStep(): Boolean; CDECL;
 function Capacitors_Get_AvailableSteps(): Integer; CDECL;
 procedure Capacitors_Get_States(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
 procedure Capacitors_Get_States_GR(); CDECL;
@@ -98,7 +98,7 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function Capacitors_Get_IsDelta(): Wordbool; CDECL;
+function Capacitors_Get_IsDelta(): Boolean; CDECL;
 var
     elem: TCapacitorObj;
 begin
@@ -179,7 +179,7 @@ begin
         Result := elem.NumSteps;
 end;
 //------------------------------------------------------------------------------
-procedure Capacitors_Set_IsDelta(Value: Wordbool); CDECL;
+procedure Capacitors_Set_IsDelta(Value: Boolean); CDECL;
 var
     elem: TCapacitorObj;
 begin
@@ -225,7 +225,7 @@ begin
         Result := ActiveCircuit.ShuntCapacitors.ListSize;
 end;
 //------------------------------------------------------------------------------
-function Capacitors_AddStep(): Wordbool; CDECL;
+function Capacitors_AddStep(): Boolean; CDECL;
 var
     elem: TCapacitorObj;
 begin
@@ -234,7 +234,7 @@ begin
         Result := elem.AddStep;
 end;
 //------------------------------------------------------------------------------
-function Capacitors_SubtractStep(): Wordbool; CDECL;
+function Capacitors_SubtractStep(): Boolean; CDECL;
 var
     elem: TCapacitorObj;
 begin
