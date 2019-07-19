@@ -84,7 +84,7 @@ ReactorConnection = dict(
 );
 
 
-LoadShapeProp = (
+LoadShapeProp = dict(
     INVALID = 0,
     npts = 1,     # Number of points to expect
     interval = 2, # default = 1.0
@@ -117,6 +117,7 @@ rReactorProp = {str(x[1]): x[0] for x in ReactorProp.items()}
 
 fn = 'Z:/dss/dss_capi/Version7/Source/PCElements/Load.pas'
 fn = 'Z:/dss/dss_capi/Version7/Source/PDElements/Reactor.pas'
+fn = 'Z:/dss/dss_capi/Version7/Source/General/LoadShape.pas'
 
 cls = fn.split('/')[-1].split('.pas')[0]
 if fn.endswith('Load.pas'):
@@ -125,6 +126,9 @@ if fn.endswith('Load.pas'):
 elif fn.endswith('Reactor.pas'):
     props = ReactorProp
     rprops = rReactorProp
+elif fn.endswith('LoadShape.pas'):
+    props = LoadShapeProp
+    rprops = rLoadShapeProp
 
 
 text = open(fn, 'r').read()
@@ -144,7 +148,7 @@ with open(fn, 'w', newline='\n') as o:
     )
     
     # DumpProperties?
-    
+
     m = re.search(f'(function T{cls}Obj.GetPropertyValue.*?^end;)', text, flags=re.MULTILINE|re.DOTALL)
     sample = m.group(1)
     fixed_sample = sample
@@ -168,11 +172,20 @@ with open(fn, 'w', newline='\n') as o:
     m = re.search(f'(function T{cls}\.Edit: Integer;.*?^end;)', text, flags=re.MULTILINE|re.DOTALL)
     sample = m.group(1)
     fixed_sample = sample
-    fixed_sample = re.sub(
-        r'(\s+)(\d+), (\d+):', 
-        lambda x: f'{x.group(1)}T{cls}Prop.{rprops[x.group(2)]}, T{cls}Prop.{rprops[x.group(3)]}:' if x.group(2) in rprops and x.group(3) in rprops else x.group(0),
-        fixed_sample
-    )
+    for num in range(10, 0, -1):
+        expr = r'(\s+)(\d+)' + ', (\d+)'*(num-1) + ':'
+        fixed_sample = re.sub(
+            expr, 
+            lambda x: (
+                f'{x.group(1)}T{cls}Prop.{rprops[x.group(2)]}'
+                + ''.join([
+                    f', T{cls}Prop.{rprops[x.group(n)]}' for n in range(3, num + 1)
+                ]) 
+                + ':' if all(x.group(n) in rprops for n in range(2, num + 1)) else x.group(0)
+            ),
+            fixed_sample
+        )
+    
     fixed_sample = re.sub(
         r'(\s+)(\d+)\.\.(\d+):', 
         lambda x: f'{x.group(1)}T{cls}Prop.{rprops[x.group(2)]}..T{cls}Prop.{rprops[x.group(3)]}:' if x.group(2) in rprops and x.group(3) in rprops else x.group(0),
