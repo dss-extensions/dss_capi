@@ -114,9 +114,9 @@ begin
             begin
             // -> SetNcondsForConnection  // Force Reallocation of terminal info
                 case Connection of
-                    0:
+                    TLoadConnection.Wye:
                         NConds := Fnphases + 1;
-                    1:
+                    TLoadConnection.Delta:
                         case Fnphases of
                             1, 2:
                                 NConds := Fnphases + 1; // L-L and Open-delta
@@ -133,7 +133,7 @@ begin
                 UpdateVoltageBases;
 
             props.kW:
-                LoadSpecType := 0;
+                LoadSpecType := TLoadSpec.kW_PF;
 
             props.pf:
             begin
@@ -174,12 +174,12 @@ begin
 
             props.kvar:
             begin
-                LoadSpecType := 1;
+                LoadSpecType := TLoadSpec.kW_kvar;
                 PFSpecified := FALSE;
             end;// kW, kvar
  {*** see set_xfkva, etc           21, 22: LoadSpectype := 3;  // XFKVA*AllocationFactor, PF  }
             props.pctMean:
-                LoadSpecType := 2;  // kVA, PF
+                LoadSpecType := TLoadSpec.kva_PF;  // kVA, PF
  {*** see set_kwh, etc           28..30: LoadSpecType := 4;  // kWh, days, cfactor, PF }
             props.CVRCurve:
                 CVRShapeObj := LoadShapeClass.Find(CVRshape);
@@ -399,7 +399,7 @@ begin
             if ActiveIndex <> 0 then
             begin
                 TLoadObj(Active).kvarBase := Value;
-                TLoadObj(Active).LoadSpecType := 1;
+                TLoadObj(Active).LoadSpecType := TLoadSpec.kW_kvar;
                 TLoadObj(Active).RecalcElementData;  // set power factor based on kW, kvar
             end;
         end;
@@ -415,7 +415,7 @@ begin
             if ActiveIndex <> 0 then
             begin
                 TLoadObj(Active).kWBase := Value;
-                TLoadObj(Active).LoadSpecType := 0;
+                TLoadObj(Active).LoadSpecType := TLoadSpec.kW_PF; //TODO: why? It shouldn't change the spec type if only the kW value changes
                 TLoadObj(Active).RecalcElementData; // sets kvar based on kW and pF
             end;
         end;
@@ -431,7 +431,7 @@ begin
             if ActiveIndex <> 0 then
             begin
                 TLoadObj(Active).PFNominal := Value;
-                TLoadObj(Active).LoadSpecType := 0;
+                TLoadObj(Active).LoadSpecType := TLoadSpec.kW_PF;
                 TLoadObj(Active).RecalcElementData; //  sets kvar based on kW and pF
             end;
         end;
@@ -562,7 +562,7 @@ begin
     Result := FALSE;
     elem := ActiveLoad;
     if elem <> NIL then
-        if elem.Connection > 0 then
+        if elem.Connection = TLoadConnection.Delta then
             Result := TRUE;
 end;
 //------------------------------------------------------------------------------
@@ -605,21 +605,21 @@ begin
     if elem <> NIL then
     begin
         case elem.FLoadModel of
-            1:
+            TLoadModel.ConstPQ:
                 Result := dssLoadConstPQ;
-            2:
+            TLoadModel.ConstZ:
                 Result := dssLoadConstZ;
-            3:
+            TLoadModel.Motor:
                 Result := dssLoadMotor;
-            4:
+            TLoadModel.CVR:
                 Result := dssLoadCVR;
-            5:
+            TLoadModel.ConstI:
                 Result := dssLoadConstI;
-            6:
+            TLoadModel.ConstPFixedQ:
                 Result := dssLoadConstPFixedQ;
-            7:
+            TLoadModel.ConstPFixedX:
                 Result := dssLoadConstPFixedX;
-            8:
+            TLoadModel.ZIPV:
                 Result := dssLoadZIPV;
         end;
     end;
@@ -858,7 +858,10 @@ var
 begin
     elem := ActiveLoad;
     if elem <> NIL then
-        elem.Connection := Integer(Value);
+        if value then
+            elem.Connection := TLoadConnection.Delta
+        else
+            elem.Connection := TLoadConnection.Wye;
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_kva(Value: Double); CDECL;
@@ -886,9 +889,15 @@ procedure Loads_Set_Model(Value: Integer); CDECL;
 var
     elem: TLoadObj;
 begin
+    if (Value < Ord(Low(TLoadModel))) or (Value > Ord(High(TLoadModel))) then
+    begin
+        DoSimpleMsg(Format('Invalid value for load model (%d)!', [Value]), 5891);
+        Exit;
+    end;
+
     elem := ActiveLoad;
     if elem <> NIL then
-        elem.FLoadModel := Value; // enums match the integer codes
+        elem.FLoadModel := TLoadModel(Value); // enums match the integer codes
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_NumCust(Value: Integer); CDECL;

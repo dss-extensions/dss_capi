@@ -3503,7 +3503,7 @@ Begin
     iBus := ActiveCircuit.BusList.Find (sBus);
     pBus := ActiveCircuit.Buses^[iBus];
     kvln := pBus.kVBase;
-    if (pLoad.Connection = 1) Or (pLoad.NPhases = 3) then
+    if (pLoad.Connection = TLoadConnection.Delta) Or (pLoad.NPhases = 3) then
       pLoad.kVLoadBase := kvln * sqrt (3.0)
     else
       pLoad.kVLoadBase := kvln;

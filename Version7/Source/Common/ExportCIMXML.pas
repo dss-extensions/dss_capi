@@ -905,7 +905,7 @@ begin
         exit;
     p := 1000.0 * pLoad.kWBase / pLoad.NPhases;
     q := 1000.0 * pLoad.kvarBase / pLoad.NPhases;
-    if pLoad.Connection = 1 then
+    if pLoad.Connection = TLoadConnection.Delta then
         s := DeltaPhaseString(pLoad)
     else
         s := PhaseString(pLoad, 1);
@@ -2466,25 +2466,25 @@ begin
                     CircuitNode(F, ActiveCircuit);
                     VbaseNode(F, pLoad);
                     case FLoadModel of
-                        1:
+                        TLoadModel.ConstPQ:
                             GuidNode(F, 'EnergyConsumer.LoadResponse', id1_ConstkVA);
-                        2:
+                        TLoadModel.ConstZ:
                             GuidNode(F, 'EnergyConsumer.LoadResponse', id2_ConstZ);
-                        3:
+                        TLoadModel.Motor:
                             GuidNode(F, 'EnergyConsumer.LoadResponse', id3_ConstPQuadQ);
-                        4:
+                        TLoadModel.CVR:
                             GuidNode(F, 'EnergyConsumer.LoadResponse', id4_LinPQuadQ);
-                        5:
+                        TLoadModel.ConstI:
                             GuidNode(F, 'EnergyConsumer.LoadResponse', id5_ConstI);
-                        6:
+                        TLoadModel.ConstPFixedQ:
                             GuidNode(F, 'EnergyConsumer.LoadResponse', id6_ConstPConstQ);
-                        7:
+                        TLoadModel.ConstPFixedX:
                             GuidNode(F, 'EnergyConsumer.LoadResponse', id7_ConstPConstX);
                     end;
                     DoubleNode(F, 'EnergyConsumer.p', 1000.0 * kWBase);
                     DoubleNode(F, 'EnergyConsumer.q', 1000.0 * kvarBase);
                     IntegerNode(F, 'EnergyConsumer.customerCount', NumCustomers);
-                    if Connection = 0 then
+                    if Connection = TLoadConnection.Wye then
                     begin
                         ShuntConnectionKindNode(F, 'EnergyConsumer', 'Y');
                         BooleanNode(F, 'EnergyConsumer.grounded', TRUE);  // TODO - check bus 2
