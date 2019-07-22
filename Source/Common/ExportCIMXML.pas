@@ -42,7 +42,8 @@ Type
   GuidChoice = (Bank, Wdg, XfCore, XfMesh, WdgInf, ScTest, OcTest,
     BaseV, LinePhase, LoadPhase, GenPhase, CapPhase, SolarPhase, BatteryPhase,
     XfLoc, LoadLoc, LineLoc, CapLoc, Topo, ReacLoc, SolarLoc, BatteryLoc,
-    OpLimV);
+    OpLimV, OpLimI);
+
   TBankObject = class(TNamedObject)
   public
     vectorGroup: String;
@@ -63,11 +64,21 @@ Type
     procedure BuildVectorGroup;
   end;
 
+  TOpLimitObject = class(TNamedObject)
+  public
+    NormAmps: double;
+    EmergAmps: double;
+    constructor Create(norm, emerg: double);
+    destructor Destroy; override;
+  end;
+
 Var
   GuidHash: THashList;       // index is 1-based
   GuidList: array of TGuid;  // index is 0-based
   BankHash: THashList;
   BankList: array of TBankObject;
+  OpLimitHash: THashList;
+  OpLimitList: array of TOpLimitObject;
 
 Const
 //  CIM_NS = 'http://iec.ch/TC57/2012/CIM-schema-cim17';
@@ -305,6 +316,18 @@ begin
   end;
 end;
 
+constructor TOpLimitObject.Create(norm, emerg:double);
+begin
+  NormAmps := norm;
+  EmergAmps := emerg;
+  Inherited Create('OpLimI');
+end;
+
+destructor TOpLimitObject.Destroy;
+begin
+  Inherited Destroy;
+end;
+
 // the CIM transformer model requires some identified objects that don't have
 // a counterpart in the DSS named objects.  These include banks, windings, and
 // winding info.  So we create temporary GUIDs on the fly, and use a hash list when we
@@ -319,6 +342,12 @@ procedure StartBankList (size: Integer);
 begin
   BankHash := THashList.Create(size);
   SetLength (BankList, size);
+end;
+
+procedure StartOpLimitList (size: Integer);
+begin
+  OpLimitHash := THashList.Create(size);
+  SetLength (OpLimitList, size);
 end;
 
 procedure AddBank (pBank: TBankObject);
@@ -338,6 +367,25 @@ begin
   Result := nil;
   ref := BankHash.Find (sBank);
   if ref > 0 then Result:=BankList[ref-1];
+end;
+
+procedure AddOpLimit (pLimit: TOpLimitObject);
+var
+  ref, size: Integer;
+begin
+  ref := OpLimitHash.Add(pLimit.localName);
+  size := High(OpLimitList) + 1;
+  if ref > size then SetLength (OpLimitList, 2 * size);
+  OpLimitList[ref-1] := pLimit;
+end;
+
+function GetOpLimit (sLimit: String): TOpLimitObject;
+var
+  ref : Integer;
+begin
+  Result := nil;
+  ref := OpLimitHash.Find (sLimit);
+  if ref > 0 then Result:=OpLimitList[ref-1];
 end;
 
 function GetHashedGuid (key: String): TGuid;
@@ -372,6 +420,7 @@ begin
     OcTest: key := 'OcTest=';
     BaseV: key := 'BaseV=';
     OpLimV: key := 'OpLimV=';
+    OpLimI: key := 'OpLimI=';
     LinePhase: key := 'LinePhase=';
     LoadPhase: key := 'LoadPhase=';
     GenPhase: key := 'GenPhase=';
@@ -423,6 +472,16 @@ begin
   Result := GetDevGuid (OpLimV, GetOpLimVName (val), 1);
 end;
 
+function GetOpLimIName (norm, emerg: double): String;
+begin
+  Result := 'OpLimI_' + FloatToStrF (norm, ffFixed, 6, 1) + '_' + FloatToStrF (emerg, ffFixed, 6, 1);
+end;
+
+function GetOpLimIGuid (norm, emerg: double): TGuid;
+begin
+  Result := GetDevGuid (OpLimI, GetOpLimIName (norm, emerg), 1);
+end;
+
 procedure FreeGuidList;
 begin
   GuidHash.Free;
@@ -433,6 +492,12 @@ procedure FreeBankList;
 begin
   BankHash.Free;
   BankList := nil;
+end;
+
+procedure FreeOpLimitList;
+begin
+  OpLimitHash.Free;
+  OpLimitList := nil;
 end;
 
 procedure DoubleNode (var F: TextFile; Node: String; val: Double);
@@ -1049,11 +1114,13 @@ begin
 end;
 
 procedure WriteReferenceTerminals(var F:TextFile; pElem:TDSSCktElement;
-  geoGUID: TGuid; crsGUID: TGuid; refGUID: TGuid);
+  geoGUID: TGuid; crsGUID: TGuid; refGUID: TGuid; 
+  norm: double=0.0; emerg: double=0.0);
 var
   Nterm, j, ref : Integer;
-  BusName, TermName : String;
-  TermGuid: TGuid;
+  BusName, TermName, LimitName : String;
+  TermGuid, LimitGuid: TGuid;
+  pLimit: TOpLimitObject;
 begin
   Nterm := pElem.Nterms;
   BusName := pElem.FirstBus;
@@ -1069,15 +1136,29 @@ begin
       IntegerNode (F, 'ACDCTerminal.sequenceNumber', j);
       Writeln (F, Format('  <cim:Terminal.ConnectivityNode rdf:resource="#%s"/>',
         [ActiveCircuit.Buses[ref].CIM_ID]));
+      if (j = 1) and (norm > 0.0) then begin
+        if emerg < norm then emerg := norm;
+        LimitName := GetOpLimIName (norm, emerg);
+        pLimit := GetOpLimit (LimitName);
+        if pLimit = nil then begin
+          pLimit := TOpLimitObject.Create(norm, emerg);
+          pLimit.localName := LimitName;
+          pLimit.GUID := GetDevGuid (OpLimI, LimitName, 0);
+          AddOpLimit (pLimit);
+        end;
+        LimitGuid := GetDevGuid (OpLimI, LimitName, 0);
+        GuidNode (F, 'ACDCTerminal.OperationalLimitSet', LimitGuid);
+      end;
       EndInstance (F, 'Terminal');
     end;
     BusName := pElem.Nextbus;
   end;
 end;
 
-procedure WriteTerminals(var F:TextFile; pElem:TDSSCktElement; geoGUID: TGuid; crsGUID: TGuid);
+procedure WriteTerminals(var F:TextFile; pElem:TDSSCktElement; geoGUID: TGuid; crsGUID: TGuid; 
+  norm: double=0.0; emerg: double=0.0);
 begin
-  WriteReferenceTerminals (F, pElem, geoGUID, crsGUID, pElem.GUID);
+  WriteReferenceTerminals (F, pElem, geoGUID, crsGUID, pElem.GUID, norm, emerg);
   WritePositions (F, pElem, geoGUID, crsGUID);
 end;
 
@@ -1302,7 +1383,12 @@ Var
   pName1, pName2 : TNamedObject;
   pIsland, pSwing : TNamedObject;  // island and ref node
   pRegion, pSubRegion, pLocation, pSubstation, pCRS : TNamedObject;
+
+  pILimit : TOpLimitObject;
   pNormLimit, pEmergLimit, pRangeAHiLimit, pRangeALoLimit, pRangeBHiLimit, pRangeBLoLimit : TNamedObject; // OperationalLimitType
+  LimitName : String;
+  LimitGuid: TGuid;
+
   zbase  : double;
   s      : String;
   swtCls : String;  // based on controls, if any, attached to a line having switch=yes
@@ -1373,6 +1459,7 @@ Begin
     i2 := ActiveCircuit.Transformers.ListSize * 11; // bank, info, 3 wdg, 3 wdg info, 3sctest
     StartGuidList (i1 + i2);
     StartBankList (ActiveCircuit.Transformers.ListSize);
+    StartOpLimitList (ActiveCircuit.Lines.ListSize);
 
     {$IFDEF FPC}
  		// this only works in the command line version
@@ -1754,7 +1841,7 @@ Begin
           GuidNode (F, 'PowerSystemResource.Location', geoGUID);
           EndInstance (F, 'LinearShuntCompensator');
           AttachCapPhases (F, pCap, geoGUID);
-          WriteTerminals (F, pCap, geoGUID, crsGUID);
+          WriteTerminals (F, pCap, geoGUID, crsGUID, pCap.NormAmps, pCap.EmergAmps);
         end;
       end;
       pCap := ActiveCircuit.ShuntCapacitors.Next;
@@ -2011,6 +2098,18 @@ Begin
           IntegerNode (F, 'ACDCTerminal.sequenceNumber', i);
           Writeln (F, Format('<cim:Terminal.ConnectivityNode rdf:resource="#%s"/>',
             [ActiveCircuit.Buses[j].CIM_ID]));
+          if i = 1 then begin   // write the current limit on HV winding, assuming that's winding 1
+            LimitName := GetOpLimIName (pXf.NormAmps, pXf.EmergAmps);
+            pILimit := GetOpLimit (LimitName);
+            if pILimit = nil then begin
+              pILimit := TOpLimitObject.Create(pXf.NormAmps, pXf.EmergAmps);
+              pILimit.localName := LimitName;
+              pILimit.GUID := GetDevGuid (OpLimI, LimitName, 0);
+              AddOpLimit (pILimit);
+            end;
+            LimitGuid := GetDevGuid (OpLimI, LimitName, 0);
+            GuidNode (F, 'ACDCTerminal.OperationalLimitSet', LimitGuid);
+          end;
           EndInstance (F, 'Terminal');
         end;
       end;
@@ -2132,7 +2231,7 @@ Begin
 				DoubleNode (F, 'ACLineSegment.b0ch', 0.0);
 				EndInstance (F, 'ACLineSegment');
 				// AttachLinePhases (F, pReac); // for the 8500-node circuit, we only need 3 phase series reactors
-				WriteTerminals (F, pReac, geoGUID, crsGUID);
+				WriteTerminals (F, pReac, geoGUID, crsGUID, pReac.NormAmps, pReac.EmergAmps);
 			end;
 			pReac := ActiveCircuit.Reactors.Next;
 		end;
@@ -2222,7 +2321,7 @@ Begin
             end;
           end;
         end;
-        WriteTerminals (F, pLine, geoGUID, crsGUID);
+        WriteTerminals (F, pLine, geoGUID, crsGUID, pLine.NormAmps, pLine.EmergAmps);
       end;
       pLine := ActiveCircuit.Lines.Next;
     end;
@@ -2437,11 +2536,36 @@ Begin
       pSpac := clsSpac.ElementList.Next;
     end;
 
+    // export the operational current limits that were created on-the-fly
+    for i:=Low(OpLimitList) to High(OpLimitList) do begin
+      pILimit := OpLimitList[i];
+      if pILimit = nil then break;
+      StartInstance (F, 'OperationalLimitSet', pILimit);
+      EndInstance (F, 'OperationalLimitSet');
+      pName1.LocalName := pILimit.LocalName + '_Norm';
+      CreateGUID (tmpGUID);
+      pName1.GUID := tmpGUID;
+      StartInstance (F, 'CurrentLimit', pName1);
+      RefNode (F, 'OperationalLimit.OperationalLimitSet', pILimit);
+      RefNode (F, 'OperationalLimit.OperationalLimitType', pNormLimit);
+      DoubleNode (F, 'CurrentLimit.value', pILimit.NormAmps);
+      EndInstance (F, 'CurrentLimit');
+      pName2.LocalName := pILimit.LocalName + '_Emerg';
+      CreateGUID (tmpGUID);
+      pName2.GUID := tmpGUID;
+      StartInstance (F, 'CurrentLimit', pName2);
+      RefNode (F, 'OperationalLimit.OperationalLimitSet', pILimit);
+      RefNode (F, 'OperationalLimit.OperationalLimitType', pEmergLimit);
+      DoubleNode (F, 'CurrentLimit.value', pILimit.EmergAmps);
+      EndInstance (F, 'CurrentLimit');
+    end;
+
     pName1.Free;
     pName2.Free;
 
     FreeGuidList;
     FreeBankList;
+    FreeOpLimitList;
 
     Writeln (F, '</rdf:RDF>');
 
