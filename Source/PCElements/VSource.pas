@@ -875,6 +875,12 @@ Var
    i, j  :Integer;
    FreqMultiplier:Double;
 
+   Function TorF(Value:Boolean):String;
+   Begin
+   if Value then  Result := 'T' Else Result := 'F';
+   End;
+
+
 Begin
 
  // Build only YPrim Series
