@@ -720,6 +720,7 @@ function TDSSCktElement.Get_MaxPower(idxTerm: Integer;ActorID: integer): Complex
  2/12/2019}
 VAR
    volts,
+   VN,
    cPower    : Complex;
    i, k,
    nrefN,
@@ -727,6 +728,7 @@ VAR
    MaxCurr,
    CurrMag   : Double;
    MaxPhase  : Integer;
+   Parent    : String;
 
 Begin
 
@@ -749,13 +751,17 @@ Begin
           End;
        End;
 
-
-       nref   := ActiveTerminal.TermNodeRef^[MaxPhase]; // reference to the phase voltage with the max current
-       nrefN  := ActiveTerminal.TermNodeRef^[Fnconds];  // reference to the ground terminal (GND or other phase)
+       Parent   :=  ParentClass.Name;
+       nref     := ActiveTerminal.TermNodeRef^[MaxPhase]; // reference to the phase voltage with the max current
+       nrefN    := ActiveTerminal.TermNodeRef^[Fnconds];  // reference to the ground terminal (GND or other phase)
        WITH ActiveCircuit[ActorID].Solution DO     // Get power into max phase of active terminal
        Begin
-          volts   := csub(NodeV^[nref],NodeV^[nrefN]);
-          Cpower := Cmul(volts, conjg(Iterminal[k+MaxPhase]) ) ;
+
+          if  not (Parent = 'Transformer') then           // Only for transformers
+            volts :=  NodeV^[nref]
+          else
+            volts   :=  csub(NodeV^[nref],NodeV^[nrefN]);
+          Cpower  :=  Cmul(volts, conjg(Iterminal[k+MaxPhase]) ) ;
        End;
 
        // Compute equivalent total power of all phases assuming equal to max power in all phases
