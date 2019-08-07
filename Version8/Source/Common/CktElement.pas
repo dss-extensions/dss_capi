@@ -15,7 +15,7 @@ unit CktElement;
 interface
 
 USES
-  Ucomplex,  Ucmatrix,  ArrayDef, Terminal, DSSObject, DSSClass, PointerList;
+  Ucomplex,  Ucmatrix,  ArrayDef, Terminal, DSSObject, DSSClass, PointerList, DSSClassDefs;
 
 
 TYPE
@@ -722,13 +722,13 @@ VAR
    volts,
    VN,
    cPower    : Complex;
+   ClassIdx,
    i, k,
    nrefN,
    nref      : Integer;
    MaxCurr,
    CurrMag   : Double;
    MaxPhase  : Integer;
-   Parent    : String;
 
 Begin
 
@@ -751,13 +751,14 @@ Begin
           End;
        End;
 
-       Parent   :=  ParentClass.Name;
+
+       ClassIdx := DSSObjType and CLASSMASK;              // gets the parent class descriptor (int)
        nref     := ActiveTerminal.TermNodeRef^[MaxPhase]; // reference to the phase voltage with the max current
        nrefN    := ActiveTerminal.TermNodeRef^[Fnconds];  // reference to the ground terminal (GND or other phase)
        WITH ActiveCircuit[ActorID].Solution DO     // Get power into max phase of active terminal
        Begin
 
-          if  not (Parent = 'Transformer') then           // Only for transformers
+          if  not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
             volts :=  NodeV^[nref]
           else
             volts   :=  csub(NodeV^[nref],NodeV^[nrefN]);
