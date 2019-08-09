@@ -77,6 +77,8 @@ procedure CktElement_Get_VoltagesMagAng_GR(); CDECL;
 
 // API Extensions
 function CktElement_Get_IsIsolated(): Boolean; CDECL;
+procedure CktElement_Get_NodeRef(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure CktElement_Get_NodeRef_GR(); CDECL;
 
 implementation
 
@@ -1590,6 +1592,29 @@ begin
         Result := ActiveCircuit[ActiveActor].ActiveCktElement.IsIsolated
     else
         Result := FALSE;
+end;
+//------------------------------------------------------------------------------
+procedure CktElement_Get_NodeRef(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+// Returns a copy of the internal NodeRef data
+var
+    Result: PIntegerArray;
+begin
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+    if ActiveCircuit[ActiveActor] = NIL then Exit;
+    if ActiveCircuit[ActiveActor].ActiveCktElement = NIL then Exit;
+    if ActiveCircuit[ActiveActor].ActiveCktElement.NodeRef = NIL then Exit;
+    
+    with ActiveCircuit[ActiveActor].ActiveCktElement do
+    begin
+        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, Yorder);
+        Move(NodeRef[1], ResultPtr[0], Yorder * SizeOf(Integer));
+    end;
+end;
+
+procedure CktElement_Get_NodeRef_GR(); CDECL;
+// Same as CktElement_Get_NodeRef but uses global result (GR) pointers
+begin
+    CktElement_Get_NodeRef(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
 end;
 //------------------------------------------------------------------------------
 end.

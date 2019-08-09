@@ -1106,6 +1106,16 @@ extern "C" {
     DSS_CAPI_DLL void CktElement_Get_NodeOrder_GR(void);
 
     /*
+    Array of integers, a copy of the internal NodeRef of the CktElement.
+    */
+    DSS_CAPI_DLL void CktElement_Get_NodeRef(int32_t** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as CktElement_Get_NodeRef but using the global buffer interface for results
+    */
+    DSS_CAPI_DLL void CktElement_Get_NodeRef_GR(void);
+
+
+    /*
     True if a recloser, relay, or fuse controlling this ckt element. OCP = Overcurrent Protection
     */
     DSS_CAPI_DLL int8_t CktElement_Get_HasOCPDevice(void);
