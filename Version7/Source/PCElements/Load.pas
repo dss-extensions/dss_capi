@@ -203,7 +203,6 @@ type
         Fixed: Boolean;   // IF Fixed, always at base value
         ShapeIsActual: Boolean;
         PFSpecified: Boolean;  // Added 3-16-16 to fix problem with UseActual
-        FnZIPV: Integer;
 
         function AllTerminalsClosed: Boolean;
         procedure CalcDailyMult(Hr: Double);
@@ -222,7 +221,6 @@ type
         procedure DoHarmonicMode;
         procedure DoCVRModel;
         procedure DoZIPVModel;
-        procedure SetZIPVSize(n: Integer);
         procedure DoMotorTypeLoad;
         function GrowthFactor(Year: Integer): Double;
         procedure StickCurrInTerminalArray(TermArray: pComplexArray; const Curr: Complex; i: Integer);
@@ -239,7 +237,6 @@ type
         procedure Set_kWhDays(const Value: Double);
         procedure Set_AllocationFactor(const Value: Double);
         procedure SetkWkvar(const PkW, Qkvar: Double);
-        procedure set_nZIPV(const Value: Integer);
 
 
     PROTECTED
@@ -271,7 +268,7 @@ type
         YearlyShapeObj: TLoadShapeObj;  // Shape for this load
         CVRshape: String;
         CVRShapeObj: TLoadShapeObj;
-        ZIPV: pDoubleArray;  // Made public 5-20-2013
+        ZIPV: Array[1..7] of Double;  // Made public 5-20-2013
         puSeriesRL: Double;
         RelWeighting: Double;
 
@@ -320,7 +317,8 @@ type
         property MinPU: Double READ Vminpu;
         property ExemptLoad: Boolean READ ExemptFromLDCurve;
         property FixedLoad: Boolean READ Fixed;
-        property nZIPV: Integer READ FnZIPV WRITE set_nZIPV;
+    const
+        nZIPV = 7;
     end;
 
 var
@@ -723,10 +721,7 @@ begin
                 TLoadProp.NumCust:
                     NumCustomers := Parser.IntValue;
                 TLoadProp.ZIPV:
-                begin
-                    SetZIPVSize(7);
-                    Parser.ParseAsVector(7, ZIPV);
-                end;
+                    Parser.ParseAsVector(7, @ZIPV[1]);
                 TLoadProp.pctSeriesRL:
                     puSeriesRL := Parser.DblValue / 100.0;
                 TLoadProp.RelWeight:
@@ -881,9 +876,8 @@ begin
             puSeriesRL := OtherLoad.puSeriesRL;
             RelWeighting := OtherLoad.RelWeighting;
 
-            SetZIPVSize(OtherLoad.nZIPV);
-            for i := 1 to FnZIPV do
-                ZIPV^[i] := OtherLoad.ZIPV^[i];
+            for i := 1 to nZIPV do
+                ZIPV[i] := OtherLoad.ZIPV[i];
 
             ClassMakeLike(OtherLoad);  // Take care of inherited class properties
 
@@ -1006,8 +1000,6 @@ begin
     HarmMag := NIL;
     HarmAng := NIL;
     puSeriesRL := 0.50;
-    ZIPV := NIL;
-    SetZIPVSize(0);
     FPhaseCurr := NIL;  // storage for intermediate current computation
                           // allocated in Recalcelementdata
 
@@ -1024,16 +1016,9 @@ begin
     YPrimOpenCond.Free;
     ReallocMem(HarmMag, 0);
     ReallocMem(HarmAng, 0);
-    ReallocMem(ZIPV, 0);
     Reallocmem(FPhaseCurr, 0);
 
     inherited Destroy;
-end;
-
-procedure TLoadObj.SetZIPVSize(n: Integer);
-begin
-    FnZIPV := n;
-    ReAllocMem(ZIPV, Sizeof(ZIPV^[1]) * FnZIPV);
 end;
 
 //----------------------------------------------------------------------------
@@ -1769,31 +1754,31 @@ begin
         begin
             if VMag <= VBase95 then
             begin
-                CurrZ := Cmul(Cmplx(Yeq.re * ZIPV^[1], Yeq.im * ZIPV^[4]), V);    // ***Changed by Celso & Paulow
-                CurrP := Cmul(Cmplx(InterpolateY95_YLow(Vmag).re * ZIPV^[3], InterpolateY95_YLow(Vmag).im * ZIPV^[6]), V);   // ***Changed by Celso & Paulo
-                CurrI := Cmul(Cmplx(InterpolateY95I_YLow(Vmag).re * ZIPV^[2], InterpolateY95I_YLow(Vmag).im * ZIPV^[5]), V);  // ***Changed by Celso & Paulo
+                CurrZ := Cmul(Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4]), V);    // ***Changed by Celso & Paulow
+                CurrP := Cmul(Cmplx(InterpolateY95_YLow(Vmag).re * ZIPV[3], InterpolateY95_YLow(Vmag).im * ZIPV[6]), V);   // ***Changed by Celso & Paulo
+                CurrI := Cmul(Cmplx(InterpolateY95I_YLow(Vmag).re * ZIPV[2], InterpolateY95I_YLow(Vmag).im * ZIPV[5]), V);  // ***Changed by Celso & Paulo
                 Curr := CAdd(CurrZ, CAdd(CurrI, CurrP));   // ***Changed by Celso & Paulo
             end
             else
             if VMag > VBase105 then
             begin
-                CurrZ := Cmul(Cmplx(Yeq.re * ZIPV^[1], Yeq.im * ZIPV^[4]), V);   // ***Changed by Celso & Paulo
-                CurrP := Cmul(Cmplx(Yeq105.re * ZIPV^[3], Yeq105.im * ZIPV^[6]), V);         // ***Changed by Celso & Paulo
-                CurrI := Cmul(Cmplx(Yeq105I.re * ZIPV^[2], Yeq105I.im * ZIPV^[5]), V);       // ***Changed by Celso & Paulo
+                CurrZ := Cmul(Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4]), V);   // ***Changed by Celso & Paulo
+                CurrP := Cmul(Cmplx(Yeq105.re * ZIPV[3], Yeq105.im * ZIPV[6]), V);         // ***Changed by Celso & Paulo
+                CurrI := Cmul(Cmplx(Yeq105I.re * ZIPV[2], Yeq105I.im * ZIPV[5]), V);       // ***Changed by Celso & Paulo
                 Curr := CAdd(CurrZ, CAdd(CurrI, CurrP));
             end
             else
             begin
-                CurrZ := Cmul(Cmplx(Yeq.re * ZIPV^[1], Yeq.im * ZIPV^[4]), V);
-                CurrI := Conjg(Cdiv(Cmplx(WNominal * ZIPV^[2], varNominal * ZIPV^[5]), CMulReal(CDivReal(V, Cabs(V)), Vbase)));
-                CurrP := Conjg(Cdiv(Cmplx(WNominal * ZIPV^[3], varNominal * ZIPV^[6]), V));
+                CurrZ := Cmul(Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4]), V);
+                CurrI := Conjg(Cdiv(Cmplx(WNominal * ZIPV[2], varNominal * ZIPV[5]), CMulReal(CDivReal(V, Cabs(V)), Vbase)));
+                CurrP := Conjg(Cdiv(Cmplx(WNominal * ZIPV[3], varNominal * ZIPV[6]), V));
                 Curr := CAdd(CurrZ, CAdd(CurrI, CurrP));
             end;
 
       // low-voltage drop-out
-            if ZIPV^[7] > 0.0 then
+            if ZIPV[7] > 0.0 then
             begin
-                vx := 500.0 * (Vmag / Vbase - ZIPV^[7]);
+                vx := 500.0 * (Vmag / Vbase - ZIPV[7]);
                 evx := exp(2 * vx);
                 yv := 0.5 * (1 + (evx - 1) / (evx + 1));
                 Curr := CMulReal(Curr, yv);
@@ -2430,7 +2415,7 @@ begin
                 begin
                     Write(F, '~ ', PropertyName^[i], '=');
                     for j := 1 to nZIPV do
-                        Write(F, ZIPV^[j]: 0: 2, ' ');
+                        Write(F, ZIPV[j]: 0: 2, ' ');
                     Writeln(F, '"');
                 end;
                 34:
@@ -2496,11 +2481,6 @@ begin
     FkWhDays := Value;
     LoadSpecType := TLoadSpec.kWh_PF;
     ComputeAllocatedLoad;
-end;
-
-procedure TLoadObj.set_nZIPV(const Value: Integer);
-begin
-    SetZIPVSize(Value);
 end;
 
 procedure TLoadObj.ComputeAllocatedLoad;
@@ -2682,7 +2662,7 @@ begin
         begin
             Result := '';
             for i := 1 to nZIPV do
-                Result := Result + Format(' %-g', [ZIPV^[i]]);
+                Result := Result + Format(' %-g', [ZIPV[i]]);
         end;
         TLoadProp.pctSeriesRL:
             Result := Format('%-g', [puSeriesRL * 100.0]);

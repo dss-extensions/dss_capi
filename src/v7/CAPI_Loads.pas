@@ -1022,8 +1022,6 @@ begin
     elem := ActiveLoad;
     if elem <> NIL then
     begin
-        // allocate space for 7
-        elem.nZIPV := 7;
         Move(ValuePtr[0], elem.ZIPV[1], elem.nZIPV * SizeOf(Double));
     end;
 end;
