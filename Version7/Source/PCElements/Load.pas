@@ -1747,35 +1747,71 @@ begin
         V := Vterminal^[i];
         VMag := Cabs(V);
 
-    { May 31, 2016 changed to linear model below VbaseLow -- converges better for low voltage}
+        { May 31, 2016 changed to linear model below VbaseLow -- converges better for low voltage}
         if VMag <= VBaseLow then
             Curr := Cmul(Yeq, V)  // Below VbaseZ resort to linear equal to Yprim contribution
         else
         begin
             if VMag <= VBase95 then
             begin
-                CurrZ := Cmul(Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4]), V);    // ***Changed by Celso & Paulow
-                CurrP := Cmul(Cmplx(InterpolateY95_YLow(Vmag).re * ZIPV[3], InterpolateY95_YLow(Vmag).im * ZIPV[6]), V);   // ***Changed by Celso & Paulo
-                CurrI := Cmul(Cmplx(InterpolateY95I_YLow(Vmag).re * ZIPV[2], InterpolateY95I_YLow(Vmag).im * ZIPV[5]), V);  // ***Changed by Celso & Paulo
-                Curr := CAdd(CurrZ, CAdd(CurrI, CurrP));   // ***Changed by Celso & Paulo
+                if (ZIPV[1] <> 0) or (ZIPV[4] <> 0) then
+                    CurrZ := Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4])
+                else
+                    CurrZ := CZERO;
+                
+                if (ZIPV[3] <> 0) or (ZIPV[6] <> 0) then
+                    CurrP := Cmplx(InterpolateY95_YLow(Vmag).re * ZIPV[3], InterpolateY95_YLow(Vmag).im * ZIPV[6])
+                else
+                    CurrP := CZERO;
+                
+                if (ZIPV[2] <> 0) or (ZIPV[5] <> 0) then
+                    CurrI := Cmplx(InterpolateY95I_YLow(Vmag).re * ZIPV[2], InterpolateY95I_YLow(Vmag).im * ZIPV[5])
+                else
+                    CurrI := CZERO;
+                    
+                Curr := Cmul(CAdd(CurrZ, CAdd(CurrI, CurrP)), V);
             end
             else
             if VMag > VBase105 then
             begin
-                CurrZ := Cmul(Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4]), V);   // ***Changed by Celso & Paulo
-                CurrP := Cmul(Cmplx(Yeq105.re * ZIPV[3], Yeq105.im * ZIPV[6]), V);         // ***Changed by Celso & Paulo
-                CurrI := Cmul(Cmplx(Yeq105I.re * ZIPV[2], Yeq105I.im * ZIPV[5]), V);       // ***Changed by Celso & Paulo
-                Curr := CAdd(CurrZ, CAdd(CurrI, CurrP));
+                if (ZIPV[1] <> 0) or (ZIPV[4] <> 0) then
+                    CurrZ := Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4])
+                else
+                    CurrZ := CZERO;
+                
+                if (ZIPV[3] <> 0) or (ZIPV[6] <> 0) then
+                    CurrP := Cmplx(Yeq105.re * ZIPV[3], Yeq105.im * ZIPV[6])
+                else
+                    CurrP := CZERO;
+                
+                if (ZIPV[2] <> 0) or (ZIPV[5] <> 0) then
+                    CurrI := Cmplx(Yeq105I.re * ZIPV[2], Yeq105I.im * ZIPV[5])
+                else
+                    CurrI := CZERO;
+                    
+                Curr := Cmul(CAdd(CurrZ, CAdd(CurrI, CurrP)), V);
             end
             else
             begin
-                CurrZ := Cmul(Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4]), V);
-                CurrI := Conjg(Cdiv(Cmplx(WNominal * ZIPV[2], varNominal * ZIPV[5]), CMulReal(CDivReal(V, Cabs(V)), Vbase)));
-                CurrP := Conjg(Cdiv(Cmplx(WNominal * ZIPV[3], varNominal * ZIPV[6]), V));
+                if (ZIPV[1] <> 0) or (ZIPV[4] <> 0) then
+                    CurrZ := Cmul(Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4]), V)
+                else
+                    CurrZ := CZERO;
+                
+                if (ZIPV[2] <> 0) or (ZIPV[5] <> 0) then
+                    CurrI := Conjg(Cdiv(Cmplx(WNominal * ZIPV[2], varNominal * ZIPV[5]), CMulReal(CDivReal(V, Cabs(V)), Vbase)))
+                else
+                    CurrI := CZERO;
+                
+                if (ZIPV[3] <> 0) or (ZIPV[6] <> 0) then
+                    CurrP := Conjg(Cdiv(Cmplx(WNominal * ZIPV[3], varNominal * ZIPV[6]), V))
+                else
+                    CurrP := CZERO;
+                    
                 Curr := CAdd(CurrZ, CAdd(CurrI, CurrP));
             end;
 
-      // low-voltage drop-out
+            // low-voltage drop-out
             if ZIPV[7] > 0.0 then
             begin
                 vx := 500.0 * (Vmag / Vbase - ZIPV[7]);
