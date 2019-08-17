@@ -1213,7 +1213,7 @@ function TReactorObj.GetPropertyValue(Index: Integer): String;
 begin
     if (Index > NumPropsThisClass) then 
     begin
-        Result := inherited GetPropertyValue(index - NumPropsThisClass);
+        Result := inherited GetPropertyValue(index);
         Exit;
     end;
     
