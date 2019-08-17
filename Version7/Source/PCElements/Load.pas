@@ -342,7 +342,7 @@ uses
     TypInfo;
 
 const
-    NumPropsThisClass = 38;
+    NumPropsThisClass = Ord(High(TLoadProp));
 
 var
     CDOUBLEONE: Complex;
@@ -639,7 +639,7 @@ begin
             if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
                 PropertyValue[ParamPointer] := Param;
 
-            case TLoadProp(ParamPointer) of
+            if (ParamPointer <= NumPropsThisClass) then case TLoadProp(ParamPointer) of
                 TLoadProp.INVALID:
                     DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 580);
                 TLoadProp.phases:
@@ -732,15 +732,14 @@ begin
                     FpuXHarm := Parser.DblValue;  // 0 means not set
                 TLoadProp.XRharm:
                     FXRharmRatio := Parser.DblValue;
-
+            end
             else
            // Inherited edits
-                ClassEdit(ActiveLoadObj, paramPointer - NumPropsThisClass)
-            end;
+                ClassEdit(ActiveLoadObj, paramPointer - NumPropsThisClass);
 
          // << SIDE EFFECTS >>
          // keep kvar nominal up to date WITH kW and PF
-            case TLoadProp(ParamPointer) of
+            if (ParamPointer <= NumPropsThisClass) then case TLoadProp(ParamPointer) of
                 TLoadProp.phases:
                 begin
                     SetNcondsForConnection;  // Force Reallocation of terminal info
@@ -2579,51 +2578,8 @@ end;
 
 
 procedure TLoadObj.InitPropertyValues(ArrayOffset: Integer);
-
 begin
-
-    PropertyValue[ord(TLoadProp.phases)] := '3';              //'phases';
-    PropertyValue[ord(TLoadProp.bus1)] := Getbus(1);         //'bus1';
-    PropertyValue[ord(TLoadProp.kV)] := '12.47';
-    PropertyValue[ord(TLoadProp.kW)] := '10';
-    PropertyValue[ord(TLoadProp.pf)] := '.88';
-    PropertyValue[ord(TLoadProp.model)] := '1';
-    PropertyValue[ord(TLoadProp.yearly)] := '';
-    PropertyValue[ord(TLoadProp.daily)] := '';
-    PropertyValue[ord(TLoadProp.duty)] := '';
-    PropertyValue[ord(TLoadProp.growth)] := '';
-    PropertyValue[ord(TLoadProp.conn)] := 'wye';
-    PropertyValue[ord(TLoadProp.kvar)] := '5';
-    PropertyValue[ord(TLoadProp.Rneut)] := '-1'; // 'rneut'; // IF entered -, assume open or user defined
-    PropertyValue[ord(TLoadProp.Xneut)] := '0';  //'xneut';
-    PropertyValue[ord(TLoadProp.status)] := 'variable'; //'status';  // fixed or variable
-    PropertyValue[ord(TLoadProp.cls)] := '1'; //class
-    PropertyValue[ord(TLoadProp.Vminpu)] := '0.95';
-    PropertyValue[ord(TLoadProp.Vmaxpu)] := '1.05';
-    PropertyValue[ord(TLoadProp.Vminnorm)] := '0.0';
-    PropertyValue[ord(TLoadProp.Vminemerg)] := '0.0';
-    PropertyValue[ord(TLoadProp.xfkVA)] := '0.0';
-    PropertyValue[ord(TLoadProp.allocationfactor)] := '0.5';  // Allocation Factor
-    PropertyValue[ord(TLoadProp.kVA)] := '11.3636';
-    PropertyValue[ord(TLoadProp.pctmean)] := '50';
-    PropertyValue[ord(TLoadProp.pctstddev)] := '10';
-    PropertyValue[ord(TLoadProp.CVRwatts)] := '1';  // CVR watt factor
-    PropertyValue[ord(TLoadProp.CVRvars)] := '2';  // CVR var factor
-    PropertyValue[ord(TLoadProp.kwh)] := '0';  // kwh bulling
-    PropertyValue[ord(TLoadProp.kwhdays)] := '30';  // kwhdays
-    PropertyValue[ord(TLoadProp.Cfactor)] := '4';  // Cfactor
-    PropertyValue[ord(TLoadProp.CVRcurve)] := '';  // CVRCurve
-    PropertyValue[ord(TLoadProp.NumCust)] := '1';  // NumCust
-    PropertyValue[ord(TLoadProp.ZIPV)] := '';  // ZIPV coefficient array
-    PropertyValue[ord(TLoadProp.pctSeriesRL)] := '50';  // %SeriesRL
-    PropertyValue[ord(TLoadProp.RelWeight)] := '1';  // RelWeighting
-    PropertyValue[ord(TLoadProp.Vlowpu)] := '0.5';  // VZpu
-    PropertyValue[ord(TLoadProp.puXharm)] := '0.0';  // puXharm
-    PropertyValue[ord(TLoadProp.XRharm)] := '6.0';  // XRHarm
-
-
     inherited  InitPropertyValues(NumPropsThisClass);
-
 end;
 
 procedure TLoadObj.MakePosSequence;
@@ -2671,7 +2627,15 @@ function TLoadObj.GetPropertyValue(Index: Integer): String;
 var
     i: Integer;
 begin
+    if (Index > NumPropsThisClass) then 
+    begin
+        Result := inherited GetPropertyValue(index - NumPropsThisClass);
+        Exit;
+    end;
+    
     case TLoadProp(Index) of
+        TLoadProp.phases: 
+            Result := Format('%-d', [fnphases]);
         TLoadProp.bus1:
             Result := GetBus(1);
         TLoadProp.kV:
@@ -2680,24 +2644,72 @@ begin
             Result := Format('%-g', [kwBase]);
         TLoadProp.pf:
             Result := Format('%-.4g', [PFNominal]);
+        TLoadProp.model: 
+            Result := Format('%-d', [ord(FLoadModel)]);
         TLoadProp.yearly:
             Result := Yearlyshape;
         TLoadProp.daily:
             Result := Dailyshape;
         TLoadProp.duty:
             Result := Dutyshape;
+        TLoadProp.growth:
+            Result := growthshape;
+        TLoadProp.conn: 
+            if Connection = TLoadConnection.Delta then
+                Result := 'delta'
+            else
+                Result := 'wye';
         TLoadProp.kvar:
             Result := Format('%-g', [kvarbase]);
+        TLoadProp.Rneut: 
+            Result := Format('%-g', [Rneut]);
+        TLoadProp.Xneut: 
+            Result := Format('%-g', [Xneut]);
+        TLoadProp.status:                 
+            if Fixed then 
+                Result := 'fixed' 
+            else if ExemptFromLDCurve then 
+                Result := 'exempt' 
+            else
+                Result := 'variable';
+        TLoadProp.cls: 
+            Result := Format('%-d', [loadclass]);
+        TLoadProp.Vminpu: 
+            Result := Format('%-g', [VMinPu]);
+        TLoadProp.Vmaxpu: 
+            Result := Format('%-g', [VMaxPu]);
+        TLoadProp.Vminnorm: 
+            Result := Format('%-g', [Vminnormal]);
+        TLoadProp.Vminemerg: 
+            Result := Format('%-g', [Vminemerg]);
+        TLoadProp.xfkVA: 
+            Result := Format('%-g', [ConnectedkVA]);
         TLoadProp.allocationfactor:
             Result := Format('%-g', [FkVAAllocationFactor]);
         TLoadProp.kVA:
             Result := Format('%-g', [kVABase]);
+        TLoadProp.pctMean: 
+            Result := Format('%-g', [puMean * 100]);
+        TLoadProp.pctstddev: 
+            Result := Format('%-g', [puStdDev * 100]);
+        TLoadProp.CVRwatts: 
+            Result := Format('%-g', [CVRwatts]);
+        TLoadProp.CVRvars: 
+            Result := Format('%-g', [CVRvars]);
+        TLoadProp.kwh: 
+            Result := Format('%-g', [kwh]);
+        TLoadProp.kwhdays: 
+            Result := Format('%-g', [kwhdays]);
         TLoadProp.Cfactor:
             Result := Format('%-.4g', [FCFactor]);
+        TLoadProp.CVRcurve:
+            Result := CVRShape;
+        TLoadProp.NumCust: 
+            Result := Format('%-d', [NumCustomers]);
         TLoadProp.ZIPV:
         begin
             Result := '';
-            for i := 1 to nZIPV do
+            for i := 1 to nZIPV do //TODO: only if set?
                 Result := Result + Format(' %-g', [ZIPV[i]]);
         end;
         TLoadProp.pctSeriesRL:
@@ -2710,8 +2722,11 @@ begin
             Result := Format('%-g', [FpuXHarm]);
         TLoadProp.XRharm:
             Result := Format('%-g', [FXRHarmRatio]);
-    else
-        Result := inherited GetPropertyValue(index);
+    else 
+        begin
+            Result := 'ERROR';
+            DoSimpleMsg('Property number "' + IntToStr(Index) + '" is not handled for Load', 541);
+        end
     end;
 end;
 

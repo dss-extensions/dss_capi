@@ -182,7 +182,7 @@ uses
     TypInfo;
 
 const
-    NumPropsThisClass = 19;
+    NumPropsThisClass = Ord(High(TReactorProp));
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TReactor.Create;  // Creates superstructure for all Reactor objects
@@ -414,54 +414,58 @@ begin
             if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
                 PropertyValue[ParamPointer] := Param;
 
-            case TReactorProp(ParamPointer) of
-                TReactorProp.INVALID:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 230);
-                TReactorProp.bus1:
-                    ReactorSetbus1(param);
-                TReactorProp.bus2:
-                    Setbus(2, param);
-                TReactorProp.phases:
-{ Numphases := Parser.IntValue};  // see below
-                TReactorProp.kvar:
-                    kvarRating := Parser.Dblvalue;
-                TReactorProp.kv:
-                    kvRating := Parser.Dblvalue;
-                TReactorProp.conn:
-                    InterpretConnection(Param);
-                TReactorProp.Rmatrix:
-                    DoMatrix(RMatrix);
-                TReactorProp.Xmatrix:
-                    DoMatrix(XMatrix);
-                TReactorProp.Parallel:
-                    IsParallel := InterpretYesNo(Param);
-                TReactorProp.R:
-                    R := Parser.Dblvalue;
-                TReactorProp.X:
-                    X := Parser.Dblvalue;
-                TReactorProp.Rp:
-                    Rp := Parser.Dblvalue;
-                TReactorProp.Z1:
-                    Z1 := InterpretComplex(Param);
-                TReactorProp.Z2:
-                    Z2 := InterpretComplex(Param);
-                TReactorProp.Z0:
-                    Z0 := InterpretComplex(Param);
-                TReactorProp.Z:
-                    Z := InterpretComplex(Param);
-                TReactorProp.RCurve:
-                    RCurve := Param;
-                TReactorProp.LCurve:
-                    LCurve := Param;
-                TReactorProp.LmH:
-                    L := Parser.DblValue / 1000.0;  // convert from mH to H
+
+            if (ParamPointer <= NumPropsThisClass) then 
+            begin 
+                case TReactorProp(ParamPointer) of
+                    TReactorProp.INVALID:
+                        DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 230);
+                    TReactorProp.bus1:
+                        ReactorSetbus1(param);
+                    TReactorProp.bus2:
+                        Setbus(2, param);
+                    TReactorProp.phases:
+    { Numphases := Parser.IntValue};  // see below
+                    TReactorProp.kvar:
+                        kvarRating := Parser.Dblvalue;
+                    TReactorProp.kv:
+                        kvRating := Parser.Dblvalue;
+                    TReactorProp.conn:
+                        InterpretConnection(Param);
+                    TReactorProp.Rmatrix:
+                        DoMatrix(RMatrix);
+                    TReactorProp.Xmatrix:
+                        DoMatrix(XMatrix);
+                    TReactorProp.Parallel:
+                        IsParallel := InterpretYesNo(Param);
+                    TReactorProp.R:
+                        R := Parser.Dblvalue;
+                    TReactorProp.X:
+                        X := Parser.Dblvalue;
+                    TReactorProp.Rp:
+                        Rp := Parser.Dblvalue;
+                    TReactorProp.Z1:
+                        Z1 := InterpretComplex(Param);
+                    TReactorProp.Z2:
+                        Z2 := InterpretComplex(Param);
+                    TReactorProp.Z0:
+                        Z0 := InterpretComplex(Param);
+                    TReactorProp.Z:
+                        Z := InterpretComplex(Param);
+                    TReactorProp.RCurve:
+                        RCurve := Param;
+                    TReactorProp.LCurve:
+                        LCurve := Param;
+                    TReactorProp.LmH:
+                        L := Parser.DblValue / 1000.0;  // convert from mH to H
+                end
+            end
             else
             // Inherited Property Edits
-                ClassEdit(ActiveReactorObj, ParamPointer - NumPropsThisClass)
-            end;
+                ClassEdit(ActiveReactorObj, ParamPointer - NumPropsThisClass);
 
          // Some specials ...
-            case TReactorProp(ParamPointer) of
+            if (ParamPointer <= NumPropsThisClass) then case TReactorProp(ParamPointer) of
                 TReactorProp.bus1:
                 begin
                     PropertyValue[ord(TReactorProp.bus2)] := GetBus(2);   // this gets modified
@@ -515,11 +519,10 @@ begin
                     SpecType := 2;
                     X := L * TwoPi * BaseFrequency;
                 end
-            else
             end;
 
          //YPrim invalidation on anything that changes impedance values
-            case TReactorProp(ParamPointer) of
+            if (ParamPointer <= NumPropsThisClass) then case TReactorProp(ParamPointer) of
                 TReactorProp.phases..TReactorProp.Z:
                     YprimInvalid := TRUE;
                 TReactorProp.RCurve:
@@ -530,7 +533,6 @@ begin
                         DoSimpleMsg('Inductance-frequency curve XYCurve.' + LCurve + ' not Found.', 2301);
                 TReactorProp.LmH:
                     YprimInvalid := TRUE;
-            else
             end;
 
             ParamName := Parser.NextParam;
@@ -665,11 +667,14 @@ begin
     Z0Specified := FALSE;
     Connection := TReactorConnection.Wye;   // 0 or 1 for wye (default) or delta, respectively
     SpecType := 1; // 1=kvar, 2=Cuf, 3=Cmatrix
+    
+    // Override some inherited variables
     NormAmps := kvarRating * SQRT3 / kvrating;
     EmergAmps := NormAmps * 1.35;
     FaultRate := 0.0005;
     PctPerm := 100.0;
     HrsToRepair := 3.0;
+    
     Yorder := Fnterms * Fnconds;
 
     RCurve := '';
@@ -1192,15 +1197,63 @@ begin
 
 end;
 
+function SymMatrixToStr(mat: PDoubleArray; order: Integer): String;
+var
+    row, col: integer;
+begin
+    Result := '[';
+    For row := 1 to order do
+        For col := row to order do
+            Result := Result + Format('-%g  ', [mat[row * order + col]]);
+            
+    Result := Result + ']';
+end;
+
 function TReactorObj.GetPropertyValue(Index: Integer): String;
 begin
-
+    if (Index > NumPropsThisClass) then 
+    begin
+        Result := inherited GetPropertyValue(index - NumPropsThisClass);
+        Exit;
+    end;
+    
     case TReactorProp(Index) of
+        TReactorProp.bus1:
+            Result := GetBus(1);
+        TReactorProp.bus2:
+            Result := GetBus(2);
+        TReactorProp.phases: 
+            Result := Format('%-d', [FnPhases]);
+        TReactorProp.kvar:
+            Result := Format('%-g', [kvarRating]);
+        TReactorProp.kv:
+            Result := Format('%-g', [kVRating]);
+        TReactorProp.conn: 
+            if Connection = TReactorConnection.Delta then
+                Result := 'delta'
+            else
+                Result := 'wye';
+        TReactorProp.Rmatrix:
+            if Rmatrix = nil then
+                Result := ''
+            else
+                Result := SymMatrixToStr(RMatrix, FnPhases);
+        TReactorProp.Xmatrix:
+            if Rmatrix = nil then
+                Result := ''
+            else
+                Result := SymMatrixToStr(XMatrix, FnPhases);
+        TReactorProp.Parallel:
+            if IsParallel then
+                Result := 'yes'
+            else
+                Result := 'no';
         TReactorProp.R:
             Result := Format('%-.8g', [R]);
         TReactorProp.X:
             Result := Format('%-.8g', [X]);
-          {Special cases for array properties}
+        TReactorProp.Rp:
+            Result := Format('%-.8g', [Rp]);
         TReactorProp.Z1:
             Result := Format('[%-.8g, %-.8g]', [Z1.re, Z1.im]);
         TReactorProp.Z2:
@@ -1209,37 +1262,22 @@ begin
             Result := Format('[%-.8g, %-.8g]', [Z0.re, Z0.im]);
         TReactorProp.Z:
             Result := Format('[%-.8g, %-.8g]', [R, X]);
+        TReactorProp.RCurve:
+            Result := RCurve;
+        TReactorProp.LCurve:
+            Result := LCurve;
         TReactorProp.LmH:
             Result := Format('%-.8g', [L * 1000.0]);
-    else
-        Result := inherited GetPropertyValue(index);
+    else 
+        begin
+            Result := 'ERROR';
+            DoSimpleMsg('Property number "' + IntToStr(Index) + '" is not handled for Reactor', 541);
+        end
     end;
-
 end;
 
 procedure TReactorObj.InitPropertyValues(ArrayOffset: Integer);
 begin
-
-    PropertyValue[ord(TReactorProp.bus1)] := GetBus(1);
-    PropertyValue[ord(TReactorProp.bus2)] := GetBus(2);
-    PropertyValue[ord(TReactorProp.phases)] := '3';
-    PropertyValue[ord(TReactorProp.kvar)] := '1200';
-    PropertyValue[ord(TReactorProp.kv)] := '12.47';
-    PropertyValue[ord(TReactorProp.conn)] := 'wye';
-    PropertyValue[ord(TReactorProp.Rmatrix)] := '';
-    PropertyValue[ord(TReactorProp.Xmatrix)] := '';
-    PropertyValue[ord(TReactorProp.Parallel)] := 'NO';  // Parallel
-    PropertyValue[ord(TReactorProp.R)] := '0';  // R series
-    PropertyValue[ord(TReactorProp.X)] := Format('%-.6g', [X]);  //X
-    PropertyValue[ord(TReactorProp.Rp)] := '0';  //Rp
-    PropertyValue[ord(TReactorProp.Z1)] := '[0 0]';  //Z1
-    PropertyValue[ord(TReactorProp.Z2)] := '[0 0]';  //Z2
-    PropertyValue[ord(TReactorProp.Z0)] := '[0 0]';  //Z0
-    PropertyValue[ord(TReactorProp.Z)] := '[0 0]';  //Z
-    PropertyValue[ord(TReactorProp.RCurve)] := '';
-    PropertyValue[ord(TReactorProp.LCurve)] := '';
-    PropertyValue[ord(TReactorProp.LmH)] := Format('%-.8g', [X / TwoPi / BaseFrequency * 1000.0]);  //X
-
     inherited  InitPropertyValues(NumPropsThisClass);
 
      //  Override Inherited properties
