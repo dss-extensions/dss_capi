@@ -339,9 +339,9 @@ begin
 
         end;
         case Connection of
-            TReactorConnection.Wye:
-                Nterms := 1;  // Force reallocation of terminals
             TReactorConnection.Delta:
+                Nterms := 1;  // Force reallocation of terminals
+            TReactorConnection.Wye:
                 if Fnterms <> 2 then
                     Nterms := 2;
         end;

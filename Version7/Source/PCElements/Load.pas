@@ -389,7 +389,7 @@ begin
         if propName = 'cls' then
             propName := 'class'
         else if LeftStr(propName, 3) = 'pct' then
-            propName := '%' + Copy(propName, 3, Length(propName) - 3);
+            propName := '%' + Copy(propName, 4, Length(propName) - 3);
             
         PropertyName[i] := propName;
     end;
