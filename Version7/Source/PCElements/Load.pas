@@ -636,8 +636,8 @@ begin
             else
                 ParamPointer := CommandList.GetCommand(ParamName);
 
-            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-                PropertyValue[ParamPointer] := Param;
+            // if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
+            //     PropertyValue[ParamPointer] := Param;
 
             if (ParamPointer <= NumPropsThisClass) then case TLoadProp(ParamPointer) of
                 TLoadProp.INVALID:
@@ -734,7 +734,7 @@ begin
                     FXRharmRatio := Parser.DblValue;
             end
             else
-           // Inherited edits
+                // Inherited edits
                 ClassEdit(ActiveLoadObj, paramPointer - NumPropsThisClass);
 
          // << SIDE EFFECTS >>

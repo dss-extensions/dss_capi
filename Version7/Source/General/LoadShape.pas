@@ -119,6 +119,7 @@ type
 
         FStdDevCalculated: Boolean;
         MaxQSpecified: Boolean;
+        
         FMean,
         FStdDev: Double;
 
@@ -147,6 +148,12 @@ type
         BaseQ: Double;
 
         UseActual: Boolean;
+        OwnsMemory: Boolean;
+        
+        PQCSVFilename: String;
+        CSVFilename: String;
+        SngFilename: String;
+        DblFilename: String;
 
         constructor Create(ParClass: TDSSClass; const LoadShapeName: String);
         destructor Destroy; OVERRIDE;
@@ -192,7 +199,7 @@ type
     ELoadShapeError = class(Exception);  // Raised to abort solution
 
 const
-    NumPropsThisClass = 20;
+    NumPropsThisClass = Ord(High(TLoadProp));
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TLoadShape.Create;  // Creates superstructure for all Line objects
@@ -200,6 +207,7 @@ begin
     inherited Create;
     Class_Name := 'LoadShape';
     DSSClassType := DSS_OBJECT;
+    OwnsMemory := True;
 
     ActiveElement := 0;
 
@@ -337,24 +345,39 @@ begin
             else
                 ParamPointer := CommandList.GetCommand(ParamName);
 
-            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-                PropertyValue[ParamPointer] := Param;
+            // if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
+            //     PropertyValue[ParamPointer] := Param;
 
-            case TLoadShapeProp(ParamPointer) of
+            if (ParamPointer <= NumPropsThisClass) then case TLoadShapeProp(ParamPointer) of
                 TLoadShapeProp.INVALID:
                     DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 610);
                 TLoadShapeProp.npts:
+                    if not OwnsMemory then
+                    begin
+                        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+                        Exit;
+                    end;
                     NumPoints := Parser.Intvalue;
                 TLoadShapeProp.interval:
                     Interval := Parser.DblValue;
-                TLoadShapeProp.mult:
+                TLoadShapeProp.Pmult, TLoadShapeProp.mult:
                 begin
+                    if not OwnsMemory then
+                    begin
+                        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+                        Exit;
+                    end;
                     SetLength(PMultipliers, NumPoints);
                     // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
                     NumPoints := InterpretDblArray(Param, NumPoints, pDoubleArray(PMultipliers));   // Parser.ParseAsVector(Npts, Multipliers);
                 end;
                 TLoadShapeProp.hour:
                 begin
+                    if not OwnsMemory then
+                    begin
+                        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+                        Exit;
+                    end;
                     SetLength(Hours, NumPoints);
                     InterpretDblArray(Param, NumPoints, pDoubleArray(Hours));   // Parser.ParseAsVector(Npts, Hours);
                     Interval := 0.0;
@@ -380,6 +403,11 @@ begin
                     end;
                 TLoadShapeProp.qmult:
                 begin
+                    if not OwnsMemory then
+                    begin
+                        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+                        Exit;
+                    end;
                     SetLength(QMultipliers, NumPoints);
                     InterpretDblArray(Param, NumPoints, pDoubleArray(QMultipliers));   // Parser.ParseAsVector(Npts, Multipliers);
                 end;
@@ -397,21 +425,15 @@ begin
                     BaseP := Parser.DblValue;
                 TLoadShapeProp.Qbase:
                     BaseQ := Parser.DblValue;
-                TLoadShapeProp.Pmult:
-                begin   // same as mult
-                    SetLength(PMultipliers, NumPoints);
-                    // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
-                    NumPoints := InterpretDblArray(Param, NumPoints, pDoubleArray(PMultipliers));   // Parser.ParseAsVector(Npts, Multipliers);
-                end;
                 TLoadShapeProp.PQCSVFile:
                     Do2ColCSVFile(Param);
-
+            end
             else
-           // Inherited parameters
-                ClassEdit(ActiveLoadShapeObj, ParamPointer - NumPropsThisClass)
-            end;
+                // Inherited parameters
+                ClassEdit(ActiveLoadShapeObj, ParamPointer - NumPropsThisClass);
 
-            case TLoadShapeProp(ParamPointer) of
+
+            if (ParamPointer <= NumPropsThisClass) then case TLoadShapeProp(ParamPointer) of
                 TLoadShapeProp.mult, TLoadShapeProp.csvfile, TLoadShapeProp.sngfile, TLoadShapeProp.dblfile:
                 begin
                     FStdDevCalculated := FALSE;   // now calculated on demand
@@ -420,7 +442,6 @@ begin
                 end;
                 TLoadShapeProp.Qmax:
                     MaxQSpecified := TRUE;
-
             end;
 
             ParamName := Parser.NextParam;
@@ -454,7 +475,9 @@ begin
         begin
             NumPoints := OtherLoadShape.NumPoints;
             Interval := OtherLoadShape.Interval;
-
+            PQCSVFile := OtherLoadShape.PQCSVFile;
+            OwnsMemory := True;
+            
             SetLength(PMultipliers, Length(OtherLoadShape.PMultipliers));
             Move(OtherLoadShape.PMultipliers[0], PMultipliers[0], Length(OtherLoadShape.PMultipliers) * SizeOf(Double));
 
@@ -548,6 +571,12 @@ var
     s: String;
 
 begin
+    if not OwnsMemory then
+    begin
+        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        Exit;
+    end;
+
     try
         AssignFile(F, FileName);
         Reset(F);
@@ -600,6 +629,7 @@ begin
         end;
     end;
 
+    PQCSVFilename := FileName;
 end;
 
 procedure TLoadShape.DoCSVFile(const FileName: String);
@@ -610,6 +640,12 @@ var
     s: String;
 
 begin
+    if not OwnsMemory then
+    begin
+        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        Exit;
+    end;
+
     try
         AssignFile(F, FileName);
         Reset(F);
@@ -658,6 +694,7 @@ begin
         end;
     end;
 
+    CSVFilename := FileName;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -668,6 +705,12 @@ var
     i: Integer;
 
 begin
+    if not OwnsMemory then
+    begin
+        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        Exit;
+    end;
+
     try
         AssignFile(F, FileName);
         Reset(F);
@@ -705,6 +748,7 @@ begin
         Exit;
     end;
 
+    SngFilename := FileName;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -714,6 +758,12 @@ var
     i: Integer;
 
 begin
+    if not OwnsMemory then
+    begin
+        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        Exit;
+    end;
+
     try
         AssignFile(F, FileName);
         Reset(F);
@@ -747,7 +797,7 @@ begin
         Exit;
     end;
 
-
+    DblFilename := FileName;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -775,7 +825,10 @@ begin
     UseActual := FALSE;
     MaxQSpecified := FALSE;
     FStdDevCalculated := FALSE;  // calculate on demand
-
+    PQCSVFilename := '';
+    FMean := 0;
+    FStdDev := 0;
+    
     ArrayPropertyIndex := 0;
 
     InitPropertyValues(0);
@@ -785,9 +838,13 @@ end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TLoadShapeObj.Destroy;
 begin
-    SetLength(Hours, 0);
-    SetLength(PMultipliers, 0);
-    SetLength(QMultipliers, 0);
+    if OwnsMemory then
+    begin
+        SetLength(Hours, 0);
+        SetLength(PMultipliers, 0);
+        SetLength(QMultipliers, 0);
+    end;
+
     inherited destroy;
 end;
 
@@ -938,6 +995,12 @@ var
     end;
 
 begin
+    if not OwnsMemory then
+    begin
+        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        Exit;
+    end;
+
     MaxMult := BaseP;
     DoNormalize(pDoubleArray(PMultipliers), Length(PMultipliers));
     if Assigned(QMultipliers) then
@@ -963,7 +1026,7 @@ begin
                 Min(FNumPoints, Min(Length(PMultipliers), Length(Hours))),
                 FMean,
                 FStdDev
-                );
+            );
 
     PropertyValue[ord(TLoadShapeProp.mean)] := Format('%.8g', [FMean]);
     PropertyValue[ord(TLoadShapeProp.stddev)] := Format('%.8g', [FStdDev]);
@@ -1086,6 +1149,12 @@ end;
 
 function TLoadShapeObj.GetPropertyValue(Index: Integer): String;
 begin
+    if (Index > NumPropsThisClass) then 
+    begin
+        Result := inherited GetPropertyValue(index);
+        Exit;
+    end;
+
     Result := '';
 
     case TLoadShapeProp(Index) of
@@ -1093,6 +1162,7 @@ begin
             Result := IntToStr(FNumPoints);
         TLoadShapeProp.interval:
             Result := Format('%.8g', [Interval]);
+        TLoadShapeProp.Pmult:
         TLoadShapeProp.mult:
             Result := GetDSSArray_Real(Length(PMultipliers), pDoubleArray(PMultipliers));
         TLoadShapeProp.hour:
@@ -1122,41 +1192,28 @@ begin
             Result := Format('%.8g', [BaseP]);
         TLoadShapeProp.Qbase:
             Result := Format('%.8g', [BaseQ]);
-        TLoadShapeProp.Pmult:
-            Result := GetDSSArray_Real(Length(PMultipliers), pDoubleArray(PMultipliers));
+        TLoadShapeProp.PQCSVFile:
+            Result := PQCSVFilename;
+        TLoadShapeProp.CSVFile:
+            Result := CSVFilename;
+        TLoadShapeProp.SngFile:
+            Result := SngFilename;
+        TLoadShapeProp.DblFile:
+            Result := DblFilename;
+        TLoadShapeProp.action:
+            Result := '';
     else
-        Result := inherited GetPropertyValue(index);
+        begin
+            Result := 'ERROR';
+            DoSimpleMsg('Property number "' + IntToStr(Index) + '" is not handled for LoadShape', 541);
+        end
     end;
 
 end;
 
 procedure TLoadShapeObj.InitPropertyValues(ArrayOffset: Integer);
 begin
-
-    PropertyValue[ord(TLoadShapeProp.npts)] := '0';     // Number of points to expect
-    PropertyValue[ord(TLoadShapeProp.interval)] := '1'; // default = 1.0 hr;
-    PropertyValue[ord(TLoadShapeProp.mult)] := '';     // vector of multiplier values
-    PropertyValue[ord(TLoadShapeProp.hour)] := '';     // vextor of hour values
-    PropertyValue[ord(TLoadShapeProp.mean)] := '0';     // set the mean (otherwise computed)
-    PropertyValue[ord(TLoadShapeProp.stddev)] := '0';   // set the std dev (otherwise computed)
-    PropertyValue[ord(TLoadShapeProp.csvfile)] := '';   // Switch input to a csvfile
-    PropertyValue[ord(TLoadShapeProp.sngfile)] := '';  // switch input to a binary file of singles
-    PropertyValue[ord(TLoadShapeProp.dblfile)] := '';   // switch input to a binary file of singles
-    PropertyValue[ord(TLoadShapeProp.action)] := ''; // action option .
-    PropertyValue[ord(TLoadShapeProp.qmult)] := ''; // Qmult.
-    PropertyValue[ord(TLoadShapeProp.UseActual)] := 'No';
-    PropertyValue[ord(TLoadShapeProp.Pmax)] := '0';
-    PropertyValue[ord(TLoadShapeProp.Qmax)] := '0';
-    PropertyValue[ord(TLoadShapeProp.sinterval)] := '3600';   // seconds
-    PropertyValue[ord(TLoadShapeProp.minterval)] := '60';     // minutes
-    PropertyValue[ord(TLoadShapeProp.Pbase)] := '0';
-    PropertyValue[ord(TLoadShapeProp.Qbase)] := '0';
-    PropertyValue[ord(TLoadShapeProp.Pmult)] := '';   // same as 3
-    PropertyValue[ord(TLoadShapeProp.PQCSVFile)] := '';  // switch input to csv file of P, Q pairs
-
-
     inherited  InitPropertyValues(NumPropsThisClass);
-
 end;
 
 procedure TLoadShape.TOPExport(ObjName: String);
@@ -1352,8 +1409,6 @@ begin
     end
     else
         DoSimpleMsg('Loadshape.' + Name + ' P multipliers not defined.', 623);
-
-
 end;
 
 procedure TLoadShapeObj.SetMaxPandQ;
