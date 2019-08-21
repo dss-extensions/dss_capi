@@ -42,6 +42,7 @@ procedure LoadShapes_Set_UseActual(Value: Boolean); CDECL;
 // API extensions
 function LoadShapes_Get_idx(): Integer; CDECL;
 procedure LoadShapes_Set_idx(Value: Integer); CDECL;
+procedure LoadShapes_Set_Points(Npts: Integer; TimePtr: PDouble; PMultPtr: PDouble; QMultPtr: PDouble; OwnsMemory: Boolean); CDECL;
 
 
 implementation
@@ -198,13 +199,17 @@ begin
         DoSimpleMsg('No active Loadshape Object found.', 61001);
         Exit;
     end;
+    if not elem.OwnsMemory then
+    begin
+        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
+        Exit;
+    end;
     elem.NumPoints := Value;
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_Pmult(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 var
     elem: TLoadshapeObj;
-    Value: PDoubleArray;
     i, k, LoopLimit: Integer;
 begin
     if ActiveCircuit = NIL then
@@ -216,9 +221,14 @@ begin
         Exit;
     end;
 
-    Value := PDoubleArray(ValuePtr);
     with elem do
     begin
+        if not elem.OwnsMemory then
+        begin
+            DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
+            Exit;
+        end;
+    
         // Only accept the new data when the number of points match
         if ValueCount <> NumPoints then
         begin
@@ -249,6 +259,12 @@ begin
 
     with elem do
     begin
+        if not elem.OwnsMemory then
+        begin
+            DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
+            Exit;
+        end;
+        
         // Only accept the new data when the number of points match
         if ValueCount <> NumPoints then
         begin
@@ -274,6 +290,7 @@ begin
         DoSimpleMsg('No active Loadshape Object found.', 61003);
         Exit;
     end;
+   
     elem.Normalize;
 end;
 //------------------------------------------------------------------------------
@@ -325,7 +342,13 @@ begin
     end;
     with elem do
     begin
-        // Only accept the new data when the number of points match
+        if not elem.OwnsMemory then
+        begin
+            DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
+            Exit;
+        end;
+        
+       // Only accept the new data when the number of points match
         if ValueCount <> NumPoints then
         begin
             DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61102);
@@ -538,6 +561,50 @@ procedure LoadShapes_Set_idx(Value: Integer); CDECL;
 begin
     if LoadShapeClass.ElementList.Get(Value) = NIL then
         DoSimpleMsg('Invalid LoadShape index: "' + IntToStr(Value) + '".', 656565);
+end;
+//------------------------------------------------------------------------------
+procedure LoadShapes_Set_Points(Npts: Integer; TimePtr:PDouble; PMultPtr: PDouble; QMultPtr: PDouble; OwnsMemory: Boolean); CDECL;
+var
+    elem: TLoadshapeObj;
+begin
+    if ActiveCircuit = NIL then
+        Exit;
+    elem := LoadshapeClass.GetActiveObj;
+    if elem = NIL then
+    begin
+        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        Exit;
+    end;
+
+    // If the LoadShape owns the memory, dispose the current data and reallocate if necessary
+    if elem.OwnsMemory then
+    begin
+        if Npts <> elem.FNumPoints then
+        begin
+        end;
+        
+        if elem.Hours = NIL and TimePtr <> NIL then
+        begin
+            SetLength();
+            elem.Hours :=
+        end;
+        if elem.TimePtr = NIL then
+        begin
+        end;
+        if elem.TimePtr = NIL then
+        begin
+        end;
+    end;
+    
+    elem.OwnsMemory := OwnsMemory;
+    elem.FNumPoints := Npts;
+    
+    if not OwnsMemory then
+    begin
+        Move(TimePtr[0], elem.Hours[0], Npts * SizeOf(Double));
+        Move(TimePtr[0], elem.Hours[0], Npts * SizeOf(Double));
+        Move(TimePtr[0], elem.Hours[0], Npts * SizeOf(Double));
+    end;
 end;
 //------------------------------------------------------------------------------
 end.

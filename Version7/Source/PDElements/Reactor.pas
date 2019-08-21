@@ -411,9 +411,8 @@ begin
             else
                 ParamPointer := CommandList.GetCommand(ParamName);
 
-            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-                PropertyValue[ParamPointer] := Param;
-
+            // if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
+            //     PropertyValue[ParamPointer] := Param;
 
             if (ParamPointer <= NumPropsThisClass) then 
             begin 
@@ -425,7 +424,7 @@ begin
                     TReactorProp.bus2:
                         Setbus(2, param);
                     TReactorProp.phases:
-    { Numphases := Parser.IntValue};  // see below
+                        { Numphases := Parser.IntValue};  // see below
                     TReactorProp.kvar:
                         kvarRating := Parser.Dblvalue;
                     TReactorProp.kv:

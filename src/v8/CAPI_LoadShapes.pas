@@ -42,6 +42,7 @@ procedure LoadShapes_Set_UseActual(Value: Boolean); CDECL;
 // API extensions
 function LoadShapes_Get_idx(): Integer; CDECL;
 procedure LoadShapes_Set_idx(Value: Integer); CDECL;
+procedure LoadShapes_Set_Points(Npts: Integer; TimePtr: PDouble; PMultPtr: PDouble; QMultPtr: PDouble; OwnsMemory: Boolean); CDECL;
 
 
 implementation
@@ -538,6 +539,11 @@ procedure LoadShapes_Set_idx(Value: Integer); CDECL;
 begin
     if LoadShapeClass[ActiveActor].ElementList.Get(Value) = NIL then
         DoSimpleMsg('Invalid LoadShape index: "' + IntToStr(Value) + '".', 656565);
+end;
+//------------------------------------------------------------------------------
+procedure LoadShapes_Set_Points(Npts: Integer; TimePtr: PDouble; PMultPtr: PDouble; QMultPtr: PDouble; OwnsMemory: Boolean); CDECL;
+begin
+    DoSimpleMsg('LoadShapes_Set_Points is not implemented in the Version 8 API.', 656566);
 end;
 //------------------------------------------------------------------------------
 end.
