@@ -5847,6 +5847,8 @@ extern "C" {
     DSS_CAPI_DLL int32_t XYCurves_Get_idx(void);
     DSS_CAPI_DLL void XYCurves_Set_idx(int32_t Value);
 
+    DSS_CAPI_DLL void LoadShapes_Set_Points(int32_t Npts, double *HoursPtr, double *PMultPtr, double *QMultPtr, int8_t ExternalMemory); 
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
