@@ -829,6 +829,7 @@ exports
     LoadShapes_Set_Qbase,
     LoadShapes_Get_UseActual,
     LoadShapes_Set_UseActual,
+    LoadShapes_Set_Points, // API extension
     Meters_Get_AllNames,
     Meters_Get_First,
     Meters_Get_Name,

@@ -42,7 +42,7 @@ procedure LoadShapes_Set_UseActual(Value: Boolean); CDECL;
 // API extensions
 function LoadShapes_Get_idx(): Integer; CDECL;
 procedure LoadShapes_Set_idx(Value: Integer); CDECL;
-procedure LoadShapes_Set_Points(Npts: Integer; TimePtr: PDouble; PMultPtr: PDouble; QMultPtr: PDouble; OwnsMemory: Boolean); CDECL;
+procedure LoadShapes_Set_Points(Npts: Integer; HoursPtr: PDouble; PMultPtr: PDouble; QMultPtr: PDouble; ExternalMemory: Boolean); CDECL;
 
 
 implementation
@@ -146,9 +146,9 @@ begin
         DoSimpleMsg('No active Loadshape Object found.', 61001);
         Exit;
     end;
-    ActualNumPoints := Min(Length(elem.PMultipliers), elem.NumPoints);
+    ActualNumPoints := elem.NumPoints;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-    Move(elem.PMultipliers[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
+    Move(elem.PMultipliers[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_Pmult_GR(); CDECL;
@@ -175,9 +175,9 @@ begin
     end;
     if not assigned(elem.QMultipliers) then
         Exit;
-    ActualNumPoints := Min(Length(elem.QMultipliers), elem.NumPoints);
+    ActualNumPoints := elem.NumPoints;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-    Move(elem.QMultipliers[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
+    Move(elem.QMultipliers[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_Qmult_GR(); CDECL;
@@ -199,7 +199,7 @@ begin
         DoSimpleMsg('No active Loadshape Object found.', 61001);
         Exit;
     end;
-    if not elem.OwnsMemory then
+    if elem.ExternalMemory then
     begin
         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
         Exit;
@@ -223,7 +223,7 @@ begin
 
     with elem do
     begin
-        if not elem.OwnsMemory then
+        if elem.ExternalMemory then
         begin
             DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
             Exit;
@@ -236,9 +236,8 @@ begin
             Exit;
         end;
 
-        SetLength(PMultipliers, 0);
-        SetLength(PMultipliers, ValueCount);
-        Move(ValuePtr[0], PMultipliers[0], ValueCount * SizeOf(Double));
+        ReallocMem(PMultipliers, Sizeof(Double) * ValueCount);
+        Move(ValuePtr[0], PMultipliers[1], ValueCount * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------
@@ -259,7 +258,7 @@ begin
 
     with elem do
     begin
-        if not elem.OwnsMemory then
+        if elem.ExternalMemory then
         begin
             DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
             Exit;
@@ -272,9 +271,8 @@ begin
             Exit;
         end;
 
-        SetLength(QMultipliers, 0);
-        SetLength(QMultipliers, ValueCount);
-        Move(ValuePtr[0], QMultipliers[0], ValueCount * SizeOf(Double));
+        ReallocMem(QMultipliers, Sizeof(Double) * ValueCount);
+        Move(ValuePtr[0], QMultipliers[1], ValueCount * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------
@@ -314,9 +312,9 @@ begin
 
     if elem.Hours = NIL then
         Exit;
-    ActualNumPoints := Min(Length(elem.Hours), elem.NumPoints);
+    ActualNumPoints := elem.NumPoints;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, ActualNumPoints);
-    Move(elem.Hours[0], ResultPtr[0], ActualNumPoints * SizeOf(Double));
+    Move(elem.Hours[1], ResultPtr[0], ActualNumPoints * SizeOf(Double));
 end;
 
 procedure LoadShapes_Get_TimeArray_GR(); CDECL;
@@ -342,7 +340,7 @@ begin
     end;
     with elem do
     begin
-        if not elem.OwnsMemory then
+        if elem.ExternalMemory then
         begin
             DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
             Exit;
@@ -355,9 +353,8 @@ begin
             Exit;
         end;
 
-        SetLength(Hours, 0);
-        SetLength(Hours, ValueCount);
-        Move(ValuePtr[0], Hours[0], ValueCount * SizeOf(Double));
+        ReallocMem(Hours, Sizeof(Double) * ValueCount);        
+        Move(ValuePtr[0], Hours[1], ValueCount * SizeOf(Double));
     end;
 end;
 //------------------------------------------------------------------------------
@@ -563,7 +560,7 @@ begin
         DoSimpleMsg('Invalid LoadShape index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
-procedure LoadShapes_Set_Points(Npts: Integer; TimePtr:PDouble; PMultPtr: PDouble; QMultPtr: PDouble; OwnsMemory: Boolean); CDECL;
+procedure LoadShapes_Set_Points(Npts: Integer; HoursPtr: PDouble; PMultPtr: PDouble; QMultPtr: PDouble; ExternalMemory: Boolean); CDECL;
 var
     elem: TLoadshapeObj;
 begin
@@ -577,34 +574,42 @@ begin
     end;
 
     // If the LoadShape owns the memory, dispose the current data and reallocate if necessary
-    if elem.OwnsMemory then
+    if not elem.ExternalMemory then
     begin
-        if Npts <> elem.FNumPoints then
+        ReallocMem(elem.PMultipliers, 0);
+        ReallocMem(elem.QMultipliers, 0);
+        ReallocMem(elem.Hours, 0);
+    end;
+    elem.PMultipliers := NIL;
+    elem.QMultipliers := NIL;
+    elem.Hours := NIL;
+    
+    elem.ExternalMemory := ExternalMemory;
+    elem.NumPoints := Npts;
+
+    if not ExternalMemory then
+    begin
+        if PMultPtr <> NIL then
         begin
+            ReallocMem(elem.PMultipliers, Sizeof(Double) * Npts);
+            Move(PMultPtr[0], elem.PMultipliers[1], Npts * SizeOf(Double));
+        end;
+        if QMultPtr <> NIL then
+        begin
+            ReallocMem(elem.QMultipliers, Sizeof(Double) * Npts);
+            Move(QMultPtr[0], elem.QMultipliers[1], Npts * SizeOf(Double));
+        end;
+        if HoursPtr <> NIL then
+        begin
+            ReallocMem(elem.Hours, Sizeof(Double) * Npts);
+            Move(HoursPtr[0], elem.Hours[1], Npts * SizeOf(Double));
         end;
         
-        if elem.Hours = NIL and TimePtr <> NIL then
-        begin
-            SetLength();
-            elem.Hours :=
-        end;
-        if elem.TimePtr = NIL then
-        begin
-        end;
-        if elem.TimePtr = NIL then
-        begin
-        end;
+        Exit;
     end;
     
-    elem.OwnsMemory := OwnsMemory;
-    elem.FNumPoints := Npts;
-    
-    if not OwnsMemory then
-    begin
-        Move(TimePtr[0], elem.Hours[0], Npts * SizeOf(Double));
-        Move(TimePtr[0], elem.Hours[0], Npts * SizeOf(Double));
-        Move(TimePtr[0], elem.Hours[0], Npts * SizeOf(Double));
-    end;
+    // Using shared memory
+    elem.SetDataPointers(HoursPtr, PMultPtr, QMultPtr);
 end;
 //------------------------------------------------------------------------------
 end.
