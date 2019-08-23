@@ -223,8 +223,8 @@ Begin
     GetTapPositionsForTopics;
   if AttributeToPublish.Contains('switchstate') Then
     GetLineSwitchStateForTopics;
-  if AttributeToPublish.count=0 then
-    Writeln('No topics need to be published.');
+//  if AttributeToPublish.count=0 then
+//    Writeln('No topics need to be published.');
 end;
 
 procedure TFNCS.GetVoltageValuesForTopics;
