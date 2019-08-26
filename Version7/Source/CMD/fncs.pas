@@ -25,17 +25,6 @@ uses
 
 type
   fncs_time = qword;
-  //StringIntegerDict = TDictionary<string, Integer>;
-  //StringComplexDict = TDictionary<string, Complex>;
-  //StringBooleanDict = TDictionary<string, boolean>;
-  //StringObjectDict = TObjectDictionary<string, Tobject>;
-  //ObjectTermianlComplexDict = TObjectDictionary<string, StringComplexDict>;
-  //ObjectTermianlBoolDict = TObjectDictionary<string, StringBooleanDict>;
-  //ObjectTermianlIntDict = TObjectDictionary<string, StringIntegerDict>;
-  //ClassObjectComplexDict = TObjectDictionary<string, ObjectTermianlComplexDict>;
-  //ClassObjectIntDict = TObjectDictionary<string, ObjectTermianlIntDict>;
-  //ClassObjectBoolDict = TObjectDictionary<string, ObjectTermianlBoolDict>;
-  //AttributeClassDict = TObjectDictionary<string, ClassObjectComplexDict>;
   ConductorValueDict = TDictionary<string, string>;
   TerminalConductorDict = TObjectDictionary<string, ConductorValueDict>;
   AttributeTerminalDict = TObjectDictionary<string, TerminalConductorDict>;
@@ -110,9 +99,7 @@ type
   private
     next_fncs_publish:fncs_time;
     topics:ClassObjectDict;
-    //tapTopics:ClassObjectIntDict;
-    //statusTopics:ClassObjectBoolDict;
-  //  terminalValueDict:TDictionary<string, double>;
+    fncsOutputStream:TStringStream;
 
   public
     AttributeToPublish:TList<string>;
@@ -135,7 +122,8 @@ type
     procedure GetVoltageValuesForTopics;
     procedure GetValuesForTopics;
     procedure GetPowerValuesForTopics;
-    function TopicsToJsonFormat:string;
+//    function TopicsToJsonFormat:string;
+    procedure TopicsToJsonStream;
     procedure AddCurrentsToDict(pElem:TDSSCktElement;Cbuffer:pComplexArray;topics:ClassObjectDict);
     procedure AddCurrentsToDict2(pElem:TDSSCktElement;topics:ClassObjectDict);
     procedure AddPowersToDict(pElem:TDSSCktElement;topics:ClassObjectDict);
@@ -144,33 +132,6 @@ type
     procedure GetControlStatusForTopics;
     procedure GetLineSwitchStateForTopics;
   end;
-  //TTopicValueComplexItem = record
-  //  AttributeName:string;
-  //  ClassName:string;
-  //  ObjectName:string;
-  //  TerminalName:string;
-  //  Value:Complex;
-  //  class operator = (item1:TTopicValueComplexItem;item2:TTopicValueComplexItem):boolean;
-  //end;
-  //TTopicValueList = specialize TFPGList<TTopicValueComplexItem>;
-  //
-  //TAttributeClassMapItem = record
-  //  AttributeName:string;
-  //  ClassName:string;
-  //end;
-  //TAttributeClassMapList = specialize TFPGList<TAttributeClassMapItem>;
-  //
-  //TClassObjectMapItem = record
-  //  ClassName:string;
-  //  ObjectName:string;
-  //end;
-  //TClassObjectMapList = specialize TFPGList<TClassObjectMapItem>;
-  //
-  //TObjectTerminalMapItem = record
-  //  ObjectName:string;
-  //  TerminalName:string;
-  //end;
-  //TObjectTerminalMapList = specialize TFPGList<TObjectTerminalMapItem>;
 
 var
   ActiveFNCS:TFNCS;
@@ -206,14 +167,7 @@ Begin
 End;
      
 procedure TFNCS.GetValuesForTopics;
-//var index:Integer;
 Begin
-  //if AttributeToPublish.Find('Voltages', index) Then
-  //  GetVoltageValuesForTopics
-  //else if AttributeToPublish.Find('Currents', index) Then
-  //  GetCurrentValuesForTopics
-  //else
-  //  Writeln('No topics need to be published.');
   if AttributeToPublish.Contains('voltage') Then
     GetVoltageValuesForTopics;
   if AttributeToPublish.Contains('current') Then
@@ -224,8 +178,6 @@ Begin
     GetTapPositionsForTopics;
   if AttributeToPublish.Contains('switchstate') Then
     GetLineSwitchStateForTopics;
-//  if AttributeToPublish.count=0 then
-//    Writeln('No topics need to be published.');
 end;
 
 procedure TFNCS.GetVoltageValuesForTopics;
@@ -566,13 +518,13 @@ function TFNCS.RoundToSignificantFigure(value:double;digit:Integer):double;
 var
   factor:double=1.0;
 begin
-     RoundToSignificantFigure:=value;
-     if value = 0.0 then
-        exit;
-     factor:=power(10.0,digit-ceil(log10(abs(value))));
-     if factor = 0.0 then
-        exit;
-     RoundToSignificantFigure:=round(value*factor)/factor;
+  RoundToSignificantFigure:=value;
+  if value = 0.0 then
+    exit;
+  factor:=power(10.0,digit-ceil(log10(abs(value))));
+  if factor = 0.0 then
+    exit;
+  RoundToSignificantFigure:=round(value*factor)/factor;
 end;
 
 procedure TFNCS.GetTapPositionsForTopics;
@@ -688,22 +640,16 @@ var
   config:TJSONData;
   el,attri,cls,obj,terminal,conductor:TJSONEnum;
   attriKey, clsKey, objKey, terminalKey, ss:string;
-  //numberOfTopics:Integer;
   index:Integer;
+  buf: String;
 begin
   next_fncs_publish := 0;
   inputfile:=TFileStream.Create(fname, fmOpenRead);
-  //AttributeToPublish.Clear;
-  //VoltageTopics.Clear;
-  //CurrentTopics.Clear;
-  //PowerTopics.Clear;
+  fncsOutputStream:=TStringStream.Create(buf);
   try
     parser:=TJSONParser.Create(inputfile);
     try
       config:=parser.Parse;
-      //numberOfTopics:=config.Count;
-      //setLength(Topics, numberOfTopics);
-      //index:=0;
       for el in config do begin
         if el.Key = 'name' then
           FedName:=el.Value.AsString
@@ -714,38 +660,6 @@ begin
         else if el.Key = 'topics' then
           for cls in el.Value do begin
             clsKey:=LowerCase(cls.Key);
-            //if attriKey='tappositions' then
-            //  for cls in attri.Value do begin
-            //    clsKey:=LowerCase(cls.Key);
-            //    if not tapTopics.ContainsKey(clsKey) then
-            //      tapTopics.AddOrSetvalue(clsKey,ObjectTermianlIntDict.create([doOwnsValues]));
-            //      for obj in cls.Value do begin
-            //         objKey:=LowerCase(obj.Key);
-            //         if not tapTopics[clsKey].ContainsKey(objKey) then
-            //            tapTopics[clsKey].AddOrSetvalue(objKey,StringIntegerDict.Create);
-            //         for terminal in obj.Value do begin
-            //           if not tapTopics[clsKey][objKey].ContainsKey(terminal.Value.AsString) then
-            //             tapTopics[clsKey][objKey].Add(LowerCase(terminal.Value.AsString), Integer.MinValue)
-            //         end;
-            //      end;
-            //  end
-            //else if attriKey='controlstatus' then
-            //  for cls in attri.Value do begin
-            //    clsKey:=LowerCase(cls.Key);
-            //    if not statusTopics.ContainsKey(clsKey) then
-            //      statusTopics.AddOrSetvalue(clsKey,ObjectTermianlBoolDict.create([doOwnsValues]));
-            //      for obj in cls.Value do begin
-            //         objKey:=LowerCase(obj.Key);
-            //         if not statusTopics[clsKey].ContainsKey(objKey) then
-            //            statusTopics[clsKey].AddOrSetvalue(objKey,StringBooleanDict.Create);
-            //         for terminal in obj.Value do begin
-            //           if not statusTopics[clsKey][objKey].ContainsKey(terminal.Value.AsString) then
-            //             statusTopics[clsKey][objKey].Add(LowerCase(terminal.Value.AsString), null)
-            //         end;
-            //      end;
-            //  end
-            //else
-              //begin
               if not topics.ContainsKey(clsKey) then
                topics.AddOrSetValue(clsKey,ObjectAttributeDict.create([doOwnsValues]));
                for obj in cls.Value do begin
@@ -800,69 +714,95 @@ begin
   writeln('Done! This is where we read FNCS publication requests from: ' + fname);
 end;
 
-function TFNCS.TopicsToJsonFormat;
+//function TFNCS.TopicsToJsonFormat;
+//var
+//  formatedString,objName,propertyName:string;
+//  keyValuePairs:string='';
+//  attri:TPair<string,TerminalConductorDict>;
+//  cls:TPair<string,ObjectAttributeDict>;
+//  obj:TPair<string,AttributeTerminalDict>;
+//  terminal:TPair<string,ConductorValueDict>;
+//  conductor:TPair<string,string>;
+//  firstClassFlag:Boolean=true;
+//  firstObjectFlag:Boolean=true;
+//  firstAttriFlag:Boolean=true;
+//  firstTerminalFlag:Boolean=true;
+//begin
+//  formatedString:='{"'+FedName+'":{';
+//  if topics.Count > 0 then
+//    for cls in topics do begin
+//      for obj in cls.Value do begin
+//        if not firstObjectFlag then
+//          formatedString:=formatedString+',';
+//        objName:='"' + cls.Key+'.'+obj.Key + '"';
+//        formatedString:=formatedString+objName+':{';
+//        for attri in obj.value do begin
+//          for terminal in attri.Value do begin
+//            for conductor in terminal.Value do begin
+//              if keyValuePairs='' then
+//              else
+//                keyValuePairs:=keyValuePairs+',';
+//              if attri.Value.count > 1 Then
+//                propertyName:='"'+attri.Key+'.'+terminal.Key+'.'+conductor.Key+'"'
+//              else if conductor.Key='-1' Then
+//                propertyName:='"'+attri.Key+'"'
+//              else
+//                propertyName:='"'+attri.Key+'.'+conductor.Key+'"';
+//              keyValuePairs:=keyValuePairs+propertyName+':"'+conductor.Value+'"';
+//            end;
+//          end;
+//        end;
+//        formatedString:=formatedString+keyValuePairs+'}';
+//        keyValuePairs:='';
+//        firstTerminalFlag:=False;
+//        firstObjectFlag:=False;
+//      end;
+//    end;
+//  formatedString:=formatedString+'}}';
+//  TopicsToJsonFormat:=formatedString
+//end;
+
+procedure TFNCS.TopicsToJsonStream;
 var
-  formatedString,objName,propertyName:string;
-  keyValuePairs:string='';
   attri:TPair<string,TerminalConductorDict>;
   cls:TPair<string,ObjectAttributeDict>;
   obj:TPair<string,AttributeTerminalDict>;
   terminal:TPair<string,ConductorValueDict>;
   conductor:TPair<string,string>;
-  firstClassFlag:Boolean=true;
   firstObjectFlag:Boolean=true;
-  firstAttriFlag:Boolean=true;
-  firstTerminalFlag:Boolean=true;
+  firstKeyFlag:Boolean=true;
 begin
-  formatedString:='{"'+FedName+'":{';
+  fncsOutputStream.Seek (0, soFromBeginning);
+  fncsOutputStream.WriteString ('{"'+FedName+'":{');
   if topics.Count > 0 then
-    //firstObjectFlag:=True;
     for cls in topics do begin
-      //if not firstClassFlag then
-      //  formatedString:=formatedString+',';
-      //formatedString:=formatedString+cls.Key+':{';
       for obj in cls.Value do begin
         if not firstObjectFlag then
-          formatedString:=formatedString+',';
-        objName:='"' + cls.Key+'.'+obj.Key + '"';
-        formatedString:=formatedString+objName+':{';
-        //firstAttriFlag:=True;
+          fncsOutputStream.WriteString (',');
+        fncsOutputStream.WriteString ('"' + cls.Key+'.'+obj.Key + '":{');
         for attri in obj.value do begin
-          //if not firstAttriFlag then
-            //formatedString:=formatedString+',';
-          //formatedString:=formatedString+attri.Key+':{';
-          //firstTerminalFlag:=True;
           for terminal in attri.Value do begin
-            //if not firstTerminalFlag then
-              //formatedString:=formatedString+',';
-            //formatedString:=formatedString+terminal.Key+':{';
             for conductor in terminal.Value do begin
-              if keyValuePairs='' then
-              else
-                keyValuePairs:=keyValuePairs+',';
+              if firstKeyFlag then begin
+                fncsOutputStream.WriteString (',');
+                firstKeyFlag:=False;
+              end;
               if attri.Value.count > 1 Then
-                propertyName:='"'+attri.Key+'.'+terminal.Key+'.'+conductor.Key+'"'
+                fncsOutputStream.WriteString ('"'+attri.Key+'.'+terminal.Key+'.'+conductor.Key+'"')
               else if conductor.Key='-1' Then
-                propertyName:='"'+attri.Key+'"'
+                fncsOutputStream.WriteString ('"'+attri.Key+'"')
               else
-                propertyName:='"'+attri.Key+'.'+conductor.Key+'"';
-              keyValuePairs:=keyValuePairs+propertyName+':"'+conductor.Value+'"';
+                fncsOutputStream.WriteString ('"'+attri.Key+'.'+conductor.Key+'"');
+              fncsOutputStream.WriteString (':"'+conductor.Value+'"');
             end;
           end;
-          //formatedString:=formatedString+'}';
-          //firstAttriFlag:=False;
         end;
-        formatedString:=formatedString+keyValuePairs+'}';
-        keyValuePairs:='';
-        firstTerminalFlag:=False;
-        //formatedString:=formatedString+'}';
+        fncsOutputStream.WriteString ('}');
+        firstKeyFlag:=True;
         firstObjectFlag:=False;
       end;
-      //formatedString:=formatedString+'}';
-      //firstClassFlag:=False;
     end;
-  formatedString:=formatedString+'}}';
-  TopicsToJsonFormat:=formatedString
+  fncsOutputStream.WriteString ('}}');
 end;
 
 // called from ActiveSolution.Increment_time
@@ -875,14 +815,16 @@ var
   ilast: size_t;
   nvalues, ival: size_t;
   values: ppchar;
-  formatedStr:string;
+//  formatedStr:string;
 begin
   // execution blocks here, until FNCS permits the time step loop to continue
   time_granted := fncs_time_request (next_fncs);
   if time_granted >= next_fncs_publish then begin
     GetValuesForTopics;
-    formatedStr:=TopicsToJsonFormat;
-    fncs_publish ('fncs_output', PChar(formatedStr));
+    TopicsToJsonStream;
+    fncs_publish ('fncs_output', PChar(fncsOutputStream.DataString));
+//    formatedStr:=TopicsToJsonFormat;
+//    fncs_publish ('fncs_output', PChar(formatedStr));
     next_fncs_publish := next_fncs_publish + PublishInterval;
   end;
   ilast := fncs_get_events_size();
@@ -967,13 +909,9 @@ begin
   CurrentTopics:=TStringList.Create;
   PowerTopics:=TStringList.Create;
   topics:=ClassObjectDict.create([doOwnsValues]);
-  //tapTopics:=ClassObjectIntDict.create([doOwnsValues]);
-  //statusTopics:=ClassObjectBoolDict.create([doOwnsValues]);
-//  writeln(FLibHandle);
   if FLibHandle <> DynLibs.NilHandle then begin
     FuncError := False;
     @fncs_initialize := find_fncs_function ('fncs_initialize');
-//    writeln (HexStr(PtrUInt(@fncs_initialize),8));
     if not FuncError then @fncs_initialize_config := find_fncs_function ('fncs_initialize_config');
     if not FuncError then @fncs_agentRegister := find_fncs_function ('fncs_agentRegister');
     if not FuncError then @fncs_agentRegisterConfig := find_fncs_function ('fncs_agentRegisterConfig');
@@ -1017,8 +955,6 @@ begin
   CurrentTopics.Free;
   PowerTopics.Free;
   topics.free;
-  //tapTopics.free;
-  //statusTopics.free;
   If FLibHandle <> DynLibs.NilHandle Then Begin
     UnloadLibrary(FLibHandle);
   End;
