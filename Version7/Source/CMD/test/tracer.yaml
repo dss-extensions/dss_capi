@@ -3,6 +3,8 @@ time_delta: 1s
 broker: tcp://localhost:5570
 values:
     output:
-        topic: opendss/output
+        topic: opendss/fncs_output
         default: 0
-
+    command:
+        topic: opendss/fncs_command
+        default: 0

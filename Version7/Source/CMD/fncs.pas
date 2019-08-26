@@ -108,6 +108,7 @@ type
     function find_fncs_function (name: String): Pointer;
 
   private
+    next_fncs_publish:fncs_time;
     topics:ClassObjectDict;
     //tapTopics:ClassObjectIntDict;
     //statusTopics:ClassObjectBoolDict;
@@ -690,6 +691,7 @@ var
   //numberOfTopics:Integer;
   index:Integer;
 begin
+  next_fncs_publish := 0;
   inputfile:=TFileStream.Create(fname, fmOpenRead);
   //AttributeToPublish.Clear;
   //VoltageTopics.Clear;
@@ -812,7 +814,7 @@ var
   firstAttriFlag:Boolean=true;
   firstTerminalFlag:Boolean=true;
 begin
-  formatedString:='{'+FedName+':{';
+  formatedString:='{"'+FedName+'":{';
   if topics.Count > 0 then
     //firstObjectFlag:=True;
     for cls in topics do begin
@@ -822,7 +824,7 @@ begin
       for obj in cls.Value do begin
         if not firstObjectFlag then
           formatedString:=formatedString+',';
-        objName:=cls.Key+'.'+obj.Key;
+        objName:='"' + cls.Key+'.'+obj.Key + '"';
         formatedString:=formatedString+objName+':{';
         //firstAttriFlag:=True;
         for attri in obj.value do begin
@@ -839,12 +841,12 @@ begin
               else
                 keyValuePairs:=keyValuePairs+',';
               if attri.Value.count > 1 Then
-                propertyName:=attri.Key+'.'+terminal.Key+'.'+conductor.Key
+                propertyName:='"'+attri.Key+'.'+terminal.Key+'.'+conductor.Key+'"'
               else if conductor.Key='-1' Then
-                propertyName:=attri.Key
+                propertyName:='"'+attri.Key+'"'
               else
-                propertyName:=attri.Key+'.'+conductor.Key;
-              keyValuePairs:=keyValuePairs+propertyName+':'+conductor.Value;
+                propertyName:='"'+attri.Key+'.'+conductor.Key+'"';
+              keyValuePairs:=keyValuePairs+propertyName+':"'+conductor.Value+'"';
             end;
           end;
           //formatedString:=formatedString+'}';
@@ -874,17 +876,15 @@ var
   nvalues, ival: size_t;
   values: ppchar;
   formatedStr:string;
-begin { TFNCS.FncsTimeRequest }
-//  writeln('  FNCS next time is ' + format('%u', [next_fncs]));
+begin
   // execution blocks here, until FNCS permits the time step loop to continue
-  //do actual publiction here
-  //1, get all values that need to be published
-  GetValuesForTopics;
-  formatedStr:=TopicsToJsonFormat;
-  //2, form the json string that need to be published
-  fncs_publish ('fncs_output', PChar(formatedStr));
   time_granted := fncs_time_request (next_fncs);
-//  writeln('  FNCS time granted is ' + format('%u', [time_granted]));
+  if time_granted >= next_fncs_publish then begin
+    GetValuesForTopics;
+    formatedStr:=TopicsToJsonFormat;
+    fncs_publish ('fncs_output', PChar(formatedStr));
+    next_fncs_publish := next_fncs_publish + PublishInterval;
+  end;
   ilast := fncs_get_events_size();
   // TODO: executing OpenDSS commands here may cause unwanted interactions
   if ilast > 0 then begin
@@ -897,7 +897,7 @@ begin { TFNCS.FncsTimeRequest }
         value := values[ival];
         writeln(Format('  FNCSTimeRequest command %s at %u', [value, time_granted]));
         DSSExecutive.Command := value;
-        fncs_publish('fncs_output', value);
+        fncs_publish('fncs_command', value);
       end;
     end;
   end;
@@ -933,7 +933,7 @@ begin
             value := values[ival];
             writeln(Format('FNCS command %s at %u', [value, time_granted]));
             DSSExecutive.Command := value;
-            fncs_publish ('fncs_output', value);
+            fncs_publish ('fncs_command', value);
           end;
         end;
       end;
