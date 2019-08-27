@@ -770,7 +770,7 @@ var
   terminal:TPair<string,ConductorValueDict>;
   conductor:TPair<string,string>;
   firstObjectFlag:Boolean=true;
-  firstKeyFlag:Boolean=true;
+  writeKeyComma:Boolean=false;
 begin
   fncsOutputStream.Seek (0, soFromBeginning);
   fncsOutputStream.WriteString ('{"'+FedName+'":{');
@@ -783,10 +783,8 @@ begin
         for attri in obj.value do begin
           for terminal in attri.Value do begin
             for conductor in terminal.Value do begin
-              if firstKeyFlag then begin
-                fncsOutputStream.WriteString (',');
-                firstKeyFlag:=False;
-              end;
+              if writeKeyComma then fncsOutputStream.WriteString (',');
+              writeKeyComma := True;
               if attri.Value.count > 1 Then
                 fncsOutputStream.WriteString ('"'+attri.Key+'.'+terminal.Key+'.'+conductor.Key+'"')
               else if conductor.Key='-1' Then
@@ -798,7 +796,7 @@ begin
           end;
         end;
         fncsOutputStream.WriteString ('}');
-        firstKeyFlag:=True;
+        writeKeyComma:=False;
         firstObjectFlag:=False;
       end;
     end;
