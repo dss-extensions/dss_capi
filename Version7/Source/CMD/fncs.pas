@@ -769,10 +769,6 @@ begin
                   atd.AddOrSetvalue(attriKey,tcd);
                 end;
                 if attri.Value is Tjsonarray then begin
-//                  if clsKey = 'transformer' then begin
-//                    writeln(Format ('%s %s %s attri.Value IS a TJSONArray: %s', 
-//                      [clsKey, objKey, attriKey, attri.Value.FormatJSON()]));
-//                  end;
                   terminalKey:='1';
                   if tcd.ContainsKey(terminalKey) then begin
                     cvd := tcd[terminalKey];
@@ -780,43 +776,36 @@ begin
                     cvd := ConductorValueDict.Create;
                     tcd.AddOrSetvalue(terminalKey, cvd);
                   end;
-//                  if clsKey = 'transformer' then writeln('made cvd for value ', terminalKey);
                   if attri.Value.count=0 then cvd.Add('-1', '');
-                  for conductor in attri.Value do
+                  for conductor in attri.Value do begin
                     condKey := conductor.Value.asstring;
                     if not cvd.ContainsKey(condKey) then begin
                       cvd.Add(condKey, '');
-//                      if clsKey = 'transformer' then writeln('  added ', condKey);
                     end;
-                 end else begin  // attri.Value is not a TJSONArray
-//                   if clsKey = 'transformer' then begin
-//                     writeln(Format ('%s %s %s attri.Value is NOT a TJSONArray: %s', 
-//                       [clsKey, objKey, attriKey, attri.Value.FormatJSON()]));
-//                   end;
-                   for terminal in attri.Value do begin
-                     terminalKey:=LowerCase(terminal.Key);
-                     if tcd.ContainsKey(terminalKey) then begin
-                       cvd := tcd[terminalKey];
-                     end else begin
-                       cvd := ConductorValueDict.Create;
-                       tcd.AddOrSetvalue(terminalKey, ConductorValueDict.Create);
-                     end;
-//                     if clsKey = 'transformer' then writeln('made cvd for value ', terminalKey);
-                     for conductor in terminal.Value do begin
-                       condKey := conductor.Value.asstring;
-                       if not cvd.ContainsKey(condKey) then begin
-                         cvd.Add(condKey, '');
- //                        if clsKey = 'transformer' then writeln('  added ', condKey);
-                       end;
-                     end; // terminal.Value
-                   end;
-                 end;  // attri.Value
-               end; // attri
-             end; // obj
-           end; // cls
-         end // el.key is topics
-         else
-           Writeln('*** unknown key "' + el.Key + '" found in FNCS config file.');
+									end;
+                end else begin  // attri.Value is not a TJSONArray
+                  for terminal in attri.Value do begin
+                    terminalKey:=LowerCase(terminal.Key);
+                    if tcd.ContainsKey(terminalKey) then begin
+                      cvd := tcd[terminalKey];
+                    end else begin
+                      cvd := ConductorValueDict.Create;
+                      tcd.AddOrSetvalue(terminalKey, cvd);
+                    end;
+                    for conductor in terminal.Value do begin
+                      condKey := conductor.Value.asstring;
+                      if not cvd.ContainsKey(condKey) then begin
+                        cvd.Add(condKey, '');
+                      end;
+                    end; // terminal.Value
+                  end;
+                end;  // attri.Value
+              end; // attri
+            end; // obj
+          end; // cls
+        end // el.key is topics
+        else
+          Writeln('*** unknown key "' + el.Key + '" found in FNCS config file.');
       end; // el
     finally
       parser.Free;
@@ -825,7 +814,7 @@ begin
     inputfile.Free;
   end;
   writeln('Done! This is where we read FNCS publication requests from: ' + fname);
-  DumpFNCSTopics;
+//  DumpFNCSTopics;
 end;
 
 procedure TFNCS.TopicsToJsonStream;
