@@ -180,73 +180,7 @@ Begin
   end;
 End;
           
-procedure TFNCS.GetValuesForTopics;
-Begin
-//  if AttributeToPublish.Contains('voltage') Then
-//    GetVoltageValuesForTopics;
-//  if AttributeToPublish.Contains('current') Then
-//    GetCurrentValuesForTopics2;
-//  if AttributeToPublish.Contains('power') Then
-//    GetPowerValuesForTopics;
-//  if AttributeToPublish.Contains('tapposition') Then
-//    GetTapPositionsForTopics;
-//  if AttributeToPublish.Contains('switchstate') Then
-//    GetLineSwitchStateForTopics;
-end;
-
 {*
-procedure TFNCS.GetVoltageValuesForTopics;
-  VAR
-     i,j,k:Integer;
-     Volts:Complex;
-     re:array of double;
-     names:TStringList;
-     thisBusName,sign,phaseStr:String;
-     BusName:string;
-     busref,phase:integer;
-
-  Begin
-      IF ActiveCircuit <> Nil THEN
-       WITH ActiveCircuit DO
-       Begin
-         setLength(re, 2*NumNodes-1);
-         k:=0;
-         names:=TStringList.Create;
-         FOR i := 1 to NumBuses DO
-         Begin
-           thisBusName:=Buses^[i].LocalName;
-           if topics['bus'].ContainsKey(thisBusName) Then
-           begin
-             For j := 1 to Buses^[i].NumNodesThisBus DO
-             Begin
-               //if topics['bus'][thisBusName]['voltage'].ContainsKey(IntToStr(j)) Then
-               //begin
-                 busref:=Buses^[i].GetRef(j);
-                 //nref := pElem.NodeRef^[k];
-                 Volts := ActiveCircuit.Solution.NodeV^[busref];//Bus.RefNo saves global numbering of a node in the circuit, the sequence of the numbers in RefNo will be used as local node index
-                 phase:=MapNodeToBus^[busref].nodenum;
-                 case phase of
-                   1:phaseStr:='A';
-                   2:phaseStr:='B';
-                   3:phaseStr:='C';
-                 else
-                   phaseStr:=IntToStr(phase);
-                 end;
-                 if Volts.im < 0 then
-                   sign:=''
-                 else
-                   sign:='+';
-                 if topics['bus'][thisBusName]['voltage']['1'].ContainsKey(phaseStr) Then
-                   topics['bus'][thisBusName]['voltage']['1'][phaseStr]:=RoundToSignificantFigure(Volts.re,6).ToString+sign+RoundToSignificantFigure(Volts.im,6).ToString+'i';
-               //end;
-             End;
-           end;
-         End;
-         names.Free;
-       End
-      ELSE setLength(re, 0);
-end;
-
 procedure TFNCS.GetCurrentValuesForTopics;
 
   Var
@@ -646,6 +580,103 @@ begin
   if factor = 0.0 then
     exit;
   RoundToSignificantFigure:=round(value*factor)/factor;
+end;
+
+{*
+procedure TFNCS.GetVoltageValuesForTopics;
+  VAR
+     i,j,k:Integer;
+     Volts:Complex;
+     re:array of double;
+     names:TStringList;
+     thisBusName,sign,phaseStr:String;
+     BusName:string;
+     busref,phase:integer;
+
+  Begin
+      IF ActiveCircuit <> Nil THEN
+       WITH ActiveCircuit DO
+       Begin
+         setLength(re, 2*NumNodes-1);
+         k:=0;
+         names:=TStringList.Create;
+         FOR i := 1 to NumBuses DO
+         Begin
+           thisBusName:=Buses^[i].LocalName;
+           if topics['bus'].ContainsKey(thisBusName) Then
+           begin
+             For j := 1 to Buses^[i].NumNodesThisBus DO
+             Begin
+               //if topics['bus'][thisBusName]['voltage'].ContainsKey(IntToStr(j)) Then
+               //begin
+                 busref:=Buses^[i].GetRef(j);
+                 //nref := pElem.NodeRef^[k];
+                 Volts := ActiveCircuit.Solution.NodeV^[busref];//Bus.RefNo saves global numbering of a node in the circuit, the sequence of the numbers in RefNo will be used as local node index
+                 phase:=MapNodeToBus^[busref].nodenum;
+                 case phase of
+                   1:phaseStr:='A';
+                   2:phaseStr:='B';
+                   3:phaseStr:='C';
+                 else
+                   phaseStr:=IntToStr(phase);
+                 end;
+                 if Volts.im < 0 then
+                   sign:=''
+                 else
+                   sign:='+';
+                 if topics['bus'][thisBusName]['voltage']['1'].ContainsKey(phaseStr) Then
+                   topics['bus'][thisBusName]['voltage']['1'][phaseStr]:=RoundToSignificantFigure(Volts.re,6).ToString+sign+RoundToSignificantFigure(Volts.im,6).ToString+'i';
+               //end;
+             End;
+           end;
+         End;
+         names.Free;
+       End
+      ELSE setLength(re, 0);
+end;
+*}
+
+procedure TFNCS.GetValuesForTopics;
+var
+  objKey, attKey, trmKey, valKey, dssName: String;
+  map: TFNCSMap;
+  oad: ObjectAttributeDict;
+  atd: AttributeTerminalDict;
+  tcd: TerminalConductorDict;
+  cvd: ConductorValueDict;
+	idxBus, idxPhs, idxLoc, idxNode: Integer;
+	Volts: Complex;
+	sign: String;
+begin
+	if topics.containsKey('bus') then begin
+		oad := topics.Items['bus'];
+		for objKey in oad.Keys do begin
+			map := oad.Items[objKey];
+			atd := map.atd;
+			idxBus := map.idx;
+			dssName := ActiveCircuit.BusList.get(idxBus);
+			for attKey in atd.Keys do begin
+				tcd := atd.Items[attKey];
+				for trmKey in tcd.Keys do begin
+					cvd := tcd.Items[trmKey];
+					for valKey in cvd.Keys do begin
+						idxPhs := 1 + Ord(valKey[1]) - Ord('A');
+						idxLoc := ActiveCircuit.Buses^[idxBus].FindIdx(idxPhs);
+            idxNode := ActiveCircuit.Buses^[idxBus].GetRef(idxLoc);
+						Volts := ActiveCircuit.Solution.NodeV^[idxNode];
+						if Volts.im < 0 then
+							sign:=''
+						else
+							sign:='+';
+						writeln(Format('Bus %s %s %s %s %d %d %d %g %g', 
+						  [dssName, attKey, trmKey, valKey, idxPhs, idxLoc, idxNode, Volts.re, Volts.im]));
+						cvd[valKey] := RoundToSignificantFigure(Volts.re,6).ToString
+						  + sign + RoundToSignificantFigure(Volts.im,6).ToString+'i';
+					end;
+				end;
+			end;
+		end;
+	end;
 end;
 
 procedure TFNCS.DumpFNCSTopics;
