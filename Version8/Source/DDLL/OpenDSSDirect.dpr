@@ -118,6 +118,7 @@ uses
   PCClass in '..\PCElements\PCClass.pas',
   PCElement in '..\PCElements\PCElement.pas',
   PVsystem in '..\PCElements\PVsystem.pas',
+  PVsystem2 in '..\PCElements\PVsystem2.pas',
   PVSystemUserModel in '..\PCElements\PVSystemUserModel.pas',
   Storage in '..\PCElements\Storage.pas',
   StorageVars in '..\PCElements\StorageVars.pas',
