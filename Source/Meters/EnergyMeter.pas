@@ -843,6 +843,7 @@ Begin
       GeneratorClass.ResetRegistersAll(ActorID);
       StorageClass[ActorID].ResetRegistersAll;
       PVSystemClass[ActorID].ResetRegistersAll;
+      PVSystem2Class[ActorID].ResetRegistersAll;
 
 
 End;
@@ -877,6 +878,7 @@ Begin
       GeneratorClass.SampleAll(ActorID);
       StorageClass[ActorID].SampleAll(ActorID);  // samples energymeter part of storage elements (not update)
       PVSystemClass[ActorID].SampleAll(ActorID);
+      PVSystem2Class[ActorID].SampleAll(ActorID);
 
 End;
 
@@ -1823,6 +1825,7 @@ Begin
                 IF (PCElementType = LOAD_ELEMENT)
                 OR (PCElementType = GEN_ELEMENT)
                 OR (PCElementType = PVSYSTEM_ELEMENT)
+                OR (PCElementType = PVSYSTEM2_ELEMENT)
                 OR (PCElementType = STORAGE_ELEMENT)
                 OR (PCElementType = CAP_ELEMENT)  // Capacitor and Reactor put on the PC list if IsShunt=TRUE
                 OR (PCElementType = REACTOR_ELEMENT) Then Begin

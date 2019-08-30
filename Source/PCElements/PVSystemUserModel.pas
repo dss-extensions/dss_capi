@@ -71,7 +71,7 @@ TYPE
 
 implementation
 
-Uses PVSystem, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils;
+Uses PVSystem, PVSystem2, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils;
 
 { TPVsystemUserModel }
 

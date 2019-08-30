@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-        NumExportOptions = 61;
+        NumExportOptions = 62;
 
 FUNCTION DoExportCmd:Integer;
 
@@ -97,6 +97,7 @@ Begin
       ExportOption[59] := 'ZCC';
       ExportOption[60] := 'Contours';
       ExportOption[61] := 'Y4';
+      ExportOption[62] := 'PVSystem2_Meters';
 
       ExportHelp[ 1] := '(Default file = EXP_VOLTAGES.CSV) Voltages to ground by bus/node.';
       ExportHelp[ 2] := '(Default file = EXP_SEQVOLTAGES.CSV) Sequence voltages.';
@@ -169,6 +170,8 @@ Begin
       ExportHelp[59] := 'Exports the connectivity matrix (ZCC) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates.  If A-Diakoptics is not initialized this command does nothing';
       ExportHelp[60] := 'Exports the Contours matrix (C) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are integers.  If A-Diakoptics is not initialized this command does nothing';
       ExportHelp[61] := 'Exports the inverse of Z4 (ZCC) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates.  If A-Diakoptics is not initialized this command does nothing';
+      ExportHelp[62] := '(Default file = EXP_PVMETERS.CSV) Present values of PVSystem2 meters. Adding the switch "/multiple" or "/m" will ' +
+                        ' cause a separate file to be written for each PVSystem2.';
 End;
 
 //----------------------------------------------------------------------------
@@ -483,6 +486,7 @@ Begin
      59: ExportZCC(FileName);
      60: ExportC(FileName);
      61: ExportY4(FileName);
+     62: ExportPVSystem2Meters(FileName);
 
    ELSE
         // ExportVoltages(FileName);    // default

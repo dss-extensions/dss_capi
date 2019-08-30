@@ -44,6 +44,7 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      LineSpacing,
      Storage,
      PVSystem,
+     PVSystem2,
      InvControl,
      ExpControl,
      variants,
@@ -223,6 +224,7 @@ VAR
    LineSpacingClass   :Array of TLineSpacing;
    StorageClass       :Array of TStorage;
    PVSystemClass      :Array of TPVSystem;
+   PVSystem2Class     :Array of TPVSystem2;
    InvControlClass    :Array of TInvControl;
    ExpControlClass    :Array of TExpControl;
    ActiveVSource      :Array of TVsource;   // created on 01/14/2019 to facilitate actors to modify VSources while simulating
@@ -1133,6 +1135,7 @@ initialization
    setlength(LineSpacingClass,CPU_Cores + 1);
    setlength(StorageClass,CPU_Cores + 1);
    setlength(PVSystemClass,CPU_Cores + 1);
+   setlength(PVSystem2Class,CPU_Cores + 1);
    setlength(InvControlClass,CPU_Cores + 1);
    setlength(ExpControlClass,CPU_Cores + 1);
    setlength(EventStrings,CPU_Cores + 1);

@@ -53,6 +53,7 @@ CONST
       STORAGE_CONTROL  = 22 * 8;
       SWT_CONTROL      = 23 * 8;
       PVSYSTEM_ELEMENT = 24 * 8;
+      PVSYSTEM2_ELEMENT = 25 * 8; // Using 25 (PR)
       // Deleted --- VV_CONTROL       = 25 * 8;
       GIC_Line         = 26 * 8;
       GIC_Transformer  = 27 * 8;
@@ -128,6 +129,7 @@ USES
      StorageController,
      SwtControl,
      PVSystem,
+     PVSystem2,
      InvControl,
      GICLine,
      GICTransformer,
@@ -217,6 +219,8 @@ Begin
      DSSClasses.New               := TSwtControl.Create;
      PVSystemClass[ActiveActor]   := TPVSystem.Create;
      DSSClasses.New               := PVSystemClass[ActiveActor];
+     PVSystem2Class[ActiveActor]  := TPVSystem2.Create;
+     DSSClasses.New               := PVSystem2Class[ActiveActor];
      DSSClasses.New               := TUPFC.Create;
      DSSClasses.New               := TUPFCControl.Create;
      DSSClasses.New               := TESPVLControl.Create;
