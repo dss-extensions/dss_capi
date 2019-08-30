@@ -169,6 +169,7 @@ uses
   MyDSSClassDefs in '..\EXE\MyDSSClassDefs.Pas',
   PVSystemUserModel in '..\PCElements\PVSystemUserModel.pas',
   PVsystem in '..\PCElements\PVsystem.pas',
+  PVsystem2 in '..\PCElements\PVsystem2.pas',
   TempShape in '..\General\TempShape.pas',
   XYcurve in '..\General\XYcurve.pas',
   PriceShape in '..\General\PriceShape.pas',

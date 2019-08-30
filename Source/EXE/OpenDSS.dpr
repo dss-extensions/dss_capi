@@ -116,6 +116,7 @@ uses
   ProgressForm in '..\Forms\ProgressForm.pas' {Progress},
   PropEdit in '..\Forms\PropEdit.pas' {PropEditForm},
   PVsystem in '..\PCElements\PVsystem.pas',
+  PVsystem2 in '..\PCElements\PVsystem2.pas',
   PVSystemUserModel in '..\PCElements\PVSystemUserModel.pas',
   Reactor in '..\PDElements\Reactor.pas',
   Recloser in '..\Controls\Recloser.pas',

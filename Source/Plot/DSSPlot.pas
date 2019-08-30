@@ -65,6 +65,7 @@ Type
       procedure MarkTheCapacitors;
       procedure MarkTheRegulators;
       procedure MarkThePVSystems;
+      procedure MarkThePVSystems2;
       procedure MarkTheStorage;
       procedure MarkTheFuses;
       procedure MarkTheReclosers;
@@ -198,6 +199,7 @@ Uses DSSGraph,
    Monitor,
    Capacitor,
    PVSystem,
+   PVSystem2,
    Storage,
    RegControl,
    Fuse,
@@ -2987,6 +2989,7 @@ begin
      If ActiveCircuit[ActiveActor].MarkCapacitors   Then MarkTheCapacitors;
      If ActiveCircuit[ActiveActor].MarkRegulators   Then MarkTheRegulators;
      If ActiveCircuit[ActiveActor].MarkPVSystems    Then MarkThePVSystems;
+     If ActiveCircuit[ActiveActor].MarkPVSystems2   Then MarkThePVSystems2;
      If ActiveCircuit[ActiveActor].MarkStorage      Then MarkTheStorage;
      If ActiveCircuit[ActiveActor].MarkFuses        Then MarkTheFuses;
      If ActiveCircuit[ActiveActor].MarkReclosers    Then MarkTheReclosers;
@@ -3172,6 +3175,32 @@ begin
             End;
          End;
       pPVSystem := ActiveCircuit[ActiveActor].PVSystems.Next;
+   End;
+end;
+
+procedure TDSSPlot.MarkThePVSystems2;
+Var
+     pPVSystem2:TPVSystem2Obj;
+     BusIdx: Integer;
+     MyBus : TDSSBus;
+
+begin
+   pPVSystem2 := ActiveCircuit[ActiveActor].PVSystems2.first;
+   While pPVSystem2 <> Nil Do
+   Begin
+      If pPVSystem2.Enabled Then
+         Begin
+            BusIdx := pPVSystem2.Terminals^[1].BusRef;
+            If BusIdx > 0 Then
+            With ActiveCircuit[ActiveActor] Do  Begin
+               MyBus :=  Buses^[BusIdx];
+               If MyBus.CoordDefined Then
+               Begin
+                  AddNewMarker(MyBus.X, MyBus.y , clRed, PVMarkerCode,PVMarkerSize);
+               End;
+            End;
+         End;
+      pPVSystem2 := ActiveCircuit[ActiveActor].PVSystems2.Next;
    End;
 end;
 
