@@ -20,8 +20,7 @@ interface
 
 uses
   Classes, SysUtils, Executive, {$IFDEF Unix} unix, {$ENDIF} dynlibs, DSSGlobals,
-  UComplex, generics.collections, CktElement, Utilities, math,
-  RegControl,ControlElem;
+  UComplex, generics.collections, CktElement, Utilities, math;
 
 type
   fncs_time = qword;
@@ -120,22 +119,14 @@ type
     constructor Create();
     destructor Destroy; override;
     function FncsTimeRequest (next_fncs:fncs_time):Boolean;
-    procedure ReadFncsPubConfig (fname: string);
+    procedure ReadFNCSPubConfig (fname: string);
     procedure MapFNCSTopics;
     procedure DumpFNCSTopics;
-//    procedure GetCurrentValuesForTopics;   
-//    procedure GetCurrentValuesForTopics2;
-//    procedure GetVoltageValuesForTopics;
+    procedure GetVoltagesForTopics (oad:ObjectAttributeDict);
+		procedure GetBranchesForTopics (oad:ObjectAttributeDict);
     procedure GetValuesForTopics;
-//    procedure GetPowerValuesForTopics;
     procedure TopicsToJsonStream;
-//    procedure AddCurrentsToDict(pElem:TDSSCktElement;Cbuffer:pComplexArray;topics:ClassObjectDict);
-//    procedure AddCurrentsToDict2(pElem:TDSSCktElement;topics:ClassObjectDict);
-//    procedure AddPowersToDict(pElem:TDSSCktElement;topics:ClassObjectDict);
     function RoundToSignificantFigure(value:double;digit:Integer):double;
-//    procedure GetTapPositionsForTopics;
-//    procedure GetControlStatusForTopics;
-//    procedure GetLineSwitchStateForTopics;
   end;
 
 var
@@ -144,7 +135,7 @@ var
 implementation
 
 uses
-  fpjson, jsonparser, jsonscanner;
+  fpjson, jsonparser, jsonscanner, Transformer; // RegControl,ControlElem;
 
 constructor TFNCSMap.Create;
 begin
@@ -179,396 +170,7 @@ Begin
     writeln('Error in FNCS Stop Time: "' + s +'" Units can only be d, h, m, or s (single char only)');
   end;
 End;
-          
-{*
-procedure TFNCS.GetCurrentValuesForTopics;
-
-  Var
-      F          :TextFile;
-      cBuffer    :pComplexArray;
-      pElem      :TDSSCktElement;
-      MaxCond, MaxTerm   :Integer;
-      i,j        :Integer;
-
-  Begin
-
-    cBuffer := nil;
-
-    Try
-       Getmem(cBuffer, sizeof(cBuffer^[1])*GetMaxCktElementSize);
-
-       // Sources first
-       pElem := ActiveCircuit.Sources.First;
-       WHILE pElem<>nil DO BEGIN
-         IF pElem.Enabled THEN BEGIN
-            pElem.GetCurrents(cBuffer);
-            AddCurrentsToDict(pElem, Cbuffer, topics);
-         END;
-          pElem := ActiveCircuit.Sources.Next;
-       END;
-
-
-       // PDELEMENTS first
-       pElem := ActiveCircuit.PDElements.First;
-       WHILE pElem<>nil DO BEGIN
-         IF pElem.Enabled THEN BEGIN
-          pElem.GetCurrents(cBuffer);
-          AddCurrentsToDict(pElem, Cbuffer, topics);
-         END;
-          pElem := ActiveCircuit.PDElements.Next;
-       END;
-
-       // Faults
-       pElem := ActiveCircuit.Faults.First;
-       WHILE pElem<>nil DO BEGIN
-         IF pElem.Enabled THEN BEGIN
-          pElem.GetCurrents(cBuffer);
-          AddCurrentsToDict(pElem, Cbuffer, topics);
-         END;
-          pElem := ActiveCircuit.Faults.Next;
-       END;
-
-       // PCELEMENTS next
-       pElem := ActiveCircuit.PCElements.First;
-       WHILE pElem<>nil DO BEGIN
-         IF pElem.Enabled THEN BEGIN
-          pElem.GetCurrents(cBuffer);
-          AddCurrentsToDict(pElem, Cbuffer, topics);
-         END;
-          pElem := ActiveCircuit.PCElements.Next;
-       END;
-    FINALLY
-       If Assigned(cBuffer) Then Freemem(cBuffer);
-    End;
-  End;
-
-PROCEDURE TFNCS.AddCurrentsToDict(pelem:TDSSCktElement; Cbuffer:pComplexArray; topics:ClassObjectDict);
-VAr
-    i,j,k:Integer;
-    value:Complex;
-    cls,obj,terminal,conductor,jstr,istr,sign:string;
-
-Begin
-    k:=0;
-    cls:=LowerCase(pelem.DSSClassName);
-    obj:=LowerCase(pelem.LocalName);
-    if topics.Containskey(cls) and topics[cls].containsKey(obj) then
-       For j := 1 to pElem.Nterms Do Begin
-         jstr:=IntToStr(j);
-         if topics[cls][obj]['current'].ContainsKey(jstr) then
-           For i:= 1 to pElem.NConds Do Begin
-             Inc(k);
-             istr:=IntToStr(i);
-             if topics[cls][obj]['current'][jstr].ContainsKey(istr) then
-             begin
-               value:=cBuffer^[k];
-               if value.im < 0 then
-                 sign:=''
-               else
-                 sign:='+';
-               topics[cls][obj]['current'][jstr][istr]:=value.re.ToString+sign+value.im.ToString+'i';
-             end
-           end
-         else
-           k:=k+pElem.NConds
-       END;
-End;
-
-procedure TFNCS.GetCurrentValuesForTopics2;
-  Var
-      F          :TextFile;
-      cBuffer    :pComplexArray;
-      pElem      :TDSSCktElement;
-      i,j        :Integer;
-
-  Begin
-
-    Try
-
-       // Sources first
-       pElem := ActiveCircuit.Sources.First;
-
-       WHILE pElem <> nil DO Begin
-         IF pElem.Enabled  THEN AddCurrentsToDict2(pElem, topics);
-          pElem := ActiveCircuit.Sources.Next;
-       End;
-
-       // PDELEMENTS first
-       pElem := ActiveCircuit.PDElements.First;
-
-       WHILE pElem<>nil  DO Begin
-         IF pElem.Enabled THEN AddCurrentsToDict2(pElem, topics);
-          pElem := ActiveCircuit.PDElements.Next;
-       End;
-
-       // Faults
-       pElem := ActiveCircuit.Faults.First;
-
-       WHILE pElem<>nil DO Begin
-         IF pElem.Enabled THEN AddCurrentsToDict2(pElem, topics);
-          pElem := ActiveCircuit.Faults.Next;
-       End;
-
-       // PCELEMENTS next
-       pElem := ActiveCircuit.PCElements.First;
-
-       WHILE pElem<>nil DO Begin
-         IF pElem.Enabled THEN AddCurrentsToDict2(pElem, topics);
-         pElem := ActiveCircuit.PCElements.Next;
-       End;
-    FINALLY
-    End;
-  End;
-
-PROCEDURE TFNCS.AddCurrentsToDict2(pElem:TDSSCktElement; topics:ClassObjectDict);
-
-Var
-
-    j,i,k, Ncond, Nterm, phase:Integer;
-    cBuffer :pComplexArray;
-    FromBus,cls,obj,jstr,istr,phaseStr,sign:String;
-    Ctotal,current:Complex;
-
-BEGIN
-
-  cBuffer := nil;
-
-  NCond := pElem.NConds;
-  Nterm := pElem.Nterms;
-  cls:=LowerCase(pelem.DSSClassName);
-  obj:=LowerCase(pelem.LocalName);
-
-  Try
-    //begin
-    Getmem(cBuffer, sizeof(cBuffer^[1])*Ncond*Nterm);
-    pElem.GetCurrents(cBuffer);
-    k:=0;
-    //FromBus:=StripExtension(pElem.FirstBus);
-    if topics.Containskey(cls) and topics[cls].containsKey(obj) then
-      For j:=1 to pElem.Nterms Do begin
-        jstr:=IntToStr(j);
-        if topics[cls][obj]['current'].containsKey(jstr) then
-          For i:=1 to pElem.NConds Do Begin
-            Inc(k);
-            //istr:=IntToStr(i);
-            phase:=GetNodeNum(pElem.NodeRef^[k]);
-            case phase of
-              1:phaseStr:='A';
-              2:phaseStr:='B';
-              3:phaseStr:='C';
-            else
-              phaseStr:=IntToStr(phase);
-            end;
-            if topics[cls][obj]['current'][jstr].ContainsKey(phaseStr) then begin
-              current:= cBuffer^[k];
-              if current.im<0 then
-                sign:=''
-              else
-                sign:='+';
-              topics[cls][obj]['current'][jstr][phaseStr]:=RoundToSignificantFigure(current.re,6).ToString+sign+RoundToSignificantFigure(current.im,6).toString+'i';
-            end
-          end
-        else
-          k:=k+pElem.NConds;
-        //end;
-      End
-      //FromBus := StripExtension(pElem.Nextbus);
-  Finally
-    If Assigned(cBuffer) Then Freemem(cBuffer);
-  End;
-END;
-
-procedure TFNCS.GetPowerValuesForTopics;
-Var
-    pElem :TDSSCktElement;
-Begin
-     // Sources first
-     pElem := ActiveCircuit.sources.First;
-
-     WHILE pElem<>nil DO Begin
-       IF pElem.Enabled  THEN AddPowersToDict(pElem, topics);
-       pElem := ActiveCircuit.sources.Next;
-     End;
-
-     // PDELEMENTS first
-     pElem := ActiveCircuit.PDElements.First;
-     WHILE pElem<>nil DO Begin
-       IF pElem.Enabled  THEN AddPowersToDict(pElem, topics);
-       pElem := ActiveCircuit.PDElements.Next;
-     End;
-
-     // PCELEMENTS next
-     pElem := ActiveCircuit.PCElements.First;
-     WHILE pElem<>nil DO Begin
-      IF pElem.Enabled  THEN AddPowersToDict(pElem, topics);
-       pElem := ActiveCircuit.PCElements.Next;
-     End;
-end;
-
-procedure TFNCS.AddPowersToDict(pElem:TDSSCktElement; topics:ClassObjectDict);
-var
-  c_Buffer:pComplexArray;
-  FromBus,fullnme,cls,obj,phaseStr,sign,jstr:String;
-  NCond, Nterm, i, j, k,phase :Integer;
-  Volts:Complex;
-  S:Complex;
-  nref:Integer;
-begin
-  c_Buffer:= Nil;
-  cls:=LowerCase(pElem.DSSClassName);
-  obj:=LowerCase(pElem.LocalName);
-  NCond := pElem.NConds;
-  Nterm := pElem.Nterms;
-  Try
-  // Allocate c_Buffer big enough for largest circuit element
-    Getmem(c_Buffer, sizeof(c_Buffer^[1])*Ncond*Nterm);
-    pElem.GetCurrents(c_Buffer);
-    k:=0;
-    //FromBus:=StripExtension(pElem.FirstBus);
-    fullnme:=FullName(pElem);
-    if topics.Containskey(cls) and topics[cls].containsKey(obj) then
-      FOR j:=1 to NTerm Do Begin
-        jstr:=IntToStr(j);
-        if topics[cls][obj]['power'].ContainsKey(jstr) then
-          For i:=1 to NCond Do Begin
-            Inc(k);
-            nref := pElem.NodeRef^[k];
-            phase:=GetNodeNum(nref);
-            case phase of
-              1:phaseStr:='A';
-              2:phaseStr:='B';
-              3:phaseStr:='C';
-            else
-              phaseStr:=IntToStr(phase);
-            end;
-            if topics[cls][obj]['power'][jstr].ContainsKey(phaseStr) then begin
-              Volts := ActiveCircuit.Solution.NodeV^[nref];
-              S:=Cmul(Volts, conjg(c_Buffer^[k]));
-              IF ActiveCircuit.PositiveSequence
-              THEN S:=CmulReal(S, 3.0);
-              if S.im<0 then
-                sign:=''
-              else
-                sign:='+';
-              topics[cls][obj]['power'][jstr][phaseStr]:=RoundToSignificantFigure(S.re*1000,6).ToString+sign+RoundToSignificantFigure(S.im*1000,6).toString+'i';
-            end;
-          End
-        else
-          k:=k+pElem.NConds;
-      //FromBus:=pElem.Nextbus;
-      End;
-  Finally
-     If Assigned(c_Buffer) then Freemem(c_Buffer);
-  End;
-end;
-
-procedure TFNCS.GetTapPositionsForTopics;
-Var
-   iWind :Integer;
-   pReg: TRegControlObj;
-   //Name:string;
-Begin
-  Try
-     WITH ActiveCircuit Do
-     Begin
-       pReg := RegControls.First;
-       WHILE pReg <> NIL Do
-       Begin
-          WITH pReg.Transformer Do
-          Begin
-            iWind := pReg.TrWinding;
-            //Name:=PresentTap[iWind];
-            if topics['transformer'].ContainsKey(Name) Then
-               topics['transformer'][Name]['tapposition']['1']['-1']:=Round((PresentTap[iWind]-(Maxtap[iWind]+Mintap[iWind])/2.0)/TapIncrement[iWind]).ToString();
-          End;
-          pReg := RegControls.Next;
-       End;
-     End;
-  FINALLY
-  End;
-end;
-
-PROCEDURE TFNCS.GetControlStatusForTopics;
-
-Var
-    ControlDevice:TControlElem;
-    parentName,thisName,cls,obj,clsobj:string;
-    isClosed,switchFound:Boolean;
-
-Begin
-  IF ActiveCircuit <> Nil THEN
-    With ActiveCircuit Do Begin
-          ControlDevice := Nil;
-          switchFound:=false;
-          TRY
-            // Sample all controls and set action times in control Queue
-            ControlDevice := DSSControls.First;
-            WHILE ControlDevice <> Nil Do
-            Begin
-                 parentName:=ControlDevice.ParentClass.Name;
-                 thisName:=ControlDevice.Name;
-                 obj:=ControlDevice.LocalName;
-                 cls:=ControlDevice.DSSClassName;
-                 clsobj:=ControlDevice.DisplayName;
-                 if parentName<>'RegControl' then
-                   switchFound:=True;
-                 IF ControlDevice.Enabled THEN ControlDevice.Sample;
-                 isClosed:=ControlDevice.Closed[0];
-                 ControlDevice := DSSControls.Next;
-            End;
-
-          EXCEPT
-             On E: Exception DO  Begin
-             //DoSimpleMsg(Format('Error Sampling Control Device "%s.%s" %s  Error = %s',[ControlDevice.ParentClass.Name, ControlDevice.Name, CRLF, E.message]), 484);
-             //Raise EControlProblem.Create('Solution aborted.');
-             End;
-          END;
-    End;
-
-End;
-
-procedure TFNCS.GetLineSwitchStateForTopics;
-var
-    elem:TDSSCktElement;
-    parentName,thisName,cls,obj,clsobj:string;
-    isClosed,switchFound:Boolean;
-begin
-    IF ActiveCircuit <> Nil THEN
-    With ActiveCircuit Do Begin
-          elem := Nil;
-          switchFound:=false;
-          TRY
-            // Sample all controls and set action times in control Queue
-            elem := CktElements.First;
-            WHILE elem <> Nil Do
-            Begin
-                 //parentName:=elem.ParentClass.Name;
-                 //thisName:=elem.Name;
-                 cls:=LowerCase(elem.DSSClassName);
-                 obj:=LowerCase(elem.LocalName);
-                 //clsobj:=elem.DisplayName;
-//                 if LineSwitchList.Contains(obj) then
-//                   if AllTerminalsClosed(elem) then
-//                     topics[cls][obj]['switchstate']['1']['-1']:='1'
-//                   else
-//                     topics[cls][obj]['switchstate']['1']['-1']:='0';
-                 //if parentName<>'RegControl' then
-                 //  switchFound:=True;
-                 //IF elem.Enabled THEN elem.Sample;
-                 //isClosed:=elem.Closed[0];
-                 elem := CktElements.Next;
-            End;
-
-          EXCEPT
-             On E: Exception DO  Begin
-             //DoSimpleMsg(Format('Error Sampling Control Device "%s.%s" %s  Error = %s',[ControlDevice.ParentClass.Name, ControlDevice.Name, CRLF, E.message]), 484);
-             //Raise EControlProblem.Create('Solution aborted.');
-             End;
-          END;
-    End;
-end;
-*}
-
+         
 function TFNCS.RoundToSignificantFigure(value:double;digit:Integer):double;
 var
   factor:double=1.0;
@@ -582,65 +184,107 @@ begin
   RoundToSignificantFigure:=round(value*factor)/factor;
 end;
 
-{*
-procedure TFNCS.GetVoltageValuesForTopics;
-  VAR
-     i,j,k:Integer;
-     Volts:Complex;
-     re:array of double;
-     names:TStringList;
-     thisBusName,sign,phaseStr:String;
-     BusName:string;
-     busref,phase:integer;
-
-  Begin
-      IF ActiveCircuit <> Nil THEN
-       WITH ActiveCircuit DO
-       Begin
-         setLength(re, 2*NumNodes-1);
-         k:=0;
-         names:=TStringList.Create;
-         FOR i := 1 to NumBuses DO
-         Begin
-           thisBusName:=Buses^[i].LocalName;
-           if topics['bus'].ContainsKey(thisBusName) Then
-           begin
-             For j := 1 to Buses^[i].NumNodesThisBus DO
-             Begin
-               //if topics['bus'][thisBusName]['voltage'].ContainsKey(IntToStr(j)) Then
-               //begin
-                 busref:=Buses^[i].GetRef(j);
-                 //nref := pElem.NodeRef^[k];
-                 Volts := ActiveCircuit.Solution.NodeV^[busref];//Bus.RefNo saves global numbering of a node in the circuit, the sequence of the numbers in RefNo will be used as local node index
-                 phase:=MapNodeToBus^[busref].nodenum;
-                 case phase of
-                   1:phaseStr:='A';
-                   2:phaseStr:='B';
-                   3:phaseStr:='C';
-                 else
-                   phaseStr:=IntToStr(phase);
-                 end;
-                 if Volts.im < 0 then
-                   sign:=''
-                 else
-                   sign:='+';
-                 if topics['bus'][thisBusName]['voltage']['1'].ContainsKey(phaseStr) Then
-                   topics['bus'][thisBusName]['voltage']['1'][phaseStr]:=RoundToSignificantFigure(Volts.re,6).ToString+sign+RoundToSignificantFigure(Volts.im,6).ToString+'i';
-               //end;
-             End;
-           end;
-         End;
-         names.Free;
-       End
-      ELSE setLength(re, 0);
-end;
-*}
-
 procedure TFNCS.GetValuesForTopics;
+begin
+	if topics.containsKey('bus') then GetVoltagesForTopics (topics.Items['bus']);
+	if topics.containsKey('line') then GetBranchesForTopics (topics.Items['line']);
+	if topics.containsKey('vsource') then GetBranchesForTopics (topics.Items['vsource']);
+	if topics.containsKey('fault') then GetBranchesForTopics (topics.Items['fault']);
+	if topics.containsKey('capacitor') then GetBranchesForTopics (topics.Items['capacitor']);
+	if topics.containsKey('load') then GetBranchesForTopics (topics.Items['load']);
+	if topics.containsKey('pvsystem') then GetBranchesForTopics (topics.Items['pvsystem']);
+	if topics.containsKey('transformer') then GetBranchesForTopics (topics.Items['transformer']);
+end;
+         
+procedure TFNCS.GetBranchesForTopics (oad:ObjectAttributeDict);
 var
   objKey, attKey, trmKey, valKey, dssName: String;
   map: TFNCSMap;
-  oad: ObjectAttributeDict;
+  atd: AttributeTerminalDict;
+  tcd: TerminalConductorDict;
+  cvd: ConductorValueDict;
+	idxDev, idxTerm, idxPhs: Integer;
+	Flow, Volts: Complex;
+	sign: String;
+  pElem :TDSSCktElement;
+	cBuffer :pComplexArray;
+	Ncond, Nterm, kmax, k, Nref: Integer;
+	PhaseTable: array[1..2, 0..3] of Integer; // index into cBuffer by terminal, then phase
+	pXf: TTransfObj;
+	idxWdg: Integer;
+begin
+	kmax := GetMaxCktElementSize;
+	Getmem(cBuffer, sizeof(cBuffer^[1])*kmax);
+	for k := 1 to kmax do begin
+		cBuffer^[k].re := 0.0;
+		cBuffer^[k].im := 0.0;
+	end;
+	for objKey in oad.Keys do begin
+		map := oad.Items[objKey];
+		atd := map.atd;
+		idxDev := map.idx;
+		if idxDev <= 0 then continue;
+		pElem := ActiveCircuit.CktElements.Get(idxDev);
+		dssName := pElem.DSSClassName + '.' + ActiveCircuit.DeviceList.get(idxDev);
+		NCond := pElem.NConds;
+		Nterm := pElem.Nterms;
+		kmax := Ncond * Nterm;
+		for k :=  0 to 3 do begin
+			PhaseTable[1, k] := 0;
+			PhaseTable[2, k] := 0;
+		end;
+		for k := 1 to kmax do begin
+			idxPhs := GetNodeNum (pElem.NodeRef^[k]);
+			if k > Ncond then
+				PhaseTable[2, idxPhs] := k
+			else
+				PhaseTable[1, idxPhs] := k;
+		end;
+		pElem.GetCurrents(cBuffer);
+		for attKey in atd.Keys do begin
+			tcd := atd.Items[attKey];
+			for trmKey in tcd.Keys do begin
+				cvd := tcd.Items[trmKey];
+				idxTerm := StrToInt (trmKey);
+				for valKey in cvd.Keys do begin
+					idxPhs := 1 + Ord(valKey[1]) - Ord('A');
+					if (idxPhs > 3) or (idxPhs < 1) then idxPhs := 0;
+					Flow.re := 0.0;
+					Flow.im := 0.0;
+					if attKey = 'current' then begin
+						k := PhaseTable [idxTerm, idxPhs];
+					  Flow := cBuffer^[k];
+					end else if attKey = 'power' then begin
+						k := PhaseTable [idxTerm, idxPhs];
+						Volts := ActiveCircuit.Solution.NodeV^[pElem.NodeRef^[k]];
+						Flow:=Cmul(Volts, conjg(cBuffer^[k]));
+						if ActiveCircuit.PositiveSequence then Flow:=CmulReal(Flow, 3.0);
+					end else if attKey = 'tapposition' then begin
+						pXf := TTransfObj (pElem);
+						idxWdg := 2; // TODO: identify and map this using pReg.Transformer and pReg.TrWinding
+ 						Flow.re := Round((pXf.PresentTap[idxWdg]-(pXf.Maxtap[idxWdg]+pXf.Mintap[idxWdg])/2.0)/pXf.TapIncrement[idxWdg]);
+					end else if attKey = 'switchstate' then begin
+						if AllTerminalsClosed (pElem) then Flow.re := 1.0;
+					end;
+					if Flow.im < 0 then
+						sign:=''
+					else
+						sign:='+';
+  				writeln(Format('Device %s %s %s %s %d %d %d %g %g', 
+	  				[dssName, attKey, trmKey, valKey, idxTerm, idxPhs, k, Flow.re, Flow.im]));
+//					cvd[valKey] := RoundToSignificantFigure(Flow.re,6).ToString
+//					  + sign + RoundToSignificantFigure(Flow.im,6).ToString+'i';
+				end;
+			end;
+		end;
+	end;
+	if Assigned (cBuffer) then FreeMem (cBuffer);
+end;
+
+procedure TFNCS.GetVoltagesForTopics (oad:ObjectAttributeDict);
+var
+  objKey, attKey, trmKey, valKey, dssName: String;
+  map: TFNCSMap;
   atd: AttributeTerminalDict;
   tcd: TerminalConductorDict;
   cvd: ConductorValueDict;
@@ -648,31 +292,29 @@ var
 	Volts: Complex;
 	sign: String;
 begin
-	if topics.containsKey('bus') then begin
-		oad := topics.Items['bus'];
-		for objKey in oad.Keys do begin
-			map := oad.Items[objKey];
-			atd := map.atd;
-			idxBus := map.idx;
-			dssName := ActiveCircuit.BusList.get(idxBus);
-			for attKey in atd.Keys do begin
-				tcd := atd.Items[attKey];
-				for trmKey in tcd.Keys do begin
-					cvd := tcd.Items[trmKey];
-					for valKey in cvd.Keys do begin
-						idxPhs := 1 + Ord(valKey[1]) - Ord('A');
-						idxLoc := ActiveCircuit.Buses^[idxBus].FindIdx(idxPhs);
-            idxNode := ActiveCircuit.Buses^[idxBus].GetRef(idxLoc);
-						Volts := ActiveCircuit.Solution.NodeV^[idxNode];
-						if Volts.im < 0 then
-							sign:=''
-						else
-							sign:='+';
-						writeln(Format('Bus %s %s %s %s %d %d %d %g %g', 
-						  [dssName, attKey, trmKey, valKey, idxPhs, idxLoc, idxNode, Volts.re, Volts.im]));
-						cvd[valKey] := RoundToSignificantFigure(Volts.re,6).ToString
-						  + sign + RoundToSignificantFigure(Volts.im,6).ToString+'i';
-					end;
+	for objKey in oad.Keys do begin
+		map := oad.Items[objKey];
+		atd := map.atd;
+		idxBus := map.idx;
+		if idxBus <= 0 then continue;
+		dssName := ActiveCircuit.BusList.get(idxBus);
+		for attKey in atd.Keys do begin
+			tcd := atd.Items[attKey];
+			for trmKey in tcd.Keys do begin
+				cvd := tcd.Items[trmKey];
+				for valKey in cvd.Keys do begin
+					idxPhs := 1 + Ord(valKey[1]) - Ord('A');
+					idxLoc := ActiveCircuit.Buses^[idxBus].FindIdx(idxPhs);
+          idxNode := ActiveCircuit.Buses^[idxBus].GetRef(idxLoc);
+					Volts := ActiveCircuit.Solution.NodeV^[idxNode];
+					if Volts.im < 0 then
+						sign:=''
+					else
+						sign:='+';
+//					writeln(Format('Bus %s %s %s %s %d %d %d %g %g', 
+//						 [dssName, attKey, trmKey, valKey, idxPhs, idxLoc, idxNode, Volts.re, Volts.im]));
+					cvd[valKey] := RoundToSignificantFigure(Volts.re,6).ToString
+					  + sign + RoundToSignificantFigure(Volts.im,6).ToString+'i';
 				end;
 			end;
 		end;
