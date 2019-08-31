@@ -270,10 +270,10 @@ begin
 						sign:=''
 					else
 						sign:='+';
-  				writeln(Format('Device %s %s %s %s %d %d %d %g %g', 
-	  				[dssName, attKey, trmKey, valKey, idxTerm, idxPhs, k, Flow.re, Flow.im]));
-//					cvd[valKey] := RoundToSignificantFigure(Flow.re,6).ToString
-//					  + sign + RoundToSignificantFigure(Flow.im,6).ToString+'i';
+//  				writeln(Format('Device %s %s %s %s %d %d %d %g %g', 
+//	  				[dssName, attKey, trmKey, valKey, idxTerm, idxPhs, k, Flow.re, Flow.im]));
+					cvd[valKey] := RoundToSignificantFigure(Flow.re,6).ToString
+					  + sign + RoundToSignificantFigure(Flow.im,6).ToString+'i';
 				end;
 			end;
 		end;
