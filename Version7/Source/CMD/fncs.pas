@@ -126,7 +126,7 @@ type
 		procedure GetBranchesForTopics (oad:ObjectAttributeDict);
     procedure GetValuesForTopics;
     procedure TopicsToJsonStream;
-    function RoundToSignificantFigure(value:double;digit:Integer):double;
+//    function RoundToSignificantFigure(value:double;digit:Integer):double;
   end;
 
 var
@@ -171,6 +171,7 @@ Begin
   end;
 End;
          
+{*         
 function TFNCS.RoundToSignificantFigure(value:double;digit:Integer):double;
 var
   factor:double=1.0;
@@ -183,7 +184,7 @@ begin
     exit;
   RoundToSignificantFigure:=round(value*factor)/factor;
 end;
-
+*}
 procedure TFNCS.GetValuesForTopics;
 begin
 	if topics.containsKey('bus') then GetVoltagesForTopics (topics.Items['bus']);
@@ -212,6 +213,7 @@ var
 	PhaseTable: array[1..2, 0..3] of Integer; // index into cBuffer by terminal, then phase
 	pXf: TTransfObj;
 	idxWdg: Integer;
+	tap: Integer;
 begin
 	kmax := GetMaxCktElementSize;
 	Getmem(cBuffer, sizeof(cBuffer^[1])*kmax);
@@ -254,26 +256,32 @@ begin
 					if attKey = 'current' then begin
 						k := PhaseTable [idxTerm, idxPhs];
 					  Flow := cBuffer^[k];
+						if Flow.im < 0 then
+							sign:=''
+						else
+							sign:='+';
+						cvd[valKey] := Format('%.3f%s%.3f%s', [Flow.re, sign, Flow.im, 'i']);
 					end else if attKey = 'power' then begin
 						k := PhaseTable [idxTerm, idxPhs];
 						Volts := ActiveCircuit.Solution.NodeV^[pElem.NodeRef^[k]];
 						Flow:=Cmul(Volts, conjg(cBuffer^[k]));
 						if ActiveCircuit.PositiveSequence then Flow:=CmulReal(Flow, 3.0);
+						if Flow.im < 0 then
+							sign:=''
+						else
+							sign:='+';
+						cvd[valKey] := Format('%.3f%s%.3f%s', [Flow.re, sign, Flow.im, 'i']);
 					end else if attKey = 'tapposition' then begin
 						pXf := TTransfObj (pElem);
 						idxWdg := 2; // TODO: identify and map this using pReg.Transformer and pReg.TrWinding
- 						Flow.re := Round((pXf.PresentTap[idxWdg]-(pXf.Maxtap[idxWdg]+pXf.Mintap[idxWdg])/2.0)/pXf.TapIncrement[idxWdg]);
+						tap := Round((pXf.PresentTap[idxWdg]-(pXf.Maxtap[idxWdg]+pXf.Mintap[idxWdg])/2.0)/pXf.TapIncrement[idxWdg]);
+ 						cvd[valKey] := Format ('%d', [tap]);
 					end else if attKey = 'switchstate' then begin
-						if AllTerminalsClosed (pElem) then Flow.re := 1.0;
+						if AllTerminalsClosed (pElem) then 
+							cvd[valKey] := '1'
+						else
+							cvd[valKey] := '0'
 					end;
-					if Flow.im < 0 then
-						sign:=''
-					else
-						sign:='+';
-//  				writeln(Format('Device %s %s %s %s %d %d %d %g %g', 
-//	  				[dssName, attKey, trmKey, valKey, idxTerm, idxPhs, k, Flow.re, Flow.im]));
-					cvd[valKey] := RoundToSignificantFigure(Flow.re,6).ToString
-					  + sign + RoundToSignificantFigure(Flow.im,6).ToString+'i';
 				end;
 			end;
 		end;
@@ -313,8 +321,9 @@ begin
 						sign:='+';
 //					writeln(Format('Bus %s %s %s %s %d %d %d %g %g', 
 //						 [dssName, attKey, trmKey, valKey, idxPhs, idxLoc, idxNode, Volts.re, Volts.im]));
-					cvd[valKey] := RoundToSignificantFigure(Volts.re,6).ToString
-					  + sign + RoundToSignificantFigure(Volts.im,6).ToString+'i';
+//					cvd[valKey] := RoundToSignificantFigure(Volts.re,6).ToString
+//					  + sign + RoundToSignificantFigure(Volts.im,6).ToString+'i';
+					cvd[valKey] := Format('%.3f%s%.3f%s', [Volts.re, sign, Volts.im, 'i']);
 				end;
 			end;
 		end;
@@ -547,7 +556,7 @@ begin
   // execution blocks here, until FNCS permits the time step loop to continue
   time_granted := fncs_time_request (next_fncs);
   if time_granted >= next_fncs_publish then begin
-    Writeln(Format('  Stream size %u at %u', [fncsOutputStream.size, time_granted]));
+//    Writeln(Format('  Stream size %u at %u', [fncsOutputStream.size, time_granted]));
     if Not FNCSTopicsMapped then MapFNCSTopics;
     GetValuesForTopics;
     TopicsToJsonStream;

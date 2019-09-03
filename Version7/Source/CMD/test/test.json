@@ -1,6 +1,6 @@
 {
 	"name":"opendss",
-	"publishInterval":1,
+	"publishInterval":3600,
 	"publishMode":"CIM",
 	"topics":{
 		"Bus":{
