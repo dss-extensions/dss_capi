@@ -1,0 +1,17 @@
+name: tracer
+time_delta: 1s
+broker: tcp://localhost:5570
+values:
+    output:
+        topic: opendss/fncs_output
+        default: 0
+    command:
+        topic: opendss/fncs_command
+        default: 0
+    F1_house_B0#load:
+        topic: gld1/F1_house_B0/load
+        default: 0
+    solar_flux:
+        topic: gld1/weather/solar_flux
+        default: 0
+
