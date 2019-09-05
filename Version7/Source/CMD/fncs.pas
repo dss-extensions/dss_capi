@@ -20,7 +20,7 @@ interface
 
 uses
   Classes, SysUtils, Executive, {$IFDEF Unix} unix, {$ENDIF} dynlibs, DSSGlobals,
-  UComplex, generics.collections, CktElement, Utilities, math;
+  UComplex, generics.collections, CktElement, Utilities, math, fgl;
 
 type
   fncs_time = qword;
@@ -37,6 +37,21 @@ type
   end;
   ObjectAttributeDict = TObjectDictionary<string, TFNCSMap>;
   ClassObjectDict = TObjectDictionary<string, ObjectAttributeDict>;
+
+	// lists for FNCS classic publications
+	TFNCSClass = (fncsBus, fncsLine, fncsSwitch, fncsCapacitor, fncsPVSystem, 
+	              fncsVSource, fncsTransformer, fncsFault);
+	TFNCSAttribute = (fncsVoltage, fncsCurrent, 
+	                    fncsPower, fncsSwitchState, fncsTapPosition);
+	TFNCSTopic = class (TObject)
+  public
+		tag: String;            // what FNCS calls it
+		cls: TFNCSClass;
+		att: TFNCSAttribute;
+		idx: Integer;           // index into BusList or DeviceList
+		ref: Integer;           // index into the phases
+		constructor Create();
+	end;
 
   TFNCS = class(TObject)
   private
@@ -104,9 +119,12 @@ type
     function find_fncs_function (name: String): Pointer;
 
   private
-    next_fncs_publish:fncs_time;
-    topics:ClassObjectDict;
-    fncsOutputStream:TStringStream;
+    next_fncs_publish: fncs_time;
+    topics: ClassObjectDict;
+//		topicList: TList;
+    fncsOutputStream: TStringStream;
+		procedure ReadFNCSJsonConfig (fname: string);
+		procedure ReadFNCSTextConfig (fname: string);
 
   public
     PublishInterval:Integer;
@@ -136,6 +154,15 @@ implementation
 
 uses
   fpjson, jsonparser, jsonscanner, Transformer; // RegControl,ControlElem;
+
+constructor TFNCSTopic.Create;
+begin
+	tag := '';
+	cls := fncsBus;
+	att := fncsVoltage;
+	idx := 0;
+	ref := 0;
+end;
 
 constructor TFNCSMap.Create;
 begin
@@ -393,7 +420,38 @@ begin
   end;
 end;
 
-procedure TFNCS.ReadFncsPubConfig(fname: string);
+procedure TFNCS.ReadFncsPubConfig (fname: string);
+var
+	buf: String;
+begin
+	buf := '   ';
+	fncsOutputStream:=TStringStream.Create(buf);
+	next_fncs_publish := 0;
+	FNCSTopicsMapped := False;
+
+	if Pos ('.json', ExtractFileExt (LowerCase (fname))) > 0 then
+		ReadFncsJsonConfig (fname)
+	else
+		ReadFncsTextConfig (fname);
+end;
+
+procedure TFNCS.ReadFncsTextConfig (fname: string);
+var
+  lines: TStringList;
+	i: Integer;
+begin
+	try
+		lines := TStringList.Create;
+		lines.LoadFromFile (fname);
+		for i := 1 to lines.Count do begin
+			writeln(lines[i-1]);
+		end;
+	finally
+		lines.free;
+	end;
+end;
+
+procedure TFNCS.ReadFncsJsonConfig (fname: string);
 var
   inputfile:TFileStream;
   parser:TJSONParser;
@@ -405,13 +463,8 @@ var
   atd:AttributeTerminalDict;
   tcd:TerminalConductorDict;
   cvd:ConductorValueDict;
-  buf: String;
 begin
-  buf := '   ';
-  next_fncs_publish := 0;
-  FNCSTopicsMapped := False;
   inputfile:=TFileStream.Create(fname, fmOpenRead);
-  fncsOutputStream:=TStringStream.Create(buf);
   try
     parser:=TJSONParser.Create(inputfile, [joUTF8]);
     try
@@ -510,9 +563,9 @@ var
   firstObjectFlag:Boolean=true;
   writeKeyComma:Boolean=false;
 begin
-  fncsOutputStream.Seek (0, soFromBeginning);
-  fncsOutputStream.WriteString ('{"'+FedName+'":{');
-  if topics.Count > 0 then
+  if topics.Count > 0 then begin
+		fncsOutputStream.Seek (0, soFromBeginning);
+		fncsOutputStream.WriteString ('{"'+FedName+'":{');
     for cls in topics do begin
       for map in cls.Value do begin
         atd := map.value.atd;
@@ -539,7 +592,8 @@ begin
         firstObjectFlag:=False;
       end;
     end;
-  fncsOutputStream.WriteString ('}}');
+		fncsOutputStream.WriteString ('}}');
+	end;
 end;
 
 // called from ActiveSolution.Increment_time
@@ -556,11 +610,13 @@ begin
   // execution blocks here, until FNCS permits the time step loop to continue
   time_granted := fncs_time_request (next_fncs);
   if time_granted >= next_fncs_publish then begin
+		if topics.Count > 0 then begin
 //    Writeln(Format('  Stream size %u at %u', [fncsOutputStream.size, time_granted]));
-    if Not FNCSTopicsMapped then MapFNCSTopics;
-    GetValuesForTopics;
-    TopicsToJsonStream;
-    fncs_publish ('fncs_output', PChar(fncsOutputStream.DataString));
+			if Not FNCSTopicsMapped then MapFNCSTopics;
+			GetValuesForTopics;
+			TopicsToJsonStream;
+			fncs_publish ('fncs_output', PChar(fncsOutputStream.DataString));
+		end;
     next_fncs_publish := next_fncs_publish + PublishInterval;
   end;
   ilast := fncs_get_events_size();
@@ -571,11 +627,13 @@ begin
       key := events[i];
       nvalues := fncs_get_values_size (key);
       values := fncs_get_values (key);
-      for ival := 0 to nvalues-1 do begin
-        value := values[ival];
-        writeln(Format('  FNCSTimeRequest command %s at %u', [value, time_granted]));
-        DSSExecutive.Command := value;
-        fncs_publish('fncs_command', value);
+			if CompareText (key, 'command') = 0 then begin
+				for ival := 0 to nvalues-1 do begin
+					value := values[ival];
+					writeln(Format('  FNCSTimeRequest command %s at %u', [value, time_granted]));
+					DSSExecutive.Command := value;
+					fncs_publish('fncs_command', value);
+				end;
       end;
     end;
   end;
@@ -607,12 +665,14 @@ begin
           key := events[i];
           nvalues := fncs_get_values_size (key);
           values := fncs_get_values (key);
-          for ival := 0 to nvalues-1 do begin
-            value := values[ival];
-            writeln(Format('FNCS command %s at %u', [value, time_granted]));
-            DSSExecutive.Command := value;
-            fncs_publish ('fncs_command', value);
-          end;
+					if CompareText (key, 'command') = 0 then begin
+						for ival := 0 to nvalues-1 do begin
+							value := values[ival];
+							writeln(Format('FNCS command %s at %u', [value, time_granted]));
+							DSSExecutive.Command := value;
+							fncs_publish ('fncs_command', value);
+						end;
+					end;
         end;
       end;
     end;
