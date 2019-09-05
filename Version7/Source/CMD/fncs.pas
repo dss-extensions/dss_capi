@@ -153,7 +153,7 @@ var
 implementation
 
 uses
-  fpjson, jsonparser, jsonscanner, Transformer; // RegControl,ControlElem;
+  fpjson, jsonparser, jsonscanner, strutils, Transformer, Load; // RegControl,ControlElem;
 
 constructor TFNCSTopic.Create;
 begin
@@ -606,6 +606,8 @@ var
   ilast: size_t;
   nvalues, ival: size_t;
   values: ppchar;
+	re, im: double;
+	ld: TLoadObj;
 begin
   // execution blocks here, until FNCS permits the time step loop to continue
   time_granted := fncs_time_request (next_fncs);
@@ -634,7 +636,18 @@ begin
 					DSSExecutive.Command := value;
 					fncs_publish('fncs_command', value);
 				end;
-      end;
+			end else if Pos ('#load', key) > 0 then begin
+				value := values[0];
+				re := StrToFloat (ExtractWord (1, value, ['+', 'j', ' ']));
+				im := StrToFloat (ExtractWord (2, value, ['+', 'j', ' ']));
+				ActiveCircuit.SetElementActive ('load.F1_house_B0');
+				ld := TLoadObj (ActiveCircuit.ActiveCktElement);
+				ld.LoadSpecType := 1;
+				ld.kwBase := re;
+				ld.kvarBase := im;
+				ld.RecalcElementData;
+				writeln(Format ('FNCS Request %s to %g + j %g at %u', [ld.Name, re, im, time_granted]));
+			end;
     end;
   end;
   Result := True;
@@ -672,6 +685,9 @@ begin
 							DSSExecutive.Command := value;
 							fncs_publish ('fncs_command', value);
 						end;
+					end else if Pos ('#load', key) > 0 then begin
+						value := values[0];
+						writeln(Format ('FNCS Loop %s to %s', [key, value]));
 					end;
         end;
       end;

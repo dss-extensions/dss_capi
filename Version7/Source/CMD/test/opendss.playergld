@@ -1,11 +1,11 @@
 #time	topic		value
 0	command	redirect IEEE13Base.dss
-1 command new load.houses Bus1=680 Phases=3 Model=2 kV=4.16 kW=80 kvar=60 
+1 command new load.F1_house_B0 Bus1=680 Phases=3 Model=2 kV=4.16 kW=0.1 kvar=0 
 2 command new pvsystem.pv1 bus1=634 phases=3 kV=0.48 irradiance=1 pmpp=285 kVA=300
 3 command new monitor.pv1v  element=pvsystem.pv1 terminal=1 mode=96
 4 command new monitor.pv1pq element=pvsystem.pv1 terminal=1 mode=65 PPolar=NO
 5 command new monitor.fdrpq element=line.650632 terminal=1 mode=65 PPolar=NO
-6 command new monitor.hsepq element=load.houses terminal=1 mode=65 PPolar=NO
+6 command new monitor.hsepq element=load.F1_house_B0 terminal=1 mode=65 PPolar=NO
 7 command solve
 8 command	export summary pvsnap_summary.csv
 9 command	set controlmode=static
