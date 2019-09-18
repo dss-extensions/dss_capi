@@ -42,8 +42,9 @@ TYPE
       FUNCTION  Get_NextBus:String;
       FUNCTION  Get_Losses(ACtorID: Integer):Complex;   // Get total losses for property...
       FUNCTION  Get_Power(idxTerm:Integer; ActorID: integer):Complex;    // Get total complex power in active terminal
-      FUNCTION  Get_MaxPower(idxTerm:Integer; ActorID: integer):Complex;    // Get eauivalent total complex power in active terminal based on phase with max current
-      FUNCTION  Get_MaxCurrent(idxTerm:Integer; ActorID: integer):Double;    // Get eauivalent total complex current on phase with max current
+      FUNCTION  Get_MaxPower(idxTerm:Integer; ActorID: integer):Complex;    // Get equivalent total complex power in active terminal based on phase with max current
+      FUNCTION  Get_MaxCurrent(idxTerm:Integer; ActorID: integer):Double;    // Get equivalent total complex current on phase with max current
+      FUNCTION  Get_MaxVoltage(idxTerm:Integer; ActorID: integer):Double;    // Get equivalent total complex voltage on phase
 
 
       PROCEDURE DoYprimCalcs(Ymatrix: TCMatrix);
@@ -149,6 +150,7 @@ TYPE
       Property Power[idxTerm:Integer; ActorID: integer]:Complex  read Get_Power;  // Total power in active terminal
       Property MaxPower[idxTerm:Integer; ActorID: integer]:Complex  read Get_MaxPower;  // Total power in active terminal
       Property MaxCurrent[idxTerm:Integer; ActorID: integer]:Double  read Get_MaxCurrent;  // Max current in active terminal
+      Property MaxVoltage[idxTerm:Integer; ActorID: integer]:Double  read Get_MaxVoltage;  // Max current in active terminal
       Property ActiveTerminalIdx:Integer       read FActiveTerminal      write Set_ActiveTerminal;
       Property Closed[Index:Integer;ActorID:Integer]:Boolean   read Get_ConductorClosed  write Set_ConductorClosed;
       PROCEDURE SumCurrents(ActorID: Integer);
@@ -713,6 +715,58 @@ Begin
 
    Result := cLoss;
 
+End;
+
+function TDSSCktElement.Get_MaxVoltage(idxTerm:Integer; ActorID: integer):Double;
+{Get Voltage at the specified terminal 09/17/2019}
+VAR
+   volts,
+   VN,
+   cPower    : Complex;
+   ClassIdx,
+   i, k,
+   nrefN,
+   nref      : Integer;
+   MaxCurr,
+   CurrMag   : Double;
+   MaxPhase  : Integer;
+
+Begin
+
+   ActiveTerminalIdx  :=  idxTerm;   // set active Terminal
+   Cpower             :=  CZERO;
+   If FEnabled Then Begin
+       ComputeIterminal(ActorID);
+
+    // Method: Checks what's the phase with maximum current
+    // retunrs the voltage for that phase
+
+       MaxCurr := 0.0;
+       MaxPhase := 1;  // Init this so it has a non zero value
+       k := (idxTerm -1)*Fnconds; // starting index of terminal
+       For i := 1 to Fnphases do Begin
+          CurrMag := Cabs(Iterminal[k+i]);
+          If CurrMag > MaxCurr Then Begin
+             MaxCurr := CurrMag;
+             MaxPhase := i
+          End;
+       End;
+
+
+       ClassIdx := DSSObjType and CLASSMASK;              // gets the parent class descriptor (int)
+       nref     := ActiveTerminal.TermNodeRef^[MaxPhase]; // reference to the phase voltage with the max current
+       nrefN    := ActiveTerminal.TermNodeRef^[Fnconds];  // reference to the ground terminal (GND or other phase)
+       WITH ActiveCircuit[ActorID].Solution DO     // Get power into max phase of active terminal
+       Begin
+
+          if  not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
+            volts :=  NodeV^[nref]
+          else
+            volts   :=  csub(NodeV^[nref],NodeV^[nrefN]);
+       End;
+   End;
+
+   Result := cabs(volts);
 End;
 
 function TDSSCktElement.Get_MaxPower(idxTerm: Integer;ActorID: integer): Complex;
