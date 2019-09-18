@@ -1250,6 +1250,7 @@ Var
    StorekvarChanged,
    SkipkWDispatch     :Boolean;
    VoltsArr           :pComplexArray;
+   kWhActual,
    ElemVolts,
    Amps,
    PDiff,
@@ -1258,7 +1259,6 @@ Var
    Dispatchkvar,
    RemainingkWh,
    ReservekWh         :Double;
-
 
 Begin
      // If list is not defined, go make one from all storage elements in circuit
@@ -1340,6 +1340,17 @@ Begin
                   Begin  // Don't bother trying to dispatch
                        ChargingAllowed  := TRUE;
                        SkipkWDispatch   := TRUE;
+                       if OutofOomph then
+                       Begin
+                         For i := 1 to FleetSize Do
+                         Begin
+                           StorageObj := FleetPointerList.Get(i);
+                           kWhActual  :=  StorageObj.StorageVars.kWhStored / StorageObj.StorageVars.kWhRating;
+                           OutOfOomph := OutOfOomph and (kWhActual >= 0.8);  // If we have more than the 80% we are good to dispatch
+                         End;
+                         OutOfOomph :=  not OutOfOomph;  // If everybody in the fleet has at least the 80% of the storage capacity full
+
+                       End;
                   End;
                 STORE_DISCHARGING: If ((PDiff + FleetkW) < 0.0) or OutOfOomph Then
                   Begin   // desired decrease is greater then present output; just cancel
@@ -1368,8 +1379,13 @@ Begin
                        For i := 1 to FleetSize Do
                        Begin
                             StorageObj := FleetPointerList.Get(i);
-                            if Dischargemode = CURRENTPEAKSHAVE then
-                              PDiff :=  StorageObj.PresentkV * PDiff;
+                            if Dischargemode = CURRENTPEAKSHAVE then // Current to power
+                            Begin    //  (MonitoredElement.MaxVoltage[ElementTerminal,ActorID] / 1000)
+                              if StorageObj.NPhases = 1 then
+                                PDiff :=  StorageObj.PresentkV * PDiff
+                              else
+                                PDiff :=  StorageObj.PresentkV * invsqrt3 * PDiff;
+                            End;
                             WITH StorageObj Do
                             Begin
                             // compute new dispatch value for this storage element ...
@@ -1522,9 +1538,15 @@ Begin
                      StorageObj       := FleetPointerList.Get(i);
                      WITH StorageObj Do
                      Begin
+
                      // Checks if PDiff needs to be adjusted considering the charging mode
                        if Chargemode = CURRENTPEAKSHAVELOW then
-                         PDiff          :=  StorageObj.PresentkV * PDiff;
+                       Begin
+                         if StorageObj.NPhases = 1 then
+                           PDiff :=  StorageObj.PresentkV * PDiff
+                         else
+                           PDiff :=  StorageObj.PresentkV * invsqrt3 * PDiff;
+                       End;
 
                      // compute new charging value for this storage element ...
                        ChargekW       := -1 * Min(StorageVars.kWrating, abs(PresentkW + PDiff *(FWeights^[i]/TotalWeight)));
