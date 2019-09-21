@@ -296,7 +296,7 @@ BEGIN
 
      // Default Bus2 to zero node of Bus1 unless it is previously defined. (Grounded-Y connection)
 
-     If Not Bus2Defined Then
+     If Not Bus2Defined and (Fnterms=2) Then   // only for WYE connection
      Begin
        // Strip node designations from S
        dotpos := Pos('.',S);
