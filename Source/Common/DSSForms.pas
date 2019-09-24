@@ -37,6 +37,7 @@ VAR
    PROCEDURE CloseDownForms;
    Procedure ShowTreeView(Const Fname:String);
    FUNCTION  MakeChannelSelection(NumFieldsToSkip:Integer; const Filename:String):Boolean;
+   FUNCTION  GetDSSProgress(SourcePath : String): Boolean;
 
 {$ENDIF}
 implementation
@@ -63,11 +64,11 @@ Begin
 End;
 
 PROCEDURE ShowPctProgress(Count:Integer; Actor_ID : integer);
-
+// To be reviewed by Davis
 Begin
      If NoFormsAllowed Then Exit;      // added RCD 12-5-2010
-     ActorProgress[Actor_ID].PctProgress := Count;
-     Application.ProcessMessages;
+//     ActorProgress[Actor_ID].PctProgress := Count;
+//     Application.ProcessMessages;
 End;
 
 Procedure ProgressCaption(const S:String; Actor_ID : integer);
@@ -136,6 +137,25 @@ Begin
     Result := TheFileName;
 
     If IsLibrary then IsDLL := TRUE;
+End;
+
+FUNCTION  GetDSSProgress(SourcePath : String): Boolean;
+var
+  RefPos  : Integer;
+  newPath : String;
+Begin
+  RefPos  :=  pos('\opendss.exe',AnsiLowerCase(SourcePath));
+  newPath :=  SourcePath.Substring(0,RefPos);
+  if fileexists(newPath + 'DSSProgress.exe') then
+  Begin
+    Result          :=  True;            // The progress app is installed
+    DSSProgressPath :=  newPath + 'DSSProgress.exe';
+  End
+  else
+  Begin
+    Result          :=  False;           // No way, is not installed
+    DSSProgressPath :=  '';
+  End;
 End;
 
 
