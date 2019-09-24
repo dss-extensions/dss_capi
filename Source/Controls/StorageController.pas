@@ -74,6 +74,7 @@ TYPE
             TotalkWCapacity,
             TotalkWhCapacity,
             pctFleetReserve,
+            ResetLevel,
             kWNeeded              :Double;
 
             FStorageNameList      :TStringList;
@@ -216,8 +217,9 @@ CONST
     propTFLAT         = 32;
     propTDNRAMP       = 33;
     propKWTHRESHOLD   = 34;
+    propRESETLEVEL    = 35;
 
-    NumPropsThisClass = 34;
+    NumPropsThisClass = 35;
 
 //= = = = = = = = = = = = = = DEFINE CONTROL MODE CONSTANTS = = = = = = = = = = = = = = = = = = = = = = = = =
 
@@ -302,6 +304,7 @@ Begin
      PropertyName[propTFLAT]                  := 'TFlat';
      PropertyName[propTDNRAMP]                := 'Tdn';
      PropertyName[propKWTHRESHOLD]            := 'kWThreshold';
+     PropertyName[propRESETLEVEL]             := 'ResetLevel';
 
 
     PropertyHelp[propELEMENT]             :=
@@ -406,10 +409,13 @@ Begin
      PropertyHelp[propTUPRAMP]  := 'Duration, hrs, of upramp part for SCHEDULE mode. Default is 0.25.';
      PropertyHelp[propTFLAT]    := 'Duration, hrs, of flat part for SCHEDULE mode. Default is 2.0.';
      PropertyHelp[propTDNRAMP]  := 'Duration, hrs, of downramp part for SCHEDULE mode. Default is 0.25.';
-     PropertyHelp[propKWTHRESHOLD] := 'Threshold, kW, for Follow mode. kW has to be above this value for the Storage element ' +
+     PropertyHelp[propKWTHRESHOLD]  := 'Threshold, kW, for Follow mode. kW has to be above this value for the Storage element ' +
                                       'to be dispatched on. Defaults to 75% of the kWTarget value. Must reset this property after ' +
                                       'setting kWTarget if you want a different value.';
-
+     PropertyHelp[propRESETLEVEL]   := 'The level of charge required for allowing the storage to discharge again after reaching ' +
+                                      'the reserve storage level. After reaching this level, the storage control  will not allow ' +
+                                      'the storage device to discharge, forcing the storage to charge. Once the storage reaches this' +
+                                      'level, the storage will be able to discharge again. This value is a number between 0.2 and 1';
 
      ActiveProperty  := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -475,29 +481,30 @@ Begin
                            End;
                          End;
             propMODEDISCHARGE: DisChargeMode := InterpretMode(propMODEDISCHARGE, Param);
-            propMODECHARGE:    ChargeMode    := InterpretMode(propMODECHARGE, Param);
+            propMODECHARGE  :    ChargeMode    := InterpretMode(propMODECHARGE, Param);
             propTIMEDISCHARGETRIGGER: DischargeTriggerTime := Parser[ActorID].DblValue;
             propTIMECHARGETRIGGER:    ChargeTriggerTime    := Parser[ActorID].DblValue;
-            propRATEKW:      pctkWRate      := Parser[ActorID].DblValue;
-            propRATEKVAR:    pctkvarRate    := Parser[ActorID].DblValue;
-            propRATECHARGE:  pctChargeRate  := Parser[ActorID].DblValue;
-            propRESERVE:     pctFleetReserve:= Parser[ActorID].DblValue;
-            propKWHTOTAL:  ;  // Do nothing (Read ONly)
-            propKWTOTAL:   ;  // Do nothing (Read ONly)
-            propKWHACTUAL:  ;  // Do nothing (Read ONly)
-            propKWACTUAL:  ;  // Do nothing (Read ONly)
-            propKWNEED:    ;  // Do nothing (Read ONly)
+            propRATEKW      :      pctkWRate      := Parser[ActorID].DblValue;
+            propRATEKVAR    :    pctkvarRate    := Parser[ActorID].DblValue;
+            propRATECHARGE  :  pctChargeRate  := Parser[ActorID].DblValue;
+            propRESERVE     :     pctFleetReserve:= Parser[ActorID].DblValue;
+            propKWHTOTAL    :  ;  // Do nothing (Read ONly)
+            propKWTOTAL     :   ;  // Do nothing (Read ONly)
+            propKWHACTUAL   :  ;  // Do nothing (Read ONly)
+            propKWACTUAL    :  ;  // Do nothing (Read ONly)
+            propKWNEED      :    ;  // Do nothing (Read ONly)
             propPARTICIPATION: ;
-            propYEARLY:  YearlyShape  := Param;
-            propDAILY:   DailyShape   := Param;
-            propDUTY:    DutyShape    := Param;
-            propEVENTLOG: ShowEventLog := InterpretYesNo(Param);
-            propVARDISPATCH: DispatchVars := InterpretYesNo(Param);
-            propINHIBITTIME: Inhibithrs   := Max(1, Parser[ActorID].IntValue);  // >=1
-            propTUPRAMP: UpRamptime    := Parser[ActorID].DblValue;
-            propTFLAT:   FlatTime      := Parser[ActorID].DblValue;
-            propTDNRAMP: DnrampTime    := Parser[ActorID].DblValue;
-            propKWTHRESHOLD: FkWThreshold := Parser[ActorID].DblValue;
+            propYEARLY      : YearlyShape  := Param;
+            propDAILY       : DailyShape   := Param;
+            propDUTY        : DutyShape    := Param;
+            propEVENTLOG    : ShowEventLog := InterpretYesNo(Param);
+            propVARDISPATCH : DispatchVars := InterpretYesNo(Param);
+            propINHIBITTIME : Inhibithrs   := Max(1, Parser[ActorID].IntValue);  // >=1
+            propTUPRAMP     : UpRamptime   := Parser[ActorID].DblValue;
+            propTFLAT       : FlatTime     := Parser[ActorID].DblValue;
+            propTDNRAMP     : DnrampTime   := Parser[ActorID].DblValue;
+            propKWTHRESHOLD : FkWThreshold := Parser[ActorID].DblValue;
+            propRESETLEVEL  : ResetLevel   := Parser[ActorID].DblValue;
 
          ELSE
            // Inherited parameters
@@ -598,6 +605,7 @@ Begin
         FPFTarget             := OtherStorageController.FPFTarget;
         FPFBand               := OtherStorageController.FPFBand;
         HalfPFBand            := OtherStorageController.HalfPFBand;
+        ResetLevel            := OtherStorageController.ResetLevel;
 
         FStorageNameList.Clear;
         For i := 1 to OtherStorageController.FStorageNameList.Count Do
@@ -666,59 +674,60 @@ constructor TStorageControllerObj.Create(ParClass:TDSSClass; const StorageContro
 
 Begin
      Inherited Create(ParClass);
-     Name                 := LowerCase(StorageControllerName);
-     DSSObjType           := ParClass.DSSClassType;
+     Name                 :=  LowerCase(StorageControllerName);
+     DSSObjType           :=  ParClass.DSSClassType;
 
-     NPhases              := 3;  // Directly set conds and phases
-     Fnconds              := 3;
-     Nterms               := 1;  // this forces allocation of terminals and conductors
+     NPhases              :=  3;  // Directly set conds and phases
+     Fnconds              :=  3;
+     Nterms               :=  1;  // this forces allocation of terminals and conductors
 
-     ElementName          := '';
-     ControlledElement    := nil;  // not used in this control
-     ElementTerminal      := 1;
-     MonitoredElement     := Nil;
+     ElementName          :=  '';
+     ControlledElement    :=  nil;  // not used in this control
+     ElementTerminal      :=  1;
+     MonitoredElement     :=  Nil;
 
-     FStorageNameList     := TSTringList.Create;
-     FWeights             := Nil;
-     FleetPointerList     := PointerList.TPointerList.Create(20);  // Default size and increment
-     FleetSize            := 0;
-     FleetState           := STORE_IDLING;
-     FkWTarget            := 8000.0;
-     FkWTargetLow         := 4000.0;
-     FkWThreshold         := 6000.0;
-     FpctkWBand           := 2.0;
-     FpctkWBandLow        := 2.0;
-     TotalWeight          := 1.0;
-     HalfkWBand           := FpctkWBand/200.0 * FkWTarget;
-     FPFTarget            := 0.96;
-     FPFBand              := 0.04;
-     HalfPFBand           := FPFBand / 2.0;
-     kWNeeded             := 0.0;
+     FStorageNameList     :=  TSTringList.Create;
+     FWeights             :=  Nil;
+     FleetPointerList     :=  PointerList.TPointerList.Create(20);  // Default size and increment
+     FleetSize            :=  0;
+     FleetState           :=  STORE_IDLING;
+     FkWTarget            :=  8000.0;
+     FkWTargetLow         :=  4000.0;
+     FkWThreshold         :=  6000.0;
+     FpctkWBand           :=  2.0;
+     FpctkWBandLow        :=  2.0;
+     TotalWeight          :=  1.0;
+     HalfkWBand           :=  FpctkWBand/200.0 * FkWTarget;
+     FPFTarget            :=  0.96;
+     FPFBand              :=  0.04;
+     HalfPFBand           :=  FPFBand / 2.0;
+     kWNeeded             :=  0.0;
 
-     DischargeMode        := MODEPEAKSHAVE;
-     ChargeMode           := MODETIME;
+     DischargeMode        :=  MODEPEAKSHAVE;
+     ChargeMode           :=  MODETIME;
 
-     DischargeTriggerTime := -1.0;  // disabled
-     ChargeTriggerTime    := 2.0;   // 2 AM
-     FElementListSpecified:= FALSE;
-     FleetListChanged     := TRUE;  // force building of list
-     pctkWRate            := 20.0;
-     pctkvarRate          := 20.0;
-     pctChargeRate        := 20.0;
-     pctFleetReserve      := 25.0;
+     DischargeTriggerTime :=  -1.0;  // disabled
+     ChargeTriggerTime    :=  2.0;   // 2 AM
+     FElementListSpecified:=  FALSE;
+     FleetListChanged     :=  TRUE;  // force building of list
+     pctkWRate            :=  20.0;
+     pctkvarRate          :=  20.0;
+     pctChargeRate        :=  20.0;
+     pctFleetReserve      :=  25.0;
 
-     ShowEventLog         := FALSE;
-     DispatchVars         := FALSE;
+     ShowEventLog         :=  FALSE;
+     DispatchVars         :=  FALSE;
      DischargeTriggeredByTime := FALSE;
-     DischargeInhibited   := FALSE;
-     OutOfOomph           := FALSE;
-     InhibitHrs           := 5;   // No. Hours to inhibit discharging after going into charge mode
+     DischargeInhibited   :=  FALSE;
+     OutOfOomph           :=  FALSE;
+     InhibitHrs           :=  5;   // No. Hours to inhibit discharging after going into charge mode
 
-     UpRamptime           := 0.25; // hr
-     FlatTime             := 2.0;
-     DnrampTime           := 0.25;
-     LastpctDischargeRate := 0.0;
-     Wait4Step            := False;     // for sync discharge with charge when there is a transition
+     UpRamptime           :=  0.25; // hr
+     FlatTime             :=  2.0;
+     DnrampTime           :=  0.25;
+     LastpctDischargeRate :=  0.0;
+     Wait4Step            :=  False;     // for sync discharge with charge when there is a transition
+     ResetLevel           :=  0.8;
 
      InitPropertyValues(0);
 
@@ -781,6 +790,7 @@ Begin
      PropertyValue[propTFLAT]                := '2.0';
      PropertyValue[propTDNRAMP]              := '0.25';
      PropertyValue[propKWTHRESHOLD]          := '4000';
+     PropertyValue[propRESETLEVEL]           := '0.8';
 
 
   inherited  InitPropertyValues(NumPropsThisClass);
@@ -824,6 +834,7 @@ Begin
           propTFLAT                : Result := Format('%.6g', [FlatTime]);
           propTDNRAMP              : Result := Format('%.6g', [DnrampTime]);
           propKWTHRESHOLD          : Result := Format('%.6g', [FkWThreshold]);
+          propRESETLEVEL           : Result := Format('%.6g', [ResetLevel]);
 
      ELSE  // take the generic handler
            Result := Inherited GetPropertyValue(index);
@@ -1346,7 +1357,7 @@ Begin
                          Begin
                            StorageObj := FleetPointerList.Get(i);
                            kWhActual  :=  StorageObj.StorageVars.kWhStored / StorageObj.StorageVars.kWhRating;
-                           OutOfOomph := OutOfOomph and (kWhActual >= 0.8);  // If we have more than the 80% we are good to dispatch
+                           OutOfOomph := OutOfOomph and (kWhActual >= ResetLevel);  // If we have more than the 80% we are good to dispatch
                          End;
                          OutOfOomph :=  not OutOfOomph;  // If everybody in the fleet has at least the 80% of the storage capacity full
 
