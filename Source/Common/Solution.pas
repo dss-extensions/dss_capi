@@ -647,15 +647,6 @@ Try
       ActorMA_Msg[ActorID].ResetEvent;
 
       {$IFNDEF FPC}
-{      if Not ADiakoptics then
-      Begin
-        if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
-      End
-      else
-      Begin
-        if ActorID = 1 then
-          if Not IsDLL then ScriptEd.UpdateSummaryForm('1');
-      End;  }
       QueryPerformanceCounter(GStartTime);
       {$ELSE}
       GStartTime := GetTickCount64;
@@ -663,7 +654,7 @@ Try
 
       If Not NoFormsAllowed Then
       Begin
-        if Not IsProgressON and DSSProgress then
+        if Not IsProgressON and DSSProgressFrm then
         Begin
           case Dynavars.SolutionMode OF
             YEARLYMODE, DUTYCYCLE, LOADDURATION1,
