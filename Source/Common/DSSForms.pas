@@ -52,7 +52,7 @@ Uses      ExecCommands, ExecOptions,
 //          MessageForm,
           ComCtrls,
           TViewer,
-          Sysutils, FrmCSVchannelSelect, System.UITypes,ScriptEdit;
+          Sysutils, FrmCSVchannelSelect, System.UITypes,ScriptEdit, StrUtils;
 
 
 Procedure InitProgressForm(Actor_ID : integer);
@@ -144,12 +144,16 @@ var
   RefPos  : Integer;
   newPath : String;
 Begin
-  RefPos  :=  pos('\opendss.exe',AnsiLowerCase(SourcePath));
-  newPath :=  SourcePath.Substring(0,RefPos);
-  if fileexists(newPath + 'DSSProgress.exe') then
+
+  newPath :=  AnsiReverseString(SourcePath);   // reverses the string
+  RefPos  :=  pos('\',AnsiLowerCase(newPath)); // detects the file name
+  newPath :=  AnsiReverseString(newPath);      // reverse again
+  newPath :=  newPath.Substring(0,length(newPath) - RefPos);  // Leaves only the folder name
+
+  if fileexists(newPath + '\DSSProgress.exe') then
   Begin
     Result          :=  True;            // The progress app is installed
-    DSSProgressPath :=  newPath + 'DSSProgress.exe';
+    DSSProgressPath :=  newPath + '\DSSProgress.exe';
   End
   else
   Begin
