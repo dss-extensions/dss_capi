@@ -434,11 +434,11 @@ Begin
                                         '"SeasonTargetsLow", which can be used to dynamically adjust the storage controller during a QSTS' +
                                         ' simulation. The default value is 1. This property needs to be defined before defining SeasonTargets/SeasonTargetsLow.';
      PropertyHelp[propSEASONTARGETS]:= 'An array of doubles specifying the targets to be used during a QSTS simulation. These targets will take effect' +
-                                        ' only if UseSeasonSignal = Yes. The number of targets cannot exceed the number of seasons defined at the SeasonSignal.' +
+                                        ' only if SeasonRating=true. The number of targets cannot exceed the number of seasons defined at the SeasonSignal.' +
                                         'The difference between the targets defined at SeasonTargets and SeasonTargetsLow is that SeasonTargets' +
                                         ' applies to discharging modes, while SeasonTargetsLow applies to charging modes.';
      PropertyHelp[propSEASONTARGETSLOW]:= 'An array of doubles specifying the targets to be used during a QSTS simulation. These targets will take effect' +
-                                        ' only if UseSeasonSignal = Yes. The number of targets cannot exceed the number of seasons defined at the SeasonSignal.' +
+                                        ' only if SeasonRating=true. The number of targets cannot exceed the number of seasons defined at the SeasonSignal.' +
                                         'The difference between the targets defined at SeasonTargets and SeasonTargetsLow is that SeasonTargets' +
                                         ' applies to discharging modes, while SeasonTargetsLow applies to charging modes.';
 
@@ -784,8 +784,10 @@ Begin
      Wait4Step            :=  False;     // for sync discharge with charge when there is a transition
      ResetLevel           :=  0.8;
      Seasons              :=  1;         // For dynamic targets
-     SeasonTargets        :=  nil;
-     SeasonTargetsLow     :=  nil;
+     setlength(SeasonTargets,1);
+     SeasonTargets[0]     :=  FkWTarget;
+     setlength(SeasonTargetsLow,1);
+     SeasonTargetsLow[0]  :=  FkWTargetLow;
 
 
      InitPropertyValues(0);
@@ -851,8 +853,8 @@ Begin
      PropertyValue[propKWTHRESHOLD]          := '4000';
      PropertyValue[propRESETLEVEL]           := '0.8';
      PropertyValue[propSEASONS]              := '1';
-     PropertyValue[propSEASONTARGETS]        := '';
-     PropertyValue[propSEASONTARGETSLOW]     := '';
+     PropertyValue[propSEASONTARGETS]        := '[8000,]';
+     PropertyValue[propSEASONTARGETSLOW]     := '[4000,]';
 
 
   inherited  InitPropertyValues(NumPropsThisClass);
