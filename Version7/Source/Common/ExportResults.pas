@@ -37,7 +37,7 @@ Procedure ExportY(FileNm:String; TripletOpt:Boolean);
 Procedure ExportSeqZ(FileNm:String);
 Procedure ExportBusCoords(FileNm:String);
 Procedure ExportLosses(FileNm:String);
-Procedure ExportGuids(FileNm:String);
+Procedure ExportUuids(FileNm:String);
 Procedure ExportCounts(FileNm:String);
 Procedure ExportSummary(FileNm:String);
 Procedure ExportProfile(FileNm:String; PhasesToPlot:Integer);
@@ -2713,7 +2713,7 @@ Begin
 
 End;
 
-Procedure ExportGuids(FileNm:String);
+Procedure ExportUuids(FileNm:String);
 Var
   F       : TextFile;
   clsCode : TLineCode;

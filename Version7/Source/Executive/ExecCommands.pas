@@ -123,7 +123,7 @@ Begin
      ExecCommand[84] := '_SolvePFlow';
      ExecCommand[85] := 'AddBusMarker';
 
-     ExecCommand[86] := 'Guids';
+     ExecCommand[86] := 'Uuids';
      ExecCommand[87] := 'SetLoadAndGenKV';
      ExecCommand[88] := 'CvrtLoadshapes';
      ExecCommand[89] := 'NodeDiff';
@@ -408,7 +408,7 @@ Begin
                         'ClearBusMarkers    !...Clears any previous bus markers'+CRLF+
                         'AddBusMarker Bus=Mybusname code=5 color=Red size=3'+CRLF+CRLF+
                         'You can use any of the standard color names  or RGB numbers. See Help on C1 property in Plot command.';
-     CommandHelp[86] := 'Read GUIDS for class names. Tab or comma-delimited file with full object name and GUID';
+     CommandHelp[86] := 'Read UUIDs (v4) for class names. Tab or comma-delimited file with full object name and UUID';
      CommandHelp[87] := 'Set load and generator object kv to agree with the bus they are connected to using the bus voltage base and connection type.';
      CommandHelp[88] := 'Convert all Loadshapes presently loaded into either files of single or files of double. '+
                         'Usually files of singles are adequate precision for loadshapes.  Syntax:'+CRLF+CRLF+
@@ -685,7 +685,7 @@ Begin
        83: ActiveCircuit.Solution.SolveDirect;
        84: ActiveCircuit.Solution.DoPFLOWsolution;
        85: CmdResult := DoAddMarkerCmd;
-       86: CmdResult := DoGuidsCmd;
+       86: CmdResult := DoUuidsCmd;
        87: CmdResult := DoSetLoadAndGenKVCmd;
 //       88:;
        89: CmdResult := DoNodeDiffCmd;
