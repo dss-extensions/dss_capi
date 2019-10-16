@@ -903,8 +903,8 @@ Begin
           propKWTHRESHOLD          : Result := Format('%.6g', [FkWThreshold]);
           propRESETLEVEL           : Result := Format('%.6g', [ResetLevel]);
           propSEASONS              : Result := Format('%d', [seasons]);
-          propSEASONTARGETS        : ReturnSeasonTarget(1);
-          propSEASONTARGETSLOW     : ReturnSeasonTarget(0);
+          propSEASONTARGETS        : Result := ReturnSeasonTarget(1);
+          propSEASONTARGETSLOW     : Result := ReturnSeasonTarget(0);
 
      ELSE  // take the generic handler
            Result := Inherited GetPropertyValue(index);
@@ -2071,9 +2071,9 @@ Begin
      For i := 0 to (Seasons - 1) Do
        Begin
           if THigh = 1 then
-             Result := Result + ', ' + format('%.6g',[SeasonTargets[i]])
+             Result := Result + format('%.6g',[SeasonTargets[i]]) + ', '
           else
-             Result := Result + ', ' + format('%.6g',[SeasonTargetsLow[i]]);
+             Result := Result + format('%.6g',[SeasonTargetsLow[i]]) + ', ';
        End;
      Result := Result + ']';  // terminate the array
 
