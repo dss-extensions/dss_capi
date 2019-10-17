@@ -41,6 +41,8 @@ VAR
    FUNCTION  MakeChannelSelection(NumFieldsToSkip:Integer; const Filename:String):Boolean;
    procedure ShowHeapUsage; // copied from Lazarus form; not used in command line yet
 
+{$INCLUDE VersionString.inc}
+
 implementation
 
 Uses ExecCommands, ExecOptions, ShowOptions, ExportOptions,
@@ -83,9 +85,9 @@ End;
 Procedure ShowAboutBox;
 begin
 	writeln ('Console OpenDSS (Electric Power Distribution System Simulator)');
-	writeln (VersionString);
-	writeln ('Copyright (c) 2008-2017, Electric Power Research Institute, Inc.');
-	writeln ('Copyright (c) 2016-2017, Battelle Memorial Institute');
+	writeln ('Version: ' + VersionString);
+	writeln ('Copyright (c) 2008-2019, Electric Power Research Institute, Inc.');
+	writeln ('Copyright (c) 2016-2019, Battelle Memorial Institute');
 	writeln ('All rights reserved.');
 End;
 

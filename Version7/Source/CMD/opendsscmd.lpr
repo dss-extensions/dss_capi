@@ -264,9 +264,10 @@ begin
   end;
 
 	// quick check parameters
-  ErrorMsg:=CheckOptions('hf', 'help fncs');
+  ErrorMsg:=CheckOptions('hfv', 'help fncs version');
   if ErrorMsg<>'' then begin
     writeln(ErrorMsg);
+		WriteHelp;
 //    ShowException(Exception.Create(ErrorMsg));
     Terminate;
     Exit;
@@ -275,6 +276,12 @@ begin
   // parse parameters
   if HasOption('h', 'help') then begin
     WriteHelp;
+    Terminate;
+    Exit;
+  end;
+
+  if HasOption('v', 'version') then begin
+    ShowAboutBox;
     Terminate;
     Exit;
   end;
@@ -358,7 +365,7 @@ end;
 
 procedure TMyApplication.WriteHelp;
 begin
-  writeln('Usage: ', ExeName, ' [-h | -f] [stop_time] [filename]');
+  writeln('Usage: ', ExeName, ' [-v | -h | -f] [stop_time] [filename]');
   writeln(' [filename] optional DSS command file. If provided, runs this file and exits.');
   writeln('      If provided, runs this file and exits.');
   writeln('      If not provided, accepts user commands at the >> prompt.');
@@ -368,6 +375,7 @@ begin
 	writeln('        may also append a single character d(ay), h(our) or m(inute) for units');
 	writeln('      if filename is provided, that will be compiled before starting FNCS');
   writeln('      This option requires FNCS installation and opendss.yaml file');
+  writeln(' -v displays the version and exits');
 end;
 
 var
