@@ -1366,6 +1366,7 @@ Var
    kWhActual,
    ElemVolts,
    Amps,
+   AmpsDiff,
    PDiff,
    PFDiff,
    DispatchkW,
@@ -1495,15 +1496,16 @@ Begin
                  Begin // Attempt to change storage dispatch
                        If Not (FleetState=STORE_DISCHARGING) Then SetFleetToDischarge;
                        If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name, Format('Attempting to dispatch %-.6g kW with %-.6g kWh remaining and %-.6g reserve.', [kWneeded, RemainingkWh, ReservekWh]),ActorID);
+                       AmpsDiff :=  PDiff;
                        For i := 1 to FleetSize Do
                        Begin
                             StorageObj := FleetPointerList.Get(i);
                             if Dischargemode = CURRENTPEAKSHAVE then // Current to power
                             Begin    //  (MonitoredElement.MaxVoltage[ElementTerminal,ActorID] / 1000)
                               if StorageObj.NPhases = 1 then
-                                PDiff :=  StorageObj.PresentkV * PDiff
+                                PDiff :=  StorageObj.PresentkV * AmpsDiff
                               else
-                                PDiff :=  StorageObj.PresentkV * invsqrt3 * PDiff;
+                                PDiff :=  StorageObj.PresentkV * invsqrt3 * AmpsDiff;
                             End;
                             WITH StorageObj Do
                             Begin
@@ -1584,6 +1586,7 @@ Var
    PDiff,
    kWNeeded,
    Amps,
+   AmpsDiff,
    ChargekW,
    ActualkWh,
    ActualkW,
@@ -1657,6 +1660,7 @@ Begin
                  Begin // Attempt to change storage kW charge
                    If Not (FleetState=STORE_CHARGING) Then SetFleetToCharge;
                    If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name, Format('Attempting to charge %-.6g kW with %-.6g kWh remaining and %-.6g rating.', [PDiff, (TotalRatingkWh-ActualkWh), TotalRatingkWh]), ActorID);
+                   AmpsDiff :=  PDiff;
                    For i := 1 to FleetSize Do
                    Begin
                      StorageObj       := FleetPointerList.Get(i);
@@ -1667,9 +1671,9 @@ Begin
                        if Chargemode = CURRENTPEAKSHAVELOW then
                        Begin
                          if StorageObj.NPhases = 1 then
-                           PDiff :=  StorageObj.PresentkV * PDiff
+                           PDiff :=  StorageObj.PresentkV * AmpsDiff
                          else
-                           PDiff :=  StorageObj.PresentkV * invsqrt3 * PDiff;
+                           PDiff :=  StorageObj.PresentkV * invsqrt3 * AmpsDiff;
                        End;
 
                      // compute new charging value for this storage element ...
