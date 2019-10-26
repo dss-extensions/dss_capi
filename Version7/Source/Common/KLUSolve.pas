@@ -68,6 +68,7 @@ FUNCTION GetCondEst(id:NativeUInt; Res: pDouble):LongWord;{$IFNDEF FPC}stdcall;e
 
 // return 1 for success, 0 for invalid handle or a node number out of range
 FUNCTION AddPrimitiveMatrix(id:NativeUInt; nOrder:LongWord; Nodes: pLongWord; Mat: pComplex):LongWord;{$IFNDEF FPC}stdcall;external 'klusolve.dll';{$ELSE}KLU_CALL;{$ENDIF}
+FUNCTION AddPrimitiveMatrixCSC(id:NativeUInt; nOrder:LongWord; Nodes: pLongWord; Mat: pComplex):LongWord;{$IFNDEF FPC}stdcall;external 'klusolve.dll';{$ELSE}KLU_CALL;{$ENDIF}
 
 // Action = 0 (close), 1 (rewrite) or 2 (append)
 FUNCTION SetLogFile(Path: pChar; Action:LongWord):LongWord;{$IFNDEF FPC}stdcall;external 'klusolve.dll';{$ELSE}KLU_CALL;{$ENDIF}

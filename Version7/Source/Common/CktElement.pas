@@ -73,6 +73,8 @@ type
         YPrim_Series,
         YPrim_Shunt,
         YPrim: TCMatrix;   // Order will be NTerms * Ncond
+        PreviousYPrim: TCMatrix; // Currently only used in Transformer, DSS C-API extension
+
         FYprimFreq: Double;     // Frequency at which YPrim has been computed
 
         procedure Set_Enabled(Value: Boolean); VIRTUAL;
@@ -182,6 +184,9 @@ constructor TDSSCktElement.Create(ParClass: TDSSClass);
 begin
 
     inherited Create(ParClass);
+    
+    PreviousYPrim := NIL;
+    
     NodeRef := NIL;
     YPrim_Series := NIL;
     YPrim_Shunt := NIL;

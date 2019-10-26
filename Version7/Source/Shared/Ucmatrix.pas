@@ -35,6 +35,7 @@ type
         procedure Invert;
         procedure Clear;  {Zero out matrix}
         procedure AddFrom(OtherMatrix: TcMatrix);
+        procedure SubtractFrom(OtherMatrix: TcMatrix);
         procedure CopyFrom(OtherMatrix: TcMatrix);
         procedure SetElement(i, j: Integer; Value: Complex);
         procedure SetElemsym(i, j: Integer; Value: Complex);
@@ -333,6 +334,19 @@ begin
         begin
             for j := 1 to Norder do
                 AddElement(i, j, OtherMatrix.GetElement(i, j));
+        end;
+end;
+
+{--------------------------------------------------------------------------}
+procedure TcMatrix.SubtractFrom(OtherMatrix: TcMatrix);
+var
+    i, j: Integer;
+begin
+    if Norder = OtherMatrix.Norder then
+        for i := 1 to Norder do
+        begin
+            for j := 1 to Norder do
+                AddElement(i, j, cNegate(OtherMatrix.GetElement(i, j)));
         end;
 end;
 

@@ -645,9 +645,22 @@ begin
             else
             end;
 
-         //YPrim invalidation on anything that changes impedance values
+            //YPrim invalidation on anything that changes impedance values
             case ParamPointer of
-                5..19:
+                5..7:
+                    YprimInvalid := TRUE;
+                8:
+                    if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and (not ActiveCircuit.Solution.SystemYChanged) and (YPrim <> NIL) then
+                    begin
+                        // Mark this to incrementally update the matrix.
+                        // If the matrix is already being rebuilt, there is 
+                        // no point in doing this, just rebuild it as usual.
+                        writeln('Adding element to incremental list ', Name);
+                        ActiveCircuit.IncrCktElements.Add(Self) 
+                    end
+                    else
+                        YprimInvalid := TRUE;
+                9..19:
                     YprimInvalid := TRUE;
                 26..27:
                     YprimInvalid := TRUE;
@@ -1330,6 +1343,19 @@ begin
     end
     else
     begin  {Same size as last time; just zero out to start over}
+        writeln('>PreviousYPrim');
+    
+        // Yprim is already required to be not null
+        if (PreviousYPrim = NIL) then
+            PreviousYPrim := TcMatrix.CreateMatrix(Yorder)
+        else if (PreviousYPrim.Order <> Yorder) then
+        begin
+            PreviousYPrim.Free;
+            PreviousYPrim := TcMatrix.CreateMatrix(Yorder);
+        end;
+        PreviousYPrim.CopyFrom(Yprim);
+        writeln('<PreviousYPrim');
+    
         YPrim_Series.Clear; // zero out YPrim
         YPrim_Shunt.Clear; // zero out YPrim
         Yprim.Clear;
@@ -1578,7 +1604,17 @@ begin
             if TempVal <> puTap then
             begin    {Only if there's been a change}
                 puTap := TempVal;
-                YPrimInvalid := TRUE;  // this property triggers setting SystemYChanged=true
+                if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and (not ActiveCircuit.Solution.SystemYChanged) and (YPrim <> NIL) then
+                begin
+                    // Mark this to incrementally update the matrix.
+                    // If the matrix is already being rebuilt, there is 
+                    // no point in doing this, just rebuild it as usual.
+                    writeln('Adding element to incremental list ', Name);                    
+                    ActiveCircuit.IncrCktElements.Add(Self) 
+                end
+                else
+                    YPrimInvalid := TRUE;  // this property triggers setting SystemYChanged=true
+                    
                 RecalcElementData;
             end;
         end;

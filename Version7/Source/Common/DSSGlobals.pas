@@ -148,6 +148,7 @@ VAR
    DSS_CAPI_EARLY_ABORT : Boolean;
    DSS_CAPI_ALLOW_EDITOR: Boolean;
    DSS_CAPI_LOADS_TERMINAL_CHECK: Boolean = True;
+   DSS_CAPI_ALLOW_INCREMENTAL_Y: Boolean = False;
 {$ENDIF}
    // Global variables for the DSS visualization tool
    DSS_Viz_installed   :Boolean=False; // DSS visualization tool (flag of existance)
@@ -1068,6 +1069,9 @@ initialization
 
    // Default is True, enable at initialization when DSS_CAPI_ALLOW_EDITOR = 0
    DSS_CAPI_ALLOW_EDITOR := (GetEnvironmentVariable('DSS_CAPI_ALLOW_EDITOR') <> '0');
+   
+   // Default is False, enable at initialization when DSS_CAPI_ALLOW_INCREMENTAL_Y = 1
+   DSS_CAPI_ALLOW_INCREMENTAL_Y := (GetEnvironmentVariable('DSS_CAPI_ALLOW_INCREMENTAL_Y') = '1');
 {$ENDIF}
 
 Finalization

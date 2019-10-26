@@ -140,6 +140,7 @@ TYPE
           Feeders,
           SwtControls        :PointerList.TPointerList;
           CktElements        : PointerList.TPointerList;
+          IncrCktElements    : PointerList.TPointerList;
 
           ControlQueue:TControlQueue;
 
@@ -374,6 +375,7 @@ BEGIN
 
      Faults          := TPointerList.Create(2);
      CktElements     := TPointerList.Create(1000);
+     IncrCktElements := TPointerList.Create(1000);
      PDElements      := TPointerList.Create(1000);
      PCElements      := TPointerList.Create(1000);
      DSSControls     := TPointerList.Create(10);
@@ -586,6 +588,7 @@ BEGIN
      Sources.Free;
      Faults.Free;
      CktElements.Free;
+     IncrCktElements.Free;
      MeterElements.Free;
      Monitors.Free;
      EnergyMeters.Free;

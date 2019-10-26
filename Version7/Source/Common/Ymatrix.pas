@@ -17,6 +17,7 @@ interface
 
 uses
     uComplex,
+    ucMatrix,
     SysUtils;
 
 
@@ -142,16 +143,17 @@ var
     YMatrixsize: Integer;
     CmatArray: pComplexArray;
     pElem: TDSSCktElement;
+    Incremental: Boolean;
+    IncrYprim: TCMatrix;
+    Norder: Integer;
 
    //{****} FTrace: TextFile;
-
-
 begin
 
   //{****} AssignFile(Ftrace, 'YmatrixTrace.txt');
   //{****} Rewrite(FTrace);
-
     CmatArray := NIL;
+    IncrYprim := NIL;
    // new function to log KLUSolve.DLL function calls
    // SetLogFile ('KLU_Log.txt', 1);
     with ActiveCircuit, ActiveCircuit.Solution do
@@ -167,10 +169,18 @@ begin
 
         YMatrixSize := NumNodes;
 
+
         case BuildOption of
             WHOLEMATRIX:
             begin
-                ResetSparseMatrix(hYsystem, YMatrixSize);
+                writeln('Checking if Incremental Y can be used...');
+                Incremental := (not SystemYChanged) and (IncrCktElements.ListSize <> 0) and (not AllocateVI) and (not FrequencyChanged);
+                writeln('Checking if Incremental Y can be used... Done!');
+                if not Incremental then
+                begin
+                    writeln('ResetSparseMatrix(hYsystem, YMatrixSize);');
+                    ResetSparseMatrix(hYsystem, YMatrixSize);
+                end;
                 hY := hYsystem;
             end;
             SERIESONLY:
@@ -192,37 +202,91 @@ begin
             Exit;  // Some problem occured building Yprims
         end;
 
-
         FrequencyChanged := FALSE;
 
         if LogEvents then
             case BuildOption of
                 WHOLEMATRIX:
-                    LogThisEvent('Building Whole Y Matrix');
+                    if Incremental then
+                        writeln('Building Whole Y Matrix -- using incremental method')
+                    else
+                        writeln('Building Whole Y Matrix');
+                        
                 SERIESONLY:
-                    LogThisEvent('Building Series Y Matrix');
+                    writeln('Building Series Y Matrix');
             end;
           // Add in Yprims for all devices
-        pElem := CktElements.First;
-        while pElem <> NIL do
+          
+        // Full method, handles all elements
+        if not Incremental then
         begin
-            with pElem do
-                if (Enabled) then
-                begin          // Add stuff only if enabled
-                    case BuildOption of
-                        WHOLEMATRIX:
-                            CmatArray := GetYPrimValues(ALL_YPRIM);
-                        SERIESONLY:
-                            CmatArray := GetYPrimValues(SERIES)
-                    end;
-           // new function adding primitive Y matrix to KLU system Y matrix
-                    if CMatArray <> NIL then
-                        if AddPrimitiveMatrix(hY, Yorder, @NodeRef[1], @CMatArray[1]) < 1 then
-                            raise EEsolv32Problem.Create('Node index out of range adding to System Y Matrix')
-                end;   // If Enabled
-            pElem := CktElements.Next;
-        end;
+            // Full method, handles all elements
+            pElem := CktElements.First;
+            while pElem <> NIL do
+            begin
+                with pElem do
+                    if (Enabled) then
+                    begin          // Add stuff only if enabled
+                        case BuildOption of
+                            WHOLEMATRIX:
+                                CmatArray := GetYPrimValues(ALL_YPRIM);
+                            SERIESONLY:
+                                CmatArray := GetYPrimValues(SERIES)
+                        end;
+               // new function adding primitive Y matrix to KLU system Y matrix
+                        if CMatArray <> NIL then
+                            if AddPrimitiveMatrix(hY, Yorder, @NodeRef[1], @CMatArray[1]) < 1 then
+                                raise EEsolv32Problem.Create('Node index out of range adding to System Y Matrix')
+                    end;   // If Enabled
+                pElem := CktElements.Next;
+            end;
+        end // if not Incremental
+        else
+        begin // if Incremental 
+            // Incremental Y update, only valid for BuildOption = WHOLEMATRIX.
+            pElem := IncrCktElements.First;
+            while pElem <> NIL do
+            begin
+                with pElem do
+                    if (Enabled) then 
+                    begin
+                        IncrYprim := TCmatrix.CreateMatrix(Yprim.order);
+                        IncrYprim.CopyFrom(Yprim);
+                        IncrYprim.SubtractFrom(PreviousYprim);
+                        
+                        CmatArray := IncrYprim.GetValuesArrayPtr(Norder);
 
+                        if CMatArray <> NIL then
+                        begin
+                            // Adds directly to the compressed matrix
+                            if AddPrimitiveMatrixCSC(hY, Yorder, @NodeRef[1], @CMatArray[1]) < 1 then
+                            begin
+                                if IncrYprim <> NIL then
+                                begin
+                                    IncrYprim.Free;
+                                    IncrYprim := NIL;
+                                end;
+                                // Retry with the full matrix instead
+                                IncrCktElements.Clear;
+                                SystemYChanged := True;
+                                BuildYMatrix(BuildOption, AllocateVI);
+                                Exit;
+                            end;
+                        end;
+                        
+                        if IncrYprim <> NIL then
+                        begin
+                            IncrYprim.Free;
+                            IncrYprim := NIL;
+                        end;
+                    end;
+                pElem := IncrCktElements.Next;
+            end;
+            IncrCktElements.Clear;
+        end;
+        
+
+        
      //{****} CloseFile(Ftrace);
      //{****} FireOffEditor(  'YmatrixTrace.txt');
 
