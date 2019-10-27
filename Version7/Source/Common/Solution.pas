@@ -867,7 +867,7 @@ begin
             GetPCInjCurr;  // Get the injection currents from all the power conversion devices and feeders
 
        // The above call could change the primitive Y matrix, so have to check
-            if SystemYChanged then
+            if SystemYChanged or (ActiveCircuit.IncrCktElements.ListSize <> 0) then
             begin
                 BuildYMatrix(WHOLEMATRIX, FALSE);  // Does not realloc V, I
             end;
@@ -1115,7 +1115,7 @@ begin
             ControlActionsDone := TRUE; // Stop solution process if failure to converge
     end;
 
-    if SystemYChanged then
+    if SystemYChanged or (ActiveCircuit.IncrCktElements.ListSize <> 0) then
     begin
         BuildYMatrix(WHOLEMATRIX, FALSE); // Rebuild Y matrix, but V stays same
     end;

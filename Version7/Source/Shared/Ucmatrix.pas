@@ -35,7 +35,7 @@ type
         procedure Invert;
         procedure Clear;  {Zero out matrix}
         procedure AddFrom(OtherMatrix: TcMatrix);
-        procedure SubtractFrom(OtherMatrix: TcMatrix);
+        procedure SubtractOther(OtherMatrix: TcMatrix);
         procedure CopyFrom(OtherMatrix: TcMatrix);
         procedure SetElement(i, j: Integer; Value: Complex);
         procedure SetElemsym(i, j: Integer; Value: Complex);
@@ -338,7 +338,7 @@ begin
 end;
 
 {--------------------------------------------------------------------------}
-procedure TcMatrix.SubtractFrom(OtherMatrix: TcMatrix);
+procedure TcMatrix.SubtractOther(OtherMatrix: TcMatrix);
 var
     i, j: Integer;
 begin

@@ -149,7 +149,7 @@ var
 
    //{****} FTrace: TextFile;
 begin
-
+    Incremental := False;
   //{****} AssignFile(Ftrace, 'YmatrixTrace.txt');
   //{****} Rewrite(FTrace);
     CmatArray := NIL;
@@ -173,12 +173,9 @@ begin
         case BuildOption of
             WHOLEMATRIX:
             begin
-                writeln('Checking if Incremental Y can be used...');
                 Incremental := (not SystemYChanged) and (IncrCktElements.ListSize <> 0) and (not AllocateVI) and (not FrequencyChanged);
-                writeln('Checking if Incremental Y can be used... Done!');
                 if not Incremental then
                 begin
-                    writeln('ResetSparseMatrix(hYsystem, YMatrixSize);');
                     ResetSparseMatrix(hYsystem, YMatrixSize);
                 end;
                 hY := hYsystem;
@@ -186,6 +183,7 @@ begin
             SERIESONLY:
             begin
                 ResetSparseMatrix(hYseries, YMatrixSize);
+                Incremental := False;
                 hY := hYSeries;
             end;
         end;
@@ -250,15 +248,24 @@ begin
                 with pElem do
                     if (Enabled) then 
                     begin
-                        IncrYprim := TCmatrix.CreateMatrix(Yprim.order);
-                        IncrYprim.CopyFrom(Yprim);
-                        IncrYprim.SubtractFrom(PreviousYprim);
-                        
-                        CmatArray := IncrYprim.GetValuesArrayPtr(Norder);
+                        //writeln('> Incremental update -- handling ', pElem.Name);
+                        //writeln('CalcYPrim');
+                        CalcYPrim;
+                        if (PreviousYprim = NIL) or (Yprim = NIL) or (PreviousYprim.order <> Yprim.order) then
+                            CMatArray := NIL
+                        else
+                        begin
+                            IncrYprim := TCmatrix.CreateMatrix(Yprim.order);
+                            IncrYprim.CopyFrom(Yprim);
+                            IncrYprim.SubtractOther(PreviousYprim);
+                            CmatArray := IncrYprim.GetValuesArrayPtr(Norder);
+                            //writeln('IncrYprim created!');
+                        end;
 
                         if CMatArray <> NIL then
                         begin
                             // Adds directly to the compressed matrix
+                            //writeln('AddPrimitiveMatrixCSC');
                             if AddPrimitiveMatrixCSC(hY, Yorder, @NodeRef[1], @CMatArray[1]) < 1 then
                             begin
                                 if IncrYprim <> NIL then
@@ -269,9 +276,25 @@ begin
                                 // Retry with the full matrix instead
                                 IncrCktElements.Clear;
                                 SystemYChanged := True;
+                                writeln('ERROR: Aborting incremental update, running normal method.');
                                 BuildYMatrix(BuildOption, AllocateVI);
                                 Exit;
                             end;
+                            //writeln('AddPrimitiveMatrixCSC called sucessfully!');
+                        end
+                        else
+                        begin
+                            if IncrYprim <> NIL then
+                            begin
+                                IncrYprim.Free;
+                                IncrYprim := NIL;
+                            end;
+                            // Retry with the full matrix instead
+                            IncrCktElements.Clear;
+                            SystemYChanged := True;
+                            writeln('ERROR: Aborting incremental update, running normal method.');
+                            BuildYMatrix(BuildOption, AllocateVI);
+                            Exit;
                         end;
                         
                         if IncrYprim <> NIL then

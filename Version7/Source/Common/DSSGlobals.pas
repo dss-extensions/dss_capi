@@ -1072,6 +1072,10 @@ initialization
    
    // Default is False, enable at initialization when DSS_CAPI_ALLOW_INCREMENTAL_Y = 1
    DSS_CAPI_ALLOW_INCREMENTAL_Y := (GetEnvironmentVariable('DSS_CAPI_ALLOW_INCREMENTAL_Y') = '1');
+   
+   if (DSS_CAPI_ALLOW_INCREMENTAL_Y) then WriteLn('DSS_CAPI_ALLOW_INCREMENTAL_Y');
+   
+   
 {$ENDIF}
 
 Finalization
