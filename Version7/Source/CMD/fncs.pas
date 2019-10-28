@@ -153,7 +153,7 @@ var
 implementation
 
 uses
-  fpjson, jsonparser, jsonscanner, strutils, Transformer, Load; // RegControl,ControlElem;
+  fpjson, jsonparser, jsonscanner, strutils, Transformer, Load, Storage; // RegControl,ControlElem;
 
 constructor TFNCSTopic.Create;
 begin
@@ -222,6 +222,7 @@ begin
 	if topics.containsKey('load') then GetBranchesForTopics (topics.Items['load']);
 	if topics.containsKey('pvsystem') then GetBranchesForTopics (topics.Items['pvsystem']);
 	if topics.containsKey('transformer') then GetBranchesForTopics (topics.Items['transformer']);
+	if topics.containsKey('storage') then GetBranchesForTopics (topics.Items['storage']);
 end;
          
 procedure TFNCS.GetBranchesForTopics (oad:ObjectAttributeDict);
@@ -239,6 +240,7 @@ var
 	Ncond, Nterm, kmax, k, Nref: Integer;
 	PhaseTable: array[1..2, 0..3] of Integer; // index into cBuffer by terminal, then phase
 	pXf: TTransfObj;
+	pStore: TStorageObj;
 	idxWdg: Integer;
 	tap: Integer;
 begin
@@ -308,6 +310,9 @@ begin
 							cvd[valKey] := '1'
 						else
 							cvd[valKey] := '0'
+					end else if attKey = 'kwhstored' then begin
+						pStore := TStorageObj (pElem);
+						cvd[valKey] := Format ('%.3f', [pStore.StorageVars.kwhStored]);
 					end;
 				end;
 			end;
@@ -562,8 +567,10 @@ var
   conductor:TPair<string,string>;
   firstObjectFlag:Boolean=true;
   writeKeyComma:Boolean=false;
+	pos1,pos2,i:Int64;
 begin
   if topics.Count > 0 then begin
+		pos1 := fncsOutputStream.Position;
 		fncsOutputStream.Seek (0, soFromBeginning);
 		fncsOutputStream.WriteString ('{"'+FedName+'":{');
     for cls in topics do begin
@@ -593,6 +600,10 @@ begin
       end;
     end;
 		fncsOutputStream.WriteString ('}}');
+		pos2 := fncsOutputStream.Position;
+		if pos2 < pos1 then
+			for i := 1 to (pos1 - pos2) do
+				fncsOutputStream.WriteString (' ');
 	end;
 end;
 
