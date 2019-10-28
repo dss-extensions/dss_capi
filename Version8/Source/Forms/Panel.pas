@@ -25,6 +25,7 @@ uses
   {$IFDEF VER300}    // Seattle
   ,System.ImageList
   {$ENDIF}
+  ,Splash_Screen
   ;
 
 type
@@ -284,6 +285,8 @@ type
     ScriptFontMnu: TMenuItem;
     Summary1: TMenuItem;
     LinkstoHelpFiles1: TMenuItem;
+    Timer1: TTimer;
+
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure DSSHelp1Click(Sender: TObject);
     procedure AboutDSS1Click(Sender: TObject);
@@ -466,16 +469,19 @@ type
     procedure ScriptEditClick(Sender: TObject);
     procedure EditPagesChange(Sender: TObject);
     procedure LinkstoHelpFiles1Click(Sender: TObject);
+    procedure Timerdone(Sender: TObject);
   private
     { Private declarations }
-    PlotOptionString:String;
+    PlotOptionString  :String;
+    SplashScr         : TSplashScr;        // For hosting the splash screen
+    TimeOut   : Integer;
     Function MakeANewEditForm(const Cap:String):TScriptEdit;
     procedure UpdateCaptions;
 
   public
     { Public declarations }
 
-    EditFormCount:Integer;
+    EditFormCount     :Integer;
     Procedure InitializeForm;
     Procedure AddCompiledFile(const filename:String);
     Procedure UpdateStatus;
@@ -500,6 +506,9 @@ uses Executive, DSSClassDefs, DSSGlobals,
 
 Var
   SelectedMonitor :String;
+
+Const
+  MaxTimeOutValue = 6;  // the time in second that the splash screen will remain open
 
 Function WinStateToInt(WindowState:TWindowState):Integer;
 Begin
@@ -1045,6 +1054,14 @@ begin
   MakeBaseClassBox;
   UpdateClassBox;
   Edit_Result.Text := VersionString;
+
+  // Shows Splash Screen
+  TimeOut             :=  0;
+  SplashScr   :=  TSplashScr.Create(nil);
+  SplashScr.Show;
+  SetWindowPos(SplashScr.Handle, HWND_TOPMOST, 0, 0, 0, 0,
+                     SWP_NoMove or SWP_NoSize);
+  Timer1.Enabled := True;
 
 end;
 
@@ -1974,6 +1991,16 @@ end;
 procedure TControlPanel.TechNotes1Click(Sender: TObject);
 begin
      shellexecute(handle,'open','http://sourceforge.net/apps/mediawiki/electricdss/index.php?title=List_of_DSS_tech_notes',nil,nil,1);
+end;
+
+procedure TControlPanel.Timerdone(Sender: TObject);
+begin
+  Inc(TimeOut);                                // app will close
+  if TimeOut >= MaxTimeOutValue then begin
+    Timer1.Enabled := False;
+    SplashScr.Close;
+    SplashScr.Free;
+  end;
 end;
 
 procedure TControlPanel.TraceLog1Click(Sender: TObject);

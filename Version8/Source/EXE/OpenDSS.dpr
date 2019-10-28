@@ -195,7 +195,8 @@ uses
   Generic5OrderMach in '..\PCElements\Generic5OrderMach.pas',
   fMonitor in '..\Meters\fMonitor.pas',
   LD_fm_infos in '..\Meters\LD_fm_infos.pas',
-  VLNodeVars in '..\Meters\VLNodeVars.pas';
+  VLNodeVars in '..\Meters\VLNodeVars.pas',
+  Splash_Screen in '..\Forms\Splash_Screen.pas' {SplashScr};
 
 {$R *.RES}
 
@@ -227,6 +228,7 @@ begin
     {Instantiate basic forms}
     Application.CreateForm(TControlPanel, ControlPanel);
   Application.CreateForm(TTViewForm, TViewForm);
+  Application.CreateForm(TSplashScr, SplashScreen);
   //  Application.CreateForm(TMainEditForm, MainEditForm);
     Application.CreateForm(TProgress, Progress);
     Application.CreateForm(TPlotOptionsForm, PlotOptionsForm);
