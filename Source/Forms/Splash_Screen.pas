@@ -1,45 +1,47 @@
-unit About;
-{
-  ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
-  All rights reserved.
-  ----------------------------------------------------------
-}
+unit Splash_Screen;
+
 interface
 
-uses Windows, SysUtils, Classes, Graphics, Forms, Controls, StdCtrls,
-  Buttons, ExtCtrls, jpeg, ComCtrls, Vcl.Imaging.pngimage;
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Imaging.pngimage,
+  Vcl.StdCtrls, Vcl.ComCtrls;
 
 type
-  TAboutBox = class(TForm)
-    Panel1: TPanel;
-    ProductName: TLabel;
-    Version: TLabel;
-    Copyright: TLabel;
-    Comments: TLabel;
-    OKButton: TButton;
-    Label1: TLabel;
+  TSplashScr = class(TForm)
+    banner: TImage;
+    logo: TImage;
     LicenseText: TRichEdit;
-    Image1: TImage;
-    EPRILogo: TImage;
+    Label1: TLabel;
+    Version: TLabel;
+
     procedure FormCreate(Sender: TObject);
+  protected
+      procedure CreateParams(var Params: TCreateParams); override; // ADD THIS LINE!
   private
     { Private declarations }
   public
     { Public declarations }
+
   end;
 
 var
-  AboutBox: TAboutBox;
+  SplashScreen: TSplashScr;
 
 implementation
 
-uses DssGlobals,  DSSForms;
+uses
 
-{$R *.DFM}
+  DSSGlobals;
 
-procedure TAboutBox.FormCreate(Sender: TObject);
+{$R *.dfm}
+
+procedure TSplashScr.FormCreate(Sender: TObject);
 begin
+
+    Left:=(Screen.Width-Width)  div 2;
+    Top:=(Screen.Height-Height) div 2;
+
      Version.Caption := VersionString;
 
      LicenseText.Lines.Clear();
@@ -71,9 +73,12 @@ begin
      LicenseText.Lines.Add('POSSIBILITY OF SUCH DAMAGE.');
 
      LicenseText.SelStart := 0;
-
 end;
 
+procedure TSplashScr.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+  Params.Style := Params.Style or WS_THICKFRAME;
+end;
 
 end.
- 
