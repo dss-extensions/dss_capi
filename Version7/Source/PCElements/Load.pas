@@ -1390,20 +1390,19 @@ begin
                      {Just a small value so things don't die and we get the actual injection current out the terminal}
                 Y := cmplx(Epsilon, 0.0)
             end
-            else
-                // compute equivalent Y assuming some of the load is series R-L and the rest is parallel R-L
+            else // compute equivalent Y assuming some of the load is series R-L and the rest is parallel R-L
             begin
-                   // Parallel R-L part of the Load model for harmonics mode
-                   // Based in equivalent Y at 100% voltage
+                // Parallel R-L part of the Load model for harmonics mode
+                // Based in equivalent Y at 100% voltage
                 Y := CmulReal(Yeq, (1.0 - puSeriesRL));
                 Y.im := Y.im / FreqMultiplier;  {Correct reactive part for frequency}
 
-                   // Series-connected R-L part
+                // Series-connected R-L part
                 if puSeriesRL <> 0.0 then
                 begin
                     if FpuXharm > 0.0 then
                     begin   // compute Zseries from special harmonic reactance for representing motors.
-                             // the series branch is assumed to represent the motor
+                            // the series branch is assumed to represent the motor
                         XseriesOhms := SQR(kVLoadBase) * 1000.0 / (kVABase * puSeriesRL) * FpuXharm;
                         Zseries := cmplx(XseriesOhms / FXRharmRatio, XSeriesOhms);
                     end
@@ -1705,16 +1704,12 @@ begin
         Vmag := Cabs(V);
         if VMag <= VBaseLow then
             Curr := Cmul(Yeq, V)  // Below VbaseZ resort to linear equal to Yprim contribution
-        else
-        if VMag <= VBase95 then
+        else if VMag <= VBase95 then
             Curr := Cmul(InterpolateY95I_YLow(Vmag), V)   //  Voltage between Vminpu and Vlow    ***Added by Celso & Paulo
-        else
-        if VMag > VBase105 then
+        else if VMag > VBase105 then
             Curr := Cmul(Yeq105I, V)  // above 105% use an impedance model
         else
-        begin
             Curr := Conjg(Cdiv(Cmplx(WNominal, varNominal), CMulReal(CDivReal(V, Vmag), Vbase)));
-        end;
 
         // Save this value in case the Load value is different than the terminal value (see InitHarmonics)
         FPhaseCurr^[i] := Curr;
@@ -1751,22 +1746,20 @@ begin
             Curr := Cmul(Yeq, V)  // Below VbaseZ resort to linear equal to Yprim contribution
         else
         begin
+            CurrZ := CZERO;
+            CurrI := CZERO;
+            CurrP := CZERO;
+
             if VMag <= VBase95 then
             begin
                 if (ZIPV[1] <> 0) or (ZIPV[4] <> 0) then
-                    CurrZ := Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4])
-                else
-                    CurrZ := CZERO;
+                    CurrZ := Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4]);
                 
                 if (ZIPV[3] <> 0) or (ZIPV[6] <> 0) then
-                    CurrP := Cmplx(InterpolateY95_YLow(Vmag).re * ZIPV[3], InterpolateY95_YLow(Vmag).im * ZIPV[6])
-                else
-                    CurrP := CZERO;
+                    CurrP := Cmplx(InterpolateY95_YLow(Vmag).re * ZIPV[3], InterpolateY95_YLow(Vmag).im * ZIPV[6]);
                 
                 if (ZIPV[2] <> 0) or (ZIPV[5] <> 0) then
-                    CurrI := Cmplx(InterpolateY95I_YLow(Vmag).re * ZIPV[2], InterpolateY95I_YLow(Vmag).im * ZIPV[5])
-                else
-                    CurrI := CZERO;
+                    CurrI := Cmplx(InterpolateY95I_YLow(Vmag).re * ZIPV[2], InterpolateY95I_YLow(Vmag).im * ZIPV[5]);
                     
                 Curr := Cmul(CAdd(CurrZ, CAdd(CurrI, CurrP)), V);
             end
@@ -1774,38 +1767,26 @@ begin
             if VMag > VBase105 then
             begin
                 if (ZIPV[1] <> 0) or (ZIPV[4] <> 0) then
-                    CurrZ := Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4])
-                else
-                    CurrZ := CZERO;
+                    CurrZ := Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4]);
                 
                 if (ZIPV[3] <> 0) or (ZIPV[6] <> 0) then
-                    CurrP := Cmplx(Yeq105.re * ZIPV[3], Yeq105.im * ZIPV[6])
-                else
-                    CurrP := CZERO;
+                    CurrP := Cmplx(Yeq105.re * ZIPV[3], Yeq105.im * ZIPV[6]);
                 
                 if (ZIPV[2] <> 0) or (ZIPV[5] <> 0) then
-                    CurrI := Cmplx(Yeq105I.re * ZIPV[2], Yeq105I.im * ZIPV[5])
-                else
-                    CurrI := CZERO;
+                    CurrI := Cmplx(Yeq105I.re * ZIPV[2], Yeq105I.im * ZIPV[5]);
                     
                 Curr := Cmul(CAdd(CurrZ, CAdd(CurrI, CurrP)), V);
             end
             else
             begin
                 if (ZIPV[1] <> 0) or (ZIPV[4] <> 0) then
-                    CurrZ := Cmul(Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4]), V)
-                else
-                    CurrZ := CZERO;
+                    CurrZ := Cmul(Cmplx(Yeq.re * ZIPV[1], Yeq.im * ZIPV[4]), V);
                 
                 if (ZIPV[2] <> 0) or (ZIPV[5] <> 0) then
-                    CurrI := Conjg(Cdiv(Cmplx(WNominal * ZIPV[2], varNominal * ZIPV[5]), CMulReal(CDivReal(V, Cabs(V)), Vbase)))
-                else
-                    CurrI := CZERO;
+                    CurrI := Conjg(Cdiv(Cmplx(WNominal * ZIPV[2], varNominal * ZIPV[5]), CMulReal(CDivReal(V, Cabs(V)), Vbase)));
                 
                 if (ZIPV[3] <> 0) or (ZIPV[6] <> 0) then
-                    CurrP := Conjg(Cdiv(Cmplx(WNominal * ZIPV[3], varNominal * ZIPV[6]), V))
-                else
-                    CurrP := CZERO;
+                    CurrP := Conjg(Cdiv(Cmplx(WNominal * ZIPV[3], varNominal * ZIPV[6]), V));
                     
                 Curr := CAdd(CurrZ, CAdd(CurrI, CurrP));
             end;
