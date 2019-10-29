@@ -33,7 +33,7 @@ type
         constructor CreateMatrix(N: Integer);
         destructor Destroy; OVERRIDE;
         procedure Invert;
-        procedure Clear;  {Zero out matrix}
+        procedure Clear; inline; {Zero out matrix}
         procedure AddFrom(OtherMatrix: TcMatrix);
         procedure SubtractOther(OtherMatrix: TcMatrix);
         procedure CopyFrom(OtherMatrix: TcMatrix);
@@ -101,12 +101,9 @@ begin
 end;
 
 {--------------------------------------------------------------------------}
-procedure TcMatrix.Clear;
-var
-    i: Integer;
+procedure TcMatrix.Clear; inline;
 begin
-    for i := 1 to (Norder * Norder) do
-        values^[i] := Cmplx(0.0, 0.0);
+    FillDword(Values^[1], (Sizeof(Complex) div 4) * Norder * Norder, 0);
 end;
 
 {--------------------------------------------------------------------------}
