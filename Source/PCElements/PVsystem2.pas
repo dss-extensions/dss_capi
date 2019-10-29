@@ -462,7 +462,7 @@ PROCEDURE TPVsystem2.DefineProperties;
     AddProperty('Pmpp',      propPmpp,
                             'Get/set the rated max power of the PV array for 1.0 kW/sq-m irradiance and a user-selected array temperature. ' +
                             'The P-TCurve should be defined relative to the selected array temperature.' );
-    AddProperty('pctPmpp',   proppctPmpp,
+    AddProperty('%Pmpp',   proppctPmpp,
                             'Upper limit on active power as a percentage of Pmpp.');
     AddProperty('Temperature', propTemp,
                             'Get/set the present Temperature. Used as fixed value corresponding to PTCurve property. '+
@@ -485,7 +485,7 @@ PROCEDURE TPVsystem2.DefineProperties;
                             'When the inverter is OFF, the power from the array must be greater than this for the inverter to turn on.');
     AddProperty('%Cutout',    propCutout,
                             '% cut-out power -- % of kVA rating of inverter. '+
-                            'When the inverter is ON, the inverter turns OFF when the power from the array drops below this valye.');
+                            'When the inverter is ON, the inverter turns OFF when the power from the array drops below this value.');
 
     AddProperty('EffCurve',  propInvEffCurve,
                             'An XYCurve object, previously defined, that describes the PER UNIT efficiency vs PER UNIT of rated kVA for the inverter. ' +
@@ -583,18 +583,18 @@ PROCEDURE TPVsystem2.DefineProperties;
                             '{Yes/No*/True/False} Set inverter to operate with PF priority when in constant PF mode. If "Yes", value assigned to "WattPriority"' +
                              ' is neglected. If controlled by an InvControl with either Volt-Var or DRC or both functions activated, PF priority is neglected and "WattPriority" is considered. Default = No.');
 
-    AddProperty('pctPminNoVars', propPminNoVars,
+    AddProperty('%PminNoVars', propPminNoVars,
                            'Minimum active power as percentage of Pmpp under which there is no vars production/absorption.');
 
-    AddProperty('pctPminkvarLimit', propPminkvarLimit,
+    AddProperty('%PminkvarMax', propPminkvarLimit,
                            'Minimum active power as percentage of Pmpp that allows the inverter to produce/absorb reactive power up to its kvarlimit.');
 
 
-    AddProperty('kvarLimit',     propkvarLimit,
-                            'Un-signed numerical variable Defaults to kVA rating of the inverter.   Indicates the maximum reactive power generation/absorption (in kvar) for the PVSystem2 (as an un-signed value).');
+    AddProperty('kvarMax',     propkvarLimit,
+                            'Indicates the maximum reactive power GENERATION (un-signed numerical variable in kvar) for the inverter (as an un-signed value). Defaults to kVA rating of the inverter.');
 
-    AddProperty('kvarLimitNeg', propkvarLimitneg,
-                           'Indicates the maximum reactive power ABSORPTION (in kvar) for the inverter (as an un-signed value). Defaults to kVA rating of the inverter.');
+    AddProperty('kvarMaxAbs', propkvarLimitneg,
+                           'Indicates the maximum reactive power ABSORPTION (un-signed numerical variable in kvar) for the inverter (as an un-signed value). Defaults to kVA rating of the inverter.');
 
 
     ActiveProperty := NumPropsThisClass;
@@ -1619,7 +1619,7 @@ PROCEDURE TPVsystem2Obj.ComputeInverterPower;
                     else kvar_out := kvarRequested;
                   end;
               end
-            else if (abs(kvarRequested) > Fkvarlimit) or (abs(kvarRequested) > Fkvarlimitneg) then
+            else if ((kvarRequested > 0.0) and (abs(kvarRequested) > Fkvarlimit)) or ((kvarRequested < 0.0) and (abs(kvarRequested) > Fkvarlimitneg)) then
               begin
                 if (kvarRequested > 0.0) then kvar_Out := Fkvarlimit * sign(kvarRequested)
                 else kvar_Out := Fkvarlimitneg * sign(kvarRequested);
