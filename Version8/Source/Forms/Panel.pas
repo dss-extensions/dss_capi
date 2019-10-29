@@ -473,7 +473,7 @@ type
   private
     { Private declarations }
     PlotOptionString  :String;
-    SplashScr         : TSplashScr;        // For hosting the splash screen
+    SplashScr         : TSplashScreen;        // For hosting the splash screen
     TimeOut   : Integer;
     Function MakeANewEditForm(const Cap:String):TScriptEdit;
     procedure UpdateCaptions;
@@ -1057,7 +1057,7 @@ begin
 
   // Shows Splash Screen
   TimeOut             :=  0;
-  SplashScr   :=  TSplashScr.Create(nil);
+  SplashScr   :=  TSplashScreen.Create(nil);
   SplashScr.Show;
   SetWindowPos(SplashScr.Handle, HWND_TOPMOST, 0, 0, 0, 0,
                      SWP_NoMove or SWP_NoSize);

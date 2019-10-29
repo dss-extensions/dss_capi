@@ -1,4 +1,4 @@
-object SplashScr: TSplashScr
+object SplashScr: TSplashScreen
   Left = 0
   Top = 0
   BorderStyle = bsNone

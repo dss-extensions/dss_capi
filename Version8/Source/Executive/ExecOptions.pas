@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-        NumExecOptions = 130;
+        NumExecOptions = 131;
 
 VAR
          ExecOption,
@@ -165,6 +165,7 @@ Begin
      ExecOption[128] := 'SeasonSignal';
      ExecOption[129] := 'NUMANodes';
      ExecOption[130] := 'MarkPVSystems2';
+     ExecOption[131] := 'GISInstalled';
 
 
      OptionHelp[1]  := 'Sets the active DSS class type.  Same as Class=...';
@@ -448,6 +449,7 @@ Begin
      OptionHelp[129] := 'Delivers the number of Non-uniform memory access nodes (NUMA Nodes) available on the machine (read Only). This information is vital when working' +
                         'with processor clusters (HPC). It will help you know the number of processors in the cluster';
      OptionHelp[130] := '{YES/TRUE | NO/FALSE}  Default is NO. Mark PVSystem2 locations with a symbol. See PVMarkerCode and PVMarkerSize. ';
+     OptionHelp[131] := 'Returns Yes/No if the OpenDSS GIS installation is detected in the local machine (Read Only)';
 End;
 //----------------------------------------------------------------------------
 FUNCTION DoSetCmd_NoCircuit:Boolean;  // Set Commands that do not require a circuit
@@ -986,6 +988,7 @@ Begin
           128: AppendGlobalResult(SeasonSignal);
           129: AppendGlobalResult(Format('%d' ,[NumNUMA]));
           130: If ActiveCircuit[ActiveActor].MarkPVSystems2  Then AppendGlobalResult('Yes') else AppendGlobalResult('No');
+          131: if DSS_GIS_installed then AppendGlobalResult('Yes') else AppendGlobalResult('No');
          ELSE
            // Ignore excess parameters
          End;
