@@ -716,7 +716,7 @@ begin
 // Bus1 <> Bus 2
 
 
-    if YPrimInvalid then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) {YPrimInvalid} then
     begin    // Reallocate YPrim if something has invalidated old allocation
         if YPrim_Shunt <> NIL then
             YPrim_Shunt.Free;

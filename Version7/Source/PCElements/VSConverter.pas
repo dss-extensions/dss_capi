@@ -423,7 +423,7 @@ var
     i: Integer;
 begin
 // build YPrim_Series non-zero for just the AC phases, and it will be diagonal
-    if YPrimInvalid then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Series = NIL) {YPrimInvalid} then
     begin
         if YPrim_Series <> NIL then
             YPrim_Series.Free;

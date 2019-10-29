@@ -1303,7 +1303,7 @@ begin
 
      // First clear present value; redefine if necessary
      // Note: Complex matrix (TcMatrix -- see uCmatrix.pas) is used for this
-    if YPrimInvalid then
+    if (Yprim = NIL) OR (Yprim.order <> Yorder) OR (Yprim_Shunt = NIL) OR (Yprim_Series = NIL) {YPrimInvalid} then
     begin
         if YPrim_Shunt <> NIL then
             YPrim_Shunt.Free;
