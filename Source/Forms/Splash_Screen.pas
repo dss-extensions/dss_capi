@@ -8,7 +8,7 @@ uses
   Vcl.StdCtrls, Vcl.ComCtrls;
 
 type
-  TSplashScr = class(TForm)
+  TSplashScreen = class(TForm)
     banner: TImage;
     logo: TImage;
     LicenseText: TRichEdit;
@@ -26,7 +26,7 @@ type
   end;
 
 var
-  SplashScreen: TSplashScr;
+  SplashScreen: TSplashScreen;
 
 implementation
 
@@ -36,7 +36,7 @@ uses
 
 {$R *.dfm}
 
-procedure TSplashScr.FormCreate(Sender: TObject);
+procedure TSplashScreen.FormCreate(Sender: TObject);
 begin
 
     Left:=(Screen.Width-Width)  div 2;
@@ -75,7 +75,7 @@ begin
      LicenseText.SelStart := 0;
 end;
 
-procedure TSplashScr.CreateParams(var Params: TCreateParams);
+procedure TSplashScreen.CreateParams(var Params: TCreateParams);
 begin
   inherited;
   Params.Style := Params.Style or WS_THICKFRAME;

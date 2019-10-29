@@ -196,7 +196,9 @@ uses
   fMonitor in '..\Meters\fMonitor.pas',
   LD_fm_infos in '..\Meters\LD_fm_infos.pas',
   VLNodeVars in '..\Meters\VLNodeVars.pas',
-  Splash_Screen in '..\Forms\Splash_Screen.pas' {SplashScr};
+  Splash_Screen in '..\Forms\Splash_Screen.pas' {SplashScr},
+  GISCommands in '..\GISCommands\GISCommands.pas',
+  djson in '..\Common\djson.pas';
 
 {$R *.RES}
 
@@ -228,7 +230,7 @@ begin
     {Instantiate basic forms}
     Application.CreateForm(TControlPanel, ControlPanel);
   Application.CreateForm(TTViewForm, TViewForm);
-  Application.CreateForm(TSplashScr, SplashScreen);
+  Application.CreateForm(TSplashScreen, SplashScreen);
   //  Application.CreateForm(TMainEditForm, MainEditForm);
     Application.CreateForm(TProgress, Progress);
     Application.CreateForm(TPlotOptionsForm, PlotOptionsForm);
