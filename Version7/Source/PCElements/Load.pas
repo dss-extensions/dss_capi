@@ -1478,40 +1478,36 @@ begin
             Yprim_Shunt.Free;
         if YPrim_Series <> NIL then
             Yprim_Series.Free;
-        if YPrim <> NIL then
-            Yprim.Free;
-
+            
         YPrim_Series := TcMatrix.CreateMatrix(Yorder);
         YPrim_Shunt := TcMatrix.CreateMatrix(Yorder);
-        YPrim := TcMatrix.CreateMatrix(Yorder);
     end
     else
     begin
         YPrim_Shunt.Clear;
         YPrim_Series.Clear;
-        YPrim.Clear;
+        // YPrim.Clear; -- YPrim is Yprint_Shunt for loads
     end;
 
-    if ActiveCircuit.Solution.LoadModel = POWERFLOW then
-    begin
+    // if ActiveCircuit.Solution.LoadModel = POWERFLOW then
+    // begin
+    //     SetNominalLoad;         // same as admittance model
+    //     CalcYPrimMatrix(YPrim_Shunt);
+    // end
+    // else
+    // begin   // ADMITTANCE model wanted
+    //     SetNominalLoad;
+    //     CalcYPrimMatrix(YPrim_Shunt);
+    // end;
+    SetNominalLoad;
+    CalcYPrimMatrix(YPrim_Shunt);
 
-        SetNominalLoad;         // same as admittance model
-        CalcYPrimMatrix(YPrim_Shunt);
-
-    end
-    else
-    begin   // ADMITTANCE model wanted
-
-        SetNominalLoad;
-        CalcYPrimMatrix(YPrim_Shunt);
-
-    end;
 
      // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages doesn't fail
     for i := 1 to Yorder do
         Yprim_Series.SetElement(i, i, CmulReal(Yprim_Shunt.Getelement(i, i), 1.0e-10));
 
-    YPrim.CopyFrom(YPrim_Shunt);
+    YPrim := YPrim_Shunt;
 
      // Account for Open Conductors
     inherited CalcYPrim;
