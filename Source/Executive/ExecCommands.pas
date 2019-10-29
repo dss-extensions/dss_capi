@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 119;
+     NumExecCommands = 128;
 
 Var
 
@@ -39,7 +39,8 @@ Uses DSSGlobals, ExecHelper, Executive, ExecOptions, ShowOptions,
      DSSForms,
      ConnectOptions,
 {$ENDIF}
-     KLUSolve, Diakoptics, sparse_math;
+     KLUSolve, Diakoptics, sparse_math,
+     GISCommands;
 
 
 PROCEDURE DefineCommands;
@@ -166,6 +167,15 @@ Begin
      ExecCommand[117] := 'CalcLaplacian';
      ExecCommand[118] := 'Clone';
      ExecCommand[119] := 'FNCSPublish';
+     ExecCommand[120] := 'StartGIS';
+     ExecCommand[121] := 'GISShowBus';
+     ExecCommand[122] := 'GISFindRoute';
+     ExecCommand[123] := 'GISGetRoute';
+     ExecCommand[124] := 'GISGetDistance';
+     ExecCommand[125] := 'GISShowRoute';
+     ExecCommand[126] := 'GISJSONRoute';
+     ExecCommand[127] := 'WindowDistribLR';
+     ExecCommand[128] := 'WindowDistribRL';
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
                          'active object' + CRLF +
@@ -516,7 +526,50 @@ Begin
                          'if the number of requested clones does not overpasses the number of local CPUs. The form of this command is clone X where' +
                          'X is the number of clones to be created';
      CommandHelp[119] := 'Read FNCS publication topics from a JSON file';
-
+     CommandHelp[120] := 'Starts OpenDSS-GIS only if it is installed in the local machine';
+     CommandHelp[121] := 'Shows the bus specified on the map, however, the following conditions need to be fulfilled:' + CRLF +
+                         CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '3. The model needs to have the correct buscoords file';
+     CommandHelp[122] := 'Finds a route between the given buses using roads and geographical information. The buses are described as an array' +
+                         ' as follows: GISFindRoute [b1 b2], do not include phases. The following conditions need to be fulfilled:' + CRLF +
+                         CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '3. The model needs to have the correct buscoords file';
+     CommandHelp[123] := 'Returns the GIS coords of the route between 2 buses step by step, however, the following conditions need to be fulfilled:' + CRLF +
+                         CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '3. GISFindRoute has been executed at some point before this command (at least once)' + CRLF +
+                         '4. The model needs to have the correct buscoords file';
+     CommandHelp[124] := 'Returns the distance (value units) of the last route calculated between 2 buses, however, the following conditions need to be fulfilled:' + CRLF +
+                         CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '3. GISFindRoute has been executed at some point before this command (at least once)' + CRLF +
+                         '4. The model needs to have the correct buscoords file';
+     CommandHelp[125] := 'Shows the last route calculated between 2 buses in OpenDSS-GIS, however, the following conditions need to be fulfilled:' + CRLF +
+                         CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '3. GISFindRoute has been executed at some point before this command (at least once)' + CRLF +
+                         '4. The model needs to have the correct buscoords file';
+     CommandHelp[126] := 'Returns the JSON script describing the last route calculated between 2 buses, however, the following conditions need to be fulfilled:' + CRLF +
+                         CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF +
+                         '3. GISFindRoute has been executed at some point before this command (at least once)' + CRLF +
+                         '4. The model needs to have the correct buscoords file';
+     CommandHelp[127] := 'Redistributes the windows horizontally leaving OpenDSS to the left of the screen and OpenDSS-GIS to the right, however, the following conditions need to be fulfilled:' + CRLF +
+                         CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF;
+     CommandHelp[128] := 'Redistributes the windows horizontally leaving OpenDSS to the right of the screen and OpenDSS-GIS to the left, however, the following conditions need to be fulfilled:' + CRLF +
+                         CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF;
 End;
 
 //----------------------------------------------------------------------------
@@ -542,7 +595,7 @@ Begin
      LastCmdLine := CmdLine;
      Parser[ActiveActor].CmdString := LastCmdLine;  // Load up command parser
      LastCommandWasCompile := False;
-     
+
      ParamPointer := 0;
      ParamName := Parser[ActiveActor].NextParam;
      Param := Parser[ActiveActor].StrValue;
@@ -806,6 +859,11 @@ Begin
       116: SolutionAbort := TRUE;
       118: DoClone;
       119: DoFNCSPubCmd;
+      120: if start_openDSSGIS() then GlobalResult  :=  'GIS Started succesfully' else GlobalResult :=  'Error, check if OpenDSS-GIS is running and your firewall setup';
+      121:  begin
+              Parser[ActiveActor].NextParam;
+              GlobalResult  :=  show_busGIS(Parser[ActiveActor].StrValue);
+            end
      ELSE
        // Ignore excess parameters
      End;

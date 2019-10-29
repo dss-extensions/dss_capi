@@ -143,7 +143,6 @@ TYPE
     protected
       FMessage,
       Msg_Cmd       : string;
-      ProgForm      : TProgress;
 //*******************************Public components******************************
     Public
 
@@ -160,6 +159,10 @@ VAR
    DSS_Viz_installed   :Boolean=False; // OpenDSS viewer (flag to mark a local installation)
    DSS_Viz_path: String;
    DSS_Viz_enable: Boolean=False;
+
+   // Global variables for OpenDSS-GIS
+   DSS_GIS_installed   :Boolean=False; // OpenDSS-GIS (flag to mark a local installation)
+   DSS_GIS_path: String;
 
    IsDLL,
    NoFormsAllowed  :Boolean;
@@ -338,6 +341,9 @@ VAR
   IsProgressON            : Boolean;
   Progress_Actor          : TProgressActor;
   DSSProgressPath         : String;
+
+//************************ OpenDSS-GIS Global defs***************************
+  IsGISON                 : Boolean;
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
 PROCEDURE DoSimpleMsg(Const S :String; ErrNum:Integer);
@@ -1096,12 +1102,24 @@ End;
 
 {$IFNDEF FPC}
 // Validates the installation and path of the OpenDSS Viewer
-function CheckOpenDSSViewer: Boolean;
+function CheckOpenDSSViewer(App_Folder :  string): Boolean;
 var FileName: string;
 begin
-  DSS_Viz_path:=GetIni('Application','path','', TPath.GetHomePath+'\OpenDSS_Viewer\settings.ini');
   // to make it compatible with the function
-  FileName  :=  stringreplace(DSS_Viz_path, '\\' ,'\',[rfReplaceAll, rfIgnoreCase]);
+  App_Folder    :=  LowerCase(App_Folder);
+
+  // Stores the
+  if App_Folder = 'opendss_viewer' then
+  Begin
+    DSS_Viz_path:=GetIni('Application','path','', TPath.GetHomePath+'\' + App_Folder + '\settings.ini');
+    FileName  :=  stringreplace(DSS_Viz_path, '\\' ,'\',[rfReplaceAll, rfIgnoreCase])
+  End
+  else
+  Begin
+    DSS_GIS_path:=GetIni('Application','path','', TPath.GetHomePath+'\' + App_Folder + '\settings.ini');
+    FileName  :=  stringreplace(DSS_GIS_path, '\\' ,'\',[rfReplaceAll, rfIgnoreCase]);
+  End;
+
   FileName  :=  stringreplace(FileName, '"' ,'',[rfReplaceAll, rfIgnoreCase]);
   // returns true only if the executable exists
   Result:=fileexists(FileName);
@@ -1430,7 +1448,8 @@ initialization
    //WriteDLLDebugFile('DSSGlobals');
 
 {$IFNDEF FPC}
-  DSS_Viz_installed:= CheckOpenDSSViewer; // OpenDSS Viewer (flag for detected installation)
+  DSS_Viz_installed := CheckOpenDSSViewer('OpenDSS_Viewer');  // OpenDSS Viewer (flag for detected installation)
+  DSS_GIS_installed := CheckOpenDSSViewer('OpenDSS_GIS');     // OpenDSS GIS (flag for detected installation)
 {$ENDIF}
 
 
