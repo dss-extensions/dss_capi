@@ -103,7 +103,7 @@ end;
 {--------------------------------------------------------------------------}
 procedure TcMatrix.Clear; inline;
 begin
-    FillDword(Values^[1], (Sizeof(Complex) div 4) * Norder * Norder, 0);
+    FillDword(Values^, (Sizeof(Complex) div 4) * Norder * Norder, 0);
 end;
 
 {--------------------------------------------------------------------------}
