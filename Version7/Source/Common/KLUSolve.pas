@@ -95,6 +95,11 @@ FUNCTION AddMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;
 // GetMatrixElement is deprecated, use GetCompressedMatrix or GetTripletMatrix
 FUNCTION GetMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;{$IFNDEF FPC}stdcall;external 'klusolve.dll';{$ELSE}KLU_CALL;{$ENDIF}
 
+
+FUNCTION Zeroise(id:NativeUInt):LongWord;{$IFNDEF FPC}stdcall;external 'klusolve.dll';{$ELSE}KLU_CALL;{$ENDIF}
+FUNCTION ZeroiseNode(id:NativeUInt; node:LongWord):LongWord;{$IFNDEF FPC}stdcall;external 'klusolve.dll';{$ELSE}KLU_CALL;{$ENDIF}
+FUNCTION IncrementMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;{$IFNDEF FPC}stdcall;external 'klusolve.dll';{$ELSE}KLU_CALL;{$ENDIF}
+
 implementation
 
 end.

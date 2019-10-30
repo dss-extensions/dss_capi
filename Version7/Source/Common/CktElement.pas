@@ -73,8 +73,7 @@ type
         YPrim_Series,
         YPrim_Shunt,
         YPrim: TCMatrix;   // Order will be NTerms * Ncond
-        PreviousYPrim: TCMatrix; // Currently only used in Transformer, DSS C-API extension
-
+        
         FYprimFreq: Double;     // Frequency at which YPrim has been computed
 
         procedure Set_Enabled(Value: Boolean); VIRTUAL;
@@ -185,8 +184,6 @@ begin
 
     inherited Create(ParClass);
     
-    PreviousYPrim := NIL;
-    
     NodeRef := NIL;
     YPrim_Series := NIL;
     YPrim_Shunt := NIL;
@@ -273,12 +270,16 @@ begin
     FYPrimInvalid := value;
     if Value then
     begin
-
+///        writeln('!!! YPrimInvalid=TRUE for ', ClassName, '.', Name);
+        
         // If this device is in the circuit, then we have to rebuild Y on a change in Yprim
         if FEnabled then
             ActiveCircuit.Solution.SystemYChanged := TRUE;
 
-    end;
+    end
+//    else
+//        writeln('!!! YPrimInvalid=FALSE for ', Name);
+    
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -668,6 +669,8 @@ begin
     if YPrim <> NIL then
         DoYPrimCalcs(YPrim);
 
+//    writeln('CalcYPrim called for ', ClassName, '.', Name);
+    YPrimInvalid := False;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

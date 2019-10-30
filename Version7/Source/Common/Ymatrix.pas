@@ -43,8 +43,15 @@ uses
     Circuit,
     CktElement,
     Utilities,
-    KLUSolve;
+    KLUSolve,
+    DSSClassDefs,
+    GUtil,
+    GSet;
 
+
+type 
+    TNodeLess = TLess<integer>;
+    TNodeSet = TSet<Integer, TNodeLess>;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ReCalcAllYPrims;
@@ -54,6 +61,8 @@ var
 
 begin
 
+//    writeln('!!!Recalc ALL Yprims');
+    
     with ActiveCircuit do
     begin
         if LogEvents then
@@ -66,6 +75,7 @@ begin
         end;
     end;
 
+//    writeln('<<<Recalc ALL Yprims');
 end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -76,21 +86,39 @@ var
     pElem: TDSSCktElement;
 
 begin
+//    writeln('!!!Recalc Invalid Yprims');
 
     with ActiveCircuit do
     begin
         if LogEvents then
             LogThisEvent('Recalc Invalid Yprims');
-        pElem := CktElements.First;
+            
+        pElem := IncrCktElements.First;
         while pElem <> NIL do
         begin
             with pElem do
                 if YprimInvalid then
+                begin
+                    //WriteLn('ReCalcInvalidYPrims: CalcYPrim for ', Name, ' (incremental)');
                     CalcYPrim;
+                end;
+            pElem := IncrCktElements.Next;
+        end;
+
+        pElem := CktElements.First;
+        while pElem <> NIL do
+        begin
+            with pElem do
+                if YprimInvalid {or ((DSSObjType and CLASSMASK) = LOAD_ELEMENT)} then
+                begin
+                    // WriteLn('ReCalcInvalidYPrims: CalcYPrim for ', Name, ' (normal)');
+                    CalcYPrim;
+                end;
             pElem := CktElements.Next;
         end;
     end;
 
+//    writeln('<<< Recalc Invalid Yprims');
 end;
 
 
@@ -135,6 +163,151 @@ begin
     end;
 end;
 
+function UpdateYMatrix(BuildOption: Integer; AllocateVI: Boolean): Boolean;
+var
+    IncrYprim: TCMatrix;
+    Norder: Integer;
+    pElem: TDSSCktElement;
+    CmatArray: pComplexArray;
+    error, n: Integer;
+    changedNodes: TNodeSet;
+    nodeIt: TNodeSet.TIterator;
+    
+    i, j, nref, inode, jnode: Integer;
+    skip: Boolean;
+    val: Complex;
+begin
+    changedNodes := TNodeSet.Create; //TODO: changedNodes.Free;
+    Result := False;
+    CmatArray := NIL;
+    IncrYprim := NIL;
+    
+    // Incremental Y update, only valid for BuildOption = WHOLEMATRIX.
+    //writeln('IncrCktElements is null? ', IncrCktElements = nil);
+    //writeln('Number of incremental elements: ', IncrCktElements.ListSize);
+    
+//    writeln('Analyzing incremental elements...');
+    pElem := ActiveCircuit.IncrCktElements.First;
+    while pElem <> NIL do with pElem do
+    begin
+        if (Enabled and (Yprim = NIL)) then 
+        begin
+            writeln('TODO: ABORT');
+        end;
+    
+        if (Enabled and (Yprim <> NIL)) then 
+        begin
+//            writeln('> Incremental update -- handling ', pElem.ClassName, '.', pElem.Name);
+            //writeln('CalcYPrim');
+            if IncrYprim <> NIL then
+            begin
+                IncrYprim.Free;
+                IncrYprim := NIL;
+            end;
+            
+            IncrYprim := TCmatrix.CreateMatrix(Yprim.order);
+            IncrYprim.CopyFrom(Yprim);
+            IncrYprim.Negate();
+            
+            CalcYPrim;
+            
+            if (Yprim = NIL) or (IncrYprim.order <> Yprim.order) then
+            begin
+                writeln('TODO: ABORT -- Orders differ?', (IncrYprim.order <> Yprim.order));
+            end;
+            
+            IncrYprim.AddFrom(YPrim);
+            for n := 1 to Yprim.order do
+            begin
+                if (NodeRef[n] <> 0) and (not IncrYprim.IsColRowZero(n)) then
+                    changedNodes.Insert(NodeRef[n]);
+            end;
+                
+//                // Retry with the full matrix instead
+//                ActiveCircuit.IncrCktElements.Clear;
+//                ActiveCircuit.Solution.SystemYChanged := True;
+//                writeln('ERROR: Aborting incremental update, running normal method (transformer, branch 2). ', 'CMatArray IS NIL');
+//                BuildYMatrix(BuildOption, AllocateVI);
+//                Exit;
+        end;
+        pElem := ActiveCircuit.IncrCktElements.Next;
+    end;
+    
+    if IncrYprim <> NIL then
+    begin
+        IncrYprim.Free;
+        IncrYprim := NIL;
+    end;
+    
+//    writeln('Changed nodes:', changedNodes.Size);
+    nodeIt := changedNodes.Min;
+    repeat
+//        writeln('>Zeroising row and column for ', nodeIt.Data);
+        //TODO: zeroise only the exact elements affected to make it faster
+        ZeroiseNode(ActiveCircuit.Solution.hYsystem, nodeIt.Data);
+    until not nodeIt.Next();
+    
+
+//    writeln('Checking all elements');
+    
+    pElem := ActiveCircuit.CktElements.First;
+    while pElem <> NIL do with pElem do
+    begin
+        if (not Enabled) or (Yprim = NIL) then
+        begin
+            pElem := ActiveCircuit.CktElements.Next;
+            continue;
+        end;
+    
+        skip := True;
+        for n := 1 to Yprim.order do
+        begin
+            nref := NodeRef[n];
+            if (nref <> 0) and (changedNodes.Find(nref) <> nil) then
+            begin
+//                WriteLn(pElem.ClassName, '.', pElem.Name, ' AFFECTS TARGET ELEMENTS! ', n, '->', nref);
+                skip := False;
+                break;
+            end;
+        end;
+    
+        if skip then
+        begin
+            pElem := ActiveCircuit.CktElements.Next;
+            continue;
+        end;
+            
+            
+        for i := 1 to Yprim.order do
+        begin
+            inode := NodeRef[i];
+            if inode = 0 then continue;
+            
+            skip := changedNodes.Find(inode) = nil;
+            for j := 1 to Yprim.order do
+            begin
+                jnode := NodeRef[j];
+                if jnode = 0 then continue;
+                
+                if (changedNodes.Find(jnode) = nil) and skip then
+                    continue;
+                    
+                val := Yprim.GetElement(i, j);
+                if (val.re = 0) and (val.im = 0) then continue;
+                
+                //writeln('IncrementMatrixElement: (', inode, ',', jnode, '): ', val.re, ', ', val.im);
+                IncrementMatrixElement(ActiveCircuit.Solution.hYsystem, inode, jnode, @val);
+            end;
+        end;
+        pElem := ActiveCircuit.CktElements.Next;
+    end;
+
+    ActiveCircuit.IncrCktElements.Clear;
+    Result := True;
+//    writeln('Incremental update finished.');
+//    writeln();
+end;
+
 procedure BuildYMatrix(BuildOption: Integer; AllocateVI: Boolean);
 
 {Builds designated Y matrix for system and allocates solution arrays}
@@ -144,16 +317,13 @@ var
     CmatArray: pComplexArray;
     pElem: TDSSCktElement;
     Incremental: Boolean;
-    IncrYprim: TCMatrix;
-    Norder: Integer;
-
+    c: Complex;
    //{****} FTrace: TextFile;
 begin
     Incremental := False;
   //{****} AssignFile(Ftrace, 'YmatrixTrace.txt');
   //{****} Rewrite(FTrace);
     CmatArray := NIL;
-    IncrYprim := NIL;
    // new function to log KLUSolve.DLL function calls
    // SetLogFile ('KLU_Log.txt', 1);
     with ActiveCircuit, ActiveCircuit.Solution do
@@ -168,7 +338,6 @@ begin
             ReProcessBusDefs;      // This changes the node references into the system Y matrix!!
 
         YMatrixSize := NumNodes;
-
 
         case BuildOption of
             WHOLEMATRIX:
@@ -189,11 +358,15 @@ begin
         end;
 
      // tune up the Yprims if necessary
-        if (FrequencyChanged) then
-            ReCalcAllYPrims
-        else
-            ReCalcInvalidYPrims;
-
+        if not Incremental then 
+        begin
+            if (FrequencyChanged) then
+                ReCalcAllYPrims
+            else if not Incremental then
+                ReCalcInvalidYPrims;
+        end;
+        
+        
         if SolutionAbort then
         begin
             DoSimpleMsg('Y matrix build aborted due to error in primitive Y calculations.', 11001);
@@ -241,75 +414,11 @@ begin
         end // if not Incremental
         else
         begin // if Incremental 
-            // Incremental Y update, only valid for BuildOption = WHOLEMATRIX.
-            pElem := IncrCktElements.First;
-            while pElem <> NIL do
-            begin
-                with pElem do
-                    if (Enabled) then 
-                    begin
-                        //writeln('> Incremental update -- handling ', pElem.Name);
-                        //writeln('CalcYPrim');
-                        CalcYPrim;
-                        if (PreviousYprim = NIL) or (Yprim = NIL) or (PreviousYprim.order <> Yprim.order) then
-                            CMatArray := NIL
-                        else
-                        begin
-                            IncrYprim := TCmatrix.CreateMatrix(Yprim.order);
-                            IncrYprim.CopyFrom(Yprim);
-                            IncrYprim.SubtractOther(PreviousYprim);
-                            CmatArray := IncrYprim.GetValuesArrayPtr(Norder);
-                            //writeln('IncrYprim created!');
-                        end;
-
-                        if CMatArray <> NIL then
-                        begin
-                            // Adds directly to the compressed matrix
-                            //writeln('AddPrimitiveMatrixCSC');
-                            if AddPrimitiveMatrixCSC(hY, Yorder, @NodeRef[1], @CMatArray[1]) < 1 then
-                            begin
-                                if IncrYprim <> NIL then
-                                begin
-                                    IncrYprim.Free;
-                                    IncrYprim := NIL;
-                                end;
-                                // Retry with the full matrix instead
-                                IncrCktElements.Clear;
-                                SystemYChanged := True;
-                                writeln('ERROR: Aborting incremental update, running normal method.');
-                                BuildYMatrix(BuildOption, AllocateVI);
-                                Exit;
-                            end;
-                            //writeln('AddPrimitiveMatrixCSC called sucessfully!');
-                        end
-                        else
-                        begin
-                            if IncrYprim <> NIL then
-                            begin
-                                IncrYprim.Free;
-                                IncrYprim := NIL;
-                            end;
-                            // Retry with the full matrix instead
-                            IncrCktElements.Clear;
-                            SystemYChanged := True;
-                            writeln('ERROR: Aborting incremental update, running normal method.');
-                            BuildYMatrix(BuildOption, AllocateVI);
-                            Exit;
-                        end;
-                        
-                        if IncrYprim <> NIL then
-                        begin
-                            IncrYprim.Free;
-                            IncrYprim := NIL;
-                        end;
-                    end;
-                pElem := IncrCktElements.Next;
-            end;
-            IncrCktElements.Clear;
+            if not UpdateYMatrix(BuildOption, AllocateVI) then
+                Exit;
         end;
         
-
-        
+       
      //{****} CloseFile(Ftrace);
      //{****} FireOffEditor(  'YmatrixTrace.txt');
 
@@ -352,6 +461,9 @@ begin
             RestoreNodeVfromVbus;
 
     end;
+
+//    GetMatrixElement(ActiveCircuit.Solution.hY, 5, 5, @c);
+//    writeln('BuildYMatrix: (4, 4) = ', c.re, ' +j', c.im);
 end;
 
 // leave the call to GetMatrixElement, but add more diagnostics
