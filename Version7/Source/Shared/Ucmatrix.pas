@@ -33,6 +33,9 @@ type
         constructor CreateMatrix(N: Integer);
         destructor Destroy; OVERRIDE;
         procedure Invert;
+        procedure Negate;
+        function IsZero: Boolean;
+        function IsColRowZero(n: Integer): Boolean;
         procedure Clear; inline; {Zero out matrix}
         procedure AddFrom(OtherMatrix: TcMatrix);
         procedure SubtractOther(OtherMatrix: TcMatrix);
@@ -107,6 +110,51 @@ begin
 end;
 
 {--------------------------------------------------------------------------}
+function TcMatrix.IsZero: Boolean; // This only check for exactly zero, no epsilon is used on purpose
+var 
+    i: integer;
+    v: pComplex;
+begin
+    Result := True;
+    v := @Values^[1];
+    for i := 1 to Norder * Norder do
+    begin
+        if (v^.re <> 0) or (v^.im <> 0) then
+        begin
+            Result := False;
+            Exit;
+        end;
+        inc(v);
+    end;
+end;
+{--------------------------------------------------------------------------}
+function TcMatrix.IsColRowZero(n: Integer): Boolean; // This only check for exactly zero, no epsilon is used on purpose
+var 
+    i, j: integer;
+    e: Complex;
+begin
+    Result := True;
+    
+    i := n;
+    
+    for j := 1 to Norder do
+    begin
+        e := Values^[((j - 1) * Norder + i)];
+        if (e.re <> 0) or (e.im <> 0) then
+        begin
+            Result := False;
+            Exit;
+        end;
+        
+        e := Values^[((i - 1) * Norder + j)];
+        if (e.re <> 0) or (e.im <> 0) then
+        begin
+            Result := False;
+            Exit;
+        end;
+    end;
+end;
+{--------------------------------------------------------------------------}
 procedure TcMatrix.MvMult(b, x: pComplexArray); inline;
 {$IFDEF DSS_CAPI_MVMULT}
 begin
@@ -149,6 +197,13 @@ end;
 // 
 // end;
 // 
+{--------------------------------------------------------------------------}
+procedure TcMatrix.Negate;
+var i: integer;
+begin
+    for i := 1 to Norder * Norder do
+        Values^[i] := Cnegate(Values^[i]);
+end;
 {--------------------------------------------------------------------------}
 procedure TcMatrix.Invert;
 type

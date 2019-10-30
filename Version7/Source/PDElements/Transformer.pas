@@ -657,7 +657,7 @@ DSS_CAPI_ALLOW_INCREMENTAL_Y := (GetEnvironmentVariable('DSS_CAPI_ALLOW_INCREMEN
                         // Mark this to incrementally update the matrix.
                         // If the matrix is already being rebuilt, there is 
                         // no point in doing this, just rebuild it as usual.
-                        writeln('Adding element to incremental list ', Name);
+                        /// writeln('Adding element to incremental list ', Name);
                         ActiveCircuit.IncrCktElements.Add(ActiveTransfObj) 
                     end
                     else
@@ -1344,19 +1344,6 @@ begin
     end
     else
     begin  {Same size as last time; just zero out to start over}
-        //writeln('>PreviousYPrim');
-    
-        // Yprim is already required to be not null
-        if (PreviousYPrim = NIL) then
-            PreviousYPrim := TcMatrix.CreateMatrix(Yorder)
-        else if (PreviousYPrim.Order <> Yorder) then
-        begin
-            PreviousYPrim.Free;
-            PreviousYPrim := TcMatrix.CreateMatrix(Yorder);
-        end;
-        PreviousYPrim.CopyFrom(Yprim);
-        //writeln('<PreviousYPrim');
-    
         YPrim_Series.Clear; // zero out YPrim
         YPrim_Shunt.Clear; // zero out YPrim
         Yprim.Clear;
@@ -1611,10 +1598,6 @@ begin
                     // Mark this to incrementally update the matrix.
                     // If the matrix is already being rebuilt, there is 
                     // no point in doing this, just rebuild it as usual.
-                    
-                    
-                    
-                    
                     // writeln('Adding element to incremental list ', Name);
                     ActiveCircuit.IncrCktElements.Add(Self) 
                 end
@@ -1623,8 +1606,8 @@ begin
                     //writeln('Cannot add element to incremental list: ', Name, '; YPrim is null?', YPrim = NIL);   
                     YPrimInvalid := TRUE;  // this property triggers setting SystemYChanged=true
                 end;
-                    
                 RecalcElementData;
+                    
             end;
         end;
 end;
@@ -2386,7 +2369,6 @@ var
     end;
 
 begin
-
     if ActiveCircuit.Solution.Frequency < 0.51 then
          {Build Yterminal for GIC ~dc simulation}
 
@@ -2512,6 +2494,8 @@ begin
 
      // Now make into terminal admittance matrix and correct for actual voltage ratings
      // Y_Terminal = AT * Y_onevolt * A  where V_onevolt = A * V_terminal
+
+        
 
         AT.Free;
 

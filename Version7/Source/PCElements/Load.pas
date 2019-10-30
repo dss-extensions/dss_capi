@@ -1461,7 +1461,6 @@ end;
 //----------------------------------------------------------------------------
 procedure TLoadObj.CalcYPrim;
 
-
 // If doing an analysis that requires the load to be modeled as an impedance
 // then put all in.
 
@@ -1486,7 +1485,7 @@ begin
     begin
         YPrim_Shunt.Clear;
         YPrim_Series.Clear;
-        // YPrim.Clear; -- YPrim is Yprint_Shunt for loads
+        // YPrim.Clear; -- YPrim is now Yprint_Shunt for loads
     end;
 
     // if ActiveCircuit.Solution.LoadModel = POWERFLOW then
