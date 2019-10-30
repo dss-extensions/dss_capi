@@ -267,25 +267,25 @@ type
     Panel5: TPanel;
     ResultPages: TPageControl;
     EditPages: TPageControl;
-    SummaryTab: TTabSheet;
-    ResultsTab: TTabSheet;
-    SummaryEdit: TRichEdit;
-    ResultsEdit: TRichEdit;
-    MessageEdit: TRichEdit;
-    Label1: TLabel;
-    PopupMenuScript: TPopupMenu;
-    ScriptDoMnu: TMenuItem;
-    ScriptSaveMnu: TMenuItem;
-    ScriptCloseMnu: TMenuItem;
-    ScriptDirMnu: TMenuItem;
-    ScriptOpenMnu: TMenuItem;
-    ScriptEditMnu: TMenuItem;
-    FontDialog1: TFontDialog;
-    N14: TMenuItem;
-    ScriptFontMnu: TMenuItem;
-    Summary1: TMenuItem;
-    LinkstoHelpFiles1: TMenuItem;
-    Timer1: TTimer;
+    SummaryTab        : TTabSheet;
+    ResultsTab        : TTabSheet;
+    SummaryEdit       : TRichEdit;
+    ResultsEdit       : TRichEdit;
+    MessageEdit       : TRichEdit;
+    Label1            : TLabel;
+    PopupMenuScript   : TPopupMenu;
+    ScriptDoMnu       : TMenuItem;
+    ScriptSaveMnu     : TMenuItem;
+    ScriptCloseMnu    : TMenuItem;
+    ScriptDirMnu      : TMenuItem;
+    ScriptOpenMnu     : TMenuItem;
+    ScriptEditMnu     : TMenuItem;
+    FontDialog1       : TFontDialog;
+    N14               : TMenuItem;
+    ScriptFontMnu     : TMenuItem;
+    Summary1          : TMenuItem;
+    LinkstoHelpFiles1 : TMenuItem;
+    Timer1            : TTimer;
 
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure DSSHelp1Click(Sender: TObject);
@@ -474,7 +474,8 @@ type
     { Private declarations }
     PlotOptionString  :String;
     SplashScr         : TSplashScreen;        // For hosting the splash screen
-    TimeOut   : Integer;
+    TimeOut           : Integer;
+    SpScrON           : Boolean;              // To check if the Splash Screen is ON
     Function MakeANewEditForm(const Cap:String):TScriptEdit;
     procedure UpdateCaptions;
 
@@ -508,7 +509,7 @@ Var
   SelectedMonitor :String;
 
 Const
-  MaxTimeOutValue = 6;  // the time in second that the splash screen will remain open
+  MaxTimeOutValue = 3;  // the time in second that the splash screen will remain open
 
 Function WinStateToInt(WindowState:TWindowState):Integer;
 Begin
@@ -579,27 +580,32 @@ procedure TControlPanel.FormClose(Sender: TObject;
 Var
   j :Integer;
 begin
-  // Main control panel
-  //   script windows numbered 1..ScriptCount
-  //   the main script window is #1 in the list
+  if Not SpScrON then
+  Begin
+    // Main control panel
+    //   script windows numbered 1..ScriptCount
+    //   the main script window is #1 in the list
 
-  DSS_Registry.Section := 'Panels';
-  DSS_Registry.ClearSection;
-  DSS_Registry.WriteString('MainWindow', Format(' %d, %d, %d, %d, %d',
-    [Top, Left, Height, Width, WinStateToInt(WindowState)]));
-  DSS_Registry.WriteInteger('ScriptCount', ScriptWindowList.Count);
+    DSS_Registry.Section := 'Panels';
+    DSS_Registry.ClearSection;
+    DSS_Registry.WriteString('MainWindow', Format(' %d, %d, %d, %d, %d',
+      [Top, Left, Height, Width, WinStateToInt(WindowState)]));
+    DSS_Registry.WriteInteger('ScriptCount', ScriptWindowList.Count);
 
-  For j := 1 to ScriptWindowList.Count Do Begin
-    ActiveScriptForm := TScriptEdit(ScriptWindowList.Items[j-1]);
-    WriteWindowRecord(j, ActiveScriptForm);
-  End;
+    For j := 1 to ScriptWindowList.Count Do Begin
+      ActiveScriptForm := TScriptEdit(ScriptWindowList.Items[j-1]);
+      WriteWindowRecord(j, ActiveScriptForm);
+    End;
 
-  {Write compile file combo}
-  DSS_Registry.Section := 'Compiled';
-  DSS_Registry.ClearSection;
-  DSS_Registry.WriteInteger('Count', CompileCombo.Items.Count);
-  For j := 0 to CompileCombo.Items.Count-1 Do
-    DSS_Registry.WriteString (Format ('Item%d', [j]), CompileCombo.Items[j]);
+    {Write compile file combo}
+    DSS_Registry.Section := 'Compiled';
+    DSS_Registry.ClearSection;
+    DSS_Registry.WriteInteger('Count', CompileCombo.Items.Count);
+    For j := 0 to CompileCombo.Items.Count-1 Do
+      DSS_Registry.WriteString (Format ('Item%d', [j]), CompileCombo.Items[j]);
+  End
+  else
+    Action  :=  caNone;
 end;
 
 procedure TControlPanel.DSSHelp1Click(Sender: TObject);
@@ -936,6 +942,17 @@ Var
   nScripts, nLines, nCompiled: Integer;
 
 begin
+
+  // Shows Splash Screen *******************************************************
+  TimeOut             :=  0;
+  SplashScr           :=  TSplashScreen.Create(nil);
+  SplashScr.Show;
+  SetWindowPos(SplashScr.Handle, HWND_TOPMOST, 0, 0, 0, 0,
+                     SWP_NoMove or SWP_NoSize);
+  Timer1.Enabled      := True;
+  SpScrON             :=  True;
+  //****************************************************************************
+
   ScriptWindowList := TObjectList.Create;
   ScriptWindowList.Clear;
   ScriptWindowList.OwnsObjects := FALSE;
@@ -1055,13 +1072,7 @@ begin
   UpdateClassBox;
   Edit_Result.Text := VersionString;
 
-  // Shows Splash Screen
-  TimeOut             :=  0;
-  SplashScr   :=  TSplashScreen.Create(nil);
-  SplashScr.Show;
-  SetWindowPos(SplashScr.Handle, HWND_TOPMOST, 0, 0, 0, 0,
-                     SWP_NoMove or SWP_NoSize);
-  Timer1.Enabled := True;
+
 
 end;
 
@@ -2000,6 +2011,7 @@ begin
     Timer1.Enabled := False;
     SplashScr.Close;
     SplashScr.Free;
+    SpScrON             :=  False;
   end;
 end;
 
