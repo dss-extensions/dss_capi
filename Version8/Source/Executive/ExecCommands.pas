@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 128;
+     NumExecCommands = 129;
 
 Var
 
@@ -176,6 +176,7 @@ Begin
      ExecCommand[126] := 'GISJSONRoute';
      ExecCommand[127] := 'WindowDistribLR';
      ExecCommand[128] := 'WindowDistribRL';
+     ExecCommand[129] := 'GISCoords';
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
                          'active object' + CRLF +
@@ -570,6 +571,11 @@ Begin
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
                          '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF;
+     CommandHelp[129] := 'Define x,y coordinates for buses using real GIS Latitude and Longitude values (decimal numbers).  Similar to BusCoords command. ' +
+                        'Execute after Solve command or MakeBusList command is executed so that bus lists are defined.' +
+                        'Reads coordinates from a CSV file with records of the form: busname, Latitude, Longitude.'+CRLF+CRLF+
+                        'Example: LatLongCoords [file=]xxxx.csv' +CRLF+CRLF+
+                        'Note: For using only if OpenDSS-GIS is locally installed.';
 End;
 
 //----------------------------------------------------------------------------
@@ -794,7 +800,7 @@ Begin
        55: CmdResult := DovoltagesCmd(TRUE);
        56: CmdResult := DoVarValuesCmd;
        57: CmdResult := DoVarNamesCmd;
-       58: CmdResult := DoBusCoordsCmd(FALSE);
+       58: CmdResult := DoBusCoordsCmd(FALSE, 0);
        59: With ActiveCircuit[ActiveActor] Do If BusNameRedefined Then ReprocessBusDefs(ActiveActor);
        60: CmdResult := DoMakePosSeq;
        61: CmdResult := DoReduceCmd;
@@ -838,7 +844,7 @@ Begin
        91: CmdResult := DoSetBusXYCmd;
        92: CmdResult := DoUpDateStorageCmd;
        93: Obfuscate;
-       94: CmdResult := DoBusCoordsCmd(TRUE);   // swaps X and Y
+       94: CmdResult := DoBusCoordsCmd(TRUE, 0);   // swaps X and Y
        95: CmdResult := DoBatchEditCmd;
        96: CmdResult := DoPstCalc;
        97: CmdResult := DoValVarCmd;
@@ -863,7 +869,15 @@ Begin
       121:  begin
               Parser[ActiveActor].NextParam;
               GlobalResult  :=  show_busGIS(Parser[ActiveActor].StrValue);
-            end
+            end;
+      122: GlobalResult  :=  Get_routeGIS();
+      123: GlobalResult  :=  Get_edgesGIS();
+      124: GlobalResult  :=  Get_distanceGIS();
+      125: GlobalResult  :=  Show_routeGIS();
+      126: GlobalResult  :=  Get_JSONrouteGIS();
+      127: GlobalResult  :=  WindowLR();
+      128: GlobalResult  :=  WindowRL();
+      129: CmdResult := DoBusCoordsCmd(FALSE, 1);   // GIS coordinates
      ELSE
        // Ignore excess parameters
      End;
