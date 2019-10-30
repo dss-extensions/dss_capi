@@ -36,10 +36,12 @@ TYPE
        Zsc,
        Ysc          :TCMatrix;
 
-       x,y,              // coordinates
-       kVBase,           // Base kV for each node to ground (0)
+       lat, long,         // GIS coords
+       x,y,               // coordinates
+       kVBase,            // Base kV for each node to ground (0)
        DistFromMeter       :Double;
 
+       GISCoordDefined,
        CoordDefined,
        BusChecked,
        Keep,
@@ -96,24 +98,29 @@ Begin
     Allocation := 3;
     Nodes := AllocMem(Sizeof(Nodes^[1])*Allocation);
     RefNo := AllocMem(Sizeof(RefNo^[1])*Allocation);
-    FNumNodesThisBus := 0;
-    Ysc              := Nil;
-    Zsc              := Nil;
-    VBus             := nil;
-    BusCurrent       := nil;
-    kVBase           := 0.0;  // Signify that it has not been set
-    x                := 0.0;
-    y                := 0.0;
-    DistFromMeter    := 0.0;
-    BusFltRate           := 0.0;  // accummulated failure rate
+    FNumNodesThisBus    := 0;
+    Ysc                 := Nil;
+    Zsc                 := Nil;
+    VBus                := nil;
+    BusCurrent          := nil;
+    kVBase              := 0.0;  // Signify that it has not been set
+    x                   := 0.0;
+    y                   := 0.0;
+    DistFromMeter       := 0.0;
+    BusFltRate          := 0.0;  // accummulated failure rate
     Bus_Int_Duration    := 0.0;
     BusCustInterrupts   := 0.0; // Accumulated Number of customer interruptions from this bus
     BusCustDurations    := 0.0; // Accumulated Customer outage durations
     BusTotalNumCustomers:= 0;
     BusTotalMiles       := 0.0;  // total length of line downstream
-    CoordDefined     := FALSE;
-    Keep             := FALSE;
-    IsRadialBus      := FALSE;
+
+    CoordDefined        := FALSE;
+    Keep                := FALSE;
+    IsRadialBus         := FALSE;
+    // GIS data
+    lat                 :=  0;
+    long                :=  0;
+    GISCoordDefined     :=  FALSE;
 End;
 
 destructor TDSSBus.Destroy;
