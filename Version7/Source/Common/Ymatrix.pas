@@ -50,7 +50,9 @@ uses
 
 
 type 
-    TNodeLess = TLess<integer>;
+    TCoordLess = TLess<QWord>;
+    TCoordSet = TSet<QWord, TCoordLess>;
+    TNodeLess = TLess<Integer>;
     TNodeSet = TSet<Integer, TNodeLess>;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -170,14 +172,16 @@ var
     pElem: TDSSCktElement;
     CmatArray: pComplexArray;
     error, n: Integer;
+    changedElements: TCoordSet;
     changedNodes: TNodeSet;
-    nodeIt: TNodeSet.TIterator;
+    coordIt: TCoordSet.TIterator;
     
     i, j, nref, inode, jnode: Integer;
-    skip: Boolean;
+    //skip: Boolean;
     val: Complex;
 begin
-    changedNodes := TNodeSet.Create; //TODO: changedNodes.Free;
+    changedElements := TCoordSet.Create; //TODO: changedElements.Free;
+    changedNodes := TNodeSet.Create;
     Result := False;
     CmatArray := NIL;
     IncrYprim := NIL;
@@ -217,10 +221,24 @@ begin
             end;
             
             IncrYprim.AddFrom(YPrim);
-            for n := 1 to Yprim.order do
+            for i := 1 to Yprim.order do
             begin
-                if (NodeRef[n] <> 0) and (not IncrYprim.IsColRowZero(n)) then
-                    changedNodes.Insert(NodeRef[n]);
+                inode := NodeRef[i];
+                if inode = 0 then continue;
+                for j := 1 to Yprim.order do
+                begin
+                    jnode := NodeRef[j];
+                    if jnode = 0 then continue;
+                    
+                    val := IncrYprim.GetElement(i, j);
+                    if (val.re <> 0) or (val.im <> 0) then
+                    begin
+                        changedNodes.Insert(inode);
+                        changedNodes.Insert(jnode);
+                        changedElements.Insert((QWord(inode) shl 32) or QWord(jnode));
+                        //writeln('!!!!', inode, '   ', jnode);
+                    end;
+                end;
             end;
                 
 //                // Retry with the full matrix instead
@@ -240,12 +258,12 @@ begin
     end;
     
 //    writeln('Changed nodes:', changedNodes.Size);
-    nodeIt := changedNodes.Min;
+    coordIt := changedElements.Min;
     repeat
-//        writeln('>Zeroising row and column for ', nodeIt.Data);
+        // writeln('>Zeroising row and column for ', (coordIt.Data shr 32), ',', coordIt.Data and $FFFFFFFF);
         //TODO: zeroise only the exact elements affected to make it faster
-        ZeroiseNode(ActiveCircuit.Solution.hYsystem, nodeIt.Data);
-    until not nodeIt.Next();
+        ZeroiseMatrixElement(ActiveCircuit.Solution.hYsystem, (coordIt.Data shr 32), coordIt.Data and $FFFFFFFF);
+    until not coordIt.Next();
     
 
 //    writeln('Checking all elements');
@@ -259,37 +277,20 @@ begin
             continue;
         end;
     
-        skip := True;
-        for n := 1 to Yprim.order do
-        begin
-            nref := NodeRef[n];
-            if (nref <> 0) and (changedNodes.Find(nref) <> nil) then
-            begin
-//                WriteLn(pElem.ClassName, '.', pElem.Name, ' AFFECTS TARGET ELEMENTS! ', n, '->', nref);
-                skip := False;
-                break;
-            end;
-        end;
-    
-        if skip then
-        begin
-            pElem := ActiveCircuit.CktElements.Next;
-            continue;
-        end;
-            
-            
         for i := 1 to Yprim.order do
         begin
             inode := NodeRef[i];
             if inode = 0 then continue;
+            if changedNodes.Find(inode) = NIL then 
+                // nothing changed for node "inode", we can skip it completely
+                continue; 
             
-            skip := changedNodes.Find(inode) = nil;
             for j := 1 to Yprim.order do
             begin
                 jnode := NodeRef[j];
                 if jnode = 0 then continue;
                 
-                if (changedNodes.Find(jnode) = nil) and skip then
+                if (changedElements.Find((QWord(inode) shl 32) or (QWord(jnode))) = nil) then
                     continue;
                     
                 val := Yprim.GetElement(i, j);
