@@ -553,7 +553,7 @@ begin
   finally
     inputfile.Free;
   end;
-  writeln('Done! This is where we read FNCS publication requests from: ' + fname);
+  writeln('Done reading FNCS publication requests from: ' + fname);
 //  DumpFNCSTopics;
 end;
 
@@ -643,9 +643,9 @@ begin
 			if CompareText (key, 'command') = 0 then begin
 				for ival := 0 to nvalues-1 do begin
 					value := values[ival];
-					writeln(Format('  FNCSTimeRequest command %s at %u', [value, time_granted]));
+//					writeln(Format('  FNCSTimeRequest command %s at %u', [value, time_granted]));
 					DSSExecutive.Command := value;
-					fncs_publish('fncs_command', value);
+//					fncs_publish('fncs_command', value);
 				end;
 			end else if Pos ('#load', key) > 0 then begin
 				value := values[0];
@@ -694,7 +694,7 @@ begin
 							value := values[ival];
 							writeln(Format('FNCS command %s at %u', [value, time_granted]));
 							DSSExecutive.Command := value;
-							fncs_publish ('fncs_command', value);
+//							fncs_publish ('fncs_command', value);
 						end;
 					end else if Pos ('#load', key) > 0 then begin
 						value := values[0];
