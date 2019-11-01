@@ -110,6 +110,7 @@ interface
          FUNCTION DoRephaseCmd:Integer;
          FUNCTION DoSetBusXYCmd:Integer;
          FUNCTION DoUpdateStorageCmd:Integer;
+         FUNCTION DoUpdateStorage2Cmd:Integer;
          FUNCTION DoPstCalc:Integer;
          FUNCTION DoValVarCmd:Integer;
          FUNCTION DoLambdaCalcs:Integer;
@@ -3826,6 +3827,13 @@ FUNCTION DoUpdateStorageCmd:Integer;
 
 Begin
        StorageClass[ActiveActor].UpdateAll(ActiveActor);
+       Result := 0;
+End;
+
+FUNCTION DoUpdateStorage2Cmd:Integer;
+
+Begin
+       Storage2Class[ActiveActor].UpdateAll(ActiveActor);
        Result := 0;
 End;
 

@@ -137,6 +137,7 @@ TYPE
           EnergyMeters,
           Generators,
           StorageElements,
+          Storage2Elements,
           PVSystems,
           PVSystems2,
           Substations,
@@ -284,6 +285,7 @@ TYPE
               MarkPVSystems    :Boolean;
               MarkPVSystems2   :Boolean;
               MarkStorage      :Boolean;
+              MarkStorage2     :Boolean;
               MarkFuses        :Boolean;
               MarkReclosers    :Boolean;
               MarkRelays       :Boolean;
@@ -410,6 +412,7 @@ BEGIN
      Sensors         := TPointerList.Create(5);
      Generators      := TPointerList.Create(5);
      StorageElements := TPointerList.Create(5);
+     Storage2Elements := TPointerList.Create(5);
      PVSystems       := TPointerList.Create(5);
      PVSystems2      := TPointerList.Create(5);
      Feeders         := TPointerList.Create(10);
@@ -496,6 +499,7 @@ BEGIN
      MarkPVSystems    := FALSE;
      MarkPVSystems2   := FALSE;
      MarkStorage      := FALSE;
+     MarkStorage2     := FALSE;
      MarkFuses        := FALSE;
      MarkReclosers    := FALSE;
 
@@ -620,6 +624,7 @@ BEGIN
      Sensors.Free;
      Generators.Free;
      StorageElements.Free;
+     Storage2Elements.Free;
      PVSystems.Free;
      PVSystems2.Free;
      Feeders.Free;
@@ -1573,6 +1578,7 @@ BEGIN
        FEEDER_ELEMENT :Feeders.Add(ActiveCktElement);
 
        STORAGE_ELEMENT:StorageElements.Add(ActiveCktElement);
+       STORAGE2_ELEMENT:Storage2Elements.Add(ActiveCktElement);
        PVSYSTEM_ELEMENT:PVSystems.Add(ActiveCktElement);
        PVSYSTEM2_ELEMENT:PVSystems2.Add(ActiveCktElement);
    END;

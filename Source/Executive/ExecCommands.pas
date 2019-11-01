@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 129;
+     NumExecCommands = 130;
 
 Var
 
@@ -177,6 +177,7 @@ Begin
      ExecCommand[127] := 'WindowDistribLR';
      ExecCommand[128] := 'WindowDistribRL';
      ExecCommand[129] := 'GISCoords';
+     ExecCommand[130] := 'UpdateStorage2';
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
                          'active object' + CRLF +
@@ -576,6 +577,7 @@ Begin
                         'Reads coordinates from a CSV file with records of the form: busname, Latitude, Longitude.'+CRLF+CRLF+
                         'Example: LatLongCoords [file=]xxxx.csv' +CRLF+CRLF+
                         'Note: For using only if OpenDSS-GIS is locally installed.';
+     CommandHelp[130] := 'Update Storage2 elements based on present solution and time interval. ';
 End;
 
 //----------------------------------------------------------------------------
@@ -878,6 +880,7 @@ Begin
       127: GlobalResult  :=  WindowLR();
       128: GlobalResult  :=  WindowRL();
       129: CmdResult := DoBusCoordsCmd(FALSE, 1);   // GIS coordinates
+      130: CmdResult := DoUpDateStorage2Cmd;
      ELSE
        // Ignore excess parameters
      End;
