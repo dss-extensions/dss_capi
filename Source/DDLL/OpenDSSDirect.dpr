@@ -48,6 +48,7 @@ uses
   ExpControl in '..\Controls\ExpControl.pas',
   GenDispatcher in '..\Controls\GenDispatcher.pas',
   InvControl in '..\Controls\InvControl.pas',
+  InvControl2 in '..\Controls\InvControl2.pas',
   Recloser in '..\Controls\Recloser.pas',
   RegControl in '..\Controls\RegControl.pas',
   Relay in '..\Controls\Relay.pas',
@@ -121,7 +122,9 @@ uses
   PVsystem2 in '..\PCElements\PVsystem2.pas',
   PVSystemUserModel in '..\PCElements\PVSystemUserModel.pas',
   Storage in '..\PCElements\Storage.pas',
+  Storage2 in '..\PCElements\Storage2.pas',
   StorageVars in '..\PCElements\StorageVars.pas',
+  Storage2Vars in '..\PCElements\Storage2Vars.pas',
   StoreUserModel in '..\PCElements\StoreUserModel.pas',
   UPFC in '..\PCElements\UPFC.pas',
   VSConverter in '..\PCElements\VSConverter.pas',
@@ -211,7 +214,10 @@ uses
   LD_fm_infos in '..\Meters\LD_fm_infos.pas',
   VLNodeVars in '..\Meters\VLNodeVars.pas',
   Generic5OrderMach in '..\PCElements\Generic5OrderMach.pas',
-  DGICSources in 'DGICSources.pas';
+  DGICSources in 'DGICSources.pas',
+  Splash_Screen in '..\Forms\Splash_Screen.pas' {SplashScreen},
+  djson in '..\Common\djson.pas',
+  GISCommands in '..\GISCommands\GISCommands.pas';
 
 //**************************end of the functions*************************************
 exports

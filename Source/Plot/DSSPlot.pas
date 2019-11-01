@@ -67,6 +67,7 @@ Type
       procedure MarkThePVSystems;
       procedure MarkThePVSystems2;
       procedure MarkTheStorage;
+      procedure MarkTheStorage2;
       procedure MarkTheFuses;
       procedure MarkTheReclosers;
       procedure MarkTheRelays;
@@ -201,6 +202,7 @@ Uses DSSGraph,
    PVSystem,
    PVSystem2,
    Storage,
+   Storage2,
    RegControl,
    Fuse,
    Recloser,
@@ -2991,6 +2993,7 @@ begin
      If ActiveCircuit[ActiveActor].MarkPVSystems    Then MarkThePVSystems;
      If ActiveCircuit[ActiveActor].MarkPVSystems2   Then MarkThePVSystems2;
      If ActiveCircuit[ActiveActor].MarkStorage      Then MarkTheStorage;
+     If ActiveCircuit[ActiveActor].MarkStorage2     Then MarkTheStorage2;
      If ActiveCircuit[ActiveActor].MarkFuses        Then MarkTheFuses;
      If ActiveCircuit[ActiveActor].MarkReclosers    Then MarkTheReclosers;
      If ActiveCircuit[ActiveActor].MarkRelays       Then MarkTheRelays;
@@ -3227,6 +3230,32 @@ begin
             End;
          End;
       pStorage := ActiveCircuit[ActiveActor].StorageElements.Next;
+   End;
+end;
+
+procedure TDSSPlot.MarkTheStorage2;
+Var
+     pStorage2:TStorage2Obj;
+     BusIdx: Integer;
+     MyBus : TDSSBus;
+
+begin
+   pStorage2 := ActiveCircuit[ActiveActor].Storage2Elements.first;
+   While pStorage2 <> Nil Do
+   Begin
+      If pStorage2.Enabled Then
+         Begin
+            BusIdx := pStorage2.Terminals^[1].BusRef;
+            If BusIdx > 0 Then
+            With ActiveCircuit[ActiveActor] Do  Begin
+               MyBus :=  Buses^[BusIdx];
+               If MyBus.CoordDefined Then
+               Begin
+                  AddNewMarker(MyBus.X, MyBus.y , clRed, StoreMarkerCode,StoreMarkerSize);
+               End;
+            End;
+         End;
+      pStorage2 := ActiveCircuit[ActiveActor].Storage2Elements.Next;
    End;
 end;
 
