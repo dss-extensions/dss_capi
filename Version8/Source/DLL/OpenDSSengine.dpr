@@ -150,6 +150,7 @@ uses
   ImplDSSElement in 'ImplDSSElement.pas' {DSSElement: CoClass},
   ImplActiveClass in 'ImplActiveClass.pas' {ActiveClass: CoClass},
   Storage in '..\PCElements\Storage.pas',
+  Storage2 in '..\PCElements\Storage2.pas',
   StoreUserModel in '..\PCElements\StoreUserModel.pas',
   StorageController in '..\Controls\StorageController.pas',
   LineGeometry in '..\General\LineGeometry.pas',
@@ -187,9 +188,11 @@ uses
   DSSGraph in '..\Plot\DSSGraph.pas',
   GeneratorVars in '..\PCElements\GeneratorVars.pas',
   StorageVars in '..\PCElements\StorageVars.pas',
+  Storage2Vars in '..\PCElements\Storage2Vars.pas',
   CapControlVars in '..\Controls\CapControlVars.pas',
   CapUserControl in '..\Controls\CapUserControl.pas',
   InvControl in '..\Controls\InvControl.pas',
+  InvControl2 in '..\Controls\InvControl2.pas',
   GICTransformer in '..\PDElements\GICTransformer.pas',
   ImplXYCurves in 'ImplXYCurves.pas' {XYCurves: CoClass},
   ImplPDElements in 'ImplPDElements.pas' {PDElements: CoClass},
@@ -227,7 +230,10 @@ uses
   VLNodeVars in '..\Meters\VLNodeVars.pas',
   Generic5OrderMach in '..\PCElements\Generic5OrderMach.pas',
   ImplGICSources in 'ImplGICSources.pas',
-  ImplReduce in 'ImplReduce.pas';
+  ImplReduce in 'ImplReduce.pas',
+  Splash_Screen in '..\Forms\Splash_Screen.pas' {SplashScreen},
+  GISCommands in '..\GISCommands\GISCommands.pas',
+  djson in '..\Common\djson.pas';
 
 exports
   DllGetClassObject,

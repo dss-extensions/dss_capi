@@ -842,6 +842,7 @@ Begin
       // Reset Generator Objects, too
       GeneratorClass.ResetRegistersAll(ActorID);
       StorageClass[ActorID].ResetRegistersAll;
+      Storage2Class[ActorID].ResetRegistersAll;
       PVSystemClass[ActorID].ResetRegistersAll;
       PVSystem2Class[ActorID].ResetRegistersAll;
 
@@ -877,6 +878,7 @@ Begin
       // Sample Generator ans Storage Objects, too
       GeneratorClass.SampleAll(ActorID);
       StorageClass[ActorID].SampleAll(ActorID);  // samples energymeter part of storage elements (not update)
+      Storage2Class[ActorID].SampleAll(ActorID);
       PVSystemClass[ActorID].SampleAll(ActorID);
       PVSystem2Class[ActorID].SampleAll(ActorID);
 
@@ -1827,6 +1829,7 @@ Begin
                 OR (PCElementType = PVSYSTEM_ELEMENT)
                 OR (PCElementType = PVSYSTEM2_ELEMENT)
                 OR (PCElementType = STORAGE_ELEMENT)
+                OR (PCElementType = STORAGE2_ELEMENT)
                 OR (PCElementType = CAP_ELEMENT)  // Capacitor and Reactor put on the PC list if IsShunt=TRUE
                 OR (PCElementType = REACTOR_ELEMENT) Then Begin
                       BranchList.NewObject      := pPCelem; // This adds element to the Shunt list in CktTree
