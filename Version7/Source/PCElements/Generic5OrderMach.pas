@@ -277,6 +277,7 @@ type
         //Procedure Get_Bii;
         procedure CalGradient;
 //        Procedure CalcDQDV;
+        procedure GetInjCurrents(Curr: pComplexArray);
     PROTECTED
 
         {A couple of virtual procedures you can override}
@@ -319,7 +320,6 @@ type
         procedure UpdateAlpha_qi; // \alpha_qi := Q_DG/Qmax;
 
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
 
           // State variable management functions, if any
         // You can omit these if your PC element model is not using these

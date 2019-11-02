@@ -147,8 +147,6 @@ type
 
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
-
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
@@ -821,14 +819,6 @@ begin
     for i := 1 to Fnconds do
         Curr^[i] := CZERO;
 
-end;
-
-procedure TRegControlObj.GetInjCurrents(Curr: pComplexArray);
-var
-    i: Integer;
-begin
-    for i := 1 to Fnconds do
-        Curr^[i] := cZero;
 end;
 
 {--------------------------------------------------------------------}

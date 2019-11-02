@@ -81,7 +81,6 @@ type
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model  - N/A
 
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
@@ -466,23 +465,6 @@ begin
 
 end;
 
-
-procedure TFeederObj.GetInjCurrents(Curr: pComplexArray);
-
-{Fill Up an array of injection currents}
-
-{Only thing this is used for is for GetCurrents.  Ignore for Feeder}
-
-
-begin
-
-    with ActiveCircuit.solution do
-    begin
-
-         {**** Do Nothing!}
-
-    end;
-end;
 
 procedure TFeederObj.DumpProperties(var F: TextFile; Complete: Boolean);
 

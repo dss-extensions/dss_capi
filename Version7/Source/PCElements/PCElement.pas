@@ -47,7 +47,6 @@ type
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present values of terminal
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE; // Get present values of terminal
         procedure ComputeIterminal; OVERRIDE;
         function InjCurrents: Integer; OVERRIDE;
         procedure CalcYPrimContribution(Curr: pComplexArray);
@@ -112,12 +111,6 @@ begin
     with ActiveCircuit.Solution do
         for i := 1 to Yorder do
             Caccum(Currents^[NodeRef^[i]], InjCurrent^[i]);
-end;
-
-procedure TPCElement.GetInjCurrents(Curr: pComplexArray);
-begin
-    DoErrorMsg('PCElement.InjCurrents', ('Improper call to GetInjCurrents for Element: ' + Name + '.'),
-        'Called PCELEMENT class virtual function instead of actual.', 640)
 end;
 
 //= = =  = = = = = = = = = = = = = = = = = = = = = = = = = = = =

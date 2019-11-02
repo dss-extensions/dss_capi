@@ -57,6 +57,7 @@ type
 
         procedure GetVterminalForSource;
         function Compute_VLine: Double;
+        procedure GetInjCurrents(Curr: pComplexArray);
     PUBLIC
 
         ENorth,
@@ -77,7 +78,6 @@ type
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model
 
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
         procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;

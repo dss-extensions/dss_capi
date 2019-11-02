@@ -279,7 +279,6 @@ type
         procedure CalcYPrim; OVERRIDE;
 
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
         function NumVariables: Integer; OVERRIDE;
         procedure GetAllVariables(States: pDoubleArray); OVERRIDE;
         function Get_Variable(i: Integer): Double; OVERRIDE;
@@ -2379,35 +2378,6 @@ begin
         Result := inherited InjCurrents;
     end;
 end;
-
-// ===========================================================================================
-procedure TPVsystemObj.GetInjCurrents(Curr: pComplexArray);
-
-// Gives the currents for the last solution performed
-
-// Do not call SetNominal, as that may change the load values
-
-var
-    i: Integer;
-
-begin
-
-    CalcInjCurrentArray;  // Difference between currents in YPrim and total current
-
-    try
-       // Copy into buffer array
-        for i := 1 to Yorder do
-            Curr^[i] := InjCurrent^[i];
-
-    except
-        ON E: Exception do
-            DoErrorMsg('PVSystem Object: "' + Name + '" in GetInjCurrents FUNCTION.',
-                E.Message,
-                'Current buffer not big enough.', 568);
-    end;
-
-end;
-
 
 // ===========================================================================================
 procedure TPVsystemObj.ResetRegisters;

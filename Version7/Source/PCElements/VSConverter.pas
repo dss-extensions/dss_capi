@@ -54,6 +54,7 @@ type
         Fmode: Integer;
         FNdc: Integer;
         LastCurrents: pComplexArray; // state memory for GetInjCurrents
+        procedure GetInjCurrents(Curr: pComplexArray);
     PUBLIC
         constructor Create(ParClass: TDSSClass; const FaultName: String);
         destructor Destroy; OVERRIDE;
@@ -63,7 +64,6 @@ type
 
       // these three functions make it a PCElement
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure MakePosSequence; OVERRIDE;

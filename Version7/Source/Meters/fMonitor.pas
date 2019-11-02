@@ -199,7 +199,6 @@ TYPE
        //       Procedure TranslateToCSV(Show:Boolean);
 
        Procedure GetCurrents(Curr: pComplexArray);                Override; // Get present value of terminal Curr
-       Procedure GetInjCurrents(Curr: pComplexArray);             Override;   // Returns Injextion currents
        PROCEDURE InitPropertyValues(ArrayOffset:Integer);         Override;
        Procedure DumpProperties(Var F:TextFile; Complete:Boolean);Override;
        function  Get_FileName: String;
@@ -1878,12 +1877,6 @@ Begin
 
   For i := 1 to Fnconds Do Curr^[i] := CZERO;
 
-End;
-
-Procedure TFMonitorObj.GetInjCurrents(Curr: pComplexArray);
-Var i:Integer;
-Begin
-     FOR i := 1 to Fnconds DO Curr^[i] := CZERO;
 End;
 
 {--------------------------------------------------------------------------}

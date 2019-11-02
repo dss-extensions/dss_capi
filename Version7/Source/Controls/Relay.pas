@@ -171,8 +171,6 @@ type
 
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
-
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
         procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
@@ -790,19 +788,7 @@ begin
 end;
 
 {--------------------------------------------------------------------------}
-
-procedure TRelayObj.GetInjCurrents(Curr: pComplexArray);
-var
-    i: Integer;
-begin
-    for i := 1 to Fnconds do
-        Curr^[i] := CZERO;
-end;
-
-{--------------------------------------------------------------------------}
 procedure TRelayObj.DoPendingAction(const Code, ProxyHdl: Integer);
-
-
 begin
     with   ControlledElement do
     begin

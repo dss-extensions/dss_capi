@@ -125,7 +125,6 @@ type
         procedure ComputeVterminal;
         procedure ZeroITerminal;
         procedure GetCurrents(Curr: pComplexArray); VIRTUAL; //Get present value of terminal Curr for reports
-        procedure GetInjCurrents(Curr: pComplexArray); VIRTUAL;   // Returns Injextion currents
         function InjCurrents: Integer; VIRTUAL; // Applies to PC Elements Puts straight into Solution Array
 
         function GetBus(i: Integer): String;  // Get bus name by index
@@ -544,14 +543,6 @@ end;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-procedure TDSSCktElement.GetInjCurrents(Curr: pComplexArray);
-
-begin
-
-    DoErrorMsg('Something is Wrong.  Got to base CktElement GetInjCurrents for Object:' + CRLF + DSSClassName + '.' + Name, '****',
-        'Should not be able to get here. Probable Programming Error.', 752);
-
-end;
 
 procedure TDSSCktElement.GetLosses(var TotalLosses, LoadLosses,
     NoLoadLosses: Complex);

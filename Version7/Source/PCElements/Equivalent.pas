@@ -60,6 +60,7 @@ type
         procedure ReallocRX;
         procedure ParseDblMatrix(Mat: pDoubleArray);
         function DoTerminalsDef(const N: Integer): Integer;
+        procedure GetInjCurrents(Curr: pComplexArray);
 
     PUBLIC
         Z: TCmatrix;  // Base Frequency Series Z matrix
@@ -72,7 +73,6 @@ type
         procedure CalcYPrim; OVERRIDE;
 
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model

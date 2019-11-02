@@ -95,14 +95,10 @@ type
         procedure CalcYPrim; OVERRIDE; // Always Zero for a VVCControl
 
         procedure Sample; OVERRIDE; // Sample control quantities and set action times in Control Queue
-        procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;
-    // Do the action that is pending from last sample
+        procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE; // Do the action that is pending from last sample
         procedure Reset; OVERRIDE; // Reset to initial defined state
 
-        procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
-    // Get present value of terminal Curr
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
-    // Returns Injextion currents
+        procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
 
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
         procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
@@ -567,15 +563,6 @@ begin
         Curr^[i] := CZERO;
 
 end;
-
-procedure TVVControlObj.GetInjCurrents(Curr: pComplexArray);
-var
-    i: Integer;
-begin
-    for i := 1 to Fnconds do
-        Curr^[i] := CZERO;
-end;
-
 { -------------------------------------------------------------------------- }
 procedure TVVControlObj.DumpProperties(var F: TextFile; Complete: Boolean);
 

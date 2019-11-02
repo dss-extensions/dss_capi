@@ -84,6 +84,7 @@ type
 
         procedure GetVterminalForSource;
         function Compute_VLine: Double;
+        procedure GetInjCurrents(Curr: pComplexArray);
     PUBLIC
         Z: TCmatrix;  // Base Frequency Series Z matrix
         Zinv: TCMatrix;
@@ -96,7 +97,6 @@ type
         procedure CalcYPrim; OVERRIDE;
 
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure MakePosSequence; OVERRIDE;  // Make a positive Sequence Model

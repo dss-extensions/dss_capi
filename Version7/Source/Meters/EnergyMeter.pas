@@ -357,8 +357,6 @@ type
         procedure RecalcElementData; OVERRIDE;
         procedure CalcYPrim; OVERRIDE;
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; //Get present value of terminal Curr
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
-
         function CheckBranchList(code: Integer): Boolean;
         procedure ResetRegisters;
         procedure TakeSample; OVERRIDE;
@@ -2161,17 +2159,6 @@ end;
 
 {--------------------------------------------------------------------------}
 procedure TEnergyMeterObj.GetCurrents(Curr: pComplexArray);  //Get present value of terminal Curr FOR reports
-
-var
-    i: Integer;
-
-begin
-    for i := 1 to Fnconds do
-        Curr^[i] := CZERO;
-end;
-
-{--------------------------------------------------------------------------}
-procedure TEnergyMeterObj.GetInjCurrents(Curr: pComplexArray);
 
 var
     i: Integer;

@@ -104,8 +104,6 @@ type
 
 
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present value of terminal Curr
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;   // Returns Injextion currents
-
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
         procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
 
@@ -799,15 +797,6 @@ begin
     for i := 1 to Fnconds do
         Curr^[i] := CZERO;
 
-end;
-
-procedure TCapControlObj.GetInjCurrents(Curr: pComplexArray);
-var
-    i: Integer;
-
-begin
-    for i := 1 to Fnconds do
-        Curr^[i] := CZERO;
 end;
 
 {--------------------------------------------------------------------------}

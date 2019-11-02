@@ -222,8 +222,6 @@ type
         // Inj currents are the difference between the desired total terminal currents and the
         // currents that result from the linear admittance matrix of the element
         function InjCurrents: Integer; OVERRIDE;
-        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
-
           // State variable management functions, if any
         // You can omit these if your PC element model is not using these
         // Default behavior is to basically do nothing
@@ -1730,36 +1728,6 @@ begin
         ShapeFactor := CDOUBLEONE;  // Defaults to no variation
 
 end;
-
-// - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-procedure TIndMach012Obj.GetInjCurrents(Curr: pComplexArray);
-//----------------------------------------------------------------------------
-
-// Gets the currents for the last solution performed
-
-// Do not call anything that may change the basic element values from the last solution
-
-var
-    i: Integer;
-
-begin
-
-    CalcInjCurrentArray;  // Difference between currents in YPrim and total current
-
-    try    // an exception here generally means an array boundary overrun
-   // Copy into buffer array
-        for i := 1 to Yorder do
-            Curr^[i] := InjCurrent^[i];
-
-    except
-        ON E: Exception do
-            DoErrorMsg('IndMach012 Object: "' + Name + '" in GetInjCurrents function.',
-                E.Message,
-                'Current buffer not big enough.', 568);
-    end;
-
-end;
-//= = =  = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 procedure TIndMach012Obj.DumpProperties(var F: TextFile; Complete: Boolean);
