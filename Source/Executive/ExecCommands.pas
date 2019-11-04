@@ -877,8 +877,24 @@ Begin
       124: GlobalResult  :=  Get_distanceGIS();
       125: GlobalResult  :=  Show_routeGIS();
       126: GlobalResult  :=  Get_JSONrouteGIS();
-      127: GlobalResult  :=  WindowLR();
-      128: GlobalResult  :=  WindowRL();
+      127: begin
+            if Not isDLL then
+            Begin
+              GlobalResult  := WindowLR();
+              ControlPanel.ResizeWindow(0);
+            end
+            else
+              GlobalResult  :=  'Avaiable only for the EXE interface'
+           End;
+      128: Begin
+            if Not IsDLL then
+            begin
+              GlobalResult  :=  WindowRL();
+              ControlPanel.ResizeWindow(1);
+            end
+            else
+              GlobalResult  :=  'Avaiable only for the EXE interface'
+           End;
       129: CmdResult := DoBusCoordsCmd(FALSE, 1);   // GIS coordinates
       130: CmdResult := DoUpDateStorage2Cmd;
      ELSE
