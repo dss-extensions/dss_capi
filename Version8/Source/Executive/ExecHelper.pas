@@ -2590,7 +2590,7 @@ Begin
                    NextParam;  BusName := StrValue;
                    iB := ActiveCircuit[ActiveActor].Buslist.Find(BusName);
                    If iB >0 Then  Begin
-                       With ActiveCircuit[ActiveActor].Buses^[iB] Do Begin     // Returns TBus object
+                    With ActiveCircuit[ActiveActor].Buses^[iB] Do Begin     // Returns TBus object
                         if CoordType = 0 then                                   // Standard buscoords
                         Begin
                           NextParam;  If SwapXY Then y := DblValue else x := DblValue;
@@ -2603,7 +2603,7 @@ Begin
                           NextParam;  long  := DblValue;
                           GISCoorddefined   :=  TRUE;
                         End;
-                       End;
+                    End;
                    End;
               End;
               {Else just ignore a bus that's not in the circuit}

@@ -490,6 +490,7 @@ type
     Procedure UpdateElementBox;
     Procedure MakeBaseClassBox;
     Procedure PopulateClassList(BaseClass: WORD);
+    Procedure ResizeWindow(LR   : Integer);
   end;
 
 
@@ -2414,6 +2415,23 @@ begin
       End
 
 end;
+
+Procedure TControlPanel.ResizeWindow(LR   : Integer);
+Begin
+  if LR = 0 then     // align left, half of the screen
+  Begin
+    Left    :=  0;
+    Width   :=  Screen.Width div 2;
+  End
+  else              // align to the right of the screen
+  Begin
+    Left    :=  Screen.Width div 2;
+    Width   :=  Screen.Width;
+  End;
+
+  Top     :=  0;
+  Height  :=  Screen.Height - 40;
+End;
 
 procedure TControlPanel.PopUp1ChDirClick(Sender: TObject);
 begin

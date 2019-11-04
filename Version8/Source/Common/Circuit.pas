@@ -1647,6 +1647,9 @@ Begin
                x       := pBus.x;
                Y       := pBus.y;
                CoordDefined := pBus.CoordDefined;
+               lat        := pBus.lat;
+               long       := pBus.long;
+               GISCoordDefined := pBus.GISCoordDefined;
                Keep    := pBus.Keep;
                {Restore Voltages in new bus def that existed in old bus def}
                If assigned(pBus.VBus) Then Begin
