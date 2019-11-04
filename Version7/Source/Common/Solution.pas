@@ -100,7 +100,6 @@ type
         dV: pNodeVArray;   // Array of delta V for Newton iteration
         FFrequency: Double;
 
-        function Converged: Boolean;
         function OK_for_Dynamics(const Value: TSolveMode): Boolean;
         function OK_for_Harmonics(const Value: TSolveMode): Boolean;
 
@@ -108,7 +107,6 @@ type
         procedure DoNewtonSolution;
         procedure DoNormalSolution;
 //       PROCEDURE GetMachineInjCurrents;
-        procedure SetGeneratordQdV;
         procedure SumAllCurrents;
         procedure Set_Frequency(const Value: Double);
         procedure Set_Mode(const Value: TSolveMode);
@@ -130,7 +128,7 @@ type
         DynamicsAllowed: Boolean;
         DynaVars: TDynamicsRec;
         ErrorSaved: pDoubleArray;
-        FirstIteration: Boolean;
+        // FirstIteration: Boolean; -- unused
         FrequencyChanged: Boolean;  // Flag set to true if something has altered the frequency
         Fyear: Integer;
         Harmonic: Double;
@@ -207,9 +205,11 @@ type
         constructor Create(ParClass: TDSSClass; const solutionname: String);
         destructor Destroy; OVERRIDE;
 
+        function Converged: Boolean;
         procedure ZeroAuxCurrents;
         function SolveZeroLoadSnapShot: Integer;
         procedure DoPFLOWsolution;
+        procedure SetGeneratordQdV;
 
         procedure Solve;                // Main Solution dispatch
         procedure SnapShotInit;
@@ -419,7 +419,7 @@ begin
 
     FrequencyChanged := TRUE;  // Force Building of YPrim matrices
     DoAllHarmonics := TRUE;
-    FirstIteration := TRUE;
+    // FirstIteration := TRUE;
     DynamicsAllowed := FALSE;
     SystemYChanged := TRUE;
     SeriesYInvalid := TRUE;
@@ -623,7 +623,7 @@ begin
 
         VMag := Cabs(NodeV^[i]);
 
-    { If base specified, use it; otherwise go on present magnitude  }
+        { If base specified, use it; otherwise go on present magnitude  }
         if NodeVbase^[i] > 0.0 then
             ErrorSaved^[i] := Abs(Vmag - VmagSaved^[i]) / NodeVbase^[i]
         else
