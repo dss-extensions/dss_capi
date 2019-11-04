@@ -215,8 +215,8 @@ uses
   VLNodeVars in '..\Meters\VLNodeVars.pas',
   Generic5OrderMach in '..\PCElements\Generic5OrderMach.pas',
   DGICSources in 'DGICSources.pas',
-  Splash_Screen in '..\Forms\Splash_Screen.pas' {SplashScreen},
   djson in '..\Common\djson.pas',
+  Splash_Screen in '..\Forms\Splash_Screen.pas' {SplashScreen},
   GISCommands in '..\GISCommands\GISCommands.pas';
 
 //**************************end of the functions*************************************
