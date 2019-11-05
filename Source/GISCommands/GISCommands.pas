@@ -29,6 +29,7 @@ function Show_routeGIS():  string;
 function Get_JSONrouteGIS():  string;
 function WindowLR():  string;
 function WindowRL():  string;
+function ReSizeWindow():  string;
 
 const GUEST_PORT = 20011;
 
@@ -357,21 +358,25 @@ var
   TempStr,
   JSONCmd   : String;
 Begin
-
-  JSONCmd   := '{"command":"resizewindow","coords":{"left":' + inttostr(Screen.Width div 2) +
-                ',"top":0,"right":' + inttostr(Screen.Width) + ',"bottom":' + inttostr(Screen.Height - 40) + '}}';
-  try
-    GISTCPClient.IOHandler.WriteLn(JSONCmd);
-    InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,2000);
-    TCPJSON :=  TdJSON.Parse(InMsg);
-    TempStr :=  TCPJSON['resizewindow'].AsString;
-    Result  :=  TempStr;
-    except
-    on E: Exception do begin
-      IsGISON     :=  False;
-      Result      :=  'Error while communicating to OpenDSS-GIS';
+  if IsGISON then
+  Begin
+    JSONCmd   := '{"command":"resizewindow","coords":{"left":' + inttostr(Screen.Width div 2) +
+                  ',"top":0,"right":' + inttostr(Screen.Width) + ',"bottom":' + inttostr(Screen.Height - 40) + '}}';
+    try
+      GISTCPClient.IOHandler.WriteLn(JSONCmd);
+      InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,2000);
+      TCPJSON :=  TdJSON.Parse(InMsg);
+      TempStr :=  TCPJSON['resizewindow'].AsString;
+      Result  :=  TempStr;
+      except
+      on E: Exception do begin
+        IsGISON     :=  False;
+        Result      :=  'Error while communicating to OpenDSS-GIS';
+      end;
     end;
-  end;
+  End
+  else
+   result  :=  'OpenDSS-GIS is not installed or initialized'
 
 End;
 
@@ -387,20 +392,72 @@ var
   TempStr,
   JSONCmd   : String;
 Begin
-  JSONCmd   := '{"command":"resizewindow","coords":{"left":0,"top":0,"right":' +
-                inttostr(Screen.Width div 2) + ',"bottom":' + inttostr(Screen.Height - 40) + '}}';
-  try
-    GISTCPClient.IOHandler.WriteLn(JSONCmd);
-    InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,2000);
-    TCPJSON :=  TdJSON.Parse(InMsg);
-    TempStr :=  TCPJSON['resizewindow'].AsString;
-    Result  :=  TempStr;
-    except
-    on E: Exception do begin
-      IsGISON     :=  False;
-      Result      :=  'Error while communicating to OpenDSS-GIS';
+  if IsGISON then
+  Begin
+    JSONCmd   := '{"command":"resizewindow","coords":{"left":0,"top":0,"right":' +
+                  inttostr(Screen.Width div 2) + ',"bottom":' + inttostr(Screen.Height - 40) + '}}';
+    try
+      GISTCPClient.IOHandler.WriteLn(JSONCmd);
+      InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,2000);
+      TCPJSON :=  TdJSON.Parse(InMsg);
+      TempStr :=  TCPJSON['resizewindow'].AsString;
+      Result  :=  TempStr;
+      except
+      on E: Exception do begin
+        IsGISON     :=  False;
+        Result      :=  'Error while communicating to OpenDSS-GIS';
+      end;
     end;
-  end;
+  End
+  else
+   result  :=  'OpenDSS-GIS is not installed or initialized'
+End;
+
+{*******************************************************************************
+*    Resizes the OpenDSS-GIS window using the coordinates given by the user    *
+*******************************************************************************}
+
+function ReSizeWindow():  string;
+var
+  TCPJSON       : TdJSON;
+  j,
+  ScrSize       : Integer;
+  InMsg,
+  TempStr,
+  JSONCmd       : String;
+  TStrArr       : Array of String;
+
+Begin
+  if IsGISON then
+  Begin
+    setlength(TStrArr,4);
+    TStrArr[0]  :=  ',"top":';
+    TStrArr[1]  :=  ',"right":';
+    TStrArr[2]  :=  ',"bottom":';
+    TStrArr[3]  :=  '}}';
+
+    JSONCmd :=  '{"command":"resizewindow","coords":{"left":';
+    for j := 0 to High(TStrArr) do
+    Begin
+      Parser[ActiveActor].NextParam;
+      JSONCmd   := JSONCmd + Parser[ActiveActor].StrValue + TStrArr[j];
+    End;
+    try
+      GISTCPClient.IOHandler.WriteLn(JSONCmd);
+      InMsg   :=  GISTCPClient.IOHandler.ReadLn(#10,2000);
+      TCPJSON :=  TdJSON.Parse(InMsg);
+      TempStr :=  TCPJSON['resizewindow'].AsString;
+      Result  :=  TempStr;
+      except
+      on E: Exception do begin
+        IsGISON     :=  False;
+        Result      :=  'Error while communicating to OpenDSS-GIS';
+      end;
+    end;
+  End
+  else
+   result  :=  'OpenDSS-GIS is not installed or initialized'
+
 End;
 
 end.

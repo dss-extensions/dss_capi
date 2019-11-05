@@ -11,7 +11,7 @@ interface
 Uses Command;
 
 CONST
-     NumExecCommands = 130;
+     NumExecCommands = 131;
 
 Var
 
@@ -178,6 +178,7 @@ Begin
      ExecCommand[128] := 'WindowDistribRL';
      ExecCommand[129] := 'GISCoords';
      ExecCommand[130] := 'UpdateStorage2';
+     ExecCommand[131] := 'GISWindowSize';
 
      CommandHelp[1]  := 'Create a new object within the DSS. Object becomes the '+
                          'active object' + CRLF +
@@ -567,17 +568,22 @@ Begin
      CommandHelp[127] := 'Redistributes the windows horizontally leaving OpenDSS to the left of the screen and OpenDSS-GIS to the right, however, the following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF;
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)';
      CommandHelp[128] := 'Redistributes the windows horizontally leaving OpenDSS to the right of the screen and OpenDSS-GIS to the left, however, the following conditions need to be fulfilled:' + CRLF +
                          CRLF +
                          '1. OpenDSS-GIS must be installed' + CRLF +
-                         '2. OpenDSS-GIS must be initialized (use StartGIS command)' + CRLF;
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)';
      CommandHelp[129] := 'Define x,y coordinates for buses using real GIS Latitude and Longitude values (decimal numbers).  Similar to BusCoords command. ' +
                         'Execute after Solve command or MakeBusList command is executed so that bus lists are defined.' +
                         'Reads coordinates from a CSV file with records of the form: busname, Latitude, Longitude.'+CRLF+CRLF+
-                        'Example: LatLongCoords [file=]xxxx.csv' +CRLF+CRLF+
+                        'Example: LatLongCoords [file=]xxxx.csv' + CRLF + CRLF +
                         'Note: For using only if OpenDSS-GIS is locally installed.';
      CommandHelp[130] := 'Update Storage2 elements based on present solution and time interval. ';
+     CommandHelp[131] := 'Resizes the OpenDSS-GIS window, the coordiantes need to be given as: Left, Top, Right, Bottom. For example:'+CRLF+CRLF+
+                         'GISWindowSize 0 0 800 800' + CRLF + CRLF +
+                         'The following conditions need to be fulfilled:' + CRLF + CRLF +
+                         '1. OpenDSS-GIS must be installed' + CRLF +
+                         '2. OpenDSS-GIS must be initialized (use StartGIS command)';
 End;
 
 //----------------------------------------------------------------------------
@@ -897,6 +903,9 @@ Begin
            End;
       129: CmdResult := DoBusCoordsCmd(FALSE, 1);   // GIS coordinates
       130: CmdResult := DoUpDateStorage2Cmd;
+      131: Begin
+             GlobalResult  :=  ReSizeWindow();
+           End
      ELSE
        // Ignore excess parameters
      End;
