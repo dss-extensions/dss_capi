@@ -134,6 +134,7 @@ uses
   Storage in '..\PCElements\Storage.pas',
   Storage2 in '..\PCElements\Storage2.pas',
   StorageController in '..\Controls\StorageController.pas',
+  StorageController2 in '..\Controls\StorageController2.pas',
   StoreUserModel in '..\PCElements\StoreUserModel.pas',
   SwtControl in '..\Controls\SwtControl.pas',
   TCC_Curve in '..\General\TCC_Curve.pas',

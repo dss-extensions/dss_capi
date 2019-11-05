@@ -54,9 +54,9 @@ Var
 procedure TPropEditForm.FormCreate(Sender: TObject);
 begin
 
-   StringGrid1.ColWidths[0] := 80;
+   StringGrid1.ColWidths[0] := 120;
    StringGrid1.ColWidths[1] := 300;
-   StringGrid1.Width := 300 + 80 + 2;
+   StringGrid1.Width := 300 + 120 + 2;
    Width := StringGrid1.Width + 20;
    StringGrid1.DefaultRowHeight := Abs(StringGrid1.Font.Height) + 4;
    StringGrid1.colcount := 2;
