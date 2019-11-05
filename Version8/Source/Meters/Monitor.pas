@@ -214,7 +214,7 @@ USES
 
     ParserDel, DSSClassDefs, DSSGlobals, Circuit, CktElement,Transformer, AutoTrans, PCElement,
     Sysutils, ucmatrix, showresults, mathUtil, PointerList, TOPExport, Dynamics, PstCalc,
-    Capacitor, Storage;
+    Capacitor, Storage, Storage2;
 
 CONST
     SEQUENCEMASK = 16;
@@ -639,13 +639,12 @@ Begin
                           End;
                    end;
                 7: begin                                                // Checking if the element is a storage device
-                          If (MeteredElement.DSSObjType And CLASSMASK) <> STORAGE_ELEMENT Then Begin
+                          If ((MeteredElement.DSSObjType And CLASSMASK) <> STORAGE_ELEMENT) and ((MeteredElement.DSSObjType And CLASSMASK) <> STORAGE2_ELEMENT)  Then Begin
                             DoSimpleMsg(MeteredElement.Name + ' is not a storage device!', 2016002);
                             Exit;
                           End;
+
                    end;
-
-
              End;
 
              IF MeteredTerminal>MeteredElement.Nterms THEN Begin
@@ -1221,12 +1220,23 @@ Begin
               Exit;  // Done with this mode now.
         End;
      7: Begin     // Monitor Storage Device state variables
-              With TStorageObj(MeteredElement) Do Begin
-                AddDblToBuffer(PresentkW);
-                AddDblToBuffer(Presentkvar);
-                AddDblToBuffer(StorageVars.kWhStored);
-                AddDblToBuffer(((StorageVars.kWhStored)/(StorageVars.kWhRating))*100);
-                AddDblToBuffer(StorageState);
+              If (MeteredElement.DSSObjType And CLASSMASK) = STORAGE_ELEMENT Then Begin  // Storage Element
+                With TStorageObj(MeteredElement) Do Begin
+                  AddDblToBuffer(PresentkW);
+                  AddDblToBuffer(Presentkvar);
+                  AddDblToBuffer(StorageVars.kWhStored);
+                  AddDblToBuffer(((StorageVars.kWhStored)/(StorageVars.kWhRating))*100);
+                  AddDblToBuffer(StorageState);
+                End;
+              End
+              Else if (MeteredElement.DSSObjType And CLASSMASK) = STORAGE2_ELEMENT Then Begin   // Storage2 Element
+                With TStorage2Obj(MeteredElement) Do Begin
+                  AddDblToBuffer(PresentkW);
+                  AddDblToBuffer(Presentkvar);
+                  AddDblToBuffer(Storage2Vars.kWhStored);
+                  AddDblToBuffer(((Storage2Vars.kWhStored)/(Storage2Vars.kWhRating))*100);
+                  AddDblToBuffer(Storage2State);
+                End;
               End;
               Exit;  // Done with this mode now.
         End;

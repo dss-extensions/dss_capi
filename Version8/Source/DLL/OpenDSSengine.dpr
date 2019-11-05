@@ -153,6 +153,7 @@ uses
   Storage2 in '..\PCElements\Storage2.pas',
   StoreUserModel in '..\PCElements\StoreUserModel.pas',
   StorageController in '..\Controls\StorageController.pas',
+  StorageController2 in '..\Controls\StorageController2.pas',
   LineGeometry in '..\General\LineGeometry.pas',
   SwtControl in '..\Controls\SwtControl.pas',
   ImplTransformers in 'ImplTransformers.pas' {Transformers: CoClass},
