@@ -31,8 +31,6 @@ function WindowLR():  string;
 function WindowRL():  string;
 function ReSizeWindow():  string;
 
-const GUEST_PORT = 20011;
-
 var
   GISTCPClient          : TIdTCPClient;  // ... TIdThreadComponent
   GISThreadComponent    : TIdThreadComponent;
@@ -60,7 +58,7 @@ Begin
       GISTCPClient                 := TIdTCPClient.Create();
       // ... set properties
       GISTCPClient.Host            := 'localhost';
-      GISTCPClient.Port            := GUEST_PORT;
+      GISTCPClient.Port            := DSSGISPort;
       GISTCPClient.ReadTimeout     := 1000;
       GISThreadComponent           := TIdThreadComponent.Create();
       try
