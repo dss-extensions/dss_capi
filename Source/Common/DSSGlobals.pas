@@ -295,6 +295,10 @@ VAR
    Parser             : Array of TParser;
    ActorMA_Msg        : Array of TEvent;  // Array to handle the events of each actor
 
+   // Default ports
+   DSSPrgPort,
+   DSSGISPort         : Integer;
+
 
 
 
@@ -388,6 +392,8 @@ procedure DoClone();
 
 procedure Delay(TickTime : Integer);
 
+procedure GetDefaultPorts();
+
 
 
 
@@ -410,6 +416,7 @@ USES  {Forms,   Controls,}
      {$IFDEF UNIX}
      BaseUnix,
      {$ENDIF}
+     djson,
      SysUtils;
      {Intrinsic Ckt Elements}
 
@@ -419,10 +426,6 @@ TYPE
 
    TDSSRegister = function(var ClassName: pchar):Integer;  // Returns base class 1 or 2 are defined
    // Users can only define circuit elements at present
-
-
-    // ... listening port : GUEST CLIENT
-    const GUEST_PORT = 20010;
 
 VAR
 
@@ -1167,7 +1170,7 @@ begin
   idTCPClient                 := TIdTCPClient.Create();
   // ... set properties
   idTCPClient.Host            := 'localhost';
-  idTCPClient.Port            := GUEST_PORT;
+  idTCPClient.Port            := DSSPrgPort;
   idThreadComponent           := TIdThreadComponent.Create();
   try
     IdTCPClient.Connect;
@@ -1223,6 +1226,34 @@ destructor TProgressActor.Destroy;
 Begin
   inherited destroy;
 End;
+
+procedure GetDefaultPorts();
+var
+  F             : TextFile;
+  JSONCfg       : TdJSON;
+  JSONStr,
+  iniFilePath   : String;
+Begin
+  iniFilePath   :=  DSSDirectory + 'ComPorts.ini';
+  if  fileexists(iniFilePath) then
+  Begin
+    AssignFile(F, iniFilePath);
+    Reset(F);
+    ReadLn(F, JSONStr);
+    CloseFile(F);
+    // parse the JSON string and extract the values
+    JSONCfg       :=  TdJSON.Parse(JSONStr);
+    DSSPrgPort    :=  JSONCfg['dssprogress'].AsInteger;
+    DSSGISPort    :=  JSONCfg['dssgis'].AsInteger;
+  End
+  else
+  begin                                      // Since the Cfg file is missing, use the defaults
+    DSSPrgPort    :=  20010;
+    DSSGISPort    :=  20011;
+  end;
+
+End;
+
 
 initialization
 
@@ -1344,6 +1375,8 @@ initialization
    DSSFileName            :=  GetDSSExeFile;
    DSSDirectory           :=  ExtractFilePath(DSSFileName);
    ADiakoptics            :=  False;  // Disabled by default
+
+   GetDefaultPorts();                 // Gets the default ports to get connected to other add-ons
 
    DSSProgressFrm         :=  GetDSSProgress(DSSFileName);
 

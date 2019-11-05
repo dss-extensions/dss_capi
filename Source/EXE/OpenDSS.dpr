@@ -132,7 +132,6 @@ uses
   Spectrum in '..\General\Spectrum.pas',
   StackDef in '..\Shared\StackDef.pas',
   Storage in '..\PCElements\Storage.pas',
-  Storage2 in '..\PCElements\Storage2.pas',
   StorageController in '..\Controls\StorageController.pas',
   StorageController2 in '..\Controls\StorageController2.pas',
   StoreUserModel in '..\PCElements\StoreUserModel.pas',
@@ -202,7 +201,8 @@ uses
   VLNodeVars in '..\Meters\VLNodeVars.pas',
   Splash_Screen in '..\Forms\Splash_Screen.pas' {SplashScr},
   GISCommands in '..\GISCommands\GISCommands.pas',
-  djson in '..\Common\djson.pas';
+  djson in '..\Common\djson.pas',
+  Storage2 in '..\PCElements\Storage2.pas';
 
 {$R *.RES}
 
