@@ -53,6 +53,7 @@ uses
   RegControl in '..\Controls\RegControl.pas',
   Relay in '..\Controls\Relay.pas',
   StorageController in '..\Controls\StorageController.pas',
+  StorageController2 in '..\Controls\StorageController2.pas',
   SwtControl in '..\Controls\SwtControl.pas',
   UPFCControl in '..\Controls\UPFCControl.pas',
   MyDSSClassDefs in '..\EXE\MyDSSClassDefs.Pas',

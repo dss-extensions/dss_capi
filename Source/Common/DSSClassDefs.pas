@@ -71,6 +71,7 @@ CONST
       Generic5OrderMach_ELEMENT = 39 * 8;         {BY Dahei UCF}
       INV_CONTROL2      = 40 * 8;
       STORAGE2_ELEMENT  = 41 * 8;
+      STORAGE2_CONTROL  = 42 * 8;
 VAR
    NumIntrinsicClasses,
    NumUserClasses     :Integer;
@@ -129,6 +130,7 @@ USES
      Storage,
      Storage2,
      StorageController,
+     StorageController2,
      SwtControl,
      PVSystem,
      PVSystem2,
@@ -216,6 +218,7 @@ Begin
      Storage2Class[ActiveActor]   := TStorage2.Create;
      DSSClasses.New               := Storage2Class[ActiveActor];
      DSSClasses.New               := TStorageController.Create;
+     DSSClasses.New               := TStorageController2.Create;
      DSSClasses.New               := TRelay.Create;
      DSSClasses.New               := TRecloser.Create;
      DSSClasses.New               := TFuse.Create;
