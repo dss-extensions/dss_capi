@@ -3,6 +3,8 @@ unit ProgressActor;
 interface
 
 uses
+  djson,
+  StrUtils,
   math,
   Winapi.Windows,
   Winapi.Messages,
@@ -48,6 +50,7 @@ type
     procedure Set_Progress(cmd : string);
     procedure Setup_Wnd(cmd : string);
     procedure ResetTimeOut;
+    FUNCTION GetDSSExeFile: String;
     { Private declarations }
   public
     Timer       : Integer;
@@ -74,12 +77,32 @@ var
 
 {$R *.dfm}
 
+FUNCTION TForm1.GetDSSExeFile: String;
+
+Var
+   TheFileName:Array[0..MAX_PATH] of char;
+
+Begin
+
+    FillChar(TheFileName, SizeOF(TheFileName), #0);  // Fill it with nulls
+    GetModuleFileName(HInstance, TheFileName, SizeOF(TheFileName));
+    Result := TheFileName;
+
+End;
+
 procedure TForm1.Button1Click(Sender: TObject);
 begin
   AbortON :=  True;
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
+var
+
+  F         : TextFile;
+  JSONCfg   : TdJSON;
+  JSONStr,
+  newPath   : String;
+  RefPos    : Integer;
 begin
   AbortON       :=  False;
   With Memo1 do
@@ -87,11 +110,31 @@ begin
     Height        :=  74;
     Text          :=  '';
   End;
+  newPath             :=  GetDSSExeFile();
+  newPath             :=  AnsiReverseString(newPath);   // reverses the string
+  RefPos              :=  pos('\',newPath); // detects the file name
+  newPath             :=  AnsiReverseString(newPath);      // reverse again
+  newPath             :=  newPath.Substring(0,length(newPath) - RefPos);  // Leaves only the folder name
+  newPath             :=  newPath + '\ComPorts.ini';
+
   Server              :=  TMyServer.Create;
   Server.Tag          := 0;
   Server.ListenQueue  := 15;
   Server.TerminateWaitTime := 5000;
-  Server.DefaultPort  :=  20010;
+
+  if  fileexists(newPath) then
+  Begin
+    AssignFile(F, newPath);
+    Reset(F);
+    ReadLn(F, JSONStr);
+    CloseFile(F);
+    // parse the JSON string and extract the values
+    JSONCfg             :=  TdJSON.Parse(JSONStr);
+    Server.DefaultPort  :=  JSONCfg['dssprogress'].AsInteger;
+  End
+  else
+    Server.DefaultPort  :=  20010;
+
   Server.Active       :=  True;
   TimeOut             :=  0;
 
