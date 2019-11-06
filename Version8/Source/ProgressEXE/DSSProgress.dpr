@@ -2,7 +2,8 @@ program DSSProgress;
 
 uses
   Vcl.Forms,
-  ProgressActor in 'ProgressActor.pas' {Form1};
+  ProgressActor in 'ProgressActor.pas' {Form1},
+  djson in '..\Common\djson.pas';
 
 {$R *.res}
 
