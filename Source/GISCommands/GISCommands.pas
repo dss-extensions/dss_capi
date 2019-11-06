@@ -44,16 +44,18 @@ implementation
 function start_openDSSGIS(): boolean;
 Begin
   Result  :=  False;
-  if Not IsGISON then
+
+  if DSS_GIS_Installed then
   Begin
-    if DSS_GIS_Installed then
+    if Not processExists('OpenDSSGIS.exe') then
+    begin
+     // Starts OpenDSS-GIS if is not running
+      ShellExecute(0, 'open',pWidechar(DSS_GIS_path), nil, nil, SW_SHOWNORMAL);
+      sleep(5000);
+      IsGISON      :=  False;
+    end;
+    if Not IsGISON then
     Begin
-      if Not processExists('OpenDSSGIS.exe') then
-      begin
-        // Starts OpenDSS-GIS if is not running
-        ShellExecute(0, 'open',pWidechar(DSS_GIS_path), nil, nil, SW_SHOWNORMAL);
-        sleep(5000);
-      end;
       // ... create TIdTCPClient
       GISTCPClient                 := TIdTCPClient.Create();
       // ... set properties
@@ -70,10 +72,11 @@ Begin
         end;
       end;
       Result  :=  IsGISON;
-    end;
-  End
-  else
-    Result  :=  IsGISON;
+    end
+    else
+      Result  :=  IsGISON;
+  End;
+
 End;
 
 {*******************************************************************************
