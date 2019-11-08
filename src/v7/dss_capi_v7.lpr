@@ -1376,6 +1376,17 @@ exports
     YMatrix_Get_SystemYChanged,
     YMatrix_Set_UseAuxCurrents,
     YMatrix_Get_UseAuxCurrents,
+    
+    YMatrix_Get_LoadsNeedUpdating,
+    YMatrix_Set_LoadsNeedUpdating,
+    YMatrix_Set_SolutionInitialized,
+    YMatrix_Get_SolutionInitialized,
+    YMatrix_SetGeneratordQdV,
+    YMatrix_CheckConvergence,
+    YMatrix_Set_Iteration,
+    YMatrix_Get_Iteration,
+    YMatrix_Get_Handle,
+    
 
     // *_GR -- Global Result variations
     Bus_Get_SeqVoltages_GR,

@@ -5849,6 +5849,21 @@ extern "C" {
 
     DSS_CAPI_DLL void LoadShapes_Set_Points(int32_t Npts, double *HoursPtr, double *PMultPtr, double *QMultPtr, int8_t ExternalMemory); 
 
+    /*
+    Update and return the convergence flag. Used for external solver loops.
+    */
+    DSS_CAPI_DLL int8_t YMatrix_CheckConvergence(void);
+    DSS_CAPI_DLL void YMatrix_SetGeneratordQdV(void);
+
+    DSS_CAPI_DLL int8_t YMatrix_Get_LoadsNeedUpdating(void);
+    DSS_CAPI_DLL void YMatrix_Set_LoadsNeedUpdating(int8_t Value);
+    DSS_CAPI_DLL int8_t YMatrix_Get_SolutionInitialized(void);
+    DSS_CAPI_DLL void YMatrix_Set_SolutionInitialized(int8_t Value);
+
+    DSS_CAPI_DLL int32_t YMatrix_Get_Iteration(void);
+    DSS_CAPI_DLL void YMatrix_Set_Iteration(int32_t Value);
+    DSS_CAPI_DLL void *YMatrix_Get_Handle(void);
+
 
     /*
     Selected KLUSolveX functions, re-exported through DSS C-API. 
