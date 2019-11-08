@@ -887,8 +887,9 @@ begin
                 if ref1 > 0 then
                 begin
                     Currents^[ref1] := cONE;
+                    NodeV^[0] := cZERO;
           {SparseSet expects 1st element of voltage array, not 0-th element}
-                    if SolveSparseSet(hYsystem, @NodeV^[1], @Currents^[1]) < 1 then
+                    if SolveSparseSet2(hYsystem, @NodeV^[0], @Currents^[1]) < 1 then
                         raise EEsolv32Problem.Create('Error Solving System Y Matrix in ComputeYsc. Problem with Sparse matrix solver.');
           {Extract Voltage Vector = column of Zsc}
                     for j := 1 to NumNodesThisBus do

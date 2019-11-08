@@ -1773,7 +1773,32 @@ exports
     WireData_Get_idx,
     WireData_Set_idx,
     XYCurves_Get_idx,
-    XYCurves_Set_idx;
+    XYCurves_Set_idx,
+    
+    // Re-export most KLUSolve functions
+    NewSparseSet,
+    GetFlops,
+    ZeroSparseSet,
+    FactorSparseMatrix,
+    SolveSparseSet,
+    SolveSparseSet2,
+    DeleteSparseSet,
+    AddMatrixElement,
+    GetSize,
+    GetNNZ,
+    GetSparseNNZ,
+    GetSingularCol,
+    GetRCond,
+    GetRGrowth,
+    GetCondEst,
+    GetMatrixElement,
+    AddPrimitiveMatrix,
+    GetCompressedMatrix,
+    GetTripletMatrix,
+    FindIslands,
+    mvmult,
+    IncrementMatrixElement,
+    ZeroiseMatrixElement;
 
 begin
   IsDLL := TRUE;

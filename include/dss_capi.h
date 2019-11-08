@@ -5849,6 +5849,36 @@ extern "C" {
 
     DSS_CAPI_DLL void LoadShapes_Set_Points(int32_t Npts, double *HoursPtr, double *PMultPtr, double *QMultPtr, int8_t ExternalMemory); 
 
+
+    /*
+    Selected KLUSolveX functions, re-exported through DSS C-API. 
+    See KLUSolveX for details.
+    */
+    DSS_CAPI_DLL void* NewSparseSet(int nBus);
+    DSS_CAPI_DLL int ZeroSparseSet(void* handle);
+    DSS_CAPI_DLL int FactorSparseMatrix(void* handle);
+    DSS_CAPI_DLL int SolveSparseSet(void* handle, double* acxX, double* acxB);
+    DSS_CAPI_DLL int SolveSparseSet2(void* handle, double* acxX, double* acxB);
+    DSS_CAPI_DLL int DeleteSparseSet(void* handle);
+    DSS_CAPI_DLL int AddMatrixElement(void* handle, int i, int j, double* pcxVal);
+    DSS_CAPI_DLL int GetMatrixElement(void* handle, int i, int j, double* pcxVal);
+    DSS_CAPI_DLL int GetSize(void* handle, int* pResult);
+    DSS_CAPI_DLL int GetNNZ(void* handle, int* pResult);
+    DSS_CAPI_DLL int GetSparseNNZ(void* handle, int* pResult);
+    DSS_CAPI_DLL int GetRCond(void* handle, double* pResult);
+    DSS_CAPI_DLL int GetRGrowth(void* handle, double* pResult);
+    DSS_CAPI_DLL int GetCondEst(void* handle, double* pResult);
+    DSS_CAPI_DLL int GetFlops(void* handle, double* pResult);
+    DSS_CAPI_DLL int GetSingularCol(void* handle, int* pResult);
+    DSS_CAPI_DLL int AddPrimitiveMatrix(void* handle, int nOrder, int* pNodes, double* pcY);
+    DSS_CAPI_DLL int GetCompressedMatrix(void* handle, int nColP, int nNZ, int* pColP, int* pRowIdx, double* pcY);
+    DSS_CAPI_DLL int GetTripletMatrix(void* handle, int nNZ, int* pRows, int* pCols, double* pcY);
+    DSS_CAPI_DLL int FindIslands(void* handle, int nOrder, int* pNodes);
+    DSS_CAPI_DLL int IncrementMatrixElement(void* handle, int i, int j, double re, double im);
+    DSS_CAPI_DLL int ZeroiseMatrixElement(void* handle, int i, int j);
+    DSS_CAPI_DLL void mvmult(int32_t N, double* b, double* A, double* x);
+
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

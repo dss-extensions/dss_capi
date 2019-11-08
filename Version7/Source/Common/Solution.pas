@@ -2450,7 +2450,8 @@ begin
     try
     // new function to log KLUSolve.DLL function calls; same information as stepping through in Delphi debugger
     // SetLogFile ('KLU_Log.txt', 1);
-        RetCode := SolveSparseSet(hY, @V^[1], @Currents^[1]);  // Solve for present InjCurr
+        V^[0] := cZERO;
+        RetCode := SolveSparseSet2(hY, @V^[0], @Currents^[1]);  // Solve for present InjCurr
 {$IFDEF DSS_CAPI}
         if (DSS_CAPI_INFO_SPARSE_COND) then // Disabled by default with DSS C-API
         begin

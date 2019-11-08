@@ -297,7 +297,7 @@ begin
                 if (val.re = 0) and (val.im = 0) then continue;
                 
                 //writeln('IncrementMatrixElement: (', inode, ',', jnode, '): ', val.re, ', ', val.im);
-                IncrementMatrixElement(ActiveCircuit.Solution.hYsystem, inode, jnode, @val);
+                IncrementMatrixElement(ActiveCircuit.Solution.hYsystem, inode, jnode, val.re, val.im);
             end;
         end;
         pElem := ActiveCircuit.CktElements.Next;
@@ -380,12 +380,12 @@ begin
             case BuildOption of
                 WHOLEMATRIX:
                     if Incremental then
-                        writeln('Building Whole Y Matrix -- using incremental method')
+                        LogThisEvent('Building Whole Y Matrix -- using incremental method')
                     else
-                        writeln('Building Whole Y Matrix');
+                        LogThisEvent('Building Whole Y Matrix');
                         
                 SERIESONLY:
-                    writeln('Building Series Y Matrix');
+                    LogThisEvent('Building Series Y Matrix');
             end;
           // Add in Yprims for all devices
           
