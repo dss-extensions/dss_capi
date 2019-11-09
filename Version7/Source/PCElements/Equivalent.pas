@@ -574,8 +574,8 @@ begin
 
     except
         DoSimpleMsg('Error computing Voltages for Equivalent.' + Name + '. Check specification. Aborting.', 804);
-        if In_Redirect then
-            Redirect_Abort := TRUE;
+        if DSSPrime.In_Redirect then
+            DSSPrime.Redirect_Abort := TRUE;
     end;
 
 end;

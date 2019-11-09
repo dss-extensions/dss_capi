@@ -107,8 +107,8 @@ Begin
      {Instantiate All DSS Classe Definitions, Intrinsic and User-defined}
      CreateDSSClasses(DSSPrime);     // in DSSGlobals
 
-     Circuits := TPointerList.Create(2);   // default buffer for 2 active circuits
-     NumCircuits := 0;
+     DSSPrime.Circuits := TPointerList.Create(2);   // default buffer for 2 active circuits
+     DSSPrime.NumCircuits := 0;
      ActiveCircuit := nil;
 
      Parser := TParser.Create;  // Create global parser object (in DSS globals)
@@ -144,7 +144,7 @@ Begin
 
      CommandList.Free;
      OptionList.Free;
-     Circuits.Free;
+     DSSPrime.Circuits.Free;
 
      DisposeDSSClasses(DSSPrime);
 
@@ -153,25 +153,17 @@ Begin
      Inherited Destroy;
 End;
 
-
-
-
-
-
-
-
-
 //----------------------------------------------------------------------------
 FUNCTION TExecutive.Get_LastError:String;
 
 Begin
-     Result := LastErrorMessage;
+     Result := DSSPrime.LastErrorMessage;
 End;
 
 //----------------------------------------------------------------------------
 FUNCTION TExecutive.Get_ErrorResult:Integer;
 Begin
-     Result := ErrorNumber;
+     Result := DSSPrime.ErrorNumber;
 End;
 
 
@@ -185,19 +177,19 @@ Begin
 
 { this load shape used for generator dispatching, etc.   Loads may refer to it, also.}
    Command := 'new loadshape.default npts=24 1.0 mult=(.677 .6256 .6087 .5833 .58028 .6025 .657 .7477 .832 .88 .94 .989 .985 .98 .9898 .999 1 .958 .936 .913 .876 .876 .828 .756)';
-   IF CmdResult = 0 THEN Begin
-   Command := 'new growthshape.default 2 year="1 20" mult=(1.025 1.025)';  // 20 years at 2.5%
-   Command := 'new spectrum.default 7  Harmonic=(1 3 5 7 9 11 13)  %mag=(100 33 20 14 11 9 7) Angle=(0 0 0 0 0 0 0)';
-   Command := 'new spectrum.defaultload 7  Harmonic=(1 3 5 7 9 11 13)  %mag=(100 1.5 20 14 1 9 7) Angle=(0 180 180 180 180 180 180)';
-   Command := 'new spectrum.defaultgen 7  Harmonic=(1 3 5 7 9 11 13)  %mag=(100 5 3 1.5 1 .7 .5) Angle=(0 0 0 0 0 0 0)';
-   Command := 'new spectrum.defaultvsource 1  Harmonic=(1 )  %mag=(100 ) Angle=(0 ) ';
-   Command := 'new spectrum.linear 1  Harmonic=(1 )  %mag=(100 ) Angle=(0 ) ';
-   Command := 'new spectrum.pwm6 13  Harmonic=(1 3 5 7 9 11 13 15 17 19 21 23 25) %mag=(100 4.4 76.5 62.7 2.9 24.8 12.7 0.5 7.1 8.4 0.9 4.4 3.3) Angle=(-103 -5 28 -180 -33 -59 79 36 -253 -124 3 -30 86)';
-   Command := 'new spectrum.dc6 10  Harmonic=(1 3 5 7 9 11 13 15 17 19)  %mag=(100 1.2 33.6 1.6 0.4 8.7  1.2  0.3  4.5 1.3) Angle=(-75 28 156 29 -91 49 54 148 -57 -46)';
-   Command := 'New TCC_Curve.A 5 c_array=(1, 2.5, 4.5, 8.0, 14.)  t_array=(0.15 0.07 .05 .045 .045) ';
-   Command := 'New TCC_Curve.D 5 c_array=(1, 2.5, 4.5, 8.0, 14.)  t_array=(6 0.7 .2 .06 .02)';
-   Command := 'New TCC_Curve.TLink 7 c_array=(2 2.1 3 4 6 22 50)  t_array=(300 100 10.1 4.0 1.4 0.1  0.02)';
-   Command := 'New TCC_Curve.KLink 6 c_array=(2 2.2 3 4 6 30)    t_array=(300 20 4 1.3 0.41 0.02)';
+   IF DSSPrime.CmdResult = 0 THEN Begin
+       Command := 'new growthshape.default 2 year="1 20" mult=(1.025 1.025)';  // 20 years at 2.5%
+       Command := 'new spectrum.default 7  Harmonic=(1 3 5 7 9 11 13)  %mag=(100 33 20 14 11 9 7) Angle=(0 0 0 0 0 0 0)';
+       Command := 'new spectrum.defaultload 7  Harmonic=(1 3 5 7 9 11 13)  %mag=(100 1.5 20 14 1 9 7) Angle=(0 180 180 180 180 180 180)';
+       Command := 'new spectrum.defaultgen 7  Harmonic=(1 3 5 7 9 11 13)  %mag=(100 5 3 1.5 1 .7 .5) Angle=(0 0 0 0 0 0 0)';
+       Command := 'new spectrum.defaultvsource 1  Harmonic=(1 )  %mag=(100 ) Angle=(0 ) ';
+       Command := 'new spectrum.linear 1  Harmonic=(1 )  %mag=(100 ) Angle=(0 ) ';
+       Command := 'new spectrum.pwm6 13  Harmonic=(1 3 5 7 9 11 13 15 17 19 21 23 25) %mag=(100 4.4 76.5 62.7 2.9 24.8 12.7 0.5 7.1 8.4 0.9 4.4 3.3) Angle=(-103 -5 28 -180 -33 -59 79 36 -253 -124 3 -30 86)';
+       Command := 'new spectrum.dc6 10  Harmonic=(1 3 5 7 9 11 13 15 17 19)  %mag=(100 1.2 33.6 1.6 0.4 8.7  1.2  0.3  4.5 1.3) Angle=(-75 28 156 29 -91 49 54 148 -57 -46)';
+       Command := 'New TCC_Curve.A 5 c_array=(1, 2.5, 4.5, 8.0, 14.)  t_array=(0.15 0.07 .05 .045 .045) ';
+       Command := 'New TCC_Curve.D 5 c_array=(1, 2.5, 4.5, 8.0, 14.)  t_array=(6 0.7 .2 .06 .02)';
+       Command := 'New TCC_Curve.TLink 7 c_array=(2 2.1 3 4 6 22 50)  t_array=(300 100 10.1 4.0 1.4 0.1  0.02)';
+       Command := 'New TCC_Curve.KLink 6 c_array=(2 2.2 3 4 6 30)    t_array=(300 20 4 1.3 0.41 0.02)';
    End;
 
 
@@ -218,7 +210,7 @@ end;
 
 procedure TExecutive.Clear;
 begin
-       IF   (NumCircuits > 0)  THEN
+       IF (DSSPrime.NumCircuits > 0)  THEN
        Begin
 
           {First get rid of all existing stuff}
@@ -254,7 +246,7 @@ begin
   End Else If FRecorderOn Then Begin
       CloseFile(RecorderFile);
   End;
-  GlobalResult := FRecorderFile;
+  DSSPrime.GlobalResult := FRecorderFile;
   FRecorderOn := Value;
 end;
 

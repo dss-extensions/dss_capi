@@ -492,7 +492,7 @@ begin
     CommandList.Abbrev := TRUE;
 
 
-    GeneratorClass := DSSClassList.Get(ClassNames.Find('generator'));
+    GeneratorClass := DSS.DSSClassList.Get(DSS.ClassNames.Find('generator'));
 
     SystemMeter := TSystemMeter.Create;//(dss);
     OV_MHandle := NIL;
@@ -920,13 +920,13 @@ var
 
 begin
 
-    if DIFilesAreOpen then
+    if DSS.DIFilesAreOpen then
         CloseAllDIFiles;
 
     if FSaveDemandInterval then
     begin
 
-        CasePath := OutputDirectory + ActiveCircuit.CaseName;
+        CasePath := DSS.OutputDirectory + ActiveCircuit.CaseName;
           {Make directories to save data}
 
         if not DirectoryExists(CasePath) then
@@ -1356,7 +1356,7 @@ begin
         CSVName := 'MTR_' + Name + '.CSV';
         AssignFile(F, GetOutputDirectory + CSVName);
         Rewrite(F);
-        GlobalResult := CSVName;
+        DSSPrime.GlobalResult := CSVName;
         SetLastResultFile(CSVName);
 
     except
@@ -2186,7 +2186,7 @@ begin
         AssignFile(F, GetOutputDirectory + CSVName);
         Rewrite(F);
 
-        GlobalResult := CSVName;
+        DSSPrime.GlobalResult := CSVName;
         SetLastResultFile(CSVName);
 
     except
@@ -3133,27 +3133,27 @@ begin
 
      {If any records were written to the file, record their relative names}
         if NBranches > 0 then
-            SavedFileList.Add(dirname + PathDelim + 'Branches.dss')
+            DSSPrime.SavedFileList.Add(dirname + PathDelim + 'Branches.dss')
         else
             DeleteFile('Branches.dss');
         if NXfmrs > 0 then
-            SavedFileList.Add(dirname + PathDelim + 'Transformers.dss')
+            DSSPrime.SavedFileList.Add(dirname + PathDelim + 'Transformers.dss')
         else
             DeleteFile('Transformers.dss');
         if NShunts > 0 then
-            SavedFileList.Add(dirname + PathDelim + 'Shunts.dss')
+            DSSPrime.SavedFileList.Add(dirname + PathDelim + 'Shunts.dss')
         else
             DeleteFile('Shunts.dss');
         if NLoads > 0 then
-            SavedFileList.Add(dirname + PathDelim + 'Loads.dss')
+            DSSPrime.SavedFileList.Add(dirname + PathDelim + 'Loads.dss')
         else
             DeleteFile('Loads.dss');
         if NGens > 0 then
-            SavedFileList.Add(dirname + PathDelim + 'Generators.dss')
+            DSSPrime.SavedFileList.Add(dirname + PathDelim + 'Generators.dss')
         else
             DeleteFile('Generators.dss');
         if NCaps > 0 then
-            SavedFileList.Add(dirname + PathDelim + 'Capacitors.dss')
+            DSSPrime.SavedFileList.Add(dirname + PathDelim + 'Capacitors.dss')
         else
             DeleteFile('Capacitors.dss');
 
@@ -3339,18 +3339,18 @@ begin
         if TDI_MHandle <> NIL then
             CloseMHandler(TDI_MHandle, DI_Dir + PathDelim + 'DI_Totals.CSV', TDI_Append);
         TDI_MHandle := NIL;
-        DIFilesAreOpen := FALSE;
+        DSS.DIFilesAreOpen := FALSE;
         if OverloadFileIsOpen then
         begin
             if OV_MHandle <> NIL then
-                CloseMHandler(OV_MHandle, DSSPrime.EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads.CSV', OV_Append);
+                CloseMHandler(OV_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads.CSV', OV_Append);
             OV_MHandle := NIL;
             OverloadFileIsOpen := FALSE;
         end;
         if VoltageFileIsOpen then
         begin
             if VR_MHandle <> NIL then
-                CloseMHandler(VR_MHandle, DSSPrime.EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions.CSV', VR_Append);
+                CloseMHandler(VR_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions.CSV', VR_Append);
             VR_MHandle := NIL;
             VoltageFileIsOpen := FALSE;
         end;
@@ -3458,7 +3458,7 @@ begin
                 DosimpleMsg('Error opening demand interval file "' + Name + '.CSV' + ' for appending.' + CRLF + E.Message, 538);
         end;
 
-        DIFilesAreOpen := TRUE;
+        DSS.DIFilesAreOpen := TRUE;
 
     end;{IF}
 end;
@@ -3499,18 +3499,18 @@ begin
   This is called only if in Demand Interval (DI) mode and the file is open.
 }
 {    Prepares everything for using seasonal ratings if required}
-    if SeasonalRating then
+    if DSS.SeasonalRating then
     begin
-        if SeasonSignal <> '' then
+        if DSS.SeasonSignal <> '' then
         begin
-            RSignal := DSS.XYCurveClass.Find(SeasonSignal);
+            RSignal := DSS.XYCurveClass.Find(DSS.SeasonSignal);
             if RSignal <> NIL then
                 RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour))
             else
-                SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
+                DSS.SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
         end
         else
-            SeasonalRating := FALSE;    // The user didn't define the seasonal signal
+            DSS.SeasonalRating := FALSE;    // The user didn't define the seasonal signal
     end;
 
  { CHECK PDELEMENTS ONLY}
@@ -3528,7 +3528,7 @@ begin
              // Section introduced in 02/20/2019 for allowing the automatic change of ratings
              // when the seasonal ratings option is active
                 ClassName := lowercase(PDElem.DSSClassName);
-                if SeasonalRating and (ClassName = 'line') and (PDElem.NumAmpRatings > 1) then
+                if DSS.SeasonalRating and (ClassName = 'line') and (PDElem.NumAmpRatings > 1) then
                 begin
                     if RatingIdx > PDElem.NumAmpRatings then
                     begin
@@ -3774,7 +3774,7 @@ begin
             Folder := DSSPrime.energyMeterClass.DI_DIR + PathDelim
         else
             Folder := GetOutputDirectory;
-        GlobalResult := CSVName;
+        DSSPrime.GlobalResult := CSVName;
         SetLastResultFile(CSVName);
 
     except
@@ -4165,7 +4165,7 @@ begin
                 DosimpleMsg('Error creating the memory space for demand interval "' + Name + '.CSV' + ' for appending.' + CRLF + E.Message, 538);
         end;
 
-        DIFilesAreOpen := TRUE;
+        DSS.DIFilesAreOpen := TRUE;
 
     end;{IF}
 

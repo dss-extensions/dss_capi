@@ -805,7 +805,7 @@ begin
     Result := NIL;
     if DataChanged then
         UpdateLineGeometryData(f);
-    if not SolutionAbort then
+    if not DSSPrime.SolutionAbort then
         Result := FLineData.YCMatrix[f, Lngth, Units];
 end;
 
@@ -815,7 +815,7 @@ begin
     Result := NIL;
     if DataChanged then
         UpdateLineGeometryData(f);
-    if not SolutionAbort then
+    if not DSSPrime.SolutionAbort then
         Result := FLineData.ZMatrix[F, Lngth, Units];
 end;
 
@@ -1080,7 +1080,7 @@ begin
     if FLineData.ConductorsInSameSpace(LineGeomErrMsg) then
     begin
         raise ELineGeometryProblem.Create('Error in LineGeometry.' + Name + ': ' + LineGeomErrMsg);
-        SolutionAbort := TRUE;
+        DSSPrime.SolutionAbort := TRUE;
     end
     else
     begin

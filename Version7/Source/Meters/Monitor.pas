@@ -739,7 +739,7 @@ begin
             Setbus(1, MeteredElement.GetBus(MeteredTerminal));
                // Make a name for the Buffer File
             BufferFile := {ActiveCircuit.CurrentDirectory + }
-                CircuitName_ + 'Mon_' + Name + '.mon';
+                DSSPrime.CircuitName_ + 'Mon_' + Name + '.mon';
                  // removed 10/19/99 ConvertBlanks(BufferFile); // turn blanks into '_'
 
                  {Allocate Buffers}
@@ -1875,7 +1875,7 @@ begin
     if Show then
         FireOffEditor(CSVName);
 
-    GlobalResult := CSVName;
+    DSSPrime.GlobalResult := CSVName;
 end;
 
 {--------------------------------------------------------------------------}
@@ -2162,7 +2162,7 @@ end;
 
 function TMonitorObj.Get_FileName: String;
 begin
-    Result := GetOutputDirectory + CircuitName_ + 'Mon_' + Name + '.csv'
+    Result := GetOutputDirectory + DSSPrime.CircuitName_ + 'Mon_' + Name + '.csv'
 end;
 
 initialization

@@ -1123,7 +1123,7 @@ begin
                     end;
                 else
                     DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Motors. IndMach012.' + name + ' has %d phases.', [Fnphases]), 5672);
-                    SolutionAbort := TRUE;
+                    DSSPrime.SolutionAbort := TRUE;
                 end;
 
                 InitModel(V012, I012); // E2, etc

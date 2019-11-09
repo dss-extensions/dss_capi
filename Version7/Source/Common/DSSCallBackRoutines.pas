@@ -34,7 +34,9 @@ uses
 {$ENDIF}
     CktElement,
     Math,
-    PDElement;
+    PDElement,
+    DSSClass,
+    DSSHelper;
 
 var
     CallBackParser: TParser;
@@ -113,7 +115,7 @@ end;
 
 procedure DoDSSCommandCallBack(S: pAnsiChar; Maxlen: Cardinal); STDCALL;
 begin
-    SolutionAbort := FALSE;
+    DSSPrime.SolutionAbort := FALSE;
     DSSExecutive.Command := String(S);
 end;
 
@@ -437,7 +439,7 @@ end;
 
 procedure GetResultStrCallBack(S: pAnsiChar; Maxlen: Cardinal); STDCALL;
 begin
-    StrlCopy(S, pAnsiChar(Ansistring(GlobalResult)), Maxlen);
+    StrlCopy(S, pAnsiChar(Ansistring(DSSPrime.GlobalResult)), Maxlen);
 end;
 
 {====================================================================================================================}

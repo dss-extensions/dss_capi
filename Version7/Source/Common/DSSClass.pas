@@ -14,7 +14,7 @@ unit DSSClass;
 interface
 
 USES
-    PointerList, Command,  Arraydef, {$IFDEF DSS_CAPI_HASHLIST}Contnrs{$ELSE}Hashlist{$ENDIF};
+    Command,  Arraydef, Hashlist, {$IFDEF DSS_CAPI_HASHLIST}Contnrs,{$ENDIF} Classes, PointerList;
 
 TYPE
     TDSS = class;
@@ -22,7 +22,9 @@ TYPE
     // Collection of all DSS Classes
     TDSSClasses = class(TObject)
     public
-        constructor Create;
+        DSS: TDSS;
+    
+        constructor Create(dss: TDSS);
         destructor Destroy; override;
         PROCEDURE New(Value:Pointer);
    End;
@@ -99,7 +101,7 @@ TYPE
    END;
 
     TDSS = class(TObject)
-    public
+    protected
         FLoadShapeClass: TDSSClass;
         FTShapeClass: TDSSClass;
         FPriceShapeClass: TDSSClass;
@@ -149,6 +151,66 @@ TYPE
         FXfmrCodeClass: TDSSClass;
         FGICLineClass: TDSSClass;
         FGICTransformerClass: TDSSClass;
+    
+    public
+        DSSClasses: TDSSClasses;
+        ClassNames         :THashList;
+        DSSClassList    :TPointerList; // pointers to the base class types
+        Circuits        :TPointerList;
+        DSSObjs         :TPointerList;
+
+//        ActiveCircuit   :TDSSCircuit;
+//        ActiveDSSClass  :TDSSClass;
+//        ActiveDSSObject :TDSSObject;
+//        AuxParser       :TParser;  // Auxiliary parser for use by anybody for reparsing values
+    
+        LastClassReferenced:Integer;  // index of class of last thing edited
+        NumCircuits     :Integer;
+        MaxAllocationIterations :Integer;
+        ErrorPending       :Boolean;
+        CmdResult,
+        ErrorNumber        :Integer;
+        LastErrorMessage   :String;
+        DefaultEarthModel  :Integer;
+        ActiveEarthModel   :Integer;
+        LastFileCompiled   :String;
+        LastCommandWasCompile :Boolean;
+        SolutionAbort      :Boolean;
+        InShowResults      :Boolean;
+        Redirect_Abort     :Boolean;
+        In_Redirect        :Boolean;
+        DIFilesAreOpen     :Boolean;
+        AutoShowExport     :Boolean;
+        SolutionWasAttempted :Boolean;
+
+        GlobalHelpString   :String;
+        GlobalPropertyValue:String;
+        GlobalResult       :String;
+        LastResultFile     :String;
+
+        LogQueries         :Boolean;
+        QueryFirstTime     :Boolean;
+        QueryLogFileName   :String;
+        QueryLogFile       :TextFile;
+
+        DataDirectory    :String;     // used to be DSSDataDirectory
+        OutputDirectory  :String;     // output files go here, same as DataDirectory if writable
+        CircuitName_     :String;     // Name of Circuit with a "_" appended
+
+        DefaultBaseFreq  :Double;
+        DaisySize        :Double;
+        
+        EventStrings: TStringList;
+        SavedFileList:TStringList;
+        ErrorStrings: TStringList;
+
+        IncMat_Ordered     : Boolean;
+        //***********************A-Diakoptics Variables*********************************
+        ADiakoptics             : Boolean;
+
+        //***********************Seasonal QSTS variables********************************
+        SeasonalRating         : Boolean;    // Tells the energy meter if the seasonal rating feature is active
+        SeasonSignal           : String;     // Stores the name of the signal for selecting the rating dynamically
         
         constructor Create;
         destructor Destroy; override;
@@ -165,19 +227,59 @@ USES DSSGlobals, SysUtils, DSSObject, ParserDel, CktElement;
 constructor TDSS.Create;
 begin
     inherited Create;
+    
+    ADiakoptics      :=    False;  // Disabled by default
+
+    SeasonalRating         :=  False;
+    SeasonSignal           :=  '';
+    
+    CmdResult             := 0;
+    DIFilesAreOpen        := FALSE;
+    ErrorNumber           := 0;
+    ErrorPending          := FALSE;
+    GlobalHelpString      := '';
+    GlobalPropertyValue   := '';
+    LastResultFile        := '';
+    In_Redirect           := FALSE;
+    InShowResults         := FALSE;
+    LastCommandWasCompile := FALSE;
+    LastErrorMessage      := '';
+    MaxAllocationIterations := 2;
+    SolutionAbort         := FALSE;
+    AutoShowExport        := FALSE;
+    SolutionWasAttempted  := FALSE;
+
+    DefaultBaseFreq       := GlobalDefaultBaseFreq;
+    DaisySize             := 1.0;
+    DefaultEarthModel     := DERI;
+    ActiveEarthModel      := DefaultEarthModel;
+
+    LogQueries       := FALSE;
+    QueryLogFileName := '';   
+
+    EventStrings     := TStringList.Create;
+    SavedFileList    := TStringList.Create;
+    ErrorStrings     := TStringList.Create;
+    // ErrorStrings.Clear;    
 end;
 
 destructor TDSS.Destroy;
 begin
+    EventStrings.Free;
+    SavedFileList.Free;
+    ErrorStrings.Free;
+
     inherited Destroy;
 end;
 
 {--------------------------------------------------------------}
 { DSSClasses Implementation
 {--------------------------------------------------------------}
-Constructor TDSSClasses.Create;
+Constructor TDSSClasses.Create(dss: TDSS);
 Begin
      Inherited Create;
+     
+     DSS := dss;
 End;
 
 {--------------------------------------------------------------}
@@ -190,9 +292,9 @@ End;
 PROCEDURE TDSSClasses.New(Value:Pointer);
 
 Begin
-    DSSClassList.New := Value; // Add to pointer list
+    DSS.DSSClassList.New := Value; // Add to pointer list
     ActiveDSSClass := Value;   // Declare to be active
-    ClassNames.Add(ActiveDSSClass.Name); // Add to classname list
+    DSS.ClassNames.Add(ActiveDSSClass.Name); // Add to classname list
 End;
 
 {--------------------------------------------------------------}

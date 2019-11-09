@@ -263,7 +263,7 @@ begin
         end;
 
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -341,7 +341,7 @@ begin
             end;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -511,7 +511,7 @@ begin
             pelem := ActiveCircuit.Faults.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
 
     finally
@@ -679,7 +679,7 @@ begin
             pElem := ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
 
     finally
@@ -802,7 +802,7 @@ begin
             pElem := ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
 
     finally
@@ -923,7 +923,7 @@ begin
             pElem := ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
 
     finally
@@ -1041,7 +1041,7 @@ begin
             pElem := ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
 
     finally
@@ -1164,7 +1164,7 @@ begin
             pElem := ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
 
     finally
@@ -1270,7 +1270,7 @@ begin
             PCElem := ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
         CloseFile(F);
@@ -1311,7 +1311,7 @@ begin
             PDElem := ActiveCircuit.PDElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
         CloseFile(F);
@@ -1401,7 +1401,7 @@ begin
             PCElem := ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
         CloseFile(F);
@@ -1599,7 +1599,7 @@ begin
             PCElem := ActiveCircuit.PCElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
         if Assigned(cBuffer) then
@@ -1726,7 +1726,7 @@ begin
             end; {With Solution}
         end; {With ActiveCircuit}
 
-        GlobalResult := Filenm;
+        DSSPrime.GlobalResult := Filenm;
 
     finally
 
@@ -1997,7 +1997,7 @@ begin
             pElem := ActiveCircuit.EnergyMeters.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -2166,7 +2166,7 @@ begin
             pElem := ActiveCircuit.Generators.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -2313,7 +2313,7 @@ begin
             pElem := ActiveCircuit.PVSystems.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -2460,7 +2460,7 @@ begin
             pElem := ActiveCircuit.StorageElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -2562,7 +2562,7 @@ begin
             pElem := ActiveCircuit.Loads.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -2609,7 +2609,7 @@ begin
             pElem := ActiveCircuit.PDElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
         if Assigned(cBuffer) then
@@ -2734,7 +2734,7 @@ begin
             PDelem := ActiveCircuit.PDElements.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
 
     finally
@@ -2790,7 +2790,7 @@ begin
             pLoad := ActiveCircuit.Loads.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -2842,7 +2842,7 @@ begin
         end;
 
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -2946,7 +2946,7 @@ begin
             end;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
     finally
         CloseFile(F);
     end;
@@ -2996,7 +2996,7 @@ begin
         end;
 
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -3015,10 +3015,10 @@ var
     pName: TNamedObject;
 begin
     try
-        clsCode := DSSClassList.Get(ClassNames.Find('linecode'));
-        clsWire := DSSClassList.Get(ClassNames.Find('wiredata'));
-        clsGeom := DSSClassList.Get(ClassNames.Find('linegeometry'));
-        clsXfmr := DSSClassList.Get(ClassNames.Find('xfmrcode'));
+        clsCode := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('linecode'));
+        clsWire := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('wiredata'));
+        clsGeom := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('linegeometry'));
+        clsXfmr := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('xfmrcode'));
 
         Assignfile(F, FileNm);
         ReWrite(F);
@@ -3076,11 +3076,11 @@ begin
         ReWrite(F);
         Writeln(F, 'Format: DSS Class Name = Instance Count');
         Writeln(F);
-        cls := DSSClassList.First;
+        cls := DSSPrime.DSSClassList.First;
         while cls <> NIL do
         begin
             Writeln(F, Format('%s = %d', [cls.Name, cls.ElementCount]));
-            cls := DSSClassList.Next;
+            cls := DSSPrime.DSSClassList.Next;
         end;
     finally
         CloseFile(F);
@@ -3157,7 +3157,7 @@ begin
 
         Writeln(F);
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
         CloseFile(F);
@@ -3185,7 +3185,7 @@ begin
                     Writeln(F, Format('%s, %-13.11g, %-13.11g', [CheckForBlanks(Uppercase(BusList.Get(i))), Buses^[i].X, Buses^[i].Y]));
             end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -3399,7 +3399,7 @@ begin
             iEnergyMeter := DSSPrime.EnergyMeterClass.Next;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -3412,15 +3412,15 @@ end;
 procedure ExportEventLog(FileNm: String);
 // Export the present set of EventStrings
 begin
-    EventStrings.SaveToFile(FileNm);
-    GlobalResult := FileNm;
+    DSSPrime.EventStrings.SaveToFile(FileNm);
+    DSSPrime.GlobalResult := FileNm;
 end;
 
 procedure ExportErrorLog(FileNm: String);
 // Export the present set of ErrorStrings
 begin
-    ErrorStrings.SaveToFile(FileNm);
-    GlobalResult := FileNm;
+    DSSPrime.ErrorStrings.SaveToFile(FileNm);
+    DSSPrime.GlobalResult := FileNm;
 end;
 
 procedure ExportIncMatrix(FileNm: String);
@@ -3437,7 +3437,7 @@ begin
         begin
             Writeln(F, inttostr(IncMat.data[i][0]) + ',' + inttostr(IncMat.data[i][1]) + ',' + inttostr(IncMat.data[i][2]));
         end;
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
         CloseFile(F);
     end;
 end;
@@ -3456,7 +3456,7 @@ begin
         begin
             Writeln(F, Inc_Mat_Rows[i]);
         end;
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
         CloseFile(F);
     end;
 end;
@@ -3475,7 +3475,7 @@ begin
         begin
             Writeln(F, Inc_Mat_Cols[i]);
         end;
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
         CloseFile(F);
     end;
 end;
@@ -3495,7 +3495,7 @@ begin
         begin
             Writeln(F, Inc_Mat_Cols[i] + ',' + inttostr(Inc_Mat_levels[i]));
         end;
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
         CloseFile(F);
     end;
 end;
@@ -3514,7 +3514,7 @@ begin
         begin
             Writeln(F, inttostr(Laplacian.data[i][0]) + ',' + inttostr(Laplacian.data[i][1]) + ',' + inttostr(Laplacian.data[i][2]));
         end;
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
         CloseFile(F);
     end;
 end;
@@ -3524,7 +3524,7 @@ var
     F: TextFile;
     i: Integer;
 begin
-    if ADiakoptics then
+    if DSSPrime.ADiakoptics then
     begin
         with ActiveCircuit, ActiveCircuit.Solution do
         begin
@@ -3535,7 +3535,7 @@ begin
             begin
                 Writeln(F, inttostr(ZLL.CData[i].Row) + ',' + inttostr(ZLL.CData[i].Col) + ',' + floattostr(ZLL.CData[i].Value.Re) + ',' + floattostr(ZLL.CData[i].Value.Im));
             end;
-            GlobalResult := FileNm;
+            DSSPrime.GlobalResult := FileNm;
             CloseFile(F);
         end;
     end;
@@ -3546,7 +3546,7 @@ var
     F: TextFile;
     i: Integer;
 begin
-    if ADiakoptics then
+    if DSSPrime.ADiakoptics then
     begin
         with ActiveCircuit, ActiveCircuit.Solution do
         begin
@@ -3557,7 +3557,7 @@ begin
             begin
                 Writeln(F, inttostr(ZCC.CData[i].Row) + ',' + inttostr(ZCC.CData[i].Col) + ',' + floattostr(ZCC.CData[i].Value.Re) + ',' + floattostr(ZCC.CData[i].Value.Im));
             end;
-            GlobalResult := FileNm;
+            DSSPrime.GlobalResult := FileNm;
             CloseFile(F);
         end;
     end;
@@ -3568,7 +3568,7 @@ var
     F: TextFile;
     i: Integer;
 begin
-    if ADiakoptics then
+    if DSSPrime.ADiakoptics then
     begin
         with ActiveCircuit, ActiveCircuit.Solution do
         begin
@@ -3579,7 +3579,7 @@ begin
             begin
                 Writeln(F, inttostr(Y4.CData[i].Row) + ',' + inttostr(Y4.CData[i].Col) + ',' + floattostr(Y4.CData[i].Value.Re) + ',' + floattostr(Y4.CData[i].Value.Im));
             end;
-            GlobalResult := FileNm;
+            DSSPrime.GlobalResult := FileNm;
             CloseFile(F);
         end;
     end;
@@ -3590,7 +3590,7 @@ var
     F: TextFile;
     i: Integer;
 begin
-    if ADiakoptics then
+    if DSSPrime.ADiakoptics then
     begin
         with ActiveCircuit, ActiveCircuit.Solution do
         begin
@@ -3601,7 +3601,7 @@ begin
             begin
                 Writeln(F, inttostr(Contours.CData[i].Row) + ',' + inttostr(Contours.CData[i].Col) + ',' + floattostr(Contours.CData[i].Value.Re));
             end;
-            GlobalResult := FileNm;
+            DSSPrime.GlobalResult := FileNm;
             CloseFile(F);
         end;
     end;
@@ -3698,7 +3698,7 @@ begin
             end;
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -3733,7 +3733,7 @@ begin
             pElem := TGICTransformerObj(GICClass.ElementList.Next);
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
         CloseFile(F);
@@ -3761,7 +3761,7 @@ begin
                         [CheckForBlanks(Uppercase(BusList.Get(i))), BusFltRate, Bus_Num_Interrupt, BusTotalNumCustomers, BusCustInterrupts, Bus_Int_Duration, BusTotalMiles]));
                 end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -3829,7 +3829,7 @@ begin
         end;
 
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -3868,7 +3868,7 @@ begin
         end;
 
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -3918,7 +3918,7 @@ begin
         end;
 
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -3940,7 +3940,7 @@ begin
         Parservars.Lookup('@result');
         Writeln(F, Parservars.Value);
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -3971,7 +3971,7 @@ begin
                 end;
             end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
         CloseFile(F);
@@ -4000,7 +4000,7 @@ begin
                 end;
             end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
         CloseFile(F);
@@ -4030,7 +4030,7 @@ begin
                 end;
             end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
         CloseFile(F);
@@ -4092,7 +4092,7 @@ begin
 
         end;
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
         CloseFile(F);

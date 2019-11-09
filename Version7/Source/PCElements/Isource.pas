@@ -555,8 +555,8 @@ begin
 
     except
         DoSimpleMsg('Error computing current for Isource.' + Name + '. Check specification. Aborting.', 334);
-        if In_Redirect then
-            Redirect_Abort := TRUE;
+        if DSSPrime.In_Redirect then
+            DSSPrime.Redirect_Abort := TRUE;
     end;
 
 end;

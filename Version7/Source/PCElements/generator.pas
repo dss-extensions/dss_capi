@@ -1540,7 +1540,7 @@ var
 begin
 
     try
-        if (not InshowResults) then
+        if (not DSSPrime.InShowResults) then
 
         begin
             Append(TraceFile);
@@ -2020,7 +2020,7 @@ begin
             else
             begin
                 DoSimpleMsg(Format('Dynamics model missing for Generator.%s ', [Name]), 5671);
-                SolutionAbort := TRUE;
+                DSSPrime.SolutionAbort := TRUE;
             end;
     else
 
@@ -2100,7 +2100,7 @@ begin
                 end;
         else
             DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.%s has %d phases.', [name, Fnphases]), 5671);
-            SolutionAbort := TRUE;
+            DSSPrime.SolutionAbort := TRUE;
         end;
 
     end;
@@ -2697,7 +2697,7 @@ begin
                     end;
                 else
                     DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.' + name + ' has %d phases.', [Fnphases]), 5672);
-                    SolutionAbort := TRUE;
+                    DSSPrime.SolutionAbort := TRUE;
                 end;
 
 

@@ -598,7 +598,7 @@ begin
     Result := False;
     if ActiveCircuit <> NIL then
     begin
-        Result := DIFilesAreOpen;    // Global variable
+        Result := DSSPrime.DIFilesAreOpen;    // Global variable
     end;
 end;
 //------------------------------------------------------------------------------

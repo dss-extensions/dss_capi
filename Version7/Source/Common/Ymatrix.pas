@@ -46,7 +46,9 @@ uses
     KLUSolve,
     DSSClassDefs,
     GUtil,
-    GSet;
+    GSet,
+    DSSClass,
+    DSSHelper;
 
 
 type 
@@ -368,7 +370,7 @@ begin
         end;
         
         
-        if SolutionAbort then
+        if DSSPrime.SolutionAbort then
         begin
             DoSimpleMsg('Y matrix build aborted due to error in primitive Y calculations.', 11001);
             Exit;  // Some problem occured building Yprims

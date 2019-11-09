@@ -456,7 +456,7 @@ begin
             67:
                 DSSExecutive.RecorderOn := InterpretYesNo(Param);
             73:
-                DefaultBaseFreq := Parser.DblValue;
+                DSSPrime.DefaultBaseFreq := Parser.DblValue;
             102:
                 UpdateRegistry := InterpretYesNo(Param);
             111:
@@ -691,12 +691,12 @@ begin
             70:
                 DoSetCFactors(Parser.DblValue);
             71:
-                AutoShowExport := InterpretYesNo(Param);
+                DSSPrime.AutoShowExport := InterpretYesNo(Param);
             72:
-                MaxAllocationIterations := Parser.IntValue;
+                DSSPrime.MaxAllocationIterations := Parser.IntValue;
             73:
             begin
-                DefaultBaseFreq := Parser.DblValue;
+                DSSPrime.DefaultBaseFreq := Parser.DblValue;
                 ActiveCircuit.Fundamental := Parser.DblValue;     // Set Base Frequency for system (used henceforth)
                 ActiveCircuit.Solution.Frequency := Parser.DblValue;
             end;
@@ -705,7 +705,7 @@ begin
             75:
                 ActiveCircuit.SwitchMarkerCode := Parser.IntValue;
             76:
-                DaisySize := Parser.DblValue;
+                DSSPrime.DaisySize := Parser.DblValue;
             77:
                 ActiveCircuit.MarkTransformers := InterpretYesNo(Param);
             78:
@@ -715,11 +715,11 @@ begin
             80:
                 ActiveCircuit.ActiveLoadShapeClass := InterpretLoadShapeClass(Param);
             81:
-                DefaultEarthModel := InterpretEarthModel(Param);
+                DSSPrime.DefaultEarthModel := InterpretEarthModel(Param);
             82:
             begin
-                LogQueries := InterpretYesNo(Param);
-                if LogQueries then
+                DSSPrime.LogQueries := InterpretYesNo(Param);
+                if DSSPrime.LogQueries then
                     ResetQueryLogFile;
             end;
             83:
@@ -781,9 +781,9 @@ begin
             113:
                 ActiveCircuit.ReductionZmag := Parser.DblValue;
             114:
-                SeasonalRating := InterpretYesNo(Param);
+                DSSPrime.SeasonalRating := InterpretYesNo(Param);
             115:
-                SeasonSignal := Param;
+                DSSPrime.SeasonSignal := Param;
 
         else
            // Ignore excess parameters
@@ -823,7 +823,7 @@ begin
     Result := 0;
     try
 
-        GlobalResult := '';  //initialize for appending
+        DSSPrime.GlobalResult := '';  //initialize for appending
 
      // Continue parsing command line
         ParamName := Parser.NextParam;
@@ -922,13 +922,13 @@ begin
                     with ActiveCircuit do
                     begin
                         i := 1;
-                        GlobalResult := '(';
+                        DSSPrime.GlobalResult := '(';
                         while LegalVoltageBases^[i] > 0.0 do
                         begin
-                            GlobalResult := GlobalResult + Format('%-g, ', [LegalVoltageBases^[i]]);
+                            DSSPrime.GlobalResult := DSSPrime.GlobalResult + Format('%-g, ', [LegalVoltageBases^[i]]);
                             inc(i);
                         end;
-                        GlobalResult := GlobalResult + ')';
+                        DSSPrime.GlobalResult := DSSPrime.GlobalResult + ')';
                     end;
                 40:
                     case ActiveCircuit.Solution.Algorithm of
@@ -988,7 +988,7 @@ begin
                 56:
                     AppendGlobalResult(ActiveCircuit.BusList.Get(ActiveCircuit.ActiveBusIndex));
                 57:
-                    AppendGlobalResult(DataDirectory); // NOTE - not necessarily output directory
+                    AppendGlobalResult(DSSPrime.DataDirectory); // NOTE - not necessarily output directory
                 58:
                     with ActiveCircuit do
                         for i := 1 to NumBuses do
@@ -1037,14 +1037,14 @@ begin
                 70:
                     AppendGlobalResult('Get function not applicable.');
                 71:
-                    if AutoShowExport then
+                    if DSSPrime.AutoShowExport then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 72:
-                    AppendGlobalResult(Format('%d', [MaxAllocationIterations]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.MaxAllocationIterations]));
                 73:
-                    AppendGlobalResult(Format('%d', [Round(DefaultBaseFreq)]));
+                    AppendGlobalResult(Format('%d', [Round(DSSPrime.DefaultBaseFreq)]));
                 74:
                     if ActiveCircuit.MarkSwitches then
                         AppendGlobalResult('Yes')
@@ -1053,7 +1053,7 @@ begin
                 75:
                     AppendGlobalResult(Format('%d', [ActiveCircuit.SwitchMarkerCode]));
                 76:
-                    AppendGlobalResult(Format('%-.6g', [DaisySize]));
+                    AppendGlobalResult(Format('%-.6g', [DSSPrime.DaisySize]));
                 77:
                     if ActiveCircuit.MarkTransformers then
                         AppendGlobalResult('Yes')
@@ -1066,9 +1066,9 @@ begin
                 80:
                     AppendGlobalResult(GetActiveLoadShapeClass);
                 81:
-                    AppendGlobalResult(GetEarthModel(DefaultEarthModel));
+                    AppendGlobalResult(GetEarthModel(DSSPrime.DefaultEarthModel));
                 82:
-                    if LogQueries then
+                    if DSSPrime.LogQueries then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
@@ -1171,12 +1171,12 @@ begin
                 113:
                     AppendGlobalResult(Format('%-g', [ActiveCircuit.ReductionZmag]));
                 114:
-                    if SeasonalRating then
+                    if DSSPrime.SeasonalRating then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 115:
-                    AppendGlobalResult(SeasonSignal);
+                    AppendGlobalResult(DSSPrime.SeasonSignal);
             else
            // Ignore excess parameters
             end;

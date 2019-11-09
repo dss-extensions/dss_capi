@@ -359,7 +359,7 @@ begin
         FileName := LowerCase(Parser.StrValue);    // should be full path name to work universally
     end;
 
-    InShowResults := TRUE;
+    DSSPrime.InShowResults := TRUE;
 
    {Assign default file name if alternate not specified}
     if Length(FileName) = 0 then
@@ -490,7 +490,7 @@ begin
         else
             FileName := 'EXP_VOLTAGES.CSV';    // default
         end;
-        FileName := GetOutputDirectory + CircuitName_ + FileName;  // Explicitly define directory
+        FileName := GetOutputDirectory + DSSPrime.CircuitName_ + FileName;  // Explicitly define directory
     end;
 
     case ParamPointer of
@@ -533,7 +533,7 @@ begin
                         if pMon <> NIL then
                         begin
                             pMon.TranslateToCSV(FALSE);
-                            FileName := GlobalResult;
+                            FileName := DSSPrime.GlobalResult;
                         end;
                         pMon := ActiveCircuit.Monitors.Next;
                     end;
@@ -544,7 +544,7 @@ begin
                     if pMon <> NIL then
                     begin
                         pMon.TranslateToCSV(FALSE);
-                        FileName := GlobalResult;
+                        FileName := DSSPrime.GlobalResult;
                     end
                     else
                         DoSimpleMsg('Monitor "' + Parm2 + '" not found.' + CRLF + parser.CmdString, 250);
@@ -652,13 +652,13 @@ begin
     end;
 
     Result := 0;
-    InShowResults := FALSE;
+    DSSPrime.InShowResults := FALSE;
 
     if not AbortExport then
     begin
         SetLastResultFile(FileName);
         ParserVars.Add('@lastexportfile', FileName);
-        if AutoShowExport then
+        if DSSPrime.AutoShowExport then
             FireOffEditor(FileName);
     end;
 

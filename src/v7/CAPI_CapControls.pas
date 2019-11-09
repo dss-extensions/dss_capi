@@ -74,7 +74,7 @@ var
 begin
     if not Assigned(ActiveCircuit) then
         exit;
-    SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('capcontrol.%s.%s=%s', [ActiveCapControl.Name, parm, val]);
     DSSExecutive.Command := cmd;
 end;

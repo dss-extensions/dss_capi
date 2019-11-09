@@ -1326,7 +1326,7 @@ begin
             Rewrite(F);
             for i := 1 to NumPoints do
                 Write(F, PMultipliers^[i]);
-            GlobalResult := 'mult=[dblfile=' + FName + ']';
+            DSSPrime.GlobalResult := 'mult=[dblfile=' + FName + ']';
         finally
             CloseFile(F);
         end;
@@ -1370,7 +1370,7 @@ begin
                 Temp := PMultipliers^[i];
                 Write(F, Temp);
             end;
-            GlobalResult := 'mult=[sngfile=' + FName + ']';
+            DSSPrime.GlobalResult := 'mult=[sngfile=' + FName + ']';
         finally
             CloseFile(F);
         end;

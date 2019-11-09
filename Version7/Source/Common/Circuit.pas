@@ -102,6 +102,7 @@ TYPE
 
 
       Public
+          DSS: TDSS;
 
           ActiveBusIndex :Integer;
           Fundamental    :Double;    // fundamental and default base frequency
@@ -283,7 +284,7 @@ TYPE
           ActiveLoadShapeClass: Integer;
 
 
-          Constructor Create(const aName:String);
+          Constructor Create(dss: TDSS; const aName:String);
           Destructor Destroy; Override;
 
           Procedure AddCktElement(Handle:Integer);  // Adds last DSS object created to circuit
@@ -336,15 +337,17 @@ USES
      {$IFDEF MSWINDOWS}Windows,  SHELLAPI, {$ELSE} BaseUnix, Unix, {$ENDIF} Executive, StrUtils,
      DSSHelper;
 //----------------------------------------------------------------------------
-Constructor TDSSCircuit.Create(const aName:String);
+Constructor TDSSCircuit.Create(dss: TDSS; const aName:String);
 
 // Var Retval:Integer;
 
 BEGIN
      inherited Create('Circuit');
+     
+     DSS := dss;
 
      IsSolved := False;
-     {*Retval   := *} DSSPrime.SolutionClass.NewObject(Name);
+     {*Retval   := *} DSS.SolutionClass.NewObject(Name);
      Solution := ActiveSolutionObj;
 
      LocalName   := LowerCase(aName);
@@ -352,7 +355,7 @@ BEGIN
      CaseName    := aName;  // Default case name to circuitname
                             // Sets CircuitName_
 
-     Fundamental      := DefaultBaseFreq;
+     Fundamental      := DSS.DefaultBaseFreq;
      ActiveCktElement := nil;
      ActiveBusIndex   := 1;    // Always a bus
 
@@ -503,8 +506,8 @@ BEGIN
      DefaultGrowthRate          := 1.025;
      DefaultGrowthFactor        := 1.0;
 
-     DefaultDailyShapeObj  := DSSPrime.LoadShapeClass.Find('default');
-     DefaultYearlyShapeObj := DSSPrime.LoadShapeClass.Find('default');
+     DefaultDailyShapeObj  := DSS.LoadShapeClass.Find('default');
+     DefaultYearlyShapeObj := DSS.LoadShapeClass.Find('default');
 
      CurrentDirectory   := '';
 
@@ -1182,7 +1185,7 @@ Begin
     Laplacian := Laplacian.multiply(IncMat);                // Laplacian Matrix calculated
     // Generates the graph file
     {******************************************************************************************}
-    FileName  := GetOutputDirectory + CircuitName_ + '.graph';
+    FileName  := GetOutputDirectory + DSS.CircuitName_ + '.graph';
     Assignfile(F,FileName);
     ReWrite(F);
     Writeln(F,inttostr(length(Inc_Mat_Cols)) + ' ' + inttostr(length(Inc_Mat_Cols) - 1)); // it should be the rank of the incidence matrix
@@ -1291,7 +1294,7 @@ Begin
       setlength(PConn_Voltages,length(Locations)*6);        //  Sets the memory space for storing the voltage at the point of conn
       setlength(Link_branches,length(Locations));           //  Sets the memory space for storing the link branches names
       setlength(PConn_Names,length(Locations));             //  Sets the memory space for storing the Bus names
-      SolutionAbort := FALSE;
+      DSS.SolutionAbort := FALSE;
       j             :=  0;
       for i := 0 to High(Locations) do
       begin
@@ -1513,7 +1516,7 @@ BEGIN
         ReallocMem(DeviceRef, Sizeof(DeviceRef^[1]) * MaxDevices);
     END;
     DeviceRef^[NumDevices].devHandle := Handle;    // Index into CktElements
-    DeviceRef^[NumDevices].CktElementClass := LastClassReferenced;
+    DeviceRef^[NumDevices].CktElementClass := DSS.LastClassReferenced;
 END;
 
 
@@ -1532,16 +1535,16 @@ BEGIN
      Result := 0;
 
      ParseObjectClassandName(FullObjectName, DevType, DevName);
-     DevClassIndex := ClassNames.Find(DevType);
-     If DevClassIndex = 0 Then DevClassIndex := LastClassReferenced;
+     DevClassIndex := DSS.ClassNames.Find(DevType);
+     If DevClassIndex = 0 Then DevClassIndex := DSS.LastClassReferenced;
      if DevName <> '' then
      begin
        Devindex := DeviceList.Find(DevName);
        WHILE DevIndex>0 DO BEGIN
            IF DeviceRef^[Devindex].CktElementClass=DevClassIndex THEN   // we got a match
             BEGIN
-              ActiveDSSClass := DSSClassList.Get(DevClassIndex);
-              LastClassReferenced := DevClassIndex;
+              ActiveDSSClass := DSS.DSSClassList.Get(DevClassIndex);
+              DSS.LastClassReferenced := DevClassIndex;
               Result := DeviceRef^[Devindex].devHandle;
              // ActiveDSSClass.Active := Result;
             //  ActiveCktElement := ActiveDSSClass.GetActiveObj;
@@ -1552,7 +1555,7 @@ BEGIN
        END;
      end;
 
-     CmdResult := Result;
+     DSS.CmdResult := Result;
 
 END;
 
@@ -1631,7 +1634,7 @@ BEGIN
   If Not MeterZonesComputed or Not ZonesLocked Then
   Begin
      If LogEvents Then LogThisEvent('Resetting Meter Zones');
-     DSSPrime.EnergyMeterClass.ResetMeterZonesAll;
+     DSS.EnergyMeterClass.ResetMeterZonesAll;
      MeterZonesComputed := True;
      If LogEvents Then LogThisEvent('Done Resetting Meter Zones');
   End;
@@ -1896,9 +1899,9 @@ begin
      CapacityFound := False;
 
      Repeat
-          DSSPrime.EnergyMeterClass.ResetAll;
+          DSS.EnergyMeterClass.ResetAll;
           Solution.Solve;
-          DSSPrime.EnergyMeterClass.SampleAll;
+          DSS.EnergyMeterClass.SampleAll;
           TotalizeMeters;
 
            // Check for non-zero in UEregs
@@ -1963,13 +1966,13 @@ begin
        Exit;
      End;
 
-    SavedFileList.Clear;  {This list keeps track of all files saved}
+    DSS.SavedFileList.Clear;  {This list keeps track of all files saved}
 
     // Initialize so we will know when we have saved the circuit elements
     For i := 1 to CktElements.ListSize Do TDSSCktElement(CktElements.Get(i)).HasBeenSaved := False;
 
     // Initialize so we don't save a class twice
-    For i := 1 to DSSClassList.ListSize Do TDssClass(DSSClassList.Get(i)).Saved := FALSE;
+    For i := 1 to DSS.DSSClassList.ListSize Do TDssClass(DSS.DSSClassList.Get(i)).Saved := FALSE;
 
     {Ignore Feeder Class -- gets saved with Energymeters}
    // FeederClass.Saved := TRUE;  // will think this class is already saved
@@ -2002,7 +2005,7 @@ begin
     If Success Then
     Begin
 {$IFDEF DSS_CAPI}
-        GlobalResult := 'Circuit saved in directory: ' + GetCurrentDir;
+        DSS.GlobalResult := 'Circuit saved in directory: ' + GetCurrentDir;
 {$ELSE}
         DoSimpleMsg('Circuit saved in directory: ' + GetCurrentDir, 433)
 {$ENDIF}
@@ -2027,10 +2030,10 @@ begin
   Result := FALSE;
 
   // Write Files for all populated DSS Classes  Except Solution Class
-  For i := 1 to DSSClassList.ListSize Do
+  For i := 1 to DSS.DSSClassList.ListSize Do
    Begin
-      Dss_Class := DSSClassList.Get(i);
-      If (DSS_Class = DSSPrime.SolutionClass) or Dss_Class.Saved Then Continue;   // Cycle to next
+      Dss_Class := DSS.DSSClassList.Get(i);
+      If (DSS_Class = DSS.SolutionClass) or Dss_Class.Saved Then Continue;   // Cycle to next
             {use default filename=classname}
       IF Not WriteClassFile(Dss_Class,'', (DSS_Class is TCktElementClass) ) Then Exit;  // bail on error
       DSS_Class.Saved := TRUE;
@@ -2055,7 +2058,7 @@ Begin
 //          If Buses^[i].kVBase > 0.0 Then
 //            Writeln(F, Format('SetkVBase Bus=%s  kvln=%.7g ', [BusList.Get(i), Buses^[i].kVBase]));
         DSSExecutive.Command := 'get voltagebases';
-        VBases := GlobalResult;
+        VBases := DSS.GlobalResult;
         Writeln(F, 'Set Voltagebases='+VBases);
         CloseFile(F);
         Result := TRUE;
@@ -2085,9 +2088,9 @@ begin
       Writeln(F);
 
       // Write Redirect for all populated DSS Classes  Except Solution Class
-      For i := 1 to SavedFileList.Count  Do
+      For i := 1 to DSS.SavedFileList.Count  Do
        Begin
-          Writeln(F, 'Redirect ', SavedFileList.Strings[i-1]);
+          Writeln(F, 'Redirect ', DSS.SavedFileList.Strings[i-1]);
        End;
 
       Writeln(F,'MakeBusList');
@@ -2197,7 +2200,7 @@ end;
 procedure TDSSCircuit.Set_CaseName(const Value: String);
 begin
   FCaseName := Value;
-  CircuitName_ := Value + '_';
+  DSS.CircuitName_ := Value + '_';
 end;
 
 function TDSSCircuit.Get_Name:String;

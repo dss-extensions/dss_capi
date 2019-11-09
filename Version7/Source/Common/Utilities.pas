@@ -778,7 +778,7 @@ begin
     begin
          {Default values}
         if compareText(param, '%result%') = 0 then
-            CSVFileName := LastResultFile
+            CSVFileName := DSSPrime.LastResultFile
         else
             CSVFileName := Param;
         if not FileExists(CSVFileName) then
@@ -1410,9 +1410,9 @@ var
 begin
     Result := 0; // Default return value
     ParseObjectClassandName(FullObjName, DevClassName, DevName);
-    DevClassIndex := ClassNames.Find(DevClassName);
+    DevClassIndex := DSSPrime.ClassNames.Find(DevClassName);
     if DevClassIndex = 0 then
-        DevClassIndex := LastClassReferenced;
+        DevClassIndex := DSSPrime.LastClassReferenced;
 
      // Since there could be devices of the same name of different classes,
      // loop until we find one of the correct class
@@ -1489,7 +1489,7 @@ begin
 
     CloseFile(F);
 
-    GlobalResult := FileName;
+    DSSPrime.GlobalResult := FileName;
 
 end;
 
@@ -1533,7 +1533,7 @@ begin
     end;
 
   // Dump All presend DSSClasses
-    pClass := DSSClassList.First;
+    pClass := DSSPrime.DSSClassList.First;
     while pClass <> NIL do
     begin
         Writeln(F, '[', pClass.name, ']');
@@ -1542,7 +1542,7 @@ begin
             Writeln(F, i: 0, ', "', pClass.PropertyName^[i], '", "',
                 ReplaceCRLF(pClass.PropertyHelp^[i]), '"');
         end;
-        pClass := DSSClassList.Next;
+        pClass := DSSPrime.DSSClassList.Next;
     end;
 
 
@@ -1594,7 +1594,7 @@ var
 begin
     Result := TRUE;
     try
-        Assignfile(F, GetOutputDirectory + CircuitName_ + 'SavedVoltages.dbl');
+        Assignfile(F, GetOutputDirectory + DSSPrime.CircuitName_ + 'SavedVoltages.dbl');
         Rewrite(F);
 
     except
@@ -1639,7 +1639,7 @@ begin
 
     Result := TRUE;
     try
-        Assignfile(F, GetOutputDirectory + CircuitName_ + 'SavedVoltages.dbl');
+        Assignfile(F, GetOutputDirectory + DSSPrime.CircuitName_ + 'SavedVoltages.dbl');
         Reset(F);
 
     except
@@ -1957,10 +1957,10 @@ procedure ClearEventLog;
 begin
     try
 {****  WriteDLLDebugFile(Format('ClearEventLog: EventStrings= %p', [@EventStrings])); }
-        EventStrings.Clear;
+        DSSPrime.EventStrings.Clear;
     except
         On E: Exception do
-            Dosimplemsg(Format('Exception clearing event log: %s, @EventStrings=%p', [E.Message, @EventStrings]), 7151);
+            Dosimplemsg(Format('Exception clearing event log: %s, @EventStrings=%p', [E.Message, @DSSPrime.EventStrings]), 7151);
     end;
 end;
 
@@ -1969,10 +1969,10 @@ procedure ClearErrorLog;
 begin
     try
 {****  WriteDLLDebugFile(Format('ClearEventLog: EventStrings= %p', [@EventStrings])); }
-        ErrorStrings.Clear;
+        DSSPrime.ErrorStrings.Clear;
     except
         On E: Exception do
-            Dosimplemsg(Format('Exception clearing error log: %s, @EventStrings=%p', [E.Message, @EventStrings]), 71511);
+            Dosimplemsg(Format('Exception clearing error log: %s, @EventStrings=%p', [E.Message, @DSSPrime.EventStrings]), 71511);
     end;
 end;
 
@@ -1981,7 +1981,7 @@ procedure LogThisEvent(const EventName: String);
 begin
     {****  WriteDLLDebugFile(Format('LogThisEvent: EventStrings= %p', [@EventStrings])); }
     with ActiveCircuit.Solution do
-        EventStrings.Add(Format('Hour=%d, Sec=%-.8g, Iteration=%d, ControlIter=%d, Event=%s',
+        DSSPrime.EventStrings.Add(Format('Hour=%d, Sec=%-.8g, Iteration=%d, ControlIter=%d, Event=%s',
             [DynaVars.intHour, Dynavars.t, iteration, ControlIteration, EventName]));
 
      //     'Time=' + TimeToStr(Time)+': '+EventName);
@@ -1997,7 +1997,7 @@ begin
     with  ActiveCircuit.Solution do
         S := Format('Hour=%d, Sec=%-.5g, ControlIter=%d, Element=%s, Action=%s',
             [DynaVars.intHour, Dynavars.t, ControlIteration, OpDev, Uppercase(action)]);
-    EventStrings.Add(S);
+    DSSPrime.EventStrings.Add(S);
   {****  ShowMessageForm(EventStrings); }
 end;
 
@@ -2082,7 +2082,7 @@ begin
         ClassName := DSS_Class.Name;
         AssignFile(F, ClassName + '.dss');
         Rewrite(F);
-        SavedFileList.Add(ClassName + '.dss');
+        DSSPrime.SavedFileList.Add(ClassName + '.dss');
         DSS_Class.First;   // Sets ActiveDSSObject
         WriteActiveDSSObject(F, 'Edit'); // Write First Vsource out as an Edit
         while DSS_Class.Next > 0 do
@@ -2149,7 +2149,7 @@ begin
         CloseFile(F);
 
         if Nrecords > 0 then
-            SavedFileList.Add(FileName)
+            DSSPrime.SavedFileList.Add(FileName)
         else
             DeleteFile(FileName);
 
@@ -2332,7 +2332,7 @@ begin
 
     end;
 
-    GlobalResult := AlignedFile;
+    DSSPrime.GlobalResult := AlignedFile;
 
 end;
 
@@ -2700,7 +2700,7 @@ begin
         else
             WriteProportionalGenerators(F, kW, PF, DoGenerators);
         end;
-        GlobalResult := Fname;
+        DSSPrime.GlobalResult := Fname;
     finally
    // Writeln(F, 'Set allowduplicates=no');
         CloseFile(F);
@@ -2941,8 +2941,8 @@ begin
     end;
 
     try
-        FileName := GetOutputDirectory + CircuitName_ + ScriptFileName;
-        GlobalResult := FileName;
+        FileName := GetOutputDirectory + DSSPrime.CircuitName_ + ScriptFileName;
+        DSSPrime.GlobalResult := FileName;
 
         Assignfile(Fout, fileName);
         Rewrite(Fout);

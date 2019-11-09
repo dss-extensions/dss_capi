@@ -899,12 +899,12 @@ begin
     if not IsLine(ActiveCircuit.ActiveCktElement) then 
         Exit;
         
-    if not SeasonalRating then 
+    if not DSSPrime.SeasonalRating then 
         Exit;
         
-    if SeasonSignal <> '' then
+    if DSSPrime.SeasonSignal <> '' then
     begin
-        RSignal := DSSPrime.XYCurveClass.Find(SeasonSignal);
+        RSignal := DSSPrime.XYCurveClass.Find(DSSPrime.SeasonSignal);
         
         if RSignal <> NIL then
             RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));

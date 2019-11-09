@@ -1357,7 +1357,7 @@ procedure TRegControlObj.RegWriteDebugRecord(S: String);
 // write a general debug string
 begin
     try
-        if (not InshowResults) then
+        if (not DSSPrime.InShowResults) then
         begin
             Append(TraceFile);
             Writeln(TraceFile, S);
@@ -1379,7 +1379,7 @@ var
 begin
 
     try
-        if (not InshowResults) then
+        if (not DSSPrime.InShowResults) then
         begin
             Separator := ', ';
             Append(TraceFile);

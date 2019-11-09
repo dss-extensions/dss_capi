@@ -567,7 +567,7 @@ Begin
                       if ControlMode = '' then
                          DoSimpleMsg('Invalid Control Mode selected', 1366);
                       CombiControlMode := '';
-                      SolutionAbort := True;
+                      DSS.SolutionAbort := True;
                       exit;
                     End;
 
@@ -589,7 +589,7 @@ Begin
                       if CombiControlMode = '' then
                          DoSimpleMsg('Invalid CombiControl Mode selected', 1367);
                       CombiControlMode := '';
-                      SolutionAbort := True;
+                      DSS.SolutionAbort := True;
                       exit;
                     End;
 

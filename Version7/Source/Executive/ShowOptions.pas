@@ -205,16 +205,16 @@ begin
         end;
     end;
 
-    InShowResults := TRUE;
+    DSSPrime.InShowResults := TRUE;
 
     case ParamPointer of
         1:
         begin {Autoadded}
-            FireOffEditor(GetOutputDirectory + CircuitName_ + 'AutoAddedGenerators.Txt');
-            FireOffEditor(GetOutputDirectory + CircuitName_ + 'AutoAddedCapacitors.Txt');
+            FireOffEditor(GetOutputDirectory + DSSPrime.CircuitName_ + 'AutoAddedGenerators.Txt');
+            FireOffEditor(GetOutputDirectory + DSSPrime.CircuitName_ + 'AutoAddedCapacitors.Txt');
         end;
         2:
-            ShowBuses(GetOutputDirectory + CircuitName_ + 'Buses.Txt');
+            ShowBuses(GetOutputDirectory + DSSPrime.CircuitName_ + 'Buses.Txt');
         3:
         begin
             ShowOptionCode := 0;
@@ -244,24 +244,24 @@ begin
                 1:
                     Filname := 'Curr_Elem';
             end;
-            ShowCurrents(GetOutputDirectory + CircuitName_ + FilName + '.Txt', ShowResid, ShowOptionCode);
+            ShowCurrents(GetOutputDirectory + DSSPrime.CircuitName_ + FilName + '.Txt', ShowResid, ShowOptionCode);
         end;
         4:
-            ActiveCircuit.Solution.WriteConvergenceReport(GetOutputDirectory + CircuitName_ + 'Convergence.TXT');
+            ActiveCircuit.Solution.WriteConvergenceReport(GetOutputDirectory + DSSPrime.CircuitName_ + 'Convergence.TXT');
         5:
         begin
             ParamName := Parser.NextParam;   // Look for another param
             Param := LowerCase(Parser.StrValue);
-            ShowElements(GetOutputDirectory + CircuitName_ + 'Elements.Txt', Param);
+            ShowElements(GetOutputDirectory + DSSPrime.CircuitName_ + 'Elements.Txt', Param);
         end;
         6:
-            ShowFaultStudy(GetOutputDirectory + CircuitName_ + 'FaultStudy.Txt');
+            ShowFaultStudy(GetOutputDirectory + DSSPrime.CircuitName_ + 'FaultStudy.Txt');
         7:
-            ShowIsolated(GetOutputDirectory + CircuitName_ + 'Isolated.Txt');
+            ShowIsolated(GetOutputDirectory + DSSPrime.CircuitName_ + 'Isolated.Txt');
         8:
-            ShowGenMeters(GetOutputDirectory + CircuitName_ + 'GenMeterOut.Txt');
+            ShowGenMeters(GetOutputDirectory + DSSPrime.CircuitName_ + 'GenMeterOut.Txt');
         9:
-            ShowMeters(GetOutputDirectory + CircuitName_ + 'EMout.Txt');
+            ShowMeters(GetOutputDirectory + DSSPrime.CircuitName_ + 'EMout.Txt');
         10:
         begin     // Show Monitor
             ParamName := Parser.NextParam;
@@ -307,7 +307,7 @@ begin
             else
                 FilName := FilName + '_kVA';
 
-            ShowPowers(GetOutputDirectory + CircuitName_ + filname + '.txt', MVAOpt, ShowOptionCode);
+            ShowPowers(GetOutputDirectory + DSSPrime.CircuitName_ + filname + '.txt', MVAOpt, ShowOptionCode);
         end;
         13:
         begin
@@ -342,33 +342,33 @@ begin
                 else
                     FilName := FilName + '_seq';
                 end;
-            ShowVoltages(GetOutputDirectory + CircuitName_ + FilName + '.Txt', LLopt, ShowOptionCode);
+            ShowVoltages(GetOutputDirectory + DSSPrime.CircuitName_ + FilName + '.Txt', LLopt, ShowOptionCode);
         end;
         14:
-            ShowMeterZone(GetOutputDirectory + CircuitName_ + 'ZoneOut.Txt');
+            ShowMeterZone(GetOutputDirectory + DSSPrime.CircuitName_ + 'ZoneOut.Txt');
         15:
-            ShowRegulatorTaps(GetOutputDirectory + CircuitName_ + 'RegTaps.Txt');
+            ShowRegulatorTaps(GetOutputDirectory + DSSPrime.CircuitName_ + 'RegTaps.Txt');
         16:
-            ShowOverloads(GetOutputDirectory + CircuitName_ + 'Overload.Txt');
+            ShowOverloads(GetOutputDirectory + DSSPrime.CircuitName_ + 'Overload.Txt');
         17:
         begin
             ParamName := Parser.NextParam;
             Param := Parser.StrValue;
             if Length(Param) > 0 then
-                ShowUnserved(GetOutputDirectory + CircuitName_ + 'Unserved.Txt', TRUE)
+                ShowUnserved(GetOutputDirectory + DSSPrime.CircuitName_ + 'Unserved.Txt', TRUE)
             else
-                ShowUnserved(GetOutputDirectory + CircuitName_ + 'Unserved.Txt', FALSE);
+                ShowUnserved(GetOutputDirectory + DSSPrime.CircuitName_ + 'Unserved.Txt', FALSE);
         end;
         18:
-            ShowEventLog(GetOutputDirectory + CircuitName_ + 'EventLog.Txt');// ShowMessageForm(EventStrings);
+            ShowEventLog(GetOutputDirectory + DSSPrime.CircuitName_ + 'EventLog.Txt');// ShowMessageForm(EventStrings);
         19:
-            ShowVariables(GetOutputDirectory + CircuitName_ + 'Variables.Txt');
+            ShowVariables(GetOutputDirectory + DSSPrime.CircuitName_ + 'Variables.Txt');
         20:
-            ShowRatings(GetOutputDirectory + CircuitName_ + 'RatingsOut.Txt');
+            ShowRatings(GetOutputDirectory + DSSPrime.CircuitName_ + 'RatingsOut.Txt');
         21:
-            ShowLoops(GetOutputDirectory + CircuitName_ + 'Loops.Txt');
+            ShowLoops(GetOutputDirectory + DSSPrime.CircuitName_ + 'Loops.Txt');
         22:
-            ShowLosses(GetOutputDirectory + CircuitName_ + 'Losses.Txt');
+            ShowLosses(GetOutputDirectory + DSSPrime.CircuitName_ + 'Losses.Txt');
         23:
         begin  // Show Bus Power Report
             ShowOptionCode := 0;
@@ -402,11 +402,11 @@ begin
             else
                 FilName := FilName + '_kVA';
 
-            ShowBusPowers(GetOutputDirectory + CircuitName_ + FilName + '.txt', BusName, MVAOpt, ShowOptionCode);
+            ShowBusPowers(GetOutputDirectory + DSSPrime.CircuitName_ + FilName + '.txt', BusName, MVAOpt, ShowOptionCode);
         end;
         24:
         begin {ShowLineConstants  Show Lineconstants 60 mi}
-            Freq := DefaultBaseFreq;  // Default
+            Freq := DSSPrime.DefaultBaseFreq;  // Default
             Units := UNITS_KFT; // 'kft'; // default
             Rho_line := 100.0;
             ParamName := parser.nextparam;
@@ -418,7 +418,7 @@ begin
             ParamName := parser.nextparam;
             if Length(Parser.strvalue) > 0 then
                 Rho_line := Parser.dblValue;
-            ShowLineConstants(GetOutputDirectory + CircuitName_ + 'LineConstants.txt', freq, units, Rho_line);
+            ShowLineConstants(GetOutputDirectory + DSSPrime.CircuitName_ + 'LineConstants.txt', freq, units, Rho_line);
         end;
 
         25:
@@ -430,30 +430,30 @@ begin
 
         26:
         begin   {Y}
-            ShowY(GetOutputDirectory + CircuitName_ + 'SystemY.txt');
+            ShowY(GetOutputDirectory + DSSPrime.CircuitName_ + 'SystemY.txt');
         end;
         27:
             if ActiveCircuit <> NIL then
-                ActiveCircuit.ControlQueue.ShowQueue(GetOutputDirectory + CircuitName_ + 'ControlQueue.csv');
+                ActiveCircuit.ControlQueue.ShowQueue(GetOutputDirectory + DSSPrime.CircuitName_ + 'ControlQueue.csv');
         28:
-            ShowTopology(GetOutputDirectory + CircuitName_);
+            ShowTopology(GetOutputDirectory + DSSPrime.CircuitName_);
         29:
-            ShowNodeCurrentSum(GetOutputDirectory + CircuitName_ + 'NodeMismatch.Txt');
+            ShowNodeCurrentSum(GetOutputDirectory + DSSPrime.CircuitName_ + 'NodeMismatch.Txt');
         30:
-            ShowkVBaseMismatch(GetOutputDirectory + CircuitName_ + 'kVBaseMismatch.Txt');
+            ShowkVBaseMismatch(GetOutputDirectory + DSSPrime.CircuitName_ + 'kVBaseMismatch.Txt');
         31:
-            ShowDeltaV(GetOutputDirectory + CircuitName_ + 'DeltaV.Txt');
+            ShowDeltaV(GetOutputDirectory + DSSPrime.CircuitName_ + 'DeltaV.Txt');
         32:
-            FireOffEditor(QueryLogFileName);
+            FireOffEditor(DSSPrime.QueryLogFileName);
         33:
-            ShowControlledElements(GetOutputDirectory + CircuitName_ + 'ControlledElements.CSV');
+            ShowControlledElements(GetOutputDirectory + DSSPrime.CircuitName_ + 'ControlledElements.CSV');
         34:
-            ShowResult(GetOutputDirectory + CircuitName_ + 'Result.CSV');
+            ShowResult(GetOutputDirectory + DSSPrime.CircuitName_ + 'Result.CSV');
     else
     end;
 
 
-    InShowResults := FALSE;
+    DSSPrime.InShowResults := FALSE;
 
 end;
 

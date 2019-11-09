@@ -1653,13 +1653,13 @@ var
     tmpUUID: TUuid;
 begin
     try
-        clsCode := DSSClassList.Get(ClassNames.Find('linecode'));
-        clsWire := DSSClassList.Get(ClassNames.Find('wiredata'));
-        clsGeom := DSSClassList.Get(ClassNames.Find('linegeometry'));
-        clsXfmr := DSSClassList.Get(ClassNames.Find('xfmrcode'));
-        clsSpac := DSSClassList.Get(ClassNames.Find('linespacing'));
-        clsTape := DSSClassList.Get(ClassNames.Find('TSData'));
-        clsConc := DSSClassList.Get(ClassNames.Find('CNData'));
+        clsCode := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('linecode'));
+        clsWire := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('wiredata'));
+        clsGeom := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('linegeometry'));
+        clsXfmr := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('xfmrcode'));
+        clsSpac := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('linespacing'));
+        clsTape := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('TSData'));
+        clsConc := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('CNData'));
         pName1 := TNamedObject.Create('Temp1');
         pName2 := TNamedObject.Create('Temp2');
         i1 := clsXfmr.ElementCount * 6; // 3 wdg info, 3 sctest
@@ -2921,7 +2921,7 @@ begin
 
         Writeln(F, '</rdf:RDF>');
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
     finally
         CloseFile(F);
     end;

@@ -148,11 +148,11 @@ begin
     begin
         try
             IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage elements
-            if not DIFilesAreOpen then
+            if not DSS.DIFilesAreOpen then
                 DSS.EnergyMeterClass.OpenAllDIFiles;   // Open Demand Interval Files, if desired   Creates DI_Totals
             Twopct := Max(NumberOfTimes div 50, 1);
             for N := 1 to NumberOfTimes do
-                if not SolutionAbort then
+                if not DSS.SolutionAbort then
                     with Dynavars do
                     begin
                         Increment_time;
@@ -201,11 +201,11 @@ begin
         try
 
             IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters
-            if not DIFilesAreOpen then
+            if not DSS.DIFilesAreOpen then
                 DSS.EnergyMeterClass.OpenAllDIFiles;   // Append Demand Interval Files, if desired
 
             for N := 1 to NumberOfTimes do
-                if not SolutionAbort then
+                if not DSS.SolutionAbort then
                     with DynaVars do
                     begin
                         Increment_time;
@@ -257,11 +257,11 @@ begin
             DynaVars.intHour := 0;
             DynaVars.dblHour := 0.0;
             IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
-            if not DIFilesAreOpen then
+            if not DSS.DIFilesAreOpen then
                 DSS.EnergyMeterClass.OpenAllDIFiles;   // Open Demand Interval Files, if desired
 
             for N := 1 to NumberOfTimes do
-                if not SolutionAbort then
+                if not DSS.SolutionAbort then
                     with DynaVars do
                     begin
                         Increment_time;
@@ -306,7 +306,7 @@ begin
         try
             IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
             for N := 1 to NumberOfTimes do
-                if not SolutionAbort then
+                if not DSS.SolutionAbort then
                     with DynaVars do
                     begin
                         Increment_time;
@@ -347,7 +347,7 @@ begin
     begin
         IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
         for N := 1 to NumberOfTimes do
-            if not SolutionAbort then
+            if not DSS.SolutionAbort then
                 with DynaVars do
                 begin
               {Compute basic multiplier from Default loadshape to use in generator dispatch, if any}
@@ -397,7 +397,7 @@ begin
             SolutionInitialized := TRUE; // If we're in dynamics mode, no need to re-initialize.
             IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
             for N := 1 to NumberOfTimes do
-                if not SolutionAbort then
+                if not DSS.SolutionAbort then
                     with DynaVars do
                     begin
                         Increment_time;
@@ -447,7 +447,7 @@ begin
             ProgressCount := 0;
 
             for N := 1 to NumberOfTimes do
-                if not SolutionAbort then
+                if not DSS.SolutionAbort then
                 begin
                     Inc(DynaVars.intHour);
                     SolveSnap;
@@ -458,9 +458,9 @@ begin
                 end
                 else
                 begin
-                    ErrorNumber := SOLUTION_ABORT;
-                    CmdResult := ErrorNumber;
-                    GlobalResult := 'Solution Aborted';
+                    DSS.ErrorNumber := SOLUTION_ABORT;
+                    DSS.CmdResult := DSS.ErrorNumber;
+                    DSS.GlobalResult := 'Solution Aborted';
                     Break;
                 end;
         finally
@@ -495,7 +495,7 @@ begin
             IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
             Ndaily := Round(24.0 / IntervalHrs);
 
-            if not DIFilesAreOpen then
+            if not DSS.DIFilesAreOpen then
                 DSS.EnergyMeterClass.OpenAllDIFiles;   // Open Demand Interval Files, if desired
 
             ProgressCaption('Monte Carlo Mode 2, ' + IntToStr(NumberofTimes) + ' Days.');
@@ -503,7 +503,7 @@ begin
 
             for N := 1 to NumberOfTimes do
 
-                if not SolutionAbort then
+                if not DSS.SolutionAbort then
                 begin       // Number of Days
 
           // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
@@ -535,9 +535,9 @@ begin
                 end
                 else
                 begin
-                    ErrorNumber := SOLUTION_ABORT;
-                    CmdResult := ErrorNumber;
-                    GlobalResult := 'Solution Aborted.';
+                    DSS.ErrorNumber := SOLUTION_ABORT;
+                    DSS.CmdResult := DSS.ErrorNumber;
+                    DSS.GlobalResult := 'Solution Aborted.';
                     Break;
                 end;
         finally
@@ -569,7 +569,7 @@ begin
         // DSS.EnergyMeterClass.ResetAll;
             IntervalHrs := 1.0;  // just get per unit energy and multiply result as necessary
 
-            if not DIFilesAreOpen then
+            if not DSS.DIFilesAreOpen then
                 DSS.EnergyMeterClass.OpenAllDIFiles;   // Open Demand Interval Files, if desired
 
             ProgressCaption('Monte Carlo Mode 3, ' + IntToStr(NumberofTimes) + ' Different Load Levels.');
@@ -580,7 +580,7 @@ begin
                 PriceSignal := PriceCurveObj.GetPrice(DynaVars.dblHour);
 
             for N := 1 to NumberOfTimes do
-                if not SolutionAbort then
+                if not DSS.SolutionAbort then
                 begin
 
         // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
@@ -603,9 +603,9 @@ begin
                 end
                 else
                 begin
-                    CmdResult := SOLUTION_ABORT;
-                    ErrorNumber := CmdResult;
-                    GlobalResult := 'Solution Aborted';
+                    DSS.CmdResult := SOLUTION_ABORT;
+                    DSS.ErrorNumber := DSS.CmdResult;
+                    DSS.GlobalResult := 'Solution Aborted';
                     Break;
                 end;
         finally
@@ -645,7 +645,7 @@ begin
 
             NDaily := Round(24.0 / DynaVars.h * 3600.0);
 
-            if not DIFilesAreOpen then
+            if not DSS.DIFilesAreOpen then
                 DSS.EnergyMeterClass.OpenAllDIFiles;   // Open Demand Interval Files, if desired
 
             ProgressCaption('Load-Duration Mode 1 Solution. ');
@@ -662,7 +662,7 @@ begin
 
                     DefaultHourMult := DefaultDailyShapeObj.GetMult(dblHour);
 
-                    if not SolutionAbort then
+                    if not DSS.SolutionAbort then
                     begin
                         for N := 1 to LoadDurCurveObj.NumPoints do
                         begin
@@ -689,9 +689,9 @@ begin
                     end
                     else
                     begin
-                        CmdResult := SOLUTION_ABORT;
-                        ErrorNumber := CmdResult;
-                        GlobalResult := 'Solution Aborted';
+                        DSS.CmdResult := SOLUTION_ABORT;
+                        DSS.ErrorNumber := DSS.CmdResult;
+                        DSS.GlobalResult := 'Solution Aborted';
                         Break;
                     end;
 
@@ -733,17 +733,17 @@ begin
     // DSS.EnergyMeterClass.ResetAll;
 
         DefaultHourMult := DefaultDailyShapeObj.GetMult(DynaVars.dblHour);
-        if not DIFilesAreOpen then
+        if not DSS.DIFilesAreOpen then
             DSS.EnergyMeterClass.OpenAllDIFiles;   // Open Demand Interval Files, if desired
 
     // (set in Solve Method) DefaultGrowthFactor :=  IntPower(DefaultGrowthRate, (Year-1));
 
         try
-            if SolutionAbort then
+            if DSS.SolutionAbort then
             begin
-                CmdResult := SOLUTION_ABORT;
-                ErrorNumber := CmdResult;
-                GlobalResult := 'Solution Aborted.';
+                DSS.CmdResult := SOLUTION_ABORT;
+                DSS.ErrorNumber := DSS.CmdResult;
+                DSS.GlobalResult := 'Solution Aborted.';
                 Exit;
             end;
 
@@ -828,7 +828,7 @@ begin
             SetGeneratorDispRef;
 
             for N := 1 to NumberOfTimes do
-                if not SolutionAbort then
+                if not DSS.SolutionAbort then
                 begin
                     Inc(DynaVars.intHour);
                     PickAFault;  // Randomly enable one of the faults
@@ -1212,7 +1212,7 @@ begin
     with ActiveCircuit, ActiveCircuit.Solution do
     begin
         IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
-        if not SolutionAbort then
+        if not DSS.SolutionAbort then
             with DynaVars do
             begin
               {Compute basic multiplier from Default loadshape to use in generator dispatch, if any}

@@ -87,7 +87,9 @@ uses
     DSSGlobals,
     sysutils,
     Utilities,
-    YMatrix;
+    YMatrix,
+    DSSClass,
+    DSSHelper;
 
 { TControlQueue }
 
@@ -523,7 +525,7 @@ procedure TControlQueue.WriteTraceRecord(const ElementName: String; const Code: 
 begin
 
     try
-        if (not InshowResults) then
+        if (not DSSPrime.InShowResults) then
         begin
             Append(TraceFile);
             Writeln(TraceFile, Format('%d, %.6g, %d, %s, %d, %-.g, %s', [

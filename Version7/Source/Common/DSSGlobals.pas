@@ -178,73 +178,20 @@ VAR
     DSSDirectory     :String;     // where the current exe resides
     MaxCircuits     :Integer;
 
+    StartupDirectory :String;     // Where we started
+    VersionString      :String;
+
+    UpdateRegistry     :Boolean;  // update on program exit
+    CPU_Freq           : int64;          // Used to store the CPU frequency -- TODO: remove, probably invalid nowadays
+    CPU_Cores          : integer;
 
     // TODO:  move all below to the new TDSS
     ActiveCircuit   :TDSSCircuit;
     ActiveDSSClass  :TDSSClass;
-    LastClassReferenced:Integer;  // index of class of last thing edited
     ActiveDSSObject :TDSSObject;
-    NumCircuits     :Integer;
-    MaxAllocationIterations :Integer;
-    Circuits        :TPointerList;
-    DSSObjs         :TPointerList;
     AuxParser       :TParser;  // Auxiliary parser for use by anybody for reparsing values
-    ErrorPending       :Boolean;
-    CmdResult,
-    ErrorNumber        :Integer;
-    LastErrorMessage   :String;
-    DefaultEarthModel  :Integer;
-    ActiveEarthModel   :Integer;
-    LastFileCompiled   :String;
-    LastCommandWasCompile :Boolean;
-    SolutionAbort      :Boolean;
-    InShowResults      :Boolean;
-    Redirect_Abort     :Boolean;
-    In_Redirect        :Boolean;
-    DIFilesAreOpen     :Boolean;
-    AutoShowExport     :Boolean;
-    SolutionWasAttempted :Boolean;
 
-    GlobalHelpString   :String;
-    GlobalPropertyValue:String;
-    GlobalResult       :String;
-    LastResultFile     :String;
-    VersionString      :String;
-
-    LogQueries         :Boolean;
-    QueryFirstTime     :Boolean;
-    QueryLogFileName   :String;
-    QueryLogFile       :TextFile;
-
-    StartupDirectory :String;     // Where we started
-    DataDirectory    :String;     // used to be DSSDataDirectory
-    OutputDirectory  :String;     // output files go here, same as DataDirectory if writable
-    CircuitName_     :String;     // Name of Circuit with a "_" appended
-
-    DefaultBaseFreq  :Double;
-    DaisySize        :Double;
-    
-    EventStrings: TStringList;
-    SavedFileList:TStringList;
-    ErrorStrings: TStringList;
-
-    DSSClassList       :TPointerList; // pointers to the base class types
-    ClassNames         :THashList;
-
-    UpdateRegistry     :Boolean;  // update on program exit
-    CPU_Freq           : int64;          // Used to store the CPU frequency
-    CPU_Cores          : integer;
-
-    IncMat_Ordered     : Boolean;
-    //***********************A-Diakoptics Variables*********************************
-    ADiakoptics             : Boolean;
-
-    //***********************Seasonal QSTS variables********************************
-    SeasonalRating         : Boolean;    // Tells the energy meter if the seasonal rating feature is active
-    SeasonSignal           : String;     // Stores the name of the signal for selecting the rating dynamically
-
-    DSSClasses: TDSSClasses;
-
+    GlobalDefaultBaseFreq: Double = 60.0;
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
 PROCEDURE DoSimpleMsg(Const S :String; ErrNum:Integer);
@@ -356,7 +303,7 @@ End;
 
 function GetOutputDirectory:String;
 begin
-  Result := OutputDirectory;
+  Result := DSSPrime.OutputDirectory;
 end;
 
 {--------------------------------------------------------------}
@@ -394,10 +341,10 @@ Begin
 
      If Not NoFormsAllowed Then Begin
 
-         If In_Redirect Then
+         If DSSPrime.In_Redirect Then
          Begin
            RetVal := DSSMessageDlg(Msg, FALSE);
-           If RetVal = -1 Then Redirect_Abort := True;
+           If RetVal = -1 Then DSSPrime.Redirect_Abort := True;
          End
          Else
            DSSMessageDlg(Msg, TRUE);
@@ -407,25 +354,25 @@ Begin
      Begin
         {$IFDEF DSS_CAPI}
         if DSS_CAPI_EARLY_ABORT then
-            Redirect_Abort := True;
+            DSSPrime.Redirect_Abort := True;
         {$ENDIF}
      End;
 
-     LastErrorMessage := Msg;
-     ErrorNumber := ErrNum;
+     DSSPrime.LastErrorMessage := Msg;
+     DSSPrime.ErrorNumber := ErrNum;
      AppendGlobalResultCRLF(Msg);
-     SolutionAbort  :=  True;
+     DSSPrime.SolutionAbort  :=  True;
 End;
 
 //----------------------------------------------------------------------------
 PROCEDURE AppendGlobalResultCRLF(const S:String);
 
 Begin
-    If Length(GlobalResult) > 0
-    THEN GlobalResult := GlobalResult + CRLF + S
-    ELSE GlobalResult := S;
+    If Length(DSSPrime.GlobalResult) > 0
+    THEN DSSPrime.GlobalResult := DSSPrime.GlobalResult + CRLF + S
+    ELSE DSSPrime.GlobalResult := S;
 
-    ErrorStrings.Add(Format('(%d) %s' ,[ErrorNumber, S]));  // Add to Error log
+    DSSPrime.ErrorStrings.Add(Format('(%d) %s' ,[DSSPrime.ErrorNumber, S]));  // Add to Error log
 End;
 
 //----------------------------------------------------------------------------
@@ -434,16 +381,16 @@ PROCEDURE DoSimpleMsg(Const S:String; ErrNum:Integer);
 VAR
     Retval:Integer;
 Begin
-    IF Not NoFormsAllowed Then Begin
-        IF In_Redirect THEN
+    IF Not  NoFormsAllowed Then Begin
+        IF DSSPrime.In_Redirect THEN
         Begin
             RetVal := DSSMessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]), FALSE);
             {$IFDEF DSS_CAPI}
             if DSS_CAPI_EARLY_ABORT then
-                Redirect_Abort := True;
+                DSSPrime.Redirect_Abort := True;
             {$ENDIF}
             IF RetVal = -1 THEN
-                Redirect_Abort := True;
+                DSSPrime.Redirect_Abort := True;
         End
         ELSE
             DSSInfoMessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]));
@@ -452,12 +399,12 @@ Begin
     Begin
         {$IFDEF DSS_CAPI}
         if DSS_CAPI_EARLY_ABORT then
-            Redirect_Abort := True;
+            DSSPrime.Redirect_Abort := True;
         {$ENDIF}
     End;
 
-    LastErrorMessage := S;
-    ErrorNumber := ErrNum;
+    DSSPrime.LastErrorMessage := S;
+    DSSPrime.ErrorNumber := ErrNum;
     AppendGlobalResultCRLF(S);
 End;
 
@@ -485,7 +432,7 @@ Begin
 
       IF Length(ObjClass) > 0 THEN SetObjectClass(ObjClass);
 
-      ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
+      ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
       IF ActiveDSSClass <> Nil THEN
       Begin
         IF Not ActiveDSSClass.SetActive(Objname) THEN
@@ -535,20 +482,20 @@ PROCEDURE ClearAllCircuits;
 
 Begin
 
-    ActiveCircuit := Circuits.First;
+    ActiveCircuit := DSSPrime.Circuits.First;
      WHILE ActiveCircuit<>nil DO
      Begin
         ActiveCircuit.Free;
-        ActiveCircuit := Circuits.Next;
+        ActiveCircuit := DSSPrime.Circuits.Next;
      End;
-    Circuits.Free;
-    Circuits := TPointerList.Create(2);   // Make a new list of circuits
-    NumCircuits := 0;
+    DSSPrime.Circuits.Free;
+    DSSPrime.Circuits := TPointerList.Create(2);   // Make a new list of circuits
+    DSSPrime.NumCircuits := 0;
 
     // Revert on key global flags to Original States
-    DefaultEarthModel     := DERI;
-    LogQueries            := FALSE;
-    MaxAllocationIterations := 2;
+    DSSPrime.DefaultEarthModel     := DERI;
+    DSSPrime.LogQueries            := FALSE;
+    DSSPrime.MaxAllocationIterations := 2;
 
 End;
 
@@ -564,15 +511,15 @@ Var
 Begin
 
 
-     If NumCircuits <= MaxCircuits - 1 Then
+     If DSSPrime.NumCircuits <= MaxCircuits - 1 Then
      Begin
-         ActiveCircuit := TDSSCircuit.Create(Name);
+         ActiveCircuit := TDSSCircuit.Create(DSSPrime, Name);
          ActiveDSSObject := ActiveSolutionObj;
-         {*Handle := *} Circuits.Add(ActiveCircuit);
-         Inc(NumCircuits);
+         {*Handle := *} DSSPrime.Circuits.Add(ActiveCircuit);
+         Inc(DSSPrime.NumCircuits);
          S := Parser.Remainder;    // Pass remainder of string on to vsource.
          {Create a default Circuit}
-         SolutionABort := FALSE;
+         DSSPrime.SolutionABort := FALSE;
          {Voltage source named "source" connected to SourceBus}
          DSSExecutive.Command := 'New object=vsource.source Bus1=SourceBus ' + S;  // Load up the parser as if it were read in
      End
@@ -591,10 +538,10 @@ PROCEDURE AppendGlobalResult(Const S:String);
 // Append a string to Global result, separated by commas
 
 Begin
-    If Length(GlobalResult)=0 Then
-        GlobalResult := S
+    If Length(DSSPrime.GlobalResult)=0 Then
+        DSSPrime.GlobalResult := S
     Else
-        GlobalResult := GlobalResult + ', ' + S;
+        DSSPrime.GlobalResult := DSSPrime.GlobalResult + ', ' + S;
 End;
 
 
@@ -683,7 +630,7 @@ PROCEDURE WriteDLLDebugFile(Const S:String);
 
 Begin
 
-        AssignFile(DLLDebugFile, OutputDirectory + 'DSSDLLDebug.TXT');
+        AssignFile(DLLDebugFile, DSSPrime.OutputDirectory + 'DSSDLLDebug.TXT');
         If DLLFirstTime then Begin
            Rewrite(DLLDebugFile);
            DLLFirstTime := False;
@@ -724,21 +671,21 @@ BEGIN
     End;
   End;
 
-  DataDirectory := PathName;
+  DSSPrime.DataDirectory := PathName;
 
   // Put a \ on the end if not supplied. Allow a null specification.
-  If Length(DataDirectory) > 0 Then Begin
-    ChDir(DataDirectory);   // Change to specified directory
-    If DataDirectory[Length(DataDirectory)] <> PathDelim Then DataDirectory := DataDirectory + PathDelim;
+  If Length(DSSPrime.DataDirectory) > 0 Then Begin
+    ChDir(DSSPrime.DataDirectory);   // Change to specified directory
+    If DSSPrime.DataDirectory[Length(DSSPrime.DataDirectory)] <> PathDelim Then DSSPrime.DataDirectory := DSSPrime.DataDirectory + PathDelim;
   End;
 
   // see if DataDirectory is writable. If not, set OutputDirectory to the user's appdata
-  if IsDirectoryWritable(DataDirectory) then begin
-    OutputDirectory := DataDirectory;
+  if IsDirectoryWritable(DSSPrime.DataDirectory) then begin
+    DSSPrime.OutputDirectory := DSSPrime.DataDirectory;
   end else begin
     ScratchPath := GetDefaultScratchDirectory + PathDelim + ProgramName + PathDelim;
     if not DirectoryExists(ScratchPath) then CreateDir(ScratchPath);
-    OutputDirectory := ScratchPath;
+    DSSPrime.OutputDirectory := ScratchPath;
   end;
 END;
 
@@ -769,11 +716,11 @@ Begin
      If DSS_Registry.ReadBool('ScriptFontBold', TRUE)    Then DefaultFontStyles := DefaultFontStyles + [fsbold];
      If DSS_Registry.ReadBool('ScriptFontItalic', FALSE) Then DefaultFontStyles := DefaultFontStyles + [fsItalic];
   {$ENDIF}
-  DefaultBaseFreq  := StrToInt(DSS_Registry.ReadString('BaseFrequency', '60' ));
+  GlobalDefaultBaseFreq  := StrToInt(DSS_Registry.ReadString('BaseFrequency', '60' ));
   LastFileCompiled := DSS_Registry.ReadString('LastFile', '' );
-  TestDataDirectory :=   DSS_Registry.ReadString('DataPath', DataDirectory);
+  TestDataDirectory :=   DSS_Registry.ReadString('DataPath', DSSPrime.DataDirectory);
   If SysUtils.DirectoryExists (TestDataDirectory) Then SetDataPath (TestDataDirectory)
-                                        Else SetDataPath (DataDirectory);
+                                        Else SetDataPath (DSSPrime.DataDirectory);
 End;
 
 
@@ -786,7 +733,7 @@ Begin
       DSS_Registry.WriteString('ScriptFontName', Format('%s',[DefaultFontName]));
       DSS_Registry.WriteBool('ScriptFontBold', {$IFDEF FPC}False{$ELSE}(fsBold in DefaultFontStyles){$ENDIF});
       DSS_Registry.WriteBool('ScriptFontItalic', {$IFDEF FPC}False{$ELSE}(fsItalic in DefaultFontStyles){$ENDIF});
-      DSS_Registry.WriteString('BaseFrequency', Format('%d',[Round(DefaultBaseFreq)]));
+      DSS_Registry.WriteString('BaseFrequency', Format('%d',[Round(GlobalDefaultBaseFreq)]));
       DSS_Registry.WriteString('LastFile',      LastFileCompiled);
       DSS_Registry.WriteString('DataPath', DataDirectory);
   End;
@@ -795,7 +742,7 @@ End;
 
 PROCEDURE ResetQueryLogFile;
 Begin
-     QueryFirstTime := TRUE;
+     DSSPrime.QueryFirstTime := TRUE;
 End;
 
 
@@ -806,18 +753,18 @@ PROCEDURE WriteQueryLogfile(Const Prop, S:String);
 Begin
 
   TRY
-        QueryLogFileName :=  OutputDirectory + 'QueryLog.CSV';
-        AssignFile(QueryLogFile, QueryLogFileName);
-        If QueryFirstTime then
+        DSSPrime.QueryLogFileName :=  DSSPrime.OutputDirectory + 'QueryLog.CSV';
+        AssignFile(DSSPrime.QueryLogFile, DSSPrime.QueryLogFileName);
+        If DSSPrime.QueryFirstTime then
         Begin
-             Rewrite(QueryLogFile);  // clear the file
-             Writeln(QueryLogFile, 'Time(h), Property, Result');
-             QueryFirstTime := False;
+             Rewrite(DSSPrime.QueryLogFile);  // clear the file
+             Writeln(DSSPrime.QueryLogFile, 'Time(h), Property, Result');
+             DSSPrime.QueryFirstTime := False;
         end
-        Else Append( QueryLogFile);
+        Else Append( DSSPrime.QueryLogFile);
 
-        Writeln(QueryLogFile,Format('%.10g, %s, %s',[ActiveCircuit.Solution.DynaVars.dblHour, Prop, S]));
-        CloseFile(QueryLogFile);
+        Writeln(DSSPrime.QueryLogFile,Format('%.10g, %s, %s',[ActiveCircuit.Solution.DynaVars.dblHour, Prop, S]));
+        CloseFile(DSSPrime.QueryLogFile);
   EXCEPT
         On E:Exception Do DoSimpleMsg('Error writing Query Log file: ' + E.Message, 908);
   END;
@@ -827,7 +774,7 @@ End;
 PROCEDURE SetLastResultFile(Const Fname:String);
 
 Begin
-      LastResultfile := Fname;
+      DSSPrime.LastResultfile := Fname;
       ParserVars.Add('@lastfile', Fname);
 End;
 
@@ -884,10 +831,6 @@ end;
 
 initialization
 
-   ADiakoptics      :=    False;  // Disabled by default
-
-   SeasonalRating         :=  False;
-   SeasonSignal           :=  '';
 
    {Various Constants and Switches}
    {$IFDEF FPC}NoFormsAllowed  := TRUE;{$ENDIF}
@@ -897,31 +840,7 @@ initialization
    SQRT3                 := Sqrt(3.0);
    InvSQRT3              := 1.0/SQRT3;
    InvSQRT3x1000         := InvSQRT3 * 1000.0;
-   CmdResult             := 0;
-   DIFilesAreOpen        := FALSE;
-   ErrorNumber           := 0;
-   ErrorPending          := FALSE;
-   GlobalHelpString      := '';
-   GlobalPropertyValue   := '';
-   LastResultFile        := '';
-   In_Redirect           := FALSE;
-   InShowResults         := FALSE;
-   IsDLL                 := FALSE;
-   LastCommandWasCompile := FALSE;
-   LastErrorMessage      := '';
-   MaxCircuits           := 1;  //  Not required anymore. planning to remove it
-   MaxAllocationIterations := 2;
-   SolutionAbort         := FALSE;
-   AutoShowExport        := FALSE;
-   SolutionWasAttempted  := FALSE;
 
-   DefaultBaseFreq       := 60.0;
-   DaisySize             := 1.0;
-   DefaultEarthModel     := DERI;
-   ActiveEarthModel      := DefaultEarthModel;
-
-   ErrorStrings     := TStringList.Create;
-   ErrorStrings.Clear;
 
    {Initialize filenames and directories}
 
@@ -968,7 +887,7 @@ initialization
 {$ELSE}
    IF GetEnvironmentVariable('DSS_BASE_FREQUENCY') <> '' THEN
    BEGIN
-      DefaultBaseFreq  := StrToInt(GetEnvironmentVariable('DSS_BASE_FREQUENCY'));
+      GlobalDefaultBaseFreq  := StrToInt(GetEnvironmentVariable('DSS_BASE_FREQUENCY'));
    END;
 {$ENDIF}
 
@@ -998,12 +917,7 @@ initialization
 
    {$IFNDEF FPC}NoFormsAllowed   := FALSE;{$ENDIF}
 
-   EventStrings     := TStringList.Create;
-   SavedFileList    := TStringList.Create;
 
-
-   LogQueries       := FALSE;
-   QueryLogFileName := '';
    UpdateRegistry   := TRUE;
    {$IFNDEF MSWINDOWS}
    CPU_Freq := 1000; // until we can query it
@@ -1012,6 +926,8 @@ initialization
    {$ENDIF}
    CPU_Cores        :=  CPUCount;
 
+   IsDLL                 := FALSE;
+   MaxCircuits           := 1;  //  Not required anymore. planning to remove it
 
    //WriteDLLDebugFile('DSSGlobals');
 
@@ -1039,10 +955,6 @@ Finalization
 
   // Dosimplemsg('Enter DSSGlobals Unit Finalization.');
   Auxparser.Free;
-
-  EventStrings.Free;
-  SavedFileList.Free;
-  ErrorStrings.Free;
 
   With DSSExecutive Do If RecorderOn Then Recorderon := FALSE;
 

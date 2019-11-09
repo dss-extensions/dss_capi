@@ -908,7 +908,7 @@ begin
     PropertyValue[9] := ''; // 'rmatrix';
     PropertyValue[10] := ''; // 'xmatrix';
     PropertyValue[11] := ''; // 'cmatrix';
-    PropertyValue[12] := Format('%6.1f', [DefaultBaseFreq]); // 'baseFreq';
+    PropertyValue[12] := Format('%6.1f', [DSSPrime.DefaultBaseFreq]); // 'baseFreq';
     PropertyValue[13] := '400'; // 'normamps';
     PropertyValue[14] := '600'; // 'emergamps';
     PropertyValue[15] := '0.1'; // 'faultrate';

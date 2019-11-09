@@ -129,7 +129,9 @@ uses
     DSSGlobals,
     mathutil,
     sysutils,
-    math;
+    math,
+    DSSClass,
+    DSSHelper;
 
 var
     C1_j1: Complex;
@@ -404,7 +406,7 @@ begin
     Fyi := Abs(Fy^[i]);
     Fyj := Abs(Fy^[j]);
 
-    case ActiveEarthModel of
+    case DSSPrime.ActiveEarthModel of
 
         SIMPLECARSON:
         begin
@@ -467,7 +469,7 @@ var
     Alpha, I0I1: Complex;
 begin
 
-    case ActiveEarthModel of
+    case DSSPrime.ActiveEarthModel of
         SIMPLECARSON:
         begin
             Result := cmplx(FRac^[i], Fw * Mu0 / (8 * pi));

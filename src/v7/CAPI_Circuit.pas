@@ -612,10 +612,10 @@ var
     Mtr: TEnergyMeter;
 
 begin
-    Mon := DSSClassList.Get(ClassNames.Find('monitor'));
+    Mon := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('monitor'));
     Mon.SaveAll;
 
-    Mtr := DSSClassList.Get(ClassNames.Find('energymeter'));
+    Mtr := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('energymeter'));
     Mtr.SaveAll;
 end;
 //------------------------------------------------------------------------------
@@ -1058,16 +1058,16 @@ var
 
 begin
     Result := 0;
-    DevClassIndex := ClassNames.Find(ClassName);
+    DevClassIndex := DSSPrime.ClassNames.Find(ClassName);
     if DevClassIndex = 0 then
     begin
         DoSimplemsg('Error: Class ' + ClassName + ' not found.', 5016);
         Exit;
     end;
 
-    LastClassReferenced := DevClassIndex;
-    ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
-    Result := LastClassReferenced;
+    DSSPrime.LastClassReferenced := DevClassIndex;
+    ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+    Result := DSSPrime.LastClassReferenced;
 end;
 //------------------------------------------------------------------------------
 function Circuit_FirstElement(): Integer; CDECL;

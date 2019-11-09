@@ -338,7 +338,7 @@ begin
     DSSObjType := ParClass.DSSClassType; // SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
     LineName := Name;  // GICsource name must be same as associated Line
 
-    LineClass := DSSClassList.Get(ClassNames.Find('Line'));
+    LineClass := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('Line'));
     Nphases := 3;
     Fnconds := 3;
     Nterms := 2;   // 4/27/2018 made a 2-terminal I source
@@ -536,8 +536,8 @@ begin
 
     except
         DoSimpleMsg('Error computing current for GICsource.' + Name + '. Check specification. Aborting.', 334);
-        if In_Redirect then
-            Redirect_Abort := TRUE;
+        if DSSPrime.In_Redirect then
+            DSSPrime.Redirect_Abort := TRUE;
     end;
 
 end;

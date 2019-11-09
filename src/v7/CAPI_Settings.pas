@@ -82,7 +82,7 @@ begin
         begin
             for i := 1 to ListSize do
                 AppendGlobalResult(Get(i));
-            Result := GlobalResult;
+            Result := DSSPrime.GlobalResult;
         end
     end
     else

@@ -83,7 +83,7 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Get_NumCircuits(): Integer; CDECL;
 begin
-    Result := NumCircuits;
+    Result := DSSPrime.NumCircuits;
 end;
 //------------------------------------------------------------------------------
 procedure DSS_ClearAll(); CDECL;
@@ -125,7 +125,7 @@ begin
     k := 0;
     for i := 1 to NumIntrinsicClasses do
     begin
-        Result[k] := DSS_CopyStringAsPChar(TDSSClass(DssClassList.Get(i)).Name);
+        Result[k] := DSS_CopyStringAsPChar(TDSSClass(DSSPrime.DssClassList.Get(i)).Name);
         Inc(k);
     end;
 
@@ -148,9 +148,9 @@ begin
     begin
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumUserClasses - 1) + 1);
         k := 0;
-        for i := NumIntrinsicClasses + 1 to DSSClassList.ListSize do
+        for i := NumIntrinsicClasses + 1 to DSSPrime.DSSClassList.ListSize do
         begin
-            Result[k] := DSS_CopyStringAsPChar(TDSSClass(DssClassList.Get(i)).Name);
+            Result[k] := DSS_CopyStringAsPChar(TDSSClass(DSSPrime.DssClassList.Get(i)).Name);
             Inc(k);
         end;
     end
@@ -179,7 +179,7 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Get_DataPath_AnsiString(): Ansistring; inline;
 begin
-    Result := DataDirectory;
+    Result := DSSPrime.DataDirectory;
 end;
 
 function DSS_Get_DataPath(): PAnsiChar; CDECL;
@@ -215,16 +215,16 @@ var
 
 begin
     Result := 0;
-    DevClassIndex := ClassNames.Find(ClassName);
+    DevClassIndex := DSSPrime.ClassNames.Find(ClassName);
     if DevClassIndex = 0 then
     begin
         DoSimplemsg('Error: Class ' + ClassName + ' not found.', 5016);
         Exit;
     end;
 
-    LastClassReferenced := DevClassIndex;
-    ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
-    Result := LastClassReferenced;
+    DSSPrime.LastClassReferenced := DevClassIndex;
+    ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+    Result := DSSPrime.LastClassReferenced;
 
 end;
 //------------------------------------------------------------------------------

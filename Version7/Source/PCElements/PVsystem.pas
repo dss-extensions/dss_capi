@@ -1867,7 +1867,7 @@ var
 begin
 
     try
-        if (not InshowResults) then
+        if (not DSSPrime.InShowResults) then
         begin
             Append(TraceFile);
             Write(TraceFile, Format('%-.g, %d, %-.g, ',
@@ -2124,7 +2124,7 @@ begin
             else
             begin
                 DoSimpleMsg(Format('Dynamics model missing for PVSystem.%s ', [Name]), 5671);
-                SolutionAbort := TRUE;
+                DSSPrime.SolutionAbort := TRUE;
             end;
     else  {All other models -- current-limited like Generator Model 7}
 
@@ -2189,7 +2189,7 @@ begin
                 end;
         else
             DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.%s has %d phases.', [name, Fnphases]), 5671);
-            SolutionAbort := TRUE;
+            DSSPrime.SolutionAbort := TRUE;
         end;
 
     end;
@@ -2610,7 +2610,7 @@ begin
                 end;
             else
                 DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. PVSystem.' + name + ' has %d phases.', [Fnphases]), 5673);
-                SolutionAbort := TRUE;
+                DSSPrime.SolutionAbort := TRUE;
             end;
 
         LastThevAngle := ThetaDyn;

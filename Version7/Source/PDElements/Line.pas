@@ -176,7 +176,6 @@ const
 
 var
     CAP_EPSILON: Complex;
-    LineCodeClass: TLineCode;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TLine.Create(dss: TDSS);  // Creates superstructure for all Line objects
@@ -186,7 +185,6 @@ begin
     DSSClassType := DSSClassType + LINE_ELEMENT; // in both PDElement list and Linesection lists
 
     ActiveElement := 0;
-    LineCodeClass := NIL;
 
     DefineProperties;
 
@@ -369,9 +367,6 @@ var
     i: Integer;
 
 begin
-    if LineCodeClass = NIL then
-        LineCodeClass := DSSClassList.Get(ClassNames.Find('linecode'));
-
     if DSSPrime.LineCodeClass.SetActive(Code) then
     begin
 
@@ -914,7 +909,7 @@ begin
     FUnitsConvert := 1.0;
     FLineCodeUnits := UNITS_NONE;
     FLineCodeSpecified := FALSE;
-    FEarthModel := DefaultEarthModel;
+    FEarthModel := DSSPrime.DefaultEarthModel;
 
     SpacingSpecified := FALSE;
     FLineSpacingObj := NIL;
@@ -1114,7 +1109,7 @@ begin
         begin
 
             FMakeZFromGeometry(ActiveCircuit.Solution.Frequency); // Includes length in proper units
-            if SolutionAbort then
+            if DSSPrime.SolutionAbort then
                 Exit;
 
         end
@@ -1123,7 +1118,7 @@ begin
         begin
 
             FMakeZFromSpacing(ActiveCircuit.Solution.Frequency); // Includes length in proper units
-            if SolutionAbort then
+            if DSSPrime.SolutionAbort then
                 Exit;
 
         end
@@ -2078,7 +2073,7 @@ begin
             Yc := NIL;
         end;
 
-        ActiveEarthModel := FEarthModel;
+        DSSPrime.ActiveEarthModel := FEarthModel;
 
         Z := FLineGeometryObj.Zmatrix[f, len, LengthUnits];
         Yc := FLineGeometryObj.YCmatrix[f, len, LengthUnits];
@@ -2129,7 +2124,7 @@ begin
     EmergAmps := pGeo.EmergAmps;
     UpdatePDProperties;
 
-    ActiveEarthModel := FEarthModel;
+    DSSPrime.ActiveEarthModel := FEarthModel;
 
     Z := pGeo.Zmatrix[f, len, LengthUnits];
     Yc := pGeo.YCmatrix[f, len, LengthUnits];

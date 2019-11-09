@@ -59,7 +59,7 @@ var
 begin
     if not Assigned(ActiveCircuit) then
         exit;
-    SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('recloser.%s.%s=%s', [TRecloserObj(ActiveCircuit.Reclosers.Active).Name, parm, val]);
     DSSExecutive.Command := cmd;
 end;

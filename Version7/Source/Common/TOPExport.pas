@@ -72,9 +72,9 @@ VAR
 
 implementation
 {$IFNDEF FPC}
-Uses ComObj, AnsiStrings, SysUtils, Dialogs, ActiveX, DSSGlobals;
+Uses ComObj, AnsiStrings, SysUtils, Dialogs, ActiveX, DSSGlobals, DSSClass, DSSHelper;
 {$ELSE}
-Uses SysUtils, DSSGlobals, CmdForms, Variants;
+Uses SysUtils, DSSGlobals, CmdForms, Variants, DSSClass, DSSHelper;
 {$ENDIF}
 Var
   TOP_Inited:Boolean;
@@ -151,7 +151,7 @@ BEGIN
          Signature := 'SuperTran V1.00'#0;
          VersionMajor := 1;
          VersionMinor := 1;
-         FBase := DefaultBaseFreq;
+         FBase := DSSPrime.DefaultBaseFreq;
          VBase := 1.0;
          tStart := 0;
          TFinish := 0;

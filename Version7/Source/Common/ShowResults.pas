@@ -108,7 +108,7 @@ begin
         for i := 1 to NumDevices do
         begin
             DevName := DeviceList.Get(i);
-            DevClassName := TDSSClass(DSSClassList.Get(DeviceRef^[i].CktElementClass)).Name;
+            DevClassName := TDSSClass(DSSPrime.DSSClassList.Get(DeviceRef^[i].CktElementClass)).Name;
             MaxDeviceNameLength := Max(MaxDeviceNameLength, (Length(DevName) + Length(DevClassName) + 1));
         end;
 end;
@@ -2022,7 +2022,7 @@ begin
                 Writeln(F);
                 Writeln(Fdisabled, 'All DISABLED Elements in Class "', ClassName, '"');
                 Writeln(Fdisabled);
-                ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
+                ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
                 for i := 1 to ActiveDSSClass.ElementCount do
                 begin
                     ActiveDSSClass.Active := i;
@@ -2385,9 +2385,9 @@ begin
         Assignfile(F, FileNm);
         ReWrite(F);
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
-        pMtrClass := DSSClassList.Get(ClassNames.Find('energymeter'));
+        pMtrClass := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('energymeter'));
 
         if Length(Param) > 0 then
         begin
@@ -3239,7 +3239,7 @@ begin
 
         Writeln(F, 'LINE CONSTANTS');
         Writeln(F, Format('Frequency = %.6g Hz, Earth resistivity = %.6g ohm-m', [Freq, Rho]));
-        Writeln(F, 'Earth Model = ', GetEarthModel(DefaultEarthModel));
+        Writeln(F, 'Earth Model = ', GetEarthModel(DSSPrime.DefaultEarthModel));
         Writeln(F);
 
         LineCodesFileNm := 'LineConstantsCode.DSS';
@@ -3248,12 +3248,12 @@ begin
 
         Writeln(F2, '!--- OpenDSS Linecodes file generated from Show LINECONSTANTS command');
         Writeln(F2, Format('!--- Frequency = %.6g Hz, Earth resistivity = %.6g ohm-m', [Freq, Rho]));
-        Writeln(F2, '!--- Earth Model = ', GetEarthModel(DefaultEarthModel));
+        Writeln(F2, '!--- Earth Model = ', GetEarthModel(DSSPrime.DefaultEarthModel));
 
         Z := NIL;
         YC := NIL;
 
-        ActiveEarthModel := DefaultEarthModel;
+        DSSPrime.ActiveEarthModel := DSSPrime.DefaultEarthModel;
 
         p := DSSPrime.LineGeometryClass.first;
         while p > 0 do
@@ -3940,7 +3940,7 @@ begin
         Parservars.Lookup('@result');
         Writeln(F, Parservars.Value);
 
-        GlobalResult := FileNm;
+        DSSPrime.GlobalResult := FileNm;
 
     finally
 
@@ -3958,8 +3958,8 @@ procedure ShowEventLog(FileNm: String);
 begin
     try
 
-        EventStrings.SaveToFile(FileNm);
-        GlobalResult := FileNm;
+        DSSPrime.EventStrings.SaveToFile(FileNm);
+        DSSPrime.GlobalResult := FileNm;
 
     finally
         FireOffEditor(FileNm);

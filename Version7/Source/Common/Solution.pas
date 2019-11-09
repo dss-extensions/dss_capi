@@ -416,8 +416,7 @@ begin
     IsDynamicModel := FALSE;
     IsHarmonicModel := FALSE;
 
-    Frequency := DefaultBaseFreq;
-    {Fundamental := 60.0; Moved to Circuit and used as default base frequency}
+    Frequency := DSSPrime.DefaultBaseFreq;
     Harmonic := 1.0;
 
     FrequencyChanged := TRUE;  // Force Building of YPrim matrices
@@ -515,7 +514,7 @@ procedure TSolutionObj.Solve;
 
 begin
     ActiveCircuit.Issolved := FALSE;
-    SolutionWasAttempted := TRUE;
+    DSSPrime.SolutionWasAttempted := TRUE;
 
     InitProgressForm; // initialize Progress Form;
 
@@ -528,11 +527,11 @@ begin
         Exit;
     end;
 
-    if SolutionAbort then
+    if DSSPrime.SolutionAbort then
     begin
-        GlobalResult := 'Solution aborted.';
-        CmdResult := SOLUTION_ABORT;
-        ErrorNumber := CmdResult;
+        DSSPrime.GlobalResult := 'Solution aborted.';
+        DSSPrime.CmdResult := SOLUTION_ABORT;
+        DSSPrime.ErrorNumber := DSSPrime.CmdResult;
         Exit;
     end;
     try
@@ -604,7 +603,7 @@ begin
         On E: Exception do
         begin
             DoSimpleMsg('Error Encountered in Solve: ' + E.Message, 482);
-            SolutionAbort := TRUE;
+            DSSPrime.SolutionAbort := TRUE;
         end;
 
     end;
@@ -982,7 +981,7 @@ begin
                 raise ESolveError.Create('Aborting');
             end;
         end;
-        if SolutionAbort then
+        if DSSPrime.SolutionAbort then
             Exit; // Initialization can result in abort
 
         try
@@ -1040,7 +1039,7 @@ begin
     SolveSystem(NodeV);  // also sets voltages in radial part of the circuit if radial solution
 
     { Reset the main system Y as the solution matrix}
-    if (hYsystem > 0) and not SolutionAbort then
+    if (hYsystem > 0) and not DSSPrime.SolutionAbort then
         hY := hYsystem;
 end;
 
@@ -1158,7 +1157,7 @@ begin
     if not ControlActionsDone and (ControlIteration >= MaxControlIterations) then
     begin
         DoSimpleMsg('Warning Max Control Iterations Exceeded. ' + CRLF + 'Tip: Show Eventlog to debug control settings.', 485);
-        SolutionAbort := TRUE;   // this will stop this message in dynamic power flow modes
+        DSSPrime.SolutionAbort := TRUE;   // this will stop this message in dynamic power flow modes
     end;
 
     if ActiveCircuit.LogEvents then
@@ -1435,9 +1434,9 @@ begin
 // This rouitne adds the series reactors to the incidence matrix vectors
     with ActiveCircuit do
     begin
-        DevClassIndex := ClassNames.Find('reactor');
-        LastClassReferenced := DevClassIndex;
-        ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
+        DevClassIndex := DSSPrime.ClassNames.Find('reactor');
+        DSSPrime.LastClassReferenced := DevClassIndex;
+        ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
         elem := ActiveDSSClass.First;
         while elem <> 0 do
         begin
@@ -1495,7 +1494,7 @@ begin
             AddXfmr2IncMatrix;       // Includes the Xfmrs
             AddSeriesCap2IncMatrix;  // Includes Series Cap
             AddSeriesReac2IncMatrix; // Includes Series Reactors
-            IncMat_Ordered := FALSE;
+            DSSPrime.IncMat_Ordered := FALSE;
         end;
 end;
 
@@ -1717,7 +1716,7 @@ begin
                     Inc_Mat_levels[j2] := BusdotIdx;
                 end;
             end;
-            IncMat_Ordered := TRUE;
+            DSSPrime.IncMat_Ordered := TRUE;
         end;
     finally
 
@@ -2294,8 +2293,8 @@ begin
            {Raise Error Message if not solved}
             DoSimpleMsg('Circuit must be solved in a non-dynamic mode before entering Dynamics or Fault study modes!' + CRLF +
                 'If you attempted to solve, then the solution has not yet converged.', 486);
-            if In_ReDirect then
-                Redirect_Abort := TRUE;  // Get outta here
+            if DSSPrime.In_ReDirect then
+                DSSPrime.Redirect_Abort := TRUE;  // Get outta here
             Result := FALSE;
         end;
     end;
@@ -2324,16 +2323,16 @@ begin
             then
             begin
                 Result := FALSE;
-                if In_ReDirect then
-                    Redirect_Abort := TRUE;  // Get outta here
+                if DSSPrime.In_ReDirect then
+                    DSSPrime.Redirect_Abort := TRUE;  // Get outta here
             end;
         end
         else
         begin
 
             DoSimpleMsg('Circuit must be solved in a fundamental frequency power flow or direct mode before entering Harmonics mode!', 487);
-            if In_ReDirect then
-                Redirect_Abort := TRUE;  // Get outta here
+            if DSSPrime.In_ReDirect then
+                DSSPrime.Redirect_Abort := TRUE;  // Get outta here
             Result := FALSE;
         end;
     end;
@@ -2378,7 +2377,7 @@ end;
 
 procedure TSolutionObj.Set_Year(const Value: Integer);
 begin
-    if DIFilesAreOpen then
+    if DSSPrime.DIFilesAreOpen then
         DSSPrime.EnergyMeterClass.CloseAllDIFiles;
     FYear := Value;
     DynaVars.intHour := 0;  {Change year, start over}
@@ -2405,7 +2404,7 @@ begin
     try
 
         try
-            AssignFile(F, CircuitName_ + 'SavedVoltages.Txt');
+            AssignFile(F, DSSPrime.CircuitName_ + 'SavedVoltages.Txt');
             Rewrite(F);
 
             with ActiveCircuit do
@@ -2431,7 +2430,7 @@ begin
     finally
 
         CloseFile(F);
-        GlobalResult := CircuitName_ + 'SavedVoltages.Txt';
+        DSSPrime.GlobalResult := DSSPrime.CircuitName_ + 'SavedVoltages.Txt';
 
     end;
 

@@ -79,7 +79,7 @@ end;
 function DSS_Executive_Get_OptionValue_AnsiString(i: Integer): Ansistring; inline;
 begin
     DSSExecutive.Command := 'get ' + ExecOption[i];
-    Result := GlobalResult;
+    Result := DSSPrime.GlobalResult;
 end;
 
 function DSS_Executive_Get_OptionValue(i: Integer): PAnsiChar; CDECL;

@@ -43,7 +43,7 @@ var
 begin
     if not Assigned(ActiveCircuit) then
         exit;
-    SolutionAbort := FALSE;  // Reset for commands entered from outside
+    DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('Relay.%s.%s=%s', [TRelayObj(ActiveCircuit.Relays.Active).Name, parm, val]);
     DSSExecutive.Command := cmd;
 end;

@@ -541,10 +541,10 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (EventStrings.Count - 1) + 1);
-        for i := 0 to EventStrings.Count - 1 do
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (DSSPrime.EventStrings.Count - 1) + 1);
+        for i := 0 to DSSPrime.EventStrings.Count - 1 do
         begin
-            Result[i] := DSS_CopyStringAsPChar(EventStrings.Strings[i]);
+            Result[i] := DSS_CopyStringAsPChar(DSSPrime.EventStrings.Strings[i]);
         end;
         Exit;
     end;
@@ -1038,7 +1038,7 @@ begin
     begin
         with ActiveCircuit.Solution, ActiveCircuit do
         begin
-            if IncMat_Ordered then
+            if DSSPrime.IncMat_Ordered then
             begin
                 ArrSize := length(Inc_Mat_Cols) - 1;
                 Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (ArrSize) + 1);

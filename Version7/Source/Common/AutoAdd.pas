@@ -125,8 +125,8 @@ constructor TAutoAdd.Create;
 begin
 
     BusIdxListCreated := FALSE;
-    GeneratorClass := DSSClassList.Get(ClassNames.Find('generator'));
-    CapacitorClass := DSSClassList.Get(ClassNames.Find('capacitor'));
+    GeneratorClass := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('generator'));
+    CapacitorClass := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('capacitor'));
 
          // AutoAdd defaults
     GenkW := 1000.0;
@@ -278,7 +278,7 @@ var
 begin
 
     try
-        FName := GetOutputDirectory + CircuitName_ + 'AutoAdded' + WhichFile + '.txt';
+        FName := GetOutputDirectory + DSSPrime.CircuitName_ + 'AutoAdded' + WhichFile + '.txt';
         AssignFile(F, Fname);
 
         if FileExists(FName) then
@@ -423,7 +423,7 @@ begin
 
     {Start up Log File}
 
-        AssignFile(FLog, GetOutputDirectory + CircuitName_ + 'AutoAddLog.CSV');
+        AssignFile(FLog, GetOutputDirectory + DSSPrime.CircuitName_ + 'AutoAddLog.CSV');
         Rewrite(FLog);
         Writeln(Flog, '"Bus", "Base kV", "kW Losses", "% Improvement", "kW UE", "% Improvement", "Weighted Total", "Iterations"');
         CloseFile(FLog); // Close it now after clearing it out
@@ -536,7 +536,7 @@ begin
 
                         end;
                     end;
-                    if SolutionAbort then
+                    if DSSPrime.SolutionAbort then
                         Break;
                 end;
 
@@ -569,7 +569,7 @@ begin
                     end;
                    // Return location of added generator so that it can
                    // be picked up through the result string of the COM interface
-                GlobalResult := BusList.Get(MinLossBus) +
+                DSSPrime.GlobalResult := BusList.Get(MinLossBus) +
                     Format(', %-g', [MaxLossImproveFactor]);
 
                 ProgressHide;
@@ -657,7 +657,7 @@ begin
                             end;
                         end;
                     end;
-                    if SolutionAbort then
+                    if DSSPrime.SolutionAbort then
                         Break;
                 end;
 
@@ -691,7 +691,7 @@ begin
                     end;
                    // Return location of added generator so that it can
                    // be picked up through the result string of the COM interface
-                GlobalResult := BusList.Get(MinLossBus);
+                DSSPrime.GlobalResult := BusList.Get(MinLossBus);
 
                    // note that the command that added the generator can be
                    // picked up from the Command property of the COM interface.

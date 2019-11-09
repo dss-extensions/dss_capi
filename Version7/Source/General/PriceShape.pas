@@ -968,7 +968,7 @@ begin
             Rewrite(F);
             for i := 1 to NumPoints do
                 Write(F, PriceValues^[i]);
-            GlobalResult := 'Price=[dblfile=' + FName + ']';
+            DSSPrime.GlobalResult := 'Price=[dblfile=' + FName + ']';
         finally
             CloseFile(F);
         end;
@@ -998,7 +998,7 @@ begin
                 sngPrice := PriceValues^[i];
                 Write(F, sngPrice);
             end;
-            GlobalResult := 'Price=[sngfile=' + FName + ']';
+            DSSPrime.GlobalResult := 'Price=[sngfile=' + FName + ']';
         finally
             CloseFile(F);
         end;

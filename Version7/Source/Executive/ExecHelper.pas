@@ -387,7 +387,7 @@ Begin
         Reset(Fin);
         if IsCompile Then 
         begin
-            LastFileCompiled := ReDirFile;
+            DSSPrime.LastFileCompiled := ReDirFile;
             LocalCompFileName:= ReDirFile;
         end;
         gotTheFile := True;
@@ -459,7 +459,7 @@ Begin
     if not gotTheFile then
     begin
         DoSimpleMsg('Redirect File: "'+ReDirFile+'" Not Found.', 243);
-        SolutionAbort := True;
+        DSSPrime.SolutionAbort := True;
         exit;  // Already had an extension, so just bail
     end;
     
@@ -475,13 +475,13 @@ Begin
             SetCurrentDir(CurrDir);
             If IsCompile Then SetDataPath(CurrDir);  // change datadirectory
 
-            Redirect_Abort := False;
-            In_Redirect    := True;
+            DSSPrime.Redirect_Abort := False;
+            DSSPrime.In_Redirect    := True;
 
             if strings = nil then 
             begin
                 // Traditional TextFile is used
-                WHILE Not ( (EOF(Fin)) or (Redirect_Abort) ) DO
+                WHILE Not ( (EOF(Fin)) or (DSSPrime.Redirect_Abort) ) DO
                 Begin
                     Readln(Fin, InputLine);
                     if Length(InputLine) > 0 then
@@ -511,7 +511,7 @@ Begin
                 // The string list is used
                 for stringIdx := 0 to (strings.Count - 1) do
                 Begin
-                    if Redirect_Abort then 
+                    if DSSPrime.Redirect_Abort then 
                         break;
                         
                     InputLine := strings[stringIdx];
@@ -528,7 +528,7 @@ Begin
                             If Not SolutionAbort Then 
                                 ProcessCommand(InputLine)
                             Else 
-                                Redirect_Abort := True;  // Abort file if solution was aborted
+                                DSSPrime.Redirect_Abort := True;  // Abort file if solution was aborted
 
                         // in block comment ... look for */   and cancel block comment (whole line)
                         if InBlockComment then
@@ -552,13 +552,13 @@ Begin
         else
             CloseFile(Fin);
             
-        In_Redirect := False;
+        DSSPrime.In_Redirect := False;
         ParserVars.Add('@lastfile', ReDirFile) ;
 
         If  IsCompile Then
         Begin
             SetDataPath(CurrDir); // change datadirectory
-            LastCommandWasCompile := True;
+            DSSPrime.LastCommandWasCompile := True;
             ParserVars.Add('@lastcompilefile', LocalCompFileName); // will be last one off the stack
         End
         Else 
