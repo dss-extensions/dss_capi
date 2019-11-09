@@ -70,7 +70,7 @@ var
     NumIntrinsicClasses,
     NumUserClasses: Integer;
 
-procedure CreateDSSClasses;
+procedure CreateDSSClasses(DSS: TDSS);
 procedure DisposeDSSClasses;
 function GetDSSClassPtr(const ClassName: String): TDSSClass;
 function SetObjectClass(const ObjType: String): Boolean;
@@ -140,10 +140,8 @@ uses
 
 
 {--------------------------------------------------------------}
-procedure CreateDSSClasses;
+procedure CreateDSSClasses(DSS: TDSS);
 begin
-    DSSPrime := TDSS.Create();
-
     Classnames := THashList.Create(25);   // Makes 5 sub lists
     DSSClassList := TPointerList.Create(10);  // 10 is initial size and increment
     DSSClasses := TDSSClasses.Create;  // class to handle junk for defining DSS classes
@@ -154,156 +152,156 @@ begin
      {instantiate all Intrinsic Object Classes}
 
      {Generic Object classes first in case others refer to them}
-    DSSPrime.SolutionClass := TDSSSolution.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.SolutionClass); // this is a special class
+    DSS.SolutionClass := TDSSSolution.Create(DSS);
+    DSSClasses.New(DSS.SolutionClass); // this is a special class
 
-    DSSPrime.LineCodeClass := TLineCode.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.LineCodeClass);
+    DSS.LineCodeClass := TLineCode.Create(DSS);
+    DSSClasses.New(DSS.LineCodeClass);
 
-    DSSPrime.LoadShapeClass := TLoadShape.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.LoadShapeClass);
+    DSS.LoadShapeClass := TLoadShape.Create(DSS);
+    DSSClasses.New(DSS.LoadShapeClass);
 
-    DSSPrime.TShapeClass := TTShape.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.TShapeClass);
+    DSS.TShapeClass := TTShape.Create(DSS);
+    DSSClasses.New(DSS.TShapeClass);
 
-    DSSPrime.PriceShapeClass := TPriceShape.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.PriceShapeClass);
+    DSS.PriceShapeClass := TPriceShape.Create(DSS);
+    DSSClasses.New(DSS.PriceShapeClass);
 
-    DSSPrime.XYCurveClass := TXYCurve.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.XYCurveClass);
+    DSS.XYCurveClass := TXYCurve.Create(DSS);
+    DSSClasses.New(DSS.XYCurveClass);
 
-    DSSPrime.GrowthShapeClass := TGrowthShape.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.GrowthShapeClass);
+    DSS.GrowthShapeClass := TGrowthShape.Create(DSS);
+    DSSClasses.New(DSS.GrowthShapeClass);
 
-    DSSPrime.TCC_CurveClass := TTCC_Curve.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.TCC_CurveClass);
+    DSS.TCC_CurveClass := TTCC_Curve.Create(DSS);
+    DSSClasses.New(DSS.TCC_CurveClass);
 
-    DSSPrime.SpectrumClass := TSpectrum.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.SpectrumClass);
+    DSS.SpectrumClass := TSpectrum.Create(DSS);
+    DSSClasses.New(DSS.SpectrumClass);
 
-    DSSPrime.WireDataClass := TWireData.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.WireDataClass);
+    DSS.WireDataClass := TWireData.Create(DSS);
+    DSSClasses.New(DSS.WireDataClass);
 
-    DSSPrime.CNDataClass := TCNData.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.CNDataClass);
+    DSS.CNDataClass := TCNData.Create(DSS);
+    DSSClasses.New(DSS.CNDataClass);
 
-    DSSPrime.TSDataClass := TTSData.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.TSDataClass);
+    DSS.TSDataClass := TTSData.Create(DSS);
+    DSSClasses.New(DSS.TSDataClass);
 
-    DSSPrime.LineGeometryClass := TLineGeometry.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.LineGeometryClass);
+    DSS.LineGeometryClass := TLineGeometry.Create(DSS);
+    DSSClasses.New(DSS.LineGeometryClass);
     
-    DSSPrime.LineSpacingClass := TLineSpacing.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.LineSpacingClass);
+    DSS.LineSpacingClass := TLineSpacing.Create(DSS);
+    DSSClasses.New(DSS.LineSpacingClass);
 
-    DSSPrime.XfmrCodeClass := TXfmrCode.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.XfmrCodeClass);
+    DSS.XfmrCodeClass := TXfmrCode.Create(DSS);
+    DSSClasses.New(DSS.XfmrCodeClass);
 
      {Circuit Element Classes}
-    DSSPrime.LineClass := TLine.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.LineClass);
+    DSS.LineClass := TLine.Create(DSS);
+    DSSClasses.New(DSS.LineClass);
 
-    DSSPrime.VSourceClass := TVSource.Create(DSSPrime);    // 2-terminal Vsource
-    DSSClasses.New(DSSPrime.VSourceClass);
+    DSS.VSourceClass := TVSource.Create(DSS);    // 2-terminal Vsource
+    DSSClasses.New(DSS.VSourceClass);
 
-    DSSPrime.ISourceClass := TISource.Create(DSSPrime);    // 2-terminal Isource
-    DSSClasses.New(DSSPrime.ISourceClass);
+    DSS.ISourceClass := TISource.Create(DSS);    // 2-terminal Isource
+    DSSClasses.New(DSS.ISourceClass);
 
-    DSSPrime.VCSSClass := TVCCS.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.VCSSClass);
+    DSS.VCSSClass := TVCCS.Create(DSS);
+    DSSClasses.New(DSS.VCSSClass);
 
-    DSSPrime.LoadClass := TLoad.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.FLoadClass);
+    DSS.LoadClass := TLoad.Create(DSS);
+    DSSClasses.New(DSS.FLoadClass);
 
-    DSSPrime.TransformerClass := TTransf.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.TransformerClass);
+    DSS.TransformerClass := TTransf.Create(DSS);
+    DSSClasses.New(DSS.TransformerClass);
 
-    DSSPrime.RegControlClass := TRegControl.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.RegControlClass);
+    DSS.RegControlClass := TRegControl.Create(DSS);
+    DSSClasses.New(DSS.RegControlClass);
 
-    DSSPrime.CapacitorClass := TCapacitor.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.CapacitorClass);
+    DSS.CapacitorClass := TCapacitor.Create(DSS);
+    DSSClasses.New(DSS.CapacitorClass);
 
-    DSSPrime.FReactorClass := TReactor.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.FReactorClass);
+    DSS.FReactorClass := TReactor.Create(DSS);
+    DSSClasses.New(DSS.FReactorClass);
 
-    DSSPrime.CapControlClass := TCapControl.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.CapControlClass);
+    DSS.CapControlClass := TCapControl.Create(DSS);
+    DSSClasses.New(DSS.CapControlClass);
 
-    DSSPrime.FaultClass := TFault.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.FaultClass);
+    DSS.FaultClass := TFault.Create(DSS);
+    DSSClasses.New(DSS.FaultClass);
 
-    DSSPrime.GeneratorClass := TGenerator.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.GeneratorClass);
+    DSS.GeneratorClass := TGenerator.Create(DSS);
+    DSSClasses.New(DSS.GeneratorClass);
 
-    DSSPrime.GenDispatcherClass := TGenDispatcher.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.GenDispatcherClass);
+    DSS.GenDispatcherClass := TGenDispatcher.Create(DSS);
+    DSSClasses.New(DSS.GenDispatcherClass);
 
-    DSSPrime.StorageClass := TStorage.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.StorageClass);
+    DSS.StorageClass := TStorage.Create(DSS);
+    DSSClasses.New(DSS.StorageClass);
 
-    DSSPrime.StorageControllerClass := TStorageController.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.StorageControllerClass);
+    DSS.StorageControllerClass := TStorageController.Create(DSS);
+    DSSClasses.New(DSS.StorageControllerClass);
 
-    DSSPrime.RelayClass := TRelay.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.RelayClass);
+    DSS.RelayClass := TRelay.Create(DSS);
+    DSSClasses.New(DSS.RelayClass);
 
-    DSSPrime.RecloserClass := TRecloser.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.RecloserClass);
+    DSS.RecloserClass := TRecloser.Create(DSS);
+    DSSClasses.New(DSS.RecloserClass);
 
-    DSSPrime.FuseClass := TFuse.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.FuseClass);
+    DSS.FuseClass := TFuse.Create(DSS);
+    DSSClasses.New(DSS.FuseClass);
 
-//     DSSPrime.FeederClass    := TFeeder.Create(DSSPrime);
-//     DSSClasses.New(DSSPrime.FeederClass);
+//     DSS.FeederClass    := TFeeder.Create(DSS);
+//     DSSClasses.New(DSS.FeederClass);
 
-    DSSPrime.SwtControlClass := TSwtControl.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.SwtControlClass);
+    DSS.SwtControlClass := TSwtControl.Create(DSS);
+    DSSClasses.New(DSS.SwtControlClass);
 
-    DSSPrime.PVSystemClass := TPVSystem.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.PVSystemClass);
+    DSS.PVSystemClass := TPVSystem.Create(DSS);
+    DSSClasses.New(DSS.PVSystemClass);
 
-    DSSPrime.UPFCClass := TUPFC.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.UPFCClass);
+    DSS.UPFCClass := TUPFC.Create(DSS);
+    DSSClasses.New(DSS.UPFCClass);
 
-    DSSPrime.UPFCControlClass := TUPFCControl.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.UPFCControlClass);
+    DSS.UPFCControlClass := TUPFCControl.Create(DSS);
+    DSSClasses.New(DSS.UPFCControlClass);
 
-    DSSPrime.ESPVLControlClass := TESPVLControl.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.ESPVLControlClass);
+    DSS.ESPVLControlClass := TESPVLControl.Create(DSS);
+    DSSClasses.New(DSS.ESPVLControlClass);
 
-    DSSPrime.IndMach012Class := TIndMach012.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.IndMach012Class);
+    DSS.IndMach012Class := TIndMach012.Create(DSS);
+    DSSClasses.New(DSS.IndMach012Class);
 
-    DSSPrime.GICsourceClass := TGICsource.Create(DSSPrime); // GIC source
-    DSSClasses.New(DSSPrime.GICsourceClass);
+    DSS.GICsourceClass := TGICsource.Create(DSS); // GIC source
+    DSSClasses.New(DSS.GICsourceClass);
 
-    DSSPrime.AutoTransClass := TAutoTrans.Create(DSSPrime); // Auto Transformer
-    DSSClasses.New(DSSPrime.AutoTransClass);
+    DSS.AutoTransClass := TAutoTrans.Create(DSS); // Auto Transformer
+    DSSClasses.New(DSS.AutoTransClass);
 
-    DSSPrime.InvControlClass := TInvControl.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.InvControlClass);
+    DSS.InvControlClass := TInvControl.Create(DSS);
+    DSSClasses.New(DSS.InvControlClass);
 
-    DSSPrime.ExpControlClass := TExpControl.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.ExpControlClass);
+    DSS.ExpControlClass := TExpControl.Create(DSS);
+    DSSClasses.New(DSS.ExpControlClass);
 
-    DSSPrime.GICLineClass := TGICLine.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.GICLineClass);
+    DSS.GICLineClass := TGICLine.Create(DSS);
+    DSSClasses.New(DSS.GICLineClass);
     
-    DSSPrime.GICTransformerClass := TGICTransformer.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.GICTransformerClass);
+    DSS.GICTransformerClass := TGICTransformer.Create(DSS);
+    DSSClasses.New(DSS.GICTransformerClass);
 
-    DSSPrime.VSConverterClass := TVSConverter.Create(DSSPrime);
-    DSSClasses.New(DSSPrime.VSConverterClass);
+    DSS.VSConverterClass := TVSConverter.Create(DSS);
+    DSSClasses.New(DSS.VSConverterClass);
 
-    DSSPrime.MonitorClass := TDSSMonitor.Create(DSSPrime);  // Have to do this AFTER Generator
-    DSSClasses.New(DSSPrime.MonitorClass);
+    DSS.MonitorClass := TDSSMonitor.Create(DSS);  // Have to do this AFTER Generator
+    DSSClasses.New(DSS.MonitorClass);
 
-    DSSPrime.EnergyMeterClass := TEnergyMeter.Create(DSSPrime);  // Have to do this AFTER Generator
-    DSSClasses.New(DSSPrime.EnergyMeterClass);
+    DSS.EnergyMeterClass := TEnergyMeter.Create(DSS);  // Have to do this AFTER Generator
+    DSSClasses.New(DSS.EnergyMeterClass);
 
-    DSSPrime.SensorClass := TSensor.Create(DSSPrime);      // Create state estimation sensors
-    DSSClasses.New(DSSPrime.SensorClass);
+    DSS.SensorClass := TSensor.Create(DSS);      // Create state estimation sensors
+    DSSClasses.New(DSS.SensorClass);
 
  { Create Classes for custom implementations }
     CreateMyDSSClasses;

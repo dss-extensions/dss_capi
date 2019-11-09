@@ -105,7 +105,7 @@ Begin
      OptionList := TCommandList.Create(ExecOption);
 
      {Instantiate All DSS Classe Definitions, Intrinsic and User-defined}
-     CreateDSSClasses;     // in DSSGlobals
+     CreateDSSClasses(DSSPrime);     // in DSSGlobals
 
      Circuits := TPointerList.Create(2);   // default buffer for 2 active circuits
      NumCircuits := 0;
@@ -226,7 +226,7 @@ begin
           DisposeDSSClasses;
 
           {Now, Start over}
-          CreateDSSClasses;
+          CreateDSSClasses(DSSPrime);
           CreateDefaultDSSItems;
           RebuildHelpForm := True; // because class strings have changed
        End;
