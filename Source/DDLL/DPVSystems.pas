@@ -160,7 +160,7 @@ begin
                End;
            End;
      End;
-  end;
+    end;
   8: begin  // PVSystems.kVARated write
      IF ActiveCircuit[ActiveActor]<> NIL THEN Begin
            WITH ActiveCircuit[ActiveActor].PVSystems Do Begin
@@ -169,7 +169,17 @@ begin
                End;
            End;
      End;
-  end
+    end;
+  9: begin  // PVSystems.Pmpp read
+     Result := -1.0;  // not set
+     IF ActiveCircuit[ActiveActor]<> NIL THEN Begin
+           WITH ActiveCircuit[ActiveActor].PVSystems Do Begin
+               IF ActiveIndex<>0 THEN Begin
+                   Result := TPVSystemObj(Active).pmpp ;
+               End;
+           End;
+     End;
+    end
   else
       Result:=-1.0;
   end;
