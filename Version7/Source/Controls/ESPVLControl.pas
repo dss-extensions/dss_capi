@@ -46,7 +46,7 @@ type
         procedure DefineProperties;
         function MakeLike(const ESPVLControlName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -145,9 +145,9 @@ const
 
 
 {--------------------------------------------------------------------------}
-constructor TESPVLControl.Create;  // Creates superstructure for all ESPVLControl objects
+constructor TESPVLControl.Create(dss: TDSS);  // Creates superstructure for all ESPVLControl objects
 begin
-    inherited Create;
+    inherited Create(dss);
 
     Class_name := 'ESPVLControl';
     DSSClassType := DSSClassType + ESPVL_CONTROL;

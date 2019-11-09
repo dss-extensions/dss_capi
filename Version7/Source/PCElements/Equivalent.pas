@@ -33,7 +33,7 @@ type
         function MakeLike(const OtherSource: String): Integer; OVERRIDE;
         procedure InterpretAllBuses(const S: String);
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -103,10 +103,10 @@ const
     NumPropsThisClass = 16;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TEquivalent.Create;  // Creates superstructure for all Line objects
+constructor TEquivalent.Create(dss: TDSS);  // Creates superstructure for all Line objects
 begin
 
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'Equivalent';
     DSSClassType := SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
 

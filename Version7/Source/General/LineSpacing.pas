@@ -31,7 +31,7 @@ type
         function MakeLike(const LineName: String): Integer; OVERRIDE;
     PUBLIC
 
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -118,9 +118,9 @@ const
     NumPropsThisClass = 5;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TLineSpacing.Create;  // Creates superstructure for all Line objects
+constructor TLineSpacing.Create(dss: TDSS);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'LineSpacing';
     DSSClassType := DSS_OBJECT;
     ActiveElement := 0;

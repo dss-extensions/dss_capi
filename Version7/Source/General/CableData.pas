@@ -25,7 +25,7 @@ type
         procedure ClassMakeLike(const OtherObj: Pointer);
     PUBLIC
         NumCableClassProps: Integer;
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
     end;
 
@@ -64,9 +64,9 @@ uses
     Arraydef,
     LineUnits;
 
-constructor TCableData.Create;  // Creates superstructure for all Line objects
+constructor TCableData.Create(dss: TDSS);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dss);
     NumCableClassProps := 4;
     DSSClassType := DSS_OBJECT;
 end;

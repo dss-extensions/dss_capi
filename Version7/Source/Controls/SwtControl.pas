@@ -24,7 +24,7 @@ type
         procedure DefineProperties;
         function MakeLike(const SwtControlName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -87,9 +87,9 @@ const
 
     NumPropsThisClass = 8;
 
-constructor TSwtControl.Create;  // Creates superstructure for all SwtControl objects
+constructor TSwtControl.Create(dss: TDSS);  // Creates superstructure for all SwtControl objects
 begin
-    inherited Create;
+    inherited Create(dss);
 
     Class_name := 'SwtControl';
     DSSClassType := DSSClassType + SWT_CONTROL;

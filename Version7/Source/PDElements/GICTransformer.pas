@@ -39,7 +39,7 @@ type
         procedure DefineProperties;
         function MakeLike(const GICTransName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -107,9 +107,9 @@ const
     SPEC_YY = 3;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TGICTransformer.Create;  // Creates superstructure for all Fault objects
+constructor TGICTransformer.Create(dss: TDSS);  // Creates superstructure for all Fault objects
 begin
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'GICTransformer';
     DSSClassType := GIC_TRANSFORMER + PD_ELEMENT;
 

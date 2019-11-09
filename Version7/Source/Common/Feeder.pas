@@ -48,7 +48,7 @@ type
         procedure DefineProperties;
         function MakeLike(const OtherFeederName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -110,9 +110,9 @@ var
     NumPropsThisClass: Integer;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TFeeder.Create;  // Creates superstructure for all Line objects
+constructor TFeeder.Create(dss: TDSS);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'Feeder';
     DSSClassType := FEEDER_ELEMENT; {+ PC_ELEMENT; } // add to PCElement list
 

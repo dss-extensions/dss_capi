@@ -85,7 +85,7 @@ type
     PROTECTED
         procedure DefineProperties;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -326,9 +326,9 @@ var
 {$ENDIF}
 
 // ===========================================================================================
-constructor TDSSSolution.Create;  // Collection of all solution objects
+constructor TDSSSolution.Create(dss: TDSS);  // Collection of all solution objects
 begin
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'Solution';
     DSSClassType := DSS_OBJECT + HIDDEN_ELEMENT;
 

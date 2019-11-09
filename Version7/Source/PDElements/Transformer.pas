@@ -58,7 +58,7 @@ type
         procedure DefineProperties;
         function MakeLike(const TransfName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -255,21 +255,17 @@ uses
     Utilities,
     XfmrCode;
 
-var
-    XfmrCodeClass: TXfmrCode;
-
 const
     NumPropsThisClass = 47;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TTransf.Create;  // Creates superstructure for all Transformer objects
+constructor TTransf.Create(dss: TDSS);  // Creates superstructure for all Transformer objects
 begin
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'Transformer';
     DSSClassType := DSSClassType + XFMR_ELEMENT; // override PDElement   (kept in both actually)
 
     ActiveElement := 0;
-    XfmrCodeClass := NIL;
 
     DefineProperties;
 
@@ -2586,9 +2582,6 @@ var
     Obj: TXfmrCodeObj;
     i: Integer;
 begin
-    if XfmrCodeClass = NIL then
-        XfmrCodeClass := DSSClassList.Get(ClassNames.Find('xfmrcode'));
-
     if XfmrCodeClass.SetActive(Code) then
     begin
         Obj := XfmrCodeClass.GetActiveObj;

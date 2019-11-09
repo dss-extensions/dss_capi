@@ -41,7 +41,7 @@ type
         function MakeLike(const LineName: String): Integer; OVERRIDE;
 
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
 
@@ -178,9 +178,9 @@ var
     LineCodeClass: TLineCode;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TLine.Create;  // Creates superstructure for all Line objects
+constructor TLine.Create(dss: TDSS);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'Line';
     DSSClassType := DSSClassType + LINE_ELEMENT; // in both PDElement list and Linesection lists
 

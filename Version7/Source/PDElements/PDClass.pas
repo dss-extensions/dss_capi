@@ -12,6 +12,7 @@ unit PDClass;
 interface
 
 uses
+    DSSClass,
     CktElementClass;
 
 type
@@ -25,7 +26,7 @@ type
         procedure DefineProperties;  // Add Properties of this class to propName
     PUBLIC
         NumPDClassProps: Integer;
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
     PUBLISHED
 
@@ -35,16 +36,16 @@ type
 implementation
 
 uses
+    DSSClassDefs,
     PDElement,
     ParserDel,
-    DSSClassDefs,
     DSSGlobals,
     Utilities;
 
-constructor TPDClass.Create;
+constructor TPDClass.Create(dss: TDSS);
 begin
 
-    inherited Create;
+    inherited Create(dss);
     NumPDClassProps := 5;
     DSSClassType := PD_ELEMENT;
 end;

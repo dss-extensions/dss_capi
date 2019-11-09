@@ -41,7 +41,7 @@ type
         procedure DefineProperties;
         function MakeLike(const UPFCControlName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -107,9 +107,9 @@ const
 
 
 {--------------------------------------------------------------------------}
-constructor TUPFCControl.Create;  // Creates superstructure for all UPFCControl objects
+constructor TUPFCControl.Create(dss: TDSS);  // Creates superstructure for all UPFCControl objects
 begin
-    inherited Create;
+    inherited Create(dss);
 
     Class_name := 'UPFCControl';
     DSSClassType := DSSClassType + UPFC_CONTROL;

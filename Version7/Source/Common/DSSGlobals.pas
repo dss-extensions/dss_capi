@@ -72,7 +72,10 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      IndMach012,
      GICsource, // GIC source
      AutoTrans, // Auto Transformer
-     VSConverter;
+     VSConverter,
+     XfmrCode,
+     GICLine,
+     GICTransformer;
 
 
 CONST
@@ -87,10 +90,12 @@ CONST
       EPSILON = 1.0e-12;   // Default tiny floating point
       EPSILON2 = 1.0e-3;   // Default for Real number mismatch testing
 
+//TODO: move the following to scoped enums!
       POWERFLOW  = 1;  // Load model types for solution
       ADMITTANCE = 2;
 
       // For YPrim matrices
+      
       ALL_YPRIM = 0;
       SERIES = 1;
       SHUNT  = 2;
@@ -137,160 +142,159 @@ CONST
 
 VAR
 
-   DLLFirstTime   :Boolean=TRUE;
-   DLLDebugFile   :TextFile;
-   ProgramName    :String;
+    // Truly global state variables
+    DLLFirstTime   :Boolean=TRUE;
+    DLLDebugFile   :TextFile;
+    ProgramName    :String;
 {$IFNDEF DSS_CAPI} // Disable DSS_Registry completely when building the DSS_CAPI DLL
-   DSS_Registry   :TIniRegSave; // Registry   (See Executive)
+    DSS_Registry   :TIniRegSave; // Registry   (See Executive)
 {$ENDIF}
 {$IFDEF DSS_CAPI}
-   DSS_CAPI_INFO_SPARSE_COND : Boolean;
-   DSS_CAPI_EARLY_ABORT : Boolean;
-   DSS_CAPI_ALLOW_EDITOR: Boolean;
-   DSS_CAPI_LOADS_TERMINAL_CHECK: Boolean = True;
-   DSS_CAPI_ALLOW_INCREMENTAL_Y: Boolean = False;
+    DSS_CAPI_INFO_SPARSE_COND : Boolean;
+    DSS_CAPI_EARLY_ABORT : Boolean;
+    DSS_CAPI_ALLOW_EDITOR: Boolean;
+    DSS_CAPI_LOADS_TERMINAL_CHECK: Boolean = True;
+    DSS_CAPI_ALLOW_INCREMENTAL_Y: Boolean = False;
 {$ENDIF}
-   // Global variables for the DSS visualization tool
-   DSS_Viz_installed   :Boolean=False; // DSS visualization tool (flag of existance)
-   DSS_Viz_path: String;
-   DSS_Viz_enable: Boolean=False;
+    // Global variables for the DSS visualization tool
+    DSS_Viz_installed   :Boolean=False; // DSS visualization tool (flag of existance)
+    DSS_Viz_path: String;
+    DSS_Viz_enable: Boolean=False;
 
-   IsDLL,
-   NoFormsAllowed  :Boolean;
+    IsDLL,
+    NoFormsAllowed  :Boolean;
 
-   ActiveCircuit   :TDSSCircuit;
-   ActiveDSSClass  :TDSSClass;
-   LastClassReferenced:Integer;  // index of class of last thing edited
-   ActiveDSSObject :TDSSObject;
-   NumCircuits     :Integer;
-   MaxCircuits     :Integer;
-   MaxBusLimit     :Integer; // Set in Validation
-   MaxAllocationIterations :Integer;
-   Circuits        :TPointerList;
-   DSSObjs         :TPointerList;
+    CALPHA             :Complex;  {120-degree shift constant}
+    SQRT2              :Double;
+    SQRT3              :Double;
+    InvSQRT3           :Double;
+    InvSQRT3x1000      :Double;
 
-   AuxParser       :TParser;  // Auxiliary parser for use by anybody for reparsing values
+    DefaultEditor    :String;     // normally, Notepad
+    DefaultFontSize  :Integer;
+    DefaultFontName  :String;
+    DefaultFontStyles :{$IFNDEF FPC}TFontStyles{$ELSE}Integer{$ENDIF};
+    DSSFileName      :String;     // Name of current exe or DLL
+    DSSDirectory     :String;     // where the current exe resides
+    MaxCircuits     :Integer;
 
-//{****} DebugTrace:TextFile;
+    ActiveCircuit   :TDSSCircuit;
+    ActiveDSSClass  :TDSSClass;
+    LastClassReferenced:Integer;  // index of class of last thing edited
+    ActiveDSSObject :TDSSObject;
+    NumCircuits     :Integer;
+    MaxAllocationIterations :Integer;
+    Circuits        :TPointerList;
+    DSSObjs         :TPointerList;
+    AuxParser       :TParser;  // Auxiliary parser for use by anybody for reparsing values
+    ErrorPending       :Boolean;
+    CmdResult,
+    ErrorNumber        :Integer;
+    LastErrorMessage   :String;
+    DefaultEarthModel  :Integer;
+    ActiveEarthModel   :Integer;
+    LastFileCompiled   :String;
+    LastCommandWasCompile :Boolean;
+    SolutionAbort      :Boolean;
+    InShowResults      :Boolean;
+    Redirect_Abort     :Boolean;
+    In_Redirect        :Boolean;
+    DIFilesAreOpen     :Boolean;
+    AutoShowExport     :Boolean;
+    SolutionWasAttempted :Boolean;
 
+    GlobalHelpString   :String;
+    GlobalPropertyValue:String;
+    GlobalResult       :String;
+    LastResultFile     :String;
+    VersionString      :String;
 
-   ErrorPending       :Boolean;
-   CmdResult,
-   ErrorNumber        :Integer;
-   LastErrorMessage   :String;
+    LogQueries         :Boolean;
+    QueryFirstTime     :Boolean;
+    QueryLogFileName   :String;
+    QueryLogFile       :TextFile;
 
-   DefaultEarthModel  :Integer;
-   ActiveEarthModel   :Integer;
+    StartupDirectory :String;     // Where we started
+    DataDirectory    :String;     // used to be DSSDataDirectory
+    OutputDirectory  :String;     // output files go here, same as DataDirectory if writable
+    CircuitName_     :String;     // Name of Circuit with a "_" appended
 
-   LastFileCompiled   :String;
-   LastCommandWasCompile :Boolean;
+    DefaultBaseFreq  :Double;
+    DaisySize        :Double;
 
-   CALPHA             :Complex;  {120-degree shift constant}
-   SQRT2              :Double;
-   SQRT3              :Double;
-   InvSQRT3           :Double;
-   InvSQRT3x1000      :Double;
-   SolutionAbort      :Boolean;
-   InShowResults      :Boolean;
-   Redirect_Abort     :Boolean;
-   In_Redirect        :Boolean;
-   DIFilesAreOpen     :Boolean;
-   AutoShowExport     :Boolean;
-   SolutionWasAttempted :Boolean;
+    // Some commonly used classes   so we can find them easily
+    LoadShapeClass     :TLoadShape;
+    TShapeClass        :TTshape;
+    PriceShapeClass    :TPriceShape;
+    XYCurveClass       :TXYCurve;
+    GrowthShapeClass   :TGrowthShape;
+    SpectrumClass      :TSpectrum;
+    SolutionClass      :TDSSClass;
+    EnergyMeterClass   :TEnergyMeter;
+    // FeederClass        :TFeeder;
+    MonitorClass       :TDSSMonitor;
+    SensorClass        :TSensor;
+    TCC_CurveClass     :TTCC_Curve;
+    WireDataClass      :TWireData;
+    CNDataClass        :TCNData;
+    TSDataClass        :TTSData;
+    LineGeometryClass  :TLineGeometry;
+    LineSpacingClass   :TLineSpacing;
+    LineCodeClass      :TLineCode;
+    StorageClass       :TStorage;
+    PVSystemClass      :TPVSystem;
+    InvControlClass     :TInvControl;
+    ExpControlClass    :TExpControl;
 
-   GlobalHelpString   :String;
-   GlobalPropertyValue:String;
-   GlobalResult       :String;
-   LastResultFile     :String;
-   VersionString      :String;
+    LineClass          :TLine;
+    VSourceClass       :TVSource;
+    ISourceClass       :TISource;
+    VCSSClass          :TVCCS;
+    LoadClass          :TLoad;
+    TransformerClass   :TTransf;
+    RegControlClass    :TRegControl;
+    CapacitorClass     :TCapacitor;
+    ReactorClass       :TReactor;
+    CapControlClass    :TCapControl;
+    FaultClass         :TFault;
+    GeneratorClass     :TGenerator;
+    GenDispatcherClass :TGenDispatcher;
+    StorageControllerClass: TStorageController;
+    RelayClass         :TRelay;
+    RecloserClass      :TRecloser;
+    FuseClass          :TFuse;
+    SwtControlClass    :TSwtControl;
+    UPFCClass          :TUPFC;
+    UPFCControlClass   :TUPFCControl;
+    ESPVLControlClass  :TESPVLControl;
+    IndMach012Class    :TIndMach012;
+    GICsourceClass     :TGICsource; // GIC source
+    AutoTransClass     :TAutoTrans; // Auto Transformer
+    VSConverterClass   :TVSConverter;
+    XfmrCodeClass      :TXfmrCode;
+    GICLineClass       :TGICLine;
+    GICTransformerClass:TGICTransformer;
+    
+    EventStrings: TStringList;
+    SavedFileList:TStringList;
+    ErrorStrings: TStringList;
 
-   LogQueries         :Boolean;
-   QueryFirstTime     :Boolean;
-   QueryLogFileName   :String;
-   QueryLogFile       :TextFile;
+    DSSClassList       :TPointerList; // pointers to the base class types
+    ClassNames         :THashList;
 
-   DefaultEditor    :String;     // normally, Notepad
-   DefaultFontSize  :Integer;
-   DefaultFontName  :String;
-   DefaultFontStyles :{$IFNDEF FPC}TFontStyles{$ELSE}Integer{$ENDIF};
-   DSSFileName      :String;     // Name of current exe or DLL
-   DSSDirectory     :String;     // where the current exe resides
-   StartupDirectory :String;     // Where we started
-   DataDirectory    :String;     // used to be DSSDataDirectory
-   OutputDirectory  :String;     // output files go here, same as DataDirectory if writable
-   CircuitName_     :String;     // Name of Circuit with a "_" appended
+    UpdateRegistry     :Boolean;  // update on program exit
+    CPU_Freq           : int64;          // Used to store the CPU frequency
+    CPU_Cores          : integer;
 
-   DefaultBaseFreq  :Double;
-   DaisySize        :Double;
+    IncMat_Ordered     : Boolean;
+    //***********************A-Diakoptics Variables*********************************
+    ADiakoptics             : Boolean;
 
-   // Some commonly used classes   so we can find them easily
-   LoadShapeClass     :TLoadShape;
-   TShapeClass        :TTshape;
-   PriceShapeClass    :TPriceShape;
-   XYCurveClass       :TXYCurve;
-   GrowthShapeClass   :TGrowthShape;
-   SpectrumClass      :TSpectrum;
-   SolutionClass      :TDSSClass;
-   EnergyMeterClass   :TEnergyMeter;
-   // FeederClass        :TFeeder;
-   MonitorClass       :TDSSMonitor;
-   SensorClass        :TSensor;
-   TCC_CurveClass     :TTCC_Curve;
-   WireDataClass      :TWireData;
-   CNDataClass        :TCNData;
-   TSDataClass        :TTSData;
-   LineGeometryClass  :TLineGeometry;
-   LineSpacingClass   :TLineSpacing;
-   LineCodeClass      :TLineCode;
-   StorageClass       :TStorage;
-   PVSystemClass      :TPVSystem;
-   InvControlClass     :TInvControl;
-   ExpControlClass    :TExpControl;
+    //***********************Seasonal QSTS variables********************************
+    SeasonalRating         : Boolean;    // Tells the energy meter if the seasonal rating feature is active
+    SeasonSignal           : String;     // Stores the name of the signal for selecting the rating dynamically
 
-   LineClass          :TLine;
-   VSourceClass       :TVSource;
-   ISourceClass       :TISource;
-   VCSSClass          :TVCCS;
-   LoadClass          :TLoad;
-   TransformerClass   :TTransf;
-   RegControlClass    :TRegControl;
-   CapacitorClass     :TCapacitor;
-   ReactorClass       :TReactor;
-   CapControlClass    :TCapControl;
-   FaultClass         :TFault;
-   GeneratorClass     :TGenerator;
-   GenDispatcherClass :TGenDispatcher;
-   StorageControllerClass: TStorageController;
-   RelayClass         :TRelay;
-   RecloserClass      :TRecloser;
-   FuseClass          :TFuse;
-   SwtControlClass    :TSwtControl;
-   UPFCClass          :TUPFC;
-   UPFCControlClass   :TUPFCControl;
-   ESPVLControlClass  :TESPVLControl;
-   IndMach012Class    :TIndMach012;
-   GICsourceClass     :TGICsource; // GIC source
-   AutoTransClass     :TAutoTrans; // Auto Transformer
-   VSConverterClass   :TVSConverter;
-
-   EventStrings: TStringList;
-   SavedFileList:TStringList;
-   ErrorStrings: TStringList;
-
-   DSSClassList       :TPointerList; // pointers to the base class types
-   ClassNames         :THashList;
-
-   UpdateRegistry     :Boolean;  // update on program exit
-   CPU_Freq           : int64;          // Used to store the CPU frequency
-   CPU_Cores          : integer;
-
-   IncMat_Ordered     : Boolean;
-//***********************A-Diakoptics Variables*********************************
-  ADiakoptics             : Boolean;
-
-//***********************Seasonal QSTS variables********************************
-   SeasonalRating         : Boolean;    // Tells the energy meter if the seasonal rating feature is active
-   SeasonSignal           : String;     // Stores the name of the signal for selecting the rating dynamically
+    DSSClasses: TDSSClasses;
 
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
@@ -972,27 +976,31 @@ initialization
 
    {Initialize filenames and directories}
 
-   {$IFDEF FPC}
-   ProgramName      := 'OpenDSSCmd';  // for now...
-   {$ELSE}
+{$IFDEF DSS_CAPI}
+   ProgramName      := 'DSS_CAPI';
+    {$IFDEF FPC}
+   ProgramName      := 'OpenDSSCmd';
+    {$ELSE}
    ProgramName      := 'OpenDSS';
-   {$ENDIF}
+    {$ENDIF}
+{$ENDIF}
+
    DSSFileName      := GetDSSExeFile;
    DSSDirectory     := ExtractFilePath(DSSFileName);
    // want to know if this was built for 64-bit, not whether running on 64 bits
    // (i.e. we could have a 32-bit build running on 64 bits; not interested in that
 {$IFDEF DSS_CAPI}
-{$IFDEF CPUX64}
+    {$IFDEF CPUX64}
    VersionString    := GetDSSVersion + ' (64-bit build)';
-{$ELSE ! CPUX86}
+    {$ELSE ! CPUX86}
    VersionString    := GetDSSVersion + ' (32-bit build)';
-{$ENDIF}
+    {$ENDIF}
 {$ELSE}
-{$IFDEF CPUX64}
+    {$IFDEF CPUX64}
    VersionString    := 'Version ' + GetDSSVersion + ' (64-bit build)';
-{$ELSE ! CPUX86}
+    {$ELSE ! CPUX86}
    VersionString    := 'Version ' + GetDSSVersion + ' (32-bit build)';
-{$ENDIF}
+    {$ENDIF}
 {$ENDIF}
 
    StartupDirectory := GetCurrentDir + PathDelim;

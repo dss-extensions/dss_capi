@@ -72,7 +72,7 @@ type
 
     PUBLIC
 
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;      // Definition of the main property editing function 
@@ -180,9 +180,9 @@ var  // Define any useful module vars here, for example:
     CDOUBLEONE: Complex;   // 1 + j1  (see Initialization section below)
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TPCPrototype.Create;  // Creates main collection handler for all PCPrototype objects
+constructor TPCPrototype.Create(dss: TDSS);  // Creates main collection handler for all PCPrototype objects
 begin
-    inherited Create;  // make the base class  and init DSSClassType
+    inherited Create(dss);  // make the base class  and init DSSClassType
 
      // Specify class name and bit mask ID for this class type
      // PCPROTOTYPE_ELEMENT must be defined in DSSClassDefs as nn*8

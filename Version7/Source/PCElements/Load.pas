@@ -131,7 +131,7 @@ type
         function MakeLike(const OtherLoadName: String): Integer; OVERRIDE;
         procedure DefineProperties;  // Add Properties of this class to propName
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -347,9 +347,9 @@ var
     CDOUBLEONE: Complex;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TLoad.Create;  // Creates superstructure FOR all Line objects
+constructor TLoad.Create(dss: TDSS);  // Creates superstructure FOR all Line objects
 begin
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'Load';
     DSSClassType := DSSClassType + LOAD_ELEMENT;
 

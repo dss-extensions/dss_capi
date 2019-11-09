@@ -47,7 +47,7 @@ type
         procedure DefineProperties;
         function MakeLike(const StorageControllerName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -266,9 +266,9 @@ var
     CDoubleOne: Complex;
 
 {--------------------------------------------------------------------------}
-constructor TStorageController.Create;  // Creates superstructure for all StorageController objects
+constructor TStorageController.Create(dss: TDSS);  // Creates superstructure for all StorageController objects
 begin
-    inherited Create;
+    inherited Create(dss);
 
     Class_name := 'StorageController';
     DSSClassType := DSSClassType + STORAGE_CONTROL;

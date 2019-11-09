@@ -113,7 +113,7 @@ type
         procedure DefineProperties;
         function MakeLike(const MonitorName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -259,9 +259,9 @@ end;
 {$ENDIF}
 
 {--------------------------------------------------------------------------}
-constructor TDSSMonitor.Create;  // Creates superstructure for all Monitor objects
+constructor TDSSMonitor.Create(dss: TDSS);  // Creates superstructure for all Monitor objects
 begin
-    inherited Create;
+    inherited Create(dss);
 
     Class_name := 'Monitor';
     DSSClassType := DSSClassType + MON_ELEMENT;

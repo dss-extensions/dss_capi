@@ -41,7 +41,7 @@ type
         procedure DefineProperties;
         function MakeLike(const SensorName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -151,9 +151,9 @@ const
 
 {==============================================================================}
 
-constructor TSensor.Create;  // Creates superstructure for all Sensor objects
+constructor TSensor.Create(dss: TDSS);  // Creates superstructure for all Sensor objects
 begin
-    inherited Create;
+    inherited Create(dss);
 
     Class_name := 'Sensor';
     DSSClassType := DSSClassType + SENSOR_ELEMENT;

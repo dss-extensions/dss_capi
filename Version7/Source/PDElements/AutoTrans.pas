@@ -54,7 +54,7 @@ type
         procedure DefineProperties;
         function MakeLike(const AutoTransfName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -247,22 +247,17 @@ uses
     Utilities,
     XfmrCode;
 
-var
-    XfmrCodeClass: TXfmrCode;
-
 const
     NumPropsThisClass = 42;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TAutoTrans.Create;  // Creates superstructure for all AutoTrans objects
+constructor TAutoTrans.Create(dss: TDSS);  // Creates superstructure for all AutoTrans objects
 begin
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'AutoTrans';
     DSSClassType := DSSClassType + AUTOTRANS_ELEMENT; // override PDElement   (kept in both actually)
 
     ActiveElement := 0;
-    XfmrCodeClass := NIL;
-
     DefineProperties;
 
      {Make space for AutoTrans property list}
@@ -2610,9 +2605,6 @@ var
     Obj: TXfmrCodeObj;
     i: Integer;
 begin
-    if XfmrCodeClass = NIL then
-        XfmrCodeClass := DSSClassList.Get(ClassNames.Find('xfmrcode'));
-
     if XfmrCodeClass.SetActive(Code) then
     begin
         Obj := XfmrCodeClass.GetActiveObj;

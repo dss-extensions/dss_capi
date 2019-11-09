@@ -61,7 +61,7 @@ type
         procedure DefineProperties;
         function MakeLike(const CurveName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -149,9 +149,9 @@ const
     NumPropsThisClass = 13;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TXYcurve.Create;  // Creates superstructure for all Line objects
+constructor TXYcurve.Create(dss: TDSS);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'XYcurve';
     DSSClassType := DSS_OBJECT;
 

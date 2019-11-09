@@ -83,7 +83,7 @@ end;
         PROCEDURE DefineProperties;
         FUNCTION MakeLike(const InvControlName:String):Integer;Override;
      public
-       constructor Create;
+       constructor Create(dss: TDSS);
        destructor Destroy; override;
 
        FUNCTION Edit:Integer; override;     // uses global parser
@@ -264,9 +264,9 @@ CONST
     CHANGEDRCVVARLEVEL = 4;
 
 {--------------------------------------------------------------------------}
-constructor TInvControl.Create;  // Creates superstructure for all InvControl objects
+constructor TInvControl.Create(dss: TDSS);  // Creates superstructure for all InvControl objects
 Begin
-     Inherited Create;
+     Inherited Create(dss);
 
      Class_name   := 'InvControl';
      DSSClassType := DSSClassType + INV_CONTROL;

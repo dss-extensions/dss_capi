@@ -41,7 +41,7 @@ type
         procedure DefineProperties;
         function MakeLike(const OtherSource: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -115,9 +115,9 @@ var
     NumPropsThisClass: Integer;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TIsource.Create;  // Creates superstructure for all Line objects
+constructor TIsource.Create(dss: TDSS);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'Isource';
     DSSClassType := SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
 

@@ -48,7 +48,7 @@ type
         procedure DefineProperties;
         function MakeLike(const FuseName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -137,9 +137,9 @@ end;
 
 
 {--------------------------------------------------------------------------}
-constructor TFuse.Create;  // Creates superstructure for all Fuse objects
+constructor TFuse.Create(dss: TDSS);  // Creates superstructure for all Fuse objects
 begin
-    inherited Create;
+    inherited Create(dss);
 
     Class_name := 'Fuse';
     DSSClassType := DSSClassType + FUSE_CONTROL;

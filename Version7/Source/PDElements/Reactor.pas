@@ -109,7 +109,7 @@ type
         function MakeLike(const ReactorName: String): Integer; OVERRIDE;
         procedure DefineProperties;  // Add Properties of this class to propName
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -185,9 +185,9 @@ const
     NumPropsThisClass = Ord(High(TReactorProp));
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TReactor.Create;  // Creates superstructure for all Reactor objects
+constructor TReactor.Create(dss: TDSS);  // Creates superstructure for all Reactor objects
 begin
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'Reactor';
     DSSClassType := DSSClassType + REACTOR_ELEMENT;
 

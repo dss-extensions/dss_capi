@@ -232,7 +232,7 @@ type
         OverLoadFileIsOpen: Boolean;
         VoltageFileIsOpen: Boolean;
 
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -464,10 +464,9 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TEnergyMeter.Create;  // Creates superstructure FOR all EnergyMeter objects
-
+constructor TEnergyMeter.Create(dss: TDSS);  // Creates superstructure FOR all EnergyMeter objects
 begin
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'EnergyMeter';
     DSSClassType := DSSClassType + ENERGY_METER;
 
@@ -494,7 +493,7 @@ begin
 
     GeneratorClass := DSSClassList.Get(ClassNames.Find('generator'));
 
-    SystemMeter := TSystemMeter.Create;
+    SystemMeter := TSystemMeter.Create;//(dss);
     OV_MHandle := NIL;
     VR_MHandle := NIL;
     DI_MHandle := NIL;

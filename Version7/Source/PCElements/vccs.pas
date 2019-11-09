@@ -29,7 +29,7 @@ type
         procedure DefineProperties;
         function MakeLike(const OtherSource: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -140,9 +140,9 @@ begin
     Result := MapIdx(idx + offset, len);
 end;
 
-constructor TVCCS.Create;  // Creates superstructure for all Line objects
+constructor TVCCS.Create(dss: TDSS);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'VCCS';
     DSSClassType := VCCS_ELEMENT + PC_ELEMENT; // participates in dynamics
 

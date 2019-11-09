@@ -32,7 +32,7 @@ type
         procedure DefineProperties;
         function MakeLike(const OtherSource: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -146,9 +146,9 @@ var
     CDOUBLEONE: Complex;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TUPFC.Create;  // Creates superstructure for all Line objects
+constructor TUPFC.Create(dss: TDSS);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'UPFC';
     DSSClassType := PC_ELEMENT + UPFC_ELEMENT;  // UPFC  is PC Element
 

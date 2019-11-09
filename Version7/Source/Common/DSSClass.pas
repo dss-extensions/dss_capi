@@ -17,48 +17,51 @@ USES
     PointerList, Command,  Arraydef, {$IFDEF DSS_CAPI_HASHLIST}Contnrs{$ELSE}Hashlist{$ENDIF};
 
 TYPE
-   // Collection of all DSS Classes
-    TDSSClasses = class(Tobject)
-   private
-     PROCEDURE Set_New(Value:Pointer);
-
-   public
+    TDSS = class(TObject)
+    public
         constructor Create;
-     destructor Destroy; override;
+        destructor Destroy; override;
+    End;
 
-     Property New :pointer Write Set_New;
-
+    // Collection of all DSS Classes
+    TDSSClasses = class(TObject)
+    public
+        constructor Create;
+        destructor Destroy; override;
+        PROCEDURE New(Value:Pointer);
    End;
 
    // Base for all collection classes
     TDSSClass = class(TObject)
-     private
-
-          Procedure Set_Active(value:Integer);
+    private
+        DSS: TDSS;
+        
+        Procedure Set_Active(value:Integer);
         function Get_ElementCount: Integer;
         function Get_First: Integer;
         function Get_Next: Integer;
 
-          Procedure ResynchElementNameList;
+        Procedure ResynchElementNameList;
 
-     Protected
+    protected
         Class_Name: String;
         ActiveElement: Integer;   // index of present ActiveElement
         CommandList: TCommandlist;
         ActiveProperty: Integer;
-         ElementNameList:{$IFDEF DSS_CAPI_HASHLIST}TFPHashList;{$ELSE}THashList;{$ENDIF}
+        ElementNameList:{$IFDEF DSS_CAPI_HASHLIST}TFPHashList;{$ELSE}THashList;{$ENDIF}
 
-         Function AddObjectToList(Obj:Pointer):Integer;  // Used by NewObject
-         Function Get_FirstPropertyName:String;
-         Function Get_NextPropertyName:String;
-         Function MakeLike(Const ObjName:String):Integer; Virtual;
+        Function AddObjectToList(Obj:Pointer):Integer;  // Used by NewObject
+        Function Get_FirstPropertyName:String;
+        Function Get_NextPropertyName:String;
+        Function MakeLike(Const ObjName:String):Integer; Virtual;
 
-         Procedure CountProperties;  // Add no. of intrinsic properties
-         Procedure AllocatePropertyArrays;
-         Procedure DefineProperties;  // Add Properties of this class to propName
-         procedure ClassEdit(Const ActiveObj:Pointer; Const ParamPointer:Integer);
+        Procedure CountProperties;  // Add no. of intrinsic properties
+        Procedure AllocatePropertyArrays;
+        Procedure DefineProperties;  // Add Properties of this class to propName
+        procedure ClassEdit(Const ActiveObj:Pointer; Const ParamPointer:Integer);
 
      public
+        
         NumProperties: Integer;
         PropertyName,
         PropertyHelp: pStringArray;
@@ -73,46 +76,53 @@ TYPE
 
         Saved: Boolean;
 
-        constructor Create;
-         destructor Destroy; override;
+        constructor Create(dss: TDSS);
+        destructor Destroy; override;
 
-         {Helper routine for building Property strings}
-         Procedure AddProperty(const PropName:String; CmdMapIndex:Integer; const HelpString:String);
-         Procedure ReallocateElementNameList;
-         
-         Function Edit:Integer;Virtual;      // uses global parser
-         Function Init(Handle:Integer):Integer; Virtual;
-         Function NewObject(const ObjName:String):Integer; Virtual;
+        {Helper routine for building Property strings}
+        Procedure AddProperty(const PropName:String; CmdMapIndex:Integer; const HelpString:String);
+        Procedure ReallocateElementNameList;
+        
+        Function Edit:Integer;Virtual;      // uses global parser
+        Function Init(Handle:Integer):Integer; Virtual;
+        Function NewObject(const ObjName:String):Integer; Virtual;
 
-         Function SetActive(const ObjName:String):Boolean; Virtual;
-         Function GetActiveObj:Pointer; // Get address of active obj of this class
-         Function Find(const ObjName:String):Pointer; Virtual;  // Find an obj of this class by name
+        Function SetActive(const ObjName:String):Boolean; Virtual;
+        Function GetActiveObj:Pointer; // Get address of active obj of this class
+        Function Find(const ObjName:String):Pointer; Virtual;  // Find an obj of this class by name
 
-         Function PropertyIndex(Const Prop:String):Integer;
-         Property FirstPropertyName:String read Get_FirstPropertyName;
-         Property NextPropertyName:String read Get_NextPropertyName;
+        Function PropertyIndex(Const Prop:String):Integer;
+        Property FirstPropertyName:String read Get_FirstPropertyName;
+        Property NextPropertyName:String read Get_NextPropertyName;
 
-         Property Active:Integer read ActiveElement write Set_Active;
-         Property ElementCount:Integer read Get_ElementCount;
-         Property First:Integer read Get_First;
-         Property Next:Integer read Get_Next;
-         Property Name:String read Class_Name;
+        Property Active:Integer read ActiveElement write Set_Active;
+        Property ElementCount:Integer read Get_ElementCount;
+        Property First:Integer read Get_First;
+        Property Next:Integer read Get_Next;
+        Property Name:String read Class_Name;
    END;
 
-VAR
-    DSSClasses: TDSSClasses;
-
+var
+    DSSPrime: TDSS;
 
 implementation
 
-
 USES DSSGlobals, SysUtils, DSSObject, ParserDel, CktElement;
+
+constructor TDSS.Create;
+begin
+    inherited Create;
+end;
+
+destructor TDSS.Destroy;
+begin
+    inherited Destroy;
+end;
 
 {--------------------------------------------------------------}
 { DSSClasses Implementation
 {--------------------------------------------------------------}
 Constructor TDSSClasses.Create;
-
 Begin
      Inherited Create;
 End;
@@ -124,7 +134,7 @@ Begin
 End;
 
 {--------------------------------------------------------------}
-PROCEDURE TDSSClasses.Set_New(Value:Pointer);
+PROCEDURE TDSSClasses.New(Value:Pointer);
 
 Begin
     DSSClassList.New := Value; // Add to pointer list
@@ -135,10 +145,11 @@ End;
 {--------------------------------------------------------------}
 {  DSSClass Implementation
 {--------------------------------------------------------------}
-Constructor TDSSClass.Create;
+Constructor TDSSClass.Create(dss: TDSS);
 
 BEGIN
     Inherited Create;
+    DSS := dss;
     ElementList := TPointerList.Create(20);  // Init size and increment
     PropertyName := nil;
     PropertyHelp := Nil;

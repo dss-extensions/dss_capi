@@ -50,7 +50,7 @@ type
         procedure DefineProperties;
         function MakeLike(const RecloserName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -162,9 +162,9 @@ end;
 
 
 {--------------------------------------------------------------------------}
-constructor TRecloser.Create;  // Creates superstructure for all Recloser objects
+constructor TRecloser.Create(dss: TDSS);  // Creates superstructure for all Recloser objects
 begin
-    inherited Create;
+    inherited Create(dss);
 
     Class_name := 'Recloser';
     DSSClassType := DSSClassType + RECLOSER_CONTROL;

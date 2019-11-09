@@ -24,7 +24,7 @@ type
         procedure DefineProperties;
         function MakeLike(const CNName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -73,9 +73,9 @@ uses
 const
     NumPropsThisClass = 4;
 
-constructor TCNData.Create;  // Creates superstructure for all Line objects
+constructor TCNData.Create(dss: TDSS);  // Creates superstructure for all Line objects
 begin
-    inherited Create;
+    inherited Create(dss);
     Class_Name := 'CNData';
     DSSClassType := DSS_OBJECT;
     ActiveElement := 0;

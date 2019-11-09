@@ -15,6 +15,7 @@ unit ControlClass;
 interface
 
 uses
+    DSSClass,
     CktElementClass;
 
 type
@@ -30,7 +31,7 @@ type
 
     PUBLIC
         NumControlClassProps: Integer;
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
     PUBLISHED
 
@@ -45,10 +46,10 @@ uses
     DSSClassDefs,
     DSSGlobals;
 
-constructor TControlClass.Create;
+constructor TControlClass.Create(dss: TDSS);
 begin
 
-    inherited Create;
+    inherited Create(dss);
     NumControlClassProps := 0;
     DSSClassType := CTRL_ELEMENT;
 end;
