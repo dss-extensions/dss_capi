@@ -134,7 +134,8 @@ uses
     Sysutils,
     Command,
     solution,
-    YMatrix;
+    YMatrix,
+    DSSHelper;
 
 const
     propLossCurve = 11;
@@ -317,7 +318,7 @@ begin
 
             case ParamPointer of
                 propLossCurve:
-                    UPFCLossCurveObj := XYCurveClass.Find(LossCurve);
+                    UPFCLossCurveObj := DSS.XYCurveClass.Find(LossCurve);
             end;
 
             ParamName := Parser.NextParam;

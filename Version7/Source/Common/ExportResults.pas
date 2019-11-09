@@ -104,7 +104,8 @@ uses
     GICTransformer,
     PVSystem,
     Storage,
-    KLUSolve;
+    KLUSolve,
+    DSSHelper;
 
 procedure WriteElementVoltagesExportFile(var F: TextFile; pElem: TDSSCktElement; MaxNumNodes: Integer);
 
@@ -2188,7 +2189,7 @@ var
 
 begin
 
-    if PVSystemClass = NIL then
+    if DSSPrime.PVSystemClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
 
@@ -2207,7 +2208,7 @@ begin
                 {Write New Header}
                     Write(F, 'Year, LDCurve, Hour, PVSystem');
                     for i := 1 to NumPVSystemRegisters do
-                        Write(F, Separator, '"' + PVSystemClass.RegisterNames[i] + '"');
+                        Write(F, Separator, '"' + DSSPrime.PVSystemClass.RegisterNames[i] + '"');
                     Writeln(F);
                     CloseFile(F);
                 end;
@@ -2248,7 +2249,7 @@ var
 begin
 
 
-    if PVSystemClass = NIL then
+    if DSSPrime.PVSystemClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
 
@@ -2287,7 +2288,7 @@ begin
         {Write New Header}
             Write(F, 'Year, LDCurve, Hour, PVSystem');
             for i := 1 to NumGenRegisters do
-                Write(F, Separator, '"' + PVSystemClass.RegisterNames[i] + '"');
+                Write(F, Separator, '"' + DSSPrime.PVSystemClass.RegisterNames[i] + '"');
             Writeln(F);
         end
         else
@@ -2335,7 +2336,7 @@ var
 
 begin
 
-    if StorageClass = NIL then
+    if DSSPrime.StorageClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
 
@@ -2354,7 +2355,7 @@ begin
                 {Write New Header}
                     Write(F, 'Year, LDCurve, Hour, Storage');
                     for i := 1 to NumStorageRegisters do
-                        Write(F, Separator, '"' + StorageClass.RegisterNames[i] + '"');
+                        Write(F, Separator, '"' + DSSPrime.StorageClass.RegisterNames[i] + '"');
                     Writeln(F);
                     CloseFile(F);
                 end;
@@ -2395,7 +2396,7 @@ var
 begin
 
 
-    if StorageClass = NIL then
+    if DSSPrime.StorageClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
 
@@ -2434,7 +2435,7 @@ begin
         {Write New Header}
             Write(F, 'Year, LDCurve, Hour, Storage');
             for i := 1 to NumStorageRegisters do
-                Write(F, Separator, '"' + StorageClass.RegisterNames[i] + '"');
+                Write(F, Separator, '"' + DSSPrime.StorageClass.RegisterNames[i] + '"');
             Writeln(F);
         end
         else
@@ -3239,11 +3240,11 @@ begin
 
         Writeln(F, 'Title=', S, ', Distance in km');
 
-        iEnergyMeter := EnergyMeterClass.First;
+        iEnergyMeter := DSSPrime.EnergyMeterClass.First;
         while iEnergyMeter > 0 do
         begin
 
-            ActiveEnergyMeter := EnergyMeterClass.GetActiveObj;
+            ActiveEnergyMeter := DSSPrime.EnergyMeterClass.GetActiveObj;
           {Go down each branch list and draw a line}
             PresentCktElement := ActiveEnergyMeter.BranchList.First;
             while PresentCktElement <> NIL do
@@ -3395,7 +3396,7 @@ begin
                 PresentCktElement := ActiveEnergyMeter.BranchList.GoForward;
             end;
 
-            iEnergyMeter := EnergyMeterClass.Next;
+            iEnergyMeter := DSSPrime.EnergyMeterClass.Next;
         end;
 
         GlobalResult := FileNm;
@@ -4071,10 +4072,10 @@ begin
         else    // export sections for all meters
         begin
 
-            iMeter := EnergyMeterClass.First;
+            iMeter := DSSPrime.EnergyMeterClass.First;
             while iMeter > 0 do
             begin
-                MyMeterPtr := EnergyMeterClass.GetActiveObj;
+                MyMeterPtr := DSSPrime.EnergyMeterClass.GetActiveObj;
                 with MyMeterPtr do
                 begin
                     for i := 1 to SectionCount do
@@ -4086,7 +4087,7 @@ begin
                                 FullName(ActiveCircuit.ActiveCktElement)]));
                         end;
                 end;
-                iMeter := EnergyMeterClass.Next;
+                iMeter := DSSPrime.EnergyMeterClass.Next;
             end;
 
         end;

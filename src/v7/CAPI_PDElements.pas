@@ -36,7 +36,9 @@ uses
     PDElement,
     PDClass,
     SysUtils,
-    Bus;
+    Bus,
+    DSSClass,
+    DSSHelper;
 
 function PDElements_Get_Count(): Integer; CDECL;
 begin

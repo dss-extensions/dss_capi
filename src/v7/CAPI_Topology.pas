@@ -40,7 +40,9 @@ uses
     CktElement,
     PDElement,
     PCElement,
-    SysUtils;
+    SysUtils,
+    DSSClass,
+    DSSHelper;
 
 function ActiveTree: TCktTree;
 begin

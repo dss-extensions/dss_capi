@@ -17,11 +17,7 @@ USES
     PointerList, Command,  Arraydef, {$IFDEF DSS_CAPI_HASHLIST}Contnrs{$ELSE}Hashlist{$ENDIF};
 
 TYPE
-    TDSS = class(TObject)
-    public
-        constructor Create;
-        destructor Destroy; override;
-    End;
+    TDSS = class;
 
     // Collection of all DSS Classes
     TDSSClasses = class(TObject)
@@ -34,7 +30,6 @@ TYPE
    // Base for all collection classes
     TDSSClass = class(TObject)
     private
-        DSS: TDSS;
         
         Procedure Set_Active(value:Integer);
         function Get_ElementCount: Integer;
@@ -61,6 +56,7 @@ TYPE
         procedure ClassEdit(Const ActiveObj:Pointer; Const ParamPointer:Integer);
 
      public
+        DSS: TDSS;
         
         NumProperties: Integer;
         PropertyName,
@@ -101,6 +97,63 @@ TYPE
         Property Next:Integer read Get_Next;
         Property Name:String read Class_Name;
    END;
+
+    TDSS = class(TObject)
+    public
+        FLoadShapeClass: TDSSClass;
+        FTShapeClass: TDSSClass;
+        FPriceShapeClass: TDSSClass;
+        FXYCurveClass: TDSSClass;
+        FGrowthShapeClass: TDSSClass;
+        FSpectrumClass: TDSSClass;
+        FSolutionClass: TDSSClass;
+        FEnergyMeterClass: TDSSClass;
+        FMonitorClass: TDSSClass;
+        FSensorClass: TDSSClass;
+        FTCC_CurveClass: TDSSClass;
+        FWireDataClass: TDSSClass;
+        FCNDataClass: TDSSClass;
+        FTSDataClass: TDSSClass;
+        FLineGeometryClass: TDSSClass;
+        FLineSpacingClass: TDSSClass;
+        FLineCodeClass: TDSSClass;
+        FStorageClass: TDSSClass;
+        FPVSystemClass: TDSSClass;
+        FInvControlClass: TDSSClass;
+        FExpControlClass: TDSSClass;
+        FLineClass: TDSSClass;
+        FVSourceClass: TDSSClass;
+        FISourceClass: TDSSClass;
+        FVCSSClass: TDSSClass;
+        FLoadClass: TDSSClass;
+        FTransformerClass: TDSSClass;
+        FRegControlClass: TDSSClass;
+        FCapacitorClass: TDSSClass;
+        FReactorClass: TDSSClass;
+        FCapControlClass: TDSSClass;
+        FFaultClass: TDSSClass;
+        FGeneratorClass: TDSSClass;
+        FGenDispatcherClass: TDSSClass;
+        FStorageControllerClass: TDSSClass;
+        FRelayClass: TDSSClass;
+        FRecloserClass: TDSSClass;
+        FFuseClass: TDSSClass;
+        FSwtControlClass: TDSSClass;
+        FUPFCClass: TDSSClass;
+        FUPFCControlClass: TDSSClass;
+        FESPVLControlClass: TDSSClass;
+        FIndMach012Class: TDSSClass;
+        FGICsourceClass: TDSSClass;
+        FAutoTransClass: TDSSClass;
+        FVSConverterClass: TDSSClass;
+        FXfmrCodeClass: TDSSClass;
+        FGICLineClass: TDSSClass;
+        FGICTransformerClass: TDSSClass;
+        
+        constructor Create;
+        destructor Destroy; override;
+    End;
+
 
 var
     DSSPrime: TDSS;

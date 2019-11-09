@@ -121,7 +121,8 @@ uses
     DSSGlobals,
     Utilities,
     Sysutils,
-    Command;
+    Command,
+    DSSHelper;
 
 const
     NumPropsThisClass = 15;
@@ -525,7 +526,7 @@ begin
 
     Vmag := Volts;
 
-    SpectrumObj := SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
     if (SpectrumObj = NIL) and (Length(Spectrum) > 0) then
     begin
         DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device GICLine.' + Name + ' Not Found.', 324);

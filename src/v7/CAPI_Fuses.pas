@@ -42,7 +42,10 @@ uses
     Sysutils,
     Fuse,
     Pointerlist,
-    DSSGlobals;
+    DSSGlobals,
+    DSSClass,
+    DSSHelper;
+   
 
 procedure Set_Parameter(const parm: String; const val: String);
 var
@@ -135,10 +138,10 @@ procedure Fuses_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if FuseClass.SetActive(Value) then
+    if DSSPrime.FuseClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := FuseClass.ElementList.Active;
-        ActiveCircuit.Fuses.Get(FuseClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.FuseClass.ElementList.Active;
+        ActiveCircuit.Fuses.Get(DSSPrime.FuseClass.Active);
     end
     else
     begin

@@ -109,7 +109,8 @@ uses
     Utilities,
     Sysutils,
     Command,
-    dynamics;
+    dynamics,
+    DSSHelper;
 
 var
     NumPropsThisClass: Integer;
@@ -309,16 +310,16 @@ begin
             {Set shape objects;  returns nil if not valid}
             {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
                 8:
-                    YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                    YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                 9:
                 begin
-                    DailyShapeObj := LoadShapeClass.Find(DailyShape);
+                    DailyShapeObj := DSS.LoadShapeClass.Find(DailyShape);
                   {If Yearly load shape is not yet defined, make it the same as Daily}
                     if YearlyShapeObj = NIL then
                         YearlyShapeObj := DailyShapeObj;
                 end;
                 10:
-                    DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                    DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
             end;
             ParamName := Parser.NextParam;
             Param := Parser.StrValue;
@@ -462,7 +463,7 @@ end;
 procedure TIsourceObj.RecalcElementData;
 begin
 
-    SpectrumObj := SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
 
     if SpectrumObj = NIL then
     begin

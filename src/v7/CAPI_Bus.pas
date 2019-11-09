@@ -70,7 +70,9 @@ uses
     ExecHelper,
     SolutionAlgs,
     Utilities,
-    Bus;
+    Bus,
+    DSSClass,
+    DSSHelper;
 
 function Bus_Get_Name_AnsiString(): Ansistring; inline;
 begin

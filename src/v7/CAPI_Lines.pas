@@ -89,7 +89,9 @@ uses
     ParserDel,
     Math,
     LineUnits,
-    XYCurve;
+    XYCurve,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
 function IsLine(const CktElem: TDSSCktElement): Boolean;
@@ -296,10 +298,10 @@ procedure Lines_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if LineClass.SetActive(Value) then
+    if DSSPrime.LineClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := LineClass.ElementList.Active;
-        ActiveCircuit.Lines.Get(LineClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.LineClass.ElementList.Active;
+        ActiveCircuit.Lines.Get(DSSPrime.LineClass.Active);
     end
     else
     begin
@@ -902,7 +904,7 @@ begin
         
     if SeasonSignal <> '' then
     begin
-        RSignal := XYCurveClass.Find(SeasonSignal);
+        RSignal := DSSPrime.XYCurveClass.Find(SeasonSignal);
         
         if RSignal <> NIL then
             RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));

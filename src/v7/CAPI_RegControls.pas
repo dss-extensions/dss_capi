@@ -70,7 +70,9 @@ uses
     ControlElem,
     RegControl,
     SysUtils,
-    PointerList;
+    PointerList,
+    DSSClass,
+    DSSHelper;
 
 function ActiveRegControl: TRegControlObj;
 begin
@@ -448,10 +450,10 @@ procedure RegControls_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if RegControlClass.SetActive(Value) then
+    if DSSPrime.RegControlClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := RegControlClass.ElementList.Active;
-        ActiveCircuit.RegControls.Get(RegControlClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.RegControlClass.ElementList.Active;
+        ActiveCircuit.RegControls.Get(DSSPrime.RegControlClass.Active);
     end
     else
     begin

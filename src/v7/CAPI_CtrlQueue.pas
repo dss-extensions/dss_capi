@@ -32,7 +32,8 @@ uses
     ControlElem,
     DSSClass,
     sysutils,
-    Utilities;
+    Utilities,
+    DSSHelper;
 
 
 {Define class for proxy control object}

@@ -326,7 +326,8 @@ uses
     MathUtil,
     DSSClassDefs,
     DSSGlobals,
-    Utilities;
+    Utilities,
+    DSSHelper;
 
 const
     NumPropsThisClass = 39;
@@ -733,7 +734,7 @@ begin
      {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
                     7:
                     begin
-                        YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                        YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                         if Assigned(YearlyShapeObj) then
                             with YearlyShapeObj do
                                 if UseActual then
@@ -741,7 +742,7 @@ begin
                     end;
                     8:
                     begin
-                        DailyDispShapeObj := LoadShapeClass.Find(DailyDispShape);
+                        DailyDispShapeObj := DSS.LoadShapeClass.Find(DailyDispShape);
                         if Assigned(DailyDispShapeObj) then
                             with DailyDispShapeObj do
                                 if UseActual then
@@ -749,7 +750,7 @@ begin
                     end;
                     9:
                     begin
-                        DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                        DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
                         if Assigned(DutyShapeObj) then
                             with DutyShapeObj do
                                 if UseActual then
@@ -1317,7 +1318,7 @@ begin
         if Length(DutyShape) > 0 then
             DoSimpleMsg('WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
 
-    SpectrumObj := SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
         DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
 

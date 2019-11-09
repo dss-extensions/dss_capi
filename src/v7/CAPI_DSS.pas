@@ -42,7 +42,8 @@ uses
     sysUtils,
     Executive,
     ParserDel,
-    CmdForms;
+    CmdForms,
+    DSSHelper;
 
 procedure DSS_NewCircuit(const Value: PAnsiChar); CDECL;
 begin

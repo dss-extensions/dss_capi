@@ -92,7 +92,9 @@ uses
     PCElement,
     MathUtil,
     CktElement,
-    Utilities;
+    Utilities,
+    DSSClass,
+    DSSHelper;
 
 procedure CalcSeqCurrents(pActiveElement: TDSSCktElement; i012: pComplexArray);
 {Assumes V012 is properly allocated before call.}

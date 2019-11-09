@@ -97,7 +97,8 @@ uses
     DSSGlobals,
     Utilities,
     Sysutils,
-    Command;
+    Command,
+    DSSHelper;
 
 const
     NumPropsThisClass = 16;
@@ -446,7 +447,7 @@ begin
         Vmag := kVBase * PerUnit * 1000.0 / 2.0 / Sin((180.0 / Fnphases) * PI / 180.0);
     end;
 
-    SpectrumObj := SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
     begin
         DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device Equivalent.' + Name + ' Not Found.', 802);

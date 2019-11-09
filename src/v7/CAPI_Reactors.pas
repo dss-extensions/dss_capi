@@ -67,6 +67,8 @@ implementation
 uses
     CAPI_Constants,
     DSSGlobals,
+    DSSClass,
+    DSSHelper,
     Executive,
     Reactor,
     SysUtils,
@@ -133,9 +135,9 @@ begin
                 SpecType := 2;
             end;
             TReactorProp.RCurve:
-                RCurveObj := XYCurveClass.Find(RCurve);
+                RCurveObj := DSSPrime.XYCurveClass.Find(RCurve);
             TReactorProp.LCurve:
-                LCurveObj := XYCurveClass.Find(LCurve);
+                LCurveObj := DSSPrime.XYCurveClass.Find(LCurve);
             TReactorProp.LmH:
             begin
                 SpecType := 2;
@@ -215,10 +217,10 @@ procedure Reactors_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if ReactorClass.SetActive(Value) then
+    if DSSPrime.ReactorClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := ReactorClass.ElementList.Active;
-        ActiveCircuit.Reactors.Get(ReactorClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.ReactorClass.ElementList.Active;
+        ActiveCircuit.Reactors.Get(DSSPrime.ReactorClass.Active);
     end
     else
     begin

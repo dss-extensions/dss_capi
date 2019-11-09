@@ -120,7 +120,8 @@ uses
     Utilities,
     Sysutils,
     Command,
-    Solution;
+    Solution,
+    DSSHelper;
 
 var
     NumPropsThisClass: Integer;
@@ -401,7 +402,7 @@ end;
 
 procedure TVCCSObj.RecalcElementData;
 begin
-    SpectrumObj := SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
     begin
         DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device VCCS.' + Name + ' Not Found.', 333);

@@ -176,7 +176,8 @@ uses
     LineUnits,
     OHLineConstants,
     CNLineConstants,
-    TSLineConstants;
+    TSLineConstants,
+    DSSHelper;
 
 const
     NumPropsThisClass = 18;
@@ -344,9 +345,9 @@ begin
                 11:
                 begin
                     FSpacingType := Parser.StrValue;
-                    if LineSpacingClass.SetActive(FSpacingType) then
+                    if DSS.LineSpacingClass.SetActive(FSpacingType) then
                     begin
-                        ActiveLineSpacingObj := LineSpacingClass.GetActiveObj;
+                        ActiveLineSpacingObj := DSS.LineSpacingClass.GetActiveObj;
                         if (FNConds = ActiveLineSpacingObj.NWires) then
                         begin
                             FLastUnit := ActiveLineSpacingObj.Units;
@@ -405,12 +406,12 @@ begin
                         AuxParser.NextParam; // ignore any parameter name  not expecting any
                         FCondName[i] := AuxParser.StrValue;
                         if ParamPointer = 15 then
-                            CNDataClass.code := FCondName[i]
+                            DSS.CNDataClass.code := FCondName[i]
                         else
                         if ParamPointer = 16 then
-                            TSDataClass.code := FCondName[i]
+                            DSS.TSDataClass.code := FCondName[i]
                         else
-                            WireDataClass.Code := FCondName[i];
+                            DSS.WireDataClass.Code := FCondName[i];
                         if Assigned(ActiveConductorDataObj) then
                         begin
                             FWireData^[i] := ActiveConductorDataObj;
@@ -461,12 +462,12 @@ begin
                 4, 13, 14:
                 begin
                     if ParamPointer = 4 then
-                        WireDataClass.code := Param
+                        DSS.WireDataClass.code := Param
                     else
                     if ParamPointer = 13 then
-                        CNDataClass.code := Param
+                        DSS.CNDataClass.code := Param
                     else
-                        TSDataClass.Code := Param;
+                        DSS.TSDataClass.Code := Param;
                     if Assigned(ActiveConductorDataObj) then
                     begin
                         FWireData^[ActiveCond] := ActiveConductorDataObj;

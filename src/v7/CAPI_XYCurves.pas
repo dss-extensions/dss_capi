@@ -47,20 +47,21 @@ uses
     CAPI_Constants,
     DSSGlobals,
     DSSObject,
-    SysUtils;
+    SysUtils,
+    DSSHelper;
 
 function XYCurves_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit <> NIL then
-        Result := XYCurveClass.ElementCount;
+        Result := DSSPrime.XYCurveClass.ElementCount;
 end;
 //------------------------------------------------------------------------------
 function XYCurves_Get_First(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit <> NIL then
-        Result := XYCurveClass.First;
+        Result := DSSPrime.XYCurveClass.First;
 end;
 //------------------------------------------------------------------------------
 function XYCurves_Get_Name_AnsiString(): Ansistring; inline;
@@ -71,7 +72,7 @@ begin
     Result := '';  // signify no name
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             Result := pXYCurve.Name;
@@ -89,7 +90,7 @@ function XYCurves_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit <> NIL then
-        Result := XYCurveClass.Next;
+        Result := DSSPrime.XYCurveClass.Next;
 end;
 //------------------------------------------------------------------------------
 procedure XYCurves_Set_Name(const Value: PAnsiChar); CDECL;
@@ -98,7 +99,7 @@ procedure XYCurves_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit <> NIL then
     begin
-        if not XYCurveClass.SetActive(Value) then
+        if not DSSPrime.XYCurveClass.SetActive(Value) then
             DoSimpleMsg('XYCurve "' + Value + '" Not Found in Active Circuit.', 51008);
 
          // Still same active object if not found
@@ -114,7 +115,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             Result := pXYCurve.NumPoints;
@@ -137,7 +138,7 @@ begin
     Result[0] := 0.0;  // error condition: one element array=0
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, (pXYCurve.NumPoints - 1) + 1);
@@ -165,7 +166,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             pXYCurve.NumPoints := Value;
@@ -188,7 +189,7 @@ begin
     Value := PDoubleArray(ValuePtr);
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
 
@@ -221,7 +222,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             Result := pXYCurve.X;
@@ -241,7 +242,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             Result := pXYCurve.Y;
@@ -265,7 +266,7 @@ begin
     Result[0] := 0.0;  // error condition: one element array=0
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, (pXYCurve.NumPoints - 1) + 1);
@@ -294,7 +295,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             pXYCurve.X := Value;
@@ -313,7 +314,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             pXYCurve.Y := Value;
@@ -335,7 +336,7 @@ begin
     Value := PDoubleArray(ValuePtr);
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
 
@@ -368,7 +369,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             Result := pXYCurve.FXscale;
@@ -389,7 +390,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             Result := pXYCurve.FXshift;
@@ -411,7 +412,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             Result := pXYCurve.FYscale;
@@ -433,7 +434,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             Result := pXYCurve.FYshift;
@@ -453,7 +454,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             pXYCurve.FXScale := Value;
@@ -473,7 +474,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             pXYCurve.FXShift := Value;
@@ -493,7 +494,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             pXYCurve.FYScale := Value;
@@ -513,7 +514,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pXYCurve := XYCurveClass.GetActiveObj;
+        pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
             pXYCurve.FYShift := Value;
@@ -528,12 +529,12 @@ end;
 //------------------------------------------------------------------------------
 function XYCurves_Get_idx(): Integer; CDECL;
 begin
-    Result := XYCurveClass.ElementList.ActiveIndex
+    Result := DSSPrime.XYCurveClass.ElementList.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure XYCurves_Set_idx(Value: Integer); CDECL;
 begin
-    if XYCurveClass.ElementList.Get(Value) = NIL then
+    if DSSPrime.XYCurveClass.ElementList.Get(Value) = NIL then
         DoSimpleMsg('Invalid XYCurve index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
@@ -545,7 +546,7 @@ begin
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, XYCurveClass.ElementList, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.XYCurveClass.ElementList, False);
 end;
 //------------------------------------------------------------------------------
 end.

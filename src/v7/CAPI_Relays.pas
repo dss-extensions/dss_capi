@@ -33,7 +33,9 @@ uses
     Circuit,
     DSSGlobals,
     Sysutils,
-    Pointerlist;
+    Pointerlist,
+    DSSClass,
+    DSSHelper;
 
 procedure Set_Parameter(const parm: String; const val: String);
 var
@@ -126,10 +128,10 @@ procedure Relays_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if RelayClass.SetActive(Value) then
+    if DSSPrime.RelayClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := RelayClass.ElementList.Active;
-        ActiveCircuit.Relays.Get(RelayClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.RelayClass.ElementList.Active;
+        ActiveCircuit.Relays.Get(DSSPrime.RelayClass.Active);
     end
     else
     begin

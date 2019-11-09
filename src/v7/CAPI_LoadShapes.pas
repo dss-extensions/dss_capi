@@ -54,14 +54,16 @@ uses
     PointerList,
     ExecHelper,
     SysUtils,
-    Math;
+    Math,
+    DSSClass,
+    DSSHelper;
 
 function LoadShapes_Get_Name_AnsiString(): Ansistring; inline;
 var
     elem: TLoadshapeObj;
 begin
     Result := '';
-    elem := LoadshapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
         Exit;
     Result := elem.Name;
@@ -77,7 +79,7 @@ procedure LoadShapes_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if LoadshapeClass.SetActive(Value) then
+    if DSSPrime.LoadShapeClass.SetActive(Value) then
         Exit;
     DoSimpleMsg('LoadShape "' + Value + '" Not Found in Active Circuit.', 77003);
 end;
@@ -87,7 +89,7 @@ begin
     Result := 0;
     if ActiveCircuit = NIL then
         Exit;
-    Result := LoadshapeClass.ElementList.ListSize;
+    Result := DSSPrime.LoadShapeClass.ElementList.ListSize;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_First(): Integer; CDECL;
@@ -95,7 +97,7 @@ begin
     Result := 0;
     if ActiveCircuit = NIL then
         Exit;
-    Result := LoadshapeClass.First;
+    Result := DSSPrime.LoadShapeClass.First;
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_Next(): Integer; CDECL;
@@ -103,7 +105,7 @@ begin
     Result := 0;
     if ActiveCircuit = NIL then
         Exit;
-    Result := LoadshapeClass.Next;
+    Result := DSSPrime.LoadShapeClass.Next;
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -114,7 +116,7 @@ begin
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, LoadShapeClass.ElementList, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.LoadShapeClass.ElementList, False);
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_Npts(): Integer; CDECL;
@@ -124,7 +126,7 @@ begin
     Result := 0;
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
         Exit;
     Result := elem.NumPoints;
@@ -140,7 +142,7 @@ begin
     Result[0] := 0.0;  // error condition: one element array=0
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61001);
@@ -168,7 +170,7 @@ begin
     Result[0] := 0.0;  // error condition: one element array=0
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61001);
@@ -193,7 +195,7 @@ var
 begin
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61001);
@@ -214,7 +216,7 @@ var
 begin
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61002);
@@ -249,7 +251,7 @@ begin
     Value := PDoubleArray(ValuePtr);
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61002);
@@ -282,7 +284,7 @@ var
 begin
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61003);
@@ -303,7 +305,7 @@ begin
     Result[0] := 0.0;  // error condition: one element array=0
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61003);
@@ -332,7 +334,7 @@ begin
     Value := PDoubleArray(ValuePtr);
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61002);
@@ -365,7 +367,7 @@ begin
     Result := 0.0;
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61005);
@@ -381,7 +383,7 @@ begin
     Result := 0.0;
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61005);
@@ -397,7 +399,7 @@ begin
     Result := 0.0;
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61005);
@@ -412,7 +414,7 @@ var
 begin
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61005);
@@ -427,7 +429,7 @@ var
 begin
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61005);
@@ -442,7 +444,7 @@ var
 begin
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61005);
@@ -463,7 +465,7 @@ begin
     Result := 0.0;
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61005);
@@ -479,7 +481,7 @@ begin
     Result := 0.0;
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61005);
@@ -494,7 +496,7 @@ var
 begin
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61005);
@@ -509,7 +511,7 @@ var
 begin
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61005);
@@ -525,7 +527,7 @@ begin
     Result := FALSE;
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadShapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61005);
@@ -540,7 +542,7 @@ var
 begin
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadshapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61005);
@@ -551,12 +553,12 @@ end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_idx(): Integer; CDECL;
 begin
-    Result := LoadShapeClass.ElementList.ActiveIndex
+    Result := DSSPrime.LoadShapeClass.ElementList.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_idx(Value: Integer); CDECL;
 begin
-    if LoadShapeClass.ElementList.Get(Value) = NIL then
+    if DSSPrime.LoadShapeClass.ElementList.Get(Value) = NIL then
         DoSimpleMsg('Invalid LoadShape index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
@@ -566,7 +568,7 @@ var
 begin
     if ActiveCircuit = NIL then
         Exit;
-    elem := LoadshapeClass.GetActiveObj;
+    elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
         DoSimpleMsg('No active Loadshape Object found.', 61005);

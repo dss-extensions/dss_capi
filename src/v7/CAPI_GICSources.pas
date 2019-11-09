@@ -42,7 +42,9 @@ uses
     PointerList,
     DSSGlobals,
     CktElement,
-    SysUtils;
+    SysUtils,
+    DSSClass,
+    DSSHelper;
 //------------------------------------------------------------------------------
 procedure GICSources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
@@ -52,14 +54,14 @@ begin
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, GICsourceClass.ElementList, True);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.GICsourceClass.ElementList, True);
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit <> NIL then
-        Result := GICsourceClass.ElementList.ListSize;
+        Result := DSSPrime.GICsourceClass.ElementList.ListSize;
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_First(): Integer; CDECL;
@@ -69,7 +71,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pElem := GICsourceClass.ElementList.First;
+        pElem := DSSPrime.GICsourceClass.ElementList.First;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
@@ -78,7 +80,7 @@ begin
                     Result := 1;
                 end
                 else
-                    pElem := GICsourceClass.ElementList.Next;
+                    pElem := DSSPrime.GICsourceClass.ElementList.Next;
             until (Result = 1) or (pElem = NIL);
     end;
 end;
@@ -90,16 +92,16 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pElem := GICsourceClass.ElementList.Next;
+        pElem := DSSPrime.GICsourceClass.ElementList.Next;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
                 begin
                     ActiveCircuit.ActiveCktElement := pElem;
-                    Result := GICsourceClass.ElementList.ActiveIndex;
+                    Result := DSSPrime.GICsourceClass.ElementList.ActiveIndex;
                 end
                 else
-                    pElem := GICsourceClass.ElementList.Next;
+                    pElem := DSSPrime.GICsourceClass.ElementList.Next;
             until (Result > 0) or (pElem = NIL);
     end;
 end;
@@ -125,9 +127,9 @@ procedure GICSources_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if GICsourceClass.SetActive(Value) then
+    if DSSPrime.GICsourceClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := GICsourceClass.ElementList.Active;
+        ActiveCircuit.ActiveCktElement := DSSPrime.GICsourceClass.ElementList.Active;
     end
     else
     begin
@@ -140,7 +142,7 @@ var
     elem: TGICSourceObj;
 begin
     Result := 0;
-    elem := GICsourceClass.ElementList.Active;
+    elem := DSSPrime.GICsourceClass.ElementList.Active;
     if elem <> NIL then
         Result := elem.NPhases;
 end;
@@ -149,7 +151,7 @@ procedure GICSources_Set_Phases(Value: Integer); CDECL;
 var
     elem: TGICSourceObj;
 begin
-    elem := GICsourceClass.GetActiveObj;
+    elem := DSSPrime.GICsourceClass.GetActiveObj;
     if elem <> NIL then
     begin
         elem.nphases := Value;
@@ -188,7 +190,7 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
+    elem := DSSPrime.GICsourceClass.ElementList.Active;
     if elem <> NIL then
         Result := elem.ENorth;
 end;
@@ -197,7 +199,7 @@ procedure GICSources_Set_EN(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
+    elem := DSSPrime.GICsourceClass.ElementList.Active;
     if elem <> NIL then
         elem.ENorth := Value;
 end;
@@ -207,7 +209,7 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
+    elem := DSSPrime.GICsourceClass.ElementList.Active;
     if elem <> NIL then
         Result := elem.EEast;
 end;
@@ -216,7 +218,7 @@ procedure GICSources_Set_EE(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
+    elem := DSSPrime.GICsourceClass.ElementList.Active;
     if elem <> NIL then
         elem.EEast := Value;
 end;
@@ -226,7 +228,7 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
+    elem := DSSPrime.GICsourceClass.ElementList.Active;
     if elem <> NIL then
         Result := elem.Lat1;
 
@@ -236,7 +238,7 @@ procedure GICSources_Set_Lat1(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
+    elem := DSSPrime.GICsourceClass.ElementList.Active;
     if elem <> NIL then
     begin
         elem.Lat1 := Value;
@@ -249,7 +251,7 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
+    elem := DSSPrime.GICsourceClass.ElementList.Active;
     if elem <> NIL then
         Result := elem.Lat2;
 
@@ -259,7 +261,7 @@ procedure GICSources_Set_Lat2(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
+    elem := DSSPrime.GICsourceClass.ElementList.Active;
     if elem <> NIL then
     begin
         elem.Lat2 := Value;
@@ -273,7 +275,7 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
+    elem := DSSPrime.GICsourceClass.ElementList.Active;
     if elem <> NIL then
         Result := elem.Lon1;
 
@@ -283,7 +285,7 @@ procedure GICSources_Set_Lon1(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
+    elem := DSSPrime.GICsourceClass.ElementList.Active;
     if elem <> NIL then
     begin
         elem.Lon1 := Value;
@@ -296,7 +298,7 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
+    elem := DSSPrime.GICsourceClass.ElementList.Active;
     if elem <> NIL then
         Result := elem.Lon2;
 
@@ -306,7 +308,7 @@ procedure GICSources_Set_Lon2(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
+    elem := DSSPrime.GICsourceClass.ElementList.Active;
     if elem <> NIL then
     begin
         elem.Lon2 := Value;
@@ -320,7 +322,7 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
+    elem := DSSPrime.GICsourceClass.ElementList.Active;
     if elem <> NIL then
         Result := elem.Volts;
 end;
@@ -329,7 +331,7 @@ procedure GICSources_Set_Volts(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
+    elem := DSSPrime.GICsourceClass.ElementList.Active;
     if elem <> NIL then
     begin
         elem.Volts := Value;
@@ -340,7 +342,7 @@ end;
 function GICSources_Get_idx(): Integer; CDECL;
 begin
     if ActiveCircuit <> NIL then
-        Result := GICSourceClass.ElementList.ActiveIndex
+        Result := DSSPrime.GICsourceClass.ElementList.ActiveIndex
     else
         Result := 0
 end;
@@ -352,7 +354,7 @@ begin
     if ActiveCircuit = NIL then
         Exit;
 
-    elem := GICSourceClass.ElementList.Get(Value);
+    elem := DSSPrime.GICsourceClass.ElementList.Get(Value);
     if elem = NIL then
     begin
         DoSimpleMsg('Invalid GICSource index: "' + IntToStr(Value) + '".', 656565);

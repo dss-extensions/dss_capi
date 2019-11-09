@@ -179,7 +179,8 @@ uses
     Sysutils,
     Mathutil,
     Utilities,
-    TypInfo;
+    TypInfo,
+    DSSHelper;
 
 const
     NumPropsThisClass = Ord(High(TReactorProp));
@@ -510,9 +511,9 @@ begin
                     SpecType := 2;
                 end;
                 TReactorProp.RCurve:
-                    RCurveObj := XYCurveClass.Find(RCurve);
+                    RCurveObj := DSS.XYCurveClass.Find(RCurve);
                 TReactorProp.LCurve:
-                    LCurveObj := XYCurveClass.Find(LCurve);
+                    LCurveObj := DSS.XYCurveClass.Find(LCurve);
                 TReactorProp.LmH:
                 begin
                     SpecType := 2;

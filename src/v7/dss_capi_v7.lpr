@@ -103,6 +103,7 @@ uses
     DSSClass in 'Version7/Source/Common/DSSClass.pas',
     DSSClassDefs in 'Version7/Source/Common/DSSClassDefs.pas',
     DSSGlobals in 'Version7/Source/Common/DSSGlobals.pas',
+    DSSHelper in 'Version7/Source/Common/DSSHelper.pas',
     DSSObject in 'Version7/Source/General/DSSObject.pas',
     Dynamics in 'Version7/Source/Shared/Dynamics.pas',
     EnergyMeter in 'Version7/Source/Meters/EnergyMeter.pas',

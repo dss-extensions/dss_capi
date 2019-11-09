@@ -333,7 +333,8 @@ USES
      ParserDel,  DSSClassDefs, DSSGlobals, Dynamics,
      Line, Transformer,  Vsource,
      Utilities, {$IFDEF FPC}CmdForms,{$ELSE}DSSForms, {$ENDIF}
-     {$IFDEF MSWINDOWS}Windows,  SHELLAPI, {$ELSE} BaseUnix, Unix, {$ENDIF} Executive, StrUtils;
+     {$IFDEF MSWINDOWS}Windows,  SHELLAPI, {$ELSE} BaseUnix, Unix, {$ENDIF} Executive, StrUtils,
+     DSSHelper;
 //----------------------------------------------------------------------------
 Constructor TDSSCircuit.Create(const aName:String);
 
@@ -343,7 +344,7 @@ BEGIN
      inherited Create('Circuit');
 
      IsSolved := False;
-     {*Retval   := *} SolutionClass.NewObject(Name);
+     {*Retval   := *} DSSPrime.SolutionClass.NewObject(Name);
      Solution := ActiveSolutionObj;
 
      LocalName   := LowerCase(aName);
@@ -502,8 +503,8 @@ BEGIN
      DefaultGrowthRate          := 1.025;
      DefaultGrowthFactor        := 1.0;
 
-     DefaultDailyShapeObj  := LoadShapeClass.Find('default');
-     DefaultYearlyShapeObj := LoadShapeClass.Find('default');
+     DefaultDailyShapeObj  := DSSPrime.LoadShapeClass.Find('default');
+     DefaultYearlyShapeObj := DSSPrime.LoadShapeClass.Find('default');
 
      CurrentDirectory   := '';
 
@@ -1630,7 +1631,7 @@ BEGIN
   If Not MeterZonesComputed or Not ZonesLocked Then
   Begin
      If LogEvents Then LogThisEvent('Resetting Meter Zones');
-     EnergyMeterClass.ResetMeterZonesAll;
+     DSSPrime.EnergyMeterClass.ResetMeterZonesAll;
      MeterZonesComputed := True;
      If LogEvents Then LogThisEvent('Done Resetting Meter Zones');
   End;
@@ -1895,9 +1896,9 @@ begin
      CapacityFound := False;
 
      Repeat
-          EnergyMeterClass.ResetAll;
+          DSSPrime.EnergyMeterClass.ResetAll;
           Solution.Solve;
-          EnergyMeterClass.SampleAll;
+          DSSPrime.EnergyMeterClass.SampleAll;
           TotalizeMeters;
 
            // Check for non-zero in UEregs
@@ -2029,7 +2030,7 @@ begin
   For i := 1 to DSSClassList.ListSize Do
    Begin
       Dss_Class := DSSClassList.Get(i);
-      If (DSS_Class = SolutionClass) or Dss_Class.Saved Then Continue;   // Cycle to next
+      If (DSS_Class = DSSPrime.SolutionClass) or Dss_Class.Saved Then Continue;   // Cycle to next
             {use default filename=classname}
       IF Not WriteClassFile(Dss_Class,'', (DSS_Class is TCktElementClass) ) Then Exit;  // bail on error
       DSS_Class.Saved := TRUE;

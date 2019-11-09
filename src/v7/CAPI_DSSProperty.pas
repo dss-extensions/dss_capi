@@ -22,7 +22,8 @@ uses
     DSSClass,
     DSSGlobals,
     Executive,
-    SysUtils;
+    SysUtils,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
 function IsPropIndexInvalid(errorNum: Integer): Boolean;

@@ -36,7 +36,9 @@ uses
     Executive,
     EnergyMeter,
     ReduceAlgs,
-    PDElement;
+    PDElement,
+    DSSClass,
+    DSSHelper;
 
 var
     ReduceEditString: String;
@@ -51,8 +53,8 @@ begin
     if ActiveCircuit = NIL then 
         Exit;
     
-    if EnergyMeterClass.SetActive(EnergyMeterName) then
-        ActiveEnergyMeterObj := EnergyMeterClass.ElementList.Active;
+    if DSSPrime.EnergyMeterClass.SetActive(EnergyMeterName) then
+        ActiveEnergyMeterObj := DSSPrime.EnergyMeterClass.ElementList.Active;
         
     if not Assigned(ActiveEnergyMeterObj) then 
         Exit;

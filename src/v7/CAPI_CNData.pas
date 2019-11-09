@@ -76,7 +76,9 @@ uses
     DSSGlobals,
     LineUnits,
     ConductorData,
-    CAPI_WireData;
+    CAPI_WireData,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------  
 procedure CableDataSetDefaults(prop: CableDataProps; conductor: TCableDataObj);
@@ -133,21 +135,21 @@ function CNData_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit <> NIL then
-        Result := CNDataClass.ElementCount;
+        Result := DSSPrime.CNDataClass.ElementCount;
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_First(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit <> NIL then
-        Result := CNDataClass.First;
+        Result := DSSPrime.CNDataClass.First;
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit <> NIL then
-        Result := CNDataClass.Next;
+        Result := DSSPrime.CNDataClass.Next;
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_Name_AnsiString(): Ansistring; inline;
@@ -158,7 +160,7 @@ begin
     Result := '';  // signify no name
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         if pCNData <> NIL then
         begin
             Result := pCNData.Name;
@@ -178,7 +180,7 @@ procedure CNData_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit <> NIL then
     begin
-        if not CNDataClass.SetActive(Value) then
+        if not DSSPrime.CNDataClass.SetActive(Value) then
             DoSimpleMsg('CNData "' + Value + '" Not Found in Active Circuit.', 51008);
 
          // Still same active object if not found
@@ -194,7 +196,7 @@ begin
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, CNDataClass.ElementList, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.CNDataClass.ElementList, False);
 end;
 //------------------------------------------------------------------------------
 function CNData_Get_NormAmps(): Double; CDECL;
@@ -204,7 +206,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.NormAmps;
     end;
 end;
@@ -215,7 +217,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         pCNData.NormAmps := Value;
         ConductorSetDefaults(ConductorProps.NormAmps, pCNData);
     end
@@ -229,7 +231,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.EmergAmps;
     end;
 end;
@@ -240,7 +242,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         pCNData.EmergAmps := Value;
         ConductorSetDefaults(ConductorProps.EmergAmps, pCNData);
     end;
@@ -253,7 +255,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FRadius * 2.0;
     end;
 end;
@@ -264,7 +266,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FRadius := Value / 2.0;
@@ -280,7 +282,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FRadius;
     end;
 end;
@@ -291,7 +293,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FRadius := Value;
@@ -307,7 +309,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FGMR60;
     end;
 end;
@@ -318,7 +320,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FGMR60 := Value;
@@ -334,7 +336,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FR60;
     end;
 end;
@@ -345,7 +347,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FR60 := Value;
@@ -361,7 +363,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FRDC;
     end;
 end;
@@ -372,7 +374,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FRDC := Value;
@@ -388,7 +390,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FGMRUnits;
     end;
 end;
@@ -399,7 +401,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FGMRUnits := Value;
@@ -415,7 +417,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FRadiusUnits;
     end;
 end;
@@ -426,7 +428,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FRadiusUnits := Value;
@@ -442,7 +444,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FResistanceUnits;
     end;
 end;
@@ -453,7 +455,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FResistanceUnits := Value;
@@ -469,7 +471,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FEpsR;
     end;
 end;
@@ -480,7 +482,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FEpsR := Value;
@@ -496,7 +498,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FInsLayer;
     end;
 end;
@@ -507,7 +509,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FInsLayer := Value;
@@ -523,7 +525,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FDiaIns;
     end;
 end;
@@ -534,7 +536,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FDiaIns := Value;
@@ -550,7 +552,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FDiaCable;
     end;
 end;
@@ -561,7 +563,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FDiaCable := Value;
@@ -577,7 +579,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FkStrand;
     end;
 end;
@@ -588,7 +590,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FkStrand := Value;
@@ -604,7 +606,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FDiaStrand;
     end;
 end;
@@ -615,7 +617,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FDiaStrand := Value;
@@ -631,7 +633,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FGmrStrand;
     end;
 end;
@@ -642,7 +644,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FGmrStrand := Value;
@@ -658,7 +660,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         Result := pCNData.FRStrand;
     end;
 end;
@@ -669,7 +671,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pCNData := CNDataClass.GetActiveObj;
+        pCNData := DSSPrime.CNDataClass.GetActiveObj;
         with pCNData do
         begin
             FRStrand := Value;
@@ -680,12 +682,12 @@ end;
 //------------------------------------------------------------------------------
 function CNData_Get_idx(): Integer; CDECL;
 begin
-    Result := CNDataClass.ElementList.ActiveIndex
+    Result := DSSPrime.CNDataClass.ElementList.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_idx(Value: Integer); CDECL;
 begin
-    if CNDataClass.ElementList.Get(Value) = NIL then
+    if DSSPrime.CNDataClass.ElementList.Get(Value) = NIL then
         DoSimpleMsg('Invalid CNData index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------

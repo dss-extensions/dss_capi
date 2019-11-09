@@ -49,7 +49,9 @@ uses
     Recloser,
     PointerList,
     DSSGlobals,
-    DSSClassDefs;
+    DSSClassDefs,
+    DSSClass,
+    DSSHelper;
 
 procedure Set_Parameter(const parm: String; const val: String);
 var
@@ -143,10 +145,10 @@ begin
     if ActiveCircuit = NIL then 
         Exit;
 
-    if RecloserClass.SetActive(Value) then
+    if DSSPrime.RecloserClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := RecloserClass.ElementList.Active;
-        ActiveCircuit.Reclosers.Get(RecloserClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.RecloserClass.ElementList.Active;
+        ActiveCircuit.Reclosers.Get(DSSPrime.RecloserClass.Active);
     end
     else
     begin

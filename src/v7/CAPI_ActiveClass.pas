@@ -22,7 +22,9 @@ uses
     CAPI_Constants,
     DSSGlobals,
     DSSObject,
-    CktElement;
+    CktElement,
+    DSSClass,
+    DSSHelper;
 
 procedure ActiveClass_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var

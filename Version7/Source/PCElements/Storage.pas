@@ -288,7 +288,8 @@ uses
     MathUtil,
     DSSClassDefs,
     DSSGlobals,
-    Utilities;
+    Utilities,
+    DSSHelper;
 
 const
 
@@ -816,11 +817,11 @@ begin
 
         {Set loadshape objects;  returns nil If not valid}
                     propYEARLY:
-                        YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                        YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                     propDAILY:
-                        DailyShapeObj := LoadShapeClass.Find(DailyShape);
+                        DailyShapeObj := DSS.LoadShapeClass.Find(DailyShape);
                     propDUTY:
-                        DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                        DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
                     propKWRATED:
                         StorageVars.kVArating := StorageVars.kWrating;
                     propKWHRATED:
@@ -1587,7 +1588,7 @@ begin
 
     if Length(Spectrum) > 0 then
     begin
-        SpectrumObj := SpectrumClass.Find(Spectrum);
+        SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
         if SpectrumObj = NIL then
             DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
     end

@@ -17,7 +17,9 @@ implementation
 uses
     CAPI_Constants,
     DSSGlobals,
-    Sysutils;
+    Sysutils,
+    DSSClass,
+    DSSHelper;
 
 procedure DSSElement_Get_AllPropertyNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var

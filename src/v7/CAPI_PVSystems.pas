@@ -48,7 +48,9 @@ uses
     CAPI_Constants,
     DSSGlobals,
     PVSystem,
-    SysUtils;
+    SysUtils,
+    DSSClass,
+    DSSHelper;
 
 procedure PVSystems_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
@@ -70,7 +72,7 @@ begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumPVSystemRegisters - 1) + 1);
     for k := 0 to NumPVSystemRegisters - 1 do
     begin
-        Result[k] := DSS_CopyStringAsPChar(PVSystemClass.RegisterNames[k + 1]);
+        Result[k] := DSS_CopyStringAsPChar(DSSPrime.PVSystemClass.RegisterNames[k + 1]);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -223,10 +225,10 @@ procedure PVSystems_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if PVSystemClass.SetActive(Value) then
+    if DSSPrime.PVSystemClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := PVSystemClass.ElementList.Active;
-        ActiveCircuit.PVSystems.Get(PVSystemClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.PVSystemClass.ElementList.Active;
+        ActiveCircuit.PVSystems.Get(DSSPrime.PVSystemClass.Active);
     end
     else
     begin
@@ -394,7 +396,7 @@ begin
     with elem do
     begin
         DailyShape := Value;
-        DailyShapeObj := LoadShapeClass.Find(DailyShape);
+        DailyShapeObj := DSSPrime.LoadShapeClass.Find(DailyShape);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -425,7 +427,7 @@ begin
     with elem do
     begin
         DutyShape := Value;
-        DutyShapeObj := LoadShapeClass.Find(DutyShape);
+        DutyShapeObj := DSSPrime.LoadShapeClass.Find(DutyShape);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -456,7 +458,7 @@ begin
     with elem do
     begin
         YearlyShape := Value;
-        YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+        YearlyShapeObj := DSSPrime.LoadShapeClass.Find(YearlyShape);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -487,7 +489,7 @@ begin
     with elem do
     begin
         DailyTShape := Value;
-        DailyTShapeObj := TShapeClass.Find(DailyTShape);
+        DailyTShapeObj := DSSPrime.TShapeClass.Find(DailyTShape);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -518,7 +520,7 @@ begin
     with elem do
     begin
         DutyTShape := Value;
-        DutyTShapeObj := TShapeClass.Find(DutyTShape);
+        DutyTShapeObj := DSSPrime.TShapeClass.Find(DutyTShape);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -549,7 +551,7 @@ begin
     with elem do
     begin
         YearlyTShape := Value;
-        YearlyTShapeObj := TShapeClass.Find(YearlyTShape);
+        YearlyTShapeObj := DSSPrime.TShapeClass.Find(YearlyTShape);
     end;
 end;
 //------------------------------------------------------------------------------

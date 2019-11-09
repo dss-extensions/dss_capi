@@ -137,7 +137,8 @@ uses
     Dynamics,
     Utilities,
     Sysutils,
-    Command;
+    Command,
+    DSSHelper;
 
 const
     NumPropsThisClass = 31;
@@ -515,16 +516,16 @@ begin
     {Set shape objects;  returns nil if not valid}
     {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
                 27:
-                    YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                    YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                 28:
                 begin
-                    DailyShapeObj := LoadShapeClass.Find(DailyShape);
+                    DailyShapeObj := DSS.LoadShapeClass.Find(DailyShape);
                   {If Yearly load shape is not yet defined, make it the same as Daily}
                     if YearlyShapeObj = NIL then
                         YearlyShapeObj := DailyShapeObj;
                 end;
                 29:
-                    DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                    DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
             end;
 
             case ParamPointer of
@@ -962,7 +963,7 @@ begin
         Vmag := kVBase * PerUnit * 1000.0 / 2.0 / Sin((180.0 / Fnphases) * PI / 180.0);
     end;
 
-    SpectrumObj := SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
     begin
         DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device Vsource.' + Name + ' Not Found.', 324);

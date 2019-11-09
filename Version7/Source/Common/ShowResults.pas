@@ -77,7 +77,8 @@ uses
     LineGeometry,
     YMatrix,
     SwtControl,
-    KLUSolve;
+    KLUSolve,
+    DSSHelper;
 
 var
     MaxBusNameLength: Integer;
@@ -3014,7 +3015,7 @@ begin
         Writeln(F, 'Loops and Paralleled Lines in all EnergyMeter Zones');
         Writeln(F);
 
-        hMeter := EnergyMeterClass.First;
+        hMeter := DSSPrime.EnergyMeterClass.First;
 
         while hMeter > 0 do
         begin
@@ -3039,7 +3040,7 @@ begin
                 end;
             end;
 
-            hMeter := EnergyMeterClass.Next
+            hMeter := DSSPrime.EnergyMeterClass.Next
         end;
 
     finally
@@ -3254,10 +3255,10 @@ begin
 
         ActiveEarthModel := DefaultEarthModel;
 
-        p := LineGeometryClass.first;
+        p := DSSPrime.LineGeometryClass.first;
         while p > 0 do
         begin
-            Pelem := LineGeometryClass.GetActiveObj;
+            Pelem := DSSPrime.LineGeometryClass.GetActiveObj;
             Z.Free;
             YC.Free;
 
@@ -3445,7 +3446,7 @@ begin
                 Writeln(F);
             end;
 
-            p := LineGeometryClass.Next;
+            p := DSSPrime.LineGeometryClass.Next;
         end;
 
     finally

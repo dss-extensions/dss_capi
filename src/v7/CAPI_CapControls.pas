@@ -57,7 +57,9 @@ uses
     CapControl,
     CapControlVars,
     SysUtils,
-    PointerList;
+    PointerList,
+    DSSClass,
+    DSSHelper;
 
 function ActiveCapControl: TCapControlObj;
 begin
@@ -380,10 +382,10 @@ procedure CapControls_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if CapControlClass.SetActive(Value) then
+    if DSSPrime.CapControlClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := CapControlClass.ElementList.Active;
-        ActiveCircuit.CapControls.Get(CapControlClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.CapControlClass.ElementList.Active;
+        ActiveCircuit.CapControls.Get(DSSPrime.CapControlClass.Active);
     end
     else
     begin

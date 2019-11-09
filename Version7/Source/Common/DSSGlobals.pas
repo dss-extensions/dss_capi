@@ -178,6 +178,8 @@ VAR
     DSSDirectory     :String;     // where the current exe resides
     MaxCircuits     :Integer;
 
+
+    // TODO:  move all below to the new TDSS
     ActiveCircuit   :TDSSCircuit;
     ActiveDSSClass  :TDSSClass;
     LastClassReferenced:Integer;  // index of class of last thing edited
@@ -221,59 +223,6 @@ VAR
 
     DefaultBaseFreq  :Double;
     DaisySize        :Double;
-
-    // Some commonly used classes   so we can find them easily
-    LoadShapeClass     :TLoadShape;
-    TShapeClass        :TTshape;
-    PriceShapeClass    :TPriceShape;
-    XYCurveClass       :TXYCurve;
-    GrowthShapeClass   :TGrowthShape;
-    SpectrumClass      :TSpectrum;
-    SolutionClass      :TDSSClass;
-    EnergyMeterClass   :TEnergyMeter;
-    // FeederClass        :TFeeder;
-    MonitorClass       :TDSSMonitor;
-    SensorClass        :TSensor;
-    TCC_CurveClass     :TTCC_Curve;
-    WireDataClass      :TWireData;
-    CNDataClass        :TCNData;
-    TSDataClass        :TTSData;
-    LineGeometryClass  :TLineGeometry;
-    LineSpacingClass   :TLineSpacing;
-    LineCodeClass      :TLineCode;
-    StorageClass       :TStorage;
-    PVSystemClass      :TPVSystem;
-    InvControlClass     :TInvControl;
-    ExpControlClass    :TExpControl;
-
-    LineClass          :TLine;
-    VSourceClass       :TVSource;
-    ISourceClass       :TISource;
-    VCSSClass          :TVCCS;
-    LoadClass          :TLoad;
-    TransformerClass   :TTransf;
-    RegControlClass    :TRegControl;
-    CapacitorClass     :TCapacitor;
-    ReactorClass       :TReactor;
-    CapControlClass    :TCapControl;
-    FaultClass         :TFault;
-    GeneratorClass     :TGenerator;
-    GenDispatcherClass :TGenDispatcher;
-    StorageControllerClass: TStorageController;
-    RelayClass         :TRelay;
-    RecloserClass      :TRecloser;
-    FuseClass          :TFuse;
-    SwtControlClass    :TSwtControl;
-    UPFCClass          :TUPFC;
-    UPFCControlClass   :TUPFCControl;
-    ESPVLControlClass  :TESPVLControl;
-    IndMach012Class    :TIndMach012;
-    GICsourceClass     :TGICsource; // GIC source
-    AutoTransClass     :TAutoTrans; // Auto Transformer
-    VSConverterClass   :TVSConverter;
-    XfmrCodeClass      :TXfmrCode;
-    GICLineClass       :TGICLine;
-    GICTransformerClass:TGICTransformer;
     
     EventStrings: TStringList;
     SavedFileList:TStringList;

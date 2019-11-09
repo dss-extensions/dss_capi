@@ -79,7 +79,9 @@ uses
     ucomplex,
     CktElement,
     PDElement,
-    CktTree;
+    CktTree,
+    DSSClass,
+    DSSHelper;
 
 //------------------------------------------------------------------------------
 procedure InvalidActiveSection(); inline;
@@ -250,7 +252,7 @@ procedure Meters_ResetAll(); CDECL;
 begin
     if ActiveCircuit <> NIL then
     begin
-        EnergyMeterClass.ResetAll;
+        DSSPrime.EnergyMeterClass.ResetAll;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -288,10 +290,10 @@ procedure Meters_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if EnergyMeterClass.SetActive(Value) then
+    if DSSPrime.EnergyMeterClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := EnergyMeterClass.ElementList.Active;
-        ActiveCircuit.EnergyMeters.Get(EnergyMeterClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.EnergyMeterClass.ElementList.Active;
+        ActiveCircuit.EnergyMeters.Get(DSSPrime.EnergyMeterClass.Active);
     end
     else
     begin
@@ -604,7 +606,7 @@ procedure Meters_CloseAllDIFiles(); CDECL;
 begin
     if ActiveCircuit <> NIL then
     begin
-        EnergyMeterClass.CloseAllDIFiles;
+        DSSPrime.EnergyMeterClass.CloseAllDIFiles;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -612,7 +614,7 @@ procedure Meters_OpenAllDIFiles(); CDECL;
 begin
     if ActiveCircuit <> NIL then
     begin
-        EnergyMeterClass.OpenAllDIFiles;
+        DSSPrime.EnergyMeterClass.OpenAllDIFiles;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -620,7 +622,7 @@ procedure Meters_SampleAll(); CDECL;
 begin
     if ActiveCircuit <> NIL then
     begin
-        EnergyMeterClass.SampleAll;
+        DSSPrime.EnergyMeterClass.SampleAll;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -628,7 +630,7 @@ procedure Meters_SaveAll(); CDECL;
 begin
     if ActiveCircuit <> NIL then
     begin
-        EnergyMeterClass.SaveAll;
+        DSSPrime.EnergyMeterClass.SaveAll;
     end;
 end;
 //------------------------------------------------------------------------------

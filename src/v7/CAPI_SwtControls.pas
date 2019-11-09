@@ -42,7 +42,9 @@ uses
     ControlElem,
     SwtControl,
     SysUtils,
-    PointerList;
+    PointerList,
+    DSSClass,
+    DSSHelper;
 
 function ActiveSwtControl: TSwtControlObj;
 begin
@@ -258,10 +260,10 @@ procedure SwtControls_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if SwtControlClass.SetActive(Value) then
+    if DSSPrime.SwtControlClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := SwtControlClass.ElementList.Active;
-        ActiveCircuit.SwtControls.Get(SwtControlClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.SwtControlClass.ElementList.Active;
+        ActiveCircuit.SwtControls.Get(DSSPrime.SwtControlClass.Active);
     end
     else
     begin

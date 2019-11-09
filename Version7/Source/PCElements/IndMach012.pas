@@ -276,8 +276,9 @@ uses
     Sysutils,      // Delphi misc utility functions
     Math,          // Delphi Math functions
     MathUtil,      // DSS Math utilities
-    Utilities;     // DSS misc utility functions
-
+    Utilities,     // DSS misc utility functions
+    DSSHelper;
+    
 const
     NumPropsThisClass = 21; // Set this constant to the actual number of properties you define
     NumIndMach012Variables = 22;
@@ -610,7 +611,7 @@ begin
                         SetNcondsForConnection;  // Force Reallocation of terminal info
                     18:
                     begin
-                        YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                        YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                         if Assigned(YearlyShapeObj) then
                             with YearlyShapeObj do
                                 if UseActual then
@@ -618,7 +619,7 @@ begin
                     end;
                     19:
                     begin
-                        DailyDispShapeObj := LoadShapeClass.Find(DailyDispShape);
+                        DailyDispShapeObj := DSS.LoadShapeClass.Find(DailyDispShape);
                         if Assigned(DailyDispShapeObj) then
                             with DailyDispShapeObj do
                                 if UseActual then
@@ -626,7 +627,7 @@ begin
                     end;
                     20:
                     begin
-                        DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                        DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
                         if Assigned(DutyShapeObj) then
                             with DutyShapeObj do
                                 if UseActual then
@@ -898,7 +899,7 @@ begin
         if Length(DutyShape) > 0 then
             DoSimpleMsg('WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
 
-    SpectrumObj := SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
         DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
 

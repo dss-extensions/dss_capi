@@ -21,7 +21,9 @@ uses
     Executive,
     SysUtils,
     solution,
-    CktElement;
+    CktElement,
+    DSSClass,
+    DSSHelper;
 
 procedure DSSimComs_BusVoltagepu(var ResultPtr: PDouble; ResultCount: PInteger; Index: PtrUInt); CDECL;
 var

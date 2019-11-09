@@ -97,6 +97,8 @@ implementation
 uses
     CAPI_Constants,
     DSSGlobals,
+    DSSClass,
+    DSSHelper,
     Executive,
     Load,
     SysUtils,
@@ -144,7 +146,7 @@ begin
             {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
             TLoadProp.yearly:
             begin
-                YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                YearlyShapeObj := DSSPrime.LoadShapeClass.Find(YearlyShape);
                 if Assigned(YearlyShapeObj) then
                     with YearlyShapeObj do
                         if UseActual then
@@ -152,7 +154,7 @@ begin
             end;
             TLoadProp.daily:
             begin
-                DailyShapeObj := LoadShapeClass.Find(DailyShape);
+                DailyShapeObj := DSSPrime.LoadShapeClass.Find(DailyShape);
                 if Assigned(DailyShapeObj) then
                     with DailyShapeObj do
                         if UseActual then
@@ -163,14 +165,14 @@ begin
             end;
             TLoadProp.duty:
             begin
-                DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                DutyShapeObj := DSSPrime.LoadShapeClass.Find(DutyShape);
                 if Assigned(DutyShapeObj) then
                     with DutyShapeObj do
                         if UseActual then
                             SetkWkvar(MaxP, MaxQ);
             end;
             TLoadProp.growth:
-                GrowthShapeObj := GrowthShapeClass.Find(GrowthShape);
+                GrowthShapeObj := DSSPrime.GrowthShapeClass.Find(GrowthShape);
 
             TLoadProp.kvar:
             begin
@@ -182,7 +184,7 @@ begin
                 LoadSpecType := TLoadSpec.kva_PF;  // kVA, PF
  {*** see set_kwh, etc           28..30: LoadSpecType := 4;  // kWh, days, cfactor, PF }
             TLoadProp.CVRCurve:
-                CVRShapeObj := LoadShapeClass.Find(CVRshape);
+                CVRShapeObj := DSSPrime.LoadShapeClass.Find(CVRshape);
         end;
     end;
 end;
@@ -303,10 +305,10 @@ procedure Loads_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if LoadClass.SetActive(Value) then
+    if DSSPrime.LoadClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := LoadClass.ElementList.Active;
-        ActiveCircuit.Loads.Get(LoadClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.LoadClass.ElementList.Active;
+        ActiveCircuit.Loads.Get(DSSPrime.LoadClass.Active);
     end
     else
     begin

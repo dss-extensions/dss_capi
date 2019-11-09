@@ -47,7 +47,9 @@ uses
     DSSGlobals,
     Generator,
     CktElement,
-    SysUtils;
+    SysUtils,
+    DSSClass,
+    DSSHelper;
 
 procedure Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
@@ -145,7 +147,7 @@ var
     GeneratorCls: TGenerator;
     k: Integer;
 begin
-    GeneratorCls := GeneratorClass;
+    GeneratorCls := DSSPrime.GeneratorClass;
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumGenRegisters - 1) + 1);
     for k := 0 to NumGenRegisters - 1 do
     begin
@@ -225,10 +227,10 @@ procedure Generators_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if GeneratorClass.SetActive(Value) then
+    if DSSPrime.GeneratorClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := GeneratorClass.ElementList.Active;
-        ActiveCircuit.Generators.Get(GeneratorClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.GeneratorClass.ElementList.Active;
+        ActiveCircuit.Generators.Get(DSSPrime.GeneratorClass.Active);
     end
     else
     begin

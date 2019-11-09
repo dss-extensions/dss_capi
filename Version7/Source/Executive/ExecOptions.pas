@@ -38,7 +38,9 @@ uses
     Utilities,
     Sysutils,
     Solution,
-    Energymeter;
+    Energymeter,
+    DSSClass,
+    DSSHelper;
 
 procedure DefineOptions;
 
@@ -564,7 +566,7 @@ begin
                 with ActiveCircuit do
                 begin
                     LoadDurCurve := Param;
-                    LoadDurCurveObj := LoadShapeClass.Find(Param);
+                    LoadDurCurveObj := DSSPrime.LoadShapeClass.Find(Param);
                     if LoadDurCurveObj = NIL then
                         DoSimpleMsg('Load-Duration Curve not found.', 131);
                 end;
@@ -614,13 +616,13 @@ begin
                 ActiveCircuit.GenMultiplier := Parser.DblValue;
             46:
             begin
-                TestLoadShapeObj := LoadShapeClass.Find(Param);
+                TestLoadShapeObj := DSSPrime.LoadShapeClass.Find(Param);
                 if TestLoadShapeObj <> NIL then
                     ActiveCircuit.DefaultDailyShapeObj := TestLoadShapeObj;
             end;
             47:
             begin
-                TestLoadShapeObj := LoadShapeClass.Find(Param);
+                TestLoadShapeObj := DSSPrime.LoadShapeClass.Find(Param);
                 if TestLoadShapeObj <> NIL then
                     ActiveCircuit.DefaultYearlyShapeObj := TestLoadShapeObj;
             end;
@@ -634,7 +636,7 @@ begin
                 with ActiveCircuit do
                 begin
                     PriceCurve := Param;
-                    PriceCurveObj := PriceShapeClass.Find(Param);
+                    PriceCurveObj := DSSPrime.PriceShapeClass.Find(Param);
                     if PriceCurveObj = NIL then
                         DoSimpleMsg('Priceshape.' + param + ' not found.', 132);
                 end;
@@ -664,14 +666,14 @@ begin
             59:
                 DoSetReduceStrategy(param);
             60:
-                EnergyMeterClass.SaveDemandInterval := InterpretYesNo(Param);
+                DSSPrime.EnergyMeterClass.SaveDemandInterval := InterpretYesNo(Param);
             61:
             begin
                 ActiveCircuit.PctNormalFactor := Parser.DblValue;
                 DoSetNormal(ActiveCircuit.PctNormalFactor);
             end;
             62:
-                EnergyMeterClass.DI_Verbose := InterpretYesNo(Param);
+                DSSPrime.EnergyMeterClass.DI_Verbose := InterpretYesNo(Param);
             63:
                 ActiveCircuit.CaseName := Parser.StrValue;
             64:
@@ -683,9 +685,9 @@ begin
             67:
                 DSSExecutive.RecorderOn := InterpretYesNo(Param);
             68:
-                EnergyMeterClass.Do_OverloadReport := InterpretYesNo(Param);
+                DSSPrime.EnergyMeterClass.Do_OverloadReport := InterpretYesNo(Param);
             69:
-                EnergyMeterClass.Do_VoltageExceptionReport := InterpretYesNo(Param);
+                DSSPrime.EnergyMeterClass.Do_VoltageExceptionReport := InterpretYesNo(Param);
             70:
                 DoSetCFactors(Parser.DblValue);
             71:
@@ -995,14 +997,14 @@ begin
                 59:
                     AppendGlobalResult(ActiveCircuit.ReductionStrategyString);
                 60:
-                    if EnergyMeterClass.SaveDemandInterval then
+                    if DSSPrime.EnergyMeterClass.SaveDemandInterval then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 61:
                     AppendGlobalResult(Format('%-.g', [ActiveCircuit.PctNormalFactor]));
                 62:
-                    if EnergyMeterClass.DI_Verbose then
+                    if DSSPrime.EnergyMeterClass.DI_Verbose then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
@@ -1023,12 +1025,12 @@ begin
                     else
                         AppendGlobalResult('No');
                 68:
-                    if EnergyMeterClass.Do_OverloadReport then
+                    if DSSPrime.EnergyMeterClass.Do_OverloadReport then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 69:
-                    if EnergyMeterClass.Do_VoltageExceptionReport then
+                    if DSSPrime.EnergyMeterClass.Do_VoltageExceptionReport then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');

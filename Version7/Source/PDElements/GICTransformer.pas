@@ -97,7 +97,8 @@ uses
     Sysutils,
     Ucomplex,
     MathUtil,
-    Utilities;
+    Utilities,
+    DSSHelper;
 
 const
     NumPropsthisclass = 15;
@@ -403,7 +404,7 @@ begin
                     FkVSpecified := TRUE;
                 12:
                 begin
-                    FVarCurveObj := XYCurveClass.Find(FVarCurve);
+                    FVarCurveObj := DSS.XYCurveClass.Find(FVarCurve);
                     Kspecified := FALSE;
                 end;
                 13..14:

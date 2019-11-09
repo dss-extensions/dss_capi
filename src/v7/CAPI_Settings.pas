@@ -55,7 +55,9 @@ implementation
 uses
     CAPI_Constants,
     DSSGlobals,
-    ExecHelper;
+    ExecHelper,
+    DSSClass,
+    DSSHelper;
 
 function Settings_Get_AllowDuplicates(): Boolean; CDECL;
 begin
@@ -459,7 +461,7 @@ begin
         with ActiveCircuit do
         begin
             PriceCurve := Value;
-            PriceCurveObj := LoadShapeClass.Find(Pricecurve);
+            PriceCurveObj := DSSPrime.LoadShapeClass.Find(Pricecurve);
             if PriceCurveObj = NIL then
                 DoSimpleMsg('Price Curve: "' + Pricecurve + '" not found.', 5006);
         end;

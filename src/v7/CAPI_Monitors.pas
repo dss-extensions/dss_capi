@@ -56,7 +56,9 @@ uses
     DSSGlobals,
     SysUtils,
     Classes,
-    Math;
+    Math,
+    DSSClass,
+    DSSHelper;
 
 type
     THeaderRec = record
@@ -217,7 +219,7 @@ procedure Monitors_ResetAll(); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    MonitorClass.ResetAll;
+    DSSPrime.MonitorClass.ResetAll;
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Sample(); CDECL;
@@ -273,10 +275,10 @@ procedure Monitors_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if MonitorClass.SetActive(Value) then
+    if DSSPrime.MonitorClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := MonitorClass.ElementList.Active;
-        ActiveCircuit.Monitors.Get(MonitorClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.MonitorClass.ElementList.Active;
+        ActiveCircuit.Monitors.Get(DSSPrime.MonitorClass.Active);
     end
     else
     begin
@@ -331,14 +333,14 @@ procedure Monitors_SampleAll(); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    MonitorClass.SampleAll;
+    DSSPrime.MonitorClass.SampleAll;
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_SaveAll(); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    MonitorClass.SaveAll;
+    DSSPrime.MonitorClass.SaveAll;
 end;
 //------------------------------------------------------------------------------
 function Monitors_Get_Count(): Integer; CDECL;
@@ -365,7 +367,7 @@ procedure Monitors_ProcessAll(); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    MonitorClass.PostProcessAll;
+    DSSPrime.MonitorClass.PostProcessAll;
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Get_Channel(var ResultPtr: PDouble; ResultCount: PInteger; Index: Integer); CDECL;

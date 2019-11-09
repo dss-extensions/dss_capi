@@ -22,7 +22,9 @@ uses
     DSSGlobals,
     ExecCommands,
     ExecOptions,
-    Executive;
+    Executive,
+    DSSClass,
+    DSSHelper;
 
 function DSS_Executive_Get_Command_AnsiString(i: Integer): Ansistring; inline;
 begin

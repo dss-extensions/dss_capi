@@ -231,8 +231,6 @@ type
 
 var
     ActiveAutoTransObj: TAutoTransObj;
-    AutoTransClass: TAutoTrans;
-
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -245,7 +243,8 @@ uses
     DSSGlobals,
     Sysutils,
     Utilities,
-    XfmrCode;
+    XfmrCode,
+    DSSHelper;
 
 const
     NumPropsThisClass = 42;
@@ -263,8 +262,6 @@ begin
      {Make space for AutoTrans property list}
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;     {Allow property list abbreviations}
-
-    AutoTransClass := Self;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2605,9 +2602,9 @@ var
     Obj: TXfmrCodeObj;
     i: Integer;
 begin
-    if XfmrCodeClass.SetActive(Code) then
+    if DSSPrime.XfmrCodeClass.SetActive(Code) then
     begin
-        Obj := XfmrCodeClass.GetActiveObj;
+        Obj := DSSPrime.XfmrCodeClass.GetActiveObj;
         XfmrCode := LowerCase(Code);
     // set sizes and copy parameters
         Nphases := Obj.Fnphases;

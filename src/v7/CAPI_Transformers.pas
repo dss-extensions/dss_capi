@@ -73,7 +73,9 @@ uses
     Transformer,
     SysUtils,
     PointerList,
-    ucomplex;
+    ucomplex,
+    DSSClass,
+    DSSHelper;
 
 function ActiveTransformer: TTransfObj;
 begin
@@ -372,10 +374,10 @@ procedure Transformers_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if TransformerClass.SetActive(Value) then
+    if DSSPrime.TransformerClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := TransformerClass.ElementList.Active;
-        ActiveCircuit.Transformers.Get(TransformerClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.TransformerClass.ElementList.Active;
+        ActiveCircuit.Transformers.Get(DSSPrime.TransformerClass.Active);
     end
     else
     begin

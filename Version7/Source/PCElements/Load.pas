@@ -338,7 +338,8 @@ uses
     Math,
     MathUtil,
     Utilities,
-    TypInfo;
+    TypInfo,
+    DSSHelper;
 
 const
     NumPropsThisClass = Ord(High(TLoadProp));
@@ -758,7 +759,7 @@ begin
     {Sets the kW and kvar properties to match the peak kW demand from the Loadshape}
                 TLoadProp.yearly:
                 begin
-                    YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                    YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                     if Assigned(YearlyShapeObj) then
                         with YearlyShapeObj do
                             if UseActual then
@@ -766,7 +767,7 @@ begin
                 end;
                 TLoadProp.daily:
                 begin
-                    DailyShapeObj := LoadShapeClass.Find(DailyShape);
+                    DailyShapeObj := DSS.LoadShapeClass.Find(DailyShape);
                     if Assigned(DailyShapeObj) then
                         with DailyShapeObj do
                             if UseActual then
@@ -777,14 +778,14 @@ begin
                 end;
                 TLoadProp.duty:
                 begin
-                    DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                    DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
                     if Assigned(DutyShapeObj) then
                         with DutyShapeObj do
                             if UseActual then
                                 SetkWkvar(MaxP, MaxQ);
                 end;
                 TLoadProp.growth:
-                    GrowthShapeObj := GrowthShapeClass.Find(GrowthShape);
+                    GrowthShapeObj := DSS.GrowthShapeClass.Find(GrowthShape);
 
                 TLoadProp.kvar:
                 begin
@@ -796,7 +797,7 @@ begin
                     LoadSpecType := TLoadSpec.kVA_PF;  // kVA, PF
  {*** see set_kwh, etc           28..30: LoadSpecType := 4;  // kWh, days, cfactor, PF }
                 TLoadProp.CVRcurve:
-                    CVRShapeObj := LoadShapeClass.Find(CVRshape);
+                    CVRShapeObj := DSS.LoadShapeClass.Find(CVRshape);
             end;
 
             ParamName := Parser.NextParam;
@@ -1344,7 +1345,7 @@ begin
         if Length(CVRShape) > 0 then
             DoSimpleMsg('WARNING! CVR Shape shape: "' + CVRShape + '" Not Found.', 586);
 
-    SpectrumObj := SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
         DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 587);
 

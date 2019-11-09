@@ -121,7 +121,9 @@ uses
     SolutionAlgs,
     Solution,
     ExecOptions,
-    Dynamics;
+    Dynamics,
+    DSSClass,
+    DSSHelper;
 
 function Solution_Get_Frequency(): Double; CDECL;
 begin
@@ -352,7 +354,7 @@ begin
         with ActiveCircuit do
         begin
             LoadDurCurve := Value;
-            LoadDurCurveObj := LoadShapeClass.Find(LoadDurCurve);
+            LoadDurCurveObj := DSSPrime.LoadShapeClass.Find(LoadDurCurve);
             if LoadDurCurveObj = NIL then
                 DoSimpleMsg('Load-Duration Curve not found.', 5001);
         end;
@@ -514,7 +516,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        TestLoadShapeObj := LoadShapeClass.Find(Value);
+        TestLoadShapeObj := DSSPrime.LoadShapeClass.Find(Value);
         if TestLoadShapeObj <> NIL then
             ActiveCircuit.DefaultDailyShapeObj := TestLoadShapeObj;
     end;
@@ -526,7 +528,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        TestLoadShapeObj := LoadShapeClass.Find(Value);
+        TestLoadShapeObj := DSSPrime.LoadShapeClass.Find(Value);
         if TestLoadShapeObj <> NIL then
             ActiveCircuit.DefaultYearlyShapeObj := TestLoadShapeObj;
     end;
@@ -805,7 +807,7 @@ begin
     if ActiveCircuit <> NIL then
         with ActiveCircuit, ActiveCircuit.Solution do
         begin
-            MonitorClass.SampleAll;  // Make all monitors take a sample
+            DSSPrime.MonitorClass.SampleAll;  // Make all monitors take a sample
             EndOfTimeStepCleanup;
             Increment_time;
  //               DefaultHourMult := DefaultDailyShapeObj.getmult(TDynamicsrec.dblHour);

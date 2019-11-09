@@ -37,7 +37,9 @@ uses
 {$ELSE}
     DSSForms,
 {$ENDIF}
-    LineUnits;
+    LineUnits,
+    DSSClass,
+    DSSHelper;
 
 procedure DefineOptions;
 
@@ -266,7 +268,7 @@ begin
             Param := Parser.StrValue;
             if Length(Param) > 0 then
             begin
-                pMon := MonitorClass.Find(Param);
+                pMon := DSSPrime.MonitorClass.Find(Param);
                 if pMon <> NIL then
                     pMon.TranslateToCSV(TRUE)
                 else

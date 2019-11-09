@@ -167,7 +167,8 @@ uses
     Utilities,
     Mathutil,
     ControlElem,
-    LineUnits;
+    LineUnits,
+    DSSHelper;
 
 const
     NumPropsThisClass = 29;
@@ -371,10 +372,10 @@ begin
     if LineCodeClass = NIL then
         LineCodeClass := DSSClassList.Get(ClassNames.Find('linecode'));
 
-    if LineCodeClass.SetActive(Code) then
+    if DSSPrime.LineCodeClass.SetActive(Code) then
     begin
 
-        LineCodeObj := LineCodeClass.GetActiveObj;
+        LineCodeObj := DSSPrime.LineCodeClass.GetActiveObj;
 
         CondCode := LowerCase(Code);
 
@@ -1891,10 +1892,10 @@ end;
 
 procedure TLineObj.FetchLineSpacing(const Code: String);
 begin
-    if LineSpacingClass.SetActive(Code) then
+    if DSSPrime.LineSpacingClass.SetActive(Code) then
     begin
 
-        FLineSpacingObj := LineSpacingClass.GetActiveObj;
+        FLineSpacingObj := DSSPrime.LineSpacingClass.GetActiveObj;
         FLineCodeSpecified := FALSE;
         KillGeometrySpecified;
         SpacingCode := LowerCase(Code);
@@ -1942,7 +1943,7 @@ begin
     for i := istart to FLineSpacingObj.NWires do
     begin
         AuxParser.NextParam; // ignore any parameter name  not expecting any
-        WireDataClass.code := AuxParser.StrValue;
+        DSSPrime.WireDataClass.code := AuxParser.StrValue;
         if Assigned(ActiveConductorDataObj) then
         begin
             FLineWireData^[i] := ActiveConductorDataObj;
@@ -1984,7 +1985,7 @@ begin
     for i := 1 to FLineSpacingObj.NPhases do
     begin // fill extra neutrals later
         AuxParser.NextParam; // ignore any parameter name  not expecting any
-        CNDataClass.code := AuxParser.StrValue;
+        DSSPrime.CNDataClass.code := AuxParser.StrValue;
         if Assigned(ActiveConductorDataObj) then
             FLineWireData^[i] := ActiveConductorDataObj
         else
@@ -2007,7 +2008,7 @@ begin
     for i := 1 to FLineSpacingObj.NPhases do
     begin // fill extra neutrals later
         AuxParser.NextParam; // ignore any parameter name  not expecting any
-        TSDataClass.code := AuxParser.StrValue;
+        DSSPrime.TSDataClass.code := AuxParser.StrValue;
         if Assigned(ActiveConductorDataObj) then
             FLineWireData^[i] := ActiveConductorDataObj
         else
@@ -2019,12 +2020,12 @@ procedure TLineObj.FetchGeometryCode(const Code: String);
 var
     i: Integer;
 begin
-    if LineGeometryClass.SetActive(Code) then
+    if DSSPrime.LineGeometryClass.SetActive(Code) then
     begin
         FLineCodeSpecified := FALSE;  // Cancel this flag
         SpacingSpecified := FALSE;
 
-        FLineGeometryObj := LineGeometryClass.GetActiveObj;
+        FLineGeometryObj := DSSPrime.LineGeometryClass.GetActiveObj;
         FZFrequency := -1.0;  // Init to signify not computed
 
         GeometryCode := LowerCase(Code);
@@ -2119,7 +2120,7 @@ begin
     end;
 
   // make a temporary LineGeometry to calculate line constants
-    pGeo := TLineGeometryObj.Create(LineGeometryClass, Name);
+    pGeo := TLineGeometryObj.Create(DSSPrime.LineGeometryClass, Name);
     pGeo.LoadSpacingAndWires(FLineSpacingObj, FLineWireData); // this sets OH, CN, or TS
 
     if FrhoSpecified then

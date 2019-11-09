@@ -253,7 +253,8 @@ uses
     DSSGlobals,
     Sysutils,
     Utilities,
-    XfmrCode;
+    XfmrCode,
+    DSSHelper;
 
 const
     NumPropsThisClass = 47;
@@ -2582,9 +2583,9 @@ var
     Obj: TXfmrCodeObj;
     i: Integer;
 begin
-    if XfmrCodeClass.SetActive(Code) then
+    if DSSPrime.XfmrCodeClass.SetActive(Code) then
     begin
-        Obj := XfmrCodeClass.GetActiveObj;
+        Obj := DSSPrime.XfmrCodeClass.GetActiveObj;
         XfmrCode := LowerCase(Code);
     // set sizes and copy parameters
         Nphases := Obj.Fnphases;

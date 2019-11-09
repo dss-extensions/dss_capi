@@ -17,7 +17,9 @@ uses
     CAPI_Constants,
     DSSGlobals,
     Executive,
-    SysUtils;
+    SysUtils,
+    DSSClass,
+    DSSHelper;
 
 const
     nothing: Ansistring = #0#0;

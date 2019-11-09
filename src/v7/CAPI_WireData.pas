@@ -53,7 +53,9 @@ uses
     CAPI_Constants,
     sysutils,
     DSSGlobals,
-    LineUnits;
+    LineUnits,
+    DSSClass,
+    DSSHelper;
 
 procedure ConductorSetDefaults(prop: ConductorProps; conductor: TConductorDataObj);
 begin
@@ -105,21 +107,21 @@ function WireData_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit <> NIL then
-        Result := WireDataClass.ElementCount;
+        Result := DSSPrime.WireDataClass.ElementCount;
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_First(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit <> NIL then
-        Result := WireDataClass.First;
+        Result := DSSPrime.WireDataClass.First;
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
     if ActiveCircuit <> NIL then
-        Result := WireDataClass.Next;
+        Result := DSSPrime.WireDataClass.Next;
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_Name_AnsiString(): Ansistring; inline;
@@ -130,7 +132,7 @@ begin
     Result := '';  // signify no name
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         if pWireData <> NIL then
         begin
             Result := pWireData.Name;
@@ -150,7 +152,7 @@ procedure WireData_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit <> NIL then
     begin
-        if not WireDataClass.SetActive(Value) then
+        if not DSSPrime.WireDataClass.SetActive(Value) then
             DoSimpleMsg('WireData "' + Value + '" Not Found in Active Circuit.', 51008);
 
          // Still same active object if not found
@@ -166,7 +168,7 @@ begin
     Result[0] := DSS_CopyStringAsPChar('NONE');
     if ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, WireDataClass.ElementList, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.WireDataClass.ElementList, False);
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_NormAmps(): Double; CDECL;
@@ -176,7 +178,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.NormAmps;
     end;
 end;
@@ -187,7 +189,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         pWireData.NormAmps := Value;
         ConductorSetDefaults(ConductorProps.NormAmps, pWireData);
     end
@@ -201,7 +203,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.EmergAmps;
     end;
 end;
@@ -212,7 +214,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         pWireData.EmergAmps := Value;
         ConductorSetDefaults(ConductorProps.EmergAmps, pWireData);
     end;
@@ -225,7 +227,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FRadius * 2.0;
     end;
 end;
@@ -236,7 +238,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do
         begin
             FRadius := Value / 2.0;
@@ -252,7 +254,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FRadius;
     end;
 end;
@@ -263,7 +265,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do
         begin
             FRadius := Value;
@@ -279,7 +281,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FGMR60;
     end;
 end;
@@ -290,7 +292,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do
         begin
             FGMR60 := Value;
@@ -306,7 +308,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FR60;
     end;
 end;
@@ -317,7 +319,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do
         begin
             FR60 := Value;
@@ -333,7 +335,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FRDC;
     end;
 end;
@@ -344,7 +346,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do
         begin
             FRDC := Value;
@@ -360,7 +362,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FGMRUnits;
     end;
 end;
@@ -371,7 +373,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do
         begin
             FGMRUnits := Value;
@@ -387,7 +389,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FRadiusUnits;
     end;
 end;
@@ -399,7 +401,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do
         begin
             FRadiusUnits := Value;
@@ -415,7 +417,7 @@ begin
     Result := 0;
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FResistanceUnits;
     end;
 end;
@@ -426,7 +428,7 @@ var
 begin
     if ActiveCircuit <> NIL then
     begin
-        pWireData := WireDataClass.GetActiveObj;
+        pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do
         begin
             FResistanceUnits := Value;
@@ -437,12 +439,12 @@ end;
 //------------------------------------------------------------------------------
 function WireData_Get_idx(): Integer; CDECL;
 begin
-    Result := WireDataClass.ElementList.ActiveIndex
+    Result := DSSPrime.WireDataClass.ElementList.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure WireData_Set_idx(Value: Integer); CDECL;
 begin
-    if WireDataClass.ElementList.Get(Value) = NIL then
+    if DSSPrime.WireDataClass.ElementList.Get(Value) = NIL then
         DoSimpleMsg('Invalid WireData index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------

@@ -104,7 +104,9 @@ uses
 {$ELSE}
     DSSForms,
 {$ENDIF}
-      {ProgressForm, Forms,} Solution;
+    {ProgressForm, Forms,} Solution,
+    DSSClass,
+    DSSHelper;
 
 function SumSelectedRegisters(Mtr: TEnergyMeterObj; Regs: pIntegerArray; count: Integer): Double;
 var
@@ -398,14 +400,14 @@ begin
 
     {Do a preliminary snapshot solution to Force definition of meter zones
      And set bus lists}
-        EnergyMeterClass.ResetAll;
+        DSSPrime.EnergyMeterClass.ResetAll;
         if SystemYChanged or ActiveCircuit.BusNameRedefined then
         begin
             SolveSnap;
             ModeChanged := TRUE;
         end;
 
-        EnergyMeterClass.SampleAll;
+        DSSPrime.EnergyMeterClass.SampleAll;
 
     { Check to see if bus base voltages have been defined }
         if Buses^[NumBuses].kVBase = 0.0 then
@@ -488,7 +490,7 @@ begin
                             ShowPctProgress(Round((100 * ProgressCount) / ProgressMax));
                         end;
 
-                        EnergyMeterClass.ResetAll;
+                        DSSPrime.EnergyMeterClass.ResetAll;
 
                          {Get the Number of Phases at this bus and the Node Ref and add into the Aux Current Array}
 
@@ -511,7 +513,7 @@ begin
                               {Only do this if solution converged ELSE something might break
                                in meter sampling}
 
-                            EnergyMeterClass.SampleAll;
+                            DSSPrime.EnergyMeterClass.SampleAll;
 
                             LossImproveFactor := WeightedLosses;
 
@@ -606,7 +608,7 @@ begin
                         ProgressFormCaption('Testing bus ' + TestBus);
                         ShowPctProgress(Round((100 * ProgressCount) / ProgressMax));
 
-                        EnergyMeterClass.ResetAll;
+                        DSSPrime.EnergyMeterClass.ResetAll;
 
                        {Get the Number of Phases at this bus and the Node Ref and add into the Aux Current Array}
 
@@ -633,7 +635,7 @@ begin
                               {Only do this if solution converged ELSE something might break
                                in meter sampling}
 
-                            EnergyMeterClass.SampleAll;
+                            DSSPrime.EnergyMeterClass.SampleAll;
 
                             LossImproveFactor := WeightedLosses;
 

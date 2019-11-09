@@ -310,7 +310,8 @@ uses
     Utilities,
     KLUSolve,
     PointerList,
-    Line;
+    Line,
+    DSSHelper;
 
 const
     NumPropsThisClass = 1;
@@ -2188,8 +2189,8 @@ begin
    {Moved here 9-8-2007 so that mode is changed before reseting monitors, etc.}
 
    // Reset Meters and Monitors
-    MonitorClass.ResetAll;
-    EnergyMeterClass.ResetAll;
+    DSSPrime.MonitorClass.ResetAll;
+    DSSPrime.EnergyMeterClass.ResetAll;
     DoResetFaults;
     DoResetControls;
 
@@ -2376,12 +2377,12 @@ end;
 procedure TSolutionObj.Set_Year(const Value: Integer);
 begin
     if DIFilesAreOpen then
-        EnergyMeterClass.CloseAllDIFiles;
+        DSSPrime.EnergyMeterClass.CloseAllDIFiles;
     FYear := Value;
     DynaVars.intHour := 0;  {Change year, start over}
     Dynavars.t := 0.0;
     Update_dblHour;
-    EnergyMeterClass.ResetAll;  // force any previous year data to complete
+    DSSPrime.EnergyMeterClass.ResetAll;  // force any previous year data to complete
 end;
 
 procedure TSolutionObj.Set_Total_Time(const Value: Double);

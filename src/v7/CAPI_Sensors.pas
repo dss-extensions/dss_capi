@@ -55,7 +55,9 @@ uses
     DSSGlobals,
     PointerList,
     Executive,
-    SysUtils;
+    SysUtils,
+    DSSClass,
+    DSSHelper;
 
 function ActiveSensor: TSensorObj;
 begin
@@ -333,7 +335,7 @@ end;
 procedure Sensors_ResetAll(); CDECL;
 begin
     if assigned(ActiveCircuit) then
-        SensorClass.ResetAll;
+        DSSPrime.SensorClass.ResetAll;
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_Currents(ValuePtr: PDouble; ValueCount: Integer); CDECL;
@@ -435,10 +437,10 @@ procedure Sensors_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if SensorClass.SetActive(Value) then
+    if DSSPrime.SensorClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := SensorClass.ElementList.Active;
-        ActiveCircuit.Sensors.Get(SensorClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.SensorClass.ElementList.Active;
+        ActiveCircuit.Sensors.Get(DSSPrime.SensorClass.Active);
     end
     else
     begin

@@ -147,7 +147,7 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
      Classes,  CktElementClass, Sensor,  { ExportCIMXML,} NamedObject,
      {$IFDEF FPC}RegExpr,{$ELSE}RegularExpressionsCore,{$ENDIF} PstCalc,
-     PDELement, ReduceAlgs;
+     PDELement, ReduceAlgs, DSSHelper;
 
 Var
    SaveCommands, DistributeCommands,  DI_PlotCommands,
@@ -763,9 +763,9 @@ FUNCTION DoSampleCmd:Integer;
 
 Begin
 
-   MonitorClass.SampleAll;
+   DSSPrime.MonitorClass.SampleAll;
 
-   EnergyMeterClass.SampleAll;  // gets generators too
+   DSSPrime.EnergyMeterClass.SampleAll;  // gets generators too
 
 
 
@@ -779,7 +779,7 @@ FUNCTION DoSolveCmd:Integer;
 Begin
    // just invoke solution obj's editor to pick up parsing and execute rest of command
    ActiveSolutionObj := ActiveCircuit.Solution;
-   Result := SolutionClass.Edit;
+   Result := DSSPrime.SolutionClass.Edit;
 
 End;
 
@@ -1015,7 +1015,7 @@ Begin
        IF CompareText(Param,'solution')=0 THEN
          Begin
           // Assume active circuit solution IF not qualified
-          ActiveDSSClass := SolutionClass;
+          ActiveDSSClass := DSSPrime.SolutionClass;
           ActiveDSSObject := ActiveCircuit.Solution;
           IsSolution := TRUE;
          End
@@ -1499,7 +1499,7 @@ Begin
 
      IF CompareText(ObjName,'solution')=0 THEN
      Begin  // special for solution
-         ActiveDSSClass  := SolutionClass;
+         ActiveDSSClass  := DSSPrime.SolutionClass;
          ActiveDSSObject := ActiveCircuit.Solution;
      End ELSE
      Begin
@@ -1526,7 +1526,7 @@ FUNCTION DoResetMeters:Integer;
 
 Begin
      Result := 0;
-     EnergyMeterClass.ResetAll
+     DSSPrime.EnergyMeterClass.ResetAll
 End;
 
 
@@ -2881,14 +2881,14 @@ Begin
 
 
     Case  Param[1] of
-        'L': LoadShapeClass.TOPExport(ObjName);
-        'T': TshapeClass.TOPExport(ObjName);
+        'L': DSSPrime.LoadShapeClass.TOPExport(ObjName);
+        'T': DSSPrime.TshapeClass.TOPExport(ObjName);
         {
           'G': GrowthShapeClass.TOPExportAll;
           'T': TCC_CurveClass.TOPExportAll;
         }
     ELSE
-        MonitorClass.TOPExport(ObjName);
+        DSSPrime.MonitorClass.TOPExport(ObjName);
     End;
 
 
@@ -3412,7 +3412,7 @@ FUNCTION DoCloseDICmd:Integer;
 
 Begin
     Result  := 0;
-    EnergyMeterClass.CloseAllDIFiles;
+    DSSPrime.EnergyMeterClass.CloseAllDIFiles;
 End;
 
 FUNCTION DoADOScmd:Integer;
@@ -3889,7 +3889,7 @@ End;
 FUNCTION DoUpdateStorageCmd:Integer;
 
 Begin
-       StorageClass.UpdateAll;
+       DSSPrime.StorageClass.UpdateAll;
        Result := 0;
 End;
 

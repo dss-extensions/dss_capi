@@ -345,7 +345,8 @@ uses
     MathUtil,
     DSSClassDefs,
     DSSGlobals,
-    Utilities;
+    Utilities,
+    DSSHelper;
 
 const
 
@@ -824,23 +825,23 @@ begin
 
                 {Set loadshape objects;  returns nil If not valid}
                     propYEARLY:
-                        YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                        YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                     propDAILY:
-                        DailyShapeObj := LoadShapeClass.Find(DailyShape);
+                        DailyShapeObj := DSS.LoadShapeClass.Find(DailyShape);
                     propDUTY:
-                        DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                        DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
 
                     propTYEARLY:
-                        YearlyTShapeObj := TShapeClass.Find(YearlyTShape);
+                        YearlyTShapeObj := DSS.TShapeClass.Find(YearlyTShape);
                     propTDAILY:
-                        DailyTShapeObj := TShapeClass.Find(DailyTShape);
+                        DailyTShapeObj := DSS.TShapeClass.Find(DailyTShape);
                     propTDUTY:
-                        DutyTShapeObj := TShapeClass.Find(DutyTShape);
+                        DutyTShapeObj := DSS.TShapeClass.Find(DutyTShape);
 
                     propInvEffCurve:
-                        InverterCurveObj := XYCurveClass.Find(InverterCurve);
+                        InverterCurveObj := DSS.XYCurveClass.Find(InverterCurve);
                     propP_T_Curve:
-                        Power_TempCurveObj := XYCurveClass.Find(Power_TempCurve);
+                        Power_TempCurveObj := DSS.XYCurveClass.Find(Power_TempCurve);
 
                     propDEBUGTRACE:
                         if DebugTrace then
@@ -1412,7 +1413,7 @@ begin
 
     if Length(Spectrum) > 0 then
     begin
-        SpectrumObj := SpectrumClass.Find(Spectrum);
+        SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
         if SpectrumObj = NIL then
             DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
     end

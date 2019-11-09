@@ -97,7 +97,8 @@ uses
     YMatrix,
     Utilities,
     SolutionAlgs,
-    KLUSolve;
+    KLUSolve,
+    DSSHelper;
 
 function Circuit_Get_Name_AnsiString(): Ansistring; inline;
 begin
@@ -597,9 +598,9 @@ procedure Circuit_Sample(); CDECL;
 
 begin
 
-    MonitorClass.SampleAll;
+    DSSPrime.MonitorClass.SampleAll;
 
-    EnergyMeterClass.SampleAll;
+    DSSPrime.EnergyMeterClass.SampleAll;
 
 end;
 //------------------------------------------------------------------------------
@@ -1095,7 +1096,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Circuit_UpdateStorage(); CDECL;
 begin
-    StorageClass.UpdateAll;
+    DSSPrime.StorageClass.UpdateAll;
 end;
 //------------------------------------------------------------------------------
 function Circuit_Get_ParentPDElement(): Integer; CDECL;

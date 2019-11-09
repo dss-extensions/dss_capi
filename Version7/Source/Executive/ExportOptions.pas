@@ -34,7 +34,9 @@ uses
     DSSGlobals,
     ExportCIMXML,
     Utilities,
-    NamedObject;
+    NamedObject,
+    DSSClass,
+    DSSHelper;
 
 function AssignNewUUID(val: String): TUuid;
 begin
@@ -345,7 +347,7 @@ begin
             Parm2 := Parser.StrValue;
 
             if CompareTextShortest(ParamName, 'meter') = 0 then
-                pMeter := EnergyMeterClass.Find(Parm2);
+                pMeter := DSSPrime.EnergyMeterClass.Find(Parm2);
         end;
 
     end;
@@ -538,7 +540,7 @@ begin
                 end
                 else
                 begin
-                    pMon := MonitorClass.Find(Parm2);
+                    pMon := DSSPrime.MonitorClass.Find(Parm2);
                     if pMon <> NIL then
                     begin
                         pMon.TranslateToCSV(FALSE);

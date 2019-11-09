@@ -404,7 +404,8 @@ uses
     Windows,
 {$ENDIF}
     Math,
-    MemoryMap_Lib;
+    MemoryMap_Lib,
+    DSSHelper;
 
  //     {$DEFINE DEBUG}
 {$UNDEF DEBUG}
@@ -893,7 +894,7 @@ begin
 
     {Set Hasmeter flag for all cktelements}
         SetHasMeterFlag;
-        SensorClass.SetHasSensorFlag;  // Set all Sensor branch flags, too.
+        DSS.SensorClass.SetHasSensorFlag;  // Set all Sensor branch flags, too.
 
     // initialize the Checked Flag for all Buses
         for i := 1 to NumBuses do
@@ -962,9 +963,9 @@ begin
 
 
       // Reset Generator Objects, too
-    GeneratorClass.ResetRegistersAll;
-    StorageClass.ResetRegistersAll;
-    PVSystemClass.ResetRegistersAll;
+    DSS.GeneratorClass.ResetRegistersAll;
+    DSS.StorageClass.ResetRegistersAll;
+    DSS.PVSystemClass.ResetRegistersAll;
 
 
 end;
@@ -1003,9 +1004,9 @@ begin
     end;
 
       // Sample Generator ans Storage Objects, too
-    GeneratorClass.SampleAll;
-    StorageClass.SampleAll;  // samples energymeter part of storage elements (not update)
-    PVSystemClass.SampleAll;
+    DSS.GeneratorClass.SampleAll;
+    DSS.StorageClass.SampleAll;  // samples energymeter part of storage elements (not update)
+    DSS.PVSystemClass.SampleAll;
 
 end;
 
@@ -1299,7 +1300,7 @@ end;
 
 function TEnergyMeterObj.MakeVPhaseReportFileName: String;
 begin
-    Result := EnergyMeterClass.DI_Dir + PathDelim + Name + '_PhaseVoltageReport.CSV';
+    Result := DSSPrime.EnergyMeterClass.DI_Dir + PathDelim + Name + '_PhaseVoltageReport.CSV';
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1800,7 +1801,7 @@ begin
     end;
 
     FirstSampleAfterReset := FALSE;
-    if EnergyMeterClass.SaveDemandInterval then
+    if DSSPrime.EnergyMeterClass.SaveDemandInterval then
         WriteDemandIntervalData;
 end;
 
@@ -3195,7 +3196,7 @@ begin
 
 
      {Write Registers to Totals File}
-    with EnergyMeterClass do
+    with DSSPrime.EnergyMeterClass do
     begin
         WriteintoMemStr(EMT_MHandle, '"' + Self.Name + '"');
         for i := 1 to NumEMregisters do
@@ -3215,7 +3216,7 @@ begin
         if This_Meter_DIFileIsOpen then
             CloseDemandIntervalFile;
 
-        if (EnergyMeterClass.DI_Verbose) then
+        if (DSSPrime.EnergyMeterClass.DI_Verbose) then
         begin
 
             This_Meter_DIFileIsOpen := TRUE;
@@ -3270,7 +3271,7 @@ var
     end;
 
 begin
-    if EnergyMeterClass.DI_Verbose and This_Meter_DIFileIsOpen then
+    if DSSPrime.EnergyMeterClass.DI_Verbose and This_Meter_DIFileIsOpen then
     begin
         with ActiveCircuit.Solution do
             WriteintoMem(DI_MHandle, DynaVars.dblHour);
@@ -3280,7 +3281,7 @@ begin
     end;
 
       {Add to Class demand interval registers}
-    with EnergyMeterClass do
+    with DSSPrime.EnergyMeterClass do
         for i := 1 to NumEMRegisters do
             DI_RegisterTotals[i] := DI_RegisterTotals[i] + Derivatives[i] * TotalsMask[i];
 
@@ -3342,14 +3343,14 @@ begin
         if OverloadFileIsOpen then
         begin
             if OV_MHandle <> NIL then
-                CloseMHandler(OV_MHandle, EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads.CSV', OV_Append);
+                CloseMHandler(OV_MHandle, DSSPrime.EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads.CSV', OV_Append);
             OV_MHandle := NIL;
             OverloadFileIsOpen := FALSE;
         end;
         if VoltageFileIsOpen then
         begin
             if VR_MHandle <> NIL then
-                CloseMHandler(VR_MHandle, EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions.CSV', VR_Append);
+                CloseMHandler(VR_MHandle, DSSPrime.EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions.CSV', VR_Append);
             VR_MHandle := NIL;
             VoltageFileIsOpen := FALSE;
         end;
@@ -3368,7 +3369,7 @@ begin
         Exit;
 
     try
-        if Energymeterclass.FDI_Verbose then
+        if DSSPrime.Energymeterclass.FDI_Verbose then
         begin
             FileNm := MakeDIFileName;   // Creates directory if it doesn't exist
             if FileExists(FileNm) then
@@ -3464,7 +3465,7 @@ end;
 
 function TEnergyMeterObj.MakeDIFileName: String;
 begin
-    Result := EnergyMeterClass.DI_Dir + PathDelim + Self.Name + '.CSV';
+    Result := DSSPrime.EnergyMeterClass.DI_Dir + PathDelim + Self.Name + '.CSV';
 end;
 
 procedure TEnergyMeter.Set_SaveDemandInterval(const Value: Boolean);
@@ -3502,7 +3503,7 @@ begin
     begin
         if SeasonSignal <> '' then
         begin
-            RSignal := XYCurveClass.Find(SeasonSignal);
+            RSignal := DSS.XYCurveClass.Find(SeasonSignal);
             if RSignal <> NIL then
                 RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour))
             else
@@ -3659,7 +3660,7 @@ begin
         Exit;
 
     try
-        FileNm := EnergyMeterClass.Di_Dir + PathDelim + 'DI_SystemMeter.CSV';
+        FileNm := DSSPrime.EnergyMeterClass.Di_Dir + PathDelim + 'DI_SystemMeter.CSV';
         AssignFile(SystemDIFile, FileNm);
       {File Must Exist}
         if FileExists(FileNm) then
@@ -3699,7 +3700,7 @@ var
 begin
     if This_Meter_DIFileIsOpen then
     begin
-        File_Path := EnergyMeterClass.DI_Dir + PathDelim + 'DI_SystemMeter.CSV';
+        File_Path := DSSPrime.EnergyMeterClass.DI_Dir + PathDelim + 'DI_SystemMeter.CSV';
         CloseMHandler(SDI_MHandle, File_Path, SDI_Append);
         SDI_MHandle := NIL;
         This_Meter_DIFileIsOpen := FALSE;
@@ -3769,8 +3770,8 @@ begin
         CSVName := 'SystemMeter.CSV';
        {If we are doing a simulation and saving interval data, create this in the
         same directory as the demand interval data}
-        if energyMeterClass.SaveDemandInterval then
-            Folder := energyMeterClass.DI_DIR + PathDelim
+        if DSSPrime.energyMeterClass.SaveDemandInterval then
+            Folder := DSSPrime.energyMeterClass.DI_DIR + PathDelim
         else
             Folder := GetOutputDirectory;
         GlobalResult := CSVName;

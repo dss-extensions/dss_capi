@@ -202,7 +202,8 @@ uses
     Math,
     Solution,
     Dynamics,
-    XYCurve;
+    XYCurve,
+    DSSHelper;
 
 const
 
@@ -649,19 +650,19 @@ begin
                 end;
                 propYEARLY:
                 begin
-                    YearlyShapeObj := LoadShapeClass.Find(YearlyShape);
+                    YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                     if YearlyShapeObj = NIL then
                         DoSimpleMsg('Yearly loadshape "' + YearlyShape + '" not found.', 14404);
                 end;
                 propDAILY:
                 begin
-                    DailyShapeObj := LoadShapeClass.Find(DailyShape);
+                    DailyShapeObj := DSS.LoadShapeClass.Find(DailyShape);
                     if DailyShapeObj = NIL then
                         DoSimpleMsg('Daily loadshape "' + DailyShape + '" not found.', 14405);
                 end;
                 propDUTY:
                 begin
-                    DutyShapeObj := LoadShapeClass.Find(DutyShape);
+                    DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
                     if DutyShapeObj = NIL then
                         DoSimpleMsg('Dutycycle loadshape "' + DutyShape + '" not found.', 14406);
                 end
@@ -2182,7 +2183,7 @@ begin
         FleetPointerList.Clear;
         for i := 1 to FleetSize do
         begin
-            StorageObj := StorageClass.Find(FStorageNameList.Strings[i - 1]);
+            StorageObj := DSSPrime.StorageClass.Find(FStorageNameList.Strings[i - 1]);
             if Assigned(StorageObj) then
             begin
                 if StorageObj.Enabled then
@@ -2203,9 +2204,9 @@ begin
      {Search through the entire circuit for enabled Storage Elements and add them to the list}
         FStorageNameList.Clear;
         FleetPointerList.Clear;
-        for i := 1 to StorageClass.ElementCount do
+        for i := 1 to DSSPrime.StorageClass.ElementCount do
         begin
-            StorageObj := StorageClass.ElementList.Get(i);
+            StorageObj := DSSPrime.StorageClass.ElementList.Get(i);
         // Look for a storage element not already assigned
             if StorageObj.Enabled and (StorageObj.DispatchMode <> STORE_EXTERNALMODE) then
             begin

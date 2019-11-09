@@ -42,7 +42,9 @@ uses
     Executive,
     Capacitor,
     SysUtils,
-    PointerList;
+    PointerList,
+    DSSClass,
+    DSSHelper;
 
 function ActiveCapacitor: TCapacitorObj;
 begin
@@ -202,10 +204,10 @@ procedure Capacitors_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if ActiveCircuit = NIL then
         Exit;
-    if CapacitorClass.SetActive(Value) then
+    if DSSPrime.CapacitorClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := CapacitorClass.ElementList.Active;
-        ActiveCircuit.ShuntCapacitors.Get(CapacitorClass.Active);
+        ActiveCircuit.ActiveCktElement := DSSPrime.CapacitorClass.ElementList.Active;
+        ActiveCircuit.ShuntCapacitors.Get(DSSPrime.CapacitorClass.Active);
     end
     else
     begin
