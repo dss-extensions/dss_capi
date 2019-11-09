@@ -428,7 +428,7 @@ procedure TInvControl2.DefineProperties;
     PropertyName[24] := 'ActivePChangeTolerance';
     PropertyName[25] := 'monVoltageCalc';
     PropertyName[26] := 'monBus';
-    PropertyName[27] := 'FMonBusesVbase';
+    PropertyName[27] := 'MonBusesVbase';
     PropertyName[28] := 'voltwattCH_curve';
 
     PropertyHelp[1] := 'Array list (full qualified name) of PVSystem2 and/or Storage2 elements to be controlled.  Usually only one element is controlled by one InvControl2. '+CRLF+CRLF+
@@ -601,7 +601,7 @@ procedure TInvControl2.DefineProperties;
 
     PropertyHelp[26] := 'Name of monitored bus used by the voltage-dependente control modes. Default is bus of the controlled PVSystem2/Storage2 or Storage2.' ;
 
-    PropertyHelp[27] := 'Three-phase voltage in Volts.' ;
+    PropertyHelp[27] := 'Array list of rated voltages of the buses and their nodes presented in the monBus property. This list may have different line-to-line and/or line-to-ground voltages' ;
 
     PropertyHelp[28] := 'Required for VOLTWATT mode for Storage2 element in CHARGING state. '+CRLF+CRLF+
                         'The name of an XYCurve object that describes the variation in active power output (in per unit of maximum active power outut for the Storage2). '+CRLF+CRLF+
