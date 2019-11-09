@@ -192,7 +192,8 @@ uses
     PCElement,
     Sysutils,
     uCmatrix,
-    MathUtil;
+    MathUtil,
+    DSSHelper;
 
 const
 
@@ -320,7 +321,7 @@ end;
 function TRelay.NewObject(const ObjName: String): Integer;
 begin
     // Make a new Relay and add it to Relay class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TRelayObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -351,7 +352,7 @@ begin
 
   // continue parsing WITH contents of Parser
     ActiveRelayObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveRelayObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveRelayObj;
 
     Result := 0;
 
@@ -652,7 +653,7 @@ begin
     Devindex := GetCktElementIndex(MonitoredElementName); // Global function
     if DevIndex > 0 then
     begin
-        MonitoredElement := ActiveCircuit.CktElements.Get(DevIndex);
+        MonitoredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
         Nphases := MonitoredElement.NPhases;       // Force number of phases to be same
         if MonitoredElementTerminal > MonitoredElement.Nterms then
         begin
@@ -701,7 +702,7 @@ begin
     Devindex := GetCktElementIndex(ElementName); // Global function
     if DevIndex > 0 then
     begin  // Both CktElement and monitored element must already exist
-        ControlledElement := ActiveCircuit.CktElements.Get(DevIndex);
+        ControlledElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
         ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Make the 1 st terminal active
 
              // If the relay becomes disabled, leave at False
@@ -1064,7 +1065,7 @@ begin
         if (VarValue > OverTrip) or (VarValue < UnderTrip) then
         begin
             if not ArmedForOpen then  // push the trip operation and arm to trip
-                with ActiveCircuit do
+                with DSSPrime.ActiveCircuit do
                 begin
                     RelayTarget := TPCElement(MonitoredElement).VariableName(MonitorVarIndex);
                     LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + Delay_Time + Breaker_time, CTRL_OPEN, 0, Self);
@@ -1075,7 +1076,7 @@ begin
         else   {Within bounds}
         begin  {Less Than pickup value: reset if armed}
             if ArmedForOpen then    // We became unarmed, so reset and disarm
-                with ActiveCircuit do
+                with DSSPrime.ActiveCircuit do
                 begin
                     LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, Self);
                     ArmedForOpen := FALSE;
@@ -1111,7 +1112,7 @@ begin
         if NegSeqCurrentMag >= PickupAmps46 then
         begin
             if not ArmedForOpen then  // push the trip operation and arm to trip
-                with ActiveCircuit do
+                with DSSPrime.ActiveCircuit do
                 begin
                     RelayTarget := '-Seq Curr';
               {simple estimate of trip time assuming current will be constant}
@@ -1127,7 +1128,7 @@ begin
         else
         begin  {Less Than pickup value: reset if armed}
             if ArmedForOpen then    // We became unarmed, so reset and disarm
-                with ActiveCircuit do
+                with DSSPrime.ActiveCircuit do
                 begin
                     LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, Self);
                     ArmedForOpen := FALSE;
@@ -1241,7 +1242,7 @@ begin
             if TripTime > 0.0 then
             begin
                 if not ArmedForOpen then
-                    with ActiveCircuit do   // Then arm for an open operation
+                    with DSSPrime.ActiveCircuit do   // Then arm for an open operation
                     begin
                         RelayTarget := '';
                         if Phasetime > 0.0 then
@@ -1258,7 +1259,7 @@ begin
             else
             begin
                 if ArmedForOpen then
-                    with ActiveCircuit do    // If current dropped below pickup, disarm trip and set for reset
+                    with DSSPrime.ActiveCircuit do    // If current dropped below pickup, disarm trip and set for reset
                     begin
                         LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, Self);
                         ArmedForOpen := FALSE;
@@ -1290,7 +1291,7 @@ begin
             if Abs(S.Re) > PhaseInst * 1000.0 then
             begin
                 if not ArmedForOpen then  // push the trip operation and arm to trip
-                    with ActiveCircuit do
+                    with DSSPrime.ActiveCircuit do
                     begin
                         RelayTarget := 'Rev P';
                         LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + Delay_Time + Breaker_time, CTRL_OPEN, 0, Self);
@@ -1300,7 +1301,7 @@ begin
             end
             else
             if ArmedForOpen then    // We became unarmed, so reset and disarm
-                with ActiveCircuit do
+                with DSSPrime.ActiveCircuit do
                 begin
                     LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, Self);
                     ArmedForOpen := FALSE;
@@ -1382,7 +1383,7 @@ begin
                 end;
 
                 if TripTime > 0.0 then
-                    with ActiveCircuit do
+                    with DSSPrime.ActiveCircuit do
                     begin
 
                         if ArmedForOpen and ((Solution.DynaVars.t + TripTime + Breaker_time) < NextTripTime) then
@@ -1411,7 +1412,7 @@ begin
                 else
                 begin
                     if ArmedForOpen then
-                        with ActiveCircuit do    // If voltage dropped below pickup, disarm trip and set for reset
+                        with DSSPrime.ActiveCircuit do    // If voltage dropped below pickup, disarm trip and set for reset
                         begin
                             ControlQueue.Delete(LastEventHandle);  // Delete last event from Queue
                             NextTripTime := -1.0;
@@ -1426,7 +1427,7 @@ begin
                     if not ArmedForClose then
                     begin
                         if (Vmax > 0.9) then
-                            with ActiveCircuit do  // OK if voltage > 90%
+                            with DSSPrime.ActiveCircuit do  // OK if voltage > 90%
                             begin
                                 LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + RecloseIntervals^[OperationCount], CTRL_CLOSE, 0, Self);
                                 ArmedForClose := TRUE;
@@ -1461,7 +1462,7 @@ begin
         if NegSeqVoltageMag >= PickupVolts47 then
         begin
             if not ArmedForOpen then  // push the trip operation and arm to trip
-                with ActiveCircuit do
+                with DSSPrime.ActiveCircuit do
                 begin
                     RelayTarget := '-Seq V';
                     LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + Delay_Time + Breaker_time, CTRL_OPEN, 0, Self);
@@ -1472,7 +1473,7 @@ begin
         else
         begin  {Less Than pickup value: reset if armed}
             if ArmedForOpen then    // We became unarmed, so reset and disarm
-                with ActiveCircuit do
+                with DSSPrime.ActiveCircuit do
                 begin
                     LastEventHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, Self);
                     ArmedForOpen := FALSE;

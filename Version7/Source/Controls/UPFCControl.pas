@@ -99,7 +99,8 @@ uses
     Sysutils,
     uCmatrix,
     MathUtil,
-    Math;
+    Math,
+    DSSHelper;
 
 const
 
@@ -168,7 +169,7 @@ end;
 function TUPFCControl.NewObject(const ObjName: String): Integer;
 begin
     // Make a new UPFCControl and add it to UPFCControl class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TUPFCControlObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -187,7 +188,7 @@ begin
 
   // continue parsing WITH contents of Parser
     ActiveUPFCControlObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveUPFCControlObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveUPFCControlObj;
 
     Result := 0;
 
@@ -355,7 +356,7 @@ begin
     Devindex := GetCktElementIndex(ElementName); // Global function
     if DevIndex > 0 then
     begin
-        MonitoredElement := ActiveCircuit.CktElements.Get(DevIndex);
+        MonitoredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
         if ElementTerminal > MonitoredElement.Nterms then
         begin
             DoErrorMsg('UPFCControl: "' + Name + '"',
@@ -500,7 +501,7 @@ begin
         end;
 
         if GenkWChanged or Genkvarchanged then  // Only push onto controlqueue if there has been a change
-            with ActiveCircuit, ActiveCircuit.Solution do
+            with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
             begin
                 LoadsNeedUpdating := TRUE; // Force recalc of power parms
             // Push present time onto control queue to force re solve at new dispatch value

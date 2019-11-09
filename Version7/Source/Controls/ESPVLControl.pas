@@ -219,7 +219,7 @@ end;
 function TESPVLControl.NewObject(const ObjName: String): Integer;
 begin
     // Make a new ESPVLControl and add it to ESPVLControl class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TESPVLControlObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -238,7 +238,7 @@ begin
 
   // continue parsing WITH contents of Parser
     ActiveESPVLControlObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveESPVLControlObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveESPVLControlObj;
 
     Result := 0;
 
@@ -445,7 +445,7 @@ begin
     Devindex := GetCktElementIndex(ElementName); // Global function
     if DevIndex > 0 then
     begin
-        MonitoredElement := ActiveCircuit.CktElements.Get(DevIndex);
+        MonitoredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
         if ElementTerminal > MonitoredElement.Nterms then
         begin
             DoErrorMsg('ESPVLControl: "' + Name + '"',

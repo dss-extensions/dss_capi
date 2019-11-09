@@ -192,12 +192,12 @@ begin
     case ParamPointer of
         4, 6, 8..10, 12, 13..17, 19..23, 29..31:
         begin
-            if not assigned(ActiveCircuit) then
+            if not assigned(DSSPrime.ActiveCircuit) then
             begin
                 DoSimpleMsg('No circuit created.', 24701);
                 Exit;
             end;
-            if not assigned(ActiveCircuit.Solution) or not assigned(ActiveCircuit.Solution.NodeV) then
+            if not assigned(DSSPrime.ActiveCircuit.Solution) or not assigned(DSSPrime.ActiveCircuit.Solution.NodeV) then
             begin
                 DoSimpleMsg('The circuit must be solved before you can do this.', 24702);
                 Exit;
@@ -247,7 +247,7 @@ begin
             ShowCurrents(GetOutputDirectory + DSSPrime.CircuitName_ + FilName + '.Txt', ShowResid, ShowOptionCode);
         end;
         4:
-            ActiveCircuit.Solution.WriteConvergenceReport(GetOutputDirectory + DSSPrime.CircuitName_ + 'Convergence.TXT');
+            DSSPrime.ActiveCircuit.Solution.WriteConvergenceReport(GetOutputDirectory + DSSPrime.CircuitName_ + 'Convergence.TXT');
         5:
         begin
             ParamName := Parser.NextParam;   // Look for another param
@@ -422,9 +422,9 @@ begin
         end;
 
         25:
-            if ActiveCircuit <> NIL then
+            if DSSPrime.ActiveCircuit <> NIL then
             begin  {Yprim}
-                with ActiveCircuit.ActiveCktElement do
+                with DSSPrime.ActiveCircuit.ActiveCktElement do
                     ShowYprim(GetOutputDirectory + ParentClass.name + '_' + name + '_Yprim.txt');
             end;
 
@@ -433,8 +433,8 @@ begin
             ShowY(GetOutputDirectory + DSSPrime.CircuitName_ + 'SystemY.txt');
         end;
         27:
-            if ActiveCircuit <> NIL then
-                ActiveCircuit.ControlQueue.ShowQueue(GetOutputDirectory + DSSPrime.CircuitName_ + 'ControlQueue.csv');
+            if DSSPrime.ActiveCircuit <> NIL then
+                DSSPrime.ActiveCircuit.ControlQueue.ShowQueue(GetOutputDirectory + DSSPrime.CircuitName_ + 'ControlQueue.csv');
         28:
             ShowTopology(GetOutputDirectory + DSSPrime.CircuitName_);
         29:

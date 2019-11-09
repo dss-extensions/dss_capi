@@ -43,7 +43,7 @@ unit Executive;
 interface
 
 USES
-      PointerList, Command;
+      PointerList, Command, DSSClass;
 
 
 
@@ -62,9 +62,9 @@ TYPE
     procedure Set_RecorderOn(const Value: Boolean);
 
      public
-
+         DSS: TDSS;
          RecorderFile: TextFile;
-         constructor Create;
+         constructor Create(dss: TDSS);
          destructor  Destroy; override;
 
          PROCEDURE CreateDefaultDSSItems;
@@ -88,16 +88,23 @@ implementation
 
 USES ExecCommands, ExecOptions,
      {ExecHelper,} DSSClassDefs, DSSGlobals, ParserDel,  SysUtils,
-     Utilities, Solution, DSSClass, IniRegSave,
+     Utilities, Solution, DSSHelper, IniRegSave,
      {$IFDEF FPC} CmdForms{$ELSE} DSSForms{$ENDIF};
 
 
 //----------------------------------------------------------------------------
-Constructor TExecutive.Create;
+Constructor TExecutive.Create(dss: TDSS);
 Begin
      Inherited Create;
 
-
+     DSS := dss;
+     
+     if DSS = NIL then
+     begin
+          // TODO: tweak/remove this
+          DSS := TDSS.Create;
+          DSSPrime := DSS;
+     end;
      // Exec Commands
      CommandList := TCommandList.Create(ExecCommand);
 
@@ -105,11 +112,11 @@ Begin
      OptionList := TCommandList.Create(ExecOption);
 
      {Instantiate All DSS Classe Definitions, Intrinsic and User-defined}
-     CreateDSSClasses(DSSPrime);     // in DSSGlobals
+     CreateDSSClasses(DSS);     // in DSSGlobals
 
-     DSSPrime.Circuits := TPointerList.Create(2);   // default buffer for 2 active circuits
-     DSSPrime.NumCircuits := 0;
-     ActiveCircuit := nil;
+     DSS.Circuits := TPointerList.Create(2);   // default buffer for 2 active circuits
+     DSS.NumCircuits := 0;
+     DSS.ActiveCircuit := nil;
 
      Parser := TParser.Create;  // Create global parser object (in DSS globals)
 
@@ -140,13 +147,13 @@ Begin
      WriteDSS_Registry;
 {$ENDIF}
 
-     ClearAllCircuits;
+     ClearAllCircuits(DSS);
 
      CommandList.Free;
      OptionList.Free;
-     DSSPrime.Circuits.Free;
+     DSS.Circuits.Free;
 
-     DisposeDSSClasses(DSSPrime);
+     DisposeDSSClasses(DSS);
 
      Parser.Free;
 
@@ -157,13 +164,13 @@ End;
 FUNCTION TExecutive.Get_LastError:String;
 
 Begin
-     Result := DSSPrime.LastErrorMessage;
+     Result := DSS.LastErrorMessage;
 End;
 
 //----------------------------------------------------------------------------
 FUNCTION TExecutive.Get_ErrorResult:Integer;
 Begin
-     Result := DSSPrime.ErrorNumber;
+     Result := DSS.ErrorNumber;
 End;
 
 
@@ -177,7 +184,7 @@ Begin
 
 { this load shape used for generator dispatching, etc.   Loads may refer to it, also.}
    Command := 'new loadshape.default npts=24 1.0 mult=(.677 .6256 .6087 .5833 .58028 .6025 .657 .7477 .832 .88 .94 .989 .985 .98 .9898 .999 1 .958 .936 .913 .876 .876 .828 .756)';
-   IF DSSPrime.CmdResult = 0 THEN Begin
+   IF DSS.CmdResult = 0 THEN Begin
        Command := 'new growthshape.default 2 year="1 20" mult=(1.025 1.025)';  // 20 years at 2.5%
        Command := 'new spectrum.default 7  Harmonic=(1 3 5 7 9 11 13)  %mag=(100 33 20 14 11 9 7) Angle=(0 0 0 0 0 0 0)';
        Command := 'new spectrum.defaultload 7  Harmonic=(1 3 5 7 9 11 13)  %mag=(100 1.5 20 14 1 9 7) Angle=(0 180 180 180 180 180 180)';
@@ -210,15 +217,15 @@ end;
 
 procedure TExecutive.Clear;
 begin
-       IF (DSSPrime.NumCircuits > 0)  THEN
+       IF (DSS.NumCircuits > 0)  THEN
        Begin
 
           {First get rid of all existing stuff}
-          ClearAllCircuits;
-          DisposeDSSClasses(DSSPrime);
+          ClearAllCircuits(DSS);
+          DisposeDSSClasses(DSS);
 
           {Now, Start over}
-          CreateDSSClasses(DSSPrime);
+          CreateDSSClasses(DSS);
           CreateDefaultDSSItems;
           RebuildHelpForm := True; // because class strings have changed
        End;
@@ -246,7 +253,7 @@ begin
   End Else If FRecorderOn Then Begin
       CloseFile(RecorderFile);
   End;
-  DSSPrime.GlobalResult := FRecorderFile;
+  DSS.GlobalResult := FRecorderFile;
   FRecorderOn := Value;
 end;
 

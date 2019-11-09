@@ -113,7 +113,8 @@ uses
     Circuit,
     Sysutils,
     uCmatrix,
-    MathUtil;
+    MathUtil,
+    DSSHelper;
 
 const
 
@@ -209,7 +210,7 @@ end;
 function TFuse.NewObject(const ObjName: String): Integer;
 begin
     // Make a new Fuse and add it to Fuse class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TFuseObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -230,7 +231,7 @@ begin
 
   // continue parsing WITH contents of Parser
     ActiveFuseObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveFuseObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveFuseObj;
 
     Result := 0;
 
@@ -405,7 +406,7 @@ begin
     Devindex := GetCktElementIndex(MonitoredElementName); // Global function
     if DevIndex > 0 then
     begin
-        MonitoredElement := ActiveCircuit.CktElements.Get(DevIndex);
+        MonitoredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
         Nphases := MonitoredElement.NPhases;       // Force number of phases to be same
         if Fnphases > FUSEMAXDIM then
             DosimpleMsg('Warning: Fuse ' + Self.Name + ': Number of phases > Max fuse dimension.', 404);
@@ -434,7 +435,7 @@ begin
     Devindex := GetCktElementIndex(ElementName); // Global function
     if DevIndex > 0 then
     begin  // Both CktElement and monitored element must already exist
-        ControlledElement := ActiveCircuit.CktElements.Get(DevIndex);
+        ControlledElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
         ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Make the 1 st terminal active
 
         if Enabled then
@@ -572,7 +573,7 @@ begin
                 if TripTime > 0.0 then
                 begin
                     if not ReadyToBlow[i] then
-                        with ActiveCircuit do
+                        with DSSPrime.ActiveCircuit do
                         begin  // Then arm for an open operation
                             hAction[i] := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + Delaytime, i, 0, Self);
                             ReadyToBlow[i] := TRUE;
@@ -582,7 +583,7 @@ begin
                 begin
                     if ReadyToBlow[i] then
                     begin  //  Current has dropped below pickup and it hasn't blown yet
-                        ActiveCircuit.ControlQueue.Delete(hAction[i]);  // Delete the fuse blow action
+                        DSSPrime.ActiveCircuit.ControlQueue.Delete(hAction[i]);  // Delete the fuse blow action
                         ReadyToBlow[i] := FALSE;
                     end;
                 end;

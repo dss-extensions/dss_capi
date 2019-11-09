@@ -333,7 +333,7 @@ end;
 function TLine.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TLineObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -572,7 +572,7 @@ begin
     Result := 0;
   // continue parsing with contents of Parser
     ActiveLineObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveLineObj;  // use property to set this value
+    DSS.ActiveCircuit.ActiveCktElement := ActiveLineObj;  // use property to set this value
 
     with ActiveLineObj do
     begin
@@ -1017,10 +1017,10 @@ begin
 
     Ztemp := CmulReal(cmplx(R1, X1), 2.0);
     {Handle special case for 1-phase line and/or pos seq model }
-    if (FnPhases = 1) or ActiveCircuit.PositiveSequence then
+    if (FnPhases = 1) or DSSPrime.ActiveCircuit.PositiveSequence then
     begin
       // long-line equivalent PI, but only for CktModel=Positive
-        if ActiveCircuit.PositiveSequence and (C1 > 0) then
+        if DSSPrime.ActiveCircuit.PositiveSequence and (C1 > 0) then
         begin
             DoLongLine(BaseFrequency);  // computes R1, X1, C1  per unit length
         end;
@@ -1108,7 +1108,7 @@ begin
         if GeometrySpecified then
         begin
 
-            FMakeZFromGeometry(ActiveCircuit.Solution.Frequency); // Includes length in proper units
+            FMakeZFromGeometry(DSSPrime.ActiveCircuit.Solution.Frequency); // Includes length in proper units
             if DSSPrime.SolutionAbort then
                 Exit;
 
@@ -1117,7 +1117,7 @@ begin
         if SpacingSpecified then
         begin
 
-            FMakeZFromSpacing(ActiveCircuit.Solution.Frequency); // Includes length in proper units
+            FMakeZFromSpacing(DSSPrime.ActiveCircuit.Solution.Frequency); // Includes length in proper units
             if DSSPrime.SolutionAbort then
                 Exit;
 
@@ -1126,7 +1126,7 @@ begin
         begin  // Z is from line code or specified in line data
                // In this section Z is assumed in ohms per unit length
             LengthMultiplier := Len / FUnitsConvert;   // convert to per unit length
-            FYprimFreq := ActiveCircuit.Solution.Frequency;
+            FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
             FreqMultiplier := FYprimFreq / BaseFrequency;
 
                { Put in Series RL }
@@ -1151,7 +1151,7 @@ begin
       {At this point have Z and Zinv in proper values including length}
       {If GIC simulation, convert Zinv back to sym components, R Only }
 
-        if ActiveCircuit.Solution.Frequency < 0.51 then     // 0.5 Hz is cutoff
+        if DSSPrime.ActiveCircuit.Solution.Frequency < 0.51 then     // 0.5 Hz is cutoff
             ConvertZinvToPosSeqR;
 
 
@@ -1193,7 +1193,7 @@ begin
             AddElement(i, i, CAP_EPSILON);
 
      // Now Build the Shunt admittances and add into YPrim
-    if ActiveCircuit.Solution.Frequency > 0.51 then   // Skip Capacitance for GIC
+    if DSSPrime.ActiveCircuit.Solution.Frequency > 0.51 then   // Skip Capacitance for GIC
         with YPrim_Shunt do
         begin
 
@@ -1510,7 +1510,7 @@ begin
         begin
             k := (i - 1) * Fnphases + 1;
             for j := 0 to 2 do
-                Vph[j] := ActiveCircuit.Solution.NodeV^[NodeRef^[k + j]];
+                Vph[j] := DSSPrime.ActiveCircuit.Solution.NodeV^[NodeRef^[k + j]];
             Phase2SymComp(@Vph, @V012);
             Phase2SymComp(@Iterminal^[k], @I012);
             Caccum(PosSeqLosses, Cmul(V012[1], Conjg(I012[1])));
@@ -1684,10 +1684,10 @@ begin
             i := 1;
             while (Common1 = 0) and (i <= 2) do
             begin
-                TestBusNum := ActiveCircuit.MapNodeToBus^[NodeRef^[1 + (i - 1) * Fnconds]].BusRef;
+                TestBusNum := DSSPrime.ActiveCircuit.MapNodeToBus^[NodeRef^[1 + (i - 1) * Fnconds]].BusRef;
                 for j := 1 to 2 do
                 begin
-                    if ActiveCircuit.MapNodeToBus^[OtherLine.NodeRef^[1 + (j - 1) * OtherLine.Nconds]].BusRef = TestBusNum then
+                    if DSSPrime.ActiveCircuit.MapNodeToBus^[OtherLine.NodeRef^[1 + (j - 1) * OtherLine.Nconds]].BusRef = TestBusNum then
                     begin
                         Common1 := i;
                         Common2 := j;
@@ -1873,7 +1873,7 @@ var
     pControlElem: TControlElem;
 begin
 
-    pControlElem := ActiveCircuit.DSSControls.First;
+    pControlElem := DSSPrime.ActiveCircuit.DSSControls.First;
     while pControlElem <> NIL do
     begin
         if CompareText(OldName, pControlElem.ElementName) = 0 then
@@ -1881,7 +1881,7 @@ begin
             Parser.cmdstring := ' Element=' + NewName;  // Change name of the property
             pControlElem.Edit;
         end;
-        pControlElem := ActiveCircuit.DSSControls.Next;
+        pControlElem := DSSPrime.ActiveCircuit.DSSControls.Next;
     end;
 end;
 

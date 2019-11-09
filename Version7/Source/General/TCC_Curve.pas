@@ -92,7 +92,8 @@ uses
     Sysutils,
     Ucomplex,
     MathUtil,
-    Utilities;
+    Utilities,
+    DSSHelper;
 
 const
     NumPropsThisClass = 3;
@@ -154,7 +155,7 @@ end;
 function TTCC_Curve.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveDSSObject := TTCC_CurveObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);

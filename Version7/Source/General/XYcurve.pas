@@ -143,7 +143,8 @@ uses
     Utilities,
     Classes,
     Math,
-    PointerList;
+    PointerList,
+    DSSHelper;
 
 const
     NumPropsThisClass = 13;
@@ -240,7 +241,7 @@ end;
 function TXYcurve.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveDSSObject := TXYcurveObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);

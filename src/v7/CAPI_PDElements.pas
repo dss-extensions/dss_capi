@@ -43,8 +43,8 @@ uses
 function PDElements_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             Result := PDElements.ListSize;
         end;
@@ -55,8 +55,8 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin
@@ -71,8 +71,8 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             ActivePDElement := PDElements.First;
             if ActivePDElement <> NIL then
@@ -95,8 +95,8 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := FALSE;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin
@@ -111,8 +111,8 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             ActivePDElement := PDElements.Next;
             if ActivePDElement <> NIL then
@@ -135,8 +135,8 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin
@@ -150,8 +150,8 @@ procedure PDElements_Set_FaultRate(Value: Double); CDECL;
 var
     ActivePDElement: TPDElement;
 begin
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin
@@ -165,8 +165,8 @@ procedure PDElements_Set_pctPermanent(Value: Double); CDECL;
 var
     ActivePDElement: TPDElement;
 begin
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin
@@ -181,8 +181,8 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := '';   // return null if not a PD element
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin
@@ -204,8 +204,8 @@ var
     TestString: String;
 
 begin
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             TestString := Value;
           // Search through list of PD Elements until we find this one
@@ -228,8 +228,8 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin
@@ -245,8 +245,8 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin
@@ -262,8 +262,8 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin
@@ -279,8 +279,8 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin
@@ -299,8 +299,8 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin
@@ -315,8 +315,8 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin
@@ -331,8 +331,8 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin
@@ -351,8 +351,8 @@ var
 
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin
@@ -368,8 +368,8 @@ var
 
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin
@@ -384,8 +384,8 @@ procedure PDElements_Set_RepairTime(Value: Double); CDECL;
 var
     ActivePDElement: TPDElement;
 begin
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement is TPDElement then
             begin

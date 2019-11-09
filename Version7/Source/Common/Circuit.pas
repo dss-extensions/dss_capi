@@ -409,7 +409,7 @@ BEGIN
      MapNodeToBus := Allocmem(Sizeof(MapNodeToBus^[1]) * MaxNodes);
      DeviceRef    := AllocMem(SizeOf(DeviceRef^[1])    * MaxDevices);
 
-     ControlQueue := TControlQueue.Create;
+     ControlQueue := TControlQueue.Create(DSS);
 
      LegalVoltageBases := AllocMem(SizeOf(LegalVoltageBases^[1]) * 8);
      // Default Voltage Bases
@@ -1109,9 +1109,9 @@ VAR
 Begin
 
   setlength(NBuses,2);
-  IF ActiveCircuit <> NIL THEN
+  IF DSS.ActiveCircuit <> NIL THEN // TODO: check why this is not using self
   Begin      // Search list of Lines in active circuit for name
-    WITH ActiveCircuit.Lines DO
+    WITH DSS.ActiveCircuit.Lines DO
     Begin
       S := LName;  // Convert to Pascal String
       Found := FALSE;
@@ -1121,7 +1121,7 @@ Begin
       Begin
         IF (CompareText(pLine.Name, S) = 0) THEN
         Begin
-          ActiveCircuit.ActiveCktElement := pLine;
+          DSS.ActiveCircuit.ActiveCktElement := pLine;
           Found := TRUE;
           Break;
         End;
@@ -1131,11 +1131,11 @@ Begin
       Begin
         DoSimpleMsg('Line "'+S+'" Not Found in Active Circuit.', 5008);
         pLine := Get(ActiveSave);    // Restore active Line
-        ActiveCircuit.ActiveCktElement := pLine;
+        DSS.ActiveCircuit.ActiveCktElement := pLine;
       End;
     End;
-    For i := 1 to  ActiveCircuit.ActiveCktElement.Nterms Do
-        NBuses[i-1] := ActiveCircuit.ActiveCktElement.GetBus(i);
+    For i := 1 to  DSS.ActiveCircuit.ActiveCktElement.Nterms Do
+        NBuses[i-1] := DSS.ActiveCircuit.ActiveCktElement.GetBus(i);
     // returns the name of the desired bus
     Result  :=  NBuses[NBus - 1];
   End;

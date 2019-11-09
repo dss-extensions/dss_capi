@@ -86,7 +86,8 @@ uses
     DSSGlobals,
     Sysutils,
     Ucomplex,
-    Utilities;
+    Utilities,
+    DSSHelper;
 
 const
     NumPropsThisClass = 37;
@@ -241,7 +242,7 @@ end;
 function TXfmrCode.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         ActiveDSSObject := TXfmrCodeObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);

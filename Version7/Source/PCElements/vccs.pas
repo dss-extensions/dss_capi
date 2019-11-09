@@ -208,7 +208,7 @@ end;
 
 function TVCCS.NewObject(const ObjName: String): Integer;
 begin
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TVCCSObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -223,7 +223,7 @@ var
 begin
   // continue parsing with contents of Parser
     ActiveVCCSObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveVCCSObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveVCCSObj;
     Result := 0;
 
     with ActiveVCCSObj do

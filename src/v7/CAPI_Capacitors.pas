@@ -49,15 +49,15 @@ uses
 function ActiveCapacitor: TCapacitorObj;
 begin
     Result := NIL;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.ShuntCapacitors.Active;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.ShuntCapacitors.Active;
 end;
 //------------------------------------------------------------------------------
 procedure Set_Parameter(const parm: String; const val: String);
 var
     cmd: String;
 begin
-    if not Assigned(ActiveCircuit) then
+    if not Assigned(DSSPrime.ActiveCircuit) then
         exit;
     DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('capacitor.%s.%s=%s', [ActiveCapacitor.Name, parm, val]);
@@ -70,9 +70,9 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.ShuntCapacitors, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.ShuntCapacitors, False);
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_First(): Integer; CDECL;
@@ -81,16 +81,16 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        lst := ActiveCircuit.ShuntCapacitors;
+        lst := DSSPrime.ActiveCircuit.ShuntCapacitors;
         elem := lst.First;
         if elem <> NIL then
         begin
             repeat
                 if elem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := elem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
                     Result := 1;
                 end
                 else
@@ -152,16 +152,16 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        lst := ActiveCircuit.ShuntCapacitors;
+        lst := DSSPrime.ActiveCircuit.ShuntCapacitors;
         elem := lst.Next;
         if elem <> NIL then
         begin
             repeat
                 if elem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := elem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
                     Result := lst.ActiveIndex;
                 end
                 else
@@ -202,12 +202,12 @@ end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     if DSSPrime.CapacitorClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := DSSPrime.CapacitorClass.ElementList.Active;
-        ActiveCircuit.ShuntCapacitors.Get(DSSPrime.CapacitorClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.CapacitorClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.ShuntCapacitors.Get(DSSPrime.CapacitorClass.Active);
     end
     else
     begin
@@ -223,8 +223,8 @@ end;
 function Capacitors_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.ShuntCapacitors.ListSize;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.ShuntCapacitors.ListSize;
 end;
 //------------------------------------------------------------------------------
 function Capacitors_AddStep(): Boolean; CDECL;
@@ -263,7 +263,7 @@ var
 begin
     Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
     Result[0] := -1;     // error code
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         Elem := ActiveCapacitor;
         if Elem <> NIL then
@@ -325,8 +325,8 @@ var
     i: Integer;
 begin
 
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
         begin
             elem := ActiveCapacitor;
             if elem <> NIL then
@@ -345,8 +345,8 @@ var
     i: Integer;
 begin
 
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
         begin
             elem := ActiveCapacitor;
             if elem <> NIL then
@@ -362,8 +362,8 @@ end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.ShuntCapacitors.ActiveIndex
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.ShuntCapacitors.ActiveIndex
     else
         Result := 0
 end;
@@ -372,15 +372,15 @@ procedure Capacitors_Set_idx(Value: Integer); CDECL;
 var
     pCapacitor: TCapacitorObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pCapacitor := ActiveCircuit.ShuntCapacitors.Get(Value);
+    pCapacitor := DSSPrime.ActiveCircuit.ShuntCapacitors.Get(Value);
     if pCapacitor = NIL then
     begin
         DoSimpleMsg('Invalid Capacitor index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pCapacitor;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pCapacitor;
 end;
 //------------------------------------------------------------------------------
 end.

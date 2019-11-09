@@ -50,7 +50,7 @@ function CommonReduceCktChecks(): Boolean; inline;
 begin
     Result := False;
     
-    if ActiveCircuit = NIL then 
+    if DSSPrime.ActiveCircuit = NIL then 
         Exit;
     
     if DSSPrime.EnergyMeterClass.SetActive(EnergyMeterName) then
@@ -67,26 +67,26 @@ end;
 //------------------------------------------------------------------------------
 function ReduceCkt_Get_Zmag(): Double; CDECL;
 begin
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.ReductionZmag
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.ReductionZmag
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_Set_Zmag(Value: Double); CDECL;
 begin
-    if Assigned(ActiveCircuit) then
-        ActiveCircuit.ReductionZmag := Value;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        DSSPrime.ActiveCircuit.ReductionZmag := Value;
 end;
 //------------------------------------------------------------------------------
 function ReduceCkt_Get_KeepLoad(): Boolean; CDECL;
 begin
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.ReduceLateralsKeepLoad;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.ReduceLateralsKeepLoad;
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_Set_KeepLoad(Value: Boolean); CDECL;
 begin
-    if Assigned(ActiveCircuit) then
-        ActiveCircuit.ReduceLateralsKeepLoad := Value;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        DSSPrime.ActiveCircuit.ReduceLateralsKeepLoad := Value;
 end;
 //------------------------------------------------------------------------------
 function ReduceCkt_Get_EditString(): PAnsiChar; CDECL;
@@ -146,14 +146,14 @@ end;
 procedure ReduceCkt_DoBranchRemove(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    if ActiveCircuit.SetElementActive(FirstPDelement) < 0 then 
+    if DSSPrime.ActiveCircuit.SetElementActive(FirstPDelement) < 0 then 
         Exit;
     
     // element was found (0-based array)
     DoRemoveBranches(
         ActiveEnergyMeterObj.BranchList, 
-        ActiveCircuit.ActiveCktElement as TPDElement, 
-        ActiveCircuit.ReduceLateralsKeepLoad, 
+        DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement, 
+        DSSPrime.ActiveCircuit.ReduceLateralsKeepLoad, 
         ReduceEditString
     );
 end;

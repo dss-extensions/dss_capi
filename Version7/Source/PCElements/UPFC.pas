@@ -231,7 +231,7 @@ end;
 function TUPFC.NewObject(const ObjName: String): Integer;
 begin
     // Make a new voltage source and add it to UPFC class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TUPFCObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -253,7 +253,7 @@ var
 begin
   // continue parsing with contents of Parser
     ActiveUPFCObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveUPFCObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveUPFCObj;
 
     Result := 0;
 
@@ -528,7 +528,7 @@ begin
         YPrim.Clear;
     end;
 
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
      { Put in Series RL Adjusted for frequency }
@@ -637,7 +637,7 @@ var
 begin
 
     try
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
             UPFCON := TRUE;
         VinMag := cabs(Vbin);
         if (VinMag > VHLimit) or (VinMag < VLLimit) then
@@ -844,7 +844,7 @@ var
 begin
 
     try
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
   {Get first Phase Current}
             if UPFCON then
             begin
@@ -961,7 +961,7 @@ var
     i: Integer;
 begin
 
-    with ActiveCircuit.solution do
+    with DSSPrime.ActiveCircuit.solution do
     begin
         for i := 1 to fnphases do
         begin
@@ -986,7 +986,7 @@ var
 
 begin
     try
-        with    ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
             ComputeVTerminal;
 
@@ -1051,7 +1051,7 @@ begin
     PropertyValue[2] := GetBus(2);
     PropertyValue[3] := '0.24';
     PropertyValue[4] := '1';
-    PropertyValue[5] := Format('%d', [Round(ActiveCircuit.Fundamental)]);
+    PropertyValue[5] := Format('%d', [Round(DSSPrime.ActiveCircuit.Fundamental)]);
     PropertyValue[6] := '3';
     PropertyValue[7] := '0.7540';  // 2mH inductance
     PropertyValue[8] := '0.02';

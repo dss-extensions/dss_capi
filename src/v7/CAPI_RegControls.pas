@@ -77,15 +77,15 @@ uses
 function ActiveRegControl: TRegControlObj;
 begin
     Result := NIL;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.RegControls.Active;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.RegControls.Active;
 end;
 //------------------------------------------------------------------------------
 procedure Set_Parameter(const parm: String; const val: String);
 var
     cmd: String;
 begin
-    if not Assigned(ActiveCircuit) then
+    if not Assigned(DSSPrime.ActiveCircuit) then
         exit;
     DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('regcontrol.%s.%s=%s', [ActiveRegControl.Name, parm, val]);
@@ -98,9 +98,9 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.RegControls, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.RegControls, False);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_CTPrimary(): Double; CDECL;
@@ -129,16 +129,16 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        lst := ActiveCircuit.RegControls;
+        lst := DSSPrime.ActiveCircuit.RegControls;
         elem := lst.First;
         if elem <> NIL then
         begin
             repeat
                 if elem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := elem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
                     Result := 1;
                 end
                 else
@@ -256,16 +256,16 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        lst := ActiveCircuit.RegControls;
+        lst := DSSPrime.ActiveCircuit.RegControls;
         elem := lst.Next;
         if elem <> NIL then
         begin
             repeat
                 if elem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := elem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
                     Result := lst.ActiveIndex;
                 end
                 else
@@ -448,12 +448,12 @@ end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     if DSSPrime.RegControlClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := DSSPrime.RegControlClass.ElementList.Active;
-        ActiveCircuit.RegControls.Get(DSSPrime.RegControlClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.RegControlClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.RegControls.Get(DSSPrime.RegControlClass.Active);
     end
     else
     begin
@@ -519,8 +519,8 @@ end;
 function RegControls_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(Activecircuit) then
-        Result := ActiveCircuit.RegControls.ListSize;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.RegControls.ListSize;
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Reset(); CDECL;
@@ -537,8 +537,8 @@ end;
 //------------------------------------------------------------------------------
 function RegControls_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.RegControls.ActiveIndex
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.RegControls.ActiveIndex
     else
         Result := 0;
 end;
@@ -547,15 +547,15 @@ procedure RegControls_Set_idx(Value: Integer); CDECL;
 var
     pRegControl: TRegControlObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pRegControl := ActiveCircuit.RegControls.Get(Value);
+    pRegControl := DSSPrime.ActiveCircuit.RegControls.Get(Value);
     if pRegControl = NIL then
     begin
         DoSimpleMsg('Invalid RegControl index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pRegControl;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pRegControl;
 end;
 //------------------------------------------------------------------------------
 end.

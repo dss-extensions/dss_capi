@@ -150,7 +150,8 @@ uses
     DSSGlobals,
     Sysutils,
     Ucomplex,
-    Utilities;
+    Utilities,
+    DSSHelper;
 
 const
     NumPropsThisClass = 13;
@@ -242,7 +243,7 @@ end;
 function TCapacitor.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TCapacitorObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -358,7 +359,7 @@ begin
     Result := 0;
   // continue parsing with contents of Parser
     ActiveCapacitorObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveCapacitorObj;  // use property to set this value
+    DSS.ActiveCircuit.ActiveCktElement := ActiveCapacitorObj;  // use property to set this value
 
 
     with ActiveCapacitorObj do
@@ -1094,7 +1095,7 @@ begin
     with YprimWork do
     begin
 
-        FYprimFreq := ActiveCircuit.Solution.Frequency;
+        FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
         FreqMultiple := FYprimFreq / BaseFrequency;
         w := TwoPi * FYprimFreq;
 

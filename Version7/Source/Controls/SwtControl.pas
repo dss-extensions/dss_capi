@@ -81,7 +81,8 @@ uses
     Circuit,
     Sysutils,
     Utilities,
-    solution;
+    solution,
+    DSSHelper;
 
 const
 
@@ -146,7 +147,7 @@ end;
 function TSwtControl.NewObject(const ObjName: String): Integer;
 begin
     // Make a new SwtControl and add it to SwtControl class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TSwtControlObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -164,7 +165,7 @@ begin
 
   // continue parsing WITH contents of Parser
     ActiveSwtControlObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveSwtControlObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveSwtControlObj;
 
     Result := 0;
 
@@ -242,7 +243,7 @@ begin
                     Devindex := GetCktElementIndex(ElementName);   // Set Controlled element
                     if DevIndex > 0 then
                     begin
-                        ControlledElement := ActiveCircuit.CktElements.Get(DevIndex);
+                        ControlledElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
                         if ControlledElement <> NIL then
                             case PresentState of     // Force state
                                 CTRL_OPEN:
@@ -336,7 +337,7 @@ begin
     Devindex := GetCktElementIndex(ElementName);
     if DevIndex > 0 then
     begin
-        ControlledElement := ActiveCircuit.CktElements.Get(DevIndex);
+        ControlledElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
         Nphases := ControlledElement.NPhases;
         Nconds := FNphases;
         ControlledElement.ActiveTerminalIdx := ElementTerminal;
@@ -446,14 +447,14 @@ begin
 
 // push on the Lock command if any at the present time delay
     if LockCommand <> CTRL_NONE then
-        with ActiveCircuit, ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
         begin
             ControlQueue.Push(DynaVars.intHour, Dynavars.t + TimeDelay, LockCommand, 0, Self);
             LockCommand := CTRL_NONE;  // reset the lock command for next time
         end;
 
     if (ActionCommand <> PresentState) and not Armed then   // we need to operate this switch
-        with ActiveCircuit, ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
         begin
             ControlQueue.Push(DynaVars.intHour, Dynavars.t + TimeDelay, ActionCommand, 0, Self);
             Armed := TRUE;

@@ -41,7 +41,9 @@ uses
     DSSGlobals,
     Ymatrix,
     KLUSolve,
-    CAPI_Utils;
+    CAPI_Utils,
+    DSSClass,
+    DSSHelper;
 
 procedure YMatrix_GetCompressedYMatrix(factor: Boolean; var nBus, nNz: Longword; var ColPtr, RowIdxPtr: pInteger; var cValsPtr: PDouble); CDECL;
 {Returns Pointers to column and row and matrix values}
@@ -50,9 +52,9 @@ var
     NumNZ, NumBuses: Longword;
     tmpCnt: array[0..1] of Integer;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Yhandle := ActiveCircuit.Solution.hY;
+    Yhandle := DSSPrime.ActiveCircuit.Solution.hY;
     if Yhandle <= 0 then
     begin
         DoSimpleMsg('Y Matrix not Built.', 222);
@@ -83,30 +85,30 @@ end;
 
 procedure YMatrix_ZeroInjCurr; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.ZeroInjCurr;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.ZeroInjCurr;
 end;
 
 procedure YMatrix_GetSourceInjCurrents; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.GetSourceInjCurrents;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.GetSourceInjCurrents;
 end;
 
 procedure YMatrix_GetPCInjCurr; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.GetPCInjCurr;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.GetPCInjCurr;
 end;
 
 procedure YMatrix_Set_SystemYChanged(arg: Boolean); CDECL;
 begin
-    ActiveCircuit.Solution.SystemYChanged := arg;
+    DSSPrime.ActiveCircuit.Solution.SystemYChanged := arg;
 end;
 
 function YMatrix_Get_SystemYChanged(): Boolean; CDECL;
 begin
-    Result := ActiveCircuit.Solution.SystemYChanged;
+    Result := DSSPrime.ActiveCircuit.Solution.SystemYChanged;
 end;
 
 procedure YMatrix_BuildYMatrixD(BuildOps, AllocateVI: Longint); CDECL;
@@ -119,82 +121,82 @@ end;
 
 procedure YMatrix_Set_UseAuxCurrents(arg: Boolean); CDECL;
 begin
-    ActiveCircuit.Solution.UseAuxCurrents := arg;
+    DSSPrime.ActiveCircuit.Solution.UseAuxCurrents := arg;
 end;
 
 function YMatrix_Get_UseAuxCurrents(): Boolean; CDECL;
 begin
-    Result := ActiveCircuit.Solution.UseAuxCurrents;
+    Result := DSSPrime.ActiveCircuit.Solution.UseAuxCurrents;
 end;
 
 procedure YMatrix_AddInAuxCurrents(SType: Integer); CDECL;
 begin
-    ActiveCircuit.Solution.AddInAuxCurrents(SType);
+    DSSPrime.ActiveCircuit.Solution.AddInAuxCurrents(SType);
 end;
 
 procedure YMatrix_getIpointer(var IvectorPtr: pNodeVarray); CDECL;
 begin
-    IVectorPtr := ActiveCircuit.Solution.Currents;
+    IVectorPtr := DSSPrime.ActiveCircuit.Solution.Currents;
 end;
 
 procedure YMatrix_getVpointer(var VvectorPtr: pNodeVarray); CDECL;
 begin
-    VVectorPtr := ActiveCircuit.Solution.NodeV;
+    VVectorPtr := DSSPrime.ActiveCircuit.Solution.NodeV;
 end;
 
 function YMatrix_SolveSystem(var NodeV: pNodeVarray): Integer; CDECL;
 begin
     if (@NodeV <> NIL) then
-        Result := ActiveCircuit.Solution.SolveSystem(NodeV)
+        Result := DSSPrime.ActiveCircuit.Solution.SolveSystem(NodeV)
     else
-        Result := ActiveCircuit.Solution.SolveSystem(ActiveCircuit.Solution.NodeV);
+        Result := DSSPrime.ActiveCircuit.Solution.SolveSystem(DSSPrime.ActiveCircuit.Solution.NodeV);
 end;
 
 procedure YMatrix_Set_LoadsNeedUpdating(arg: Boolean); CDECL;
 begin
-    ActiveCircuit.Solution.LoadsNeedUpdating := arg;
+    DSSPrime.ActiveCircuit.Solution.LoadsNeedUpdating := arg;
 end;
 
 function YMatrix_Get_LoadsNeedUpdating(): Boolean; CDECL;
 begin
-    Result := ActiveCircuit.Solution.LoadsNeedUpdating;
+    Result := DSSPrime.ActiveCircuit.Solution.LoadsNeedUpdating;
 end;
 
 procedure YMatrix_Set_SolutionInitialized(arg: Boolean); CDECL;
 begin
-    ActiveCircuit.Solution.SolutionInitialized := arg;
+    DSSPrime.ActiveCircuit.Solution.SolutionInitialized := arg;
 end;
 
 function YMatrix_Get_SolutionInitialized(): Boolean; CDECL;
 begin
-    Result := ActiveCircuit.Solution.SolutionInitialized;
+    Result := DSSPrime.ActiveCircuit.Solution.SolutionInitialized;
 end;
 
 
 function YMatrix_CheckConvergence(): Boolean; CDECL;
 begin
-    Result := ActiveCircuit.Solution.Converged();
+    Result := DSSPrime.ActiveCircuit.Solution.Converged();
 end;
 
 procedure YMatrix_Set_Iteration(Value: Integer); CDECL;
 begin
-    if ActiveCircuit = NIL then Exit;
-    ActiveCircuit.Solution.Iteration := Value;
+    if DSSPrime.ActiveCircuit = NIL then Exit;
+    DSSPrime.ActiveCircuit.Solution.Iteration := Value;
 end;
 
 function YMatrix_Get_Iteration(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.Iteration
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.Iteration
     else
         Result := -1;
 end;
 
 procedure YMatrix_SetGeneratordQdV(); CDECL;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if DSSPrime.ActiveCircuit = NIL then Exit;
     try
-        ActiveCircuit.Solution.SetGeneratordQdV;  // Set dQdV for Model 3 generators
+        DSSPrime.ActiveCircuit.Solution.SetGeneratordQdV;  // Set dQdV for Model 3 generators
     except
         ON E: EEsolv32Problem do
         begin
@@ -205,8 +207,8 @@ end;
 
 function YMatrix_Get_Handle(): NativeUInt; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.hY
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.hY
     else
         Result := 0;
 end;

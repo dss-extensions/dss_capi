@@ -498,7 +498,7 @@ function TDSSSolution.Edit: Integer;
 begin
     Result := 0;
 
-    ActiveSolutionObj := ActiveCircuit.Solution;
+    ActiveSolutionObj := DSS.ActiveCircuit.Solution;
 
     with ActiveSolutionObj do
     begin
@@ -513,14 +513,14 @@ end;
 procedure TSolutionObj.Solve;
 
 begin
-    ActiveCircuit.Issolved := FALSE;
+    DSS.ActiveCircuit.Issolved := FALSE;
     DSSPrime.SolutionWasAttempted := TRUE;
 
     InitProgressForm; // initialize Progress Form;
 
 {Check of some special conditions that must be met before executing solutions}
 
-    if ActiveCircuit.EmergMinVolts >= ActiveCircuit.NormalMinVolts then
+    if DSS.ActiveCircuit.EmergMinVolts >= DSS.ActiveCircuit.NormalMinVolts then
     begin
         DoSimpleMsg('Error: Emergency Min Voltage Must Be Less Than Normal Min Voltage!' +
             CRLF + 'Solution Not Executed.', 480);
@@ -536,7 +536,7 @@ begin
     end;
     try
 {Main solution Algorithm dispatcher}
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
 
             case Year of
@@ -583,7 +583,7 @@ begin
             TSolveMode.FAULTSTUDY:
                 SolveFaultStudy;
             TSolveMode.AUTOADDFLAG:
-                ActiveCircuit.AutoAddObj.Solve;
+                DSS.ActiveCircuit.AutoAddObj.Solve;
             TSolveMode.HARMONICMODE:
                 SolveHarmonic;
             TSolveMode.GENERALTIME:
@@ -620,7 +620,7 @@ begin
 
 // base convergence on voltage magnitude
     MaxError := 0.0;
-    for i := 1 to ActiveCircuit.NumNodes do
+    for i := 1 to DSS.ActiveCircuit.NumNodes do
     begin
 
         VMag := Cabs(NodeV^[i]);
@@ -648,21 +648,21 @@ begin
     if Iteration = 1 then
     begin
         Write(Fdebug, 'Iter');
-        for i := 1 to ActiveCircuit.NumNodes do
-            Write(Fdebug, ', ', ActiveCircuit.Buslist.get(ActiveCircuit.MapNodeToBus^[i].BusRef), '.', ActiveCircuit.MapNodeToBus^[i].NodeNum: 0);
+        for i := 1 to DSS.ActiveCircuit.NumNodes do
+            Write(Fdebug, ', ', DSS.ActiveCircuit.Buslist.get(DSS.ActiveCircuit.MapNodeToBus^[i].BusRef), '.', DSS.ActiveCircuit.MapNodeToBus^[i].NodeNum: 0);
         Writeln(Fdebug);
     end;
               {*****}
     Write(Fdebug, Iteration: 2);
-    for i := 1 to ActiveCircuit.NumNodes do
+    for i := 1 to DSS.ActiveCircuit.NumNodes do
         Write(Fdebug, ', ', VMagSaved^[i]: 8: 1);
     Writeln(Fdebug);
     Write(Fdebug, 'Err');
-    for i := 1 to ActiveCircuit.NumNodes do
+    for i := 1 to DSS.ActiveCircuit.NumNodes do
         Write(Fdebug, ', ', Format('%-.5g', [ErrorSaved^[i]]));
     Writeln(Fdebug);
     Write(Fdebug, 'Curr');
-    for i := 1 to ActiveCircuit.NumNodes do
+    for i := 1 to DSS.ActiveCircuit.NumNodes do
         Write(Fdebug, ', ', Cabs(Currents^[i]): 8: 1);
     Writeln(Fdebug);
               {*****}
@@ -690,7 +690,7 @@ var
 
 begin
 
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
 
         pElem := Sources.First;
@@ -711,7 +711,7 @@ procedure TSolutionObj.SetGeneratorDispRef;
 // Set the global generator dispatch reference
 
 begin
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
         case Dynavars.SolutionMode of
 
             TSolveMode.SNAPSHOT:
@@ -767,10 +767,10 @@ begin
 
      // Save the generator dispatch level and set on high enough to
      // turn all generators on
-    GenDispSave := ActiveCircuit.GeneratorDispatchReference;
-    ActiveCircuit.GeneratorDispatchReference := 1000.0;
+    GenDispSave := DSS.ActiveCircuit.GeneratorDispatchReference;
+    DSS.ActiveCircuit.GeneratorDispatchReference := 1000.0;
 
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
 
         pGen := Generators.First;
@@ -821,7 +821,7 @@ begin
     end;
 
      // Restore generator dispatch reference
-    ActiveCircuit.GeneratorDispatchReference := GenDispSave;
+    DSS.ActiveCircuit.GeneratorDispatchReference := GenDispSave;
     try
         if Did_One        // Reset Initial Solution
         then
@@ -856,7 +856,7 @@ begin
     Iteration := 0;
 
  {**** Main iteration loop ****}
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
         repeat
             Inc(Iteration);
 
@@ -869,7 +869,7 @@ begin
             GetPCInjCurr;  // Get the injection currents from all the power conversion devices and feeders
 
        // The above call could change the primitive Y matrix, so have to check
-            if SystemYChanged or (ActiveCircuit.IncrCktElements.ListSize <> 0) then
+            if SystemYChanged or (DSS.ActiveCircuit.IncrCktElements.ListSize <> 0) then
             begin
                 BuildYMatrix(WHOLEMATRIX, FALSE);  // Does not realloc V, I
             end;
@@ -912,7 +912,7 @@ var
 
 begin
 
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ReAllocMem(dV, SizeOf(dV^[1]) * (NumNodes + 1)); // Make sure this is always big enough
 
@@ -969,7 +969,7 @@ begin
     if not SolutionInitialized then
     begin
 
-        if ActiveCircuit.LogEvents then
+        if DSS.ActiveCircuit.LogEvents then
             LogThisEvent('Initializing Solution');
         try
         //SolveZeroLoadSnapShot;
@@ -1006,7 +1006,7 @@ begin
             DoNewtonSolution;
     end;
 
-    ActiveCircuit.Issolved := ConvergedFlag;
+    DSS.ActiveCircuit.Issolved := ConvergedFlag;
     LastSolutionWasDirect := FALSE;
 
 end;
@@ -1033,7 +1033,7 @@ begin
         raise EEsolv32Problem.Create('Series Y matrix not built yet in SolveZeroLoadSnapshot.');
     hY := hYseries;
 
-    if ActiveCircuit.LogEvents then
+    if DSS.ActiveCircuit.LogEvents then
         LogThisEvent('Solve Sparse Set ZeroLoadSnapshot ...');
 
     SolveSystem(NodeV);  // also sets voltages in radial part of the circuit if radial solution
@@ -1058,26 +1058,26 @@ begin
     // don't allow the meter zones to auto-build in this load flow solution, because the
     // voltage bases are not available yet
 
-        bZoneCalc := ActiveCircuit.MeterZonesComputed;
-        bZoneLock := ActiveCircuit.ZonesLocked;
-        ActiveCircuit.MeterZonesComputed := TRUE;
-        ActiveCircuit.ZonesLocked := TRUE;
+        bZoneCalc := DSS.ActiveCircuit.MeterZonesComputed;
+        bZoneLock := DSS.ActiveCircuit.ZonesLocked;
+        DSS.ActiveCircuit.MeterZonesComputed := TRUE;
+        DSS.ActiveCircuit.ZonesLocked := TRUE;
 
         SolveZeroLoadSnapShot;
 
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
             for i := 1 to NumBuses do
                 with Buses^[i] do
                     kVBase := NearestBasekV(Cabs(NodeV^[GetRef(1)]) * 0.001732) / SQRT3;  // l-n base kV
 
         InitializeNodeVbase;      // for convergence test
 
-        ActiveCircuit.Issolved := TRUE;
+        DSS.ActiveCircuit.Issolved := TRUE;
 
     // now build the meter zones
-        ActiveCircuit.MeterZonesComputed := bZoneCalc;
-        ActiveCircuit.ZonesLocked := bZoneLock;
-        ActiveCircuit.DoResetMeterZones;
+        DSS.ActiveCircuit.MeterZonesComputed := bZoneCalc;
+        DSS.ActiveCircuit.ZonesLocked := bZoneLock;
+        DSS.ActiveCircuit.DoResetMeterZones;
 
     except
         ON E: EEsolv32Problem do
@@ -1108,7 +1108,7 @@ begin
     begin
         if ConvergedFlag then
         begin
-            if ActiveCircuit.LogEvents then
+            if DSS.ActiveCircuit.LogEvents then
                 LogThisEvent('Control Iteration ' + IntToStr(ControlIteration));
             Sample_DoControlActions;
             Check_Fault_Status;
@@ -1117,7 +1117,7 @@ begin
             ControlActionsDone := TRUE; // Stop solution process if failure to converge
     end;
 
-    if SystemYChanged or (ActiveCircuit.IncrCktElements.ListSize <> 0) then
+    if SystemYChanged or (DSS.ActiveCircuit.IncrCktElements.ListSize <> 0) then
     begin
         BuildYMatrix(WHOLEMATRIX, FALSE); // Rebuild Y matrix, but V stays same
     end;
@@ -1160,7 +1160,7 @@ begin
         DSSPrime.SolutionAbort := TRUE;   // this will stop this message in dynamic power flow modes
     end;
 
-    if ActiveCircuit.LogEvents then
+    if DSS.ActiveCircuit.LogEvents then
         LogThisEvent('Solution Done');
 
 {$IFDEF DLL_ENGINE}
@@ -1203,7 +1203,7 @@ begin
     if SolveSystem(NodeV) = 1   // Solve with Zero injection current
     then
     begin
-        ActiveCircuit.IsSolved := TRUE;
+        DSS.ActiveCircuit.IsSolved := TRUE;
         ConvergedFlag := TRUE;
     end;
 
@@ -1255,7 +1255,7 @@ procedure TSolutionObj.ZeroInjCurr;
 var
     I: Integer;
 begin
-    for i := 0 to ActiveCircuit.NumNodes do
+    for i := 0 to DSS.ActiveCircuit.NumNodes do
         Currents^[i] := CZERO;
 end;
 // ===========================================================================================
@@ -1280,7 +1280,7 @@ var
     counter: Integer;
 begin
 // This rouitne adds the Lines to the incidence matrix vectors
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         elem := Lines.First;
 //    Counter     :=  0;
@@ -1335,9 +1335,9 @@ var
 
 begin
 // This rouitne adds the Transformers to the incidence matrix vectors
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
-        lst := ActiveCircuit.Transformers;
+        lst := DSS.ActiveCircuit.Transformers;
         elem := lst.First;
         while elem <> NIL do
         begin
@@ -1382,7 +1382,7 @@ var
     CapEndFlag: Boolean;
 begin
 // This rouitne adds the series capacitors to the incidence matrix vectors
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         lst := ShuntCapacitors;
         elem := lst.First;
@@ -1432,7 +1432,7 @@ var
     EndFlag: Boolean;
 begin
 // This rouitne adds the series reactors to the incidence matrix vectors
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         DevClassIndex := DSSPrime.ClassNames.Find('reactor');
         DSSPrime.LastClassReferenced := DevClassIndex;
@@ -1484,8 +1484,8 @@ begin
     else
         IncMat.reset;
 
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSS.ActiveCircuit <> NIL then
+        with DSS.ActiveCircuit do
         begin
             temp_counter := 0;
             ActiveIncCell[0] := 1;           // Activates row 1 of the incidence matrix
@@ -1574,10 +1574,10 @@ var
     nPDE: Integer;                           // PDElements index
 begin
     try
-        if ActiveCircuit <> NIL then
+        if DSS.ActiveCircuit <> NIL then
         begin
 //      TreeNm := FileRoot + 'TopoTree_Cols.csv';   // For debuging
-            topo := ActiveCircuit.GetTopology;
+            topo := DSS.ActiveCircuit.GetTopology;
             nLevels := 0;
             nPDE := 0;
             setlength(Inc_Mat_Cols, 0);
@@ -1596,9 +1596,9 @@ begin
                     nLevels := topo.Level;
                     PDE_Name := PDElem.ParentClass.Name + '.' + PDElem.Name;
 //******************Gets the buses to which the PDE is connected****************
-                    with ActiveCircuit do
+                    with DSS.ActiveCircuit do
                     begin
-                        ActiveCircuit.SetElementActive(PDE_Name);
+                        DSS.ActiveCircuit.SetElementActive(PDE_Name);
                         SetLength(PDE_Buses, ActiveCktElement.Nterms);
                         for i := 1 to ActiveCktElement.Nterms do
                         begin
@@ -1753,7 +1753,7 @@ var
 
 begin
 
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         pElem := PCElements.First;
         while pElem <> NIL do
@@ -1784,7 +1784,7 @@ begin
 
   // Inherited DumpProperties(F,Complete);
 
-    Writeln(F, '! NumNodes = ', ActiveCircuit.NumNodes: 0);
+    Writeln(F, '! NumNodes = ', DSS.ActiveCircuit.NumNodes: 0);
 
     {WITH ParentClass Do
      FOR i := 1 to NumProperties Do
@@ -1801,23 +1801,23 @@ begin
     Writeln(F, 'Set frequency=', Format('%-g', [Frequency]));
     Writeln(F, 'Set stepsize=', Format('%-g', [DynaVars.h]));
     Writeln(F, 'Set number=', NumberOfTimes: 0);
-    Writeln(F, 'Set circuit=', ActiveCircuit.Name);
+    Writeln(F, 'Set circuit=', DSS.ActiveCircuit.Name);
     Writeln(F, 'Set editor=', DefaultEditor);
     Writeln(F, 'Set tolerance=', Format('%-g', [ConvergenceTolerance]));
     Writeln(F, 'Set maxiterations=', MaxIterations: 0);
     Writeln(F, 'Set miniterations=', MinIterations: 0);
     Writeln(F, 'Set loadmodel=', GetLoadModel);
 
-    Writeln(F, 'Set loadmult=', Format('%-g', [ActiveCircuit.LoadMultiplier]));
-    Writeln(F, 'Set Normvminpu=', Format('%-g', [ActiveCircuit.NormalMinVolts]));
-    Writeln(F, 'Set Normvmaxpu=', Format('%-g', [ActiveCircuit.NormalMaxVolts]));
-    Writeln(F, 'Set Emergvminpu=', Format('%-g', [ActiveCircuit.EmergMinVolts]));
-    Writeln(F, 'Set Emergvmaxpu=', Format('%-g', [ActiveCircuit.EmergMaxVolts]));
-    Writeln(F, 'Set %mean=', Format('%-.4g', [ActiveCircuit.DefaultDailyShapeObj.Mean * 100.0]));
-    Writeln(F, 'Set %stddev=', Format('%-.4g', [ActiveCircuit.DefaultDailyShapeObj.StdDev * 100.0]));
-    Writeln(F, 'Set LDCurve=', ActiveCircuit.LoadDurCurve);  // Load Duration Curve
-    Writeln(F, 'Set %growth=', Format('%-.4g', [((ActiveCircuit.DefaultGrowthRate - 1.0) * 100.0)]));  // default growth rate
-    with ActiveCircuit.AutoAddObj do
+    Writeln(F, 'Set loadmult=', Format('%-g', [DSS.ActiveCircuit.LoadMultiplier]));
+    Writeln(F, 'Set Normvminpu=', Format('%-g', [DSS.ActiveCircuit.NormalMinVolts]));
+    Writeln(F, 'Set Normvmaxpu=', Format('%-g', [DSS.ActiveCircuit.NormalMaxVolts]));
+    Writeln(F, 'Set Emergvminpu=', Format('%-g', [DSS.ActiveCircuit.EmergMinVolts]));
+    Writeln(F, 'Set Emergvmaxpu=', Format('%-g', [DSS.ActiveCircuit.EmergMaxVolts]));
+    Writeln(F, 'Set %mean=', Format('%-.4g', [DSS.ActiveCircuit.DefaultDailyShapeObj.Mean * 100.0]));
+    Writeln(F, 'Set %stddev=', Format('%-.4g', [DSS.ActiveCircuit.DefaultDailyShapeObj.StdDev * 100.0]));
+    Writeln(F, 'Set LDCurve=', DSS.ActiveCircuit.LoadDurCurve);  // Load Duration Curve
+    Writeln(F, 'Set %growth=', Format('%-.4g', [((DSS.ActiveCircuit.DefaultGrowthRate - 1.0) * 100.0)]));  // default growth rate
+    with DSS.ActiveCircuit.AutoAddObj do
     begin
         Writeln(F, 'Set genkw=', Format('%-g', [GenkW]));
         Writeln(F, 'Set genpf=', Format('%-g', [GenPF]));
@@ -1831,22 +1831,22 @@ begin
         end;
     end;
     Write(F, 'Set allowduplicates=');
-    if ActiveCircuit.DuplicatesAllowed then
+    if DSS.ActiveCircuit.DuplicatesAllowed then
         Writeln(F, 'Yes')
     else
         Writeln(F, 'No');
     Write(F, 'Set zonelock=');
-    if ActiveCircuit.ZonesLocked then
+    if DSS.ActiveCircuit.ZonesLocked then
         Writeln(F, 'Yes')
     else
         Writeln(F, 'No');
-    Writeln(F, 'Set ueweight=', ActiveCircuit.UEWeight: 8: 2);
-    Writeln(F, 'Set lossweight=', ActiveCircuit.LossWeight: 8: 2);
-    Writeln(F, 'Set ueregs=', IntArraytoString(ActiveCircuit.UEregs, ActiveCircuit.NumUERegs));
-    Writeln(F, 'Set lossregs=', IntArraytoString(ActiveCircuit.Lossregs, ActiveCircuit.NumLossRegs));
+    Writeln(F, 'Set ueweight=', DSS.ActiveCircuit.UEWeight: 8: 2);
+    Writeln(F, 'Set lossweight=', DSS.ActiveCircuit.LossWeight: 8: 2);
+    Writeln(F, 'Set ueregs=', IntArraytoString(DSS.ActiveCircuit.UEregs, DSS.ActiveCircuit.NumUERegs));
+    Writeln(F, 'Set lossregs=', IntArraytoString(DSS.ActiveCircuit.Lossregs, DSS.ActiveCircuit.NumLossRegs));
     Write(F, 'Set voltagebases=(');  //  changes the default voltage base rules
     i := 1;
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
         while LegalVoltageBases^[i] > 0.0 do
         begin
             Write(F, LegalVoltageBases^[i]: 10: 2);
@@ -1860,13 +1860,13 @@ begin
             Writeln(F, 'Set algorithm=newton');
     end;
     Write(F, 'Set Trapezoidal=');
-    if ActiveCircuit.TrapezoidalIntegration then
+    if DSS.ActiveCircuit.TrapezoidalIntegration then
         Writeln(F, 'yes')
     else
         Writeln(F, 'no');
-    Writeln(F, 'Set genmult=', Format('%-g', [ActiveCircuit.GenMultiplier]));
+    Writeln(F, 'Set genmult=', Format('%-g', [DSS.ActiveCircuit.GenMultiplier]));
 
-    Writeln(F, 'Set Basefrequency=', Format('%-g', [ActiveCircuit.Fundamental]));
+    Writeln(F, 'Set Basefrequency=', Format('%-g', [DSS.ActiveCircuit.Fundamental]));
 
     Write(F, 'Set harmonics=(');  //  changes the default voltage base rules
     if DoAllHarmonics then
@@ -1879,7 +1879,7 @@ begin
     Writeln(F);
 
     if Complete then
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
         begin
 
             hY := Solution.hY;
@@ -1931,7 +1931,7 @@ begin
         Writeln(F, 'Convergence Report:');
         Writeln(F, '-------------------');
         Writeln(F, '"Bus.Node", "Error", "|V|","Vbase"');
-        with ActiveCircuit do
+        with DSS.ActiveCircuit do
             for i := 1 to NumNodes do
                 with MapNodeToBus^[i] do
                 begin
@@ -1961,7 +1961,7 @@ var
     pelem: TDSSCktElement;
 
 begin
-    with  ActiveCircuit do
+    with  DSS.ActiveCircuit do
     begin
         pelem := CktElements.First;
         while pelem <> NIL do
@@ -1978,7 +1978,7 @@ var
     XHour: Integer;
     XSec: Double;
 begin
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         case ControlMode of
 
@@ -2018,7 +2018,7 @@ var
     ControlDevice: TControlElem;
 
 begin
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ControlDevice := NIL;
         try
@@ -2057,7 +2057,7 @@ begin
         DoControlActions;
 
      {This variable lets control devices know the bus list has changed}
-        ActiveCircuit.Control_BusNameRedefined := FALSE;  // Reset until next change
+        DSS.ActiveCircuit.Control_BusNameRedefined := FALSE;  // Reset until next change
     end;
 
 end;
@@ -2070,7 +2070,7 @@ begin
     DynaVars.intHour := 0;
     DynaVars.t := 0.0;
     Update_dblHour;
-    ActiveCircuit.TrapezoidalIntegration := FALSE;
+    DSS.ActiveCircuit.TrapezoidalIntegration := FALSE;
 
     if not OK_for_Dynamics(Value) then
         Exit;
@@ -2154,19 +2154,19 @@ begin
         TSolveMode.LOADDURATION1:
         begin
             DynaVars.h := 3600.0;
-            ActiveCircuit.TrapezoidalIntegration := TRUE;
+            DSS.ActiveCircuit.TrapezoidalIntegration := TRUE;
             SampleTheMeters := TRUE;
         end;
         TSolveMode.LOADDURATION2:
         begin
             DynaVars.intHour := 1;
-            ActiveCircuit.TrapezoidalIntegration := TRUE;
+            DSS.ActiveCircuit.TrapezoidalIntegration := TRUE;
             SampleTheMeters := TRUE;
         end;
         TSolveMode.AUTOADDFLAG:
         begin
             IntervalHrs := 1.0;
-            ActiveCircuit.AutoAddObj.ModeChanged := TRUE;
+            DSS.ActiveCircuit.AutoAddObj.ModeChanged := TRUE;
         end;
         TSolveMode.HARMONICMODE:
         begin
@@ -2200,11 +2200,11 @@ end;
 procedure TSolutionObj.AddInAuxCurrents(SolveType: Integer);
 
 begin
-    {FOR i := 1 to ActiveCircuit.NumNodes Do Caccum(Currents^[i], AuxCurrents^[i]);}
+    {FOR i := 1 to DSS.ActiveCircuit.NumNodes Do Caccum(Currents^[i], AuxCurrents^[i]);}
     // For Now, only AutoAdd Obj uses this
 
     if Dynavars.SolutionMode = TSolveMode.AUTOADDFLAG then
-        ActiveCircuit.AutoAddObj.AddCurrents(SolveType);
+        DSS.ActiveCircuit.AutoAddObj.AddCurrents(SolveType);
 
 end;
 
@@ -2212,7 +2212,7 @@ procedure TSolutionObj.ZeroAuxCurrents;
 var
     i: Integer;
 begin
-    for i := 1 to ActiveCircuit.NumNodes do
+    for i := 1 to DSS.ActiveCircuit.NumNodes do
         AuxCurrents^[i] := CZERO;
 end;
 
@@ -2222,7 +2222,7 @@ var
     pFault: TFaultOBj;
 
 begin
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
 
         pFault := TFaultObj(Faults.First);
@@ -2248,7 +2248,7 @@ Var
 begin
      // do machines in Dynamics Mode
      IF   IsDynamicModel THEN
-      With ActiveCircuit DO  Begin
+      With DSS.ActiveCircuit DO  Begin
 
          pElem := Generators.First;
          WHILE pElem<>nil Do Begin
@@ -2286,7 +2286,7 @@ begin
     if not IsDynamicModel and ValueIsDynamic then
     begin   // see if conditions right for going into dynamics
 
-        if ActiveCircuit.IsSolved then
+        if DSS.ActiveCircuit.IsSolved then
             CalcInitialMachineStates   // set state variables for machines (loads and generators)
         else
         begin
@@ -2311,13 +2311,13 @@ begin
     if IsHarmonicModel and not ((Value = TSolveMode.HARMONICMODE) or (Value = TSolveMode.HARMONICMODET)) then
     begin
         InvalidateAllPCELEMENTS;  // Force Recomp of YPrims when we leave Harmonics mode
-        Frequency := ActiveCircuit.Fundamental;   // Resets everything to norm
+        Frequency := DSS.ActiveCircuit.Fundamental;   // Resets everything to norm
     end;
 
     if not IsHarmonicModel and ((Value = TSolveMode.HARMONICMODE) or (Value = TSolveMode.HARMONICMODET)) then
     begin   // see if conditions right for going into Harmonics
 
-        if (ActiveCircuit.IsSolved) and (Frequency = ActiveCircuit.Fundamental) then
+        if (DSS.ActiveCircuit.IsSolved) and (Frequency = DSS.ActiveCircuit.Fundamental) then
         begin
             if not InitializeForHarmonics   // set state variables for machines (loads and generators) and sources
             then
@@ -2348,8 +2348,8 @@ begin
     end;
 
     FFrequency := Value;
-    if ActiveCircuit <> NIL then
-        Harmonic := FFrequency / ActiveCircuit.Fundamental;  // Make Sure Harmonic stays in synch
+    if DSS.ActiveCircuit <> NIL then
+        Harmonic := FFrequency / DSS.ActiveCircuit.Fundamental;  // Make Sure Harmonic stays in synch
 end;
 
 procedure TSolutionObj.Increment_time;
@@ -2407,7 +2407,7 @@ begin
             AssignFile(F, DSSPrime.CircuitName_ + 'SavedVoltages.Txt');
             Rewrite(F);
 
-            with ActiveCircuit do
+            with DSS.ActiveCircuit do
                 for i := 1 to NumBuses do
                 begin
                     BusName := BusList.Get(i);
@@ -2503,7 +2503,7 @@ procedure TSolutionObj.UpdateVBus;
 var
     i, j: Integer;
 begin
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
         for i := 1 to NumBuses do
             with Buses^[i] do
                 if Assigned(Vbus) then
@@ -2515,7 +2515,7 @@ procedure TSolutionObj.RestoreNodeVfromVbus;
 var
     i, j: Integer;
 begin
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
         for i := 1 to NumBuses do
             with Buses^[i] do
                 if Assigned(Vbus) then

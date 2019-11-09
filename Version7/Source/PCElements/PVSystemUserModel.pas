@@ -71,7 +71,8 @@ TYPE
 
 implementation
 
-Uses PVSystem, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils;
+Uses PVSystem, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils, 
+     DSSClass, DSSHelper;
 
 { TPVsystemUserModel }
 
@@ -192,7 +193,7 @@ begin
                  FName   := '';
             end
             Else Begin
-                FID := FNew( ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
+                FID := FNew( DSSPrime.ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
             End;;
         End;
 end;

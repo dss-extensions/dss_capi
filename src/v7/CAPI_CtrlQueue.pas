@@ -66,14 +66,14 @@ var
 
 procedure CtrlQueue_ClearQueue(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.ControlQueue.Clear;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.ControlQueue.Clear;
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_Delete(ActionHandle: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.ControlQueue.Delete(ActionHandle);
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.ControlQueue.Delete(ActionHandle);
 end;
 //------------------------------------------------------------------------------
 function CtrlQueue_Get_ActionCode(): Integer; CDECL;
@@ -93,7 +93,7 @@ end;
 function CtrlQueue_Get_NumActions(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then Exit;
+    if DSSPrime.ActiveCircuit = NIL then Exit;
     Result := COMControlProxyObj.ActionList.Count;
 end;
 //------------------------------------------------------------------------------
@@ -101,35 +101,35 @@ function CtrlQueue_Push(Hour: Integer; Seconds: Double; ActionCode, DeviceHandle
 // returns handle on control queue
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        Result := ActiveCircuit.ControlQueue.push(Hour, Seconds, ActionCode, DeviceHandle, COMControlProxyObj);
+        Result := DSSPrime.ActiveCircuit.ControlQueue.push(Hour, Seconds, ActionCode, DeviceHandle, COMControlProxyObj);
     end;
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_Show(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.ControlQueue.ShowQueue(GetOutputDirectory + 'COMProxy_ControlQueue.CSV');
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.ControlQueue.ShowQueue(GetOutputDirectory + 'COMProxy_ControlQueue.CSV');
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_ClearActions(); CDECL;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if DSSPrime.ActiveCircuit = NIL then Exit;
     COMControlProxyObj.ClearActionList;
 end;
 //------------------------------------------------------------------------------
 function CtrlQueue_Get_PopAction(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then Exit;
+    if DSSPrime.ActiveCircuit = NIL then Exit;
     Result := COMControlProxyObj.ActionList.Count;
     COMControlProxyObj.PopAction;
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_Set_Action(Param1: Integer); CDECL;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if DSSPrime.ActiveCircuit = NIL then Exit;
     with COMControlProxyObj do
         if Param1 < ActionList.Count then
             ActiveAction := ActionList.Items[Param1 - 1];
@@ -138,14 +138,14 @@ end;
 function CtrlQueue_Get_QueueSize(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.ControlQueue.QueueSize;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.ControlQueue.QueueSize;
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_DoAllQueue(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.ControlQueue.DoAllActions;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.ControlQueue.DoAllActions;
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -157,7 +157,7 @@ var
 
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         QSize := CtrlQueue_Get_queuesize;
         if QSize > 0 then
@@ -166,7 +166,7 @@ begin
             Result[0] := DSS_CopyStringAsPChar('Handle, Hour, Sec, ActionCode, ProxyDevRef, Device');
             for i := 0 to QSize - 1 do
             begin
-                Result[i + 1] := DSS_CopyStringAsPChar(ActiveCircuit.ControlQueue.QueueItem(i));
+                Result[i + 1] := DSS_CopyStringAsPChar(DSSPrime.ActiveCircuit.ControlQueue.QueueItem(i));
             end;
             Exit;
         end;

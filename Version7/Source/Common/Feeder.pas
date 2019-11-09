@@ -104,7 +104,8 @@ uses
     Sysutils,
     Command,
     Energymeter,
-    PDElement;
+    PDElement,
+    DSSHelper;
 
 var
     NumPropsThisClass: Integer;
@@ -167,7 +168,7 @@ begin
     //Make a new Feeder object
     // First see if this one already exists. If so, just reinitialize
     Obj := Find(ObjName);
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
         if Obj <> NIL then
         begin
             ActiveCktElement := Obj;
@@ -177,7 +178,7 @@ begin
         begin
             ActiveCktElement := TFeederObj.Create(Self, ObjName);
             Result := AddObjectToList(ActiveDSSObject);
-            ActiveCircuit.AddCktElement(Result);
+            DSS.ActiveCircuit.AddCktElement(Result);
       // done here because feeder objects are instantiated from energy meters
         end;
 end;
@@ -192,7 +193,7 @@ var
 begin
   // continue parsing with contents of Parser
     ActiveFeederObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveFeederObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveFeederObj;
 
     Result := 0;
 
@@ -344,7 +345,7 @@ begin
             begin
                 bref := BranchList.PresentBranch.ToBusReference; // each call pops off a new one
                 if bref > 0 then
-                    ActiveCircuit.Buses^[bref].IsRadialBus := TRUE;
+                    DSSPrime.ActiveCircuit.Buses^[bref].IsRadialBus := TRUE;
             end;
 
             pShunt := BranchList.PresentBranch.FirstShuntObject;

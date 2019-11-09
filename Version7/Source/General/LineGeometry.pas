@@ -274,7 +274,7 @@ end;
 function TLineGeometry.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveDSSObject := TLineGeometryObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -535,7 +535,7 @@ begin
             NormAmps := OtherLineGeometry.NormAmps;
             EmergAmps := OtherLineGeometry.EmergAmps;
 
-            UpdateLineGeometryData(activecircuit.solution.Frequency);
+            UpdateLineGeometryData(DSS.activecircuit.solution.Frequency);
 
             for i := 1 to ParentClass.NumProperties do
                 PropertyValue[i] := OtherLineGeometry.PropertyValue[i];
@@ -1125,7 +1125,7 @@ begin
     NormAmps := Wires^[1].NormAmps;
     EmergAmps := Wires^[1].EmergAmps;
 
-    UpdateLineGeometryData(activecircuit.solution.Frequency);
+    UpdateLineGeometryData(DSSPrime.activecircuit.solution.Frequency);
 end;
 
 end.

@@ -108,17 +108,17 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Lines, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Lines, False);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Bus1_AnsiString(): Ansistring; inline;
 begin
     Result := '';
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := ActiveCircuit.ActiveCktElement.GetBus(1);
+    Result := DSSPrime.ActiveCircuit.ActiveCktElement.GetBus(1);
 end;
 
 function Lines_Get_Bus1(): PAnsiChar; CDECL;
@@ -129,9 +129,9 @@ end;
 function Lines_Get_Bus2_AnsiString(): Ansistring; inline;
 begin
     Result := '';
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := ActiveCircuit.ActiveCktElement.GetBus(2);
+    Result := DSSPrime.ActiveCircuit.ActiveCktElement.GetBus(2);
 end;
 
 function Lines_Get_Bus2(): PAnsiChar; CDECL;
@@ -145,36 +145,36 @@ var
 
 begin
     Result := 0;  // signify no more
-    if ActiveCircuit = NIL then 
+    if DSSPrime.ActiveCircuit = NIL then 
         Exit;
-    pLine := ActiveCircuit.Lines.First;
+    pLine := DSSPrime.ActiveCircuit.Lines.First;
     if pLine = NIL then
         Exit;
     repeat
         if pLine.Enabled then
         begin
-            ActiveCircuit.ActiveCktElement := pLine;
+            DSSPrime.ActiveCircuit.ActiveCktElement := pLine;
             Result := 1;
         end
         else
-            pLine := ActiveCircuit.Lines.Next;
+            pLine := DSSPrime.ActiveCircuit.Lines.Next;
     until (Result = 1) or (pLine = NIL);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Length(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := TLineObj(ActiveCircuit.ActiveCktElement).Len;
+    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).Len;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_LineCode_AnsiString(): Ansistring; inline;
 begin
     Result := '';
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := TLineObj(ActiveCircuit.ActiveCktElement).CondCode;
+    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).CondCode;
 end;
 
 function Lines_Get_LineCode(): PAnsiChar; CDECL;
@@ -187,8 +187,8 @@ var
     pLine: TDSSCktElement;
 begin
     Result := '';  // signify no name
-    if ActiveCircuit = NIL then Exit;
-    pLine := ActiveCircuit.ActiveCktElement;
+    if DSSPrime.ActiveCircuit = NIL then Exit;
+    pLine := DSSPrime.ActiveCircuit.ActiveCktElement;
     if pLine = NIL then Exit;
     Result := pLine.Name;
 end;
@@ -203,34 +203,34 @@ var
     pLine: TLineObj;
 begin
     Result := 0;  // signify no more
-    if ActiveCircuit = NIL then Exit;
-    pLine := ActiveCircuit.Lines.Next;
+    if DSSPrime.ActiveCircuit = NIL then Exit;
+    pLine := DSSPrime.ActiveCircuit.Lines.Next;
     if pLine = NIL then Exit;
     repeat
         if pLine.Enabled then
         begin
-            ActiveCircuit.ActiveCktElement := pLine;
-            Result := ActiveCircuit.Lines.ActiveIndex;
+            DSSPrime.ActiveCircuit.ActiveCktElement := pLine;
+            Result := DSSPrime.ActiveCircuit.Lines.ActiveIndex;
         end
         else
-            pLine := ActiveCircuit.Lines.Next;
+            pLine := DSSPrime.ActiveCircuit.Lines.Next;
     until (Result > 0) or (pLine = NIL);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Phases(): Integer; CDECL;
 begin
     Result := 0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := ActiveCircuit.ActiveCktElement.Nphases;
+    Result := DSSPrime.ActiveCircuit.ActiveCktElement.Nphases;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_R1(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         Result := R1 / UnitsConvert;
     end;
@@ -239,9 +239,9 @@ end;
 function Lines_Get_X1(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         Result := X1 / UnitsConvert;
     end;
@@ -254,9 +254,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Bus1(const Value: PAnsiChar); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         SetBus(1, Value);
     end;
@@ -264,9 +264,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Bus2(const Value: PAnsiChar); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         SetBus(2, Value);
     end;
@@ -274,9 +274,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Length(Value: Double); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         Len := Value;
         YprimInvalid := TRUE;
@@ -285,9 +285,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_LineCode(const Value: PAnsiChar); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         FetchLineCode(Value);
         YprimInvalid := TRUE;
@@ -296,12 +296,12 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     if DSSPrime.LineClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := DSSPrime.LineClass.ElementList.Active;
-        ActiveCircuit.Lines.Get(DSSPrime.LineClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.LineClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Lines.Get(DSSPrime.LineClass.Active);
     end
     else
     begin
@@ -311,9 +311,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Phases(Value: Integer); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         Nphases := Value;
         YprimInvalid := TRUE;
@@ -322,9 +322,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_R1(Value: Double); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         R1 := Value;
         SymComponentsChanged := TRUE;
@@ -334,9 +334,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_X1(Value: Double); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         X1 := Value;
         SymComponentsChanged := TRUE;
@@ -347,19 +347,19 @@ end;
 function Lines_Get_C0(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
 
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
         Result := C0 / UnitsConvert * 1.0e9;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_C1(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
         Result := C1 / UnitsConvert * 1.0e9;
 end;
 //------------------------------------------------------------------------------
@@ -371,9 +371,9 @@ var
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     Result[0] := 0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         Factor := TwoPi * BaseFrequency * 1.0e-9 * UnitsConvert;  // corrected 2.9.2018 RCD
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Sqr(Nphases));
@@ -397,9 +397,9 @@ end;
 function Lines_Get_R0(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         Result := R0 / UnitsConvert;
     end;
@@ -412,9 +412,9 @@ var
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     Result[0] := 0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(Nphases) - 1) + 1);
         k := 0;
@@ -437,9 +437,9 @@ end;
 function Lines_Get_X0(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         Result := X0 / UnitsConvert;
     end;
@@ -452,9 +452,9 @@ var
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     Result[0] := 0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Sqr(Nphases));
         k := 0;
@@ -475,9 +475,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_C0(Value: Double); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         C0 := Value * 1.0e-9;
         SymComponentsChanged := TRUE;
@@ -487,9 +487,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_C1(Value: Double); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         C1 := Value * 1.0e-9;
         SymComponentsChanged := TRUE;
@@ -504,9 +504,9 @@ var
     Factor: Double;
 begin
     Value := PDoubleArray(ValuePtr);
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         Factor := TwoPi * BaseFrequency * 1.0e-9;
         k := (0);
@@ -522,9 +522,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_R0(Value: Double); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         R0 := Value;
         SymComponentsChanged := TRUE;
@@ -539,9 +539,9 @@ var
     Ztemp: complex;
 begin
     Value := PDoubleArray(ValuePtr);
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         k := (0);
         for i := 1 to NPhases do
@@ -557,9 +557,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_X0(Value: Double); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         X0 := Value;
         SymComponentsChanged := TRUE;
@@ -574,9 +574,9 @@ var
     Ztemp: complex;
 begin
     Value := PDoubleArray(ValuePtr);
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         k := (0);
         for i := 1 to NPhases do
@@ -593,24 +593,24 @@ end;
 function Lines_Get_EmergAmps(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := TLineObj(ActiveCircuit.ActiveCktElement).EmergAmps;
+    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).EmergAmps;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_NormAmps(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := TLineObj(ActiveCircuit.ActiveCktElement).NormAmps;
+    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).NormAmps;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_EmergAmps(Value: Double); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         EmergAmps := Value;
     end;
@@ -618,9 +618,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_NormAmps(Value: Double); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         NormAmps := Value;
     end;
@@ -629,9 +629,9 @@ end;
 function Lines_Get_Geometry_AnsiString(): Ansistring; inline;
 begin
     Result := '';
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := TLineObj(ActiveCircuit.ActiveCktElement).GeometryCode;
+    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).GeometryCode;
 end;
 
 function Lines_Get_Geometry(): PAnsiChar; CDECL;
@@ -641,9 +641,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Geometry(const Value: PAnsiChar); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         Parser.CmdString := 'geometry=' + Value;
         Edit;
@@ -654,32 +654,32 @@ end;
 function Lines_Get_Rg(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := TLineObj(ActiveCircuit.ActiveCktElement).Rg;
+    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).Rg;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Rho(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := TLineObj(ActiveCircuit.ActiveCktElement).rho;
+    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).rho;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Xg(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := TLineObj(ActiveCircuit.ActiveCktElement).Xg;
+    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).Xg;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Rg(Value: Double); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         Parser.CmdString := Format('rg=%.7g', [Value]);
         Edit;
@@ -689,9 +689,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Rho(Value: Double); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         Parser.CmdString := Format('rho=%.7g', [Value]);
         Edit;
@@ -701,9 +701,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Xg(Value: Double); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         Parser.CmdString := Format('xg=%.7g', [Value]);
         Edit;
@@ -722,13 +722,13 @@ var
     cValues: pComplexArray;
 
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);  // just return null array
         Result[0] := 0;
         Exit;
     end;
-    with ActiveCircuit, TLineObj(ActiveCircuit.ActiveCktElement) do
+    with DSSPrime.ActiveCircuit, TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         NValues := SQR(Yorder);
         cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
@@ -757,7 +757,7 @@ var
 
 begin
     Value := PDoubleArray(ValuePtr);
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
        {Do Nothing for now}
     end;
@@ -766,17 +766,17 @@ end;
 function Lines_Get_NumCust(): Integer; CDECL;
 begin
     Result := 0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := TLineObj(ActiveCircuit.ActiveCktElement).BranchNumCustomers;
+    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).BranchNumCustomers;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_TotalCust(): Integer; CDECL;
 begin
     Result := 0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := TLineObj(ActiveCircuit.ActiveCktElement).BranchTotalCustomers;
+    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).BranchTotalCustomers;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Parent(): Integer; CDECL;
@@ -786,15 +786,15 @@ var
     pLine: TLineObj;
 begin
     Result := 0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    pLine := TLineObj(ActiveCircuit.ActiveCktElement);
+    pLine := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement);
     if pLine.ParentPDelement <> NIL then
     begin
         if (pLine.ParentPDelement.Enabled) and (IsLine(pLine.ParentPDelement)) then
         begin
-            ActiveCircuit.ActiveCktElement := pLine.ParentPDElement;
-            Result := ActiveCircuit.Lines.ActiveIndex;
+            DSSPrime.ActiveCircuit.ActiveCktElement := pLine.ParentPDElement;
+            Result := DSSPrime.ActiveCircuit.Lines.ActiveIndex;
         end;
     end;
 end;
@@ -802,16 +802,16 @@ end;
 function Lines_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(Activecircuit) then
-        Result := ActiveCircuit.Lines.ListSize;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.Lines.ListSize;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Spacing_AnsiString(): Ansistring; inline;
 begin
     Result := '';
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := TLineObj(ActiveCircuit.ActiveCktElement).SpacingCode;
+    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).SpacingCode;
 end;
 
 function Lines_Get_Spacing(): PAnsiChar; CDECL;
@@ -821,9 +821,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Spacing(const Value: PAnsiChar); CDECL;
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         Parser.CmdString := 'spacing=' + Value;
         Edit;
@@ -834,9 +834,9 @@ end;
 function Lines_Get_Units(): Integer; CDECL;
 begin
     Result := 0;
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := TLineObj(ActiveCircuit.ActiveCktElement).LengthUnits;
+    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).LengthUnits;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Units(Value: Integer); CDECL;
@@ -845,10 +845,10 @@ procedure Lines_Set_Units(Value: Integer); CDECL;
  The Set functions in this interface all set values in this length unit.
 }
 begin
-    if (ActiveCircuit = NIL) or (not IsLine(ActiveCircuit.ActiveCktElement)) then
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
         
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         if Value < dssLineUnitsMaxnum then
         begin
@@ -864,8 +864,8 @@ end;
 //------------------------------------------------------------------------------
 function Lines_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Lines.ActiveIndex
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Lines.ActiveIndex
     else
         Result := 0;
 end;
@@ -874,15 +874,15 @@ procedure Lines_Set_idx(Value: Integer); CDECL;
 var
     pLine: TLineObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pLine := ActiveCircuit.Lines.Get(Value);
+    pLine := DSSPrime.ActiveCircuit.Lines.Get(Value);
     if pLine = NIL then
     begin
         DoSimpleMsg('Invalid Line index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pLine;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pLine;
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_SeasonRating(): Double; CDECL;
@@ -893,10 +893,10 @@ begin
     Result := 0;
     RatingIdx := -1;
 
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
 
-    if not IsLine(ActiveCircuit.ActiveCktElement) then 
+    if not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement) then 
         Exit;
         
     if not DSSPrime.SeasonalRating then 
@@ -907,27 +907,27 @@ begin
         RSignal := DSSPrime.XYCurveClass.Find(DSSPrime.SeasonSignal);
         
         if RSignal <> NIL then
-            RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));
+            RatingIdx := trunc(RSignal.GetYValue(DSSPrime.ActiveCircuit.Solution.DynaVars.intHour));
         
         // Just in case
-        if (RatingIdx >= TLineObj(ActiveCircuit.ActiveCktElement).NumAmpRatings) or (RatingIdx < 0) then
-            Result := TLineObj(ActiveCircuit.ActiveCktElement).NormAmps
+        if (RatingIdx >= TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).NumAmpRatings) or (RatingIdx < 0) then
+            Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).NormAmps
         else
-            Result := TLineObj(ActiveCircuit.ActiveCktElement).AmpRatings[RatingIdx];
+            Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).AmpRatings[RatingIdx];
     end
     else
-        Result := TLineObj(ActiveCircuit.ActiveCktElement).NormAmps;
+        Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).NormAmps;
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_IsSwitch(Value: Boolean); CDECL;
 begin
-    if ActiveCircuit = NIL then 
+    if DSSPrime.ActiveCircuit = NIL then 
         Exit;
         
-    if not IsLine(ActiveCircuit.ActiveCktElement) then 
+    if not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement) then 
         Exit;
         
-    with TLineObj(ActiveCircuit.ActiveCktElement) do
+    with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
         IsSwitch := Value;
         if not Value then Exit;
@@ -952,13 +952,13 @@ function Lines_Get_IsSwitch(): Boolean; CDECL;
 begin
     Result := FALSE;
     
-    if ActiveCircuit = NIL then 
+    if DSSPrime.ActiveCircuit = NIL then 
         Exit;
         
-    if not IsLine(ActiveCircuit.ActiveCktElement) then 
+    if not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement) then 
         Exit;
     
-    Result := TLineObj(ActiveCircuit.ActiveCktElement).IsSwitch;
+    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).IsSwitch;
 end;
 //------------------------------------------------------------------------------
 end.

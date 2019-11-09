@@ -99,21 +99,21 @@ end;
 function TSData_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.TSDataClass.ElementCount;
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.TSDataClass.First;
 end;
 //------------------------------------------------------------------------------
 function TSData_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.TSDataClass.Next;
 end;
 //------------------------------------------------------------------------------
@@ -123,7 +123,7 @@ var
 
 begin
     Result := '';  // signify no name
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         if pTSData <> NIL then
@@ -143,7 +143,7 @@ procedure TSData_Set_Name(const Value: PAnsiChar); CDECL;
 // set LineCode active by name
 
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         if not DSSPrime.TSDataClass.SetActive(Value) then
             DoSimpleMsg('TSData "' + Value + '" Not Found in Active Circuit.', 51008);
@@ -159,7 +159,7 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.TSDataClass.ElementList, False);
 end;
@@ -169,7 +169,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.NormAmps;
@@ -180,7 +180,7 @@ procedure TSData_Set_NormAmps(Value: Double); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         pTSData.NormAmps := Value;
@@ -194,7 +194,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.EmergAmps;
@@ -205,7 +205,7 @@ procedure TSData_Set_EmergAmps(Value: Double); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         pTSData.EmergAmps := Value;
@@ -218,7 +218,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.FRadius * 2.0;
@@ -229,7 +229,7 @@ procedure TSData_Set_Diameter(Value: Double); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         with pTSData do
@@ -245,7 +245,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.FRadius;
@@ -256,7 +256,7 @@ procedure TSData_Set_Radius(Value: Double); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         with pTSData do
@@ -272,7 +272,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.FGMR60;
@@ -283,7 +283,7 @@ procedure TSData_Set_GMRac(Value: Double); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         with pTSData do
@@ -299,7 +299,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.FR60;
@@ -310,7 +310,7 @@ procedure TSData_Set_Rac(Value: Double); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         with pTSData do
@@ -326,7 +326,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.FRDC;
@@ -337,7 +337,7 @@ procedure TSData_Set_Rdc(Value: Double); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         with pTSData do
@@ -353,7 +353,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.FGMRUnits;
@@ -364,7 +364,7 @@ procedure TSData_Set_GMRUnits(Value: Integer); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         with pTSData do
@@ -380,7 +380,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.FRadiusUnits;
@@ -391,7 +391,7 @@ procedure TSData_Set_RadiusUnits(Value: Integer); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         with pTSData do
@@ -407,7 +407,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.FResistanceUnits;
@@ -418,7 +418,7 @@ procedure TSData_Set_ResistanceUnits(Value: Integer); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         with pTSData do
@@ -434,7 +434,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.FEpsR;
@@ -445,7 +445,7 @@ procedure TSData_Set_EpsR(Value: Double); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         with pTSData do
@@ -461,7 +461,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.FInsLayer;
@@ -472,7 +472,7 @@ procedure TSData_Set_InsLayer(Value: Double); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         with pTSData do
@@ -488,7 +488,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.FDiaIns;
@@ -499,7 +499,7 @@ procedure TSData_Set_DiaIns(Value: Double); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         with pTSData do
@@ -515,7 +515,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.FDiaCable;
@@ -526,7 +526,7 @@ procedure TSData_Set_DiaCable(Value: Double); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         with pTSData do
@@ -542,7 +542,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.FDiaShield;
@@ -553,7 +553,7 @@ procedure TSData_Set_DiaShield(Value: Double); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         with pTSData do
@@ -569,7 +569,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.FTapeLayer;
@@ -580,7 +580,7 @@ procedure TSData_Set_TapeLayer(Value: Double); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         with pTSData do
@@ -596,7 +596,7 @@ var
     pTSData: TTSDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         Result := pTSData.FTapeLap;
@@ -607,7 +607,7 @@ procedure TSData_Set_TapeLap(Value: Double); CDECL;
 var
     pTSData: TTSDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         with pTSData do

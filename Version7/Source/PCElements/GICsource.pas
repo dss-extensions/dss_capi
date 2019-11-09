@@ -100,7 +100,8 @@ uses
     Utilities,
     Sysutils,
     Command,
-    dynamics;
+    dynamics,
+    DSSHelper;
 
 var
     NumPropsThisClass: Integer;
@@ -183,7 +184,7 @@ end;
 function TGICsource.NewObject(const ObjName: String): Integer;
 begin
     // Make a new voltage source and add it to GICsource class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TGICSourceObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -201,7 +202,7 @@ var
 begin
   // continue parsing with contents of Parser
     ActiveGICsourceObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveGICsourceObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveGICsourceObj;
 
     Result := 0;
 
@@ -520,7 +521,7 @@ begin
 
     try
      // If the solution frequency not 0.1 Hz, source is shorted.
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
             if abs(Frequency - SrcFrequency) < EPSILON2 then
                 Vmag := Volts
@@ -564,7 +565,7 @@ var
 begin
 
     try
-        with    ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
 
             for     i := 1 to Yorder do

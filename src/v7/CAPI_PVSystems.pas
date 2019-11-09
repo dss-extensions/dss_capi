@@ -58,9 +58,9 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.PVSystems, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.PVSystems, False);
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -83,9 +83,9 @@ var
     k: Integer;
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        PVSystem := TPVSystemObj(ActiveCircuit.PVSystems.Active);
+        PVSystem := TPVSystemObj(DSSPrime.ActiveCircuit.PVSystems.Active);
         if PVSystem <> NIL then
         begin
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (numPVSystemRegisters - 1) + 1);
@@ -119,19 +119,19 @@ var
 begin
 
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pPVSystem := ActiveCircuit.pVSystems.First;
+        pPVSystem := DSSPrime.ActiveCircuit.pVSystems.First;
         if pPVSystem <> NIL then
         begin
             repeat
                 if pPVSystem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := pPVSystem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := pPVSystem;
                     Result := 1;
                 end
                 else
-                    pPVSystem := ActiveCircuit.pVSystems.Next;
+                    pPVSystem := DSSPrime.ActiveCircuit.pVSystems.Next;
             until (Result = 1) or (pPVSystem = NIL);
         end
         else
@@ -147,19 +147,19 @@ var
 begin
 
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pPVSystem := ActiveCircuit.PVSystems.Next;
+        pPVSystem := DSSPrime.ActiveCircuit.PVSystems.Next;
         if pPVSystem <> NIL then
         begin
             repeat
                 if pPVSystem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := pPVSystem;
-                    Result := ActiveCircuit.PVSystems.ActiveIndex;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := pPVSystem;
+                    Result := DSSPrime.ActiveCircuit.PVSystems.ActiveIndex;
                 end
                 else
-                    pPVSystem := ActiveCircuit.PVSystems.Next;
+                    pPVSystem := DSSPrime.ActiveCircuit.PVSystems.Next;
             until (Result > 0) or (pPVSystem = NIL);
         end
         else
@@ -171,14 +171,14 @@ end;
 function PVSystems_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(Activecircuit) then
-        Result := ActiveCircuit.PVSystems.ListSize;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.PVSystems.ListSize;
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.PVSystems.ActiveIndex
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.PVSystems.ActiveIndex
     else
         Result := 0;
 end;
@@ -187,14 +187,14 @@ procedure PVSystems_Set_idx(Value: Integer); CDECL;
 var
     pPVSystem: TPVSystemObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pPVSystem := ActiveCircuit.PVSystems.Get(Value);
+    pPVSystem := DSSPrime.ActiveCircuit.PVSystems.Get(Value);
     if pPVSystem = NIL then
     begin
         DoSimpleMsg('Invalid PVSystem index: "' + IntToStr(Value) + '".', 656565);
     end;
-    ActiveCircuit.ActiveCktElement := pPVSystem;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pPVSystem;
 end;
 //------------------------------------------------------------------------------
 function PVSystems_Get_Name_AnsiString(): Ansistring; inline;
@@ -203,9 +203,9 @@ var
 
 begin
     Result := '';
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pPVSystem := ActiveCircuit.PVSystems.Active;
+        pPVSystem := DSSPrime.ActiveCircuit.PVSystems.Active;
         if pPVSystem <> NIL then
         begin
             Result := pPVSystem.Name;
@@ -223,12 +223,12 @@ end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     if DSSPrime.PVSystemClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := DSSPrime.PVSystemClass.ElementList.Active;
-        ActiveCircuit.PVSystems.Get(DSSPrime.PVSystemClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.PVSystemClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.PVSystems.Get(DSSPrime.PVSystemClass.Active);
     end
     else
     begin
@@ -239,9 +239,9 @@ end;
 function PVSystems_Get_Irradiance(): Double; CDECL;
 begin
     Result := -1.0;  // not set
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.PVSystems do
+        with DSSPrime.ActiveCircuit.PVSystems do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -253,9 +253,9 @@ end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Irradiance(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.PVSystems do
+        with DSSPrime.ActiveCircuit.PVSystems do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -268,9 +268,9 @@ end;
 function PVSystems_Get_kvar(): Double; CDECL;
 begin
     Result := 0.0;  // not set
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.PVSystems do
+        with DSSPrime.ActiveCircuit.PVSystems do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -283,9 +283,9 @@ end;
 function PVSystems_Get_kVArated(): Double; CDECL;
 begin
     Result := -1.0;  // not set
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.PVSystems do
+        with DSSPrime.ActiveCircuit.PVSystems do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -298,9 +298,9 @@ end;
 function PVSystems_Get_kW(): Double; CDECL;
 begin
     Result := 0.0;  // not set
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.PVSystems do
+        with DSSPrime.ActiveCircuit.PVSystems do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -313,9 +313,9 @@ end;
 function PVSystems_Get_PF(): Double; CDECL;
 begin
     Result := 0.0;  // not set
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.PVSystems do
+        with DSSPrime.ActiveCircuit.PVSystems do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -327,9 +327,9 @@ end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_kVArated(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.PVSystems do
+        with DSSPrime.ActiveCircuit.PVSystems do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -341,9 +341,9 @@ end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_PF(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.PVSystems do
+        with DSSPrime.ActiveCircuit.PVSystems do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -356,9 +356,9 @@ end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_kvar(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.PVSystems do
+        with DSSPrime.ActiveCircuit.PVSystems do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -372,12 +372,12 @@ end;
 function PVSystems_Get_daily(): PAnsiChar; CDECL;
 begin
     Result := nil;
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.PVSystems.ActiveIndex = 0 then
         Exit;
         
-    with ActiveCircuit.PVSystems do
+    with DSSPrime.ActiveCircuit.PVSystems do
     begin
         Result := DSS_GetAsPAnsiChar(TPVSystemObj(Active).DailyShape);
     end;
@@ -387,12 +387,12 @@ procedure PVSystems_Set_daily(const Value: PAnsiChar); CDECL;
 var
     elem: TPVSystemObj;
 begin
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.PVSystems.ActiveIndex = 0 then
         Exit;
         
-    elem := TPVSystemObj(ActiveCircuit.PVSystems.Active);
+    elem := TPVSystemObj(DSSPrime.ActiveCircuit.PVSystems.Active);
     with elem do
     begin
         DailyShape := Value;
@@ -403,12 +403,12 @@ end;
 function PVSystems_Get_duty(): PAnsiChar; CDECL;
 begin
     Result := nil;
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.PVSystems.ActiveIndex = 0 then
         Exit;
         
-    with ActiveCircuit.PVSystems do
+    with DSSPrime.ActiveCircuit.PVSystems do
     begin
         Result := DSS_GetAsPAnsiChar(TPVSystemObj(Active).DutyShape);
     end;
@@ -418,12 +418,12 @@ procedure PVSystems_Set_duty(const Value: PAnsiChar); CDECL;
 var
     elem: TPVSystemObj;
 begin
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.PVSystems.ActiveIndex = 0 then
         Exit;
         
-    elem := TPVSystemObj(ActiveCircuit.PVSystems.Active);
+    elem := TPVSystemObj(DSSPrime.ActiveCircuit.PVSystems.Active);
     with elem do
     begin
         DutyShape := Value;
@@ -434,12 +434,12 @@ end;
 function PVSystems_Get_yearly(): PAnsiChar; CDECL;
 begin
     Result := nil;
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.PVSystems.ActiveIndex = 0 then
         Exit;
         
-    with ActiveCircuit.PVSystems do
+    with DSSPrime.ActiveCircuit.PVSystems do
     begin
         Result := DSS_GetAsPAnsiChar(TPVSystemObj(Active).YearlyShape);
     end;
@@ -449,12 +449,12 @@ procedure PVSystems_Set_yearly(const Value: PAnsiChar); CDECL;
 var
     elem: TPVSystemObj;
 begin
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.PVSystems.ActiveIndex = 0 then
         Exit;
         
-    elem := TPVSystemObj(ActiveCircuit.PVSystems.Active);
+    elem := TPVSystemObj(DSSPrime.ActiveCircuit.PVSystems.Active);
     with elem do
     begin
         YearlyShape := Value;
@@ -465,12 +465,12 @@ end;
 function PVSystems_Get_Tdaily(): PAnsiChar; CDECL;
 begin
     Result := nil;
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.PVSystems.ActiveIndex = 0 then
         Exit;
         
-    with ActiveCircuit.PVSystems do
+    with DSSPrime.ActiveCircuit.PVSystems do
     begin
         Result := DSS_GetAsPAnsiChar(TPVSystemObj(Active).DailyTShape);
     end;
@@ -480,12 +480,12 @@ procedure PVSystems_Set_Tdaily(const Value: PAnsiChar); CDECL;
 var
     elem: TPVSystemObj;
 begin
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.PVSystems.ActiveIndex = 0 then
         Exit;
         
-    elem := TPVSystemObj(ActiveCircuit.PVSystems.Active);
+    elem := TPVSystemObj(DSSPrime.ActiveCircuit.PVSystems.Active);
     with elem do
     begin
         DailyTShape := Value;
@@ -496,12 +496,12 @@ end;
 function PVSystems_Get_Tduty(): PAnsiChar; CDECL;
 begin
     Result := nil;
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.PVSystems.ActiveIndex = 0 then
         Exit;
         
-    with ActiveCircuit.PVSystems do
+    with DSSPrime.ActiveCircuit.PVSystems do
     begin
         Result := DSS_GetAsPAnsiChar(TPVSystemObj(Active).DutyTShape);
     end;
@@ -511,12 +511,12 @@ procedure PVSystems_Set_Tduty(const Value: PAnsiChar); CDECL;
 var
     elem: TPVSystemObj;
 begin
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.PVSystems.ActiveIndex = 0 then
         Exit;
         
-    elem := TPVSystemObj(ActiveCircuit.PVSystems.Active);
+    elem := TPVSystemObj(DSSPrime.ActiveCircuit.PVSystems.Active);
     with elem do
     begin
         DutyTShape := Value;
@@ -527,12 +527,12 @@ end;
 function PVSystems_Get_Tyearly(): PAnsiChar; CDECL;
 begin
     Result := nil;
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.PVSystems.ActiveIndex = 0 then
         Exit;
         
-    with ActiveCircuit.PVSystems do
+    with DSSPrime.ActiveCircuit.PVSystems do
     begin
         Result := DSS_GetAsPAnsiChar(TPVSystemObj(Active).YearlyTShape);
     end;
@@ -542,12 +542,12 @@ procedure PVSystems_Set_Tyearly(const Value: PAnsiChar); CDECL;
 var
     elem: TPVSystemObj;
 begin
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.PVSystems.ActiveIndex = 0 then
         Exit;
         
-    elem := TPVSystemObj(ActiveCircuit.PVSystems.Active);
+    elem := TPVSystemObj(DSSPrime.ActiveCircuit.PVSystems.Active);
     with elem do
     begin
         YearlyTShape := Value;

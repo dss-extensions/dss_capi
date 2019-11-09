@@ -67,7 +67,7 @@ begin
 
 //    writeln('!!!Recalc ALL Yprims');
     
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         if LogEvents then
             LogThisEvent('Recalc All Yprims');
@@ -92,7 +92,7 @@ var
 begin
 //    writeln('!!!Recalc Invalid Yprims');
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         if LogEvents then
             LogThisEvent('Recalc Invalid Yprims');
@@ -156,7 +156,7 @@ var
 
 begin
 
-    with ActiveCircuit, Solution do
+    with DSSPrime.ActiveCircuit, Solution do
     begin
         for i := 1 to NumNodes do
             with MapNodeToBus^[i] do
@@ -193,7 +193,7 @@ begin
     //writeln('Number of incremental elements: ', IncrCktElements.ListSize);
     
 //    writeln('Analyzing incremental elements...');
-    pElem := ActiveCircuit.IncrCktElements.First;
+    pElem := DSSPrime.ActiveCircuit.IncrCktElements.First;
     while pElem <> NIL do with pElem do
     begin
         if (Enabled and (Yprim = NIL)) then 
@@ -250,7 +250,7 @@ begin
 //                BuildYMatrix(BuildOption, AllocateVI);
 //                Exit;
         end;
-        pElem := ActiveCircuit.IncrCktElements.Next;
+        pElem := DSSPrime.ActiveCircuit.IncrCktElements.Next;
     end;
     
     if IncrYprim <> NIL then
@@ -264,18 +264,18 @@ begin
     repeat
         // writeln('>Zeroising row and column for ', (coordIt.Data shr 32), ',', coordIt.Data and $FFFFFFFF);
         //TODO: zeroise only the exact elements affected to make it faster
-        ZeroiseMatrixElement(ActiveCircuit.Solution.hYsystem, (coordIt.Data shr 32), coordIt.Data and $FFFFFFFF);
+        ZeroiseMatrixElement(DSSPrime.ActiveCircuit.Solution.hYsystem, (coordIt.Data shr 32), coordIt.Data and $FFFFFFFF);
     until not coordIt.Next();
     
 
 //    writeln('Checking all elements');
     
-    pElem := ActiveCircuit.CktElements.First;
+    pElem := DSSPrime.ActiveCircuit.CktElements.First;
     while pElem <> NIL do with pElem do
     begin
         if (not Enabled) or (Yprim = NIL) then
         begin
-            pElem := ActiveCircuit.CktElements.Next;
+            pElem := DSSPrime.ActiveCircuit.CktElements.Next;
             continue;
         end;
     
@@ -299,13 +299,13 @@ begin
                 if (val.re = 0) and (val.im = 0) then continue;
                 
                 //writeln('IncrementMatrixElement: (', inode, ',', jnode, '): ', val.re, ', ', val.im);
-                IncrementMatrixElement(ActiveCircuit.Solution.hYsystem, inode, jnode, val.re, val.im);
+                IncrementMatrixElement(DSSPrime.ActiveCircuit.Solution.hYsystem, inode, jnode, val.re, val.im);
             end;
         end;
-        pElem := ActiveCircuit.CktElements.Next;
+        pElem := DSSPrime.ActiveCircuit.CktElements.Next;
     end;
 
-    ActiveCircuit.IncrCktElements.Clear;
+    DSSPrime.ActiveCircuit.IncrCktElements.Clear;
     Result := True;
 //    writeln('Incremental update finished.');
 //    writeln();
@@ -329,7 +329,7 @@ begin
     CmatArray := NIL;
    // new function to log KLUSolve.DLL function calls
    // SetLogFile ('KLU_Log.txt', 1);
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
     begin
 
         if PreserveNodeVoltages then
@@ -482,7 +482,7 @@ var
 begin
 
     Result := '';
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         hY := Solution.hY;
         for i := 1 to Numnodes do

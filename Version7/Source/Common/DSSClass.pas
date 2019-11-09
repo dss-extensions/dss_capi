@@ -14,7 +14,7 @@ unit DSSClass;
 interface
 
 USES
-    Command,  Arraydef, Hashlist, {$IFDEF DSS_CAPI_HASHLIST}Contnrs,{$ENDIF} Classes, PointerList;
+    Command,  Arraydef, Hashlist, {$IFDEF DSS_CAPI_HASHLIST}Contnrs,{$ENDIF} Classes, PointerList, NamedObject;
 
 TYPE
     TDSS = class;
@@ -152,6 +152,7 @@ TYPE
         FGICLineClass: TDSSClass;
         FGICTransformerClass: TDSSClass;
     
+        FActiveCircuit: TNamedObject;
     public
         DSSClasses: TDSSClasses;
         ClassNames         :THashList;
@@ -162,7 +163,6 @@ TYPE
         NumIntrinsicClasses,
         NumUserClasses: Integer;
 
-//        ActiveCircuit   :TDSSCircuit;
 //        ActiveDSSClass  :TDSSClass;
 //        ActiveDSSObject :TDSSObject;
 //        AuxParser       :TParser;  // Auxiliary parser for use by anybody for reparsing values
@@ -225,7 +225,7 @@ var
 
 implementation
 
-USES DSSGlobals, SysUtils, DSSObject, ParserDel, CktElement;
+USES DSSGlobals, SysUtils, DSSObject, ParserDel, CktElement, DSSHelper;
 
 constructor TDSS.Create;
 begin
@@ -363,7 +363,7 @@ BEGIN
          // Make sure Active Ckt Element agrees if is a ckt element
          // So COM interface will work
         if ActiveDSSObject is TDSSCktElement then
-            ActiveCircuit.ActiveCktElement := TDSSCktElement(ActiveDSSObject);
+            DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(ActiveDSSObject);
        End;
 END;
 
@@ -522,7 +522,7 @@ begin
       // Make sure Active Ckt Element agrees if is a ckt element
       // So COM interface will work
         if ActiveDSSObject is TDSSCktElement then
-            ActiveCircuit.ActiveCktElement := TDSSCktElement(ActiveDSSObject);
+            DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(ActiveDSSObject);
         Result := ActiveElement;
     End;
 end;
@@ -537,7 +537,7 @@ begin
       // Make sure Active Ckt Element agrees if is a ckt element
       // So COM interface will work
         if ActiveDSSObject is TDSSCktElement then
-            ActiveCircuit.ActiveCktElement := TDSSCktElement(ActiveDSSObject);
+            DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(ActiveDSSObject);
         Result := ActiveElement;
     End;
 

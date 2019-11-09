@@ -192,15 +192,15 @@ end;
 function ActiveLoad: TLoadObj;
 begin
     Result := NIL;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Loads.Active;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Loads.Active;
 end;
 //------------------------------------------------------------------------------
 procedure Set_Parameter(const parm: String; const val: String);
 var
     cmd: String;
 begin
-    if not Assigned(ActiveCircuit) then
+    if not Assigned(DSSPrime.ActiveCircuit) then
         exit;
     DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('load.%s.%s=%s', [ActiveLoad.Name, parm, val]);
@@ -213,9 +213,9 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Loads, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Loads, False);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_First(): Integer; CDECL;
@@ -223,26 +223,26 @@ var
     pLoad: TLoadObj;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pLoad := ActiveCircuit.Loads.First;
+    pLoad := DSSPrime.ActiveCircuit.Loads.First;
     if pLoad = NIL then
         Exit;
     repeat
         if pLoad.Enabled then
         begin
-            ActiveCircuit.ActiveCktElement := pLoad;
+            DSSPrime.ActiveCircuit.ActiveCktElement := pLoad;
             Result := 1;
         end
         else
-            pLoad := ActiveCircuit.Loads.Next;
+            pLoad := DSSPrime.ActiveCircuit.Loads.Next;
     until (Result = 1) or (pLoad = NIL);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Loads.ActiveIndex
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Loads.ActiveIndex
     else
         Result := 0
 end;
@@ -251,15 +251,15 @@ procedure Loads_Set_idx(Value: Integer); CDECL;
 var
     pLoad: TLoadObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pLoad := ActiveCircuit.Loads.Get(Value);
+    pLoad := DSSPrime.ActiveCircuit.Loads.Get(Value);
     if pLoad = NIL then
     begin
         DoSimpleMsg('Invalid Load index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pLoad;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pLoad;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Name_AnsiString(): Ansistring; inline;
@@ -267,10 +267,10 @@ var
     pLoad: TLoadObj;
 begin
     Result := '';
-    if ActiveCircuit = NIL then 
+    if DSSPrime.ActiveCircuit = NIL then 
         Exit;
 
-    pLoad := ActiveCircuit.Loads.Active;
+    pLoad := DSSPrime.ActiveCircuit.Loads.Active;
     if pLoad <> NIL then
         Result := pLoad.Name
     else
@@ -287,28 +287,28 @@ var
     pLoad: TLoadObj;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then Exit;
-    pLoad := ActiveCircuit.Loads.Next;
+    if DSSPrime.ActiveCircuit = NIL then Exit;
+    pLoad := DSSPrime.ActiveCircuit.Loads.Next;
     if pLoad = NIL then Exit;
     repeat
         if pLoad.Enabled then
         begin
-            ActiveCircuit.ActiveCktElement := pLoad;
-            Result := ActiveCircuit.Loads.ActiveIndex;
+            DSSPrime.ActiveCircuit.ActiveCktElement := pLoad;
+            Result := DSSPrime.ActiveCircuit.Loads.ActiveIndex;
         end
         else
-            pLoad := ActiveCircuit.Loads.Next;
+            pLoad := DSSPrime.ActiveCircuit.Loads.Next;
     until (Result > 0) or (pLoad = NIL);
 end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     if DSSPrime.LoadClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := DSSPrime.LoadClass.ElementList.Active;
-        ActiveCircuit.Loads.Get(DSSPrime.LoadClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.LoadClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Loads.Get(DSSPrime.LoadClass.Active);
     end
     else
     begin
@@ -319,9 +319,9 @@ end;
 function Loads_Get_kV(): Double; CDECL;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Loads do
+        with DSSPrime.ActiveCircuit.Loads do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -335,9 +335,9 @@ end;
 function Loads_Get_kvar(): Double; CDECL;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Loads do
+        with DSSPrime.ActiveCircuit.Loads do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -350,9 +350,9 @@ end;
 function Loads_Get_kW(): Double; CDECL;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Loads do
+        with DSSPrime.ActiveCircuit.Loads do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -365,9 +365,9 @@ end;
 function Loads_Get_PF(): Double; CDECL;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Loads do
+        with DSSPrime.ActiveCircuit.Loads do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -379,9 +379,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_kV(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Loads do
+        with DSSPrime.ActiveCircuit.Loads do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -394,9 +394,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_kvar(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Loads do
+        with DSSPrime.ActiveCircuit.Loads do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -410,9 +410,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_kW(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Loads do
+        with DSSPrime.ActiveCircuit.Loads do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -426,9 +426,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_PF(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Loads do
+        with DSSPrime.ActiveCircuit.Loads do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -443,8 +443,8 @@ end;
 function Loads_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.Loads.ListSize;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.Loads.ListSize;
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_AllocationFactor(): Double; CDECL;
@@ -807,12 +807,12 @@ procedure Loads_Set_daily(const Value: PAnsiChar); CDECL;
 var
     elem: TLoadObj;
 begin
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.Loads.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.Loads.ActiveIndex = 0 then
         Exit;
         
-    elem := TLoadObj(ActiveCircuit.Loads.Active);
+    elem := TLoadObj(DSSPrime.ActiveCircuit.Loads.Active);
     with elem do
     begin
         DailyShape := Value;
@@ -824,12 +824,12 @@ procedure Loads_Set_duty(const Value: PAnsiChar); CDECL;
 var
     elem: TLoadObj;
 begin
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.Loads.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.Loads.ActiveIndex = 0 then
         Exit;
         
-    elem := TLoadObj(ActiveCircuit.Loads.Active);
+    elem := TLoadObj(DSSPrime.ActiveCircuit.Loads.Active);
     with elem do
     begin
         DutyShape := Value;
@@ -841,12 +841,12 @@ procedure Loads_Set_Growth(const Value: PAnsiChar); CDECL;
 var
     elem: TLoadObj;
 begin
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.Loads.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.Loads.ActiveIndex = 0 then
         Exit;
         
-    elem := TLoadObj(ActiveCircuit.Loads.Active);
+    elem := TLoadObj(DSSPrime.ActiveCircuit.Loads.Active);
     with elem do
     begin
         GrowthShape := Value;
@@ -973,12 +973,12 @@ procedure Loads_Set_Yearly(const Value: PAnsiChar); CDECL;
 var
     elem: TLoadObj;
 begin
-    if ActiveCircuit = nil then
+    if DSSPrime.ActiveCircuit = nil then
         Exit;
-    if ActiveCircuit.Loads.ActiveIndex = 0 then
+    if DSSPrime.ActiveCircuit.Loads.ActiveIndex = 0 then
         Exit;
         
-    elem := TLoadObj(ActiveCircuit.Loads.Active);
+    elem := TLoadObj(DSSPrime.ActiveCircuit.Loads.Active);
     with elem do
     begin
         YearlyShape := Value;

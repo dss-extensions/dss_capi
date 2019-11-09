@@ -142,7 +142,8 @@ uses
     Sysutils,
     uCmatrix,
     MathUtil,
-    Math;
+    Math,
+    DSSHelper;
 
 const
     AVGPHASES = -1;
@@ -267,7 +268,7 @@ end;
 function TCapControl.NewObject(const ObjName: String): Integer;
 begin
     // Make a new CapControl and add it to CapControl class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TCapControlObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -285,7 +286,7 @@ begin
 
   // continue parsing WITH contents of Parser
     ActiveCapControlObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveCapControlObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveCapControlObj;
 
     Result := 0;
 
@@ -641,7 +642,7 @@ begin
     Devindex := GetCktElementIndex(ControlVars.CapacitorName); // Global function
     if DevIndex > 0 then
     begin  // Both capacitor and monitored element must already exist
-        ControlledElement := ActiveCircuit.CktElements.Get(DevIndex);
+        ControlledElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
         ControlledCapacitor := This_Capacitor;
         Nphases := ControlledElement.NPhases;  // Force number of phases to be same   Added 5/21/01  RCD
         Nconds := FNphases;
@@ -672,7 +673,7 @@ begin
     Devindex := GetCktElementIndex(ElementName); // Global function
     if DevIndex > 0 then
     begin
-        MonitoredElement := ActiveCircuit.CktElements.Get(DevIndex);
+        MonitoredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
         if ElementTerminal > MonitoredElement.Nterms then
         begin
             DoErrorMsg('CapControl.' + Name + ':',
@@ -695,7 +696,7 @@ begin
     if ControlVars.VoverrideBusSpecified then
         with ControlVars do
         begin
-            VOverrideBusIndex := ActiveCircuit.BusList.Find(VOverrideBusName);
+            VOverrideBusIndex := DSSPrime.ActiveCircuit.BusList.Find(VOverrideBusName);
             if VOverrideBusIndex = 0 then
             begin
                 DoSimpleMsg(Format('CapControl.%s: Voltage override Bus "%s" not found. Did you wait until buses were defined? Reverting to default.', [Name, VOverrideBusName]), 10361);
@@ -744,7 +745,7 @@ begin
     with pBus do
         if Assigned(Vbus) then    // uses nphases from CapControlObj
             for j := 1 to nPhases do
-                cBuffer^[j] := ActiveCircuit.Solution.NodeV^[GetRef(j)];
+                cBuffer^[j] := DSSPrime.ActiveCircuit.Solution.NodeV^[GetRef(j)];
     ;
 
 end;
@@ -857,7 +858,7 @@ begin
                             if ShowEventLog then
                                 AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Opened**');
                             PresentState := CTRL_OPEN;
-                            with ActiveCircuit.Solution do
+                            with DSSPrime.ActiveCircuit.Solution do
                                 LastOpenTime := DynaVars.t + 3600.0 * DynaVars.intHour;
                         end;
                     end;
@@ -1000,7 +1001,7 @@ begin
 
                 if VoverrideBusSpecified then
                 begin
-                    GetBusVoltages(ActiveCircuit.Buses^[VOverrideBusIndex], cBuffer);
+                    GetBusVoltages(DSSPrime.ActiveCircuit.Buses^[VOverrideBusIndex], cBuffer);
                 end
                 else
                     MonitoredElement.GetTermVoltages(ElementTerminal, cBuffer);
@@ -1172,7 +1173,7 @@ begin
                 TIMECONTROL: {time}
               {7-8-10  NormalizeToTOD Algorithm modified to close logic hole between 11 PM and midnight}
                 begin
-                    with ActiveCircuit.Solution do
+                    with DSSPrime.ActiveCircuit.Solution do
                     begin
                         NormalizedTime := NormalizeToTOD(DynaVars.intHour, DynaVars.t);
                     end;
@@ -1284,7 +1285,7 @@ begin
 
             end;
     end;
-    with ActiveCircuit, ControlVars do
+    with DSSPrime.ActiveCircuit, ControlVars do
     begin
         if ShouldSwitch and not Armed then
         begin

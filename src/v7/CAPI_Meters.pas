@@ -95,9 +95,9 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.EnergyMeters, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.EnergyMeters, False);
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_First(): Integer; CDECL;
@@ -107,8 +107,8 @@ var
 begin
 
     Result := 0;
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeter := EnergyMeters.First;
             if pMeter <> NIL then
@@ -135,9 +135,9 @@ var
 
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
         if pMeterObj <> NIL then
             Result := pMeterObj.name;
     end;
@@ -153,19 +153,19 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeterObj := ActiveCircuit.EnergyMeters.next;
+        pMeterObj := DSSPrime.ActiveCircuit.EnergyMeters.next;
         if pMeterObj <> NIL then
         begin
             repeat   // Find an Enabled Meter
                 if pMeterObj.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := pMeterObj;
-                    Result := ActiveCircuit.EnergyMeters.ActiveIndex;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := pMeterObj;
+                    Result := DSSPrime.ActiveCircuit.EnergyMeters.ActiveIndex;
                 end
                 else
-                    pMeterObj := ActiveCircuit.EnergyMeters.next;
+                    pMeterObj := DSSPrime.ActiveCircuit.EnergyMeters.next;
             until (Result > 0) or (pMeterObj = NIL);
         end
         else
@@ -180,9 +180,9 @@ var
     k: Integer;
 
 begin
-    if ActiveCircuit <> NIL then 
+    if DSSPrime.ActiveCircuit <> NIL then 
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
         if Assigned(pMeterObj) then
         begin
             Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumEMRegisters);
@@ -205,9 +205,9 @@ var
 begin
 
 // First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
         if pMeterObj <> NIL then
         begin
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (numEMRegisters - 1) + 1);
@@ -239,9 +239,9 @@ var
 
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeter := ActiveCircuit.EnergyMeters.Active;
+        pMeter := DSSPrime.ActiveCircuit.EnergyMeters.Active;
         if pMeter <> NIL then
             pMeter.ResetRegisters;
     end;
@@ -250,7 +250,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Meters_ResetAll(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         DSSPrime.EnergyMeterClass.ResetAll;
     end;
@@ -262,9 +262,9 @@ var
 
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeter := ActiveCircuit.EnergyMeters.Active;
+        pMeter := DSSPrime.ActiveCircuit.EnergyMeters.Active;
         if pMeter <> NIL then
             pMeter.TakeSample;
     end;
@@ -277,9 +277,9 @@ var
 
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeter := ActiveCircuit.EnergyMeters.Active;
+        pMeter := DSSPrime.ActiveCircuit.EnergyMeters.Active;
         if pMeter <> NIL then
             pMeter.SaveRegisters;
     end;
@@ -288,12 +288,12 @@ end;
 //------------------------------------------------------------------------------
 procedure Meters_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     if DSSPrime.EnergyMeterClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := DSSPrime.EnergyMeterClass.ElementList.Active;
-        ActiveCircuit.EnergyMeters.Get(DSSPrime.EnergyMeterClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.EnergyMeterClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.EnergyMeters.Get(DSSPrime.EnergyMeterClass.Active);
     end
     else
     begin
@@ -308,8 +308,8 @@ var
 
 begin
 
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
         begin
             TotalizeMeters;
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (NumEMRegisters - 1) + 1);
@@ -338,9 +338,9 @@ var
 begin
 
 // First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
         if pMeterObj <> NIL then
         begin
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMeterObj.NPhases - 1) + 1);
@@ -372,9 +372,9 @@ var
 begin
     Value := PDoubleArray(ValuePtr);
 // First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
         if pMeterObj <> NIL then
         begin
             k := (0);   // get starting index for Value array
@@ -396,9 +396,9 @@ var
 begin
 
 // First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
         if pMeterObj <> NIL then
         begin
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMeterObj.NPhases - 1) + 1);
@@ -430,9 +430,9 @@ var
 begin
     Value := PDoubleArray(ValuePtr);
 // First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
         if pMeterObj <> NIL then
         begin
             k := (0);   // get starting index for Value array
@@ -454,9 +454,9 @@ var
 begin
 
 // First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
         if pMeterObj <> NIL then
         begin
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMeterObj.NPhases - 1) + 1);
@@ -488,9 +488,9 @@ var
 begin
     Value := PDoubleArray(ValuePtr);
 // First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
         if pMeterObj <> NIL then
         begin
             k := (0);   // get starting index for Value array
@@ -510,9 +510,9 @@ var
 begin
 
 // First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
         if pMeterObj <> NIL then
         begin
             Result := pMeterObj.ElementName;
@@ -538,9 +538,9 @@ var
 begin
 
 // First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
         if pMeterObj <> NIL then
         begin
             Result := pMeterObj.MeteredTerminal;
@@ -561,9 +561,9 @@ var
 begin
 
 // First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
         if pMeterObj <> NIL then
         begin
             pMeterObj.elementName := Value;
@@ -580,9 +580,9 @@ var
 begin
 
 // First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
         if pMeterObj <> NIL then
         begin
             pMeterObj.MeteredTerminal := Value;
@@ -596,7 +596,7 @@ end;
 function Meters_Get_DIFilesAreOpen(): Boolean; CDECL;
 begin
     Result := False;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         Result := DSSPrime.DIFilesAreOpen;    // Global variable
     end;
@@ -604,7 +604,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Meters_CloseAllDIFiles(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         DSSPrime.EnergyMeterClass.CloseAllDIFiles;
     end;
@@ -612,7 +612,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Meters_OpenAllDIFiles(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         DSSPrime.EnergyMeterClass.OpenAllDIFiles;
     end;
@@ -620,7 +620,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Meters_SampleAll(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         DSSPrime.EnergyMeterClass.SampleAll;
     end;
@@ -628,7 +628,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Meters_SaveAll(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         DSSPrime.EnergyMeterClass.SaveAll;
     end;
@@ -643,9 +643,9 @@ var
     node: TCktTreeNode;
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         pMeterObj := EnergyMeters.Active;
         if pMeterObj = NIL then
@@ -669,9 +669,9 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+    pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
     if pMeterObj = NIL then
         Exit;
     if not pMeterObj.CheckBranchList(5500) then
@@ -682,8 +682,8 @@ end;
 function Meters_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.EnergyMeters.ListSize;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.EnergyMeters.ListSize;
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_AllBranchesInZone(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -695,10 +695,10 @@ var
     pElem: TDSSCktElement;
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         pMeterObj := EnergyMeters.Active;
         if pMeterObj = NIL then
@@ -730,8 +730,8 @@ var
   // pelem : TDSSCktElement;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := EnergyMeters.Active;
             if pMeterObj <> NIL then
@@ -757,8 +757,8 @@ var
 
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -774,8 +774,8 @@ var
 
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -790,8 +790,8 @@ var
     pMeterObj: TEnergyMeterObj;
 
 begin
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -811,8 +811,8 @@ var
 
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -827,8 +827,8 @@ var
     pMeterObj: TEnergyMeterObj;
 
 begin
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -846,8 +846,8 @@ var
 
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -864,8 +864,8 @@ var
 
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -884,8 +884,8 @@ var
 
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -901,8 +901,8 @@ var
 
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -917,8 +917,8 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -932,8 +932,8 @@ procedure Meters_SetActiveSection(SectIdx: Integer); CDECL;
 var
     pMeterObj: TEnergyMeterObj;
 begin
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -952,8 +952,8 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -972,8 +972,8 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -992,8 +992,8 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -1012,8 +1012,8 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -1032,8 +1032,8 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -1052,8 +1052,8 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -1073,8 +1073,8 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -1094,8 +1094,8 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit) then
+        with DSSPrime.ActiveCircuit do
         begin
             pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
             if pMeterObj <> NIL then
@@ -1113,8 +1113,8 @@ end;
 //------------------------------------------------------------------------------
 function Meters_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.EnergyMeters.ActiveIndex
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.EnergyMeters.ActiveIndex
     else
         Result := 0
 end;
@@ -1123,15 +1123,15 @@ procedure Meters_Set_idx(Value: Integer); CDECL;
 var
     pEnergyMeter: TEnergyMeterObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pEnergyMeter := ActiveCircuit.EnergyMeters.Get(Value);
+    pEnergyMeter := DSSPrime.ActiveCircuit.EnergyMeters.Get(Value);
     if pEnergyMeter = NIL then
     begin
         DoSimpleMsg('Invalid Meter index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pEnergyMeter;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pEnergyMeter;
 end;
 //------------------------------------------------------------------------------
 end.

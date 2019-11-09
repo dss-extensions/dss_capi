@@ -94,7 +94,9 @@ implementation
 
 uses
     DSSGlobals,
-    SysUtils;
+    SysUtils,
+    DSSClass,
+    DSSHelper;
 
 constructor TDSSBus.Create;
 begin
@@ -164,7 +166,7 @@ begin
             AddANode;
             Nodes^[FNumNodesThisBus] := NodeNum;
 
-            with ActiveCircuit do
+            with DSSPrime.ActiveCircuit do
             begin
                 INC(NumNodes);  // Global node number for circuit
                 RefNo^[FNumNodesThisBus] := NumNodes;

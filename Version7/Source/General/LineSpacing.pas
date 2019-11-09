@@ -112,7 +112,8 @@ uses
     DSSGlobals,
     Ucomplex,
     Utilities,
-    LineUNits;
+    LineUNits,
+    DSSHelper;
 
 const
     NumPropsThisClass = 5;
@@ -168,7 +169,7 @@ end;
 function TLineSpacing.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveDSSObject := TLineSpacingObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);

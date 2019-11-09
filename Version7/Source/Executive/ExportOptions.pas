@@ -215,12 +215,12 @@ begin
     case ParamPointer of
         1..24, 28..32, 35, 46..51:
         begin
-            if not assigned(ActiveCircuit) then
+            if not assigned(DSSPrime.ActiveCircuit) then
             begin
                 DoSimpleMsg('No circuit created.', 24711);
                 Exit;
             end;
-            if not assigned(ActiveCircuit.Solution) or not assigned(ActiveCircuit.Solution.NodeV) then
+            if not assigned(DSSPrime.ActiveCircuit.Solution) or not assigned(DSSPrime.ActiveCircuit.Solution.NodeV) then
             begin
                 DoSimpleMsg('The circuit must be solved before you can do this.', 24712);
                 Exit;
@@ -234,10 +234,10 @@ begin
     TripletOpt := FALSE;
     PhasesToPlot := PROFILE3PH;  // init this to get rid of compiler warning
     pMeter := NIL;
-    Substation := ActiveCircuit.Name + '_Substation';
-    SubGeographicRegion := ActiveCircuit.Name + '_SubRegion';
-    GeographicRegion := ActiveCircuit.Name + '_Region';
-    FdrUuid := ActiveCircuit.UUID;  // default is to not change the feeder mrid 
+    Substation := DSSPrime.ActiveCircuit.Name + '_Substation';
+    SubGeographicRegion := DSSPrime.ActiveCircuit.Name + '_SubRegion';
+    GeographicRegion := DSSPrime.ActiveCircuit.Name + '_Region';
+    FdrUuid := DSSPrime.ActiveCircuit.UUID;  // default is to not change the feeder mrid 
     CreateUUID4(SubUuid);      // these next 3 are created on the fly for CIM export
     CreateUUID4(SubGeoUuid);
     CreateUUID4(RgnUuid);
@@ -527,7 +527,7 @@ begin
             begin
                 if Parm2 = 'all' then
                 begin
-                    pMon := ActiveCircuit.Monitors.First;
+                    pMon := DSSPrime.ActiveCircuit.Monitors.First;
                     while pMon <> NIL do
                     begin
                         if pMon <> NIL then
@@ -535,7 +535,7 @@ begin
                             pMon.TranslateToCSV(FALSE);
                             FileName := DSSPrime.GlobalResult;
                         end;
-                        pMon := ActiveCircuit.Monitors.Next;
+                        pMon := DSSPrime.ActiveCircuit.Monitors.Next;
                     end;
                 end
                 else

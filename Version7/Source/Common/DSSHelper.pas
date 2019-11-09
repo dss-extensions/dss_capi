@@ -4,6 +4,7 @@ interface
 
 uses 
     DSSClass,
+    Circuit,
     Spectrum,
     LoadShape,
     TempShape,
@@ -57,6 +58,7 @@ uses
 type
     TDSSGlobalHelper = class helper for TDSS
     private
+        function GetActiveCircuit: TDSSCircuit; inline;
         function GetLoadShapeClass: TLoadShape; inline;
         function GetTShapeClass: TTshape; inline;
         function GetPriceShapeClass: TPriceShape; inline;
@@ -107,6 +109,7 @@ type
         function GetGICLineClass: TGICLine; inline;
         function GetGICTransformerClass:TGICTransformer; inline;
         
+        procedure SetActiveCircuit(val: TDSSCircuit); inline;
         procedure SetLoadShapeClass(val: TLoadShape); inline;
         procedure SetTShapeClass(val: TTshape); inline;
         procedure SetPriceShapeClass(val: TPriceShape); inline;
@@ -158,6 +161,8 @@ type
         procedure SetGICTransformerClass(val:TGICTransformer); inline;
         
     public
+        property ActiveCircuit: TDSSCircuit read GetActiveCircuit write SetActiveCircuit;
+        
         property LoadShapeClass: TLoadShape read GetLoadShapeClass write SetLoadShapeClass;
         property TShapeClass: TTshape read GetTShapeClass write SetTShapeClass;
         property PriceShapeClass: TPriceShape read GetPriceShapeClass write SetPriceShapeClass;
@@ -211,6 +216,7 @@ type
     
 implementation
 
+function TDSSGlobalHelper.GetActiveCircuit: TDSSCircuit; begin Result := TDSSCircuit(FActiveCircuit); end;
 function TDSSGlobalHelper.GetLoadShapeClass: TLoadShape; begin Result := TLoadShape(FLoadShapeClass); end;
 function TDSSGlobalHelper.GetTShapeClass: TTshape; begin Result := TTshape(FTShapeClass); end;
 function TDSSGlobalHelper.GetPriceShapeClass: TPriceShape; begin Result := TPriceShape(FPriceShapeClass); end;
@@ -261,6 +267,7 @@ function TDSSGlobalHelper.GetXfmrCodeClass: TXfmrCode; begin Result := TXfmrCode
 function TDSSGlobalHelper.GetGICLineClass: TGICLine; begin Result := TGICLine(FGICLineClass); end;
 function TDSSGlobalHelper.GetGICTransformerClass: TGICTransformer; begin Result := TGICTransformer(FGICTransformerClass); end;
 
+procedure TDSSGlobalHelper.SetActiveCircuit(val: TDSSCircuit); begin FActiveCircuit := val; end;
 procedure TDSSGlobalHelper.SetLoadShapeClass(val: TLoadShape); begin FLoadShapeClass := val; end;
 procedure TDSSGlobalHelper.SetTShapeClass(val: TTshape); begin FTShapeClass := val; end;
 procedure TDSSGlobalHelper.SetPriceShapeClass(val: TPriceShape); begin FPriceShapeClass := val; end;

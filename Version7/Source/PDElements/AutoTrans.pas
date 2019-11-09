@@ -425,7 +425,7 @@ end;
 function TAutoTrans.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
 
         ActiveCktElement := TAutoTransObj.Create(Self, ObjName);
@@ -451,7 +451,7 @@ begin
 
   {Make this object the active circuit element}
     ActiveAutoTransObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveAutoTransObj;  // use property to set this value
+    DSS.ActiveCircuit.ActiveCktElement := ActiveAutoTransObj;  // use property to set this value
 
     Result := 0;
 
@@ -1418,7 +1418,7 @@ begin
     end;
 
     // Set frequency multipliers for this calculation
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
     // Check for rebuilding Y_Terminal; Only rebuild if freq is different than last time
     if FreqMultiplier <> Y_Terminal_Freqmult then
@@ -1779,7 +1779,7 @@ begin
         ITerm_NL := Allocmem(SizeOf(Complex) * 2 * NumWindings);
 
      {Load up Vterminal - already allocated for all cktelements}
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
             if Assigned(NodeV) then
                 for i := 1 to Yorder do
                     Vterminal^[i] := NodeV^[NodeRef^[i]]
@@ -1891,7 +1891,7 @@ begin
         end;
 
      {Load up VTerminal - already allocated for all cktelements}
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
             for i := 1 to Yorder do
                 Vterminal^[i] := NodeV^[NodeRef^[i]];
 
@@ -2380,7 +2380,7 @@ var
 begin
 
     // check for GIC build
-    if ActiveCircuit.Solution.Frequency < 0.51 then
+    if DSSPrime.ActiveCircuit.Solution.Frequency < 0.51 then
          {Build Yterminal for GIC ~dc simulation}
 
         GICBuildYTerminal

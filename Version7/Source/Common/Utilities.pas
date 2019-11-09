@@ -196,7 +196,8 @@ uses
     HashList,
     EnergyMeter,
     PCElement,
-    ControlElem;
+    ControlElem,
+    DSSHelper;
 
 const
     ZERONULL: Integer = 0;
@@ -569,8 +570,8 @@ begin
         Result := ADMITTANCE;
     end;
 { If this represents a change, invalidate all the PC Yprims}
-    if Result <> ActiveCircuit.Solution.LoadModel then
-        ActiveCircuit.InvalidateAllPCElements;
+    if Result <> DSSPrime.ActiveCircuit.Solution.LoadModel then
+        DSSPrime.ActiveCircuit.InvalidateAllPCElements;
 
 end;
 
@@ -975,7 +976,7 @@ begin
     Val(S2, Result, Code);
     if Code > 0 then
     begin   {check for error}
-        Result := ActiveCircuit.solution.DynaVars.h; // Don't change it
+        Result := DSSPrime.ActiveCircuit.solution.DynaVars.h; // Don't change it
         DosimpleMsg('Error in specification of StepSize: ' + s, 99933);
         Exit;
     end;
@@ -986,7 +987,7 @@ begin
             Result := Result * 60.0;
         's': ; // Do nothing
     else
-        Result := ActiveCircuit.solution.DynaVars.h; // Don't change it
+        Result := DSSPrime.ActiveCircuit.solution.DynaVars.h; // Don't change it
         DosimpleMsg('Error in specification of StepSize: "' + s + '" Units can only be h, m, or s (single char only) ', 99934);
     end;
 
@@ -1266,16 +1267,16 @@ function GetSolutionModeID: String;
 
 begin
     Result := 'UNKNOWN';
-    if ActiveCircuit <> NIL then
-        Result := GetSolutionModeIDName(ActiveCircuit.Solution.mode);
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := GetSolutionModeIDName(DSSPrime.ActiveCircuit.Solution.mode);
 end;
 
 function GetControlModeID: String;
 
 begin
     Result := 'Unknown';
-    if ActiveCircuit <> NIL then
-        case ActiveCircuit.Solution.Controlmode of
+    if DSSPrime.ActiveCircuit <> NIL then
+        case DSSPrime.ActiveCircuit.Solution.Controlmode of
             CTRLSTATIC:
                 Result := 'STATIC';
             EVENTDRIVEN:
@@ -1296,8 +1297,8 @@ function GetRandomModeID: String;
 
 begin
     Result := 'Unknown';
-    if ActiveCircuit <> NIL then
-        case ActiveCircuit.Solution.RandomType of
+    if DSSPrime.ActiveCircuit <> NIL then
+        case DSSPrime.ActiveCircuit.Solution.RandomType of
 
             0:
                 Result := 'None';
@@ -1316,7 +1317,7 @@ end;
 function GetLoadModel: String;
 begin
 
-    case ActiveCircuit.solution.LoadModel of
+    case DSSPrime.ActiveCircuit.solution.LoadModel of
         ADMITTANCE:
             Result := 'Admittance';
     else
@@ -1416,7 +1417,7 @@ begin
 
      // Since there could be devices of the same name of different classes,
      // loop until we find one of the correct class
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         Devindex := DeviceList.Find(DevName);
         while DevIndex > 0 do
@@ -1472,7 +1473,7 @@ begin
         end;
     end;
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         pLoad := Loads.First;
         while pLoad <> NIL do
@@ -1565,7 +1566,7 @@ var
 begin
 
     Count := 1;
-    TestkV := ActiveCircuit.LegalVoltageBases^[1];
+    TestkV := DSSPrime.ActiveCircuit.LegalVoltageBases^[1];
     Result := TestkV;
     MinDiff := 1.0E50;  // Big whompin number
 
@@ -1579,7 +1580,7 @@ begin
         end;
 
         Inc(Count);
-        TestkV := ActiveCircuit.LegalVoltageBases^[Count];
+        TestkV := DSSPrime.ActiveCircuit.LegalVoltageBases^[Count];
     end;
 
 end;
@@ -1607,7 +1608,7 @@ begin
     end;
 
     try
-        with ActiveCircuit, ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit, Solution do
         begin
             dNumNodes := NumNodes;
             Write(F, dNumNodes);
@@ -1652,7 +1653,7 @@ begin
     end;
 
     try
-        with ActiveCircuit, ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit, Solution do
         begin
             Read(F, dNumNodes);
             if NumNodes = Round(dNumNodes) then
@@ -1690,7 +1691,7 @@ begin
 
     if SavePresentVoltages   // Zap voltage vector to disk
     then
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
         begin
     // Go through all PC Elements
             pcElem := PCElements.First;
@@ -1720,7 +1721,7 @@ begin
 
 // If state variables not defined for a PC class, does nothing
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         pcelem := PCElements.First;
 
@@ -1744,7 +1745,7 @@ begin
 
 // Invalidate All PC Elements; Any could be a machine
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         pcelem := PCElements.First;
 
@@ -1760,7 +1761,7 @@ end;
 function PresentTimeInSec: Double;
 
 begin
-    with ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
         Result := Dynavars.t + DynaVars.intHour * 3600.0;
 end;
 
@@ -1772,7 +1773,7 @@ var
 
 begin
     Result := 0;
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         pFault := TFaultObj(Faults.First);
         while pFault <> NIL do
@@ -1791,7 +1792,7 @@ var
 
 begin
     Result := 0;
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         ControlDevice := DSSControls.First;
         while ControlDevice <> NIL do
@@ -1809,7 +1810,7 @@ begin
     if NodeRef = 0 then
         Result := 0
     else
-        Result := ActiveCircuit.MapNodeToBus^[NodeRef].NodeNum
+        Result := DSSPrime.ActiveCircuit.MapNodeToBus^[NodeRef].NodeNum
 end;
 
 
@@ -1980,7 +1981,7 @@ procedure LogThisEvent(const EventName: String);
 
 begin
     {****  WriteDLLDebugFile(Format('LogThisEvent: EventStrings= %p', [@EventStrings])); }
-    with ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
         DSSPrime.EventStrings.Add(Format('Hour=%d, Sec=%-.8g, Iteration=%d, ControlIter=%d, Event=%s',
             [DynaVars.intHour, Dynavars.t, iteration, ControlIteration, EventName]));
 
@@ -1994,7 +1995,7 @@ var
 
 begin
   {****  WriteDLLDebugFile(Format('LogThisEvent: EventStrings= %p', [@EventStrings])); }
-    with  ActiveCircuit.Solution do
+    with  DSSPrime.ActiveCircuit.Solution do
         S := Format('Hour=%d, Sec=%-.5g, ControlIter=%d, Element=%s, Action=%s',
             [DynaVars.intHour, Dynavars.t, ControlIteration, OpDev, Uppercase(action)]);
     DSSPrime.EventStrings.Add(S);
@@ -2208,7 +2209,7 @@ var
 
 begin
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
         for i := 1 to NumBuses do
             Buses^[i].Keep := FALSE;
 
@@ -2367,7 +2368,7 @@ var
     i, j, nref: Integer;
 begin
     Result := -1.0;
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         for i := 1 to NumBuses do
         begin
@@ -2394,7 +2395,7 @@ begin
     Result := 1.0e50; // start with big number
     MinFound := FALSE;
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         for i := 1 to NumBuses do
             with buses^[i] do
@@ -2437,12 +2438,12 @@ var
 
 begin
     Result := CZERO;
-    cktElem := ActiveCircuit.Sources.First;
+    cktElem := DSSPrime.ActiveCircuit.Sources.First;
     while CktElem <> NIL do
     begin
      //----CktElem.ActiveTerminalIdx := 1;
         Caccum(Result, Cnegate(CktElem.power[1]));
-        cktElem := ActiveCircuit.Sources.Next;
+        cktElem := DSSPrime.ActiveCircuit.Sources.Next;
     end;
 end;
 
@@ -2460,7 +2461,7 @@ begin
     Count := LoadClass.ElementList.ListSize;
 
     kWEach := kW / Max(1.0, round(Count));
-    if ActiveCircuit.PositiveSequence then
+    if DSSPrime.ActiveCircuit.PositiveSequence then
         kWEach := kWeach / 3.0;
 
     for i := 1 to Count do
@@ -2472,7 +2473,7 @@ begin
                 Write(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
             else
                 Write(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
-            with ActiveCircuit do
+            with DSSPrime.ActiveCircuit do
             begin
                 Write(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
                 Write(F, Format(' kW=%-g', [kWeach]));
@@ -2507,7 +2508,7 @@ begin
 
 
     kWEach := kW / LoadCount;  // median sized generator
-    if ActiveCircuit.PositiveSequence then
+    if DSSPrime.ActiveCircuit.PositiveSequence then
         kWEach := kWEach / 3.0;
 
     randomize;
@@ -2522,7 +2523,7 @@ begin
                 Write(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
             else
                 Write(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
-            with ActiveCircuit do
+            with DSSPrime.ActiveCircuit do
             begin
                 Write(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
                 Write(F, Format(' kW=%-g', [kWeach * random * 2.0]));
@@ -2570,7 +2571,7 @@ begin
                 Dec(SkipCount);
     end;
 
-    if ActiveCircuit.PositiveSequence then
+    if DSSPrime.ActiveCircuit.PositiveSequence then
         kWeach := kW / TotalkW / 3.0
     else
         kWeach := kW / TotalkW;
@@ -2586,7 +2587,7 @@ begin
                     Write(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
                 else
                     Write(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
-                with ActiveCircuit do
+                with DSSPrime.ActiveCircuit do
                 begin
                     Write(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
                     Write(F, Format(' kW=%-g ', [kWeach * pLoad.kWBase]));
@@ -2628,7 +2629,7 @@ begin
         end;
     end;
 
-    if ActiveCircuit.PositiveSequence then
+    if DSSPrime.ActiveCircuit.PositiveSequence then
         kWeach := kW / TotalkW / 3.0
     else
         kWeach := kW / TotalkW;
@@ -2642,7 +2643,7 @@ begin
                 Write(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
             else
                 Write(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
-            with ActiveCircuit do
+            with DSSPrime.ActiveCircuit do
             begin
                 Write(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
                 Write(F, Format(' kW=%-g', [kWeach * pLoad.kWBase]));
@@ -2719,7 +2720,7 @@ var
     // Feeder could have been dumped in meantime by setting Feeder=False in EnergyMeter
 
 begin
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         pMeter := EnergyMeters.First;
         while pMeter <> NIL do
@@ -2736,7 +2737,7 @@ var
     pFeeder: TFeederObj;
 
 begin
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         pFeeder := Feeders.First;
         while pFeeder <> NIL do
@@ -2754,7 +2755,7 @@ procedure InitializeFeeders;
 // Var i:Integer;
 begin
     (*    Do Nothing for now
-    With ActiveCircuit Do
+    With DSSPrime.ActiveCircuit Do
     For i := 1 to Feeders.ListSize Do Begin
         If Not SolutionAbort Then TFeederObj(Feeders.Get(i)).InitForSweep;
     End;
@@ -2765,7 +2766,7 @@ procedure ForwardSweepAllFeeders;
 // Var i:Integer;
 begin
     (*    Do Nothing for now
-    With ActiveCircuit Do
+    With DSSPrime.ActiveCircuit Do
     For i := 1 to Feeders.ListSize Do Begin
         If Not SolutionAbort Then TFeederObj(Feeders.Get(i)).ForwardSweep;
     End;
@@ -2776,7 +2777,7 @@ procedure BackwardSweepAllFeeders;
 // Var i:Integer;
 begin
     (*    Do Nothing for now
-    With ActiveCircuit Do
+    With DSSPrime.ActiveCircuit Do
     For i := 1 to Feeders.ListSize Do Begin
         If Not SolutionAbort Then TFeederObj(Feeders.Get(i)).BackwardSweep;
     End;
@@ -2827,7 +2828,7 @@ var
 begin
     Result := 0;
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
         for i := 1 to NumDevices do
             Result := max(result, TDSSCktElement(CktElements.Get(i)).Yorder);
 
@@ -2857,11 +2858,11 @@ var
     iBusidx: Integer;
 begin
     Result := StartNode;
-    iBusidx := ActiveCircuit.Buslist.Find(sBusName);
+    iBusidx := DSSPrime.ActiveCircuit.Buslist.Find(sBusName);
     if iBusidx > 0 then
-        while ActiveCircuit.Buses^[iBusidx].FindIdx(Result) <> 0 do
+        while DSSPrime.ActiveCircuit.Buses^[iBusidx].FindIdx(Result) <> 0 do
             Inc(Result);
-    ActiveCircuit.Buses^[iBusidx].Add(result);  // add it to the list so next call will be unique
+    DSSPrime.ActiveCircuit.Buses^[iBusidx].Add(result);  // add it to the list so next call will be unique
 end;
 
 procedure ShowMessageBeep(const s: String);
@@ -3111,7 +3112,7 @@ end;
 function GetActiveLoadShapeClass: String;
 
 begin
-    case ActiveCircuit.ActiveLoadShapeClass of
+    case DSSPrime.ActiveCircuit.ActiveLoadShapeClass of
         USEDAILY:
             Result := 'Daily';
         USEYEARLY:
@@ -3252,7 +3253,7 @@ var
         with pelem do
         begin
             Name := Format('%s%d', [copy(ParentClass.Name, 1, 4), ClassIndex]);
-            ActiveCircuit.DeviceList.Add(Name); // Make a new device list corresponding to the CktElements List
+            DSSPrime.ActiveCircuit.DeviceList.Add(Name); // Make a new device list corresponding to the CktElements List
             pelem.Checked := TRUE;
         end;
     end;
@@ -3263,11 +3264,11 @@ begin
 
 {Make sure buslist exists}
 
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    if ActiveCircuit.BusList.ListSize <= 0 then
+    if DSSPrime.ActiveCircuit.BusList.ListSize <= 0 then
         Exit;
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         TempBusList := THashList.Create(BusList.ListSize);
 

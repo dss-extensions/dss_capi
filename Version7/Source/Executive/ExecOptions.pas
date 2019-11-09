@@ -513,25 +513,25 @@ begin
             2, 13:
                 SetObject(Param);
             3:
-                ActiveCircuit.solution.DynaVars.intHour := Parser.IntValue;
+                DSSPrime.ActiveCircuit.solution.DynaVars.intHour := Parser.IntValue;
             4:
-                ActiveCircuit.solution.DynaVars.t := Parser.DblValue;
+                DSSPrime.ActiveCircuit.solution.DynaVars.t := Parser.DblValue;
             5:
-                with ActiveCircuit do
+                with DSSPrime.ActiveCircuit do
                 begin
                     Solution.Year := Parser.IntValue;
                     DefaultGrowthFactor := IntPower(DefaultGrowthRate, (Solution.Year - 1));
                 end;
             6:
-                ActiveCircuit.solution.Frequency := Parser.DblValue;
+                DSSPrime.ActiveCircuit.solution.Frequency := Parser.DblValue;
             7, 18:
-                ActiveCircuit.solution.DynaVars.h := InterpretTimeStepSize(Param);
+                DSSPrime.ActiveCircuit.solution.DynaVars.h := InterpretTimeStepSize(Param);
             8:
-                ActiveCircuit.solution.Mode := InterpretSolveMode(Param);  // see DSSGlobals
+                DSSPrime.ActiveCircuit.solution.Mode := InterpretSolveMode(Param);  // see DSSGlobals
             9:
-                ActiveCircuit.solution.RandomType := InterpretRandom(Param);
+                DSSPrime.ActiveCircuit.solution.RandomType := InterpretRandom(Param);
             10:
-                ActiveCircuit.solution.NumberOfTimes := Parser.IntValue;
+                DSSPrime.ActiveCircuit.solution.NumberOfTimes := Parser.IntValue;
             11:
                 Set_Time;
             14:
@@ -539,31 +539,31 @@ begin
             15:
                 DefaultEditor := Param;     // 'Editor='
             16:
-                ActiveCircuit.solution.ConvergenceTolerance := Parser.DblValue;
+                DSSPrime.ActiveCircuit.solution.ConvergenceTolerance := Parser.DblValue;
             17:
-                ActiveCircuit.solution.MaxIterations := Parser.IntValue;
+                DSSPrime.ActiveCircuit.solution.MaxIterations := Parser.IntValue;
             19:
-                with ActiveCircuit.solution do
+                with DSSPrime.ActiveCircuit.solution do
                 begin
                     DefaultLoadModel := InterpretLoadModel(Param); // for reverting to last on specified
                     LoadModel := DefaultLoadModel;
                 end;
             20:
-                ActiveCircuit.LoadMultiplier := Parser.DblValue;  // Set using LoadMultiplier property
+                DSSPrime.ActiveCircuit.LoadMultiplier := Parser.DblValue;  // Set using LoadMultiplier property
             21:
-                ActiveCircuit.NormalMinVolts := Parser.DblValue;
+                DSSPrime.ActiveCircuit.NormalMinVolts := Parser.DblValue;
             22:
-                ActiveCircuit.NormalMaxVolts := Parser.DblValue;
+                DSSPrime.ActiveCircuit.NormalMaxVolts := Parser.DblValue;
             23:
-                ActiveCircuit.EmergMinVolts := Parser.DblValue;
+                DSSPrime.ActiveCircuit.EmergMinVolts := Parser.DblValue;
             24:
-                ActiveCircuit.EmergMaxVolts := Parser.DblValue;
+                DSSPrime.ActiveCircuit.EmergMaxVolts := Parser.DblValue;
             25:
-                ActiveCircuit.DefaultDailyShapeObj.Mean := Parser.DblValue / 100.0;
+                DSSPrime.ActiveCircuit.DefaultDailyShapeObj.Mean := Parser.DblValue / 100.0;
             26:
-                ActiveCircuit.DefaultDailyShapeObj.StdDev := Parser.DblValue / 100.0;
+                DSSPrime.ActiveCircuit.DefaultDailyShapeObj.StdDev := Parser.DblValue / 100.0;
             27:
-                with ActiveCircuit do
+                with DSSPrime.ActiveCircuit do
                 begin
                     LoadDurCurve := Param;
                     LoadDurCurveObj := DSSPrime.LoadShapeClass.Find(Param);
@@ -571,69 +571,69 @@ begin
                         DoSimpleMsg('Load-Duration Curve not found.', 131);
                 end;
             28:
-                with ActiveCircuit do
+                with DSSPrime.ActiveCircuit do
                 begin
                     DefaultGrowthRate := 1.0 + Parser.DblValue / 100.0;
                     DefaultGrowthFactor := IntPower(DefaultGrowthRate, (Solution.Year - 1));
                 end;
             29:
-                ActiveCircuit.AutoAddObj.GenkW := Parser.DblValue;
+                DSSPrime.ActiveCircuit.AutoAddObj.GenkW := Parser.DblValue;
             30:
-                ActiveCircuit.AutoAddObj.GenPF := Parser.DblValue;
+                DSSPrime.ActiveCircuit.AutoAddObj.GenPF := Parser.DblValue;
             31:
-                ActiveCircuit.AutoAddObj.CapkVAR := Parser.DblValue;
+                DSSPrime.ActiveCircuit.AutoAddObj.CapkVAR := Parser.DblValue;
             32:
-                ActiveCircuit.AutoAddObj.AddType := InterpretAddType(Param);
+                DSSPrime.ActiveCircuit.AutoAddObj.AddType := InterpretAddType(Param);
             33:
-                ActiveCircuit.DuplicatesAllowed := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.DuplicatesAllowed := InterpretYesNo(Param);
             34:
-                ActiveCircuit.ZonesLocked := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.ZonesLocked := InterpretYesNo(Param);
             35:
-                ActiveCircuit.UEWeight := Parser.DblValue;
+                DSSPrime.ActiveCircuit.UEWeight := Parser.DblValue;
             36:
-                ActiveCircuit.LossWeight := Parser.DblValue;
+                DSSPrime.ActiveCircuit.LossWeight := Parser.DblValue;
             37:
-                ParseIntArray(ActiveCircuit.UERegs, ActiveCircuit.NumUEregs, Param);
+                ParseIntArray(DSSPrime.ActiveCircuit.UERegs, DSSPrime.ActiveCircuit.NumUEregs, Param);
             38:
-                ParseIntArray(ActiveCircuit.LossRegs, ActiveCircuit.NumLossregs, Param);
+                ParseIntArray(DSSPrime.ActiveCircuit.LossRegs, DSSPrime.ActiveCircuit.NumLossregs, Param);
             39:
                 DoLegalVoltageBases;
             40:
-                ActiveCircuit.Solution.Algorithm := InterpretSolveAlg(Param);
+                DSSPrime.ActiveCircuit.Solution.Algorithm := InterpretSolveAlg(Param);
             41:
-                ActiveCircuit.TrapezoidalIntegration := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.TrapezoidalIntegration := InterpretYesNo(Param);
             42:
                 DoAutoAddBusList(Param);
             43:
-                with ActiveCircuit.Solution do
+                with DSSPrime.ActiveCircuit.Solution do
                 begin
                     ControlMode := InterpretControlMode(Param);
                     DefaultControlMode := ControlMode;  // always revert to last one specified in a script
                 end;
             44:
-                ActiveCircuit.ControlQueue.TraceLog := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.ControlQueue.TraceLog := InterpretYesNo(Param);
             45:
-                ActiveCircuit.GenMultiplier := Parser.DblValue;
+                DSSPrime.ActiveCircuit.GenMultiplier := Parser.DblValue;
             46:
             begin
                 TestLoadShapeObj := DSSPrime.LoadShapeClass.Find(Param);
                 if TestLoadShapeObj <> NIL then
-                    ActiveCircuit.DefaultDailyShapeObj := TestLoadShapeObj;
+                    DSSPrime.ActiveCircuit.DefaultDailyShapeObj := TestLoadShapeObj;
             end;
             47:
             begin
                 TestLoadShapeObj := DSSPrime.LoadShapeClass.Find(Param);
                 if TestLoadShapeObj <> NIL then
-                    ActiveCircuit.DefaultYearlyShapeObj := TestLoadShapeObj;
+                    DSSPrime.ActiveCircuit.DefaultYearlyShapeObj := TestLoadShapeObj;
             end;
             48:
                 DoSetAllocationFactors(Parser.DblValue);
             49:
-                ActiveCircuit.PositiveSequence := InterpretCktModel(Param);
+                DSSPrime.ActiveCircuit.PositiveSequence := InterpretCktModel(Param);
             50:
-                ActiveCircuit.PriceSignal := Parser.DblValue;
+                DSSPrime.ActiveCircuit.PriceSignal := Parser.DblValue;
             51:
-                with ActiveCircuit do
+                with DSSPrime.ActiveCircuit do
                 begin
                     PriceCurve := Param;
                     PriceCurveObj := DSSPrime.PriceShapeClass.Find(Param);
@@ -641,7 +641,7 @@ begin
                         DoSimpleMsg('Priceshape.' + param + ' not found.', 132);
                 end;
             52:
-                with ActiveCircuit do
+                with DSSPrime.ActiveCircuit do
                     if ActiveCktElement <> NIL then
                         with ActiveCktElement do
                         begin
@@ -650,13 +650,13 @@ begin
                         end;
             53:
             begin
-                ActiveCircuit.Fundamental := Parser.DblValue;     // Set Base Frequency for system (used henceforth)
-                ActiveCircuit.Solution.Frequency := Parser.DblValue;
+                DSSPrime.ActiveCircuit.Fundamental := Parser.DblValue;     // Set Base Frequency for system (used henceforth)
+                DSSPrime.ActiveCircuit.Solution.Frequency := Parser.DblValue;
             end;
             54:
                 DoHarmonicsList(Param);
             55:
-                ActiveCircuit.Solution.MaxControlIterations := Parser.IntValue;
+                DSSPrime.ActiveCircuit.Solution.MaxControlIterations := Parser.IntValue;
             56:
                 Result := SetActiveBus(Param);   // See DSSGlobals
             57:
@@ -669,19 +669,19 @@ begin
                 DSSPrime.EnergyMeterClass.SaveDemandInterval := InterpretYesNo(Param);
             61:
             begin
-                ActiveCircuit.PctNormalFactor := Parser.DblValue;
-                DoSetNormal(ActiveCircuit.PctNormalFactor);
+                DSSPrime.ActiveCircuit.PctNormalFactor := Parser.DblValue;
+                DoSetNormal(DSSPrime.ActiveCircuit.PctNormalFactor);
             end;
             62:
                 DSSPrime.EnergyMeterClass.DI_Verbose := InterpretYesNo(Param);
             63:
-                ActiveCircuit.CaseName := Parser.StrValue;
+                DSSPrime.ActiveCircuit.CaseName := Parser.StrValue;
             64:
-                ActiveCircuit.NodeMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.NodeMarkerCode := Parser.IntValue;
             65:
-                ActiveCircuit.NodeMarkerWidth := Parser.IntValue;
+                DSSPrime.ActiveCircuit.NodeMarkerWidth := Parser.IntValue;
             66:
-                ActiveCircuit.LogEvents := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.LogEvents := InterpretYesNo(Param);
             67:
                 DSSExecutive.RecorderOn := InterpretYesNo(Param);
             68:
@@ -697,23 +697,23 @@ begin
             73:
             begin
                 DSSPrime.DefaultBaseFreq := Parser.DblValue;
-                ActiveCircuit.Fundamental := Parser.DblValue;     // Set Base Frequency for system (used henceforth)
-                ActiveCircuit.Solution.Frequency := Parser.DblValue;
+                DSSPrime.ActiveCircuit.Fundamental := Parser.DblValue;     // Set Base Frequency for system (used henceforth)
+                DSSPrime.ActiveCircuit.Solution.Frequency := Parser.DblValue;
             end;
             74:
-                ActiveCircuit.MarkSwitches := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.MarkSwitches := InterpretYesNo(Param);
             75:
-                ActiveCircuit.SwitchMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.SwitchMarkerCode := Parser.IntValue;
             76:
                 DSSPrime.DaisySize := Parser.DblValue;
             77:
-                ActiveCircuit.MarkTransformers := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.MarkTransformers := InterpretYesNo(Param);
             78:
-                ActiveCircuit.TransMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.TransMarkerCode := Parser.IntValue;
             79:
-                ActiveCircuit.TransMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.TransMarkerSize := Parser.IntValue;
             80:
-                ActiveCircuit.ActiveLoadShapeClass := InterpretLoadShapeClass(Param);
+                DSSPrime.ActiveCircuit.ActiveLoadShapeClass := InterpretLoadShapeClass(Param);
             81:
                 DSSPrime.DefaultEarthModel := InterpretEarthModel(Param);
             82:
@@ -723,63 +723,63 @@ begin
                     ResetQueryLogFile;
             end;
             83:
-                ActiveCircuit.MarkCapacitors := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.MarkCapacitors := InterpretYesNo(Param);
             84:
-                ActiveCircuit.MarkRegulators := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.MarkRegulators := InterpretYesNo(Param);
             85:
-                ActiveCircuit.MarkPVSystems := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.MarkPVSystems := InterpretYesNo(Param);
             86:
-                ActiveCircuit.MarkStorage := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.MarkStorage := InterpretYesNo(Param);
             87:
-                ActiveCircuit.CapMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.CapMarkerCode := Parser.IntValue;
             88:
-                ActiveCircuit.RegMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.RegMarkerCode := Parser.IntValue;
             89:
-                ActiveCircuit.PVMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.PVMarkerCode := Parser.IntValue;
             90:
-                ActiveCircuit.StoreMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.StoreMarkerCode := Parser.IntValue;
             91:
-                ActiveCircuit.CapMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.CapMarkerSize := Parser.IntValue;
             92:
-                ActiveCircuit.RegMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.RegMarkerSize := Parser.IntValue;
             93:
-                ActiveCircuit.PVMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.PVMarkerSize := Parser.IntValue;
             94:
-                ActiveCircuit.StoreMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.StoreMarkerSize := Parser.IntValue;
             95:
-                ActiveCircuit.NeglectLoadY := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.NeglectLoadY := InterpretYesNo(Param);
             96:
-                ActiveCircuit.MarkFuses := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.MarkFuses := InterpretYesNo(Param);
             97:
-                ActiveCircuit.FuseMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.FuseMarkerCode := Parser.IntValue;
             98:
-                ActiveCircuit.FuseMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.FuseMarkerSize := Parser.IntValue;
             99:
-                ActiveCircuit.MarkReclosers := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.MarkReclosers := InterpretYesNo(Param);
             100:
-                ActiveCircuit.RecloserMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.RecloserMarkerCode := Parser.IntValue;
             101:
-                ActiveCircuit.RecloserMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.RecloserMarkerSize := Parser.IntValue;
             102:
                 UpdateRegistry := InterpretYesNo(Param);
             103:
-                ActiveCircuit.MarkRelays := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.MarkRelays := InterpretYesNo(Param);
             104:
-                ActiveCircuit.RelayMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.RelayMarkerCode := Parser.IntValue;
             105:
-                ActiveCircuit.RelayMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.RelayMarkerSize := Parser.IntValue;
             107:
-                ActiveCircuit.Solution.Total_Time := Parser.DblValue;
+                DSSPrime.ActiveCircuit.Solution.Total_Time := Parser.DblValue;
             109:
-                ActiveCircuit.Solution.SampleTheMeters := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.Solution.SampleTheMeters := InterpretYesNo(Param);
             110:
-                ActiveCircuit.solution.MinIterations := Parser.IntValue;
+                DSSPrime.ActiveCircuit.solution.MinIterations := Parser.IntValue;
             111:
                 DSS_Viz_enable := InterpretYesNo(Param);
             112:
-                ActiveCircuit.ReduceLateralsKeepLoad := InterpretYesNo(Param);
+                DSSPrime.ActiveCircuit.ReduceLateralsKeepLoad := InterpretYesNo(Param);
             113:
-                ActiveCircuit.ReductionZmag := Parser.DblValue;
+                DSSPrime.ActiveCircuit.ReductionZmag := Parser.DblValue;
             114:
                 DSSPrime.SeasonalRating := InterpretYesNo(Param);
             115:
@@ -791,10 +791,10 @@ begin
 
         case ParamPointer of
             3, 4:
-                ActiveCircuit.Solution.Update_dblHour;
+                DSSPrime.ActiveCircuit.Solution.Update_dblHour;
               // Update IntervalHrs for devices that integrate
             7, 18:
-                ActiveCircuit.Solution.IntervalHrs := ActiveCircuit.Solution.DynaVars.h / 3600.0;
+                DSSPrime.ActiveCircuit.Solution.IntervalHrs := DSSPrime.ActiveCircuit.Solution.DynaVars.h / 3600.0;
         end;
 
         ParamName := Parser.NextParam;
@@ -838,88 +838,88 @@ begin
                 0:
                     DoSimpleMsg('Unknown parameter "' + ParamName + '" for Get Command ', 133);
                 1, 12:
-                    AppendGlobalResult(ActiveCircuit.ActiveCktElement.DSSClassName);
+                    AppendGlobalResult(DSSPrime.ActiveCircuit.ActiveCktElement.DSSClassName);
                 2, 13:
-                    AppendGlobalResult(ActiveCircuit.ActiveCktElement.Name);
+                    AppendGlobalResult(DSSPrime.ActiveCircuit.ActiveCktElement.Name);
                 3:
-                    AppendGlobalResult(IntToStr(ActiveCircuit.solution.DynaVars.intHour));
+                    AppendGlobalResult(IntToStr(DSSPrime.ActiveCircuit.solution.DynaVars.intHour));
                 4:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.solution.DynaVars.t]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.solution.DynaVars.t]));
                 5:
-                    AppendGlobalResult(IntToStr(ActiveCircuit.solution.Year));
+                    AppendGlobalResult(IntToStr(DSSPrime.ActiveCircuit.solution.Year));
                 6:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.solution.Frequency]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.solution.Frequency]));
                 7, 18:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.solution.DynaVars.h]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.solution.DynaVars.h]));
                 8:
                     AppendGlobalResult(GetSolutionModeID);
                 9:
                     AppendGlobalResult(GetRandomModeID);
                 10:
-                    AppendGlobalResult(IntToStr(ActiveCircuit.solution.NumberOfTimes));
+                    AppendGlobalResult(IntToStr(DSSPrime.ActiveCircuit.solution.NumberOfTimes));
                 11:
-                    AppendGlobalResult(Format('[ %d, %-g ] !... %-g (hours)', [ActiveCircuit.solution.DynaVars.intHour, ActiveCircuit.solution.DynaVars.t, ActiveCircuit.solution.DynaVars.dblHour]));
+                    AppendGlobalResult(Format('[ %d, %-g ] !... %-g (hours)', [DSSPrime.ActiveCircuit.solution.DynaVars.intHour, DSSPrime.ActiveCircuit.solution.DynaVars.t, DSSPrime.ActiveCircuit.solution.DynaVars.dblHour]));
                 14:
-                    AppendGlobalResult(ActiveCircuit.name);
+                    AppendGlobalResult(DSSPrime.ActiveCircuit.name);
                 15:
                     AppendGlobalResult(DefaultEditor);
                 16:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.solution.ConvergenceTolerance]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.solution.ConvergenceTolerance]));
                 17:
-                    AppendGlobalResult(IntToStr(ActiveCircuit.solution.MaxIterations));
+                    AppendGlobalResult(IntToStr(DSSPrime.ActiveCircuit.solution.MaxIterations));
                 19:
                     AppendGlobalResult(GetLoadModel);
                 20:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.LoadMultiplier]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.LoadMultiplier]));
                 21:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.NormalMinVolts]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.NormalMinVolts]));
                 22:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.NormalMaxVolts]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.NormalMaxVolts]));
                 23:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.EmergMinVolts]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.EmergMinVolts]));
                 24:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.EmergMaxVolts]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.EmergMaxVolts]));
                 25:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.DefaultDailyShapeObj.Mean * 100.0]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.DefaultDailyShapeObj.Mean * 100.0]));
                 26:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.DefaultDailyShapeObj.StdDev * 100.0]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.DefaultDailyShapeObj.StdDev * 100.0]));
                 27:
-                    AppendGlobalResult(ActiveCircuit.LoadDurCurve);
+                    AppendGlobalResult(DSSPrime.ActiveCircuit.LoadDurCurve);
                 28:
-                    AppendGlobalResult(Format('%-g', [(ActiveCircuit.DefaultGrowthRate - 1.0) * 100.0]));
+                    AppendGlobalResult(Format('%-g', [(DSSPrime.ActiveCircuit.DefaultGrowthRate - 1.0) * 100.0]));
                 29:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.AutoAddObj.GenkW]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.AutoAddObj.GenkW]));
                 30:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.AutoAddObj.GenPF]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.AutoAddObj.GenPF]));
                 31:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.AutoAddObj.CapkVAR]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.AutoAddObj.CapkVAR]));
                 32:
-                    case ActiveCircuit.AutoAddObj.Addtype of
+                    case DSSPrime.ActiveCircuit.AutoAddObj.Addtype of
                         GENADD:
                             AppendGlobalResult('generator');
                         CAPADD:
                             AppendGlobalResult('capacitor');
                     end;
                 33:
-                    if ActiveCircuit.DuplicatesAllowed then
+                    if DSSPrime.ActiveCircuit.DuplicatesAllowed then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 34:
-                    if ActiveCircuit.ZonesLocked then
+                    if DSSPrime.ActiveCircuit.ZonesLocked then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 35:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.UEWeight]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.UEWeight]));
                 36:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.LossWeight]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.LossWeight]));
                 37:
-                    AppendGlobalResult(IntArrayToString(ActiveCircuit.UERegs, ActiveCircuit.NumUEregs));
+                    AppendGlobalResult(IntArrayToString(DSSPrime.ActiveCircuit.UERegs, DSSPrime.ActiveCircuit.NumUEregs));
                 38:
-                    AppendGlobalResult(IntArrayToString(ActiveCircuit.LossRegs, ActiveCircuit.NumLossRegs));
+                    AppendGlobalResult(IntArrayToString(DSSPrime.ActiveCircuit.LossRegs, DSSPrime.ActiveCircuit.NumLossRegs));
                 39:
-                    with ActiveCircuit do
+                    with DSSPrime.ActiveCircuit do
                     begin
                         i := 1;
                         DSSPrime.GlobalResult := '(';
@@ -931,51 +931,51 @@ begin
                         DSSPrime.GlobalResult := DSSPrime.GlobalResult + ')';
                     end;
                 40:
-                    case ActiveCircuit.Solution.Algorithm of
+                    case DSSPrime.ActiveCircuit.Solution.Algorithm of
                         NORMALSOLVE:
                             AppendGlobalResult('normal');
                         NEWTONSOLVE:
                             AppendGlobalResult('newton');
                     end;
                 41:
-                    if ActiveCircuit.TrapezoidalIntegration then
+                    if DSSPrime.ActiveCircuit.TrapezoidalIntegration then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 42:
-                    with ActiveCircuit.AutoAddBusList do
+                    with DSSPrime.ActiveCircuit.AutoAddBusList do
                         for i := 1 to ListSize do
                             AppendGlobalResult(Get(i));
                 43:
                     AppendGlobalResult(GetControlModeID);
                 44:
-                    if ActiveCircuit.ControlQueue.traceLog then
+                    if DSSPrime.ActiveCircuit.ControlQueue.traceLog then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 45:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.GenMultiplier]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.GenMultiplier]));
                 46:
-                    AppendGlobalResult(ActiveCircuit.DefaultDailyShapeObj.Name);
+                    AppendGlobalResult(DSSPrime.ActiveCircuit.DefaultDailyShapeObj.Name);
                 47:
-                    AppendGlobalResult(ActiveCircuit.DefaultYearlyShapeObj.Name);
+                    AppendGlobalResult(DSSPrime.ActiveCircuit.DefaultYearlyShapeObj.Name);
                 48:
                     AppendGlobalResult('Get function not applicable.');
                 49:
-                    if ActiveCircuit.positiveSequence then
+                    if DSSPrime.ActiveCircuit.positiveSequence then
                         AppendGlobalResult('positive')
                     else
                         AppendGlobalResult('multiphase');
                 50:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.PriceSignal]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.PriceSignal]));
                 51:
-                    AppendGlobalResult(ActiveCircuit.PriceCurve);
+                    AppendGlobalResult(DSSPrime.ActiveCircuit.PriceCurve);
                 52:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.ActiveCktElement.ActiveTerminalIdx]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.ActiveCktElement.ActiveTerminalIdx]));
                 53:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.Fundamental]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.Fundamental]));
                 54:
-                    with ActiveCircuit.Solution do
+                    with DSSPrime.ActiveCircuit.Solution do
                         if DoALLHarmonics then
                             AppendGlobalResult('ALL')
                         else
@@ -984,38 +984,38 @@ begin
                                 AppendGlobalResult(Format('%-g', [HarmonicList^[i]]));
                         end;
                 55:
-                    AppendGlobalResult(IntToStr(ActiveCircuit.solution.MaxControlIterations));
+                    AppendGlobalResult(IntToStr(DSSPrime.ActiveCircuit.solution.MaxControlIterations));
                 56:
-                    AppendGlobalResult(ActiveCircuit.BusList.Get(ActiveCircuit.ActiveBusIndex));
+                    AppendGlobalResult(DSSPrime.ActiveCircuit.BusList.Get(DSSPrime.ActiveCircuit.ActiveBusIndex));
                 57:
                     AppendGlobalResult(DSSPrime.DataDirectory); // NOTE - not necessarily output directory
                 58:
-                    with ActiveCircuit do
+                    with DSSPrime.ActiveCircuit do
                         for i := 1 to NumBuses do
                             if Buses^[i].Keep then
                                 AppendGlobalResult(BusList.Get(i));
                 59:
-                    AppendGlobalResult(ActiveCircuit.ReductionStrategyString);
+                    AppendGlobalResult(DSSPrime.ActiveCircuit.ReductionStrategyString);
                 60:
                     if DSSPrime.EnergyMeterClass.SaveDemandInterval then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 61:
-                    AppendGlobalResult(Format('%-.g', [ActiveCircuit.PctNormalFactor]));
+                    AppendGlobalResult(Format('%-.g', [DSSPrime.ActiveCircuit.PctNormalFactor]));
                 62:
                     if DSSPrime.EnergyMeterClass.DI_Verbose then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 63:
-                    AppendGlobalResult(ActiveCircuit.CaseName);
+                    AppendGlobalResult(DSSPrime.ActiveCircuit.CaseName);
                 64:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.NodeMarkerCode]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.NodeMarkerCode]));
                 65:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.NodeMarkerWidth]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.NodeMarkerWidth]));
                 66:
-                    if ActiveCircuit.LogEvents then
+                    if DSSPrime.ActiveCircuit.LogEvents then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
@@ -1046,23 +1046,23 @@ begin
                 73:
                     AppendGlobalResult(Format('%d', [Round(DSSPrime.DefaultBaseFreq)]));
                 74:
-                    if ActiveCircuit.MarkSwitches then
+                    if DSSPrime.ActiveCircuit.MarkSwitches then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 75:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.SwitchMarkerCode]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.SwitchMarkerCode]));
                 76:
                     AppendGlobalResult(Format('%-.6g', [DSSPrime.DaisySize]));
                 77:
-                    if ActiveCircuit.MarkTransformers then
+                    if DSSPrime.ActiveCircuit.MarkTransformers then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 78:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.TransMarkerCode]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.TransMarkerCode]));
                 79:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.TransMarkerSize]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.TransMarkerSize]));
                 80:
                     AppendGlobalResult(GetActiveLoadShapeClass);
                 81:
@@ -1073,103 +1073,103 @@ begin
                     else
                         AppendGlobalResult('No');
                 83:
-                    if ActiveCircuit.MarkCapacitors then
+                    if DSSPrime.ActiveCircuit.MarkCapacitors then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 84:
-                    if ActiveCircuit.MarkRegulators then
+                    if DSSPrime.ActiveCircuit.MarkRegulators then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 85:
-                    if ActiveCircuit.MarkPVSystems then
+                    if DSSPrime.ActiveCircuit.MarkPVSystems then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 86:
-                    if ActiveCircuit.MarkStorage then
+                    if DSSPrime.ActiveCircuit.MarkStorage then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 87:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.CapMarkerCode]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.CapMarkerCode]));
                 88:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.RegMarkerCode]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.RegMarkerCode]));
                 89:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.PVMarkerCode]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.PVMarkerCode]));
                 90:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.StoreMarkerCode]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.StoreMarkerCode]));
                 91:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.CapMarkerSize]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.CapMarkerSize]));
                 92:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.RegMarkerSize]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.RegMarkerSize]));
                 93:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.PVMarkerSize]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.PVMarkerSize]));
                 94:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.StoreMarkerSize]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.StoreMarkerSize]));
                 95:
-                    if ActiveCircuit.NeglectLoadY then
+                    if DSSPrime.ActiveCircuit.NeglectLoadY then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 96:
-                    if ActiveCircuit.MarkFuses then
+                    if DSSPrime.ActiveCircuit.MarkFuses then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 97:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.FuseMarkerCode]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.FuseMarkerCode]));
                 98:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.FuseMarkerSize]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.FuseMarkerSize]));
                 99:
-                    if ActiveCircuit.MarkReclosers then
+                    if DSSPrime.ActiveCircuit.MarkReclosers then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 100:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.RecloserMarkerCode]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.RecloserMarkerCode]));
                 101:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.RecloserMarkerSize]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.RecloserMarkerSize]));
                 102:
                     if UpdateRegistry then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 103:
-                    if ActiveCircuit.MarkRelays then
+                    if DSSPrime.ActiveCircuit.MarkRelays then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 104:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.RelayMarkerCode]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.RelayMarkerCode]));
                 105:
-                    AppendGlobalResult(Format('%d', [ActiveCircuit.RelayMarkerSize]));
+                    AppendGlobalResult(Format('%d', [DSSPrime.ActiveCircuit.RelayMarkerSize]));
                 106:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.Solution.Time_Solve]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.Solution.Time_Solve]));
                 107:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.Solution.Total_Time]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.Solution.Total_Time]));
                 108:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.Solution.Time_Step]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.Solution.Time_Step]));
                 109:
-                    if ActiveCircuit.Solution.SampleTheMeters then
+                    if DSSPrime.ActiveCircuit.Solution.SampleTheMeters then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 110:
-                    AppendGlobalResult(IntToStr(ActiveCircuit.solution.MinIterations));
+                    AppendGlobalResult(IntToStr(DSSPrime.ActiveCircuit.solution.MinIterations));
                 111:
                     if DSS_Viz_enable then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 112:
-                    if ActiveCircuit.ReduceLateralsKeepLoad then
+                    if DSSPrime.ActiveCircuit.ReduceLateralsKeepLoad then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');
                 113:
-                    AppendGlobalResult(Format('%-g', [ActiveCircuit.ReductionZmag]));
+                    AppendGlobalResult(Format('%-g', [DSSPrime.ActiveCircuit.ReductionZmag]));
                 114:
                     if DSSPrime.SeasonalRating then
                         AppendGlobalResult('Yes')

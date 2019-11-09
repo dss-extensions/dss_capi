@@ -182,21 +182,21 @@ VAR
     VersionString      :String;
 
     UpdateRegistry     :Boolean;  // update on program exit
-    CPU_Freq           : int64;          // Used to store the CPU frequency -- TODO: remove, probably invalid nowadays
+    CPU_Freq           : int64;   // Used to store the CPU performance counter frequency (not the actual CPU frequency)
     CPU_Cores          : integer;
 
+    GlobalDefaultBaseFreq: Double = 60.0;
+    
     // TODO:  move all below to the new TDSS
-    ActiveCircuit   :TDSSCircuit;
     ActiveDSSClass  :TDSSClass;
     ActiveDSSObject :TDSSObject;
     AuxParser       :TParser;  // Auxiliary parser for use by anybody for reparsing values
 
-    GlobalDefaultBaseFreq: Double = 60.0;
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
 PROCEDURE DoSimpleMsg(Const S :String; ErrNum:Integer);
 
-PROCEDURE ClearAllCircuits;
+PROCEDURE ClearAllCircuits(DSS: TDSS);
 
 PROCEDURE SetObject(const param :string);
 FUNCTION  SetActiveBus(const BusName:String):Integer;
@@ -246,8 +246,8 @@ USES  {Forms,   Controls,}
      DSSForms, SHFolder,
      {$ENDIF}
      Solution,
-     Executive;
-     {Intrinsic Ckt Elements}
+     Executive,
+     DSSHelper;
 
 TYPE
 
@@ -440,7 +440,7 @@ Begin
           DoSimpleMsg('Error! Object "' + ObjName + '" not found.'+ CRLF + parser.CmdString, 904);
         End
         ELSE
-        With ActiveCircuit Do
+        With DSSPrime.ActiveCircuit Do
         Begin
            CASE ActiveDSSObject.DSSObjType OF
                 DSS_OBJECT: ;  // do nothing for general DSS object
@@ -465,7 +465,7 @@ Begin
    // Now find the bus and set active
    Result := 0;
 
-   WITH ActiveCircuit Do
+   WITH DSSPrime.ActiveCircuit Do
      Begin
         If BusList.ListSize=0 Then Exit;   // Buslist not yet built
         ActiveBusIndex := BusList.Find(BusName);
@@ -478,25 +478,22 @@ Begin
 
 End;
 
-PROCEDURE ClearAllCircuits;
-
+PROCEDURE ClearAllCircuits(DSS: TDSS);
 Begin
-
-    ActiveCircuit := DSSPrime.Circuits.First;
-     WHILE ActiveCircuit<>nil DO
+     DSS.ActiveCircuit := DSS.Circuits.First;
+     WHILE DSS.ActiveCircuit<>nil DO
      Begin
-        ActiveCircuit.Free;
-        ActiveCircuit := DSSPrime.Circuits.Next;
+        DSS.ActiveCircuit.Free;
+        DSS.ActiveCircuit := DSSPrime.Circuits.Next;
      End;
-    DSSPrime.Circuits.Free;
-    DSSPrime.Circuits := TPointerList.Create(2);   // Make a new list of circuits
-    DSSPrime.NumCircuits := 0;
+    DSS.Circuits.Free;
+    DSS.Circuits := TPointerList.Create(2);   // Make a new list of circuits
+    DSS.NumCircuits := 0;
 
     // Revert on key global flags to Original States
-    DSSPrime.DefaultEarthModel     := DERI;
-    DSSPrime.LogQueries            := FALSE;
-    DSSPrime.MaxAllocationIterations := 2;
-
+    DSS.DefaultEarthModel     := DERI;
+    DSS.LogQueries            := FALSE;
+    DSS.MaxAllocationIterations := 2;
 End;
 
 
@@ -513,9 +510,9 @@ Begin
 
      If DSSPrime.NumCircuits <= MaxCircuits - 1 Then
      Begin
-         ActiveCircuit := TDSSCircuit.Create(DSSPrime, Name);
+         DSSPrime.ActiveCircuit := TDSSCircuit.Create(DSSPrime, Name);
          ActiveDSSObject := ActiveSolutionObj;
-         {*Handle := *} DSSPrime.Circuits.Add(ActiveCircuit);
+         {*Handle := *} DSSPrime.Circuits.Add(DSSPrime.ActiveCircuit);
          Inc(DSSPrime.NumCircuits);
          S := Parser.Remainder;    // Pass remainder of string on to vsource.
          {Create a default Circuit}
@@ -763,7 +760,7 @@ Begin
         end
         Else Append( DSSPrime.QueryLogFile);
 
-        Writeln(DSSPrime.QueryLogFile,Format('%.10g, %s, %s',[ActiveCircuit.Solution.DynaVars.dblHour, Prop, S]));
+        Writeln(DSSPrime.QueryLogFile,Format('%.10g, %s, %s',[DSSPrime.ActiveCircuit.Solution.DynaVars.dblHour, Prop, S]));
         CloseFile(DSSPrime.QueryLogFile);
   EXCEPT
         On E:Exception Do DoSimpleMsg('Error writing Query Log file: ' + E.Message, 908);

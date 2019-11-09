@@ -210,7 +210,7 @@ end;
 function TIsource.NewObject(const ObjName: String): Integer;
 begin
     // Make a new voltage source and add it to Isource class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TIsourceObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -228,7 +228,7 @@ var
 begin
   // continue parsing with contents of Parser
     ActiveIsourceObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveIsourceObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveIsourceObj;
 
     Result := 0;
 
@@ -517,7 +517,7 @@ begin
 
     try
 
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
   {Get first Phase Current}
             if IsHarmonicModel then
             begin
@@ -604,7 +604,7 @@ var
     BaseCurr: complex;
 begin
 
-    with ActiveCircuit.solution do
+    with DSSPrime.ActiveCircuit.solution do
     begin
         BaseCurr := GetBaseCurr;   // this func applies spectrum if needed
 

@@ -80,8 +80,8 @@ uses
 function ActiveTransformer: TTransfObj;
 begin
     Result := NIL;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Transformers.Active;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Transformers.Active;
 end;
 
 // assuming the active winding has already been set
@@ -90,7 +90,7 @@ procedure Set_Parameter(const parm: String; const val: String);
 var
     cmd: String;
 begin
-    if not Assigned(ActiveCircuit) then
+    if not Assigned(DSSPrime.ActiveCircuit) then
         exit;
     DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('transformer.%s.%s=%s', [ActiveTransformer.Name, parm, val]);
@@ -103,9 +103,9 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Transformers, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Transformers, False);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_First(): Integer; CDECL;
@@ -114,16 +114,16 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        lst := ActiveCircuit.Transformers;
+        lst := DSSPrime.ActiveCircuit.Transformers;
         elem := lst.First;
         if elem <> NIL then
         begin
             repeat
                 if elem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := elem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
                     Result := 1;
                 end
                 else
@@ -189,9 +189,9 @@ var
     elem: TTransfObj;
 begin
     Result := '';
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        elem := ActiveCircuit.Transformers.Active;
+        elem := DSSPrime.ActiveCircuit.Transformers.Active;
         if elem <> NIL then
             Result := elem.Name;
     end;
@@ -208,16 +208,16 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        lst := ActiveCircuit.Transformers;
+        lst := DSSPrime.ActiveCircuit.Transformers;
         elem := lst.Next;
         if elem <> NIL then
         begin
             repeat
                 if elem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := elem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
                     Result := lst.ActiveIndex;
                 end
                 else
@@ -372,12 +372,12 @@ end;
 //------------------------------------------------------------------------------
 procedure Transformers_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     if DSSPrime.TransformerClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := DSSPrime.TransformerClass.ElementList.Active;
-        ActiveCircuit.Transformers.Get(DSSPrime.TransformerClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.TransformerClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Transformers.Get(DSSPrime.TransformerClass.Active);
     end
     else
     begin
@@ -452,8 +452,8 @@ end;
 function Transformers_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.Transformers.ListSize;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.Transformers.ListSize;
 end;
 //------------------------------------------------------------------------------
 procedure Transformers_Get_WdgVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -650,14 +650,14 @@ var
     lst: TPointerList;
     k: Integer;
 begin
-    if (ActiveCircuit = NIL) or (ActiveCircuit.Transformers.ListSize <= 0) then
+    if (DSSPrime.ActiveCircuit = NIL) or (DSSPrime.ActiveCircuit.Transformers.ListSize <= 0) then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Result[0] := 0;
         Exit;
     end;
     
-    lst := ActiveCircuit.Transformers;
+    lst := DSSPrime.ActiveCircuit.Transformers;
     DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, lst.ListSize * 2 * 3);
     CResult := PComplexArray(ResultPtr);
     k := 1;
@@ -683,8 +683,8 @@ end;
 //------------------------------------------------------------------------------
 function Transformers_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Transformers.ActiveIndex
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Transformers.ActiveIndex
     else
         Result := 0;
 end;
@@ -693,15 +693,15 @@ procedure Transformers_Set_idx(Value: Integer); CDECL;
 var
     pTransformer: TTransfObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pTransformer := ActiveCircuit.Transformers.Get(Value);
+    pTransformer := DSSPrime.ActiveCircuit.Transformers.Get(Value);
     if pTransformer = NIL then
     begin
         DoSimpleMsg('Invalid Transformer index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pTransformer;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pTransformer;
 end;
 //------------------------------------------------------------------------------
 end.

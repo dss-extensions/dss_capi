@@ -570,7 +570,7 @@ begin
                 DSSPrime.CmdResult := DoNewCmd; // new
 
             15:
-                if not Assigned(ActiveCircuit) then
+                if not Assigned(DSSPrime.ActiveCircuit) then
                 begin
                     DoSetCmd_NoCircuit; // can only call this if no circuit active
                     Exit;    // We exit with either a good outcome or bad
@@ -625,27 +625,27 @@ begin
 
             108: // CalcIncMatrix
             begin
-                ActiveCircuit.Solution.Calc_Inc_Matrix();
+                DSSPrime.ActiveCircuit.Solution.Calc_Inc_Matrix();
             end;
             109: // CalcIncMatrix_O
             begin
-                ActiveCircuit.Solution.Calc_Inc_Matrix_Org();
+                DSSPrime.ActiveCircuit.Solution.Calc_Inc_Matrix_Org();
             end;
             110: // Refine_BusLevels
             begin
-                ActiveCircuit.Get_paths_4_Coverage();
-                DSSPrime.GlobalResult := inttostr(length(ActiveCircuit.Path_Idx) - 1) + ' new paths detected';
+                DSSPrime.ActiveCircuit.Get_paths_4_Coverage();
+                DSSPrime.GlobalResult := inttostr(length(DSSPrime.ActiveCircuit.Path_Idx) - 1) + ' new paths detected';
             end;
             111: // CalcLaplacian
             begin
-                with ActiveCircuit.Solution do
+                with DSSPrime.ActiveCircuit.Solution do
                 begin
                     Laplacian := IncMat.Transpose();          // Transposes the Incidence Matrix
                     Laplacian := Laplacian.multiply(IncMat);  // IncMatT*IncMat
                 end;
             end
         else
-            if ActiveCircuit = NIL then
+            if DSSPrime.ActiveCircuit = NIL then
             begin
                 DoSimpleMsg('You must create a new circuit object first: "new circuit.mycktname" to execute this command.', 301);
                 Exit;
@@ -736,11 +736,11 @@ begin
             30:
                 DSSPrime.CmdResult := DoSetkVBase;
             31:
-                ActiveCircuit.InvalidateAllPCElements;  // FORce rebuilding of Y
+                DSSPrime.ActiveCircuit.InvalidateAllPCElements;  // FORce rebuilding of Y
             32:
                 DSSPrime.CmdResult := DoGetCmd;
             33:
-                ActiveCircuit.Solution.SolutionInitialized := FALSE;
+                DSSPrime.ActiveCircuit.Solution.SolutionInitialized := FALSE;
             34:
                 DSSPrime.CmdResult := DoExportCmd;
        {35: DSSPrime.CmdResult := DoFileEditCmd;}
@@ -789,7 +789,7 @@ begin
             58:
                 DSSPrime.CmdResult := DoBusCoordsCmd(FALSE);
             59:
-                with ActiveCircuit do
+                with DSSPrime.ActiveCircuit do
                     if BusNameRedefined then
                         ReprocessBusDefs;
             60:
@@ -822,19 +822,19 @@ begin
                 DSSPrime.CmdResult := DoReconductorCmd;
        {Step solution commands}
             78:
-                ActiveCircuit.Solution.SnapShotInit;
+                DSSPrime.ActiveCircuit.Solution.SnapShotInit;
             79:
-                ActiveCircuit.Solution.SolveCircuit;
+                DSSPrime.ActiveCircuit.Solution.SolveCircuit;
             80:
-                ActiveCircuit.Solution.SampleControlDevices;
+                DSSPrime.ActiveCircuit.Solution.SampleControlDevices;
             81:
-                ActiveCircuit.Solution.DoControlActions;
+                DSSPrime.ActiveCircuit.Solution.DoControlActions;
             82:
-                ActiveCircuit.ControlQueue.ShowQueue(GetOutputDirectory + DSSPrime.CircuitName_ + 'ControlQueue.csv');
+                DSSPrime.ActiveCircuit.ControlQueue.ShowQueue(GetOutputDirectory + DSSPrime.CircuitName_ + 'ControlQueue.csv');
             83:
-                ActiveCircuit.Solution.SolveDirect;
+                DSSPrime.ActiveCircuit.Solution.SolveDirect;
             84:
-                ActiveCircuit.Solution.DoPFLOWsolution;
+                DSSPrime.ActiveCircuit.Solution.DoPFLOWsolution;
             85:
                 DSSPrime.CmdResult := DoAddMarkerCmd;
             86:
@@ -861,15 +861,15 @@ begin
             97:
                 DSSPrime.CmdResult := DoValVarCmd;
             98:
-                ActiveCircuit.ReprocessBusDefs;
+                DSSPrime.ActiveCircuit.ReprocessBusDefs;
             99:
-                Activecircuit.ClearBusMarkers;
+                DSSPrime.ActiveCircuit.ClearBusMarkers;
             100:
                 DSSPrime.CmdResult := DoLambdaCalcs;   // Option: Assume Restoration
             102:
-                ActiveCircuit.Solution.EndofTimeStepCleanup;
+                DSSPrime.ActiveCircuit.Solution.EndofTimeStepCleanup;
             103:
-                ActiveCircuit.Solution.FinishTimeStep;
+                DSSPrime.ActiveCircuit.Solution.FinishTimeStep;
             104:
                 DSSPrime.CmdResult := DoNodeListCmd;
       {$IFNDEF FPC}

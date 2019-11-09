@@ -100,7 +100,8 @@ uses
     Sysutils,
     uCmatrix,
     MathUtil,
-    Math;
+    Math,
+    DSSHelper;
 
 const
 
@@ -169,7 +170,7 @@ end;
 function TGenDispatcher.NewObject(const ObjName: String): Integer;
 begin
     // Make a new GenDispatcher and add it to GenDispatcher class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TGenDispatcherObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -188,7 +189,7 @@ begin
 
   // continue parsing WITH contents of Parser
     ActiveGenDispatcherObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveGenDispatcherObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveGenDispatcherObj;
 
     Result := 0;
 
@@ -356,7 +357,7 @@ begin
     Devindex := GetCktElementIndex(ElementName); // Global function
     if DevIndex > 0 then
     begin
-        MonitoredElement := ActiveCircuit.CktElements.Get(DevIndex);
+        MonitoredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
         if ElementTerminal > MonitoredElement.Nterms then
         begin
             DoErrorMsg('GenDispatcher: "' + Name + '"',
@@ -501,7 +502,7 @@ begin
         end;
 
         if GenkWChanged or Genkvarchanged then  // Only push onto controlqueue if there has been a change
-            with ActiveCircuit, ActiveCircuit.Solution do
+            with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
             begin
                 LoadsNeedUpdating := TRUE; // Force recalc of power parms
             // Push present time onto control queue to force re solve at new dispatch value

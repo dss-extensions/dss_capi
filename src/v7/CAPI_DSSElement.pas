@@ -27,8 +27,8 @@ var
     k: Integer;
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveDSSObject <> NIL then
                 with ActiveDSSObject do
@@ -55,7 +55,7 @@ end;
 //------------------------------------------------------------------------------
 function DSSElement_Get_Name_AnsiString(): Ansistring; inline;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         if ActiveDSSObject <> NIL then
             with ActiveDSSObject do
             begin
@@ -73,8 +73,8 @@ end;
 function DSSElement_Get_NumProperties(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveDSSObject <> NIL then
                 with ActiveDSSObject do

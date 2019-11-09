@@ -127,111 +127,111 @@ uses
 
 function Solution_Get_Frequency(): Double; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.Frequency
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.Frequency
     else
         Result := 0.0;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Hour(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.DynaVars.intHour
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.DynaVars.intHour
     else
         Result := 0;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Iterations(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.Iteration
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.Iteration
     else
         Result := 0;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_LoadMult(): Double; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.LoadMultiplier
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.LoadMultiplier
     else
         Result := 0.0;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_MaxIterations(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.MaxIterations
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.MaxIterations
     else
         Result := 0;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Mode(): Integer; CDECL;
 begin
-     //If ActiveCircuit <> Nil Then Result := GetSolutionModeID      changed to integer 8/16/00
-    if ActiveCircuit <> NIL then
-        Result := Ord(ActiveCircuit.Solution.Mode)
+     //If DSSPrime.ActiveCircuit <> Nil Then Result := GetSolutionModeID      changed to integer 8/16/00
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := Ord(DSSPrime.ActiveCircuit.Solution.Mode)
     else
         Result := 0;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Number(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.NumberOfTimes
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.NumberOfTimes
     else
         Result := 0;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Random(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.RandomType
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.RandomType
     else
         Result := 0;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Seconds(): Double; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.dynavars.t
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.dynavars.t
     else
         Result := 0.0;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_StepSize(): Double; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.dynavars.h
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.dynavars.h
     else
         Result := 0.0;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Tolerance(): Double; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.ConvergenceTolerance
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.ConvergenceTolerance
     else
         Result := 0.0;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Year(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.Year
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.Year
     else
         Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Frequency(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.Frequency := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.Frequency := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Hour(Value: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        with  ActiveCircuit.Solution do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with  DSSPrime.ActiveCircuit.Solution do
         begin
             DynaVars.intHour := Value;
             Update_dblHour;
@@ -240,71 +240,71 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_LoadMult(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.LoadMultiplier := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.LoadMultiplier := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_MaxIterations(Value: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.MaxIterations := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.MaxIterations := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Mode(Mode: Integer); CDECL;
 begin
     //TODO: validate Mode
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.Mode := TSolveMode(Mode); //InterpretSolveMode(Value);
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.Mode := TSolveMode(Mode); //InterpretSolveMode(Value);
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Number(Value: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.NumberOfTimes := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.NumberOfTimes := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Random(Random: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.RandomType := Random;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.RandomType := Random;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Seconds(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.dynavars.t := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.dynavars.t := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_StepSize(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        ActiveCircuit.Solution.dynavars.h := Value;
+        DSSPrime.ActiveCircuit.Solution.dynavars.h := Value;
         Solution_Set_IntervalHrs(Value / 3600.0);     // Keep IntervalHrs in synch with time step size
     end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Tolerance(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.ConvergenceTolerance := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.ConvergenceTolerance := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Year(Value: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.Year := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.Year := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Solve(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.Solve;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.Solve;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_ModeID_AnsiString(): Ansistring; inline;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := GetSolutionModeID
     else
         Result := '';
@@ -317,8 +317,8 @@ end;
 //------------------------------------------------------------------------------
 function Solution_Get_LoadModel(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.LoadModel
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.LoadModel
     else
         Result := 0;
 end;
@@ -326,8 +326,8 @@ end;
 procedure Solution_Set_LoadModel(Value: Integer); CDECL;
 begin
 
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit.Solution do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit.Solution do
         begin
             LoadModel := Value;
             DefaultLoadModel := LoadModel;
@@ -337,8 +337,8 @@ end;
 //------------------------------------------------------------------------------
 function Solution_Get_LDCurve_AnsiString(): Ansistring; inline;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.LoadDurCurve
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.LoadDurCurve
     else
         Result := '';
 end;
@@ -350,8 +350,8 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_LDCurve(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
         begin
             LoadDurCurve := Value;
             LoadDurCurveObj := DSSPrime.LoadShapeClass.Find(LoadDurCurve);
@@ -363,8 +363,8 @@ end;
 //------------------------------------------------------------------------------
 function Solution_Get_pctGrowth(): Double; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
         begin
             Result := (DefaultGrowthRate - 1.0) * 100.0;
             Exit;
@@ -374,8 +374,8 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_pctGrowth(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
         begin
             DefaultGrowthRate := 1.0 + Value / 100.0;
             DefaultGrowthFactor := IntPower(DefaultGrowthRate, (Solution.Year - 1));
@@ -384,86 +384,86 @@ end;
 //------------------------------------------------------------------------------
 function Solution_Get_AddType(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.AutoAddObj.AddType
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.AutoAddObj.AddType
     else
         Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_AddType(Value: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.AutoAddObj.AddType := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.AutoAddObj.AddType := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_GenkW(): Double; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.AutoAddObj.GenkW
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.AutoAddObj.GenkW
     else
         Result := 0.0;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_GenkW(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.AutoAddObj.GenkW := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.AutoAddObj.GenkW := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_GenPF(): Double; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.AutoAddObj.GenPF
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.AutoAddObj.GenPF
     else
         Result := 0.0;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_GenPF(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.AutoAddObj.GenPF := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.AutoAddObj.GenPF := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Capkvar(): Double; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.AutoAddObj.Capkvar
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.AutoAddObj.Capkvar
     else
         Result := 0.0;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Capkvar(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.AutoAddObj.Capkvar := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.AutoAddObj.Capkvar := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Algorithm(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.Algorithm
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.Algorithm
     else
         Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Algorithm(Value: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.Algorithm := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.Algorithm := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_ControlMode(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.ControlMode
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.ControlMode
     else
         Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_ControlMode(Value: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit.Solution do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit.Solution do
         begin
             ControlMode := Value;
             DefaultControlMode := ControlMode;
@@ -472,22 +472,22 @@ end;
 //------------------------------------------------------------------------------
 function Solution_Get_GenMult(): Double; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.GenMultiplier
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.GenMultiplier
     else
         Result := 0.0;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_GenMult(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.GenMultiplier := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.GenMultiplier := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_DefaultDaily_AnsiString(): Ansistring; inline;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.DefaultDailyShapeObj.Name
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.DefaultDailyShapeObj.Name
     else
         Result := '';
 end;
@@ -499,8 +499,8 @@ end;
 //------------------------------------------------------------------------------
 function Solution_Get_DefaultYearly_AnsiString(): Ansistring; inline;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.DefaultYearlyShapeObj.Name
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.DefaultYearlyShapeObj.Name
     else
         Result := '';
 end;
@@ -514,11 +514,11 @@ procedure Solution_Set_DefaultDaily(const Value: PAnsiChar); CDECL;
 var
     TestLoadShapeObj: TLoadShapeObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         TestLoadShapeObj := DSSPrime.LoadShapeClass.Find(Value);
         if TestLoadShapeObj <> NIL then
-            ActiveCircuit.DefaultDailyShapeObj := TestLoadShapeObj;
+            DSSPrime.ActiveCircuit.DefaultDailyShapeObj := TestLoadShapeObj;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -526,11 +526,11 @@ procedure Solution_Set_DefaultYearly(const Value: PAnsiChar); CDECL;
 var
     TestLoadShapeObj: TLoadShapeObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         TestLoadShapeObj := DSSPrime.LoadShapeClass.Find(Value);
         if TestLoadShapeObj <> NIL then
-            ActiveCircuit.DefaultYearlyShapeObj := TestLoadShapeObj;
+            DSSPrime.ActiveCircuit.DefaultYearlyShapeObj := TestLoadShapeObj;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -539,7 +539,7 @@ var
     Result: PPAnsiCharArray;
     i: Integer;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (DSSPrime.EventStrings.Count - 1) + 1);
         for i := 0 to DSSPrime.EventStrings.Count - 1 do
@@ -561,16 +561,16 @@ end;
 function Solution_Get_dblHour(): Double; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        Result := ActiveCircuit.Solution.DynaVars.dblHour;
+        Result := DSSPrime.ActiveCircuit.Solution.DynaVars.dblHour;
     end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_dblHour(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit.Solution do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit.Solution do
         begin
             DynaVars.intHour := Trunc(Value);
             DynaVars.dblHour := Value;
@@ -580,101 +580,101 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_StepsizeHr(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        ActiveCircuit.Solution.Dynavars.h := Value * 3600.0;
+        DSSPrime.ActiveCircuit.Solution.Dynavars.h := Value * 3600.0;
     end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_StepsizeMin(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        ActiveCircuit.Solution.Dynavars.h := Value * 60.0;
+        DSSPrime.ActiveCircuit.Solution.Dynavars.h := Value * 60.0;
     end;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_ControlIterations(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        Result := ActiveCircuit.Solution.ControlIteration;
+        Result := DSSPrime.ActiveCircuit.Solution.ControlIteration;
     end;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_MaxControlIterations(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        Result := ActiveCircuit.Solution.MaxControlIterations;
+        Result := DSSPrime.ActiveCircuit.Solution.MaxControlIterations;
     end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Sample_DoControlActions(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        ActiveCircuit.Solution.Sample_DoControlActions;
+        DSSPrime.ActiveCircuit.Solution.Sample_DoControlActions;
     end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_ControlIterations(Value: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        ActiveCircuit.Solution.ControlIteration := Value;
+        DSSPrime.ActiveCircuit.Solution.ControlIteration := Value;
     end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_MaxControlIterations(Value: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        ActiveCircuit.Solution.MaxControlIterations := Value;
+        DSSPrime.ActiveCircuit.Solution.MaxControlIterations := Value;
     end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_CheckFaultStatus(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        ActiveCircuit.Solution.Check_Fault_Status;
+        DSSPrime.ActiveCircuit.Solution.Check_Fault_Status;
     end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_SolveDirect(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        ActiveCircuit.Solution.SolveDirect;
+        DSSPrime.ActiveCircuit.Solution.SolveDirect;
     end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_SolveNoControl(); CDECL;
 {Solves without checking controls}
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        ActiveCircuit.Solution.SolveCircuit;
+        DSSPrime.ActiveCircuit.Solution.SolveCircuit;
     end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_SolvePflow(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        ActiveCircuit.Solution.DoPflowSolution;
+        DSSPrime.ActiveCircuit.Solution.DoPflowSolution;
     end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_SolvePlusControl(); CDECL;
 {One Pass Through the solution and then dispatches controls}
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
             SolveCircuit;
             CheckControls;
@@ -684,31 +684,31 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_SolveSnap(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.SolveSnap;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.SolveSnap;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_CheckControls(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.CheckControls;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.CheckControls;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_InitSnap(); CDECL;
 {Initi some things that are done at the beginning of a snapshot solve}
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        ActiveCircuit.Solution.SnapShotInit;
+        DSSPrime.ActiveCircuit.Solution.SnapShotInit;
     end;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_SystemYChanged(): Boolean; CDECL;
 begin
     Result := False;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        Result := ActiveCircuit.Solution.SystemYChanged;
+        Result := DSSPrime.ActiveCircuit.Solution.SystemYChanged;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -723,7 +723,7 @@ procedure Solution_BuildYMatrix(BuildOption, AllocateVI: Integer); CDECL;
     FALSE: Do not Reallocate VI; leave as is
 }
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         if AllocateVI = 0 then
             Ymatrix.BuildYMatrix(BuildOption, FALSE)
@@ -734,31 +734,31 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_DoControlActions(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.DoControlActions;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.DoControlActions;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_SampleControlDevices(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.SampleControlDevices;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.SampleControlDevices;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Converged(): Boolean; CDECL;
 begin
     Result := False;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Issolved;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Issolved;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Converged(Value: Boolean); CDECL;
 {Set the flag directly to force its setting}
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        ActiveCircuit.Solution.ConvergedFlag := Value;
-        ActiveCircuit.Issolved := Value;
+        DSSPrime.ActiveCircuit.Solution.ConvergedFlag := Value;
+        DSSPrime.ActiveCircuit.Issolved := Value;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -766,16 +766,16 @@ function Solution_Get_Totaliterations(): Integer; CDECL;
 // Same as Iterations interface
 
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.Iteration
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.Iteration
     else
         Result := 0;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_MostIterationsDone(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.MostIterationsDone
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.MostIterationsDone
     else
         Result := 0;
 end;
@@ -783,32 +783,32 @@ end;
 function Solution_Get_ControlActionsDone(): Boolean; CDECL;
 begin
     Result := False;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.ControlActionsDone;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.ControlActionsDone;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_ControlActionsDone(Value: Boolean); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.ControlActionsDone := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.ControlActionsDone := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Cleanup(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit, ActiveCircuit.Solution do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
         begin
-            ActiveCircuit.Solution.EndOfTimeStepCleanup;
+            DSSPrime.ActiveCircuit.Solution.EndOfTimeStepCleanup;
         end;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_FinishTimeStep(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit, ActiveCircuit.Solution do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
         begin
             DSSPrime.MonitorClass.SampleAll;  // Make all monitors take a sample
-            ActiveCircuit.Solution.EndOfTimeStepCleanup;
+            DSSPrime.ActiveCircuit.Solution.EndOfTimeStepCleanup;
             Increment_time;
  //               DefaultHourMult := DefaultDailyShapeObj.getmult(TDynamicsrec.dblHour);
         end;
@@ -817,55 +817,55 @@ end;
 function Solution_Get_Process_Time(): Double; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.Time_Solve;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.Time_Solve;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Total_Time(): Double; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.Total_Time;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.Total_Time;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_Total_Time(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.Total_Time := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.Total_Time := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_Time_of_Step(): Double; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.Time_Step;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.Time_Step;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_IntervalHrs(): Double; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.IntervalHrs;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.IntervalHrs;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_IntervalHrs(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.IntervalHrs := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.IntervalHrs := Value;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_MinIterations(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Solution.MinIterations
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Solution.MinIterations
     else
         Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_MinIterations(Value: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.MinIterations := Value;
+    if DSSPrime.ActiveCircuit <> NIL then
+        DSSPrime.ActiveCircuit.Solution.MinIterations := Value;
 end;
 
 {V8-ONLY>
@@ -891,9 +891,9 @@ var
     Idx,
     ArrSize: Integer;
 begin
-    if (ActiveCircuit <> NIL) and (ActiveCircuit.Solution.Laplacian <> NIL) then
+    if (DSSPrime.ActiveCircuit <> NIL) and (DSSPrime.ActiveCircuit.Solution.Laplacian <> NIL) then
     begin
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
             ArrSize := Laplacian.NZero * 3;
             Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ArrSize) + 1);
@@ -931,9 +931,9 @@ var
     Idx,
     ArrSize: Integer;
 begin
-    if (ActiveCircuit <> NIL) and (ActiveCircuit.Solution.IncMat <> NIL) then
+    if (DSSPrime.ActiveCircuit <> NIL) and (DSSPrime.ActiveCircuit.Solution.IncMat <> NIL) then
     begin
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
             ArrSize := IncMat.NZero * 3;
             Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (ArrSize) + 1);
@@ -970,9 +970,9 @@ var
     Idx,
     ArrSize: Integer;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
             ArrSize := length(Inc_Mat_Levels) - 1;    // Removes the 3 initial zeros and the extra index
                                                   // Since it starts on 0
@@ -1003,9 +1003,9 @@ var
     Idx,
     ArrSize: Integer;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
             ArrSize := length(Inc_Mat_Rows) - 1;
             Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (ArrSize) + 1);
@@ -1034,9 +1034,9 @@ var
     Idx,
     ArrSize: Integer;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Solution, ActiveCircuit do
+        with DSSPrime.ActiveCircuit.Solution, DSSPrime.ActiveCircuit do
         begin
             if DSSPrime.IncMat_Ordered then
             begin

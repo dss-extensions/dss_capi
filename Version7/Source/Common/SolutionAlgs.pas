@@ -90,7 +90,7 @@ procedure TSolutionAlgs.FinishTimeStep;
 }
 begin
     DSS.MonitorClass.SampleAll;
-    with ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
         if SampleTheMeters then
             DSS.EnergyMeterClass.SampleAll;   // Save Demand interval Files
@@ -113,7 +113,7 @@ begin
     DSS.ExpControlClass.UpdateAll;
 
     // End of Time Step Timer
-    ActiveCircuit.Solution.UpdateLoopTime;
+    DSS.ActiveCircuit.Solution.UpdateLoopTime;
     DSS.MonitorClass.SampleAllMode5;  // sample all mode 5 monitors to get timings
 end;
 
@@ -140,11 +140,11 @@ var
 
 begin
     Result := 0;
-    ProgressCaption('Solving Year ' + IntToStr(ActiveCircuit.Solution.Year));
+    ProgressCaption('Solving Year ' + IntToStr(DSS.ActiveCircuit.Solution.Year));
     ProgressCount := 0;
     ShowPctProgress(ProgressCount);
 
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         try
             IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage elements
@@ -193,7 +193,7 @@ var
 begin
     Result := 0;
 
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
       // t:=0.0;
       // DSS.MonitorClass.ResetAll;
@@ -247,7 +247,7 @@ var
 
 begin
     Result := 0;
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         DynaVars.t := 0.0;
 
@@ -298,7 +298,7 @@ begin
     ProgressCount := 0;
     ShowPctProgress(0);
 
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
      //   t:=0.0;
         // DSS.MonitorClass.ResetAll;
@@ -343,7 +343,7 @@ var
 begin
     Result := 0;
 
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
         for N := 1 to NumberOfTimes do
@@ -371,7 +371,7 @@ var
     pcelem: TPCElement;
 
 begin
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         pcelem := PCelements.First;
         while pcelem <> NIL do
@@ -391,7 +391,7 @@ var
 begin
     Result := 0;
 
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         try
             SolutionInitialized := TRUE; // If we're in dynamics mode, no need to re-initialize.
@@ -431,7 +431,7 @@ var
 begin
     Result := 0;
 
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         try
             LoadMultiplier := 1.0;   // Always set with prop in case matrix must be rebuilt
@@ -484,7 +484,7 @@ var
 begin
     Result := 0;
 
-    with ActiveCircuit, ActiveCircuit.solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.solution do
     begin
         try
             DynaVars.t := 0.0;
@@ -561,7 +561,7 @@ var
 begin
     Result := 0;
 
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
     // Time must be set beFore entering this routine
         try
@@ -629,7 +629,7 @@ var
 begin
     Result := 0;
 
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         try
             if LoadDurCurveObj = NIL then
@@ -702,7 +702,7 @@ begin
                 DSS.EnergyMeterClass.CloseAllDIFiles;   // Save Demand interval Files
             ProgressHide;
         end;
-    end; {WITH ActiveCircuit}
+    end; {WITH DSS.ActiveCircuit}
 
 end;
 
@@ -718,7 +718,7 @@ var
 begin
     Result := 0;
 
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         if LoadDurCurveObj = NIL then
         begin
@@ -772,7 +772,7 @@ begin
             if SampleTheMeters then
                 DSS.EnergyMeterClass.CloseAllDIFiles;   // Save Demand interval Files
         end;
-    end; {WITH ActiveCircuit}
+    end; {WITH DSS.ActiveCircuit}
 
 end;
 
@@ -783,14 +783,14 @@ var
     NumFaults, i, Whichone: Integer;
     FaultObj: TFaultObj;
 begin
-    NumFaults := ActiveCircuit.Faults.Listsize;
+    NumFaults := DSS.ActiveCircuit.Faults.Listsize;
     Whichone := Trunc(Random * NumFaults) + 1;
     if Whichone > NumFaults then
         Whichone := NumFaults;
 
     for i := 1 to NumFaults do
     begin
-        FaultObj := ActiveCircuit.Faults.Get(i);
+        FaultObj := DSS.ActiveCircuit.Faults.Get(i);
         if i = Whichone then
         begin
             ActiveFaultObj := FaultObj; // in Fault Unit
@@ -810,7 +810,7 @@ var
 begin
     Result := 0;
 
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         try
             LoadModel := ADMITTANCE;   // All Direct solution
@@ -851,7 +851,7 @@ procedure TSolutionAlgs.AllocateAllSCParms;
 var
     i: Integer;
 begin
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         for i := 1 to NumBuses do
             Buses^[i].AllocateBusQuantities;
@@ -865,7 +865,7 @@ procedure TSolutionAlgs.ComputeIsc;
 var
     i: Integer;
 begin
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         for i := 1 to NumBuses do
             with Buses^[i] do
@@ -888,7 +888,7 @@ var
     ref1: Integer;
 
 begin
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         with Buses^[iB] do
         begin
@@ -926,7 +926,7 @@ var
 
 begin
 
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
 
         for j := 1 to NumNodes do
@@ -949,7 +949,7 @@ end;
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure TSolutionAlgs.DisableAllFaults;
 begin
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveFaultObj := Faults.First;
         while ActiveFaultObj <> NIL do
@@ -971,7 +971,7 @@ begin
     ShowPctProgress(0);
     ProgressCaption('Computing Open-Circuit Voltages');
 
-    with ActiveCircuit.solution do
+    with DSS.ActiveCircuit.solution do
     begin
         LoadModel := ADMITTANCE;
         DisableAllFaults;
@@ -1081,7 +1081,7 @@ begin
     NumFreq := 0;
     Reallocmem(FreqList, Sizeof(FreqList^[1]) * MaxFreq);
 
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         {Check Sources -- each could have a different base frequency}
         p := Sources.First;
@@ -1104,7 +1104,7 @@ begin
     {Mark Spectra being used}
         {Check loads and generators - these are assumed to be at fundamental frequency}
     SpectrumInUse := AllocMem(SizeOf(Integer) * DSS.SpectrumClass.ElementCount);  //Allocate and zero
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         p := PCelements.First;
         while p <> NIL do
@@ -1127,7 +1127,7 @@ begin
             pSpectrum := DSS.SpectrumClass.GetActiveObj;
             for j := 1 to pSpectrum.NumHarm do
             begin
-                AddFrequency(FreqList, NumFreq, MaxFreq, pSpectrum.HarmArray^[j] * ActiveCircuit.Fundamental);
+                AddFrequency(FreqList, NumFreq, MaxFreq, pSpectrum.HarmArray^[j] * DSS.ActiveCircuit.Fundamental);
             end;
         end;
     end;
@@ -1152,7 +1152,7 @@ begin
     ShowPctProgress(0);
     ProgressCaption('Performing Harmonic Solution');
 
-    with ActiveCircuit, ActiveCircuit.solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.solution do
     begin
         try
 
@@ -1209,7 +1209,7 @@ function TSolutionAlgs.SolveHarmTime: Integer;     // It is based in SolveGenera
 begin
     Result := 0;
 
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
         if not DSS.SolutionAbort then
@@ -1234,7 +1234,7 @@ begin
 
     FrequencyList := NIL;   // Set up for Reallocmem
 
-    with ActiveCircuit, ActiveCircuit.solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.solution do
     begin
         IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
         try

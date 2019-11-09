@@ -78,8 +78,8 @@ function Bus_Get_Name_AnsiString(): Ansistring; inline;
 begin
     Result := '';
 
-    if (ActiveCircuit <> NIL) then
-        with ActiveCircuit do
+    if (DSSPrime.ActiveCircuit <> NIL) then
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
                 Result := BusList.Get(ActiveBusIndex);
 end;
@@ -92,10 +92,10 @@ end;
 function Bus_Get_NumNodes(): Integer; CDECL;
 begin
     Result := 0;
-    if (ActiveCircuit <> NIL) then
-        with ActiveCircuit do
+    if (DSSPrime.ActiveCircuit <> NIL) then
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
-                Result := ActiveCircuit.Buses^[ActiveCircuit.ActiveBusIndex].NumNodesThisBus;
+                Result := DSSPrime.ActiveCircuit.Buses^[DSSPrime.ActiveCircuit.ActiveBusIndex].NumNodesThisBus;
 
 end;
 //------------------------------------------------------------------------------
@@ -109,12 +109,12 @@ var
     VPh, V012: array[1..3] of Complex;
 
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     end
     else
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
                 Nvalues := Buses^[ActiveBusIndex].NumNodesThisBus;
@@ -167,12 +167,12 @@ var
     pBus: TDSSBus;
 
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     end
     else
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
                 pBus := Buses^[ActiveBusIndex];
@@ -216,12 +216,12 @@ var
     pBus: TDSSBus;
 
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
     begin
         Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1)
     end
     else
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
                 pBus := Buses^[ActiveBusIndex];
@@ -264,12 +264,12 @@ var
 
 begin
 
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     end
     else
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
                 if Buses^[ActiveBusIndex].BusCurrent <> NIL then
@@ -310,12 +310,12 @@ var
 
 begin
 
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     end
     else
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
                 if Buses^[ActiveBusIndex].VBus <> NIL then
@@ -351,10 +351,10 @@ end;
 function Bus_Get_kVBase(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit <> NIL) then
-        with ActiveCircuit do
+    if (DSSPrime.ActiveCircuit <> NIL) then
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
-                Result := ActiveCircuit.Buses^[ActiveCircuit.ActiveBusIndex].kVBase;
+                Result := DSSPrime.ActiveCircuit.Buses^[DSSPrime.ActiveCircuit.ActiveBusIndex].kVBase;
 
 end;
 //------------------------------------------------------------------------------
@@ -368,12 +368,12 @@ var
     pBus: TDSSBus;
 
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     end
     else
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
                 pBus := Buses^[ActiveBusIndex];
@@ -421,12 +421,12 @@ var
     Z: Complex;
 
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     end
     else
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
                 Z := Buses^[ActiveBusIndex].Zsc0;
@@ -452,12 +452,12 @@ var
 
 begin
 
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     end
     else
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
                 Z := Buses^[ActiveBusIndex].Zsc1;
@@ -485,7 +485,7 @@ var
 
 begin
 
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     end
@@ -493,7 +493,7 @@ begin
 
         try
 
-            with ActiveCircuit do
+            with DSSPrime.ActiveCircuit do
                 if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
                 begin
                     if Assigned(Buses^[ActiveBusIndex].Zsc) then
@@ -551,7 +551,7 @@ var
 
 begin
 
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     end
@@ -559,7 +559,7 @@ begin
 
         try
 
-            with ActiveCircuit do
+            with DSSPrime.ActiveCircuit do
                 if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
                 begin
                     if Assigned(Buses^[ActiveBusIndex].Ysc) then
@@ -603,48 +603,48 @@ end;
 function Bus_Get_Coorddefined(): Boolean; CDECL;
 begin
     Result := FALSE;
-    if (ActiveCircuit <> NIL) then
-        with ActiveCircuit do
+    if (DSSPrime.ActiveCircuit <> NIL) then
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
-                if (Buses^[ActiveCircuit.ActiveBusIndex].Coorddefined) then
+                if (Buses^[DSSPrime.ActiveCircuit.ActiveBusIndex].Coorddefined) then
                     Result := TRUE;
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_x(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit <> NIL) then
-        with ActiveCircuit do
+    if (DSSPrime.ActiveCircuit <> NIL) then
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
-                if (Buses^[ActiveCircuit.ActiveBusIndex].Coorddefined) then
-                    Result := Buses^[ActiveCircuit.ActiveBusIndex].x;
+                if (Buses^[DSSPrime.ActiveCircuit.ActiveBusIndex].Coorddefined) then
+                    Result := Buses^[DSSPrime.ActiveCircuit.ActiveBusIndex].x;
 end;
 //------------------------------------------------------------------------------
 procedure Bus_Set_x(Value: Double); CDECL;
 begin
-    if (ActiveCircuit <> NIL) then
-        with ActiveCircuit do
+    if (DSSPrime.ActiveCircuit <> NIL) then
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
-                Buses^[ActiveCircuit.ActiveBusIndex].Coorddefined := TRUE;
-                Buses^[ActiveCircuit.ActiveBusIndex].x := Value;
+                Buses^[DSSPrime.ActiveCircuit.ActiveBusIndex].Coorddefined := TRUE;
+                Buses^[DSSPrime.ActiveCircuit.ActiveBusIndex].x := Value;
             end;
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_y(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit <> NIL) then
-        with ActiveCircuit do
+    if (DSSPrime.ActiveCircuit <> NIL) then
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
-                if (Buses^[ActiveCircuit.ActiveBusIndex].Coorddefined) then
-                    Result := Buses^[ActiveCircuit.ActiveBusIndex].y;
+                if (Buses^[DSSPrime.ActiveCircuit.ActiveBusIndex].Coorddefined) then
+                    Result := Buses^[DSSPrime.ActiveCircuit.ActiveBusIndex].y;
 end;
 //------------------------------------------------------------------------------
 procedure Bus_Set_y(Value: Double); CDECL;
 begin
-    if (ActiveCircuit <> NIL) then
-        with ActiveCircuit do
+    if (DSSPrime.ActiveCircuit <> NIL) then
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
                 Buses^[ActiveBusIndex].Coorddefined := TRUE;
@@ -655,16 +655,16 @@ end;
 function Bus_Get_Distance(): Double; CDECL;
 begin
     Result := 0.0;
-    if (ActiveCircuit <> NIL) then
-        with ActiveCircuit do
+    if (DSSPrime.ActiveCircuit <> NIL) then
+        with DSSPrime.ActiveCircuit do
             if ((ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses)) then
                 Result := Buses^[ActiveBusIndex].DistFromMeter;
 end;
 //------------------------------------------------------------------------------
 function Bus_GetUniqueNodeNumber(StartNumber: Integer): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
 
             if ActiveBusIndex > 0 then
                 Result := Utilities.GetUniqueNodeNumber(BusList.Get(ActiveBusIndex), StartNumber);
@@ -680,12 +680,12 @@ var
     VPh, V012: array[1..3] of Complex;
 
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     end
     else
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
                 Nvalues := Buses^[ActiveBusIndex].NumNodesThisBus;
@@ -729,8 +729,8 @@ end;
 function Bus_Get_Int_Duration(): Double; CDECL;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
             if ActiveBusIndex > 0 then
                 Result := Buses^[ActiveBusIndex].Bus_Int_Duration;
 end;
@@ -738,8 +738,8 @@ end;
 function Bus_Get_Lambda(): Double; CDECL;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
             if ActiveBusIndex > 0 then
                 Result := Buses^[ActiveBusIndex].BusFltRate;
 end;
@@ -747,8 +747,8 @@ end;
 function Bus_Get_Cust_Duration(): Double; CDECL;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
             if ActiveBusIndex > 0 then
                 Result := Buses^[ActiveBusIndex].BusCustDurations;
 end;
@@ -756,8 +756,8 @@ end;
 function Bus_Get_Cust_Interrupts(): Double; CDECL;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
             if ActiveBusIndex > 0 then
                 Result := Buses^[ActiveBusIndex].BusCustDurations;
 end;
@@ -765,8 +765,8 @@ end;
 function Bus_Get_N_Customers(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
             if ActiveBusIndex > 0 then
                 Result := Buses^[ActiveBusIndex].BusTotalNumCustomers;
 end;
@@ -774,8 +774,8 @@ end;
 function Bus_Get_N_interrupts(): Double; CDECL;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
             if ActiveBusIndex > 0 then
                 Result := Buses^[ActiveBusIndex].Bus_Num_Interrupt;
 end;
@@ -789,12 +789,12 @@ var
     BaseFactor: Double;
 
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     end
     else
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
                 pBus := Buses^[ActiveBusIndex];
@@ -860,12 +860,12 @@ var
     pBus: TDSSBus;
 
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     end
     else
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
                 pBus := Buses^[ActiveBusIndex];
@@ -929,12 +929,12 @@ var
 
 begin
 
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     end
     else
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
                 pBus := Buses^[ActiveBusIndex];
@@ -987,12 +987,12 @@ var
 
 begin
 
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
     end
     else
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
             begin
                 pBus := Buses^[ActiveBusIndex];
@@ -1031,8 +1031,8 @@ end;
 function Bus_Get_TotalMiles(): Double; CDECL;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
             if ActiveBusIndex > 0 then
                 Result := Buses^[ActiveBusIndex].BusTotalMiles;
 end;
@@ -1040,8 +1040,8 @@ end;
 function Bus_Get_SectionID(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
             if ActiveBusIndex > 0 then
                 Result := Buses^[ActiveBusIndex].BusSectionID;
 end;
@@ -1051,8 +1051,8 @@ var
     BusIndex: Integer;
 begin
     Result := -1;   // Signifies Error
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
         begin
             BusIndex := ActiveBusIndex + 1;
             if (BusIndex > 0) and (BusIndex <= Numbuses) then

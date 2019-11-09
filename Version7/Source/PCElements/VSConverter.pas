@@ -87,7 +87,8 @@ uses
     Sysutils,
     MathUtil,
     Utilities,
-    StrUtils;
+    StrUtils,
+    DSSHelper;
 
 const
     NumPropsthisclass = 19;
@@ -175,7 +176,7 @@ end;
 
 function TVSConverter.NewObject(const ObjName: String): Integer;
 begin
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TVSConverterObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -210,7 +211,7 @@ var
 begin
     Result := 0;
     ActiveVSConverterObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveVSConverterObj;  // use property to set this value
+    DSS.ActiveCircuit.ActiveCktElement := ActiveVSConverterObj;  // use property to set this value
 
     with ActiveVSConverterObj do
     begin
@@ -233,7 +234,7 @@ begin
                     begin
                         Nphases := Parser.IntValue;
                         NConds := Fnphases;
-                        ActiveCircuit.BusNameRedefined := TRUE;
+                        DSS.ActiveCircuit.BusNameRedefined := TRUE;
                     end;
                 2:
                     VscSetBus1(param);
@@ -439,7 +440,7 @@ begin
     end;
 
   // calculate the AC voltage source admittance
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
     Value.re := FRac;
     Value.im := FXac * FreqMultiplier;
@@ -471,7 +472,7 @@ var
     i: Integer;
 begin
     try
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
             ComputeVTerminal;
       // add the injection currents from both AC and DC nodes, to the

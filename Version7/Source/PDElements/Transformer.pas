@@ -446,7 +446,7 @@ end;
 function TTransf.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
 
         ActiveCktElement := TTransfObj.Create(Self, ObjName);
@@ -472,7 +472,7 @@ begin
 
   {Make this object the active circuit element}
     ActiveTransfObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveTransfObj;  // use property to set this value
+    DSS.ActiveCircuit.ActiveCktElement := ActiveTransfObj;  // use property to set this value
 
     Result := 0;
 
@@ -649,13 +649,13 @@ DSS_CAPI_ALLOW_INCREMENTAL_Y := (GetEnvironmentVariable('DSS_CAPI_ALLOW_INCREMEN
                 5..7:
                     YprimInvalid := TRUE;
                 8:
-                    if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and (not ActiveCircuit.Solution.SystemYChanged) and (YPrim <> NIL) then
+                    if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and (not DSS.ActiveCircuit.Solution.SystemYChanged) and (YPrim <> NIL) then
                     begin
                         // Mark this to incrementally update the matrix.
                         // If the matrix is already being rebuilt, there is 
                         // no point in doing this, just rebuild it as usual.
                         /// writeln('Adding element to incremental list ', Name);
-                        ActiveCircuit.IncrCktElements.Add(ActiveTransfObj) 
+                        DSS.ActiveCircuit.IncrCktElements.Add(ActiveTransfObj) 
                     end
                     else
                         YprimInvalid := TRUE;
@@ -1347,7 +1347,7 @@ begin
     end;
 
     // Set frequency multipliers for this calculation
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
     // Check for rebuilding Y_Terminal; Only rebuild if freq is different than last time
     if FreqMultiplier <> Y_Terminal_Freqmult then
@@ -1590,13 +1590,13 @@ begin
             begin    {Only if there's been a change}
                 puTap := TempVal;
                 // Writeln(ActiveCircuit.Solution.dynavars.dblHour, ' Transformer.', Name, '.Tap = ', puTap);
-                if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and (not ActiveCircuit.Solution.SystemYChanged) and (YPrim <> NIL) then
+                if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and (not DSSPrime.ActiveCircuit.Solution.SystemYChanged) and (YPrim <> NIL) then
                 begin
                     // Mark this to incrementally update the matrix.
                     // If the matrix is already being rebuilt, there is 
                     // no point in doing this, just rebuild it as usual.
                     // writeln('Adding element to incremental list ', Name);
-                    ActiveCircuit.IncrCktElements.Add(Self) 
+                    DSSPrime.ActiveCircuit.IncrCktElements.Add(Self) 
                 end
                 else
                 begin
@@ -1736,7 +1736,7 @@ begin
         ITerm_NL := Allocmem(SizeOf(Complex) * 2 * NumWindings);
 
      {Load up Vterminal - already allocated for all cktelements}
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
             if Assigned(NodeV) then
                 for i := 1 to Yorder do
                     Vterminal^[i] := NodeV^[NodeRef^[i]]
@@ -1845,7 +1845,7 @@ begin
         end;
 
      {Load up VTerminal - already allocated for all cktelements}
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
             for i := 1 to Yorder do
                 Vterminal^[i] := NodeV^[NodeRef^[i]];
 
@@ -2366,7 +2366,7 @@ var
     end;
 
 begin
-    if ActiveCircuit.Solution.Frequency < 0.51 then
+    if DSSPrime.ActiveCircuit.Solution.Frequency < 0.51 then
          {Build Yterminal for GIC ~dc simulation}
 
         GICBuildYTerminal

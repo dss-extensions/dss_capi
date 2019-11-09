@@ -44,7 +44,7 @@ end;
 function DSSProperty_Get_Description_AnsiString(): Ansistring; inline;
 begin
     Result := '';
-    if (ActiveCircuit <> NIL) and (FPropIndex <> 0) {and (FPropClass <> Nil)} then
+    if (DSSPrime.ActiveCircuit <> NIL) and (FPropIndex <> 0) {and (FPropClass <> Nil)} then
         with ActiveDSSObject.ParentClass do
             if not IsPropIndexInvalid(33006) then
                 Result := PropertyHelp^[FPropIndex];
@@ -58,7 +58,7 @@ end;
 function DSSProperty_Get_Name_AnsiString(): Ansistring; inline;
 begin
     Result := '';
-    if (ActiveCircuit <> NIL) and (FPropIndex <> 0) {and (FPropClass <> Nil)} then
+    if (DSSPrime.ActiveCircuit <> NIL) and (FPropIndex <> 0) {and (FPropClass <> Nil)} then
         with ActiveDSSObject.ParentClass do
         begin
             if IsPropIndexInvalid(33005) then
@@ -75,7 +75,7 @@ end;
 function DSSProperty_Get_Val_AnsiString(): Ansistring; inline;
 begin
     Result := '';
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     with ActiveDSSObject do
     begin
@@ -92,7 +92,7 @@ end;
 //------------------------------------------------------------------------------
 procedure DSSProperty_Set_Val(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
 
     with ActiveDSSObject do
@@ -105,7 +105,7 @@ end;
 //------------------------------------------------------------------------------
 procedure DSSProperty_Set_Index(const Value: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         FPropIndex := Value + 1;
         FPropClass := ActiveDSSObject.ParentClass;
@@ -118,7 +118,7 @@ procedure DSSProperty_Set_Name(const Value: PAnsiChar); CDECL;
 var
     i: Integer;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         FPropClass := ActiveDSSObject.ParentClass;
         FPropIndex := 0;

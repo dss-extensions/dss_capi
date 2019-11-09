@@ -223,7 +223,7 @@ end;
 function TGICLine.NewObject(const ObjName: String): Integer;
 begin
     // Make a new voltage source and add it to GICLine class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TGICLineObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -267,7 +267,7 @@ var
 begin
   // continue parsing with contents of Parser
     ActiveGICLineObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveGICLineObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveGICLineObj;
 
     Result := 0;
 
@@ -563,7 +563,7 @@ begin
         YPrim.Clear;
     end;
 
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
      { Put in Series RL Adjusted for frequency }
@@ -634,7 +634,7 @@ begin
    equally displaced in time.}
         Vmag := Volts;
 
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
 
             if IsHarmonicModel and (SpectrumObj <> NIL) then
             begin
@@ -707,7 +707,7 @@ var
 
 begin
     try
-        with    ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
 
             for  i := 1 to Yorder do

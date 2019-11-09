@@ -200,7 +200,8 @@ uses
     Sysutils,
     uCmatrix,
     MathUtil,
-    Math;
+    Math,
+    DSSHelper;
 
 const
     AVGPHASES = -1;
@@ -352,7 +353,7 @@ end;
 function TRegControl.NewObject(const ObjName: String): Integer;
 begin
     // Make a new RegControl and add it to RegControl class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TRegControlObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -378,7 +379,7 @@ begin
 
   // continue parsing WITH contents of Parser
     ActiveRegControlObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveRegControlObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveRegControlObj;
 
     Result := 0;
 
@@ -697,7 +698,7 @@ begin
 
     if DevIndex > 0 then
     begin  // RegControled element must already exist
-        ControlledElement := ActiveCircuit.CktElements.Get(DevIndex);
+        ControlledElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
         Monitoredelement := ControlledElement;  // same for this controller
 
         if UsingRegulatedBus then
@@ -929,7 +930,7 @@ begin
         ACTION_TAPCHANGE:
         begin
             if (DebugTrace) then
-                with ActiveCircuit do
+                with DSSPrime.ActiveCircuit do
                     RegWriteDebugRecord(Format('+++ %.6g s: Handling TapChange = %.8g', [Solution.DynaVars.t, PendingTapChange]));
 
             if PendingTapChange = 0.0 then  {Check to make sure control has not reset}
@@ -941,7 +942,7 @@ begin
                 begin
 
                  // Transformer PresentTap property automatically limits tap
-                    with ActiveCircuit, ActiveCircuit.Solution do
+                    with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
                     begin
                         case ControlMode of
                             CTRLSTATIC:
@@ -1082,7 +1083,7 @@ begin
                     if (FwdPower < -RevPowerThreshold) then
                     begin
                         ReversePending := TRUE;
-                        with ActiveCircuit do
+                        with DSSPrime.ActiveCircuit do
                             RevHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + RevDelay, ACTION_REVERSE, 0, Self);
                         if (DebugTrace) then
                             RegWriteDebugRecord(Format('Pushed Reverse Action, Handle=%d, FwdPower=%.8g', [RevHandle, FwdPower]));
@@ -1095,7 +1096,7 @@ begin
                     begin
                         if (DebugTrace) then
                             RegWriteDebugRecord(Format('Deleting Reverse Action, Handle=%d', [RevHandle]));
-                        ActiveCircuit.ControlQueue.Delete(RevHandle);
+                        DSSPrime.ActiveCircuit.ControlQueue.Delete(RevHandle);
                         RevHandle := 0;   // reset for next time
                     end;
                 end;
@@ -1110,7 +1111,7 @@ begin
                     if (FwdPower > RevPowerThreshold) then
                     begin
                         ReversePending := TRUE;
-                        with ActiveCircuit do
+                        with DSSPrime.ActiveCircuit do
                             RevBackHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + RevDelay, ACTION_REVERSE, 0, Self);
                         if (DebugTrace) then
                             RegWriteDebugRecord(Format('Pushed ReverseBack Action to switch back, Handle=%d, FwdPower=%.8g', [RevBackHandle, FwdPower]));
@@ -1123,7 +1124,7 @@ begin
                     begin
                         if (DebugTrace) then
                             RegWriteDebugRecord(Format('Deleting ReverseBack Action, Handle=%d', [RevBackHandle]));
-                        ActiveCircuit.ControlQueue.Delete(RevBackHandle);
+                        DSSPrime.ActiveCircuit.ControlQueue.Delete(RevBackHandle);
                         RevBackHandle := 0;   // reset for next time
                     end;
                 end;
@@ -1141,7 +1142,7 @@ begin
                                 Increment := TapIncrement[TapWinding];
                                 PendingTapChange := Round((1.0 - PresentTap[Tapwinding]) / Increment) * Increment;
                                 if (PendingTapChange <> 0.0) and not Armed then
-                                    with ActiveCircuit do
+                                    with DSSPrime.ActiveCircuit do
                                     begin
                                         if (DebugTrace) then
                                             RegWriteDebugRecord(Format('*** %.6g s: Pushing TapChange = %.8g, delay= %.8g', [Solution.DynaVars.t, PendingTapChange, TapDelay]));
@@ -1271,7 +1272,7 @@ begin
                 if PendingTapChange > 0.0 then
                 begin
                     if PresentTap[TapWinding] < MaxTap[TapWinding] then
-                        with ActiveCircuit do
+                        with DSSPrime.ActiveCircuit do
                         begin
                             ControlActionHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ComputeTimeDelay(Vactual), ACTION_TAPCHANGE, 0, Self);
                             Armed := TRUE;  // Armed to change taps
@@ -1280,7 +1281,7 @@ begin
                 else
                 begin
                     if PresentTap[TapWinding] > MinTap[TapWinding] then
-                        with ActiveCircuit do
+                        with DSSPrime.ActiveCircuit do
                         begin
                             ControlActionHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ComputeTimeDelay(Vactual), ACTION_TAPCHANGE, 0, Self);
                             Armed := TRUE;  // Armed to change taps
@@ -1293,7 +1294,7 @@ begin
             PendingTapChange := 0.0;
             if Armed then
             begin
-                ActiveCircuit.ControlQueue.Delete(ControlActionHandle);
+                DSSPrime.ActiveCircuit.ControlQueue.Delete(ControlActionHandle);
                 Armed := FALSE;
                 ControlActionHandle := 0;
             end;
@@ -1385,11 +1386,11 @@ begin
             Append(TraceFile);
             with TTransfObj(ControlledElement) do
                 Writeln(TraceFile,
-                    ActiveCircuit.Solution.DynaVars.intHour: 0, Separator,
-                    ActiveCircuit.Solution.DynaVars.t: 0: 3, Separator,
-                    ActiveCircuit.Solution.ControlIteration: 0, Separator,
-                    ActiveCircuit.Solution.Iteration: 0, Separator,
-                    ActiveCircuit.LoadMultiplier: 6: 2, Separator,
+                    DSSPrime.ActiveCircuit.Solution.DynaVars.intHour: 0, Separator,
+                    DSSPrime.ActiveCircuit.Solution.DynaVars.t: 0: 3, Separator,
+                    DSSPrime.ActiveCircuit.Solution.ControlIteration: 0, Separator,
+                    DSSPrime.ActiveCircuit.Solution.Iteration: 0, Separator,
+                    DSSPrime.ActiveCircuit.LoadMultiplier: 6: 2, Separator,
                     PresentTap[ElementTerminal]: 8: 5, Separator,
                     PendingTapChange: 8: 5, Separator,
                     TapChangeMade: 8: 5, Separator,

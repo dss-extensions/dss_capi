@@ -119,7 +119,8 @@ uses
     Sysutils,
     Ucomplex,
     MathUtil,
-    Utilities;
+    Utilities,
+    DSSHelper;
 
 const
     NumPropsthisclass = 9;
@@ -201,7 +202,7 @@ end;
 function TFault.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TFaultObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -282,7 +283,7 @@ begin
     Result := 0;
   // continue parsing with contents of Parser
     ActiveFaultObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveFaultObj;  // use property to set this value
+    DSS.ActiveCircuit.ActiveCktElement := ActiveFaultObj;  // use property to set this value
 
     with ActiveFaultObj do
     begin
@@ -348,7 +349,7 @@ begin
                     begin
                         Nphases := PhasesTemp;
                         NConds := Fnphases;  // Force Reallocation of terminal info
-                        ActiveCircuit.BusNameRedefined := TRUE;  // Set Global Flag to signal circuit to rebuild busdefs
+                        DSS.ActiveCircuit.BusNameRedefined := TRUE;  // Set Global Flag to signal circuit to rebuild busdefs
                     end;
                 end;
                 4:
@@ -515,7 +516,7 @@ procedure TFaultObj.Randomize;
 // called from solveMontefault Procedure
 
 begin
-    with activeCircuit.Solution do
+    with DSSPrime.activeCircuit.Solution do
     begin
         case RandomType of
             GAUSSIAN:
@@ -576,7 +577,7 @@ begin
 
   // make sure randommult is 1.0 if not solution mode MonteFault
 
-    if ActiveCircuit.Solution.Mode <> TSolveMode.MONTEFAULT then
+    if DSSPrime.ActiveCircuit.Solution.Mode <> TSolveMode.MONTEFAULT then
         RandomMult := 1.0;
 
     if RandomMult = 0.0 then

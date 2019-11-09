@@ -126,7 +126,8 @@ uses
     Sysutils,
     Ucomplex,
     Utilities,
-    LineUnits;
+    LineUnits,
+    DSSHelper;
 
 const
     NumPropsThisClass = 26;
@@ -254,7 +255,7 @@ end;
 function TLineCode.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveDSSObject := TLineCodeObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -643,7 +644,7 @@ begin
     Z := NIL;
     Zinv := NIL;
     Yc := NIL;
-    Basefrequency := ActiveCircuit.Fundamental;
+    Basefrequency := DSSPrime.ActiveCircuit.Fundamental;
     Units := UNITS_NONE;  // default to none  (no conversion)
     Normamps := 400.0;
     EmergAmps := 600.0;

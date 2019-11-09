@@ -172,15 +172,15 @@ begin
     BusIdxListCreated := FALSE;
 
     // Autoaddbuslist exists in Active Circuit, use it  (see set Autobuslist=)
-    if ActiveCircuit.AutoAddBusList.ListSize > 0 then
-        FBusList := ActiveCircuit.AutoAddBusList
+    if DSSPrime.ActiveCircuit.AutoAddBusList.ListSize > 0 then
+        FBusList := DSSPrime.ActiveCircuit.AutoAddBusList
     else
 
-    if ActiveCircuit.EnergyMeters.ListSize = 0 then
+    if DSSPrime.ActiveCircuit.EnergyMeters.ListSize = 0 then
     begin
         // No energymeters in circuit
         // Include all buses in the circuit
-        BusIdxListSize := ActiveCircuit.BusList.listsize;
+        BusIdxListSize := DSSPrime.ActiveCircuit.BusList.listsize;
         BusIdxList := AllocMem(Sizeof(BusIdxList^[1]) * BusIdxListSize);
 
         for i := 1 to BusIdxListSize do
@@ -197,8 +197,8 @@ begin
          // Include only buses in EnergyMeter lists
              // Consider all meters
         FBusListCreatedHere := TRUE;
-        FBusList := THashList.Create(ActiveCircuit.NumBuses);
-        pMeter := ActiveCircuit.EnergyMeters.First;
+        FBusList := THashList.Create(DSSPrime.ActiveCircuit.NumBuses);
+        pMeter := DSSPrime.ActiveCircuit.EnergyMeters.First;
         while pMeter <> NIL do
         begin
 
@@ -219,7 +219,7 @@ begin
                     PDElem := pMeter.BranchList.GoForward;
                 end;
             end;
-            pMeter := ActiveCircuit.EnergyMeters.Next;
+            pMeter := DSSPrime.ActiveCircuit.EnergyMeters.Next;
         end;
     end;
 
@@ -229,7 +229,7 @@ begin
 
     for i := 1 to BusIdxListSize do
     begin
-        BusIdxList^[i] := ActiveCircuit.BusList.Find(FbusList.Get(i));
+        BusIdxList^[i] := DSSPrime.ActiveCircuit.BusList.Find(FbusList.Get(i));
     end;
 
     if FBusListCreatedHere then
@@ -252,7 +252,7 @@ begin
 
     ComputekWLosses_EEN;
 
-    if ActiveCircuit.EnergyMeters.ListSize = 0 then
+    if DSSPrime.ActiveCircuit.EnergyMeters.ListSize = 0 then
     begin
         // No energymeters in circuit
         // Just go by total system losses
@@ -261,7 +261,7 @@ begin
         Result := puLossImprovement;
     end
     else
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
         begin
             puLossImprovement := (BaseLosses - kWLosses) / GenkW;
             puEENImprovement := (BaseEEN - kWEEN) / GenkW;
@@ -388,7 +388,7 @@ begin
 }
     Result := 0;
 
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
     begin
 
 
@@ -401,7 +401,7 @@ begin
     {Do a preliminary snapshot solution to Force definition of meter zones
      And set bus lists}
         DSSPrime.EnergyMeterClass.ResetAll;
-        if SystemYChanged or ActiveCircuit.BusNameRedefined then
+        if SystemYChanged or DSSPrime.ActiveCircuit.BusNameRedefined then
         begin
             SolveSnap;
             ModeChanged := TRUE;
@@ -441,7 +441,7 @@ begin
 
             GENADD:
             begin
-                if ActiveCircuit.PositiveSequence then
+                if DSSPrime.ActiveCircuit.PositiveSequence then
                     TestGenkW := GenkW / 3.0
                 else
                     TestGenkW := GenkW;
@@ -586,7 +586,7 @@ begin
                 MaxLossImproveFactor := -1.0e50;  // Some very large number
                 MinBusPhases := 3;
 
-                if ActiveCircuit.PositiveSequence then
+                if DSSPrime.ActiveCircuit.PositiveSequence then
                     TestCapkvar := Capkvar / 3.0
                 else
                     TestCapkvar := Capkvar;
@@ -719,7 +719,7 @@ begin
     case AddType of
 
         GENADD:
-            with ActiveCircuit, ActiveCircuit.Solution do
+            with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
             begin
            {For buses with voltage <> 0, add into aux current array}
                 for i := 1 to Phases do
@@ -741,7 +741,7 @@ begin
             end;
 
         CAPADD:
-            with ActiveCircuit, ActiveCircuit.Solution do
+            with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
             begin
 
            {For buses with voltage <> 0, add into aux current array}
@@ -773,12 +773,12 @@ var
 
 begin
 
-    if ActiveCircuit.EnergyMeters.ListSize = 0 then
+    if DSSPrime.ActiveCircuit.EnergyMeters.ListSize = 0 then
     begin
 
         // No energymeters in circuit
         // Just go by total system losses
-        kWLosses := ActiveCircuit.Losses.re * 0.001;
+        kWLosses := DSSPrime.ActiveCircuit.Losses.re * 0.001;
         kWEEN := 0.0;
 
     end
@@ -787,17 +787,17 @@ begin
         kWLosses := 0.0;
         kWEEN := 0.0;
 
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
         begin
 
-            pMeter := ActiveCircuit.Energymeters.First;
+            pMeter := DSSPrime.ActiveCircuit.Energymeters.First;
             while pMeter <> NIL do
             begin
 
                 kWLosses := kWLosses + SumSelectedRegisters(pMeter, LossRegs, NumLossRegs);
                 kWEEN := kWEEN + SumSelectedRegisters(pMeter, UEregs, NumUEregs);
 
-                pMeter := ActiveCircuit.EnergyMeters.Next;
+                pMeter := DSSPrime.ActiveCircuit.EnergyMeters.Next;
             end;
         end;
     end;

@@ -78,7 +78,8 @@ implementation
 uses
     DSSClassDefs,
     DSSGlobals,
-    Sysutils;
+    Sysutils,
+    DSSHelper;
 
 constructor TPCElement.Create(ParClass: TDSSClass);
 begin
@@ -108,7 +109,7 @@ var
     i: Integer;
 begin
     Result := 0;
-    with ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
         for i := 1 to Yorder do
             Caccum(Currents^[NodeRef^[i]], InjCurrent^[i]);
 end;
@@ -136,7 +137,7 @@ begin
             CAccum(Curr^[i], CNegate(Injcurrent^[i]));
         IterminalUpdated := TRUE;
     end;
-    IterminalSolutionCount := ActiveCircuit.Solution.SolutionCount;
+    IterminalSolutionCount := DSSPrime.ActiveCircuit.Solution.SolutionCount;
 end;
 
 //= = =  = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -151,7 +152,7 @@ var
 begin
     try
 
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
             if (Enabled) then
             begin
@@ -293,10 +294,10 @@ end;
 
 procedure TPCElement.ComputeIterminal;
 begin
-    if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+    if IterminalSolutionCount <> DSSPrime.ActiveCircuit.Solution.SolutionCount then
     begin
         GetCurrents(Iterminal);
-        IterminalSolutionCount := ActiveCircuit.Solution.SolutionCount;
+        IterminalSolutionCount := DSSPrime.ActiveCircuit.Solution.SolutionCount;
     end;
 
 end;
@@ -313,7 +314,7 @@ procedure TPCElement.set_ITerminalUpdated(const Value: Boolean);
 begin
     FITerminalUpdated := Value;
     if Value then
-        ITerminalSolutionCount := ActiveCircuit.Solution.SolutionCount;
+        ITerminalSolutionCount := DSSPrime.ActiveCircuit.Solution.SolutionCount;
 end;
 
 end.

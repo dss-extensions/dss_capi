@@ -57,9 +57,9 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Generators, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Generators, False);
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_First(): Integer; CDECL;
@@ -69,19 +69,19 @@ var
 begin
 
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pGen := ActiveCircuit.Generators.First;
+        pGen := DSSPrime.ActiveCircuit.Generators.First;
         if pGen <> NIL then
         begin
             repeat
                 if pGen.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := pGen;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := pGen;
                     Result := 1;
                 end
                 else
-                    pGen := ActiveCircuit.Generators.Next;
+                    pGen := DSSPrime.ActiveCircuit.Generators.Next;
             until (Result = 1) or (pGen = NIL);
         end
         else
@@ -95,9 +95,9 @@ var
 
 begin
     Result := '';
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pGen := ActiveCircuit.Generators.Active;
+        pGen := DSSPrime.ActiveCircuit.Generators.Active;
         if pGen <> NIL then
         begin
             Result := pGen.Name;
@@ -120,19 +120,19 @@ var
 begin
 
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        pGen := ActiveCircuit.Generators.Next;
+        pGen := DSSPrime.ActiveCircuit.Generators.Next;
         if pGen <> NIL then
         begin
             repeat
                 if pGen.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := pGen;
-                    Result := ActiveCircuit.Generators.ActiveIndex;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := pGen;
+                    Result := DSSPrime.ActiveCircuit.Generators.ActiveIndex;
                 end
                 else
-                    pGen := ActiveCircuit.Generators.Next;
+                    pGen := DSSPrime.ActiveCircuit.Generators.Next;
             until (Result > 0) or (pGen = NIL);
         end
         else
@@ -163,9 +163,9 @@ var
     k: Integer;
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        Gen := TGeneratorObj(ActiveCircuit.Generators.Active);
+        Gen := TGeneratorObj(DSSPrime.ActiveCircuit.Generators.Active);
         if Gen <> NIL then
         begin
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (numGenRegisters - 1) + 1);
@@ -195,9 +195,9 @@ end;
 function Generators_Get_ForcedON(): Boolean; CDECL;
 begin
     Result := FALSE;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -210,9 +210,9 @@ end;
 procedure Generators_Set_ForcedON(Value: Boolean); CDECL;
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -225,12 +225,12 @@ end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     if DSSPrime.GeneratorClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := DSSPrime.GeneratorClass.ElementList.Active;
-        ActiveCircuit.Generators.Get(DSSPrime.GeneratorClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.GeneratorClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Generators.Get(DSSPrime.GeneratorClass.Active);
     end
     else
     begin
@@ -241,9 +241,9 @@ end;
 function Generators_Get_kV(): Double; CDECL;
 begin
     Result := -1.0;  // not set
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -256,9 +256,9 @@ end;
 function Generators_Get_kvar(): Double; CDECL;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -271,9 +271,9 @@ end;
 function Generators_Get_kW(): Double; CDECL;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -286,9 +286,9 @@ end;
 function Generators_Get_PF(): Double; CDECL;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -301,9 +301,9 @@ end;
 function Generators_Get_Phases(): Integer; CDECL;
 begin
     Result := 0;  // not set
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -316,9 +316,9 @@ end;
 procedure Generators_Set_kV(Value: Double); CDECL;
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -331,9 +331,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_kvar(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -345,9 +345,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_kW(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -359,9 +359,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_PF(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -373,9 +373,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Phases(Value: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -388,14 +388,14 @@ end;
 function Generators_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(Activecircuit) then
-        Result := ActiveCircuit.Generators.ListSize;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.Generators.ListSize;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Generators.ActiveIndex
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Generators.ActiveIndex
     else
         Result := 0;
 end;
@@ -404,23 +404,23 @@ procedure Generators_Set_idx(Value: Integer); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pGen := ActiveCircuit.Generators.Get(Value);
+    pGen := DSSPrime.ActiveCircuit.Generators.Get(Value);
     if pGen = NIL then
     begin
         DoSimpleMsg('Invalid Generator index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pGen;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pGen;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Model(): Integer; CDECL;
 begin
     Result := -1;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -432,9 +432,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Model(Value: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -443,7 +443,7 @@ begin
                     GenModel := Value;
                      // Handle side effect
                     if GenModel = 3 then
-                        ActiveCircuit.Solution.SolutionInitialized := FALSE;
+                        DSSPrime.ActiveCircuit.Solution.SolutionInitialized := FALSE;
                 end;
             end;
         end;
@@ -453,9 +453,9 @@ end;
 function Generators_Get_kVArated(): Double; CDECL;
 begin
     Result := -1.0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -467,9 +467,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_kVArated(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -485,9 +485,9 @@ end;
 function Generators_Get_Vmaxpu(): Double; CDECL;
 begin
     Result := -1.0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -500,9 +500,9 @@ end;
 function Generators_Get_Vminpu(): Double; CDECL;
 begin
     Result := -1.0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -514,9 +514,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Vmaxpu(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin
@@ -531,9 +531,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Vminpu(Value: Double); CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        with ActiveCircuit.Generators do
+        with DSSPrime.ActiveCircuit.Generators do
         begin
             if ActiveIndex <> 0 then
             begin

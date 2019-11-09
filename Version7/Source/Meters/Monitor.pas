@@ -236,7 +236,8 @@ uses
     Dynamics,
     PstCalc,
     Capacitor,
-    Storage;
+    Storage,
+    DSSHelper;
 
 const
     SEQUENCEMASK = 16;
@@ -344,7 +345,7 @@ end;
 function TDSSMonitor.NewObject(const ObjName: String): Integer;
 begin
     // Make a new Monitor and add it to Monitor class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TMonitorObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -364,7 +365,7 @@ begin
   // continue parsing with contents of Parser
   // continue parsing with contents of Parser
     ActiveMonitorObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveMonitorObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveMonitorObj;
 
     Result := 0;
     recalc := 0;
@@ -443,12 +444,12 @@ var
     Mon: TMonitorObj;
 
 begin
-    Mon := ActiveCircuit.Monitors.First;
+    Mon := DSS.ActiveCircuit.Monitors.First;
     while Mon <> NIL do
     begin
         if Mon.enabled then
             Mon.ResetIt;
-        Mon := ActiveCircuit.Monitors.Next;
+        Mon := DSS.ActiveCircuit.Monitors.Next;
     end;
 
 end;
@@ -460,13 +461,13 @@ var
     Mon: TMonitorObj;
 // sample all monitors except mode 5 monitors
 begin
-    Mon := ActiveCircuit.Monitors.First;
+    Mon := DSS.ActiveCircuit.Monitors.First;
     while Mon <> NIL do
     begin
         if Mon.enabled then
             if Mon.Mode <> 5 then
                 Mon.TakeSample;
-        Mon := ActiveCircuit.Monitors.Next;
+        Mon := DSS.ActiveCircuit.Monitors.Next;
     end;
 end;
 
@@ -477,13 +478,13 @@ var
     Mon: TMonitorObj;
 // sample all Mode 5 monitors except monitors
 begin
-    Mon := ActiveCircuit.Monitors.First;
+    Mon := DSS.ActiveCircuit.Monitors.First;
     while Mon <> NIL do
     begin
         if Mon.enabled then
             if Mon.Mode = 5 then
                 Mon.TakeSample;
-        Mon := ActiveCircuit.Monitors.Next;
+        Mon := DSS.ActiveCircuit.Monitors.Next;
     end;
 end;
 
@@ -492,12 +493,12 @@ procedure TDSSMonitor.PostProcessAll;
 var
     Mon: TMonitorObj;
 begin
-    Mon := ActiveCircuit.Monitors.First;
+    Mon := DSS.ActiveCircuit.Monitors.First;
     while Mon <> NIL do
     begin
         if Mon.Enabled then
             Mon.PostProcess;
-        Mon := ActiveCircuit.Monitors.Next;
+        Mon := DSS.ActiveCircuit.Monitors.Next;
     end;
 end;
 
@@ -508,12 +509,12 @@ var
     Mon: TMonitorObj;
 
 begin
-    Mon := ActiveCircuit.Monitors.First;
+    Mon := DSS.ActiveCircuit.Monitors.First;
     while Mon <> NIL do
     begin
         if Mon.Enabled then
             Mon.Save;
-        Mon := ActiveCircuit.Monitors.Next;
+        Mon := DSS.ActiveCircuit.Monitors.Next;
     end;
 end;
 
@@ -616,7 +617,7 @@ begin
     MonBuffer := AllocMem(Sizeof(MonBuffer^[1]) * BufferSize);
     BufPtr := 0;
 
-    ElementName := TDSSCktElement(ActiveCircuit.CktElements.Get(1)).Name; // Default to first circuit element (source)
+    ElementName := TDSSCktElement(DSSPrime.ActiveCircuit.CktElements.Get(1)).Name; // Default to first circuit element (source)
     MeteredElement := NIL;
     Bufferfile := '';
 
@@ -683,7 +684,7 @@ begin
     Devindex := GetCktElementIndex(ElementName);                   // Global function
     if DevIndex > 0 then
     begin                                       // Monitored element must already exist
-        MeteredElement := ActiveCircuit.CktElements.Get(DevIndex);
+        MeteredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
         case (Mode and MODEMASK) of
             2, 8, 10:
             begin                                                // Must be transformer
@@ -865,7 +866,7 @@ begin
         fillchar(StrBuffer, Sizeof(TMonitorStrBuffer), 0);  {clear buffer}
         strPtr := @StrBuffer;
         strPtr^ := chr(0);     // Init string
-        if ActiveCircuit.Solution.IsHarmonicModel then
+        if DSSPrime.ActiveCircuit.Solution.IsHarmonicModel then
             strLcat(strPtr, pAnsichar('Freq, Harmonic, '), Sizeof(TMonitorStrBuffer))
         else
             strLcat(strPtr, pAnsichar('hour, t(sec), '), Sizeof(TMonitorStrBuffer));
@@ -1302,13 +1303,13 @@ begin
 
     inc(SampleCount);
 
-    Hour := ActiveCircuit.Solution.DynaVars.intHour;
-    Sec := ActiveCircuit.Solution.Dynavars.t;
+    Hour := DSSPrime.ActiveCircuit.Solution.DynaVars.intHour;
+    Sec := DSSPrime.ActiveCircuit.Solution.Dynavars.t;
 
     Offset := (MeteredTerminal - 1) * MeteredElement.NConds;
 
    //Save time unless Harmonics mode and then save Frequency and Harmonic
-    with ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
         if IsHarmonicModel then
         begin
             AddDblsToBuffer(@Frequency, 1);  // put freq in hour slot as a double
@@ -1337,7 +1338,7 @@ begin
                 begin
                 // NodeRef is set by the main Circuit object
                 // It is the index of the terminal into the system node list
-                    VoltageBuffer^[i] := ActiveCircuit.Solution.NodeV^[NodeRef^[i]];
+                    VoltageBuffer^[i] := DSSPrime.ActiveCircuit.Solution.NodeV^[NodeRef^[i]];
                 end;
             except
                 On E: Exception do
@@ -1369,7 +1370,7 @@ begin
             try
                 for i := 1 to Fnphases do
                 begin
-                    FlickerBuffer^[i] := ActiveCircuit.Solution.NodeV^[NodeRef^[i]];
+                    FlickerBuffer^[i] := DSSPrime.ActiveCircuit.Solution.NodeV^[NodeRef^[i]];
                 end;
             except
                 On E: Exception do
@@ -1380,7 +1381,7 @@ begin
         5:
         begin
             (* Capture Solution Variables *)
-            with ActiveCircuit.Solution do
+            with DSSPrime.ActiveCircuit.Solution do
             begin
                 SolutionBuffer^[1] := Iteration;
                 SolutionBuffer^[2] := ControlIteration;
@@ -1552,7 +1553,7 @@ begin
         1:
         begin     // Convert Voltage Buffer to power kW, kvar or Mag/Angle
             CalckPowers(VoltageBuffer, VoltageBuffer, @CurrentBuffer^[Offset + 1], NumVI);
-            if (IsSequence or ActiveCircuit.PositiveSequence) then
+            if (IsSequence or DSSPrime.ActiveCircuit.PositiveSequence) then
                 CmulArray(VoltageBuffer, 3.0, NumVI); // convert to total power
             if Ppolar then
                 ConvertComplexArrayToPolar(VoltageBuffer, NumVI);
@@ -1746,7 +1747,7 @@ begin
         begin
             pst[p] := AllocMem(Sizeof(SngBuffer[1]) * Npst);
             busref := MeteredElement.Terminals[MeteredTerminal].BusRef;
-            Vbase := 1000.0 * ActiveCircuit.Buses^[busref].kVBase;
+            Vbase := 1000.0 * DSSPrime.ActiveCircuit.Buses^[busref].kVBase;
             FlickerMeter(N, BaseFrequency, Vbase, data[0], data[p + 1], pst[p]);
         end;
 
@@ -2081,7 +2082,7 @@ begin
             if (s > 0.0) and (s < 100.0) then
                 Hours := FALSE;
 
-            case ActiveCircuit.Solution.DynaVars.SolutionMode of
+            case DSSPrime.ActiveCircuit.Solution.DynaVars.SolutionMode of
                 TSolveMode.HARMONICMODE:
                     Time := hr;
             else
@@ -2102,7 +2103,7 @@ begin
                     Read(sngBuffer, RecordBytes);
                 end;
 
-            case ActiveCircuit.Solution.DynaVars.SolutionMode of
+            case DSSPrime.ActiveCircuit.Solution.DynaVars.SolutionMode of
                 TSolveMode.HARMONICMODE:
                     MaxTime := hr;
             else
@@ -2133,7 +2134,7 @@ begin
                     end;
                     if Nread < RecordBytes then
                         Break;
-                    case ActiveCircuit.Solution.DynaVars.SolutionMode of
+                    case DSSPrime.ActiveCircuit.Solution.DynaVars.SolutionMode of
                         TSolveMode.HARMONICMODE:
                             Time := hr;
                     else

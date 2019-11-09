@@ -80,8 +80,8 @@ uses
 function ActiveReactor(out e: TReactorObj): TReactorObj; inline;
 begin
     e := NIL;
-    if ActiveCircuit <> NIL then
-        e := ActiveCircuit.Reactors.Active;
+    if DSSPrime.ActiveCircuit <> NIL then
+        e := DSSPrime.ActiveCircuit.Reactors.Active;
     Result := e;
 end;
 //------------------------------------------------------------------------------
@@ -169,9 +169,9 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Reactors, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Reactors, False);
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_First(): Integer; CDECL;
@@ -180,16 +180,16 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         exit;
-    lst := ActiveCircuit.Reactors;
+    lst := DSSPrime.ActiveCircuit.Reactors;
     elem := lst.First;
     if elem <> NIL then
     begin
         repeat
             if elem.Enabled then
             begin
-                ActiveCircuit.ActiveCktElement := elem;
+                DSSPrime.ActiveCircuit.ActiveCktElement := elem;
                 Result := 1;
             end
             else
@@ -215,12 +215,12 @@ end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     if DSSPrime.ReactorClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := DSSPrime.ReactorClass.ElementList.Active;
-        ActiveCircuit.Reactors.Get(DSSPrime.ReactorClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.ReactorClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Reactors.Get(DSSPrime.ReactorClass.Active);
     end
     else
     begin
@@ -234,16 +234,16 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        lst := ActiveCircuit.Reactors;
+        lst := DSSPrime.ActiveCircuit.Reactors;
         elem := lst.Next;
         if elem <> NIL then
         begin
             repeat
                 if elem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := elem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
                     Result := lst.ActiveIndex;
                 end
                 else
@@ -256,8 +256,8 @@ end;
 function Reactors_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.Reactors.ListSize;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.Reactors.ListSize;
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Bus1_AnsiString(): Ansistring; inline;
@@ -820,8 +820,8 @@ end;
 //------------------------------------------------------------------------------
 function Reactors_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Reactors.ActiveIndex
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Reactors.ActiveIndex
     else
         Result := 0;
 end;
@@ -830,15 +830,15 @@ procedure Reactors_Set_idx(Value: Integer); CDECL;
 var
     pReactor: TReactorObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pReactor := ActiveCircuit.Reactors.Get(Value);
+    pReactor := DSSPrime.ActiveCircuit.Reactors.Get(Value);
     if pReactor = NIL then
     begin
         DoSimpleMsg('Invalid Reactor index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pReactor;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pReactor;
 end;
 //------------------------------------------------------------------------------
 end.

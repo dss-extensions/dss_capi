@@ -86,7 +86,8 @@ TYPE
 
 implementation
 
-Uses Generator, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils;
+Uses Generator, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils,
+     DSSClass, DSSHelper;
 
 { TGenUserModel }
 
@@ -209,7 +210,7 @@ begin
                  FName   := '';
             end
             Else Begin
-                FID := FNew(FActiveGeneratorVars^, ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
+                FID := FNew(FActiveGeneratorVars^, DSSPrime.ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
             End;;
         End;
 end;

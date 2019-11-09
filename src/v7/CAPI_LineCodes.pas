@@ -63,21 +63,21 @@ uses
 function LineCodes_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.LineCodeClass.ElementCount;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.LineCodeClass.First;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.LineCodeClass.Next;
 end;
 //------------------------------------------------------------------------------
@@ -87,7 +87,7 @@ var
 
 begin
     Result := '';  // signify no name
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         if pLineCode <> NIL then
@@ -107,7 +107,7 @@ procedure LineCodes_Set_Name(const Value: PAnsiChar); CDECL;
 // set LineCode active by name
 
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         if not DSSPrime.LineCodeClass.SetActive(Value) then
             DoSimpleMsg('LineCode "' + Value + '" Not Found in Active Circuit.', 51008);
@@ -123,7 +123,7 @@ var
 
 begin
     Result := TRUE;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         if pLineCode <> NIL then
@@ -138,7 +138,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         Result := pLineCode.Units;
@@ -151,7 +151,7 @@ var
 
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
@@ -173,7 +173,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         Result := pLineCode.FNPhases;
@@ -185,7 +185,7 @@ procedure LineCodes_Set_Phases(Value: Integer); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         pLineCode.NumPhases := Value;   // use property value to force reallocations
@@ -198,7 +198,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         Result := pLineCode.R1;
@@ -212,7 +212,7 @@ var
 
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
@@ -229,7 +229,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         Result := pLineCode.X1;
@@ -243,7 +243,7 @@ var
 
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
@@ -260,7 +260,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         Result := pLineCode.R0;
@@ -274,7 +274,7 @@ var
 
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         Result := pLineCode.X0;
@@ -288,7 +288,7 @@ var
 
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
@@ -306,7 +306,7 @@ var
 
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
@@ -323,7 +323,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         Result := pLineCode.C0;
@@ -336,7 +336,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         Result := pLineCode.C1;
@@ -350,7 +350,7 @@ var
 
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
@@ -368,7 +368,7 @@ var
 
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
@@ -390,7 +390,7 @@ var
 begin
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
@@ -425,7 +425,7 @@ var
 begin
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
@@ -458,7 +458,7 @@ var
 
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
@@ -493,7 +493,7 @@ var
 begin
     Value := PDoubleArray(ValuePtr);
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
@@ -521,7 +521,7 @@ var
 begin
     Value := PDoubleArray(ValuePtr);
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
@@ -549,7 +549,7 @@ var
 begin
     Value := PDoubleArray(ValuePtr);
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
@@ -572,7 +572,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         Result := pLineCode.NormAmps;
@@ -584,7 +584,7 @@ procedure LineCodes_Set_NormAmps(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         pLineCode.NormAmps := Value;
@@ -597,7 +597,7 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         Result := pLineCode.EmergAmps;
@@ -609,7 +609,7 @@ procedure LineCodes_Set_EmergAmps(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         pLineCode.EmergAmps := Value;
@@ -623,7 +623,7 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.LineCodeClass.ElementList, False);
 end;

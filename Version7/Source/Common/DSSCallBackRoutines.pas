@@ -130,23 +130,23 @@ var
 begin
     StrlCopy(Name1, pAnsiChar(''), Len1);  // Initialize to null
     StrlCopy(Name2, pAnsiChar(''), Len2);
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        CktElement := ActiveCircuit.Activecktelement;
+        CktElement := DSSPrime.ActiveCircuit.Activecktelement;
         if CktElement <> NIL then
         begin
      {First bus}
             BusIdx := CktElement.Terminals^[1].busref;
             if BusIdx > 0 then
-                with  ActiveCircuit.Buses^[BusIdx] do
+                with DSSPrime.ActiveCircuit.Buses^[BusIdx] do
                     if CoordDefined then
-                        StrlCopy(Name1, pAnsiChar(Ansistring(ActiveCircuit.BusList.Get(Busidx))), Len1);
+                        StrlCopy(Name1, pAnsiChar(Ansistring(DSSPrime.ActiveCircuit.BusList.Get(Busidx))), Len1);
       {Second bus}
             BusIdx := CktElement.Terminals^[2].busref;
             if BusIdx > 0 then
-                with  ActiveCircuit.Buses^[BusIdx] do
+                with DSSPrime.ActiveCircuit.Buses^[BusIdx] do
                     if CoordDefined then
-                        StrlCopy(Name2, pAnsiChar(Ansistring(ActiveCircuit.BusList.Get(Busidx))), Len2);
+                        StrlCopy(Name2, pAnsiChar(Ansistring(DSSPrime.ActiveCircuit.BusList.Get(Busidx))), Len2);
         end; {If CktElement}
     end;  {If ActiveCircuit}
 end;
@@ -158,8 +158,8 @@ procedure GetActiveElementVoltagesCallBack(var NumVoltages: Integer; V: pComplex
 var
     i: Integer;
 begin
-    if Assigned(ActiveCircuit.ActiveCktElement) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
+        with DSSPrime.ActiveCircuit do
             with ActiveCktElement do
             begin
                 NumVoltages := Min(Yorder, NumVoltages);  // reset buffer size
@@ -174,8 +174,8 @@ procedure GetActiveElementCurrentsCallBack(var NumCurrents: Integer; Curr: pComp
 var
     i: Integer;
 begin
-    if Assigned(ActiveCircuit.ActiveCktElement) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
+        with DSSPrime.ActiveCircuit do
             with ActiveCktElement do
             begin
                 ComputeIterminal;
@@ -192,8 +192,8 @@ begin
     TotalLosses := CZERO;
     LoadLosses := CZERO;
     NoLoadLosses := CZERO;
-    if Assigned(ActiveCircuit.ActiveCktElement) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
+        with DSSPrime.ActiveCircuit do
             with ActiveCktElement do
             begin
                 GetLosses(TotalLosses, LoadLosses, NoLoadLosses);
@@ -205,8 +205,8 @@ end;
 procedure GetActiveElementPowerCallBack(Terminal: Integer; var TotalPower: Complex); STDCALL;
 begin
     TotalPower := CZERO;
-    if Assigned(ActiveCircuit.ActiveCktElement) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
+        with DSSPrime.ActiveCircuit do
             with ActiveCktElement do
             begin
              //----ActiveTerminalIdx := Terminal;
@@ -224,10 +224,10 @@ var
 begin
     NumCust := 0;
     TotalCust := 0;
-    if Assigned(ActiveCircuit.ActiveCktElement) then
-        if ActiveCircuit.ActiveCktElement is TPDElement then
+    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
+        if DSSPrime.ActiveCircuit.ActiveCktElement is TPDElement then
         begin
-            pDElem := ActiveCircuit.ActiveCktElement as TPDElement;
+            pDElem := DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement;
             NumCust := pDElem.BranchNumCustomers;
             TotalCust := pDElem.BranchTotalCustomers;
         end;
@@ -239,8 +239,8 @@ procedure GetActiveElementNodeRefCallBack(Maxsize: Integer; NodeReferenceArray: 
 var
     i: Integer;
 begin
-    if Assigned(ActiveCircuit.ActiveCktElement) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
+        with DSSPrime.ActiveCircuit do
             with ActiveCktElement do
             begin
                 for i := 1 to Min(Yorder, Maxsize) do
@@ -253,8 +253,8 @@ end;
 function GetActiveElementBusRefCallBack(Terminal: Integer): Integer; STDCALL;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit.ActiveCktElement) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
+        with DSSPrime.ActiveCircuit do
             with ActiveCktElement do
             begin
                 Result := Terminals^[Terminal].BusRef;
@@ -265,8 +265,8 @@ end;
 
 procedure GetActiveElementTerminalInfoCallBack(var NumTerminals, NumConds, NumPhases: Integer); STDCALL;
 begin
-    if Assigned(ActiveCircuit.ActiveCktElement) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
+        with DSSPrime.ActiveCircuit do
             with ActiveCktElement do
             begin
                 NumTerminals := Nterms;
@@ -279,8 +279,8 @@ end;
 
 procedure GetPtrToSystemVarrayCallBack(var V: Pointer; var iNumNodes: Integer); STDCALL; // Returns pointer to Solution.V and size
 begin
-    if Assigned(ActiveCircuit.ActiveCktElement) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
+        with DSSPrime.ActiveCircuit do
             with ActiveCktElement do
             begin
                 V := Solution.NodeV;  // Return Pointer to Node Voltage array
@@ -295,9 +295,9 @@ function GetActiveElementIndexCallBack: Integer; STDCALL;
     {Usually just checking to see if this result >0}
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        if Assigned(ActiveCircuit.ActiveCktElement) then
-            Result := ActiveCircuit.ActiveCktElement.ClassIndex;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
+            Result := DSSPrime.ActiveCircuit.ActiveCktElement.ClassIndex;
 end;
 
 {====================================================================================================================}
@@ -306,9 +306,9 @@ function IsActiveElementEnabledCallBack: Boolean; STDCALL;
 
 begin
     Result := FALSE;
-    if Assigned(ActiveCircuit) then
-        if Assigned(ActiveCircuit.ActiveCktElement) then
-            Result := ActiveCircuit.ActiveCktElement.Enabled;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
+            Result := DSSPrime.ActiveCircuit.ActiveCktElement.Enabled;
 end;
 
 {====================================================================================================================}
@@ -316,8 +316,8 @@ end;
 function IsBusCoordinateDefinedCallback(BusRef: Integer): Boolean; STDCALL;
 begin
     Result := FALSE;
-    if Assigned(ActiveCircuit) and (busRef > 0) then
-        Result := ActiveCircuit.Buses^[BusRef].CoordDefined;
+    if Assigned(DSSPrime.ActiveCircuit) and (busRef > 0) then
+        Result := DSSPrime.ActiveCircuit.Buses^[BusRef].CoordDefined;
 end;
 
 {====================================================================================================================}
@@ -325,10 +325,10 @@ procedure GetBusCoordinateCallback(BusRef: Integer; var X, Y: Double); STDCALL;
 begin
     X := 0.0;
     Y := 0.0;
-    if Assigned(ActiveCircuit) and (busRef > 0) then
+    if Assigned(DSSPrime.ActiveCircuit) and (busRef > 0) then
     begin
-        X := ActiveCircuit.Buses^[BusRef].X;
-        Y := ActiveCircuit.Buses^[BusRef].Y;
+        X := DSSPrime.ActiveCircuit.Buses^[BusRef].X;
+        Y := DSSPrime.ActiveCircuit.Buses^[BusRef].Y;
     end;
 end;
 
@@ -336,9 +336,9 @@ end;
 function GetBuskVBaseCallback(BusRef: Integer): Double; STDCALL;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) and (busRef > 0) then
+    if Assigned(DSSPrime.ActiveCircuit) and (busRef > 0) then
     begin
-        Result := ActiveCircuit.Buses^[BusRef].kVBase;
+        Result := DSSPrime.ActiveCircuit.Buses^[BusRef].kVBase;
     end;
 end;
 
@@ -346,18 +346,18 @@ end;
 function GetBusDistFromMeterCallback(BusRef: Integer): Double; STDCALL;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) and (busRef > 0) then
+    if Assigned(DSSPrime.ActiveCircuit) and (busRef > 0) then
     begin
-        Result := ActiveCircuit.Buses^[BusRef].DistFromMeter;
+        Result := DSSPrime.ActiveCircuit.Buses^[BusRef].DistFromMeter;
     end;
 end;
 
 {====================================================================================================================}
 procedure GetDynamicsStructCallBack(var DynamicsStruct: Pointer); STDCALL;
 begin
-    if Assigned(ActiveCircuit) then
+    if Assigned(DSSPrime.ActiveCircuit) then
     begin
-        DynamicsStruct := @ActiveCircuit.Solution.DynaVars;
+        DynamicsStruct := @DSSPrime.ActiveCircuit.Solution.DynaVars;
     end;
 
 end;
@@ -366,9 +366,9 @@ end;
 function GetStepSizeCallBack: Double; STDCALL;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
+    if Assigned(DSSPrime.ActiveCircuit) then
     begin
-        Result := ActiveCircuit.Solution.DynaVars.h;
+        Result := DSSPrime.ActiveCircuit.Solution.DynaVars.h;
     end;
 end;
 
@@ -376,9 +376,9 @@ end;
 function GetTimeSecCallBack: Double; STDCALL;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
+    if Assigned(DSSPrime.ActiveCircuit) then
     begin
-        Result := ActiveCircuit.Solution.DynaVars.t;
+        Result := DSSPrime.ActiveCircuit.Solution.DynaVars.t;
     end;
 
 end;
@@ -387,9 +387,9 @@ end;
 function GetTimeHrCallBack: Double; STDCALL;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
+    if Assigned(DSSPrime.ActiveCircuit) then
     begin
-        Result := ActiveCircuit.Solution.DynaVars.dblHour;
+        Result := DSSPrime.ActiveCircuit.Solution.DynaVars.dblHour;
     end;
 end;
 
@@ -399,8 +399,8 @@ procedure GetPublicDataPtrCallBack(var pPublicData: Pointer; var PublicDataBytes
 
 begin
 
-    if Assigned(ActiveCircuit.ActiveCktElement) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
+        with DSSPrime.ActiveCircuit do
             with ActiveCktElement do
             begin
                 pPublicData := PublicDataStruct;
@@ -416,8 +416,8 @@ var
     S: String;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit.ActiveCktElement) then
-        with ActiveCircuit do
+    if Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) then
+        with DSSPrime.ActiveCircuit do
             with ActiveCktElement do
             begin
                 S := ParentClass.Name + '.' + Name;
@@ -429,12 +429,12 @@ end;
 
 function GetActiveElementPtrCallBack(): Pointer; STDCALL;  // Returns pointer to active circuit element
 begin
-    Result := Pointer(ActiveCircuit.ActiveCktElement);
+    Result := Pointer(DSSPrime.ActiveCircuit.ActiveCktElement);
 end;
 
 function ControlQueuePushCallBack(const Hour: Integer; const Sec: Double; const Code, ProxyHdl: Integer; Owner: Pointer): Integer; STDCALL;
 begin
-    Result := ActiveCircuit.ControlQueue.Push(Hour, Sec, Code, ProxyHdl, Owner);
+    Result := DSSPrime.ActiveCircuit.ControlQueue.Push(Hour, Sec, Code, ProxyHdl, Owner);
 end;
 
 procedure GetResultStrCallBack(S: pAnsiChar; Maxlen: Cardinal); STDCALL;

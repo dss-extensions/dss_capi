@@ -62,15 +62,15 @@ uses
 function ActiveSensor: TSensorObj;
 begin
     Result := NIL;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Sensors.Active;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Sensors.Active;
 end;
 //------------------------------------------------------------------------------
 procedure Set_Parameter(const parm: String; const val: String);
 var
     cmd: String;
 begin
-    if not Assigned(ActiveCircuit) then
+    if not Assigned(DSSPrime.ActiveCircuit) then
         exit;
     DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('capacitor.%s.%s=%s', [ActiveSensor.Name, parm, val]);
@@ -83,16 +83,16 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Sensors, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Sensors, False);
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.Sensors.ListSize;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.Sensors.ListSize;
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -125,16 +125,16 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        lst := ActiveCircuit.Sensors;
+        lst := DSSPrime.ActiveCircuit.Sensors;
         elem := lst.First;
         if elem <> NIL then
         begin
             repeat
                 if elem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := elem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
                     Result := 1;
                 end
                 else
@@ -273,16 +273,16 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        lst := ActiveCircuit.Sensors;
+        lst := DSSPrime.ActiveCircuit.Sensors;
         elem := lst.Next;
         if elem <> NIL then
         begin
             repeat
                 if elem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := elem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
                     Result := lst.ActiveIndex;
                 end
                 else
@@ -334,7 +334,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Sensors_ResetAll(); CDECL;
 begin
-    if assigned(ActiveCircuit) then
+    if assigned(DSSPrime.ActiveCircuit) then
         DSSPrime.SensorClass.ResetAll;
 end;
 //------------------------------------------------------------------------------
@@ -435,12 +435,12 @@ end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     if DSSPrime.SensorClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := DSSPrime.SensorClass.ElementList.Active;
-        ActiveCircuit.Sensors.Get(DSSPrime.SensorClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.SensorClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Sensors.Get(DSSPrime.SensorClass.Active);
     end
     else
     begin
@@ -483,8 +483,8 @@ end;
 //------------------------------------------------------------------------------
 function Sensors_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Sensors.ActiveIndex
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Sensors.ActiveIndex
     else
         Result := 0;
 end;
@@ -493,15 +493,15 @@ procedure Sensors_Set_idx(Value: Integer); CDECL;
 var
     pSensor: TSensorObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pSensor := ActiveCircuit.Sensors.Get(Value);
+    pSensor := DSSPrime.ActiveCircuit.Sensors.Get(Value);
     if pSensor = NIL then
     begin
         DoSimpleMsg('Invalid Sensor index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pSensor;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pSensor;
 end;
 //------------------------------------------------------------------------------
 end.

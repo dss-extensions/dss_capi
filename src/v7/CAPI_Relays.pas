@@ -41,10 +41,10 @@ procedure Set_Parameter(const parm: String; const val: String);
 var
     cmd: String;
 begin
-    if not Assigned(ActiveCircuit) then
+    if not Assigned(DSSPrime.ActiveCircuit) then
         exit;
     DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
-    cmd := Format('Relay.%s.%s=%s', [TRelayObj(ActiveCircuit.Relays.Active).Name, parm, val]);
+    cmd := Format('Relay.%s.%s=%s', [TRelayObj(DSSPrime.ActiveCircuit.Relays.Active).Name, parm, val]);
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
@@ -54,16 +54,16 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Relays, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Relays, False);
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Relays.ListSize;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Relays.ListSize;
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_First(): Integer; CDECL;
@@ -71,18 +71,18 @@ var
     pElem: TRelayObj;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pElem := ActiveCircuit.Relays.First;
+    pElem := DSSPrime.ActiveCircuit.Relays.First;
     if pElem <> NIL then
         repeat
             if pElem.Enabled then
             begin
-                ActiveCircuit.ActiveCktElement := pElem;
+                DSSPrime.ActiveCircuit.ActiveCktElement := pElem;
                 Result := 1;
             end
             else
-                pElem := ActiveCircuit.Relays.Next;
+                pElem := DSSPrime.ActiveCircuit.Relays.Next;
         until (Result = 1) or (pElem = NIL);
 end;
 //------------------------------------------------------------------------------
@@ -91,8 +91,8 @@ var
     elem: TRelayObj;
 begin
     Result := '';
-    if ActiveCircuit = NIL then Exit;
-    elem := ActiveCircuit.Relays.Active;
+    if DSSPrime.ActiveCircuit = NIL then Exit;
+    elem := DSSPrime.ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Result := elem.Name;
 end;
@@ -107,18 +107,18 @@ var
     pElem: TRelayObj;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pElem := ActiveCircuit.Relays.Next;
+    pElem := DSSPrime.ActiveCircuit.Relays.Next;
     if pElem <> NIL then
         repeat
             if pElem.Enabled then
             begin
-                ActiveCircuit.ActiveCktElement := pElem;
-                Result := ActiveCircuit.Relays.ActiveIndex;
+                DSSPrime.ActiveCircuit.ActiveCktElement := pElem;
+                Result := DSSPrime.ActiveCircuit.Relays.ActiveIndex;
             end
             else
-                pElem := ActiveCircuit.Relays.Next;
+                pElem := DSSPrime.ActiveCircuit.Relays.Next;
         until (Result > 0) or (pElem = NIL);
 end;
 //------------------------------------------------------------------------------
@@ -126,12 +126,12 @@ procedure Relays_Set_Name(const Value: PAnsiChar); CDECL;
 // Set element active by name
 
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     if DSSPrime.RelayClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := DSSPrime.RelayClass.ElementList.Active;
-        ActiveCircuit.Relays.Get(DSSPrime.RelayClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.RelayClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.Relays.Get(DSSPrime.RelayClass.Active);
     end
     else
     begin
@@ -144,9 +144,9 @@ var
     elem: TRelayObj;
 begin
     Result := '';
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    elem := ActiveCircuit.Relays.Active;
+    elem := DSSPrime.ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Result := elem.MonitoredElementName;
 end;
@@ -160,9 +160,9 @@ procedure Relays_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
 var
     elem: TRelayObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    elem := ActiveCircuit.Relays.Active;
+    elem := DSSPrime.ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Set_parameter('monitoredObj', Value);
 end;
@@ -172,9 +172,9 @@ var
     elem: TRelayObj;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    elem := ActiveCircuit.Relays.Active;
+    elem := DSSPrime.ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Result := elem.MonitoredElementTerminal;
 end;
@@ -184,9 +184,9 @@ var
     elem: TRelayObj;
 begin
     Result := '';
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    elem := ActiveCircuit.Relays.Active;
+    elem := DSSPrime.ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Result := elem.ElementName;
 end;
@@ -200,9 +200,9 @@ procedure Relays_Set_MonitoredTerm(Value: Integer); CDECL;
 var
     elem: TRelayObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    elem := ActiveCircuit.Relays.Active;
+    elem := DSSPrime.ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Set_parameter('monitoredterm', IntToStr(Value));
 
@@ -212,9 +212,9 @@ procedure Relays_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
 var
     elem: TRelayObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    elem := ActiveCircuit.Relays.Active;
+    elem := DSSPrime.ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Set_parameter('SwitchedObj', Value);
 
@@ -225,9 +225,9 @@ var
     elem: TRelayObj;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    elem := ActiveCircuit.Relays.Active;
+    elem := DSSPrime.ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Result := elem.ElementTerminal;
 end;
@@ -236,17 +236,17 @@ procedure Relays_Set_SwitchedTerm(Value: Integer); CDECL;
 var
     elem: TRelayObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    elem := ActiveCircuit.Relays.Active;
+    elem := DSSPrime.ActiveCircuit.Relays.Active;
     if elem <> NIL then
         Set_parameter('SwitchedTerm', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Relays.ActiveIndex
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.Relays.ActiveIndex
     else
         Result := 0;
 end;
@@ -255,14 +255,14 @@ procedure Relays_Set_idx(Value: Integer); CDECL;
 var
     pRelay: TRelayObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pRelay := ActiveCircuit.Relays.Get(Value);
+    pRelay := DSSPrime.ActiveCircuit.Relays.Get(Value);
     if pRelay = NIL then
     begin
         DoSimpleMsg('Invalid Relay index: "' + IntToStr(Value) + '".', 656565);
     end;
-    ActiveCircuit.ActiveCktElement := pRelay;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pRelay;
 end;
 //------------------------------------------------------------------------------
 end.

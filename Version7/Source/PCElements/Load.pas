@@ -532,7 +532,7 @@ end;
 function TLoad.NewObject(const ObjName: String): Integer;
 begin
     // Make a new load object and add it to Load class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TLoadObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -620,7 +620,7 @@ var
 begin
   // continue parsing WITH contents of Parser
     ActiveLoadObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveLoadObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveLoadObj;
 
     Result := 0;
 
@@ -1111,7 +1111,7 @@ begin
     else
     begin
         if GrowthShapeObj = NIL then
-            LastGrowthFactor := Activecircuit.DefaultGrowthFactor
+            LastGrowthFactor := DSSPrime.Activecircuit.DefaultGrowthFactor
         else
         if Year <> LastYear then    // Search growthcurve
             LastGrowthFactor := GrowthShapeObj.GetMult(Year);
@@ -1139,7 +1139,7 @@ var
 begin
     ShapeFactor := CDOUBLEONE;
     ShapeIsActual := FALSE;
-    with ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
         if Fixed then
         begin
             Factor := GrowthFactor(Year);   // For fixed loads, consider only growth factor
@@ -1151,17 +1151,17 @@ begin
                     if ExemptFromLDCurve then
                         Factor := GrowthFactor(Year)
                     else
-                        Factor := ActiveCircuit.LoadMultiplier * GrowthFactor(Year);
+                        Factor := DSSPrime.ActiveCircuit.LoadMultiplier * GrowthFactor(Year);
                 TSolveMode.DAILYMODE:
                 begin
                     Factor := GrowthFactor(Year);
                     if not ExemptFromLDCurve then
-                        Factor := Factor * ActiveCircuit.LoadMultiplier;
+                        Factor := Factor * DSSPrime.ActiveCircuit.LoadMultiplier;
                     CalcDailyMult(DynaVars.dblHour);
                 end;
                 TSolveMode.YEARLYMODE:
                 begin
-                    Factor := ActiveCircuit.LoadMultiplier * GrowthFactor(Year);
+                    Factor := DSSPrime.ActiveCircuit.LoadMultiplier * GrowthFactor(Year);
                     CalcYearlyMult(DynaVars.dblHour);
                     if FLoadModel = TLoadModel.CVR then
                         CalcCVRMult(DynaVars.dblHour);
@@ -1170,7 +1170,7 @@ begin
                 begin
                     Factor := GrowthFactor(Year);
                     if not ExemptFromLDCurve then
-                        Factor := Factor * ActiveCircuit.LoadMultiplier;
+                        Factor := Factor * DSSPrime.ActiveCircuit.LoadMultiplier;
                     CalcDutyMult(DynaVars.dblHour);
                 end;
                 TSolveMode.GENERALTIME,
@@ -1178,9 +1178,9 @@ begin
                 begin
                     Factor := GrowthFactor(Year);
                     if not ExemptFromLDCurve then
-                        Factor := Factor * ActiveCircuit.LoadMultiplier;
+                        Factor := Factor * DSSPrime.ActiveCircuit.LoadMultiplier;
                            // This mode allows use of one class of load shape
-                    case ActiveCircuit.ActiveLoadShapeClass of
+                    case DSSPrime.ActiveCircuit.ActiveLoadShapeClass of
                         USEDAILY:
                             CalcDailyMult(DynaVars.dblHour);
                         USEYEARLY:
@@ -1196,7 +1196,7 @@ begin
                     Randomize(RandomType);
                     Factor := RandomMult * GrowthFactor(Year);
                     if not ExemptFromLDCurve then
-                        Factor := Factor * ActiveCircuit.LoadMultiplier;
+                        Factor := Factor * DSSPrime.ActiveCircuit.LoadMultiplier;
                 end;
 
                 TSolveMode.MONTECARLO2,
@@ -1207,7 +1207,7 @@ begin
                     Factor := GrowthFactor(Year);
                     CalcDailyMult(DynaVars.dblHour);
                     if not ExemptFromLDCurve then
-                        Factor := Factor * ActiveCircuit.LoadMultiplier;
+                        Factor := Factor * DSSPrime.ActiveCircuit.LoadMultiplier;
                 end;
                 TSolveMode.PEAKDAY:
                 begin
@@ -1379,13 +1379,13 @@ var
 
 begin
 
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
-    with ActiveCircuit.Solution do
-        if IsHarmonicModel and (Frequency <> ActiveCircuit.Fundamental) then
+    with DSSPrime.ActiveCircuit.Solution do
+        if IsHarmonicModel and (Frequency <> DSSPrime.ActiveCircuit.Fundamental) then
         begin     // Harmonic Mode  and other than fundamental frequency
-            if ActiveCircuit.NeglectLoadY then
+            if DSSPrime.ActiveCircuit.NeglectLoadY then
             begin
                      {Just a small value so things don't die and we get the actual injection current out the terminal}
                 Y := cmplx(Epsilon, 0.0)
@@ -1488,7 +1488,7 @@ begin
         // YPrim.Clear; -- YPrim is now Yprint_Shunt for loads
     end;
 
-    // if ActiveCircuit.Solution.LoadModel = POWERFLOW then
+    // if DSSPrime.ActiveCircuit.Solution.LoadModel = POWERFLOW then
     // begin
     //     SetNominalLoad;         // same as admittance model
     //     CalcYPrimMatrix(YPrim_Shunt);
@@ -1999,7 +1999,7 @@ begin
    {Don't calc Vterminal here because it could be undefined!}
     ZeroInjCurrent;
     ZeroIterminal;
-    with ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
     begin
         LoadHarmonic := Frequency / LoadFundamental;    // Loadfundamental = frequency of solution when Harmonic mode entered
         Mult := SpectrumObj.GetMult(LoadHarmonic);
@@ -2047,14 +2047,14 @@ begin
 
         TLoadConnection.Wye:
         begin
-            with ActiveCircuit.Solution do
+            with DSSPrime.ActiveCircuit.Solution do
                 for i := 1 to Fnphases do
                     Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[Fnconds]);
         end;
 
         TLoadConnection.Delta:
         begin
-            with ActiveCircuit.Solution do
+            with DSSPrime.ActiveCircuit.Solution do
                 for i := 1 to Fnphases do
                 begin
                     j := i + 1;
@@ -2066,7 +2066,7 @@ begin
 
     end;
 
-    LoadSolutionCount := ActiveCircuit.Solution.SolutionCount;
+    LoadSolutionCount := DSSPrime.ActiveCircuit.Solution.SolutionCount;
 
 end;
 
@@ -2078,7 +2078,7 @@ procedure TLoadObj.CalcLoadModelContribution;
 
 begin
     IterminalUpdated := FALSE;
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit, Solution do
     begin
           {IF      IsDynamicModel THEN  DoDynamicMode
           ELSE} if IsHarmonicModel and (Frequency <> Fundamental) then
@@ -2138,7 +2138,7 @@ begin
    /// THIS MAY NOT WORK !!! WATCH FOR BAD RESULTS
 
    // some terminals not closed  use admittance model FOR injection
-        if OpenLoadSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+        if OpenLoadSolutionCount <> DSSPrime.ActiveCircuit.Solution.SolutionCount then
         begin
 
       // Rebuild the Yprimopencond IF a new solution because values may have changed.
@@ -2174,7 +2174,7 @@ begin
                     k := k + Fnconds;
                 end;
             end;
-            OpenLoadSolutionCount := ActiveCircuit.Solution.SolutionCount;
+            OpenLoadSolutionCount := DSSPrime.ActiveCircuit.Solution.SolutionCount;
 
         end;
 
@@ -2193,9 +2193,9 @@ procedure TLoadObj.GetTerminalCurrents(Curr: pComplexArray);
 
 begin
 
-    with ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
     begin
-        if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+        if IterminalSolutionCount <> DSSPrime.ActiveCircuit.Solution.SolutionCount then
         begin     // recalc the contribution
             CalcLoadModelContribution;  // Adds totals in Iterminal as a side effect
         end;
@@ -2213,7 +2213,7 @@ begin
 
     Result := 0;
     if Enabled then
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
             if LoadsNeedUpdating then
                 SetNominalLoad; // Set the nominal kW, etc. for the type of solution being done
@@ -2273,7 +2273,7 @@ begin
     end;
 
      {ELSE Check Voltages}
-    if LoadSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+    if LoadSolutionCount <> DSSPrime.ActiveCircuit.Solution.SolutionCount then
         CalcVTerminalPhase;
 
      // Get the lowest of the Phase voltages
@@ -2289,12 +2289,12 @@ begin
     if VminNormal <> 0.0 then
         NormMinCriteria := VMinNormal
     else
-        NormMinCriteria := ActiveCircuit.NormalMinVolts;
+        NormMinCriteria := DSSPrime.ActiveCircuit.NormalMinVolts;
 
     if VminEmerg <> 0.0 then
         EmergMinCriteria := VMinEmerg
     else
-        EmergMinCriteria := ActiveCircuit.EmergMinVolts;
+        EmergMinCriteria := DSSPrime.ActiveCircuit.EmergMinVolts;
 
     if Vpu < EmergMinCriteria then
     begin
@@ -2334,7 +2334,7 @@ begin
         Exit;
     end;   // Check line overload
 
-    if LoadSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+    if LoadSolutionCount <> DSSPrime.ActiveCircuit.Solution.SolutionCount then
         CalcVTerminalPhase;
 
      // Get the lowest of the Phase voltages
@@ -2350,12 +2350,12 @@ begin
     if VminNormal <> 0.0 then
         NormMinCriteria := VMinNormal
     else
-        NormMinCriteria := ActiveCircuit.NormalMinVolts;
+        NormMinCriteria := DSSPrime.ActiveCircuit.NormalMinVolts;
 
     if VminEmerg <> 0.0 then
         EmergMinCriteria := VMinEmerg
     else
-        EmergMinCriteria := ActiveCircuit.EmergMinVolts;
+        EmergMinCriteria := DSSPrime.ActiveCircuit.EmergMinVolts;
 
 
     if Vpu < NormMinCriteria then
@@ -2505,7 +2505,7 @@ begin
 
      // Currents := AllocMem(Sizeof(Currents^[1])*Yorder);   // to hold currents
 
-    LoadFundamental := ActiveCircuit.Solution.Frequency;
+    LoadFundamental := DSSPrime.ActiveCircuit.Solution.Frequency;
 
      // GetCurrents(Currents); // Use FPhaseCurr from most recent pflow solution
      {Store the currents at fundamental frequency.

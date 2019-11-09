@@ -145,7 +145,8 @@ uses
     Classes,
     TOPExport,
     Math,
-    PointerList;
+    PointerList,
+    DSSHelper;
 
 const
     NumPropsThisClass = 12;
@@ -246,7 +247,7 @@ end;
 function TPriceShape.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveDSSObject := TPriceShapeObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);

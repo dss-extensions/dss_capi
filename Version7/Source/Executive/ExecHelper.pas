@@ -605,12 +605,12 @@ Begin
             Result := 0;
           End
           ELSE
-          WITH ActiveCircuit Do
+          WITH DSSPrime.ActiveCircuit Do
           Begin
              CASE ActiveDSSObject.DSSObjType OF
                   DSS_OBJECT: ;  // do nothing for general DSS object
 
-             ELSE Begin   // for circuit types, set ActiveCircuit Element, too
+             ELSE Begin   // for circuit types, set DSSPrime.ActiveCircuit Element, too
                    ActiveCktElement := ActiveDSSClass.GetActiveObj;
                    // Now check for active terminal designation
                    ParamName := LowerCase(Parser.NextParam);
@@ -689,14 +689,14 @@ Begin
    If (Length(ObjClass)=0) or (CompareTextShortest( ObjClass, 'meters')=0 ) then Begin
    // Save monitors and Meters
 
-     WITH ActiveCircuit.Monitors Do
+     WITH DSSPrime.ActiveCircuit.Monitors Do
      FOR i := 1 to ListSize Do
      Begin
          pMon := Get(i);
          pMon.Save;
      End;
 
-     WITH ActiveCircuit.EnergyMeters Do
+     WITH DSSPrime.ActiveCircuit.EnergyMeters Do
      FOR i := 1 to ListSize Do
      Begin
          pMtr := Get(i);
@@ -706,11 +706,11 @@ Begin
      Exit;
    End;
    If CompareTextShortest( ObjClass, 'circuit')=0 then  Begin
-      IF not ActiveCircuit.Save(SaveDir) Then Result := 1;
+      IF not DSSPrime.ActiveCircuit.Save(SaveDir) Then Result := 1;
       Exit;
    End;
    If CompareTextShortest( ObjClass, 'voltages')=0 then  Begin
-      ActiveCircuit.Solution.SaveVoltages;
+      DSSPrime.ActiveCircuit.Solution.SaveVoltages;
       Exit;
    End;
 
@@ -778,7 +778,7 @@ End;
 FUNCTION DoSolveCmd:Integer;
 Begin
    // just invoke solution obj's editor to pick up parsing and execute rest of command
-   ActiveSolutionObj := ActiveCircuit.Solution;
+   ActiveSolutionObj := DSSPrime.ActiveCircuit.Solution;
    Result := DSSPrime.SolutionClass.Edit;
 
 End;
@@ -819,7 +819,7 @@ Begin
         // intrinsic and user Defined models
            ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
            IF ActiveDSSClass.SetActive(ObjName) THEN
-           WITH ActiveCircuit Do
+           WITH DSSPrime.ActiveCircuit Do
            Begin // scroll through list of objects until a match
              CASE ActiveDSSObject.DSSObjType OF
                     DSS_OBJECT: DoSimpleMsg('Error in SetActiveCktElement: Object not a circuit Element.'+ CRLF + parser.CmdString, 254);
@@ -846,7 +846,7 @@ Var Objtype, ObjName:String;
 Begin
 
   //   Result := SetActiveCktElement;
-  //  IF Result>0 THEN ActiveCircuit.ActiveCktElement.Enabled := True;
+  //  IF Result>0 THEN DSSPrime.ActiveCircuit.ActiveCktElement.Enabled := True;
 
      Result := 0;
 
@@ -931,7 +931,7 @@ Begin
      End;
 
 //     Result := SetActiveCktElement;
-//     IF Result>0 THEN ActiveCircuit.ActiveCktElement.Enabled := False;
+//     IF Result>0 THEN DSSPrime.ActiveCircuit.ActiveCktElement.Enabled := False;
 End;
 
 //----------------------------------------------------------------------------
@@ -979,7 +979,7 @@ Begin
 {$ENDIF}
     Begin
         FileName := GetOutputDirectory +  'Bus_Hash_List.Txt';
-        ActiveCircuit.BusList.DumpToFile(FileName);
+        DSSPrime.ActiveCircuit.BusList.DumpToFile(FileName);
 {$IFDEF DSS_CAPI}DSSPrime.GlobalResult := FileName;{$ENDIF}
         FireOffEditor(FileName);
         Exit;
@@ -992,7 +992,7 @@ Begin
 {$ENDIF}
     Begin
         FileName := GetOutputDirectory +  'Device_Hash_List.Txt';
-        ActiveCircuit.DeviceList.DumpToFile(FileName);
+        DSSPrime.ActiveCircuit.DeviceList.DumpToFile(FileName);
 {$IFDEF DSS_CAPI}DSSPrime.GlobalResult := FileName;{$ENDIF}
         FireOffEditor(FileName);
         Exit;
@@ -1016,7 +1016,7 @@ Begin
          Begin
           // Assume active circuit solution IF not qualified
           ActiveDSSClass := DSSPrime.SolutionClass;
-          ActiveDSSObject := ActiveCircuit.Solution;
+          ActiveDSSObject := DSSPrime.ActiveCircuit.Solution;
           IsSolution := TRUE;
          End
        ELSE
@@ -1083,14 +1083,14 @@ Begin
 
         // Dump general Circuit stuff
 
-        IF DebugDump THEN ActiveCircuit.DebugDump(F);
+        IF DebugDump THEN DSSPrime.ActiveCircuit.DebugDump(F);
         // Dump circuit objects
         TRY
-          pObject := ActiveCircuit.CktElements.First;
+          pObject := DSSPrime.ActiveCircuit.CktElements.First;
           WHILE pObject <> Nil DO
           Begin
               pObject.DumpProperties(F, DebugDump);
-              pObject := ActiveCircuit.CktElements.Next;
+              pObject := DSSPrime.ActiveCircuit.CktElements.Next;
           End;
           pObject := DSSPrime.DSSObjs.First;
           WHILE pObject <> Nil DO
@@ -1103,7 +1103,7 @@ Begin
               DoErrorMsg('DoPropertyDump - Problem writing file.', E.Message, 'File may be read only, in use, or disk full?', 257);
         End;
 
-        ActiveCircuit.Solution.DumpProperties(F,DebugDump);
+        DSSPrime.ActiveCircuit.Solution.DumpProperties(F,DebugDump);
       End;
 
   FINALLY
@@ -1129,7 +1129,7 @@ VAR
 
 Begin
      Parser.ParseAsVector(2, @TimeArray);
-     WITH ActiveCircuit.Solution DO
+     WITH DSSPrime.ActiveCircuit.Solution DO
      Begin
         DynaVars.intHour := Round(TimeArray[1]);
         DynaVars.t := TimeArray[2];
@@ -1149,7 +1149,7 @@ Begin
    Begin
        IF CompareText(pCkt.Name, cktname)=0 THEN
        Begin
-           ActiveCircuit := pCkt;
+           DSSPrime.ActiveCircuit := pCkt;
            Exit;
        End;
        pCkt := DSSPrime.Circuits.Next;
@@ -1178,7 +1178,7 @@ Begin
      {LegalVoltageBases is a zero-terminated array, so we have to allocate
       one more than the number of actual values}
 
-     WITH ActiveCircuit Do
+     WITH DSSPrime.ActiveCircuit Do
      Begin
        Reallocmem(LegalVoltageBases, Sizeof(LegalVoltageBases^[1])*(Num+1));
        FOR i := 1 to Num+1 Do LegalVoltageBases^[i] := Dummy^[i];
@@ -1210,7 +1210,7 @@ Begin
         ParamName := Parser.NextParam;
         Conductor := Parser.IntValue;
 
-        With ActiveCircuit Do
+        With DSSPrime.ActiveCircuit Do
         Begin
               ActiveCktElement.ActiveTerminalIdx := Terminal;
               ActiveCktElement.Closed[Conductor] := FALSE;
@@ -1247,7 +1247,7 @@ Begin
        ParamName := Parser.NextParam;
        Conductor := Parser.IntValue;
 
-        With ActiveCircuit Do
+        With DSSPrime.ActiveCircuit Do
          Begin
           ActiveCktElement.ActiveTerminalIdx := Terminal;
           ActiveCktElement.Closed[Conductor] := TRUE;
@@ -1321,7 +1321,7 @@ begin
           pCapElement := TCapacitorObj(ActiveDSSObject);
           If pCapElement.IsShunt Then
           Begin
-             If pCapElement.Enabled Then  ActiveCircuit.Buses^[pCapElement.Terminals^[1].Busref].Keep := TRUE;
+             If pCapElement.Enabled Then  DSSPrime.ActiveCircuit.Buses^[pCapElement.Terminals^[1].Busref].Keep := TRUE;
           End;
           ObjRef := pClass.Next;
        End;
@@ -1338,7 +1338,7 @@ begin
           pReacElement := TReactorObj(ActiveDSSObject);
           If pReacElement.IsShunt Then
           Try
-             If pReacElement.Enabled Then ActiveCircuit.Buses^[pReacElement.Terminals^[1].Busref].Keep := TRUE;
+             If pReacElement.Enabled Then DSSPrime.ActiveCircuit.Buses^[pReacElement.Terminals^[1].Busref].Keep := TRUE;
           Except
              On E:Exception Do Begin
                DoSimpleMsg(Format('%s %s Reactor=%s Bus No.=%d ',[E.Message, CRLF, pReacElement.Name, pReacElement.NodeRef^[1] ]), 9999);
@@ -1370,11 +1370,11 @@ Begin
     IF Length(Param) = 0  Then Param := 'A';
     CASE Param[1] of
      'A': Begin
-              metobj := ActiveCircuit.EnergyMeters.First;
+              metobj := DSSPrime.ActiveCircuit.EnergyMeters.First;
               While metobj <> nil Do
               Begin
                 MetObj.ReduceZone;
-                MetObj := ActiveCircuit.EnergyMeters.Next;
+                MetObj := DSSPrime.ActiveCircuit.EnergyMeters.Next;
               End;
           End;
 
@@ -1402,7 +1402,7 @@ VAR
 
 Begin
 
-     WITH ActiveCircuit DO
+     WITH DSSPrime.ActiveCircuit DO
      Begin
 
         pMon := Monitors.First;
@@ -1500,7 +1500,7 @@ Begin
      IF CompareText(ObjName,'solution')=0 THEN
      Begin  // special for solution
          ActiveDSSClass  := DSSPrime.SolutionClass;
-         ActiveDSSObject := ActiveCircuit.Solution;
+         ActiveDSSObject := DSSPrime.ActiveCircuit.Solution;
      End ELSE
      Begin
          // Set Object Active
@@ -1542,7 +1542,7 @@ Begin
     ParamName := Parser.NextParam;
     Param := Parser.StrValue;
 
-    With ActiveCircuit.Solution Do
+    With DSSPrime.ActiveCircuit.Solution Do
     CASE UpCase(Param[1]) of
 
        'Y'{Year}:  Year := Year + 1;
@@ -1574,7 +1574,7 @@ Begin
 
    Result := 0;
 
-   ActiveCircuit.Solution.SetVoltageBases;
+   DSSPrime.ActiveCircuit.Solution.SetVoltageBases;
 
 End;
 //----------------------------------------------------------------------------
@@ -1621,24 +1621,24 @@ Begin
                            End;
         ELSE
             // These are circuit elements
-            IF   ActiveCircuit = nil
+            IF   DSSPrime.ActiveCircuit = nil
             THEN Begin
                  DoSimpleMsg('You Must Create a circuit first: "new circuit.yourcktname"', 265);
                  Exit;
             End;
 
           // IF Object already exists.  Treat as an Edit IF dulicates not allowed
-            IF    ActiveCircuit.DuplicatesAllowed THEN
+            IF    DSSPrime.ActiveCircuit.DuplicatesAllowed THEN
              Begin
                  Result := ActiveDSSClass.NewObject(Name); // Returns index into this class
-                 ActiveCircuit.AddCktElement(Result);   // Adds active object to active circuit
+                 DSSPrime.ActiveCircuit.AddCktElement(Result);   // Adds active object to active circuit
              End
             ELSE
              Begin      // Check to see if we can set it active first
                 IF   Not ActiveDSSClass.SetActive(Name)  THEN
                  Begin
                    Result := ActiveDSSClass.NewObject(Name);   // Returns index into this class
-                   ActiveCircuit.AddCktElement(Result);   // Adds active object to active circuit
+                   DSSPrime.ActiveCircuit.AddCktElement(Result);   // Adds active object to active circuit
                  End
                 ELSE
                  Begin
@@ -1650,7 +1650,7 @@ Begin
         End;
 
         // ActiveDSSObject now points to the object just added
-        // IF a circuit element, ActiveCktElement in ActiveCircuit is also set
+        // IF a circuit element, ActiveCktElement in DSSPrime.ActiveCircuit is also set
 
         If Result>0 Then ActiveDSSObject.ClassIndex := Result;
 
@@ -1705,7 +1705,7 @@ Begin
 
    // Now find the bus and set the value
 
-   WITH ActiveCircuit Do
+   WITH DSSPrime.ActiveCircuit Do
    Begin
       ActiveBusIndex := BusList.Find(BusName);
 
@@ -1741,7 +1741,7 @@ VAR
 
 begin
 
-     ActiveCircuit.AutoAddBusList.Clear;
+     DSSPrime.ActiveCircuit.AutoAddBusList.Clear;
 
      // Load up auxiliary parser to reparse the array list or file name
      Auxparser.CmdString := S;
@@ -1764,7 +1764,7 @@ begin
                   ParmName := Auxparser.NextParam ;
                   Param := AuxParser.StrValue;
                   IF   Length(Param) > 0
-                  THEN ActiveCircuit.AutoAddBusList.Add(Param);
+                  THEN DSSPrime.ActiveCircuit.AutoAddBusList.Add(Param);
              End;
              CloseFile(F);
 
@@ -1779,7 +1779,7 @@ begin
        // Parse bus names off of array list
        WHILE Length(Param) > 0 Do
        BEGIN
-            ActiveCircuit.AutoAddBusList.Add(Param);
+            DSSPrime.ActiveCircuit.AutoAddBusList.Add(Param);
             AuxParser.NextParam;
             Param := AuxParser.StrValue;
        END;
@@ -1826,7 +1826,7 @@ begin
                   ParmName := Auxparser.NextParam ;
                   Param := AuxParser.StrValue;
                   IF   Length(Param) > 0
-                  THEN With ActiveCircuit Do
+                  THEN With DSSPrime.ActiveCircuit Do
                     Begin
                       iBus := BusList.Find(Param);
                       If iBus>0 Then Buses^[iBus].Keep := TRUE;
@@ -1845,7 +1845,7 @@ begin
        // Parse bus names off of array list
        WHILE Length(Param) > 0 Do
        BEGIN
-            With ActiveCircuit Do
+            With DSSPrime.ActiveCircuit Do
             Begin
               iBus := BusList.Find(Param);
               If iBus>0 Then Buses^[iBus].Keep := TRUE;
@@ -1865,10 +1865,10 @@ Var
    LossValue :complex;
 begin
      Result := 0;
-     IF ActiveCircuit <> Nil THEN
+     IF DSSPrime.ActiveCircuit <> Nil THEN
       Begin
          DSSPrime.GlobalResult := '';
-         LossValue := ActiveCircuit.Losses;
+         LossValue := DSSPrime.ActiveCircuit.Losses;
          DSSPrime.GlobalResult := Format('%10.5g, %10.5g',[LossValue.re * 0.001,  LossValue.im*0.001]);
       End
     ELSE  DSSPrime.GlobalResult := 'No Active Circuit.';
@@ -1884,8 +1884,8 @@ VAR
 Begin
     Result := 0;
 
-  If ActiveCircuit <> Nil Then
-     WITH ActiveCircuit.ActiveCktElement DO
+  If DSSPrime.ActiveCircuit <> Nil Then
+     WITH DSSPrime.ActiveCircuit.ActiveCktElement DO
      Begin
          NValues := NConds*Nterms;
          DSSPrime.GlobalResult := '';
@@ -1913,15 +1913,15 @@ Begin
 
   Result := 0;
 
-  If ActiveCircuit <> Nil Then
+  If DSSPrime.ActiveCircuit <> Nil Then
   Begin
     S := Parser.NextParam;
     CktElementName := Parser.StrValue ;
 
     If Length(CktElementName) > 0  Then  SetObject(CktElementName);
 
-    If Assigned(ActiveCircuit.ActiveCktElement) Then
-     WITH ActiveCircuit.ActiveCktElement DO
+    If Assigned(DSSPrime.ActiveCircuit.ActiveCktElement) Then
+     WITH DSSPrime.ActiveCircuit.ActiveCktElement DO
      Begin
          NValues := NConds*Nterms;
          DSSPrime.GlobalResult := '';
@@ -1943,8 +1943,8 @@ Var
    LossValue :complex;
 begin
     Result := 0;
-     IF ActiveCircuit <> Nil THEN
-      WITH ActiveCircuit DO
+     IF DSSPrime.ActiveCircuit <> Nil THEN
+      WITH DSSPrime.ActiveCircuit DO
       Begin
         If ActiveCktElement<>Nil THEN
         Begin
@@ -1969,9 +1969,9 @@ Begin
 
  Result := 0;
 
- IF ActiveCircuit <> Nil THEN
+ IF DSSPrime.ActiveCircuit <> Nil THEN
 
-  WITH ActiveCircuit.ActiveCktElement DO
+  WITH DSSPrime.ActiveCircuit.ActiveCktElement DO
   Begin
       NValues := NPhases;
       cBuffer := Allocmem(sizeof(Complex)*NValues);
@@ -1996,8 +1996,8 @@ VAR
 Begin
 
  Result := 0;
- IF ActiveCircuit <> Nil THEN
-  WITH ActiveCircuit.ActiveCktElement DO
+ IF DSSPrime.ActiveCircuit <> Nil THEN
+  WITH DSSPrime.ActiveCircuit.ActiveCktElement DO
   Begin
       NValues := NConds*Nterms;
       DSSPrime.GlobalResult := '';
@@ -2025,8 +2025,8 @@ VAR
 Begin
 
    Result := 0;
-   IF ActiveCircuit <> Nil THEN
-     WITH ActiveCircuit DO
+   IF DSSPrime.ActiveCircuit <> Nil THEN
+     WITH DSSPrime.ActiveCircuit DO
      Begin
        If ActiveCktElement<>Nil THEN
        WITH ActiveCktElement DO
@@ -2054,7 +2054,7 @@ Begin
           Reallocmem(cBuffer,0);
         End; {ELSE}
        End; {WITH ActiveCktElement}
-     End   {IF/WITH ActiveCircuit}
+     End   {IF/WITH DSSPrime.ActiveCircuit}
    ELSE DSSPrime.GlobalResult := 'No Active Circuit';
 
 
@@ -2074,8 +2074,8 @@ VAR
 Begin
 
  Result := 0;
- IF ActiveCircuit <> Nil THEN
-   WITH ActiveCircuit DO Begin
+ IF DSSPrime.ActiveCircuit <> Nil THEN
+   WITH DSSPrime.ActiveCircuit DO Begin
      If ActiveCktElement<>Nil THEN
      WITH ActiveCktElement DO Begin
       DSSPrime.GlobalResult := '';
@@ -2124,8 +2124,8 @@ Begin
   Result := 0;
   Nvalues := -1; // unassigned, for exception message
   n := -1; // unassigned, for exception message
-  IF   ActiveCircuit <> Nil THEN
-   WITH ActiveCircuit DO
+  IF   DSSPrime.ActiveCircuit <> Nil THEN
+   WITH DSSPrime.ActiveCircuit DO
    Begin
      If ActiveCktElement<>Nil THEN
      WITH ActiveCktElement DO
@@ -2193,8 +2193,8 @@ VAR
 Begin
 
     Result := 0;
-    IF ActiveCircuit <> Nil THEN
-      WITH ActiveCircuit DO
+    IF DSSPrime.ActiveCircuit <> Nil THEN
+      WITH DSSPrime.ActiveCircuit DO
       Begin
         If ActiveBusIndex<>0 THEN
         Begin
@@ -2229,8 +2229,8 @@ VAR
 Begin
 
     Result := 0;
-    IF ActiveCircuit <> Nil THEN
-      WITH ActiveCircuit DO
+    IF DSSPrime.ActiveCircuit <> Nil THEN
+      WITH DSSPrime.ActiveCircuit DO
       Begin
         If ActiveBusIndex<>0 THEN
         Begin
@@ -2266,8 +2266,8 @@ VAR
 Begin
 
     Result := 0;
-    IF ActiveCircuit <> Nil THEN
-      WITH ActiveCircuit DO
+    IF DSSPrime.ActiveCircuit <> Nil THEN
+      WITH DSSPrime.ActiveCircuit DO
       Begin
         If ActiveBusIndex<>0 THEN
         Begin
@@ -2305,7 +2305,7 @@ VAR
 
 begin
     Result := 0;
-    WITH ActiveCircuit Do
+    WITH DSSPrime.ActiveCircuit Do
     Begin
          LoadMultiplier := 1.0;   // Property .. has side effects
          With Solution Do
@@ -2352,7 +2352,7 @@ VAR
 begin
     IF   X <= 0.0
     THEN DoSimpleMsg('Allocation Factor must be greater than zero.', 271)
-    ELSE WITH ActiveCircuit Do
+    ELSE WITH DSSPrime.ActiveCircuit Do
     Begin
          pLoad := Loads.First;
          WHILE pLoad <> NIL Do
@@ -2371,7 +2371,7 @@ VAR
 begin
     IF   X <= 0.0
     THEN DoSimpleMsg('CFactor must be greater than zero.', 271)
-    ELSE WITH ActiveCircuit Do
+    ELSE WITH DSSPrime.ActiveCircuit Do
     Begin
          pLoad := Loads.First;
          WHILE pLoad <> NIL Do
@@ -2393,7 +2393,7 @@ VAR
 Begin
    Result := 0;
 
-   WITH ActiveCircuit.Solution Do
+   WITH DSSPrime.ActiveCircuit.Solution Do
    IF CompareText(S, 'ALL') = 0 THEN DoAllHarmonics := TRUE
    ELSE Begin
        DoAllHarmonics := FALSE;
@@ -2437,13 +2437,13 @@ Var
    i: Integer;
 Begin
     Result := 0;
-    If ActiveCircuit <> Nil Then
+    If DSSPrime.ActiveCircuit <> Nil Then
       Begin
-       ActiveCircuit.TotalizeMeters;
+       DSSPrime.ActiveCircuit.TotalizeMeters;
         // Now export to global result
         For i := 1 to NumEMregisters Do
           Begin
-            AppendGlobalResult(Format('%-.6g',[ActiveCircuit.RegisterTotals[i]]));
+            AppendGlobalResult(Format('%-.6g',[DSSPrime.ActiveCircuit.RegisterTotals[i]]));
           End;
       End;
 End;
@@ -2472,8 +2472,8 @@ Begin
 
          CASE ParamPointer OF
             0: DoSimpleMsg('Unknown parameter "'+ParamName+'" for Capacity Command', 273);
-            1: ActiveCircuit.CapacityStart := Parser.DblValue;
-            2: ActiveCircuit.CapacityIncrement := Parser.DblValue;
+            1: DSSPrime.ActiveCircuit.CapacityStart := Parser.DblValue;
+            2: DSSPrime.ActiveCircuit.CapacityIncrement := Parser.DblValue;
 
          ELSE
 
@@ -2483,10 +2483,10 @@ Begin
          Param := Parser.StrValue;
      END;
 
-    WITH ActiveCircuit Do
+    WITH DSSPrime.ActiveCircuit Do
     IF ComputeCapacity Then Begin   // Totalizes EnergyMeters at End
 
-       DSSPrime.GlobalResult := Format('%-.6g', [(ActiveCircuit.RegisterTotals[3] + ActiveCircuit.RegisterTotals[19]) ] );  // Peak KW in Meters
+       DSSPrime.GlobalResult := Format('%-.6g', [(DSSPrime.ActiveCircuit.RegisterTotals[3] + DSSPrime.ActiveCircuit.RegisterTotals[19]) ] );  // Peak KW in Meters
        AppendGlobalResult(Format('%-.6g', [LoadMultiplier]));
     End;
 End;
@@ -2526,7 +2526,7 @@ Begin
 
    Try
 
-     WITH ActiveCircuit, ActiveCircuit.Solution Do
+     WITH DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution Do
      Begin
        FOR j := 1 to NumNodes Do Currents^[j] := cZERO;  // Clear Currents array
 
@@ -2553,8 +2553,8 @@ Var
 Begin
 
     Result := 0;
-    If ActiveCircuit <> Nil Then
-    With ActiveCircuit Do
+    If DSSPrime.ActiveCircuit <> Nil Then
+    With DSSPrime.ActiveCircuit Do
       Begin
          {Check if PCElement}
          CASE (ActiveCktElement.DSSObjType and BASECLASSMASK) OF
@@ -2585,13 +2585,13 @@ Begin
 
     {Check to make sure this is a PC Element. If not, return null string in global result}
 
-    If (ActiveCircuit.ActiveCktElement.DSSObjType And BASECLASSMASK) <> PC_ELEMENT Then
+    If (DSSPrime.ActiveCircuit.ActiveCktElement.DSSObjType And BASECLASSMASK) <> PC_ELEMENT Then
 
        DSSPrime.GlobalResult := ''
 
     Else Begin
 
-        PCElem :=  ActiveCircuit.ActiveCktElement As TPCElement;
+        PCElem :=  DSSPrime.ActiveCircuit.ActiveCktElement As TPCElement;
 
         {Get next parameter on command line}
 
@@ -2630,8 +2630,8 @@ Var
 Begin
 
     Result := 0;
-    If ActiveCircuit <> Nil Then
-    With ActiveCircuit Do
+    If DSSPrime.ActiveCircuit <> Nil Then
+    With DSSPrime.ActiveCircuit Do
       Begin
          {Check if PCElement}
          CASE (ActiveCktElement.DSSObjType and BASECLASSMASK) OF
@@ -2691,9 +2691,9 @@ Begin
              With AuxParser Do Begin      // User Auxparser to parse line
                    CmdString := S;
                    NextParam;  BusName := StrValue;
-                   iB := ActiveCircuit.Buslist.Find(BusName);
+                   iB := DSSPrime.ActiveCircuit.Buslist.Find(BusName);
                    If iB >0 Then  Begin
-                       With ActiveCircuit.Buses^[iB] Do Begin     // Returns TBus object
+                       With DSSPrime.ActiveCircuit.Buses^[iB] Do Begin     // Returns TBus object
                          NextParam;  If SwapXY Then y := DblValue else x := DblValue;
                          NextParam;  If SwapXY Then x := DblValue else y := DblValue;
                          CoordDefined := TRUE;
@@ -2725,13 +2725,13 @@ Var
 Begin
     Result := 0;
 
-    ActiveCircuit.PositiveSequence := TRUE;
+    DSSPrime.ActiveCircuit.PositiveSequence := TRUE;
 
-    CktElem := ActiveCircuit.CktElements.First;
+    CktElem := DSSPrime.ActiveCircuit.CktElements.First;
     While CktElem<>Nil Do
     Begin
        CktElem.MakePosSequence;
-       CktElem := ActiveCircuit.CktElements.Next;
+       CktElem := DSSPrime.ActiveCircuit.CktElements.Next;
     End;
 
 End;
@@ -2744,35 +2744,35 @@ PROCEDURE DoSetReduceStrategy(Const S:String);
    Begin If j<i Then Result := i Else Result := j; End;
 
 Begin
-     ActiveCircuit.ReductionStrategyString := S;
+     DSSPrime.ActiveCircuit.ReductionStrategyString := S;
 
-     ActiveCircuit.ReductionStrategy := rsDefault;
+     DSSPrime.ActiveCircuit.ReductionStrategy := rsDefault;
      IF Length(S)=0 Then Exit;  {No option given}
 
      AuxParser.CmdString := Parser.Remainder;  // so we don't mess up Set Command
 
      Case UpperCase(S)[1] of
 
-       'B': ActiveCircuit.ReductionStrategy := rsBreakLoop;
-       'D': ActiveCircuit.ReductionStrategy := rsDefault;  {Default}
-       'E': ActiveCircuit.ReductionStrategy := rsDangling;  {Ends}
+       'B': DSSPrime.ActiveCircuit.ReductionStrategy := rsBreakLoop;
+       'D': DSSPrime.ActiveCircuit.ReductionStrategy := rsDefault;  {Default}
+       'E': DSSPrime.ActiveCircuit.ReductionStrategy := rsDangling;  {Ends}
        'L': Begin {Laterals}
-               ActiveCircuit.ReductionStrategy := rsLaterals;
+               DSSPrime.ActiveCircuit.ReductionStrategy := rsLaterals;
             End;
-       'M': ActiveCircuit.ReductionStrategy := rsMergeParallel;
+       'M': DSSPrime.ActiveCircuit.ReductionStrategy := rsMergeParallel;
        (*
        'T': Begin          removed 2-28-2018
-              ActiveCircuit.ReductionStrategy := rsTapEnds;
-              ActiveCircuit.ReductionMaxAngle := 15.0;  {default}
-              If Length(param2) > 0 Then  ActiveCircuit.ReductionMaxAngle := Auxparser.DblValue;
+              DSSPrime.ActiveCircuit.ReductionStrategy := rsTapEnds;
+              DSSPrime.ActiveCircuit.ReductionMaxAngle := 15.0;  {default}
+              If Length(param2) > 0 Then  DSSPrime.ActiveCircuit.ReductionMaxAngle := Auxparser.DblValue;
             End;
             *)
        'S': Begin  {Shortlines or Switch}
               IF CompareTextShortest(S, 'SWITCH')=0 Then Begin
-                  activeCircuit.ReductionStrategy := rsSwitches;
+                  DSSPrime.ActiveCircuit.ReductionStrategy := rsSwitches;
               End ELSE Begin
-                  ActiveCircuit.ReductionStrategy := rsShortlines;
-                  { ActiveCircuit.ReductionZmag is now set in main ExecOptions     }
+                  DSSPrime.ActiveCircuit.ReductionStrategy := rsShortlines;
+                  { DSSPrime.ActiveCircuit.ReductionZmag is now set in main ExecOptions     }
               End;
             End;
      ELSE
@@ -2799,7 +2799,7 @@ Begin
     Param := UpperCase(Parser.StrValue);
 
     // initialize the Checked Flag FOR all circuit Elements
-    With ActiveCircuit Do
+    With DSSPrime.ActiveCircuit Do
     Begin
      CktElem := CktElements.First;
      WHILE  (CktElem <> NIL) Do
@@ -2813,11 +2813,11 @@ Begin
     IF Length(Param) = 0  Then Param := 'A';
     CASE Param[1] of
      'A': Begin
-              metobj := ActiveCircuit.EnergyMeters.First;
+              metobj := DSSPrime.ActiveCircuit.EnergyMeters.First;
               While metobj <> nil Do
               Begin
                 MetObj.InterpolateCoordinates;
-                MetObj := ActiveCircuit.EnergyMeters.Next;
+                MetObj := DSSPrime.ActiveCircuit.EnergyMeters.Next;
               End;
           End;
 
@@ -2900,10 +2900,10 @@ Var i:Integer;
     pLine:TLineObj;
 
 Begin
-    If ActiveCircuit <> Nil Then Begin
+    If DSSPrime.ActiveCircuit <> Nil Then Begin
        pctNormal := pctNormal * 0.01;  // local copy only
-       For i := 1 to ActiveCircuit.Lines.ListSize Do  Begin
-         pLine := ActiveCircuit.Lines.Get(i);
+       For i := 1 to DSSPrime.ActiveCircuit.Lines.ListSize Do  Begin
+         pLine := DSSPrime.ActiveCircuit.Lines.Get(i);
          pLine.Normamps := pctNormal * pLine.EmergAmps;
        End;
     End;
@@ -2921,13 +2921,13 @@ Var
 
 Begin
     Result := 0;
-    If ActiveCircuit <> NIl then Begin
+    If DSSPrime.ActiveCircuit <> NIl then Begin
 
         ParamName := Parser.NextParam;
         Angle := Parser.DblValue * PI/180.0;   // Deg to rad
 
         a := cmplx(cos(Angle), Sin(Angle));
-        With ActiveCircuit Do Begin
+        With DSSPrime.ActiveCircuit Do Begin
             Xmin := 1.0e50;
             Xmax := -1.0e50;
             Ymin := 1.0e50;
@@ -2987,16 +2987,16 @@ Begin
              AuxParser.NextParam;
              BusName := Auxparser.StrValue;
              If Length(BusName) > 0 Then Begin
-                 BusIndex := ActiveCircuit.BusList.Find(BusName);
+                 BusIndex := DSSPrime.ActiveCircuit.BusList.Find(BusName);
                  If BusIndex>0 Then Begin
                      AuxParser.Nextparam;
                      node := AuxParser.Intvalue;
-                     With  ActiveCircuit.Buses^[BusIndex] Do
+                     With  DSSPrime.ActiveCircuit.Buses^[BusIndex] Do
                      For i := 1 to NumNodesThisBus Do Begin
                          If GetNum(i)=node then Begin
                              AuxParser.Nextparam;
                              Vmag := AuxParser.Dblvalue;
-                             Diff := Cabs(ActiveCircuit.Solution.NodeV^[GetRef(i)]) - Vmag;
+                             Diff := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV^[GetRef(i)]) - Vmag;
                              If Vmag<>0.0 then Begin
                                 Writeln(Fout, BusName,'.',node,', ', (Diff / Vmag * 100.0):7:2,', %');
                              End
@@ -3044,37 +3044,37 @@ Var
 Begin
   Result := 0;
      S := '';
-     IF ActiveCircuit.Issolved Then S := S + 'Status = SOLVED' + CRLF
+     IF DSSPrime.ActiveCircuit.Issolved Then S := S + 'Status = SOLVED' + CRLF
      Else Begin
        S := S + 'Status = NOT Solved' + CRLF;
      End;
      S := S + 'Solution Mode = ' + GetSolutionModeID + CRLF;
-     S := S + 'Number = ' + IntToStr(ActiveCircuit.Solution.NumberofTimes) + CRLF;
-     S := S + 'Load Mult = '+ Format('%5.3f', [ActiveCircuit.LoadMultiplier]) + CRLF;
-     S := S + 'Devices = '+ Format('%d', [ActiveCircuit.NumDevices]) + CRLF;
-     S := S + 'Buses = ' + Format('%d', [ActiveCircuit.NumBuses]) + CRLF;
-     S := S + 'Nodes = ' + Format('%d', [ActiveCircuit.NumNodes]) + CRLF;
+     S := S + 'Number = ' + IntToStr(DSSPrime.ActiveCircuit.Solution.NumberofTimes) + CRLF;
+     S := S + 'Load Mult = '+ Format('%5.3f', [DSSPrime.ActiveCircuit.LoadMultiplier]) + CRLF;
+     S := S + 'Devices = '+ Format('%d', [DSSPrime.ActiveCircuit.NumDevices]) + CRLF;
+     S := S + 'Buses = ' + Format('%d', [DSSPrime.ActiveCircuit.NumBuses]) + CRLF;
+     S := S + 'Nodes = ' + Format('%d', [DSSPrime.ActiveCircuit.NumNodes]) + CRLF;
      S := S + 'Control Mode =' + GetControlModeID + CRLF;
-     S := S + 'Total Iterations = '+IntToStr(ActiveCircuit.Solution.Iteration) + CRLF;
-     S := S + 'Control Iterations = '+IntToStr(ActiveCircuit.Solution.ControlIteration) + CRLF;
-     S := S + 'Max Sol Iter = ' +IntToStr(ActiveCircuit.Solution.MostIterationsDone ) + CRLF;
+     S := S + 'Total Iterations = '+IntToStr(DSSPrime.ActiveCircuit.Solution.Iteration) + CRLF;
+     S := S + 'Control Iterations = '+IntToStr(DSSPrime.ActiveCircuit.Solution.ControlIteration) + CRLF;
+     S := S + 'Max Sol Iter = ' +IntToStr(DSSPrime.ActiveCircuit.Solution.MostIterationsDone ) + CRLF;
      S := S + ' ' + CRLF;
      S := S + ' - Circuit Summary -' + CRLF;
      S := S + ' ' + CRLF;
-     If ActiveCircuit <> Nil Then Begin
+     If DSSPrime.ActiveCircuit <> Nil Then Begin
 
-         S := S + Format('Year = %d ',[ActiveCircuit.Solution.Year]) + CRLF;
-         S := S + Format('Hour = %d ',[ActiveCircuit.Solution.DynaVars.intHour]) + CRLF;
+         S := S + Format('Year = %d ',[DSSPrime.ActiveCircuit.Solution.Year]) + CRLF;
+         S := S + Format('Hour = %d ',[DSSPrime.ActiveCircuit.Solution.DynaVars.intHour]) + CRLF;
          S := S + 'Max pu. voltage = '+Format('%-.5g ',[GetMaxPUVoltage]) + CRLF;
          S := S + 'Min pu. voltage = '+Format('%-.5g ',[GetMinPUVoltage(TRUE)]) + CRLF;
          cPower :=  CmulReal(GetTotalPowerFromSources, 0.000001);  // MVA
          S := S + Format('Total Active Power:   %-.6g MW',[cpower.re]) + CRLF;
          S := S + Format('Total Reactive Power: %-.6g Mvar',[cpower.im]) + CRLF;
-         cLosses := CmulReal(ActiveCircuit.Losses, 0.000001);
+         cLosses := CmulReal(DSSPrime.ActiveCircuit.Losses, 0.000001);
          If cPower.re <> 0.0 Then S := S + Format('Total Active Losses:   %-.6g MW, (%-.4g %%)',[cLosses.re,(Closses.re/cPower.re*100.0)]) + CRLF
                              Else S := S + 'Total Active Losses:   ****** MW, (**** %%)' + CRLF;
          S := S + Format('Total Reactive Losses: %-.6g Mvar',[cLosses.im]) + CRLF;
-         S := S + Format('Frequency = %-g Hz',[ActiveCircuit.Solution.Frequency]) + CRLF;
+         S := S + Format('Frequency = %-g Hz',[DSSPrime.ActiveCircuit.Solution.Frequency]) + CRLF;
          S := S + 'Mode = '+GetSolutionModeID + CRLF;
          S := S + 'Control Mode = '+GetControlModeID + CRLF;
          S := S + 'Load Model = '+GetLoadModel + CRLF;
@@ -3348,12 +3348,12 @@ Begin
   Result := 0;
 {$IF not defined(FPC)}
      // Abort if no circuit or solution
-     If not assigned(ActiveCircuit) Then
+     If not assigned(DSSPrime.ActiveCircuit) Then
      Begin
           DoSimpleMsg('No circuit created.',24721);
           Exit;
      End;
-     If not assigned(ActiveCircuit.Solution) OR not assigned(ActiveCircuit.Solution.NodeV) Then
+     If not assigned(DSSPrime.ActiveCircuit.Solution) OR not assigned(DSSPrime.ActiveCircuit.Solution.NodeV) Then
      Begin
           DoSimpleMsg('The circuit must be solved before you can do this.',24722);
           Exit;
@@ -3396,7 +3396,7 @@ Begin
 
      Devindex := GetCktElementIndex(ElemName); // Global function
      IF DevIndex > 0 THEN Begin  //  element must already exist
-        pElem := ActiveCircuit.CktElements.Get(DevIndex);
+        pElem := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
         If pElem is TDSSCktElement Then Begin
            DSSPlotObj.DoVisualizationPlot(TDSSCktElement(pElem), Quantity);
         End Else Begin
@@ -3560,7 +3560,7 @@ Begin
      ParamPointer := 0;
 
      BusMarker := TBusMarker.Create;
-     ActiveCircuit.BusMarkerList.Add(BusMarker);
+     DSSPrime.ActiveCircuit.BusMarkerList.Add(BusMarker);
 
      ParamName := Parser.NextParam;
      Param := Parser.StrValue;
@@ -3597,12 +3597,12 @@ VAR
   kvln : double;
 Begin
   Result := 0;
-  pLoad := ActiveCircuit.Loads.First;
+  pLoad := DSSPrime.ActiveCircuit.Loads.First;
   WHILE pLoad <> NIL Do Begin
     ActiveLoadObj := pLoad; // for UpdateVoltageBases to work
     sBus := StripExtension (pLoad.GetBus(1));
-    iBus := ActiveCircuit.BusList.Find (sBus);
-    pBus := ActiveCircuit.Buses^[iBus];
+    iBus := DSSPrime.ActiveCircuit.BusList.Find (sBus);
+    pBus := DSSPrime.ActiveCircuit.Buses^[iBus];
     kvln := pBus.kVBase;
     if (pLoad.Connection = TLoadConnection.Delta) Or (pLoad.NPhases = 3) then
       pLoad.kVLoadBase := kvln * sqrt (3.0)
@@ -3610,14 +3610,14 @@ Begin
       pLoad.kVLoadBase := kvln;
     pLoad.UpdateVoltageBases;
     pLoad.RecalcElementData;
-    pLoad := ActiveCircuit.Loads.Next;
+    pLoad := DSSPrime.ActiveCircuit.Loads.Next;
   End;
 
-  For i := 1 to ActiveCircuit.Generators.ListSize Do Begin
-    pGen := ActiveCircuit.Generators.Get(i);
+  For i := 1 to DSSPrime.ActiveCircuit.Generators.ListSize Do Begin
+    pGen := DSSPrime.ActiveCircuit.Generators.Get(i);
     sBus := StripExtension (pGen.GetBus(1));
-    iBus := ActiveCircuit.BusList.Find (sBus);
-    pBus := ActiveCircuit.Buses^[iBus];
+    iBus := DSSPrime.ActiveCircuit.BusList.Find (sBus);
+    pBus := DSSPrime.ActiveCircuit.Buses^[iBus];
     kvln := pBus.kVBase;
     if (pGen.Connection = 1) Or (pGen.NPhases > 1) then
       pGen.PresentKV := kvln * sqrt (3.0)
@@ -3653,7 +3653,7 @@ Begin
         // find this object
         ParseObjectClassAndName (NameVal, DevClass, DevName);
         IF CompareText (DevClass, 'circuit')=0 THEN begin
-          pName := ActiveCircuit
+          pName := DSSPrime.ActiveCircuit
         end else begin
           DSSPrime.LastClassReferenced := DSSPrime.ClassNames.Find (DevClass);
           ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
@@ -3748,29 +3748,29 @@ Begin
     AuxParser.Token := sNode1;
     NodeBuffer[1] := 1;
     sBusName := AuxParser.ParseAsBusName (numNodes,  @NodeBuffer);
-    iBusidx := ActiveCircuit.Buslist.Find(sBusName);
+    iBusidx := DSSPrime.ActiveCircuit.Buslist.Find(sBusName);
     If iBusidx>0 Then Begin
-        B1Ref := ActiveCircuit.Buses^[iBusidx].Find(NodeBuffer[1])
+        B1Ref := DSSPrime.ActiveCircuit.Buses^[iBusidx].Find(NodeBuffer[1])
     End Else Begin
         DoSimpleMsg(Format('Bus %s not found.',[sBusName]), 28709);
         Exit;
     End;
 
-    V1 := ActiveCircuit.Solution.NodeV^[B1Ref];
+    V1 := DSSPrime.ActiveCircuit.Solution.NodeV^[B1Ref];
 
     // Get 2nd node voltage
     AuxParser.Token := sNode2;
     NodeBuffer[1] := 1;
     sBusName := AuxParser.ParseAsBusName (numNodes,  @NodeBuffer);
-    iBusidx := ActiveCircuit.Buslist.Find(sBusName);
+    iBusidx := DSSPrime.ActiveCircuit.Buslist.Find(sBusName);
     If iBusidx>0 Then Begin
-        B2Ref := ActiveCircuit.Buses^[iBusidx].Find(NodeBuffer[1])
+        B2Ref := DSSPrime.ActiveCircuit.Buses^[iBusidx].Find(NodeBuffer[1])
     End Else Begin
         DoSimpleMsg(Format('Bus %s not found.',[sBusName]), 28710);
         Exit;
     End;
 
-    V2 := ActiveCircuit.Solution.NodeV^[B2Ref];
+    V2 := DSSPrime.ActiveCircuit.Solution.NodeV^[B2Ref];
 
     VNodeDiff := CSub(V1, V2);
     DSSPrime.GlobalResult := Format('%.7g, V,    %.7g, deg  ',[Cabs(VNodeDiff), CDang(VNodeDiff) ]);
@@ -3868,9 +3868,9 @@ Begin
           DoSimpleMsg('Error: Unknown Parameter on command line: '+Param, 28721);
        End;
 
-       iB := ActiveCircuit.Buslist.Find(BusName);
+       iB := DSSPrime.ActiveCircuit.Buslist.Find(BusName);
        If iB >0 Then  Begin
-           With ActiveCircuit.Buses^[iB] Do Begin     // Returns TBus object
+           With DSSPrime.ActiveCircuit.Buses^[iB] Do Begin     // Returns TBus object
              x := Xval;
              y := Yval;
              CoordDefined := TRUE;
@@ -3932,7 +3932,7 @@ Begin
                  Reallocmem(Varray, SizeOf(Varray^[1])*Npts);
                End;
             2: Npts    := InterpretDblArray(Param, Npts, Varray);
-            3: CyclesPerSample := Round(ActiveCircuit.Solution.Frequency * Parser.dblvalue);
+            3: CyclesPerSample := Round(DSSPrime.ActiveCircuit.Solution.Frequency * Parser.dblvalue);
             4: Freq   := Parser.DblValue;
             5: Lamp    := Parser.IntValue;
          Else
@@ -3972,7 +3972,7 @@ Begin
       Result := 0;
 
 // Do for each Energymeter object in active circuit
-      pMeter := ActiveCircuit.EnergyMeters.First;
+      pMeter := DSSPrime.ActiveCircuit.EnergyMeters.First;
       If pMeter=nil Then Begin
         DoSimpleMsg('No EnergyMeter Objects Defined. EnergyMeter objects required for this function.',28724);
         Exit;
@@ -3987,7 +3987,7 @@ Begin
           Assumerestoration := False;
 
        // initialize bus quantities
-       With ActiveCircuit Do
+       With DSSPrime.ActiveCircuit Do
        For i := 1 to NumBuses Do
          With Buses^[i] Do Begin
             BusFltRate        := 0.0;
@@ -3996,7 +3996,7 @@ Begin
 
       while pMeter <> Nil do Begin
          pMeter.CalcReliabilityIndices(AssumeRestoration);
-         pMeter := ActiveCircuit.EnergyMeters.Next;
+         pMeter := DSSPrime.ActiveCircuit.EnergyMeters.Next;
       End;
 End;
 
@@ -4114,15 +4114,15 @@ Begin
         SetObject(FelementName);
 
       // Get Energymeter associated with this element.
-        if ActiveCircuit.ActiveCktElement is TPDElement then Begin
-          pPDElem := ActiveCircuit.ActiveCktElement as TPDElement;
+        if DSSPrime.ActiveCircuit.ActiveCktElement is TPDElement then Begin
+          pPDElem := DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement;
           if pPDElem.SensorObj = Nil then DoSimpleMsg(Format('Element %s.%s is not in a meter zone! Add an Energymeter. ',[pPDelem.Parentclass.Name, pPDelem.name  ]),287261)
           Else Begin
             FMeterName := Format('%s.%s',[pPDElem.SensorObj.ParentClass.Name, pPDElem.SensorObj.Name]);
             SetObject(FMeterName);
 
-            if ActiveCircuit.ActiveCktElement is TEnergyMeterObj then Begin
-                pMeter := ActiveCircuit.ActiveCktElement as TEnergyMeterObj;
+            if DSSPrime.ActiveCircuit.ActiveCktElement is TEnergyMeterObj then Begin
+                pMeter := DSSPrime.ActiveCircuit.ActiveCktElement as TEnergyMeterObj;
                 // in ReduceAlgs
                 DoRemoveBranches(pMeter.BranchList, pPDelem, FKeepLoad, FEditString);
             End

@@ -77,7 +77,7 @@ end;
 procedure LoadShapes_Set_Name(const Value: PAnsiChar); CDECL;
 // Set element active by name
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     if DSSPrime.LoadShapeClass.SetActive(Value) then
         Exit;
@@ -87,7 +87,7 @@ end;
 function LoadShapes_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     Result := DSSPrime.LoadShapeClass.ElementList.ListSize;
 end;
@@ -95,7 +95,7 @@ end;
 function LoadShapes_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     Result := DSSPrime.LoadShapeClass.First;
 end;
@@ -103,7 +103,7 @@ end;
 function LoadShapes_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     Result := DSSPrime.LoadShapeClass.Next;
 end;
@@ -114,7 +114,7 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.LoadShapeClass.ElementList, False);
 end;
@@ -124,7 +124,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -140,7 +140,7 @@ var
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     Result[0] := 0.0;  // error condition: one element array=0
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -168,7 +168,7 @@ var
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     Result[0] := 0.0;  // error condition: one element array=0
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -193,7 +193,7 @@ procedure LoadShapes_Set_Npts(Value: Integer); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -214,7 +214,7 @@ var
     elem: TLoadshapeObj;
     i, k, LoopLimit: Integer;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -249,7 +249,7 @@ var
     Value: PDoubleArray;
 begin
     Value := PDoubleArray(ValuePtr);
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -282,7 +282,7 @@ procedure LoadShapes_Normalize(); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -303,7 +303,7 @@ var
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     Result[0] := 0.0;  // error condition: one element array=0
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -332,7 +332,7 @@ var
     Value: PDoubleArray;
 begin
     Value := PDoubleArray(ValuePtr);
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -365,7 +365,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := 0.0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -381,7 +381,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := 0.0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -397,7 +397,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := 0.0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -412,7 +412,7 @@ procedure LoadShapes_Set_HrInterval(Value: Double); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -427,7 +427,7 @@ procedure LoadShapes_Set_MinInterval(Value: Double); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -442,7 +442,7 @@ procedure LoadShapes_Set_Sinterval(Value: Double); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -463,7 +463,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := 0.0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -479,7 +479,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := 0.0;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -494,7 +494,7 @@ procedure LoadShapes_Set_PBase(Value: Double); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -509,7 +509,7 @@ procedure LoadShapes_Set_Qbase(Value: Double); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -525,7 +525,7 @@ var
     elem: TLoadshapeObj;
 begin
     Result := FALSE;
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -540,7 +540,7 @@ procedure LoadShapes_Set_UseActual(Value: Boolean); CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
@@ -566,7 +566,7 @@ procedure LoadShapes_Set_Points(Npts: Integer; HoursPtr: PDouble; PMultPtr: PDou
 var
     elem: TLoadshapeObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then

@@ -201,7 +201,7 @@ end;
 function TGICTransformer.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TGICTransformerObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -292,7 +292,7 @@ begin
     Result := 0;
   // continue parsing with contents of Parser
     ActiveGICTransformerObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveGICTransformerObj;  // use property to set this value
+    DSS.ActiveCircuit.ActiveCktElement := ActiveGICTransformerObj;  // use property to set this value
 
     with ActiveGICTransformerObj do
     begin
@@ -384,7 +384,7 @@ begin
                     begin
                         Nphases := Parser.IntValue;
                         NConds := Fnphases;  // Force Reallocation of terminal info if different size
-                        ActiveCircuit.BusNameRedefined := TRUE;  // Set Global Flag to signal circuit to rebuild busdefs
+                        DSS.ActiveCircuit.BusNameRedefined := TRUE;  // Set Global Flag to signal circuit to rebuild busdefs
                     end;
                 6:
                     case Spectype of

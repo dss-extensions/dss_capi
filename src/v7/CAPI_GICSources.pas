@@ -52,7 +52,7 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.GICsourceClass.ElementList, True);
 end;
@@ -60,7 +60,7 @@ end;
 function GICSources_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.GICsourceClass.ElementList.ListSize;
 end;
 //------------------------------------------------------------------------------
@@ -69,14 +69,14 @@ var
     pElem: TGICSourceObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pElem := DSSPrime.GICsourceClass.ElementList.First;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := pElem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := pElem;
                     Result := 1;
                 end
                 else
@@ -90,14 +90,14 @@ var
     pElem: TGICSourceObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pElem := DSSPrime.GICsourceClass.ElementList.Next;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := pElem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := pElem;
                     Result := DSSPrime.GICsourceClass.ElementList.ActiveIndex;
                 end
                 else
@@ -111,9 +111,9 @@ var
     elem: TDSSCktElement;
 begin
     Result := '';
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    elem := ActiveCircuit.ActiveCktElement;
+    elem := DSSPrime.ActiveCircuit.ActiveCktElement;
     if elem <> NIL then
         Result := elem.Name;
 end;
@@ -125,11 +125,11 @@ end;
 //------------------------------------------------------------------------------
 procedure GICSources_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     if DSSPrime.GICsourceClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := DSSPrime.GICsourceClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.GICsourceClass.ElementList.Active;
     end
     else
     begin
@@ -162,9 +162,9 @@ end;
 function GICSources_Get_Bus1_AnsiString(): Ansistring; inline;
 begin
     Result := '';
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Result := ActiveCircuit.ActiveCktElement.GetBus(1);
+    Result := DSSPrime.ActiveCircuit.ActiveCktElement.GetBus(1);
 end;
 
 function GICSources_Get_Bus1(): PAnsiChar; CDECL;
@@ -175,9 +175,9 @@ end;
 function GICSources_Get_Bus2_AnsiString(): Ansistring; inline;
 begin
     Result := '';
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Result := ActiveCircuit.ActiveCktElement.GetBus(2);
+    Result := DSSPrime.ActiveCircuit.ActiveCktElement.GetBus(2);
 end;
 
 function GICSources_Get_Bus2(): PAnsiChar; CDECL;
@@ -341,7 +341,7 @@ end;
 //------------------------------------------------------------------------------
 function GICSources_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.GICsourceClass.ElementList.ActiveIndex
     else
         Result := 0
@@ -351,7 +351,7 @@ procedure GICSources_Set_idx(Value: Integer); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
 
     elem := DSSPrime.GICsourceClass.ElementList.Get(Value);
@@ -360,7 +360,7 @@ begin
         DoSimpleMsg('Invalid GICSource index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := elem;
+    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
 end;
 //------------------------------------------------------------------------------
 end.

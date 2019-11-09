@@ -33,8 +33,8 @@ var
     k: Integer;
 
 begin
-    if (ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
-        with ActiveCircuit do
+    if (DSSPrime.ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
+        with DSSPrime.ActiveCircuit do
         begin
             Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, ActiveDSSClass.ElementCount);
             k := 0;
@@ -55,7 +55,7 @@ function ActiveClass_Get_First(): Integer; CDECL;
 begin
 
     Result := 0;
-    if (ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
+    if (DSSPrime.ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
     begin
         Result := ActiveDSSClass.First;  // sets active objects
     end;
@@ -66,7 +66,7 @@ function ActiveClass_Get_Next(): Integer; CDECL;
 begin
 
     Result := 0;
-    if (ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
+    if (DSSPrime.ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
     begin
         Result := ActiveDSSClass.Next;  // sets active objects
     end;
@@ -97,7 +97,7 @@ begin
         if pelem <> NIL then
         begin
             if pelem is TDSSCktElement then
-                ActiveCircuit.ActiveCktElement := TDSSCktElement(pelem)  // sets ActiveDSSobject
+                DSSPrime.ActiveCircuit.ActiveCktElement := TDSSCktElement(pelem)  // sets ActiveDSSobject
             else
                 ActiveDSSObject := pelem;
         end;

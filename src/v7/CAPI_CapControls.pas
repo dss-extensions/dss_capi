@@ -64,15 +64,15 @@ uses
 function ActiveCapControl: TCapControlObj;
 begin
     Result := NIL;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.CapControls.Active;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.CapControls.Active;
 end;
 //------------------------------------------------------------------------------
 procedure Set_Parameter(const parm: String; const val: String);
 var
     cmd: String;
 begin
-    if not Assigned(ActiveCircuit) then
+    if not Assigned(DSSPrime.ActiveCircuit) then
         exit;
     DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('capcontrol.%s.%s=%s', [ActiveCapControl.Name, parm, val]);
@@ -85,9 +85,9 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.CapControls, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.CapControls, False);
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Capacitor_AnsiString(): Ansistring; inline;
@@ -151,16 +151,16 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        lst := ActiveCircuit.CapControls;
+        lst := DSSPrime.ActiveCircuit.CapControls;
         elem := lst.First;
         if elem <> NIL then
         begin
             repeat
                 if elem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := elem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
                     Result := 1;
                 end
                 else
@@ -241,16 +241,16 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        lst := ActiveCircuit.CapControls;
+        lst := DSSPrime.ActiveCircuit.CapControls;
         elem := lst.Next;
         if elem <> NIL then
         begin
             repeat
                 if elem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := elem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
                     Result := lst.ActiveIndex;
                 end
                 else
@@ -380,12 +380,12 @@ end;
 //------------------------------------------------------------------------------
 procedure CapControls_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     if DSSPrime.CapControlClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := DSSPrime.CapControlClass.ElementList.Active;
-        ActiveCircuit.CapControls.Get(DSSPrime.CapControlClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.CapControlClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.CapControls.Get(DSSPrime.CapControlClass.Active);
     end
     else
     begin
@@ -429,8 +429,8 @@ end;
 function CapControls_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.CapControls.ListSize;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.CapControls.ListSize;
 end;
 //------------------------------------------------------------------------------
 procedure CapControls_Reset(); CDECL;
@@ -447,8 +447,8 @@ end;
 //------------------------------------------------------------------------------
 function CapControls_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.CapControls.ActiveIndex
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.CapControls.ActiveIndex
     else
         Result := 0
 end;
@@ -457,15 +457,15 @@ procedure CapControls_Set_idx(Value: Integer); CDECL;
 var
     pCapControl: TCapControlObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pCapControl := ActiveCircuit.CapControls.Get(Value);
+    pCapControl := DSSPrime.ActiveCircuit.CapControls.Get(Value);
     if pCapControl = NIL then
     begin
         DoSimpleMsg('Invalid CapControl index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pCapControl;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pCapControl;
 end;
 //------------------------------------------------------------------------------
 end.

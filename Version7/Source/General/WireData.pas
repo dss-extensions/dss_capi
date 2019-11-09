@@ -56,7 +56,8 @@ uses
     Sysutils,
     Ucomplex,
     Arraydef,
-    LineUNits;
+    LineUNits,
+    DSSHelper;
 
 const
     NumPropsThisClass = 0; // because they were all moved to ConductorData
@@ -92,7 +93,7 @@ end;
 function TWireData.NewObject(const ObjName: String): Integer;
 begin
   // create a new object of this class and add to list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveDSSObject := TWireDataObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);

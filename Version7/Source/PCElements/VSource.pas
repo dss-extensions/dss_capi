@@ -305,7 +305,7 @@ end;
 function TVsource.NewObject(const ObjName: String): Integer;
 begin
     // Make a new voltage source and add it to Vsource class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TVsourceObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -355,7 +355,7 @@ var
 begin
   // continue parsing with contents of Parser
     ActiveVSourceObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveVSourceObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveVSourceObj;
 
     Result := 0;
 
@@ -1025,7 +1025,7 @@ begin
         YPrim.Clear;
     end;
 
-    with ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
     begin
         FYprimFreq := Frequency;
         FreqMultiplier := FYprimFreq / BaseFrequency;
@@ -1112,7 +1112,7 @@ begin
   }
 
 
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
 
             ShapeIsActual := FALSE;
@@ -1233,7 +1233,7 @@ var
 
 begin
     try
-        with    ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
      //FOR i := 1 TO (Nterms * NConds) DO Vtemp^[i] := V^[NodeRef^[i]];
      // This is safer    12/7/99
@@ -1322,7 +1322,7 @@ begin
     PropertyValue[2] := '115';
     PropertyValue[3] := '1';
     PropertyValue[4] := '0';
-    PropertyValue[5] := Format('%d', [Round(ActiveCircuit.Fundamental)]);
+    PropertyValue[5] := Format('%d', [Round(DSSPrime.ActiveCircuit.Fundamental)]);
     PropertyValue[6] := '3';
     PropertyValue[7] := '2000';
     PropertyValue[8] := '2100';

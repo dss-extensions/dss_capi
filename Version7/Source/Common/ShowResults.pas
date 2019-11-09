@@ -92,7 +92,7 @@ var
     i: Integer;
 begin
     MaxBusNameLength := 4;
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
         for i := 1 to NumBuses do
             MaxBusNameLength := Max(MaxBusNameLength, Length(BusList.Get(i)));
 end;
@@ -104,7 +104,7 @@ var
 
 begin
     MaxDeviceNameLength := 0;
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
         for i := 1 to NumDevices do
         begin
             DevName := DeviceList.Get(i);
@@ -124,7 +124,7 @@ var
 
 begin
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
 
         if Buses^[i].NumNodesThisBus >= 3 then
@@ -158,7 +158,7 @@ begin
 
         else
         begin
-            Vph[1] := ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(1)];
+            Vph[1] := DSSPrime.ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(1)];
             V0 := 0.0;
             V1 := Cabs(Vph[1]);     // Use first phase value for non-three phase buses
             V2 := 0.0;
@@ -208,7 +208,7 @@ var
     jj, kk: Integer;
 
 begin
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         jj := 1;
         with Buses^[i] do
@@ -222,7 +222,7 @@ begin
                 until NodeIdx > 0;
 
                 nref1 := GetRef(NodeIdx);   // Get the overall node reference number
-                Volts := ActiveCircuit.Solution.NodeV^[nref1];
+                Volts := DSSPrime.ActiveCircuit.Solution.NodeV^[nref1];
 
                 kk := 1; // keep compiler from complaining
                 if {LL and} (jj <= 4) then
@@ -236,7 +236,7 @@ begin
                     if kk <= NumNodesThisBus then
                     begin
                         nref2 := Buses^[i].GetRef(kk); // reference for next phase in sequence
-                        VoltsLL := Csub(Volts, ActiveCircuit.Solution.NodeV^[nref2]);
+                        VoltsLL := Csub(Volts, DSSPrime.ActiveCircuit.Solution.NodeV^[nref2]);
                     end;
                 end;
 
@@ -303,9 +303,9 @@ begin
         begin
             Inc(k);
             nref := pElem.NodeRef^[k];
-            Volts := ActiveCircuit.Solution.NodeV^[nref];
+            Volts := DSSPrime.ActiveCircuit.Solution.NodeV^[nref];
             Vmag := Cabs(Volts) * 0.001;
-            with ActiveCircuit do
+            with DSSPrime.ActiveCircuit do
             begin
                 if nref = 0 then
                     Vpu := 0.0
@@ -350,19 +350,19 @@ begin
         Node1 := pElem.NodeRef^[i];
         Node2 := pElem.NodeRef^[i + Ncond];
         if Node1 > 0 then
-            Bus1 := ActiveCircuit.MapNodeToBus^[Node1].BusRef
+            Bus1 := DSSPrime.ActiveCircuit.MapNodeToBus^[Node1].BusRef
         else
             Bus1 := 0;
         if Node2 > 0 then
-            Bus2 := ActiveCircuit.MapNodeToBus^[Node2].BusRef
+            Bus2 := DSSPrime.ActiveCircuit.MapNodeToBus^[Node2].BusRef
         else
             Bus2 := 0;
         if (Bus1 > 0) and (Bus2 > 0) then
         begin
-            Volts1 := ActiveCircuit.Solution.NodeV^[Node1];   // OK if Node1 or Node2 = 0
-            Volts2 := ActiveCircuit.Solution.NodeV^[Node2];
+            Volts1 := DSSPrime.ActiveCircuit.Solution.NodeV^[Node1];   // OK if Node1 or Node2 = 0
+            Volts2 := DSSPrime.ActiveCircuit.Solution.NodeV^[Node2];
             Volts1 := Csub(Volts1, Volts2);   // diff voltage
-            with ActiveCircuit do
+            with DSSPrime.ActiveCircuit do
             begin
                 if Buses^[Bus1].kVBase <> Buses^[Bus2].kVBase then
                     Vmag := 0.0
@@ -409,7 +409,7 @@ begin
                 Writeln(F);
                 Writeln(F, pad('Bus', MaxBusNameLength), '  Mag:   V1 (kV)    p.u.     V2 (kV)   %V2/V1    V0 (kV)    %V0/V1');
                 Writeln(F);
-                for i := 1 to ActiveCircuit.NumBuses do
+                for i := 1 to DSSPrime.ActiveCircuit.NumBuses do
                     WriteSeqVoltages(F, i, LL);
 
             end; {ShowOptionCode Case 0}
@@ -429,7 +429,7 @@ begin
                     Writeln(F, pad('Bus', MaxBusNameLength), ' Node    VLN (kV)   Angle      pu     Base kV    Node-Node   VLL (kV)  Angle      pu');
                 Writeln(F);
 
-                for i := 1 to ActiveCircuit.NumBuses do
+                for i := 1 to DSSPrime.ActiveCircuit.NumBuses do
                     WriteBusVoltages(F, i, LL);
 
             end; {ShowOptionCode Case 1}
@@ -446,25 +446,25 @@ begin
 
 
        // SOURCES first
-                pElem := ActiveCircuit.sources.First;
+                pElem := DSSPrime.ActiveCircuit.sources.First;
 
                 while pElem <> NIL do
                 begin
                     if pElem.Enabled then
                         WriteElementVoltages(F, pElem, LL);
                     Writeln(F);
-                    pElem := ActiveCircuit.sources.Next;
+                    pElem := DSSPrime.ActiveCircuit.sources.Next;
                 end;
 
        // PDELEMENTS first
-                pElem := ActiveCircuit.PDElements.First;
+                pElem := DSSPrime.ActiveCircuit.PDElements.First;
 
                 while pElem <> NIL do
                 begin
                     if pElem.Enabled then
                         WriteElementVoltages(F, pElem, LL);
                     Writeln(F);
-                    pElem := ActiveCircuit.PDElements.Next;
+                    pElem := DSSPrime.ActiveCircuit.PDElements.Next;
                 end;
 
                 Writeln(F, '= = = = = = = = = = = = = = = = = = =  = = = = = = = = = = =  = =');
@@ -475,13 +475,13 @@ begin
                 Writeln(F);
 
        // PCELEMENTS next
-                pElem := ActiveCircuit.PCElements.First;
+                pElem := DSSPrime.ActiveCircuit.PCElements.First;
 
                 while pElem <> NIL do
                 begin
                     if pElem.Enabled then
                         WriteElementVoltages(F, pElem, LL);
-                    pElem := ActiveCircuit.PCElements.Next;
+                    pElem := DSSPrime.ActiveCircuit.PCElements.Next;
                     Writeln(F);
                 end;
 
@@ -663,7 +663,7 @@ begin
 
 
 //Sources First
-                    Pelem := ActiveCircuit.Sources.First;
+                    Pelem := DSSPrime.ActiveCircuit.Sources.First;
                     while pelem <> NIL do
                     begin
                         if (pelem.Enabled) then
@@ -681,12 +681,12 @@ begin
                             end;
                             Freemem(cBuffer);
                         end;
-                        pelem := ActiveCircuit.Sources.Next;
+                        pelem := DSSPrime.ActiveCircuit.Sources.Next;
                     end;
 
 
      // PDELEMENTS Next
-                    PDelem := ActiveCircuit.PDElements.First;
+                    PDelem := DSSPrime.ActiveCircuit.PDElements.First;
 
                     while PDelem <> NIL do
                     begin
@@ -705,11 +705,11 @@ begin
                             end; {For}
                             Freemem(cBuffer);
                         end;
-                        PDelem := ActiveCircuit.PDElements.Next;
+                        PDelem := DSSPrime.ActiveCircuit.PDElements.Next;
                     end;
 
     // PCelemENTS next
-                    PCelem := ActiveCircuit.PCelements.First;
+                    PCelem := DSSPrime.ActiveCircuit.PCelements.First;
 
                     while PCelem <> NIL do
                     begin
@@ -728,12 +728,12 @@ begin
                             end;
                             Freemem(cBuffer);
                         end;
-                        PCelem := ActiveCircuit.PCelements.Next;
+                        PCelem := DSSPrime.ActiveCircuit.PCelements.Next;
                     end;
 
 
      //Faults next
-                    Pelem := ActiveCircuit.Faults.First;
+                    Pelem := DSSPrime.ActiveCircuit.Faults.First;
                     while pelem <> NIL do
                     begin
                         if (pelem.Enabled) then
@@ -752,7 +752,7 @@ begin
                             end;
                             Freemem(cBuffer);
                         end;
-                        pelem := ActiveCircuit.Faults.Next;
+                        pelem := DSSPrime.ActiveCircuit.Faults.Next;
                     end;
 
                 end; {Code 0:}
@@ -773,33 +773,33 @@ begin
 
 
      // Sources first
-                    pElem := ActiveCircuit.Sources.First;
+                    pElem := DSSPrime.ActiveCircuit.Sources.First;
 
                     while pElem <> NIL do
                     begin
                         if pElem.Enabled then
                             WriteTerminalCurrents(F, pElem, FALSE);
-                        pElem := ActiveCircuit.Sources.Next;
+                        pElem := DSSPrime.ActiveCircuit.Sources.Next;
                     end;
 
      // PDELEMENTS first
-                    pElem := ActiveCircuit.PDElements.First;
+                    pElem := DSSPrime.ActiveCircuit.PDElements.First;
 
                     while pElem <> NIL do
                     begin
                         if pElem.Enabled then
                             WriteTerminalCurrents(F, pElem, ShowResidual);
-                        pElem := ActiveCircuit.PDElements.Next;
+                        pElem := DSSPrime.ActiveCircuit.PDElements.Next;
                     end;
 
      // Faults
-                    pElem := ActiveCircuit.Faults.First;
+                    pElem := DSSPrime.ActiveCircuit.Faults.First;
 
                     while pElem <> NIL do
                     begin
                         if pElem.Enabled then
                             WriteTerminalCurrents(F, pElem, FALSE);
-                        pElem := ActiveCircuit.Faults.Next;
+                        pElem := DSSPrime.ActiveCircuit.Faults.Next;
                     end;
 
 
@@ -811,13 +811,13 @@ begin
                     Writeln(F);
 
      // PCELEMENTS next
-                    pElem := ActiveCircuit.PCElements.First;
+                    pElem := DSSPrime.ActiveCircuit.PCElements.First;
 
                     while pElem <> NIL do
                     begin
                         if pElem.Enabled then
                             WriteTerminalCurrents(F, pElem, FALSE);
-                        pElem := ActiveCircuit.PCElements.Next;
+                        pElem := DSSPrime.ActiveCircuit.PCElements.Next;
                     end;
 
                 end;  {code:1}
@@ -892,7 +892,7 @@ begin
                 Writeln(F);
 
      // Sources first
-                p_Elem := ActiveCircuit.Sources.First;
+                p_Elem := DSSPrime.ActiveCircuit.Sources.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -909,7 +909,7 @@ begin
                             begin
                                 k := (j - 1) * Ncond + i;
                                 nref := p_Elem.NodeRef^[k];
-                                Volts := ActiveCircuit.Solution.NodeV^[nref];
+                                Volts := DSSPrime.ActiveCircuit.Solution.NodeV^[nref];
                                 Iph[i] := c_Buffer^[k];
                                 Vph[i] := volts;
                             end;
@@ -924,7 +924,7 @@ begin
                                 I012[1] := CZERO;
                                 V012[3] := CZERO;
                                 I012[3] := CZERO;
-                                if ActiveCircuit.PositiveSequence then
+                                if DSSPrime.ActiveCircuit.PositiveSequence then
                                 begin
                                     V012[2] := Vph[1];
                                     I012[2] := Iph[1];
@@ -955,12 +955,12 @@ begin
 
                         end;
                     end;
-                    p_Elem := ActiveCircuit.Sources.Next;
+                    p_Elem := DSSPrime.ActiveCircuit.Sources.Next;
                 end;
 
 
      // PDELEMENTS next
-                PDElem := ActiveCircuit.PDElements.First;
+                PDElem := DSSPrime.ActiveCircuit.PDElements.First;
 
                 while PDElem <> NIL do
                 begin
@@ -977,7 +977,7 @@ begin
                             begin
                                 k := (j - 1) * Ncond + i;
                                 nref := pDElem.NodeRef^[k];
-                                Volts := ActiveCircuit.Solution.NodeV^[nref];
+                                Volts := DSSPrime.ActiveCircuit.Solution.NodeV^[nref];
                                 Iph[i] := c_Buffer^[k];
                                 Vph[i] := volts;
                             end;
@@ -992,7 +992,7 @@ begin
                                 I012[1] := CZERO;
                                 V012[3] := CZERO;
                                 I012[3] := CZERO;
-                                if ActiveCircuit.PositiveSequence then
+                                if DSSPrime.ActiveCircuit.PositiveSequence then
                                 begin
                                     V012[2] := Vph[1];
                                     I012[2] := Iph[1];
@@ -1038,11 +1038,11 @@ begin
 
                         end;
                     end;
-                    PDElem := ActiveCircuit.PDElements.Next;
+                    PDElem := DSSPrime.ActiveCircuit.PDElements.Next;
                 end;
 
      // PCELEMENTS Next
-                PCElem := ActiveCircuit.PCElements.First;
+                PCElem := DSSPrime.ActiveCircuit.PCElements.First;
 
                 while PCElem <> NIL do
                 begin
@@ -1059,7 +1059,7 @@ begin
                             begin
                                 k := (j - 1) * Ncond + i;
                                 nref := PCElem.NodeRef^[k];
-                                Volts := ActiveCircuit.Solution.NodeV^[nref];
+                                Volts := DSSPrime.ActiveCircuit.Solution.NodeV^[nref];
                                 Iph[i] := c_Buffer^[k];
                                 Vph[i] := volts;
                             end;
@@ -1075,7 +1075,7 @@ begin
                                 I012[1] := CZERO;
                                 V012[3] := CZERO;
                                 I012[3] := CZERO;
-                                if ActiveCircuit.PositiveSequence then
+                                if DSSPrime.ActiveCircuit.PositiveSequence then
                                 begin
                                     V012[2] := Vph[1];
                                     I012[2] := Iph[1];
@@ -1108,7 +1108,7 @@ begin
 
                         end;
                     end;
-                    PCElem := ActiveCircuit.PCElements.Next;
+                    PCElem := DSSPrime.ActiveCircuit.PCElements.Next;
                 end;
             end; {ShowOptionCode=0}
 
@@ -1133,7 +1133,7 @@ begin
 
 
      // Sources first
-                p_Elem := ActiveCircuit.sources.First;
+                p_Elem := DSSPrime.ActiveCircuit.sources.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -1152,9 +1152,9 @@ begin
                             begin
                                 Inc(k);
                                 nref := p_Elem.NodeRef^[k];
-                                Volts := ActiveCircuit.Solution.NodeV^[nref];
+                                Volts := DSSPrime.ActiveCircuit.Solution.NodeV^[nref];
                                 S := Cmul(Volts, conjg(c_Buffer^[k]));
-                                if { (p_Elem.nphases=1) and } ActiveCircuit.PositiveSequence then
+                                if { (p_Elem.nphases=1) and } DSSPrime.ActiveCircuit.PositiveSequence then
                                     S := CmulReal(S, 3.0);
                                 if Opt = 1 then
                                     S := CmulReal(S, 0.001);
@@ -1168,11 +1168,11 @@ begin
                         end;
                         Writeln(F);
                     end;
-                    p_Elem := ActiveCircuit.sources.Next;
+                    p_Elem := DSSPrime.ActiveCircuit.sources.Next;
                 end;
 
      // PDELEMENTS first
-                p_Elem := ActiveCircuit.PDElements.First;
+                p_Elem := DSSPrime.ActiveCircuit.PDElements.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -1191,9 +1191,9 @@ begin
                             begin
                                 Inc(k);
                                 nref := p_Elem.NodeRef^[k];
-                                Volts := ActiveCircuit.Solution.NodeV^[nref];
+                                Volts := DSSPrime.ActiveCircuit.Solution.NodeV^[nref];
                                 S := Cmul(Volts, conjg(c_Buffer^[k]));
-                                if { (p_Elem.nphases=1) and } ActiveCircuit.PositiveSequence then
+                                if { (p_Elem.nphases=1) and } DSSPrime.ActiveCircuit.PositiveSequence then
                                     S := CmulReal(S, 3.0);
                                 if Opt = 1 then
                                     S := CmulReal(S, 0.001);
@@ -1207,7 +1207,7 @@ begin
                         end;
                         Writeln(F);
                     end;
-                    p_Elem := ActiveCircuit.PDElements.Next;
+                    p_Elem := DSSPrime.ActiveCircuit.PDElements.Next;
                 end;
 
                 Writeln(F, '= = = = = = = = = = = = = = = = = = =  = = = = = = = = = = =  = =');
@@ -1223,7 +1223,7 @@ begin
                 Writeln(F);
 
      // PCELEMENTS next
-                p_Elem := ActiveCircuit.PCElements.First;
+                p_Elem := DSSPrime.ActiveCircuit.PCElements.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -1243,9 +1243,9 @@ begin
                             begin
                                 Inc(k);
                                 nref := p_Elem.NodeRef^[k];
-                                Volts := ActiveCircuit.Solution.NodeV^[nref];
+                                Volts := DSSPrime.ActiveCircuit.Solution.NodeV^[nref];
                                 S := Cmul(Volts, conjg(c_Buffer^[k]));
-                                if { (p_Elem.nphases=1) and } ActiveCircuit.PositiveSequence then
+                                if { (p_Elem.nphases=1) and } DSSPrime.ActiveCircuit.PositiveSequence then
                                     S := CmulReal(S, 3.0);
                                 if Opt = 1 then
                                     S := CmulReal(S, 0.001);
@@ -1259,7 +1259,7 @@ begin
                         end;
                         Writeln(F);
                     end;
-                    p_Elem := ActiveCircuit.PCElements.Next;
+                    p_Elem := DSSPrime.ActiveCircuit.PCElements.Next;
                 end;
 
             end; {ShowOptionCode=1}
@@ -1269,7 +1269,7 @@ begin
         end; {CASE}
 
         Writeln(F);
-        S := CmulReal(ActiveCircuit.Losses, 0.001);
+        S := CmulReal(DSSPrime.ActiveCircuit.Losses, 0.001);
         if Opt = 1 then
             S := CmulReal(S, 0.001);
         Writeln(F, 'Total Circuit Losses = ', S.re: 6: 1, ' +j ', S.im: 6: 1);
@@ -1331,7 +1331,7 @@ begin
         begin
             k := (j - 1) * Ncond + i;
             nref := cktElem.NodeRef^[k];
-            Volts := ActiveCircuit.Solution.NodeV^[nref];
+            Volts := DSSPrime.ActiveCircuit.Solution.NodeV^[nref];
             Iph[i] := c_Buffer^[k];
             Vph[i] := volts;
         end;
@@ -1347,7 +1347,7 @@ begin
             I012[1] := CZERO;
             V012[3] := CZERO;
             I012[3] := CZERO;
-            if ActiveCircuit.PositiveSequence then
+            if DSSPrime.ActiveCircuit.PositiveSequence then
             begin
                 V012[2] := Vph[1];
                 I012[2] := Iph[1];
@@ -1423,9 +1423,9 @@ begin
         begin
             k := (jTerm - 1) * Ncond + i;
             nref := CktElem.NodeRef^[k];
-            Volts := ActiveCircuit.Solution.NodeV^[nref];
+            Volts := DSSPrime.ActiveCircuit.Solution.NodeV^[nref];
             S := Cmul(Volts, conjg(c_Buffer^[k]));
-            if { (CktElem.nphases=1) and } ActiveCircuit.PositiveSequence then
+            if { (CktElem.nphases=1) and } DSSPrime.ActiveCircuit.PositiveSequence then
                 S := CmulReal(S, 3.0);
             if Opt = 1 then
                 S := CmulReal(S, 0.001);
@@ -1475,7 +1475,7 @@ begin
     c_Buffer := NIL;
 
   {Get Bus Reference}
-    BusReference := ActiveCircuit.BusList.Find(BusName);
+    BusReference := DSSPrime.ActiveCircuit.BusList.Find(BusName);
     if BusReference = 0 then
     begin
         DoSimpleMsg('Bus "' + UpperCase(BusName) + '" not found.', 219);
@@ -1508,7 +1508,7 @@ begin
                 Writeln(F);
 
      // Sources first
-                p_Elem := ActiveCircuit.Sources.First;
+                p_Elem := DSSPrime.ActiveCircuit.Sources.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -1528,12 +1528,12 @@ begin
                             end;
 
                         end;
-                    p_Elem := ActiveCircuit.Sources.Next;
+                    p_Elem := DSSPrime.ActiveCircuit.Sources.Next;
                 end;
 
 
      // PDELEMENTS next
-                PDElem := ActiveCircuit.PDElements.First;
+                PDElem := DSSPrime.ActiveCircuit.PDElements.First;
                 while PDElem <> NIL do
                 begin
                     if (PDElem.Enabled) then
@@ -1550,11 +1550,11 @@ begin
                                     WriteSeqCurrents(F, Paddots(FullName(PDElem), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
                             end;
                         end;
-                    PDElem := ActiveCircuit.PDElements.Next;
+                    PDElem := DSSPrime.ActiveCircuit.PDElements.Next;
                 end;
 
      // PCELEMENTS Next
-                PCElem := ActiveCircuit.PCElements.First;
+                PCElem := DSSPrime.ActiveCircuit.PCElements.First;
                 while PCElem <> NIL do
                 begin
                     if (PCElem.Enabled) then
@@ -1571,7 +1571,7 @@ begin
                                     WriteSeqCurrents(F, Paddots(FullName(PCelem), MaxDeviceNameLength + 2), I0, I1, I2, Cmax, 0.0, 0.0, j, DSSObjType);
                             end;
                         end;
-                    PCElem := ActiveCircuit.PCElements.Next;
+                    PCElem := DSSPrime.ActiveCircuit.PCElements.Next;
                 end;
 
      {Sequence Powers}
@@ -1587,7 +1587,7 @@ begin
                 Writeln(F);
 
      // Sources first
-                p_Elem := ActiveCircuit.Sources.First;
+                p_Elem := DSSPrime.ActiveCircuit.Sources.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -1597,12 +1597,12 @@ begin
         {Use j set by CheckBusReference}
                             WriteTerminalPowerSeq(F, p_Elem, j, opt);
                         end;
-                    p_Elem := ActiveCircuit.Sources.Next;
+                    p_Elem := DSSPrime.ActiveCircuit.Sources.Next;
                 end;
 
 
      // PDELEMENTS next
-                PDElem := ActiveCircuit.PDElements.First;
+                PDElem := DSSPrime.ActiveCircuit.PDElements.First;
                 while PDElem <> NIL do
                 begin
                     if (PDElem.Enabled) then
@@ -1610,11 +1610,11 @@ begin
                         begin  // Is this connected to the bus
                             WriteTerminalPowerSeq(F, PDElem, j, opt);
                         end;
-                    PDElem := ActiveCircuit.PDElements.Next;
+                    PDElem := DSSPrime.ActiveCircuit.PDElements.Next;
                 end;
 
      // PCELEMENTS Next
-                PCElem := ActiveCircuit.PCElements.First;
+                PCElem := DSSPrime.ActiveCircuit.PCElements.First;
                 while PCElem <> NIL do
                 begin
                     if (PCElem.Enabled) then
@@ -1622,7 +1622,7 @@ begin
                         begin
                             WriteTerminalPowerSeq(F, PCElem, j, opt)
                         end;
-                    PCElem := ActiveCircuit.PCElements.Next;
+                    PCElem := DSSPrime.ActiveCircuit.PCElements.Next;
                 end;
             end; {ShowOptionCode=0}
 
@@ -1649,7 +1649,7 @@ begin
 
 
           // Sources first
-                p_Elem := ActiveCircuit.sources.First;
+                p_Elem := DSSPrime.ActiveCircuit.sources.First;
                 while p_Elem <> NIL do
                 begin
                     if p_Elem.Enabled then
@@ -1658,12 +1658,12 @@ begin
                             WriteTerminalCurrents(F, p_Elem, FALSE);
                             Writeln(F);
                         end;
-                    p_Elem := ActiveCircuit.sources.Next;
+                    p_Elem := DSSPrime.ActiveCircuit.sources.Next;
                 end;
 
 
      // PDELEMENTS first
-                p_Elem := ActiveCircuit.PDElements.First;
+                p_Elem := DSSPrime.ActiveCircuit.PDElements.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -1673,7 +1673,7 @@ begin
                             WriteTerminalCurrents(F, p_Elem, TRUE);
                             Writeln(F);
                         end;
-                    p_Elem := ActiveCircuit.PDElements.Next;
+                    p_Elem := DSSPrime.ActiveCircuit.PDElements.Next;
                 end;
 
                 Writeln(F, '= = = = = = = = = = = = = = = = = = =  = = = = = = = = = = =  = =');
@@ -1684,7 +1684,7 @@ begin
                 Writeln(F);
 
      // PCELEMENTS next
-                p_Elem := ActiveCircuit.PCElements.First;
+                p_Elem := DSSPrime.ActiveCircuit.PCElements.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -1695,11 +1695,11 @@ begin
                             Writeln(F);
                         end;
 
-                    p_Elem := ActiveCircuit.PCElements.Next;
+                    p_Elem := DSSPrime.ActiveCircuit.PCElements.Next;
                 end;
 
       // FAULTs next
-                p_Elem := ActiveCircuit.Faults.First;
+                p_Elem := DSSPrime.ActiveCircuit.Faults.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -1710,7 +1710,7 @@ begin
                             Writeln(F);
                         end;
 
-                    p_Elem := ActiveCircuit.Faults.Next;
+                    p_Elem := DSSPrime.ActiveCircuit.Faults.Next;
                 end;
 
      {Branch Powers}
@@ -1728,7 +1728,7 @@ begin
                 Writeln(F);
 
      // Sources first
-                p_Elem := ActiveCircuit.sources.First;
+                p_Elem := DSSPrime.ActiveCircuit.sources.First;
                 while p_Elem <> NIL do
                 begin
                     if p_Elem.Enabled then
@@ -1737,12 +1737,12 @@ begin
                             WriteTerminalPower(F, p_Elem, j, opt);
                             Writeln(F);
                         end;
-                    p_Elem := ActiveCircuit.sources.Next;
+                    p_Elem := DSSPrime.ActiveCircuit.sources.Next;
                 end;
 
 
      // PDELEMENTS first
-                p_Elem := ActiveCircuit.PDElements.First;
+                p_Elem := DSSPrime.ActiveCircuit.PDElements.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -1759,7 +1759,7 @@ begin
                                     WriteTerminalPower(F, p_Elem, j, opt);
                                 end;
                         end;
-                    p_Elem := ActiveCircuit.PDElements.Next;
+                    p_Elem := DSSPrime.ActiveCircuit.PDElements.Next;
                 end;
 
                 Writeln(F, '= = = = = = = = = = = = = = = = = = =  = = = = = = = = = = =  = =');
@@ -1775,7 +1775,7 @@ begin
                 Writeln(F);
 
      // PCELEMENTS next
-                p_Elem := ActiveCircuit.PCElements.First;
+                p_Elem := DSSPrime.ActiveCircuit.PCElements.First;
 
                 while p_Elem <> NIL do
                 begin
@@ -1786,7 +1786,7 @@ begin
                             Writeln(F);
                         end;
 
-                    p_Elem := ActiveCircuit.PCElements.Next;
+                    p_Elem := DSSPrime.ActiveCircuit.PCElements.Next;
                 end;
 
             end; {ShowOptionCode=1}
@@ -1829,7 +1829,7 @@ begin
         ReWrite(F);
 
    { Set source voltage injection currents }
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
         begin
             with Solution do
             begin
@@ -2042,7 +2042,7 @@ begin
         begin  // Default - Just do PD and PC Element in active circuit
 
             Writeln(F);
-            Writeln(F, 'Elements in Active Circuit: ' + ActiveCircuit.Name);
+            Writeln(F, 'Elements in Active Circuit: ' + DSSPrime.ActiveCircuit.Name);
             Writeln(F);
             Writeln(F, 'Power Delivery Elements');
             Writeln(F);
@@ -2051,7 +2051,7 @@ begin
 
 
             Writeln(Fdisabled);
-            Writeln(Fdisabled, 'DISABLED Elements in Active Circuit: ' + ActiveCircuit.Name);
+            Writeln(Fdisabled, 'DISABLED Elements in Active Circuit: ' + DSSPrime.ActiveCircuit.Name);
             Writeln(Fdisabled);
             Writeln(Fdisabled, 'DISABLED Power Delivery Elements');
             Writeln(Fdisabled);
@@ -2059,7 +2059,7 @@ begin
             Writeln(Fdisabled);
 
      // PDELEMENTS first
-            pElem := ActiveCircuit.PDElements.First;
+            pElem := DSSPrime.ActiveCircuit.PDElements.First;
 
             while pElem <> NIL do
             begin
@@ -2071,7 +2071,7 @@ begin
                 begin
                     WriteElementRecord(Fdisabled, pElem);
                 end;
-                pElem := ActiveCircuit.PDElements.Next;
+                pElem := DSSPrime.ActiveCircuit.PDElements.Next;
             end;
 
             Writeln(F);
@@ -2087,7 +2087,7 @@ begin
             Writeln(Fdisabled);
 
      // PCELEMENTS next
-            pElem := ActiveCircuit.PCElements.First;
+            pElem := DSSPrime.ActiveCircuit.PCElements.First;
 
             while pElem <> NIL do
             begin
@@ -2099,7 +2099,7 @@ begin
                 begin
                     WriteElementRecord(Fdisabled, pElem);
                 end;
-                pElem := ActiveCircuit.PCElements.Next;
+                pElem := DSSPrime.ActiveCircuit.PCElements.Next;
             end;
 
 
@@ -2138,12 +2138,12 @@ begin
         ReWrite(F);
 
         Writeln(F);
-        Writeln(F, 'BUSES AND NODES IN ACTIVE CIRCUIT: ' + ActiveCircuit.name);
+        Writeln(F, 'BUSES AND NODES IN ACTIVE CIRCUIT: ' + DSSPrime.ActiveCircuit.name);
         Writeln(F);
         Writeln(F, Pad('     ', MaxBusNameLength), '                         Coord                                 Number of     Nodes');
         Writeln(F, Pad('  Bus', MaxBusNameLength), '    Base kV             (x, y)                      Keep?       Nodes        connected ...');
         Writeln(F);
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
         begin
             for i := 1 to NumBuses do
             begin
@@ -2215,12 +2215,12 @@ begin
         begin
             ;
 
-            pElem := ActiveCircuit.energyMeters.First;   // write registernames for first meter only
+            pElem := DSSPrime.ActiveCircuit.energyMeters.First;   // write registernames for first meter only
             for i := 1 to NumEMRegisters do
                 Writeln(F, 'Reg ' + IntToStr(i) + ' = ', pElem.RegisterNames[i]);
             Writeln(F);
 
-            pElem := ActiveCircuit.energyMeters.First;
+            pElem := DSSPrime.ActiveCircuit.energyMeters.First;
             if pElem <> NIL then
             begin
                 Write(F, 'Meter        ');
@@ -2238,7 +2238,7 @@ begin
                             Write(F, PElem.Registers[j]: 10: 0, ' ');
                         end;
                     end;
-                    pElem := ActiveCircuit.EnergyMeters.Next;
+                    pElem := DSSPrime.ActiveCircuit.EnergyMeters.Next;
                     Writeln(F);
                 end;
             end;
@@ -2274,7 +2274,7 @@ begin
         Writeln(F);
         Writeln(F, 'GENERATOR ENERGY METER VALUES');
         Writeln(F);
-        pElem := ActiveCircuit.Generators.First;
+        pElem := DSSPrime.ActiveCircuit.Generators.First;
         if pElem <> NIL then
         begin
             GeneratorClass := TGenerator(pElem.ParentClass);
@@ -2293,7 +2293,7 @@ begin
                         Write(F, PElem.Registers[j]: 10: 0, ' ');
                     end;
                 end;
-                pElem := ActiveCircuit.Generators.Next;
+                pElem := DSSPrime.ActiveCircuit.Generators.Next;
                 Writeln(F);
             end;
         end;
@@ -2338,7 +2338,7 @@ begin
         Writeln(F, 'Name            Tap      Min       Max     Step  Position');
         Writeln(F);
 
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
         begin
             pReg := RegControls.First;
             while pReg <> NIL do
@@ -2492,7 +2492,7 @@ begin
 
 
      // PDELEMENTS
-        PDelem := ActiveCircuit.PDElements.First;
+        PDelem := DSSPrime.ActiveCircuit.PDElements.First;
         while PDelem <> NIL do
         begin
             if (PDelem.Enabled) then
@@ -2559,7 +2559,7 @@ begin
                             end;
                     end; {For}
                 end;
-            PDelem := ActiveCircuit.PDElements.Next;
+            PDelem := DSSPrime.ActiveCircuit.PDElements.Next;
         end;
 
     finally
@@ -2596,7 +2596,7 @@ begin
         Writeln(F);
 
      // Load
-        pLoad := ActiveCircuit.Loads.First;
+        pLoad := DSSPrime.ActiveCircuit.Loads.First;
         while pLoad <> NIL do
         begin
             if (pLoad.Enabled) then
@@ -2622,7 +2622,7 @@ begin
                 end;
 
             end;
-            pLoad := ActiveCircuit.Loads.Next;
+            pLoad := DSSPrime.ActiveCircuit.Loads.Next;
         end;
 
     finally
@@ -2674,7 +2674,7 @@ begin
         TransLosses := CZERO;
 
      // PDELEMENTS
-        PDelem := ActiveCircuit.PDElements.First;
+        PDelem := DSSPrime.ActiveCircuit.PDElements.First;
         while PDelem <> NIL do
         begin
             if (PDelem.Enabled)
@@ -2700,7 +2700,7 @@ begin
                 Write(F, Format('     %.6g', [kLosses.im]));
                 Writeln(F);
             end;
-            PDelem := ActiveCircuit.PDElements.Next;
+            PDelem := DSSPrime.ActiveCircuit.PDElements.Next;
         end;      {While}
 
         Writeln(F);
@@ -2711,14 +2711,14 @@ begin
 
         LoadPower := CZERO;
      // Sum the total load kW being served in the Ckt Model
-        PCelem := ActiveCircuit.Loads.First;
+        PCelem := DSSPrime.ActiveCircuit.Loads.First;
         while Pcelem <> NIL do
         begin
             if PcElem.Enabled then
             begin
                 Caccum(LoadPower, PCelem.Power[1]);
             end;
-            PCelem := ActiveCircuit.Loads.Next;
+            PCelem := DSSPrime.ActiveCircuit.Loads.Next;
         end;
         LoadPower := CmulReal(LoadPower, 0.001);
 
@@ -2760,7 +2760,7 @@ begin
         Writeln(F, 'Present values of all variables in PC Elements in the circuit.');
         Writeln(F);
 
-        pcElem := ActiveCircuit.PCElements.First;
+        pcElem := DSSPrime.ActiveCircuit.PCElements.First;
 
         while pcElem <> NIL do
         begin
@@ -2774,7 +2774,7 @@ begin
                 end;
                 Writeln(F);
             end;
-            pCElem := ActiveCircuit.PCElements.Next;
+            pCElem := DSSPrime.ActiveCircuit.PCElements.Next;
         end;
 
     finally
@@ -2804,10 +2804,10 @@ var
 begin
 
      // Make sure bus list is built
-    if ActiveCircuit.BusNameRedefined then
-        ActiveCircuit.ReProcessBusDefs;
+    if DSSPrime.ActiveCircuit.BusNameRedefined then
+        DSSPrime.ActiveCircuit.ReProcessBusDefs;
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
 
          {Initialize all Circuit Elements to not checked}
@@ -2830,7 +2830,7 @@ begin
     end;
 
     // Get Started at main voltage source
-    TestElement := ActiveCircuit.Sources.First;
+    TestElement := DSSPrime.ActiveCircuit.Sources.First;
     Branch_List := GetIsolatedSubArea(TestElement);
 
     {Show Report of Elements connected and not connected}
@@ -2846,7 +2846,7 @@ begin
         Writeln(F, '***  THE FOLLOWING BUSES HAVE NO CONNECTION TO THE SOURCE ***');
         Writeln(F);
 
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
         begin
             for j := 1 to NumBuses do
                 if not Buses^[j].BusChecked then
@@ -2858,7 +2858,7 @@ begin
         Writeln(F, '***********  THE FOLLOWING SUB NETWORKS ARE ISOLATED ************');
         Writeln(F);
 
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
         begin
             TestElement := CktElements.First;
 
@@ -2894,7 +2894,7 @@ begin
         Writeln(F, '***********  THE FOLLOWING ENABLED ELEMENTS ARE ISOLATED ************');
         Writeln(F);
 
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
         begin
 
        {Mark all controls, energy meters and monitors as checked so they don't show up}
@@ -2925,7 +2925,7 @@ begin
         Writeln(F, '***  THE FOLLOWING BUSES ARE NOT CONNECTED TO ANY POWER DELIVERY ELEMENT ***');
         Writeln(F);
 
-        with ActiveCircuit do
+        with DSSPrime.ActiveCircuit do
         begin
             for j := 1 to NumBuses do
                 if not Buses^[j].BusChecked then
@@ -2978,7 +2978,7 @@ begin
         Writeln(F, 'Power Delivery Elements Normal and Emergency (max) Ratings');
         Writeln(F);
 
-        pdElem := ActiveCircuit.PDElements.First;
+        pdElem := DSSPrime.ActiveCircuit.PDElements.First;
         while pdElem <> NIL do
         begin
 
@@ -2986,7 +2986,7 @@ begin
             Write(F, Format('%-.4g,  %-.4g  !Amps', [pdElem.Normamps, pdElem.EmergAmps]));
             Writeln(F);
 
-            pdElem := ActiveCircuit.PDElements.Next;
+            pdElem := DSSPrime.ActiveCircuit.PDElements.Next;
         end;
     finally
 
@@ -3085,10 +3085,10 @@ begin
 
         Assignfile(Ftree, TreeNm);
         ReWrite(Ftree);
-        Writeln(Ftree, 'Branches and Loads in Circuit ' + ActiveCircuit.Name);
+        Writeln(Ftree, 'Branches and Loads in Circuit ' + DSSPrime.ActiveCircuit.Name);
         Writeln(Ftree);
 
-        topo := ActiveCircuit.GetTopology;
+        topo := DSSPrime.ActiveCircuit.GetTopology;
         nLoops := 0;
         nParallel := 0;
         nLevels := 0;
@@ -3167,7 +3167,7 @@ begin
             end;
         end;
 
-        pdElem := ActiveCircuit.PDElements.First;
+        pdElem := DSSPrime.ActiveCircuit.PDElements.First;
         while assigned(pdElem) do
         begin
             if pdElem.IsIsolated then
@@ -3194,7 +3194,7 @@ begin
                 Writeln(Ftree);
                 Inc(nIsolated);
             end;
-            pdElem := ActiveCircuit.PDElements.Next;
+            pdElem := DSSPrime.ActiveCircuit.PDElements.Next;
         end;
 
         nLoops := nLoops div 2;  // TODO, see if parallel lines also counted twice
@@ -3468,8 +3468,8 @@ var
 
 begin
 
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if DSSPrime.ActiveCircuit <> NIL then
+        with DSSPrime.ActiveCircuit do
         begin
             if ActiveCktElement <> NIL then
             begin
@@ -3541,9 +3541,9 @@ var
 
 begin
 
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    hY := ActiveCircuit.Solution.hY;
+    hY := DSSPrime.ActiveCircuit.Solution.hY;
     if hY <= 0 then
     begin
         DoSimpleMsg('Y Matrix not Built.', 222);
@@ -3614,7 +3614,7 @@ begin
         Assignfile(F, FileNm);
         ReWrite(F);
 
-        with ActiveCircuit, ActiveCircuit.solution do
+        with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.solution do
         begin
         // Zero out the nodal current array
             for i := 0 to NumNodes do
@@ -3664,7 +3664,7 @@ begin
             Writeln(F, Format('%s, %2d, %10.5f,       %s, %10.5f', [Bname, nref, dTemp, pctError, MaxNodeCurrent^[nRef]]));
 
 
-            for i := 1 to ActiveCircuit.NumBuses do
+            for i := 1 to DSSPrime.ActiveCircuit.NumBuses do
             begin
                 for j := 1 to Buses^[i].NumNodesThisBus do
                 begin
@@ -3710,7 +3710,7 @@ begin
         ReWrite(F);
 
         {Check Loads}
-        if ActiveCircuit.Loads.ListSize > 0 then
+        if DSSPrime.ActiveCircuit.Loads.ListSize > 0 then
         begin
             Writeln(F);
             Writeln(F, '!!!  LOAD VOLTAGE BASE MISMATCHES');
@@ -3718,12 +3718,12 @@ begin
         end;
 
 
-        pLoad := ActiveCircuit.Loads.First;
+        pLoad := DSSPrime.ActiveCircuit.Loads.First;
         while pLoad <> NIL do
         begin
            {Find Bus To Which Load Connected}
-            pBus := ActiveCircuit.Buses^[pLoad.Terminals^[1].BusRef];
-            BusName := ActiveCircuit.BusList.Get(pLoad.Terminals^[1].BusRef);
+            pBus := DSSPrime.ActiveCircuit.Buses^[pLoad.Terminals^[1].BusRef];
+            BusName := DSSPrime.ActiveCircuit.BusList.Get(pLoad.Terminals^[1].BusRef);
             if pBus.kVBase <> 0.0 then
             begin
                 if (pLoad.Nphases = 1) and (pLoad.Connection = TLoadConnection.Wye) then
@@ -3746,13 +3746,13 @@ begin
                     end;
                 end;
             end;
-            pLoad := ActiveCircuit.Loads.Next;
+            pLoad := DSSPrime.ActiveCircuit.Loads.Next;
         end;
 
 
         {Check Generators}
 
-        if ActiveCircuit.Generators.ListSize > 0 then
+        if DSSPrime.ActiveCircuit.Generators.ListSize > 0 then
         begin
             Writeln(F);
             Writeln(F, '!!!  GENERATOR VOLTAGE BASE MISMATCHES');
@@ -3760,12 +3760,12 @@ begin
         end;
 
 
-        pGen := ActiveCircuit.Generators.First;
+        pGen := DSSPrime.ActiveCircuit.Generators.First;
         while pGen <> NIL do
         begin
            {Find Bus To Which Generator Connected}
-            pBus := ActiveCircuit.Buses^[pGen.Terminals^[1].BusRef];
-            BusName := ActiveCircuit.BusList.Get(pGen.Terminals^[1].BusRef);
+            pBus := DSSPrime.ActiveCircuit.Buses^[pGen.Terminals^[1].BusRef];
+            BusName := DSSPrime.ActiveCircuit.BusList.Get(pGen.Terminals^[1].BusRef);
             if pBus.kVBase <> 0.0 then
             begin
                 if (pGen.Nphases = 1) and (pGen.Connection = 0) then
@@ -3789,7 +3789,7 @@ begin
                 end;
             end;
 
-            pGen := ActiveCircuit.Generators.Next;
+            pGen := DSSPrime.ActiveCircuit.Generators.Next;
         end;
 
     finally
@@ -3824,7 +3824,7 @@ begin
 
 
          // SOURCES first
-        pElem := ActiveCircuit.sources.First;
+        pElem := DSSPrime.ActiveCircuit.sources.First;
 
         while pElem <> NIL do
         begin
@@ -3833,7 +3833,7 @@ begin
                 WriteElementDeltaVoltages(F, pElem);
                 Writeln(F);
             end;
-            pElem := ActiveCircuit.sources.Next;
+            pElem := DSSPrime.ActiveCircuit.sources.Next;
         end;
 
         Writeln(F);
@@ -3844,7 +3844,7 @@ begin
 
 
          // PDELEMENTS next
-        pElem := ActiveCircuit.PDElements.First;
+        pElem := DSSPrime.ActiveCircuit.PDElements.First;
 
         while pElem <> NIL do
         begin
@@ -3853,7 +3853,7 @@ begin
                 WriteElementDeltaVoltages(F, pElem);
                 Writeln(F);
             end;
-            pElem := ActiveCircuit.PDElements.Next;
+            pElem := DSSPrime.ActiveCircuit.PDElements.Next;
         end;
 
         Writeln(F, '= = = = = = = = = = = = = = = = = = =  = = = = = = = = = = =  = =');
@@ -3864,7 +3864,7 @@ begin
         Writeln(F);
 
          // PCELEMENTS next
-        pElem := ActiveCircuit.PCElements.First;
+        pElem := DSSPrime.ActiveCircuit.PCElements.First;
 
         while pElem <> NIL do
         begin
@@ -3873,7 +3873,7 @@ begin
                 WriteElementDeltaVoltages(F, pElem);
                 Writeln(F);
             end;
-            pElem := ActiveCircuit.PCElements.Next;
+            pElem := DSSPrime.ActiveCircuit.PCElements.Next;
         end;
 
 
@@ -3899,7 +3899,7 @@ begin
         Assignfile(F, FileNm);
         ReWrite(F);
 
-        pdelem := ActiveCircuit.PDElements.First;
+        pdelem := DSSPrime.ActiveCircuit.PDElements.First;
         while pdelem <> NIL do
         begin
             if pdelem.HasControl then
@@ -3914,7 +3914,7 @@ begin
                 end;
                 Writeln(F);
             end;
-            pdelem := ActiveCircuit.PDElements.Next;
+            pdelem := DSSPrime.ActiveCircuit.PDElements.Next;
         end;
 
     finally

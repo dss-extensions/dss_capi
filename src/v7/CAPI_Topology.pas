@@ -47,8 +47,8 @@ uses
 function ActiveTree: TCktTree;
 begin
     Result := NIL;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.GetTopology;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.GetTopology;
 end;
 //------------------------------------------------------------------------------
 function ActiveTreeNode: TCktTreeNode;
@@ -93,7 +93,7 @@ begin
     if assigned(node) then
     begin
         Result := topo.Level;
-        ActiveCircuit.ActiveCktElement := node.CktObject;
+        DSSPrime.ActiveCircuit.ActiveCktElement := node.CktObject;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -111,7 +111,7 @@ begin
     topo := ActiveTree;
     if Assigned(topo) then
     begin
-        elm := ActiveCircuit.PDElements.First;
+        elm := DSSPrime.ActiveCircuit.PDElements.First;
         while assigned(elm) do
         begin
             if elm.IsIsolated then
@@ -121,7 +121,7 @@ begin
                 if k > 0 then
                     SetLength(Result, (k) + 1);
             end;
-            elm := ActiveCircuit.PDElements.Next;
+            elm := DSSPrime.ActiveCircuit.PDElements.Next;
         end;
     end;
 
@@ -209,7 +209,7 @@ begin
     begin
         if assigned(topo.GoBackward) then
         begin
-            ActiveCircuit.ActiveCktElement := topo.PresentBranch.CktObject;
+            DSSPrime.ActiveCircuit.ActiveCktElement := topo.PresentBranch.CktObject;
             Result := 1;
         end;
     end;
@@ -245,7 +245,7 @@ begin
     begin
         if assigned(topo.First) then
         begin
-            ActiveCircuit.ActiveCktElement := topo.PresentBranch.CktObject;
+            DSSPrime.ActiveCircuit.ActiveCktElement := topo.PresentBranch.CktObject;
             Result := 1;
         end;
     end;
@@ -261,7 +261,7 @@ begin
     begin
         if assigned(topo.GoForward) then
         begin
-            ActiveCircuit.ActiveCktElement := topo.PresentBranch.CktObject;
+            DSSPrime.ActiveCircuit.ActiveCktElement := topo.PresentBranch.CktObject;
             Result := 1;
         end;
     end;
@@ -277,7 +277,7 @@ begin
     begin
         if node.IsLoopedHere then
         begin
-            ActiveCircuit.ActiveCktElement := node.LoopLineObj;
+            DSSPrime.ActiveCircuit.ActiveCktElement := node.LoopLineObj;
             Result := 1;
         end;
     end;
@@ -297,12 +297,12 @@ begin
     topo := ActiveTree;
     if Assigned(topo) then
     begin
-        elm := ActiveCircuit.PDElements.First;
+        elm := DSSPrime.ActiveCircuit.PDElements.First;
         while assigned(elm) do
         begin
             if elm.IsIsolated then
                 Inc(Result);
-            elm := ActiveCircuit.PDElements.Next;
+            elm := DSSPrime.ActiveCircuit.PDElements.Next;
         end;
     end;
 end;
@@ -317,7 +317,7 @@ begin
     begin
         if node.IsParallel then
         begin
-            ActiveCircuit.ActiveCktElement := node.LoopLineObj;
+            DSSPrime.ActiveCircuit.ActiveCktElement := node.LoopLineObj;
             Result := 1;
         end;
     end;
@@ -337,13 +337,13 @@ begin
     topo := ActiveTree;
     if assigned(topo) then
     begin
-        elem := ActiveCircuit.ActiveCktElement;
+        elem := DSSPrime.ActiveCircuit.ActiveCktElement;
         pdElem := topo.First;
         while Assigned(pdElem) do
         begin
             if (CompareText(pdElem.QualifiedName, S) = 0) then
             begin
-                ActiveCircuit.ActiveCktElement := pdElem;
+                DSSPrime.ActiveCircuit.ActiveCktElement := pdElem;
                 Found := TRUE;
                 Break;
             end;
@@ -354,7 +354,7 @@ begin
     begin
         DoSimpleMsg('Branch "' + S + '" Not Found in Active Circuit Topology.', 5003);
         if assigned(elem) then
-            ActiveCircuit.ActiveCktElement := elem;
+            DSSPrime.ActiveCircuit.ActiveCktElement := elem;
     end;
 end;
 //------------------------------------------------------------------------------
@@ -372,7 +372,7 @@ begin
     topo := ActiveTree;
     if Assigned(topo) then
     begin
-        elm := ActiveCircuit.PCElements.First;
+        elm := DSSPrime.ActiveCircuit.PCElements.First;
         while assigned(elm) do
         begin
             if elm.IsIsolated then
@@ -382,7 +382,7 @@ begin
                 if k > 0 then
                     SetLength(Result, (k) + 1);
             end;
-            elm := ActiveCircuit.PCElements.Next;
+            elm := DSSPrime.ActiveCircuit.PCElements.Next;
         end;
     end;
 
@@ -413,7 +413,7 @@ begin
         elm := node.FirstShuntObject;
         if assigned(elm) then
         begin
-            ActiveCircuit.ActiveCktElement := elm;
+            DSSPrime.ActiveCircuit.ActiveCktElement := elm;
             Result := 1;
         end;
     end;
@@ -431,7 +431,7 @@ begin
         elm := node.NextShuntObject;
         if assigned(elm) then
         begin
-            ActiveCircuit.ActiveCktElement := elm;
+            DSSPrime.ActiveCircuit.ActiveCktElement := elm;
             Result := 1;
         end;
     end;
@@ -446,12 +446,12 @@ begin
     topo := ActiveTree;
     if Assigned(topo) then
     begin
-        elm := ActiveCircuit.PCElements.First;
+        elm := DSSPrime.ActiveCircuit.PCElements.First;
         while assigned(elm) do
         begin
             if elm.IsIsolated then
                 Inc(Result);
-            elm := ActiveCircuit.PCElements.Next;
+            elm := DSSPrime.ActiveCircuit.PCElements.Next;
         end;
     end;
 end;
@@ -495,7 +495,7 @@ begin
     topo := ActiveTree;
     if assigned(topo) then
     begin
-        elem := ActiveCircuit.ActiveCktElement;
+        elem := DSSPrime.ActiveCircuit.ActiveCktElement;
         pdElem := topo.First;
         while Assigned(pdElem) and (not found) do
         begin
@@ -504,7 +504,7 @@ begin
             begin
                 if (CompareText(B, S) = 0) then
                 begin
-                    ActiveCircuit.ActiveCktElement := pdElem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := pdElem;
                     Found := TRUE;
                     Break;
                 end;
@@ -517,7 +517,7 @@ begin
     begin
         DoSimpleMsg('Bus "' + S + '" Not Found in Active Circuit Topology.', 5003);
         if assigned(elem) then
-            ActiveCircuit.ActiveCktElement := elem;
+            DSSPrime.ActiveCircuit.ActiveCktElement := elem;
     end;
 end;
 //------------------------------------------------------------------------------

@@ -143,7 +143,8 @@ uses
     ucmatrix,
     showresults,
     mathUtil,
-    PointerList, {TOPExport,} Dynamics;
+    PointerList, {TOPExport,} Dynamics,
+    DSSHelper;
 
 const
 
@@ -232,7 +233,7 @@ end;
 function TSensor.NewObject(const ObjName: String): Integer;
 begin
     // Make a new Sensor and add it to Sensor class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TSensorObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -252,7 +253,7 @@ begin
 
   // continue parsing with contents of Parser
     ActiveSensorObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveSensorObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveSensorObj;
 
     Result := 0;
     DoRecalcElementData := FALSE;
@@ -362,12 +363,12 @@ var
 
 begin
 
-    pSensor := ActiveCircuit.Sensors.First;
+    pSensor := DSS.ActiveCircuit.Sensors.First;
     while pSensor <> NIL do
     begin
         if pSensor.enabled then
             pSensor.ResetIt;
-        pSensor := ActiveCircuit.Sensors.Next;
+        pSensor := DSS.ActiveCircuit.Sensors.Next;
     end;
 
 end;
@@ -382,12 +383,12 @@ var
 begin
 
 
-    pSensor := ActiveCircuit.Sensors.First;
+    pSensor := DSS.ActiveCircuit.Sensors.First;
     while pSensor <> NIL do
     begin
         if pSensor.enabled then
             pSensor.TakeSample;
-        pSensor := ActiveCircuit.Sensors.Next;
+        pSensor := DSS.ActiveCircuit.Sensors.Next;
     end;
 
 end;
@@ -421,7 +422,7 @@ var
 
 begin
    {Initialize all to FALSE}
-    with  ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         CktElem := PDElements.First;
         while CktElem <> NIL do
@@ -437,9 +438,9 @@ begin
         end;  {WHILE}
     end; {WITH}
 
-    for i := 1 to ActiveCircuit.Sensors.ListSize do
+    for i := 1 to DSS.ActiveCircuit.Sensors.ListSize do
     begin
-        ThisSensor := ActiveCircuit.Sensors.Get(i);
+        ThisSensor := DSS.ActiveCircuit.Sensors.Get(i);
         with ThisSensor do
             if MeteredElement <> NIL then
             begin
@@ -575,7 +576,7 @@ begin
     Devindex := GetCktElementIndex(ElementName); // Global function
     if DevIndex > 0 then
     begin  // Sensored element must already exist
-        MeteredElement := ActiveCircuit.CktElements.Get(DevIndex);
+        MeteredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
 
         if MeteredTerminal > MeteredElement.Nterms then
         begin

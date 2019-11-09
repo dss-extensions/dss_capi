@@ -469,7 +469,7 @@ end;
 function TStorageController.NewObject(const ObjName: String): Integer;
 begin
     // Make a new StorageController and add it to StorageController class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TStorageControllerObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -489,7 +489,7 @@ begin
 
   // continue parsing with contents of Parser
     ActiveStorageControllerObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveStorageControllerObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveStorageControllerObj;
 
     Result := 0;
 
@@ -1081,7 +1081,7 @@ begin
     Devindex := GetCktElementIndex(ElementName); // Global FUNCTION
     if DevIndex > 0 then
     begin
-        MonitoredElement := ActiveCircuit.CktElements.Get(DevIndex);
+        MonitoredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
         if ElementTerminal > MonitoredElement.Nterms then
         begin
             DoErrorMsg('StorageController: "' + Name + '"',
@@ -1286,7 +1286,7 @@ var
 begin
     pctDischargeRate := 0.0;   // init for test
     if (DisChargeTriggerTime > 0.0) then
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
            // turn on if time within 1/2 time step
             if not (FleetState = STORE_DISCHARGING) then
@@ -1371,7 +1371,7 @@ begin
         1:
         begin
             if (DisChargeTriggerTime > 0.0) then
-                with ActiveCircuit.Solution do
+                with DSSPrime.ActiveCircuit.Solution do
                 begin
                  // turn on if time within 1/2 time step
                     if abs(NormalizeToTOD(DynaVars.intHour, DynaVars.t) - DisChargeTriggerTime) < DynaVars.h / 7200.0 then
@@ -1397,7 +1397,7 @@ begin
         2:
         begin
             if ChargeTriggerTime > 0.0 then
-                with ActiveCircuit.Solution do
+                with DSSPrime.ActiveCircuit.Solution do
                 begin
                     if abs(NormalizeToTOD(DynaVars.intHour, DynaVars.t) - ChargeTriggerTime) < DynaVars.h / 7200.0 then
                         if not (FleetState = STORE_CHARGING) then
@@ -1410,7 +1410,7 @@ begin
                             OutOfOomph := FALSE;
                             PushTimeOntoControlQueue(STORE_CHARGING);   // force re-solve at this time step
                     // Push message onto control queue to release inhibit at a later time
-                            with ActiveCircuit do
+                            with DSSPrime.ActiveCircuit do
                             begin
                                 Solution.LoadsNeedUpdating := TRUE; // Force recalc of power parms
                                 ControlQueue.Push(DynaVars.intHour + InhibitHrs, Dynavars.t, RELEASE_INHIBIT, 0, Self);
@@ -1449,7 +1449,7 @@ procedure TStorageControllerObj.PushTimeOntoControlQueue(Code: Integer);
    Push present time onto control queue to force re solve at new dispatch value
 }
 begin
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
     begin
         LoadsNeedUpdating := TRUE; // Force recalc of power parms
         ControlQueue.Push(DynaVars.intHour, DynaVars.t, Code, 0, Self);
@@ -1968,7 +1968,7 @@ begin
 
     // Get multiplier
 
-    with ActiveCircuit.Solution do
+    with DSSPrime.ActiveCircuit.Solution do
         case Mode of
             TSolveMode.DAILYMODE:
                 CalcDailyMult(DynaVars.dblHour); // Daily dispatch curve
@@ -2006,7 +2006,7 @@ begin
         SetFleetkWRate(pctKWRate);
         SetFleetkvarRate(pctkvarRate);
         SetFleetToDischarge;
-        ActiveCircuit.Solution.LoadsNeedUpdating := TRUE; // Force recalc of power parms
+        DSSPrime.ActiveCircuit.Solution.LoadsNeedUpdating := TRUE; // Force recalc of power parms
     end;
 
     {Force a new power flow solution if fleet state has changed}

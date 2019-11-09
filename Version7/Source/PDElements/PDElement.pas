@@ -89,7 +89,8 @@ uses
     DSSClassDefs,
     DSSGlobals,
     Sysutils,
-    Bus;
+    Bus,
+    DSSHelper;
 
 {---------Summing Utility proc-------}
 procedure accumsum(var a: Double; b: Double); inline;
@@ -107,7 +108,7 @@ var
 
 begin
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         if FromTerminal = 2 then
             Toterminal := 1
@@ -147,7 +148,7 @@ procedure TPDElement.CalcCustInterrupts;
 var
     FromBus: TDSSBus;
 begin
-    FromBus := ActiveCircuit.Buses^[Terminals^[FromTerminal].BusRef];
+    FromBus := DSSPrime.ActiveCircuit.Buses^[Terminals^[FromTerminal].BusRef];
     with  FromBus do
     begin
         accumsum(BusCustInterrupts, Bus_Num_Interrupt * BranchTotalCustomers);
@@ -162,7 +163,7 @@ var
 
 begin
 
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         if FromTerminal = 2 then
             ToTerminal := 1
@@ -239,7 +240,7 @@ begin
         if Enabled then
         begin
 
-            with ActiveCircuit.Solution do
+            with DSSPrime.ActiveCircuit.Solution do
                 for i := 1 to Yorder do
                     Vterminal^[i] := NodeV^[NodeRef^[i]];
 
@@ -338,7 +339,7 @@ var
     FromBus: TDSSBus;
 
 begin
-    FromBus := ActiveCircuit.Buses^[Terminals^[FromTerminal].BusRef];
+    FromBus := DSSPrime.ActiveCircuit.Buses^[Terminals^[FromTerminal].BusRef];
     with  FromBus do
     begin
         BusCustInterrupts := 0.0;

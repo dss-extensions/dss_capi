@@ -1814,6 +1814,6 @@ exports
 
 begin
   IsDLL := TRUE;
-  DSSExecutive := TExecutive.Create;
+  DSSExecutive := TExecutive.Create(NIL);
   DSSExecutive.CreateDefaultDSSItems;
 end.

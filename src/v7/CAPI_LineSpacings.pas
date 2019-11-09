@@ -48,21 +48,21 @@ uses
 function LineSpacings_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.LineSpacingClass.ElementCount;
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.LineSpacingClass.First;
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.LineSpacingClass.Next;
 end;
 //------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ var
 
 begin
     Result := '';  // signify no name
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineSpacing := DSSPrime.LineSpacingClass.GetActiveObj;
         if pLineSpacing <> NIL then
@@ -92,7 +92,7 @@ procedure LineSpacings_Set_Name(const Value: PAnsiChar); CDECL;
 // set LineCode active by name
 
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         if not DSSPrime.LineSpacingClass.SetActive(Value) then
             DoSimpleMsg('LineSpacing "' + Value + '" Not Found in Active Circuit.', 51008);
@@ -107,7 +107,7 @@ var
     pLineSpacing: TLineSpacingObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineSpacing := DSSPrime.LineSpacingClass.GetActiveObj;
         Result := pLineSpacing.NWires;
@@ -120,7 +120,7 @@ var
 
 begin
 
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineSpacing := DSSPrime.LineSpacingClass.GetActiveObj;
         if (Value < 1) then
@@ -140,7 +140,7 @@ var
     pLineSpacing: TLineSpacingObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineSpacing := DSSPrime.LineSpacingClass.GetActiveObj;
         Result := pLineSpacing.NPhases;
@@ -152,7 +152,7 @@ procedure LineSpacings_Set_Phases(Value: Integer); CDECL;
 var
     pLineSpacing: TLineSpacingObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineSpacing := DSSPrime.LineSpacingClass.GetActiveObj;
         with pLineSpacing do
@@ -168,7 +168,7 @@ procedure LineSpacings_Set_Units(Value: Integer); CDECL;
 var
     pLineSpacing: TLineSpacingObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineSpacing := DSSPrime.LineSpacingClass.GetActiveObj;
         with pLineSpacing do
@@ -184,7 +184,7 @@ var
     pLineSpacing: TLineSpacingObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineSpacing := DSSPrime.LineSpacingClass.GetActiveObj;
         with pLineSpacing do
@@ -199,7 +199,7 @@ var
     pLineSpacing: TLineSpacingObj;
     i: Integer;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineSpacing := DSSPrime.LineSpacingClass.GetActiveObj;
         with pLineSpacing do
@@ -225,7 +225,7 @@ var
     i: Integer;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineSpacing := DSSPrime.LineSpacingClass.GetActiveObj;
         with pLineSpacing do
@@ -249,7 +249,7 @@ var
     pLineSpacing: TLineSpacingObj;
     i: Integer;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineSpacing := DSSPrime.LineSpacingClass.GetActiveObj;
         with pLineSpacing do
@@ -275,7 +275,7 @@ var
     i: Integer;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineSpacing := DSSPrime.LineSpacingClass.GetActiveObj;
         with pLineSpacing do
@@ -300,7 +300,7 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.LineSpacingClass.ElementList, False);
 end;

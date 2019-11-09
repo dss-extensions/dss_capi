@@ -42,7 +42,7 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.IsourceClass.ElementList, True);
 end;
@@ -50,7 +50,7 @@ end;
 function ISources_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.IsourceClass.ElementList.ListSize;
 end;
 //------------------------------------------------------------------------------
@@ -59,14 +59,14 @@ var
     pElem: TIsourceObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pElem := DSSPrime.IsourceClass.ElementList.First;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := pElem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := pElem;
                     Result := 1;
                 end
                 else
@@ -80,14 +80,14 @@ var
     pElem: TIsourceObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pElem := DSSPrime.IsourceClass.ElementList.Next;
         if pElem <> NIL then
             repeat
                 if pElem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := pElem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := pElem;
                     Result := DSSPrime.IsourceClass.ElementList.ActiveIndex;
                 end
                 else
@@ -101,8 +101,8 @@ var
     elem: TDSSCktElement;
 begin
     Result := '';
-    if ActiveCircuit = NIL then Exit;
-    elem := ActiveCircuit.ActiveCktElement;
+    if DSSPrime.ActiveCircuit = NIL then Exit;
+    elem := DSSPrime.ActiveCircuit.ActiveCktElement;
     if elem <> NIL then
         Result := elem.Name;
 end;
@@ -116,11 +116,11 @@ procedure ISources_Set_Name(const Value: PAnsiChar); CDECL;
 // Set element active by name
 
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         if DSSPrime.IsourceClass.SetActive(Value) then
         begin
-            ActiveCircuit.ActiveCktElement := DSSPrime.IsourceClass.ElementList.Active;
+            DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.IsourceClass.ElementList.Active;
         end
         else
         begin
@@ -188,7 +188,7 @@ end;
 //------------------------------------------------------------------------------
 function ISources_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.IsourceClass.ElementList.ActiveIndex
     else
         Result := 0
@@ -198,7 +198,7 @@ procedure ISources_Set_idx(Value: Integer); CDECL;
 var
     pISource: TISourceObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     pISource := DSSPrime.IsourceClass.ElementList.Get(Value);
     if pISource = NIL then
@@ -206,7 +206,7 @@ begin
         DoSimpleMsg('Invalid ISource index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pISource;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pISource;
 end;
 //------------------------------------------------------------------------------
 end.

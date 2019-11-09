@@ -68,7 +68,8 @@ uses
     Sysutils,
     Ucomplex,
     Arraydef,
-    LineUNits;
+    LineUNits,
+    DSSHelper;
 
 const
     NumPropsThisClass = 4;
@@ -113,7 +114,7 @@ end;
 
 function TCNData.NewObject(const ObjName: String): Integer;
 begin
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveDSSObject := TCNDataObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);

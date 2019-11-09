@@ -164,7 +164,9 @@ uses
     PDElement,
     PCElement,
     DSSGlobals,
-    Utilities;
+    Utilities,
+    DSSClass,
+    DSSHelper;
 
 constructor TcktTreeNode.Create(const pParent: TCktTreeNode; const pSelfobj: Pointer);
 
@@ -531,7 +533,7 @@ procedure GetSourcesConnectedToBus(BusNum: Integer; BranchList: TCktTree; Analyz
 var
     psrc: TPCElement;      // Sources are special PC elements
 begin
-    with ActiveCircuit do
+    with DSSPrime.ActiveCircuit do
     begin
         psrc := Sources.First;
         while psrc <> NIL do
@@ -665,8 +667,8 @@ var
     lstPD, lstPC: TAdjArray;
 begin
 
-    lstPD := ActiveCircuit.GetBusAdjacentPDLists;
-    lstPC := ActiveCircuit.GetBusAdjacentPCLists;
+    lstPD := DSSPrime.ActiveCircuit.GetBusAdjacentPDLists;
+    lstPC := DSSPrime.ActiveCircuit.GetBusAdjacentPCLists;
 
     BranchList := TCktTree.Create;
     TestElement := StartElement;
@@ -695,7 +697,7 @@ begin
                 BranchList.PresentBranch.ToBusReference := TestBusNum;   // Add this as a "to" bus reference
                 if TestBusNum > 0 then
                 begin
-                    ActiveCircuit.Buses^[TestBusNum].BusChecked := TRUE;
+                    DSSPrime.ActiveCircuit.Buses^[TestBusNum].BusChecked := TRUE;
                     GetSourcesConnectedToBus(TestBusNum, BranchList, Analyze);
                     GetPCElementsConnectedToBus(lstPC[TestBusNum], BranchList, Analyze);
                     GetShuntPDElementsConnectedToBus(lstPD[TestBusNum], BranchList, Analyze);
@@ -713,7 +715,7 @@ var
     i, j, nBus: Integer;
     pCktElement: TDSSCktElement;
 begin
-    nBus := ActiveCircuit.NumBuses;
+    nBus := DSSPrime.ActiveCircuit.NumBuses;
   // Circuit.Buses is effectively 1-based; bus 0 is ground
     SetLength(lstPD, nBus + 1);
     SetLength(lstPC, nBus + 1);
@@ -723,7 +725,7 @@ begin
         lstPC[i] := TList.Create;
     end;
 
-    pCktElement := ActiveCircuit.PCElements.First;
+    pCktElement := DSSPrime.ActiveCircuit.PCElements.First;
     while pCktElement <> NIL do
     begin
         if pCktElement.Enabled then
@@ -731,10 +733,10 @@ begin
             i := pCktElement.Terminals^[1].BusRef;
             lstPC[i].Add(pCktElement);
         end;
-        pCktElement := ActiveCircuit.PCElements.Next;
+        pCktElement := DSSPrime.ActiveCircuit.PCElements.Next;
     end;
 
-    pCktElement := ActiveCircuit.PDElements.First;
+    pCktElement := DSSPrime.ActiveCircuit.PDElements.First;
   {Put only eligible PDElements in the list}
     while pCktElement <> NIL do
     begin
@@ -751,7 +753,7 @@ begin
                     i := pCktElement.Terminals^[j].BusRef;
                     lstPD[i].Add(pCktElement);
                 end;
-        pCktElement := ActiveCircuit.PDElements.Next;
+        pCktElement := DSSPrime.ActiveCircuit.PDElements.Next;
     end;
 end;
 

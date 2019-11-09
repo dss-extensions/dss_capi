@@ -49,15 +49,15 @@ uses
 function ActiveSwtControl: TSwtControlObj;
 begin
     Result := NIL;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.SwtControls.Active;
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.SwtControls.Active;
 end;
 //------------------------------------------------------------------------------
 procedure Set_Parameter(const parm: String; const val: String);
 var
     cmd: String;
 begin
-    if not Assigned(ActiveCircuit) then
+    if not Assigned(DSSPrime.ActiveCircuit) then
         exit;
     DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('swtcontrol.%s.%s=%s', [ActiveSwtControl.Name, parm, val]);
@@ -87,9 +87,9 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.SwtControls, False);
+    Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.SwtControls, False);
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_Delay(): Double; CDECL;
@@ -108,16 +108,16 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        lst := ActiveCircuit.SwtControls;
+        lst := DSSPrime.ActiveCircuit.SwtControls;
         elem := lst.First;
         if elem <> NIL then
         begin
             repeat
                 if elem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := elem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
                     Result := 1;
                 end
                 else
@@ -158,16 +158,16 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
-        lst := ActiveCircuit.SwtControls;
+        lst := DSSPrime.ActiveCircuit.SwtControls;
         elem := lst.Next;
         if elem <> NIL then
         begin
             repeat
                 if elem.Enabled then
                 begin
-                    ActiveCircuit.ActiveCktElement := elem;
+                    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
                     Result := lst.ActiveIndex;
                 end
                 else
@@ -258,12 +258,12 @@ end;
 //------------------------------------------------------------------------------
 procedure SwtControls_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     if DSSPrime.SwtControlClass.SetActive(Value) then
     begin
-        ActiveCircuit.ActiveCktElement := DSSPrime.SwtControlClass.ElementList.Active;
-        ActiveCircuit.SwtControls.Get(DSSPrime.SwtControlClass.Active);
+        DSSPrime.ActiveCircuit.ActiveCktElement := DSSPrime.SwtControlClass.ElementList.Active;
+        DSSPrime.ActiveCircuit.SwtControls.Get(DSSPrime.SwtControlClass.Active);
     end
     else
     begin
@@ -284,8 +284,8 @@ end;
 function SwtControls_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.SwtControls.ListSize;
+    if Assigned(DSSPrime.ActiveCircuit) then
+        Result := DSSPrime.ActiveCircuit.SwtControls.ListSize;
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_NormalState(): Integer; CDECL;
@@ -369,8 +369,8 @@ end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.SwtControls.ActiveIndex
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSSPrime.ActiveCircuit.SwtControls.ActiveIndex
     else
         Result := 0;
 end;
@@ -379,15 +379,15 @@ procedure SwtControls_Set_idx(Value: Integer); CDECL;
 var
     pSwtControl: TSwtControlObj;
 begin
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    pSwtControl := ActiveCircuit.SwtControls.Get(Value);
+    pSwtControl := DSSPrime.ActiveCircuit.SwtControls.Get(Value);
     if pSwtControl = NIL then
     begin
         DoSimpleMsg('Invalid SwtControl index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
-    ActiveCircuit.ActiveCktElement := pSwtControl;
+    DSSPrime.ActiveCircuit.ActiveCktElement := pSwtControl;
 end;
 //------------------------------------------------------------------------------
 end.

@@ -178,7 +178,7 @@ end;
 function TEquivalent.NewObject(const ObjName: String): Integer;
 begin
     // Make a new voltage source and add it to Equivalent class list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TEquivalentObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -196,7 +196,7 @@ var
 begin
   // continue parsing with contents of Parser
     ActiveEquivalentObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveEquivalentObj;
+    DSS.ActiveCircuit.ActiveCktElement := ActiveEquivalentObj;
 
     Result := 0;
 
@@ -488,7 +488,7 @@ begin
     if NeedToDoRecalc then
         RecalcElementData;
 
-    FYprimFreq := ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
      { Put in Series RL matrix Adjusted for frequency }
@@ -548,7 +548,7 @@ begin
             Vmag := kVBase * PerUnit * 1000.0 / 2.0 / Sin((180.0 / Fnphases) * PI / 180.0);
         end;
 
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
             if IsHarmonicModel then
             begin
                 EquivHarm := Frequency / EquivFrequency;
@@ -602,7 +602,7 @@ var
 
 begin
     try
-        with    ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
         begin
      //FOR i := 1 TO (Nterms * NConds) DO Vtemp^[i] := V^[NodeRef^[i]];
      // This is safer    12/7/99

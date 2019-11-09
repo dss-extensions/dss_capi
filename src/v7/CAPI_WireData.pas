@@ -106,21 +106,21 @@ end;
 function WireData_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.WireDataClass.ElementCount;
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.WireDataClass.First;
 end;
 //------------------------------------------------------------------------------
 function WireData_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
         Result := DSSPrime.WireDataClass.Next;
 end;
 //------------------------------------------------------------------------------
@@ -130,7 +130,7 @@ var
 
 begin
     Result := '';  // signify no name
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         if pWireData <> NIL then
@@ -150,7 +150,7 @@ procedure WireData_Set_Name(const Value: PAnsiChar); CDECL;
 // set LineCode active by name
 
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         if not DSSPrime.WireDataClass.SetActive(Value) then
             DoSimpleMsg('WireData "' + Value + '" Not Found in Active Circuit.', 51008);
@@ -166,7 +166,7 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if DSSPrime.ActiveCircuit = NIL then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.WireDataClass.ElementList, False);
 end;
@@ -176,7 +176,7 @@ var
     pWireData: TWireDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.NormAmps;
@@ -187,7 +187,7 @@ procedure WireData_Set_NormAmps(Value: Double); CDECL;
 var
     pWireData: TWireDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         pWireData.NormAmps := Value;
@@ -201,7 +201,7 @@ var
     pWireData: TWireDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.EmergAmps;
@@ -212,7 +212,7 @@ procedure WireData_Set_EmergAmps(Value: Double); CDECL;
 var
     pWireData: TWireDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         pWireData.EmergAmps := Value;
@@ -225,7 +225,7 @@ var
     pWireData: TWireDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FRadius * 2.0;
@@ -236,7 +236,7 @@ procedure WireData_Set_Diameter(Value: Double); CDECL;
 var
     pWireData: TWireDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do
@@ -252,7 +252,7 @@ var
     pWireData: TWireDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FRadius;
@@ -263,7 +263,7 @@ procedure WireData_Set_Radius(Value: Double); CDECL;
 var
     pWireData: TWireDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do
@@ -279,7 +279,7 @@ var
     pWireData: TWireDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FGMR60;
@@ -290,7 +290,7 @@ procedure WireData_Set_GMRac(Value: Double); CDECL;
 var
     pWireData: TWireDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do
@@ -306,7 +306,7 @@ var
     pWireData: TWireDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FR60;
@@ -317,7 +317,7 @@ procedure WireData_Set_Rac(Value: Double); CDECL;
 var
     pWireData: TWireDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do
@@ -333,7 +333,7 @@ var
     pWireData: TWireDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FRDC;
@@ -344,7 +344,7 @@ procedure WireData_Set_Rdc(Value: Double); CDECL;
 var
     pWireData: TWireDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do
@@ -360,7 +360,7 @@ var
     pWireData: TWireDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FGMRUnits;
@@ -371,7 +371,7 @@ procedure WireData_Set_GMRUnits(Value: Integer); CDECL;
 var
     pWireData: TWireDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do
@@ -387,7 +387,7 @@ var
     pWireData: TWireDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FRadiusUnits;
@@ -399,7 +399,7 @@ procedure WireData_Set_RadiusUnits(Value: Integer); CDECL;
 var
     pWireData: TWireDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do
@@ -415,7 +415,7 @@ var
     pWireData: TWireDataObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         Result := pWireData.FResistanceUnits;
@@ -426,7 +426,7 @@ procedure WireData_Set_ResistanceUnits(Value: Integer); CDECL;
 var
     pWireData: TWireDataObj;
 begin
-    if ActiveCircuit <> NIL then
+    if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         with pWireData do

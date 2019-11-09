@@ -281,7 +281,7 @@ end;
 function TReactor.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TReactorObj.Create(Self, ObjName);
         Result := AddObjectToList(ActiveDSSObject);
@@ -396,7 +396,7 @@ begin
     Result := 0;
   // continue parsing with contents of Parser
     ActiveReactorObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveReactorObj;  // use property to set this value
+    DSS.ActiveCircuit.ActiveCktElement := ActiveReactorObj;  // use property to set this value
 
 
     with ActiveReactorObj do
@@ -828,11 +828,11 @@ begin
     with YPrimTemp do
     begin
 
-        FYprimFreq := ActiveCircuit.Solution.Frequency;
+        FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
         FreqMultiplier := FYprimFreq / BaseFrequency;
 
      {If GIC simulation, Resistance Only }
-        if ActiveCircuit.Solution.Frequency < 0.51 then
+        if DSSPrime.ActiveCircuit.Solution.Frequency < 0.51 then
         begin    // 0.5 Hz is cutoff
             if X > 0.0 then
                 if R <= 0.0 then
@@ -1096,7 +1096,7 @@ begin
     // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages doesn't fail
     if IsShunt then
     begin
-        if (Nphases = 1) and (not ActiveCircuit.PositiveSequence) then  // assume a neutral or grounding reactor; Leave diagonal in the circuit
+        if (Nphases = 1) and (not DSSPrime.ActiveCircuit.PositiveSequence) then  // assume a neutral or grounding reactor; Leave diagonal in the circuit
             for i := 1 to Yorder do
                 Yprim_Series.SetElement(i, i, Yprim_Shunt.Getelement(i, i))
         else
@@ -1181,12 +1181,12 @@ begin
         TotalLosses := Losses;  // Side effect: computes Iterminal and Vterminal
      {Compute losses in Rp Branch from voltages across shunt element -- node to ground}
         NoLoadLosses := CZERO;
-        with ActiveCircuit.Solution do
+        with DSSPrime.ActiveCircuit.Solution do
             for i := 1 to FNphases do
                 with NodeV^[NodeRef^[i]] do
                     Caccum(NoLoadLosses, cmplx((SQR(re) + SQR(im)) / Rp, 0.0));  // V^2/Rp
 
-        if ActiveCircuit.PositiveSequence then
+        if DSSPrime.ActiveCircuit.PositiveSequence then
             CmulReal(NoLoadLosses, 3.0);
         LoadLosses := Csub(TotalLosses, NoLoadLosses);  // Subtract no load losses from total losses
 
