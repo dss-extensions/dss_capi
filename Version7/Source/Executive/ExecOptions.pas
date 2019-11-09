@@ -509,7 +509,7 @@ begin
             0:
                 DoSimpleMsg('Unknown parameter "' + ParamName + '" for Set Command ', 130);
             1, 12:
-                SetObjectClass(Param);
+                SetObjectClass(DSSPrime, Param);
             2, 13:
                 SetObject(Param);
             3:

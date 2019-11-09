@@ -15,7 +15,6 @@ uses
     HashList;
 
 const
-
     BASECLASSMASK: Cardinal = $00000007;
     CLASSMASK: Cardinal = $FFFFFFF8;
 
@@ -66,14 +65,10 @@ const
     GIC_SOURCE = 36 * 8;
     AUTOTRANS_ELEMENT = 37 * 8;
 
-var
-    NumIntrinsicClasses,
-    NumUserClasses: Integer;
-
 procedure CreateDSSClasses(DSS: TDSS);
 procedure DisposeDSSClasses(DSS: TDSS);
-function GetDSSClassPtr(const ClassName: String): TDSSClass;
-function SetObjectClass(const ObjType: String): Boolean;
+function GetDSSClassPtr(DSS: TDSS; const ClassName: String): TDSSClass;
+function SetObjectClass(DSS: TDSS; const ObjType: String): Boolean;
 
 
 implementation
@@ -306,11 +301,10 @@ begin
  { Create Classes for custom implementations }
     CreateMyDSSClasses;
 
-    NumIntrinsicClasses := DSS.DSSClassList.ListSize;
-    NumUserClasses := 0;
+    DSS.NumIntrinsicClasses := DSS.DSSClassList.ListSize;
+    DSS.NumUserClasses := 0;
 
    {Add user-defined objects}
-
 
    {This feature has been disabled - doesn't work in IIS}
 
@@ -318,8 +312,6 @@ begin
    // are a user-defined DSS class
 
    //**** LoadUserClasses;
-
-
 end;
 
 //----------------------------------------------------------------------------
@@ -368,7 +360,7 @@ end;
 
 
 {--------------------------------------------------------------}
-procedure AddUserClass;
+procedure AddUserClass(DSS: TDSS);
 
 begin
       // ***** ADD STUFF HERE ****
@@ -384,7 +376,7 @@ begin
 end;
 
 {--------------------------------------------------------------}
-procedure LoadUserClasses;
+procedure LoadUserClasses(DSS: TDSS);
 var
     F: TSearchRec;
 begin
@@ -396,7 +388,7 @@ begin
     begin
         repeat
             if IsDSSDLL(F.Name) then
-                AddUserclass; // Attempt to add (ignored if classname already exists)
+                AddUserclass(DSS); // Attempt to add (ignored if classname already exists)
         until FindNext(F) <> 0;
     end;
 
@@ -406,14 +398,14 @@ begin
         begin
             repeat
                 if IsDSSDLL(F.Name) then
-                    AddUserclass; // Attempt to add (ignored if classname already exists)
+                    AddUserclass(DSS); // Attempt to add (ignored if classname already exists)
             until FindNext(F) <> 0;
         end;
 
 end;
 
 //----------------------------------------------------------------------------
-function SetObjectClass(const ObjType: String): Boolean;
+function SetObjectClass(DSS: TDSS; const ObjType: String): Boolean;
 
 // set LastClassReferenced variable by class name
 
@@ -422,7 +414,7 @@ var
 
 begin
 
-    Classref := DSSPrime.ClassNames.Find(ObjType);
+    Classref := DSS.ClassNames.Find(ObjType);
 
     case Classref of
         0:
@@ -432,7 +424,7 @@ begin
             Exit;
         end;{Error}
     else
-        DSSPrime.LastClassReferenced := Classref;
+        DSS.LastClassReferenced := Classref;
     end;
 
     Result := TRUE;
@@ -440,9 +432,9 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-function GetDSSClassPtr(const ClassName: String): TDSSClass;
+function GetDSSClassPtr(DSS: TDSS; const ClassName: String): TDSSClass;
 begin
-    Result := TDSSClass(DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find(lowercase(ClassName))));
+    Result := TDSSClass(DSS.DSSClassList.Get(DSSPrime.ClassNames.Find(lowercase(ClassName))));
 end;
 
 

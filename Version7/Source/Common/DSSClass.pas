@@ -159,6 +159,9 @@ TYPE
         Circuits        :TPointerList;
         DSSObjs         :TPointerList;
 
+        NumIntrinsicClasses,
+        NumUserClasses: Integer;
+
 //        ActiveCircuit   :TDSSCircuit;
 //        ActiveDSSClass  :TDSSClass;
 //        ActiveDSSObject :TDSSObject;

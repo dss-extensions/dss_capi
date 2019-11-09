@@ -541,7 +541,7 @@ var
 begin
 
     Result := FALSE;
-    GenClass := GetDSSClassPtr('generator');
+    GenClass := GetDSSClassPtr(DSSPrime, 'generator');
 
     if FListSize > 0 then
     begin    // Name list is defined - Use it

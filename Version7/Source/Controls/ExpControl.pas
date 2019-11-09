@@ -603,7 +603,7 @@ VAR
    i:Integer;
 begin
   Result := FALSE;
-  PVSysClass := GetDSSClassPtr('PVsystem');
+  PVSysClass := GetDSSClassPtr(DSSPrime, 'PVsystem');
   If FListSize > 0 Then Begin    // Name list is defined - Use it
     SetLength(ControlledElement,FListSize+1);  // Use this as the main pointer to PVSystem Elements
     SetLength(FPriorVpu, FListSize+1);

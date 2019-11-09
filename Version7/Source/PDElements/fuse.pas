@@ -149,7 +149,7 @@ begin
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
 
-    TCC_CurveClass := GetDSSClassPtr('TCC_Curve');
+    TCC_CurveClass := GetDSSClassPtr(DSS, 'TCC_Curve');
 end;
 
 {--------------------------------------------------------------------------}

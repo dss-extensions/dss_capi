@@ -2456,7 +2456,7 @@ var
     Count, i: Integer;
 
 begin
-    LoadClass := GetDSSClassPtr('load');
+    LoadClass := GetDSSClassPtr(DSSPrime, 'load');
     Count := LoadClass.ElementList.ListSize;
 
     kWEach := kW / Max(1.0, round(Count));
@@ -2494,7 +2494,7 @@ var
     Count, i, LoadCount: Integer;
 
 begin
-    LoadClass := GetDSSClassPtr('load');
+    LoadClass := GetDSSClassPtr(DSSPrime, 'load');
     Count := LoadClass.ElementList.ListSize;
    {Count enabled loads}
     LoadCount := 0;
@@ -2551,7 +2551,7 @@ var
 
 begin
 
-    LoadClass := GetDSSClassPtr('load');
+    LoadClass := GetDSSClassPtr(DSSPrime, 'load');
     Count := LoadClass.ElementList.ListSize;
    {Add up the rated load in the enabled loads where gens will be placed}
     TotalkW := 0.0;
@@ -2615,7 +2615,7 @@ var
     Count, i: Integer;
 
 begin
-    LoadClass := GetDSSClassPtr('load');
+    LoadClass := GetDSSClassPtr(DSSPrime, 'load');
     Count := LoadClass.ElementList.ListSize;
    {Add up the rated load in the enabled loads}
     TotalkW := 0.0;

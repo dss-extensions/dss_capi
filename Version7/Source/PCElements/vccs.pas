@@ -153,7 +153,7 @@ begin
 
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
-    XY_CurveClass := GetDSSClassPtr('XYCurve');
+    XY_CurveClass := GetDSSClassPtr(DSS, 'XYCurve');
 end;
 
 destructor TVCCS.Destroy;

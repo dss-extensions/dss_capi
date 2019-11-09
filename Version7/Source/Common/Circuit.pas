@@ -1978,24 +1978,24 @@ begin
    // FeederClass.Saved := TRUE;  // will think this class is already saved
 
     {Define voltage sources first}
-    Success :=  WriteVsourceClassFile(GetDSSClassPtr('vsource'), TRUE);
+    Success :=  WriteVsourceClassFile(GetDssClassPtr(DSS, 'vsource'), TRUE);
     {Write library files so that they will be available to lines, loads, etc}
     {Use default filename=classname}
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('wiredata'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('cndata'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('tsdata'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('linegeometry'),'', FALSE);
-    // If Success Then Success :=  WriteClassFile(GetDssClassPtr('linecode'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('linespacing'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('linecode'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('xfmrcode'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('loadshape'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('TShape'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('priceshape'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('growthshape'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('XYcurve'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('TCC_Curve'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr('Spectrum'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'wiredata'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'cndata'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'tsdata'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'linegeometry'),'', FALSE);
+    // If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'linecode'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'linespacing'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'linecode'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'xfmrcode'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'loadshape'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'TShape'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'priceshape'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'growthshape'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'XYcurve'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'TCC_Curve'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'Spectrum'),'', FALSE);
     If Success Then Success := SaveFeeders; // Save feeders first
     If Success Then Success := SaveDSSObjects;  // Save rest ot the objects
     If Success Then Success := SaveVoltageBases;

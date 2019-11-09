@@ -275,7 +275,7 @@ Begin
 
      CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
      CommandList.Abbrev := TRUE;
-     XY_CurveClass := GetDSSClassPtr('XYCurve');
+     XY_CurveClass := GetDSSClassPtr(DSS, 'XYCurve');
 
 End;
 
@@ -2355,7 +2355,7 @@ VAR
 begin
 
    Result := FALSE;
-   PVSysClass := GetDSSClassPtr('PVsystem');
+   PVSysClass := GetDSSClassPtr(DSSPrime, 'PVsystem');
 
    If FListSize > 0 Then
    Begin    // Name list is defined - Use it

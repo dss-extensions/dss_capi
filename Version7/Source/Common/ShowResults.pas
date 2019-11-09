@@ -2016,7 +2016,7 @@ begin
 
         if Length(ClassName) > 0 then
         begin  // Just give a list of Active elements of a particular Class
-            if SetObjectClass(ClassName) then
+            if SetObjectClass(DSSPrime, ClassName) then
             begin
                 Writeln(F, 'All Elements in Class "', ClassName, '"');
                 Writeln(F);
@@ -2204,7 +2204,7 @@ begin
         Writeln(F, 'ENERGY METER VALUES');
         Writeln(F);
         Writeln(F, 'Registers:');
-        MeterClass := TEnergyMeter(GetDSSClassPtr('Energymeter'));
+        MeterClass := TEnergyMeter(GetDSSClassPtr(DSSPrime, 'Energymeter'));
         if MeterClass = NIL then
             Exit;  // oops somewhere!!
         if MeterClass.ElementCount = 0 then

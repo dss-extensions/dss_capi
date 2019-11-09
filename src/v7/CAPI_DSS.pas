@@ -121,9 +121,9 @@ var
 
 begin
 
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumIntrinsicClasses - 1) + 1);
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (DSSPrime.NumIntrinsicClasses - 1) + 1);
     k := 0;
-    for i := 1 to NumIntrinsicClasses do
+    for i := 1 to DSSPrime.NumIntrinsicClasses do
     begin
         Result[k] := DSS_CopyStringAsPChar(TDSSClass(DSSPrime.DssClassList.Get(i)).Name);
         Inc(k);
@@ -144,11 +144,11 @@ var
     i, k: Integer;
 
 begin
-    if NumUserClasses > 0 then
+    if DSSPrime.NumUserClasses > 0 then
     begin
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumUserClasses - 1) + 1);
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (DSSPrime.NumUserClasses - 1) + 1);
         k := 0;
-        for i := NumIntrinsicClasses + 1 to DSSPrime.DSSClassList.ListSize do
+        for i := DSSPrime.NumIntrinsicClasses + 1 to DSSPrime.DSSClassList.ListSize do
         begin
             Result[k] := DSS_CopyStringAsPChar(TDSSClass(DSSPrime.DssClassList.Get(i)).Name);
             Inc(k);
@@ -168,13 +168,13 @@ end;
 function DSS_Get_NumClasses(): Integer; CDECL;
 begin
 
-    Result := NumIntrinsicClasses;
+    Result := DSSPrime.NumIntrinsicClasses;
 
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_NumUserClasses(): Integer; CDECL;
 begin
-    Result := NumUserClasses;
+    Result := DSSPrime.NumUserClasses;
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_DataPath_AnsiString(): Ansistring; inline;

@@ -1880,7 +1880,7 @@ var
 
 begin
 
-    MeterClass := TEnergyMeter(GetDSSClassPtr('Energymeter'));
+    MeterClass := TEnergyMeter(GetDSSClassPtr(DSSPrime, 'Energymeter'));
     if MeterClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
@@ -2038,7 +2038,7 @@ var
 
 begin
 
-    GeneratorClass := TGenerator(GetDSSClassPtr('generator'));
+    GeneratorClass := TGenerator(GetDSSClassPtr(DSSPrime, 'generator'));
     if GeneratorClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
@@ -2101,7 +2101,7 @@ var
 begin
 
 
-    GeneratorClass := TGenerator(GetDSSClassPtr('generator'));
+    GeneratorClass := TGenerator(GetDSSClassPtr(DSSPrime, 'generator'));
     if GeneratorClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
@@ -3723,7 +3723,7 @@ begin
         Assignfile(F, FileNm);
         ReWrite(F);
 
-        GICClass := TGICTransformer(GetDSSClassPtr('GICTransformer'));
+        GICClass := TGICTransformer(GetDSSClassPtr(DSSPrime, 'GICTransformer'));
 
         Writeln(F, 'Bus, Mvar, GIC Amps per phase');
         pElem := TGICTransformerObj(GICClass.ElementList.First);

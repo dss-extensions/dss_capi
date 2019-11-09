@@ -430,7 +430,7 @@ Begin
            End;
       End;
 
-      IF Length(ObjClass) > 0 THEN SetObjectClass(ObjClass);
+      IF Length(ObjClass) > 0 THEN SetObjectClass(DSSPrime, ObjClass);
 
       ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
       IF ActiveDSSClass <> Nil THEN
