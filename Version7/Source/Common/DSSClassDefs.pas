@@ -71,7 +71,7 @@ var
     NumUserClasses: Integer;
 
 procedure CreateDSSClasses(DSS: TDSS);
-procedure DisposeDSSClasses;
+procedure DisposeDSSClasses(DSS: TDSS);
 function GetDSSClassPtr(const ClassName: String): TDSSClass;
 function SetObjectClass(const ObjType: String): Boolean;
 
@@ -135,13 +135,16 @@ uses
     IndMach012,
     GICSource,
     AutoTrans,
-    
+        
+    SolutionAlgs,
     DSSHelper;
 
 
 {--------------------------------------------------------------}
 procedure CreateDSSClasses(DSS: TDSS);
 begin
+    DSS.SolutionAlgs := TSolutionAlgs.Create(DSS);
+
     Classnames := THashList.Create(25);   // Makes 5 sub lists
     DSSClassList := TPointerList.Create(10);  // 10 is initial size and increment
     DSSClasses := TDSSClasses.Create;  // class to handle junk for defining DSS classes
@@ -323,7 +326,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-procedure DisposeDSSClasses;
+procedure DisposeDSSClasses(DSS: TDSS);
 
 var
     i: Integer;
@@ -332,6 +335,7 @@ var
     SuccessFree: String;
 
 begin
+    DSS.SolutionAlgs.Free;
 
     try
         SuccessFree := 'First Object';

@@ -1123,7 +1123,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Circuit_EndOfTimeStepUpdate(); CDECL;
 begin
-    EndOfTimeStepCleanup;
+    DSSPrime.SolutionAlgs.EndOfTimeStepCleanup;
 end;
 //------------------------------------------------------------------------------
 procedure Circuit_Get_YNodeOrder(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;

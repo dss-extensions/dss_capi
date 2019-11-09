@@ -798,7 +798,7 @@ begin
     if ActiveCircuit <> NIL then
         with ActiveCircuit, ActiveCircuit.Solution do
         begin
-            EndOfTimeStepCleanup;
+            DSSPrime.SolutionAlgs.EndOfTimeStepCleanup;
         end;
 end;
 //------------------------------------------------------------------------------
@@ -808,7 +808,7 @@ begin
         with ActiveCircuit, ActiveCircuit.Solution do
         begin
             DSSPrime.MonitorClass.SampleAll;  // Make all monitors take a sample
-            EndOfTimeStepCleanup;
+            DSSPrime.SolutionAlgs.EndOfTimeStepCleanup;
             Increment_time;
  //               DefaultHourMult := DefaultDailyShapeObj.getmult(TDynamicsrec.dblHour);
         end;

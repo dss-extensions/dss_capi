@@ -146,7 +146,7 @@ Begin
      OptionList.Free;
      Circuits.Free;
 
-     DisposeDSSClasses;
+     DisposeDSSClasses(DSSPrime);
 
      Parser.Free;
 
@@ -223,7 +223,7 @@ begin
 
           {First get rid of all existing stuff}
           ClearAllCircuits;
-          DisposeDSSClasses;
+          DisposeDSSClasses(DSSPrime);
 
           {Now, Start over}
           CreateDSSClasses(DSSPrime);

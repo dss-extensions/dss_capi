@@ -2532,7 +2532,7 @@ Begin
 
        IF (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) Then Begin
           If not assigned(Buses^[ActiveBusIndex].Zsc) Then Buses^[ActiveBusIndex].AllocateBusQuantities ;
-          SolutionAlgs.ComputeYsc(ActiveBusIndex);      // Compute YSC for active Bus
+          DSSPrime.SolutionAlgs.ComputeYsc(ActiveBusIndex);      // Compute YSC for active Bus
           Result := 0;
        End;
      End;

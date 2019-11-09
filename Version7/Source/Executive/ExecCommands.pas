@@ -47,7 +47,9 @@ uses
 {$ENDIF}
     sysutils,
     Utilities,
-    SolutionAlgs;
+    SolutionAlgs,
+    DSSClass,
+    DSSHelper;
 
 procedure DefineCommands;
 
@@ -865,9 +867,9 @@ begin
             100:
                 CmdResult := DoLambdaCalcs;   // Option: Assume Restoration
             102:
-                EndofTimeStepCleanup;
+                DSSPrime.SolutionAlgs.EndofTimeStepCleanup;
             103:
-                FinishTimeStep;
+                DSSPrime.SolutionAlgs.FinishTimeStep;
             104:
                 CmdResult := DoNodeListCmd;
       {$IFNDEF FPC}

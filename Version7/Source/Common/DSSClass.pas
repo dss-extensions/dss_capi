@@ -100,6 +100,8 @@ TYPE
 
     TDSS = class(TObject)
     public
+        FSolutionAlgs: TObject;
+    
         FLoadShapeClass: TDSSClass;
         FTShapeClass: TDSSClass;
         FPriceShapeClass: TDSSClass;

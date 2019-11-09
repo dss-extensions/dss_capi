@@ -556,39 +556,39 @@ begin
             TSolveMode.SNAPSHOT:
                 SolveSnap;
             TSolveMode.YEARLYMODE:
-                SolveYearly;
+                DSSPrime.SolutionAlgs.SolveYearly;
             TSolveMode.DAILYMODE:
-                SolveDaily;
+                DSSPrime.SolutionAlgs.SolveDaily;
             TSolveMode.DUTYCYCLE:
-                SolveDuty;
+                DSSPrime.SolutionAlgs.SolveDuty;
             TSolveMode.DYNAMICMODE:
-                SolveDynamic;
+                DSSPrime.SolutionAlgs.SolveDynamic;
             TSolveMode.MONTECARLO1:
-                SolveMonte1;
+                DSSPrime.SolutionAlgs.SolveMonte1;
             TSolveMode.MONTECARLO2:
-                SolveMonte2;
+                DSSPrime.SolutionAlgs.SolveMonte2;
             TSolveMode.MONTECARLO3:
-                SolveMonte3;
+                DSSPrime.SolutionAlgs.SolveMonte3;
             TSolveMode.PEAKDAY:
-                SolvePeakDay;
+                DSSPrime.SolutionAlgs.SolvePeakDay;
             TSolveMode.LOADDURATION1:
-                SolveLD1;
+                DSSPrime.SolutionAlgs.SolveLD1;
             TSolveMode.LOADDURATION2:
-                SolveLD2;
+                DSSPrime.SolutionAlgs.SolveLD2;
             TSolveMode.DIRECT:
                 SolveDirect;
             TSolveMode.MONTEFAULT:
-                SolveMonteFault;  // Monte Carlo Fault Cases
+                DSSPrime.SolutionAlgs.SolveMonteFault;  // Monte Carlo Fault Cases
             TSolveMode.FAULTSTUDY:
-                SolveFaultStudy;
+                DSSPrime.SolutionAlgs.SolveFaultStudy;
             TSolveMode.AUTOADDFLAG:
                 ActiveCircuit.AutoAddObj.Solve;
             TSolveMode.HARMONICMODE:
-                SolveHarmonic;
+                DSSPrime.SolutionAlgs.SolveHarmonic;
             TSolveMode.GENERALTIME:
-                SolveGeneralTime;
+                DSSPrime.SolutionAlgs.SolveGeneralTime;
             TSolveMode.HARMONICMODET:
-                SolveHarmonicT;  //Declares the Hsequential-time harmonics
+                DSSPrime.SolutionAlgs.SolveHarmonicT;  //Declares the Hsequential-time harmonics
         else
             DosimpleMsg('Unknown solution mode.', 481);
         end;
