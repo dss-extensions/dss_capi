@@ -18,16 +18,11 @@ unit SolutionAlgs;
 
 interface
 
-uses DSSClass, ArrayDef, PCElement;
+uses DSSClass, ArrayDef, PCElement, Solution;
 
 type
-    TSolutionAlgs = class(TObject)
+    TSolutionAlgs = class helper for TSolutionObj
     public
-        DSS: TDSS;
-        
-        constructor Create(dss: TDSS);
-        destructor Destroy; override;
-
         function SolveMonte1: Integer;   // Solve Monte Carlo Solution
         function SolveMonte2: Integer;   // Solve Monte Carlo Solution
         function SolveMonte3: Integer;   // Solve Monte Carlo Solution
@@ -1287,17 +1282,6 @@ begin
         end;
     end;
 
-end;
-
-constructor TSolutionAlgs.Create(dss: TDSS);
-begin
-    inherited Create;
-    DSS := dss;
-end;
-
-destructor TSolutionAlgs.Destroy; 
-begin
-    inherited;
 end;
 
 end.

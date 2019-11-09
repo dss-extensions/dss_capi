@@ -136,15 +136,12 @@ uses
     GICSource,
     AutoTrans,
         
-    SolutionAlgs,
     DSSHelper;
 
 
 {--------------------------------------------------------------}
 procedure CreateDSSClasses(DSS: TDSS);
 begin
-    DSS.SolutionAlgs := TSolutionAlgs.Create(DSS);
-
     Classnames := THashList.Create(25);   // Makes 5 sub lists
     DSSClassList := TPointerList.Create(10);  // 10 is initial size and increment
     DSSClasses := TDSSClasses.Create;  // class to handle junk for defining DSS classes
@@ -335,8 +332,6 @@ var
     SuccessFree: String;
 
 begin
-    DSS.SolutionAlgs.Free;
-
     try
         SuccessFree := 'First Object';
         for i := 1 to DSSObjs.ListSize do

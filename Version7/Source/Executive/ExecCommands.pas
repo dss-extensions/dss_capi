@@ -867,9 +867,9 @@ begin
             100:
                 CmdResult := DoLambdaCalcs;   // Option: Assume Restoration
             102:
-                DSSPrime.SolutionAlgs.EndofTimeStepCleanup;
+                ActiveCircuit.Solution.EndofTimeStepCleanup;
             103:
-                DSSPrime.SolutionAlgs.FinishTimeStep;
+                ActiveCircuit.Solution.FinishTimeStep;
             104:
                 CmdResult := DoNodeListCmd;
       {$IFNDEF FPC}

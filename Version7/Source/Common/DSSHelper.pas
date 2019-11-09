@@ -52,15 +52,11 @@ uses
     VSConverter,
     XfmrCode,
     GICLine,
-    GICTransformer,
-    
-    SolutionAlgs;
+    GICTransformer;
     
 type
     TDSSGlobalHelper = class helper for TDSS
     private
-        function GetSolutionAlgs: TSolutionAlgs; inline;
-        
         function GetLoadShapeClass: TLoadShape; inline;
         function GetTShapeClass: TTshape; inline;
         function GetPriceShapeClass: TPriceShape; inline;
@@ -110,8 +106,6 @@ type
         function GetXfmrCodeClass: TXfmrCode; inline;
         function GetGICLineClass: TGICLine; inline;
         function GetGICTransformerClass:TGICTransformer; inline;
-
-        procedure SetSolutionAlgs(val: TSolutionAlgs); inline;
         
         procedure SetLoadShapeClass(val: TLoadShape); inline;
         procedure SetTShapeClass(val: TTshape); inline;
@@ -164,8 +158,6 @@ type
         procedure SetGICTransformerClass(val:TGICTransformer); inline;
         
     public
-        property SolutionAlgs: TSolutionAlgs read GetSolutionAlgs write SetSolutionAlgs;
-        
         property LoadShapeClass: TLoadShape read GetLoadShapeClass write SetLoadShapeClass;
         property TShapeClass: TTshape read GetTShapeClass write SetTShapeClass;
         property PriceShapeClass: TPriceShape read GetPriceShapeClass write SetPriceShapeClass;
@@ -218,9 +210,6 @@ type
     end;    
     
 implementation
-
-function TDSSGlobalHelper.GetSolutionAlgs: TSolutionAlgs; begin Result := TSolutionAlgs(FSolutionAlgs); end;
-procedure TDSSGlobalHelper.SetSolutionAlgs(val: TSolutionAlgs); begin FSolutionAlgs := val; end;
 
 function TDSSGlobalHelper.GetLoadShapeClass: TLoadShape; begin Result := TLoadShape(FLoadShapeClass); end;
 function TDSSGlobalHelper.GetTShapeClass: TTshape; begin Result := TTshape(FTShapeClass); end;

@@ -95,8 +95,9 @@ type
     end;
 
     TSolutionObj = class(TDSSObject)
+    PROTECTED
+        DSS: TDSS;
     PRIVATE
-
         dV: pNodeVArray;   // Array of delta V for Newton iteration
         FFrequency: Double;
 
@@ -202,7 +203,7 @@ type
 //      ADiakoptics_ready  : Boolean;
 //      ADiakoptics_Actors :  Integer;
 //******************************************************************************
-        constructor Create(ParClass: TDSSClass; const solutionname: String);
+        constructor Create(ParClass: TDSSClass; const solutionname: String; dss: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Converged: Boolean;
@@ -377,17 +378,18 @@ end;
 function TDSSSolution.NewObject(const ObjName: String): Integer;
 begin
     // Make a new Solution Object and add it to Solution class list
-    ActiveSolutionObj := TSolutionObj.Create(Self, ObjName);
+    ActiveSolutionObj := TSolutionObj.Create(Self, ObjName, DSS);
     // this one is different than the rest of the objects.
     Result := AdDobjectToList(ActiveSolutionObj);
 end;
 
 // ===========================================================================================
-constructor TSolutionObj.Create(ParClass: TDSSClass; const SolutionName: String);
+constructor TSolutionObj.Create(ParClass: TDSSClass; const SolutionName: String; dss: TDSS);
 // ===========================================================================================
 begin
     inherited Create(ParClass);
     Name := LowerCase(SolutionName);
+    DSS := dss;
 
 //    i := SetLogFile ('c:\\temp\\KLU_Log.txt', 1);
 
@@ -556,39 +558,39 @@ begin
             TSolveMode.SNAPSHOT:
                 SolveSnap;
             TSolveMode.YEARLYMODE:
-                DSSPrime.SolutionAlgs.SolveYearly;
+                SolveYearly;
             TSolveMode.DAILYMODE:
-                DSSPrime.SolutionAlgs.SolveDaily;
+                SolveDaily;
             TSolveMode.DUTYCYCLE:
-                DSSPrime.SolutionAlgs.SolveDuty;
+                SolveDuty;
             TSolveMode.DYNAMICMODE:
-                DSSPrime.SolutionAlgs.SolveDynamic;
+                SolveDynamic;
             TSolveMode.MONTECARLO1:
-                DSSPrime.SolutionAlgs.SolveMonte1;
+                SolveMonte1;
             TSolveMode.MONTECARLO2:
-                DSSPrime.SolutionAlgs.SolveMonte2;
+                SolveMonte2;
             TSolveMode.MONTECARLO3:
-                DSSPrime.SolutionAlgs.SolveMonte3;
+                SolveMonte3;
             TSolveMode.PEAKDAY:
-                DSSPrime.SolutionAlgs.SolvePeakDay;
+                SolvePeakDay;
             TSolveMode.LOADDURATION1:
-                DSSPrime.SolutionAlgs.SolveLD1;
+                SolveLD1;
             TSolveMode.LOADDURATION2:
-                DSSPrime.SolutionAlgs.SolveLD2;
+                SolveLD2;
             TSolveMode.DIRECT:
                 SolveDirect;
             TSolveMode.MONTEFAULT:
-                DSSPrime.SolutionAlgs.SolveMonteFault;  // Monte Carlo Fault Cases
+                SolveMonteFault;  // Monte Carlo Fault Cases
             TSolveMode.FAULTSTUDY:
-                DSSPrime.SolutionAlgs.SolveFaultStudy;
+                SolveFaultStudy;
             TSolveMode.AUTOADDFLAG:
                 ActiveCircuit.AutoAddObj.Solve;
             TSolveMode.HARMONICMODE:
-                DSSPrime.SolutionAlgs.SolveHarmonic;
+                SolveHarmonic;
             TSolveMode.GENERALTIME:
-                DSSPrime.SolutionAlgs.SolveGeneralTime;
+                SolveGeneralTime;
             TSolveMode.HARMONICMODET:
-                DSSPrime.SolutionAlgs.SolveHarmonicT;  //Declares the Hsequential-time harmonics
+                SolveHarmonicT;  //Declares the Hsequential-time harmonics
         else
             DosimpleMsg('Unknown solution mode.', 481);
         end;
