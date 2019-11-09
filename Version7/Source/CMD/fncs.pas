@@ -624,7 +624,7 @@ begin
   time_granted := fncs_time_request (next_fncs);
   if time_granted >= next_fncs_publish then begin
 		if topics.Count > 0 then begin
-//    Writeln(Format('  Stream size %u at %u', [fncsOutputStream.size, time_granted]));
+//      Writeln(Format('  Stream size %u at %u, next at %u, interval %u', [fncsOutputStream.size, time_granted, next_fncs_publish, PublishInterval]));
 			if Not FNCSTopicsMapped then MapFNCSTopics;
 			GetValuesForTopics;
 			TopicsToJsonStream;
