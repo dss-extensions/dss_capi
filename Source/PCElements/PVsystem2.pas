@@ -587,7 +587,7 @@ PROCEDURE TPVsystem2.DefineProperties;
                            'Minimum active power as percentage of Pmpp under which there is no vars production/absorption.');
 
     AddProperty('%PminkvarMax', propPminkvarLimit,
-                           'Minimum active power as percentage of Pmpp that allows the inverter to produce/absorb reactive power up to its kvarlimit.');
+                           'Minimum active power as percentage of Pmpp that allows the inverter to produce/absorb reactive power up to its kvarMax or kvarMaxAbs.');
 
 
     AddProperty('kvarMax',     propkvarLimit,
