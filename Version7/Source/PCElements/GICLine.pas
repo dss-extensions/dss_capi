@@ -107,9 +107,6 @@ type
 
     end;
 
-var
-    ActiveGICLineObj: TGICLineObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -241,7 +238,7 @@ var
    // Set Bus2 = Bus1.0.0.0
 
 begin
-    with ActiveGICLineObj do
+    with DSS.ActiveGICLineObj do
     begin
         SetBus(1, S);
 
@@ -266,12 +263,12 @@ var
 
 begin
   // continue parsing with contents of Parser
-    ActiveGICLineObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveGICLineObj;
+    DSS.ActiveGICLineObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveGICLineObj;
 
     Result := 0;
 
-    with ActiveGICLineObj do
+    with DSS.ActiveGICLineObj do
     begin
 
         ParamPointer := 0;
@@ -342,7 +339,7 @@ begin
                     Lon2 := Parser.DblValue;
 
             else
-                ClassEdit(ActiveGICLineObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveGICLineObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -373,7 +370,7 @@ begin
    {See if we can find this line name in the present collection}
     OtherGICLine := Find(OtherLine);
     if OtherGICLine <> NIL then
-        with ActiveGICLineObj do
+        with DSS.ActiveGICLineObj do
         begin
 
             if Fnphases <> OtherGICLine.Fnphases then

@@ -778,7 +778,7 @@ End;
 FUNCTION DoSolveCmd:Integer;
 Begin
    // just invoke solution obj's editor to pick up parsing and execute rest of command
-   ActiveSolutionObj := DSSPrime.ActiveCircuit.Solution;
+   DSSPrime.ActiveSolutionObj := DSSPrime.ActiveCircuit.Solution;
    Result := DSSPrime.SolutionClass.Edit;
 
 End;
@@ -3599,7 +3599,7 @@ Begin
   Result := 0;
   pLoad := DSSPrime.ActiveCircuit.Loads.First;
   WHILE pLoad <> NIL Do Begin
-    ActiveLoadObj := pLoad; // for UpdateVoltageBases to work
+    DSSPrime.ActiveLoadObj := pLoad; // for UpdateVoltageBases to work
     sBus := StripExtension (pLoad.GetBus(1));
     iBus := DSSPrime.ActiveCircuit.BusList.Find (sBus);
     pBus := DSSPrime.ActiveCircuit.Buses^[iBus];

@@ -111,10 +111,7 @@ type
 
     end;
 
-var
-    ActiveVVCControlObj: TVVControlObj;
-
-  { -------------------------------------------------------------------------- }
+{ -------------------------------------------------------------------------- }
 implementation
 
 uses
@@ -270,12 +267,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveVVCControlObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActiveVVCControlObj;
+    DSS.ActiveVVCControlObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActiveVVCControlObj;
 
     Result := 0;
 
-    with ActiveVVCControlObj do
+    with DSS.ActiveVVCControlObj do
     begin
 
         ParamPointer := 0;
@@ -344,7 +341,7 @@ begin
                     FdeltaQ_factor := Parser.DblValue;
             else
         // Inherited parameters
-                ClassEdit(ActiveVVCControlObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveVVCControlObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -386,7 +383,7 @@ begin
   { See if we can find this VVCControl name in the present collection }
     OtherVVCControl := Find(VVCControlName);
     if OtherVVCControl <> NIL then
-        with ActiveVVCControlObj do
+        with DSS.ActiveVVCControlObj do
         begin
 
             NPhases := OtherVVCControl.Fnphases;

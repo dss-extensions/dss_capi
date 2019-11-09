@@ -378,10 +378,6 @@ type
 
     end;
 
-var
-    ActiveEnergyMeterObj: TEnergyMeterObj;
-  { RegisterNameList      :TCommandList; }
-
 
 implementation
 
@@ -661,14 +657,14 @@ begin
 
   // continue parsing WITH contents of Parser
   // continue parsing WITH contents of Parser
-    ActiveEnergyMeterObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveEnergyMeterObj;
+    DSS.ActiveEnergyMeterObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveEnergyMeterObj;
 
     Result := 0;
 
     DoRecalc := FALSE;
 
-    with ActiveEnergyMeterObj do
+    with DSS.ActiveEnergyMeterObj do
     begin
 
         MeteredElementChanged := FALSE;
@@ -754,7 +750,7 @@ begin
                     PropertyValue[24] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
            (****11: HasFeeder := InterpretYesNo(Param); ***)
             else
-                ClassEdit(ActiveEnergyMeterObj, ParamPointer - NumPropsthisClass)
+                ClassEdit(DSS.ActiveEnergyMeterObj, ParamPointer - NumPropsthisClass)
             end;
 
             case ParamPointer of
@@ -785,7 +781,7 @@ begin
    {See IF we can find this EnergyMeter name in the present collection}
     OtherEnergyMeter := Find(EnergyMeterName);
     if OtherEnergyMeter <> NIL then
-        with ActiveEnergyMeterObj do
+        with DSS.ActiveEnergyMeterObj do
         begin
 
             NPhases := OtherEnergyMeter.Fnphases;
@@ -2306,7 +2302,7 @@ begin
     AuxParser.CmdString := Opts;  // Load up aux Parser
 
     {Loop until no more options found}
-    with ActiveEnergymeterObj do
+    with DSS.ActiveEnergymeterObj do
         repeat
             S1 := AuxParser.NextParam; // ignore any parameter name  not expecting any
             S2 := lowercase(AuxParser.StrValue);

@@ -129,9 +129,9 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveConductorDataObj := ElementList.Active;
-    ActiveDSSObject := ActiveConductorDataObj;
-    with TCNDataObj(ActiveConductorDataObj) do
+    DSS.ActiveConductorDataObj := ElementList.Active;
+    ActiveDSSObject := DSS.ActiveConductorDataObj;
+    with TCNDataObj(DSS.ActiveConductorDataObj) do
     begin
         ParamPointer := 0;
         ParamName := Parser.NextParam;
@@ -159,7 +159,7 @@ begin
                     FRStrand := Parser.DblValue;
             else
         // Inherited parameters
-                ClassEdit(ActiveConductorDataObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveConductorDataObj, ParamPointer - NumPropsThisClass)
             end;
 
       {Set defaults}
@@ -195,7 +195,7 @@ begin
     Result := 0;
     OtherData := Find(CNName);
     if OtherData <> NIL then
-        with TCNDataObj(ActiveConductorDataObj) do
+        with TCNDataObj(DSS.ActiveConductorDataObj) do
         begin
             FkStrand := OtherData.FkStrand;
             FDiaStrand := OtherData.FDiaStrand;
@@ -225,13 +225,14 @@ procedure TCNData.Set_Code(const Value: String);  // sets the  active CNData
 var
     CNDataObj: TCNDataObj;
 begin
-    ActiveConductorDataObj := NIL;
+    DSS.ActiveConductorDataObj := NIL;
     CNDataObj := ElementList.First;
     while CNDataObj <> NIL do
     begin
+        // TODO: fast lookup
         if CompareText(CNDataObj.Name, Value) = 0 then
         begin
-            ActiveConductorDataObj := CNDataObj;
+            DSS.ActiveConductorDataObj := CNDataObj;
             Exit;
         end;
         CNDataObj := ElementList.Next;

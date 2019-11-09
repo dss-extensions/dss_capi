@@ -107,8 +107,6 @@ type
         function VariableName(i: Integer): String; OVERRIDE;
     end;
 
-var
-    ActiveVCCSObj: TVCCSObj;
 
 implementation
 
@@ -222,11 +220,11 @@ var
     Param: String;
 begin
   // continue parsing with contents of Parser
-    ActiveVCCSObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveVCCSObj;
+    DSS.ActiveVCCSObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveVCCSObj;
     Result := 0;
 
-    with ActiveVCCSObj do
+    with DSS.ActiveVCCSObj do
     begin
         ParamPointer := 0;
         ParamName := Parser.NextParam;
@@ -292,7 +290,7 @@ begin
                 13:
                     FirmsTau := Parser.DblValue;
             else
-                ClassEdit(ActiveVCCSObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveVCCSObj, ParamPointer - NumPropsThisClass)
             end;
             ParamName := Parser.NextParam;
             Param := Parser.StrValue;
@@ -312,7 +310,7 @@ begin
   {See if we can find this line name in the present collection}
     OtherVCCS := Find(OtherSource);
     if OtherVCCS <> NIL then
-        with ActiveVCCSObj do
+        with DSS.ActiveVCCSObj do
         begin
             if Fnphases <> OtherVCCS.Fnphases then
             begin
@@ -483,7 +481,7 @@ var
 begin
     ComputeVterminal;
 //  IterminalUpdated := FALSE;
-    if ActiveSolutionObj.IsDynamicModel then
+    if DSSPrime.ActiveSolutionObj.IsDynamicModel then
     begin
         if FrmsMode then
         begin
@@ -616,7 +614,7 @@ begin
 
   // initialize the history terms for HW model source convention
     d := 1 / FsampleFreq;
-    wd := 2 * Pi * ActiveSolutionObj.Frequency * d;
+    wd := 2 * Pi * DSSPrime.ActiveSolutionObj.Frequency * d;
     for i := 1 to Ffiltlen do
     begin
         wt := vang - wd * (Ffiltlen - i);
@@ -719,10 +717,10 @@ begin
 
     ComputeIterminal;
 
-    t := ActiveSolutionObj.DynaVars.t;
-    h := ActiveSolutionObj.DynaVars.h;
-    f := ActiveSolutionObj.Frequency;
-    corrector := ActiveSolutionObj.DynaVars.IterationFlag;
+    t := DSSPrime.ActiveSolutionObj.DynaVars.t;
+    h := DSSPrime.ActiveSolutionObj.DynaVars.h;
+    f := DSSPrime.ActiveSolutionObj.Frequency;
+    corrector := DSSPrime.ActiveSolutionObj.DynaVars.IterationFlag;
     d := 1 / FSampleFreq;
     nstep := trunc(1e-6 + h / d);
     w := 2 * Pi * f;

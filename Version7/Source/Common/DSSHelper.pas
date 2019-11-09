@@ -53,7 +53,11 @@ uses
     VSConverter,
     XfmrCode,
     GICLine,
-    GICTransformer;
+    GICTransformer,
+    Solution, 
+    // VVControl, 
+    ConductorData
+    ;
     
 type
     TDSSGlobalHelper = class helper for TDSS
@@ -159,6 +163,112 @@ type
         procedure SetXfmrCodeClass(val: TXfmrCode); inline;
         procedure SetGICLineClass(val: TGICLine); inline;
         procedure SetGICTransformerClass(val:TGICTransformer); inline;
+
+        function GetActiveFeederObj: TFeederObj; inline;
+        function GetActiveSolutionObj: TSolutionObj; inline;
+        function GetActiveCapControlObj: TCapControlObj; inline;
+        function GetActiveESPVLControlObj: TESPVLControlObj; inline;
+        function GetActiveExpControlObj: TExpControlObj; inline;
+        function GetActiveGenDispatcherObj: TGenDispatcherObj; inline;
+        function GetActiveInvControlObj: TInvControlObj; inline;
+        function GetActiveRecloserObj: TRecloserObj; inline;
+        function GetActiveRegControlObj: TRegControlObj; inline;
+        function GetActiveRelayObj: TRelayObj; inline;
+        function GetActiveStorageControllerObj: TStorageControllerObj; inline;
+        function GetActiveSwtControlObj: TSwtControlObj; inline;
+        function GetActiveUPFCControlObj: TUPFCControlObj; inline;
+        // function GetActiveVVCControlObj: TVVControlObj; inline;
+        function GetActiveConductorDataObj: TConductorDataObj; inline;
+        function GetActiveGrowthShapeObj: TGrowthShapeObj; inline;
+        function GetActiveLineCodeObj: TLineCodeObj; inline;
+        function GetActiveLineGeometryObj: TLineGeometryObj; inline;
+        function GetActiveLineSpacingObj: TLineSpacingObj; inline;
+        function GetActiveLoadShapeObj: TLoadShapeObj; inline;
+        function GetActivePriceShapeObj: TPriceShapeObj; inline;
+        function GetActiveSpectrumObj: TSpectrumObj; inline;
+        function GetActiveTCC_CurveObj: TTCC_CurveObj; inline;
+        function GetActiveTShapeObj: TTShapeObj; inline;
+        function GetActiveXfmrCodeObj: TXfmrCodeObj; inline;
+        function GetActiveXYcurveObj: TXYcurveObj; inline;
+        function GetActiveEnergyMeterObj: TEnergyMeterObj; inline;
+        // function GetActiveFMonitorObj: TFMonitorObj; inline;
+        function GetActiveMonitorObj: TMonitorObj; inline;
+        function GetActiveSensorObj: TSensorObj; inline;
+        // function GetActiveEquivalentObj: TEquivalentObj; inline;
+        function GetActiveGeneratorObj: TGeneratorObj; inline;
+        // function GetActiveGeneric5Obj: TGeneric5Obj; inline;
+        function GetActiveGICLineObj: TGICLineObj; inline;
+        function GetActiveGICsourceObj: TGICSourceObj; inline;
+        function GetActiveIndMach012Obj: TIndMach012Obj; inline;
+        function GetActiveIsourceObj: TIsourceObj; inline;
+        function GetActiveLoadObj: TLoadObj; inline;
+        function GetActivePVsystemObj: TPVsystemObj; inline;
+        function GetActiveStorageObj: TStorageObj; inline;
+        function GetActiveUPFCObj: TUPFCObj; inline;
+        function GetActiveVCCSObj: TVCCSObj; inline;
+        function GetActiveVSConverterObj: TVSConverterObj; inline;
+        function GetActiveVsourceObj: TVsourceObj; inline;
+        function GetActiveAutoTransObj: TAutoTransObj; inline;
+        function GetActiveCapacitorObj: TCapacitorObj; inline;
+        function GetActiveFaultObj: TFaultObj; inline;
+        function GetActiveFuseObj: TFuseObj; inline;
+        function GetActiveGICTransformerObj: TGICTransformerObj; inline;
+        function GetActiveLineObj: TLineObj; inline;
+        function GetActiveReactorObj: TReactorObj; inline;
+        function GetActiveTransfObj: TTransfObj; inline;
+
+        procedure SetActiveFeederObj(val: TFeederObj); inline;
+        procedure SetActiveSolutionObj(val: TSolutionObj); inline;
+        procedure SetActiveCapControlObj(val: TCapControlObj); inline;
+        procedure SetActiveESPVLControlObj(val: TESPVLControlObj); inline;
+        procedure SetActiveExpControlObj(val: TExpControlObj); inline;
+        procedure SetActiveGenDispatcherObj(val: TGenDispatcherObj); inline;
+        procedure SetActiveInvControlObj(val: TInvControlObj); inline;
+        procedure SetActiveRecloserObj(val: TRecloserObj); inline;
+        procedure SetActiveRegControlObj(val: TRegControlObj); inline;
+        procedure SetActiveRelayObj(val: TRelayObj); inline;
+        procedure SetActiveStorageControllerObj(val: TStorageControllerObj); inline;
+        procedure SetActiveSwtControlObj(val: TSwtControlObj); inline;
+        procedure SetActiveUPFCControlObj(val: TUPFCControlObj); inline;
+        // procedure SetActiveVVCControlObj(val: TVVControlObj); inline;
+        procedure SetActiveConductorDataObj(val: TConductorDataObj); inline;
+        procedure SetActiveGrowthShapeObj(val: TGrowthShapeObj); inline;
+        procedure SetActiveLineCodeObj(val: TLineCodeObj); inline;
+        procedure SetActiveLineGeometryObj(val: TLineGeometryObj); inline;
+        procedure SetActiveLineSpacingObj(val: TLineSpacingObj); inline;
+        procedure SetActiveLoadShapeObj(val: TLoadShapeObj); inline;
+        procedure SetActivePriceShapeObj(val: TPriceShapeObj); inline;
+        procedure SetActiveSpectrumObj(val: TSpectrumObj); inline;
+        procedure SetActiveTCC_CurveObj(val: TTCC_CurveObj); inline;
+        procedure SetActiveTShapeObj(val: TTShapeObj); inline;
+        procedure SetActiveXfmrCodeObj(val: TXfmrCodeObj); inline;
+        procedure SetActiveXYcurveObj(val: TXYcurveObj); inline;
+        procedure SetActiveEnergyMeterObj(val: TEnergyMeterObj); inline;
+        // procedure SetActiveFMonitorObj(val: TFMonitorObj); inline;
+        procedure SetActiveMonitorObj(val: TMonitorObj); inline;
+        procedure SetActiveSensorObj(val: TSensorObj); inline;
+        // procedure SetActiveEquivalentObj(val: TEquivalentObj); inline;
+        procedure SetActiveGeneratorObj(val: TGeneratorObj); inline;
+        // procedure SetActiveGeneric5Obj(val: TGeneric5Obj); inline;
+        procedure SetActiveGICLineObj(val: TGICLineObj); inline;
+        procedure SetActiveGICsourceObj(val: TGICSourceObj); inline;
+        procedure SetActiveIndMach012Obj(val: TIndMach012Obj); inline;
+        procedure SetActiveIsourceObj(val: TIsourceObj); inline;
+        procedure SetActiveLoadObj(val: TLoadObj); inline;
+        procedure SetActivePVsystemObj(val: TPVsystemObj); inline;
+        procedure SetActiveStorageObj(val: TStorageObj); inline;
+        procedure SetActiveUPFCObj(val: TUPFCObj); inline;
+        procedure SetActiveVCCSObj(val: TVCCSObj); inline;
+        procedure SetActiveVSConverterObj(val: TVSConverterObj); inline;
+        procedure SetActiveVsourceObj(val: TVsourceObj); inline;
+        procedure SetActiveAutoTransObj(val: TAutoTransObj); inline;
+        procedure SetActiveCapacitorObj(val: TCapacitorObj); inline;
+        procedure SetActiveFaultObj(val: TFaultObj); inline;
+        procedure SetActiveFuseObj(val: TFuseObj); inline;
+        procedure SetActiveGICTransformerObj(val: TGICTransformerObj); inline;
+        procedure SetActiveLineObj(val: TLineObj); inline;
+        procedure SetActiveReactorObj(val: TReactorObj); inline;
+        procedure SetActiveTransfObj(val: TTransfObj); inline;
         
     public
         property ActiveCircuit: TDSSCircuit read GetActiveCircuit write SetActiveCircuit;
@@ -212,6 +322,60 @@ type
         property XfmrCodeClass: TXfmrCode read GetXfmrCodeClass write SetXfmrCodeClass;
         property GICLineClass: TGICLine read GetGICLineClass write SetGICLineClass;
         property GICTransformerClass: TGICTransformer read GetGICTransformerClass write SetGICTransformerClass;
+        
+        property ActiveFeederObj: TFeederObj read GetActiveFeederObj write SetActiveFeederObj;
+        property ActiveSolutionObj: TSolutionObj read GetActiveSolutionObj write SetActiveSolutionObj;
+        property ActiveCapControlObj: TCapControlObj read GetActiveCapControlObj write SetActiveCapControlObj;
+        property ActiveESPVLControlObj: TESPVLControlObj read GetActiveESPVLControlObj write SetActiveESPVLControlObj;
+        property ActiveExpControlObj: TExpControlObj read GetActiveExpControlObj write SetActiveExpControlObj;
+        property ActiveGenDispatcherObj: TGenDispatcherObj read GetActiveGenDispatcherObj write SetActiveGenDispatcherObj;
+        property ActiveInvControlObj: TInvControlObj read GetActiveInvControlObj write SetActiveInvControlObj;
+        property ActiveRecloserObj: TRecloserObj read GetActiveRecloserObj write SetActiveRecloserObj;
+        property ActiveRegControlObj: TRegControlObj read GetActiveRegControlObj write SetActiveRegControlObj;
+        property ActiveRelayObj: TRelayObj read GetActiveRelayObj write SetActiveRelayObj;
+        property ActiveStorageControllerObj: TStorageControllerObj read GetActiveStorageControllerObj write SetActiveStorageControllerObj;
+        property ActiveSwtControlObj: TSwtControlObj read GetActiveSwtControlObj write SetActiveSwtControlObj;
+        property ActiveUPFCControlObj: TUPFCControlObj read GetActiveUPFCControlObj write SetActiveUPFCControlObj;
+        // property ActiveVVCControlObj: TVVControlObj read GetActiveVVCControlObj write SetActiveVVCControlObj;
+        property ActiveConductorDataObj: TConductorDataObj read GetActiveConductorDataObj write SetActiveConductorDataObj;
+        property ActiveGrowthShapeObj: TGrowthShapeObj read GetActiveGrowthShapeObj write SetActiveGrowthShapeObj;
+        property ActiveLineCodeObj: TLineCodeObj read GetActiveLineCodeObj write SetActiveLineCodeObj;
+        property ActiveLineGeometryObj: TLineGeometryObj read GetActiveLineGeometryObj write SetActiveLineGeometryObj;
+        property ActiveLineSpacingObj: TLineSpacingObj read GetActiveLineSpacingObj write SetActiveLineSpacingObj;
+        property ActiveLoadShapeObj: TLoadShapeObj read GetActiveLoadShapeObj write SetActiveLoadShapeObj;
+        property ActivePriceShapeObj: TPriceShapeObj read GetActivePriceShapeObj write SetActivePriceShapeObj;
+        property ActiveSpectrumObj: TSpectrumObj read GetActiveSpectrumObj write SetActiveSpectrumObj;
+        property ActiveTCC_CurveObj: TTCC_CurveObj read GetActiveTCC_CurveObj write SetActiveTCC_CurveObj;
+        property ActiveTShapeObj: TTShapeObj read GetActiveTShapeObj write SetActiveTShapeObj;
+        property ActiveXfmrCodeObj: TXfmrCodeObj read GetActiveXfmrCodeObj write SetActiveXfmrCodeObj;
+        property ActiveXYcurveObj: TXYcurveObj read GetActiveXYcurveObj write SetActiveXYcurveObj;
+        property ActiveEnergyMeterObj: TEnergyMeterObj read GetActiveEnergyMeterObj write SetActiveEnergyMeterObj;
+        // property ActiveFMonitorObj: TFMonitorObj read GetActiveFMonitorObj write SetActiveFMonitorObj;
+        property ActiveMonitorObj: TMonitorObj read GetActiveMonitorObj write SetActiveMonitorObj;
+        property ActiveSensorObj: TSensorObj read GetActiveSensorObj write SetActiveSensorObj;
+        // property ActiveEquivalentObj: TEquivalentObj read GetActiveEquivalentObj write SetActiveEquivalentObj;
+        property ActiveGeneratorObj: TGeneratorObj read GetActiveGeneratorObj write SetActiveGeneratorObj;
+        // property ActiveGeneric5Obj: TGeneric5Obj read GetActiveGeneric5Obj write SetActiveGeneric5Obj;
+        property ActiveGICLineObj: TGICLineObj read GetActiveGICLineObj write SetActiveGICLineObj;
+        property ActiveGICsourceObj: TGICSourceObj read GetActiveGICsourceObj write SetActiveGICsourceObj;
+        property ActiveIndMach012Obj: TIndMach012Obj read GetActiveIndMach012Obj write SetActiveIndMach012Obj;
+        property ActiveIsourceObj: TIsourceObj read GetActiveIsourceObj write SetActiveIsourceObj;
+        property ActiveLoadObj: TLoadObj read GetActiveLoadObj write SetActiveLoadObj;
+        property ActivePVsystemObj: TPVsystemObj read GetActivePVsystemObj write SetActivePVsystemObj;
+        property ActiveStorageObj: TStorageObj read GetActiveStorageObj write SetActiveStorageObj;
+        property ActiveUPFCObj: TUPFCObj read GetActiveUPFCObj write SetActiveUPFCObj;
+        property ActiveVCCSObj: TVCCSObj read GetActiveVCCSObj write SetActiveVCCSObj;
+        property ActiveVSConverterObj: TVSConverterObj read GetActiveVSConverterObj write SetActiveVSConverterObj;
+        property ActiveVsourceObj: TVsourceObj read GetActiveVsourceObj write SetActiveVsourceObj;
+        property ActiveAutoTransObj: TAutoTransObj read GetActiveAutoTransObj write SetActiveAutoTransObj;
+        property ActiveCapacitorObj: TCapacitorObj read GetActiveCapacitorObj write SetActiveCapacitorObj;
+        property ActiveFaultObj: TFaultObj read GetActiveFaultObj write SetActiveFaultObj;
+        property ActiveFuseObj: TFuseObj read GetActiveFuseObj write SetActiveFuseObj;
+        property ActiveGICTransformerObj: TGICTransformerObj read GetActiveGICTransformerObj write SetActiveGICTransformerObj;
+        property ActiveLineObj: TLineObj read GetActiveLineObj write SetActiveLineObj;
+        property ActiveReactorObj: TReactorObj read GetActiveReactorObj write SetActiveReactorObj;
+        property ActiveTransfObj: TTransfObj read GetActiveTransfObj write SetActiveTransfObj;
+        
     end;    
     
 implementation
@@ -267,6 +431,60 @@ function TDSSGlobalHelper.GetXfmrCodeClass: TXfmrCode; begin Result := TXfmrCode
 function TDSSGlobalHelper.GetGICLineClass: TGICLine; begin Result := TGICLine(FGICLineClass); end;
 function TDSSGlobalHelper.GetGICTransformerClass: TGICTransformer; begin Result := TGICTransformer(FGICTransformerClass); end;
 
+function TDSSGlobalHelper.GetActiveFeederObj: TFeederObj; begin Result := TFeederObj(FActiveFeederObj); end;
+function TDSSGlobalHelper.GetActiveSolutionObj: TSolutionObj; begin Result := TSolutionObj(FActiveSolutionObj); end;
+function TDSSGlobalHelper.GetActiveCapControlObj: TCapControlObj; begin Result := TCapControlObj(FActiveCapControlObj); end;
+function TDSSGlobalHelper.GetActiveESPVLControlObj: TESPVLControlObj; begin Result := TESPVLControlObj(FActiveESPVLControlObj); end;
+function TDSSGlobalHelper.GetActiveExpControlObj: TExpControlObj; begin Result := TExpControlObj(FActiveExpControlObj); end;
+function TDSSGlobalHelper.GetActiveGenDispatcherObj: TGenDispatcherObj; begin Result := TGenDispatcherObj(FActiveGenDispatcherObj); end;
+function TDSSGlobalHelper.GetActiveInvControlObj: TInvControlObj; begin Result := TInvControlObj(FActiveInvControlObj); end;
+function TDSSGlobalHelper.GetActiveRecloserObj: TRecloserObj; begin Result := TRecloserObj(FActiveRecloserObj); end;
+function TDSSGlobalHelper.GetActiveRegControlObj: TRegControlObj; begin Result := TRegControlObj(FActiveRegControlObj); end;
+function TDSSGlobalHelper.GetActiveRelayObj: TRelayObj; begin Result := TRelayObj(FActiveRelayObj); end;
+function TDSSGlobalHelper.GetActiveStorageControllerObj: TStorageControllerObj; begin Result := TStorageControllerObj(FActiveStorageControllerObj); end;
+function TDSSGlobalHelper.GetActiveSwtControlObj: TSwtControlObj; begin Result := TSwtControlObj(FActiveSwtControlObj); end;
+function TDSSGlobalHelper.GetActiveUPFCControlObj: TUPFCControlObj; begin Result := TUPFCControlObj(FActiveUPFCControlObj); end;
+// function TDSSGlobalHelper.ActiveGetVVCControlObj: TVVControlObj; begin Result := TVVCControlObj(FActiveVVCControlObj); end;
+function TDSSGlobalHelper.GetActiveConductorDataObj: TConductorDataObj; begin Result := TConductorDataObj(FActiveConductorDataObj); end;
+function TDSSGlobalHelper.GetActiveGrowthShapeObj: TGrowthShapeObj; begin Result := TGrowthShapeObj(FActiveGrowthShapeObj); end;
+function TDSSGlobalHelper.GetActiveLineCodeObj: TLineCodeObj; begin Result := TLineCodeObj(FActiveLineCodeObj); end;
+function TDSSGlobalHelper.GetActiveLineGeometryObj: TLineGeometryObj; begin Result := TLineGeometryObj(FActiveLineGeometryObj); end;
+function TDSSGlobalHelper.GetActiveLineSpacingObj: TLineSpacingObj; begin Result := TLineSpacingObj(FActiveLineSpacingObj); end;
+function TDSSGlobalHelper.GetActiveLoadShapeObj: TLoadShapeObj; begin Result := TLoadShapeObj(FActiveLoadShapeObj); end;
+function TDSSGlobalHelper.GetActivePriceShapeObj: TPriceShapeObj; begin Result := TPriceShapeObj(FActivePriceShapeObj); end;
+function TDSSGlobalHelper.GetActiveSpectrumObj: TSpectrumObj; begin Result := TSpectrumObj(FActiveSpectrumObj); end;
+function TDSSGlobalHelper.GetActiveTCC_CurveObj: TTCC_CurveObj; begin Result := TTCC_CurveObj(FActiveTCC_CurveObj); end;
+function TDSSGlobalHelper.GetActiveTShapeObj: TTShapeObj; begin Result := TTShapeObj(FActiveTShapeObj); end;
+function TDSSGlobalHelper.GetActiveXfmrCodeObj: TXfmrCodeObj; begin Result := TXfmrCodeObj(FActiveXfmrCodeObj); end;
+function TDSSGlobalHelper.GetActiveXYcurveObj: TXYcurveObj; begin Result := TXYcurveObj(FActiveXYcurveObj); end;
+function TDSSGlobalHelper.GetActiveEnergyMeterObj: TEnergyMeterObj; begin Result := TEnergyMeterObj(FActiveEnergyMeterObj); end;
+// function TDSSGlobalHelper.GetActiveFMonitorObj: TFMonitorObj; begin Result := TFMonitorObj(FActiveFMonitorObj); end;
+function TDSSGlobalHelper.GetActiveMonitorObj: TMonitorObj; begin Result := TMonitorObj(FActiveMonitorObj); end;
+function TDSSGlobalHelper.GetActiveSensorObj: TSensorObj; begin Result := TSensorObj(FActiveSensorObj); end;
+// function TDSSGlobalHelper.ActiveGetEquivalentObj: TEquivalentObj; begin Result := TEquivalentObj(FActiveEquivalentObj); end;
+function TDSSGlobalHelper.GetActiveGeneratorObj: TGeneratorObj; begin Result := TGeneratorObj(FActiveGeneratorObj); end;
+// function TDSSGlobalHelper.ActiveGetGeneric5Obj: TGeneric5Obj; begin Result := TGeneric5Obj(FActiveGeneric5Obj); end;
+function TDSSGlobalHelper.GetActiveGICLineObj: TGICLineObj; begin Result := TGICLineObj(FActiveGICLineObj); end;
+function TDSSGlobalHelper.GetActiveGICsourceObj: TGICSourceObj; begin Result := TGICsourceObj(FActiveGICsourceObj); end;
+function TDSSGlobalHelper.GetActiveIndMach012Obj: TIndMach012Obj; begin Result := TIndMach012Obj(FActiveIndMach012Obj); end;
+function TDSSGlobalHelper.GetActiveIsourceObj: TIsourceObj; begin Result := TIsourceObj(FActiveIsourceObj); end;
+function TDSSGlobalHelper.GetActiveLoadObj: TLoadObj; begin Result := TLoadObj(FActiveLoadObj); end;
+function TDSSGlobalHelper.GetActivePVsystemObj: TPVsystemObj; begin Result := TPVsystemObj(FActivePVsystemObj); end;
+function TDSSGlobalHelper.GetActiveStorageObj: TStorageObj; begin Result := TStorageObj(FActiveStorageObj); end;
+function TDSSGlobalHelper.GetActiveUPFCObj: TUPFCObj; begin Result := TUPFCObj(FActiveUPFCObj); end;
+function TDSSGlobalHelper.GetActiveVCCSObj: TVCCSObj; begin Result := TVCCSObj(FActiveVCCSObj); end;
+function TDSSGlobalHelper.GetActiveVSConverterObj: TVSConverterObj; begin Result := TVSConverterObj(FActiveVSConverterObj); end;
+function TDSSGlobalHelper.GetActiveVsourceObj: TVsourceObj; begin Result := TVsourceObj(FActiveVsourceObj); end;
+function TDSSGlobalHelper.GetActiveAutoTransObj: TAutoTransObj; begin Result := TAutoTransObj(FActiveAutoTransObj); end;
+function TDSSGlobalHelper.GetActiveCapacitorObj: TCapacitorObj; begin Result := TCapacitorObj(FActiveCapacitorObj); end;
+function TDSSGlobalHelper.GetActiveFaultObj: TFaultObj; begin Result := TFaultObj(FActiveFaultObj); end;
+function TDSSGlobalHelper.GetActiveFuseObj: TFuseObj; begin Result := TFuseObj(FActiveFuseObj); end;
+function TDSSGlobalHelper.GetActiveGICTransformerObj: TGICTransformerObj; begin Result := TGICTransformerObj(FActiveGICTransformerObj); end;
+function TDSSGlobalHelper.GetActiveLineObj: TLineObj; begin Result := TLineObj(FActiveLineObj); end;
+function TDSSGlobalHelper.GetActiveReactorObj: TReactorObj; begin Result := TReactorObj(FActiveReactorObj); end;
+function TDSSGlobalHelper.GetActiveTransfObj: TTransfObj; begin Result := TTransfObj(FActiveTransfObj); end;
+
+
 procedure TDSSGlobalHelper.SetActiveCircuit(val: TDSSCircuit); begin FActiveCircuit := val; end;
 procedure TDSSGlobalHelper.SetLoadShapeClass(val: TLoadShape); begin FLoadShapeClass := val; end;
 procedure TDSSGlobalHelper.SetTShapeClass(val: TTshape); begin FTShapeClass := val; end;
@@ -317,5 +535,59 @@ procedure TDSSGlobalHelper.SetVSConverterClass(val: TVSConverter); begin FVSConv
 procedure TDSSGlobalHelper.SetXfmrCodeClass(val: TXfmrCode); begin FXfmrCodeClass := val; end;
 procedure TDSSGlobalHelper.SetGICLineClass(val: TGICLine); begin FGICLineClass := val; end;
 procedure TDSSGlobalHelper.SetGICTransformerClass(val:TGICTransformer); begin FGICTransformerClass := val; end;
+
+procedure TDSSGlobalHelper.SetActiveFeederObj(val: TFeederObj); begin FActiveFeederObj := val; end;
+procedure TDSSGlobalHelper.SetActiveSolutionObj(val: TSolutionObj); begin FActiveSolutionObj := val; end;
+procedure TDSSGlobalHelper.SetActiveCapControlObj(val: TCapControlObj); begin FActiveCapControlObj := val; end;
+procedure TDSSGlobalHelper.SetActiveESPVLControlObj(val: TESPVLControlObj); begin FActiveESPVLControlObj := val; end;
+procedure TDSSGlobalHelper.SetActiveExpControlObj(val: TExpControlObj); begin FActiveExpControlObj := val; end;
+procedure TDSSGlobalHelper.SetActiveGenDispatcherObj(val: TGenDispatcherObj); begin FActiveGenDispatcherObj := val; end;
+procedure TDSSGlobalHelper.SetActiveInvControlObj(val: TInvControlObj); begin FActiveInvControlObj := val; end;
+procedure TDSSGlobalHelper.SetActiveRecloserObj(val: TRecloserObj); begin FActiveRecloserObj := val; end;
+procedure TDSSGlobalHelper.SetActiveRegControlObj(val: TRegControlObj); begin FActiveRegControlObj := val; end;
+procedure TDSSGlobalHelper.SetActiveRelayObj(val: TRelayObj); begin FActiveRelayObj := val; end;
+procedure TDSSGlobalHelper.SetActiveStorageControllerObj(val: TStorageControllerObj); begin FActiveStorageControllerObj := val; end;
+procedure TDSSGlobalHelper.SetActiveSwtControlObj(val: TSwtControlObj); begin FActiveSwtControlObj := val; end;
+procedure TDSSGlobalHelper.SetActiveUPFCControlObj(val: TUPFCControlObj); begin FActiveUPFCControlObj := val; end;
+// procedure TDSSGlobalHelper.SetActiveVVCControlObj(val: TVVControlObj); begin FActiveVVCControlObj := val; end;
+procedure TDSSGlobalHelper.SetActiveConductorDataObj(val: TConductorDataObj); begin FActiveConductorDataObj := val; end;
+procedure TDSSGlobalHelper.SetActiveGrowthShapeObj(val: TGrowthShapeObj); begin FActiveGrowthShapeObj := val; end;
+procedure TDSSGlobalHelper.SetActiveLineCodeObj(val: TLineCodeObj); begin FActiveLineCodeObj := val; end;
+procedure TDSSGlobalHelper.SetActiveLineGeometryObj(val: TLineGeometryObj); begin FActiveLineGeometryObj := val; end;
+procedure TDSSGlobalHelper.SetActiveLineSpacingObj(val: TLineSpacingObj); begin FActiveLineSpacingObj := val; end;
+procedure TDSSGlobalHelper.SetActiveLoadShapeObj(val: TLoadShapeObj); begin FActiveLoadShapeObj := val; end;
+procedure TDSSGlobalHelper.SetActivePriceShapeObj(val: TPriceShapeObj); begin FActivePriceShapeObj := val; end;
+procedure TDSSGlobalHelper.SetActiveSpectrumObj(val: TSpectrumObj); begin FActiveSpectrumObj := val; end;
+procedure TDSSGlobalHelper.SetActiveTCC_CurveObj(val: TTCC_CurveObj); begin FActiveTCC_CurveObj := val; end;
+procedure TDSSGlobalHelper.SetActiveTShapeObj(val: TTShapeObj); begin FActiveTShapeObj := val; end;
+procedure TDSSGlobalHelper.SetActiveXfmrCodeObj(val: TXfmrCodeObj); begin FActiveXfmrCodeObj := val; end;
+procedure TDSSGlobalHelper.SetActiveXYcurveObj(val: TXYcurveObj); begin FActiveXYcurveObj := val; end;
+procedure TDSSGlobalHelper.SetActiveEnergyMeterObj(val: TEnergyMeterObj); begin FActiveEnergyMeterObj := val; end;
+// procedure TDSSGlobalHelper.SetActiveFMonitorObj(val: TFMonitorObj); begin FActiveFMonitorObj := val; end;
+procedure TDSSGlobalHelper.SetActiveMonitorObj(val: TMonitorObj); begin FActiveMonitorObj := val; end;
+procedure TDSSGlobalHelper.SetActiveSensorObj(val: TSensorObj); begin FActiveSensorObj := val; end;
+// procedure TDSSGlobalHelper.SetActiveEquivalentObj(val: TEquivalentObj); begin FActiveEquivalentObj := val; end;
+procedure TDSSGlobalHelper.SetActiveGeneratorObj(val: TGeneratorObj); begin FActiveGeneratorObj := val; end;
+// procedure TDSSGlobalHelper.SetActiveGeneric5Obj(val: TGeneric5Obj); begin FActiveGeneric5Obj := val; end;
+procedure TDSSGlobalHelper.SetActiveGICLineObj(val: TGICLineObj); begin FActiveGICLineObj := val; end;
+procedure TDSSGlobalHelper.SetActiveGICsourceObj(val: TGICSourceObj); begin FActiveGICsourceObj := val; end;
+procedure TDSSGlobalHelper.SetActiveIndMach012Obj(val: TIndMach012Obj); begin FActiveIndMach012Obj := val; end;
+procedure TDSSGlobalHelper.SetActiveIsourceObj(val: TIsourceObj); begin FActiveIsourceObj := val; end;
+procedure TDSSGlobalHelper.SetActiveLoadObj(val: TLoadObj); begin FActiveLoadObj := val; end;
+procedure TDSSGlobalHelper.SetActivePVsystemObj(val: TPVsystemObj); begin FActivePVsystemObj := val; end;
+procedure TDSSGlobalHelper.SetActiveStorageObj(val: TStorageObj); begin FActiveStorageObj := val; end;
+procedure TDSSGlobalHelper.SetActiveUPFCObj(val: TUPFCObj); begin FActiveUPFCObj := val; end;
+procedure TDSSGlobalHelper.SetActiveVCCSObj(val: TVCCSObj); begin FActiveVCCSObj := val; end;
+procedure TDSSGlobalHelper.SetActiveVSConverterObj(val: TVSConverterObj); begin FActiveVSConverterObj := val; end;
+procedure TDSSGlobalHelper.SetActiveVsourceObj(val: TVsourceObj); begin FActiveVsourceObj := val; end;
+procedure TDSSGlobalHelper.SetActiveAutoTransObj(val: TAutoTransObj); begin FActiveAutoTransObj := val; end;
+procedure TDSSGlobalHelper.SetActiveCapacitorObj(val: TCapacitorObj); begin FActiveCapacitorObj := val; end;
+procedure TDSSGlobalHelper.SetActiveFaultObj(val: TFaultObj); begin FActiveFaultObj := val; end;
+procedure TDSSGlobalHelper.SetActiveFuseObj(val: TFuseObj); begin FActiveFuseObj := val; end;
+procedure TDSSGlobalHelper.SetActiveGICTransformerObj(val: TGICTransformerObj); begin FActiveGICTransformerObj := val; end;
+procedure TDSSGlobalHelper.SetActiveLineObj(val: TLineObj); begin FActiveLineObj := val; end;
+procedure TDSSGlobalHelper.SetActiveReactorObj(val: TReactorObj); begin FActiveReactorObj := val; end;
+procedure TDSSGlobalHelper.SetActiveTransfObj(val: TTransfObj); begin FActiveTransfObj := val; end;
+
 
 end.

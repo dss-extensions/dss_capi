@@ -83,9 +83,6 @@ type
     TConductorDataArray = array[1..100] of TConductorDataObj;
     pConductorDataArray = ^TConductorDataArray;
 
-var
-    ActiveConductorDataObj: TConductorDataObj;
-
 implementation
 
 uses

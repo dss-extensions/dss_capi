@@ -106,9 +106,6 @@ type
 
     end;
 
-var
-    ActiveFaultObj: TFaultObj;
-
 implementation
 
 uses
@@ -218,7 +215,7 @@ var
     MatBuffer: pDoubleArray;
 
 begin
-    with ActiveFaultObj do
+    with DSS.ActiveFaultObj do
     begin
         MatBuffer := Allocmem(Sizeof(Double) * Fnphases * Fnphases);
         OrderFound := Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
@@ -245,7 +242,7 @@ var
    // Set Bus2 = Bus1.0.0.0
 
 begin
-    with ActiveFaultObj do
+    with DSS.ActiveFaultObj do
     begin
 
         SetBus(1, S);
@@ -282,10 +279,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveFaultObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveFaultObj;  // use property to set this value
+    DSS.ActiveFaultObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveFaultObj;  // use property to set this value
 
-    with ActiveFaultObj do
+    with DSS.ActiveFaultObj do
     begin
 
         ParamPointer := 0;
@@ -329,7 +326,7 @@ begin
                     MinAmps := Parser.DblValue;
             else
            // Inherited
-                ClassEdit(ActiveFaultObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveFaultObj, ParamPointer - NumPropsThisClass)
             end;
 
          // Some specials ...
@@ -388,7 +385,7 @@ begin
    {See if we can find this Fault name in the present collection}
     OtherFault := Find(FaultName);
     if OtherFault <> NIL then
-        with ActiveFaultObj do
+        with DSS.ActiveFaultObj do
         begin
 
             if Fnphases <> OtherFault.Fnphases then

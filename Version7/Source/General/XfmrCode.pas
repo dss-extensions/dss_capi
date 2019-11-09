@@ -75,9 +75,6 @@ type
 
     end;
 
-var
-    ActiveXfmrCodeObj: TXfmrCodeObj;
-
 implementation
 
 uses
@@ -274,16 +271,16 @@ begin
     end
     else
         Dosimplemsg('Invalid number of windings: (' + IntToStr(N) + ') for Transformer ' +
-            ActiveTransfObj.Name, 111);
+            DSSPrime.ActiveTransfObj.Name, 111);
 end;
 
 procedure TXfmrCode.SetActiveWinding(w: Integer);
 begin
-    with ActiveXfmrCodeObj do
+    with DSS.ActiveXfmrCodeObj do
         if (w > 0) and (w <= NumWindings) then
             ActiveWinding := w
         else
-            DoSimpleMsg('Wdg parameter invalid for "' + ActiveXfmrCodeObj.Name + '"', 112);
+            DoSimpleMsg('Wdg parameter invalid for "' + DSS.ActiveXfmrCodeObj.Name + '"', 112);
 end;
 
 procedure TXfmrCode.InterpretWindings(const S: String; which: WdgParmChoice);
@@ -292,7 +289,7 @@ var
     i: Integer;
 begin
     AuxParser.CmdString := S;
-    with ActiveXfmrCodeObj do
+    with DSS.ActiveXfmrCodeObj do
     begin
         for i := 1 to Numwindings do
         begin
@@ -326,11 +323,11 @@ var
     UpdateXsc: Boolean;
 
 begin
-    ActiveXfmrCodeObj := ElementList.Active;
-    ActiveDSSObject := ActiveXfmrCodeObj;
+    DSS.ActiveXfmrCodeObj := ElementList.Active;
+    ActiveDSSObject := DSS.ActiveXfmrCodeObj;
     UpdateXsc := FALSE;
 
-    with ActiveXfmrCodeObj do
+    with DSS.ActiveXfmrCodeObj do
     begin
         ParamPointer := 0;
         ParamName := Parser.NextParam;
@@ -423,7 +420,7 @@ begin
                 37:
                     Winding^[ActiveWinding].RdcOhms := Parser.DblValue;
             else
-                ClassEdit(ActiveXfmrCodeObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveXfmrCodeObj, ParamPointer - NumPropsThisClass)
             end;
 
          {Take care of properties that require some additional work,}
@@ -505,7 +502,7 @@ begin
    {See if we can find this ode in the present collection}
     Other := Find(Name);
     if Other <> NIL then
-        with ActiveXfmrCodeObj do
+        with DSS.ActiveXfmrCodeObj do
         begin
             FNphases := Other.FNphases;
             SetNumWindings(Other.NumWindings);
@@ -566,13 +563,13 @@ procedure TXfmrCode.Set_Code(const Value: String);  // sets the  active XfmrCode
 var
     XfmrCodeObj: TXfmrCodeObj;
 begin
-    ActiveXfmrCodeObj := NIL;
+    DSS.ActiveXfmrCodeObj := NIL;
     XfmrCodeObj := ElementList.First;
     while XfmrCodeObj <> NIL do
     begin
         if CompareText(XfmrCodeObj.Name, Value) = 0 then
         begin
-            ActiveXfmrCodeObj := XfmrCodeObj;
+            DSS.ActiveXfmrCodeObj := XfmrCodeObj;
             Exit;
         end;
         XfmrCodeObj := ElementList.Next;

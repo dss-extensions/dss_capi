@@ -2153,7 +2153,7 @@ begin
                     sBank := 'CIMXfmrCode_' + pXf.Name;
                     clsXfmr.NewObject(sBank);
                     clsXfmr.Code := sBank;
-                    pXfmr := ActiveXfmrCodeObj;
+                    pXfmr := DSSPrime.ActiveXfmrCodeObj;
                     CreateUUID4(tmpUUID);
                     pXfmr.UUID := tmpUUID;
                     pXfmr.PullFromTransformer(pXf);

@@ -229,10 +229,6 @@ type
         property baseVA: Double READ VAbase;
     end;
 
-var
-    ActiveAutoTransObj: TAutoTransObj;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 implementation
 
@@ -450,12 +446,12 @@ begin
   // continue parsing cmdline presently in Parser
 
   {Make this object the active circuit element}
-    ActiveAutoTransObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveAutoTransObj;  // use property to set this value
+    DSS.ActiveAutoTransObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveAutoTransObj;  // use property to set this value
 
     Result := 0;
 
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
     begin
         XHXChanged := FALSE;
         ParamPointer := 0;
@@ -560,7 +556,7 @@ begin
                     PropertyValue[45] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
             else
            // Inherited properties
-                ClassEdit(ActiveAutoTransObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveAutoTransObj, ParamPointer - NumPropsThisClass)
             end;
 
          {Take care of properties that require some additional work,}
@@ -639,18 +635,18 @@ end;
 procedure TAutoTrans.SetActiveWinding(w: Integer);
 
 begin
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
         if (w > 0) and (w <= NumWindings) then
             ActiveWinding := w
         else
-            DoSimpleMsg('Wdg parameter invalid for "' + ActiveAutoTransObj.Name + '"', 100112);
+            DoSimpleMsg('Wdg parameter invalid for "' + DSS.ActiveAutoTransObj.Name + '"', 100112);
 end;
 
 function TAutoTrans.TrapZero(const Value: Double; DefaultValue: Double): Double;
 begin
     if Value = 0.0 then
     begin
-        Dosimplemsg('Zero Reactance specified for AutoTrans.' + ActiveAutoTransObj.Name, 1011201);
+        Dosimplemsg('Zero Reactance specified for AutoTrans.' + DSS.ActiveAutoTransObj.Name, 1011201);
         Result := DefaultValue;
     end
     else
@@ -665,7 +661,7 @@ procedure TAutoTrans.InterpretAutoConnection(const S: String);
 //    Y, wye, or LN
 
 begin
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
     begin
         with Winding^[ActiveWinding] do
         begin
@@ -708,7 +704,7 @@ begin
     AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings}
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
@@ -731,7 +727,7 @@ begin
     AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
@@ -771,7 +767,7 @@ begin
     AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
@@ -794,7 +790,7 @@ begin
     AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
@@ -818,7 +814,7 @@ begin
     AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
@@ -842,7 +838,7 @@ begin
     AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
-    with ActiveAutoTransObj do
+    with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
@@ -865,7 +861,7 @@ begin
    {See if we can find this Transf name in the present collection}
     OtherTransf := Find(AutoTransfName);
     if OtherTransf <> NIL then
-        with ActiveAutoTransObj do
+        with DSS.ActiveAutoTransObj do
         begin
             Nphases := OtherTransf.Fnphases;
             SetNumWindings(OtherTransf.NumWindings);

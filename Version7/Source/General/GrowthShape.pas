@@ -100,10 +100,6 @@ type
         function GetMult(Yr: Integer): Double;  // Get multiplier for Specified Year
     end;
 
-var
-    ActiveGrowthShapeObj: TGrowthShapeObj;
-
-
 implementation
 
 uses
@@ -208,10 +204,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveGrowthShapeObj := ElementList.Active;
-    ActiveDSSObject := ActiveGrowthShapeObj;
+    DSS.ActiveGrowthShapeObj := ElementList.Active;
+    ActiveDSSObject := DSS.ActiveGrowthShapeObj;
 
-    with ActiveGrowthShapeObj do
+    with DSS.ActiveGrowthShapeObj do
     begin
 
         ParamPointer := 0;
@@ -257,7 +253,7 @@ begin
                     DoDblFile(Param);
             else
            // Inherited parameters
-                ClassEdit(ActiveGrowthShapeObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveGrowthShapeObj, ParamPointer - NumPropsThisClass)
             end;
 
             ParamName := Parser.NextParam;
@@ -278,7 +274,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherGrowthShape := Find(ShapeName);
     if OtherGrowthShape <> NIL then
-        with ActiveGrowthShapeObj do
+        with DSS.ActiveGrowthShapeObj do
         begin
             Npts := OtherGrowthShape.Npts;
             ReallocMem(Multiplier, SizeOf(Multiplier^[1]) * Npts);
@@ -326,14 +322,14 @@ var
 
 begin
 
-    ActiveGrowthShapeObj := NIL;
+    DSS.ActiveGrowthShapeObj := NIL;
     GrowthShapeObj := ElementList.First;
     while GrowthShapeObj <> NIL do
     begin
 
         if CompareText(GrowthShapeObj.Name, Value) = 0 then
         begin
-            ActiveGrowthShapeObj := GrowthShapeObj;
+            DSS.ActiveGrowthShapeObj := GrowthShapeObj;
             Exit;
         end;
 
@@ -363,7 +359,7 @@ begin
     end;
 
     try
-        with ActiveGrowthShapeObj do
+        with DSS.ActiveGrowthShapeObj do
         begin
             i := 0;
             while (not EOF(F)) and (i < Npts) do
@@ -411,7 +407,7 @@ begin
     end;
 
     try
-        with ActiveGrowthShapeObj do
+        with DSS.ActiveGrowthShapeObj do
         begin
             i := 0;
             while (not EOF(F)) and (i < Npts) do
@@ -449,7 +445,7 @@ begin
     end;
 
     try
-        with ActiveGrowthShapeObj do
+        with DSS.ActiveGrowthShapeObj do
         begin
             i := 0;
             while (not EOF(F)) and (i < Npts) do

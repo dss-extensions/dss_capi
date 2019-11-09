@@ -80,9 +80,6 @@ type
 
     end;
 
-var
-    ActiveTCC_CurveObj: TTCC_CurveObj;
-
 implementation
 
 uses
@@ -186,10 +183,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveTCC_CurveObj := ElementList.Active;
-    ActiveDSSObject := ActiveTCC_CurveObj;
+    DSS.ActiveTCC_CurveObj := ElementList.Active;
+    ActiveDSSObject := DSS.ActiveTCC_CurveObj;
 
-    with ActiveTCC_CurveObj do
+    with DSS.ActiveTCC_CurveObj do
     begin
 
         ParamPointer := 0;
@@ -216,7 +213,7 @@ begin
                     Npts := InterpretDblArray(Param, Npts, T_values);   // Parser.ParseAsVector(Npts, Hours);
             else
            // Inherited parameters
-                ClassEdit(ActiveTCC_CurveObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveTCC_CurveObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -249,7 +246,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherTCC_Curve := Find(ShapeName);
     if OtherTCC_Curve <> NIL then
-        with ActiveTCC_CurveObj do
+        with DSS.ActiveTCC_CurveObj do
         begin
             Npts := OtherTCC_Curve.Npts;
             ReAllocmem(C_Values, Sizeof(C_Values^[1]) * Npts);
@@ -302,14 +299,14 @@ var
 
 begin
 
-    ActiveTCC_CurveObj := NIL;
+    DSS.ActiveTCC_CurveObj := NIL;
     TCC_CurveObj := ElementList.First;
     while TCC_CurveObj <> NIL do
     begin
 
         if CompareText(TCC_CurveObj.Name, Value) = 0 then
         begin
-            ActiveTCC_CurveObj := TCC_CurveObj;
+            DSS.ActiveTCC_CurveObj := TCC_CurveObj;
             Exit;
         end;
 

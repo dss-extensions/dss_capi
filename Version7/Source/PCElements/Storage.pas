@@ -272,9 +272,6 @@ type
         property MinModelVoltagePU: Double READ VminPu;
     end;
 
-var
-    ActiveStorageObj: TStorageObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -566,7 +563,7 @@ end;
 procedure TStorage.SetNcondsForConnection;
 
 begin
-    with ActiveStorageObj do
+    with DSS.ActiveStorageObj do
     begin
         case Connection of
             0:
@@ -603,7 +600,7 @@ var
     TestS: String;
 
 begin
-    with ActiveStorageObj do
+    with DSS.ActiveStorageObj do
     begin
         TestS := lowercase(S);
         case TestS[1] of
@@ -687,12 +684,12 @@ var
 begin
 
   // continue parsing with contents of Parser
-    ActiveStorageObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveStorageObj;
+    DSS.ActiveStorageObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveStorageObj;
 
     Result := 0;
 
-    with ActiveStorageObj do
+    with DSS.ActiveStorageObj do
     begin
 
         ParamPointer := 0;
@@ -803,7 +800,7 @@ begin
 
                 else
                // Inherited parameters
-                    ClassEdit(ActiveStorageObj, ParamPointer - NumPropsThisClass)
+                    ClassEdit(DSS.ActiveStorageObj, ParamPointer - NumPropsThisClass)
                 end;
 
                 case iCase of
@@ -886,7 +883,7 @@ begin
      {See If we can find this line name in the present collection}
     OtherStorageObj := Find(OtherStorageObjName);
     if (OtherStorageObj <> NIL) then
-        with ActiveStorageObj do
+        with DSS.ActiveStorageObj do
         begin
             if (Fnphases <> OtherStorageObj.Fnphases) then
             begin

@@ -125,9 +125,9 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveConductorDataObj := ElementList.Active;
-    ActiveDSSObject := ActiveConductorDataObj;
-    with TTSDataObj(ActiveConductorDataObj) do
+    DSS.ActiveConductorDataObj := ElementList.Active;
+    ActiveDSSObject := DSS.ActiveConductorDataObj;
+    with TTSDataObj(DSS.ActiveConductorDataObj) do
     begin
         ParamPointer := 0;
         ParamName := Parser.NextParam;
@@ -153,7 +153,7 @@ begin
                     FTapeLap := Parser.DblValue;
             else
         // Inherited parameters
-                ClassEdit(ActiveConductorDataObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveConductorDataObj, ParamPointer - NumPropsThisClass)
             end;
 
       {Check for critical errors}
@@ -182,7 +182,7 @@ begin
     Result := 0;
     OtherData := Find(TSName);
     if OtherData <> NIL then
-        with TTSDataObj(ActiveConductorDataObj) do
+        with TTSDataObj(DSS.ActiveConductorDataObj) do
         begin
             FDiaShield := OtherData.FDiaShield;
             FTapeLayer := OtherData.FTapeLayer;
@@ -211,13 +211,14 @@ procedure TTSData.Set_Code(const Value: String);  // sets the  active TSData
 var
     TSDataObj: TTSDataObj;
 begin
-    ActiveConductorDataObj := NIL;
+    DSS.ActiveConductorDataObj := NIL;
     TSDataObj := ElementList.First;
     while TSDataObj <> NIL do
     begin
+        //TODO: fast lookup
         if CompareText(TSDataObj.Name, Value) = 0 then
         begin
-            ActiveConductorDataObj := TSDataObj;
+            DSS.ActiveConductorDataObj := TSDataObj;
             Exit;
         end;
         TSDataObj := ElementList.Next;

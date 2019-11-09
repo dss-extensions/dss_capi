@@ -130,8 +130,6 @@ type
 
     end;
 
-var
-    ActiveTShapeObj: TTShapeObj;
 
 implementation
 
@@ -265,10 +263,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveTShapeObj := ElementList.Active;
-    ActiveDSSObject := ActiveTShapeObj;
+    DSS.ActiveTShapeObj := ElementList.Active;
+    ActiveDSSObject := DSS.ActiveTShapeObj;
 
-    with ActiveTShapeObj do
+    with DSS.ActiveTShapeObj do
     begin
 
         ParamPointer := 0;
@@ -326,7 +324,7 @@ begin
                     end;
             else
            // Inherited parameters
-                ClassEdit(ActiveTShapeObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveTShapeObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -364,7 +362,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherTShape := Find(ShapeName);
     if OtherTShape <> NIL then
-        with ActiveTShapeObj do
+        with DSS.ActiveTShapeObj do
         begin
             NumPoints := OtherTShape.NumPoints;
             Interval := OtherTShape.Interval;
@@ -417,14 +415,14 @@ var
 
 begin
 
-    ActiveTShapeObj := NIL;
+    DSS.ActiveTShapeObj := NIL;
     TShapeObj := ElementList.First;
     while TShapeObj <> NIL do
     begin
-
+        //TODO
         if CompareText(TShapeObj.Name, Value) = 0 then
         begin
-            ActiveTShapeObj := TShapeObj;
+            DSS.ActiveTShapeObj := TShapeObj;
             Exit;
         end;
 
@@ -455,7 +453,7 @@ begin
 
     try
 
-        with ActiveTShapeObj do
+        with DSS.ActiveTShapeObj do
         begin
             ReAllocmem(TValues, Sizeof(TValues^[1]) * NumPoints);
             if Interval = 0.0 then
@@ -513,7 +511,7 @@ begin
     end;
 
     try
-        with ActiveTShapeObj do
+        with DSS.ActiveTShapeObj do
         begin
             ReAllocmem(TValues, Sizeof(TValues^[1]) * NumPoints);
             if Interval = 0.0 then
@@ -559,7 +557,7 @@ begin
     end;
 
     try
-        with ActiveTShapeObj do
+        with DSS.ActiveTShapeObj do
         begin
             ReAllocmem(TValues, Sizeof(TValues^[1]) * NumPoints);
             if Interval = 0.0 then

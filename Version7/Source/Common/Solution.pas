@@ -274,9 +274,6 @@ type
     end;
 
 {==========================================================================}
-var
-    ActiveSolutionObj: TSolutionObj;
-
 
 implementation
 
@@ -378,9 +375,9 @@ end;
 function TDSSSolution.NewObject(const ObjName: String): Integer;
 begin
     // Make a new Solution Object and add it to Solution class list
-    ActiveSolutionObj := TSolutionObj.Create(Self, ObjName, DSS);
+    DSS.ActiveSolutionObj := TSolutionObj.Create(Self, ObjName, DSS);
     // this one is different than the rest of the objects.
-    Result := AdDobjectToList(ActiveSolutionObj);
+    Result := AddObjectToList(DSS.ActiveSolutionObj);
 end;
 
 // ===========================================================================================
@@ -498,9 +495,9 @@ function TDSSSolution.Edit: Integer;
 begin
     Result := 0;
 
-    ActiveSolutionObj := DSS.ActiveCircuit.Solution;
+    DSS.ActiveSolutionObj := DSS.ActiveCircuit.Solution;
 
-    with ActiveSolutionObj do
+    with DSS.ActiveSolutionObj do
     begin
 
        // This is all we do here now...

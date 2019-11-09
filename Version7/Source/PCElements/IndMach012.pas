@@ -188,7 +188,6 @@ type
     PROTECTED
 
         {A couple of virtual procedures you can override}
-        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure DoDynamicMode;
@@ -210,6 +209,7 @@ type
         constructor Create(ParClass: TDSSClass; const IndMach012ObjName: String);
         destructor Destroy; OVERRIDE;
 
+        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure RecalcElementData; OVERRIDE;   // Generally called after Edit is complete to recompute variables
         procedure CalcYPrim; OVERRIDE;   // Calculate Primitive Y matrix
         procedure Integrate;
@@ -259,9 +259,6 @@ type
        }
 
     end;
-
-var
-    ActiveIndMach012Obj: TIndMach012Obj;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
@@ -479,7 +476,7 @@ procedure TIndMach012.SetNcondsForConnection;
 
 begin
 
-    with ActiveIndMach012Obj do
+    with DSS.ActiveIndMach012Obj do
     begin
         case Connection of
             0:
@@ -520,12 +517,12 @@ begin
 
   // set the present element active
   // and continue parsing with contents of Parser
-    ActiveIndMach012Obj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveIndMach012Obj;
+    DSS.ActiveIndMach012Obj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveIndMach012Obj;
 
     Result := 0;
 
-    with ActiveIndMach012Obj do
+    with DSS.ActiveIndMach012Obj do
     begin
      // peel off the next token on the edit line
         ParamPointer := 0;
@@ -599,7 +596,7 @@ begin
 
                 else
            // Handle Inherited properties
-                    ClassEdit(ActiveIndMach012Obj, ParamPointer - NumPropsThisClass)
+                    ClassEdit(DSS.ActiveIndMach012Obj, ParamPointer - NumPropsThisClass)
                 end;
 
          // ---------------- SIDE EFFECTS CASE STATEMENT ---------------------
@@ -668,7 +665,7 @@ begin
     OtherIndMach012 := Find(OtherIndMach012Name);
     if (OtherIndMach012 <> NIL)   // skip if not found
     then
-        with ActiveIndMach012Obj do
+        with DSS.ActiveIndMach012Obj do
         begin
        // You should first set the basic circuit element properties, for example
             if (Fnphases <> OtherIndMach012.Fnphases) then

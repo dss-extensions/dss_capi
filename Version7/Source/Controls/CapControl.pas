@@ -128,9 +128,6 @@ type
     end;
 
 
-var
-    ActiveCapControlObj: TCapControlObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -285,12 +282,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveCapControlObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveCapControlObj;
+    DSS.ActiveCapControlObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveCapControlObj;
 
     Result := 0;
 
-    with ActiveCapControlObj do
+    with DSS.ActiveCapControlObj do
     begin
 
         ParamPointer := 0;
@@ -328,7 +325,7 @@ begin
                         'p':
                             ControlType := PFCONTROL;
                     else
-                        DoSimpleMsg(Format('Unrecognized CapControl Type: "%s" (Capcontrol.%s)', [param, ActiveCapControlObj.name]), 352);
+                        DoSimpleMsg(Format('Unrecognized CapControl Type: "%s" (Capcontrol.%s)', [param, DSS.ActiveCapControlObj.name]), 352);
                     end;
                 5:
                     ControlVars.PTRatio := Parser.DblValue;
@@ -394,7 +391,7 @@ begin
                     end;
             else
            // Inherited parameters
-                ClassEdit(ActiveCapControlObj, ParamPointer - NumPropsthisClass)
+                ClassEdit(DSS.ActiveCapControlObj, ParamPointer - NumPropsthisClass)
             end;
 
 
@@ -421,7 +418,7 @@ begin
                             end
                             else
                             begin
-                                DoSimpleMsg('Invalid PF ON value for CapControl.' + ActiveCapControlObj.Name, 353);
+                                DoSimpleMsg('Invalid PF ON value for CapControl.' + DSS.ActiveCapControlObj.Name, 353);
                             end;
                         end;
                         8:
@@ -435,7 +432,7 @@ begin
                             end
                             else
                             begin
-                                DoSimpleMsg('Invalid PF OFF value for CapControl.' + ActiveCapControlObj.Name, 35301);
+                                DoSimpleMsg('Invalid PF OFF value for CapControl.' + DSS.ActiveCapControlObj.Name, 35301);
                             end;
                         end;
 
@@ -482,7 +479,7 @@ begin
    {See if we can find this CapControl name in the present collection}
     OtherCapControl := Find(CapControlName);
     if OtherCapControl <> NIL then
-        with ActiveCapControlObj do
+        with DSS.ActiveCapControlObj do
         begin
 
             NPhases := OtherCapControl.Fnphases;

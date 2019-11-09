@@ -329,9 +329,6 @@ type
 
     end;
 
-var
-    ActivePVsystemObj: TPVsystemObj;
-
 // ===========================================================================================
 implementation
 
@@ -609,7 +606,7 @@ end;
 procedure TPVsystem.SetNcondsForConnection;
 
 begin
-    with ActivePVsystemObj do
+    with DSS.ActivePVsystemObj do
     begin
         case Connection of
             0:
@@ -646,7 +643,7 @@ var
     TestS: String;
 
 begin
-    with ActivePVsystemObj do
+    with DSS.ActivePVsystemObj do
     begin
         TestS := lowercase(S);
         case TestS[1] of
@@ -697,12 +694,12 @@ var
 begin
 
   // continue parsing with contents of Parser
-    ActivePVsystemObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActivePVsystemObj;
+    DSS.ActivePVsystemObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActivePVsystemObj;
 
     Result := 0;
 
-    with ActivePVsystemObj do
+    with DSS.ActivePVsystemObj do
     begin
 
         ParamPointer := 0;
@@ -816,7 +813,7 @@ begin
 
                 else
                // Inherited parameters
-                    ClassEdit(ActivePVsystemObj, ParamPointer - NumPropsThisClass)
+                    ClassEdit(DSS.ActivePVsystemObj, ParamPointer - NumPropsThisClass)
                 end;
 
                 case iCase of
@@ -886,7 +883,7 @@ begin
      {See If we can find this line name in the present collection}
     OtherPVsystemObj := Find(OtherPVsystemObjName);
     if (OtherPVsystemObj <> NIL) then
-        with ActivePVsystemObj do
+        with DSS.ActivePVsystemObj do
         begin
             if (Fnphases <> OtherPVsystemObj.Fnphases) then
             begin

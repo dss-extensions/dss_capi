@@ -94,9 +94,6 @@ type
 
     end;
 
-var
-    ActiveIsourceObj: TIsourceObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -227,12 +224,12 @@ var
 
 begin
   // continue parsing with contents of Parser
-    ActiveIsourceObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveIsourceObj;
+    DSS.ActiveIsourceObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveIsourceObj;
 
     Result := 0;
 
-    with ActiveIsourceObj do
+    with DSS.ActiveIsourceObj do
     begin
 
         ParamPointer := 0;
@@ -303,7 +300,7 @@ begin
                 11:
                     SetBus(2, Param);
             else
-                ClassEdit(ActiveIsourceObj, ParamPointer - NumPropsThisClass);
+                ClassEdit(DSS.ActiveIsourceObj, ParamPointer - NumPropsThisClass);
             end;
 
             case ParamPointer of
@@ -342,7 +339,7 @@ begin
    {See if we can find this line name in the present collection}
     OtherIsource := Find(OtherSource);
     if OtherIsource <> NIL then
-        with ActiveIsourceObj do
+        with DSS.ActiveIsourceObj do
         begin
 
             if Fnphases <> OtherIsource.Fnphases then
@@ -398,7 +395,7 @@ var
    // Set Bus2 = Bus1.0.0.0
 
 begin
-    with ActiveISourceObj do
+    with DSS.ActiveISourceObj do
     begin
         SetBus(1, S);
 

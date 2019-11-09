@@ -351,11 +351,6 @@ type
     end;
 
 
-var
-    Generic5Class: TGeneric5;
-    ActiveGeneric5Obj: TGeneric5Obj;
-
-
 implementation
 
 {Typical Uses Clause -- not all may not be needed}

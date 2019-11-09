@@ -74,8 +74,6 @@ type
 
     end;
 
-var
-    ActiveSpectrumObj: TSpectrumObj;
 
 implementation
 
@@ -171,10 +169,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveSpectrumObj := ElementList.Active;
-    ActiveDSSObject := ActiveSpectrumObj;
+    DSS.ActiveSpectrumObj := ElementList.Active;
+    ActiveDSSObject := DSS.ActiveSpectrumObj;
 
-    with ActiveSpectrumObj do
+    with DSS.ActiveSpectrumObj do
     begin
 
         ParamPointer := 0;
@@ -221,7 +219,7 @@ begin
                     DoCSVFile(Param);
             else
           // Inherited parameters
-                ClassEdit(ActiveSpectrumObj, Parampointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveSpectrumObj, Parampointer - NumPropsThisClass)
             end;
 
 
@@ -255,7 +253,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherSpectrum := Find(LineName);
     if OtherSpectrum <> NIL then
-        with ActiveSpectrumObj do
+        with DSS.ActiveSpectrumObj do
         begin
 
             NumHarm := OtherSpectrum.NumHarm;
@@ -298,14 +296,14 @@ var
     SpectrumObj: TSpectrumObj;
 begin
 
-    ActiveSpectrumObj := NIL;
+    DSS.ActiveSpectrumObj := NIL;
     SpectrumObj := ElementList.First;
     while SpectrumObj <> NIL do
     begin
 
         if CompareText(SpectrumObj.Name, Value) = 0 then
         begin
-            ActiveSpectrumObj := SpectrumObj;
+            DSS.ActiveSpectrumObj := SpectrumObj;
             Exit;
         end;
 
@@ -369,7 +367,7 @@ begin
 
     try
 
-        with ActiveSpectrumObj do
+        with DSS.ActiveSpectrumObj do
         begin
             ReAllocmem(HarmArray, Sizeof(HarmArray^[1]) * NumHarm);
             ReAllocmem(puMagArray, Sizeof(puMagArray^[1]) * NumHarm);

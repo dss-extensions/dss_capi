@@ -177,10 +177,6 @@ type
 
     end;
 
-
-var
-    ActiveRelayObj: TRelayObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -351,12 +347,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveRelayObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveRelayObj;
+    DSS.ActiveRelayObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveRelayObj;
 
     Result := 0;
 
-    with ActiveRelayObj do
+    with DSS.ActiveRelayObj do
     begin
 
         ParamPointer := 0;
@@ -442,7 +438,7 @@ begin
                         TDGround := Parser.DblValue;
                 else
            // Inherited parameters
-                    ClassEdit(ActiveRelayObj, ParamPointer - NumPropsthisClass)
+                    ClassEdit(DSS.ActiveRelayObj, ParamPointer - NumPropsthisClass)
                 end;
 
             if ParamPointer > 0 then
@@ -486,7 +482,7 @@ begin
    {See if we can find this Relay name in the present collection}
     OtherRelay := Find(RelayName);
     if OtherRelay <> NIL then
-        with ActiveRelayObj do
+        with DSS.ActiveRelayObj do
         begin
 
             NPhases := OtherRelay.Fnphases;

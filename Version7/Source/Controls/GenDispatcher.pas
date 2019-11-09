@@ -84,10 +84,6 @@ type
         function MakeGenList: Boolean;
     end;
 
-
-var
-    ActiveGenDispatcherObj: TGenDispatcherObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -188,12 +184,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveGenDispatcherObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveGenDispatcherObj;
+    DSS.ActiveGenDispatcherObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveGenDispatcherObj;
 
     Result := 0;
 
-    with ActiveGenDispatcherObj do
+    with DSS.ActiveGenDispatcherObj do
     begin
 
         ParamPointer := 0;
@@ -236,7 +232,7 @@ begin
 
             else
            // Inherited parameters
-                ClassEdit(ActiveGenDispatcherObj, ParamPointer - NumPropsthisClass)
+                ClassEdit(DSS.ActiveGenDispatcherObj, ParamPointer - NumPropsthisClass)
             end;
 
             case ParamPointer of
@@ -274,7 +270,7 @@ begin
    {See if we can find this GenDispatcher name in the present collection}
     OtherGenDispatcher := Find(GenDispatcherName);
     if OtherGenDispatcher <> NIL then
-        with ActiveGenDispatcherObj do
+        with DSS.ActiveGenDispatcherObj do
         begin
 
             NPhases := OtherGenDispatcher.Fnphases;

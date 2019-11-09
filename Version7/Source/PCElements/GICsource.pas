@@ -85,9 +85,6 @@ type
 
     end;
 
-var
-    ActiveGICsourceObj: TGICSourceObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -201,12 +198,12 @@ var
 
 begin
   // continue parsing with contents of Parser
-    ActiveGICsourceObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveGICsourceObj;
+    DSS.ActiveGICsourceObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveGICsourceObj;
 
     Result := 0;
 
-    with ActiveGICsourceObj do
+    with DSS.ActiveGICsourceObj do
     begin
 
         ParamPointer := 0;
@@ -251,7 +248,7 @@ begin
                     Lon2 := Parser.DblValue;
 
             else
-                ClassEdit(ActiveGICsourceObj, ParamPointer - NumPropsThisClass);
+                ClassEdit(DSS.ActiveGICsourceObj, ParamPointer - NumPropsThisClass);
             end;
 
             case ParamPointer of
@@ -282,7 +279,7 @@ begin
    {See if we can find this line name in the present collection}
     OtherGICsource := Find(OtherSource);
     if OtherGICsource <> NIL then
-        with ActiveGICsourceObj do
+        with DSS.ActiveGICsourceObj do
         begin
 
             if Fnphases <> OtherGICsource.Fnphases then

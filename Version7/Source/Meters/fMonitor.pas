@@ -206,10 +206,6 @@ TYPE
       // Property CSVFileName:String Read Get_FileName;
    end;
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-
-VAR
-    ActiveFMonitorObj:TFMonitorObj;
 
 {--------------------------------------------------------------------------}
 implementation

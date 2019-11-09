@@ -179,9 +179,6 @@ type
 
     end;
 
-var
-    ActiveLoadShapeObj: TLoadShapeObj;
-
 implementation
 
 uses
@@ -331,10 +328,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveLoadShapeObj := ElementList.Active;
-    ActiveDSSObject := ActiveLoadShapeObj;
+    DSS.ActiveLoadShapeObj := ElementList.Active;
+    ActiveDSSObject := DSS.ActiveLoadShapeObj;
 
-    with ActiveLoadShapeObj do
+    with DSS.ActiveLoadShapeObj do
     begin
 
         ParamPointer := 0;
@@ -354,7 +351,7 @@ begin
                 TLoadShapeProp.INVALID:
                     DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 610);
                 TLoadShapeProp.npts:
-                    if ActiveLoadShapeObj.ExternalMemory then
+                    if DSS.ActiveLoadShapeObj.ExternalMemory then
                     begin
                         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
                         Exit;
@@ -365,7 +362,7 @@ begin
                     Interval := Parser.DblValue;
                 TLoadShapeProp.Pmult, TLoadShapeProp.mult:
                 begin
-                    if ActiveLoadShapeObj.ExternalMemory then
+                    if DSS.ActiveLoadShapeObj.ExternalMemory then
                     begin
                         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
                         Exit;
@@ -376,7 +373,7 @@ begin
                 end;
                 TLoadShapeProp.hour:
                 begin
-                    if ActiveLoadShapeObj.ExternalMemory then
+                    if DSS.ActiveLoadShapeObj.ExternalMemory then
                     begin
                         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
                         Exit;
@@ -428,7 +425,7 @@ begin
             end
             else
                 // Inherited parameters
-                ClassEdit(ActiveLoadShapeObj, ParamPointer - NumPropsThisClass);
+                ClassEdit(DSS.ActiveLoadShapeObj, ParamPointer - NumPropsThisClass);
 
 
             if (ParamPointer <= NumPropsThisClass) then case TLoadShapeProp(ParamPointer) of
@@ -469,7 +466,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherLoadShape := Find(ShapeName);
     if OtherLoadShape <> NIL then
-        with ActiveLoadShapeObj do
+        with DSS.ActiveLoadShapeObj do
         begin
             NumPoints := OtherLoadShape.NumPoints;
             Interval := OtherLoadShape.Interval;
@@ -545,14 +542,14 @@ var
 
 begin
 
-    ActiveLoadShapeObj := NIL;
+    DSS.ActiveLoadShapeObj := NIL;
     LoadShapeObj := ElementList.First;
     while LoadShapeObj <> NIL do
     begin
 
         if CompareText(LoadShapeObj.Name, Value) = 0 then
         begin
-            ActiveLoadShapeObj := LoadShapeObj;
+            DSS.ActiveLoadShapeObj := LoadShapeObj;
             Exit;
         end;
 
@@ -574,7 +571,7 @@ var
     s: String;
 
 begin
-    if ActiveLoadShapeObj.ExternalMemory then
+    if DSS.ActiveLoadShapeObj.ExternalMemory then
     begin
         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
@@ -591,7 +588,7 @@ begin
 
     try
 
-        with ActiveLoadShapeObj do
+        with DSS.ActiveLoadShapeObj do
         begin
          // Allocate both P and Q multipliers
             ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
@@ -632,7 +629,7 @@ begin
         end;
     end;
 
-    ActiveLoadShapeObj.PQCSVFilename := FileName;
+    DSS.ActiveLoadShapeObj.PQCSVFilename := FileName;
 end;
 
 procedure TLoadShape.DoCSVFile(const FileName: String);
@@ -643,7 +640,7 @@ var
     s: String;
 
 begin
-    if ActiveLoadShapeObj.ExternalMemory then
+    if DSS.ActiveLoadShapeObj.ExternalMemory then
     begin
         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
@@ -660,7 +657,7 @@ begin
 
     try
 
-        with ActiveLoadShapeObj do
+        with DSS.ActiveLoadShapeObj do
         begin
             ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
             if Interval = 0.0 then
@@ -697,7 +694,7 @@ begin
         end;
     end;
 
-    ActiveLoadShapeObj.CSVFilename := FileName;
+    DSS.ActiveLoadShapeObj.CSVFilename := FileName;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -708,7 +705,7 @@ var
     i: Integer;
 
 begin
-    if ActiveLoadShapeObj.ExternalMemory then
+    if DSS.ActiveLoadShapeObj.ExternalMemory then
     begin
         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
@@ -724,7 +721,7 @@ begin
     end;
 
     try
-        with ActiveLoadShapeObj do
+        with DSS.ActiveLoadShapeObj do
         begin
             ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
             if Interval = 0.0 then
@@ -751,7 +748,7 @@ begin
         Exit;
     end;
 
-    ActiveLoadShapeObj.SngFilename := FileName;
+    DSS.ActiveLoadShapeObj.SngFilename := FileName;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -761,7 +758,7 @@ var
     i: Integer;
 
 begin
-    if ActiveLoadShapeObj.ExternalMemory then
+    if DSS.ActiveLoadShapeObj.ExternalMemory then
     begin
         DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
@@ -777,7 +774,7 @@ begin
     end;
 
     try
-        with ActiveLoadShapeObj do
+        with DSS.ActiveLoadShapeObj do
         begin
             ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
             if Interval = 0.0 then
@@ -800,7 +797,7 @@ begin
         Exit;
     end;
 
-    ActiveLoadShapeObj.DblFilename := FileName;
+    DSS.ActiveLoadShapeObj.DblFilename := FileName;
 
 end;
 

@@ -167,9 +167,6 @@ type
         property SimpleX: Double READ X;
     end;
 
-var
-    ActiveReactorObj: TReactorObj;
-
 implementation
 
 uses
@@ -296,7 +293,7 @@ var
     MatBuffer: pDoubleArray;
 
 begin
-    with ActiveReactorObj do
+    with DSS.ActiveReactorObj do
     begin
         MatBuffer := Allocmem(Sizeof(Double) * Fnphases * Fnphases);
         OrderFound := Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
@@ -322,7 +319,7 @@ var
     TestS: String;
 
 begin
-    with ActiveReactorObj do
+    with DSS.ActiveReactorObj do
     begin
         TestS := lowercase(S);
         case TestS[1] of
@@ -360,7 +357,7 @@ var
    // Set Bus2 = Bus1.0.0.0
 
 begin
-    with ActiveReactorObj do
+    with DSS.ActiveReactorObj do
     begin
         SetBus(1, S);
 
@@ -395,11 +392,11 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveReactorObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveReactorObj;  // use property to set this value
+    DSS.ActiveReactorObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveReactorObj;  // use property to set this value
 
 
-    with ActiveReactorObj do
+    with DSS.ActiveReactorObj do
     begin
 
         ParamPointer := 0;
@@ -462,7 +459,7 @@ begin
             end
             else
             // Inherited Property Edits
-                ClassEdit(ActiveReactorObj, ParamPointer - NumPropsThisClass);
+                ClassEdit(DSS.ActiveReactorObj, ParamPointer - NumPropsThisClass);
 
          // Some specials ...
             if (ParamPointer <= NumPropsThisClass) then case TReactorProp(ParamPointer) of
@@ -554,7 +551,7 @@ begin
    {See if we can find this Reactor name in the present collection}
     OtherReactor := Find(ReactorName);
     if OtherReactor <> NIL then
-        with ActiveReactorObj do
+        with DSS.ActiveReactorObj do
         begin
 
             if Fnphases <> OtherReactor.Fnphases then

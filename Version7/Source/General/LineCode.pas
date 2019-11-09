@@ -114,9 +114,6 @@ type
 
     end;
 
-var
-    ActiveLineCodeObj: TLineCodeObj;
-
 implementation
 
 uses
@@ -320,7 +317,7 @@ procedure TLineCode.SetUnits(const s: String);
 // decodes the units string and sets the Units variable
 
 begin
-    ActiveLineCodeObj.Units := GetUnitsCode(S);
+    DSS.ActiveLineCodeObj.Units := GetUnitsCode(S);
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -331,7 +328,7 @@ begin
     SymComponentsChanged := TRUE;
 
 
-    with ActiveLineCodeObj do
+    with DSS.ActiveLineCodeObj do
     begin
         SymComponentsModel := TRUE;
         case i of
@@ -363,7 +360,7 @@ var
     Factor: Double;
 
 begin
-    with ActiveLineCodeObj do
+    with DSS.ActiveLineCodeObj do
     begin
         MatrixChanged := TRUE;
         MatBuffer := Allocmem(Sizeof(Double) * FNphases * FNphases);
@@ -411,13 +408,13 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveLineCodeObj := ElementList.Active;
-    ActiveDSSObject := ActiveLineCodeObj;
+    DSS.ActiveLineCodeObj := ElementList.Active;
+    ActiveDSSObject := DSS.ActiveLineCodeObj;
     SymComponentsChanged := FALSE;
     MatrixChanged := FALSE;
-    ActiveLineCodeObj.ReduceByKron := FALSE;  // Allow all matrices to be computed it raw form
+    DSS.ActiveLineCodeObj.ReduceByKron := FALSE;  // Allow all matrices to be computed it raw form
 
-    with ActiveLineCodeObj do
+    with DSS.ActiveLineCodeObj do
     begin
 
         ParamPointer := 0;
@@ -496,7 +493,7 @@ begin
                     NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
                 end
             else
-                ClassEdit(ActiveLineCodeObj, Parampointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveLineCodeObj, Parampointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -533,7 +530,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherLineCode := Find(LineName);
     if OtherLineCode <> NIL then
-        with ActiveLineCodeObj do
+        with DSS.ActiveLineCodeObj do
         begin
 
             if FNPhases <> OtherLineCode.FNphases then
@@ -603,14 +600,14 @@ var
     LineCodeObj: TLineCodeObj;
 begin
 
-    ActiveLineCodeObj := NIL;
+    DSS.ActiveLineCodeObj := NIL;
     LineCodeObj := ElementList.First;
     while LineCodeObj <> NIL do
     begin
-
+        //TODO: fast lookup
         if CompareText(LineCodeObj.Name, Value) = 0 then
         begin
-            ActiveLineCodeObj := LineCodeObj;
+            DSS.ActiveLineCodeObj := LineCodeObj;
             Exit;
         end;
 

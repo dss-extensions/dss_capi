@@ -320,9 +320,6 @@ type
         nZIPV = 7;
     end;
 
-var
-    ActiveLoadObj: TLoadObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -543,7 +540,7 @@ end;
 procedure TLoad.SetNcondsForConnection;
 
 begin
-    with ActiveLoadObj do
+    with DSS.ActiveLoadObj do
     begin
         case Connection of
             TLoadConnection.Wye:
@@ -570,7 +567,7 @@ var
     TestS: String;
 
 begin
-    with ActiveLoadObj do
+    with DSS.ActiveLoadObj do
     begin
         TestS := lowercase(S);
         case TestS[1] of
@@ -619,12 +616,12 @@ var
 
 begin
   // continue parsing WITH contents of Parser
-    ActiveLoadObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveLoadObj;
+    DSS.ActiveLoadObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveLoadObj;
 
     Result := 0;
 
-    with ActiveLoadObj do
+    with DSS.ActiveLoadObj do
     begin
         ParamPointer := 0;
         ParamName := Parser.NextParam;
@@ -735,7 +732,7 @@ begin
             end
             else
                 // Inherited edits
-                ClassEdit(ActiveLoadObj, paramPointer - NumPropsThisClass);
+                ClassEdit(DSS.ActiveLoadObj, paramPointer - NumPropsThisClass);
 
          // << SIDE EFFECTS >>
          // keep kvar nominal up to date WITH kW and PF
@@ -820,7 +817,7 @@ begin
    {See IF we can find this line name in the present collection}
     OtherLoad := Find(OtherLoadName);
     if OtherLoad <> NIL then
-        with ActiveLoadObj do
+        with DSS.ActiveLoadObj do
         begin
 
             Connection := OtherLoad.Connection;
@@ -1542,7 +1539,7 @@ end;
 
 procedure TLoadObj.UpdateVoltageBases;
 begin
-    with ActiveLoadObj do
+    with DSSPrime.ActiveLoadObj do //TODO: why not self?
         case Connection of
             TLoadConnection.Delta:
                 VBase := kVLoadBase * 1000.0;

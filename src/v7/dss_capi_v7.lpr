@@ -107,7 +107,7 @@ uses
     DSSObject in 'Version7/Source/General/DSSObject.pas',
     Dynamics in 'Version7/Source/Shared/Dynamics.pas',
     EnergyMeter in 'Version7/Source/Meters/EnergyMeter.pas',
-    Equivalent in 'Version7/Source/PCElements/Equivalent.pas',
+    // Equivalent in 'Version7/Source/PCElements/Equivalent.pas',
     EventQueue in 'Version7/Source/Common/EventQueue.pas',
     ExecCommands in 'Version7/Source/Executive/ExecCommands.pas',
     ExecHelper in 'Version7/Source/Executive/ExecHelper.pas',
@@ -1813,7 +1813,6 @@ exports
     ZeroiseMatrixElement;
 
 begin
-  IsDLL := TRUE;
   DSSExecutive := TExecutive.Create(NIL);
   DSSExecutive.CreateDefaultDSSItems;
 end.

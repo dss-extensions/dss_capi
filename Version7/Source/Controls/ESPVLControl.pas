@@ -121,10 +121,6 @@ type
         function MakeLocalControlList: Boolean;
     end;
 
-
-var
-    ActiveESPVLControlObj: TESPVLControlObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -237,12 +233,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveESPVLControlObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveESPVLControlObj;
+    DSS.ActiveESPVLControlObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveESPVLControlObj;
 
     Result := 0;
 
-    with ActiveESPVLControlObj do
+    with DSS.ActiveESPVLControlObj do
     begin
 
         ParamPointer := 0;
@@ -314,7 +310,7 @@ begin
 
             else
            // Inherited parameters
-                ClassEdit(ActiveESPVLControlObj, ParamPointer - NumPropsthisClass)
+                ClassEdit(DSS.ActiveESPVLControlObj, ParamPointer - NumPropsthisClass)
             end;
 
          // Side Effects
@@ -351,7 +347,7 @@ begin
    {See if we can find this ESPVLControl name in the present collection}
     OtherESPVLControl := Find(ESPVLControlName);
     if OtherESPVLControl <> NIL then
-        with ActiveESPVLControlObj do
+        with DSS.ActiveESPVLControlObj do
         begin
 
             NPhases := OtherESPVLControl.Fnphases;

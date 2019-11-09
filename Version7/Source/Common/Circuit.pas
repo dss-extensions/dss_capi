@@ -348,7 +348,7 @@ BEGIN
 
      IsSolved := False;
      {*Retval   := *} DSS.SolutionClass.NewObject(Name);
-     Solution := ActiveSolutionObj;
+     Solution := DSS.ActiveSolutionObj;
 
      LocalName   := LowerCase(aName);
 

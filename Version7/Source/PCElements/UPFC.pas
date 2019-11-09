@@ -117,9 +117,6 @@ type
 
     end;
 
-var
-    ActiveUPFCObj: TUPFCObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -252,12 +249,12 @@ var
 
 begin
   // continue parsing with contents of Parser
-    ActiveUPFCObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveUPFCObj;
+    DSS.ActiveUPFCObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveUPFCObj;
 
     Result := 0;
 
-    with ActiveUPFCObj do
+    with DSS.ActiveUPFCObj do
     begin
 
         ParamPointer := 0;
@@ -313,7 +310,7 @@ begin
                     kvarLim := Parser.DblValue;
 
             else
-                ClassEdit(ActiveUPFCObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveUPFCObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -342,7 +339,7 @@ begin
    {See if we can find this line name in the present collection}
     OtherUPFC := Find(OtherSource);
     if OtherUPFC <> NIL then
-        with ActiveUPFCObj do
+        with DSS.ActiveUPFCObj do
         begin
 
             if Fnphases <> OtherUPFC.Fnphases then

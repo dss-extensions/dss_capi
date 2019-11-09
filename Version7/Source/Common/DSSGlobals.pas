@@ -499,19 +499,13 @@ End;
 
 
 PROCEDURE MakeNewCircuit(Const Name:String);
-
-//Var
-//   handle :Integer;
 Var
     S:String;
-
 Begin
-
-
      If DSSPrime.NumCircuits <= MaxCircuits - 1 Then
      Begin
          DSSPrime.ActiveCircuit := TDSSCircuit.Create(DSSPrime, Name);
-         ActiveDSSObject := ActiveSolutionObj;
+         ActiveDSSObject := DSSPrime.ActiveSolutionObj;
          {*Handle := *} DSSPrime.Circuits.Add(DSSPrime.ActiveCircuit);
          Inc(DSSPrime.NumCircuits);
          S := Parser.Remainder;    // Pass remainder of string on to vsource.
@@ -922,8 +916,11 @@ initialization
    QueryPerformanceFrequency(CPU_Freq);
    {$ENDIF}
    CPU_Cores        :=  CPUCount;
-
+   {$IFDEF DSS_CAPI}
+   IsDLL                 := True;
+   {$ELSE}
    IsDLL                 := FALSE;
+   {$ENDIF}
    MaxCircuits           := 1;  //  Not required anymore. planning to remove it
 
    //WriteDLLDebugFile('DSSGlobals');

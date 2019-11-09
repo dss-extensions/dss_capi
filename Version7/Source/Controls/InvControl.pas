@@ -242,10 +242,6 @@ end;
 
    end;
 
-
-VAR
-    ActiveInvControlObj:TInvControlObj;
-
 {--------------------------------------------------------------------------}
 IMPLEMENTATION
 
@@ -522,12 +518,12 @@ VAR
 Begin
 
   // continue parsing WITH contents of Parser
-  ActiveInvControlObj := ElementList.Active;
-  DSS.ActiveCircuit.ActiveCktElement := ActiveInvControlObj;
+  DSS.ActiveInvControlObj := ElementList.Active;
+  DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveInvControlObj;
 
   Result := 0;
 
-  WITH ActiveInvControlObj Do Begin
+  WITH DSS.ActiveInvControlObj Do Begin
 
      ParamPointer := 0;
      ParamName := Parser.NextParam;
@@ -681,7 +677,7 @@ Begin
 
          ELSE
            // Inherited parameters
-           ClassEdit( ActiveInvControlObj, ParamPointer - NumPropsthisClass)
+           ClassEdit( DSS.ActiveInvControlObj, ParamPointer - NumPropsthisClass)
          End;
 
         CASE ParamPointer OF
@@ -714,7 +710,7 @@ Begin
    {See if we can find this InvControl name in the present collection}
    OtherInvControl := Find(InvControlName);
    IF OtherInvControl<>Nil THEN
-   WITH ActiveInvControlObj Do Begin
+   WITH DSS.ActiveInvControlObj Do Begin
 
       NPhases := OtherInvControl.Fnphases;
       NConds  := OtherInvControl.Fnconds; // Force Reallocation of terminal stuff

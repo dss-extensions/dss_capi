@@ -101,9 +101,6 @@ type
         ;
     end;
 
-var
-    ActiveLineSpacingObj: TLineSpacingObj;
-
 implementation
 
 uses
@@ -182,7 +179,7 @@ var
     i: Integer;
 begin
     AuxParser.CmdString := S;
-    with ActiveLineSpacingObj do
+    with DSS.ActiveLineSpacingObj do
     begin
         for i := 1 to NWires do
         begin
@@ -209,10 +206,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveLineSpacingObj := ElementList.Active;
-    ActiveDSSObject := ActiveLineSpacingObj;
+    DSS.ActiveLineSpacingObj := ElementList.Active;
+    ActiveDSSObject := DSS.ActiveLineSpacingObj;
 
-    with ActiveLineSpacingObj do
+    with DSS.ActiveLineSpacingObj do
     begin
 
         ParamPointer := 0;
@@ -243,7 +240,7 @@ begin
                     FUnits := GetUnitsCode(Param);
             else
            // Inherited parameters
-                ClassEdit(ActiveLineSpacingObj, Parampointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveLineSpacingObj, Parampointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -269,7 +266,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherLineSpacing := Find(LineName);
     if OtherLineSpacing <> NIL then
-        with ActiveLineSpacingObj do
+        with DSS.ActiveLineSpacingObj do
         begin
 
             NWires := OtherLineSpacing.NWires;   // allocates
@@ -311,14 +308,14 @@ var
     LineSpacingObj: TLineSpacingObj;
 begin
 
-    ActiveLineSpacingObj := NIL;
+    DSS.ActiveLineSpacingObj := NIL;
     LineSpacingObj := ElementList.First;
     while LineSpacingObj <> NIL do
     begin
 
         if CompareText(LineSpacingObj.Name, Value) = 0 then
         begin
-            ActiveLineSpacingObj := LineSpacingObj;
+            DSS.ActiveLineSpacingObj := LineSpacingObj;
             Exit;
         end;
 

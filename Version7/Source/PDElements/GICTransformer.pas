@@ -83,9 +83,6 @@ type
         procedure WriteVarOutputRecord(var F: TextFile); // Add a record to the ouput file based on present GIC
     end;
 
-var
-    ActiveGICTransformerObj: TGICTransformerObj;
-
 implementation
 
 uses
@@ -219,7 +216,7 @@ var
    // Set Bus2 = BusH1.0.0.0
 
 begin
-    with ActiveGICTransformerObj do
+    with DSS.ActiveGICTransformerObj do
     begin
 
         SetBus(1, S);
@@ -252,7 +249,7 @@ var
    // Set Bus2 = Bus1.0.0.0
 
 begin
-    with ActiveGICTransformerObj do
+    with DSS.ActiveGICTransformerObj do
     begin
 
         if Nterms <> 4 then   // have to have 4 terminals to set this property
@@ -291,10 +288,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveGICTransformerObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveGICTransformerObj;  // use property to set this value
+    DSS.ActiveGICTransformerObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveGICTransformerObj;  // use property to set this value
 
-    with ActiveGICTransformerObj do
+    with DSS.ActiveGICTransformerObj do
     begin
 
         ParamPointer := 0;
@@ -363,7 +360,7 @@ begin
                     FKFactor := Parser.DblValue;
             else
            // Inherited
-                ClassEdit(ActiveGICTransformerObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveGICTransformerObj, ParamPointer - NumPropsThisClass)
             end;
 
          // Some specials ...
@@ -440,7 +437,7 @@ begin
    {See if we can find this Fault name in the present collection}
     OtherGICTrans := Find(GICTransName);
     if OtherGICTrans <> NIL then
-        with ActiveGICTransformerObj do
+        with DSS.ActiveGICTransformerObj do
         begin
 
             if Fnphases <> OtherGICTrans.Fnphases then

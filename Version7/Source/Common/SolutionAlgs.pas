@@ -793,7 +793,7 @@ begin
         FaultObj := DSS.ActiveCircuit.Faults.Get(i);
         if i = Whichone then
         begin
-            ActiveFaultObj := FaultObj; // in Fault Unit
+            DSS.ActiveFaultObj := FaultObj; // in Fault Unit
             FaultObj.Enabled := TRUE;
         end
         else
@@ -832,7 +832,7 @@ begin
                 begin
                     Inc(DynaVars.intHour);
                     PickAFault;  // Randomly enable one of the faults
-                    ActiveFaultObj.Randomize;  // Randomize the fault resistance
+                    DSS.ActiveFaultObj.Randomize;  // Randomize the fault resistance
                     SolveDirect;
                     DSS.MonitorClass.SampleAll;  // Make all monitors take a sample
 
@@ -951,11 +951,11 @@ procedure TSolutionAlgs.DisableAllFaults;
 begin
     with DSS.ActiveCircuit do
     begin
-        ActiveFaultObj := Faults.First;
-        while ActiveFaultObj <> NIL do
+        DSS.ActiveFaultObj := Faults.First;
+        while DSS.ActiveFaultObj <> NIL do
         begin
-            ActiveFaultObj.Enabled := FALSE;
-            ActiveFaultObj := Faults.Next;
+            DSS.ActiveFaultObj.Enabled := FALSE;
+            DSS.ActiveFaultObj := Faults.Next;
         end
     end;
 end;

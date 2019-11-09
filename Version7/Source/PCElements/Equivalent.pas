@@ -83,9 +83,6 @@ type
 
     end;
 
-var
-    ActiveEquivalentObj: TEquivalentObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -195,12 +192,12 @@ var
 
 begin
   // continue parsing with contents of Parser
-    ActiveEquivalentObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveEquivalentObj;
+    DSS.ActiveEquivalentObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveEquivalentObj;
 
     Result := 0;
 
-    with ActiveEquivalentObj do
+    with DSS.ActiveEquivalentObj do
     begin
 
         ParamPointer := 0;
@@ -245,7 +242,7 @@ begin
                 11:
                     ParseDblMatrix(X0);
             else
-                ClassEdit(ActiveEquivalentObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveEquivalentObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -276,7 +273,7 @@ begin
    {See if we can find this line name in the present collection}
     OtherEquivalent := Find(OtherSource);
     if OtherEquivalent <> NIL then
-        with ActiveEquivalentObj do
+        with DSS.ActiveEquivalentObj do
         begin
 
             if (Fnphases <> OtherEquivalent.Fnphases) or
@@ -776,7 +773,7 @@ begin
     AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
-    with ActiveEquivalentObj do
+    with DSS.ActiveEquivalentObj do
         for i := 1 to FNterms do
         begin
             S1 := AuxParser.NextParam; // ignore any parameter name  not expecting any

@@ -129,8 +129,6 @@ type
 
     end;
 
-var
-    ActiveXYcurveObj: TXYcurveObj;
 
 implementation
 
@@ -261,10 +259,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveXYcurveObj := ElementList.Active;
-    ActiveDSSObject := ActiveXYcurveObj;
+    DSS.ActiveXYcurveObj := ElementList.Active;
+    ActiveDSSObject := DSS.ActiveXYcurveObj;
 
-    with ActiveXYcurveObj do
+    with DSS.ActiveXYcurveObj do
     begin
 
         ParamPointer := 0;
@@ -334,7 +332,7 @@ begin
                     FYscale := Parser.dblvalue;
             else
            // Inherited parameters
-                ClassEdit(ActiveXYcurveObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveXYcurveObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -379,7 +377,7 @@ begin
    {See if we can find this curve in the present collection}
     OtherXYCurve := Find(CurveName);
     if OtherXYCurve <> NIL then
-        with ActiveXYcurveObj do
+        with DSS.ActiveXYcurveObj do
         begin
             NumPoints := OtherXYCurve.NumPoints;
             ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
@@ -431,14 +429,14 @@ var
 
 begin
 
-    ActiveXYcurveObj := NIL;
+    DSS.ActiveXYcurveObj := NIL;
     XYCurveObj := ElementList.First;
     while XYCurveObj <> NIL do
     begin
-
+        // TODO: fast lookup
         if CompareText(XYCurveObj.Name, Value) = 0 then
         begin
-            ActiveXYcurveObj := XYCurveObj;
+            DSS.ActiveXYcurveObj := XYCurveObj;
             Exit;
         end;
 
@@ -469,7 +467,7 @@ begin
 
     try
 
-        with ActiveXYcurveObj do
+        with DSS.ActiveXYcurveObj do
         begin
             ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
             ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);
@@ -523,7 +521,7 @@ begin
     end;
 
     try
-        with ActiveXYcurveObj do
+        with DSS.ActiveXYcurveObj do
         begin
             ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
             ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);
@@ -566,7 +564,7 @@ begin
     end;
 
     try
-        with ActiveXYcurveObj do
+        with DSS.ActiveXYcurveObj do
         begin
             ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
             ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);

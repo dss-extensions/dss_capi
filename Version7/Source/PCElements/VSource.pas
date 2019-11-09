@@ -122,9 +122,6 @@ type
 
     end;
 
-var
-    ActiveVsourceObj: TVsourceObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -323,7 +320,7 @@ var
    // Set Bus2 = Bus1.0.0.0
 
 begin
-    with ActiveVSourceObj do
+    with DSS.ActiveVSourceObj do
     begin
         SetBus(1, S);
 
@@ -354,12 +351,12 @@ var
 
 begin
   // continue parsing with contents of Parser
-    ActiveVSourceObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveVSourceObj;
+    DSS.ActiveVSourceObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveVSourceObj;
 
     Result := 0;
 
-    with ActiveVSourceObj do
+    with DSS.ActiveVSourceObj do
     begin
 
         ParamPointer := 0;
@@ -463,7 +460,7 @@ begin
                 31:
                     puZideal := InterpretComplex(Param);
             else
-                ClassEdit(ActiveVsourceObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveVsourceObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -586,7 +583,7 @@ begin
    {See if we can find this line name in the present collection}
     OtherVSource := Find(OtherSource);
     if OtherVSource <> NIL then
-        with ActiveVsourceObj do
+        with DSS.ActiveVsourceObj do
         begin
 
             if Fnphases <> OtherVSource.Fnphases then

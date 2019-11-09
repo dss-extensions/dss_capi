@@ -207,10 +207,6 @@ type
         property CSVFileName: String READ Get_FileName;
     end;
 
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-
-var
-    ActiveMonitorObj: TMonitorObj;
 
 {--------------------------------------------------------------------------}
 implementation
@@ -364,13 +360,13 @@ begin
 
   // continue parsing with contents of Parser
   // continue parsing with contents of Parser
-    ActiveMonitorObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveMonitorObj;
+    DSS.ActiveMonitorObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveMonitorObj;
 
     Result := 0;
     recalc := 0;
 
-    with ActiveMonitorObj do
+    with DSS.ActiveMonitorObj do
     begin
 
         ParamPointer := 0;
@@ -424,7 +420,7 @@ begin
                     Ppolar := InterpretYesNo(Param);
             else
            // Inherited parameters
-                ClassEdit(ActiveMonitorObj, ParamPointer - NumPropsthisClass)
+                ClassEdit(DSS.ActiveMonitorObj, ParamPointer - NumPropsthisClass)
             end;
 
             ParamName := Parser.NextParam;
@@ -528,7 +524,7 @@ begin
    {See if we can find this Monitor name in the present collection}
     OtherMonitor := Find(MonitorName);
     if OtherMonitor <> NIL then
-        with ActiveMonitorObj do
+        with DSS.ActiveMonitorObj do
         begin
 
             NPhases := OtherMonitor.Fnphases;

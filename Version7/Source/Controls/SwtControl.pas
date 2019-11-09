@@ -68,9 +68,6 @@ type
         property CurrentAction: EControlAction READ ActionCommand WRITE Set_LastAction;
     end;
 
-var
-    ActiveSwtControlObj: TSwtControlObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -164,12 +161,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveSwtControlObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveSwtControlObj;
+    DSS.ActiveSwtControlObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveSwtControlObj;
 
     Result := 0;
 
-    with ActiveSwtControlObj do
+    with DSS.ActiveSwtControlObj do
     begin
 
         ParamPointer := 0;
@@ -219,7 +216,7 @@ begin
 
             else
            // Inherited parameters
-                ClassEdit(ActiveSwtControlObj, ParamPointer - NumPropsthisClass)
+                ClassEdit(DSS.ActiveSwtControlObj, ParamPointer - NumPropsthisClass)
             end;
 
          {supplemental actions}
@@ -273,7 +270,7 @@ begin
    {See if we can find this SwtControl name in the present collection}
     OtherSwtControl := Find(SwtControlName);
     if OtherSwtControl <> NIL then
-        with ActiveSwtControlObj do
+        with DSS.ActiveSwtControlObj do
         begin
 
             NPhases := OtherSwtControl.Fnphases;

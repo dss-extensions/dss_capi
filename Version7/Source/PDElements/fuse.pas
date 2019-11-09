@@ -99,10 +99,6 @@ type
 
     end;
 
-
-var
-    ActiveFuseObj: TFuseObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -230,12 +226,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveFuseObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveFuseObj;
+    DSS.ActiveFuseObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveFuseObj;
 
     Result := 0;
 
-    with ActiveFuseObj do
+    with DSS.ActiveFuseObj do
     begin
 
         ParamPointer := 0;
@@ -273,7 +269,7 @@ begin
 
             else
            // Inherited parameters
-                ClassEdit(ActiveFuseObj, ParamPointer - NumPropsthisClass)
+                ClassEdit(DSS.ActiveFuseObj, ParamPointer - NumPropsthisClass)
             end;
 
             case ParamPointer of
@@ -304,7 +300,7 @@ begin
    {See if we can find this Fuse name in the present collection}
     OtherFuse := Find(FuseName);
     if OtherFuse <> NIL then
-        with ActiveFuseObj do
+        with DSS.ActiveFuseObj do
         begin
 
             NPhases := OtherFuse.Fnphases;

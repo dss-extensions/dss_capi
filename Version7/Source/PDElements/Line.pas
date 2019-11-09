@@ -154,9 +154,6 @@ type
         property ConductorData[i: Integer]: TConductorDataObj READ FetchConductorData;
     end;
 
-var
-    ActiveLineObj: TLineObj;
-
 implementation
 
 uses
@@ -459,7 +456,7 @@ var
     Zvalues: pComplexArray;
 
 begin
-    with ActiveLineObj do
+    with DSS.ActiveLineObj do
     begin
        {Added 3-17-15 in case Z and Yc do not get allocated to the proper value}
         if Z.Order <> Fnphases then
@@ -488,7 +485,7 @@ var
     Zvalues: pComplexArray;
 
 begin
-    with ActiveLineObj do
+    with DSS.ActiveLineObj do
     begin
         if Z.Order <> Fnphases then
             ReallocZandYcMatrices;
@@ -519,7 +516,7 @@ var
     Factor: Double;
 
 begin
-    with ActiveLineObj do
+    with DSS.ActiveLineObj do
     begin
         if Z.Order <> Fnphases then
             ReallocZandYcMatrices;
@@ -571,10 +568,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveLineObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveLineObj;  // use property to set this value
+    DSS.ActiveLineObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveLineObj;  // use property to set this value
 
-    with ActiveLineObj do
+    with DSS.ActiveLineObj do
     begin
         ParamPointer := 0;
         ParamName := Parser.NextParam;
@@ -684,7 +681,7 @@ begin
                 end
             else
             // Inherited Property Edits
-                ClassEdit(ActiveLineObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveLineObj, ParamPointer - NumPropsThisClass)
             end;
 
          // Side Effects ...
@@ -799,7 +796,7 @@ begin
    {See if we can find this line name in the present collection}
     OtherLine := Find(LineName);
     if OtherLine <> NIL then
-        with ActiveLineObj do
+        with DSS.ActiveLineObj do
         begin
 
             if Fnphases <> OtherLine.Fnphases then
@@ -1939,9 +1936,9 @@ begin
     begin
         AuxParser.NextParam; // ignore any parameter name  not expecting any
         DSSPrime.WireDataClass.code := AuxParser.StrValue;
-        if Assigned(ActiveConductorDataObj) then
+        if Assigned(DSSPrime.ActiveConductorDataObj) then
         begin
-            FLineWireData^[i] := ActiveConductorDataObj;
+            FLineWireData^[i] := DSSPrime.ActiveConductorDataObj;
             if FLineWireData^[i].NumAmpRatings > NewNumRat then
             begin
                 NewNumRat := FLineWireData^[i].NumAmpRatings;
@@ -1981,8 +1978,8 @@ begin
     begin // fill extra neutrals later
         AuxParser.NextParam; // ignore any parameter name  not expecting any
         DSSPrime.CNDataClass.code := AuxParser.StrValue;
-        if Assigned(ActiveConductorDataObj) then
-            FLineWireData^[i] := ActiveConductorDataObj
+        if Assigned(DSSPrime.ActiveConductorDataObj) then
+            FLineWireData^[i] := DSSPrime.ActiveConductorDataObj
         else
             DoSimpleMsg('CN cable ' + AuxParser.StrValue + ' was not defined first.(LINE.' + Name + ')', 18105);
     end;
@@ -2004,8 +2001,8 @@ begin
     begin // fill extra neutrals later
         AuxParser.NextParam; // ignore any parameter name  not expecting any
         DSSPrime.TSDataClass.code := AuxParser.StrValue;
-        if Assigned(ActiveConductorDataObj) then
-            FLineWireData^[i] := ActiveConductorDataObj
+        if Assigned(DSSPrime.ActiveConductorDataObj) then
+            FLineWireData^[i] := DSSPrime.ActiveConductorDataObj
         else
             DoSimpleMsg('TS cable ' + AuxParser.StrValue + ' was not defined first. (LINE.' + Name + ')', 18107);
     end;

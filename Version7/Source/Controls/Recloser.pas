@@ -120,10 +120,6 @@ type
 
     end;
 
-
-var
-    ActiveRecloserObj: TRecloserObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -290,12 +286,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveRecloserObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveRecloserObj;
+    DSS.ActiveRecloserObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveRecloserObj;
 
     Result := 0;
 
-    with ActiveRecloserObj do
+    with DSS.ActiveRecloserObj do
     begin
 
         ParamPointer := 0;
@@ -361,7 +357,7 @@ begin
 
             else
            // Inherited parameters
-                ClassEdit(ActiveRecloserObj, ParamPointer - NumPropsthisClass)
+                ClassEdit(DSS.ActiveRecloserObj, ParamPointer - NumPropsthisClass)
             end;
 
             case ParamPointer of
@@ -392,7 +388,7 @@ begin
    {See if we can find this Recloser name in the present collection}
     OtherRecloser := Find(RecloserName);
     if OtherRecloser <> NIL then
-        with ActiveRecloserObj do
+        with DSS.ActiveRecloserObj do
         begin
 
             NPhases := OtherRecloser.Fnphases;

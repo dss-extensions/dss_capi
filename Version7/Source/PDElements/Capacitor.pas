@@ -139,9 +139,6 @@ type
 
     end;
 
-var
-    ActiveCapacitorObj: TCapacitorObj;
-
 implementation
 
 uses
@@ -258,7 +255,7 @@ var
     MatBuffer: pDoubleArray;
 
 begin
-    with ActiveCapacitorObj do
+    with DSS.ActiveCapacitorObj do
     begin
         MatBuffer := Allocmem(Sizeof(Double) * Fnphases * Fnphases);
         OrderFound := Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
@@ -284,7 +281,7 @@ var
     TestS: String;
 
 begin
-    with ActiveCapacitorObj do
+    with DSS.ActiveCapacitorObj do
     begin
         TestS := lowercase(S);
         case TestS[1] of
@@ -322,7 +319,7 @@ var
    // Set Bus2 = Bus1.0.0.0
 
 begin
-    with ActiveCapacitorObj do
+    with DSS.ActiveCapacitorObj do
     begin
         SetBus(1, S);
 
@@ -358,11 +355,11 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveCapacitorObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveCapacitorObj;  // use property to set this value
+    DSS.ActiveCapacitorObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveCapacitorObj;  // use property to set this value
 
 
-    with ActiveCapacitorObj do
+    with DSS.ActiveCapacitorObj do
     begin
 
         ParamPointer := 0;
@@ -412,7 +409,7 @@ begin
                     ProcessStatesSpec(Param);
             else
             // Inherited Property Edits
-                ClassEdit(ActiveCapacitorObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveCapacitorObj, ParamPointer - NumPropsThisClass)
             end;
 
          // Some specials ...
@@ -485,7 +482,7 @@ begin
    {See if we can find this Capacitor name in the present collection}
     OtherCapacitor := Find(CapacitorName);
     if OtherCapacitor <> NIL then
-        with ActiveCapacitorObj do
+        with DSS.ActiveCapacitorObj do
         begin
 
             if Fnphases <> OtherCapacitor.Fnphases then

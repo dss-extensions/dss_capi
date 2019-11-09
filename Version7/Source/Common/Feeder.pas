@@ -88,9 +88,6 @@ type
 
     end;
 
-var
-    ActiveFeederObj: TFeederObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -192,12 +189,12 @@ var
 
 begin
   // continue parsing with contents of Parser
-    ActiveFeederObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveFeederObj;
+    DSS.ActiveFeederObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveFeederObj;
 
     Result := 0;
 
-    with ActiveFeederObj do
+    with DSS.ActiveFeederObj do
     begin
 
         ParamPointer := 0;
@@ -218,7 +215,7 @@ begin
                     DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 630);
 
             else
-                ClassEdit(ActiveFeederObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveFeederObj, ParamPointer - NumPropsThisClass)
             end;
 
             ParamName := Parser.NextParam;
@@ -242,7 +239,7 @@ begin
    {See if we can find this name in the present collection}
     OtherFeeder := Find(OtherFeederName);
     if OtherFeeder <> NIL then
-        with ActiveFeederObj do
+        with DSS.ActiveFeederObj do
         begin
 
             if Fnphases <> OtherFeeder.Fnphases then

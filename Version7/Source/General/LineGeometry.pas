@@ -162,9 +162,6 @@ type
         property PhaseChoice[i: Integer]: ConductorChoice READ Get_PhaseChoice;
     end;
 
-var
-    ActiveLineGeometryObj: TLineGeometryObj;
-
 implementation
 
 uses
@@ -293,10 +290,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActiveLineGeometryObj := ElementList.Active;
-    ActiveDSSObject := ActiveLineGeometryObj;
+    DSS.ActiveLineGeometryObj := ElementList.Active;
+    ActiveDSSObject := DSS.ActiveLineGeometryObj;
 
-    with ActiveLineGeometryObj do
+    with DSS.ActiveLineGeometryObj do
     begin
 
         ParamPointer := 0;
@@ -347,14 +344,14 @@ begin
                     FSpacingType := Parser.StrValue;
                     if DSS.LineSpacingClass.SetActive(FSpacingType) then
                     begin
-                        ActiveLineSpacingObj := DSS.LineSpacingClass.GetActiveObj;
-                        if (FNConds = ActiveLineSpacingObj.NWires) then
+                        DSS.ActiveLineSpacingObj := DSS.LineSpacingClass.GetActiveObj;
+                        if (FNConds = DSS.ActiveLineSpacingObj.NWires) then
                         begin
-                            FLastUnit := ActiveLineSpacingObj.Units;
+                            FLastUnit := DSS.ActiveLineSpacingObj.Units;
                             for i := 1 to FNConds do
                             begin
-                                FX^[i] := ActiveLineSpacingObj.Xcoord[i];
-                                FY^[i] := ActiveLineSpacingObj.Ycoord[i];
+                                FX^[i] := DSS.ActiveLineSpacingObj.Xcoord[i];
+                                FY^[i] := DSS.ActiveLineSpacingObj.Ycoord[i];
                                 FUnits^[i] := FLastUnit;
                             end
                         end
@@ -412,15 +409,15 @@ begin
                             DSS.TSDataClass.code := FCondName[i]
                         else
                             DSS.WireDataClass.Code := FCondName[i];
-                        if Assigned(ActiveConductorDataObj) then
+                        if Assigned(DSS.ActiveConductorDataObj) then
                         begin
-                            FWireData^[i] := ActiveConductorDataObj;
+                            FWireData^[i] := DSS.ActiveConductorDataObj;
                             if (i = 1) then
                             begin
-                                if (ActiveConductorDataObj.NormAmps > 0.0) then
-                                    Normamps := ActiveConductorDataObj.NormAmps;
-                                if (ActiveConductorDataObj.Emergamps > 0.0) then
-                                    Emergamps := ActiveConductorDataObj.EmergAmps;
+                                if (DSS.ActiveConductorDataObj.NormAmps > 0.0) then
+                                    Normamps := DSS.ActiveConductorDataObj.NormAmps;
+                                if (DSS.ActiveConductorDataObj.Emergamps > 0.0) then
+                                    Emergamps := DSS.ActiveConductorDataObj.EmergAmps;
                             end;
                         end
                         else
@@ -447,7 +444,7 @@ begin
                 end
             else
            // Inherited parameters
-                ClassEdit(ActiveLineGeometryObj, Parampointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveLineGeometryObj, Parampointer - NumPropsThisClass)
             end;
 
          {Set defaults}
@@ -468,16 +465,16 @@ begin
                         DSS.CNDataClass.code := Param
                     else
                         DSS.TSDataClass.Code := Param;
-                    if Assigned(ActiveConductorDataObj) then
+                    if Assigned(DSS.ActiveConductorDataObj) then
                     begin
-                        FWireData^[ActiveCond] := ActiveConductorDataObj;
+                        FWireData^[ActiveCond] := DSS.ActiveConductorDataObj;
                   {Default the current ratings for this geometry to the rating of the first conductor}
                         if (ActiveCond = 1) then
                         begin
-                            if (ActiveConductorDataObj.NormAmps > 0.0) then
-                                Normamps := ActiveConductorDataObj.NormAmps;
-                            if (ActiveConductorDataObj.Emergamps > 0.0) then
-                                Emergamps := ActiveConductorDataObj.EmergAmps;
+                            if (DSS.ActiveConductorDataObj.NormAmps > 0.0) then
+                                Normamps := DSS.ActiveConductorDataObj.NormAmps;
+                            if (DSS.ActiveConductorDataObj.Emergamps > 0.0) then
+                                Emergamps := DSS.ActiveConductorDataObj.EmergAmps;
                         end;
                     end
                     else
@@ -514,7 +511,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherLineGeometry := Find(LineName);
     if OtherLineGeometry <> NIL then
-        with ActiveLineGeometryObj do
+        with DSS.ActiveLineGeometryObj do
         begin
             NConds := OtherLineGeometry.NWires;   // allocates
             FNphases := OtherLineGeometry.FNphases;
@@ -568,14 +565,14 @@ var
     LineGeometryObj: TLineGeometryObj;
 begin
 
-    ActiveLineGeometryObj := NIL;
+    DSS.ActiveLineGeometryObj := NIL;
     LineGeometryObj := ElementList.First;
     while LineGeometryObj <> NIL do
     begin
 
         if CompareText(LineGeometryObj.Name, Value) = 0 then
         begin
-            ActiveLineGeometryObj := LineGeometryObj;
+            DSS.ActiveLineGeometryObj := LineGeometryObj;
             Exit;
         end;
 

@@ -130,9 +130,6 @@ type
 
     end;
 
-var
-    ActivePriceShapeObj: TPriceShapeObj;
-
 implementation
 
 uses
@@ -265,10 +262,10 @@ var
 begin
     Result := 0;
   // continue parsing with contents of Parser
-    ActivePriceShapeObj := ElementList.Active;
-    ActiveDSSObject := ActivePriceShapeObj;
+    DSS.ActivePriceShapeObj := ElementList.Active;
+    ActiveDSSObject := DSS.ActivePriceShapeObj;
 
-    with ActivePriceShapeObj do
+    with DSS.ActivePriceShapeObj do
     begin
 
         ParamPointer := 0;
@@ -326,7 +323,7 @@ begin
                     end;
             else
            // Inherited parameters
-                ClassEdit(ActivePriceShapeObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActivePriceShapeObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -364,7 +361,7 @@ begin
    {See if we can find this line code in the present collection}
     OtherPriceShape := Find(ShapeName);
     if OtherPriceShape <> NIL then
-        with ActivePriceShapeObj do
+        with DSS.ActivePriceShapeObj do
         begin
             NumPoints := OtherPriceShape.NumPoints;
             Interval := OtherPriceShape.Interval;
@@ -417,14 +414,14 @@ var
 
 begin
 
-    ActivePriceShapeObj := NIL;
+    DSS.ActivePriceShapeObj := NIL;
     PriceShapeObj := ElementList.First;
     while PriceShapeObj <> NIL do
     begin
 
         if CompareText(PriceShapeObj.Name, Value) = 0 then
         begin
-            ActivePriceShapeObj := PriceShapeObj;
+            DSS.ActivePriceShapeObj := PriceShapeObj;
             Exit;
         end;
 
@@ -455,7 +452,7 @@ begin
 
     try
 
-        with ActivePriceShapeObj do
+        with DSS.ActivePriceShapeObj do
         begin
             ReAllocmem(PriceValues, Sizeof(PriceValues^[1]) * NumPoints);
             if Interval = 0.0 then
@@ -513,7 +510,7 @@ begin
     end;
 
     try
-        with ActivePriceShapeObj do
+        with DSS.ActivePriceShapeObj do
         begin
             ReAllocmem(PriceValues, Sizeof(PriceValues^[1]) * NumPoints);
             if Interval = 0.0 then
@@ -559,7 +556,7 @@ begin
     end;
 
     try
-        with ActivePriceShapeObj do
+        with DSS.ActivePriceShapeObj do
         begin
             ReAllocmem(PriceValues, Sizeof(PriceValues^[1]) * NumPoints);
             if Interval = 0.0 then

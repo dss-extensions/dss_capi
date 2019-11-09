@@ -183,10 +183,6 @@ type
 
     end;
 
-
-var
-    ActiveStorageControllerObj: TStorageControllerObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -488,12 +484,12 @@ var
 begin
 
   // continue parsing with contents of Parser
-    ActiveStorageControllerObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveStorageControllerObj;
+    DSS.ActiveStorageControllerObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveStorageControllerObj;
 
     Result := 0;
 
-    with ActiveStorageControllerObj do
+    with DSS.ActiveStorageControllerObj do
     begin
 
         ParamPointer := 0;
@@ -604,7 +600,7 @@ begin
 
             else
            // Inherited parameters
-                ClassEdit(ActiveStorageControllerObj, ParamPointer - NumPropsthisClass)
+                ClassEdit(DSS.ActiveStorageControllerObj, ParamPointer - NumPropsthisClass)
             end;
 
          // Side effects of setting properties above
@@ -691,7 +687,7 @@ begin
    {See If we can find this StorageController name in the present collection}
     OtherStorageController := Find(StorageControllerName);
     if OtherStorageController <> NIL then
-        with ActiveStorageControllerObj do
+        with DSS.ActiveStorageControllerObj do
         begin
 
             NPhases := OtherStorageController.Fnphases;

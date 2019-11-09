@@ -154,9 +154,6 @@ type
 
     end;
 
-var
-    ActivePCPrototypeObj: TPCPrototypeObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -286,7 +283,7 @@ procedure TPCPrototype.SetNcondsForConnection;
 // for defining the number of conductors per terminal (Nconds) based on Y or delta connection
 
 begin
-    with ActivePCPrototypeObj do
+    with DSS.ActivePCPrototypeObj do
     begin
         case Connection of
             0:
@@ -323,12 +320,12 @@ var     // Define some local vars for handling parser results
 begin
   // set the present element active
   // and continue parsing with contents of Parser
-    ActivePCPrototypeObj := ElementList.Active;
-    ActiveCircuit.ActiveCktElement := ActivePCPrototypeObj;
+    DSS.ActivePCPrototypeObj := ElementList.Active;
+    ActiveCircuit.ActiveCktElement := DSS.ActivePCPrototypeObj;
 
     Result := 0;
 
-    with ActivePCPrototypeObj do
+    with DSS.ActivePCPrototypeObj do
     begin
      // peel off the next token on the edit line
         ParamPointer := 0;
@@ -372,7 +369,7 @@ begin
 
                 else
            // Handle Inherited properties
-                    ClassEdit(ActivePCPrototypeObj, ParamPointer - NumPropsThisClass)
+                    ClassEdit(DSS.ActivePCPrototypeObj, ParamPointer - NumPropsThisClass)
                 end;
 
          // ---------------- SIDE EFFECTS CASE STATEMENT ---------------------
@@ -422,7 +419,7 @@ begin
     OtherPCPrototype := Find(OtherPCPrototypeName);
     if (OtherPCPrototype <> NIL)   // skip if not found
     then
-        with ActivePCPrototypeObj do
+        with DSS.ActivePCPrototypeObj do
         begin
        // You should first set the basic circuit element properties, for example
             if (Fnphases <> OtherPCPrototype.Fnphases) then

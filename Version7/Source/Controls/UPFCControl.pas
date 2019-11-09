@@ -83,10 +83,6 @@ type
         function MakeGenList: Boolean;
     end;
 
-
-var
-    ActiveUPFCControlObj: TUPFCControlObj;
-
 {--------------------------------------------------------------------------}
 implementation
 
@@ -187,12 +183,12 @@ var
 begin
 
   // continue parsing WITH contents of Parser
-    ActiveUPFCControlObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveUPFCControlObj;
+    DSS.ActiveUPFCControlObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveUPFCControlObj;
 
     Result := 0;
 
-    with ActiveUPFCControlObj do
+    with DSS.ActiveUPFCControlObj do
     begin
 
         ParamPointer := 0;
@@ -235,7 +231,7 @@ begin
 
             else
            // Inherited parameters
-                ClassEdit(ActiveUPFCControlObj, ParamPointer - NumPropsthisClass)
+                ClassEdit(DSS.ActiveUPFCControlObj, ParamPointer - NumPropsthisClass)
             end;
 
             case ParamPointer of
@@ -273,7 +269,7 @@ begin
    {See if we can find this UPFCControl name in the present collection}
     OtherUPFCControl := Find(UPFCControlName);
     if OtherUPFCControl <> NIL then
-        with ActiveUPFCControlObj do
+        with DSS.ActiveUPFCControlObj do
         begin
 
             NPhases := OtherUPFCControl.Fnphases;

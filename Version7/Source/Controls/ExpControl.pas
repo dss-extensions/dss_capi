@@ -102,9 +102,6 @@ INTERFACE
 
    end;
 
-  VAR
-    ActiveExpControlObj:TExpControlObj;
-
 {--------------------------------------------------------------------------}
 IMPLEMENTATION
 
@@ -221,10 +218,10 @@ VAR
 
 
 Begin
-  ActiveExpControlObj := ElementList.Active;
-  DSS.ActiveCircuit.ActiveCktElement := ActiveExpControlObj;
+  DSS.ActiveExpControlObj := ElementList.Active;
+  DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveExpControlObj;
   Result := 0;
-  WITH ActiveExpControlObj Do Begin
+  WITH DSS.ActiveExpControlObj Do Begin
     ParamPointer := 0;
     ParamName := Parser.NextParam;
     Param := Parser.StrValue;
@@ -255,7 +252,7 @@ Begin
        12: FPreferQ := InterpretYesNo(param);
       ELSE
         // Inherited parameters
-        ClassEdit( ActiveExpControlObj, ParamPointer - NumPropsthisClass)
+        ClassEdit( DSS.ActiveExpControlObj, ParamPointer - NumPropsthisClass)
       End;
       ParamName := Parser.NextParam;
       Param := Parser.StrValue;
@@ -273,7 +270,7 @@ Begin
    {See if we can find this ExpControl name in the present collection}
    OtherExpControl := Find(ExpControlName);
    IF OtherExpControl<>Nil THEN
-   WITH ActiveExpControlObj Do Begin
+   WITH DSS.ActiveExpControlObj Do Begin
 
       NPhases := OtherExpControl.Fnphases;
       NConds  := OtherExpControl.Fnconds; // Force Reallocation of terminal stuff

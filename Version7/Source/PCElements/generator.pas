@@ -310,9 +310,6 @@ type
 
     end;
 
-var
-    ActiveGeneratorObj: TGeneratorObj;
-
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
@@ -507,7 +504,7 @@ end;
 procedure TGenerator.SetNcondsForConnection;
 
 begin
-    with ActiveGeneratorObj do
+    with DSS.ActiveGeneratorObj do
     begin
         case Connection of
             0:
@@ -533,7 +530,7 @@ var
     TestS: String;
 
 begin
-    with ActiveGeneratorObj do
+    with DSS.ActiveGeneratorObj do
     begin
         TestS := lowercase(S);
         case TestS[1] of
@@ -601,12 +598,12 @@ var
 
 begin
   // continue parsing with contents of Parser
-    ActiveGeneratorObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveGeneratorObj;
+    DSS.ActiveGeneratorObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveGeneratorObj;
 
     Result := 0;
 
-    with ActiveGeneratorObj do
+    with DSS.ActiveGeneratorObj do
     begin
 
         ParamPointer := 0;
@@ -713,7 +710,7 @@ begin
 
                 else
            // Inherited parameters
-                    ClassEdit(ActiveGeneratorObj, ParamPointer - NumPropsThisClass)
+                    ClassEdit(DSS.ActiveGeneratorObj, ParamPointer - NumPropsThisClass)
                 end;
 
             if ParamPointer > 0 then
@@ -797,7 +794,7 @@ begin
    {See if we can find this line name in the present collection}
     OtherGenerator := Find(OtherGeneratorName);
     if (OtherGenerator <> NIL) then
-        with ActiveGeneratorObj do
+        with DSS.ActiveGeneratorObj do
         begin
 
             if (Fnphases <> OtherGenerator.Fnphases) then

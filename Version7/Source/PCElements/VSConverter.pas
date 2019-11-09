@@ -73,8 +73,6 @@ type
         procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
     end;
 
-var
-    ActiveVSConverterObj: TVSConverterObj;
 
 implementation
 
@@ -188,7 +186,7 @@ var
     s2: String;
     i, dotpos: Integer;
 begin
-    with ActiveVSconverterObj do
+    with DSS.ActiveVSconverterObj do
     begin
         SetBus(1, S);
         dotpos := Pos('.', S);
@@ -210,10 +208,10 @@ var
     Tok: String;
 begin
     Result := 0;
-    ActiveVSConverterObj := ElementList.Active;
-    DSS.ActiveCircuit.ActiveCktElement := ActiveVSConverterObj;  // use property to set this value
+    DSS.ActiveVSConverterObj := ElementList.Active;
+    DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveVSConverterObj;  // use property to set this value
 
-    with ActiveVSConverterObj do
+    with DSS.ActiveVSConverterObj do
     begin
         ParamPointer := 0;
         ParamName := Parser.NextParam;
@@ -291,7 +289,7 @@ begin
                         Fmode := VSC_FIXED
                 end;
             else
-                ClassEdit(ActiveVSConverterObj, ParamPointer - NumPropsThisClass)
+                ClassEdit(DSS.ActiveVSConverterObj, ParamPointer - NumPropsThisClass)
             end;
 
             case ParamPointer of
@@ -315,7 +313,7 @@ begin
     Result := 0;
     OtherVSC := Find(VSCName);
     if OtherVSC <> NIL then
-        with ActiveVSConverterObj do
+        with DSS.ActiveVSConverterObj do
         begin
             if Fnphases <> OtherVSC.Fnphases then
             begin
