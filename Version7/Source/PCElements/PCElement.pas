@@ -109,7 +109,7 @@ var
     i: Integer;
 begin
     Result := 0;
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
         for i := 1 to Yorder do
             Caccum(Currents^[NodeRef^[i]], InjCurrent^[i]);
 end;
@@ -137,7 +137,7 @@ begin
             CAccum(Curr^[i], CNegate(Injcurrent^[i]));
         IterminalUpdated := TRUE;
     end;
-    IterminalSolutionCount := DSSPrime.ActiveCircuit.Solution.SolutionCount;
+    IterminalSolutionCount := DSS.ActiveCircuit.Solution.SolutionCount;
 end;
 
 //= = =  = = = = = = = = = = = = = = = = = = = = = = = = = = = =
@@ -152,7 +152,7 @@ var
 begin
     try
 
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
         begin
             if (Enabled) then
             begin
@@ -294,10 +294,10 @@ end;
 
 procedure TPCElement.ComputeIterminal;
 begin
-    if IterminalSolutionCount <> DSSPrime.ActiveCircuit.Solution.SolutionCount then
+    if IterminalSolutionCount <> DSS.ActiveCircuit.Solution.SolutionCount then
     begin
         GetCurrents(Iterminal);
-        IterminalSolutionCount := DSSPrime.ActiveCircuit.Solution.SolutionCount;
+        IterminalSolutionCount := DSS.ActiveCircuit.Solution.SolutionCount;
     end;
 
 end;
@@ -314,7 +314,7 @@ procedure TPCElement.set_ITerminalUpdated(const Value: Boolean);
 begin
     FITerminalUpdated := Value;
     if Value then
-        ITerminalSolutionCount := DSSPrime.ActiveCircuit.Solution.SolutionCount;
+        ITerminalSolutionCount := DSS.ActiveCircuit.Solution.SolutionCount;
 end;
 
 end.

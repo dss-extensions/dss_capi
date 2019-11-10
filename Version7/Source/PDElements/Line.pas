@@ -364,10 +364,10 @@ var
     i: Integer;
 
 begin
-    if DSSPrime.LineCodeClass.SetActive(Code) then
+    if DSS.LineCodeClass.SetActive(Code) then
     begin
 
-        LineCodeObj := DSSPrime.LineCodeClass.GetActiveObj;
+        LineCodeObj := DSS.LineCodeClass.GetActiveObj;
 
         CondCode := LowerCase(Code);
 
@@ -906,7 +906,7 @@ begin
     FUnitsConvert := 1.0;
     FLineCodeUnits := UNITS_NONE;
     FLineCodeSpecified := FALSE;
-    FEarthModel := DSSPrime.DefaultEarthModel;
+    FEarthModel := DSS.DefaultEarthModel;
 
     SpacingSpecified := FALSE;
     FLineSpacingObj := NIL;
@@ -1014,10 +1014,10 @@ begin
 
     Ztemp := CmulReal(cmplx(R1, X1), 2.0);
     {Handle special case for 1-phase line and/or pos seq model }
-    if (FnPhases = 1) or DSSPrime.ActiveCircuit.PositiveSequence then
+    if (FnPhases = 1) or DSS.ActiveCircuit.PositiveSequence then
     begin
       // long-line equivalent PI, but only for CktModel=Positive
-        if DSSPrime.ActiveCircuit.PositiveSequence and (C1 > 0) then
+        if DSS.ActiveCircuit.PositiveSequence and (C1 > 0) then
         begin
             DoLongLine(BaseFrequency);  // computes R1, X1, C1  per unit length
         end;
@@ -1105,8 +1105,8 @@ begin
         if GeometrySpecified then
         begin
 
-            FMakeZFromGeometry(DSSPrime.ActiveCircuit.Solution.Frequency); // Includes length in proper units
-            if DSSPrime.SolutionAbort then
+            FMakeZFromGeometry(DSS.ActiveCircuit.Solution.Frequency); // Includes length in proper units
+            if DSS.SolutionAbort then
                 Exit;
 
         end
@@ -1114,8 +1114,8 @@ begin
         if SpacingSpecified then
         begin
 
-            FMakeZFromSpacing(DSSPrime.ActiveCircuit.Solution.Frequency); // Includes length in proper units
-            if DSSPrime.SolutionAbort then
+            FMakeZFromSpacing(DSS.ActiveCircuit.Solution.Frequency); // Includes length in proper units
+            if DSS.SolutionAbort then
                 Exit;
 
         end
@@ -1123,7 +1123,7 @@ begin
         begin  // Z is from line code or specified in line data
                // In this section Z is assumed in ohms per unit length
             LengthMultiplier := Len / FUnitsConvert;   // convert to per unit length
-            FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
+            FYprimFreq := DSS.ActiveCircuit.Solution.Frequency;
             FreqMultiplier := FYprimFreq / BaseFrequency;
 
                { Put in Series RL }
@@ -1148,7 +1148,7 @@ begin
       {At this point have Z and Zinv in proper values including length}
       {If GIC simulation, convert Zinv back to sym components, R Only }
 
-        if DSSPrime.ActiveCircuit.Solution.Frequency < 0.51 then     // 0.5 Hz is cutoff
+        if DSS.ActiveCircuit.Solution.Frequency < 0.51 then     // 0.5 Hz is cutoff
             ConvertZinvToPosSeqR;
 
 
@@ -1190,7 +1190,7 @@ begin
             AddElement(i, i, CAP_EPSILON);
 
      // Now Build the Shunt admittances and add into YPrim
-    if DSSPrime.ActiveCircuit.Solution.Frequency > 0.51 then   // Skip Capacitance for GIC
+    if DSS.ActiveCircuit.Solution.Frequency > 0.51 then   // Skip Capacitance for GIC
         with YPrim_Shunt do
         begin
 
@@ -1507,7 +1507,7 @@ begin
         begin
             k := (i - 1) * Fnphases + 1;
             for j := 0 to 2 do
-                Vph[j] := DSSPrime.ActiveCircuit.Solution.NodeV^[NodeRef^[k + j]];
+                Vph[j] := DSS.ActiveCircuit.Solution.NodeV^[NodeRef^[k + j]];
             Phase2SymComp(@Vph, @V012);
             Phase2SymComp(@Iterminal^[k], @I012);
             Caccum(PosSeqLosses, Cmul(V012[1], Conjg(I012[1])));
@@ -1681,10 +1681,10 @@ begin
             i := 1;
             while (Common1 = 0) and (i <= 2) do
             begin
-                TestBusNum := DSSPrime.ActiveCircuit.MapNodeToBus^[NodeRef^[1 + (i - 1) * Fnconds]].BusRef;
+                TestBusNum := DSS.ActiveCircuit.MapNodeToBus^[NodeRef^[1 + (i - 1) * Fnconds]].BusRef;
                 for j := 1 to 2 do
                 begin
-                    if DSSPrime.ActiveCircuit.MapNodeToBus^[OtherLine.NodeRef^[1 + (j - 1) * OtherLine.Nconds]].BusRef = TestBusNum then
+                    if DSS.ActiveCircuit.MapNodeToBus^[OtherLine.NodeRef^[1 + (j - 1) * OtherLine.Nconds]].BusRef = TestBusNum then
                     begin
                         Common1 := i;
                         Common2 := j;
@@ -1870,7 +1870,7 @@ var
     pControlElem: TControlElem;
 begin
 
-    pControlElem := DSSPrime.ActiveCircuit.DSSControls.First;
+    pControlElem := DSS.ActiveCircuit.DSSControls.First;
     while pControlElem <> NIL do
     begin
         if CompareText(OldName, pControlElem.ElementName) = 0 then
@@ -1878,16 +1878,16 @@ begin
             Parser.cmdstring := ' Element=' + NewName;  // Change name of the property
             pControlElem.Edit;
         end;
-        pControlElem := DSSPrime.ActiveCircuit.DSSControls.Next;
+        pControlElem := DSS.ActiveCircuit.DSSControls.Next;
     end;
 end;
 
 procedure TLineObj.FetchLineSpacing(const Code: String);
 begin
-    if DSSPrime.LineSpacingClass.SetActive(Code) then
+    if DSS.LineSpacingClass.SetActive(Code) then
     begin
 
-        FLineSpacingObj := DSSPrime.LineSpacingClass.GetActiveObj;
+        FLineSpacingObj := DSS.LineSpacingClass.GetActiveObj;
         FLineCodeSpecified := FALSE;
         KillGeometrySpecified;
         SpacingCode := LowerCase(Code);
@@ -1928,17 +1928,17 @@ begin
         istart := FLineSpacingObj.NPhases + 1;
     end;
 
-    DSSPrime.AuxParser.CmdString := Code;
+    DSS.AuxParser.CmdString := Code;
 
     NewNumRat := 1;
     RatingsInc := FALSE;             // So far we don't know if there are seasonal ratings
     for i := istart to FLineSpacingObj.NWires do
     begin
-        DSSPrime.AuxParser.NextParam; // ignore any parameter name  not expecting any
-        DSSPrime.WireDataClass.code := DSSPrime.AuxParser.StrValue;
-        if Assigned(DSSPrime.ActiveConductorDataObj) then
+        DSS.AuxParser.NextParam; // ignore any parameter name  not expecting any
+        DSS.WireDataClass.code := DSS.AuxParser.StrValue;
+        if Assigned(DSS.ActiveConductorDataObj) then
         begin
-            FLineWireData^[i] := DSSPrime.ActiveConductorDataObj;
+            FLineWireData^[i] := DSS.ActiveConductorDataObj;
             if FLineWireData^[i].NumAmpRatings > NewNumRat then
             begin
                 NewNumRat := FLineWireData^[i].NumAmpRatings;
@@ -1949,7 +1949,7 @@ begin
             end;
         end
         else
-            DoSimpleMsg('Wire "' + DSSPrime.AuxParser.StrValue + '" was not defined first (LINE.' + name + ').', 18103);
+            DoSimpleMsg('Wire "' + DSS.AuxParser.StrValue + '" was not defined first (LINE.' + name + ').', 18103);
     end;
 
     if RatingsInc then
@@ -1973,15 +1973,15 @@ begin
 
     FPhaseChoice := ConcentricNeutral;
     FLineWireData := Allocmem(Sizeof(FLineWireData^[1]) * FLineSpacingObj.NWires);
-    DSSPrime.AuxParser.CmdString := Code;
+    DSS.AuxParser.CmdString := Code;
     for i := 1 to FLineSpacingObj.NPhases do
     begin // fill extra neutrals later
-        DSSPrime.AuxParser.NextParam; // ignore any parameter name  not expecting any
-        DSSPrime.CNDataClass.code := DSSPrime.AuxParser.StrValue;
-        if Assigned(DSSPrime.ActiveConductorDataObj) then
-            FLineWireData^[i] := DSSPrime.ActiveConductorDataObj
+        DSS.AuxParser.NextParam; // ignore any parameter name  not expecting any
+        DSS.CNDataClass.code := DSS.AuxParser.StrValue;
+        if Assigned(DSS.ActiveConductorDataObj) then
+            FLineWireData^[i] := DSS.ActiveConductorDataObj
         else
-            DoSimpleMsg('CN cable ' + DSSPrime.AuxParser.StrValue + ' was not defined first.(LINE.' + Name + ')', 18105);
+            DoSimpleMsg('CN cable ' + DSS.AuxParser.StrValue + ' was not defined first.(LINE.' + Name + ')', 18105);
     end;
 end;
 
@@ -1996,15 +1996,15 @@ begin
 
     FPhaseChoice := TapeShield;
     FLineWireData := Allocmem(Sizeof(FLineWireData^[1]) * FLineSpacingObj.NWires);
-    DSSPrime.AuxParser.CmdString := Code;
+    DSS.AuxParser.CmdString := Code;
     for i := 1 to FLineSpacingObj.NPhases do
     begin // fill extra neutrals later
-        DSSPrime.AuxParser.NextParam; // ignore any parameter name  not expecting any
-        DSSPrime.TSDataClass.code := DSSPrime.AuxParser.StrValue;
-        if Assigned(DSSPrime.ActiveConductorDataObj) then
-            FLineWireData^[i] := DSSPrime.ActiveConductorDataObj
+        DSS.AuxParser.NextParam; // ignore any parameter name  not expecting any
+        DSS.TSDataClass.code := DSS.AuxParser.StrValue;
+        if Assigned(DSS.ActiveConductorDataObj) then
+            FLineWireData^[i] := DSS.ActiveConductorDataObj
         else
-            DoSimpleMsg('TS cable ' + DSSPrime.AuxParser.StrValue + ' was not defined first. (LINE.' + Name + ')', 18107);
+            DoSimpleMsg('TS cable ' + DSS.AuxParser.StrValue + ' was not defined first. (LINE.' + Name + ')', 18107);
     end;
 end;
 
@@ -2012,12 +2012,12 @@ procedure TLineObj.FetchGeometryCode(const Code: String);
 var
     i: Integer;
 begin
-    if DSSPrime.LineGeometryClass.SetActive(Code) then
+    if DSS.LineGeometryClass.SetActive(Code) then
     begin
         FLineCodeSpecified := FALSE;  // Cancel this flag
         SpacingSpecified := FALSE;
 
-        FLineGeometryObj := DSSPrime.LineGeometryClass.GetActiveObj;
+        FLineGeometryObj := DSS.LineGeometryClass.GetActiveObj;
         FZFrequency := -1.0;  // Init to signify not computed
 
         GeometryCode := LowerCase(Code);
@@ -2070,7 +2070,7 @@ begin
             Yc := NIL;
         end;
 
-        DSSPrime.ActiveEarthModel := FEarthModel;
+        DSS.ActiveEarthModel := FEarthModel;
 
         Z := FLineGeometryObj.Zmatrix[f, len, LengthUnits];
         Yc := FLineGeometryObj.YCmatrix[f, len, LengthUnits];
@@ -2112,7 +2112,7 @@ begin
     end;
 
   // make a temporary LineGeometry to calculate line constants
-    pGeo := TLineGeometryObj.Create(DSSPrime.LineGeometryClass, Name);
+    pGeo := TLineGeometryObj.Create(DSS.LineGeometryClass, Name);
     pGeo.LoadSpacingAndWires(FLineSpacingObj, FLineWireData); // this sets OH, CN, or TS
 
     if FrhoSpecified then
@@ -2121,7 +2121,7 @@ begin
     EmergAmps := pGeo.EmergAmps;
     UpdatePDProperties;
 
-    DSSPrime.ActiveEarthModel := FEarthModel;
+    DSS.ActiveEarthModel := FEarthModel;
 
     Z := pGeo.Zmatrix[f, len, LengthUnits];
     Yc := pGeo.YCmatrix[f, len, LengthUnits];

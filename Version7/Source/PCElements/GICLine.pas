@@ -523,7 +523,7 @@ begin
 
     Vmag := Volts;
 
-    SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if (SpectrumObj = NIL) and (Length(Spectrum) > 0) then
     begin
         DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device GICLine.' + Name + ' Not Found.', 324);
@@ -560,7 +560,7 @@ begin
         YPrim.Clear;
     end;
 
-    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSS.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
      { Put in Series RL Adjusted for frequency }
@@ -631,7 +631,7 @@ begin
    equally displaced in time.}
         Vmag := Volts;
 
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
 
             if IsHarmonicModel and (SpectrumObj <> NIL) then
             begin
@@ -676,8 +676,8 @@ begin
 
     except
         DoSimpleMsg('Error computing Voltages for GICLine.' + Name + '. Check specification. Aborting.', 326);
-        if DSSPrime.In_Redirect then
-            DSSPrime.Redirect_Abort := TRUE;
+        if DSS.In_Redirect then
+            DSS.Redirect_Abort := TRUE;
     end;
 
 end;
@@ -704,7 +704,7 @@ var
 
 begin
     try
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
         begin
 
             for  i := 1 to Yorder do

@@ -460,7 +460,7 @@ end;
 procedure TIsourceObj.RecalcElementData;
 begin
 
-    SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
 
     if SpectrumObj = NIL then
     begin
@@ -514,7 +514,7 @@ begin
 
     try
 
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
   {Get first Phase Current}
             if IsHarmonicModel then
             begin
@@ -552,8 +552,8 @@ begin
 
     except
         DoSimpleMsg('Error computing current for Isource.' + Name + '. Check specification. Aborting.', 334);
-        if DSSPrime.In_Redirect then
-            DSSPrime.Redirect_Abort := TRUE;
+        if DSS.In_Redirect then
+            DSS.Redirect_Abort := TRUE;
     end;
 
 end;
@@ -601,7 +601,7 @@ var
     BaseCurr: complex;
 begin
 
-    with DSSPrime.ActiveCircuit.solution do
+    with DSS.ActiveCircuit.solution do
     begin
         BaseCurr := GetBaseCurr;   // this func applies spectrum if needed
 

@@ -336,7 +336,7 @@ begin
     DSSObjType := ParClass.DSSClassType; // SOURCE + NON_PCPD_ELEM;  // Don't want this in PC Element List
     LineName := Name;  // GICsource name must be same as associated Line
 
-    LineClass := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('Line'));
+    LineClass := DSS.DSSClassList.Get(DSS.ClassNames.Find('Line'));
     Nphases := 3;
     Fnconds := 3;
     Nterms := 2;   // 4/27/2018 made a 2-terminal I source
@@ -518,7 +518,7 @@ begin
 
     try
      // If the solution frequency not 0.1 Hz, source is shorted.
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
         begin
             if abs(Frequency - SrcFrequency) < EPSILON2 then
                 Vmag := Volts
@@ -534,8 +534,8 @@ begin
 
     except
         DoSimpleMsg('Error computing current for GICsource.' + Name + '. Check specification. Aborting.', 334);
-        if DSSPrime.In_Redirect then
-            DSSPrime.Redirect_Abort := TRUE;
+        if DSS.In_Redirect then
+            DSS.Redirect_Abort := TRUE;
     end;
 
 end;
@@ -562,7 +562,7 @@ var
 begin
 
     try
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
         begin
 
             for     i := 1 to Yorder do

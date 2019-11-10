@@ -960,7 +960,7 @@ begin
         Vmag := kVBase * PerUnit * 1000.0 / 2.0 / Sin((180.0 / Fnphases) * PI / 180.0);
     end;
 
-    SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
     begin
         DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device Vsource.' + Name + ' Not Found.', 324);
@@ -1022,7 +1022,7 @@ begin
         YPrim.Clear;
     end;
 
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
         FYprimFreq := Frequency;
         FreqMultiplier := FYprimFreq / BaseFrequency;
@@ -1109,7 +1109,7 @@ begin
   }
 
 
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
         begin
 
             ShapeIsActual := FALSE;
@@ -1202,8 +1202,8 @@ begin
 
     except
         DoSimpleMsg('Error computing Voltages for Vsource.' + Name + '. Check specification. Aborting.', 326);
-        if DSSPrime.In_Redirect then
-            DSSPrime.Redirect_Abort := TRUE;
+        if DSS.In_Redirect then
+            DSS.Redirect_Abort := TRUE;
     end;
 
 end;
@@ -1230,7 +1230,7 @@ var
 
 begin
     try
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
         begin
      //FOR i := 1 TO (Nterms * NConds) DO Vtemp^[i] := V^[NodeRef^[i]];
      // This is safer    12/7/99
@@ -1319,7 +1319,7 @@ begin
     PropertyValue[2] := '115';
     PropertyValue[3] := '1';
     PropertyValue[4] := '0';
-    PropertyValue[5] := Format('%d', [Round(DSSPrime.ActiveCircuit.Fundamental)]);
+    PropertyValue[5] := Format('%d', [Round(DSS.ActiveCircuit.Fundamental)]);
     PropertyValue[6] := '3';
     PropertyValue[7] := '2000';
     PropertyValue[8] := '2100';

@@ -825,11 +825,11 @@ begin
     with YPrimTemp do
     begin
 
-        FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
+        FYprimFreq := DSS.ActiveCircuit.Solution.Frequency;
         FreqMultiplier := FYprimFreq / BaseFrequency;
 
      {If GIC simulation, Resistance Only }
-        if DSSPrime.ActiveCircuit.Solution.Frequency < 0.51 then
+        if DSS.ActiveCircuit.Solution.Frequency < 0.51 then
         begin    // 0.5 Hz is cutoff
             if X > 0.0 then
                 if R <= 0.0 then
@@ -1093,7 +1093,7 @@ begin
     // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages doesn't fail
     if IsShunt then
     begin
-        if (Nphases = 1) and (not DSSPrime.ActiveCircuit.PositiveSequence) then  // assume a neutral or grounding reactor; Leave diagonal in the circuit
+        if (Nphases = 1) and (not DSS.ActiveCircuit.PositiveSequence) then  // assume a neutral or grounding reactor; Leave diagonal in the circuit
             for i := 1 to Yorder do
                 Yprim_Series.SetElement(i, i, Yprim_Shunt.Getelement(i, i))
         else
@@ -1178,12 +1178,12 @@ begin
         TotalLosses := Losses;  // Side effect: computes Iterminal and Vterminal
      {Compute losses in Rp Branch from voltages across shunt element -- node to ground}
         NoLoadLosses := CZERO;
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             for i := 1 to FNphases do
                 with NodeV^[NodeRef^[i]] do
                     Caccum(NoLoadLosses, cmplx((SQR(re) + SQR(im)) / Rp, 0.0));  // V^2/Rp
 
-        if DSSPrime.ActiveCircuit.PositiveSequence then
+        if DSS.ActiveCircuit.PositiveSequence then
             CmulReal(NoLoadLosses, 3.0);
         LoadLosses := Csub(TotalLosses, NoLoadLosses);  // Subtract no load losses from total losses
 

@@ -400,7 +400,7 @@ end;
 
 procedure TVCCSObj.RecalcElementData;
 begin
-    SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
     begin
         DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device VCCS.' + Name + ' Not Found.', 333);
@@ -481,7 +481,7 @@ var
 begin
     ComputeVterminal;
 //  IterminalUpdated := FALSE;
-    if DSSPrime.ActiveSolutionObj.IsDynamicModel then
+    if DSS.ActiveSolutionObj.IsDynamicModel then
     begin
         if FrmsMode then
         begin
@@ -614,7 +614,7 @@ begin
 
   // initialize the history terms for HW model source convention
     d := 1 / FsampleFreq;
-    wd := 2 * Pi * DSSPrime.ActiveSolutionObj.Frequency * d;
+    wd := 2 * Pi * DSS.ActiveSolutionObj.Frequency * d;
     for i := 1 to Ffiltlen do
     begin
         wt := vang - wd * (Ffiltlen - i);
@@ -717,10 +717,10 @@ begin
 
     ComputeIterminal;
 
-    t := DSSPrime.ActiveSolutionObj.DynaVars.t;
-    h := DSSPrime.ActiveSolutionObj.DynaVars.h;
-    f := DSSPrime.ActiveSolutionObj.Frequency;
-    corrector := DSSPrime.ActiveSolutionObj.DynaVars.IterationFlag;
+    t := DSS.ActiveSolutionObj.DynaVars.t;
+    h := DSS.ActiveSolutionObj.DynaVars.h;
+    f := DSS.ActiveSolutionObj.Frequency;
+    corrector := DSS.ActiveSolutionObj.DynaVars.IterationFlag;
     d := 1 / FSampleFreq;
     nstep := trunc(1e-6 + h / d);
     w := 2 * Pi * f;

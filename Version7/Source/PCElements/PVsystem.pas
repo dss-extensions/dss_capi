@@ -1410,7 +1410,7 @@ begin
 
     if Length(Spectrum) > 0 then
     begin
-        SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
+        SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
         if SpectrumObj = NIL then
             DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
     end
@@ -1438,7 +1438,7 @@ begin
     TShapeValue := PVSystemVars.FTemperature; // init here; changed by curve routine
 
     // Check to make sure the PVSystem element is ON
-    with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         if not (IsDynamicModel or IsHarmonicModel)      // Leave PVSystem element in whatever state it was prior to entering Dynamic mode
         then
@@ -1467,7 +1467,7 @@ begin
                     TSolveMode.GENERALTIME:
                     begin
                            // This mode allows use of one class of load shape
-                        case DSSPrime.ActiveCircuit.ActiveLoadShapeClass of
+                        case DSS.ActiveCircuit.ActiveLoadShapeClass of
                             USEDAILY:
                             begin
                                 CalcDailyMult(DynaVars.dblHour);
@@ -1563,10 +1563,10 @@ var
 
 begin
 
-    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSS.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
-    with  DSSPrime.ActiveCircuit.solution do
+    with  DSS.ActiveCircuit.solution do
         if IsDynamicModel or IsHarmonicModel then
         begin
        {YEQ is computed from %R and %X -- inverse of Rthev + j Xthev}
@@ -1864,13 +1864,13 @@ var
 begin
 
     try
-        if (not DSSPrime.InShowResults) then
+        if (not DSS.InShowResults) then
         begin
             Append(TraceFile);
             Write(TraceFile, Format('%-.g, %d, %-.g, ',
-                [DSSPrime.ActiveCircuit.Solution.DynaVARs.t,
-                DSSPrime.ActiveCircuit.Solution.Iteration,
-                DSSPrime.ActiveCircuit.LoadMultiplier]),
+                [DSS.ActiveCircuit.Solution.DynaVARs.t,
+                DSS.ActiveCircuit.Solution.Iteration,
+                DSS.ActiveCircuit.LoadMultiplier]),
                 GetSolutionModeID, ', ',
                 GetLoadModel, ', ',
                 VoltageModel: 0, ', ',
@@ -2060,7 +2060,7 @@ begin
     begin
         UserModel.FCalc(Vterminal, Iterminal);
         IterminalUpdated := TRUE;
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
         begin          // Negate currents from user model for power flow PVSystem element model
             for i := 1 to FnConds do
                 Caccum(InjCurrent^[i], Cnegate(Iterminal^[i]));
@@ -2121,7 +2121,7 @@ begin
             else
             begin
                 DoSimpleMsg(Format('Dynamics model missing for PVSystem.%s ', [Name]), 5671);
-                DSSPrime.SolutionAbort := TRUE;
+                DSS.SolutionAbort := TRUE;
             end;
     else  {All other models -- current-limited like Generator Model 7}
 
@@ -2186,7 +2186,7 @@ begin
                 end;
         else
             DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.%s has %d phases.', [name, Fnphases]), 5671);
-            DSSPrime.SolutionAbort := TRUE;
+            DSS.SolutionAbort := TRUE;
         end;
 
     end;
@@ -2217,7 +2217,7 @@ begin
 
     ComputeVterminal;
 
-    with DSSPrime.ActiveCircuit.Solution, PVSystemVars do
+    with DSS.ActiveCircuit.Solution, PVSystemVars do
     begin
         PVSystemHarmonic := Frequency / PVSystemFundamental;
         if SpectrumObj <> NIL then
@@ -2256,14 +2256,14 @@ begin
 
         0:
         begin
-            with DSSPrime.ActiveCircuit.Solution do
+            with DSS.ActiveCircuit.Solution do
                 for i := 1 to Fnphases do
                     Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[Fnconds]);
         end;
 
         1:
         begin
-            with DSSPrime.ActiveCircuit.Solution do
+            with DSS.ActiveCircuit.Solution do
                 for i := 1 to Fnphases do
                 begin
                     j := i + 1;
@@ -2275,7 +2275,7 @@ begin
 
     end;
 
-    PVSystemSolutionCount := DSSPrime.ActiveCircuit.Solution.SolutionCount;
+    PVSystemSolutionCount := DSS.ActiveCircuit.Solution.SolutionCount;
 
 end;
 
@@ -2298,7 +2298,7 @@ procedure TPVsystemObj.CalcPVSystemModelContribution;
 
 begin
     IterminalUpdated := FALSE;
-    with  DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
+    with  DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         if IsDynamicModel then
             DoDynamicMode
@@ -2342,9 +2342,9 @@ procedure TPVsystemObj.GetTerminalCurrents(Curr: pComplexArray);
 // Compute total Currents
 
 begin
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
-        if IterminalSolutionCount <> DSSPrime.ActiveCircuit.Solution.SolutionCount then
+        if IterminalSolutionCount <> DSS.ActiveCircuit.Solution.SolutionCount then
         begin     // recalc the contribution
             if not PVsystemObjSwitchOpen then
                 CalcPVSystemModelContribution;  // Adds totals in Iterminal as a side effect
@@ -2361,7 +2361,7 @@ end;
 function TPVsystemObj.InjCurrents: Integer;
 
 begin
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
         if LoadsNeedUpdating then
             SetNominalPVSystemOuput; // Set the nominal kW, etc for the type of solution being Done
@@ -2396,7 +2396,7 @@ procedure TPVsystemObj.Integrate(Reg: Integer; const Deriv: Double; const Interv
 
 begin
 
-    if DSSPrime.ActiveCircuit.TrapezoidalIntegration then
+    if DSS.ActiveCircuit.TrapezoidalIntegration then
     begin
         {Trapezoidal Rule Integration}
         if not FirstSampleAfterReset then
@@ -2428,9 +2428,9 @@ begin
         HourValue := 1.0;
 
 
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
         begin
-            if DSSPrime.ActiveCircuit.PositiveSequence then
+            if DSS.ActiveCircuit.PositiveSequence then
             begin
                 S := CmulReal(S, 3.0);
                 Smag := 3.0 * Smag;
@@ -2440,7 +2440,7 @@ begin
             SetDragHandRegister(Reg_MaxkW, abs(S.re));
             SetDragHandRegister(Reg_MaxkVA, Smag);
             Integrate(Reg_Hours, HourValue, IntervalHrs);  // Accumulate Hours in operation
-            Integrate(Reg_Price, S.re * DSSPrime.ActiveCircuit.PriceSignal * 0.001, IntervalHrs);  //
+            Integrate(Reg_Price, S.re * DSS.ActiveCircuit.PriceSignal * 0.001, IntervalHrs);  //
             FirstSampleAfterReset := FALSE;
         end;
     end;
@@ -2523,13 +2523,13 @@ var
 
 begin
     YPrimInvalid := TRUE;  // Force rebuild of YPrims
-    PVSystemFundamental := DSSPrime.ActiveCircuit.Solution.Frequency;  // Whatever the frequency is when we enter here.
+    PVSystemFundamental := DSS.ActiveCircuit.Solution.Frequency;  // Whatever the frequency is when we enter here.
 
      {Compute reference Thevinen voltage from phase 1 current}
 
     ComputeIterminal;  // Get present value of current
 
-    with DSSPrime.ActiveCircuit.solution do
+    with DSS.ActiveCircuit.solution do
         case Connection of
             0:
             begin {wye - neutral is explicit}
@@ -2579,7 +2579,7 @@ begin
 
         ComputeIterminal;
 
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             case Fnphases of
 
                 1:
@@ -2607,7 +2607,7 @@ begin
                 end;
             else
                 DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. PVSystem.' + name + ' has %d phases.', [Fnphases]), 5673);
-                DSSPrime.SolutionAbort := TRUE;
+                DSS.SolutionAbort := TRUE;
             end;
 
         LastThevAngle := ThetaDyn;
@@ -2635,7 +2635,7 @@ begin
 
     else
 
-        with DSSPrime.ActiveCircuit.Solution {, StorageVars} do
+        with DSS.ActiveCircuit.Solution {, StorageVars} do
         begin
 
 (*

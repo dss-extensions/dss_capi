@@ -1342,7 +1342,7 @@ begin
     end;
 
     // Set frequency multipliers for this calculation
-    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSS.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
     // Check for rebuilding Y_Terminal; Only rebuild if freq is different than last time
     if FreqMultiplier <> Y_Terminal_Freqmult then
@@ -1585,13 +1585,13 @@ begin
             begin    {Only if there's been a change}
                 puTap := TempVal;
                 // Writeln(ActiveCircuit.Solution.dynavars.dblHour, ' Transformer.', Name, '.Tap = ', puTap);
-                if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and (not DSSPrime.ActiveCircuit.Solution.SystemYChanged) and (YPrim <> NIL) then
+                if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and (not DSS.ActiveCircuit.Solution.SystemYChanged) and (YPrim <> NIL) then
                 begin
                     // Mark this to incrementally update the matrix.
                     // If the matrix is already being rebuilt, there is 
                     // no point in doing this, just rebuild it as usual.
                     // writeln('Adding element to incremental list ', Name);
-                    DSSPrime.ActiveCircuit.IncrCktElements.Add(Self) 
+                    DSS.ActiveCircuit.IncrCktElements.Add(Self) 
                 end
                 else
                 begin
@@ -1731,7 +1731,7 @@ begin
         ITerm_NL := Allocmem(SizeOf(Complex) * 2 * NumWindings);
 
      {Load up Vterminal - already allocated for all cktelements}
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             if Assigned(NodeV) then
                 for i := 1 to Yorder do
                     Vterminal^[i] := NodeV^[NodeRef^[i]]
@@ -1840,7 +1840,7 @@ begin
         end;
 
      {Load up VTerminal - already allocated for all cktelements}
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             for i := 1 to Yorder do
                 Vterminal^[i] := NodeV^[NodeRef^[i]];
 
@@ -2158,9 +2158,9 @@ begin
         begin
             OnPhase1 := FALSE;
        {Load up auxiliary parser}
-            DSSPrime.AuxParser.CmdString := GetBus(iW);
-            DSSPrime.AuxParser.NextParam;
-            S := DSSPrime.AuxParser.ParseAsBusName(N, @Nodes);
+            DSS.AuxParser.CmdString := GetBus(iW);
+            DSS.AuxParser.NextParam;
+            S := DSS.AuxParser.ParseAsBusName(N, @Nodes);
             if N = 0 then
                 OnPhase1 := TRUE;
             for i := 1 to N do
@@ -2361,7 +2361,7 @@ var
     end;
 
 begin
-    if DSSPrime.ActiveCircuit.Solution.Frequency < 0.51 then
+    if DSS.ActiveCircuit.Solution.Frequency < 0.51 then
          {Build Yterminal for GIC ~dc simulation}
 
         GICBuildYTerminal
@@ -2578,9 +2578,9 @@ var
     Obj: TXfmrCodeObj;
     i: Integer;
 begin
-    if DSSPrime.XfmrCodeClass.SetActive(Code) then
+    if DSS.XfmrCodeClass.SetActive(Code) then
     begin
-        Obj := DSSPrime.XfmrCodeClass.GetActiveObj;
+        Obj := DSS.XfmrCodeClass.GetActiveObj;
         XfmrCode := LowerCase(Code);
     // set sizes and copy parameters
         Nphases := Obj.Fnphases;

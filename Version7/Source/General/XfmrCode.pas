@@ -239,7 +239,7 @@ end;
 function TXfmrCode.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with DSSPrime.ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         DSS.ActiveDSSObject := TXfmrCodeObj.Create(Self, ObjName);
         Result := AddObjectToList(DSS.ActiveDSSObject);
@@ -271,7 +271,7 @@ begin
     end
     else
         Dosimplemsg('Invalid number of windings: (' + IntToStr(N) + ') for Transformer ' +
-            DSSPrime.ActiveTransfObj.Name, 111);
+            DSS.ActiveTransfObj.Name, 111);
 end;
 
 procedure TXfmrCode.SetActiveWinding(w: Integer);

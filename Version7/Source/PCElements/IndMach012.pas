@@ -896,7 +896,7 @@ begin
         if Length(DutyShape) > 0 then
             DoSimpleMsg('WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
 
-    SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
         DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
 
@@ -953,7 +953,7 @@ var
     h2: Double;
 
 begin
-    with DSSPrime.ActiveCircuit.Solution.Dynavars do
+    with DSS.ActiveCircuit.Solution.Dynavars do
     begin
         if IterationFlag = 0 then
         begin  // on predictor step
@@ -1092,7 +1092,7 @@ begin
      {Compute nominal Positive sequence voltage behind transient reactance}
 
         if MachineON then
-            with DSSPrime.ActiveCircuit.Solution do
+            with DSS.ActiveCircuit.Solution do
             begin
 
                 Yeq := Cinv(Zsp);
@@ -1120,7 +1120,7 @@ begin
                     end;
                 else
                     DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Motors. IndMach012.' + name + ' has %d phases.', [Fnphases]), 5672);
-                    DSSPrime.SolutionAbort := TRUE;
+                    DSS.SolutionAbort := TRUE;
                 end;
 
                 InitModel(V012, I012); // E2, etc
@@ -1128,7 +1128,7 @@ begin
          // Shaft variables
                 Theta := Cang(E1);
                 dTheta := 0.0;
-                w0 := Twopi * DSSPrime.ActiveCircuit.Solution.Frequency;
+                w0 := Twopi * DSS.ActiveCircuit.Solution.Frequency;
          // recalc Mmass and D in case the frequency has changed
                 with MachineData do
                 begin
@@ -1175,10 +1175,10 @@ var
 
 begin
 
-    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSS.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;  // ratio to adjust reactances for present solution frequency
 
-    with DSSPrime.ActiveCircuit.solution do
+    with DSS.ActiveCircuit.solution do
         if IsDynamicModel or IsHarmonicModel then
    // for Dynamics and Harmonics modes use constant equivalent Y
         begin
@@ -1373,7 +1373,7 @@ begin
 
     // compute I012
 
-    case DSSPrime.ActiveCircuit.Solution.DynaVars.SolutionMode of
+    case DSS.ActiveCircuit.Solution.DynaVars.SolutionMode of
         TSolveMode.DYNAMICMODE:
         begin
             CalcDynamic(V012, I012);
@@ -1445,7 +1445,7 @@ begin
    // Set the VTerminal array
     ComputeVterminal;
 
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
         GenHarmonic := Frequency / BaseFrequency; // harmonic based on the fundamental for this object
         // get the spectrum multiplier and multiply by the V thev (or Norton current for load objects)
@@ -1483,7 +1483,7 @@ procedure TIndMach012Obj.CalcIndMach012ModelContribution;
 
 begin
     IterminalUpdated := FALSE;
-    with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         if IsDynamicModel then
             DoDynamicMode
@@ -1534,9 +1534,9 @@ procedure TIndMach012Obj.GetTerminalCurrents(Curr: pComplexArray);
 
 begin
 
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
-        if IterminalSolutionCount <> DSSPrime.ActiveCircuit.Solution.SolutionCount then
+        if IterminalSolutionCount <> DSS.ActiveCircuit.Solution.SolutionCount then
         begin     // recalc the contribution
           // You will likely want some logic like this
             if not IndMach012SwitchOpen then
@@ -1555,7 +1555,7 @@ function TIndMach012Obj.InjCurrents: Integer;
 
 begin
 
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
 
       // Generators and Loads use logic like this:
@@ -1586,7 +1586,7 @@ begin
     MachineOn_Saved := MachineON;
     ShapeFactor := CDOUBLEONE;
     // Check to make sure the generation is ON
-    with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         if not (IsDynamicModel or IsHarmonicModel) then     // Leave machine in whatever state it was prior to entering Dynamic mode
         begin
@@ -1628,7 +1628,7 @@ begin
                     begin
                         Factor := 1.0;
                                    // This mode allows use of one class of load shape
-                        case DSSPrime.ActiveCircuit.ActiveLoadShapeClass of
+                        case DSS.ActiveCircuit.ActiveLoadShapeClass of
                             USEDAILY:
                                 CalcDailyMult(DynaVars.dblHour);
                             USEYEARLY:
@@ -1922,7 +1922,7 @@ begin
 
     ComputeIterminal;
 
-    with DSSPrime.ActiveCircuit.Solution, MachineData do
+    with DSS.ActiveCircuit.Solution, MachineData do
     begin
 
         with DynaVars do
@@ -2320,7 +2320,7 @@ procedure TIndMach012Obj.WriteTraceRecord;
 //----------------------------------------------------------------------------
 begin
     Append(TraceFile);
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
         Write(TraceFile, Format('%-.6g, %d, %-.6g, ', [Dynavars.dblHour * 3600.0, Iteration, S1]));
 
     Write(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(Is1), Cabs(Is2)]));

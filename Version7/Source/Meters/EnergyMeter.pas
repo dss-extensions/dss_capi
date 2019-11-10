@@ -167,6 +167,7 @@ type
         This_Meter_DIFileIsOpen: Boolean;
         SystemDIFile: TextFile;
         cPower, cLosses: Complex;
+        DSS: TDSS;
 
         procedure Clear;
         procedure Integrate(var Reg: Double; Value: Double; var Deriv: Double);
@@ -186,7 +187,7 @@ type
         procedure Reset;
         procedure Save;
 
-        constructor Create;
+        constructor Create(dss: TDSS);
         destructor Destroy; OVERRIDE;
 
     end;
@@ -490,7 +491,7 @@ begin
 
     GeneratorClass := DSS.DSSClassList.Get(DSS.ClassNames.Find('generator'));
 
-    SystemMeter := TSystemMeter.Create;//(dss);
+    SystemMeter := TSystemMeter.Create(DSS);
     OV_MHandle := NIL;
     VR_MHandle := NIL;
     DI_MHandle := NIL;
@@ -1044,7 +1045,7 @@ begin
     Fnconds := 3;
     Nterms := 1;  // this forces allocation of terminals and conductors in base class
     ExcessFlag := TRUE;  // Default to Excess energy FOR UE
-    ElementName := 'Vsource.' + TDSSCktElement(DSSPrime.ActiveCircuit.CktElements.Get(1)).Name; // Default to first circuit element (source)
+    ElementName := 'Vsource.' + TDSSCktElement(DSS.ActiveCircuit.CktElements.Get(1)).Name; // Default to first circuit element (source)
     MeteredElement := NIL;
     BranchList := NIL;  // initialize to NIL, set later when inited
     SequenceList := NIL;
@@ -1231,7 +1232,7 @@ begin
     Devindex := GetCktElementIndex(ElementName);   // Global function
     if DevIndex > 0 then
     begin  // Monitored element must already exist
-        MeteredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex); // Get pointer to metered element
+        MeteredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex); // Get pointer to metered element
          {MeteredElement must be a PDElement}
         if not (MeteredElement is TPDElement) then
         begin
@@ -1296,7 +1297,7 @@ end;
 
 function TEnergyMeterObj.MakeVPhaseReportFileName: String;
 begin
-    Result := DSSPrime.EnergyMeterClass.DI_Dir + PathDelim + Name + '_PhaseVoltageReport.CSV';
+    Result := DSS.EnergyMeterClass.DI_Dir + PathDelim + Name + '_PhaseVoltageReport.CSV';
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1352,7 +1353,7 @@ begin
         CSVName := 'MTR_' + Name + '.CSV';
         AssignFile(F, GetOutputDirectory + CSVName);
         Rewrite(F);
-        DSSPrime.GlobalResult := CSVName;
+        DSS.GlobalResult := CSVName;
         SetLastResultFile(CSVName);
 
     except
@@ -1365,7 +1366,7 @@ begin
 
     try
 //       Writeln(F,'**** NEW RECORD ****');
-        Writeln(F, 'Year, ', DSSPrime.ActiveCircuit.Solution.Year: 0, ',');
+        Writeln(F, 'Year, ', DSS.ActiveCircuit.Solution.Year: 0, ',');
         for i := 1 to NumEMregisters do
             Writeln(F, '"', RegisterNames[i], '",', Registers[i]: 0: 0);
     finally
@@ -1378,7 +1379,7 @@ end;
 procedure TEnergyMeterObj.Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
 
 begin
-    if DSSPrime.ActiveCircuit.TrapezoidalIntegration then
+    if DSS.ActiveCircuit.TrapezoidalIntegration then
     begin
         {Trapezoidal Rule Integration}
         if not FirstSampleAfterReset then
@@ -1454,7 +1455,7 @@ begin
      //----MeteredElement.ActiveTerminalIdx := MeteredTerminal;  // needed for Excess kVA calcs
     S_Local := CmulReal(MeteredElement.Power[MeteredTerminal], 0.001);
     S_Local_kVA := Cabs(S_Local);
-    Delta_Hrs := DSSPrime.ActiveCircuit.Solution.IntervalHrs;
+    Delta_Hrs := DSS.ActiveCircuit.Solution.IntervalHrs;
     Integrate(Reg_kWh, S_Local.re, Delta_Hrs);   // Accumulate the power
     Integrate(Reg_kvarh, S_Local.im, Delta_Hrs);
     SetDragHandRegister(Reg_MaxkW, S_Local.re);   // 3-10-04 removed abs()
@@ -1677,7 +1678,7 @@ begin
             if FPhaseVoltageReport then
                 with BranchList.PresentBranch do
                     if VoltBaseIndex > 0 then
-                        with DSSPrime.ActiveCircuit do
+                        with DSS.ActiveCircuit do
                             if Buses^[FromBusReference].kVBase > 0.0 then
                             begin
                                 for i := 1 to Buses^[FromBusReference].NumNodesThisBus do
@@ -1797,7 +1798,7 @@ begin
     end;
 
     FirstSampleAfterReset := FALSE;
-    if DSSPrime.EnergyMeterClass.SaveDemandInterval then
+    if DSS.EnergyMeterClass.SaveDemandInterval then
         WriteDemandIntervalData;
 end;
 
@@ -1879,7 +1880,7 @@ var
 
 begin
    {Initialize all to FALSE}
-    with DSSPrime.ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         CktElem := PDElements.First;
         while CktElem <> NIL do
@@ -1889,9 +1890,9 @@ begin
         end;  {WHILE}
     end; {WITH}
 
-    for i := 1 to DSSPrime.ActiveCircuit.EnergyMeters.ListSize do
+    for i := 1 to DSS.ActiveCircuit.EnergyMeters.ListSize do
     begin
-        ThisMeter := DSSPrime.ActiveCircuit.EnergyMeters.Get(i);
+        ThisMeter := DSS.ActiveCircuit.EnergyMeters.Get(i);
         with ThisMeter do
             if MeteredElement <> NIL then
                 MeteredElement.HasEnergyMeter := TRUE;
@@ -1965,7 +1966,7 @@ begin
     begin
     // This bus is the head of the feeder or zone; do not mark as radial bus
         FromBusReference := MeteredElement.Terminals^[MeteredTerminal].BusRef;
-        DSSPrime.ActiveCircuit.Buses^[FromBusReference].DistFromMeter := 0.0;
+        DSS.ActiveCircuit.Buses^[FromBusReference].DistFromMeter := 0.0;
         VoltBaseIndex := AddToVoltBaseList(FromBusReference);
         FromTerminal := MeteredTerminal;
         if MeteredElement is TPDElement then
@@ -2012,7 +2013,7 @@ begin
         for iTerm := 1 to ActiveBranch.Nterms do
         begin
             if not ActiveBranch.Terminals^[iTerm].Checked then
-                with DSSPrime.ActiveCircuit do
+                with DSS.ActiveCircuit do
                 begin
         // Now find all loads and generators connected to the bus on this end of branch
         // attach them as generic objects to cktTree node.
@@ -2182,7 +2183,7 @@ begin
         AssignFile(F, GetOutputDirectory + CSVName);
         Rewrite(F);
 
-        DSSPrime.GlobalResult := CSVName;
+        DSS.GlobalResult := CSVName;
         SetLastResultFile(CSVName);
 
     except
@@ -2201,7 +2202,7 @@ begin
         begin
             PDElem := BranchList.First;
             while PDElem <> NIL do
-                with DSSPrime.ActiveCircuit do
+                with DSS.ActiveCircuit do
                 begin
                     Writeln(F, Format('%d, %s.%s, %s, %s, %10.4f',
                         [BranchList.Level, PDelem.ParentClass.Name, PDelem.Name,
@@ -2331,7 +2332,7 @@ var
     i: Integer;
 
 begin
-    with DSSPrime.ActiveCircuit.Buses^[BusRef] do
+    with DSS.ActiveCircuit.Buses^[BusRef] do
     begin
         for i := 1 to VBaseCount do
         begin
@@ -2395,7 +2396,7 @@ begin
                     1:
                         with LoadElem do
                         begin
-                            ConnectedPhase := DSSPrime.ActiveCircuit.MapNodeToBus^[NodeRef^[1]].NodeNum;
+                            ConnectedPhase := DSS.ActiveCircuit.MapNodeToBus^[NodeRef^[1]].NodeNum;
                             if (ConnectedPhase > 0) and (ConnectedPhase < 4)   // Restrict to phases 1..3
                             then
                                 AllocationFactor := AllocationFactor * SensorObj.PhsAllocationFactor^[ConnectedPhase];
@@ -2523,7 +2524,7 @@ begin
     if not assigned(BranchList) then
         MakeMeterZoneLists;
 
-    case DSSPrime.ActiveCircuit.ReductionStrategy of
+    case DSS.ActiveCircuit.ReductionStrategy of
 
         rsShortlines:
             DoReduceShortLines(BranchList);    {See ReduceAlgs.Pas}
@@ -2576,7 +2577,7 @@ begin
     if not CheckBranchList(529) then
         Exit;
 
-    with DSSPrime.ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
 
         for i := 1 to Branchlist.ZoneEndsList.NumEnds do
@@ -2649,7 +2650,7 @@ begin
     if LineCount = 1 then
         Exit;  {Nothing to do!}
 
-    with DSSPrime.ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         Xinc := (Buses^[FirstCoordref].X - Buses^[SecondCoordRef].X) / LineCount;
         Yinc := (Buses^[FirstCoordref].Y - Buses^[SecondCoordRef].Y) / LineCount;
@@ -2719,7 +2720,7 @@ begin
     // Forward sweep to get number of interruptions
        // Initialize number of interruptions and Duration
     PD_Elem := TPDElement(SequenceList.Get(1));
-    pBus := DSSPrime.ActiveCircuit.Buses^[PD_Elem.Terminals^[PD_Elem.FromTerminal].BusRef];
+    pBus := DSS.ActiveCircuit.Buses^[PD_Elem.Terminals^[PD_Elem.FromTerminal].BusRef];
     pBus.Bus_Num_Interrupt := Source_NumInterruptions;
     pBus.BusCustInterrupts := Source_NumInterruptions * pBus.BusTotalNumCustomers;
     pBus.Bus_Int_Duration := Source_IntDuration;
@@ -2768,7 +2769,7 @@ begin
         pSection := @FeederSections^[PD_Elem.BranchSectionID];
         Inc(pSection.NCustomers, PD_Elem.BranchNumCustomers); // Sum up num Customers on this Section
         Inc(pSection.NBranches, 1); // Sum up num branches on this Section
-        pBus := DSSPrime.ActiveCircuit.Buses^[PD_Elem.Terminals^[PD_Elem.ToTerminal].BusRef];
+        pBus := DSS.ActiveCircuit.Buses^[PD_Elem.Terminals^[PD_Elem.ToTerminal].BusRef];
         DblInc(pSection.SumBranchFltRates, pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate);
         DblInc(pSection.SumFltRatesXRepairHrs, (pBus.Bus_Num_Interrupt * PD_Elem.BranchFltRate * PD_Elem.HrsToRepair));
         if PD_Elem.HasOCPDevice then
@@ -2802,7 +2803,7 @@ begin
 
         { Set Bus_int_Duration}
 
-    with DSSPrime.ActiveCircuit do
+    with DSS.ActiveCircuit do
         for idx := 1 to NumBuses do
         begin
             pBus := Buses^[idx];
@@ -2832,7 +2833,7 @@ begin
     CustInterrupts := 0.0;
 
        // Use LoadList for SAIFI calculation
-    with DSSPrime.ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         for idx := 1 to LoadList.ListSize do  // all loads in meter zone
         begin
@@ -3020,7 +3021,7 @@ begin
 
 
         cktElem := BranchList.First;
-        with DSSPrime.ActiveCircuit do
+        with DSS.ActiveCircuit do
             while cktElem <> NIL do
             begin
                 if CktElem.Enabled then
@@ -3129,27 +3130,27 @@ begin
 
      {If any records were written to the file, record their relative names}
         if NBranches > 0 then
-            DSSPrime.SavedFileList.Add(dirname + PathDelim + 'Branches.dss')
+            DSS.SavedFileList.Add(dirname + PathDelim + 'Branches.dss')
         else
             DeleteFile('Branches.dss');
         if NXfmrs > 0 then
-            DSSPrime.SavedFileList.Add(dirname + PathDelim + 'Transformers.dss')
+            DSS.SavedFileList.Add(dirname + PathDelim + 'Transformers.dss')
         else
             DeleteFile('Transformers.dss');
         if NShunts > 0 then
-            DSSPrime.SavedFileList.Add(dirname + PathDelim + 'Shunts.dss')
+            DSS.SavedFileList.Add(dirname + PathDelim + 'Shunts.dss')
         else
             DeleteFile('Shunts.dss');
         if NLoads > 0 then
-            DSSPrime.SavedFileList.Add(dirname + PathDelim + 'Loads.dss')
+            DSS.SavedFileList.Add(dirname + PathDelim + 'Loads.dss')
         else
             DeleteFile('Loads.dss');
         if NGens > 0 then
-            DSSPrime.SavedFileList.Add(dirname + PathDelim + 'Generators.dss')
+            DSS.SavedFileList.Add(dirname + PathDelim + 'Generators.dss')
         else
             DeleteFile('Generators.dss');
         if NCaps > 0 then
-            DSSPrime.SavedFileList.Add(dirname + PathDelim + 'Capacitors.dss')
+            DSS.SavedFileList.Add(dirname + PathDelim + 'Capacitors.dss')
         else
             DeleteFile('Capacitors.dss');
 
@@ -3192,7 +3193,7 @@ begin
 
 
      {Write Registers to Totals File}
-    with DSSPrime.EnergyMeterClass do
+    with DSS.EnergyMeterClass do
     begin
         WriteintoMemStr(EMT_MHandle, '"' + Self.Name + '"');
         for i := 1 to NumEMregisters do
@@ -3212,7 +3213,7 @@ begin
         if This_Meter_DIFileIsOpen then
             CloseDemandIntervalFile;
 
-        if (DSSPrime.EnergyMeterClass.DI_Verbose) then
+        if (DSS.EnergyMeterClass.DI_Verbose) then
         begin
 
             This_Meter_DIFileIsOpen := TRUE;
@@ -3267,9 +3268,9 @@ var
     end;
 
 begin
-    if DSSPrime.EnergyMeterClass.DI_Verbose and This_Meter_DIFileIsOpen then
+    if DSS.EnergyMeterClass.DI_Verbose and This_Meter_DIFileIsOpen then
     begin
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             WriteintoMem(DI_MHandle, DynaVars.dblHour);
         for i := 1 to NumEMRegisters do
             WriteintoMem(DI_MHandle, Derivatives[i]);
@@ -3277,7 +3278,7 @@ begin
     end;
 
       {Add to Class demand interval registers}
-    with DSSPrime.EnergyMeterClass do
+    with DSS.EnergyMeterClass do
         for i := 1 to NumEMRegisters do
             DI_RegisterTotals[i] := DI_RegisterTotals[i] + Derivatives[i] * TotalsMask[i];
 
@@ -3285,7 +3286,7 @@ begin
       {Phase Voltage Report, if requested}
     if VPhaseReportFileIsOpen then
     begin
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             WriteintoMem(PHV_MHandle, DynaVars.dblHour);
         for i := 1 to MaxVBaseCount do
             if VBaseList^[i] > 0.0 then
@@ -3365,7 +3366,7 @@ begin
         Exit;
 
     try
-        if DSSPrime.Energymeterclass.FDI_Verbose then
+        if DSS.Energymeterclass.FDI_Verbose then
         begin
             FileNm := MakeDIFileName;   // Creates directory if it doesn't exist
             if FileExists(FileNm) then
@@ -3461,7 +3462,7 @@ end;
 
 function TEnergyMeterObj.MakeDIFileName: String;
 begin
-    Result := DSSPrime.EnergyMeterClass.DI_Dir + PathDelim + Self.Name + '.CSV';
+    Result := DSS.EnergyMeterClass.DI_Dir + PathDelim + Self.Name + '.CSV';
 end;
 
 procedure TEnergyMeter.Set_SaveDemandInterval(const Value: Boolean);
@@ -3656,7 +3657,7 @@ begin
         Exit;
 
     try
-        FileNm := DSSPrime.EnergyMeterClass.Di_Dir + PathDelim + 'DI_SystemMeter.CSV';
+        FileNm := DSS.EnergyMeterClass.Di_Dir + PathDelim + 'DI_SystemMeter.CSV';
         AssignFile(SystemDIFile, FileNm);
       {File Must Exist}
         if FileExists(FileNm) then
@@ -3696,15 +3697,16 @@ var
 begin
     if This_Meter_DIFileIsOpen then
     begin
-        File_Path := DSSPrime.EnergyMeterClass.DI_Dir + PathDelim + 'DI_SystemMeter.CSV';
+        File_Path := DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_SystemMeter.CSV';
         CloseMHandler(SDI_MHandle, File_Path, SDI_Append);
         SDI_MHandle := NIL;
         This_Meter_DIFileIsOpen := FALSE;
     end;
 end;
 
-constructor TSystemMeter.Create;
+constructor TSystemMeter.Create(dss: TDSS);
 begin
+    DSS := dss;
     Clear;
     This_Meter_DIFileIsOpen := FALSE;
 end;
@@ -3717,14 +3719,14 @@ end;
 
 procedure TSystemMeter.Integrate(var Reg: Double; Value: Double; var Deriv: Double);
 begin
-    if DSSPrime.ActiveCircuit.TrapezoidalIntegration then
+    if DSS.ActiveCircuit.TrapezoidalIntegration then
     begin
         {Trapezoidal Rule Integration}
         if not FirstSampleAfterReset then
-            Reg := Reg + 0.5 * DSSPrime.ActiveCircuit.Solution.IntervalHrs * (Value + Deriv);
+            Reg := Reg + 0.5 * DSS.ActiveCircuit.Solution.IntervalHrs * (Value + Deriv);
     end
     else   {Plain Euler integration}
-        Reg := Reg + DSSPrime.ActiveCircuit.Solution.IntervalHrs * Value;
+        Reg := Reg + DSS.ActiveCircuit.Solution.IntervalHrs * Value;
 
     Deriv := Value;
 
@@ -3766,11 +3768,11 @@ begin
         CSVName := 'SystemMeter.CSV';
        {If we are doing a simulation and saving interval data, create this in the
         same directory as the demand interval data}
-        if DSSPrime.energyMeterClass.SaveDemandInterval then
-            Folder := DSSPrime.energyMeterClass.DI_DIR + PathDelim
+        if DSS.energyMeterClass.SaveDemandInterval then
+            Folder := DSS.energyMeterClass.DI_DIR + PathDelim
         else
             Folder := GetOutputDirectory;
-        DSSPrime.GlobalResult := CSVName;
+        DSS.GlobalResult := CSVName;
         SetLastResultFile(CSVName);
 
     except
@@ -3786,7 +3788,7 @@ begin
             SM_MHandle.Free;
         SM_MHandle := Create_Meter_Space('Year, ');
         WriteintoMemStr(SM_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
-        WriteintoMemStr(SM_MHandle, inttostr(DSSPrime.ActiveCircuit.Solution.Year));
+        WriteintoMemStr(SM_MHandle, inttostr(DSS.ActiveCircuit.Solution.Year));
         WriteRegisters(F);
         WriteintoMemStr(SM_MHandle, Char(10));
 
@@ -3811,7 +3813,7 @@ begin
     Peakkva := Max(Cabs(cPower), Peakkva);
 
   {Get total circuit losses}
-    cLosses := DSSPrime.ActiveCircuit.Losses;  // PD Elements except shunts
+    cLosses := DSS.ActiveCircuit.Losses;  // PD Elements except shunts
     cLosses := CmulReal(cLosses, 0.001);  // convert to kW
 
     Integrate(Losseskwh, cLosses.re, dLosseskwh);
@@ -3842,7 +3844,7 @@ end;
 
 procedure TSystemMeter.WriteDemandIntervalData;
 begin
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
         WriteintoMem(SDI_MHandle, DynaVars.dblHour);
     WriteintoMem(SDI_MHandle, cPower.re);
     WriteintoMem(SDI_MHandle, cPower.im);

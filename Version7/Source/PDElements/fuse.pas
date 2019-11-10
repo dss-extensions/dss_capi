@@ -402,7 +402,7 @@ begin
     Devindex := GetCktElementIndex(MonitoredElementName); // Global function
     if DevIndex > 0 then
     begin
-        MonitoredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
+        MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
         Nphases := MonitoredElement.NPhases;       // Force number of phases to be same
         if Fnphases > FUSEMAXDIM then
             DosimpleMsg('Warning: Fuse ' + Self.Name + ': Number of phases > Max fuse dimension.', 404);
@@ -431,7 +431,7 @@ begin
     Devindex := GetCktElementIndex(ElementName); // Global function
     if DevIndex > 0 then
     begin  // Both CktElement and monitored element must already exist
-        ControlledElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
+        ControlledElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
         ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Make the 1 st terminal active
 
         if Enabled then
@@ -569,7 +569,7 @@ begin
                 if TripTime > 0.0 then
                 begin
                     if not ReadyToBlow[i] then
-                        with DSSPrime.ActiveCircuit do
+                        with DSS.ActiveCircuit do
                         begin  // Then arm for an open operation
                             hAction[i] := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + Delaytime, i, 0, Self);
                             ReadyToBlow[i] := TRUE;
@@ -579,7 +579,7 @@ begin
                 begin
                     if ReadyToBlow[i] then
                     begin  //  Current has dropped below pickup and it hasn't blown yet
-                        DSSPrime.ActiveCircuit.ControlQueue.Delete(hAction[i]);  // Delete the fuse blow action
+                        DSS.ActiveCircuit.ControlQueue.Delete(hAction[i]);  // Delete the fuse blow action
                         ReadyToBlow[i] := FALSE;
                     end;
                 end;

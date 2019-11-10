@@ -1424,7 +1424,7 @@ begin
 
     ShapeFactor := CDOUBLEONE;  // init here; changed by curve routine
     // Check to make sure the Storage element is ON
-    with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         if not (IsDynamicModel or IsHarmonicModel) then     // Leave Storage element in whatever state it was prior to entering Dynamic mode
         begin
@@ -1455,7 +1455,7 @@ begin
                         TSolveMode.GENERALTIME:
                         begin
                          // This mode allows use of one class of load shape
-                            case DSSPrime.ActiveCircuit.ActiveLoadShapeClass of
+                            case DSS.ActiveCircuit.ActiveLoadShapeClass of
                                 USEDAILY:
                                     CalcDailyMult(DynaVars.dblHour);
                                 USEYEARLY:
@@ -1585,7 +1585,7 @@ begin
 
     if Length(Spectrum) > 0 then
     begin
-        SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
+        SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
         if SpectrumObj = NIL then
             DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
     end
@@ -1615,10 +1615,10 @@ var
 
 begin
 
-    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSS.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
-    with  DSSPrime.ActiveCircuit.solution do
+    with  DSS.ActiveCircuit.solution do
         if {IsDynamicModel or} IsHarmonicModel then
         begin
        {Yeq is computed from %R and %X -- inverse of Rthev + j Xthev}
@@ -1789,7 +1789,7 @@ begin
                                // Check to see If it is time to turn the charge cycle on If it is not already on.
                     if not (Fstate = STORE_CHARGING) then
                         if ChargeTime > 0.0 then
-                            with DSSPrime.ActiveCircuit.Solution do
+                            with DSS.ActiveCircuit.Solution do
                             begin
                                 if abs(NormalizeToTOD(DynaVars.intHour, DynaVARs.t) - ChargeTime) < DynaVARs.h / 3600.0 then
                                     Fstate := STORE_CHARGING;
@@ -1884,13 +1884,13 @@ var
 begin
 
     try
-        if (not DSSPrime.InShowResults) then
+        if (not DSS.InShowResults) then
         begin
             Append(TraceFile);
             Write(TraceFile, Format('%-.g, %d, %-.g, ',
-                [DSSPrime.ActiveCircuit.Solution.DynaVars.dblHour,
-                DSSPrime.ActiveCircuit.Solution.Iteration,
-                DSSPrime.ActiveCircuit.LoadMultiplier]),
+                [DSS.ActiveCircuit.Solution.DynaVars.dblHour,
+                DSS.ActiveCircuit.Solution.Iteration,
+                DSS.ActiveCircuit.LoadMultiplier]),
                 GetSolutionModeID, ', ',
                 GetLoadModel, ', ',
                 VoltageModel: 0, ', ',
@@ -2077,7 +2077,7 @@ begin
     begin
         UserModel.FCalc(Vterminal, Iterminal);
         IterminalUpdated := TRUE;
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
         begin          // Negate currents from user model for power flow Storage element model
             for i := 1 to FnConds do
                 Caccum(InjCurrent^[i], Cnegate(Iterminal^[i]));
@@ -2167,7 +2167,7 @@ begin
                 end;
             else
                 DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Storage Element. Storage.%s has %d phases.', [name, Fnphases]), 5671);
-                DSSPrime.SolutionAbort := TRUE;
+                DSS.SolutionAbort := TRUE;
             end;
 
     {Add it into inj current array}
@@ -2187,7 +2187,7 @@ var
 begin
 // do user written dynamics model
 
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin  // Just pass node voltages to ground and let dynamic model take care of it
         for i := 1 to FNconds do
             VTerminal^[i] := NodeV^[NodeRef^[i]];
@@ -2225,7 +2225,7 @@ begin
 
     ComputeVterminal;
 
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
         StorageHarmonic := Frequency / StorageFundamental;
         if SpectrumObj <> NIL then
@@ -2265,14 +2265,14 @@ begin
 
         0:
         begin
-            with DSSPrime.ActiveCircuit.Solution do
+            with DSS.ActiveCircuit.Solution do
                 for i := 1 to Fnphases do
                     Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[Fnconds]);
         end;
 
         1:
         begin
-            with DSSPrime.ActiveCircuit.Solution do
+            with DSS.ActiveCircuit.Solution do
                 for i := 1 to Fnphases do
                 begin
                     j := i + 1;
@@ -2284,7 +2284,7 @@ begin
 
     end;
 
-    StorageSolutionCount := DSSPrime.ActiveCircuit.Solution.SolutionCount;
+    StorageSolutionCount := DSS.ActiveCircuit.Solution.SolutionCount;
 
 end;
 
@@ -2308,7 +2308,7 @@ procedure TStorageObj.CalcStorageModelContribution;
 
 begin
     IterminalUpdated := FALSE;
-    with  DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
+    with  DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         if IsDynamicModel then
             DoDynamicMode
@@ -2352,9 +2352,9 @@ procedure TStorageObj.GetTerminalCurrents(Curr: pComplexArray);
 // Compute total Currents
 
 begin
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
-        if IterminalSolutionCount <> DSSPrime.ActiveCircuit.Solution.SolutionCount then
+        if IterminalSolutionCount <> DSS.ActiveCircuit.Solution.SolutionCount then
         begin     // recalc the contribution
             if not StorageObjSwitchOpen then
                 CalcStorageModelContribution;  // Adds totals in Iterminal as a side effect
@@ -2371,7 +2371,7 @@ end;
 function TStorageObj.InjCurrents: Integer;
 
 begin
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
         if LoadsNeedUpdating then
             SetNominalStorageOuput; // Set the nominal kW, etc for the type of solution being Done
@@ -2405,7 +2405,7 @@ end;
 procedure TStorageObj.Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
 
 begin
-    if DSSPrime.ActiveCircuit.TrapezoidalIntegration then
+    if DSS.ActiveCircuit.TrapezoidalIntegration then
     begin
         {Trapezoidal Rule Integration}
         if not FirstSampleAfterReset then
@@ -2446,12 +2446,12 @@ begin
             HourValue := 0.0;
         end;
 
-        if (FState = STORE_DISCHARGING) or DSSPrime.ActiveCircuit.TrapezoidalIntegration then
+        if (FState = STORE_DISCHARGING) or DSS.ActiveCircuit.TrapezoidalIntegration then
         {Make sure we always integrate for Trapezoidal case
          Don't need to for Gen Off and normal integration}
-            with DSSPrime.ActiveCircuit.Solution do
+            with DSS.ActiveCircuit.Solution do
             begin
-                if DSSPrime.ActiveCircuit.PositiveSequence then
+                if DSS.ActiveCircuit.PositiveSequence then
                 begin
                     S := CmulReal(S, 3.0);
                     Smag := 3.0 * Smag;
@@ -2461,7 +2461,7 @@ begin
                 SetDragHandRegister(Reg_MaxkW, abs(S.re));
                 SetDragHandRegister(Reg_MaxkVA, Smag);
                 Integrate(Reg_Hours, HourValue, IntervalHrs);  // Accumulate Hours in operation
-                Integrate(Reg_Price, S.re * DSSPrime.ActiveCircuit.PriceSignal * 0.001, IntervalHrs);  // Accumulate Hours in operation
+                Integrate(Reg_Price, S.re * DSS.ActiveCircuit.PriceSignal * 0.001, IntervalHrs);  // Accumulate Hours in operation
                 FirstSampleAfterReset := FALSE;
             end;
     end;
@@ -2478,11 +2478,11 @@ begin
         kWhBeforeUpdate := kWhStored;   // keep this for reporting change in storage as a variable
 
     {Assume User model will take care of updating storage in dynamics mode}
-        if DSSPrime.ActiveCircuit.solution.IsDynamicModel and IsUserModel then
+        if DSS.ActiveCircuit.solution.IsDynamicModel and IsUserModel then
             Exit;
 
 
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             case FState of
 
                 STORE_DISCHARGING:
@@ -2602,7 +2602,7 @@ var
 
 begin
     YPrimInvalid := TRUE;  // Force rebuild of YPrims
-    StorageFundamental := DSSPrime.ActiveCircuit.Solution.Frequency;  // Whatever the frequency is when we enter here.
+    StorageFundamental := DSS.ActiveCircuit.Solution.Frequency;  // Whatever the frequency is when we enter here.
 
     Yeq := Cinv(Cmplx(StorageVars.RThev, StorageVars.XThev));      // used for current calcs  Always L-N
 
@@ -2612,7 +2612,7 @@ begin
     begin
         ComputeIterminal;  // Get present value of current
 
-        with DSSPrime.ActiveCircuit.solution do
+        with DSS.ActiveCircuit.solution do
             case Connection of
                 0:
                 begin {wye - neutral is explicit}
@@ -2668,7 +2668,7 @@ begin
         begin
             NumPhases := Fnphases;
             NumConductors := Fnconds;
-            w_grid := twopi * DSSPrime.ActiveCircuit.Solution.Frequency;
+            w_grid := twopi * DSS.ActiveCircuit.Solution.Frequency;
         end;
         DynaModel.FInit(Vterminal, Iterminal);
     end
@@ -2679,7 +2679,7 @@ begin
      {Compute nominal Positive sequence voltage behind equivalent filter impedance}
 
         if FState = STORE_DISCHARGING then
-            with DSSPrime.ActiveCircuit.Solution do
+            with DSS.ActiveCircuit.Solution do
             begin
                 ComputeIterminal;
 
@@ -2743,7 +2743,7 @@ begin
 
     else
 
-        with DSSPrime.ActiveCircuit.Solution, StorageVars do
+        with DSS.ActiveCircuit.Solution, StorageVars do
         begin
 
             with StorageVars do

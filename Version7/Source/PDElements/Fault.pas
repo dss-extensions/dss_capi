@@ -513,7 +513,7 @@ procedure TFaultObj.Randomize;
 // called from solveMontefault Procedure
 
 begin
-    with DSSPrime.activeCircuit.Solution do
+    with DSS.activeCircuit.Solution do
     begin
         case RandomType of
             GAUSSIAN:
@@ -574,7 +574,7 @@ begin
 
   // make sure randommult is 1.0 if not solution mode MonteFault
 
-    if DSSPrime.ActiveCircuit.Solution.Mode <> TSolveMode.MONTEFAULT then
+    if DSS.ActiveCircuit.Solution.Mode <> TSolveMode.MONTEFAULT then
         RandomMult := 1.0;
 
     if RandomMult = 0.0 then

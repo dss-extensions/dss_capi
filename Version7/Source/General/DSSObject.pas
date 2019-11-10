@@ -28,6 +28,7 @@ type
 {$ELSE}
     PROTECTED
 {$ENDIF}
+        DSS: TDSS;
 
         PropSeqCount: Integer;
         FPropertyValue: pStringArray;
@@ -82,6 +83,8 @@ end;
 constructor TDSSObject.Create(ParClass: TDSSClass);
 begin
     inherited Create(ParClass.Name);
+    DSS := ParClass.DSS;
+    
     DSSObjType := 0;
     PropSeqCount := 0;
     ParentClass := ParClass;

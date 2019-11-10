@@ -1092,7 +1092,7 @@ begin
     with YprimWork do
     begin
 
-        FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
+        FYprimFreq := DSS.ActiveCircuit.Solution.Frequency;
         FreqMultiple := FYprimFreq / BaseFrequency;
         w := TwoPi * FYprimFreq;
 

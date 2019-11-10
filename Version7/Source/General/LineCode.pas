@@ -641,7 +641,7 @@ begin
     Z := NIL;
     Zinv := NIL;
     Yc := NIL;
-    Basefrequency := DSSPrime.ActiveCircuit.Fundamental;
+    Basefrequency := DSS.ActiveCircuit.Fundamental;
     Units := UNITS_NONE;  // default to none  (no conversion)
     Normamps := 400.0;
     EmergAmps := 600.0;
@@ -906,7 +906,7 @@ begin
     PropertyValue[9] := ''; // 'rmatrix';
     PropertyValue[10] := ''; // 'xmatrix';
     PropertyValue[11] := ''; // 'cmatrix';
-    PropertyValue[12] := Format('%6.1f', [DSSPrime.DefaultBaseFreq]); // 'baseFreq';
+    PropertyValue[12] := Format('%6.1f', [DSS.DefaultBaseFreq]); // 'baseFreq';
     PropertyValue[13] := '400'; // 'normamps';
     PropertyValue[14] := '600'; // 'emergamps';
     PropertyValue[15] := '0.1'; // 'faultrate';

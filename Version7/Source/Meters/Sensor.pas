@@ -570,7 +570,7 @@ begin
     Devindex := GetCktElementIndex(ElementName); // Global function
     if DevIndex > 0 then
     begin  // Sensored element must already exist
-        MeteredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
+        MeteredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
 
         if MeteredTerminal > MeteredElement.Nterms then
         begin

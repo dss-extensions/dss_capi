@@ -438,7 +438,7 @@ begin
     end;
 
   // calculate the AC voltage source admittance
-    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSS.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
     Value.re := FRac;
     Value.im := FXac * FreqMultiplier;
@@ -470,7 +470,7 @@ var
     i: Integer;
 begin
     try
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
         begin
             ComputeVTerminal;
       // add the injection currents from both AC and DC nodes, to the

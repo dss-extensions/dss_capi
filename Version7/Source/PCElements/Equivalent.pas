@@ -444,7 +444,7 @@ begin
         Vmag := kVBase * PerUnit * 1000.0 / 2.0 / Sin((180.0 / Fnphases) * PI / 180.0);
     end;
 
-    SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
     begin
         DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device Equivalent.' + Name + ' Not Found.', 802);
@@ -485,7 +485,7 @@ begin
     if NeedToDoRecalc then
         RecalcElementData;
 
-    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSS.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
      { Put in Series RL matrix Adjusted for frequency }
@@ -545,7 +545,7 @@ begin
             Vmag := kVBase * PerUnit * 1000.0 / 2.0 / Sin((180.0 / Fnphases) * PI / 180.0);
         end;
 
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             if IsHarmonicModel then
             begin
                 EquivHarm := Frequency / EquivFrequency;
@@ -571,8 +571,8 @@ begin
 
     except
         DoSimpleMsg('Error computing Voltages for Equivalent.' + Name + '. Check specification. Aborting.', 804);
-        if DSSPrime.In_Redirect then
-            DSSPrime.Redirect_Abort := TRUE;
+        if DSS.In_Redirect then
+            DSS.Redirect_Abort := TRUE;
     end;
 
 end;
@@ -599,7 +599,7 @@ var
 
 begin
     try
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
         begin
      //FOR i := 1 TO (Nterms * NConds) DO Vtemp^[i] := V^[NodeRef^[i]];
      // This is safer    12/7/99

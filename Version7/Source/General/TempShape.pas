@@ -967,7 +967,7 @@ begin
             Rewrite(F);
             for i := 1 to NumPoints do
                 Write(F, TValues^[i]);
-            DSSPrime.GlobalResult := 'Temp=[dblfile=' + FName + ']';
+            DSS.GlobalResult := 'Temp=[dblfile=' + FName + ']';
         finally
             CloseFile(F);
         end;
@@ -997,7 +997,7 @@ begin
                 Temp := TValues^[i];
                 Write(F, Temp);
             end;
-            DSSPrime.GlobalResult := 'Temp=[sngfile=' + FName + ']';
+            DSS.GlobalResult := 'Temp=[sngfile=' + FName + ']';
         finally
             CloseFile(F);
         end;

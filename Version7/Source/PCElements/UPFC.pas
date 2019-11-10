@@ -525,7 +525,7 @@ begin
         YPrim.Clear;
     end;
 
-    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSS.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
      { Put in Series RL Adjusted for frequency }
@@ -634,7 +634,7 @@ var
 begin
 
     try
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             UPFCON := TRUE;
         VinMag := cabs(Vbin);
         if (VinMag > VHLimit) or (VinMag < VLLimit) then
@@ -799,8 +799,8 @@ begin
         Result := CurrOut;
     except
         DoSimpleMsg('Error computing current for Isource.' + Name + '. Check specification. Aborting.', 334);
-        if DSSPrime.In_Redirect then
-            DSSPrime.Redirect_Abort := TRUE;
+        if DSS.In_Redirect then
+            DSS.Redirect_Abort := TRUE;
     end;
 end;
 //============================================================================
@@ -841,7 +841,7 @@ var
 begin
 
     try
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
   {Get first Phase Current}
             if UPFCON then
             begin
@@ -944,8 +944,8 @@ begin
         Result := CurrIn;
     except
         DoSimpleMsg('Error computing current for Isource.' + Name + '. Check specification. Aborting.', 334);
-        if DSSPrime.In_Redirect then
-            DSSPrime.Redirect_Abort := TRUE;
+        if DSS.In_Redirect then
+            DSS.Redirect_Abort := TRUE;
     end;
 
 end;
@@ -958,7 +958,7 @@ var
     i: Integer;
 begin
 
-    with DSSPrime.ActiveCircuit.solution do
+    with DSS.ActiveCircuit.solution do
     begin
         for i := 1 to fnphases do
         begin
@@ -983,7 +983,7 @@ var
 
 begin
     try
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
         begin
             ComputeVTerminal;
 
@@ -1048,7 +1048,7 @@ begin
     PropertyValue[2] := GetBus(2);
     PropertyValue[3] := '0.24';
     PropertyValue[4] := '1';
-    PropertyValue[5] := Format('%d', [Round(DSSPrime.ActiveCircuit.Fundamental)]);
+    PropertyValue[5] := Format('%d', [Round(DSS.ActiveCircuit.Fundamental)]);
     PropertyValue[6] := '3';
     PropertyValue[7] := '0.7540';  // 2mH inductance
     PropertyValue[8] := '0.02';

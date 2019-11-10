@@ -570,8 +570,8 @@ begin
 
     except
         DoSimpleMsg('Exception while computing Spectrum.' + Name + '. Check Definition. Aborting', 655);
-        if DSSPrime.In_Redirect then
-            DSSPrime.Redirect_Abort := TRUE;
+        if DSS.In_Redirect then
+            DSS.Redirect_Abort := TRUE;
     end;
 
 end;

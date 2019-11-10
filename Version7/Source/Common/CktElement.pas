@@ -81,7 +81,7 @@ type
         procedure Set_NTerms(Value: Integer); VIRTUAL;
         procedure Set_Handle(Value: Integer);
     PUBLIC
-
+       
       {Total Noderef array for element}
         NodeRef: pIntegerArray;  // Need fast access to this
         Yorder: Integer;

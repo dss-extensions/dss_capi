@@ -1028,8 +1028,8 @@ begin
             for ii := nphases + 1 to NConds do
                 NNodes[ii] := 0;
 
-            DSSPrime.Auxparser.Token := s; // load up AuxParser
-            strBusName := DSSPrime.AuxParser.ParseAsBusName(NumNodes, @NNodes);
+            DSS.Auxparser.Token := s; // load up AuxParser
+            strBusName := DSS.AuxParser.ParseAsBusName(NumNodes, @NNodes);
 
               // Check for non-zero neutral specification
             if NNodes[nphases + 1] > 0 then
@@ -1414,7 +1414,7 @@ begin
     end;
 
     // Set frequency multipliers for this calculation
-    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSS.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
     // Check for rebuilding Y_Terminal; Only rebuild if freq is different than last time
     if FreqMultiplier <> Y_Terminal_Freqmult then
@@ -1775,7 +1775,7 @@ begin
         ITerm_NL := Allocmem(SizeOf(Complex) * 2 * NumWindings);
 
      {Load up Vterminal - already allocated for all cktelements}
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             if Assigned(NodeV) then
                 for i := 1 to Yorder do
                     Vterminal^[i] := NodeV^[NodeRef^[i]]
@@ -1887,7 +1887,7 @@ begin
         end;
 
      {Load up VTerminal - already allocated for all cktelements}
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             for i := 1 to Yorder do
                 Vterminal^[i] := NodeV^[NodeRef^[i]];
 
@@ -2214,9 +2214,9 @@ begin
         begin
             OnPhase1 := FALSE;
        {Load up auxiliary parser}
-            DSSPrime.AuxParser.CmdString := GetBus(iW);
-            DSSPrime.AuxParser.NextParam;
-            S := DSSPrime.AuxParser.ParseAsBusName(N, @Nodes);
+            DSS.AuxParser.CmdString := GetBus(iW);
+            DSS.AuxParser.NextParam;
+            S := DSS.AuxParser.ParseAsBusName(N, @Nodes);
             if N = 0 then
                 OnPhase1 := TRUE;
             for i := 1 to N do
@@ -2376,7 +2376,7 @@ var
 begin
 
     // check for GIC build
-    if DSSPrime.ActiveCircuit.Solution.Frequency < 0.51 then
+    if DSS.ActiveCircuit.Solution.Frequency < 0.51 then
          {Build Yterminal for GIC ~dc simulation}
 
         GICBuildYTerminal
@@ -2598,9 +2598,9 @@ var
     Obj: TXfmrCodeObj;
     i: Integer;
 begin
-    if DSSPrime.XfmrCodeClass.SetActive(Code) then
+    if DSS.XfmrCodeClass.SetActive(Code) then
     begin
-        Obj := DSSPrime.XfmrCodeClass.GetActiveObj;
+        Obj := DSS.XfmrCodeClass.GetActiveObj;
         XfmrCode := LowerCase(Code);
     // set sizes and copy parameters
         Nphases := Obj.Fnphases;

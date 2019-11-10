@@ -108,7 +108,7 @@ var
 
 begin
 
-    with DSSPrime.ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         if FromTerminal = 2 then
             Toterminal := 1
@@ -148,7 +148,7 @@ procedure TPDElement.CalcCustInterrupts;
 var
     FromBus: TDSSBus;
 begin
-    FromBus := DSSPrime.ActiveCircuit.Buses^[Terminals^[FromTerminal].BusRef];
+    FromBus := DSS.ActiveCircuit.Buses^[Terminals^[FromTerminal].BusRef];
     with  FromBus do
     begin
         accumsum(BusCustInterrupts, Bus_Num_Interrupt * BranchTotalCustomers);
@@ -163,7 +163,7 @@ var
 
 begin
 
-    with DSSPrime.ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         if FromTerminal = 2 then
             ToTerminal := 1
@@ -240,7 +240,7 @@ begin
         if Enabled then
         begin
 
-            with DSSPrime.ActiveCircuit.Solution do
+            with DSS.ActiveCircuit.Solution do
                 for i := 1 to Yorder do
                     Vterminal^[i] := NodeV^[NodeRef^[i]];
 
@@ -339,7 +339,7 @@ var
     FromBus: TDSSBus;
 
 begin
-    FromBus := DSSPrime.ActiveCircuit.Buses^[Terminals^[FromTerminal].BusRef];
+    FromBus := DSS.ActiveCircuit.Buses^[Terminals^[FromTerminal].BusRef];
     with  FromBus do
     begin
         BusCustInterrupts := 0.0;

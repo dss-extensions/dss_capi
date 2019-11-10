@@ -1116,7 +1116,7 @@ begin
     GenOn_Saved := GenON;
     ShapeFactor := CDOUBLEONE;
     // Check to make sure the generation is ON
-    with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         if not (IsDynamicModel or IsHarmonicModel) then     // Leave generator in whatever state it was prior to entering Dynamic mode
         begin
@@ -1151,28 +1151,28 @@ begin
                 begin
                     case Mode of
                         TSolveMode.SNAPSHOT:
-                            Factor := DSSPrime.ActiveCircuit.GenMultiplier * 1.0;
+                            Factor := DSS.ActiveCircuit.GenMultiplier * 1.0;
                         TSolveMode.DAILYMODE:
                         begin
-                            Factor := DSSPrime.ActiveCircuit.GenMultiplier;
+                            Factor := DSS.ActiveCircuit.GenMultiplier;
                             CalcDailyMult(DynaVars.dblHour) // Daily dispatch curve
                         end;
                         TSolveMode.YEARLYMODE:
                         begin
-                            Factor := DSSPrime.ActiveCircuit.GenMultiplier;
+                            Factor := DSS.ActiveCircuit.GenMultiplier;
                             CalcYearlyMult(DynaVars.dblHour);
                         end;
                         TSolveMode.DUTYCYCLE:
                         begin
-                            Factor := DSSPrime.ActiveCircuit.GenMultiplier;
+                            Factor := DSS.ActiveCircuit.GenMultiplier;
                             CalcDutyMult(DynaVars.dblHour);
                         end;
                         TSolveMode.GENERALTIME,   // General sequential time simulation
                         TSolveMode.DYNAMICMODE:
                         begin
-                            Factor := DSSPrime.ActiveCircuit.GenMultiplier;
+                            Factor := DSS.ActiveCircuit.GenMultiplier;
                                        // This mode allows use of one class of load shape
-                            case DSSPrime.ActiveCircuit.ActiveLoadShapeClass of
+                            case DSS.ActiveCircuit.ActiveLoadShapeClass of
                                 USEDAILY:
                                     CalcDailyMult(DynaVars.dblHour);
                                 USEYEARLY:
@@ -1186,18 +1186,18 @@ begin
                         TSolveMode.MONTECARLO1,
                         TSolveMode.MONTEFAULT,
                         TSolveMode.FAULTSTUDY:
-                            Factor := DSSPrime.ActiveCircuit.GenMultiplier * 1.0;
+                            Factor := DSS.ActiveCircuit.GenMultiplier * 1.0;
                         TSolveMode.MONTECARLO2,
                         TSolveMode.MONTECARLO3,
                         TSolveMode.LOADDURATION1,
                         TSolveMode.LOADDURATION2:
                         begin
-                            Factor := DSSPrime.ActiveCircuit.GenMultiplier;
+                            Factor := DSS.ActiveCircuit.GenMultiplier;
                             CalcDailyMult(DynaVars.dblHour);
                         end;
                         TSolveMode.PEAKDAY:
                         begin
-                            Factor := DSSPrime.ActiveCircuit.GenMultiplier;
+                            Factor := DSS.ActiveCircuit.GenMultiplier;
                             CalcDailyMult(DynaVars.dblHour);
                         end;
                         TSolveMode.AUTOADDFLAG:
@@ -1315,7 +1315,7 @@ begin
         if Length(DutyShape) > 0 then
             DoSimpleMsg('WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
 
-    SpectrumObj := DSSPrime.SpectrumClass.Find(Spectrum);
+    SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
         DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
 
@@ -1351,10 +1351,10 @@ var
 
 begin
 
-    FYprimFreq := DSSPrime.ActiveCircuit.Solution.Frequency;
+    FYprimFreq := DSS.ActiveCircuit.Solution.Frequency;
     FreqMultiplier := FYprimFreq / BaseFrequency;
 
-    with DSSPrime.ActiveCircuit.solution do
+    with DSS.ActiveCircuit.solution do
         if IsDynamicModel or IsHarmonicModel then
         begin
             if GenON then
@@ -1470,7 +1470,7 @@ begin
         YPrim.Clear;
     end;
 
-    if DSSPrime.ActiveCircuit.Solution.LoadModel = POWERFLOW then
+    if DSS.ActiveCircuit.Solution.LoadModel = POWERFLOW then
     begin
 
         // 12-7-99 we'll start with Yeq in system matrix
@@ -1537,14 +1537,14 @@ var
 begin
 
     try
-        if (not DSSPrime.InShowResults) then
+        if (not DSS.InShowResults) then
 
         begin
             Append(TraceFile);
             Write(TraceFile, Format('%-.g, %d, %-.g, ',
-                [DSSPrime.ActiveCircuit.Solution.DynaVars.t + DSSPrime.ActiveCircuit.Solution.Dynavars.IntHour * 3600.0,
-                DSSPrime.ActiveCircuit.Solution.Iteration,
-                DSSPrime.ActiveCircuit.LoadMultiplier]),
+                [DSS.ActiveCircuit.Solution.DynaVars.t + DSS.ActiveCircuit.Solution.Dynavars.IntHour * 3600.0,
+                DSS.ActiveCircuit.Solution.Iteration,
+                DSS.ActiveCircuit.LoadMultiplier]),
                 GetSolutionModeID, ', ',
                 GetLoadModel, ', ',
                 GenModel: 0, ', ',
@@ -1903,7 +1903,7 @@ begin
          //AppendToEventLog('Wnominal=', Format('%-.5g',[Pnominalperphase]));
         UserModel.FCalc(Vterminal, Iterminal);
         IterminalUpdated := TRUE;
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
         begin          // Negate currents from user model for power flow generator model
             for i := 1 to FnConds do
                 Caccum(InjCurrent^[i], Cnegate(Iterminal^[i]));
@@ -2017,7 +2017,7 @@ begin
             else
             begin
                 DoSimpleMsg(Format('Dynamics model missing for Generator.%s ', [Name]), 5671);
-                DSSPrime.SolutionAbort := TRUE;
+                DSS.SolutionAbort := TRUE;
             end;
     else
 
@@ -2097,7 +2097,7 @@ begin
                 end;
         else
             DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.%s has %d phases.', [name, Fnphases]), 5671);
-            DSSPrime.SolutionAbort := TRUE;
+            DSS.SolutionAbort := TRUE;
         end;
 
     end;
@@ -2133,7 +2133,7 @@ begin
 
     ComputeVterminal;
 
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
         GenHarmonic := Frequency / GenFundamental;
         E := CmulReal(SpectrumObj.GetMult(GenHarmonic), GenVars.VThevHarm); // Get base harmonic magnitude
@@ -2169,14 +2169,14 @@ begin
 
         0:
         begin
-            with DSSPrime.ActiveCircuit.Solution do
+            with DSS.ActiveCircuit.Solution do
                 for i := 1 to Fnphases do
                     Vterminal^[i] := VDiff(NodeRef^[i], NodeRef^[Fnconds]);
         end;
 
         1:
         begin
-            with DSSPrime.ActiveCircuit.Solution do
+            with DSS.ActiveCircuit.Solution do
                 for i := 1 to Fnphases do
                 begin
                     j := i + 1;
@@ -2188,7 +2188,7 @@ begin
 
     end;
 
-    GeneratorSolutionCount := DSSPrime.ActiveCircuit.Solution.SolutionCount;
+    GeneratorSolutionCount := DSS.ActiveCircuit.Solution.SolutionCount;
 
 end;
 
@@ -2202,7 +2202,7 @@ begin
 
     ComputeVTerminal;
 
-    GeneratorSolutionCount := DSSPrime.ActiveCircuit.Solution.SolutionCount;
+    GeneratorSolutionCount := DSS.ActiveCircuit.Solution.SolutionCount;
 
 end;
 
@@ -2213,7 +2213,7 @@ procedure TGeneratorObj.CalcGenModelContribution;
 
 begin
     IterminalUpdated := FALSE;
-    with DSSPrime.ActiveCircuit, Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         if IsDynamicModel then
             DoDynamicMode
@@ -2321,9 +2321,9 @@ procedure TGeneratorObj.GetTerminalCurrents(Curr: pComplexArray);
 
 
 begin
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
-        if IterminalSolutionCount <> DSSPrime.ActiveCircuit.Solution.SolutionCount then
+        if IterminalSolutionCount <> DSS.ActiveCircuit.Solution.SolutionCount then
         begin     // recalc the contribution
             if not GenSwitchOpen then
                 CalcGenModelContribution;  // Adds totals in Iterminal as a side effect
@@ -2342,7 +2342,7 @@ function TGeneratorObj.InjCurrents: Integer;
 
 begin
 
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
     begin
         if LoadsNeedUpdating then
             SetNominalGeneration; // Set the nominal kW, etc for the type of solution being done
@@ -2378,7 +2378,7 @@ end;
 procedure TGeneratorObj.Integrate(Reg: Integer; const Deriv: Double; const Interval: Double);
 
 begin
-    if DSSPrime.ActiveCircuit.TrapezoidalIntegration then
+    if DSS.ActiveCircuit.TrapezoidalIntegration then
     begin
         {Trapezoidal Rule Integration}
         if not FirstSampleAfterReset then
@@ -2418,12 +2418,12 @@ begin
             HourValue := 0.0;
         end;
 
-        if GenON or DSSPrime.ActiveCircuit.TrapezoidalIntegration then
+        if GenON or DSS.ActiveCircuit.TrapezoidalIntegration then
       {Make sure we always integrate for Trapezoidal case
        Don't need to for Gen Off and normal integration}
-            with DSSPrime.ActiveCircuit.Solution do
+            with DSS.ActiveCircuit.Solution do
             begin
-                if DSSPrime.ActiveCircuit.PositiveSequence then
+                if DSS.ActiveCircuit.PositiveSequence then
                 begin
                     S := CmulReal(S, 3.0);
                     Smag := 3.0 * Smag;
@@ -2433,7 +2433,7 @@ begin
                 SetDragHandRegister(Reg_MaxkW, abs(S.re));
                 SetDragHandRegister(Reg_MaxkVA, Smag);
                 Integrate(Reg_Hours, HourValue, IntervalHrs);  // Accumulate Hours in operation
-                Integrate(Reg_Price, S.re * DSSPrime.ActiveCircuit.PriceSignal * 0.001, IntervalHrs);  // Accumulate Hours in operation
+                Integrate(Reg_Price, S.re * DSS.ActiveCircuit.PriceSignal * 0.001, IntervalHrs);  // Accumulate Hours in operation
                 FirstSampleAfterReset := FALSE;
             end;
     end;
@@ -2553,7 +2553,7 @@ var
 begin
 
     YPrimInvalid := TRUE;  // Force rebuild of YPrims
-    GenFundamental := DSSPrime.ActiveCircuit.Solution.Frequency;  // Whatever the frequency is when we enter here.
+    GenFundamental := DSS.ActiveCircuit.Solution.Frequency;  // Whatever the frequency is when we enter here.
 
     with GenVars do
     begin
@@ -2567,7 +2567,7 @@ begin
 
             ComputeIterminal;  // Get present value of current
 
-            with DSSPrime.ActiveCircuit.solution do
+            with DSS.ActiveCircuit.solution do
                 case Connection of
                     0:
                     begin {wye - neutral is explicit}
@@ -2667,7 +2667,7 @@ begin
      {Compute nominal Positive sequence voltage behind transient reactance}
 
         if GenON then
-            with DSSPrime.ActiveCircuit.Solution do
+            with DSS.ActiveCircuit.Solution do
             begin
 
                 ComputeIterminal;
@@ -2694,7 +2694,7 @@ begin
                     end;
                 else
                     DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.' + name + ' has %d phases.', [Fnphases]), 5672);
-                    DSSPrime.SolutionAbort := TRUE;
+                    DSS.SolutionAbort := TRUE;
                 end;
 
 
@@ -2706,7 +2706,7 @@ begin
                     Model7LastAngle := Theta;
 
                 dTheta := 0.0;
-                w0 := Twopi * DSSPrime.ActiveCircuit.Solution.Frequency;
+                w0 := Twopi * DSS.ActiveCircuit.Solution.Frequency;
          // recalc Mmass and D in case the frequency has changed
                 with GenVars do
                 begin
@@ -2720,7 +2720,7 @@ begin
 
          // Init User-written models
          //Ncond:Integer; V, I:pComplexArray; const X,Pshaft,Theta,Speed,dt,time:Double
-                with DSSPrime.ActiveCircuit.Solution do
+                with DSS.ActiveCircuit.Solution do
                     if GenModel = 6 then
                     begin
                         if UserModel.Exists then
@@ -2756,7 +2756,7 @@ begin
 // Check for user-written exciter model.
     //Function(V, I:pComplexArray; const Pshaft,Theta,Speed,dt,time:Double)
 
-    with DSSPrime.ActiveCircuit.Solution, GenVars do
+    with DSS.ActiveCircuit.Solution, GenVars do
     begin
 
         with DynaVars do
