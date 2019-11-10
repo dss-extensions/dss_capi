@@ -33,17 +33,17 @@ var
     k: Integer;
 
 begin
-    if (DSSPrime.ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
+    if (DSSPrime.ActiveCircuit <> NIL) and Assigned(DSSPrime.ActiveDSSClass) then
         with DSSPrime.ActiveCircuit do
         begin
-            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, ActiveDSSClass.ElementCount);
+            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, DSSPrime.ActiveDSSClass.ElementCount);
             k := 0;
-            idx := ActiveDSSClass.First;
+            idx := DSSPrime.ActiveDSSClass.First;
             while idx > 0 do
             begin
-                Result[k] := DSS_CopyStringAsPChar(ActiveDSSObject.Name);
+                Result[k] := DSS_CopyStringAsPChar(DSSPrime.ActiveDSSObject.Name);
                 Inc(k);
-                idx := ActiveDSSClass.Next;
+                idx := DSSPrime.ActiveDSSClass.Next;
             end;
         end
     else
@@ -55,9 +55,9 @@ function ActiveClass_Get_First(): Integer; CDECL;
 begin
 
     Result := 0;
-    if (DSSPrime.ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
+    if (DSSPrime.ActiveCircuit <> NIL) and Assigned(DSSPrime.ActiveDSSClass) then
     begin
-        Result := ActiveDSSClass.First;  // sets active objects
+        Result := DSSPrime.ActiveDSSClass.First;  // sets active objects
     end;
 
 end;
@@ -66,17 +66,17 @@ function ActiveClass_Get_Next(): Integer; CDECL;
 begin
 
     Result := 0;
-    if (DSSPrime.ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
+    if (DSSPrime.ActiveCircuit <> NIL) and Assigned(DSSPrime.ActiveDSSClass) then
     begin
-        Result := ActiveDSSClass.Next;  // sets active objects
+        Result := DSSPrime.ActiveDSSClass.Next;  // sets active objects
     end;
 
 end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_Name_AnsiString(): Ansistring; inline;
 begin
-    if Assigned(ActiveDSSObject) then
-        Result := ActiveDSSObject.Name
+    if Assigned(DSSPrime.ActiveDSSObject) then
+        Result := DSSPrime.ActiveDSSObject.Name
     else
         Result := '';
 end;
@@ -91,31 +91,31 @@ procedure ActiveClass_Set_Name(const Value: PAnsiChar); CDECL;
 var
     pelem: TDSSObject;
 begin
-    if Assigned(ActiveDSSClass) then
+    if Assigned(DSSPrime.ActiveDSSClass) then
     begin
-        pelem := ActiveDSSClass.Find(Value);
+        pelem := DSSPrime.ActiveDSSClass.Find(Value);
         if pelem <> NIL then
         begin
             if pelem is TDSSCktElement then
-                DSSPrime.ActiveCircuit.ActiveCktElement := TDSSCktElement(pelem)  // sets ActiveDSSobject
+                DSSPrime.ActiveCircuit.ActiveCktElement := TDSSCktElement(pelem)  // sets DSSPrime.ActiveDSSObject
             else
-                ActiveDSSObject := pelem;
+                DSSPrime.ActiveDSSObject := pelem;
         end;
     end;
 end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_NumElements(): Integer; CDECL;
 begin
-    if Assigned(ActiveDSSClass) then
-        Result := ActiveDSSCLass.ElementCount
+    if Assigned(DSSPrime.ActiveDSSClass) then
+        Result := DSSPrime.ActiveDSSClass.ElementCount
     else
         Result := 0;
 end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_ActiveClassName_AnsiString(): Ansistring; inline;
 begin
-    if Assigned(ActiveDSSClass) then
-        Result := ActiveDSSCLass.Name
+    if Assigned(DSSPrime.ActiveDSSClass) then
+        Result := DSSPrime.ActiveDSSClass.Name
     else
         Result := '';
 end;
@@ -127,8 +127,8 @@ end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_Count(): Integer; CDECL;
 begin
-    if Assigned(ActiveDSSClass) then
-        Result := ActiveDSSCLass.ElementCount
+    if Assigned(DSSPrime.ActiveDSSClass) then
+        Result := DSSPrime.ActiveDSSClass.ElementCount
     else
         Result := 0;
 end;

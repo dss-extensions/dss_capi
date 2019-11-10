@@ -1066,7 +1066,7 @@ begin
     end;
 
     DSSPrime.LastClassReferenced := DevClassIndex;
-    ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+    DSSPrime.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
     Result := DSSPrime.LastClassReferenced;
 end;
 //------------------------------------------------------------------------------
@@ -1074,9 +1074,9 @@ function Circuit_FirstElement(): Integer; CDECL;
 { Sets first element in active class to be active}
 begin
     Result := 0;
-    if (DSSPrime.ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
+    if (DSSPrime.ActiveCircuit <> NIL) and Assigned(DSSPrime.ActiveDSSClass) then
     begin
-        Result := ActiveDSSClass.First;
+        Result := DSSPrime.ActiveDSSClass.First;
     end
     else
         Result := 0;
@@ -1086,9 +1086,9 @@ function Circuit_NextElement(): Integer; CDECL;
 { Sets next element in active class to be active}
 begin
     Result := 0;
-    if (DSSPrime.ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
+    if (DSSPrime.ActiveCircuit <> NIL) and Assigned(DSSPrime.ActiveDSSClass) then
     begin
-        Result := ActiveDSSClass.Next;
+        Result := DSSPrime.ActiveDSSClass.Next;
     end
     else
         Result := 0;

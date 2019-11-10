@@ -186,8 +186,8 @@ begin
    // create a new object of this class and add to list
     with DSS.ActiveCircuit do
     begin
-        ActiveDSSObject := TGrowthShapeObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        DSS.ActiveDSSObject := TGrowthShapeObj.Create(Self, ObjName);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 
@@ -205,7 +205,7 @@ begin
     Result := 0;
   // continue parsing with contents of Parser
     DSS.ActiveGrowthShapeObj := ElementList.Active;
-    ActiveDSSObject := DSS.ActiveGrowthShapeObj;
+    DSS.ActiveDSSObject := DSS.ActiveGrowthShapeObj;
 
     with DSS.ActiveGrowthShapeObj do
     begin
@@ -365,8 +365,8 @@ begin
             while (not EOF(F)) and (i < Npts) do
             begin
                 Inc(i);
-                Readln(F, s);  {Use AuxParser to allow flexible formats}
-                with AuxParser do
+                Readln(F, s);  {Use DSS.AuxParser to allow flexible formats}
+                with DSS.AuxParser do
                 begin
              // Readln(F,Year^[i], Multiplier^[i]);
                     CmdString := S;

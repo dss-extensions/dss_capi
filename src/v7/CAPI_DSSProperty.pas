@@ -18,7 +18,6 @@ implementation
 
 uses
     CAPI_Constants,
-    CAPI_Globals,
     DSSClass,
     DSSGlobals,
     Executive,
@@ -30,11 +29,11 @@ function IsPropIndexInvalid(errorNum: Integer): Boolean;
 begin
     Result := FALSE;
 
-    if (FPropIndex > ActiveDSSObject.ParentClass.NumProperties) or (FPropIndex < 1) then
+    if (DSSPrime.FPropIndex > DSSPrime.ActiveDSSObject.ParentClass.NumProperties) or (DSSPrime.FPropIndex < 1) then
     begin
         DoSimpleMsg(Format(
             'Invalid property index "%d" for "%s.%s"',
-            [FPropIndex, ActiveDSSObject.ParentClass.Name, ActiveDSSObject.Name]),
+            [DSSPrime.FPropIndex, DSSPrime.ActiveDSSObject.ParentClass.Name, DSSPrime.ActiveDSSObject.Name]),
             errorNum
             );
         Result := TRUE;
@@ -44,10 +43,10 @@ end;
 function DSSProperty_Get_Description_AnsiString(): Ansistring; inline;
 begin
     Result := '';
-    if (DSSPrime.ActiveCircuit <> NIL) and (FPropIndex <> 0) {and (FPropClass <> Nil)} then
-        with ActiveDSSObject.ParentClass do
+    if (DSSPrime.ActiveCircuit <> NIL) and (DSSPrime.FPropIndex <> 0) {and (DSSPrime.FPropClass <> Nil)} then
+        with DSSPrime.ActiveDSSObject.ParentClass do
             if not IsPropIndexInvalid(33006) then
-                Result := PropertyHelp^[FPropIndex];
+                Result := PropertyHelp^[DSSPrime.FPropIndex];
 end;
 
 function DSSProperty_Get_Description(): PAnsiChar; CDECL;
@@ -58,12 +57,12 @@ end;
 function DSSProperty_Get_Name_AnsiString(): Ansistring; inline;
 begin
     Result := '';
-    if (DSSPrime.ActiveCircuit <> NIL) and (FPropIndex <> 0) {and (FPropClass <> Nil)} then
-        with ActiveDSSObject.ParentClass do
+    if (DSSPrime.ActiveCircuit <> NIL) and (DSSPrime.FPropIndex <> 0) {and (DSSPrime.FPropClass <> Nil)} then
+        with DSSPrime.ActiveDSSObject.ParentClass do
         begin
             if IsPropIndexInvalid(33005) then
                 Exit;
-            Result := PropertyName^[FPropIndex];
+            Result := PropertyName^[DSSPrime.FPropIndex];
         end;
 end;
 
@@ -77,11 +76,11 @@ begin
     Result := '';
     if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    with ActiveDSSObject do
+    with DSSPrime.ActiveDSSObject do
     begin
         if IsPropIndexInvalid(33004) then
             Exit;
-        Result := PropertyValue[ParentClass.PropertyIdxMap[FPropIndex]];
+        Result := PropertyValue[ParentClass.PropertyIdxMap[DSSPrime.FPropIndex]];
     end;
 end;
 
@@ -95,11 +94,11 @@ begin
     if DSSPrime.ActiveCircuit = NIL then
         Exit;
 
-    with ActiveDSSObject do
+    with DSSPrime.ActiveDSSObject do
     begin
         if IsPropIndexInvalid(33001) then
             Exit;
-        DSSExecutive.Command := 'Edit ' + ParentClass.Name + '.' + Name + ' ' + ParentClass.PropertyName^[FPropIndex] + '=' + (Value);
+        DSSPrime.DSSExecutive.Command := 'Edit ' + ParentClass.Name + '.' + Name + ' ' + ParentClass.PropertyName^[DSSPrime.FPropIndex] + '=' + (Value);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -107,8 +106,8 @@ procedure DSSProperty_Set_Index(const Value: Integer); CDECL;
 begin
     if DSSPrime.ActiveCircuit <> NIL then
     begin
-        FPropIndex := Value + 1;
-        FPropClass := ActiveDSSObject.ParentClass;
+        DSSPrime.FPropIndex := Value + 1;
+        DSSPrime.FPropClass := DSSPrime.ActiveDSSObject.ParentClass;
         if IsPropIndexInvalid(33002) then
             Exit;
     end;
@@ -120,22 +119,22 @@ var
 begin
     if DSSPrime.ActiveCircuit <> NIL then
     begin
-        FPropClass := ActiveDSSObject.ParentClass;
-        FPropIndex := 0;
-        if FPropClass <> NIL then
-            with FPropClass do
+        DSSPrime.FPropClass := DSSPrime.ActiveDSSObject.ParentClass;
+        DSSPrime.FPropIndex := 0;
+        if DSSPrime.FPropClass <> NIL then
+            with DSSPrime.FPropClass do
                 for i := 1 to NumProperties do
                 begin
                     if CompareText(Value, PropertyName^[i]) = 0 then
                     begin
-                        FPropIndex := i;
+                        DSSPrime.FPropIndex := i;
                         Exit;
                     end;
                 end;
 
         DoSimpleMsg(Format(
             'Invalid property name "%s" for "%s.%s"',
-            [String(Value), FPropClass.Name, ActiveDSSObject.Name]),
+            [String(Value), DSSPrime.FPropClass.Name, DSSPrime.ActiveDSSObject.Name]),
             33003
             );
     end;

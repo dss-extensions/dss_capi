@@ -41,7 +41,8 @@ uses
     ParserDel,
     DSSClassDefs,
     DSSGlobals,
-    Utilities;
+    Utilities,
+    DSSHelper;
 
 constructor TPCClass.Create(dss: TDSS);
 begin
@@ -103,7 +104,7 @@ begin
 
     OtherPCObj := TPCElement(OtherObj);
 
-    with TPCElement(ActiveDSSObject) do
+    with TPCElement(DSS.ActiveDSSObject) do
     begin
         Spectrum := OtherPCObj.Spectrum;
         SpectrumObj := OtherPCObj.SpectrumObj;

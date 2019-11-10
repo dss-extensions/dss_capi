@@ -168,8 +168,8 @@ begin
    // create a new object of this class and add to list
     with DSS.ActiveCircuit do
     begin
-        ActiveDSSObject := TLineSpacingObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        DSS.ActiveDSSObject := TLineSpacingObj.Create(Self, ObjName);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 
@@ -178,19 +178,19 @@ var
     Str: String;
     i: Integer;
 begin
-    AuxParser.CmdString := S;
+    DSS.AuxParser.CmdString := S;
     with DSS.ActiveLineSpacingObj do
     begin
         for i := 1 to NWires do
         begin
-            AuxParser.NextParam; // ignore any parameter name  not expecting any
-            Str := AuxParser.StrValue;
+            DSS.AuxParser.NextParam; // ignore any parameter name  not expecting any
+            Str := DSS.AuxParser.StrValue;
             if Length(Str) > 0 then
                 case which of
                     X:
-                        FX^[i] := AuxParser.Dblvalue;
+                        FX^[i] := DSS.AuxParser.Dblvalue;
                     H:
-                        FY^[i] := AuxParser.Dblvalue;
+                        FY^[i] := DSS.AuxParser.Dblvalue;
                 end;
         end;
     end;
@@ -207,7 +207,7 @@ begin
     Result := 0;
   // continue parsing with contents of Parser
     DSS.ActiveLineSpacingObj := ElementList.Active;
-    ActiveDSSObject := DSS.ActiveLineSpacingObj;
+    DSS.ActiveDSSObject := DSS.ActiveLineSpacingObj;
 
     with DSS.ActiveLineSpacingObj do
     begin

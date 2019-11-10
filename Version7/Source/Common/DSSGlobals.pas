@@ -141,8 +141,6 @@ CONST
       PROFILE120KFT = 9992;  // not mutually exclusive to the other choices 9999..9994
 
 VAR
-
-    // Truly global state variables
     DLLFirstTime   :Boolean=TRUE;
     DLLDebugFile   :TextFile;
     ProgramName    :String;
@@ -177,21 +175,12 @@ VAR
     DSSFileName      :String;     // Name of current exe or DLL
     DSSDirectory     :String;     // where the current exe resides
     MaxCircuits     :Integer;
-
     StartupDirectory :String;     // Where we started
     VersionString      :String;
-
     UpdateRegistry     :Boolean;  // update on program exit
     CPU_Freq           : int64;   // Used to store the CPU performance counter frequency (not the actual CPU frequency)
     CPU_Cores          : integer;
-
     GlobalDefaultBaseFreq: Double = 60.0;
-    
-    // TODO:  move all below to the new TDSS
-    ActiveDSSClass  :TDSSClass;
-    ActiveDSSObject :TDSSObject;
-    AuxParser       :TParser;  // Auxiliary parser for use by anybody for reparsing values
-
 
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
 PROCEDURE DoSimpleMsg(Const S :String; ErrNum:Integer);
@@ -204,7 +193,7 @@ PROCEDURE SetDataPath(const PathName:String);
 
 PROCEDURE SetLastResultFile(Const Fname:String);
 
-PROCEDURE MakeNewCircuit(Const Name:String);
+PROCEDURE MakeNewCircuit(DSS: TDSS; Const Name:String);
 
 PROCEDURE AppendGlobalResult(Const s:String);
 PROCEDURE AppendGlobalResultCRLF(const S:String);  // Separate by CRLF
@@ -219,12 +208,12 @@ PROCEDURE ReadDSS_Registry;
 PROCEDURE WriteDSS_Registry;
 {$ENDIF}
 
-FUNCTION IsDSSDLL(Fname:String):Boolean;
+// FUNCTION IsDSSDLL(Fname:String):Boolean;
 
 Function GetOutputDirectory:String;
 
-Procedure MyReallocMem(Var p:Pointer; newsize:integer);
-Function MyAllocMem(nbytes:Cardinal):Pointer;
+// Procedure MyReallocMem(Var p:Pointer; newsize:integer);
+// Function MyAllocMem(nbytes:Cardinal):Pointer;
 
 
 
@@ -253,13 +242,13 @@ TYPE
 
    THandle = NativeUint;
 
-   TDSSRegister = function(var ClassName: pchar):Integer;  // Returns base class 1 or 2 are defined
+   //TDSSRegister = function(var ClassName: pchar):Integer;  // Returns base class 1 or 2 are defined
    // Users can only define circuit elements at present
 
 VAR
 
    LastUserDLLHandle: THandle;
-   DSSRegisterProc:TDSSRegister;   // of last library loaded
+   //DSSRegisterProc:TDSSRegister;   // of last library loaded
 
 {$IFDEF FPC}
 FUNCTION GetDefaultDataDirectory: String;
@@ -307,26 +296,26 @@ begin
 end;
 
 {--------------------------------------------------------------}
-FUNCTION IsDSSDLL(Fname:String):Boolean;
-
-Begin
-    Result := FALSE;
-
-    // Ignore if "DSSLIB.DLL"
-    If CompareText(ExtractFileName(Fname),'dsslib.dll')=0 Then Exit;
-
-   LastUserDLLHandle := LoadLibrary(pchar(Fname));
-   IF LastUserDLLHandle <> 0 then BEGIN
-
-   // Assign the address of the DSSRegister proc to DSSRegisterProc variable
-    @DSSRegisterProc := GetProcAddress(LastUserDLLHandle, 'DSSRegister');
-    IF @DSSRegisterProc <> nil THEN Result := TRUE
-    ELSE FreeLibrary(LastUserDLLHandle);
-
-  END;
-
-End;
-
+// FUNCTION IsDSSDLL(Fname:String):Boolean;
+// 
+// Begin
+//     Result := FALSE;
+// 
+//     // Ignore if "DSSLIB.DLL"
+//     If CompareText(ExtractFileName(Fname),'dsslib.dll')=0 Then Exit;
+// 
+//    LastUserDLLHandle := LoadLibrary(pchar(Fname));
+//    IF LastUserDLLHandle <> 0 then BEGIN
+// 
+//    // Assign the address of the DSSRegister proc to DSSRegisterProc variable
+//     @DSSRegisterProc := GetProcAddress(LastUserDLLHandle, 'DSSRegister');
+//     IF @DSSRegisterProc <> nil THEN Result := TRUE
+//     ELSE FreeLibrary(LastUserDLLHandle);
+// 
+//   END;
+// 
+// End;
+// 
 //----------------------------------------------------------------------------
 PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause:String; ErrNum:Integer);
 
@@ -432,21 +421,21 @@ Begin
 
       IF Length(ObjClass) > 0 THEN SetObjectClass(DSSPrime, ObjClass);
 
-      ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
-      IF ActiveDSSClass <> Nil THEN
+      DSSPrime.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+      IF DSSPrime.ActiveDSSClass <> Nil THEN
       Begin
-        IF Not ActiveDSSClass.SetActive(Objname) THEN
+        IF Not DSSPrime.ActiveDSSClass.SetActive(Objname) THEN
         Begin // scroll through list of objects untill a match
           DoSimpleMsg('Error! Object "' + ObjName + '" not found.'+ CRLF + parser.CmdString, 904);
         End
         ELSE
         With DSSPrime.ActiveCircuit Do
         Begin
-           CASE ActiveDSSObject.DSSObjType OF
+           CASE DSSPrime.ActiveDSSObject.DSSObjType OF
                 DSS_OBJECT: ;  // do nothing for general DSS object
 
            ELSE Begin   // for circuit types, set ActiveCircuit Element, too
-                 ActiveCktElement := ActiveDSSClass.GetActiveObj;
+                 ActiveCktElement := DSSPrime.ActiveDSSClass.GetActiveObj;
                 End;
            End;
         End;
@@ -498,21 +487,21 @@ End;
 
 
 
-PROCEDURE MakeNewCircuit(Const Name:String);
+PROCEDURE MakeNewCircuit(DSS: TDSS; Const Name:String);
 Var
     S:String;
 Begin
-     If DSSPrime.NumCircuits <= MaxCircuits - 1 Then
+     If DSS.NumCircuits <= MaxCircuits - 1 Then
      Begin
-         DSSPrime.ActiveCircuit := TDSSCircuit.Create(DSSPrime, Name);
-         ActiveDSSObject := DSSPrime.ActiveSolutionObj;
-         {*Handle := *} DSSPrime.Circuits.Add(DSSPrime.ActiveCircuit);
-         Inc(DSSPrime.NumCircuits);
+         DSS.ActiveCircuit := TDSSCircuit.Create(DSS, Name);
+         DSS.ActiveDSSObject := DSS.ActiveSolutionObj;
+         {*Handle := *} DSS.Circuits.Add(DSS.ActiveCircuit);
+         Inc(DSS.NumCircuits);
          S := Parser.Remainder;    // Pass remainder of string on to vsource.
          {Create a default Circuit}
-         DSSPrime.SolutionABort := FALSE;
+         DSS.SolutionABort := FALSE;
          {Voltage source named "source" connected to SourceBus}
-         DSSExecutive.Command := 'New object=vsource.source Bus1=SourceBus ' + S;  // Load up the parser as if it were read in
+         DSS.DSSExecutive.Command := 'New object=vsource.source Bus1=SourceBus ' + S;  // Load up the parser as if it were read in
      End
      Else
      Begin
@@ -752,7 +741,7 @@ Begin
              Writeln(DSSPrime.QueryLogFile, 'Time(h), Property, Result');
              DSSPrime.QueryFirstTime := False;
         end
-        Else Append( DSSPrime.QueryLogFile);
+        Else Append(DSSPrime.QueryLogFile);
 
         Writeln(DSSPrime.QueryLogFile,Format('%.10g, %s, %s',[DSSPrime.ActiveCircuit.Solution.DynaVars.dblHour, Prop, S]));
         CloseFile(DSSPrime.QueryLogFile);
@@ -769,18 +758,17 @@ Begin
       ParserVars.Add('@lastfile', Fname);
 End;
 
-Function MyAllocMem(nbytes:Cardinal):Pointer;
-Begin
-    Result := AllocMem(Nbytes);
-    WriteDLLDebugFile(Format('Allocating %d bytes @ %p',[nbytes, Result]));
-End;
-
-Procedure MyReallocMem(Var p:Pointer; newsize:Integer);
-
-Begin
-     WriteDLLDebugFile(Format('Reallocating @ %p, new size= %d', [p, newsize]));
-     ReallocMem(p, newsize);
-End;
+// Function MyAllocMem(nbytes:Cardinal):Pointer;
+// Begin
+//     Result := AllocMem(Nbytes);
+//     WriteDLLDebugFile(Format('Allocating %d bytes @ %p',[nbytes, Result]));
+// End;
+// 
+// Procedure MyReallocMem(Var p:Pointer; newsize:Integer);
+// Begin
+//      WriteDLLDebugFile(Format('Reallocating @ %p, new size= %d', [p, newsize]));
+//      ReallocMem(p, newsize);
+// End;
 
 // Function to validate the installation and path of the OpenDSS Viewer
 function GetIni(s,k: string; d: string; f: string=''): string; overload;
@@ -821,8 +809,6 @@ end;
 {$ENDIF}
 
 initialization
-
-
    {Various Constants and Switches}
    {$IFDEF FPC}NoFormsAllowed  := TRUE;{$ENDIF}
 
@@ -882,8 +868,6 @@ initialization
    END;
 {$ENDIF}
 
-   AuxParser        := TParser.Create;
-
    {$IFDEF Darwin}
       DefaultEditor := GetEnvironmentVariable('EDITOR');
       // If there is no EDITOR environment variable, keep the old behavior
@@ -908,7 +892,6 @@ initialization
 
    {$IFNDEF FPC}NoFormsAllowed   := FALSE;{$ENDIF}
 
-
    UpdateRegistry   := TRUE;
    {$IFNDEF MSWINDOWS}
    CPU_Freq := 1000; // until we can query it
@@ -916,11 +899,7 @@ initialization
    QueryPerformanceFrequency(CPU_Freq);
    {$ENDIF}
    CPU_Cores        :=  CPUCount;
-   {$IFDEF DSS_CAPI}
-   IsDLL                 := True;
-   {$ELSE}
    IsDLL                 := FALSE;
-   {$ENDIF}
    MaxCircuits           := 1;  //  Not required anymore. planning to remove it
 
    //WriteDLLDebugFile('DSSGlobals');
@@ -929,6 +908,7 @@ initialization
    DSS_Viz_installed:= CheckDSSVisualizationTool; // DSS visualization tool (flag of existance)
    {$ENDIF}
 {$IFDEF DSS_CAPI}
+   IsDLL := True;
    DSS_CAPI_INFO_SPARSE_COND := (GetEnvironmentVariable('DSS_CAPI_INFO_SPARSE_COND') = '1');
 
    // Default is True, disable at initialization only when DSS_CAPI_EARLY_ABORT = 0
@@ -941,18 +921,14 @@ initialization
    DSS_CAPI_ALLOW_INCREMENTAL_Y := (GetEnvironmentVariable('DSS_CAPI_ALLOW_INCREMENTAL_Y') = '1');
    
    if (DSS_CAPI_ALLOW_INCREMENTAL_Y) then WriteLn('DSS_CAPI_ALLOW_INCREMENTAL_Y');
-   
-   
 {$ENDIF}
+
+  DSSPrime := TDSS.Create(True);
+
 
 Finalization
 
-  // Dosimplemsg('Enter DSSGlobals Unit Finalization.');
-  Auxparser.Free;
-
-  With DSSExecutive Do If RecorderOn Then Recorderon := FALSE;
-
-  DSSExecutive.Free;  {Writes to Registry}
+  DSSPrime.Free;  {Writes to Registry}
 {$IFNDEF DSS_CAPI}
   DSS_Registry.Free;  {Close Registry}
 {$ENDIF}

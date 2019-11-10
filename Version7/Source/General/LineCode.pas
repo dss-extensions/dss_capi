@@ -254,8 +254,8 @@ begin
    // create a new object of this class and add to list
     with DSS.ActiveCircuit do
     begin
-        ActiveDSSObject := TLineCodeObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        DSS.ActiveDSSObject := TLineCodeObj.Create(Self, ObjName);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 
@@ -409,7 +409,7 @@ begin
     Result := 0;
   // continue parsing with contents of Parser
     DSS.ActiveLineCodeObj := ElementList.Active;
-    ActiveDSSObject := DSS.ActiveLineCodeObj;
+    DSS.ActiveDSSObject := DSS.ActiveLineCodeObj;
     SymComponentsChanged := FALSE;
     MatrixChanged := FALSE;
     DSS.ActiveLineCodeObj.ReduceByKron := FALSE;  // Allow all matrices to be computed it raw form

@@ -252,7 +252,7 @@ begin
     with ActiveCircuit do
     begin
         ActiveCktElement := TVVControlObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 

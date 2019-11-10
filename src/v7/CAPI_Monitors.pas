@@ -1,5 +1,7 @@
 unit CAPI_Monitors;
 
+//TODO: remove AuxParser usage
+
 {$inline on}
 
 interface
@@ -445,10 +447,12 @@ begin
 
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMon.SampleCount - 1) + 1);
     ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-    AuxParser.CmdString := String(Header.StrBuffer);
-    AuxParser.AutoIncrement := TRUE;
-    FirstCol := AuxParser.StrValue;  // Get rid of first two columns
-    AuxParser.AutoIncrement := FALSE;
+    
+    
+    DSSPrime.AuxParser.CmdString := String(Header.StrBuffer);
+    DSSPrime.AuxParser.AutoIncrement := TRUE;
+    FirstCol := DSSPrime.AuxParser.StrValue;  // Get rid of first two columns
+    DSSPrime.AuxParser.AutoIncrement := FALSE;
     // check first col to see if it is "Freq" for harmonics solution
     if SysUtils.CompareText(FirstCol, 'freq') = 0 then
     begin
@@ -505,10 +509,10 @@ begin
         Exit;
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMon.SampleCount - 1) + 1);
     ReadMonitorHeader(Header, FALSE);   // leave at beginning of data
-    AuxParser.CmdString := String(Header.StrBuffer);
-    AuxParser.AutoIncrement := TRUE;
-    FirstCol := AuxParser.StrValue;  // Get rid of first two columns
-    AuxParser.AutoIncrement := FALSE;
+    DSSPrime.AuxParser.CmdString := String(Header.StrBuffer);
+    DSSPrime.AuxParser.AutoIncrement := TRUE;
+    FirstCol := DSSPrime.AuxParser.StrValue;  // Get rid of first two columns
+    DSSPrime.AuxParser.AutoIncrement := FALSE;
     // check first col to see if it is "Hour"
     if Sysutils.CompareText(FirstCol, 'hour') = 0 then
     begin
@@ -579,22 +583,22 @@ begin
     with DSSPrime.ActiveCircuit do
     begin
         k := 0;
-        SaveDelims := AuxParser.Delimiters;
-        AuxParser.Delimiters := ',';
-        SaveWhiteSpace := AuxParser.Whitespace;
-        AuxParser.Whitespace := '';
-        AuxParser.CmdString := String(Header.StrBuffer);
-        AuxParser.AutoIncrement := TRUE;
-        AuxParser.StrValue;  // Get rid of first two columns
-        AuxParser.StrValue;
+        SaveDelims := DSSPrime.AuxParser.Delimiters;
+        DSSPrime.AuxParser.Delimiters := ',';
+        SaveWhiteSpace := DSSPrime.AuxParser.Whitespace;
+        DSSPrime.AuxParser.Whitespace := '';
+        DSSPrime.AuxParser.CmdString := String(Header.StrBuffer);
+        DSSPrime.AuxParser.AutoIncrement := TRUE;
+        DSSPrime.AuxParser.StrValue;  // Get rid of first two columns
+        DSSPrime.AuxParser.StrValue;
         while k < ListSize do
         begin
-            Result[k] := DSS_CopyStringAsPChar(AuxParser.StrValue);
+            Result[k] := DSS_CopyStringAsPChar(DSSPrime.AuxParser.StrValue);
             Inc(k);
         end;
-        AuxParser.AutoIncrement := FALSE; // be a good citizen
-        AuxParser.Delimiters := SaveDelims;
-        AuxParser.Whitespace := SaveWhiteSpace;
+        DSSPrime.AuxParser.AutoIncrement := FALSE; // be a good citizen
+        DSSPrime.AuxParser.Delimiters := SaveDelims;
+        DSSPrime.AuxParser.Whitespace := SaveWhiteSpace;
     end;
 end;
 //------------------------------------------------------------------------------

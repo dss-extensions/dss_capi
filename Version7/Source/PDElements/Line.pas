@@ -333,7 +333,7 @@ begin
     with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TLineObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 
@@ -1928,14 +1928,14 @@ begin
         istart := FLineSpacingObj.NPhases + 1;
     end;
 
-    AuxParser.CmdString := Code;
+    DSSPrime.AuxParser.CmdString := Code;
 
     NewNumRat := 1;
     RatingsInc := FALSE;             // So far we don't know if there are seasonal ratings
     for i := istart to FLineSpacingObj.NWires do
     begin
-        AuxParser.NextParam; // ignore any parameter name  not expecting any
-        DSSPrime.WireDataClass.code := AuxParser.StrValue;
+        DSSPrime.AuxParser.NextParam; // ignore any parameter name  not expecting any
+        DSSPrime.WireDataClass.code := DSSPrime.AuxParser.StrValue;
         if Assigned(DSSPrime.ActiveConductorDataObj) then
         begin
             FLineWireData^[i] := DSSPrime.ActiveConductorDataObj;
@@ -1949,7 +1949,7 @@ begin
             end;
         end
         else
-            DoSimpleMsg('Wire "' + AuxParser.StrValue + '" was not defined first (LINE.' + name + ').', 18103);
+            DoSimpleMsg('Wire "' + DSSPrime.AuxParser.StrValue + '" was not defined first (LINE.' + name + ').', 18103);
     end;
 
     if RatingsInc then
@@ -1973,15 +1973,15 @@ begin
 
     FPhaseChoice := ConcentricNeutral;
     FLineWireData := Allocmem(Sizeof(FLineWireData^[1]) * FLineSpacingObj.NWires);
-    AuxParser.CmdString := Code;
+    DSSPrime.AuxParser.CmdString := Code;
     for i := 1 to FLineSpacingObj.NPhases do
     begin // fill extra neutrals later
-        AuxParser.NextParam; // ignore any parameter name  not expecting any
-        DSSPrime.CNDataClass.code := AuxParser.StrValue;
+        DSSPrime.AuxParser.NextParam; // ignore any parameter name  not expecting any
+        DSSPrime.CNDataClass.code := DSSPrime.AuxParser.StrValue;
         if Assigned(DSSPrime.ActiveConductorDataObj) then
             FLineWireData^[i] := DSSPrime.ActiveConductorDataObj
         else
-            DoSimpleMsg('CN cable ' + AuxParser.StrValue + ' was not defined first.(LINE.' + Name + ')', 18105);
+            DoSimpleMsg('CN cable ' + DSSPrime.AuxParser.StrValue + ' was not defined first.(LINE.' + Name + ')', 18105);
     end;
 end;
 
@@ -1996,15 +1996,15 @@ begin
 
     FPhaseChoice := TapeShield;
     FLineWireData := Allocmem(Sizeof(FLineWireData^[1]) * FLineSpacingObj.NWires);
-    AuxParser.CmdString := Code;
+    DSSPrime.AuxParser.CmdString := Code;
     for i := 1 to FLineSpacingObj.NPhases do
     begin // fill extra neutrals later
-        AuxParser.NextParam; // ignore any parameter name  not expecting any
-        DSSPrime.TSDataClass.code := AuxParser.StrValue;
+        DSSPrime.AuxParser.NextParam; // ignore any parameter name  not expecting any
+        DSSPrime.TSDataClass.code := DSSPrime.AuxParser.StrValue;
         if Assigned(DSSPrime.ActiveConductorDataObj) then
             FLineWireData^[i] := DSSPrime.ActiveConductorDataObj
         else
-            DoSimpleMsg('TS cable ' + AuxParser.StrValue + ' was not defined first. (LINE.' + Name + ')', 18107);
+            DoSimpleMsg('TS cable ' + DSSPrime.AuxParser.StrValue + ' was not defined first. (LINE.' + Name + ')', 18107);
     end;
 end;
 

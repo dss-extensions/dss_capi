@@ -376,34 +376,34 @@ begin
 end;
 
 {--------------------------------------------------------------}
-procedure LoadUserClasses(DSS: TDSS);
-var
-    F: TSearchRec;
-begin
-
-{  Rework This !!!!}
-
-    // Check All DLLs in present directory
-    if FindFirst('*.dll', 0, F) = 0 then
-    begin
-        repeat
-            if IsDSSDLL(F.Name) then
-                AddUserclass(DSS); // Attempt to add (ignored if classname already exists)
-        until FindNext(F) <> 0;
-    end;
-
-    // Check All DLLs in DSS Directory   unless that is the directory we just checked
-    if comparetext(StartupDirectory, DSSDirectory) <> 0 then
-        if FindFirst(DSSDirectory + '*.dll', 0, F) = 0 then
-        begin
-            repeat
-                if IsDSSDLL(F.Name) then
-                    AddUserclass(DSS); // Attempt to add (ignored if classname already exists)
-            until FindNext(F) <> 0;
-        end;
-
-end;
-
+// procedure LoadUserClasses(DSS: TDSS);
+// var
+//     F: TSearchRec;
+// begin
+// 
+// {  Rework This !!!!}
+// 
+//     // Check All DLLs in present directory
+//     if FindFirst('*.dll', 0, F) = 0 then
+//     begin
+//         repeat
+//             if IsDSSDLL(F.Name) then
+//                 AddUserclass(DSS); // Attempt to add (ignored if classname already exists)
+//         until FindNext(F) <> 0;
+//     end;
+// 
+//     // Check All DLLs in DSS Directory   unless that is the directory we just checked
+//     if comparetext(StartupDirectory, DSSDirectory) <> 0 then
+//         if FindFirst(DSSDirectory + '*.dll', 0, F) = 0 then
+//         begin
+//             repeat
+//                 if IsDSSDLL(F.Name) then
+//                     AddUserclass(DSS); // Attempt to add (ignored if classname already exists)
+//             until FindNext(F) <> 0;
+//         end;
+// 
+// end;
+// 
 //----------------------------------------------------------------------------
 function SetObjectClass(DSS: TDSS; const ObjType: String): Boolean;
 

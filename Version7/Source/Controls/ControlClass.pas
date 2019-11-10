@@ -106,7 +106,7 @@ begin
 //   OtherControlObj := TControlElem(OtherObj);
     TControlElem.Create(OtherObj);
 
-     //With TPCElement(ActiveDSSObject) Do
+     //With TPCElement(DSS.ActiveDSSObject) Do
      //Begin
      //  value:= OtherControlObj.value;
      //End;

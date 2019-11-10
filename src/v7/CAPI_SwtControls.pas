@@ -61,7 +61,7 @@ begin
         exit;
     DSSPrime.SolutionAbort := FALSE;  // Reset for commands entered from outside
     cmd := Format('swtcontrol.%s.%s=%s', [ActiveSwtControl.Name, parm, val]);
-    DSSExecutive.Command := cmd;
+    DSSPrime.DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_Action(): Integer; CDECL;

@@ -246,8 +246,8 @@ begin
    // create a new object of this class and add to list
     with DSS.ActiveCircuit do
     begin
-        ActiveDSSObject := TPriceShapeObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        DSS.ActiveDSSObject := TPriceShapeObj.Create(Self, ObjName);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 
@@ -263,7 +263,7 @@ begin
     Result := 0;
   // continue parsing with contents of Parser
     DSS.ActivePriceShapeObj := ElementList.Active;
-    ActiveDSSObject := DSS.ActivePriceShapeObj;
+    DSS.ActiveDSSObject := DSS.ActivePriceShapeObj;
 
     with DSS.ActivePriceShapeObj do
     begin
@@ -461,9 +461,9 @@ begin
             while (not EOF(F)) and (i < FNumPoints) do
             begin
                 Inc(i);
-                Readln(F, s); // read entire line  and parse with AuxParser
-            {AuxParser allows commas or white space}
-                with AuxParser do
+                Readln(F, s); // read entire line  and parse with DSS.AuxParser
+            {DSS.AuxParser allows commas or white space}
+                with DSS.AuxParser do
                 begin
                     CmdString := s;
                     if Interval = 0.0 then

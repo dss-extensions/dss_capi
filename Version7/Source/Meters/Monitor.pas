@@ -344,7 +344,7 @@ begin
     with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TMonitorObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 
@@ -2045,16 +2045,16 @@ begin
             end;
 
            {Parse off Channel Names}
-            AuxParser.Whitespace := '';
-            AuxParser.CmdString := String(pStrBuffer);
-            AuxParser.NextParam;  // pop off two
-            AuxParser.NextParam;
+            DSS.AuxParser.Whitespace := '';
+            DSS.AuxParser.CmdString := String(pStrBuffer);
+            DSS.AuxParser.NextParam;  // pop off two
+            DSS.AuxParser.NextParam;
             for i := 1 to RecordSize do
             begin
-                AuxParser.NextParam;
-                NameList.Add(AuxParser.StrValue);
+                DSS.AuxParser.NextParam;
+                NameList.Add(DSS.AuxParser.StrValue);
             end;
-            AuxParser.ResetDelims;
+            DSS.AuxParser.ResetDelims;
 
            {Write TOP Header}
 

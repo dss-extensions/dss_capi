@@ -468,7 +468,7 @@ begin
     with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TStorageControllerObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 

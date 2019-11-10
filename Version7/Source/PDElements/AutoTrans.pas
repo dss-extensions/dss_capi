@@ -425,7 +425,7 @@ begin
     begin
 
         ActiveCktElement := TAutoTransObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);  // Return index of AutoTrans in AutoTrans list
+        Result := AddObjectToList(DSS.ActiveDSSObject);  // Return index of AutoTrans in AutoTrans list
 
     end;
 
@@ -701,15 +701,15 @@ var
     i: Integer;
 begin
 
-    AuxParser.CmdString := S;  // Load up Parser
+    DSS.AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings}
     with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
-            S1 := AuxParser.NextParam; // ignore any parameter name  not expecting any
-            S2 := AuxParser.StrValue;
+            S1 := DSS.AuxParser.NextParam; // ignore any parameter name  not expecting any
+            S2 := DSS.AuxParser.StrValue;
             if Length(S2) > 0 then
                 InterpretAutoConnection(S2);
         end;
@@ -724,15 +724,15 @@ var
     i: Integer;
 begin
 
-    AuxParser.CmdString := S;  // Load up Parser
+    DSS.AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
     with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
-            AuxParser.NextParam; // ignore any parameter name  not expecting any
-            BusNam := AuxParser.StrValue;
+            DSS.AuxParser.NextParam; // ignore any parameter name  not expecting any
+            BusNam := DSS.AuxParser.StrValue;
             if Length(BusNam) > 0 then
                 SetBusAuto(ActiveWinding, BusNam);
         end;
@@ -764,17 +764,17 @@ var
     i: Integer;
 begin
 
-    AuxParser.CmdString := S;  // Load up Parser
+    DSS.AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
     with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
-            AuxParser.NextParam; // ignore any parameter name  not expecting any
-            DataStr := AuxParser.StrValue;
+            DSS.AuxParser.NextParam; // ignore any parameter name  not expecting any
+            DataStr := DSS.AuxParser.StrValue;
             if Length(DataStr) > 0 then
-                Winding^[ActiveWinding].kVLL := AuxParser.Dblvalue;
+                Winding^[ActiveWinding].kVLL := DSS.AuxParser.Dblvalue;
         end;
 
 end;
@@ -787,17 +787,17 @@ var
     i: Integer;
 begin
 
-    AuxParser.CmdString := S;  // Load up Parser
+    DSS.AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
     with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
-            AuxParser.NextParam; // ignore any parameter name  not expecting any
-            DataStr := AuxParser.StrValue;
+            DSS.AuxParser.NextParam; // ignore any parameter name  not expecting any
+            DataStr := DSS.AuxParser.StrValue;
             if Length(DataStr) > 0 then
-                Winding^[ActiveWinding].kVA := AuxParser.Dblvalue;
+                Winding^[ActiveWinding].kVA := DSS.AuxParser.Dblvalue;
         end;
 
 
@@ -811,17 +811,17 @@ var
     i: Integer;
 begin
 
-    AuxParser.CmdString := S;  // Load up Parser
+    DSS.AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
     with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
-            AuxParser.NextParam; // ignore any parameter name  not expecting any
-            DataStr := AuxParser.StrValue;
+            DSS.AuxParser.NextParam; // ignore any parameter name  not expecting any
+            DataStr := DSS.AuxParser.StrValue;
             if Length(DataStr) > 0 then
-                Winding^[ActiveWinding].Rpu := AuxParser.Dblvalue * 0.01;
+                Winding^[ActiveWinding].Rpu := DSS.AuxParser.Dblvalue * 0.01;
         end;
 
 end;
@@ -835,17 +835,17 @@ var
     i: Integer;
 begin
 
-    AuxParser.CmdString := S;  // Load up Parser
+    DSS.AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
     with DSS.ActiveAutoTransObj do
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
-            AuxParser.NextParam; // ignore any parameter name,  not expecting any
-            DataStr := AuxParser.StrValue;
+            DSS.AuxParser.NextParam; // ignore any parameter name,  not expecting any
+            DataStr := DSS.AuxParser.StrValue;
             if Length(DataStr) > 0 then
-                Winding^[ActiveWinding].puTap := AuxParser.Dblvalue;
+                Winding^[ActiveWinding].puTap := DSS.AuxParser.Dblvalue;
         end;
 
 end;
@@ -1028,8 +1028,8 @@ begin
             for ii := nphases + 1 to NConds do
                 NNodes[ii] := 0;
 
-            Auxparser.Token := s; // load up AuxParser
-            strBusName := AuxParser.ParseAsBusName(NumNodes, @NNodes);
+            DSSPrime.Auxparser.Token := s; // load up AuxParser
+            strBusName := DSSPrime.AuxParser.ParseAsBusName(NumNodes, @NNodes);
 
               // Check for non-zero neutral specification
             if NNodes[nphases + 1] > 0 then
@@ -2214,9 +2214,9 @@ begin
         begin
             OnPhase1 := FALSE;
        {Load up auxiliary parser}
-            AuxParser.CmdString := GetBus(iW);
-            AuxParser.NextParam;
-            S := AuxParser.ParseAsBusName(N, @Nodes);
+            DSSPrime.AuxParser.CmdString := GetBus(iW);
+            DSSPrime.AuxParser.NextParam;
+            S := DSSPrime.AuxParser.ParseAsBusName(N, @Nodes);
             if N = 0 then
                 OnPhase1 := TRUE;
             for i := 1 to N do

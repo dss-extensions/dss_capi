@@ -639,7 +639,7 @@ begin
     with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TEnergyMeterObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 
@@ -2299,13 +2299,13 @@ var
     S1, S2: String;
 begin
 
-    AuxParser.CmdString := Opts;  // Load up aux Parser
+    DSS.AuxParser.CmdString := Opts;  // Load up aux Parser
 
     {Loop until no more options found}
     with DSS.ActiveEnergymeterObj do
         repeat
-            S1 := AuxParser.NextParam; // ignore any parameter name  not expecting any
-            S2 := lowercase(AuxParser.StrValue);
+            S1 := DSS.AuxParser.NextParam; // ignore any parameter name  not expecting any
+            S2 := lowercase(DSS.AuxParser.StrValue);
             if Length(S2) > 0 then
                 case s2[1] of
                     'e':

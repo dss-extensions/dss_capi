@@ -56,12 +56,15 @@ uses
     GICTransformer,
     Solution, 
     // VVControl, 
-    ConductorData
-    ;
+    ConductorData,
+    DSSObject,
+    Executive;
     
 type
     TDSSGlobalHelper = class helper for TDSS
     private
+        function GetDSSExecutive: TExecutive; inline;
+        function GetActiveDSSObject: TDSSObject; inline;
         function GetActiveCircuit: TDSSCircuit; inline;
         function GetLoadShapeClass: TLoadShape; inline;
         function GetTShapeClass: TTshape; inline;
@@ -113,6 +116,8 @@ type
         function GetGICLineClass: TGICLine; inline;
         function GetGICTransformerClass:TGICTransformer; inline;
         
+        procedure SetDSSExecutive(val: TExecutive); inline;
+        procedure SetActiveDSSObject(val: TDSSObject); inline;
         procedure SetActiveCircuit(val: TDSSCircuit); inline;
         procedure SetLoadShapeClass(val: TLoadShape); inline;
         procedure SetTShapeClass(val: TTshape); inline;
@@ -271,7 +276,9 @@ type
         procedure SetActiveTransfObj(val: TTransfObj); inline;
         
     public
+        property DSSExecutive: TExecutive read GetDSSExecutive write SetDSSExecutive;
         property ActiveCircuit: TDSSCircuit read GetActiveCircuit write SetActiveCircuit;
+        property ActiveDSSObject: TDSSObject read GetActiveDSSObject write SetActiveDSSObject;
         
         property LoadShapeClass: TLoadShape read GetLoadShapeClass write SetLoadShapeClass;
         property TShapeClass: TTshape read GetTShapeClass write SetTShapeClass;
@@ -380,6 +387,8 @@ type
     
 implementation
 
+function TDSSGlobalHelper.GetDSSExecutive: TExecutive; begin Result := TExecutive(FDSSExecutive); end;
+function TDSSGlobalHelper.GetActiveDSSObject: TDSSObject; begin Result := TDSSObject(FActiveDSSObject); end;
 function TDSSGlobalHelper.GetActiveCircuit: TDSSCircuit; begin Result := TDSSCircuit(FActiveCircuit); end;
 function TDSSGlobalHelper.GetLoadShapeClass: TLoadShape; begin Result := TLoadShape(FLoadShapeClass); end;
 function TDSSGlobalHelper.GetTShapeClass: TTshape; begin Result := TTshape(FTShapeClass); end;
@@ -485,6 +494,8 @@ function TDSSGlobalHelper.GetActiveReactorObj: TReactorObj; begin Result := TRea
 function TDSSGlobalHelper.GetActiveTransfObj: TTransfObj; begin Result := TTransfObj(FActiveTransfObj); end;
 
 
+procedure TDSSGlobalHelper.SetDSSExecutive(val: TExecutive); begin FDSSExecutive := val; end;
+procedure TDSSGlobalHelper.SetActiveDSSObject(val: TDSSObject); begin FActiveDSSObject := val; end;
 procedure TDSSGlobalHelper.SetActiveCircuit(val: TDSSCircuit); begin FActiveCircuit := val; end;
 procedure TDSSGlobalHelper.SetLoadShapeClass(val: TLoadShape); begin FLoadShapeClass := val; end;
 procedure TDSSGlobalHelper.SetTShapeClass(val: TTshape); begin FTShapeClass := val; end;

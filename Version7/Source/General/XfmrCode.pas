@@ -241,8 +241,8 @@ begin
    // create a new object of this class and add to list
     with DSSPrime.ActiveCircuit do
     begin
-        ActiveDSSObject := TXfmrCodeObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        DSS.ActiveDSSObject := TXfmrCodeObj.Create(Self, ObjName);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 
@@ -288,26 +288,26 @@ var
     Str: String;
     i: Integer;
 begin
-    AuxParser.CmdString := S;
+    DSS.AuxParser.CmdString := S;
     with DSS.ActiveXfmrCodeObj do
     begin
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
-            AuxParser.NextParam; // ignore any parameter name  not expecting any
-            Str := AuxParser.StrValue;
+            DSS.AuxParser.NextParam; // ignore any parameter name  not expecting any
+            Str := DSS.AuxParser.StrValue;
             if Length(Str) > 0 then
                 case which of
                     Conn:
                         Winding^[ActiveWinding].Connection := InterpretConnection(Str);
                     kV:
-                        Winding^[ActiveWinding].kvll := AuxParser.Dblvalue;
+                        Winding^[ActiveWinding].kvll := DSS.AuxParser.Dblvalue;
                     kVA:
-                        Winding^[ActiveWinding].kva := AuxParser.Dblvalue;
+                        Winding^[ActiveWinding].kva := DSS.AuxParser.Dblvalue;
                     R:
-                        Winding^[ActiveWinding].Rpu := 0.01 * AuxParser.Dblvalue;
+                        Winding^[ActiveWinding].Rpu := 0.01 * DSS.AuxParser.Dblvalue;
                     Tap:
-                        Winding^[ActiveWinding].puTap := AuxParser.Dblvalue;
+                        Winding^[ActiveWinding].puTap := DSS.AuxParser.Dblvalue;
                 end;
         end;
     end;
@@ -324,7 +324,7 @@ var
 
 begin
     DSS.ActiveXfmrCodeObj := ElementList.Active;
-    ActiveDSSObject := DSS.ActiveXfmrCodeObj;
+    DSS.ActiveDSSObject := DSS.ActiveXfmrCodeObj;
     UpdateXsc := FALSE;
 
     with DSS.ActiveXfmrCodeObj do

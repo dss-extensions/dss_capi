@@ -543,7 +543,7 @@ begin
         case ParamPointer of
             14:
             begin
-                with DSSExecutive do
+                with DSSPrime.DSSExecutive do
                     if RecorderOn then
                         Write_to_RecorderFile(CRLF + '!*********' + CmdLine);
                 DSSPrime.CmdResult := DoRedirect(TRUE);
@@ -551,14 +551,14 @@ begin
             end;//'Compile';
             20:
             begin
-                with DSSExecutive do
+                with DSSPrime.DSSExecutive do
                     if RecorderOn then
                         Write_to_RecorderFile(CRLF + '!*********' + CmdLine);
                 DSSPrime.CmdResult := DoRedirect(FALSE);
                 Exit;
             end; //'Redirect';
         else   // Write everything direct to recorder, if ON
-            with DSSExecutive do
+            with DSSPrime.DSSExecutive do
                 if RecorderOn then
                     Write_to_RecorderFile(CmdLine);
         end;
@@ -669,12 +669,12 @@ begin
                 ParseObjName(ParamName, ObjName, PropName);
                 if Length(ObjName) > 0 then
                     SetObject(ObjName);  // Set active element
-                if ActiveDSSObject <> NIL then
+                if DSSPrime.ActiveDSSObject <> NIL then
                 begin
              // rebuild command line and pass to editor
              // use quotes to ensure first parameter is interpreted OK after rebuild
                     Parser.CmdString := PropName + '="' + Param + '" ' + Parser.Remainder;
-                    ActiveDSSClass.Edit;
+                    DSSPrime.ActiveDSSClass.Edit;
                 end;
             end;
             Exit;  // Done - don't need to do anything ELSE

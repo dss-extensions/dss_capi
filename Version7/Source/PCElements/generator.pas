@@ -496,7 +496,7 @@ begin
     with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TGeneratorObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 

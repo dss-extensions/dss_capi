@@ -135,7 +135,6 @@ interface
     FUNCTION DoPropertyDump:Integer;
 
 
-
 implementation
 
 USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
@@ -221,7 +220,7 @@ Begin
 
      IF   CompareText(ObjClass,'circuit') = 0
      THEN Begin
-            MakeNewCircuit(ObjName);  // Make a new circuit
+            MakeNewCircuit(DSSPrime, ObjName);  // Make a new circuit
             ClearEventLog;      // Start the event log in the current directory
             ClearErrorLog;
           End
@@ -286,17 +285,17 @@ Begin
         End;{Error}
     ELSE
       Params:=Parser.Position;
-      ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+      DSSPrime.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
       RegEx1:=TRegExpr.Create;
       RegEx1.ModifierI := True; // equivalent to RegEx1.Options:=[preCaseLess]
       RegEx1.Expression:=UTF8String(Pattern);
-      If ActiveDSSClass.First>0 then pObj:=ActiveDSSObject else pObj := Nil;
+      If DSSPrime.ActiveDSSClass.First>0 then pObj:=DSSPrime.ActiveDSSObject else pObj := Nil;
       while pObj <> Nil do begin
         if RegEx1.Exec(UTF8String(pObj.Name)) then begin
           Parser.Position:=Params;
-          ActiveDSSClass.Edit;
+          DSSPrime.ActiveDSSClass.Edit;
         end;
-        If ActiveDSSClass.Next>0 then pObj:=ActiveDSSObject else pObj := Nil;
+        If DSSPrime.ActiveDSSClass.Next>0 then pObj:=DSSPrime.ActiveDSSObject else pObj := Nil;
       end;
       RegEx1.Free;
     End;
@@ -325,18 +324,18 @@ Begin
         End;{Error}
     ELSE
       Params:=Parser.Position;
-      ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+      DSSPrime.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
       RegEx1:=TPerlRegEx.Create;
       RegEx1.Options:=[preCaseLess];
       RegEx1.RegEx:=Pattern; // UTF8String(Pattern);
-      If ActiveDSSClass.First>0 then pObj:=ActiveDSSObject else pObj := Nil;
+      If DSSPrime.ActiveDSSClass.First>0 then pObj:=DSSPrime.ActiveDSSObject else pObj := Nil;
       while pObj <> Nil do begin
         RegEx1.Subject:= pObj.Name; //(pObj.Name);
         if RegEx1.Match then begin
           Parser.Position:=Params;
-          ActiveDSSClass.Edit;
+          DSSPrime.ActiveDSSClass.Edit;
         end;
-        If ActiveDSSClass.Next>0 then pObj:=ActiveDSSObject else pObj := Nil;
+        If DSSPrime.ActiveDSSClass.Next>0 then pObj:=DSSPrime.ActiveDSSObject else pObj := Nil;
       end;
     End;
   End;
@@ -596,10 +595,10 @@ Begin
         // Everything else must be a circuit element
         IF Length(ObjClass)>0 THEN SetObjectClass(DSSPrime, ObjClass);
 
-        ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
-        IF ActiveDSSClass<>Nil THEN
+        DSSPrime.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+        IF DSSPrime.ActiveDSSClass<>Nil THEN
         Begin
-          IF Not ActiveDSSClass.SetActive(Objname) THEN
+          IF Not DSSPrime.ActiveDSSClass.SetActive(Objname) THEN
           Begin // scroll through list of objects untill a match
             DoSimpleMsg('Error! Object "' + ObjName + '" not found.'+ CRLF + parser.CmdString, 245);
             Result := 0;
@@ -607,11 +606,11 @@ Begin
           ELSE
           WITH DSSPrime.ActiveCircuit Do
           Begin
-             CASE ActiveDSSObject.DSSObjType OF
+             CASE DSSPrime.ActiveDSSObject.DSSObjType OF
                   DSS_OBJECT: ;  // do nothing for general DSS object
 
              ELSE Begin   // for circuit types, set DSSPrime.ActiveCircuit Element, too
-                   ActiveCktElement := ActiveDSSClass.GetActiveObj;
+                   ActiveCktElement := DSSPrime.ActiveDSSClass.GetActiveObj;
                    // Now check for active terminal designation
                    ParamName := LowerCase(Parser.NextParam);
                    Param := Parser.StrValue;
@@ -637,7 +636,7 @@ FUNCTION DoMoreCmd:Integer;
 
 // more editstring  (assumes active circuit element)
 Begin
-      IF ActiveDSSClass<>nil THEN Result := ActiveDSSClass.Edit
+      IF DSSPrime.ActiveDSSClass<>nil THEN Result := DSSPrime.ActiveDSSClass.Edit
                              ELSE Result := 0;
 End;
 
@@ -741,7 +740,7 @@ FUNCTION DoClearCmd:Integer;
 
 Begin
 
-      DSSExecutive.Clear;
+      DSSPrime.DSSExecutive.Clear;
 
       Result := 0;
 
@@ -805,7 +804,7 @@ Begin
      ELSE
      Begin
 
-        IF CompareText(ObjType, ActiveDSSClass.Name)<>0 THEN
+        IF CompareText(ObjType, DSSPrime.ActiveDSSClass.Name)<>0 THEN
              DSSPrime.LastClassReferenced := DSSPrime.ClassNames.Find(ObjType);
 
         CASE DSSPrime.LastClassReferenced of
@@ -817,14 +816,14 @@ Begin
         ELSE
 
         // intrinsic and user Defined models
-           ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
-           IF ActiveDSSClass.SetActive(ObjName) THEN
+           DSSPrime.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+           IF DSSPrime.ActiveDSSClass.SetActive(ObjName) THEN
            WITH DSSPrime.ActiveCircuit Do
            Begin // scroll through list of objects until a match
-             CASE ActiveDSSObject.DSSObjType OF
+             CASE DSSPrime.ActiveDSSObject.DSSObjType OF
                     DSS_OBJECT: DoSimpleMsg('Error in SetActiveCktElement: Object not a circuit Element.'+ CRLF + parser.CmdString, 254);
              ELSE Begin
-                    ActiveCktElement := ActiveDSSClass.GetActiveObj;
+                    ActiveCktElement := DSSPrime.ActiveDSSClass.GetActiveObj;
                     Result:=1;
                   End;
              End;
@@ -1015,8 +1014,8 @@ Begin
        IF CompareText(Param,'solution')=0 THEN
          Begin
           // Assume active circuit solution IF not qualified
-          ActiveDSSClass := DSSPrime.SolutionClass;
-          ActiveDSSObject := DSSPrime.ActiveCircuit.Solution;
+          DSSPrime.ActiveDSSClass := DSSPrime.SolutionClass;
+          DSSPrime.ActiveDSSObject := DSSPrime.ActiveCircuit.Solution;
           IsSolution := TRUE;
          End
        ELSE
@@ -1032,8 +1031,8 @@ Begin
             // IF DoSelectCmd=0 THEN Exit;  8-17-00
             IF SetObjectClass(DSSPrime, ObjClass)
             THEN Begin
-              ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
-              IF ActiveDSSClass = NIL Then Exit;
+              DSSPrime.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+              IF DSSPrime.ActiveDSSClass = NIL Then Exit;
             End
             ELSE Exit;
          End;
@@ -1060,24 +1059,24 @@ Begin
         {IF ObjName='*' then we dump all objects of this class}
         CASE ObjName[1] of
            '*':Begin
-                  FOR i := 1 to ActiveDSSClass.ElementCount Do
+                  FOR i := 1 to DSSPrime.ActiveDSSClass.ElementCount Do
                   Begin
-                      ActiveDSSClass.Active := i;
-                      ActiveDSSObject.DumpProperties(F, DebugDump);
+                      DSSPrime.ActiveDSSClass.Active := i;
+                      DSSPrime.ActiveDSSObject.DumpProperties(F, DebugDump);
                   End;
                End;
         ELSE
-           IF Not ActiveDSSClass.SetActive(Objname)
+           IF Not DSSPrime.ActiveDSSClass.SetActive(Objname)
            THEN Begin
                DoSimpleMsg('Error! Object "' + ObjName + '" not found.', 256) ;
                Exit;
            End
-           ELSE ActiveDSSObject.DumpProperties(F, DebugDump);  // Dump only properties of active circuit element
+           ELSE DSSPrime.ActiveDSSObject.DumpProperties(F, DebugDump);  // Dump only properties of active circuit element
         END;
 
       End
       ELSE IF IsSolution THEN  Begin
-         ActiveDSSObject.DumpProperties(F, DebugDump);
+         DSSPrime.ActiveDSSObject.DumpProperties(F, DebugDump);
       End
       ELSE Begin
 
@@ -1318,7 +1317,7 @@ begin
        ObjRef := pClass.First;
        While Objref>0 Do
        Begin
-          pCapElement := TCapacitorObj(ActiveDSSObject);
+          pCapElement := TCapacitorObj(DSSPrime.ActiveDSSObject);
           If pCapElement.IsShunt Then
           Begin
              If pCapElement.Enabled Then  DSSPrime.ActiveCircuit.Buses^[pCapElement.Terminals^[1].Busref].Keep := TRUE;
@@ -1335,7 +1334,7 @@ begin
        ObjRef := pClass.First;
        While Objref>0 Do
        Begin
-          pReacElement := TReactorObj(ActiveDSSObject);
+          pReacElement := TReactorObj(DSSPrime.ActiveDSSObject);
           If pReacElement.IsShunt Then
           Try
              If pReacElement.Enabled Then DSSPrime.ActiveCircuit.Buses^[pReacElement.Terminals^[1].Busref].Keep := TRUE;
@@ -1499,8 +1498,8 @@ Begin
 
      IF CompareText(ObjName,'solution')=0 THEN
      Begin  // special for solution
-         ActiveDSSClass  := DSSPrime.SolutionClass;
-         ActiveDSSObject := DSSPrime.ActiveCircuit.Solution;
+         DSSPrime.ActiveDSSClass  := DSSPrime.SolutionClass;
+         DSSPrime.ActiveDSSObject := DSSPrime.ActiveCircuit.Solution;
      End ELSE
      Begin
          // Set Object Active
@@ -1509,9 +1508,9 @@ Begin
      End;
 
      // Put property value in global VARiable
-     PropIndex := ActiveDSSClass.Propertyindex(PropName);
+     PropIndex := DSSPrime.ActiveDSSClass.Propertyindex(PropName);
      IF PropIndex>0 THEN
-        DSSPrime.GlobalPropertyValue := ActiveDSSObject.GetPropertyValue(PropIndex)
+        DSSPrime.GlobalPropertyValue := DSSPrime.ActiveDSSObject.GetPropertyValue(PropIndex)
      ELSE
         DSSPrime.GlobalPropertyValue := 'Property Unknown';
 
@@ -1587,7 +1586,7 @@ Begin
 
    // Search for class IF not already active
    // IF nothing specified, LastClassReferenced remains
-   IF   CompareText(Objtype, ActiveDssClass.Name) <> 0
+   IF   CompareText(Objtype, DSSPrime.ActiveDSSClass.Name) <> 0
    THEN DSSPrime.LastClassReferenced := DSSPrime.ClassNames.Find(ObjType);
 
    CASE DSSPrime.LastClassReferenced of
@@ -1600,7 +1599,7 @@ Begin
 
      // intrinsic and user Defined models
      // Make a new circuit element
-        ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+        DSSPrime.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
 
       // Name must be supplied
         IF   Length(Name) = 0
@@ -1611,13 +1610,13 @@ Begin
 
 
    // now let's make a new object or set an existing one active, whatever the case
-        CASE  ActiveDSSClass.DSSClassType Of
+        CASE  DSSPrime.ActiveDSSClass.DSSClassType Of
             // These can be added WITHout having an active circuit
             // Duplicates not allowed in general DSS objects;
-             DSS_OBJECT :  IF  NOT  ActiveDSSClass.SetActive(Name)
+             DSS_OBJECT :  IF  NOT  DSSPrime.ActiveDSSClass.SetActive(Name)
                            THEN Begin
-                               Result := ActiveDSSClass.NewObject(Name);
-                               DSSPrime.DSSObjs.Add(ActiveDSSObject);  // Stick in pointer list to keep track of it
+                               Result := DSSPrime.ActiveDSSClass.NewObject(Name);
+                               DSSPrime.DSSObjs.Add(DSSPrime.ActiveDSSObject);  // Stick in pointer list to keep track of it
                            End;
         ELSE
             // These are circuit elements
@@ -1630,31 +1629,31 @@ Begin
           // IF Object already exists.  Treat as an Edit IF dulicates not allowed
             IF    DSSPrime.ActiveCircuit.DuplicatesAllowed THEN
              Begin
-                 Result := ActiveDSSClass.NewObject(Name); // Returns index into this class
+                 Result := DSSPrime.ActiveDSSClass.NewObject(Name); // Returns index into this class
                  DSSPrime.ActiveCircuit.AddCktElement(Result);   // Adds active object to active circuit
              End
             ELSE
              Begin      // Check to see if we can set it active first
-                IF   Not ActiveDSSClass.SetActive(Name)  THEN
+                IF   Not DSSPrime.ActiveDSSClass.SetActive(Name)  THEN
                  Begin
-                   Result := ActiveDSSClass.NewObject(Name);   // Returns index into this class
+                   Result := DSSPrime.ActiveDSSClass.NewObject(Name);   // Returns index into this class
                    DSSPrime.ActiveCircuit.AddCktElement(Result);   // Adds active object to active circuit
                  End
                 ELSE
                  Begin
-                    DoSimpleMsg('Warning: Duplicate new element definition: "'+ ActiveDSSClass.Name+'.'+Name+'"'+
+                    DoSimpleMsg('Warning: Duplicate new element definition: "'+ DSSPrime.ActiveDSSClass.Name+'.'+Name+'"'+
                                  CRLF+ 'Element being redefined.', 266);
                  End;
              End;
 
         End;
 
-        // ActiveDSSObject now points to the object just added
+        // DSSPrime.ActiveDSSObject now points to the object just added
         // IF a circuit element, ActiveCktElement in DSSPrime.ActiveCircuit is also set
 
-        If Result>0 Then ActiveDSSObject.ClassIndex := Result;
+        If Result>0 Then DSSPrime.ActiveDSSObject.ClassIndex := Result;
 
-        ActiveDSSClass.Edit;    // Process remaining instructions on the command line
+        DSSPrime.ActiveDSSClass.Edit;    // Process remaining instructions on the command line
 
   End;
 End;
@@ -1678,10 +1677,10 @@ Begin
 
    // intrinsic and user Defined models
    // Edit the DSS object
-      ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
-      IF ActiveDSSClass.SetActive(Name) THEN
+      DSSPrime.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+      IF DSSPrime.ActiveDSSClass.SetActive(Name) THEN
       Begin
-          Result := ActiveDSSClass.Edit;   // Edit the active object
+          Result := DSSPrime.ActiveDSSClass.Edit;   // Edit the active object
       End;
    End;
 
@@ -1744,9 +1743,9 @@ begin
      DSSPrime.ActiveCircuit.AutoAddBusList.Clear;
 
      // Load up auxiliary parser to reparse the array list or file name
-     Auxparser.CmdString := S;
-     ParmName := Auxparser.NextParam ;
-     Param := AuxParser.StrValue;
+     DSSPrime.AuxParser.CmdString := S;
+     ParmName := DSSPrime.AuxParser.NextParam ;
+     Param := DSSPrime.AuxParser.StrValue;
 
      {Syntax can be either a list of bus names or a file specification:  File= ...}
 
@@ -1760,9 +1759,9 @@ begin
              WHILE Not EOF(F) Do
              Begin         // Fixed 7/8/01 to handle all sorts of bus names
                   Readln(F, S2);
-                  Auxparser.CmdString := S2;
-                  ParmName := Auxparser.NextParam ;
-                  Param := AuxParser.StrValue;
+                  DSSPrime.AuxParser.CmdString := S2;
+                  ParmName := DSSPrime.AuxParser.NextParam ;
+                  Param := DSSPrime.AuxParser.StrValue;
                   IF   Length(Param) > 0
                   THEN DSSPrime.ActiveCircuit.AutoAddBusList.Add(Param);
              End;
@@ -1780,8 +1779,8 @@ begin
        WHILE Length(Param) > 0 Do
        BEGIN
             DSSPrime.ActiveCircuit.AutoAddBusList.Add(Param);
-            AuxParser.NextParam;
-            Param := AuxParser.StrValue;
+            DSSPrime.AuxParser.NextParam;
+            Param := DSSPrime.AuxParser.StrValue;
        END;
 
      End;
@@ -1806,9 +1805,9 @@ VAR
 begin
 
      // Load up auxiliary parser to reparse the array list or file name
-     Auxparser.CmdString := S;
-     ParmName := Auxparser.NextParam ;
-     Param := AuxParser.StrValue;
+     DSSPrime.AuxParser.CmdString := S;
+     ParmName := DSSPrime.AuxParser.NextParam ;
+     Param := DSSPrime.AuxParser.StrValue;
 
      {Syntax can be either a list of bus names or a file specification:  File= ...}
 
@@ -1822,9 +1821,9 @@ begin
              WHILE Not EOF(F) Do
              Begin         // Fixed 7/8/01 to handle all sorts of bus names
                   Readln(F, S2);
-                  Auxparser.CmdString := S2;
-                  ParmName := Auxparser.NextParam ;
-                  Param := AuxParser.StrValue;
+                  DSSPrime.AuxParser.CmdString := S2;
+                  ParmName := DSSPrime.AuxParser.NextParam ;
+                  Param := DSSPrime.AuxParser.StrValue;
                   IF   Length(Param) > 0
                   THEN With DSSPrime.ActiveCircuit Do
                     Begin
@@ -1851,8 +1850,8 @@ begin
               If iBus>0 Then Buses^[iBus].Keep := TRUE;
             End;
 
-            AuxParser.NextParam;
-            Param := AuxParser.StrValue;
+            DSSPrime.AuxParser.NextParam;
+            Param := DSSPrime.AuxParser.StrValue;
        END;
 
      End;
@@ -2419,7 +2418,7 @@ Begin
     Result := 0;
     If NoFormsAllowed Then Exit;
     DoSelectCmd;  // Select ActiveObject
-    IF ActiveDSSObject <> NIL THEN  Begin
+    IF DSSPrime.ActiveDSSObject <> NIL THEN  Begin
 
          ShowPropEditForm;
 
@@ -2688,7 +2687,7 @@ Begin
              Inc(iLine);
              Readln(F, S);      // Read line in from file
 
-             With AuxParser Do Begin      // User Auxparser to parse line
+             With DSSPrime.AuxParser Do Begin      // User DSSPrime.AuxParser to parse line
                    CmdString := S;
                    NextParam;  BusName := StrValue;
                    iB := DSSPrime.ActiveCircuit.Buslist.Find(BusName);
@@ -2749,7 +2748,7 @@ Begin
      DSSPrime.ActiveCircuit.ReductionStrategy := rsDefault;
      IF Length(S)=0 Then Exit;  {No option given}
 
-     AuxParser.CmdString := Parser.Remainder;  // so we don't mess up Set Command
+     DSSPrime.AuxParser.CmdString := Parser.Remainder;  // so we don't mess up Set Command
 
      Case UpperCase(S)[1] of
 
@@ -2764,7 +2763,7 @@ Begin
        'T': Begin          removed 2-28-2018
               DSSPrime.ActiveCircuit.ReductionStrategy := rsTapEnds;
               DSSPrime.ActiveCircuit.ReductionMaxAngle := 15.0;  {default}
-              If Length(param2) > 0 Then  DSSPrime.ActiveCircuit.ReductionMaxAngle := Auxparser.DblValue;
+              If Length(param2) > 0 Then  DSSPrime.ActiveCircuit.ReductionMaxAngle := DSSPrime.AuxParser.DblValue;
             End;
             *)
        'S': Begin  {Shortlines or Switch}
@@ -2983,19 +2982,19 @@ Begin
 
          While Not EOF(Fin) Do Begin
              Readln(Fin, Line);
-             Auxparser.CmdString := Line;
-             AuxParser.NextParam;
-             BusName := Auxparser.StrValue;
+             DSSPrime.AuxParser.CmdString := Line;
+             DSSPrime.AuxParser.NextParam;
+             BusName := DSSPrime.AuxParser.StrValue;
              If Length(BusName) > 0 Then Begin
                  BusIndex := DSSPrime.ActiveCircuit.BusList.Find(BusName);
                  If BusIndex>0 Then Begin
-                     AuxParser.Nextparam;
-                     node := AuxParser.Intvalue;
+                     DSSPrime.AuxParser.Nextparam;
+                     node := DSSPrime.AuxParser.Intvalue;
                      With  DSSPrime.ActiveCircuit.Buses^[BusIndex] Do
                      For i := 1 to NumNodesThisBus Do Begin
                          If GetNum(i)=node then Begin
-                             AuxParser.Nextparam;
-                             Vmag := AuxParser.Dblvalue;
+                             DSSPrime.AuxParser.Nextparam;
+                             Vmag := DSSPrime.AuxParser.Dblvalue;
                              Diff := Cabs(DSSPrime.ActiveCircuit.Solution.NodeV^[GetRef(i)]) - Vmag;
                              If Vmag<>0.0 then Begin
                                 Writeln(Fout, BusName,'.',node,', ', (Diff / Vmag * 100.0):7:2,', %');
@@ -3301,13 +3300,13 @@ Begin
          If Not Unknown then
          CASE ParamPointer OF
            1: Begin  // List of case names
-                AuxParser.CmdString := Param;
-                AuxParser.NextParam;
-                Param := AuxParser.StrValue;
+                DSSPrime.AuxParser.CmdString := Param;
+                DSSPrime.AuxParser.NextParam;
+                Param := DSSPrime.AuxParser.StrValue;
                 While Length(Param)>0 Do Begin
                     CaseNames.Add(Param);
-                    AuxParser.NextParam;
-                    Param := AuxParser.StrValue;
+                    DSSPrime.AuxParser.NextParam;
+                    Param := DSSPrime.AuxParser.StrValue;
                 End;
               End;
            2: Begin
@@ -3433,8 +3432,8 @@ Begin
     DoAllocateLoadsCmd;
 
     {Let's look to see how well we did}
-     If not DSSPrime.AutoShowExport Then DSSExecutive.Command := 'Set showexport=yes';
-     DSSExecutive.Command := 'Export Estimation';
+     If not DSSPrime.AutoShowExport Then DSSPrime.DSSExecutive.Command := 'Set showexport=yes';
+     DSSPrime.DSSExecutive.Command := 'Export Estimation';
 
 End;
 
@@ -3642,7 +3641,7 @@ Begin
     Reset(F);
     While not EOF(F) Do Begin
       Readln(F, S);
-      With AuxParser Do Begin
+      With DSSPrime.AuxParser Do Begin
         pName := nil;
         CmdString := S;
         NextParam;  NameVal := StrValue;
@@ -3656,10 +3655,10 @@ Begin
           pName := DSSPrime.ActiveCircuit
         end else begin
           DSSPrime.LastClassReferenced := DSSPrime.ClassNames.Find (DevClass);
-          ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
-          if ActiveDSSClass <> nil then begin
-            ActiveDSSClass.SetActive (DevName);
-            pName := ActiveDSSClass.GetActiveObj;
+          DSSPrime.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+          if DSSPrime.ActiveDSSClass <> nil then begin
+            DSSPrime.ActiveDSSClass.SetActive (DevName);
+            pName := DSSPrime.ActiveDSSClass.GetActiveObj;
           end;
         end;
         // re-assign its GUID
@@ -3745,9 +3744,9 @@ Begin
     If Pos('1',ParamName)>0 then sNode1 := Param;
 
     // Get first node voltage
-    AuxParser.Token := sNode1;
+    DSSPrime.AuxParser.Token := sNode1;
     NodeBuffer[1] := 1;
-    sBusName := AuxParser.ParseAsBusName (numNodes,  @NodeBuffer);
+    sBusName := DSSPrime.AuxParser.ParseAsBusName (numNodes,  @NodeBuffer);
     iBusidx := DSSPrime.ActiveCircuit.Buslist.Find(sBusName);
     If iBusidx>0 Then Begin
         B1Ref := DSSPrime.ActiveCircuit.Buses^[iBusidx].Find(NodeBuffer[1])
@@ -3759,9 +3758,9 @@ Begin
     V1 := DSSPrime.ActiveCircuit.Solution.NodeV^[B1Ref];
 
     // Get 2nd node voltage
-    AuxParser.Token := sNode2;
+    DSSPrime.AuxParser.Token := sNode2;
     NodeBuffer[1] := 1;
-    sBusName := AuxParser.ParseAsBusName (numNodes,  @NodeBuffer);
+    sBusName := DSSPrime.AuxParser.ParseAsBusName (numNodes,  @NodeBuffer);
     iBusidx := DSSPrime.ActiveCircuit.Buslist.Find(sBusName);
     If iBusidx>0 Then Begin
         B2Ref := DSSPrime.ActiveCircuit.Buses^[iBusidx].Find(NodeBuffer[1])

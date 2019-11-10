@@ -241,8 +241,8 @@ begin
    // create a new object of this class and add to list
     with DSS.ActiveCircuit do
     begin
-        ActiveDSSObject := TXYcurveObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        DSS.ActiveDSSObject := TXYcurveObj.Create(Self, ObjName);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 
@@ -260,7 +260,7 @@ begin
     Result := 0;
   // continue parsing with contents of Parser
     DSS.ActiveXYcurveObj := ElementList.Active;
-    ActiveDSSObject := DSS.ActiveXYcurveObj;
+    DSS.ActiveDSSObject := DSS.ActiveXYcurveObj;
 
     with DSS.ActiveXYcurveObj do
     begin
@@ -475,9 +475,9 @@ begin
             while (not EOF(F)) and (i < FNumPoints) do
             begin
                 Inc(i);
-                Readln(F, s); // read entire line  and parse with AuxParser
-            {AuxParser allows commas or white space}
-                with AuxParser do
+                Readln(F, s); // read entire line  and parse with DSS.AuxParser
+            {DSS.AuxParser allows commas or white space}
+                with DSS.AuxParser do
                 begin
                     CmdString := s;
                     NextParam;

@@ -320,7 +320,7 @@ begin
     with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TRelayObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 
@@ -456,9 +456,9 @@ begin
                             'v':
                                 PropertyValue[14] := '(5.0)';
                         end;
-                        AuxParser.CmdString := PropertyValue[14];
-                        ParamName := AuxParser.NextParam;
-                        NumReclose := AuxParser.ParseAsVector(4, RecloseIntervals);
+                        DSS.AuxParser.CmdString := PropertyValue[14];
+                        ParamName := DSS.AuxParser.NextParam;
+                        NumReclose := DSS.AuxParser.ParseAsVector(4, RecloseIntervals);
                     end;
                 end;
 

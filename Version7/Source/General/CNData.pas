@@ -116,8 +116,8 @@ function TCNData.NewObject(const ObjName: String): Integer;
 begin
     with DSS.ActiveCircuit do
     begin
-        ActiveDSSObject := TCNDataObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        DSS.ActiveDSSObject := TCNDataObj.Create(Self, ObjName);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 
@@ -130,7 +130,7 @@ begin
     Result := 0;
   // continue parsing with contents of Parser
     DSS.ActiveConductorDataObj := ElementList.Active;
-    ActiveDSSObject := DSS.ActiveConductorDataObj;
+    DSS.ActiveDSSObject := DSS.ActiveConductorDataObj;
     with TCNDataObj(DSS.ActiveConductorDataObj) do
     begin
         ParamPointer := 0;

@@ -202,7 +202,7 @@ begin
     with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TFaultObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 
 end;

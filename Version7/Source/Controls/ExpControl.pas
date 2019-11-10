@@ -205,7 +205,7 @@ Begin
     WITH DSS.ActiveCircuit Do
     Begin
       ActiveCktElement := TExpControlObj.Create(Self, ObjName);
-      Result := AddObjectToList(ActiveDSSObject);
+      Result := AddObjectToList(DSS.ActiveDSSObject);
     End;
 End;
 

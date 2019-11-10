@@ -2022,19 +2022,19 @@ begin
                 Writeln(F);
                 Writeln(Fdisabled, 'All DISABLED Elements in Class "', ClassName, '"');
                 Writeln(Fdisabled);
-                ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
-                for i := 1 to ActiveDSSClass.ElementCount do
+                DSSPrime.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+                for i := 1 to DSSPrime.ActiveDSSClass.ElementCount do
                 begin
-                    ActiveDSSClass.Active := i;
-                    if (ActiveDSSClass.DSSClassType and BASECLASSMASK) > 0 then
+                    DSSPrime.ActiveDSSClass.Active := i;
+                    if (DSSPrime.ActiveDSSClass.DSSClassType and BASECLASSMASK) > 0 then
                     begin
-                        if TDSSCktElement(ActiveDSSObject).Enabled then
-                            Writeln(F, UpperCase(ActiveDssObject.Name))
+                        if TDSSCktElement(DSSPrime.ActiveDSSObject).Enabled then
+                            Writeln(F, UpperCase(DSSPrime.ActiveDSSObject.Name))
                         else
-                            Writeln(Fdisabled, UpperCase(ActiveDssObject.Name));
+                            Writeln(Fdisabled, UpperCase(DSSPrime.ActiveDSSObject.Name));
                     end
                     else
-                        Writeln(F, UpperCase(ActiveDssObject.Name));   // non cktelements
+                        Writeln(F, UpperCase(DSSPrime.ActiveDSSObject.Name));   // non cktelements
                 end;
             end;
         end
@@ -3020,7 +3020,7 @@ begin
         while hMeter > 0 do
         begin
 
-            pMtr := TEnergyMeterObj(ActiveDSSObject);
+            pMtr := TEnergyMeterObj(DSSPrime.ActiveDSSObject);
 
             if pMtr.BranchList <> NIL then
             begin

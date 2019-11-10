@@ -62,7 +62,8 @@ uses
     Sysutils,
     Ucomplex,
     Arraydef,
-    LineUnits;
+    LineUnits,
+    DSSHelper;
 
 constructor TCableData.Create(dss: TDSS);  // Creates superstructure for all Line objects
 begin
@@ -142,7 +143,7 @@ var
     OtherCableData: TCableDataObj;
 begin
     OtherCableData := TCableDataObj(OtherObj);
-    with TCableDataObj(ActiveDSSObject) do
+    with TCableDataObj(DSS.ActiveDSSObject) do
     begin
         FEpsR := OtherCableData.FEpsR;
         FInsLayer := OtherCableData.FInsLayer;

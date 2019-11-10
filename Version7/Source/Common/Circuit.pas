@@ -1090,7 +1090,7 @@ Begin
     Fileroot              :=  Fileroot  + PathDelim + 'Torn_Circuit';
     CreateDir(Fileroot);                        // Creates the folder for storing the modified circuit
     DelFilesFromDir(Fileroot,'*',True);         // Removes all the files inside the new directory (if exists)
-    DssExecutive.Command  :=  'save circuit Dir="' + Fileroot + '"';
+    DSS.DssExecutive.Command  :=  'save circuit Dir="' + Fileroot + '"';
     // This routine extracts and modifies the file content to separate the subsystems as OpenDSS projects indepedently
     Format_SubCircuits(FileRoot, length(Locations));
 End;
@@ -1350,7 +1350,7 @@ Begin
 
            End;
           // Generates the OpenDSS Command;
-          DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
+          DSS.DssExecutive.Command := 'New EnergyMeter.Zone_' + inttostr(i + 1) + ' element=' + PDElement + ' ' + Terminal + ' option=R action=C';
         End
         else
         Begin
@@ -1543,11 +1543,11 @@ BEGIN
        WHILE DevIndex>0 DO BEGIN
            IF DeviceRef^[Devindex].CktElementClass=DevClassIndex THEN   // we got a match
             BEGIN
-              ActiveDSSClass := DSS.DSSClassList.Get(DevClassIndex);
+              DSS.ActiveDSSClass := DSS.DSSClassList.Get(DevClassIndex);
               DSS.LastClassReferenced := DevClassIndex;
               Result := DeviceRef^[Devindex].devHandle;
-             // ActiveDSSClass.Active := Result;
-            //  ActiveCktElement := ActiveDSSClass.GetActiveObj;
+             // DSS.ActiveDSSClass.Active := Result;
+            //  ActiveCktElement := DSS.ActiveDSSClass.GetActiveObj;
               ActiveCktElement := CktElements.Get(Result);
               Break;
             END;
@@ -1563,7 +1563,7 @@ END;
 Procedure TDSSCircuit.Set_ActiveCktElement(Value:TDSSCktElement);
 BEGIN
     FActiveCktElement := Value;
-    ActiveDSSObject := Value;
+    DSS.ActiveDSSObject := Value;
 END;
 
 //----------------------------------------------------------------------------
@@ -2057,7 +2057,7 @@ Begin
 //        For i := 1 to NumBuses do
 //          If Buses^[i].kVBase > 0.0 Then
 //            Writeln(F, Format('SetkVBase Bus=%s  kvln=%.7g ', [BusList.Get(i), Buses^[i].kVBase]));
-        DSSExecutive.Command := 'get voltagebases';
+        DSS.DssExecutive.Command := 'get voltagebases';
         VBases := DSS.GlobalResult;
         Writeln(F, 'Set Voltagebases='+VBases);
         CloseFile(F);

@@ -1813,6 +1813,4 @@ exports
     ZeroiseMatrixElement;
 
 begin
-  DSSExecutive := TExecutive.Create(NIL);
-  DSSExecutive.CreateDefaultDSSItems;
 end.

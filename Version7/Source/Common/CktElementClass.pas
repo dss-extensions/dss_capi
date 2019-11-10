@@ -40,7 +40,8 @@ uses
     CktElement,
     ParserDel,
     Utilities,
-    DSSGlobals;
+    DSSGlobals,
+    DSSHelper;
 
 { TCktElementClass }
 
@@ -72,7 +73,7 @@ begin
 
     OtherCktObj := TDSSCktElement(OtherObj);
 
-    with TDSSCktElement(ActiveDSSObject) do
+    with TDSSCktElement(DSS.ActiveDSSObject) do
     begin
         BaseFrequency := OtherCktObj.BaseFrequency;
         Enabled := TRUE;

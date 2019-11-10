@@ -273,8 +273,8 @@ begin
    // create a new object of this class and add to list
     with DSS.ActiveCircuit do
     begin
-        ActiveDSSObject := TLineGeometryObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        DSS.ActiveDSSObject := TLineGeometryObj.Create(Self, ObjName);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 
@@ -291,7 +291,7 @@ begin
     Result := 0;
   // continue parsing with contents of Parser
     DSS.ActiveLineGeometryObj := ElementList.Active;
-    ActiveDSSObject := DSS.ActiveLineGeometryObj;
+    DSS.ActiveDSSObject := DSS.ActiveLineGeometryObj;
 
     with DSS.ActiveLineGeometryObj do
     begin
@@ -397,11 +397,11 @@ begin
                             istart := FNPhases + 1;
                     end;
 
-                    AuxParser.CmdString := Parser.StrValue;
+                    DSS.AuxParser.CmdString := Parser.StrValue;
                     for i := istart to istop do
                     begin
-                        AuxParser.NextParam; // ignore any parameter name  not expecting any
-                        FCondName[i] := AuxParser.StrValue;
+                        DSS.AuxParser.NextParam; // ignore any parameter name  not expecting any
+                        FCondName[i] := DSS.AuxParser.StrValue;
                         if ParamPointer = 15 then
                             DSS.CNDataClass.code := FCondName[i]
                         else

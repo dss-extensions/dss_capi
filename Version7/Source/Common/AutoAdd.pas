@@ -545,7 +545,7 @@ begin
                 UseAuxCurrents := FALSE;
 
                 if MinLossBus > 0 then
-                    with DSSExecutive do
+                    with DSSPrime.DSSExecutive do
                     begin
 
                         if MinBusPhases >= 3 then
@@ -667,7 +667,7 @@ begin
                 UseAuxCurrents := FALSE;
 
                 if MinLossBus > 0 then
-                    with DSSExecutive do
+                    with DSSPrime.DSSExecutive do
                     begin
 
                         if MinBusPhases >= 3 then

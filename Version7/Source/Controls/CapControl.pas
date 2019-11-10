@@ -268,7 +268,7 @@ begin
     with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TCapControlObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 

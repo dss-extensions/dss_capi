@@ -312,8 +312,8 @@ begin
    // create a new object of this class and add to list
     with DSS.ActiveCircuit do
     begin
-        ActiveDSSObject := TLoadShapeObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        DSS.ActiveDSSObject := TLoadShapeObj.Create(Self, ObjName);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 
@@ -329,7 +329,7 @@ begin
     Result := 0;
   // continue parsing with contents of Parser
     DSS.ActiveLoadShapeObj := ElementList.Active;
-    ActiveDSSObject := DSS.ActiveLoadShapeObj;
+    DSS.ActiveDSSObject := DSS.ActiveLoadShapeObj;
 
     with DSS.ActiveLoadShapeObj do
     begin
@@ -599,9 +599,9 @@ begin
             while (not EOF(F)) and (i < FNumPoints) do
             begin
                 Inc(i);
-                Readln(F, s); // read entire line  and parse with AuxParser
-            {AuxParser allows commas or white space}
-                with AuxParser do
+                Readln(F, s); // read entire line  and parse with DSS.AuxParser
+            {DSS.AuxParser allows commas or white space}
+                with DSS.AuxParser do
                 begin
                     CmdString := s;
                     if Interval = 0.0 then
@@ -666,9 +666,9 @@ begin
             while (not EOF(F)) and (i < FNumPoints) do
             begin
                 Inc(i);
-                Readln(F, s); // read entire line  and parse with AuxParser
-            {AuxParser allows commas or white space}
-                with AuxParser do
+                Readln(F, s); // read entire line  and parse with DSS.AuxParser
+            {DSS.AuxParser allows commas or white space}
+                with DSS.AuxParser do
                 begin
                     CmdString := s;
                     if Interval = 0.0 then

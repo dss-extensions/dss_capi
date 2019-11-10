@@ -376,7 +376,7 @@ Begin
     With ActiveCircuit Do
     Begin
       ActiveCktElement := TFMonitorObj.Create(Self, ObjName);
-      Result := AddObjectToList(ActiveDSSObject);
+      Result := AddObjectToList(DSS.ActiveDSSObject);
     End;
 End;
 {--------------------------------------------------------------------------}
@@ -987,7 +987,7 @@ Begin
 
       TempStr :=  TempStr + '|';
     End;
-    ActiveDSSObject.PropertyValue[15]  :=  TempStr;
+    DSS.ActiveDSSObject.PropertyValue[15]  :=  TempStr;
 
 
 end;
@@ -1026,7 +1026,7 @@ Begin
 
       TempStr :=  TempStr + '|';
     End;
-    ActiveDSSObject.PropertyValue[18]  :=  TempStr;
+    DSS.ActiveDSSObject.PropertyValue[18]  :=  TempStr;
 end;
 {--------------------------------------------------------------------------}
 Procedure TFMonitorObj.Set_ElemTable_line( strParam: string);
@@ -1066,7 +1066,7 @@ Begin
                   floattostr(pNodeFMs^[i].vl_V_ref_dg)  + ',' +
                   floattostr(pNodeFMs^[iNodeNum].vl_kc_ul_dg) + '|';
     End;
-    ActiveDSSObject.PropertyValue[16]  :=  TempStr;
+    DSS.ActiveDSSObject.PropertyValue[16]  :=  TempStr;
 end;
 Procedure TFMonitorObj.Get_PQ_DI(i_NodeNum : integer);
 var

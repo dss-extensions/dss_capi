@@ -154,8 +154,8 @@ begin
    // create a new object of this class and add to list
     with DSS.ActiveCircuit do
     begin
-        ActiveDSSObject := TTCC_CurveObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        DSS.ActiveDSSObject := TTCC_CurveObj.Create(Self, ObjName);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 
@@ -184,7 +184,7 @@ begin
     Result := 0;
   // continue parsing with contents of Parser
     DSS.ActiveTCC_CurveObj := ElementList.Active;
-    ActiveDSSObject := DSS.ActiveTCC_CurveObj;
+    DSS.ActiveDSSObject := DSS.ActiveTCC_CurveObj;
 
     with DSS.ActiveTCC_CurveObj do
     begin

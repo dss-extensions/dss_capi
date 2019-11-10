@@ -47,7 +47,7 @@ uses
 
 procedure DSS_NewCircuit(const Value: PAnsiChar); CDECL;
 begin
-    MakeNewCircuit(Value);
+    MakeNewCircuit(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_AllowForms: Boolean; CDECL;
@@ -109,8 +109,8 @@ begin
       InitializeInterfaces;
       IsDLL := TRUE;
     {Create one instance of DSS executive whenever the DSS Engine is init'd}
-      DSSExecutive := TExecutive.Create;  // Start the DSS when DSS interface is created
-      DSSExecutive.CreateDefaultDSSItems;
+      DSSPrime.DSSExecutive := TExecutive.Create;  // Start the DSS when DSS interface is created
+      DSSPrime.DSSExecutive.CreateDefaultDSSItems;
   *)
 end;
 //------------------------------------------------------------------------------
@@ -195,7 +195,7 @@ end;
 procedure DSS_Reset(); CDECL;
 begin
      {Put any code here necessary to reset for specific systems};
- // revert to original -- DSSExecutive.Free;
+ // revert to original -- DSSPrime.DSSExecutive.Free;
 
 end;
 //------------------------------------------------------------------------------
@@ -223,7 +223,7 @@ begin
     end;
 
     DSSPrime.LastClassReferenced := DevClassIndex;
-    ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+    DSSPrime.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
     Result := DSSPrime.LastClassReferenced;
 
 end;

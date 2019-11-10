@@ -1432,9 +1432,9 @@ begin
     with DSS.ActiveCircuit do
     begin
         DevClassIndex := DSSPrime.ClassNames.Find('reactor');
-        DSSPrime.LastClassReferenced := DevClassIndex;
-        ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
-        elem := ActiveDSSClass.First;
+        DSS.LastClassReferenced := DevClassIndex;
+        DSS.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+        elem := DSS.ActiveDSSClass.First;
         while elem <> 0 do
         begin
             RBus := ActiveCktElement.GetBus(2);
@@ -1463,7 +1463,7 @@ begin
                     Upload2IncMatrix;
                 end;
             end;
-            elem := ActiveDSSClass.Next;
+            elem := DSS.ActiveDSSClass.Next;
             inc(ActiveIncCell[0]);
         end;
     end;

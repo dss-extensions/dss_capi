@@ -92,7 +92,8 @@ uses
     Sysutils,
     Ucomplex,
     LineUNits,
-    Utilities;
+    Utilities,
+    DSSHelper;
 
 const
     LineUnitsHelp = '{mi|kft|km|m|Ft|in|cm|mm} Default=none.';
@@ -240,7 +241,7 @@ var
     OtherConductorData: TConductorDataObj;
 begin
     OtherConductorData := TConductorDataObj(OtherObj);
-    with TConductorDataObj(ActiveDSSObject) do
+    with TConductorDataObj(DSS.ActiveDSSObject) do
     begin
         FRDC := OtherConductorData.FRDC;
         FR60 := OtherConductorData.FR60;

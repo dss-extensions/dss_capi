@@ -30,8 +30,8 @@ begin
     if DSSPrime.ActiveCircuit <> NIL then
         with DSSPrime.ActiveCircuit do
         begin
-            if ActiveDSSObject <> NIL then
-                with ActiveDSSObject do
+            if DSSPrime.ActiveDSSObject <> NIL then
+                with DSSPrime.ActiveDSSObject do
                 begin
                     with ParentClass do
                     begin
@@ -56,8 +56,8 @@ end;
 function DSSElement_Get_Name_AnsiString(): Ansistring; inline;
 begin
     if DSSPrime.ActiveCircuit <> NIL then
-        if ActiveDSSObject <> NIL then
-            with ActiveDSSObject do
+        if DSSPrime.ActiveDSSObject <> NIL then
+            with DSSPrime.ActiveDSSObject do
             begin
                 Result := ParentClass.Name + '.' + Name;
             end
@@ -76,8 +76,8 @@ begin
     if DSSPrime.ActiveCircuit <> NIL then
         with DSSPrime.ActiveCircuit do
         begin
-            if ActiveDSSObject <> NIL then
-                with ActiveDSSObject do
+            if DSSPrime.ActiveDSSObject <> NIL then
+                with DSSPrime.ActiveDSSObject do
                 begin
                     Result := ParentClass.NumProperties;
                 end

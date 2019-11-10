@@ -116,7 +116,7 @@ end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_SaveCircuit(const CktName: PAnsiChar); CDECL;
 begin
-    DSSExecutive.Command := 'Save Circuit Dir=' + CktName;
+    DSSPrime.DSSExecutive.Command := 'Save Circuit Dir=' + CktName;
    // Master file name is returned in DSSText.Result
 end;
 //------------------------------------------------------------------------------

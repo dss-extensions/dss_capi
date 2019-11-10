@@ -14,7 +14,7 @@ unit DSSClass;
 interface
 
 USES
-    Command,  Arraydef, Hashlist, {$IFDEF DSS_CAPI_HASHLIST}Contnrs,{$ENDIF} Classes, PointerList, NamedObject;
+    Command,  Arraydef, Hashlist, {$IFDEF DSS_CAPI_HASHLIST}Contnrs,{$ENDIF} Classes, PointerList, NamedObject, ParserDel;
 
 TYPE
     TDSS = class;
@@ -205,7 +205,10 @@ TYPE
         FActiveReactorObj: TObject;
         FActiveTransfObj: TObject;
     
+        FDSSExecutive: TObject;
+    
         FActiveCircuit: TNamedObject;
+        FActiveDSSObject :TNamedObject;
     public
         DSSClasses: TDSSClasses;
         ClassNames         :THashList;
@@ -216,9 +219,8 @@ TYPE
         NumIntrinsicClasses,
         NumUserClasses: Integer;
 
-//        ActiveDSSClass  :TDSSClass;
-//        ActiveDSSObject :TDSSObject;
-//        AuxParser       :TParser;  // Auxiliary parser for use by anybody for reparsing values
+        ActiveDSSClass  :TDSSClass;
+        AuxParser       :TParser;  // Auxiliary parser for use by anybody for reparsing values
     
         LastClassReferenced:Integer;  // index of class of last thing edited
         NumCircuits     :Integer;
@@ -267,8 +269,15 @@ TYPE
         //***********************Seasonal QSTS variables********************************
         SeasonalRating         : Boolean;    // Tells the energy meter if the seasonal rating feature is active
         SeasonSignal           : String;     // Stores the name of the signal for selecting the rating dynamically
+
         
-        constructor Create;
+        IsPrime: Boolean; // Indicates whether this instance is the first/main DSS instance
+
+        // For external APIs
+        FPropIndex: Integer;  
+        FPropClass: TDSSClass;
+        
+        constructor Create(_IsPrime: Boolean = False);
         destructor Destroy; override;
     End;
 
@@ -278,11 +287,15 @@ var
 
 implementation
 
-USES DSSGlobals, SysUtils, DSSObject, ParserDel, CktElement, DSSHelper;
+USES DSSGlobals, SysUtils, DSSObject, CktElement, DSSHelper, Executive;
 
-constructor TDSS.Create;
+constructor TDSS.Create(_IsPrime: Boolean);
 begin
     inherited Create;
+    
+    IsPrime := _IsPrime;
+
+    AuxParser        := TParser.Create;
     
     ADiakoptics      :=    False;  // Disabled by default
 
@@ -316,11 +329,18 @@ begin
     EventStrings     := TStringList.Create;
     SavedFileList    := TStringList.Create;
     ErrorStrings     := TStringList.Create;
-    // ErrorStrings.Clear;    
+    // ErrorStrings.Clear;
+    
+    FPropIndex := 0;
+    FPropClass := NIL;
+    
+    DSSExecutive := TExecutive(self);
+    DSSExecutive.CreateDefaultDSSItems;
 end;
 
 destructor TDSS.Destroy;
 begin
+    AuxParser.Free;
     EventStrings.Free;
     SavedFileList.Free;
     ErrorStrings.Free;
@@ -349,8 +369,8 @@ PROCEDURE TDSSClasses.New(Value:Pointer);
 
 Begin
     DSS.DSSClassList.New := Value; // Add to pointer list
-    ActiveDSSClass := Value;   // Declare to be active
-    DSS.ClassNames.Add(ActiveDSSClass.Name); // Add to classname list
+    DSS.ActiveDSSClass := Value;   // Declare to be active
+    DSS.ClassNames.Add(DSS.ActiveDSSClass.Name); // Add to classname list
 End;
 
 {--------------------------------------------------------------}
@@ -412,11 +432,11 @@ BEGIN
      THEN
        Begin
         ActiveElement := Value;
-        ActiveDSSObject := ElementList.Get(ActiveElement);
+        DSS.ActiveDSSObject := ElementList.Get(ActiveElement);
          // Make sure Active Ckt Element agrees if is a ckt element
          // So COM interface will work
-        if ActiveDSSObject is TDSSCktElement then
-            DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(ActiveDSSObject);
+        if DSS.ActiveDSSObject is TDSSCktElement then
+            DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(DSS.ActiveDSSObject);
        End;
 END;
 
@@ -463,7 +483,7 @@ BEGIN
     If idx>0 Then
     Begin
         ActiveElement := idx;
-        ActiveDSSObject := ElementList.get(idx);
+        DSS.ActiveDSSObject := ElementList.get(idx);
         Result := TRUE;
     End;
 
@@ -571,11 +591,11 @@ begin
 
     ELSE Begin
         ActiveElement := 1;
-        ActiveDSSObject := ElementList.First;
+        DSS.ActiveDSSObject := ElementList.First;
       // Make sure Active Ckt Element agrees if is a ckt element
       // So COM interface will work
-        if ActiveDSSObject is TDSSCktElement then
-            DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(ActiveDSSObject);
+        if DSS.ActiveDSSObject is TDSSCktElement then
+            DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(DSS.ActiveDSSObject);
         Result := ActiveElement;
     End;
 end;
@@ -586,11 +606,11 @@ begin
     IF ActiveElement > ElementList.ListSize
     THEN Result := 0
     ELSE Begin
-        ActiveDSSObject := ElementList.Next;
+        DSS.ActiveDSSObject := ElementList.Next;
       // Make sure Active Ckt Element agrees if is a ckt element
       // So COM interface will work
-        if ActiveDSSObject is TDSSCktElement then
-            DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(ActiveDSSObject);
+        if DSS.ActiveDSSObject is TDSSCktElement then
+            DSS.ActiveCircuit.ActiveCktElement := TDSSCktElement(DSS.ActiveDSSObject);
         Result := ActiveElement;
     End;
 

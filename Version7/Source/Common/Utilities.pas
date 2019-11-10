@@ -702,11 +702,11 @@ var
     ParmName: String;
 
 begin
-    Auxparser.CmdString := S;
-    ParmName := Auxparser.NextParam;
-    Result.re := AuxParser.dblvalue;
-    ParmName := Auxparser.NextParam;
-    Result.im := AuxParser.dblvalue;
+    DSSPrime.AuxParser.CmdString := S;
+    ParmName := DSSPrime.AuxParser.NextParam;
+    Result.re := DSSPrime.AuxParser.dblvalue;
+    ParmName := DSSPrime.AuxParser.NextParam;
+    Result.im := DSSPrime.AuxParser.dblvalue;
 end;
 
 //----------------------------------------------------------------------------
@@ -768,9 +768,9 @@ var
 
 begin
 
-    Auxparser.CmdString := S;
-    ParmName := Auxparser.NextParam;
-    Param := AuxParser.StrValue;
+    DSSPrime.AuxParser.CmdString := S;
+    ParmName := DSSPrime.AuxParser.NextParam;
+    Param := DSSPrime.AuxParser.StrValue;
     Result := MaxValues; // Default Return Value;
 
      {Syntax can be either a list of numeric values or a file specification:  File= ...}
@@ -793,16 +793,16 @@ begin
         CSVHeader := FALSE;
 
          // Look for other options  (may be in either order)
-        ParmName := Auxparser.NextParam;
-        Param := AuxParser.StrValue;
+        ParmName := DSSPrime.AuxParser.NextParam;
+        Param := DSSPrime.AuxParser.StrValue;
         while Length(Param) > 0 do
         begin
             if CompareTextShortest(ParmName, 'column') = 0 then
-                CSVColumn := AuxParser.IntValue;
+                CSVColumn := DSSPrime.AuxParser.IntValue;
             if CompareTextShortest(ParmName, 'header') = 0 then
                 CSVHeader := InterpretYesNo(param);
-            ParmName := Auxparser.NextParam;
-            Param := AuxParser.StrValue;
+            ParmName := DSSPrime.AuxParser.NextParam;
+            Param := DSSPrime.AuxParser.StrValue;
         end;
 
          // load the list from a file
@@ -821,10 +821,10 @@ begin
                     if not EOF(F) then
                     begin
                         Readln(F, InputLIne);
-                        Auxparser.CmdString := InputLine;
+                        DSSPrime.AuxParser.CmdString := InputLine;
                         for iskip := 1 to CSVColumn do
-                            ParmName := AuxParser.NextParam;
-                        ResultArray^[i] := AuxParser.dblValue;
+                            ParmName := DSSPrime.AuxParser.NextParam;
+                        ResultArray^[i] := DSSPrime.AuxParser.dblValue;
                     end
                     else
                     begin
@@ -896,8 +896,8 @@ begin
          // Parse Values of array list
         for i := 1 to MaxValues do
         begin
-            ResultArray^[i] := AuxParser.DblValue;    // Fills array with zeros if we run out of numbers
-            AuxParser.NextParam;
+            ResultArray^[i] := DSSPrime.AuxParser.DblValue;    // Fills array with zeros if we run out of numbers
+            DSSPrime.AuxParser.NextParam;
         end;
     end;
 end;
@@ -915,9 +915,9 @@ var
     i: Integer;
 
 begin
-    Auxparser.CmdString := S;
-    ParmName := Auxparser.NextParam;
-    Param := AuxParser.StrValue;
+    DSSPrime.AuxParser.CmdString := S;
+    ParmName := DSSPrime.AuxParser.NextParam;
+    Param := DSSPrime.AuxParser.StrValue;
     Result := Maxvalues;  // Default return value
 
      {Syntax can be either a list of numeric values or a file specification:  File= ...}
@@ -951,8 +951,8 @@ begin
          // Parse Values of array list
         for i := 1 to MaxValues do
         begin
-            ResultArray^[i] := AuxParser.IntValue;    // Fills array with zeros if we run out of numbers
-            AuxParser.NextParam;
+            ResultArray^[i] := DSSPrime.AuxParser.IntValue;    // Fills array with zeros if we run out of numbers
+            DSSPrime.AuxParser.NextParam;
         end;
     end;
 end;
@@ -1054,9 +1054,9 @@ begin
     Size := 0;
     ReAllocStringArray;
 
-    Auxparser.CmdString := S;
-    ParmName := Auxparser.NextParam;
-    Param := AuxParser.StrValue;
+    DSSPrime.AuxParser.CmdString := S;
+    ParmName := DSSPrime.AuxParser.NextParam;
+    Param := DSSPrime.AuxParser.StrValue;
 
      {Syntax can be either a list of string values or a file specification:  File= ...}
 
@@ -1097,8 +1097,8 @@ begin
             if Size > Maxsize then
                 BumpUpStringArray;
             ResultArray^[Size] := Param;
-            ParmName := AuxParser.NextParam;
-            Param := AuxParser.StrValue;
+            ParmName := DSSPrime.AuxParser.NextParam;
+            Param := DSSPrime.AuxParser.StrValue;
         end;
     end;
 
@@ -1127,9 +1127,9 @@ begin
     ResultList.Clear;
 
 
-    Auxparser.CmdString := S;
-    ParmName := Auxparser.NextParam;
-    Param := AuxParser.StrValue;
+    DSSPrime.AuxParser.CmdString := S;
+    ParmName := DSSPrime.AuxParser.NextParam;
+    Param := DSSPrime.AuxParser.StrValue;
 
      {Syntax can be either a list of string values or a file specification:  File= ...}
 
@@ -1143,9 +1143,9 @@ begin
             while not EOF(F) do
             begin
                 Readln(F, Param);
-                Auxparser.CmdString := Param;
-                ParmName := Auxparser.NextParam;
-                NextParam := AuxParser.StrValue;
+                DSSPrime.AuxParser.CmdString := Param;
+                ParmName := DSSPrime.AuxParser.NextParam;
+                NextParam := DSSPrime.AuxParser.StrValue;
                 if Length(NextParam) > 0 then
                 begin     // Ignore Blank Lines in File
                     ResultList.Add(NextParam);
@@ -1167,8 +1167,8 @@ begin
         while Param <> '' do
         begin
             ResultList.add(Param);
-            ParmName := AuxParser.NextParam;
-            Param := AuxParser.StrValue;
+            ParmName := DSSPrime.AuxParser.NextParam;
+            Param := DSSPrime.AuxParser.StrValue;
         end;
     end;
 
@@ -1337,11 +1337,11 @@ var
 begin
 
 // Parse the line once to get the count of tokens on string, S
-    AuxParser.cmdString := S;
+    DSSPrime.AuxParser.cmdString := S;
     Count := 0;
     repeat
-        ParamName := AuxParser.NextParam;
-        Param := AuxParser.StrValue;
+        ParamName := DSSPrime.AuxParser.NextParam;
+        Param := DSSPrime.AuxParser.StrValue;
         if Length(Param) > 0 then
             Inc(Count);
     until Length(Param) = 0;
@@ -1350,11 +1350,11 @@ begin
     ReallocMem(iarray, sizeof(iarray^[1]) * count);
 
 // Parse again for real
-    AuxParser.cmdString := S;
+    DSSPrime.AuxParser.cmdString := S;
     for i := 1 to Count do
     begin
-        ParamName := AuxParser.NextParam;
-        iarray^[i] := AuxParser.IntValue;
+        ParamName := DSSPrime.AuxParser.NextParam;
+        iarray^[i] := DSSPrime.AuxParser.IntValue;
     end;
 
 
@@ -2084,13 +2084,13 @@ begin
         AssignFile(F, ClassName + '.dss');
         Rewrite(F);
         DSSPrime.SavedFileList.Add(ClassName + '.dss');
-        DSS_Class.First;   // Sets ActiveDSSObject
+        DSS_Class.First;   // Sets DSSPrime.ActiveDSSObject
         WriteActiveDSSObject(F, 'Edit'); // Write First Vsource out as an Edit
         while DSS_Class.Next > 0 do
         begin
        // Skip Cktelements that have been checked before and written out by
        // something else
-            if TDSSCktElement(ActiveDSSObject).HasBeenSaved then
+            if TDSSCktElement(DSSPrime.ActiveDSSObject).HasBeenSaved then
                 Continue;
        // Skip disabled circuit elements; write all general DSS objects
             WriteActiveDSSObject(F, 'New');    // sets HasBeenSaved := TRUE
@@ -2132,13 +2132,13 @@ begin
 
         Nrecords := 0;
 
-        DSS_Class.First;   // Sets ActiveDSSObject
+        DSS_Class.First;   // Sets DSSPrime.ActiveDSSObject
         repeat
 
        // Skip Cktelements that have been checked before and written out by
        // something else
             if IsCktElement then
-                with TDSSCktElement(ActiveDSSObject) do
+                with TDSSCktElement(DSSPrime.ActiveDSSObject) do
                     if HasBeenSaved or (not Enabled) then
                         Continue;
 
@@ -2185,20 +2185,20 @@ var
 
 
 begin
-    ParClass := ActiveDSSObject.ParentClass;
-  //  Write(F, NeworEdit, ' "', ParClass.Name + '.' + ActiveDSSObject.Name,'"');
-    Write(F, Format('%s "%s.%s"', [NeworEdit, ParClass.Name, ActiveDSSObject.Name]));
+    ParClass := DSSPrime.ActiveDSSObject.ParentClass;
+  //  Write(F, NeworEdit, ' "', ParClass.Name + '.' + DSSPrime.ActiveDSSObject.Name,'"');
+    Write(F, Format('%s "%s.%s"', [NeworEdit, ParClass.Name, DSSPrime.ActiveDSSObject.Name]));
 
-    ActiveDSSObject.SaveWrite(F);
+    DSSPrime.ActiveDSSObject.SaveWrite(F);
 
 
    // Handle disabled circuit elements;   Modified to allow applets to save disabled elements 12-28-06
-    if (ActiveDSSObject.DSSObjType and ClassMask) <> DSS_Object then
-        if not TDSSCktElement(ActiveDSSObject).Enabled then
+    if (DSSPrime.ActiveDSSObject.DSSObjType and ClassMask) <> DSS_Object then
+        if not TDSSCktElement(DSSPrime.ActiveDSSObject).Enabled then
             Write(F, ' ENABLED=NO');
     Writeln(F); // Terminate line
 
-    ActiveDSSObject.HasBeenSaved := TRUE;
+    DSSPrime.ActiveDSSObject.HasBeenSaved := TRUE;
 
 end;
 
@@ -2260,8 +2260,8 @@ begin
         end;
     end;
 
-    SaveDelims := AuxParser.Delimiters;
-    AuxParser.Delimiters := ',';
+    SaveDelims := DSSPrime.AuxParser.Delimiters;
+    DSSPrime.AuxParser.Delimiters := ',';
     ArraySize := 10;
     FieldLength := Allocmem(Sizeof(Integer) * ArraySize);
 
@@ -2270,11 +2270,11 @@ begin
         while not Eof(Fin) do
         begin
             Readln(Fin, line);
-            AuxParser.CmdString := Line;  // Load the parsr
+            DSSPrime.AuxParser.CmdString := Line;  // Load the parsr
             FieldNum := 0;
             repeat
-                AuxParser.NextParam;
-                Field := Auxparser.StrValue;
+                DSSPrime.AuxParser.NextParam;
+                Field := DSSPrime.AuxParser.StrValue;
                 FieldLen := Length(Field);
                 if pos(' ', Field) > 0 then
                     FieldLen := FieldLen + 2;
@@ -2302,11 +2302,11 @@ begin
         while not EOF(Fin) do
         begin
             Readln(Fin, Line);
-            AuxParser.CmdString := Line;  // Load the parser
+            DSSPrime.AuxParser.CmdString := Line;  // Load the parser
             FieldNum := 0;
             repeat
-                AuxParser.NextParam;
-                Field := Auxparser.StrValue;
+                DSSPrime.AuxParser.NextParam;
+                Field := DSSPrime.AuxParser.StrValue;
                 if pos(' ', Field) > 0 then
                     Field := '"' + Field + '"';  // add quotes if a space in field
                 FieldLen := Length(Field);
@@ -2329,7 +2329,7 @@ begin
         CloseFile(Fout);
 
         Reallocmem(FieldLength, 0);
-        AuxParser.Delimiters := SaveDelims;
+        DSSPrime.AuxParser.Delimiters := SaveDelims;
 
     end;
 
@@ -2340,8 +2340,8 @@ end;
 function DoExecutiveCommand(const s: String): Integer;
 
 begin
-    DSSExecutive.command := S;
-    Result := DSSExecutive.Error;
+    DSSPrime.DSSExecutive.command := S;
+    Result := DSSPrime.DSSExecutive.Error;
 end;
 
 
@@ -3213,7 +3213,7 @@ end;
 function MakeNewCktElemName(const oldname: String): String;
 begin
     SetObject(OldName);  // set opject active
-    with ActiveDSSObject do
+    with DSSPrime.ActiveDSSObject do
         Result := Format('%s.%s%d', [ParentClass.Name, copy(ParentClass.Name, 1, 4), ClassIndex]);
 end;
 

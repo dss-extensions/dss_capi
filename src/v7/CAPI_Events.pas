@@ -6,7 +6,7 @@ interface
 
 uses
     CAPI_Utils,
-    AxCtrls,
+    // AxCtrls,
     Classes;
 
 implementation

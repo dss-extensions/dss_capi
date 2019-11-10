@@ -45,8 +45,6 @@ interface
 USES
       PointerList, Command, DSSClass;
 
-
-
 TYPE
      TExecutive = class(TObject)
      private
@@ -78,10 +76,6 @@ TYPE
 
      end;
 
-VAR
-
-    DSSExecutive:TExecutive;
-
 
 implementation
 
@@ -98,13 +92,8 @@ Begin
      Inherited Create;
 
      DSS := dss;
-     
-     if DSS = NIL then
-     begin
-          // TODO: tweak/remove this
-          DSS := TDSS.Create;
-          DSSPrime := DSS;
-     end;
+     // DSS.DSSExecutive := self;
+      
      // Exec Commands
      CommandList := TCommandList.Create(ExecCommand);
 
@@ -142,6 +131,9 @@ End;
 Destructor TExecutive.Destroy;
 
 Begin
+    If RecorderOn Then 
+        RecorderOn := FALSE;
+
 {$IFNDEF DSS_CAPI}
     {Write some global Variables to Registry}
      WriteDSS_Registry;

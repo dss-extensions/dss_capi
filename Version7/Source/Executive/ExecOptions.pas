@@ -454,7 +454,7 @@ begin
             57:
                 SetDataPath(Param);  // Set a legal data path
             67:
-                DSSExecutive.RecorderOn := InterpretYesNo(Param);
+                DSSPrime.DSSExecutive.RecorderOn := InterpretYesNo(Param);
             73:
                 DSSPrime.DefaultBaseFreq := Parser.DblValue;
             102:
@@ -683,7 +683,7 @@ begin
             66:
                 DSSPrime.ActiveCircuit.LogEvents := InterpretYesNo(Param);
             67:
-                DSSExecutive.RecorderOn := InterpretYesNo(Param);
+                DSSPrime.DSSExecutive.RecorderOn := InterpretYesNo(Param);
             68:
                 DSSPrime.EnergyMeterClass.Do_OverloadReport := InterpretYesNo(Param);
             69:
@@ -1020,7 +1020,7 @@ begin
                     else
                         AppendGlobalResult('No');
                 67:
-                    if DSSExecutive.RecorderON then
+                    if DSSPrime.DSSExecutive.RecorderON then
                         AppendGlobalResult('Yes')
                     else
                         AppendGlobalResult('No');

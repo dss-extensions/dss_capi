@@ -272,7 +272,7 @@ begin
     with ActiveCircuit do
     begin
         ActiveCktElement := TPCPrototypeObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 

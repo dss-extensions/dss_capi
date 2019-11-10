@@ -588,7 +588,7 @@ begin
     with ActiveCircuit do
     begin
         ActiveCktElement := TGeneric5Obj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 
 end;

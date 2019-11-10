@@ -503,7 +503,7 @@ Begin
     WITH DSS.ActiveCircuit Do
     Begin
       ActiveCktElement := TInvControlObj.Create(Self, ObjName);
-      Result := AddObjectToList(ActiveDSSObject);
+      Result := AddObjectToList(DSS.ActiveDSSObject);
     End;
 End;
 

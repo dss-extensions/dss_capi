@@ -230,7 +230,7 @@ begin
     with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TSensorObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 

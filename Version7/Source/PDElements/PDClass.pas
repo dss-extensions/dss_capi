@@ -40,7 +40,8 @@ uses
     PDElement,
     ParserDel,
     DSSGlobals,
-    Utilities;
+    Utilities,
+    DSSHelper;
 
 constructor TPDClass.Create(dss: TDSS);
 begin
@@ -120,7 +121,7 @@ begin
 
     OtherPDObj := TPDElement(OtherObj);
 
-    with TPDElement(ActiveDSSObject) do
+    with TPDElement(DSS.ActiveDSSObject) do
     begin
         NormAmps := OtherPDObj.NormAmps;
         EmergAmps := OtherPDObj.EmergAmps;

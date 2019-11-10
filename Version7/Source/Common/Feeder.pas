@@ -174,7 +174,7 @@ begin
         else
         begin
             ActiveCktElement := TFeederObj.Create(Self, ObjName);
-            Result := AddObjectToList(ActiveDSSObject);
+            Result := AddObjectToList(DSS.ActiveDSSObject);
             DSS.ActiveCircuit.AddCktElement(Result);
       // done here because feeder objects are instantiated from energy meters
         end;

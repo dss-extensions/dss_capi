@@ -151,8 +151,8 @@ begin
    // create a new object of this class and add to list
     with DSS.ActiveCircuit do
     begin
-        ActiveDSSObject := TSpectrumObj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        DSS.ActiveDSSObject := TSpectrumObj.Create(Self, ObjName);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 end;
 
@@ -170,7 +170,7 @@ begin
     Result := 0;
   // continue parsing with contents of Parser
     DSS.ActiveSpectrumObj := ElementList.Active;
-    ActiveDSSObject := DSS.ActiveSpectrumObj;
+    DSS.ActiveDSSObject := DSS.ActiveSpectrumObj;
 
     with DSS.ActiveSpectrumObj do
     begin
@@ -376,8 +376,8 @@ begin
             while (not EOF(F)) and (i < NumHarm) do
             begin
                 Inc(i);
-                Readln(F, S);  // Use Auxparser, which allows for formats
-                with AuxParser do
+                Readln(F, S);  // Use DSS.AuxParser, which allows for formats
+                with DSS.AuxParser do
                 begin
                     CmdString := S;
                     NextParam;

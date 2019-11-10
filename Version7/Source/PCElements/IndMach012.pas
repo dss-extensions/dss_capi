@@ -463,7 +463,7 @@ begin
     with DSS.ActiveCircuit do
     begin
         ActiveCktElement := TIndMach012Obj.Create(Self, ObjName);
-        Result := AddObjectToList(ActiveDSSObject);
+        Result := AddObjectToList(DSS.ActiveDSSObject);
     end;
 
 end;
