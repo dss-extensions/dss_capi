@@ -389,7 +389,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('CapControl "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'CapControl "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -462,7 +462,7 @@ begin
     pCapControl := DSSPrime.ActiveCircuit.CapControls.Get(Value);
     if pCapControl = NIL then
     begin
-        DoSimpleMsg('Invalid CapControl index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid CapControl index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pCapControl;

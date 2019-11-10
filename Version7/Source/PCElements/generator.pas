@@ -607,8 +607,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if (Length(ParamName) = 0) then
@@ -626,17 +626,17 @@ begin
                     0:
                         DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
                     1:
-                        NPhases := Parser.Intvalue; // num phases
+                        NPhases := DSS.Parser.Intvalue; // num phases
                     2:
                         SetBus(1, param);
                     3:
-                        PresentkV := Parser.DblValue;
+                        PresentkV := DSS.Parser.DblValue;
                     4:
-                        kWBase := Parser.DblValue;
+                        kWBase := DSS.Parser.DblValue;
                     5:
-                        PFNominal := Parser.DblValue;
+                        PFNominal := DSS.Parser.DblValue;
                     6:
-                        GenModel := Parser.IntValue;
+                        GenModel := DSS.Parser.IntValue;
                     7:
                         YearlyShape := Param;
                     8:
@@ -646,11 +646,11 @@ begin
                     10:
                         DispatchMode := InterpretDispMode(Param);
                     11:
-                        DispatchValue := Parser.DblValue;
+                        DispatchValue := DSS.Parser.DblValue;
                     12:
                         InterpretConnection(Param);
                     13:
-                        Presentkvar := Parser.DblValue;
+                        Presentkvar := DSS.Parser.DblValue;
                     14:
                         DoSimpleMsg(DSS, 'Rneut property has been deleted. Use external impedance.', 5611);
                     15:
@@ -661,52 +661,52 @@ begin
                         else
                             IsFixed := FALSE;
                     17:
-                        GenClass := Parser.IntValue;
+                        GenClass := DSS.Parser.IntValue;
                     18:
-                        Vpu := Parser.DblValue;
+                        Vpu := DSS.Parser.DblValue;
                     19:
-                        kvarMax := Parser.DblValue;
+                        kvarMax := DSS.Parser.DblValue;
                     20:
-                        kvarMin := Parser.DblValue;
+                        kvarMin := DSS.Parser.DblValue;
                     21:
-                        PVFactor := Parser.DblValue;  //decelaration factor
+                        PVFactor := DSS.Parser.DblValue;  //decelaration factor
                     22:
                         DebugTrace := InterpretYesNo(Param);
                     23:
-                        VMinPu := Parser.DblValue;
+                        VMinPu := DSS.Parser.DblValue;
                     24:
-                        VMaxPu := Parser.DblValue;
+                        VMaxPu := DSS.Parser.DblValue;
                     25:
                         FForcedON := InterpretYesNo(Param);
                     26:
-                        GenVars.kVArating := Parser.DblValue;
+                        GenVars.kVArating := DSS.Parser.DblValue;
                     27:
-                        GenVars.kVArating := Parser.DblValue * 1000.0;  // 'MVA';
+                        GenVars.kVArating := DSS.Parser.DblValue * 1000.0;  // 'MVA';
                     28:
-                        GenVars.puXd := Parser.DblValue;
+                        GenVars.puXd := DSS.Parser.DblValue;
                     29:
-                        GenVars.puXdp := Parser.DblValue;
+                        GenVars.puXdp := DSS.Parser.DblValue;
                     30:
-                        GenVars.puXdpp := Parser.DblValue;
+                        GenVars.puXdpp := DSS.Parser.DblValue;
                     31:
-                        GenVars.Hmass := Parser.DblValue;
+                        GenVars.Hmass := DSS.Parser.DblValue;
                     32:
-                        GenVars.Dpu := Parser.DblValue;
+                        GenVars.Dpu := DSS.Parser.DblValue;
                     33:
-                        UserModel.Name := Parser.StrValue;  // Connect to user written models
+                        UserModel.Name := DSS.Parser.StrValue;  // Connect to user written models
                     34:
                         if UserModel.Exists then
-                            UserModel.Edit := Parser.StrValue;  // Send edit string to user model
+                            UserModel.Edit := DSS.Parser.StrValue;  // Send edit string to user model
                     35:
-                        ShaftModel.Name := Parser.StrValue;
+                        ShaftModel.Name := DSS.Parser.StrValue;
                     36:
-                        ShaftModel.Edit := Parser.StrValue;
+                        ShaftModel.Edit := DSS.Parser.StrValue;
                     37:
-                        DutyStart := Parser.DblValue;
+                        DutyStart := DSS.Parser.DblValue;
                     38:
                         ForceBalanced := InterpretYesNo(Param);
                     39:
-                        Genvars.XRdp := Parser.DblValue;  // X/R for dynamics model
+                        Genvars.XRdp := DSS.Parser.DblValue;  // X/R for dynamics model
 
                 else
            // Inherited parameters
@@ -774,8 +774,8 @@ begin
                         kVANotSet := FALSE;
                 end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -1010,8 +1010,8 @@ begin
     PublicDataStruct := pointer(@Genvars);
     PublicDataSize := SizeOf(TGeneratorVars);
 
-    UserModel := TGenUserModel.Create(@Genvars);
-    ShaftModel := TGenUserModel.Create(@Genvars);
+    UserModel := TGenUserModel.Create(DSS, @Genvars);
+    ShaftModel := TGenUserModel.Create(DSS, @Genvars);
 
     DispatchValue := 0.0;   // Follow curves
 
@@ -3060,7 +3060,7 @@ begin
             S := S + Format(' MVA=%-.5g  ', [genvars.kvarating / 1000.0 / Fnphases]);
     end;
 
-    Parser.CmdString := S;
+    DSS.Parser.CmdString := S;
     Edit;
 
     inherited;

@@ -223,8 +223,8 @@ Begin
   Result := 0;
   WITH DSS.ActiveExpControlObj Do Begin
     ParamPointer := 0;
-    ParamName := Parser.NextParam;
-    Param := Parser.StrValue;
+    ParamName := DSS.Parser.NextParam;
+    Param := DSS.Parser.StrValue;
     WHILE Length(Param)>0 Do Begin
       IF Length(ParamName) = 0 THEN Inc(ParamPointer)
       ELSE ParamPointer := CommandList.GetCommand(ParamName);
@@ -239,23 +239,23 @@ Begin
            FPVSystemPointerList.Clear; // clear this for resetting on first sample
            FListSize := FPVSystemNameList.count;
            end;
-        2: If Parser.DblValue >= 0 then FVregInit := Parser.DblValue;
-        3: If Parser.DblValue > 0 then FSlope := Parser.DblValue;
-        4: If Parser.DblValue >= 0 then FVregTau := Parser.DblValue; // zero means fixed Vreg
-        5: FQbias := Parser.DblValue;
-        6: If Parser.DblValue > 0 then FVregMin := Parser.DblValue;
-        7: If Parser.DblValue > 0 then FVregMax := Parser.DblValue;
-        8: If Parser.DblValue >= 0 then FQmaxLead := Parser.DblValue;
-        9: If Parser.DblValue >= 0 then FQmaxLag := Parser.DblValue;
+        2: If DSS.Parser.DblValue >= 0 then FVregInit := DSS.Parser.DblValue;
+        3: If DSS.Parser.DblValue > 0 then FSlope := DSS.Parser.DblValue;
+        4: If DSS.Parser.DblValue >= 0 then FVregTau := DSS.Parser.DblValue; // zero means fixed Vreg
+        5: FQbias := DSS.Parser.DblValue;
+        6: If DSS.Parser.DblValue > 0 then FVregMin := DSS.Parser.DblValue;
+        7: If DSS.Parser.DblValue > 0 then FVregMax := DSS.Parser.DblValue;
+        8: If DSS.Parser.DblValue >= 0 then FQmaxLead := DSS.Parser.DblValue;
+        9: If DSS.Parser.DblValue >= 0 then FQmaxLag := DSS.Parser.DblValue;
        10: ShowEventLog := InterpretYesNo(param);
-       11: FdeltaQ_factor := Parser.DblValue;
+       11: FdeltaQ_factor := DSS.Parser.DblValue;
        12: FPreferQ := InterpretYesNo(param);
       ELSE
         // Inherited parameters
         ClassEdit( DSS.ActiveExpControlObj, ParamPointer - NumPropsthisClass)
       End;
-      ParamName := Parser.NextParam;
-      Param := Parser.StrValue;
+      ParamName := DSS.Parser.NextParam;
+      Param := DSS.Parser.StrValue;
     End;
     RecalcElementData;
   End;
@@ -399,7 +399,7 @@ Begin
          Nphases := ControlledElement[i].NPhases;  // TEMC TODO - what if these are different sizes (same concern exists with InvControl)
          Nconds  := Nphases;
          if (ControlledElement[i] = nil) then
-            DoErrorMsg('ExpControl: "' + Self.Name + '"',
+            DoErrorMsg(DSS, 'ExpControl: "' + Self.Name + '"',
               'Controlled Element "' + FPVSystemNameList.Strings[i-1] + '" Not Found.',
               ' PVSystem object must be defined previously.', 361);
          if ControlledElement[i].Yorder > maxord then maxord := ControlledElement[i].Yorder;

@@ -525,12 +525,12 @@ begin
 
 {Load up the parser and process the first parameter only}
         LastCmdLine := CmdLine;
-        Parser.CmdString := LastCmdLine;  // Load up command parser
+        DSSPrime.Parser.CmdString := LastCmdLine;  // Load up command parser
         DSSPrime.LastCommandWasCompile := FALSE;
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSSPrime.Parser.NextParam;
+        Param := DSSPrime.Parser.StrValue;
         if Length(Param) = 0 then
             Exit;  // Skip blank line
 
@@ -605,15 +605,15 @@ begin
                 DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoYearlyCurvesCmd;
             72:
             begin
-                ParamName := Parser.NextParam;
-                Param := Parser.StrValue;
+                ParamName := DSSPrime.Parser.NextParam;
+                Param := DSSPrime.Parser.StrValue;
                 if SetCurrentDir(Param) then
                 begin
                     DSSPrime.CmdResult := 0;
-                    SetDataPath(Param);  // change datadirectory
+                    SetDataPath(DSSPrime, Param);  // change datadirectory
                 end
                 else
-                    DoSimpleMsg(DSS, 'Directory "' + Param + '" not found.', 282);
+                    DoSimpleMsg(DSSPrime, 'Directory "' + Param + '" not found.', 282);
             end;
             75:
                 DSSPrime.DSSExecutive.DoADosCmd;
@@ -647,7 +647,7 @@ begin
         else
             if DSSPrime.ActiveCircuit = NIL then
             begin
-                DoSimpleMsg(DSS, 'You must create a new circuit object first: "new circuit.mycktname" to execute this command.', 301);
+                DoSimpleMsg(DSSPrime, 'You must create a new circuit object first: "new circuit.mycktname" to execute this command.', 301);
                 Exit;
             end;
         end;
@@ -661,19 +661,19 @@ begin
        {If a command or no text beFORe the = sign, THEN error}
             if (Length(ParamName) = 0) or (Comparetext(paramName, 'command') = 0) then
             begin
-                DoSimpleMsg(DSS, 'Unknown Command: "' + Param + '" ' + CRLF + parser.CmdString, 302);
+                DoSimpleMsg(DSSPrime, 'Unknown Command: "' + Param + '" ' + CRLF + DSSPrime.Parser.CmdString, 302);
                 DSSPrime.CmdResult := 1;
             end
             else
             begin
                 DSSPrime.DSSExecutive.ParseObjName(ParamName, ObjName, PropName);
                 if Length(ObjName) > 0 then
-                    SetObject(ObjName);  // Set active element
+                    SetObject(DSSPrime, ObjName);  // Set active element
                 if DSSPrime.ActiveDSSObject <> NIL then
                 begin
              // rebuild command line and pass to editor
              // use quotes to ensure first parameter is interpreted OK after rebuild
-                    Parser.CmdString := PropName + '="' + Param + '" ' + Parser.Remainder;
+                    DSSPrime.Parser.CmdString := PropName + '="' + Param + '" ' + DSSPrime.Parser.Remainder;
                     DSSPrime.ActiveDSSClass.Edit;
                 end;
             end;
@@ -897,12 +897,12 @@ begin
 
     except
         On E: Exception do
-            DoErrorMsg(('ProcessCommand' + CRLF + 'Exception Raised While Processing DSS Command:' + CRLF + parser.CmdString),
+            DoErrorMsg(DSSPrime, ('ProcessCommand' + CRLF + 'Exception Raised While Processing DSS Command:' + CRLF + DSSPrime.Parser.CmdString),
                 E.Message,
                 'Error in command string or circuit data.', 303);
     end;
 
-    DSS.ParserVars.Add('@result', DSSPrime.GlobalResult)
+    DSSPrime.ParserVars.Add('@result', DSSPrime.GlobalResult)
 
 end;
 

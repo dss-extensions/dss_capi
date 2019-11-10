@@ -257,7 +257,7 @@ begin
                                                                     while ShuntElement <> NIL do
                                                                     begin
                                                                         DSS.Parser.CmdString := 'bus1="' + DSS.ActiveCircuit.BusList.Get(PresentBranch.ToBusReference) + GetNodeString(ShuntElement.GetBus(1)) + '"';
-                          //   {****} WriteDLLDebugFile(Format('Moving Shunt.%s from %s to %s ',[ShuntElement.Name, ShuntElement.GetBus(1), Parser.CmdString ]));
+                          //   {****} WriteDLLDebugFile(Format('Moving Shunt.%s from %s to %s ',[ShuntElement.Name, ShuntElement.GetBus(1), DSS.Parser.CmdString ]));
                                                                         ShuntElement.Edit;
                                                                         ShuntElement := ParentNode.NextShuntObject;
                                                                     end;  {While}
@@ -308,7 +308,7 @@ begin
                                                             while ShuntElement <> NIL do
                                                             begin
                                                                 DSS.Parser.CmdString := 'bus1="' + DSS.ActiveCircuit.BusList.Get(PresentBranch.FromBusReference) + GetNodeString(ShuntElement.GetBus(1)) + '"';
-                  //  {****} WriteDLLDebugFile(Format('Moving Shunt.%s from %s to %s ',[ShuntElement.Name, ShuntElement.GetBus(1), Parser.CmdString ]));
+                  //  {****} WriteDLLDebugFile(Format('Moving Shunt.%s from %s to %s ',[ShuntElement.Name, ShuntElement.GetBus(1), DSS.Parser.CmdString ]));
                                                                 ShuntElement.Edit;
                                                                 ShuntElement := PresentBranch.NextShuntObject;
                                                             end;  {While}

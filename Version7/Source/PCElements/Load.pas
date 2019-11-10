@@ -624,8 +624,8 @@ begin
     with DSS.ActiveLoadObj do
     begin
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while (Length(Param) > 0) do
         begin
             if (Length(ParamName) = 0) then
@@ -640,17 +640,17 @@ begin
                 TLoadProp.INVALID:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 580);
                 TLoadProp.phases:
-                    Nphases := Parser.Intvalue; // num phases
+                    Nphases := DSS.Parser.Intvalue; // num phases
                 TLoadProp.bus1:
                     SetBus(1, param);
                 TLoadProp.kV:
-                    kVLoadBase := Parser.DblValue;
+                    kVLoadBase := DSS.Parser.DblValue;
                 TLoadProp.kW:
-                    kWBase := Parser.DblValue;
+                    kWBase := DSS.Parser.DblValue;
                 TLoadProp.pf:
-                    PFNominal := Parser.DblValue;
+                    PFNominal := DSS.Parser.DblValue;
                 TLoadProp.model:
-                    FLoadModel := TLoadModel(Parser.IntValue);
+                    FLoadModel := TLoadModel(DSS.Parser.IntValue);
                 TLoadProp.yearly:
                     YearlyShape := Param;
                 TLoadProp.daily:
@@ -662,11 +662,11 @@ begin
                 TLoadProp.conn:
                     InterpretConnection(Param);
                 TLoadProp.kvar:
-                    kvarBase := Parser.DblValue;
+                    kvarBase := DSS.Parser.DblValue;
                 TLoadProp.Rneut:
-                    Rneut := Parser.DblValue;
+                    Rneut := DSS.Parser.DblValue;
                 TLoadProp.Xneut:
-                    Xneut := Parser.DblValue;
+                    Xneut := DSS.Parser.DblValue;
                 TLoadProp.status:
                     case lowercase(Param)[1] of
                         'f':
@@ -684,51 +684,51 @@ begin
                         ExemptFromLDCurve := FALSE;
                     end;
                 TLoadProp.cls:
-                    LoadClass := Parser.IntValue;
+                    LoadClass := DSS.Parser.IntValue;
                 TLoadProp.Vminpu:
-                    VMinPu := Parser.DblValue;
+                    VMinPu := DSS.Parser.DblValue;
                 TLoadProp.Vmaxpu:
-                    VMaxPu := Parser.DblValue;
+                    VMaxPu := DSS.Parser.DblValue;
                 TLoadProp.Vminnorm:
-                    VminNormal := Parser.DblValue;
+                    VminNormal := DSS.Parser.DblValue;
                 TLoadProp.Vminemerg:
-                    VminEmerg := Parser.DblValue;
+                    VminEmerg := DSS.Parser.DblValue;
                 TLoadProp.xfkVA:
-                    ConnectedkVA := Parser.DblValue;
+                    ConnectedkVA := DSS.Parser.DblValue;
                 TLoadProp.allocationfactor:
-                    kVAAllocationFactor := Parser.DblValue;
+                    kVAAllocationFactor := DSS.Parser.DblValue;
                 TLoadProp.kVA:
-                    kVABase := Parser.DblValue;
+                    kVABase := DSS.Parser.DblValue;
                 TLoadProp.pctmean:
-                    FpuMean := Parser.DblValue / 100.0;
+                    FpuMean := DSS.Parser.DblValue / 100.0;
                 TLoadProp.pctstddev:
-                    FpuStdDev := Parser.DblValue / 100.0;
+                    FpuStdDev := DSS.Parser.DblValue / 100.0;
                 TLoadProp.CVRwatts:
-                    FCVRwattFactor := Parser.DblValue;
+                    FCVRwattFactor := DSS.Parser.DblValue;
                 TLoadProp.CVRvars:
-                    FCVRvarFactor := Parser.DblValue;
+                    FCVRvarFactor := DSS.Parser.DblValue;
                 TLoadProp.kwh:
-                    kWh := Parser.DblValue;
+                    kWh := DSS.Parser.DblValue;
                 TLoadProp.kwhdays:
-                    kWhdays := Parser.DblValue;
+                    kWhdays := DSS.Parser.DblValue;
                 TLoadProp.Cfactor:
-                    Cfactor := Parser.DblValue;
+                    Cfactor := DSS.Parser.DblValue;
                 TLoadProp.CVRcurve:
                     CVRShape := Param;
                 TLoadProp.NumCust:
-                    NumCustomers := Parser.IntValue;
+                    NumCustomers := DSS.Parser.IntValue;
                 TLoadProp.ZIPV:
-                    Parser.ParseAsVector(7, @ZIPV[1]);
+                    DSS.Parser.ParseAsVector(7, @ZIPV[1]);
                 TLoadProp.pctSeriesRL:
-                    puSeriesRL := Parser.DblValue / 100.0;
+                    puSeriesRL := DSS.Parser.DblValue / 100.0;
                 TLoadProp.RelWeight:
-                    RelWeighting := Parser.DblValue;
+                    RelWeighting := DSS.Parser.DblValue;
                 TLoadProp.Vlowpu:
-                    VLowpu := Parser.DblValue;
+                    VLowpu := DSS.Parser.DblValue;
                 TLoadProp.puXharm:
-                    FpuXHarm := Parser.DblValue;  // 0 means not set
+                    FpuXHarm := DSS.Parser.DblValue;  // 0 means not set
                 TLoadProp.XRharm:
-                    FXRharmRatio := Parser.DblValue;
+                    FXRharmRatio := DSS.Parser.DblValue;
             end
             else
                 // Inherited edits
@@ -797,8 +797,8 @@ begin
                     CVRShapeObj := DSS.LoadShapeClass.Find(CVRshape);
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -2559,7 +2559,7 @@ begin
         S := S + Format(' xfkVA=%-.5g  ', [FConnectedkVA / 3.0]);
 
 
-    Parser.CmdString := S;
+    DSS.Parser.CmdString := S;
     Edit;
 
     inherited;

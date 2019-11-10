@@ -1313,7 +1313,7 @@ Begin
              for dbg := 0 to 1 do
              Begin
                BusName          :=  Inc_Mat_Cols[Active_Cols[dbg]];
-               SetActiveBus(BusName);           // Activates the Bus
+               SetActiveBus(DSS, BusName);           // Activates the Bus
                pBus             :=  Buses^[ActiveBusIndex];
                jj               :=  1;
          // this code so nodes come out in order from smallest to larges
@@ -1333,7 +1333,7 @@ Begin
              Terminal         :=  'terminal=' + inttostr(jj + 1);
 
              PConn_Names[i]   :=  BusName;
-             SetActiveBus(BusName);           // Activates the Bus
+             SetActiveBus(DSS, BusName);           // Activates the Bus
              pBus             :=  Buses^[ActiveBusIndex];
 
              for jj := 1 to 3 do
@@ -1358,7 +1358,7 @@ Begin
           Begin
              BusName          :=  Inc_Mat_Cols[0];
              PConn_Names[i]   :=  BusName;
-             SetActiveBus(BusName);           // Activates the Bus
+             SetActiveBus(DSS, BusName);           // Activates the Bus
              pBus             :=  Buses^[ActiveBusIndex];
              // Stores the voltages for the Reference bus first
              for jj := 1 to 3 do
@@ -1379,10 +1379,10 @@ Begin
     else
     Begin
       if (TextCmd = '**Error**') then
-        DoErrorMsg('Tear_Circuit','MeTIS cannot start.',
+        DoErrorMsg(DSS, 'Tear_Circuit','MeTIS cannot start.',
                    'The MeTIS program (pmetis.exe/kmetis.exe) cannot be executed/found.', 7006)
       else
-        DoErrorMsg('Tear_Circuit','The graph file is incorrect.',
+        DoErrorMsg(DSS, 'Tear_Circuit','The graph file is incorrect.',
                    'MeTIS cannot process the graph file because is incorrect' +
                    '(The number of edges is incorrect).', 7007);
     End;
@@ -1403,7 +1403,7 @@ BEGIN
       np    := NPhases;
       Ncond := NConds;
 
-      Parser.Token := FirstBus;     // use parser functions to decode
+      DSS.Parser.Token := FirstBus;     // use parser functions to decode
       FOR iTerm := 1 to Nterms DO
         BEGIN
            NodesOK := TRUE;
@@ -1415,7 +1415,7 @@ BEGIN
            For i := np + 1 to NCond DO NodeBuffer^[i] := 0;
 
            // Parser will override bus connection if any specified
-           BusName :=  Parser.ParseAsBusName(NNodes, NodeBuffer);
+           BusName :=  DSS.Parser.ParseAsBusName(NNodes, NodeBuffer);
 
            // Check for error in node specification
            For j := 1 to NNodes Do
@@ -1424,11 +1424,11 @@ BEGIN
                Begin
                    retval := DSSMessageDlg('Error in Node specification for Element: "'
                      +ParentClass.Name+'.'+Name+'"'+CRLF+
-                     'Bus Spec: "'+Parser.Token+'"',FALSE);
+                     'Bus Spec: "'+DSS.Parser.Token+'"',FALSE);
                    NodesOK := FALSE;
                    If  retval=-1 Then Begin
                        AbortBusProcess := TRUE;
-                       AppendGlobalresult('Aborted bus process.');
+                       AppendGlobalresult(DSS, 'Aborted bus process.');
                        Exit
                    End;
                    Break;
@@ -1445,7 +1445,7 @@ BEGIN
              ActiveTerminal.BusRef := AddBus(BusName,   Ncond);
              SetNodeRef(iTerm, NodeBuffer);  // for active circuit
            End;
-           Parser.Token := NextBus;
+           DSS.Parser.Token := NextBus;
          END;
      END;
 END;
@@ -1479,7 +1479,7 @@ BEGIN
 
 // Trap error in bus name
     IF Length(BusName) = 0 THEN BEGIN  // Error in busname
-       DoErrorMsg('TDSSCircuit.AddBus', 'BusName for Object "' + ActiveCktElement.Name + '" is null.',
+       DoErrorMsg(DSS, 'TDSSCircuit.AddBus', 'BusName for Object "' + ActiveCktElement.Name + '" is null.',
                   'Error in definition of object.', 424);
        For i := 1 to ActiveCktElement.NConds DO NodeBuffer^[i] := 0;
        Result := 0;

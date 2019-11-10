@@ -526,8 +526,8 @@ Begin
   WITH DSS.ActiveInvControlObj Do Begin
 
      ParamPointer := 0;
-     ParamName := Parser.NextParam;
-     Param := Parser.StrValue;
+     ParamName := DSS.Parser.NextParam;
+     Param := DSS.Parser.StrValue;
      WHILE Length(Param)>0 Do Begin
          IF Length(ParamName) = 0 THEN Inc(ParamPointer)
          ELSE ParamPointer := CommandList.GetCommand(ParamName);
@@ -539,22 +539,22 @@ Begin
             0: DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
             1: InterpretTStringListArray(Param, FPVSystemNameList);
             2: Begin
-                   If      CompareTextShortest(Parser.StrValue, 'voltvar')= 0 Then
+                   If      CompareTextShortest(DSS.Parser.StrValue, 'voltvar')= 0 Then
                     Begin
                       ControlMode := 'VOLTVAR';
                       CombiControlMode := '';
                     End
-                   Else If CompareTextShortest(Parser.StrValue, 'voltwatt')= 0 Then
+                   Else If CompareTextShortest(DSS.Parser.StrValue, 'voltwatt')= 0 Then
                     Begin
                       ControlMode := 'VOLTWATT';
                       CombiControlMode := '';
                     End
-                   Else If CompareTextShortest(Parser.StrValue, 'dynamicreaccurr')= 0 Then
+                   Else If CompareTextShortest(DSS.Parser.StrValue, 'dynamicreaccurr')= 0 Then
                     Begin
                       ControlMode := 'DYNAMICREACCURR';
                       CombiControlMode := '';
                     End
-                   Else If CompareTextShortest(Parser.StrValue, 'fixedpf')= 0 Then
+                   Else If CompareTextShortest(DSS.Parser.StrValue, 'fixedpf')= 0 Then
                     Begin
                       ControlMode := 'FIXEDPF';
                       CombiControlMode := '';
@@ -571,12 +571,12 @@ Begin
                End;
 
             3: Begin
-                   If      CompareTextShortest(Parser.StrValue, 'vv_vw')= 0 Then
+                   If      CompareTextShortest(DSS.Parser.StrValue, 'vv_vw')= 0 Then
                     Begin
                       ControlMode := '';
                       CombiControlMode := 'VV_VW';
                     End
-                   Else If CompareTextShortest(Parser.StrValue, 'vv_drc')= 0 Then
+                   Else If CompareTextShortest(DSS.Parser.StrValue, 'vv_drc')= 0 Then
                     Begin
                       ControlMode := '';
                       CombiControlMode := 'VV_DRC';
@@ -595,7 +595,7 @@ Begin
 
 
             4: Begin
-                  Fvvc_curvename := Parser.StrValue;
+                  Fvvc_curvename := DSS.Parser.StrValue;
                   if Length(Fvvc_curvename) > 0 then
                     begin
                       Fvvc_curve := GetXYCurve(Fvvc_curvename, 'VOLTVAR');
@@ -603,20 +603,20 @@ Begin
                     end;
                End;
             5: Begin
-                  if(Parser.DblValue > 0.0) THEN DoSimpleMsg(DSS, 'Hysteresis offset should be a negative value, or 0 "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 1364)
+                  if(DSS.Parser.DblValue > 0.0) THEN DoSimpleMsg(DSS, 'Hysteresis offset should be a negative value, or 0 "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 1364)
                   else
-                    Fvvc_curveOffset := Parser.DblValue;
+                    Fvvc_curveOffset := DSS.Parser.DblValue;
                End;
 
             6: Begin
-                 If CompareTextShortest(Parser.StrValue, 'rated') = 0 then FVoltage_CurveX_ref := 0
-                 Else If CompareTextShortest(Parser.StrValue, 'avg')= 0 then FVoltage_CurveX_ref := 1
-                 Else If CompareTextShortest(Parser.StrValue, 'ravg')= 0 then FVoltage_CurveX_ref := 2
+                 If CompareTextShortest(DSS.Parser.StrValue, 'rated') = 0 then FVoltage_CurveX_ref := 0
+                 Else If CompareTextShortest(DSS.Parser.StrValue, 'avg')= 0 then FVoltage_CurveX_ref := 1
+                 Else If CompareTextShortest(DSS.Parser.StrValue, 'ravg')= 0 then FVoltage_CurveX_ref := 2
                End;
 
             7: FRollAvgWindowLength := InterpretAvgVWindowLen(Param);
             8: Begin
-                  Fvoltwatt_curvename := Parser.StrValue;
+                  Fvoltwatt_curvename := DSS.Parser.StrValue;
                   if Length(Fvoltwatt_curvename) > 0 then
                     begin
                       Fvoltwatt_curve := GetXYCurve(Fvoltwatt_curvename, 'VOLTWATT');
@@ -624,7 +624,7 @@ Begin
                     end;
                End;
             9: Begin
-                  FDbVMin := Parser.DblValue;
+                  FDbVMin := DSS.Parser.DblValue;
                   if(FDbVMax > 0.0) and (FDbVmin > FDbVMax) then
                     begin
                     DoSimpleMsg(DSS, 'Minimum dead-band voltage value should be less than the maximum dead-band voltage value.  Value set to 0.0 "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 1365);
@@ -632,7 +632,7 @@ Begin
                     end;
                End;
             10: Begin
-                  FDbVMax := Parser.DblValue;
+                  FDbVMax := DSS.Parser.DblValue;
                   if(FDbVMin > 0.0) and (FDbVMax < FDbVmin) then
                     begin
                     DoSimpleMsg(DSS, 'Maximum dead-band voltage value should be greater than the minimum dead-band voltage value.  Value set to 0.0 "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 1366);
@@ -640,40 +640,40 @@ Begin
                     end;
                End;
 
-            11: FArGraLowV := Parser.DblValue;
-            12: FArGraHiV := Parser.DblValue;
+            11: FArGraLowV := DSS.Parser.DblValue;
+            12: FArGraHiV := DSS.Parser.DblValue;
             13: FDRCRollAvgWindowLength := InterpretDRCAvgVWindowLen(Param);
-            14: FdeltaQ_factor := Parser.DblValue;
-            15: FVoltageChangeTolerance := Parser.DblValue;
-            16: FVarChangeTolerance := Parser.DblValue;
+            14: FdeltaQ_factor := DSS.Parser.DblValue;
+            15: FVoltageChangeTolerance := DSS.Parser.DblValue;
+            16: FVarChangeTolerance := DSS.Parser.DblValue;
             17: Begin
-                   If      CompareTextShortest(Parser.StrValue, 'pmpppu')= 0         Then  FVoltwattYAxis := 1
-                   Else If CompareTextShortest(Parser.StrValue, 'pavailablepu')= 0        Then  FVoltwattYAxis := 0
-                   Else If CompareTextShortest(Parser.StrValue, 'pctpmpppu')= 0        Then  FVoltwattYAxis := 2
+                   If      CompareTextShortest(DSS.Parser.StrValue, 'pmpppu')= 0         Then  FVoltwattYAxis := 1
+                   Else If CompareTextShortest(DSS.Parser.StrValue, 'pavailablepu')= 0        Then  FVoltwattYAxis := 0
+                   Else If CompareTextShortest(DSS.Parser.StrValue, 'pctpmpppu')= 0        Then  FVoltwattYAxis := 2
                 End;
 
             18: Begin
-                   If      CompareTextShortest(Parser.StrValue, 'inactive')= 0         Then  RateofChangeMode := INACTIVE
-                   Else If CompareTextShortest(Parser.StrValue, 'lpf')= 0        Then  RateofChangeMode := LPF
-                   Else If CompareTextShortest(Parser.StrValue, 'risefall')= 0 Then  RateofChangeMode := RISEFALL
+                   If      CompareTextShortest(DSS.Parser.StrValue, 'inactive')= 0         Then  RateofChangeMode := INACTIVE
+                   Else If CompareTextShortest(DSS.Parser.StrValue, 'lpf')= 0        Then  RateofChangeMode := LPF
+                   Else If CompareTextShortest(DSS.Parser.StrValue, 'risefall')= 0 Then  RateofChangeMode := RISEFALL
                End;
 
             19: Begin
-                  If Parser.DblValue > 0 then FLPFTau := Parser.DblValue
+                  If DSS.Parser.DblValue > 0 then FLPFTau := DSS.Parser.DblValue
                   else RateofChangeMode := INACTIVE;
                 End;
             20: Begin
-                  If Parser.DblValue > 0 then FRiseFallLimit := Parser.DblValue
+                  If DSS.Parser.DblValue > 0 then FRiseFallLimit := DSS.Parser.DblValue
                   else RateofChangeMode := INACTIVE;
                 End;
-            21: FdeltaP_factor := Parser.DblValue;
+            21: FdeltaP_factor := DSS.Parser.DblValue;
             22: ShowEventLog := InterpretYesNo(param);
             23: Begin
-                   If      CompareTextShortest(Parser.StrValue, 'varaval_watts')= 0         Then  FVV_ReacPower_ref := 'VARAVAL_WATTS'
-                   Else If CompareTextShortest(Parser.StrValue, 'varmax_vars')= 0        Then  FVV_ReacPower_ref := 'VARMAX_VARS'
-                   Else If CompareTextShortest(Parser.StrValue, 'varmax_watts')= 0 Then  FVV_ReacPower_ref := 'VARMAX_WATTS'
+                   If      CompareTextShortest(DSS.Parser.StrValue, 'varaval_watts')= 0         Then  FVV_ReacPower_ref := 'VARAVAL_WATTS'
+                   Else If CompareTextShortest(DSS.Parser.StrValue, 'varmax_vars')= 0        Then  FVV_ReacPower_ref := 'VARMAX_VARS'
+                   Else If CompareTextShortest(DSS.Parser.StrValue, 'varmax_watts')= 0 Then  FVV_ReacPower_ref := 'VARMAX_WATTS'
                 End;
-            24: FActivePChangeTolerance := Parser.DblValue;
+            24: FActivePChangeTolerance := DSS.Parser.DblValue;
 
          ELSE
            // Inherited parameters
@@ -689,8 +689,8 @@ Begin
 
         END;
 
-         ParamName := Parser.NextParam;
-         Param := Parser.StrValue;
+         ParamName := DSS.Parser.NextParam;
+         Param := DSS.Parser.StrValue;
      End;
 
      RecalcElementData;
@@ -1027,7 +1027,7 @@ Begin
          else
          begin
             ControlledElement[i] := nil; // PVSystem element not found
-            DoErrorMsg('InvControl: "' + Self.Name + '"',
+            DoErrorMsg(DSS, 'InvControl: "' + Self.Name + '"',
               'Controlled Element "' + FPVSystemNameList.Strings[i-1] + '" Not Found.',
               ' PVSystem object must be defined previously.', 361);
         end;

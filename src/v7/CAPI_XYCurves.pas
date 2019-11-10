@@ -100,7 +100,7 @@ begin
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         if not DSSPrime.XYCurveClass.SetActive(Value) then
-            DoSimpleMsg('XYCurve "' + Value + '" Not Found in Active Circuit.', 51008);
+            DoSimpleMsg(DSSPrime, 'XYCurve "' + Value + '" Not Found in Active Circuit.', 51008);
 
          // Still same active object if not found
     end;
@@ -122,7 +122,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51009);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51009);
         end;
     end;
 end;
@@ -147,7 +147,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51013);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51013);
         end;
     end;
 end;
@@ -173,7 +173,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51014);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51014);
         end;
     end;
 
@@ -208,7 +208,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51015);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51015);
         end;
     end;
 
@@ -229,7 +229,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51010);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51010);
         end;
     end;
 end;
@@ -249,7 +249,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51011);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51011);
         end;
     end;
 
@@ -275,7 +275,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51013);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51013);
         end;
     end;
 
@@ -302,7 +302,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51010);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51010);
         end;
     end;
 end;
@@ -321,7 +321,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51010);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51010);
         end;
     end;
 end;
@@ -355,7 +355,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51016);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51016);
         end;
     end;
 
@@ -376,7 +376,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51011);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51011);
         end;
     end;
 
@@ -397,7 +397,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51011);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51011);
         end;
     end;
 
@@ -419,7 +419,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51011);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51011);
         end;
     end;
 
@@ -441,7 +441,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51011);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51011);
         end;
     end;
 
@@ -461,7 +461,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51010);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51010);
         end;
     end;
 
@@ -481,7 +481,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51010);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51010);
         end;
     end;
 
@@ -501,7 +501,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51010);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51010);
         end;
     end;
 
@@ -521,7 +521,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active XYCurve Object found.', 51010);
+            DoSimpleMsg(DSSPrime, 'No active XYCurve Object found.', 51010);
         end;
     end;
 
@@ -535,7 +535,7 @@ end;
 procedure XYCurves_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.XYCurveClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg('Invalid XYCurve index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid XYCurve index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 procedure XYCurves_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;

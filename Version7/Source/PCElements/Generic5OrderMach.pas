@@ -650,8 +650,8 @@ begin
     begin
      // peel off the next token on the edit line
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
 
         while Length(Param) > 0 do
         begin
@@ -677,7 +677,7 @@ begin
                     0:
                         DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
                     1:
-                        NPhases := Parser.Intvalue; // num phases
+                        NPhases := DSS.Parser.Intvalue; // num phases
                     2:
                     begin
                         SetBus(1, param);      //'bus1 = 8.1.2.3'
@@ -686,38 +686,38 @@ begin
                     end;
 
                     3:
-                        PresentkV := Parser.DblValue;
+                        PresentkV := DSS.Parser.DblValue;
                     4:
                     begin
-                        kWBase := Parser.DblValue;
+                        kWBase := DSS.Parser.DblValue;
                         if (Pmax < 0) or (Pmax > kWBase * 1000) then
                             Pmax := kWBase * 1000;
                         if PQpriority = 1 then
                             Pmax := kWBase * 1000;
                     end;
 
-                    5: ; // Do nothing; read only power factor    := Parser.DblValue;
+                    5: ; // Do nothing; read only power factor    := DSS.Parser.DblValue;
                     6:
-                        InterpretConnection(Parser.StrValue);
+                        InterpretConnection(DSS.Parser.StrValue);
                     7:
-                        MachineData.kVArating := Parser.DblValue;
-            //8: MachineData.Hmass   := Parser.DblValue;
-            //9: MachineData.D       := Parser.DblValue;
+                        MachineData.kVArating := DSS.Parser.DblValue;
+            //8: MachineData.Hmass   := DSS.Parser.DblValue;
+            //9: MachineData.D       := DSS.Parser.DblValue;
                     10:
-                        P_ref1 := 1000 * Parser.DblValue;  //for phase ctrl unit kW to W
+                        P_ref1 := 1000 * DSS.Parser.DblValue;  //for phase ctrl unit kW to W
                     11:
-                        P_ref2 := 1000 * Parser.DblValue;  //for phase ctrl
+                        P_ref2 := 1000 * DSS.Parser.DblValue;  //for phase ctrl
                     12:
-                        P_ref3 := 1000 * Parser.DblValue;  //for phase ctrl
+                        P_ref3 := 1000 * DSS.Parser.DblValue;  //for phase ctrl
                     13:
-                        V_ref1 := 1000 * Parser.DblValue;  //for phase ctrl unit kV to V
+                        V_ref1 := 1000 * DSS.Parser.DblValue;  //for phase ctrl unit kV to V
                     14:
-                        V_ref2 := 1000 * Parser.DblValue;  //for phase ctrl
+                        V_ref2 := 1000 * DSS.Parser.DblValue;  //for phase ctrl
                     15:
-                        V_ref3 := 1000 * Parser.DblValue;  //for phase ctrl
+                        V_ref3 := 1000 * DSS.Parser.DblValue;  //for phase ctrl
                     16:
-                        MaxSlip := Parser.DblValue;
-                    17: ;//InterpretOption(Parser.StrValue);
+                        MaxSlip := DSS.Parser.DblValue;
+                    17: ;//InterpretOption(DSS.Parser.StrValue);
                     18:
                         YearlyShape := Param;
                     19:
@@ -728,70 +728,70 @@ begin
                         DebugTrace := InterpretYesNo(Param);
               {}
                     22:
-                        Set_P_Ref(Parser.DblValue);//to norm value W from kW(in script)//for avg ctrl    1000*PrefKw/3;
+                        Set_P_Ref(DSS.Parser.DblValue);//to norm value W from kW(in script)//for avg ctrl    1000*PrefKw/3;
                     23:
-                        Set_Q_Ref(Parser.DblValue);//to VA from kVA(in script)         //for avg ctrl    1000*QrefKVAr/3;
+                        Set_Q_Ref(DSS.Parser.DblValue);//to VA from kVA(in script)         //for avg ctrl    1000*QrefKVAr/3;
                     24:
-                        Cluster_Num := Parser.Intvalue;
+                        Cluster_Num := DSS.Parser.Intvalue;
                     25:
-                        Set_V_Ref(Parser.Dblvalue);//kV  to V                          //for avg ctrl    1000*VrefkV;
+                        Set_V_Ref(DSS.Parser.Dblvalue);//kV  to V                          //for avg ctrl    1000*VrefkV;
                     26:
-                        ctrl_mode := Parser.Intvalue;
+                        ctrl_mode := DSS.Parser.Intvalue;
                 ///////////////////////////////////////////
     ///
     ///////////////////////////////////////////
                     27:
                     begin
-                        QV_flag := Parser.Intvalue;
+                        QV_flag := DSS.Parser.Intvalue;
                     end;  // QV_flag_0 :=QV_flag
                     28:
-                        kcd := Parser.dblvalue;
+                        kcd := DSS.Parser.dblvalue;
                     29:
-                        kcq := Parser.dblvalue;
+                        kcq := DSS.Parser.dblvalue;
                     30:
-                        kqi := Parser.dblvalue;
+                        kqi := DSS.Parser.dblvalue;
                     31:
-                        Q_ref1 := 1000 * Parser.DblValue; //for phase ctrl unit kVar to Var
+                        Q_ref1 := 1000 * DSS.Parser.DblValue; //for phase ctrl unit kVar to Var
                     32:
-                        Q_ref2 := 1000 * Parser.DblValue; //for phase ctrl
+                        Q_ref2 := 1000 * DSS.Parser.DblValue; //for phase ctrl
                     33:
-                        Q_ref3 := 1000 * Parser.DblValue; //for phase ctrl
+                        Q_ref3 := 1000 * DSS.Parser.DblValue; //for phase ctrl
                     34:
                     begin
-                        Pmax := 1000 * Parser.DblValue; //Pmax has to be less then kW in script
+                        Pmax := 1000 * DSS.Parser.DblValue; //Pmax has to be less then kW in script
                         PMax_phase := Pmax / fnphases;
                     end;
                     35:
                     begin
-                        Pmin := 1000 * Parser.DblValue;  //for phase ctrl
+                        Pmin := 1000 * DSS.Parser.DblValue;  //for phase ctrl
                         PMin_phase := Pmax / fnphases;
                     end;
                     36:
-                        PQpriority := Parser.intValue;  //
+                        PQpriority := DSS.Parser.intValue;  //
                     37:
-                        Pmpp := 1000 * Parser.DblValue;  //for pmpp kW
+                        Pmpp := 1000 * DSS.Parser.DblValue;  //for pmpp kW
                     38:
-                        Pfctr1 := Parser.DblValue;  //for pmpp
+                        Pfctr1 := DSS.Parser.DblValue;  //for pmpp
                     39:
-                        Pfctr2 := Parser.DblValue;  //for pmpp
+                        Pfctr2 := DSS.Parser.DblValue;  //for pmpp
                     40:
-                        Pfctr3 := Parser.DblValue; //for pmpp
+                        Pfctr3 := DSS.Parser.DblValue; //for pmpp
                     41:
-                        Pfctr4 := Parser.DblValue; //for pmpp
+                        Pfctr4 := DSS.Parser.DblValue; //for pmpp
                     42:
-                        Pfctr5 := Parser.DblValue; //for  pmpp
+                        Pfctr5 := DSS.Parser.DblValue; //for  pmpp
                     43:
-                        Pfctr6 := Parser.DblValue; //for pmpp
+                        Pfctr6 := DSS.Parser.DblValue; //for pmpp
                     44:
-                        Pbias := 1000 * Parser.DblValue; //for pmpp
+                        Pbias := 1000 * DSS.Parser.DblValue; //for pmpp
                     45:
-                        CC_switch := InterpretYesNo(parser.StrValue); //  yes, true, y ,t; or no, false, n, f
+                        CC_switch := InterpretYesNo(DSS.Parser.StrValue); //  yes, true, y ,t; or no, false, n, f
                     46:
-                        kcq_drp2 := parser.DblValue; //cluster num
+                        kcq_drp2 := DSS.Parser.DblValue; //cluster num
                     47:
-                        Volt_Trhd := parser.DblValue;
+                        Volt_Trhd := DSS.Parser.DblValue;
                     48:
-                        droop := Parser.intValue;
+                        droop := DSS.Parser.intValue;
                 else
            // Handle Inherited properties
                     ClassEdit(ActiveGeneric5Obj, ParamPointer - NumPropsThisClass)
@@ -839,8 +839,8 @@ begin
             end;
 
          // Get next token off Parser and continue editing properties
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
      // After editing is complete, the typical next step is to call the RecalcElementData function
@@ -3673,7 +3673,7 @@ begin
 
     except
         ON E: Exception do
-            DoErrorMsg('IndMach012 Object: "' + Name + '" in GetInjCurrents function.',
+            DoErrorMsg(DSS, 'IndMach012 Object: "' + Name + '" in GetInjCurrents function.',
                 E.Message,
                 'Current buffer not big enough.', 568);
     end;
@@ -4326,7 +4326,7 @@ begin
       If PrpSequence^[27]>0 Then S := S + Format(' MVA=%-.5g  ',[genvars.kvarating/1000.0/Fnphases]);
   End;
 
-  Parser.CmdString := S;   // Push the string into the Parser object
+  DSS.Parser.CmdString := S;   // Push the string into the Parser object
   Edit;    // Invoke the Edit method for this class
 
   inherited;  // sets the terminal bus references, must do after editing number of phases

@@ -88,7 +88,7 @@ begin
 
             case ParamPointer of
                 1:
-                    Spectrum := Parser.StrValue;
+                    Spectrum := DSS.Parser.StrValue;
             else
                 inherited ClassEdit(ActivePCObj, ParamPointer - NumPCClassProps)
             end;

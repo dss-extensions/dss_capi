@@ -276,8 +276,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -295,31 +295,31 @@ begin
                 1:
                     ElementName := lowercase(Param);
                 2:
-                    ElementTerminal := Parser.IntValue;
+                    ElementTerminal := DSS.Parser.IntValue;
                 3:
-                    Fvvc_Vmaxpu := Parser.DblValue;
+                    Fvvc_Vmaxpu := DSS.Parser.DblValue;
                 4:
-                    Fvvc_Vminpu := Parser.DblValue;
+                    Fvvc_Vminpu := DSS.Parser.DblValue;
                 5:
-                    Fkva_rating := Parser.DblValue;
+                    Fkva_rating := DSS.Parser.DblValue;
                 6:
-                    FkW_rating := Parser.DblValue;
+                    FkW_rating := DSS.Parser.DblValue;
                 7:
-                    Fkvar_fulloutput := Parser.DblValue;
+                    Fkvar_fulloutput := DSS.Parser.DblValue;
                 8:
-                    Fpf := Parser.DblValue;
+                    Fpf := DSS.Parser.DblValue;
                 9:
-                    Fdelay := Parser.DblValue;
+                    Fdelay := DSS.Parser.DblValue;
                 10:
-                    Fdelayoff := Parser.DblValue;
+                    Fdelayoff := DSS.Parser.DblValue;
                 11:
-                    FkW_ramp_rate := Parser.DblValue;
+                    FkW_ramp_rate := DSS.Parser.DblValue;
                 12:
-                    Fkvar_ramp_rate := Parser.DblValue;
+                    Fkvar_ramp_rate := DSS.Parser.DblValue;
                 13:
-                    FkW_limit := Parser.DblValue;
+                    FkW_limit := DSS.Parser.DblValue;
                 14:
-                    Fkvar_limit := Parser.DblValue;
+                    Fkvar_limit := DSS.Parser.DblValue;
 
                 15:
                     InterpretTStringListArray(Param, FGeneratorNameList);
@@ -333,12 +333,12 @@ begin
                     end;
                 end;
                 17:
-                    Fvvc_curve_size := Parser.IntValue;
+                    Fvvc_curve_size := DSS.Parser.IntValue;
 
                 18:
                     Fvvc_curve := GetVVCCurve(Param);
                 19:
-                    FdeltaQ_factor := Parser.DblValue;
+                    FdeltaQ_factor := DSS.Parser.DblValue;
             else
         // Inherited parameters
                 ClassEdit(DSS.ActiveVVCControlObj, ParamPointer - NumPropsThisClass)
@@ -364,8 +364,8 @@ begin
 
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -484,7 +484,7 @@ begin
         MonitoredElement := ActiveCircuit.CktElements.Get(DevIndex);
         if ElementTerminal > MonitoredElement.Nterms then
         begin
-            DoErrorMsg('VVCControl: "' + Name + '"',
+            DoErrorMsg(DSS, 'VVCControl: "' + Name + '"',
                 'Terminal no. "' + Format('%-d', [ElementTerminal]) + '" does not exist.', 'Re-specify terminal no.', 371);
         end
         else
@@ -516,7 +516,7 @@ begin
     else
     begin
         ControlledElement := NIL; // element not found
-        DoErrorMsg('VVControl: "' + Self.Name + '"',
+        DoErrorMsg(DSS, 'VVControl: "' + Self.Name + '"',
             'Controlled Element "' + FGeneratorNameList.Strings[0] + '" Not Found.',
             ' Element must be defined previously.', 361);
     end;

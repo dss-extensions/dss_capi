@@ -81,7 +81,7 @@ begin
         Exit;
     if DSSPrime.LoadShapeClass.SetActive(Value) then
         Exit;
-    DoSimpleMsg('LoadShape "' + Value + '" Not Found in Active Circuit.', 77003);
+    DoSimpleMsg(DSSPrime, 'LoadShape "' + Value + '" Not Found in Active Circuit.', 77003);
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_Count(): Integer; CDECL;
@@ -145,7 +145,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61001);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61001);
         Exit;
     end;
     ActualNumPoints := elem.NumPoints;
@@ -173,7 +173,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61001);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61001);
     end;
     if not assigned(elem.QMultipliers) then
         Exit;
@@ -198,12 +198,12 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61001);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61001);
         Exit;
     end;
     if elem.ExternalMemory then
     begin
-        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
+        DoSimpleMsg(DSSPrime, 'Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
         Exit;
     end;
     elem.NumPoints := Value;
@@ -219,7 +219,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61002);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61002);
         Exit;
     end;
 
@@ -227,14 +227,14 @@ begin
     begin
         if elem.ExternalMemory then
         begin
-            DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
+            DoSimpleMsg(DSSPrime, 'Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
             Exit;
         end;
     
         // Only accept the new data when the number of points match
         if ValueCount <> NumPoints then
         begin
-            DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61100);
+            DoSimpleMsg(DSSPrime, Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61100);
             Exit;
         end;
 
@@ -254,7 +254,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61002);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61002);
         Exit;
     end;
 
@@ -262,14 +262,14 @@ begin
     begin
         if elem.ExternalMemory then
         begin
-            DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
+            DoSimpleMsg(DSSPrime, 'Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
             Exit;
         end;
         
         // Only accept the new data when the number of points match
         if ValueCount <> NumPoints then
         begin
-            DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61101);
+            DoSimpleMsg(DSSPrime, Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61101);
             Exit;
         end;
 
@@ -287,7 +287,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61003);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61003);
         Exit;
     end;
    
@@ -308,7 +308,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61003);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61003);
         Exit;
     end;
 
@@ -337,21 +337,21 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61002);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61002);
         Exit;
     end;
     with elem do
     begin
         if elem.ExternalMemory then
         begin
-            DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
+            DoSimpleMsg(DSSPrime, 'Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61101);
             Exit;
         end;
         
        // Only accept the new data when the number of points match
         if ValueCount <> NumPoints then
         begin
-            DoSimpleMsg(Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61102);
+            DoSimpleMsg(DSSPrime, Format('The number of values (%d) does not match the current Npts (%d)!', [ValueCount, NumPoints]), 61102);
             Exit;
         end;
 
@@ -370,7 +370,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61005);
         Exit;
     end;
     Result := elem.Interval;
@@ -386,7 +386,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61005);
         Exit;
     end;
     Result := elem.Interval * 60.0;
@@ -402,7 +402,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61005);
         Exit;
     end;
     Result := elem.Interval * 3600.0;
@@ -417,7 +417,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61005);
         Exit;
     end;
     elem.Interval := Value;
@@ -432,7 +432,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61005);
         Exit;
     end;
     elem.Interval := Value / 60.0;
@@ -447,7 +447,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61005);
         Exit;
     end;
     elem.Interval := Value / 3600.0;
@@ -468,7 +468,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61005);
         Exit;
     end;
     Result := elem.baseP;
@@ -484,7 +484,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61005);
         Exit;
     end;
     Result := elem.baseQ;
@@ -499,7 +499,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61005);
         Exit;
     end;
     elem.baseP := Value;
@@ -514,7 +514,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61005);
         Exit;
     end;
     elem.baseQ := Value;
@@ -530,7 +530,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61005);
         Exit;
     end;
     Result := elem.UseActual;
@@ -545,7 +545,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61005);
         Exit;
     end;
     elem.UseActual := Value;
@@ -559,7 +559,7 @@ end;
 procedure LoadShapes_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.LoadShapeClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg('Invalid LoadShape index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid LoadShape index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_Points(Npts: Integer; HoursPtr: PDouble; PMultPtr: PDouble; QMultPtr: PDouble; ExternalMemory: Boolean); CDECL;
@@ -571,7 +571,7 @@ begin
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
     begin
-        DoSimpleMsg('No active Loadshape Object found.', 61005);
+        DoSimpleMsg(DSSPrime, 'No active Loadshape Object found.', 61005);
         Exit;
     end;
 

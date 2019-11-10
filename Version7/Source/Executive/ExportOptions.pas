@@ -207,8 +207,8 @@ begin
     AbortExport := FALSE;
     FileName := '';
 
-    ParamName := Parser.NextParam;
-    Parm1 := LowerCase(Parser.StrValue);
+    ParamName := DSS.Parser.NextParam;
+    Parm1 := LowerCase(DSS.Parser.StrValue);
     ParamPointer := ExportCommands.Getcommand(Parm1);
 
    {Check commands requiring a solution and abort if no solution or circuit}
@@ -245,8 +245,8 @@ begin
     case ParamPointer of
         9, 19:
         begin { Trap export powers command and look for MVA/kVA option }
-            ParamName := parser.nextParam;
-            Parm2 := LowerCase(Parser.strvalue);
+            ParamName := DSS.Parser.nextParam;
+            Parm2 := LowerCase(DSS.Parser.strvalue);
             MVAOpt := 0;
             if Length(Parm2) > 0 then
                 if Parm2[1] = 'm' then
@@ -255,8 +255,8 @@ begin
 
         8:
         begin { Trap UE only flag  }
-            ParamName := parser.nextParam;
-            Parm2 := LowerCase(Parser.strvalue);
+            ParamName := DSS.Parser.nextParam;
+            Parm2 := LowerCase(DSS.Parser.strvalue);
             UEonlyOpt := FALSE;
             if Length(Parm2) > 0 then
                 if Parm2[1] = 'u' then
@@ -265,14 +265,14 @@ begin
 
         15:
         begin {Get monitor name for export monitors command}
-            ParamName := Parser.NextParam;
-            Parm2 := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Parm2 := DSS.Parser.StrValue;
         end;
 
         17:
         begin { Trap Sparse Triplet flag  }
-            ParamName := parser.nextParam;
-            Parm2 := LowerCase(Parser.strvalue);
+            ParamName := DSS.Parser.nextParam;
+            Parm2 := LowerCase(DSS.Parser.strvalue);
             TripletOpt := FALSE;
             if Length(Parm2) > 0 then
                 if Parm2[1] = 't' then
@@ -281,8 +281,8 @@ begin
 
         20, 21:
         begin {user-supplied substation and regions}
-            ParamName := LowerCase(parser.nextParam);
-            Parm2 := Parser.strValue;
+            ParamName := LowerCase(DSS.Parser.nextParam);
+            Parm2 := DSS.Parser.strValue;
             while Length(ParamName) > 0 do
             begin
                 if CompareTextShortest(ParamName, 'subs') = 0 then
@@ -308,15 +308,15 @@ begin
                 else
                 if CompareTextShortest(ParamName, 'rg') = 0 then
                     RgnUuid := AssignNewUUID(Parm2);
-                ParamName := LowerCase(parser.nextParam);
-                Parm2 := Parser.strValue;
+                ParamName := LowerCase(DSS.Parser.nextParam);
+                Parm2 := DSS.Parser.strValue;
             end;
         end;
 
         32:
         begin {Get phases to plot}
-            ParamName := Parser.NextParam;
-            Parm2 := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Parm2 := DSS.Parser.StrValue;
             PhasesToPlot := PROFILE3PH; // the default
             if CompareTextShortest(Parm2, 'default') = 0 then
                 PhasesToPlot := PROFILE3PH
@@ -337,14 +337,14 @@ begin
                 PhasesToPlot := PROFILELLPRI
             else
             if Length(Parm2) = 1 then
-                PhasesToPlot := Parser.IntValue;
+                PhasesToPlot := DSS.Parser.IntValue;
 
         end;
 
         51:
         begin {Sections}
-            ParamName := Parser.NextParam;
-            Parm2 := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Parm2 := DSS.Parser.StrValue;
 
             if CompareTextShortest(ParamName, 'meter') = 0 then
                 pMeter := DSS.EnergyMeterClass.Find(Parm2);
@@ -355,8 +355,8 @@ begin
    {Pick up next parameter on line, alternate file name, if any}
     if Length(FileName) = 0 then
     begin
-        ParamName := Parser.NextParam;
-        FileName := LowerCase(Parser.StrValue);    // should be full path name to work universally
+        ParamName := DSS.Parser.NextParam;
+        FileName := LowerCase(DSS.Parser.StrValue);    // should be full path name to work universally
     end;
 
     DSS.InShowResults := TRUE;
@@ -547,11 +547,11 @@ begin
                         FileName := DSS.GlobalResult;
                     end
                     else
-                        DoSimpleMsg(DSS, 'Monitor "' + Parm2 + '" not found.' + CRLF + parser.CmdString, 250);
+                        DoSimpleMsg(DSS, 'Monitor "' + Parm2 + '" not found.' + CRLF + DSS.Parser.CmdString, 250);
                 end;
             end
             else
-                DoSimpleMsg(DSS, 'Monitor Name Not Specified.' + CRLF + parser.CmdString, 251);
+                DoSimpleMsg(DSS, 'Monitor Name Not Specified.' + CRLF + DSS.Parser.CmdString, 251);
         16:
             ExportYprim(DSS, Filename);
         17:
@@ -656,7 +656,7 @@ begin
 
     if not AbortExport then
     begin
-        SetLastResultFile(FileName);
+        SetLastResultFile(DSS, FileName);
         DSS.ParserVars.Add('@lastexportfile', FileName);
         if DSS.AutoShowExport then
             FireOffEditor(FileName);

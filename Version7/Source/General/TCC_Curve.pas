@@ -190,8 +190,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -206,7 +206,7 @@ begin
                 0:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 420);
                 1:
-                    Npts := Parser.Intvalue;
+                    Npts := DSS.Parser.Intvalue;
                 2:
                     Npts := InterpretDblArray(Param, Npts, C_Values);   // Parser.ParseAsVector(Npts, Multipliers);
                 3:
@@ -230,8 +230,8 @@ begin
                     CalcLogPoints(T_Values, LogT, Npts);
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end; {WHILE}
     end; {WITH}
 end;

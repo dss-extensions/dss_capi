@@ -152,7 +152,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('Recloser "' + Value + '" Not Found in Active Circuit.', 77003);
+        DoSimpleMsg(DSSPrime, 'Recloser "' + Value + '" Not Found in Active Circuit.', 77003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -467,7 +467,7 @@ begin
     pRecloser := DSSPrime.ActiveCircuit.Reclosers.Get(Value);
     if pRecloser = NIL then
     begin
-        DoSimpleMsg('Invalid Recloser index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Recloser index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pRecloser;

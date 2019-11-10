@@ -234,7 +234,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('Generator "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'Generator "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -409,7 +409,7 @@ begin
     pGen := DSSPrime.ActiveCircuit.Generators.Get(Value);
     if pGen = NIL then
     begin
-        DoSimpleMsg('Invalid Generator index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Generator index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pGen;

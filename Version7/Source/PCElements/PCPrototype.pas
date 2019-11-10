@@ -329,8 +329,8 @@ begin
     begin
      // peel off the next token on the edit line
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
 
         while Length(Param) > 0 do
         begin
@@ -356,11 +356,11 @@ begin
                     0:
                         DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
                     1:
-                        NPhases := Parser.Intvalue; // num phases
+                        NPhases := DSS.Parser.Intvalue; // num phases
                     2:
                         SetBus(1, param);
                     3:
-                        PresentkV := Parser.DblValue;
+                        PresentkV := DSS.Parser.DblValue;
 
             {...}
             {etc.}
@@ -389,8 +389,8 @@ begin
                 end;
 
          // Get next token off Parser and continue editing properties
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
      // After editing is complete, the typical next step is to call the RecalcElementData function
@@ -1684,7 +1684,7 @@ begin
             S := S + Format(' MVA=%-.5g  ', [genvars.kvarating / 1000.0 / Fnphases]);
     end;
 
-    Parser.CmdString := S;   // Push the string into the Parser object
+    DSS.Parser.CmdString := S;   // Push the string into the Parser object
     Edit;    // Invoke the Edit method for this class
 
     inherited;  // sets the terminal bus references, must do after editing number of phases

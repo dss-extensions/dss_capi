@@ -295,8 +295,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -330,7 +330,7 @@ begin
                     end;
                 7:
                 begin
-                    G1 := Parser.Dblvalue;
+                    G1 := DSS.Parser.Dblvalue;
                     if G1 <> 0.0 then
                         G1 := 1.0 / G1
                     else
@@ -338,26 +338,26 @@ begin
                 end;
                 8:
                 begin
-                    G2 := Parser.Dblvalue;
+                    G2 := DSS.Parser.Dblvalue;
                     if G2 <> 0.0 then
                         G2 := 1.0 / G2
                     else
                         G2 := 10000.0;  // Default to a low resistance
                 end;
                 9:
-                    FkV1 := Parser.DblValue;
+                    FkV1 := DSS.Parser.DblValue;
                 10:
-                    FkV2 := Parser.DblValue;
+                    FkV2 := DSS.Parser.DblValue;
                 11:
-                    FMVArating := Parser.DblValue;
+                    FMVArating := DSS.Parser.DblValue;
                 12:
                     FVarCurve := Param;
                 13:
-                    FpctR1 := Parser.DblValue;
+                    FpctR1 := DSS.Parser.DblValue;
                 14:
-                    FpctR2 := Parser.DblValue;
+                    FpctR2 := DSS.Parser.DblValue;
                 15:
-                    FKFactor := Parser.DblValue;
+                    FKFactor := DSS.Parser.DblValue;
             else
            // Inherited
                 ClassEdit(DSS.ActiveGICTransformerObj, ParamPointer - NumPropsThisClass)
@@ -377,9 +377,9 @@ begin
                     end;
                 end;
                 5:
-                    if Fnphases <> Parser.IntValue then
+                    if Fnphases <> DSS.Parser.IntValue then
                     begin
-                        Nphases := Parser.IntValue;
+                        Nphases := DSS.Parser.IntValue;
                         NConds := Fnphases;  // Force Reallocation of terminal info if different size
                         DSS.ActiveCircuit.BusNameRedefined := TRUE;  // Set Global Flag to signal circuit to rebuild busdefs
                     end;
@@ -418,8 +418,8 @@ begin
             else
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -834,7 +834,7 @@ procedure TGICTransformerObj.MakePosSequence;
 begin
     if FnPhases <> 1 then
     begin
-        Parser.CmdString := 'Phases=1';
+        DSS.Parser.CmdString := 'Phases=1';
         Edit;
     end;
     inherited;

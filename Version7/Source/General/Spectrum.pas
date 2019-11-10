@@ -176,8 +176,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -193,7 +193,7 @@ begin
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Name + '"', 650);
                 1:
                 begin
-                    NumHarm := Parser.IntValue;
+                    NumHarm := DSS.Parser.IntValue;
                     ReAllocmem(AngleArray, Sizeof(AngleArray^[1]) * NumHarm); // Make a dummy Angle array
                     for i := 1 to NumHarm do
                         AngleArray^[i] := 0.0;
@@ -223,8 +223,8 @@ begin
             end;
 
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;       {WHILE}
 
         if (HarmArray <> NIL) then   // Check this after HarmArray is allocated  2/20/2018

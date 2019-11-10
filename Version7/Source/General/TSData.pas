@@ -130,8 +130,8 @@ begin
     with TTSDataObj(DSS.ActiveConductorDataObj) do
     begin
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -146,11 +146,11 @@ begin
                 0:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 101);
                 1:
-                    FDiaShield := Parser.DblValue;
+                    FDiaShield := DSS.Parser.DblValue;
                 2:
-                    FTapeLayer := Parser.DblValue;
+                    FTapeLayer := DSS.Parser.DblValue;
                 3:
-                    FTapeLap := Parser.DblValue;
+                    FTapeLap := DSS.Parser.DblValue;
             else
         // Inherited parameters
                 ClassEdit(DSS.ActiveConductorDataObj, ParamPointer - NumPropsThisClass)
@@ -168,8 +168,8 @@ begin
                     if ((FTapeLap < 0.0) or (FTapeLap > 100.0)) then
                         DoSimpleMsg(DSS, 'Error: Tap lap must range from 0 to 100 for TapeShieldData ' + Name, 999);
             end;
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
     end;
 end;

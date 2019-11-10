@@ -463,7 +463,7 @@ begin
             ReallocZandYcMatrices;
 
         MatBuffer := Allocmem(Sizeof(Double) * Fnphases * Fnphases);
-        OrderFound := Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
+        OrderFound := DSS.Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
 
         if OrderFound > 0 then    // Parse was successful
         begin    {R}
@@ -491,7 +491,7 @@ begin
             ReallocZandYcMatrices;
 
         MatBuffer := Allocmem(Sizeof(Double) * Fnphases * Fnphases);
-        OrderFound := Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
+        OrderFound := DSS.Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
 
         if OrderFound > 0 then    // Parse was successful
         begin    {X}
@@ -522,7 +522,7 @@ begin
             ReallocZandYcMatrices;
 
         MatBuffer := Allocmem(Sizeof(Double) * Fnphases * Fnphases);
-        OrderFound := Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
+        OrderFound := DSS.Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
 
         if OrderFound > 0 then    // Parse was successful
         begin    {X}
@@ -574,8 +574,8 @@ begin
     with DSS.ActiveLineObj do
     begin
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -596,25 +596,25 @@ begin
                 3:
                     FetchLineCode(Param);  // Define line by conductor code
                 4:
-                    Len := Parser.DblValue;
+                    Len := DSS.Parser.DblValue;
                 5:
 {Nphases: See below};
                 6:
-                    r1 := Parser.Dblvalue;
+                    r1 := DSS.Parser.Dblvalue;
                 7:
-                    x1 := Parser.Dblvalue;
+                    x1 := DSS.Parser.Dblvalue;
                 8:
-                    r0 := Parser.Dblvalue;
+                    r0 := DSS.Parser.Dblvalue;
                 9:
-                    x0 := Parser.Dblvalue;
+                    x0 := DSS.Parser.Dblvalue;
                 10:
                 begin
-                    c1 := Parser.Dblvalue * 1.0e-9;
+                    c1 := DSS.Parser.Dblvalue * 1.0e-9;
                     FCapSpecified := TRUE;
                 end; // Convert from nano to farads
                 11:
                 begin
-                    c0 := Parser.Dblvalue * 1.0e-9;
+                    c0 := DSS.Parser.Dblvalue * 1.0e-9;
                     FCapSpecified := TRUE;
                 end;
                 12:
@@ -629,12 +629,12 @@ begin
                 15:
                     IsSwitch := InterpretYesNo(Param);
                 16:
-                    Rg := Parser.DblValue;
+                    Rg := DSS.Parser.DblValue;
                 17:
-                    Xg := Parser.DblValue;
+                    Xg := DSS.Parser.DblValue;
                 18:
                 begin
-                    rho := Parser.DblValue;
+                    rho := DSS.Parser.DblValue;
                     FrhoSpecified := TRUE;
                 end;
                 19:
@@ -660,23 +660,23 @@ begin
                     FetchTSCableList(Param);
                 26:
                 begin
-                    c1 := Parser.Dblvalue / (twopi * BaseFrequency) * 1.0e-6;
+                    c1 := DSS.Parser.Dblvalue / (twopi * BaseFrequency) * 1.0e-6;
                     FCapSpecified := TRUE;
                 end;
                 27:
                 begin
-                    c0 := Parser.Dblvalue / (twopi * BaseFrequency) * 1.0e-6;
+                    c0 := DSS.Parser.Dblvalue / (twopi * BaseFrequency) * 1.0e-6;
                     FCapSpecified := TRUE;
                 end;
                 28:
                 begin
-                    NumAmpRatings := Parser.IntValue;
+                    NumAmpRatings := DSS.Parser.IntValue;
                     setlength(AmpRatings, NumAmpRatings);
                 end;
                 29:
                 begin
                     setlength(AmpRatings, NumAmpRatings);
-                    Param := Parser.StrValue;
+                    Param := DSS.Parser.StrValue;
                     NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
                 end
             else
@@ -697,10 +697,10 @@ begin
                     MilesThisLine := len * ConvertLineUnits(LengthUnits, UNITS_MILES);
 
                 5: {Change the number of phases ... only valid if SymComponentsModel=TRUE}
-                    if Fnphases <> Parser.IntValue then
+                    if Fnphases <> DSS.Parser.IntValue then
                         if (not GeometrySpecified) and SymComponentsModel then
                         begin  // ignore change of nphases if geometry used
-                            Nphases := Parser.IntValue;
+                            Nphases := DSS.Parser.IntValue;
                             NConds := Fnphases;  // Force Reallocation of terminal info
                             Yorder := Fnterms * Fnconds;
                  {YPrimInvalid := True;}  // now set below
@@ -776,8 +776,8 @@ begin
             else
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
      // If SymComponentsChanged THEN RecalcElementData;
@@ -1156,7 +1156,7 @@ begin
         begin
                  {If error, put in tiny series conductance}
 // TEMc - shut this up for the CDPSM connectivity profile test, or whenever else it gets annoying
-            DoErrorMsg('TLineObj.CalcYPrim', 'Matrix Inversion Error for Line "' + Name + '"',
+            DoErrorMsg(DSS, 'TLineObj.CalcYPrim', 'Matrix Inversion Error for Line "' + Name + '"',
                 'Invalid impedance specified. Replaced with tiny conductance.', 183);
             Zinv.Clear;
             for i := 1 to Fnphases do
@@ -1629,7 +1629,7 @@ begin
         S := S + Format(' Normamps=%-.5g  %-.5g', [NormAmps, EmergAmps]);
     // Repeat the Length Units to compensate for unexpected reset
         S := S + ' Units=' + LineUnitsStr(LengthUnits);
-        Parser.CmdString := S;
+        DSS.Parser.CmdString := S;
         Edit;
     end;
 
@@ -1715,7 +1715,7 @@ begin
                     end;
             end;
 
-            Parser.cmdstring := S;
+            DSS.Parser.cmdstring := S;
             Edit;
 
         end; {If Series}
@@ -1771,11 +1771,11 @@ begin
                 end;
             end;
 
-            Parser.cmdstring := S;   // This reset the length units
+            DSS.Parser.cmdstring := S;   // This reset the length units
             Edit;
 
           // update length units
-            Parser.cmdstring := Format(' Length=%-g  Units=%s', [TotalLen, LineUnitsStr(LenUnitsSaved)]);
+            DSS.Parser.cmdstring := Format(' Length=%-g  Units=%s', [TotalLen, LineUnitsStr(LenUnitsSaved)]);
             Edit;
 
           // Update symmetrical Components computation
@@ -1833,7 +1833,7 @@ begin
                 S := S + ' | ';
             end;
             S := S + ']';
-            Parser.cmdstring := S;
+            DSS.Parser.cmdstring := S;
             Edit;
 
                {C Matrix}
@@ -1846,11 +1846,11 @@ begin
                 S := S + ' | ';
             end;
             S := S + '] ';
-            Parser.cmdstring := S;
+            DSS.Parser.cmdstring := S;
             Edit;
 
                // update length units
-            Parser.cmdstring := Format(' Length=%-g  Units=%s', [TotalLen, LineUnitsStr(LenUnitsSaved)]);
+            DSS.Parser.cmdstring := Format(' Length=%-g  Units=%s', [TotalLen, LineUnitsStr(LenUnitsSaved)]);
             Edit;
         end;  {Matrix definition}
 
@@ -1875,7 +1875,7 @@ begin
     begin
         if CompareText(OldName, pControlElem.ElementName) = 0 then
         begin
-            Parser.cmdstring := ' Element=' + NewName;  // Change name of the property
+            DSS.Parser.cmdstring := ' Element=' + NewName;  // Change name of the property
             pControlElem.Edit;
         end;
         pControlElem := DSS.ActiveCircuit.DSSControls.Next;

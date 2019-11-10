@@ -218,7 +218,7 @@ begin
     with DSS.ActiveFaultObj do
     begin
         MatBuffer := Allocmem(Sizeof(Double) * Fnphases * Fnphases);
-        OrderFound := Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
+        OrderFound := DSS.Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
 
         if OrderFound > 0 then    // Parse was successful
         begin    {X}
@@ -286,8 +286,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -305,25 +305,25 @@ begin
                     FltSetbus1(param);
                 2:
                     Setbus(2, param);
-                3: ;{Numphases := Parser.IntValue;}  // see below
+                3: ;{Numphases := DSS.Parser.IntValue;}  // see below
                 4:
                 begin
-                    G := Parser.Dblvalue;
+                    G := DSS.Parser.Dblvalue;
                     if G <> 0.0 then
                         G := 1.0 / G
                     else
                         G := 10000.0;  // Default to a low resistance
                 end;
                 5:
-                    StdDev := Parser.Dblvalue * 0.01;
+                    StdDev := DSS.Parser.Dblvalue * 0.01;
                 6:
                     DoGmatrix;
                 7:
-                    ON_Time := Parser.Dblvalue;
+                    ON_Time := DSS.Parser.Dblvalue;
                 8:
                     IsTemporary := InterpretYesNo(Param);
                 9:
-                    MinAmps := Parser.DblValue;
+                    MinAmps := DSS.Parser.DblValue;
             else
            // Inherited
                 ClassEdit(DSS.ActiveFaultObj, ParamPointer - NumPropsThisClass)
@@ -341,7 +341,7 @@ begin
                     end;
                 3:
                 begin
-                    PhasesTemp := Parser.IntValue;
+                    PhasesTemp := DSS.Parser.IntValue;
                     if Fnphases <> PhasesTemp then
                     begin
                         Nphases := PhasesTemp;
@@ -366,8 +366,8 @@ begin
             else
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -801,7 +801,7 @@ procedure TFaultObj.MakePosSequence;
 begin
     if FnPhases <> 1 then
     begin
-        Parser.CmdString := 'Phases=1';
+        DSS.Parser.CmdString := 'Phases=1';
         Edit;
     end;
     inherited;

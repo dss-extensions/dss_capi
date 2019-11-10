@@ -145,7 +145,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('Fuse "' + Value + '" Not Found in Active Circuit.', 77003);
+        DoSimpleMsg(DSSPrime, 'Fuse "' + Value + '" Not Found in Active Circuit.', 77003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -386,7 +386,7 @@ begin
     pFuse := DSSPrime.ActiveCircuit.Fuses.Get(Value);
     if pFuse = NIL then
     begin
-        DoSimpleMsg('Invalid Fuse index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Fuse index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pFuse;

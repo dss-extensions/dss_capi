@@ -256,7 +256,7 @@ begin
     pLoad := DSSPrime.ActiveCircuit.Loads.Get(Value);
     if pLoad = NIL then
     begin
-        DoSimpleMsg('Invalid Load index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Load index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pLoad;
@@ -312,7 +312,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('Load "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'Load "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -893,7 +893,7 @@ var
 begin
     if (Value < Ord(Low(TLoadModel))) or (Value > Ord(High(TLoadModel))) then
     begin
-        DoSimpleMsg(Format('Invalid value for load model (%d)!', [Value]), 5891);
+        DoSimpleMsg(DSSPrime, Format('Invalid value for load model (%d)!', [Value]), 5891);
         Exit;
     end;
 
@@ -1016,7 +1016,7 @@ var
 begin
     if ValueCount <> 7 then
     begin
-        DoSimpleMsg(Format('ZIPV requires 7 elements, %d were provided!', [ValueCount]), 5890);
+        DoSimpleMsg(DSSPrime, Format('ZIPV requires 7 elements, %d were provided!', [ValueCount]), 5890);
         Exit;
     end;
 

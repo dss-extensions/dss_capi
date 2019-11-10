@@ -10,7 +10,7 @@ unit PVSystemUserModel;
 
 interface
 
-USES  Dynamics, DSSCallBackRoutines, ucomplex, Arraydef;
+USES  Dynamics, DSSCallBackRoutines, ucomplex, Arraydef, DSSClass;
 
 TYPE
 
@@ -35,6 +35,7 @@ TYPE
       protected
 
       public
+        DSS: TDSS;
 
         FEdit:         Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
         FInit:         procedure(V, I:pComplexArray);Stdcall;   // For dynamics
@@ -63,7 +64,7 @@ TYPE
         Procedure   Select;
         Procedure   Integrate;
 
-        constructor Create;
+        constructor Create(dssContext: TDSS);
         destructor  Destroy; override;
       published
 
@@ -72,7 +73,7 @@ TYPE
 implementation
 
 Uses PVSystem, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils, 
-     DSSClass, DSSHelper;
+     DSSHelper;
 
 { TPVsystemUserModel }
 
@@ -86,9 +87,9 @@ begin
     Result := Addr;
 end;
 
-constructor TPVsystemUserModel.Create;
+constructor TPVsystemUserModel.Create(dssContext: TDSS);
 begin
-
+    DSS := dssContext;
     FID := 0;
     Fhandle := 0;
     FName := '';

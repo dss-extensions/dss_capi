@@ -2379,8 +2379,8 @@ begin
 
     try
         FileNm := StripExtension(FileNm);
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
 
         FileNm := FileNm + '_' + Param + '.txt';
 
@@ -2438,14 +2438,14 @@ begin
             end;
         end
         else
-            DoSimpleMsg(DSS, 'Meter Name Not Specified.' + CRLF + parser.CmdString, 221);
+            DoSimpleMsg(DSS, 'Meter Name Not Specified.' + CRLF + DSS.Parser.CmdString, 221);
 
     finally
 
         CloseFile(F);
 
-        ParamName := Parser.NextParam;
-        Param := Parser.strvalue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.strvalue;
 
         case length(Param) of
             0:

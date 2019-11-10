@@ -86,7 +86,7 @@ uses
 //------------------------------------------------------------------------------
 procedure InvalidActiveSection(); inline;
 begin
-    DoSimpleMsg('Invalid active section. Has SetActiveSection been called?', 5055);
+    DoSimpleMsg(DSSPrime, 'Invalid active section. Has SetActiveSection been called?', 5055);
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -297,7 +297,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('EnergyMeter "' + Value + '" Not Found in Active Circuit.', 5005);
+        DoSimpleMsg(DSSPrime, 'EnergyMeter "' + Value + '" Not Found in Active Circuit.', 5005);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -800,7 +800,7 @@ begin
                     if (Value > 0) and (Value <= SequenceList.ListSize) then
                         ActiveCktElement := SequenceList.Get(Value)
                     else
-                        DoSimpleMsg(Format('Invalid index for SequenceList: %d. List size is %d.', [Value, SequenceList.ListSize]), 500501);
+                        DoSimpleMsg(DSSPrime, Format('Invalid index for SequenceList: %d. List size is %d.', [Value, SequenceList.ListSize]), 500501);
                 end;
         end;
 end;
@@ -1128,7 +1128,7 @@ begin
     pEnergyMeter := DSSPrime.ActiveCircuit.EnergyMeters.Get(Value);
     if pEnergyMeter = NIL then
     begin
-        DoSimpleMsg('Invalid Meter index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Meter index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pEnergyMeter;

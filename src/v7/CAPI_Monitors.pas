@@ -284,7 +284,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('Monitor "' + Value + '" Not Found in Active Circuit.', 5004);
+        DoSimpleMsg(DSSPrime, 'Monitor "' + Value + '" Not Found in Active Circuit.', 5004);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -395,7 +395,7 @@ begin
 
     if (Index < 1) or (Index > Header.RecordSize {NumChannels}) then
     begin
-        DoSimpleMsg(Format(
+        DoSimpleMsg(DSSPrime, Format(
             'Monitors.Channel: invalid channel index (%d), monitor "%s" has %d channels.',
             [Index, pMon.Name, Header.RecordSize]
             ), 5888);
@@ -698,7 +698,7 @@ begin
     pMonitor := DSSPrime.ActiveCircuit.Monitors.Get(Value);
     if pMonitor = NIL then
     begin
-        DoSimpleMsg('Invalid Monitor index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Monitor index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pMonitor;

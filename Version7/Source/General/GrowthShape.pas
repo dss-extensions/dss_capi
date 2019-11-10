@@ -211,8 +211,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -227,7 +227,7 @@ begin
                 0:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 600);
                 1:
-                    Npts := Parser.Intvalue;
+                    Npts := DSS.Parser.Intvalue;
                 2:
                 begin
                     ReAllocmem(Year, Sizeof(Year^[1]) * Npts);
@@ -256,8 +256,8 @@ begin
                 ClassEdit(DSS.ActiveGrowthShapeObj, ParamPointer - NumPropsThisClass)
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end; {WHILE}
 
         ReCalcYearMult;

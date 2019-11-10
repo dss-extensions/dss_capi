@@ -213,8 +213,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -229,9 +229,9 @@ begin
                 0:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 10101);
                 1:
-                    NWires := Parser.IntValue;  // Use property value to force reallocations
+                    NWires := DSS.Parser.IntValue;  // Use property value to force reallocations
                 2:
-                    FNPhases := Parser.IntValue;
+                    FNPhases := DSS.Parser.IntValue;
                 3:
                     InterpretArray(Param, X);
                 4:
@@ -248,8 +248,8 @@ begin
                     DataChanged := TRUE;
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
     end;

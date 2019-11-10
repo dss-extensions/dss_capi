@@ -170,8 +170,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -189,13 +189,13 @@ begin
                 1:
                     ElementName := lowercase(Param);
                 2:
-                    ElementTerminal := Parser.IntValue;
+                    ElementTerminal := DSS.Parser.IntValue;
                 3:
                     InterpretSwitchAction(param);
                 4:
                     Locked := InterpretYesNo(Param);
                 5:
-                    TimeDelay := Parser.DblValue;
+                    TimeDelay := DSS.Parser.DblValue;
                 6:
                 begin    // set the normal state
                     InterpretSwitchAction(param);
@@ -252,8 +252,8 @@ begin
                 end;
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -354,7 +354,7 @@ begin
     else
     begin
         ControlledElement := NIL;   // element not found
-        DoErrorMsg('SwtControl: "' + Self.Name + '"', 'CktElement Element "' + ElementName + '" Not Found.',
+        DoErrorMsg(DSS, 'SwtControl: "' + Self.Name + '"', 'CktElement Element "' + ElementName + '" Not Found.',
             ' Element must be defined previously.', 387);
     end;
 end;

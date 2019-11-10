@@ -57,7 +57,7 @@ begin
     Yhandle := DSSPrime.ActiveCircuit.Solution.hY;
     if Yhandle <= 0 then
     begin
-        DoSimpleMsg('Y Matrix not Built.', 222);
+        DoSimpleMsg(DSSPrime, 'Y Matrix not Built.', 222);
         Exit;
     end;
 
@@ -200,7 +200,7 @@ begin
     except
         ON E: EEsolv32Problem do
         begin
-            DoSimpleMsg('From DoPFLOWsolution.SetGeneratordQdV: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSSPrime), 7073);
+            DoSimpleMsg(DSSPrime, 'From DoPFLOWsolution.SetGeneratordQdV: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSSPrime), 7073);
         end;
     end;
 end;

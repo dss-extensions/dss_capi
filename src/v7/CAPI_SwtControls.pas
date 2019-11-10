@@ -267,7 +267,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('SwtControl "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'SwtControl "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -384,7 +384,7 @@ begin
     pSwtControl := DSSPrime.ActiveCircuit.SwtControls.Get(Value);
     if pSwtControl = NIL then
     begin
-        DoSimpleMsg('Invalid SwtControl index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid SwtControl index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pSwtControl;

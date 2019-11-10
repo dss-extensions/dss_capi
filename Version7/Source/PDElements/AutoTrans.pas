@@ -455,8 +455,8 @@ begin
     begin
         XHXChanged := FALSE;
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -471,25 +471,25 @@ begin
                 0:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "AutoTrans.' + Name + '"', 100110);
                 1:
-                    Nphases := Parser.IntValue;
+                    Nphases := DSS.Parser.IntValue;
                 2:
-                    SetNumWindings(Parser.IntValue); // Reallocate stuff if bigger
+                    SetNumWindings(DSS.Parser.IntValue); // Reallocate stuff if bigger
                 3:
-                    SetActiveWinding(Parser.IntValue);
+                    SetActiveWinding(DSS.Parser.IntValue);
                 4:
                     SetbusAuto(ActiveWinding, param);
                 5:
                     InterpretAutoConnection(Param);
                 6:
-                    Winding^[ActiveWinding].kVLL := parser.Dblvalue;
+                    Winding^[ActiveWinding].kVLL := DSS.Parser.Dblvalue;
                 7:
-                    Winding^[ActiveWinding].kVA := parser.Dblvalue;
+                    Winding^[ActiveWinding].kVA := DSS.Parser.Dblvalue;
                 8:
-                    Winding^[ActiveWinding].puTap := parser.Dblvalue;
+                    Winding^[ActiveWinding].puTap := DSS.Parser.Dblvalue;
                 9:
-                    Winding^[ActiveWinding].Rpu := parser.Dblvalue * 0.01;  // %R
+                    Winding^[ActiveWinding].Rpu := DSS.Parser.Dblvalue * 0.01;  // %R
                 10:
-                    Winding^[ActiveWinding].RdcOhms := Parser.DblValue;
+                    Winding^[ActiveWinding].RdcOhms := DSS.Parser.DblValue;
                 11:
                     strCoreType := Param;
                 12:
@@ -503,45 +503,45 @@ begin
                 16:
                     InterpretAllTaps(Param);
                 17:
-                    puXHX := TrapZero(parser.Dblvalue, 7.0) * 0.01;
+                    puXHX := TrapZero(DSS.Parser.Dblvalue, 7.0) * 0.01;
                 18:
-                    puXHT := TrapZero(parser.Dblvalue, 35.0) * 0.01;
+                    puXHT := TrapZero(DSS.Parser.Dblvalue, 35.0) * 0.01;
                 19:
-                    puXXT := TrapZero(parser.Dblvalue, 30.0) * 0.01;
+                    puXXT := TrapZero(DSS.Parser.Dblvalue, 30.0) * 0.01;
                 20:
-                    Parser.ParseAsVector(((NumWindings - 1) * NumWindings div 2), puXSC);
+                    DSS.Parser.ParseAsVector(((NumWindings - 1) * NumWindings div 2), puXSC);
                 21:
-                    ThermalTimeConst := Parser.DblValue;
+                    ThermalTimeConst := DSS.Parser.DblValue;
                 22:
-                    n_thermal := Parser.DblValue;
+                    n_thermal := DSS.Parser.DblValue;
                 23:
-                    m_thermal := Parser.DblValue;
+                    m_thermal := DSS.Parser.DblValue;
                 24:
-                    FLrise := Parser.DblValue;
+                    FLrise := DSS.Parser.DblValue;
                 25:
-                    HSRise := Parser.DblValue;
+                    HSRise := DSS.Parser.DblValue;
                 26:
-                    pctLoadLoss := Parser.DblValue;
+                    pctLoadLoss := DSS.Parser.DblValue;
                 27:
-                    pctNoLoadLoss := Parser.DblValue;
+                    pctNoLoadLoss := DSS.Parser.DblValue;
                 28:
-                    NormMaxHkVA := Parser.Dblvalue;
+                    NormMaxHkVA := DSS.Parser.Dblvalue;
                 29:
-                    EmergMaxHkVA := Parser.Dblvalue;
+                    EmergMaxHkVA := DSS.Parser.Dblvalue;
                 30:
                     IsSubstation := InterpretYesNo(Param);
                 31:
-                    Winding^[ActiveWinding].MaxTap := Parser.DblValue;
+                    Winding^[ActiveWinding].MaxTap := DSS.Parser.DblValue;
                 32:
-                    Winding^[ActiveWinding].MinTap := Parser.DblValue;
+                    Winding^[ActiveWinding].MinTap := DSS.Parser.DblValue;
                 33:
-                    Winding^[ActiveWinding].NumTaps := Parser.IntValue;
+                    Winding^[ActiveWinding].NumTaps := DSS.Parser.IntValue;
                 34:
                     SubstationName := Param;
                 35:
-                    pctImag := Parser.DblValue;
+                    pctImag := DSS.Parser.DblValue;
                 36:
-                    ppm_FloatFactor := Parser.DblValue * 1.0e-6;
+                    ppm_FloatFactor := DSS.Parser.DblValue * 1.0e-6;
                 37:
                     InterpretAllRs(Param);
                 38:
@@ -622,8 +622,8 @@ begin
             end;
 
          {Advance to next property on input line}
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -2059,7 +2059,7 @@ begin
             Result := Format('%.7g', [puXXT * 100.0]);
         20:
             for i := 1 to (NumWindings - 1) * NumWindings div 2 do
-                Result := Result + Format('%-g, ', [puXSC^[i] * 100.0]);// Parser.ParseAsVector(((NumWindings - 1)*NumWindings div 2), Xsc);
+                Result := Result + Format('%-g, ', [puXSC^[i] * 100.0]);// DSS.Parser.ParseAsVector(((NumWindings - 1)*NumWindings div 2), Xsc);
         26:
             Result := Format('%.7g', [pctLoadLoss]);
         27:
@@ -2255,7 +2255,7 @@ begin
 
     S := S + ' NormHkVA=' + Format(' %-.5g %-.5g', [NormMaxHkVA / FNPhases, EmergMaxHkVA / FNPhases]);
 
-    Parser.CmdString := S;
+    DSS.Parser.CmdString := S;
     Edit;
 
     inherited;
@@ -2434,7 +2434,7 @@ begin
 
         if ZB.InvertError > 0 then
         begin
-            DoErrorMsg('TAutoTransObj.CalcYPrim', 'Matrix Inversion Error for AutoTrans "' + Name + '"',
+            DoErrorMsg(DSS, 'TAutoTransObj.CalcYPrim', 'Matrix Inversion Error for AutoTrans "' + Name + '"',
                 'Invalid impedance specified. Replaced with tiny conductance to ground.', 117);
             ZB.Clear;
             for i := 1 to ZB.Order do

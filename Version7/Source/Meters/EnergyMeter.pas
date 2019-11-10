@@ -670,8 +670,8 @@ begin
 
         MeteredElementChanged := FALSE;
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if (Length(ParamName) = 0) then
@@ -688,7 +688,7 @@ begin
                 1:
                     ElementName := lowercase(param);
                 2:
-                    MeteredTerminal := Parser.IntValue;
+                    MeteredTerminal := DSS.Parser.IntValue;
                 3:
                 begin  {Actions}
                     param := lowercase(param);
@@ -710,11 +710,11 @@ begin
                 4:
                     ProcessOptions(Param);
                 5:
-                    MaxZonekVA_Norm := Parser.DblValue;
+                    MaxZonekVA_Norm := DSS.Parser.DblValue;
                 6:
-                    MaxZonekVA_Emerg := Parser.DblValue;
+                    MaxZonekVA_Emerg := DSS.Parser.DblValue;
                 7:
-                    parser.ParseAsVector(Fnphases, SensorCurrent);   // Inits to zero
+                    DSS.Parser.ParseAsVector(Fnphases, SensorCurrent);   // Inits to zero
                 8:
                     InterpretAndAllocStrArray(Param, DefinedZoneListSize, DefinedZoneList);
                 9:
@@ -736,9 +736,9 @@ begin
                 17:
                     FPhaseVoltageReport := InterpretYesNo(Param);
                 18:
-                    Source_NumInterruptions := Parser.dblvalue; // Annual interruptions for upline circuit
+                    Source_NumInterruptions := DSS.Parser.dblvalue; // Annual interruptions for upline circuit
                 19:
-                    Source_IntDuration := Parser.dblValue; // hours
+                    Source_IntDuration := DSS.Parser.dblValue; // hours
                 20:
                     PropertyValue[20] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
                 21:
@@ -763,8 +763,8 @@ begin
              (****11: If HasFeeder Then DoRecalc := True Else RemoveFeederObj; *)
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         if DoRecalc then
@@ -1237,7 +1237,7 @@ begin
         if not (MeteredElement is TPDElement) then
         begin
             MeteredElement := NIL;   // element not found
-            DoErrorMsg('EnergyMeter: "' + Self.Name + '"', 'Circuit Element "' + ElementName + '" is not a Power Delivery (PD) element.',
+            DoErrorMsg(DSS, 'EnergyMeter: "' + Self.Name + '"', 'Circuit Element "' + ElementName + '" is not a Power Delivery (PD) element.',
                 ' Element must be a PD element.', 525);
             Exit;
         end;
@@ -1245,7 +1245,7 @@ begin
 
         if MeteredTerminal > MeteredElement.Nterms then
         begin
-            DoErrorMsg('EnergyMeter: "' + Name + '"',
+            DoErrorMsg(DSS, 'EnergyMeter: "' + Name + '"',
                 'Terminal no. "' + IntToStr(MeteredTerminal) + '" does not exist.',
                 'Respecify terminal no.', 524);
         end
@@ -1274,7 +1274,7 @@ begin
     else
     begin
         MeteredElement := NIL;   // element not found
-        DoErrorMsg('EnergyMeter: "' + Self.Name + '"', 'Circuit Element "' + ElementName + '" Not Found.',
+        DoErrorMsg(DSS, 'EnergyMeter: "' + Self.Name + '"', 'Circuit Element "' + ElementName + '" Not Found.',
             ' Element must be defined previously.', 525);
     end;
 end;
@@ -1354,7 +1354,7 @@ begin
         AssignFile(F, DSS.OutputDirectory + CSVName);
         Rewrite(F);
         DSS.GlobalResult := CSVName;
-        SetLastResultFile(CSVName);
+        SetLastResultFile(DSS, CSVName);
 
     except
         On E: Exception do
@@ -2184,7 +2184,7 @@ begin
         Rewrite(F);
 
         DSS.GlobalResult := CSVName;
-        SetLastResultFile(CSVName);
+        SetLastResultFile(DSS, CSVName);
 
     except
 
@@ -2734,8 +2734,8 @@ begin
 
     if SectionCount = 0 then
     begin // Error - no OCP devices
-        DoSimpleMsg
-        ('Error: No Overcurrent Protection device (Relay, Recloser, or Fuse) defined. Aborting Reliability calc.',
+        DoSimpleMsg(DSS,
+            'Error: No Overcurrent Protection device (Relay, Recloser, or Fuse) defined. Aborting Reliability calc.',
             52902);
         Exit;
     end;
@@ -3070,7 +3070,7 @@ begin
                             if LoadElement.HasBeenAllocated then
                             begin
                        {Manually set the allocation factor so it shows up}
-                                Parser.CmdString := 'allocationfactor=' + Format('%-.4g', [LoadElement.AllocationFactor]);
+                                DSS.Parser.CmdString := 'allocationfactor=' + Format('%-.4g', [LoadElement.AllocationFactor]);
                                 LoadElement.Edit;
                             end;
                             ActiveCktElement := shuntElement; // reset in case Edit mangles it
@@ -3177,12 +3177,12 @@ begin
         if This_Meter_DIFileIsOpen then
         begin
             if DI_MHandle <> NIL then
-                CloseMHandler(DI_MHandle, MakeDIFileName, DI_Append);
+                CloseMHandler(DSS, DI_MHandle, MakeDIFileName, DI_Append);
             DI_MHandle := NIL;
             This_Meter_DIFileIsOpen := FALSE;
             if PHV_MHandle <> NIL then
                 if VPhaseReportFileIsOpen then
-                    CloseMHandler(PHV_MHandle, MakeVPhaseReportFileName, PHV_Append);
+                    CloseMHandler(DSS, PHV_MHandle, MakeVPhaseReportFileName, PHV_Append);
             PHV_MHandle := NIL;
             VPhaseReportFileIsOpen := FALSE;
         end;
@@ -3331,23 +3331,23 @@ begin
         SystemMeter.CloseDemandIntervalFile;
         SystemMeter.Save;
         if EMT_MHandle <> NIL then
-            CloseMHandler(EMT_MHandle, DI_Dir + PathDelim + 'EnergyMeterTotals.CSV', EMT_Append);
+            CloseMHandler(DSS, EMT_MHandle, DI_Dir + PathDelim + 'EnergyMeterTotals.CSV', EMT_Append);
         EMT_MHandle := NIL;
         if TDI_MHandle <> NIL then
-            CloseMHandler(TDI_MHandle, DI_Dir + PathDelim + 'DI_Totals.CSV', TDI_Append);
+            CloseMHandler(DSS, TDI_MHandle, DI_Dir + PathDelim + 'DI_Totals.CSV', TDI_Append);
         TDI_MHandle := NIL;
         DSS.DIFilesAreOpen := FALSE;
         if OverloadFileIsOpen then
         begin
             if OV_MHandle <> NIL then
-                CloseMHandler(OV_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads.CSV', OV_Append);
+                CloseMHandler(DSS, OV_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads.CSV', OV_Append);
             OV_MHandle := NIL;
             OverloadFileIsOpen := FALSE;
         end;
         if VoltageFileIsOpen then
         begin
             if VR_MHandle <> NIL then
-                CloseMHandler(VR_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions.CSV', VR_Append);
+                CloseMHandler(DSS, VR_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions.CSV', VR_Append);
             VR_MHandle := NIL;
             VoltageFileIsOpen := FALSE;
         end;
@@ -3698,7 +3698,7 @@ begin
     if This_Meter_DIFileIsOpen then
     begin
         File_Path := DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_SystemMeter.CSV';
-        CloseMHandler(SDI_MHandle, File_Path, SDI_Append);
+        CloseMHandler(DSS, SDI_MHandle, File_Path, SDI_Append);
         SDI_MHandle := NIL;
         This_Meter_DIFileIsOpen := FALSE;
     end;
@@ -3773,7 +3773,7 @@ begin
         else
             Folder := DSS.OutputDirectory;
         DSS.GlobalResult := CSVName;
-        SetLastResultFile(CSVName);
+        SetLastResultFile(DSS, CSVName);
 
     except
         On E: Exception do
@@ -3793,7 +3793,7 @@ begin
         WriteintoMemStr(SM_MHandle, Char(10));
 
     finally
-        CloseMHandler(SM_MHandle, Folder + CSVName, SM_Append);
+        CloseMHandler(DSS, SM_MHandle, Folder + CSVName, SM_Append);
         SM_MHandle := NIL;
     end;
 end;
@@ -3922,7 +3922,7 @@ begin
         for i := 1 to NumEMRegisters do
             WriteintoMem(FM_MHandle, Double(RegSum[i]));
         WriteintoMemStr(FM_MHandle, Char(10));
-        CloseMHandler(FM_MHandle, DI_Dir + PathDelim + 'Totals.CSV', FM_Append);
+        CloseMHandler(DSS, FM_MHandle, DI_Dir + PathDelim + 'Totals.CSV', FM_Append);
         FM_MHandle := NIL;
 
     except
@@ -4080,7 +4080,7 @@ procedure TEnergyMeter.InterpretRegisterMaskArray(var Mask: TRegisterArray);
 var
     i, n: Integer;
 begin
-    n := Parser.ParseAsVector(NumEMRegisters, @Mask);
+    n := DSS.Parser.ParseAsVector(NumEMRegisters, @Mask);
     for i := n + 1 to NumEMRegisters do
         Mask[i] := 1.0;  // Set the rest to 1
 end;

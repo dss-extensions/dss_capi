@@ -624,7 +624,7 @@ begin
     Result := -1;
     if DSSPrime.ActiveCircuit = NIL then
     begin
-        DoSimpleMsg('Create a circuit before trying to set an element active!', 5015);
+        DoSimpleMsg(DSSPrime, 'Create a circuit before trying to set an element active!', 5015);
         Exit;
     end;
 
@@ -688,7 +688,7 @@ end;
 //------------------------------------------------------------------------------
 function Circuit_SetActiveBus(const BusName: PAnsiChar): Integer; CDECL;
 begin
-    DSSGlobals.SetActiveBus(StripExtension(BusName));
+    DSSGlobals.SetActiveBus(DSSPrime, StripExtension(BusName));
     if Assigned(DSSPrime.ActiveCircuit) then
         Result := DSSPrime.ActiveCircuit.ActiveBusIndex - 1
     else
@@ -1061,7 +1061,7 @@ begin
     DevClassIndex := DSSPrime.ClassNames.Find(ClassName);
     if DevClassIndex = 0 then
     begin
-        DoSimplemsg('Error: Class ' + ClassName + ' not found.', 5016);
+        DoSimpleMsg(DSSPrime, 'Error: Class ' + ClassName + ' not found.', 5016);
         Exit;
     end;
 
@@ -1226,7 +1226,7 @@ procedure Circuit_SetCktElementIndex(const Value: Integer); CDECL;
 begin
     if DSSPrime.ActiveCircuit = NIL then
     begin
-        DoSimpleMsg('Create a circuit before trying to set an element active!', 5015);
+        DoSimpleMsg(DSSPrime, 'Create a circuit before trying to set an element active!', 5015);
         Exit;
     end;
 
@@ -1235,7 +1235,7 @@ begin
         if NumDevices > Value then
             ActiveCktElement := CktElements.Get(Value + 1)
         else
-            DoSimpleMsg('Invalid CktElement index', 5030);
+            DoSimpleMsg(DSSPrime, 'Invalid CktElement index', 5030);
     end;
 end;
 
@@ -1243,7 +1243,7 @@ procedure Circuit_SetCktElementName(const Value: PAnsiChar); CDECL;
 begin
     if Circuit_SetActiveElement(Value) = -1 then
     begin
-        DoSimpleMsg(Format('Invalid CktElement name "%s"', [Value]), 5031);
+        DoSimpleMsg(DSSPrime, Format('Invalid CktElement name "%s"', [Value]), 5031);
     end;
 end;
 //------------------------------------------------------------------------------

@@ -146,7 +146,7 @@ var
 
 {General Module Function}
 
-function GetTccCurve(const CurveName: String): TTCC_CurveObj;
+function GetTccCurve(DSS: TDSS; const CurveName: String): TTCC_CurveObj;
 
 begin
 
@@ -285,7 +285,7 @@ var
 
 begin
 
-  // continue parsing WITH contents of Parser
+  // continue parsing with contents of Parser
     DSS.ActiveRecloserObj := ElementList.Active;
     DSS.ActiveCircuit.ActiveCktElement := DSS.ActiveRecloserObj;
 
@@ -295,8 +295,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -313,47 +313,47 @@ begin
                 1:
                     MonitoredElementName := lowercase(param);
                 2:
-                    MonitoredElementTerminal := Parser.IntValue;
+                    MonitoredElementTerminal := DSS.Parser.IntValue;
                 3:
                     ElementName := lowercase(param);
                 4:
-                    ElementTerminal := Parser.IntValue;
+                    ElementTerminal := DSS.Parser.IntValue;
                 5:
-                    NumFast := Parser.Intvalue;
+                    NumFast := DSS.Parser.Intvalue;
                 6:
-                    PhaseFast := GetTccCurve(Param);
+                    PhaseFast := GetTccCurve(DSS, Param);
                 7:
-                    PhaseDelayed := GetTCCCurve(Param);
+                    PhaseDelayed := GetTCCCurve(DSS, Param);
                 8:
-                    GroundFast := GetTccCurve(Param);
+                    GroundFast := GetTccCurve(DSS, Param);
                 9:
-                    GroundDelayed := GetTCCCurve(Param);
+                    GroundDelayed := GetTCCCurve(DSS, Param);
                 10:
-                    PhaseTrip := Parser.Dblvalue;
+                    PhaseTrip := DSS.Parser.Dblvalue;
                 11:
-                    GroundTrip := Parser.Dblvalue;
+                    GroundTrip := DSS.Parser.Dblvalue;
                 12:
-                    PhaseInst := Parser.Dblvalue;
+                    PhaseInst := DSS.Parser.Dblvalue;
                 13:
-                    GroundInst := Parser.Dblvalue;
+                    GroundInst := DSS.Parser.Dblvalue;
                 14:
-                    Resettime := Parser.Dblvalue;
+                    Resettime := DSS.Parser.Dblvalue;
                 15:
-                    NumReclose := Parser.Intvalue - 1;   // one less than number of shots
+                    NumReclose := DSS.Parser.Intvalue - 1;   // one less than number of shots
                 16:
-                    NumReclose := Parser.ParseAsVector(4, RecloseIntervals);   // max of 4 allowed
+                    NumReclose := DSS.Parser.ParseAsVector(4, RecloseIntervals);   // max of 4 allowed
                 17:
-                    DelayTime := Parser.DblValue;
+                    DelayTime := DSS.Parser.DblValue;
                 18:
                     InterpretRecloserAction(Param);
                 19:
-                    TDPhFast := Parser.DblValue;
+                    TDPhFast := DSS.Parser.DblValue;
                 20:
-                    TDGrFast := Parser.DblValue;
+                    TDGrFast := DSS.Parser.DblValue;
                 21:
-                    TDPhDelayed := Parser.DblValue;
+                    TDPhDelayed := DSS.Parser.DblValue;
                 22:
-                    TDGrDelayed := Parser.DblValue;
+                    TDGrDelayed := DSS.Parser.DblValue;
 
             else
            // Inherited parameters
@@ -368,8 +368,8 @@ begin
                     ElementTerminal := MonitoredElementTerminal;
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -461,8 +461,8 @@ begin
     MonitoredElementTerminal := 1;
     MonitoredElement := NIL;
 
-    PhaseFast := GetTccCurve('a');
-    PhaseDelayed := GetTccCurve('d');
+    PhaseFast := GetTccCurve(DSS, 'a');
+    PhaseDelayed := GetTccCurve(DSS, 'd');
     GroundFast := NIL;
     GroundDelayed := NIL;
 
@@ -533,7 +533,7 @@ begin
         Nphases := MonitoredElement.NPhases;       // Force number of phases to be same
         if MonitoredElementTerminal > MonitoredElement.Nterms then
         begin
-            DoErrorMsg('Recloser: "' + Name + '"',
+            DoErrorMsg(DSS, 'Recloser: "' + Name + '"',
                 'Terminal no. "' + '" does not exist.',
                 'Re-specify terminal no.', 392);
         end
@@ -589,7 +589,7 @@ begin
     else
     begin
         ControlledElement := NIL;   // element not found
-        DoErrorMsg('Recloser: "' + Self.Name + '"', 'CktElement Element "' + ElementName + '" Not Found.',
+        DoErrorMsg(DSS, 'Recloser: "' + Self.Name + '"', 'CktElement Element "' + ElementName + '" Not Found.',
             ' Element must be defined previously.', 393);
     end;
 end;

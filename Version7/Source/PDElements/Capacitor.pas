@@ -258,7 +258,7 @@ begin
     with DSS.ActiveCapacitorObj do
     begin
         MatBuffer := Allocmem(Sizeof(Double) * Fnphases * Fnphases);
-        OrderFound := Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
+        OrderFound := DSS.Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
 
         if OrderFound > 0 then    // Parse was successful
         begin    {C}
@@ -363,8 +363,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -386,11 +386,11 @@ begin
                     NumTerm := 2;    // Specifies that the capacitor is not connected to ground
                 end;
                 3:
-{ Numphases := Parser.IntValue};  // see below
+{ Numphases := DSS.Parser.IntValue};  // see below
                 4:
                     FNumSteps := InterpretDblArray(Param, FNumSteps, FkvarRating);
                 5:
-                    kvRating := Parser.Dblvalue;
+                    kvRating := DSS.Parser.Dblvalue;
                 6:
                     InterpretConnection(Param);
                 7:
@@ -404,7 +404,7 @@ begin
                 11:
                     ProcessHarmonicSpec(Param);
                 12:
-                    NumSteps := Parser.IntValue;
+                    NumSteps := DSS.Parser.IntValue;
                 13:
                     ProcessStatesSpec(Param);
             else
@@ -426,9 +426,9 @@ begin
                         Bus2Defined := TRUE;
                     end;
                 3:
-                    if Fnphases <> Parser.IntValue then
+                    if Fnphases <> DSS.Parser.IntValue then
                     begin
-                        Nphases := Parser.IntValue;
+                        Nphases := DSS.Parser.IntValue;
                         NConds := Fnphases;  // Force Reallocation of terminal info
                         Yorder := Fnterms * Fnconds;
                     end;
@@ -463,8 +463,8 @@ begin
             end;
 
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -911,7 +911,7 @@ begin
                 end;
         end;
 
-        Parser.CmdString := S;
+        DSS.Parser.CmdString := S;
         Edit;
 
     end;

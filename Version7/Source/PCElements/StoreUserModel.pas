@@ -15,7 +15,7 @@ unit StoreUserModel;
 
 interface
 
-USES  StorageVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef;
+USES  StorageVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef, DSSClass;
 
 TYPE
 
@@ -39,6 +39,7 @@ TYPE
          function  Get_Exists: Boolean;
 
       Public
+         DSS: TDSS;
 
          FEdit:         Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
          FInit:         Procedure(V, I:pComplexArray);Stdcall;   // For dynamics
@@ -62,7 +63,7 @@ TYPE
          Procedure   Select;
          Procedure   Integrate;
 
-         constructor Create;
+         constructor Create(dssContext: TDSS);
          destructor  Destroy; override;
 
       Published
@@ -94,7 +95,8 @@ TYPE
       protected
 
       public
-
+        DSS: TDSS;
+        
         FEdit:         Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
         FInit:         Procedure(V, I:pComplexArray); Stdcall;   // For dynamics
         FCalc:         Procedure(V, I:pComplexArray); stdcall; // returns Currents or sets Pshaft
@@ -121,7 +123,7 @@ TYPE
         Procedure   Select;
         Procedure   Integrate;
 
-        constructor Create;
+        constructor Create(dssContext: TDSS);
         destructor  Destroy; override;
 
       published
@@ -131,7 +133,7 @@ TYPE
 implementation
 
 Uses Storage, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils,
-     DSSClass, DSSHelper;
+     DSSHelper;
 
 { TStoreUserModel }
 
@@ -145,9 +147,9 @@ begin
         Result := Addr;
 end;
 
-constructor TStoreUserModel.Create;
+constructor TStoreUserModel.Create(dssContext: TDSS);
 begin
-
+  DSS := dssContext;
   FID := 0;
   Fhandle := 0;
   FName := '';
@@ -251,7 +253,7 @@ begin
                  FName   := '';
             end
             Else Begin
-                FID := FNew( DSSPrime.ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
+                FID := FNew( DSS.ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
             End;;
         End;
 end;
@@ -271,9 +273,9 @@ begin
         Result := Addr;
 end;
 
-constructor TStoreDynaModel.Create;
+constructor TStoreDynaModel.Create(dssContext: TDSS);
 begin
-
+  DSS := dssContext;
   FID     := 0;
   Fhandle := 0;
   FName   := '';
@@ -376,7 +378,7 @@ begin
                  FName   := '';
             end
             Else Begin
-                FID := FNew( DSSPrime.ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
+                FID := FNew( DSS.ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
             End;;
         End;
 end;

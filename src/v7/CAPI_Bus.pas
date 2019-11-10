@@ -521,7 +521,7 @@ begin
 
         except
             On E: Exception do
-                DoSimpleMsg('ZscMatrix Error: ' + E.message + CRLF, 5016);
+                DoSimpleMsg(DSSPrime, 'ZscMatrix Error: ' + E.message + CRLF, 5016);
         end;
 
 end;
@@ -587,7 +587,7 @@ begin
 
         except
             On E: Exception do
-                DoSimpleMsg('ZscMatrix Error: ' + E.message + CRLF, 5017);
+                DoSimpleMsg(DSSPrime, 'ZscMatrix Error: ' + E.message + CRLF, 5017);
         end;
 
 

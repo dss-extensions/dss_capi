@@ -427,7 +427,7 @@ begin
             end;
         except
             On E: Exception do
-                DoErrorMsg('ShowGraph.', E.Message,
+                DoErrorMsg(DSS, 'ShowGraph.', E.Message,
                     'Is DSSView.EXE correctly installed???', 45704);
         end;
 

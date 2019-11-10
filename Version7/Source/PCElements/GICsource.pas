@@ -207,8 +207,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -223,29 +223,29 @@ begin
                 0:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 330);
                 1:
-                    Volts := Parser.DblValue;
+                    Volts := DSS.Parser.DblValue;
                 2:
-                    Angle := Parser.DblValue; // Ang
+                    Angle := DSS.Parser.DblValue; // Ang
                 3:
-                    SrcFrequency := Parser.DblValue; // freq   Usually 0.1 Hz
+                    SrcFrequency := DSS.Parser.DblValue; // freq   Usually 0.1 Hz
                 4:
                 begin
-                    Nphases := Parser.IntValue; // num phases
+                    Nphases := DSS.Parser.IntValue; // num phases
                     FphaseShift := 0.0;     // Zero Sequence
                     NConds := Fnphases;  // Force Reallocation of terminal info
                 end;
                 5:
-                    ENorth := Parser.DblValue;
+                    ENorth := DSS.Parser.DblValue;
                 6:
-                    EEast := Parser.DblValue;
+                    EEast := DSS.Parser.DblValue;
                 7:
-                    Lat1 := Parser.DblValue;
+                    Lat1 := DSS.Parser.DblValue;
                 8:
-                    Lon1 := Parser.DblValue;
+                    Lon1 := DSS.Parser.DblValue;
                 9:
-                    Lat2 := Parser.DblValue;
+                    Lat2 := DSS.Parser.DblValue;
                 10:
-                    Lon2 := Parser.DblValue;
+                    Lon2 := DSS.Parser.DblValue;
 
             else
                 ClassEdit(DSS.ActiveGICsourceObj, ParamPointer - NumPropsThisClass);
@@ -258,8 +258,8 @@ begin
                     VoltsSpecified := FALSE;
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;   // Updates Volts
@@ -417,8 +417,8 @@ begin
             SetBus(1, GICBus);
             SetBus(2, LineBus2);
              // Redefine the bus2 spec for LineElem
-            Parser.CmdString := 'Bus2=' + GICBus;
-            pLineElem.Edit;  // invoke the Line's editor to process Parser
+            DSS.Parser.CmdString := 'Bus2=' + GICBus;
+            pLineElem.Edit;  // invoke the Line's editor to process DSS.Parser
         end;
 
         Bus2Defined := TRUE;
@@ -579,7 +579,7 @@ begin
 
     except
         On E: Exception do
-            DoErrorMsg(('GetCurrents for GICsource Element: ' + Name + '.'), E.Message,
+            DoErrorMsg(DSS, ('GetCurrents for GICsource Element: ' + Name + '.'), E.Message,
                 'Inadequate storage allotted for circuit element?', 335);
     end;
 
@@ -663,7 +663,7 @@ begin
 
     if Fnphases > 1 then
     begin
-        Parser.CmdString := 'phases=1';
+        DSS.Parser.CmdString := 'phases=1';
         Edit;
     end;
     inherited;

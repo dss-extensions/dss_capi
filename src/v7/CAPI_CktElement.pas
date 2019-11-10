@@ -593,7 +593,7 @@ begin
                                     'Nphases=' + IntToStr(Nphases) + CRLF +
                                     'NTerms=' + IntToStr(NTerms) + CRLF +
                                     'NConds =' + IntToStr(NConds);
-                                DoSimpleMsg(S, 5012);
+                                DoSimpleMsg(DSSPrime, S, 5012);
                             end;
                         end;
                     end
@@ -745,7 +745,7 @@ begin
                                     'Nphases=' + IntToStr(Nphases) + CRLF +
                                     'NTerms=' + IntToStr(NTerms) + CRLF +
                                     'NConds =' + IntToStr(NConds);
-                                DoSimpleMsg(S, 5012);
+                                DoSimpleMsg(DSSPrime, S, 5012);
                             end;
                         end;
                     end
@@ -1182,7 +1182,7 @@ begin
                                     'Nphases=' + IntToStr(Nphases) + CRLF +
                                     'NTerms=' + IntToStr(NTerms) + CRLF +
                                     'NConds =' + IntToStr(NConds);
-                                DoSimpleMsg(S, 5012);
+                                DoSimpleMsg(DSSPrime, S, 5012);
                             end;
                         end;
                     end
@@ -1245,7 +1245,7 @@ begin
                                     'Nphases=' + IntToStr(Nphases) + CRLF +
                                     'NTerms=' + IntToStr(NTerms) + CRLF +
                                     'NConds =' + IntToStr(NConds);
-                                DoSimpleMsg(S, 5012);
+                                DoSimpleMsg(DSSPrime, S, 5012);
                             end;
                         end;
                     end

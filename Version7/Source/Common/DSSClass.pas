@@ -296,7 +296,11 @@ begin
     inherited Create;
     
     ParserVars := TParserVar.Create(100);  // start with space for 100 variables
-    
+
+{$IFDEF DSS_CAPI}
+    // Use the current working directory as the initial datapath when using DSS_CAPI
+    SetDataPath(self, StartupDirectory);
+{$ENDIF}
     
     IsPrime := _IsPrime;
     Parser        := TParser.Create;
@@ -428,7 +432,7 @@ END;
 Function TDSSClass.NewObject(const ObjName:String):Integer;
 BEGIN
     Result := 0;
-    DoErrorMsg('Reached base class of TDSSClass for device "' + ObjName + '"',
+    DoErrorMsg(DSS, 'Reached base class of TDSSClass for device "' + ObjName + '"',
         'N/A',
         'Should be overridden.', 780);
 END;
@@ -576,7 +580,7 @@ BEGIN
   If ParamPointer > 0 Then
   WITH TDSSObject(ActiveObj) DO BEGIN
       CASE ParamPointer OF
-       1: MakeLike(Parser.StrValue);    // Like command (virtual)
+       1: MakeLike(DSS.Parser.StrValue);    // Like command (virtual)
       END;
   End;
 End;

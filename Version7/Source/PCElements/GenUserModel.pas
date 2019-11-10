@@ -16,7 +16,7 @@ unit GenUserModel;
 
 interface
 
-USES  GeneratorVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef;
+USES  GeneratorVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef, DSSClass;
 
 TYPE
 
@@ -46,7 +46,8 @@ TYPE
       protected
 
       public
-
+        DSS: TDSS;
+        
         FEdit:         Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
         FInit:         procedure(V, I:pComplexArray);Stdcall;   // For dynamics
         FCalc:         Procedure(V, I:pComplexArray); stdcall; // returns Currents or sets Pshaft
@@ -76,7 +77,7 @@ TYPE
         Procedure Select;
         Procedure Integrate;
         
-        constructor Create(ActiveGeneratorVars:pTGeneratorVars);
+        constructor Create(dssContext: TDSS; ActiveGeneratorVars:pTGeneratorVars);
         destructor  Destroy; override;
       published
 
@@ -87,7 +88,7 @@ TYPE
 implementation
 
 Uses Generator, DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils,
-     DSSClass, DSSHelper;
+     DSSHelper;
 
 { TGenUserModel }
 
@@ -101,9 +102,9 @@ begin
         Result := Addr;
 end;
 
-constructor TGenUserModel.Create( ActiveGeneratorVars:pTGeneratorVars);
+constructor TGenUserModel.Create(dssContext: TDSS; ActiveGeneratorVars:pTGeneratorVars);
 begin
-
+    DSS     := dssContext;
     FID     := 0;
     Fhandle := 0;
     FName   := '';

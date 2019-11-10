@@ -152,10 +152,10 @@ begin
                 YprimInvalid := TRUE;
             TReactorProp.RCurve:
                 if RCurveObj = NIL then
-                    DoSimpleMsg('Resistance-frequency curve XYCurve.' + RCurve + ' not Found.', 2301);
+                    DoSimpleMsg(DSSPrime, 'Resistance-frequency curve XYCurve.' + RCurve + ' not Found.', 2301);
             TReactorProp.LCurve:
                 if LCurveObj = NIL then
-                    DoSimpleMsg('Inductance-frequency curve XYCurve.' + LCurve + ' not Found.', 2301);
+                    DoSimpleMsg(DSSPrime, 'Inductance-frequency curve XYCurve.' + LCurve + ' not Found.', 2301);
             TReactorProp.LmH:
                 YprimInvalid := TRUE;
         else
@@ -224,7 +224,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('Reactor "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'Reactor "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -835,7 +835,7 @@ begin
     pReactor := DSSPrime.ActiveCircuit.Reactors.Get(Value);
     if pReactor = NIL then
     begin
-        DoSimpleMsg('Invalid Reactor index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Reactor index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pReactor;

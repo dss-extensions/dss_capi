@@ -56,9 +56,9 @@ begin
 
             case ParamPointer of
                 1:
-                    BaseFrequency := Parser.Dblvalue;
+                    BaseFrequency := DSS.Parser.Dblvalue;
                 2:
-                    Enabled := InterpretYesNo(Parser.StrValue);
+                    Enabled := InterpretYesNo(DSS.Parser.StrValue);
             else
                 inherited ClassEdit(ActiveCktElemObj, ParamPointer - NumCktElemClassProps)
             end;

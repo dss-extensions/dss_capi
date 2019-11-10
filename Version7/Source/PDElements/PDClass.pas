@@ -97,15 +97,15 @@ begin
 
             case ParamPointer of
                 1:
-                    NormAmps := Parser.Dblvalue;
+                    NormAmps := DSS.Parser.Dblvalue;
                 2:
-                    EmergAmps := Parser.Dblvalue;
+                    EmergAmps := DSS.Parser.Dblvalue;
                 3:
-                    FaultRate := Parser.Dblvalue;
+                    FaultRate := DSS.Parser.Dblvalue;
                 4:
-                    PctPerm := Parser.Dblvalue;
+                    PctPerm := DSS.Parser.Dblvalue;
                 5:
-                    HrsToRepair := Parser.DblValue;
+                    HrsToRepair := DSS.Parser.DblValue;
             else
                 inherited ClassEdit(ActivePDObj, ParamPointer - NumPDClassProps)
             end;

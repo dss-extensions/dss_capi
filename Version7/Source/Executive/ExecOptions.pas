@@ -403,7 +403,7 @@ begin
     OptionHelp[100] := 'Numeric marker code (0..47 see Users Manual) for Recloser elements. Default is 17. (color=Lime)';
     OptionHelp[101] := 'Size of Recloser marker. Default is 5.';
     OptionHelp[102] := '{YES/TRUE | NO/FALSE}  Default is Yes. Update Windows Registry values upon exiting.  You might want to turn this off if you temporarily ' +
-        'change fonts or DefaultBaseFrequency, for example. ';
+        'change fonts or DefaultBaseFrequency, for example. ' {$IFDEF DSS_CAPI} + 'NOTE: This is a no-op in DSS C-API, as the registry is not used at all.'{$ENDIF};
     OptionHelp[103] := '{YES/TRUE | NO/FALSE}  Default is NO. Mark Relay locations with a symbol. See RelayMarkerCode and RelayMarkerSize. ';
     OptionHelp[104] := 'Numeric marker code (0..47 see Users Manual) for Relay elements. Default is 17. (Color=Lime)';
     OptionHelp[105] := 'Size of Relay marker. Default is 5.';
@@ -458,7 +458,11 @@ begin
             73:
                 DSSPrime.DefaultBaseFreq := DSSPrime.Parser.DblValue;
             102:
+{$IFDEF DSS_CAPI}
+                ;
+{$ELSE}
                 UpdateRegistry := InterpretYesNo(Param);
+{$ENDIF}
             111:
             begin
                 DSS_Viz_enable := InterpretYesNo(Param);
@@ -761,7 +765,12 @@ begin
             101:
                 DSSPrime.ActiveCircuit.RecloserMarkerSize := DSSPrime.Parser.IntValue;
             102:
+{$IFDEF DSS_CAPI}
+                ;
+{$ELSE}
                 UpdateRegistry := InterpretYesNo(Param);
+{$ENDIF}
+
             103:
                 DSSPrime.ActiveCircuit.MarkRelays := InterpretYesNo(Param);
             104:
@@ -1132,10 +1141,13 @@ begin
                 101:
                     AppendGlobalResult(DSSPrime, Format('%d', [DSSPrime.ActiveCircuit.RecloserMarkerSize]));
                 102:
+{$IFNDEF DSS_CAPI}
                     if UpdateRegistry then
                         AppendGlobalResult(DSSPrime, 'Yes')
                     else
+{$ELSE}
                         AppendGlobalResult(DSSPrime, 'No');
+{$ENDIF}
                 103:
                     if DSSPrime.ActiveCircuit.MarkRelays then
                         AppendGlobalResult(DSSPrime, 'Yes')

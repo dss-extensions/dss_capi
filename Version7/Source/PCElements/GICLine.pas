@@ -272,8 +272,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -293,22 +293,22 @@ begin
                     SetBus(2, param);
 
                 3:
-                    Volts := Parser.DblValue; // basekv
+                    Volts := DSS.Parser.DblValue; // basekv
                 4:
-                    Angle := Parser.DblValue; // Ang
+                    Angle := DSS.Parser.DblValue; // Ang
                 5:
-                    SrcFrequency := Parser.DblValue; // freq
+                    SrcFrequency := DSS.Parser.DblValue; // freq
                 6:
                 begin
-                    Nphases := Parser.Intvalue; // num phases
+                    Nphases := DSS.Parser.Intvalue; // num phases
                     NConds := Fnphases;  // Force Reallocation of terminal info
                 end;
                 7:
-                    R := Parser.DblValue;
+                    R := DSS.Parser.DblValue;
                 8:
-                    X := Parser.DblValue;
+                    X := DSS.Parser.DblValue;
                 9:
-                    C := Parser.DblValue;
+                    C := DSS.Parser.DblValue;
 
     (*     10:  Case Uppercase(Param)[1] of
                   'P': ScanType :=  1;
@@ -326,17 +326,17 @@ begin
                 END;
     *)
                 10:
-                    ENorth := Parser.DblValue;
+                    ENorth := DSS.Parser.DblValue;
                 11:
-                    EEast := Parser.DblValue;
+                    EEast := DSS.Parser.DblValue;
                 12:
-                    Lat1 := Parser.DblValue;
+                    Lat1 := DSS.Parser.DblValue;
                 13:
-                    Lon1 := Parser.DblValue;
+                    Lon1 := DSS.Parser.DblValue;
                 14:
-                    Lat2 := Parser.DblValue;
+                    Lat2 := DSS.Parser.DblValue;
                 15:
-                    Lon2 := Parser.DblValue;
+                    Lon2 := DSS.Parser.DblValue;
 
             else
                 ClassEdit(DSS.ActiveGICLineObj, ParamPointer - NumPropsThisClass)
@@ -349,8 +349,8 @@ begin
                     VoltsSpecified := FALSE;
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -585,7 +585,7 @@ begin
 
     if Zinv.InvertError > 0 then
     begin       {If error, put in Large series conductance}
-        DoErrorMsg('TGICLineObj.CalcYPrim', 'Matrix Inversion Error for GICLine "' + Name + '"',
+        DoErrorMsg(DSS, 'TGICLineObj.CalcYPrim', 'Matrix Inversion Error for GICLine "' + Name + '"',
             'Invalid impedance specified. Replaced with small resistance.', 325);
         Zinv.Clear;
         for i := 1 to Fnphases do
@@ -720,7 +720,7 @@ begin
         end;  {With}
     except
         On E: Exception do
-            DoErrorMsg(('GetCurrents for Element: ' + Name + '.'), E.Message,
+            DoErrorMsg(DSS, ('GetCurrents for Element: ' + Name + '.'), E.Message,
                 'Inadequate storage allotted for circuit element.', 327);
     end;
 
@@ -845,7 +845,7 @@ begin
     S := S + Format('R=%-.8g ', [R]);
     S := S + Format('X=%-.8g ', [X]);
 
-    Parser.CmdString := S;
+    DSS.Parser.CmdString := S;
     Edit;
 
     inherited;

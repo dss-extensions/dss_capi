@@ -81,7 +81,7 @@ begin
         with DSSPrime.ActiveCircuit.AutoAddBusList do
         begin
             for i := 1 to ListSize do
-                AppendGlobalResult(Get(i));
+                AppendGlobalResult(DSSPrime, Get(i));
             Result := DSSPrime.GlobalResult;
         end
     end
@@ -463,7 +463,7 @@ begin
             PriceCurve := Value;
             PriceCurveObj := DSSPrime.LoadShapeClass.Find(Pricecurve);
             if PriceCurveObj = NIL then
-                DoSimpleMsg('Price Curve: "' + Pricecurve + '" not found.', 5006);
+                DoSimpleMsg(DSSPrime, 'Price Curve: "' + Pricecurve + '" not found.', 5006);
         end;
 end;
 //------------------------------------------------------------------------------

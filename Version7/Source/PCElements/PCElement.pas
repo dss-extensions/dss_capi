@@ -183,7 +183,7 @@ begin
 
     except
         On E: Exception do
-            DoErrorMsg(('GetCurrents for Element: ' + Name + '.'), E.Message,
+            DoErrorMsg(DSS, ('GetCurrents for Element: ' + Name + '.'), E.Message,
                 'Inadequate storage allotted for circuit element.', 641);
     end;
 

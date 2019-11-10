@@ -258,8 +258,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -278,36 +278,36 @@ begin
                 2:
                     SetBus(2, param);     // special handling of Bus 2
                 3:
-                    VRef := Parser.DblValue; // kv Output reference
+                    VRef := DSS.Parser.DblValue; // kv Output reference
                 4:
-                    pf := Parser.DblValue; // power factor
+                    pf := DSS.Parser.DblValue; // power factor
                 5:
-                    Freq := Parser.DblValue; // Freq
+                    Freq := DSS.Parser.DblValue; // Freq
                 6:
                 begin
-                    Nphases := Parser.Intvalue; // num phases
+                    Nphases := DSS.Parser.Intvalue; // num phases
                     NConds := Fnphases;  // Force Reallocation of terminal info
                 end;
                 7:
-                    Xs := Parser.DblValue; // Xs
+                    Xs := DSS.Parser.DblValue; // Xs
                 8:
-                    Tol1 := Parser.DblValue; // Tolerance Ctrl 2
+                    Tol1 := DSS.Parser.DblValue; // Tolerance Ctrl 2
                 9:
-                    ModeUPFC := Parser.IntValue;
+                    ModeUPFC := DSS.Parser.IntValue;
                 10:
-                    VpqMax := Parser.DblValue;
+                    VpqMax := DSS.Parser.DblValue;
                 propLossCurve:
                     LossCurve := Param;
                 12:
-                    VHLimit := Parser.DblValue;
+                    VHLimit := DSS.Parser.DblValue;
                 13:
-                    VLLimit := Parser.DblValue;
+                    VLLimit := DSS.Parser.DblValue;
                 14:
-                    CLimit := Parser.DblValue;
+                    CLimit := DSS.Parser.DblValue;
                 15:
-                    VRef2 := Parser.DblValue;
+                    VRef2 := DSS.Parser.DblValue;
                 16:
-                    kvarLim := Parser.DblValue;
+                    kvarLim := DSS.Parser.DblValue;
 
             else
                 ClassEdit(DSS.ActiveUPFCObj, ParamPointer - NumPropsThisClass)
@@ -318,8 +318,8 @@ begin
                     UPFCLossCurveObj := DSS.XYCurveClass.Find(LossCurve);
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -542,7 +542,7 @@ begin
 
     if Zinv.InvertError > 0 then
     begin       {If error, put in Large series conductance}
-        DoErrorMsg('TUPFCObj.CalcYPrim', 'Matrix Inversion Error for UPFC "' + Name + '"',
+        DoErrorMsg(DSS, 'TUPFCObj.CalcYPrim', 'Matrix Inversion Error for UPFC "' + Name + '"',
             'Invalid impedance specified. Replaced with small resistance.', 325);
         Zinv.Clear;
         for i := 1 to Fnphases do
@@ -996,7 +996,7 @@ begin
         end;  {With}
     except
         On E: Exception do
-            DoErrorMsg(('GetCurrents for Element: ' + Name + '.'), E.Message,
+            DoErrorMsg(DSS, ('GetCurrents for Element: ' + Name + '.'), E.Message,
                 'Inadequate storage allotted for circuit element.', 327);
     end;
 
@@ -1103,7 +1103,7 @@ begin
         S := S + Format('R1=%-.5g ', [R1]);
         S := S + Format('X1=%-.5g ', [X1]);
 
-        Parser.CmdString := S;
+        DSS.Parser.CmdString := S;
         Edit;
 
         inherited;

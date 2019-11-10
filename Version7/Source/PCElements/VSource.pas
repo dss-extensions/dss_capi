@@ -360,8 +360,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -378,38 +378,38 @@ begin
                 1:
                     VSourceSetBus1(param);   // special handling of Bus 1
                 2:
-                    kVBase := Parser.DblValue; // basekv
+                    kVBase := DSS.Parser.DblValue; // basekv
                 3:
-                    PerUnit := Parser.DblValue; // pu
+                    PerUnit := DSS.Parser.DblValue; // pu
                 4:
-                    Angle := Parser.DblValue; // Ang
+                    Angle := DSS.Parser.DblValue; // Ang
                 5:
-                    SrcFrequency := Parser.DblValue; // freq
+                    SrcFrequency := DSS.Parser.DblValue; // freq
                 6:
                 begin
-                    Nphases := Parser.Intvalue; // num phases
+                    Nphases := DSS.Parser.Intvalue; // num phases
                     NConds := Fnphases;  // Force Reallocation of terminal info
                 end;
                 7:
-                    MVAsc3 := Parser.DblValue; // MVAsc3
+                    MVAsc3 := DSS.Parser.DblValue; // MVAsc3
                 8:
-                    MVAsc1 := Parser.DblValue; // MVAsc1
+                    MVAsc1 := DSS.Parser.DblValue; // MVAsc1
                 9:
-                    X1R1 := Parser.DblValue; // X1/R1
+                    X1R1 := DSS.Parser.DblValue; // X1/R1
                 10:
-                    X0R0 := Parser.DblValue; // X0/R0
+                    X0R0 := DSS.Parser.DblValue; // X0/R0
                 11:
-                    Isc3 := Parser.DblValue;
+                    Isc3 := DSS.Parser.DblValue;
                 12:
-                    Isc1 := Parser.DblValue;
+                    Isc1 := DSS.Parser.DblValue;
                 13:
-                    R1 := Parser.DblValue;
+                    R1 := DSS.Parser.DblValue;
                 14:
-                    X1 := Parser.DblValue;
+                    X1 := DSS.Parser.DblValue;
                 15:
-                    R0 := Parser.DblValue;
+                    R0 := DSS.Parser.DblValue;
                 16:
-                    X0 := Parser.DblValue;
+                    X0 := DSS.Parser.DblValue;
                 17:
                     case Uppercase(Param)[1] of
                         'P':
@@ -447,7 +447,7 @@ begin
                 25:
                     puZ2 := InterpretComplex(Param);
                 26:
-                    BaseMVA := Parser.DblValue;
+                    BaseMVA := DSS.Parser.DblValue;
 
                 27:
                     YearlyShape := Param;
@@ -562,8 +562,8 @@ begin
                     ZBase := SQR(kvBase) / BaseMVA;
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -1058,7 +1058,7 @@ begin
 
     if Zinv.InvertError > 0 then
     begin       {If error, put in Large series conductance}
-        DoErrorMsg('TVsourceObj.CalcYPrim', 'Matrix Inversion Error for Vsource "' + Name + '"',
+        DoErrorMsg(DSS, 'TVsourceObj.CalcYPrim', 'Matrix Inversion Error for Vsource "' + Name + '"',
             'Invalid impedance specified. Replaced with small resistance.', 325);
         Zinv.Clear;
         for i := 1 to Fnphases do
@@ -1247,7 +1247,7 @@ begin
         end;  {With}
     except
         On E: Exception do
-            DoErrorMsg(('GetCurrents for Element: ' + Name + '.'), E.Message,
+            DoErrorMsg(DSS, ('GetCurrents for Element: ' + Name + '.'), E.Message,
                 'Inadequate storage allotted for circuit element.', 327);
     end;
 
@@ -1452,7 +1452,7 @@ begin
     S := S + Format('R1=%-.5g ', [R1]);
     S := S + Format('X1=%-.5g ', [X1]);
 
-    Parser.CmdString := S;
+    DSS.Parser.CmdString := S;
     Edit;
 
     inherited;

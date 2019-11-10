@@ -98,7 +98,7 @@ function IsLine(const CktElem: TDSSCktElement): Boolean;
 begin
     Result := ((CktElem.DssObjtype and CLASSMASK) = LINE_ELEMENT);
     if not Result then
-        DoSimpleMsg('Line Type Expected, but another found. Dss Class=' + CktElem.DSSClassName + CRLF +
+        DoSimpleMsg(DSSPrime, 'Line Type Expected, but another found. Dss Class=' + CktElem.DSSClassName + CRLF +
             'Element name=' + CktElem.Name, 5007);
 end;
 //------------------------------------------------------------------------------
@@ -305,7 +305,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('Line "' + Value + '" Not Found in Active Circuit.', 5008);
+        DoSimpleMsg(DSSPrime, 'Line "' + Value + '" Not Found in Active Circuit.', 5008);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -645,7 +645,7 @@ begin
         Exit;
     with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
-        Parser.CmdString := 'geometry=' + Value;
+        DSSPrime.Parser.CmdString := 'geometry=' + Value;
         Edit;
         YprimInvalid := TRUE;
     end;
@@ -681,7 +681,7 @@ begin
         Exit;
     with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
-        Parser.CmdString := Format('rg=%.7g', [Value]);
+        DSSPrime.Parser.CmdString := Format('rg=%.7g', [Value]);
         Edit;
         YprimInvalid := TRUE;
     end;
@@ -693,7 +693,7 @@ begin
         Exit;
     with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
-        Parser.CmdString := Format('rho=%.7g', [Value]);
+        DSSPrime.Parser.CmdString := Format('rho=%.7g', [Value]);
         Edit;
         YprimInvalid := TRUE;
     end;
@@ -705,7 +705,7 @@ begin
         Exit;
     with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
-        Parser.CmdString := Format('xg=%.7g', [Value]);
+        DSSPrime.Parser.CmdString := Format('xg=%.7g', [Value]);
         Edit;
         YprimInvalid := TRUE;
     end;
@@ -825,7 +825,7 @@ begin
         Exit;
     with TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement) do
     begin
-        Parser.CmdString := 'spacing=' + Value;
+        DSSPrime.Parser.CmdString := 'spacing=' + Value;
         Edit;
         YprimInvalid := TRUE;
     end;
@@ -852,12 +852,12 @@ begin
     begin
         if Value < dssLineUnitsMaxnum then
         begin
-            Parser.CmdString := Format('units=%s', [LineUnitsStr(Value)]);
+            DSSPrime.Parser.CmdString := Format('units=%s', [LineUnitsStr(Value)]);
             Edit;
             YprimInvalid := TRUE;
         end
         else
-            DoSimpleMsg('Invalid line units integer sent via COM interface.  Please enter a value within range.', 183);
+            DoSimpleMsg(DSSPrime, 'Invalid line units integer sent via COM interface.  Please enter a value within range.', 183);
 
     end;
 end;
@@ -879,7 +879,7 @@ begin
     pLine := DSSPrime.ActiveCircuit.Lines.Get(Value);
     if pLine = NIL then
     begin
-        DoSimpleMsg('Invalid Line index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Line index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pLine;

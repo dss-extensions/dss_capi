@@ -17,7 +17,7 @@ unit CmdForms;
 interface
 
 uses
-    Classes, PointerList;
+    Classes;
 
 var
     ControlPanelCreated: Boolean;  // signify whether this is the DLL or EXE
@@ -30,7 +30,7 @@ procedure ProgressCaption(const S: String);
 procedure ProgressFormCaption(const S: String);
 procedure ProgressHide;
 procedure ShowControlPanel;
-procedure ShowHelpForm(DSSClassList: TPointerList);
+procedure ShowHelpForm(dssContext: TObject);
 procedure ShowAboutBox;
 procedure ShowPropEditForm;
 procedure ShowPctProgress(Count: Integer);
@@ -56,7 +56,9 @@ uses
     ParserDel,
     Sysutils,
     Strutils,
-    ArrayDef;
+    ArrayDef,
+    DSSHelper,
+    PointerList;
 
 const
     colwidth = 25;
@@ -280,14 +282,16 @@ begin
     end;
 end;
 
-procedure ShowHelpForm(DSSClassList: TPointerList);
+procedure ShowHelpForm(dssContext: TObject);
 var
     Param, OptName: String;
+    DSS: TDSS;
 begin
-    Parser.NextParam;
-    Param := LowerCase(Parser.StrValue);
-    Parser.NextParam;
-    OptName := LowerCase(Parser.StrValue);
+    DSS := TDSS(dssContext);
+    DSS.Parser.NextParam;
+    Param := LowerCase(DSS.Parser.StrValue);
+    DSS.Parser.NextParam;
+    OptName := LowerCase(DSS.Parser.StrValue);
     if ANSIStartsStr('com', param) then
         ShowAnyHelp(NumExecCommands, @ExecCommand, @CommandHelp, OptName)
     else
@@ -301,7 +305,7 @@ begin
         ShowAnyHelp(NumExportOptions, @ExportOption, @ExportHelp, OptName)
     else
     if ANSIStartsStr('cl', param) then
-        ShowClassHelp(DSSClassList, OptName)
+        ShowClassHelp(DSS.DSSClassList, OptName)
     else
         ShowGeneralHelp;
 end;

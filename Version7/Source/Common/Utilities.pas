@@ -307,7 +307,7 @@ begin
         end;
     end;
     if gotError then
-        DoErrorMsg('FireOffEditor.', msg, 'Editor could not be started. Is the editor correctly specified?', 704);
+        DoErrorMsg(DSSPrime, 'FireOffEditor.', msg, 'Editor could not be started. Is the editor correctly specified?', 704);
 end;
 
 procedure DoDOSCmd(CmdString: String);
@@ -332,7 +332,7 @@ begin
         end;
     end;
     if gotError then
-        DoSimpleMsg(DSS, Format('DoDOSCmd Error:%s. Error in Command "%s"', [msg, CmdString]), 704);
+        DoSimpleMsg(DSSPrime, Format('DoDOSCmd Error:%s. Error in Command "%s"', [msg, CmdString]), 704);
 end;
 
 {$ELSE}
@@ -345,22 +345,22 @@ begin
         if FileExists(FileNm) then
         begin
             retval := ShellExecute(0, NIL, Pchar(encloseQuotes(DefaultEditor)), Pchar(encloseQuotes(FileNm)), NIL, SW_SHOW);
-            SetLastResultFile(FileNm);
+            SetLastResultFile(DSSPrime, FileNm);
 
             case Retval of
                 0:
-                    DoSimpleMsg(DSS, 'System out of memory. Cannot start Editor.', 700);
+                    DoSimpleMsg(DSSPrime, 'System out of memory. Cannot start Editor.', 700);
                 ERROR_BAD_FORMAT:
-                    DoSimpleMsg(DSS, 'Editor File is Invalid.', 701);
+                    DoSimpleMsg(DSSPrime, 'Editor File is Invalid.', 701);
                 ERROR_FILE_NOT_FOUND:
-                    DoSimpleMsg(DSS, 'Editor "' + DefaultEditor + '"  Not Found.' + CRLF + 'Did you set complete path name?', 702);
+                    DoSimpleMsg(DSSPrime, 'Editor "' + DefaultEditor + '"  Not Found.' + CRLF + 'Did you set complete path name?', 702);
                 ERROR_PATH_NOT_FOUND:
-                    DoSimpleMsg(DSS, 'Path for Editor "' + DefaultEditor + '" Not Found.', 703);
+                    DoSimpleMsg(DSSPrime, 'Path for Editor "' + DefaultEditor + '" Not Found.', 703);
             end;
         end;
     except
         On E: Exception do
-            DoErrorMsg('FireOffEditor.', E.Message,
+            DoErrorMsg(DSSPrime, 'FireOffEditor.', E.Message,
                 'Default Editor correctly specified???', 704);
     end;
 end;
@@ -377,7 +377,7 @@ begin
 
     except
         On E: Exception do
-            DoSimpleMsg(DSS, Format('DoDOSCmd Error:%s. Error in Command "%s"', [E.Message, CmdString]), 704);
+            DoSimpleMsg(DSSPrime, Format('DoDOSCmd Error:%s. Error in Command "%s"', [E.Message, CmdString]), 704);
     end;
 end;
 
@@ -784,7 +784,7 @@ begin
             CSVFileName := Param;
         if not FileExists(CSVFileName) then
         begin
-            DoSimpleMsg(DSS, Format('CSV file "%s" does not exist', [CSVFileName]), 70401);
+            DoSimpleMsg(DSSPrime, Format('CSV file "%s" does not exist', [CSVFileName]), 70401);
             Exit;
         end;
 
@@ -834,7 +834,7 @@ begin
                 except
                     On E: Exception do
                     begin
-                        DoSimpleMsg(DSS, Format('Error reading %d-th numeric array value from file: "%s" Error is:', [i, Param, E.message]), 705);
+                        DoSimpleMsg(DSSPrime, Format('Error reading %d-th numeric array value from file: "%s" Error is:', [i, Param, E.message]), 705);
                         Result := i - 1;
                         Break;
                     end;
@@ -863,7 +863,7 @@ begin
             MyStream.ReadBuffer(ResultArray^[1], SizeOf(ResultArray^[1]) * Result);
         end
         else
-            DoSimpleMsg(DSS, Format('File of doubles "%s" not found.', [Param]), 70501);
+            DoSimpleMsg(DSSPrime, Format('File of doubles "%s" not found.', [Param]), 70501);
         MyStream.Free;
     end
 
@@ -885,7 +885,7 @@ begin
             end;
         end
         else
-            DoSimpleMsg(DSS, Format('File of Singles "%s" not found.', [Param]), 70502);
+            DoSimpleMsg(DSSPrime, Format('File of Singles "%s" not found.', [Param]), 70502);
         MyStream.Free;
 
     end
@@ -942,7 +942,7 @@ begin
 
         except
             On E: Exception do
-                DoSimpleMsg(DSS, 'Error trying to read numeric array values from file: "' + Param + '"  Error is: ' + E.message, 706);
+                DoSimpleMsg(DSSPrime, 'Error trying to read numeric array values from file: "' + Param + '"  Error is: ' + E.message, 706);
         end;
     end
     else
@@ -977,7 +977,7 @@ begin
     if Code > 0 then
     begin   {check for error}
         Result := DSSPrime.ActiveCircuit.solution.DynaVars.h; // Don't change it
-        DoSimpleMsg(DSS, 'Error in specification of StepSize: ' + s, 99933);
+        DoSimpleMsg(DSSPrime, 'Error in specification of StepSize: ' + s, 99933);
         Exit;
     end;
     case ch of
@@ -988,7 +988,7 @@ begin
         's': ; // Do nothing
     else
         Result := DSSPrime.ActiveCircuit.solution.DynaVars.h; // Don't change it
-        DoSimpleMsg(DSS, 'Error in specification of StepSize: "' + s + '" Units can only be h, m, or s (single char only) ', 99934);
+        DoSimpleMsg(DSSPrime, 'Error in specification of StepSize: "' + s + '" Units can only be h, m, or s (single char only) ', 99934);
     end;
 
 end;
@@ -1082,7 +1082,7 @@ begin
 
         except
             On E: Exception do
-                DoSimpleMsg(DSS, 'Error trying to read numeric array values from a file. Error is: ' + E.message, 707);
+                DoSimpleMsg(DSSPrime, 'Error trying to read numeric array values from a file. Error is: ' + E.message, 707);
         end;
 
 
@@ -1155,7 +1155,7 @@ begin
 
         except
             On E: Exception do
-                DoSimpleMsg(DSS, 'Error trying to read numeric array values from a file. Error is: ' + E.message, 708);
+                DoSimpleMsg(DSSPrime, 'Error trying to read numeric array values from a file. Error is: ' + E.message, 708);
         end;
 
 
@@ -1212,7 +1212,7 @@ begin
     end;
 
       // Check object name in case it is a variable
-    Parser.CheckforVar(ObjName);
+    DSSPrime.Parser.CheckforVar(ObjName);
 
 end;
 
@@ -1468,7 +1468,7 @@ begin
     except
         On E: Exception do
         begin
-            DoErrorMsg('Error opening ' + FileName + ' for writing.', E.Message, ' File protected or other file error.', 709);
+            DoErrorMsg(DSSPrime, 'Error opening ' + FileName + ' for writing.', E.Message, ' File protected or other file error.', 709);
             Exit;
         end;
     end;
@@ -1512,7 +1512,7 @@ begin
     except
         On E: Exception do
         begin
-            DoErrorMsg('Error opening ' + FileName + ' for writing.', E.Message, 'Disk protected or other file error', 710);
+            DoErrorMsg(DSSPrime, 'Error opening ' + FileName + ' for writing.', E.Message, 'Disk protected or other file error', 710);
             Exit;
         end;
     end;
@@ -1601,7 +1601,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg(DSS, 'Error opening/creating file to save voltages: ' + E.message, 711);
+            DoSimpleMsg(DSSPrime, 'Error opening/creating file to save voltages: ' + E.message, 711);
             Result := FALSE;
             Exit;
         end;
@@ -1621,7 +1621,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg(DSS, 'Error writing file to save voltages: ' + E.message, 712);
+            DoSimpleMsg(DSSPrime, 'Error writing file to save voltages: ' + E.message, 712);
             Result := FALSE;
         end;
     end;
@@ -1646,7 +1646,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg(DSS, 'Error opening file to retrieve saved voltages: ' + E.message, 713);
+            DoSimpleMsg(DSSPrime, 'Error opening file to retrieve saved voltages: ' + E.message, 713);
             Result := FALSE;
             Exit;
         end;
@@ -1661,7 +1661,7 @@ begin
                     Read(F, NodeV^[i].re, NodeV^[i].im)
             else
             begin
-                DoSimpleMsg(DSS, 'Saved results do not match present circuit. Aborting.', 714);
+                DoSimpleMsg(DSSPrime, 'Saved results do not match present circuit. Aborting.', 714);
                 Result := FALSE;
             end;
         end;
@@ -1671,7 +1671,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg(DSS, 'Error reading file to retrieve saved voltages: ' + E.message, 715);
+            DoSimpleMsg(DSSPrime, 'Error reading file to retrieve saved voltages: ' + E.message, 715);
             Result := FALSE;
         end;
     end;
@@ -1961,7 +1961,7 @@ begin
         DSSPrime.EventStrings.Clear;
     except
         On E: Exception do
-            DoSimpleMsg(DSS, Format('Exception clearing event log: %s, @EventStrings=%p', [E.Message, @DSSPrime.EventStrings]), 7151);
+            DoSimpleMsg(DSSPrime, Format('Exception clearing event log: %s, @EventStrings=%p', [E.Message, @DSSPrime.EventStrings]), 7151);
     end;
 end;
 
@@ -1973,7 +1973,7 @@ begin
         DSSPrime.ErrorStrings.Clear;
     except
         On E: Exception do
-            DoSimpleMsg(DSS, Format('Exception clearing error log: %s, @EventStrings=%p', [E.Message, @DSSPrime.EventStrings]), 71511);
+            DoSimpleMsg(DSSPrime, Format('Exception clearing error log: %s, @EventStrings=%p', [E.Message, @DSSPrime.EventStrings]), 71511);
     end;
 end;
 
@@ -2036,7 +2036,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg(DSS, 'Error in Dump Complex Matrix: ' + E.message + '  Write aborted.', 716);
+            DoSimpleMsg(DSSPrime, 'Error in Dump Complex Matrix: ' + E.message + '  Write aborted.', 716);
         end;
 
     end;
@@ -2101,7 +2101,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg(DSS, 'WriteClassFile Error: ' + E.Message, 717);
+            DoSimpleMsg(DSSPrime, 'WriteClassFile Error: ' + E.Message, 717);
             Result := FALSE;
         end;
     end;
@@ -2159,7 +2159,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg(DSS, 'WriteClassFile Error: ' + E.Message, 718);
+            DoSimpleMsg(DSSPrime, 'WriteClassFile Error: ' + E.Message, 718);
             Result := FALSE;
         end;
     end;
@@ -2240,7 +2240,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg(DSS, 'Error opening file: ' + Filename + ', ' + E.message, 719);
+            DoSimpleMsg(DSSPrime, 'Error opening file: ' + Filename + ', ' + E.message, 719);
             Result := FALSE;
             Exit
         end;
@@ -2253,7 +2253,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg(DSS, 'Error opening file: ' + AlignedFile + ', ' + E.message, 720);
+            DoSimpleMsg(DSSPrime, 'Error opening file: ' + AlignedFile + ', ' + E.message, 720);
             CloseFile(Fin);
             Result := FALSE;
             Exit;
@@ -2668,13 +2668,13 @@ begin
 
     try
         if FileExists(Fname) then
-            DoSimpleMsg(DSS, 'File "' + Fname + '" is about to be overwritten. Rename it now before continuing if you wish to keep it.', 721);
+            DoSimpleMsg(DSSPrime, 'File "' + Fname + '" is about to be overwritten. Rename it now before continuing if you wish to keep it.', 721);
         AssignFile(F, Fname);
         Rewrite(F);
     except
         On E: Exception do
         begin
-            DoSimpleMsg(DSS, 'Error opening "' + Fname + '" for writing. Aborting.', 722);
+            DoSimpleMsg(DSSPrime, 'Error opening "' + Fname + '" for writing. Aborting.', 722);
             Exit;
         end;
     end;
@@ -2705,7 +2705,7 @@ begin
     finally
    // Writeln(F, 'Set allowduplicates=no');
         CloseFile(F);
-        SetlastResultFile(Fname);
+        SetLastResultFile(DSSPrime, Fname);
     end;
 
 end;
@@ -2898,7 +2898,7 @@ begin
     begin
         if (pLine.NPhases = NPhases) or (Nphases = 0) then
         begin
-            Parser.CmdString := EditStr;
+            DSSPrime.Parser.CmdString := EditStr;
             pLine.Edit;   // Uses Parser
         end;
         if pLine = ToLine then
@@ -2937,7 +2937,7 @@ begin
    {Error check}
     if pPDelem = NIL then
     begin
-        DoSimpleMsg(DSS, FromLine.ParentClass.Name + '.' + FromLine.Name + ' Not found in Meter Zone.', 723);
+        DoSimpleMsg(DSSPrime, FromLine.ParentClass.Name + '.' + FromLine.Name + ' Not found in Meter Zone.', 723);
         Exit;
     end;
 
@@ -3205,14 +3205,14 @@ begin
             Result := StrToInt(S);
     except
         On E: Exception do
-            DoSimpleMsg(DSS, 'Invalid Color Specification: "' + S + '".', 724);
+            DoSimpleMsg(DSSPrime, 'Invalid Color Specification: "' + S + '".', 724);
     end;
 {$ENDIF}
 end;
 
 function MakeNewCktElemName(const oldname: String): String;
 begin
-    SetObject(OldName);  // set opject active
+    SetObject(DSSPrime, OldName);  // set opject active
     with DSSPrime.ActiveDSSObject do
         Result := Format('%s.%s%d', [ParentClass.Name, copy(ParentClass.Name, 1, 4), ClassIndex]);
 end;
@@ -3305,7 +3305,7 @@ begin
                         S := S + Format('Bus%d=%s ', [i, NewBusName]);
                     end;
                 end;
-                Parser.CmdString := S;
+                DSSPrime.Parser.CmdString := S;
                 pCktElem.Edit;
             end;
             pCktElem := CktElements.Next;
@@ -3394,7 +3394,7 @@ begin
                             begin
                                 if (pCtrlElem.DSSObjType and CLASSMASK) = REG_CONTROL then
                                 begin
-                                    Parser.CmdString := Format('Transformer=%s', [pCktElem.Name]);
+                                    DSSPrime.Parser.CmdString := Format('Transformer=%s', [pCktElem.Name]);
                                     pCtrlElem.Edit;
                                 end;
                                 pCtrlElem := pCktElem.ControlElementList.Next;
@@ -3413,7 +3413,7 @@ begin
         for i := 0 to ControlUpDatePtrs.Count - 1 do
         begin
             pCktElem := ControlUpDatePtrs.Items[i];
-            Parser.CmdString := ControlUpDateStrings.Strings[i];
+            DSSPrime.Parser.CmdString := ControlUpDateStrings.Strings[i];
             pCktElem.Edit;
         end;
 

@@ -192,7 +192,7 @@ begin
     pPVSystem := DSSPrime.ActiveCircuit.PVSystems.Get(Value);
     if pPVSystem = NIL then
     begin
-        DoSimpleMsg('Invalid PVSystem index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid PVSystem index: "' + IntToStr(Value) + '".', 656565);
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pPVSystem;
 end;
@@ -232,7 +232,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('PVSystem "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'PVSystem "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------

@@ -198,8 +198,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -218,8 +218,8 @@ begin
                 ClassEdit(DSS.ActiveFeederObj, ParamPointer - NumPropsThisClass)
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -451,7 +451,7 @@ begin
 
     EXCEPT
       On E: Exception
-      Do DoErrorMsg(('GetCurrents for Feeder Element: ' + Name + '.'), E.Message,
+      Do DoErrorMsg(DSS, ('GetCurrents for Feeder Element: ' + Name + '.'), E.Message,
         'Inadequate storage allotted for circuit element?', 632);
     End;
   End Else
@@ -502,7 +502,7 @@ begin
  { Do Nothing
   If Fnphases>1 Then
   Begin
-     Parser.CmdString := 'phases=1';
+     DSS.Parser.CmdString := 'phases=1';
      Edit;
   End;
   inherited;

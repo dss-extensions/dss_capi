@@ -31,7 +31,7 @@ begin
 
     if (DSSPrime.FPropIndex > DSSPrime.ActiveDSSObject.ParentClass.NumProperties) or (DSSPrime.FPropIndex < 1) then
     begin
-        DoSimpleMsg(Format(
+        DoSimpleMsg(DSSPrime, Format(
             'Invalid property index "%d" for "%s.%s"',
             [DSSPrime.FPropIndex, DSSPrime.ActiveDSSObject.ParentClass.Name, DSSPrime.ActiveDSSObject.Name]),
             errorNum
@@ -132,7 +132,7 @@ begin
                     end;
                 end;
 
-        DoSimpleMsg(Format(
+        DoSimpleMsg(DSSPrime, Format(
             'Invalid property name "%s" for "%s.%s"',
             [String(Value), DSSPrime.FPropClass.Name, DSSPrime.ActiveDSSObject.Name]),
             33003

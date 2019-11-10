@@ -48,7 +48,7 @@ var
 procedure DoSimpleMsgCallback(S: pAnsiChar; maxlen: Cardinal); STDCALL; // Call back for user-written models
 
 begin
-    DoSimpleMsg(DSS, String(s), 9000);
+    DoSimpleMsg(DSSPrime, String(s), 9000);
 end;
 
    {These routines should work well with Fortran as well as C and VB}

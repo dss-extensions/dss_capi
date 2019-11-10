@@ -60,7 +60,7 @@ begin
 {$IFDEF WINDOWS}
     if (Value) and (GetConsoleWindow() = 0) then
     begin
-        DoSimplemsg('Cannot activate output with no console available!', 5096);
+        DoSimpleMsg(DSSPrime, 'Cannot activate output with no console available!', 5096);
         Exit;
     end;
 {$ENDIF}
@@ -189,7 +189,7 @@ end;
 //------------------------------------------------------------------------------
 procedure DSS_Set_DataPath(const Value: PAnsiChar); CDECL;
 begin
-    SetDataPath(Value);
+    SetDataPath(DSSPrime, Value);
 end;
 //------------------------------------------------------------------------------
 procedure DSS_Reset(); CDECL;
@@ -218,7 +218,7 @@ begin
     DevClassIndex := DSSPrime.ClassNames.Find(ClassName);
     if DevClassIndex = 0 then
     begin
-        DoSimplemsg('Error: Class ' + ClassName + ' not found.', 5016);
+        DoSimpleMsg(DSSPrime, 'Error: Class ' + ClassName + ' not found.', 5016);
         Exit;
     end;
 

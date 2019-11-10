@@ -124,7 +124,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('ISource "' + Value + '" Not Found in Active Circuit.', 77003);
+            DoSimpleMsg(DSSPrime, 'ISource "' + Value + '" Not Found in Active Circuit.', 77003);
         end;
     end;
 end;
@@ -203,7 +203,7 @@ begin
     pISource := DSSPrime.IsourceClass.ElementList.Get(Value);
     if pISource = NIL then
     begin
-        DoSimpleMsg('Invalid ISource index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid ISource index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pISource;

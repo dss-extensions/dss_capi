@@ -370,8 +370,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -392,9 +392,9 @@ begin
                     PropertyValue[1] := ElementName;
                 end;
                 2:
-                    MeteredTerminal := Parser.IntValue;
+                    MeteredTerminal := DSS.Parser.IntValue;
                 3:
-                    Mode := Parser.IntValue;
+                    Mode := DSS.Parser.IntValue;
                 4:
                 begin
                     param := lowercase(param);
@@ -423,8 +423,8 @@ begin
                 ClassEdit(DSS.ActiveMonitorObj, ParamPointer - NumPropsthisClass)
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         if recalc > 0 then
@@ -722,7 +722,7 @@ begin
 
         if MeteredTerminal > MeteredElement.Nterms then
         begin
-            DoErrorMsg('Monitor: "' + Name + '"',
+            DoErrorMsg(DSS, 'Monitor: "' + Name + '"',
                 'Terminal no. "' + '" does not exist.',
                 'Respecify terminal no.', 665);
         end
@@ -791,7 +791,7 @@ begin
     else
     begin
         MeteredElement := NIL;   // element not found
-        DoErrorMsg('Monitor: "' + Self.Name + '"', 'Circuit Element "' + ElementName + '" Not Found.',
+        DoErrorMsg(DSS, 'Monitor: "' + Self.Name + '"', 'Circuit Element "' + ElementName + '" Not Found.',
             ' Element must be defined previously.', 666);
     end;
 end;
@@ -1201,7 +1201,7 @@ begin
 
     except
         On E: Exception do
-            DoErrorMsg('Cannot open Monitor file.',
+            DoErrorMsg(DSS, 'Cannot open Monitor file.',
                 E.Message,
                 'Monitor: "' + Name + '"', 670)
 
@@ -1233,7 +1233,7 @@ begin
         end;
     except
         On E: Exception do
-            DoErrorMsg('Cannot close Monitor stream.',
+            DoErrorMsg(DSS, 'Cannot close Monitor stream.',
                 E.Message,
                 'Monitor: "' + Name + '"', 671)
     end;

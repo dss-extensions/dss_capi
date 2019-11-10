@@ -266,9 +266,9 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
+        ParamName := DSS.Parser.NextParam;
 
-        Param := Parser.StrValue;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -283,7 +283,7 @@ begin
                 0:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 610);
                 1:
-                    NumPoints := Parser.Intvalue;
+                    NumPoints := DSS.Parser.Intvalue;
                 2:
                 begin
                     ReAllocmem(TempPointsBuffer, Sizeof(TempPointsBuffer^[1]) * FNumPoints * 2);
@@ -319,17 +319,17 @@ begin
                 7:
                     DoDblFile(Param);
                 8:
-                    X := Parser.dblvalue;
+                    X := DSS.Parser.dblvalue;
                 9:
-                    Y := Parser.dblvalue;
+                    Y := DSS.Parser.dblvalue;
                 10:
-                    FXshift := Parser.dblvalue;
+                    FXshift := DSS.Parser.dblvalue;
                 11:
-                    FYshift := Parser.dblvalue;
+                    FYshift := DSS.Parser.dblvalue;
                 12:
-                    FXscale := Parser.dblvalue;
+                    FXscale := DSS.Parser.dblvalue;
                 13:
-                    FYscale := Parser.dblvalue;
+                    FYscale := DSS.Parser.dblvalue;
             else
            // Inherited parameters
                 ClassEdit(DSS.ActiveXYcurveObj, ParamPointer - NumPropsThisClass)
@@ -352,8 +352,8 @@ begin
                 end;
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end; {While}
 
     end; {WITH}

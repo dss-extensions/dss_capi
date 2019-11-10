@@ -121,7 +121,7 @@ var
 
 {General Module Function}
 
-function GetTccCurve(const CurveName: String): TTCC_CurveObj;
+function GetTccCurve(DSS: TDSS; const CurveName: String): TTCC_CurveObj;
 
 begin
 
@@ -235,8 +235,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -253,17 +253,17 @@ begin
                 1:
                     MonitoredElementName := lowercase(param);
                 2:
-                    MonitoredElementTerminal := Parser.IntValue;
+                    MonitoredElementTerminal := DSS.Parser.IntValue;
                 3:
                     ElementName := lowercase(param);
                 4:
-                    ElementTerminal := Parser.IntValue;
+                    ElementTerminal := DSS.Parser.IntValue;
                 5:
-                    FuseCurve := GetTCCCurve(Param);
+                    FuseCurve := GetTCCCurve(DSS, Param);
                 6:
-                    RatedCurrent := Parser.Dblvalue;
+                    RatedCurrent := DSS.Parser.Dblvalue;
                 7:
-                    DelayTime := Parser.DblValue;
+                    DelayTime := DSS.Parser.DblValue;
                 8:
                     InterpretFuseAction(Param);
 
@@ -280,8 +280,8 @@ begin
                     ElementTerminal := MonitoredElementTerminal;
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -361,7 +361,7 @@ begin
     MonitoredElementTerminal := 1;
     MonitoredElement := NIL;
 
-    FuseCurve := GetTccCurve('tlink');
+    FuseCurve := GetTccCurve(DSS, 'tlink');
 
     RatedCurrent := 1.0;
 
@@ -408,7 +408,7 @@ begin
             DoSimpleMsg(DSS, 'Warning: Fuse ' + Self.Name + ': Number of phases > Max fuse dimension.', 404);
         if MonitoredElementTerminal > MonitoredElement.Nterms then
         begin
-            DoErrorMsg('Fuse: "' + Name + '"',
+            DoErrorMsg(DSS, 'Fuse: "' + Name + '"',
                 'Terminal no. "' + '" does not exist.',
                 'Re-specify terminal no.', 404);
         end
@@ -455,7 +455,7 @@ begin
     else
     begin
         ControlledElement := NIL;   // element not found
-        DoErrorMsg('Fuse: "' + Self.Name + '"', 'CktElement Element "' + ElementName + '" Not Found.',
+        DoErrorMsg(DSS, 'Fuse: "' + Self.Name + '"', 'CktElement Element "' + ElementName + '" Not Found.',
             ' Element must be defined previously.', 405);
     end;
 end;

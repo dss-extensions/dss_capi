@@ -110,7 +110,7 @@ begin
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         if not DSSPrime.LineCodeClass.SetActive(Value) then
-            DoSimpleMsg('LineCode "' + Value + '" Not Found in Active Circuit.', 51008);
+            DoSimpleMsg(DSSPrime, 'LineCode "' + Value + '" Not Found in Active Circuit.', 51008);
 
          // Still same active object if not found
     end;
@@ -158,11 +158,12 @@ begin
         begin
             if Value < dssLineUnitsMaxnum then
             begin
-                Parser.CmdString := Format('units=%s', [LineUnitsStr(Value)]);
+
+                DSSPrime.Parser.CmdString := Format('units=%s', [LineUnitsStr(Value)]);
                 Edit;
             end
             else
-                DoSimpleMsg('Invalid line units integer sent via COM interface.  Please enter a value within range.', 183);
+                DoSimpleMsg(DSSPrime, 'Invalid line units integer sent via COM interface.  Please enter a value within range.', 183);
 
         end;
     end;
@@ -217,7 +218,7 @@ begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
         begin
-            Parser.CmdString := Format('R1=%g', [Value]);
+            DSSPrime.Parser.CmdString := Format('R1=%g', [Value]);
             Edit;
         end;
     end;
@@ -248,7 +249,7 @@ begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
         begin
-            Parser.CmdString := Format('X1=%g', [Value]);
+            DSSPrime.Parser.CmdString := Format('X1=%g', [Value]);
             Edit;
         end;
     end;
@@ -293,7 +294,7 @@ begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
         begin
-            Parser.CmdString := Format('R0=%g', [Value]);
+            DSSPrime.Parser.CmdString := Format('R0=%g', [Value]);
             Edit;
         end;
     end;
@@ -311,7 +312,7 @@ begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
         begin
-            Parser.CmdString := Format('X0=%g', [Value]);
+            DSSPrime.Parser.CmdString := Format('X0=%g', [Value]);
             Edit;
         end;
     end;
@@ -355,7 +356,7 @@ begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
         begin
-            Parser.CmdString := Format('C0=%g', [Value]);
+            DSSPrime.Parser.CmdString := Format('C0=%g', [Value]);
             Edit;
         end;
     end;
@@ -373,7 +374,7 @@ begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         with pLineCode do
         begin
-            Parser.CmdString := Format('C1=%g', [Value]);
+            DSSPrime.Parser.CmdString := Format('C1=%g', [Value]);
             Edit;
         end;
     end;
@@ -636,7 +637,7 @@ end;
 procedure LineCodes_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.LineCodeClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg('Invalid LineCode index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid LineCode index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

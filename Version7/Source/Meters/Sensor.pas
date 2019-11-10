@@ -256,8 +256,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -274,35 +274,35 @@ begin
                 1:
                     ElementName := lowercase(param);
                 2:
-                    MeteredTerminal := Parser.IntValue;
+                    MeteredTerminal := DSS.Parser.IntValue;
                 3:
-                    kVBase := Parser.DblValue;
+                    kVBase := DSS.Parser.DblValue;
                 4:
                     ClearSpecified := InterpretYesNo(Param);
                 5:
-                    Parser.ParseAsVector(Fnphases, SensorVoltage);  // Inits to zero
+                    DSS.Parser.ParseAsVector(Fnphases, SensorVoltage);  // Inits to zero
                 6:
-                    Parser.ParseAsVector(Fnphases, SensorCurrent);  // Inits to zero
+                    DSS.Parser.ParseAsVector(Fnphases, SensorCurrent);  // Inits to zero
                 7:
                 begin
-                    Parser.ParseAsVector(Fnphases, SensorkW);
+                    DSS.Parser.ParseAsVector(Fnphases, SensorkW);
                     Pspecified := TRUE;
                     UpdateCurrentVector;
                 end;
                 8:
                 begin
-                    Parser.ParseAsVector(Fnphases, Sensorkvar);
+                    DSS.Parser.ParseAsVector(Fnphases, Sensorkvar);
                     Qspecified := TRUE;
                     UpdateCurrentVector;
                 end;
                 9:
                     Conn := InterpretConnection(Param);
                 10:
-                    FDeltaDirection := LimitToPlusMinusOne(Parser.IntValue);
+                    FDeltaDirection := LimitToPlusMinusOne(DSS.Parser.IntValue);
                 11:
-                    pctError := Parser.dblValue;
+                    pctError := DSS.Parser.dblValue;
                 12:
-                    Weight := Parser.dblValue;
+                    Weight := DSS.Parser.dblValue;
                 13:
                     Action := Param;  // Put sq error in Global Result
             else
@@ -338,8 +338,8 @@ begin
                     DoRecalcElementData := TRUE;
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         if DoRecalcElementData then
@@ -574,7 +574,7 @@ begin
 
         if MeteredTerminal > MeteredElement.Nterms then
         begin
-            DoErrorMsg('Sensor: "' + Name + '"',
+            DoErrorMsg(DSS, 'Sensor: "' + Name + '"',
                 'Terminal no. "' + '" does not exist.',
                 'Respecify terminal no.', 665);
         end
@@ -600,7 +600,7 @@ begin
     else
     begin
         MeteredElement := NIL;   // element not found
-        DoErrorMsg('Sensor: "' + Self.Name + '"', 'Circuit Element "' + ElementName + '" Not Found.',
+        DoErrorMsg(DSS, 'Sensor: "' + Self.Name + '"', 'Circuit Element "' + ElementName + '" Not Found.',
             ' Element must be defined previously.', 666);
     end;
 end;

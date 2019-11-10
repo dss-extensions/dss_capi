@@ -335,8 +335,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -357,9 +357,9 @@ begin
                         Exit;
                     end
                     else
-                        NumPoints := Parser.Intvalue;
+                        NumPoints := DSS.Parser.Intvalue;
                 TLoadShapeProp.interval:
-                    Interval := Parser.DblValue;
+                    Interval := DSS.Parser.DblValue;
                 TLoadShapeProp.Pmult, TLoadShapeProp.mult:
                 begin
                     if DSS.ActiveLoadShapeObj.ExternalMemory then
@@ -383,9 +383,9 @@ begin
                     Interval := 0.0;
                 end;
                 TLoadShapeProp.mean:
-                    Mean := Parser.DblValue;
+                    Mean := DSS.Parser.DblValue;
                 TLoadShapeProp.stddev:
-                    StdDev := Parser.DblValue;
+                    StdDev := DSS.Parser.DblValue;
                 TLoadShapeProp.csvfile:
                     DoCSVFile(Param);
                 TLoadShapeProp.sngfile:
@@ -409,17 +409,17 @@ begin
                 TLoadShapeProp.UseActual:
                     UseActual := InterpretYesNo(Param);
                 TLoadShapeProp.Pmax:
-                    MaxP := Parser.DblValue;
+                    MaxP := DSS.Parser.DblValue;
                 TLoadShapeProp.Qmax:
-                    MaxQ := Parser.DblValue;
+                    MaxQ := DSS.Parser.DblValue;
                 TLoadShapeProp.sinterval:
-                    Interval := Parser.DblValue / 3600.0;  // Convert seconds to hr
+                    Interval := DSS.Parser.DblValue / 3600.0;  // Convert seconds to hr
                 TLoadShapeProp.minterval:
-                    Interval := Parser.DblValue / 60.0;  // Convert minutes to hr
+                    Interval := DSS.Parser.DblValue / 60.0;  // Convert minutes to hr
                 TLoadShapeProp.Pbase:
-                    BaseP := Parser.DblValue;
+                    BaseP := DSS.Parser.DblValue;
                 TLoadShapeProp.Qbase:
-                    BaseQ := Parser.DblValue;
+                    BaseQ := DSS.Parser.DblValue;
                 TLoadShapeProp.PQCSVFile:
                     Do2ColCSVFile(Param);
             end
@@ -439,8 +439,8 @@ begin
                     MaxQSpecified := TRUE;
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end; {WHILE}
 
         if Assigned(PMultipliers) then
@@ -1339,7 +1339,7 @@ begin
                 Rewrite(F);
                 for i := 1 to NumPoints do
                     Write(F, QMultipliers^[i]);
-                AppendGlobalResult(' Qmult=[dblfile=' + FName + ']');
+                AppendGlobalResult(DSS, ' Qmult=[dblfile=' + FName + ']');
             finally
                 CloseFile(F);
             end;
@@ -1386,7 +1386,7 @@ begin
                     Temp := QMultipliers^[i];
                     Write(F, Temp);
                 end;
-                AppendGlobalResult(' Qmult=[sngfile=' + FName + ']');
+                AppendGlobalResult(DSS, ' Qmult=[sngfile=' + FName + ']');
             finally
                 CloseFile(F);
             end;

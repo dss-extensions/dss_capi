@@ -270,9 +270,9 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
+        ParamName := DSS.Parser.NextParam;
 
-        Param := Parser.StrValue;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -287,9 +287,9 @@ begin
                 0:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 57610);
                 1:
-                    NumPoints := Parser.Intvalue;
+                    NumPoints := DSS.Parser.Intvalue;
                 2:
-                    Interval := Parser.DblValue;
+                    Interval := DSS.Parser.DblValue;
                 3:
                 begin
                     ReAllocmem(TValues, Sizeof(TValues^[1]) * NumPoints);
@@ -302,9 +302,9 @@ begin
                     NumPoints := InterpretDblArray(Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
                 end;
                 5:
-                    Mean := Parser.DblValue;
+                    Mean := DSS.Parser.DblValue;
                 6:
-                    StdDev := Parser.DblValue;
+                    StdDev := DSS.Parser.DblValue;
                 7:
                     DoCSVFile(Param);
                 8:
@@ -312,9 +312,9 @@ begin
                 9:
                     DoDblFile(Param);
                 10:
-                    Interval := Parser.DblValue / 3600.0;  // Convert seconds to hr
+                    Interval := DSS.Parser.DblValue / 3600.0;  // Convert seconds to hr
                 11:
-                    Interval := Parser.DblValue / 60.0;  // Convert minutes to hr
+                    Interval := DSS.Parser.DblValue / 60.0;  // Convert minutes to hr
                 12:
                     case lowercase(Param)[1] of
                         'd':
@@ -337,8 +337,8 @@ begin
 
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end; {While}
 
     end; {WITH}

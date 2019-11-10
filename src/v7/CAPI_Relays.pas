@@ -135,7 +135,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('Relay "' + Value + '" Not Found in Active Circuit.', 77003);
+        DoSimpleMsg(DSSPrime, 'Relay "' + Value + '" Not Found in Active Circuit.', 77003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -260,7 +260,7 @@ begin
     pRelay := DSSPrime.ActiveCircuit.Relays.Get(Value);
     if pRelay = NIL then
     begin
-        DoSimpleMsg('Invalid Relay index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Relay index: "' + IntToStr(Value) + '".', 656565);
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pRelay;
 end;

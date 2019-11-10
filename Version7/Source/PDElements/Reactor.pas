@@ -296,7 +296,7 @@ begin
     with DSS.ActiveReactorObj do
     begin
         MatBuffer := Allocmem(Sizeof(Double) * Fnphases * Fnphases);
-        OrderFound := Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
+        OrderFound := DSS.Parser.ParseAsSymMatrix(Fnphases, MatBuffer);
 
         if OrderFound > 0 then    // Parse was successful Else don't change Matrix
         begin    {X}
@@ -400,8 +400,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -422,11 +422,11 @@ begin
                     TReactorProp.bus2:
                         Setbus(2, param);
                     TReactorProp.phases:
-                        { Numphases := Parser.IntValue};  // see below
+                        { Numphases := DSS.Parser.IntValue};  // see below
                     TReactorProp.kvar:
-                        kvarRating := Parser.Dblvalue;
+                        kvarRating := DSS.Parser.Dblvalue;
                     TReactorProp.kv:
-                        kvRating := Parser.Dblvalue;
+                        kvRating := DSS.Parser.Dblvalue;
                     TReactorProp.conn:
                         InterpretConnection(Param);
                     TReactorProp.Rmatrix:
@@ -436,11 +436,11 @@ begin
                     TReactorProp.Parallel:
                         IsParallel := InterpretYesNo(Param);
                     TReactorProp.R:
-                        R := Parser.Dblvalue;
+                        R := DSS.Parser.Dblvalue;
                     TReactorProp.X:
-                        X := Parser.Dblvalue;
+                        X := DSS.Parser.Dblvalue;
                     TReactorProp.Rp:
-                        Rp := Parser.Dblvalue;
+                        Rp := DSS.Parser.Dblvalue;
                     TReactorProp.Z1:
                         Z1 := InterpretComplex(Param);
                     TReactorProp.Z2:
@@ -454,7 +454,7 @@ begin
                     TReactorProp.LCurve:
                         LCurve := Param;
                     TReactorProp.LmH:
-                        L := Parser.DblValue / 1000.0;  // convert from mH to H
+                        L := DSS.Parser.DblValue / 1000.0;  // convert from mH to H
                 end
             end
             else
@@ -475,9 +475,9 @@ begin
                         Bus2Defined := TRUE;
                     end;
                 TReactorProp.phases:
-                    if Fnphases <> Parser.IntValue then
+                    if Fnphases <> DSS.Parser.IntValue then
                     begin
-                        Nphases := Parser.IntValue;
+                        Nphases := DSS.Parser.IntValue;
                         NConds := Fnphases;  // Force Reallocation of terminal info
                         Yorder := Fnterms * Fnconds;
                     end;
@@ -532,8 +532,8 @@ begin
                     YprimInvalid := TRUE;
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -924,7 +924,7 @@ begin
                     ZMatrix.Invert;  {Invert in place - is now Ymatrix}
                     if ZMatrix.InvertError > 0 then
                     begin       {If error, put in tiny series conductance}
-                        DoErrorMsg('TReactorObj.CalcYPrim', 'Matrix Inversion Error for Reactor "' + Name + '"',
+                        DoErrorMsg(DSS, 'TReactorObj.CalcYPrim', 'Matrix Inversion Error for Reactor "' + Name + '"',
                             'Invalid impedance specified. Replaced with tiny conductance.', 234);
                         ZMatrix.Clear;
                         for i := 1 to Fnphases do
@@ -1063,7 +1063,7 @@ begin
                 ZMatrix.Invert;  {Invert in place - is now Ymatrix}
                 if ZMatrix.InvertError > 0 then
                 begin       {If error, put in tiny series conductance}
-                    DoErrorMsg('TReactorObj.CalcYPrim', 'Matrix Inversion Error for Reactor "' + Name + '"',
+                    DoErrorMsg(DSS, 'TReactorObj.CalcYPrim', 'Matrix Inversion Error for Reactor "' + Name + '"',
                         'Invalid impedance specified. Replaced with tiny conductance.', 234);
                     ZMatrix.Clear;
                     for i := 1 to Fnphases do
@@ -1355,7 +1355,7 @@ begin
 
         end;
 
-        Parser.CmdString := S;
+        DSS.Parser.CmdString := S;
         Edit;
 
     end;

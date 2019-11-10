@@ -419,7 +419,7 @@ begin
     case Classref of
         0:
         begin
-            DoSimpleMsg(DSS, 'Error! Object Class "' + ObjType + '" not found.' + CRLF + parser.CmdString, 903);
+            DoSimpleMsg(DSS, 'Error! Object Class "' + ObjType + '" not found.' + CRLF + DSS.Parser.CmdString, 903);
             Result := FALSE;
             Exit;
         end;{Error}

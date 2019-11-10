@@ -90,16 +90,16 @@ begin
         case prop of
             CableDataProps.EpsR:
                 if (FEpsR < 1.0) then
-                    DoSimpleMsg('Error: Insulation permittivity must be greater than one for CableData ' + Name, 999);
+                    DoSimpleMsg(DSSPrime, 'Error: Insulation permittivity must be greater than one for CableData ' + Name, 999);
             CableDataProps.InsLayer:
                 if (FInsLayer <= 0.0) then
-                    DoSimpleMsg('Error: Insulation layer thickness must be positive for CableData ' + Name, 999);
+                    DoSimpleMsg(DSSPrime, 'Error: Insulation layer thickness must be positive for CableData ' + Name, 999);
             CableDataProps.DiaIns:
                 if (FDiaIns <= 0.0) then
-                    DoSimpleMsg('Error: Diameter over insulation layer must be positive for CableData ' + Name, 999);
+                    DoSimpleMsg(DSSPrime, 'Error: Diameter over insulation layer must be positive for CableData ' + Name, 999);
             CableDataProps.DiaCable:
                 if (FDiaCable <= 0.0) then
-                    DoSimpleMsg('Error: Diameter over cable must be positive for CableData ' + Name, 999);
+                    DoSimpleMsg(DSSPrime, 'Error: Diameter over cable must be positive for CableData ' + Name, 999);
         end;
     end;
 end;
@@ -120,13 +120,13 @@ begin
         case prop of
             CNDataProps.k:
                 if (FkStrand < 2) then
-                    DoSimpleMsg('Error: Must have at least 2 concentric neutral strands for CNData ' + Name, 999);
+                    DoSimpleMsg(DSSPrime, 'Error: Must have at least 2 concentric neutral strands for CNData ' + Name, 999);
             CNDataProps.DiaStrand:
                 if (FDiaStrand <= 0.0) then
-                    DoSimpleMsg('Error: Neutral strand diameter must be positive for CNData ' + Name, 999);
+                    DoSimpleMsg(DSSPrime, 'Error: Neutral strand diameter must be positive for CNData ' + Name, 999);
             CNDataProps.GmrStrand:
                 if (FGmrStrand <= 0.0) then
-                    DoSimpleMsg('Error: Neutral strand GMR must be positive for CNData ' + Name, 999);
+                    DoSimpleMsg(DSSPrime, 'Error: Neutral strand GMR must be positive for CNData ' + Name, 999);
         end;
     end;
 end;
@@ -181,7 +181,7 @@ begin
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         if not DSSPrime.CNDataClass.SetActive(Value) then
-            DoSimpleMsg('CNData "' + Value + '" Not Found in Active Circuit.', 51008);
+            DoSimpleMsg(DSSPrime, 'CNData "' + Value + '" Not Found in Active Circuit.', 51008);
 
          // Still same active object if not found
     end;
@@ -688,7 +688,7 @@ end;
 procedure CNData_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.CNDataClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg('Invalid CNData index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid CNData index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

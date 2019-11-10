@@ -526,8 +526,8 @@ begin
     begin
      // peel off the next token on the edit line
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
 
         while Length(Param) > 0 do
         begin
@@ -553,38 +553,38 @@ begin
                     0:
                         DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
                     1:
-                        NPhases := Parser.Intvalue; // num phases
+                        NPhases := DSS.Parser.Intvalue; // num phases
                     2:
                         SetBus(1, param);
                     3:
-                        PresentkV := Parser.DblValue;
+                        PresentkV := DSS.Parser.DblValue;
                     4:
-                        kWBase := Parser.DblValue;
-                    5: ; // Do nothing; read only power factor    := Parser.DblValue;
+                        kWBase := DSS.Parser.DblValue;
+                    5: ; // Do nothing; read only power factor    := DSS.Parser.DblValue;
                     6:
-                        InterpretConnection(Parser.StrValue);
+                        InterpretConnection(DSS.Parser.StrValue);
                     7:
-                        MachineData.kVArating := Parser.DblValue;
+                        MachineData.kVArating := DSS.Parser.DblValue;
                     8:
-                        MachineData.Hmass := Parser.DblValue;
+                        MachineData.Hmass := DSS.Parser.DblValue;
                     9:
-                        MachineData.D := Parser.DblValue;
+                        MachineData.D := DSS.Parser.DblValue;
                     10:
-                        puRs := Parser.DblValue;
+                        puRs := DSS.Parser.DblValue;
                     11:
-                        puXs := Parser.DblValue;
+                        puXs := DSS.Parser.DblValue;
                     12:
-                        puRr := Parser.DblValue;
+                        puRr := DSS.Parser.DblValue;
                     13:
-                        puXr := Parser.DblValue;
+                        puXr := DSS.Parser.DblValue;
                     14:
-                        puXm := Parser.DblValue;
+                        puXm := DSS.Parser.DblValue;
                     15:
-                        Slip := Parser.DblValue;
+                        Slip := DSS.Parser.DblValue;
                     16:
-                        MaxSlip := Parser.DblValue;
+                        MaxSlip := DSS.Parser.DblValue;
                     17:
-                        InterpretOption(Parser.StrValue);
+                        InterpretOption(DSS.Parser.StrValue);
                     18:
                         YearlyShape := Param;
                     19:
@@ -634,8 +634,8 @@ begin
                 end;
 
          // Get next token off Parser and continue editing properties
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
      // After editing is complete, the typical next step is to call the RecalcElementData function
@@ -2247,7 +2247,7 @@ begin
       If PrpSequence^[27]>0 Then S := S + Format(' MVA=%-.5g  ',[genvars.kvarating/1000.0/Fnphases]);
   End;
 
-  Parser.CmdString := S;   // Push the string into the Parser object
+  DSS.Parser.CmdString := S;   // Push the string into the Parser object
   Edit;    // Invoke the Edit method for this class
 
   inherited;  // sets the terminal bus references, must do after editing number of phases

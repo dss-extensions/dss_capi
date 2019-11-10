@@ -227,8 +227,8 @@ begin
     with DSS.ActiveVCCSObj do
     begin
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -246,18 +246,18 @@ begin
                     SetBus(1, param);
                 2:
                 begin
-                    Nphases := Parser.IntValue; // num phases
+                    Nphases := DSS.Parser.IntValue; // num phases
                     NConds := Fnphases;  // Force Reallocation of terminal info
                 end;
                 3:
-                    Prated := Parser.DblValue;
+                    Prated := DSS.Parser.DblValue;
                 4:
-                    Vrated := Parser.DblValue;
+                    Vrated := DSS.Parser.DblValue;
                 5:
-                    Ppct := Parser.DblValue;
+                    Ppct := DSS.Parser.DblValue;
                 6:
                 begin
-                    Fbp1_name := Parser.StrValue;
+                    Fbp1_name := DSS.Parser.StrValue;
                     if Length(Fbp1_name) > 0 then
                     begin
                         Fbp1 := XY_CurveClass.Find(Fbp1_name);
@@ -265,7 +265,7 @@ begin
                 end;
                 7:
                 begin
-                    Fbp2_name := Parser.StrValue;
+                    Fbp2_name := DSS.Parser.StrValue;
                     if Length(Fbp2_name) > 0 then
                     begin
                         Fbp2 := XY_CurveClass.Find(Fbp2_name);
@@ -273,14 +273,14 @@ begin
                 end;
                 8:
                 begin
-                    Ffilter_name := Parser.StrValue;
+                    Ffilter_name := DSS.Parser.StrValue;
                     if Length(Ffilter_name) > 0 then
                     begin
                         Ffilter := XY_CurveClass.Find(Ffilter_name);
                     end;
                 end;
                 9:
-                    FsampleFreq := Parser.DblValue;
+                    FsampleFreq := DSS.Parser.DblValue;
                 10:
                     FrmsMode := InterpretYesNo(Param);
                 11:
@@ -292,8 +292,8 @@ begin
             else
                 ClassEdit(DSS.ActiveVCCSObj, ParamPointer - NumPropsThisClass)
             end;
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
         RecalcElementData;
         YPrimInvalid := TRUE;
@@ -470,7 +470,7 @@ begin
             Curr^[i] := Cnegate(ComplexBuffer^[i]);
     except
         On E: Exception do
-            DoErrorMsg(('GetCurrents for VCCS Element: ' + Name + '.'), E.Message,
+            DoErrorMsg(DSS, ('GetCurrents for VCCS Element: ' + Name + '.'), E.Message,
                 'Inadequate storage allotted for circuit element?', 335);
     end;
 end;
@@ -546,7 +546,7 @@ procedure TVCCSObj.MakePosSequence;
 begin
     if Fnphases > 1 then
     begin
-        Parser.CmdString := 'phases=1';
+        DSS.Parser.CmdString := 'phases=1';
         Edit;
     end;
     inherited;

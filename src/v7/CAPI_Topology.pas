@@ -352,7 +352,7 @@ begin
     end;
     if not Found then
     begin
-        DoSimpleMsg('Branch "' + S + '" Not Found in Active Circuit Topology.', 5003);
+        DoSimpleMsg(DSSPrime, 'Branch "' + S + '" Not Found in Active Circuit Topology.', 5003);
         if assigned(elem) then
             DSSPrime.ActiveCircuit.ActiveCktElement := elem;
     end;
@@ -515,7 +515,7 @@ begin
     end;
     if not Found then
     begin
-        DoSimpleMsg('Bus "' + S + '" Not Found in Active Circuit Topology.', 5003);
+        DoSimpleMsg(DSSPrime, 'Bus "' + S + '" Not Found in Active Circuit Topology.', 5003);
         if assigned(elem) then
             DSSPrime.ActiveCircuit.ActiveCktElement := elem;
     end;

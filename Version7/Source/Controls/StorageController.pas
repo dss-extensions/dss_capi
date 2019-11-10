@@ -493,8 +493,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -511,19 +511,19 @@ begin
                 propELEMENT:
                     ElementName := lowercase(param);
                 propTERMINAL:
-                    ElementTerminal := Parser.IntValue;
+                    ElementTerminal := DSS.Parser.IntValue;
                 propKWTARGET:
-                    FkWTarget := Parser.DblValue;
+                    FkWTarget := DSS.Parser.DblValue;
                 propKWTARGETLOW:
-                    FkWTargetLow := Parser.DblValue;
+                    FkWTargetLow := DSS.Parser.DblValue;
                 propKWBAND:
-                    FpctkWBand := Parser.DblValue;
+                    FpctkWBand := DSS.Parser.DblValue;
                 propKWBANDLOW:
-                    FpctkWBandLow := Parser.DblValue;
+                    FpctkWBandLow := DSS.Parser.DblValue;
                 propPFTARGET:
-                    FPFTarget := ConvertPFToPFRange2(Parser.DblValue);
+                    FPFTarget := ConvertPFToPFRange2(DSS.Parser.DblValue);
                 propPFBAND:
-                    FPFBand := Parser.DblValue;
+                    FPFBand := DSS.Parser.DblValue;
                 propELEMENTLIST:
                     InterpretTStringListArray(Param, FStorageNameList);
                 propWEIGHTS:
@@ -540,17 +540,17 @@ begin
                 propMODECHARGE:
                     ChargeMode := InterpretMode(propMODECHARGE, Param);
                 propTIMEDISCHARGETRIGGER:
-                    DischargeTriggerTime := Parser.DblValue;
+                    DischargeTriggerTime := DSS.Parser.DblValue;
                 propTIMECHARGETRIGGER:
-                    ChargeTriggerTime := Parser.DblValue;
+                    ChargeTriggerTime := DSS.Parser.DblValue;
                 propRATEKW:
-                    pctkWRate := Parser.DblValue;
+                    pctkWRate := DSS.Parser.DblValue;
                 propRATEKVAR:
-                    pctkvarRate := Parser.DblValue;
+                    pctkvarRate := DSS.Parser.DblValue;
                 propRATECHARGE:
-                    pctChargeRate := Parser.DblValue;
+                    pctChargeRate := DSS.Parser.DblValue;
                 propRESERVE:
-                    pctFleetReserve := Parser.DblValue;
+                    pctFleetReserve := DSS.Parser.DblValue;
                 propKWHTOTAL: ;  // Do nothing (Read ONly)
                 propKWTOTAL: ;  // Do nothing (Read ONly)
                 propKWHACTUAL: ;  // Do nothing (Read ONly)
@@ -568,15 +568,15 @@ begin
                 propVARDISPATCH:
                     DispatchVars := InterpretYesNo(Param);
                 propINHIBITTIME:
-                    Inhibithrs := Max(1, Parser.IntValue);  // >=1
+                    Inhibithrs := Max(1, DSS.Parser.IntValue);  // >=1
                 propTUPRAMP:
-                    UpRamptime := Parser.DblValue;
+                    UpRamptime := DSS.Parser.DblValue;
                 propTFLAT:
-                    FlatTime := Parser.DblValue;
+                    FlatTime := DSS.Parser.DblValue;
                 propTDNRAMP:
-                    DnrampTime := Parser.DblValue;
+                    DnrampTime := DSS.Parser.DblValue;
                 propKWTHRESHOLD:
-                    FkWThreshold := Parser.DblValue;
+                    FkWThreshold := DSS.Parser.DblValue;
                 propRESETLEVEL:
                     ResetLevel := Parser.DblValue;
                 propSEASONS:
@@ -667,8 +667,8 @@ begin
 
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -1080,7 +1080,7 @@ begin
         MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
         if ElementTerminal > MonitoredElement.Nterms then
         begin
-            DoErrorMsg('StorageController: "' + Name + '"',
+            DoErrorMsg(DSS, 'StorageController: "' + Name + '"',
                 'Terminal no. "' + '" Does not exist.',
                 'Re-specify terminal no.', 371);
         end

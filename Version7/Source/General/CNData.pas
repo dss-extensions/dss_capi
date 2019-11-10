@@ -134,8 +134,8 @@ begin
     with TCNDataObj(DSS.ActiveConductorDataObj) do
     begin
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -150,13 +150,13 @@ begin
                 0:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 101);
                 1:
-                    FkStrand := Parser.IntValue;
+                    FkStrand := DSS.Parser.IntValue;
                 2:
-                    FDiaStrand := Parser.DblValue;
+                    FDiaStrand := DSS.Parser.DblValue;
                 3:
-                    FGmrStrand := Parser.DblValue;
+                    FGmrStrand := DSS.Parser.DblValue;
                 4:
-                    FRStrand := Parser.DblValue;
+                    FRStrand := DSS.Parser.DblValue;
             else
         // Inherited parameters
                 ClassEdit(DSS.ActiveConductorDataObj, ParamPointer - NumPropsThisClass)
@@ -181,8 +181,8 @@ begin
                     if (FGmrStrand <= 0.0) then
                         DoSimpleMsg(DSS, 'Error: Neutral strand GMR must be positive for CNData ' + Name, 999);
             end;
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
     end;
 end;

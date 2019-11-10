@@ -381,7 +381,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('Transformer "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'Transformer "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -698,7 +698,7 @@ begin
     pTransformer := DSSPrime.ActiveCircuit.Transformers.Get(Value);
     if pTransformer = NIL then
     begin
-        DoSimpleMsg('Invalid Transformer index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Transformer index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pTransformer;

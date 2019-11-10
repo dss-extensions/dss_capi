@@ -356,8 +356,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -378,11 +378,11 @@ begin
                     1:
                         MonitoredElementName := lowercase(param);
                     2:
-                        MonitoredElementTerminal := Parser.IntValue;
+                        MonitoredElementTerminal := DSS.Parser.IntValue;
                     3:
                         ElementName := lowercase(param);
                     4:
-                        ElementTerminal := Parser.IntValue;
+                        ElementTerminal := DSS.Parser.IntValue;
                     5:
                         InterpretRelayType(Param);
                     6:
@@ -390,52 +390,52 @@ begin
                     7:
                         GroundCurve := GetTCCCurve(Param);
                     8:
-                        PhaseTrip := Parser.Dblvalue;
+                        PhaseTrip := DSS.Parser.Dblvalue;
                     9:
-                        GroundTrip := Parser.Dblvalue;
+                        GroundTrip := DSS.Parser.Dblvalue;
                     10:
-                        PhaseInst := Parser.Dblvalue;
+                        PhaseInst := DSS.Parser.Dblvalue;
                     11:
-                        GroundInst := Parser.Dblvalue;
+                        GroundInst := DSS.Parser.Dblvalue;
                     12:
-                        ResetTime := Parser.Dblvalue;
+                        ResetTime := DSS.Parser.Dblvalue;
                     13:
-                        NumReclose := Parser.Intvalue - 1;   // one less than number of shots
+                        NumReclose := DSS.Parser.Intvalue - 1;   // one less than number of shots
                     14:
                         if Comparetext(Param, 'NONE') = 0 then
                             NumReclose := 1
                         else
-                            NumReclose := Parser.ParseAsVector(4, RecloseIntervals);   // max of 4 allowed
+                            NumReclose := DSS.Parser.ParseAsVector(4, RecloseIntervals);   // max of 4 allowed
                     15:
                         OVCurve := GetTCCCurve(Param);
                     16:
                         UVCurve := GetTCCCurve(Param);
                     17:
-                        kVBase := Parser.DblValue;
+                        kVBase := DSS.Parser.DblValue;
                     18:
-                        Breaker_time := Parser.DblValue;
+                        Breaker_time := DSS.Parser.DblValue;
                     19:
                         InterpretRelayAction(Param);
                     20:
                         MonitorVariable := lowercase(param);  // for pc elements
                     21:
-                        PctPickup46 := Parser.DblValue;
+                        PctPickup46 := DSS.Parser.DblValue;
                     22:
-                        Isqt46 := Parser.DblValue;
+                        Isqt46 := DSS.Parser.DblValue;
                     23:
-                        BaseAmps46 := Parser.DblValue;
+                        BaseAmps46 := DSS.Parser.DblValue;
                     24:
-                        Delay_Time := Parser.DblValue;
+                        Delay_Time := DSS.Parser.DblValue;
                     25:
-                        PctPickup47 := Parser.DblValue;
+                        PctPickup47 := DSS.Parser.DblValue;
                     26:
-                        Overtrip := Parser.DblValue;
+                        Overtrip := DSS.Parser.DblValue;
                     27:
-                        Undertrip := Parser.DblValue;
+                        Undertrip := DSS.Parser.DblValue;
                     28:
-                        TDPhase := Parser.DblValue;
+                        TDPhase := DSS.Parser.DblValue;
                     29:
-                        TDGround := Parser.DblValue;
+                        TDGround := DSS.Parser.DblValue;
                 else
            // Inherited parameters
                     ClassEdit(DSS.ActiveRelayObj, ParamPointer - NumPropsthisClass)
@@ -462,8 +462,8 @@ begin
                     end;
                 end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -653,7 +653,7 @@ begin
         Nphases := MonitoredElement.NPhases;       // Force number of phases to be same
         if MonitoredElementTerminal > MonitoredElement.Nterms then
         begin
-            DoErrorMsg('Relay: "' + Name + '"',
+            DoErrorMsg(DSS, 'Relay: "' + Name + '"',
                 'Terminal no. "' + '" does not exist.',
                 'Re-specify terminal no.', 384);
         end
@@ -726,7 +726,7 @@ begin
     else
     begin
         ControlledElement := NIL;   // element not found
-        DoErrorMsg('Relay: "' + Self.Name + '"', 'CktElement Element "' + ElementName + '" Not Found.',
+        DoErrorMsg(DSS, 'Relay: "' + Self.Name + '"', 'CktElement Element "' + ElementName + '" Not Found.',
             ' Element must be defined previously.', 387);
     end;
 

@@ -330,8 +330,8 @@ begin
     with DSS.ActiveXfmrCodeObj do
     begin
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -346,25 +346,25 @@ begin
                 0:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "XfmrCode.' + Name + '"', 110);
                 1:
-                    FNphases := Parser.IntValue;
+                    FNphases := DSS.Parser.IntValue;
                 2:
-                    SetNumWindings(Parser.IntValue); // Reallocate stuff if bigger
+                    SetNumWindings(DSS.Parser.IntValue); // Reallocate stuff if bigger
                 3:
-                    SetActiveWinding(Parser.IntValue);
+                    SetActiveWinding(DSS.Parser.IntValue);
                 4:
                     Winding^[ActiveWinding].Connection := InterpretConnection(Param);
                 5:
-                    Winding^[ActiveWinding].kvll := parser.Dblvalue;
+                    Winding^[ActiveWinding].kvll := DSS.Parser.Dblvalue;
                 6:
-                    Winding^[ActiveWinding].kVA := parser.Dblvalue;
+                    Winding^[ActiveWinding].kVA := DSS.Parser.Dblvalue;
                 7:
-                    Winding^[ActiveWinding].puTap := parser.Dblvalue;
+                    Winding^[ActiveWinding].puTap := DSS.Parser.Dblvalue;
                 8:
-                    Winding^[ActiveWinding].Rpu := parser.Dblvalue * 0.01;  // %R
+                    Winding^[ActiveWinding].Rpu := DSS.Parser.Dblvalue * 0.01;  // %R
                 9:
-                    Winding^[ActiveWinding].Rneut := parser.Dblvalue;
+                    Winding^[ActiveWinding].Rneut := DSS.Parser.Dblvalue;
                 10:
-                    Winding^[ActiveWinding].Xneut := parser.Dblvalue;
+                    Winding^[ActiveWinding].Xneut := DSS.Parser.Dblvalue;
                 11:
                     InterpretWindings(Param, Conn);
                 12:
@@ -374,51 +374,51 @@ begin
                 14:
                     InterpretWindings(Param, Tap);
                 15:
-                    XHL := parser.Dblvalue * 0.01;
+                    XHL := DSS.Parser.Dblvalue * 0.01;
                 16:
-                    XHT := parser.Dblvalue * 0.01;
+                    XHT := DSS.Parser.Dblvalue * 0.01;
                 17:
-                    XLT := parser.Dblvalue * 0.01;
+                    XLT := DSS.Parser.Dblvalue * 0.01;
                 18:
-                    Parser.ParseAsVector(((NumWindings - 1) * NumWindings div 2), Xsc);
+                    DSS.Parser.ParseAsVector(((NumWindings - 1) * NumWindings div 2), Xsc);
                 19:
-                    ThermalTimeConst := Parser.DblValue;
+                    ThermalTimeConst := DSS.Parser.DblValue;
                 20:
-                    n_thermal := Parser.DblValue;
+                    n_thermal := DSS.Parser.DblValue;
                 21:
-                    m_thermal := Parser.DblValue;
+                    m_thermal := DSS.Parser.DblValue;
                 22:
-                    FLrise := Parser.DblValue;
+                    FLrise := DSS.Parser.DblValue;
                 23:
-                    HSRise := Parser.DblValue;
+                    HSRise := DSS.Parser.DblValue;
                 24:
-                    pctLoadLoss := Parser.DblValue;
+                    pctLoadLoss := DSS.Parser.DblValue;
                 25:
-                    pctNoLoadLoss := Parser.DblValue;
+                    pctNoLoadLoss := DSS.Parser.DblValue;
                 26:
-                    NormMaxHkVA := Parser.Dblvalue;
+                    NormMaxHkVA := DSS.Parser.Dblvalue;
                 27:
-                    EmergMaxHkVA := Parser.Dblvalue;
+                    EmergMaxHkVA := DSS.Parser.Dblvalue;
                 28:
-                    Winding^[ActiveWinding].MaxTap := Parser.DblValue;
+                    Winding^[ActiveWinding].MaxTap := DSS.Parser.DblValue;
                 29:
-                    Winding^[ActiveWinding].MinTap := Parser.DblValue;
+                    Winding^[ActiveWinding].MinTap := DSS.Parser.DblValue;
                 30:
-                    Winding^[ActiveWinding].NumTaps := Parser.IntValue;
+                    Winding^[ActiveWinding].NumTaps := DSS.Parser.IntValue;
                 31:
-                    pctImag := Parser.DblValue;
+                    pctImag := DSS.Parser.DblValue;
                 32:
-                    ppm_FloatFactor := Parser.DblValue * 1.0e-6;
+                    ppm_FloatFactor := DSS.Parser.DblValue * 1.0e-6;
                 33:
                     InterpretWindings(Param, R);
                 34:
-                    XHL := parser.Dblvalue * 0.01;
+                    XHL := DSS.Parser.Dblvalue * 0.01;
                 35:
-                    XHT := parser.Dblvalue * 0.01;
+                    XHT := DSS.Parser.Dblvalue * 0.01;
                 36:
-                    XLT := parser.Dblvalue * 0.01;
+                    XLT := DSS.Parser.Dblvalue * 0.01;
                 37:
-                    Winding^[ActiveWinding].RdcOhms := Parser.DblValue;
+                    Winding^[ActiveWinding].RdcOhms := DSS.Parser.DblValue;
             else
                 ClassEdit(DSS.ActiveXfmrCodeObj, ParamPointer - NumPropsThisClass)
             end;
@@ -469,8 +469,8 @@ begin
             end;
 
          {Advance to next property on input line}
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         if UpdateXsc then

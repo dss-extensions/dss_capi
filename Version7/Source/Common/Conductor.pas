@@ -78,20 +78,12 @@ end;
 
 procedure TConductor.CalcIsqt(CurrentMag: Double);  // Computes whether conductor has burned down
 begin
-
-
-    DoSimpleMsg(DSS, 'Need to implement Tconductor.CalcIsqrt', 770);
-
-
+    raise Exception.Create('Need to implement Tconductor.CalcIsqrt');
 end;
 
 procedure TConductor.ResetIsqt;  // restore the conductor and reset the i2t calcs
 begin
-
-
-    DoSimpleMsg(DSS, 'Need to implement Tconductor.ResetIsqt', 771);
-
-
+    raise Exception.Create('Need to implement Tconductor.ResetIsqt');
 end;
 
 

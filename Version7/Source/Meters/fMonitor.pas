@@ -400,8 +400,8 @@ Begin
   WITH ActiveFMonitorObj DO Begin
 
      ParamPointer := 0;
-     ParamName := Parser.NextParam;
-     Param := Parser.StrValue;
+     ParamName := DSS.Parser.NextParam;
+     Param := DSS.Parser.StrValue;
      WHILE Length(Param)>0 DO Begin
          IF Length(ParamName) = 0 THEN Inc(ParamPointer)
          ELSE ParamPointer := CommandList.GetCommand(ParamName);
@@ -415,8 +415,8 @@ Begin
                  ElementName := ConstructElemName(lowercase(param));   // subtitute @var values if any
                  PropertyValue[1] := ElementName;
                End;
-            2: MeteredTerminal := Parser.IntValue;
-            3: Mode := Parser.IntValue;
+            2: MeteredTerminal := DSS.Parser.IntValue;
+            3: Mode := DSS.Parser.IntValue;
             4: Begin
                   param := lowercase(param);
                   Case param[1] of
@@ -429,27 +429,27 @@ Begin
             5: IncludeResidual := InterpretYesNo(Param);
             6: VIpolar := InterpretYesNo(Param);
             7: Ppolar := InterpretYesNo(Param);
-            8: p_trans_ref := 1000 * Parser.dblValue;//kW for ref, unit of p_trans_ref is 'W'
-            9: V_Sensor := Parser.IntValue;//Voltage Sensor: Binary
-            10: P_Sensor := Parser.IntValue;//Power sensor : Binary
-            //11: Node_num := Parser.IntValue;//Node number : integer
-            12: Cluster_num := Parser.IntValue;//group number: integer
-            13: Total_Clusters := Parser.IntValue;//Total number of the groups: integer
-            14: Set_nodes_for_fm(Parser.IntValue);//Nodes. Innitiate the structure
+            8: p_trans_ref := 1000 * DSS.Parser.dblValue;//kW for ref, unit of p_trans_ref is 'W'
+            9: V_Sensor := DSS.Parser.IntValue;//Voltage Sensor: Binary
+            10: P_Sensor := DSS.Parser.IntValue;//Power sensor : Binary
+            //11: Node_num := DSS.Parser.IntValue;//Node number : integer
+            12: Cluster_num := DSS.Parser.IntValue;//group number: integer
+            13: Total_Clusters := DSS.Parser.IntValue;//Total number of the groups: integer
+            14: Set_nodes_for_fm(DSS.Parser.IntValue);//Nodes. Innitiate the structure
             15: Set_CommVector(Param);//
             16: Set_ElemTable_line(Param);//
-            17: p_mode :=   Parser.IntValue;
+            17: p_mode :=   DSS.Parser.IntValue;
             18: Set_CommDelayVector(Param);//
             19: begin
-                  T_intvl_smpl :=  Parser.dblValue; //
+                  T_intvl_smpl :=  DSS.Parser.dblValue; //
                   for i := 1 to nodes do
                           ResetDelaySteps(i);
                 end ;
-            20: MaxLocalMem := Parser.IntValue;
+            20: MaxLocalMem := DSS.Parser.IntValue;
             21: Set_volt_lmt_clstr(Param);
             22: ld_fm_info[0].b_curt_ctrl := InterpretYesNo(Param); //curtailment
             23: begin
-                up_dly := Parser.dblValue;
+                up_dly := DSS.Parser.dblValue;
                 if t_intvl_smpl<>0.0 then
                 begin
                     if frac (up_dly /t_intvl_smpl)<>0.0 then
@@ -458,14 +458,14 @@ Begin
                 end
                     else nUp_dlys :=0;
             end;
-            24: virtual_Ld_Nd := Parser.IntValue;
+            24: virtual_Ld_Nd := DSS.Parser.IntValue;
          ELSE
            // Inherited parameters
            ClassEdit( ActiveFMonitorObj, ParamPointer - NumPropsthisClass)
          End;
 
-         ParamName := Parser.NextParam;
-         Param := Parser.StrValue;
+         ParamName := DSS.Parser.NextParam;
+         Param := DSS.Parser.StrValue;
      End;
 
      if recalc > 0 then RecalcElementData;
@@ -811,7 +811,7 @@ Begin
              End;
 
              IF MeteredTerminal>MeteredElement.Nterms THEN Begin
-                 DoErrorMsg('FMonitor: "' + Name + '"',
+                 DoErrorMsg(DSS, 'FMonitor: "' + Name + '"',
                                  'Terminal no. "' +'" does not exist.',
                                  'Respecify terminal no.', 665);
              End
@@ -849,7 +849,7 @@ Begin
          End
          ELSE Begin
             MeteredElement := nil;   // element not found
-            DoErrorMsg('Monitor: "' + Self.Name + '"', 'Circuit Element "'+ ElementName + '" Not Found.',
+            DoErrorMsg(DSS, 'Monitor: "' + Self.Name + '"', 'Circuit Element "'+ ElementName + '" Not Found.',
                             ' Element must be defined previously.', 666);
          End;
          {}

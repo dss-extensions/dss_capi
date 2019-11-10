@@ -383,8 +383,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -401,46 +401,46 @@ begin
                 1:
                     ElementName := 'Transformer.' + lowercase(param);  // Initialize to Transformer
                 2:
-                    ElementTerminal := Parser.IntValue;
+                    ElementTerminal := DSS.Parser.IntValue;
                 3:
-                    Vreg := Parser.DblValue;
+                    Vreg := DSS.Parser.DblValue;
                 4:
-                    Bandwidth := Parser.DblValue;
+                    Bandwidth := DSS.Parser.DblValue;
                 5:
-                    PTRatio := Parser.DblValue;
+                    PTRatio := DSS.Parser.DblValue;
                 6:
-                    CTRating := Parser.DblValue;
+                    CTRating := DSS.Parser.DblValue;
                 7:
-                    R := Parser.DblValue;
+                    R := DSS.Parser.DblValue;
                 8:
-                    X := Parser.DblValue;
+                    X := DSS.Parser.DblValue;
                 9:
                     RegulatedBus := Param;      // Buaname.node
                 10:
-                    TimeDelay := Parser.DblValue;
+                    TimeDelay := DSS.Parser.DblValue;
                 11:
                     IsReversible := InterpretYesNo(Param);
                 12:
-                    revVreg := Parser.DblValue;
+                    revVreg := DSS.Parser.DblValue;
                 13:
-                    revBandwidth := Parser.DblValue;
+                    revBandwidth := DSS.Parser.DblValue;
                 14:
-                    revR := Parser.DblValue;
+                    revR := DSS.Parser.DblValue;
                 15:
-                    revX := Parser.DblValue;
+                    revX := DSS.Parser.DblValue;
                 16:
-                    TapDelay := Parser.DblValue;
+                    TapDelay := DSS.Parser.DblValue;
                 17:
                     DebugTrace := InterpretYesNo(Param);
                 18:
-                    TapLimitPerChange := max(0, Parser.IntValue);
+                    TapLimitPerChange := max(0, DSS.Parser.IntValue);
                 19:
                     FInversetime := InterpretYesNo(Param);
                 20:
-                    TapWinding := Parser.intValue;
+                    TapWinding := DSS.Parser.intValue;
                 21:
                 begin
-                    Vlimit := Parser.DblValue;
+                    Vlimit := DSS.Parser.DblValue;
                     if VLimit > 0.0 then
                         VLimitActive := TRUE
                     else
@@ -453,19 +453,19 @@ begin
                     if CompareTextShortest(param, 'min') = 0 then
                         FPTPhase := MINPHASE
                     else
-                        FPTPhase := max(1, Parser.IntValue);
+                        FPTPhase := max(1, DSS.Parser.IntValue);
                 23:
-                    kWRevPowerThreshold := Parser.DblValue;
+                    kWRevPowerThreshold := DSS.Parser.DblValue;
                 24:
-                    RevDelay := Parser.DblValue;
+                    RevDelay := DSS.Parser.DblValue;
                 25:
                     ReverseNeutral := InterpretYesNo(Param);
                 26:
                     ShowEventLog := InterpretYesNo(param);
                 27:
-                    RemotePTRatio := Parser.DblValue;
+                    RemotePTRatio := DSS.Parser.DblValue;
                 28:
-                    TapNum := Parser.IntValue;
+                    TapNum := DSS.Parser.IntValue;
                 29:
                     if InterpretYesNo(Param) then
                     begin  // force a reset
@@ -473,9 +473,9 @@ begin
                         PropertyValue[29] := 'n'; // so it gets reported properly
                     end;
                 30:
-                    LDC_Z := Parser.DblValue;
+                    LDC_Z := DSS.Parser.DblValue;
                 31:
-                    revLDC_Z := Parser.DblValue;
+                    revLDC_Z := DSS.Parser.DblValue;
                 32:
                     CogenEnabled := InterpretYesNo(Param);
 
@@ -504,8 +504,8 @@ begin
                     RevPowerThreshold := kWRevPowerThreshold * 1000.0;
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -718,7 +718,7 @@ begin
         begin
             if ElementTerminal > ControlledElement.Nterms then
             begin
-                DoErrorMsg('RegControl: "' + Name + '"', 'Winding no. "' + '" does not exist.',
+                DoErrorMsg(DSS, 'RegControl: "' + Name + '"', 'Winding no. "' + '" does not exist.',
                     'Respecify Monitored Winding no.', 122);
             end
             else
@@ -736,14 +736,14 @@ begin
         else
         begin
             ControlledElement := NIL;   // we get here if element not found
-            DoErrorMsg('RegControl: "' + Self.Name + '"', 'Controlled Regulator Element "' + ElementName + '" Is not a transformer.',
+            DoErrorMsg(DSS, 'RegControl: "' + Self.Name + '"', 'Controlled Regulator Element "' + ElementName + '" Is not a transformer.',
                 ' Element must be defined previously.', 123);
         end;
     end
     else
     begin
         ControlledElement := NIL;   // element not found
-        DoErrorMsg('RegControl: "' + Self.Name + '"', 'Transformer Element "' + ElementName + '" Not Found.',
+        DoErrorMsg(DSS, 'RegControl: "' + Self.Name + '"', 'Transformer Element "' + ElementName + '" Not Found.',
             ' Element must be defined previously.', 124);
     end;
 end;

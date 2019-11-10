@@ -177,10 +177,12 @@ VAR
     MaxCircuits     :Integer;
     StartupDirectory :String;     // Where we started
     VersionString      :String;
-    UpdateRegistry     :Boolean;  // update on program exit
     CPU_Freq           : int64;   // Used to store the CPU performance counter frequency (not the actual CPU frequency)
     CPU_Cores          : integer;
     GlobalDefaultBaseFreq: Double = 60.0;
+{$IFNDEF DSS_CAPI}    
+    UpdateRegistry     :Boolean;  // update on program exit
+{$ENDIF}
 
 PROCEDURE DoErrorMsg(DSS: TDSS; Const S, Emsg, ProbCause :String; ErrNum:Integer);
 PROCEDURE DoSimpleMsg(DSS: TDSS; Const S :String; ErrNum:Integer);
@@ -841,18 +843,15 @@ initialization
 {$ENDIF}
 
    StartupDirectory := GetCurrentDir + PathDelim;
-{$IFNDEF DSS_CAPI}
-   SetDataPath (DSS, GetDefaultDataDirectory + PathDelim + ProgramName + PathDelim);
-{$ELSE} // Use the current working directory as the initial datapath when using DSS_CAPI
-   SetDataPath (DSS, StartupDirectory);
-{$ENDIF}
 
 {$IFNDEF DSS_CAPI}
+   SetDataPath (DSS, GetDefaultDataDirectory + PathDelim + ProgramName + PathDelim); //TODO
    {$IFNDEF FPC}
    DSS_Registry     := TIniRegSave.Create('\Software\' + ProgramName);
    {$ELSE}
    DSS_Registry     := TIniRegSave.Create(DataDirectory + 'opendsscmd.ini');
    {$ENDIF}
+   UpdateRegistry   := TRUE;
 {$ELSE}
    IF GetEnvironmentVariable('DSS_BASE_FREQUENCY') <> '' THEN
    BEGIN
@@ -884,7 +883,6 @@ initialization
 
    {$IFNDEF FPC}NoFormsAllowed   := FALSE;{$ENDIF}
 
-   UpdateRegistry   := TRUE;
    {$IFNDEF MSWINDOWS}
    CPU_Freq := 1000; // until we can query it
    {$ELSE}

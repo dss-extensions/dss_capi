@@ -108,7 +108,7 @@ procedure LineGeometries_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if DSSPrime.ActiveCircuit = NIL then Exit;
     if not DSSPrime.LineGeometryClass.SetActive(Value) then
-        DoSimpleMsg('LineGeometry "' + Value + '" Not Found in Active Circuit.', 51008);
+        DoSimpleMsg(DSSPrime, 'LineGeometry "' + Value + '" Not Found in Active Circuit.', 51008);
 
      // Still same active object if not found
 end;
@@ -131,7 +131,7 @@ begin
     pLineGeometry := DSSPrime.LineGeometryClass.GetActiveObj;
     if (Value < 1) then
     begin
-        DoSimpleMsg('Invalid number of conductors sent via C-API. Please enter a value within range.', 183);
+        DoSimpleMsg(DSSPrime, 'Invalid number of conductors sent via C-API. Please enter a value within range.', 183);
         Exit;
     end;
     pLineGeometry.DataChanged := TRUE;
@@ -156,7 +156,7 @@ begin
     pLineGeometry := DSSPrime.LineGeometryClass.GetActiveObj;
     if (Value < 1) then
     begin
-        DoSimpleMsg('Invalid number of phases sent via C-API. Please enter a value within range.', 184);
+        DoSimpleMsg(DSSPrime, 'Invalid number of phases sent via C-API. Please enter a value within range.', 184);
     end;
     
     with pLineGeometry do
@@ -387,7 +387,7 @@ begin
     begin
         if Nconds <> ValueCount then
         begin
-            DoSimpleMsg('Invalid number of items sent via C-API. Please enter a value within range.', 189);
+            DoSimpleMsg(DSSPrime, 'Invalid number of items sent via C-API. Please enter a value within range.', 189);
             Exit;
         end;
         Move(ValuePtr[0], FUnits[1], ValueCount * SizeOf(Double));
@@ -431,7 +431,7 @@ begin
     begin
         if Nconds <> ValueCount then
         begin
-            DoSimpleMsg('Invalid number of items sent via C-API. Please enter a value within range.', 188);
+            DoSimpleMsg(DSSPrime, 'Invalid number of items sent via C-API. Please enter a value within range.', 188);
             Exit;
         end;
         Move(ValuePtr[0], FY[1], ValueCount * SizeOf(Double));
@@ -475,7 +475,7 @@ begin
     begin
         if Nconds <> ValueCount then
         begin
-            DoSimpleMsg('Invalid number of items sent via C-API. Please enter a value within range.', 187);
+            DoSimpleMsg(DSSPrime, 'Invalid number of items sent via C-API. Please enter a value within range.', 187);
             Exit;
         end;
         Move(ValuePtr[0], FX[1], ValueCount * SizeOf(Double));
@@ -550,7 +550,7 @@ procedure LineGeometries_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.ActiveCircuit = NIL then Exit;
     if DSSPrime.LineGeometryClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg('Invalid LineGeometry index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid LineGeometry index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

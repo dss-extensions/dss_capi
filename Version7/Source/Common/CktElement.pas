@@ -536,7 +536,7 @@ procedure TDSSCktElement.GetCurrents(Curr: pComplexArray);  //Get present value 
 
 begin
 
-    DoErrorMsg('Something is Wrong.  Got to base CktElement GetCurrents for Object:' + CRLF + DSSClassName + '.' + Name,
+    DoErrorMsg(DSS, 'Something is Wrong.  Got to base CktElement GetCurrents for Object:' + CRLF + DSSClassName + '.' + Name,
         'N/A',
         'Should not be able to get here. Probable Programming Error.', 751);
 
@@ -562,7 +562,7 @@ function TDSSCktElement.InjCurrents: Integer;  // Applies to PC Elements
 
 begin
     Result := 0;
-    DoErrorMsg(('Improper call to InjCurrents for Element: ' + Name + '.'), '****',
+    DoErrorMsg(DSS, ('Improper call to InjCurrents for Element: ' + Name + '.'), '****',
         'Called CktElement class base function instead of actual.', 753)
 
 end;

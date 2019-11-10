@@ -693,8 +693,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;  // Parse next property off the command line
-        Param := Parser.StrValue;   // Put the string value of the property value in local memory for faster access
+        ParamName := DSS.Parser.NextParam;  // Parse next property off the command line
+        Param := DSS.Parser.StrValue;   // Put the string value of the property value in local memory for faster access
         while Length(Param) > 0 do
         begin
 
@@ -715,17 +715,17 @@ begin
                     0:
                         DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
                     1:
-                        NPhases := Parser.Intvalue; // num phases
+                        NPhases := DSS.Parser.Intvalue; // num phases
                     2:
                         SetBus(1, param);
                     propKV:
-                        PresentkV := Parser.DblValue;
+                        PresentkV := DSS.Parser.DblValue;
                     propKW:
-                        PresentkW := Parser.DblValue;
+                        PresentkW := DSS.Parser.DblValue;
                     propPF:
-                        PFNominal := Parser.DblValue;
+                        PFNominal := DSS.Parser.DblValue;
                     propMODEL:
-                        VoltageModel := Parser.IntValue;
+                        VoltageModel := DSS.Parser.IntValue;
                     propYEARLY:
                         YearlyShape := Param;
                     propDAILY:
@@ -735,63 +735,63 @@ begin
                     propDISPMODE:
                         DispatchMode := InterpretDispMode(Param);
                     propIDLEKVAR:
-                        pctIdlekvar := Parser.DblValue;
+                        pctIdlekvar := DSS.Parser.DblValue;
                     propCONNECTION:
                         InterpretConnection(Param);
                     propKVAR:
-                        Presentkvar := Parser.DblValue;
+                        Presentkvar := DSS.Parser.DblValue;
                     propPCTR:
-                        pctR := Parser.DblValue;
+                        pctR := DSS.Parser.DblValue;
                     propPCTX:
-                        pctX := Parser.DblValue;
+                        pctX := DSS.Parser.DblValue;
                     propIDLEKW:
-                        pctIdlekW := Parser.DblValue;
+                        pctIdlekW := DSS.Parser.DblValue;
                     propCLASS:
-                        StorageClass := Parser.IntValue;
+                        StorageClass := DSS.Parser.IntValue;
                     propDISPOUTTRIG:
-                        DischargeTrigger := Parser.DblValue;
+                        DischargeTrigger := DSS.Parser.DblValue;
                     propDISPINTRIG:
-                        ChargeTrigger := Parser.DblValue;
+                        ChargeTrigger := DSS.Parser.DblValue;
                     propCHARGEEFF:
-                        pctChargeEff := Parser.DblValue;
+                        pctChargeEff := DSS.Parser.DblValue;
                     propDISCHARGEEFF:
-                        pctDischargeEff := Parser.DblValue;
+                        pctDischargeEff := DSS.Parser.DblValue;
                     propPCTKWOUT:
-                        pctkWout := Parser.DblValue;
+                        pctkWout := DSS.Parser.DblValue;
                     propVMINPU:
-                        VMinPu := Parser.DblValue;
+                        VMinPu := DSS.Parser.DblValue;
                     propVMAXPU:
-                        VMaxPu := Parser.DblValue;
+                        VMaxPu := DSS.Parser.DblValue;
                     propSTATE:
                         FState := InterpretState(Param); //****
                     propKVA:
-                        StorageVars.kVArating := Parser.DblValue;
+                        StorageVars.kVArating := DSS.Parser.DblValue;
                     propKWRATED:
-                        StorageVars.kWrating := Parser.DblValue;
+                        StorageVars.kWrating := DSS.Parser.DblValue;
                     propKWHRATED:
-                        StorageVars.kWhrating := Parser.DblValue;
+                        StorageVars.kWhrating := DSS.Parser.DblValue;
                     propKWHSTORED:
-                        StorageVars.kWhstored := Parser.DblValue;
+                        StorageVars.kWhstored := DSS.Parser.DblValue;
                     propPCTRESERVE:
-                        pctReserve := Parser.DblValue;
+                        pctReserve := DSS.Parser.DblValue;
                     propUSERMODEL:
-                        UserModel.Name := Parser.StrValue;  // Connect to user written models
+                        UserModel.Name := DSS.Parser.StrValue;  // Connect to user written models
                     propUSERDATA:
                         if UserModel.Exists then
-                            UserModel.Edit := Parser.StrValue;  // Send edit string to user model
+                            UserModel.Edit := DSS.Parser.StrValue;  // Send edit string to user model
                     propDEBUGTRACE:
                         DebugTrace := InterpretYesNo(Param);
                     propPCTKWIN:
-                        pctkWIn := Parser.DblValue;
+                        pctkWIn := DSS.Parser.DblValue;
                     propPCTSTORED:
-                        StorageVars.kWhStored := Parser.DblValue * 0.01 * StorageVars.kWhRating;
+                        StorageVars.kWhStored := DSS.Parser.DblValue * 0.01 * StorageVars.kWhRating;
                     propCHARGETIME:
-                        ChargeTime := Parser.DblValue;
+                        ChargeTime := DSS.Parser.DblValue;
                     propDynaDLL:
-                        DynaModel.Name := Parser.StrValue;
+                        DynaModel.Name := DSS.Parser.StrValue;
                     propDynaData:
                         if DynaModel.Exists then
-                            DynaModel.Edit := Parser.StrValue;
+                            DynaModel.Edit := DSS.Parser.StrValue;
                     propBalanced:
                         ForceBalanced := InterpretYesNo(Param);
                     propLimited:
@@ -860,8 +860,8 @@ begin
                 end;
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -1089,8 +1089,8 @@ begin
     PublicDataSize := SizeOf(TStorageVars);
 
     IsUserModel := FALSE;
-    UserModel := TStoreUserModel.Create;
-    DynaModel := TStoreDynaModel.Create;
+    UserModel := TStoreUserModel.Create(DSS);
+    DynaModel := TStoreDynaModel.Create(DSS);
 
     Reg_kWh := 1;
     Reg_kvarh := 2;
@@ -3032,7 +3032,7 @@ begin
         S := S + Format(' kWrating=%-.5g  PF=%-.5g', [StorageVars.kWrating / Fnphases, PFNominal]);
     end;
 
-    Parser.CmdString := S;
+    DSS.Parser.CmdString := S;
     Edit;
 
     inherited;   // write out other properties

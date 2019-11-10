@@ -356,7 +356,7 @@ begin
             LoadDurCurve := Value;
             LoadDurCurveObj := DSSPrime.LoadShapeClass.Find(LoadDurCurve);
             if LoadDurCurveObj = NIL then
-                DoSimpleMsg('Load-Duration Curve not found.', 5001);
+                DoSimpleMsg(DSSPrime, 'Load-Duration Curve not found.', 5001);
         end;
 
 end;

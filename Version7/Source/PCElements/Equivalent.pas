@@ -201,8 +201,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -217,20 +217,20 @@ begin
                 0:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "Equivalent.' + Name + '"', 800);
                 1:
-                    Nterms := DoTerminalsDef(Parser.IntValue);  // This will allocate a bunch of stuff
+                    Nterms := DoTerminalsDef(DSS.Parser.IntValue);  // This will allocate a bunch of stuff
                 2:
                     InterpretAllBuses(param);
                 3:
-                    kVBase := Parser.DblValue; // basekv
+                    kVBase := DSS.Parser.DblValue; // basekv
                 4:
-                    PerUnit := Parser.DblValue; // pu
+                    PerUnit := DSS.Parser.DblValue; // pu
                 5:
-                    Angle := Parser.DblValue; // Ang
+                    Angle := DSS.Parser.DblValue; // Ang
                 6:
-                    EquivFrequency := Parser.DblValue; // freq
+                    EquivFrequency := DSS.Parser.DblValue; // freq
                 7:
                 begin
-                    Nphases := Parser.Intvalue; // num phases
+                    Nphases := DSS.Parser.Intvalue; // num phases
                     NConds := Fnphases;  // Force Reallocation of terminal info
                 end;
                 8:
@@ -252,8 +252,8 @@ begin
 
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
     // RecalcElementData;
@@ -503,7 +503,7 @@ begin
 
     if Zinv.InvertError > 0 then
     begin       {If error, put in Large series conductance}
-        DoErrorMsg('TEquivalentObj.CalcYPrim', 'Matrix Inversion Error for Equivalent "' + Name + '"',
+        DoErrorMsg(DSS, 'TEquivalentObj.CalcYPrim', 'Matrix Inversion Error for Equivalent "' + Name + '"',
             'Invalid impedance specified. Replaced with small resistance.', 803);
         Zinv.Clear;
         for i := 1 to Fnphases do
@@ -616,7 +616,7 @@ begin
         end;  {With}
     except
         On E: Exception do
-            DoErrorMsg(('GetCurrents for Element: ' + Name + '.'), E.Message,
+            DoErrorMsg(DSS, ('GetCurrents for Element: ' + Name + '.'), E.Message,
                 'Inadequate storage allotted for circuit element.', 805);
     end;
 
@@ -730,7 +730,7 @@ begin
     S := S + Format('R1=%-.5g ', [R1]);
     S := S + Format('X1=%-.5g ', [X1]);
 
-    Parser.CmdString := S;
+    DSS.Parser.CmdString := S;
     Edit;
 
     inherited;
@@ -751,7 +751,7 @@ procedure TEquivalentObj.ParseDblMatrix(Mat: pDoubleArray);
 
 begin
 
-    Parser.ParseAsSymMatrix(FnTerms, Mat);
+    DSS.Parser.ParseAsSymMatrix(FnTerms, Mat);
 
 end;
 

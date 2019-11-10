@@ -233,8 +233,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -251,14 +251,14 @@ begin
                 1:
                     IsourceSetBus1(param);
                 2:
-                    Amps := Parser.DblValue;
+                    Amps := DSS.Parser.DblValue;
                 3:
-                    Angle := Parser.DblValue; // Ang
+                    Angle := DSS.Parser.DblValue; // Ang
                 4:
-                    SrcFrequency := Parser.DblValue; // freq
+                    SrcFrequency := DSS.Parser.DblValue; // freq
                 5:
                 begin
-                    Nphases := Parser.IntValue; // num phases
+                    Nphases := DSS.Parser.IntValue; // num phases
                     case FNphases of
                         1:
                             FphaseShift := 0.0;
@@ -318,8 +318,8 @@ begin
                 10:
                     DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
             end;
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -586,7 +586,7 @@ begin
 
     except
         On E: Exception do
-            DoErrorMsg(('GetCurrents for Isource Element: ' + Name + '.'), E.Message,
+            DoErrorMsg(DSS, ('GetCurrents for Isource Element: ' + Name + '.'), E.Message,
                 'Inadequate storage allotted for circuit element?', 335);
     end;
 
@@ -684,7 +684,7 @@ begin
 
     if Fnphases > 1 then
     begin
-        Parser.CmdString := 'phases=1';
+        DSS.Parser.CmdString := 'phases=1';
         Edit;
     end;
     inherited;

@@ -457,7 +457,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('RegControl "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'RegControl "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -552,7 +552,7 @@ begin
     pRegControl := DSSPrime.ActiveCircuit.RegControls.Get(Value);
     if pRegControl = NIL then
     begin
-        DoSimpleMsg('Invalid RegControl index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid RegControl index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pRegControl;

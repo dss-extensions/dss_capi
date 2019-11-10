@@ -177,8 +177,8 @@ var
 begin
     Result := 0;
 
-    ParamName := Parser.NextParam;
-    Param := LowerCase(Parser.StrValue);
+    ParamName := DSS.Parser.NextParam;
+    Param := LowerCase(DSS.Parser.StrValue);
     ParamPointer := ShowCommands.Getcommand(Param);
 
     if ParamPointer = 0 then
@@ -219,8 +219,8 @@ begin
         begin
             ShowOptionCode := 0;
             ShowResid := FALSE;
-            ParamName := Parser.NextParam;   // Look for residual
-            Param := Uppercase(Parser.StrValue);
+            ParamName := DSS.Parser.NextParam;   // Look for residual
+            Param := Uppercase(DSS.Parser.StrValue);
            // logic handles show curr y|n|T elements or show curr elements
             if (Length(Param) > 0) then
                 case Param[1] of
@@ -231,8 +231,8 @@ begin
                     'E':
                         ShowOptionCode := 1;
                 end;
-            ParamName := Parser.NextParam;   // Look for another param
-            Param := Uppercase(Parser.StrValue);
+            ParamName := DSS.Parser.NextParam;   // Look for another param
+            Param := Uppercase(DSS.Parser.StrValue);
             if (Length(Param) > 0) then
                 case Param[1] of
                     'E':
@@ -250,8 +250,8 @@ begin
             DSS.ActiveCircuit.Solution.WriteConvergenceReport(DSS.OutputDirectory + DSS.CircuitName_ + 'Convergence.TXT');
         5:
         begin
-            ParamName := Parser.NextParam;   // Look for another param
-            Param := LowerCase(Parser.StrValue);
+            ParamName := DSS.Parser.NextParam;   // Look for another param
+            Param := LowerCase(DSS.Parser.StrValue);
             ShowElements(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Elements.Txt', Param);
         end;
         6:
@@ -264,18 +264,18 @@ begin
             ShowMeters(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'EMout.Txt');
         10:
         begin     // Show Monitor
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
             if Length(Param) > 0 then
             begin
                 pMon := DSS.MonitorClass.Find(Param);
                 if pMon <> NIL then
                     pMon.TranslateToCSV(TRUE)
                 else
-                    DoSimpleMsg(DSS, 'Monitor "' + param + '" not found.' + CRLF + parser.CmdString, 248);
+                    DoSimpleMsg(DSS, 'Monitor "' + param + '" not found.' + CRLF + DSS.Parser.CmdString, 248);
             end
             else
-                DoSimpleMsg(DSS, 'Monitor Name Not Specified.' + CRLF + parser.CmdString, 249);
+                DoSimpleMsg(DSS, 'Monitor Name Not Specified.' + CRLF + DSS.Parser.CmdString, 249);
         end;
         11:
             ShowControlPanel;
@@ -284,8 +284,8 @@ begin
             ShowOptionCode := 0;
             MVAOpt := 0;
             FilName := 'Power';
-            Paramname := parser.nextParam;
-            Param := LowerCase(Parser.strvalue);
+            Paramname := DSS.Parser.nextParam;
+            Param := LowerCase(DSS.Parser.strvalue);
             if Length(Param) > 0 then
                 case Param[1] of
                     'm':
@@ -293,8 +293,8 @@ begin
                     'e':
                         ShowOptionCode := 1;
                 end;
-            Paramname := parser.nextParam;
-            Param := LowerCase(Parser.strvalue);
+            Paramname := DSS.Parser.nextParam;
+            Param := LowerCase(DSS.Parser.strvalue);
             if Length(Param) > 0 then
                 if Param[1] = 'e' then
                     ShowOptionCode := 1;
@@ -314,8 +314,8 @@ begin
             LLOpt := FALSE;      // Line-Line voltage option
             ShowOptionCode := 0;
             {Check for LL or LN option}
-            Paramname := parser.nextParam;
-            Param := Parser.strvalue;
+            Paramname := DSS.Parser.nextParam;
+            Param := DSS.Parser.strvalue;
 
             FilName := 'VLN';
             if Length(Param) > 0 then
@@ -325,8 +325,8 @@ begin
                     FilName := 'VLL';
                 end;
             {Check for Seq | nodes | elements}
-            Paramname := parser.nextParam;
-            Param := UpperCase(Parser.strvalue);
+            Paramname := DSS.Parser.nextParam;
+            Param := UpperCase(DSS.Parser.strvalue);
             if Length(Param) > 0 then
                 case Param[1] of
                     'N':
@@ -352,8 +352,8 @@ begin
             ShowOverloads(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Overload.Txt');
         17:
         begin
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
             if Length(Param) > 0 then
                 ShowUnserved(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Unserved.Txt', TRUE)
             else
@@ -373,14 +373,14 @@ begin
         begin  // Show Bus Power Report
             ShowOptionCode := 0;
             MVAOpt := 0;
-            Paramname := parser.nextParam; // Get busname
-            Busname := Parser.strvalue;
+            Paramname := DSS.Parser.nextParam; // Get busname
+            Busname := DSS.Parser.strvalue;
             if Length(BusName) > 0 then
                 FilName := BusName
             else
                 FilName := 'BusPower';
-            Paramname := parser.nextParam;
-            Param := LowerCase(Parser.strvalue);
+            Paramname := DSS.Parser.nextParam;
+            Param := LowerCase(DSS.Parser.strvalue);
             if Length(Param) > 0 then
                 case Param[1] of
                     'm':
@@ -388,8 +388,8 @@ begin
                     'e':
                         ShowOptionCode := 1;
                 end;
-            Paramname := parser.nextParam;
-            Param := LowerCase(Parser.strvalue);
+            Paramname := DSS.Parser.nextParam;
+            Param := LowerCase(DSS.Parser.strvalue);
             if Length(Param) > 0 then
                 if Param[1] = 'e' then
                     ShowOptionCode := 1;
@@ -409,15 +409,15 @@ begin
             Freq := DSS.DefaultBaseFreq;  // Default
             Units := UNITS_KFT; // 'kft'; // default
             Rho_line := 100.0;
-            ParamName := parser.nextparam;
-            if Length(Parser.strvalue) > 0 then
-                Freq := Parser.dblvalue;
-            ParamName := parser.nextparam;
-            if Length(Parser.strvalue) > 0 then
-                Units := GetUnitsCode(Parser.strvalue);
-            ParamName := parser.nextparam;
-            if Length(Parser.strvalue) > 0 then
-                Rho_line := Parser.dblValue;
+            ParamName := DSS.Parser.nextparam;
+            if Length(DSS.Parser.strvalue) > 0 then
+                Freq := DSS.Parser.dblvalue;
+            ParamName := DSS.Parser.nextparam;
+            if Length(DSS.Parser.strvalue) > 0 then
+                Units := GetUnitsCode(DSS.Parser.strvalue);
+            ParamName := DSS.Parser.nextparam;
+            if Length(DSS.Parser.strvalue) > 0 then
+                Rho_line := DSS.Parser.dblValue;
             ShowLineConstants(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'LineConstants.txt', freq, units, Rho_line);
         end;
 

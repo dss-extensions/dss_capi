@@ -193,8 +193,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -211,13 +211,13 @@ begin
                 1:
                     ElementName := lowercase(param);
                 2:
-                    ElementTerminal := Parser.IntValue;
+                    ElementTerminal := DSS.Parser.IntValue;
                 3:
-                    FkWLimit := Parser.DblValue;
+                    FkWLimit := DSS.Parser.DblValue;
                 4:
-                    FkWBand := Parser.DblValue;
+                    FkWBand := DSS.Parser.DblValue;
                 5:
-                    FkvarLimit := Parser.DblValue;
+                    FkvarLimit := DSS.Parser.DblValue;
                 6:
                     InterpretTStringListArray(Param, FGeneratorNameList);
                 7:
@@ -250,8 +250,8 @@ begin
 
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -356,7 +356,7 @@ begin
         MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
         if ElementTerminal > MonitoredElement.Nterms then
         begin
-            DoErrorMsg('GenDispatcher: "' + Name + '"',
+            DoErrorMsg(DSS, 'GenDispatcher: "' + Name + '"',
                 'Terminal no. "' + '" does not exist.',
                 'Re-specify terminal no.', 371);
         end

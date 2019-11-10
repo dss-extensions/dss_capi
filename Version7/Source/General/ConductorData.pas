@@ -161,34 +161,34 @@ begin
         begin
             case ParamPointer of
                 1:
-                    FRDC := Parser.Dblvalue;
+                    FRDC := DSS.Parser.Dblvalue;
                 2:
-                    FR60 := Parser.DblValue;
+                    FR60 := DSS.Parser.DblValue;
                 3:
-                    FresistanceUnits := GetUnitsCode(Parser.StrValue);
+                    FresistanceUnits := GetUnitsCode(DSS.Parser.StrValue);
                 4:
-                    FGMR60 := Parser.DblValue;
+                    FGMR60 := DSS.Parser.DblValue;
                 5:
-                    FGMRUnits := GetUnitsCode(Parser.StrValue);
+                    FGMRUnits := GetUnitsCode(DSS.Parser.StrValue);
                 6:
-                    Fradius := Parser.DblValue;
+                    Fradius := DSS.Parser.DblValue;
                 7:
-                    FRadiusUnits := GetUnitsCode(Parser.StrValue);
+                    FRadiusUnits := GetUnitsCode(DSS.Parser.StrValue);
                 8:
-                    NormAmps := Parser.DblValue;
+                    NormAmps := DSS.Parser.DblValue;
                 9:
-                    EmergAmps := Parser.DblValue;
+                    EmergAmps := DSS.Parser.DblValue;
                 10:
-                    Fradius := Parser.DblValue / 2.0;
+                    Fradius := DSS.Parser.DblValue / 2.0;
                 11:
                 begin
-                    NumAmpRatings := Parser.IntValue;
+                    NumAmpRatings := DSS.Parser.IntValue;
                     setlength(AmpRatings, NumAmpRatings);
                 end;
                 12:
                 begin
                     setlength(AmpRatings, NumAmpRatings);
-                    Param := Parser.StrValue;
+                    Param := DSS.Parser.StrValue;
                     NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, pointer(AmpRatings));
                 end
             else

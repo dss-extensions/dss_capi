@@ -711,7 +711,7 @@ begin
 
     if Length(CktElementName) > 0 then
     begin
-        SetObject(CktElementName);
+        SetObject(DSS, CktElementName);
 
 
         if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
@@ -832,7 +832,7 @@ begin
 
     if Length(CktElementName) > 0 then
     begin
-        SetObject(CktElementName);
+        SetObject(DSS, CktElementName);
 
         if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
             with DSS.ActiveCircuit.ActiveCktElement do
@@ -952,7 +952,7 @@ begin
 
     if Length(CktElementName) > 0 then
     begin
-        SetObject(CktElementName);
+        SetObject(DSS, CktElementName);
 
         if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
             with DSS.ActiveCircuit.ActiveCktElement do
@@ -1072,7 +1072,7 @@ begin
 
     if Length(CktElementName) > 0 then
     begin
-        SetObject(CktElementName);
+        SetObject(DSS, CktElementName);
 
         if Assigned(DSS.ActiveCircuit.ActiveCktElement) then
             with DSS.ActiveCircuit.ActiveCktElement do
@@ -1858,7 +1858,7 @@ begin
 
 
     finally
-        AppendGlobalResult(FileNm);
+        AppendGlobalResult(DSS, FileNm);
         CloseFile(F);
 
     end;
@@ -1914,7 +1914,7 @@ begin
                 for j := 1 to NumEMRegisters do
                     Write(F, Separator, PElem.Registers[j]: 10: 0);
                 Writeln(F);
-                AppendGlobalResult(FileNm);
+                AppendGlobalResult(DSS, FileNm);
             finally
                 CloseFile(F);
             end;
@@ -2075,7 +2075,7 @@ begin
                         Write(F, Separator, PElem.Registers[j]: 10: 0);
                     Writeln(F);
                 end;
-                AppendGlobalResult(FileNm);
+                AppendGlobalResult(DSS, FileNm);
             finally
                 CloseFile(F);
             end;
@@ -2225,7 +2225,7 @@ begin
                         Write(F, Separator, PElem.Registers[j]: 10: 0);
                     Writeln(F);
                 end;
-                AppendGlobalResult(FileNm);
+                AppendGlobalResult(DSS, FileNm);
             finally
                 CloseFile(F);
             end;
@@ -2372,7 +2372,7 @@ begin
                         Write(F, Separator, PElem.Registers[j]: 10: 0);
                     Writeln(F);
                 end;
-                AppendGlobalResult(FileNm);
+                AppendGlobalResult(DSS, FileNm);
             finally
                 CloseFile(F);
             end;

@@ -113,8 +113,8 @@ begin
     with DSS.ActiveConductorDataObj do
     begin
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -132,8 +132,8 @@ begin
         // Inherited parameters
                 ClassEdit(DSS.ActiveConductorDataObj, ParamPointer - NumPropsThisClass)
             end;
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
     end;
 end;

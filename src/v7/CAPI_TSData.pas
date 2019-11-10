@@ -85,13 +85,13 @@ begin
         case prop of
             TSDataProps.DiaShield:
                 if (FDiaShield <= 0.0) then
-                    DoSimpleMsg('Error: Diameter over shield must be positive for TapeShieldData ' + Name, 999);
+                    DoSimpleMsg(DSSPrime, 'Error: Diameter over shield must be positive for TapeShieldData ' + Name, 999);
             TSDataProps.TapeLayer:
                 if (FTapeLayer <= 0.0) then
-                    DoSimpleMsg('Error: Tape shield thickness must be positive for TapeShieldData ' + Name, 999);
+                    DoSimpleMsg(DSSPrime, 'Error: Tape shield thickness must be positive for TapeShieldData ' + Name, 999);
             TSDataProps.TapeLap:
                 if ((FTapeLap < 0.0) or (FTapeLap > 100.0)) then
-                    DoSimpleMsg('Error: Tap lap must range from 0 to 100 for TapeShieldData ' + Name, 999);
+                    DoSimpleMsg(DSSPrime, 'Error: Tap lap must range from 0 to 100 for TapeShieldData ' + Name, 999);
         end;
     end;
 end;
@@ -146,7 +146,7 @@ begin
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         if not DSSPrime.TSDataClass.SetActive(Value) then
-            DoSimpleMsg('TSData "' + Value + '" Not Found in Active Circuit.', 51008);
+            DoSimpleMsg(DSSPrime, 'TSData "' + Value + '" Not Found in Active Circuit.', 51008);
 
          // Still same active object if not found
     end;
@@ -626,7 +626,7 @@ end;
 procedure TSData_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.TSDataClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg('Invalid TSData index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid TSData index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

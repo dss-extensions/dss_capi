@@ -214,8 +214,8 @@ begin
     with DSS.ActiveVSConverterObj do
     begin
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -228,46 +228,46 @@ begin
                 0:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 350);
                 1:
-                    if Fnphases <> Parser.IntValue then
+                    if Fnphases <> DSS.Parser.IntValue then
                     begin
-                        Nphases := Parser.IntValue;
+                        Nphases := DSS.Parser.IntValue;
                         NConds := Fnphases;
                         DSS.ActiveCircuit.BusNameRedefined := TRUE;
                     end;
                 2:
                     VscSetBus1(param);
                 3:
-                    FkVac := Parser.DblValue;
+                    FkVac := DSS.Parser.DblValue;
                 4:
-                    FkVdc := Parser.DblValue;
+                    FkVdc := DSS.Parser.DblValue;
                 5:
-                    FkW := Parser.DblValue;
+                    FkW := DSS.Parser.DblValue;
                 6:
-                    FNdc := Parser.IntValue;
+                    FNdc := DSS.Parser.IntValue;
                 7:
-                    FRac := Parser.DblValue;
+                    FRac := DSS.Parser.DblValue;
                 8:
-                    FXac := Parser.DblValue;
+                    FXac := DSS.Parser.DblValue;
                 9:
-                    Fm := Parser.DblValue;
+                    Fm := DSS.Parser.DblValue;
                 10:
-                    Fd := Parser.DblValue;
+                    Fd := DSS.Parser.DblValue;
                 11:
-                    FMinM := Parser.DblValue;
+                    FMinM := DSS.Parser.DblValue;
                 12:
-                    FMaxM := Parser.DblValue;
+                    FMaxM := DSS.Parser.DblValue;
                 13:
-                    FMaxIac := Parser.DblValue;
+                    FMaxIac := DSS.Parser.DblValue;
                 14:
-                    FMaxIdc := Parser.DblValue;
+                    FMaxIdc := DSS.Parser.DblValue;
                 15:
-                    FRefVac := Parser.DblValue;
+                    FRefVac := DSS.Parser.DblValue;
                 16:
-                    FRefPac := Parser.DblValue;
+                    FRefPac := DSS.Parser.DblValue;
                 17:
-                    FRefQac := Parser.DblValue;
+                    FRefQac := DSS.Parser.DblValue;
                 18:
-                    FRefVdc := Parser.DblValue;
+                    FRefVdc := DSS.Parser.DblValue;
                 19:
                 begin
                     Tok := Uppercase(LeftStr(param, 4));
@@ -298,8 +298,8 @@ begin
             else
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
         RecalcElementData;
     end;
@@ -485,7 +485,7 @@ begin
         end;
     except
         on E: Exception do
-            DoErrorMsg(('GetCurrents for Element: ' + Name + '.'), E.Message,
+            DoErrorMsg(DSS, ('GetCurrents for Element: ' + Name + '.'), E.Message,
                 'Inadequate storage allotted for circuit element.', 327);
     end;
 end;
@@ -695,9 +695,9 @@ procedure TVSConverterObj.MakePosSequence;
 begin
     if FnPhases <> 2 then
     begin
-        Parser.CmdString := 'Phases=2';
+        DSS.Parser.CmdString := 'Phases=2';
         Edit;
-        Parser.CmdString := 'Ndc=1';
+        DSS.Parser.CmdString := 'Ndc=1';
         Edit;
     end;
     inherited;

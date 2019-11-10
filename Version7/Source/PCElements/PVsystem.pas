@@ -703,8 +703,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;  // Parse next property off the command line
-        Param := Parser.StrValue;   // Put the string value of the property value in local memory for faster access
+        ParamName := DSS.Parser.NextParam;  // Parse next property off the command line
+        Param := DSS.Parser.StrValue;   // Put the string value of the property value in local memory for faster access
         while Length(Param) > 0 do
         begin
 
@@ -725,21 +725,21 @@ begin
                     0:
                         DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
                     1:
-                        NPhases := Parser.Intvalue; // num phases
+                        NPhases := DSS.Parser.Intvalue; // num phases
                     2:
                         SetBus(1, param);
                     propKV:
-                        PresentkV := Parser.DblValue;
+                        PresentkV := DSS.Parser.DblValue;
                     propIrradiance:
-                        PVSystemVars.FIrradiance := Parser.DblValue;
+                        PVSystemVars.FIrradiance := DSS.Parser.DblValue;
                     propPF:
                     begin
                         PFSpecified := TRUE;
                         kvarSpecified := FALSE;
-                        PFnominal := Parser.DblValue;
+                        PFnominal := DSS.Parser.DblValue;
                     end;
                     propMODEL:
-                        VoltageModel := Parser.IntValue;
+                        VoltageModel := DSS.Parser.IntValue;
                     propYEARLY:
                         YearlyShape := Param;
                     propDAILY:
@@ -758,45 +758,45 @@ begin
                     begin
                         kvarSpecified := TRUE;
                         PFSpecified := FALSE;
-                        Presentkvar := Parser.DblValue;
+                        Presentkvar := DSS.Parser.DblValue;
                     end;
                     propPCTR:
-                        pctR := Parser.DblValue;
+                        pctR := DSS.Parser.DblValue;
                     propPCTX:
-                        pctX := Parser.DblValue;
+                        pctX := DSS.Parser.DblValue;
                     propCLASS:
-                        FClass := Parser.IntValue;
+                        FClass := DSS.Parser.IntValue;
                     propInvEffCurve:
                         InverterCurve := Param;
                     propTemp:
-                        PVSystemVars.FTemperature := Parser.DblValue;
+                        PVSystemVars.FTemperature := DSS.Parser.DblValue;
                     propPmpp:
-                        PVSystemVars.FPmpp := Parser.DblValue;
+                        PVSystemVars.FPmpp := DSS.Parser.DblValue;
                     propP_T_Curve:
                         Power_TempCurve := Param;
                     propCutin:
-                        FpctCutIn := Parser.DblValue;
+                        FpctCutIn := DSS.Parser.DblValue;
                     propCutout:
-                        FpctCutOut := Parser.DblValue;
+                        FpctCutOut := DSS.Parser.DblValue;
                     propVMINPU:
-                        VMinPu := Parser.DblValue;
+                        VMinPu := DSS.Parser.DblValue;
                     propVMAXPU:
-                        VMaxPu := Parser.DblValue;
+                        VMaxPu := DSS.Parser.DblValue;
                     propKVA:
                         with PVSystemVars do
                         begin
-                            FkVArating := Parser.DblValue;
+                            FkVArating := DSS.Parser.DblValue;
                             Fkvarlimit := FkVArating;   // Reset kvar limit to kVA rating
                         end;
                     propUSERMODEL:
-                        UserModel.Name := Parser.StrValue;  // Connect to user written models
+                        UserModel.Name := DSS.Parser.StrValue;  // Connect to user written models
                     propUSERDATA:
                         if UserModel.Exists then
-                            UserModel.Edit := Parser.StrValue;  // Send edit string to user model
+                            UserModel.Edit := DSS.Parser.StrValue;  // Send edit string to user model
                     propDEBUGTRACE:
                         DebugTrace := InterpretYesNo(Param);
                     proppctPmpp:
-                        PVSystemVars.FpuPmpp := Parser.DblValue / 100.0;  // convert to pu
+                        PVSystemVars.FpuPmpp := DSS.Parser.DblValue / 100.0;  // convert to pu
                     propBalanced:
                         ForceBalanced := InterpretYesNo(Param);
                     propLimited:
@@ -804,9 +804,9 @@ begin
                     propVarFollowInverter:
                         FVarFollowInverter := InterpretYesNo(Param);
                     propkvarLimit:
-                        PVSystemVars.Fkvarlimit := Abs(Parser.DblValue);
+                        PVSystemVars.Fkvarlimit := Abs(DSS.Parser.DblValue);
                     propDutyStart:
-                        DutyStart := Parser.DblValue;
+                        DutyStart := DSS.Parser.DblValue;
                     propPPriority:
                         PVSystemVars.P_priority := InterpretYesNo(Param);  // set watt priority flag
 
@@ -860,8 +860,8 @@ begin
                 end;
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -1097,7 +1097,7 @@ begin
     PublicDataStruct := @PVSystemVars;
     PublicDataSize := SizeOf(TPVSystemVars);
 
-    UserModel := TPVsystemUserModel.Create;
+    UserModel := TPVsystemUserModel.Create(DSS);
 
     Reg_kWh := 1;
     Reg_kvarh := 2;
@@ -2952,7 +2952,7 @@ begin
         if (Fnphases > 1) then
             S := S + Format(' kva=%-.5g  PF=%-.5g', [FkVArating / Fnphases, PFnominal]);
 
-        Parser.CmdString := S;
+        DSS.Parser.CmdString := S;
         Edit;
     end;
 

@@ -95,7 +95,7 @@ begin
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         if not DSSPrime.LineSpacingClass.SetActive(Value) then
-            DoSimpleMsg('LineSpacing "' + Value + '" Not Found in Active Circuit.', 51008);
+            DoSimpleMsg(DSSPrime, 'LineSpacing "' + Value + '" Not Found in Active Circuit.', 51008);
 
          // Still same active object if not found
     end;
@@ -125,7 +125,7 @@ begin
         pLineSpacing := DSSPrime.LineSpacingClass.GetActiveObj;
         if (Value < 1) then
         begin
-            DoSimpleMsg('Invalid number of conductors sent via COM interface.  Please enter a value within range.', 183);
+            DoSimpleMsg(DSSPrime, 'Invalid number of conductors sent via COM interface.  Please enter a value within range.', 183);
         end
         else
         begin
@@ -206,7 +206,7 @@ begin
         begin
             if NWires <> ValueCount then
             begin
-                DoSimpleMsg('Invalid number of items sent via COM interface.  Please enter a value within range.', 183);
+                DoSimpleMsg(DSSPrime, 'Invalid number of items sent via COM interface.  Please enter a value within range.', 183);
                 Exit;
             end;
 
@@ -256,7 +256,7 @@ begin
         begin
             if NWires <> ValueCount then
             begin
-                DoSimpleMsg('Invalid number of items sent via COM interface.  Please enter a value within range.', 183);
+                DoSimpleMsg(DSSPrime, 'Invalid number of items sent via COM interface.  Please enter a value within range.', 183);
                 Exit;
             end;
 
@@ -313,7 +313,7 @@ end;
 procedure LineSpacings_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.LineSpacingClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg('Invalid LineSpacing index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid LineSpacing index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

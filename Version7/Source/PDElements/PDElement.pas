@@ -252,7 +252,7 @@ begin
 
     except
         On E: Exception do
-            DoErrorMsg(('Trying to Get Currents for Element: ' + Name + '.'), E.Message,
+            DoErrorMsg(DSS, ('Trying to Get Currents for Element: ' + Name + '.'), E.Message,
                 'Has the circuit been solved?', 660);
     end;
 

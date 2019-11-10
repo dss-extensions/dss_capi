@@ -133,7 +133,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('GICSource "' + Value + '" Not Found in Active Circuit.', 77003);
+        DoSimpleMsg(DSSPrime, 'GICSource "' + Value + '" Not Found in Active Circuit.', 77003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -357,7 +357,7 @@ begin
     elem := DSSPrime.GICsourceClass.ElementList.Get(Value);
     if elem = NIL then
     begin
-        DoSimpleMsg('Invalid GICSource index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid GICSource index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := elem;

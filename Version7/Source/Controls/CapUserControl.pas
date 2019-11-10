@@ -24,7 +24,7 @@ unit CapUserControl;
 
 interface
 
-USES  CapControlVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef;
+USES  CapControlVars, Dynamics, DSSCallBackRoutines, ucomplex, Arraydef, DSSClass;
 
 TYPE
 
@@ -54,6 +54,7 @@ TYPE
       protected
 
       public
+        DSS: TDSS;
 
         FEdit:    Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
 
@@ -62,7 +63,7 @@ TYPE
         Procedure DoPending(Const Code, ProxyHdl:integer);
         Procedure Sample;
 
-        constructor Create;
+        constructor Create(dssContext: TDSS);
         destructor  Destroy; override;
 
         // this property loads library (if needed), sets the procedure variables, and makes a new instance
@@ -79,7 +80,7 @@ TYPE
 
 implementation
 
-Uses  DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils;
+Uses  DSSGlobals, {$IFDEF FPC}dynlibs{$ELSE}Windows{$ENDIF}, Sysutils, DSSHelper;
 
 { TCapUserControl }
 
@@ -93,9 +94,9 @@ begin
         Result := Addr;
 end;
 
-constructor TCapUserControl.Create;
+constructor TCapUserControl.Create(dssContext: TDSS);
 begin
-
+    DSS     := dssContext;
     FID     := 0;
     Fhandle := 0;
     FName   := '';

@@ -95,10 +95,10 @@ begin
         case prop of
             ConductorProps.GMRac:
                 if (Fradius = 0.0) then
-                    DoSimpleMsg('Error: Radius is specified as zero for ConductorData.' + Name, 999);
+                    DoSimpleMsg(DSSPrime, 'Error: Radius is specified as zero for ConductorData.' + Name, 999);
             ConductorProps.radius:
                 if (FGMR60 = 0.0) then
-                    DoSimpleMsg('Error: GMR is specified as zero for ConductorData.' + Name, 999);
+                    DoSimpleMsg(DSSPrime, 'Error: GMR is specified as zero for ConductorData.' + Name, 999);
         end;
     end;
 end;
@@ -153,7 +153,7 @@ begin
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         if not DSSPrime.WireDataClass.SetActive(Value) then
-            DoSimpleMsg('WireData "' + Value + '" Not Found in Active Circuit.', 51008);
+            DoSimpleMsg(DSSPrime, 'WireData "' + Value + '" Not Found in Active Circuit.', 51008);
 
          // Still same active object if not found
     end;
@@ -445,7 +445,7 @@ end;
 procedure WireData_Set_idx(Value: Integer); CDECL;
 begin
     if DSSPrime.WireDataClass.ElementList.Get(Value) = NIL then
-        DoSimpleMsg('Invalid WireData index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid WireData index: "' + IntToStr(Value) + '".', 656565);
 end;
 //------------------------------------------------------------------------------
 end.

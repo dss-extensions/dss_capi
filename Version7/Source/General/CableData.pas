@@ -110,13 +110,13 @@ begin
         begin
             case ParamPointer of
                 1:
-                    FEpsR := Parser.Dblvalue;
+                    FEpsR := DSS.Parser.Dblvalue;
                 2:
-                    FInsLayer := Parser.DblValue;
+                    FInsLayer := DSS.Parser.DblValue;
                 3:
-                    FDiaIns := Parser.DblValue;
+                    FDiaIns := DSS.Parser.DblValue;
                 4:
-                    FDiaCable := Parser.DblValue;
+                    FDiaCable := DSS.Parser.DblValue;
             else
                 inherited ClassEdit(ActiveObj, ParamPointer - NumCableClassProps)
             end;

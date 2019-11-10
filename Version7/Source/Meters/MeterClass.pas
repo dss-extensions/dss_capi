@@ -94,7 +94,7 @@ begin
         begin
 
       //CASE ParamPointer OF
-       //1: BaseFrequency := Parser.Dblvalue;
+       //1: BaseFrequency := DSS.Parser.Dblvalue;
        //ELSE
             inherited ClassEdit(ActiveMeterObj, ParamPointer - NumMeterClassProps)
       //END;

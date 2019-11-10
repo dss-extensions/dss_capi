@@ -364,7 +364,7 @@ begin
     begin
         MatrixChanged := TRUE;
         MatBuffer := Allocmem(Sizeof(Double) * FNphases * FNphases);
-        OrderFound := Parser.ParseAsSymMatrix(FNphases, MatBuffer);
+        OrderFound := DSS.Parser.ParseAsSymMatrix(FNphases, MatBuffer);
 
         if OrderFound > 0 then    // Parse was successful
             case i of
@@ -418,8 +418,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -434,19 +434,19 @@ begin
                 0:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 101);
                 1:
-                    Numphases := Parser.IntValue;  // Use property value to force reallocations
+                    Numphases := DSS.Parser.IntValue;  // Use property value to force reallocations
                 2:
-                    SetZ1Z0(1, Parser.Dblvalue);  {R1}
+                    SetZ1Z0(1, DSS.Parser.Dblvalue);  {R1}
                 3:
-                    SetZ1Z0(2, Parser.Dblvalue);  {X0}
+                    SetZ1Z0(2, DSS.Parser.Dblvalue);  {X0}
                 4:
-                    SetZ1Z0(3, Parser.Dblvalue);  {R1}
+                    SetZ1Z0(3, DSS.Parser.Dblvalue);  {R1}
                 5:
-                    SetZ1Z0(4, Parser.Dblvalue);  {X0}
+                    SetZ1Z0(4, DSS.Parser.Dblvalue);  {X0}
                 6:
-                    SetZ1Z0(5, Parser.Dblvalue * 1.0e-9); {C1}   // Convert from nano to farads
+                    SetZ1Z0(5, DSS.Parser.Dblvalue * 1.0e-9); {C1}   // Convert from nano to farads
                 7:
-                    SetZ1Z0(6, Parser.Dblvalue * 1.0e-9); {C0}
+                    SetZ1Z0(6, DSS.Parser.Dblvalue * 1.0e-9); {C0}
                 8:
                     SetUnits(Param);
                 9:
@@ -456,40 +456,40 @@ begin
                 11:
 {Cmatrix} DoMatrix(3);
                 12:
-                    BaseFrequency := Parser.DblValue;
+                    BaseFrequency := DSS.Parser.DblValue;
                 13:
-                    NormAmps := Parser.Dblvalue;
+                    NormAmps := DSS.Parser.Dblvalue;
                 14:
-                    EmergAmps := Parser.Dblvalue;
+                    EmergAmps := DSS.Parser.Dblvalue;
                 15:
-                    FaultRate := Parser.Dblvalue;
+                    FaultRate := DSS.Parser.Dblvalue;
                 16:
-                    PctPerm := Parser.Dblvalue;
+                    PctPerm := DSS.Parser.Dblvalue;
                 17:
-                    HrsToRepair := Parser.Dblvalue;
+                    HrsToRepair := DSS.Parser.Dblvalue;
                 18:
                     ReduceByKron := InterpretYesNo(Param);
                 19:
-                    Rg := Parser.DblValue;
+                    Rg := DSS.Parser.DblValue;
                 20:
-                    Xg := Parser.DblValue;
+                    Xg := DSS.Parser.DblValue;
                 21:
-                    rho := Parser.DblValue;
+                    rho := DSS.Parser.DblValue;
                 22:
-                    FNeutralConductor := Parser.IntValue;
+                    FNeutralConductor := DSS.Parser.IntValue;
                 23:
-                    SetZ1Z0(5, Parser.Dblvalue / (twopi * BaseFrequency) * 1.0e-6); {B1 -> C1}
+                    SetZ1Z0(5, DSS.Parser.Dblvalue / (twopi * BaseFrequency) * 1.0e-6); {B1 -> C1}
                 24:
-                    SetZ1Z0(6, Parser.Dblvalue / (twopi * BaseFrequency) * 1.0e-6); {B0 -> C0}
+                    SetZ1Z0(6, DSS.Parser.Dblvalue / (twopi * BaseFrequency) * 1.0e-6); {B0 -> C0}
                 25:
                 begin
-                    NumAmpRatings := Parser.IntValue;
+                    NumAmpRatings := DSS.Parser.IntValue;
                     setlength(AmpRatings, NumAmpRatings);
                 end;
                 26:
                 begin
                     setlength(AmpRatings, NumAmpRatings);
-                    Param := Parser.StrValue;
+                    Param := DSS.Parser.StrValue;
                     NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
                 end
             else
@@ -505,8 +505,8 @@ begin
             end;
 
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         if SymComponentsModel then

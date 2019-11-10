@@ -297,8 +297,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -313,11 +313,11 @@ begin
                 0:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 10101);
                 1:
-                    NConds := Parser.IntValue;  // Use property value to force reallocations
+                    NConds := DSS.Parser.IntValue;  // Use property value to force reallocations
                 2:
-                    FNphases := Parser.IntValue;
+                    FNphases := DSS.Parser.IntValue;
                 3:
-                    ActiveCond := Parser.IntValue;
+                    ActiveCond := DSS.Parser.IntValue;
                 4:
                 begin
                     FCondName^[ActiveCond] := Param;
@@ -325,23 +325,23 @@ begin
                         ChangeLineConstantsType(Overhead);
                 end;
                 5:
-                    FX^[ActiveCond] := Parser.DblValue;
+                    FX^[ActiveCond] := DSS.Parser.DblValue;
                 6:
-                    FY^[ActiveCond] := Parser.DblValue;
+                    FY^[ActiveCond] := DSS.Parser.DblValue;
                 7:
                 begin
                     FUnits^[ActiveCond] := GetUnitsCode(Param);
                     FLastUnit := FUnits^[ActiveCond];
                 end;
                 8:
-                    NormAmps := Parser.DblValue;
+                    NormAmps := DSS.Parser.DblValue;
                 9:
-                    EmergAmps := Parser.DblValue;
+                    EmergAmps := DSS.Parser.DblValue;
                 10:
                     Freduce := InterpretYesNo(Param);
                 11:
                 begin
-                    FSpacingType := Parser.StrValue;
+                    FSpacingType := DSS.Parser.StrValue;
                     if DSS.LineSpacingClass.SetActive(FSpacingType) then
                     begin
                         DSS.ActiveLineSpacingObj := DSS.LineSpacingClass.GetActiveObj;
@@ -397,7 +397,7 @@ begin
                             istart := FNPhases + 1;
                     end;
 
-                    DSS.AuxParser.CmdString := Parser.StrValue;
+                    DSS.AuxParser.CmdString := DSS.Parser.StrValue;
                     for i := istart to istop do
                     begin
                         DSS.AuxParser.NextParam; // ignore any parameter name  not expecting any
@@ -433,13 +433,13 @@ begin
                 end;
                 17:
                 begin
-                    NumAmpRatings := Parser.IntValue;
+                    NumAmpRatings := DSS.Parser.IntValue;
                     setlength(AmpRatings, NumAmpRatings);
                 end;
                 18:
                 begin
                     setlength(AmpRatings, NumAmpRatings);
-                    Param := Parser.StrValue;
+                    Param := DSS.Parser.StrValue;
                     NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
                 end
             else
@@ -455,7 +455,7 @@ begin
                         FNPhases := FNConds;
                 3:
                     if (ActiveCond < 1) or (ActiveCond > FNconds) then
-                        DoSimpleMsg(DSS, 'Illegal cond= specification in Line Geometry:' + CRLF + Parser.cmdstring, 10102);
+                        DoSimpleMsg(DSS, 'Illegal cond= specification in Line Geometry:' + CRLF + DSS.Parser.cmdstring, 10102);
                 4, 13, 14:
                 begin
                     if ParamPointer = 4 then
@@ -493,8 +493,8 @@ begin
                     DataChanged := TRUE;
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
     end;

@@ -211,7 +211,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('Capacitor "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'Capacitor "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -377,7 +377,7 @@ begin
     pCapacitor := DSSPrime.ActiveCircuit.ShuntCapacitors.Get(Value);
     if pCapacitor = NIL then
     begin
-        DoSimpleMsg('Invalid Capacitor index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Capacitor index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pCapacitor;

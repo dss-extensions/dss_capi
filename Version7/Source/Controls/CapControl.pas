@@ -291,8 +291,8 @@ begin
     begin
 
         ParamPointer := 0;
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
         while Length(Param) > 0 do
         begin
             if Length(ParamName) = 0 then
@@ -309,7 +309,7 @@ begin
                 1:
                     ElementName := ConstructElemName(lowercase(param));  // substitute @var value if any
                 2:
-                    ElementTerminal := Parser.IntValue;
+                    ElementTerminal := DSS.Parser.IntValue;
                 3:
                     ControlVars.CapacitorName := 'capacitor.' + param;   // will automatically substitute @var value
                 4:
@@ -328,25 +328,25 @@ begin
                         DoSimpleMsg(DSS, Format('Unrecognized CapControl Type: "%s" (Capcontrol.%s)', [param, DSS.ActiveCapControlObj.name]), 352);
                     end;
                 5:
-                    ControlVars.PTRatio := Parser.DblValue;
+                    ControlVars.PTRatio := DSS.Parser.DblValue;
                 6:
-                    ControlVars.CTRatio := Parser.DblValue;
+                    ControlVars.CTRatio := DSS.Parser.DblValue;
                 7:
-                    ControlVars.ON_Value := Parser.DblValue;
+                    ControlVars.ON_Value := DSS.Parser.DblValue;
                 8:
-                    ControlVars.OFF_Value := Parser.DblValue;
+                    ControlVars.OFF_Value := DSS.Parser.DblValue;
                 9:
-                    ControlVars.ONDelay := Parser.DblValue;
+                    ControlVars.ONDelay := DSS.Parser.DblValue;
                 10:
                     ControlVars.Voverride := InterpretYesNo(param);
                 11:
-                    ControlVars.Vmax := Parser.DblValue;
+                    ControlVars.Vmax := DSS.Parser.DblValue;
                 12:
-                    ControlVars.Vmin := Parser.DblValue;
+                    ControlVars.Vmin := DSS.Parser.DblValue;
                 13:
-                    ControlVars.OFFDelay := Parser.DblValue;
+                    ControlVars.OFFDelay := DSS.Parser.DblValue;
                 14:
-                    ControlVars.DeadTime := Parser.DblValue;
+                    ControlVars.DeadTime := DSS.Parser.DblValue;
                 15:
                     if CompareTextShortest(param, 'avg') = 0 then
                         ControlVars.FCTPhase := AVGPHASES
@@ -357,7 +357,7 @@ begin
                     if CompareTextShortest(param, 'min') = 0 then
                         ControlVars.FCTPhase := MINPHASE
                     else
-                        ControlVars.FCTPhase := max(1, Parser.IntValue);
+                        ControlVars.FCTPhase := max(1, DSS.Parser.IntValue);
                 16:
                     if CompareTextShortest(param, 'avg') = 0 then
                         ControlVars.FPTPhase := AVGPHASES
@@ -368,7 +368,7 @@ begin
                     if CompareTextShortest(param, 'min') = 0 then
                         ControlVars.FPTPhase := MINPHASE
                     else
-                        ControlVars.FPTPhase := max(1, Parser.IntValue);
+                        ControlVars.FPTPhase := max(1, DSS.Parser.IntValue);
                 17:
                 begin
                     ControlVars.VoverrideBusSpecified := TRUE;
@@ -377,12 +377,12 @@ begin
                 18:
                     ShowEventLog := InterpretYesNo(param);
                 19:
-                    UserModel.Name := Parser.StrValue;  // Connect to user written model
+                    UserModel.Name := DSS.Parser.StrValue;  // Connect to user written model
                 20:
                     if UserModel.Exists then
-                        UserModel.Edit := Parser.StrValue;  // Send edit string to user model
+                        UserModel.Edit := DSS.Parser.StrValue;  // Send edit string to user model
                 21:
-                    FpctMinKvar := Parser.DblValue;
+                    FpctMinKvar := DSS.Parser.DblValue;
                 22:
                     if InterpretYesNo(Param) then
                     begin  // force a reset
@@ -460,8 +460,8 @@ begin
                 ControlType := USERCONTROL;
 
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param := DSS.Parser.StrValue;
         end;
 
         RecalcElementData;
@@ -593,7 +593,7 @@ begin
     FpctMinkvar := 50.0;
 
     IsUserModel := FALSE;
-    UserModel := TCapUserControl.Create;   // Inits handles, FID
+    UserModel := TCapUserControl.Create(DSS);   // Inits handles, FID
 
 
     ControlVars.ControlActionHandle := 0;
@@ -659,7 +659,7 @@ begin
     else
     begin
         ControlledElement := NIL;   // element not found
-        DoErrorMsg('CapControl: "' + Self.Name + '"', 'Capacitor Element "' + ControlVars.CapacitorName + '" Not Found.',
+        DoErrorMsg(DSS, 'CapControl: "' + Self.Name + '"', 'Capacitor Element "' + ControlVars.CapacitorName + '" Not Found.',
             ' Element must be defined previously.', 361);
     end;
 
@@ -673,7 +673,7 @@ begin
         MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
         if ElementTerminal > MonitoredElement.Nterms then
         begin
-            DoErrorMsg('CapControl.' + Name + ':',
+            DoErrorMsg(DSS, 'CapControl.' + Name + ':',
                 'Terminal no. "' + '" does not exist.',
                 'Re-specify terminal no.', 362);
         end

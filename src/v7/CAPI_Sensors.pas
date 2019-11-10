@@ -444,7 +444,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('Sensor "' + Value + '" Not Found in Active Circuit.', 5003);
+        DoSimpleMsg(DSSPrime, 'Sensor "' + Value + '" Not Found in Active Circuit.', 5003);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -498,7 +498,7 @@ begin
     pSensor := DSSPrime.ActiveCircuit.Sensors.Get(Value);
     if pSensor = NIL then
     begin
-        DoSimpleMsg('Invalid Sensor index: "' + IntToStr(Value) + '".', 656565);
+        DoSimpleMsg(DSSPrime, 'Invalid Sensor index: "' + IntToStr(Value) + '".', 656565);
         Exit;
     end;
     DSSPrime.ActiveCircuit.ActiveCktElement := pSensor;
