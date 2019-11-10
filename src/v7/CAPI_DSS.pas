@@ -88,7 +88,7 @@ end;
 //------------------------------------------------------------------------------
 procedure DSS_ClearAll(); CDECL;
 begin
-    DoClearCmd;
+    DSSPrime.DSSExecutive.DoClearCmd;
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_Version_AnsiString(): Ansistring; inline;

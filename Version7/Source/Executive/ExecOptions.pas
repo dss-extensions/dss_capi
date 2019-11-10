@@ -533,9 +533,9 @@ begin
             10:
                 DSSPrime.ActiveCircuit.solution.NumberOfTimes := Parser.IntValue;
             11:
-                Set_Time;
+                DSSPrime.DSSExecutive.Set_Time;
             14:
-                SetActiveCircuit(Param);
+                DSSPrime.DSSExecutive.SetActiveCircuit(Param);
             15:
                 DefaultEditor := Param;     // 'Editor='
             16:
@@ -597,13 +597,13 @@ begin
             38:
                 ParseIntArray(DSSPrime.ActiveCircuit.LossRegs, DSSPrime.ActiveCircuit.NumLossregs, Param);
             39:
-                DoLegalVoltageBases;
+                DSSPrime.DSSExecutive.DoLegalVoltageBases;
             40:
                 DSSPrime.ActiveCircuit.Solution.Algorithm := InterpretSolveAlg(Param);
             41:
                 DSSPrime.ActiveCircuit.TrapezoidalIntegration := InterpretYesNo(Param);
             42:
-                DoAutoAddBusList(Param);
+                DSSPrime.DSSExecutive.DoAutoAddBusList(Param);
             43:
                 with DSSPrime.ActiveCircuit.Solution do
                 begin
@@ -627,7 +627,7 @@ begin
                     DSSPrime.ActiveCircuit.DefaultYearlyShapeObj := TestLoadShapeObj;
             end;
             48:
-                DoSetAllocationFactors(Parser.DblValue);
+                DSSPrime.DSSExecutive.DoSetAllocationFactors(Parser.DblValue);
             49:
                 DSSPrime.ActiveCircuit.PositiveSequence := InterpretCktModel(Param);
             50:
@@ -654,7 +654,7 @@ begin
                 DSSPrime.ActiveCircuit.Solution.Frequency := Parser.DblValue;
             end;
             54:
-                DoHarmonicsList(Param);
+                DSSPrime.DSSExecutive.DoHarmonicsList(Param);
             55:
                 DSSPrime.ActiveCircuit.Solution.MaxControlIterations := Parser.IntValue;
             56:
@@ -662,15 +662,15 @@ begin
             57:
                 SetDataPath(Param);  // Set a legal data path
             58:
-                DoKeeperBusList(Param);
+                DSSPrime.DSSExecutive.DoKeeperBusList(Param);
             59:
-                DoSetReduceStrategy(param);
+                DSSPrime.DSSExecutive.DoSetReduceStrategy(param);
             60:
                 DSSPrime.EnergyMeterClass.SaveDemandInterval := InterpretYesNo(Param);
             61:
             begin
                 DSSPrime.ActiveCircuit.PctNormalFactor := Parser.DblValue;
-                DoSetNormal(DSSPrime.ActiveCircuit.PctNormalFactor);
+                DSSPrime.DSSExecutive.DoSetNormal(DSSPrime.ActiveCircuit.PctNormalFactor);
             end;
             62:
                 DSSPrime.EnergyMeterClass.DI_Verbose := InterpretYesNo(Param);
@@ -689,7 +689,7 @@ begin
             69:
                 DSSPrime.EnergyMeterClass.Do_VoltageExceptionReport := InterpretYesNo(Param);
             70:
-                DoSetCFactors(Parser.DblValue);
+                DSSPrime.DSSExecutive.DoSetCFactors(Parser.DblValue);
             71:
                 DSSPrime.AutoShowExport := InterpretYesNo(Param);
             72:
@@ -802,7 +802,7 @@ begin
     end; {WHILE}
 
     if SolveOption = 1 then
-        DoSolveCmd;
+        DSSPrime.DSSExecutive.DoSolveCmd;
 
 end;
 

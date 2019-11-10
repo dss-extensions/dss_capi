@@ -468,7 +468,7 @@ begin
                     LoadBasekV := LoadBasekV * Sqrt3;
        {Load up parser with definition of equivalent load}
                 Parser.CmdString := Format(' phases=%d Bus1=%s kW=%g kvar=%g kV=%g %s', [FirstPDElement.NPhases, Busname, TotalkVA.re, TotalkVA.im, LoadBasekV, EditStr]);
-                AddObject('load', NewLoadName); // Add new load to circuit
+                DSSPrime.DSSExecutive.AddObject('load', NewLoadName); // Add new load to circuit
             end;
 
      {Disable all elements in the tree downline from the start element}

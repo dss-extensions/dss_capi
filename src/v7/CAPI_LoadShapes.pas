@@ -455,7 +455,7 @@ end;
 //------------------------------------------------------------------------------
 function LoadShapes_New(const Name: PAnsiChar): Integer; CDECL;
 begin
-    Result := AddObject('loadshape', Name);    // Returns handle to object
+    Result := DSSPrime.DSSExecutive.AddObject('loadshape', Name);    // Returns handle to object
 end;
 //------------------------------------------------------------------------------
 function LoadShapes_Get_PBase(): Double; CDECL;

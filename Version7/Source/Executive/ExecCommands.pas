@@ -546,7 +546,7 @@ begin
                 with DSSPrime.DSSExecutive do
                     if RecorderOn then
                         Write_to_RecorderFile(CRLF + '!*********' + CmdLine);
-                DSSPrime.CmdResult := DoRedirect(TRUE);
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoRedirect(TRUE);
                 Exit;
             end;//'Compile';
             20:
@@ -554,7 +554,7 @@ begin
                 with DSSPrime.DSSExecutive do
                     if RecorderOn then
                         Write_to_RecorderFile(CRLF + '!*********' + CmdLine);
-                DSSPrime.CmdResult := DoRedirect(FALSE);
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoRedirect(FALSE);
                 Exit;
             end; //'Redirect';
         else   // Write everything direct to recorder, if ON
@@ -567,7 +567,7 @@ begin
         case ParamPointer of
 
             1:
-                DSSPrime.CmdResult := DoNewCmd; // new
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoNewCmd; // new
 
             15:
                 if not Assigned(DSSPrime.ActiveCircuit) then
@@ -579,30 +579,30 @@ begin
 {Do Nothing - comment};
 
             21:
-                DSSPrime.CmdResult := DoHelpCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoHelpCmd;
             22:
                 if not IsDLL then
                     ExitControlPanel;  // Quit in Stand alone version
             25:
                 ShowControlPanel; // DSSForms
             27:
-                DoClearCmd;
+                DSSPrime.DSSExecutive.DoClearCmd;
             28:
-                DoAboutBox;
+                DSSPrime.DSSExecutive.DoAboutBox;
             35:
-                DSSPrime.CmdResult := DoFileEditCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoFileEditCmd;
             49:
-                DSSPrime.CmdResult := DoClassesCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoClassesCmd;
             50:
-                DSSPrime.CmdResult := DoUserClassesCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoUserClassesCmd;
             63:
-                DSSPrime.CmdResult := DoAlignFileCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoAlignFileCmd;
             69:
-                DSSPrime.CmdResult := DoDI_PlotCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoDI_PlotCmd;
             70:
-                DSSPrime.CmdResult := DoCompareCasesCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoCompareCasesCmd;
             71:
-                DSSPrime.CmdResult := DoYearlyCurvesCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoYearlyCurvesCmd;
             72:
             begin
                 ParamName := Parser.NextParam;
@@ -616,12 +616,12 @@ begin
                     DoSimpleMsg('Directory "' + Param + '" not found.', 282);
             end;
             75:
-                DoADosCmd;
+                DSSPrime.DSSExecutive.DoADosCmd;
             88:
-                DoCvrtLoadshapesCmd;
+                DSSPrime.DSSExecutive.DoCvrtLoadshapesCmd;
 
             101:
-                DoVarCmd;
+                DSSPrime.DSSExecutive.DoVarCmd;
 
             108: // CalcIncMatrix
             begin
@@ -666,7 +666,7 @@ begin
             end
             else
             begin
-                ParseObjName(ParamName, ObjName, PropName);
+                DSSPrime.DSSExecutive.ParseObjName(ParamName, ObjName, PropName);
                 if Length(ObjName) > 0 then
                     SetObject(ObjName);  // Set active element
                 if DSSPrime.ActiveDSSObject <> NIL then
@@ -685,21 +685,21 @@ begin
         case ParamPointer of
 
             2:
-                DSSPrime.CmdResult := DoEditCmd; // edit
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoEditCmd; // edit
             3..5:
-                DSSPrime.CmdResult := DoMoreCmd; // more , m, ~
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoMoreCmd; // more , m, ~
             6:
-                DSSPrime.CmdResult := DoSelectCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoSelectCmd;
             7:
-                DSSPrime.CmdResult := DoSaveCmd; //'save';
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoSaveCmd; //'save';
             8:
                 DSSPrime.CmdResult := DoShowCmd; //'show';
             9:
                 DSSPrime.CmdResult := DoSetCmd(1);  // changed from DoSolveCmd; //'solve';
             10:
-                DSSPrime.CmdResult := DoEnableCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoEnableCmd;
             11:
-                DSSPrime.CmdResult := DoDisableCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoDisableCmd;
        {$IFNDEF FPC}
             12:
                 DSSPrime.CmdResult := DoPlotCmd; //'plot';
@@ -711,30 +711,30 @@ begin
             end;
        {$ENDIF}
             13:
-                DSSPrime.CmdResult := DoResetCmd; //'resetmonitors';
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoResetCmd; //'resetmonitors';
             15:
                 DSSPrime.CmdResult := DoSetCmd(0);  //'set WITH no solve'
             16:
-                DSSPrime.CmdResult := DoPropertyDump;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoPropertyDump;
             17:
-                DSSPrime.CmdResult := DoOpenCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoOpenCmd;
             18:
-                DSSPrime.CmdResult := DoCloseCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoCloseCmd;
 
 
             23:
-                DSSPrime.CmdResult := DoQueryCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoQueryCmd;
             24:
-                DSSPrime.CmdResult := DoNextCmd;  // Advances time
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoNextCmd;  // Advances time
        {25: ControlPanel.Show -- see above }
             26:
-                DSSPrime.CmdResult := DoSampleCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoSampleCmd;
        {27: Begin ClearAllCircuits; DisposeDSSClasses; CreateDSSClasses; End;}
        {28: DoAboutBox; }
             29:
-                DSSPrime.CmdResult := DoSetVoltageBases;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoSetVoltageBases;
             30:
-                DSSPrime.CmdResult := DoSetkVBase;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoSetkVBase;
             31:
                 DSSPrime.ActiveCircuit.InvalidateAllPCElements;  // FORce rebuilding of Y
             32:
@@ -745,81 +745,81 @@ begin
                 DSSPrime.CmdResult := DoExportCmd;
        {35: DSSPrime.CmdResult := DoFileEditCmd;}
             36:
-                DSSPrime.CmdResult := DovoltagesCmd(FALSE);
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DovoltagesCmd(FALSE);
             37:
-                DSSPrime.CmdResult := DocurrentsCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DocurrentsCmd;
             38:
-                DSSPrime.CmdResult := DopowersCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DopowersCmd;
             39:
-                DSSPrime.CmdResult := DoseqvoltagesCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoseqvoltagesCmd;
             40:
-                DSSPrime.CmdResult := DoseqcurrentsCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoseqcurrentsCmd;
             41:
-                DSSPrime.CmdResult := DoseqpowersCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoseqpowersCmd;
             42:
-                DSSPrime.CmdResult := DolossesCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DolossesCmd;
             43:
-                DSSPrime.CmdResult := DophaselossesCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DophaselossesCmd;
             44:
-                DSSPrime.CmdResult := DocktlossesCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DocktlossesCmd;
             45:
-                DSSPrime.CmdResult := DoAllocateLoadsCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoAllocateLoadsCmd;
             46:
-                DSSPrime.CmdResult := DoFormEditCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoFormEditCmd;
             47:
-                DSSPrime.CmdResult := DoMeterTotals;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoMeterTotals;
             48:
-                DSSPrime.CmdResult := DoCapacityCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoCapacityCmd;
 //       49: DSSPrime.CmdResult := DoClassesCmd;
 //       50: DSSPrime.CmdResult := DoUserClassesCmd;
             51:
-                DSSPrime.CmdResult := DoZscCmd(TRUE);
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoZscCmd(TRUE);
             52:
-                DSSPrime.CmdResult := DoZsc10cmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoZsc10cmd;
             53:
-                DSSPrime.CmdResult := DoZscRefresh;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoZscRefresh;
             54:
-                DSSPrime.CmdResult := DoZscCmd(FALSE);
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoZscCmd(FALSE);
             55:
-                DSSPrime.CmdResult := DovoltagesCmd(TRUE);
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DovoltagesCmd(TRUE);
             56:
-                DSSPrime.CmdResult := DoVarValuesCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoVarValuesCmd;
             57:
-                DSSPrime.CmdResult := DoVarNamesCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoVarNamesCmd;
             58:
-                DSSPrime.CmdResult := DoBusCoordsCmd(FALSE);
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoBusCoordsCmd(FALSE);
             59:
                 with DSSPrime.ActiveCircuit do
                     if BusNameRedefined then
                         ReprocessBusDefs;
             60:
-                DSSPrime.CmdResult := DoMakePosSeq;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoMakePosSeq;
             61:
-                DSSPrime.CmdResult := DoReduceCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoReduceCmd;
             62:
-                DSSPrime.CmdResult := DoInterpolateCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoInterpolateCmd;
             64:
-                DSSPrime.CmdResult := DoTOPCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoTOPCmd;
             65:
-                DSSPrime.CmdResult := DoRotateCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoRotateCmd;
             66:
-                DSSPrime.CmdResult := DoVdiffCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoVdiffCmd;
             67:
-                DSSPrime.CmdResult := DoSummaryCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoSummaryCmd;
             68:
-                DSSPrime.CmdResult := DoDistributeCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoDistributeCmd;
 //      69;
 //      70;
 //      71;
 //      72;
             73:
-                DSSPrime.CmdResult := DoVisualizeCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoVisualizeCmd;
             74:
-                DSSPrime.CmdResult := DoCloseDICmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoCloseDICmd;
             76:
-                DSSPrime.CmdResult := DoEstimateCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoEstimateCmd;
             77:
-                DSSPrime.CmdResult := DoReconductorCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoReconductorCmd;
        {Step solution commands}
             78:
                 DSSPrime.ActiveCircuit.Solution.SnapShotInit;
@@ -836,42 +836,42 @@ begin
             84:
                 DSSPrime.ActiveCircuit.Solution.DoPFLOWsolution;
             85:
-                DSSPrime.CmdResult := DoAddMarkerCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoAddMarkerCmd;
             86:
-                DSSPrime.CmdResult := DoUuidsCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoUuidsCmd;
             87:
-                DSSPrime.CmdResult := DoSetLoadAndGenKVCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoSetLoadAndGenKVCmd;
 //       88:;
             89:
-                DSSPrime.CmdResult := DoNodeDiffCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoNodeDiffCmd;
             90:
-                DSSPrime.CmdResult := DoRephaseCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoRephaseCmd;
             91:
-                DSSPrime.CmdResult := DoSetBusXYCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoSetBusXYCmd;
             92:
-                DSSPrime.CmdResult := DoUpDateStorageCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoUpDateStorageCmd;
             93:
                 Obfuscate;
             94:
-                DSSPrime.CmdResult := DoBusCoordsCmd(TRUE);   // swaps X and Y
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoBusCoordsCmd(TRUE);   // swaps X and Y
             95:
-                DSSPrime.CmdResult := DoBatchEditCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoBatchEditCmd;
             96:
-                DSSPrime.CmdResult := DoPstCalc;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoPstCalc;
             97:
-                DSSPrime.CmdResult := DoValVarCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoValVarCmd;
             98:
                 DSSPrime.ActiveCircuit.ReprocessBusDefs;
             99:
                 DSSPrime.ActiveCircuit.ClearBusMarkers;
             100:
-                DSSPrime.CmdResult := DoLambdaCalcs;   // Option: Assume Restoration
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoLambdaCalcs;   // Option: Assume Restoration
             102:
                 DSSPrime.ActiveCircuit.Solution.EndofTimeStepCleanup;
             103:
                 DSSPrime.ActiveCircuit.Solution.FinishTimeStep;
             104:
-                DSSPrime.CmdResult := DoNodeListCmd;
+                DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoNodeListCmd;
       {$IFNDEF FPC}
             105:
                 DSSPrime.CmdResult := DoConnectCmd; //'TCP/IP connect';
@@ -890,7 +890,7 @@ begin
             end;
       {$ENDIF}
             107:
-                DoRemoveCmd;
+                DSSPrime.DSSExecutive.DoRemoveCmd;
         else
        // Ignore excess parameters
         end;

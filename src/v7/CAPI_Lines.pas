@@ -249,7 +249,7 @@ end;
 //------------------------------------------------------------------------------
 function Lines_New(const Name: PAnsiChar): Integer; CDECL;
 begin
-    Result := AddObject('line', Name);    // Returns handle to object
+    Result := DSSPrime.DSSExecutive.AddObject('line', Name);    // Returns handle to object
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Bus1(const Value: PAnsiChar); CDECL;

@@ -538,7 +538,7 @@ begin
 
     Result := FALSE;   // Init in case of failure
 
-    if ExecHelper.DoZscRefresh = 0 then
+    if DSSPrime.DSSExecutive.DoZscRefresh = 0 then
         Result := TRUE;
 
 end;

@@ -164,7 +164,7 @@ end;
 procedure Settings_Set_AllocationFactors(Value: Double); CDECL;
 begin
     if DSSPrime.ActiveCircuit <> NIL then
-        DoSetAllocationFactors(Value);
+        DSSPrime.DSSExecutive.DoSetAllocationFactors(Value);
 end;
 //------------------------------------------------------------------------------
 procedure Settings_Set_AllowDuplicates(Value: Boolean); CDECL;
@@ -176,7 +176,7 @@ end;
 procedure Settings_Set_AutoBusList(const Value: PAnsiChar); CDECL;
 begin
     if DSSPrime.ActiveCircuit <> NIL then
-        DoAutoAddBusList(Value);
+        DSSPrime.DSSExecutive.DoAutoAddBusList(Value);
 end;
 //------------------------------------------------------------------------------
 procedure Settings_Set_CktModel(Value: Integer); CDECL;
