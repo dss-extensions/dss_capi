@@ -310,7 +310,7 @@ End;
 // End;
 // 
 //----------------------------------------------------------------------------
-PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause:String; ErrNum:Integer);
+PROCEDURE DoErrorMsg(DSS: TDSS; Const S, Emsg, ProbCause:String; ErrNum:Integer);
 
 VAR
     Msg:String;
@@ -323,10 +323,10 @@ Begin
 
      If Not NoFormsAllowed Then Begin
 
-         If DSSPrime.In_Redirect Then
+         If DSS.In_Redirect Then
          Begin
            RetVal := DSSMessageDlg(Msg, FALSE);
-           If RetVal = -1 Then DSSPrime.Redirect_Abort := True;
+           If RetVal = -1 Then DSS.Redirect_Abort := True;
          End
          Else
            DSSMessageDlg(Msg, TRUE);
@@ -336,43 +336,43 @@ Begin
      Begin
         {$IFDEF DSS_CAPI}
         if DSS_CAPI_EARLY_ABORT then
-            DSSPrime.Redirect_Abort := True;
+            DSS.Redirect_Abort := True;
         {$ENDIF}
      End;
 
-     DSSPrime.LastErrorMessage := Msg;
-     DSSPrime.ErrorNumber := ErrNum;
-     AppendGlobalResultCRLF(Msg);
-     DSSPrime.SolutionAbort  :=  True;
+     DSS.LastErrorMessage := Msg;
+     DSS.ErrorNumber := ErrNum;
+     AppendGlobalResultCRLF(DSS, Msg);
+     DSS.SolutionAbort  :=  True;
 End;
 
 //----------------------------------------------------------------------------
-PROCEDURE AppendGlobalResultCRLF(const S:String);
+PROCEDURE AppendGlobalResultCRLF(DSS: TDSS; const S:String);
 
 Begin
-    If Length(DSSPrime.GlobalResult) > 0
-    THEN DSSPrime.GlobalResult := DSSPrime.GlobalResult + CRLF + S
-    ELSE DSSPrime.GlobalResult := S;
+    If Length(DSS.GlobalResult) > 0
+    THEN DSS.GlobalResult := DSS.GlobalResult + CRLF + S
+    ELSE DSS.GlobalResult := S;
 
-    DSSPrime.ErrorStrings.Add(Format('(%d) %s' ,[DSSPrime.ErrorNumber, S]));  // Add to Error log
+    DSS.ErrorStrings.Add(Format('(%d) %s' ,[DSS.ErrorNumber, S]));  // Add to Error log
 End;
 
 //----------------------------------------------------------------------------
-PROCEDURE DoSimpleMsg(DSS, Const S:String; ErrNum:Integer);
+PROCEDURE DoSimpleMsg(DSS: TDSS; Const S:String; ErrNum:Integer);
 
 VAR
     Retval:Integer;
 Begin
     IF Not  NoFormsAllowed Then Begin
-        IF DSSPrime.In_Redirect THEN
+        IF DSS.In_Redirect THEN
         Begin
             RetVal := DSSMessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]), FALSE);
             {$IFDEF DSS_CAPI}
             if DSS_CAPI_EARLY_ABORT then
-                DSSPrime.Redirect_Abort := True;
+                DSS.Redirect_Abort := True;
             {$ENDIF}
             IF RetVal = -1 THEN
-                DSSPrime.Redirect_Abort := True;
+                DSS.Redirect_Abort := True;
         End
         ELSE
             DSSInfoMessageDlg(Format('(%d) OpenDSS %s%s', [Errnum, CRLF, S]));
@@ -381,18 +381,18 @@ Begin
     Begin
         {$IFDEF DSS_CAPI}
         if DSS_CAPI_EARLY_ABORT then
-            DSSPrime.Redirect_Abort := True;
+            DSS.Redirect_Abort := True;
         {$ENDIF}
     End;
 
-    DSSPrime.LastErrorMessage := S;
-    DSSPrime.ErrorNumber := ErrNum;
-    AppendGlobalResultCRLF(S);
+    DSS.LastErrorMessage := S;
+    DSS.ErrorNumber := ErrNum;
+    AppendGlobalResultCRLF(DSS, S);
 End;
 
 
 //----------------------------------------------------------------------------
-PROCEDURE SetObject(const param :string);
+PROCEDURE SetObject(DSS: TDSS; const param :string);
 
 {Set object active by name}
 
@@ -411,23 +411,23 @@ Begin
            End;
       End;
 
-      IF Length(ObjClass) > 0 THEN SetObjectClass(DSSPrime, ObjClass);
+      IF Length(ObjClass) > 0 THEN SetObjectClass(DSS, ObjClass);
 
-      DSSPrime.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
-      IF DSSPrime.ActiveDSSClass <> Nil THEN
+      DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
+      IF DSS.ActiveDSSClass <> Nil THEN
       Begin
-        IF Not DSSPrime.ActiveDSSClass.SetActive(Objname) THEN
+        IF Not DSS.ActiveDSSClass.SetActive(Objname) THEN
         Begin // scroll through list of objects untill a match
-          DoSimpleMsg(DSS, 'Error! Object "' + ObjName + '" not found.'+ CRLF + DSSPrime.Parser.CmdString, 904);
+          DoSimpleMsg(DSS, 'Error! Object "' + ObjName + '" not found.'+ CRLF + DSS.Parser.CmdString, 904);
         End
         ELSE
-        With DSSPrime.ActiveCircuit Do
+        With DSS.ActiveCircuit Do
         Begin
-           CASE DSSPrime.ActiveDSSObject.DSSObjType OF
+           CASE DSS.ActiveDSSObject.DSSObjType OF
                 DSS_OBJECT: ;  // do nothing for general DSS object
 
            ELSE Begin   // for circuit types, set ActiveCircuit Element, too
-                 ActiveCktElement := DSSPrime.ActiveDSSClass.GetActiveObj;
+                 ActiveCktElement := DSS.ActiveDSSClass.GetActiveObj;
                 End;
            End;
         End;
@@ -453,7 +453,7 @@ Begin
         IF   ActiveBusIndex=0 Then
           Begin
             Result := 1;
-            AppendGlobalResult('SetActiveBus: Bus ' + BusName + ' Not Found.');
+            AppendGlobalResult(DSS, 'SetActiveBus: Bus ' + BusName + ' Not Found.');
           End;
      End;
 
@@ -497,7 +497,7 @@ Begin
      End
      Else
      Begin
-         DoErrorMsg('MakeNewCircuit',
+         DoErrorMsg(DSS, 'MakeNewCircuit',
                     'Cannot create new circuit.',
                     'Max. Circuits Exceeded.'+CRLF+
                     '(Max no. of circuits='+inttostr(Maxcircuits)+')', 906);
@@ -842,9 +842,9 @@ initialization
 
    StartupDirectory := GetCurrentDir + PathDelim;
 {$IFNDEF DSS_CAPI}
-   SetDataPath (GetDefaultDataDirectory + PathDelim + ProgramName + PathDelim);
+   SetDataPath (DSS, GetDefaultDataDirectory + PathDelim + ProgramName + PathDelim);
 {$ELSE} // Use the current working directory as the initial datapath when using DSS_CAPI
-   SetDataPath (StartupDirectory);
+   SetDataPath (DSS, StartupDirectory);
 {$ENDIF}
 
 {$IFNDEF DSS_CAPI}

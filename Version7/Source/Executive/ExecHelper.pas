@@ -482,7 +482,7 @@ Begin
             // loads in more files
             CurrDir := ExtractFileDir(ReDirFile);
             SetCurrentDir(CurrDir);
-            If IsCompile Then SetDataPath(CurrDir);  // change datadirectory
+            If IsCompile Then SetDataPath(DSS, CurrDir);  // change datadirectory
 
             DSS.Redirect_Abort := False;
             DSS.In_Redirect    := True;
@@ -551,7 +551,7 @@ Begin
                 ActiveCircuit.CurrentDirectory := CurrDir + PathDelim;
 
         EXCEPT On E: Exception DO
-            DoErrorMsg('DoRedirect'+CRLF+'Error Processing Input Stream in Compile/Redirect.',
+            DoErrorMsg(DSS, 'DoRedirect'+CRLF+'Error Processing Input Stream in Compile/Redirect.',
                         E.Message,
                         'Error in File: "' + ReDirFile + '" or Filename itself.', 244);
         END;
@@ -566,7 +566,7 @@ Begin
 
         If  IsCompile Then
         Begin
-            SetDataPath(CurrDir); // change datadirectory
+            SetDataPath(DSS, CurrDir); // change datadirectory
             DSS.LastCommandWasCompile := True;
             DSS.ParserVars.Add('@lastcompilefile', LocalCompFileName); // will be last one off the stack
         End
@@ -627,7 +627,7 @@ Begin
                    If Length(Param)>0
                    THEN ActiveCktElement.ActiveTerminalIdx := DSS.Parser.Intvalue
                    ELSE ActiveCktElement.ActiveTerminalIdx := 1;  {default to 1}
-                   With ActiveCktElement Do SetActiveBus(StripExtension(Getbus(ActiveTerminalIdx)));
+                   With ActiveCktElement Do SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx)));
                   End;
              End;
           End;
@@ -739,7 +739,7 @@ Begin
      WriteClassFile(DSSClass, SaveFile, FALSE); // just write the class with no checks
    End;
 
-   SetLastResultFile( SaveFile);
+   SetLastResultFile(DSS, SaveFile);
    DSS.GlobalResult := SaveFile;
 
 End;
@@ -1055,7 +1055,7 @@ Begin
   EXCEPT
       On E:Exception DO
       Begin
-        DoErrorMsg('DoPropertyDump - opening '+ DSS.OutputDirectory +' DSS_PropertyDump.txt for writing in '+Getcurrentdir, E.Message, 'Disk protected or other file error', 255);
+        DoErrorMsg(DSS, 'DoPropertyDump - opening '+ DSS.OutputDirectory +' DSS_PropertyDump.txt for writing in '+Getcurrentdir, E.Message, 'Disk protected or other file error', 255);
         Exit;
       End;
   End;
@@ -1109,7 +1109,7 @@ Begin
           End;
         EXCEPT
             On E:Exception DO
-              DoErrorMsg('DoPropertyDump - Problem writing file.', E.Message, 'File may be read only, in use, or disk full?', 257);
+              DoErrorMsg(DSS, 'DoPropertyDump - Problem writing file.', E.Message, 'File may be read only, in use, or disk full?', 257);
         End;
 
         DSS.ActiveCircuit.Solution.DumpProperties(F,DebugDump);
@@ -1223,7 +1223,7 @@ Begin
         Begin
               ActiveCktElement.ActiveTerminalIdx := Terminal;
               ActiveCktElement.Closed[Conductor] := FALSE;
-              With ActiveCktElement Do SetActiveBus(StripExtension(Getbus(ActiveTerminalIdx)));
+              With ActiveCktElement Do SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx)));
         End;
   End
   ELSE
@@ -1260,7 +1260,7 @@ Begin
          Begin
           ActiveCktElement.ActiveTerminalIdx := Terminal;
           ActiveCktElement.Closed[Conductor] := TRUE;
-          With ActiveCktElement Do SetActiveBus(StripExtension(Getbus(ActiveTerminalIdx)));
+          With ActiveCktElement Do SetActiveBus(DSS, StripExtension(Getbus(ActiveTerminalIdx)));
          End;
 
     End
@@ -1526,7 +1526,7 @@ Begin
 
      DSS.GlobalResult := DSS.GlobalPropertyValue;
 
-     If DSS.LogQueries Then WriteQueryLogFile(param, DSS.GlobalResult); // write time-stamped query
+     If DSS.LogQueries Then WriteQueryLogFile(DSS, param, DSS.GlobalResult); // write time-stamped query
 
 End;
 
@@ -1729,7 +1729,7 @@ Begin
       End
       ELSE Begin
            Result := 1;
-           AppendGlobalResult('Bus ' + BusName + ' Not Found.');
+           AppendGlobalResult(DSS, 'Bus ' + BusName + ' Not Found.');
       End;
    End;
 
@@ -1927,7 +1927,7 @@ Begin
     S := DSS.Parser.NextParam;
     CktElementName := DSS.Parser.StrValue ;
 
-    If Length(CktElementName) > 0  Then  SetObject(CktElementName);
+    If Length(CktElementName) > 0  Then  SetObject(DSS, CktElementName);
 
     If Assigned(DSS.ActiveCircuit.ActiveCktElement) Then
      WITH DSS.ActiveCircuit.ActiveCktElement DO
@@ -2452,7 +2452,7 @@ Begin
         // Now export to global result
         For i := 1 to NumEMregisters Do
           Begin
-            AppendGlobalResult(Format('%-.6g',[DSS.ActiveCircuit.RegisterTotals[i]]));
+            AppendGlobalResult(DSS, Format('%-.6g',[DSS.ActiveCircuit.RegisterTotals[i]]));
           End;
       End;
 End;
@@ -2496,7 +2496,7 @@ Begin
     IF ComputeCapacity Then Begin   // Totalizes EnergyMeters at End
 
        DSS.GlobalResult := Format('%-.6g', [(DSS.ActiveCircuit.RegisterTotals[3] + DSS.ActiveCircuit.RegisterTotals[19]) ] );  // Peak KW in Meters
-       AppendGlobalResult(Format('%-.6g', [LoadMultiplier]));
+       AppendGlobalResult(DSS, Format('%-.6g', [LoadMultiplier]));
     End;
 End;
 
@@ -2506,7 +2506,7 @@ function TExecHelper.DoClassesCmd:Integer;
 VAR  i:Integer;
 Begin
      For i := 1 to DSS.NumIntrinsicClasses Do Begin
-       AppendGlobalResult(TDSSClass(DSS.DSSClassList.Get(i)).Name);
+       AppendGlobalResult(DSS, TDSSClass(DSS.DSSClassList.Get(i)).Name);
      End;
      Result := 0;
 End;
@@ -2517,11 +2517,11 @@ VAR  i:Integer;
 Begin
     Result := 0;
     IF DSS.NumUserClasses=0 Then Begin
-        AppendGlobalResult('No User Classes Defined.');
+        AppendGlobalResult(DSS, 'No User Classes Defined.');
     End
     ELSE
      For i := DSS.NumIntrinsicClasses+1 to DSS.DSSClassList.ListSize Do Begin
-       AppendGlobalResult(TDSSClass(DSS.DSSClassList.Get(i)).Name);
+       AppendGlobalResult(DSS, TDSSClass(DSS.DSSClassList.Get(i)).Name);
      End;
 End;
 
@@ -2570,10 +2570,10 @@ Begin
            PC_ELEMENT: With ActiveCktElement as TPCElement Do
                        Begin
                          For i := 1 to NumVariables Do
-                         AppendGlobalResult(Format('%-.6g',[Variable[i]]));
+                         AppendGlobalResult(DSS, Format('%-.6g',[Variable[i]]));
                        End;
          Else
-             AppendGlobalResult('Null');
+             AppendGlobalResult(DSS, 'Null');
          End;
       End;
 
@@ -2647,10 +2647,10 @@ Begin
            PC_ELEMENT: With (ActiveCktElement as TPCElement) Do
                        Begin
                          For i := 1 to NumVariables Do
-                         AppendGlobalResult(VariableName(i));
+                         AppendGlobalResult(DSS, VariableName(i));
                        End;
          Else
-             AppendGlobalResult('Null');
+             AppendGlobalResult(DSS, 'Null');
          End;
       End;
 
@@ -4120,7 +4120,7 @@ Begin
      Else Begin // Element exists  GO!
 
       // Set CktElement active
-        SetObject(FelementName);
+        SetObject(DSS, FelementName);
 
       // Get Energymeter associated with this element.
         if DSS.ActiveCircuit.ActiveCktElement is TPDElement then Begin
@@ -4128,7 +4128,7 @@ Begin
           if pPDElem.SensorObj = Nil then DoSimpleMsg(DSS, Format('Element %s.%s is not in a meter zone! Add an Energymeter. ',[pPDelem.Parentclass.Name, pPDelem.name  ]),287261)
           Else Begin
             FMeterName := Format('%s.%s',[pPDElem.SensorObj.ParentClass.Name, pPDElem.SensorObj.Name]);
-            SetObject(FMeterName);
+            SetObject(DSS, FMeterName);
 
             if DSS.ActiveCircuit.ActiveCktElement is TEnergyMeterObj then Begin
                 pMeter := DSS.ActiveCircuit.ActiveCktElement as TEnergyMeterObj;
