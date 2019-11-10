@@ -441,7 +441,7 @@ begin
     Devindex := GetCktElementIndex(ElementName); // Global function
     if DevIndex > 0 then
     begin
-        MonitoredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
+        MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
         if ElementTerminal > MonitoredElement.Nterms then
         begin
             DoErrorMsg('ESPVLControl: "' + Name + '"',
@@ -631,7 +631,7 @@ begin
 
             for i := 1 to FLocalControlListSize do
             begin
-                pESPVLControl := DSSPrime.ESPVLControlClass.Find(FLocalControlNameList.Strings[i - 1]);
+                pESPVLControl := DSS.ESPVLControlClass.Find(FLocalControlNameList.Strings[i - 1]);
                 if Assigned(pESPVLControl) and pESPVLControl.Enabled then
                     FLocalControlPointerList.New := pESPVLControl;
             end;
@@ -641,9 +641,9 @@ begin
         begin
          {Search through the entire circuit for enabled generators and add them to the list}
 
-            for i := 1 to DSSPrime.ESPVLControlClass.ElementCount do
+            for i := 1 to DSS.ESPVLControlClass.ElementCount do
             begin
-                pESPVLControl := DSSPrime.ESPVLControlClass.ElementList.Get(i);
+                pESPVLControl := DSS.ESPVLControlClass.ElementList.Get(i);
                 if pESPVLControl.Enabled then
                     FLocalControlPointerList.New := pESPVLControl;
             end;

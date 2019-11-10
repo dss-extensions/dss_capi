@@ -342,7 +342,7 @@ begin
             begin
                 bref := BranchList.PresentBranch.ToBusReference; // each call pops off a new one
                 if bref > 0 then
-                    DSSPrime.ActiveCircuit.Buses^[bref].IsRadialBus := TRUE;
+                    DSS.ActiveCircuit.Buses^[bref].IsRadialBus := TRUE;
             end;
 
             pShunt := BranchList.PresentBranch.FirstShuntObject;

@@ -639,7 +639,7 @@ begin
     Devindex := GetCktElementIndex(ControlVars.CapacitorName); // Global function
     if DevIndex > 0 then
     begin  // Both capacitor and monitored element must already exist
-        ControlledElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
+        ControlledElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
         ControlledCapacitor := This_Capacitor;
         Nphases := ControlledElement.NPhases;  // Force number of phases to be same   Added 5/21/01  RCD
         Nconds := FNphases;
@@ -670,7 +670,7 @@ begin
     Devindex := GetCktElementIndex(ElementName); // Global function
     if DevIndex > 0 then
     begin
-        MonitoredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
+        MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
         if ElementTerminal > MonitoredElement.Nterms then
         begin
             DoErrorMsg('CapControl.' + Name + ':',
@@ -693,7 +693,7 @@ begin
     if ControlVars.VoverrideBusSpecified then
         with ControlVars do
         begin
-            VOverrideBusIndex := DSSPrime.ActiveCircuit.BusList.Find(VOverrideBusName);
+            VOverrideBusIndex := DSS.ActiveCircuit.BusList.Find(VOverrideBusName);
             if VOverrideBusIndex = 0 then
             begin
                 DoSimpleMsg(Format('CapControl.%s: Voltage override Bus "%s" not found. Did you wait until buses were defined? Reverting to default.', [Name, VOverrideBusName]), 10361);
@@ -742,7 +742,7 @@ begin
     with pBus do
         if Assigned(Vbus) then    // uses nphases from CapControlObj
             for j := 1 to nPhases do
-                cBuffer^[j] := DSSPrime.ActiveCircuit.Solution.NodeV^[GetRef(j)];
+                cBuffer^[j] := DSS.ActiveCircuit.Solution.NodeV^[GetRef(j)];
     ;
 
 end;
@@ -855,7 +855,7 @@ begin
                             if ShowEventLog then
                                 AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Opened**');
                             PresentState := CTRL_OPEN;
-                            with DSSPrime.ActiveCircuit.Solution do
+                            with DSS.ActiveCircuit.Solution do
                                 LastOpenTime := DynaVars.t + 3600.0 * DynaVars.intHour;
                         end;
                     end;
@@ -998,7 +998,7 @@ begin
 
                 if VoverrideBusSpecified then
                 begin
-                    GetBusVoltages(DSSPrime.ActiveCircuit.Buses^[VOverrideBusIndex], cBuffer);
+                    GetBusVoltages(DSS.ActiveCircuit.Buses^[VOverrideBusIndex], cBuffer);
                 end
                 else
                     MonitoredElement.GetTermVoltages(ElementTerminal, cBuffer);
@@ -1170,7 +1170,7 @@ begin
                 TIMECONTROL: {time}
               {7-8-10  NormalizeToTOD Algorithm modified to close logic hole between 11 PM and midnight}
                 begin
-                    with DSSPrime.ActiveCircuit.Solution do
+                    with DSS.ActiveCircuit.Solution do
                     begin
                         NormalizedTime := NormalizeToTOD(DynaVars.intHour, DynaVars.t);
                     end;
@@ -1282,7 +1282,7 @@ begin
 
             end;
     end;
-    with DSSPrime.ActiveCircuit, ControlVars do
+    with DSS.ActiveCircuit, ControlVars do
     begin
         if ShouldSwitch and not Armed then
         begin

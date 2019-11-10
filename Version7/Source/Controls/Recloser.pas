@@ -529,7 +529,7 @@ begin
     if DevIndex > 0 then
     begin
 
-        MonitoredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
+        MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
         Nphases := MonitoredElement.NPhases;       // Force number of phases to be same
         if MonitoredElementTerminal > MonitoredElement.Nterms then
         begin
@@ -560,7 +560,7 @@ begin
     if DevIndex > 0 then
     begin  // Both CktElement and monitored element must already exist
 
-        ControlledElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
+        ControlledElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
         ControlledElement.ActiveTerminalIdx := ElementTerminal;  // Make the 1 st terminal active
 
              // If the recloser becomes disabled, leave at False
@@ -830,7 +830,7 @@ begin
             if TripTime > 0.0 then
             begin
                 if not ArmedForOpen then
-                    with DSSPrime.ActiveCircuit do   // Then arm for an open operation
+                    with DSS.ActiveCircuit do   // Then arm for an open operation
                     begin
                         ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TripTime + Delaytime, CTRL_OPEN, 0, Self);
                         if OperationCount <= NumReclose then
@@ -842,7 +842,7 @@ begin
             else
             begin
                 if ArmedForOpen then
-                    with DSSPrime.ActiveCircuit do    // If current dropped below pickup, disarm trip and set for reset
+                    with DSS.ActiveCircuit do    // If current dropped below pickup, disarm trip and set for reset
                     begin
                         ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + ResetTime, CTRL_RESET, 0, Self);
                         ArmedForOpen := FALSE;

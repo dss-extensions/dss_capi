@@ -228,7 +228,7 @@ begin
 {    Indicates which solution Itemp is computed for    }
     IterminalSolutionCount := -1;
 
-    BaseFrequency := DSSPrime.ActiveCircuit.Fundamental;
+    BaseFrequency := DSS.ActiveCircuit.Fundamental;
 
 end;
 
@@ -274,7 +274,7 @@ begin
         
         // If this device is in the circuit, then we have to rebuild Y on a change in Yprim
         if FEnabled then
-            DSSPrime.ActiveCircuit.Solution.SystemYChanged := TRUE;
+            DSS.ActiveCircuit.Solution.SystemYChanged := TRUE;
 
     end
 //    else
@@ -335,7 +335,7 @@ begin
 
         for i := 1 to Fnphases do
             Terminals^[FActiveTerminal].Conductors^[i].Closed := Value;
-        DSSPrime.ActiveCircuit.Solution.SystemYChanged := TRUE;  // force Y matrix rebuild
+        DSS.ActiveCircuit.Solution.SystemYChanged := TRUE;  // force Y matrix rebuild
         YPrimInvalid := TRUE;
 
     end
@@ -345,7 +345,7 @@ begin
         if (Index > 0) and (Index <= Fnconds) then
         begin
             Terminals^[FActiveTerminal].Conductors^[index].Closed := Value;
-            DSSPrime.ActiveCircuit.Solution.SystemYChanged := TRUE;
+            DSS.ActiveCircuit.Solution.SystemYChanged := TRUE;
             YPrimInvalid := TRUE;
         end;
 
@@ -367,7 +367,7 @@ begin
     end;
 
     if Value <> Fnconds then
-        DSSPrime.ActiveCircuit.BusNameRedefined := TRUE;
+        DSS.ActiveCircuit.BusNameRedefined := TRUE;
     Fnconds := Value;
     Set_Nterms(fNterms);  // ReallocTerminals    NEED MORE EFFICIENT WAY TO DO THIS
 end;
@@ -468,7 +468,7 @@ procedure TDSSCktElement.Set_Enabled(Value: Boolean);
 //  NumNodesSaved:Integer;
 
 begin
-    with DSSPrime.ActiveCircuit do
+    with DSS.ActiveCircuit do
         if Value <> FEnabled then
         begin  // don't change unless this represents a change
 
@@ -630,7 +630,7 @@ begin
     if i <= FNterms then
     begin
         FBusNames^[i] := lowercase(S);
-        DSSPrime.ActiveCircuit.BusNameRedefined := TRUE;  // Set Global Flag to signal circuit to rebuild busdefs
+        DSS.ActiveCircuit.BusNameRedefined := TRUE;  // Set Global Flag to signal circuit to rebuild busdefs
     end
     else
         DoSimpleMsg(Format('Attempt to set bus name for non-existent circuit element terminal(%d): "%s"', [i, s]), 7541);
@@ -670,10 +670,10 @@ procedure TDSSCktElement.ComputeIterminal;
 begin
 
 // to save time, only recompute if a different solution than last time it was computed.
-    if IterminalSolutionCount <> DSSPrime.ActiveCircuit.Solution.SolutionCount then
+    if IterminalSolutionCount <> DSS.ActiveCircuit.Solution.SolutionCount then
     begin
         GetCurrents(Iterminal);
-        IterminalSolutionCount := DSSPrime.ActiveCircuit.Solution.SolutionCount;
+        IterminalSolutionCount := DSS.ActiveCircuit.Solution.SolutionCount;
     end;
 end;
 
@@ -720,7 +720,7 @@ begin
         ComputeIterminal;
 
     // Method: Sum complex power going into phase conductors of active terminal
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
         begin
             k := (idxTerm - 1) * Fnconds;
             for i := 1 to Fnconds do     // 11-7-08 Changed from Fnphases - was not accounting for all conductors
@@ -732,7 +732,7 @@ begin
         end;
 
        {If this is a positive sequence circuit, then we need to multiply by 3 to get the 3-phase power}
-        if DSSPrime.ActiveCircuit.PositiveSequence then
+        if DSS.ActiveCircuit.PositiveSequence then
             cPower := cMulReal(cPower, 3.0);
     end;
 
@@ -758,13 +758,13 @@ begin
         ComputeIterminal;
 
     // Method: Sum complex power going into all conductors of all terminals
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             for k := 1 to Yorder do
             begin
                 n := NodeRef^[k];
                 if n > 0 then
                 begin
-                    if DSSPrime.ActiveCircuit.PositiveSequence then
+                    if DSS.ActiveCircuit.PositiveSequence then
                         Caccum(cLoss, CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[k])), 3.0))
                     else
                         Caccum(cLoss, Cmul(NodeV^[n], conjg(Iterminal^[k])));
@@ -875,7 +875,7 @@ begin
         ClassIdx := DSSObjType and CLASSMASK;              // gets the parent class descriptor (int)
         nref := ActiveTerminal.TermNodeRef^[MaxPhase]; // reference to the phase voltage with the max current
         nrefN := ActiveTerminal.TermNodeRef^[Fnconds];  // reference to the ground terminal (GND or other phase)
-        with DSSPrime.ActiveCircuit.Solution do     // Get power into max phase of active terminal
+        with DSS.ActiveCircuit.Solution do     // Get power into max phase of active terminal
         begin
 
             if not (ClassIdx = XFMR_ELEMENT) then  // Only for transformers
@@ -894,7 +894,7 @@ begin
 
        {If this is a positive sequence circuit (Fnphases=1),
         then we need to multiply by 3 to get the 3-phase power}
-        if DSSPrime.ActiveCircuit.PositiveSequence then
+        if DSS.ActiveCircuit.PositiveSequence then
             cPower := cMulReal(cPower, 3.0);
     end;
 
@@ -945,13 +945,13 @@ begin
     begin
         ComputeIterminal;
 
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             for i := 1 to Yorder do
             begin
                 n := NodeRef^[i]; // increment through terminals
                 if n > 0 then
                 begin
-                    if DSSPrime.ActiveCircuit.PositiveSequence then
+                    if DSS.ActiveCircuit.PositiveSequence then
                         PowerBuffer^[i] := CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[i])), 3.0)
                     else
                         PowerBuffer^[i] := Cmul(NodeV^[n], conjg(Iterminal^[i]));
@@ -980,7 +980,7 @@ begin
     begin
         ComputeIterminal;
 
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             for i := 1 to Num_Phases do
             begin
                 cLoss := cmplx(0.0, 0.0);
@@ -990,7 +990,7 @@ begin
                     n := NodeRef^[k]; // increment through terminals
                     if n > 0 then
                     begin
-                        if DSSPrime.ActiveCircuit.PositiveSequence then
+                        if DSS.ActiveCircuit.PositiveSequence then
                             Caccum(cLoss, CmulReal(Cmul(NodeV^[n], conjg(Iterminal^[k])), 3.0))
                         else
                             Caccum(cLoss, Cmul(NodeV^[n], conjg(Iterminal^[k])));
@@ -1165,7 +1165,7 @@ begin
     if FEnabled then
     begin
         ComputeIterminal;
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             for i := 1 to Yorder do
                 Caccum(Currents^[NodeRef^[i]], Iterminal^[i]);  // Noderef=0 is OK
     end;
@@ -1192,7 +1192,7 @@ begin
             Exit;
         end;
 
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
             for i := 1 to NCond do
                 Vbuffer^[i] := NodeV^[Terminals^[iTerm].TermNodeRef^[i]];
 
@@ -1284,7 +1284,7 @@ var
     i: Integer;
 
 begin
-    with DSSPrime.ActiveCircuit.solution do
+    with DSS.ActiveCircuit.solution do
         for i := 1 to Yorder do
             VTerminal^[i] := NodeV^[NodeRef^[i]];
 end;

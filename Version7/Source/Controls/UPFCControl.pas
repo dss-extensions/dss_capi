@@ -352,7 +352,7 @@ begin
     Devindex := GetCktElementIndex(ElementName); // Global function
     if DevIndex > 0 then
     begin
-        MonitoredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
+        MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
         if ElementTerminal > MonitoredElement.Nterms then
         begin
             DoErrorMsg('UPFCControl: "' + Name + '"',
@@ -497,7 +497,7 @@ begin
         end;
 
         if GenkWChanged or Genkvarchanged then  // Only push onto controlqueue if there has been a change
-            with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
+            with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
             begin
                 LoadsNeedUpdating := TRUE; // Force recalc of power parms
             // Push present time onto control queue to force re solve at new dispatch value
@@ -538,7 +538,7 @@ var
 begin
 
     Result := FALSE;
-    GenClass := GetDSSClassPtr(DSSPrime, 'generator');
+    GenClass := GetDSSClassPtr(DSS, 'generator');
 
     if FListSize > 0 then
     begin    // Name list is defined - Use it

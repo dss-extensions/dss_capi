@@ -334,7 +334,7 @@ begin
     Devindex := GetCktElementIndex(ElementName);
     if DevIndex > 0 then
     begin
-        ControlledElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
+        ControlledElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
         Nphases := ControlledElement.NPhases;
         Nconds := FNphases;
         ControlledElement.ActiveTerminalIdx := ElementTerminal;
@@ -444,14 +444,14 @@ begin
 
 // push on the Lock command if any at the present time delay
     if LockCommand <> CTRL_NONE then
-        with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
         begin
             ControlQueue.Push(DynaVars.intHour, Dynavars.t + TimeDelay, LockCommand, 0, Self);
             LockCommand := CTRL_NONE;  // reset the lock command for next time
         end;
 
     if (ActionCommand <> PresentState) and not Armed then   // we need to operate this switch
-        with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
         begin
             ControlQueue.Push(DynaVars.intHour, Dynavars.t + TimeDelay, ActionCommand, 0, Self);
             Armed := TRUE;

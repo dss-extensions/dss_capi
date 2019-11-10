@@ -1077,7 +1077,7 @@ begin
     Devindex := GetCktElementIndex(ElementName); // Global FUNCTION
     if DevIndex > 0 then
     begin
-        MonitoredElement := DSSPrime.ActiveCircuit.CktElements.Get(DevIndex);
+        MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
         if ElementTerminal > MonitoredElement.Nterms then
         begin
             DoErrorMsg('StorageController: "' + Name + '"',
@@ -1282,7 +1282,7 @@ var
 begin
     pctDischargeRate := 0.0;   // init for test
     if (DisChargeTriggerTime > 0.0) then
-        with DSSPrime.ActiveCircuit.Solution do
+        with DSS.ActiveCircuit.Solution do
         begin
            // turn on if time within 1/2 time step
             if not (FleetState = STORE_DISCHARGING) then
@@ -1367,7 +1367,7 @@ begin
         1:
         begin
             if (DisChargeTriggerTime > 0.0) then
-                with DSSPrime.ActiveCircuit.Solution do
+                with DSS.ActiveCircuit.Solution do
                 begin
                  // turn on if time within 1/2 time step
                     if abs(NormalizeToTOD(DynaVars.intHour, DynaVars.t) - DisChargeTriggerTime) < DynaVars.h / 7200.0 then
@@ -1393,7 +1393,7 @@ begin
         2:
         begin
             if ChargeTriggerTime > 0.0 then
-                with DSSPrime.ActiveCircuit.Solution do
+                with DSS.ActiveCircuit.Solution do
                 begin
                     if abs(NormalizeToTOD(DynaVars.intHour, DynaVars.t) - ChargeTriggerTime) < DynaVars.h / 7200.0 then
                         if not (FleetState = STORE_CHARGING) then
@@ -1406,7 +1406,7 @@ begin
                             OutOfOomph := FALSE;
                             PushTimeOntoControlQueue(STORE_CHARGING);   // force re-solve at this time step
                     // Push message onto control queue to release inhibit at a later time
-                            with DSSPrime.ActiveCircuit do
+                            with DSS.ActiveCircuit do
                             begin
                                 Solution.LoadsNeedUpdating := TRUE; // Force recalc of power parms
                                 ControlQueue.Push(DynaVars.intHour + InhibitHrs, Dynavars.t, RELEASE_INHIBIT, 0, Self);
@@ -1445,7 +1445,7 @@ procedure TStorageControllerObj.PushTimeOntoControlQueue(Code: Integer);
    Push present time onto control queue to force re solve at new dispatch value
 }
 begin
-    with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
         LoadsNeedUpdating := TRUE; // Force recalc of power parms
         ControlQueue.Push(DynaVars.intHour, DynaVars.t, Code, 0, Self);
@@ -1964,7 +1964,7 @@ begin
 
     // Get multiplier
 
-    with DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit.Solution do
         case Mode of
             TSolveMode.DAILYMODE:
                 CalcDailyMult(DynaVars.dblHour); // Daily dispatch curve
@@ -2002,7 +2002,7 @@ begin
         SetFleetkWRate(pctKWRate);
         SetFleetkvarRate(pctkvarRate);
         SetFleetToDischarge;
-        DSSPrime.ActiveCircuit.Solution.LoadsNeedUpdating := TRUE; // Force recalc of power parms
+        DSS.ActiveCircuit.Solution.LoadsNeedUpdating := TRUE; // Force recalc of power parms
     end;
 
     {Force a new power flow solution if fleet state has changed}
@@ -2179,7 +2179,7 @@ begin
         FleetPointerList.Clear;
         for i := 1 to FleetSize do
         begin
-            StorageObj := DSSPrime.StorageClass.Find(FStorageNameList.Strings[i - 1]);
+            StorageObj := DSS.StorageClass.Find(FStorageNameList.Strings[i - 1]);
             if Assigned(StorageObj) then
             begin
                 if StorageObj.Enabled then
@@ -2200,9 +2200,9 @@ begin
      {Search through the entire circuit for enabled Storage Elements and add them to the list}
         FStorageNameList.Clear;
         FleetPointerList.Clear;
-        for i := 1 to DSSPrime.StorageClass.ElementCount do
+        for i := 1 to DSS.StorageClass.ElementCount do
         begin
-            StorageObj := DSSPrime.StorageClass.ElementList.Get(i);
+            StorageObj := DSS.StorageClass.ElementList.Get(i);
         // Look for a storage element not already assigned
             if StorageObj.Enabled and (StorageObj.DispatchMode <> STORE_EXTERNALMODE) then
             begin

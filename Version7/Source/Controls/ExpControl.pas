@@ -516,7 +516,7 @@ BEGIN
                              [PVSys.Presentkvar]));
       FPriorQ[i] := Qset;
       FPriorVpu[i] := FPresentVpu[i];
-      DSSPrime.ActiveCircuit.Solution.LoadsNeedUpdating := TRUE;
+      DSS.ActiveCircuit.Solution.LoadsNeedUpdating := TRUE;
       // Force recalc of power parms
       Set_PendingChange(NONE,i);
     end
@@ -542,12 +542,12 @@ begin
       // Calculate the present average voltage  magnitude
       PVSys.ComputeVTerminal;
       for j := 1 to PVSys.Yorder do cBuffer[j] := PVSys.Vterminal^[j];
-      BasekV := DSSPrime.ActiveCircuit.Buses^[PVSys.terminals^[1].busRef].kVBase;
+      BasekV := DSS.ActiveCircuit.Buses^[PVSys.terminals^[1].busRef].kVBase;
       Vpresent := 0;
       For j := 1 to PVSys.NPhases Do Vpresent := Vpresent + Cabs(cBuffer[j]);
       FPresentVpu[i] := (Vpresent / PVSys.NPhases) / (basekV * 1000.0);
       // if initializing with Vreg=0 in static mode, we want to FIND Vreg
-      if (DSSPrime.ActiveCircuit.Solution.ControlMode = CTRLSTATIC) and (FVregInit <= 0.0) then
+      if (DSS.ActiveCircuit.Solution.ControlMode = CTRLSTATIC) and (FVregInit <= 0.0) then
         FVregs[i] := FPresentVpu[i];
       // both errors are in per-unit
       Verr := Abs(FPresentVpu[i] - FPriorVpu[i]);
@@ -560,11 +560,11 @@ begin
       end;
       PVSys.VWmode := FALSE;
       if ((Verr > FVoltageChangeTolerance) or (Qerr > FVarChangeTolerance) or
-          (DSSPrime.ActiveCircuit.Solution.ControlIteration = 1)) then begin
+          (DSS.ActiveCircuit.Solution.ControlIteration = 1)) then begin
         FWithinTol[i] := False;
         Set_PendingChange(CHANGEVARLEVEL,i);
-        With  DSSPrime.ActiveCircuit.Solution.DynaVars Do
-          ControlActionHandle := DSSPrime.ActiveCircuit.ControlQueue.Push (intHour, t + TimeDelay, PendingChange[i], 0, Self);
+        With  DSS.ActiveCircuit.Solution.DynaVars Do
+          ControlActionHandle := DSS.ActiveCircuit.ControlQueue.Push (intHour, t + TimeDelay, PendingChange[i], 0, Self);
         If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
           (' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]));
       end else begin
@@ -600,7 +600,7 @@ VAR
    i:Integer;
 begin
   Result := FALSE;
-  PVSysClass := GetDSSClassPtr(DSSPrime, 'PVsystem');
+  PVSysClass := GetDSSClassPtr(DSS, 'PVsystem');
   If FListSize > 0 Then Begin    // Name list is defined - Use it
     SetLength(ControlledElement,FListSize+1);  // Use this as the main pointer to PVSystem Elements
     SetLength(FPriorVpu, FListSize+1);
@@ -713,7 +713,7 @@ begin
   for j := 1 to FPVSystemPointerList.ListSize do begin
     PVSys := ControlledElement[j];
     if FVregTau > 0.0 then begin
-      dt :=  DSSPrime.ActiveCircuit.Solution.Dynavars.h;
+      dt :=  DSS.ActiveCircuit.Solution.Dynavars.h;
       Verr := FPresentVpu[j] - FVregs[j];
       FVregs[j] := FVregs[j] + Verr * (1 - Exp (-dt / FVregTau));
     end else begin
