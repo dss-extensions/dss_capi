@@ -241,7 +241,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 330);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 330);
                 1:
                     SetBus(1, param);
                 2:
@@ -342,12 +342,12 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in VCCS MakeLike: "' + OtherSource + '" Not Found.', 332);
+        DoSimpleMsg(DSS, 'Error in VCCS MakeLike: "' + OtherSource + '" Not Found.', 332);
 end;
 
 function TVCCS.Init(Handle: Integer): Integer;
 begin
-    DoSimpleMsg('Need to implement TVCCS.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TVCCS.Init', -1);
     Result := 0;
 end;
 
@@ -403,7 +403,7 @@ begin
     SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
     begin
-        DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device VCCS.' + Name + ' Not Found.', 333);
+        DoSimpleMsg(DSS, 'Spectrum Object "' + Spectrum + '" for Device VCCS.' + Name + ' Not Found.', 333);
     end;
     Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
 

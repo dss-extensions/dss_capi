@@ -17,14 +17,16 @@ uses
     ArrayDef,
     uComplex,
     uCMatrix,
-    NamedObject;
+    NamedObject,
+    DSSClass;
 
 type
 
 
     TDSSBus = class(TNamedObject)
     PRIVATE
-
+        DSS: TDSS;
+        
         FNumNodesThisBus: Integer;
         Nodes: pIntegerArray;
         Allocation: Integer;
@@ -35,7 +37,6 @@ type
         function Get_Zsc1: Complex;
 
     PUBLIC
-
         VBus,
         BusCurrent: pComplexArray;
         Zsc,
@@ -60,7 +61,7 @@ type
         BusTotalMiles: Double;  // Total length of lines downstream from this bus for Duke siting algorithm
         BusSectionID: Integer; // ID of the feeder section this bus belongs to
 
-        constructor Create;
+        constructor Create(dssContext: TDSS);
         destructor Destroy; OVERRIDE;
 
         procedure AllocateBusQuantities;
@@ -95,12 +96,13 @@ implementation
 uses
     DSSGlobals,
     SysUtils,
-    DSSClass,
     DSSHelper;
 
-constructor TDSSBus.Create;
+constructor TDSSBus.Create(dssContext: TDSS);
 begin
     inherited Create('Bus');
+    DSS := dssContext;
+    
     Allocation := 3;
     Nodes := AllocMem(Sizeof(Nodes^[1]) * Allocation);
     RefNo := AllocMem(Sizeof(RefNo^[1]) * Allocation);
@@ -166,7 +168,7 @@ begin
             AddANode;
             Nodes^[FNumNodesThisBus] := NodeNum;
 
-            with DSSPrime.ActiveCircuit do
+            with DSS.ActiveCircuit do
             begin
                 INC(NumNodes);  // Global node number for circuit
                 RefNo^[FNumNodesThisBus] := NumNodes;

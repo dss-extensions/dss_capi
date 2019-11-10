@@ -270,7 +270,7 @@ begin
         end
     end
     else
-        Dosimplemsg('Invalid number of windings: (' + IntToStr(N) + ') for Transformer ' +
+        DoSimpleMsg(DSS, 'Invalid number of windings: (' + IntToStr(N) + ') for Transformer ' +
             DSS.ActiveTransfObj.Name, 111);
 end;
 
@@ -280,7 +280,7 @@ begin
         if (w > 0) and (w <= NumWindings) then
             ActiveWinding := w
         else
-            DoSimpleMsg('Wdg parameter invalid for "' + DSS.ActiveXfmrCodeObj.Name + '"', 112);
+            DoSimpleMsg(DSS, 'Wdg parameter invalid for "' + DSS.ActiveXfmrCodeObj.Name + '"', 112);
 end;
 
 procedure TXfmrCode.InterpretWindings(const S: String; which: WdgParmChoice);
@@ -344,7 +344,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "XfmrCode.' + Name + '"', 110);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "XfmrCode.' + Name + '"', 110);
                 1:
                     FNphases := Parser.IntValue;
                 2:
@@ -544,13 +544,13 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in XfmrCode MakeLike: "' + Name + '" Not Found.', 102);
+        DoSimpleMsg(DSS, 'Error in XfmrCode MakeLike: "' + Name + '" Not Found.', 102);
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 function TXfmrCode.Init(Handle: Integer): Integer;
 begin
-    DoSimpleMsg('Need to implement TXfmrCode.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TXfmrCode.Init', -1);
     REsult := 0;
 end;
 
@@ -574,7 +574,7 @@ begin
         end;
         XfmrCodeObj := ElementList.Next;
     end;
-    DoSimpleMsg('XfmrCode: "' + Value + '" not Found.', 103);
+    DoSimpleMsg(DSS, 'XfmrCode: "' + Value + '" not Found.', 103);
 end;
 
 

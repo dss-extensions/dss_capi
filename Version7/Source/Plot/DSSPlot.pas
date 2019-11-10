@@ -337,7 +337,7 @@ begin
                 if Bus.CoordDefined then
                     AddNewMarker(Bus.x, Bus.y, AddMarkerColor, AddMarkerCode, AddMarkerSize)
                 else
-                    DoSimpleMsg('Bus Coordinates not defined for bus ' + Busname, 28709);
+                    DoSimpleMsg(DSS, 'Bus Coordinates not defined for bus ' + Busname, 28709);
 
             end;
     end;
@@ -685,7 +685,7 @@ begin
 
         except
             On E: Exception do
-                DoSimpleMsg('Error opening "' + ObjectName + '": ' + E.Message,
+                DoSimpleMsg(DSS, 'Error opening "' + ObjectName + '": ' + E.Message,
                     190);
         end;
     finally
@@ -895,14 +895,14 @@ begin
    { *** Make a New DSSGraph Plot *** }
   // If MakeNewGraph(DSSDataDirectory + CircuitName_ + 'Plot.DSV') = 0 Then
  //  Begin
- //     DoSimpleMsg('Make New Plot failed in DSSPlot Execute.', 8734);
+ //     DoSimpleMsg(DSS, 'Make New Plot failed in DSSPlot Execute.', 8734);
  //     Exit;
  //  End;
     try
         case PlotType of
             ptmonitorplot:
             begin
-                Fname := GetOutputDirectory + CircuitName_ + 'MONITOR-' + UpperCase(ObjectName);
+                Fname := DSS.OutputDirectory + CircuitName_ + 'MONITOR-' + UpperCase(ObjectName);
                 for i := 0 to High(Channels) do
                     Fname := Fname + Format('-ch%d', [Channels[i]]);
                 if MakeNewGraph(Fname + '.DSV') > 0 then
@@ -912,66 +912,66 @@ begin
                 end
                 else
                 begin
-                    DoSimpleMsg('Make New Plot failed for Monitor Plot.', 87341);
+                    DoSimpleMsg(DSS, 'Make New Plot failed for Monitor Plot.', 87341);
                     Exit;
                 end;
             end;   {Monitor Plot}
             ptLoadShape:
-                if MakeNewGraph(GetOutputDirectory + CircuitName_ + Format('Loadshape_%s.DSV', [ObjectName])) > 0 then
+                if MakeNewGraph(DSS.OutputDirectory + CircuitName_ + Format('Loadshape_%s.DSV', [ObjectName])) > 0 then
                 begin
                     DoLoadShapePlot(ObjectName);
                     Exit; // All we need to do here
                 end
                 else
                 begin
-                    DoSimpleMsg('Make New Plot failed for Loadshape Plot.', 87342);
+                    DoSimpleMsg(DSS, 'Make New Plot failed for Loadshape Plot.', 87342);
                     Exit;
                 end;
             ptTShape:
-                if MakeNewGraph(GetOutputDirectory + CircuitName_ + Format('TempShape_%s.DSV', [ObjectName])) > 0 then
+                if MakeNewGraph(DSS.OutputDirectory + CircuitName_ + Format('TempShape_%s.DSV', [ObjectName])) > 0 then
                 begin
                     DoTempShapePlot(ObjectName);
                     Exit; // All we need to do here
                 end
                 else
                 begin
-                    DoSimpleMsg('Make New Plot failed for TempShape Plot.', 87343);
+                    DoSimpleMsg(DSS, 'Make New Plot failed for TempShape Plot.', 87343);
                     Exit;
                 end;
             ptPriceShape:
-                if MakeNewGraph(GetOutputDirectory + CircuitName_ + Format('Priceshape_%s.DSV', [ObjectName])) > 0 then
+                if MakeNewGraph(DSS.OutputDirectory + CircuitName_ + Format('Priceshape_%s.DSV', [ObjectName])) > 0 then
                 begin
                     DoPriceShapePlot(ObjectName);
                     Exit; // All we need to do here
                 end
                 else
                 begin
-                    DoSimpleMsg('Make New Plot failed for PriceShape Plot.', 87344);
+                    DoSimpleMsg(DSS, 'Make New Plot failed for PriceShape Plot.', 87344);
                     Exit;
                 end;
             ptProfile:
-                if MakeNewGraph(GetOutputDirectory + CircuitName_ + Format('Profile%d.DSV', [PhasesToPlot])) > 0 then
+                if MakeNewGraph(DSS.OutputDirectory + CircuitName_ + Format('Profile%d.DSV', [PhasesToPlot])) > 0 then
                 begin
                     DoProfilePlot;
                     Exit;
                 end
                 else
                 begin
-                    DoSimpleMsg('Make New Plot failed for Profile Plot.', 87345);
+                    DoSimpleMsg(DSS, 'Make New Plot failed for Profile Plot.', 87345);
                     Exit;
                 end;
         else { All other plots }
 
             case PlotType of
                 ptAutoAddLogPlot:
-                    if MakeNewGraph(GetOutputDirectory + CircuitName_ + 'AutoADD.DSV') = 0 then
+                    if MakeNewGraph(DSS.OutputDirectory + CircuitName_ + 'AutoADD.DSV') = 0 then
                     begin
-                        DoSimpleMsg('Make New Plot failed for AutoADD Plot.', 8734);
+                        DoSimpleMsg(DSS, 'Make New Plot failed for AutoADD Plot.', 8734);
                         Exit;
                     end;
                 ptCircuitplot:
                 begin
-                    Fname := GetOutputDirectory + CircuitName_;
+                    Fname := DSS.OutputDirectory + CircuitName_;
                     case Quantity of
                         pqVoltage:
                             Fname := Fname + 'Voltage.DSV';
@@ -989,32 +989,32 @@ begin
 
                     if MakeNewGraph(Fname) = 0 then
                     begin
-                        DoSimpleMsg('Make New Plot failed for Circuit Plot.', 87346);
+                        DoSimpleMsg(DSS, 'Make New Plot failed for Circuit Plot.', 87346);
                         Exit;
                     end;
                 end;
                 ptGeneralDataPlot:
-                    if MakeNewGraph(GetOutputDirectory + CircuitName_ + 'General.DSV') = 0 then
+                    if MakeNewGraph(DSS.OutputDirectory + CircuitName_ + 'General.DSV') = 0 then
                     begin
-                        DoSimpleMsg('Make New Plot failed for General Data Plot.', 87347);
+                        DoSimpleMsg(DSS, 'Make New Plot failed for General Data Plot.', 87347);
                         Exit;
                     end;
                 ptGeneralCircuitPlot:
-                    if MakeNewGraph(GetOutputDirectory + CircuitName_ + 'GeneralCircuit.DSV') = 0 then
+                    if MakeNewGraph(DSS.OutputDirectory + CircuitName_ + 'GeneralCircuit.DSV') = 0 then
                     begin
-                        DoSimpleMsg('Make New Plot failed for GeneralCircuit Plot.', 87348);
+                        DoSimpleMsg(DSS, 'Make New Plot failed for GeneralCircuit Plot.', 87348);
                         Exit;
                     end;
                 ptMeterZones:
-                    if MakeNewGraph(GetOutputDirectory + CircuitName_ + 'MeterZone.DSV') = 0 then
+                    if MakeNewGraph(DSS.OutputDirectory + CircuitName_ + 'MeterZone.DSV') = 0 then
                     begin
-                        DoSimpleMsg('Make New Plot failed for MeterZone Plot.', 87349);
+                        DoSimpleMsg(DSS, 'Make New Plot failed for MeterZone Plot.', 87349);
                         Exit;
                     end;
                 ptdaisyplot:
-                    if MakeNewGraph(GetOutputDirectory + CircuitName_ + 'Daisy.DSV') = 0 then
+                    if MakeNewGraph(DSS.OutputDirectory + CircuitName_ + 'Daisy.DSV') = 0 then
                     begin
-                        DoSimpleMsg('Make New Plot failed for Daisy Plot.', 87340);
+                        DoSimpleMsg(DSS, 'Make New Plot failed for Daisy Plot.', 87340);
                         Exit;
                     end;
             end;
@@ -1385,7 +1385,7 @@ begin
     Temp_Shape := TShapeClass.Find(TempShapeName);
     if Temp_Shape = NIL then
     begin
-        DoSimpleMsg('Tshape object not found: "' + TempShapeName + '"', 87341);
+        DoSimpleMsg(DSS, 'Tshape object not found: "' + TempShapeName + '"', 87341);
         Exit;
     end;
 
@@ -1456,7 +1456,7 @@ begin
     Load_Shape := LoadShapeClass.Find(LoadShapeName);
     if Load_Shape = NIL then
     begin
-        DoSimpleMsg('Loadshape object not found: "' + LoadShapeName + '"', 87341);
+        DoSimpleMsg(DSS, 'Loadshape object not found: "' + LoadShapeName + '"', 87341);
         Exit;
     end;
 
@@ -1580,7 +1580,7 @@ begin
     FileName := CaseName + PathDelim + 'di_yr_' + Trim(IntToStr(CaseYear)) + PathDelim + MeterName + '.CSV';
     if not FileExists(FileName) then
     begin
-        DoSimpleMsg('File "' + FileName + '" does not exist.', 191);
+        DoSimpleMsg(DSS, 'File "' + FileName + '" does not exist.', 191);
         Exit;
     end
     else
@@ -1604,15 +1604,15 @@ begin
             end; { With }
         except
             On E: Exception do
-                DoSimpleMsg('Error Reading File "' + FileName + '". ' + E.message,
+                DoSimpleMsg(DSS, 'Error Reading File "' + FileName + '". ' + E.message,
                     192)
         end;
 
     end;
 
-    if MakeNewGraph(GetOutputDirectory + CircuitName_ + 'DIPlot.DSV') = 0 then
+    if MakeNewGraph(DSS.OutputDirectory + CircuitName_ + 'DIPlot.DSV') = 0 then
     begin
-        DoSimpleMsg('Make New Plot failed in DSSPlot - DI plot.', 8734);
+        DoSimpleMsg(DSS, 'Make New Plot failed in DSSPlot - DI plot.', 8734);
         Exit;
     end;
 
@@ -1681,7 +1681,7 @@ begin
 
         except
             On E: Exception do
-                DoSimpleMsg('Error Reading File "' + FileName + '". ' + E.message,
+                DoSimpleMsg(DSS, 'Error Reading File "' + FileName + '". ' + E.message,
                     193)
         end;
         set_KeepAspectRatio(FALSE);
@@ -1824,9 +1824,9 @@ begin
     MinYear := 20;
     MaxYear := 0;
 
-    if MakeNewGraph(GetOutputDirectory + CircuitName_ + 'CompPlot.DSV') = 0 then
+    if MakeNewGraph(DSS.OutputDirectory + CircuitName_ + 'CompPlot.DSV') = 0 then
     begin
-        DoSimpleMsg('Make New Plot failed in DSSPlot - comparison Plot.', 8734);
+        DoSimpleMsg(DSS, 'Make New Plot failed in DSSPlot - comparison Plot.', 8734);
         Exit;
     end;
 
@@ -1927,7 +1927,7 @@ begin
                             begin
                                 if not ReadS then
                                 begin
-                                    DoSimpleMsg('Meter Not Found: "' + WhichFile + '"',
+                                    DoSimpleMsg(DSS, 'Meter Not Found: "' + WhichFile + '"',
                                         1941);
                                     Exit; // Abort
                                 end;
@@ -2070,7 +2070,7 @@ begin
 
     except
         On E: Exception do
-            DoSimpleMsg('Error writing file: "' + FileName + '". ' + E.message,
+            DoSimpleMsg(DSS, 'Error writing file: "' + FileName + '". ' + E.message,
                 196);
     end;
 
@@ -2152,9 +2152,9 @@ begin
 
     Names := TStringList.Create;
 
-    if MakeNewGraph(GetOutputDirectory + CircuitName_ + 'YearlyPlot.DSV') = 0 then
+    if MakeNewGraph(DSS.OutputDirectory + CircuitName_ + 'YearlyPlot.DSV') = 0 then
     begin
-        DoSimpleMsg('Make New Plot failed in DSSPlot -- yearly plot.', 8734);
+        DoSimpleMsg(DSS, 'Make New Plot failed in DSSPlot -- yearly plot.', 8734);
         Exit;
     end;
 
@@ -2349,7 +2349,7 @@ begin
 
         if FirstYear then
         begin
-            DoSimpleMsg('No Files Found', 199);
+            DoSimpleMsg(DSS, 'No Files Found', 199);
         end
         else
         begin
@@ -2591,7 +2591,7 @@ begin
             Freemem(Yarray[i], Sizeof(Xarray^[1]) * NumberofRecords);
     end
     else
-        DoSimpleMsg('Monitor "' + ObjectName + '" not found.', 200);
+        DoSimpleMsg(DSS, 'Monitor "' + ObjectName + '" not found.', 200);
 end;
 
 procedure TDSSPlot.DoPriceShapePlot(const PriceShapeName: String);
@@ -2609,7 +2609,7 @@ begin
     Price_Shape := PriceShapeClass.Find(PriceShapeName);
     if Price_Shape = NIL then
     begin
-        DoSimpleMsg('PriceShape object not found: "' + PriceShapeName + '"',
+        DoSimpleMsg(DSS, 'PriceShape object not found: "' + PriceShapeName + '"',
             87341);
         Exit;
     end;
@@ -3688,7 +3688,7 @@ begin
     end;
 
 
-    Fname := GetOutputDirectory + CircuitName_;
+    Fname := DSS.OutputDirectory + CircuitName_;
     case Quantity of
         vizVOLTAGE:
         begin
@@ -3720,7 +3720,7 @@ begin
 
     if MakeNewGraph(Fname) = 0 then
     begin
-        DoSimpleMsg('Make New Plot failed in DSSPlot - visualization plot.', 8734);
+        DoSimpleMsg(DSS, 'Make New Plot failed in DSSPlot - visualization plot.', 8734);
         Exit;
     end;
 

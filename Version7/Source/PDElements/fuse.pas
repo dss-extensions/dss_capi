@@ -128,7 +128,7 @@ begin
     Result := TCC_CurveClass.Find(CurveName);
 
     if Result = NIL then
-        DoSimpleMsg('TCC Curve object: "' + CurveName + '" not found.', 401);
+        DoSimpleMsg(DSS, 'TCC Curve object: "' + CurveName + '" not found.', 401);
 
 end;
 
@@ -249,7 +249,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 402);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 402);
                 1:
                     MonitoredElementName := lowercase(param);
                 2:
@@ -326,7 +326,7 @@ begin
 
         end
     else
-        DoSimpleMsg('Error in Fuse MakeLike: "' + FuseName + '" Not Found.', 403);
+        DoSimpleMsg(DSS, 'Error in Fuse MakeLike: "' + FuseName + '" Not Found.', 403);
 
 end;
 
@@ -405,7 +405,7 @@ begin
         MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
         Nphases := MonitoredElement.NPhases;       // Force number of phases to be same
         if Fnphases > FUSEMAXDIM then
-            DosimpleMsg('Warning: Fuse ' + Self.Name + ': Number of phases > Max fuse dimension.', 404);
+            DoSimpleMsg(DSS, 'Warning: Fuse ' + Self.Name + ': Number of phases > Max fuse dimension.', 404);
         if MonitoredElementTerminal > MonitoredElement.Nterms then
         begin
             DoErrorMsg('Fuse: "' + Name + '"',

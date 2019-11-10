@@ -153,7 +153,7 @@ begin
     Result := TCC_CurveClass.Find(CurveName);
 
     if Result = NIL then
-        DoSimpleMsg('TCC Curve object: "' + CurveName + '" not found.', 388);
+        DoSimpleMsg(DSS, 'TCC Curve object: "' + CurveName + '" not found.', 388);
 
 end;
 
@@ -309,7 +309,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 390);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 390);
                 1:
                     MonitoredElementName := lowercase(param);
                 2:
@@ -429,7 +429,7 @@ begin
 
         end
     else
-        DoSimpleMsg('Error in Recloser MakeLike: "' + RecloserName + '" Not Found.', 391);
+        DoSimpleMsg(DSS, 'Error in Recloser MakeLike: "' + RecloserName + '" Not Found.', 391);
 
 end;
 

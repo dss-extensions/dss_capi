@@ -118,17 +118,17 @@ end;
 
 procedure TMeterClass.ResetAll;
 begin
-    DoSimpleMsg('Programming Error: Base MeterClass.ResetAll Reached for Class: ' + Name, 760);
+    DoSimpleMsg(DSS, 'Programming Error: Base MeterClass.ResetAll Reached for Class: ' + Name, 760);
 end;
 
 procedure TMeterClass.SampleAll;
 begin
-    DoSimpleMsg('Programming Error: Base MeterClass.SampleAll Reached for Class: ' + Name, 761);
+    DoSimpleMsg(DSS, 'Programming Error: Base MeterClass.SampleAll Reached for Class: ' + Name, 761);
 end;
 
 procedure TMeterClass.SaveAll;
 begin
-    DoSimpleMsg('Programming Error: Base MeterClass.SaveAll Reached for Class: ' + Name, 762);
+    DoSimpleMsg(DSS, 'Programming Error: Base MeterClass.SaveAll Reached for Class: ' + Name, 762);
 end;
 
 end.

@@ -385,7 +385,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 661);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 661);
                 1:
                 begin
                     ElementName := ConstructElemName(lowercase(param));   // subtitute @var values if any
@@ -544,7 +544,7 @@ begin
 
         end
     else
-        DoSimpleMsg('Error in Monitor MakeLike: "' + MonitorName + '" Not Found.', 662);
+        DoSimpleMsg(DSS, 'Error in Monitor MakeLike: "' + MonitorName + '" Not Found.', 662);
 
 end;
 
@@ -687,7 +687,7 @@ begin
                 if (MeteredElement.DSSObjType and CLASSMASK) <> XFMR_ELEMENT then
                     if (MeteredElement.DSSObjType and CLASSMASK) <> AUTOTRANS_ELEMENT then
                     begin
-                        DoSimpleMsg(MeteredElement.Name + ' is not a transformer!', 663);
+                        DoSimpleMsg(DSS, MeteredElement.Name + ' is not a transformer!', 663);
                         Exit;
                     end;
             end;
@@ -695,7 +695,7 @@ begin
             begin                                                // Must be PCElement
                 if (MeteredElement.DSSObjType and BASECLASSMASK) <> PC_ELEMENT then
                 begin
-                    DoSimpleMsg(MeteredElement.Name + ' must be a power conversion element (Load or Generator)!', 664);
+                    DoSimpleMsg(DSS, MeteredElement.Name + ' must be a power conversion element (Load or Generator)!', 664);
                     Exit;
                 end;
             end;
@@ -703,7 +703,7 @@ begin
             begin                                                // Checking Caps Tap
                 if (MeteredElement.DSSObjType and CLASSMASK) <> CAP_ELEMENT then
                 begin
-                    DoSimpleMsg(MeteredElement.Name + ' is not a capacitor!', 2016001);
+                    DoSimpleMsg(DSS, MeteredElement.Name + ' is not a capacitor!', 2016001);
                     Exit;
                 end;
             end;
@@ -712,7 +712,7 @@ begin
             begin                                                // Checking if the element is a storage device
                 if (MeteredElement.DSSObjType and CLASSMASK) <> STORAGE_ELEMENT then
                 begin
-                    DoSimpleMsg(MeteredElement.Name + ' is not a storage device!', 2016002);
+                    DoSimpleMsg(DSS, MeteredElement.Name + ' is not a storage device!', 2016002);
                     Exit;
                 end;
             end;
@@ -1338,7 +1338,7 @@ begin
                 end;
             except
                 On E: Exception do
-                    DoSimpleMsg(E.Message + CRLF + 'NodeRef is invalid. Try solving a snapshot or direct before solving in a mode that takes a monitor sample.', 672);
+                    DoSimpleMsg(DSS, E.Message + CRLF + 'NodeRef is invalid. Try solving a snapshot or direct before solving in a mode that takes a monitor sample.', 672);
             end;
         end;
 
@@ -1370,7 +1370,7 @@ begin
                 end;
             except
                 On E: Exception do
-                    DoSimpleMsg(E.Message + CRLF + 'NodeRef is invalid. Try solving a snapshot or direct before solving in a mode that takes a monitor sample.', 672);
+                    DoSimpleMsg(DSS, E.Message + CRLF + 'NodeRef is invalid. Try solving a snapshot or direct before solving in a mode that takes a monitor sample.', 672);
             end;
         end;
 
@@ -1812,7 +1812,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error opening CSVFile "' + CSVName + '" for writing' + CRLF + E.Message, 672);
+            DoSimpleMsg(DSS, 'Error opening CSVFile "' + CSVName + '" for writing' + CRLF + E.Message, 672);
             Exit
         end;
     end;
@@ -1857,7 +1857,7 @@ begin
 
             On E: Exception do
             begin
-                DoSimpleMsg('Error Writing CSVFile "' + CSVName + '" ' + CRLF + E.Message, 673);
+                DoSimpleMsg(DSS, 'Error Writing CSVFile "' + CSVName + '" ' + CRLF + E.Message, 673);
             end;
 
         end;
@@ -1968,10 +1968,10 @@ var
     time: Double;
     hr, s: Single;
     TrialFileName, FileNumber: String;
-
+    TOPTransferFile: TOutFile32;
 begin
      // Create a unique file name
-    TrialFileName := GetOutputDirectory + 'TOP_Mon_' + ObjName;
+    TrialFileName := DSS.OutputDirectory + 'TOP_Mon_' + ObjName;
     FileNumber := '';
     i := 0;
     while FileExists(TrialFileName + FileNumber + '.STO') do
@@ -1979,17 +1979,22 @@ begin
         Inc(i);
         FileNumber := IntToStr(i);
     end;
+    
+    TOPTransferFile := TOutFile32.Create;
+    TOPTransferFile.Fname := 'DSSTransfer.STO';
+    
     TOPTransferFile.FileName := TrialFileName + Filenumber + '.STO';
     try
         TOPTransferFile.Open;
     except
         ON E: Exception do
         begin
-            DoSimpleMsg('TOP Transfer File Error: ' + E.message, 674);
+            DoSimpleMsg(DSS, 'TOP Transfer File Error: ' + E.message, 674);
             try
                 TopTransferFile.Close;
-            except
-              {OK if Error}
+                {OK if Error}
+            finally
+                TOPTransferFile.Free;
             end;
             Exit;
         end;
@@ -2004,7 +2009,7 @@ begin
      {Make a List of fixed interval data where the interval is greater than 1 minute}
     if CompareText(ObjName, 'ALL') = 0 then
     begin
-        DoSimpleMsg('ALL option not yet implemented.', 675);
+        DoSimpleMsg(DSS, 'ALL option not yet implemented.', 675);
      {
        Obj := ElementList.First;
        While Obj <>  Nil Do Begin
@@ -2019,7 +2024,7 @@ begin
         if Obj <> NIL then
             ObjList.Add(Obj)
         else
-            DoSimpleMsg('Monitor.' + ObjName + ' not found.', 676);
+            DoSimpleMsg(DSS, 'Monitor.' + ObjName + ' not found.', 676);
     end;
 
      {If none found, exit}
@@ -2112,7 +2117,7 @@ begin
            {Go Back to where we were}
             MonitorStream.Seek(PositionSave, soBeginning);
 
-            TopTransferFile.WriteHeader(Time, MaxTime, Time, RecordSize, 0, 16, 'DSS (TM), EPRI (R)');
+            TopTransferFile.WriteHeader(Time, MaxTime, Time, RecordSize, 0, 16, 'DSS (TM), EPRI (R)', DSS.DefaultBaseFreq);
             TopTransferFile.WriteNames(NameList, CNames);
 
            {Now Process rest of monitor file}
@@ -2154,12 +2159,12 @@ begin
     ObjList.Free;
     NameList.Free;
     CNames.Free;
-
+    TOPTransferFile.Free;
 end;
 
 function TMonitorObj.Get_FileName: String;
 begin
-    Result := GetOutputDirectory + DSS.CircuitName_ + 'Mon_' + Name + '.csv'
+    Result := DSS.OutputDirectory + DSS.CircuitName_ + 'Mon_' + Name + '.csv'
 end;
 
 initialization

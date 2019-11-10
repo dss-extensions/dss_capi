@@ -397,7 +397,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 120);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 120);
                 1:
                     ElementName := 'Transformer.' + lowercase(param);  // Initialize to Transformer
                 2:
@@ -495,7 +495,7 @@ begin
                 17:
                     if DebugTrace then
                     begin
-                        AssignFile(TraceFile, GetOutputDirectory + 'REG_' + Name + '.CSV');
+                        AssignFile(TraceFile, DSS.OutputDirectory + 'REG_' + Name + '.CSV');
                         ReWrite(TraceFile);
                         Writeln(TraceFile, 'Hour, Sec, ControlIteration, Iterations, LoadMultiplier, Present Tap, Pending Change, Actual Change, Increment, Min Tap, Max Tap');
                         CloseFile(Tracefile);
@@ -571,7 +571,7 @@ begin
         end
 
     else
-        DoSimpleMsg('Error in RegControl MakeLike: "' + RegControlName + '" Not Found.', 121);
+        DoSimpleMsg(DSS, 'Error in RegControl MakeLike: "' + RegControlName + '" Not Found.', 121);
 
 end;
 

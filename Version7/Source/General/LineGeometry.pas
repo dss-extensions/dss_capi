@@ -311,7 +311,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 10101);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 10101);
                 1:
                     NConds := Parser.IntValue;  // Use property value to force reallocations
                 2:
@@ -356,10 +356,10 @@ begin
                             end
                         end
                         else
-                            DoSimpleMsg('LineSpacing object ' + FSpacingType + ' has the wrong number of wires.', 10103);
+                            DoSimpleMsg(DSS, 'LineSpacing object ' + FSpacingType + ' has the wrong number of wires.', 10103);
                     end
                     else
-                        DoSimpleMsg('LineSpacing object ' + FSpacingType + ' has not been defined.', 10103);
+                        DoSimpleMsg(DSS, 'LineSpacing object ' + FSpacingType + ' has not been defined.', 10103);
                 end;
                 13:
                 begin
@@ -422,12 +422,12 @@ begin
                         end
                         else
                         if ParamPointer = 15 then
-                            DoSimpleMsg('CNData Object "' + FCondName[i] + '" not defined. Must be previously defined.', 10103)
+                            DoSimpleMsg(DSS, 'CNData Object "' + FCondName[i] + '" not defined. Must be previously defined.', 10103)
                         else
                         if ParamPointer = 16 then
-                            DoSimpleMsg('TSData Object "' + FCondName[i] + '" not defined. Must be previously defined.', 10103)
+                            DoSimpleMsg(DSS, 'TSData Object "' + FCondName[i] + '" not defined. Must be previously defined.', 10103)
                         else
-                            DoSimpleMsg('WireData Object "' + FCondName[i] + '" not defined. Must be previously defined.', 10103);
+                            DoSimpleMsg(DSS, 'WireData Object "' + FCondName[i] + '" not defined. Must be previously defined.', 10103);
                     end;
                     FActiveCond := istop;
                 end;
@@ -455,7 +455,7 @@ begin
                         FNPhases := FNConds;
                 3:
                     if (ActiveCond < 1) or (ActiveCond > FNconds) then
-                        DoSimpleMsg('Illegal cond= specification in Line Geometry:' + CRLF + Parser.cmdstring, 10102);
+                        DoSimpleMsg(DSS, 'Illegal cond= specification in Line Geometry:' + CRLF + Parser.cmdstring, 10102);
                 4, 13, 14:
                 begin
                     if ParamPointer = 4 then
@@ -479,12 +479,12 @@ begin
                     end
                     else
                     if ParamPointer = 4 then
-                        DoSimpleMsg('WireData Object "' + param + '" not defined. Must be previously defined.', 10103)
+                        DoSimpleMsg(DSS, 'WireData Object "' + param + '" not defined. Must be previously defined.', 10103)
                     else
                     if ParamPointer = 13 then
-                        DoSimpleMsg('CNData Object "' + param + '" not defined. Must be previously defined.', 10103)
+                        DoSimpleMsg(DSS, 'CNData Object "' + param + '" not defined. Must be previously defined.', 10103)
                     else
-                        DoSimpleMsg('TSData Object "' + param + '" not defined. Must be previously defined.', 10103);
+                        DoSimpleMsg(DSS, 'TSData Object "' + param + '" not defined. Must be previously defined.', 10103);
                 end;
             end;
 
@@ -539,7 +539,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in LineGeometry MakeLike: "' + LineName + '" Not Found.', 102);
+        DoSimpleMsg(DSS, 'Error in LineGeometry MakeLike: "' + LineName + '" Not Found.', 102);
 
 
 end;
@@ -548,7 +548,7 @@ end;
 function TLineGeometry.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TLineGeometry.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TLineGeometry.Init', -1);
     Result := 0;
 end;
 
@@ -579,7 +579,7 @@ begin
         LineGeometryObj := ElementList.Next;
     end;
 
-    DoSimpleMsg('LineGeometry: "' + Value + '" not Found.', 103);
+    DoSimpleMsg(DSS, 'LineGeometry: "' + Value + '" not Found.', 103);
 
 end;
 
@@ -813,7 +813,7 @@ begin
     if DataChanged then
         UpdateLineGeometryData(f);
     if not DSS.SolutionAbort then
-        Result := FLineData.ZMatrix[F, Lngth, Units];
+        Result := FLineData.ZMatrix[F, Lngth, Units, DSS.DefaultEarthModel];
 end;
 
 procedure TLineGeometryObj.InitPropertyValues(ArrayOffset: Integer);
@@ -960,7 +960,7 @@ var
 begin
     if Value < 1 then
     begin
-        DoSimpleMsg('Invalid number of conductors sent via DSS command. Please enter a value within range.', 185);
+        DoSimpleMsg(DSS, 'Invalid number of conductors sent via DSS command. Please enter a value within range.', 185);
         Exit;
     end;
 
@@ -1009,7 +1009,7 @@ procedure TLineGeometryObj.set_Nphases(const Value: Integer);
 begin
     if Value < 1 then
     begin
-        DoSimpleMsg('Invalid number of phases sent via DSS command. Please enter a value within range.', 186);
+        DoSimpleMsg(DSS, 'Invalid number of phases sent via DSS command. Please enter a value within range.', 186);
         Exit;
     end;
 
@@ -1081,7 +1081,7 @@ begin
     end
     else
     begin
-        FLineData.Calc(f);
+        FLineData.Calc(f, DSS.DefaultEarthModel);
         if FReduce then
             FLineData.Reduce; // reduce out neutrals
     end;

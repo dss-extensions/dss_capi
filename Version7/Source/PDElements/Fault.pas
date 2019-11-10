@@ -300,7 +300,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 350);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 350);
                 1:
                     FltSetbus1(param);
                 2:
@@ -426,7 +426,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Fault MakeLike: "' + FaultName + '" Not Found.', 351);
+        DoSimpleMsg(DSS, 'Error in Fault MakeLike: "' + FaultName + '" Not Found.', 351);
 
 
 end;
@@ -435,7 +435,7 @@ end;
 function TFault.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TFault.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TFault.Init', -1);
     Result := 0;
 end;
 

@@ -410,7 +410,7 @@ Begin
          inc (recalc);
 
          CASE ParamPointer OF
-            0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 661);
+            0: DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 661);
             1: Begin
                  ElementName := ConstructElemName(lowercase(param));   // subtitute @var values if any
                  PropertyValue[1] := ElementName;
@@ -616,7 +616,7 @@ Begin
        BaseFrequency:= OtherMonitor.BaseFrequency;
 
    End
-   ELSE  DoSimpleMsg('Error in Monitor MakeLike: "' + MonitorName + '" Not Found.', 662);
+   ELSE  DoSimpleMsg(DSS, 'Error in Monitor MakeLike: "' + MonitorName + '" Not Found.', 662);
 
 End;
 
@@ -789,19 +789,19 @@ Begin
              Case (Mode and MODEMASK) of
                 2: Begin                                                // Must be transformer
                           If (MeteredElement.DSSObjType And CLASSMASK) <> XFMR_ELEMENT Then Begin
-                            DoSimpleMsg(MeteredElement.Name + ' is not a transformer!', 663);
+                            DoSimpleMsg(DSS, MeteredElement.Name + ' is not a transformer!', 663);
                             Exit;
                           End;
                    End;
                 3: Begin                                                // Must be PCElement
                           If (MeteredElement.DSSObjType And BASECLASSMASK) <> PC_ELEMENT Then Begin
-                            DoSimpleMsg(MeteredElement.Name + ' must be a power conversion element (Load or Generator)!', 664);
+                            DoSimpleMsg(DSS, MeteredElement.Name + ' must be a power conversion element (Load or Generator)!', 664);
                             Exit;
                           End;
                    End;
                 6: begin                                                // Checking Caps Tap
                           If (MeteredElement.DSSObjType And CLASSMASK) <> CAP_ELEMENT Then Begin
-                            DoSimpleMsg(MeteredElement.Name + ' is not a capacitor!', 2016001);
+                            DoSimpleMsg(DSS, MeteredElement.Name + ' is not a capacitor!', 2016001);
                             Exit;
                           End;
                    end;
@@ -1609,7 +1609,7 @@ Begin
                   VoltageBuffer^[i] := ActiveCircuit.Solution.NodeV^[NodeRef^[i]];
               End;
             EXCEPT
-               On E:Exception Do DoSimpleMsg(E.Message + CRLF + 'NodeRef is invalid. Try solving a snapshot or direct before solving in a mode that takes a monitor sample.', 672);
+               On E:Exception Do DoSimpleMsg(DSS, E.Message + CRLF + 'NodeRef is invalid. Try solving a snapshot or direct before solving in a mode that takes a monitor sample.', 672);
             END;
        End;
 
@@ -1633,7 +1633,7 @@ Begin
                   FlickerBuffer^[i] := ActiveCircuit.Solution.NodeV^[NodeRef^[i]];
               End;
             EXCEPT
-               On E:Exception Do DoSimpleMsg(E.Message + CRLF + 'NodeRef is invalid. Try solving a snapshot or direct before solving in a mode that takes a monitor sample.', 672);
+               On E:Exception Do DoSimpleMsg(DSS, E.Message + CRLF + 'NodeRef is invalid. Try solving a snapshot or direct before solving in a mode that takes a monitor sample.', 672);
             END;
         End;
 
@@ -3151,7 +3151,7 @@ end;
 {}
 function TFMonitorObj.Get_FileName: String;
 begin
-  Result := GetOutputDirectory +  CircuitName_ + 'Mon_' + Name + '.csv'
+  Result := DSS.OutputDirectory +  CircuitName_ + 'Mon_' + Name + '.csv'
 end;
 
 function TFMonitorObj.Calc_fm_ul_0(NodeNumofDG, phase_num:Integer; dbNodeRef: integer; Bii,beta,Volt_Trhd: double): double;

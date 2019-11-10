@@ -24,7 +24,7 @@ TYPE
     public
         DSS: TDSS;
     
-        constructor Create(dss: TDSS);
+        constructor Create(dssContext: TDSS);
         destructor Destroy; override;
         PROCEDURE New(Value:Pointer);
    End;
@@ -74,7 +74,7 @@ TYPE
 
         Saved: Boolean;
 
-        constructor Create(dss: TDSS);
+        constructor Create(dssContext: TDSS);
         destructor Destroy; override;
 
         {Helper routine for building Property strings}
@@ -221,7 +221,9 @@ TYPE
 
         ActiveDSSClass  :TDSSClass;
         AuxParser       :TParser;  // Auxiliary parser for use by anybody for reparsing values
-    
+        Parser: TParser;
+        ParserVars: TParserVar;
+
         LastClassReferenced:Integer;  // index of class of last thing edited
         NumCircuits     :Integer;
         MaxAllocationIterations :Integer;
@@ -293,8 +295,11 @@ constructor TDSS.Create(_IsPrime: Boolean);
 begin
     inherited Create;
     
+    ParserVars := TParserVar.Create(100);  // start with space for 100 variables
+    
+    
     IsPrime := _IsPrime;
-
+    Parser        := TParser.Create;
     AuxParser        := TParser.Create;
     
     ADiakoptics      :=    False;  // Disabled by default
@@ -344,18 +349,20 @@ begin
     EventStrings.Free;
     SavedFileList.Free;
     ErrorStrings.Free;
-
+    ParserVars.Free;
+    Parser.Free;
+    
     inherited Destroy;
 end;
 
 {--------------------------------------------------------------}
 { DSSClasses Implementation
 {--------------------------------------------------------------}
-Constructor TDSSClasses.Create(dss: TDSS);
+Constructor TDSSClasses.Create(dssContext: TDSS);
 Begin
      Inherited Create;
      
-     DSS := dss;
+     DSS := dssContext;
 End;
 
 {--------------------------------------------------------------}
@@ -376,11 +383,11 @@ End;
 {--------------------------------------------------------------}
 {  DSSClass Implementation
 {--------------------------------------------------------------}
-Constructor TDSSClass.Create(dss: TDSS);
+Constructor TDSSClass.Create(dssContext: TDSS);
 
 BEGIN
     Inherited Create;
-    DSS := dss;
+    DSS := dssContext;
     ElementList := TPointerList.Create(20);  // Init size and increment
     PropertyName := nil;
     PropertyHelp := Nil;
@@ -443,14 +450,14 @@ END;
 Function TDSSClass.Edit:Integer;
 BEGIN
     Result := 0;
-    DoSimpleMsg('virtual function TDSSClass.Edit called.  Should be overriden.', 781);
+    DoSimpleMsg(DSS, 'virtual function TDSSClass.Edit called.  Should be overriden.', 781);
 END;
 
 
 Function TDSSClass.Init(Handle:Integer):Integer;
 BEGIN
     Result := 0;
-    DoSimpleMsg('virtual function TDSSClass.Init called.  Should be overriden.', 782);
+    DoSimpleMsg(DSS, 'virtual function TDSSClass.Init called.  Should be overriden.', 782);
 END;
 
 Function TDSSClass.AddObjectToList(Obj:Pointer):Integer;
@@ -577,7 +584,7 @@ End;
 Function  TDSSClass.MakeLike(Const ObjName:String):Integer;
 Begin
     Result := 0;
-    DoSimpleMsg('virtual function TDSSClass.MakeLike called.  Should be overriden.', 784);
+    DoSimpleMsg(DSS, 'virtual function TDSSClass.MakeLike called.  Should be overriden.', 784);
 End;
 
 function TDSSClass.Get_ElementCount: Integer;

@@ -120,7 +120,7 @@ end;
 procedure TMeterElement.TakeSample;
 begin
   // virtual function - should be overridden
-    DoSimpleMsg('Programming Error:  Reached base Meterelement class for TakeSample.' + CRLF + 'Device: ' + Name, 723);
+    DoSimpleMsg(DSS, 'Programming Error:  Reached base Meterelement class for TakeSample.' + CRLF + 'Device: ' + Name, 723);
 end;
 
 end.

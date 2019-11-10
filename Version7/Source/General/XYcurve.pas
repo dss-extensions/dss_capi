@@ -281,7 +281,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 610);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 610);
                 1:
                     NumPoints := Parser.Intvalue;
                 2:
@@ -396,7 +396,7 @@ begin
                 PropertyValue[i] := OtherXYCurve.PropertyValue[i];
         end
     else
-        DoSimpleMsg('Error in XYCurve MakeLike: "' + CurveName + '" Not Found.', 611);
+        DoSimpleMsg(DSS, 'Error in XYCurve MakeLike: "' + CurveName + '" Not Found.', 611);
 
 
 end;
@@ -405,7 +405,7 @@ end;
 function TXYcurve.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TXYcurve.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TXYcurve.Init', -1);
     Result := 0;
 end;
 
@@ -443,7 +443,7 @@ begin
         XYCurveObj := ElementList.Next;
     end;
 
-    DoSimpleMsg('XYCurve: "' + Value + '" not Found.', 612);
+    DoSimpleMsg(DSS, 'XYCurve: "' + Value + '" not Found.', 612);
 
 end;
 
@@ -460,7 +460,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 613);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 613);
         CloseFile(F);
         Exit;
     end;
@@ -494,7 +494,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error Processing XYCurve CSV File: "' + FileName + '. ' + E.Message, 614);
+            DoSimpleMsg(DSS, 'Error Processing XYCurve CSV File: "' + FileName + '. ' + E.Message, 614);
             CloseFile(F);
             Exit;
         end;
@@ -515,7 +515,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 615);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 615);
         CloseFile(F);
         Exit;
     end;
@@ -539,7 +539,7 @@ begin
                 NumPoints := i;
         end;
     except
-        DoSimpleMsg('Error Processing binary (single) XYCurve File: "' + FileName, 616);
+        DoSimpleMsg(DSS, 'Error Processing binary (single) XYCurve File: "' + FileName, 616);
         CloseFile(F);
         Exit;
     end;
@@ -558,7 +558,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 617);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 617);
         CloseFile(F);
         Exit;
     end;
@@ -580,7 +580,7 @@ begin
                 NumPoints := i;
         end;
     except
-        DoSimpleMsg('Error Processing binary (double) XYCurve File: "' + FileName, 618);
+        DoSimpleMsg(DSS, 'Error Processing binary (double) XYCurve File: "' + FileName, 618);
         CloseFile(F);
         Exit;
     end;
@@ -1022,7 +1022,7 @@ Begin
     End;
 
    End
-   ELSE DoSimpleMsg('Tshape.'+Name + ' Temperatures not defined.', 622);
+   ELSE DoSimpleMsg(DSS, 'Tshape.'+Name + ' Temperatures not defined.', 622);
 End;
 
 PROCEDURE TXYcurveObj.SaveToSngFile;
@@ -1050,7 +1050,7 @@ Begin
 
 
    End
-   ELSE DoSimpleMsg('Tshape.'+Name + ' Temperatures not defined.', 623);
+   ELSE DoSimpleMsg(DSS, 'Tshape.'+Name + ' Temperatures not defined.', 623);
 
 
 End;

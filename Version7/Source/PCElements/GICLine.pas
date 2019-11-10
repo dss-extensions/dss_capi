@@ -286,7 +286,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "VSource.' + Name + '"', 320);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "VSource.' + Name + '"', 320);
                 1:
                     GICLineSetBus1(param);   // special handling of Bus 1
                 2:
@@ -315,14 +315,14 @@ begin
                   'Z': ScanType :=  0;
                   'N': ScanType := -1;
                 ELSE
-                   DoSimpleMsg('Unknown Scan Type for "' + Class_Name +'.'+ Name + '": '+Param, 321);
+                   DoSimpleMsg(DSS, 'Unknown Scan Type for "' + Class_Name +'.'+ Name + '": '+Param, 321);
                 END;
            11:  Case Uppercase(Param)[1] of
                   'P': Sequencetype :=  1;
                   'Z': Sequencetype :=  0;
                   'N': Sequencetype := -1;
                 ELSE
-                   DoSimpleMsg('Unknown Sequence Type for "' + Class_Name +'.'+ Name + '": '+Param, 321);
+                   DoSimpleMsg(DSS, 'Unknown Sequence Type for "' + Class_Name +'.'+ Name + '": '+Param, 321);
                 END;
     *)
                 10:
@@ -409,7 +409,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in GICLine MakeLike: "' + OtherLine + '" Not Found.', 322);
+        DoSimpleMsg(DSS, 'Error in GICLine MakeLike: "' + OtherLine + '" Not Found.', 322);
 
 end;
 
@@ -417,7 +417,7 @@ end;
 function TGICLine.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TGICLine.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TGICLine.Init', -1);
     Result := 0;
 end;
 
@@ -526,7 +526,7 @@ begin
     SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if (SpectrumObj = NIL) and (Length(Spectrum) > 0) then
     begin
-        DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device GICLine.' + Name + ' Not Found.', 324);
+        DoSimpleMsg(DSS, 'Spectrum Object "' + Spectrum + '" for Device GICLine.' + Name + ' Not Found.', 324);
     end;
 
     Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
@@ -675,7 +675,7 @@ begin
             end;
 
     except
-        DoSimpleMsg('Error computing Voltages for GICLine.' + Name + '. Check specification. Aborting.', 326);
+        DoSimpleMsg(DSS, 'Error computing Voltages for GICLine.' + Name + '. Check specification. Aborting.', 326);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;

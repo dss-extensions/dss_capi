@@ -247,7 +247,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 330);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 330);
                 1:
                     IsourceSetBus1(param);
                 2:
@@ -278,7 +278,7 @@ begin
                         'N':
                             ScanType := -1;
                     else
-                        DoSimpleMsg('Unknown Scan Type for "' + Class_Name + '.' + Name + '": ' + Param, 331);
+                        DoSimpleMsg(DSS, 'Unknown Scan Type for "' + Class_Name + '.' + Name + '": ' + Param, 331);
                     end;
                 7:
                     case Uppercase(Param)[1] of
@@ -289,7 +289,7 @@ begin
                         'N':
                             SequenceType := -1;
                     else
-                        DoSimpleMsg('Unknown Sequence Type for "' + Class_Name + '.' + Name + '": ' + Param, 331);
+                        DoSimpleMsg(DSS, 'Unknown Sequence Type for "' + Class_Name + '.' + Name + '": ' + Param, 331);
                     end;
                 8:
                     YearlyShape := Param;
@@ -374,7 +374,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Isource MakeLike: "' + OtherSource + '" Not Found.', 332);
+        DoSimpleMsg(DSS, 'Error in Isource MakeLike: "' + OtherSource + '" Not Found.', 332);
 
 end;
 
@@ -382,7 +382,7 @@ end;
 function TIsource.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TIsource.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TIsource.Init', -1);
     Result := 0;
 end;
 
@@ -464,7 +464,7 @@ begin
 
     if SpectrumObj = NIL then
     begin
-        DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device Isource.' + Name + ' Not Found.', 333);
+        DoSimpleMsg(DSS, 'Spectrum Object "' + Spectrum + '" for Device Isource.' + Name + ' Not Found.', 333);
     end;
 
     Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
@@ -551,7 +551,7 @@ begin
             end;
 
     except
-        DoSimpleMsg('Error computing current for Isource.' + Name + '. Check specification. Aborting.', 334);
+        DoSimpleMsg(DSS, 'Error computing current for Isource.' + Name + '. Check specification. Aborting.', 334);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;

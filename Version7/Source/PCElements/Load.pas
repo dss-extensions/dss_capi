@@ -638,7 +638,7 @@ begin
 
             if (ParamPointer <= NumPropsThisClass) then case TLoadProp(ParamPointer) of
                 TLoadProp.INVALID:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 580);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 580);
                 TLoadProp.phases:
                     Nphases := Parser.Intvalue; // num phases
                 TLoadProp.bus1:
@@ -884,7 +884,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Load MakeLike: "' + OtherLoadName + '" Not Found.', 581);
+        DoSimpleMsg(DSS, 'Error in Load MakeLike: "' + OtherLoadName + '" Not Found.', 581);
 
 end;
 
@@ -911,7 +911,7 @@ begin
         p.Randomize(0);
     end;
 
-    DoSimpleMsg('Need to finish implementation TLoad.Init', -1);
+    DoSimpleMsg(DSS, 'Need to finish implementation TLoad.Init', -1);
     Result := 0;
 end;
 
@@ -1328,23 +1328,23 @@ begin
 
     if YearlyShapeObj = NIL then
         if Length(YearlyShape) > 0 then
-            DoSimpleMsg('WARNING! Yearly load shape: "' + YearlyShape + '" Not Found.', 583);
+            DoSimpleMsg(DSS, 'WARNING! Yearly load shape: "' + YearlyShape + '" Not Found.', 583);
     if DailyShapeObj = NIL then
         if Length(DailyShape) > 0 then
-            DoSimpleMsg('WARNING! Daily load shape: "' + DailyShape + '" Not Found.', 584);
+            DoSimpleMsg(DSS, 'WARNING! Daily load shape: "' + DailyShape + '" Not Found.', 584);
     if DutyShapeObj = NIL then
         if Length(DutyShape) > 0 then
-            DoSimpleMsg('WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 585);
+            DoSimpleMsg(DSS, 'WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 585);
     if GrowthShapeObj = NIL then
         if Length(GrowthShape) > 0 then
-            DoSimpleMsg('WARNING! Yearly Growth shape: "' + GrowthShape + '" Not Found.', 586);
+            DoSimpleMsg(DSS, 'WARNING! Yearly Growth shape: "' + GrowthShape + '" Not Found.', 586);
     if CVRShapeObj = NIL then
         if Length(CVRShape) > 0 then
-            DoSimpleMsg('WARNING! CVR Shape shape: "' + CVRShape + '" Not Found.', 586);
+            DoSimpleMsg(DSS, 'WARNING! CVR Shape shape: "' + CVRShape + '" Not Found.', 586);
 
     SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
-        DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 587);
+        DoSimpleMsg(DSS, 'ERROR! Spectrum "' + Spectrum + '" Not Found.', 587);
 
     if Rneut < 0.0 then  // flag FOR open neutral
         YNeut := Cmplx(0.0, 0.0)
@@ -1888,7 +1888,7 @@ begin
 
         On E: Exception do
         begin
-            DoSimpleMsg(Format('Error in Load.%s: %s ', [Name, E.Message]), 5871);
+            DoSimpleMsg(DSS, Format('Error in Load.%s: %s ', [Name, E.Message]), 5871);
             raise;
         end;
 
@@ -2667,7 +2667,7 @@ begin
     else 
         begin
             Result := 'ERROR';
-            DoSimpleMsg('Property number "' + IntToStr(Index) + '" is not handled for Load', 541);
+            DoSimpleMsg(DSS, 'Property number "' + IntToStr(Index) + '" is not handled for Load', 541);
         end
     end;
 end;

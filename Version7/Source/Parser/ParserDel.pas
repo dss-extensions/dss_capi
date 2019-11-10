@@ -117,18 +117,15 @@ type
         property AutoIncrement: Boolean READ FAutoIncrement WRITE FAutoIncrement;
     end;
 
-var
-    Parser: TParser;
-    ParserVars: TParserVar;
-
-
 implementation
 
-{$IFNDEF FPC}
 uses
-    Dialogs;
-
+    DSSClass,
+    DSSHelper
+{$IFNDEF FPC}
+    , Dialogs
 {$ENDIF}
+    ;
 
 const
     Commentchar = '!';
@@ -280,9 +277,9 @@ begin
             else
                 VariableName := TokenBuffer;
 
-            if ParserVars.Lookup(VariableName) > 0 then
+            if DSSPrime.ParserVars.Lookup(VariableName) > 0 then
             begin
-                VariableValue := ParserVars.Value; // Retrieve the value of the variable
+                VariableValue := DSSPrime.ParserVars.Value; // Retrieve the value of the variable
                 if VariableValue[1] = '{' then
                 begin
                     ReplaceToDotPos(Copy(VariableValue, 2, length(VariableValue) - 2));    // get rid of closed brace added by parservar
@@ -1039,14 +1036,5 @@ begin
         VarValues^[ActiveVariable] := Value;
 
 end;
-
-initialization
-
-    // Variables
-    ParserVars := TParserVar.Create(100);  // start with space for 100 variables
-
-finalization
-
-    ParserVars.Free;
 
 end.

@@ -726,9 +726,9 @@ begin
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         if AllocateVI = 0 then
-            Ymatrix.BuildYMatrix(BuildOption, FALSE)
+            Ymatrix.BuildYMatrix(DSSPrime, BuildOption, FALSE)
         else
-            Ymatrix.BuildYMatrix(BuildOption, TRUE)
+            Ymatrix.BuildYMatrix(DSSPrime, BuildOption, TRUE)
     end;
 end;
 //------------------------------------------------------------------------------

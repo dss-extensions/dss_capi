@@ -185,7 +185,7 @@ begin
             case ParamPointer of
            {internal SwtControl Property commands}
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 382);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 382);
                 1:
                     ElementName := lowercase(Param);
                 2:
@@ -290,7 +290,7 @@ begin
 
         end
     else
-        DoSimpleMsg('Error in SwtControl MakeLike: "' + SwtControlName + '" Not Found.', 383);
+        DoSimpleMsg(DSS, 'Error in SwtControl MakeLike: "' + SwtControlName + '" Not Found.', 383);
 
 end;
 

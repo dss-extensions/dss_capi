@@ -226,7 +226,7 @@ begin
                 PropertyValue[ParamPointer] := Param;
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 350);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 350);
                 1:
                     if Fnphases <> Parser.IntValue then
                     begin
@@ -347,12 +347,12 @@ begin
             Result := 1;
         end // with
     else
-        DoSimpleMsg('Error in VSConverter MakeLike: "' + VSCName + '" Not Found.', 351);
+        DoSimpleMsg(DSS, 'Error in VSConverter MakeLike: "' + VSCName + '" Not Found.', 351);
 end;
 
 function TVSConverter.Init(Handle: Integer): Integer;
 begin
-    DoSimpleMsg('Need to implement TVSConverter.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TVSConverter.Init', -1);
     Result := 0;
 end;
 

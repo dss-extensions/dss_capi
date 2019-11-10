@@ -80,7 +80,7 @@ procedure TConductor.CalcIsqt(CurrentMag: Double);  // Computes whether conducto
 begin
 
 
-    DoSimpleMsg('Need to implement Tconductor.CalcIsqrt', 770);
+    DoSimpleMsg(DSS, 'Need to implement Tconductor.CalcIsqrt', 770);
 
 
 end;
@@ -89,7 +89,7 @@ procedure TConductor.ResetIsqt;  // restore the conductor and reset the i2t calc
 begin
 
 
-    DoSimpleMsg('Need to implement Tconductor.ResetIsqt', 771);
+    DoSimpleMsg(DSS, 'Need to implement Tconductor.ResetIsqt', 771);
 
 
 end;

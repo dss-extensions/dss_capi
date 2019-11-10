@@ -128,19 +128,19 @@ end;
 procedure ReduceCkt_DoDefault(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    DoReduceDefault(DSSPrime.ActiveEnergyMeterObj.BranchList);
+    DoReduceDefault(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_DoShortLines(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    DoReduceShortLines(DSSPrime.ActiveEnergyMeterObj.BranchList);
+    DoReduceShortLines(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_Do1phLaterals(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    DoRemoveAll_1ph_Laterals(DSSPrime.ActiveEnergyMeterObj.BranchList);
+    DoRemoveAll_1ph_Laterals(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_DoBranchRemove(); CDECL;
@@ -151,6 +151,7 @@ begin
     
     // element was found (0-based array)
     DoRemoveBranches(
+        DSSPrime, 
         DSSPrime.ActiveEnergyMeterObj.BranchList, 
         DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement, 
         DSSPrime.ActiveCircuit.ReduceLateralsKeepLoad, 
@@ -161,25 +162,25 @@ end;
 procedure ReduceCkt_DoDangling(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    DoReduceDangling(DSSPrime.ActiveEnergyMeterObj.BranchList);
+    DoReduceDangling(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_DoLoopBreak(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    DoBreakLoops(DSSPrime.ActiveEnergyMeterObj.BranchList);
+    DoBreakLoops(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_DoParallelLines(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    DoMergeParallelLines(DSSPrime.ActiveEnergyMeterObj.BranchList);
+    DoMergeParallelLines(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_DoSwitches(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    DoRemoveAll_1ph_Laterals(DSSPrime.ActiveEnergyMeterObj.BranchList);
+    DoRemoveAll_1ph_Laterals(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
 

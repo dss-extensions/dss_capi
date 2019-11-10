@@ -361,7 +361,7 @@ begin
 // Check for an almost certain programming error
     if Value <= 0 then
     begin
-        DoSimpleMsg(Format('Invalid number of terminals (%d) for "%s.%s"',
+        DoSimpleMsg(DSS, Format('Invalid number of terminals (%d) for "%s.%s"',
             [Value, Parentclass.Name, name]), 749);
         Exit;
     end;
@@ -390,7 +390,7 @@ begin
 // Check for an almost certain programming error
     if Value <= 0 then
     begin
-        DoSimpleMsg(Format('Invalid number of terminals (%d) for "%s.%s"',
+        DoSimpleMsg(DSS, Format('Invalid number of terminals (%d) for "%s.%s"',
             [Value, Parentclass.Name, name]), 749);
         Exit;
     end;
@@ -403,7 +403,7 @@ begin
         {Sanity Check}
         if Fnconds > 101 then
         begin
-            DoSimpleMsg(Format('Warning: Number of conductors is very large (%d) for Circuit Element: "%s.%s.' +
+            DoSimpleMsg(DSS, Format('Warning: Number of conductors is very large (%d) for Circuit Element: "%s.%s.' +
                 'Possible error in specifying the Number of Phases for element.',
                 [Fnconds, Parentclass.Name, name]), 750);
         end;
@@ -633,7 +633,7 @@ begin
         DSS.ActiveCircuit.BusNameRedefined := TRUE;  // Set Global Flag to signal circuit to rebuild busdefs
     end
     else
-        DoSimpleMsg(Format('Attempt to set bus name for non-existent circuit element terminal(%d): "%s"', [i, s]), 7541);
+        DoSimpleMsg(DSS, Format('Attempt to set bus name for non-existent circuit element terminal(%d): "%s"', [i, s]), 7541);
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -646,7 +646,7 @@ end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 procedure TDSSCktElement.RecalcElementData;
 begin
-    DoSimpleMsg('Virtual proc RecalcElementData in Base CktElement Class Called for Device = "' + Name + '"', 754);
+    DoSimpleMsg(DSS, 'Virtual proc RecalcElementData in Base CktElement Class Called for Device = "' + Name + '"', 754);
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1198,7 +1198,7 @@ begin
 
     except
         On E: Exception do
-            DoSimpleMsg('Error filling voltage buffer in GetTermVoltages for Circuit Element:' + DSSclassName + '.' + Name + CRLF +
+            DoSimpleMsg(DSS, 'Error filling voltage buffer in GetTermVoltages for Circuit Element:' + DSSclassName + '.' + Name + CRLF +
                 'Probable Cause: Invalid definition of element.' + CRLF +
                 'System Error Message: ' + E.Message, 755);
     end;

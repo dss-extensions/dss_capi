@@ -215,7 +215,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "Equivalent.' + Name + '"', 800);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "Equivalent.' + Name + '"', 800);
                 1:
                     Nterms := DoTerminalsDef(Parser.IntValue);  // This will allocate a bunch of stuff
                 2:
@@ -321,7 +321,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Equivalent MakeLike: "' + OtherSource + '" Not Found.', 801);
+        DoSimpleMsg(DSS, 'Error in Equivalent MakeLike: "' + OtherSource + '" Not Found.', 801);
 
 end;
 
@@ -329,7 +329,7 @@ end;
 function TEquivalent.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TEquivalent.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TEquivalent.Init', -1);
     Result := 0;
 end;
 
@@ -447,7 +447,7 @@ begin
     SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
     begin
-        DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device Equivalent.' + Name + ' Not Found.', 802);
+        DoSimpleMsg(DSS, 'Spectrum Object "' + Spectrum + '" for Device Equivalent.' + Name + ' Not Found.', 802);
     end;
 
     Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
@@ -570,7 +570,7 @@ begin
             end;
 
     except
-        DoSimpleMsg('Error computing Voltages for Equivalent.' + Name + '. Check specification. Aborting.', 804);
+        DoSimpleMsg(DSS, 'Error computing Voltages for Equivalent.' + Name + '. Check specification. Aborting.', 804);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;

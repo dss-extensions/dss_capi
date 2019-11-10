@@ -139,7 +139,7 @@ function TStoreUserModel.CheckFuncError(Addr: Pointer;  FuncName: String): Point
 begin
         If Addr=nil then
           Begin
-            DoSimpleMsg('Storage User Model DLL Does Not Have Required Function: ' + FuncName, 1569);
+            DoSimpleMsg(DSS, 'Storage User Model DLL Does Not Have Required Function: ' + FuncName, 1569);
             FuncError := True;
           End;
         Result := Addr;
@@ -220,7 +220,7 @@ begin
         End;
 
         If FHandle = 0 Then
-              DoSimpleMsg('Storage User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 1570)
+              DoSimpleMsg(DSS, 'Storage User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 1570)
         Else
         Begin
 
@@ -265,7 +265,7 @@ function TStoreDynaModel.CheckFuncError(Addr: Pointer;
 begin
         If Addr=nil then
           Begin
-            DoSimpleMsg('Storage User Dynamic DLL Does Not Have Required Function: ' + FuncName, 1569);
+            DoSimpleMsg(DSS, 'Storage User Dynamic DLL Does Not Have Required Function: ' + FuncName, 1569);
             FuncError := True;
           End;
         Result := Addr;
@@ -347,7 +347,7 @@ begin
         End;
 
         If FHandle = 0 Then
-              DoSimpleMsg('Storage User-written Dynamics Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 1570)
+              DoSimpleMsg(DSS, 'Storage User-written Dynamics Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 1570)
         Else
         Begin
 

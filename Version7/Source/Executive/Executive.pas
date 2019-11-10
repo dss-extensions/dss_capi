@@ -62,7 +62,7 @@ TYPE
      public
          DSS: TDSS;
          RecorderFile: TextFile;
-         constructor Create(dss: TDSS);
+         constructor Create(dssContext: TDSS);
          destructor  Destroy; override;
 
          PROCEDURE CreateDefaultDSSItems;
@@ -87,11 +87,11 @@ USES ExecCommands, ExecOptions,
 
 
 //----------------------------------------------------------------------------
-Constructor TExecutive.Create(dss: TDSS);
+Constructor TExecutive.Create(dssContext: TDSS);
 Begin
      Inherited Create;
 
-     DSS := dss;
+     DSS := dssContext;
      // DSS.DSSExecutive := self;
       
      // Exec Commands
@@ -106,8 +106,6 @@ Begin
      DSS.Circuits := TPointerList.Create(2);   // default buffer for 2 active circuits
      DSS.NumCircuits := 0;
      DSS.ActiveCircuit := nil;
-
-     Parser := TParser.Create;  // Create global parser object (in DSS globals)
 
      LastCmdLine := '';
      RedirFile := '';
@@ -146,8 +144,6 @@ Begin
      DSS.Circuits.Free;
 
      DisposeDSSClasses(DSS);
-
-     Parser.Free;
 
      Inherited Destroy;
 End;
@@ -230,15 +226,15 @@ begin
        MaxAllocationIterations := 2;
 
        {Prepare for new variables}
-       ParserVars.Free;
-       ParserVars := TParserVar.Create(100);  // start with space for 100 variables
+       DSS.ParserVars.Free;
+       DSS.ParserVars := TParserVar.Create(100);  // start with space for 100 variables
 end;
 
 procedure TExecutive.Set_RecorderOn(const Value: Boolean);
 begin
   If Value Then Begin
     If Not FRecorderOn Then Begin
-      FRecorderFile := GetOutputDirectory + 'DSSRecorder.DSS' ;
+      FRecorderFile := DSS.OutputDirectory + 'DSSRecorder.DSS' ;
       AssignFile(RecorderFile, FRecorderFile);
     End;
     ReWrite(RecorderFile);

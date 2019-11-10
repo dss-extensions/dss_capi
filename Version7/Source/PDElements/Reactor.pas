@@ -416,7 +416,7 @@ begin
             begin 
                 case TReactorProp(ParamPointer) of
                     TReactorProp.INVALID:
-                        DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 230);
+                        DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 230);
                     TReactorProp.bus1:
                         ReactorSetbus1(param);
                     TReactorProp.bus2:
@@ -524,10 +524,10 @@ begin
                     YprimInvalid := TRUE;
                 TReactorProp.RCurve:
                     if RCurveObj = NIL then
-                        DoSimpleMsg('Resistance-frequency curve XYCurve.' + RCurve + ' not Found.', 2301);
+                        DoSimpleMsg(DSS, 'Resistance-frequency curve XYCurve.' + RCurve + ' not Found.', 2301);
                 TReactorProp.LCurve:
                     if LCurveObj = NIL then
-                        DoSimpleMsg('Inductance-frequency curve XYCurve.' + LCurve + ' not Found.', 2301);
+                        DoSimpleMsg(DSS, 'Inductance-frequency curve XYCurve.' + LCurve + ' not Found.', 2301);
                 TReactorProp.LmH:
                     YprimInvalid := TRUE;
             end;
@@ -614,7 +614,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Reactor MakeLike: "' + ReactorName + '" Not Found.', 231);
+        DoSimpleMsg(DSS, 'Error in Reactor MakeLike: "' + ReactorName + '" Not Found.', 231);
 
 
 end;
@@ -623,7 +623,7 @@ end;
 function TReactor.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TReactor.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TReactor.Init', -1);
     REsult := 0;
 end;
 
@@ -757,7 +757,7 @@ begin
         ETKInvert(Gmatrix, Fnphases, CheckError);
         if CheckError > 0 then
         begin
-            DoSimpleMsg('Error inverting R Matrix for Reactor.' + name + ' - G is zeroed.', 232);
+            DoSimpleMsg(DSS, 'Error inverting R Matrix for Reactor.' + name + ' - G is zeroed.', 232);
             for i := 1 to Fnphases * Fnphases do
                 Gmatrix^[i] := 0.0;
         end;
@@ -768,7 +768,7 @@ begin
         ETKInvert(Bmatrix, Fnphases, CheckError);
         if CheckError > 0 then
         begin
-            DoSimpleMsg('Error inverting X Matrix for Reactor.' + name + ' - B is zeroed.', 233);
+            DoSimpleMsg(DSS, 'Error inverting X Matrix for Reactor.' + name + ' - B is zeroed.', 233);
             for i := 1 to Fnphases * Fnphases do
                 Bmatrix^[i] := 0.0;
         end;
@@ -1268,7 +1268,7 @@ begin
     else 
         begin
             Result := 'ERROR';
-            DoSimpleMsg('Property number "' + IntToStr(Index) + '" is not handled for Reactor', 541);
+            DoSimpleMsg(DSS, 'Property number "' + IntToStr(Index) + '" is not handled for Reactor', 541);
         end
     end;
 end;

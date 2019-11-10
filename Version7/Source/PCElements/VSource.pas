@@ -374,7 +374,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "VSource.' + Name + '"', 320);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "VSource.' + Name + '"', 320);
                 1:
                     VSourceSetBus1(param);   // special handling of Bus 1
                 2:
@@ -419,7 +419,7 @@ begin
                         'N':
                             ScanType := -1;
                     else
-                        DoSimpleMsg('Unknown Scan Type for "' + Class_Name + '.' + Name + '": ' + Param, 321);
+                        DoSimpleMsg(DSS, 'Unknown Scan Type for "' + Class_Name + '.' + Name + '": ' + Param, 321);
                     end;
                 18:
                     case Uppercase(Param)[1] of
@@ -430,7 +430,7 @@ begin
                         'N':
                             Sequencetype := -1;
                     else
-                        DoSimpleMsg('Unknown Sequence Type for "' + Class_Name + '.' + Name + '": ' + Param, 321);
+                        DoSimpleMsg(DSS, 'Unknown Sequence Type for "' + Class_Name + '.' + Name + '": ' + Param, 321);
                     end;
                 19:
                     SetBus(2, param);
@@ -657,7 +657,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Vsource MakeLike: "' + OtherSource + '" Not Found.', 322);
+        DoSimpleMsg(DSS, 'Error in Vsource MakeLike: "' + OtherSource + '" Not Found.', 322);
 
 end;
 
@@ -665,7 +665,7 @@ end;
 function TVsource.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TVsource.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TVsource.Init', -1);
     Result := 0;
 end;
 
@@ -963,7 +963,7 @@ begin
     SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
     begin
-        DoSimpleMsg('Spectrum Object "' + Spectrum + '" for Device Vsource.' + Name + ' Not Found.', 324);
+        DoSimpleMsg(DSS, 'Spectrum Object "' + Spectrum + '" for Device Vsource.' + Name + ' Not Found.', 324);
     end;
 
     {Now check for errors.  If any of these came out nil and the string was not nil, give warning}
@@ -975,13 +975,13 @@ begin
         DutyShape := '';
     if YearlyShapeObj = NIL then
         if Length(YearlyShape) > 0 then
-            DoSimpleMsg('WARNING! Vsource Yearly load shape: "' + YearlyShape + '" Not Found.', 34583);
+            DoSimpleMsg(DSS, 'WARNING! Vsource Yearly load shape: "' + YearlyShape + '" Not Found.', 34583);
     if DailyShapeObj = NIL then
         if Length(DailyShape) > 0 then
-            DoSimpleMsg('WARNING! Vsource Daily load shape: "' + DailyShape + '" Not Found.', 34584);
+            DoSimpleMsg(DSS, 'WARNING! Vsource Daily load shape: "' + DailyShape + '" Not Found.', 34584);
     if DutyShapeObj = NIL then
         if Length(DutyShape) > 0 then
-            DoSimpleMsg('WARNING! Vsource Duty load shape: "' + DutyShape + '" Not Found.', 34585);
+            DoSimpleMsg(DSS, 'WARNING! Vsource Duty load shape: "' + DutyShape + '" Not Found.', 34585);
 
     Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
 
@@ -1201,7 +1201,7 @@ begin
         end;
 
     except
-        DoSimpleMsg('Error computing Voltages for Vsource.' + Name + '. Check specification. Aborting.', 326);
+        DoSimpleMsg(DSS, 'Error computing Voltages for Vsource.' + Name + '. Check specification. Aborting.', 326);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;

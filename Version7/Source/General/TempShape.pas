@@ -285,7 +285,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 57610);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 57610);
                 1:
                     NumPoints := Parser.Intvalue;
                 2:
@@ -382,7 +382,7 @@ begin
                 PropertyValue[i] := OtherTShape.PropertyValue[i];
         end
     else
-        DoSimpleMsg('Error in TShape MakeLike: "' + ShapeName + '" Not Found.', 57611);
+        DoSimpleMsg(DSS, 'Error in TShape MakeLike: "' + ShapeName + '" Not Found.', 57611);
 
 
 end;
@@ -391,7 +391,7 @@ end;
 function TTShape.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TTShape.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TTShape.Init', -1);
     Result := 0;
 end;
 
@@ -429,7 +429,7 @@ begin
         TShapeObj := ElementList.Next;
     end;
 
-    DoSimpleMsg('TShape: "' + Value + '" not Found.', 57612);
+    DoSimpleMsg(DSS, 'TShape: "' + Value + '" not Found.', 57612);
 
 end;
 
@@ -446,7 +446,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 57613);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 57613);
         CloseFile(F);
         Exit;
     end;
@@ -484,7 +484,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message, 57614);
+            DoSimpleMsg(DSS, 'Error Processing CSV File: "' + FileName + '. ' + E.Message, 57614);
             CloseFile(F);
             Exit;
         end;
@@ -505,7 +505,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 57615);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 57615);
         CloseFile(F);
         Exit;
     end;
@@ -533,7 +533,7 @@ begin
                 NumPoints := i;
         end;
     except
-        DoSimpleMsg('Error Processing TShape File: "' + FileName, 57616);
+        DoSimpleMsg(DSS, 'Error Processing TShape File: "' + FileName, 57616);
         CloseFile(F);
         Exit;
     end;
@@ -551,7 +551,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 57617);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 57617);
         CloseFile(F);
         Exit;
     end;
@@ -575,7 +575,7 @@ begin
                 NumPoints := i;
         end;
     except
-        DoSimpleMsg('Error Processing Tshape File: "' + FileName, 57618);
+        DoSimpleMsg(DSS, 'Error Processing Tshape File: "' + FileName, 57618);
         CloseFile(F);
         Exit;
     end;
@@ -851,19 +851,20 @@ var
     MaxPts, i, j: Integer;
     MaxTime, MinInterval, Hr_Time: Double;
     ObjList: TPointerList;
-
+    TOPTransferFile: TOutFile32;
 begin
-    TOPTransferFile.FileName := GetOutputDirectory + 'TOP_TShape.STO';
+    TOPTransferFile.FileName := DSS.OutputDirectory + 'TOP_TShape.STO';
     try
         TOPTransferFile.Open;
     except
         ON E: Exception do
         begin
-            DoSimpleMsg('TOP Transfer File Error: ' + E.message, 57619);
+            DoSimpleMsg(DSS, 'TOP Transfer File Error: ' + E.message, 57619);
             try
                 TopTransferFile.Close;
-            except
-              {OK if Error}
+                {OK if Error}
+            finally
+                TOPTransferFile.Free;
             end;
             Exit;
         end;
@@ -894,11 +895,11 @@ begin
             if Obj.Interval > (1.0 / 60.0) then
                 ObjList.Add(Obj)
             else
-                DoSimpleMsg('Tshape.' + ObjName + ' is not hourly fixed interval.', 57620);
+                DoSimpleMsg(DSS, 'Tshape.' + ObjName + ' is not hourly fixed interval.', 57620);
         end
         else
         begin
-            DoSimpleMsg('Tshape.' + ObjName + ' not found.', 57621);
+            DoSimpleMsg(DSS, 'Tshape.' + ObjName + ' not found.', 57621);
         end;
 
     end;
@@ -921,7 +922,7 @@ begin
       // SetLength(Xarray, maxPts);
         MaxPts := Round(MaxTime / MinInterval);
 
-        TopTransferFile.WriteHeader(0.0, MaxTime, MinInterval, ObjList.ListSize, 0, 16, 'DSS (TM), Electrotek Concepts (R)');
+        TopTransferFile.WriteHeader(0.0, MaxTime, MinInterval, ObjList.ListSize, 0, 16, 'DSS (TM), Electrotek Concepts (R)', DSS.DefaultBaseFreq);
         TopTransferFile.WriteNames(NameList, CNames);
 
         Hr_Time := 0.0;
@@ -949,6 +950,7 @@ begin
     ObjList.Free;
     NameList.Free;
     CNames.Free;
+    TOPTransferFile.Free;
 end;
 
 
@@ -974,7 +976,7 @@ begin
 
     end
     else
-        DoSimpleMsg('Tshape.' + Name + ' Temperatures not defined.', 57622);
+        DoSimpleMsg(DSS, 'Tshape.' + Name + ' Temperatures not defined.', 57622);
 end;
 
 procedure TTShapeObj.SaveToSngFile;
@@ -1005,7 +1007,7 @@ begin
 
     end
     else
-        DoSimpleMsg('Tshape.' + Name + ' Temperatures not defined.', 57623);
+        DoSimpleMsg(DSS, 'Tshape.' + Name + ' Temperatures not defined.', 57623);
 
 
 end;

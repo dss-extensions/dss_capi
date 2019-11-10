@@ -432,7 +432,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 101);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 101);
                 1:
                     Numphases := Parser.IntValue;  // Use property value to force reallocations
                 2:
@@ -574,7 +574,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Line MakeLike: "' + LineName + '" Not Found.', 102);
+        DoSimpleMsg(DSS, 'Error in Line MakeLike: "' + LineName + '" Not Found.', 102);
 
 
 end;
@@ -583,7 +583,7 @@ end;
 function TLineCode.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TLineCode.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TLineCode.Init', -1);
     REsult := 0;
 end;
 
@@ -614,7 +614,7 @@ begin
         LineCodeObj := ElementList.Next;
     end;
 
-    DoSimpleMsg('Linecode: "' + Value + '" not Found.', 103);
+    DoSimpleMsg(DSS, 'Linecode: "' + Value + '" not Found.', 103);
 
 end;
 
@@ -946,7 +946,7 @@ begin
             NewYC := YC.Kron(FNeutralConductor);
         except
             On E: Exception do
-                DoSimpleMsg(Format('Kron Reduction failed: LineCode.%s. Attempting to eliminate Neutral Conductor %d.', [Name, FNeutralConductor]), 103);
+                DoSimpleMsg(DSS, Format('Kron Reduction failed: LineCode.%s. Attempting to eliminate Neutral Conductor %d.', [Name, FNeutralConductor]), 103);
         end;
 
         // Reallocate into smaller space   if Kron was successful
@@ -977,13 +977,13 @@ begin
         end
         else
         begin
-            DoSimpleMsg(Format('Kron Reduction failed: LineCode.%s. Attempting to eliminate Neutral Conductor %d.', [Name, FNeutralConductor]), 103);
+            DoSimpleMsg(DSS, Format('Kron Reduction failed: LineCode.%s. Attempting to eliminate Neutral Conductor %d.', [Name, FNeutralConductor]), 103);
         end;
 
     end
     else
     begin
-        DoSimpleMsg('Cannot perform Kron Reduction on a 1-phase LineCode: LineCode.' + Name, 103);
+        DoSimpleMsg(DSS, 'Cannot perform Kron Reduction on a 1-phase LineCode: LineCode.' + Name, 103);
     end;
     ;
 

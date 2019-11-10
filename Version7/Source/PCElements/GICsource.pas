@@ -221,7 +221,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 330);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 330);
                 1:
                     Volts := Parser.DblValue;
                 2:
@@ -315,7 +315,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in GICsource MakeLike: "' + OtherSource + '" Not Found.', 332);
+        DoSimpleMsg(DSS, 'Error in GICsource MakeLike: "' + OtherSource + '" Not Found.', 332);
 
 end;
 
@@ -323,7 +323,7 @@ end;
 function TGICsource.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TGICsource.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TGICsource.Init', -1);
     Result := 0;
 end;
 
@@ -401,7 +401,7 @@ begin
 
     if pLineElem = NIL then
     begin
-        DoSimpleMsg('Line Object "' + LineName + '" associated with GICsource.' + Name + ' Not Found. Make sure you define it first.', 333);
+        DoSimpleMsg(DSS, 'Line Object "' + LineName + '" associated with GICsource.' + Name + ' Not Found. Make sure you define it first.', 333);
     end
     else
     begin
@@ -533,7 +533,7 @@ begin
         end;
 
     except
-        DoSimpleMsg('Error computing current for GICsource.' + Name + '. Check specification. Aborting.', 334);
+        DoSimpleMsg(DSS, 'Error computing current for GICsource.' + Name + '. Check specification. Aborting.', 334);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;

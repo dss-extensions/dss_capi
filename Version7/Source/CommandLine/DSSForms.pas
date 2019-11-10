@@ -156,7 +156,7 @@ end;
 procedure ShowControlPanel;
 
 begin
-    DoSimpleMsg('Illegal command: Show Control Panel.', 9904);
+    DoSimpleMsg(DSS, 'Illegal command: Show Control Panel.', 9904);
 end;
 
 procedure ShowHelpForm;
@@ -166,7 +166,7 @@ var
 begin
     ParamName := Parser.NextParam;
     Param := Parser.StrValue;
-    DoSimpleMsg('Illegal command: Show Help Form.', 9903);
+    DoSimpleMsg(DSS, 'Illegal command: Show Help Form.', 9903);
 
 end;
 
@@ -179,27 +179,27 @@ end;
 procedure ShowPropEditForm;
 
 begin
-    DoSimpleMsg('Illegal command: Show Property Edit Form.', 9902);
+    DoSimpleMsg(DSS, 'Illegal command: Show Property Edit Form.', 9902);
 end;
 
 
 procedure CloseDownForms;
 
 begin
-    DoSimpleMsg('No Forms to Close.', 9901);
+    DoSimpleMsg(DSS, 'No Forms to Close.', 9901);
 end;
 
 procedure ShowRegistrationForm;
 
 begin
-    DoSimpleMsg('Registration Form Not Valid for this Version', 9900);
+    DoSimpleMsg(DSS, 'Registration Form Not Valid for this Version', 9900);
 end;
 
 {
 Procedure MessageDlg(const Message  : string; DialogType  : TMsgDlgType; Buttons : TMsgDlgButtons; HelpContext : Longint ) : Integer;;
 
 Begin
-     DoSimpleMsg( Message );
+     DoSimpleMsg(DSS,  Message );
 End;
 
 Const mtError := 0;

@@ -377,7 +377,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "Capacitor.' + Name + '"', 450);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "Capacitor.' + Name + '"', 450);
                 1:
                     CapSetbus1(param);
                 2:
@@ -528,7 +528,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Capacitor MakeLike: "' + CapacitorName + '" Not Found.', 451);
+        DoSimpleMsg(DSS, 'Error in Capacitor MakeLike: "' + CapacitorName + '" Not Found.', 451);
 
 
 end;
@@ -537,7 +537,7 @@ end;
 function TCapacitor.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TCapacitor.Init', 452);
+    DoSimpleMsg(DSS, 'Need to implement TCapacitor.Init', 452);
     Result := 0;
 end;
 

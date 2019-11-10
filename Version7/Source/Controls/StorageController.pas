@@ -507,7 +507,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 14407);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 14407);
                 propELEMENT:
                     ElementName := lowercase(param);
                 propTERMINAL:
@@ -648,19 +648,19 @@ begin
                 begin
                     YearlyShapeObj := DSS.LoadShapeClass.Find(YearlyShape);
                     if YearlyShapeObj = NIL then
-                        DoSimpleMsg('Yearly loadshape "' + YearlyShape + '" not found.', 14404);
+                        DoSimpleMsg(DSS, 'Yearly loadshape "' + YearlyShape + '" not found.', 14404);
                 end;
                 propDAILY:
                 begin
                     DailyShapeObj := DSS.LoadShapeClass.Find(DailyShape);
                     if DailyShapeObj = NIL then
-                        DoSimpleMsg('Daily loadshape "' + DailyShape + '" not found.', 14405);
+                        DoSimpleMsg(DSS, 'Daily loadshape "' + DailyShape + '" not found.', 14405);
                 end;
                 propDUTY:
                 begin
                     DutyShapeObj := DSS.LoadShapeClass.Find(DutyShape);
                     if DutyShapeObj = NIL then
-                        DoSimpleMsg('Dutycycle loadshape "' + DutyShape + '" not found.', 14406);
+                        DoSimpleMsg(DSS, 'Dutycycle loadshape "' + DutyShape + '" not found.', 14406);
                 end
 
             else
@@ -769,7 +769,7 @@ begin
 
         end
     else
-        DoSimpleMsg('Error in StorageController MakeLike: "' + StorageControllerName + '" Not Found.', 370);
+        DoSimpleMsg(DSS, 'Error in StorageController MakeLike: "' + StorageControllerName + '" Not Found.', 370);
 
 end;
 
@@ -1093,11 +1093,11 @@ begin
         end;
     end
     else
-        DoSimpleMsg('Monitored Element in StorageController.' + Name + ' Does not exist:"' + ElementName + '"', 372);
+        DoSimpleMsg(DSS, 'Monitored Element in StorageController.' + Name + ' Does not exist:"' + ElementName + '"', 372);
 
     if FleetListChanged then
         if not MakeFleetList then
-            DoSimpleMsg('No unassigned Storage Elements found to assign to StorageController.' + Name, 37201);
+            DoSimpleMsg(DSS, 'No unassigned Storage Elements found to assign to StorageController.' + Name, 37201);
 
     GetkWTotal(TotalkWCapacity);
     GetkWhTotal(TotalkWhCapacity);
@@ -1225,7 +1225,7 @@ begin
                 Result := 'UNKNOWN'
             end;
     else
-        DoSimpleMsg('Unknown Charge/Discharge designation', 14401);
+        DoSimpleMsg(DSS, 'Unknown Charge/Discharge designation', 14401);
     end;
 end;
 
@@ -1892,7 +1892,7 @@ begin
         MODESCHEDULE:
             DoScheduleMode;
     else
-        DoSimpleMsg(Format('Invalid DisCharging Mode: %d', [DisChargeMode]), 14408);
+        DoSimpleMsg(DSS, Format('Invalid DisCharging Mode: %d', [DisChargeMode]), 14408);
     end;
 
     if ChargingAllowed then
@@ -1905,7 +1905,7 @@ begin
             CURRENTPEAKSHAVELOW:
                 DoPeakShaveModeLow
         else
-            DoSimpleMsg(Format('Invalid Charging Mode: %d', [ChargeMode]), 14409);
+            DoSimpleMsg(DSS, Format('Invalid Charging Mode: %d', [ChargeMode]), 14409);
         end;
 
 
@@ -2141,7 +2141,7 @@ begin
                 'i':
                     Result := CURRENTPEAKSHAVE;
             else
-                DoSimpleMsg('Discharge Mode "' + S + '" not recognized.', 14402);
+                DoSimpleMsg(DSS, 'Discharge Mode "' + S + '" not recognized.', 14402);
             end;
         propMODECHARGE:
             case LowerCase(S)[1] of
@@ -2156,7 +2156,7 @@ begin
                 'i':
                     Result := CURRENTPEAKSHAVELOW;
             else
-                DoSimpleMsg('Charge Mode "' + S + '" not recognized.', 14402);
+                DoSimpleMsg(DSS, 'Charge Mode "' + S + '" not recognized.', 14402);
             end;
     else
     end;
@@ -2187,7 +2187,7 @@ begin
             end
             else
             begin
-                DoSimpleMsg('Error: Storage Element "' + FStorageNameList.Strings[i - 1] + '" not found.', 14403);
+                DoSimpleMsg(DSS, 'Error: Storage Element "' + FStorageNameList.Strings[i - 1] + '" not found.', 14403);
                 Exit;
             end;
         end;

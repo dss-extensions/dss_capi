@@ -346,7 +346,7 @@ begin
             if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
                 PropertyValue[PropertyIdxMap[ParamPointer]] := Param
             else
-                DoSimpleMsg('Unknown parameter "' + ParamName + '" for PCPrototype "' + Name + '"', 560);
+                DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for PCPrototype "' + Name + '"', 560);
 
          // --------------- MAIN CASE STATEMENT ----------------------
             if ParamPointer > 0 then
@@ -354,7 +354,7 @@ begin
          // use PropertyIdxMap to map to the correct Case index
                 case PropertyIdxMap[ParamPointer] of
                     0:
-                        DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
+                        DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
                     1:
                         NPhases := Parser.Intvalue; // num phases
                     2:
@@ -454,7 +454,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Load MakeLike: "' + OtherPCPrototypeName + '" Not Found.', 562);
+        DoSimpleMsg(DSS, 'Error in Load MakeLike: "' + OtherPCPrototypeName + '" Not Found.', 562);
 
 end;
 
@@ -586,7 +586,7 @@ begin
     // For example, find specified Spectrum object  and report error if not found
     SpectrumObj := SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
-        DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
+        DoSimpleMsg(DSS, 'ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
 
     // For PC elements, a good idea to reallocate InjCurrent in case Yorder has changed
     Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);

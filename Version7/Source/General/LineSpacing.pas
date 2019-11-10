@@ -227,7 +227,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 10101);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 10101);
                 1:
                     NWires := Parser.IntValue;  // Use property value to force reallocations
                 2:
@@ -282,7 +282,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in LineSpacing MakeLike: "' + LineName + '" Not Found.', 102);
+        DoSimpleMsg(DSS, 'Error in LineSpacing MakeLike: "' + LineName + '" Not Found.', 102);
 
 
 end;
@@ -291,7 +291,7 @@ end;
 function TLineSpacing.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TLineSpacing.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TLineSpacing.Init', -1);
     Result := 0;
 end;
 
@@ -322,7 +322,7 @@ begin
         LineSpacingObj := ElementList.Next;
     end;
 
-    DoSimpleMsg('LineSpacing: "' + Value + '" not Found.', 103);
+    DoSimpleMsg(DSS, 'LineSpacing: "' + Value + '" not Found.', 103);
 
 end;
 

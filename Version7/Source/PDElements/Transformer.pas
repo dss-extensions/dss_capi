@@ -489,7 +489,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "Transformer.' + Name + '"', 110);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "Transformer.' + Name + '"', 110);
                 1:
                     Nphases := Parser.IntValue;
                 2:
@@ -683,14 +683,14 @@ begin
         if (w > 0) and (w <= NumWindings) then
             ActiveWinding := w
         else
-            DoSimpleMsg('Wdg parameter invalid for "' + DSS.ActiveTransfObj.Name + '"', 112);
+            DoSimpleMsg(DSS, 'Wdg parameter invalid for "' + DSS.ActiveTransfObj.Name + '"', 112);
 end;
 
 function TTransf.TrapZero(const Value: Double; DefaultValue: Double): Double;
 begin
     if Value = 0.0 then
     begin
-        Dosimplemsg('Zero Reactance specified for Transformer.' + DSS.ActiveTransfObj.Name, 11201);
+        DoSimpleMsg(DSS, 'Zero Reactance specified for Transformer.' + DSS.ActiveTransfObj.Name, 11201);
         Result := DefaultValue;
     end
     else
@@ -964,7 +964,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Transf MakeLike: "' + TransfName + '" Not Found.', 113);
+        DoSimpleMsg(DSS, 'Error in Transf MakeLike: "' + TransfName + '" Not Found.', 113);
 
 
 end;
@@ -973,7 +973,7 @@ end;
 function TTransf.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TTransf.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TTransf.Init', -1);
     Result := 0;
 end;
 
@@ -1083,7 +1083,7 @@ begin
         Y_Term_NL := TCMatrix.CreateMatrix(2 * NumWindings);
     end
     else
-        Dosimplemsg('Invalid number of windings: (' + IntToStr(N) + ') for Transformer ' + Name, 111);
+        DoSimpleMsg(DSS, 'Invalid number of windings: (' + IntToStr(N) + ') for Transformer ' + Name, 111);
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1780,7 +1780,7 @@ begin
 
     except
         On E: Exception do
-            DoSimpleMsg('Error filling voltage buffer in GetAllWindingCurrents for Circuit Element:Transformer.' + Name + CRLF +
+            DoSimpleMsg(DSS, 'Error filling voltage buffer in GetAllWindingCurrents for Circuit Element:Transformer.' + Name + CRLF +
                 'Probable Cause: Invalid definition of element.' + CRLF +
                 'System Error Message: ' + E.Message, 100114);
     end;
@@ -1862,7 +1862,7 @@ begin
 
     except
         On E: Exception do
-            DoSimpleMsg('Error filling voltage buffer in GetWindingVoltages for Circuit Element:Transformer.' + Name + CRLF +
+            DoSimpleMsg(DSS, 'Error filling voltage buffer in GetWindingVoltages for Circuit Element:Transformer.' + Name + CRLF +
                 'Probable Cause: Invalid definition of element.' + CRLF +
                 'System Error Message: ' + E.Message, 114);
     end;
@@ -2631,7 +2631,7 @@ begin
         RecalcElementData
     end
     else
-        DoSimpleMsg('Xfmr Code:' + Code + ' not found.', 180);
+        DoSimpleMsg(DSS, 'Xfmr Code:' + Code + ' not found.', 180);
 end;
 
 end.

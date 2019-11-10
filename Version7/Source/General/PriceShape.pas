@@ -284,7 +284,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 58610);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 58610);
                 1:
                     NumPoints := Parser.Intvalue;
                 2:
@@ -381,7 +381,7 @@ begin
                 PropertyValue[i] := OtherPriceShape.PropertyValue[i];
         end
     else
-        DoSimpleMsg('Error in PriceShape MakeLike: "' + ShapeName + '" Not Found.', 58611);
+        DoSimpleMsg(DSS, 'Error in PriceShape MakeLike: "' + ShapeName + '" Not Found.', 58611);
 
 
 end;
@@ -390,7 +390,7 @@ end;
 function TPriceShape.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TPriceShape.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TPriceShape.Init', -1);
     Result := 0;
 end;
 
@@ -428,7 +428,7 @@ begin
         PriceShapeObj := ElementList.Next;
     end;
 
-    DoSimpleMsg('PriceShape: "' + Value + '" not Found.', 58612);
+    DoSimpleMsg(DSS, 'PriceShape: "' + Value + '" not Found.', 58612);
 
 end;
 
@@ -445,7 +445,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 58613);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 58613);
         CloseFile(F);
         Exit;
     end;
@@ -483,7 +483,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message, 58614);
+            DoSimpleMsg(DSS, 'Error Processing CSV File: "' + FileName + '. ' + E.Message, 58614);
             CloseFile(F);
             Exit;
         end;
@@ -504,7 +504,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 58615);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 58615);
         CloseFile(F);
         Exit;
     end;
@@ -532,7 +532,7 @@ begin
                 NumPoints := i;
         end;
     except
-        DoSimpleMsg('Error Processing PriceShape File: "' + FileName, 58616);
+        DoSimpleMsg(DSS, 'Error Processing PriceShape File: "' + FileName, 58616);
         CloseFile(F);
         Exit;
     end;
@@ -550,7 +550,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 58617);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 58617);
         CloseFile(F);
         Exit;
     end;
@@ -574,7 +574,7 @@ begin
                 NumPoints := i;
         end;
     except
-        DoSimpleMsg('Error Processing PriceShape File: "' + FileName, 58618);
+        DoSimpleMsg(DSS, 'Error Processing PriceShape File: "' + FileName, 58618);
         CloseFile(F);
         Exit;
     end;
@@ -850,19 +850,20 @@ var
     MaxPts, i, j: Integer;
     MaxTime, MinInterval, Hr_Time: Double;
     ObjList: TPointerList;
-
+    TOPTransferFile: TOutFile32;
 begin
-    TOPTransferFile.FileName := GetOutputDirectory + 'TOP_PriceShape.STO';
+    TOPTransferFile.FileName := DSS.OutputDirectory + 'TOP_PriceShape.STO';
     try
         TOPTransferFile.Open;
     except
         ON E: Exception do
         begin
-            DoSimpleMsg('TOP Transfer File Error: ' + E.message, 58619);
+            DoSimpleMsg(DSS, 'TOP Transfer File Error: ' + E.message, 58619);
             try
                 TopTransferFile.Close;
-            except
-              {OK if Error}
+                {OK if Error}
+            finally
+                TOPTransferFile.Free;
             end;
             Exit;
         end;
@@ -893,11 +894,11 @@ begin
             if Obj.Interval > (1.0 / 60.0) then
                 ObjList.Add(Obj)
             else
-                DoSimpleMsg('PriceShape.' + ObjName + ' is not hourly fixed interval.', 58620);
+                DoSimpleMsg(DSS, 'PriceShape.' + ObjName + ' is not hourly fixed interval.', 58620);
         end
         else
         begin
-            DoSimpleMsg('PriceShape.' + ObjName + ' not found.', 58621);
+            DoSimpleMsg(DSS, 'PriceShape.' + ObjName + ' not found.', 58621);
         end;
 
     end;
@@ -920,7 +921,7 @@ begin
       // SetLength(Xarray, maxPts);
         MaxPts := Round(MaxTime / MinInterval);
 
-        TopTransferFile.WriteHeader(0.0, MaxTime, MinInterval, ObjList.ListSize, 0, 16, 'DSS (TM), Electrotek Concepts (R)');
+        TopTransferFile.WriteHeader(0.0, MaxTime, MinInterval, ObjList.ListSize, 0, 16, 'DSS (TM), Electrotek Concepts (R)', DSS.DefaultBaseFreq);
         TopTransferFile.WriteNames(NameList, CNames);
 
         Hr_Time := 0.0;
@@ -948,6 +949,7 @@ begin
     ObjList.Free;
     NameList.Free;
     CNames.Free;
+    TOPTransferFile.Free;
 end;
 
 
@@ -973,7 +975,7 @@ begin
 
     end
     else
-        DoSimpleMsg('PriceShape.' + Name + ' Prices not defined.', 58622);
+        DoSimpleMsg(DSS, 'PriceShape.' + Name + ' Prices not defined.', 58622);
 end;
 
 procedure TPriceShapeObj.SaveToSngFile;
@@ -1004,7 +1006,7 @@ begin
 
     end
     else
-        DoSimpleMsg('PriceShape.' + Name + ' Prices not defined.', 58623);
+        DoSimpleMsg(DSS, 'PriceShape.' + Name + ' Prices not defined.', 58623);
 
 
 end;

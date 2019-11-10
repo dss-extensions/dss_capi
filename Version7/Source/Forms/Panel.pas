@@ -886,7 +886,7 @@ begin
             ActiveScriptForm.HasFileName := TRUE;
         except
             On E: Exception do
-                DoSimpleMsg('Error opening new window: ' + E.Message, 312);
+                DoSimpleMsg(DSS, 'Error opening new window: ' + E.Message, 312);
         end;
     end;
     UpdateCaptions;
@@ -1196,7 +1196,7 @@ begin
         Screen.Cursor := crDefault;
     end
     else
-        DoSimpleMsg('Select "energymeter" element before executing this command.', 210);
+        DoSimpleMsg(DSS, 'Select "energymeter" element before executing this command.', 210);
 
 end;
 
@@ -1272,7 +1272,7 @@ begin
         ActiveScriptForm.ExecuteDSSCommand(S);
     end
     else
-        DoSimpleMsg('Select "energymeter" element before executing this command.', 211);
+        DoSimpleMsg(DSS, 'Select "energymeter" element before executing this command.', 211);
 
 end;
 
@@ -1367,7 +1367,7 @@ begin
         ActiveScriptForm.ExecuteDSSCommand('Show monitor ' + Elementbox.Text);
     end
     else
-        DoSimpleMsg('Select "monitor" element before executing this command.', 212);
+        DoSimpleMsg(DSS, 'Select "monitor" element before executing this command.', 212);
 
 end;
 
@@ -1649,7 +1649,7 @@ begin
     if ActiveCircuit <> NIL then
         ActiveScriptForm.ExecuteDSSCommand('MakebusList')
     else
-        DoSimpleMsg('Define a Circuit first', 213);
+        DoSimpleMsg(DSS, 'Define a Circuit first', 213);
 end;
 
 procedure TControlPanel.LoadModel1Click(Sender: TObject);
@@ -1970,7 +1970,7 @@ end;
 
 procedure TControlPanel.TCCCurve1Click(Sender: TObject);
 begin
-    DoSimpleMsg('This function currently inactive.', 999123);
+    DoSimpleMsg(DSS, 'This function currently inactive.', 999123);
 end;
 
 procedure TControlPanel.BaseClassComboChange(Sender: TObject);
@@ -2024,7 +2024,7 @@ begin
         Screen.Cursor := crDefault;
     end
     else
-        DoSimpleMsg('Select "energymeter" element before executing this command.', 214);
+        DoSimpleMsg(DSS, 'Select "energymeter" element before executing this command.', 214);
 
 end;
 
@@ -2142,7 +2142,7 @@ procedure TControlPanel.SaveScriptWindow1Click(Sender: TObject);
 
 begin
     if ActiveScriptForm.isMainWindow then
-        DoSimpleMsg('Cannot save the Main Window.' + CRLF + 'Make a new script window, copy contents, and then save.', 215)
+        DoSimpleMsg(DSS, 'Cannot save the Main Window.' + CRLF + 'Make a new script window, copy contents, and then save.', 215)
     else
         with SaveDialog1 do
         begin
@@ -2194,7 +2194,7 @@ begin
         CloseFile(F);
     except
         On E: Exception do
-            DoSimpleMsg('Error with General Bus Data File:' + E.Message, 5444);
+            DoSimpleMsg(DSS, 'Error with General Bus Data File:' + E.Message, 5444);
     end;
 
     SaveDelims := AuxParser.Delimiters;
@@ -2290,7 +2290,7 @@ begin
         ActiveScriptForm.ExecuteDSSCommand(Format('plot Loadshape Object=%s', [elementbox.text]));
     end
     else
-        DoSimpleMsg('Select "loadshape" element before executing this command.', 216);
+        DoSimpleMsg(DSS, 'Select "loadshape" element before executing this command.', 216);
 
 end;
 
@@ -2457,7 +2457,7 @@ begin
                 UpdateStatus;
             except
                 On E: Exception do
-                    DoSimpleMsg('Error: ' + E.Message, 218);
+                    DoSimpleMsg(DSS, 'Error: ' + E.Message, 218);
             end;
         end; {Execute}
     end;  {WITH}
@@ -2631,7 +2631,7 @@ begin
         CloseFile(F);
     except
         On E: Exception do
-            DoSimpleMsg('Error with General Line Data File:' + E.Message, 5444);
+            DoSimpleMsg(DSS, 'Error with General Line Data File:' + E.Message, 5444);
     end;
 
     SaveDelims := AuxParser.Delimiters;
@@ -2977,12 +2977,12 @@ begin
                 UpdateStatus;
             except
                 On E: Exception do
-                    DoSimpleMsg('Error Loading File: ' + E.Message, 218);
+                    DoSimpleMsg(DSS, 'Error Loading File: ' + E.Message, 218);
             end;
         end
         else
         begin
-            DoSimpleMsg('File "' + CompileCombo.Text + '" Not Found.', 218);
+            DoSimpleMsg(DSS, 'File "' + CompileCombo.Text + '" Not Found.', 218);
         end; {File Exists}
     end;
 end;

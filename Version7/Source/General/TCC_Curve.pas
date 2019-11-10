@@ -204,7 +204,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 420);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 420);
                 1:
                     Npts := Parser.Intvalue;
                 2:
@@ -266,7 +266,7 @@ begin
                 PropertyValue[i] := OtherTCC_Curve.PropertyValue[i];
         end
     else
-        DoSimpleMsg('Error in TCC_Curve MakeLike: "' + ShapeName + '" Not Found.', 421);
+        DoSimpleMsg(DSS, 'Error in TCC_Curve MakeLike: "' + ShapeName + '" Not Found.', 421);
 
 
 end;
@@ -275,7 +275,7 @@ end;
 function TTCC_Curve.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TTCC_Curve.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TTCC_Curve.Init', -1);
     REsult := 0;
 end;
 
@@ -313,7 +313,7 @@ begin
         TCC_CurveObj := ElementList.Next;
     end;
 
-    DoSimpleMsg('TCC_Curve: "' + Value + '" not Found.', 422);
+    DoSimpleMsg(DSS, 'TCC_Curve: "' + Value + '" not Found.', 422);
 
 end;
 

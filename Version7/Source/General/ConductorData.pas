@@ -228,10 +228,10 @@ begin
             case ParamPointer of
                 4:
                     if (Fradius = 0.0) then
-                        DoSimpleMsg('Error: Radius is specified as zero for ConductorData.' + Name, 999);
+                        DoSimpleMsg(DSS, 'Error: Radius is specified as zero for ConductorData.' + Name, 999);
                 6:
                     if (FGMR60 = 0.0) then
-                        DoSimpleMsg('Error: GMR is specified as zero for ConductorData.' + Name, 999);
+                        DoSimpleMsg(DSS, 'Error: GMR is specified as zero for ConductorData.' + Name, 999);
             end;
         end;
 end;

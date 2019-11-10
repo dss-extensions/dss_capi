@@ -54,7 +54,7 @@ TYPE
           {constructor Create(Owner: TObject);}
           Procedure Open;
           Procedure Close;
-          Procedure WriteHeader(const t_start, t_stop,h:Double; const NV, NI,NameSize:Integer; const Title:AnsiString);
+          Procedure WriteHeader(const t_start, t_stop,h:Double; const NV, NI,NameSize:Integer; const Title:AnsiString; const BaseFreq: Double);
           Procedure WriteNames(var Vnames, Cnames:TStringList);
           Procedure WriteData(Const t:Double; Const V, Curr:pDoubleArray);
           Procedure OpenR;  {Open for Read Only}
@@ -66,9 +66,10 @@ TYPE
 
     End;
 
+{$IFNDEF FPC}   
 VAR
-   TOPTransferFile :TOutFile32;
    TOP_Object      :Variant;  // For Top Automation
+{$ENDIF}   
 
 implementation
 {$IFNDEF FPC}
@@ -100,7 +101,6 @@ Begin
 {$IFNDEF FPC}
   TRY
      If NOT TOP_Inited Then StartTop;
-
 
    TRY
      TOP_Object.OpenFile(TOPTransferFile.FName);
@@ -137,7 +137,7 @@ BEGIN
      CloseFile(Fout);  {Close the output file}
 END;
 
-Procedure TOutFile32.WriteHeader(const t_start, t_stop, h:Double; const NV, NI,NameSize:Integer; const Title:AnsiString);
+Procedure TOutFile32.WriteHeader(const t_start, t_stop, h:Double; const NV, NI,NameSize:Integer; const Title:AnsiString; const BaseFreq: Double);
 
 VAR
    NumWrite:Integer;
@@ -151,7 +151,7 @@ BEGIN
          Signature := 'SuperTran V1.00'#0;
          VersionMajor := 1;
          VersionMinor := 1;
-         FBase := DSSPrime.DefaultBaseFreq;
+         FBase := BaseFreq;
          VBase := 1.0;
          tStart := 0;
          TFinish := 0;
@@ -265,11 +265,8 @@ BEGIN
 END;
 
 Initialization
-
+    //TODO: remove this from global context
     TOP_Inited := FALSE;
-    TOPTransferFile:= TOutFile32.Create;
-    TOPTransferFile.Fname := 'DSSTransfer.STO';
-
 {$IFNDEF FPC}
     CoInitialize(Nil);
 {$ENDIF}

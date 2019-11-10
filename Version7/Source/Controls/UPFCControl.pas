@@ -206,7 +206,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 364);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 364);
                 1:
                     ElementName := lowercase(param);
                 2:
@@ -287,7 +287,7 @@ begin
 
         end
     else
-        DoSimpleMsg('Error in UPFCControl MakeLike: "' + UPFCControlName + '" Not Found.', 370);
+        DoSimpleMsg(DSS, 'Error in UPFCControl MakeLike: "' + UPFCControlName + '" Not Found.', 370);
 
 end;
 
@@ -366,7 +366,7 @@ begin
         end;
     end
     else
-        DoSimpleMsg('Monitored Element in UPFCControl.' + Name + ' does not exist:"' + ElementName + '"', 372);
+        DoSimpleMsg(DSS, 'Monitored Element in UPFCControl.' + Name + ' does not exist:"' + ElementName + '"', 372);
 
 
 end;

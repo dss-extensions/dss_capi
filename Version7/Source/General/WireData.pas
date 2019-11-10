@@ -127,7 +127,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 101);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 101);
             else
         // Inherited parameters
                 ClassEdit(DSS.ActiveConductorDataObj, ParamPointer - NumPropsThisClass)
@@ -154,12 +154,12 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Wire MakeLike: "' + WireName + '" Not Found.', 102);
+        DoSimpleMsg(DSS, 'Error in Wire MakeLike: "' + WireName + '" Not Found.', 102);
 end;
 
 function TWireData.Init(Handle: Integer): Integer;
 begin
-    DoSimpleMsg('Need to implement TWireData.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TWireData.Init', -1);
     REsult := 0;
 end;
 
@@ -184,7 +184,7 @@ begin
         end;
         WireDataObj := ElementList.Next;
     end;
-    DoSimpleMsg('WireData: "' + Value + '" not Found.', 103);
+    DoSimpleMsg(DSS, 'WireData: "' + Value + '" not Found.', 103);
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -284,7 +284,7 @@ TYPE
           ActiveLoadShapeClass: Integer;
 
 
-          Constructor Create(dss: TDSS; const aName:String);
+          Constructor Create(dssContext: TDSS; const aName:String);
           Destructor Destroy; Override;
 
           Procedure AddCktElement(Handle:Integer);  // Adds last DSS object created to circuit
@@ -337,14 +337,14 @@ USES
      {$IFDEF MSWINDOWS}Windows,  SHELLAPI, {$ELSE} BaseUnix, Unix, {$ENDIF} Executive, StrUtils,
      DSSHelper;
 //----------------------------------------------------------------------------
-Constructor TDSSCircuit.Create(dss: TDSS; const aName:String);
+Constructor TDSSCircuit.Create(dssContext: TDSS; const aName:String);
 
 // Var Retval:Integer;
 
 BEGIN
      inherited Create('Circuit');
      
-     DSS := dss;
+     DSS := dssContext;
 
      IsSolved := False;
      {*Retval   := *} DSS.SolutionClass.NewObject(Name);
@@ -523,7 +523,7 @@ BEGIN
      ReduceLateralsKeepLoad := TRUE;
 
    {Misc objects}
-   AutoAddObj           := TAutoAdd.Create;
+   AutoAddObj           := TAutoAdd.Create(DSS);
 
    Branch_List          := nil;
    BusAdjPC             := nil;
@@ -568,7 +568,7 @@ BEGIN
 
            EXCEPT
              ON E: Exception Do
-               DoSimpleMsg('Exception Freeing Circuit Element:'  + ElemName + CRLF + E.Message, 423);
+               DoSimpleMsg(DSS, 'Exception Freeing Circuit Element:'  + ElemName + CRLF + E.Message, 423);
            END;
      End;
 
@@ -1129,7 +1129,7 @@ Begin
       End;
       IF NOT Found THEN
       Begin
-        DoSimpleMsg('Line "'+S+'" Not Found in Active Circuit.', 5008);
+        DoSimpleMsg(DSS, 'Line "'+S+'" Not Found in Active Circuit.', 5008);
         pLine := Get(ActiveSave);    // Restore active Line
         DSS.ActiveCircuit.ActiveCktElement := pLine;
       End;
@@ -1185,7 +1185,7 @@ Begin
     Laplacian := Laplacian.multiply(IncMat);                // Laplacian Matrix calculated
     // Generates the graph file
     {******************************************************************************************}
-    FileName  := GetOutputDirectory + DSS.CircuitName_ + '.graph';
+    FileName  := DSS.OutputDirectory + DSS.CircuitName_ + '.graph';
     Assignfile(F,FileName);
     ReWrite(F);
     Writeln(F,inttostr(length(Inc_Mat_Cols)) + ' ' + inttostr(length(Inc_Mat_Cols) - 1)); // it should be the rank of the incidence matrix
@@ -1454,6 +1454,7 @@ END;
 //----------------------------------------------------------------------------
 Procedure TDSSCircuit.AddABus;
 BEGIN
+    //TODO: check if other growth rates are better from large systems
     If NumBuses > MaxBuses THEN BEGIN
         Inc(MaxBuses, IncBuses);
         ReallocMem(Buses, SizeOf(Buses^[1]) * MaxBuses);
@@ -1490,7 +1491,7 @@ BEGIN
          Result := BusList.Add(BusName);    // Result is index of bus
          Inc(NumBuses);
          AddABus;   // Allocates more memory if necessary
-         Buses^[NumBuses] := TDSSBus.Create;
+         Buses^[NumBuses] := TDSSBus.Create(DSS);
     END;
 
     {Define nodes belonging to the bus}
@@ -1885,12 +1886,12 @@ Var
 begin
      Result := FALSE;
      If (EnergyMeters.ListSize = 0) Then Begin
-       DoSimpleMsg('Cannot compute system capacity with EnergyMeter objects!', 430);
+       DoSimpleMsg(DSS, 'Cannot compute system capacity with EnergyMeter objects!', 430);
        Exit;
      End;
 
      If (NumUeRegs = 0) Then Begin
-       DoSimpleMsg('Cannot compute system capacity with no UE resisters defined.  Use SET UEREGS=(...) command.', 431);
+       DoSimpleMsg(DSS, 'Cannot compute system capacity with no UE resisters defined.  Use SET UEREGS=(...) command.', 431);
        Exit;
      End;
 
@@ -1962,7 +1963,7 @@ begin
 
     If Not Success Then
      Begin
-       DoSimpleMsg('Could not create a folder "'+Dir+'" for saving the circuit.', 432);
+       DoSimpleMsg(DSS, 'Could not create a folder "'+Dir+'" for saving the circuit.', 432);
        Exit;
      End;
 
@@ -2007,11 +2008,11 @@ begin
 {$IFDEF DSS_CAPI}
         DSS.GlobalResult := 'Circuit saved in directory: ' + GetCurrentDir;
 {$ELSE}
-        DoSimpleMsg('Circuit saved in directory: ' + GetCurrentDir, 433)
+        DoSimpleMsg(DSS, 'Circuit saved in directory: ' + GetCurrentDir, 433)
 {$ENDIF}
     End
     Else
-        DoSimpleMsg('Error attempting to save circuit in ' + GetCurrentDir, 434);
+        DoSimpleMsg(DSS, 'Error attempting to save circuit in ' + GetCurrentDir, 434);
 
     // Return to Original directory
     SetCurrentDir(SaveDir);
@@ -2063,7 +2064,7 @@ Begin
         CloseFile(F);
         Result := TRUE;
      Except
-      On E:Exception Do DoSimpleMsg('Error Saving BusVoltageBases File: '+E.Message, 43501);
+      On E:Exception Do DoSimpleMsg(DSS, 'Error Saving BusVoltageBases File: '+E.Message, 43501);
      End;
 
 End;
@@ -2104,7 +2105,7 @@ begin
       CloseFile(F);
       Result := TRUE;
   Except
-      On E:Exception Do DoSimpleMsg('Error Saving Master File: '+E.Message, 435);
+      On E:Exception Do DoSimpleMsg(DSS, 'Error Saving Master File: '+E.Message, 435);
   End;
 
 end;
@@ -2137,7 +2138,7 @@ begin
                 SetCurrentDir(SaveDir);
              End
              Else Begin
-                DoSimpleMsg('Cannot create directory: '+CurrDir, 436);
+                DoSimpleMsg(DSS, 'Cannot create directory: '+CurrDir, 436);
                 Result := FALSE;
                 SetCurrentDir(SaveDir);  // back to whence we came
                 Break;
@@ -2171,7 +2172,7 @@ begin
        Result := TRUE;
 
    Except
-       On E:Exception Do DoSimpleMsg('Error creating Buscoords.dss.', 437);
+       On E:Exception Do DoSimpleMsg(DSS, 'Error creating Buscoords.dss.', 437);
    End;
 
 end;
@@ -2210,13 +2211,13 @@ end;
 
 Function TDSSCircuit.GetBusAdjacentPDLists: TAdjArray;
 begin
-  if not Assigned (BusAdjPD) then BuildActiveBusAdjacencyLists (BusAdjPD, BusAdjPC);
+  if not Assigned (BusAdjPD) then BuildActiveBusAdjacencyLists(self, BusAdjPD, BusAdjPC);
   Result := BusAdjPD;
 end;
 
 Function TDSSCircuit.GetBusAdjacentPCLists: TAdjArray;
 begin
-  if not Assigned (BusAdjPC) then BuildActiveBusAdjacencyLists (BusAdjPD, BusAdjPC);
+  if not Assigned (BusAdjPC) then BuildActiveBusAdjacencyLists(self, BusAdjPD, BusAdjPC);
   Result := BusAdjPC;
 end;
 
@@ -2235,7 +2236,7 @@ begin
       elem := CktElements.Next;
     End;
     FOR i := 1 to NumBuses Do Buses^[i].BusChecked := FALSE;
-    Branch_List := GetIsolatedSubArea (Sources.First, TRUE);  // calls back to build adjacency lists
+    Branch_List := GetIsolatedSubArea(self, Sources.First, TRUE);  // calls back to build adjacency lists
   end;
   Result := Branch_List;
 end;

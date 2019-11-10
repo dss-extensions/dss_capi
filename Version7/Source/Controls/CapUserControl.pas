@@ -87,7 +87,7 @@ function TCapUserControl.CheckFuncError(Addr: Pointer;  FuncName: String): Point
 begin
         If Addr=nil then
           Begin
-               DoSimpleMsg('CapControl User Model Does Not Have Required Function: ' + FuncName, 569);
+               DoSimpleMsg(DSS, 'CapControl User Model Does Not Have Required Function: ' + FuncName, 569);
                FuncError := True;
           End;
         Result := Addr;
@@ -188,7 +188,7 @@ begin
           End;
 
         If FHandle = 0 Then
-              DoSimpleMsg('CapControl User Model ' + Value + ' Load Library Failed. DSS Directory = '+DSSDirectory, 570)
+              DoSimpleMsg(DSS, 'CapControl User Model ' + Value + ' Load Library Failed. DSS Directory = '+DSSDirectory, 570)
         Else
         Begin
             FName := Value;
@@ -205,7 +205,7 @@ begin
 
             If FuncError Then Begin
                  If not FreeLibrary(FHandle) then
-                 DoSimpleMsg('Error Freeing DLL: '+Fname, 10570);  // decrement the reference count
+                 DoSimpleMsg(DSS, 'Error Freeing DLL: '+Fname, 10570);  // decrement the reference count
                  FID     := 0;
                  FHandle := 0;
                  FName   := '';

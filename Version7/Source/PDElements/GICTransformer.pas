@@ -309,7 +309,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 350);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 350);
                 1:
                     GICTransSetBusH(param);
                 2:
@@ -476,7 +476,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in GICTransformer MakeLike: "' + GICTransName + '" Not Found.', 351);
+        DoSimpleMsg(DSS, 'Error in GICTransformer MakeLike: "' + GICTransName + '" Not Found.', 351);
 
 
 end;
@@ -485,7 +485,7 @@ end;
 function TGICTransformer.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TGICTransformer.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TGICTransformer.Init', -1);
     Result := 0;
 end;
 

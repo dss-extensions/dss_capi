@@ -305,7 +305,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 352);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 352);
                 1:
                     ElementName := ConstructElemName(lowercase(param));  // substitute @var value if any
                 2:
@@ -325,7 +325,7 @@ begin
                         'p':
                             ControlType := PFCONTROL;
                     else
-                        DoSimpleMsg(Format('Unrecognized CapControl Type: "%s" (Capcontrol.%s)', [param, DSS.ActiveCapControlObj.name]), 352);
+                        DoSimpleMsg(DSS, Format('Unrecognized CapControl Type: "%s" (Capcontrol.%s)', [param, DSS.ActiveCapControlObj.name]), 352);
                     end;
                 5:
                     ControlVars.PTRatio := Parser.DblValue;
@@ -418,7 +418,7 @@ begin
                             end
                             else
                             begin
-                                DoSimpleMsg('Invalid PF ON value for CapControl.' + DSS.ActiveCapControlObj.Name, 353);
+                                DoSimpleMsg(DSS, 'Invalid PF ON value for CapControl.' + DSS.ActiveCapControlObj.Name, 353);
                             end;
                         end;
                         8:
@@ -432,21 +432,21 @@ begin
                             end
                             else
                             begin
-                                DoSimpleMsg('Invalid PF OFF value for CapControl.' + DSS.ActiveCapControlObj.Name, 35301);
+                                DoSimpleMsg(DSS, 'Invalid PF OFF value for CapControl.' + DSS.ActiveCapControlObj.Name, 35301);
                             end;
                         end;
 
                         15:
                             if FCTPhase > FNphases then
                             begin
-                                DoSimpleMsg(Format('Error: Monitored phase(%d) must be less than or equal to number of phases(%d). ', [FCTPhase, FNphases]), 35302);
+                                DoSimpleMsg(DSS, Format('Error: Monitored phase(%d) must be less than or equal to number of phases(%d). ', [FCTPhase, FNphases]), 35302);
                                 FCTPhase := 1;
                             end;
 
                         16:
                             if FPTPhase > FNphases then
                             begin
-                                DoSimpleMsg(Format('Error: Monitored phase(%d) must be less than or equal to number of phases(%d). ', [FPTPhase, FNphases]), 35303);
+                                DoSimpleMsg(DSS, Format('Error: Monitored phase(%d) must be less than or equal to number of phases(%d). ', [FPTPhase, FNphases]), 35303);
                                 FPTPhase := 1;
                             end;
                     end;
@@ -526,7 +526,7 @@ begin
 
         end
     else
-        DoSimpleMsg('Error in CapControl MakeLike: "' + CapControlName + '" Not Found.', 360);
+        DoSimpleMsg(DSS, 'Error in CapControl MakeLike: "' + CapControlName + '" Not Found.', 360);
 
 end;
 
@@ -687,7 +687,7 @@ begin
         end;
     end
     else
-        DoSimpleMsg('Monitored Element in CapControl.' + Name + ' does not exist:"' + ElementName + '"', 363);
+        DoSimpleMsg(DSS, 'Monitored Element in CapControl.' + Name + ' does not exist:"' + ElementName + '"', 363);
 
          {Alternative override bus}
     if ControlVars.VoverrideBusSpecified then
@@ -696,7 +696,7 @@ begin
             VOverrideBusIndex := DSS.ActiveCircuit.BusList.Find(VOverrideBusName);
             if VOverrideBusIndex = 0 then
             begin
-                DoSimpleMsg(Format('CapControl.%s: Voltage override Bus "%s" not found. Did you wait until buses were defined? Reverting to default.', [Name, VOverrideBusName]), 10361);
+                DoSimpleMsg(DSS, Format('CapControl.%s: Voltage override Bus "%s" not found. Did you wait until buses were defined? Reverting to default.', [Name, VOverrideBusName]), 10361);
                 VoverrideBusSpecified := FALSE;
             end;
 

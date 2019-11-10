@@ -272,7 +272,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "UPFC.' + Name + '"', 320);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "UPFC.' + Name + '"', 320);
                 1:
                     SetBus(1, param);  // special handling of Bus 1
                 2:
@@ -383,7 +383,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in UPFC MakeLike: "' + OtherSource + '" Not Found.', 322);
+        DoSimpleMsg(DSS, 'Error in UPFC MakeLike: "' + OtherSource + '" Not Found.', 322);
 
 end;
 
@@ -391,7 +391,7 @@ end;
 function TUPFC.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TUPFC.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TUPFC.Init', -1);
     Result := 0;
 end;
 
@@ -793,12 +793,12 @@ begin
                     end;
                 end
             else
-                DoSimpleMsg('Control mode not regognized for UPFC', 790);
+                DoSimpleMsg(DSS, 'Control mode not regognized for UPFC', 790);
             end;
         end;
         Result := CurrOut;
     except
-        DoSimpleMsg('Error computing current for Isource.' + Name + '. Check specification. Aborting.', 334);
+        DoSimpleMsg(DSS, 'Error computing current for Isource.' + Name + '. Check specification. Aborting.', 334);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;
@@ -943,7 +943,7 @@ begin
                 CurrIn := cmplx(0, 0);
         Result := CurrIn;
     except
-        DoSimpleMsg('Error computing current for Isource.' + Name + '. Check specification. Aborting.', 334);
+        DoSimpleMsg(DSS, 'Error computing current for Isource.' + Name + '. Check specification. Aborting.', 334);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;

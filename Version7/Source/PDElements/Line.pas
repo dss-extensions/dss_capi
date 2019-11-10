@@ -443,7 +443,7 @@ begin
 
     end
     else
-        DoSimpleMsg('Line Code:' + Code + ' not found.', 180);
+        DoSimpleMsg(DSS, 'Line Code:' + Code + ' not found.', 180);
 
 end;
 
@@ -588,7 +588,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "Line.' + Name + '"', 181);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "Line.' + Name + '"', 181);
                 1:
                     Setbus(1, param);
                 2:
@@ -708,7 +708,7 @@ begin
                         end
                         else
                         begin
-                            DoSimpleMsg('Illegal change of number of phases for Line.' + Name, 18101);
+                            DoSimpleMsg(DSS, 'Illegal change of number of phases for Line.' + Name, 18101);
                         end;
                 6..11, 26..27:
                 begin
@@ -842,7 +842,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Line MakeLike: "' + LineName + '" Not Found.', 182);
+        DoSimpleMsg(DSS, 'Error in Line MakeLike: "' + LineName + '" Not Found.', 182);
 
 end;
 
@@ -850,7 +850,7 @@ end;
 function TLine.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TLine.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TLine.Init', -1);
     Result := 0;
 end;
 
@@ -1859,7 +1859,7 @@ begin
         Result := TRUE;
     end
     else
-        DoSimpleMsg('Error in Line Merge: Attempt to merge with invalid (nil) line object found.', 184);
+        DoSimpleMsg(DSS, 'Error in Line Merge: Attempt to merge with invalid (nil) line object found.', 184);
 
 
 end;
@@ -1900,7 +1900,7 @@ begin
 
     end
     else
-        DoSimpleMsg('Line Spacing object ' + Code + ' not found.(LINE.' + Name + ')', 181011);
+        DoSimpleMsg(DSS, 'Line Spacing object ' + Code + ' not found.(LINE.' + Name + ')', 181011);
 end;
 
 procedure TLineObj.FetchWireList(const Code: String);
@@ -1912,7 +1912,7 @@ var
     NewRatings: array of Double;
 begin
     if not assigned(FLineSpacingObj) then
-        DoSimpleMsg('You must assign the LineSpacing before the Wires Property (LINE.' + name + ').', 18102);
+        DoSimpleMsg(DSS, 'You must assign the LineSpacing before the Wires Property (LINE.' + name + ').', 18102);
 
     if FPhaseChoice = Unknown then
     begin // it's an overhead line
@@ -1949,7 +1949,7 @@ begin
             end;
         end
         else
-            DoSimpleMsg('Wire "' + DSS.AuxParser.StrValue + '" was not defined first (LINE.' + name + ').', 18103);
+            DoSimpleMsg(DSS, 'Wire "' + DSS.AuxParser.StrValue + '" was not defined first (LINE.' + name + ').', 18103);
     end;
 
     if RatingsInc then
@@ -1969,7 +1969,7 @@ begin
     FLineCodeSpecified := FALSE;
     KillGeometrySpecified;
     if not assigned(FLineSpacingObj) then
-        DoSimpleMsg('Must assign the LineSpacing before CN cables.(LINE.' + Name + ')', 18104);
+        DoSimpleMsg(DSS, 'Must assign the LineSpacing before CN cables.(LINE.' + Name + ')', 18104);
 
     FPhaseChoice := ConcentricNeutral;
     FLineWireData := Allocmem(Sizeof(FLineWireData^[1]) * FLineSpacingObj.NWires);
@@ -1981,7 +1981,7 @@ begin
         if Assigned(DSS.ActiveConductorDataObj) then
             FLineWireData^[i] := DSS.ActiveConductorDataObj
         else
-            DoSimpleMsg('CN cable ' + DSS.AuxParser.StrValue + ' was not defined first.(LINE.' + Name + ')', 18105);
+            DoSimpleMsg(DSS, 'CN cable ' + DSS.AuxParser.StrValue + ' was not defined first.(LINE.' + Name + ')', 18105);
     end;
 end;
 
@@ -1992,7 +1992,7 @@ begin
     FLineCodeSpecified := FALSE;
     KillGeometrySpecified;
     if not assigned(FLineSpacingObj) then
-        DoSimpleMsg('Must assign the LineSpacing before TS cables.(LINE.' + Name + ')', 18106);
+        DoSimpleMsg(DSS, 'Must assign the LineSpacing before TS cables.(LINE.' + Name + ')', 18106);
 
     FPhaseChoice := TapeShield;
     FLineWireData := Allocmem(Sizeof(FLineWireData^[1]) * FLineSpacingObj.NWires);
@@ -2004,7 +2004,7 @@ begin
         if Assigned(DSS.ActiveConductorDataObj) then
             FLineWireData^[i] := DSS.ActiveConductorDataObj
         else
-            DoSimpleMsg('TS cable ' + DSS.AuxParser.StrValue + ' was not defined first. (LINE.' + Name + ')', 18107);
+            DoSimpleMsg(DSS, 'TS cable ' + DSS.AuxParser.StrValue + ' was not defined first. (LINE.' + Name + ')', 18107);
     end;
 end;
 
@@ -2041,7 +2041,7 @@ begin
 
     end
     else
-        DoSimpleMsg('Line Geometry Object:' + Code + ' not found. (LINE.' + Name + ')', 18108);
+        DoSimpleMsg(DSS, 'Line Geometry Object:' + Code + ' not found. (LINE.' + Name + ')', 18108);
 
 end;
 

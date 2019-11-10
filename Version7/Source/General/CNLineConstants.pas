@@ -37,7 +37,7 @@ type
     PROTECTED
 
     PUBLIC
-        procedure Calc(f: Double); OVERRIDE;
+        procedure Calc(f: Double; EarthModel: Integer); OVERRIDE;
 
         constructor Create(NumConductors: Integer);
         destructor Destroy; OVERRIDE;
@@ -99,7 +99,7 @@ begin
         FRStrand^[i] := Value * To_Per_Meter(units);
 end;
 
-procedure TCNLineConstants.Calc(f: Double);
+procedure TCNLineConstants.Calc(f: Double; EarthModel: Integer);
 {Compute base Z and YC matrices in ohms/m for this frequency and earth impedance}
 var
     Zi, Zspacing: Complex;
@@ -148,7 +148,7 @@ begin
   // Self Impedances - CN cores and bare neutrals
     for i := 1 to FNumConds do
     begin
-        Zi := Get_Zint(i);
+        Zi := Get_Zint(i, EarthModel);
         if PowerFreq then
         begin // for less than 1 kHz, use published GMR
             Zi.im := 0.0;
@@ -158,7 +158,7 @@ begin
         begin
             Zspacing := CmulReal(Lfactor, ln(1.0 / Fradius^[i]));
         end;
-        Zmat.SetElement(i, i, Cadd(Zi, Cadd(Zspacing, Get_Ze(i, i))));
+        Zmat.SetElement(i, i, Cadd(Zi, Cadd(Zspacing, Get_Ze(i, i, EarthModel))));
     end;
 
   // CN self impedances
@@ -171,7 +171,7 @@ begin
         Zspacing := CMulReal(Lfactor, ln(1.0 / GmrCN));
         Zi := cmplx(ResCN, 0.0);
         idxi := i + FNumConds;
-        Zmat.SetElement(idxi, idxi, Cadd(Zi, Cadd(Zspacing, Get_Ze(i, i))));
+        Zmat.SetElement(idxi, idxi, Cadd(Zi, Cadd(Zspacing, Get_Ze(i, i, EarthModel))));
     end;
 
   // Mutual Impedances - between CN cores and bare neutrals
@@ -180,7 +180,7 @@ begin
         for j := 1 to i - 1 do
         begin
             Dij := sqrt(sqr(Fx^[i] - Fx^[j]) + sqr(Fy^[i] - Fy^[j]));
-            Zmat.SetElemSym(i, j, Cadd(Cmulreal(Lfactor, ln(1.0 / Dij)), Get_Ze(i, j)));
+            Zmat.SetElemSym(i, j, Cadd(Cmulreal(Lfactor, ln(1.0 / Dij)), Get_Ze(i, j, EarthModel)));
         end;
     end;
 
@@ -192,7 +192,7 @@ begin
         begin  // CN to other CN
             idxj := j + FNumConds;
             Dij := sqrt(sqr(Fx^[i] - Fx^[j]) + sqr(Fy^[i] - Fy^[j]));
-            Zmat.SetElemSym(idxi, idxj, Cadd(Cmulreal(Lfactor, ln(1.0 / Dij)), Get_Ze(i, j)));
+            Zmat.SetElemSym(idxi, idxj, Cadd(Cmulreal(Lfactor, ln(1.0 / Dij)), Get_Ze(i, j, EarthModel)));
         end;
         for j := 1 to FNumConds do
         begin // CN to cores and bare neutrals
@@ -208,7 +208,7 @@ begin
                 Dij := Power(Power(Dij, FkStrand^[i]) - Power(RadCN, FkStrand^[i]),
                     1.0 / FkStrand^[i]);
             end;
-            Zmat.SetElemSym(idxi, idxj, Cadd(Cmulreal(Lfactor, ln(1.0 / Dij)), Get_Ze(i, j)));
+            Zmat.SetElemSym(idxi, idxj, Cadd(Cmulreal(Lfactor, ln(1.0 / Dij)), Get_Ze(i, j, EarthModel)));
         end;
     end;
 

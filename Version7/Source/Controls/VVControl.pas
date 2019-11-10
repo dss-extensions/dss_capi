@@ -239,7 +239,7 @@ begin
     Result := XY_CurveClass.Find(CurveName);
 
     if Result = NIL then
-        DoSimpleMsg('XY Curve object: "' + CurveName + '" not found.', 380);
+        DoSimpleMsg(DSS, 'XY Curve object: "' + CurveName + '" not found.', 380);
 
 end;
 
@@ -290,7 +290,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' +
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' +
                         Class_name + '.' + Name + '"', 364);
                 1:
                     ElementName := lowercase(Param);
@@ -403,7 +403,7 @@ begin
 
         end
     else
-        DoSimpleMsg('Error in VVCControl MakeLike: "' + VVCControlName +
+        DoSimpleMsg(DSS, 'Error in VVCControl MakeLike: "' + VVCControlName +
             '" Not Found.', 370);
 
 end;
@@ -497,7 +497,7 @@ begin
     // for speedy sampling
     end
     else
-        DoSimpleMsg('Monitored Element in VVCControl.' + Name +
+        DoSimpleMsg(DSS, 'Monitored Element in VVCControl.' + Name +
             ' does not exist:"' + ElementName + '"', 372);
 
     if FGenPointerList.ListSize = 0 then
@@ -726,7 +726,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg(
+        DoSimpleMsg(DSS, 
             'Could not find any generators, or the vvc curve size is zero.  Please correct in your script.', 1234);
     end;
 end;

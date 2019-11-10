@@ -10,12 +10,13 @@ unit ExportOptions;
 interface
 
 uses
-    Command;
+    Command,
+    DSSClass;
 
 const
     NumExportOptions = 61;
 
-function DoExportCmd: Integer;
+function DoExportCmd(DSS: TDSS): Integer;
 
 
 var
@@ -35,7 +36,6 @@ uses
     ExportCIMXML,
     Utilities,
     NamedObject,
-    DSSClass,
     DSSHelper;
 
 function AssignNewUUID(val: String): TUuid;
@@ -183,7 +183,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-function DoExportCmd: Integer;
+function DoExportCmd(DSS: TDSS): Integer;
 
 var
     ParamName,
@@ -215,14 +215,14 @@ begin
     case ParamPointer of
         1..24, 28..32, 35, 46..51:
         begin
-            if not assigned(DSSPrime.ActiveCircuit) then
+            if not assigned(DSS.ActiveCircuit) then
             begin
-                DoSimpleMsg('No circuit created.', 24711);
+                DoSimpleMsg(DSS, 'No circuit created.', 24711);
                 Exit;
             end;
-            if not assigned(DSSPrime.ActiveCircuit.Solution) or not assigned(DSSPrime.ActiveCircuit.Solution.NodeV) then
+            if not assigned(DSS.ActiveCircuit.Solution) or not assigned(DSS.ActiveCircuit.Solution.NodeV) then
             begin
-                DoSimpleMsg('The circuit must be solved before you can do this.', 24712);
+                DoSimpleMsg(DSS, 'The circuit must be solved before you can do this.', 24712);
                 Exit;
             end;
         end;
@@ -234,10 +234,10 @@ begin
     TripletOpt := FALSE;
     PhasesToPlot := PROFILE3PH;  // init this to get rid of compiler warning
     pMeter := NIL;
-    Substation := DSSPrime.ActiveCircuit.Name + '_Substation';
-    SubGeographicRegion := DSSPrime.ActiveCircuit.Name + '_SubRegion';
-    GeographicRegion := DSSPrime.ActiveCircuit.Name + '_Region';
-    FdrUuid := DSSPrime.ActiveCircuit.UUID;  // default is to not change the feeder mrid 
+    Substation := DSS.ActiveCircuit.Name + '_Substation';
+    SubGeographicRegion := DSS.ActiveCircuit.Name + '_SubRegion';
+    GeographicRegion := DSS.ActiveCircuit.Name + '_Region';
+    FdrUuid := DSS.ActiveCircuit.UUID;  // default is to not change the feeder mrid 
     CreateUUID4(SubUuid);      // these next 3 are created on the fly for CIM export
     CreateUUID4(SubGeoUuid);
     CreateUUID4(RgnUuid);
@@ -347,7 +347,7 @@ begin
             Parm2 := Parser.StrValue;
 
             if CompareTextShortest(ParamName, 'meter') = 0 then
-                pMeter := DSSPrime.EnergyMeterClass.Find(Parm2);
+                pMeter := DSS.EnergyMeterClass.Find(Parm2);
         end;
 
     end;
@@ -359,7 +359,7 @@ begin
         FileName := LowerCase(Parser.StrValue);    // should be full path name to work universally
     end;
 
-    DSSPrime.InShowResults := TRUE;
+    DSS.InShowResults := TRUE;
 
    {Assign default file name if alternate not specified}
     if Length(FileName) = 0 then
@@ -490,175 +490,175 @@ begin
         else
             FileName := 'EXP_VOLTAGES.CSV';    // default
         end;
-        FileName := GetOutputDirectory + DSSPrime.CircuitName_ + FileName;  // Explicitly define directory
+        FileName := DSS.OutputDirectory + DSS.CircuitName_ + FileName;  // Explicitly define directory
     end;
 
     case ParamPointer of
         1:
-            ExportVoltages(FileName);
+            ExportVoltages(DSS, Filename);
         2:
-            ExportSeqVoltages(FileName);
+            ExportSeqVoltages(DSS, Filename);
         3:
-            ExportCurrents(FileName);
+            ExportCurrents(DSS, Filename);
         4:
-            ExportSeqCurrents(FileName);
+            ExportSeqCurrents(DSS, Filename);
         5:
-            ExportEstimation(FileName);   // Estimation error
+            ExportEstimation(DSS, Filename);   // Estimation error
         6:
-            ExportCapacity(FileName);
+            ExportCapacity(DSS, Filename);
         7:
-            ExportOverLoads(FileName);
+            ExportOverLoads(DSS, Filename);
         8:
-            ExportUnserved(FileName, UEOnlyOpt);
+            ExportUnserved(DSS, FileName, UEOnlyOpt);
         9:
-            ExportPowers(FileName, MVAOpt);
+            ExportPowers(DSS, FileName, MVAOpt);
         10:
-            ExportSeqPowers(FileName, MVAopt);
+            ExportSeqPowers(DSS, FileName, MVAopt);
         11:
-            ExportFaultStudy(FileName);
+            ExportFaultStudy(DSS, Filename);
         12:
-            ExportGenMeters(FileName);
+            ExportGenMeters(DSS, Filename);
         13:
-            ExportLoads(FileName);
+            ExportLoads(DSS, Filename);
         14:
-            ExportMeters(FileName);
+            ExportMeters(DSS, Filename);
         15:
             if Length(Parm2) > 0 then
             begin
                 if Parm2 = 'all' then
                 begin
-                    pMon := DSSPrime.ActiveCircuit.Monitors.First;
+                    pMon := DSS.ActiveCircuit.Monitors.First;
                     while pMon <> NIL do
                     begin
                         if pMon <> NIL then
                         begin
                             pMon.TranslateToCSV(FALSE);
-                            FileName := DSSPrime.GlobalResult;
+                            FileName := DSS.GlobalResult;
                         end;
-                        pMon := DSSPrime.ActiveCircuit.Monitors.Next;
+                        pMon := DSS.ActiveCircuit.Monitors.Next;
                     end;
                 end
                 else
                 begin
-                    pMon := DSSPrime.MonitorClass.Find(Parm2);
+                    pMon := DSS.MonitorClass.Find(Parm2);
                     if pMon <> NIL then
                     begin
                         pMon.TranslateToCSV(FALSE);
-                        FileName := DSSPrime.GlobalResult;
+                        FileName := DSS.GlobalResult;
                     end
                     else
-                        DoSimpleMsg('Monitor "' + Parm2 + '" not found.' + CRLF + parser.CmdString, 250);
+                        DoSimpleMsg(DSS, 'Monitor "' + Parm2 + '" not found.' + CRLF + parser.CmdString, 250);
                 end;
             end
             else
-                DoSimpleMsg('Monitor Name Not Specified.' + CRLF + parser.CmdString, 251);
+                DoSimpleMsg(DSS, 'Monitor Name Not Specified.' + CRLF + parser.CmdString, 251);
         16:
-            ExportYprim(Filename);
+            ExportYprim(DSS, Filename);
         17:
-            ExportY(Filename, TripletOpt);
+            ExportY(DSS, Filename, TripletOpt);
         18:
-            ExportSeqZ(Filename);
+            ExportSeqZ(DSS, Filename);
         19:
-            ExportPbyphase(Filename, MVAOpt);
+            ExportPbyphase(DSS, Filename, MVAOpt);
         20:
-            DoSimpleMsg('CDPSMCombined (CIM17) export no longer supported; use Export CIM100', 252);
+            DoSimpleMsg(DSS, 'CDPSMCombined (CIM17) export no longer supported; use Export CIM100', 252);
         21:
-            ExportCDPSM(Filename, Substation, SubGeographicRegion, GeographicRegion, FdrUuid, SubUuid, SubGeoUuid, RgnUuid, Combined);
+            ExportCDPSM(DSS, Filename, Substation, SubGeographicRegion, GeographicRegion, FdrUuid, SubUuid, SubGeoUuid, RgnUuid, Combined);
         22:
-            DoSimpleMsg('Asset export no longer supported; use Export CIM100', 252);
+            DoSimpleMsg(DSS, 'Asset export no longer supported; use Export CIM100', 252);
         23:
-            ExportBusCoords(Filename);
+            ExportBusCoords(DSS, Filename);
         24:
-            ExportLosses(Filename);
+            ExportLosses(DSS, Filename);
         25:
-            ExportUuids(Filename);
+            ExportUuids(DSS, Filename);
         26:
-            ExportCounts(Filename);
+            ExportCounts(DSS, Filename);
         27:
-            ExportSummary(Filename);
+            ExportSummary(DSS, Filename);
         28:
-            DoSimpleMsg('ElectricalProperties export no longer supported; use Export CIM100', 252);
+            DoSimpleMsg(DSS, 'ElectricalProperties export no longer supported; use Export CIM100', 252);
         29:
-            DoSimpleMsg('Geographical export no longer supported; use Export CIM100', 252);
+            DoSimpleMsg(DSS, 'Geographical export no longer supported; use Export CIM100', 252);
         30:
-            DoSimpleMsg('Topology export no longer supported; use Export CIM100', 252);
+            DoSimpleMsg(DSS, 'Topology export no longer supported; use Export CIM100', 252);
         31:
-            DoSimpleMsg('StateVariables export no longer supported; use Export CIM100', 252);
+            DoSimpleMsg(DSS, 'StateVariables export no longer supported; use Export CIM100', 252);
         32:
-            ExportProfile(FileName, PhasesToPlot);
+            ExportProfile(DSS, FileName, PhasesToPlot);
         33:
-            ExportEventLog(FileName);
+            ExportEventLog(DSS, Filename);
         34:
             DumpAllocationFactors(FileName);
         35:
-            ExportVoltagesElements(FileName);
+            ExportVoltagesElements(DSS, Filename);
         36:
-            ExportGICMvar(FileName);
+            ExportGICMvar(DSS, Filename);
         37:
-            ExportBusReliability(FileName);
+            ExportBusReliability(DSS, Filename);
         38:
-            ExportBranchReliability(FileName);
+            ExportBranchReliability(DSS, Filename);
         39:
-            ExportNodeNames(FileName);
+            ExportNodeNames(DSS, Filename);
         40:
-            ExportTaps(FileName);
+            ExportTaps(DSS, Filename);
         41:
-            ExportNodeOrder(FileName);
+            ExportNodeOrder(DSS, Filename);
         42:
-            ExportElemCurrents(FileName);
+            ExportElemCurrents(DSS, Filename);
         43:
-            ExportElemVoltages(FileName);
+            ExportElemVoltages(DSS, Filename);
         44:
-            ExportElemPowers(FileName);
+            ExportElemPowers(DSS, Filename);
         45:
-            ExportResult(FileName);
+            ExportResult(DSS, Filename);
         46:
-            ExportYNodeList(FileName);
+            ExportYNodeList(DSS, Filename);
         47:
-            ExportYVoltages(FileName);
+            ExportYVoltages(DSS, Filename);
         48:
-            ExportYCurrents(FileName);
+            ExportYCurrents(DSS, Filename);
         49:
-            ExportPVSystemMeters(FileName);
+            ExportPVSystemMeters(DSS, Filename);
         50:
-            ExportStorageMeters(FileName);
+            ExportStorageMeters(DSS, Filename);
         51:
-            ExportSections(FileName, pMeter);
+            ExportSections(DSS, FileName, pMeter);
         52:
-            ExportErrorLog(FileName);
+            ExportErrorLog(DSS, Filename);
         53:
-            ExportIncMatrix(FileName);
+            ExportIncMatrix(DSS, Filename);
         54:
-            ExportIncMatrixRows(FileName);
+            ExportIncMatrixRows(DSS, Filename);
         55:
-            ExportIncMatrixCols(FileName);
+            ExportIncMatrixCols(DSS, Filename);
         56:
-            ExportBusLevels(FileName);
+            ExportBusLevels(DSS, Filename);
         57:
-            ExportLaplacian(FileName);
+            ExportLaplacian(DSS, Filename);
         58:
-            ExportZLL(FileName);
+            ExportZLL(DSS, Filename);
         59:
-            ExportZCC(FileName);
+            ExportZCC(DSS, Filename);
         60:
-            ExportC(FileName);
+            ExportC(DSS, Filename);
         61:
-            ExportY4(FileName);
+            ExportY4(DSS, Filename);
 
     else
-        // ExportVoltages(FileName);    // default
-        DoSimpleMsg('Error: Unknown Export command: "' + parm1 + '"', 24713);
+        // ExportVoltages(DSS, Filename);    // default
+        DoSimpleMsg(DSS, 'Error: Unknown Export command: "' + parm1 + '"', 24713);
         AbortExport := TRUE;
     end;
 
     Result := 0;
-    DSSPrime.InShowResults := FALSE;
+    DSS.InShowResults := FALSE;
 
     if not AbortExport then
     begin
         SetLastResultFile(FileName);
-        ParserVars.Add('@lastexportfile', FileName);
-        if DSSPrime.AutoShowExport then
+        DSS.ParserVars.Add('@lastexportfile', FileName);
+        if DSS.AutoShowExport then
             FireOffEditor(FileName);
     end;
 

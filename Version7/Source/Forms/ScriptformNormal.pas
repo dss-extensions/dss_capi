@@ -337,7 +337,7 @@ begin
 
         except
             On E: Exception do
-                DoSimpleMsg('Error saving file: ' + E.message, 310);
+                DoSimpleMsg(DSS, 'Error saving file: ' + E.message, 310);
         end;
 
     finally
@@ -404,10 +404,10 @@ begin
                 ActiveScriptFormNormal.HasFileName := TRUE;
             end
             else
-                DoSimpleMsg('File "' + Editor.SelText + '" not found in currentdirectory: "' + GetCurrentDir + '"', 311);
+                DoSimpleMsg(DSS, 'File "' + Editor.SelText + '" not found in currentdirectory: "' + GetCurrentDir + '"', 311);
         except
             On E: Exception do
-                DoSimpleMsg('Error opening new window: ' + E.Message, 312);
+                DoSimpleMsg(DSS, 'Error opening new window: ' + E.Message, 312);
         end;
     end;
 end;
@@ -426,10 +426,10 @@ begin
             if FileExists(FileName) then
                 FireOffEditor(FileName)
             else
-                DoSimpleMsg('File "' + FileName + '" not found in currentdirectory: "' + GetCurrentDir + '"', 313);
+                DoSimpleMsg(DSS, 'File "' + FileName + '" not found in currentdirectory: "' + GetCurrentDir + '"', 313);
         except
             On E: Exception do
-                DoSimpleMsg('Error opening Editor: ' + E.Message, 314);
+                DoSimpleMsg(DSS, 'Error opening Editor: ' + E.Message, 314);
         end;
     end;
 

@@ -225,12 +225,12 @@ begin
                         begin
                             if not assigned(ActiveCircuit) then
                             begin
-                                DoSimpleMsg('No circuit created.', 24731);
+                                DoSimpleMsg(DSS, 'No circuit created.', 24731);
                                 Exit;
                             end;
                             if not assigned(ActiveCircuit.Solution) or not assigned(ActiveCircuit.Solution.NodeV) then
                             begin
-                                DoSimpleMsg('The circuit must be solved before you can do this.', 24732);
+                                DoSimpleMsg(DSS, 'The circuit must be solved before you can do this.', 24732);
                                 Exit;
                             end;
                         end;
@@ -476,7 +476,7 @@ begin
             if (PlotType = ptScatterPlot) or (
                 PlotType = ptEvolutionPlot) or (
                 PlotType = ptMatrixplot) then
-                DoSimpleMsg('The OpenDSS Viewer is disabled (Check the OpenDSSViewer option in the help).', 0)
+                DoSimpleMsg(DSS, 'The OpenDSS Viewer is disabled (Check the OpenDSSViewer option in the help).', 0)
             else
                 Execute;   // makes a new plot based on these options
       {$ENDIF}

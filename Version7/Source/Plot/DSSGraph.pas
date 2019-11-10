@@ -120,7 +120,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error opening DSSView file: ' + Filename + ', ' + E.message, 45001);
+            DoSimpleMsg(DSS, 'Error opening DSSView file: ' + Filename + ', ' + E.message, 45001);
             Exit;
         end;
     end;
@@ -132,7 +132,7 @@ begin
         ActiveSolutionFileHdl := Sysutils.FileCreate(ActiveSolutionFileName);
         if ActiveSolutionFileHdl < 0 then
         begin
-            DoSimpleMsg('Error occured opening DSSView binary Solution file: ' + Filename, 45001);
+            DoSimpleMsg(DSS, 'Error occured opening DSSView binary Solution file: ' + Filename, 45001);
             CloseFile(ActiveDSSGraphFile);
             Exit;
         end;
@@ -140,7 +140,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error opening DSSView Solution file: ' + Filename + ', ' + E.message, 45001);
+            DoSimpleMsg(DSS, 'Error opening DSSView Solution file: ' + Filename + ', ' + E.message, 45001);
             Exit;
         end;
     end;
@@ -412,17 +412,17 @@ begin
                     Pchar(EncloseQuotes(ActiveFileName)),
                     NIL, SW_SHOW);
 
-                ParserVars.Add('@LastPlotFile', ActiveFileName);
+                DSS.ParserVars.Add('@LastPlotFile', ActiveFileName);
 
                 case Retval of
                     0:
-                        DoSimpleMsg('System out of memory. ', 45700);
+                        DoSimpleMsg(DSS, 'System out of memory. ', 45700);
                     ERROR_BAD_FORMAT:
-                        DoSimpleMsg('Graphics output file "' + ActiveFileName + '" is Invalid.', 45701);
+                        DoSimpleMsg(DSS, 'Graphics output file "' + ActiveFileName + '" is Invalid.', 45701);
                     ERROR_FILE_NOT_FOUND:
-                        DoSimpleMsg(DSSViewfile + ' File  Not Found.' + CRLF + 'It should be in the same directory as the OpenDSS program', 45702);
+                        DoSimpleMsg(DSS, DSSViewfile + ' File  Not Found.' + CRLF + 'It should be in the same directory as the OpenDSS program', 45702);
                     ERROR_PATH_NOT_FOUND:
-                        DoSimpleMsg('Path for DSSView program "' + DSSViewFile + '" Not Found.', 45703);
+                        DoSimpleMsg(DSS, 'Path for DSSView program "' + DSSViewFile + '" Not Found.', 45703);
                 end;
             end;
         except

@@ -182,35 +182,33 @@ VAR
     CPU_Cores          : integer;
     GlobalDefaultBaseFreq: Double = 60.0;
 
-PROCEDURE DoErrorMsg(Const S, Emsg, ProbCause :String; ErrNum:Integer);
-PROCEDURE DoSimpleMsg(Const S :String; ErrNum:Integer);
+PROCEDURE DoErrorMsg(DSS: TDSS; Const S, Emsg, ProbCause :String; ErrNum:Integer);
+PROCEDURE DoSimpleMsg(DSS: TDSS; Const S :String; ErrNum:Integer);
 
 PROCEDURE ClearAllCircuits(DSS: TDSS);
 
-PROCEDURE SetObject(const param :string);
-FUNCTION  SetActiveBus(const BusName:String):Integer;
-PROCEDURE SetDataPath(const PathName:String);
+PROCEDURE SetObject(DSS: TDSS; const param :string);
+FUNCTION  SetActiveBus(DSS: TDSS; const BusName:String):Integer;
+PROCEDURE SetDataPath(DSS: TDSS; const PathName:String);
 
-PROCEDURE SetLastResultFile(Const Fname:String);
+PROCEDURE SetLastResultFile(DSS: TDSS; Const Fname:String);
 
 PROCEDURE MakeNewCircuit(DSS: TDSS; Const Name:String);
 
-PROCEDURE AppendGlobalResult(Const s:String);
-PROCEDURE AppendGlobalResultCRLF(const S:String);  // Separate by CRLF
+PROCEDURE AppendGlobalResult(DSS: TDSS; Const s:String);
+PROCEDURE AppendGlobalResultCRLF(DSS: TDSS; const S:String);  // Separate by CRLF
 
-PROCEDURE ResetQueryLogFile;
-PROCEDURE WriteQueryLogFile(Const Prop, S:String);
+PROCEDURE ResetQueryLogFile(DSS: TDSS);
+PROCEDURE WriteQueryLogFile(DSS: TDSS; Const Prop, S:String);
 
-PROCEDURE WriteDLLDebugFile(Const S:String);
+PROCEDURE WriteDLLDebugFile(DSS: TDSS; Const S:String);
 
 {$IFNDEF DSS_CAPI} // Disable DSS_Registry completely when building the DSS_CAPI DLL
-PROCEDURE ReadDSS_Registry;
-PROCEDURE WriteDSS_Registry;
+PROCEDURE ReadDSS_Registry(DSS: TDSS);
+PROCEDURE WriteDSS_Registry(DSS: TDSS);
 {$ENDIF}
 
 // FUNCTION IsDSSDLL(Fname:String):Boolean;
-
-Function GetOutputDirectory:String;
 
 // Procedure MyReallocMem(Var p:Pointer; newsize:integer);
 // Function MyAllocMem(nbytes:Cardinal):Pointer;
@@ -290,11 +288,6 @@ Begin
 End;
 {$ENDIF}
 
-function GetOutputDirectory:String;
-begin
-  Result := DSSPrime.OutputDirectory;
-end;
-
 {--------------------------------------------------------------}
 // FUNCTION IsDSSDLL(Fname:String):Boolean;
 // 
@@ -365,7 +358,7 @@ Begin
 End;
 
 //----------------------------------------------------------------------------
-PROCEDURE DoSimpleMsg(Const S:String; ErrNum:Integer);
+PROCEDURE DoSimpleMsg(DSS, Const S:String; ErrNum:Integer);
 
 VAR
     Retval:Integer;
@@ -408,7 +401,6 @@ VAR
    ObjName, ObjClass :String;
 
 Begin
-
       // Split off Obj class and name
       dotpos := Pos('.', Param);
       CASE dotpos OF
@@ -426,7 +418,7 @@ Begin
       Begin
         IF Not DSSPrime.ActiveDSSClass.SetActive(Objname) THEN
         Begin // scroll through list of objects untill a match
-          DoSimpleMsg('Error! Object "' + ObjName + '" not found.'+ CRLF + parser.CmdString, 904);
+          DoSimpleMsg(DSS, 'Error! Object "' + ObjName + '" not found.'+ CRLF + DSSPrime.Parser.CmdString, 904);
         End
         ELSE
         With DSSPrime.ActiveCircuit Do
@@ -441,12 +433,12 @@ Begin
         End;
       End
       ELSE
-        DoSimpleMsg('Error! Active object type/class is not set.', 905);
+        DoSimpleMsg(DSS, 'Error! Active object type/class is not set.', 905);
 
 End;
 
 //----------------------------------------------------------------------------
-FUNCTION SetActiveBus(const BusName:String):Integer;
+FUNCTION SetActiveBus(DSS: TDSS; const BusName:String):Integer;
 
 
 Begin
@@ -454,7 +446,7 @@ Begin
    // Now find the bus and set active
    Result := 0;
 
-   WITH DSSPrime.ActiveCircuit Do
+   WITH DSS.ActiveCircuit Do
      Begin
         If BusList.ListSize=0 Then Exit;   // Buslist not yet built
         ActiveBusIndex := BusList.Find(BusName);
@@ -473,7 +465,7 @@ Begin
      WHILE DSS.ActiveCircuit<>nil DO
      Begin
         DSS.ActiveCircuit.Free;
-        DSS.ActiveCircuit := DSSPrime.Circuits.Next;
+        DSS.ActiveCircuit := DSS.Circuits.Next;
      End;
     DSS.Circuits.Free;
     DSS.Circuits := TPointerList.Create(2);   // Make a new list of circuits
@@ -497,7 +489,7 @@ Begin
          DSS.ActiveDSSObject := DSS.ActiveSolutionObj;
          {*Handle := *} DSS.Circuits.Add(DSS.ActiveCircuit);
          Inc(DSS.NumCircuits);
-         S := Parser.Remainder;    // Pass remainder of string on to vsource.
+         S := DSS.Parser.Remainder;    // Pass remainder of string on to vsource.
          {Create a default Circuit}
          DSS.SolutionABort := FALSE;
          {Voltage source named "source" connected to SourceBus}
@@ -513,15 +505,15 @@ Begin
 End;
 
 
-PROCEDURE AppendGlobalResult(Const S:String);
+PROCEDURE AppendGlobalResult(DSS: TDSS; Const S:String);
 
 // Append a string to Global result, separated by commas
 
 Begin
-    If Length(DSSPrime.GlobalResult)=0 Then
-        DSSPrime.GlobalResult := S
+    If Length(DSS.GlobalResult)=0 Then
+        DSS.GlobalResult := S
     Else
-        DSSPrime.GlobalResult := DSSPrime.GlobalResult + ', ' + S;
+        DSS.GlobalResult := DSS.GlobalResult + ', ' + S;
 End;
 
 
@@ -606,11 +598,11 @@ End;
 {$ENDIF}
 {$ENDIF} //IFDEF DSS_CAPI
 
-PROCEDURE WriteDLLDebugFile(Const S:String);
+PROCEDURE WriteDLLDebugFile(DSS: TDSS; Const S:String);
 
 Begin
 
-        AssignFile(DLLDebugFile, DSSPrime.OutputDirectory + 'DSSDLLDebug.TXT');
+        AssignFile(DLLDebugFile, DSS.OutputDirectory + 'DSSDLLDebug.TXT');
         If DLLFirstTime then Begin
            Rewrite(DLLDebugFile);
            DLLFirstTime := False;
@@ -638,7 +630,7 @@ begin
 end;
 {$ENDIF}
 
-PROCEDURE SetDataPath(const PathName:String);
+PROCEDURE SetDataPath(DSS: TDSS; const PathName:String);
 var
   ScratchPath: String;
 // Pathname may be null
@@ -646,31 +638,31 @@ BEGIN
   if (Length(PathName) > 0) and not DirectoryExists(PathName) then Begin
   // Try to create the directory
     if not CreateDir(PathName) then Begin
-      DosimpleMsg('Cannot create ' + PathName + ' directory.', 907);
+      DoSimpleMsg(DSS, 'Cannot create ' + PathName + ' directory.', 907);
       Exit;
     End;
   End;
 
-  DSSPrime.DataDirectory := PathName;
+  DSS.DataDirectory := PathName;
 
   // Put a \ on the end if not supplied. Allow a null specification.
-  If Length(DSSPrime.DataDirectory) > 0 Then Begin
-    ChDir(DSSPrime.DataDirectory);   // Change to specified directory
-    If DSSPrime.DataDirectory[Length(DSSPrime.DataDirectory)] <> PathDelim Then DSSPrime.DataDirectory := DSSPrime.DataDirectory + PathDelim;
+  If Length(DSS.DataDirectory) > 0 Then Begin
+    ChDir(DSS.DataDirectory);   // Change to specified directory
+    If DSS.DataDirectory[Length(DSS.DataDirectory)] <> PathDelim Then DSS.DataDirectory := DSS.DataDirectory + PathDelim;
   End;
 
   // see if DataDirectory is writable. If not, set OutputDirectory to the user's appdata
-  if IsDirectoryWritable(DSSPrime.DataDirectory) then begin
-    DSSPrime.OutputDirectory := DSSPrime.DataDirectory;
+  if IsDirectoryWritable(DSS.DataDirectory) then begin
+    DSS.OutputDirectory := DSS.DataDirectory;
   end else begin
     ScratchPath := GetDefaultScratchDirectory + PathDelim + ProgramName + PathDelim;
     if not DirectoryExists(ScratchPath) then CreateDir(ScratchPath);
-    DSSPrime.OutputDirectory := ScratchPath;
+    DSS.OutputDirectory := ScratchPath;
   end;
 END;
 
 {$IFNDEF DSS_CAPI} // Disable DSS_Registry completely when building the DSS_CAPI DLL
-PROCEDURE ReadDSS_Registry;
+PROCEDURE ReadDSS_Registry(DSS: TDSS);
 Var  TestDataDirectory:string;
 Begin
   DSS_Registry.Section := 'MainSect';
@@ -698,13 +690,13 @@ Begin
   {$ENDIF}
   GlobalDefaultBaseFreq  := StrToInt(DSS_Registry.ReadString('BaseFrequency', '60' ));
   LastFileCompiled := DSS_Registry.ReadString('LastFile', '' );
-  TestDataDirectory :=   DSS_Registry.ReadString('DataPath', DSSPrime.DataDirectory);
+  TestDataDirectory :=   DSS_Registry.ReadString('DataPath', DSS.DataDirectory);
   If SysUtils.DirectoryExists (TestDataDirectory) Then SetDataPath (TestDataDirectory)
-                                        Else SetDataPath (DSSPrime.DataDirectory);
+                                        Else SetDataPath (DSS.DataDirectory);
 End;
 
 
-PROCEDURE WriteDSS_Registry;
+PROCEDURE WriteDSS_Registry(DSS: TDSS);
 Begin
   If UpdateRegistry Then  Begin
       DSS_Registry.Section := 'MainSect';
@@ -720,42 +712,42 @@ Begin
 End;
 {$ENDIF}
 
-PROCEDURE ResetQueryLogFile;
+PROCEDURE ResetQueryLogFile(DSS: TDSS);
 Begin
-     DSSPrime.QueryFirstTime := TRUE;
+     DSS.QueryFirstTime := TRUE;
 End;
 
 
-PROCEDURE WriteQueryLogfile(Const Prop, S:String);
+PROCEDURE WriteQueryLogfile(DSS: TDSS; Const Prop, S:String);
 
 {Log file is written after a query command if LogQueries is true.}
 
 Begin
 
   TRY
-        DSSPrime.QueryLogFileName :=  DSSPrime.OutputDirectory + 'QueryLog.CSV';
-        AssignFile(DSSPrime.QueryLogFile, DSSPrime.QueryLogFileName);
-        If DSSPrime.QueryFirstTime then
+        DSS.QueryLogFileName :=  DSS.OutputDirectory + 'QueryLog.CSV';
+        AssignFile(DSS.QueryLogFile, DSS.QueryLogFileName);
+        If DSS.QueryFirstTime then
         Begin
-             Rewrite(DSSPrime.QueryLogFile);  // clear the file
-             Writeln(DSSPrime.QueryLogFile, 'Time(h), Property, Result');
-             DSSPrime.QueryFirstTime := False;
+             Rewrite(DSS.QueryLogFile);  // clear the file
+             Writeln(DSS.QueryLogFile, 'Time(h), Property, Result');
+             DSS.QueryFirstTime := False;
         end
-        Else Append(DSSPrime.QueryLogFile);
+        Else Append(DSS.QueryLogFile);
 
-        Writeln(DSSPrime.QueryLogFile,Format('%.10g, %s, %s',[DSSPrime.ActiveCircuit.Solution.DynaVars.dblHour, Prop, S]));
-        CloseFile(DSSPrime.QueryLogFile);
+        Writeln(DSS.QueryLogFile,Format('%.10g, %s, %s',[DSS.ActiveCircuit.Solution.DynaVars.dblHour, Prop, S]));
+        CloseFile(DSS.QueryLogFile);
   EXCEPT
-        On E:Exception Do DoSimpleMsg('Error writing Query Log file: ' + E.Message, 908);
+        On E:Exception Do DoSimpleMsg(DSS, 'Error writing Query Log file: ' + E.Message, 908);
   END;
 
 End;
 
-PROCEDURE SetLastResultFile(Const Fname:String);
+PROCEDURE SetLastResultFile(DSS: TDSS; Const Fname:String);
 
 Begin
-      DSSPrime.LastResultfile := Fname;
-      ParserVars.Add('@lastfile', Fname);
+      DSS.LastResultfile := Fname;
+      DSS.ParserVars.Add('@lastfile', Fname);
 End;
 
 // Function MyAllocMem(nbytes:Cardinal):Pointer;
@@ -770,6 +762,7 @@ End;
 //      ReallocMem(p, newsize);
 // End;
 
+{$IFNDEF FPC}
 // Function to validate the installation and path of the OpenDSS Viewer
 function GetIni(s,k: string; d: string; f: string=''): string; overload;
 var
@@ -794,7 +787,6 @@ begin
   FreeAndNil(ini);
 end;
 
-{$IFNDEF FPC}
 // Validates the installation and path of the OpenDSS Viewer
 function CheckOpenDSSViewer: Boolean;
 var FileName: string;
@@ -905,7 +897,7 @@ initialization
    //WriteDLLDebugFile('DSSGlobals');
 
    {$IFNDEF FPC}
-   DSS_Viz_installed:= CheckDSSVisualizationTool; // DSS visualization tool (flag of existance)
+   DSS_Viz_installed := CheckDSSVisualizationTool; // DSS visualization tool (flag of existance)
    {$ENDIF}
 {$IFDEF DSS_CAPI}
    IsDLL := True;
@@ -934,5 +926,3 @@ Finalization
 {$ENDIF}
 
 End.
-
-

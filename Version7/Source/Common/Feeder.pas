@@ -212,7 +212,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 630);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 630);
 
             else
                 ClassEdit(DSS.ActiveFeederObj, ParamPointer - NumPropsThisClass)
@@ -260,7 +260,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Feeder MakeLike: "' + OtherFeederName + '" Not Found.', 631);
+        DoSimpleMsg(DSS, 'Error in Feeder MakeLike: "' + OtherFeederName + '" Not Found.', 631);
 
 end;
 
@@ -268,7 +268,7 @@ end;
 function TFeeder.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TFeeder.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TFeeder.Init', -1);
     Result := 0;
 end;
 

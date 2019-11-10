@@ -349,11 +349,11 @@ begin
 
             if (ParamPointer <= NumPropsThisClass) then case TLoadShapeProp(ParamPointer) of
                 TLoadShapeProp.INVALID:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 610);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 610);
                 TLoadShapeProp.npts:
                     if DSS.ActiveLoadShapeObj.ExternalMemory then
                     begin
-                        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+                        DoSimpleMsg(DSS, 'Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
                         Exit;
                     end
                     else
@@ -364,7 +364,7 @@ begin
                 begin
                     if DSS.ActiveLoadShapeObj.ExternalMemory then
                     begin
-                        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+                        DoSimpleMsg(DSS, 'Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
                         Exit;
                     end;
                     ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
@@ -375,7 +375,7 @@ begin
                 begin
                     if DSS.ActiveLoadShapeObj.ExternalMemory then
                     begin
-                        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+                        DoSimpleMsg(DSS, 'Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
                         Exit;
                     end;
                     ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
@@ -509,7 +509,7 @@ begin
                 PropertyValue[i] := OtherLoadShape.PropertyValue[i];
         end
     else
-        DoSimpleMsg('Error in LoadShape MakeLike: "' + ShapeName + '" Not Found.', 611);
+        DoSimpleMsg(DSS, 'Error in LoadShape MakeLike: "' + ShapeName + '" Not Found.', 611);
 
 
 end;
@@ -518,7 +518,7 @@ end;
 function TLoadShape.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TLoadShape.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TLoadShape.Init', -1);
     REsult := 0;
 end;
 
@@ -556,7 +556,7 @@ begin
         LoadShapeObj := ElementList.Next;
     end;
 
-    DoSimpleMsg('LoadShape: "' + Value + '" not Found.', 612);
+    DoSimpleMsg(DSS, 'LoadShape: "' + Value + '" not Found.', 612);
 
 end;
 
@@ -573,7 +573,7 @@ var
 begin
     if DSS.ActiveLoadShapeObj.ExternalMemory then
     begin
-        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        DoSimpleMsg(DSS, 'Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
     end;
 
@@ -581,7 +581,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 613);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 613);
         CloseFile(F);
         Exit;
     end;
@@ -623,7 +623,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message, 614);
+            DoSimpleMsg(DSS, 'Error Processing CSV File: "' + FileName + '. ' + E.Message, 614);
             CloseFile(F);
             Exit;
         end;
@@ -642,7 +642,7 @@ var
 begin
     if DSS.ActiveLoadShapeObj.ExternalMemory then
     begin
-        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        DoSimpleMsg(DSS, 'Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
     end;
 
@@ -650,7 +650,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 613);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 613);
         CloseFile(F);
         Exit;
     end;
@@ -688,7 +688,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message, 614);
+            DoSimpleMsg(DSS, 'Error Processing CSV File: "' + FileName + '. ' + E.Message, 614);
             CloseFile(F);
             Exit;
         end;
@@ -707,7 +707,7 @@ var
 begin
     if DSS.ActiveLoadShapeObj.ExternalMemory then
     begin
-        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        DoSimpleMsg(DSS, 'Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
     end;
 
@@ -715,7 +715,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 615);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 615);
         CloseFile(F);
         Exit;
     end;
@@ -743,7 +743,7 @@ begin
                 NumPoints := i;
         end;
     except
-        DoSimpleMsg('Error Processing LoadShape File: "' + FileName, 616);
+        DoSimpleMsg(DSS, 'Error Processing LoadShape File: "' + FileName, 616);
         CloseFile(F);
         Exit;
     end;
@@ -760,7 +760,7 @@ var
 begin
     if DSS.ActiveLoadShapeObj.ExternalMemory then
     begin
-        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        DoSimpleMsg(DSS, 'Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
     end;
 
@@ -768,7 +768,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 617);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 617);
         CloseFile(F);
         Exit;
     end;
@@ -792,7 +792,7 @@ begin
                 NumPoints := i;
         end;
     except
-        DoSimpleMsg('Error Processing LoadShape File: "' + FileName, 618);
+        DoSimpleMsg(DSS, 'Error Processing LoadShape File: "' + FileName, 618);
         CloseFile(F);
         Exit;
     end;
@@ -988,7 +988,7 @@ var
 begin
     if ExternalMemory then
     begin
-        DoSimpleMsg('Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
+        DoSimpleMsg(DSS, 'Data cannot be changed for LoadShapes with external memory! Reset the data first.', 61102);
         Exit;
     end;
 
@@ -1189,7 +1189,7 @@ begin
     else
         begin
             Result := 'ERROR';
-            DoSimpleMsg('Property number "' + IntToStr(Index) + '" is not handled for LoadShape', 541);
+            DoSimpleMsg(DSS, 'Property number "' + IntToStr(Index) + '" is not handled for LoadShape', 541);
         end
     end;
 
@@ -1209,19 +1209,20 @@ var
     MaxPts, i, j: Integer;
     MaxTime, MinInterval, Hr_Time: Double;
     ObjList: TPointerList;
-
+    TOPTransferFile: TOutFile32;
 begin
-    TOPTransferFile.FileName := GetOutputDirectory + 'TOP_LoadShape.STO';
+    TOPTransferFile.FileName := DSS.OutputDirectory + 'TOP_LoadShape.STO';
     try
         TOPTransferFile.Open;
     except
         ON E: Exception do
         begin
-            DoSimpleMsg('TOP Transfer File Error: ' + E.message, 619);
+            DoSimpleMsg(DSS, 'TOP Transfer File Error: ' + E.message, 619);
             try
                 TopTransferFile.Close;
-            except
-              {OK if Error}
+                {OK if Error}
+            finally
+                TOPTransferFile.Free;
             end;
             Exit;
         end;
@@ -1252,11 +1253,11 @@ begin
             if Obj.Interval > (1.0 / 60.0) then
                 ObjList.Add(Obj)
             else
-                DoSimpleMsg('Loadshape.' + ObjName + ' is not hourly fixed interval.', 620);
+                DoSimpleMsg(DSS, 'Loadshape.' + ObjName + ' is not hourly fixed interval.', 620);
         end
         else
         begin
-            DoSimpleMsg('Loadshape.' + ObjName + ' not found.', 621);
+            DoSimpleMsg(DSS, 'Loadshape.' + ObjName + ' not found.', 621);
         end;
 
     end;
@@ -1279,7 +1280,7 @@ begin
       // SetLength(Xarray, maxPts);
         MaxPts := Round(MaxTime / MinInterval);
 
-        TopTransferFile.WriteHeader(0.0, MaxTime, MinInterval, ObjList.ListSize, 0, 16, 'DSS (TM), Electrotek Concepts (R)');
+        TopTransferFile.WriteHeader(0.0, MaxTime, MinInterval, ObjList.ListSize, 0, 16, 'DSS (TM), Electrotek Concepts (R)', DSS.DefaultBaseFreq);
         TopTransferFile.WriteNames(NameList, CNames);
 
         Hr_Time := 0.0;
@@ -1307,6 +1308,7 @@ begin
     ObjList.Free;
     NameList.Free;
     CNames.Free;
+    TOPTransferFile.Free;
 end;
 
 procedure TLoadShapeObj.SaveToDblFile;
@@ -1345,7 +1347,7 @@ begin
 
     end
     else
-        DoSimpleMsg('Loadshape.' + Name + ' P multipliers not defined.', 622);
+        DoSimpleMsg(DSS, 'Loadshape.' + Name + ' P multipliers not defined.', 622);
 end;
 
 procedure TLoadShapeObj.SaveToSngFile;
@@ -1392,7 +1394,7 @@ begin
 
     end
     else
-        DoSimpleMsg('Loadshape.' + Name + ' P multipliers not defined.', 623);
+        DoSimpleMsg(DSS, 'Loadshape.' + Name + ' P multipliers not defined.', 623);
 end;
 
 procedure TLoadShapeObj.SetMaxPandQ;

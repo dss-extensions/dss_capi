@@ -122,7 +122,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error attempting to show editing Form: ' + E.Message, 143);
+            DoSimpleMsg(DSS, 'Error attempting to show editing Form: ' + E.Message, 143);
             StringGrid1.RowCount := 2;
         end;
     end;

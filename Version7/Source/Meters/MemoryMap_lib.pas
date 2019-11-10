@@ -122,7 +122,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error Attempting to open file: "' + Dest_path + '. ' + E.Message, 159000);
+            DoSimpleMsg(DSS, 'Error Attempting to open file: "' + Dest_path + '. ' + E.Message, 159000);
             CloseFile(F);
             Exit;
         end;

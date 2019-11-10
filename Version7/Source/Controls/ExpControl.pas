@@ -233,7 +233,7 @@ Begin
       THEN PropertyValue[ParamPointer]:= Param;
 
       CASE ParamPointer OF
-        0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
+        0: DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
         1: begin
            InterpretTStringListArray(Param, FPVSystemNameList);
            FPVSystemPointerList.Clear; // clear this for resetting on first sample
@@ -296,7 +296,7 @@ Begin
       For j := 1 to ParentClass.NumProperties Do PropertyValue[j] := OtherExpControl.PropertyValue[j];
 
    End
-   ELSE  DoSimpleMsg('Error in ExpControl MakeLike: "' + ExpControlName + '" Not Found.', 370);
+   ELSE  DoSimpleMsg(DSS, 'Error in ExpControl MakeLike: "' + ExpControlName + '" Not Found.', 370);
 
 End;
 

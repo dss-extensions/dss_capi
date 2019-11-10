@@ -182,7 +182,7 @@ begin
             ParamPointer := CommandList.GetCommand(ParamName);
 
         case ParamPointer of
-           // 0: DoSimpleMsg('Unknown parameter "'+ParamName+'" for Object "'+Name+'"');
+           // 0: DoSimpleMsg(DSS, 'Unknown parameter "'+ParamName+'" for Object "'+Name+'"');
             1:
                 puRs := ModelParser.DblValue;
             2:

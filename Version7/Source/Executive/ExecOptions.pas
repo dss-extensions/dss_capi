@@ -437,8 +437,8 @@ begin
     Result := TRUE;
      // Continue parsing command line
     ParamPointer := 0;
-    ParamName := Parser.NextParam;
-    Param := Parser.StrValue;
+    ParamName := DSSPrime.Parser.NextParam;
+    Param := DSSPrime.Parser.StrValue;
     while Length(Param) > 0 do
     begin
         if Length(ParamName) = 0 then
@@ -448,7 +448,7 @@ begin
 
         case ParamPointer of
             0:
-                DoSimpleMsg('Unknown parameter "' + ParamName + '" for Set Command ', 130);
+                DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Set Command ', 130);
             15:
                 DefaultEditor := Param;     // 'Editor='
             57:
@@ -456,7 +456,7 @@ begin
             67:
                 DSSPrime.DSSExecutive.RecorderOn := InterpretYesNo(Param);
             73:
-                DSSPrime.DefaultBaseFreq := Parser.DblValue;
+                DSSPrime.DefaultBaseFreq := DSSPrime.Parser.DblValue;
             102:
                 UpdateRegistry := InterpretYesNo(Param);
             111:
@@ -465,14 +465,14 @@ begin
             end;
         else
         begin
-            DoSimpleMsg('You must create a new circuit object first: "new circuit.mycktname" to execute this Set command.', 301);
+            DoSimpleMsg(DSS, 'You must create a new circuit object first: "new circuit.mycktname" to execute this Set command.', 301);
             Result := FALSE;  // Indicate that we could not process all set command
             Exit;
         end;
         end;
 
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSSPrime.Parser.NextParam;
+        Param := DSSPrime.Parser.StrValue;
     end; {WHILE}
 
 end;
@@ -496,8 +496,8 @@ begin
     Result := 0;
      // Continue parsing command line
     ParamPointer := 0;
-    ParamName := Parser.NextParam;
-    Param := Parser.StrValue;
+    ParamName := DSSPrime.Parser.NextParam;
+    Param := DSSPrime.Parser.StrValue;
     while Length(Param) > 0 do
     begin
         if Length(ParamName) = 0 then
@@ -507,23 +507,23 @@ begin
 
         case ParamPointer of
             0:
-                DoSimpleMsg('Unknown parameter "' + ParamName + '" for Set Command ', 130);
+                DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Set Command ', 130);
             1, 12:
                 SetObjectClass(DSSPrime, Param);
             2, 13:
                 SetObject(Param);
             3:
-                DSSPrime.ActiveCircuit.solution.DynaVars.intHour := Parser.IntValue;
+                DSSPrime.ActiveCircuit.solution.DynaVars.intHour := DSSPrime.Parser.IntValue;
             4:
-                DSSPrime.ActiveCircuit.solution.DynaVars.t := Parser.DblValue;
+                DSSPrime.ActiveCircuit.solution.DynaVars.t := DSSPrime.Parser.DblValue;
             5:
                 with DSSPrime.ActiveCircuit do
                 begin
-                    Solution.Year := Parser.IntValue;
+                    Solution.Year := DSSPrime.Parser.IntValue;
                     DefaultGrowthFactor := IntPower(DefaultGrowthRate, (Solution.Year - 1));
                 end;
             6:
-                DSSPrime.ActiveCircuit.solution.Frequency := Parser.DblValue;
+                DSSPrime.ActiveCircuit.solution.Frequency := DSSPrime.Parser.DblValue;
             7, 18:
                 DSSPrime.ActiveCircuit.solution.DynaVars.h := InterpretTimeStepSize(Param);
             8:
@@ -531,7 +531,7 @@ begin
             9:
                 DSSPrime.ActiveCircuit.solution.RandomType := InterpretRandom(Param);
             10:
-                DSSPrime.ActiveCircuit.solution.NumberOfTimes := Parser.IntValue;
+                DSSPrime.ActiveCircuit.solution.NumberOfTimes := DSSPrime.Parser.IntValue;
             11:
                 DSSPrime.DSSExecutive.Set_Time;
             14:
@@ -539,9 +539,9 @@ begin
             15:
                 DefaultEditor := Param;     // 'Editor='
             16:
-                DSSPrime.ActiveCircuit.solution.ConvergenceTolerance := Parser.DblValue;
+                DSSPrime.ActiveCircuit.solution.ConvergenceTolerance := DSSPrime.Parser.DblValue;
             17:
-                DSSPrime.ActiveCircuit.solution.MaxIterations := Parser.IntValue;
+                DSSPrime.ActiveCircuit.solution.MaxIterations := DSSPrime.Parser.IntValue;
             19:
                 with DSSPrime.ActiveCircuit.solution do
                 begin
@@ -549,39 +549,39 @@ begin
                     LoadModel := DefaultLoadModel;
                 end;
             20:
-                DSSPrime.ActiveCircuit.LoadMultiplier := Parser.DblValue;  // Set using LoadMultiplier property
+                DSSPrime.ActiveCircuit.LoadMultiplier := DSSPrime.Parser.DblValue;  // Set using LoadMultiplier property
             21:
-                DSSPrime.ActiveCircuit.NormalMinVolts := Parser.DblValue;
+                DSSPrime.ActiveCircuit.NormalMinVolts := DSSPrime.Parser.DblValue;
             22:
-                DSSPrime.ActiveCircuit.NormalMaxVolts := Parser.DblValue;
+                DSSPrime.ActiveCircuit.NormalMaxVolts := DSSPrime.Parser.DblValue;
             23:
-                DSSPrime.ActiveCircuit.EmergMinVolts := Parser.DblValue;
+                DSSPrime.ActiveCircuit.EmergMinVolts := DSSPrime.Parser.DblValue;
             24:
-                DSSPrime.ActiveCircuit.EmergMaxVolts := Parser.DblValue;
+                DSSPrime.ActiveCircuit.EmergMaxVolts := DSSPrime.Parser.DblValue;
             25:
-                DSSPrime.ActiveCircuit.DefaultDailyShapeObj.Mean := Parser.DblValue / 100.0;
+                DSSPrime.ActiveCircuit.DefaultDailyShapeObj.Mean := DSSPrime.Parser.DblValue / 100.0;
             26:
-                DSSPrime.ActiveCircuit.DefaultDailyShapeObj.StdDev := Parser.DblValue / 100.0;
+                DSSPrime.ActiveCircuit.DefaultDailyShapeObj.StdDev := DSSPrime.Parser.DblValue / 100.0;
             27:
                 with DSSPrime.ActiveCircuit do
                 begin
                     LoadDurCurve := Param;
                     LoadDurCurveObj := DSSPrime.LoadShapeClass.Find(Param);
                     if LoadDurCurveObj = NIL then
-                        DoSimpleMsg('Load-Duration Curve not found.', 131);
+                        DoSimpleMsg(DSS, 'Load-Duration Curve not found.', 131);
                 end;
             28:
                 with DSSPrime.ActiveCircuit do
                 begin
-                    DefaultGrowthRate := 1.0 + Parser.DblValue / 100.0;
+                    DefaultGrowthRate := 1.0 + DSSPrime.Parser.DblValue / 100.0;
                     DefaultGrowthFactor := IntPower(DefaultGrowthRate, (Solution.Year - 1));
                 end;
             29:
-                DSSPrime.ActiveCircuit.AutoAddObj.GenkW := Parser.DblValue;
+                DSSPrime.ActiveCircuit.AutoAddObj.GenkW := DSSPrime.Parser.DblValue;
             30:
-                DSSPrime.ActiveCircuit.AutoAddObj.GenPF := Parser.DblValue;
+                DSSPrime.ActiveCircuit.AutoAddObj.GenPF := DSSPrime.Parser.DblValue;
             31:
-                DSSPrime.ActiveCircuit.AutoAddObj.CapkVAR := Parser.DblValue;
+                DSSPrime.ActiveCircuit.AutoAddObj.CapkVAR := DSSPrime.Parser.DblValue;
             32:
                 DSSPrime.ActiveCircuit.AutoAddObj.AddType := InterpretAddType(Param);
             33:
@@ -589,9 +589,9 @@ begin
             34:
                 DSSPrime.ActiveCircuit.ZonesLocked := InterpretYesNo(Param);
             35:
-                DSSPrime.ActiveCircuit.UEWeight := Parser.DblValue;
+                DSSPrime.ActiveCircuit.UEWeight := DSSPrime.Parser.DblValue;
             36:
-                DSSPrime.ActiveCircuit.LossWeight := Parser.DblValue;
+                DSSPrime.ActiveCircuit.LossWeight := DSSPrime.Parser.DblValue;
             37:
                 ParseIntArray(DSSPrime.ActiveCircuit.UERegs, DSSPrime.ActiveCircuit.NumUEregs, Param);
             38:
@@ -613,7 +613,7 @@ begin
             44:
                 DSSPrime.ActiveCircuit.ControlQueue.TraceLog := InterpretYesNo(Param);
             45:
-                DSSPrime.ActiveCircuit.GenMultiplier := Parser.DblValue;
+                DSSPrime.ActiveCircuit.GenMultiplier := DSSPrime.Parser.DblValue;
             46:
             begin
                 TestLoadShapeObj := DSSPrime.LoadShapeClass.Find(Param);
@@ -627,36 +627,36 @@ begin
                     DSSPrime.ActiveCircuit.DefaultYearlyShapeObj := TestLoadShapeObj;
             end;
             48:
-                DSSPrime.DSSExecutive.DoSetAllocationFactors(Parser.DblValue);
+                DSSPrime.DSSExecutive.DoSetAllocationFactors(DSSPrime.Parser.DblValue);
             49:
                 DSSPrime.ActiveCircuit.PositiveSequence := InterpretCktModel(Param);
             50:
-                DSSPrime.ActiveCircuit.PriceSignal := Parser.DblValue;
+                DSSPrime.ActiveCircuit.PriceSignal := DSSPrime.Parser.DblValue;
             51:
                 with DSSPrime.ActiveCircuit do
                 begin
                     PriceCurve := Param;
                     PriceCurveObj := DSSPrime.PriceShapeClass.Find(Param);
                     if PriceCurveObj = NIL then
-                        DoSimpleMsg('Priceshape.' + param + ' not found.', 132);
+                        DoSimpleMsg(DSS, 'Priceshape.' + param + ' not found.', 132);
                 end;
             52:
                 with DSSPrime.ActiveCircuit do
                     if ActiveCktElement <> NIL then
                         with ActiveCktElement do
                         begin
-                            ActiveTerminalIdx := Parser.IntValue;
+                            ActiveTerminalIdx := DSSPrime.Parser.IntValue;
                             SetActiveBus(StripExtension(Getbus(ActiveTerminalIdx)));   // bus connected to terminal
                         end;
             53:
             begin
-                DSSPrime.ActiveCircuit.Fundamental := Parser.DblValue;     // Set Base Frequency for system (used henceforth)
-                DSSPrime.ActiveCircuit.Solution.Frequency := Parser.DblValue;
+                DSSPrime.ActiveCircuit.Fundamental := DSSPrime.Parser.DblValue;     // Set Base Frequency for system (used henceforth)
+                DSSPrime.ActiveCircuit.Solution.Frequency := DSSPrime.Parser.DblValue;
             end;
             54:
                 DSSPrime.DSSExecutive.DoHarmonicsList(Param);
             55:
-                DSSPrime.ActiveCircuit.Solution.MaxControlIterations := Parser.IntValue;
+                DSSPrime.ActiveCircuit.Solution.MaxControlIterations := DSSPrime.Parser.IntValue;
             56:
                 Result := SetActiveBus(Param);   // See DSSGlobals
             57:
@@ -669,17 +669,17 @@ begin
                 DSSPrime.EnergyMeterClass.SaveDemandInterval := InterpretYesNo(Param);
             61:
             begin
-                DSSPrime.ActiveCircuit.PctNormalFactor := Parser.DblValue;
+                DSSPrime.ActiveCircuit.PctNormalFactor := DSSPrime.Parser.DblValue;
                 DSSPrime.DSSExecutive.DoSetNormal(DSSPrime.ActiveCircuit.PctNormalFactor);
             end;
             62:
                 DSSPrime.EnergyMeterClass.DI_Verbose := InterpretYesNo(Param);
             63:
-                DSSPrime.ActiveCircuit.CaseName := Parser.StrValue;
+                DSSPrime.ActiveCircuit.CaseName := DSSPrime.Parser.StrValue;
             64:
-                DSSPrime.ActiveCircuit.NodeMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.NodeMarkerCode := DSSPrime.Parser.IntValue;
             65:
-                DSSPrime.ActiveCircuit.NodeMarkerWidth := Parser.IntValue;
+                DSSPrime.ActiveCircuit.NodeMarkerWidth := DSSPrime.Parser.IntValue;
             66:
                 DSSPrime.ActiveCircuit.LogEvents := InterpretYesNo(Param);
             67:
@@ -689,29 +689,29 @@ begin
             69:
                 DSSPrime.EnergyMeterClass.Do_VoltageExceptionReport := InterpretYesNo(Param);
             70:
-                DSSPrime.DSSExecutive.DoSetCFactors(Parser.DblValue);
+                DSSPrime.DSSExecutive.DoSetCFactors(DSSPrime.Parser.DblValue);
             71:
                 DSSPrime.AutoShowExport := InterpretYesNo(Param);
             72:
-                DSSPrime.MaxAllocationIterations := Parser.IntValue;
+                DSSPrime.MaxAllocationIterations := DSSPrime.Parser.IntValue;
             73:
             begin
-                DSSPrime.DefaultBaseFreq := Parser.DblValue;
-                DSSPrime.ActiveCircuit.Fundamental := Parser.DblValue;     // Set Base Frequency for system (used henceforth)
-                DSSPrime.ActiveCircuit.Solution.Frequency := Parser.DblValue;
+                DSSPrime.DefaultBaseFreq := DSSPrime.Parser.DblValue;
+                DSSPrime.ActiveCircuit.Fundamental := DSSPrime.Parser.DblValue;     // Set Base Frequency for system (used henceforth)
+                DSSPrime.ActiveCircuit.Solution.Frequency := DSSPrime.Parser.DblValue;
             end;
             74:
                 DSSPrime.ActiveCircuit.MarkSwitches := InterpretYesNo(Param);
             75:
-                DSSPrime.ActiveCircuit.SwitchMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.SwitchMarkerCode := DSSPrime.Parser.IntValue;
             76:
-                DSSPrime.DaisySize := Parser.DblValue;
+                DSSPrime.DaisySize := DSSPrime.Parser.DblValue;
             77:
                 DSSPrime.ActiveCircuit.MarkTransformers := InterpretYesNo(Param);
             78:
-                DSSPrime.ActiveCircuit.TransMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.TransMarkerCode := DSSPrime.Parser.IntValue;
             79:
-                DSSPrime.ActiveCircuit.TransMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.TransMarkerSize := DSSPrime.Parser.IntValue;
             80:
                 DSSPrime.ActiveCircuit.ActiveLoadShapeClass := InterpretLoadShapeClass(Param);
             81:
@@ -731,55 +731,55 @@ begin
             86:
                 DSSPrime.ActiveCircuit.MarkStorage := InterpretYesNo(Param);
             87:
-                DSSPrime.ActiveCircuit.CapMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.CapMarkerCode := DSSPrime.Parser.IntValue;
             88:
-                DSSPrime.ActiveCircuit.RegMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.RegMarkerCode := DSSPrime.Parser.IntValue;
             89:
-                DSSPrime.ActiveCircuit.PVMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.PVMarkerCode := DSSPrime.Parser.IntValue;
             90:
-                DSSPrime.ActiveCircuit.StoreMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.StoreMarkerCode := DSSPrime.Parser.IntValue;
             91:
-                DSSPrime.ActiveCircuit.CapMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.CapMarkerSize := DSSPrime.Parser.IntValue;
             92:
-                DSSPrime.ActiveCircuit.RegMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.RegMarkerSize := DSSPrime.Parser.IntValue;
             93:
-                DSSPrime.ActiveCircuit.PVMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.PVMarkerSize := DSSPrime.Parser.IntValue;
             94:
-                DSSPrime.ActiveCircuit.StoreMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.StoreMarkerSize := DSSPrime.Parser.IntValue;
             95:
                 DSSPrime.ActiveCircuit.NeglectLoadY := InterpretYesNo(Param);
             96:
                 DSSPrime.ActiveCircuit.MarkFuses := InterpretYesNo(Param);
             97:
-                DSSPrime.ActiveCircuit.FuseMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.FuseMarkerCode := DSSPrime.Parser.IntValue;
             98:
-                DSSPrime.ActiveCircuit.FuseMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.FuseMarkerSize := DSSPrime.Parser.IntValue;
             99:
                 DSSPrime.ActiveCircuit.MarkReclosers := InterpretYesNo(Param);
             100:
-                DSSPrime.ActiveCircuit.RecloserMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.RecloserMarkerCode := DSSPrime.Parser.IntValue;
             101:
-                DSSPrime.ActiveCircuit.RecloserMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.RecloserMarkerSize := DSSPrime.Parser.IntValue;
             102:
                 UpdateRegistry := InterpretYesNo(Param);
             103:
                 DSSPrime.ActiveCircuit.MarkRelays := InterpretYesNo(Param);
             104:
-                DSSPrime.ActiveCircuit.RelayMarkerCode := Parser.IntValue;
+                DSSPrime.ActiveCircuit.RelayMarkerCode := DSSPrime.Parser.IntValue;
             105:
-                DSSPrime.ActiveCircuit.RelayMarkerSize := Parser.IntValue;
+                DSSPrime.ActiveCircuit.RelayMarkerSize := DSSPrime.Parser.IntValue;
             107:
-                DSSPrime.ActiveCircuit.Solution.Total_Time := Parser.DblValue;
+                DSSPrime.ActiveCircuit.Solution.Total_Time := DSSPrime.Parser.DblValue;
             109:
                 DSSPrime.ActiveCircuit.Solution.SampleTheMeters := InterpretYesNo(Param);
             110:
-                DSSPrime.ActiveCircuit.solution.MinIterations := Parser.IntValue;
+                DSSPrime.ActiveCircuit.solution.MinIterations := DSSPrime.Parser.IntValue;
             111:
                 DSS_Viz_enable := InterpretYesNo(Param);
             112:
                 DSSPrime.ActiveCircuit.ReduceLateralsKeepLoad := InterpretYesNo(Param);
             113:
-                DSSPrime.ActiveCircuit.ReductionZmag := Parser.DblValue;
+                DSSPrime.ActiveCircuit.ReductionZmag := DSSPrime.Parser.DblValue;
             114:
                 DSSPrime.SeasonalRating := InterpretYesNo(Param);
             115:
@@ -797,8 +797,8 @@ begin
                 DSSPrime.ActiveCircuit.Solution.IntervalHrs := DSSPrime.ActiveCircuit.Solution.DynaVars.h / 3600.0;
         end;
 
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSSPrime.Parser.NextParam;
+        Param := DSSPrime.Parser.StrValue;
     end; {WHILE}
 
     if SolveOption = 1 then
@@ -826,8 +826,8 @@ begin
         DSSPrime.GlobalResult := '';  //initialize for appending
 
      // Continue parsing command line
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSSPrime.Parser.NextParam;
+        Param := DSSPrime.Parser.StrValue;
      // there will be no named paramters in this command and the params
      // themselves will be the parameter name to return
         while Length(Param) > 0 do
@@ -836,7 +836,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Get Command ', 133);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Get Command ', 133);
                 1, 12:
                     AppendGlobalResult(DSSPrime.ActiveCircuit.ActiveCktElement.DSSClassName);
                 2, 13:
@@ -1181,8 +1181,8 @@ begin
            // Ignore excess parameters
             end;
 
-            ParamName := Parser.NextParam;
-            Param := Parser.StrValue;
+            ParamName := DSSPrime.Parser.NextParam;
+            Param := DSSPrime.Parser.StrValue;
         end; {WHILE}
 
     except

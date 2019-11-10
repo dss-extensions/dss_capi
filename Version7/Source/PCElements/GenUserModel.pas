@@ -95,7 +95,7 @@ function TGenUserModel.CheckFuncError(Addr: Pointer;  FuncName: String): Pointer
 begin
         If Addr=nil then
           Begin
-            DoSimpleMsg('Generator User Model Does Not Have Required Function: ' + FuncName, 569);
+            DoSimpleMsg(DSS, 'Generator User Model Does Not Have Required Function: ' + FuncName, 569);
             FuncError := True;
           End;
         Result := Addr;
@@ -180,7 +180,7 @@ begin
           End;
 
         If FHandle = 0 Then
-              DoSimpleMsg('Generator User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 570)
+              DoSimpleMsg(DSS, 'Generator User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 570)
         Else
         Begin
             FName := Value;

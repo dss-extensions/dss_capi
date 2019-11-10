@@ -337,7 +337,7 @@ begin
         DSS.DSSObjs.Free;
     except
         On E: Exception do
-            Dosimplemsg('Exception disposing of DSS Obj "' + TraceName + '". ' + CRLF +
+            DoSimpleMsg(DSS, 'Exception disposing of DSS Obj "' + TraceName + '". ' + CRLF +
                 'Last Successful dispose was for object "' + SuccessFree + '" ' + CRLF +
                 E.Message, 901);
     end;
@@ -353,7 +353,7 @@ begin
         DSS.ClassNames.Free;
     except
         On E: Exception do
-            Dosimplemsg('Exception disposing of DSS Class"' + TraceName + '". ' + CRLF + E.Message, 902);
+            DoSimpleMsg(DSS, 'Exception disposing of DSS Class"' + TraceName + '". ' + CRLF + E.Message, 902);
     end;
 
 end;
@@ -419,7 +419,7 @@ begin
     case Classref of
         0:
         begin
-            DoSimpleMsg('Error! Object Class "' + ObjType + '" not found.' + CRLF + parser.CmdString, 903);
+            DoSimpleMsg(DSS, 'Error! Object Class "' + ObjType + '" not found.' + CRLF + parser.CmdString, 903);
             Result := FALSE;
             Exit;
         end;{Error}
@@ -434,7 +434,7 @@ end;
 //----------------------------------------------------------------------------
 function GetDSSClassPtr(DSS: TDSS; const ClassName: String): TDSSClass;
 begin
-    Result := TDSSClass(DSS.DSSClassList.Get(DSSPrime.ClassNames.Find(lowercase(ClassName))));
+    Result := TDSSClass(DSS.DSSClassList.Get(DSS.ClassNames.Find(lowercase(ClassName))));
 end;
 
 

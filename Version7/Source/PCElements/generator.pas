@@ -619,12 +619,12 @@ begin
             if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
                 PropertyValue[PropertyIdxMap[ParamPointer]] := Param
             else
-                DoSimpleMsg('Unknown parameter "' + ParamName + '" for Generator "' + Name + '"', 560);
+                DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Generator "' + Name + '"', 560);
 
             if ParamPointer > 0 then
                 case PropertyIdxMap[ParamPointer] of
                     0:
-                        DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
+                        DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
                     1:
                         NPhases := Parser.Intvalue; // num phases
                     2:
@@ -652,9 +652,9 @@ begin
                     13:
                         Presentkvar := Parser.DblValue;
                     14:
-                        DoSimpleMsg('Rneut property has been deleted. Use external impedance.', 5611);
+                        DoSimpleMsg(DSS, 'Rneut property has been deleted. Use external impedance.', 5611);
                     15:
-                        DoSimpleMsg('Xneut property has been deleted. Use external impedance.', 5612);
+                        DoSimpleMsg(DSS, 'Xneut property has been deleted. Use external impedance.', 5612);
                     16:
                         if lowercase(Param[1]) = 'f' then
                             IsFixed := TRUE
@@ -757,7 +757,7 @@ begin
                     22:
                         if DebugTrace then
                         begin
-                            AssignFile(TraceFile, GetOutputDirectory + 'GEN_' + Name + '.CSV');
+                            AssignFile(TraceFile, DSS.OutputDirectory + 'GEN_' + Name + '.CSV');
                             ReWrite(TraceFile);
                             Write(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, GenModel, dQdV, Avg_Vpu, Vdiff, MQnominalperphase, MPnominalperphase, CurrentType');
                             for i := 1 to nphases do
@@ -865,7 +865,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Load MakeLike: "' + OtherGeneratorName + '" Not Found.', 562);
+        DoSimpleMsg(DSS, 'Error in Load MakeLike: "' + OtherGeneratorName + '" Not Found.', 562);
 
 end;
 
@@ -892,7 +892,7 @@ begin
         p.Randomize(0);
     end;
 
-    DoSimpleMsg('Need to implement TGenerator.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TGenerator.Init', -1);
     Result := 0;
 
 end;
@@ -1307,17 +1307,17 @@ begin
 
     if YearlyShapeObj = NIL then
         if Length(YearlyShape) > 0 then
-            DoSimpleMsg('WARNING! Yearly load shape: "' + YearlyShape + '" Not Found.', 563);
+            DoSimpleMsg(DSS, 'WARNING! Yearly load shape: "' + YearlyShape + '" Not Found.', 563);
     if DailyDispShapeObj = NIL then
         if Length(DailyDispShape) > 0 then
-            DoSimpleMsg('WARNING! Daily load shape: "' + DailyDispShape + '" Not Found.', 564);
+            DoSimpleMsg(DSS, 'WARNING! Daily load shape: "' + DailyDispShape + '" Not Found.', 564);
     if DutyShapeObj = NIL then
         if Length(DutyShape) > 0 then
-            DoSimpleMsg('WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
+            DoSimpleMsg(DSS, 'WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
 
     SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
-        DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
+        DoSimpleMsg(DSS, 'ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
 
 
     YQFixed := -varBase / Sqr(VBase);   //10-17-02  Fixed negative sign
@@ -1911,7 +1911,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('Generator.' + name + ' model designated to use user-written model, but user-written model is not defined.', 567);
+        DoSimpleMsg(DSS, 'Generator.' + name + ' model designated to use user-written model, but user-written model is not defined.', 567);
     end;
 
 end;
@@ -2016,7 +2016,7 @@ begin
             end
             else
             begin
-                DoSimpleMsg(Format('Dynamics model missing for Generator.%s ', [Name]), 5671);
+                DoSimpleMsg(DSS, Format('Dynamics model missing for Generator.%s ', [Name]), 5671);
                 DSS.SolutionAbort := TRUE;
             end;
     else
@@ -2096,7 +2096,7 @@ begin
                         ITerminal^[FnConds] := Cnegate(CmulReal(I012[0], 3.0));
                 end;
         else
-            DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.%s has %d phases.', [name, Fnphases]), 5671);
+            DoSimpleMsg(DSS, Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.%s has %d phases.', [name, Fnphases]), 5671);
             DSS.SolutionAbort := TRUE;
         end;
 
@@ -2693,7 +2693,7 @@ begin
                         VThevMag := Cabs(Edp);
                     end;
                 else
-                    DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.' + name + ' has %d phases.', [Fnphases]), 5672);
+                    DoSimpleMsg(DSS, Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.' + name + ' has %d phases.', [Fnphases]), 5672);
                     DSS.SolutionAbort := TRUE;
                 end;
 

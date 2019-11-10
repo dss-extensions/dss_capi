@@ -716,14 +716,14 @@ begin
             if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
                 PropertyValue[PropertyIdxMap[ParamPointer]] := Param   // Update the string value of the property
             else
-                DoSimpleMsg('Unknown parameter "' + ParamName + '" for PVSystem "' + Name + '"', 560);
+                DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for PVSystem "' + Name + '"', 560);
 
             if (ParamPointer > 0) then
             begin
                 iCase := PropertyIdxMap[ParamPointer];
                 case iCASE of
                     0:
-                        DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
+                        DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
                     1:
                         NPhases := Parser.Intvalue; // num phases
                     2:
@@ -843,7 +843,7 @@ begin
                     propDEBUGTRACE:
                         if DebugTrace then
                         begin   // Init trace file
-                            AssignFile(TraceFile, GetOutputDirectory + 'STOR_' + Name + '.CSV');
+                            AssignFile(TraceFile, DSS.OutputDirectory + 'STOR_' + Name + '.CSV');
                             ReWrite(TraceFile);
                             Write(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, PVSystemModel,  Qnominalperphase, Pnominalperphase, CurrentType');
                             for i := 1 to nphases do
@@ -956,7 +956,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in PVSystem MakeLike: "' + OtherPVsystemObjName + '" Not Found.', 562);
+        DoSimpleMsg(DSS, 'Error in PVSystem MakeLike: "' + OtherPVsystemObjName + '" Not Found.', 562);
 
 end;
 
@@ -982,7 +982,7 @@ begin
         p.Randomize(0);
     end;
 
-    DoSimpleMsg('Need to implement TPVsystem.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TPVsystem.Init', -1);
     Result := 0;
 end;
 
@@ -1391,28 +1391,28 @@ begin
     {Now check for errors.  If any of these came out nil and the string was not nil, give warning}
     if YearlyShapeObj = NIL then
         if Length(YearlyShape) > 0 then
-            DoSimpleMsg('WARNING! Yearly load shape: "' + YearlyShape + '" Not Found.', 563);
+            DoSimpleMsg(DSS, 'WARNING! Yearly load shape: "' + YearlyShape + '" Not Found.', 563);
     if DailyShapeObj = NIL then
         if Length(DailyShape) > 0 then
-            DoSimpleMsg('WARNING! Daily load shape: "' + DailyShape + '" Not Found.', 564);
+            DoSimpleMsg(DSS, 'WARNING! Daily load shape: "' + DailyShape + '" Not Found.', 564);
     if DutyShapeObj = NIL then
         if Length(DutyShape) > 0 then
-            DoSimpleMsg('WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
+            DoSimpleMsg(DSS, 'WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
     if YearlyTShapeObj = NIL then
         if Length(YearlyTShape) > 0 then
-            DoSimpleMsg('WARNING! Yearly temperature shape: "' + YearlyTShape + '" Not Found.', 5631);
+            DoSimpleMsg(DSS, 'WARNING! Yearly temperature shape: "' + YearlyTShape + '" Not Found.', 5631);
     if DailyTShapeObj = NIL then
         if Length(DailyTShape) > 0 then
-            DoSimpleMsg('WARNING! Daily temperature shape: "' + DailyTShape + '" Not Found.', 5641);
+            DoSimpleMsg(DSS, 'WARNING! Daily temperature shape: "' + DailyTShape + '" Not Found.', 5641);
     if DutyTShapeObj = NIL then
         if Length(DutyTShape) > 0 then
-            DoSimpleMsg('WARNING! Duty temperature shape: "' + DutyTShape + '" Not Found.', 5651);
+            DoSimpleMsg(DSS, 'WARNING! Duty temperature shape: "' + DutyTShape + '" Not Found.', 5651);
 
     if Length(Spectrum) > 0 then
     begin
         SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
         if SpectrumObj = NIL then
-            DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
+            DoSimpleMsg(DSS, 'ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
     end
     else
         SpectrumObj := NIL;
@@ -2067,7 +2067,7 @@ begin
         end;
     end
     else
-        DoSimpleMsg('PVSystem.' + name + ' model designated to use user-written model, but user-written model is not defined.', 567);
+        DoSimpleMsg(DSS, 'PVSystem.' + name + ' model designated to use user-written model, but user-written model is not defined.', 567);
 
 end;
 
@@ -2120,7 +2120,7 @@ begin
             end
             else
             begin
-                DoSimpleMsg(Format('Dynamics model missing for PVSystem.%s ', [Name]), 5671);
+                DoSimpleMsg(DSS, Format('Dynamics model missing for PVSystem.%s ', [Name]), 5671);
                 DSS.SolutionAbort := TRUE;
             end;
     else  {All other models -- current-limited like Generator Model 7}
@@ -2185,7 +2185,7 @@ begin
                         ITerminal^[FnConds] := Cnegate(CmulReal(I012[0], 3.0));
                 end;
         else
-            DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.%s has %d phases.', [name, Fnphases]), 5671);
+            DoSimpleMsg(DSS, Format('Dynamics mode is implemented only for 1- or 3-phase Generators. Generator.%s has %d phases.', [name, Fnphases]), 5671);
             DSS.SolutionAbort := TRUE;
         end;
 
@@ -2606,7 +2606,7 @@ begin
                     ThetaDyn := Cang(Edp); // initial thev equivalent phase angle
                 end;
             else
-                DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. PVSystem.' + name + ' has %d phases.', [Fnphases]), 5673);
+                DoSimpleMsg(DSS, Format('Dynamics mode is implemented only for 1- or 3-phase Generators. PVSystem.' + name + ' has %d phases.', [Fnphases]), 5673);
                 DSS.SolutionAbort := TRUE;
             end;
 

@@ -85,7 +85,7 @@ type
     PROTECTED
         procedure DefineProperties;
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dssContext: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -203,7 +203,7 @@ type
 //      ADiakoptics_ready  : Boolean;
 //      ADiakoptics_Actors :  Integer;
 //******************************************************************************
-        constructor Create(ParClass: TDSSClass; const solutionname: String; dss: TDSS);
+        constructor Create(ParClass: TDSSClass; const solutionname: String);
         destructor Destroy; OVERRIDE;
 
         function Converged: Boolean;
@@ -325,9 +325,9 @@ var
 {$ENDIF}
 
 // ===========================================================================================
-constructor TDSSSolution.Create(dss: TDSS);  // Collection of all solution objects
+constructor TDSSSolution.Create(dssContext: TDSS);  // Collection of all solution objects
 begin
-    inherited Create(dss);
+    inherited Create(dssContext);
     Class_Name := 'Solution';
     DSSClassType := DSS_OBJECT + HIDDEN_ELEMENT;
 
@@ -375,18 +375,17 @@ end;
 function TDSSSolution.NewObject(const ObjName: String): Integer;
 begin
     // Make a new Solution Object and add it to Solution class list
-    DSS.ActiveSolutionObj := TSolutionObj.Create(Self, ObjName, DSS);
+    DSS.ActiveSolutionObj := TSolutionObj.Create(Self, ObjName);
     // this one is different than the rest of the objects.
     Result := AddObjectToList(DSS.ActiveSolutionObj);
 end;
 
 // ===========================================================================================
-constructor TSolutionObj.Create(ParClass: TDSSClass; const SolutionName: String; dss: TDSS);
+constructor TSolutionObj.Create(ParClass: TDSSClass; const SolutionName: String);
 // ===========================================================================================
 begin
     inherited Create(ParClass);
     Name := LowerCase(SolutionName);
-    DSS := dss;
 
 //    i := SetLogFile ('c:\\temp\\KLU_Log.txt', 1);
 
@@ -413,7 +412,7 @@ begin
     IsDynamicModel := FALSE;
     IsHarmonicModel := FALSE;
 
-    Frequency := DSSPrime.DefaultBaseFreq;
+    Frequency := DSS.DefaultBaseFreq;
     Harmonic := 1.0;
 
     FrequencyChanged := TRUE;  // Force Building of YPrim matrices
@@ -511,7 +510,7 @@ procedure TSolutionObj.Solve;
 
 begin
     DSS.ActiveCircuit.Issolved := FALSE;
-    DSSPrime.SolutionWasAttempted := TRUE;
+    DSS.SolutionWasAttempted := TRUE;
 
     InitProgressForm; // initialize Progress Form;
 
@@ -519,16 +518,16 @@ begin
 
     if DSS.ActiveCircuit.EmergMinVolts >= DSS.ActiveCircuit.NormalMinVolts then
     begin
-        DoSimpleMsg('Error: Emergency Min Voltage Must Be Less Than Normal Min Voltage!' +
+        DoSimpleMsg(DSS, 'Error: Emergency Min Voltage Must Be Less Than Normal Min Voltage!' +
             CRLF + 'Solution Not Executed.', 480);
         Exit;
     end;
 
-    if DSSPrime.SolutionAbort then
+    if DSS.SolutionAbort then
     begin
-        DSSPrime.GlobalResult := 'Solution aborted.';
-        DSSPrime.CmdResult := SOLUTION_ABORT;
-        DSSPrime.ErrorNumber := DSSPrime.CmdResult;
+        DSS.GlobalResult := 'Solution aborted.';
+        DSS.CmdResult := SOLUTION_ABORT;
+        DSS.ErrorNumber := DSS.CmdResult;
         Exit;
     end;
     try
@@ -588,7 +587,7 @@ begin
             TSolveMode.HARMONICMODET:
                 SolveHarmonicT;  //Declares the Hsequential-time harmonics
         else
-            DosimpleMsg('Unknown solution mode.', 481);
+            DoSimpleMsg(DSS, 'Unknown solution mode.', 481);
         end;
     {$IFDEF MSWINDOWS}
         QueryPerformanceCounter(GEndTime);
@@ -599,8 +598,8 @@ begin
 
         On E: Exception do
         begin
-            DoSimpleMsg('Error Encountered in Solve: ' + E.Message, 482);
-            DSSPrime.SolutionAbort := TRUE;
+            DoSimpleMsg(DSS, 'Error Encountered in Solve: ' + E.Message, 482);
+            DSS.SolutionAbort := TRUE;
         end;
 
     end;
@@ -748,7 +747,7 @@ begin
             TSolveMode.HARMONICMODET:
                 GeneratorDispatchReference := LoadMultiplier * DefaultGrowthFactor * DefaultHourMult.re;
         else
-            DosimpleMsg('Unknown solution mode.', 483);
+            DoSimpleMsg(DSS, 'Unknown solution mode.', 483);
         end;
 end;
 // ===========================================================================================
@@ -826,7 +825,7 @@ begin
     except
         ON E: EEsolv32Problem do
         begin
-            DoSimpleMsg('From SetGenerator DQDV, SolveZeroLoadSnapShot: ' + CRLF + E.Message + CheckYMatrixforZeroes, 7071);
+            DoSimpleMsg(DSS, 'From SetGenerator DQDV, SolveZeroLoadSnapShot: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSS), 7071);
             raise ESolveError.Create('Aborting');
         end;
     end;
@@ -868,7 +867,7 @@ begin
        // The above call could change the primitive Y matrix, so have to check
             if SystemYChanged or (DSS.ActiveCircuit.IncrCktElements.ListSize <> 0) then
             begin
-                BuildYMatrix(WHOLEMATRIX, FALSE);  // Does not realloc V, I
+                BuildYMatrix(DSS, WHOLEMATRIX, FALSE);  // Does not realloc V, I
             end;
             if UseAuxCurrents then
                 AddInAuxCurrents(NORMALSOLVE);
@@ -928,7 +927,7 @@ begin
            // Call to current calc could change YPrim for some devices
             if SystemYChanged then
             begin
-                BuildYMatrix(WHOLEMATRIX, FALSE);   // Does not realloc V, I
+                BuildYMatrix(DSS, WHOLEMATRIX, FALSE);   // Does not realloc V, I
             end;
 
             if UseAuxCurrents then
@@ -961,7 +960,7 @@ begin
     Inc(SolutionCount);    //Unique number for this solution
 
     if VoltageBaseChanged then
-        InitializeNodeVbase; // for convergence test
+        InitializeNodeVbase(DSS); // for convergence test
 
     if not SolutionInitialized then
     begin
@@ -974,11 +973,11 @@ begin
         except
             ON E: EEsolv32Problem do
             begin
-                DoSimpleMsg('From DoPFLOWsolution.SolveYDirect: ' + CRLF + E.Message + CheckYMatrixforZeroes, 7072);
+                DoSimpleMsg(DSS, 'From DoPFLOWsolution.SolveYDirect: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSS), 7072);
                 raise ESolveError.Create('Aborting');
             end;
         end;
-        if DSSPrime.SolutionAbort then
+        if DSS.SolutionAbort then
             Exit; // Initialization can result in abort
 
         try
@@ -986,7 +985,7 @@ begin
         except
             ON E: EEsolv32Problem do
             begin
-                DoSimpleMsg('From DoPFLOWsolution.SetGeneratordQdV: ' + CRLF + E.Message + CheckYMatrixforZeroes, 7073);
+                DoSimpleMsg(DSS, 'From DoPFLOWsolution.SetGeneratordQdV: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSS), 7073);
                 raise ESolveError.Create('Aborting');
             end;
         end;
@@ -1018,7 +1017,7 @@ begin
 
     if SystemYChanged or SeriesYInvalid then
     begin
-        BuildYMatrix(SERIESONLY, TRUE);   // Side Effect: Allocates V
+        BuildYMatrix(DSS, SERIESONLY, TRUE);   // Side Effect: Allocates V
     end;
     Inc(SolutionCount);    //Unique number for this solution
 
@@ -1036,7 +1035,7 @@ begin
     SolveSystem(NodeV);  // also sets voltages in radial part of the circuit if radial solution
 
     { Reset the main system Y as the solution matrix}
-    if (hYsystem > 0) and not DSSPrime.SolutionAbort then
+    if (hYsystem > 0) and not DSS.SolutionAbort then
         hY := hYsystem;
 end;
 
@@ -1067,7 +1066,7 @@ begin
                 with Buses^[i] do
                     kVBase := NearestBasekV(Cabs(NodeV^[GetRef(1)]) * 0.001732) / SQRT3;  // l-n base kV
 
-        InitializeNodeVbase;      // for convergence test
+        InitializeNodeVbase(DSS);      // for convergence test
 
         DSS.ActiveCircuit.Issolved := TRUE;
 
@@ -1079,7 +1078,7 @@ begin
     except
         ON E: EEsolv32Problem do
         begin
-            DoSimpleMsg('From SetVoltageBases.SolveZeroLoadSnapShot: ' + CRLF + E.Message + CheckYMatrixforZeroes, 7075);
+            DoSimpleMsg(DSS, 'From SetVoltageBases.SolveZeroLoadSnapShot: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSS), 7075);
             raise ESolveError.Create('Aborting');
         end;
     end;
@@ -1116,7 +1115,7 @@ begin
 
     if SystemYChanged or (DSS.ActiveCircuit.IncrCktElements.ListSize <> 0) then
     begin
-        BuildYMatrix(WHOLEMATRIX, FALSE); // Rebuild Y matrix, but V stays same
+        BuildYMatrix(DSS, WHOLEMATRIX, FALSE); // Rebuild Y matrix, but V stays same
     end;
 end;
 
@@ -1153,8 +1152,8 @@ begin
 
     if not ControlActionsDone and (ControlIteration >= MaxControlIterations) then
     begin
-        DoSimpleMsg('Warning Max Control Iterations Exceeded. ' + CRLF + 'Tip: Show Eventlog to debug control settings.', 485);
-        DSSPrime.SolutionAbort := TRUE;   // this will stop this message in dynamic power flow modes
+        DoSimpleMsg(DSS, 'Warning Max Control Iterations Exceeded. ' + CRLF + 'Tip: Show Eventlog to debug control settings.', 485);
+        DSS.SolutionAbort := TRUE;   // this will stop this message in dynamic power flow modes
     end;
 
     if DSS.ActiveCircuit.LogEvents then
@@ -1184,7 +1183,7 @@ begin
 
     if SystemYChanged then
     begin
-        BuildYMatrix(WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
+        BuildYMatrix(DSS, WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
     end;
 
     Inc(SolutionCount);   // Unique number for this solution
@@ -1224,7 +1223,7 @@ begin
         except
             ON E: EEsolv32Problem do
             begin
-                DoSimpleMsg('From SolveSnap.SolveDirect: ' + CRLF + E.Message + CheckYMatrixforZeroes, 7075);
+                DoSimpleMsg(DSS, 'From SolveSnap.SolveDirect: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSS), 7075);
                 raise ESolveError.Create('Aborting');
             end;
         end
@@ -1233,13 +1232,13 @@ begin
         try
             if SystemYChanged then
             begin
-                BuildYMatrix(WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
+                BuildYMatrix(DSS, WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
             end;
             DoPFLOWsolution;
         except
             ON E: EEsolv32Problem do
             begin
-                DoSimpleMsg('From SolveSnap.DoPflowSolution: ' + CRLF + E.Message + CheckYMatrixforZeroes, 7074);
+                DoSimpleMsg(DSS, 'From SolveSnap.DoPflowSolution: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSS), 7074);
                 raise ESolveError.Create('Aborting');
             end;
         end
@@ -1431,9 +1430,9 @@ begin
 // This rouitne adds the series reactors to the incidence matrix vectors
     with DSS.ActiveCircuit do
     begin
-        DevClassIndex := DSSPrime.ClassNames.Find('reactor');
+        DevClassIndex := DSS.ClassNames.Find('reactor');
         DSS.LastClassReferenced := DevClassIndex;
-        DSS.ActiveDSSClass := DSSPrime.DSSClassList.Get(DSSPrime.LastClassReferenced);
+        DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
         elem := DSS.ActiveDSSClass.First;
         while elem <> 0 do
         begin
@@ -1491,7 +1490,7 @@ begin
             AddXfmr2IncMatrix;       // Includes the Xfmrs
             AddSeriesCap2IncMatrix;  // Includes Series Cap
             AddSeriesReac2IncMatrix; // Includes Series Reactors
-            DSSPrime.IncMat_Ordered := FALSE;
+            DSS.IncMat_Ordered := FALSE;
         end;
 end;
 
@@ -1713,7 +1712,7 @@ begin
                     Inc_Mat_levels[j2] := BusdotIdx;
                 end;
             end;
-            DSSPrime.IncMat_Ordered := TRUE;
+            DSS.IncMat_Ordered := TRUE;
         end;
     finally
 
@@ -1736,7 +1735,7 @@ end;
 function TDSSSolution.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TSolution.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TSolution.Init', -1);
     Result := 0;
 end;
 
@@ -2031,7 +2030,7 @@ begin
         except
             On E: Exception do
             begin
-                DoSimpleMsg(Format('Error Sampling Control Device "%s.%s" %s  Error = %s', [ControlDevice.ParentClass.Name, ControlDevice.Name, CRLF, E.message]), 484);
+                DoSimpleMsg(DSS, Format('Error Sampling Control Device "%s.%s" %s  Error = %s', [ControlDevice.ParentClass.Name, ControlDevice.Name, CRLF, E.message]), 484);
                 raise EControlProblem.Create('Solution aborted.');
             end;
         end;
@@ -2187,8 +2186,8 @@ begin
    {Moved here 9-8-2007 so that mode is changed before reseting monitors, etc.}
 
    // Reset Meters and Monitors
-    DSSPrime.MonitorClass.ResetAll;
-    DSSPrime.EnergyMeterClass.ResetAll;
+    DSS.MonitorClass.ResetAll;
+    DSS.EnergyMeterClass.ResetAll;
     DoResetFaults;
     DoResetControls;
 
@@ -2288,10 +2287,10 @@ begin
         else
         begin
            {Raise Error Message if not solved}
-            DoSimpleMsg('Circuit must be solved in a non-dynamic mode before entering Dynamics or Fault study modes!' + CRLF +
+            DoSimpleMsg(DSS, 'Circuit must be solved in a non-dynamic mode before entering Dynamics or Fault study modes!' + CRLF +
                 'If you attempted to solve, then the solution has not yet converged.', 486);
-            if DSSPrime.In_ReDirect then
-                DSSPrime.Redirect_Abort := TRUE;  // Get outta here
+            if DSS.In_ReDirect then
+                DSS.Redirect_Abort := TRUE;  // Get outta here
             Result := FALSE;
         end;
     end;
@@ -2320,16 +2319,16 @@ begin
             then
             begin
                 Result := FALSE;
-                if DSSPrime.In_ReDirect then
-                    DSSPrime.Redirect_Abort := TRUE;  // Get outta here
+                if DSS.In_ReDirect then
+                    DSS.Redirect_Abort := TRUE;  // Get outta here
             end;
         end
         else
         begin
 
-            DoSimpleMsg('Circuit must be solved in a fundamental frequency power flow or direct mode before entering Harmonics mode!', 487);
-            if DSSPrime.In_ReDirect then
-                DSSPrime.Redirect_Abort := TRUE;  // Get outta here
+            DoSimpleMsg(DSS, 'Circuit must be solved in a fundamental frequency power flow or direct mode before entering Harmonics mode!', 487);
+            if DSS.In_ReDirect then
+                DSS.Redirect_Abort := TRUE;  // Get outta here
             Result := FALSE;
         end;
     end;
@@ -2374,13 +2373,13 @@ end;
 
 procedure TSolutionObj.Set_Year(const Value: Integer);
 begin
-    if DSSPrime.DIFilesAreOpen then
-        DSSPrime.EnergyMeterClass.CloseAllDIFiles;
+    if DSS.DIFilesAreOpen then
+        DSS.EnergyMeterClass.CloseAllDIFiles;
     FYear := Value;
     DynaVars.intHour := 0;  {Change year, start over}
     Dynavars.t := 0.0;
     Update_dblHour;
-    DSSPrime.EnergyMeterClass.ResetAll;  // force any previous year data to complete
+    DSS.EnergyMeterClass.ResetAll;  // force any previous year data to complete
 end;
 
 procedure TSolutionObj.Set_Total_Time(const Value: Double);
@@ -2401,7 +2400,7 @@ begin
     try
 
         try
-            AssignFile(F, DSSPrime.CircuitName_ + 'SavedVoltages.Txt');
+            AssignFile(F, DSS.CircuitName_ + 'SavedVoltages.Txt');
             Rewrite(F);
 
             with DSS.ActiveCircuit do
@@ -2418,7 +2417,7 @@ begin
         except
             On E: Exception do
             begin
-                DoSimpleMsg('Error opening Saved Voltages File: ' + E.message, 488);
+                DoSimpleMsg(DSS, 'Error opening Saved Voltages File: ' + E.message, 488);
                 Exit;
             end;
         end;
@@ -2427,7 +2426,7 @@ begin
     finally
 
         CloseFile(F);
-        DSSPrime.GlobalResult := DSSPrime.CircuitName_ + 'SavedVoltages.Txt';
+        DSS.GlobalResult := DSS.CircuitName_ + 'SavedVoltages.Txt';
 
     end;
 

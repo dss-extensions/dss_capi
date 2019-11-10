@@ -270,7 +270,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 661);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 661);
                 1:
                     ElementName := lowercase(param);
                 2:
@@ -479,7 +479,7 @@ begin
 
         end
     else
-        DoSimpleMsg('Error in Sensor MakeLike: "' + SensorName + '" Not Found.', 662);
+        DoSimpleMsg(DSS, 'Error in Sensor MakeLike: "' + SensorName + '" Not Found.', 662);
 
 end;
 
@@ -905,7 +905,7 @@ end;
 { - function is not actually used
 function TSensorObj.Get_FileName: String;
 begin
-        Result := GetOutputDirectory +  CircuitName_ + 'Sensor_' + Name + '.csv'
+        Result := DSS.OutputDirectory +  CircuitName_ + 'Sensor_' + Name + '.csv'
 end;
 }
 

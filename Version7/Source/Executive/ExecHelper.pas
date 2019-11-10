@@ -186,11 +186,11 @@ Begin
 }
       ObjClass := '';
       ObjName := '';
-      ParamName := LowerCase(Parser.NextParam);
-      Param := Parser.StrValue;
+      ParamName := LowerCase(DSS.Parser.NextParam);
+      Param := DSS.Parser.StrValue;
       IF Length(ParamName)>0 THEN  Begin   // IF specified, must be object or an abbreviation
         IF ComparetextShortest(ParamName, 'object')<>0 THEN  Begin
-          DoSimpleMsg('object=Class.Name expected as first parameter in command.'+ CRLF + parser.CmdString, 240);
+          DoSimpleMsg(DSS, 'object=Class.Name expected as first parameter in command.'+ CRLF + DSS.Parser.CmdString, 240);
           Exit;
         End;
       End;
@@ -224,7 +224,7 @@ Begin
 
      IF CompareText(ObjClass,'solution') = 0
      THEN Begin
-         DoSimpleMsg('You cannot create new Solution objects through the command interface.', 241);
+         DoSimpleMsg(DSS, 'You cannot create new Solution objects through the command interface.', 241);
          Exit;
      End;
 
@@ -290,11 +290,11 @@ Begin
 
     CASE DSS.LastClassReferenced of
       0: Begin
-        DoSimpleMsg('BatchEdit Command: Object Type "' + ObjType + '" not found.'+ CRLF + parser.CmdString, 267);
+        DoSimpleMsg(DSS, 'BatchEdit Command: Object Type "' + ObjType + '" not found.'+ CRLF + DSS.Parser.CmdString, 267);
         Exit;
         End;{Error}
     ELSE
-      Params:=Parser.Position;
+      Params:=DSS.Parser.Position;
       DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
       RegEx1:=TRegExpr.Create;
       RegEx1.ModifierI := True; // equivalent to RegEx1.Options:=[preCaseLess]
@@ -302,7 +302,7 @@ Begin
       If DSS.ActiveDSSClass.First>0 then pObj:=DSS.ActiveDSSObject else pObj := Nil;
       while pObj <> Nil do begin
         if RegEx1.Exec(UTF8String(pObj.Name)) then begin
-          Parser.Position:=Params;
+          DSS.Parser.Position:=Params;
           DSS.ActiveDSSClass.Edit;
         end;
         If DSS.ActiveDSSClass.Next>0 then pObj:=DSS.ActiveDSSObject else pObj := Nil;
@@ -329,11 +329,11 @@ Begin
 
     CASE DSS.LastClassReferenced of
       0: Begin
-        DoSimpleMsg('BatchEdit Command: Object Type "' + ObjType + '" not found.'+ CRLF + parser.CmdString, 267);
+        DoSimpleMsg(DSS, 'BatchEdit Command: Object Type "' + ObjType + '" not found.'+ CRLF + DSS.Parser.CmdString, 267);
         Exit;
         End;{Error}
     ELSE
-      Params:=Parser.Position;
+      Params:=DSS.Parser.Position;
       DSS.ActiveDSSClass := DSS.DSSClassList.Get(DSS.LastClassReferenced);
       RegEx1:=TPerlRegEx.Create;
       RegEx1.Options:=[preCaseLess];
@@ -342,7 +342,7 @@ Begin
       while pObj <> Nil do begin
         RegEx1.Subject:= pObj.Name; //(pObj.Name);
         if RegEx1.Match then begin
-          Parser.Position:=Params;
+          DSS.Parser.Position:=Params;
           DSS.ActiveDSSClass.Edit;
         end;
         If DSS.ActiveDSSClass.Next>0 then pObj:=DSS.ActiveDSSObject else pObj := Nil;
@@ -378,7 +378,7 @@ Begin
     // Going back up the redirect stack
 
     // Get next parm and try to interpret as a file name
-    ParamName := Parser.NextParam;
+    ParamName := DSS.Parser.NextParam;
     
     // Expanded path is required later as other Free Pascal functions 
     // may fail with relative paths
@@ -457,7 +457,7 @@ Begin
                 AssignFile(Fin, ReDirFile);
                 Reset(Fin);
             EXCEPT
-                DoSimpleMsg('Redirect File: "' + ReDirFile + '" Not Found.', 242);
+                DoSimpleMsg(DSS, 'Redirect File: "' + ReDirFile + '" Not Found.', 242);
                 DSS.SolutionAbort := TRUE;
                 Exit;
             End;
@@ -467,7 +467,7 @@ Begin
 
     if not gotTheFile then
     begin
-        DoSimpleMsg('Redirect File: "'+ReDirFile+'" Not Found.', 243);
+        DoSimpleMsg(DSS, 'Redirect File: "'+ReDirFile+'" Not Found.', 243);
         DSS.SolutionAbort := True;
         exit;  // Already had an extension, so just bail
     end;
@@ -561,19 +561,19 @@ Begin
         else
             CloseFile(Fin);
             
-        DSSPrime.In_Redirect := False;
-        ParserVars.Add('@lastfile', ReDirFile) ;
+        DSS.In_Redirect := False;
+        DSS.ParserVars.Add('@lastfile', ReDirFile) ;
 
         If  IsCompile Then
         Begin
             SetDataPath(CurrDir); // change datadirectory
             DSS.LastCommandWasCompile := True;
-            ParserVars.Add('@lastcompilefile', LocalCompFileName); // will be last one off the stack
+            DSS.ParserVars.Add('@lastcompilefile', LocalCompFileName); // will be last one off the stack
         End
         Else 
         Begin
             SetCurrentDir(SaveDir);    // set back to where we were for redirect, but not compile
-            ParserVars.Add('@lastredirectfile', ReDirFile);
+            DSS.ParserVars.Add('@lastredirectfile', ReDirFile);
         End;
     END;
 End;
@@ -610,7 +610,7 @@ Begin
         Begin
           IF Not DSS.ActiveDSSClass.SetActive(Objname) THEN
           Begin // scroll through list of objects untill a match
-            DoSimpleMsg('Error! Object "' + ObjName + '" not found.'+ CRLF + parser.CmdString, 245);
+            DoSimpleMsg(DSS, 'Error! Object "' + ObjName + '" not found.'+ CRLF + DSS.Parser.CmdString, 245);
             Result := 0;
           End
           ELSE
@@ -622,10 +622,10 @@ Begin
              ELSE Begin   // for circuit types, set DSS.ActiveCircuit Element, too
                    ActiveCktElement := DSS.ActiveDSSClass.GetActiveObj;
                    // Now check for active terminal designation
-                   ParamName := LowerCase(Parser.NextParam);
-                   Param := Parser.StrValue;
+                   ParamName := LowerCase(DSS.Parser.NextParam);
+                   Param := DSS.Parser.StrValue;
                    If Length(Param)>0
-                   THEN ActiveCktElement.ActiveTerminalIdx := Parser.Intvalue
+                   THEN ActiveCktElement.ActiveTerminalIdx := DSS.Parser.Intvalue
                    ELSE ActiveCktElement.ActiveTerminalIdx := 1;  {default to 1}
                    With ActiveCktElement Do SetActiveBus(StripExtension(Getbus(ActiveTerminalIdx)));
                   End;
@@ -633,7 +633,7 @@ Begin
           End;
         End
         ELSE Begin
-          DoSimpleMsg('Error! Active object type/class is not set.', 246);
+          DoSimpleMsg(DSS, 'Error! Active object type/class is not set.', 246);
           Result := 0;
         End;
 
@@ -675,23 +675,23 @@ Begin
      SaveDir := '';
      SaveFile := '';
      ParamPointer := 0;
-     ParamName := Parser.NextParam;
-     Param := Parser.StrValue;
+     ParamName := DSS.Parser.NextParam;
+     Param := DSS.Parser.StrValue;
      WHILE Length(Param)>0 DO
      Begin
          IF   (Length(ParamName) = 0)  THEN Inc(ParamPointer)
          ELSE ParamPointer := SaveCommands.GetCommand(ParamName);
 
          CASE ParamPointer OF
-           1: ObjClass := Parser.StrValue;
-           2: Savefile := Parser.StrValue;   // File name for saving  a class
-           3: SaveDir := Parser.StrValue;
+           1: ObjClass := DSS.Parser.StrValue;
+           2: Savefile := DSS.Parser.StrValue;   // File name for saving  a class
+           3: SaveDir := DSS.Parser.StrValue;
          ELSE
 
          End;
 
-         ParamName := Parser.NextParam;
-         Param := Parser.StrValue;
+         ParamName := DSS.Parser.NextParam;
+         Param := DSS.Parser.StrValue;
      End;
 
    DSS.InShowResults := True;
@@ -732,7 +732,7 @@ Begin
           Try
              mkDir(SaveDir);
           Except
-             On E:Exception Do DoSimpleMsg('Error making Directory: "'+SaveDir+'". ' + E.Message, 247);
+             On E:Exception Do DoSimpleMsg(DSS, 'Error making Directory: "'+SaveDir+'". ' + E.Message, 247);
           End;
        SaveFile := SaveDir + PathDelim + SaveFile;
      End;
@@ -759,7 +759,7 @@ End;
 //----------------------------------------------------------------------------
 function TExecHelper.DoHelpCmd:Integer;
 Begin
-    ShowHelpForm; // DSSForms Unit
+    ShowHelpForm(DSS.DSSClassList); // DSSForms Unit
     Result := 0;
 End;
 
@@ -819,7 +819,7 @@ Begin
 
         CASE DSS.LastClassReferenced of
           0: Begin
-                 DoSimpleMsg('Object Type "' + ObjType + '" not found.'+ CRLF + parser.CmdString, 253);
+                 DoSimpleMsg(DSS, 'Object Type "' + ObjType + '" not found.'+ CRLF + DSS.Parser.CmdString, 253);
                  Result := 0;
                  Exit;
              End;{Error}
@@ -831,7 +831,7 @@ Begin
            WITH DSS.ActiveCircuit Do
            Begin // scroll through list of objects until a match
              CASE DSS.ActiveDSSObject.DSSObjType OF
-                    DSS_OBJECT: DoSimpleMsg('Error in SetActiveCktElement: Object not a circuit Element.'+ CRLF + parser.CmdString, 254);
+                    DSS_OBJECT: DoSimpleMsg(DSS, 'Error in SetActiveCktElement: Object not a circuit Element.'+ CRLF + DSS.Parser.CmdString, 254);
              ELSE Begin
                     ActiveCktElement := DSS.ActiveDSSClass.GetActiveObj;
                     Result:=1;
@@ -883,9 +883,9 @@ Begin
              End
              Else Begin
 
-              // just load up the parser and call the edit routine for the object in question
+              // just load up the DSS.Parser and call the edit routine for the object in question
 
-              Parser.CmdString := 'Enabled=true';  // Will only work for CktElements
+              DSS.Parser.CmdString := 'Enabled=true';  // Will only work for CktElements
               Result := EditObject(ObjType, ObjName);
              End;
          End;
@@ -930,9 +930,9 @@ Begin
              End
              Else Begin
 
-              // just load up the parser and call the edit routine for the object in question
+              // just load up the DSS.Parser and call the edit routine for the object in question
 
-              Parser.CmdString := 'Enabled=false';  // Will only work for CktElements
+              DSS.Parser.CmdString := 'Enabled=false';  // Will only work for CktElements
               Result := EditObject(ObjType, ObjName);
              End;
          End;
@@ -965,8 +965,8 @@ Begin
  ObjName := ' ';
  
  // Continue parsing command line - check for object name
- ParamName := Parser.NextParam;
- Param := Parser.StrValue;
+ ParamName := DSS.Parser.NextParam;
+ Param := DSS.Parser.StrValue;
  IF Length(Param)>0 THEN
  Begin
 
@@ -987,7 +987,7 @@ Begin
     If Not NoFormsAllowed Then 
 {$ENDIF}
     Begin
-        FileName := GetOutputDirectory +  'Bus_Hash_List.Txt';
+        FileName := DSS.OutputDirectory +  'Bus_Hash_List.Txt';
         DSS.ActiveCircuit.BusList.DumpToFile(FileName);
 {$IFDEF DSS_CAPI}DSS.GlobalResult := FileName;{$ENDIF}
         FireOffEditor(FileName);
@@ -1000,7 +1000,7 @@ Begin
     If Not NoFormsAllowed Then 
 {$ENDIF}
     Begin
-        FileName := GetOutputDirectory +  'Device_Hash_List.Txt';
+        FileName := DSS.OutputDirectory +  'Device_Hash_List.Txt';
         DSS.ActiveCircuit.DeviceList.DumpToFile(FileName);
 {$IFDEF DSS_CAPI}DSS.GlobalResult := FileName;{$ENDIF}
         FireOffEditor(FileName);
@@ -1009,7 +1009,7 @@ Begin
 
     IF CompareText(Copy(lowercase(Param),1,5), 'alloc')=0 THEN
     Begin
-        FileName :=GetOutputDirectory + 'AllocationFactors.Txt';
+        FileName :=DSS.OutputDirectory + 'AllocationFactors.Txt';
         DumpAllocationFactors(FileName);
 {$IFDEF DSS_CAPI}DSS.GlobalResult := FileName;{$ENDIF}
         FireOffEditor(FileName);
@@ -1032,11 +1032,11 @@ Begin
          Begin
             SingleObject := TRUE;
            // Check to see IF we want a debugdump on this object
-            ParamName := Parser.NextParam;
-            Param2 := Parser.StrValue;
+            ParamName := DSS.Parser.NextParam;
+            Param2 := DSS.Parser.StrValue;
             IF CompareText(Param2,'debug')=0 THEN DebugDump := TRUE;
             // Set active Element to be value in Param
-            Parser.CmdString := '"' + Param + '"';  // put param back into parser
+            DSS.Parser.CmdString := '"' + Param + '"';  // put param back into DSS.Parser
             GetObjClassAndName( ObjClass, ObjName);
             // IF DoSelectCmd=0 THEN Exit;  8-17-00
             IF SetObjectClass(DSS, ObjClass)
@@ -1050,12 +1050,12 @@ Begin
  End;
 
   TRY
-      AssignFile(F, GetOutputDirectory + DSS.CircuitName_ + 'PropertyDump.Txt');
+      AssignFile(F, DSS.OutputDirectory + DSS.CircuitName_ + 'PropertyDump.Txt');
       Rewrite(F);
   EXCEPT
       On E:Exception DO
       Begin
-        DoErrorMsg('DoPropertyDump - opening '+ GetOutputDirectory +' DSS_PropertyDump.txt for writing in '+Getcurrentdir, E.Message, 'Disk protected or other file error', 255);
+        DoErrorMsg('DoPropertyDump - opening '+ DSS.OutputDirectory +' DSS_PropertyDump.txt for writing in '+Getcurrentdir, E.Message, 'Disk protected or other file error', 255);
         Exit;
       End;
   End;
@@ -1078,7 +1078,7 @@ Begin
         ELSE
            IF Not DSS.ActiveDSSClass.SetActive(Objname)
            THEN Begin
-               DoSimpleMsg('Error! Object "' + ObjName + '" not found.', 256) ;
+               DoSimpleMsg(DSS, 'Error! Object "' + ObjName + '" not found.', 256) ;
                Exit;
            End
            ELSE DSS.ActiveDSSObject.DumpProperties(F, DebugDump);  // Dump only properties of active circuit element
@@ -1120,7 +1120,7 @@ Begin
          CloseFile(F);
   END;  {TRY}
 
-  FileName := GetOutputDirectory + DSS.CircuitName_ + 'PropertyDump.Txt';
+  FileName := DSS.OutputDirectory + DSS.CircuitName_ + 'PropertyDump.Txt';
 {$IFDEF DSS_CAPI}DSS.GlobalResult := FileName;{$ENDIF}
   FireOffEditor(FileName);
 
@@ -1137,7 +1137,7 @@ VAR
    TimeArray:Array[1..2] of double;
 
 Begin
-     Parser.ParseAsVector(2, @TimeArray);
+     DSS.Parser.ParseAsVector(2, @TimeArray);
      WITH DSS.ActiveCircuit.Solution DO
      Begin
         DynaVars.intHour := Round(TimeArray[1]);
@@ -1166,7 +1166,7 @@ Begin
 
    // IF none is found, just leave as is after giving error
 
-   DoSimpleMsg('Error! No circuit named "' + cktname + '" found.' + CRLF +
+   DoSimpleMsg(DSS, 'Error! No circuit named "' + cktname + '" found.' + CRLF +
                'Active circuit not changed.', 258);
 End;
 
@@ -1181,7 +1181,7 @@ VAR
 Begin
 
      Dummy := AllocMem(Sizeof(Double) * 100); // Big Buffer
-     Num   := Parser.ParseAsVector(100, Dummy);
+     Num   := DSS.Parser.ParseAsVector(100, Dummy);
      {Parsing zero-fills the array}
 
      {LegalVoltageBases is a zero-terminated array, so we have to allocate
@@ -1214,10 +1214,10 @@ Begin
   retval := SetActiveCktElement;
   IF retval>0 THEN
   Begin
-        ParamName := Parser.NextParam;
-        Terminal  := Parser.IntValue;
-        ParamName := Parser.NextParam;
-        Conductor := Parser.IntValue;
+        ParamName := DSS.Parser.NextParam;
+        Terminal  := DSS.Parser.IntValue;
+        ParamName := DSS.Parser.NextParam;
+        Conductor := DSS.Parser.IntValue;
 
         With DSS.ActiveCircuit Do
         Begin
@@ -1228,7 +1228,7 @@ Begin
   End
   ELSE
   Begin
-       DoSimpleMsg('Error in Open Command: Circuit Element Not Found.' +CRLF+ Parser.CmdString, 259);
+       DoSimpleMsg(DSS, 'Error in Open Command: Circuit Element Not Found.' +CRLF+ DSS.Parser.CmdString, 259);
   End;
   Result := 0;
 End;
@@ -1251,10 +1251,10 @@ Begin
   retval := SetActiveCktElement;
   IF retval>0 THEN
     Begin
-       ParamName := Parser.NextParam;                 
-       Terminal  := Parser.IntValue;
-       ParamName := Parser.NextParam;
-       Conductor := Parser.IntValue;
+       ParamName := DSS.Parser.NextParam;                 
+       Terminal  := DSS.Parser.IntValue;
+       ParamName := DSS.Parser.NextParam;
+       Conductor := DSS.Parser.IntValue;
 
         With DSS.ActiveCircuit Do
          Begin
@@ -1266,7 +1266,7 @@ Begin
     End
   ELSE
   Begin
-       DoSimpleMsg('Error in Close Command: Circuit Element Not Found.' +CRLF+ Parser.CmdString, 260);
+       DoSimpleMsg(DSS, 'Error in Close Command: Circuit Element Not Found.' +CRLF+ DSS.Parser.CmdString, 260);
   End;
   Result := 0;
 
@@ -1281,8 +1281,8 @@ Begin
     Result := 0;
 
     // Get next parm and try to interpret as a file name
-    ParamName := Parser.NextParam;
-    Param := UpperCase(Parser.StrValue);
+    ParamName := DSS.Parser.NextParam;
+    Param := UpperCase(DSS.Parser.StrValue);
     IF Length(Param) = 0
        THEN Begin
             DoResetMonitors;
@@ -1306,7 +1306,7 @@ Begin
 
       ELSE
 
-         DoSimpleMsg('Unknown argument to Reset Command: "'+ Param+'"', 261);
+         DoSimpleMsg(DSS, 'Unknown argument to Reset Command: "'+ Param+'"', 261);
 
       End;
 
@@ -1350,7 +1350,7 @@ begin
              If pReacElement.Enabled Then DSS.ActiveCircuit.Buses^[pReacElement.Terminals^[1].Busref].Keep := TRUE;
           Except
              On E:Exception Do Begin
-               DoSimpleMsg(Format('%s %s Reactor=%s Bus No.=%d ',[E.Message, CRLF, pReacElement.Name, pReacElement.NodeRef^[1] ]), 9999);
+               DoSimpleMsg(DSS, Format('%s %s Reactor=%s Bus No.=%d ',[E.Message, CRLF, pReacElement.Name, pReacElement.NodeRef^[1] ]), 9999);
                Break;
              End;
           End;
@@ -1370,8 +1370,8 @@ VAR
 Begin
     Result := 0;
     // Get next parm and try to interpret as a file name
-    ParamName := Parser.NextParam;
-    Param := UpperCase(Parser.StrValue);
+    ParamName := DSS.Parser.NextParam;
+    Param := UpperCase(DSS.Parser.StrValue);
 
     {Mark Capacitor and Reactor buses as Keep so we don't lose them}
     MarkCapandReactorBuses;
@@ -1398,7 +1398,7 @@ Begin
             MetObj := MeterClass.GetActiveObj;
             MetObj.ReduceZone;
           End
-          Else DoSimpleMsg('EnergyMeter "'+Param+'" not found.', 262);
+          Else DoSimpleMsg(DSS, 'EnergyMeter "'+Param+'" not found.', 262);
        End;
     End;
 
@@ -1436,8 +1436,8 @@ Begin
     Result := 0;
 
     // Get next parm and try to interpret as a file name
-    ParamName := Parser.NextParam;
-    Param := Parser.StrValue;
+    ParamName := DSS.Parser.NextParam;
+    Param := DSS.Parser.StrValue;
 
     IF  FileExists(Param) THEN FireOffEditor(Param)
     ELSE Begin
@@ -1501,8 +1501,8 @@ VAR
 Begin
 
      Result := 0;
-     ParamName := Parser.NextParam;
-     Param := Parser.StrValue;
+     ParamName := DSS.Parser.NextParam;
+     Param := DSS.Parser.StrValue;
 
      ParseObjName(Param, ObjName, PropName);
 
@@ -1513,7 +1513,7 @@ Begin
      End ELSE
      Begin
          // Set Object Active
-         parser.cmdstring := '"' + Objname + '"';
+         DSS.Parser.cmdstring := '"' + Objname + '"';
          DoSelectCmd;
      End;
 
@@ -1548,8 +1548,8 @@ Begin
     Result := 0;
 
     // Get next parm and try to interpret as a file name
-    ParamName := Parser.NextParam;
-    Param := Parser.StrValue;
+    ParamName := DSS.Parser.NextParam;
+    Param := DSS.Parser.StrValue;
 
     With DSS.ActiveCircuit.Solution Do
     CASE UpCase(Param[1]) of
@@ -1601,7 +1601,7 @@ Begin
 
    CASE DSS.LastClassReferenced of
      0: Begin
-            DoSimpleMsg('New Command: Object Type "' + ObjType + '" not found.' + CRLF + parser.CmdString, 263);
+            DoSimpleMsg(DSS, 'New Command: Object Type "' + ObjType + '" not found.' + CRLF + DSS.Parser.CmdString, 263);
             Result := 0;
             Exit;
         End;{Error}
@@ -1614,7 +1614,7 @@ Begin
       // Name must be supplied
         IF   Length(Name) = 0
         THEN Begin
-            DoSimpleMsg('Object Name Missing'+ CRLF + parser.CmdString, 264);
+            DoSimpleMsg(DSS, 'Object Name Missing'+ CRLF + DSS.Parser.CmdString, 264);
             Exit;
         End;
 
@@ -1632,7 +1632,7 @@ Begin
             // These are circuit elements
             IF   DSS.ActiveCircuit = nil
             THEN Begin
-                 DoSimpleMsg('You Must Create a circuit first: "new circuit.yourcktname"', 265);
+                 DoSimpleMsg(DSS, 'You Must Create a circuit first: "new circuit.yourcktname"', 265);
                  Exit;
             End;
 
@@ -1651,7 +1651,7 @@ Begin
                  End
                 ELSE
                  Begin
-                    DoSimpleMsg('Warning: Duplicate new element definition: "'+ DSS.ActiveDSSClass.Name+'.'+Name+'"'+
+                    DoSimpleMsg(DSS, 'Warning: Duplicate new element definition: "'+ DSS.ActiveDSSClass.Name+'.'+Name+'"'+
                                  CRLF+ 'Element being redefined.', 266);
                  End;
              End;
@@ -1679,7 +1679,7 @@ Begin
 
    CASE DSS.LastClassReferenced of
      0: Begin
-            DoSimpleMsg('Edit Command: Object Type "' + ObjType + '" not found.'+ CRLF + parser.CmdString, 267);
+            DoSimpleMsg(DSS, 'Edit Command: Object Type "' + ObjType + '" not found.'+ CRLF + DSS.Parser.CmdString, 267);
             Result := 0;
             Exit;
         End;{Error}
@@ -1706,11 +1706,11 @@ VAR
 Begin
 
 // Parse off next two items on line
-   ParamName := Parser.NextParam;
-   BusName   := LowerCase(Parser.StrValue);
+   ParamName := DSS.Parser.NextParam;
+   BusName   := LowerCase(DSS.Parser.StrValue);
 
-   ParamName := Parser.NextParam;
-   kVValue   := Parser.DblValue;
+   ParamName := DSS.Parser.NextParam;
+   kVValue   := DSS.Parser.DblValue;
 
    // Now find the bus and set the value
 
@@ -1752,7 +1752,7 @@ begin
 
      DSS.ActiveCircuit.AutoAddBusList.Clear;
 
-     // Load up auxiliary parser to reparse the array list or file name
+     // Load up auxiliary DSS.Parser to reparse the array list or file name
      DSS.AuxParser.CmdString := S;
      ParmName := DSS.AuxParser.NextParam ;
      Param := DSS.AuxParser.StrValue;
@@ -1778,7 +1778,7 @@ begin
              CloseFile(F);
 
          EXCEPT
-             On E:Exception Do DoSimpleMsg('Error trying to read bus list file. Error is: '+E.message, 268);
+             On E:Exception Do DoSimpleMsg(DSS, 'Error trying to read bus list file. Error is: '+E.message, 268);
          END;
 
 
@@ -1814,7 +1814,7 @@ VAR
 
 begin
 
-     // Load up auxiliary parser to reparse the array list or file name
+     // Load up auxiliary DSS.Parser to reparse the array list or file name
      DSS.AuxParser.CmdString := S;
      ParmName := DSS.AuxParser.NextParam ;
      Param := DSS.AuxParser.StrValue;
@@ -1844,7 +1844,7 @@ begin
              CloseFile(F);
 
          EXCEPT
-             On E:Exception Do DoSimpleMsg('Error trying to read bus list file "+param+". Error is: '+E.message, 269);
+             On E:Exception Do DoSimpleMsg(DSS, 'Error trying to read bus list file "+param+". Error is: '+E.message, 269);
          END;
 
 
@@ -1924,8 +1924,8 @@ Begin
 
   If DSS.ActiveCircuit <> Nil Then
   Begin
-    S := Parser.NextParam;
-    CktElementName := Parser.StrValue ;
+    S := DSS.Parser.NextParam;
+    CktElementName := DSS.Parser.StrValue ;
 
     If Length(CktElementName) > 0  Then  SetObject(CktElementName);
 
@@ -2175,7 +2175,7 @@ Begin
                 'Nterms=' + IntToStr(Nterms) + CRLF +
                 'NConds =' + IntToStr(NConds) + CRLF +
                 'noderef=' + IntToStr(N) ;
-            DoSimpleMsg(S, 270);
+            DoSimpleMsg(DSS, S, 270);
           End;
       END;
      End
@@ -2360,7 +2360,7 @@ VAR
 
 begin
     IF   X <= 0.0
-    THEN DoSimpleMsg('Allocation Factor must be greater than zero.', 271)
+    THEN DoSimpleMsg(DSS, 'Allocation Factor must be greater than zero.', 271)
     ELSE WITH DSS.ActiveCircuit Do
     Begin
          pLoad := Loads.First;
@@ -2379,7 +2379,7 @@ VAR
 
 begin
     IF   X <= 0.0
-    THEN DoSimpleMsg('CFactor must be greater than zero.', 271)
+    THEN DoSimpleMsg(DSS, 'CFactor must be greater than zero.', 271)
     ELSE WITH DSS.ActiveCircuit Do
     Begin
          pLoad := Loads.First;
@@ -2408,7 +2408,7 @@ Begin
        DoAllHarmonics := FALSE;
 
        Dummy := AllocMem(Sizeof(Double) * 100); // Big Buffer
-       Num   := Parser.ParseAsVector(100, Dummy);
+       Num   := DSS.Parser.ParseAsVector(100, Dummy);
        {Parsing zero-fills the array}
 
        HarmonicListSize := Num;
@@ -2434,7 +2434,7 @@ Begin
 
     End
     ELSE   Begin
-       DoSimpleMsg('Element Not Found.', 272);
+       DoSimpleMsg(DSS, 'Element Not Found.', 272);
        Result := 1;
     End;
 End;
@@ -2468,8 +2468,8 @@ Begin
   Result := 0;
 
      ParamPointer := 0;
-     ParamName := Parser.NextParam;
-     Param := Parser.StrValue;
+     ParamName := DSS.Parser.NextParam;
+     Param := DSS.Parser.StrValue;
      WHILE Length(Param)>0 DO BEGIN
          IF Length(ParamName) = 0 THEN Inc(ParamPointer)
          ELSE Case ParamName[1] of
@@ -2480,16 +2480,16 @@ Begin
               END;
 
          CASE ParamPointer OF
-            0: DoSimpleMsg('Unknown parameter "'+ParamName+'" for Capacity Command', 273);
-            1: DSS.ActiveCircuit.CapacityStart := Parser.DblValue;
-            2: DSS.ActiveCircuit.CapacityIncrement := Parser.DblValue;
+            0: DoSimpleMsg(DSS, 'Unknown parameter "'+ParamName+'" for Capacity Command', 273);
+            1: DSS.ActiveCircuit.CapacityStart := DSS.Parser.DblValue;
+            2: DSS.ActiveCircuit.CapacityIncrement := DSS.Parser.DblValue;
 
          ELSE
 
          END;
 
-         ParamName := Parser.NextParam;
-         Param := Parser.StrValue;
+         ParamName := DSS.Parser.NextParam;
+         Param := DSS.Parser.StrValue;
      END;
 
     WITH DSS.ActiveCircuit Do
@@ -2547,7 +2547,7 @@ Begin
      End;
 
    Except
-       On E:Exception Do DoSimpleMsg('ZscRefresh Error: ' + E.message + CRLF , 274);
+       On E:Exception Do DoSimpleMsg(DSS, 'ZscRefresh Error: ' + E.message + CRLF , 274);
    End;
 
 
@@ -2604,8 +2604,8 @@ Begin
 
         {Get next parameter on command line}
 
-        ParamName := UpperCase(Parser.NextParam);
-        Param := Parser.StrValue;
+        ParamName := UpperCase(DSS.Parser.NextParam);
+        Param := DSS.Parser.StrValue;
 
         PropIndex := 1;
         If Length(ParamName) > 0 Then
@@ -2618,7 +2618,7 @@ Begin
 
         CASE PropIndex of
             1: VarIndex := PCElem.LookupVariable(Param);  // Look up property index
-            2: VarIndex := Parser.IntValue ;
+            2: VarIndex := DSS.Parser.IntValue ;
         END;
 
         If (VarIndex>0) and (VarIndex<=PCElem.NumVariables) Then
@@ -2683,8 +2683,8 @@ Begin
 
     {Get next parameter on command line}
 
-    ParamName := Parser.NextParam;
-    Param := Parser.StrValue;
+    ParamName := DSS.Parser.NextParam;
+    Param := DSS.Parser.StrValue;
 
     Try
       iLine := -1;
@@ -2715,8 +2715,8 @@ Begin
       Except
       {**CHANGE THIS ERROR MESSAGE**}
           ON E:Exception Do Begin
-              If iLine = -1 Then DoSimpleMsg('Bus Coordinate file: "' + Param + '" not found; ' + E.Message , 275)
-              Else DoSimpleMsg('Bus Coordinate file: Error Reading Line ' + InttoStr(Iline)+'; ' + E.Message , 275);
+              If iLine = -1 Then DoSimpleMsg(DSS, 'Bus Coordinate file: "' + Param + '" not found; ' + E.Message , 275)
+              Else DoSimpleMsg(DSS, 'Bus Coordinate file: Error Reading Line ' + InttoStr(Iline)+'; ' + E.Message , 275);
           End;
       End;
 
@@ -2758,7 +2758,7 @@ Begin
      DSS.ActiveCircuit.ReductionStrategy := rsDefault;
      IF Length(S)=0 Then Exit;  {No option given}
 
-     DSS.AuxParser.CmdString := Parser.Remainder;  // so we don't mess up Set Command
+     DSS.AuxParser.CmdString := DSS.Parser.Remainder;  // so we don't mess up Set Command
 
      Case UpperCase(S)[1] of
 
@@ -2785,7 +2785,7 @@ Begin
               End;
             End;
      ELSE
-         DoSimpleMsg('Unknown Reduction Strategy: "' + S + '".', 276);
+         DoSimpleMsg(DSS, 'Unknown Reduction Strategy: "' + S + '".', 276);
      End;
 
 End;
@@ -2804,8 +2804,8 @@ VAR
 Begin
     Result := 0;
 
-    ParamName := Parser.NextParam;
-    Param := UpperCase(Parser.StrValue);
+    ParamName := DSS.Parser.NextParam;
+    Param := UpperCase(DSS.Parser.StrValue);
 
     // initialize the Checked Flag FOR all circuit Elements
     With DSS.ActiveCircuit Do
@@ -2841,7 +2841,7 @@ Begin
             MetObj := MeterClass.GetActiveObj;
             MetObj.InterpolateCoordinates;
           End
-          Else DoSimpleMsg('EnergyMeter "'+Param+'" not found.', 277);
+          Else DoSimpleMsg(DSS, 'EnergyMeter "'+Param+'" not found.', 277);
        End;
     End;
 
@@ -2854,8 +2854,8 @@ Var
 
 Begin
   Result := 0;
-  ParamName := Parser.NextParam;
-  Param := Parser.StrValue;
+  ParamName := DSS.Parser.NextParam;
+  Param := DSS.Parser.StrValue;
 
 
   If FileExists(Param) Then
@@ -2864,7 +2864,7 @@ Begin
     End
   Else
     Begin
-     DoSimpleMsg('File "'+Param+'" does not exist.', 278);
+     DoSimpleMsg(DSS, 'File "'+Param+'" does not exist.', 278);
      Result := 1;
     End;
 
@@ -2880,11 +2880,11 @@ Var
 
 Begin
     Result := 0;
-    ParamName := Parser.NextParam;
-    Param := UpperCase(Parser.StrValue);
+    ParamName := DSS.Parser.NextParam;
+    Param := UpperCase(DSS.Parser.StrValue);
 
-    ParamName := Parser.NextParam;
-    ObjName := UpperCase(Parser.StrValue);
+    ParamName := DSS.Parser.NextParam;
+    ObjName := UpperCase(DSS.Parser.StrValue);
 
     If Length(ObjName)=0 Then ObjName := 'ALL';
 
@@ -2932,8 +2932,8 @@ Begin
     Result := 0;
     If DSS.ActiveCircuit <> NIl then Begin
 
-        ParamName := Parser.NextParam;
-        Angle := Parser.DblValue * PI/180.0;   // Deg to rad
+        ParamName := DSS.Parser.NextParam;
+        Angle := DSS.Parser.DblValue * PI/180.0;   // Deg to rad
 
         a := cmplx(cos(Angle), Sin(Angle));
         With DSS.ActiveCircuit Do Begin
@@ -3020,7 +3020,7 @@ Begin
       
     Except
           On E:Exception Do Begin
-           DoSimpleMsg('Error opening Saved Voltages or VDIFF File: '+E.message, 280);
+           DoSimpleMsg(DSS, 'Error opening Saved Voltages or VDIFF File: '+E.message, 280);
            Exit;
           End;
 
@@ -3037,7 +3037,7 @@ Begin
   End;
 
   End
-  Else  DoSimpleMsg('Error: No Saved Voltages.', 281);
+  Else  DoSimpleMsg(DSS, 'Error: No Saved Voltages.', 281);
 
 End;
 
@@ -3116,8 +3116,8 @@ Begin
      FilName := 'DistGenerators.dss';
      DoGenerators := TRUE;
 
-     ParamName := Parser.NextParam;
-     Param := Parser.StrValue;
+     ParamName := DSS.Parser.NextParam;
+     Param := DSS.Parser.StrValue;
      WHILE Length(Param)>0 DO
      Begin
          IF   (Length(ParamName) = 0)
@@ -3125,20 +3125,20 @@ Begin
          ELSE ParamPointer := DistributeCommands.GetCommand(ParamName);
 
          CASE ParamPointer OF
-           1: kW := Parser.DblValue;
-           2: How := Parser.StrValue;
-           3: Skip := Parser.IntValue;
-           4: PF := Parser.DblValue;
-           5: FilName := Parser.StrValue;
-           6: kW := Parser.DblValue * 1000.0;
+           1: kW := DSS.Parser.DblValue;
+           2: How := DSS.Parser.StrValue;
+           3: Skip := DSS.Parser.IntValue;
+           4: PF := DSS.Parser.DblValue;
+           5: FilName := DSS.Parser.StrValue;
+           6: kW := DSS.Parser.DblValue * 1000.0;
            7: if (Uppercase(Param)[1]='L') then DoGenerators := FALSE Else DoGenerators := TRUE;  // Load or Generator
 
          ELSE
              // ignore unnamed and extra parms
          End;
 
-         ParamName := Parser.NextParam;
-         Param := Parser.StrValue;
+         ParamName := DSS.Parser.NextParam;
+         Param := DSS.Parser.StrValue;
      End;
 
      if Not DoGenerators then FilName := 'DistLoads.dss' ;
@@ -3176,8 +3176,8 @@ Begin
      MeterName := 'DI_Totals';
 
      ParamPointer := 0;
-     ParamName := Parser.NextParam;
-     Param := Parser.StrValue;
+     ParamName := DSS.Parser.NextParam;
+     Param := DSS.Parser.StrValue;
      WHILE Length(Param)>0 DO
      Begin
          IF   (Length(ParamName) = 0) THEN Inc(ParamPointer)
@@ -3185,9 +3185,9 @@ Begin
 
          CASE ParamPointer OF
            1: CaseName := Param;
-           2: CaseYear := Parser.Intvalue;
+           2: CaseYear := DSS.Parser.Intvalue;
            3: Begin
-                 NumRegs := Parser.ParseAsVector(NumEMREgisters, @dRegisters);
+                 NumRegs := DSS.Parser.ParseAsVector(NumEMREgisters, @dRegisters);
                  SetLength(iRegisters, NumRegs);
                  For i := 1 to NumRegs Do iRegisters[i-1] := Round(dRegisters[i]);
               End;
@@ -3198,8 +3198,8 @@ Begin
              // ignore unnamed and extra parms
          End;
 
-         ParamName := Parser.NextParam;
-         Param := Parser.StrValue;
+         ParamName := DSS.Parser.NextParam;
+         Param := DSS.Parser.StrValue;
      End;
 
      DSSPlotObj.DoDI_Plot(CaseName, CaseYear, iRegisters, PeakDay, MeterName);
@@ -3230,8 +3230,8 @@ Begin
      WhichFile := 'Totals';
 
      ParamPointer := 0;
-     ParamName := UpperCase(Parser.NextParam);
-     Param := Parser.StrValue;
+     ParamName := UpperCase(DSS.Parser.NextParam);
+     Param := DSS.Parser.StrValue;
      WHILE Length(Param)>0 DO
      Begin
          Unknown := False;
@@ -3250,14 +3250,14 @@ Begin
          CASE ParamPointer OF
            1: CaseName1 := Param;
            2: CaseName2 := Param;
-           3: Reg := Parser.IntValue;
+           3: Reg := DSS.Parser.IntValue;
            4: WhichFile := Param;
          ELSE
              // ignore unnamed and extra parms
          End;
 
-         ParamName := UpperCase(Parser.NextParam);
-         Param := Parser.StrValue;
+         ParamName := UpperCase(DSS.Parser.NextParam);
+         Param := DSS.Parser.StrValue;
      End;
 
      DSSPlotObj.DoCompareCases(CaseName1, CaseName2, WhichFile,  Reg);
@@ -3292,8 +3292,8 @@ Begin
 
 
      ParamPointer := 0;
-     ParamName := Parser.NextParam;
-     Param := Parser.StrValue;
+     ParamName := DSS.Parser.NextParam;
+     Param := DSS.Parser.StrValue;
      WHILE Length(Param)>0 DO
      Begin
          Unknown := False;
@@ -3320,7 +3320,7 @@ Begin
                 End;
               End;
            2: Begin
-                NRegs := Parser.ParseAsVector(NumEMRegisters, @dRegisters);
+                NRegs := DSS.Parser.ParseAsVector(NumEMRegisters, @dRegisters);
                 SetLength(iRegisters, Nregs);
                 For i := 1 to NRegs Do iRegisters[i-1] := Round(dRegisters[i]);
               end;
@@ -3329,8 +3329,8 @@ Begin
              // ignore unnamed and extra parms
          End;
 
-         ParamName := Parser.NextParam;
-         Param := Parser.StrValue;
+         ParamName := DSS.Parser.NextParam;
+         Param := DSS.Parser.StrValue;
      End;
 
      DSSPlotObj.DoYearlyCurvePlot(CaseNames, WhichFile,  iRegisters);
@@ -3359,12 +3359,12 @@ Begin
      // Abort if no circuit or solution
      If not assigned(DSS.ActiveCircuit) Then
      Begin
-          DoSimpleMsg('No circuit created.',24721);
+          DoSimpleMsg(DSS, 'No circuit created.',24721);
           Exit;
      End;
      If not assigned(DSS.ActiveCircuit.Solution) OR not assigned(DSS.ActiveCircuit.Solution.NodeV) Then
      Begin
-          DoSimpleMsg('The circuit must be solved before you can do this.',24722);
+          DoSimpleMsg(DSS, 'The circuit must be solved before you can do this.',24722);
           Exit;
      End;
 
@@ -3372,8 +3372,8 @@ Begin
      ElemName := '';
       {Parse rest of command line}
      ParamPointer := 0;
-     ParamName := UpperCase(Parser.NextParam);
-     Param := Parser.StrValue;
+     ParamName := UpperCase(DSS.Parser.NextParam);
+     Param := DSS.Parser.StrValue;
      WHILE Length(Param)>0 DO
      Begin
          Unknown := False;
@@ -3397,8 +3397,8 @@ Begin
              // ignore unnamed and extra parms
          End;
 
-         ParamName := UpperCase(Parser.NextParam);
-         Param := Parser.StrValue;
+         ParamName := UpperCase(DSS.Parser.NextParam);
+         Param := DSS.Parser.StrValue;
      End;  {WHILE}
 
      {--------------------------------------------------------------}
@@ -3409,10 +3409,10 @@ Begin
         If pElem is TDSSCktElement Then Begin
            DSSPlotObj.DoVisualizationPlot(TDSSCktElement(pElem), Quantity);
         End Else Begin
-          DoSimpleMsg(pElem.Name + ' must be a circuit element type!', 282);   // Wrong type
+          DoSimpleMsg(DSS, pElem.Name + ' must be a circuit element type!', 282);   // Wrong type
         End;
      End Else Begin
-        DoSimpleMsg('Requested Circuit Element: "' + ElemName + '" Not Found.',282 ); // Did not find it ..
+        DoSimpleMsg(DSS, 'Requested Circuit Element: "' + ElemName + '" Not Found.',282 ); // Did not find it ..
      End;
 {$ENDIF}
 End;
@@ -3428,7 +3428,7 @@ function TExecHelper.DoADOScmd:Integer;
 
 Begin
     Result  := 0;
-    DoDOScmd(Parser.Remainder);
+    DoDOScmd(DSS.Parser.Remainder);
 End;
 
 function TExecHelper.DoEstimateCmd:Integer;
@@ -3477,8 +3477,8 @@ Begin
      Line2 := '';
      MyEditString := '';
      NPhases := 0; // no filtering by number of phases
-     ParamName := Parser.NextParam;
-     Param := Parser.StrValue;
+     ParamName := DSS.Parser.NextParam;
+     Param := DSS.Parser.StrValue;
      while Length(Param) > 0 do Begin
        IF Length(ParamName) = 0 THEN Inc(ParamPointer)
        ELSE ParamPointer := ReconductorCommands.GetCommand(ParamName);
@@ -3489,13 +3489,13 @@ Begin
           3: Begin Linecode := Param; LineCodeSpecified := TRUE; GeometrySpecified := FALSE; End;
           4: Begin Geometry := Param; LineCodeSpecified := FALSE; GeometrySpecified := TRUE; End;
           5: MyEditString := Param;
-          6: Nphases := Parser.IntValue;
+          6: Nphases := DSS.Parser.IntValue;
        Else
-          DoSimpleMsg('Error: Unknown Parameter on command line: '+Param, 28701);
+          DoSimpleMsg(DSS, 'Error: Unknown Parameter on command line: '+Param, 28701);
        End;
 
-      ParamName := Parser.NextParam;
-      Param := Parser.StrValue;
+      ParamName := DSS.Parser.NextParam;
+      Param := DSS.Parser.StrValue;
      End;
 
      {Check for Errors}
@@ -3505,12 +3505,12 @@ Begin
      Line2 := StripClassName(Line2);
 
      If (Length(Line1)=0) or (Length(Line2)=0) then Begin
-       DoSimpleMsg('Both Line1 and Line2 must be specified!', 28702);
+       DoSimpleMsg(DSS, 'Both Line1 and Line2 must be specified!', 28702);
        Exit;
      End;
 
      If (Not LineCodeSpecified) and (Not GeometrySpecified) then Begin
-       DoSimpleMsg('Either a new LineCode or a Geometry must be specified!', 28703);
+       DoSimpleMsg(DSS, 'Either a new LineCode or a Geometry must be specified!', 28703);
        Exit;
      End;
 
@@ -3519,19 +3519,19 @@ Begin
      pLine2 := LineCLass.Find(Line2);
 
      If (pLine1 = Nil) or (pLine2=NIL) then Begin
-       If pLine1=Nil then doSimpleMsg('Line.'+Line1+' not found.', 28704)
-       Else If pLine2=Nil then doSimpleMsg('Line.'+Line2+' not found.', 28704);
+       If pLine1=Nil then DoSimpleMsg(DSS, 'Line.'+Line1+' not found.', 28704)
+       Else If pLine2=Nil then DoSimpleMsg(DSS, 'Line.'+Line2+' not found.', 28704);
        Exit;
      End;
 
      {Now check to make sure they are in the same meter's zone}
      If (pLine1.MeterObj=Nil) or (pLine2.MeterObj=Nil)  then Begin
-       DoSimpleMsg('Error: Both Lines must be in the same EnergyMeter zone. One or both are not in any meter zone.', 28705);
+       DoSimpleMsg(DSS, 'Error: Both Lines must be in the same EnergyMeter zone. One or both are not in any meter zone.', 28705);
        Exit;
      End;
 
      If pLine1.MeterObj<>pline2.MeterObj then Begin
-       DoSimpleMsg('Error: Line1 is in EnergyMeter.'+pLine1.MeterObj.Name+
+       DoSimpleMsg(DSS, 'Error: Line1 is in EnergyMeter.'+pLine1.MeterObj.Name+
                    ' zone while Line2 is in EnergyMeter.'+pLine2.MeterObj.Name+ ' zone. Both must be in the same Zone.', 28706);
        Exit;
      End;
@@ -3551,7 +3551,7 @@ Begin
           1: TraceAndEdit(pLine1, pLine2, NPhases, Editstring);
           2: TraceAndEdit(pLine2, pLine1, NPhases, Editstring);
      Else
-         DoSimpleMsg('Traceback path not found between Line1 and Line2.', 28707);
+         DoSimpleMsg(DSS, 'Traceback path not found between Line1 and Line2.', 28707);
          Exit;
      end;
 
@@ -3571,8 +3571,8 @@ Begin
      BusMarker := TBusMarker.Create;
      DSS.ActiveCircuit.BusMarkerList.Add(BusMarker);
 
-     ParamName := Parser.NextParam;
-     Param := Parser.StrValue;
+     ParamName := DSS.Parser.NextParam;
+     Param := DSS.Parser.StrValue;
      WHILE Length(Param)>0 DO
      Begin
          IF   (Length(ParamName) = 0)
@@ -3582,16 +3582,16 @@ Begin
          With BusMarker Do
          CASE ParamPointer OF
            1: BusName := Param;
-           2: AddMarkerCode := Parser.IntValue;
+           2: AddMarkerCode := DSS.Parser.IntValue;
            3: AddMarkerColor:= InterpretColorName(Param);
-           4: AddMarkerSize := Parser.IntValue;
+           4: AddMarkerSize := DSS.Parser.IntValue;
 
          ELSE
              // ignore unnamed and extra parms
          End;
 
-         ParamName := Parser.NextParam;
-         Param := Parser.StrValue;
+         ParamName := DSS.Parser.NextParam;
+         Param := DSS.Parser.StrValue;
      End;
 
 End;
@@ -3644,8 +3644,8 @@ Var
   pName: TNamedObject;
 Begin
   Result := 0;
-  ParamName := Parser.NextParam;
-  Param := Parser.StrValue;
+  ParamName := DSS.Parser.NextParam;
+  Param := DSS.Parser.StrValue;
   Try
     AssignFile(F, Param);
     Reset(F);
@@ -3692,8 +3692,8 @@ Var
    Fname          :String;
 
 Begin
-    ParamName := Parser.NextParam;
-    Param := Parser.StrValue;
+    ParamName := DSS.Parser.NextParam;
+    Param := DSS.Parser.StrValue;
 
     If length(param)=0 then  Param := 's';
 
@@ -3713,7 +3713,7 @@ Begin
      iLoadshape := LoadShapeClass.First;
      while iLoadshape > 0 do  Begin
         pLoadShape := LoadShapeClass.GetActiveObj;
-        Parser.CmdString := Action;
+        DSS.Parser.CmdString := Action;
         pLoadShape.Edit;
         Writeln(F, Format('New Loadshape.%s Npts=%d Interval=%.8g %s',[pLoadShape.Name, pLoadShape.NumPoints, pLoadShape.Interval, DSS.GlobalResult]));
         iLoadshape := LoadShapeClass.Next;
@@ -3743,13 +3743,13 @@ Var
 Begin
 
     Result := 0;
-    ParamName := Parser.NextParam;
-    Param := Parser.StrValue;
+    ParamName := DSS.Parser.NextParam;
+    Param := DSS.Parser.StrValue;
     sNode1 := Param;
     If Pos('2',ParamName)>0 then sNode2 := Param;
 
-    ParamName := Parser.NextParam;
-    Param := Parser.StrValue;
+    ParamName := DSS.Parser.NextParam;
+    Param := DSS.Parser.StrValue;
     sNode2 := Param;
     If Pos('1',ParamName)>0 then sNode1 := Param;
 
@@ -3761,7 +3761,7 @@ Begin
     If iBusidx>0 Then Begin
         B1Ref := DSS.ActiveCircuit.Buses^[iBusidx].Find(NodeBuffer[1])
     End Else Begin
-        DoSimpleMsg(Format('Bus %s not found.',[sBusName]), 28709);
+        DoSimpleMsg(DSS, Format('Bus %s not found.',[sBusName]), 28709);
         Exit;
     End;
 
@@ -3775,7 +3775,7 @@ Begin
     If iBusidx>0 Then Begin
         B2Ref := DSS.ActiveCircuit.Buses^[iBusidx].Find(NodeBuffer[1])
     End Else Begin
-        DoSimpleMsg(Format('Bus %s not found.',[sBusName]), 28710);
+        DoSimpleMsg(DSS, Format('Bus %s not found.',[sBusName]), 28710);
         Exit;
     End;
 
@@ -3806,8 +3806,8 @@ Begin
      ScriptfileName := 'RephaseEditScript.DSS';
      TransfStop     := TRUE;  // Stop at Transformers
 
-     ParamName      := Parser.NextParam;
-     Param          := Parser.StrValue;
+     ParamName      := DSS.Parser.NextParam;
+     Param          := DSS.Parser.StrValue;
      while Length(Param) > 0 do Begin
        IF Length(ParamName) = 0 THEN Inc(ParamPointer)
        ELSE ParamPointer := RephaseCommands.GetCommand(ParamName);
@@ -3819,27 +3819,27 @@ Begin
           4: ScriptFileName := Param;
           5: TransfStop := InterpretYesNo(Param);
        Else
-          DoSimpleMsg('Error: Unknown Parameter on command line: '+Param, 28711);
+          DoSimpleMsg(DSS, 'Error: Unknown Parameter on command line: '+Param, 28711);
        End;
 
-      ParamName := Parser.NextParam;
-      Param := Parser.StrValue;
+      ParamName := DSS.Parser.NextParam;
+      Param := DSS.Parser.StrValue;
      End;
 
      LineClass := DSS.DSSClassList.Get(DSS.ClassNames.Find('Line'));
      pStartLine := LineClass.Find(StripClassName(StartLine));
      If pStartLine=Nil then  Begin
-         DosimpleMsg('Starting Line ('+StartLine+') not found.', 28712);
+         DoSimpleMsg(DSS, 'Starting Line ('+StartLine+') not found.', 28712);
          Exit;
      End;
      {Check for some error conditions and abort if necessary}
      If pStartLine.MeterObj=Nil then  Begin
-         DosimpleMsg('Starting Line must be in an EnergyMeter zone.', 28713);
+         DoSimpleMsg(DSS, 'Starting Line must be in an EnergyMeter zone.', 28713);
          Exit;
      End;
 
      If not (pStartLine.MeterObj is TEnergyMeterObj) then  Begin
-         DosimpleMsg('Starting Line must be in an EnergyMeter zone.', 28714);
+         DoSimpleMsg(DSS, 'Starting Line must be in an EnergyMeter zone.', 28714);
          Exit;
      End;
 
@@ -3861,8 +3861,8 @@ Var
 Begin
 
      Result := 0;
-     ParamName      := Parser.NextParam;
-     Param          := Parser.StrValue;
+     ParamName      := DSS.Parser.NextParam;
+     Param          := DSS.Parser.StrValue;
      ParamPointer   := 0;
      Xval := 0.0;  Yval := 0.0;
      while Length(Param) > 0 do Begin
@@ -3871,10 +3871,10 @@ Begin
 
        Case ParamPointer of
           1: BusName := Param;
-          2: Xval := Parser.DblValue;
-          3: Yval := Parser.DblValue;
+          2: Xval := DSS.Parser.DblValue;
+          3: Yval := DSS.Parser.DblValue;
        Else
-          DoSimpleMsg('Error: Unknown Parameter on command line: '+Param, 28721);
+          DoSimpleMsg(DSS, 'Error: Unknown Parameter on command line: '+Param, 28721);
        End;
 
        iB := DSS.ActiveCircuit.Buslist.Find(BusName);
@@ -3885,11 +3885,11 @@ Begin
              CoordDefined := TRUE;
            End;
        End Else Begin
-           DosimpleMsg('Error: Bus "' + BusName + '" Not Found.', 28722);
+           DoSimpleMsg(DSS, 'Error: Bus "' + BusName + '" Not Found.', 28722);
        End;
 
-      ParamName := Parser.NextParam;
-      Param := Parser.StrValue;
+      ParamName := DSS.Parser.NextParam;
+      Param := DSS.Parser.StrValue;
      End;
 
 
@@ -3928,8 +3928,8 @@ Begin
      CyclesPerSample := 60;
      Freq := DSS.DefaultBaseFreq;
 
-     ParamName      := Parser.NextParam;
-     Param          := Parser.StrValue;
+     ParamName      := DSS.Parser.NextParam;
+     Param          := DSS.Parser.StrValue;
      ParamPointer   := 0;
      while Length(Param) > 0 do Begin
          IF    Length(ParamName) = 0 THEN Inc(ParamPointer)
@@ -3937,19 +3937,19 @@ Begin
          // 'Npts', 'Voltages', 'cycles', 'lamp'
          Case ParamPointer of
             1: Begin
-                 Npts  := Parser.IntValue;
+                 Npts  := DSS.Parser.IntValue;
                  Reallocmem(Varray, SizeOf(Varray^[1])*Npts);
                End;
             2: Npts    := InterpretDblArray(Param, Npts, Varray);
-            3: CyclesPerSample := Round(DSS.ActiveCircuit.Solution.Frequency * Parser.dblvalue);
-            4: Freq   := Parser.DblValue;
-            5: Lamp    := Parser.IntValue;
+            3: CyclesPerSample := Round(DSS.ActiveCircuit.Solution.Frequency * DSS.Parser.dblvalue);
+            4: Freq   := DSS.Parser.DblValue;
+            5: Lamp    := DSS.Parser.IntValue;
          Else
-            DoSimpleMsg('Error: Unknown Parameter on command line: '+Param, 28722);
+            DoSimpleMsg(DSS, 'Error: Unknown Parameter on command line: '+Param, 28722);
          End;
 
-        ParamName := Parser.NextParam;
-        Param := Parser.StrValue;
+        ParamName := DSS.Parser.NextParam;
+        Param := DSS.Parser.StrValue;
      End;
 
      If Npts>10 Then
@@ -3961,7 +3961,7 @@ Begin
          For i := 1 to nPst Do  S := S + Format('%.8g, ', [PstArray^[i]]);
          DSS.GlobalResult := S;
      End
-     Else DoSimpleMsg('Insuffient number of points for Pst Calculation.', 28723);
+     Else DoSimpleMsg(DSS, 'Insuffient number of points for Pst Calculation.', 28723);
 
 
      Reallocmem(Varray,   0);   // discard temp arrays
@@ -3983,12 +3983,12 @@ Begin
 // Do for each Energymeter object in active circuit
       pMeter := DSS.ActiveCircuit.EnergyMeters.First;
       If pMeter=nil Then Begin
-        DoSimpleMsg('No EnergyMeter Objects Defined. EnergyMeter objects required for this function.',28724);
+        DoSimpleMsg(DSS, 'No EnergyMeter Objects Defined. EnergyMeter objects required for this function.',28724);
         Exit;
       End;
 
-      ParamName := Parser.NextParam;
-      Param := Parser.StrValue ;
+      ParamName := DSS.Parser.NextParam;
+      Param := DSS.Parser.StrValue ;
 
       If Length(Param)>0 Then
           Assumerestoration := InterpretYesNo(param)
@@ -4023,8 +4023,8 @@ Begin
 
      Result := 0;
 
-     ParamName := Parser.NextParam;
-     Param := Parser.StrValue;
+     ParamName := DSS.Parser.NextParam;
+     Param := DSS.Parser.StrValue;
 
       If Length(Param)=0 Then  // show all vars
       Begin
@@ -4034,33 +4034,33 @@ Begin
           {
           MsgStrings := TStringList.Create;
           MsgStrings.Add('Variable, Value');
-          for iVar := 1 to ParserVars.NumVariables  do
-              MsgStrings.Add(ParserVars.VarString[iVar] );
+          for iVar := 1 to DSS.ParserVars.NumVariables  do
+              MsgStrings.Add(DSS.ParserVars.VarString[iVar] );
           ShowMessageForm(MsgStrings);
           MsgStrings.Free;}
           Str := 'Variable, Value' + CRLF;
-          for iVar := 1 to ParserVars.NumVariables do
-            Str := Str + ParserVars.VarString[iVar]+CRLF;
+          for iVar := 1 to DSS.ParserVars.NumVariables do
+            Str := Str + DSS.ParserVars.VarString[iVar]+CRLF;
 
 {$IFNDEF DSS_CAPI}
-          DoSimpleMsg(Str, 999345);
+          DoSimpleMsg(DSS, Str, 999345);
 {$ELSE}
           DSS.GlobalResult := Str;
 {$ENDIF}
       End Else if Length(ParamName)=0 then   // show value of this var
       Begin
-           DSS.GlobalResult := Param;  // Parser substitutes @var with value
+           DSS.GlobalResult := Param;  // DSS.Parser substitutes @var with value
       End
       Else Begin
            WHILE Length(ParamName)>0 Do Begin
                case ParamName[1] of
-                  '@': ParserVars.Add(ParamName, Param);
+                  '@': DSS.ParserVars.Add(ParamName, Param);
                else
-                   DosimpleMsg('Illegal Variable Name: ' + ParamName + '; Must begin with "@"', 28725);
+                   DoSimpleMsg(DSS, 'Illegal Variable Name: ' + ParamName + '; Must begin with "@"', 28725);
                    Exit;
                end;
-               ParamName := Parser.NextParam;
-               Param := Parser.StrValue;
+               ParamName := DSS.Parser.NextParam;
+               Param := DSS.Parser.StrValue;
            End;
 
       End;
@@ -4091,8 +4091,8 @@ Begin
      FKeepLoad := TRUE;
      ParamPointer := 0;
 
-     ParamName := Parser.NextParam;
-     Param := Parser.StrValue;
+     ParamName := DSS.Parser.NextParam;
+     Param := DSS.Parser.StrValue;
 
      WHILE Length(Param)>0 DO
      Begin
@@ -4107,15 +4107,15 @@ Begin
 
          End;
 
-         ParamName := Parser.NextParam;
-         Param := Parser.StrValue;
+         ParamName := DSS.Parser.NextParam;
+         Param := DSS.Parser.StrValue;
      End;
 
      // Check for existence of FelementName
      DeviceIndex := GetCktElementIndex(FElementName);
      if DeviceIndex = 0  then
      Begin
-         DoSimpleMsg('Error: Element '+ FelementName + ' does not exist in this circuit.', 28726);
+         DoSimpleMsg(DSS, 'Error: Element '+ FelementName + ' does not exist in this circuit.', 28726);
      End
      Else Begin // Element exists  GO!
 
@@ -4125,7 +4125,7 @@ Begin
       // Get Energymeter associated with this element.
         if DSS.ActiveCircuit.ActiveCktElement is TPDElement then Begin
           pPDElem := DSS.ActiveCircuit.ActiveCktElement as TPDElement;
-          if pPDElem.SensorObj = Nil then DoSimpleMsg(Format('Element %s.%s is not in a meter zone! Add an Energymeter. ',[pPDelem.Parentclass.Name, pPDelem.name  ]),287261)
+          if pPDElem.SensorObj = Nil then DoSimpleMsg(DSS, Format('Element %s.%s is not in a meter zone! Add an Energymeter. ',[pPDelem.Parentclass.Name, pPDelem.name  ]),287261)
           Else Begin
             FMeterName := Format('%s.%s',[pPDElem.SensorObj.ParentClass.Name, pPDElem.SensorObj.Name]);
             SetObject(FMeterName);
@@ -4133,12 +4133,12 @@ Begin
             if DSS.ActiveCircuit.ActiveCktElement is TEnergyMeterObj then Begin
                 pMeter := DSS.ActiveCircuit.ActiveCktElement as TEnergyMeterObj;
                 // in ReduceAlgs
-                DoRemoveBranches(pMeter.BranchList, pPDelem, FKeepLoad, FEditString);
+                DoRemoveBranches(DSS, pMeter.BranchList, pPDelem, FKeepLoad, FEditString);
             End
-            Else DoSimpleMsg('Error: The Sensor Object for '+ FelementName + ' is not an EnergyMeter object', 28727);
+            Else DoSimpleMsg(DSS, 'Error: The Sensor Object for '+ FelementName + ' is not an EnergyMeter object', 28727);
           End;
         End
-        Else DoSimpleMsg('Error: Element '+ FelementName + ' is not a power delivery element (PDElement)', 28728);
+        Else DoSimpleMsg(DSS, 'Error: Element '+ FelementName + ' is not a power delivery element (PDElement)', 28728);
 
      End;
 

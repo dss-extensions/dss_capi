@@ -80,7 +80,7 @@ function TPVsystemUserModel.CheckFuncError(Addr: Pointer;  FuncName: String): Po
 begin
     If Addr=nil then
       Begin
-        DoSimpleMsg('PVSystem User Model Does Not Have Required Function: ' + FuncName, 1569);
+        DoSimpleMsg(DSS, 'PVSystem User Model Does Not Have Required Function: ' + FuncName, 1569);
         FuncError := True;
       End;
     Result := Addr;
@@ -162,7 +162,7 @@ begin
         End;
 
         If FHandle = 0 Then
-              DoSimpleMsg('PVSystem User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 1570)
+              DoSimpleMsg(DSS, 'PVSystem User Model ' + Value + ' Not Loaded. DSS Directory = '+DSSDirectory, 1570)
         Else
         Begin
 

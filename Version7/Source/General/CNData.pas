@@ -148,7 +148,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 101);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 101);
                 1:
                     FkStrand := Parser.IntValue;
                 2:
@@ -173,13 +173,13 @@ begin
             case ParamPointer of
                 1:
                     if (FkStrand < 2) then
-                        DoSimpleMsg('Error: Must have at least 2 concentric neutral strands for CNData ' + Name, 999);
+                        DoSimpleMsg(DSS, 'Error: Must have at least 2 concentric neutral strands for CNData ' + Name, 999);
                 2:
                     if (FDiaStrand <= 0.0) then
-                        DoSimpleMsg('Error: Neutral strand diameter must be positive for CNData ' + Name, 999);
+                        DoSimpleMsg(DSS, 'Error: Neutral strand diameter must be positive for CNData ' + Name, 999);
                 3:
                     if (FGmrStrand <= 0.0) then
-                        DoSimpleMsg('Error: Neutral strand GMR must be positive for CNData ' + Name, 999);
+                        DoSimpleMsg(DSS, 'Error: Neutral strand GMR must be positive for CNData ' + Name, 999);
             end;
             ParamName := Parser.NextParam;
             Param := Parser.StrValue;
@@ -207,12 +207,12 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Concentric Neutral MakeLike: "' + CNName + '" Not Found.', 102);
+        DoSimpleMsg(DSS, 'Error in Concentric Neutral MakeLike: "' + CNName + '" Not Found.', 102);
 end;
 
 function TCNData.Init(Handle: Integer): Integer;
 begin
-    DoSimpleMsg('Need to implement TCNData.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TCNData.Init', -1);
     Result := 0;
 end;
 
@@ -237,7 +237,7 @@ begin
         end;
         CNDataObj := ElementList.Next;
     end;
-    DoSimpleMsg('CNData: "' + Value + '" not Found.', 103);
+    DoSimpleMsg(DSS, 'CNData: "' + Value + '" not Found.', 103);
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

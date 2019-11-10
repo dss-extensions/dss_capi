@@ -187,7 +187,7 @@ type
         procedure Reset;
         procedure Save;
 
-        constructor Create(dss: TDSS);
+        constructor Create(dssContext: TDSS);
         destructor Destroy; OVERRIDE;
 
     end;
@@ -233,7 +233,7 @@ type
         OverLoadFileIsOpen: Boolean;
         VoltageFileIsOpen: Boolean;
 
-        constructor Create(dss: TDSS);
+        constructor Create(dssContext: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -462,9 +462,9 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TEnergyMeter.Create(dss: TDSS);  // Creates superstructure FOR all EnergyMeter objects
+constructor TEnergyMeter.Create(dssContext: TDSS);  // Creates superstructure FOR all EnergyMeter objects
 begin
-    inherited Create(dss);
+    inherited Create(dssContext);
     Class_Name := 'EnergyMeter';
     DSSClassType := DSSClassType + ENERGY_METER;
 
@@ -684,7 +684,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 520);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 520);
                 1:
                     ElementName := lowercase(param);
                 2:
@@ -826,7 +826,7 @@ begin
 
         end
     else
-        DoSimpleMsg('Error in EnergyMeter MakeLike: "' + EnergyMeterName + '" Not Found.', 521);
+        DoSimpleMsg(DSS, 'Error in EnergyMeter MakeLike: "' + EnergyMeterName + '" Not Found.', 521);
 
 end;
 
@@ -834,7 +834,7 @@ end;
 function TEnergyMeter.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TEnergyMeter.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TEnergyMeter.Init', -1);
     Result := 0;
 end;
 
@@ -887,7 +887,7 @@ begin
         end;
 
     // Set up the bus adjacency lists for faster searches to build meter zone lists.
-        BuildActiveBusAdjacencyLists(BusAdjPD, BusAdjPC);
+        BuildActiveBusAdjacencyLists(DSS.ActiveCircuit, BusAdjPD, BusAdjPC);
 
     {Set Hasmeter flag for all cktelements}
         SetHasMeterFlag;
@@ -932,7 +932,7 @@ begin
                 mkDir(CasePath);
             except
                 On E: Exception do
-                    DoSimpleMsg('Error making  Directory: "' + CasePath + '". ' + E.Message, 522);
+                    DoSimpleMsg(DSS, 'Error making  Directory: "' + CasePath + '". ' + E.Message, 522);
             end;
         end;
         DI_Dir := CasePath + PathDelim + 'DI_yr_' + Trim(IntToStr(DSS.ActiveCircuit.Solution.Year));
@@ -942,7 +942,7 @@ begin
                 mkDir(DI_Dir);
             except
                 On E: Exception do
-                    DoSimpleMsg('Error making Demand Interval Directory: "' + DI_Dir + '". ' + E.Message, 523);
+                    DoSimpleMsg(DSS, 'Error making Demand Interval Directory: "' + DI_Dir + '". ' + E.Message, 523);
             end;
         end;
 
@@ -1351,7 +1351,7 @@ begin
 
     try
         CSVName := 'MTR_' + Name + '.CSV';
-        AssignFile(F, GetOutputDirectory + CSVName);
+        AssignFile(F, DSS.OutputDirectory + CSVName);
         Rewrite(F);
         DSS.GlobalResult := CSVName;
         SetLastResultFile(CSVName);
@@ -1359,7 +1359,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error opening Meter File "' + CRLF + CSVName + '": ' + E.Message, 526);
+            DoSimpleMsg(DSS, 'Error opening Meter File "' + CRLF + CSVName + '": ' + E.Message, 526);
             Exit;
         end
     end;
@@ -1938,7 +1938,7 @@ begin
         BranchList.New := MeteredElement
     else
     begin   // oops
-        DoSimpleMsg('Metered Element for EnergyMeter ' + Name + ' not defined.', 527);
+        DoSimpleMsg(DSS, 'Metered Element for EnergyMeter ' + Name + ' not defined.', 527);
         Exit;
     end;
 
@@ -2180,7 +2180,7 @@ begin
     try
 
         CSVName := 'Zone_' + Name + '.CSV';
-        AssignFile(F, GetOutputDirectory + CSVName);
+        AssignFile(F, DSS.OutputDirectory + CSVName);
         Rewrite(F);
 
         DSS.GlobalResult := CSVName;
@@ -2190,7 +2190,7 @@ begin
 
         On E: Exception do
         begin
-            DoSimpleMsg('Error opening File "' + CSVName + '": ' + E.Message, 528);
+            DoSimpleMsg(DSS, 'Error opening File "' + CSVName + '": ' + E.Message, 528);
             Exit;
         end;
 
@@ -2527,22 +2527,22 @@ begin
     case DSS.ActiveCircuit.ReductionStrategy of
 
         rsShortlines:
-            DoReduceShortLines(BranchList);    {See ReduceAlgs.Pas}
+            DoReduceShortLines(DSS, BranchList);    {See ReduceAlgs.Pas}
          {rsTapEnds:       DoReduceTapEnds (BranchList);}
         rsMergeParallel:
-            DoMergeParallelLines(BranchList);
+            DoMergeParallelLines(DSS, BranchList);
         rsDangling:
-            DoReduceDangling(BranchList);
+            DoReduceDangling(DSS, BranchList);
         rsBreakLoop:
-            DoBreakLoops(BranchList);
+            DoBreakLoops(DSS, BranchList);
         rsSwitches:
-            DoReduceSwitches(BranchList);
+            DoReduceSwitches(DSS, BranchList);
         rsLaterals:
-            DoRemoveAll_1ph_Laterals(BranchList);
+            DoRemoveAll_1ph_Laterals(DSS, BranchList);
 
     else
        {Default}
-        DoReduceDefault(BranchList);
+        DoReduceDefault(DSS, BranchList);
     end;
 (* Feeder Code removed
     // Resynchronize with Feeders
@@ -2556,7 +2556,7 @@ begin
     if not Assigned(BranchList) then
     begin
         Result := FALSE;
-        DoSimpleMsg('Meter Zone Lists need to be built. Do Solve or Makebuslist first!', code);
+        DoSimpleMsg(DSS, 'Meter Zone Lists need to be built. Do Solve or Makebuslist first!', code);
         Exit;
     end;
     Result := TRUE;
@@ -2699,7 +2699,7 @@ begin
 
     if not Assigned(SequenceList) then
     begin
-        DoSimpleMsg('Energymeter.' + Name + ' Zone not defined properly.', 52901);
+        DoSimpleMsg(DSS, 'Energymeter.' + Name + ' Zone not defined properly.', 52901);
         Exit;
     end;
 
@@ -2948,7 +2948,7 @@ begin
         except
             On E: Exception do
             begin
-                DoSimpleMsg('Error creating Branches.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 530);
+                DoSimpleMsg(DSS, 'Error creating Branches.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 530);
                 CloseFile(FBranches);
                 Exit;
             end;
@@ -2961,7 +2961,7 @@ begin
         except
             On E: Exception do
             begin
-                DoSimpleMsg('Error creating Transformers.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 53001);
+                DoSimpleMsg(DSS, 'Error creating Transformers.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 53001);
                 CloseFile(FXfmrs);
                 Exit;
             end;
@@ -2974,7 +2974,7 @@ begin
         except
             On E: Exception do
             begin
-                DoSimpleMsg('Error creating Shunts.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 531);
+                DoSimpleMsg(DSS, 'Error creating Shunts.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 531);
                 CloseFile(FShunts);
                 Exit;
             end;
@@ -2987,7 +2987,7 @@ begin
         except
             On E: Exception do
             begin
-                DoSimpleMsg('Error creating Loads.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 532);
+                DoSimpleMsg(DSS, 'Error creating Loads.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 532);
                 CloseFile(FLoads);
                 Exit;
             end;
@@ -3000,7 +3000,7 @@ begin
         except
             On E: Exception do
             begin
-                DoSimpleMsg('Error creating Generators.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 533);
+                DoSimpleMsg(DSS, 'Error creating Generators.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 533);
                 CloseFile(FGens);
                 Exit;
             end;
@@ -3013,7 +3013,7 @@ begin
         except
             On E: Exception do
             begin
-                DoSimpleMsg('Error creating Capacitors.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 534);
+                DoSimpleMsg(DSS, 'Error creating Capacitors.dss for Energymeter: ' + Self.Name + '. ' + E.Message, 534);
                 CloseFile(FCaps);
                 Exit;
             end;
@@ -3188,7 +3188,7 @@ begin
         end;
     except
         ON E: Exception do
-            DoSimpleMsg('Error Closing Demand Interval file for Meter "' + Name + '"', 534);
+            DoSimpleMsg(DSS, 'Error Closing Demand Interval file for Meter "' + Name + '"', 534);
     end;
 
 
@@ -3250,7 +3250,7 @@ begin
         end;
     except
         On E: Exception do
-            DosimpleMsg('Error opening demand interval file "' + Name + '.CSV' + ' for writing.' + CRLF + E.Message, 535);
+            DoSimpleMsg(DSS, 'Error opening demand interval file "' + Name + '.CSV' + ' for writing.' + CRLF + E.Message, 535);
     end;
 
 end;
@@ -3315,7 +3315,7 @@ begin
             CreateMeterTotals;
         except
             On E: Exception do
-                DoSimpleMsg('Error on Rewrite of totals file: ' + E.Message, 536);
+                DoSimpleMsg(DSS, 'Error on Rewrite of totals file: ' + E.Message, 536);
         end;
 
         {Close all the DI file for each meter}
@@ -3380,7 +3380,7 @@ begin
         end;
     except
         On E: Exception do
-            DosimpleMsg('Error opening demand interval file "' + Name + '.CSV' + ' for appending.' + CRLF + E.Message, 537);
+            DoSimpleMsg(DSS, 'Error opening demand interval file "' + Name + '.CSV' + ' for appending.' + CRLF + E.Message, 537);
     end;
 end;
 
@@ -3452,7 +3452,7 @@ begin
             CreateFDI_Totals;
         except
             On E: Exception do
-                DosimpleMsg('Error opening demand interval file "' + Name + '.CSV' + ' for appending.' + CRLF + E.Message, 538);
+                DoSimpleMsg(DSS, 'Error opening demand interval file "' + Name + '.CSV' + ' for appending.' + CRLF + E.Message, 538);
         end;
 
         DSS.DIFilesAreOpen := TRUE;
@@ -3640,7 +3640,7 @@ begin
         WriteintoMemStr(TDI_MHandle, Char(10));
     except
         On E: Exception do
-            DoSimpleMsg('Error creating: "' + DI_Dir + PathDelim + 'DI_Totals.CSV": ' + E.Message, 539)
+            DoSimpleMsg(DSS, 'Error creating: "' + DI_Dir + PathDelim + 'DI_Totals.CSV": ' + E.Message, 539)
     end;
 end;
 
@@ -3670,7 +3670,7 @@ begin
         This_Meter_DIFileIsOpen := TRUE;
     except
         On E: Exception do
-            DosimpleMsg('Error opening demand interval file "' + FileNm + ' for appending.' + CRLF + E.Message, 540);
+            DoSimpleMsg(DSS, 'Error opening demand interval file "' + FileNm + ' for appending.' + CRLF + E.Message, 540);
     end;
 
 end;
@@ -3704,9 +3704,9 @@ begin
     end;
 end;
 
-constructor TSystemMeter.Create(dss: TDSS);
+constructor TSystemMeter.Create(dssContext: TDSS);
 begin
-    DSS := dss;
+    DSS := dssContext;
     Clear;
     This_Meter_DIFileIsOpen := FALSE;
 end;
@@ -3747,7 +3747,7 @@ begin
 
     except
         On E: Exception do
-            DosimpleMsg('Error opening demand interval file "DI_SystemMeter.CSV"  for writing.' + CRLF + E.Message, 541);
+            DoSimpleMsg(DSS, 'Error opening demand interval file "DI_SystemMeter.CSV"  for writing.' + CRLF + E.Message, 541);
     end;
 
 
@@ -3771,14 +3771,14 @@ begin
         if DSS.energyMeterClass.SaveDemandInterval then
             Folder := DSS.energyMeterClass.DI_DIR + PathDelim
         else
-            Folder := GetOutputDirectory;
+            Folder := DSS.OutputDirectory;
         DSS.GlobalResult := CSVName;
         SetLastResultFile(CSVName);
 
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error opening System Meter File "' + CRLF + CSVName + '": ' + E.Message, 542);
+            DoSimpleMsg(DSS, 'Error opening System Meter File "' + CRLF + CSVName + '": ' + E.Message, 542);
             Exit;
         end
     end;
@@ -3927,7 +3927,7 @@ begin
 
     except
         On E: Exception do
-            DosimpleMsg('Error writing demand interval file Totals.CSV.' + CRLF + E.Message, 543);
+            DoSimpleMsg(DSS, 'Error writing demand interval file Totals.CSV.' + CRLF + E.Message, 543);
     end;
 
 end;
@@ -4098,7 +4098,7 @@ begin
     FeederObj.Enabled := ActiveCircuit.RadialSolution;
 
   End
-  Else DoSimpleMsg('Error: Attempted to make Feeder Obj without instantiating Metered Element in Energymeter.'+name,544);
+  Else DoSimpleMsg(DSS, 'Error: Attempted to make Feeder Obj without instantiating Metered Element in Energymeter.'+name,544);
 end;
 *)
 (*  Feeder object code commented out
@@ -4160,7 +4160,7 @@ begin
 
         except
             On E: Exception do
-                DosimpleMsg('Error creating the memory space for demand interval "' + Name + '.CSV' + ' for appending.' + CRLF + E.Message, 538);
+                DoSimpleMsg(DSS, 'Error creating the memory space for demand interval "' + Name + '.CSV' + ' for appending.' + CRLF + E.Message, 538);
         end;
 
         DSS.DIFilesAreOpen := TRUE;
@@ -4181,7 +4181,7 @@ begin
         OV_MHandle := Create_Meter_Space('"Hour", "Element", "Normal Amps", "Emerg Amps", "% Normal", "% Emerg", "kVBase", "I1(A)", "I2(A)", "I3(A)"' + Char(10));
     except
         On E: Exception do
-            DosimpleMsg('Error creating memory space (Overload report) for writing.' + CRLF + E.Message, 541);
+            DoSimpleMsg(DSS, 'Error creating memory space (Overload report) for writing.' + CRLF + E.Message, 541);
     end;
 
 end;
@@ -4198,7 +4198,7 @@ begin
         WriteintoMemStr(VR_MHandle, ', "LV Undervoltages", "Min LV Voltage", "LV Overvoltage", "Max LV Voltage", "Min LV Bus", "Max LV Bus"' + Char(10));
     except
         On E: Exception do
-            DosimpleMsg('Error creating memory space (Voltage report) for writing.' + CRLF + E.Message, 541);
+            DoSimpleMsg(DSS, 'Error creating memory space (Voltage report) for writing.' + CRLF + E.Message, 541);
     end;
 
 end;

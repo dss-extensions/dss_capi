@@ -15,13 +15,15 @@ unit ExportCIMXML;
 interface
 
 uses
-    NamedObject;  // for TUuid
+    NamedObject,  // for TUuid
+    DSSClass;
+
 
 type
     CIMProfileChoice = (Combined, Functional, ElectricalProperties,
         Asset, Geographical, Topology, StateVariables);
 
-procedure ExportCDPSM(FileNm: String;
+procedure ExportCDPSM(DSS: TDSS; FileNm: String;
     Substation: String;
     SubGeographicRegion: String;
     GeographicRegion: String;
@@ -74,7 +76,6 @@ uses
     Relay,
     Recloser,
     DSSObject,
-    DSSClass,
     DSSHelper;
 
 type
@@ -99,7 +100,7 @@ type
         constructor Create(MaxWdg: Integer);
         destructor Destroy; OVERRIDE;
 
-        procedure AddTransformer(pXf: TTransfObj);
+        procedure AddTransformer(DSS: TDSS; pXf: TTransfObj);
         procedure BuildVectorGroup;
     end;
 
@@ -123,7 +124,7 @@ const
 //  CIM_NS = 'http://iec.ch/TC57/2012/CIM-schema-cim17';
     CIM_NS = 'http://iec.ch/TC57/CIM100';
 
-procedure ParseSwitchClass(pLine: TLineObj; var swtCls: String; var ratedAmps, breakingAmps: Double);
+procedure ParseSwitchClass(DSS: TDSS; pLine: TLineObj; var swtCls: String; var ratedAmps, breakingAmps: Double);
 var
     pFuse: TFuseObj;
     pRelay: TRelayObj;
@@ -132,7 +133,7 @@ begin
     swtCls := 'LoadBreakSwitch';
     ratedAmps := pLine.NormAmps;
     breakingAmps := ratedAmps;
-    pFuse := DSSPrime.ActiveCircuit.Fuses.First;
+    pFuse := DSS.ActiveCircuit.Fuses.First;
     while (pFuse <> NIL) do
     begin
         if pFuse.ControlledElement = pLine then
@@ -142,9 +143,9 @@ begin
             breakingAmps := 0.0;
             exit;
         end;
-        pFuse := DSSPrime.ActiveCircuit.Fuses.Next;
+        pFuse := DSS.ActiveCircuit.Fuses.Next;
     end;
-    pRelay := DSSPrime.ActiveCircuit.Relays.First;
+    pRelay := DSS.ActiveCircuit.Relays.First;
     while (pRelay <> NIL) do
     begin
         if pRelay.ControlledElement = pLine then
@@ -152,9 +153,9 @@ begin
             swtCls := 'Breaker';
             exit;
         end;
-        pRelay := DSSPrime.ActiveCircuit.Relays.Next;
+        pRelay := DSS.ActiveCircuit.Relays.Next;
     end;
-    pRecloser := DSSPrime.ActiveCircuit.Reclosers.First;
+    pRecloser := DSS.ActiveCircuit.Reclosers.First;
     while (pRecloser <> NIL) do
     begin
         if pRecloser.ControlledElement = pLine then
@@ -162,12 +163,12 @@ begin
             swtCls := 'Recloser';
             exit;
         end;
-        pRecloser := DSSPrime.ActiveCircuit.Reclosers.Next;
+        pRecloser := DSS.ActiveCircuit.Reclosers.Next;
     end;
 end;
 
 // this returns s1, s2, or a combination of ABCN
-function PhaseString(pElem: TDSSCktElement; bus: Integer): String; // if order doesn't matter
+function PhaseString(DSS: TDSS; pElem: TDSSCktElement; bus: Integer): String; // if order doesn't matter
 var
     val, phs: String;
     dot: Integer;
@@ -178,10 +179,10 @@ begin
         phs := pElem.NextBus;
     bSec := FALSE;
     if pElem.NPhases = 2 then
-        if DSSPrime.ActiveCircuit.Buses^[pElem.Terminals^[bus].BusRef].kVBase < 0.25 then
+        if DSS.ActiveCircuit.Buses^[pElem.Terminals^[bus].BusRef].kVBase < 0.25 then
             bSec := TRUE;
     if pElem.NPhases = 1 then
-        if DSSPrime.ActiveCircuit.Buses^[pElem.Terminals^[bus].BusRef].kVBase < 0.13 then
+        if DSS.ActiveCircuit.Buses^[pElem.Terminals^[bus].BusRef].kVBase < 0.13 then
             bSec := TRUE;
 
     dot := pos('.', phs);
@@ -397,7 +398,7 @@ begin
         vectorGroup := UpperCase(LeftStr(vectorGroup, 1)) + RightStr(vectorGroup, Length(vectorGroup) - 1);
 end;
 
-procedure TBankObject.AddTransformer(pXf: TTransfObj);
+procedure TBankObject.AddTransformer(DSS: TDSS; pXf: TTransfObj);
 var
     i: Integer;
     phs: String;
@@ -408,7 +409,7 @@ begin
     a_unit := pXf;
     for i := 1 to pXf.NumberOfWindings do
     begin
-        phs := PhaseString(pXf, i);
+        phs := PhaseString(DSS, pXf, i);
         if Pos('A', phs) > 0 then
             phaseA[i - 1] := 1;
         if Pos('B', phs) > 0 then
@@ -703,11 +704,11 @@ begin
     Writeln(F, Format('  <cim:Equipment.EquipmentContainer rdf:resource="#%s"/>', [Obj.CIM_ID]));
 end;
 
-function FirstPhaseString(pElem: TDSSCktElement; bus: Integer): String;
+function FirstPhaseString(DSS: TDSS; pElem: TDSSCktElement; bus: Integer): String;
 var
     val: String;
 begin
-    val := PhaseString(pElem, bus);
+    val := PhaseString(DSS, pElem, bus);
     if val <> '' then
         Result := LeftStr(val, 1)
     else
@@ -837,10 +838,10 @@ begin
     Writeln(F, Format('</cim:%s>', [Root]));
 end;
 
-procedure XfmrPhasesEnum(var F: TextFile; pElem: TDSSCktElement; bus: Integer);
+procedure XfmrPhasesEnum(DSS: TDSS; var F: TextFile; pElem: TDSSCktElement; bus: Integer);
 begin
     Writeln(F, Format('  <cim:TransformerTankEnd.phases rdf:resource="%s#PhaseCode.%s"/>',
-        [CIM_NS, PhaseString(pElem, bus)]));
+        [CIM_NS, PhaseString(DSS, pElem, bus)]));
 end;
 
 procedure PhaseNode(var F: TextFile; Root: String; val: String);
@@ -874,14 +875,14 @@ begin
 end;
 
 // we specify phases except for balanced three-phase
-procedure AttachLinePhases(var F: TextFile; pLine: TLineObj);
+procedure AttachLinePhases(DSS: TDSS; var F: TextFile; pLine: TLineObj);
 var
     s, phs: String;
     i: Integer;
     pPhase: TNamedObject;
 begin
     pPhase := TNamedObject.Create('dummy');
-    s := PhaseString(pLine, 1);
+    s := PhaseString(DSS, pLine, 1);
     if pLine.NumConductorsAvailable > length(s) then
         s := s + 'N'; // so we can specify the neutral conductor
     for i := 1 to length(s) do
@@ -936,7 +937,7 @@ begin
     end;
 end;
 
-procedure AttachCapPhases(var F: TextFile; pCap: TCapacitorObj; geoUUID: TUuid);
+procedure AttachCapPhases(DSS: TDSS; var F: TextFile; pCap: TCapacitorObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -946,7 +947,7 @@ begin
     if pCap.NPhases = 3 then
         exit;
     pPhase := TNamedObject.Create('dummy');
-    s := PhaseString(pCap, 1);
+    s := PhaseString(DSS, pCap, 1);
     with pCap do
     begin
         bph := 0.001 * Totalkvar / NomKV / NomKV / NumSteps / NPhases;
@@ -983,7 +984,7 @@ begin
     EndInstance(F, 'EnergyConsumerPhase');
 end;
 
-procedure AttachLoadPhases(var F: TextFile; pLoad: TLoadObj; geoUUID: TUuid);
+procedure AttachLoadPhases(DSS: TDSS; var F: TextFile; pLoad: TLoadObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -997,7 +998,7 @@ begin
     if pLoad.Connection = 1 then
         s := DeltaPhaseString(pLoad)
     else
-        s := PhaseString(pLoad, 1);
+        s := PhaseString(DSS, pLoad, 1);
 
     pPhase := TNamedObject.Create('dummy');
   // first, filter out what appear to be split secondary loads
@@ -1047,7 +1048,7 @@ begin
     EndInstance(F, 'SynchronousMachinePhase');
 end;
 
-procedure AttachGeneratorPhases(var F: TextFile; pGen: TGeneratorObj; geoUUID: TUuid);
+procedure AttachGeneratorPhases(DSS: TDSS; var F: TextFile; pGen: TGeneratorObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -1061,7 +1062,7 @@ begin
     if pGen.Connection = 1 then
         s := DeltaPhaseString(pGen)
     else
-        s := PhaseString(pGen, 1);
+        s := PhaseString(DSS, pGen, 1);
 
     pPhase := TNamedObject.Create('dummy');
   //  TODO - handle s1 to s2 240-volt loads; these would be s12, which is not a valid SinglePhaseKind
@@ -1108,7 +1109,7 @@ begin
     EndInstance(F, 'PowerElectronicsConnectionPhase');
 end;
 
-procedure AttachSolarPhases(var F: TextFile; pPV: TPVSystemObj; geoUUID: TUuid);
+procedure AttachSolarPhases(DSS: TDSS; var F: TextFile; pPV: TPVSystemObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -1122,7 +1123,7 @@ begin
     if pPV.Connection = 1 then
         s := DeltaPhaseString(pPV)
     else
-        s := PhaseString(pPV, 1);
+        s := PhaseString(DSS, pPV, 1);
 
     pPhase := TNamedObject.Create('dummy');
   //  TODO - handle s1 to s2 240-volt loads; these would be s12, which is not a valid SinglePhaseKind
@@ -1169,7 +1170,7 @@ begin
     EndInstance(F, 'PowerElectronicsConnectionPhase');
 end;
 
-procedure AttachStoragePhases(var F: TextFile; pBat: TStorageObj; geoUUID: TUuid);
+procedure AttachStoragePhases(DSS: TDSS; var F: TextFile; pBat: TStorageObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -1183,7 +1184,7 @@ begin
     if pBat.Connection = 1 then
         s := DeltaPhaseString(pBat)
     else
-        s := PhaseString(pBat, 1);
+        s := PhaseString(DSS, pBat, 1);
 
     pPhase := TNamedObject.Create('dummy');
   //  TODO - handle s1 to s2 240-volt loads; these would be s12, which is not a valid SinglePhaseKind
@@ -1271,7 +1272,7 @@ begin
         Result := FALSE;
 end;
 
-procedure WritePositions(var F: TextFile; pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid);
+procedure WritePositions(DSS: TDSS; var F: TextFile; pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid);
 var
     Nterm, j, ref: Integer;
     BusName: String;
@@ -1292,15 +1293,15 @@ begin
             StartFreeInstance(F, 'PositionPoint');
             UuidNode(F, 'PositionPoint.Location', geoUUID);
             IntegerNode(F, 'PositionPoint.sequenceNumber', j);
-            StringNode(F, 'PositionPoint.xPosition', FloatToStr(DSSPrime.ActiveCircuit.Buses^[ref].x));
-            StringNode(F, 'PositionPoint.yPosition', FloatToStr(DSSPrime.ActiveCircuit.Buses^[ref].y));
+            StringNode(F, 'PositionPoint.xPosition', FloatToStr(DSS.ActiveCircuit.Buses^[ref].x));
+            StringNode(F, 'PositionPoint.yPosition', FloatToStr(DSS.ActiveCircuit.Buses^[ref].y));
             EndInstance(F, 'PositionPoint');
         end;
         BusName := pElem.Nextbus;
     end;
 end;
 
-procedure WriteReferenceTerminals(var F: TextFile; pElem: TDSSCktElement;
+procedure WriteReferenceTerminals(DSS: TDSS; var F: TextFile; pElem: TDSSCktElement;
     geoUUID: TUuid; crsUUID: TUuid; RefUuid: TUuid;
     norm: Double = 0.0; emerg: Double = 0.0);
 var
@@ -1324,7 +1325,7 @@ begin
             UuidNode(F, 'Terminal.ConductingEquipment', RefUuid);
             IntegerNode(F, 'ACDCTerminal.sequenceNumber', j);
             Writeln(F, Format('  <cim:Terminal.ConnectivityNode rdf:resource="#%s"/>',
-                [DSSPrime.ActiveCircuit.Buses[ref].CIM_ID]));
+                [DSS.ActiveCircuit.Buses[ref].CIM_ID]));
             if (j = 1) and (norm > 0.0) then
             begin
                 if emerg < norm then
@@ -1347,20 +1348,20 @@ begin
     end;
 end;
 
-procedure WriteTerminals(var F: TextFile; pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid;
+procedure WriteTerminals(DSS: TDSS; var F: TextFile; pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid;
     norm: Double = 0.0; emerg: Double = 0.0);
 begin
-    WriteReferenceTerminals(F, pElem, geoUUID, crsUUID, pElem.UUID, norm, emerg);
-    WritePositions(F, pElem, geoUUID, crsUUID);
+    WriteReferenceTerminals(DSS, F, pElem, geoUUID, crsUUID, pElem.UUID, norm, emerg);
+    WritePositions(DSS, F, pElem, geoUUID, crsUUID);
 end;
 
-procedure VbaseNode(var F: TextFile; pElem: TDSSCktElement);
+procedure VbaseNode(DSS: TDSS; var F: TextFile; pElem: TDSSCktElement);
 var
     j: Integer;
 begin
     j := pElem.Terminals^[1].BusRef;
     UuidNode(F, 'ConductingEquipment.BaseVoltage',
-        GetBaseVUuid(sqrt(3.0) * DSSPrime.ActiveCircuit.Buses^[j].kVBase));
+        GetBaseVUuid(sqrt(3.0) * DSS.ActiveCircuit.Buses^[j].kVBase));
 end;
 
 procedure WriteXfmrCode(var F: TextFile; pXfmr: TXfmrCodeObj);
@@ -1569,7 +1570,7 @@ begin
     end;
 end;
 
-procedure ExportCDPSM(FileNm: String;
+procedure ExportCDPSM(DSS: TDSS; FileNm: String;
     Substation: String;
     SubGeographicRegion: String;
     GeographicRegion: String;
@@ -1654,24 +1655,24 @@ var
     tmpUUID: TUuid;
 begin
     try
-        clsCode := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('linecode'));
-        clsWire := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('wiredata'));
-        clsGeom := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('linegeometry'));
-        clsXfmr := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('xfmrcode'));
-        clsSpac := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('linespacing'));
-        clsTape := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('TSData'));
-        clsConc := DSSPrime.DSSClassList.Get(DSSPrime.ClassNames.Find('CNData'));
+        clsCode := DSS.DSSClassList.Get(DSS.ClassNames.Find('linecode'));
+        clsWire := DSS.DSSClassList.Get(DSS.ClassNames.Find('wiredata'));
+        clsGeom := DSS.DSSClassList.Get(DSS.ClassNames.Find('linegeometry'));
+        clsXfmr := DSS.DSSClassList.Get(DSS.ClassNames.Find('xfmrcode'));
+        clsSpac := DSS.DSSClassList.Get(DSS.ClassNames.Find('linespacing'));
+        clsTape := DSS.DSSClassList.Get(DSS.ClassNames.Find('TSData'));
+        clsConc := DSS.DSSClassList.Get(DSS.ClassNames.Find('CNData'));
         pName1 := TNamedObject.Create('Temp1');
         pName2 := TNamedObject.Create('Temp2');
         i1 := clsXfmr.ElementCount * 6; // 3 wdg info, 3 sctest
-        i2 := DSSPrime.ActiveCircuit.Transformers.ListSize * 11; // bank, info, 3 wdg, 3 wdg info, 3sctest
+        i2 := DSS.ActiveCircuit.Transformers.ListSize * 11; // bank, info, 3 wdg, 3 wdg info, 3sctest
         StartUuidList(i1 + i2);
-        StartBankList(DSSPrime.ActiveCircuit.Transformers.ListSize);
+        StartBankList(DSS.ActiveCircuit.Transformers.ListSize);
         StartOpLimitList(ActiveCircuit.Lines.ListSize);
 
     {$IFDEF FPC}
          // this only works in the command line version
-        Writeln(FileNm + '<=' + DSSPrime.ActiveCircuit.Name + '<-' + Substation + '<-' + SubGeographicRegion + '<-' + GeographicRegion);
+        Writeln(FileNm + '<=' + DSS.ActiveCircuit.Name + '<-' + Substation + '<-' + SubGeographicRegion + '<-' + GeographicRegion);
     {$ENDIF}
         Assignfile(F, FileNm);
         ReWrite(F);
@@ -1688,7 +1689,7 @@ begin
         pCRS := TNamedObject.Create('CoordinateSystem');
         CreateUUID4(crsUUID);
         pCRS.UUID := crsUUID;
-        pCRS.localName := DSSPrime.ActiveCircuit.Name + '_CrsUrn';
+        pCRS.localName := DSS.ActiveCircuit.Name + '_CrsUrn';
         StartInstance(F, 'CoordinateSystem', pCRS);
         StringNode(F, 'CoordinateSystem.crsUrn', 'OpenDSSLocalBusCoordinates');
         EndInstance(F, 'CoordinateSystem');
@@ -1716,24 +1717,24 @@ begin
         pLocation := TNamedObject.Create('Location');
         CreateUUID4(geoUUID);
         pLocation.UUID := geoUUID;
-        pLocation.localName := DSSPrime.ActiveCircuit.Name + '_Location';
+        pLocation.localName := DSS.ActiveCircuit.Name + '_Location';
         StartInstance(F, 'Location', pLocation);
         UuidNode(F, 'Location.CoordinateSystem', crsUUID);
         EndInstance(F, 'Location');
 
-        DSSPrime.ActiveCircuit.UUID := FdrUUID;
-        StartInstance(F, 'Feeder', DSSPrime.ActiveCircuit);
+        DSS.ActiveCircuit.UUID := FdrUUID;
+        StartInstance(F, 'Feeder', DSS.ActiveCircuit);
         RefNode(F, 'Feeder.NormalEnergizingSubstation', pSubstation);
         RefNode(F, 'PowerSystemResource.Location', pLocation);
         EndInstance(F, 'Feeder');
 
         // the whole system will be a topo island
         pIsland := TNamedObject.Create('Island');
-        pIsland.localName := DSSPrime.ActiveCircuit.Name + '_Island';
+        pIsland.localName := DSS.ActiveCircuit.Name + '_Island';
         CreateUUID4(geoUUID);
         pIsland.UUID := geoUUID;
         pSwing := TNamedObject.Create('SwingBus');
-        pSwing.localName := DSSPrime.ActiveCircuit.Name + '_SwingBus';
+        pSwing.localName := DSS.ActiveCircuit.Name + '_SwingBus';
 
         pNormLimit := TNamedObject.Create('NormalAmpsType');
         pNormLimit.localName := ActiveCircuit.Name + '_NormAmpsType';
@@ -1866,12 +1867,12 @@ begin
                 UuidNode(F, 'ConnectivityNode.TopologicalNode', geoUUID);
                 UuidNode(F, 'ConnectivityNode.OperationalLimitSet', GetOpLimVUuid(sqrt(3.0) * ActiveCircuit.Buses^[i].kVBase));
                 Writeln(F, Format('  <cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#%s"/>',
-                    [DSSPrime.ActiveCircuit.CIM_ID]));
+                    [DSS.ActiveCircuit.CIM_ID]));
                 Writeln(F, '</cim:ConnectivityNode>');
             end;
 
             // find the swing bus ==> first voltage source
-            pVsrc := DSSPrime.ActiveCircuit.Sources.First; // pIsrc are in the same list
+            pVsrc := DSS.ActiveCircuit.Sources.First; // pIsrc are in the same list
             while pVsrc <> NIL do
             begin
                 if pVsrc.ClassNameIs('TVSourceObj') then
@@ -1887,17 +1888,17 @@ begin
                         break;
                     end;
                 end;
-                pVsrc := DSSPrime.ActiveCircuit.Sources.Next;
+                pVsrc := DSS.ActiveCircuit.Sources.Next;
             end;
         end;
 
-        pGen := DSSPrime.ActiveCircuit.Generators.First;
+        pGen := DSS.ActiveCircuit.Generators.First;
         while pGen <> NIL do
         begin
             if pGen.Enabled then
             begin
                 StartInstance(F, 'SynchronousMachine', pGen);
-                CircuitNode(F, DSSPrime.ActiveCircuit);
+                CircuitNode(F, DSS.ActiveCircuit);
                 DoubleNode(F, 'SynchronousMachine.p', pGen.Presentkw * 1000.0);
                 DoubleNode(F, 'SynchronousMachine.q', pGen.Presentkvar * 1000.0);
                 DoubleNode(F, 'SynchronousMachine.ratedS', pGen.GenVars.kvarating * 1000.0);
@@ -1907,13 +1908,13 @@ begin
                 CreateUUID4(geoUUID);
                 UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                 EndInstance(F, 'SynchronousMachine');
-                AttachGeneratorPhases(F, pGen, geoUUID);
-                WriteTerminals(F, pGen, geoUUID, crsUUID);
+                AttachGeneratorPhases(DSS, F, pGen, geoUUID);
+                WriteTerminals(DSS, F, pGen, geoUUID, crsUUID);
             end;
-            pGen := DSSPrime.ActiveCircuit.Generators.Next;
+            pGen := DSS.ActiveCircuit.Generators.Next;
         end;
 
-        pPV := DSSPrime.ActiveCircuit.PVSystems.First;
+        pPV := DSS.ActiveCircuit.PVSystems.First;
         while pPV <> NIL do
         begin
             if pPV.Enabled then
@@ -1926,7 +1927,7 @@ begin
                 UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                 EndInstance(F, 'PhotovoltaicUnit');
                 StartInstance(F, 'PowerElectronicsConnection', pPV);
-                CircuitNode(F, DSSPrime.ActiveCircuit);
+                CircuitNode(F, DSS.ActiveCircuit);
                 RefNode(F, 'PowerElectronicsConnection.PowerElectronicsUnit', pName1);
                 DoubleNode(F, 'PowerElectronicsConnection.maxIFault', 1.0 / pPV.MinModelVoltagePU);
                 DoubleNode(F, 'PowerElectronicsConnection.p', pPV.Presentkw * 1000.0);
@@ -1935,18 +1936,18 @@ begin
                 DoubleNode(F, 'PowerElectronicsConnection.ratedU', pPV.Presentkv * 1000.0);
                 UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                 EndInstance(F, 'PowerElectronicsConnection');
-                AttachSolarPhases(F, pPV, geoUUID);
+                AttachSolarPhases(DSS, F, pPV, geoUUID);
         // we want the location using PV unit name
-                WriteReferenceTerminals(F, pPV, geoUUID, crsUUID, pPV.UUID);
+                WriteReferenceTerminals(DSS, F, pPV, geoUUID, crsUUID, pPV.UUID);
                 s := pPV.LocalName;
                 pPV.LocalName := pName1.LocalName;
-                WritePositions(F, pPV, geoUUID, crsUUID);
+                WritePositions(DSS, F, pPV, geoUUID, crsUUID);
                 pPV.LocalName := s;
             end;
-            pPV := DSSPrime.ActiveCircuit.PVSystems.Next;
+            pPV := DSS.ActiveCircuit.PVSystems.Next;
         end;
 
-        pBat := DSSPrime.ActiveCircuit.StorageElements.First;
+        pBat := DSS.ActiveCircuit.StorageElements.First;
         while pBat <> NIL do
         begin
             if pBat.Enabled then
@@ -1962,7 +1963,7 @@ begin
                 UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                 EndInstance(F, 'BatteryUnit');
                 StartInstance(F, 'PowerElectronicsConnection', pBat);
-                CircuitNode(F, DSSPrime.ActiveCircuit);
+                CircuitNode(F, DSS.ActiveCircuit);
                 RefNode(F, 'PowerElectronicsConnection.PowerElectronicsUnit', pName1);
                 DoubleNode(F, 'PowerElectronicsConnection.maxIFault', 1.0 / pBat.MinModelVoltagePU);
                 DoubleNode(F, 'PowerElectronicsConnection.p', pBat.Presentkw * 1000.0);
@@ -1971,18 +1972,18 @@ begin
                 DoubleNode(F, 'PowerElectronicsConnection.ratedU', pBat.Presentkv * 1000.0);
                 UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                 EndInstance(F, 'PowerElectronicsConnection');
-                AttachStoragePhases(F, pBat, geoUUID);
+                AttachStoragePhases(DSS, F, pBat, geoUUID);
         // we want the location using battery unit name
-                WriteReferenceTerminals(F, pBat, geoUUID, crsUUID, pBat.UUID);
+                WriteReferenceTerminals(DSS, F, pBat, geoUUID, crsUUID, pBat.UUID);
                 s := pBat.LocalName;
                 pBat.LocalName := pName1.LocalName;
-                WritePositions(F, pBat, geoUUID, crsUUID);
+                WritePositions(DSS, F, pBat, geoUUID, crsUUID);
                 pBat.LocalName := s;
             end;
-            pBat := DSSPrime.ActiveCircuit.StorageElements.Next;
+            pBat := DSS.ActiveCircuit.StorageElements.Next;
         end;
 
-        pVsrc := DSSPrime.ActiveCircuit.Sources.First; // pIsrc are in the same list
+        pVsrc := DSS.ActiveCircuit.Sources.First; // pIsrc are in the same list
         while pVsrc <> NIL do
         begin
             if pVsrc.ClassNameIs('TVSourceObj') then
@@ -2012,8 +2013,8 @@ begin
                         end;
 
                         StartInstance(F, 'EnergySource', pVsrc);
-                        CircuitNode(F, DSSPrime.ActiveCircuit);
-                        VbaseNode(F, pVsrc);
+                        CircuitNode(F, DSS.ActiveCircuit);
+                        VbaseNode(DSS, F, pVsrc);
                         DoubleNode(F, 'EnergySource.nominalVoltage', 1000 * kVbase);
                         DoubleNode(F, 'EnergySource.voltageMagnitude', 1000 * kVbase * PerUnit);
                         DoubleNode(F, 'EnergySource.voltageAngle', TwoPi * Angle / 360.0);
@@ -2025,19 +2026,19 @@ begin
                         UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                         EndInstance(F, 'EnergySource');
 //          AttachPhases (F, pVsrc, 1, 'EnergySource');
-                        WriteTerminals(F, pVsrc, geoUUID, crsUUID);
+                        WriteTerminals(DSS, F, pVsrc, geoUUID, crsUUID);
                     end;
-            pVsrc := DSSPrime.ActiveCircuit.Sources.Next;
+            pVsrc := DSS.ActiveCircuit.Sources.Next;
         end;
 
-        pCap := DSSPrime.ActiveCircuit.ShuntCapacitors.First;
+        pCap := DSS.ActiveCircuit.ShuntCapacitors.First;
         while pCap <> NIL do
         begin
             if pCap.Enabled then
             begin
                 StartInstance(F, 'LinearShuntCompensator', pCap);
-                CircuitNode(F, DSSPrime.ActiveCircuit);
-                VbaseNode(F, pCap);
+                CircuitNode(F, DSS.ActiveCircuit);
+                VbaseNode(DSS, F, pCap);
                 with pCap do
                 begin
                     val := 0.001 * Totalkvar / NomKV / NomKV / NumSteps;
@@ -2046,12 +2047,12 @@ begin
                     DoubleNode(F, 'LinearShuntCompensator.gPerSection', 0.0);
 
                     val := 0.0;
-                    pCapC := DSSPrime.ActiveCircuit.CapControls.First;
+                    pCapC := DSS.ActiveCircuit.CapControls.First;
                     while (pCapC <> NIL) do
                     begin
                         if pCapC.This_Capacitor = pCap then
                             val := pCapC.OnDelayVal;
-                        pCapC := DSSPrime.ActiveCircuit.CapControls.Next;
+                        pCapC := DSS.ActiveCircuit.CapControls.Next;
                     end;
                     DoubleNode(F, 'ShuntCompensator.aVRDelay', val);
 
@@ -2073,14 +2074,14 @@ begin
                     geoUUID := GetDevUuid(CapLoc, pCap.localName, 1);
                     UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                     EndInstance(F, 'LinearShuntCompensator');
-                    AttachCapPhases(F, pCap, geoUUID);
-                    WriteTerminals(F, pCap, geoUUID, crsUUID, pCap.NormAmps, pCap.EmergAmps);
+                    AttachCapPhases(DSS, F, pCap, geoUUID);
+                    WriteTerminals(DSS, F, pCap, geoUUID, crsUUID, pCap.NormAmps, pCap.EmergAmps);
                 end;
             end;
-            pCap := DSSPrime.ActiveCircuit.ShuntCapacitors.Next;
+            pCap := DSS.ActiveCircuit.ShuntCapacitors.Next;
         end;
 
-        pCapC := DSSPrime.ActiveCircuit.CapControls.First;
+        pCapC := DSS.ActiveCircuit.CapControls.First;
         while (pCapC <> NIL) do
         begin
             with pCapC do
@@ -2090,8 +2091,8 @@ begin
                 RefNode(F, 'RegulatingControl.RegulatingCondEq', This_Capacitor);
                 i1 := GetCktElementIndex(ElementName); // Global function
                 UuidNode(F, 'RegulatingControl.Terminal',
-                    GetTermUuid(DSSPrime.ActiveCircuit.CktElements.Get(i1), ElementTerminal));
-                s := FirstPhaseString(DSSPrime.ActiveCircuit.CktElements.Get(i1), 1);
+                    GetTermUuid(DSS.ActiveCircuit.CktElements.Get(i1), ElementTerminal));
+                s := FirstPhaseString(DSS, DSS.ActiveCircuit.CktElements.Get(i1), 1);
                 if PTPhase > 0 then
                     MonitoredPhaseNode(F, Char(Ord(s[1]) + PTPhase - 1))
                 else
@@ -2133,7 +2134,7 @@ begin
                 DoubleNode(F, 'RegulatingControl.targetDeadband', val * (v2 - v1));
                 EndInstance(F, 'RegulatingControl');
             end;
-            pCapC := DSSPrime.ActiveCircuit.CapControls.Next;
+            pCapC := DSS.ActiveCircuit.CapControls.Next;
         end;
 
     // begin the transformers; 
@@ -2143,7 +2144,7 @@ begin
 
     // for case 3, it's better to identify and create the info classes first
     //    TODO: side effect is that these transformers will reference XfmrCode until the text file is reloaded. Solution results should be the same.
-        pXf := DSSPrime.ActiveCircuit.Transformers.First;
+        pXf := DSS.ActiveCircuit.Transformers.First;
         while pXf <> NIL do
         begin
             if pXf.Enabled then
@@ -2153,14 +2154,14 @@ begin
                     sBank := 'CIMXfmrCode_' + pXf.Name;
                     clsXfmr.NewObject(sBank);
                     clsXfmr.Code := sBank;
-                    pXfmr := DSSPrime.ActiveXfmrCodeObj;
+                    pXfmr := DSS.ActiveXfmrCodeObj;
                     CreateUUID4(tmpUUID);
                     pXfmr.UUID := tmpUUID;
                     pXfmr.PullFromTransformer(pXf);
                     pXf.XfmrCode := pXfmr.Name;
                 end;
             end;
-            pXf := DSSPrime.ActiveCircuit.Transformers.Next;
+            pXf := DSS.ActiveCircuit.Transformers.Next;
         end;
 
         // write all the XfmrCodes first (CIM TransformerTankInfo)
@@ -2174,12 +2175,12 @@ begin
             pName1.UUID := tmpUUID;
             StartInstance(F, 'Asset', pName1);
             RefNode(F, 'Asset.AssetInfo', pXfmr);
-            pXf := DSSPrime.ActiveCircuit.Transformers.First;
+            pXf := DSS.ActiveCircuit.Transformers.First;
             while pXf <> NIL do
             begin
                 if pXf.XfmrCode = pXfmr.Name then
                     RefNode(F, 'Asset.PowerSystemResources', pXf);
-                pXf := DSSPrime.ActiveCircuit.Transformers.Next;
+                pXf := DSS.ActiveCircuit.Transformers.Next;
             end;
             EndInstance(F, 'Asset');
             pXfmr := clsXfmr.ElementList.Next;
@@ -2187,13 +2188,13 @@ begin
 
     // create all the banks (CIM PowerTransformer)
         maxWdg := 0;
-        pXf := DSSPrime.ActiveCircuit.Transformers.First;
+        pXf := DSS.ActiveCircuit.Transformers.First;
         while pXf <> NIL do
         begin
             if pXf.Enabled then
                 if pXf.NumberOfWindings > maxWdg then
                     maxWdg := pXf.NumberofWindings;
-            pXf := DSSPrime.ActiveCircuit.Transformers.Next;
+            pXf := DSS.ActiveCircuit.Transformers.Next;
         end;
 
         if MaxWdg > 0 then
@@ -2208,7 +2209,7 @@ begin
                 MeshList[i - 1] := TNamedObject.Create('dummy');
         end;
 
-        pXf := DSSPrime.ActiveCircuit.Transformers.First;
+        pXf := DSS.ActiveCircuit.Transformers.First;
         while pXf <> NIL do
         begin
             if pXf.Enabled then
@@ -2226,11 +2227,11 @@ begin
                     AddBank(pBank);
                 end;
             end;
-            pXf := DSSPrime.ActiveCircuit.Transformers.Next;
+            pXf := DSS.ActiveCircuit.Transformers.Next;
         end;
 
     // write all the transformers, according to the three cases
-        pXf := DSSPrime.ActiveCircuit.Transformers.First;
+        pXf := DSS.ActiveCircuit.Transformers.First;
         while pXf <> NIL do
         begin
             if pXf.Enabled then
@@ -2246,21 +2247,21 @@ begin
                         bTanks := FALSE; // case 1, balanced three-phase
 
                     pBank := GetBank(sBank);
-                    pBank.AddTransformer(pXf);
+                    pBank.AddTransformer(DSS, pXf);
                     geoUUID := GetDevUuid(XfLoc, pXf.Name, 1);
 
                     if bTanks then
                     begin
                         StartInstance(F, 'TransformerTank', pXf);
-                        CircuitNode(F, DSSPrime.ActiveCircuit);
+                        CircuitNode(F, DSS.ActiveCircuit);
                         RefNode(F, 'TransformerTank.PowerTransformer', pBank);
                         UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                         EndInstance(F, 'TransformerTank');
-                        WritePositions(F, pXf, geoUUID, crsUUID);
+                        WritePositions(DSS, F, pXf, geoUUID, crsUUID);
                     end
                     else
                     begin
-                        WritePositions(F, pXf, geoUUID, crsUUID);
+                        WritePositions(DSS, F, pXf, geoUUID, crsUUID);
                     end;
 
         // make the winding, mesh and core name objects for easy reference
@@ -2318,7 +2319,7 @@ begin
                         if bTanks then
                         begin
                             StartInstance(F, 'TransformerTankEnd', WdgList[i - 1]);
-                            XfmrPhasesEnum(F, pXf, i);
+                            XfmrPhasesEnum(DSS, F, pXf, i);
                             RefNode(F, 'TransformerTankEnd.TransformerTank', pXf);
                         end
                         else
@@ -2371,7 +2372,7 @@ begin
                         pName2.LocalName := pXf.Name + '_T' + IntToStr(i);
                         pName2.UUID := GetTermUuid(pXf, i);
                         RefNode(F, 'TransformerEnd.Terminal', pName2);
-                        UuidNode(F, 'TransformerEnd.BaseVoltage', GetBaseVUuid(sqrt(3.0) * DSSPrime.ActiveCircuit.Buses^[j].kVBase));
+                        UuidNode(F, 'TransformerEnd.BaseVoltage', GetBaseVUuid(sqrt(3.0) * DSS.ActiveCircuit.Buses^[j].kVBase));
                         if bTanks then
                             EndInstance(F, 'TransformerTankEnd')
                         else
@@ -2381,7 +2382,7 @@ begin
                         RefNode(F, 'Terminal.ConductingEquipment', pBank);
                         IntegerNode(F, 'ACDCTerminal.sequenceNumber', i);
                         Writeln(F, Format('<cim:Terminal.ConnectivityNode rdf:resource="#%s"/>',
-                            [DSSPrime.ActiveCircuit.Buses[j].CIM_ID]));
+                            [DSS.ActiveCircuit.Buses[j].CIM_ID]));
                         if i = 1 then
                         begin   // write the current limit on HV winding, assuming that's winding 1
                             LimitName := GetOpLimIName(pXf.NormAmps, pXf.EmergAmps);
@@ -2399,7 +2400,7 @@ begin
                         EndInstance(F, 'Terminal');
                     end;
                 end;
-            pXf := DSSPrime.ActiveCircuit.Transformers.Next;
+            pXf := DSS.ActiveCircuit.Transformers.Next;
         end;
 
     // finally, write all the transformer banks (CIM PowerTransformer)
@@ -2413,7 +2414,7 @@ begin
             if AnsiPos('=', pBank.localName) = 1 then
                 pBank.localName := Copy(pBank.localName, 2, MaxInt);
             StartInstance(F, 'PowerTransformer', pBank);
-            CircuitNode(F, DSSPrime.ActiveCircuit);
+            CircuitNode(F, DSS.ActiveCircuit);
             StringNode(F, 'PowerTransformer.vectorGroup', pBank.vectorGroup);
             UuidNode(F, 'PowerSystemResource.Location',
                 GetDevUuid(XfLoc, pBank.a_unit.Name, 1));
@@ -2425,7 +2426,7 @@ begin
         MeshList := NIL;
 
     // voltage regulators
-        pReg := DSSPrime.ActiveCircuit.RegControls.First;
+        pReg := DSS.ActiveCircuit.RegControls.First;
         while (pReg <> NIL) do
         begin
             with pReg do
@@ -2445,7 +2446,7 @@ begin
                 StartInstance(F, 'TapChangerControl', pName2);
                 RegulatingControlEnum(F, 'voltage');
                 UuidNode(F, 'RegulatingControl.Terminal', GetTermUuid(Transformer, TrWinding));
-                MonitoredPhaseNode(F, FirstPhaseString(Transformer, TrWinding));
+                MonitoredPhaseNode(F, FirstPhaseString(DSS, Transformer, TrWinding));
                 BooleanNode(F, 'RegulatingControl.enabled', pReg.Enabled);
                 BooleanNode(F, 'RegulatingControl.discrete', TRUE);
                 DoubleNode(F, 'RegulatingControl.targetValue', TargetVoltage);
@@ -2499,20 +2500,20 @@ begin
                 RefNode(F, 'Asset.PowerSystemResources', pReg);
                 EndInstance(F, 'Asset');
             end;
-            pReg := DSSPrime.ActiveCircuit.RegControls.Next;
+            pReg := DSS.ActiveCircuit.RegControls.Next;
         end;
 
     // done with the transformers
 
         // series reactors, exported as lines
-        pReac := DSSPrime.ActiveCircuit.Reactors.First;
+        pReac := DSS.ActiveCircuit.Reactors.First;
         while pReac <> NIL do
         begin
             if pReac.Enabled then
             begin
                 StartInstance(F, 'ACLineSegment', pReac);
-                CircuitNode(F, DSSPrime.ActiveCircuit);
-                VbaseNode(F, pReac);
+                CircuitNode(F, DSS.ActiveCircuit);
+                VbaseNode(DSS, F, pReac);
                 geoUUID := GetDevUuid(ReacLoc, pReac.Name, 1);
                 UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                 DoubleNode(F, 'Conductor.length', 1.0);
@@ -2526,12 +2527,12 @@ begin
                 DoubleNode(F, 'ACLineSegment.b0ch', 0.0);
                 EndInstance(F, 'ACLineSegment');
                 // AttachLinePhases (F, pReac); // for the 8500-node circuit, we only need 3 phase series reactors
-                WriteTerminals(F, pReac, geoUUID, crsUUID, pReac.NormAmps, pReac.EmergAmps);
+                WriteTerminals(DSS, F, pReac, geoUUID, crsUUID, pReac.NormAmps, pReac.EmergAmps);
             end;
-            pReac := DSSPrime.ActiveCircuit.Reactors.Next;
+            pReac := DSS.ActiveCircuit.Reactors.Next;
         end;
 
-        pLine := DSSPrime.ActiveCircuit.Lines.First;
+        pLine := DSS.ActiveCircuit.Lines.First;
         while pLine <> NIL do
         begin
             if pLine.Enabled then
@@ -2542,10 +2543,10 @@ begin
                     geoUUID := GetDevUuid(LineLoc, pLine.Name, 1);
                     if IsSwitch then
                     begin
-                        ParseSwitchClass(pLine, swtCls, ratedAmps, breakingAmps);
+                        ParseSwitchClass(DSS, pLine, swtCls, ratedAmps, breakingAmps);
                         StartInstance(F, swtCls, pLine);
-                        CircuitNode(F, DSSPrime.ActiveCircuit);
-                        VbaseNode(F, pLine);
+                        CircuitNode(F, DSS.ActiveCircuit);
+                        VbaseNode(DSS, F, pLine);
                         if breakingAmps > 0.0 then
                             DoubleNode(F, 'ProtectedSwitch.breakingCapacity', breakingAmps); // Fuse and Sectionaliser don't have this, others do
                         DoubleNode(F, 'Switch.ratedCurrent', ratedAmps);
@@ -2569,8 +2570,8 @@ begin
                     else
                     begin
                         StartInstance(F, 'ACLineSegment', pLine);
-                        CircuitNode(F, DSSPrime.ActiveCircuit);
-                        VbaseNode(F, pLine);
+                        CircuitNode(F, DSS.ActiveCircuit);
+                        VbaseNode(DSS, F, pLine);
                         if LineCodeSpecified then
                         begin
                             DoubleNode(F, 'Conductor.length', Len * v1);
@@ -2617,7 +2618,7 @@ begin
                         UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                         EndInstance(F, 'ACLineSegment');
                         if not (SymComponentsModel and (NPhases = 3)) then
-                            AttachLinePhases(F, pLine);
+                            AttachLinePhases(DSS, F, pLine);
                         if bVal = TRUE then
                         begin  // writing PuZ on the fly
                             StartInstance(F, 'PerLengthPhaseImpedance', pName1);
@@ -2639,9 +2640,9 @@ begin
                             end;
                         end;
                     end;
-                    WriteTerminals(F, pLine, geoUUID, crsUUID, pLine.NormAmps, pLine.EmergAmps);
+                    WriteTerminals(DSS, F, pLine, geoUUID, crsUUID, pLine.NormAmps, pLine.EmergAmps);
                 end;
-            pLine := DSSPrime.ActiveCircuit.Lines.Next;
+            pLine := DSS.ActiveCircuit.Lines.Next;
         end;
 
     // create the DSS-like load models
@@ -2682,15 +2683,15 @@ begin
             100, 0, 0,
             0, 0);
 
-        pLoad := DSSPrime.ActiveCircuit.Loads.First;
+        pLoad := DSS.ActiveCircuit.Loads.First;
         while pLoad <> NIL do
         begin
             if pLoad.Enabled then
                 with pLoad do
                 begin
                     StartInstance(F, 'EnergyConsumer', pLoad);
-                    CircuitNode(F, DSSPrime.ActiveCircuit);
-                    VbaseNode(F, pLoad);
+                    CircuitNode(F, DSS.ActiveCircuit);
+                    VbaseNode(DSS, F, pLoad);
                     case FLoadModel of
                         1:
                             UuidNode(F, 'EnergyConsumer.LoadResponse', id1_ConstkVA);
@@ -2723,10 +2724,10 @@ begin
                     CreateUUID4(geoUUID);
                     UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                     EndInstance(F, 'EnergyConsumer');
-                    AttachLoadPhases(F, pLoad, geoUUID);
-                    WriteTerminals(F, pLoad, geoUUID, crsUUID);
+                    AttachLoadPhases(DSS, F, pLoad, geoUUID);
+                    WriteTerminals(DSS, F, pLoad, geoUUID, crsUUID);
                 end;
-            pLoad := DSSPrime.ActiveCircuit.Loads.Next;
+            pLoad := DSS.ActiveCircuit.Loads.Next;
         end;
 
         pCode := clsCode.ElementList.First;
@@ -2736,7 +2737,7 @@ begin
             begin
                 if pCode.Units = UNITS_NONE then
                 begin // we need the real units for CIM
-                    pLine := DSSPrime.ActiveCircuit.Lines.First;
+                    pLine := DSS.ActiveCircuit.Lines.First;
                     while pLine <> NIL do
                     begin
                         if pLine.Enabled then
@@ -2748,7 +2749,7 @@ begin
                                 break;
                             end;
                         end;
-                        pLine := DSSPrime.ActiveCircuit.Lines.Next;
+                        pLine := DSS.ActiveCircuit.Lines.Next;
                     end;
                 end;
                 v1 := To_per_Meter(pCode.Units); // TODO: warn if still UNITS_NONE
@@ -2921,7 +2922,7 @@ begin
 
         Writeln(F, '</rdf:RDF>');
 
-        DSSPrime.GlobalResult := FileNm;
+        DSS.GlobalResult := FileNm;
     finally
         CloseFile(F);
     end;

@@ -333,7 +333,7 @@ begin
     Result := TCC_CurveClass.Find(CurveName);
 
     if Result = NIL then
-        DoSimpleMsg('TCC Curve object: "' + CurveName + '" not found.', 380);
+        DoSimpleMsg(DSS, 'TCC Curve object: "' + CurveName + '" not found.', 380);
 
 end;
 
@@ -368,13 +368,13 @@ begin
             if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
                 PropertyValue[PropertyIdxMap[ParamPointer]] := Param
             else
-                DoSimpleMsg('Unknown parameter "' + ParamName + '" for Relay "' + Name + '"', 381);
+                DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Relay "' + Name + '"', 381);
 
             if ParamPointer > 0 then
                 case PropertyIdxMap[ParamPointer] of
            {internal Relay Property commands}
                     0:
-                        DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 382);
+                        DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 382);
                     1:
                         MonitoredElementName := lowercase(param);
                     2:
@@ -542,7 +542,7 @@ begin
 
         end
     else
-        DoSimpleMsg('Error in Relay MakeLike: "' + RelayName + '" Not Found.', 383);
+        DoSimpleMsg(DSS, 'Error in Relay MakeLike: "' + RelayName + '" Not Found.', 383);
 
 end;
 
@@ -669,13 +669,13 @@ begin
                 Generic:
                 begin
                     if (MonitoredElement.DSSObjType and BASECLASSMASK) <> PC_ELEMENT then
-                        DoSimpleMsg('Relay ' + Name + ': Monitored element for Generic relay is not a PC Element.', 385)
+                        DoSimpleMsg(DSS, 'Relay ' + Name + ': Monitored element for Generic relay is not a PC Element.', 385)
                     else
                     begin
                         MonitorVarIndex := (MonitoredElement as TPCelement).LookupVariable(MonitorVariable);
                         if MonitorVarIndex < 1 then    // oops
                         begin
-                            DoSimpleMsg('Relay ' + Name + ': Monitor variable "' + MonitorVariable + '" does not exist.', 386);
+                            DoSimpleMsg(DSS, 'Relay ' + Name + ': Monitor variable "' + MonitorVariable + '" does not exist.', 386);
                         end;
                     end;
 

@@ -83,7 +83,7 @@ end;
 procedure TControlElem.DoPendingAction;
 begin
   // virtual function - should be overridden
-    DoSimpleMsg('Programming Error:  Reached base class for DoPendingAction.' + CRLF + 'Device: ' + DSSClassName + '.' + Name, 460);
+    DoSimpleMsg(DSS, 'Programming Error:  Reached base class for DoPendingAction.' + CRLF + 'Device: ' + DSSClassName + '.' + Name, 460);
 end;
 
 procedure TControlElem.RemoveSelfFromControlElementList(CktElem: TDSSCktElement);
@@ -111,13 +111,13 @@ end;
 
 procedure TControlElem.Reset;
 begin
-    DoSimpleMsg('Programming Error: Reached base class for Reset.' + CRLF + 'Device: ' + DSSClassName + '.' + Name, 461);
+    DoSimpleMsg(DSS, 'Programming Error: Reached base class for Reset.' + CRLF + 'Device: ' + DSSClassName + '.' + Name, 461);
 end;
 
 procedure TControlElem.Sample;
 begin
   // virtual function - should be overridden
-    DoSimpleMsg('Programming Error:  Reached base class for Sample.' + CRLF + 'Device: ' + DSSClassName + '.' + Name, 462);
+    DoSimpleMsg(DSS, 'Programming Error:  Reached base class for Sample.' + CRLF + 'Device: ' + DSSClassName + '.' + Name, 462);
 end;
 
 

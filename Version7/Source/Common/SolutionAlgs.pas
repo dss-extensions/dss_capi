@@ -634,7 +634,7 @@ begin
         try
             if LoadDurCurveObj = NIL then
             begin
-                Dosimplemsg('Load Duration Curve Not Defined (Set LDCurve=... command). Cannot perForm solution.', 470);
+                DoSimpleMsg(DSS, 'Load Duration Curve Not Defined (Set LDCurve=... command). Cannot perForm solution.', 470);
                 Exit;
             end;
 
@@ -722,7 +722,7 @@ begin
     begin
         if LoadDurCurveObj = NIL then
         begin
-            Dosimplemsg('Load Duration Curve Not Defined (Set LDCurve=... command). Cannot perForm solution.', 471);
+            DoSimpleMsg(DSS, 'Load Duration Curve Not Defined (Set LDCurve=... command). Cannot perForm solution.', 471);
             Exit;
         end;
 

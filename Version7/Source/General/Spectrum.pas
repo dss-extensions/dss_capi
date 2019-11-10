@@ -190,7 +190,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Name + '"', 650);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Name + '"', 650);
                 1:
                 begin
                     NumHarm := Parser.IntValue;
@@ -231,7 +231,7 @@ begin
         begin
             if HarmArrayHasaZero(iZeroPoint) then
 
-                DoSimpleMsg(Format('Error: Zero frequency detected in Spectrum.%s, point %d. Not allowed', [Name, iZeroPoint]), 65001)
+                DoSimpleMsg(DSS, Format('Error: Zero frequency detected in Spectrum.%s, point %d. Not allowed', [Name, iZeroPoint]), 65001)
 
             else
             if (HarmArray <> NIL) and (puMagArray <> NIL) and (AngleArray <> NIL) then
@@ -274,7 +274,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Spectrum MakeLike: "' + LineName + '" Not Found.', 651);
+        DoSimpleMsg(DSS, 'Error in Spectrum MakeLike: "' + LineName + '" Not Found.', 651);
 
 
 end;
@@ -310,7 +310,7 @@ begin
         SpectrumObj := ElementList.Next;
     end;
 
-    DoSimpleMsg('Spectrum: "' + Value + '" not Found.', 652);
+    DoSimpleMsg(DSS, 'Spectrum: "' + Value + '" not Found.', 652);
 
 end;
 
@@ -360,7 +360,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening CSV File: "' + FileName, 653);
+        DoSimpleMsg(DSS, 'Error Opening CSV File: "' + FileName, 653);
         CloseFile(F);
         Exit;
     end;
@@ -396,7 +396,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message, 654);
+            DoSimpleMsg(DSS, 'Error Processing CSV File: "' + FileName + '. ' + E.Message, 654);
             CloseFile(F);
             Exit;
         end;
@@ -569,7 +569,7 @@ begin
             MultArray^[i] := pdegtocomplex(puMagArray^[i], (AngleArray^[i] - HarmArray^[i] * FundAngle));
 
     except
-        DoSimpleMsg('Exception while computing Spectrum.' + Name + '. Check Definition. Aborting', 655);
+        DoSimpleMsg(DSS, 'Exception while computing Spectrum.' + Name + '. Check Definition. Aborting', 655);
         if DSS.In_Redirect then
             DSS.Redirect_Abort := TRUE;
     end;

@@ -536,7 +536,7 @@ Begin
          THEN PropertyValue[ParamPointer]:= Param;
 
          CASE ParamPointer OF
-            0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
+            0: DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
             1: InterpretTStringListArray(Param, FPVSystemNameList);
             2: Begin
                    If      CompareTextShortest(Parser.StrValue, 'voltvar')= 0 Then
@@ -562,7 +562,7 @@ Begin
                    Else
                     Begin
                       if ControlMode = '' then
-                         DoSimpleMsg('Invalid Control Mode selected', 1366);
+                         DoSimpleMsg(DSS, 'Invalid Control Mode selected', 1366);
                       CombiControlMode := '';
                       DSS.SolutionAbort := True;
                       exit;
@@ -584,7 +584,7 @@ Begin
                    Else
                     Begin
                       if CombiControlMode = '' then
-                         DoSimpleMsg('Invalid CombiControl Mode selected', 1367);
+                         DoSimpleMsg(DSS, 'Invalid CombiControl Mode selected', 1367);
                       CombiControlMode := '';
                       DSS.SolutionAbort := True;
                       exit;
@@ -603,7 +603,7 @@ Begin
                     end;
                End;
             5: Begin
-                  if(Parser.DblValue > 0.0) THEN DoSimpleMsg('Hysteresis offset should be a negative value, or 0 "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 1364)
+                  if(Parser.DblValue > 0.0) THEN DoSimpleMsg(DSS, 'Hysteresis offset should be a negative value, or 0 "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 1364)
                   else
                     Fvvc_curveOffset := Parser.DblValue;
                End;
@@ -627,7 +627,7 @@ Begin
                   FDbVMin := Parser.DblValue;
                   if(FDbVMax > 0.0) and (FDbVmin > FDbVMax) then
                     begin
-                    DoSimpleMsg('Minimum dead-band voltage value should be less than the maximum dead-band voltage value.  Value set to 0.0 "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 1365);
+                    DoSimpleMsg(DSS, 'Minimum dead-band voltage value should be less than the maximum dead-band voltage value.  Value set to 0.0 "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 1365);
                     FDbvMin := 0.0;
                     end;
                End;
@@ -635,7 +635,7 @@ Begin
                   FDbVMax := Parser.DblValue;
                   if(FDbVMin > 0.0) and (FDbVMax < FDbVmin) then
                     begin
-                    DoSimpleMsg('Maximum dead-band voltage value should be greater than the minimum dead-band voltage value.  Value set to 0.0 "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 1366);
+                    DoSimpleMsg(DSS, 'Maximum dead-band voltage value should be greater than the minimum dead-band voltage value.  Value set to 0.0 "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 1366);
                     FDbvMax := 0.0;
                     end;
                End;
@@ -778,7 +778,7 @@ Begin
       For j := 1 to ParentClass.NumProperties Do PropertyValue[j] := OtherInvControl.PropertyValue[j];
 
    End
-   ELSE  DoSimpleMsg('Error in InvControl MakeLike: "' + InvControlName + '" Not Found.', 370);
+   ELSE  DoSimpleMsg(DSS, 'Error in InvControl MakeLike: "' + InvControlName + '" Not Found.', 370);
 
 End;
 
@@ -1961,7 +1961,7 @@ begin
                   // if the volt-var curve does not exist, exit
                   if Length(Fvvc_curvename) = 0 then
                     begin
-                      DoSimpleMsg('XY Curve object representing vvc1_curve does not exist or is not tied to InvControl.', 382);
+                      DoSimpleMsg(DSS, 'XY Curve object representing vvc1_curve does not exist or is not tied to InvControl.', 382);
                       exit
                     end;
 
@@ -2044,7 +2044,7 @@ begin
                   // if volt-watt curve does not exist, exit
                   if Length(Fvoltwatt_curvename) = 0 then
                     begin
-                      DoSimpleMsg('XY Curve object representing voltwatt_curve does not exist or is not tied to InvControl.', 381);
+                      DoSimpleMsg(DSS, 'XY Curve object representing voltwatt_curve does not exist or is not tied to InvControl.', 381);
                       exit
                     end;
                   // if inverter is off and varfollowinverter is true, then exit.
@@ -2053,7 +2053,7 @@ begin
                   // if the volt-var curve does not exist, exit
                   if Length(Fvvc_curvename) = 0 then
                     begin
-                      DoSimpleMsg('XY Curve object representing vvc1_curve does not exist or is not tied to InvControl.', 382);
+                      DoSimpleMsg(DSS, 'XY Curve object representing vvc1_curve does not exist or is not tied to InvControl.', 382);
                       exit
                     end;
 
@@ -2137,7 +2137,7 @@ begin
 
                   if Length(Fvoltwatt_curvename) = 0 then
                     begin
-                      DoSimpleMsg('XY Curve object representing voltwatt_curve does not exist or is not tied to InvControl.', 381);
+                      DoSimpleMsg(DSS, 'XY Curve object representing voltwatt_curve does not exist or is not tied to InvControl.', 381);
                       exit
                     end;
 
@@ -2197,7 +2197,7 @@ begin
                     ControlledElement[i].VWmode := FALSE;
                     if Length(Fvvc_curvename) = 0 then
                       begin
-                        DoSimpleMsg('XY Curve object representing vvc1_curve does not exist or is not tied to InvControl.', 382);
+                        DoSimpleMsg(DSS, 'XY Curve object representing vvc1_curve does not exist or is not tied to InvControl.', 382);
                         exit
                       end;
 
@@ -2589,7 +2589,7 @@ Begin
   Result := XY_CurveClass.Find(CurveName);
 
   IF Result = NIL THEN begin
-    DoSimpleMsg('XY Curve object: "' + CurveName + '" representing VOLTWATT or VOLTVAR curve (depending on mode) not found.', 380);
+    DoSimpleMsg(DSS, 'XY Curve object: "' + CurveName + '" representing VOLTWATT or VOLTVAR curve (depending on mode) not found.', 380);
     Exit;
   end;
 
@@ -2602,7 +2602,7 @@ Begin
       begin
         if (Result.YValue_pt[i] < 0.0) or (Result.YValue_pt[i] > 1.0) then
           begin
-            DoSimpleMsg('XY Curve object: "' + CurveName + '" has active power value(s) greater than 1.0 per-unit or less than 0.0 per-unit.  Not allowed for VOLTWATT control mode for PVSystems', 381);
+            DoSimpleMsg(DSS, 'XY Curve object: "' + CurveName + '" has active power value(s) greater than 1.0 per-unit or less than 0.0 per-unit.  Not allowed for VOLTWATT control mode for PVSystems', 381);
             Result := NIL;
             Break;
           end;
@@ -2642,7 +2642,7 @@ Begin
          FRollAvgWindowLengthIntervalUnit := 's'; // Only a number was specified, so must be seconds
          FVAvgWindowLengthSec := 1.0;
          Result := 1;
-         DosimpleMsg('Error in specification of Voltage Averaging Window Length: ' + s, 1134);
+         DoSimpleMsg(DSS, 'Error in specification of Voltage Averaging Window Length: ' + s, 1134);
          Exit;
      End;
 
@@ -2666,7 +2666,7 @@ Begin
          FRollAvgWindowLengthIntervalUnit := 's';
          FVAvgWindowLengthSec := Result*1.0;
          Result := 0; // Don't change it
-         DosimpleMsg('Error in specification of voltage sample interval size: "' + s +'" Units can only be h, m, or s (single char only) ', 99934);
+         DoSimpleMsg(DSS, 'Error in specification of voltage sample interval size: "' + s +'" Units can only be h, m, or s (single char only) ', 99934);
      end;
 End;
 
@@ -2696,7 +2696,7 @@ Begin
          FDRCRollAvgWindowLengthIntervalUnit := 's'; // Only a number was specified, so must be seconds
          FDRCVAvgWindowLengthSec := 1.0;
          Result := 1;
-         DosimpleMsg('Error in specification of Voltage Averaging Window Length: ' + s, 1134);
+         DoSimpleMsg(DSS, 'Error in specification of Voltage Averaging Window Length: ' + s, 1134);
          Exit;
      End;
 
@@ -2720,7 +2720,7 @@ Begin
          FDRCRollAvgWindowLengthIntervalUnit := 's';
          FDRCVAvgWindowLengthSec := Result*1.0;
          Result := 0; // Don't change it
-         DosimpleMsg('Error in specification of voltage sample interval size: "' + s +'" Units can only be h, m, or s (single char only) ', 99934);
+         DoSimpleMsg(DSS, 'Error in specification of voltage sample interval size: "' + s +'" Units can only be h, m, or s (single char only) ', 99934);
      end;
 End;
 

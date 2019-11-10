@@ -157,7 +157,7 @@ begin
             end;
             if not Found then
             begin
-                DoSimpleMsg('Monitor "' + tempS + '" Not Found in Active Circuit.', 5004);
+                DoSimpleMsg(DSS, 'Monitor "' + tempS + '" Not Found in Active Circuit.', 5004);
                 pMon := Get(ActiveSave);    // Restore active Monerator
                 ActiveCircuit.ActiveCktElement := pMon;
             end;
@@ -446,7 +446,7 @@ begin
         MySocket.Address := IP; // Local IP Address
     end
     else
-        DoSimpleMsg(Err, 0);
+        DoSimpleMsg(DSS, Err, 0);
     OldMode := SetErrorMode(SEM_FAILCRITICALERRORS);
     try
         MySocket.Open; //Activates the client
@@ -462,11 +462,11 @@ begin
                     launched := ShellExecute(0, 'open', Pchar(DSS_Viz_path), NIL, NIL, 5);
                     sleep(500);
                     if launched < 33 then // If not launched.
-                        DoSimpleMsg('Error with connection to the OpenDSS Viewer.', 0);
+                        DoSimpleMsg(DSS, 'Error with connection to the OpenDSS Viewer.', 0);
                 end;
             end
             else
-                DoSimpleMsg('The OpenDSS Viewer can not be found.', 0);
+                DoSimpleMsg(DSS, 'The OpenDSS Viewer can not be found.', 0);
             try
                 MySocket.Open; //Activates the client
             except  // Error on conection
@@ -475,7 +475,7 @@ begin
             end;
         until (MySocket.Socket.Connected = TRUE) or (counter > 14);
         if (MySocket.Socket.Connected = FALSE) then
-            DoSimpleMsg('Connection to ' + MySocket.Address + ' port ' +
+            DoSimpleMsg(DSS, 'Connection to ' + MySocket.Address + ' port ' +
                 IntToStr(MySocket.Port) + ' failed.', 0);
     end;
     SetErrorMode(OldMode);
@@ -494,14 +494,14 @@ begin
 //  myStr:=Socket.ReceiveText;     Does not work with blicking connections
 //  if (myStr='Handler ready'+#13#10) then
 //    TCPHandlerReady:=True;
-//  DoSimpleMsg('Server msg:'+myStr,0);
+//  DoSimpleMsg(DSS, 'Server msg:'+myStr,0);
 end;
 
 procedure TDSSConnect.MySocketDisconnect(Sender: TObject; Socket: TCustomWinSocket);
 begin
 //  myStr:='Disconnected';
 //  Socket.SendText(myStr);//Send the “Disconnected” message to the server
-//  DoSimpleMsg(myStr,0);
+//  DoSimpleMsg(DSS, myStr,0);
 end;
 
 procedure TDSSConnect.MySocketError(Sender: TObject; Socket: TCustomWinSocket;
@@ -509,7 +509,7 @@ procedure TDSSConnect.MySocketError(Sender: TObject; Socket: TCustomWinSocket;
 begin
     ErrorCode := 0;
     MySocket.Active := FALSE;
-//  DoSimpleMsg('Socket error',0);
+//  DoSimpleMsg(DSS, 'Socket error',0);
 end;
 
 //////////////////////////////// MSG functions /////////////////////////////////
@@ -563,7 +563,7 @@ begin
             end;
             if not Found then
             begin
-                DoSimpleMsg('Monitor "' + tempS + '" Not Found in Active Circuit.', 5004);
+                DoSimpleMsg(DSS, 'Monitor "' + tempS + '" Not Found in Active Circuit.', 5004);
                 pMon := Get(ActiveSave);    // Restore active Monerator
                 ActiveCircuit.ActiveCktElement := pMon;
             end;
@@ -722,7 +722,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('Loadshape "' + Widestring(ObjectName) +
+            DoSimpleMsg(DSS, 'Loadshape "' + Widestring(ObjectName) +
                 '" Not Found in Active Circuit.', 77003);
         end;
     end;
@@ -752,7 +752,7 @@ begin
             end
             else
             begin
-                DoSimpleMsg('No active Loadshape Object found.', 61001);
+                DoSimpleMsg(DSS, 'No active Loadshape Object found.', 61001);
             end;
         end;
     end
@@ -782,7 +782,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active Loadshape Object found.', 61001);
+            DoSimpleMsg(DSS, 'No active Loadshape Object found.', 61001);
         end;
     end;
 
@@ -803,7 +803,7 @@ begin
         end
         else
         begin
-            DoSimpleMsg('No active Loadshape Object found.', 61001);
+            DoSimpleMsg(DSS, 'No active Loadshape Object found.', 61001);
         end;
     end;
 
@@ -1165,7 +1165,7 @@ begin
                         end;
                         if not Found then
                         begin
-                            DoSimpleMsg('Monitor "' + tempS +
+                            DoSimpleMsg(DSS, 'Monitor "' + tempS +
                                 '" Not Found in Active Circuit.', 5004);
                             pMon := Get(ActiveSave);    // Restore active Monerator
                             ActiveCircuit.ActiveCktElement := pMon;

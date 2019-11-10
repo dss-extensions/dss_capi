@@ -543,7 +543,7 @@ begin
             if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
                 PropertyValue[PropertyIdxMap[ParamPointer]] := Param
             else
-                DoSimpleMsg('Unknown parameter "' + ParamName + '" for IndMach012 "' + Name + '"', 560);
+                DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for IndMach012 "' + Name + '"', 560);
 
          // --------------- MAIN CASE STATEMENT ----------------------
             if ParamPointer > 0 then
@@ -551,7 +551,7 @@ begin
          // use PropertyIdxMap to map to the correct Case index
                 case PropertyIdxMap[ParamPointer] of
                     0:
-                        DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
+                        DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
                     1:
                         NPhases := Parser.Intvalue; // num phases
                     2:
@@ -704,7 +704,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Load MakeLike: "' + OtherIndMach012Name + '" Not Found.', 562);
+        DoSimpleMsg(DSS, 'Error in Load MakeLike: "' + OtherIndMach012Name + '" Not Found.', 562);
 
 end;
 
@@ -735,7 +735,7 @@ begin
         p.Randomize(0);
     end;
 
-    DoSimpleMsg('Need to implement TIndMach012.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TIndMach012.Init', -1);
     Result := 0;
 
 end;
@@ -888,17 +888,17 @@ begin
 
     if YearlyShapeObj = NIL then
         if Length(YearlyShape) > 0 then
-            DoSimpleMsg('WARNING! Yearly load shape: "' + YearlyShape + '" Not Found.', 563);
+            DoSimpleMsg(DSS, 'WARNING! Yearly load shape: "' + YearlyShape + '" Not Found.', 563);
     if DailyDispShapeObj = NIL then
         if Length(DailyDispShape) > 0 then
-            DoSimpleMsg('WARNING! Daily load shape: "' + DailyDispShape + '" Not Found.', 564);
+            DoSimpleMsg(DSS, 'WARNING! Daily load shape: "' + DailyDispShape + '" Not Found.', 564);
     if DutyShapeObj = NIL then
         if Length(DutyShape) > 0 then
-            DoSimpleMsg('WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
+            DoSimpleMsg(DSS, 'WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
 
     SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
     if SpectrumObj = NIL then
-        DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
+        DoSimpleMsg(DSS, 'ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
 
     if DebugTrace then
         InitTraceFile;
@@ -1119,7 +1119,7 @@ begin
                         E1 := Csub(V012[1], Cmul(I012[1], Zsp));    // Pos sequence
                     end;
                 else
-                    DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Motors. IndMach012.' + name + ' has %d phases.', [Fnphases]), 5672);
+                    DoSimpleMsg(DSS, Format('Dynamics mode is implemented only for 1- or 3-phase Motors. IndMach012.' + name + ' has %d phases.', [Fnphases]), 5672);
                     DSS.SolutionAbort := TRUE;
                 end;
 

@@ -12,34 +12,37 @@ unit ShowResults;
 
 interface
 
-procedure ShowVoltages(FileNm: String; LL: Boolean; ShowOptionCode: Integer);
-procedure ShowCurrents(FileNm: String; ShowResidual: Boolean; ShowOptionCode: Integer);
-procedure ShowPowers(FileNm: String; opt, ShowOptionCode: Integer);
-procedure ShowBusPowers(FileNm, BusName: String; opt, ShowOptionCode: Integer);
-procedure ShowFaultStudy(FileNm: String);
-procedure ShowElements(FileNm: String; ClassName: String);
-procedure ShowBuses(FileNm: String);
-procedure ShowMeters(FileNm: String);
-procedure ShowGenMeters(FileNm: String);
-procedure ShowMeterZone(FileNm: String);
-procedure ShowLosses(FileNm: String);
-procedure ShowRegulatorTaps(FileNm: String);
-procedure ShowOverloads(FileNm: String);
-procedure ShowUnserved(FileNm: String; UE_Only: Boolean);
-procedure ShowVariables(FileNm: String);
-procedure ShowIsolated(FileNm: String);
-procedure ShowRatings(FileNm: String);
-procedure ShowLoops(FileNm: String);
-procedure ShowLineConstants(FileNm: String; Freq: Double; Units: Integer; Rho: Double);
-procedure ShowYPrim(Filenm: String);
-procedure ShowY(FileNm: String);
-procedure ShowTopology(FileRoot: String); // summary and tree-view to separate files
-procedure ShowNodeCurrentSum(FileNm: String);
-procedure ShowkVBaseMismatch(FileNm: String);
-procedure ShowDeltaV(FileNm: String);
-procedure ShowControlledElements(FileNm: String);
-procedure ShowResult(FileNm: String);
-procedure ShowEventLog(FileNm: String);
+uses 
+    DSSClass;
+
+procedure ShowVoltages(DSS: TDSS; FileNm: String; LL: Boolean; ShowOptionCode: Integer);
+procedure ShowCurrents(DSS: TDSS; FileNm: String; ShowResidual: Boolean; ShowOptionCode: Integer);
+procedure ShowPowers(DSS: TDSS; FileNm: String; opt, ShowOptionCode: Integer);
+procedure ShowBusPowers(DSS: TDSS; FileNm, BusName: String; opt, ShowOptionCode: Integer);
+procedure ShowFaultStudy(DSS: TDSS; FileNm: String);
+procedure ShowElements(DSS: TDSS; FileNm: String; ClassName: String);
+procedure ShowBuses(DSS: TDSS; FileNm: String);
+procedure ShowMeters(DSS: TDSS; FileNm: String);
+procedure ShowGenMeters(DSS: TDSS; FileNm: String);
+procedure ShowMeterZone(DSS: TDSS; FileNm: String);
+procedure ShowLosses(DSS: TDSS; FileNm: String);
+procedure ShowRegulatorTaps(DSS: TDSS; FileNm: String);
+procedure ShowOverloads(DSS: TDSS; FileNm: String);
+procedure ShowUnserved(DSS: TDSS; FileNm: String; UE_Only: Boolean);
+procedure ShowVariables(DSS: TDSS; FileNm: String);
+procedure ShowIsolated(DSS: TDSS; FileNm: String);
+procedure ShowRatings(DSS: TDSS; FileNm: String);
+procedure ShowLoops(DSS: TDSS; FileNm: String);
+procedure ShowLineConstants(DSS: TDSS; FileNm: String; Freq: Double; Units: Integer; Rho: Double);
+procedure ShowYPrim(DSS: TDSS; FileNm: String);
+procedure ShowY(DSS: TDSS; FileNm: String);
+procedure ShowTopology(DSS: TDSS; FileRoot: String); // summary and tree-view to separate files
+procedure ShowNodeCurrentSum(DSS: TDSS; FileNm: String);
+procedure ShowkVBaseMismatch(DSS: TDSS; FileNm: String);
+procedure ShowDeltaV(DSS: TDSS; FileNm: String);
+procedure ShowControlledElements(DSS: TDSS; FileNm: String);
+procedure ShowResult(DSS: TDSS; FileNm: String);
+procedure ShowEventLog(DSS: TDSS; FileNm: String);
 
 implementation
 
@@ -48,7 +51,6 @@ uses
     Arraydef,
     sysutils,
     Circuit,
-    DSSClass,
     DSSClassDefs,
     DSSGlobals,
     uCMatrix,
@@ -381,7 +383,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowVoltages(FileNm: String; LL: Boolean; ShowOptionCode: Integer);
+procedure ShowVoltages(DSS: TDSS; FileNm: String; LL: Boolean; ShowOptionCode: Integer);
 
 // Show bus voltages by circuit element terminal
 
@@ -495,7 +497,7 @@ begin
 
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
@@ -628,7 +630,7 @@ begin
 
 end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowCurrents(FileNm: String; ShowResidual: Boolean; ShowOptionCode: Integer);
+procedure ShowCurrents(DSS: TDSS; FileNm: String; ShowResidual: Boolean; ShowOptionCode: Integer);
 
 
 var
@@ -830,19 +832,19 @@ begin
 
             CloseFile(F);
             FireOffEditor(FileNm);
-            ParserVars.Add('@lastshowfile', FileNm);
+            DSS.ParserVars.Add('@lastshowfile', FileNm);
 
         end;
 
     except
         On E: Exception do
-            DoSimpleMsg('Exception raised in ShowCurrents: ' + E.Message, 2190);
+            DoSimpleMsg(DSS, 'Exception raised in ShowCurrents: ' + E.Message, 2190);
     end;
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowPowers(FileNm: String; opt, ShowOptionCode: Integer);
+procedure ShowPowers(DSS: TDSS; FileNm: String; opt, ShowOptionCode: Integer);
 
 {Opt = 0: kVA
  opt = 1: MVA
@@ -1280,7 +1282,7 @@ begin
             Freemem(c_Buffer);
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
 
     end;
@@ -1447,7 +1449,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowBusPowers(FileNm, BusName: String; opt, ShowOptionCode: Integer);
+procedure ShowBusPowers(DSS: TDSS; FileNm, BusName: String; opt, ShowOptionCode: Integer);
 
 {Report power flow around a specified Bus}
 
@@ -1478,7 +1480,7 @@ begin
     BusReference := DSSPrime.ActiveCircuit.BusList.Find(BusName);
     if BusReference = 0 then
     begin
-        DoSimpleMsg('Bus "' + UpperCase(BusName) + '" not found.', 219);
+        DoSimpleMsg(DSS, 'Bus "' + UpperCase(BusName) + '" not found.', 219);
         Exit;
     end;
     try
@@ -1801,13 +1803,13 @@ begin
             Freemem(c_Buffer);
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowFaultStudy(FileNm: String);
+procedure ShowFaultStudy(DSS: TDSS; FileNm: String);
 
 var
     i, iBus, iphs: Integer;
@@ -1961,7 +1963,7 @@ begin
 
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
 
@@ -1982,7 +1984,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowElements(FileNm: String; ClassName: String);
+procedure ShowElements(DSS: TDSS; FileNm: String; ClassName: String);
 
 // Show Elements and bus connections
 
@@ -2002,7 +2004,7 @@ begin
             ReWrite(F);
         except
             On E: Exception do
-                DoSimpleMsg('Error Trying to open element file "' + FileNm + '" file:' + E.message, 219000);
+                DoSimpleMsg(DSS, 'Error Trying to open element file "' + FileNm + '" file:' + E.message, 219000);
         end;
 
         try
@@ -2011,7 +2013,7 @@ begin
             ReWrite(FDisabled);
         except
             On E: Exception do
-                DoSimpleMsg('Error Trying to open disabled element file "' + DisabledFilenm + '" file:' + E.message, 219000);
+                DoSimpleMsg(DSS, 'Error Trying to open disabled element file "' + DisabledFilenm + '" file:' + E.message, 219000);
         end;
 
         if Length(ClassName) > 0 then
@@ -2112,7 +2114,7 @@ begin
         FireOffEditor(DisabledFileNm);
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
@@ -2120,7 +2122,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowBuses(FileNm: String);
+procedure ShowBuses(DSS: TDSS; FileNm: String);
 
 // Show bus names and nodes in uses
 
@@ -2177,7 +2179,7 @@ begin
 
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
@@ -2185,7 +2187,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowMeters(FileNm: String);
+procedure ShowMeters(DSS: TDSS; FileNm: String);
 
 // Show Values of  Meter Elements
 
@@ -2249,14 +2251,14 @@ begin
 
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowGenMeters(FileNm: String);
+procedure ShowGenMeters(DSS: TDSS; FileNm: String);
 
 // Show Values of Generator Meter Elements
 
@@ -2302,7 +2304,7 @@ begin
 
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
@@ -2319,7 +2321,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowRegulatorTaps(FileNm: String);
+procedure ShowRegulatorTaps(DSS: TDSS; FileNm: String);
 
 var
     F: TextFile;
@@ -2355,13 +2357,13 @@ begin
     finally
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowMeterZone(FileNm: String);
+procedure ShowMeterZone(DSS: TDSS; FileNm: String);
 
 var
     F: TextFile;
@@ -2393,7 +2395,7 @@ begin
         begin
             pMtr := pMtrClass.Find(Param);
             if pMtr = NIL then
-                DoSimpleMsg('EnergyMeter "' + Param + '" not found.', 220)
+                DoSimpleMsg(DSS, 'EnergyMeter "' + Param + '" not found.', 220)
             else
             if pMtr.BranchList <> NIL then
             begin
@@ -2436,7 +2438,7 @@ begin
             end;
         end
         else
-            DoSimpleMsg('Meter Name Not Specified.' + CRLF + parser.CmdString, 221);
+            DoSimpleMsg(DSS, 'Meter Name Not Specified.' + CRLF + parser.CmdString, 221);
 
     finally
 
@@ -2451,13 +2453,13 @@ begin
         else
             ShowTreeView(FileNm);
         end;
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
      //
     end;
 
 end;
 
-procedure ShowOverloads(FileNm: String);
+procedure ShowOverloads(DSS: TDSS; FileNm: String);
 
 var
     F: TextFile;
@@ -2567,7 +2569,7 @@ begin
             Freemem(c_Buffer);
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
@@ -2575,7 +2577,7 @@ end;
 
 { - -- - - - - ------------------------------}
 
-procedure ShowUnserved(FileNm: String; UE_Only: Boolean);
+procedure ShowUnserved(DSS: TDSS; FileNm: String; UE_Only: Boolean);
 
 var
     F: TextFile;
@@ -2629,14 +2631,14 @@ begin
 
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
 end;
 
 
-procedure ShowLosses(FileNm: String);
+procedure ShowLosses(DSS: TDSS; FileNm: String);
 
 
 var
@@ -2732,13 +2734,13 @@ begin
 
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
 end;
 
-procedure ShowVariables(FileNm: String);
+procedure ShowVariables(DSS: TDSS; FileNm: String);
 
 var
     F: Textfile;
@@ -2781,13 +2783,13 @@ begin
 
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
 end;
 
-procedure ShowIsolated(FileNm: String);
+procedure ShowIsolated(DSS: TDSS; FileNm: String);
 
 {Show isolated buses/branches in present circuit}
 
@@ -2831,7 +2833,7 @@ begin
 
     // Get Started at main voltage source
     TestElement := DSSPrime.ActiveCircuit.Sources.First;
-    Branch_List := GetIsolatedSubArea(TestElement);
+    Branch_List := GetIsolatedSubArea(DSSPrime.ActiveCircuit, TestElement);
 
     {Show Report of Elements connected and not connected}
     try
@@ -2869,7 +2871,7 @@ begin
                         if (TestElement.DSSObjType and BASECLASSMASK) = PD_ELEMENT then
                         begin
 
-                            SubArea := GetIsolatedSubArea(TestElement);
+                            SubArea := GetIsolatedSubArea(DSSPrime.ActiveCircuit, TestElement);
                             Writeln(F, '*** START SUBAREA ***');
                             TestBranch := SubArea.First;
                             while TestBranch <> NIL do
@@ -2958,12 +2960,12 @@ begin
         CloseFile(F);
         Branch_List.Free;
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 
 end;
 
-procedure ShowRatings(FileNm: String);
+procedure ShowRatings(DSS: TDSS; FileNm: String);
 
 var
     F: TextFile;
@@ -2992,12 +2994,12 @@ begin
 
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 
 end;
 
-procedure ShowLoops(FileNm: String);
+procedure ShowLoops(DSS: TDSS; FileNm: String);
 {Show loops and paralleled branches in Meter zones}
 
 var
@@ -3047,7 +3049,7 @@ begin
 
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
 
@@ -3064,7 +3066,7 @@ begin
         Write(F, Format('(* %d *)', [nLevel]));
 end;
 
-procedure ShowTopology(FileRoot: String);
+procedure ShowTopology(DSS: TDSS; FileRoot: String);
 var
     F, Ftree: TextFile;
     FileNm, TreeNm: String;
@@ -3208,12 +3210,12 @@ begin
         CloseFile(F);
         CloseFile(Ftree);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
         ShowTreeView(TreeNm);
     end;
 end;
 
-procedure ShowLineConstants(FileNm: String; Freq: Double; Units: Integer; Rho: Double);
+procedure ShowLineConstants(DSS: TDSS; FileNm: String; Freq: Double; Units: Integer; Rho: Double);
 var
     F, F2: TextFile;
     p: Integer;
@@ -3269,7 +3271,7 @@ begin
                 YC := pelem.YCmatrix[freq, 1.0, Units];
             except
                 on E: Exception do
-                    DoSimpleMsg('Error computing line constants for LineGeometry.' + pelem.Name +
+                    DoSimpleMsg(DSS, 'Error computing line constants for LineGeometry.' + pelem.Name +
                         '; Error message: ' + E.Message, 9934);
             end;
 
@@ -3455,11 +3457,11 @@ begin
         CloseFile(F2);
         FireOffEditor(FileNm);
         FireOffEditor(LineCodesFileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
 
-procedure ShowYPrim(Filenm: String);
+procedure ShowYPrim(DSS: TDSS; FileNm: String);
 
 var
     F: TextFile;
@@ -3518,7 +3520,7 @@ begin
 
                     CloseFile(F);
                     FireOffEditor(FileNm);
-                    ParserVars.Add('@lastshowfile', FileNm);
+                    DSS.ParserVars.Add('@lastshowfile', FileNm);
                 end;
 
 
@@ -3528,7 +3530,7 @@ begin
 end;
 
 // shows how to retrieve the System Y in Triplet form
-procedure ShowY(FileNm: String);
+procedure ShowY(DSS: TDSS; FileNm: String);
 
 var
     F: TextFile;
@@ -3546,7 +3548,7 @@ begin
     hY := DSSPrime.ActiveCircuit.Solution.hY;
     if hY <= 0 then
     begin
-        DoSimpleMsg('Y Matrix not Built.', 222);
+        DoSimpleMsg(DSS, 'Y Matrix not Built.', 222);
         Exit;
     end;
   // print lower triangle of G and B using new functions
@@ -3585,12 +3587,12 @@ begin
     finally
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 
 end;
 
-procedure ShowNodeCurrentSum(FileNm: String);
+procedure ShowNodeCurrentSum(DSS: TDSS; FileNm: String);
 
 type
     pNodeDoubleArray = ^NodeDoubleArray;
@@ -3686,13 +3688,13 @@ begin
     finally
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
         ReallocMem(MaxNodeCurrent, 0); // Dispose of temp memory
     end;
 end;
 
 
-procedure ShowkVBaseMismatch(FileNm: String);
+procedure ShowkVBaseMismatch(DSS: TDSS; FileNm: String);
 
 var
     F: TextFile;
@@ -3795,11 +3797,11 @@ begin
     finally
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 end;
 
-procedure ShowDeltaV(FileNm: String);
+procedure ShowDeltaV(DSS: TDSS; FileNm: String);
 
 var
     F: TextFile;
@@ -3880,12 +3882,12 @@ begin
     finally
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 
 end;
 
-procedure ShowControlledElements(FileNm: String);
+procedure ShowControlledElements(DSS: TDSS; FileNm: String);
 
 var
     F: Textfile;
@@ -3921,13 +3923,13 @@ begin
 
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
 
     end;
 
 end;
 
-procedure ShowResult(FileNm: String);
+procedure ShowResult(DSS: TDSS; FileNm: String);
 
 var
     F: TextFile;
@@ -3937,8 +3939,8 @@ begin
     try
         Assignfile(F, FileNm);
         ReWrite(F);
-        Parservars.Lookup('@result');
-        Writeln(F, Parservars.Value);
+        DSS.ParserVars.Lookup('@result');
+        Writeln(F, DSS.ParserVars.Value);
 
         DSSPrime.GlobalResult := FileNm;
 
@@ -3946,13 +3948,13 @@ begin
 
         CloseFile(F);
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 
 
 end;
 
-procedure ShowEventLog(FileNm: String);
+procedure ShowEventLog(DSS: TDSS; FileNm: String);
 
 
 begin
@@ -3963,7 +3965,7 @@ begin
 
     finally
         FireOffEditor(FileNm);
-        ParserVars.Add('@lastshowfile', FileNm);
+        DSS.ParserVars.Add('@lastshowfile', FileNm);
     end;
 
 end;

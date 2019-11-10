@@ -60,7 +60,7 @@ type
         procedure Restore_Time_Step;
 
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dssContext: TDSS);
         destructor Destroy; OVERRIDE;
 
         function Push(const Hour: Integer; const Sec: Double; const Code, ProxyHdl: Integer; const Owner: TControlElem): Integer; OVERLOAD;
@@ -176,11 +176,11 @@ begin
     ActionList.Clear;
 end;
 
-constructor TControlQueue.Create(dss: TDSS);
+constructor TControlQueue.Create(dssContext: TDSS);
 begin
     inherited Create;
     
-    DSS := dss;
+    DSS := dssContext;
     
     ActionList := TList.Create;
     ActionList.Clear;
@@ -485,7 +485,7 @@ begin
 
     if DebugTrace then
     begin
-        AssignFile(TraceFile, GetOutputDirectory + 'Trace_ControlQueue.CSV');
+        AssignFile(TraceFile, DSS.OutputDirectory + 'Trace_ControlQueue.CSV');
         ReWrite(TraceFile);
         Writeln(TraceFile, '"Hour", "sec", "Control Iteration", "Element", "Action Code", "Trace Parameter", "Description"');
         CloseFile(Tracefile);

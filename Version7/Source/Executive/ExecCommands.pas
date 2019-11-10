@@ -613,7 +613,7 @@ begin
                     SetDataPath(Param);  // change datadirectory
                 end
                 else
-                    DoSimpleMsg('Directory "' + Param + '" not found.', 282);
+                    DoSimpleMsg(DSS, 'Directory "' + Param + '" not found.', 282);
             end;
             75:
                 DSSPrime.DSSExecutive.DoADosCmd;
@@ -647,7 +647,7 @@ begin
         else
             if DSSPrime.ActiveCircuit = NIL then
             begin
-                DoSimpleMsg('You must create a new circuit object first: "new circuit.mycktname" to execute this command.', 301);
+                DoSimpleMsg(DSS, 'You must create a new circuit object first: "new circuit.mycktname" to execute this command.', 301);
                 Exit;
             end;
         end;
@@ -661,7 +661,7 @@ begin
        {If a command or no text beFORe the = sign, THEN error}
             if (Length(ParamName) = 0) or (Comparetext(paramName, 'command') = 0) then
             begin
-                DoSimpleMsg('Unknown Command: "' + Param + '" ' + CRLF + parser.CmdString, 302);
+                DoSimpleMsg(DSS, 'Unknown Command: "' + Param + '" ' + CRLF + parser.CmdString, 302);
                 DSSPrime.CmdResult := 1;
             end
             else
@@ -693,7 +693,7 @@ begin
             7:
                 DSSPrime.CmdResult := DSSPrime.DSSExecutive.DoSaveCmd; //'save';
             8:
-                DSSPrime.CmdResult := DoShowCmd; //'show';
+                DSSPrime.CmdResult := DoShowCmd(DSSPrime); //'show';
             9:
                 DSSPrime.CmdResult := DoSetCmd(1);  // changed from DoSolveCmd; //'solve';
             10:
@@ -742,7 +742,7 @@ begin
             33:
                 DSSPrime.ActiveCircuit.Solution.SolutionInitialized := FALSE;
             34:
-                DSSPrime.CmdResult := DoExportCmd;
+                DSSPrime.CmdResult := DoExportCmd(DSSPrime);
        {35: DSSPrime.CmdResult := DoFileEditCmd;}
             36:
                 DSSPrime.CmdResult := DSSPrime.DSSExecutive.DovoltagesCmd(FALSE);
@@ -830,7 +830,7 @@ begin
             81:
                 DSSPrime.ActiveCircuit.Solution.DoControlActions;
             82:
-                DSSPrime.ActiveCircuit.ControlQueue.ShowQueue(GetOutputDirectory + DSSPrime.CircuitName_ + 'ControlQueue.csv');
+                DSSPrime.ActiveCircuit.ControlQueue.ShowQueue(DSSPrime.OutputDirectory + DSSPrime.CircuitName_ + 'ControlQueue.csv');
             83:
                 DSSPrime.ActiveCircuit.Solution.SolveDirect;
             84:
@@ -902,7 +902,7 @@ begin
                 'Error in command string or circuit data.', 303);
     end;
 
-    ParserVars.Add('@result', DSSPrime.GlobalResult)
+    DSS.ParserVars.Add('@result', DSSPrime.GlobalResult)
 
 end;
 

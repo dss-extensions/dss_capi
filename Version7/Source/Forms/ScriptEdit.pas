@@ -371,7 +371,7 @@ begin
             HasFileName := TRUE;
         except
             On E: Exception do
-                DoSimpleMsg('Error saving file: ' + E.message, 310);
+                DoSimpleMsg(DSS, 'Error saving file: ' + E.message, 310);
         end;
     finally
         Screen.Cursor := Save_Cursor;  { Always restore to normal }
@@ -408,7 +408,7 @@ begin
         if FileExists(FileName) then
             Result := FileName
         else
-            DoSimpleMsg('File "' + Editor.SelText + '" not found in currentdirectory: "' + GetCurrentDir + '"', 311);
+            DoSimpleMsg(DSS, 'File "' + Editor.SelText + '" not found in currentdirectory: "' + GetCurrentDir + '"', 311);
     end;
 end;
 
@@ -424,10 +424,10 @@ begin
             if FileExists(FileName) then
                 FireOffEditor(FileName)
             else
-                DoSimpleMsg('File "' + FileName + '" not found in currentdirectory: "' + GetCurrentDir + '"', 313);
+                DoSimpleMsg(DSS, 'File "' + FileName + '" not found in currentdirectory: "' + GetCurrentDir + '"', 313);
         except
             On E: Exception do
-                DoSimpleMsg('Error opening Editor: ' + E.Message, 314);
+                DoSimpleMsg(DSS, 'Error opening Editor: ' + E.Message, 314);
         end;
     end;
 end;

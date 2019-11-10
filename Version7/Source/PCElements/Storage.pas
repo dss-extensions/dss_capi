@@ -706,14 +706,14 @@ begin
             if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
                 PropertyValue[PropertyIdxMap[ParamPointer]] := Param   // Update the string value of the property
             else
-                DoSimpleMsg('Unknown parameter "' + ParamName + '" for Storage "' + Name + '"', 560);
+                DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Storage "' + Name + '"', 560);
 
             if ParamPointer > 0 then
             begin
                 iCase := PropertyIdxMap[ParamPointer];
                 case iCASE of
                     0:
-                        DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
+                        DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
                     1:
                         NPhases := Parser.Intvalue; // num phases
                     2:
@@ -834,7 +834,7 @@ begin
                     propDEBUGTRACE:
                         if DebugTrace then
                         begin   // Init trace file
-                            AssignFile(TraceFile, GetOutputDirectory + 'STOR_' + Name + '.CSV');
+                            AssignFile(TraceFile, DSS.OutputDirectory + 'STOR_' + Name + '.CSV');
                             ReWrite(TraceFile);
                             Write(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, StorageModel,  Qnominalperphase, Pnominalperphase, CurrentType');
                             for i := 1 to nphases do
@@ -955,7 +955,7 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in Storage MakeLike: "' + OtherStorageObjName + '" Not Found.', 562);
+        DoSimpleMsg(DSS, 'Error in Storage MakeLike: "' + OtherStorageObjName + '" Not Found.', 562);
 
 end;
 
@@ -981,7 +981,7 @@ begin
         p.Randomize(0);
     end;
 
-    DoSimpleMsg('Need to implement TStorage.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TStorage.Init', -1);
     Result := 0;
 end;
 
@@ -1575,19 +1575,19 @@ begin
     {Now check for errors.  If any of these came out nil and the string was not nil, give warning}
     if YearlyShapeObj = NIL then
         if Length(YearlyShape) > 0 then
-            DoSimpleMsg('WARNING! Yearly load shape: "' + YearlyShape + '" Not Found.', 563);
+            DoSimpleMsg(DSS, 'WARNING! Yearly load shape: "' + YearlyShape + '" Not Found.', 563);
     if DailyShapeObj = NIL then
         if Length(DailyShape) > 0 then
-            DoSimpleMsg('WARNING! Daily load shape: "' + DailyShape + '" Not Found.', 564);
+            DoSimpleMsg(DSS, 'WARNING! Daily load shape: "' + DailyShape + '" Not Found.', 564);
     if DutyShapeObj = NIL then
         if Length(DutyShape) > 0 then
-            DoSimpleMsg('WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
+            DoSimpleMsg(DSS, 'WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
 
     if Length(Spectrum) > 0 then
     begin
         SpectrumObj := DSS.SpectrumClass.Find(Spectrum);
         if SpectrumObj = NIL then
-            DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
+            DoSimpleMsg(DSS, 'ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
     end
     else
         SpectrumObj := NIL;
@@ -2085,7 +2085,7 @@ begin
     end
     else
     begin
-        DoSimpleMsg('Storage.' + name + ' model designated to use user-written model, but user-written model is not defined.', 567);
+        DoSimpleMsg(DSS, 'Storage.' + name + ' model designated to use user-written model, but user-written model is not defined.', 567);
     end;
 
 end;
@@ -2166,7 +2166,7 @@ begin
 
                 end;
             else
-                DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Storage Element. Storage.%s has %d phases.', [name, Fnphases]), 5671);
+                DoSimpleMsg(DSS, Format('Dynamics mode is implemented only for 1- or 3-phase Storage Element. Storage.%s has %d phases.', [name, Fnphases]), 5671);
                 DSS.SolutionAbort := TRUE;
             end;
 

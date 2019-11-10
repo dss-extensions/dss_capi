@@ -17,7 +17,7 @@ unit CmdForms;
 interface
 
 uses
-    Classes;
+    Classes, PointerList;
 
 var
     ControlPanelCreated: Boolean;  // signify whether this is the DLL or EXE
@@ -30,7 +30,7 @@ procedure ProgressCaption(const S: String);
 procedure ProgressFormCaption(const S: String);
 procedure ProgressHide;
 procedure ShowControlPanel;
-procedure ShowHelpForm;
+procedure ShowHelpForm(DSSClassList: TPointerList);
 procedure ShowAboutBox;
 procedure ShowPropEditForm;
 procedure ShowPctProgress(Count: Integer);
@@ -164,19 +164,19 @@ begin
     Result := CompareText(TDSSClass(Item1).name, TDSSClass(Item2).name);
 end;
 
-procedure AddHelpForClasses(BaseClass: Word; bProperties: Boolean);
+procedure AddHelpForClasses(DSSClassList: TPointerList; BaseClass: Word; bProperties: Boolean);
 var
     HelpList: TList;
     pDSSClass: TDSSClass;
     i, j: Integer;
 begin
     HelpList := TList.Create();
-    pDSSClass := DSSPrime.DSSClassList.First;
+    pDSSClass := DSSClassList.First;
     while pDSSClass <> NIL do
     begin
         if (pDSSClass.DSSClassType and BASECLASSMASK) = BaseClass then
             HelpList.Add(pDSSClass);
-        pDSSClass := DSSPrime.DSSClassList.Next;
+        pDSSClass := DSSClassList.Next;
     end;
     HelpList.Sort(@CompareClassNames);
 
@@ -243,14 +243,14 @@ begin
     end;
 end;
 
-procedure ShowClassHelp(const opt: String);
+procedure ShowClassHelp(DSSClassList: TPointerList; const opt: String);
 var
     pDSSClass: TDSSClass;
     i: Integer;
 begin
     if Length(opt) > 0 then
     begin
-        pDSSClass := DSSPrime.DSSClassList.First;
+        pDSSClass := DSSClassList.First;
         while pDSSClass <> NIL do
         begin
             if AnsiStartsStr(opt, LowerCase(pDSSClass.name)) then
@@ -260,27 +260,27 @@ begin
                 for i := 1 to pDSSClass.NumProperties do
                     writeln('  ', pDSSClass.PropertyName[i], ': ', pDSSClass.PropertyHelp^[i]);
             end;
-            pDSSClass := DSSPrime.DSSClassList.Next;
+            pDSSClass := DSSClassList.Next;
         end;
     end
     else
     begin
         writeln('== Power Delivery Elements ==');
-        AddHelpForClasses(PD_ELEMENT, FALSE);
+        AddHelpForClasses(DSSClassList, PD_ELEMENT, FALSE);
         writeln('== Power Conversion Elements ==');
-        AddHelpForClasses(PC_ELEMENT, FALSE);
+        AddHelpForClasses(DSSClassList, PC_ELEMENT, FALSE);
         writeln('== Control Elements ==');
-        AddHelpForClasses(CTRL_ELEMENT, FALSE);
+        AddHelpForClasses(DSSClassList, CTRL_ELEMENT, FALSE);
         writeln('== Metering Elements ==');
-        AddHelpForClasses(METER_ELEMENT, FALSE);
+        AddHelpForClasses(DSSClassList, METER_ELEMENT, FALSE);
         writeln('== Supporting Elements ==');
-        AddHelpForClasses(0, FALSE);
+        AddHelpForClasses(DSSClassList, 0, FALSE);
         writeln('== Other Elements ==');
-        AddHelpForClasses(NON_PCPD_ELEM, FALSE);
+        AddHelpForClasses(DSSClassList, NON_PCPD_ELEM, FALSE);
     end;
 end;
 
-procedure ShowHelpForm;
+procedure ShowHelpForm(DSSClassList: TPointerList);
 var
     Param, OptName: String;
 begin
@@ -301,7 +301,7 @@ begin
         ShowAnyHelp(NumExportOptions, @ExportOption, @ExportHelp, OptName)
     else
     if ANSIStartsStr('cl', param) then
-        ShowClassHelp(OptName)
+        ShowClassHelp(DSSClassList, OptName)
     else
         ShowGeneralHelp;
 end;

@@ -144,7 +144,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 101);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 101);
                 1:
                     FDiaShield := Parser.DblValue;
                 2:
@@ -160,13 +160,13 @@ begin
             case ParamPointer of
                 1:
                     if (FDiaShield <= 0.0) then
-                        DoSimpleMsg('Error: Diameter over shield must be positive for TapeShieldData ' + Name, 999);
+                        DoSimpleMsg(DSS, 'Error: Diameter over shield must be positive for TapeShieldData ' + Name, 999);
                 2:
                     if (FTapeLayer <= 0.0) then
-                        DoSimpleMsg('Error: Tape shield thickness must be positive for TapeShieldData ' + Name, 999);
+                        DoSimpleMsg(DSS, 'Error: Tape shield thickness must be positive for TapeShieldData ' + Name, 999);
                 3:
                     if ((FTapeLap < 0.0) or (FTapeLap > 100.0)) then
-                        DoSimpleMsg('Error: Tap lap must range from 0 to 100 for TapeShieldData ' + Name, 999);
+                        DoSimpleMsg(DSS, 'Error: Tap lap must range from 0 to 100 for TapeShieldData ' + Name, 999);
             end;
             ParamName := Parser.NextParam;
             Param := Parser.StrValue;
@@ -193,12 +193,12 @@ begin
             Result := 1;
         end
     else
-        DoSimpleMsg('Error in TapeShield MakeLike: "' + TSName + '" Not Found.', 102);
+        DoSimpleMsg(DSS, 'Error in TapeShield MakeLike: "' + TSName + '" Not Found.', 102);
 end;
 
 function TTSData.Init(Handle: Integer): Integer;
 begin
-    DoSimpleMsg('Need to implement TTSData.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TTSData.Init', -1);
     Result := 0;
 end;
 
@@ -223,7 +223,7 @@ begin
         end;
         TSDataObj := ElementList.Next;
     end;
-    DoSimpleMsg('TSData: "' + Value + '" not Found.', 103);
+    DoSimpleMsg(DSS, 'TSData: "' + Value + '" not Found.', 103);
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -225,7 +225,7 @@ begin
 
             case ParamPointer of
                 0:
-                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 600);
+                    DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 600);
                 1:
                     Npts := Parser.Intvalue;
                 2:
@@ -289,7 +289,7 @@ begin
 
         end
     else
-        DoSimpleMsg('Error in GrowthShape MakeLike: "' + ShapeName + '" Not Found.', 601);
+        DoSimpleMsg(DSS, 'Error in GrowthShape MakeLike: "' + ShapeName + '" Not Found.', 601);
 
 
 end;
@@ -298,7 +298,7 @@ end;
 function TGrowthShape.Init(Handle: Integer): Integer;
 
 begin
-    DoSimpleMsg('Need to implement TGrowthShape.Init', -1);
+    DoSimpleMsg(DSS, 'Need to implement TGrowthShape.Init', -1);
     REsult := 0;
 end;
 
@@ -336,7 +336,7 @@ begin
         GrowthShapeObj := ElementList.Next;
     end;
 
-    DoSimpleMsg('GrowthShape: "' + Value + '" not Found.', 602);
+    DoSimpleMsg(DSS, 'GrowthShape: "' + Value + '" not Found.', 602);
 
 end;
 
@@ -353,7 +353,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 603);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 603);
         CloseFile(F);
         Exit;
     end;
@@ -381,7 +381,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error Processing CSV File: "' + FileName + '. ' + E.Message, 604);
+            DoSimpleMsg(DSS, 'Error Processing CSV File: "' + FileName + '. ' + E.Message, 604);
             CloseFile(F);
             Exit;
         end;
@@ -401,7 +401,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 605);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 605);
         CloseFile(F);
         Exit;
     end;
@@ -420,7 +420,7 @@ begin
             CloseFile(F);
         end;
     except
-        DoSimpleMsg('Error Processing GrowthShape File: "' + FileName, 606);
+        DoSimpleMsg(DSS, 'Error Processing GrowthShape File: "' + FileName, 606);
         CloseFile(F);
         Exit;
     end;
@@ -439,7 +439,7 @@ begin
         AssignFile(F, FileName);
         Reset(F);
     except
-        DoSimpleMsg('Error Opening File: "' + FileName, 607);
+        DoSimpleMsg(DSS, 'Error Opening File: "' + FileName, 607);
         CloseFile(F);
         Exit;
     end;
@@ -457,7 +457,7 @@ begin
             CloseFile(F);
         end;
     except
-        DoSimpleMsg('Error Processing GrowthShape File: "' + FileName, 608);
+        DoSimpleMsg(DSS, 'Error Processing GrowthShape File: "' + FileName, 608);
         CloseFile(F);
         Exit;
     end;

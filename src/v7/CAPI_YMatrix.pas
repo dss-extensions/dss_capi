@@ -116,7 +116,7 @@ var
     AllocateV: Boolean;
 begin
     AllocateV := (AllocateVI <> 0);
-    BuildYMatrix(BuildOps, AllocateV);
+    BuildYMatrix(DSSPrime, BuildOps, AllocateV);
 end;
 
 procedure YMatrix_Set_UseAuxCurrents(arg: Boolean); CDECL;
@@ -200,7 +200,7 @@ begin
     except
         ON E: EEsolv32Problem do
         begin
-            DoSimpleMsg('From DoPFLOWsolution.SetGeneratordQdV: ' + CRLF + E.Message + CheckYMatrixforZeroes, 7073);
+            DoSimpleMsg('From DoPFLOWsolution.SetGeneratordQdV: ' + CRLF + E.Message + CheckYMatrixforZeroes(DSSPrime), 7073);
         end;
     end;
 end;

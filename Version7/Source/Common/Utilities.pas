@@ -332,7 +332,7 @@ begin
         end;
     end;
     if gotError then
-        DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"', [msg, CmdString]), 704);
+        DoSimpleMsg(DSS, Format('DoDOSCmd Error:%s. Error in Command "%s"', [msg, CmdString]), 704);
 end;
 
 {$ELSE}
@@ -349,13 +349,13 @@ begin
 
             case Retval of
                 0:
-                    DoSimpleMsg('System out of memory. Cannot start Editor.', 700);
+                    DoSimpleMsg(DSS, 'System out of memory. Cannot start Editor.', 700);
                 ERROR_BAD_FORMAT:
-                    DoSimpleMsg('Editor File is Invalid.', 701);
+                    DoSimpleMsg(DSS, 'Editor File is Invalid.', 701);
                 ERROR_FILE_NOT_FOUND:
-                    DoSimpleMsg('Editor "' + DefaultEditor + '"  Not Found.' + CRLF + 'Did you set complete path name?', 702);
+                    DoSimpleMsg(DSS, 'Editor "' + DefaultEditor + '"  Not Found.' + CRLF + 'Did you set complete path name?', 702);
                 ERROR_PATH_NOT_FOUND:
-                    DoSimpleMsg('Path for Editor "' + DefaultEditor + '" Not Found.', 703);
+                    DoSimpleMsg(DSS, 'Path for Editor "' + DefaultEditor + '" Not Found.', 703);
             end;
         end;
     except
@@ -377,7 +377,7 @@ begin
 
     except
         On E: Exception do
-            DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"', [E.Message, CmdString]), 704);
+            DoSimpleMsg(DSS, Format('DoDOSCmd Error:%s. Error in Command "%s"', [E.Message, CmdString]), 704);
     end;
 end;
 
@@ -784,7 +784,7 @@ begin
             CSVFileName := Param;
         if not FileExists(CSVFileName) then
         begin
-            DoSimpleMsg(Format('CSV file "%s" does not exist', [CSVFileName]), 70401);
+            DoSimpleMsg(DSS, Format('CSV file "%s" does not exist', [CSVFileName]), 70401);
             Exit;
         end;
 
@@ -834,7 +834,7 @@ begin
                 except
                     On E: Exception do
                     begin
-                        DoSimpleMsg(Format('Error reading %d-th numeric array value from file: "%s" Error is:', [i, Param, E.message]), 705);
+                        DoSimpleMsg(DSS, Format('Error reading %d-th numeric array value from file: "%s" Error is:', [i, Param, E.message]), 705);
                         Result := i - 1;
                         Break;
                     end;
@@ -863,7 +863,7 @@ begin
             MyStream.ReadBuffer(ResultArray^[1], SizeOf(ResultArray^[1]) * Result);
         end
         else
-            DoSimpleMsg(Format('File of doubles "%s" not found.', [Param]), 70501);
+            DoSimpleMsg(DSS, Format('File of doubles "%s" not found.', [Param]), 70501);
         MyStream.Free;
     end
 
@@ -885,7 +885,7 @@ begin
             end;
         end
         else
-            DoSimpleMsg(Format('File of Singles "%s" not found.', [Param]), 70502);
+            DoSimpleMsg(DSS, Format('File of Singles "%s" not found.', [Param]), 70502);
         MyStream.Free;
 
     end
@@ -942,7 +942,7 @@ begin
 
         except
             On E: Exception do
-                DoSimpleMsg('Error trying to read numeric array values from file: "' + Param + '"  Error is: ' + E.message, 706);
+                DoSimpleMsg(DSS, 'Error trying to read numeric array values from file: "' + Param + '"  Error is: ' + E.message, 706);
         end;
     end
     else
@@ -977,7 +977,7 @@ begin
     if Code > 0 then
     begin   {check for error}
         Result := DSSPrime.ActiveCircuit.solution.DynaVars.h; // Don't change it
-        DosimpleMsg('Error in specification of StepSize: ' + s, 99933);
+        DoSimpleMsg(DSS, 'Error in specification of StepSize: ' + s, 99933);
         Exit;
     end;
     case ch of
@@ -988,7 +988,7 @@ begin
         's': ; // Do nothing
     else
         Result := DSSPrime.ActiveCircuit.solution.DynaVars.h; // Don't change it
-        DosimpleMsg('Error in specification of StepSize: "' + s + '" Units can only be h, m, or s (single char only) ', 99934);
+        DoSimpleMsg(DSS, 'Error in specification of StepSize: "' + s + '" Units can only be h, m, or s (single char only) ', 99934);
     end;
 
 end;
@@ -1082,7 +1082,7 @@ begin
 
         except
             On E: Exception do
-                DoSimpleMsg('Error trying to read numeric array values from a file. Error is: ' + E.message, 707);
+                DoSimpleMsg(DSS, 'Error trying to read numeric array values from a file. Error is: ' + E.message, 707);
         end;
 
 
@@ -1155,7 +1155,7 @@ begin
 
         except
             On E: Exception do
-                DoSimpleMsg('Error trying to read numeric array values from a file. Error is: ' + E.message, 708);
+                DoSimpleMsg(DSS, 'Error trying to read numeric array values from a file. Error is: ' + E.message, 708);
         end;
 
 
@@ -1506,7 +1506,7 @@ var
 begin
 
     try
-        FileName := GetOutputDirectory + 'DSSCommandsDump.Txt';
+        FileName := DSSPrime.OutputDirectory + 'DSSCommandsDump.Txt';
         AssignFile(F, FileName);
         Rewrite(F);
     except
@@ -1595,13 +1595,13 @@ var
 begin
     Result := TRUE;
     try
-        Assignfile(F, GetOutputDirectory + DSSPrime.CircuitName_ + 'SavedVoltages.dbl');
+        Assignfile(F, DSSPrime.OutputDirectory + DSSPrime.CircuitName_ + 'SavedVoltages.dbl');
         Rewrite(F);
 
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error opening/creating file to save voltages: ' + E.message, 711);
+            DoSimpleMsg(DSS, 'Error opening/creating file to save voltages: ' + E.message, 711);
             Result := FALSE;
             Exit;
         end;
@@ -1621,7 +1621,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error writing file to save voltages: ' + E.message, 712);
+            DoSimpleMsg(DSS, 'Error writing file to save voltages: ' + E.message, 712);
             Result := FALSE;
         end;
     end;
@@ -1640,13 +1640,13 @@ begin
 
     Result := TRUE;
     try
-        Assignfile(F, GetOutputDirectory + DSSPrime.CircuitName_ + 'SavedVoltages.dbl');
+        Assignfile(F, DSSPrime.OutputDirectory + DSSPrime.CircuitName_ + 'SavedVoltages.dbl');
         Reset(F);
 
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error opening file to retrieve saved voltages: ' + E.message, 713);
+            DoSimpleMsg(DSS, 'Error opening file to retrieve saved voltages: ' + E.message, 713);
             Result := FALSE;
             Exit;
         end;
@@ -1661,7 +1661,7 @@ begin
                     Read(F, NodeV^[i].re, NodeV^[i].im)
             else
             begin
-                DoSimpleMsg('Saved results do not match present circuit. Aborting.', 714);
+                DoSimpleMsg(DSS, 'Saved results do not match present circuit. Aborting.', 714);
                 Result := FALSE;
             end;
         end;
@@ -1671,7 +1671,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error reading file to retrieve saved voltages: ' + E.message, 715);
+            DoSimpleMsg(DSS, 'Error reading file to retrieve saved voltages: ' + E.message, 715);
             Result := FALSE;
         end;
     end;
@@ -1961,7 +1961,7 @@ begin
         DSSPrime.EventStrings.Clear;
     except
         On E: Exception do
-            Dosimplemsg(Format('Exception clearing event log: %s, @EventStrings=%p', [E.Message, @DSSPrime.EventStrings]), 7151);
+            DoSimpleMsg(DSS, Format('Exception clearing event log: %s, @EventStrings=%p', [E.Message, @DSSPrime.EventStrings]), 7151);
     end;
 end;
 
@@ -1973,7 +1973,7 @@ begin
         DSSPrime.ErrorStrings.Clear;
     except
         On E: Exception do
-            Dosimplemsg(Format('Exception clearing error log: %s, @EventStrings=%p', [E.Message, @DSSPrime.EventStrings]), 71511);
+            DoSimpleMsg(DSS, Format('Exception clearing error log: %s, @EventStrings=%p', [E.Message, @DSSPrime.EventStrings]), 71511);
     end;
 end;
 
@@ -2036,7 +2036,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error in Dump Complex Matrix: ' + E.message + '  Write aborted.', 716);
+            DoSimpleMsg(DSS, 'Error in Dump Complex Matrix: ' + E.message + '  Write aborted.', 716);
         end;
 
     end;
@@ -2101,7 +2101,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('WriteClassFile Error: ' + E.Message, 717);
+            DoSimpleMsg(DSS, 'WriteClassFile Error: ' + E.Message, 717);
             Result := FALSE;
         end;
     end;
@@ -2159,7 +2159,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimpleMsg('WriteClassFile Error: ' + E.Message, 718);
+            DoSimpleMsg(DSS, 'WriteClassFile Error: ' + E.Message, 718);
             Result := FALSE;
         end;
     end;
@@ -2240,7 +2240,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimplemsg('Error opening file: ' + Filename + ', ' + E.message, 719);
+            DoSimpleMsg(DSS, 'Error opening file: ' + Filename + ', ' + E.message, 719);
             Result := FALSE;
             Exit
         end;
@@ -2253,7 +2253,7 @@ begin
     except
         On E: Exception do
         begin
-            DoSimplemsg('Error opening file: ' + AlignedFile + ', ' + E.message, 720);
+            DoSimpleMsg(DSS, 'Error opening file: ' + AlignedFile + ', ' + E.message, 720);
             CloseFile(Fin);
             Result := FALSE;
             Exit;
@@ -2668,13 +2668,13 @@ begin
 
     try
         if FileExists(Fname) then
-            DoSimpleMsg('File "' + Fname + '" is about to be overwritten. Rename it now before continuing if you wish to keep it.', 721);
+            DoSimpleMsg(DSS, 'File "' + Fname + '" is about to be overwritten. Rename it now before continuing if you wish to keep it.', 721);
         AssignFile(F, Fname);
         Rewrite(F);
     except
         On E: Exception do
         begin
-            DoSimpleMsg('Error opening "' + Fname + '" for writing. Aborting.', 722);
+            DoSimpleMsg(DSS, 'Error opening "' + Fname + '" for writing. Aborting.', 722);
             Exit;
         end;
     end;
@@ -2937,12 +2937,12 @@ begin
    {Error check}
     if pPDelem = NIL then
     begin
-        DosimpleMsg(FromLine.ParentClass.Name + '.' + FromLine.Name + ' Not found in Meter Zone.', 723);
+        DoSimpleMsg(DSS, FromLine.ParentClass.Name + '.' + FromLine.Name + ' Not found in Meter Zone.', 723);
         Exit;
     end;
 
     try
-        FileName := GetOutputDirectory + DSSPrime.CircuitName_ + ScriptFileName;
+        FileName := DSSPrime.OutputDirectory + DSSPrime.CircuitName_ + ScriptFileName;
         DSSPrime.GlobalResult := FileName;
 
         Assignfile(Fout, fileName);
@@ -3205,7 +3205,7 @@ begin
             Result := StrToInt(S);
     except
         On E: Exception do
-            DoSimpleMsg('Invalid Color Specification: "' + S + '".', 724);
+            DoSimpleMsg(DSS, 'Invalid Color Specification: "' + S + '".', 724);
     end;
 {$ENDIF}
 end;

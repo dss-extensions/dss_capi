@@ -18,7 +18,8 @@ interface
 uses
     uComplex,
     ucMatrix,
-    SysUtils;
+    SysUtils,
+    DSSClass;
 
 
 {Options for building Y matrix}
@@ -30,11 +31,11 @@ type
     EEsolv32Problem = class(Exception);
 
 
-procedure BuildYMatrix(BuildOption: Integer; AllocateVI: Boolean);
+procedure BuildYMatrix(DSS: TDSS; BuildOption: Integer; AllocateVI: Boolean);
 procedure ResetSparseMatrix(var hY: NativeUint; size: Integer);
-procedure InitializeNodeVbase;
+procedure InitializeNodeVbase(DSS: TDSS);
 
-function CheckYMatrixforZeroes: String;
+function CheckYMatrixforZeroes(DSS: TDSS): String;
 
 implementation
 
@@ -47,7 +48,6 @@ uses
     DSSClassDefs,
     GUtil,
     GSet,
-    DSSClass,
     DSSHelper;
 
 
@@ -58,7 +58,7 @@ type
     TNodeSet = TSet<Integer, TNodeLess>;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ReCalcAllYPrims;
+procedure ReCalcAllYPrims(Ckt: TDSSCircuit);
 
 var
     pElem: TDSSCktElement;
@@ -67,7 +67,7 @@ begin
 
 //    writeln('!!!Recalc ALL Yprims');
     
-    with DSSPrime.ActiveCircuit do
+    with Ckt do
     begin
         if LogEvents then
             LogThisEvent('Recalc All Yprims');
@@ -83,7 +83,7 @@ begin
 end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ReCalcInvalidYPrims;
+procedure ReCalcInvalidYPrims(Ckt: TDSSCircuit);
 {Recalc YPrims only for those circuit elements that have had changes since last
  solution}
 var
@@ -92,7 +92,7 @@ var
 begin
 //    writeln('!!!Recalc Invalid Yprims');
 
-    with DSSPrime.ActiveCircuit do
+    with Ckt do
     begin
         if LogEvents then
             LogThisEvent('Recalc Invalid Yprims');
@@ -149,14 +149,14 @@ begin
 end;
 
 
-procedure InitializeNodeVbase;
+procedure InitializeNodeVbase(DSS: TDSS);
 
 var
     i: Integer;
 
 begin
 
-    with DSSPrime.ActiveCircuit, Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         for i := 1 to NumNodes do
             with MapNodeToBus^[i] do
@@ -167,7 +167,7 @@ begin
     end;
 end;
 
-function UpdateYMatrix(BuildOption: Integer; AllocateVI: Boolean): Boolean;
+function UpdateYMatrix(Ckt: TDSSCircuit; BuildOption: Integer; AllocateVI: Boolean): Boolean;
 var
     IncrYprim: TCMatrix;
     Norder: Integer;
@@ -193,7 +193,7 @@ begin
     //writeln('Number of incremental elements: ', IncrCktElements.ListSize);
     
 //    writeln('Analyzing incremental elements...');
-    pElem := DSSPrime.ActiveCircuit.IncrCktElements.First;
+    pElem := Ckt.IncrCktElements.First;
     while pElem <> NIL do with pElem do
     begin
         if (Enabled and (Yprim = NIL)) then 
@@ -250,7 +250,7 @@ begin
 //                BuildYMatrix(BuildOption, AllocateVI);
 //                Exit;
         end;
-        pElem := DSSPrime.ActiveCircuit.IncrCktElements.Next;
+        pElem := Ckt.IncrCktElements.Next;
     end;
     
     if IncrYprim <> NIL then
@@ -264,18 +264,18 @@ begin
     repeat
         // writeln('>Zeroising row and column for ', (coordIt.Data shr 32), ',', coordIt.Data and $FFFFFFFF);
         //TODO: zeroise only the exact elements affected to make it faster
-        ZeroiseMatrixElement(DSSPrime.ActiveCircuit.Solution.hYsystem, (coordIt.Data shr 32), coordIt.Data and $FFFFFFFF);
+        ZeroiseMatrixElement(Ckt.Solution.hYsystem, (coordIt.Data shr 32), coordIt.Data and $FFFFFFFF);
     until not coordIt.Next();
     
 
 //    writeln('Checking all elements');
     
-    pElem := DSSPrime.ActiveCircuit.CktElements.First;
+    pElem := Ckt.CktElements.First;
     while pElem <> NIL do with pElem do
     begin
         if (not Enabled) or (Yprim = NIL) then
         begin
-            pElem := DSSPrime.ActiveCircuit.CktElements.Next;
+            pElem := Ckt.CktElements.Next;
             continue;
         end;
     
@@ -299,19 +299,19 @@ begin
                 if (val.re = 0) and (val.im = 0) then continue;
                 
                 //writeln('IncrementMatrixElement: (', inode, ',', jnode, '): ', val.re, ', ', val.im);
-                IncrementMatrixElement(DSSPrime.ActiveCircuit.Solution.hYsystem, inode, jnode, val.re, val.im);
+                IncrementMatrixElement(Ckt.Solution.hYsystem, inode, jnode, val.re, val.im);
             end;
         end;
-        pElem := DSSPrime.ActiveCircuit.CktElements.Next;
+        pElem := Ckt.CktElements.Next;
     end;
 
-    DSSPrime.ActiveCircuit.IncrCktElements.Clear;
+    Ckt.IncrCktElements.Clear;
     Result := True;
 //    writeln('Incremental update finished.');
 //    writeln();
 end;
 
-procedure BuildYMatrix(BuildOption: Integer; AllocateVI: Boolean);
+procedure BuildYMatrix(DSS: TDSS; BuildOption: Integer; AllocateVI: Boolean);
 
 {Builds designated Y matrix for system and allocates solution arrays}
 
@@ -329,7 +329,7 @@ begin
     CmatArray := NIL;
    // new function to log KLUSolve.DLL function calls
    // SetLogFile ('KLU_Log.txt', 1);
-    with DSSPrime.ActiveCircuit, DSSPrime.ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
 
         if PreserveNodeVoltages then
@@ -364,15 +364,15 @@ begin
         if not Incremental then 
         begin
             if (FrequencyChanged) then
-                ReCalcAllYPrims
+                ReCalcAllYPrims(DSS.ActiveCircuit)
             else if not Incremental then
-                ReCalcInvalidYPrims;
+                ReCalcInvalidYPrims(DSS.ActiveCircuit);
         end;
         
         
-        if DSSPrime.SolutionAbort then
+        if DSS.SolutionAbort then
         begin
-            DoSimpleMsg('Y matrix build aborted due to error in primitive Y calculations.', 11001);
+            DoSimpleMsg(DSS, 'Y matrix build aborted due to error in primitive Y calculations.', 11001);
             Exit;  // Some problem occured building Yprims
         end;
 
@@ -417,7 +417,7 @@ begin
         end // if not Incremental
         else
         begin // if Incremental 
-            if not UpdateYMatrix(BuildOption, AllocateVI) then
+            if not UpdateYMatrix(DSS.ActiveCircuit, BuildOption, AllocateVI) then
                 Exit;
         end;
         
@@ -443,7 +443,7 @@ begin
             VMagSaved := AllocMem(Sizeof(VMagSaved^[1]) * NumNodes);  // zero fill
             ErrorSaved := AllocMem(Sizeof(ErrorSaved^[1]) * NumNodes);  // zero fill
             NodeVBase := AllocMem(Sizeof(NodeVBase^[1]) * NumNodes);  // zero fill
-            InitializeNodeVbase;
+            InitializeNodeVbase(DSS);
 
         end;
 
@@ -470,7 +470,7 @@ begin
 end;
 
 // leave the call to GetMatrixElement, but add more diagnostics
-function CheckYMatrixforZeroes: String;
+function CheckYMatrixforZeroes(DSS: TDSS): String;
 
 var
     i: Longword;
@@ -482,7 +482,7 @@ var
 begin
 
     Result := '';
-    with DSSPrime.ActiveCircuit do
+    with DSS.ActiveCircuit do
     begin
         hY := Solution.hY;
         for i := 1 to Numnodes do

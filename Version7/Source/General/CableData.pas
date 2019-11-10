@@ -124,16 +124,16 @@ begin
             case ParamPointer of
                 1:
                     if (FEpsR < 1.0) then
-                        DoSimpleMsg('Error: Insulation permittivity must be greater than one for CableData ' + Name, 999);
+                        DoSimpleMsg(DSS, 'Error: Insulation permittivity must be greater than one for CableData ' + Name, 999);
                 2:
                     if (FInsLayer <= 0.0) then
-                        DoSimpleMsg('Error: Insulation layer thickness must be positive for CableData ' + Name, 999);
+                        DoSimpleMsg(DSS, 'Error: Insulation layer thickness must be positive for CableData ' + Name, 999);
                 3:
                     if (FDiaIns <= 0.0) then
-                        DoSimpleMsg('Error: Diameter over insulation layer must be positive for CableData ' + Name, 999);
+                        DoSimpleMsg(DSS, 'Error: Diameter over insulation layer must be positive for CableData ' + Name, 999);
                 4:
                     if (FDiaCable <= 0.0) then
-                        DoSimpleMsg('Error: Diameter over cable must be positive for CableData ' + Name, 999);
+                        DoSimpleMsg(DSS, 'Error: Diameter over cable must be positive for CableData ' + Name, 999);
             end;
         end;
 end;
