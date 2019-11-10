@@ -275,36 +275,36 @@ begin
                 5:
                     FkvarLimit := DSS.Parser.DblValue;
                 6:
-                    InterpretTStringListArray(Param, FLocalControlNameList);
+                    InterpretTStringListArray(DSS, Param, FLocalControlNameList);
                 7:
                 begin
                     FLocalControlListSize := FLocalControlNameList.count;
                     if FLocalControlListSize > 0 then
                     begin
                         Reallocmem(FLocalControlWeights, Sizeof(FLocalControlWeights^[1]) * FLocalControlListSize);
-                        FLocalControlListSize := InterpretDblArray(Param, FLocalControlListSize, FLocalControlWeights);
+                        FLocalControlListSize := InterpretDblArray(DSS, Param, FLocalControlListSize, FLocalControlWeights);
                     end;
                 end;
                 8:
-                    InterpretTStringListArray(Param, FPVSystemNameList);
+                    InterpretTStringListArray(DSS, Param, FPVSystemNameList);
                 9:
                 begin
                     FPVSystemListSize := FPVSystemNameList.count;
                     if FPVSystemListSize > 0 then
                     begin
                         Reallocmem(FPVSystemWeights, Sizeof(FPVSystemWeights^[1]) * FPVSystemListSize);
-                        FPVSystemListSize := InterpretDblArray(Param, FPVSystemListSize, FPVSystemWeights);
+                        FPVSystemListSize := InterpretDblArray(DSS, Param, FPVSystemListSize, FPVSystemWeights);
                     end;
                 end;
                 10:
-                    InterpretTStringListArray(Param, FStorageNameList);
+                    InterpretTStringListArray(DSS, Param, FStorageNameList);
                 11:
                 begin
                     FStorageListSize := FStorageNameList.count;
                     if FStorageListSize > 0 then
                     begin
                         Reallocmem(FStorageWeights, Sizeof(FStorageWeights^[1]) * FStorageListSize);
-                        FStorageListSize := InterpretDblArray(Param, FStorageListSize, FStorageWeights);
+                        FStorageListSize := InterpretDblArray(DSS, Param, FStorageListSize, FStorageWeights);
                     end;
                 end;
 
@@ -438,7 +438,7 @@ begin
 
 {Check for existence of monitored element}
 
-    Devindex := GetCktElementIndex(ElementName); // Global function
+    Devindex := GetCktElementIndex(DSS, ElementName); // Global function
     if DevIndex > 0 then
     begin
         MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);

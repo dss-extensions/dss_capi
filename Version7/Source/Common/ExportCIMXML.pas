@@ -2089,7 +2089,7 @@ begin
                 StartInstance(F, 'RegulatingControl', pCapC);
                 UuidNode(F, 'PowerSystemResource.Location', GetDevUuid(CapLoc, This_Capacitor.Name, 1));
                 RefNode(F, 'RegulatingControl.RegulatingCondEq', This_Capacitor);
-                i1 := GetCktElementIndex(ElementName); // Global function
+                i1 := GetCktElementIndex(DSS, ElementName); // Global function
                 UuidNode(F, 'RegulatingControl.Terminal',
                     GetTermUuid(DSS.ActiveCircuit.CktElements.Get(i1), ElementTerminal));
                 s := FirstPhaseString(DSS, DSS.ActiveCircuit.CktElements.Get(i1), 1);

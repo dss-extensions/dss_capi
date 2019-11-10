@@ -189,7 +189,7 @@ begin
                 begin
                     setlength(AmpRatings, NumAmpRatings);
                     Param := DSS.Parser.StrValue;
-                    NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, pointer(AmpRatings));
+                    NumAmpRatings := InterpretDblArray(DSS, Param, NumAmpRatings, pointer(AmpRatings));
                 end
             else
                 inherited ClassEdit(ActiveObj, ParamPointer - NumConductorClassProps)

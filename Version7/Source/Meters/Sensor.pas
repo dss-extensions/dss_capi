@@ -567,7 +567,7 @@ var
 
 begin
     ValidSensor := FALSE;
-    Devindex := GetCktElementIndex(ElementName); // Global function
+    Devindex := GetCktElementIndex(DSS, ElementName); // Global function
     if DevIndex > 0 then
     begin  // Sensored element must already exist
         MeteredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);

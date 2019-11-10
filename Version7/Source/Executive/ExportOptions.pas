@@ -589,7 +589,7 @@ begin
         33:
             ExportEventLog(DSS, Filename);
         34:
-            DumpAllocationFactors(FileName);
+            DumpAllocationFactors(DSS, FileName);
         35:
             ExportVoltagesElements(DSS, Filename);
         36:
@@ -659,7 +659,7 @@ begin
         SetLastResultFile(DSS, FileName);
         DSS.ParserVars.Add('@lastexportfile', FileName);
         if DSS.AutoShowExport then
-            FireOffEditor(FileName);
+            FireOffEditor(DSS, FileName);
     end;
 
 end;

@@ -288,7 +288,7 @@ begin
                 begin
                     ReAllocmem(TempPointsBuffer, Sizeof(TempPointsBuffer^[1]) * FNumPoints * 2);
                  // Allow possible Resetting (to a lower value) of num points when specifying temperatures not Hours
-                    NumPoints := InterpretDblArray(Param, (FNumPoints * 2), TempPointsBuffer) div 2;  // Parser.ParseAsVector(Npts, Temperatures);
+                    NumPoints := InterpretDblArray(DSS, Param, (FNumPoints * 2), TempPointsBuffer) div 2;  // Parser.ParseAsVector(Npts, Temperatures);
                     ReAllocmem(YValues, Sizeof(YValues^[1]) * FNumPoints);
                     ReAllocmem(XValues, Sizeof(XValues^[1]) * FNumPoints);
                     for i := 1 to FNumPoints do
@@ -303,13 +303,13 @@ begin
                 3:
                 begin
                     ReAllocmem(YValues, Sizeof(YValues^[1]) * NumPoints);
-                    NumPoints := InterpretDblArray(Param, NumPoints, YValues);
+                    NumPoints := InterpretDblArray(DSS, Param, NumPoints, YValues);
                     Y := Yvalues^[1];
                 end;
                 4:
                 begin
                     ReAllocmem(XValues, Sizeof(XValues^[1]) * NumPoints);
-                    NumPoints := InterpretDblArray(Param, NumPoints, XValues);
+                    NumPoints := InterpretDblArray(DSS, Param, NumPoints, XValues);
                     X := Xvalues^[1];
                 end;
                 5:

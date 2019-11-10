@@ -211,7 +211,7 @@ begin
                  FName   := '';
             end
             Else Begin
-                FID := FNew(FActiveGeneratorVars^, DSSPrime.ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
+                FID := FNew(FActiveGeneratorVars^, DSS.ActiveCircuit.Solution.Dynavars, CallBackRoutines);  // Create new instance of user model
             End;;
         End;
 end;

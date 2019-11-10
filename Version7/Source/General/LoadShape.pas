@@ -369,7 +369,7 @@ begin
                     end;
                     ReAllocmem(PMultipliers, Sizeof(PMultipliers^[1]) * NumPoints);
                  // Allow possible Resetting (to a lower value) of num points when specifying multipliers not Hours
-                    NumPoints := InterpretDblArray(Param, NumPoints, PMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
+                    NumPoints := InterpretDblArray(DSS, Param, NumPoints, PMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
                 end;
                 TLoadShapeProp.hour:
                 begin
@@ -379,7 +379,7 @@ begin
                         Exit;
                     end;
                     ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
-                    InterpretDblArray(Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
+                    InterpretDblArray(DSS, Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
                     Interval := 0.0;
                 end;
                 TLoadShapeProp.mean:
@@ -404,7 +404,7 @@ begin
                 TLoadShapeProp.qmult:
                 begin
                     ReAllocmem(QMultipliers, Sizeof(QMultipliers^[1]) * NumPoints);
-                    InterpretDblArray(Param, NumPoints, QMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
+                    InterpretDblArray(DSS, Param, NumPoints, QMultipliers);   // Parser.ParseAsVector(Npts, Multipliers);
                 end;
                 TLoadShapeProp.UseActual:
                     UseActual := InterpretYesNo(Param);

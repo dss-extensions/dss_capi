@@ -452,7 +452,7 @@ begin
         Writeln(F, 'Element, Terminal,  I1, %Normal, %Emergency, I2, %I2/I1, I0, %I0/I1, Iresidual, %NEMA');
 
      {Allocate cBuffer big enough for largest circuit element}
-        Getmem(cbuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
+        Getmem(cbuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize(DSS));
 
 
      //Sources First
@@ -603,7 +603,7 @@ begin
         Assignfile(F, FileNm);
         ReWrite(F);
 
-        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
+        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize(DSS));
 
      {Calculate the width of the file}
         MaxCond := 1;
@@ -721,7 +721,7 @@ begin
                 NValues := NConds * Nterms;
                 for i := 1 to NValues do
                 begin
-                    Write(F, Format(', %d', [GetNodeNum(NodeRef^[i])]));
+                    Write(F, Format(', %d', [GetNodeNum(DSS, NodeRef^[i])]));
                 end;
                 Writeln(F);
             end
@@ -1439,7 +1439,7 @@ begin
         ReWrite(F);
         Separator := ', ';
 
-        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
+        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize(DSS));
 
         case Opt of
             1:
@@ -2593,7 +2593,7 @@ begin
         Assignfile(F, FileNm);
         ReWrite(F);
 
-        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
+        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize(DSS));
 
         Writeln(F, 'Name, Imax, %normal, %emergency, kW, kvar, NumCustomers, TotalCustomers, NumPhases, kVBase');
 
@@ -2648,7 +2648,7 @@ begin
         ReWrite(F);
 
     {Allocate cBuffer big enough for largest circuit element}
-        Getmem(cbuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
+        Getmem(cbuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize(DSS));
 
      {Sequence Currents}
         Writeln(F, 'Element, Terminal,  I1, AmpsOver, kVAOver, %Normal, %Emergency, I2, %I2/I1, I0, %I0/I1');
@@ -3126,14 +3126,14 @@ begin
         else
             Write(F, 'UnSolved');
 
-        Write(F, Format(', %s', [GetSolutionModeID]));
+        Write(F, Format(', %s', [GetSolutionModeID(DSS)]));
         Write(F, Format(', %d', [DSS.ActiveCircuit.Solution.NumberofTimes]));
         Write(F, Format(', %8.3f', [DSS.ActiveCircuit.LoadMultiplier]));
         Write(F, Format(', %d', [DSS.ActiveCircuit.NumDevices]));
         Write(F, Format(', %d', [DSS.ActiveCircuit.NumBuses]));
         Write(F, Format(', %d', [DSS.ActiveCircuit.NumNodes]));
         Write(F, Format(', %d', [DSS.ActiveCircuit.Solution.Iteration]));
-        Write(F, Format(', %s', [GetControlModeID]));
+        Write(F, Format(', %s', [GetControlModeID(DSS)]));
         Write(F, Format(', %d', [DSS.ActiveCircuit.Solution.ControlIteration]));
         Write(F, Format(', %d', [DSS.ActiveCircuit.Solution.MostIterationsDone]));
         if DSS.ActiveCircuit <> NIL then
@@ -3141,9 +3141,9 @@ begin
             begin
                 Write(F, Format(', %d', [DSS.ActiveCircuit.Solution.Year]));
                 Write(F, Format(', %d', [DSS.ActiveCircuit.Solution.DynaVars.intHour]));
-                Write(F, Format(', %-.5g', [GetMaxPUVoltage]));
-                Write(F, Format(', %-.5g', [GetMinPUVoltage(TRUE)]));
-                cPower := CmulReal(GetTotalPowerFromSources, 0.000001);  // MVA
+                Write(F, Format(', %-.5g', [GetMaxPUVoltage(DSS)]));
+                Write(F, Format(', %-.5g', [GetMinPUVoltage(DSS, TRUE)]));
+                cPower := CmulReal(GetTotalPowerFromSources(DSS), 0.000001);  // MVA
                 Write(F, Format(', %-.6g', [cPower.re]));
                 Write(F, Format(', %-.6g', [cPower.im]));
                 cLosses := CmulReal(DSS.ActiveCircuit.Losses, 0.000001);

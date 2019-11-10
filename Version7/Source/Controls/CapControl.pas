@@ -307,7 +307,7 @@ begin
                 0:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 352);
                 1:
-                    ElementName := ConstructElemName(lowercase(param));  // substitute @var value if any
+                    ElementName := ConstructElemName(DSS, lowercase(param));  // substitute @var value if any
                 2:
                     ElementTerminal := DSS.Parser.IntValue;
                 3:
@@ -636,7 +636,7 @@ begin
 
 // 5-21-01 RCD moved this section ahead of monitored element so Nphases gets defined first
 
-    Devindex := GetCktElementIndex(ControlVars.CapacitorName); // Global function
+    Devindex := GetCktElementIndex(DSS, ControlVars.CapacitorName); // Global function
     if DevIndex > 0 then
     begin  // Both capacitor and monitored element must already exist
         ControlledElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
@@ -667,7 +667,7 @@ begin
 
 {Check for existence of monitored element}
 
-    Devindex := GetCktElementIndex(ElementName); // Global function
+    Devindex := GetCktElementIndex(DSS, ElementName); // Global function
     if DevIndex > 0 then
     begin
         MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
@@ -853,7 +853,7 @@ begin
                             ControlledCapacitor.SubtractStep;
 
                             if ShowEventLog then
-                                AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Opened**');
+                                AppendtoEventLog(DSS, 'Capacitor.' + ControlledElement.Name, '**Opened**');
                             PresentState := CTRL_OPEN;
                             with DSS.ActiveCircuit.Solution do
                                 LastOpenTime := DynaVars.t + 3600.0 * DynaVars.intHour;
@@ -867,11 +867,11 @@ begin
                             PresentState := CTRL_OPEN;
                             ControlledElement.Closed[0] := FALSE;   // Open all phases of active terminal
                             if ShowEventLog then
-                                AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Opened**');
+                                AppendtoEventLog(DSS, 'Capacitor.' + ControlledElement.Name, '**Opened**');
                         end
                         else
                         if ShowEventLog then
-                            AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Step Down**');
+                            AppendtoEventLog(DSS, 'Capacitor.' + ControlledElement.Name, '**Step Down**');
                     end;
                 end;
             CTRL_CLOSE:
@@ -880,7 +880,7 @@ begin
                 begin
                     ControlledElement.Closed[0] := TRUE;    // Close all phases of active terminal
                     if ShowEventLog then
-                        AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Closed**');
+                        AppendtoEventLog(DSS, 'Capacitor.' + ControlledElement.Name, '**Closed**');
                     PresentState := CTRL_CLOSE;
                     ControlledCapacitor.AddStep;
                 end
@@ -888,7 +888,7 @@ begin
                 begin
                     if ControlledCapacitor.AddStep then
                         if ShowEventLog then
-                            AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Step Up**');
+                            AppendtoEventLog(DSS, 'Capacitor.' + ControlledElement.Name, '**Step Up**');
                 end;
             end;
         else
@@ -1013,7 +1013,7 @@ begin
                             ShouldSwitch := TRUE;
                             VoverrideEvent := TRUE;
                             if ShowEventLog then
-                                AppendtoEventLog('Capacitor.' + ControlledElement.Name, Format('Low Voltage Override: %.8g V', [Vtest]));
+                                AppendtoEventLog(DSS, 'Capacitor.' + ControlledElement.Name, Format('Low Voltage Override: %.8g V', [Vtest]));
                         end;
                     CTRL_CLOSE:
                         if Vtest > Vmax then
@@ -1022,7 +1022,7 @@ begin
                             ShouldSwitch := TRUE;
                             VoverrideEvent := TRUE;
                             if ShowEventLog then
-                                AppendtoEventLog('Capacitor.' + ControlledElement.Name, Format('High Voltage Override: %.8g V', [Vtest]));
+                                AppendtoEventLog(DSS, 'Capacitor.' + ControlledElement.Name, Format('High Voltage Override: %.8g V', [Vtest]));
                         end;
                 end;
 
@@ -1299,7 +1299,7 @@ begin
             ControlActionHandle := ControlQueue.Push(Solution.DynaVars.intHour, Solution.DynaVars.t + TimeDelay, PendingChange, 0, Self);
             Armed := TRUE;
             if ShowEventLog then
-                AppendtoEventLog('Capacitor.' + ControlledElement.Name, Format('**Armed**, Delay= %.5g sec', [TimeDelay]));
+                AppendtoEventLog(DSS, 'Capacitor.' + ControlledElement.Name, Format('**Armed**, Delay= %.5g sec', [TimeDelay]));
         end;
 
         if Armed and (PendingChange = CTRL_NONE) then
@@ -1307,7 +1307,7 @@ begin
             ControlQueue.Delete(ControlActionHandle);
             Armed := FALSE;
             if ShowEventLog then
-                AppendtoEventLog('Capacitor.' + ControlledElement.Name, '**Reset**');
+                AppendtoEventLog(DSS, 'Capacitor.' + ControlledElement.Name, '**Reset**');
         end;
     end;  {With}
 end;

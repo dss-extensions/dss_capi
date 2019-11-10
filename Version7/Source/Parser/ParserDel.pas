@@ -61,6 +61,7 @@ type
 
     TParser = class(TObject)
     PRIVATE
+        ParserVars: TParserVar; // reference to global parser vars
         CmdBuffer: String;
         FPosition: Integer;
         ParameterBuffer: String;
@@ -107,6 +108,7 @@ type
         function ParseAsSymMatrix(MatrixBuffer: Array of Double): Integer;
         procedure ResetDelims;   // resets delimiters to default
         procedure CheckforVar(var TokenBuffer: String);
+        procedure SetVars(vars: TParserVar);
     PUBLISHED
         property CmdString: String READ CmdBuffer WRITE SetCmdString;
         property Position: Integer READ FPosition WRITE FPosition; // to save and restore
@@ -277,9 +279,9 @@ begin
             else
                 VariableName := TokenBuffer;
 
-            if DSSPrime.ParserVars.Lookup(VariableName) > 0 then
+            if ParserVars.Lookup(VariableName) > 0 then
             begin
-                VariableValue := DSSPrime.ParserVars.Value; // Retrieve the value of the variable
+                VariableValue := ParserVars.Value; // Retrieve the value of the variable
                 if VariableValue[1] = '{' then
                 begin
                     ReplaceToDotPos(Copy(VariableValue, 2, length(VariableValue) - 2));    // get rid of closed brace added by parservar
@@ -297,6 +299,7 @@ constructor TParser.Create;
 begin
     inherited Create;
 
+    ParserVars := nil;
     DelimChars := ',=';
     WhiteSpaceChars := ' ' + #9;   // blank + tab
     FBeginQuoteChars := '("''[{';
@@ -1035,6 +1038,11 @@ begin
     if (ActiveVariable > 0) and (ActiveVariable <= NumVariables) then
         VarValues^[ActiveVariable] := Value;
 
+end;
+
+procedure TParser.SetVars(vars: TParserVar);
+begin
+    ParserVars := vars;
 end;
 
 end.

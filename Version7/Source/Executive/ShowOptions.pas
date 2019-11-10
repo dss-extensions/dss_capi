@@ -210,8 +210,8 @@ begin
     case ParamPointer of
         1:
         begin {Autoadded}
-            FireOffEditor(DSS.OutputDirectory + DSS.CircuitName_ + 'AutoAddedGenerators.Txt');
-            FireOffEditor(DSS.OutputDirectory + DSS.CircuitName_ + 'AutoAddedCapacitors.Txt');
+            FireOffEditor(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'AutoAddedGenerators.Txt');
+            FireOffEditor(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'AutoAddedCapacitors.Txt');
         end;
         2:
             ShowBuses(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'Buses.Txt');
@@ -444,7 +444,7 @@ begin
         31:
             ShowDeltaV(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'DeltaV.Txt');
         32:
-            FireOffEditor(DSS.QueryLogFileName);
+            FireOffEditor(DSS, DSS.QueryLogFileName);
         33:
             ShowControlledElements(DSS, DSS.OutputDirectory + DSS.CircuitName_ + 'ControlledElements.CSV');
         34:

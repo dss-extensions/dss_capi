@@ -520,7 +520,7 @@ Begin
                 // The string list is used
                 for stringIdx := 0 to (strings.Count - 1) do
                 Begin
-                    if DSSPrime.Redirect_Abort then 
+                    if DSS.Redirect_Abort then 
                         break;
                         
                     InputLine := strings[stringIdx];
@@ -537,7 +537,7 @@ Begin
                             If Not SolutionAbort Then 
                                 ProcessCommand(InputLine)
                             Else 
-                                DSSPrime.Redirect_Abort := True;  // Abort file if solution was aborted
+                                DSS.Redirect_Abort := True;  // Abort file if solution was aborted
 
                         // in block comment ... look for */   and cancel block comment (whole line)
                         if InBlockComment then

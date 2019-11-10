@@ -399,7 +399,7 @@ var
 
 begin
 
-    Devindex := GetCktElementIndex(MonitoredElementName); // Global function
+    Devindex := GetCktElementIndex(DSS, MonitoredElementName); // Global function
     if DevIndex > 0 then
     begin
         MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
@@ -428,7 +428,7 @@ begin
     if Assigned(ControlledElement) then
         ControlledElement.HasOCPDevice := FALSE;
 
-    Devindex := GetCktElementIndex(ElementName); // Global function
+    Devindex := GetCktElementIndex(DSS, ElementName); // Global function
     if DevIndex > 0 then
     begin  // Both CktElement and monitored element must already exist
         ControlledElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
@@ -496,7 +496,7 @@ begin
                     if ReadyToBlow[Phs] then
                     begin   // ignore if we became disarmed in meantime
                         ControlledElement.Closed[Phs] := FALSE;   // Open all phases of active terminal
-                        AppendtoEventLog('Fuse.' + Self.Name, 'Phase ' + IntToStr(Phs) + ' Blown');
+                        AppendtoEventLog(DSS, 'Fuse.' + Self.Name, 'Phase ' + IntToStr(Phs) + ' Blown');
                         hAction[phs] := 0;
                     end;
             else

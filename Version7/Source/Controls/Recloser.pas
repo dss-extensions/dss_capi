@@ -525,7 +525,7 @@ var
 
 begin
 
-    Devindex := GetCktElementIndex(MonitoredElementName); // Global function
+    Devindex := GetCktElementIndex(DSS, MonitoredElementName); // Global function
     if DevIndex > 0 then
     begin
 
@@ -556,7 +556,7 @@ begin
         ControlledElement.HasAutoOCPDevice := FALSE;
     end;
 
-    Devindex := GetCktElementIndex(ElementName); // Global function
+    Devindex := GetCktElementIndex(DSS, ElementName); // Global function
     if DevIndex > 0 then
     begin  // Both CktElement and monitored element must already exist
 
@@ -645,19 +645,19 @@ begin
                             if OperationCount > NumReclose then
                             begin
                                 LockedOut := TRUE;
-                                AppendtoEventLog('Recloser.' + Self.Name, 'Opened, Locked Out');
+                                AppendtoEventLog(DSS, 'Recloser.' + Self.Name, 'Opened, Locked Out');
                             end
                             else
                             begin
                                 if OperationCount > NumFast then
-                                    AppendtoEventLog('Recloser.' + Self.Name, 'Opened, Delayed')
+                                    AppendtoEventLog(DSS, 'Recloser.' + Self.Name, 'Opened, Delayed')
                                 else
-                                    AppendtoEventLog('Recloser.' + Self.Name, 'Opened, Fast');
+                                    AppendtoEventLog(DSS, 'Recloser.' + Self.Name, 'Opened, Fast');
                             end;
                             if PhaseTarget then
-                                AppendtoEventLog(' ', 'Phase Target');
+                                AppendtoEventLog(DSS, ' ', 'Phase Target');
                             if GroundTarget then
-                                AppendtoEventLog(' ', 'Ground Target');
+                                AppendtoEventLog(DSS, ' ', 'Ground Target');
                             ArmedForOpen := FALSE;
                         end;
                 else {nada}
@@ -669,7 +669,7 @@ begin
                         begin
                             ControlledElement.Closed[0] := TRUE;    // Close all phases of active terminal
                             Inc(OperationCount);
-                            AppendtoEventLog('Recloser.' + Self.Name, 'Closed');
+                            AppendtoEventLog(DSS, 'Recloser.' + Self.Name, 'Closed');
                             ArmedForClose := FALSE;
                         end;
                 else {Nada}

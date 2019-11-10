@@ -1535,7 +1535,7 @@ BEGIN
 
      Result := 0;
 
-     ParseObjectClassandName(FullObjectName, DevType, DevName);
+     ParseObjectClassandName(DSS, FullObjectName, DevType, DevName);
      DevClassIndex := DSS.ClassNames.Find(DevType);
      If DevClassIndex = 0 Then DevClassIndex := DSS.LastClassReferenced;
      if DevName <> '' then
@@ -1634,10 +1634,10 @@ BEGIN
    so that all changes to the circuit will result in rebuilding the lists}
   If Not MeterZonesComputed or Not ZonesLocked Then
   Begin
-     If LogEvents Then LogThisEvent('Resetting Meter Zones');
+     If LogEvents Then LogThisEvent(DSS, 'Resetting Meter Zones');
      DSS.EnergyMeterClass.ResetMeterZonesAll;
      MeterZonesComputed := True;
-     If LogEvents Then LogThisEvent('Done Resetting Meter Zones');
+     If LogEvents Then LogThisEvent(DSS, 'Done Resetting Meter Zones');
   End;
 
   FreeTopology;
@@ -1712,7 +1712,7 @@ VAR
     i:integer;
 
 BEGIN
-     If LogEvents Then LogThisEvent('Reprocessing Bus Definitions');
+     If LogEvents Then LogThisEvent(DSS, 'Reprocessing Bus Definitions');
 
      AbortBusProcess := FALSE;
      SaveBusInfo;  // So we don't have to keep re-doing this
@@ -1979,24 +1979,24 @@ begin
    // FeederClass.Saved := TRUE;  // will think this class is already saved
 
     {Define voltage sources first}
-    Success :=  WriteVsourceClassFile(GetDssClassPtr(DSS, 'vsource'), TRUE);
+    Success :=  WriteVsourceClassFile(DSS, GetDssClassPtr(DSS, 'vsource'), TRUE);
     {Write library files so that they will be available to lines, loads, etc}
     {Use default filename=classname}
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'wiredata'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'cndata'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'tsdata'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'linegeometry'),'', FALSE);
-    // If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'linecode'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'linespacing'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'linecode'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'xfmrcode'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'loadshape'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'TShape'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'priceshape'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'growthshape'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'XYcurve'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'TCC_Curve'),'', FALSE);
-    If Success Then Success :=  WriteClassFile(GetDssClassPtr(DSS, 'Spectrum'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'wiredata'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'cndata'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'tsdata'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'linegeometry'),'', FALSE);
+    // If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'linecode'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'linespacing'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'linecode'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'xfmrcode'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'loadshape'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'TShape'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'priceshape'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'growthshape'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'XYcurve'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'TCC_Curve'),'', FALSE);
+    If Success Then Success :=  WriteClassFile(DSS, GetDssClassPtr(DSS, 'Spectrum'),'', FALSE);
     If Success Then Success := SaveFeeders; // Save feeders first
     If Success Then Success := SaveDSSObjects;  // Save rest ot the objects
     If Success Then Success := SaveVoltageBases;
@@ -2036,7 +2036,7 @@ begin
       Dss_Class := DSS.DSSClassList.Get(i);
       If (DSS_Class = DSS.SolutionClass) or Dss_Class.Saved Then Continue;   // Cycle to next
             {use default filename=classname}
-      IF Not WriteClassFile(Dss_Class,'', (DSS_Class is TCktElementClass) ) Then Exit;  // bail on error
+      IF Not WriteClassFile(DSS, Dss_Class,'', (DSS_Class is TCktElementClass) ) Then Exit;  // bail on error
       DSS_Class.Saved := TRUE;
    End;
 
@@ -2185,7 +2185,7 @@ Var
 
 begin
 {Reallocate the device list to improve the performance of searches}
-    If LogEvents Then LogThisEvent('Reallocating Device List');
+    If LogEvents Then LogThisEvent(DSS, 'Reallocating Device List');
     TempList := THashList.Create(2*NumDevices);
 
     For i := 1 to DeviceList.ListSize Do

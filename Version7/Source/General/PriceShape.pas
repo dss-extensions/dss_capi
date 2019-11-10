@@ -293,12 +293,12 @@ begin
                 begin
                     ReAllocmem(PriceValues, Sizeof(PriceValues^[1]) * NumPoints);
                  // Allow possible Resetting (to a lower value) of num points when specifying Prices not Hours
-                    NumPoints := InterpretDblArray(Param, NumPoints, PriceValues);   // Parser.ParseAsVector(Npts, Prices);
+                    NumPoints := InterpretDblArray(DSS, Param, NumPoints, PriceValues);   // Parser.ParseAsVector(Npts, Prices);
                 end;
                 4:
                 begin
                     ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
-                    NumPoints := InterpretDblArray(Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
+                    NumPoints := InterpretDblArray(DSS, Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
                 end;
                 5:
                     Mean := DSS.Parser.DblValue;

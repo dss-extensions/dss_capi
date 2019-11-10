@@ -219,14 +219,14 @@ begin
                 5:
                     FkvarLimit := DSS.Parser.DblValue;
                 6:
-                    InterpretTStringListArray(Param, FGeneratorNameList);
+                    InterpretTStringListArray(DSS, Param, FGeneratorNameList);
                 7:
                 begin
                     FListSize := FGeneratorNameList.count;
                     if FListSize > 0 then
                     begin
                         Reallocmem(FWeights, Sizeof(FWeights^[1]) * FListSize);
-                        FListSize := InterpretDblArray(Param, FListSize, FWeights);
+                        FListSize := InterpretDblArray(DSS, Param, FListSize, FWeights);
                     end;
                 end;
 
@@ -350,7 +350,7 @@ begin
 
 {Check for existence of monitored element}
 
-    Devindex := GetCktElementIndex(ElementName); // Global function
+    Devindex := GetCktElementIndex(DSS, ElementName); // Global function
     if DevIndex > 0 then
     begin
         MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);

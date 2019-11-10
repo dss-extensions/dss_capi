@@ -208,9 +208,9 @@ begin
                 1:
                     Npts := DSS.Parser.Intvalue;
                 2:
-                    Npts := InterpretDblArray(Param, Npts, C_Values);   // Parser.ParseAsVector(Npts, Multipliers);
+                    Npts := InterpretDblArray(DSS, Param, Npts, C_Values);   // Parser.ParseAsVector(Npts, Multipliers);
                 3:
-                    Npts := InterpretDblArray(Param, Npts, T_values);   // Parser.ParseAsVector(Npts, Hours);
+                    Npts := InterpretDblArray(DSS, Param, Npts, T_values);   // Parser.ParseAsVector(Npts, Hours);
             else
            // Inherited parameters
                 ClassEdit(DSS.ActiveTCC_CurveObj, ParamPointer - NumPropsThisClass)

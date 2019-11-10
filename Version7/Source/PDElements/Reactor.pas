@@ -442,13 +442,13 @@ begin
                     TReactorProp.Rp:
                         Rp := DSS.Parser.Dblvalue;
                     TReactorProp.Z1:
-                        Z1 := InterpretComplex(Param);
+                        Z1 := InterpretComplex(DSS, Param);
                     TReactorProp.Z2:
-                        Z2 := InterpretComplex(Param);
+                        Z2 := InterpretComplex(DSS, Param);
                     TReactorProp.Z0:
-                        Z0 := InterpretComplex(Param);
+                        Z0 := InterpretComplex(DSS, Param);
                     TReactorProp.Z:
-                        Z := InterpretComplex(Param);
+                        Z := InterpretComplex(DSS, Param);
                     TReactorProp.RCurve:
                         RCurve := Param;
                     TReactorProp.LCurve:

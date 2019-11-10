@@ -294,12 +294,12 @@ begin
                 begin
                     ReAllocmem(TValues, Sizeof(TValues^[1]) * NumPoints);
                  // Allow possible Resetting (to a lower value) of num points when specifying temperatures not Hours
-                    NumPoints := InterpretDblArray(Param, NumPoints, TValues);   // Parser.ParseAsVector(Npts, Temperatures);
+                    NumPoints := InterpretDblArray(DSS, Param, NumPoints, TValues);   // Parser.ParseAsVector(Npts, Temperatures);
                 end;
                 4:
                 begin
                     ReAllocmem(Hours, Sizeof(Hours^[1]) * NumPoints);
-                    NumPoints := InterpretDblArray(Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
+                    NumPoints := InterpretDblArray(DSS, Param, NumPoints, Hours);   // Parser.ParseAsVector(Npts, Hours);
                 end;
                 5:
                     Mean := DSS.Parser.DblValue;

@@ -107,8 +107,8 @@ Begin
      DSS.NumCircuits := 0;
      DSS.ActiveCircuit := nil;
 
-     LastCmdLine := '';
-     RedirFile := '';
+     DSS.LastCmdLine := '';
+     DSS.RedirFile := '';
 
      FRecorderOn := FALSE;
      FrecorderFile := '';
@@ -193,14 +193,14 @@ End;
 
 function TExecutive.Get_Command: String;
 begin
-    Result := LastCmdLine;
+    Result := DSS.LastCmdLine;
 end;
 
 
 procedure TExecutive.Set_Command(const Value: String);
 begin
 
-      ProcessCommand(Value);
+      ProcessCommand(DSS, Value);
 end;
 
 procedure TExecutive.Clear;
@@ -228,6 +228,9 @@ begin
        {Prepare for new variables}
        DSS.ParserVars.Free;
        DSS.ParserVars := TParserVar.Create(100);  // start with space for 100 variables
+       DSS.Parser.SetVars(DSS.ParserVars);
+       DSS.AuxParser.SetVars(DSS.ParserVars);
+       
 end;
 
 procedure TExecutive.Set_RecorderOn(const Value: Boolean);

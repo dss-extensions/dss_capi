@@ -1431,7 +1431,7 @@ begin
                     begin
                         for j := (i - 1) * NConds + 1 to i * Nconds do
                         begin
-                            Result[k] := GetNodeNum(NodeRef^[j]);
+                            Result[k] := GetNodeNum(DSSPrime, NodeRef^[j]);
                             inc(k);
                         end;
                     end;

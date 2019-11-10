@@ -518,7 +518,7 @@ begin
         end;
     finally
         CloseFile(F);
-        FireOffEditor(FileNm);
+        FireOffEditor(DSS, FileNm);
     end;
 
 

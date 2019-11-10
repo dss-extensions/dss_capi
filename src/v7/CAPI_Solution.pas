@@ -305,7 +305,7 @@ end;
 function Solution_Get_ModeID_AnsiString(): Ansistring; inline;
 begin
     if DSSPrime.ActiveCircuit <> NIL then
-        Result := GetSolutionModeID
+        Result := GetSolutionModeID(DSSPrime)
     else
         Result := '';
 end;

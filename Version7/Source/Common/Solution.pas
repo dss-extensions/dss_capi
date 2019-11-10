@@ -857,7 +857,7 @@ begin
             Inc(Iteration);
 
             if LogEvents then
-                LogThisEvent('Solution Iteration ' + IntToStr(Iteration));
+                LogThisEvent(DSS, 'Solution Iteration ' + IntToStr(Iteration));
 
     { Get injcurrents for all PC devices  }
             ZeroInjCurr;
@@ -874,7 +874,7 @@ begin
 
       // Solve for voltages                      {Note:NodeV[0] = 0 + j0 always}
             if LogEvents then
-                LogThisEvent('Solve Sparse Set DoNormalSolution ...');
+                LogThisEvent(DSS, 'Solve Sparse Set DoNormalSolution ...');
             SolveSystem(NodeV);
             LoadsNeedUpdating := FALSE;
 
@@ -966,7 +966,7 @@ begin
     begin
 
         if DSS.ActiveCircuit.LogEvents then
-            LogThisEvent('Initializing Solution');
+            LogThisEvent(DSS, 'Initializing Solution');
         try
         //SolveZeroLoadSnapShot;
             SolveYDirect;  // 8-14-06 This should give a better answer than zero load snapshot
@@ -1030,7 +1030,7 @@ begin
     hY := hYseries;
 
     if DSS.ActiveCircuit.LogEvents then
-        LogThisEvent('Solve Sparse Set ZeroLoadSnapshot ...');
+        LogThisEvent(DSS, 'Solve Sparse Set ZeroLoadSnapshot ...');
 
     SolveSystem(NodeV);  // also sets voltages in radial part of the circuit if radial solution
 
@@ -1064,7 +1064,7 @@ begin
         with DSS.ActiveCircuit do
             for i := 1 to NumBuses do
                 with Buses^[i] do
-                    kVBase := NearestBasekV(Cabs(NodeV^[GetRef(1)]) * 0.001732) / SQRT3;  // l-n base kV
+                    kVBase := NearestBasekV(DSS, Cabs(NodeV^[GetRef(1)]) * 0.001732) / SQRT3;  // l-n base kV
 
         InitializeNodeVbase(DSS);      // for convergence test
 
@@ -1105,7 +1105,7 @@ begin
         if ConvergedFlag then
         begin
             if DSS.ActiveCircuit.LogEvents then
-                LogThisEvent('Control Iteration ' + IntToStr(ControlIteration));
+                LogThisEvent(DSS, 'Control Iteration ' + IntToStr(ControlIteration));
             Sample_DoControlActions;
             Check_Fault_Status;
         end
@@ -1157,7 +1157,7 @@ begin
     end;
 
     if DSS.ActiveCircuit.LogEvents then
-        LogThisEvent('Solution Done');
+        LogThisEvent(DSS, 'Solution Done');
 
 {$IFDEF DLL_ENGINE}
     Fire_StepControls;
@@ -1788,9 +1788,9 @@ begin
         Writeln(F,'Set ',PropertyName^[i],'=',PropertyValue^[i]);
      End;
      }
-    Writeln(F, 'Set Mode=', GetSolutionModeID);
-    Writeln(F, 'Set ControlMode=', GetControlModeID);
-    Writeln(F, 'Set Random=', GetRandomModeID);
+    Writeln(F, 'Set Mode=', GetSolutionModeID(DSS));
+    Writeln(F, 'Set ControlMode=', GetControlModeID(DSS));
+    Writeln(F, 'Set Random=', GetRandomModeID(DSS));
     Writeln(F, 'Set hour=', DynaVars.intHour: 0);
     Writeln(F, 'Set sec=', Format('%-g', [DynaVars.t]));
     Writeln(F, 'Set year=', Year: 0);
@@ -1802,7 +1802,7 @@ begin
     Writeln(F, 'Set tolerance=', Format('%-g', [ConvergenceTolerance]));
     Writeln(F, 'Set maxiterations=', MaxIterations: 0);
     Writeln(F, 'Set miniterations=', MinIterations: 0);
-    Writeln(F, 'Set loadmodel=', GetLoadModel);
+    Writeln(F, 'Set loadmodel=', GetLoadModel(DSS));
 
     Writeln(F, 'Set loadmult=', Format('%-g', [DSS.ActiveCircuit.LoadMultiplier]));
     Writeln(F, 'Set Normvminpu=', Format('%-g', [DSS.ActiveCircuit.NormalMinVolts]));
@@ -1944,7 +1944,7 @@ begin
     finally
 
         CloseFile(F);
-        FireOffEditor(Fname);
+        FireOffEditor(DSS, Fname);
 
     end;
 
@@ -2188,8 +2188,8 @@ begin
    // Reset Meters and Monitors
     DSS.MonitorClass.ResetAll;
     DSS.EnergyMeterClass.ResetAll;
-    DoResetFaults;
-    DoResetControls;
+    DoResetFaults(DSS);
+    DoResetControls(DSS);
 
 end;
 
@@ -2277,13 +2277,13 @@ begin
 
    {When we go in and out of Dynamics mode, we have to do some special things}
     if IsDynamicModel and not ValueIsDynamic then
-        InvalidateAllPCELEMENTS;  // Force Recomp of YPrims when we leave Dynamics mode
+        InvalidateAllPCELEMENTS(DSS);  // Force Recomp of YPrims when we leave Dynamics mode
 
     if not IsDynamicModel and ValueIsDynamic then
     begin   // see if conditions right for going into dynamics
 
         if DSS.ActiveCircuit.IsSolved then
-            CalcInitialMachineStates   // set state variables for machines (loads and generators)
+            CalcInitialMachineStates(DSS)   // set state variables for machines (loads and generators)
         else
         begin
            {Raise Error Message if not solved}
@@ -2306,7 +2306,7 @@ begin
 
     if IsHarmonicModel and not ((Value = TSolveMode.HARMONICMODE) or (Value = TSolveMode.HARMONICMODET)) then
     begin
-        InvalidateAllPCELEMENTS;  // Force Recomp of YPrims when we leave Harmonics mode
+        InvalidateAllPCELEMENTS(DSS);  // Force Recomp of YPrims when we leave Harmonics mode
         Frequency := DSS.ActiveCircuit.Fundamental;   // Resets everything to norm
     end;
 
@@ -2315,7 +2315,7 @@ begin
 
         if (DSS.ActiveCircuit.IsSolved) and (Frequency = DSS.ActiveCircuit.Fundamental) then
         begin
-            if not InitializeForHarmonics   // set state variables for machines (loads and generators) and sources
+            if not InitializeForHarmonics(DSS)   // set state variables for machines (loads and generators) and sources
             then
             begin
                 Result := FALSE;

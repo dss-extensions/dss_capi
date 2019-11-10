@@ -525,14 +525,14 @@ begin
                 propPFBAND:
                     FPFBand := DSS.Parser.DblValue;
                 propELEMENTLIST:
-                    InterpretTStringListArray(Param, FStorageNameList);
+                    InterpretTStringListArray(DSS, Param, FStorageNameList);
                 propWEIGHTS:
                 begin
                     FleetSize := FStorageNameList.count;
                     if FleetSize > 0 then
                     begin
                         Reallocmem(FWeights, Sizeof(FWeights^[1]) * FleetSize);
-                        FleetSize := InterpretDblArray(Param, FleetSize, FWeights);
+                        FleetSize := InterpretDblArray(DSS, Param, FleetSize, FWeights);
                     end;
                 end;
                 propMODEDISCHARGE:
@@ -1074,7 +1074,7 @@ begin
 
         {Check for existence of monitored element}
 
-    Devindex := GetCktElementIndex(ElementName); // Global FUNCTION
+    Devindex := GetCktElementIndex(DSS, ElementName); // Global FUNCTION
     if DevIndex > 0 then
     begin
         MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
@@ -1293,7 +1293,7 @@ begin
                 begin
                         {Time is within 1 time step of the trigger time}
                     if ShowEventLog then
-                        AppendToEventLog('StorageController.' + Self.Name, 'Fleet Set to Discharging (up ramp)by Schedule');
+                        AppendToEventLog(DSS, 'StorageController.' + Self.Name, 'Fleet Set to Discharging (up ramp)by Schedule');
                     SetFleetToDischarge;
                     ChargingAllowed := FALSE;
                     pctDischargeRate := min(pctkWRate, max(pctKWRate * Tdiff / UpRampTime, 0.0));
@@ -1332,7 +1332,7 @@ begin
                         ChargingAllowed := TRUE;
                         pctDischargeRate := 0.0;
                         if ShowEventLog then
-                            AppendToEventLog('StorageController.' + Self.Name, 'Fleet Set to Idling by Schedule');
+                            AppendToEventLog(DSS, 'StorageController.' + Self.Name, 'Fleet Set to Idling by Schedule');
 
                     end
                     else
@@ -1376,7 +1376,7 @@ begin
                         begin
                         {Time is within 1 time step of the trigger time}
                             if ShowEventLog then
-                                AppendToEventLog('StorageController.' + Self.Name, 'Fleet Set to Discharging by Time Trigger');
+                                AppendToEventLog(DSS, 'StorageController.' + Self.Name, 'Fleet Set to Discharging by Time Trigger');
                             SetFleetToDischarge;
                             SetFleetkWRate(pctKWRate);
                             DischargeInhibited := FALSE;
@@ -1400,7 +1400,7 @@ begin
                         begin
                     {Time is within 1 time step of the trigger time}
                             if ShowEventLog then
-                                AppendToEventLog('StorageController.' + Self.Name, 'Fleet Set to Charging by Time Trigger');
+                                AppendToEventLog(DSS, 'StorageController.' + Self.Name, 'Fleet Set to Charging by Time Trigger');
                             SetFleetToCharge;
                             DischargeInhibited := TRUE;
                             OutOfOomph := FALSE;
@@ -1542,7 +1542,7 @@ begin
                 if DischargeTriggeredByTime then
                 begin
                     if ShowEventLog then
-                        AppendToEventLog('StorageController.' + Self.Name,
+                        AppendToEventLog(DSS, 'StorageController.' + Self.Name,
                             Format('Fleet Set to Discharging by Time Trigger; Old kWTarget = %-.6g; New = %-.6g', [FkwTarget, S.re * 0.001]));
                     FkwTarget := Max(FkWThreshold, S.re * 0.001);  // Capture present kW and reset target
                     DischargeTriggeredByTime := FALSE;  // so we don't come back in here right away
@@ -1640,7 +1640,7 @@ begin
                     if not (FleetState = STORE_DISCHARGING) then
                         SetFleetToDischarge;
                     if ShowEventLog then
-                        AppendToEventLog('StorageController.' + Self.Name, Format('Attempting to dispatch %-.6g kW with %-.6g kWh remaining and %-.6g reserve.', [kWneeded, RemainingkWh, ReservekWh]));
+                        AppendToEventLog(DSS, 'StorageController.' + Self.Name, Format('Attempting to dispatch %-.6g kW with %-.6g kWh remaining and %-.6g reserve.', [kWneeded, RemainingkWh, ReservekWh]));
                     AmpsDiff := PDiff;
                     for i := 1 to FleetSize do
                     begin
@@ -1676,7 +1676,7 @@ begin
                 ChargingAllowed := TRUE;
                 OutOfOomph := TRUE;
                 if ShowEventLog then
-                    AppendToEventLog('StorageController.' + Self.Name, Format('Ran out of OOMPH: %-.6g kWh remaining and %-.6g reserve.', [RemainingkWh, ReservekWh]));
+                    AppendToEventLog(DSS, 'StorageController.' + Self.Name, Format('Ran out of OOMPH: %-.6g kWh remaining and %-.6g reserve.', [RemainingkWh, ReservekWh]));
             end;
         end;
 
@@ -1686,7 +1686,7 @@ begin
         if DispatchVars and (Abs(PFDiff) > HalfPFBand) then
         begin
             if ShowEventLog then
-                AppendToEventLog('StorageController.' + Self.Name, Format('Changed kvar Dispatch. PF Diff needed = %.6g', [PFDiff]));
+                AppendToEventLog(DSS, 'StorageController.' + Self.Name, Format('Changed kvar Dispatch. PF Diff needed = %.6g', [PFDiff]));
           // Redispatch Storage elements
             for i := 1 to FleetSize do
             begin
@@ -1814,7 +1814,7 @@ begin
                     if not (FleetState = STORE_CHARGING) then
                         SetFleetToCharge;
                     if ShowEventLog then
-                        AppendToEventLog('StorageController.' + Self.Name, Format('Attempting to charge %-.6g kW with %-.6g kWh remaining and %-.6g rating.', [PDiff, (TotalRatingkWh - ActualkWh), TotalRatingkWh]));
+                        AppendToEventLog(DSS, 'StorageController.' + Self.Name, Format('Attempting to charge %-.6g kW with %-.6g kWh remaining and %-.6g rating.', [PDiff, (TotalRatingkWh - ActualkWh), TotalRatingkWh]));
                     AmpsDiff := PDiff;
                     for i := 1 to FleetSize do
                     begin
@@ -1854,7 +1854,7 @@ begin
                 end;
                 ChargingAllowed := FALSE;
                 if ShowEventLog then
-                    AppendToEventLog('StorageController.' + Self.Name, Format('Fully charged: %-.6g kWh of rated %-.6g.', [ActualkWh, TotalRatingkWh]));
+                    AppendToEventLog(DSS, 'StorageController.' + Self.Name, Format('Fully charged: %-.6g kWh of rated %-.6g.', [ActualkWh, TotalRatingkWh]));
             end;
         end;
 

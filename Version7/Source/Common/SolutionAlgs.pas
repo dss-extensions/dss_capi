@@ -1159,7 +1159,7 @@ begin
             if Frequency <> Fundamental then
             begin     // Last solution was something other than fundamental
                 Frequency := Fundamental;
-                if not RetrieveSavedVoltages then
+                if not RetrieveSavedVoltages(DSS) then
                     Exit;  {Get Saved fundamental frequency solution}
             end;
 
@@ -1241,12 +1241,12 @@ begin
             if Frequency <> Fundamental then
             begin     // Last solution was something other than fundamental
                 Frequency := Fundamental;
-                if not RetrieveSavedVoltages then
+                if not RetrieveSavedVoltages(DSS) then
                     Exit;  {Get Saved fundamental frequency solution}
             end;
 //     DefaultHourMult := DefaultDailyShapeObj.getmult(DynaVars.dblHour);
 //     IF Load_Changed THEN Begin    //Added to update the current sources of all frequencies any time
-            InitializeForHarmonics;  //the value of a load changes in a proportional way
+            InitializeForHarmonics(DSS);  //the value of a load changes in a proportional way
 //            Load_Changed:=FALSE;     // Added 05 dec 2013 - D. Montenegro
 //     End;
             SolveSnap;

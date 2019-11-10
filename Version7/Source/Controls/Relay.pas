@@ -646,7 +646,7 @@ var
 
 begin
 
-    Devindex := GetCktElementIndex(MonitoredElementName); // Global function
+    Devindex := GetCktElementIndex(DSS, MonitoredElementName); // Global function
     if DevIndex > 0 then
     begin
         MonitoredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
@@ -695,7 +695,7 @@ begin
         ControlledElement.HasAutoOCPDevice := FALSE;
     end;
 
-    Devindex := GetCktElementIndex(ElementName); // Global function
+    Devindex := GetCktElementIndex(DSS, ElementName); // Global function
     if DevIndex > 0 then
     begin  // Both CktElement and monitored element must already exist
         ControlledElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
@@ -800,14 +800,14 @@ begin
                             if OperationCount > NumReclose then
                             begin
                                 LockedOut := TRUE;
-                                AppendtoEventLog('Relay.' + Self.Name, 'Opened on ' + RelayTarget + ' & Locked Out ');
+                                AppendtoEventLog(DSS, 'Relay.' + Self.Name, 'Opened on ' + RelayTarget + ' & Locked Out ');
                             end
                             else
-                                AppendtoEventLog('Relay.' + Self.Name, 'Opened');
+                                AppendtoEventLog(DSS, 'Relay.' + Self.Name, 'Opened');
                             if PhaseTarget then
-                                AppendtoEventLog(' ', 'Phase Target');
+                                AppendtoEventLog(DSS, ' ', 'Phase Target');
                             if GroundTarget then
-                                AppendtoEventLog(' ', 'Ground Target');
+                                AppendtoEventLog(DSS, ' ', 'Ground Target');
                             ArmedForOpen := FALSE;
                         end;
                 else {nada}
@@ -819,7 +819,7 @@ begin
                         begin
                             ControlledElement.Closed[0] := TRUE;    // Close all phases of active terminal
                             Inc(OperationCount);
-                            AppendtoEventLog('Relay.' + Self.Name, 'Closed');
+                            AppendtoEventLog(DSS, 'Relay.' + Self.Name, 'Closed');
                             ArmedForClose := FALSE;
                         end;
                 else {Nada}

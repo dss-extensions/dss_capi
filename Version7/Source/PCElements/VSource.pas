@@ -435,17 +435,17 @@ begin
                 19:
                     SetBus(2, param);
                 20:
-                    Ztemp := InterpretComplex(Param);
+                    Ztemp := InterpretComplex(DSS, Param);
                 21:
-                    Ztemp := InterpretComplex(Param);
+                    Ztemp := InterpretComplex(DSS, Param);
                 22:
-                    Ztemp := InterpretComplex(Param);
+                    Ztemp := InterpretComplex(DSS, Param);
                 23:
-                    puZ1 := InterpretComplex(Param);
+                    puZ1 := InterpretComplex(DSS, Param);
                 24:
-                    puZ0 := InterpretComplex(Param);
+                    puZ0 := InterpretComplex(DSS, Param);
                 25:
-                    puZ2 := InterpretComplex(Param);
+                    puZ2 := InterpretComplex(DSS, Param);
                 26:
                     BaseMVA := DSS.Parser.DblValue;
 

@@ -677,7 +677,7 @@ begin
                 begin
                     setlength(AmpRatings, NumAmpRatings);
                     Param := DSS.Parser.StrValue;
-                    NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
+                    NumAmpRatings := InterpretDblArray(DSS, Param, NumAmpRatings, Pointer(AmpRatings));
                 end
             else
             // Inherited Property Edits

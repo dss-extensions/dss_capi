@@ -235,7 +235,7 @@ Begin
       CASE ParamPointer OF
         0: DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
         1: begin
-           InterpretTStringListArray(Param, FPVSystemNameList);
+           InterpretTStringListArray(DSS, Param, FPVSystemNameList);
            FPVSystemPointerList.Clear; // clear this for resetting on first sample
            FListSize := FPVSystemNameList.count;
            end;
@@ -481,7 +481,7 @@ BEGIN
       if (FWithinTol[i]=False) then begin
         // look up Qpu from the slope crossing at Vreg, and add the bias
         Qpu := -FSlope * (FPresentVpu[i] - FVregs[i]) + FQbias;
-        If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+','+PVSys.Name,
+        If ShowEventLog Then AppendtoEventLog(DSS, 'ExpControl.' + Self.Name+','+PVSys.Name,
           Format(' Setting Qpu= %.5g at FVreg= %.5g, Vpu= %.5g', [Qpu, FVregs[i],FPresentVpu[i]]));
       end;
 
@@ -499,7 +499,7 @@ BEGIN
       if FPreferQ then begin
         Plimit := Qbase * Sqrt (1 - Qpu * Qpu);
         if Plimit < PVSys.PresentkW then begin
-          If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+','+PVSys.Name,
+          If ShowEventLog Then AppendtoEventLog(DSS, 'ExpControl.' + Self.Name+','+PVSys.Name,
             Format(' curtailing %.3f to %.3f kW', [PVSys.PresentkW, Plimit]));
           PVSys.PresentkW := Plimit;
           PVSys.puPmpp := Plimit/PVSys.Pmpp;
@@ -511,7 +511,7 @@ BEGIN
       Qset := FPriorQ[i] + DeltaQ * FdeltaQ_factor;
  //     Qset := FQbias * Qbase;
       If PVSys.Presentkvar <> Qset Then PVSys.Presentkvar := Qset;
-      If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name +','+ PVSys.Name,
+      If ShowEventLog Then AppendtoEventLog(DSS, 'ExpControl.' + Self.Name +','+ PVSys.Name,
                              Format(' Setting PVSystem output kvar= %.5g',
                              [PVSys.Presentkvar]));
       FPriorQ[i] := Qset;
@@ -565,11 +565,11 @@ begin
         Set_PendingChange(CHANGEVARLEVEL,i);
         With  DSS.ActiveCircuit.Solution.DynaVars Do
           ControlActionHandle := DSS.ActiveCircuit.ControlQueue.Push (intHour, t + TimeDelay, PendingChange[i], 0, Self);
-        If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
+        If ShowEventLog Then AppendtoEventLog(DSS, 'ExpControl.' + Self.Name+' '+PVSys.Name, Format
           (' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]));
       end else begin
         FWithinTol[i] := True;
-        If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
+        If ShowEventLog Then AppendtoEventLog(DSS, 'ExpControl.' + Self.Name+' '+PVSys.Name, Format
           (' within Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]));
       end;
     end;  {For}
@@ -722,7 +722,7 @@ begin
     if FVregs[j] < FVregMin then FVregs[j] := FVregMin;
     if FVregs[j] > FVregMax then FVregs[j] := FVregMax;
     PVSys.Set_Variable(5,FVregs[j]);
-    If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+','+PVSys.Name,
+    If ShowEventLog Then AppendtoEventLog(DSS, 'ExpControl.' + Self.Name+','+PVSys.Name,
       Format(' Setting new Vreg= %.5g Vpu=%.5g Verr=%.5g',
       [FVregs[j], FPresentVpu[j], Verr]));
   end;

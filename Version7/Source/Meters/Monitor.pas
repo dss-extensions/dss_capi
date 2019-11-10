@@ -388,7 +388,7 @@ begin
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 661);
                 1:
                 begin
-                    ElementName := ConstructElemName(lowercase(param));   // subtitute @var values if any
+                    ElementName := ConstructElemName(DSS, lowercase(param));   // subtitute @var values if any
                     PropertyValue[1] := ElementName;
                 end;
                 2:
@@ -677,7 +677,7 @@ var
 
 begin
     ValidMonitor := FALSE;
-    Devindex := GetCktElementIndex(ElementName);                   // Global function
+    Devindex := GetCktElementIndex(DSS, ElementName);                   // Global function
     if DevIndex > 0 then
     begin                                       // Monitored element must already exist
         MeteredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
@@ -1870,7 +1870,7 @@ begin
     end;
 
     if Show then
-        FireOffEditor(CSVName);
+        FireOffEditor(DSS, CSVName);
 
     DSS.GlobalResult := CSVName;
 end;

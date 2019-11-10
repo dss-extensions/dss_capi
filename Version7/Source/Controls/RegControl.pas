@@ -682,12 +682,12 @@ begin
     else
         UsingRegulatedBus := TRUE;
 
-    Devindex := GetCktElementIndex(ElementName); // Global FUNCTION
+    Devindex := GetCktElementIndex(DSS, ElementName); // Global FUNCTION
     if DevIndex = 0 then
     begin // Try 'AutoTrans' instead of Transformer
         TransName := StripClassName(ElementName);
         NewElementName := 'autotrans.' + TransName;
-        Devindex := GetCktElementIndex(NewElementName);
+        Devindex := GetCktElementIndex(DSS, NewElementName);
         if Devindex > 0 then
             ElementName := NewElementName;
     end;
@@ -948,7 +948,7 @@ begin
                                     RegWriteTraceRecord(TapChangeToMake);
                                 PresentTap[TapWinding] := PresentTap[TapWinding] + TapChangeToMake;
                                 if ShowEventLog then
-                                    AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d taps to %-.6g.', [Lastchange, PresentTap[TapWinding]]));
+                                    AppendtoEventLog(DSS, 'Regulator.' + ControlledElement.Name, Format(' Changed %d taps to %-.6g.', [Lastchange, PresentTap[TapWinding]]));
                                 PendingTapChange := 0.0;  // Reset to no change.  Program will determine if another needed.
                                 Armed := FALSE;
                             end;
@@ -972,7 +972,7 @@ begin
                                     RegWriteTraceRecord(TapChangeToMake);
                                 PresentTap[TapWinding] := PresentTap[TapWinding] + TapChangeToMake;
                                 if ShowEventLog then
-                                    AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d tap to %-.6g.', [Lastchange, PresentTap[TapWinding]]));
+                                    AppendtoEventLog(DSS, 'Regulator.' + ControlledElement.Name, Format(' Changed %d tap to %-.6g.', [Lastchange, PresentTap[TapWinding]]));
                                 if (DebugTrace) then
                                     RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name, Lastchange, PresentTap[TapWinding]]));
 
@@ -989,7 +989,7 @@ begin
                                     RegWriteTraceRecord(TapChangeToMake);
                                 PresentTap[TapWinding] := PresentTap[TapWinding] + TapChangeToMake;
                                 if ShowEventLog then
-                                    AppendtoEventLog('Regulator.' + ControlledElement.Name, Format(' Changed %d tap to %-.6g.', [Lastchange, PresentTap[TapWinding]]));
+                                    AppendtoEventLog(DSS, 'Regulator.' + ControlledElement.Name, Format(' Changed %d tap to %-.6g.', [Lastchange, PresentTap[TapWinding]]));
                                 if (DebugTrace) then
                                     RegWriteDebugRecord(Format('--- Regulator.%s Changed %d tap to %-.6g.', [ControlledElement.Name, Lastchange, PresentTap[TapWinding]]));
 

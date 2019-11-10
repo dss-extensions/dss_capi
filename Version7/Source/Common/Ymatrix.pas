@@ -70,7 +70,7 @@ begin
     with Ckt do
     begin
         if LogEvents then
-            LogThisEvent('Recalc All Yprims');
+            LogThisEvent(Ckt.DSS, 'Recalc All Yprims');
         pElem := CktElements.First;
         while pElem <> NIL do
         begin
@@ -95,7 +95,7 @@ begin
     with Ckt do
     begin
         if LogEvents then
-            LogThisEvent('Recalc Invalid Yprims');
+            LogThisEvent(Ckt.DSS, 'Recalc Invalid Yprims');
             
         pElem := IncrCktElements.First;
         while pElem <> NIL do
@@ -382,12 +382,12 @@ begin
             case BuildOption of
                 WHOLEMATRIX:
                     if Incremental then
-                        LogThisEvent('Building Whole Y Matrix -- using incremental method')
+                        LogThisEvent(DSS, 'Building Whole Y Matrix -- using incremental method')
                     else
-                        LogThisEvent('Building Whole Y Matrix');
+                        LogThisEvent(DSS, 'Building Whole Y Matrix');
                         
                 SERIESONLY:
-                    LogThisEvent('Building Series Y Matrix');
+                    LogThisEvent(DSS, 'Building Series Y Matrix');
             end;
           // Add in Yprims for all devices
           
@@ -429,7 +429,7 @@ begin
         if AllocateVI then
         begin
             if LogEvents then
-                LogThisEvent('ReAllocating Solution Arrays');
+                LogThisEvent(DSS, 'ReAllocating Solution Arrays');
             ReAllocMem(NodeV, SizeOf(NodeV^[1]) * (NumNodes + 1)); // Allocate System Voltage array - allow for zero element
             NodeV^[0] := CZERO;
             ReAllocMem(Currents, SizeOf(Currents^[1]) * (NumNodes + 1)); // Allocate System current array

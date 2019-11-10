@@ -716,7 +716,7 @@ begin
                 7:
                     DSS.Parser.ParseAsVector(Fnphases, SensorCurrent);   // Inits to zero
                 8:
-                    InterpretAndAllocStrArray(Param, DefinedZoneListSize, DefinedZoneList);
+                    InterpretAndAllocStrArray(DSS, Param, DefinedZoneListSize, DefinedZoneList);
                 9:
                     LocalOnly := InterpretYesNo(Param);
                 10:
@@ -1229,7 +1229,7 @@ var
     DevIndex: Integer;
 
 begin
-    Devindex := GetCktElementIndex(ElementName);   // Global function
+    Devindex := GetCktElementIndex(DSS, ElementName);   // Global function
     if DevIndex > 0 then
     begin  // Monitored element must already exist
         MeteredElement := DSS.ActiveCircuit.CktElements.Get(DevIndex); // Get pointer to metered element
@@ -3031,14 +3031,14 @@ begin
                     if (CktElem.DSSObjType and Classmask) = XFMR_ELEMENT then
                     begin
                         Inc(NXfmrs);
-                        WriteActiveDSSObject(FXfmrs, 'New');     // sets HasBeenSaved := TRUE
+                        WriteActiveDSSObject(DSS, FXfmrs, 'New');     // sets HasBeenSaved := TRUE
                         if cktElem.HasControl then
                         begin
                             pControlElem := cktElem.ControlElementList.First;
                             while pControlElem <> NIL do
                             begin
                                 ActiveCktElement := pControlElem;
-                                WriteActiveDSSObject(FXfmrs, 'New');  //  regulator control ...Also, relays, switch controls
+                                WriteActiveDSSObject(DSS, FXfmrs, 'New');  //  regulator control ...Also, relays, switch controls
                                 pControlElem := cktElem.ControlElementList.Next;
                             end;
                         end;
@@ -3046,14 +3046,14 @@ begin
                     else
                     begin  {Mostly LINE elements}
                         Inc(NBranches);
-                        WriteActiveDSSObject(FBranches, 'New');     // sets HasBeenSaved := TRUE
+                        WriteActiveDSSObject(DSS, FBranches, 'New');     // sets HasBeenSaved := TRUE
                         if cktElem.HasControl then
                         begin
                             pControlElem := cktElem.ControlElementList.First;
                             while pControlElem <> NIL do
                             begin
                                 ActiveCktElement := pControlElem;
-                                WriteActiveDSSObject(FBranches, 'New');  //  regulator control ...Also, relays, switch controls
+                                WriteActiveDSSObject(DSS, FBranches, 'New');  //  regulator control ...Also, relays, switch controls
                                 pControlElem := cktElem.ControlElementList.Next;
                             end;
                         end;
@@ -3075,20 +3075,20 @@ begin
                             end;
                             ActiveCktElement := shuntElement; // reset in case Edit mangles it
                             Inc(NLoads);
-                            WriteActiveDSSObject(FLoads, 'New');
+                            WriteActiveDSSObject(DSS, FLoads, 'New');
                         end
                         else
                         if (shuntElement.DSSObjType and Classmask) = GEN_ELEMENT then
                         begin
                             Inc(NGens);
-                            WriteActiveDSSObject(FGens, 'New');
+                            WriteActiveDSSObject(DSS, FGens, 'New');
                             if shuntElement.HasControl then
                             begin
                                 pControlElem := shuntElement.ControlElementList.First;
                                 while pControlElem <> NIL do
                                 begin
                                     ActiveCktElement := pControlElem;
-                                    WriteActiveDSSObject(FGens, 'New');
+                                    WriteActiveDSSObject(DSS, FGens, 'New');
                                     pControlElem := shuntElement.ControlElementList.Next;
                                 end;
                             end;
@@ -3097,14 +3097,14 @@ begin
                         if (shuntElement.DSSObjType and Classmask) = CAP_ELEMENT then
                         begin
                             Inc(NCaps);
-                            WriteActiveDSSObject(FCaps, 'New');
+                            WriteActiveDSSObject(DSS, FCaps, 'New');
                             if shuntElement.HasControl then
                             begin
                                 pControlElem := shuntElement.ControlElementList.First;
                                 while pControlElem <> NIL do
                                 begin
                                     ActiveCktElement := pControlElem;
-                                    WriteActiveDSSObject(FCaps, 'New');
+                                    WriteActiveDSSObject(DSS, FCaps, 'New');
                                     pControlElem := shuntElement.ControlElementList.Next;
                                 end;
                             end;
@@ -3112,7 +3112,7 @@ begin
                         else
                         begin
                             Inc(NShunts);
-                            WriteActiveDSSObject(Fshunts, 'New');
+                            WriteActiveDSSObject(DSS, Fshunts, 'New');
                         end;
                         shuntElement := BranchList.NextObject
                     end;
@@ -3804,7 +3804,7 @@ begin
 
   {Get total system energy out of the sources}
 
-    cPower := CmulReal(GetTotalPowerFromSources, 0.001);  // convert to kW
+    cPower := CmulReal(GetTotalPowerFromSources(DSS), 0.001);  // convert to kW
 
     Integrate(kWh, cPower.re, dkwh);
     Integrate(kvarh, cPower.im, dkvarh);

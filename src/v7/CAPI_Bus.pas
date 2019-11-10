@@ -667,7 +667,7 @@ begin
         with DSSPrime.ActiveCircuit do
 
             if ActiveBusIndex > 0 then
-                Result := Utilities.GetUniqueNodeNumber(BusList.Get(ActiveBusIndex), StartNumber);
+                Result := Utilities.GetUniqueNodeNumber(DSSPrime, BusList.Get(ActiveBusIndex), StartNumber);
 end;
 //------------------------------------------------------------------------------
 procedure Bus_Get_CplxSeqVoltages(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;

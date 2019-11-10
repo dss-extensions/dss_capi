@@ -272,6 +272,8 @@ TYPE
         SeasonalRating         : Boolean;    // Tells the energy meter if the seasonal rating feature is active
         SeasonSignal           : String;     // Stores the name of the signal for selecting the rating dynamically
 
+        LastCmdLine: String;   // always has last command processed
+        RedirFile: String;
         
         IsPrime: Boolean; // Indicates whether this instance is the first/main DSS instance
 
@@ -295,7 +297,8 @@ constructor TDSS.Create(_IsPrime: Boolean);
 begin
     inherited Create;
     
-    ParserVars := TParserVar.Create(100);  // start with space for 100 variables
+    LastCmdLine := '';
+    RedirFile := '';
 
 {$IFDEF DSS_CAPI}
     // Use the current working directory as the initial datapath when using DSS_CAPI
@@ -303,8 +306,12 @@ begin
 {$ENDIF}
     
     IsPrime := _IsPrime;
+    
+    ParserVars := TParserVar.Create(100);  // start with space for 100 variables
     Parser        := TParser.Create;
     AuxParser        := TParser.Create;
+    Parser.SetVars(ParserVars);
+    AuxParser.SetVars(ParserVars);
     
     ADiakoptics      :=    False;  // Disabled by default
 

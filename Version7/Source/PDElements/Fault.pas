@@ -697,11 +697,11 @@ begin
         begin
             if not Is_ON then
             begin   {Turn it on unless it has been previously cleared}
-                if (PresentTimeInSec > On_Time) and not Cleared then
+                if (PresentTimeInSec(DSS) > On_Time) and not Cleared then
                 begin
                     Is_ON := TRUE;
                     YPrimInvalid := TRUE;
-                    AppendtoEventLog('Fault.' + Name, '**APPLIED**');
+                    AppendtoEventLog(DSS, 'Fault.' + Name, '**APPLIED**');
                 end;
             end
             else
@@ -712,7 +712,7 @@ begin
                         Is_ON := FALSE;
                         Cleared := TRUE;
                         YPrimInvalid := TRUE;
-                        AppendtoEventLog('Fault.' + Name, '**CLEARED**');
+                        AppendtoEventLog(DSS, 'Fault.' + Name, '**CLEARED**');
                     end;
             end;
         end;

@@ -237,7 +237,7 @@ begin
                 begin
                     if NormalState = CTRL_NONE then
                         NormalState := PresentState;
-                    Devindex := GetCktElementIndex(ElementName);   // Set Controlled element
+                    Devindex := GetCktElementIndex(DSS, ElementName);   // Set Controlled element
                     if DevIndex > 0 then
                     begin
                         ControlledElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
@@ -331,7 +331,7 @@ procedure TSwtControlObj.RecalcElementData;
 var
     DevIndex: Integer;
 begin
-    Devindex := GetCktElementIndex(ElementName);
+    Devindex := GetCktElementIndex(DSS, ElementName);
     if DevIndex > 0 then
     begin
         ControlledElement := DSS.ActiveCircuit.CktElements.Get(DevIndex);
@@ -402,13 +402,13 @@ begin
             begin
                 ControlledElement.Closed[0] := FALSE; // Open all phases of active terminal
                 PresentState := CTRL_OPEN;
-                AppendtoEventLog('SwtControl.' + Self.Name, 'Opened');
+                AppendtoEventLog(DSS, 'SwtControl.' + Self.Name, 'Opened');
             end;
             if (Code = Integer(CTRL_CLOSE)) and (PresentState = CTRL_OPEN) then
             begin
                 ControlledElement.Closed[0] := TRUE;    // Close all phases of active terminal
                 PresentState := CTRL_CLOSE;
-                AppendtoEventLog('SwtControl.' + Self.Name, 'Closed');
+                AppendtoEventLog(DSS, 'SwtControl.' + Self.Name, 'Closed');
             end;
             Armed := FALSE;  // reset the switch
         end;
