@@ -30,7 +30,7 @@ type
         procedure DefineProperties;
         function MakeLike(const Name: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
         function Edit: Integer; OVERRIDE;     // uses global parser
         function Init(Handle: Integer): Integer; OVERRIDE;
@@ -90,7 +90,7 @@ const
     NumPropsThisClass = 37;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TXfmrCode.Create(dss: TDSS);
+constructor TXfmrCode.Create(dss: TDSSContext);
 begin
     inherited Create(dss);
     Class_Name := 'XfmrCode';

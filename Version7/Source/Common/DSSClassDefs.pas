@@ -65,10 +65,10 @@ const
     GIC_SOURCE = 36 * 8;
     AUTOTRANS_ELEMENT = 37 * 8;
 
-procedure CreateDSSClasses(DSS: TDSS);
-procedure DisposeDSSClasses(DSS: TDSS);
-function GetDSSClassPtr(DSS: TDSS; const ClassName: String): TDSSClass;
-function SetObjectClass(DSS: TDSS; const ObjType: String): Boolean;
+procedure CreateDSSClasses(DSS: TDSSContext);
+procedure DisposeDSSClasses(DSS: TDSSContext);
+function GetDSSClassPtr(DSS: TDSSContext; const ClassName: String): TDSSClass;
+function SetObjectClass(DSS: TDSSContext; const ObjType: String): Boolean;
 
 
 implementation
@@ -135,7 +135,7 @@ uses
 
 
 {--------------------------------------------------------------}
-procedure CreateDSSClasses(DSS: TDSS);
+procedure CreateDSSClasses(DSS: TDSSContext);
 begin
     DSS.Classnames := THashList.Create(25);   // Makes 5 sub lists
     DSS.DSSClassList := TPointerList.Create(10);  // 10 is initial size and increment
@@ -315,7 +315,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-procedure DisposeDSSClasses(DSS: TDSS);
+procedure DisposeDSSClasses(DSS: TDSSContext);
 
 var
     i: Integer;
@@ -360,7 +360,7 @@ end;
 
 
 {--------------------------------------------------------------}
-procedure AddUserClass(DSS: TDSS);
+procedure AddUserClass(DSS: TDSSContext);
 
 begin
       // ***** ADD STUFF HERE ****
@@ -376,7 +376,7 @@ begin
 end;
 
 {--------------------------------------------------------------}
-// procedure LoadUserClasses(DSS: TDSS);
+// procedure LoadUserClasses(DSS: TDSSContext);
 // var
 //     F: TSearchRec;
 // begin
@@ -405,7 +405,7 @@ end;
 // end;
 // 
 //----------------------------------------------------------------------------
-function SetObjectClass(DSS: TDSS; const ObjType: String): Boolean;
+function SetObjectClass(DSS: TDSSContext; const ObjType: String): Boolean;
 
 // set LastClassReferenced variable by class name
 
@@ -432,7 +432,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-function GetDSSClassPtr(DSS: TDSS; const ClassName: String): TDSSClass;
+function GetDSSClassPtr(DSS: TDSSContext; const ClassName: String): TDSSClass;
 begin
     Result := TDSSClass(DSS.DSSClassList.Get(DSS.ClassNames.Find(lowercase(ClassName))));
 end;

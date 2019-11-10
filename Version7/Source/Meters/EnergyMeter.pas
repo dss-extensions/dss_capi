@@ -167,7 +167,7 @@ type
         This_Meter_DIFileIsOpen: Boolean;
         SystemDIFile: TextFile;
         cPower, cLosses: Complex;
-        DSS: TDSS;
+        DSS: TDSSContext;
 
         procedure Clear;
         procedure Integrate(var Reg: Double; Value: Double; var Deriv: Double);
@@ -187,7 +187,7 @@ type
         procedure Reset;
         procedure Save;
 
-        constructor Create(dssContext: TDSS);
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
     end;
@@ -233,7 +233,7 @@ type
         OverLoadFileIsOpen: Boolean;
         VoltageFileIsOpen: Boolean;
 
-        constructor Create(dssContext: TDSS);
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -462,7 +462,7 @@ begin
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TEnergyMeter.Create(dssContext: TDSS);  // Creates superstructure FOR all EnergyMeter objects
+constructor TEnergyMeter.Create(dssContext: TDSSContext);  // Creates superstructure FOR all EnergyMeter objects
 begin
     inherited Create(dssContext);
     Class_Name := 'EnergyMeter';
@@ -3704,7 +3704,7 @@ begin
     end;
 end;
 
-constructor TSystemMeter.Create(dssContext: TDSS);
+constructor TSystemMeter.Create(dssContext: TDSSContext);
 begin
     DSS := dssContext;
     Clear;

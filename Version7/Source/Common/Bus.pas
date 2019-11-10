@@ -25,7 +25,7 @@ type
 
     TDSSBus = class(TNamedObject)
     PRIVATE
-        DSS: TDSS;
+        DSS: TDSSContext;
         
         FNumNodesThisBus: Integer;
         Nodes: pIntegerArray;
@@ -61,7 +61,7 @@ type
         BusTotalMiles: Double;  // Total length of lines downstream from this bus for Duke siting algorithm
         BusSectionID: Integer; // ID of the feeder section this bus belongs to
 
-        constructor Create(dssContext: TDSS);
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         procedure AllocateBusQuantities;
@@ -98,7 +98,7 @@ uses
     SysUtils,
     DSSHelper;
 
-constructor TDSSBus.Create(dssContext: TDSS);
+constructor TDSSBus.Create(dssContext: TDSSContext);
 begin
     inherited Create('Bus');
     DSS := dssContext;

@@ -184,30 +184,30 @@ VAR
     UpdateRegistry     :Boolean;  // update on program exit
 {$ENDIF}
 
-PROCEDURE DoErrorMsg(DSS: TDSS; Const S, Emsg, ProbCause :String; ErrNum:Integer);
-PROCEDURE DoSimpleMsg(DSS: TDSS; Const S :String; ErrNum:Integer);
+PROCEDURE DoErrorMsg(DSS: TDSSContext; Const S, Emsg, ProbCause :String; ErrNum:Integer);
+PROCEDURE DoSimpleMsg(DSS: TDSSContext; Const S :String; ErrNum:Integer);
 
-PROCEDURE ClearAllCircuits(DSS: TDSS);
+PROCEDURE ClearAllCircuits(DSS: TDSSContext);
 
-PROCEDURE SetObject(DSS: TDSS; const param :string);
-FUNCTION  SetActiveBus(DSS: TDSS; const BusName:String):Integer;
-PROCEDURE SetDataPath(DSS: TDSS; const PathName:String);
+PROCEDURE SetObject(DSS: TDSSContext; const param :string);
+FUNCTION  SetActiveBus(DSS: TDSSContext; const BusName:String):Integer;
+PROCEDURE SetDataPath(DSS: TDSSContext; const PathName:String);
 
-PROCEDURE SetLastResultFile(DSS: TDSS; Const Fname:String);
+PROCEDURE SetLastResultFile(DSS: TDSSContext; Const Fname:String);
 
-PROCEDURE MakeNewCircuit(DSS: TDSS; Const Name:String);
+PROCEDURE MakeNewCircuit(DSS: TDSSContext; Const Name:String);
 
-PROCEDURE AppendGlobalResult(DSS: TDSS; Const s:String);
-PROCEDURE AppendGlobalResultCRLF(DSS: TDSS; const S:String);  // Separate by CRLF
+PROCEDURE AppendGlobalResult(DSS: TDSSContext; Const s:String);
+PROCEDURE AppendGlobalResultCRLF(DSS: TDSSContext; const S:String);  // Separate by CRLF
 
-PROCEDURE ResetQueryLogFile(DSS: TDSS);
-PROCEDURE WriteQueryLogFile(DSS: TDSS; Const Prop, S:String);
+PROCEDURE ResetQueryLogFile(DSS: TDSSContext);
+PROCEDURE WriteQueryLogFile(DSS: TDSSContext; Const Prop, S:String);
 
-PROCEDURE WriteDLLDebugFile(DSS: TDSS; Const S:String);
+PROCEDURE WriteDLLDebugFile(DSS: TDSSContext; Const S:String);
 
 {$IFNDEF DSS_CAPI} // Disable DSS_Registry completely when building the DSS_CAPI DLL
-PROCEDURE ReadDSS_Registry(DSS: TDSS);
-PROCEDURE WriteDSS_Registry(DSS: TDSS);
+PROCEDURE ReadDSS_Registry(DSS: TDSSContext);
+PROCEDURE WriteDSS_Registry(DSS: TDSSContext);
 {$ENDIF}
 
 // FUNCTION IsDSSDLL(Fname:String):Boolean;
@@ -312,7 +312,7 @@ End;
 // End;
 // 
 //----------------------------------------------------------------------------
-PROCEDURE DoErrorMsg(DSS: TDSS; Const S, Emsg, ProbCause:String; ErrNum:Integer);
+PROCEDURE DoErrorMsg(DSS: TDSSContext; Const S, Emsg, ProbCause:String; ErrNum:Integer);
 
 VAR
     Msg:String;
@@ -349,7 +349,7 @@ Begin
 End;
 
 //----------------------------------------------------------------------------
-PROCEDURE AppendGlobalResultCRLF(DSS: TDSS; const S:String);
+PROCEDURE AppendGlobalResultCRLF(DSS: TDSSContext; const S:String);
 
 Begin
     If Length(DSS.GlobalResult) > 0
@@ -360,7 +360,7 @@ Begin
 End;
 
 //----------------------------------------------------------------------------
-PROCEDURE DoSimpleMsg(DSS: TDSS; Const S:String; ErrNum:Integer);
+PROCEDURE DoSimpleMsg(DSS: TDSSContext; Const S:String; ErrNum:Integer);
 
 VAR
     Retval:Integer;
@@ -394,7 +394,7 @@ End;
 
 
 //----------------------------------------------------------------------------
-PROCEDURE SetObject(DSS: TDSS; const param :string);
+PROCEDURE SetObject(DSS: TDSSContext; const param :string);
 
 {Set object active by name}
 
@@ -440,7 +440,7 @@ Begin
 End;
 
 //----------------------------------------------------------------------------
-FUNCTION SetActiveBus(DSS: TDSS; const BusName:String):Integer;
+FUNCTION SetActiveBus(DSS: TDSSContext; const BusName:String):Integer;
 
 
 Begin
@@ -461,7 +461,7 @@ Begin
 
 End;
 
-PROCEDURE ClearAllCircuits(DSS: TDSS);
+PROCEDURE ClearAllCircuits(DSS: TDSSContext);
 Begin
      DSS.ActiveCircuit := DSS.Circuits.First;
      WHILE DSS.ActiveCircuit<>nil DO
@@ -481,7 +481,7 @@ End;
 
 
 
-PROCEDURE MakeNewCircuit(DSS: TDSS; Const Name:String);
+PROCEDURE MakeNewCircuit(DSS: TDSSContext; Const Name:String);
 Var
     S:String;
 Begin
@@ -507,7 +507,7 @@ Begin
 End;
 
 
-PROCEDURE AppendGlobalResult(DSS: TDSS; Const S:String);
+PROCEDURE AppendGlobalResult(DSS: TDSSContext; Const S:String);
 
 // Append a string to Global result, separated by commas
 
@@ -600,7 +600,7 @@ End;
 {$ENDIF}
 {$ENDIF} //IFDEF DSS_CAPI
 
-PROCEDURE WriteDLLDebugFile(DSS: TDSS; Const S:String);
+PROCEDURE WriteDLLDebugFile(DSS: TDSSContext; Const S:String);
 
 Begin
 
@@ -632,7 +632,7 @@ begin
 end;
 {$ENDIF}
 
-PROCEDURE SetDataPath(DSS: TDSS; const PathName:String);
+PROCEDURE SetDataPath(DSS: TDSSContext; const PathName:String);
 var
   ScratchPath: String;
 // Pathname may be null
@@ -664,7 +664,7 @@ BEGIN
 END;
 
 {$IFNDEF DSS_CAPI} // Disable DSS_Registry completely when building the DSS_CAPI DLL
-PROCEDURE ReadDSS_Registry(DSS: TDSS);
+PROCEDURE ReadDSS_Registry(DSS: TDSSContext);
 Var  TestDataDirectory:string;
 Begin
   DSS_Registry.Section := 'MainSect';
@@ -698,7 +698,7 @@ Begin
 End;
 
 
-PROCEDURE WriteDSS_Registry(DSS: TDSS);
+PROCEDURE WriteDSS_Registry(DSS: TDSSContext);
 Begin
   If UpdateRegistry Then  Begin
       DSS_Registry.Section := 'MainSect';
@@ -714,13 +714,13 @@ Begin
 End;
 {$ENDIF}
 
-PROCEDURE ResetQueryLogFile(DSS: TDSS);
+PROCEDURE ResetQueryLogFile(DSS: TDSSContext);
 Begin
      DSS.QueryFirstTime := TRUE;
 End;
 
 
-PROCEDURE WriteQueryLogfile(DSS: TDSS; Const Prop, S:String);
+PROCEDURE WriteQueryLogfile(DSS: TDSSContext; Const Prop, S:String);
 
 {Log file is written after a query command if LogQueries is true.}
 
@@ -745,7 +745,7 @@ Begin
 
 End;
 
-PROCEDURE SetLastResultFile(DSS: TDSS; Const Fname:String);
+PROCEDURE SetLastResultFile(DSS: TDSSContext; Const Fname:String);
 
 Begin
       DSS.LastResultfile := Fname;
@@ -913,7 +913,7 @@ initialization
    if (DSS_CAPI_ALLOW_INCREMENTAL_Y) then WriteLn('DSS_CAPI_ALLOW_INCREMENTAL_Y');
 {$ENDIF}
 
-  DSSPrime := TDSS.Create(True);
+  DSSPrime := TDSSContext.Create(True);
 
 
 Finalization

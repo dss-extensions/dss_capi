@@ -32,7 +32,7 @@ type
         procedure DefineProperties;
         function MakeLike(const OtherSource: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -144,7 +144,7 @@ var
     CDOUBLEONE: Complex;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TUPFC.Create(dss: TDSS);  // Creates superstructure for all Line objects
+constructor TUPFC.Create(dss: TDSSContext);  // Creates superstructure for all Line objects
 begin
     inherited Create(dss);
     Class_Name := 'UPFC';

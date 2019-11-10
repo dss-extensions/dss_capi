@@ -31,7 +31,7 @@ type
 
     PUBLIC
         NumControlClassProps: Integer;
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
     PUBLISHED
 
@@ -46,7 +46,7 @@ uses
     DSSClassDefs,
     DSSGlobals;
 
-constructor TControlClass.Create(dss: TDSS);
+constructor TControlClass.Create(dss: TDSSContext);
 begin
 
     inherited Create(dss);

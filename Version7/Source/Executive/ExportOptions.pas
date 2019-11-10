@@ -16,7 +16,7 @@ uses
 const
     NumExportOptions = 61;
 
-function DoExportCmd(DSS: TDSS): Integer;
+function DoExportCmd(DSS: TDSSContext): Integer;
 
 
 var
@@ -183,7 +183,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-function DoExportCmd(DSS: TDSS): Integer;
+function DoExportCmd(DSS: TDSSContext): Integer;
 
 var
     ParamName,

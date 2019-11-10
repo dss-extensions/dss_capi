@@ -28,7 +28,7 @@ type
 
     PUBLIC
         NumCktElemClassProps: Integer;
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
     PUBLISHED
 
@@ -89,7 +89,7 @@ begin
 
 end;
 
-constructor TCktElementClass.Create(dss: TDSS);
+constructor TCktElementClass.Create(dss: TDSSContext);
 begin
 
     inherited Create(dss);

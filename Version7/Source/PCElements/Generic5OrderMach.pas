@@ -45,7 +45,7 @@ type
 
     PUBLIC
 
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;      // Definition of the main property editing function
@@ -375,7 +375,7 @@ var  // Define any useful module vars here, for example:
     CDOUBLEONE: Complex;   // 1 + j1  (see Initialization section below)
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TGeneric5.Create(dss: TDSS);  // Creates main collection handler for all IndMach012 objects
+constructor TGeneric5.Create(dss: TDSSContext);  // Creates main collection handler for all IndMach012 objects
 begin
     inherited Create(dss);  // make the base class  and init DSSClassType
 

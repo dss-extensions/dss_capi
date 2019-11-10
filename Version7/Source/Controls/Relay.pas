@@ -71,7 +71,7 @@ type
         procedure DefineProperties;
         function MakeLike(const RelayName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -203,7 +203,7 @@ const
     GENERIC = 6; {Use this for frequency, etc.  Generic over/under relay}
 
 {--------------------------------------------------------------------------}
-constructor TRelay.Create(dss: TDSS);  // Creates superstructure for all Relay objects
+constructor TRelay.Create(dss: TDSSContext);  // Creates superstructure for all Relay objects
 begin
     inherited Create(dss);
 

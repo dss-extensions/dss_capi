@@ -28,7 +28,7 @@ type
 {$ELSE}
     PROTECTED
 {$ENDIF}
-        DSS: TDSS;
+        DSS: TDSSContext;
 
         PropSeqCount: Integer;
         FPropertyValue: pStringArray;

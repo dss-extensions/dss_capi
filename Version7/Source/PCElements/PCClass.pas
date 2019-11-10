@@ -27,7 +27,7 @@ type
 
     PUBLIC
         NumPCClassProps: Integer;
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
     PUBLISHED
 
@@ -44,7 +44,7 @@ uses
     Utilities,
     DSSHelper;
 
-constructor TPCClass.Create(dss: TDSS);
+constructor TPCClass.Create(dss: TDSSContext);
 begin
     inherited Create(dss);
     NumPCClassProps := 1;

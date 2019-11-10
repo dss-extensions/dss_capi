@@ -51,7 +51,7 @@ type
         procedure DefineProperties;
         function MakeLike(const RegControlName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -213,7 +213,7 @@ var
     LastChange: Integer;
 
 {--------------------------------------------------------------------------}
-constructor TRegControl.Create(dss: TDSS);  // Creates superstructure for all RegControl objects
+constructor TRegControl.Create(dss: TDSSContext);  // Creates superstructure for all RegControl objects
 begin
     inherited Create(dss);
 

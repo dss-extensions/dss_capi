@@ -41,7 +41,7 @@ type
         procedure DefineProperties;
         function MakeLike(const GenDispatcherName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -105,7 +105,7 @@ const
 
 
 {--------------------------------------------------------------------------}
-constructor TGenDispatcher.Create(dss: TDSS);  // Creates superstructure for all GenDispatcher objects
+constructor TGenDispatcher.Create(dss: TDSSContext);  // Creates superstructure for all GenDispatcher objects
 begin
     inherited Create(dss);
 

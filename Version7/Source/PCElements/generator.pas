@@ -123,7 +123,7 @@ type
     PUBLIC
         RegisterNames: array[1..NumGenregisters] of String;
 
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -339,7 +339,7 @@ var
 //    TwoPI3:Double;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TGenerator.Create(dss: TDSS);  // Creates superstructure for all Line objects
+constructor TGenerator.Create(dss: TDSSContext);  // Creates superstructure for all Line objects
 begin
     inherited Create(dss);
     Class_Name := 'Generator';

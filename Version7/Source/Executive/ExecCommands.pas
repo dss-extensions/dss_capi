@@ -22,7 +22,7 @@ var
 
     CommandList: TCommandList;
 
-procedure ProcessCommand(DSS: TDSS; const CmdLine: String);
+procedure ProcessCommand(DSS: TDSSContext; const CmdLine: String);
 
 implementation
 
@@ -503,7 +503,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-procedure ProcessCommand(DSS: TDSS; const CmdLine: String);
+procedure ProcessCommand(DSS: TDSSContext; const CmdLine: String);
 var
     ParamPointer: Integer;
     ParamName: String;

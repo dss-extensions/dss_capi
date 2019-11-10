@@ -15,34 +15,34 @@ interface
 uses 
     DSSClass;
 
-procedure ShowVoltages(DSS: TDSS; FileNm: String; LL: Boolean; ShowOptionCode: Integer);
-procedure ShowCurrents(DSS: TDSS; FileNm: String; ShowResidual: Boolean; ShowOptionCode: Integer);
-procedure ShowPowers(DSS: TDSS; FileNm: String; opt, ShowOptionCode: Integer);
-procedure ShowBusPowers(DSS: TDSS; FileNm, BusName: String; opt, ShowOptionCode: Integer);
-procedure ShowFaultStudy(DSS: TDSS; FileNm: String);
-procedure ShowElements(DSS: TDSS; FileNm: String; ClassName: String);
-procedure ShowBuses(DSS: TDSS; FileNm: String);
-procedure ShowMeters(DSS: TDSS; FileNm: String);
-procedure ShowGenMeters(DSS: TDSS; FileNm: String);
-procedure ShowMeterZone(DSS: TDSS; FileNm: String);
-procedure ShowLosses(DSS: TDSS; FileNm: String);
-procedure ShowRegulatorTaps(DSS: TDSS; FileNm: String);
-procedure ShowOverloads(DSS: TDSS; FileNm: String);
-procedure ShowUnserved(DSS: TDSS; FileNm: String; UE_Only: Boolean);
-procedure ShowVariables(DSS: TDSS; FileNm: String);
-procedure ShowIsolated(DSS: TDSS; FileNm: String);
-procedure ShowRatings(DSS: TDSS; FileNm: String);
-procedure ShowLoops(DSS: TDSS; FileNm: String);
-procedure ShowLineConstants(DSS: TDSS; FileNm: String; Freq: Double; Units: Integer; Rho: Double);
-procedure ShowYPrim(DSS: TDSS; FileNm: String);
-procedure ShowY(DSS: TDSS; FileNm: String);
-procedure ShowTopology(DSS: TDSS; FileRoot: String); // summary and tree-view to separate files
-procedure ShowNodeCurrentSum(DSS: TDSS; FileNm: String);
-procedure ShowkVBaseMismatch(DSS: TDSS; FileNm: String);
-procedure ShowDeltaV(DSS: TDSS; FileNm: String);
-procedure ShowControlledElements(DSS: TDSS; FileNm: String);
-procedure ShowResult(DSS: TDSS; FileNm: String);
-procedure ShowEventLog(DSS: TDSS; FileNm: String);
+procedure ShowVoltages(DSS: TDSSContext; FileNm: String; LL: Boolean; ShowOptionCode: Integer);
+procedure ShowCurrents(DSS: TDSSContext; FileNm: String; ShowResidual: Boolean; ShowOptionCode: Integer);
+procedure ShowPowers(DSS: TDSSContext; FileNm: String; opt, ShowOptionCode: Integer);
+procedure ShowBusPowers(DSS: TDSSContext; FileNm, BusName: String; opt, ShowOptionCode: Integer);
+procedure ShowFaultStudy(DSS: TDSSContext; FileNm: String);
+procedure ShowElements(DSS: TDSSContext; FileNm: String; ClassName: String);
+procedure ShowBuses(DSS: TDSSContext; FileNm: String);
+procedure ShowMeters(DSS: TDSSContext; FileNm: String);
+procedure ShowGenMeters(DSS: TDSSContext; FileNm: String);
+procedure ShowMeterZone(DSS: TDSSContext; FileNm: String);
+procedure ShowLosses(DSS: TDSSContext; FileNm: String);
+procedure ShowRegulatorTaps(DSS: TDSSContext; FileNm: String);
+procedure ShowOverloads(DSS: TDSSContext; FileNm: String);
+procedure ShowUnserved(DSS: TDSSContext; FileNm: String; UE_Only: Boolean);
+procedure ShowVariables(DSS: TDSSContext; FileNm: String);
+procedure ShowIsolated(DSS: TDSSContext; FileNm: String);
+procedure ShowRatings(DSS: TDSSContext; FileNm: String);
+procedure ShowLoops(DSS: TDSSContext; FileNm: String);
+procedure ShowLineConstants(DSS: TDSSContext; FileNm: String; Freq: Double; Units: Integer; Rho: Double);
+procedure ShowYPrim(DSS: TDSSContext; FileNm: String);
+procedure ShowY(DSS: TDSSContext; FileNm: String);
+procedure ShowTopology(DSS: TDSSContext; FileRoot: String); // summary and tree-view to separate files
+procedure ShowNodeCurrentSum(DSS: TDSSContext; FileNm: String);
+procedure ShowkVBaseMismatch(DSS: TDSSContext; FileNm: String);
+procedure ShowDeltaV(DSS: TDSSContext; FileNm: String);
+procedure ShowControlledElements(DSS: TDSSContext; FileNm: String);
+procedure ShowResult(DSS: TDSSContext; FileNm: String);
+procedure ShowEventLog(DSS: TDSSContext; FileNm: String);
 
 implementation
 
@@ -89,7 +89,7 @@ var
 const
     TABCHAR: Char = chr(9);
 
-procedure SetMaxBusNameLength(DSS: TDSS);
+procedure SetMaxBusNameLength(DSS: TDSSContext);
 var
     i: Integer;
 begin
@@ -99,7 +99,7 @@ begin
             MaxBusNameLength := Max(MaxBusNameLength, Length(BusList.Get(i)));
 end;
 
-procedure SetMaxDeviceNameLength(DSS: TDSS);
+procedure SetMaxDeviceNameLength(DSS: TDSSContext);
 var
     i: Integer;
     DevName, DevClassName: String;
@@ -115,7 +115,7 @@ begin
         end;
 end;
 
-procedure WriteSeqVoltages(DSS: TDSS; var F: TextFile; i: Integer; LL: Boolean);
+procedure WriteSeqVoltages(DSS: TDSSContext; var F: TextFile; i: Integer; LL: Boolean);
 
 var
     j, k: Integer;
@@ -196,7 +196,7 @@ begin
 
 end;
 
-procedure WriteBusVoltages(DSS: TDSS; var F: TextFile; i: Integer; LL: Boolean);
+procedure WriteBusVoltages(DSS: TDSSContext; var F: TextFile; i: Integer; LL: Boolean);
 
 // 6/11/14 Modified to write both LL and LN voltages out for LN case
 
@@ -286,7 +286,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElementVoltages(DSS: TDSS; var F: TextFile; pElem: TDSSCktElement; LL: Boolean);
+procedure WriteElementVoltages(DSS: TDSSContext; var F: TextFile; pElem: TDSSCktElement; LL: Boolean);
 var
     NCond, Nterm, i, j, k, nref, bref: Integer;
     Busname: String;
@@ -332,7 +332,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElementDeltaVoltages(DSS: TDSS; var F: TextFile; pElem: TDSSCktElement);
+procedure WriteElementDeltaVoltages(DSS: TDSSContext; var F: TextFile; pElem: TDSSCktElement);
 var
     NCond,
     Node1, Node2,
@@ -383,7 +383,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowVoltages(DSS: TDSS; FileNm: String; LL: Boolean; ShowOptionCode: Integer);
+procedure ShowVoltages(DSS: TDSSContext; FileNm: String; LL: Boolean; ShowOptionCode: Integer);
 
 // Show bus voltages by circuit element terminal
 
@@ -577,7 +577,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteTerminalCurrents(DSS: TDSS; var F: TextFile; pElem: TDSSCktElement; ShowResidual: Boolean);
+procedure WriteTerminalCurrents(DSS: TDSSContext; var F: TextFile; pElem: TDSSCktElement; ShowResidual: Boolean);
 
 var
 
@@ -630,7 +630,7 @@ begin
 
 end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowCurrents(DSS: TDSS; FileNm: String; ShowResidual: Boolean; ShowOptionCode: Integer);
+procedure ShowCurrents(DSS: TDSSContext; FileNm: String; ShowResidual: Boolean; ShowOptionCode: Integer);
 
 
 var
@@ -844,7 +844,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowPowers(DSS: TDSS; FileNm: String; opt, ShowOptionCode: Integer);
+procedure ShowPowers(DSS: TDSSContext; FileNm: String; opt, ShowOptionCode: Integer);
 
 {Opt = 0: kVA
  opt = 1: MVA
@@ -1309,7 +1309,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteTerminalPowerSeq(DSS: TDSS; var F: TextFile; cktElem: TDSSCktElement; j, opt: Integer);
+procedure WriteTerminalPowerSeq(DSS: TDSSContext; var F: TextFile; cktElem: TDSSCktElement; j, opt: Integer);
 var
     i, k, Ncond, nref: Integer;
     Volts, S: Complex;
@@ -1397,7 +1397,7 @@ begin
 end;
 
 
-procedure WriteTerminalPower(DSS: TDSS; var F: TextFile; CktElem: TDSSCktElement; jTerm, opt: Integer);
+procedure WriteTerminalPower(DSS: TDSSContext; var F: TextFile; CktElem: TDSSCktElement; jTerm, opt: Integer);
 
 var
 
@@ -1449,7 +1449,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowBusPowers(DSS: TDSS; FileNm, BusName: String; opt, ShowOptionCode: Integer);
+procedure ShowBusPowers(DSS: TDSSContext; FileNm, BusName: String; opt, ShowOptionCode: Integer);
 
 {Report power flow around a specified Bus}
 
@@ -1809,7 +1809,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowFaultStudy(DSS: TDSS; FileNm: String);
+procedure ShowFaultStudy(DSS: TDSSContext; FileNm: String);
 
 var
     i, iBus, iphs: Integer;
@@ -1984,7 +1984,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowElements(DSS: TDSS; FileNm: String; ClassName: String);
+procedure ShowElements(DSS: TDSSContext; FileNm: String; ClassName: String);
 
 // Show Elements and bus connections
 
@@ -2122,7 +2122,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowBuses(DSS: TDSS; FileNm: String);
+procedure ShowBuses(DSS: TDSSContext; FileNm: String);
 
 // Show bus names and nodes in uses
 
@@ -2187,7 +2187,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowMeters(DSS: TDSS; FileNm: String);
+procedure ShowMeters(DSS: TDSSContext; FileNm: String);
 
 // Show Values of  Meter Elements
 
@@ -2258,7 +2258,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowGenMeters(DSS: TDSS; FileNm: String);
+procedure ShowGenMeters(DSS: TDSSContext; FileNm: String);
 
 // Show Values of Generator Meter Elements
 
@@ -2321,7 +2321,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowRegulatorTaps(DSS: TDSS; FileNm: String);
+procedure ShowRegulatorTaps(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -2363,7 +2363,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ShowMeterZone(DSS: TDSS; FileNm: String);
+procedure ShowMeterZone(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -2459,7 +2459,7 @@ begin
 
 end;
 
-procedure ShowOverloads(DSS: TDSS; FileNm: String);
+procedure ShowOverloads(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -2577,7 +2577,7 @@ end;
 
 { - -- - - - - ------------------------------}
 
-procedure ShowUnserved(DSS: TDSS; FileNm: String; UE_Only: Boolean);
+procedure ShowUnserved(DSS: TDSSContext; FileNm: String; UE_Only: Boolean);
 
 var
     F: TextFile;
@@ -2638,7 +2638,7 @@ begin
 end;
 
 
-procedure ShowLosses(DSS: TDSS; FileNm: String);
+procedure ShowLosses(DSS: TDSSContext; FileNm: String);
 
 
 var
@@ -2740,7 +2740,7 @@ begin
 
 end;
 
-procedure ShowVariables(DSS: TDSS; FileNm: String);
+procedure ShowVariables(DSS: TDSSContext; FileNm: String);
 
 var
     F: Textfile;
@@ -2789,7 +2789,7 @@ begin
 
 end;
 
-procedure ShowIsolated(DSS: TDSS; FileNm: String);
+procedure ShowIsolated(DSS: TDSSContext; FileNm: String);
 
 {Show isolated buses/branches in present circuit}
 
@@ -2965,7 +2965,7 @@ begin
 
 end;
 
-procedure ShowRatings(DSS: TDSS; FileNm: String);
+procedure ShowRatings(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -2999,7 +2999,7 @@ begin
 
 end;
 
-procedure ShowLoops(DSS: TDSS; FileNm: String);
+procedure ShowLoops(DSS: TDSSContext; FileNm: String);
 {Show loops and paralleled branches in Meter zones}
 
 var
@@ -3066,7 +3066,7 @@ begin
         Write(F, Format('(* %d *)', [nLevel]));
 end;
 
-procedure ShowTopology(DSS: TDSS; FileRoot: String);
+procedure ShowTopology(DSS: TDSSContext; FileRoot: String);
 var
     F, Ftree: TextFile;
     FileNm, TreeNm: String;
@@ -3215,7 +3215,7 @@ begin
     end;
 end;
 
-procedure ShowLineConstants(DSS: TDSS; FileNm: String; Freq: Double; Units: Integer; Rho: Double);
+procedure ShowLineConstants(DSS: TDSSContext; FileNm: String; Freq: Double; Units: Integer; Rho: Double);
 var
     F, F2: TextFile;
     p: Integer;
@@ -3461,7 +3461,7 @@ begin
     end;
 end;
 
-procedure ShowYPrim(DSS: TDSS; FileNm: String);
+procedure ShowYPrim(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -3530,7 +3530,7 @@ begin
 end;
 
 // shows how to retrieve the System Y in Triplet form
-procedure ShowY(DSS: TDSS; FileNm: String);
+procedure ShowY(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -3592,7 +3592,7 @@ begin
 
 end;
 
-procedure ShowNodeCurrentSum(DSS: TDSS; FileNm: String);
+procedure ShowNodeCurrentSum(DSS: TDSSContext; FileNm: String);
 
 type
     pNodeDoubleArray = ^NodeDoubleArray;
@@ -3694,7 +3694,7 @@ begin
 end;
 
 
-procedure ShowkVBaseMismatch(DSS: TDSS; FileNm: String);
+procedure ShowkVBaseMismatch(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -3801,7 +3801,7 @@ begin
     end;
 end;
 
-procedure ShowDeltaV(DSS: TDSS; FileNm: String);
+procedure ShowDeltaV(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -3887,7 +3887,7 @@ begin
 
 end;
 
-procedure ShowControlledElements(DSS: TDSS; FileNm: String);
+procedure ShowControlledElements(DSS: TDSSContext; FileNm: String);
 
 var
     F: Textfile;
@@ -3929,7 +3929,7 @@ begin
 
 end;
 
-procedure ShowResult(DSS: TDSS; FileNm: String);
+procedure ShowResult(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -3954,7 +3954,7 @@ begin
 
 end;
 
-procedure ShowEventLog(DSS: TDSS; FileNm: String);
+procedure ShowEventLog(DSS: TDSSContext; FileNm: String);
 
 
 begin

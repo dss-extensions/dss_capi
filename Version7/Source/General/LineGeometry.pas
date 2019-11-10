@@ -48,7 +48,7 @@ type
         function MakeLike(const LineName: String): Integer; OVERRIDE;
     PUBLIC
 
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -180,7 +180,7 @@ const
     NumPropsThisClass = 18;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TLineGeometry.Create(dss: TDSS);  // Creates superstructure for all Line objects
+constructor TLineGeometry.Create(dss: TDSSContext);  // Creates superstructure for all Line objects
 begin
     inherited Create(dss);
     Class_Name := 'LineGeometry';

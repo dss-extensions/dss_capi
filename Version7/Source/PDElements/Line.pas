@@ -41,7 +41,7 @@ type
         function MakeLike(const LineName: String): Integer; OVERRIDE;
 
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
 
@@ -175,7 +175,7 @@ var
     CAP_EPSILON: Complex;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TLine.Create(dss: TDSS);  // Creates superstructure for all Line objects
+constructor TLine.Create(dss: TDSSContext);  // Creates superstructure for all Line objects
 begin
     inherited Create(dss);
     Class_Name := 'Line';

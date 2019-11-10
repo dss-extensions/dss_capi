@@ -96,7 +96,7 @@ type
     PUBLIC
         RegisterNames: array[1..NumPVSystemRegisters] of String;
 
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -400,7 +400,7 @@ var
     CDOUBLEONE: Complex;
 
 // ===========================================================================================
-constructor TPVsystem.Create(dss: TDSS);  // Creates superstructure for all PVSystem elements
+constructor TPVsystem.Create(dss: TDSSContext);  // Creates superstructure for all PVSystem elements
 begin
     inherited Create(dss);
     Class_Name := 'PVSystem';

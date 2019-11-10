@@ -17,58 +17,58 @@ uses
     EnergyMeter,
     DSSClass;
 
-procedure ExportVoltages(DSS: TDSS; FileNm: String);
-procedure ExportSeqVoltages(DSS: TDSS; FileNm: String);
-procedure ExportCurrents(DSS: TDSS; FileNm: String);
-procedure ExportEstimation(DSS: TDSS; Filenm: String);
-procedure ExportSeqCurrents(DSS: TDSS; FileNm: String);
-procedure ExportPowers(DSS: TDSS; FileNm: String; opt: Integer);
-procedure ExportPbyphase(DSS: TDSS; FileNm: String; opt: Integer);
-procedure ExportSeqPowers(DSS: TDSS; FileNm: String; opt: Integer);
-procedure ExportFaultStudy(DSS: TDSS; FileNm: String);
-procedure ExportMeters(DSS: TDSS; FileNm: String);
-procedure ExportGenMeters(DSS: TDSS; FileNm: String);
-procedure ExportPVSystemMeters(DSS: TDSS; FileNm: String);
-procedure ExportStorageMeters(DSS: TDSS; FileNm: String);
-procedure ExportLoads(DSS: TDSS; FileNm: String);
-procedure ExportCapacity(DSS: TDSS; FileNm: String);
-procedure ExportOverloads(DSS: TDSS; FileNm: String);
-procedure ExportUnserved(DSS: TDSS; FileNm: String; UE_Only: Boolean);
-procedure ExportYprim(DSS: TDSS; FileNm: String);
-procedure ExportY(DSS: TDSS; FileNm: String; TripletOpt: Boolean);
-procedure ExportSeqZ(DSS: TDSS; FileNm: String);
-procedure ExportBusCoords(DSS: TDSS; FileNm: String);
-procedure ExportLosses(DSS: TDSS; FileNm: String);
-procedure ExportUuids(DSS: TDSS; FileNm: String);
-procedure ExportCounts(DSS: TDSS; FileNm: String);
-procedure ExportSummary(DSS: TDSS; FileNm: String);
-procedure ExportProfile(DSS: TDSS; FileNm: String; PhasesToPlot: Integer);
-procedure ExportEventLog(DSS: TDSS; FileNm: String);
-procedure ExportVoltagesElements(DSS: TDSS; FileNm: String);
-procedure ExportGICMvar(DSS: TDSS; FileNm: String);
-procedure ExportBusReliability(DSS: TDSS; FileNm: String);
-procedure ExportBranchReliability(DSS: TDSS; FileNm: String);
-procedure ExportNodeNames(DSS: TDSS; FileNm: String);
-procedure ExportTaps(DSS: TDSS; FileNm: String);
-procedure ExportNodeOrder(DSS: TDSS; FileNm: String);
-procedure ExportElemCurrents(DSS: TDSS; FileNm: String);
-procedure ExportElemVoltages(DSS: TDSS; FileNm: String);
-procedure ExportElemPowers(DSS: TDSS; FileNm: String);
-procedure ExportResult(DSS: TDSS; FileNm: String);
-procedure ExportYNodeList(DSS: TDSS; FileNM: String);
-procedure ExportYVoltages(DSS: TDSS; FileNM: String);
-procedure ExportYCurrents(DSS: TDSS; FileNM: String);
-procedure ExportSections(DSS: TDSS; FileNM: String; pMeter: TEnergyMeterObj);
-procedure ExportErrorLog(DSS: TDSS; FileNm: String);
-procedure ExportIncMatrix(DSS: TDSS; FileNm: String);
-procedure ExportIncMatrixRows(DSS: TDSS; FileNm: String);
-procedure ExportIncMatrixCols(DSS: TDSS; FileNm: String);
-procedure ExportBusLevels(DSS: TDSS; FileNm: String);
-procedure ExportLaplacian(DSS: TDSS; FileNm: String);
-procedure ExportZLL(DSS: TDSS; FileNm: String);
-procedure ExportZCC(DSS: TDSS; FileNm: String);
-procedure ExportY4(DSS: TDSS; FileNm: String);
-procedure ExportC(DSS: TDSS; FileNm: String);
+procedure ExportVoltages(DSS: TDSSContext; FileNm: String);
+procedure ExportSeqVoltages(DSS: TDSSContext; FileNm: String);
+procedure ExportCurrents(DSS: TDSSContext; FileNm: String);
+procedure ExportEstimation(DSS: TDSSContext; Filenm: String);
+procedure ExportSeqCurrents(DSS: TDSSContext; FileNm: String);
+procedure ExportPowers(DSS: TDSSContext; FileNm: String; opt: Integer);
+procedure ExportPbyphase(DSS: TDSSContext; FileNm: String; opt: Integer);
+procedure ExportSeqPowers(DSS: TDSSContext; FileNm: String; opt: Integer);
+procedure ExportFaultStudy(DSS: TDSSContext; FileNm: String);
+procedure ExportMeters(DSS: TDSSContext; FileNm: String);
+procedure ExportGenMeters(DSS: TDSSContext; FileNm: String);
+procedure ExportPVSystemMeters(DSS: TDSSContext; FileNm: String);
+procedure ExportStorageMeters(DSS: TDSSContext; FileNm: String);
+procedure ExportLoads(DSS: TDSSContext; FileNm: String);
+procedure ExportCapacity(DSS: TDSSContext; FileNm: String);
+procedure ExportOverloads(DSS: TDSSContext; FileNm: String);
+procedure ExportUnserved(DSS: TDSSContext; FileNm: String; UE_Only: Boolean);
+procedure ExportYprim(DSS: TDSSContext; FileNm: String);
+procedure ExportY(DSS: TDSSContext; FileNm: String; TripletOpt: Boolean);
+procedure ExportSeqZ(DSS: TDSSContext; FileNm: String);
+procedure ExportBusCoords(DSS: TDSSContext; FileNm: String);
+procedure ExportLosses(DSS: TDSSContext; FileNm: String);
+procedure ExportUuids(DSS: TDSSContext; FileNm: String);
+procedure ExportCounts(DSS: TDSSContext; FileNm: String);
+procedure ExportSummary(DSS: TDSSContext; FileNm: String);
+procedure ExportProfile(DSS: TDSSContext; FileNm: String; PhasesToPlot: Integer);
+procedure ExportEventLog(DSS: TDSSContext; FileNm: String);
+procedure ExportVoltagesElements(DSS: TDSSContext; FileNm: String);
+procedure ExportGICMvar(DSS: TDSSContext; FileNm: String);
+procedure ExportBusReliability(DSS: TDSSContext; FileNm: String);
+procedure ExportBranchReliability(DSS: TDSSContext; FileNm: String);
+procedure ExportNodeNames(DSS: TDSSContext; FileNm: String);
+procedure ExportTaps(DSS: TDSSContext; FileNm: String);
+procedure ExportNodeOrder(DSS: TDSSContext; FileNm: String);
+procedure ExportElemCurrents(DSS: TDSSContext; FileNm: String);
+procedure ExportElemVoltages(DSS: TDSSContext; FileNm: String);
+procedure ExportElemPowers(DSS: TDSSContext; FileNm: String);
+procedure ExportResult(DSS: TDSSContext; FileNm: String);
+procedure ExportYNodeList(DSS: TDSSContext; FileNM: String);
+procedure ExportYVoltages(DSS: TDSSContext; FileNM: String);
+procedure ExportYCurrents(DSS: TDSSContext; FileNM: String);
+procedure ExportSections(DSS: TDSSContext; FileNM: String; pMeter: TEnergyMeterObj);
+procedure ExportErrorLog(DSS: TDSSContext; FileNm: String);
+procedure ExportIncMatrix(DSS: TDSSContext; FileNm: String);
+procedure ExportIncMatrixRows(DSS: TDSSContext; FileNm: String);
+procedure ExportIncMatrixCols(DSS: TDSSContext; FileNm: String);
+procedure ExportBusLevels(DSS: TDSSContext; FileNm: String);
+procedure ExportLaplacian(DSS: TDSSContext; FileNm: String);
+procedure ExportZLL(DSS: TDSSContext; FileNm: String);
+procedure ExportZCC(DSS: TDSSContext; FileNm: String);
+procedure ExportY4(DSS: TDSSContext; FileNm: String);
+procedure ExportC(DSS: TDSSContext; FileNm: String);
 
 
 implementation
@@ -107,7 +107,7 @@ uses
     KLUSolve,
     DSSHelper;
 
-procedure WriteElementVoltagesExportFile(DSS: TDSS; var F: TextFile; pElem: TDSSCktElement; MaxNumNodes: Integer);
+procedure WriteElementVoltagesExportFile(DSS: TDSSContext; var F: TextFile; pElem: TDSSCktElement; MaxNumNodes: Integer);
 
 var
     NCond, Nterm, i, j, k, m, nref, bref: Integer;
@@ -168,7 +168,7 @@ end; //end procedure
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportSeqVoltages(DSS: TDSS; FileNm: String);
+procedure ExportSeqVoltages(DSS: TDSSContext; FileNm: String);
 
 // Export Symmetrical Component bus voltages
 
@@ -273,7 +273,7 @@ begin
 end;
 
 //-------------------------------------------------------------------
-procedure ExportVoltages(DSS: TDSS; FileNm: String);
+procedure ExportVoltages(DSS: TDSSContext; FileNm: String);
 
 // Export Symmetrical Component bus voltages
 
@@ -352,7 +352,7 @@ begin
 end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure CalcAndWriteSeqCurrents(DSS: TDSS; var F: TextFile; j: Integer; pelem: TDSSCktElement; cBuffer: pComplexArray; DoRatings: Boolean);
+procedure CalcAndWriteSeqCurrents(DSS: TDSSContext; var F: TextFile; j: Integer; pelem: TDSSCktElement; cBuffer: pComplexArray; DoRatings: Boolean);
 var
     I0, I1, I2, I2I1, I0I1, iNormal, iEmerg: Double;
     i, k, NCond: Integer;
@@ -429,7 +429,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportSeqCurrents(DSS: TDSS; FileNm: String);
+procedure ExportSeqCurrents(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -558,7 +558,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure CalcAndWriteMaxCurrents(DSS: TDSS; var F: TextFile; pElem: TPDElement; Cbuffer: pComplexArray);
+procedure CalcAndWriteMaxCurrents(DSS: TDSSContext; var F: TextFile; pElem: TPDElement; Cbuffer: pComplexArray);
 var
     i: Integer;
     Currmag, MaxCurrent: Double;
@@ -586,7 +586,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportCurrents(DSS: TDSS; FileNm: String);
+procedure ExportCurrents(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -693,7 +693,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteNodeList(DSS: TDSS; var F: TextFile; const CktElementName: String);
+procedure WriteNodeList(DSS: TDSSContext; var F: TextFile; const CktElementName: String);
 var
     NValues, i: Integer;
 
@@ -731,7 +731,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportNodeOrder(DSS: TDSS; FileNm: String);
+procedure ExportNodeOrder(DSS: TDSSContext; FileNm: String);
 
 { Writes NodeLists in same order as Export Currents function
 }
@@ -814,7 +814,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElemCurrents(DSS: TDSS; var F: TextFile; const CktElementName: String);
+procedure WriteElemCurrents(DSS: TDSSContext; var F: TextFile; const CktElementName: String);
 var
     NValues, i: Integer;
 
@@ -853,7 +853,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportElemCurrents(DSS: TDSS; FileNm: String);
+procedure ExportElemCurrents(DSS: TDSSContext; FileNm: String);
 
 { Export currents in same order as NodeOrder export
 }
@@ -934,7 +934,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElemVoltages(DSS: TDSS; var F: TextFile; const CktElementName: String);
+procedure WriteElemVoltages(DSS: TDSSContext; var F: TextFile; const CktElementName: String);
 var
     NValues, i: Integer;
 
@@ -972,7 +972,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportElemVoltages(DSS: TDSS; FileNm: String);
+procedure ExportElemVoltages(DSS: TDSSContext; FileNm: String);
 { Export conductor voltages in same order as NodeOrder export
 }
 var
@@ -1054,7 +1054,7 @@ end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure WriteElemPowers(DSS: TDSS; var F: TextFile; const CktElementName: String);
+procedure WriteElemPowers(DSS: TDSSContext; var F: TextFile; const CktElementName: String);
 var
     NValues, i: Integer;
     S: Complex;
@@ -1094,7 +1094,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportElemPowers(DSS: TDSS; FileNm: String);
+procedure ExportElemPowers(DSS: TDSSContext; FileNm: String);
 
 { Export conductor powers in same order as NodeOrder export
 }
@@ -1176,7 +1176,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportPowers(DSS: TDSS; FileNm: String; opt: Integer);
+procedure ExportPowers(DSS: TDSSContext; FileNm: String; opt: Integer);
 
 {Opt = 0: kVA
  opt = 1: MVA
@@ -1279,7 +1279,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportLosses(DSS: TDSS; FileNm: String);
+procedure ExportLosses(DSS: TDSSContext; FileNm: String);
 
 {Opt = 0: kVA
  opt = 1: MVA
@@ -1320,7 +1320,7 @@ begin
 end;
 
 // ===============================================================================
-procedure ExportPbyphase(DSS: TDSS; FileNm: String; opt: Integer);
+procedure ExportPbyphase(DSS: TDSSContext; FileNm: String; opt: Integer);
 
 { Export Powers by phase }
 
@@ -1410,7 +1410,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportSeqPowers(DSS: TDSS; FileNm: String; opt: Integer);
+procedure ExportSeqPowers(DSS: TDSSContext; FileNm: String; opt: Integer);
 
 {Opt = 0: kVA
  opt = 1: MVA
@@ -1611,7 +1611,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportFaultStudy(DSS: TDSS; FileNm: String);
+procedure ExportFaultStudy(DSS: TDSSContext; FileNm: String);
 
 var
     i, iBus, iphs: Integer;
@@ -1737,7 +1737,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportEstimation(DSS: TDSS; FileNm: String);
+procedure ExportEstimation(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -1868,7 +1868,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteMultipleMeterFiles(DSS: TDSS);
+procedure WriteMultipleMeterFiles(DSS: TDSSContext);
 
 var
     F: TextFile;
@@ -1927,7 +1927,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteSingleMeterFile(DSS: TDSS; const FileNm: String);
+procedure WriteSingleMeterFile(DSS: TDSSContext; const FileNm: String);
 var
     F: TextFile;
     i, j: Integer;
@@ -2008,7 +2008,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportMeters(DSS: TDSS; FileNm: String);
+procedure ExportMeters(DSS: TDSSContext; FileNm: String);
 
 // Export Values of  Meter Elements
 
@@ -2026,7 +2026,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteMultipleGenMeterFiles(DSS: TDSS);
+procedure WriteMultipleGenMeterFiles(DSS: TDSSContext);
 
 var
     F: TextFile;
@@ -2088,7 +2088,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteSingleGenMeterFile(DSS: TDSS; FileNm: String);
+procedure WriteSingleGenMeterFile(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -2178,7 +2178,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteMultiplePVSystemMeterFiles(DSS: TDSS);
+procedure WriteMultiplePVSystemMeterFiles(DSS: TDSSContext);
 
 var
     F: TextFile;
@@ -2237,7 +2237,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteSinglePVSystemMeterFile(DSS: TDSS; FileNm: String);
+procedure WriteSinglePVSystemMeterFile(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -2325,7 +2325,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteMultipleStorageMeterFiles(DSS: TDSS);
+procedure WriteMultipleStorageMeterFiles(DSS: TDSSContext);
 
 var
     F: TextFile;
@@ -2384,7 +2384,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure WriteSingleStorageMeterFile(DSS: TDSS; FileNm: String);
+procedure WriteSingleStorageMeterFile(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -2473,7 +2473,7 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportGenMeters(DSS: TDSS; FileNm: String);
+procedure ExportGenMeters(DSS: TDSSContext; FileNm: String);
 
 // Export Values of Generator Meter Elements
 // If switch /m is specified, a separate file is created for each generator using the generator's name
@@ -2489,7 +2489,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportPVSystemMeters(DSS: TDSS; FileNm: String);
+procedure ExportPVSystemMeters(DSS: TDSSContext; FileNm: String);
 
 // Export Values of Generator Meter Elements
 // If switch /m is specified, a separate file is created for each generator using the generator's name
@@ -2505,7 +2505,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportStorageMeters(DSS: TDSS; FileNm: String);
+procedure ExportStorageMeters(DSS: TDSSContext; FileNm: String);
 
 // Export Values of Generator Meter Elements
 // If switch /m is specified, a separate file is created for each generator using the generator's name
@@ -2521,7 +2521,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportLoads(DSS: TDSS; FileNm: String);
+procedure ExportLoads(DSS: TDSSContext; FileNm: String);
 
 // Export Loads to view present allocation
 
@@ -2573,7 +2573,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportCapacity(DSS: TDSS; FileNm: String);
+procedure ExportCapacity(DSS: TDSSContext; FileNm: String);
 
 {
  Similar to export currents except does only max of the phases and compares that
@@ -2622,7 +2622,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportOverloads(DSS: TDSS; FileNm: String);
+procedure ExportOverloads(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -2745,7 +2745,7 @@ begin
     end;
 end;
 
-procedure ExportUnserved(DSS: TDSS; FileNm: String; UE_Only: Boolean);
+procedure ExportUnserved(DSS: TDSSContext; FileNm: String; UE_Only: Boolean);
 
 var
     F: TextFile;
@@ -2800,7 +2800,7 @@ begin
 
 end;
 
-procedure ExportYprim(DSS: TDSS; FileNm: String);
+procedure ExportYprim(DSS: TDSSContext; FileNm: String);
 
 {Exports  YPrim matrices for all  Circuit Elements}
 
@@ -2853,7 +2853,7 @@ begin
 end;
 
 // illustrate retrieval of System Y using compressed column format
-procedure ExportY(DSS: TDSS; FileNm: String; TripletOpt: Boolean);
+procedure ExportY(DSS: TDSSContext; FileNm: String; TripletOpt: Boolean);
 
 {Exports System Y Matrix in Node Order}
 
@@ -2952,7 +2952,7 @@ begin
     end;
 end;
 
-procedure ExportSeqZ(DSS: TDSS; FileNm: String);
+procedure ExportSeqZ(DSS: TDSSContext; FileNm: String);
 
 // Export Symmetrical Component Impedances at each bus
 
@@ -3005,7 +3005,7 @@ begin
 
 end;
 
-procedure ExportUuids(DSS: TDSS; FileNm: String);
+procedure ExportUuids(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     clsCode: TLineCode;
@@ -3066,7 +3066,7 @@ begin
     end;
 end;
 
-procedure ExportCounts(DSS: TDSS; FileNm: String);
+procedure ExportCounts(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     cls: TDSSClass;
@@ -3087,7 +3087,7 @@ begin
     end;
 end;
 
-procedure ExportSummary(DSS: TDSS; FileNm: String);
+procedure ExportSummary(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     cPower, cLosses: Complex;
@@ -3164,7 +3164,7 @@ begin
     end;
 end;
 
-procedure ExportBusCoords(DSS: TDSS; FileNm: String);
+procedure ExportBusCoords(DSS: TDSSContext; FileNm: String);
 // Export bus x, y coordinates
 
 var
@@ -3208,7 +3208,7 @@ begin
 end;
 
 
-procedure ExportProfile(DSS: TDSS; FileNm: String; PhasesToPlot: Integer);
+procedure ExportProfile(DSS: TDSSContext; FileNm: String; PhasesToPlot: Integer);
 
 var
     iEnergyMeter: Integer;
@@ -3409,21 +3409,21 @@ begin
 
 end;
 
-procedure ExportEventLog(DSS: TDSS; FileNm: String);
+procedure ExportEventLog(DSS: TDSSContext; FileNm: String);
 // Export the present set of EventStrings
 begin
     DSS.EventStrings.SaveToFile(FileNm);
     DSS.GlobalResult := FileNm;
 end;
 
-procedure ExportErrorLog(DSS: TDSS; FileNm: String);
+procedure ExportErrorLog(DSS: TDSSContext; FileNm: String);
 // Export the present set of ErrorStrings
 begin
     DSS.ErrorStrings.SaveToFile(FileNm);
     DSS.GlobalResult := FileNm;
 end;
 
-procedure ExportIncMatrix(DSS: TDSS; FileNm: String);
+procedure ExportIncMatrix(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     i: Integer;
@@ -3442,7 +3442,7 @@ begin
     end;
 end;
 
-procedure ExportIncMatrixRows(DSS: TDSS; FileNm: String);
+procedure ExportIncMatrixRows(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     i: Integer;
@@ -3461,7 +3461,7 @@ begin
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportIncMatrixCols(DSS: TDSS; FileNm: String);
+procedure ExportIncMatrixCols(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     i: Integer;
@@ -3480,7 +3480,7 @@ begin
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportBusLevels(DSS: TDSS; FileNm: String);
+procedure ExportBusLevels(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     i: Integer;
@@ -3500,7 +3500,7 @@ begin
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportLaplacian(DSS: TDSS; FileNm: String);
+procedure ExportLaplacian(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     i: Integer;
@@ -3519,7 +3519,7 @@ begin
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportZLL(DSS: TDSS; FileNm: String);
+procedure ExportZLL(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     i: Integer;
@@ -3541,7 +3541,7 @@ begin
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportZCC(DSS: TDSS; FileNm: String);
+procedure ExportZCC(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     i: Integer;
@@ -3563,7 +3563,7 @@ begin
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportY4(DSS: TDSS; FileNm: String);
+procedure ExportY4(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     i: Integer;
@@ -3585,7 +3585,7 @@ begin
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportC(DSS: TDSS; FileNm: String);
+procedure ExportC(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     i: Integer;
@@ -3607,7 +3607,7 @@ begin
     end;
 end;
 //-------------------------------------------------------------------
-procedure ExportVoltagesElements(DSS: TDSS; FileNm: String);
+procedure ExportVoltagesElements(DSS: TDSSContext; FileNm: String);
 
 // Export element voltages, by terminal and node/bus
 
@@ -3709,7 +3709,7 @@ begin
 end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-procedure ExportGICMvar(DSS: TDSS; FileNm: String);
+procedure ExportGICMvar(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -3742,7 +3742,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportBusReliability(DSS: TDSS; FileNm: String);
+procedure ExportBusReliability(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     i: Integer;
@@ -3771,7 +3771,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportBranchReliability(DSS: TDSS; FileNm: String);
+procedure ExportBranchReliability(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     pElem: TPDElement;
@@ -3839,7 +3839,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportNodeNames(DSS: TDSS; FileNm: String);
+procedure ExportNodeNames(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     i: Integer;
@@ -3889,7 +3889,7 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure ExportTaps(DSS: TDSS; FileNm: String);
+procedure ExportTaps(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
     iWind: Integer;
@@ -3927,7 +3927,7 @@ begin
 
 end;
 
-procedure ExportResult(DSS: TDSS; FileNm: String);
+procedure ExportResult(DSS: TDSSContext; FileNm: String);
 
 var
     F: TextFile;
@@ -3950,7 +3950,7 @@ begin
 
 end;
 
-procedure ExportYNodeList(DSS: TDSS; FileNm: String);
+procedure ExportYNodeList(DSS: TDSSContext; FileNm: String);
 var
     i: Integer;
     F: TextFile;
@@ -3979,7 +3979,7 @@ begin
 
 end;
 
-procedure ExportYVoltages(DSS: TDSS; FileNm: String);
+procedure ExportYVoltages(DSS: TDSSContext; FileNm: String);
 var
     i: Integer;
     F: TextFile;
@@ -4009,7 +4009,7 @@ begin
 
 end;
 
-procedure ExportYCurrents(DSS: TDSS; FileNm: String);
+procedure ExportYCurrents(DSS: TDSSContext; FileNm: String);
 var
     i: Integer;
     F: TextFile;
@@ -4039,7 +4039,7 @@ begin
 end;
 
 
-procedure ExportSections(DSS: TDSS; FileNM: String; pMeter: TEnergyMeterObj);
+procedure ExportSections(DSS: TDSSContext; FileNM: String; pMeter: TEnergyMeterObj);
 
 var
     MyMeterPtr: TEnergyMeterObj;

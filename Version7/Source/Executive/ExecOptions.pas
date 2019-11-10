@@ -20,9 +20,9 @@ var
     OptionHelp: array[1..NumExecOptions] of String;
     OptionList: TCommandList;
 
-function DoGetCmd(DSS: TDSS): Integer;
-function DoSetCmd(DSS: TDSS; SolveOption: Integer): Integer;
-function DoSetCmd_NoCircuit(DSS: TDSS): Boolean;  // Set Commands that do not require a circuit
+function DoGetCmd(DSS: TDSSContext): Integer;
+function DoSetCmd(DSS: TDSSContext; SolveOption: Integer): Integer;
+function DoSetCmd_NoCircuit(DSS: TDSSContext): Boolean;  // Set Commands that do not require a circuit
 
 
 implementation
@@ -421,7 +421,7 @@ begin
     OptionHelp[115] := 'Is the name of the XY curve defining the seasonal change when performing QSTS simulations.';
 end;
 //----------------------------------------------------------------------------
-function DoSetCmd_NoCircuit(DSS: TDSS): Boolean;  // Set Commands that do not require a circuit
+function DoSetCmd_NoCircuit(DSS: TDSSContext): Boolean;  // Set Commands that do not require a circuit
 //----------------------------------------------------------------------------
 
 // This is for setting global options that do not require an active circuit
@@ -481,7 +481,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-function DoSetCmd(DSS: TDSS; SolveOption: Integer): Integer;
+function DoSetCmd(DSS: TDSSContext; SolveOption: Integer): Integer;
 //----------------------------------------------------------------------------
 
 // Set DSS Options
@@ -816,7 +816,7 @@ end;
 
 
 //----------------------------------------------------------------------------
-function DoGetCmd(DSS: TDSS): Integer;
+function DoGetCmd(DSS: TDSSContext): Integer;
 
 // Get DSS Options Reguest and put it in Global Result string
 // may be retrieved by Result property of the DSSText interface

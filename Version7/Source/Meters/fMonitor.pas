@@ -32,7 +32,7 @@ TYPE
      public
 
 
-       constructor Create(dss: TDSS);
+       constructor Create(dss: TDSSContext);
        destructor  Destroy; override;
 
        Function Edit:Integer;                 override;     // uses global parser
@@ -230,7 +230,7 @@ VAR
     StrBuffer:TFMonitorStrBuffer;
 
 {--------------------------------------------------------------------------}
-constructor TDSSFMonitor.Create(dss: TDSS);  // Creates superstructure for all Monitor objects
+constructor TDSSFMonitor.Create(dss: TDSSContext);  // Creates superstructure for all Monitor objects
 
 Begin
      Inherited Create(dss);

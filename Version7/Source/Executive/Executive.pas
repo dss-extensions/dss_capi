@@ -60,9 +60,9 @@ TYPE
     procedure Set_RecorderOn(const Value: Boolean);
 
      public
-         DSS: TDSS;
+         DSS: TDSSContext;
          RecorderFile: TextFile;
-         constructor Create(dssContext: TDSS);
+         constructor Create(dssContext: TDSSContext);
          destructor  Destroy; override;
 
          PROCEDURE CreateDefaultDSSItems;
@@ -87,7 +87,7 @@ USES ExecCommands, ExecOptions,
 
 
 //----------------------------------------------------------------------------
-Constructor TExecutive.Create(dssContext: TDSS);
+Constructor TExecutive.Create(dssContext: TDSSContext);
 Begin
      Inherited Create;
 

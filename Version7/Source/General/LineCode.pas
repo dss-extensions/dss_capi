@@ -49,7 +49,7 @@ type
         function MakeLike(const LineName: String): Integer; OVERRIDE;
     PUBLIC
 
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -130,7 +130,7 @@ const
     NumPropsThisClass = 26;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TLineCode.Create(dss: TDSS);  // Creates superstructure for all Line objects
+constructor TLineCode.Create(dss: TDSSContext);  // Creates superstructure for all Line objects
 begin
     inherited Create(dss);
     Class_Name := 'LineCode';

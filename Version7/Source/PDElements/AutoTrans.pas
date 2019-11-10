@@ -54,7 +54,7 @@ type
         procedure DefineProperties;
         function MakeLike(const AutoTransfName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -246,7 +246,7 @@ const
     NumPropsThisClass = 42;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TAutoTrans.Create(dss: TDSS);  // Creates superstructure for all AutoTrans objects
+constructor TAutoTrans.Create(dss: TDSSContext);  // Creates superstructure for all AutoTrans objects
 begin
     inherited Create(dss);
     Class_Name := 'AutoTrans';

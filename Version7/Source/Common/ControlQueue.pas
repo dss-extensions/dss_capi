@@ -40,7 +40,7 @@ type
 
     TControlQueue = class(Tobject)
     PRIVATE
-        DSS: TDSS;
+        DSS: TDSSContext;
         ActionList: TList;
         DebugTrace: Boolean;
         Tracefile: TextFile;
@@ -60,7 +60,7 @@ type
         procedure Restore_Time_Step;
 
     PUBLIC
-        constructor Create(dssContext: TDSS);
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Push(const Hour: Integer; const Sec: Double; const Code, ProxyHdl: Integer; const Owner: TControlElem): Integer; OVERLOAD;
@@ -176,7 +176,7 @@ begin
     ActionList.Clear;
 end;
 
-constructor TControlQueue.Create(dssContext: TDSS);
+constructor TControlQueue.Create(dssContext: TDSSContext);
 begin
     inherited Create;
     

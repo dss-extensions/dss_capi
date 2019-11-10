@@ -26,7 +26,7 @@ type
         procedure DefineProperties;  // Add Properties of this class to propName
     PUBLIC
         NumPDClassProps: Integer;
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
     PUBLISHED
 
@@ -43,7 +43,7 @@ uses
     Utilities,
     DSSHelper;
 
-constructor TPDClass.Create(dss: TDSS);
+constructor TPDClass.Create(dss: TDSSContext);
 begin
 
     inherited Create(dss);

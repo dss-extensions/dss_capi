@@ -285,9 +285,9 @@ end;
 procedure ShowHelpForm(dssContext: TObject);
 var
     Param, OptName: String;
-    DSS: TDSS;
+    DSS: TDSSContext;
 begin
-    DSS := TDSS(dssContext);
+    DSS := TDSSContext(dssContext);
     DSS.Parser.NextParam;
     Param := LowerCase(DSS.Parser.StrValue);
     DSS.Parser.NextParam;

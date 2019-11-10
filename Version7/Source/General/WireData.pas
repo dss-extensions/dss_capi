@@ -27,7 +27,7 @@ type
         procedure DefineProperties;
         function MakeLike(const WireName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -62,7 +62,7 @@ uses
 const
     NumPropsThisClass = 0; // because they were all moved to ConductorData
 
-constructor TWireData.Create(dss: TDSS);  // Creates superstructure for all Line objects
+constructor TWireData.Create(dss: TDSSContext);  // Creates superstructure for all Line objects
 begin
     inherited Create(dss);
     Class_Name := 'WireData';

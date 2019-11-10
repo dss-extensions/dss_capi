@@ -54,7 +54,7 @@ TYPE
       protected
 
       public
-        DSS: TDSS;
+        DSS: TDSSContext;
 
         FEdit:    Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
 
@@ -63,7 +63,7 @@ TYPE
         Procedure DoPending(Const Code, ProxyHdl:integer);
         Procedure Sample;
 
-        constructor Create(dssContext: TDSS);
+        constructor Create(dssContext: TDSSContext);
         destructor  Destroy; override;
 
         // this property loads library (if needed), sets the procedure variables, and makes a new instance
@@ -94,7 +94,7 @@ begin
         Result := Addr;
 end;
 
-constructor TCapUserControl.Create(dssContext: TDSS);
+constructor TCapUserControl.Create(dssContext: TDSSContext);
 begin
     DSS     := dssContext;
     FID     := 0;

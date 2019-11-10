@@ -16,7 +16,7 @@ uses
 const
     NumShowOptions = 34;
 
-function DoShowCmd(DSS: TDSS): Integer;
+function DoShowCmd(DSS: TDSSContext): Integer;
 
 
 var
@@ -157,7 +157,7 @@ end;
 
 
 //----------------------------------------------------------------------------
-function DoShowCmd(DSS: TDSS): Integer;
+function DoShowCmd(DSS: TDSSContext): Integer;
 
 var
     ParamName, Param, Filname: String;

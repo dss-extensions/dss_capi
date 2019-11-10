@@ -25,8 +25,8 @@ uses
     Classes{, StdCtrls};
 
 function CompareTextShortest(const S1, S2: String): Integer;
-procedure FireOffEditor(DSS: TDSS; FileNm: String);
-procedure DoDOSCmd(DSS: TDSS; CmdString: String);
+procedure FireOffEditor(DSS: TDSSContext; FileNm: String);
+procedure DoDOSCmd(DSS: TDSSContext; CmdString: String);
 function StripExtension(const S: String): String;
 function StripClassName(const S: String): String;  // Return only element name sans class.
 function GetNodeString(const Busname: String): String;
@@ -37,15 +37,15 @@ function IntArrayToString(iarray: pIntegerArray; count: Integer): String;
 function DblArrayToString(dblarray: pDoubleArray; count: Integer): String;
 function CmplxArrayToString(cpxarray: pComplexArray; count: Integer): String;
 function EncloseQuotes(const s: String): String;
-procedure ShowMessageBeep(DSS: TDSS; const s: String);
+procedure ShowMessageBeep(DSS: TDSSContext; const s: String);
 function FullName(pElem: TDSSCktElement): String;
 
 {Parsing Utilities}
-procedure ParseObjectClassandName(DSS: TDSS; const FullObjName: String; var ClassName, ObjName: String);
-procedure ParseIntArray(DSS: TDSS; var iarray: pIntegerArray; var count: Integer; const s: String);
+procedure ParseObjectClassandName(DSS: TDSSContext; const FullObjName: String; var ClassName, ObjName: String);
+procedure ParseIntArray(DSS: TDSSContext; var iarray: pIntegerArray; var count: Integer; const s: String);
 function InterpretSolveMode(const s: String): TSolveMode;
 function InterpretControlMode(const s: String): Integer;
-function InterpretLoadModel(DSS: TDSS; const s: String): Integer;
+function InterpretLoadModel(DSS: TDSSContext; const s: String): Integer;
 function InterpretYesNo(const s: String): Boolean;
 function InterpretRandom(const s: String): Integer;
 function InterpretAddType(const s: String): Integer;
@@ -54,24 +54,24 @@ function InterpretSolveAlg(const s: String): Integer;
 function InterpretCktModel(const s: String): Boolean;
 procedure InitDblArray(NumValues: Integer; Xarray: pDoubleArray; Value: Double);
 procedure InitIntArray(NumValues: Integer; Xarray: pIntegerArray; Value: Integer);
-function InterpretDblArray(DSS: TDSS; const s: String; MaxValues: Integer; ResultArray: pDoubleArray): Integer;
-function InterpretIntArray(DSS: TDSS; const s: String; MaxValues: Integer; ResultArray: pIntegerArray): Integer;
-procedure InterpretAndAllocStrArray(DSS: TDSS; const s: String; var Size: Integer; var ResultArray: pStringArray);
-procedure InterpretTStringListArray(DSS: TDSS; const s: String; var ResultList: TStringList);
-function InterpretTimeStepSize(DSS: TDSS; const s: String): Double;
+function InterpretDblArray(DSS: TDSSContext; const s: String; MaxValues: Integer; ResultArray: pDoubleArray): Integer;
+function InterpretIntArray(DSS: TDSSContext; const s: String; MaxValues: Integer; ResultArray: pIntegerArray): Integer;
+procedure InterpretAndAllocStrArray(DSS: TDSSContext; const s: String; var Size: Integer; var ResultArray: pStringArray);
+procedure InterpretTStringListArray(DSS: TDSSContext; const s: String; var ResultList: TStringList);
+function InterpretTimeStepSize(DSS: TDSSContext; const s: String): Double;
 function InterpretLoadShapeClass(const s: String): Integer;
 function InterpretEarthModel(const s: String): Integer;
-function InterpretColorName(DSS: TDSS; const s: String): Integer;
-function InterpretComplex(DSS: TDSS; const s: String): Complex;
-function ConstructElemName(DSS: TDSS; const Param: String): String;
+function InterpretColorName(DSS: TDSSContext; const s: String): Integer;
+function InterpretComplex(DSS: TDSSContext; const s: String): Complex;
+function ConstructElemName(DSS: TDSSContext; const Param: String): String;
 function InterpretCoreType(const str: String): Integer;
 
-function GetSolutionModeID(DSS: TDSS): String;
+function GetSolutionModeID(DSS: TDSSContext): String;
 function GetSolutionModeIDName(idx: TSolveMode): String;
-function GetControlModeID(DSS: TDSS): String;
-function GetRandomModeID(DSS: TDSS): String;
-function GetLoadModel(DSS: TDSS): String;
-function GetActiveLoadShapeClass(DSS: TDSS): String;
+function GetControlModeID(DSS: TDSSContext): String;
+function GetRandomModeID(DSS: TDSSContext): String;
+function GetLoadModel(DSS: TDSSContext): String;
+function GetActiveLoadShapeClass(DSS: TDSSContext): String;
 function GetDSSArray_Real(n: Integer; dbls: pDoubleArray): String;
 function GetDSSArray_Integer(n: Integer; ints: pIntegerArray): String;
 function GetEarthModel(n: Integer): String;
@@ -80,8 +80,8 @@ function GetOCPDeviceTypeString(icode: Integer): String;
 
 
 {misc functions}
-function DoExecutiveCommand(DSS: TDSS; const s: String): Integer;
-function GetCktElementIndex(DSS: TDSS; const FullObjName: String): Integer;
+function DoExecutiveCommand(DSS: TDSSContext; const s: String): Integer;
+function GetCktElementIndex(DSS: TDSSContext; const FullObjName: String): Integer;
 function IsShuntElement(const Elem: TDSSCktElement): Boolean;
 function IsLineElement(const Elem: TDSSCktElement): Boolean;
 function IsTransformerElement(const Elem: TDSSCktElement): Boolean;
@@ -89,15 +89,15 @@ function IsTransformerElement(const Elem: TDSSCktElement): Boolean;
 function CheckParallel(const Line1, Line2: TDSSCktElement): Boolean;
 function AllTerminalsClosed(ThisElement: TDSSCktElement): Boolean;
 function Str_Real(const Value: Double; NumDecimals: Integer): String;
-procedure DumpAllDSSCommands(DSS: TDSS; var Filename: String);
-procedure DumpAllocationFactors(DSS: TDSS; var Filename: String);
-procedure DumpComplexMatrix(DSS: TDSS; var F: TextFile; AMatrix: TcMatrix);
-function NearestBasekV(DSS: TDSS; kV: Double): Double;
-function PresentTimeInSec(DSS: TDSS): Double;
-function DoResetFaults(DSS: TDSS): Integer;
-function DoResetControls(DSS: TDSS): Integer;
-procedure DoResetKeepList(DSS: TDSS);
-function GetNodeNum(DSS: TDSS; NodeRef: Integer): Integer;
+procedure DumpAllDSSCommands(DSS: TDSSContext; var Filename: String);
+procedure DumpAllocationFactors(DSS: TDSSContext; var Filename: String);
+procedure DumpComplexMatrix(DSS: TDSSContext; var F: TextFile; AMatrix: TcMatrix);
+function NearestBasekV(DSS: TDSSContext; kV: Double): Double;
+function PresentTimeInSec(DSS: TDSSContext): Double;
+function DoResetFaults(DSS: TDSSContext): Integer;
+function DoResetControls(DSS: TDSSContext): Integer;
+procedure DoResetKeepList(DSS: TDSSContext);
+function GetNodeNum(DSS: TDSSContext; NodeRef: Integer): Integer;
 procedure InitStringToNull(var S: String);
 function CmulReal_im(const a: Complex; const Mult: Double): Complex;  // Multiply only imaginary part by a real
 //FUNCTION IsValidNumericField(const NumberField:TEdit):Boolean;
@@ -107,18 +107,18 @@ function QuadSolver(const a, b, c: Double): Double; // returns largest of two an
 
 
 {Save Function Helper}
-function WriteClassFile(DSS: TDSS; const DSS_Class: TDSSClass; FileName: String; IsCktElement: Boolean): Boolean;
-function WriteVsourceClassFile(DSS: TDSS; const DSS_Class: TDSSClass; IsCktElement: Boolean): Boolean;
-procedure WriteActiveDSSObject(DSS: TDSS; var F: TextFile; const NeworEdit: String);
+function WriteClassFile(DSS: TDSSContext; const DSS_Class: TDSSClass; FileName: String; IsCktElement: Boolean): Boolean;
+function WriteVsourceClassFile(DSS: TDSSContext; const DSS_Class: TDSSClass; IsCktElement: Boolean): Boolean;
+procedure WriteActiveDSSObject(DSS: TDSSContext; var F: TextFile; const NeworEdit: String);
 function checkforblanks(const S: String): String;
-function RewriteAlignedFile(DSS: TDSS; const Filename: String): Boolean;
+function RewriteAlignedFile(DSS: TDSSContext; const Filename: String): Boolean;
 
 {Event Log}
-procedure ClearEventLog(DSS: TDSS);
-procedure AppendToEventLog(DSS: TDSS; const opdev: String; const action: String);
-procedure LogThisEvent(DSS: TDSS; const EventName: String);
+procedure ClearEventLog(DSS: TDSSContext);
+procedure AppendToEventLog(DSS: TDSSContext; const opdev: String; const action: String);
+procedure LogThisEvent(DSS: TDSSContext; const EventName: String);
 
-procedure ClearErrorLog(DSS: TDSS);
+procedure ClearErrorLog(DSS: TDSSContext);
 
 {Routines for doing common things to complex numbers}
 procedure RotatePhasorDeg(var Phasor: Complex; const h, AngleDeg: Double);
@@ -133,26 +133,26 @@ function ConvertPFRange2ToPF(const value: Double): Double;
 procedure CmulArray(pc: pcomplexarray; Multiplier: Double; size: Integer);  // Multiply a complex array times a double
 
 {Support for going in and out of Dynamics Mode and Harmonics Mode}
-procedure CalcInitialMachineStates(DSS: TDSS);
-procedure InvalidateAllPCELEMENTS(DSS: TDSS);
-function InitializeForHarmonics(DSS: TDSS): Boolean;
-function SavePresentVoltages(DSS: TDSS): Boolean;
-function RetrieveSavedVoltages(DSS: TDSS): Boolean;
+procedure CalcInitialMachineStates(DSS: TDSSContext);
+procedure InvalidateAllPCELEMENTS(DSS: TDSSContext);
+function InitializeForHarmonics(DSS: TDSSContext): Boolean;
+function SavePresentVoltages(DSS: TDSSContext): Boolean;
+function RetrieveSavedVoltages(DSS: TDSSContext): Boolean;
 
-function GetMaxPUVoltage(DSS: TDSS): Double;
-function GetMinPUVoltage(DSS: TDSS; IgnoreNeutrals: Boolean): Double;
-function GetTotalPowerFromSources(DSS: TDSS): Complex;
-function GetMaxCktElementSize(DSS: TDSS): Integer;
-function GetUniqueNodeNumber(DSS: TDSS; const sBusName: String; StartNode: Integer): Integer;
+function GetMaxPUVoltage(DSS: TDSSContext): Double;
+function GetMinPUVoltage(DSS: TDSSContext; IgnoreNeutrals: Boolean): Double;
+function GetTotalPowerFromSources(DSS: TDSSContext): Complex;
+function GetMaxCktElementSize(DSS: TDSSContext): Integer;
+function GetUniqueNodeNumber(DSS: TDSSContext; const sBusName: String; StartNode: Integer): Integer;
 
 {TraceBack Functions}
 function IsPathBetween(FromLine, ToLine: TPDElement): Boolean;
-procedure TraceAndEdit(DSS: TDSS; FromLine, ToLine: TPDElement; NPhases: Integer; EditStr: String);
-procedure GoForwardAndRephase(DSS: TDSS; FromLine: TPDElement; const PhaseString, EditStr, ScriptFileName: String; TransStop: Boolean);
+procedure TraceAndEdit(DSS: TDSSContext; FromLine, ToLine: TPDElement; NPhases: Integer; EditStr: String);
+procedure GoForwardAndRephase(DSS: TDSSContext; FromLine: TPDElement; const PhaseString, EditStr, ScriptFileName: String; TransStop: Boolean);
 
-procedure MakeDistributedGenerators(DSS: TDSS; kW, PF: Double; How: String; Skip: Integer; Fname: String; DoGenerators: Boolean);
+procedure MakeDistributedGenerators(DSS: TDSSContext; kW, PF: Double; How: String; Skip: Integer; Fname: String; DoGenerators: Boolean);
 
-procedure Obfuscate(DSS: TDSS);
+procedure Obfuscate(DSS: TDSSContext);
 
 
 {Feeder Utilities} // not currently used
@@ -277,7 +277,7 @@ begin
 end;
 
 {$IFDEF FPC}
-procedure FireOffEditor(DSS: TDSS; FileNm: String);
+procedure FireOffEditor(DSS: TDSSContext; FileNm: String);
 var
     s: String;
     gotError: Boolean;
@@ -310,7 +310,7 @@ begin
         DoErrorMsg(DSS, 'FireOffEditor.', msg, 'Editor could not be started. Is the editor correctly specified?', 704);
 end;
 
-procedure DoDOSCmd(DSS: TDSS; CmdString: String);
+procedure DoDOSCmd(DSS: TDSSContext; CmdString: String);
 var //Handle:Word;
     s: String;
     gotError: Boolean;
@@ -337,7 +337,7 @@ end;
 
 {$ELSE}
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure FireOffEditor(DSS: TDSS; FileNm: String);
+procedure FireOffEditor(DSS: TDSSContext; FileNm: String);
 var
     retval: Word;
 begin
@@ -556,7 +556,7 @@ begin
 
 end;
 //----------------------------------------------------------------------------
-function InterpretLoadModel(DSS: TDSS; const s: String): Integer;
+function InterpretLoadModel(DSS: TDSSContext; const s: String): Integer;
 var
     S2: String;
 begin
@@ -694,7 +694,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-function InterpretComplex(DSS: TDSS; const s: String): Complex;
+function InterpretComplex(DSS: TDSSContext; const s: String): Complex;
 
 // interpret first two entries as complex numbers
 
@@ -732,7 +732,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-function InterpretDblArray(DSS: TDSS; const s: String; MaxValues: Integer; ResultArray: pDoubleArray): Integer;
+function InterpretDblArray(DSS: TDSSContext; const s: String; MaxValues: Integer; ResultArray: pDoubleArray): Integer;
 
 { Get numeric values from an array specified either as a list on numbers or a text file spec.
   ResultArray must be allocated to MaxValues by calling routine.
@@ -902,7 +902,7 @@ begin
     end;
 end;
 
-function InterpretIntArray(DSS: TDSS; const s: String; MaxValues: Integer; ResultArray: pIntegerArray): Integer;
+function InterpretIntArray(DSS: TDSSContext; const s: String; MaxValues: Integer; ResultArray: pIntegerArray): Integer;
 
 { Get numeric values from an array specified either as a list on numbers or a text file spec.
   ResultArray must be allocated to MaxValues by calling routine.
@@ -957,7 +957,7 @@ begin
     end;
 end;
 
-function InterpretTimeStepSize(DSS: TDSS; const s: String): Double;
+function InterpretTimeStepSize(DSS: TDSSContext; const s: String): Double;
 {Return stepsize in seconds}
 var
     Code: Integer;
@@ -1002,7 +1002,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-procedure InterpretAndAllocStrArray(DSS: TDSS; const s: String; var Size: Integer; var ResultArray: pStringArray);
+procedure InterpretAndAllocStrArray(DSS: TDSSContext; const s: String; var Size: Integer; var ResultArray: pStringArray);
 
 { Get string values from an array specified either as a list on strings or a text file spec.
   ResultArray is allocated as needed.
@@ -1108,7 +1108,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-procedure InterpretTStringListArray(DSS: TDSS; const s: String; var ResultList: TStringList);
+procedure InterpretTStringListArray(DSS: TDSSContext; const s: String; var ResultList: TStringList);
 
 { Get string values from an array specified either as a list on strings or a text file spec.
   ResultArray is allocated as needed.
@@ -1189,7 +1189,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-procedure ParseObjectClassandName(DSS: TDSS; const FullObjName: String; var ClassName, ObjName: String);
+procedure ParseObjectClassandName(DSS: TDSSContext; const FullObjName: String; var ClassName, ObjName: String);
 
 var
     dotpos: Integer;
@@ -1263,7 +1263,7 @@ begin
 
 end;
 
-function GetSolutionModeID(DSS: TDSS): String;
+function GetSolutionModeID(DSS: TDSSContext): String;
 
 begin
     Result := 'UNKNOWN';
@@ -1271,7 +1271,7 @@ begin
         Result := GetSolutionModeIDName(DSS.ActiveCircuit.Solution.mode);
 end;
 
-function GetControlModeID(DSS: TDSS): String;
+function GetControlModeID(DSS: TDSSContext): String;
 
 begin
     Result := 'Unknown';
@@ -1293,7 +1293,7 @@ begin
 
 end;
 
-function GetRandomModeID(DSS: TDSS): String;
+function GetRandomModeID(DSS: TDSSContext): String;
 
 begin
     Result := 'Unknown';
@@ -1314,7 +1314,7 @@ begin
 
 end;
 
-function GetLoadModel(DSS: TDSS): String;
+function GetLoadModel(DSS: TDSSContext): String;
 begin
 
     case DSS.ActiveCircuit.solution.LoadModel of
@@ -1327,7 +1327,7 @@ begin
 
 end;
 
-procedure ParseIntArray(DSS: TDSS; var iarray: pIntegerArray; var count: Integer; const s: String);
+procedure ParseIntArray(DSS: TDSSContext; var iarray: pIntegerArray; var count: Integer; const s: String);
 
 var
     paramName: String;
@@ -1399,7 +1399,7 @@ end;
 
 
 //----------------------------------------------------------------------------
-function GetCktElementIndex(DSS: TDSS; const FullObjName: String): Integer;
+function GetCktElementIndex(DSS: TDSSContext; const FullObjName: String): Integer;
 
 // Given the full object name, return the index to the circuit element in the
 // active circuit.  Use full name if given. Else assume last class referenced.
@@ -1454,7 +1454,7 @@ begin
 end;
 
 // - - - - - --------------------------------------------------
-procedure DumpAllocationFactors(DSS: TDSS; var FileName: String);
+procedure DumpAllocationFactors(DSS: TDSSContext; var FileName: String);
 
 var
     F: TextFile;
@@ -1496,7 +1496,7 @@ end;
 
 
 // - - - - - --------------------------------------------------
-procedure DumpAllDSSCommands(DSS: TDSS; var FileName: String);
+procedure DumpAllDSSCommands(DSS: TDSSContext; var FileName: String);
 
 var
     F: TextFile;
@@ -1553,7 +1553,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-function NearestBasekV(DSS: TDSS; kV: Double): Double;
+function NearestBasekV(DSS: TDSSContext; kV: Double): Double;
 
 {Find closest base voltage}
 
@@ -1586,7 +1586,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-function SavePresentVoltages(DSS: TDSS): Boolean;
+function SavePresentVoltages(DSS: TDSSContext): Boolean;
 
 var
     F: file of Double;
@@ -1630,7 +1630,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-function RetrieveSavedVoltages(DSS: TDSS): Boolean;
+function RetrieveSavedVoltages(DSS: TDSSContext): Boolean;
 
 var
     F: file of Double;
@@ -1680,7 +1680,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-function InitializeForHarmonics(DSS: TDSS): Boolean;
+function InitializeForHarmonics(DSS: TDSSContext): Boolean;
 
 {Intialize PCELEMENT base values for harmonics analysis}
 
@@ -1710,7 +1710,7 @@ end;
 
 
 //----------------------------------------------------------------------------
-procedure CalcInitialMachineStates(DSS: TDSS);
+procedure CalcInitialMachineStates(DSS: TDSSContext);
 
 var
     pcelem: TPCElement;
@@ -1736,7 +1736,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-procedure InvalidateAllPCELEMENTS(DSS: TDSS);
+procedure InvalidateAllPCELEMENTS(DSS: TDSSContext);
 
 var
     pcelem: TPCElement;
@@ -1758,7 +1758,7 @@ begin
     end;
 end;
 
-function PresentTimeInSec(DSS: TDSS): Double;
+function PresentTimeInSec(DSS: TDSSContext): Double;
 
 begin
     with DSS.ActiveCircuit.Solution do
@@ -1767,7 +1767,7 @@ end;
 
 
 //----------------------------------------------------------------------------
-function DoResetFaults(DSS: TDSS): Integer;
+function DoResetFaults(DSS: TDSSContext): Integer;
 var
     pFault: TFaultOBj;
 
@@ -1786,7 +1786,7 @@ end;
 
 
 //----------------------------------------------------------------------------
-function DoResetControls(DSS: TDSS): Integer;
+function DoResetControls(DSS: TDSSContext): Integer;
 var
     ControlDevice: TControlElem;
 
@@ -1805,7 +1805,7 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-function GetNodeNum(DSS: TDSS; NodeRef: Integer): Integer;
+function GetNodeNum(DSS: TDSSContext; NodeRef: Integer): Integer;
 begin
     if NodeRef = 0 then
         Result := 0
@@ -1965,7 +1965,7 @@ begin
     end;
 end;
 
-procedure ClearErrorLog(DSS: TDSS);
+procedure ClearErrorLog(DSS: TDSSContext);
 
 begin
     try
@@ -1977,7 +1977,7 @@ begin
     end;
 end;
 
-procedure LogThisEvent(DSS: TDSS; const EventName: String);
+procedure LogThisEvent(DSS: TDSSContext; const EventName: String);
 
 begin
     {****  WriteDLLDebugFile(Format('LogThisEvent: EventStrings= %p', [@EventStrings])); }
@@ -1989,7 +1989,7 @@ begin
  {****  ShowMessageForm(EventStrings); }
 end;
 
-procedure AppendToEventLog(DSS: TDSS; const opdev: String; const action: String);
+procedure AppendToEventLog(DSS: TDSSContext; const opdev: String; const action: String);
 var
     S: String;
 
@@ -2003,7 +2003,7 @@ begin
 end;
 
 
-procedure DumpComplexMatrix(DSS: TDSS; var F: TextFile; AMatrix: TcMatrix);
+procedure DumpComplexMatrix(DSS: TDSSContext; var F: TextFile; AMatrix: TcMatrix);
 
 var
     i, j: Integer;
@@ -2068,7 +2068,7 @@ begin
 end;
 
 
-function WriteVsourceClassFile(DSS: TDSS; const DSS_Class: TDSSClass; IsCktElement: Boolean): Boolean;
+function WriteVsourceClassFile(DSS: TDSSContext; const DSS_Class: TDSSClass; IsCktElement: Boolean): Boolean;
 {Special Function to write the Vsource class and change the DSS command of the first Source
  so that there is no problem with duplication when the circuit is subsequently created}
 
@@ -2108,7 +2108,7 @@ begin
 
 end;
 
-function WriteClassFile(DSS: TDSS; const DSS_Class: TDSSClass; FileName: String; IsCktElement: Boolean): Boolean;
+function WriteClassFile(DSS: TDSSContext; const DSS_Class: TDSSClass; FileName: String; IsCktElement: Boolean): Boolean;
 
 var
     F: TextFile;
@@ -2178,7 +2178,7 @@ begin
 end;
 
 
-procedure WriteActiveDSSObject(DSS: TDSS; var F: TextFile; const NeworEdit: String);
+procedure WriteActiveDSSObject(DSS: TDSSContext; var F: TextFile; const NeworEdit: String);
 
 var
     ParClass: TDssClass;
@@ -2202,7 +2202,7 @@ begin
 
 end;
 
-procedure DoResetKeepList(DSS: TDSS);
+procedure DoResetKeepList(DSS: TDSSContext);
 
 var
     i: Integer;
@@ -2223,7 +2223,7 @@ begin
 
 end;
 
-function RewriteAlignedFile(DSS: TDSS; const Filename: String): Boolean;
+function RewriteAlignedFile(DSS: TDSSContext; const Filename: String): Boolean;
 
 var
     Fin, Fout: TextFile;
@@ -2337,7 +2337,7 @@ begin
 
 end;
 
-function DoExecutiveCommand(DSS: TDSS; const s: String): Integer;
+function DoExecutiveCommand(DSS: TDSSContext; const s: String): Integer;
 
 begin
     DSS.DSSExecutive.command := S;
@@ -2363,7 +2363,7 @@ begin
         end;
 end;
 
-function GetMaxPUVoltage(DSS: TDSS): Double;
+function GetMaxPUVoltage(DSS: TDSSContext): Double;
 var
     i, j, nref: Integer;
 begin
@@ -2386,7 +2386,7 @@ begin
     end;
 end;
 
-function GetMinPUVoltage(DSS: TDSS; IgnoreNeutrals: Boolean): Double;
+function GetMinPUVoltage(DSS: TDSSContext; IgnoreNeutrals: Boolean): Double;
 var
     i, j, nref: Integer;
     MinFound: Boolean;
@@ -2431,7 +2431,7 @@ begin
 
 end;
 
-function GetTotalPowerFromSources(DSS: TDSS): Complex;
+function GetTotalPowerFromSources(DSS: TDSSContext): Complex;
 
 var
     CktElem: TDSSCktElement;
@@ -2447,7 +2447,7 @@ begin
     end;
 end;
 
-procedure WriteUniformGenerators(DSS: TDSS; var F: TextFile; kW, PF: Double; DoGenerators: Boolean);
+procedure WriteUniformGenerators(DSS: TDSSContext; var F: TextFile; kW, PF: Double; DoGenerators: Boolean);
  { Distribute the generators uniformly amongst the feeder nodes that have loads}
 
 var
@@ -2485,7 +2485,7 @@ begin
     end;
 end;
 
-procedure WriteRandomGenerators(DSS: TDSS; var F: TextFile; kW, PF: Double; DoGenerators: Boolean);
+procedure WriteRandomGenerators(DSS: TDSSContext; var F: TextFile; kW, PF: Double; DoGenerators: Boolean);
 {Distribute Generators randomly to loaded buses}
 
 var
@@ -2537,7 +2537,7 @@ begin
 
 end;
 
-procedure WriteEveryOtherGenerators(DSS: TDSS; var F: TextFile; kW, PF: Double; Skip: Integer; DoGenerators: Boolean);
+procedure WriteEveryOtherGenerators(DSS: TDSSContext; var F: TextFile; kW, PF: Double; Skip: Integer; DoGenerators: Boolean);
 
 {distribute generators on every other load, skipping the number specified}
 
@@ -2603,7 +2603,7 @@ begin
 
 end;
 
-procedure WriteProportionalGenerators(DSS: TDSS; var F: TextFile; kW, PF: Double; DoGenerators: Boolean);
+procedure WriteProportionalGenerators(DSS: TDSSContext; var F: TextFile; kW, PF: Double; DoGenerators: Boolean);
 
 {Distribute the generator Proportional to load}
 
@@ -2657,7 +2657,7 @@ begin
 end;
 
 
-procedure MakeDistributedGenerators(DSS: TDSS; kW, PF: Double; How: String; Skip: Integer; Fname: String; DoGenerators: Boolean);
+procedure MakeDistributedGenerators(DSS: TDSSContext; kW, PF: Double; How: String; Skip: Integer; Fname: String; DoGenerators: Boolean);
 
 var
     F: TextFile;
@@ -2711,7 +2711,7 @@ begin
 end;
 
 {Feeder Utilities}
-// procedure EnableFeeders(DSS: TDSS);
+// procedure EnableFeeders(DSS: TDSSContext);
 // 
 // var
 //     pMeter: TEnergyMeterObj;
@@ -2821,7 +2821,7 @@ begin
         pc^[i] := CMulReal(pc^[i], Multiplier);
 end;
 
-function GetMaxCktElementSize(DSS: TDSS): Integer;
+function GetMaxCktElementSize(DSS: TDSSContext): Integer;
 var
     i: Integer;
 
@@ -2851,7 +2851,7 @@ Begin
      End;
 End;
 *)
-function GetUniqueNodeNumber(DSS: TDSS; const sBusName: String; StartNode: Integer): Integer;
+function GetUniqueNodeNumber(DSS: TDSSContext; const sBusName: String; StartNode: Integer): Integer;
 {To help avoid collisions of neutral numbers, this function returns a node number that is not being used,
  Starting at the StartNode value}
 var
@@ -2865,7 +2865,7 @@ begin
     DSS.ActiveCircuit.Buses^[iBusidx].Add(result);  // add it to the list so next call will be unique
 end;
 
-procedure ShowMessageBeep(DSS: TDSS; const s: String);
+procedure ShowMessageBeep(DSS: TDSSContext; const s: String);
 begin
     Beep;
     DSSInfoMessageDlg(s);
@@ -2888,7 +2888,7 @@ begin
     end;
 end;
 
-procedure TraceAndEdit(DSS: TDSS; FromLine, ToLine: TPDElement; NPhases: Integer; EditStr: String);
+procedure TraceAndEdit(DSS: TDSSContext; FromLine, ToLine: TPDElement; NPhases: Integer; EditStr: String);
 {Trace back up a tree and execute an edit command string}
 var
     pLine: TPDElement;
@@ -2907,7 +2907,7 @@ begin
     end;
 end;
 
-procedure GoForwardAndRephase(DSS: TDSS; FromLine: TPDElement; const PhaseString, EditStr, ScriptFileName: String; TransStop: Boolean);
+procedure GoForwardAndRephase(DSS: TDSSContext; FromLine: TPDElement; const PhaseString, EditStr, ScriptFileName: String; TransStop: Boolean);
 {Trace forward down a tree and Generate a script file to change the phase}
 var
     pPDelem: TPDElement;
@@ -3109,7 +3109,7 @@ begin
 
 end;
 
-function GetActiveLoadShapeClass(DSS: TDSS): String;
+function GetActiveLoadShapeClass(DSS: TDSSContext): String;
 
 begin
     case DSS.ActiveCircuit.ActiveLoadShapeClass of
@@ -3140,7 +3140,7 @@ begin
 end;
 
 
-function InterpretColorName(DSS: TDSS; const s: String): Integer;
+function InterpretColorName(DSS: TDSSContext; const s: String): Integer;
 
 begin
 {$IFDEF FPC}
@@ -3210,14 +3210,14 @@ begin
 {$ENDIF}
 end;
 
-function MakeNewCktElemName(DSS: TDSS; const oldname: String): String;
+function MakeNewCktElemName(DSS: TDSSContext; const oldname: String): String;
 begin
     SetObject(DSS, OldName);  // set opject active
     with DSS.ActiveDSSObject do
         Result := Format('%s.%s%d', [ParentClass.Name, copy(ParentClass.Name, 1, 4), ClassIndex]);
 end;
 
-function ConstructElemName(DSS: TDSS; const Param: String): String;
+function ConstructElemName(DSS: TDSSContext; const Param: String): String;
 {Construct an element name, sustituting @var values if any}
 
 var
@@ -3230,7 +3230,7 @@ begin
 
 end;
 
-procedure Obfuscate(DSS: TDSS);
+procedure Obfuscate(DSS: TDSSContext);
 {Rename Buses and element names to generic names to remove identifiable names}
 var
     i, bref: Integer;

@@ -18,16 +18,16 @@ uses
     PDElement,
     DSSClass;
 
-procedure DoReduceDefault(DSS: TDSS; var BranchList: TCktTree);
-procedure DoReduceShortLines(DSS: TDSS; var BranchList: TCktTree);
-procedure DoReduceDangling(DSS: TDSS; var BranchList: TCktTree);
+procedure DoReduceDefault(DSS: TDSSContext; var BranchList: TCktTree);
+procedure DoReduceShortLines(DSS: TDSSContext; var BranchList: TCktTree);
+procedure DoReduceDangling(DSS: TDSSContext; var BranchList: TCktTree);
   {procedure DoReduceTapEnds(var BranchList:TCktTree);}
-procedure DoBreakLoops(DSS: TDSS; var BranchList: TCktTree);
-procedure DoMergeParallelLines(DSS: TDSS; var BranchList: TCktTree);
-procedure DoReduceSwitches(DSS: TDSS; var Branchlist: TCktTree);
-procedure DoRemoveAll_1ph_Laterals(DSS: TDSS; var Branchlist: TCktTree);
+procedure DoBreakLoops(DSS: TDSSContext; var BranchList: TCktTree);
+procedure DoMergeParallelLines(DSS: TDSSContext; var BranchList: TCktTree);
+procedure DoReduceSwitches(DSS: TDSSContext; var Branchlist: TCktTree);
+procedure DoRemoveAll_1ph_Laterals(DSS: TDSSContext; var Branchlist: TCktTree);
 
-procedure DoRemoveBranches(DSS: TDSS; var BranchList: TCktTree; FirstPDElement: TPDElement; KeepLoad: Boolean; const EditStr: String);
+procedure DoRemoveBranches(DSS: TDSSContext; var BranchList: TCktTree; FirstPDElement: TPDElement; KeepLoad: Boolean; const EditStr: String);
 
 
 implementation
@@ -50,7 +50,7 @@ const
     SERIESMERGE: Boolean = TRUE;
     PARALLELMERGE: Boolean = FALSE;
 
-procedure DoMergeParallelLines(DSS: TDSS; var BranchList: TCktTree);
+procedure DoMergeParallelLines(DSS: TDSSContext; var BranchList: TCktTree);
 {Merge all lines in this zone that are marked in parallel}
 
 var
@@ -74,7 +74,7 @@ begin
     end;
 end;
 
-procedure DoBreakLoops(DSS: TDSS; var BranchList: TCktTree);
+procedure DoBreakLoops(DSS: TDSSContext; var BranchList: TCktTree);
 
 {Break loops}
 var
@@ -101,7 +101,7 @@ end;
 
 {
 
-procedure DoReduceTapEnds(DSS: TDSS; var BranchList:TCktTree);
+procedure DoReduceTapEnds(DSS: TDSSContext; var BranchList:TCktTree);
 (*Var
    pLineElem1, pLineElem2:TLineObj;
    ToBusRef:Integer;
@@ -114,7 +114,7 @@ end;
 }
 
 
-procedure DoReduceDangling(DSS: TDSS; var BranchList: TCktTree);
+procedure DoReduceDangling(DSS: TDSSContext; var BranchList: TCktTree);
 var
     pLineElem1: TDSSCktElement;
     ToBusRef: Integer;
@@ -149,7 +149,7 @@ begin
 
 end;
 
-function IsShortLine(DSS: TDSS; const Elem: TDSSCktElement): Boolean;
+function IsShortLine(DSS: TDSSContext; const Elem: TDSSCktElement): Boolean;
 var
     Ztest: Double;
     LineElement: TLineObj;
@@ -176,7 +176,7 @@ begin
 
 end;
 
-procedure DoReduceShortLines(DSS: TDSS; var BranchList: TCktTree);
+procedure DoReduceShortLines(DSS: TDSSContext; var BranchList: TCktTree);
 {Eliminate short lines with impedance < Zmag and merge with lines on either side}
 var
     LineElement1, LineElement2: TLineObj;
@@ -332,7 +332,7 @@ begin
     end;
 end;
 
-procedure DoReduceSwitches(DSS: TDSS; var Branchlist: TCktTree);
+procedure DoReduceSwitches(DSS: TDSSContext; var Branchlist: TCktTree);
 
 {Merge switches in with lines or delete if dangling}
 
@@ -377,7 +377,7 @@ begin
 
 end;
 
-procedure DoReduceDefault(DSS: TDSS; var BranchList: TCktTree);
+procedure DoReduceDefault(DSS: TDSSContext; var BranchList: TCktTree);
 
 var
     LineElement1, LineElement2: TLineObj;
@@ -420,7 +420,7 @@ begin
 
 end;
 
-procedure DoRemoveBranches(DSS: TDSS; var BranchList: TCktTree; FirstPDElement: TPDElement; KeepLoad: Boolean; const EditStr: String);
+procedure DoRemoveBranches(DSS: TDSSContext; var BranchList: TCktTree; FirstPDElement: TPDElement; KeepLoad: Boolean; const EditStr: String);
 var
     PDElem: TPDElement;
     BusName: String;
@@ -508,7 +508,7 @@ begin
     end;
 end;
 
-procedure DoRemoveAll_1ph_Laterals(DSS: TDSS; var Branchlist: TCktTree);
+procedure DoRemoveAll_1ph_Laterals(DSS: TDSSContext; var Branchlist: TCktTree);
 {Remove all 1-phase laterals in Branchlist and lump total load back to main feeder}
 {
   This removes all elements on all 1ph laterals and moves the net load back to the main feeder tap point

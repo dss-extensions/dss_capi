@@ -39,7 +39,7 @@ TYPE
          function  Get_Exists: Boolean;
 
       Public
-         DSS: TDSS;
+         DSS: TDSSContext;
 
          FEdit:         Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
          FInit:         Procedure(V, I:pComplexArray);Stdcall;   // For dynamics
@@ -63,7 +63,7 @@ TYPE
          Procedure   Select;
          Procedure   Integrate;
 
-         constructor Create(dssContext: TDSS);
+         constructor Create(dssContext: TDSSContext);
          destructor  Destroy; override;
 
       Published
@@ -95,7 +95,7 @@ TYPE
       protected
 
       public
-        DSS: TDSS;
+        DSS: TDSSContext;
         
         FEdit:         Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
         FInit:         Procedure(V, I:pComplexArray); Stdcall;   // For dynamics
@@ -123,7 +123,7 @@ TYPE
         Procedure   Select;
         Procedure   Integrate;
 
-        constructor Create(dssContext: TDSS);
+        constructor Create(dssContext: TDSSContext);
         destructor  Destroy; override;
 
       published
@@ -147,7 +147,7 @@ begin
         Result := Addr;
 end;
 
-constructor TStoreUserModel.Create(dssContext: TDSS);
+constructor TStoreUserModel.Create(dssContext: TDSSContext);
 begin
   DSS := dssContext;
   FID := 0;
@@ -273,7 +273,7 @@ begin
         Result := Addr;
 end;
 
-constructor TStoreDynaModel.Create(dssContext: TDSS);
+constructor TStoreDynaModel.Create(dssContext: TDSSContext);
 begin
   DSS := dssContext;
   FID     := 0;

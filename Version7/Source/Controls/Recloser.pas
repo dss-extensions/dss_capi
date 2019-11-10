@@ -50,7 +50,7 @@ type
         procedure DefineProperties;
         function MakeLike(const RecloserName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -146,7 +146,7 @@ var
 
 {General Module Function}
 
-function GetTccCurve(DSS: TDSS; const CurveName: String): TTCC_CurveObj;
+function GetTccCurve(DSS: TDSSContext; const CurveName: String): TTCC_CurveObj;
 
 begin
 
@@ -159,7 +159,7 @@ end;
 
 
 {--------------------------------------------------------------------------}
-constructor TRecloser.Create(dss: TDSS);  // Creates superstructure for all Recloser objects
+constructor TRecloser.Create(dss: TDSSContext);  // Creates superstructure for all Recloser objects
 begin
     inherited Create(dss);
 

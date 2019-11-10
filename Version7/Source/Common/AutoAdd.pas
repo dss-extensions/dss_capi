@@ -76,9 +76,9 @@ type
 
         ModeChanged: Boolean;
         
-        DSS: TDSS;
+        DSS: TDSSContext;
 
-        constructor Create(dssContext: TDSS);
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         procedure MakeBusList;
@@ -123,7 +123,7 @@ begin
 end;
 
 
-constructor TAutoAdd.Create(dssContext: TDSS);
+constructor TAutoAdd.Create(dssContext: TDSSContext);
 begin
     DSS := dssContext;
 

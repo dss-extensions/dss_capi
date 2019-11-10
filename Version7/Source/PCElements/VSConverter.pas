@@ -27,7 +27,7 @@ type
         procedure DefineProperties;
         function MakeLike(const VSCName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
         function Edit: Integer; OVERRIDE;
         function Init(Handle: Integer): Integer; OVERRIDE;
@@ -100,7 +100,7 @@ const
 // Class Methods
 // =====================================================
 
-constructor TVSConverter.Create(dss: TDSS);
+constructor TVSConverter.Create(dss: TDSSContext);
 begin
     inherited Create(dss);
     Class_Name := 'VSConverter';

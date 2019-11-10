@@ -56,7 +56,7 @@ type
         procedure DefineProperties;
         function MakeLike(const CapControlName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -150,7 +150,7 @@ const
 
 
 {--------------------------------------------------------------------------}
-constructor TCapControl.Create(dss: TDSS);  // Creates superstructure for all CapControl objects
+constructor TCapControl.Create(dss: TDSSContext);  // Creates superstructure for all CapControl objects
 begin
     inherited Create(dss);
 

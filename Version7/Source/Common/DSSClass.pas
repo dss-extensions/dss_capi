@@ -17,14 +17,14 @@ USES
     Command,  Arraydef, Hashlist, {$IFDEF DSS_CAPI_HASHLIST}Contnrs,{$ENDIF} Classes, PointerList, NamedObject, ParserDel;
 
 TYPE
-    TDSS = class;
+    TDSSContext = class;
 
     // Collection of all DSS Classes
     TDSSClasses = class(TObject)
     public
-        DSS: TDSS;
+        DSS: TDSSContext;
     
-        constructor Create(dssContext: TDSS);
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; override;
         PROCEDURE New(Value:Pointer);
    End;
@@ -58,7 +58,7 @@ TYPE
         procedure ClassEdit(Const ActiveObj:Pointer; Const ParamPointer:Integer);
 
      public
-        DSS: TDSS;
+        DSS: TDSSContext;
         
         NumProperties: Integer;
         PropertyName,
@@ -74,7 +74,7 @@ TYPE
 
         Saved: Boolean;
 
-        constructor Create(dssContext: TDSS);
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; override;
 
         {Helper routine for building Property strings}
@@ -100,7 +100,7 @@ TYPE
         Property Name:String read Class_Name;
    END;
 
-    TDSS = class(TObject)
+    TDSSContext = class(TObject)
     protected
         FLoadShapeClass: TDSSClass;
         FTShapeClass: TDSSClass;
@@ -287,13 +287,13 @@ TYPE
 
 
 var
-    DSSPrime: TDSS;
+    DSSPrime: TDSSContext;
 
 implementation
 
 USES DSSGlobals, SysUtils, DSSObject, CktElement, DSSHelper, Executive;
 
-constructor TDSS.Create(_IsPrime: Boolean);
+constructor TDSSContext.Create(_IsPrime: Boolean);
 begin
     inherited Create;
     
@@ -354,7 +354,7 @@ begin
     DSSExecutive.CreateDefaultDSSItems;
 end;
 
-destructor TDSS.Destroy;
+destructor TDSSContext.Destroy;
 begin
     AuxParser.Free;
     EventStrings.Free;
@@ -369,7 +369,7 @@ end;
 {--------------------------------------------------------------}
 { DSSClasses Implementation
 {--------------------------------------------------------------}
-Constructor TDSSClasses.Create(dssContext: TDSS);
+Constructor TDSSClasses.Create(dssContext: TDSSContext);
 Begin
      Inherited Create;
      
@@ -394,7 +394,7 @@ End;
 {--------------------------------------------------------------}
 {  DSSClass Implementation
 {--------------------------------------------------------------}
-Constructor TDSSClass.Create(dssContext: TDSS);
+Constructor TDSSClass.Create(dssContext: TDSSContext);
 
 BEGIN
     Inherited Create;

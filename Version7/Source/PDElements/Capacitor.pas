@@ -65,7 +65,7 @@ type
         function MakeLike(const CapacitorName: String): Integer; OVERRIDE;
         procedure DefineProperties;  // Add Properties of this class to propName
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -154,7 +154,7 @@ const
     NumPropsThisClass = 13;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TCapacitor.Create(dss: TDSS);  // Creates superstructure for all Capacitor objects
+constructor TCapacitor.Create(dss: TDSSContext);  // Creates superstructure for all Capacitor objects
 begin
     inherited Create(dss);
     Class_Name := 'Capacitor';

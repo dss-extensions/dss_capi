@@ -32,7 +32,7 @@ type
 
     PUBLIC
         NumMeterClassProps: Integer;
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         procedure ResetAll; VIRTUAL;
@@ -51,7 +51,7 @@ uses
     DSSClassDefs,
     DSSGlobals;
 
-constructor TMeterClass.Create(dss: TDSS);
+constructor TMeterClass.Create(dss: TDSSContext);
 begin
 
     inherited Create(dss);

@@ -22,7 +22,7 @@ INTERFACE
         PROCEDURE DefineProperties;
         FUNCTION MakeLike(const ExpControlName:String):Integer;Override;
       public
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; override;
 
         FUNCTION Edit:Integer; override;     // uses global parser
@@ -117,7 +117,7 @@ CONST
     CHANGEVARLEVEL = 1;
 
 {--------------------------------------------------------------------------}
-constructor TExpControl.Create(dss: TDSS);  // Creates superstructure for all ExpControl objects
+constructor TExpControl.Create(dss: TDSSContext);  // Creates superstructure for all ExpControl objects
 Begin
   Inherited Create(dss);
   Class_name   := 'ExpControl';

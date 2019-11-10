@@ -46,7 +46,7 @@ TYPE
       protected
 
       public
-        DSS: TDSS;
+        DSS: TDSSContext;
         
         FEdit:         Procedure(s:pAnsichar; Maxlen:Cardinal); Stdcall; // send string to user model to handle
         FInit:         procedure(V, I:pComplexArray);Stdcall;   // For dynamics
@@ -77,7 +77,7 @@ TYPE
         Procedure Select;
         Procedure Integrate;
         
-        constructor Create(dssContext: TDSS; ActiveGeneratorVars:pTGeneratorVars);
+        constructor Create(dssContext: TDSSContext; ActiveGeneratorVars:pTGeneratorVars);
         destructor  Destroy; override;
       published
 
@@ -102,7 +102,7 @@ begin
         Result := Addr;
 end;
 
-constructor TGenUserModel.Create(dssContext: TDSS; ActiveGeneratorVars:pTGeneratorVars);
+constructor TGenUserModel.Create(dssContext: TDSSContext; ActiveGeneratorVars:pTGeneratorVars);
 begin
     DSS     := dssContext;
     FID     := 0;

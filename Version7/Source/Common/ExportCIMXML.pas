@@ -23,7 +23,7 @@ type
     CIMProfileChoice = (Combined, Functional, ElectricalProperties,
         Asset, Geographical, Topology, StateVariables);
 
-procedure ExportCDPSM(DSS: TDSS; FileNm: String;
+procedure ExportCDPSM(DSS: TDSSContext; FileNm: String;
     Substation: String;
     SubGeographicRegion: String;
     GeographicRegion: String;
@@ -100,7 +100,7 @@ type
         constructor Create(MaxWdg: Integer);
         destructor Destroy; OVERRIDE;
 
-        procedure AddTransformer(DSS: TDSS; pXf: TTransfObj);
+        procedure AddTransformer(DSS: TDSSContext; pXf: TTransfObj);
         procedure BuildVectorGroup;
     end;
 
@@ -124,7 +124,7 @@ const
 //  CIM_NS = 'http://iec.ch/TC57/2012/CIM-schema-cim17';
     CIM_NS = 'http://iec.ch/TC57/CIM100';
 
-procedure ParseSwitchClass(DSS: TDSS; pLine: TLineObj; var swtCls: String; var ratedAmps, breakingAmps: Double);
+procedure ParseSwitchClass(DSS: TDSSContext; pLine: TLineObj; var swtCls: String; var ratedAmps, breakingAmps: Double);
 var
     pFuse: TFuseObj;
     pRelay: TRelayObj;
@@ -168,7 +168,7 @@ begin
 end;
 
 // this returns s1, s2, or a combination of ABCN
-function PhaseString(DSS: TDSS; pElem: TDSSCktElement; bus: Integer): String; // if order doesn't matter
+function PhaseString(DSS: TDSSContext; pElem: TDSSCktElement; bus: Integer): String; // if order doesn't matter
 var
     val, phs: String;
     dot: Integer;
@@ -398,7 +398,7 @@ begin
         vectorGroup := UpperCase(LeftStr(vectorGroup, 1)) + RightStr(vectorGroup, Length(vectorGroup) - 1);
 end;
 
-procedure TBankObject.AddTransformer(DSS: TDSS; pXf: TTransfObj);
+procedure TBankObject.AddTransformer(DSS: TDSSContext; pXf: TTransfObj);
 var
     i: Integer;
     phs: String;
@@ -704,7 +704,7 @@ begin
     Writeln(F, Format('  <cim:Equipment.EquipmentContainer rdf:resource="#%s"/>', [Obj.CIM_ID]));
 end;
 
-function FirstPhaseString(DSS: TDSS; pElem: TDSSCktElement; bus: Integer): String;
+function FirstPhaseString(DSS: TDSSContext; pElem: TDSSCktElement; bus: Integer): String;
 var
     val: String;
 begin
@@ -838,7 +838,7 @@ begin
     Writeln(F, Format('</cim:%s>', [Root]));
 end;
 
-procedure XfmrPhasesEnum(DSS: TDSS; var F: TextFile; pElem: TDSSCktElement; bus: Integer);
+procedure XfmrPhasesEnum(DSS: TDSSContext; var F: TextFile; pElem: TDSSCktElement; bus: Integer);
 begin
     Writeln(F, Format('  <cim:TransformerTankEnd.phases rdf:resource="%s#PhaseCode.%s"/>',
         [CIM_NS, PhaseString(DSS, pElem, bus)]));
@@ -875,7 +875,7 @@ begin
 end;
 
 // we specify phases except for balanced three-phase
-procedure AttachLinePhases(DSS: TDSS; var F: TextFile; pLine: TLineObj);
+procedure AttachLinePhases(DSS: TDSSContext; var F: TextFile; pLine: TLineObj);
 var
     s, phs: String;
     i: Integer;
@@ -937,7 +937,7 @@ begin
     end;
 end;
 
-procedure AttachCapPhases(DSS: TDSS; var F: TextFile; pCap: TCapacitorObj; geoUUID: TUuid);
+procedure AttachCapPhases(DSS: TDSSContext; var F: TextFile; pCap: TCapacitorObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -984,7 +984,7 @@ begin
     EndInstance(F, 'EnergyConsumerPhase');
 end;
 
-procedure AttachLoadPhases(DSS: TDSS; var F: TextFile; pLoad: TLoadObj; geoUUID: TUuid);
+procedure AttachLoadPhases(DSS: TDSSContext; var F: TextFile; pLoad: TLoadObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -1048,7 +1048,7 @@ begin
     EndInstance(F, 'SynchronousMachinePhase');
 end;
 
-procedure AttachGeneratorPhases(DSS: TDSS; var F: TextFile; pGen: TGeneratorObj; geoUUID: TUuid);
+procedure AttachGeneratorPhases(DSS: TDSSContext; var F: TextFile; pGen: TGeneratorObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -1109,7 +1109,7 @@ begin
     EndInstance(F, 'PowerElectronicsConnectionPhase');
 end;
 
-procedure AttachSolarPhases(DSS: TDSS; var F: TextFile; pPV: TPVSystemObj; geoUUID: TUuid);
+procedure AttachSolarPhases(DSS: TDSSContext; var F: TextFile; pPV: TPVSystemObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -1170,7 +1170,7 @@ begin
     EndInstance(F, 'PowerElectronicsConnectionPhase');
 end;
 
-procedure AttachStoragePhases(DSS: TDSS; var F: TextFile; pBat: TStorageObj; geoUUID: TUuid);
+procedure AttachStoragePhases(DSS: TDSSContext; var F: TextFile; pBat: TStorageObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -1272,7 +1272,7 @@ begin
         Result := FALSE;
 end;
 
-procedure WritePositions(DSS: TDSS; var F: TextFile; pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid);
+procedure WritePositions(DSS: TDSSContext; var F: TextFile; pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid);
 var
     Nterm, j, ref: Integer;
     BusName: String;
@@ -1301,7 +1301,7 @@ begin
     end;
 end;
 
-procedure WriteReferenceTerminals(DSS: TDSS; var F: TextFile; pElem: TDSSCktElement;
+procedure WriteReferenceTerminals(DSS: TDSSContext; var F: TextFile; pElem: TDSSCktElement;
     geoUUID: TUuid; crsUUID: TUuid; RefUuid: TUuid;
     norm: Double = 0.0; emerg: Double = 0.0);
 var
@@ -1348,14 +1348,14 @@ begin
     end;
 end;
 
-procedure WriteTerminals(DSS: TDSS; var F: TextFile; pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid;
+procedure WriteTerminals(DSS: TDSSContext; var F: TextFile; pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid;
     norm: Double = 0.0; emerg: Double = 0.0);
 begin
     WriteReferenceTerminals(DSS, F, pElem, geoUUID, crsUUID, pElem.UUID, norm, emerg);
     WritePositions(DSS, F, pElem, geoUUID, crsUUID);
 end;
 
-procedure VbaseNode(DSS: TDSS; var F: TextFile; pElem: TDSSCktElement);
+procedure VbaseNode(DSS: TDSSContext; var F: TextFile; pElem: TDSSCktElement);
 var
     j: Integer;
 begin
@@ -1570,7 +1570,7 @@ begin
     end;
 end;
 
-procedure ExportCDPSM(DSS: TDSS; FileNm: String;
+procedure ExportCDPSM(DSS: TDSSContext; FileNm: String;
     Substation: String;
     SubGeographicRegion: String;
     GeographicRegion: String;

@@ -102,7 +102,7 @@ TYPE
 
 
       Public
-          DSS: TDSS;
+          DSS: TDSSContext;
 
           ActiveBusIndex :Integer;
           Fundamental    :Double;    // fundamental and default base frequency
@@ -284,7 +284,7 @@ TYPE
           ActiveLoadShapeClass: Integer;
 
 
-          Constructor Create(dssContext: TDSS; const aName:String);
+          Constructor Create(dssContext: TDSSContext; const aName:String);
           Destructor Destroy; Override;
 
           Procedure AddCktElement(Handle:Integer);  // Adds last DSS object created to circuit
@@ -337,7 +337,7 @@ USES
      {$IFDEF MSWINDOWS}Windows,  SHELLAPI, {$ELSE} BaseUnix, Unix, {$ENDIF} Executive, StrUtils,
      DSSHelper;
 //----------------------------------------------------------------------------
-Constructor TDSSCircuit.Create(dssContext: TDSS; const aName:String);
+Constructor TDSSCircuit.Create(dssContext: TDSSContext; const aName:String);
 
 // Var Retval:Integer;
 

@@ -51,7 +51,7 @@ type
         procedure DefineProperties;
         function MakeLike(const OtherLine: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -125,7 +125,7 @@ const
     NumPropsThisClass = 15;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TGICLine.Create(dss: TDSS);  // Creates superstructure for all Line objects
+constructor TGICLine.Create(dss: TDSSContext);  // Creates superstructure for all Line objects
 begin
     inherited Create(dss);
     Class_Name := 'GICLine';

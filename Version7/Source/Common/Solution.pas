@@ -85,7 +85,7 @@ type
     PROTECTED
         procedure DefineProperties;
     PUBLIC
-        constructor Create(dssContext: TDSS);
+        constructor Create(dssContext: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -96,7 +96,7 @@ type
 
     TSolutionObj = class(TDSSObject)
     PROTECTED
-        DSS: TDSS;
+        DSS: TDSSContext;
     PRIVATE
         dV: pNodeVArray;   // Array of delta V for Newton iteration
         FFrequency: Double;
@@ -325,7 +325,7 @@ var
 {$ENDIF}
 
 // ===========================================================================================
-constructor TDSSSolution.Create(dssContext: TDSS);  // Collection of all solution objects
+constructor TDSSSolution.Create(dssContext: TDSSContext);  // Collection of all solution objects
 begin
     inherited Create(dssContext);
     Class_Name := 'Solution';

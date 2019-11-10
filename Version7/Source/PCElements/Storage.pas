@@ -78,7 +78,7 @@ type
     PUBLIC
         RegisterNames: array[1..NumStorageRegisters] of String;
 
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;
@@ -345,7 +345,7 @@ var
     CDOUBLEONE: Complex;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TStorage.Create(dss: TDSS);  // Creates superstructure for all Storage elements
+constructor TStorage.Create(dss: TDSSContext);  // Creates superstructure for all Storage elements
 begin
     inherited Create(dss);
     Class_Name := 'Storage';

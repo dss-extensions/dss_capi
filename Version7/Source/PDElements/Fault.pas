@@ -61,7 +61,7 @@ type
         procedure DefineProperties;
         function MakeLike(const FaultName: String): Integer; OVERRIDE;
     PUBLIC
-        constructor Create(dss: TDSS);
+        constructor Create(dss: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         function Edit: Integer; OVERRIDE;     // uses global parser
@@ -123,7 +123,7 @@ const
     NumPropsthisclass = 9;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-constructor TFault.Create(dss: TDSS);  // Creates superstructure for all Fault objects
+constructor TFault.Create(dss: TDSSContext);  // Creates superstructure for all Fault objects
 begin
     inherited Create(dss);
     Class_Name := 'Fault';

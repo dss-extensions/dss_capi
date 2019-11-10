@@ -61,7 +61,7 @@ uses
     Executive;
     
 type
-    TDSSGlobalHelper = class helper for TDSS
+    TDSSGlobalHelper = class helper for TDSSContext
     private
         function GetDSSExecutive: TExecutive; inline;
         function GetActiveDSSObject: TDSSObject; inline;

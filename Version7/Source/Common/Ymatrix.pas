@@ -31,11 +31,11 @@ type
     EEsolv32Problem = class(Exception);
 
 
-procedure BuildYMatrix(DSS: TDSS; BuildOption: Integer; AllocateVI: Boolean);
+procedure BuildYMatrix(DSS: TDSSContext; BuildOption: Integer; AllocateVI: Boolean);
 procedure ResetSparseMatrix(var hY: NativeUint; size: Integer);
-procedure InitializeNodeVbase(DSS: TDSS);
+procedure InitializeNodeVbase(DSS: TDSSContext);
 
-function CheckYMatrixforZeroes(DSS: TDSS): String;
+function CheckYMatrixforZeroes(DSS: TDSSContext): String;
 
 implementation
 
@@ -149,7 +149,7 @@ begin
 end;
 
 
-procedure InitializeNodeVbase(DSS: TDSS);
+procedure InitializeNodeVbase(DSS: TDSSContext);
 
 var
     i: Integer;
@@ -311,7 +311,7 @@ begin
 //    writeln();
 end;
 
-procedure BuildYMatrix(DSS: TDSS; BuildOption: Integer; AllocateVI: Boolean);
+procedure BuildYMatrix(DSS: TDSSContext; BuildOption: Integer; AllocateVI: Boolean);
 
 {Builds designated Y matrix for system and allocates solution arrays}
 
@@ -470,7 +470,7 @@ begin
 end;
 
 // leave the call to GetMatrixElement, but add more diagnostics
-function CheckYMatrixforZeroes(DSS: TDSS): String;
+function CheckYMatrixforZeroes(DSS: TDSSContext): String;
 
 var
     i: Longword;
