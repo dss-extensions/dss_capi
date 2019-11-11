@@ -95,8 +95,6 @@ type
     end;
 
     TSolutionObj = class(TDSSObject)
-    PROTECTED
-        DSS: TDSSContext;
     PRIVATE
         dV: pNodeVArray;   // Array of delta V for Newton iteration
         FFrequency: Double;

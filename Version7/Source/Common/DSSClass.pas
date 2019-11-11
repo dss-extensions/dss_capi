@@ -350,7 +350,7 @@ begin
     FPropIndex := 0;
     FPropClass := NIL;
     
-    DSSExecutive := TExecutive(self);
+    DSSExecutive := TExecutive.Create(self);
     DSSExecutive.CreateDefaultDSSItems;
 end;
 

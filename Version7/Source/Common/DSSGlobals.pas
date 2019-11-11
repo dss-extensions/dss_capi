@@ -236,6 +236,7 @@ USES  {Forms,   Controls,}
      {$ENDIF}
      Solution,
      Executive,
+     ExecCommands,
      DSSHelper;
 
 TYPE
@@ -254,10 +255,10 @@ VAR
 FUNCTION GetDefaultDataDirectory: String;
 Begin
 {$IFDEF UNIX}
-  Result := GetEnvironmentVariable('HOME') + PathDelim + 'Documents';
+  Result := SysUtils.GetEnvironmentVariable('HOME') + PathDelim + 'Documents';
 {$ENDIF}
 {$IF (defined(Windows) or defined(MSWindows))}
-  Result := GetEnvironmentVariable('HOMEDRIVE') + GetEnvironmentVariable('HOMEPATH') + PathDelim + 'Documents';
+  Result := SysUtils.GetEnvironmentVariable('HOMEDRIVE') + SysUtils.GetEnvironmentVariable('HOMEPATH') + PathDelim + 'Documents';
 {$ENDIF}
 end;
 
@@ -267,7 +268,7 @@ Begin
   Result := '/tmp';
   {$ENDIF}
   {$IF (defined(Windows) or defined(MSWindows))}
-  Result := GetEnvironmentVariable('LOCALAPPDATA');
+  Result := SysUtils.GetEnvironmentVariable('LOCALAPPDATA');
   {$ENDIF}
 End;
 {$ELSE}
@@ -853,14 +854,14 @@ initialization
    {$ENDIF}
    UpdateRegistry   := TRUE;
 {$ELSE}
-   IF GetEnvironmentVariable('DSS_BASE_FREQUENCY') <> '' THEN
+   IF SysUtils.GetEnvironmentVariable('DSS_BASE_FREQUENCY') <> '' THEN
    BEGIN
-      GlobalDefaultBaseFreq  := StrToInt(GetEnvironmentVariable('DSS_BASE_FREQUENCY'));
+      GlobalDefaultBaseFreq  := StrToInt(SysUtils.GetEnvironmentVariable('DSS_BASE_FREQUENCY'));
    END;
 {$ENDIF}
 
    {$IFDEF Darwin}
-      DefaultEditor := GetEnvironmentVariable('EDITOR');
+      DefaultEditor := SysUtils.GetEnvironmentVariable('EDITOR');
       // If there is no EDITOR environment variable, keep the old behavior
       if (DefaultEditor = '') then
           DefaultEditor   := 'open -t';
@@ -868,7 +869,7 @@ initialization
       DefaultFontName := 'Geneva';
    {$ENDIF}
    {$IFDEF Linux}
-      DefaultEditor := GetEnvironmentVariable('EDITOR');
+      DefaultEditor := SysUtils.GetEnvironmentVariable('EDITOR');
       // If there is no EDITOR environment variable, keep the old behavior
       if (DefaultEditor = '') then
           DefaultEditor := 'xdg-open';
@@ -899,22 +900,30 @@ initialization
    {$ENDIF}
 {$IFDEF DSS_CAPI}
    IsDLL := True;
-   DSS_CAPI_INFO_SPARSE_COND := (GetEnvironmentVariable('DSS_CAPI_INFO_SPARSE_COND') = '1');
+   DSS_CAPI_INFO_SPARSE_COND := (SysUtils.GetEnvironmentVariable('DSS_CAPI_INFO_SPARSE_COND') = '1');
 
    // Default is True, disable at initialization only when DSS_CAPI_EARLY_ABORT = 0
-   DSS_CAPI_EARLY_ABORT := (GetEnvironmentVariable('DSS_CAPI_EARLY_ABORT') <> '0');
+   DSS_CAPI_EARLY_ABORT := (SysUtils.GetEnvironmentVariable('DSS_CAPI_EARLY_ABORT') <> '0');
 
    // Default is True, enable at initialization when DSS_CAPI_ALLOW_EDITOR = 0
-   DSS_CAPI_ALLOW_EDITOR := (GetEnvironmentVariable('DSS_CAPI_ALLOW_EDITOR') <> '0');
+   DSS_CAPI_ALLOW_EDITOR := (SysUtils.GetEnvironmentVariable('DSS_CAPI_ALLOW_EDITOR') <> '0');
    
    // Default is False, enable at initialization when DSS_CAPI_ALLOW_INCREMENTAL_Y = 1
-   DSS_CAPI_ALLOW_INCREMENTAL_Y := (GetEnvironmentVariable('DSS_CAPI_ALLOW_INCREMENTAL_Y') = '1');
+   DSS_CAPI_ALLOW_INCREMENTAL_Y := (SysUtils.GetEnvironmentVariable('DSS_CAPI_ALLOW_INCREMENTAL_Y') = '1');
    
    if (DSS_CAPI_ALLOW_INCREMENTAL_Y) then WriteLn('DSS_CAPI_ALLOW_INCREMENTAL_Y');
 {$ENDIF}
 
-  DSSPrime := TDSSContext.Create(True);
+    ExecCommands.DefineCommands;
 
+try
+   DSSPrime := TDSSContext.Create(True);
+except 
+    on E: Exception do
+    begin
+        DSSPrime := nil;
+    end;
+end;
 
 Finalization
 
@@ -923,4 +932,5 @@ Finalization
   DSS_Registry.Free;  {Close Registry}
 {$ENDIF}
 
+  ExecCommands.DisposeStrings;
 End.

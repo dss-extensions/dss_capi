@@ -92,7 +92,6 @@ Begin
      Inherited Create;
 
      DSS := dssContext;
-     // DSS.DSSExecutive := self;
       
      // Exec Commands
      CommandList := TCommandList.Create(ExecCommand);
@@ -252,16 +251,6 @@ procedure TExecutive.Write_to_RecorderFile(const s: string);
 begin
    Writeln(Recorderfile, S);
 end;
-
-initialization
-
-//WriteDLLDebugFile('Executive');
-
-
-
-finalization
-
-
 
 end.
 

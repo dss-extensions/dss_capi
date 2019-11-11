@@ -24,6 +24,9 @@ var
 
 procedure ProcessCommand(DSS: TDSSContext; const CmdLine: String);
 
+procedure DefineCommands;
+procedure DisposeStrings;
+
 implementation
 
 uses
@@ -911,13 +914,5 @@ begin
         CommandHelp[i] := '';
     end;
 end;
-
-initialization
-
-    DefineCommands;
-
-finalization
-
-    DisposeStrings;
 
 end.
