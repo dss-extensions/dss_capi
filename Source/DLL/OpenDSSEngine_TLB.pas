@@ -12,10 +12,10 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 52393 $
-// File generated on 3/3/2019 10:53:10 PM from Type Library described below.
+// File generated on 11/11/2019 10:59:11 AM from Type Library described below.
 
 // ************************************************************************  //
-// Type Lib: C:\Users\prdu001\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
+// Type Lib: C:\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
 // LIBID: {8BFDE413-245A-4514-B151-B16DCC243796}
 // LCID: 0
 // Helpfile:
@@ -3474,6 +3474,8 @@ type
     procedure Set_PF(Value: Double); stdcall;
     function Get_kVArated: Double; safecall;
     procedure Set_kVArated(Value: Double); stdcall;
+    function Get_Pmpp: Double; safecall;
+    procedure Set_Pmpp(Value: Double); safecall;
     property AllNames: OleVariant read Get_AllNames;
     property RegisterNames: OleVariant read Get_RegisterNames;
     property RegisterValues: OleVariant read Get_RegisterValues;
@@ -3487,6 +3489,7 @@ type
     // Skipped Property "kvar"
     // Skipped Property "PF"
     // Skipped Property "kVArated"
+    property Pmpp: Double read Get_Pmpp write Set_Pmpp;
   end;
 
 // *********************************************************************//
@@ -3509,6 +3512,7 @@ type
     function kvar: Double; dispid 211;
     function PF: Double; dispid 212;
     function kVArated: Double; dispid 213;
+    property Pmpp: Double dispid 214;
   end;
 
 // *********************************************************************//
