@@ -489,7 +489,7 @@ Begin
                          'VARMAX_WATTS: When set to VARMAX_WATTS the units of the y-axis for the volt-var curve are given in percent of the maximum reactive power setting of each of the PVSystems.  Active power generation has'+CRLF+
                          'precedence over reactive power generation/absorption.'+CRLF;
 
-     PropertyName[24] := 'ActivePChangeTolerance is the active power tolerance required to be met between control iterations to signal achieving convergence. Default is 0.01';
+     PropertyHelp[24] := 'ActivePChangeTolerance is the active power tolerance required to be met between control iterations to signal achieving convergence. Default is 0.01';
 
      ActiveProperty  := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
