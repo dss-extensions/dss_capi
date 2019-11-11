@@ -371,10 +371,14 @@ begin
   writeln('      If not provided, accepts user commands at the >> prompt.');
   writeln(' -h displays this message and exits');
   writeln(' -f stop_time [filename] starts in FNCS co-simulation mode');
-	writeln('      stop_time is the co-simulation stopping time in seconds');
+	writeln('      Stop_time is the co-simulation stopping time in seconds;');
 	writeln('        may also append a single character d(ay), h(our) or m(inute) for units');
-	writeln('      if filename is provided, that will be compiled before starting FNCS');
+	writeln('      If filename is provided, that will be compiled before starting FNCS');
   writeln('      This option requires FNCS installation and opendss.yaml file');
+	writeln('      Run with Envar FNCS_LOG_LEVEL=WARNING (default), INFO or DEBUG* to generate more logging output,');
+	writeln('        DEBUG1 for fncs command echo, outside the time step loop,');
+	writeln('        DEBUG2 for fncs command echo, inside the time step loop,');
+	writeln('        DEBUG3 for fncs topic map echo.');
   writeln(' -v displays the version and exits');
 end;
 

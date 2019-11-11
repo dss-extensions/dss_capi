@@ -43,6 +43,8 @@ type
 	              fncsVSource, fncsTransformer, fncsFault);
 	TFNCSAttribute = (fncsVoltage, fncsCurrent, 
 	                    fncsPower, fncsSwitchState, fncsTapPosition);
+	TFNCSLogLevel = (fncsLogWarning, fncsLogInfo, fncsLogDebug1, fncsLogDebug2,
+			fncsLogDebug3, fncsLogDebug4);
 	TFNCSTopic = class (TObject)
   public
 		tag: String;            // what FNCS calls it
@@ -120,6 +122,7 @@ type
 
   private
     next_fncs_publish: fncs_time;
+		log_level: TFNCSLogLevel;
     topics: ClassObjectDict;
 //		topicList: TList;
     fncsOutputStream: TStringStream;
@@ -553,8 +556,10 @@ begin
   finally
     inputfile.Free;
   end;
-  writeln('Done reading FNCS publication requests from: ' + fname);
-//  DumpFNCSTopics;
+	if log_level >= fncsLogInfo then
+		writeln('Done reading FNCS publication requests from: ' + fname);
+  if log_level >= fncsLogDebug3 then
+		DumpFNCSTopics;
 end;
 
 procedure TFNCS.TopicsToJsonStream;
@@ -624,13 +629,17 @@ begin
   time_granted := fncs_time_request (next_fncs);
   if time_granted >= next_fncs_publish then begin
 		if topics.Count > 0 then begin
-//      Writeln(Format('  Stream size %u at %u, next at %u, interval %u', [fncsOutputStream.size, time_granted, next_fncs_publish, PublishInterval]));
+			if log_level >= fncsLogDebug2 then begin
+				Writeln(Format('  Stream size %u at %u, next at %u, interval %u', [fncsOutputStream.size, time_granted, next_fncs_publish, PublishInterval]));
+				system.flush (stdout);
+			end;
 			if Not FNCSTopicsMapped then MapFNCSTopics;
 			GetValuesForTopics;
 			TopicsToJsonStream;
 			fncs_publish ('fncs_output', PChar(fncsOutputStream.DataString));
 		end;
-    next_fncs_publish := next_fncs_publish + PublishInterval;
+		while next_fncs_publish <= time_granted do
+			next_fncs_publish := next_fncs_publish + PublishInterval;
   end;
   ilast := fncs_get_events_size();
   // TODO: executing OpenDSS commands here may cause unwanted interactions
@@ -643,7 +652,10 @@ begin
 			if CompareText (key, 'command') = 0 then begin
 				for ival := 0 to nvalues-1 do begin
 					value := values[ival];
-//					writeln(Format('  FNCSTimeRequest command %s at %u', [value, time_granted]));
+					if log_level >= fncsLogDebug2 then begin
+						writeln(Format('  FNCSTimeRequest command %s at %u', [value, time_granted]));
+						system.flush (stdout);
+					end;
 					DSSExecutive.Command := value;
 //					fncs_publish('fncs_command', value);
 				end;
@@ -657,7 +669,10 @@ begin
 				ld.kwBase := re;
 				ld.kvarBase := im;
 				ld.RecalcElementData;
-				writeln(Format ('FNCS Request %s to %g + j %g at %u', [ld.Name, re, im, time_granted]));
+				if log_level >= fncsLogDebug2 then begin
+					writeln(Format ('FNCS Request %s to %g + j %g at %u', [ld.Name, re, im, time_granted]));
+					system.flush (stdout);
+				end;
 			end;
     end;
   end;
@@ -676,7 +691,8 @@ var
 begin
   time_granted := 0;
   time_stop := InterpretStopTimeForFNCS(s);
-  writeln(Format('Starting FNCS loop to run %s or %u seconds', [s, time_stop]));
+  if log_level >= fncsLogInfo then
+		writeln(Format('Starting FNCS loop to run %s or %u seconds', [s, time_stop]));
   fncs_initialize;
 
   Try
@@ -692,13 +708,23 @@ begin
 					if CompareText (key, 'command') = 0 then begin
 						for ival := 0 to nvalues-1 do begin
 							value := values[ival];
-							writeln(Format('FNCS command %s at %u', [value, time_granted]));
+							if log_level >= fncsLogDebug1 then begin
+								writeln(Format('FNCS command %s at %u', [value, time_granted]));
+								system.flush (stdout);
+							end;
 							DSSExecutive.Command := value;
 //							fncs_publish ('fncs_command', value);
+							if log_level >= fncsLogDebug1 then begin
+								writeln(Format('Finished with %s at %u', [value, time_granted]));
+								system.flush (stdout);
+							end;
 						end;
 					end else if Pos ('#load', key) > 0 then begin
 						value := values[0];
-						writeln(Format ('FNCS Loop %s to %s', [key, value]));
+						if log_level >= fncsLogDebug1 then begin
+							writeln(Format ('FNCS Loop %s to %s', [key, value]));
+							system.flush (stdout);
+						end;
 					end;
         end;
       end;
@@ -724,7 +750,24 @@ begin
 end;
 
 constructor TFNCS.Create;
-begin
+var 
+	s: String;
+begin { TFNCS.Create }
+	log_level := fncsLogWarning;
+	s := GetEnvironmentVariable ('FNCS_LOG_LEVEL');
+	if s = 'INFO' then 
+		log_level := fncsLogInfo
+	else if s = 'DEBUG' then
+		log_level := fncsLogDebug1
+	else if s = 'DEBUG1' then
+		log_level := fncsLogDebug1
+	else if s = 'DEBUG2' then
+		log_level := fncsLogDebug2
+	else if s = 'DEBUG3' then
+		log_level := fncsLogDebug3
+	else if s = 'DEBUG4' then
+		log_level := fncsLogDebug4;
+
   FLibHandle := SafeLoadLibrary ('libfncs.' + SharedSuffix);
   topics:=ClassObjectDict.create([doOwnsValues]);
   if FLibHandle <> DynLibs.NilHandle then begin
