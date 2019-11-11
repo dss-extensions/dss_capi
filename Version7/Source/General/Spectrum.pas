@@ -149,11 +149,8 @@ end;
 function TSpectrum.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with DSS.ActiveCircuit do
-    begin
-        DSS.ActiveDSSObject := TSpectrumObj.Create(Self, ObjName);
-        Result := AddObjectToList(DSS.ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TSpectrumObj.Create(Self, ObjName);
+    Result := AddObjectToList(DSS.ActiveDSSObject);
 end;
 
 

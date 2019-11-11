@@ -245,11 +245,8 @@ end;
 function TTShape.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with DSS.ActiveCircuit do
-    begin
-        DSS.ActiveDSSObject := TTShapeObj.Create(Self, ObjName);
-        Result := AddObjectToList(DSS.ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TTShapeObj.Create(Self, ObjName);
+    Result := AddObjectToList(DSS.ActiveDSSObject);
 end;
 
 

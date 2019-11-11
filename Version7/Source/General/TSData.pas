@@ -110,11 +110,8 @@ end;
 
 function TTSData.NewObject(const ObjName: String): Integer;
 begin
-    with DSS.ActiveCircuit do
-    begin
-        DSS.ActiveDSSObject := TTSDataObj.Create(Self, ObjName);
-        Result := AddObjectToList(DSS.ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TTSDataObj.Create(Self, ObjName);
+    Result := AddObjectToList(DSS.ActiveDSSObject);
 end;
 
 function TTSData.Edit: Integer;

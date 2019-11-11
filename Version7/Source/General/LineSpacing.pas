@@ -166,11 +166,8 @@ end;
 function TLineSpacing.NewObject(const ObjName: String): Integer;
 begin
    // create a new object of this class and add to list
-    with DSS.ActiveCircuit do
-    begin
-        DSS.ActiveDSSObject := TLineSpacingObj.Create(Self, ObjName);
-        Result := AddObjectToList(DSS.ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TLineSpacingObj.Create(Self, ObjName);
+    Result := AddObjectToList(DSS.ActiveDSSObject);
 end;
 
 procedure TLineSpacing.InterpretArray(const S: String; which: SpcParmChoice);

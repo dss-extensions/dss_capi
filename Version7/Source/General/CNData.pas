@@ -114,11 +114,8 @@ end;
 
 function TCNData.NewObject(const ObjName: String): Integer;
 begin
-    with DSS.ActiveCircuit do
-    begin
-        DSS.ActiveDSSObject := TCNDataObj.Create(Self, ObjName);
-        Result := AddObjectToList(DSS.ActiveDSSObject);
-    end;
+    DSS.ActiveDSSObject := TCNDataObj.Create(Self, ObjName);
+    Result := AddObjectToList(DSS.ActiveDSSObject);
 end;
 
 function TCNData.Edit: Integer;
