@@ -34,6 +34,8 @@ type
     procedure Set_kVArated(Value: Double); stdcall;
     procedure Set_PF(Value: Double); stdcall;
     procedure Set_kvar(Value: Double); stdcall;
+    function Get_Pmpp: Double; safecall;
+    procedure Set_Pmpp(Value: Double); safecall;
 
   end;
 
@@ -340,6 +342,29 @@ begin
              End;
          End;
    End;
+end;
+
+function TPVSystems.Get_Pmpp: Double;
+begin
+  Result := -1.0;  // not set
+  IF ActiveCircuit[ActiveActor]<> NIL THEN Begin
+    WITH ActiveCircuit[ActiveActor].PVSystems Do Begin
+      IF ActiveIndex<>0 THEN Begin
+        Result := TPVSystemObj(Active).pmpp ;
+      End;
+    End;
+  End;
+end;
+
+procedure TPVSystems.Set_Pmpp(Value: Double);
+begin
+  IF ActiveCircuit[ActiveActor]<> NIL THEN Begin
+    WITH ActiveCircuit[ActiveActor].PVSystems Do Begin
+      IF ActiveIndex<>0 THEN Begin
+        TPVSystemObj(Active).pmpp := Value ;
+      End;
+    End;
+  End;
 end;
 
 initialization
