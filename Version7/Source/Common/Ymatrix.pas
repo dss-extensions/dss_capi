@@ -96,7 +96,8 @@ begin
     begin
         if LogEvents then
             LogThisEvent(Ckt.DSS, 'Recalc Invalid Yprims');
-            
+
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
         pElem := IncrCktElements.First;
         while pElem <> NIL do
         begin
@@ -108,7 +109,7 @@ begin
                 end;
             pElem := IncrCktElements.Next;
         end;
-
+{$ENDIF}
         pElem := CktElements.First;
         while pElem <> NIL do
         begin
@@ -167,6 +168,7 @@ begin
     end;
 end;
 
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
 function UpdateYMatrix(Ckt: TDSSCircuit; BuildOption: Integer; AllocateVI: Boolean): Boolean;
 var
     IncrYprim: TCMatrix;
@@ -310,6 +312,7 @@ begin
 //    writeln('Incremental update finished.');
 //    writeln();
 end;
+{$ENDIF} //DSS_CAPI_INCREMENTAL_Y
 
 procedure BuildYMatrix(DSS: TDSSContext; BuildOption: Integer; AllocateVI: Boolean);
 
@@ -319,11 +322,15 @@ var
     YMatrixsize: Integer;
     CmatArray: pComplexArray;
     pElem: TDSSCktElement;
-    Incremental: Boolean;
     c: Complex;
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+    Incremental: Boolean;
+{$ENDIF}
    //{****} FTrace: TextFile;
 begin
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
     Incremental := False;
+{$ENDIF}
   //{****} AssignFile(Ftrace, 'YmatrixTrace.txt');
   //{****} Rewrite(FTrace);
     CmatArray := NIL;
@@ -345,27 +352,32 @@ begin
         case BuildOption of
             WHOLEMATRIX:
             begin
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
                 Incremental := (not SystemYChanged) and (IncrCktElements.ListSize <> 0) and (not AllocateVI) and (not FrequencyChanged);
                 if not Incremental then
                 begin
+{$ENDIF}
                     ResetSparseMatrix(hYsystem, YMatrixSize);
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
                 end;
+{$ENDIF}
                 hY := hYsystem;
             end;
             SERIESONLY:
             begin
                 ResetSparseMatrix(hYseries, YMatrixSize);
-                Incremental := False;
                 hY := hYSeries;
             end;
         end;
 
      // tune up the Yprims if necessary
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
         if not Incremental then 
+{$ENDIF}
         begin
             if (FrequencyChanged) then
                 ReCalcAllYPrims(DSS.ActiveCircuit)
-            else if not Incremental then
+            else 
                 ReCalcInvalidYPrims(DSS.ActiveCircuit);
         end;
         
@@ -381,9 +393,11 @@ begin
         if LogEvents then
             case BuildOption of
                 WHOLEMATRIX:
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
                     if Incremental then
                         LogThisEvent(DSS, 'Building Whole Y Matrix -- using incremental method')
                     else
+{$ENDIF}
                         LogThisEvent(DSS, 'Building Whole Y Matrix');
                         
                 SERIESONLY:
@@ -392,8 +406,10 @@ begin
           // Add in Yprims for all devices
           
         // Full method, handles all elements
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
         if not Incremental then
         begin
+{$ENDIF}
             // Full method, handles all elements
             pElem := CktElements.First;
             while pElem <> NIL do
@@ -414,13 +430,14 @@ begin
                     end;   // If Enabled
                 pElem := CktElements.Next;
             end;
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
         end // if not Incremental
         else
         begin // if Incremental 
             if not UpdateYMatrix(DSS.ActiveCircuit, BuildOption, AllocateVI) then
                 Exit;
         end;
-        
+{$ENDIF}
        
      //{****} CloseFile(Ftrace);
      //{****} FireOffEditor(  'YmatrixTrace.txt');

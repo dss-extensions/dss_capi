@@ -141,7 +141,9 @@ TYPE
           Feeders,
           SwtControls        :PointerList.TPointerList;
           CktElements        : PointerList.TPointerList;
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
           IncrCktElements    : PointerList.TPointerList;
+{$ENDIF}
 
           ControlQueue:TControlQueue;
 
@@ -379,7 +381,9 @@ BEGIN
 
      Faults          := TPointerList.Create(2);
      CktElements     := TPointerList.Create(1000);
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
      IncrCktElements := TPointerList.Create(1000);
+{$ENDIF}
      PDElements      := TPointerList.Create(1000);
      PCElements      := TPointerList.Create(1000);
      DSSControls     := TPointerList.Create(10);
@@ -592,7 +596,10 @@ BEGIN
      Sources.Free;
      Faults.Free;
      CktElements.Free;
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
      IncrCktElements.Free;
+{$ENDIF}
+    
      MeterElements.Free;
      Monitors.Free;
      EnergyMeters.Free;

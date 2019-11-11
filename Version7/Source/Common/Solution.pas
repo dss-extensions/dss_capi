@@ -863,7 +863,7 @@ begin
             GetPCInjCurr;  // Get the injection currents from all the power conversion devices and feeders
 
        // The above call could change the primitive Y matrix, so have to check
-            if SystemYChanged or (DSS.ActiveCircuit.IncrCktElements.ListSize <> 0) then
+            if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (DSS.ActiveCircuit.IncrCktElements.ListSize <> 0){$ENDIF} then
             begin
                 BuildYMatrix(DSS, WHOLEMATRIX, FALSE);  // Does not realloc V, I
             end;
@@ -1111,7 +1111,7 @@ begin
             ControlActionsDone := TRUE; // Stop solution process if failure to converge
     end;
 
-    if SystemYChanged or (DSS.ActiveCircuit.IncrCktElements.ListSize <> 0) then
+    if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (DSS.ActiveCircuit.IncrCktElements.ListSize <> 0){$ENDIF} then
     begin
         BuildYMatrix(DSS, WHOLEMATRIX, FALSE); // Rebuild Y matrix, but V stays same
     end;
@@ -1179,7 +1179,7 @@ begin
     QueryPerformanceCounter(SolveStartTime);
 {$ENDIF}
 
-    if SystemYChanged then
+    if SystemYChanged {$IFDEF DSS_CAPI_INCREMENTAL_Y}or (DSS.ActiveCircuit.IncrCktElements.ListSize <> 0){$ENDIF} then
     begin
         BuildYMatrix(DSS, WHOLEMATRIX, TRUE);   // Side Effect: Allocates V
     end;

@@ -637,22 +637,21 @@ begin
             else
             end;
 
-DSS_CAPI_ALLOW_INCREMENTAL_Y := (GetEnvironmentVariable('DSS_CAPI_ALLOW_INCREMENTAL_Y') = '1');
-
             //YPrim invalidation on anything that changes impedance values
             case ParamPointer of
                 5..7:
                     YprimInvalid := TRUE;
                 8:
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
                     if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and (not DSS.ActiveCircuit.Solution.SystemYChanged) and (YPrim <> NIL) then
                     begin
                         // Mark this to incrementally update the matrix.
                         // If the matrix is already being rebuilt, there is 
                         // no point in doing this, just rebuild it as usual.
-                        /// writeln('Adding element to incremental list ', Name);
                         DSS.ActiveCircuit.IncrCktElements.Add(DSS.ActiveTransfObj) 
                     end
                     else
+{$ENDIF}
                         YprimInvalid := TRUE;
                 9..19:
                     YprimInvalid := TRUE;
@@ -1585,19 +1584,18 @@ begin
             begin    {Only if there's been a change}
                 puTap := TempVal;
                 // Writeln(ActiveCircuit.Solution.dynavars.dblHour, ' Transformer.', Name, '.Tap = ', puTap);
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
                 if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and (not DSS.ActiveCircuit.Solution.SystemYChanged) and (YPrim <> NIL) then
                 begin
                     // Mark this to incrementally update the matrix.
                     // If the matrix is already being rebuilt, there is 
                     // no point in doing this, just rebuild it as usual.
-                    // writeln('Adding element to incremental list ', Name);
                     DSS.ActiveCircuit.IncrCktElements.Add(Self) 
                 end
                 else
-                begin
-                    //writeln('Cannot add element to incremental list: ', Name, '; YPrim is null?', YPrim = NIL);   
+{$ENDIF}
                     YPrimInvalid := TRUE;  // this property triggers setting SystemYChanged=true
-                end;
+
                 RecalcElementData;
                     
             end;

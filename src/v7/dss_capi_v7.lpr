@@ -1793,7 +1793,6 @@ exports
     ZeroSparseSet,
     FactorSparseMatrix,
     SolveSparseSet,
-    SolveSparseSet2,
     DeleteSparseSet,
     AddMatrixElement,
     GetSize,
@@ -1808,9 +1807,13 @@ exports
     GetCompressedMatrix,
     GetTripletMatrix,
     FindIslands,
-    mvmult,
+    mvmult
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+    , 
+    SolveSparseSet2,
     IncrementMatrixElement,
-    ZeroiseMatrixElement;
-
+    ZeroiseMatrixElement
+{$ENDIF}
+    ;
 begin
 end.

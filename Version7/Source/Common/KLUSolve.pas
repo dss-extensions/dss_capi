@@ -38,7 +38,6 @@ FUNCTION DeleteSparseSet(id:NativeUInt):LongWord;{$IFNDEF FPC}cdecl;external 'kl
 // return 1 for success, 2 for singular, 0 for invalid handle
 // factors matrix if needed
 FUNCTION SolveSparseSet(id:NativeUInt; x,b:pComplexArray):LongWord;{$IFNDEF FPC}cdecl;external 'klusolvex.dll';{$ELSE}KLU_CALL;{$ENDIF}
-FUNCTION SolveSparseSet2(id:NativeUInt; x,b:pComplexArray):LongWord;{$IFNDEF FPC}cdecl;external 'klusolvex.dll';{$ELSE}KLU_CALL;{$ENDIF}
 
 // return 1 for success, 0 for invalid handle
 FUNCTION ZeroSparseSet(id:NativeUInt):LongWord;{$IFNDEF FPC}cdecl;external 'klusolvex.dll';{$ELSE}KLU_CALL;{$ENDIF}
@@ -92,8 +91,11 @@ FUNCTION AddMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;
 // GetMatrixElement is deprecated, use GetCompressedMatrix or GetTripletMatrix
 FUNCTION GetMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;{$IFNDEF FPC}cdecl;external 'klusolvex.dll';{$ELSE}KLU_CALL;{$ENDIF}
 
+{$IFDEF DSS_CAPI_ALLOW_INCREMENTAL_Y}
+FUNCTION SolveSparseSet2(id:NativeUInt; x,b:pComplexArray):LongWord;{$IFNDEF FPC}cdecl;external 'klusolvex.dll';{$ELSE}KLU_CALL;{$ENDIF}
 FUNCTION IncrementMatrixElement(id:NativeUInt; i,j:LongWord; re: Double; im: Double):LongWord;{$IFNDEF FPC}cdecl;external 'klusolvex.dll';{$ELSE}KLU_CALL;{$ENDIF}
 FUNCTION ZeroiseMatrixElement(id:NativeUInt; i,j:LongWord):LongWord;{$IFNDEF FPC}cdecl;external 'klusolvex.dll';{$ELSE}KLU_CALL;{$ENDIF}
+{$ENDIF}
 
 implementation
 
