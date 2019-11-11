@@ -810,7 +810,7 @@ begin
     if DataChanged then
         UpdateLineGeometryData(f);
     if not DSS.SolutionAbort then
-        Result := FLineData.ZMatrix[F, Lngth, Units, DSS.DefaultEarthModel];
+        Result := FLineData.ZMatrix[F, Lngth, Units, DSS.ActiveEarthModel];
 end;
 
 procedure TLineGeometryObj.InitPropertyValues(ArrayOffset: Integer);
@@ -1078,7 +1078,7 @@ begin
     end
     else
     begin
-        FLineData.Calc(f, DSS.DefaultEarthModel);
+        FLineData.Calc(f, DSS.ActiveEarthModel);
         if FReduce then
             FLineData.Reduce; // reduce out neutrals
     end;
