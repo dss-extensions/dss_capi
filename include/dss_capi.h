@@ -5873,7 +5873,6 @@ extern "C" {
     DSS_CAPI_DLL int ZeroSparseSet(void* handle);
     DSS_CAPI_DLL int FactorSparseMatrix(void* handle);
     DSS_CAPI_DLL int SolveSparseSet(void* handle, double* acxX, double* acxB);
-    DSS_CAPI_DLL int SolveSparseSet2(void* handle, double* acxX, double* acxB);
     DSS_CAPI_DLL int DeleteSparseSet(void* handle);
     DSS_CAPI_DLL int AddMatrixElement(void* handle, int i, int j, double* pcxVal);
     DSS_CAPI_DLL int GetMatrixElement(void* handle, int i, int j, double* pcxVal);

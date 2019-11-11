@@ -92,7 +92,6 @@ FUNCTION AddMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;
 FUNCTION GetMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;{$IFNDEF FPC}cdecl;external 'klusolvex.dll';{$ELSE}KLU_CALL;{$ENDIF}
 
 {$IFDEF DSS_CAPI_ALLOW_INCREMENTAL_Y}
-FUNCTION SolveSparseSet2(id:NativeUInt; x,b:pComplexArray):LongWord;{$IFNDEF FPC}cdecl;external 'klusolvex.dll';{$ELSE}KLU_CALL;{$ENDIF}
 FUNCTION IncrementMatrixElement(id:NativeUInt; i,j:LongWord; re: Double; im: Double):LongWord;{$IFNDEF FPC}cdecl;external 'klusolvex.dll';{$ELSE}KLU_CALL;{$ENDIF}
 FUNCTION ZeroiseMatrixElement(id:NativeUInt; i,j:LongWord):LongWord;{$IFNDEF FPC}cdecl;external 'klusolvex.dll';{$ELSE}KLU_CALL;{$ENDIF}
 {$ENDIF}
