@@ -478,8 +478,8 @@ begin
     AddProperty('Vmaxpu', propVMAXPU,
         'Default = 1.10.  Maximum per unit voltage for which the Model is assumed to apply. ' +
         'Above this value, the load model reverts to a constant impedance model.');
-    AddProperty('Balanced', propBalanced, '{Yes | No*} Default is No.  Force balanced current only for 3-phase PVSystems. Forces zero- and negative-sequence to zero.  ');
-    AddProperty('LimitCurrent', propLimited, 'Limits current magnitude to Vminpu value for both 1-phase and 3-phase PVSystems similar to Generator Model 7. For 3-phase, ' +
+    AddProperty('Balanced', propBalanced, '{Yes | No*} Default is No.  Force balanced current only for 3-phase Storage. Forces zero- and negative-sequence to zero.  ');
+    AddProperty('LimitCurrent', propLimited, 'Limits current magnitude to Vminpu value for both 1-phase and 3-phase Storage similar to Generator Model 7. For 3-phase, ' +
         'limits the positive-sequence current but not the negative-sequence.');
     AddProperty('yearly', propYEARLY,
         'Dispatch shape to use for yearly simulations.  Must be previously defined ' +
@@ -2568,7 +2568,7 @@ begin
             Result := kWIdlingLosses;
         //****  STORE_DISCHARGING:Result := abs(Power[1].re * (100.0 - pctDisChargeEff)/100000.0) + (2.0 - pctChargeEff/100.0) * kWIdlingLosses;  // kW
         STORE_DISCHARGING:
-            Result := abs(Power[1].re * (100.0 / pctDisChargeEff - 1.0) / 1000.0) + (100.0 / pctDisChargeEff) * kWIdlingLosses;  // kW
+            Result := abs(Power[1].re * (100.0 - pctDisChargeEff) / 100000.0) + (2.0 - pctChargeEff / 100.0) * kWIdlingLosses;  // kW
     end;
 end;
 

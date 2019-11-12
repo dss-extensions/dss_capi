@@ -229,6 +229,8 @@ begin
 
     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
     CommandList.Abbrev := TRUE;
+
+    LastChange := 0;
 end;
 
 {--------------------------------------------------------------------------}
@@ -1137,7 +1139,7 @@ begin
                 end;
 
                   {Check for special case of Reverse Neutral where regulator is to move to neutral position}
-                  {Both Cogen Mode and Reverse operaiont}
+                  {Both Cogen Mode and Reverse operation}
                 with ControlledTransformer do
                     if ReverseNeutral then
                     begin

@@ -2831,7 +2831,7 @@ begin
                 ConductorUsageEnum(F, 'distribution');
                 IntegerNode(F, 'WireSpacingInfo.phaseWireCount', 1);
                 DoubleNode(F, 'WireSpacingInfo.phaseWireSpacing', 0.0);
-                if PhaseChoice = Overhead then
+                if PhaseChoice[1] = Overhead then   // decide this off the first conductor
                     BooleanNode(F, 'WireSpacingInfo.isCable', FALSE)
                 else
                     BooleanNode(F, 'WireSpacingInfo.isCable', TRUE);

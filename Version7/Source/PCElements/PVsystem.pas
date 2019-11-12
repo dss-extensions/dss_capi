@@ -223,6 +223,7 @@ type
         procedure Set_PresentIrradiance(const Value: Double);
 
         procedure Set_kVARating(const Value: Double);
+        procedure Set_Pmpp(const Value: Double);
         procedure Set_puPmpp(const Value: Double);
         function Get_Varmode: Integer;
 
@@ -316,7 +317,7 @@ type
         property PresentkV: Double READ Get_PresentkV WRITE Set_PresentkV;
         property PowerFactor: Double READ PFnominal WRITE Set_PowerFactor;
         property kVARating: Double READ PVSystemVars.FkVARating WRITE Set_kVARating;
-        property Pmpp: Double READ PVSystemVars.FPmpp;
+        property Pmpp: Double READ PVSystemVars.FPmpp WRITE Set_pmpp;
         property puPmpp: Double READ PVSystemVars.FpuPmpp WRITE Set_puPmpp;
         property Varmode: Integer READ Get_Varmode WRITE Set_Varmode;  // 0=constant PF; 1=kvar specified
         property VWmode: Boolean READ Get_VWmode WRITE Set_VWmode;
@@ -3016,6 +3017,12 @@ begin
     PVSystemVars.FkVARating := Value;
     PropertyValue[propKVA] := Format('%-g', [PVSystemVars.FkVArating]);
 end;
+// ===========================================================================================
+procedure TPVsystemObj.Set_Pmpp(const Value: Double);
+begin
+    PVSystemVars.FPmpp := Value;
+    PropertyValue[propPmpp] := Format('%-g', [PVSystemVars.FkVArating]);
+end;
 
 // ===========================================================================================
 procedure TPVsystemObj.Set_PowerFactor(const Value: Double);
@@ -3029,7 +3036,7 @@ procedure TPVsystemObj.Set_PresentIrradiance(const Value: Double);
 begin
 
     PVSystemVars.FIrradiance := Value;
-
+    PropertyValue[propKVA] := Format('%-g', [PVSystemVars.FPmpp]);
 end;
 
 // ===========================================================================================

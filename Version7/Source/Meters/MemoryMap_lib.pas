@@ -26,7 +26,7 @@ function Create_Meter_Space(Init_Str: String): TBytesStream; OVERLOAD;
 procedure WriteintoMemStr(Mem_Space: TBytesStream; Content: String); OVERLOAD;
 procedure WriteintoMem(Mem_Space: TBytesStream; Content: Double); OVERLOAD;
 procedure CloseMHandler(Mem_Space: TBytesStream; const Dest_Path: String; AppendFile: Boolean); OVERLOAD;
-procedure ReadMHandler(Mem_Space: TBytesStream; X_axis: pDoubleArray2d; Ylabels: pStringArray1d; Y_axis: pDoubleArray2d);
+procedure ReadMHandler(Mem_Space: TBytesStream; X_axis: pDoubleArray2d; Ylabels: pStringArray1d; Y_axis: pDoubleArray2d); OVERLOAD;
 procedure Write_String(Mem_Space: TBytesStream; const Content: String);
 
 implementation
@@ -210,7 +210,7 @@ end;
 // Returns the content of the BytesStream to be plotted with the OpenDSS Viewer
 //******************************************************************************
 procedure ReadMHandler(Mem_Space: TBytesStream; X_axis: pDoubleArray2d;
-    Ylabels: pStringArray1d; Y_axis: pDoubleArray2d);
+    Ylabels: pStringArray1d; Y_axis: pDoubleArray2d); OVERLOAD;
 var
     buffer: Uint8;
     idx: Integer;

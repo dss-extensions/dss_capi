@@ -234,6 +234,10 @@ begin
 {$IFNDEF FPC}
        If Not IsDLL Then ControlPanel.UpdateElementBox ;
 {$ENDIF}
+       DefaultEarthModel     := DERI;
+       LogQueries            := FALSE;
+       MaxAllocationIterations := 2;
+
        {Prepare for new variables}
        ParserVars.Free;
        ParserVars := TParserVar.Create(100);  // start with space for 100 variables
