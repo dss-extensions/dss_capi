@@ -122,6 +122,7 @@ type
 
   private
     next_fncs_publish: fncs_time;
+		existing_fncs_grant: fncs_time;
 		log_level: TFNCSLogLevel;
     topics: ClassObjectDict;
 //		topicList: TList;
@@ -624,59 +625,73 @@ var
   values: ppchar;
 	re, im: double;
 	ld: TLoadObj;
+	Hour: integer;
+	Sec: double;
 begin
   // execution blocks here, until FNCS permits the time step loop to continue
-  time_granted := fncs_time_request (next_fncs);
-  if time_granted >= next_fncs_publish then begin
-		if topics.Count > 0 then begin
-			if log_level >= fncsLogDebug2 then begin
-				Writeln(Format('  Stream size %u at %u, next at %u, interval %u', [fncsOutputStream.size, time_granted, next_fncs_publish, PublishInterval]));
-				system.flush (stdout);
-			end;
-			if Not FNCSTopicsMapped then MapFNCSTopics;
-			GetValuesForTopics;
-			TopicsToJsonStream;
-			fncs_publish ('fncs_output', PChar(fncsOutputStream.DataString));
+	time_granted := 0;
+	while time_granted < next_fncs do begin
+		time_granted := fncs_time_request (next_fncs);
+		if log_level >= fncsLogDebug2 then begin
+			Writeln(Format('  Already granted %u by FNCS and requested %u, granted %u', [existing_fncs_grant, next_fncs, time_granted]));
+			system.flush (stdout);
 		end;
-		while next_fncs_publish <= time_granted do
-			next_fncs_publish := next_fncs_publish + PublishInterval;
-  end;
-  ilast := fncs_get_events_size();
-  // TODO: executing OpenDSS commands here may cause unwanted interactions
-  if ilast > 0 then begin
-    events := fncs_get_events();
-    for i := 0 to ilast-1 do begin
-      key := events[i];
-      nvalues := fncs_get_values_size (key);
-      values := fncs_get_values (key);
-			if CompareText (key, 'command') = 0 then begin
-				for ival := 0 to nvalues-1 do begin
-					value := values[ival];
-					if log_level >= fncsLogDebug2 then begin
-						writeln(Format('  FNCSTimeRequest command %s at %u', [value, time_granted]));
-						system.flush (stdout);
-					end;
-					DSSExecutive.Command := value;
-//					fncs_publish('fncs_command', value);
-				end;
-			end else if Pos ('#load', key) > 0 then begin
-				value := values[0];
-				re := StrToFloat (ExtractWord (1, value, ['+', 'j', ' ']));
-				im := StrToFloat (ExtractWord (2, value, ['+', 'j', ' ']));
-				ActiveCircuit.SetElementActive ('load.F1_house_B0');
-				ld := TLoadObj (ActiveCircuit.ActiveCktElement);
-				ld.LoadSpecType := 1;
-				ld.kwBase := re;
-				ld.kvarBase := im;
-				ld.RecalcElementData;
+		Hour := ActiveCircuit.Solution.DynaVars.intHour;
+		Sec :=  ActiveCircuit.Solution.Dynavars.t;
+		if time_granted >= next_fncs_publish then begin
+			if topics.Count > 0 then begin
 				if log_level >= fncsLogDebug2 then begin
-					writeln(Format ('FNCS Request %s to %g + j %g at %u', [ld.Name, re, im, time_granted]));
+					Writeln(Format('  Stream size %u at %u, next at %u, interval %u, %d:%.3f', 
+						[fncsOutputStream.size, time_granted, next_fncs_publish, PublishInterval, Hour, Sec]));
 					system.flush (stdout);
 				end;
+				if Not FNCSTopicsMapped then MapFNCSTopics;
+				GetValuesForTopics;
+				TopicsToJsonStream;
+				fncs_publish ('fncs_output', PChar(fncsOutputStream.DataString));
 			end;
-    end;
-  end;
-  Result := True;
+			while next_fncs_publish <= time_granted do
+				next_fncs_publish := next_fncs_publish + PublishInterval;
+		end;
+		ilast := fncs_get_events_size();
+		// TODO: executing OpenDSS commands here may cause unwanted interactions
+		if ilast > 0 then begin
+			events := fncs_get_events();
+			for i := 0 to ilast-1 do begin
+				key := events[i];
+				nvalues := fncs_get_values_size (key);
+				values := fncs_get_values (key);
+				if CompareText (key, 'command') = 0 then begin
+					for ival := 0 to nvalues-1 do begin
+						value := values[ival];
+						if log_level >= fncsLogDebug2 then begin
+							writeln(Format('  FNCSTimeRequest command %s at %u, %d:%.3f', 
+								[value, time_granted, Hour, Sec]));
+							system.flush (stdout);
+						end;
+						DSSExecutive.Command := value;
+//						fncs_publish('fncs_command', value);
+					end;
+				end else if Pos ('#load', key) > 0 then begin
+					value := values[0];
+					re := StrToFloat (ExtractWord (1, value, ['+', 'j', ' ']));
+					im := StrToFloat (ExtractWord (2, value, ['+', 'j', ' ']));
+					ActiveCircuit.SetElementActive ('load.F1_house_B0');
+					ld := TLoadObj (ActiveCircuit.ActiveCktElement);
+					ld.LoadSpecType := 1;
+					ld.kwBase := re;
+					ld.kvarBase := im;
+					ld.RecalcElementData;
+					if log_level >= fncsLogDebug2 then begin
+						writeln(Format ('FNCS Request %s to %g + j %g at %u, %d:%.3f', 
+							[ld.Name, re, im, time_granted, Hour, Sec]));
+						system.flush (stdout);
+					end;
+				end;
+			end;
+		end;
+	end;
+	Result := True;
 end;
 
 procedure TFNCS.RunFNCSLoop (const s:string);
@@ -698,6 +713,7 @@ begin
   Try
     while time_granted < time_stop do begin
       time_granted := fncs_time_request (time_stop);
+			existing_fncs_grant := time_granted;
       ilast := fncs_get_events_size();
       if ilast > 0 then begin
         events := fncs_get_events();
@@ -728,6 +744,7 @@ begin
 					end;
         end;
       end;
+			existing_fncs_grant := 0;
     end;
   finally
     fncs_finalize;
@@ -752,7 +769,8 @@ end;
 constructor TFNCS.Create;
 var 
 	s: String;
-begin { TFNCS.Create }
+begin
+	existing_fncs_grant := 0;
 	log_level := fncsLogWarning;
 	s := GetEnvironmentVariable ('FNCS_LOG_LEVEL');
 	if s = 'INFO' then 
