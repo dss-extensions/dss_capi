@@ -357,8 +357,12 @@ VAR
     ParamName,  InputLine, CurrDir, SaveDir : String;
     LocalCompFileName  : String;
     InBlockComment : Boolean;
-
+    strings: TStringList;
+    gotTheFile: Boolean;
+    stringIdx: Integer;
 Begin
+    gotTheFile := False;
+    strings := nil;
     Result := 0;
     InBlockComment := FALSE;  // Discareded off stack upon return
     // Therefore extent of block comment does not extend beyond a file
@@ -366,27 +370,72 @@ Begin
 
     // Get next parm and try to interpret as a file name
     ParamName := Parser[ActiveActor].NextParam;
-    ReDirFile := ExpandFileName(Parser[ActiveActor].StrValue);
+    ReDirFile := Parser[ActiveActor].StrValue;
+    if ReDirFile = '' then 
+        exit;  // ignore altogether IF null filename
+    
+    SaveDir :=  GetCurrentDir;
 
-    IF ReDirFile <> '' THEN
-    Begin
+    try
+        // First try, using the provided name directly
+        AssignFile(Fin, ReDirFile);
+        Reset(Fin);
+        if IsCompile Then 
+        begin
+            LastFileCompiled := ReDirFile;
+            LocalCompFileName:= ReDirFile;
+        end;
+        gotTheFile := True;
+    except
+        // intentionally blank
+    end;
 
-      SaveDir :=  GetCurrentDir;
+    if not gotTheFile then
+    begin
+        // Try the expanded name
+        ReDirFile := ExpandFileName(Parser[ActiveActor].StrValue);
+        if ReDirFile = '' then
+            exit;
 
-      TRY
-          AssignFile(Fin, ReDirFile);
-          Reset(Fin);
-          If IsCompile Then Begin
-             LastFileCompiled := ReDirFile;
-             LocalCompFileName:= ReDirFile;
-          End;
-      EXCEPT
+        try
+            AssignFile(Fin, ReDirFile);
+            Reset(Fin);
+            if IsCompile Then 
+            begin
+                LastFileCompiled := ReDirFile;
+                LocalCompFileName := ReDirFile;
+            end;
+            gotTheFile := True;
+        except
+            // intentionally blank
+        end;
+    end;
 
-         // Couldn't find file  Try appending a '.dss' to the file name
-         // If it doesn't already have an extension
+    if not gotTheFile and FileExists(ReDirFile) then
+    begin
+        // If the usual Pascal text file is broken, 
+        // try a stream via a TStringList object
+        try
+            strings := TStringList.Create;
+            strings.LoadFromFile(ReDirFile);
+            if IsCompile Then 
+            begin
+                LastFileCompiled := ReDirFile;
+                LocalCompFileName := ReDirFile;
+            end;
+            gotTheFile := True;
+        except
+            FreeAndNil(strings);
+        end;
+    end;
 
-         IF   Pos('.', ReDirFile)=0
-         THEN Begin
+    if not gotTheFile then
+    begin
+        // Couldn't find file
+        // Try appending a '.dss' to the file name
+        // If it doesn't already have an extension
+        IF Pos('.', ReDirFile)=0 THEN 
+        Begin
             ReDirFile := ReDirFile + '.dss';
             TRY
                 AssignFile(Fin, ReDirFile);
@@ -396,77 +445,118 @@ Begin
                 SolutionAbort := TRUE;
                 Exit;
             End;
-         End
-         ELSE Begin
-               DoSimpleMsg('Redirect File: "'+ReDirFile+'" Not Found.', 243);
-               SolutionAbort := True;
-               Exit;  // Already had an extension, so just Bail
-         End;
+            gotTheFile := True;
+        End;
+    end;
 
-      END;
+    if not gotTheFile then
+    begin
+        DoSimpleMsg('Redirect File: "'+ReDirFile+'" Not Found.', 243);
+        SolutionAbort := True;
+        exit;  // Already had an extension, so just bail
+    end;
 
     // OK, we finally got one open, so we're going to continue
-       TRY
-          TRY
-             // Change Directory to path specified by file in CASE that
-             // loads in more files
-             CurrDir := ExtractFileDir(ReDirFile);
-             SetCurrentDir(CurrDir);
-             If  IsCompile Then   SetDataPath(CurrDir);  // change datadirectory
+    TRY
+        TRY
+            // Change Directory to path specified by file in CASE that
+            // loads in more files
+            CurrDir := ExtractFileDir(ReDirFile);
+            SetCurrentDir(CurrDir);
+            If IsCompile Then SetDataPath(CurrDir);  // change datadirectory
 
-             Redirect_Abort := False;
-             In_Redirect    := True;
+            Redirect_Abort := False;
+            In_Redirect    := True;
 
-             WHILE Not ( (EOF(Fin)) or (Redirect_Abort) ) DO
-               Begin
-                  Readln(Fin, InputLine);
-                  if Length(InputLine) > 0 then
-                  BEGIN
-                      if Not InBlockComment then     // look for '/*'  at baginning of line
-                        case InputLine[1] of
-                           '/': if (Length(InputLine) > 1) and (InputLine[2]='*')then
-                                InBlockComment := TRUE;
-                        end;
+            if strings = nil then 
+            begin
+                // Tradicional TextFile is used
+                WHILE Not ( (EOF(Fin)) or (Redirect_Abort) ) DO
+                Begin
+                    Readln(Fin, InputLine);
+                    if Length(InputLine) > 0 then
+                    BEGIN
+                        if Not InBlockComment then     // look for '/*'  at baginning of line
+                            case InputLine[1] of
+                                '/': 
+                                    if (Length(InputLine) > 1) and (InputLine[2]='*') then
+                                        InBlockComment := TRUE;
+                            end;
 
-                      If Not InBlockComment Then   // process the command line
-                        If Not SolutionAbort Then ProcessCommand(InputLine)
-                                             Else Redirect_Abort := True;  // Abort file if solution was aborted
+                        If Not InBlockComment Then   // process the command line
+                            If Not SolutionAbort Then 
+                                ProcessCommand(InputLine)
+                            Else 
+                                Redirect_Abort := True;  // Abort file if solution was aborted
 
-                      // in block comment ... look for */   and cancel block comment (whole line)
-                      if InBlockComment then
-                        if Pos('*/', Inputline)>0 then
+                        // in block comment ... look for */   and cancel block comment (whole line)
+                        if InBlockComment then
+                            if Pos('*/', Inputline) > 0 then
                                 InBlockComment := FALSE;
-                  END;
-               End;
+                    END;
+                End // WHILE Not ( (EOF(Fin)) or (Redirect_Abort) ) DO
+            end 
+            else
+            begin
+                // The string list is used
+                for stringIdx := 0 to (strings.Count - 1) do
+                Begin
+                    if Redirect_Abort then 
+                        break;
+                        
+                    InputLine := strings[stringIdx];
+                    if Length(InputLine) > 0 then
+                    BEGIN
+                        if Not InBlockComment then     // look for '/*'  at baginning of line
+                            case InputLine[1] of
+                                '/': 
+                                    if (Length(InputLine) > 1) and (InputLine[2]='*') then
+                                        InBlockComment := TRUE;
+                            end;
 
-             IF ActiveCircuit[ActiveActor] <> Nil THEN ActiveCircuit[ActiveActor].CurrentDirectory := CurrDir + PathDelim;
+                        If Not InBlockComment Then   // process the command line
+                            If Not SolutionAbort Then 
+                                ProcessCommand(InputLine)
+                            Else 
+                                Redirect_Abort := True;  // Abort file if solution was aborted
 
-          EXCEPT
-             On E: Exception DO
-                DoErrorMsg('DoRedirect'+CRLF+'Error Processing Input Stream in Compile/Redirect.',
-                            E.Message,
-                            'Error in File: "' + ReDirFile + '" or Filename itself.', 244);
-          END;
-      FINALLY
-          CloseFile(Fin);
-          In_Redirect := False;
-          ParserVars.Add('@lastfile', ReDirFile) ;
+                        // in block comment ... look for */   and cancel block comment (whole line)
+                        if InBlockComment then
+                            if Pos('*/', Inputline) > 0 then
+                                InBlockComment := FALSE;
+                    END;
+                End; // for stringIdx := 1 to strings.Count do
+            end;
 
-          If  IsCompile Then   Begin
+            IF ActiveCircuit[ActiveActor] <> Nil THEN 
+                ActiveCircuit[ActiveActor].CurrentDirectory := CurrDir + PathDelim;
+
+        EXCEPT On E: Exception DO
+            DoErrorMsg('DoRedirect'+CRLF+'Error Processing Input Stream in Compile/Redirect.',
+                        E.Message,
+                        'Error in File: "' + ReDirFile + '" or Filename itself.', 244);
+        END;
+    FINALLY
+        if strings <> nil then
+            FreeAndNil(strings)
+        else
+            CloseFile(Fin);
+            
+        In_Redirect := False;
+        ParserVars.Add('@lastfile', ReDirFile) ;
+
+        If  IsCompile Then
+        Begin
             SetDataPath(CurrDir); // change datadirectory
             LastCommandWasCompile := True;
             ParserVars.Add('@lastcompilefile', LocalCompFileName); // will be last one off the stack
-          End
-          Else Begin
-              SetCurrentDir(SaveDir);    // set back to where we were for redirect, but not compile
-              ParserVars.Add('@lastredirectfile', ReDirFile);
-
-          end;
-      END;
-
-    End;  // ELSE ignore altogether IF null filename
-
-
+        End
+        Else 
+        Begin
+            SetCurrentDir(SaveDir);    // set back to where we were for redirect, but not compile
+            ParserVars.Add('@lastredirectfile', ReDirFile);
+        End;
+    END;
 End;
 
 //----------------------------------------------------------------------------
