@@ -46,6 +46,7 @@ uses
     Arraydef;
 
 type
+    TCoeff = array[1..2] of Double;
 
     TXYcurve = class(TDSSClass)
     PRIVATE
@@ -112,7 +113,7 @@ type
 
         function GetYValue(X: Double): Double;  // Get Y value at specified X Value
         function GetXValue(Y: Double): Double;  // Get X value at specified Y Value
-
+        function GetCoefficients(X: Double): TCoeff;
 
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
         procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
@@ -684,6 +685,77 @@ begin
      // If we fall through the loop, Extrapolate from last two points
             LastValueAccessed := FNumPoints - 1;
             Result := InterpolatePoints(FNumPoints, LastValueAccessed, X, XValues, YValues);
+        end;
+end;
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+function TXYcurveObj.GetCoefficients(X: Double): TCoeff;
+
+// This function returns the coefficients of the line interpolated line for the given X (a*X + b).
+// If no points exist in the curve (or just a single point), the result is  (a = 0, b = 0)
+// If Xvalue is outside the range of defined X values,
+// the curve is extrapolated from the Ends (a = 0, b = extrapolated value)
+
+var
+    i: Integer;
+//   coef: pDoubleArray;
+    coef: TCoeff;
+begin
+
+  // default return value if no points in curve
+    coef[1] := 0.0;
+    coef[2] := 0.0;
+    Result := coef;
+
+    if FNumPoints > 0 then         // Handle Exceptional cases
+        if FNumPoints = 1 then
+            Result := coef
+        else
+        begin
+
+    { Start with previous value accessed under the assumption that most
+      of the time, the values won't change much}
+
+            if (XValues^[LastValueAccessed] > X) then
+                LastValueAccessed := 1; // Start over from Beginning
+
+      // if off the curve for the first point, extrapolate from the first two points
+            if (LastValueAccessed = 1) and (XValues[1] > X) then
+            begin
+
+        // Assume the same coefficients determined by the first two points. Necessary to keep
+        // consistency with TXYcurveObj.GetYValue function.
+                coef[1] := (YValues^[2] - YValues^[1]) / (XValues^[2] - XValues^[1]);
+                coef[2] := YValues^[2] - coef[1] * XValues^[2];
+
+                Result := coef;
+                Exit;
+            end;
+
+      // In the middle of the arrays
+            for i := LastValueAccessed + 1 to FNumPoints do
+            begin
+                if (XValues^[i] > X) then
+          // INTERPOLATE between two values
+                begin
+                    LastValueAccessed := i - 1;
+
+                    coef[1] := (YValues^[i] - YValues^[i - 1]) / (XValues^[i] - XValues^[i - 1]);
+
+                    coef[2] := YValues^[i] - coef[1] * XValues^[i];
+
+                    Result := coef;
+                    Exit;
+                end;
+            end;
+
+
+      // Assume the same coefficients determined by the last two points. Necessary to keep
+      // consistency with TXYcurveObj.GetYValue function.
+            coef[1] := (YValues^[FNumPoints] - YValues^[FNumPoints - 1]) / (XValues^[FNumPoints] - XValues^[FNumPoints - 1]);
+            coef[2] := YValues^[FNumPoints] - coef[1] * XValues^[FNumPoints];
+            Result := coef;
+
         end;
 end;
 

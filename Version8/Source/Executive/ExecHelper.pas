@@ -83,7 +83,7 @@ interface
          FUNCTION DoZsc10Cmd: Integer;
          FUNCTION DoZscRefresh(ActorID : Integer):Integer;
 
-         FUNCTION DoBusCoordsCmd(SwapXY:Boolean):Integer;
+         FUNCTION DoBusCoordsCmd(SwapXY:Boolean; CoordType  : Integer):Integer;
          FUNCTION DoGuidsCmd:Integer;
          FUNCTION DoSetLoadAndGenKVCmd:Integer;
          FUNCTION DoVarValuesCmd:Integer;
@@ -2645,7 +2645,7 @@ Begin
 
 End;
 
-FUNCTION DoBusCoordsCmd(SwapXY:Boolean):Integer;
+FUNCTION DoBusCoordsCmd(SwapXY:Boolean; CoordType  : Integer):Integer;
 
 {
  Format of File should be
@@ -2691,11 +2691,18 @@ Begin
                    NextParam;  BusName := StrValue;
                    iB := ActiveCircuit[ActiveActor].Buslist.Find(BusName);
                    If iB >0 Then  Begin
-                       With ActiveCircuit[ActiveActor].Buses^[iB] Do Begin     // Returns TBus object
-                         NextParam;  If SwapXY Then y := DblValue else x := DblValue;
-                         NextParam;  If SwapXY Then x := DblValue else y := DblValue;
-                         CoordDefined := TRUE;
-                       End;
+                    With ActiveCircuit[ActiveActor].Buses^[iB] Do Begin     // Returns TBus object
+                        if CoordType = 0 then                                   // Standard buscoords
+                        Begin
+                          NextParam;  If SwapXY Then y := DblValue else x := DblValue;
+                          NextParam;  If SwapXY Then x := DblValue else y := DblValue;
+                          CoordDefined := TRUE;
+                        End
+                        else
+                        Begin                                                   // GIS coords
+                            // unsupported right now
+                        End;
+                    End;
                    End;
               End;
               {Else just ignore a bus that's not in the circuit}

@@ -14,6 +14,9 @@ unit ExportCIMXML;
 
 interface
 
+uses
+    NamedObject;  // for TUuid
+
 type
     CIMProfileChoice = (Combined, Functional, ElectricalProperties,
         Asset, Geographical, Topology, StateVariables);
@@ -22,10 +25,10 @@ procedure ExportCDPSM(FileNm: String;
     Substation: String;
     SubGeographicRegion: String;
     GeographicRegion: String;
-    FdrGUID: TGuid;
-    SubGUID: TGuid;
-    SubGeoGUID: TGuid;
-    RgnGUID: TGuid;
+    FdrUUID: TUuid;
+    SubUUID: TUuid;
+    SubGeoUUID: TUuid;
+    RgnUUID: TUuid;
     prf: CIMProfileChoice = Combined);
 
 implementation
@@ -57,7 +60,6 @@ uses
     ConductorData,
     LineUnits,
     LineGeometry,
-    NamedObject,
     StrUtils,
     Math,
     XfmrCode,
@@ -75,9 +77,10 @@ uses
     DSSClass;
 
 type
-    GuidChoice = (Bank, Wdg, XfCore, XfMesh, WdgInf, ScTest, OcTest,
+    UuidChoice = (Bank, Wdg, XfCore, XfMesh, WdgInf, ScTest, OcTest,
         BaseV, LinePhase, LoadPhase, GenPhase, CapPhase, SolarPhase, BatteryPhase,
-        XfLoc, LoadLoc, LineLoc, CapLoc, Topo, ReacLoc, SolarLoc, BatteryLoc);
+        XfLoc, LoadLoc, LineLoc, CapLoc, Topo, ReacLoc, SolarLoc, BatteryLoc,
+        OpLimV, OpLimI);
 
     TBankObject = class(TNamedObject)
     PUBLIC
@@ -99,11 +102,21 @@ type
         procedure BuildVectorGroup;
     end;
 
+    TOpLimitObject = class(TNamedObject)
+    PUBLIC
+        NormAmps: Double;
+        EmergAmps: Double;
+        constructor Create(norm, emerg: Double);
+        destructor Destroy; OVERRIDE;
+    end;
+
 var
-    GuidHash: THashList;       // index is 1-based
-    GuidList: array of TGuid;  // index is 0-based
+    UuidHash: THashList;       // index is 1-based
+    UuidList: array of TUuid;  // index is 0-based
     BankHash: THashList;
     BankList: array of TBankObject;
+    OpLimitHash: THashList;
+    OpLimitList: array of TOpLimitObject;
 
 const
 //  CIM_NS = 'http://iec.ch/TC57/2012/CIM-schema-cim17';
@@ -410,20 +423,38 @@ begin
     end;
 end;
 
+constructor TOpLimitObject.Create(norm, emerg: Double);
+begin
+    NormAmps := norm;
+    EmergAmps := emerg;
+    inherited Create('OpLimI');
+end;
+
+destructor TOpLimitObject.Destroy;
+begin
+    inherited Destroy;
+end;
+
 // the CIM transformer model requires some identified objects that don't have
 // a counterpart in the DSS named objects.  These include banks, windings, and
-// winding info.  So we create temporary GUIDs on the fly, and use a hash list when we
-// need the GUIDs for later reference
-procedure StartGuidList(size: Integer);
+// winding info.  So we create temporary UUIDs on the fly, and use a hash list when we
+// need the UUIDs for later reference
+procedure StartUuidList(size: Integer);
 begin
-    GuidHash := THashList.Create(size);
-    SetLength(GuidList, size);
+    UuidHash := THashList.Create(size);
+    SetLength(UuidList, size);
 end;
 
 procedure StartBankList(size: Integer);
 begin
     BankHash := THashList.Create(size);
     SetLength(BankList, size);
+end;
+
+procedure StartOpLimitList(size: Integer);
+begin
+    OpLimitHash := THashList.Create(size);
+    SetLength(OpLimitList, size);
 end;
 
 procedure AddBank(pBank: TBankObject);
@@ -447,29 +478,50 @@ begin
         Result := BankList[ref - 1];
 end;
 
-function GetHashedGuid(key: String): TGuid;
+procedure AddOpLimit(pLimit: TOpLimitObject);
+var
+    ref, size: Integer;
+begin
+    ref := OpLimitHash.Add(pLimit.localName);
+    size := High(OpLimitList) + 1;
+    if ref > size then
+        SetLength(OpLimitList, 2 * size);
+    OpLimitList[ref - 1] := pLimit;
+end;
+
+function GetOpLimit(sLimit: String): TOpLimitObject;
+var
+    ref: Integer;
+begin
+    Result := NIL;
+    ref := OpLimitHash.Find(sLimit);
+    if ref > 0 then
+        Result := OpLimitList[ref - 1];
+end;
+
+function GetHashedUuid(key: String): TUuid;
 var
     ref: Integer;
     size: Integer;
 begin
-    ref := GuidHash.Find(key);
+    ref := UuidHash.Find(key);
     if ref = 0 then
     begin
-        ref := GuidHash.Add(key);
-        CreateGuid(Result);
-        size := High(GuidList) + 1;
+        ref := UuidHash.Add(key);
+        CreateUUID4(Result);
+        size := High(UuidList) + 1;
         if ref > size then
-            SetLength(GuidList, 2 * (size + 1));
-        GuidList[ref - 1] := Result
+            SetLength(UuidList, 2 * (size + 1));
+        UuidList[ref - 1] := Result
     end
     else
     begin
-        Result := GuidList[ref - 1]
+        Result := UuidList[ref - 1]
     end;
 end;
 
 // any temporary object (not managed by DSS) should have '=' prepended to the Name
-function GetDevGuid(which: GuidChoice; Name: String; Seq: Integer): TGuid;
+function GetDevUuid(which: UuidChoice; Name: String; Seq: Integer): TUuid;
 var
     key: String;
 begin
@@ -490,6 +542,10 @@ begin
             key := 'OcTest=';
         BaseV:
             key := 'BaseV=';
+        OpLimV:
+            key := 'OpLimV=';
+        OpLimI:
+            key := 'OpLimI=';
         LinePhase:
             key := 'LinePhase=';
         LoadPhase:
@@ -520,16 +576,16 @@ begin
             key := 'BatteryLoc=';
     end;
     key := key + Name + '=' + IntToStr(Seq);
-    Result := GetHashedGuid(key);
+    Result := GetHashedUuid(key);
 end;
 
 // terminals are uniquely identified by class (DSSObjType), plus name and sequence
-function GetTermGuid(pElem: TDSSCktElement; Seq: Integer): TGuid;
+function GetTermUuid(pElem: TDSSCktElement; Seq: Integer): TUuid;
 var
     key: String;
 begin
     key := IntToStr(pElem.DSSObjType) + '=' + pElem.Name + '=' + IntToStr(Seq);
-    Result := GetHashedGuid(key);
+    Result := GetHashedUuid(key);
 end;
 
 {$R-}
@@ -540,21 +596,47 @@ begin
     Result := 'BaseV_' + FloatToStrF(val, ffFixed, 6, 4);
 end;
 
-function GetBaseVGuid(val: Double): TGuid;
+function GetBaseVUuid(val: Double): TUuid;
 begin
-    Result := GetDevGuid(BaseV, GetBaseVName(val), 1);
+    Result := GetDevUuid(BaseV, GetBaseVName(val), 1);
 end;
 
-procedure FreeGuidList;
+function GetOpLimVName(val: Double): String;
 begin
-    GuidHash.Free;
-    GuidList := NIL;
+    Result := 'OpLimV_' + FloatToStrF(val, ffFixed, 6, 4);
+end;
+
+function GetOpLimVUuid(val: Double): TUuid;
+begin
+    Result := GetDevUuid(OpLimV, GetOpLimVName(val), 1);
+end;
+
+function GetOpLimIName(norm, emerg: Double): String;
+begin
+    Result := 'OpLimI_' + FloatToStrF(norm, ffFixed, 6, 1) + '_' + FloatToStrF(emerg, ffFixed, 6, 1);
+end;
+
+function GetOpLimIUuid(norm, emerg: Double): TUuid;
+begin
+    Result := GetDevUuid(OpLimI, GetOpLimIName(norm, emerg), 1);
+end;
+
+procedure FreeUuidList;
+begin
+    UuidHash.Free;
+    UuidList := NIL;
 end;
 
 procedure FreeBankList;
 begin
     BankHash.Free;
     BankList := NIL;
+end;
+
+procedure FreeOpLimitList;
+begin
+    OpLimitHash.Free;
+    OpLimitList := NIL;
 end;
 
 procedure DoubleNode(var F: TextFile; Node: String; val: Double);
@@ -583,9 +665,9 @@ begin
     Writeln(F, Format('  <cim:%s rdf:resource="#%s"/>', [Node, Obj.CIM_ID]));
 end;
 
-procedure GuidNode(var F: TextFile; Node: String; ID: TGuid);
+procedure UuidNode(var F: TextFile; Node: String; ID: TUuid);
 begin
-    Writeln(F, Format('  <cim:%s rdf:resource="#%s"/>', [Node, GUIDToCIMString(ID)]));
+    Writeln(F, Format('  <cim:%s rdf:resource="#%s"/>', [Node, UUIDToCIMString(ID)]));
 end;
 
 procedure LineCodeRefNode(var F: TextFile; List: TLineCode; Name: String);
@@ -723,6 +805,12 @@ begin
         [CIM_NS, val]));
 end;
 
+procedure OpLimitDirectionEnum(var F: TextFile; val: String);
+begin
+    Writeln(F, Format('  <cim:OperationalLimitType.direction rdf:resource="%s#OperationalLimitDirectionKind.%s"/>',
+        [CIM_NS, val]));
+end;
+
 procedure StringNode(var F: TextFile; Node: String; val: String);
 begin
     Writeln(F, Format('  <cim:%s>%s</cim:%s>', [Node, val, Node]));
@@ -737,10 +825,10 @@ end;
 
 procedure StartFreeInstance(var F: TextFile; Root: String);
 var
-    temp: TGUID;
+    temp: TUuid;
 begin
-    CreateGUID(temp);
-    Writeln(F, Format('<cim:%s rdf:ID="%s">', [Root, GUIDToCIMString(temp)]));
+    CreateUUID4(temp);
+    Writeln(F, Format('<cim:%s rdf:ID="%s">', [Root, UUIDToCIMString(temp)]));
 end;
 
 procedure EndInstance(var F: TextFile; Root: String);
@@ -805,15 +893,15 @@ begin
         if phs = '2' then
             phs := 's2';
         pPhase.LocalName := pLine.Name + '_' + phs;
-        pPhase.GUID := GetDevGuid(LinePhase, pPhase.LocalName, 1);
+        pPhase.UUID := GetDevUuid(LinePhase, pPhase.LocalName, 1);
         StartInstance(F, 'ACLineSegmentPhase', pPhase);
         PhaseKindNode(F, 'ACLineSegmentPhase', phs);
         IntegerNode(F, 'ACLineSegmentPhase.sequenceNumber', i);
         if i <= pLine.NumConductorsAvailable then
             PhaseWireRefNode(F, pLine.ConductorData[i]);
         RefNode(F, 'ACLineSegmentPhase.ACLineSegment', pLine);
-        GuidNode(F, 'PowerSystemResource.Location',
-            GetDevGuid(LineLoc, pLine.Name, 1));
+        UuidNode(F, 'PowerSystemResource.Location',
+            GetDevUuid(LineLoc, pLine.Name, 1));
         EndInstance(F, 'ACLineSegmentPhase');
     end;
 end;
@@ -835,19 +923,19 @@ begin
         phs1 := s1[i];
         phs2 := s2[i];
         pPhase.LocalName := pLine.Name + '_' + phs1;
-        pPhase.GUID := GetDevGuid(LinePhase, pPhase.LocalName, 1);
+        pPhase.UUID := GetDevUuid(LinePhase, pPhase.LocalName, 1);
         StartInstance(F, 'SwitchPhase', pPhase);
         BooleanNode(F, 'SwitchPhase.closed', pLine.Closed[0]);
         BooleanNode(F, 'SwitchPhase.normalOpen', not pLine.Closed[0]);
         PhaseSideNode(F, 'SwitchPhase', 1, phs1);
         PhaseSideNode(F, 'SwitchPhase', 2, phs2);
         RefNode(F, 'SwitchPhase.Switch', pLine);
-        GuidNode(F, 'PowerSystemResource.Location', GetDevGuid(LineLoc, pLine.Name, 1));
+        UuidNode(F, 'PowerSystemResource.Location', GetDevUuid(LineLoc, pLine.Name, 1));
         EndInstance(F, 'SwitchPhase');
     end;
 end;
 
-procedure AttachCapPhases(var F: TextFile; pCap: TCapacitorObj; geoGUID: TGuid);
+procedure AttachCapPhases(var F: TextFile; pCap: TCapacitorObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -868,7 +956,7 @@ begin
     begin
         phs := s[i];
         pPhase.LocalName := pCap.Name + '_' + phs;
-        pPhase.GUID := GetDevGuid(CapPhase, pPhase.LocalName, 1);
+        pPhase.UUID := GetDevUuid(CapPhase, pPhase.LocalName, 1);
         StartInstance(F, 'LinearShuntCompensatorPhase', pPhase);
         PhaseKindNode(F, 'ShuntCompensatorPhase', phs);
         DoubleNode(F, 'LinearShuntCompensatorPhase.bPerSection', bph);
@@ -876,25 +964,25 @@ begin
         IntegerNode(F, 'ShuntCompensatorPhase.normalSections', pCap.NumSteps);
         IntegerNode(F, 'ShuntCompensatorPhase.maximumSections', pCap.NumSteps);
         RefNode(F, 'ShuntCompensatorPhase.ShuntCompensator', pCap);
-        GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+        UuidNode(F, 'PowerSystemResource.Location', geoUUID);
         EndInstance(F, 'LinearShuntCompensatorPhase');
     end;
 end;
 
-procedure AttachSecondaryPhases(var F: TextFile; pLoad: TLoadObj; geoGUID: TGuid; pPhase: TNamedObject; p, q: Double; phs: String);
+procedure AttachSecondaryPhases(var F: TextFile; pLoad: TLoadObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
 begin
     pPhase.LocalName := pLoad.Name + '_' + phs;
-    pPhase.GUID := GetDevGuid(LoadPhase, pPhase.LocalName, 1);
+    pPhase.UUID := GetDevUuid(LoadPhase, pPhase.LocalName, 1);
     StartInstance(F, 'EnergyConsumerPhase', pPhase);
     PhaseKindNode(F, 'EnergyConsumerPhase', phs);
     DoubleNode(F, 'EnergyConsumerPhase.p', p);
     DoubleNode(F, 'EnergyConsumerPhase.q', q);
     RefNode(F, 'EnergyConsumerPhase.EnergyConsumer', pLoad);
-    GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+    UuidNode(F, 'PowerSystemResource.Location', geoUUID);
     EndInstance(F, 'EnergyConsumerPhase');
 end;
 
-procedure AttachLoadPhases(var F: TextFile; pLoad: TLoadObj; geoGUID: TGuid);
+procedure AttachLoadPhases(var F: TextFile; pLoad: TLoadObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -919,13 +1007,13 @@ begin
     begin
         if pLoad.NPhases = 2 then
         begin
-            AttachSecondaryPhases(F, pLoad, geoGUID, pPhase, p, q, 's1');
-            AttachSecondaryPhases(F, pLoad, geoGUID, pPhase, p, q, 's2');
+            AttachSecondaryPhases(F, pLoad, geoUUID, pPhase, p, q, 's1');
+            AttachSecondaryPhases(F, pLoad, geoUUID, pPhase, p, q, 's2');
             exit;
         end
         else
         begin
-            AttachSecondaryPhases(F, pLoad, geoGUID, pPhase, p, q, s);
+            AttachSecondaryPhases(F, pLoad, geoUUID, pPhase, p, q, s);
             exit;
         end;
     end;
@@ -934,31 +1022,31 @@ begin
     begin
         phs := s[i];
         pPhase.LocalName := pLoad.Name + '_' + phs;
-        pPhase.GUID := GetDevGuid(LoadPhase, pPhase.LocalName, 1);
+        pPhase.UUID := GetDevUuid(LoadPhase, pPhase.LocalName, 1);
         StartInstance(F, 'EnergyConsumerPhase', pPhase);
         PhaseKindNode(F, 'EnergyConsumerPhase', phs);
         DoubleNode(F, 'EnergyConsumerPhase.p', p);
         DoubleNode(F, 'EnergyConsumerPhase.q', q);
         RefNode(F, 'EnergyConsumerPhase.EnergyConsumer', pLoad);
-        GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+        UuidNode(F, 'PowerSystemResource.Location', geoUUID);
         EndInstance(F, 'EnergyConsumerPhase');
     end;
 end;
 
-procedure AttachSecondaryGenPhases(var F: TextFile; pGen: TGeneratorObj; geoGUID: TGuid; pPhase: TNamedObject; p, q: Double; phs: String);
+procedure AttachSecondaryGenPhases(var F: TextFile; pGen: TGeneratorObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
 begin
     pPhase.LocalName := pGen.Name + '_' + phs;
-    pPhase.GUID := GetDevGuid(GenPhase, pPhase.LocalName, 1);
+    pPhase.UUID := GetDevUuid(GenPhase, pPhase.LocalName, 1);
     StartInstance(F, 'SynchronousMachinePhase', pPhase);
     PhaseKindNode(F, 'SynchronousMachinePhase', phs);
     DoubleNode(F, 'SynchronousMachinePhase.p', p);
     DoubleNode(F, 'SynchronousMachinePhase.q', q);
     RefNode(F, 'SynchronousMachinePhase.SynchronousMachine', pGen);
-    GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+    UuidNode(F, 'PowerSystemResource.Location', geoUUID);
     EndInstance(F, 'SynchronousMachinePhase');
 end;
 
-procedure AttachGeneratorPhases(var F: TextFile; pGen: TGeneratorObj; geoGUID: TGuid);
+procedure AttachGeneratorPhases(var F: TextFile; pGen: TGeneratorObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -980,13 +1068,13 @@ begin
     begin
         if pGen.NPhases = 2 then
         begin
-            AttachSecondaryGenPhases(F, pGen, geoGUID, pPhase, p, q, 's1');
-            AttachSecondaryGenPhases(F, pGen, geoGUID, pPhase, p, q, 's2');
+            AttachSecondaryGenPhases(F, pGen, geoUUID, pPhase, p, q, 's1');
+            AttachSecondaryGenPhases(F, pGen, geoUUID, pPhase, p, q, 's2');
             exit;
         end
         else
         begin
-            AttachSecondaryGenPhases(F, pGen, geoGUID, pPhase, p, q, s);
+            AttachSecondaryGenPhases(F, pGen, geoUUID, pPhase, p, q, s);
             exit;
         end;
     end;
@@ -995,31 +1083,31 @@ begin
     begin
         phs := s[i];
         pPhase.LocalName := pGen.Name + '_' + phs;
-        pPhase.GUID := GetDevGuid(GenPhase, pPhase.LocalName, 1);
+        pPhase.UUID := GetDevUuid(GenPhase, pPhase.LocalName, 1);
         StartInstance(F, 'SynchronousMachinePhase', pPhase);
         PhaseKindNode(F, 'SynchronousMachinePhase', phs);
         DoubleNode(F, 'SynchronousMachinePhase.p', p);
         DoubleNode(F, 'SynchronousMachinePhase.q', q);
         RefNode(F, 'SynchronousMachinePhase.SynchronousMachine', pGen);
-        GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+        UuidNode(F, 'PowerSystemResource.Location', geoUUID);
         EndInstance(F, 'SynchronousMachinePhase');
     end;
 end;
 
-procedure AttachSecondarySolarPhases(var F: TextFile; pPV: TPVSystemObj; geoGUID: TGuid; pPhase: TNamedObject; p, q: Double; phs: String);
+procedure AttachSecondarySolarPhases(var F: TextFile; pPV: TPVSystemObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
 begin
     pPhase.LocalName := pPV.Name + '_' + phs;
-    pPhase.GUID := GetDevGuid(SolarPhase, pPhase.LocalName, 1);
+    pPhase.UUID := GetDevUuid(SolarPhase, pPhase.LocalName, 1);
     StartInstance(F, 'PowerElectronicsConnectionPhase', pPhase);
     PhaseKindNode(F, 'PowerElectronicsConnectionPhase', phs);
     DoubleNode(F, 'PowerElectronicsConnectionPhase.p', p);
     DoubleNode(F, 'PowerElectronicsConnectionPhase.q', q);
     RefNode(F, 'PowerElectronicsConnectionPhase.PowerElectronicsConnection', pPV);
-    GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+    UuidNode(F, 'PowerSystemResource.Location', geoUUID);
     EndInstance(F, 'PowerElectronicsConnectionPhase');
 end;
 
-procedure AttachSolarPhases(var F: TextFile; pPV: TPVSystemObj; geoGUID: TGuid);
+procedure AttachSolarPhases(var F: TextFile; pPV: TPVSystemObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -1041,13 +1129,13 @@ begin
     begin
         if pPV.NPhases = 2 then
         begin
-            AttachSecondarySolarPhases(F, pPV, geoGUID, pPhase, p, q, 's1');
-            AttachSecondarySolarPhases(F, pPV, geoGUID, pPhase, p, q, 's2');
+            AttachSecondarySolarPhases(F, pPV, geoUUID, pPhase, p, q, 's1');
+            AttachSecondarySolarPhases(F, pPV, geoUUID, pPhase, p, q, 's2');
             exit;
         end
         else
         begin
-            AttachSecondarySolarPhases(F, pPV, geoGUID, pPhase, p, q, s);
+            AttachSecondarySolarPhases(F, pPV, geoUUID, pPhase, p, q, s);
             exit;
         end;
     end;
@@ -1056,31 +1144,31 @@ begin
     begin
         phs := s[i];
         pPhase.LocalName := pPV.Name + '_' + phs;
-        pPhase.GUID := GetDevGuid(SolarPhase, pPhase.LocalName, 1);
+        pPhase.UUID := GetDevUuid(SolarPhase, pPhase.LocalName, 1);
         StartInstance(F, 'PowerElectronicsConnectionPhase', pPhase);
         PhaseKindNode(F, 'PowerElectronicsConnectionPhase', phs);
         DoubleNode(F, 'PowerElectronicsConnectionPhase.p', p);
         DoubleNode(F, 'PowerElectronicsConnectionPhase.q', q);
         RefNode(F, 'PowerElectronicsConnectionPhase.PowerElectronicsConnection', pPV);
-        GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+        UuidNode(F, 'PowerSystemResource.Location', geoUUID);
         EndInstance(F, 'PowerElectronicsConnectionPhase');
     end;
 end;
 
-procedure AttachSecondaryStoragePhases(var F: TextFile; pBat: TStorageObj; geoGUID: TGuid; pPhase: TNamedObject; p, q: Double; phs: String);
+procedure AttachSecondaryStoragePhases(var F: TextFile; pBat: TStorageObj; geoUUID: TUuid; pPhase: TNamedObject; p, q: Double; phs: String);
 begin
     pPhase.LocalName := pBat.Name + '_' + phs;
-    pPhase.GUID := GetDevGuid(BatteryPhase, pPhase.LocalName, 1);
+    pPhase.UUID := GetDevUuid(BatteryPhase, pPhase.LocalName, 1);
     StartInstance(F, 'PowerElectronicsConnectionPhase', pPhase);
     PhaseKindNode(F, 'PowerElectronicsConnectionPhase', phs);
     DoubleNode(F, 'PowerElectronicsConnectionPhase.p', p);
     DoubleNode(F, 'PowerElectronicsConnectionPhase.q', q);
     RefNode(F, 'PowerElectronicsConnectionPhase.PowerElectronicsConnection', pBat);
-    GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+    UuidNode(F, 'PowerSystemResource.Location', geoUUID);
     EndInstance(F, 'PowerElectronicsConnectionPhase');
 end;
 
-procedure AttachStoragePhases(var F: TextFile; pBat: TStorageObj; geoGUID: TGuid);
+procedure AttachStoragePhases(var F: TextFile; pBat: TStorageObj; geoUUID: TUuid);
 var
     s, phs: String;
     i: Integer;
@@ -1102,13 +1190,13 @@ begin
     begin
         if pBat.NPhases = 2 then
         begin
-            AttachSecondaryStoragePhases(F, pBat, geoGUID, pPhase, p, q, 's1');
-            AttachSecondaryStoragePhases(F, pBat, geoGUID, pPhase, p, q, 's2');
+            AttachSecondaryStoragePhases(F, pBat, geoUUID, pPhase, p, q, 's1');
+            AttachSecondaryStoragePhases(F, pBat, geoUUID, pPhase, p, q, 's2');
             exit;
         end
         else
         begin
-            AttachSecondaryStoragePhases(F, pBat, geoGUID, pPhase, p, q, s);
+            AttachSecondaryStoragePhases(F, pBat, geoUUID, pPhase, p, q, s);
             exit;
         end;
     end;
@@ -1117,13 +1205,13 @@ begin
     begin
         phs := s[i];
         pPhase.LocalName := pBat.Name + '_' + phs;
-        pPhase.GUID := GetDevGuid(BatteryPhase, pPhase.LocalName, 1);
+        pPhase.UUID := GetDevUuid(BatteryPhase, pPhase.LocalName, 1);
         StartInstance(F, 'PowerElectronicsConnectionPhase', pPhase);
         PhaseKindNode(F, 'PowerElectronicsConnectionPhase', phs);
         DoubleNode(F, 'PowerElectronicsConnectionPhase.p', p);
         DoubleNode(F, 'PowerElectronicsConnectionPhase.q', q);
         RefNode(F, 'PowerElectronicsConnectionPhase.PowerElectronicsConnection', pBat);
-        GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+        UuidNode(F, 'PowerSystemResource.Location', geoUUID);
         EndInstance(F, 'PowerElectronicsConnectionPhase');
     end;
 end;
@@ -1136,12 +1224,12 @@ begin
     EndInstance(F, 'IEC61970CIMVersion');
 end;
 
-procedure WriteLoadModel(var F: TextFile; Name: String; ID: TGuid;
+procedure WriteLoadModel(var F: TextFile; Name: String; ID: TUuid;
     zP: Double; iP: Double; pP: Double; zQ: Double; iQ: Double; pQ: Double;
     eP: Double; eQ: Double);
 begin
-    Writeln(F, Format('<cim:LoadResponseCharacteristic rdf:ID="%s">', [GUIDToCIMString(ID)]));
-    StringNode(F, 'IdentifiedObject.mRID', GUIDToCIMString(ID));
+    Writeln(F, Format('<cim:LoadResponseCharacteristic rdf:ID="%s">', [UUIDToCIMString(ID)]));
+    StringNode(F, 'IdentifiedObject.mRID', UUIDToCIMString(ID));
     StringNode(F, 'IdentifiedObject.name', Name);
     if (eP > 0.0) or (eQ > 0.0) then
         BooleanNode(F, 'LoadResponseCharacteristic.exponentModel', TRUE)
@@ -1182,17 +1270,17 @@ begin
         Result := FALSE;
 end;
 
-procedure WritePositions(var F: TextFile; pElem: TDSSCktElement; geoGUID: TGuid; crsGUID: TGuid);
+procedure WritePositions(var F: TextFile; pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid);
 var
     Nterm, j, ref: Integer;
     BusName: String;
 begin
     Nterm := pElem.Nterms;
     BusName := pElem.FirstBus;
-    Writeln(F, Format('<cim:Location rdf:ID="%s">', [GUIDToCIMString(geoGUID)]));
-    StringNode(F, 'IdentifiedObject.mRID', GUIDToCIMString(geoGUID));
+    Writeln(F, Format('<cim:Location rdf:ID="%s">', [UUIDToCIMString(geoUUID)]));
+    StringNode(F, 'IdentifiedObject.mRID', UUIDToCIMString(geoUUID));
     StringNode(F, 'IdentifiedObject.name', pElem.LocalName + '_Loc');
-    GuidNode(F, 'Location.CoordinateSystem', crsGUID);
+    UuidNode(F, 'Location.CoordinateSystem', crsUUID);
     EndInstance(F, 'Location');
 
     for j := 1 to NTerm do
@@ -1201,7 +1289,7 @@ begin
         begin
             ref := pElem.Terminals^[j].BusRef;
             StartFreeInstance(F, 'PositionPoint');
-            GuidNode(F, 'PositionPoint.Location', geoGUID);
+            UuidNode(F, 'PositionPoint.Location', geoUUID);
             IntegerNode(F, 'PositionPoint.sequenceNumber', j);
             StringNode(F, 'PositionPoint.xPosition', FloatToStr(ActiveCircuit.Buses^[ref].x));
             StringNode(F, 'PositionPoint.yPosition', FloatToStr(ActiveCircuit.Buses^[ref].y));
@@ -1212,11 +1300,13 @@ begin
 end;
 
 procedure WriteReferenceTerminals(var F: TextFile; pElem: TDSSCktElement;
-    geoGUID: TGuid; crsGUID: TGuid; refGUID: TGuid);
+    geoUUID: TUuid; crsUUID: TUuid; RefUuid: TUuid;
+    norm: Double = 0.0; emerg: Double = 0.0);
 var
     Nterm, j, ref: Integer;
-    BusName, TermName: String;
-    TermGuid: TGuid;
+    BusName, TermName, LimitName: String;
+    TermUuid, LimiTUuid: TUuid;
+    pLimit: TOpLimitObject;
 begin
     Nterm := pElem.Nterms;
     BusName := pElem.FirstBus;
@@ -1226,24 +1316,41 @@ begin
         begin
             ref := pElem.Terminals^[j].BusRef;
             TermName := pElem.Name + '_T' + IntToStr(j);
-            TermGuid := GetTermGuid(pElem, j);
-            Writeln(F, Format('<cim:Terminal rdf:ID="%s">', [GUIDToCIMString(TermGuid)]));
-            StringNode(F, 'IdentifiedObject.mRID', GUIDToCIMString(TermGuid));
+            TermUuid := GetTermUuid(pElem, j);
+            Writeln(F, Format('<cim:Terminal rdf:ID="%s">', [UUIDToCIMString(TermUuid)]));
+            StringNode(F, 'IdentifiedObject.mRID', UUIDToCIMString(TermUuid));
             StringNode(F, 'IdentifiedObject.name', TermName);
-            GuidNode(F, 'Terminal.ConductingEquipment', refGUID);
+            UuidNode(F, 'Terminal.ConductingEquipment', RefUuid);
             IntegerNode(F, 'ACDCTerminal.sequenceNumber', j);
             Writeln(F, Format('  <cim:Terminal.ConnectivityNode rdf:resource="#%s"/>',
                 [ActiveCircuit.Buses[ref].CIM_ID]));
+            if (j = 1) and (norm > 0.0) then
+            begin
+                if emerg < norm then
+                    emerg := norm;
+                LimitName := GetOpLimIName(norm, emerg);
+                pLimit := GetOpLimit(LimitName);
+                if pLimit = NIL then
+                begin
+                    pLimit := TOpLimitObject.Create(norm, emerg);
+                    pLimit.localName := LimitName;
+                    pLimit.UUID := GetDevUuid(OpLimI, LimitName, 0);
+                    AddOpLimit(pLimit);
+                end;
+                LimiTUuid := GetDevUuid(OpLimI, LimitName, 0);
+                UuidNode(F, 'ACDCTerminal.OperationalLimitSet', LimiTUuid);
+            end;
             EndInstance(F, 'Terminal');
         end;
         BusName := pElem.Nextbus;
     end;
 end;
 
-procedure WriteTerminals(var F: TextFile; pElem: TDSSCktElement; geoGUID: TGuid; crsGUID: TGuid);
+procedure WriteTerminals(var F: TextFile; pElem: TDSSCktElement; geoUUID: TUuid; crsUUID: TUuid;
+    norm: Double = 0.0; emerg: Double = 0.0);
 begin
-    WriteReferenceTerminals(F, pElem, geoGUID, crsGUID, pElem.GUID);
-    WritePositions(F, pElem, geoGUID, crsGUID);
+    WriteReferenceTerminals(F, pElem, geoUUID, crsUUID, pElem.UUID, norm, emerg);
+    WritePositions(F, pElem, geoUUID, crsUUID);
 end;
 
 procedure VbaseNode(var F: TextFile; pElem: TDSSCktElement);
@@ -1251,8 +1358,8 @@ var
     j: Integer;
 begin
     j := pElem.Terminals^[1].BusRef;
-    GuidNode(F, 'ConductingEquipment.BaseVoltage',
-        GetBaseVGuid(sqrt(3.0) * ActiveCircuit.Buses^[j].kVBase));
+    UuidNode(F, 'ConductingEquipment.BaseVoltage',
+        GetBaseVUuid(sqrt(3.0) * ActiveCircuit.Buses^[j].kVBase));
 end;
 
 procedure WriteXfmrCode(var F: TextFile; pXfmr: TXfmrCodeObj);
@@ -1260,15 +1367,15 @@ var
     pName, pBank: TNamedObject;
     ratShort, ratEmerg, val, Zbase: Double;
     i, j, seq: Integer;
-    temp: TGUID;
+    temp: TUuid;
 begin
     pName := TNamedObject.Create('dummy');
     pBank := TNamedObject.Create('dummy');
     with pXfmr do
     begin
         pBank.LocalName := pXfmr.Name + '_PowerXfInfo';
-        CreateGUID(temp);
-        pBank.GUID := temp;
+        CreateUUID4(temp);
+        pBank.UUID := temp;
         StartInstance(F, 'PowerTransformerInfo', pBank);
         EndInstance(F, 'PowerTransformerInfo');
         StartInstance(F, 'TransformerTankInfo', pXfmr);
@@ -1281,7 +1388,7 @@ begin
             Zbase := Winding^[i].kvll;
             Zbase := 1000.0 * Zbase * Zbase / Winding^[1].kva;
             pName.localName := pXfmr.Name + '_' + IntToStr(i);
-            pName.GUID := GetDevGuid(WdgInf, pXfmr.Name, i);
+            pName.UUID := GetDevUuid(WdgInf, pXfmr.Name, i);
             StartInstance(F, 'TransformerEndInfo', pName);
             RefNode(F, 'TransformerEndInfo.TransformerTankInfo', pXfmr);
             IntegerNode(F, 'TransformerEndInfo.endNumber', i);
@@ -1316,9 +1423,9 @@ begin
             EndInstance(F, 'TransformerEndInfo');
         end;
         pName.localName := pXfmr.Name + '_' + IntToStr(1);
-        pName.GUID := GetDevGuid(OcTest, pXfmr.Name, 1);
+        pName.UUID := GetDevUuid(OcTest, pXfmr.Name, 1);
         StartInstance(F, 'NoLoadTest', pName);
-        GuidNode(F, 'NoLoadTest.EnergisedEnd', GetDevGuid(WdgInf, pXfmr.Name, 1));
+        UuidNode(F, 'NoLoadTest.EnergisedEnd', GetDevUuid(WdgInf, pXfmr.Name, 1));
         DoubleNode(F, 'NoLoadTest.energisedEndVoltage', 1000.0 * Winding^[1].kvll);
         DoubleNode(F, 'NoLoadTest.excitingCurrent', pctImag);
         DoubleNode(F, 'NoLoadTest.excitingCurrentZero', pctImag);
@@ -1334,11 +1441,11 @@ begin
             begin
                 Inc(seq);
                 pName.localName := pXfmr.Name + '_' + IntToStr(seq);
-                pName.GUID := GetDevGuid(ScTest, pXfmr.Name, seq);
+                pName.UUID := GetDevUuid(ScTest, pXfmr.Name, seq);
                 StartInstance(F, 'ShortCircuitTest', pName);
-                GuidNode(F, 'ShortCircuitTest.EnergisedEnd', GetDevGuid(WdgInf, pXfmr.Name, i));
+                UuidNode(F, 'ShortCircuitTest.EnergisedEnd', GetDevUuid(WdgInf, pXfmr.Name, i));
          // NOTE: can insert more than one GroundedEnds for three-winding short-circuit tests
-                GuidNode(F, 'ShortCircuitTest.GroundedEnds', GetDevGuid(WdgInf, pXfmr.Name, j));
+                UuidNode(F, 'ShortCircuitTest.GroundedEnds', GetDevUuid(WdgInf, pXfmr.Name, j));
                 IntegerNode(F, 'ShortCircuitTest.energisedEndStep', Winding^[i].NumTaps div 2);
                 IntegerNode(F, 'ShortCircuitTest.groundedEndStep', Winding^[j].NumTaps div 2);
                 Zbase := Winding^[i].kvll;
@@ -1465,10 +1572,10 @@ procedure ExportCDPSM(FileNm: String;
     Substation: String;
     SubGeographicRegion: String;
     GeographicRegion: String;
-    FdrGUID: TGuid;
-    SubGUID: TGuid;
-    SubGeoGUID: TGuid;
-    RgnGUID: TGuid;
+    FdrUUID: TUuid;
+    SubUUID: TUuid;
+    SubGeoUUID: TUuid;
+    RgnUUID: TUuid;
     prf: CIMProfileChoice);
 var
     F: TextFile;
@@ -1483,6 +1590,12 @@ var
     pName1, pName2: TNamedObject;
     pIsland, pSwing: TNamedObject;  // island and ref node
     pRegion, pSubRegion, pLocation, pSubstation, pCRS: TNamedObject;
+
+    pILimit: TOpLimitObject;
+    pNormLimit, pEmergLimit, pRangeAHiLimit, pRangeALoLimit, pRangeBHiLimit, pRangeBLoLimit: TNamedObject; // OperationalLimitType
+    LimitName: String;
+    LimiTUuid: TUuid;
+
     zbase: Double;
     s: String;
     swtCls: String;  // based on controls, if any, attached to a line having switch=yes
@@ -1526,18 +1639,18 @@ var
     pConc: TCNDataObj;
 
   // DSS-like load models
-    id1_ConstkVA: TGuid;
-    id2_ConstZ: TGuid;
-    id3_ConstPQuadQ: TGuid;
-    id4_LinPQuadQ: TGuid;
-    id5_ConstI: TGuid;
-    id6_ConstPConstQ: TGuid;  // P can vary, Q not
-    id7_ConstPConstX: TGuid;
+    id1_ConstkVA: TUuid;
+    id2_ConstZ: TUuid;
+    id3_ConstPQuadQ: TUuid;
+    id4_LinPQuadQ: TUuid;
+    id5_ConstI: TUuid;
+    id6_ConstPConstQ: TUuid;  // P can vary, Q not
+    id7_ConstPConstX: TUuid;
 
   // for CIM Locations
-    geoGUID: TGuid;
-    crsGUID: TGuid;
-    tmpGUID: TGuid;
+    geoUUID: TUuid;
+    crsUUID: TUuid;
+    tmpUUID: TUuid;
 begin
     try
         clsCode := DSSClassList.Get(ClassNames.Find('linecode'));
@@ -1551,8 +1664,9 @@ begin
         pName2 := TNamedObject.Create('Temp2');
         i1 := clsXfmr.ElementCount * 6; // 3 wdg info, 3 sctest
         i2 := ActiveCircuit.Transformers.ListSize * 11; // bank, info, 3 wdg, 3 wdg info, 3sctest
-        StartGuidList(i1 + i2);
+        StartUuidList(i1 + i2);
         StartBankList(ActiveCircuit.Transformers.ListSize);
+        StartOpLimitList(ActiveCircuit.Lines.ListSize);
 
     {$IFDEF FPC}
          // this only works in the command line version
@@ -1571,42 +1685,42 @@ begin
         VersionInstance(F);
 
         pCRS := TNamedObject.Create('CoordinateSystem');
-        CreateGUID(crsGUID);
-        pCRS.GUID := crsGUID;
+        CreateUUID4(crsUUID);
+        pCRS.UUID := crsUUID;
         pCRS.localName := ActiveCircuit.Name + '_CrsUrn';
         StartInstance(F, 'CoordinateSystem', pCRS);
         StringNode(F, 'CoordinateSystem.crsUrn', 'OpenDSSLocalBusCoordinates');
         EndInstance(F, 'CoordinateSystem');
 
         pRegion := TNamedObject.Create('GeographicalRegion');
-        pRegion.GUID := RgnGUID;
+        pRegion.UUID := RgnUUID;
         pRegion.LocalName := GeographicRegion;
         StartInstance(F, 'GeographicalRegion', pRegion);
         EndInstance(F, 'GeographicalRegion');
 
         pSubRegion := TNamedObject.Create('SubGeographicalRegion');
-        pSubRegion.GUID := SubGeoGUID;
+        pSubRegion.UUID := SubGeoUUID;
         pSubRegion.LocalName := SubGeographicRegion;
         StartInstance(F, 'SubGeographicalRegion', pSubRegion);
         RefNode(F, 'SubGeographicalRegion.Region', pRegion);
         EndInstance(F, 'SubGeographicalRegion');
 
         pSubstation := TNamedObject.Create('Substation');
-        pSubstation.GUID := SubGUID;
+        pSubstation.UUID := SubUUID;
         pSubstation.LocalName := Substation;
         StartInstance(F, 'Substation', pSubstation);
         RefNode(F, 'Substation.Region', pSubRegion);
         EndInstance(F, 'Substation');
 
         pLocation := TNamedObject.Create('Location');
-        CreateGUID(geoGUID);
-        pLocation.GUID := geoGUID;
+        CreateUUID4(geoUUID);
+        pLocation.UUID := geoUUID;
         pLocation.localName := ActiveCircuit.Name + '_Location';
         StartInstance(F, 'Location', pLocation);
-        GuidNode(F, 'Location.CoordinateSystem', crsGUID);
+        UuidNode(F, 'Location.CoordinateSystem', crsUUID);
         EndInstance(F, 'Location');
 
-        ActiveCircuit.GUID := FdrGuid;
+        ActiveCircuit.UUID := FdrUUID;
         StartInstance(F, 'Feeder', ActiveCircuit);
         RefNode(F, 'Feeder.NormalEnergizingSubstation', pSubstation);
         RefNode(F, 'PowerSystemResource.Location', pLocation);
@@ -1615,33 +1729,142 @@ begin
         // the whole system will be a topo island
         pIsland := TNamedObject.Create('Island');
         pIsland.localName := ActiveCircuit.Name + '_Island';
-        CreateGUID(geoGUID);
-        pIsland.GUID := geoGUID;
+        CreateUUID4(geoUUID);
+        pIsland.UUID := geoUUID;
         pSwing := TNamedObject.Create('SwingBus');
         pSwing.localName := ActiveCircuit.Name + '_SwingBus';
 
+        pNormLimit := TNamedObject.Create('NormalAmpsType');
+        pNormLimit.localName := ActiveCircuit.Name + '_NormAmpsType';
+        CreateUUID4(tmpUUID);
+        pNormLimit.UUID := tmpUUID;
+        StartInstance(F, 'OperationalLimitType', pNormLimit);
+        DoubleNode(F, 'OperationalLimitType.acceptableDuration', 5.0e9);  // more than 100 years
+        OpLimitDirectionEnum(F, 'absoluteValue');
+        EndInstance(F, 'OperationalLimitType');
+
+        pEmergLimit := TNamedObject.Create('EmergencyAmpsType');
+        pEmergLimit.localName := ActiveCircuit.Name + '_EmergencyAmpsType';
+        CreateUUID4(tmpUUID);
+        pEmergLimit.UUID := tmpUUID;
+        StartInstance(F, 'OperationalLimitType', pEmergLimit);
+        DoubleNode(F, 'OperationalLimitType.acceptableDuration', 2.0 * 3600.0); // 2 hours
+        OpLimitDirectionEnum(F, 'absoluteValue');
+        EndInstance(F, 'OperationalLimitType');
+
+        pRangeAHiLimit := TNamedObject.Create('RangeAHiType');
+        pRangeAHiLimit.localName := ActiveCircuit.Name + '_RangeAHiType';
+        CreateUUID4(tmpUUID);
+        pRangeAHiLimit.UUID := tmpUUID;
+        StartInstance(F, 'OperationalLimitType', pRangeAHiLimit);
+        DoubleNode(F, 'OperationalLimitType.acceptableDuration', 5.0e9);
+        OpLimitDirectionEnum(F, 'high');
+        EndInstance(F, 'OperationalLimitType');
+
+        pRangeALoLimit := TNamedObject.Create('RangeALoType');
+        pRangeALoLimit.localName := ActiveCircuit.Name + '_RangeALoType';
+        CreateUUID4(tmpUUID);
+        pRangeALoLimit.UUID := tmpUUID;
+        StartInstance(F, 'OperationalLimitType', pRangeALoLimit);
+        DoubleNode(F, 'OperationalLimitType.acceptableDuration', 5.0e9);
+        OpLimitDirectionEnum(F, 'low');
+        EndInstance(F, 'OperationalLimitType');
+
+        pRangeBHiLimit := TNamedObject.Create('RangeBHiType');
+        pRangeBHiLimit.localName := ActiveCircuit.Name + '_RangeBHiType';
+        CreateUUID4(tmpUUID);
+        pRangeBHiLimit.UUID := tmpUUID;
+        StartInstance(F, 'OperationalLimitType', pRangeBHiLimit);
+        DoubleNode(F, 'OperationalLimitType.acceptableDuration', 24.0 * 3600.0);
+        OpLimitDirectionEnum(F, 'high');
+        EndInstance(F, 'OperationalLimitType');
+
+        pRangeBLoLimit := TNamedObject.Create('RangeBLoType');
+        pRangeBLoLimit.localName := ActiveCircuit.Name + '_RangeBLoType';
+        CreateUUID4(tmpUUID);
+        pRangeBLoLimit.UUID := tmpUUID;
+        StartInstance(F, 'OperationalLimitType', pRangeBLoLimit);
+        DoubleNode(F, 'OperationalLimitType.acceptableDuration', 24.0 * 3600.0);
+        OpLimitDirectionEnum(F, 'low');
+        EndInstance(F, 'OperationalLimitType');
+
         with ActiveCircuit do
         begin
+      // build the lists of base voltages and operational voltage limits
+            i := 1;
+            while LegalVoltageBases[i] > 0.0 do
+            begin
+                pName1.LocalName := GetBaseVName(LegalVoltageBases[i]);
+                pName1.UUID := GetBaseVUuid(LegalVoltageBases[i]);
+                StartInstance(F, 'BaseVoltage', pName1);
+                DoubleNode(F, 'BaseVoltage.nominalVoltage', 1000.0 * LegalVoltageBases[i]);
+                EndInstance(F, 'BaseVoltage');
+
+                pName1.LocalName := GetOpLimVName(LegalVoltageBases[i]);
+                pName1.UUID := GetOpLimVUuid(LegalVoltageBases[i]);
+                StartInstance(F, 'OperationalLimitSet', pName1);
+                EndInstance(F, 'OperationalLimitSet');
+
+                pName2.LocalName := pName1.LocalName + '_RangeAHi';
+                CreateUUID4(tmpUUID);
+                pName2.UUID := tmpUUID;
+                StartInstance(F, 'VoltageLimit', pName2);
+                RefNode(F, 'OperationalLimit.OperationalLimitSet', pName1);
+                RefNode(F, 'OperationalLimit.OperationalLimitType', pRangeAHiLimit);
+                DoubleNode(F, 'VoltageLimit.value', 1.05 * 1000.0 * LegalVoltageBases[i]);
+                EndInstance(F, 'VoltageLimit');
+
+                pName2.LocalName := pName1.LocalName + '_RangeALo';
+                CreateUUID4(tmpUUID);
+                pName2.UUID := tmpUUID;
+                StartInstance(F, 'VoltageLimit', pName2);
+                RefNode(F, 'OperationalLimit.OperationalLimitSet', pName1);
+                RefNode(F, 'OperationalLimit.OperationalLimitType', pRangeALoLimit);
+                DoubleNode(F, 'VoltageLimit.value', 0.95 * 1000.0 * LegalVoltageBases[i]);
+                EndInstance(F, 'VoltageLimit');
+
+                pName2.LocalName := pName1.LocalName + '_RangeBHi';
+                CreateUUID4(tmpUUID);
+                pName2.UUID := tmpUUID;
+                StartInstance(F, 'VoltageLimit', pName2);
+                RefNode(F, 'OperationalLimit.OperationalLimitSet', pName1);
+                RefNode(F, 'OperationalLimit.OperationalLimitType', pRangeBHiLimit);
+                DoubleNode(F, 'VoltageLimit.value', 1.0583333 * 1000.0 * LegalVoltageBases[i]);
+                EndInstance(F, 'VoltageLimit');
+
+                pName2.LocalName := pName1.LocalName + '_RangeBLo';
+                CreateUUID4(tmpUUID);
+                pName2.UUID := tmpUUID;
+                StartInstance(F, 'VoltageLimit', pName2);
+                RefNode(F, 'OperationalLimit.OperationalLimitSet', pName1);
+                RefNode(F, 'OperationalLimit.OperationalLimitType', pRangeBLoLimit);
+                DoubleNode(F, 'VoltageLimit.value', 0.9166667 * 1000.0 * LegalVoltageBases[i]);
+                EndInstance(F, 'VoltageLimit');
+
+                inc(i);
+            end;
+
             for i := 1 to NumBuses do
             begin
                 Buses^[i].localName := BusList.Get(i);
             end;
 
-            // each bus corresponds to a topo node and connectivity node
+            // each bus corresponds to a topo node (TODO, do we need topo nodes anymore?) and connectivity node
             for i := 1 to NumBuses do
             begin
-                geoGUID := GetDevGuid(Topo, Buses^[i].localName, 1);
-                Writeln(F, Format('<cim:TopologicalNode rdf:ID="%s">', [GUIDToCIMString(geoGUID)]));
-                StringNode(F, 'IdentifiedObject.mRID', GUIDToCIMString(geoGUID));
+                geoUUID := GetDevUuid(Topo, Buses^[i].localName, 1);
+                Writeln(F, Format('<cim:TopologicalNode rdf:ID="%s">', [UUIDToCIMString(geoUUID)]));
+                StringNode(F, 'IdentifiedObject.mRID', UUIDToCIMString(geoUUID));
                 StringNode(F, 'IdentifiedObject.name', Buses^[i].localName);
-                GuidNode(F, 'TopologicalNode.TopologicalIsland', pIsland.GUID);
+                UuidNode(F, 'TopologicalNode.TopologicalIsland', pIsland.UUID);
                 Writeln(F, '</cim:TopologicalNode>');
 
                 Writeln(F, Format('<cim:ConnectivityNode rdf:ID="%s">',
-                    [GUIDToCIMString(Buses^[i].GUID)]));
-                StringNode(F, 'IdentifiedObject.mRID', GUIDToCIMString(Buses^[i].GUID));
+                    [UUIDToCIMString(Buses^[i].UUID)]));
+                StringNode(F, 'IdentifiedObject.mRID', UUIDToCIMString(Buses^[i].UUID));
                 StringNode(F, 'IdentifiedObject.name', Buses^[i].localName);
-                GuidNode(F, 'ConnectivityNode.TopologicalNode', geoGUID);
+                UuidNode(F, 'ConnectivityNode.TopologicalNode', geoUUID);
+                UuidNode(F, 'ConnectivityNode.OperationalLimitSet', GetOpLimVUuid(sqrt(3.0) * ActiveCircuit.Buses^[i].kVBase));
                 Writeln(F, Format('  <cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#%s"/>',
                     [ActiveCircuit.CIM_ID]));
                 Writeln(F, '</cim:ConnectivityNode>');
@@ -1656,8 +1879,8 @@ begin
                     if pVsrc.Enabled then
                     begin
                         i := pVsrc.Terminals^[1].BusRef;
-                        geoGUID := GetDevGuid(Topo, Buses^[i].localName, 1);
-                        pSwing.GUID := geoGUID;
+                        geoUUID := GetDevUuid(Topo, Buses^[i].localName, 1);
+                        pSwing.UUID := geoUUID;
                         StartInstance(F, 'TopologicalIsland', pIsland);
                         RefNode(F, 'TopologicalIsland.AngleRefTopologicalNode', pSwing);
                         EndInstance(F, 'TopologicalIsland');
@@ -1665,17 +1888,6 @@ begin
                     end;
                 end;
                 pVsrc := ActiveCircuit.Sources.Next;
-            end;
-
-            i := 1;
-            while LegalVoltageBases[i] > 0.0 do
-            begin
-                pName1.LocalName := GetBaseVName(LegalVoltageBases[i]);
-                pName1.GUID := GetBaseVGuid(LegalVoltageBases[i]);
-                StartInstance(F, 'BaseVoltage', pName1);
-                DoubleNode(F, 'BaseVoltage.nominalVoltage', 1000.0 * LegalVoltageBases[i]);
-                EndInstance(F, 'BaseVoltage');
-                inc(i);
             end;
         end;
 
@@ -1692,11 +1904,11 @@ begin
                 DoubleNode(F, 'SynchronousMachine.ratedU', pGen.Presentkv * 1000.0);
 //        SynchMachTypeEnum (F, 'generator');
 //        SynchMachModeEnum (F, 'generator');
-                CreateGuid(geoGUID);
-                GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+                CreateUUID4(geoUUID);
+                UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                 EndInstance(F, 'SynchronousMachine');
-                AttachGeneratorPhases(F, pGen, geoGUID);
-                WriteTerminals(F, pGen, geoGUID, crsGUID);
+                AttachGeneratorPhases(F, pGen, geoUUID);
+                WriteTerminals(F, pGen, geoUUID, crsUUID);
             end;
             pGen := ActiveCircuit.Generators.Next;
         end;
@@ -1707,11 +1919,11 @@ begin
             if pPV.Enabled then
             begin
                 pName1.LocalName := pPV.Name; // + '_PVPanels';
-                CreateGuid(geoGUID);
-                pName1.GUID := geoGUID;
+                CreateUUID4(geoUUID);
+                pName1.UUID := geoUUID;
                 StartInstance(F, 'PhotovoltaicUnit', pName1);
-                geoGUID := GetDevGuid(SolarLoc, pPV.localName, 1);
-                GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+                geoUUID := GetDevUuid(SolarLoc, pPV.localName, 1);
+                UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                 EndInstance(F, 'PhotovoltaicUnit');
                 StartInstance(F, 'PowerElectronicsConnection', pPV);
                 CircuitNode(F, ActiveCircuit);
@@ -1721,14 +1933,14 @@ begin
                 DoubleNode(F, 'PowerElectronicsConnection.q', pPV.Presentkvar * 1000.0);
                 DoubleNode(F, 'PowerElectronicsConnection.ratedS', pPV.PVSystemVars.fkvarating * 1000.0);
                 DoubleNode(F, 'PowerElectronicsConnection.ratedU', pPV.Presentkv * 1000.0);
-                GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+                UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                 EndInstance(F, 'PowerElectronicsConnection');
-                AttachSolarPhases(F, pPV, geoGUID);
+                AttachSolarPhases(F, pPV, geoUUID);
         // we want the location using PV unit name
-                WriteReferenceTerminals(F, pPV, geoGUID, crsGUID, pPV.GUID);
+                WriteReferenceTerminals(F, pPV, geoUUID, crsUUID, pPV.UUID);
                 s := pPV.LocalName;
                 pPV.LocalName := pName1.LocalName;
-                WritePositions(F, pPV, geoGUID, crsGUID);
+                WritePositions(F, pPV, geoUUID, crsUUID);
                 pPV.LocalName := s;
             end;
             pPV := ActiveCircuit.PVSystems.Next;
@@ -1740,14 +1952,14 @@ begin
             if pBat.Enabled then
             begin
                 pName1.LocalName := pBat.Name; // + '_Cells';
-                CreateGuid(geoGUID);
-                pName1.GUID := geoGUID;
+                CreateUUID4(geoUUID);
+                pName1.UUID := geoUUID;
                 StartInstance(F, 'BatteryUnit', pName1);
                 DoubleNode(F, 'BatteryUnit.ratedE', pBat.StorageVars.kwhRating * 1000.0);
                 DoubleNode(F, 'BatteryUnit.storedE', pBat.StorageVars.kwhStored * 1000.0);
                 BatteryStateEnum(F, pBat.StorageState);
-                geoGUID := GetDevGuid(BatteryLoc, pBat.localName, 1);
-                GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+                geoUUID := GetDevUuid(BatteryLoc, pBat.localName, 1);
+                UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                 EndInstance(F, 'BatteryUnit');
                 StartInstance(F, 'PowerElectronicsConnection', pBat);
                 CircuitNode(F, ActiveCircuit);
@@ -1757,14 +1969,14 @@ begin
                 DoubleNode(F, 'PowerElectronicsConnection.q', pBat.Presentkvar * 1000.0);
                 DoubleNode(F, 'PowerElectronicsConnection.ratedS', pBat.StorageVars.kvarating * 1000.0);
                 DoubleNode(F, 'PowerElectronicsConnection.ratedU', pBat.Presentkv * 1000.0);
-                GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+                UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                 EndInstance(F, 'PowerElectronicsConnection');
-                AttachStoragePhases(F, pBat, geoGUID);
+                AttachStoragePhases(F, pBat, geoUUID);
         // we want the location using battery unit name
-                WriteReferenceTerminals(F, pBat, geoGUID, crsGUID, pBat.GUID);
+                WriteReferenceTerminals(F, pBat, geoUUID, crsUUID, pBat.UUID);
                 s := pBat.LocalName;
                 pBat.LocalName := pName1.LocalName;
-                WritePositions(F, pBat, geoGUID, crsGUID);
+                WritePositions(F, pBat, geoUUID, crsUUID);
                 pBat.LocalName := s;
             end;
             pBat := ActiveCircuit.StorageElements.Next;
@@ -1809,11 +2021,11 @@ begin
                         DoubleNode(F, 'EnergySource.x', X1);
                         DoubleNode(F, 'EnergySource.r0', R0);
                         DoubleNode(F, 'EnergySource.x0', X0);
-                        CreateGuid(geoGUID);
-                        GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+                        CreateUUID4(geoUUID);
+                        UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                         EndInstance(F, 'EnergySource');
 //          AttachPhases (F, pVsrc, 1, 'EnergySource');
-                        WriteTerminals(F, pVsrc, geoGUID, crsGUID);
+                        WriteTerminals(F, pVsrc, geoUUID, crsUUID);
                     end;
             pVsrc := ActiveCircuit.Sources.Next;
         end;
@@ -1858,11 +2070,11 @@ begin
                     DoubleNode(F, 'LinearShuntCompensator.g0PerSection', 0.0);
                     IntegerNode(F, 'ShuntCompensator.normalSections', NumSteps);
                     IntegerNode(F, 'ShuntCompensator.maximumSections', NumSteps);
-                    geoGUID := GetDevGuid(CapLoc, pCap.localName, 1);
-                    GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+                    geoUUID := GetDevUuid(CapLoc, pCap.localName, 1);
+                    UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                     EndInstance(F, 'LinearShuntCompensator');
-                    AttachCapPhases(F, pCap, geoGUID);
-                    WriteTerminals(F, pCap, geoGUID, crsGUID);
+                    AttachCapPhases(F, pCap, geoUUID);
+                    WriteTerminals(F, pCap, geoUUID, crsUUID, pCap.NormAmps, pCap.EmergAmps);
                 end;
             end;
             pCap := ActiveCircuit.ShuntCapacitors.Next;
@@ -1874,11 +2086,11 @@ begin
             with pCapC do
             begin
                 StartInstance(F, 'RegulatingControl', pCapC);
-                GuidNode(F, 'PowerSystemResource.Location', GetDevGuid(CapLoc, This_Capacitor.Name, 1));
+                UuidNode(F, 'PowerSystemResource.Location', GetDevUuid(CapLoc, This_Capacitor.Name, 1));
                 RefNode(F, 'RegulatingControl.RegulatingCondEq', This_Capacitor);
                 i1 := GetCktElementIndex(ElementName); // Global function
-                GuidNode(F, 'RegulatingControl.Terminal',
-                    GetTermGuid(ActiveCircuit.CktElements.Get(i1), ElementTerminal));
+                UuidNode(F, 'RegulatingControl.Terminal',
+                    GetTermUuid(ActiveCircuit.CktElements.Get(i1), ElementTerminal));
                 s := FirstPhaseString(ActiveCircuit.CktElements.Get(i1), 1);
                 if PTPhase > 0 then
                     MonitoredPhaseNode(F, Char(Ord(s[1]) + PTPhase - 1))
@@ -1942,8 +2154,8 @@ begin
                     clsXfmr.NewObject(sBank);
                     clsXfmr.Code := sBank;
                     pXfmr := ActiveXfmrCodeObj;
-                    CreateGUID(tmpGUID);
-                    pXfmr.GUID := tmpGUID;
+                    CreateUUID4(tmpUUID);
+                    pXfmr.UUID := tmpUUID;
                     pXfmr.PullFromTransformer(pXf);
                     pXf.XfmrCode := pXfmr.Name;
                 end;
@@ -1958,8 +2170,8 @@ begin
             WriteXfmrCode(F, pXfmr);
       // link to the transformers using this XfmrCode
             pName1.LocalName := 'TankAsset_' + pXfmr.Name;
-            CreateGUID(tmpGUID);
-            pName1.GUID := tmpGUID;
+            CreateUUID4(tmpUUID);
+            pName1.UUID := tmpUUID;
             StartInstance(F, 'Asset', pName1);
             RefNode(F, 'Asset.AssetInfo', pXfmr);
             pXf := ActiveCircuit.Transformers.First;
@@ -2010,7 +2222,7 @@ begin
                 begin
                     pBank := TBankObject.Create(maxWdg);
                     pBank.localName := sBank;
-                    pBank.GUID := GetDevGuid(Bank, sBank, 0);
+                    pBank.UUID := GetDevUuid(Bank, sBank, 0);
                     AddBank(pBank);
                 end;
             end;
@@ -2035,34 +2247,34 @@ begin
 
                     pBank := GetBank(sBank);
                     pBank.AddTransformer(pXf);
-                    geoGUID := GetDevGuid(XfLoc, pXf.Name, 1);
+                    geoUUID := GetDevUuid(XfLoc, pXf.Name, 1);
 
                     if bTanks then
                     begin
                         StartInstance(F, 'TransformerTank', pXf);
                         CircuitNode(F, ActiveCircuit);
                         RefNode(F, 'TransformerTank.PowerTransformer', pBank);
-                        GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+                        UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                         EndInstance(F, 'TransformerTank');
-                        WritePositions(F, pXf, geoGUID, crsGUID);
+                        WritePositions(F, pXf, geoUUID, crsUUID);
                     end
                     else
                     begin
-                        WritePositions(F, pXf, geoGUID, crsGUID);
+                        WritePositions(F, pXf, geoUUID, crsUUID);
                     end;
 
         // make the winding, mesh and core name objects for easy reference
                     for i := 1 to NumberOfWindings do
                     begin
                         WdgList[i - 1].localName := pXf.Name + '_End_' + IntToStr(i);
-                        WdgList[i - 1].GUID := GetDevGuid(Wdg, pXf.Name, i);
+                        WdgList[i - 1].UUID := GetDevUuid(Wdg, pXf.Name, i);
                     end;
                     CoreList[0].LocalName := pXf.Name + '_Yc';
-                    CoreList[0].GUID := GetDevGuid(XfCore, pXf.Name, 1);
+                    CoreList[0].UUID := GetDevUuid(XfCore, pXf.Name, 1);
                     for i := 1 to ((maxWdg - 1) * maxWdg div 2) do
                     begin
                         MeshList[i - 1].localName := pXf.Name + '_Zsc_' + IntToStr(i);
-                        MeshList[i - 1].GUID := GetDevGuid(XfMesh, pXf.Name, i);
+                        MeshList[i - 1].UUID := GetDevUuid(XfMesh, pXf.Name, i);
                     end;
 
                     if not bTanks then
@@ -2157,9 +2369,9 @@ begin
                         end;
                         j := pXf.Terminals^[i].BusRef;
                         pName2.LocalName := pXf.Name + '_T' + IntToStr(i);
-                        pName2.GUID := GetTermGuid(pXf, i);
+                        pName2.UUID := GetTermUuid(pXf, i);
                         RefNode(F, 'TransformerEnd.Terminal', pName2);
-                        GuidNode(F, 'TransformerEnd.BaseVoltage', GetBaseVGuid(sqrt(3.0) * ActiveCircuit.Buses^[j].kVBase));
+                        UuidNode(F, 'TransformerEnd.BaseVoltage', GetBaseVUuid(sqrt(3.0) * ActiveCircuit.Buses^[j].kVBase));
                         if bTanks then
                             EndInstance(F, 'TransformerTankEnd')
                         else
@@ -2170,6 +2382,20 @@ begin
                         IntegerNode(F, 'ACDCTerminal.sequenceNumber', i);
                         Writeln(F, Format('<cim:Terminal.ConnectivityNode rdf:resource="#%s"/>',
                             [ActiveCircuit.Buses[j].CIM_ID]));
+                        if i = 1 then
+                        begin   // write the current limit on HV winding, assuming that's winding 1
+                            LimitName := GetOpLimIName(pXf.NormAmps, pXf.EmergAmps);
+                            pILimit := GetOpLimit(LimitName);
+                            if pILimit = NIL then
+                            begin
+                                pILimit := TOpLimitObject.Create(pXf.NormAmps, pXf.EmergAmps);
+                                pILimit.localName := LimitName;
+                                pILimit.UUID := GetDevUuid(OpLimI, LimitName, 0);
+                                AddOpLimit(pILimit);
+                            end;
+                            LimiTUuid := GetDevUuid(OpLimI, LimitName, 0);
+                            UuidNode(F, 'ACDCTerminal.OperationalLimitSet', LimiTUuid);
+                        end;
                         EndInstance(F, 'Terminal');
                     end;
                 end;
@@ -2189,8 +2415,8 @@ begin
             StartInstance(F, 'PowerTransformer', pBank);
             CircuitNode(F, ActiveCircuit);
             StringNode(F, 'PowerTransformer.vectorGroup', pBank.vectorGroup);
-            GuidNode(F, 'PowerSystemResource.Location',
-                GetDevGuid(XfLoc, pBank.a_unit.Name, 1));
+            UuidNode(F, 'PowerSystemResource.Location',
+                GetDevUuid(XfLoc, pBank.a_unit.Name, 1));
             EndInstance(F, 'PowerTransformer');
         end;
 
@@ -2205,8 +2431,8 @@ begin
             with pReg do
             begin
                 pName1.LocalName := pReg.LocalName + '_Info';
-                CreateGUID(geoGUID);
-                pName1.GUID := geoGUID;
+                CreateUUID4(geoUUID);
+                pName1.UUID := geoUUID;
                 StartInstance(F, 'TapChangerInfo', pName1);
                 DoubleNode(F, 'TapChangerInfo.ptRatio', PT);
                 DoubleNode(F, 'TapChangerInfo.ctRatio', CT / 0.2);
@@ -2214,11 +2440,11 @@ begin
                 EndInstance(F, 'TapChangerInfo');
 
                 pName2.LocalName := pReg.LocalName + '_Ctrl';
-                CreateGUID(geoGUID);
-                pName2.GUID := geoGUID;
+                CreateUUID4(geoUUID);
+                pName2.UUID := geoUUID;
                 StartInstance(F, 'TapChangerControl', pName2);
                 RegulatingControlEnum(F, 'voltage');
-                GuidNode(F, 'RegulatingControl.Terminal', GetTermGuid(Transformer, TrWinding));
+                UuidNode(F, 'RegulatingControl.Terminal', GetTermUuid(Transformer, TrWinding));
                 MonitoredPhaseNode(F, FirstPhaseString(Transformer, TrWinding));
                 BooleanNode(F, 'RegulatingControl.enabled', pReg.Enabled);
                 BooleanNode(F, 'RegulatingControl.discrete', TRUE);
@@ -2241,33 +2467,33 @@ begin
                     DoubleNode(F, 'TapChangerControl.limitVoltage', VoltageLimit)
                 else
                     DoubleNode(F, 'TapChangerControl.limitVoltage', 0.0);
-                GuidNode(F, 'PowerSystemResource.Location',
-                    GetDevGuid(XfLoc, Transformer.Name, 1));
+                UuidNode(F, 'PowerSystemResource.Location',
+                    GetDevUuid(XfLoc, Transformer.Name, 1));
                 EndInstance(F, 'TapChangerControl');
 
                 StartInstance(F, 'RatioTapChanger', pReg);
-                GuidNode(F, 'RatioTapChanger.TransformerEnd',
-                    GetDevGuid(Wdg, Transformer.Name, TrWinding));
-                GuidNode(F, 'TapChanger.TapChangerControl', pName2.GUID);
+                UuidNode(F, 'RatioTapChanger.TransformerEnd',
+                    GetDevUuid(Wdg, Transformer.Name, TrWinding));
+                UuidNode(F, 'TapChanger.TapChangerControl', pName2.UUID);
                 DoubleNode(F, 'RatioTapChanger.stepVoltageIncrement', 100.0 * TapIncrement);
                 TransformerControlEnum(F, 'volt');
-                IntegerNode(F, 'TapChanger.highStep', NumTaps);
-                IntegerNode(F, 'TapChanger.lowStep', 0);
-                IntegerNode(F, 'TapChanger.neutralStep', NumTaps div 2);
-                IntegerNode(F, 'TapChanger.normalStep', NumTaps div 2);
+                IntegerNode(F, 'TapChanger.highStep', NumTaps div 2);
+                IntegerNode(F, 'TapChanger.lowStep', -NumTaps div 2);
+                IntegerNode(F, 'TapChanger.neutralStep', 0);
+                IntegerNode(F, 'TapChanger.normalStep', 0);
                 DoubleNode(F, 'TapChanger.neutralU', 120.0 * PT);
                 DoubleNode(F, 'TapChanger.initialDelay', InitialDelay);
                 DoubleNode(F, 'TapChanger.subsequentDelay', SubsequentDelay);
                 BooleanNode(F, 'TapChanger.ltcFlag', TRUE);
                 BooleanNode(F, 'TapChanger.controlEnabled', pReg.Enabled);
                 DoubleNode(F, 'TapChanger.step', TapNum);
-                GuidNode(F, 'PowerSystemResource.Location',
-                    GetDevGuid(XfLoc, Transformer.Name, 1));
+                UuidNode(F, 'PowerSystemResource.Location',
+                    GetDevUuid(XfLoc, Transformer.Name, 1));
                 EndInstance(F, 'RatioTapChanger');
 
                 pName2.LocalName := 'TapChangerAsset_' + pReg.LocalName;
-                CreateGUID(tmpGUID);
-                pName2.GUID := tmpGUID;
+                CreateUUID4(tmpUUID);
+                pName2.UUID := tmpUUID;
                 StartInstance(F, 'Asset', pName2);
                 RefNode(F, 'Asset.AssetInfo', pName1);
                 RefNode(F, 'Asset.PowerSystemResources', pReg);
@@ -2287,8 +2513,8 @@ begin
                 StartInstance(F, 'ACLineSegment', pReac);
                 CircuitNode(F, ActiveCircuit);
                 VbaseNode(F, pReac);
-                geoGUID := GetDevGuid(ReacLoc, pReac.Name, 1);
-                GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+                geoUUID := GetDevUuid(ReacLoc, pReac.Name, 1);
+                UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                 DoubleNode(F, 'Conductor.length', 1.0);
                 DoubleNode(F, 'ACLineSegment.r', pReac.SimpleR);
                 DoubleNode(F, 'ACLineSegment.x', pReac.SimpleX);
@@ -2300,7 +2526,7 @@ begin
                 DoubleNode(F, 'ACLineSegment.b0ch', 0.0);
                 EndInstance(F, 'ACLineSegment');
                 // AttachLinePhases (F, pReac); // for the 8500-node circuit, we only need 3 phase series reactors
-                WriteTerminals(F, pReac, geoGUID, crsGUID);
+                WriteTerminals(F, pReac, geoUUID, crsUUID, pReac.NormAmps, pReac.EmergAmps);
             end;
             pReac := ActiveCircuit.Reactors.Next;
         end;
@@ -2313,7 +2539,7 @@ begin
                 begin
                     bval := FALSE; // flag to write a "line code" of PULengthPhaseZ
                     v1 := To_Meters(pLine.LengthUnits);
-                    geoGUID := GetDevGuid(LineLoc, pLine.Name, 1);
+                    geoUUID := GetDevUuid(LineLoc, pLine.Name, 1);
                     if IsSwitch then
                     begin
                         ParseSwitchClass(pLine, swtCls, ratedAmps, breakingAmps);
@@ -2336,7 +2562,7 @@ begin
                             BooleanNode(F, 'Switch.open', TRUE);
                         end;
                         BooleanNode(F, 'Switch.retained', TRUE);
-                        GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+                        UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                         EndInstance(F, swtCls);
                         AttachSwitchPhases(F, pLine);
                     end
@@ -2381,14 +2607,14 @@ begin
                             begin
                                 bval := TRUE;
                                 pName1.LocalName := pLine.Name + '_PUZ';
-                                CreateGUID(tmpGUID);
-                                pName1.GUID := tmpGUID;
+                                CreateUUID4(tmpUUID);
+                                pName1.UUID := tmpUUID;
                                 RefNode(F, 'ACLineSegment.PerLengthImpedance', pName1);
               // TODO - we no longer have proper length units if matrices were specified
                                 DoubleNode(F, 'Conductor.length', Len * v1);
                             end;
                         end;
-                        GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+                        UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                         EndInstance(F, 'ACLineSegment');
                         if not (SymComponentsModel and (NPhases = 3)) then
                             AttachLinePhases(F, pLine);
@@ -2413,19 +2639,19 @@ begin
                             end;
                         end;
                     end;
-                    WriteTerminals(F, pLine, geoGUID, crsGUID);
+                    WriteTerminals(F, pLine, geoUUID, crsUUID, pLine.NormAmps, pLine.EmergAmps);
                 end;
             pLine := ActiveCircuit.Lines.Next;
         end;
 
     // create the DSS-like load models
-        CreateGuid(id1_ConstkVA);
-        CreateGuid(id2_ConstZ);
-        CreateGuid(id3_ConstPQuadQ);
-        CreateGuid(id4_LinPQuadQ);
-        CreateGuid(id5_ConstI);
-        CreateGuid(id6_ConstPConstQ);  // P can vary, Q not
-        CreateGuid(id7_ConstPConstX);
+        CreateUUID4(id1_ConstkVA);
+        CreateUUID4(id2_ConstZ);
+        CreateUUID4(id3_ConstPQuadQ);
+        CreateUUID4(id4_LinPQuadQ);
+        CreateUUID4(id5_ConstI);
+        CreateUUID4(id6_ConstPConstQ);  // P can vary, Q not
+        CreateUUID4(id7_ConstPConstX);
 
         WriteLoadModel(F, 'Constant kVA', id1_ConstkVA,
             0, 0, 100,
@@ -2467,19 +2693,19 @@ begin
                     VbaseNode(F, pLoad);
                     case FLoadModel of
                         1:
-                            GuidNode(F, 'EnergyConsumer.LoadResponse', id1_ConstkVA);
+                            UuidNode(F, 'EnergyConsumer.LoadResponse', id1_ConstkVA);
                         2:
-                            GuidNode(F, 'EnergyConsumer.LoadResponse', id2_ConstZ);
+                            UuidNode(F, 'EnergyConsumer.LoadResponse', id2_ConstZ);
                         3:
-                            GuidNode(F, 'EnergyConsumer.LoadResponse', id3_ConstPQuadQ);
+                            UuidNode(F, 'EnergyConsumer.LoadResponse', id3_ConstPQuadQ);
                         4:
-                            GuidNode(F, 'EnergyConsumer.LoadResponse', id4_LinPQuadQ);
+                            UuidNode(F, 'EnergyConsumer.LoadResponse', id4_LinPQuadQ);
                         5:
-                            GuidNode(F, 'EnergyConsumer.LoadResponse', id5_ConstI);
+                            UuidNode(F, 'EnergyConsumer.LoadResponse', id5_ConstI);
                         6:
-                            GuidNode(F, 'EnergyConsumer.LoadResponse', id6_ConstPConstQ);
+                            UuidNode(F, 'EnergyConsumer.LoadResponse', id6_ConstPConstQ);
                         7:
-                            GuidNode(F, 'EnergyConsumer.LoadResponse', id7_ConstPConstX);
+                            UuidNode(F, 'EnergyConsumer.LoadResponse', id7_ConstPConstX);
                     end;
                     DoubleNode(F, 'EnergyConsumer.p', 1000.0 * kWBase);
                     DoubleNode(F, 'EnergyConsumer.q', 1000.0 * kvarBase);
@@ -2494,11 +2720,11 @@ begin
                         ShuntConnectionKindNode(F, 'EnergyConsumer', 'D');
                         BooleanNode(F, 'EnergyConsumer.grounded', FALSE);
                     end;
-                    CreateGuid(geoGUID);
-                    GuidNode(F, 'PowerSystemResource.Location', geoGUID);
+                    CreateUUID4(geoUUID);
+                    UuidNode(F, 'PowerSystemResource.Location', geoUUID);
                     EndInstance(F, 'EnergyConsumer');
-                    AttachLoadPhases(F, pLoad, geoGUID);
-                    WriteTerminals(F, pLoad, geoGUID, crsGUID);
+                    AttachLoadPhases(F, pLoad, geoUUID);
+                    WriteTerminals(F, pLoad, geoUUID, crsUUID);
                 end;
             pLoad := ActiveCircuit.Loads.Next;
         end;
@@ -2614,8 +2840,8 @@ begin
                 for i := 1 to NWires do
                 begin
                     pName1.LocalName := 'WP_' + pGeom.Name + '_' + IntToStr(i);
-                    CreateGuid(tmpGUID);
-                    pName1.GUID := tmpGUID;
+                    CreateUUID4(tmpUUID);
+                    pName1.UUID := tmpUUID;
                     StartInstance(F, 'WirePosition', pName1);
                     RefNode(F, 'WirePosition.WireSpacingInfo', pGeom);
                     IntegerNode(F, 'WirePosition.sequenceNumber', i);
@@ -2647,8 +2873,8 @@ begin
                 for i := 1 to NWires do
                 begin
                     pName1.LocalName := 'WP_' + pSpac.Name + '_' + IntToStr(i);
-                    CreateGuid(tmpGUID);
-                    pName1.GUID := tmpGUID;
+                    CreateUUID4(tmpUUID);
+                    pName1.UUID := tmpUUID;
                     StartInstance(F, 'WirePosition', pName1);
                     RefNode(F, 'WirePosition.WireSpacingInfo', pSpac);
                     IntegerNode(F, 'WirePosition.sequenceNumber', i);
@@ -2660,11 +2886,38 @@ begin
             pSpac := clsSpac.ElementList.Next;
         end;
 
+    // export the operational current limits that were created on-the-fly
+        for i := Low(OpLimitList) to High(OpLimitList) do
+        begin
+            pILimit := OpLimitList[i];
+            if pILimit = NIL then
+                break;
+            StartInstance(F, 'OperationalLimitSet', pILimit);
+            EndInstance(F, 'OperationalLimitSet');
+            pName1.LocalName := pILimit.LocalName + '_Norm';
+            CreateUUID4(tmpUUID);
+            pName1.UUID := tmpUUID;
+            StartInstance(F, 'CurrentLimit', pName1);
+            RefNode(F, 'OperationalLimit.OperationalLimitSet', pILimit);
+            RefNode(F, 'OperationalLimit.OperationalLimitType', pNormLimit);
+            DoubleNode(F, 'CurrentLimit.value', pILimit.NormAmps);
+            EndInstance(F, 'CurrentLimit');
+            pName2.LocalName := pILimit.LocalName + '_Emerg';
+            CreateUUID4(tmpUUID);
+            pName2.UUID := tmpUUID;
+            StartInstance(F, 'CurrentLimit', pName2);
+            RefNode(F, 'OperationalLimit.OperationalLimitSet', pILimit);
+            RefNode(F, 'OperationalLimit.OperationalLimitType', pEmergLimit);
+            DoubleNode(F, 'CurrentLimit.value', pILimit.EmergAmps);
+            EndInstance(F, 'CurrentLimit');
+        end;
+
         pName1.Free;
         pName2.Free;
 
-        FreeGuidList;
+        FreeUuidList;
         FreeBankList;
+        FreeOpLimitList;
 
         Writeln(F, '</rdf:RDF>');
 

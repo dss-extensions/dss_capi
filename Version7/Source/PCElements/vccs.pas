@@ -3,6 +3,7 @@ unit VCCS;
 {
   ----------------------------------------------------------
   Copyright (c) 2016, University of Pittsburgh
+  Copyright (c) 2019, Battelle Memorial Institute
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -52,13 +53,20 @@ type
         Fkv: Double; // scale voltage to HW pu input
         Fki: Double; // scale HW pu output to current
 
+        FrmsMode: Boolean; // indicates a phasor-domain PLL simulation
+        FmaxIpu: Double; // maximum RMS current in per-unit of rated
+        FvrmsTau: Double; // LPF time constant sensing Vrms
+        FirmsTau: Double; // LPF time constant producing Irms
+
         // Support for Dynamics Mode - PU of Vrated and BaseCurr
-        sVwave: Double;
-        sIwave: Double;
-        sIrms: Double;
-        sIpeak: Double;
-        sBP1out: Double;
-        sFilterout: Double;
+        // state variables for Dynamics Mode
+        s1: Double; // Vwave(t), or Vrms in phasor mode
+        s2: Double; // Iwave(t), or Ipwr in phasor mode
+        s3: Double; // Irms,     or Hout in phasor mode
+        s4: Double; // Ipeak,    or Irms in phasor mode
+        s5: Double; // BP1out,   or NA in phasor mode
+        s6: Double; // Hout,     or NA in phasor mode
+
         vlast: complex;
         y2: pDoubleArray;
         z: pDoubleArray;     // current digital filter history terms
@@ -68,6 +76,9 @@ type
         sIdxU: Integer; // ring buffer index for z and whist
         sIdxY: Integer; // ring buffer index for y2 (rms current)
         y2sum: Double;
+        procedure InitPhasorStates;
+        procedure IntegratePhasorStates;
+
     PROTECTED
         function Get_Variable(i: Integer): Double; OVERRIDE;
         procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
@@ -151,7 +162,7 @@ end;
 
 procedure TVCCS.DefineProperties;
 begin
-    NumPropsThisClass := 9;
+    NumPropsThisClass := 13;
 
     Numproperties := NumPropsThisClass;
     CountProperties;   // Get inherited property count
@@ -167,6 +178,10 @@ begin
     PropertyName[7] := 'bp2';
     PropertyName[8] := 'filter';
     PropertyName[9] := 'fsample';
+    PropertyName[10] := 'rmsmode';
+    PropertyName[11] := 'imaxpu';
+    PropertyName[12] := 'vrmstau';
+    PropertyName[13] := 'irmstau';
 
      // define Property help values
     PropertyHelp[1] := 'Name of bus to which source is connected.' + CRLF + 'bus1=busname' + CRLF + 'bus1=busname.1.2.3';
@@ -178,6 +193,10 @@ begin
     PropertyHelp[7] := 'XYCurve defining the output piece-wise linear block.';
     PropertyHelp[8] := 'XYCurve defining the digital filter coefficients (x numerator, y denominator).';
     PropertyHelp[9] := 'Sample frequency [Hz} for the digital filter.';
+    PropertyHelp[10] := 'True if only Hz is used to represent a phase-locked loop (PLL), ignoring the BP1, BP2 and time-domain transformations. Default is no.';
+    PropertyHelp[11] := 'Maximum output current in per-unit of rated; defaults to 1.1';
+    PropertyHelp[12] := 'Time constant in sensing Vrms for the PLL; defaults to 0.0015';
+    PropertyHelp[13] := 'Time constant in producing Irms from the PLL; defaults to 0.0015';
 
     ActiveProperty := NumPropsThisClass;
     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -263,6 +282,14 @@ begin
                 end;
                 9:
                     FsampleFreq := Parser.DblValue;
+                10:
+                    FrmsMode := InterpretYesNo(Param);
+                11:
+                    FmaxIpu := Parser.DblValue;
+                12:
+                    FvrmsTau := Parser.DblValue;
+                13:
+                    FirmsTau := Parser.DblValue;
             else
                 ClassEdit(ActiveVCCSObj, ParamPointer - NumPropsThisClass)
             end;
@@ -304,6 +331,10 @@ begin
             Fbp2_name := OtherVCCS.Fbp2_name;
             Ffilter_name := OtherVCCS.Ffilter_name;
             FsampleFreq := OtherVCCS.FsampleFreq;
+            FrmsMode := OtherVCCS.FrmsMode;
+            FmaxIpu := OtherVCCS.FmaxIpu;
+            FvrmsTau := OtherVCCS.FvrmsTau;
+            FirmsTau := OtherVCCS.FirmsTau;
 
             ClassMakeLike(OtherVCCS); // set spectrum,  base frequency
 
@@ -337,6 +368,10 @@ begin
     FsampleFreq := 5000.0;
     Fkv := 1.0;
     Fki := 1.0;
+    FrmsMode := FALSE;
+    FmaxIpu := 1.1;
+    FvrmsTau := 0.0015;
+    FirmsTau := 0.0015;
 
     Fwinlen := 0;
     Ffilter_name := '';
@@ -449,9 +484,19 @@ begin
 //  IterminalUpdated := FALSE;
     if ActiveSolutionObj.IsDynamicModel then
     begin
-        for i := 1 to Fnphases do
+        if FrmsMode then
         begin
-            Curr^[i] := pdegtocomplex(sIrms * BaseCurr, cdang(Vterminal^[i]));
+            for i := 1 to Fnphases do
+            begin
+                Curr^[i] := pdegtocomplex(s4 * BaseCurr, cdang(Vterminal^[i]));
+            end;
+        end
+        else
+        begin
+            for i := 1 to Fnphases do
+            begin
+                Curr^[i] := pdegtocomplex(s3 * BaseCurr, cdang(Vterminal^[i]));
+            end;
         end;
     end
     else
@@ -491,6 +536,10 @@ begin
     PropertyValue[7] := 'NONE';
     PropertyValue[8] := 'NONE';
     PropertyValue[9] := '5000';
+    PropertyValue[10] := 'no';
+    PropertyValue[11] := '1.1';
+    PropertyValue[12] := '0.0015';
+    PropertyValue[13] := '0.0015';
     inherited  InitPropertyValues(NumPropsThisClass);
 end;
 
@@ -505,6 +554,41 @@ begin
 end;
 
 // support for DYNAMICMODE
+// NB: in phasor mode, use load convention for OpenDSS
+procedure TVCCSObj.InitPhasorStates;
+var
+    i, k: Integer;
+begin
+    ComputeIterminal;
+    s1 := cabs(Vterminal^[1]) / Vrated;
+    s4 := cabs(Iterminal^[1]) / BaseCurr;
+    s2 := s4;
+    s3 := s4;
+    s5 := 0;
+    s6 := 0;
+    vlast := cdivreal(Vterminal^[1], Vrated);
+
+  // initialize the history terms for HW model source convention
+    for i := 1 to Ffiltlen do
+    begin
+        whist[i] := s1;
+        wlast[i] := s1;
+    end;
+    for i := 1 to Fwinlen do
+    begin
+        k := i - Fwinlen + Ffiltlen;
+        if k > 0 then
+        begin
+            z[k] := s4; // HW history with load convention
+            zlast[k] := z[k];
+        end;
+    end;
+  // initialize the ring buffer indices; these increment by 1 before actual use
+    sIdxU := 0;
+    sIdxY := 0;
+end;
+
+// support for DYNAMICMODE
 // NB: The test data and HW model used source convention (I and V in phase)
 //     However, OpenDSS uses the load convention
 procedure TVCCSObj.InitStateVars;
@@ -513,15 +597,20 @@ var
     i, k: Integer;
 begin
   // initialize outputs from the terminal conditions
+    if FrmsMode then
+    begin
+        InitPhasorStates;
+        exit;
+    end;
     ComputeIterminal;
     iang := cang(Iterminal^[1]);
     vang := cang(Vterminal^[1]);
-    sVwave := cabs(Vterminal^[1]) / Vrated;
-    sIrms := cabs(Iterminal^[1]) / BaseCurr;
-    sIwave := sIrms;
-    sIpeak := sIrms;
-    sBP1out := 0;
-    sFilterout := 0;
+    s1 := cabs(Vterminal^[1]) / Vrated;
+    s3 := cabs(Iterminal^[1]) / BaseCurr;
+    s2 := s3;
+    s4 := s3;
+    s5 := 0;
+    s6 := 0;
     vlast := cdivreal(Vterminal^[1], Vrated);
 
   // initialize the history terms for HW model source convention
@@ -531,13 +620,13 @@ begin
     begin
         wt := vang - wd * (Ffiltlen - i);
         whist[i] := 0;
-        whist[i] := Fbp1.GetYValue(sVwave * cos(wt));
+        whist[i] := Fbp1.GetYValue(s1 * cos(wt));
         wlast[i] := whist[i];
     end;
     for i := 1 to Fwinlen do
     begin
         wt := iang - wd * (Fwinlen - i);
-        val := sIrms * cos(wt);  // current by passive sign convention
+        val := s3 * cos(wt);  // current by passive sign convention
         y2[i] := val * val;
         k := i - Fwinlen + Ffiltlen;
         if k > 0 then
@@ -552,6 +641,66 @@ begin
     sIdxY := 0;
 end;
 
+procedure TVCCSObj.IntegratePhasorStates;
+var
+    vpu, ipwr, imax, h, d: Double;
+    iu, i, k, nstep, corrector: Integer;
+begin
+    ComputeIterminal;
+    vpu := cabs(Vterminal^[1]) / Vrated;
+    if vpu > 0.0 then
+    begin
+        h := ActiveSolutionObj.DynaVars.h;
+        corrector := ActiveSolutionObj.DynaVars.IterationFlag;
+        nstep := trunc(1e-6 + h * FSampleFreq);
+    // Vrms from LPF
+        d := vpu - s1;
+        s1 := s1 + d * (1.0 - exp(-h / FvrmsTau));
+    // rms current to maintain power
+        ipwr := BaseCurr / s1;
+        imax := FmaxIpu * Irated;
+        if ipwr > imax then
+            ipwr := imax;
+        s2 := ipwr / BaseCurr;
+    // Hout
+//    s3 := s2;
+        iu := sIdxU;
+        for k := 1 to FFiltlen do
+        begin
+            z[k] := zlast[k];
+            whist[k] := wlast[k];
+        end;
+        for i := 1 to nstep do
+        begin
+            iu := OffsetIdx(iu, 1, Ffiltlen);
+            whist[iu] := s2;
+      // apply the filter and second PWL block
+            z[iu] := 0;
+            for k := 1 to Ffiltlen do
+            begin
+                z[iu] := z[iu] + Ffilter.Yvalue_pt[k] * whist[MapIdx(iu - k + 1, Ffiltlen)];
+            end;
+            for k := 2 to Ffiltlen do
+            begin
+                z[iu] := z[iu] - Ffilter.Xvalue_pt[k] * z[MapIdx(iu - k + 1, Ffiltlen)];
+            end;
+            s3 := z[iu];
+        end;
+    // Irms through LPF
+        d := s3 - s4;
+        s4 := s4 + d * (1.0 - exp(-h / FirmsTau));
+        if corrector = 1 then
+        begin
+            sIdxU := iu;
+            for k := 1 to FFiltlen do
+            begin
+                zlast[k] := z[k];
+                wlast[k] := whist[k];
+            end;
+        end;
+    end;
+end;
+
 // this is called twice per dynamic time step; predictor then corrector
 procedure TVCCSObj.IntegrateStates;
 var
@@ -561,6 +710,12 @@ var
     vnow: complex;
     iu, iy: Integer; // local copies of sIdxU and sIdxY for predictor
 begin
+    if FrmsMode then
+    begin
+        IntegratePhasorStates;
+        exit;
+    end;
+
     ComputeIterminal;
 
     t := ActiveSolutionObj.DynaVars.t;
@@ -603,8 +758,8 @@ begin
         end;
         y := Fbp2.GetYValue(z[iu]);
     // updating outputs
-        if (corrector = 1) and (abs(y) > sIpeak) then
-            sIpeak := abs(y); // catching the fastest peaks
+        if (corrector = 1) and (abs(y) > s4) then
+            s4 := abs(y); // catching the fastest peaks
     // update the RMS
         iy := OffsetIdx(iy, 1, Fwinlen);
         y2[iy] := y * y;  // brute-force RMS update
@@ -613,7 +768,7 @@ begin
             y2sum := 0.0;
             for k := 1 to Fwinlen do
                 y2sum := y2sum + y2[k];
-            sIrms := sqrt(2.0 * y2sum / Fwinlen); // TODO - this is the magnitude, what about angle?
+            s3 := sqrt(2.0 * y2sum / Fwinlen); // TODO - this is the magnitude, what about angle?
         end;
     end;
 
@@ -622,10 +777,10 @@ begin
         sIdxU := iu;
         sIdxY := iy;
         vlast := vnow;
-        sVwave := vin;
-        sBP1out := whist[sIdxU];
-        sFilterout := z[sIdxU];
-        sIwave := y;
+        s1 := vin;
+        s5 := whist[sIdxU];
+        s6 := z[sIdxU];
+        s2 := y;
         for k := 1 to FFiltlen do
         begin
             zlast[k] := z[k];
@@ -650,19 +805,39 @@ end;
 function TVCCSObj.VariableName(i: Integer): String;
 begin
     Result := '';
-    case i of
-        1:
-            Result := 'Vwave';
-        2:
-            Result := 'Iwave';
-        3:
-            Result := 'Irms';
-        4:
-            Result := 'Ipeak';
-        5:
-            Result := 'bp1out';
-        6:
-            Result := 'filterout';
+    if FrmsMode then
+    begin
+        case i of
+            1:
+                Result := 'Vrms';
+            2:
+                Result := 'Ipwr';
+            3:
+                Result := 'Hout';
+            4:
+                Result := 'Irms';
+            5:
+                Result := 'NA';
+            6:
+                Result := 'NA';
+        end;
+    end
+    else
+    begin
+        case i of
+            1:
+                Result := 'Vwave';
+            2:
+                Result := 'Iwave';
+            3:
+                Result := 'Irms';
+            4:
+                Result := 'Ipeak';
+            5:
+                Result := 'BP1out';
+            6:
+                Result := 'Hout';
+        end;
     end;
 end;
 
@@ -671,17 +846,17 @@ begin
     Result := 0;
     case i of
         1:
-            Result := sVwave;
+            Result := s1;
         2:
-            Result := sIwave;
+            Result := s2;
         3:
-            Result := sIrms;
+            Result := s3;
         4:
-            Result := sIpeak;
+            Result := s4;
         5:
-            Result := sBP1out;
+            Result := s5;
         6:
-            Result := sFilterout;
+            Result := s6;
     end;
 end;
 
@@ -689,17 +864,17 @@ procedure TVCCSObj.Set_Variable(i: Integer; Value: Double);
 begin
     case i of
         1:
-            sVwave := Value;
+            s1 := Value;
         2:
-            sIwave := Value;
+            s2 := Value;
         3:
-            sIrms := Value;
+            s3 := Value;
         4:
-            sIpeak := Value;
+            s4 := Value;
         5:
-            sBP1out := Value;
+            s5 := Value;
         6:
-            sFilterout := Value;
+            s6 := Value;
     end;
 end;
 

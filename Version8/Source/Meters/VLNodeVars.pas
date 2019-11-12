@@ -56,9 +56,11 @@ type
         vl_CC_switch_dg: Boolean;// cooperate control switch. true, cooperate control is on
         vl_PF_flag_dg: Integer;//1, real power control is on
         vl_QV_flag_dg: Integer;//1, volt/var control is on
+        vl_volt_thrd_dg: Double;
         //vl_phase_select
         vl_Alpha_dg,
         vl_Alpha1_dg, vl_Alpha2_dg, vl_Alpha3_dg,
+        vl_Alpha_dgn,
         vl_Gradient_dg, vl_Gradient1_dg, vl_Gradient2_dg, vl_Gradient3_dg: Double;
 
         // communication array for alpha and others can be improved
@@ -93,6 +95,10 @@ type
         vl_P_Di3: Double; //
        // vl_NodeRef : integer;// for global use
 
+       // attack and defense
+        d_atk, z_dfs: Double;
+        z_dfsn: Double;
+        d_atk0: Double;
     end;
     pNodeArray = ^NodeArray;
     NodeArray = array [1..33] of TVLNodeVars;

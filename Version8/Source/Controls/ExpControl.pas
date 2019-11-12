@@ -34,7 +34,7 @@ INTERFACE
       private
             ControlActionHandle: Integer;
             ControlledElement: Array of TPVSystemObj;    // list of pointers to controlled PVSystem elements
-            MonitoredElement : TDSSCktElement;  // First PVSystem element for now
+             // MonitoredElement is First PVSystem element for now
 
             // PVSystemList information
             FListSize:Integer;
@@ -186,14 +186,14 @@ Begin
                         'For Category A inverters per P1547/D7, set this value to 0.25.'+
                         'Regardless of QmaxLag, the reactive power injection is still '+
                         'limited by dynamic headroom when actual real power output exceeds 0%';
-     PropertyHelp[10] := '{Yes/True | No/False*} Default is No for ExpControl. Log control actions to Eventlog.';
+     PropertyHelp[10] := '{Yes/True* | No/False} Default is No for ExpControl. Log control actions to Eventlog.';
      PropertyHelp[11] := 'Convergence parameter; Defaults to 0.7. '+CRLF+CRLF+
                          'Sets the maximum change (in per unit) from the prior var output level to the desired var output level during each control iteration. '+
                          'If numerical instability is noticed in solutions such as var sign changing from one control iteration to the next and voltages oscillating between two values with some separation, '+
                          'this is an indication of numerical instability (use the EventLog to diagnose). '+
                          'If the maximum control iterations are exceeded, and no numerical instability is seen in the EventLog of via monitors, then try increasing the value of this parameter to reduce the number '+
                          'of control iterations needed to achieve the control criteria, and move to the power flow solution.';
-     PropertyHelp[12] := '{Yes/True | No/False*} Default is No for ExpControl.' + CRLF + CRLF +
+     PropertyHelp[12] := '{Yes/True* | No/False} Default is No for ExpControl.' + CRLF + CRLF +
                          'Curtails real power output as needed to meet the reactive power requirement. ' +
                          'IEEE1547-2018 requires Yes, but earlier versions of OpenDSS only implemented No, ' +
                          'so the default is No for backward compatibility of OpenDSS models.';
@@ -209,7 +209,7 @@ Begin
     WITH ActiveCircuit[ActiveActor] Do
     Begin
       ActiveCktElement := TExpControlObj.Create(Self, ObjName);
-      Result := AddobjectToList(ActiveDSSObject[ActiveActor]);
+      Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
     End;
 End;
 
@@ -225,11 +225,11 @@ Begin
   ActiveExpControlObj := ElementList.Active;
   ActiveCircuit[ActorID].ActiveCktElement := ActiveExpControlObj;
   Result := 0;
-  WITH ActiveExpControlObj do Begin
+  WITH ActiveExpControlObj Do Begin
     ParamPointer := 0;
     ParamName := Parser[ActorID].NextParam;
     Param := Parser[ActorID].StrValue;
-    WHILE Length(Param)>0 do Begin
+    WHILE Length(Param)>0 Do Begin
       IF Length(ParamName) = 0 THEN Inc(ParamPointer)
       ELSE ParamPointer := CommandList.GetCommand(ParamName);
 
@@ -237,7 +237,7 @@ Begin
       THEN PropertyValue[ParamPointer]:= Param;
 
       CASE ParamPointer OF
-        0: doSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
+        0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
         1: begin
            InterpretTStringListArray(Param, FPVSystemNameList);
            FPVSystemPointerList.Clear; // clear this for resetting on first sample
@@ -274,7 +274,7 @@ Begin
    {See if we can find this ExpControl name in the present collection}
    OtherExpControl := Find(ExpControlName);
    IF OtherExpControl<>Nil THEN
-   WITH ActiveExpControlObj do Begin
+   WITH ActiveExpControlObj Do Begin
 
       NPhases := OtherExpControl.Fnphases;
       NConds  := OtherExpControl.Fnconds; // Force Reallocation of terminal stuff
@@ -403,7 +403,7 @@ Begin
          Nphases := ControlledElement[i].NPhases;  // TEMC TODO - what if these are different sizes (same concern exists with InvControl)
          Nconds  := Nphases;
          if (ControlledElement[i] = nil) then
-            doErrorMsg('ExpControl: "' + Self.Name + '"',
+            DoErrorMsg('ExpControl: "' + Self.Name + '"',
               'Controlled Element "' + FPVSystemNameList.Strings[i-1] + '" Not Found.',
               ' PVSystem object must be defined previously.', 361);
          if ControlledElement[i].Yorder > maxord then maxord := ControlledElement[i].Yorder;
@@ -440,7 +440,7 @@ Var
    i:Integer;
 Begin
 // Control is a zero current source
-  For i := 1 to Fnconds do Curr^[i] := CZERO;
+  For i := 1 to Fnconds Do Curr^[i] := CZERO;
 End;
 
 PROCEDURE TExpControlObj.GetInjCurrents(Curr: pComplexArray; ActorID : Integer);
@@ -448,7 +448,7 @@ Var
    i:Integer;
 Begin
 // Control is a zero current source
-  For i := 1 to Fnconds do Curr^[i] := CZERO;
+  For i := 1 to Fnconds Do Curr^[i] := CZERO;
 End;
 
 PROCEDURE TExpControlObj.DumpProperties(Var F:TextFile; Complete:Boolean);
@@ -457,8 +457,8 @@ VAR
 Begin
     Inherited DumpProperties(F,Complete);
 
-    WITH ParentClass do
-     For i := 1 to NumProperties do
+    WITH ParentClass Do
+     For i := 1 to NumProperties Do
      Begin
         Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[i]);
      End;
@@ -469,12 +469,12 @@ Begin
     End;
 End;
 
-PROCEDURE TExpControlObj.doPendingAction(Const Code, ProxyHdl:Integer;ActorID : Integer);
+PROCEDURE TExpControlObj.DoPendingAction(Const Code, ProxyHdl:Integer;ActorID: Integer);
 VAR
   i             :Integer;
-  Qset, DeltaQ  :double;
-  Qmaxpu, Qpu   :double;
-  Qbase         :double;
+  Qset, DeltaQ  :Double;
+  Qmaxpu, Qpu   :Double;
+  Qbase         :Double;
   Qinvmaxpu     :Double;
   Plimit        :Double;
   PVSys         :TPVSystemObj;
@@ -494,7 +494,7 @@ BEGIN
         // look up Qpu from the slope crossing at Vreg, and add the bias
         Qpu := -FSlope * (FPresentVpu[i] - FVregs[i]) + FQbias;
         If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+','+PVSys.Name,
-          Format(' Setting Qpu= %.5g at FVreg= %.5g, Vpu= %.5g', [Qpu, FVregs[i],FPresentVpu[i]]),ActorID);
+          Format(' Setting Qpu= %.5g at FVreg= %.5g, Vpu= %.5g', [Qpu, FVregs[i],FPresentVpu[i]]), ActorID);
       end;
 
       // apply limits on Qpu, then define the target in kVAR
@@ -512,7 +512,7 @@ BEGIN
         Plimit := Qbase * Sqrt (1 - Qpu * Qpu);
         if Plimit < PVSys.PresentkW then begin
           If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+','+PVSys.Name,
-            Format(' curtailing %.3f to %.3f kW', [PVSys.PresentkW, Plimit]), ActorID);
+            Format(' curtailing %.3f to %.3f kW', [PVSys.PresentkW, Plimit]),ActorID);
           PVSys.PresentkW := Plimit;
           PVSys.puPmpp := Plimit/PVSys.Pmpp;
         end;
@@ -525,7 +525,7 @@ BEGIN
       If PVSys.Presentkvar <> Qset Then PVSys.Presentkvar := Qset;
       If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name +','+ PVSys.Name,
                              Format(' Setting PVSystem output kvar= %.5g',
-                             [PVSys.Presentkvar]),ActorID);
+                             [PVSys.Presentkvar]), ActorID);
       FPriorQ[i] := Qset;
       FPriorVpu[i] := FPresentVpu[i];
       ActiveCircuit[ActorID].Solution.LoadsNeedUpdating := TRUE;
@@ -549,14 +549,14 @@ begin
   If (FListSize>0) then Begin
     // If an ExpControl controls more than one PV, control each one
     // separately based on the PVSystem's terminal voltages, etc.
-    for i := 1 to FPVSystemPointerList.ListSize Do begin
+    for i := 1 to FPVSystemPointerList.ListSize do begin
       PVSys := ControlledElement[i];   // Use local variable in loop
       // Calculate the present average voltage  magnitude
       PVSys.ComputeVTerminal(ActorID);
-      for j := 1 to PVSys.Yorder DO cBuffer[j] := PVSys.Vterminal^[j];
+      for j := 1 to PVSys.Yorder do cBuffer[j] := PVSys.Vterminal^[j];
       BasekV := ActiveCircuit[ActorID].Buses^[PVSys.terminals^[1].busRef].kVBase;
       Vpresent := 0;
-      For j := 1 to PVSys.NPhases do Vpresent := Vpresent + Cabs(cBuffer[j]);
+      For j := 1 to PVSys.NPhases Do Vpresent := Vpresent + Cabs(cBuffer[j]);
       FPresentVpu[i] := (Vpresent / PVSys.NPhases) / (basekV * 1000.0);
       // if initializing with Vreg=0 in static mode, we want to FIND Vreg
       if (ActiveCircuit[ActorID].Solution.ControlMode = CTRLSTATIC) and (FVregInit <= 0.0) then
@@ -572,17 +572,17 @@ begin
       end;
       PVSys.VWmode := FALSE;
       if ((Verr > FVoltageChangeTolerance) or (Qerr > FVarChangeTolerance) or
-        (ActiveCircuit[ActorID].Solution.ControlIteration = 1)) then begin
+          (ActiveCircuit[ActorID].Solution.ControlIteration = 1)) then begin
         FWithinTol[i] := False;
         Set_PendingChange(CHANGEVARLEVEL,i);
-        With  ActiveCircuit[ActorID].Solution.DynaVars do
+        With  ActiveCircuit[ActorID].Solution.DynaVars Do
           ControlActionHandle := ActiveCircuit[ActorID].ControlQueue.Push (intHour, t + TimeDelay, PendingChange[i], 0, Self, ActorID);
         If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
-          (' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]),ActorID);
+          (' outside Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]), ActorID);
       end else begin
         FWithinTol[i] := True;
         If ShowEventLog Then AppendtoEventLog('ExpControl.' + Self.Name+' '+PVSys.Name, Format
-          (' within Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]),ActorID);
+          (' within Hit Tolerance, Verr= %.5g, Qerr=%.5g', [Verr,Qerr]), ActorID);
       end;
     end;  {For}
   end; {If FlistSize}
@@ -622,13 +622,13 @@ begin
     SetLength(FTargetQ,FListSize+1);
     SetLength(FWithinTol, FListSize+1);
     SetLength(FVregs, FListSize+1);
-    For i := 1 to FListSize do Begin
+    For i := 1 to FListSize Do Begin
       PVSys := PVSysClass.Find(FPVSystemNameList.Strings[i-1]);
       If Assigned(PVSys) and PVSys.Enabled Then FPVSystemPointerList.New := PVSys;
     End;
   End Else Begin
      {Search through the entire circuit for enabled pvsysten objects and add them to the list}
-         For i := 1 to PVSysClass.ElementCount do Begin
+         For i := 1 to PVSysClass.ElementCount Do Begin
             PVSys :=  PVSysClass.ElementList.Get(i);
             If PVSys.Enabled Then FPVSystemPointerList.New := PVSys;
             FPVSystemNameList.Add(PVSys.Name);
@@ -648,7 +648,7 @@ begin
     End;  {Else}
 
   //Initialize arrays
-  For i := 1 to FlistSize do begin
+  For i := 1 to FlistSize Do begin
 //    PVSys := PVSysClass.Find(FPVSystemNameList.Strings[i-1]);
 //    Set_NTerms(PVSys.NTerms); // TODO - what is this for?
     FPriorVpu[i] := 0.0;
@@ -698,7 +698,7 @@ Begin
     Exit;
   End;
   Result := '['+ FPVSystemNameList.Strings[0];
-  For i := 1 to FListSize-1 do Begin
+  For i := 1 to FListSize-1 Do Begin
     Result := Result + ', ' + FPVSystemNameList.Strings[i];
   End;
   Result := Result + ']';  // terminate the array
