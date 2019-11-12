@@ -186,14 +186,14 @@ Begin
                         'For Category A inverters per P1547/D7, set this value to 0.25.'+
                         'Regardless of QmaxLag, the reactive power injection is still '+
                         'limited by dynamic headroom when actual real power output exceeds 0%';
-     PropertyHelp[10] := '{Yes/True* | No/False} Default is No for ExpControl. Log control actions to Eventlog.';
+     PropertyHelp[10] := '{Yes/True | No/False*} Default is No for ExpControl. Log control actions to Eventlog.';
      PropertyHelp[11] := 'Convergence parameter; Defaults to 0.7. '+CRLF+CRLF+
                          'Sets the maximum change (in per unit) from the prior var output level to the desired var output level during each control iteration. '+
                          'If numerical instability is noticed in solutions such as var sign changing from one control iteration to the next and voltages oscillating between two values with some separation, '+
                          'this is an indication of numerical instability (use the EventLog to diagnose). '+
                          'If the maximum control iterations are exceeded, and no numerical instability is seen in the EventLog of via monitors, then try increasing the value of this parameter to reduce the number '+
                          'of control iterations needed to achieve the control criteria, and move to the power flow solution.';
-     PropertyHelp[12] := '{Yes/True* | No/False} Default is No for ExpControl.' + CRLF + CRLF +
+     PropertyHelp[12] := '{Yes/True | No/False*} Default is No for ExpControl.' + CRLF + CRLF +
                          'Curtails real power output as needed to meet the reactive power requirement. ' +
                          'IEEE1547-2018 requires Yes, but earlier versions of OpenDSS only implemented No, ' +
                          'so the default is No for backward compatibility of OpenDSS models.';

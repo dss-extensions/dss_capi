@@ -11,20 +11,22 @@ interface
 
 type
 
+    TUuid = TGuid;    // this is a GUID compliant to RFC 4122, v4
+
     TNamedObject = class(TObject)
     PRIVATE
         PName: String;  // path name, or class name for DSS
         LName: String;  // localName is unique within a class, like the old FName
         DName: String;  // for optional display, does not have to be unique
-        pGuid: ^TGuid;
+        pUuid: ^TUuid;  // compliant to RFC 4122, v4
 
         function Get_QualifiedName: String;
         function Get_DisplayName: String;
         procedure Set_DisplayName(const Value: String);
-        function Get_GUID: TGuid;
+        function Get_UUID: TUuid;
         function Get_ID: String;
         function Get_CIM_ID: String;
-        procedure Set_GUID(const Value: TGUID);
+        procedure Set_UUID(const Value: TUuid);
     PUBLIC
         constructor Create(ClassName: String);
         destructor Destroy; OVERRIDE;
@@ -33,12 +35,15 @@ type
         property LocalName: String READ LName WRITE LName;
         property QualifiedName: String READ Get_QualifiedName;
         property DisplayName: String READ Get_DisplayName WRITE Set_DisplayName;
-        property GUID: TGuid READ Get_GUID WRITE Set_GUID;
+        property UUID: TUuid READ Get_UUID WRITE Set_UUID;
         property ID: String READ Get_ID;
         property CIM_ID: String READ Get_CIM_ID;
     end;
 
-function GUIDToCIMString(GUID: TGUID): String;
+function CreateUUID4(out UUID: TUuid): Integer;
+function StringToUUID(const S: String): TUuid;
+function UUIDToString(const UUID: TUuid): String;
+function UUIDToCIMString(UUID: TUuid): String;
 
 implementation
 
@@ -46,11 +51,28 @@ uses
     Sysutils,
     StrUtils;
 
-function GUIDToCIMString(GUID: TGUID): String;
+function CreateUUID4(out UUID: TUuid): Integer;
+begin
+    Result := CreateGUID(UUID);
+    UUID.D3 := (UUID.D3 and $0fff) or $4000;   // place a 4 at character 13
+    UUID.D4[0] := (UUID.D4[0] and $3f) or $80; // character 17 to be 8, 9, A or B
+end;
+
+function StringToUUID(const S: String): TUuid;
+begin
+    Result := StringToGUID(S);
+end;
+
+function UUIDToString(const UUID: TUuid): String;
+begin
+    Result := GuidToString(UUID);
+end;
+
+function UUIDToCIMString(UUID: TUuid): String;
 var
     s: String;
 begin
-    s := GUIDToString(GuID);
+    s := GUIDToString(UUID);
     Result := '_' + MidStr(s, 2, Length(s) - 2);
 end;
 
@@ -60,13 +82,13 @@ begin
     PName := ClassName;
     LName := '';
     DName := '';
-    pGuid := NIL;
+    pUuid := NIL;
 end;
 
 destructor TNamedObject.Destroy;
 begin
-    if pGuid <> NIL then
-        Dispose(pGuid);
+    if pUuid <> NIL then
+        Dispose(pUuid);
     inherited Destroy;
 end;
 
@@ -89,31 +111,31 @@ begin
     Result := PName + '.' + LName
 end;
 
-procedure TNamedObject.Set_GUID(const Value: TGUID);
+procedure TNamedObject.Set_UUID(const Value: TUuid);
 begin
-    if pGuid = NIL then
-        New(pGuid);
-    pGuid^ := Value;
+    if pUuid = NIL then
+        New(pUuid);
+    pUuid^ := Value;
 end;
 
-function TNamedObject.Get_GUID: TGuid;
+function TNamedObject.Get_UUID: TUuid;
 begin
-    if pGuid = NIL then
+    if pUuid = NIL then
     begin
-        New(pGuid);
-        CreateGuid(pGuid^);
+        New(pUuid);
+        CreateUUID4(pUuid^);
     end;
-    Result := pGuid^;
+    Result := pUuid^;
 end;
 
 function TNamedObject.Get_ID: String;
 begin
-    Result := GUIDToString(Get_GUID);
+    Result := GUIDToString(Get_UUID);
 end;
 
 function TNamedObject.Get_CIM_ID: String;
 begin
-    Result := GUIDToCIMString(Get_GUID);
+    Result := UUIDToCIMString(Get_UUID);
 end;
 
 end.

@@ -38,7 +38,7 @@ procedure ExportY(FileNm: String; TripletOpt: Boolean);
 procedure ExportSeqZ(FileNm: String);
 procedure ExportBusCoords(FileNm: String);
 procedure ExportLosses(FileNm: String);
-procedure ExportGuids(FileNm: String);
+procedure ExportUuids(FileNm: String);
 procedure ExportCounts(FileNm: String);
 procedure ExportSummary(FileNm: String);
 procedure ExportProfile(FileNm: String; PhasesToPlot: Integer);
@@ -3004,7 +3004,7 @@ begin
 
 end;
 
-procedure ExportGuids(FileNm: String);
+procedure ExportUuids(FileNm: String);
 var
     F: TextFile;
     clsCode: TLineCode;

@@ -84,7 +84,7 @@ interface
          FUNCTION DoZscRefresh(ActorID : Integer):Integer;
 
          FUNCTION DoBusCoordsCmd(SwapXY:Boolean; CoordType  : Integer):Integer;
-         FUNCTION DoGuidsCmd:Integer;
+         FUNCTION DoUuidsCmd:Integer;
          FUNCTION DoSetLoadAndGenKVCmd:Integer;
          FUNCTION DoVarValuesCmd:Integer;
          FUNCTION DoVarNamesCmd :Integer;
@@ -3631,10 +3631,10 @@ Begin
 
 End;
 
-FUNCTION DoGuidsCmd:Integer;
+FUNCTION DoUuidsCmd:Integer;
 Var
   F:TextFile;
-  ParamName, Param, S, NameVal, GuidVal, DevClass, DevName: String;
+  ParamName, Param, S, NameVal, UuidVal, DevClass, DevName: String;
   pName: TNamedObject;
 Begin
   Result := 0;
@@ -3649,10 +3649,10 @@ Begin
         pName := nil;
         CmdString := S;
         NextParam;  NameVal := StrValue;
-        NextParam;  GuidVal := StrValue;
-        // format the GUID properly
-        if Pos ('{', GuidVal) < 1 then
-          GuidVal := '{' + GuidVal + '}';
+        NextParam;  UuidVal := StrValue;
+        // format the UUID properly
+        if Pos ('{', UuidVal) < 1 then
+          UuidVal := '{' + UuidVal + '}';
         // find this object
         ParseObjectClassAndName (NameVal, DevClass, DevName);
         IF CompareText (DevClass, 'circuit')=0 THEN begin
@@ -3665,8 +3665,8 @@ Begin
             pName := ActiveDSSClass[ActiveActor].GetActiveObj;
           end;
         end;
-        // re-assign its GUID
-        if pName <> nil then pName.GUID := StringToGuid (GuidVal);
+        // re-assign its UUID
+        if pName <> nil then pName.UUID := StringToUuid (UuidVal);
       End;
     End;
   Finally
