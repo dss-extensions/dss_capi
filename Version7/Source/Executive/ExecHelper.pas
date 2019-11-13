@@ -470,7 +470,7 @@ Begin
 
             if strings = nil then 
             begin
-                // Tradicional TextFile is used
+                // Traditional TextFile is used
                 WHILE Not ( (EOF(Fin)) or (Redirect_Abort) ) DO
                 Begin
                     Readln(Fin, InputLine);

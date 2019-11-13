@@ -18,12 +18,12 @@ Caso procure integração com outras linguagens de programação:
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) para .NET/C#, no momento apenas Windows. Em breve também será possível usá-lo via COM.
 - [DSS MATLAB](http://github.com/dss-extensions/dss_sharp/) permite integração multi-plataforma (Windows, Linux, MacOS) bastante compatível com o módulo COM, de fato contorna algumas dificuldades de COM.
 
-Esta é a versão 0.10.3, baseada no OpenDSS sVN r2609 (um pouco nova que o OpenDSS v8.5.9.1 e v7.6.5.86).
+Esta é a versão 0.10.4, baseada no OpenDSS SVN r2761 (um pouco nova que o OpenDSS v8.6.5.3 e v7.6.5.91).
 
 Apesar de o objetivo principal (compatibilidade com COM) ter sido alcançado, este é um sempre um trabalho em andamento.
 *Observe que, enquanto a interface clássica (v7 + aprimoramentos) é estável, a interface para o OpenDSS-PM (v8, baseada em atores e execução paralela) ainda é experimental.* A partir da versão 0.10, a interface v8 está bem mais estável que na versão 0.9.8 da DSS C-API.
 
-Ao invés de usar parâmetros numéricos como na interface DDLL oficial, cada propriedade COM foi exposta como um par de funções. Por exemplo, a propriedade `kVA` das cargas é exposta como:
+Ao invés de usar parâmetros numéricos como na interface DDLL oficial (OpenDSSDirect), cada propriedade COM foi exposta como um par de funções. Por exemplo, a propriedade `kVA` das cargas é exposta como:
 
 ```
     double Loads_Get_kva();
@@ -42,7 +42,8 @@ A partir de 2019-03-05, este repositório contém todo o código fonte em lingua
 
 Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) para listagem detalhada.
 
-- **2019-05-22 / version 0.10.3: Algumas correções importantes, desempenho geral bastante melhorado, e novas funcionalidadesSome important fixes, better general performance, novas funções estendidas, e novas funcionalidades portadas do módulo COM e da versão atual do OpenDSS.**
+- **2019-11-XX / version 0.10.4: Apenas manutenção: Corrige acesso a arquivos com caminho longo no Linux, e inclui alterações portadas da versão COM e do código do OpenDSS oficial.**
+- 2019-05-22 / version 0.10.3: Algumas correções importantes, desempenho geral bastante melhorado, novas funções estendidas, e novas funcionalidades portadas do módulo COM e da versão atual do OpenDSS.
 - 2019-03-05: o repositório Git `electricdss-src` foi integrado diretamente em `dss_capi`.
 - 2019-02-28 / version 0.10.2: Implementa a função `CtrlQueue_Push` (faltante na versão anterior); modificações em `LoadShapes` para melhor desempenho e mais validação; introduz `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` para (desa)ativar chamadas ao editor externo.
 - 2019-02-12 / version 0.10.1: Verificação de erros mais ampla, introdução da função `Error_Get_NumberPtr`, correções e melhor tratamento em `Meters`.

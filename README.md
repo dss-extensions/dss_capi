@@ -18,7 +18,7 @@ If you are looking for the bindings to other languages:
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) is available for .NET/C#, also mimics the COM classes, but Windows-only at the moment. Soon it will be possible to use it via COM too.
 - [DSS MATLAB](http://github.com/dss-extensions/dss_sharp/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible bastante with the COM classes.
 
-Version 0.10.3, based on OpenDSS revision 2609 (which is slightly newer than OpenDSS v8.5.9.1 and v7.6.5.86)
+Version 0.10.4, based on OpenDSS revision 2761 (which is slightly newer than OpenDSS v8.6.5.3 and v7.6.5.91)
 
 While the main objective of COM compatibility has been reach, this is still a work-in-progress and is subject to changes. 
 *Note that, while the interface with OpenDSS is stable (v7, classic version), the OpenDSS-PM (v8, actor-based parallel machine version) interface is experimental in our builds.* From version 0.10, the v8 interface is a lot more stable than in 0.9.8.
@@ -40,7 +40,8 @@ Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) for a detailed list.
 
-- **2019-05-22 / version 0.10.3: Some important fixes, better general performance, new API extensions, new features ported from COM and the OpenDSS version 8 codebase.**
+- **2019-11-XX / version 0.10.4: Maintenance release. Fixes issue with long paths on Linux, includes some changes ported from COM and the official OpenDSS codebase.**
+- 2019-05-22 / version 0.10.3: Some important fixes, better general performance, new API extensions, new features ported from COM and the OpenDSS version 8 codebase.
 - 2019-03-05: the Git repository `electricdss-src` was merged into `dss_capi`.
 - 2019-02-28 / version 0.10.2: Highlights: implements the missing `CtrlQueue_Push`; reworks `LoadShapes` for performance and validation; introduces `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` to toggle the editor calls.**
 - 2019-02-12 / version 0.10.1: Highlights: more error checking, introduction of `Error_Get_NumberPtr`, fixes and better handling of Meters.

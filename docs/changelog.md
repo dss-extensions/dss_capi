@@ -10,6 +10,12 @@
     - initial work on the plotting and extended reporting API
     - potentially unify the v7 and v8 codebases into a single library. Since v8 is unstable and hard to debug, it might be dropped due to lack of time.
     
+# Version 0.10.4
+
+- Updated up to revision 2761 of the official OpenDSS code. The changes affect at least the following components: CIMXML export, `Capacitor`, `InvControl`, `LineGeometry`, `PVsystem`, `StorageController`, `Storage`, `Vsource`, `VCCS`.
+- This version should be fully compatible with 0.10.3.
+- Fixes issue with long paths on Linux, potentially other platforms too.
+
 # Version 0.10.3
 
 - Updated up to revision 2609 of the official OpenDSS code. Most of the new features have been ported and tested successfully.
