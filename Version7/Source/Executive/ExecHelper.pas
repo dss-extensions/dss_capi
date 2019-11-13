@@ -354,7 +354,7 @@ FUNCTION DoRedirect(IsCompile:Boolean):Integer;
 
 VAR
     Fin:TextFile;
-    ParamName,  InputLine, CurrDir, SaveDir : String;
+    ParamName,  InputLine, CurrDir, SaveDir, ReDirFileExp : String;
     LocalCompFileName  : String;
     InBlockComment : Boolean;
     strings: TStringList;
@@ -370,6 +370,11 @@ Begin
 
     // Get next parm and try to interpret as a file name
     ParamName := Parser.NextParam;
+    
+    // Expanded path is required later as other Free Pascal functions 
+    // may fail with relative paths
+    ReDirFileExp := ExpandFileName(Parser.StrValue);
+    
     ReDirFile := Parser.StrValue;
     if ReDirFile = '' then 
         exit;  // ignore altogether IF null filename
@@ -389,11 +394,13 @@ Begin
     except
         // intentionally blank
     end;
+    
+    // For full backwards compatibility
+    ReDirFile := ReDirFileExp;
 
     if not gotTheFile then
     begin
         // Try the expanded name
-        ReDirFile := ExpandFileName(Parser.StrValue);
         if ReDirFile = '' then
             exit;
 
@@ -455,6 +462,9 @@ Begin
         SolutionAbort := True;
         exit;  // Already had an extension, so just bail
     end;
+    
+    // For full backwards compatibility
+    ReDirFile := ReDirFileExp;
 
     // OK, we finally got one open, so we're going to continue
     TRY
