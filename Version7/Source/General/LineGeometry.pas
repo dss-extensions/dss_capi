@@ -393,7 +393,9 @@ begin
                     begin
                         if FPhaseChoice^[ActiveCond] = Unknown then
                             ChangeLineConstantsType(Overhead)
-                        else // these are buried neutral wires
+                        else if FPhaseChoice^[ActiveCond] <> Overhead then
+                            // these are buried neutral wires 
+                            // (only when the phase conductors not overhead)
                             istart := FNPhases + 1;
                     end;
 
@@ -428,7 +430,8 @@ begin
                             DoSimpleMsg('TSData Object "' + FCondName[i] + '" not defined. Must be previously defined.', 10103)
                         else
                             DoSimpleMsg('WireData Object "' + FCondName[i] + '" not defined. Must be previously defined.', 10103);
-                    end
+                    end;
+                    FActiveCond := istop;
                 end;
                 17:
                 begin
@@ -996,6 +999,9 @@ begin
         ActiveCond := i;
         ChangeLineConstantsType(Overhead);    // works on activecond
     end;
+    // Reset the active conductor
+    FActiveCond := 1;
+
     FCondName := AllocStringArray(FNconds);
 
 
