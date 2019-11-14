@@ -74,12 +74,15 @@ var
     i: Integer;
 begin
     if ActiveCircuit <> NIL then
+    begin
+        GlobalResult := '';
         with ActiveCircuit.AutoAddBusList do
         begin
             for i := 1 to ListSize do
                 AppendGlobalResult(Get(i));
             Result := GlobalResult;
         end
+    end
     else
         Result := '';
 
