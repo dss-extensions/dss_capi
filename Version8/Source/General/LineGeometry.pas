@@ -996,7 +996,7 @@ begin
 
     for i := 1 to FNconds do
     begin
-        ActiveCond := i;
+        FActiveCond := i;
         ChangeLineConstantsType(Overhead);    // works on activecond
     end;
     // Reset the active conductor
