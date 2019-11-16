@@ -2,8 +2,10 @@
 
 **not released**
 
-- **Planned**:
+- **Done**:
     - drop the GR API for strings (bytes, ints and floats will continue)
+
+- **Planned**:
     - extend the API to work with 64-bit integers where appropriate
     - simplify the types used by the interface. For example, dropping the `uint16_t` type (used for booleans) and using int32_t instead -- this was an artifact from the COM code.
     - complement the API with the missing classes

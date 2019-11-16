@@ -40,7 +40,7 @@ Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) for a detailed list.
 
-- **2019-11-XX / version 0.10.4: Maintenance release. Fixes issue with long paths on Linux, includes some changes ported from COM and the official OpenDSS codebase.**
+- **2019-11-16 / version 0.10.4: Maintenance release. Fixes issue with long paths on Linux, includes some changes ported from COM and the official OpenDSS codebase.**
 - 2019-05-22 / version 0.10.3: Some important fixes, better general performance, new API extensions, new features ported from COM and the OpenDSS version 8 codebase.
 - 2019-03-05: the Git repository `electricdss-src` was merged into `dss_capi`.
 - 2019-02-28 / version 0.10.2: Highlights: implements the missing `CtrlQueue_Push`; reworks `LoadShapes` for performance and validation; introduces `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` to toggle the editor calls.**

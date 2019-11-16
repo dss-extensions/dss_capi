@@ -42,7 +42,7 @@ A partir de 2019-03-05, este repositório contém todo o código fonte em lingua
 
 Veja o [registro de alterações (em inglês)](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) para listagem detalhada.
 
-- **2019-11-XX / version 0.10.4: Apenas manutenção: Corrige acesso a arquivos com caminho longo no Linux, e inclui alterações portadas da versão COM e do código do OpenDSS oficial.**
+- **2019-11-16 / version 0.10.4: Apenas manutenção: Corrige acesso a arquivos com caminho longo no Linux, e inclui alterações portadas da versão COM e do código do OpenDSS oficial.**
 - 2019-05-22 / version 0.10.3: Algumas correções importantes, desempenho geral bastante melhorado, novas funções estendidas, e novas funcionalidades portadas do módulo COM e da versão atual do OpenDSS.
 - 2019-03-05: o repositório Git `electricdss-src` foi integrado diretamente em `dss_capi`.
 - 2019-02-28 / version 0.10.2: Implementa a função `CtrlQueue_Push` (faltante na versão anterior); modificações em `LoadShapes` para melhor desempenho e mais validação; introduz `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` para (desa)ativar chamadas ao editor externo.
