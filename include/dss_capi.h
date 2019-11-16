@@ -2,16 +2,9 @@
 #define DSS_CAPI_DLL_H
 #define DSS_CAPI_VERSION "0.10.4-dev"
 
-#ifndef DSS_CAPI_USE_V8
-    #define DSS_CAPI_V7_VERSION DSS_CAPI_VERSION
-    #ifdef DSS_CAPI_V7_DLL 
-        #define DSS_CAPI_DLL DSS_CAPI_V7_DLL
-    #endif
-#else
-    #define DSS_CAPI_V8_VERSION DSS_CAPI_VERSION
-    #ifdef DSS_CAPI_V8_DLL 
-        #define DSS_CAPI_DLL DSS_CAPI_V8_DLL
-    #endif
+#define DSS_CAPI_V7_VERSION DSS_CAPI_VERSION
+#ifdef DSS_CAPI_V7_DLL 
+    #define DSS_CAPI_DLL DSS_CAPI_V7_DLL
 #endif
 
 #ifndef DSS_CAPI_DLL
@@ -3128,85 +3121,83 @@ extern "C" {
     */
     DSS_CAPI_DLL void Monitors_Set_Terminal(int32_t Value);
 
-#ifdef DSS_CAPI_USE_V8
     /*
     Delivers the number of CPUs on the current PC
     */
-    DSS_CAPI_DLL int32_t Parallel_Get_NumCPUs(void); /*V8*/
+    DSS_CAPI_DLL int32_t Parallel_Get_NumCPUs(void);
 
     /*
     Delivers the number of Cores of the local PC
     */
-    DSS_CAPI_DLL int32_t Parallel_Get_NumCores(void); /*V8*/
+    DSS_CAPI_DLL int32_t Parallel_Get_NumCores(void);
 
     /*
     Gets the ID of the Active Actor
     */
-    DSS_CAPI_DLL int32_t Parallel_Get_ActiveActor(void); /*V8*/
+    DSS_CAPI_DLL int32_t Parallel_Get_ActiveActor(void);
 
     /*
     Sets the Active Actor
     */
-    DSS_CAPI_DLL void Parallel_Set_ActiveActor(int32_t Value); /*V8*/
+    DSS_CAPI_DLL void Parallel_Set_ActiveActor(int32_t Value);
 
-    DSS_CAPI_DLL void Parallel_CreateActor(void); /*V8*/
+    DSS_CAPI_DLL void Parallel_CreateActor(void);
 
     /*
     Gets the CPU of the Active Actor
     */
-    DSS_CAPI_DLL int32_t Parallel_Get_ActorCPU(void); /*V8*/
+    DSS_CAPI_DLL int32_t Parallel_Get_ActorCPU(void);
 
     /*
     Sets the CPU for the Active Actor
     */
-    DSS_CAPI_DLL void Parallel_Set_ActorCPU(int32_t Value); /*V8*/
+    DSS_CAPI_DLL void Parallel_Set_ActorCPU(int32_t Value);
 
     /*
     Gets the number of Actors created
     */
-    DSS_CAPI_DLL int32_t Parallel_Get_NumOfActors(void); /*V8*/
+    DSS_CAPI_DLL int32_t Parallel_Get_NumOfActors(void);
 
-    DSS_CAPI_DLL void Parallel_Wait(void); /*V8*/
+    DSS_CAPI_DLL void Parallel_Wait(void);
 
     /*
     Gets the progress of all existing actors in pct
     */
-    DSS_CAPI_DLL void Parallel_Get_ActorProgress(int32_t** ResultPtr, int32_t* ResultCount); /*V8*/
+    DSS_CAPI_DLL void Parallel_Get_ActorProgress(int32_t** ResultPtr, int32_t* ResultCount);
     /*
     Same as Parallel_Get_ActorProgress but using the global buffer interface for results
     */
-    DSS_CAPI_DLL void Parallel_Get_ActorProgress_GR(void); /*V8*/
+    DSS_CAPI_DLL void Parallel_Get_ActorProgress_GR(void);
 
     /*
     Gets the status of each actor
     */
-    DSS_CAPI_DLL void Parallel_Get_ActorStatus(int32_t** ResultPtr, int32_t* ResultCount); /*V8*/
+    DSS_CAPI_DLL void Parallel_Get_ActorStatus(int32_t** ResultPtr, int32_t* ResultCount);
     /*
     Same as Parallel_Get_ActorStatus but using the global buffer interface for results
     */
-    DSS_CAPI_DLL void Parallel_Get_ActorStatus_GR(void); /*V8*/
+    DSS_CAPI_DLL void Parallel_Get_ActorStatus_GR(void);
 
     /*
     Sets ON/OFF (1/0) Parallel features of the Engine
     */
-    DSS_CAPI_DLL int32_t Parallel_Get_ActiveParallel(void); /*V8*/
+    DSS_CAPI_DLL int32_t Parallel_Get_ActiveParallel(void);
 
     /*
     Delivers if the Parallel features of the Engine are Active
     */
-    DSS_CAPI_DLL void Parallel_Set_ActiveParallel(int32_t Value); /*V8*/
+    DSS_CAPI_DLL void Parallel_Set_ActiveParallel(int32_t Value);
 
     /*
     Reads the values of the ConcatenateReports option (1=enabled, 0=disabled)
     */
-    DSS_CAPI_DLL int32_t Parallel_Get_ConcatenateReports(void); /*V8*/
+    DSS_CAPI_DLL int32_t Parallel_Get_ConcatenateReports(void);
 
     /*
     Enable/Disable (1/0) the ConcatenateReports option for extracting monitors data
     */
-    DSS_CAPI_DLL void Parallel_Set_ConcatenateReports(int32_t Value); /*V8*/
+    DSS_CAPI_DLL void Parallel_Set_ConcatenateReports(int32_t Value);
 
-#endif //#ifdef DSS_CAPI_USE_V8
     /*
     String to be parsed. Loading this string resets the Parser to the beginning of the line. Then parse off the tokens in sequence.
     */
@@ -4696,7 +4687,7 @@ extern "C" {
     DSS_CAPI_DLL void Solution_Set_MinIterations(int32_t Value);
 
 #ifdef DSS_CAPI_USE_V8
-    DSS_CAPI_DLL void Solution_SolveAll(void); /*V8*/
+    DSS_CAPI_DLL void Solution_SolveAll(void);
 #endif //#ifdef DSS_CAPI_USE_V8
 
     DSS_CAPI_DLL void Solution_Get_IncMatrix(int32_t** ResultPtr, int32_t* ResultCount);

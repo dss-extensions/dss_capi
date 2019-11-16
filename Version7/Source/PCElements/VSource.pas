@@ -458,7 +458,7 @@ begin
                 30:
                     IsQuasiIdeal := InterpretSourceModel(Param);
                 31:
-                    puZideal := InterpretComplex(Param);
+                    puZideal := InterpretComplex(DSS, Param);
             else
                 ClassEdit(DSS.ActiveVsourceObj, ParamPointer - NumPropsThisClass)
             end;

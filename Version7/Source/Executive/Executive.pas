@@ -220,9 +220,9 @@ begin
 {$IFNDEF FPC}
        If Not IsDLL Then ControlPanel.UpdateElementBox ;
 {$ENDIF}
-       DefaultEarthModel     := DERI;
-       LogQueries            := FALSE;
-       MaxAllocationIterations := 2;
+       DSS.DefaultEarthModel     := DERI;
+       DSS.LogQueries            := FALSE;
+       DSS.MaxAllocationIterations := 2;
 
        {Prepare for new variables}
        DSS.ParserVars.Free;

@@ -152,6 +152,7 @@ uses
     Notes in 'Version7/Source/Common/Notes.pas',
     OHLineConstants in 'Version7/Source/General/OHLineConstants.pas',
     ParserDel in 'Version7/Source/Parser/ParserDel.pas',
+    Parallel_Lib in 'Version7/Source/Parallel_Lib/Parallel_Lib.pas',
     PCClass in 'Version7/Source/PCElements/PCClass.pas',
     PCElement in 'Version7/Source/PCElements/PCElement.pas',
     PDClass in 'Version7/Source/PDElements/PDClass.pas',
@@ -172,6 +173,7 @@ uses
     ShowResults in 'Version7/Source/Common/ShowResults.pas',
     Solution in 'Version7/Source/Common/Solution.pas',
     SolutionAlgs in 'Version7/Source/Common/SolutionAlgs.pas',
+    Sparse_Math in 'Version7/Source/Common/Sparse_Math.pas',
     Spectrum in 'Version7/Source/General/Spectrum.pas',
     StackDef in 'Version7/Source/Shared/StackDef.pas',
     Storage in 'Version7/Source/PCElements/Storage.pas',
@@ -230,6 +232,7 @@ uses
     CAPI_LoadShapes in 'CAPI_LoadShapes.pas',
     CAPI_Meters in 'CAPI_Meters.pas',
     CAPI_Monitors in 'CAPI_Monitors.pas',
+    CAPI_Parallel in 'CAPI_Parallel.pas',
     CAPI_Parser in 'CAPI_Parser.pas',
     CAPI_PDElements in 'CAPI_PDElements.pas',
     CAPI_PVSystems in 'CAPI_PVSystems.pas',
@@ -906,6 +909,21 @@ exports
     Monitors_Set_Element,
     Monitors_Get_Terminal,
     Monitors_Set_Terminal,
+    Parallel_Get_NumCPUs,
+    Parallel_Get_NumCores,
+    Parallel_Get_ActiveActor,
+    Parallel_Set_ActiveActor,
+    Parallel_CreateActor,
+    Parallel_Get_ActorCPU,
+    Parallel_Set_ActorCPU,
+    Parallel_Get_NumOfActors,
+    Parallel_Wait,
+    Parallel_Get_ActorProgress,
+    Parallel_Get_ActorStatus,
+    Parallel_Get_ActiveParallel,
+    Parallel_Set_ActiveParallel,
+    Parallel_Get_ConcatenateReports,
+    Parallel_Set_ConcatenateReports,
     Parser_Get_CmdString,
     Parser_Set_CmdString,
     Parser_Get_NextParam,
@@ -1227,6 +1245,7 @@ exports
     Solution_Set_IntervalHrs,
     Solution_Get_MinIterations,
     Solution_Set_MinIterations,
+    Solution_SolveAll,
     Solution_Get_IncMatrix,
     Solution_Get_Laplacian,
     Solution_Get_BusLevels,
@@ -1377,7 +1396,7 @@ exports
     YMatrix_Get_SystemYChanged,
     YMatrix_Set_UseAuxCurrents,
     YMatrix_Get_UseAuxCurrents,
-    
+
     YMatrix_Get_LoadsNeedUpdating,
     YMatrix_Set_LoadsNeedUpdating,
     YMatrix_Set_SolutionInitialized,
@@ -1387,7 +1406,7 @@ exports
     YMatrix_Set_Iteration,
     YMatrix_Get_Iteration,
     YMatrix_Get_Handle,
-    
+
 
     // *_GR -- Global Result variations
     Bus_Get_SeqVoltages_GR,
@@ -1473,6 +1492,8 @@ exports
     Monitors_Get_Channel_GR,
     Monitors_Get_dblFreq_GR,
     Monitors_Get_dblHour_GR,
+    Parallel_Get_ActorProgress_GR,
+    Parallel_Get_ActorStatus_GR,
     Parser_Get_Vector_GR,
     Parser_Get_Matrix_GR,
     Parser_Get_SymMatrix_GR,
@@ -1786,7 +1807,7 @@ exports
     WireData_Set_idx,
     XYCurves_Get_idx,
     XYCurves_Set_idx,
-    
+
     // Re-export most KLUSolve functions
     NewSparseSet,
     GetFlops,
@@ -1806,13 +1827,13 @@ exports
     AddPrimitiveMatrix,
     GetCompressedMatrix,
     GetTripletMatrix,
-    FindIslands,
-    mvmult
+    FindIslands
+{$IFDEF DSS_CAPI_MVMULT}
+    , mvmult
+{$ENDIF}
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
-    , 
-    SolveSparseSet2,
-    IncrementMatrixElement,
-    ZeroiseMatrixElement
+    , IncrementMatrixElement
+    , ZeroiseMatrixElement
 {$ENDIF}
     ;
 begin

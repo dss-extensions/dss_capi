@@ -77,7 +77,7 @@ var
 begin
     if DSSPrime.ActiveCircuit <> NIL then
     begin
-        GlobalResult := '';
+        DSSPrime.GlobalResult := '';
         with DSSPrime.ActiveCircuit.AutoAddBusList do
         begin
             for i := 1 to ListSize do

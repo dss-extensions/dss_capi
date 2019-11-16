@@ -284,11 +284,11 @@ begin
                 10:
                     FrmsMode := InterpretYesNo(Param);
                 11:
-                    FmaxIpu := Parser.DblValue;
+                    FmaxIpu := DSS.Parser.DblValue;
                 12:
-                    FvrmsTau := Parser.DblValue;
+                    FvrmsTau := DSS.Parser.DblValue;
                 13:
-                    FirmsTau := Parser.DblValue;
+                    FirmsTau := DSS.Parser.DblValue;
             else
                 ClassEdit(DSS.ActiveVCCSObj, ParamPointer - NumPropsThisClass)
             end;
@@ -649,8 +649,8 @@ begin
     vpu := cabs(Vterminal^[1]) / Vrated;
     if vpu > 0.0 then
     begin
-        h := ActiveSolutionObj.DynaVars.h;
-        corrector := ActiveSolutionObj.DynaVars.IterationFlag;
+        h := DSS.ActiveSolutionObj.DynaVars.h;
+        corrector := DSS.ActiveSolutionObj.DynaVars.IterationFlag;
         nstep := trunc(1e-6 + h * FSampleFreq);
     // Vrms from LPF
         d := vpu - s1;

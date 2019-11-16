@@ -578,15 +578,15 @@ begin
                 propKWTHRESHOLD:
                     FkWThreshold := DSS.Parser.DblValue;
                 propRESETLEVEL:
-                    ResetLevel := Parser.DblValue;
+                    ResetLevel := DSS.Parser.DblValue;
                 propSEASONS:
-                    Seasons := Parser.IntValue;
+                    Seasons := DSS.Parser.IntValue;
                 propSEASONTARGETS:
                 begin
                     if Seasons > 1 then
                     begin
                         setlength(SeasonTargets, Seasons);
-                        Seasons := InterpretDblArray(Param, Seasons, Pointer(SeasonTargets));
+                        Seasons := InterpretDblArray(DSS, Param, Seasons, Pointer(SeasonTargets));
                     end;
                 end;
                 propSEASONTARGETSLOW:
@@ -594,7 +594,7 @@ begin
                     if Seasons > 1 then
                     begin
                         setlength(SeasonTargetsLow, Seasons);
-                        Seasons := InterpretDblArray(Param, Seasons, Pointer(SeasonTargetsLow));
+                        Seasons := InterpretDblArray(DSS, Param, Seasons, Pointer(SeasonTargetsLow));
                     end;
                 end;
 
@@ -1460,11 +1460,11 @@ var
     RatingIdx: Integer;
     RSignal: TXYCurveObj;
 begin
-    if SeasonSignal <> '' then
+    if DSS.SeasonSignal <> '' then
     begin
-        RSignal := XYCurveClass.Find(SeasonSignal);
+        RSignal := DSS.XYCurveClass.Find(DSS.SeasonSignal); //TODO: move this to TDSSContext
         if RSignal <> NIL then
-            RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));
+            RatingIdx := trunc(RSignal.GetYValue(DSS.ActiveCircuit.Solution.DynaVars.intHour));
 
         if (RatingIdx <= Seasons) and (Seasons > 1) then
         begin
@@ -1529,7 +1529,7 @@ begin
         else
             S := MonitoredElement.MaxPower[ElementTerminal];  // Max power in active terminal
        // In case of having seasonal targets
-        if SeasonalRating then
+        if DSS.SeasonalRating then
             CtrlTarget := Get_DynamicTarget(1)
         else
             CtrlTarget := FkWTarget;
@@ -1756,7 +1756,7 @@ begin
         SkipkWCharge := FALSE;
 
        //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
-        if SeasonalRating then
+        if DSS.SeasonalRating then
             CtrlTarget := Get_DynamicTarget(0)
         else
             CtrlTarget := FkWTargetLow;

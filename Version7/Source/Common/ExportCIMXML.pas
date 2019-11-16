@@ -113,6 +113,7 @@ type
     end;
 
 var
+    //TODO: move global state to TDSSContext
     UuidHash: THashList;       // index is 1-based
     UuidList: array of TUuid;  // index is 0-based
     BankHash: THashList;
@@ -995,7 +996,7 @@ begin
         exit;
     p := 1000.0 * pLoad.kWBase / pLoad.NPhases;
     q := 1000.0 * pLoad.kvarBase / pLoad.NPhases;
-    if pLoad.Connection = 1 then
+    if pLoad.Connection = TLoadConnection.Delta then
         s := DeltaPhaseString(pLoad)
     else
         s := PhaseString(DSS, pLoad, 1);
@@ -1668,7 +1669,7 @@ begin
         i2 := DSS.ActiveCircuit.Transformers.ListSize * 11; // bank, info, 3 wdg, 3 wdg info, 3sctest
         StartUuidList(i1 + i2);
         StartBankList(DSS.ActiveCircuit.Transformers.ListSize);
-        StartOpLimitList(ActiveCircuit.Lines.ListSize);
+        StartOpLimitList(DSS.ActiveCircuit.Lines.ListSize);
 
     {$IFDEF FPC}
          // this only works in the command line version
@@ -1737,7 +1738,7 @@ begin
         pSwing.localName := DSS.ActiveCircuit.Name + '_SwingBus';
 
         pNormLimit := TNamedObject.Create('NormalAmpsType');
-        pNormLimit.localName := ActiveCircuit.Name + '_NormAmpsType';
+        pNormLimit.localName := DSS.ActiveCircuit.Name + '_NormAmpsType';
         CreateUUID4(tmpUUID);
         pNormLimit.UUID := tmpUUID;
         StartInstance(F, 'OperationalLimitType', pNormLimit);
@@ -1746,7 +1747,7 @@ begin
         EndInstance(F, 'OperationalLimitType');
 
         pEmergLimit := TNamedObject.Create('EmergencyAmpsType');
-        pEmergLimit.localName := ActiveCircuit.Name + '_EmergencyAmpsType';
+        pEmergLimit.localName := DSS.ActiveCircuit.Name + '_EmergencyAmpsType';
         CreateUUID4(tmpUUID);
         pEmergLimit.UUID := tmpUUID;
         StartInstance(F, 'OperationalLimitType', pEmergLimit);
@@ -1755,7 +1756,7 @@ begin
         EndInstance(F, 'OperationalLimitType');
 
         pRangeAHiLimit := TNamedObject.Create('RangeAHiType');
-        pRangeAHiLimit.localName := ActiveCircuit.Name + '_RangeAHiType';
+        pRangeAHiLimit.localName := DSS.ActiveCircuit.Name + '_RangeAHiType';
         CreateUUID4(tmpUUID);
         pRangeAHiLimit.UUID := tmpUUID;
         StartInstance(F, 'OperationalLimitType', pRangeAHiLimit);
@@ -1764,7 +1765,7 @@ begin
         EndInstance(F, 'OperationalLimitType');
 
         pRangeALoLimit := TNamedObject.Create('RangeALoType');
-        pRangeALoLimit.localName := ActiveCircuit.Name + '_RangeALoType';
+        pRangeALoLimit.localName := DSS.ActiveCircuit.Name + '_RangeALoType';
         CreateUUID4(tmpUUID);
         pRangeALoLimit.UUID := tmpUUID;
         StartInstance(F, 'OperationalLimitType', pRangeALoLimit);
@@ -1773,7 +1774,7 @@ begin
         EndInstance(F, 'OperationalLimitType');
 
         pRangeBHiLimit := TNamedObject.Create('RangeBHiType');
-        pRangeBHiLimit.localName := ActiveCircuit.Name + '_RangeBHiType';
+        pRangeBHiLimit.localName := DSS.ActiveCircuit.Name + '_RangeBHiType';
         CreateUUID4(tmpUUID);
         pRangeBHiLimit.UUID := tmpUUID;
         StartInstance(F, 'OperationalLimitType', pRangeBHiLimit);
@@ -1782,7 +1783,7 @@ begin
         EndInstance(F, 'OperationalLimitType');
 
         pRangeBLoLimit := TNamedObject.Create('RangeBLoType');
-        pRangeBLoLimit.localName := ActiveCircuit.Name + '_RangeBLoType';
+        pRangeBLoLimit.localName := DSS.ActiveCircuit.Name + '_RangeBLoType';
         CreateUUID4(tmpUUID);
         pRangeBLoLimit.UUID := tmpUUID;
         StartInstance(F, 'OperationalLimitType', pRangeBLoLimit);
@@ -1790,6 +1791,7 @@ begin
         OpLimitDirectionEnum(F, 'low');
         EndInstance(F, 'OperationalLimitType');
 
+        with DSS.ActiveCircuit do 
         begin
       // build the lists of base voltages and operational voltage limits
             i := 1;
@@ -1865,7 +1867,7 @@ begin
                 StringNode(F, 'IdentifiedObject.mRID', UUIDToCIMString(Buses^[i].UUID));
                 StringNode(F, 'IdentifiedObject.name', Buses^[i].localName);
                 UuidNode(F, 'ConnectivityNode.TopologicalNode', geoUUID);
-                UuidNode(F, 'ConnectivityNode.OperationalLimitSet', GetOpLimVUuid(sqrt(3.0) * ActiveCircuit.Buses^[i].kVBase));
+                UuidNode(F, 'ConnectivityNode.OperationalLimitSet', GetOpLimVUuid(sqrt(3.0) * DSS.ActiveCircuit.Buses^[i].kVBase));
                 Writeln(F, Format('  <cim:ConnectivityNode.ConnectivityNodeContainer rdf:resource="#%s"/>',
                     [DSS.ActiveCircuit.CIM_ID]));
                 Writeln(F, '</cim:ConnectivityNode>');
@@ -2693,25 +2695,25 @@ begin
                     CircuitNode(F, DSS.ActiveCircuit);
                     VbaseNode(DSS, F, pLoad);
                     case FLoadModel of
-                        1:
+                        TLoadModel.ConstPQ:
                             UuidNode(F, 'EnergyConsumer.LoadResponse', id1_ConstkVA);
-                        2:
+                        TLoadModel.ConstZ:
                             UuidNode(F, 'EnergyConsumer.LoadResponse', id2_ConstZ);
-                        3:
+                        TLoadModel.Motor:
                             UuidNode(F, 'EnergyConsumer.LoadResponse', id3_ConstPQuadQ);
-                        4:
+                        TLoadModel.CVR:
                             UuidNode(F, 'EnergyConsumer.LoadResponse', id4_LinPQuadQ);
-                        5:
+                        TLoadModel.ConstI:
                             UuidNode(F, 'EnergyConsumer.LoadResponse', id5_ConstI);
-                        6:
+                        TLoadModel.ConstPFixedQ:
                             UuidNode(F, 'EnergyConsumer.LoadResponse', id6_ConstPConstQ);
-                        7:
+                        TLoadModel.ConstPFixedX:
                             UuidNode(F, 'EnergyConsumer.LoadResponse', id7_ConstPConstX);
                     end;
                     DoubleNode(F, 'EnergyConsumer.p', 1000.0 * kWBase);
                     DoubleNode(F, 'EnergyConsumer.q', 1000.0 * kvarBase);
                     IntegerNode(F, 'EnergyConsumer.customerCount', NumCustomers);
-                    if Connection = 0 then
+                    if Connection = TLoadConnection.Wye then
                     begin
                         ShuntConnectionKindNode(F, 'EnergyConsumer', 'Y');
                         BooleanNode(F, 'EnergyConsumer.grounded', TRUE);  // TODO - check bus 2

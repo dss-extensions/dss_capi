@@ -3,7 +3,8 @@
 **not released**
 
 - **Done**:
-- The C headers for the two variantes (v7 and v8) have been unified into a single header. The old header files in `include/v7/dss_capi.h` and include/v8/dss_capi.h` have been modified to use this new header (`include/dss_capi.h`). Functions specific to v8 are ifdef'ed and also marked with a `/*V8*/` comment to make it easier to filter in automated tools.
+- The C headers for the two variants (v7 and v8) have been unified into a single header. The old header files in `include/v7/dss_capi.h` and include/v8/dss_capi.h` have been modified to use this new header (`include/dss_capi.h`). Functions specific to v8 are ifdef'ed and also marked with a `/*V8*/` comment to make it easier to filter in automated tools.
+- The code unification between v7 and v8 has begun. The offical OpenDSS Version 8 code has been removed from the master branch.
 - The GR API for string arrays was dropped since it didn't bring benefits (GR arrays of bytes, ints and floats will continue).
 - Replace `uint16_t` with `int8_t` in C headers, `WordBool` with `Boolean` in Pascal. This was an artifact from the COM code. The new type, besides being the natural type in Pascal, should match the `bool` type in most modern C/C++ compilers. This may still be replaced with int32_t to reduce the types used before v0.11 is released.
 
@@ -12,7 +13,6 @@
     - extend the API to work with 64-bit integers where appropriate
     - complement the API with the missing classes
     - initial work on the plotting and extended reporting API
-    - potentially unify the v7 and v8 codebases into a single library. Since v8 is unstable and hard to debug, it might be dropped due to lack of time.
     
 # Version 0.10.4
 

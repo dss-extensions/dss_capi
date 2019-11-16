@@ -45,31 +45,6 @@ if exist lib\win_x64\dss_capi_v7.dll (
     exit /B 1
 )
 
-REM fpc -Px86_64 @src\v8\windows-x64.cfg -B src\v8\dss_capi_v8.lpr
-REM if errorlevel 1 exit /B 1
-REM if exist lib\win_x64\dss_capi_v8.dll (
-    REM where /q dumpbin
-    REM if errorlevel 1 (
-        REM echo WARNING: dumpbin.exe is not in your path. Be sure to run this script on 
-        REM echo          the "x64 Native Tools Command Prompt for VS 2017" or the 
-        REM echo          equivalent for your Visual Studio version.
-        REM exit /B 1
-    REM )
-    REM dumpbin /exports "lib\win_x64\dss_capi_v8.dll" > lib\win_x64\exports.txt
-    REM echo LIBRARY DSS_CAPI_V8 > lib\win_x64\dss_capi_v8.def
-    REM echo EXPORTS >> lib\win_x64\dss_capi_v8.def
-    REM for /f "skip=19 tokens=4" %%A in (lib\win_x64\exports.txt) do echo %%A >> lib\win_x64\dss_capi_v8.def
-    REM lib /def:lib\win_x64\dss_capi_v8.def /out:lib\win_x64\dss_capi_v8.lib /machine:X64
-    REM dlltool --as-flags=--64 -d lib\win_x64\dss_capi_v8.def -m i386:x86-64 -l lib\win_x64\dss_capi_v8.dll.a
-    
-    REM del /s lib\win_x64\dss_capi_v8.exp
-    REM del /s lib\win_x64\dss_capi_v8.def
-    REM del /s lib\win_x64\exports.txt
-REM ) else (
-    REM echo ERROR: DSS_CAPI_V8.DLL file not found. Check previous messages for possible causes.
-REM )
-
-
 SETLOCAL ENABLEEXTENSIONS
 
 IF DEFINED APPVEYOR (

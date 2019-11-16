@@ -195,7 +195,7 @@ Begin
         End;
       End;
 
-      ParseObjectClassandName(Param, ObjClass, ObjName);     // see DSSGlobals
+      ParseObjectClassandName(DSS, Param, ObjClass, ObjName);     // see DSSGlobals
 
 End;
 
@@ -231,8 +231,8 @@ Begin
      IF   CompareText(ObjClass,'circuit') = 0
      THEN Begin
             MakeNewCircuit(DSS, ObjName);  // Make a new circuit
-            ClearEventLog;      // Start the event log in the current directory
-            ClearErrorLog;
+            ClearEventLog(DSS);      // Start the event log in the current directory
+            ClearErrorLog(DSS);
           End
      ELSE    // Everything else must be a circuit element or DSS Object
         Begin
@@ -382,22 +382,22 @@ Begin
     
     // Expanded path is required later as other Free Pascal functions 
     // may fail with relative paths
-    ReDirFileExp := ExpandFileName(Parser.StrValue);
+    ReDirFileExp := ExpandFileName(DSS.Parser.StrValue);
     
-    ReDirFile := Parser.StrValue;
-    if ReDirFile = '' then 
+    DSS.ReDirFile := DSS.Parser.StrValue;
+    if DSS.ReDirFile = '' then 
         exit;  // ignore altogether IF null filename
     
     SaveDir :=  GetCurrentDir;
 
     try
         // First try, using the provided name directly
-        AssignFile(Fin, ReDirFile);
+        AssignFile(Fin, DSS.ReDirFile);
         Reset(Fin);
         if IsCompile Then 
         begin
-            DSS.LastFileCompiled := ReDirFile;
-            LocalCompFileName:= ReDirFile;
+            DSS.LastFileCompiled := DSS.ReDirFile;
+            LocalCompFileName:= DSS.ReDirFile;
         end;
         gotTheFile := True;
     except
@@ -405,21 +405,21 @@ Begin
     end;
     
     // For full backwards compatibility
-    ReDirFile := ReDirFileExp;
+    DSS.ReDirFile := ReDirFileExp;
 
     if not gotTheFile then
     begin
         // Try the expanded name
-        if ReDirFile = '' then
+        if DSS.ReDirFile = '' then
             exit;
 
         try
-            AssignFile(Fin, ReDirFile);
+            AssignFile(Fin, DSS.ReDirFile);
             Reset(Fin);
             if IsCompile Then 
             begin
-                LastFileCompiled := ReDirFile;
-                LocalCompFileName := ReDirFile;
+                DSS.LastFileCompiled := DSS.ReDirFile;
+                LocalCompFileName := DSS.ReDirFile;
             end;
             gotTheFile := True;
         except
@@ -427,17 +427,17 @@ Begin
         end;
     end;
 
-    if not gotTheFile and FileExists(ReDirFile) then
+    if not gotTheFile and FileExists(DSS.ReDirFile) then
     begin
         // If the usual Pascal text file is broken, 
         // try a stream via a TStringList object
         try
             strings := TStringList.Create;
-            strings.LoadFromFile(ReDirFile);
+            strings.LoadFromFile(DSS.ReDirFile);
             if IsCompile Then 
             begin
-                LastFileCompiled := ReDirFile;
-                LocalCompFileName := ReDirFile;
+                DSS.LastFileCompiled := DSS.ReDirFile;
+                LocalCompFileName := DSS.ReDirFile;
             end;
             gotTheFile := True;
         except
@@ -450,14 +450,14 @@ Begin
         // Couldn't find file
         // Try appending a '.dss' to the file name
         // If it doesn't already have an extension
-        IF Pos('.', ReDirFile)=0 THEN 
+        IF Pos('.', DSS.ReDirFile)=0 THEN 
         Begin
-            ReDirFile := ReDirFile + '.dss';
+            DSS.ReDirFile := DSS.ReDirFile + '.dss';
             TRY
-                AssignFile(Fin, ReDirFile);
+                AssignFile(Fin, DSS.ReDirFile);
                 Reset(Fin);
             EXCEPT
-                DoSimpleMsg(DSS, 'Redirect File: "' + ReDirFile + '" Not Found.', 242);
+                DoSimpleMsg(DSS, 'Redirect File: "' + DSS.ReDirFile + '" Not Found.', 242);
                 DSS.SolutionAbort := TRUE;
                 Exit;
             End;
@@ -467,20 +467,20 @@ Begin
 
     if not gotTheFile then
     begin
-        DoSimpleMsg(DSS, 'Redirect File: "'+ReDirFile+'" Not Found.', 243);
+        DoSimpleMsg(DSS, 'Redirect File: "'+DSS.ReDirFile+'" Not Found.', 243);
         DSS.SolutionAbort := True;
         exit;  // Already had an extension, so just bail
     end;
     
     // For full backwards compatibility
-    ReDirFile := ReDirFileExp;
+    DSS.ReDirFile := ReDirFileExp;
 
     // OK, we finally got one open, so we're going to continue
     TRY
         TRY
             // Change Directory to path specified by file in CASE that
             // loads in more files
-            CurrDir := ExtractFileDir(ReDirFile);
+            CurrDir := ExtractFileDir(DSS.ReDirFile);
             SetCurrentDir(CurrDir);
             If IsCompile Then SetDataPath(DSS, CurrDir);  // change datadirectory
 
@@ -504,7 +504,7 @@ Begin
 
                         If Not InBlockComment Then   // process the command line
                             If Not DSS.SolutionAbort Then 
-                                ProcessCommand(InputLine)
+                                ProcessCommand(DSS, InputLine)
                             Else 
                                 DSS.Redirect_Abort := True;  // Abort file if solution was aborted
 
@@ -534,8 +534,8 @@ Begin
                             end;
 
                         If Not InBlockComment Then   // process the command line
-                            If Not SolutionAbort Then 
-                                ProcessCommand(InputLine)
+                            If Not DSS.SolutionAbort Then 
+                                ProcessCommand(DSS, InputLine)
                             Else 
                                 DSS.Redirect_Abort := True;  // Abort file if solution was aborted
 
@@ -547,13 +547,13 @@ Begin
                 End; // for stringIdx := 1 to strings.Count do
             end;
 
-            IF ActiveCircuit <> Nil THEN 
-                ActiveCircuit.CurrentDirectory := CurrDir + PathDelim;
+            IF DSS.ActiveCircuit <> Nil THEN 
+                DSS.ActiveCircuit.CurrentDirectory := CurrDir + PathDelim;
 
         EXCEPT On E: Exception DO
             DoErrorMsg(DSS, 'DoRedirect'+CRLF+'Error Processing Input Stream in Compile/Redirect.',
                         E.Message,
-                        'Error in File: "' + ReDirFile + '" or Filename itself.', 244);
+                        'Error in File: "' + DSS.ReDirFile + '" or Filename itself.', 244);
         END;
     FINALLY
         if strings <> nil then
@@ -562,7 +562,7 @@ Begin
             CloseFile(Fin);
             
         DSS.In_Redirect := False;
-        DSS.ParserVars.Add('@lastfile', ReDirFile) ;
+        DSS.ParserVars.Add('@lastfile', DSS.ReDirFile) ;
 
         If  IsCompile Then
         Begin
@@ -573,7 +573,7 @@ Begin
         Else 
         Begin
             SetCurrentDir(SaveDir);    // set back to where we were for redirect, but not compile
-            DSS.ParserVars.Add('@lastredirectfile', ReDirFile);
+            DSS.ParserVars.Add('@lastredirectfile', DSS.ReDirFile);
         End;
     END;
 End;
@@ -736,7 +736,7 @@ Begin
           End;
        SaveFile := SaveDir + PathDelim + SaveFile;
      End;
-     WriteClassFile(DSSClass, SaveFile, FALSE); // just write the class with no checks
+     WriteClassFile(DSS, DSSClass, SaveFile, FALSE); // just write the class with no checks
    End;
 
    SetLastResultFile(DSS, SaveFile);
@@ -975,9 +975,9 @@ Begin
     If Not NoFormsAllowed Then 
 {$ENDIF}
     Begin
-        DumpAllDSSCommands(FileName);
+        DumpAllDSSCommands(DSS, FileName);
 {$IFDEF DSS_CAPI}DSS.GlobalResult := FileName;{$ENDIF}
-        FireOffEditor(FileName);
+        FireOffEditor(DSS, FileName);
         Exit;
     End;
 
@@ -990,7 +990,7 @@ Begin
         FileName := DSS.OutputDirectory +  'Bus_Hash_List.Txt';
         DSS.ActiveCircuit.BusList.DumpToFile(FileName);
 {$IFDEF DSS_CAPI}DSS.GlobalResult := FileName;{$ENDIF}
-        FireOffEditor(FileName);
+        FireOffEditor(DSS, FileName);
         Exit;
     End;
 
@@ -1003,16 +1003,16 @@ Begin
         FileName := DSS.OutputDirectory +  'Device_Hash_List.Txt';
         DSS.ActiveCircuit.DeviceList.DumpToFile(FileName);
 {$IFDEF DSS_CAPI}DSS.GlobalResult := FileName;{$ENDIF}
-        FireOffEditor(FileName);
+        FireOffEditor(DSS, FileName);
         Exit;
     End;
 
     IF CompareText(Copy(lowercase(Param),1,5), 'alloc')=0 THEN
     Begin
         FileName :=DSS.OutputDirectory + 'AllocationFactors.Txt';
-        DumpAllocationFactors(FileName);
+        DumpAllocationFactors(DSS, FileName);
 {$IFDEF DSS_CAPI}DSS.GlobalResult := FileName;{$ENDIF}
-        FireOffEditor(FileName);
+        FireOffEditor(DSS, FileName);
         Exit;
     End;
 
@@ -1122,7 +1122,7 @@ Begin
 
   FileName := DSS.OutputDirectory + DSS.CircuitName_ + 'PropertyDump.Txt';
 {$IFDEF DSS_CAPI}DSS.GlobalResult := FileName;{$ENDIF}
-  FireOffEditor(FileName);
+  FireOffEditor(DSS, FileName);
 
 End;
 
@@ -1287,11 +1287,11 @@ Begin
        THEN Begin
             DoResetMonitors;
             DoResetMeters;
-            DoResetFaults ;
-            DoResetControls;
-            ClearEventLog;
-            ClearErrorLog;
-            DoResetKeepList;
+            DoResetFaults(DSS);
+            DoResetControls(DSS);
+            ClearEventLog(DSS);
+            ClearErrorLog(DSS);
+            DoResetKeepList(DSS);
        End
     ELSE
       CASE Param[1] of
@@ -1299,10 +1299,10 @@ Begin
                'O'{MOnitor}:  DoResetMonitors;
                'E'{MEter}:    DoResetMeters;
             END;
-       'F'{Faults}:   DoResetFaults;
-       'C'{Controls}: DoResetControls;
-       'E'{EventLog and ErrorLog}: Begin ClearEventLog;  ClearErrorLog; End;
-       'K': DoResetKeepList;
+       'F'{Faults}:   DoResetFaults(DSS);
+       'C'{Controls}: DoResetControls(DSS);
+       'E'{EventLog and ErrorLog}: Begin ClearEventLog(DSS);  ClearErrorLog(DSS); End;
+       'K': DoResetKeepList(DSS);
 
       ELSE
 
@@ -1439,7 +1439,7 @@ Begin
     ParamName := DSS.Parser.NextParam;
     Param := DSS.Parser.StrValue;
 
-    IF  FileExists(Param) THEN FireOffEditor(Param)
+    IF  FileExists(Param) THEN FireOffEditor(DSS, Param)
     ELSE Begin
        DSS.GlobalResult := 'File "'+param+'" does not exist.';
        Result := 1;
@@ -1936,7 +1936,7 @@ Begin
          DSS.GlobalResult := '';
          For i := 1 to  NValues DO
          Begin
-            DSS.GlobalResult := DSS.GlobalResult + Format('%d, ',[GetNodeNum(NodeRef^[i]) ]);
+            DSS.GlobalResult := DSS.GlobalResult + Format('%d, ',[GetNodeNum(DSS, NodeRef^[i]) ]);
          End;
      End
   Else
@@ -2860,7 +2860,7 @@ Begin
 
   If FileExists(Param) Then
     Begin
-     If Not RewriteAlignedFile(Param) Then Result := 1;
+     If Not RewriteAlignedFile(DSS, Param) Then Result := 1;
     End
   Else
     Begin
@@ -2868,7 +2868,7 @@ Begin
      Result := 1;
     End;
 
-  If Result=0 Then FireOffEditor(DSS.GlobalResult);
+  If Result=0 Then FireOffEditor(DSS, DSS.GlobalResult);
 
 End; {DoAlignfileCmd}
 
@@ -3032,7 +3032,7 @@ Begin
    CloseFile(Fin);
    CloseFile(Fout);
 
-   FireOffEditor(DSS.CircuitName_ + 'VDIFF.txt');
+   FireOffEditor(DSS, DSS.CircuitName_ + 'VDIFF.txt');
 
   End;
 
@@ -3057,13 +3057,13 @@ Begin
      Else Begin
        S := S + 'Status = NOT Solved' + CRLF;
      End;
-     S := S + 'Solution Mode = ' + GetSolutionModeID + CRLF;
+     S := S + 'Solution Mode = ' + GetSolutionModeID(DSS) + CRLF;
      S := S + 'Number = ' + IntToStr(DSS.ActiveCircuit.Solution.NumberofTimes) + CRLF;
      S := S + 'Load Mult = '+ Format('%5.3f', [DSS.ActiveCircuit.LoadMultiplier]) + CRLF;
      S := S + 'Devices = '+ Format('%d', [DSS.ActiveCircuit.NumDevices]) + CRLF;
      S := S + 'Buses = ' + Format('%d', [DSS.ActiveCircuit.NumBuses]) + CRLF;
      S := S + 'Nodes = ' + Format('%d', [DSS.ActiveCircuit.NumNodes]) + CRLF;
-     S := S + 'Control Mode =' + GetControlModeID + CRLF;
+     S := S + 'Control Mode =' + GetControlModeID(DSS) + CRLF;
      S := S + 'Total Iterations = '+IntToStr(DSS.ActiveCircuit.Solution.Iteration) + CRLF;
      S := S + 'Control Iterations = '+IntToStr(DSS.ActiveCircuit.Solution.ControlIteration) + CRLF;
      S := S + 'Max Sol Iter = ' +IntToStr(DSS.ActiveCircuit.Solution.MostIterationsDone ) + CRLF;
@@ -3074,9 +3074,9 @@ Begin
 
          S := S + Format('Year = %d ',[DSS.ActiveCircuit.Solution.Year]) + CRLF;
          S := S + Format('Hour = %d ',[DSS.ActiveCircuit.Solution.DynaVars.intHour]) + CRLF;
-         S := S + 'Max pu. voltage = '+Format('%-.5g ',[GetMaxPUVoltage]) + CRLF;
-         S := S + 'Min pu. voltage = '+Format('%-.5g ',[GetMinPUVoltage(TRUE)]) + CRLF;
-         cPower :=  CmulReal(GetTotalPowerFromSources, 0.000001);  // MVA
+         S := S + 'Max pu. voltage = '+Format('%-.5g ',[GetMaxPUVoltage(DSS)]) + CRLF;
+         S := S + 'Min pu. voltage = '+Format('%-.5g ',[GetMinPUVoltage(DSS, TRUE)]) + CRLF;
+         cPower :=  CmulReal(GetTotalPowerFromSources(DSS), 0.000001);  // MVA
          S := S + Format('Total Active Power:   %-.6g MW',[cpower.re]) + CRLF;
          S := S + Format('Total Reactive Power: %-.6g Mvar',[cpower.im]) + CRLF;
          cLosses := CmulReal(DSS.ActiveCircuit.Losses, 0.000001);
@@ -3084,9 +3084,9 @@ Begin
                              Else S := S + 'Total Active Losses:   ****** MW, (**** %%)' + CRLF;
          S := S + Format('Total Reactive Losses: %-.6g Mvar',[cLosses.im]) + CRLF;
          S := S + Format('Frequency = %-g Hz',[DSS.ActiveCircuit.Solution.Frequency]) + CRLF;
-         S := S + 'Mode = '+GetSolutionModeID + CRLF;
-         S := S + 'Control Mode = '+GetControlModeID + CRLF;
-         S := S + 'Load Model = '+GetLoadModel + CRLF;
+         S := S + 'Mode = '+GetSolutionModeID(DSS) + CRLF;
+         S := S + 'Control Mode = '+GetControlModeID(DSS) + CRLF;
+         S := S + 'Load Model = '+GetLoadModel(DSS) + CRLF;
      End;
 
      DSS.GlobalResult := S;
@@ -3143,7 +3143,7 @@ Begin
 
      if Not DoGenerators then FilName := 'DistLoads.dss' ;
 
-     MakeDistributedGenerators(kW, PF, How, Skip, FilName, DoGenerators);  // in Utilities
+     MakeDistributedGenerators(DSS, kW, PF, How, Skip, FilName, DoGenerators);  // in Utilities
 
 End;
 
@@ -3428,7 +3428,7 @@ function TExecHelper.DoADOScmd:Integer;
 
 Begin
     Result  := 0;
-    DoDOScmd(DSS.Parser.Remainder);
+    DoDOScmd(DSS, DSS.Parser.Remainder);
 End;
 
 function TExecHelper.DoEstimateCmd:Integer;
@@ -3548,8 +3548,8 @@ Begin
      EditString := Format('%s  %s',[EditString, MyEditString]);
 
      case TraceDirection of
-          1: TraceAndEdit(pLine1, pLine2, NPhases, Editstring);
-          2: TraceAndEdit(pLine2, pLine1, NPhases, Editstring);
+          1: TraceAndEdit(DSS, pLine1, pLine2, NPhases, Editstring);
+          2: TraceAndEdit(DSS, pLine2, pLine1, NPhases, Editstring);
      Else
          DoSimpleMsg(DSS, 'Traceback path not found between Line1 and Line2.', 28707);
          Exit;
@@ -3583,7 +3583,7 @@ Begin
          CASE ParamPointer OF
            1: BusName := Param;
            2: AddMarkerCode := DSS.Parser.IntValue;
-           3: AddMarkerColor:= InterpretColorName(Param);
+           3: AddMarkerColor:= InterpretColorName(DSS, Param);
            4: AddMarkerSize := DSS.Parser.IntValue;
 
          ELSE
@@ -3637,7 +3637,7 @@ Begin
 
 End;
 
-function TExecHelper.DoGuidsCmd:Integer;
+function TExecHelper.DoUuidsCmd:Integer;
 Var
   F:TextFile;
   ParamName, Param, S, NameVal, GuidVal, DevClass, DevName: String;
@@ -3660,7 +3660,7 @@ Begin
         if Pos ('{', GuidVal) < 1 then
           GuidVal := '{' + GuidVal + '}';
         // find this object
-        ParseObjectClassAndName (NameVal, DevClass, DevName);
+        ParseObjectClassAndName(DSS, NameVal, DevClass, DevName);
         IF CompareText (DevClass, 'circuit')=0 THEN begin
           pName := DSS.ActiveCircuit
         end else begin
@@ -3672,7 +3672,7 @@ Begin
           end;
         end;
         // re-assign its GUID
-        if pName <> nil then pName.GUID := StringToGuid (GuidVal);
+        if pName <> nil then pName.UUID := StringToUuid (GuidVal);
       End;
     End;
   Finally
@@ -3720,7 +3720,7 @@ Begin
      End;
 
      CloseFile(F);
-     FireOffEditor(Fname);
+     FireOffEditor(DSS, Fname);
      Result := 0;
 End;
 
@@ -3843,7 +3843,7 @@ Begin
          Exit;
      End;
 
-     GoForwardandRephase(pStartLine, NewPhases, MyEditString, ScriptfileName, TransfStop);
+     GoForwardandRephase(DSS, pStartLine, NewPhases, MyEditString, ScriptfileName, TransfStop);
 
 End;
 
@@ -3940,7 +3940,7 @@ Begin
                  Npts  := DSS.Parser.IntValue;
                  Reallocmem(Varray, SizeOf(Varray^[1])*Npts);
                End;
-            2: Npts    := InterpretDblArray(Param, Npts, Varray);
+            2: Npts    := InterpretDblArray(DSS, Param, Npts, Varray);
             3: CyclesPerSample := Round(DSS.ActiveCircuit.Solution.Frequency * DSS.Parser.dblvalue);
             4: Freq   := DSS.Parser.DblValue;
             5: Lamp    := DSS.Parser.IntValue;
@@ -4112,7 +4112,7 @@ Begin
      End;
 
      // Check for existence of FelementName
-     DeviceIndex := GetCktElementIndex(FElementName);
+     DeviceIndex := GetCktElementIndex(DSS, FElementName);
      if DeviceIndex = 0  then
      Begin
          DoSimpleMsg(DSS, 'Error: Element '+ FelementName + ' does not exist in this circuit.', 28726);
