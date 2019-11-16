@@ -6,7 +6,7 @@ build_script:
 
     appveyor downloadfile https://sourceforge.net/projects/dss-capi/files/FPC/FPC-win32-win64-3.0.4.7z/download -FileName FPC-win32-win64-3.0.4.7z
 
-    appveyor downloadfile https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_win_x86-gcc5.3.zip -FileName klusolve_x86.zip
+    appveyor downloadfile https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_win_x86-msvc2017.zip -FileName klusolve_x86.zip
     
     appveyor downloadfile https://github.com/dss-extensions/klusolve/releases/download/1.1.0a2/klusolve_1.1.0a2_win_x64-gcc8.1.zip -FileName klusolve_x64.zip
 
