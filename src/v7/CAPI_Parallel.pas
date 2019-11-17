@@ -1,0 +1,167 @@
+unit CAPI_Parallel;
+
+{$inline on}
+
+interface
+
+uses
+    CAPI_Utils;
+
+function Parallel_Get_NumCPUs(): Integer; CDECL;
+function Parallel_Get_NumCores(): Integer; CDECL;
+function Parallel_Get_ActiveActor(): Integer; CDECL;
+procedure Parallel_Set_ActiveActor(Value: Integer); CDECL;
+procedure Parallel_CreateActor(); CDECL;
+function Parallel_Get_ActorCPU(): Integer; CDECL;
+procedure Parallel_Set_ActorCPU(Value: Integer); CDECL;
+function Parallel_Get_NumOfActors(): Integer; CDECL;
+procedure Parallel_Wait(); CDECL;
+procedure Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Parallel_Get_ActorProgress_GR(); CDECL;
+procedure Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure Parallel_Get_ActorStatus_GR(); CDECL;
+function Parallel_Get_ActiveParallel(): Integer; CDECL;
+procedure Parallel_Set_ActiveParallel(Value: Integer); CDECL;
+function Parallel_Get_ConcatenateReports(): Integer; CDECL;
+procedure Parallel_Set_ConcatenateReports(Value: Integer); CDECL;
+
+implementation
+
+uses
+    CAPI_Constants,
+    DSSGlobals,
+    Executive,
+    SysUtils,
+    solution,
+    CktElement,
+    ParserDel,
+    KLUSolve,
+    Classes,
+    DSSClass,
+    DSSHelper;
+
+function Parallel_Get_NumCPUs(): Integer; CDECL;
+begin
+    Result := CPU_Cores;
+end;
+//------------------------------------------------------------------------------
+function Parallel_Get_NumCores(): Integer; CDECL;
+begin
+    Result := round(CPU_Cores / 2); //TODO: fix
+end;
+//------------------------------------------------------------------------------
+function Parallel_Get_ActiveActor(): Integer; CDECL;
+begin
+    Result := ActiveActor;
+end;
+//------------------------------------------------------------------------------
+procedure Parallel_Set_ActiveActor(Value: Integer); CDECL;
+begin
+    if Value <= High(DSSPrime.Children)+1 then
+        DSSPrime.ActiveActor := Value
+    else
+        DoSimpleMsg(DSSPrime, 'The actor does not exists', 7002);
+end;
+//------------------------------------------------------------------------------
+procedure Parallel_CreateActor(); CDECL;
+begin
+    New_Actor_Slot(DSSPrime);
+end;
+//------------------------------------------------------------------------------
+function Parallel_Get_ActorCPU(): Integer; CDECL;
+begin
+    Result := DSSPrime.ActiveChild.CPU;
+end;
+//------------------------------------------------------------------------------
+procedure Parallel_Set_ActorCPU(Value: Integer); CDECL;
+begin
+    if Value < CPU_Cores then
+    begin
+        DSSPrime.ActiveChild.CPU := value;
+        if DSSPrime.ActiveChild.ActorThread <> nil then
+            DSSPrime.ActiveChild.ActorThread.CPU := value;
+    end
+    else DoSimpleMsg(DSSPrime, 'The CPU does not exist', 7004);
+end;
+//------------------------------------------------------------------------------
+function Parallel_Get_NumOfActors(): Integer; CDECL;
+begin
+    Result := High(DSSPrime.Children)+1;
+end;
+//------------------------------------------------------------------------------
+procedure Parallel_Wait(); CDECL;
+var
+    i: Integer;
+begin
+    if Parallel_enabled then
+        Wait4Actors(DSSPrime, 0);
+end;
+//------------------------------------------------------------------------------
+procedure Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+var
+    Result: PIntegerArray;
+    idx: Integer;
+begin
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, NumOfActors);
+    for idx := 0 to High(DSSPrime.Children) do
+    begin
+        Result[idx] := DSSPrime.Children[idx].ActorPctProgress;
+    end;
+end;
+
+procedure Parallel_Get_ActorProgress_GR(); CDECL;
+// Same as Parallel_Get_ActorProgress but uses global result (GR) pointers
+begin
+    Parallel_Get_ActorProgress(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+end;
+
+//------------------------------------------------------------------------------
+procedure Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+var
+    Result: PIntegerArray;
+    idx: Integer;
+begin
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, NumOfActors);
+    for idx := 0 to High(DSSPrime.Children) do
+    begin
+        if DSSPrime.Children[idx].ActorThread.Is_Busy then
+            Result[idx] := 0
+        else
+            Result[idx] := 1;
+    end;
+end;
+
+procedure Parallel_Get_ActorStatus_GR(); CDECL;
+// Same as Parallel_Get_ActorStatus but uses global result (GR) pointers
+begin
+    Parallel_Get_ActorStatus(GR_DataPtr_PInteger, GR_CountPtr_PInteger)
+end;
+
+//------------------------------------------------------------------------------
+function Parallel_Get_ActiveParallel(): Integer; CDECL;
+begin
+    if DSSPrime.Parallel_enabled then
+        Result := 1
+    else
+        Result := 0;
+end;
+//------------------------------------------------------------------------------
+procedure Parallel_Set_ActiveParallel(Value: Integer); CDECL;
+begin
+    Parallel_enabled := (Value = 1);
+end;
+//------------------------------------------------------------------------------
+function Parallel_Get_ConcatenateReports(): Integer; CDECL;
+begin
+    if DSSPrime.ConcatenateReports then
+        Result := 1
+    else
+        Result := 0;
+end;
+//------------------------------------------------------------------------------
+procedure Parallel_Set_ConcatenateReports(Value: Integer); CDECL;
+begin
+    DSSPrime.ConcatenateReports := (Value = 1);
+end;
+//------------------------------------------------------------------------------
+end.

@@ -69,6 +69,9 @@ TYPE
          Procedure Write_to_RecorderFile(const s:string);
 
          Procedure Clear;
+{$IFDEF DSS_CAPI_PM}
+         Procedure ClearAll;
+{$ENDIF}
          Property Command:String   read Get_Command write Set_Command;
          Property Error:Integer    read Get_ErrorResult;
          Property LastError:String read Get_LastError;
@@ -197,40 +200,77 @@ end;
 
 
 procedure TExecutive.Set_Command(const Value: String);
+{$IFDEF DSS_CAPI_PM}
+var
+    PMParent: TDSSContext;
+    i: Integer;
 begin
-
-      ProcessCommand(DSS, Value);
+    PMParent := DSS.GetPrime();
+{$ELSE}
+begin
+{$ENDIF}
+{$IFDEF DSS_CAPI_PM}
+    if PMParent.AllActors then
+    begin
+        for idx := 0 to High(PMParent.Children) do
+        begin
+            //TODO: if in the future the commands are processed in threads, this would need a lock, and
+            //      maybe allow certain commands only in the DSSPrime instance to simplify things
+            if PMParent.AllActors then 
+                ProcessCommand(PMParent.Children[idx], Value);
+        end;
+    end
+    else
+{$ENDIF}
+        ProcessCommand(DSS, Value);
 end;
 
 procedure TExecutive.Clear;
 begin
-       IF (DSS.NumCircuits > 0)  THEN
-       Begin
+    IF (DSS.NumCircuits > 0)  THEN
+    Begin
+        {First get rid of all existing stuff}
+        ClearAllCircuits(DSS);
+        DisposeDSSClasses(DSS);
 
-          {First get rid of all existing stuff}
-          ClearAllCircuits(DSS);
-          DisposeDSSClasses(DSS);
-
-          {Now, Start over}
-          CreateDSSClasses(DSS);
-          CreateDefaultDSSItems;
-          RebuildHelpForm := True; // because class strings have changed
-       End;
+        {Now, Start over}
+        CreateDSSClasses(DSS);
+        CreateDefaultDSSItems;
+        RebuildHelpForm := True; // because class strings have changed
+    End;
 
 {$IFNDEF FPC}
-       If Not IsDLL Then ControlPanel.UpdateElementBox ;
+    If Not IsDLL Then ControlPanel.UpdateElementBox ;
 {$ENDIF}
-       DSS.DefaultEarthModel     := DERI;
-       DSS.LogQueries            := FALSE;
-       DSS.MaxAllocationIterations := 2;
+    DSS.DefaultEarthModel     := DERI;
+    DSS.LogQueries            := FALSE;
+    DSS.MaxAllocationIterations := 2;
 
-       {Prepare for new variables}
-       DSS.ParserVars.Free;
-       DSS.ParserVars := TParserVar.Create(100);  // start with space for 100 variables
-       DSS.Parser.SetVars(DSS.ParserVars);
-       DSS.AuxParser.SetVars(DSS.ParserVars);
-       
+    {Prepare for new variables}
+    DSS.ParserVars.Free;
+    DSS.ParserVars := TParserVar.Create(100);  // start with space for 100 variables
+    DSS.Parser.SetVars(DSS.ParserVars);
+    DSS.AuxParser.SetVars(DSS.ParserVars);
 end;
+
+{$IFDEF DSS_CAPI_PM}
+procedure TExecutive.ClearAll;
+var
+    PMParent: TDSSContext;
+    i: integer;
+begin
+    PMParent := DSS.GetPrime();
+    
+    for i := 1 to high(PMParent.Children) then
+    begin
+        PMParent.Children[i].Free;
+    end;
+    SetLength(PMParent.Children, 1);
+    PMParent.ActiveChildIndex := 0;
+    PMParent.ActiveChild := PMParent;
+    PMParent.DSSExecutive.Clear();
+end;
+{$ENDIF}
 
 procedure TExecutive.Set_RecorderOn(const Value: Boolean);
 begin

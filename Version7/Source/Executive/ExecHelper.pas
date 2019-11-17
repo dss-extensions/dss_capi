@@ -49,7 +49,9 @@ type
         FUNCTION DoUserClassesCmd:Integer;
         FUNCTION DoHelpCmd:Integer;
         FUNCTION DoClearCmd:Integer;
+{$IFDEF DSS_CAPI_PM}
         FUNCTION DoClearAllCmd:Integer;
+{$ENDIF}
         FUNCTION DoReduceCmd:Integer;
         FUNCTION DoInterpolateCmd:Integer;
 
@@ -748,24 +750,18 @@ End;
 
 //----------------------------------------------------------------------------
 function TExecHelper.DoClearCmd:Integer;
-
 Begin
-
       DSS.DSSExecutive.Clear;
-
       Result := 0;
-
 End;
 //----------------------------------------------------------------------------
+{$IFDEF DSS_CAPI_PM}
 function TExecHelper.DoClearAllCmd:Integer;
-
 Begin
-
       DSS.DSSExecutive.ClearAll;
-
       Result := 0;
-
 End;
+{$ENDIF}
 //----------------------------------------------------------------------------
 function TExecHelper.DoHelpCmd:Integer;
 Begin

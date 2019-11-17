@@ -17,7 +17,7 @@ const
     NumExecOptions = 115;
 {$ELSE}
     NumExecOptions = 127;
-{$END}
+{$ENDIF}
 
 var
     ExecOption,
@@ -44,8 +44,11 @@ uses
     Sysutils,
     Solution,
     Energymeter,
-    DSSHelper,
-    Diakoptics;
+    DSSHelper
+{$IFDEF DSS_CAPI_PM}
+    , Diakoptics
+{$ENDIF}
+    ;
 
 {$IFDEF DSS_CAPI_PM}
 const
@@ -298,10 +301,10 @@ begin
         'The defaults are as shown in the example above.';
     OptionHelp[40] := '{Normal | Newton}  Solution algorithm type.  Normal is a fixed point iteration ' +
         'that is a little quicker than the Newton iteration.  Normal is adequate for most radial ' +
-        'distribution circuits.  Newton is more robust for circuits that are difficult to solve.' +
+        'distribution circuits.  Newton is more robust for circuits that are difficult to solve.'
 {$IFDEF DSS_CAPI_PM}
-        'Diakoptics is used for accelerating the simulation using multicore computers';
-{$ENDIF}
+         + 'Diakoptics is used for accelerating the simulation using multicore computers'
+{$ENDIF};
     OptionHelp[41] := '{YES/TRUE | NO/FALSE}  Default is "No/False". Specifies whether to use trapezoidal integration for accumulating energy meter registers. ' +
         'Applies to EnergyMeter and Generator objects.  Default method simply multiplies the ' +
         'present value of the registers times the width of the interval (Euler). ' +
@@ -494,10 +497,7 @@ var
 {$IFDEF DSS_CAPI_PM}
     PMParent: TDSSContext;
 begin
-    if DSS.IsPrime then
-        PMParent := DSS
-    else
-        PMParent := DSS.Parent;
+    PMParent := DSS.GetPrime();
 {$ELSE}
 begin
 {$ENDIF}
@@ -898,6 +898,7 @@ begin
                 DSS.SeasonalRating := InterpretYesNo(Param);
             115:
                 DSS.SeasonSignal := Param;
+{$IFDEF DSS_CAPI_PM}                
             OPTION_ActiveActor:
             begin
                 if Parser.StrValue = '*' then
@@ -954,8 +955,10 @@ begin
                 else
                     ADiakoptics := FALSE;
             end;
+{$ENDIF}
         else
            // Ignore excess parameters
+           //TODO: warn about excess parameters
         end;
 
         case ParamPointer of
@@ -992,10 +995,7 @@ var
 {$IFDEF DSS_CAPI_PM}
     PMParent: TDSSContext;
 begin
-    if DSS.IsPrime then
-        PMParent := DSS
-    else
-        PMParent := DSS.Parent;
+    PMParent := DSS.GetPrime();
 {$ELSE}
 begin
 {$ENDIF}
@@ -1421,7 +1421,7 @@ begin
 
             ParamName := DSS.Parser.NextParam;
             Param := DSS.Parser.StrValue;
-
+        end; {WHILE}
     except
         AppendGlobalResult(DSS, '***Error***');
     end;
@@ -1441,10 +1441,7 @@ var
 {$IFDEF DSS_CAPI_PM}
     PMParent: TDSSContext;
 begin
-    if DSS.IsPrime then
-        PMParent := DSS
-    else
-        PMParent := DSS.Parent;
+    PMParent := DSS.GetPrime();
 {$ELSE}
 begin
 {$ENDIF}

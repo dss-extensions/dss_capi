@@ -216,6 +216,49 @@ type
         function Get_DI_Verbose: Boolean;
 
     PROTECTED
+        // Moved from global unit vars
+
+        Delta_Hrs: Double;
+       // adjacency lists for PC and PD elements at each bus, built for faster searches
+        BusAdjPC: TAdjArray; // also includes shunt PD elements
+        BusAdjPD: TAdjArray;
+
+    {*******************************************************************************
+    *    Nomenclature:                                                             *
+    *                  OV_ Overloads                                               *
+    *                  VR_ Voltage report                                          *
+    *                  DI_ Demand interval                                         *
+    *                  SI_ System Demand interval                                  *
+    *                  TDI_ DI Totals                                              *
+    *                  FM_  Meter Totals                                           *
+    *                  SM_  System Mater                                           *
+    *                  EMT_  Energy Meter Totals                                   *
+    *                  PHV_  Phase Voltage Report                                  *
+    *     These prefixes are applied to the variables of each file mapped into     *
+    *     Memory using the MemoryMap_Lib                                           *
+    ********************************************************************************
+    }
+        OV_MHandle: TBytesStream;  // a. Handle to the file in memory
+        VR_MHandle: TBytesStream;
+        DI_MHandle: TBytesStream;
+        SDI_MHandle: TBytesStream;
+        TDI_MHandle: TBytesStream;
+        SM_MHandle: TBytesStream;
+        EMT_MHandle: TBytesStream;
+        PHV_MHandle: TBytesStream;
+        FM_MHandle: TBytesStream;
+
+    //*********** Flags for appending Files*****************************************
+        OV_Append: Boolean;
+        VR_Append: Boolean;
+        DI_Append: Boolean;
+        SDI_Append: Boolean;
+        TDI_Append: Boolean;
+        SM_Append: Boolean;
+        EMT_Append: Boolean;
+        PHV_Append: Boolean;
+        FM_Append: Boolean;
+
         procedure DefineProperties;
         function MakeLike(const EnergyMeterName: String): Integer; OVERRIDE;
         procedure SetHasMeterFlag;
@@ -319,7 +362,6 @@ type
 
 
     PROTECTED
-
         procedure OpenDemandIntervalFile;
         procedure WriteDemandIntervalData;
         procedure CloseDemandIntervalFile;
@@ -410,49 +452,6 @@ uses
 
 const
     NumPropsThisClass = 24;
-
-var
-
-    Delta_Hrs: Double;
-   // adjacency lists for PC and PD elements at each bus, built for faster searches
-    BusAdjPC: TAdjArray; // also includes shunt PD elements
-    BusAdjPD: TAdjArray;
-
-{*******************************************************************************
-*    Nomenclature:                                                             *
-*                  OV_ Overloads                                               *
-*                  VR_ Voltage report                                          *
-*                  DI_ Demand interval                                         *
-*                  SI_ System Demand interval                                  *
-*                  TDI_ DI Totals                                              *
-*                  FM_  Meter Totals                                           *
-*                  SM_  System Mater                                           *
-*                  EMT_  Energy Meter Totals                                   *
-*                  PHV_  Phase Voltage Report                                  *
-*     These prefixes are applied to the variables of each file mapped into     *
-*     Memory using the MemoryMap_Lib                                           *
-********************************************************************************
-}
-    OV_MHandle: TBytesStream;  // a. Handle to the file in memory
-    VR_MHandle: TBytesStream;
-    DI_MHandle: TBytesStream;
-    SDI_MHandle: TBytesStream;
-    TDI_MHandle: TBytesStream;
-    SM_MHandle: TBytesStream;
-    EMT_MHandle: TBytesStream;
-    PHV_MHandle: TBytesStream;
-    FM_MHandle: TBytesStream;
-
-//*********** Flags for appending Files*****************************************
-    OV_Append: Boolean;
-    VR_Append: Boolean;
-    DI_Append: Boolean;
-    SDI_Append: Boolean;
-    TDI_Append: Boolean;
-    SM_Append: Boolean;
-    EMT_Append: Boolean;
-    PHV_Append: Boolean;
-    FM_Append: Boolean;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -579,7 +578,7 @@ begin
         '   File name is "MTR_metername.CSV".' + CRLF +
         '(T)ake = Takes a sample at present solution' + CRLF +
         '(Z)onedump = Dump names of elements in meter zone to a file' + CRLF +
-        '   File name is "Zone_metername.CSV".';
+        '   File name is "Zone_metername.CSV".'; // TODO: mention the actor/child number in PM
     PropertyHelp[4] := 'Enter a string ARRAY of any combination of the following. Options processed left-to-right:' + CRLF + CRLF +
         '(E)xcess : (default) UE/EEN is estimate of energy over capacity ' + CRLF +
         '(T)otal : UE/EEN is total energy after capacity exceeded' + CRLF +
@@ -1114,16 +1113,18 @@ begin
     VoltageUEOnly := FALSE;
 
 //*************No append files by default***************************************
-    OV_Append := FALSE;
-    VR_Append := FALSE;
-    DI_Append := FALSE;
-    SDI_Append := FALSE;
-    TDI_Append := FALSE;
-    SM_Append := FALSE;
-    EMT_Append := FALSE;
-    PHV_Append := FALSE;
-    FM_Append := FALSE;
-
+    with DSS.EnergyMeterClass do
+    begin
+        OV_Append := FALSE;
+        VR_Append := FALSE;
+        DI_Append := FALSE;
+        SDI_Append := FALSE;
+        TDI_Append := FALSE;
+        SM_Append := FALSE;
+        EMT_Append := FALSE;
+        PHV_Append := FALSE;
+        FM_Append := FALSE;
+    end;
      // Set Register names  that correspond to the register quantities
     RegisterNames[1] := 'kWh';
     RegisterNames[2] := 'kvarh';
@@ -1297,7 +1298,7 @@ end;
 
 function TEnergyMeterObj.MakeVPhaseReportFileName: String;
 begin
-    Result := DSS.EnergyMeterClass.DI_Dir + PathDelim + Name + '_PhaseVoltageReport.CSV';
+    Result := DSS.EnergyMeterClass.DI_Dir + PathDelim + Name + '_PhaseVoltageReport' + DSS._Name + '.CSV';
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1445,7 +1446,7 @@ var
     S_NegSeqLosses: Complex;
 
     puV: Double;
-
+    Delta_hrs_local: Double;
 begin
     if not CheckBranchList(545) then
         Exit;
@@ -1455,9 +1456,9 @@ begin
      //----MeteredElement.ActiveTerminalIdx := MeteredTerminal;  // needed for Excess kVA calcs
     S_Local := CmulReal(MeteredElement.Power[MeteredTerminal], 0.001);
     S_Local_kVA := Cabs(S_Local);
-    Delta_Hrs := DSS.ActiveCircuit.Solution.IntervalHrs;
-    Integrate(Reg_kWh, S_Local.re, Delta_Hrs);   // Accumulate the power
-    Integrate(Reg_kvarh, S_Local.im, Delta_Hrs);
+    DSS.EnergyMeterClass.Delta_Hrs := DSS.ActiveCircuit.Solution.IntervalHrs;
+    Integrate(Reg_kWh, S_Local.re, DSS.EnergyMeterClass.Delta_Hrs);   // Accumulate the power
+    Integrate(Reg_kvarh, S_Local.im, DSS.EnergyMeterClass.Delta_Hrs);
     SetDragHandRegister(Reg_MaxkW, S_Local.re);   // 3-10-04 removed abs()
     SetDragHandRegister(Reg_MaxkVA, S_Local_kVA);
 
@@ -1710,30 +1711,32 @@ begin
         CktElem := BranchList.GoForward;
     end;
 
-     {NOTE: Integrate proc automatically sets derivatives array}
-    Integrate(Reg_LoadEEN, TotalLoad_EEN, Delta_Hrs);
-    Integrate(Reg_LoadUE, TotalLoad_UE, Delta_Hrs);
+    Delta_hrs_local := DSS.EnergyMeterClass.Delta_Hrs;
+    
+    {NOTE: Integrate proc automatically sets derivatives array}
+    Integrate(Reg_LoadEEN, TotalLoad_EEN, Delta_hrs_local);
+    Integrate(Reg_LoadUE, TotalLoad_UE, Delta_hrs_local);
 
-     {Accumulate losses in appropriate registers}
-    Integrate(Reg_ZoneLosseskWh, TotalLosses.re, Delta_Hrs);
-    Integrate(Reg_ZoneLosseskvarh, TotalLosses.im, Delta_Hrs);
-    Integrate(Reg_LoadLosseskWh, TotalLoadLosses.re, Delta_Hrs);
-    Integrate(Reg_LoadLosseskvarh, TotalLoadLosses.im, Delta_Hrs);
-    Integrate(Reg_NoLoadLosseskWh, TotalNoLoadLosses.re, Delta_Hrs);
-    Integrate(Reg_NoLoadLosseskvarh, TotalNoLoadLosses.im, Delta_Hrs);
-    Integrate(Reg_LineLosseskWh, TotalLineLosses.re, Delta_Hrs);
-    Integrate(Reg_LineModeLineLoss, TotalLineModeLosses.re, Delta_Hrs);
-    Integrate(Reg_ZeroModeLineLoss, TotalZeroModeLosses.re, Delta_Hrs);
-    Integrate(Reg_3_phaseLineLoss, Total3phaseLosses.re, Delta_Hrs);
-    Integrate(Reg_1_phaseLineLoss, Total1phaseLosses.re, Delta_Hrs);
-    Integrate(Reg_TransformerLosseskWh, TotalTransformerLosses.re, Delta_Hrs);
+    {Accumulate losses in appropriate registers}
+    Integrate(Reg_ZoneLosseskWh, TotalLosses.re, Delta_hrs_local);
+    Integrate(Reg_ZoneLosseskvarh, TotalLosses.im, Delta_hrs_local);
+    Integrate(Reg_LoadLosseskWh, TotalLoadLosses.re, Delta_hrs_local);
+    Integrate(Reg_LoadLosseskvarh, TotalLoadLosses.im, Delta_hrs_local);
+    Integrate(Reg_NoLoadLosseskWh, TotalNoLoadLosses.re, Delta_hrs_local);
+    Integrate(Reg_NoLoadLosseskvarh, TotalNoLoadLosses.im, Delta_hrs_local);
+    Integrate(Reg_LineLosseskWh, TotalLineLosses.re, Delta_hrs_local);
+    Integrate(Reg_LineModeLineLoss, TotalLineModeLosses.re, Delta_hrs_local);
+    Integrate(Reg_ZeroModeLineLoss, TotalZeroModeLosses.re, Delta_hrs_local);
+    Integrate(Reg_3_phaseLineLoss, Total3phaseLosses.re, Delta_hrs_local);
+    Integrate(Reg_1_phaseLineLoss, Total1phaseLosses.re, Delta_hrs_local);
+    Integrate(Reg_TransformerLosseskWh, TotalTransformerLosses.re, Delta_hrs_local);
     for i := 1 to MaxVBaseCount do
     begin
-        Integrate(Reg_VbaseStart + i, VBaseTotalLosses^[i], Delta_Hrs);
-        Integrate(Reg_VbaseStart + 1 * MaxVBaseCount + i, VBaseLineLosses^[i], Delta_Hrs);
-        Integrate(Reg_VbaseStart + 2 * MaxVBaseCount + i, VBaseLoadLosses^[i], Delta_Hrs);
-        Integrate(Reg_VbaseStart + 3 * MaxVBaseCount + i, VBaseNoLoadLosses^[i], Delta_Hrs);
-        Integrate(Reg_VbaseStart + 4 * MaxVBaseCount + i, VBaseLoad^[i], Delta_Hrs);
+        Integrate(Reg_VbaseStart + i, VBaseTotalLosses^[i], Delta_hrs_local);
+        Integrate(Reg_VbaseStart + 1 * MaxVBaseCount + i, VBaseLineLosses^[i], Delta_hrs_local);
+        Integrate(Reg_VbaseStart + 2 * MaxVBaseCount + i, VBaseLoadLosses^[i], Delta_hrs_local);
+        Integrate(Reg_VbaseStart + 3 * MaxVBaseCount + i, VBaseNoLoadLosses^[i], Delta_hrs_local);
+        Integrate(Reg_VbaseStart + 4 * MaxVBaseCount + i, VBaseLoad^[i], Delta_hrs_local);
     end;
 
 
@@ -1741,10 +1744,10 @@ begin
      {---------------   Total Zone Load and Generation -------------------------}
      {--------------------------------------------------------------------------}
 
-    Integrate(Reg_ZonekWh, TotalZonekW, Delta_Hrs);
-    Integrate(Reg_Zonekvarh, TotalZonekvar, Delta_Hrs);
-    Integrate(Reg_GenkWh, TotalGenkW, Delta_Hrs);
-    Integrate(Reg_Genkvarh, TotalGenkvar, Delta_Hrs);
+    Integrate(Reg_ZonekWh, TotalZonekW, Delta_hrs_local);
+    Integrate(Reg_Zonekvarh, TotalZonekvar, Delta_hrs_local);
+    Integrate(Reg_GenkWh, TotalGenkW, Delta_hrs_local);
+    Integrate(Reg_Genkvarh, TotalGenkvar, Delta_hrs_local);
     GenkVA := Sqrt(Sqr(TotalGenkvar) + Sqr(TotalGenkW));
     LoadkVA := Sqrt(Sqr(TotalZonekvar) + Sqr(TotalZonekW));
 
@@ -1779,22 +1782,22 @@ begin
     begin
         if (S_Local_KVA = 0.0) then
             S_Local_KVA := MaxZonekVA_Norm;
-        Integrate(Reg_OverloadkWhNorm, Maxvalue([0.0, (ZonekW * (1.0 - MaxZonekVA_Norm / S_Local_KVA))]), Delta_Hrs);
+        Integrate(Reg_OverloadkWhNorm, Maxvalue([0.0, (ZonekW * (1.0 - MaxZonekVA_Norm / S_Local_KVA))]), Delta_hrs_local);
     end
     else
     begin
-        Integrate(Reg_OverloadkWhNorm, MaxExcesskWNorm, Delta_Hrs);
+        Integrate(Reg_OverloadkWhNorm, MaxExcesskWNorm, Delta_hrs_local);
     end;
 
     if (MaxZonekVA_Emerg > 0.0) then
     begin
         if (S_Local_KVA = 0.0) then
             S_Local_KVA := MaxZonekVA_Emerg;
-        Integrate(Reg_OverloadkWhEmerg, Maxvalue([0.0, (ZonekW * (1.0 - MaxZonekVA_Emerg / S_Local_KVA))]), Delta_Hrs);
+        Integrate(Reg_OverloadkWhEmerg, Maxvalue([0.0, (ZonekW * (1.0 - MaxZonekVA_Emerg / S_Local_KVA))]), Delta_hrs_local);
     end
     else
     begin
-        Integrate(Reg_OverloadkWhEmerg, MaxExcesskWEmerg, Delta_Hrs);
+        Integrate(Reg_OverloadkWhEmerg, MaxExcesskWEmerg, Delta_hrs_local);
     end;
 
     FirstSampleAfterReset := FALSE;
@@ -1920,7 +1923,8 @@ var
     IsFeederEnd: Boolean;
     adjLst: TList;
     PCElementType: Cardinal;
-
+    BusAdjPC: TAdjArray;
+    BusAdjPD: TAdjArray;
 begin
 
     ZoneListCounter := 0;
@@ -1995,6 +1999,8 @@ begin
     ActiveBranch := MeteredElement;
 
   { ****************  MAIN LOOP *****************************}
+    BusAdjPC := DSS.EnergyMeterClass.BusAdjPC;
+    BusAdjPD := DSS.EnergyMeterClass.BusAdjPD;
     while ActiveBranch <> NIL do
     begin
 
@@ -3174,9 +3180,9 @@ var
 begin
 
     try
-        if This_Meter_DIFileIsOpen then
+        if This_Meter_DIFileIsOpen then with DSS.EnergyMeterClass do
         begin
-            if DI_MHandle <> NIL then
+            if DSS.EnergyMeterClass.DI_MHandle <> NIL then
                 CloseMHandler(DSS, DI_MHandle, MakeDIFileName, DI_Append);
             DI_MHandle := NIL;
             This_Meter_DIFileIsOpen := FALSE;
@@ -3213,7 +3219,7 @@ begin
         if This_Meter_DIFileIsOpen then
             CloseDemandIntervalFile;
 
-        if (DSS.EnergyMeterClass.DI_Verbose) then
+        if (DSS.EnergyMeterClass.DI_Verbose) then with DSS.EnergyMeterClass do
         begin
 
             This_Meter_DIFileIsOpen := TRUE;
@@ -3250,7 +3256,7 @@ begin
         end;
     except
         On E: Exception do
-            DoSimpleMsg(DSS, 'Error opening demand interval file "' + Name + '.CSV' + ' for writing.' + CRLF + E.Message, 535);
+            DoSimpleMsg(DSS, 'Error opening demand interval file "' + Name + DSS._Name + '.CSV' + ' for writing.' + CRLF + E.Message, 535);
     end;
 
 end;
@@ -3268,7 +3274,7 @@ var
     end;
 
 begin
-    if DSS.EnergyMeterClass.DI_Verbose and This_Meter_DIFileIsOpen then
+    if DSS.EnergyMeterClass.DI_Verbose and This_Meter_DIFileIsOpen then with DSS.EnergyMeterClass do
     begin
         with DSS.ActiveCircuit.Solution do
             WriteintoMem(DI_MHandle, DynaVars.dblHour);
@@ -3284,7 +3290,7 @@ begin
 
 
       {Phase Voltage Report, if requested}
-    if VPhaseReportFileIsOpen then
+    if VPhaseReportFileIsOpen then with DSS.EnergyMeterClass do
     begin
         with DSS.ActiveCircuit.Solution do
             WriteintoMem(PHV_MHandle, DynaVars.dblHour);
@@ -3327,27 +3333,27 @@ begin
             mtr := DSS.ActiveCircuit.EnergyMeters.Next;
         end;
 
-        WriteTotalsFile;  // Sum all energymeter registers to "Totals.CSV"
+        WriteTotalsFile;  // Sum all energymeter registers to "Totals_{}.CSV"
         SystemMeter.CloseDemandIntervalFile;
         SystemMeter.Save;
         if EMT_MHandle <> NIL then
-            CloseMHandler(DSS, EMT_MHandle, DI_Dir + PathDelim + 'EnergyMeterTotals.CSV', EMT_Append);
+            CloseMHandler(DSS, EMT_MHandle, DI_Dir + PathDelim + 'EnergyMeterTotals' + DSS._Name + '.CSV', EMT_Append);
         EMT_MHandle := NIL;
         if TDI_MHandle <> NIL then
-            CloseMHandler(DSS, TDI_MHandle, DI_Dir + PathDelim + 'DI_Totals.CSV', TDI_Append);
+            CloseMHandler(DSS, TDI_MHandle, DI_Dir + PathDelim + 'DI_Totals' + DSS._Name + '.CSV', TDI_Append);
         TDI_MHandle := NIL;
         DSS.DIFilesAreOpen := FALSE;
         if OverloadFileIsOpen then
         begin
             if OV_MHandle <> NIL then
-                CloseMHandler(DSS, OV_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads.CSV', OV_Append);
+                CloseMHandler(DSS, OV_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads' + DSS._Name + '.CSV', OV_Append);
             OV_MHandle := NIL;
             OverloadFileIsOpen := FALSE;
         end;
         if VoltageFileIsOpen then
         begin
             if VR_MHandle <> NIL then
-                CloseMHandler(DSS, VR_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions.CSV', VR_Append);
+                CloseMHandler(DSS, VR_MHandle, DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions' + DSS._Name + '.CSV', VR_Append);
             VR_MHandle := NIL;
             VoltageFileIsOpen := FALSE;
         end;
@@ -3366,7 +3372,7 @@ begin
         Exit;
 
     try
-        if DSS.Energymeterclass.FDI_Verbose then
+        if DSS.Energymeterclass.FDI_Verbose then with DSS.EnergyMeterClass do
         begin
             FileNm := MakeDIFileName;   // Creates directory if it doesn't exist
             if FileExists(FileNm) then
@@ -3380,7 +3386,7 @@ begin
         end;
     except
         On E: Exception do
-            DoSimpleMsg(DSS, 'Error opening demand interval file "' + Name + '.CSV' + ' for appending.' + CRLF + E.Message, 537);
+            DoSimpleMsg(DSS, 'Error opening demand interval file "' + Name + DSS._Name + '.CSV' + ' for appending.' + CRLF + E.Message, 537);
     end;
 end;
 
@@ -3445,14 +3451,14 @@ begin
 
           {Open FDI_Totals}
         try
-            FileNm := DI_Dir + PathDelim + 'DI_Totals.CSV';
+            FileNm := DI_Dir + PathDelim + 'DI_Totals' + DSS._Name + '.CSV';
               {File Must Exist}
             if FileExists(FileNm) then
                 TDI_Append := TRUE;
             CreateFDI_Totals;
         except
             On E: Exception do
-                DoSimpleMsg(DSS, 'Error opening demand interval file "' + Name + '.CSV' + ' for appending.' + CRLF + E.Message, 538);
+                DoSimpleMsg(DSS, 'Error opening demand interval file "' + Name + DSS._Name + '.CSV' + ' for appending.' + CRLF + E.Message, 538);
         end;
 
         DSS.DIFilesAreOpen := TRUE;
@@ -3462,7 +3468,7 @@ end;
 
 function TEnergyMeterObj.MakeDIFileName: String;
 begin
-    Result := DSS.EnergyMeterClass.DI_Dir + PathDelim + Self.Name + '.CSV';
+    Result := DSS.EnergyMeterClass.DI_Dir + PathDelim + Self.Name + DSS._Name + '.CSV';
 end;
 
 procedure TEnergyMeter.Set_SaveDemandInterval(const Value: Boolean);
@@ -3640,7 +3646,7 @@ begin
         WriteintoMemStr(TDI_MHandle, Char(10));
     except
         On E: Exception do
-            DoSimpleMsg(DSS, 'Error creating: "' + DI_Dir + PathDelim + 'DI_Totals.CSV": ' + E.Message, 539)
+            DoSimpleMsg(DSS, 'Error creating: "' + DI_Dir + PathDelim + 'DI_Totals' + DSS._Name + '.CSV": ' + E.Message, 539)
     end;
 end;
 
@@ -3657,12 +3663,12 @@ begin
         Exit;
 
     try
-        FileNm := DSS.EnergyMeterClass.Di_Dir + PathDelim + 'DI_SystemMeter.CSV';
+        FileNm := DSS.EnergyMeterClass.Di_Dir + PathDelim + 'DI_SystemMeter' + DSS._Name + '.CSV';
         AssignFile(SystemDIFile, FileNm);
       {File Must Exist}
         if FileExists(FileNm) then
         begin
-//        DI_MMFView:=  MapFile2Memory(EnergyMeterClass.DI_Dir+ PathDelim + 'DI_SystemMeter.CSV', DI_MMFHandle);
+//        DI_MMFView:=  MapFile2Memory(EnergyMeterClass.DI_Dir+ PathDelim + 'DI_SystemMeter' + DSS._Name + '.CSV', DI_MMFHandle);
 //        DI_Cursor :=  GetMMFCursor(DI_MMFView);
         end
         else
@@ -3695,9 +3701,9 @@ procedure TSystemMeter.CloseDemandIntervalFile;
 var
     File_Path: String;
 begin
-    if This_Meter_DIFileIsOpen then
+    if This_Meter_DIFileIsOpen then with DSS.EnergyMeterClass do
     begin
-        File_Path := DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_SystemMeter.CSV';
+        File_Path := DSS.EnergyMeterClass.DI_Dir + PathDelim + 'DI_SystemMeter' + DSS._Name + '.CSV';
         CloseMHandler(DSS, SDI_MHandle, File_Path, SDI_Append);
         SDI_MHandle := NIL;
         This_Meter_DIFileIsOpen := FALSE;
@@ -3737,17 +3743,19 @@ var
     F_header: String;
 begin
     try
-        if This_Meter_DIFileIsOpen then
-            SDI_MHandle.Free;
-        This_Meter_DIFileIsOpen := TRUE;
-        if SDI_MHandle <> NIL then
-            SDI_MHandle.free;
-        SDI_MHandle := Create_Meter_Space('"Hour", ');
-        WriteintoMemStr(SDI_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
-
+        with DSS.EnergyMeterClass do
+        begin
+            if This_Meter_DIFileIsOpen then
+                SDI_MHandle.Free;
+            This_Meter_DIFileIsOpen := TRUE;
+            if SDI_MHandle <> NIL then
+                SDI_MHandle.free;
+            SDI_MHandle := Create_Meter_Space('"Hour", ');
+            WriteintoMemStr(SDI_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
+        end;
     except
         On E: Exception do
-            DoSimpleMsg(DSS, 'Error opening demand interval file "DI_SystemMeter.CSV"  for writing.' + CRLF + E.Message, 541);
+            DoSimpleMsg(DSS, 'Error opening demand interval file "DI_SystemMeter' + DSS._Name + '.CSV"  for writing.' + CRLF + E.Message, 541);
     end;
 
 
@@ -3765,7 +3773,7 @@ var
     CSVName, Folder: String;
 begin
     try
-        CSVName := 'SystemMeter.CSV';
+        CSVName := 'SystemMeter' + DSS._Name + '.CSV';
        {If we are doing a simulation and saving interval data, create this in the
         same directory as the demand interval data}
         if DSS.energyMeterClass.SaveDemandInterval then
@@ -3783,19 +3791,20 @@ begin
         end
     end;
 
-    try
-        if SM_MHandle <> NIL then
-            SM_MHandle.Free;
-        SM_MHandle := Create_Meter_Space('Year, ');
-        WriteintoMemStr(SM_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
-        WriteintoMemStr(SM_MHandle, inttostr(DSS.ActiveCircuit.Solution.Year));
-        WriteRegisters(F);
-        WriteintoMemStr(SM_MHandle, Char(10));
+    with DSS.EnergyMeterClass do
+        try
+            if SM_MHandle <> NIL then
+                SM_MHandle.Free;
+            SM_MHandle := Create_Meter_Space('Year, ');
+            WriteintoMemStr(SM_MHandle, 'kWh, kvarh, "Peak kW", "peak kVA", "Losses kWh", "Losses kvarh", "Peak Losses kW"' + Char(10));
+            WriteintoMemStr(SM_MHandle, inttostr(DSS.ActiveCircuit.Solution.Year));
+            WriteRegisters(F);
+            WriteintoMemStr(SM_MHandle, Char(10));
 
-    finally
-        CloseMHandler(DSS, SM_MHandle, Folder + CSVName, SM_Append);
-        SM_MHandle := NIL;
-    end;
+        finally
+            CloseMHandler(DSS, SM_MHandle, Folder + CSVName, SM_Append);
+            SM_MHandle := NIL;
+        end;
 end;
 
 procedure TSystemMeter.TakeSample;
@@ -3844,17 +3853,19 @@ end;
 
 procedure TSystemMeter.WriteDemandIntervalData;
 begin
-    with DSS.ActiveCircuit.Solution do
-        WriteintoMem(SDI_MHandle, DynaVars.dblHour);
-    WriteintoMem(SDI_MHandle, cPower.re);
-    WriteintoMem(SDI_MHandle, cPower.im);
-    WriteintoMem(SDI_MHandle, peakkW);
-    WriteintoMem(SDI_MHandle, peakkVA);
-    WriteintoMem(SDI_MHandle, cLosses.re);
-    WriteintoMem(SDI_MHandle, cLosses.im);
-    WriteintoMem(SDI_MHandle, PeakLosseskW);
-    WriteintoMemStr(SDI_MHandle, Char(10));
-
+    with DSS.EnergyMeterClass do
+    begin
+        with DSS.ActiveCircuit.Solution do
+            WriteintoMem(SDI_MHandle, DynaVars.dblHour);
+        WriteintoMem(SDI_MHandle, cPower.re);
+        WriteintoMem(SDI_MHandle, cPower.im);
+        WriteintoMem(SDI_MHandle, peakkW);
+        WriteintoMem(SDI_MHandle, peakkVA);
+        WriteintoMem(SDI_MHandle, cLosses.re);
+        WriteintoMem(SDI_MHandle, cLosses.im);
+        WriteintoMem(SDI_MHandle, PeakLosseskW);
+        WriteintoMemStr(SDI_MHandle, Char(10));
+    end;
 end;
 
 procedure TSystemMeter.WriteRegisterNames(var F: TextFile);
@@ -3864,14 +3875,16 @@ end;
 
 procedure TSystemMeter.WriteRegisters(var F: TextFile);
 begin
-    WriteintoMem(SM_MHandle, kWh);
-    WriteintoMem(SM_MHandle, kvarh);
-    WriteintoMem(SM_MHandle, peakkW);
-    WriteintoMem(SM_MHandle, peakkVA);
-    WriteintoMem(SM_MHandle, Losseskwh);
-    WriteintoMem(SM_MHandle, Losseskvarh);
-    WriteintoMem(SM_MHandle, PeakLosseskW);
-
+    with DSS.EnergyMeterClass do
+    begin
+        WriteintoMem(SM_MHandle, kWh);
+        WriteintoMem(SM_MHandle, kvarh);
+        WriteintoMem(SM_MHandle, peakkW);
+        WriteintoMem(SM_MHandle, peakkVA);
+        WriteintoMem(SM_MHandle, Losseskwh);
+        WriteintoMem(SM_MHandle, Losseskvarh);
+        WriteintoMem(SM_MHandle, PeakLosseskW);
+    end;
 end;
 
 procedure TEnergyMeter.Set_DI_Verbose(const Value: Boolean);
@@ -3922,12 +3935,12 @@ begin
         for i := 1 to NumEMRegisters do
             WriteintoMem(FM_MHandle, Double(RegSum[i]));
         WriteintoMemStr(FM_MHandle, Char(10));
-        CloseMHandler(DSS, FM_MHandle, DI_Dir + PathDelim + 'Totals.CSV', FM_Append);
+        CloseMHandler(DSS, FM_MHandle, DI_Dir + PathDelim + 'Totals' + DSS._Name + '.CSV', FM_Append);
         FM_MHandle := NIL;
 
     except
         On E: Exception do
-            DoSimpleMsg(DSS, 'Error writing demand interval file Totals.CSV.' + CRLF + E.Message, 543);
+            DoSimpleMsg(DSS, 'Error writing demand interval file Totals' + DSS._Name + '.CSV.' + CRLF + E.Message, 543);
     end;
 
 end;
@@ -4160,7 +4173,7 @@ begin
 
         except
             On E: Exception do
-                DoSimpleMsg(DSS, 'Error creating the memory space for demand interval "' + Name + '.CSV' + ' for appending.' + CRLF + E.Message, 538);
+                DoSimpleMsg(DSS, 'Error creating the memory space for demand interval "' + Name + DSS._Name + '.CSV' + ' for appending.' + CRLF + E.Message, 538);
         end;
 
         DSS.DIFilesAreOpen := TRUE;

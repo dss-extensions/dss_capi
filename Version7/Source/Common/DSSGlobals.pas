@@ -161,7 +161,6 @@ VAR
     DSS_Viz_path: String;
     DSS_Viz_enable: Boolean=False;
 
-    IsDLL,
     NoFormsAllowed  :Boolean;
 
     CALPHA             :Complex;  {120-degree shift constant}
@@ -406,6 +405,7 @@ VAR
    ObjName, ObjClass :String;
 
 Begin
+      ObjClass := '';
       // Split off Obj class and name
       dotpos := Pos('.', Param);
       CASE dotpos OF
@@ -444,8 +444,6 @@ End;
 
 //----------------------------------------------------------------------------
 FUNCTION SetActiveBus(DSS: TDSSContext; const BusName:String):Integer;
-
-
 Begin
 
    // Now find the bus and set active
@@ -755,18 +753,6 @@ Begin
       DSS.ParserVars.Add('@lastfile', Fname);
 End;
 
-// Function MyAllocMem(nbytes:Cardinal):Pointer;
-// Begin
-//     Result := AllocMem(Nbytes);
-//     WriteDLLDebugFile(Format('Allocating %d bytes @ %p',[nbytes, Result]));
-// End;
-// 
-// Procedure MyReallocMem(Var p:Pointer; newsize:Integer);
-// Begin
-//      WriteDLLDebugFile(Format('Reallocating @ %p, new size= %d', [p, newsize]));
-//      ReallocMem(p, newsize);
-// End;
-
 {$IFNDEF FPC}
 // Function to validate the installation and path of the OpenDSS Viewer
 function GetIni(s,k: string; d: string; f: string=''): string; overload;
@@ -892,7 +878,6 @@ initialization
    QueryPerformanceFrequency(CPU_Freq);
    {$ENDIF}
    CPU_Cores        :=  CPUCount;
-   IsDLL                 := FALSE;
    MaxCircuits           := 1;  //  Not required anymore. planning to remove it
 
    //WriteDLLDebugFile('DSSGlobals');
@@ -901,7 +886,6 @@ initialization
    DSS_Viz_installed := CheckDSSVisualizationTool; // DSS visualization tool (flag of existance)
    {$ENDIF}
 {$IFDEF DSS_CAPI}
-   IsDLL := True;
    DSS_CAPI_INFO_SPARSE_COND := (SysUtils.GetEnvironmentVariable('DSS_CAPI_INFO_SPARSE_COND') = '1');
 
    // Default is True, disable at initialization only when DSS_CAPI_EARLY_ABORT = 0
@@ -919,7 +903,7 @@ initialization
     ExecCommands.DefineCommands;
 
 try
-   DSSPrime := TDSSContext.Create(True);
+   DSSPrime := TDSSContext.Create(nil, True);
 except 
     on E: Exception do
     begin

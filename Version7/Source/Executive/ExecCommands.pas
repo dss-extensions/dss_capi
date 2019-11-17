@@ -55,9 +55,12 @@ uses
     SolutionAlgs,
     DSSHelper,
     DSSClassDefs,
-    KLUSolve,
-    Diakoptics,
-    sparse_math;
+    KLUSolve
+{$IFDEF DSS_CAPI_PM}
+    , Diakoptics
+    , sparse_math
+{$ENDIF}
+    ;
     
 {$IFDEF DSS_CAPI_PM}
 const
@@ -769,9 +772,11 @@ begin
                 DSS.CmdResult := DoShowCmd(DSS); //'show';
             9:
             begin
+{$IFDEF DSS_CAPI_PM}
                 IsSolveAll := FALSE;
-                ActiveCircuit[1].AD_Init := FALSE;
-                CmdResult := DoSetCmd(1);  // changed from DoSolveCmd; //'solve';
+                DSS.AD_Init := FALSE;
+{$ENDIF}
+                DSS.CmdResult := DoSetCmd(DSS, 1);  // changed from DoSolveCmd; //'solve';
             end;
             10:
                 DSS.CmdResult := DSS.DSSExecutive.DoEnableCmd;
@@ -968,10 +973,12 @@ begin
       {$ENDIF}
             107:
                 DSS.DSSExecutive.DoRemoveCmd;
+{$IFDEF DSS_CAPI_PM}
             CMD_Abort:
                 SolutionAbort := TRUE;
             CMD_Clone:
                 DoClone;
+{$ENDIF}
         else
        // Ignore excess parameters
         end;

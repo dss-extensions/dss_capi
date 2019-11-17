@@ -135,7 +135,9 @@ type
         ActorActive,
         Processing: Boolean;
 
+{$IFDEF DSS_CAPI_PM}
         procedure Start_Diakoptics();
+{$ENDIF}
         procedure Notify_Main;
         function Get_Processing(): Boolean;
         procedure Set_Processing(Nval: Boolean);
@@ -223,10 +225,11 @@ type
         {Voltage and Current Arrays}
         NodeV: pNodeVArray;    // Main System Voltage Array   allows NodeV^[0]=0
         Currents: pNodeVArray;      // Main System Currents Array
-
+{$IFDEF DSS_CAPI_PM}
        {A-Diakoptics variables}
         Node_dV: pNodeVArray;     // Used to store the partial solution voltage
         Ic_Local: pNodeVArray;     // Used to store the complementary curret
+{$ENDIF}
 
 //******************************************************************************
         IncMat: Tsparse_matrix; // Incidence sparse matrix
@@ -262,8 +265,10 @@ type
         Active_Cols_Idx: array of Integer;
 //******************************************************************************
 //********************Diakoptics solution mode variables************************
+{$IFDEF DSS_CAPI_PM}
         ADiakoptics_ready: Boolean;
         ADiakoptics_Actors: Integer;
+{$ENDIF}
 //******************************************************************************
         constructor Create(ParClass: TDSSClass; const solutionname: String);
         destructor Destroy; OVERRIDE;
@@ -370,7 +375,9 @@ uses
     KLUSolve,
     PointerList,
     Line,
+{$IFDEF DSS_CAPI_PM}
     Diakoptics,
+{$ENDIF}
     DSSHelper;
 
 const
@@ -514,11 +521,12 @@ begin
     IntervalHrs := 1.0;
 
     InitPropertyValues(0);
+    
+{$IFDEF DSS_CAPI_PM}
     ADiakoptics_Ready := FALSE;   // A-Diakoptics needs to be initialized
-    {$IFDEF DSS_CAPI_PM}
     if not Assigned(ActorMA_Msg) then
         ActorMA_Msg := TEvent.Create(NIL, TRUE, FALSE, '');
-    {$ENDIF}
+{$ENDIF}
 end;
 
 // ===========================================================================================
@@ -2641,7 +2649,7 @@ end;
 {*******************************************************************************
 *           Routine created to empty a recently created folder                 *
 ********************************************************************************}
-{$IFDEF MSWINDOWS}
+    {$IFDEF MSWINDOWS}
 procedure DelFilesFromDir(Directory, FileMask: String; DelSubDirs: Boolean);
 var
     SourceLst: String;
@@ -2660,8 +2668,8 @@ begin
     SHFileOperation(FOS);
 end;
 
-{$ENDIF}
-{$IFDEF UNIX}
+    {$ENDIF}
+    {$IFDEF UNIX}
 procedure DeltreeDir(Directory: String);
 var
     Info: TSearchRec;
@@ -2721,7 +2729,7 @@ begin
     end;
 end;
 
-{$ENDIF}
+    {$ENDIF}
 {*******************************************************************************
 *             Used to create the OpenDSS Solver thread                         *
 ********************************************************************************
@@ -2968,9 +2976,9 @@ begin
                     Ic_Local^[row - VIndex + 1] := ActiveCircuit[1].Ic.CData[i].Value;
                 end;
             end;
-      // Solves to find the total solution
+            // Solves to find the total solution
             SolveSparseSet(hY, @Node_dV^[1], @Ic_Local^[1]);
-      // Sends the total voltage for this part to the coordinator
+            // Sends the total voltage for this part to the coordinator
             for i := 1 to NumNodes do
             begin
                 CNum := csub(NodeV^[i], Node_dV^[i]);

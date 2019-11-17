@@ -461,10 +461,11 @@ begin
             ErrorSaved := AllocMem(Sizeof(ErrorSaved^[1]) * NumNodes);  // zero fill
             NodeVBase := AllocMem(Sizeof(NodeVBase^[1]) * NumNodes);  // zero fill
             InitializeNodeVbase(DSS);
-         {A-Diakoptics vectors memory allocation}
+{$IFDEF DSS_CAPI_PM}
+            {A-Diakoptics vectors memory allocation}
             ReAllocMem(Node_dV, SizeOf(Node_dV^[1]) * (NumNodes + 1)); // Allocate the partial solution voltage
             ReAllocMem(Ic_Local, SizeOf(Ic_Local^[1]) * (NumNodes + 1)); // Allocate the Complementary currents
-
+{$ENDIF}
         end;
 
         case BuildOption of

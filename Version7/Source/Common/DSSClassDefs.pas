@@ -334,7 +334,7 @@ begin
             SuccessFree := TraceName;
         end;
         TraceName := '(DSSObjs Class)';
-        DSS.DSSObjs.Free;
+        FreeAndNil(DSS.DSSObjs);
     except
         On E: Exception do
             DoSimpleMsg(DSS, 'Exception disposing of DSS Obj "' + TraceName + '". ' + CRLF +
@@ -346,11 +346,11 @@ begin
         for i := 1 to DSS.DSSClassList.ListSize do
             TDSSClass(DSS.DSSClassList.Get(i)).Free;
         TraceName := '(DSS Class List)';
-        DSS.DSSClassList.Free;
+        FreeAndNil(DSS.DSSClassList);
         TraceName := '(DSS Classes)';
-        DSS.DSSClasses.Free;
+        FreeAndNil(DSS.DSSClasses);
         TraceName := '(ClassNames)';
-        DSS.ClassNames.Free;
+        FreeAndNil(DSS.ClassNames);
     except
         On E: Exception do
             DoSimpleMsg(DSS, 'Exception disposing of DSS Class"' + TraceName + '". ' + CRLF + E.Message, 902);

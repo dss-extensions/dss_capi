@@ -14,7 +14,7 @@ unit DSSClass;
 interface
 
 USES
-    Command,  Arraydef, Hashlist, {$IFDEF DSS_CAPI_HASHLIST}Contnrs,{$ENDIF} Classes, PointerList, NamedObject, ParserDel;
+    Command,  Arraydef, Hashlist, {$IFDEF DSS_CAPI_HASHLIST}Contnrs,{$ENDIF} Classes, PointerList, NamedObject, ParserDel, SyncObjs;
 
 TYPE
     TDSSContext = class;
@@ -67,7 +67,6 @@ TYPE
         RevPropertyIdxMap: pIntegerArray;    // maps property to internal command number
 
         DSSClassType: Integer;
-
 
         ElementList: TPointerList;
         ElementNamesOutOfSynch: Boolean;     // When device gets renamed
@@ -209,20 +208,28 @@ TYPE
     
         FActiveCircuit: TNamedObject;
         FActiveDSSObject :TNamedObject;
+{$IFDEF DSS_CAPI_PM}
+        FActorThread: TThread; //TODO: Currently only for solution, extend later
+{$ENDIF}
     public
         Parent: TDSSContext;
         
         // Parallel Machine state
-{$IFDEF DSS_CAPI_PM}        
+{$IFDEF DSS_CAPI_PM}
         Children: array of TDSSContext;
         ActiveChild: TDSSContext;
         ActiveChildIndex: Integer;
         CPU: Integer;
         
+        IsSolveAll: Boolean;
         AllActors: Boolean;
         Parallel_enabled: Boolean;
         ConcatenateReports: Boolean;
+        ADiakoptics: Boolean;
+        
+        ActorMsg: TEvent;
 {$ENDIF}
+        _Name: String;
     
         // Original global state
         DSSClasses: TDSSClasses;
@@ -280,8 +287,6 @@ TYPE
         ErrorStrings: TStringList;
 
         IncMat_Ordered     : Boolean;
-        //***********************A-Diakoptics Variables*********************************
-        ADiakoptics             : Boolean;
 
         //***********************Seasonal QSTS variables********************************
         SeasonalRating         : Boolean;    // Tells the energy meter if the seasonal rating feature is active
@@ -296,8 +301,9 @@ TYPE
         FPropIndex: Integer;  
         FPropClass: TDSSClass;
         
-        constructor Create(_Parent: TDSSContext; _IsPrime: Boolean = False);
+        constructor Create(_Parent: TDSSContext = nil; _IsPrime: Boolean = False);
         destructor Destroy; override;
+        function GetPrime(): TDSSContext;
     End;
 
 
@@ -308,31 +314,48 @@ implementation
 
 USES DSSGlobals, SysUtils, DSSObject, CktElement, DSSHelper, Executive;
 
+function TDSSContext.GetPrime(): TDSSContext;
+begin
+    if IsPrime or (Parent = nil) then 
+        Result := self
+    else
+        Result := Parent.GetPrime();
+end;
+
 constructor TDSSContext.Create(_Parent: TDSSContext; _IsPrime: Boolean);
 begin
     inherited Create;
 
     IsPrime := _IsPrime;
+    Parent := _Parent;
 
-{$IFDEF DSS_CAPI_PM}    
+{$IFDEF DSS_CAPI_PM}
     ActiveChildIndex := 0;
     Children := nil;
     
+    IsSolveAll := False;
     AllActors := False;
     ConcatenateReports := False;
     Parallel_enabled := False;
+    ADiakoptics := False;
     
     if IsPrime then
     begin
         SetLength(Children, 1);
         Children[0] := Self;
         ActiveChild := Self;
+        _Name := '_1';
     end
     else
+    begin
         ActiveChild := nil;
-        
+        _Name := '_';
+    end;
+    CPU := 0; //TODO: unused for now, can be useful even on single thread later
+{$ELSE}
+    _Name := '';
 {$ENDIF} // DSS_CAPI_PM
-    Parent := _Parent;
+
     
     LastCmdLine := '';
     RedirFile := '';
@@ -343,7 +366,6 @@ begin
 {$ENDIF}
     
     
-    CPU := 0; //TODO: unused for now
     
     ParserVars := TParserVar.Create(100);  // start with space for 100 variables
     Parser := TParser.Create;
@@ -351,8 +373,6 @@ begin
     Parser.SetVars(ParserVars);
     AuxParser.SetVars(ParserVars);
     
-    ADiakoptics      :=    False;  // Disabled by default
-
     SeasonalRating         :=  False;
     SeasonSignal           :=  '';
     

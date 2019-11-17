@@ -65,10 +65,12 @@ procedure ExportIncMatrixRows(DSS: TDSSContext; FileNm: String);
 procedure ExportIncMatrixCols(DSS: TDSSContext; FileNm: String);
 procedure ExportBusLevels(DSS: TDSSContext; FileNm: String);
 procedure ExportLaplacian(DSS: TDSSContext; FileNm: String);
+{$IFDEF DSS_CAPI_PM}
 procedure ExportZLL(DSS: TDSSContext; FileNm: String);
 procedure ExportZCC(DSS: TDSSContext; FileNm: String);
 procedure ExportY4(DSS: TDSSContext; FileNm: String);
 procedure ExportC(DSS: TDSSContext; FileNm: String);
+{$ENDIF}
 
 
 implementation
@@ -3519,6 +3521,7 @@ begin
     end;
 end;
 //-------------------------------------------------------------------
+{$IFDEF DSS_CAPI_PM}
 procedure ExportZLL(DSS: TDSSContext; FileNm: String);
 var
     F: TextFile;
@@ -3606,6 +3609,7 @@ begin
         end;
     end;
 end;
+{$ENDIF}
 //-------------------------------------------------------------------
 procedure ExportVoltagesElements(DSS: TDSSContext; FileNm: String);
 

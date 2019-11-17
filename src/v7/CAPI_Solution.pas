@@ -95,9 +95,9 @@ function Solution_Get_IntervalHrs(): Double; CDECL;
 procedure Solution_Set_IntervalHrs(Value: Double); CDECL;
 function Solution_Get_MinIterations(): Integer; CDECL;
 procedure Solution_Set_MinIterations(Value: Integer); CDECL;
-{V8-ONLY>
+{$IFDEF DSS_CAPI_PM}
 procedure Solution_SolveAll();cdecl;
-<V8-ONLY}
+{$ENDIF}
 procedure Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
 procedure Solution_Get_IncMatrix_GR(); CDECL;
 procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
@@ -868,7 +868,7 @@ begin
         DSSPrime.ActiveCircuit.Solution.MinIterations := Value;
 end;
 
-{V8-ONLY>
+{$IFDEF DSS_CAPI_PM}
 //------------------------------------------------------------------------------
 procedure Solution_SolveAll();cdecl;
 var
@@ -880,7 +880,7 @@ begin
     CmdResult   :=  DoSetCmd(1);
   end;
 end;
-<V8-ONLY}
+{$ENDIF}
 //------------------------------------------------------------------------------
 procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
 var

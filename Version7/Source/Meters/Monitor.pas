@@ -1798,8 +1798,13 @@ var
     RecordSize: Cardinal;
     s: Single;
     sngBuffer: array[1..100] of Single;
-
+{$IFDEF DSS_CAPI_PM}
+    PMParent: TDSSContext;
 begin
+    PMParent := DSS.GetPrime();
+{$ELSE}
+begin
+{$ENDIF}
 
     Save;  // Save present buffer
     CloseMonitorStream;   // Position at beginning
@@ -1808,7 +1813,12 @@ begin
 
     try
         AssignFile(F, CSVName);    // Make CSV file
-        Rewrite(F);
+{$IFDEF DSS_CAPI_PM}
+        if PMParent.ConcatenateReports and (PMParent <> DSS) then
+            Append(F)
+        else
+{$ENDIF}
+            Rewrite(F);
     except
         On E: Exception do
         begin
@@ -1828,7 +1838,11 @@ begin
     end;
 
     pStr := @StrBuffer;
-    Writeln(F, pStr);
+
+{$IFDEF DSS_CAPI_PM}
+    if not PMParent.ConcatenateReports or (PMParent = DSS) then
+{$ENDIF}
+        Writeln(F, pStr);
     RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
 
     try
@@ -2163,11 +2177,19 @@ begin
 end;
 
 function TMonitorObj.Get_FileName: String;
+{$IFDEF DSS_CAPI_PM}
+    PMParent: TDSSContext;
+{$ENDIF}
 begin
-    Result := DSS.OutputDirectory + DSS.CircuitName_ + 'Mon_' + Name + '.csv'
+{$IFDEF DSS_CAPI_PM}
+    PMParent := DSS.GetPrime();
+    if PMParent.ConcatenateReports then
+    begin
+        Result := PMParent.OutputDirectory + PMParent.CircuitName_ + 'Mon_' + Name + '.csv';
+        Exit;
+    end;
+{$ENDIF}
+    Result := DSS.OutputDirectory + DSS.CircuitName_ + 'Mon_' + Name + DSS._Name + '.csv'
 end;
-
-initialization
-  //WriteDLLDebugFile('Monitor');
 
 end.

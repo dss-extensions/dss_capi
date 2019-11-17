@@ -172,9 +172,14 @@ var
     Freq: Double;
     Units: Integer;
     Rho_line: Double;
-
-
+{$IFDEF DSS_CAPI_PM}
+    PMParent: TDSSContext;
+    InitP, FinalP, idxP: Integer;  // Variables added to concatenate the results in OpenDSS-PM
 begin
+    PMParent := DSS.GetPrime();
+{$ELSE}
+begin
+{$ENDIF}
     Result := 0;
 
     ParamName := DSS.Parser.NextParam;
@@ -266,16 +271,36 @@ begin
         begin     // Show Monitor
             ParamName := DSS.Parser.NextParam;
             Param := DSS.Parser.StrValue;
-            if Length(Param) > 0 then
-            begin
-                pMon := DSS.MonitorClass.Find(Param);
-                if pMon <> NIL then
-                    pMon.TranslateToCSV(TRUE)
-                else
-                    DoSimpleMsg(DSS, 'Monitor "' + param + '" not found.' + CRLF + DSS.Parser.CmdString, 248);
-            end
+            if Length(Param) = 0 then
+                DoSimpleMsg(DSS, 'Monitor Name Not Specified.' + CRLF + DSS.Parser.CmdString, 249)
             else
-                DoSimpleMsg(DSS, 'Monitor Name Not Specified.' + CRLF + DSS.Parser.CmdString, 249);
+            begin
+{$IFDEF DSS_CAPI_PM}
+                if not PMParent.ConcatenateReports then
+                begin
+{$ENDIF}
+                    pMon := DSS.MonitorClass.Find(Param);
+                    if pMon <> NIL then
+                        pMon.TranslateToCSV(TRUE)
+                    else
+                        DoSimpleMsg(DSS, 'Monitor "' + param + '" not found.' + CRLF + DSS.Parser.CmdString, 248);
+{$IFDEF DSS_CAPI_PM}
+                end
+                else
+                begin
+                    InitP := 0;
+                    FinalP := High(PMParent.Children);
+                    for idxP := InitP to FinalP do
+                    begin
+                        pMon := PMParent.Children[idxP].MonitorClass.Find(Param);
+                        if pMon <> NIL then
+                            pMon.TranslateToCSV((idxP = FinalP))
+                        else
+                            DoSimpleMsg('Monitor "' + param + '" not found.' + CRLF + DSS.Parser.CmdString, 248);
+                    end;
+                end;
+{$ENDIF}
+            end;
         end;
         11:
             ShowControlPanel;

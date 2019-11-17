@@ -63,6 +63,9 @@ uses
 type
     TDSSGlobalHelper = class helper for TDSSContext
     private
+{$IFDEF DSS_CAPI_PM}
+        function GetActorThread: TSolver; inline;
+{$ENDIF}
         function GetDSSExecutive: TExecutive; inline;
         function GetActiveDSSObject: TDSSObject; inline;
         function GetActiveCircuit: TDSSCircuit; inline;
@@ -116,6 +119,9 @@ type
         function GetGICLineClass: TGICLine; inline;
         function GetGICTransformerClass:TGICTransformer; inline;
         
+{$IFDEF DSS_CAPI_PM}
+        procedure SetActorThread(val: TSolver); inline;
+{$ENDIF}
         procedure SetDSSExecutive(val: TExecutive); inline;
         procedure SetActiveDSSObject(val: TDSSObject); inline;
         procedure SetActiveCircuit(val: TDSSCircuit); inline;
@@ -276,6 +282,9 @@ type
         procedure SetActiveTransfObj(val: TTransfObj); inline;
         
     public
+{$IFDEF DSS_CAPI_PM}
+        property ActorThread: TSolver read GetActorThread write SetActorThread;
+{$ENDIF}
         property DSSExecutive: TExecutive read GetDSSExecutive write SetDSSExecutive;
         property ActiveCircuit: TDSSCircuit read GetActiveCircuit write SetActiveCircuit;
         property ActiveDSSObject: TDSSObject read GetActiveDSSObject write SetActiveDSSObject;
@@ -387,6 +396,9 @@ type
     
 implementation
 
+{$IFDEF DSS_CAPI_PM}
+function TDSSGlobalHelper.GetActorThread: TSolver; begin Result := TSolver(FActorThread); end;
+{$ENDIF}
 function TDSSGlobalHelper.GetDSSExecutive: TExecutive; begin Result := TExecutive(FDSSExecutive); end;
 function TDSSGlobalHelper.GetActiveDSSObject: TDSSObject; begin Result := TDSSObject(FActiveDSSObject); end;
 function TDSSGlobalHelper.GetActiveCircuit: TDSSCircuit; begin Result := TDSSCircuit(FActiveCircuit); end;
@@ -494,6 +506,9 @@ function TDSSGlobalHelper.GetActiveReactorObj: TReactorObj; begin Result := TRea
 function TDSSGlobalHelper.GetActiveTransfObj: TTransfObj; begin Result := TTransfObj(FActiveTransfObj); end;
 
 
+{$IFDEF DSS_CAPI_PM}
+function TDSSGlobalHelper.SetActorThread(val: TSolver); begin FActorThread := val; end;
+{$ENDIF}
 procedure TDSSGlobalHelper.SetDSSExecutive(val: TExecutive); begin FDSSExecutive := val; end;
 procedure TDSSGlobalHelper.SetActiveDSSObject(val: TDSSObject); begin FActiveDSSObject := val; end;
 procedure TDSSGlobalHelper.SetActiveCircuit(val: TDSSCircuit); begin FActiveCircuit := val; end;

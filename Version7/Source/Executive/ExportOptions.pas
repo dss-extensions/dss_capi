@@ -14,7 +14,11 @@ uses
     DSSClass;
 
 const
+{$IFNDEF DSS_CAPI_PM}
+    NumExportOptions = 57;
+{$ELSE}
     NumExportOptions = 61;
+{$ENDIF}
 
 function DoExportCmd(DSS: TDSSContext): Integer;
 
@@ -106,10 +110,12 @@ begin
     ExportOption[55] := 'IncMatrixCols';
     ExportOption[56] := 'BusLevels';
     ExportOption[57] := 'Laplacian';
+{$IFDEF DSS_CAPI_PM}
     ExportOption[58] := 'ZLL';
     ExportOption[59] := 'ZCC';
     ExportOption[60] := 'Contours';
     ExportOption[61] := 'Y4';
+{$ENDIF}
 
     ExportHelp[1] := '(Default file = EXP_VOLTAGES.CSV) Voltages to ground by bus/node.';
     ExportHelp[2] := '(Default file = EXP_SEQVOLTAGES.CSV) Sequence voltages.';
@@ -176,10 +182,12 @@ begin
     ExportHelp[56] := 'Exports the names and the level of each Bus inside the Circuit based on its topology information. The level value defines' +
         'how far or close is the bus from the circuits backbone (0 means that the bus is at the backbone)';
     ExportHelp[57] := 'Exports the Laplacian matrix calculated using the branch-to-node Incidence matrix in compressed coordinated format (Row,Col,Value)';
+{$IFDEF DSS_CAPI_PM}
     ExportHelp[58] := 'Exports the Link branches matrix (ZLL) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates. If A-Diakoptics is not initialized this command does nothing';
     ExportHelp[59] := 'Exports the connectivity matrix (ZCC) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates.  If A-Diakoptics is not initialized this command does nothing';
     ExportHelp[60] := 'Exports the Contours matrix (C) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are integers.  If A-Diakoptics is not initialized this command does nothing';
     ExportHelp[61] := 'Exports the inverse of Z4 (ZCC) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates.  If A-Diakoptics is not initialized this command does nothing';
+{$ENDIF}    
 end;
 
 //----------------------------------------------------------------------------
@@ -201,8 +209,15 @@ var
     AbortExport: Boolean;
     Substation, GeographicRegion, SubGeographicRegion: String; // for CIM export
     FdrUuid, SubUuid, SubGeoUuid, RgnUuid: TUuid;              // for CIM export
-
+{$IFDEF DSS_CAPI_PM}
+    InitP, FinalP, idxP: Integer;
+    PMParent: TDSSContext;
 begin
+    PMParent := DSS.GetPrime();
+{$ELSE}
+begin
+{$ENDIF}
+
     Result := 0;
     AbortExport := FALSE;
     FileName := '';
@@ -478,6 +493,7 @@ begin
                 FileName := 'Bus_Levels.csv';
             57:
                 FileName := 'Laplacian.csv';
+{$IFDEF DSS_CAPI_PM}
             58:
                 FileName := 'ZLL.csv';
             59:
@@ -486,7 +502,7 @@ begin
                 FileName := 'C.csv';
             61:
                 FileName := 'Y4.csv';
-
+{$ENDIF}
         else
             FileName := 'EXP_VOLTAGES.CSV';    // default
         end;
@@ -523,35 +539,74 @@ begin
         14:
             ExportMeters(DSS, Filename);
         15:
-            if Length(Parm2) > 0 then
+            if Length(Parm2) = 0 then
+                DoSimpleMsg(DSS, 'Monitor Name Not Specified.' + CRLF + DSS.Parser.CmdString, 251)
+            else
             begin
-                if Parm2 = 'all' then
+{$IFDEF DSS_CAPI_PM}
+                if not PMParent.ConcatenateReports then
                 begin
-                    pMon := DSS.ActiveCircuit.Monitors.First;
-                    while pMon <> NIL do
+{$ENDIF}
+                    if Parm2 = 'all' then
                     begin
+                        pMon := DSS.ActiveCircuit.Monitors.First;
+                        while pMon <> NIL do
+                        begin
+                            if pMon <> NIL then
+                            begin
+                                pMon.TranslateToCSV(FALSE);
+                                FileName := DSS.GlobalResult;
+                            end;
+                            pMon := DSS.ActiveCircuit.Monitors.Next;
+                        end;
+                    end
+                    else
+                    begin
+                        pMon := DSS.MonitorClass.Find(Parm2);
                         if pMon <> NIL then
                         begin
                             pMon.TranslateToCSV(FALSE);
                             FileName := DSS.GlobalResult;
-                        end;
-                        pMon := DSS.ActiveCircuit.Monitors.Next;
+                        end
+                        else
+                            DoSimpleMsg(DSS, 'Monitor "' + Parm2 + '" not found.' + CRLF + DSS.Parser.CmdString, 250);
                     end;
+{$IFDEF DSS_CAPI_PM}
                 end
                 else
                 begin
-                    pMon := DSS.MonitorClass.Find(Parm2);
-                    if pMon <> NIL then
+                    InitP := 0;
+                    FinalP := High(PParent.Children);
+                    for idxP := InitP to FinalP do
                     begin
-                        pMon.TranslateToCSV(FALSE);
-                        FileName := DSS.GlobalResult;
-                    end
-                    else
-                        DoSimpleMsg(DSS, 'Monitor "' + Parm2 + '" not found.' + CRLF + DSS.Parser.CmdString, 250);
+                        if Parm2 = 'all' then
+                        begin
+                            pMon := PParent.Children[idxP].ActiveCircuit.Monitors.First;
+                            while pMon <> NIL do
+                            begin
+                                if pMon <> NIL then
+                                begin
+                                    pMon.TranslateToCSV(FALSE);
+                                    FileName := GlobalResult;
+                                end;
+                                pMon := PParent.Children[idxP].ActiveCircuit.Monitors.Next;
+                            end;
+                        end
+                        else
+                        begin
+                            pMon := PParent.Children[idxP].MonitorClass.Find(Parm2);
+                            if pMon <> NIL then
+                            begin
+                                pMon.TranslateToCSV(FALSE);
+                                FileName := GlobalResult;
+                            end
+                            else
+                                DoSimpleMsg('Monitor "' + Parm2 + '" not found.' + CRLF + DSS.Parser.CmdString, 250);
+                        end;
+                    end;
                 end;
-            end
-            else
-                DoSimpleMsg(DSS, 'Monitor Name Not Specified.' + CRLF + DSS.Parser.CmdString, 251);
+{$ENDIF}
+            end;
         16:
             ExportYprim(DSS, Filename);
         17:
@@ -636,6 +691,7 @@ begin
             ExportBusLevels(DSS, Filename);
         57:
             ExportLaplacian(DSS, Filename);
+{$IFDEF DSS_CAPI_PM}
         58:
             ExportZLL(DSS, Filename);
         59:
@@ -644,7 +700,7 @@ begin
             ExportC(DSS, Filename);
         61:
             ExportY4(DSS, Filename);
-
+{$ENDIF}
     else
         // ExportVoltages(DSS, Filename);    // default
         DoSimpleMsg(DSS, 'Error: Unknown Export command: "' + parm1 + '"', 24713);
