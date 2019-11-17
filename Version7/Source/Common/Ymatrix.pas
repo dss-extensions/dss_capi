@@ -2,7 +2,7 @@ unit Ymatrix;
 
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2019, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -461,6 +461,9 @@ begin
             ErrorSaved := AllocMem(Sizeof(ErrorSaved^[1]) * NumNodes);  // zero fill
             NodeVBase := AllocMem(Sizeof(NodeVBase^[1]) * NumNodes);  // zero fill
             InitializeNodeVbase(DSS);
+         {A-Diakoptics vectors memory allocation}
+            ReAllocMem(Node_dV, SizeOf(Node_dV^[1]) * (NumNodes + 1)); // Allocate the partial solution voltage
+            ReAllocMem(Ic_Local, SizeOf(Ic_Local^[1]) * (NumNodes + 1)); // Allocate the Complementary currents
 
         end;
 

@@ -13,7 +13,11 @@ uses
     Command, DSSClass;
 
 const
+{$IFNDEF DSS_CAPI_PM}
     NumExecCommands = 111;
+{$ELSE}
+    NumExecCommands = 118;
+{$ENDIF}
 
 var
 
@@ -38,9 +42,10 @@ uses
     ExportOptions,
     ParserDel,
     LoadShape,
-     {$IFDEF FPC}
+{$IFDEF FPC}
     CmdForms,
 {$ELSE}
+    Windows,
     PlotOptions,
     DSSForms,
     ConnectOptions,
@@ -48,7 +53,22 @@ uses
     sysutils,
     Utilities,
     SolutionAlgs,
-    DSSHelper;
+    DSSHelper,
+    DSSClassDefs,
+    KLUSolve,
+    Diakoptics,
+    sparse_math;
+    
+{$IFDEF DSS_CAPI_PM}
+const
+    CMD_NewActor = 105;
+    CMD_ClearAll = 106;
+    CMD_Wait = 107;
+    CMD_SolveAll = 108;
+    CMD_Tear_Circuit = 111;
+    CMD_Abort = 116;
+    CMD_Clone = 118;
+{$ENDIF}
 
 procedure DefineCommands;
 
@@ -166,6 +186,15 @@ begin
     ExecCommand[109] := 'CalcIncMatrix_O';
     ExecCommand[110] := 'Refine_BusLevels';
     ExecCommand[111] := 'CalcLaplacian';
+{$IFDEF DSS_CAPI_PM}
+    ExecCommand[CMD_NewActor] := 'NewActor';
+    ExecCommand[CMD_ClearAll] := 'ClearAll';
+    ExecCommand[CMD_Wait] := 'Wait';
+    ExecCommand[CMD_SolveAll] := 'SolveAll';
+    ExecCommand[CMD_Tear_Circuit] := 'Tear_Circuit';
+    ExecCommand[CMD_Abort] := 'Abort';
+    ExecCommand[CMD_Clone] := 'Clone';
+{$ENDIF}
 
     CommandHelp[1] := 'Create a new object within the DSS. Object becomes the ' +
         'active object' + CRLF +
@@ -502,13 +531,28 @@ begin
     CommandHelp[111] := 'Calculate the laplacian matrix using the incidence matrix' + CRLF +
         'previously calculated, this means that before calling this command' + CRLF +
         'the incidence matrix needs to be calculated using calcincmatrix/calcincmatrix_o';
-
+{$IFDEF DSS_CAPI_PM}
+    CommandHelp[CMD_NewActor] := 'This command creates a new actor (OpenDSS Instance) and sets the new actor as the active actor. ' +
+        'There can be only 1 circuit per actor. The NewActor command will increment the variable NumOfActors;' +
+        ' however, if the number of actors is the same as the number of available CPUs the new actor will not be created ' +
+        'generating an error message. This instruction will deliver the ID of the active actor. This command does not requires a precedent command.';
+    CommandHelp[CMD_ClearAll] := 'Clears all the circuits and all the actors, after this instruction there will be only 1 actor (actor 1) and will be the active actor';
+    CommandHelp[CMD_Wait] := 'Pauses the scripting thread until all the active actors are Ready to receive new commands (have finished all their tasks and are ready to receive new simulation orders).';
+    CommandHelp[CMD_SolveAll] := 'Solves all the circuits (Actors) loaded into memory by the user';
+    CommandHelp[CMD_Tear_Circuit] := 'Estimates the buses for tearing the system in many parts as CPUs - 1 are in the local computer, is used for tearing the interconnected circuit into a' +
+        ' balanced (same number of nodes) collection of subsystems for the A-Diakoptics algorithm';
+    CommandHelp[CMD_Abort] := 'Aborts all the simulations running';
+    CommandHelp[CMD_Clone] := 'Clones the active circuit. This command creates as many copies of the active cirucit as indicated in the argument ' +
+        'if the number of requested clones does not overpasses the number of local CPUs. The form of this command is clone X where' +
+        'X is the number of clones to be created';
+{$ENDIF}
 end;
 
 //----------------------------------------------------------------------------
 procedure ProcessCommand(DSS: TDSSContext; const CmdLine: String);
 var
     ParamPointer: Integer;
+    i: Integer;
     ParamName: String;
     Param: String;
     ObjName, PropName: String;
@@ -586,6 +630,12 @@ begin
                 DSS.DSSExecutive.DoClearCmd;
             28:
                 DSS.DSSExecutive.DoAboutBox;
+            32:
+                if not Assigned(DSS.ActiveCircuit) then
+                begin
+                    DoGetCmd_NoCircuit(DSS); // can only call this if no circuit active
+                    Exit;    // We exit with either a good outcome or bad
+                end;
             35:
                 DSS.CmdResult := DSS.DSSExecutive.DoFileEditCmd;
             49:
@@ -640,7 +690,33 @@ begin
                     Laplacian := IncMat.Transpose();          // Transposes the Incidence Matrix
                     Laplacian := Laplacian.multiply(IncMat);  // IncMatT*IncMat
                 end;
-            end
+            end;
+{$IFDEF DSS_CAPI_PM}
+            CMD_NewActor:
+            begin
+                New_Actor_Slot();
+            end;
+            CMD_ClearAll:
+                DoClearAllCmd;
+            CMD_Wait:
+            begin
+                if Parallel_enabled then
+                    Wait4Actors(0);
+            end;
+            CMD_SolveAll:
+            begin
+                IsSolveAll := TRUE;
+                for i := 1 to NumOfActors do
+                begin
+                    ActiveActor := i;
+                    CmdResult := DoSetCmd(1);
+                end;
+            end;
+            CMD_Tear_Circuit:
+            begin
+                ADiakoptics_Tearing();
+            end;
+{$ENDIF}
         else
             if DSS.ActiveCircuit = NIL then
             begin
@@ -692,7 +768,11 @@ begin
             8:
                 DSS.CmdResult := DoShowCmd(DSS); //'show';
             9:
-                DSS.CmdResult := DoSetCmd(DSS, 1);  // changed from DoSolveCmd; //'solve';
+            begin
+                IsSolveAll := FALSE;
+                ActiveCircuit[1].AD_Init := FALSE;
+                CmdResult := DoSetCmd(1);  // changed from DoSolveCmd; //'solve';
+            end;
             10:
                 DSS.CmdResult := DSS.DSSExecutive.DoEnableCmd;
             11:
@@ -888,6 +968,10 @@ begin
       {$ENDIF}
             107:
                 DSS.DSSExecutive.DoRemoveCmd;
+            CMD_Abort:
+                SolutionAbort := TRUE;
+            CMD_Clone:
+                DoClone;
         else
        // Ignore excess parameters
         end;
@@ -898,9 +982,9 @@ begin
                 E.Message,
                 'Error in command string or circuit data.', 303);
     end;
-
+{$IFNDEF DSS_CAPI_PM}
     DSS.ParserVars.Add('@result', DSS.GlobalResult)
-
+{$ENDIF}
 end;
 
 procedure DisposeStrings;

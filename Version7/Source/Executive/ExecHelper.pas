@@ -49,6 +49,7 @@ type
         FUNCTION DoUserClassesCmd:Integer;
         FUNCTION DoHelpCmd:Integer;
         FUNCTION DoClearCmd:Integer;
+        FUNCTION DoClearAllCmd:Integer;
         FUNCTION DoReduceCmd:Integer;
         FUNCTION DoInterpolateCmd:Integer;
 
@@ -755,7 +756,16 @@ Begin
       Result := 0;
 
 End;
+//----------------------------------------------------------------------------
+function TExecHelper.DoClearAllCmd:Integer;
 
+Begin
+
+      DSS.DSSExecutive.ClearAll;
+
+      Result := 0;
+
+End;
 //----------------------------------------------------------------------------
 function TExecHelper.DoHelpCmd:Integer;
 Begin

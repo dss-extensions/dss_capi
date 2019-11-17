@@ -107,7 +107,6 @@ begin
     Result := TRUE;
  (*      Reverted to original method. 3/1/17. see dpr file
       InitializeInterfaces;
-      IsDLL := TRUE;
     {Create one instance of DSS executive whenever the DSS Engine is init'd}
       DSSPrime.DSSExecutive := TExecutive.Create;  // Start the DSS when DSS interface is created
       DSSPrime.DSSExecutive.CreateDefaultDSSItems;

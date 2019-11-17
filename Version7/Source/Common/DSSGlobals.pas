@@ -140,6 +140,8 @@ CONST
       PROFILEPUKM = 9993;  // not mutually exclusive to the other choices 9999..9994
       PROFILE120KFT = 9992;  // not mutually exclusive to the other choices 9999..9994
 
+      IsDLL = True;
+
 VAR
     DLLFirstTime   :Boolean=TRUE;
     DLLDebugFile   :TextFile;

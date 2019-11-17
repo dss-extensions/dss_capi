@@ -210,6 +210,21 @@ TYPE
         FActiveCircuit: TNamedObject;
         FActiveDSSObject :TNamedObject;
     public
+        Parent: TDSSContext;
+        
+        // Parallel Machine state
+{$IFDEF DSS_CAPI_PM}        
+        Children: array of TDSSContext;
+        ActiveChild: TDSSContext;
+        ActiveChildIndex: Integer;
+        CPU: Integer;
+        
+        AllActors: Boolean;
+        Parallel_enabled: Boolean;
+        ConcatenateReports: Boolean;
+{$ENDIF}
+    
+        // Original global state
         DSSClasses: TDSSClasses;
         ClassNames         :THashList;
         DSSClassList    :TPointerList; // pointers to the base class types
@@ -281,7 +296,7 @@ TYPE
         FPropIndex: Integer;  
         FPropClass: TDSSClass;
         
-        constructor Create(_IsPrime: Boolean = False);
+        constructor Create(_Parent: TDSSContext; _IsPrime: Boolean = False);
         destructor Destroy; override;
     End;
 
@@ -293,9 +308,31 @@ implementation
 
 USES DSSGlobals, SysUtils, DSSObject, CktElement, DSSHelper, Executive;
 
-constructor TDSSContext.Create(_IsPrime: Boolean);
+constructor TDSSContext.Create(_Parent: TDSSContext; _IsPrime: Boolean);
 begin
     inherited Create;
+
+    IsPrime := _IsPrime;
+
+{$IFDEF DSS_CAPI_PM}    
+    ActiveChildIndex := 0;
+    Children := nil;
+    
+    AllActors := False;
+    ConcatenateReports := False;
+    Parallel_enabled := False;
+    
+    if IsPrime then
+    begin
+        SetLength(Children, 1);
+        Children[0] := Self;
+        ActiveChild := Self;
+    end
+    else
+        ActiveChild := nil;
+        
+{$ENDIF} // DSS_CAPI_PM
+    Parent := _Parent;
     
     LastCmdLine := '';
     RedirFile := '';
@@ -305,11 +342,12 @@ begin
     SetDataPath(self, StartupDirectory);
 {$ENDIF}
     
-    IsPrime := _IsPrime;
+    
+    CPU := 0; //TODO: unused for now
     
     ParserVars := TParserVar.Create(100);  // start with space for 100 variables
-    Parser        := TParser.Create;
-    AuxParser        := TParser.Create;
+    Parser := TParser.Create;
+    AuxParser := TParser.Create;
     Parser.SetVars(ParserVars);
     AuxParser.SetVars(ParserVars);
     
