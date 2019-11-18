@@ -844,13 +844,13 @@ end;
 PROCEDURE TCapControlObj.Sample(ActorID : Integer);
 
 VAR
+   PF,
+   Sabs,
    CurrTest,
    Vtest,
    NormalizedTime,
    Q       :Double;
    S       :Complex;
-   PF      :Double;
-   Sabs    :Double;
 
 
 
