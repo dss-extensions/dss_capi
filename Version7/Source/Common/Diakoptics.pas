@@ -44,7 +44,7 @@ var
   i,
   j,
   k         : Integer;
-  Vpartial  : TSparse_Complex;
+  Vpartial  : TSparse_Complex; //TODO: migrate to KLUSolveX
 Begin
   {Space left empty to implement the simplified Diakoptics algorithm}
   With ActiveCircuit[1], ActiveCircuit[1].Solution do

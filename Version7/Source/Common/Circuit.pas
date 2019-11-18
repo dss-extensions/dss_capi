@@ -162,7 +162,7 @@ TYPE
           CapacityStart,
           CapacityIncrement:  Double;
 
-          TrapezoidalIntegration,   // flag for trapezoidal integratio
+          TrapezoidalIntegration,   // flag for trapezoidal integration
           LogEvents  :Boolean;
 
           LoadDurCurve:String;
@@ -190,6 +190,7 @@ TYPE
           Locations         : Array of Integer;   // Stores the indexes of the locations
 
           // Variables for Diakoptics
+          //TODO: migrate TSparse_Complex to KLUSolveX (most already present in Eigen)
           Contours         :  TSparse_Complex;    //  Contours matrix
           ZLL              :  TSparse_Complex;    //  Link branch matrix
           ZCT              :  TSparse_Complex;    //  The transformation matrix (to go from one to other domain)

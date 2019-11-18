@@ -1,5 +1,5 @@
 {*******************************************************************************
-  Electric Power Resarch Insitute EPRI 2018
+  Electric Power Research Insitute EPRI 2018
 
  Library created to handle sparse matrix linear algebra ops, the arguments need
  to be sparse and provided in compressed coordiante format

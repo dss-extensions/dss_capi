@@ -64,6 +64,7 @@ type
     TDSSGlobalHelper = class helper for TDSSContext
     private
 {$IFDEF DSS_CAPI_PM}
+        function GetNumOfActors: Integer; inline;
         function GetActorThread: TSolver; inline;
 {$ENDIF}
         function GetDSSExecutive: TExecutive; inline;
@@ -283,6 +284,7 @@ type
         
     public
 {$IFDEF DSS_CAPI_PM}
+        property NumOfActors: Integer read GetNumOfActors;
         property ActorThread: TSolver read GetActorThread write SetActorThread;
 {$ENDIF}
         property DSSExecutive: TExecutive read GetDSSExecutive write SetDSSExecutive;
@@ -397,6 +399,7 @@ type
 implementation
 
 {$IFDEF DSS_CAPI_PM}
+function TDSSGlobalHelper.GetNumOfActors: Integer; begin Result := High(Children) + 1; end;
 function TDSSGlobalHelper.GetActorThread: TSolver; begin Result := TSolver(FActorThread); end;
 {$ENDIF}
 function TDSSGlobalHelper.GetDSSExecutive: TExecutive; begin Result := TExecutive(FDSSExecutive); end;

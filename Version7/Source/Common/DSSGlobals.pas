@@ -6,16 +6,6 @@ unit DSSGlobals;
   ----------------------------------------------------------
 }
 
-
-{ Change Log
- 8-14-99  SolutionAbort Added
-
- 10-12-99 AutoAdd constants added;
- 4-17-00  Added IsShuntCapacitor routine, Updated constants
- 10-08-02 Moved Control Panel Instantiation and show to here
- 11-6-02  Removed load user DLL because it was causing a conflict
-}
-
 {$WARN UNIT_PLATFORM OFF}
 
 interface
@@ -185,38 +175,36 @@ VAR
     UpdateRegistry     :Boolean;  // update on program exit
 {$ENDIF}
 
-PROCEDURE DoErrorMsg(DSS: TDSSContext; Const S, Emsg, ProbCause :String; ErrNum:Integer);
-PROCEDURE DoSimpleMsg(DSS: TDSSContext; Const S :String; ErrNum:Integer);
+procedure DoErrorMsg(DSS: TDSSContext; Const S, Emsg, ProbCause :String; ErrNum:Integer);
+procedure DoSimpleMsg(DSS: TDSSContext; Const S :String; ErrNum:Integer);
 
-PROCEDURE ClearAllCircuits(DSS: TDSSContext);
+procedure ClearAllCircuits(DSS: TDSSContext);
 
-PROCEDURE SetObject(DSS: TDSSContext; const param :string);
-FUNCTION  SetActiveBus(DSS: TDSSContext; const BusName:String):Integer;
-PROCEDURE SetDataPath(DSS: TDSSContext; const PathName:String);
+procedure SetObject(DSS: TDSSContext; const param :string);
+function  SetActiveBus(DSS: TDSSContext; const BusName:String):Integer;
+procedure SetDataPath(DSS: TDSSContext; const PathName:String);
 
-PROCEDURE SetLastResultFile(DSS: TDSSContext; Const Fname:String);
+procedure SetLastResultFile(DSS: TDSSContext; Const Fname:String);
 
-PROCEDURE MakeNewCircuit(DSS: TDSSContext; Const Name:String);
+procedure MakeNewCircuit(DSS: TDSSContext; Const Name:String);
 
-PROCEDURE AppendGlobalResult(DSS: TDSSContext; Const s:String);
-PROCEDURE AppendGlobalResultCRLF(DSS: TDSSContext; const S:String);  // Separate by CRLF
+procedure AppendGlobalResult(DSS: TDSSContext; Const s:String);
+procedure AppendGlobalResultCRLF(DSS: TDSSContext; const S:String);  // Separate by CRLF
 
-PROCEDURE ResetQueryLogFile(DSS: TDSSContext);
-PROCEDURE WriteQueryLogFile(DSS: TDSSContext; Const Prop, S:String);
+procedure ResetQueryLogFile(DSS: TDSSContext);
+procedure WriteQueryLogFile(DSS: TDSSContext; Const Prop, S:String);
 
-PROCEDURE WriteDLLDebugFile(DSS: TDSSContext; Const S:String);
+procedure WriteDLLDebugFile(DSS: TDSSContext; Const S:String);
 
 {$IFNDEF DSS_CAPI} // Disable DSS_Registry completely when building the DSS_CAPI DLL
-PROCEDURE ReadDSS_Registry(DSS: TDSSContext);
-PROCEDURE WriteDSS_Registry(DSS: TDSSContext);
+procedure ReadDSS_Registry(DSS: TDSSContext);
+procedure WriteDSS_Registry(DSS: TDSSContext);
 {$ENDIF}
 
-// FUNCTION IsDSSDLL(Fname:String):Boolean;
-
-// Procedure MyReallocMem(Var p:Pointer; newsize:integer);
-// Function MyAllocMem(nbytes:Cardinal):Pointer;
-
-
+{$IFDEF DSS_CAPI_PM}
+procedure DoClone(DSS: TDSSContext);
+procedure New_Actor_Slot(DSS: TDSSContext);
+{$ENDIF}
 
 implementation
 
@@ -462,14 +450,15 @@ Begin
 
 End;
 
-PROCEDURE ClearAllCircuits(DSS: TDSSContext);
-Begin
-     DSS.ActiveCircuit := DSS.Circuits.First;
-     WHILE DSS.ActiveCircuit<>nil DO
-     Begin
+{$IFNDEF DSS_CAPI_PM}
+procedure ClearAllCircuits(DSS: TDSSContext);
+begin
+    DSS.ActiveCircuit := DSS.Circuits.First;
+    while DSS.ActiveCircuit <> nil do
+    begin
         DSS.ActiveCircuit.Free;
         DSS.ActiveCircuit := DSS.Circuits.Next;
-     End;
+    end;
     DSS.Circuits.Free;
     DSS.Circuits := TPointerList.Create(2);   // Make a new list of circuits
     DSS.NumCircuits := 0;
@@ -479,12 +468,55 @@ Begin
     DSS.LogQueries            := FALSE;
     DSS.MaxAllocationIterations := 2;
 End;
-
+{$ELSE}
+procedure ClearAllCircuits(DSS: TDSSContext);
+var
+    i : integer;
+    PMParent: TDSSContext;
+begin
+    PMParent := DSS.GetPrime();
+    
+    for i := 0 to High(PMParent.Children) do
+        with PMParent.Children[i] do
+        begin
+            ActiveCircuit := Circuits.First;
+            while ActiveCircuit <> nil do
+            begin
+                ActiveCircuit.Free;
+                ActiveCircuit := Circuits.Next;
+            end;
+            ActiveCircuit.NumCircuits := 0;
+            Circuits.Free;
+            Circuits := TPointerList.Create(2);   // Make a new list of circuits
+            
+            //TODO: check why v8 does this:
+            //Parser.Free;
+            //Parser := nil;
+            
+            // In case the actor hasn't been destroyed
+            if ActorThread <> nil then
+            begin
+                //TODO: set SolutionAbort?
+                ActorThread.Send_Message(EXIT_ACTOR);
+                ActorThread.WaitFor;
+                FreeAndNil(ActorThread);
+            end;
+            
+            // Revert on key global flags to Original States
+            DefaultEarthModel := DERI;
+            LogQueries := FALSE;
+            MaxAllocationIterations := 2;
+        end;
+        
+    PMParent.ActiveChild := PMParent;
+    PMParent.ActiveChildIndex := 0;
+end;
+{$ENDIF}// DSS_CAPI_PM
 
 
 PROCEDURE MakeNewCircuit(DSS: TDSSContext; Const Name:String);
 Var
-    S:String;
+    S: String;
 Begin
      If DSS.NumCircuits <= MaxCircuits - 1 Then
      Begin
@@ -494,7 +526,7 @@ Begin
          Inc(DSS.NumCircuits);
          S := DSS.Parser.Remainder;    // Pass remainder of string on to vsource.
          {Create a default Circuit}
-         DSS.SolutionABort := FALSE;
+         DSS.SolutionAbort := False;
          {Voltage source named "source" connected to SourceBus}
          DSS.DSSExecutive.Command := 'New object=vsource.source Bus1=SourceBus ' + S;  // Load up the parser as if it were read in
      End
@@ -790,6 +822,111 @@ begin
   Result:=fileexists(FileName);
 end;
 {$ENDIF}
+
+
+{$IFDEF DSS_CAPI_PM}
+// Waits for all the actors running tasks
+procedure Wait4Actors(WType : Integer);
+var
+    i: Integer;
+    Flag: Boolean;
+    PMParent: TDSSContext;
+    Child: TDSSContext;
+begin
+    PMParent := DSS.GetPrime();
+    // WType defines the starting point in which the actors will be evaluated,
+    // modification introduced in 01-10-2019 to facilitate the coordination
+    // between actors when a simulation is performed using A-Diakoptics
+    for i := WType to High(PMParent.Children) do
+    begin
+        try
+            Child := PMParent.Children[i];
+            if Child.ActorStatus = 0 then
+            begin
+                Flag := True;
+                while Flag do
+                    Flag := Child.ActorMA_Msg.WaitFor(10) = TWaitResult.wrTimeout;
+            end;
+        except
+        on EOutOfMemory do
+            Dosimplemsg(DSS, 'Exception Waiting for the parallel thread to finish a job"', 7006);
+        end;
+    end;
+end;
+
+// Clones the active Circuit as many times as requested if possible
+procedure DoClone(DSS: TDSSContext);
+var
+    PMParent: TDSSContext;
+    i,
+    NumClones: Integer;
+    Ref_Ckt: String;
+Begin
+    //TODO: DSS must DSSPrime here?
+    PMParent := DSS.GetPrime();
+    Ref_Ckt := DSS.LastFileCompiled;
+    DSS.Parser.NextParam;
+    NumClones := DSS.Parser.IntValue;
+    PMParent.Parallel_enabled := False;
+    if ((PMParent.NumOfActors + NumClones) <= CPU_Cores) and (NumClones > 0) then
+    begin
+        for i := 1 to NumClones do
+        begin
+            New_Actor_Slot(PMParent);
+            PMParent.ActiveChild.DSSExecutive.Command := 'compile "' + Ref_Ckt + '"';
+            // sets the previous maxiterations and controliterations
+            PMParent.ActiveChild.ActiveCircuit.Solution.MaxIterations := DSS.ActiveCircuit.Solution.MaxIterations;
+            PMParent.ActiveChild.ActiveCircuit.Solution.MaxControlIterations := DSS.ActiveCircuit.Solution.MaxControlIterations;
+            // Solves the circuit
+            DSS.CmdResult := ExecOptions.DoSetCmd(PMParent.ActiveChild, 1);
+        end;
+    end
+    else
+    begin
+        if NumClones > 0 then
+            DoSimpleMsg('There are no more CPUs available', 7001)
+        else
+            DoSimpleMsg('The number of clones requested is invalid', 7004)
+    end;
+end;
+
+// Prepares memory to host a new actor
+procedure New_Actor_Slot(DSS: TDSSContext);
+var
+    PMParent: TDSSContext;
+begin
+    PMParent := DSS.GetPrime();
+
+    if (High(PMParent.Children) + 1) < CPU_Cores then
+    begin
+        SetLength(PMParent.Children, High(PMParent.Children) + 2);
+        PMParent.ActiveChildIndex := High(PMParent.Children);
+        PMParent.ActiveChild := TDSS.Create(PMParent);
+        PMParent.Children[PMParent.ActiveChildIndex] := PMParent.ActiveChild;
+        PMParent.ActiveChild._Name := '_' + inttostr(PMParent.ActiveChildIndex + 1);
+        PMParent.ActiveChild.CPU := PMParent.ActiveChild;
+        GlobalResult := inttostr(PMParent.ActiveChildIndex + 1);
+    end
+    else 
+        DoSimpleMsg(DSS, 'There are no more CPUs available', 7001)
+End;
+
+// Creates a new actor
+procedure New_Actor(DSS: TDSSContext; ActorID: Integer);
+var
+    PMParent: TDSSContext;
+    Child: TDSSContext;
+begin
+    PMParent := DSS.GetPrime();
+    Child := PMParent.Children[ActorID - 1];
+    Child.ActorThread := TSolver.Create(True, Child.CPU, ActorID, nil, Child.ActorMA_Msg);
+//    Child.ActorThread.Priority :=  tpTimeCritical;
+    Child.ActorThread.Start;
+    Child.ActorStatus := 1;//TODO: use enum
+end;
+
+{$ENDIF}
+
 
 initialization
    {Various Constants and Switches}
