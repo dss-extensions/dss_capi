@@ -3,7 +3,7 @@ set -e -x
 if [ ! -d "build/units_v7_x64" ]; then
     mkdir build/units_v7_x64
 fi
-fpc -Px86_64 @src/v7/linux-x64.cfg -B src/v7/dss_capi_v7.lpr
+fpc -Px86_64 @src/linux-x64.cfg -B src/dss_capi_v7.lpr
 bash custom_link.sh lib/linux_x64
 
 mkdir -p release/dss_capi/lib

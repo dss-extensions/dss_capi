@@ -5,7 +5,7 @@ export LDFLAGS=-L`pwd`/lib/darwin_x64/
 if [ ! -d "build/units_v7_x64" ]; then
     mkdir build/units_v7_x64
 fi
-fpc -Px86_64 @src/v7/darwin-x64.cfg -B src/v7/dss_capi_v7.lpr
+fpc -Px86_64 @src/darwin-x64.cfg -B src/dss_capi_v7.lpr
 bash custom_link.sh lib/darwin_x64
 
 # Make the lib look in the same folder for KLUSolve

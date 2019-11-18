@@ -3,7 +3,7 @@ set -e -x
 if [ ! -d "build/units_v7_x86" ]; then
     mkdir build/units_v7_x86
 fi
-fpc -Pi386 @src/v7/linux-x86.cfg -B src/v7/dss_capi_v7.lpr
+fpc -Pi386 @src/linux-x86.cfg -B src/dss_capi_v7.lpr
 bash custom_link.sh lib/linux_x86
 
 mkdir -p release/dss_capi/lib

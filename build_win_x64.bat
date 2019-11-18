@@ -20,7 +20,7 @@ if not exist .\build\units_v8_x64 (
 ) 
 
 
-fpc -Px86_64 @src\v7\windows-x64.cfg -B src\v7\dss_capi_v7.lpr
+fpc -Px86_64 @src\windows-x64.cfg -B src\dss_capi_v7.lpr
 if errorlevel 1 exit /B 1
 if exist lib\win_x64\dss_capi_v7.dll (
     where /q dumpbin
