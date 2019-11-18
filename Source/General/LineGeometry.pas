@@ -240,10 +240,12 @@ END;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Function TLineGeometry.Edit(ActorID : Integer):Integer;
 VAR
-   ParamPointer:Integer;
-   ParamName:String;
-   Param:String;
-   i, istart, istop: Integer;
+   ParamPointer     :Integer;
+   ParamName,
+   Param            :String;
+   i,
+   istart,
+   istop            : Integer;
 
 BEGIN
   Result := 0;
@@ -295,47 +297,53 @@ BEGIN
            End;
            13: Begin FCondName^[ActiveCond] := Param; ChangeLineConstantsType (ConcentricNeutral) End;
            14: Begin FCondName^[ActiveCond] := Param; ChangeLineConstantsType (TapeShield) End;
-           12,15,16: Begin
-              istart := 1;
-              istop := FNConds;
-              if ParamPointer = 15 then begin
-                ChangeLineConstantsType (ConcentricNeutral);
-                istop := FNPhases;
-              end else if ParamPointer = 16 then begin
-                ChangeLineConstantsType (TapeShield);
-                istop := FNPhases;
-              end else if ParamPointer = 12 then begin
-                if FPhaseChoice^[ActiveCond] = Unknown then
-                  ChangeLineConstantsType (Overhead)
-                else // these are buried neutral wires
-                  istart := FNPhases + 1;
-              end;
+           12,
+           15,
+           16: Begin
+                  istart := 1;
+                  istop := FNConds;
 
-              AuxParser[ActorID].CmdString := Parser[ActorID].StrValue;
-              for i := istart to istop do begin
-                AuxParser[ActorID].NextParam; // ignore any parameter name  not expecting any
-                FCondName[i] := AuxParser[ActorID].StrValue;
-                if ParamPointer=15 then
-                  CNDataClass[ActorID].code := FCondName[i]
-                else if ParamPointer=16 then
-                  TSDataClass[ActorID].code := FCondName[i]
-                else
-                  WireDataClass[ActorID].Code := FCondName[i];
-                if Assigned(ActiveConductorDataObj) then begin
-                  FWireData^[i] := ActiveConductorDataObj;
-                  if (i=1) then begin
-                    If (ActiveConductorDataObj.NormAmps > 0.0)  Then Normamps  := ActiveConductorDataObj.NormAmps;
-                    If (ActiveConductorDataObj.Emergamps > 0.0) Then Emergamps := ActiveConductorDataObj.EmergAmps;
-                  end;
-                end else
-                  if ParamPointer=15 then
-                    DoSimpleMsg('CNData Object "' + FCondName[i] + '" not defined. Must be previously defined.', 10103)
-                  else if ParamPointer=16 then
-                    DoSimpleMsg('TSData Object "' + FCondName[i] + '" not defined. Must be previously defined.', 10103)
+                  if ParamPointer = 15 then begin
+                    ChangeLineConstantsType (ConcentricNeutral);
+                    istop := FNPhases;
+                  end else if ParamPointer = 16 then begin
+                    ChangeLineConstantsType (TapeShield);
+                    istop := FNPhases;
+                  end
                   else
-                    DoSimpleMsg('WireData Object "' + FCondName[i] + '" not defined. Must be previously defined.', 10103);
-              end
-           End;
+                    if ParamPointer = 12 then
+                    begin
+                      if FPhaseChoice^[ActiveCond] = Unknown then
+                        ChangeLineConstantsType (Overhead)
+                      else // these are buried neutral wires
+                        if FPhaseChoice^[ActiveCond] <> Overhead then istart := FNPhases + 1; // to fix the bug introduced with ActiveCond
+                    end;
+
+                  AuxParser[ActorID].CmdString := Parser[ActorID].StrValue;
+                  for i := istart to istop do begin
+                    AuxParser[ActorID].NextParam; // ignore any parameter name  not expecting any
+                    FCondName[i] := AuxParser[ActorID].StrValue;
+                    if ParamPointer=15 then
+                      CNDataClass[ActorID].code := FCondName[i]
+                    else if ParamPointer=16 then
+                      TSDataClass[ActorID].code := FCondName[i]
+                    else
+                      WireDataClass[ActorID].Code := FCondName[i];
+                    if Assigned(ActiveConductorDataObj) then begin
+                      FWireData^[i] := ActiveConductorDataObj;
+                      if (i=1) then begin
+                        If (ActiveConductorDataObj.NormAmps > 0.0)  Then Normamps  := ActiveConductorDataObj.NormAmps;
+                        If (ActiveConductorDataObj.Emergamps > 0.0) Then Emergamps := ActiveConductorDataObj.EmergAmps;
+                      end;
+                    end else
+                      if ParamPointer=15 then
+                        DoSimpleMsg('CNData Object "' + FCondName[i] + '" not defined. Must be previously defined.', 10103)
+                      else if ParamPointer=16 then
+                        DoSimpleMsg('TSData Object "' + FCondName[i] + '" not defined. Must be previously defined.', 10103)
+                      else
+                        DoSimpleMsg('WireData Object "' + FCondName[i] + '" not defined. Must be previously defined.', 10103);
+                  end
+               End;
            17: Begin
                  NumAmpRatings         :=  Parser[ActorID].IntValue;
                  setlength(AmpRatings,NumAmpRatings);
@@ -394,23 +402,24 @@ END;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Function TLineGeometry.MakeLike(Const LineName:String):Integer;
 VAR
-   OtherLineGeometry:TLineGeometryObj;
-   i:Integer;
+   OtherLineGeometry: TLineGeometryObj;
+   i                : Integer;
+   temp1            : Double;
 BEGIN
    Result := 0;
    {See if we can find this line code in the present collection}
    OtherLineGeometry := Find(LineName);
    IF OtherLineGeometry<>Nil THEN
    WITH ActiveLineGeometryObj DO BEGIN
-       NConds := OtherLineGeometry.NWires;   // allocates
-       FNphases := OtherLineGeometry.FNphases;
+       NConds       := OtherLineGeometry.NWires;   // allocates
+       FNphases     := OtherLineGeometry.FNphases;
        FSpacingType := OtherLineGeometry.FSpacingType;
-       For i := 1 to FNConds Do FPhaseChoice^[i] := OtherLineGeometry.FPhaseChoice^[i];
-       For i := 1 to FNConds Do FCondName^[i] := OtherLineGeometry.FCondName^[i];
-       For i := 1 to FNConds Do FWireData^[i] := OtherLineGeometry.FWireData^[i];
-       For i := 1 to FNConds Do FX^[i] := OtherLineGeometry.FX^[i];
-       For i := 1 to FNConds Do FY^[i] := OtherLineGeometry.FY^[i];
-       For i := 1 to FNConds Do FUnits^[i] := OtherLineGeometry.FUnits^[i];
+       For i := 1 to FNConds Do FPhaseChoice^[i]  := OtherLineGeometry.FPhaseChoice^[i];
+       For i := 1 to FNConds Do FCondName^[i]     := OtherLineGeometry.FCondName^[i];
+       For i := 1 to FNConds Do FWireData^[i]     := OtherLineGeometry.FWireData^[i];
+       For i := 1 to FNConds Do FX^[i]            := OtherLineGeometry.FX^[i];
+       For i := 1 to FNConds Do FY^[i]            := OtherLineGeometry.FY^[i];
+       For i := 1 to FNConds Do FUnits^[i]        := OtherLineGeometry.FUnits^[i];
        DataChanged := TRUE;
        NormAmps    := OtherLineGeometry.NormAmps;
        EmergAmps   := OtherLineGeometry.EmergAmps;
@@ -777,7 +786,6 @@ begin
     Reallocmem( FPhaseChoice,    Sizeof(FPhaseChoice^[1])    *FNconds);
 
 {Initialize Allocations}
-  For i := 1 to FNconds Do FPhaseChoice^[i] := Overhead;
   For i := 1 to FNconds Do FWireData^[i] := Nil;
   For i := 1 to FNconds Do FX^[i] := 0.0;
   For i := 1 to FNconds Do FY^[i] := 0.0;
@@ -805,10 +813,11 @@ begin
 end;
 
 procedure TLineGeometryObj.UpdateLineGeometryData(f:Double);
-Var i   :Integer;
-  LineGeomErrMsg :String;
-  cnd: TCNDataObj;
-  tsd: TTSDataObj;
+Var
+  i               : Integer;
+  LineGeomErrMsg  : String;
+  cnd             : TCNDataObj;
+  tsd             : TTSDataObj;
 begin
 
   For i := 1 to FNconds Do Begin
