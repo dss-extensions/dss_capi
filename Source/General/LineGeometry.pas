@@ -404,7 +404,7 @@ Function TLineGeometry.MakeLike(Const LineName:String):Integer;
 VAR
    OtherLineGeometry: TLineGeometryObj;
    i                : Integer;
-   temp1            : Double;
+
 BEGIN
    Result := 0;
    {See if we can find this line code in the present collection}
