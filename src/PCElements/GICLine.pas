@@ -113,7 +113,7 @@ implementation
 uses
     ParserDel,
     Circuit,
-    MyDSSClassDefs,
+    // MyDSSClassDefs,
     DSSClassDefs,
     DSSGlobals,
     Utilities,

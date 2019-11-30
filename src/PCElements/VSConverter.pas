@@ -78,7 +78,7 @@ implementation
 
 uses
     ParserDel,
-    MyDSSClassDefs,
+    // MyDSSClassDefs,
     DSSClassDefs,
     DSSGlobals,
     Dynamics,

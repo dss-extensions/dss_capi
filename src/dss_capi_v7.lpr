@@ -147,7 +147,7 @@ uses
     MeterClass in 'Meters/MeterClass.pas',
     MeterElement in 'Meters/MeterElement.pas',
     Monitor in 'Meters/Monitor.pas',
-    MyDSSClassDefs in 'CMD/MyDSSClassDefs.Pas',
+    // MyDSSClassDefs in 'CMD/MyDSSClassDefs.Pas',
     NamedObject in 'General/NamedObject.pas',
     Notes in 'Common/Notes.pas',
     OHLineConstants in 'General/OHLineConstants.pas',

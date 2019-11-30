@@ -78,7 +78,7 @@ uses
     DSSGlobals,
     DSSObject,
     ParserDel,
-    MyDSSClassDefs,
+    // MyDSSClassDefs,
     Solution,
     Bus,
     Line,
@@ -299,7 +299,7 @@ begin
     DSS.DSSClasses.New(DSS.SensorClass);
 
  { Create Classes for custom implementations }
-    CreateMyDSSClasses;
+//    CreateMyDSSClasses;
 
     DSS.NumIntrinsicClasses := DSS.DSSClassList.ListSize;
     DSS.NumUserClasses := 0;
