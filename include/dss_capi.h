@@ -5838,7 +5838,29 @@ extern "C" {
     DSS_CAPI_DLL int32_t XYCurves_Get_idx(void);
     DSS_CAPI_DLL void XYCurves_Set_idx(int32_t Value);
 
-    DSS_CAPI_DLL void LoadShapes_Set_Points(int32_t Npts, double *HoursPtr, double *PMultPtr, double *QMultPtr, int8_t ExternalMemory); 
+    /*
+    Sets all numeric arrays for the active LoadShape. 
+    
+    If ExternalMemory is 0, the data is copied, allocating memory.
+    If ExternalMemory is 1, the data is NOT copied. The caller is required to keep the 
+    pointers alive while the LoadShape is used, as well as deallocating it.
+    
+    If IsFloat32 is 0, the pointers are interpreted as pointers to float64/double precision numbers. 
+    Otherwise, the pointers are interpreted as pointers to float32/single precision numbers.
+    */
+    DSS_CAPI_DLL void LoadShapes_Set_Points(int32_t Npts, void *HoursPtr, void *PMultPtr, void *QMultPtr, int8_t ExternalMemory, int8_t IsFloat32); 
+
+    /*
+    Converts the current LoadShape data to float32/single precision. 
+    If there is no data or the data is already represented using float32, nothing is done.
+    */
+    DSS_CAPI_DLL void LoadShapes_UseFloat32(void);
+    
+    /*
+    Converts the current LoadShape data to float64/double precision. 
+    If there is no data or the data is already represented using float64, nothing is done.
+    */
+    DSS_CAPI_DLL void LoadShapes_UseFloat64(void);
 
     /*
     Update and return the convergence flag. Used for external solver loops.
