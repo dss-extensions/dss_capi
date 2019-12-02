@@ -3519,6 +3519,7 @@ Var
   F:TextFile;
   ParamName, Param, S, NameVal, UuidVal, DevClass, DevName: String;
   pName: TNamedObject;
+  idx: integer;
 Begin
   Result := 0;
   ParamName := Parser.NextParam;
@@ -3540,6 +3541,9 @@ Begin
         ParseObjectClassAndName (NameVal, DevClass, DevName);
         IF CompareText (DevClass, 'circuit')=0 THEN begin
           pName := ActiveCircuit
+        end else if CompareText (DevClass, 'Bus')=0 then begin
+          idx := ActiveCircuit.BusList.Find (DevName);
+          pName := ActiveCircuit.Buses^[idx];
         end else begin
           LastClassReferenced := ClassNames.Find (DevClass);
           ActiveDSSClass := DSSClassList.Get(LastClassReferenced);

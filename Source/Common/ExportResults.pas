@@ -2721,6 +2721,7 @@ Var
   clsWire : TWireData;
   clsXfmr : TXfmrCode;
   pName   : TNamedObject;
+  i       : integer;
 Begin
   Try
     clsCode := DSSClassList.Get(ClassNames.Find('linecode'));
@@ -2733,6 +2734,11 @@ Begin
 
     pName := ActiveCircuit;
     Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+
+    for i :=1 to ActiveCircuit.NumBuses do begin
+      pName := ActiveCircuit.Buses^[i];
+      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+    end;
 
     pName := ActiveCircuit.CktElements.First;
     while pName <> nil do begin
