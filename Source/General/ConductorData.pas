@@ -47,6 +47,7 @@ TYPE
       FRDC              :Double;
       FR60              :Double;
       FGMR60            :Double;
+      Fcapradius60      :Double;  // in case it is different than radius for cap calcs
       Fradius           :Double;
       FGMRUnits         :Integer;
       FResistanceUnits  :Integer;
@@ -61,6 +62,7 @@ TYPE
       Property Rdc:Double Read FRDC;
       Property Rac:Double Read FR60;
       Property GMR:Double Read FGMR60;
+      Property CapRadius:Double Read Fcapradius60;
       Property Radius:Double Read FRadius;
       Property ResUnits:Integer Read FresistanceUnits;
       Property RadiusUnits:Integer Read FradiusUnits;
@@ -86,7 +88,7 @@ Const
 constructor TConductorData.Create;  // Creates superstructure for all Line objects
 BEGIN
   Inherited Create;
-  NumConductorClassProps := 10;
+  NumConductorClassProps := 11;
   DSSClassType := DSS_OBJECT;
 END;
 
@@ -113,6 +115,7 @@ Begin
   PropertyName^[ActiveProperty + 8] := 'normamps';
   PropertyName^[ActiveProperty + 9] := 'emergamps';
   PropertyName^[ActiveProperty + 10] := 'diam';
+  PropertyName^[ActiveProperty + 11] := 'Capradius';
 
   PropertyHelp^[ActiveProperty + 1] := 'dc Resistance, ohms per unit length (see Runits). Defaults to Rac/1.02 if not specified.';
   PropertyHelp^[ActiveProperty + 2] := 'Resistance at 60 Hz per unit length. Defaults to 1.02*Rdc if not specified.';
@@ -124,6 +127,7 @@ Begin
   PropertyHelp^[ActiveProperty + 8] := 'Normal ampacity, amperes. Defaults to Emergency amps/1.5 if not specified.';
   PropertyHelp^[ActiveProperty + 9] := 'Emergency ampacity, amperes. Defaults to 1.5 * Normal Amps if not specified.';
   PropertyHelp^[ActiveProperty + 10] := 'Diameter; Alternative method for entering radius.';
+  PropertyHelp^[ActiveProperty + 11] := 'Equivalent conductor radius for capacitor calcs. Specify this for bundled conductors. Defaults to same value as radius.';
 
   ActiveProperty := ActiveProperty + NumConductorClassProps;
   Inherited DefineProperties;
@@ -147,6 +151,7 @@ BEGIN
         8: NormAmps         := Parser.DblValue ;
         9: EmergAmps        := Parser.DblValue ;
        10: Fradius          := Parser.DblValue / 2.0;
+       11: Fcapradius60        := Parser.DblValue;
       ELSE
         Inherited ClassEdit(ActiveObj, ParamPointer - NumConductorClassProps)
       END;
@@ -156,11 +161,18 @@ BEGIN
         2: If FRDC<0.0      Then FRDC := FR60 / 1.02;
         4: If Fradius<0.0   Then Fradius := FGMR60 / 0.7788;
         5: If FradiusUnits =0 Then FradiusUnits := FGMRunits;
-        6: If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
+        6: Begin
+             If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
+             if Fcapradius60<0.0 then Fcapradius60 := Fradius;    // default to radius
+           End;
         7: If FGMRUnits=0   Then FGMRunits := FradiusUnits;
         8: IF EmergAmps<0.0 Then EmergAmps := 1.5*NormAmps;
         9: If NormAmps<0.0  Then NormAmps := EmergAmps/1.5;
-       10: If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
+       10: Begin
+              If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
+              if Fcapradius60<0.0 then Fcapradius60 := Fradius;    // default to radius
+           End;
+       11: If Fcapradius60<0.0    Then Fcapradius60 := FRadius;
       END;
       {Check for critical errors}
       CASE ParamPointer OF
@@ -180,6 +192,7 @@ BEGIN
     FR60:= OtherConductorData.FR60;
     FResistanceUnits:= OtherConductorData.FResistanceUnits;
     FGMR60:= OtherConductorData.FGMR60;
+    Fcapradius60:= OtherConductorData.Fcapradius60;
     FGMRUnits:= OtherConductorData.FGMRUnits;
     FRadius:= OtherConductorData.FRadius;
     FRadiusUnits:= OtherConductorData.FRadiusUnits;
@@ -204,6 +217,7 @@ BEGIN
   FR60              := -1.0;
   FGMR60            := -1.0;
   Fradius           := -1.0;
+  Fcapradius60      := -1.0;   // init to not defined
   FGMRUnits         := 0;
   FResistanceUnits  := 0;
   FRadiusUnits      := 0;
@@ -237,6 +251,7 @@ Begin
         8: Writeln(F, Format('%.6g',[NormAmps]));
         9: Writeln(F, Format('%.6g',[EmergAmps]));
        10: Writeln(F, Format('%.6g',[radius*2.0]));
+       11: Writeln(F, Format('%.6g',[Fcapradius60]));
       END;
     End;
   End;
@@ -254,7 +269,8 @@ begin
   PropertyValue[ArrayOffset + 8] :=  '-1';
   PropertyValue[ArrayOffset + 9] :=  '-1';
   PropertyValue[ArrayOffset + 10] :=  '-1';
-  inherited InitPropertyValues(ArrayOffset + 10);
+  PropertyValue[ArrayOffset + 11] :=  '-1';
+  inherited InitPropertyValues(ArrayOffset + 11);
 end;
 
 end.
