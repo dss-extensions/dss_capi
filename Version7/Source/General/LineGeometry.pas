@@ -751,7 +751,8 @@ begin
   For i := 1 to FNconds Do Begin
     FLineData.X[i, Funits^[i]] := FX^[i];
     FLineData.Y[i, Funits^[i]] := FY^[i];
-    FLineData.radius[i, FWireData^[i].RadiusUnits] := FWireData^[i].Radius;
+    FLineData.radius[i,    FWireData^[i].RadiusUnits] := FWireData^[i].Radius;
+    FLineData.capradius[i, FWireData^[i].RadiusUnits] := FWireData^[i].capRadius;
     FLineData.GMR[i, FWireData^[i].GMRUnits]       := FWireData^[i].GMR;
     FLineData.Rdc[i, FWireData^[i].ResUnits]       := FWireData^[i].Rdc;
     FLineData.Rac[i, FWireData^[i].ResUnits]       := FWireData^[i].Rac;
@@ -789,7 +790,7 @@ begin
     Raise ELineGeometryProblem.Create('Error in LineGeometry.'+Name+': '+LineGeomErrMsg);
     SolutionAbort := TRUE;
   End Else Begin
-    FLineData.Calc(f);
+    FLineData.Calc(f);    {***** Line impedance calc'd here ****}
     If FReduce Then FLineData.Reduce; // reduce out neutrals
   End;
 end;
