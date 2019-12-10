@@ -23,12 +23,13 @@ type
     function Get_NumElements: Integer; safecall;
     function Get_ActiveClassName: WideString; safecall;
     function Get_Count: Integer; safecall;
+    function Get_ActiveClassParent: WideString; safecall;
 
   end;
 
 implementation
 
-uses ComServ, DSSGlobals, DSSObject, Variants, CktElement;
+uses ComServ, DSSGlobals, DSSObject, Variants, CktElement, PCClass, PDClass, MeterClass, ControlClass;
 
 function TActiveClass.Get_AllNames: OleVariant;
 Var
@@ -114,6 +115,25 @@ function TActiveClass.Get_Count: Integer;
 begin
      if Assigned(ActiveDSSClass[ActiveActor]) then  Result := ActiveDSSCLass[ActiveActor].ElementCount
      Else Result := 0;
+end;
+
+function TActiveClass.Get_ActiveClassParent: WideString;
+begin
+  if Assigned(ActiveDSSClass[ActiveActor]) then
+  Begin
+    Result  :=  pAnsiChar('Generic Object');
+
+    if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TPCClass) then
+      Result  :=  pAnsiChar('TPCClas');
+    if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TPDClass) then
+      Result  :=  pAnsiChar('TPDClass');
+    if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TMeterClass) then
+      Result  :=  pAnsiChar('TMeterClass');
+    if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TControlClass) then
+      Result  :=  pAnsiChar('TControlClass');
+
+  End
+  Else Result := pAnsiChar(AnsiString('Parent Class unknonwn'));
 end;
 
 initialization
