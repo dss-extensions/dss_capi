@@ -12,7 +12,7 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 52393 $
-// File generated on 11/11/2019 10:59:11 AM from Type Library described below.
+// File generated on 12/10/2019 11:23:02 AM from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
@@ -2141,6 +2141,7 @@ type
     function Get_NumElements: Integer; safecall;
     function Get_ActiveClassName: WideString; safecall;
     function Get_Count: Integer; safecall;
+    function Get_ActiveClassParent: WideString; safecall;
     property AllNames: OleVariant read Get_AllNames;
     property First: Integer read Get_First;
     property Next: Integer read Get_Next;
@@ -2148,6 +2149,7 @@ type
     property NumElements: Integer read Get_NumElements;
     property ActiveClassName: WideString read Get_ActiveClassName;
     property Count: Integer read Get_Count;
+    property ActiveClassParent: WideString read Get_ActiveClassParent;
   end;
 
 // *********************************************************************//
@@ -2164,6 +2166,7 @@ type
     property NumElements: Integer readonly dispid 205;
     property ActiveClassName: WideString readonly dispid 206;
     property Count: Integer readonly dispid 207;
+    property ActiveClassParent: WideString readonly dispid 208;
   end;
 
 // *********************************************************************//
