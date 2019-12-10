@@ -8,7 +8,7 @@ procedure ActiveClassV(mode:longint; out arg: variant); cdecl;
 
 implementation
 
-uses DSSGlobals, DSSObject, Variants, CktElement;
+uses DSSGlobals, DSSObject, Variants, CktElement, PCElement, DSSClass, PDClass, PCClass, MeterClass, ControlClass;
 
 function ActiveClassI(mode:longint; arg: longint):longint; cdecl;
 begin
@@ -67,6 +67,22 @@ begin
   2: begin  // ActiveClass.ActiveClassName
      if Assigned(ActiveDSSClass[ActiveActor]) then  Result := pAnsiChar(AnsiString(ActiveDSSCLass[ActiveActor].Name))
      Else Result := pAnsiChar(AnsiString(''));
+  end;
+  3: begin  // ActiveClass.ActiveClassParent
+     if Assigned(ActiveDSSClass[ActiveActor]) then
+     Begin
+      Result  :=  pAnsiChar('Generic Object');
+
+      if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TPCClass) then
+        Result  :=  pAnsiChar('TPCClas');
+      if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TPDClass) then
+        Result  :=  pAnsiChar('TPDClass');
+      if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TMeterClass) then
+        Result  :=  pAnsiChar('TMeterClass');
+      if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TControlClass) then
+        Result  :=  pAnsiChar('TControlClass');
+     End
+     Else Result := pAnsiChar(AnsiString('Parent Class unknonwn'));
   end
   else
       Result:=pAnsiChar(AnsiString('Error, parameter not recognized'));
