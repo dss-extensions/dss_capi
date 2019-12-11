@@ -207,10 +207,7 @@ Begin
    Substation := ActiveCircuit.Name + '_Substation';
    SubGeographicRegion := ActiveCircuit.Name + '_SubRegion';
    GeographicRegion := ActiveCircuit.Name + '_Region';
-   FdrUuid := ActiveCircuit.UUID;  // default is to not change the feeder mrid 
-   CreateUUID4 (SubUuid);      // these next 3 are created on the fly for CIM export
-   CreateUUID4 (SubGeoUuid); 
-   CreateUUID4 (RgnUuid);
+   DefaultCircuitUUIDs (FdrUuid, SubUuid, RgnUuid, SubGeoUuid);
 
    CASE ParamPointer OF
       9, 19: Begin { Trap export powers command and look for MVA/kVA option }

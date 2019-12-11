@@ -66,7 +66,8 @@ Uses uComplex,  Arraydef, Sysutils,   Circuit, DSSClassDefs, DSSGlobals,
      uCMatrix,  solution, CktElement, Utilities, Bus, MathUtil, DSSClass,
      PDElement, PCElement, Generator,  Sensor, Load, RegControl, Transformer,
      ParserDel, Math, Ymatrix, LineGeometry, WireData, LineCode, XfmrCode, NamedObject,
-     GICTransformer, PVSystem, Storage, KLUSolve;
+     GICTransformer, PVSystem, Storage, KLUSolve, ExportCIMXML,
+     LineSpacing, CNData, TSData;
 
 Procedure WriteElementVoltagesExportFile(Var F:TextFile; pElem:TDSSCktElement;MaxNumNodes:Integer);
 
@@ -2720,6 +2721,9 @@ Var
   clsGeom : TLineGeometry;
   clsWire : TWireData;
   clsXfmr : TXfmrCode;
+  clsSpac : TLineSpacing;
+  clsTape : TTSData;
+  clsConc : TCNData;
   pName   : TNamedObject;
   i       : integer;
 Begin
@@ -2728,6 +2732,9 @@ Begin
     clsWire := DSSClassList.Get(ClassNames.Find('wiredata'));
     clsGeom := DSSClassList.Get(ClassNames.Find('linegeometry'));
     clsXfmr := DSSClassList.Get(ClassNames.Find('xfmrcode'));
+    clsSpac := DSSClassList.Get(ClassNames.Find('linespacing'));
+    clsTape := DSSClassList.Get(ClassNames.Find('TSData'));
+    clsConc := DSSClassList.Get(ClassNames.Find('CNData'));
 
     Assignfile(F, FileNm);
     ReWrite(F);
@@ -2770,8 +2777,29 @@ Begin
       pName := clsXfmr.ElementList.Next;
     End;
 
+    pName := clsSpac.ElementList.First;
+    while pName <> nil do begin
+      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+      pName := clsSpac.ElementList.Next;
+    End;
+
+    pName := clsTape.ElementList.First;
+    while pName <> nil do begin
+      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+      pName := clsTape.ElementList.Next;
+    End;
+
+    pName := clsConc.ElementList.First;
+    while pName <> nil do begin
+      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+      pName := clsConc.ElementList.Next;
+    End;
+
+    WriteHashedUUIDs (F);
+
   Finally
     CloseFile(F);
+    FreeUuidList;
   End;
 End;
 
