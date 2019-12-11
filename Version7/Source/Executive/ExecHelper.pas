@@ -147,7 +147,7 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      uComplex,  mathutil,  Bus,  SolutionAlgs,
      {$IFDEF FPC}CmdForms,{$ELSE}DSSForms,DssPlot,{$ENDIF} ExecCommands, Executive,
      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
-     Classes,  CktElementClass, Sensor,  { ExportCIMXML,} NamedObject,
+     Classes,  CktElementClass, Sensor, ExportCIMXML, NamedObject,
      {$IFDEF FPC}RegExpr,{$ELSE}RegularExpressionsCore,{$ENDIF} PstCalc,
      PDELement, ReduceAlgs{$IFDEF FPC}, Fncs{$ENDIF};
 
@@ -3520,13 +3520,15 @@ Var
   ParamName, Param, S, NameVal, UuidVal, DevClass, DevName: String;
   pName: TNamedObject;
   idx: integer;
-Begin
+begin
+  StartUuidList (ActiveCircuit.NumBuses + 2 * ActiveCircuit.NumDevices);
   Result := 0;
   ParamName := Parser.NextParam;
   Param := Parser.StrValue;
   Try
     AssignFile(F, Param);
     Reset(F);
+    AuxParser.Delimiters := ',';
     While not EOF(F) Do Begin
       Readln(F, S);
       With AuxParser Do Begin
@@ -3537,26 +3539,30 @@ Begin
         // format the UUID properly
         if Pos ('{', UuidVal) < 1 then
           UuidVal := '{' + UuidVal + '}';
-        // find this object
-        ParseObjectClassAndName (NameVal, DevClass, DevName);
-        IF CompareText (DevClass, 'circuit')=0 THEN begin
-          pName := ActiveCircuit
-        end else if CompareText (DevClass, 'Bus')=0 then begin
-          idx := ActiveCircuit.BusList.Find (DevName);
-          pName := ActiveCircuit.Buses^[idx];
-        end else begin
-          LastClassReferenced := ClassNames.Find (DevClass);
-          ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
-          if ActiveDSSClass <> nil then begin
-            ActiveDSSClass.SetActive (DevName);
-            pName := ActiveDSSClass.GetActiveObj;
+        if Pos ('=', NameVal) > 0 then begin  // it's a non-identified object in OpenDSS
+          AddHashedUuid (NameVal, UuidVal);
+        end else begin  // find this as a descendant of TNamedObject
+          ParseObjectClassAndName (NameVal, DevClass, DevName);
+          IF CompareText (DevClass, 'circuit')=0 THEN begin
+            pName := ActiveCircuit
+          end else if CompareText (DevClass, 'Bus')=0 then begin
+            idx := ActiveCircuit.BusList.Find (DevName);
+            pName := ActiveCircuit.Buses^[idx];
+          end else begin
+            LastClassReferenced := ClassNames.Find (DevClass);
+            ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
+            if ActiveDSSClass <> nil then begin
+              ActiveDSSClass.SetActive (DevName);
+              pName := ActiveDSSClass.GetActiveObj;
+            end;
           end;
+          // re-assign its UUID
+          if pName <> nil then pName.UUID := StringToUuid (UuidVal);
         end;
-        // re-assign its UUID
-        if pName <> nil then pName.UUID := StringToUuid (UuidVal);
       End;
     End;
   Finally
+    AuxParser.ResetDelims;
     CloseFile(F);
   End;
 End;
