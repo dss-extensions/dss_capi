@@ -117,7 +117,7 @@ Begin
       ExportHelp[22] := '** Deprecated ** (IEC 61968-13, CDPSM Asset profile)';
       ExportHelp[23] := '[Default file = EXP_BUSCOORDS.CSV] Bus coordinates in csv form.';
       ExportHelp[24] := '[Default file = EXP_LOSSES.CSV] Losses for each element.';
-      ExportHelp[25] := '[Default file = EXP_UUIDS.CSV] Uuids for each element.';
+      ExportHelp[25] := '[Default file = EXP_UUIDS.CSV] Uuids for each element. This frees the UUID list after export.';
       ExportHelp[26] := '[Default file = EXP_Counts.CSV] (instance counts for each class)';
       ExportHelp[27] := '[Default file = EXP_Summary.CSV] Solution summary.';
       ExportHelp[28] := '** Deprecated ** (IEC 61968-13, CDPSM Electrical Properties profile)';
