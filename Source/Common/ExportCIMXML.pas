@@ -42,7 +42,7 @@ Uses SysUtils, Utilities, Circuit, DSSClassDefs, DSSGlobals, CktElement,
      PDElement, PCElement, Generator, Load, RegControl,
      Vsource, Line, Transformer, Ucomplex, UcMatrix, LineCode,
      Fuse, Capacitor, CapControl, CapControlvars,  Reactor, Feeder, ConductorData, LineUnits,
-     LineGeometry, StrUtils, Math, XfmrCode, HashList, WireData,
+     LineGeometry, StrUtils, Math, HashList, WireData, XfmrCode,
      LineSpacing, CableData, CNData, TSData, Storage, PVSystem, Relay, Recloser,
      DSSObject, DSSClass;
 
@@ -346,6 +346,7 @@ end;
 // need the UUIDs for later reference
 procedure StartUuidList (size:Integer);
 begin
+  if assigned(UuidList) then FreeUuidList;
   UuidHash := THashList.Create(size);
   SetLength (UuidList, size);
   SetLength (UuidKeyList, size);
@@ -361,6 +362,25 @@ procedure StartOpLimitList (size: Integer);
 begin
   OpLimitHash := THashList.Create(size);
   SetLength (OpLimitList, size);
+end;
+
+procedure FreeUuidList;
+begin
+  UuidHash.Free;
+  UuidList := nil;
+  UuidKeyList := nil;
+end;
+
+procedure FreeBankList;
+begin
+  BankHash.Free;
+  BankList := nil;
+end;
+
+procedure FreeOpLimitList;
+begin
+  OpLimitHash.Free;
+  OpLimitList := nil;
 end;
 
 procedure AddBank (pBank: TBankObject);
@@ -566,25 +586,6 @@ end;
 function GetOpLimIUuid (norm, emerg: double): TUuid;
 begin
   Result := GetDevUuid (OpLimI, GetOpLimIName (norm, emerg), 1);
-end;
-
-procedure FreeUuidList;
-begin
-  UuidHash.Free;
-  UuidList := nil;
-  UuidKeyList := nil;
-end;
-
-procedure FreeBankList;
-begin
-  BankHash.Free;
-  BankList := nil;
-end;
-
-procedure FreeOpLimitList;
-begin
-  OpLimitHash.Free;
-  OpLimitList := nil;
 end;
 
 procedure DoubleNode (var F: TextFile; Node: String; val: Double);
@@ -1255,7 +1256,7 @@ begin
     GetBaseVUuid (sqrt(3.0) * ActiveCircuit.Buses^[j].kVBase));
 end;
 
-Procedure WriteXfmrCode (var F: TextFile; pXfmr: TXfmrCodeObj);
+Procedure WriteXfmrCode (var F: TextFile; pXfCd: TXfmrCodeObj);
 var
   pName, pBank: TNamedObject;
   ratShort, ratEmerg, val, Zbase: double;
@@ -1264,12 +1265,12 @@ var
 begin
   pName := TNamedObject.Create('dummy');
   pBank := TNamedObject.Create('dummy');
-  with pXfmr do begin
-    pBank.LocalName := pXfmr.Name + '_PowerXfInfo';
-    pBank.UUID := GetDevUuid (XfInfo, pXfmr.Name, 1);
+  with pXfCd do begin
+    pBank.LocalName := pXfCd.Name + '_PowerXfInfo';
+    pBank.UUID := GetDevUuid (XfInfo, pXfCd.Name, 1);
     StartInstance (F, 'PowerTransformerInfo', pBank);
     EndInstance (F, 'PowerTransformerInfo');
-    StartInstance (F, 'TransformerTankInfo', pXfmr);
+    StartInstance (F, 'TransformerTankInfo', pXfCd);
     RefNode (F, 'TransformerTankInfo.PowerTransformerInfo', pBank);
     EndInstance (F, 'TransformerTankInfo');
     ratShort := NormMaxHKVA / Winding^[1].kva;
@@ -1277,12 +1278,12 @@ begin
     for i := 1 to NumWindings do begin
       Zbase := Winding^[i].kvll;
       Zbase := 1000.0 * Zbase * Zbase / Winding^[1].kva;
-      pName.localName := pXfmr.Name + '_' + IntToStr (i);
-      pName.UUID := GetDevUuid (WdgInf, pXfmr.Name, i);
+      pName.localName := pXfCd.Name + '_' + IntToStr (i);
+      pName.UUID := GetDevUuid (WdgInf, pXfCd.Name, i);
       StartInstance (F, 'TransformerEndInfo', pName);
-      RefNode (F, 'TransformerEndInfo.TransformerTankInfo', pXfmr);
+      RefNode (F, 'TransformerEndInfo.TransformerTankInfo', pXfCd);
       IntegerNode (F, 'TransformerEndInfo.endNumber', i);
-      if pXfmr.FNPhases < 3 then begin
+      if pXfCd.FNPhases < 3 then begin
         WindingConnectionEnum (F, 'I');
         if (i = 3) and (Winding^[i].kvll < 0.3) then // for center-tap secondary
           IntegerNode (F, 'TransformerEndInfo.phaseAngleClock', 6)
@@ -1309,10 +1310,10 @@ begin
       DoubleNode (F, 'TransformerEndInfo.insulationU', 0.0);
       EndInstance (F, 'TransformerEndInfo');
     end;
-    pName.localName:= pXfmr.Name + '_' + IntToStr(1);
-    pName.UUID := GetDevUuid (OcTest, pXfmr.Name, 1);
+    pName.localName:= pXfCd.Name + '_' + IntToStr(1);
+    pName.UUID := GetDevUuid (OcTest, pXfCd.Name, 1);
     StartInstance (F, 'NoLoadTest', pName);
-    UuidNode (F, 'NoLoadTest.EnergisedEnd', GetDevUuid (WdgInf, pXfmr.Name, 1));
+    UuidNode (F, 'NoLoadTest.EnergisedEnd', GetDevUuid (WdgInf, pXfCd.Name, 1));
     DoubleNode (F, 'NoLoadTest.energisedEndVoltage', 1000.0 * Winding^[1].kvll);
     DoubleNode (F, 'NoLoadTest.excitingCurrent', pctImag);
     DoubleNode (F, 'NoLoadTest.excitingCurrentZero', pctImag);
@@ -1326,12 +1327,12 @@ begin
     for i:= 1 to NumWindings do
       for j:= (i+1) to NumWindings do begin
         Inc (seq);
-        pName.localName:= pXfmr.Name + '_' + IntToStr(seq);
-        pName.UUID := GetDevUuid (ScTest, pXfmr.Name, seq);
+        pName.localName:= pXfCd.Name + '_' + IntToStr(seq);
+        pName.UUID := GetDevUuid (ScTest, pXfCd.Name, seq);
         StartInstance (F, 'ShortCircuitTest', pName);
-        UuidNode (F, 'ShortCircuitTest.EnergisedEnd', GetDevUuid (WdgInf, pXfmr.Name, i));
+        UuidNode (F, 'ShortCircuitTest.EnergisedEnd', GetDevUuid (WdgInf, pXfCd.Name, i));
          // NOTE: can insert more than one GroundedEnds for three-winding short-circuit tests
-        UuidNode (F, 'ShortCircuitTest.GroundedEnds', GetDevUuid (WdgInf, pXfmr.Name, j));
+        UuidNode (F, 'ShortCircuitTest.GroundedEnds', GetDevUuid (WdgInf, pXfCd.Name, j));
         IntegerNode (F, 'ShortCircuitTest.energisedEndStep', Winding^[i].NumTaps div 2);
         IntegerNode (F, 'ShortCircuitTest.groundedEndStep', Winding^[j].NumTaps div 2);
         Zbase := Winding^[i].kvll;
@@ -1444,6 +1445,18 @@ begin
   end;
 end;
 
+procedure ListXfmrCodes (clsXfCd : TXfmrCode; lbl:String); // for debugging
+var
+  pXfCd : TXfmrCodeObj;
+begin
+  writeln('xfmrcodes at ' + lbl);
+  pXfCd := clsXfCd.ElementList.First;
+  while pXfCd <> nil do begin
+    writeln('  ' + pXfCd.LocalName + ' ' + pXfCd.Name + ' ' + UUIDtoString (pXfCd.UUID));
+    pXfCd := clsXfCd.ElementList.Next;
+  end;
+end;
+
 Procedure ExportCDPSM(FileNm:String;
   Substation:String;
   SubGeographicRegion:String;
@@ -1498,18 +1511,18 @@ Var
   pLine : TLineObj;
   pReac : TReactorObj;
 
-  clsCode : TLineCode;
+  clsLnCd : TLineCode;
   clsGeom : TLineGeometry;
   clsWire : TWireData;
-  clsXfmr : TXfmrCode;
+  clsXfCd : TXfmrCode;
   clsSpac : TLineSpacing;
   clsTape : TTSData;
   clsConc : TCNData;
 
-  pCode : TLineCodeObj;
+  pLnCd : TLineCodeObj;
   pGeom : TLineGeometryObj;
   pWire : TWireDataObj;
-  pXfmr : TXfmrCodeObj;
+  pXfCd : TXfmrCodeObj;
   pSpac : TLineSpacingObj;
   pTape : TTSDataObj;
   pConc : TCNDataObj;
@@ -1528,17 +1541,17 @@ Var
   crsUUID: TUuid;
 Begin
   Try
-    clsCode := DSSClassList.Get(ClassNames.Find('linecode'));
+    clsLnCd := DSSClassList.Get(ClassNames.Find('linecode'));
     clsWire := DSSClassList.Get(ClassNames.Find('wiredata'));
     clsGeom := DSSClassList.Get(ClassNames.Find('linegeometry'));
-    clsXfmr := DSSClassList.Get(ClassNames.Find('xfmrcode'));
+    clsXfCd := DSSClassList.Get(ClassNames.Find('xfmrcode'));
     clsSpac := DSSClassList.Get(ClassNames.Find('linespacing'));
     clsTape := DSSClassList.Get(ClassNames.Find('TSData'));
     clsConc := DSSClassList.Get(ClassNames.Find('CNData'));
     pName1 := TNamedObject.Create('Temp1');
     pName2 := TNamedObject.Create('Temp2');
     if not assigned(UuidList) then begin  // this may have been done already from the uuids command
-        i1 := clsXfmr.ElementCount * 6; // 3 wdg info, 3 sctest
+        i1 := clsXfCd.ElementCount * 6; // 3 wdg info, 3 sctest
         i2 := ActiveCircuit.Transformers.ListSize * 11; // bank, info, 3 wdg, 3 wdg info, 3sctest
         StartUuidList (i1 + i2);
     end;
@@ -1972,34 +1985,34 @@ Begin
       if pXf.Enabled then begin
         if (length(pXf.XfmrCode) < 1) and (pXf.NPhases <> 3) then begin
           sBank := 'CIMXfmrCode_' + pXf.Name;
-          clsXfmr.NewObject (sBank);
-          clsXfmr.Code := sBank;
-          pXfmr := ActiveXfmrCodeObj;
-          pXfmr.UUID := GetDevUuid (TankInfo, pXfmr.Name, 1);
-          pXfmr.PullFromTransformer (pXf);
-          pXf.XfmrCode := pXfmr.Name;
+          clsXfCd.NewObject (sBank);
+          clsXfCd.Code := sBank;
+          pXfCd := ActiveXfmrCodeObj;
+          pXfCd.UUID := GetDevUuid (TankInfo, pXfCd.Name, 1);
+          pXfCd.PullFromTransformer (pXf);
+          pXf.XfmrCode := pXfCd.Name;
         end;
 			end;
 			pXf := ActiveCircuit.Transformers.Next;
 		end;
 
 		// write all the XfmrCodes first (CIM TransformerTankInfo)
-    pXfmr := clsXfmr.ElementList.First;
-    while pXfmr <> nil do begin
-      WriteXfmrCode (F, pXfmr);
+    pXfCd := clsXfCd.ElementList.First;
+    while pXfCd <> nil do begin
+      WriteXfmrCode (F, pXfCd);
       // link to the transformers using this XfmrCode
-      pName1.LocalName := 'TankAsset_' + pXfmr.Name;
-      pName1.UUID := GetDevUuid (TankAsset, pXfmr.Name, 1);
+      pName1.LocalName := 'TankAsset_' + pXfCd.Name;
+      pName1.UUID := GetDevUuid (TankAsset, pXfCd.Name, 1);
       StartInstance (F, 'Asset', pName1);
-      RefNode (F, 'Asset.AssetInfo', pXfmr);
+      RefNode (F, 'Asset.AssetInfo', pXfCd);
       pXf := ActiveCircuit.Transformers.First;
       while pXf <> nil do begin
-        if pXf.XfmrCode = pXfmr.Name then
+        if pXf.XfmrCode = pXfCd.Name then
           RefNode (F, 'Asset.PowerSystemResources', pXf);
         pXf := ActiveCircuit.Transformers.Next;
       end;
       EndInstance (F, 'Asset');
-      pXfmr := clsXfmr.ElementList.Next;
+      pXfCd := clsXfCd.ElementList.Next;
     end;
 
     // create all the banks (CIM PowerTransformer)
@@ -2336,7 +2349,7 @@ Begin
           VbaseNode (F, pLine);
           if LineCodeSpecified then begin
             DoubleNode (F, 'Conductor.length', Len * v1);
-            LineCodeRefNode (F, clsCode, pLine.CondCode);
+            LineCodeRefNode (F, clsLnCd, pLine.CondCode);
           end else if GeometrySpecified then begin
             DoubleNode (F, 'Conductor.length', Len * v1);
             LineSpacingRefNode (F, clsGeom, pLine.GeometryCode);
@@ -2466,26 +2479,26 @@ Begin
         pLoad := ActiveCircuit.Loads.Next;
     end;
 
-    pCode := clsCode.ElementList.First;
-    while pCode <> nil do begin
-      with pCode do begin
-        if pCode.Units = UNITS_NONE then begin // we need the real units for CIM
+    pLnCd := clsLnCd.ElementList.First;
+    while pLnCd <> nil do begin
+      with pLnCd do begin
+        if pLnCd.Units = UNITS_NONE then begin // we need the real units for CIM
           pLine := ActiveCircuit.Lines.First;
           while pLine <> nil do begin
             If pLine.Enabled Then Begin
-              if pLine.CondCode = pCode.LocalName then begin
-                pCode.Units := pLine.LengthUnits;
-//                writeln ('Setting Units on ' + pCode.LocalName + ' to ' + LineUnitsStr(pCode.Units));
+              if pLine.CondCode = pLnCd.LocalName then begin
+                pLnCd.Units := pLine.LengthUnits;
+//                writeln ('Setting Units on ' + pLnCd.LocalName + ' to ' + LineUnitsStr(pLnCd.Units));
                 break;
               end;
             end;
             pLine := ActiveCircuit.Lines.Next;
           end;
         end;
-        v1 := To_per_Meter (pCode.Units); // TODO: warn if still UNITS_NONE
+        v1 := To_per_Meter (pLnCd.Units); // TODO: warn if still UNITS_NONE
         if SymComponentsModel and (NumPhases=3) then begin
           v2 := 1.0e-9 * TwoPi * BaseFrequency; // convert nF to mhos
-          StartInstance (F, 'PerLengthSequenceImpedance', pCode);
+          StartInstance (F, 'PerLengthSequenceImpedance', pLnCd);
           DoubleNode (F, 'PerLengthSequenceImpedance.r', R1 * v1);
           DoubleNode (F, 'PerLengthSequenceImpedance.x', X1 * v1);
           DoubleNode (F, 'PerLengthSequenceImpedance.bch', C1 * v1 * v2);
@@ -2496,14 +2509,14 @@ Begin
           DoubleNode (F, 'PerLengthSequenceImpedance.g0ch', 0.0);
           EndInstance (F, 'PerLengthSequenceImpedance')
         end else begin
-          StartInstance (F, 'PerLengthPhaseImpedance', pCode);
+          StartInstance (F, 'PerLengthPhaseImpedance', pLnCd);
           IntegerNode (F, 'PerLengthPhaseImpedance.conductorCount', FNPhases);
           EndInstance (F, 'PerLengthPhaseImpedance');
           seq := 1;
           for i:= 1 to FNPhases do begin
             for j:= 1 to i do begin
-              StartFreeInstance (F, 'PhaseImpedanceData', GetDevUuid (ZData, pCode.LocalName, seq));
-              RefNode (F, 'PhaseImpedanceData.PhaseImpedance', pCode);
+              StartFreeInstance (F, 'PhaseImpedanceData', GetDevUuid (ZData, pLnCd.LocalName, seq));
+              RefNode (F, 'PhaseImpedanceData.PhaseImpedance', pLnCd);
               IntegerNode (F, 'PhaseImpedanceData.row', i);
               IntegerNode (F, 'PhaseImpedanceData.column', j);
               DoubleNode (F, 'PhaseImpedanceData.r', Z.GetElement(i,j).re * v1);
@@ -2515,7 +2528,7 @@ Begin
           end;
         end;
       end;
-      pCode := clsCode.ElementList.Next;
+      pLnCd := clsLnCd.ElementList.Next;
     end;
 
     pWire := clsWire.ElementList.First;
@@ -2563,7 +2576,7 @@ Begin
         for i := 1 to NWires do begin
           pName1.LocalName := 'WP_' + pGeom.Name + '_' + IntToStr(i);
           pName1.UUID := GetDevUuid (WirePos, pName1.LocalName, 1);  // 1 for pGeom
-          StartInstance (F, 'WirePosition', pName1);  // TODO - are these really IdentifiedObject?
+          StartInstance (F, 'WirePosition', pName1);
           RefNode (F, 'WirePosition.WireSpacingInfo', pGeom);
           IntegerNode (F, 'WirePosition.sequenceNumber', i);
           v1 := To_Meters (Units[i]);
@@ -2592,7 +2605,7 @@ Begin
         for i := 1 to NWires do begin
           pName1.LocalName := 'WP_' + pSpac.Name + '_' + IntToStr(i);
           pName1.UUID := GetDevUuid (WirePos, pName1.LocalName, 2); // 2 for pSpac
-          StartInstance (F, 'WirePosition', pName1);  // TODO - are these really IdentifiedObject?
+          StartInstance (F, 'WirePosition', pName1);
           RefNode (F, 'WirePosition.WireSpacingInfo', pSpac);
           IntegerNode (F, 'WirePosition.sequenceNumber', i);
           DoubleNode (F, 'WirePosition.xCoord', Xcoord[i] * v1);
@@ -2628,7 +2641,7 @@ Begin
     pName1.Free;
     pName2.Free;
 
-//    FreeUuidList;  // TODO: this is deferred for UUID export
+//    FreeUuidList;  // this is deferred for UUID export
     FreeBankList;
     FreeOpLimitList;
 
