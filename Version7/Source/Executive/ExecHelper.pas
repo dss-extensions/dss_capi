@@ -3542,6 +3542,7 @@ begin
         if Pos ('=', NameVal) > 0 then begin  // it's a non-identified object in OpenDSS
           AddHashedUuid (NameVal, UuidVal);
         end else begin  // find this as a descendant of TNamedObject
+          pName := nil;
           ParseObjectClassAndName (NameVal, DevClass, DevName);
           IF CompareText (DevClass, 'circuit')=0 THEN begin
             pName := ActiveCircuit
@@ -3551,10 +3552,9 @@ begin
           end else begin
             LastClassReferenced := ClassNames.Find (DevClass);
             ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
-            if ActiveDSSClass <> nil then begin
-              ActiveDSSClass.SetActive (DevName);
-              pName := ActiveDSSClass.GetActiveObj;
-            end;
+            if ActiveDSSClass <> nil then
+              if ActiveDSSClass.SetActive (DevName) then
+                pName := ActiveDSSClass.GetActiveObj;
           end;
           // re-assign its UUID
           if pName <> nil then pName.UUID := StringToUuid (UuidVal);

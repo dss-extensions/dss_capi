@@ -2717,10 +2717,10 @@ End;
 Procedure ExportUuids(FileNm:String);
 Var
   F       : TextFile;
-  clsCode : TLineCode;
+  clsLnCd : TLineCode;
   clsGeom : TLineGeometry;
   clsWire : TWireData;
-  clsXfmr : TXfmrCode;
+  clsXfCd : TXfmrCode;
   clsSpac : TLineSpacing;
   clsTape : TTSData;
   clsConc : TCNData;
@@ -2728,10 +2728,10 @@ Var
   i       : integer;
 Begin
   Try
-    clsCode := DSSClassList.Get(ClassNames.Find('linecode'));
+    clsLnCd := DSSClassList.Get(ClassNames.Find('linecode'));
     clsWire := DSSClassList.Get(ClassNames.Find('wiredata'));
     clsGeom := DSSClassList.Get(ClassNames.Find('linegeometry'));
-    clsXfmr := DSSClassList.Get(ClassNames.Find('xfmrcode'));
+    clsXfCd := DSSClassList.Get(ClassNames.Find('xfmrcode'));
     clsSpac := DSSClassList.Get(ClassNames.Find('linespacing'));
     clsTape := DSSClassList.Get(ClassNames.Find('TSData'));
     clsConc := DSSClassList.Get(ClassNames.Find('CNData'));
@@ -2753,10 +2753,10 @@ Begin
       pName := ActiveCircuit.CktElements.Next;
     End;
 
-    pName := clsCode.ElementList.First;
+    pName := clsLnCd.ElementList.First;
     while pName <> nil do begin
       Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-      pName := clsCode.ElementList.Next;
+      pName := clsLnCd.ElementList.Next;
     End;
 
     pName := clsWire.ElementList.First;
@@ -2771,10 +2771,10 @@ Begin
       pName := clsGeom.ElementList.Next;
     End;
 
-    pName := clsXfmr.ElementList.First;
+    pName := clsXfCd.ElementList.First;
     while pName <> nil do begin
       Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-      pName := clsXfmr.ElementList.Next;
+      pName := clsXfCd.ElementList.Next;
     End;
 
     pName := clsSpac.ElementList.First;
