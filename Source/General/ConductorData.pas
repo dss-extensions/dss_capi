@@ -1,7 +1,7 @@
 unit ConductorData;
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2020, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -47,6 +47,7 @@ TYPE
       FRDC              : Double;
       FR60              : Double;
       FGMR60            : Double;
+      Fcapradius60      : Double;  // in case it is different than radius for cap calcs
       Fradius           : Double;
       FGMRUnits         : Integer;
       FResistanceUnits  : Integer;
@@ -63,6 +64,7 @@ TYPE
       Property Rdc:Double Read FRDC;
       Property Rac:Double Read FR60;
       Property GMR:Double Read FGMR60;
+      Property CapRadius:Double Read Fcapradius60;
       Property Radius:Double Read FRadius;
       Property ResUnits:Integer Read FresistanceUnits;
       Property RadiusUnits:Integer Read FradiusUnits;
@@ -88,7 +90,7 @@ Const
 constructor TConductorData.Create;  // Creates superstructure for all Line objects
 BEGIN
   Inherited Create;
-  NumConductorClassProps := 12;
+  NumConductorClassProps := 13;
   DSSClassType := DSS_OBJECT;
 END;
 
@@ -117,6 +119,7 @@ Begin
   PropertyName^[ActiveProperty + 10]:= 'diam';
   PropertyName^[ActiveProperty + 11]:= 'Seasons';
   PropertyName^[ActiveProperty + 12]:= 'Ratings';
+  PropertyName^[ActiveProperty + 13]:= 'Capradius';
 
   PropertyHelp^[ActiveProperty + 1] := 'dc Resistance, ohms per unit length (see Runits). Defaults to Rac/1.02 if not specified.';
   PropertyHelp^[ActiveProperty + 2] := 'Resistance at 60 Hz per unit length. Defaults to 1.02*Rdc if not specified.';
@@ -131,6 +134,7 @@ Begin
   PropertyHelp^[ActiveProperty + 11]:= 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
   PropertyHelp^[ActiveProperty + 12]:= 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
                                         CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
+  PropertyHelp^[ActiveProperty + 13]:= 'Equivalent conductor radius for capacitor calcs. Specify this for bundled conductors. Defaults to same value as radius.';
 
   ActiveProperty := ActiveProperty + NumConductorClassProps;
   Inherited DefineProperties;
@@ -164,21 +168,29 @@ BEGIN
               setlength(AmpRatings,NumAmpRatings);
               Param := Parser[ActiveActor].StrValue;
               NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, pointer(AmpRatings));
-            End
+            End;
+       13: Fcapradius60        := Parser[ActiveActor].DblValue;
       ELSE
         Inherited ClassEdit(ActiveObj, ParamPointer - NumConductorClassProps)
       END;
       {Set defaults}
       CASE ParamPointer OF
-        1 : If FR60<0.0      Then FR60 := 1.02* FRDC;
-        2 : If FRDC<0.0      Then FRDC := FR60 / 1.02;
-        4 : If Fradius<0.0   Then Fradius := FGMR60 / 0.7788;
-        5 : If FradiusUnits =0 Then FradiusUnits := FGMRunits;
-        6 : If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
-        7 : If FGMRUnits=0   Then FGMRunits := FradiusUnits;
-        8 : IF EmergAmps<0.0 Then EmergAmps := 1.5*NormAmps;
-        9 : If NormAmps<0.0  Then NormAmps := EmergAmps/1.5;
-       10 : If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
+        1: If FR60<0.0        Then FR60         := 1.02* FRDC;
+        2: If FRDC<0.0        Then FRDC         := FR60 / 1.02;
+        4: If Fradius<0.0     Then Fradius      := FGMR60 / 0.7788;
+        5: If FradiusUnits =0 Then FradiusUnits := FGMRunits;
+        6: Begin
+             If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
+             if Fcapradius60<0.0 then Fcapradius60 := Fradius;    // default to radius
+           End;
+        7: If FGMRUnits=0   Then FGMRunits := FradiusUnits;
+        8: IF EmergAmps<0.0 Then EmergAmps := 1.5*NormAmps;
+        9: If NormAmps<0.0  Then NormAmps := EmergAmps/1.5;
+       10: Begin
+              If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
+              if Fcapradius60<0.0 then Fcapradius60 := Fradius;    // default to radius
+           End;
+       13: If Fcapradius60<0.0    Then Fcapradius60 := FRadius;
       END;
       {Check for critical errors}
       CASE ParamPointer OF
@@ -194,15 +206,16 @@ VAR
 BEGIN
   OtherConductorData := TConductorDataObj(OtherObj);
   WITH TConductorDataObj(ActiveDSSObject[ActiveActor]) DO BEGIN
-    FRDC:= OtherConductorData.FRDC;
-    FR60:= OtherConductorData.FR60;
-    FResistanceUnits:= OtherConductorData.FResistanceUnits;
-    FGMR60:= OtherConductorData.FGMR60;
-    FGMRUnits:= OtherConductorData.FGMRUnits;
-    FRadius:= OtherConductorData.FRadius;
-    FRadiusUnits:= OtherConductorData.FRadiusUnits;
-    NormAmps := OtherConductorData.NormAmps;
-    EmergAmps := OtherConductorData.EmergAmps;
+    FRDC              := OtherConductorData.FRDC;
+    FR60              := OtherConductorData.FR60;
+    FResistanceUnits  := OtherConductorData.FResistanceUnits;
+    FGMR60            := OtherConductorData.FGMR60;
+    Fcapradius60      := OtherConductorData.Fcapradius60;
+    FGMRUnits         := OtherConductorData.FGMRUnits;
+    FRadius           := OtherConductorData.FRadius;
+    FRadiusUnits      := OtherConductorData.FRadiusUnits;
+    NormAmps          := OtherConductorData.NormAmps;
+    EmergAmps         := OtherConductorData.EmergAmps;
   END;
   // Inherited ClassMakeLike(OtherObj);
 END;
@@ -222,6 +235,7 @@ BEGIN
   FR60              := -1.0;
   FGMR60            := -1.0;
   Fradius           := -1.0;
+  Fcapradius60      := -1.0;   // init to not defined
   FGMRUnits         := 0;
   FResistanceUnits  := 0;
   FRadiusUnits      := 0;
@@ -268,6 +282,7 @@ Begin
               TempStr   :=  TempStr + ']';
               Writeln(F, TempStr);
             End;
+       13: Writeln(F, Format('%.6g',[Fcapradius60]));
       END;
     End;
   End;
@@ -286,8 +301,9 @@ begin
   PropertyValue[ArrayOffset + 9] :=  '-1';
   PropertyValue[ArrayOffset + 10] :=  '-1';
   PropertyValue[ArrayOffset + 11] :=  '1';
-  PropertyValue[ArrayOffset + 12] :=  '[-1]';    
-  inherited InitPropertyValues(ArrayOffset + 10);
+  PropertyValue[ArrayOffset + 12] :=  '[-1]';
+  PropertyValue[ArrayOffset + 13] :=  '-1';
+  inherited InitPropertyValues(ArrayOffset + 13);
 end;
 
 end.

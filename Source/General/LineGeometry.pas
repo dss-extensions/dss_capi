@@ -1,7 +1,7 @@
 unit LineGeometry;
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2020, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -240,12 +240,13 @@ END;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Function TLineGeometry.Edit(ActorID : Integer):Integer;
 VAR
+   i,
+   istart,
+   istop,
    ParamPointer     :Integer;
    ParamName,
    Param            :String;
-   i,
-   istart,
-   istop            : Integer;
+
 
 BEGIN
   Result := 0;
@@ -271,11 +272,15 @@ BEGIN
             3: ActiveCond    := Parser[ActorID].IntValue;
             4: Begin
                 FCondName^[ActiveCond] := Param;
-                if FPhaseChoice^[ActiveCond] = Unknown then ChangeLineConstantsType (Overhead);
+                if (FPhaseChoice^[ActiveCond] = Unknown) or (FPhaseChoice^[ActiveCond] = Overhead) then
+                  ChangeLineConstantsType (Overhead);
             end;
             5: FX^[ActiveCond] := Parser[ActorID].DblValue;
             6: FY^[ActiveCond] := Parser[ActorID].DblValue;
-            7: Begin FUnits^[ActiveCond] := GetUnitsCode(Param); FLastUnit := FUnits^[ActiveCond]; End;
+            7: Begin
+                FUnits^[ActiveCond] := GetUnitsCode(Param);
+                FLastUnit           := FUnits^[ActiveCond];
+               End;
             8: NormAmps    := Parser[ActorID].DblValue ;
             9: EmergAmps   := Parser[ActorID].DblValue ;
            10: Freduce     := InterpretYesNo(Param);
@@ -753,15 +758,17 @@ begin
 
   if needNew then
     case newPhaseChoice of
-      Overhead: newLineData := TOHLineConstants.Create(FNConds);
-      ConcentricNeutral: newLineData := TCNLineConstants.Create(FNConds);
-      TapeShield: newLineData := TTSLineConstants.Create(FNConds);
+      Overhead          : newLineData := TOHLineConstants.Create(FNConds);
+      ConcentricNeutral : newLineData := TCNLineConstants.Create(FNConds);
+      TapeShield        : newLineData := TTSLineConstants.Create(FNConds);
     end;
 
-  if Assigned(newLineData) then begin
-    if Assigned(FLineData) then begin
-      newLineData.Nphases := FLineData.Nphases;
-      newLineData.rhoearth := FLineData.rhoearth;
+  if Assigned(newLineData) then
+  begin
+    if Assigned(FLineData) then
+    begin
+      newLineData.Nphases   := FLineData.Nphases;
+      newLineData.rhoearth  := FLineData.rhoearth;
     end else
       FreeAndNil(FLineData);
     FLineData := newLineData;
@@ -785,18 +792,22 @@ begin
     Reallocmem( FUnits,    Sizeof(Funits^[1])    *FNconds);
     Reallocmem( FPhaseChoice,    Sizeof(FPhaseChoice^[1])    *FNconds);
 
+  For i := 1 to FNconds Do
+  Begin
+    ActiveCond := i;
+    ChangeLineConstantsType(Overhead);    // works on activecond
+  End;
+
+  FCondName := AllocStringArray(FNconds);
+
 {Initialize Allocations}
-  For i := 1 to FNconds Do FWireData^[i] := Nil;
-  For i := 1 to FNconds Do FX^[i] := 0.0;
-  For i := 1 to FNconds Do FY^[i] := 0.0;
-  For i := 1 to FNconds Do FUnits^[i] := -1;  // default to ft
+  For i := 1 to FNconds Do FWireData^[i]  := Nil;
+  For i := 1 to FNconds Do FX^[i]         := 0.0;
+  For i := 1 to FNconds Do FY^[i]         := 0.0;
+  For i := 1 to FNconds Do FUnits^[i]     := -1;  // default to ft
   FLastUnit := UNITS_FT;
 
-  For i := 1 to FNconds Do Begin
-      ActiveCond := i;
-      ChangeLineConstantsType(Overhead);    // works on activecond
-  End;
-  FCondName := AllocStringArray(FNconds);
+
 
 
 end;
@@ -824,6 +835,7 @@ begin
     FLineData.X[i, Funits^[i]] := FX^[i];
     FLineData.Y[i, Funits^[i]] := FY^[i];
     FLineData.radius[i, FWireData^[i].RadiusUnits] := FWireData^[i].Radius;
+    FLineData.capradius[i, FWireData^[i].RadiusUnits] := FWireData^[i].capRadius;
     FLineData.GMR[i, FWireData^[i].GMRUnits]       := FWireData^[i].GMR;
     FLineData.Rdc[i, FWireData^[i].ResUnits]       := FWireData^[i].Rdc;
     FLineData.Rac[i, FWireData^[i].ResUnits]       := FWireData^[i].Rac;
@@ -839,18 +851,20 @@ begin
         GmrStrand[i, cnd.GMRUnits] := cnd.GmrStrand;
         RStrand[i, cnd.ResUnits] := cnd.RStrand;
       end;
-    end else if (FWireData^[i] is TTSDataObj) then begin
-      with (FLineData as TTSLineConstants) do begin
-        tsd := (FWireData^[i] as TTSDataObj);
-        EpsR[i] := tsd.EpsR;
-        InsLayer[i, tsd.RadiusUnits] := tsd.InsLayer;
-        DiaIns[i, tsd.RadiusUnits] := tsd.DiaIns;
-        DiaCable[i, tsd.RadiusUnits] := tsd.DiaCable;
-        DiaShield[i, tsd.RadiusUnits] := tsd.DiaShield;
-        TapeLayer[i, tsd.RadiusUnits] := tsd.TapeLayer;
-        TapeLap[i] := tsd.TapeLap;
+    end else if (FWireData^[i] is TTSDataObj) then
+      begin
+        with (FLineData as TTSLineConstants) do
+        begin
+          tsd                           := (FWireData^[i] as TTSDataObj);
+          EpsR[i]                       := tsd.EpsR;
+          InsLayer[i, tsd.RadiusUnits]  := tsd.InsLayer;
+          DiaIns[i, tsd.RadiusUnits]    := tsd.DiaIns;
+          DiaCable[i, tsd.RadiusUnits]  := tsd.DiaCable;
+          DiaShield[i, tsd.RadiusUnits] := tsd.DiaShield;
+          TapeLayer[i, tsd.RadiusUnits] := tsd.TapeLayer;
+          TapeLap[i] := tsd.TapeLap;
+        end;
       end;
-    end;
   End;
 
   FLineData.Nphases := FNphases;
