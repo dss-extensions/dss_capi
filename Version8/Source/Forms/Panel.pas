@@ -1,7 +1,7 @@
 unit Panel;
  {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2020, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }

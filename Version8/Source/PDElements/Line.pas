@@ -1492,7 +1492,7 @@ begin
       End; {If Series}
 
       {Rename the line}
-       If Series Then NewName := StripExtension(GetBus(1)) + '~'  + StripExtension(GetBus(2))
+       If Series Then NewName := OtherLine.Name + '~' + Name //StripExtension(GetBus(1)) + '~'  + StripExtension(GetBus(2))
                  Else NewName := StripExtension(GetBus(1)) + '||' + StripExtension(GetBus(2));
 
        {Update ControlElement Connections to This Line}
