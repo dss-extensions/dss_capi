@@ -391,7 +391,7 @@ begin
               thetaij := 0.0;
               Dij := 2.0*Fyi;
           end else begin
-              Dij := sqrt(sqr((Fyi + Fyj) + sqr(Fx^[i] - Fx^[j])));
+              Dij := sqrt(sqr(Fyi + Fyj) + sqr(Fx^[i] - Fx^[j]));
               thetaij := ArcCos( (Fyi + Fyj)/ Dij);
           End;
           mij := 2.8099e-3 * Dij * sqrt(FFrequency/Frhoearth);
