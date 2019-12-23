@@ -296,7 +296,7 @@ begin
                         if pMon <> NIL then
                             pMon.TranslateToCSV((idxP = FinalP))
                         else
-                            DoSimpleMsg('Monitor "' + param + '" not found.' + CRLF + DSS.Parser.CmdString, 248);
+                            DoSimpleMsg(DSS, 'Monitor "' + param + '" not found.' + CRLF + DSS.Parser.CmdString, 248);
                     end;
                 end;
 {$ENDIF}

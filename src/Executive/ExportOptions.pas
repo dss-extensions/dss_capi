@@ -576,32 +576,32 @@ begin
                 else
                 begin
                     InitP := 0;
-                    FinalP := High(PParent.Children);
+                    FinalP := High(PMParent.Children);
                     for idxP := InitP to FinalP do
                     begin
                         if Parm2 = 'all' then
                         begin
-                            pMon := PParent.Children[idxP].ActiveCircuit.Monitors.First;
+                            pMon := PMParent.Children[idxP].ActiveCircuit.Monitors.First;
                             while pMon <> NIL do
                             begin
                                 if pMon <> NIL then
                                 begin
                                     pMon.TranslateToCSV(FALSE);
-                                    FileName := GlobalResult;
+                                    FileName := DSS.GlobalResult;
                                 end;
-                                pMon := PParent.Children[idxP].ActiveCircuit.Monitors.Next;
+                                pMon := PMParent.Children[idxP].ActiveCircuit.Monitors.Next;
                             end;
                         end
                         else
                         begin
-                            pMon := PParent.Children[idxP].MonitorClass.Find(Parm2);
+                            pMon := PMParent.Children[idxP].MonitorClass.Find(Parm2);
                             if pMon <> NIL then
                             begin
                                 pMon.TranslateToCSV(FALSE);
-                                FileName := GlobalResult;
+                                FileName := DSS.GlobalResult;
                             end
                             else
-                                DoSimpleMsg('Monitor "' + Parm2 + '" not found.' + CRLF + DSS.Parser.CmdString, 250);
+                                DoSimpleMsg(DSS, 'Monitor "' + Parm2 + '" not found.' + CRLF + DSS.Parser.CmdString, 250);
                         end;
                     end;
                 end;

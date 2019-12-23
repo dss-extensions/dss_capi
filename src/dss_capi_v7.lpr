@@ -75,8 +75,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 uses
     SysUtils,
     Classes,
-    CustApp,
     {$IFDEF UNIX}cwstring,{$ENDIF}
+    Parallel_Lib in 'Parallel_Lib/Parallel_Lib.pas',
     Arraydef in 'Shared/Arraydef.pas',
     AutoAdd in 'Common/AutoAdd.pas',
     Bus in 'Common/Bus.pas',
@@ -99,6 +99,9 @@ uses
     ControlClass in 'Controls/ControlClass.pas',
     ControlElem in 'Controls/ControlElem.pas',
     ControlQueue in 'Common/ControlQueue.pas',
+{$IFDEF DSS_CAPI_PM}
+    Diakoptics in 'Common/Diakoptics.pas',
+{$ENDIF}    
     DSSCallBackRoutines in 'Common/DSSCallBackRoutines.pas',
     DSSClass in 'Common/DSSClass.pas',
     DSSClassDefs in 'Common/DSSClassDefs.pas',
@@ -147,7 +150,6 @@ uses
     MeterClass in 'Meters/MeterClass.pas',
     MeterElement in 'Meters/MeterElement.pas',
     Monitor in 'Meters/Monitor.pas',
-    // MyDSSClassDefs in 'CMD/MyDSSClassDefs.Pas',
     NamedObject in 'General/NamedObject.pas',
     Notes in 'Common/Notes.pas',
     OHLineConstants in 'General/OHLineConstants.pas',

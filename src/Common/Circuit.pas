@@ -24,9 +24,22 @@ interface
 
 USES
      Classes, Solution, SysUtils, ArrayDef, HashList, PointerList, CktElement,
-     DSSClass, {DSSObject,} Bus, LoadShape, PriceShape, ControlQueue, uComplex,
-     AutoAdd, EnergyMeter, NamedObject, CktTree{$IFNDEF FPC}, Graphics{$ENDIF}, math,     Sparse_Math,
-     {$IFNDEF FPC}vcl.dialogs, {$ELSE} Process, {$ENDIF} MeTIS_Exec;
+     DSSClass, Bus, LoadShape, PriceShape, ControlQueue, uComplex,
+     AutoAdd, EnergyMeter, NamedObject, CktTree, MeTIS_Exec
+     {$IFNDEF FPC}
+     , Graphics
+     {$ENDIF} 
+     , math
+     , Sparse_Math
+     {$IFNDEF FPC}
+     , vcl.dialogs
+     {$ELSE} 
+     , Process 
+     {$ENDIF} 
+     {$IFDEF DSS_CAPI_PM}
+     , syncobjs
+     {$ENDIF}
+     ;
 
 
 TYPE
@@ -190,14 +203,19 @@ TYPE
           Locations         : Array of Integer;   // Stores the indexes of the locations
 
           // Variables for Diakoptics
-          //TODO: migrate TSparse_Complex to KLUSolveX (most already present in Eigen)
+          //TODO: migrate TSparse_Complex to KLUSolveX (most functionality already present in Eigen)
           Contours         :  TSparse_Complex;    //  Contours matrix
           ZLL              :  TSparse_Complex;    //  Link branch matrix
           ZCT              :  TSparse_Complex;    //  The transformation matrix (to go from one to other domain)
           ZCC              :  TSparse_Complex;    //  Interconnections matrix
           Y4               :  TSparse_Complex;    //  The inverse of the interconnections matrix
           V_0              :  TSparse_Complex;    //  The voltages of the partial solutions
+          
           Ic               :  TSparse_Complex;    //  The complementary Currents vector
+{$IFDEF DSS_CAPI_PM}
+          LockIc           :  TCriticalSection;
+{$ENDIF}
+
           VIndex           :  Integer;  // To store the index of the sub-circuit in the interconnected system
           VLength          :  Integer;  // To store the length of the sub-circuit in the interconnected system
           AD_Init          :  Boolean;    // This is used only by the A-Diakoptics coordiantor (ID = 1)
@@ -538,7 +556,7 @@ BEGIN
 
 
   Coverage              :=  0.9;      // 90% coverage expected by default
-  Actual_coverage       :=  -1;       //No coverage
+  Actual_coverage       :=  -1;       // No coverage
   Num_SubCkts           :=  CPU_Cores-1;
 
   setlength(Longest_paths,0);
@@ -554,7 +572,9 @@ BEGIN
   Y4        :=  TSparse_Complex.Create;
   V_0       :=  TSparse_Complex.Create;
   Ic        :=  TSparse_Complex.Create;
-
+{$IFDEF DSS_CAPI_PM}
+  LockIc    :=  syncobjs.TCriticalSection.Create;
+{$ENDIF}
 END;
 
 //----------------------------------------------------------------------------
@@ -565,83 +585,77 @@ VAR
     ElemName :String;
 
 BEGIN
-     For i := 1 to NumDevices Do Begin
-           TRY
-              pCktElem := TDSSCktElement(CktElements.Get(i));
-              ElemName := pCktElem.ParentClass.name + '.' + pCktElem.Name;
-              pCktElem.Free;
-
-           EXCEPT
-             ON E: Exception Do
-               DoSimpleMsg(DSS, 'Exception Freeing Circuit Element:'  + ElemName + CRLF + E.Message, 423);
-           END;
-     End;
-
-     FOR i := 1 to NumBuses Do Buses^[i].Free;  // added 10-29-00
-
-     Reallocmem(DeviceRef, 0);
-     Reallocmem(Buses,     0);
-     Reallocmem(MapNodeToBus, 0);
-     Reallocmem(NodeBuffer, 0);
-     Reallocmem(UEregs, 0);
-     Reallocmem(Lossregs, 0);
-     Reallocmem(LegalVoltageBases, 0);
-
-     DeviceList.Free;
-     BusList.Free;
-     AutoAddBusList.Free;
-     Solution.Free;
-     PDElements.Free;
-     PCElements.Free;
-     DSSControls.Free;
-     Sources.Free;
-     Faults.Free;
-     CktElements.Free;
+    For i := 1 to NumDevices Do Begin
+        TRY
+            pCktElem := TDSSCktElement(CktElements.Get(i));
+            ElemName := pCktElem.ParentClass.name + '.' + pCktElem.Name;
+            pCktElem.Free;
+        EXCEPT
+            ON E: Exception Do
+                DoSimpleMsg(DSS, 'Exception Freeing Circuit Element:'  + ElemName + CRLF + E.Message, 423);
+        END;
+    End;
+    FOR i := 1 to NumBuses Do Buses^[i].Free;  // added 10-29-00
+    Reallocmem(DeviceRef, 0);
+    Reallocmem(Buses,     0);
+    Reallocmem(MapNodeToBus, 0);
+    Reallocmem(NodeBuffer, 0);
+    Reallocmem(UEregs, 0);
+    Reallocmem(Lossregs, 0);
+    Reallocmem(LegalVoltageBases, 0);
+    DeviceList.Free;
+    BusList.Free;
+    AutoAddBusList.Free;
+    Solution.Free;
+    PDElements.Free;
+    PCElements.Free;
+    DSSControls.Free;
+    Sources.Free;
+    Faults.Free;
+    CktElements.Free;
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
-     IncrCktElements.Free;
+    IncrCktElements.Free;
 {$ENDIF}
-    
-     MeterElements.Free;
-     Monitors.Free;
-     EnergyMeters.Free;
-     Sensors.Free;
-     Generators.Free;
-     StorageElements.Free;
-     PVSystems.Free;
-     Feeders.Free;
-     Substations.Free;
-     Transformers.Free;
-     CapControls.Free;
-     SwtControls.Free;
-     RegControls.Free;
-     Loads.Free;
-     Lines.Free;
-     ShuntCapacitors.Free;
-     Reactors.Free;
-     Reclosers.Free;
-     Relays.Free;
-     Fuses.Free;
-
-     ControlQueue.Free;
-
-     ClearBusMarkers;
-     BusMarkerList.Free;
-
-     AutoAddObj.Free;
-
-     FreeTopology;
+    MeterElements.Free;
+    Monitors.Free;
+    EnergyMeters.Free;
+    Sensors.Free;
+    Generators.Free;
+    StorageElements.Free;
+    PVSystems.Free;
+    Feeders.Free;
+    Substations.Free;
+    Transformers.Free;
+    CapControls.Free;
+    SwtControls.Free;
+    RegControls.Free;
+    Loads.Free;
+    Lines.Free;
+    ShuntCapacitors.Free;
+    Reactors.Free;
+    Reclosers.Free;
+    Relays.Free;
+    Fuses.Free;
+    ControlQueue.Free;
+    ClearBusMarkers;
+    BusMarkerList.Free;
+    AutoAddObj.Free;
+    FreeTopology;
 
 //  Release all ADiakoptics matrixes
 
-     Contours.Free;
-     ZLL.Free;
-     ZCC.Free;
-     ZCT.Free;
-     Y4.Free;
-     V_0.Free;
-     Ic.Free;
+    Contours.Free;
+    ZLL.Free;
+    ZCC.Free;
+    ZCT.Free;
+    Y4.Free;
+    V_0.Free;
+    Ic.Free;
 
-     Inherited Destroy;
+{$IFDEF DSS_CAPI_PM}
+    LockIc.Free;
+{$ENDIF}
+    Inherited Destroy;
 END;
 
 {*******************************************************************************

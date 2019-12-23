@@ -20,10 +20,8 @@ const
 {$ENDIF}
 
 var
-
     ExecCommand,
     CommandHelp: array[1..NumExecCommands] of String;
-
     CommandList: TCommandList;
 
 procedure ProcessCommand(DSS: TDSSContext; const CmdLine: String);
@@ -64,13 +62,16 @@ uses
     
 {$IFDEF DSS_CAPI_PM}
 const
-    CMD_NewActor = 105;
-    CMD_ClearAll = 106;
-    CMD_Wait = 107;
-    CMD_SolveAll = 108;
-    CMD_Tear_Circuit = 111;
-    CMD_Abort = 116;
+    CMD_NewActor = 112;
+    CMD_ClearAll = 113;
+    CMD_Wait = 114;
+    CMD_SolveAll = 115;
+    CMD_Tear_Circuit = 116;
+    CMD_Abort = 117;
     CMD_Clone = 118;
+
+
+    
 {$ENDIF}
 
 procedure DefineCommands;
@@ -559,8 +560,13 @@ var
     ParamName: String;
     Param: String;
     ObjName, PropName: String;
-
+{$IFDEF DSS_CAPI_PM}
+    PMParent: TDSSContext;
 begin
+    PMParent := DSS.GetPrime();
+{$ELSE}
+begin
+{$ENDIF}
     try
 
         DSS.CmdResult := 0;
@@ -697,27 +703,26 @@ begin
 {$IFDEF DSS_CAPI_PM}
             CMD_NewActor:
             begin
-                New_Actor_Slot();
+                New_Actor_Slot(DSS);
             end;
             CMD_ClearAll:
-                DoClearAllCmd;
+                DSS.DSSExecutive.DoClearAllCmd;
             CMD_Wait:
             begin
-                if Parallel_enabled then
-                    Wait4Actors(0);
+                if DSS.Parallel_enabled then
+                    Wait4Actors(DSS, 0);
             end;
             CMD_SolveAll:
             begin
-                IsSolveAll := TRUE;
-                for i := 1 to NumOfActors do
+                PMParent.IsSolveAll := TRUE; //TODO
+                for i := 0 to PMParent.NumOfActors - 1 do
                 begin
-                    ActiveActor := i;
-                    CmdResult := DoSetCmd(1);
+                    DSS.CmdResult := DoSetCmd(PMParent.Children[i], 1);
                 end;
             end;
             CMD_Tear_Circuit:
             begin
-                ADiakoptics_Tearing();
+                ADiakoptics_Tearing(DSS);
             end;
 {$ENDIF}
         else
@@ -773,8 +778,8 @@ begin
             9:
             begin
 {$IFDEF DSS_CAPI_PM}
-                IsSolveAll := FALSE;
-                DSS.AD_Init := FALSE;
+                PMParent.IsSolveAll := FALSE; //TODO
+                DSS.ActiveCircuit.AD_Init := FALSE; //TODO
 {$ENDIF}
                 DSS.CmdResult := DoSetCmd(DSS, 1);  // changed from DoSolveCmd; //'solve';
             end;
@@ -975,9 +980,9 @@ begin
                 DSS.DSSExecutive.DoRemoveCmd;
 {$IFDEF DSS_CAPI_PM}
             CMD_Abort:
-                SolutionAbort := TRUE;
+                PMParent.SolutionAbort := TRUE; //TODO
             CMD_Clone:
-                DoClone;
+                DoClone(DSS);
 {$ENDIF}
         else
        // Ignore excess parameters

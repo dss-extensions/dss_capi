@@ -17,6 +17,13 @@ USES
     Command,  Arraydef, Hashlist, {$IFDEF DSS_CAPI_HASHLIST}Contnrs,{$ENDIF} Classes, PointerList, NamedObject, ParserDel, SyncObjs;
 
 TYPE
+{$SCOPEDENUMS ON}
+    TActorStatus = (
+        Busy = 0,
+        Idle = 1
+    );
+{$SCOPEDENUMS OFF}
+
     TDSSContext = class;
 
     // Collection of all DSS Classes
@@ -226,8 +233,12 @@ TYPE
         Parallel_enabled: Boolean;
         ConcatenateReports: Boolean;
         ADiakoptics: Boolean;
+        ActorPctProgress: Integer;
         
         ActorMsg: TEvent;
+
+        ActorStatus: TActorStatus;
+        ActorMA_Msg: TEvent;
 {$ENDIF}
         _Name: String;
     
@@ -330,6 +341,9 @@ begin
     Parent := _Parent;
 
 {$IFDEF DSS_CAPI_PM}
+    ActorStatus := TActorStatus.Idle;
+    ActorMA_Msg := nil;
+
     ActiveChildIndex := 0;
     Children := nil;
     
@@ -338,6 +352,7 @@ begin
     ConcatenateReports := False;
     Parallel_enabled := False;
     ADiakoptics := False;
+    ActorPctProgress := 0;
     
     if IsPrime then
     begin

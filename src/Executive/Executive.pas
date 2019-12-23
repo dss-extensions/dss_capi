@@ -203,7 +203,7 @@ procedure TExecutive.Set_Command(const Value: String);
 {$IFDEF DSS_CAPI_PM}
 var
     PMParent: TDSSContext;
-    i: Integer;
+    idx: Integer;
 begin
     PMParent := DSS.GetPrime();
 {$ELSE}
@@ -261,7 +261,7 @@ var
 begin
     PMParent := DSS.GetPrime();
     
-    for i := 1 to high(PMParent.Children) then
+    for i := 1 to high(PMParent.Children) do
     begin
         PMParent.Children[i].Free;
     end;

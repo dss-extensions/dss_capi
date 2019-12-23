@@ -202,8 +202,10 @@ procedure WriteDSS_Registry(DSS: TDSSContext);
 {$ENDIF}
 
 {$IFDEF DSS_CAPI_PM}
+procedure Wait4Actors(DSS: TDSSContext; ActorOffset: Integer);
 procedure DoClone(DSS: TDSSContext);
 procedure New_Actor_Slot(DSS: TDSSContext);
+procedure New_Actor(DSS: TDSSContext);
 {$ENDIF}
 
 implementation
@@ -218,6 +220,9 @@ USES  {Forms,   Controls,}
      {$IFDEF DSS_CAPI}
      CAPI_Metadata,
      {$ENDIF}
+     {$IFDEF DSS_CAPI_PM}
+     syncobjs,
+     {$ENDIF}
      {$IFDEF FPC}
      resource, versiontypes, versionresource, dynlibs, CmdForms,
      {$ELSE}
@@ -226,6 +231,7 @@ USES  {Forms,   Controls,}
      Solution,
      Executive,
      ExecCommands,
+     ExecOptions,
      DSSHelper;
 
 TYPE
@@ -499,7 +505,8 @@ begin
                 //TODO: set SolutionAbort?
                 ActorThread.Send_Message(EXIT_ACTOR);
                 ActorThread.WaitFor;
-                FreeAndNil(ActorThread);
+                ActorThread.Free;
+                ActorThread := nil;
             end;
             
             // Revert on key global flags to Original States
@@ -826,7 +833,7 @@ end;
 
 {$IFDEF DSS_CAPI_PM}
 // Waits for all the actors running tasks
-procedure Wait4Actors(WType : Integer);
+procedure Wait4Actors(DSS: TDSSContext; ActorOffset: Integer);
 var
     i: Integer;
     Flag: Boolean;
@@ -834,18 +841,18 @@ var
     Child: TDSSContext;
 begin
     PMParent := DSS.GetPrime();
-    // WType defines the starting point in which the actors will be evaluated,
+    // ActorOffset defines the starting point in which the actors will be evaluated,
     // modification introduced in 01-10-2019 to facilitate the coordination
     // between actors when a simulation is performed using A-Diakoptics
-    for i := WType to High(PMParent.Children) do
+    for i := ActorOffset to High(PMParent.Children) do
     begin
         try
             Child := PMParent.Children[i];
-            if Child.ActorStatus = 0 then
+            if Child.ActorStatus = TActorStatus.Busy then
             begin
                 Flag := True;
                 while Flag do
-                    Flag := Child.ActorMA_Msg.WaitFor(10) = TWaitResult.wrTimeout;
+                    Flag := (Child.ActorMA_Msg.WaitFor(10) = TWaitResult.wrTimeout);
             end;
         except
         on EOutOfMemory do
@@ -884,9 +891,9 @@ Begin
     else
     begin
         if NumClones > 0 then
-            DoSimpleMsg('There are no more CPUs available', 7001)
+            DoSimpleMsg(DSS, 'There are no more CPUs available', 7001)
         else
-            DoSimpleMsg('The number of clones requested is invalid', 7004)
+            DoSimpleMsg(DSS, 'The number of clones requested is invalid', 7004)
     end;
 end;
 
@@ -901,28 +908,23 @@ begin
     begin
         SetLength(PMParent.Children, High(PMParent.Children) + 2);
         PMParent.ActiveChildIndex := High(PMParent.Children);
-        PMParent.ActiveChild := TDSS.Create(PMParent);
+        PMParent.ActiveChild := TDSSContext.Create(PMParent);
         PMParent.Children[PMParent.ActiveChildIndex] := PMParent.ActiveChild;
         PMParent.ActiveChild._Name := '_' + inttostr(PMParent.ActiveChildIndex + 1);
-        PMParent.ActiveChild.CPU := PMParent.ActiveChild;
-        GlobalResult := inttostr(PMParent.ActiveChildIndex + 1);
+        PMParent.ActiveChild.CPU := PMParent.ActiveChildIndex;
+        DSS.GlobalResult := inttostr(PMParent.ActiveChildIndex + 1);
     end
     else 
         DoSimpleMsg(DSS, 'There are no more CPUs available', 7001)
 End;
 
 // Creates a new actor
-procedure New_Actor(DSS: TDSSContext; ActorID: Integer);
-var
-    PMParent: TDSSContext;
-    Child: TDSSContext;
+procedure New_Actor(DSS: TDSSContext);
 begin
-    PMParent := DSS.GetPrime();
-    Child := PMParent.Children[ActorID - 1];
-    Child.ActorThread := TSolver.Create(True, Child.CPU, ActorID, nil, Child.ActorMA_Msg);
+    DSS.ActorThread := TSolver.Create(DSS, True, DSS.CPU, nil, DSS.ActorMA_Msg);
 //    Child.ActorThread.Priority :=  tpTimeCritical;
-    Child.ActorThread.Start;
-    Child.ActorStatus := 1;//TODO: use enum
+    DSS.ActorThread.Start();
+    DSS.ActorStatus := TActorStatus.Idle;
 end;
 
 {$ENDIF}

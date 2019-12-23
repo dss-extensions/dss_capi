@@ -86,8 +86,9 @@ const
     ALL_ACTORS = 0; // Wait flag for all the actors
     AD_ACTORS = 1; // Wait flag to wait only for the A-Diakoptics actors
 
-type
 
+
+type
     EControlProblem = class(Exception);
     ESolveError = class(Exception);  // Raised when solution aborted
 
@@ -116,18 +117,19 @@ type
     TInfoMessageCall = procedure(const info: String) of object;  // Creates the procedure for sending a message
 
     TSolver = class(TThread)
-        constructor Create(Susp: Boolean; local_CPU: Integer; ID: Integer; CallBack: TInfoMessageCall; AEvent: TEvent); OVERLOAD;
+        constructor Create(dssContext: TDSSContext; Susp: Boolean; local_CPU: Integer; CallBack: TInfoMessageCall; AEvent: TEvent); OVERLOAD;
         procedure Execute; OVERRIDE;
         procedure Doterminate; OVERRIDE;
         destructor Destroy; OVERRIDE;
 
 //*******************************Private components*****************************
     PROTECTED
+        DSS: TDSSContext;
+
         FMessage,
         Msg_Cmd: String;
         UINotifier,
         FInfoProc: TInfoMessageCall;
-        ActorID,
         MsgType: Integer;
         UIEvent,
         ActorMsg: TEvent;
@@ -222,6 +224,9 @@ type
         VmagSaved: pDoubleArray;
         VoltageBaseChanged: Boolean;
 
+        ProgressCount: Integer; // used in SolutionAlgs
+
+
         {Voltage and Current Arrays}
         NodeV: pNodeVArray;    // Main System Voltage Array   allows NodeV^[0]=0
         Currents: pNodeVArray;      // Main System Currents Array
@@ -268,6 +273,7 @@ type
 {$IFDEF DSS_CAPI_PM}
         ADiakoptics_ready: Boolean;
         ADiakoptics_Actors: Integer;
+        LockNodeV: TCriticalSection;
 {$ENDIF}
 //******************************************************************************
         constructor Create(ParClass: TDSSClass; const solutionname: String);
@@ -347,6 +353,9 @@ uses
     SolutionAlgs,
     DSSClassDefs,
     DSSGlobals,
+{$IFDEF MSWINDOWS}
+    SHELLAPI,
+{$ENDIF}
 {$IFDEF FPC}
     CmdForms,
 {$ELSE}
@@ -524,8 +533,10 @@ begin
     
 {$IFDEF DSS_CAPI_PM}
     ADiakoptics_Ready := FALSE;   // A-Diakoptics needs to be initialized
-    if not Assigned(ActorMA_Msg) then
-        ActorMA_Msg := TEvent.Create(NIL, TRUE, FALSE, '');
+    if not Assigned(DSS.ActorMA_Msg) then
+        DSS.ActorMA_Msg := TEvent.Create(NIL, TRUE, FALSE, '');
+
+    LockNodeV := SyncObjs.TCriticalSection.Create;
 {$ENDIF}
 end;
 
@@ -549,17 +560,21 @@ begin
 
     Reallocmem(HarmonicList, 0);
 {$IFDEF DSS_CAPI_PM}    
-    ActorMA_Msg.SetEvent;
-
-// Sends a message to the working actor
-    if ActorHandle <> NIL then
+    // Sends a message to the working actor
+    with DSS do 
     begin
-        ActorHandle.Send_Message(EXIT_ACTOR);
-        ActorHandle.WaitFor;
-        FreeandNil(ActorHandle);
+        ActorMA_Msg.SetEvent();
+        if ActorThread <> NIL then
+        begin
+            ActorThread.Send_Message(EXIT_ACTOR);
+            ActorThread.WaitFor();
+            ActorThread.Free();
+            ActorThread := nil;
+        end;
+        ActorMA_Msg.Free;
+        ActorMA_Msg := NIL;
     end;
-    ActorMA_Msg.Free;
-    ActorMA_Msg := NIL;
+    LockNodeV.Free;
 {$ENDIF}
 
     inherited Destroy;
@@ -675,27 +690,28 @@ begin
          Total_Time_Elapsed := Total_Time_Elapsed + Total_Solve_Time_Elapsed;
 {$ELSE} // DSS_CAPI_PM
         // Creates the actor again in case of being terminated due to an error before
-        if ActorHandle.Terminated or (ActorHandle = NIL) then
+        if (DSS.ActorThread = NIL) or DSS.ActorThread.Terminated then
         begin
-            if ActorHandle.Terminated then
-                ActorHandle.Free;
-            New_Actor;
+            if DSS.ActorThread.Terminated then
+                DSS.ActorThread.Free;
+
+            New_Actor(DSS);
         end;
         {CheckFaultStatus;  ???? needed here??}
 
         // Resets the event for receiving messages from the active actor
         // Updates the status of the Actor in the GUI
-        ActorStatus := 0;    // Global to indicate that the actor is busy
-        ActorMA_Msg.ResetEvent;
+        DSS.ActorStatus := TActorStatus.Busy;
+        DSS.ActorMA_Msg.ResetEvent;
         {$IFNDEF FPC}
-        if not ADiakoptics then
+        if not DSS.ADiakoptics then
         begin
             if not IsDLL then
                 ScriptEd.UpdateSummaryForm('1');
         end
         else
         begin
-            if ActorID = 1 then
+            if DSS.IsPrime then
                 if not IsDLL then
                     ScriptEd.UpdateSummaryForm('1');
         end;
@@ -707,21 +723,21 @@ begin
         Total_Solve_Time_Elapsed := ((GEndTime - GStartTime) / CPU_Freq) * 1000000;
         Total_Time_Elapsed := Total_Time_Elapsed + Total_Solve_Time_Elapsed;
 
-      // Sends message to start the Simulation
-        ActorHandle.Send_Message(SIMULATE);
-      // If the parallel mode is not active, Waits until the actor finishes
-        if not Parallel_enabled then
+        // Sends message to start the Simulation
+        DSS.ActorThread.Send_Message(SIMULATE);
+        // If the parallel mode is not active, Waits until the actor finishes
+        if not DSS.Parallel_enabled then
         begin
-            Wait4Actors(ALL_ACTORS);
+            Wait4Actors(DSS, ALL_ACTORS);
             {$IFNDEF FPC}
-            if not ADiakoptics then
+            if not DSS.ADiakoptics then
             begin
                 if not IsDLL then
                     ScriptEd.UpdateSummaryForm('1');
             end
             else
             begin
-                if ActorID = 1 then
+                if DSS.IsPrime then
                     if not IsDLL then
                         ScriptEd.UpdateSummaryForm('1');
             end;
@@ -2735,18 +2751,17 @@ end;
 ********************************************************************************
 }
 
-constructor TSolver.Create(Susp: Boolean; local_CPU: Integer; ID: Integer; CallBack: TInfoMessageCall; AEvent: TEvent);
+constructor TSolver.Create(dssContext: TDSSContext; Susp: Boolean; local_CPU: Integer; CallBack: TInfoMessageCall; AEvent: TEvent);
 
 var
     Parallel: TParallel_Lib;
     Thpriority: String;
 begin
-
+    DSS := dssContext;
 
     UIEvent := AEvent;
     FInfoProc := CallBack;
     FreeOnTerminate := FALSE;
-    ActorID := ID;
     ActorMsg := TEvent.Create(NIL, TRUE, FALSE, '');
     MsgType := -1;
     ActorActive := TRUE;
@@ -2782,21 +2797,16 @@ end;
 
 function TSolver.Get_CPU(): Integer;
 begin
-    Result := ActorCPU;
+    Result := DSS.CPU;
 end;
 
 procedure TSolver.Set_CPU(CPU: Integer);
 var
     Parallel: TParallel_Lib;
 begin
-    ActorCPU := CPU;
-  {$IFDEF MSWINDOWS}              // Only for windows
+    DSS.CPU := CPU;
     Parallel.Set_Thread_affinity(handle, CPU);
 //  Parallel.Set_Thread_Priority(handle,THREAD_PRIORITY_TIME_CRITICAL);
-  {$ELSE}
-//  Parallel.Set_Thread_Priority(self,THREAD_PRIORITY_TIME_CRITICAL);
-    Parallel.Set_Thread_affinity(handle, CPU);
-  {$ENDIF}
 end;
 
 {*******************************************************************************
@@ -2816,93 +2826,98 @@ var
     Volts: Polar;
 
 begin
-    with ActiveCircuit, ActiveCircuit.Solution do
+    with DSS.ActiveCircuit, Solution do
     begin
         while ActorActive do
         begin
             ActorMsg.WaitFor(INFINITE);
             ActorMsg.ResetEvent;
             Processing := TRUE;
-            case MsgType of             // Evaluates the incomming message
-                SIMULATE:               // Simulates the active ciruit on this actor
+            
+            // Evaluates the incoming message
+            case MsgType of             
+                SIMULATE: // Simulates the active ciruit on this actor
                     try
                         begin                   // Checks if this is the coordinator actor in A-Diakoptics mode
-                            if ((ADiakoptics and (ActorID = 1)) and not IsSolveAll) then
-                                Solve_Diakoptics()
+                            if DSS.ADiakoptics and DSS.IsPrime and (not DSS.IsSolveAll) then
+                            begin
+                                Solve_Diakoptics(DSS)
+                            end
                             else
                             begin
-                  // Verifies if there is an A-Diakoptics simulation running to update the local Vsources
-                                if (ADiakoptics and not IsSolveAll) then
+                                // Verifies if there is an A-Diakoptics simulation running to update the local Vsources
+                                if DSS.ADiakoptics and (not DSS.IsSolveAll) then
                                     Start_Diakoptics();
-                  // Normal solution routine
+
+                                // Normal solution routine
                                 case Dynavars.SolutionMode of
-                                    SNAPSHOT:
+                                    TSolveMode.SNAPSHOT:
                                         SolveSnap;
-                                    YEARLYMODE:
+                                    TSolveMode.YEARLYMODE:
                                         SolveYearly;
-                                    DAILYMODE:
+                                    TSolveMode.DAILYMODE:
                                         SolveDaily;
-                                    DUTYCYCLE:
+                                    TSolveMode.DUTYCYCLE:
                                         SolveDuty;
-                                    DYNAMICMODE:
+                                    TSolveMode.DYNAMICMODE:
                                         SolveDynamic;
-                                    MONTECARLO1:
+                                    TSolveMode.MONTECARLO1:
                                         SolveMonte1;
-                                    MONTECARLO2:
+                                    TSolveMode.MONTECARLO2:
                                         SolveMonte2;
-                                    MONTECARLO3:
+                                    TSolveMode.MONTECARLO3:
                                         SolveMonte3;
-                                    PEAKDAY:
+                                    TSolveMode.PEAKDAY:
                                         SolvePeakDay;
-                                    LOADDURATION1:
+                                    TSolveMode.LOADDURATION1:
                                         SolveLD1;
-                                    LOADDURATION2:
+                                    TSolveMode.LOADDURATION2:
                                         SolveLD2;
-                                    DIRECT:
+                                    TSolveMode.DIRECT:
                                         SolveDirect;
-                                    MONTEFAULT:
+                                    TSolveMode.MONTEFAULT:
                                         SolveMonteFault;  // Monte Carlo Fault Cases
-                                    FAULTSTUDY:
+                                    TSolveMode.FAULTSTUDY:
                                         SolveFaultStudy;
-                                    AUTOADDFLAG:
-                                        ActiveCircuit.AutoAddObj.Solve;
-                                    HARMONICMODE:
+                                    TSolveMode.AUTOADDFLAG:
+                                        AutoAddObj.Solve;
+                                    TSolveMode.HARMONICMODE:
                                         SolveHarmonic;
-                                    GENERALTIME:
+                                    TSolveMode.GENERALTIME:
                                         SolveGeneralTime;
-                                    HARMONICMODET:
+                                    TSolveMode.HARMONICMODET:
                                         SolveHarmonicT;  //Declares the Hsequential-time harmonics
                                 else
-                                    DosimpleMsg('Unknown solution mode.', 481);
+                                    DoSimpleMsg(DSS, 'Unknown solution mode.', 481);
                                 end;
                             end;
-                {$IFDEF MSWINDOWS}
+                            {$IFDEF MSWINDOWS}
                             QueryPerformanceCounter(GEndTime);
-                {$ELSE}
+                            {$ELSE}
                             GEndTime := GetTickCount64;
-                {$ENDIF}
+                            {$ENDIF}
                             Total_Solve_Time_Elapsed := ((GEndTime - GStartTime) / CPU_Freq) * 1000000;
                             Total_Time_Elapsed := Total_Time_Elapsed + Total_Solve_Time_Elapsed;
                             Processing := FALSE;
                             FMessage := '1';
-                            ActorStatus := 1;      // Global to indicate that the actor is ready
+                            DSS.ActorStatus := TActorStatus.Idle;
 
                   // If this is an A-Diakoptics actor reports the results to the coordinator (Actor 1)
-                            if ADiakoptics and (ActorID <> 1) then
-                                Notify_Main;
+                            if DSS.ADiakoptics and not DSS.IsPrime then
+                                Notify_Main();
 
                   // Sends a message to Actor Object (UI) to notify that the actor has finised
                             UIEvent.SetEvent;
                   {$IFDEF MSWINDOWS}
-                            if not ADiakoptics then
+                            if not DSS.ADiakoptics then
                             begin
-                                if Parallel_enabled then
+                                if DSS.Parallel_enabled then
                                     if not IsDLL then
                                         queue(CallCallBack); // Refreshes the GUI if running asynchronously
                             end
                             else
                             begin
-                                if (Parallel_enabled and (ActorID = 1)) then
+                                if (DSS.Parallel_enabled and DSS.IsPrime) then
                                     if not IsDLL then
                                         queue(CallCallBack); // Refreshes the GUI if running asynchronously
                             end;
@@ -2912,23 +2927,23 @@ begin
                         On E: Exception do
                         begin
                             FMessage := '1';
-                            ActorStatus := 1;      // Global to indicate that the actor is ready
-                            SolutionAbort := TRUE;
+                            DSS.ActorStatus := TActorStatus.Idle;
+                            DSS.SolutionAbort := TRUE;
                             UIEvent.SetEvent;
-                            if not ADiakoptics then
+                            if not DSS.ADiakoptics then
                             begin
-                                if Parallel_enabled then
+                                if DSS.Parallel_enabled then
                                     if not IsDLL then
-                                        queue(CallCallBack); // Refreshes the GUI if running asynchronously
+                                        Queue(CallCallBack); // Refreshes the GUI if running asynchronously
                             end
                             else
                             begin
-                                if (Parallel_enabled and (ActorID = 1)) then
+                                if (DSS.Parallel_enabled and DSS.IsPrime) then
                                     if not IsDLL then
                                         queue(CallCallBack); // Refreshes the GUI if running asynchronously
                             end;
-                            if not Parallel_enabled then
-                                DoSimpleMsg('Error Encountered in Solve: ' + E.Message, 482);
+                            if not DSS.Parallel_enabled then
+                                DoSimpleMsg(DSS, 'Error Encountered in Solve: ' + E.Message, 482);
                         end;
                     end;
                 EXIT_ACTOR:                // Terminates the thread
@@ -2936,7 +2951,7 @@ begin
                     ActorActive := FALSE;
                 end
             else                       // I don't know what the message is
-                DosimpleMsg('Unknown Message.', 7010);
+                DosimpleMsg(DSs, 'Unknown Message.', 7010);
             end;
 
         end;
@@ -2958,42 +2973,48 @@ var
     VSource: TVsourceObj;
     Volts: Polar;
     CNum: Complex;
+    PrimeCircuit: TDSSCircuit;
 begin
-    with ActiveCircuit, ActiveCircuit.Solution do
+    PrimeCircuit := DSS.GetPrime().ActiveCircuit;
+
+    with DSS.ActiveCircuit, Solution do
     begin
-        j := ActiveCircuit[1].Ic.NZero - 1;    // Brings the number of Non-Zero elements from Ic
+        j := PrimeCircuit.Ic.NZero - 1;    // Brings the number of Non-Zero elements from Ic
         if j > 0 then
         begin
-      // Clears the local Ic vector
+            // Clears the local Ic vector
             for i := 1 to NumNodes do
-                Ic_Local^[i] := cZERO;  // probably not necessary
-      // Brings the section of the vector needed for this actor
+                Ic_Local[i] := cZERO;  // probably not necessary
+
+            // Brings the section of the vector needed for this actor
             for i := 0 to j do
             begin
-                if ActiveCircuit[1].Ic.CData[i].row >= VIndex then
+                if PrimeCircuit.Ic.CData[i].row >= VIndex then
                 begin
-                    row := ActiveCircuit[1].Ic.CData[i].row;
-                    Ic_Local^[row - VIndex + 1] := ActiveCircuit[1].Ic.CData[i].Value;
+                    row := PrimeCircuit.Ic.CData[i].row;
+                    Ic_Local[row - VIndex + 1] := PrimeCircuit.Ic.CData[i].Value;
                 end;
             end;
+
             // Solves to find the total solution
-            SolveSparseSet(hY, @Node_dV^[1], @Ic_Local^[1]);
+            SolveSparseSet(hY, @Node_dV[1], @Ic_Local[1]);
+
             // Sends the total voltage for this part to the coordinator
             for i := 1 to NumNodes do
             begin
-                CNum := csub(NodeV^[i], Node_dV^[i]);
-                ActiveCircuit[1].Solution.NodeV^[i + VIndex] := CNum;
+                CNum := csub(NodeV[i], Node_dV[i]);
+                PrimeCircuit.Solution.NodeV[i + VIndex] := CNum;
             end;
 
-      // Sets the voltage at the feeder head
-            VSource := ActiveVSource.ElementList.First;
+            // Sets the voltage at the feeder head
+            VSource := DSS.VSourceClass.ElementList.First;
             for i := 1 to 3 do
             begin
-                CNum := cadd(NodeV^[i], Node_dV^[i]);
+                CNum := cadd(NodeV[i], Node_dV[i]);
                 Volts := ctopolardeg(CNum);
                 VSource.kVBase := Volts.mag / 1000;   // is in kV
                 VSource.Angle := Volts.ang;
-                VSource := ActiveVSource.ElementList.Next;
+                VSource := DSS.VSourceClass.ElementList.Next;
             end;
         end;
     end;
@@ -3004,20 +3025,24 @@ var
     CNum: Complex;
     i, j,
     idx: Integer;
+    PrimeCircuit: TDSSCircuit;
 begin
-  // Will do something
-    with ActiveCircuit, ActiveCircuit.Solution do
+    PrimeCircuit := DSS.GetPrime().ActiveCircuit;
+
+    // Will do something
+    with DSS.ActiveCircuit, Solution do
     begin
         i := NumNodes;
         for idx := 1 to i do
         begin
-      // if it doesn't includes any power injection element (Isource, VSource)
-      // returns dV to correct the interconnection equation
-            if ActorID > 2 then
+            // if it doesn't includes any power injection element (Isource, VSource)
+            // returns dV to correct the interconnection equation
+            if not DSS.IsPrime then
                 CNum := csub(NodeV^[idx], Node_dV^[idx])
             else
                 CNum := NodeV^[idx];
-            ActiveCircuit[1].V_0.Insert((idx + VIndex - 1), 0, CNum);
+
+            PrimeCircuit.V_0.Insert((idx + VIndex - 1), 0, CNum);
         end;
     end;
 
@@ -3029,10 +3054,10 @@ var
 begin
     ActorActive := FALSE;
     Processing := FALSE;
-    ActorStatus := 1;      // Global to indicate that the actor is ready
+    DSS.ActorStatus := TActorStatus.Idle;
     UIEvent.SetEvent;
     ActorMsg.Free;
-//    Freeandnil(UIEvent);
+//    FreeAndNil(UIEvent);
     inherited;
 end;
 
@@ -3041,7 +3066,5 @@ begin
     inherited destroy;
 end;
 
-initialization
-    IsMultiThread := TRUE;
 {$ENDIF} //DSS_CAPI_PM
 end.

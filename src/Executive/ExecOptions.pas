@@ -13,7 +13,7 @@ uses
     Command, DSSClass;
 
 const
-{$IFDEF DSS_CAPI_PM}
+{$IFNDEF DSS_CAPI_PM}
     NumExecOptions = 115;
 {$ELSE}
     NumExecOptions = 127;
@@ -534,7 +534,7 @@ begin
 {$IFDEF DSS_CAPI_PM}
             OPTION_ActiveActor:
             begin
-                if Parser.StrValue = '*' then
+                if DSS.Parser.StrValue = '*' then
                 begin
                     PMParent.AllActors := TRUE;
                     PMParent.ActiveChildIndex := 0;
@@ -544,27 +544,27 @@ begin
                 begin
                     if ((DSS.Parser.IntValue > 0) and (DSS.Parser.IntValue <= (high(PMParent.Children) + 1))) then
                     begin
-                        PMParent.ActiveChildIndex := Parser.IntValue - 1;
-                        PMParent.ActiveChild := PMParent.ActiveChild[PMParent.ActiveChildIndex];
+                        PMParent.ActiveChildIndex := DSS.Parser.IntValue - 1;
+                        PMParent.ActiveChild := PMParent.Children[PMParent.ActiveChildIndex];
                         PMParent.AllActors := FALSE;
                     end
                     else
                     begin
-                        DoSimpleMsg('The actor does not exist', 7002);
+                        DoSimpleMsg(DSS, 'The actor does not exist', 7002);
                     end;
                 end;
             end;
             OPTION_CPU:
             begin
-                if Parser.IntValue < CPU_Cores then
+                if DSS.Parser.IntValue < CPU_Cores then
                 begin
-                    DSS.CPU := Parser.IntValue;
-                    if DSS.ActorHandle <> NIL then
-                        DSS.ActorHandle.CPU := ActorCPU;
+                    DSS.CPU := DSS.Parser.IntValue;
+//TODO                    if DSS.ActorHandle <> NIL then
+//TODO                        DSS.ActorHandle.CPU := ActorCPU;
                 end
                 else
                 begin
-                    DoSimpleMsg('The CPU does not exist', 7003);
+                    DoSimpleMsg(DSS, 'The CPU does not exist', 7003);
                 end;
             end;
             OPTION_Parallel:
@@ -598,10 +598,13 @@ var
     ParamName: String;
     Param: String;
     TestLoadShapeObj: TLoadShapeObj;
-
-
+{$IFDEF DSS_CAPI_PM}
+    PMParent: TDSSContext;
 begin
-
+    PMParent := DSS.GetPrime();
+{$ELSE}
+begin
+{$ENDIF}
     Result := 0;
      // Continue parsing command line
     ParamPointer := 0;
@@ -901,17 +904,19 @@ begin
 {$IFDEF DSS_CAPI_PM}                
             OPTION_ActiveActor:
             begin
-                if Parser.StrValue = '*' then
+                if DSS.Parser.StrValue = '*' then
                 begin
-                    AllActors := TRUE;
-                    ActiveActor := 1;
+                    PMParent.AllActors := TRUE;
+                    PMParent.ActiveChildIndex := 0;
+                    PMParent.ActiveChild := PMParent.Children[PMParent.ActiveChildIndex];
                 end
                 else
                 begin
-                    if Parser.IntValue <= NumOfActors then
+                    if (DSS.Parser.IntValue > 0) and (DSS.Parser.IntValue <= PMParent.NumOfActors) then
                     begin
-                        ActiveActor := Parser.IntValue;
-                        AllActors := FALSE;
+                        PMParent.AllActors := FALSE;
+                        PMParent.ActiveChildIndex := DSS.Parser.IntValue - 1;
+                        PMParent.ActiveChild := PMParent.Children[PMParent.ActiveChildIndex];
                     end
                     else
                     begin
@@ -921,11 +926,11 @@ begin
             end;
             OPTION_CPU:
             begin
-                if Parser.IntValue < CPU_Cores then
+                if DSS.Parser.IntValue < CPU_Cores then
                 begin
-                    DSS.CPU := Parser.IntValue;
-                    if DSS.ActorHandle <> NIL then
-                        DSS.ActorHandle.CPU := DSS.CPU;
+                    DSS.CPU := DSS.Parser.IntValue;
+//TODO                    if DSS.ActorHandle <> NIL then
+//TODO                        DSS.ActorHandle.CPU := DSS.CPU;
                 end
                 else
                 begin
@@ -934,26 +939,26 @@ begin
             end;
             OPTION_Parallel:
             begin
-                Parallel_enabled := InterpretYesNo(Param);
+                PMParent.Parallel_enabled := InterpretYesNo(Param);
             end;
             OPTION_ConcatenateReports:
             begin
-                ConcatenateReports := InterpretYesNo(Param);
+                PMParent.ConcatenateReports := InterpretYesNo(Param);
             end;
             OPTION_Coverage:
             begin
-                ActiveCircuit.Coverage := Parser.DblValue;
+                DSS.ActiveCircuit.Coverage := DSS.Parser.DblValue;
             end;
             OPTION_Num_SubCircuits:
             begin
-                ActiveCircuit.Num_SubCkts := Parser.IntValue;
+                DSS.ActiveCircuit.Num_SubCkts := DSS.Parser.IntValue;
             end;
             OPTION_ADiakoptics:
             begin
                 if InterpretYesNo(Param) then
-                    ADiakopticsInit()  // Initalizes the parallel environment if enabled
+                    ADiakopticsInit(DSS)  // Initalizes the parallel environment if enabled
                 else
-                    ADiakoptics := FALSE;
+                    DSS.ADiakoptics := FALSE;
             end;
 {$ENDIF}
         else
@@ -1373,10 +1378,10 @@ begin
                     if PMParent.AllActors then
                         AppendGlobalResult(DSS, 'All')
                     else
-                        AppendGlobalResult(DSS, Format('%d', PMParent.ActiveChildIndex + 1));
+                        AppendGlobalResult(DSS, Format('%d', [PMParent.ActiveChildIndex + 1]));
                 end;
                 OPTION_CPU:
-                    AppendGlobalResult(DSS, Format('%d', [PMParent.ActiveChild.CPU]))
+                    AppendGlobalResult(DSS, Format('%d', [PMParent.ActiveChild.CPU]));
                 OPTION_ActorProgress:
 {$IFNDEF FPC}
                     ScriptEd.UpdateProgressSummary
@@ -1387,29 +1392,26 @@ begin
                         AppendGlobalResult(DSS, 'Yes')
                     else
                         AppendGlobalResult(DSS, 'No');
-                    end;
                 OPTION_ConcatenateReports:
                     if PMParent.ConcatenateReports then
                         AppendGlobalResult(DSS, 'Yes')
                     else
                         AppendGlobalResult(DSS, 'No');
-                    end;
                 OPTION_Coverage:
-                    AppendGlobalResult(DSS, Format('%-g', [ActiveCircuit.Actual_Coverage]));
+                    AppendGlobalResult(DSS, Format('%-g', [DSS.ActiveCircuit.Actual_Coverage]));
                 OPTION_Num_SubCircuits:
-                    AppendGlobalResult(DSS, Format('%d', [ActiveCircuit.Num_SubCkts]));
+                    AppendGlobalResult(DSS, Format('%d', [DSS.ActiveCircuit.Num_SubCkts]));
                 OPTION_ADiakoptics:
-                    if ADiakoptics then
+                    if PMParent.ADiakoptics then
                         AppendGlobalResult(DSS, 'Yes')
                     else
                         AppendGlobalResult(DSS, 'No');
                 OPTION_LinkBranches:
                 begin
-                    if ADiakoptics then
+                    if PMParent.ADiakoptics then
                     begin
-                        ActiveActor := 1;
-                        for i := 1 to High(ActiveCircuit.Link_Branches) do
-                            AppendGlobalResult(DSS, ActiveCircuit.Link_Branches[i]);
+                        for i := 1 to High(PMParent.ActiveCircuit.Link_Branches) do
+                            AppendGlobalResult(DSS, PMParent.ActiveCircuit.Link_Branches[i]);
                     end
                     else
                         AppendGlobalResult(DSS, 'Initialize A-Diakoptics first!');
@@ -1468,12 +1470,10 @@ begin
                 OPTION_NumActors:
                     AppendGlobalResult(DSS, Format('%d', [high(PMParent.Children) + 1]));
                 OPTION_ActiveActor:
-                begin
                     if PMParent.AllActors then
                         AppendGlobalResult(DSS, 'All')
                     else
-                        AppendGlobalResult(DSS, Format('%d', DSS.Parent.ActiveChildIndex + 1));
-                end;
+                        AppendGlobalResult(DSS, Format('%d', [DSS.Parent.ActiveChildIndex + 1]));
                 OPTION_CPU:
                     AppendGlobalResult(DSS, Format('%d', [PMParent.ActiveChild.CPU]));
                 OPTION_Parallel:
@@ -1481,13 +1481,11 @@ begin
                         AppendGlobalResult(DSS, 'Yes')
                     else
                         AppendGlobalResult(DSS, 'No');
-                    end;
                 OPTION_ConcatenateReports:
                     if PMParent.ConcatenateReports then
                         AppendGlobalResult(DSS, 'Yes')
                     else
                         AppendGlobalResult(DSS, 'No');
-                    end;
                 else
                 begin
                     DoSimpleMsg(DSS, 'You must create a new circuit object first: "new circuit.mycktname" to execute this Set command.', 301);

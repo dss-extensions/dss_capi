@@ -510,7 +510,7 @@ function TDSSGlobalHelper.GetActiveTransfObj: TTransfObj; begin Result := TTrans
 
 
 {$IFDEF DSS_CAPI_PM}
-function TDSSGlobalHelper.SetActorThread(val: TSolver); begin FActorThread := val; end;
+procedure TDSSGlobalHelper.SetActorThread(val: TSolver); begin FActorThread := val; end;
 {$ENDIF}
 procedure TDSSGlobalHelper.SetDSSExecutive(val: TExecutive); begin FDSSExecutive := val; end;
 procedure TDSSGlobalHelper.SetActiveDSSObject(val: TDSSObject); begin FActiveDSSObject := val; end;

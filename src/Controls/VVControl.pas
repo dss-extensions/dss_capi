@@ -117,7 +117,6 @@ implementation
 uses
     ParserDel,
     DSSClassDefs,
-    // MyDSSClassDefs,
     DSSGlobals,
     Circuit,
     Generator,

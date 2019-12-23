@@ -46,6 +46,7 @@ type
         procedure EndOfTimeStepCleanup;
         procedure FinishTimeStep;
     private
+        procedure Show10PctProgress(i, N: Integer);
         procedure PickAFault;
         procedure AllocateAllSCParms;
         procedure ComputeIsc;
@@ -76,9 +77,6 @@ uses
     Isource,
     KLUSolve,
     DSSHelper;
-
-var
-    ProgressCount: Integer;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure TSolutionAlgs.FinishTimeStep;
@@ -118,7 +116,7 @@ begin
 end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-procedure Show10PctProgress(i, N: Integer);
+procedure TSolutionAlgs.Show10PctProgress(i, N: Integer);
 
 begin
     if NoFormsAllowed then
@@ -134,15 +132,18 @@ end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 function TSolutionAlgs.SolveYearly: Integer;
-
 var
     N, Twopct: Integer;
 
 begin
     Result := 0;
-    ProgressCaption('Solving Year ' + IntToStr(DSS.ActiveCircuit.Solution.Year));
     ProgressCount := 0;
-    ShowPctProgress(ProgressCount);
+{$IFDEF DSS_CAPI_PM}
+    DSS.ActorPctProgress := 0;
+{$ELSE}
+    ProgressCaption('Solving Year ' + IntToStr(DSS.ActiveCircuit.Solution.Year));
+    ShowPctProgress(0);
+{$ENDIF}
 
     with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
@@ -165,12 +166,17 @@ begin
                             DSS.EnergyMeterClass.SampleAll; // Make all Energy Meters take a sample
 
                         EndOfTimeStepCleanup;
-
+{$IFDEF DSS_CAPI_PM}
+                        DSS.ActorPctProgress := (N * 100) div NumberofTimes;
+{$ELSE}
                         if (N mod Twopct) = 0 then
                             ShowPctProgress((N * 100) div NumberofTimes);
+{$ENDIF}
                     end;
         finally
+{$IFNDEF DSS_CAPI_PM}
             ProgressHide;
+{$ENDIF}
             DSS.MonitorClass.SaveAll;
     // DSS.EnergyMeterClass.CloseAllDIFiles;   // Save Demand interval Files    See DIFilesAreOpen Logic
         end;
@@ -218,7 +224,9 @@ begin
                             DSS.EnergyMeterClass.SampleAll; // Make all Energy Meters take a sample
 
                         EndOfTimeStepCleanup;
-
+{$IFDEF DSS_CAPI_PM}
+                        DSS.ActorPctProgress := (N * 100) div NumberofTimes;
+{$ENDIF}
                     end;
 
         finally
@@ -294,9 +302,13 @@ var
 begin
     Result := 0;
 
-    ProgressCaption('Duty Cycle Solution');
     ProgressCount := 0;
+{$IFDEF DSS_CAPI_PM}
+    DSS.ActorPctProgress := 0;
+{$ELSE}
+    ProgressCaption('Duty Cycle Solution');
     ShowPctProgress(0);
+{$ENDIF}
 
     with DSS.ActiveCircuit, DSS.ActiveCircuit.Solution do
     begin
@@ -318,16 +330,20 @@ begin
                             DSS.EnergyMeterClass.SampleAll; // Make all Energy Meters take a sample
 
                         EndOfTimeStepCleanup;
-
-
+{$IFDEF DSS_CAPI_PM}
+                        DSS.ActorPctProgress := (N * 100) div NumberofTimes;
+{$ELSE}
                         if (N mod Twopct) = 0 then
                             ShowPctProgress((N * 100) div NumberofTimes);
+{$ENDIF}                            
                     end;
         finally
             DSS.MonitorClass.SaveAll;
             if SampleTheMeters then
                 DSS.EnergyMeterClass.CloseAllDIFiles;   // Save Demand interval Files
+{$IFNDEF DSS_CAPI_PM}
             ProgressHide;
+{$ENDIF}
         end;
     end;
 end;
@@ -356,7 +372,9 @@ begin
                     SolveSnap;
 
                     FinishTimeStep;
-
+{$IFDEF DSS_CAPI_PM}
+                    DSS.ActorPctProgress := (N * 100) div NumberofTimes;
+{$ENDIF}
                 end;
     end;
 end;
@@ -443,7 +461,10 @@ begin
         // DSS.MonitorClass.ResetAll;
         // DSS.EnergyMeterClass.ResetAll;
 
+{$IFDEF DSS_CAPI_PM}
+{$ELSE}
             ProgressCaption('Monte Carlo Mode 1, ' + IntToStr(NumberofTimes) + ' Random Loads.');
+{$ENDIF}
             ProgressCount := 0;
 
             for N := 1 to NumberOfTimes do
@@ -454,7 +475,11 @@ begin
                     DSS.MonitorClass.SampleAll;  // Make all monitors take a sample
                     if SampleTheMeters then
                         DSS.EnergyMeterClass.SampleAll;  // Make all meters take a sample
-                    Show10PctProgress(N, NumberOfTimes);
+{$IFDEF DSS_CAPI_PM}
+                        DSS.ActorPctProgress := (N * 100) div NumberofTimes;
+{$ELSE}
+                        Show10PctProgress(N, NumberOfTimes);
+{$ENDIF}
                 end
                 else
                 begin
@@ -467,7 +492,9 @@ begin
             DSS.MonitorClass.SaveAll;
             if SampleTheMeters then
                 DSS.EnergyMeterClass.CloseAllDIFiles;
+{$IFNDEF DSS_CAPI_PM}
             ProgressHide;
+{$ENDIF}
         end;
     end;
 
@@ -498,7 +525,10 @@ begin
             if not DSS.DIFilesAreOpen then
                 DSS.EnergyMeterClass.OpenAllDIFiles;   // Open Demand Interval Files, if desired
 
+{$IFDEF DSS_CAPI_PM}
+{$ELSE}
             ProgressCaption('Monte Carlo Mode 2, ' + IntToStr(NumberofTimes) + ' Days.');
+{$ENDIF}
             ProgressCount := 0;
 
             for N := 1 to NumberOfTimes do
@@ -529,9 +559,11 @@ begin
                             EndOfTimeStepCleanup;
 
                         end;
-
+{$IFDEF DSS_CAPI_PM}
+                    DSS.ActorPctProgress := (N * 100) div NumberofTimes;
+{$ELSE}
                     Show10PctProgress(N, NumberOfTimes);
-
+{$ENDIF}
                 end
                 else
                 begin
@@ -544,7 +576,9 @@ begin
             DSS.MonitorClass.SaveAll;
             if SampleTheMeters then
                 DSS.EnergyMeterClass.CloseAllDIFiles;   // Save Demand interval Files
+{$IFNDEF DSS_CAPI_PM}
             ProgressHide;
+{$ENDIF}
         end;
     end;
 end;
@@ -572,7 +606,10 @@ begin
             if not DSS.DIFilesAreOpen then
                 DSS.EnergyMeterClass.OpenAllDIFiles;   // Open Demand Interval Files, if desired
 
+{$IFDEF DSS_CAPI_PM}
+{$ELSE}
             ProgressCaption('Monte Carlo Mode 3, ' + IntToStr(NumberofTimes) + ' Different Load Levels.');
+{$ENDIF}
             ProgressCount := 0;
 
             DefaultHourMult := DefaultDailyShapeObj.GetMult(DynaVars.dblHour);
@@ -599,7 +636,11 @@ begin
                     if SampleTheMeters then
                         DSS.EnergyMeterClass.SampleAll;  // Make all meters take a sample
 
+{$IFDEF DSS_CAPI_PM}
+                    DSS.ActorPctProgress := (N * 100) div NumberofTimes;
+{$ELSE}
                     Show10PctProgress(N, NumberOfTimes);
+{$ENDIF}
                 end
                 else
                 begin
@@ -612,7 +653,9 @@ begin
             DSS.MonitorClass.SaveAll;
             if SampleTheMeters then
                 DSS.EnergyMeterClass.CloseAllDIFiles;   // Save Demand interval Files
+{$IFNDEF DSS_CAPI_PM}
             ProgressHide;
+{$ENDIF}
         end;
     end; {WITH}
 end;
@@ -648,8 +691,10 @@ begin
             if not DSS.DIFilesAreOpen then
                 DSS.EnergyMeterClass.OpenAllDIFiles;   // Open Demand Interval Files, if desired
 
+{$IFDEF DSS_CAPI_PM}
+{$ELSE}
             ProgressCaption('Load-Duration Mode 1 Solution. ');
-
+{$ENDIF}
       // (set in Solve method) DefaultGrowthFactor :=  IntPower(DefaultGrowthRate, (Year-1));
 
             DynaVars.intHour := 0;
@@ -685,7 +730,11 @@ begin
 
 
                         end;
+{$IFDEF DSS_CAPI_PM}
+                        DSS.ActorPctProgress := (N * 100) div NDaily;
+{$ELSE}
                         ShowPctProgress((i * 100) div NDaily);
+{$ENDIF}
                     end
                     else
                     begin
@@ -700,7 +749,9 @@ begin
             DSS.MonitorClass.SaveAll;
             if SampleTheMeters then
                 DSS.EnergyMeterClass.CloseAllDIFiles;   // Save Demand interval Files
+{$IFNDEF DSS_CAPI_PM}
             ProgressHide;
+{$ENDIF}
         end;
     end; {WITH DSS.ActiveCircuit}
 
@@ -822,7 +873,10 @@ begin
 
       // DSS.MonitorClass.ResetAll;
 
+{$IFDEF DSS_CAPI_PM}
+{$ELSE}
             ProgressCaption('Monte Carlo Fault Study: ' + IntToStr(NumberofTimes) + ' Different Faults.');
+{$ENDIF}
             ProgressCount := 0;
 
             SetGeneratorDispRef;
@@ -835,12 +889,17 @@ begin
                     DSS.ActiveFaultObj.Randomize;  // Randomize the fault resistance
                     SolveDirect;
                     DSS.MonitorClass.SampleAll;  // Make all monitors take a sample
-
+{$IFDEF DSS_CAPI_PM}
+                    DSS.ActorPctProgress := (N * 100) div NumberOfTimes;
+{$ELSE}
                     Show10PctProgress(N, NumberOfTimes);
+{$ENDIF}
                 end;
         finally
             DSS.MonitorClass.SaveAll;
+{$IFNDEF DSS_CAPI_PM}
             ProgressHide;
+{$ENDIF}
         end;
     end;
 
@@ -939,7 +998,10 @@ begin
             if ((iB * 10) div NumBuses) > ProgressCount then
             begin
                 Inc(ProgressCount);
+{$IFDEF DSS_CAPI_PM}
+{$ELSE}
                 ShowPctProgress(30 + ProgressCount * 5);
+{$ENDIF}
             end;
         end;
     end;
@@ -967,10 +1029,13 @@ function TSolutionAlgs.SolveFaultStudy: Integer;
 begin
     Result := 0;
 
+{$IFDEF DSS_CAPI_PM}
+    DSS.ActorPctProgress := 0;
+{$ELSE}
     ShowPctProgress(0);
     ProgressCaption('Computing Open-Circuit Voltages');
-
-    with DSS.ActiveCircuit.solution do
+{$ENDIF}
+    with DSS.ActiveCircuit.Solution do
     begin
         LoadModel := ADMITTANCE;
         DisableAllFaults;
@@ -981,33 +1046,39 @@ begin
         UpdateVBus;  // Put present solution Voc's in bus quantities
     end;
 
+{$IFDEF DSS_CAPI_PM}
+    DSS.ActorPctProgress := 30;
+{$ELSE}
     ProgressCaption('Computing Ysc Matrices for Each Bus');
     ShowPctProgress(30);
+{$ENDIF}
     ComputeAllYsc;
-
+    
+{$IFDEF DSS_CAPI_PM}
+    DSS.ActorPctProgress := 80;
+{$ELSE}
     ProgressCaption('Computing Short-circuit currents.');
     ShowPctProgress(80);
+{$ENDIF}
     ComputeIsc;
 
+{$IFDEF DSS_CAPI_PM}
+    DSS.ActorPctProgress := 100;
+{$ELSE}
     ShowPctProgress(100);
     ProgressCaption('Done.');
     ProgressHide;
+{$ENDIF}
    // Now should have all we need to make a short circuit report
-
 end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure TSolutionAlgs.AddFrequency(var FreqList: pDoublearray; var NumFreq, MaxFreq: Integer; F: Double);
-
 {Add unique Frequency, F to list in ascending order, reallocating if necessary}
-
 var
     i, j: Integer;
-
 begin
-
-     {See if F is in List}
-
+    {See if F is in List}
     for i := 1 to NumFreq do
     begin
          {Allow a little tolerance (0.1 hz) for the Frequency for round off error}
@@ -1015,7 +1086,7 @@ begin
             Exit; // Already in List, nothing to do
     end;
 
-     {OK, it's not in list, so let's Add it}
+    {OK, it's not in list, so let's Add it}
     Inc(NumFreq);
     if NumFreq > MaxFreq then
     begin  // Let's make a little more room
@@ -1023,7 +1094,7 @@ begin
         ReallocMem(FreqList, SizeOf(FreqList^[1]) * MaxFreq);
     end;
 
-     {Let's add it in ascending order}
+    {Let's add it in ascending order}
     for i := 1 to NumFreq - 1 do
     begin
         if F < FreqList^[i] then
@@ -1038,12 +1109,10 @@ begin
 
      {If we fall through, tack it on to the end}
     FreqList^[NumFreq] := F;
-
 end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 function TSolutionAlgs.GetSourceFrequency(pc: TPCElement): Double; // TODO - applicable to VCCS?
-
 var
     pVsrc: TVsourceObj;
     pIsrc: TIsourceObj;
@@ -1064,7 +1133,6 @@ end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure TSolutionAlgs.CollectAllFrequencies(var FreqList: pDoubleArray; var NumFreq: Integer);
-
 var
     SpectrumInUse: pIntegerArray;
     p: TPCElement;
@@ -1132,24 +1200,24 @@ begin
     end;
 
     ReallocMem(SpectrumInUse, 0);
-
-
 end;
 
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 function TSolutionAlgs.SolveHarmonic: Integer;
-
 var
     FrequencyList: pDoubleArray;
     i, NFreq: Integer;
-
 begin
     Result := 0;
 
     FrequencyList := NIL;   // Set up for Reallocmem
+{$IFDEF DSS_CAPI_PM}
+    DSS.ActorPctProgress := 0;
+{$ELSE}
     ShowPctProgress(0);
     ProgressCaption('Performing Harmonic Solution');
+{$ENDIF}
 
     with DSS.ActiveCircuit, DSS.ActiveCircuit.solution do
     begin
@@ -1181,19 +1249,30 @@ begin
                 Frequency := FrequencyList^[i];   // forces rebuild of SystemY
                 if Abs(Harmonic - 1.0) > EPSILON then
                 begin    // Skip fundamental
+                    {$IFDEF DSS_CAPI_PM}
+                    DSS.ActorPctProgress := Round((100.0 * i) / Nfreq);
+                    {$ELSE}
                     ProgressCaption('Solving at Frequency = ' + Format('%-g', [Frequency]));
                     ShowPctProgress(Round((100.0 * i) / Nfreq));
+                    {$ENDIF}
+
                     SolveDirect;
                     DSS.MonitorClass.SampleAll;
-               // Storage devices are assumed to stay the same since there is no time variation in this mode
+                   // Storage devices are assumed to stay the same since there is no time variation in this mode
                 end;
 
             end; {FOR}
 
+            {$IFDEF DSS_CAPI_PM}
+            DSS.ActorPctProgress := 100;
+            {$ELSE}
             ShowPctProgress(100);
             ProgressCaption('Done.');
+            {$ENDIF}
         finally
+{$IFNDEF DSS_CAPI_PM}
             ProgressHide;
+{$ENDIF}
             DSS.MonitorClass.SaveAll;
             ReallocMem(FrequencyList, 0);
         end;

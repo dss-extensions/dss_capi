@@ -2178,6 +2178,7 @@ end;
 
 function TMonitorObj.Get_FileName: String;
 {$IFDEF DSS_CAPI_PM}
+var
     PMParent: TDSSContext;
 {$ENDIF}
 begin

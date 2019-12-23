@@ -52,13 +52,16 @@ end;
 //------------------------------------------------------------------------------
 function Parallel_Get_ActiveActor(): Integer; CDECL;
 begin
-    Result := ActiveActor;
+    Result := DSSPrime.ActiveChildIndex;
 end;
 //------------------------------------------------------------------------------
 procedure Parallel_Set_ActiveActor(Value: Integer); CDECL;
 begin
-    if Value <= High(DSSPrime.Children)+1 then
-        DSSPrime.ActiveActor := Value
+    if (Value > 0) and (Value <= DSSPrime.NumOfActors) then
+    begin
+        DSSPrime.ActiveChildIndex := Value - 1;
+        DSSPrime.ActiveChild := DSSPrime.Children[DSSPrime.ActiveChildIndex];
+    end
     else
         DoSimpleMsg(DSSPrime, 'The actor does not exists', 7002);
 end;
@@ -86,14 +89,14 @@ end;
 //------------------------------------------------------------------------------
 function Parallel_Get_NumOfActors(): Integer; CDECL;
 begin
-    Result := High(DSSPrime.Children)+1;
+    Result := DSSPrime.NumOfActors;
 end;
 //------------------------------------------------------------------------------
 procedure Parallel_Wait(); CDECL;
 var
     i: Integer;
 begin
-    if Parallel_enabled then
+    if DSSPrime.Parallel_enabled then
         Wait4Actors(DSSPrime, 0);
 end;
 //------------------------------------------------------------------------------
@@ -102,7 +105,7 @@ var
     Result: PIntegerArray;
     idx: Integer;
 begin
-    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, NumOfActors);
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, DSSPrime.NumOfActors);
     for idx := 0 to High(DSSPrime.Children) do
     begin
         Result[idx] := DSSPrime.Children[idx].ActorPctProgress;
@@ -121,13 +124,13 @@ var
     Result: PIntegerArray;
     idx: Integer;
 begin
-    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, NumOfActors);
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, DSSPrime.NumOfActors);
     for idx := 0 to High(DSSPrime.Children) do
     begin
         if DSSPrime.Children[idx].ActorThread.Is_Busy then
-            Result[idx] := 0
+            Result[idx] := Ord(TActorStatus.Busy)
         else
-            Result[idx] := 1;
+            Result[idx] := Ord(TActorStatus.Idle);
     end;
 end;
 
@@ -148,7 +151,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Parallel_Set_ActiveParallel(Value: Integer); CDECL;
 begin
-    Parallel_enabled := (Value = 1);
+    DSSPrime.Parallel_enabled := (Value = 1); //TODO
 end;
 //------------------------------------------------------------------------------
 function Parallel_Get_ConcatenateReports(): Integer; CDECL;

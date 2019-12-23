@@ -11,14 +11,11 @@ if errorlevel 1 (
     )
 )
 
+rd /s /q .\build\units_v7_x64
+
 if not exist .\build\units_v7_x64 (
     mkdir .\build\units_v7_x64
 ) 
-
-if not exist .\build\units_v8_x64 (
-    mkdir .\build\units_v8_x64
-) 
-
 
 fpc -Px86_64 @src\windows-x64.cfg -B src\dss_capi_v7.lpr
 if errorlevel 1 exit /B 1

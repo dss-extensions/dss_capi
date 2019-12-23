@@ -872,13 +872,12 @@ end;
 //------------------------------------------------------------------------------
 procedure Solution_SolveAll();cdecl;
 var
-  i : Integer;
+    i : Integer;
 begin
-  for i := 1 to NumOfActors do
-  begin
-    ActiveActor :=  i;
-    CmdResult   :=  DoSetCmd(1);
-  end;
+    for i := 0 to High(DSSPrime.Children) do
+    begin
+        DSSPrime.CmdResult := DoSetCmd(DSSPrime.Children[i], 1);
+    end;
 end;
 {$ENDIF}
 //------------------------------------------------------------------------------
