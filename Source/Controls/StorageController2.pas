@@ -2232,7 +2232,7 @@ Begin
      FleetPointerList.Clear;
      For i := 1 to FleetSize Do
        Begin
-             StorageObj := StorageClass[ActiveActor].Find(FStorage2NameList.Strings[i-1]);
+             StorageObj := Storage2Class[ActiveActor].Find(FStorage2NameList.Strings[i-1]);
              If Assigned(StorageObj) Then Begin
                 If StorageObj.Enabled Then FleetPointerList.New := StorageObj;
              End Else Begin
@@ -2248,8 +2248,8 @@ Begin
      {Search through the entire circuit for enabled Storage Elements and add them to the list}
      FStorage2NameList.Clear;
      FleetPointerList.Clear;
-     For i := 1 to StorageClass[ActiveActor].ElementCount Do Begin
-        StorageObj :=  StorageClass[ActiveActor].ElementList.Get(i);
+     For i := 1 to Storage2Class[ActiveActor].ElementCount Do Begin
+        StorageObj :=  Storage2Class[ActiveActor].ElementList.Get(i);
         // Look for a storage element not already assigned
         If StorageObj.Enabled and (StorageObj.DispatchMode <> STORE_EXTERNALMODE) Then Begin
            FStorage2NameList.Add(StorageObj.Name);  // Add to list of names
