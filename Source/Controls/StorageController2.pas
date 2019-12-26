@@ -330,7 +330,7 @@ Begin
       'which the control is monitoring. There is no default; Must be specified.';
     PropertyHelp[propTERMINAL]            :=
       'Number of the terminal of the circuit element to which the StorageController2 control is connected. '+
-      '1 or 2, typically.  Default is 1. Make sure you have the direction on the power matching the sign of kWTarget.';
+      '1 or 2, typically.  Default is 1. Make sure to select the proper direction on the power for the respective dispatch mode.';
     PropertyHelp[propMONPHASE]            :=
       'Number of the phase being monitored or one of {AVG | MAX | MIN} for all phases. Default=AVG. ' +
       'Must be less than the number of phases. Used in PeakShave, Follow, Support and I-PeakShave discharging modes ' +
