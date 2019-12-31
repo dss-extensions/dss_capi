@@ -1657,8 +1657,9 @@ begin
     Update_dblHour;
 {$IFDEF FPC}
     if Assigned (ActiveFNCS) then begin
-      if ActiveFNCS.IsReady then begin
+      if ActiveFNCS.IsRunning then begin
         next_fncs := fncs_time (intHour) * fncs_time (3600) + Trunc(t);
+//				writeln(Format('  requesting %d from FNCS at %g seconds or %g hours', [next_fncs, t, dblHour]));
 //        writeln('Loop time is ' + format('%d', [intHour]) + ':' + format('%d', [Trunc(t)]));
         ActiveFNCS.FncsTimeRequest (next_fncs);
       end;

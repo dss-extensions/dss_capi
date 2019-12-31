@@ -120,7 +120,8 @@ type
 
     function find_fncs_function (name: String): Pointer;
 
-  private
+	private
+		in_fncs_loop:Boolean;
     next_fncs_publish: fncs_time;
 		existing_fncs_grant: fncs_time;
 		log_level: TFNCSLogLevel;
@@ -137,6 +138,7 @@ type
     FNCSTopicsMapped:Boolean;
 
     function IsReady:Boolean;
+		function IsRunning:Boolean;
     procedure RunFNCSLoop (const s:string);
     constructor Create();
     destructor Destroy; override;
@@ -709,6 +711,7 @@ begin
   if log_level >= fncsLogInfo then
 		writeln(Format('Starting FNCS loop to run %s or %u seconds', [s, time_stop]));
   fncs_initialize;
+	in_fncs_loop := True;
 
   Try
     while time_granted < time_stop do begin
@@ -747,6 +750,7 @@ begin
 			existing_fncs_grant := 0;
     end;
   finally
+		in_fncs_loop := False;
     fncs_finalize;
   end;
 end;
@@ -755,6 +759,11 @@ function TFNCS.IsReady:Boolean;
 begin
   Result := True;
   if FLibHandle = DynLibs.NilHandle then Result := False;
+end;
+
+function TFNCS.IsRunning:Boolean;
+begin
+	Result := in_fncs_loop;
 end;
 
 function TFNCS.find_fncs_function (name: String): Pointer;
@@ -771,6 +780,7 @@ var
 	s: String;
 begin
 	existing_fncs_grant := 0;
+	in_fncs_loop := False;
 	log_level := fncsLogWarning;
 	s := GetEnvironmentVariable ('FNCS_LOG_LEVEL');
 	if s = 'INFO' then 
@@ -828,6 +838,7 @@ end;
 
 destructor TFNCS.Destroy;
 begin
+	in_fncs_loop := False;
   topics.free;
   If FLibHandle <> DynLibs.NilHandle Then Begin
     UnloadLibrary(FLibHandle);
