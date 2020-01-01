@@ -35,129 +35,92 @@ implementation
 
 uses
     CAPI_Constants,
-    ParserDel;
-
-var
-    ComParser: ParserDel.TParser;
-
-function Parser_Get_CmdString_AnsiString(): Ansistring; inline;
-begin
-    Result := ComParser.CmdString;
-end;
+    ParserDel,
+    DSSClass;
 
 function Parser_Get_CmdString(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Parser_Get_CmdString_AnsiString());
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ComParser.CmdString);
 end;
 //------------------------------------------------------------------------------
 procedure Parser_Set_CmdString(const Value: PAnsiChar); CDECL;
 begin
-    ComParser.CmdString := Value;
+    DSSPrime.ComParser.CmdString := Value;
 end;
 //------------------------------------------------------------------------------
-function Parser_Get_NextParam_AnsiString(): Ansistring; inline;
-begin
-    Result := ComParser.NextParam;
-end;
-
 function Parser_Get_NextParam(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Parser_Get_NextParam_AnsiString());
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ComParser.NextParam);
 end;
 //------------------------------------------------------------------------------
 function Parser_Get_AutoIncrement(): Boolean; CDECL;
 begin
-    Result := ComParser.AutoIncrement;
+    Result := DSSPrime.ComParser.AutoIncrement;
 end;
 //------------------------------------------------------------------------------
 procedure Parser_Set_AutoIncrement(Value: Boolean); CDECL;
 begin
-    ComParser.AutoIncrement := Value;
+    DSSPrime.ComParser.AutoIncrement := Value;
 end;
 //------------------------------------------------------------------------------
 function Parser_Get_DblValue(): Double; CDECL;
 begin
-    Result := ComParser.DblValue;
+    Result := DSSPrime.ComParser.DblValue;
 end;
 //------------------------------------------------------------------------------
 function Parser_Get_IntValue(): Integer; CDECL;
 begin
-    Result := ComParser.IntValue;
+    Result := DSSPrime.ComParser.IntValue;
 end;
 //------------------------------------------------------------------------------
-function Parser_Get_StrValue_AnsiString(): Ansistring; inline;
-begin
-    Result := ComParser.StrValue;
-end;
-
 function Parser_Get_StrValue(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Parser_Get_StrValue_AnsiString());
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ComParser.StrValue);
 end;
 //------------------------------------------------------------------------------
-function Parser_Get_WhiteSpace_AnsiString(): Ansistring; inline;
-begin
-    Result := Comparser.Whitespace;
-end;
-
 function Parser_Get_WhiteSpace(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Parser_Get_WhiteSpace_AnsiString());
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ComParser.Whitespace);
 end;
 //------------------------------------------------------------------------------
 procedure Parser_Set_WhiteSpace(const Value: PAnsiChar); CDECL;
 begin
-    ComParser.Whitespace := Value;
+    DSSPrime.ComParser.Whitespace := Value;
 end;
 //------------------------------------------------------------------------------
-function Parser_Get_BeginQuote_AnsiString(): Ansistring; inline;
-begin
-    Result := ComParser.BeginQuoteChars;
-end;
-
 function Parser_Get_BeginQuote(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Parser_Get_BeginQuote_AnsiString());
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ComParser.BeginQuoteChars);
 end;
 //------------------------------------------------------------------------------
-function Parser_Get_EndQuote_AnsiString(): Ansistring; inline;
-begin
-    Result := ComParser.EndQuoteChars;
-end;
-
 function Parser_Get_EndQuote(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Parser_Get_EndQuote_AnsiString());
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ComParser.EndQuoteChars);
 end;
 //------------------------------------------------------------------------------
 procedure Parser_Set_BeginQuote(const Value: PAnsiChar); CDECL;
 begin
-    ComParser.BeginQuoteChars := Value;
+    DSSPrime.ComParser.BeginQuoteChars := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Parser_Set_EndQuote(const Value: PAnsiChar); CDECL;
 begin
-    ComParser.EndQuoteChars := Value;
+    DSSPrime.ComParser.EndQuoteChars := Value;
 end;
 //------------------------------------------------------------------------------
-function Parser_Get_Delimiters_AnsiString(): Ansistring; inline;
-begin
-    Result := ComParser.Delimiters;
-end;
-
 function Parser_Get_Delimiters(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Parser_Get_Delimiters_AnsiString());
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ComParser.Delimiters);
 end;
 //------------------------------------------------------------------------------
 procedure Parser_Set_Delimiters(const Value: PAnsiChar); CDECL;
 begin
-    ComParser.Delimiters := Value;
+    DSSPrime.ComParser.Delimiters := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Parser_ResetDelimiters(); CDECL;
 begin
-    ComParser.ResetDelims;
+    DSSPrime.ComParser.ResetDelims;
 end;
 //------------------------------------------------------------------------------
 procedure Parser_Get_Vector(var ResultPtr: PDouble; ResultCount: PInteger; ExpectedSize: Integer); CDECL;
@@ -168,7 +131,7 @@ var
 
 begin
     SetLength(VectorBuffer, ExpectedSize);
-    ActualSize := ComParser.ParseAsVector(VectorBuffer);
+    ActualSize := DSSPrime.ComParser.ParseAsVector(VectorBuffer);
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, ActualSize);
     Move(VectorBuffer[0], ResultPtr[0], ActualSize * SizeOf(Double));
     SetLength(VectorBuffer, 0);
@@ -189,7 +152,7 @@ var
 begin
     MatrixSize := ExpectedOrder * ExpectedOrder;
     SetLength(MatrixBuffer, MatrixSize);
-    ComParser.ParseAsMatrix(MatrixBuffer);
+    DSSPrime.ComParser.ParseAsMatrix(MatrixBuffer);
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, MatrixSize);
     Move(MatrixBuffer[0], ResultPtr[0], MatrixSize * SizeOf(Double));
     SetLength(MatrixBuffer, 0);
@@ -210,7 +173,7 @@ var
 begin
     MatrixSize := ExpectedOrder * ExpectedOrder;
     SetLength(MatrixBuffer, MatrixSize);
-    ComParser.ParseAsSymMatrix(MatrixBuffer);
+    DSSPrime.ComParser.ParseAsSymMatrix(MatrixBuffer);
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, MatrixSize);
     Move(MatrixBuffer[0], ResultPtr[0], MatrixSize * SizeOf(Double));
     SetLength(MatrixBuffer, 0);
@@ -221,9 +184,5 @@ procedure Parser_Get_SymMatrix_GR(ExpectedOrder: Integer); CDECL;
 begin
     Parser_Get_SymMatrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble, ExpectedOrder)
 end;
-
 //------------------------------------------------------------------------------
-initialization
-    ComParser := ParserDel.TParser.Create;  // create COM Parser object
-
 end.

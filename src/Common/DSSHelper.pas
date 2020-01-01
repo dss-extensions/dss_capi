@@ -58,7 +58,8 @@ uses
     // VVControl, 
     ConductorData,
     DSSObject,
-    Executive;
+    Executive,
+    COMControlProxy;
     
 type
     TDSSGlobalHelper = class helper for TDSSContext
@@ -67,6 +68,7 @@ type
         function GetNumOfActors: Integer; inline;
         function GetActorThread: TSolver; inline;
 {$ENDIF}
+        function GetCOMControlProxyObj: TCOMControlProxyObj; inline;
         function GetDSSExecutive: TExecutive; inline;
         function GetActiveDSSObject: TDSSObject; inline;
         function GetActiveCircuit: TDSSCircuit; inline;
@@ -287,6 +289,7 @@ type
         property NumOfActors: Integer read GetNumOfActors;
         property ActorThread: TSolver read GetActorThread write SetActorThread;
 {$ENDIF}
+        property COMControlProxyObj: TCOMControlProxyObj read GetCOMControlProxyObj;
         property DSSExecutive: TExecutive read GetDSSExecutive write SetDSSExecutive;
         property ActiveCircuit: TDSSCircuit read GetActiveCircuit write SetActiveCircuit;
         property ActiveDSSObject: TDSSObject read GetActiveDSSObject write SetActiveDSSObject;
@@ -402,6 +405,7 @@ implementation
 function TDSSGlobalHelper.GetNumOfActors: Integer; begin Result := High(Children) + 1; end;
 function TDSSGlobalHelper.GetActorThread: TSolver; begin Result := TSolver(FActorThread); end;
 {$ENDIF}
+function TDSSGlobalHelper.GetCOMControlProxyObj: TCOMControlProxyObj; begin Result := TCOMControlProxyObj(FCOMControlProxyObj); end;
 function TDSSGlobalHelper.GetDSSExecutive: TExecutive; begin Result := TExecutive(FDSSExecutive); end;
 function TDSSGlobalHelper.GetActiveDSSObject: TDSSObject; begin Result := TDSSObject(FActiveDSSObject); end;
 function TDSSGlobalHelper.GetActiveCircuit: TDSSCircuit; begin Result := TDSSCircuit(FActiveCircuit); end;

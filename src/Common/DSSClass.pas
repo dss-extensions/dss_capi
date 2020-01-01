@@ -23,6 +23,12 @@ TYPE
         Idle = 1
     );
 {$SCOPEDENUMS OFF}
+    TAction = record
+        ActionCode: Integer;
+        DeviceHandle: Integer;
+    end;
+    
+    pAction = ^TAction;
 
     TDSSContext = class;
 
@@ -312,6 +318,15 @@ TYPE
         FPropIndex: Integer;  
         FPropClass: TDSSClass;
         
+        // Previously C-API or COM globals
+        tempBuffer: AnsiString; // CAPI_Utils.pas
+        ComParser: TParser; // CAPI_Parser.pas
+        ReduceEditString: String; // CAPI_ReduceCkt.pas
+        EnergyMeterName: String; // CAPI_ReduceCkt.pas
+        FirstPDelement: String;  // Full name -- CAPI_ReduceCkt.pas
+        FCOMControlProxyObj: TObject; // CAPI_CtrlQueue.pas
+        ActiveAction: pAction; // CAPI_CtrlQueue.pas
+        
         constructor Create(_Parent: TDSSContext = nil; _IsPrime: Boolean = False);
         destructor Destroy; override;
         function GetPrime(): TDSSContext;
@@ -323,7 +338,7 @@ var
 
 implementation
 
-USES DSSGlobals, SysUtils, DSSObject, CktElement, DSSHelper, Executive;
+USES DSSGlobals, SysUtils, DSSObject, CktElement, DSSHelper, Executive, COMControlProxy;
 
 function TDSSContext.GetPrime(): TDSSContext;
 begin
@@ -423,6 +438,14 @@ begin
     FPropIndex := 0;
     FPropClass := NIL;
     
+    ReduceEditString := ''; // Init to null string
+    EnergyMeterName := '';
+    FirstPDelement := '';
+    
+    ComParser := ParserDel.TParser.Create;  // create COM Parser object
+    FCOMControlProxyObj := TCOMControlProxyObj.Create(NIL, 'COM_Proxy');
+    ActiveAction := NIL;
+    
     DSSExecutive := TExecutive.Create(self);
     DSSExecutive.CreateDefaultDSSItems;
 end;
@@ -435,6 +458,8 @@ begin
     ErrorStrings.Free;
     ParserVars.Free;
     Parser.Free;
+    ComParser.Free;
+    TCOMControlProxyObj(FCOMControlProxyObj).Free;
     
     inherited Destroy;
 end;

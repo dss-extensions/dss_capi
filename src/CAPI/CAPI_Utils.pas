@@ -91,10 +91,7 @@ procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger;
 
 implementation
 
-Uses DSSObject;
-
-var
-    tempBuffer: Ansistring;
+Uses DSSObject, DSSClass;
 
 function DSS_CopyStringAsPChar(s: Ansistring): PAnsiChar;
 begin
@@ -105,13 +102,13 @@ end;
 function DSS_GetAsPAnsiChar(s: Ansistring): PAnsiChar; inline;
 begin
     // keep a reference to the string to make sure the memory is not deallocated
-    tempBuffer := s;
-    result := PAnsiChar(tempBuffer);
+    DSSPrime.tempBuffer := s;
+    result := PAnsiChar(DSSPrime.tempBuffer);
 end;
 
 procedure DSS_ResetStringBuffer(); CDECL;
 begin
-    tempBuffer := '';
+    DSSPrime.tempBuffer := '';
 end;
 
 //------------------------------------------------------------------------------

@@ -1,9 +1,9 @@
 #ifndef DSS_CAPI_DLL_H
 #define DSS_CAPI_DLL_H
-#define DSS_CAPI_VERSION "0.10.4-dev"
+#define DSS_CAPI_VERSION "0.11.0-dev"
 
 #define DSS_CAPI_V7_VERSION DSS_CAPI_VERSION
-#ifdef DSS_CAPI_V7_DLL 
+#ifdef DSS_CAPI_V7_DLL
     #define DSS_CAPI_DLL DSS_CAPI_V7_DLL
 #endif
 
@@ -705,9 +705,9 @@ extern "C" {
     Same as Circuit_Get_AllElementLosses but using the global buffer interface for results
     */
     DSS_CAPI_DLL void Circuit_Get_AllElementLosses_GR(void);
-    
+
     /*
-    Array of total losses (complex) in a selection of elements. 
+    Array of total losses (complex) in a selection of elements.
     Use the element indices (starting at 1) as parameter.
     */
     DSS_CAPI_DLL void Circuit_Get_ElementLosses(double** ResultPtr, int32_t* ResultCount, int32_t *ElementsPtr, int32_t ElementsCount);
@@ -1338,12 +1338,18 @@ extern "C" {
     */
     DSS_CAPI_DLL int32_t DSSElement_Get_NumProperties(void);
 
+    /*
+    No description.
+    */
     DSS_CAPI_DLL void DSSimComs_BusVoltagepu(double** ResultPtr, int32_t* ResultCount, size_t Index);
     /*
     Same as DSSimComs_BusVoltagepu but using the global buffer interface for results
     */
     DSS_CAPI_DLL void DSSimComs_BusVoltagepu_GR(size_t Index);
 
+    /*
+    No description.
+    */
     DSS_CAPI_DLL void DSSimComs_BusVoltage(double** ResultPtr, int32_t* ResultCount, size_t Index);
     /*
     Same as DSSimComs_BusVoltage but using the global buffer interface for results
@@ -2121,6 +2127,9 @@ extern "C" {
     */
     DSS_CAPI_DLL double Lines_Get_C1(void);
 
+    /*
+    No description.
+    */
     DSS_CAPI_DLL void Lines_Get_Cmatrix(double** ResultPtr, int32_t* ResultCount);
     /*
     Same as Lines_Get_Cmatrix but using the global buffer interface for results
@@ -2146,6 +2155,9 @@ extern "C" {
     */
     DSS_CAPI_DLL double Lines_Get_X0(void);
 
+    /*
+    No description.
+    */
     DSS_CAPI_DLL void Lines_Get_Xmatrix(double** ResultPtr, int32_t* ResultCount);
     /*
     Same as Lines_Get_Xmatrix but using the global buffer interface for results
@@ -4690,20 +4702,27 @@ extern "C" {
     DSS_CAPI_DLL void Solution_SolveAll(void);
 #endif //#ifdef DSS_CAPI_USE_V8
 
+    /*
+    No description.
+    */
     DSS_CAPI_DLL void Solution_Get_IncMatrix(int32_t** ResultPtr, int32_t* ResultCount);
-
     /*
     Same as Solution_Get_IncMatrix but using the global buffer interface for results
     */
     DSS_CAPI_DLL void Solution_Get_IncMatrix_GR(void);
 
+    /*
+    No description.
+    */
     DSS_CAPI_DLL void Solution_Get_Laplacian(int32_t** ResultPtr, int32_t* ResultCount);
-
     /*
     Same as Solution_Get_Laplacian but using the global buffer interface for results
     */
     DSS_CAPI_DLL void Solution_Get_Laplacian_GR(void);
 
+    /*
+    No description.
+    */
     DSS_CAPI_DLL void Solution_Get_BusLevels(int32_t** ResultPtr, int32_t* ResultCount);
     /*
     Same as Solution_Get_BusLevels but using the global buffer interface for results
@@ -5110,7 +5129,6 @@ extern "C" {
     Complex array of voltages for active winding
     */
     DSS_CAPI_DLL void Transformers_Get_WdgVoltages(double** ResultPtr, int32_t* ResultCount);
-
     /*
     Same as Transformers_Get_WdgVoltages but using the global buffer interface for results
     */
@@ -5120,7 +5138,6 @@ extern "C" {
     All Winding currents (ph1, wdg1, wdg2,... ph2, wdg1, wdg2 ...)
     */
     DSS_CAPI_DLL void Transformers_Get_WdgCurrents(double** ResultPtr, int32_t* ResultCount);
-
     /*
     Same as Transformers_Get_WdgCurrents but using the global buffer interface for results
     */
@@ -5839,25 +5856,25 @@ extern "C" {
     DSS_CAPI_DLL void XYCurves_Set_idx(int32_t Value);
 
     /*
-    Sets all numeric arrays for the active LoadShape. 
-    
+    Sets all numeric arrays for the active LoadShape.
+
     If ExternalMemory is 0, the data is copied, allocating memory.
-    If ExternalMemory is 1, the data is NOT copied. The caller is required to keep the 
-    pointers alive while the LoadShape is used, as well as deallocating it.
-    
-    If IsFloat32 is 0, the pointers are interpreted as pointers to float64/double precision numbers. 
+    If ExternalMemory is 1, the data is NOT copied. The caller is required to keep the
+    pointers alive while the LoadShape is used, as well as deallocating it later.
+
+    If IsFloat32 is 0, the pointers are interpreted as pointers to float64/double precision numbers.
     Otherwise, the pointers are interpreted as pointers to float32/single precision numbers.
     */
-    DSS_CAPI_DLL void LoadShapes_Set_Points(int32_t Npts, void *HoursPtr, void *PMultPtr, void *QMultPtr, int8_t ExternalMemory, int8_t IsFloat32); 
+    DSS_CAPI_DLL void LoadShapes_Set_Points(int32_t Npts, void *HoursPtr, void *PMultPtr, void *QMultPtr, int8_t ExternalMemory, int8_t IsFloat32);
 
     /*
-    Converts the current LoadShape data to float32/single precision. 
+    Converts the current LoadShape data to float32/single precision.
     If there is no data or the data is already represented using float32, nothing is done.
     */
     DSS_CAPI_DLL void LoadShapes_UseFloat32(void);
-    
+
     /*
-    Converts the current LoadShape data to float64/double precision. 
+    Converts the current LoadShape data to float64/double precision.
     If there is no data or the data is already represented using float64, nothing is done.
     */
     DSS_CAPI_DLL void LoadShapes_UseFloat64(void);
@@ -5879,7 +5896,7 @@ extern "C" {
 
 
     /*
-    Selected KLUSolveX functions, re-exported through DSS C-API. 
+    Selected KLUSolveX functions, re-exported through DSS C-API.
     See KLUSolveX for details.
     */
     DSS_CAPI_DLL void* NewSparseSet(int nBus);

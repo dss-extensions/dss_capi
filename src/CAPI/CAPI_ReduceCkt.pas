@@ -39,11 +39,6 @@ uses
     PDElement,
     DSSClass,
     DSSHelper;
-
-var
-    ReduceEditString: String;
-    EnergyMeterName: String;
-    FirstPDelement: String;  // Full name
     
 //------------------------------------------------------------------------------
 function CommonReduceCktChecks(): Boolean; inline;
@@ -53,7 +48,7 @@ begin
     if DSSPrime.ActiveCircuit = NIL then 
         Exit;
     
-    if DSSPrime.EnergyMeterClass.SetActive(EnergyMeterName) then
+    if DSSPrime.EnergyMeterClass.SetActive(DSSPrime.EnergyMeterName) then
         DSSPrime.ActiveEnergyMeterObj := DSSPrime.EnergyMeterClass.ElementList.Active;
         
     if not Assigned(DSSPrime.ActiveEnergyMeterObj) then 
@@ -91,27 +86,27 @@ end;
 //------------------------------------------------------------------------------
 function ReduceCkt_Get_EditString(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(ReduceEditString);
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ReduceEditString);
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_Set_EditString(const Value: PAnsiChar); CDECL;
 begin
-    ReduceEditString := Value;
+    DSSPrime.ReduceEditString := Value;
 end;
 //------------------------------------------------------------------------------
 function ReduceCkt_Get_StartPDElement(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(FirstPDelement);
+    Result := DSS_GetAsPAnsiChar(DSSPrime.FirstPDelement);
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_Set_StartPDElement(const Value: PAnsiChar); CDECL;
 begin
-    FirstPDelement := Value;
+    DSSPrime.FirstPDelement := Value;
 end;
 //------------------------------------------------------------------------------
 function ReduceCkt_Get_EnergyMeter(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(EnergyMeterName);
+    Result := DSS_GetAsPAnsiChar(DSSPrime.EnergyMeterName);
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_SaveCircuit(const CktName: PAnsiChar); CDECL;
@@ -122,7 +117,7 @@ end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_Set_EnergyMeter(const Value: PAnsiChar); CDECL;
 begin
-    EnergyMeterName := Value;
+    DSSPrime.EnergyMeterName := Value;
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_DoDefault(); CDECL;
@@ -146,7 +141,7 @@ end;
 procedure ReduceCkt_DoBranchRemove(); CDECL;
 begin
     if not CommonReduceCktChecks() then Exit;
-    if DSSPrime.ActiveCircuit.SetElementActive(FirstPDelement) < 0 then 
+    if DSSPrime.ActiveCircuit.SetElementActive(DSSPrime.FirstPDelement) < 0 then 
         Exit;
     
     // element was found (0-based array)
@@ -155,7 +150,7 @@ begin
         DSSPrime.ActiveEnergyMeterObj.BranchList, 
         DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement, 
         DSSPrime.ActiveCircuit.ReduceLateralsKeepLoad, 
-        ReduceEditString
+        DSSPrime.ReduceEditString
     );
 end;
 //------------------------------------------------------------------------------
@@ -183,9 +178,4 @@ begin
     DoRemoveAll_1ph_Laterals(DSSPrime, DSSPrime.ActiveEnergyMeterObj.BranchList);
 end;
 //------------------------------------------------------------------------------
-
-initialization
-    ReduceEditString := ''; // Init to null string
-    EnergyMeterName := '';
-    FirstPDelement := '';
 end.
