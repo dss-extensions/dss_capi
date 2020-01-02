@@ -19,7 +19,7 @@ library dss_capi_v7;
   derived from this software without specific prior written permission.
 
   THIS SOFTWARE IS PROVIDED BY Electric Power Research Institute, Inc., "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDNG, BUT NOT LIMITED TO, THE
   IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
   ARE DISCLAIMED. IN NO EVENT SHALL Electric Power Research Institute, Inc.,
   BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
@@ -32,7 +32,7 @@ library dss_capi_v7;
 }
 
 {
-Copyright (c) 2017-2019, Paulo Meira
+Copyright (c) 2017-2020, Paulo Meira
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -76,7 +76,6 @@ uses
     SysUtils,
     Classes,
     {$IFDEF UNIX}cwstring,{$ENDIF}
-    Parallel_Lib in 'Parallel_Lib/Parallel_Lib.pas',
     Arraydef in 'Shared/Arraydef.pas',
     AutoAdd in 'Common/AutoAdd.pas',
     Bus in 'Common/Bus.pas',
@@ -830,7 +829,9 @@ exports
     LoadShapes_Set_Qbase,
     LoadShapes_Get_UseActual,
     LoadShapes_Set_UseActual,
-    LoadShapes_Set_Points, // API extension
+    LoadShapes_Set_Points, // API extensions
+    LoadShapes_UseFloat32,
+    LoadShapes_UseFloat64,
     Meters_Get_AllNames,
     Meters_Get_First,
     Meters_Get_Name,
@@ -1516,15 +1517,9 @@ exports
     Settings_Get_LossRegs_GR,
     Settings_Get_UEregs_GR,
     Settings_Get_VoltageBases_GR,
-    Solution_Get_EventLog_GR,
     Solution_Get_IncMatrix_GR,
     Solution_Get_Laplacian_GR,
     Solution_Get_BusLevels_GR,
-    Solution_Get_IncMatrixRows_GR,
-    Solution_Get_IncMatrixCols_GR,
-    Topology_Get_AllIsolatedBranches_GR,
-    Topology_Get_AllLoopedPairs_GR,
-    Topology_Get_AllIsolatedLoads_GR,
     Transformers_Get_AllLossesByType_GR,
     Transformers_Get_LossesByType_GR,
     Transformers_Get_WdgCurrents_GR,
