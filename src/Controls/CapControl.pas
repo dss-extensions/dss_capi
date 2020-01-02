@@ -743,8 +743,6 @@ begin
         if Assigned(Vbus) then    // uses nphases from CapControlObj
             for j := 1 to nPhases do
                 cBuffer^[j] := DSS.ActiveCircuit.Solution.NodeV^[GetRef(j)];
-    ;
-
 end;
 
 procedure TCapControlObj.GetControlCurrent(var ControlCurrent: Double);
@@ -791,15 +789,12 @@ procedure TCapControlObj.GetCurrents(Curr: pComplexArray);
 var
     i: Integer;
 begin
-
     for i := 1 to Fnconds do
         Curr^[i] := CZERO;
-
 end;
 
 {--------------------------------------------------------------------------}
 procedure TCapControlObj.DumpProperties(var F: TextFile; Complete: Boolean);
-
 var
     i: Integer;
 
@@ -822,9 +817,7 @@ end;
 
 {--------------------------------------------------------------------------}
 procedure TCapControlObj.DoPendingAction(const Code, ProxyHdl: Integer);
-
 begin
-
     ControlledElement.ActiveTerminalIdx := 1;  // Set active terminal of capacitor to terminal 1
 
         {Allow user control to do something}
@@ -838,7 +831,6 @@ begin
                               // Usermodel could override Pending change so the rest of this procedure is ignored.
             end;
     end;
-
 
     with ControlVars do
         case PendingChange of

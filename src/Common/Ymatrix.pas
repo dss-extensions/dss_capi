@@ -64,9 +64,6 @@ var
     pElem: TDSSCktElement;
 
 begin
-
-//    writeln('!!!Recalc ALL Yprims');
-    
     with Ckt do
     begin
         if LogEvents then
@@ -78,20 +75,14 @@ begin
             pElem := CktElements.Next;
         end;
     end;
-
-//    writeln('<<<Recalc ALL Yprims');
 end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ReCalcInvalidYPrims(Ckt: TDSSCircuit);
-{Recalc YPrims only for those circuit elements that have had changes since last
- solution}
+{Recalc YPrims only for those circuit elements that have had changes since last solution}
 var
     pElem: TDSSCktElement;
-
 begin
-//    writeln('!!!Recalc Invalid Yprims');
-
     with Ckt do
     begin
         if LogEvents then
@@ -122,17 +113,12 @@ begin
             pElem := CktElements.Next;
         end;
     end;
-
-//    writeln('<<< Recalc Invalid Yprims');
 end;
 
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ResetSparseMatrix(var hY: NativeUint; size: Integer);
-
-
 begin
-
     if hY <> 0 then
     begin
         if DeleteSparseSet(hY) < 1  {Get rid of existing one beFore making a new one} then
@@ -141,22 +127,19 @@ begin
         hY := 0;
     end;
 
-     // Make a new sparse set
+    // Make a new sparse set
     hY := NewSparseSet(Size);
     if hY < 1 then
-    begin   // Raise and exception
+    begin
         raise EEsolv32Problem.Create('Error Creating System Y Matrix. Problem WITH Sparse matrix solver.');
     end;
 end;
 
 
 procedure InitializeNodeVbase(DSS: TDSSContext);
-
 var
     i: Integer;
-
 begin
-
     with DSS.ActiveCircuit, Solution do
     begin
         for i := 1 to NumNodes do
@@ -191,10 +174,6 @@ begin
     IncrYprim := NIL;
     
     // Incremental Y update, only valid for BuildOption = WHOLEMATRIX.
-    //writeln('IncrCktElements is null? ', IncrCktElements = nil);
-    //writeln('Number of incremental elements: ', IncrCktElements.ListSize);
-    
-//    writeln('Analyzing incremental elements...');
     pElem := Ckt.IncrCktElements.First;
     while pElem <> NIL do with pElem do
     begin
@@ -239,6 +218,7 @@ begin
                     begin
                         changedNodes.Insert(inode);
                         changedNodes.Insert(jnode);
+                        // Encode the coordinates as a 64-bit integer
                         changedElements.Insert((QWord(inode) shl 32) or QWord(jnode));
                         //writeln('!!!!', inode, '   ', jnode);
                     end;
@@ -265,7 +245,7 @@ begin
     coordIt := changedElements.Min;
     repeat
         // writeln('>Zeroising row and column for ', (coordIt.Data shr 32), ',', coordIt.Data and $FFFFFFFF);
-        //TODO: zeroise only the exact elements affected to make it faster
+        // Zeroise only the exact elements affected to make it faster
         ZeroiseMatrixElement(Ckt.Solution.hYsystem, (coordIt.Data shr 32), coordIt.Data and $FFFFFFFF);
     until not coordIt.Next();
     

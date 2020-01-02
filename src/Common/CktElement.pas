@@ -335,8 +335,8 @@ begin
 
         for i := 1 to Fnphases do
             Terminals^[FActiveTerminal].Conductors^[i].Closed := Value;
-        DSS.ActiveCircuit.Solution.SystemYChanged := TRUE;  // force Y matrix rebuild
-        YPrimInvalid := TRUE;
+        // DSS.ActiveCircuit.Solution.SystemYChanged := TRUE;  // force Y matrix rebuild
+        YPrimInvalid := TRUE; // this also sets the global SystemYChanged flag
 
     end
     else
@@ -345,7 +345,7 @@ begin
         if (Index > 0) and (Index <= Fnconds) then
         begin
             Terminals^[FActiveTerminal].Conductors^[index].Closed := Value;
-            DSS.ActiveCircuit.Solution.SystemYChanged := TRUE;
+            // DSS.ActiveCircuit.Solution.SystemYChanged := TRUE;
             YPrimInvalid := TRUE;
         end;
 

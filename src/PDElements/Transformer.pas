@@ -607,7 +607,7 @@ begin
                     begin
                         Winding^[1].kVA := Winding^[2].kVA;  // For 2-winding, force both kVAs to be same
                     end;
-           // Update LoadLosskW if winding %r changed. Using only windings 1 and 2
+                // Update LoadLosskW if winding %r changed. Using only windings 1 and 2
                 9:
                     pctLoadLoss := (Winding^[1].Rpu + Winding^[2].Rpu) * 100.0;
                 15:
@@ -643,13 +643,16 @@ begin
                     YprimInvalid := TRUE;
                 8:
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
-                    if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and (not DSS.ActiveCircuit.Solution.SystemYChanged) and (YPrim <> NIL) then
-                    begin
+                    // Try to handle tap changes incrementally
+                    if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and 
+                       (not DSS.ActiveCircuit.Solution.SystemYChanged) and 
+                       (YPrim <> NIL) and 
+                       (not YPrimInvalid)
+                    then
                         // Mark this to incrementally update the matrix.
                         // If the matrix is already being rebuilt, there is 
                         // no point in doing this, just rebuild it as usual.
                         DSS.ActiveCircuit.IncrCktElements.Add(DSS.ActiveTransfObj) 
-                    end
                     else
 {$ENDIF}
                         YprimInvalid := TRUE;
@@ -1585,13 +1588,15 @@ begin
                 puTap := TempVal;
                 // Writeln(ActiveCircuit.Solution.dynavars.dblHour, ' Transformer.', Name, '.Tap = ', puTap);
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
-                if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and (not DSS.ActiveCircuit.Solution.SystemYChanged) and (YPrim <> NIL) then
-                begin
+                if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and 
+                   (not DSS.ActiveCircuit.Solution.SystemYChanged) and 
+                   (YPrim <> NIL) and 
+                   (not YPrimInvalid)
+                then
                     // Mark this to incrementally update the matrix.
                     // If the matrix is already being rebuilt, there is 
                     // no point in doing this, just rebuild it as usual.
                     DSS.ActiveCircuit.IncrCktElements.Add(Self) 
-                end
                 else
 {$ENDIF}
                     YPrimInvalid := TRUE;  // this property triggers setting SystemYChanged=true

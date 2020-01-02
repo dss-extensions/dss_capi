@@ -108,6 +108,10 @@ type
 
         procedure set_NumSteps(const Value: Integer); // 1=kvar, 2=Cuf, 3=Cmatrix
 
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+    PROTECTED
+        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE; 
+{$ENDIF}
 
     PUBLIC
 
@@ -453,12 +457,22 @@ begin
             else
             end;
 
-         //YPrim invalidation on anything that changes impedance values
+            //YPrim invalidation on anything that changes impedance values
             case ParamPointer of
                 3..8:
                     YprimInvalid := TRUE;
                 12, 13:
-                    YprimInvalid := TRUE;
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+                    // For changes in NumSteps and States, try to handle it incrementally
+                    if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and 
+                       (not DSS.ActiveCircuit.Solution.SystemYChanged) and 
+                       (YPrim <> NIL) and 
+                       (not YPrimInvalid)
+                    then
+                        DSS.ActiveCircuit.IncrCktElements.Add(DSS.ActiveCapacitorObj)
+                    else
+{$ENDIF}
+                        YprimInvalid := TRUE;
             else
             end;
 
@@ -931,7 +945,20 @@ begin
     if FStates^[Idx] <> Value then
     begin
         FStates^[Idx] := Value;
-        YprimInvalid := TRUE;
+
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}        
+        if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and 
+           (not DSS.ActiveCircuit.Solution.SystemYChanged) and 
+           (YPrim <> NIL) and 
+           (not YPrimInvalid)
+        then
+            // Mark this to incrementally update the matrix.
+            // If the matrix is already being rebuilt, there is 
+            // no point in doing this, just rebuild it as usual.
+            DSS.ActiveCircuit.IncrCktElements.Add(Self)
+        else
+{$ENDIF}        
+            YPrimInvalid := TRUE;
     end;
 end;
 
@@ -1064,7 +1091,16 @@ begin
 
      // Force rebuild of YPrims if necessary.
     if Value <> FLastStepInService then
-        YprimInvalid := TRUE;
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+        if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and 
+           (not DSS.ActiveCircuit.Solution.SystemYChanged) and 
+           (YPrim <> NIL) and 
+           (not YPrimInvalid)
+        then
+            DSS.ActiveCircuit.IncrCktElements.Add(Self)
+{$ENDIF}
+        else
+            YprimInvalid := TRUE;
 
     FLastStepInService := Value;
 end;
@@ -1275,5 +1311,44 @@ function TCapacitorObj.AvailableSteps: Integer;
 begin
     Result := FNumsteps - LastStepInService;
 end;
+
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+procedure TCapacitorObj.Set_ConductorClosed(Index: Integer; Value: Boolean);
+var
+    i: Integer;
+begin
+    if (Index = 0) then
+    begin  // Do all conductors
+        for i := 1 to Fnphases do
+            Terminals^[ActiveTerminalIdx].Conductors^[i].Closed := Value;
+        
+        if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and 
+           (not DSS.ActiveCircuit.Solution.SystemYChanged) and 
+           (YPrim <> NIL) and 
+           (not YPrimInvalid)
+        then
+            // Mark this to incrementally update the matrix.
+            // If the matrix is already being rebuilt, there is 
+            // no point in doing this, just rebuild it as usual.
+            DSS.ActiveCircuit.IncrCktElements.Add(Self)
+        else
+            YPrimInvalid := TRUE; // this also sets the global SystemYChanged flag
+    end
+    else
+    if (Index > 0) and (Index <= Fnconds) then
+    begin
+        Terminals^[ActiveTerminalIdx].Conductors^[index].Closed := Value;
+            
+        if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and 
+           (not DSS.ActiveCircuit.Solution.SystemYChanged) and 
+           (YPrim <> NIL) and 
+           (not YPrimInvalid)
+        then
+            DSS.ActiveCircuit.IncrCktElements.Add(Self)
+        else
+            YPrimInvalid := TRUE;
+    end;
+end;
+{$ENDIF}
 
 end.
