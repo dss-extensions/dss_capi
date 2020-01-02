@@ -26,14 +26,9 @@ uses
     DSSClass,
     DSSHelper;
 
-function DSS_Executive_Get_Command_AnsiString(i: Integer): Ansistring; inline;
-begin
-    Result := ExecCommand[i];
-end;
-
 function DSS_Executive_Get_Command(i: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSS_Executive_Get_Command_AnsiString(i));
+    Result := DSS_GetAsPAnsiChar(ExecCommand[i]);
 end;
 //------------------------------------------------------------------------------
 function DSS_Executive_Get_NumCommands(): Integer; CDECL;
@@ -46,45 +41,25 @@ begin
     Result := NumExecOptions;
 end;
 //------------------------------------------------------------------------------
-function DSS_Executive_Get_Option_AnsiString(i: Integer): Ansistring; inline;
-begin
-    Result := ExecOption[i];
-end;
-
 function DSS_Executive_Get_Option(i: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSS_Executive_Get_Option_AnsiString(i));
+    Result := DSS_GetAsPAnsiChar(ExecOption[i]);
 end;
 //------------------------------------------------------------------------------
-function DSS_Executive_Get_CommandHelp_AnsiString(i: Integer): Ansistring; inline;
-begin
-    Result := CommandHelp[i];
-end;
-
 function DSS_Executive_Get_CommandHelp(i: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSS_Executive_Get_CommandHelp_AnsiString(i));
+    Result := DSS_GetAsPAnsiChar(CommandHelp[i]);
 end;
 //------------------------------------------------------------------------------
-function DSS_Executive_Get_OptionHelp_AnsiString(i: Integer): Ansistring; inline;
-begin
-    Result := OptionHelp[i];
-end;
-
 function DSS_Executive_Get_OptionHelp(i: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSS_Executive_Get_OptionHelp_AnsiString(i));
+    Result := DSS_GetAsPAnsiChar(OptionHelp[i]);
 end;
 //------------------------------------------------------------------------------
-function DSS_Executive_Get_OptionValue_AnsiString(i: Integer): Ansistring; inline;
-begin
-    DSSPrime.DSSExecutive.Command := 'get ' + ExecOption[i];
-    Result := DSSPrime.GlobalResult;
-end;
-
 function DSS_Executive_Get_OptionValue(i: Integer): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSS_Executive_Get_OptionValue_AnsiString(i));
+    DSSPrime.DSSExecutive.Command := 'get ' + ExecOption[i];
+    Result := DSS_GetAsPAnsiChar(DSSPrime.GlobalResult);
 end;
 //------------------------------------------------------------------------------
 end.

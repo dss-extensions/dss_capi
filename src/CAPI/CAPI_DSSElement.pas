@@ -53,21 +53,15 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function DSSElement_Get_Name_AnsiString(): Ansistring; inline;
+function DSSElement_Get_Name(): PAnsiChar; CDECL;
 begin
+    Result := nil;
     if DSSPrime.ActiveCircuit <> NIL then
         if DSSPrime.ActiveDSSObject <> NIL then
             with DSSPrime.ActiveDSSObject do
             begin
-                Result := ParentClass.Name + '.' + Name;
+                Result := DSS_GetAsPAnsiChar(ParentClass.Name + '.' + Name);
             end
-        else
-            Result := '';
-end;
-
-function DSSElement_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(DSSElement_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
 function DSSElement_Get_NumProperties(): Integer; CDECL;

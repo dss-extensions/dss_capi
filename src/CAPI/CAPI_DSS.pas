@@ -91,14 +91,9 @@ begin
     DSSPrime.DSSExecutive.DoClearCmd;
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_Version_AnsiString(): Ansistring; inline;
-begin
-    Result := VersionString + '; License Status: Open ';
-end;
-
 function DSS_Get_Version(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSS_Get_Version_AnsiString());
+    Result := DSS_GetAsPAnsiChar(VersionString + '; License Status: Open ');
 end;
 //------------------------------------------------------------------------------
 function DSS_Start(code: Integer): Boolean; CDECL;
@@ -176,14 +171,9 @@ begin
     Result := DSSPrime.NumUserClasses;
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_DataPath_AnsiString(): Ansistring; inline;
-begin
-    Result := DSSPrime.DataDirectory;
-end;
-
 function DSS_Get_DataPath(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSS_Get_DataPath_AnsiString());
+    Result := DSS_GetAsPAnsiChar(DSSPrime.DataDirectory);
 end;
 //------------------------------------------------------------------------------
 procedure DSS_Set_DataPath(const Value: PAnsiChar); CDECL;
@@ -198,14 +188,9 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_DefaultEditor_AnsiString(): Ansistring; inline;
-begin
-    Result := DSSGlobals.DefaultEditor;
-end;
-
 function DSS_Get_DefaultEditor(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSS_Get_DefaultEditor_AnsiString());
+    Result := DSS_GetAsPAnsiChar(DSSGlobals.DefaultEditor);
 end;
 //------------------------------------------------------------------------------
 function DSS_SetActiveClass(const ClassName: PAnsiChar): Integer; CDECL;

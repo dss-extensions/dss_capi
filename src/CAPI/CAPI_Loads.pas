@@ -262,24 +262,17 @@ begin
     DSSPrime.ActiveCircuit.ActiveCktElement := pLoad;
 end;
 //------------------------------------------------------------------------------
-function Loads_Get_Name_AnsiString(): Ansistring; inline;
+function Loads_Get_Name(): PAnsiChar; CDECL;
 var
     pLoad: TLoadObj;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then 
         Exit;
 
     pLoad := DSSPrime.ActiveCircuit.Loads.Active;
     if pLoad <> NIL then
-        Result := pLoad.Name
-    else
-        Result := '';  // signify no name
-end;
-
-function Loads_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Loads_Get_Name_AnsiString());
+        Result := DSS_GetAsPAnsiChar(pLoad.Name)
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Next(): Integer; CDECL;
@@ -477,19 +470,14 @@ begin
         Result := elem.LoadClass;
 end;
 //------------------------------------------------------------------------------
-function Loads_Get_CVRcurve_AnsiString(): Ansistring; inline;
+function Loads_Get_CVRcurve(): PAnsiChar; CDECL;
 var
     elem: TLoadObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveLoad;
     if elem <> NIL then
-        Result := elem.CVRshape;
-end;
-
-function Loads_Get_CVRcurve(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Loads_Get_CVRcurve_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.CVRshape);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_CVRvars(): Double; CDECL;
@@ -512,49 +500,34 @@ begin
         Result := elem.CVRwatts;
 end;
 //------------------------------------------------------------------------------
-function Loads_Get_daily_AnsiString(): Ansistring; inline;
-var
-    elem: TLoadObj;
-begin
-    Result := '';
-    elem := ActiveLoad;
-    if elem <> NIL then
-        Result := elem.DailyShape;
-end;
-
 function Loads_Get_daily(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Loads_Get_daily_AnsiString());
-end;
-//------------------------------------------------------------------------------
-function Loads_Get_duty_AnsiString(): Ansistring; inline;
 var
     elem: TLoadObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveLoad;
     if elem <> NIL then
-        Result := elem.DailyShape;
+        Result := DSS_GetAsPAnsiChar(elem.DailyShape);
 end;
-
+//------------------------------------------------------------------------------
 function Loads_Get_duty(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Loads_Get_duty_AnsiString());
-end;
-//------------------------------------------------------------------------------
-function Loads_Get_Growth_AnsiString(): Ansistring; inline;
 var
     elem: TLoadObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveLoad;
     if elem <> NIL then
-        Result := elem.GrowthShape;
+        Result := DSS_GetAsPAnsiChar(elem.DailyShape);
 end;
-
+//------------------------------------------------------------------------------
 function Loads_Get_Growth(): PAnsiChar; CDECL;
+var
+    elem: TLoadObj;
 begin
-    Result := DSS_GetAsPAnsiChar(Loads_Get_Growth_AnsiString());
+    Result := nil;
+    elem := ActiveLoad;
+    if elem <> NIL then
+        Result := DSS_GetAsPAnsiChar(elem.GrowthShape);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_IsDelta(): Boolean; CDECL;
@@ -667,19 +640,14 @@ begin
         Result := elem.Rneut;
 end;
 //------------------------------------------------------------------------------
-function Loads_Get_Spectrum_AnsiString(): Ansistring; inline;
+function Loads_Get_Spectrum(): PAnsiChar; CDECL;
 var
     elem: TLoadObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveLoad;
     if elem <> NIL then
-        Result := elem.Spectrum;
-end;
-
-function Loads_Get_Spectrum(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Loads_Get_Spectrum_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.Spectrum);
 end;
 //------------------------------------------------------------------------------
 function Loads_Get_Status(): Integer; CDECL;
@@ -758,20 +726,16 @@ begin
         Result := elem.Xneut;
 end;
 //------------------------------------------------------------------------------
-function Loads_Get_Yearly_AnsiString(): Ansistring; inline;
+function Loads_Get_Yearly(): PAnsiChar; CDECL;
 var
     elem: TLoadObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveLoad;
     if elem <> NIL then
-        Result := elem.YearlyShape;
+        Result := DSS_GetAsPAnsiChar(elem.YearlyShape);
 end;
 
-function Loads_Get_Yearly(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Loads_Get_Yearly_AnsiString());
-end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_AllocationFactor(Value: Double); CDECL;
 begin
@@ -1098,20 +1062,17 @@ begin
     end
 end;
 //------------------------------------------------------------------------------
-function Loads_Get_Bus1_AnsiString(): Ansistring; inline;
+function Loads_Get_Bus1(): PAnsiChar; CDECL;
 var
     pLoad: TLoadObj;
 begin
+    Result := nil;
     pLoad := ActiveLoad;
     if pLoad = NIL then
         exit;
-    Result := pLoad.GetBus(1);
+    Result := DSS_GetAsPAnsiChar(pLoad.GetBus(1));
 end;
 
-function Loads_Get_Bus1(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Loads_Get_Bus1_AnsiString());
-end;
 //------------------------------------------------------------------------------
 procedure Loads_Set_Bus1(const Value: PAnsiChar); CDECL;
 var

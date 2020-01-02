@@ -10,9 +10,7 @@ uses
 function Topology_Get_NumLoops(): Integer; CDECL;
 function Topology_Get_ActiveBranch(): Integer; CDECL;
 procedure Topology_Get_AllIsolatedBranches(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Topology_Get_AllIsolatedBranches_GR(); CDECL;
 procedure Topology_Get_AllLoopedPairs(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Topology_Get_AllLoopedPairs_GR(); CDECL;
 function Topology_Get_BackwardBranch(): Integer; CDECL;
 function Topology_Get_BranchName(): PAnsiChar; CDECL;
 function Topology_Get_First(): Integer; CDECL;
@@ -23,7 +21,6 @@ function Topology_Get_NumIsolatedBranches(): Integer; CDECL;
 function Topology_Get_ParallelBranch(): Integer; CDECL;
 procedure Topology_Set_BranchName(const Value: PAnsiChar); CDECL;
 procedure Topology_Get_AllIsolatedLoads(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Topology_Get_AllIsolatedLoads_GR(); CDECL;
 function Topology_Get_FirstLoad(): Integer; CDECL;
 function Topology_Get_NextLoad(): Integer; CDECL;
 function Topology_Get_NumIsolatedLoads(): Integer; CDECL;
@@ -132,13 +129,6 @@ begin
     end;
     SetLength(Result, 0);
 end;
-
-procedure Topology_Get_AllIsolatedBranches_GR(); CDECL;
-// Same as Topology_Get_AllIsolatedBranches but uses global result (GR) pointers
-begin
-    Topology_Get_AllIsolatedBranches(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 procedure Topology_Get_AllLoopedPairs(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
@@ -191,13 +181,6 @@ begin
     end;
     SetLength(Result, 0);
 end;
-
-procedure Topology_Get_AllLoopedPairs_GR(); CDECL;
-// Same as Topology_Get_AllLoopedPairs but uses global result (GR) pointers
-begin
-    Topology_Get_AllLoopedPairs(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function Topology_Get_BackwardBranch(): Integer; CDECL;
 var
@@ -215,24 +198,19 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function Topology_Get_BranchName_AnsiString(): Ansistring; inline;
+function Topology_Get_BranchName(): PAnsiChar; CDECL;
 var
     node: TCktTreeNode;
     elm: TDSSCktElement;
 begin
-    Result := '';
+    Result := nil;
     node := ActiveTreeNode;
     if assigned(node) then
     begin
         elm := node.CktObject;
         if assigned(elm) then
-            Result := elm.QualifiedName;
+            Result := DSS_GetAsPAnsiChar(elm.QualifiedName);
     end;
-end;
-
-function Topology_Get_BranchName(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Topology_Get_BranchName_AnsiString());
 end;
 //------------------------------------------------------------------------------
 function Topology_Get_First(): Integer; CDECL;
@@ -393,13 +371,6 @@ begin
     end;
     SetLength(Result, 0);
 end;
-
-procedure Topology_Get_AllIsolatedLoads_GR(); CDECL;
-// Same as Topology_Get_AllIsolatedLoads but uses global result (GR) pointers
-begin
-    Topology_Get_AllIsolatedLoads(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function Topology_Get_FirstLoad(): Integer; CDECL;
 var
@@ -461,24 +432,19 @@ begin
     Result := Topology_Get_ActiveBranch;
 end;
 //------------------------------------------------------------------------------
-function Topology_Get_BusName_AnsiString(): Ansistring; inline;
+function Topology_Get_BusName(): PAnsiChar; CDECL;
 var
     node: TCktTreeNode;
     elm: TDSSCktElement;
 begin
-    Result := '';
+    Result := nil;
     node := ActiveTreeNode;
     if assigned(node) then
     begin
         elm := node.CktObject;
         if assigned(elm) then
-            Result := elm.FirstBus;
+            Result := DSS_GetAsPAnsiChar(elm.FirstBus);
     end;
-end;
-
-function Topology_Get_BusName(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Topology_Get_BusName_AnsiString());
 end;
 //------------------------------------------------------------------------------
 procedure Topology_Set_BusName(const Value: PAnsiChar); CDECL;

@@ -59,20 +59,15 @@ uses
     DSSClass,
     DSSHelper;
 
-function LoadShapes_Get_Name_AnsiString(): Ansistring; inline;
+function LoadShapes_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TLoadshapeObj;
 begin
-    Result := '';
+    Result := nil;
     elem := DSSPrime.LoadShapeClass.GetActiveObj;
     if elem = NIL then
         Exit;
-    Result := elem.Name;
-end;
-
-function LoadShapes_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(LoadShapes_Get_Name_AnsiString());
+    Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 procedure LoadShapes_Set_Name(const Value: PAnsiChar); CDECL;

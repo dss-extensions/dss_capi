@@ -137,19 +137,14 @@ begin
         Result := elem.IsLocked;   // Fixed bug here
 end;
 //------------------------------------------------------------------------------
-function SwtControls_Get_Name_AnsiString(): Ansistring; inline;
+function SwtControls_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TSwtControlObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveSwtControl;
     if elem <> NIL then
-        Result := elem.Name;
-end;
-
-function SwtControls_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(SwtControls_Get_Name_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_Next(): Integer; CDECL;
@@ -177,19 +172,14 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function SwtControls_Get_SwitchedObj_AnsiString(): Ansistring; inline;
+function SwtControls_Get_SwitchedObj(): PAnsiChar; CDECL;
 var
     elem: TSwtControlObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveSwtControl;
     if elem <> NIL then
-        Result := elem.ElementName;
-end;
-
-function SwtControls_Get_SwitchedObj(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(SwtControls_Get_SwitchedObj_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.ElementName);
 end;
 //------------------------------------------------------------------------------
 function SwtControls_Get_SwitchedTerm(): Integer; CDECL;

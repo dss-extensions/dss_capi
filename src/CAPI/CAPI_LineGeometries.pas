@@ -84,23 +84,15 @@ begin
     Result := DSSPrime.LineGeometryClass.Next;
 end;
 //------------------------------------------------------------------------------
-function LineGeometries_Get_Name_AnsiString(): Ansistring; inline;
+function LineGeometries_Get_Name(): PAnsiChar; CDECL;
 var
     pLineGeometry: TLineGeometryObj;
-
 begin
-    Result := '';  // signify no name
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then Exit;
     pLineGeometry := DSSPrime.LineGeometryClass.GetActiveObj;
     if pLineGeometry <> NIL then
-    begin
-        Result := pLineGeometry.Name;
-    end;
-end;
-
-function LineGeometries_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(LineGeometries_Get_Name_AnsiString());
+        Result := DSS_GetAsPAnsiChar(pLineGeometry.Name);
 end;
 //------------------------------------------------------------------------------
 procedure LineGeometries_Set_Name(const Value: PAnsiChar); CDECL;

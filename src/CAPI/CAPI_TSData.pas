@@ -117,10 +117,9 @@ begin
         Result := DSSPrime.TSDataClass.Next;
 end;
 //------------------------------------------------------------------------------
-function TSData_Get_Name_AnsiString(): Ansistring; inline;
+function TSData_Get_Name(): PAnsiChar; CDECL;
 var
     pTSData: TTSDataObj;
-
 begin
     Result := '';  // signify no name
     if DSSPrime.ActiveCircuit <> NIL then
@@ -128,15 +127,9 @@ begin
         pTSData := DSSPrime.TSDataClass.GetActiveObj;
         if pTSData <> NIL then
         begin
-            Result := pTSData.Name;
+            Result := DSS_GetAsPAnsiChar(pTSData.Name);
         end;
     end;
-
-end;
-
-function TSData_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(TSData_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
 procedure TSData_Set_Name(const Value: PAnsiChar); CDECL;

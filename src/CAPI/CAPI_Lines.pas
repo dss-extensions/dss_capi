@@ -113,30 +113,20 @@ begin
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Lines, False);
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Bus1_AnsiString(): Ansistring; inline;
-begin
-    Result := '';
-    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
-        Exit;
-    Result := DSSPrime.ActiveCircuit.ActiveCktElement.GetBus(1);
-end;
-
 function Lines_Get_Bus1(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Lines_Get_Bus1_AnsiString());
-end;
-//------------------------------------------------------------------------------
-function Lines_Get_Bus2_AnsiString(): Ansistring; inline;
-begin
-    Result := '';
+    Result := nil;
     if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
         Exit;
-    Result := DSSPrime.ActiveCircuit.ActiveCktElement.GetBus(2);
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.ActiveCktElement.GetBus(1));
 end;
-
+//------------------------------------------------------------------------------
 function Lines_Get_Bus2(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Lines_Get_Bus2_AnsiString());
+    Result := nil;
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
+        Exit;
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.ActiveCktElement.GetBus(2));
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_First(): Integer; CDECL;
@@ -169,33 +159,23 @@ begin
     Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).Len;
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_LineCode_AnsiString(): Ansistring; inline;
-begin
-    Result := '';
-    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
-        Exit;
-    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).CondCode;
-end;
-
 function Lines_Get_LineCode(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Lines_Get_LineCode_AnsiString());
+    Result := nil;
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
+        Exit;
+    Result := DSS_GetAsPAnsiChar(TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).CondCode);
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Name_AnsiString(): Ansistring; inline;
+function Lines_Get_Name(): PAnsiChar; CDECL;
 var
     pLine: TDSSCktElement;
 begin
-    Result := '';  // signify no name
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then Exit;
     pLine := DSSPrime.ActiveCircuit.ActiveCktElement;
     if pLine = NIL then Exit;
-    Result := pLine.Name;
-end;
-
-function Lines_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Lines_Get_Name_AnsiString());
+    Result := DSS_GetAsPAnsiChar(pLine.Name);
 end;
 //------------------------------------------------------------------------------
 function Lines_Get_Next(): Integer; CDECL;
@@ -626,17 +606,12 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Geometry_AnsiString(): Ansistring; inline;
-begin
-    Result := '';
-    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
-        Exit;
-    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).GeometryCode;
-end;
-
 function Lines_Get_Geometry(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Lines_Get_Geometry_AnsiString());
+    Result := nil;
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
+        Exit;
+    Result := DSS_GetAsPAnsiChar(TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).GeometryCode);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Geometry(const Value: PAnsiChar); CDECL;
@@ -806,17 +781,12 @@ begin
         Result := DSSPrime.ActiveCircuit.Lines.ListSize;
 end;
 //------------------------------------------------------------------------------
-function Lines_Get_Spacing_AnsiString(): Ansistring; inline;
-begin
-    Result := '';
-    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
-        Exit;
-    Result := TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).SpacingCode;
-end;
-
 function Lines_Get_Spacing(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Lines_Get_Spacing_AnsiString());
+    Result := nil;
+    if (DSSPrime.ActiveCircuit = NIL) or (not IsLine(DSSPrime.ActiveCircuit.ActiveCktElement)) then
+        Exit;
+    Result := DSS_GetAsPAnsiChar(TLineObj(DSSPrime.ActiveCircuit.ActiveCktElement).SpacingCode);
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_Spacing(const Value: PAnsiChar); CDECL;

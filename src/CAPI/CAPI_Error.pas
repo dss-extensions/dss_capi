@@ -21,15 +21,10 @@ uses
     DSSClass,
     DSSHelper;
 
-function Error_Get_Description_AnsiString(): Ansistring; inline;
-begin
-    Result := DSSPrime.LastErrorMessage;
-    DSSPrime.LastErrorMessage := ''; // Reset after retrieving message
-end;
-
 function Error_Get_Description(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Error_Get_Description_AnsiString());
+    Result := DSS_GetAsPAnsiChar(DSSPrime.LastErrorMessage);
+    DSSPrime.LastErrorMessage := ''; // Reset after retrieving message
 end;
 //------------------------------------------------------------------------------
 function Error_Get_Number(): Integer; CDECL;

@@ -131,19 +131,14 @@ begin
         Result := elem.Totalkvar;
 end;
 //------------------------------------------------------------------------------
-function Capacitors_Get_Name_AnsiString(): Ansistring; inline;
+function Capacitors_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TCapacitorObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveCapacitor;
     if elem <> NIL then
-        Result := elem.Name;
-end;
-
-function Capacitors_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Capacitors_Get_Name_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_Next(): Integer; CDECL;

@@ -74,19 +74,14 @@ uses
     DSSClass,
     DSSHelper;
 
-function Bus_Get_Name_AnsiString(): Ansistring; inline;
+function Bus_Get_Name(): PAnsiChar; CDECL;
 begin
-    Result := '';
+    Result := nil;
 
     if (DSSPrime.ActiveCircuit <> NIL) then
         with DSSPrime.ActiveCircuit do
             if (ActiveBusIndex > 0) and (ActiveBusIndex <= Numbuses) then
-                Result := BusList.Get(ActiveBusIndex);
-end;
-
-function Bus_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Bus_Get_Name_AnsiString());
+                Result := DSS_GetAsPAnsiChar(BusList.Get(ActiveBusIndex));
 end;
 //------------------------------------------------------------------------------
 function Bus_Get_NumNodes(): Integer; CDECL;

@@ -106,21 +106,16 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Name_AnsiString(): Ansistring; inline;
+function GICSources_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TDSSCktElement;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.ActiveCircuit.ActiveCktElement;
     if elem <> NIL then
-        Result := elem.Name;
-end;
-
-function GICSources_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(GICSources_Get_Name_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 procedure GICSources_Set_Name(const Value: PAnsiChar); CDECL;
@@ -159,30 +154,20 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Bus1_AnsiString(): Ansistring; inline;
-begin
-    Result := '';
-    if DSSPrime.ActiveCircuit = NIL then
-        Exit;
-    Result := DSSPrime.ActiveCircuit.ActiveCktElement.GetBus(1);
-end;
-
 function GICSources_Get_Bus1(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(GICSources_Get_Bus1_AnsiString());
-end;
-//------------------------------------------------------------------------------
-function GICSources_Get_Bus2_AnsiString(): Ansistring; inline;
-begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then
         Exit;
-    Result := DSSPrime.ActiveCircuit.ActiveCktElement.GetBus(2);
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.ActiveCktElement.GetBus(1));
 end;
-
+//------------------------------------------------------------------------------
 function GICSources_Get_Bus2(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(GICSources_Get_Bus2_AnsiString());
+    Result := nil;
+    if DSSPrime.ActiveCircuit = NIL then
+        Exit;
+    Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.ActiveCktElement.GetBus(2));
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_EN(): Double; CDECL;

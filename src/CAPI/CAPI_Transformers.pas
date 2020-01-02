@@ -184,22 +184,17 @@ begin
         Result := elem.Mintap[elem.ActiveWinding];
 end;
 //------------------------------------------------------------------------------
-function Transformers_Get_Name_AnsiString(): Ansistring; inline;
+function Transformers_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TTransfObj;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         elem := DSSPrime.ActiveCircuit.Transformers.Active;
         if elem <> NIL then
-            Result := elem.Name;
+            Result := DSS_GetAsPAnsiChar(elem.Name);
     end;
-end;
-
-function Transformers_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Transformers_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Next(): Integer; CDECL;
@@ -287,19 +282,14 @@ begin
         Result := elem.ActiveWinding;
 end;
 //------------------------------------------------------------------------------
-function Transformers_Get_XfmrCode_AnsiString(): Ansistring; inline;
+function Transformers_Get_XfmrCode(): PAnsiChar; CDECL;
 var
     elem: TTransfObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveTransformer;
     if elem <> NIL then
-        Result := elem.XfmrCode;
-end;
-
-function Transformers_Get_XfmrCode(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Transformers_Get_XfmrCode_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.XfmrCode);
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_Xhl(): Double; CDECL;
@@ -542,22 +532,17 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function Transformers_Get_strWdgCurrents_AnsiString(): Ansistring; CDECL;
+function Transformers_Get_strWdgCurrents(): PAnsiChar; CDECL;
 var
     elem: TTransfObj;
 begin
     elem := ActiveTransformer;
     if elem <> NIL then
     begin
-        Result := elem.GetWindingCurrentsResult;
+        Result := DSS_GetAsPAnsiChar(elem.GetWindingCurrentsResult);
         Exit;
     end;
-    Result := '';
-end;
-
-function Transformers_Get_strWdgCurrents(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Transformers_Get_strWdgCurrents_AnsiString());
+    Result := nil;
 end;
 //------------------------------------------------------------------------------
 function Transformers_Get_CoreType(): Integer; CDECL;

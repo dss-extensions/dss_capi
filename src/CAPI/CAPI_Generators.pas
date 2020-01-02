@@ -89,28 +89,17 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function Generators_Get_Name_AnsiString(): Ansistring; inline;
+function Generators_Get_Name(): PAnsiChar; CDECL;
 var
     pGen: TGeneratorObj;
-
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         pGen := DSSPrime.ActiveCircuit.Generators.Active;
         if pGen <> NIL then
-        begin
-            Result := pGen.Name;
-        end
-        else
-            Result := '';  // signify no name
+            Result := DSS_GetAsPAnsiChar(pGen.Name);
     end;
-
-end;
-
-function Generators_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Generators_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Next(): Integer; CDECL;

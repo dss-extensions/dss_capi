@@ -64,26 +64,21 @@ begin
         Result := DSSPrime.XYCurveClass.First;
 end;
 //------------------------------------------------------------------------------
-function XYCurves_Get_Name_AnsiString(): Ansistring; inline;
+function XYCurves_Get_Name(): PAnsiChar; CDECL;
 var
     pXYCurve: TXYCurveObj;
 
 begin
-    Result := '';  // signify no name
+    Result := nil;
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         pXYCurve := DSSPrime.XYCurveClass.GetActiveObj;
         if pXYCurve <> NIL then
         begin
-            Result := pXYCurve.Name;
+            Result := DSS_GetAsPAnsiChar(pXYCurve.Name);
         end;
     end;
 
-end;
-
-function XYCurves_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(XYCurves_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
 function XYCurves_Get_Next(): Integer; CDECL;

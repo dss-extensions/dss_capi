@@ -197,28 +197,17 @@ begin
     DSSPrime.ActiveCircuit.ActiveCktElement := pPVSystem;
 end;
 //------------------------------------------------------------------------------
-function PVSystems_Get_Name_AnsiString(): Ansistring; inline;
+function PVSystems_Get_Name(): PAnsiChar; CDECL;
 var
     pPVSystem: TPVSystemObj;
-
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         pPVSystem := DSSPrime.ActiveCircuit.PVSystems.Active;
         if pPVSystem <> NIL then
-        begin
-            Result := pPVSystem.Name;
-        end
-        else
-            Result := '';  // signify no name
+            Result := DSS_GetAsPAnsiChar(pPVSystem.Name);
     end;
-
-end;
-
-function PVSystems_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(PVSystems_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
 procedure PVSystems_Set_Name(const Value: PAnsiChar); CDECL;

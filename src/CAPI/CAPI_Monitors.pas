@@ -111,23 +111,17 @@ begin
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.Monitors, False);
 end;
 //------------------------------------------------------------------------------
-function Monitors_Get_FileName_AnsiString(): Ansistring; inline;
+function Monitors_Get_FileName(): PAnsiChar; CDECL;
 var
     pMon: TMonitorObj;
-
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then
         Exit;
     pMon := DSSPrime.ActiveCircuit.Monitors.Active;
     if pMon = NIL then
         Exit;
-    Result := PMon.CSVFileName
-end;
-
-function Monitors_Get_FileName(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Monitors_Get_FileName_AnsiString());
+    Result := DSS_GetAsPAnsiChar(PMon.CSVFileName)
 end;
 //------------------------------------------------------------------------------
 function Monitors_Get_First(): Integer; CDECL;
@@ -165,23 +159,17 @@ begin
     Result := PMon.Mode
 end;
 //------------------------------------------------------------------------------
-function Monitors_Get_Name_AnsiString(): Ansistring; inline;
+function Monitors_Get_Name(): PAnsiChar; CDECL;
 var
     pMon: TMonitorObj;
-
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then
         Exit;
     pMon := DSSPrime.ActiveCircuit.Monitors.Active;
     if pMon = NIL then
         Exit;
-    Result := PMon.Name
-end;
-
-function Monitors_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Monitors_Get_Name_AnsiString());
+    Result := DSS_GetAsPAnsiChar(PMon.Name)
 end;
 //------------------------------------------------------------------------------
 function Monitors_Get_Next(): Integer; CDECL;
@@ -624,21 +612,17 @@ begin
     Result := Header.RecordSize;
 end;
 //------------------------------------------------------------------------------
-function Monitors_Get_Element_AnsiString(): Ansistring; inline;
+function Monitors_Get_Element(): PAnsiChar; CDECL;
 var
     pMon: TMonitorObj;
 begin
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then
         Exit;
     pMon := DSSPrime.ActiveCircuit.Monitors.Active;
     if pMon = NIL then
         Exit;
-    Result := pMon.ElementName;
-end;
-
-function Monitors_Get_Element(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Monitors_Get_Element_AnsiString());
+    Result := DSS_GetAsPAnsiChar(pMon.ElementName);
 end;
 //------------------------------------------------------------------------------
 procedure Monitors_Set_Element(const Value: PAnsiChar); CDECL;

@@ -158,7 +158,6 @@ begin
 end;
 
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
 procedure CalcSeqVoltages(pActiveElement: TDSSCktElement; V012: pComplexArray);
 {Assumes V012 is properly allocated before call.}
@@ -210,16 +209,12 @@ begin
     end;
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
 function IsPDElement: Boolean;
 begin
     Result := ((DSSPrime.ActiveCircuit.ActiveCktElement.DSSObjType and 3) = PD_ELEMENT)
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
-
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
 procedure CktElement_Get_BusNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
@@ -243,7 +238,6 @@ begin
 
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 procedure CktElement_Get_BusNames_GR(); CDECL;
 // Same as CktElement_Get_BusNames but uses global result (GR) pointers
 begin
@@ -251,22 +245,15 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function CktElement_Get_Name_AnsiString(): Ansistring; inline;
+function CktElement_Get_Name(): PAnsiChar; CDECL;
 begin
     if DSSPrime.ActiveCircuit <> NIL then
         with DSSPrime.ActiveCircuit.ActiveCktElement do
         begin
-            Result := ParentClass.Name + '.' + Name;
+            Result := DSS_GetAsPAnsiChar(ParentClass.Name + '.' + Name);
         end
     else
-        Result := '';
-end;
-
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
-
-function CktElement_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(CktElement_Get_Name_AnsiString());
+        Result := nil;
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_NumConductors(): Integer; CDECL;
@@ -276,8 +263,6 @@ begin
     else
         Result := 0;
 end;
-
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
 function CktElement_Get_NumPhases(): Integer; CDECL;
 begin
@@ -286,8 +271,6 @@ begin
     else
         Result := 0;
 end;
-
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
 function CktElement_Get_NumTerminals(): Integer; CDECL;
 begin
@@ -296,8 +279,6 @@ begin
     else
         Result := 0;
 end;
-
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
 procedure CktElement_Set_BusNames(ValuePtr: PPAnsiChar; ValueCount: Integer); CDECL;
 var
@@ -322,9 +303,6 @@ begin
         end;
     end;
 end;
-
-
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
 procedure CktElement_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
@@ -356,7 +334,6 @@ begin
 
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 procedure CktElement_Get_Currents_GR(); CDECL;
 // Same as CktElement_Get_Currents but uses global result (GR) pointers
 begin
@@ -402,7 +379,6 @@ begin
 
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 procedure CktElement_Get_Voltages_GR(); CDECL;
 // Same as CktElement_Get_Voltages but uses global result (GR) pointers
 begin
@@ -458,7 +434,6 @@ begin
     Result[0] := 0;
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 procedure CktElement_Get_Losses_GR(); CDECL;
 // Same as CktElement_Get_Losses but uses global result (GR) pointers
 begin
@@ -482,7 +457,6 @@ begin
     Result := 0.0;
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
 procedure CktElement_Get_PhaseLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 // Returns Phase losses in kW, kVar
@@ -518,7 +492,6 @@ begin
 
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 procedure CktElement_Get_PhaseLosses_GR(); CDECL;
 // Same as CktElement_Get_PhaseLosses but uses global result (GR) pointers
 begin
@@ -548,7 +521,6 @@ begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 procedure CktElement_Get_Powers_GR(); CDECL;
 // Same as CktElement_Get_Powers but uses global result (GR) pointers
 begin
@@ -606,7 +578,6 @@ begin
 
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 procedure CktElement_Get_SeqCurrents_GR(); CDECL;
 // Same as CktElement_Get_SeqCurrents but uses global result (GR) pointers
 begin
@@ -698,7 +669,6 @@ begin
 
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 procedure CktElement_Get_SeqPowers_GR(); CDECL;
 // Same as CktElement_Get_SeqPowers but uses global result (GR) pointers
 begin
@@ -759,7 +729,6 @@ begin
 
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 procedure CktElement_Get_SeqVoltages_GR(); CDECL;
 // Same as CktElement_Get_SeqVoltages but uses global result (GR) pointers
 begin
@@ -783,7 +752,6 @@ begin
 
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
 procedure CktElement_Open(Term, Phs: Integer); CDECL;
 begin
@@ -800,7 +768,6 @@ begin
 
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
 procedure CktElement_Set_EmergAmps(Value: Double); CDECL;
 begin
@@ -816,7 +783,6 @@ begin
         end;
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
 procedure CktElement_Set_Enabled(Value: Boolean); CDECL;
 begin
@@ -824,7 +790,6 @@ begin
         DSSPrime.ActiveCircuit.ActiveCktElement.Enabled := Value;
 end;
 
-{ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -}
 //------------------------------------------------------------------------------
 procedure CktElement_Set_NormalAmps(Value: Double); CDECL;
 begin
@@ -1007,30 +972,20 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function CktElement_Get_DisplayName_AnsiString(): Ansistring; inline;
-begin
-    if DSSPrime.ActiveCircuit <> NIL then
-        Result := DSSPrime.ActiveCircuit.ActiveCktElement.DisplayName
-    else
-        Result := '';
-end;
-
 function CktElement_Get_DisplayName(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(CktElement_Get_DisplayName_AnsiString());
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.ActiveCktElement.DisplayName)
+    else
+        Result := nil;
 end;
 //------------------------------------------------------------------------------
-function CktElement_Get_GUID_AnsiString(): Ansistring; inline;
-begin
-    if DSSPrime.ActiveCircuit <> NIL then
-        Result := DSSPrime.ActiveCircuit.ActiveCktElement.ID
-    else
-        Result := '';
-end;
-
 function CktElement_Get_GUID(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(CktElement_Get_GUID_AnsiString());
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.ActiveCktElement.ID)
+    else
+        Result := nil;
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_Handle(): Integer; CDECL;
@@ -1047,11 +1002,11 @@ begin
         DSSPrime.ActiveCircuit.ActiveCktElement.DisplayName := Value;
 end;
 //------------------------------------------------------------------------------
-function CktElement_Get_Controller_AnsiString(idx: Integer): Ansistring; inline;
+function CktElement_Get_Controller(idx: Integer): PAnsiChar; CDECL;
 var
     ctrl: TDSSCktElement;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit <> NIL then
         with DSSPrime.ActiveCircuit do
         begin
@@ -1059,34 +1014,24 @@ begin
             begin
                 ctrl := ActiveCktElement.ControlElementList.Get(idx);
                 if ctrl <> NIL then
-                    Result := Format('%s.%s', [ctrl.ParentClass.Name, ctrl.Name]);
+                    Result := DSS_GetAsPAnsiChar(Format('%s.%s', [ctrl.ParentClass.Name, ctrl.Name]));
             end;
         end;
 end;
-
-function CktElement_Get_Controller(idx: Integer): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(CktElement_Get_Controller_AnsiString(idx));
-end;
 //------------------------------------------------------------------------------
-function CktElement_Get_EnergyMeter_AnsiString(): Ansistring; inline;
+function CktElement_Get_EnergyMeter(): PAnsiChar; CDECL;
 var
     pd: TPDElement;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         if DSSPrime.ActiveCircuit.ActiveCktElement.HasEnergyMeter then
         begin
             pd := DSSPrime.ActiveCircuit.ActiveCktElement as TPDElement;
-            Result := pd.MeterObj.Name;
+            Result := DSS_GetAsPAnsiChar(pd.MeterObj.Name);
         end;
     end;
-end;
-
-function CktElement_Get_EnergyMeter(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(CktElement_Get_EnergyMeter_AnsiString());
 end;
 //------------------------------------------------------------------------------
 function CktElement_Get_HasVoltControl(): Boolean; CDECL;

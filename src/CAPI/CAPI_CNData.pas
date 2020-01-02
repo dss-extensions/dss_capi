@@ -152,26 +152,19 @@ begin
         Result := DSSPrime.CNDataClass.Next;
 end;
 //------------------------------------------------------------------------------
-function CNData_Get_Name_AnsiString(): Ansistring; inline;
+function CNData_Get_Name(): PAnsiChar; CDECL;
 var
     pCNData: TCNDataObj;
-
 begin
-    Result := '';  // signify no name
+    Result := nil;  // signify no name
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         pCNData := DSSPrime.CNDataClass.GetActiveObj;
         if pCNData <> NIL then
         begin
-            Result := pCNData.Name;
+            Result := DSS_GetAsPAnsiChar(pCNData.Name);
         end;
     end;
-
-end;
-
-function CNData_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(CNData_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
 procedure CNData_Set_Name(const Value: PAnsiChar); CDECL;

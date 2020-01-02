@@ -66,26 +66,17 @@ begin
         Result := DSSPrime.LineSpacingClass.Next;
 end;
 //------------------------------------------------------------------------------
-function LineSpacings_Get_Name_AnsiString(): Ansistring; inline;
+function LineSpacings_Get_Name(): PAnsiChar; CDECL;
 var
     pLineSpacing: TLineSpacingObj;
-
 begin
-    Result := '';  // signify no name
+    Result := nil;
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineSpacing := DSSPrime.LineSpacingClass.GetActiveObj;
         if pLineSpacing <> NIL then
-        begin
-            Result := pLineSpacing.Name;
-        end;
+            Result := DSS_GetAsPAnsiChar(pLineSpacing.Name);
     end;
-
-end;
-
-function LineSpacings_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(LineSpacings_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Set_Name(const Value: PAnsiChar); CDECL;

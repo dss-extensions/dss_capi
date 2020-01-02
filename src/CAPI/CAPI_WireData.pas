@@ -124,26 +124,21 @@ begin
         Result := DSSPrime.WireDataClass.Next;
 end;
 //------------------------------------------------------------------------------
-function WireData_Get_Name_AnsiString(): Ansistring; inline;
+function WireData_Get_Name(): PAnsiChar; CDECL;
 var
     pWireData: TWireDataObj;
 
 begin
-    Result := '';  // signify no name
+    Result := nil;  // signify no name
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         pWireData := DSSPrime.WireDataClass.GetActiveObj;
         if pWireData <> NIL then
         begin
-            Result := pWireData.Name;
+            Result := DSS_GetAsPAnsiChar(pWireData.Name);
         end;
     end;
 
-end;
-
-function WireData_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(WireData_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
 procedure WireData_Set_Name(const Value: PAnsiChar); CDECL;

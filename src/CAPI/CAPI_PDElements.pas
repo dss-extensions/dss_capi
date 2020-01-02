@@ -176,11 +176,11 @@ begin
         end;
 end;
 //------------------------------------------------------------------------------
-function PDElements_Get_Name_AnsiString(): Ansistring; inline;
+function PDElements_Get_Name(): PAnsiChar; CDECL;
 var
     ActivePDElement: TPDElement;
 begin
-    Result := '';   // return null if not a PD element
+    Result := nil;   // return null if not a PD element
     if Assigned(DSSPrime.ActiveCircuit) then
         with DSSPrime.ActiveCircuit do
         begin
@@ -188,14 +188,9 @@ begin
             begin
                 ActivePDElement := ActiveCktelement as TPDElement;
                 with ActivePDElement do
-                    Result := Format('%s.%s', [Parentclass.Name, Name]);  // full name
+                    Result := DSS_GetAsPAnsiChar(Format('%s.%s', [Parentclass.Name, Name]));  // full name
             end;
         end;
-end;
-
-function PDElements_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(PDElements_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
 procedure PDElements_Set_Name(const Value: PAnsiChar); CDECL;

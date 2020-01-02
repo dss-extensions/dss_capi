@@ -198,19 +198,14 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function Reactors_Get_Name_AnsiString(): Ansistring; inline;
+function Reactors_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TReactorObj;
 begin
-    Result := '';
+    Result := nil;
     if ActiveReactor(elem) = NIL then
         exit;
-    Result := elem.Name;
-end;
-
-function Reactors_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Reactors_Get_Name_AnsiString());
+    Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 procedure Reactors_Set_Name(const Value: PAnsiChar); CDECL;
@@ -260,62 +255,44 @@ begin
         Result := DSSPrime.ActiveCircuit.Reactors.ListSize;
 end;
 //------------------------------------------------------------------------------
-function Reactors_Get_Bus1_AnsiString(): Ansistring; inline;
-var
-    pReactor: TReactorObj;
-begin
-    if ActiveReactor(pReactor) = NIL then
-        exit;
-    Result := pReactor.GetBus(1);
-end;
-
 function Reactors_Get_Bus1(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Reactors_Get_Bus1_AnsiString());
-end;
-//------------------------------------------------------------------------------
-function Reactors_Get_Bus2_AnsiString(): Ansistring; inline;
 var
     pReactor: TReactorObj;
 begin
+    Result := nil;
     if ActiveReactor(pReactor) = NIL then
         exit;
-    Result := pReactor.GetBus(2);
+    Result := DSS_GetAsPAnsiChar(pReactor.GetBus(1));
 end;
-
+//------------------------------------------------------------------------------
 function Reactors_Get_Bus2(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Reactors_Get_Bus2_AnsiString());
-end;
-//------------------------------------------------------------------------------
-function Reactors_Get_LCurve_AnsiString(): Ansistring; inline;
 var
     pReactor: TReactorObj;
 begin
-    Result := '';
+    Result := nil;
     if ActiveReactor(pReactor) = NIL then
         exit;
-    Result := pReactor.LCurve;
+    Result := DSS_GetAsPAnsiChar(pReactor.GetBus(2));
 end;
-
+//------------------------------------------------------------------------------
 function Reactors_Get_LCurve(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Reactors_Get_LCurve_AnsiString());
-end;
-//------------------------------------------------------------------------------
-function Reactors_Get_RCurve_AnsiString(): Ansistring; inline;
 var
     pReactor: TReactorObj;
 begin
-    Result := '';
+    Result := nil;
     if ActiveReactor(pReactor) = NIL then
         exit;
-    Result := pReactor.RCurve;
+    Result := DSS_GetAsPAnsiChar(pReactor.LCurve);
 end;
-
+//------------------------------------------------------------------------------
 function Reactors_Get_RCurve(): PAnsiChar; CDECL;
+var
+    pReactor: TReactorObj;
 begin
-    Result := DSS_GetAsPAnsiChar(Reactors_Get_RCurve_AnsiString());
+    Result := nil;
+    if ActiveReactor(pReactor) = NIL then
+        exit;
+    Result := DSS_GetAsPAnsiChar(pReactor.RCurve);
 end;
 //------------------------------------------------------------------------------
 function Reactors_Get_Parallel(): Boolean; CDECL;

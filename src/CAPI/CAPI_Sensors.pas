@@ -227,19 +227,14 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function Sensors_Get_MeteredElement_AnsiString(): Ansistring; inline;
+function Sensors_Get_MeteredElement(): PAnsiChar; CDECL;
 var
     elem: TSensorObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveSensor;
     if elem <> NIL then
-        Result := elem.ElementName;
-end;
-
-function Sensors_Get_MeteredElement(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Sensors_Get_MeteredElement_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.ElementName);
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_MeteredTerminal(): Integer; CDECL;
@@ -252,19 +247,14 @@ begin
         Result := elem.MeteredTerminal;
 end;
 //------------------------------------------------------------------------------
-function Sensors_Get_Name_AnsiString(): Ansistring; inline;
+function Sensors_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TSensorObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveSensor;
     if elem <> NIL then
-        Result := elem.Name;
-end;
-
-function Sensors_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Sensors_Get_Name_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_Next(): Integer; CDECL;

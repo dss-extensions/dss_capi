@@ -100,17 +100,12 @@ uses
     KLUSolve,
     DSSHelper;
 
-function Circuit_Get_Name_AnsiString(): Ansistring; inline;
-begin
-    if DSSPrime.ActiveCircuit <> NIL then
-        Result := DSSPrime.ActiveCircuit.Name
-    else
-        Result := '';
-end;
-
 function Circuit_Get_Name(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Circuit_Get_Name_AnsiString());
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.Name)
+    else
+        Result := nil;
 end;
 //------------------------------------------------------------------------------
 function Circuit_Get_NumBuses(): Integer; CDECL;

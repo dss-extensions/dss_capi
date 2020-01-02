@@ -220,34 +220,24 @@ begin
         Result := elem.MaxTapChange;
 end;
 //------------------------------------------------------------------------------
-function RegControls_Get_MonitoredBus_AnsiString(): Ansistring; inline;
+function RegControls_Get_MonitoredBus(): PAnsiChar; CDECL;
 var
     elem: TRegControlObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveRegControl;
     if elem <> NIL then
-        Result := elem.ControlledBusName;
-end;
-
-function RegControls_Get_MonitoredBus(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(RegControls_Get_MonitoredBus_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.ControlledBusName);
 end;
 //------------------------------------------------------------------------------
-function RegControls_Get_Name_AnsiString(): Ansistring; inline;
+function RegControls_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TRegControlObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveRegControl;
     if elem <> NIL then
-        Result := elem.Name;
-end;
-
-function RegControls_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(RegControls_Get_Name_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_Next(): Integer; CDECL;
@@ -256,23 +246,19 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if DSSPrime.ActiveCircuit <> NIL then
-    begin
-        lst := DSSPrime.ActiveCircuit.RegControls;
-        elem := lst.Next;
-        if elem <> NIL then
+    if DSSPrime.ActiveCircuit = NIL then Exit;
+    lst := DSSPrime.ActiveCircuit.RegControls;
+    elem := lst.Next;
+    if elem = NIL then Exit;
+    repeat
+        if elem.Enabled then
         begin
-            repeat
-                if elem.Enabled then
-                begin
-                    DSSPrime.ActiveCircuit.ActiveCktElement := elem;
-                    Result := lst.ActiveIndex;
-                end
-                else
-                    elem := lst.Next;
-            until (Result > 0) or (elem = NIL);
+            DSSPrime.ActiveCircuit.ActiveCktElement := elem;
+            Result := lst.ActiveIndex;
         end
-    end;
+        else
+            elem := lst.Next;
+    until (Result > 0) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_PTratio(): Double; CDECL;
@@ -345,19 +331,14 @@ begin
         Result := elem.TrWinding;  // has the taps
 end;
 //------------------------------------------------------------------------------
-function RegControls_Get_Transformer_AnsiString(): Ansistring; inline;
+function RegControls_Get_Transformer(): PAnsiChar; CDECL;
 var
     elem: TRegControlObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveRegControl;
     if elem <> NIL then
-        Result := elem.Transformer.Name;
-end;
-
-function RegControls_Get_Transformer(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(RegControls_Get_Transformer_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.Transformer.Name);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_VoltageLimit(): Double; CDECL;
@@ -532,7 +513,6 @@ begin
     begin
         elem.Reset;
     end;
-
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_idx(): Integer; CDECL;

@@ -86,20 +86,15 @@ begin
         until (Result = 1) or (pElem = NIL);
 end;
 //------------------------------------------------------------------------------
-function Relays_Get_Name_AnsiString(): Ansistring; inline;
+function Relays_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TRelayObj;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then Exit;
     elem := DSSPrime.ActiveCircuit.Relays.Active;
     if elem <> NIL then
-        Result := elem.Name;
-end;
-
-function Relays_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Relays_Get_Name_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 function Relays_Get_Next(): Integer; CDECL;
@@ -139,21 +134,16 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function Relays_Get_MonitoredObj_AnsiString(): Ansistring; inline;
+function Relays_Get_MonitoredObj(): PAnsiChar; CDECL;
 var
     elem: TRelayObj;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.ActiveCircuit.Relays.Active;
     if elem <> NIL then
-        Result := elem.MonitoredElementName;
-end;
-
-function Relays_Get_MonitoredObj(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Relays_Get_MonitoredObj_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.MonitoredElementName);
 end;
 //------------------------------------------------------------------------------
 procedure Relays_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
@@ -179,21 +169,16 @@ begin
         Result := elem.MonitoredElementTerminal;
 end;
 //------------------------------------------------------------------------------
-function Relays_Get_SwitchedObj_AnsiString(): Ansistring; inline;
+function Relays_Get_SwitchedObj(): PAnsiChar; CDECL;
 var
     elem: TRelayObj;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.ActiveCircuit.Relays.Active;
     if elem <> NIL then
-        Result := elem.ElementName;
-end;
-
-function Relays_Get_SwitchedObj(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Relays_Get_SwitchedObj_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.ElementName);
 end;
 //------------------------------------------------------------------------------
 procedure Relays_Set_MonitoredTerm(Value: Integer); CDECL;

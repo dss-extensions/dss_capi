@@ -57,7 +57,6 @@ function Solution_Get_DefaultYearly(): PAnsiChar; CDECL;
 procedure Solution_Set_DefaultDaily(const Value: PAnsiChar); CDECL;
 procedure Solution_Set_DefaultYearly(const Value: PAnsiChar); CDECL;
 procedure Solution_Get_EventLog(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Solution_Get_EventLog_GR(); CDECL;
 function Solution_Get_dblHour(): Double; CDECL;
 procedure Solution_Set_dblHour(Value: Double); CDECL;
 procedure Solution_Set_StepsizeHr(Value: Double); CDECL;
@@ -105,9 +104,7 @@ procedure Solution_Get_Laplacian_GR(); CDECL;
 procedure Solution_Get_BusLevels(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
 procedure Solution_Get_BusLevels_GR(); CDECL;
 procedure Solution_Get_IncMatrixRows(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Solution_Get_IncMatrixRows_GR(); CDECL;
 procedure Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
-procedure Solution_Get_IncMatrixCols_GR(); CDECL;
 
 implementation
 
@@ -302,17 +299,12 @@ begin
         DSSPrime.ActiveCircuit.Solution.Solve;
 end;
 //------------------------------------------------------------------------------
-function Solution_Get_ModeID_AnsiString(): Ansistring; inline;
-begin
-    if DSSPrime.ActiveCircuit <> NIL then
-        Result := GetSolutionModeID(DSSPrime)
-    else
-        Result := '';
-end;
-
 function Solution_Get_ModeID(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Solution_Get_ModeID_AnsiString());
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSS_GetAsPAnsiChar(GetSolutionModeID(DSSPrime))
+    else
+        Result := nil;
 end;
 //------------------------------------------------------------------------------
 function Solution_Get_LoadModel(): Integer; CDECL;
@@ -335,17 +327,12 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-function Solution_Get_LDCurve_AnsiString(): Ansistring; inline;
-begin
-    if DSSPrime.ActiveCircuit <> NIL then
-        Result := DSSPrime.ActiveCircuit.LoadDurCurve
-    else
-        Result := '';
-end;
-
 function Solution_Get_LDCurve(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Solution_Get_LDCurve_AnsiString());
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.LoadDurCurve)
+    else
+        Result := nil;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_LDCurve(const Value: PAnsiChar); CDECL;
@@ -484,30 +471,20 @@ begin
         DSSPrime.ActiveCircuit.GenMultiplier := Value;
 end;
 //------------------------------------------------------------------------------
-function Solution_Get_DefaultDaily_AnsiString(): Ansistring; inline;
-begin
-    if DSSPrime.ActiveCircuit <> NIL then
-        Result := DSSPrime.ActiveCircuit.DefaultDailyShapeObj.Name
-    else
-        Result := '';
-end;
-
 function Solution_Get_DefaultDaily(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Solution_Get_DefaultDaily_AnsiString());
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.DefaultDailyShapeObj.Name)
+    else
+        Result := nil;
 end;
 //------------------------------------------------------------------------------
-function Solution_Get_DefaultYearly_AnsiString(): Ansistring; inline;
-begin
-    if DSSPrime.ActiveCircuit <> NIL then
-        Result := DSSPrime.ActiveCircuit.DefaultYearlyShapeObj.Name
-    else
-        Result := '';
-end;
-
 function Solution_Get_DefaultYearly(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Solution_Get_DefaultYearly_AnsiString());
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.DefaultYearlyShapeObj.Name)
+    else
+        Result := nil;
 end;
 //------------------------------------------------------------------------------
 procedure Solution_Set_DefaultDaily(const Value: PAnsiChar); CDECL;
@@ -550,13 +527,6 @@ begin
     end;
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
 end;
-
-procedure Solution_Get_EventLog_GR(); CDECL;
-// Same as Solution_Get_EventLog but uses global result (GR) pointers
-begin
-    Solution_Get_EventLog(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 function Solution_Get_dblHour(): Double; CDECL;
 begin
@@ -1017,13 +987,6 @@ begin
     end;
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
 end;
-
-procedure Solution_Get_IncMatrixRows_GR(); CDECL;
-// Same as Solution_Get_IncMatrixRows but uses global result (GR) pointers
-begin
-    Solution_Get_IncMatrixRows(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 procedure Solution_Get_IncMatrixCols(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
@@ -1059,12 +1022,5 @@ begin
     end;
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
 end;
-
-procedure Solution_Get_IncMatrixCols_GR(); CDECL;
-// Same as Solution_Get_IncMatrixCols but uses global result (GR) pointers
-begin
-    Solution_Get_IncMatrixCols(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
-end;
-
 //------------------------------------------------------------------------------
 end.

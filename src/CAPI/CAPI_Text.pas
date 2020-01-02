@@ -21,17 +21,9 @@ uses
     DSSClass,
     DSSHelper;
 
-const
-    nothing: Ansistring = #0#0;
-
-function Text_Get_Command_AnsiString(): Ansistring; inline;
-begin
-    Result := DSSPrime.DSSExecutive.Command;
-end;
-
 function Text_Get_Command(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Text_Get_Command_AnsiString());
+    Result := DSS_GetAsPAnsiChar(DSSPrime.DSSExecutive.Command);
 end;
 //------------------------------------------------------------------------------
 procedure Text_Set_Command(const Value: PAnsiChar); CDECL;
@@ -40,24 +32,18 @@ begin
     DSSPrime.DSSExecutive.Command := Value;  {Convert to String}
 end;
 //------------------------------------------------------------------------------
-function Text_Get_Result_AnsiString(): Ansistring; inline;
+function Text_Get_Result(): PAnsiChar; CDECL;
 begin
     if Length(DSSPrime.GlobalResult) < 1 then
-        Result := nothing
+        Result := nil
     else
-        Result := DSSPrime.GlobalResult;
+        Result := DSS_GetAsPAnsiChar(DSSPrime.GlobalResult);
     {****}
     {
       Need to implement a protocol for determining whether to go get the
       result from a file or to issue another DSS command to get the value
       from operations where the result is voluminous.
     }
-
-end;
-
-function Text_Get_Result(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Text_Get_Result_AnsiString());
 end;
 //------------------------------------------------------------------------------
 end.

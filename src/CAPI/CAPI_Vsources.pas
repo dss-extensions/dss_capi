@@ -100,20 +100,15 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function Vsources_Get_Name_AnsiString(): Ansistring; inline;
+function Vsources_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TDSSCktElement;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then Exit;
     elem := DSSPrime.ActiveCircuit.ActiveCktElement;
     if elem <> NIL then
-        Result := elem.Name;
-end;
-
-function Vsources_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Vsources_Get_Name_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 procedure Vsources_Set_Name(const Value: PAnsiChar); CDECL;

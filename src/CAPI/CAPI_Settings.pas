@@ -71,7 +71,7 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-function Settings_Get_AutoBusList_AnsiString(): Ansistring; inline;
+function Settings_Get_AutoBusList(): PAnsiChar; CDECL;
 var
     i: Integer;
 begin
@@ -82,17 +82,11 @@ begin
         begin
             for i := 1 to ListSize do
                 AppendGlobalResult(DSSPrime, Get(i));
-            Result := DSSPrime.GlobalResult;
+            Result := DSS_GetAsPAnsiChar(DSSPrime.GlobalResult);
         end
     end
     else
-        Result := '';
-
-end;
-
-function Settings_Get_AutoBusList(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Settings_Get_AutoBusList_AnsiString());
+        Result := nil;
 end;
 //------------------------------------------------------------------------------
 function Settings_Get_CktModel(): Integer; CDECL;
@@ -433,17 +427,12 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-function Settings_Get_PriceCurve_AnsiString(): Ansistring; inline;
-begin
-    if DSSPrime.ActiveCircuit <> NIL then
-        Result := DSSPrime.ActiveCircuit.PriceCurve
-    else
-        Result := '';
-end;
-
 function Settings_Get_PriceCurve(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Settings_Get_PriceCurve_AnsiString());
+    if DSSPrime.ActiveCircuit <> NIL then
+        Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveCircuit.PriceCurve)
+    else
+        Result := nil;
 end;
 //------------------------------------------------------------------------------
 function Settings_Get_PriceSignal(): Double; CDECL;

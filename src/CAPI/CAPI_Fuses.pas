@@ -96,21 +96,16 @@ begin
         until (Result = 1) or (pElem = NIL);
 end;
 //------------------------------------------------------------------------------
-function Fuses_Get_Name_AnsiString(): Ansistring; inline;
+function Fuses_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TFuseObj;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.ActiveCircuit.Fuses.Active;
     if elem <> NIL then
-        Result := elem.Name;
-end;
-
-function Fuses_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Fuses_Get_Name_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_Next(): Integer; CDECL;
@@ -149,21 +144,16 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function Fuses_Get_MonitoredObj_AnsiString(): Ansistring; inline;
+function Fuses_Get_MonitoredObj(): PAnsiChar; CDECL;
 var
     elem: TFuseObj;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.ActiveCircuit.Fuses.Active;
     if elem <> NIL then
-        Result := elem.MonitoredElementName;
-end;
-
-function Fuses_Get_MonitoredObj(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Fuses_Get_MonitoredObj_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.MonitoredElementName);
 end;
 //------------------------------------------------------------------------------
 function Fuses_Get_MonitoredTerm(): Integer; CDECL;
@@ -178,21 +168,16 @@ begin
         Result := elem.MonitoredElementTerminal;
 end;
 //------------------------------------------------------------------------------
-function Fuses_Get_SwitchedObj_AnsiString(): Ansistring; inline;
+function Fuses_Get_SwitchedObj(): PAnsiChar; CDECL;
 var
     elem: TFuseObj;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.ActiveCircuit.Fuses.Active;
     if elem <> NIL then
-        Result := elem.ElementName;
-end;
-
-function Fuses_Get_SwitchedObj(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Fuses_Get_SwitchedObj_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.ElementName);
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_MonitoredObj(const Value: PAnsiChar); CDECL;
@@ -251,23 +236,18 @@ begin
         Set_parameter('SwitchedTerm', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
-function Fuses_Get_TCCcurve_AnsiString(): Ansistring; inline;
+function Fuses_Get_TCCcurve(): PAnsiChar; CDECL;
 var
     elem: TFuseObj;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then
         Exit;
     elem := DSSPrime.ActiveCircuit.Fuses.Active;
     if elem <> NIL then
-        Result := elem.FuseCurve.Name
+        Result := DSS_GetAsPAnsiChar(elem.FuseCurve.Name)
     else
-        Result := 'No Fuse Active!';
-end;
-
-function Fuses_Get_TCCcurve(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Fuses_Get_TCCcurve_AnsiString());
+        Result := DSS_GetAsPAnsiChar('No Fuse Active!');
 end;
 //------------------------------------------------------------------------------
 procedure Fuses_Set_TCCcurve(const Value: PAnsiChar); CDECL;

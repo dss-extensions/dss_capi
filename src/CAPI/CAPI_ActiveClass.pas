@@ -73,17 +73,12 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-function ActiveClass_Get_Name_AnsiString(): Ansistring; inline;
-begin
-    if Assigned(DSSPrime.ActiveDSSObject) then
-        Result := DSSPrime.ActiveDSSObject.Name
-    else
-        Result := '';
-end;
-
 function ActiveClass_Get_Name(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(ActiveClass_Get_Name_AnsiString());
+    if Assigned(DSSPrime.ActiveDSSObject) then
+        Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveDSSObject.Name)
+    else
+        Result := nil;
 end;
 //------------------------------------------------------------------------------
 procedure ActiveClass_Set_Name(const Value: PAnsiChar); CDECL;
@@ -112,17 +107,12 @@ begin
         Result := 0;
 end;
 //------------------------------------------------------------------------------
-function ActiveClass_Get_ActiveClassName_AnsiString(): Ansistring; inline;
-begin
-    if Assigned(DSSPrime.ActiveDSSClass) then
-        Result := DSSPrime.ActiveDSSClass.Name
-    else
-        Result := '';
-end;
-
 function ActiveClass_Get_ActiveClassName(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(ActiveClass_Get_ActiveClassName_AnsiString());
+    if Assigned(DSSPrime.ActiveDSSClass) then
+        Result := DSS_GetAsPAnsiChar(DSSPrime.ActiveDSSClass.Name)
+    else
+        Result := nil;
 end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_Count(): Integer; CDECL;

@@ -129,23 +129,17 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-function Meters_Get_Name_AnsiString(): Ansistring; inline;
+function Meters_Get_Name(): PAnsiChar; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
-
 begin
-
+    Result := nil;
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
         if pMeterObj <> NIL then
-            Result := pMeterObj.name;
+            Result := DSS_GetAsPAnsiChar(pMeterObj.name);
     end;
-end;
-
-function Meters_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Meters_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_Next(): Integer; CDECL;
@@ -504,32 +498,18 @@ begin
 
 end;
 //------------------------------------------------------------------------------
-function Meters_Get_MeteredElement_AnsiString(): Ansistring; inline;
+function Meters_Get_MeteredElement(): PAnsiChar; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
 begin
-
 // First make sure active circuit element is a meter
+    Result := nil;
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         pMeterObj := TEnergyMeterObj(DSSPrime.ActiveCircuit.EnergyMeters.Active);
         if pMeterObj <> NIL then
-        begin
-            Result := pMeterObj.ElementName;
-        end
-        else
-            Result := '';
+            Result := DSS_GetAsPAnsiChar(pMeterObj.ElementName);
     end
-    else
-    begin
-        Result := '';
-    end;
-
-end;
-
-function Meters_Get_MeteredElement(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Meters_Get_MeteredElement_AnsiString());
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_MeteredTerminal(): Integer; CDECL;

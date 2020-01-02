@@ -90,19 +90,14 @@ begin
     Generic_Get_AllNames(ResultPtr, ResultCount, DSSPrime.ActiveCircuit.CapControls, False);
 end;
 //------------------------------------------------------------------------------
-function CapControls_Get_Capacitor_AnsiString(): Ansistring; inline;
+function CapControls_Get_Capacitor(): PAnsiChar; CDECL;
 var
     elem: TCapControlObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveCapControl;
     if elem <> NIL then
-        Result := elem.This_Capacitor.Name;
-end;
-
-function CapControls_Get_Capacitor(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(CapControls_Get_Capacitor_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.This_Capacitor.Name);
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_CTratio(): Double; CDECL;
@@ -195,19 +190,14 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function CapControls_Get_MonitoredObj_AnsiString(): Ansistring; inline;
+function CapControls_Get_MonitoredObj(): PAnsiChar; CDECL;
 var
     elem: TCapControlObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveCapControl;
     if elem <> NIL then
-        Result := elem.ElementName;
-end;
-
-function CapControls_Get_MonitoredObj(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(CapControls_Get_MonitoredObj_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.ElementName);
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_MonitoredTerm(): Integer; CDECL;
@@ -220,19 +210,14 @@ begin
         Result := elem.ElementTerminal;
 end;
 //------------------------------------------------------------------------------
-function CapControls_Get_Name_AnsiString(): Ansistring; inline;
+function CapControls_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TCapControlObj;
 begin
-    Result := '';
+    Result := nil;
     elem := ActiveCapControl;
     if elem <> NIL then
-        Result := elem.Name;
-end;
-
-function CapControls_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(CapControls_Get_Name_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 function CapControls_Get_Next(): Integer; CDECL;

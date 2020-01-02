@@ -40,53 +40,39 @@ begin
     end;
 end;
 //------------------------------------------------------------------------------
-function DSSProperty_Get_Description_AnsiString(): Ansistring; inline;
+function DSSProperty_Get_Description(): PAnsiChar; CDECL;
 begin
-    Result := '';
+    Result := nil;
     if (DSSPrime.ActiveCircuit <> NIL) and (DSSPrime.FPropIndex <> 0) {and (DSSPrime.FPropClass <> Nil)} then
         with DSSPrime.ActiveDSSObject.ParentClass do
             if not IsPropIndexInvalid(33006) then
-                Result := PropertyHelp^[DSSPrime.FPropIndex];
-end;
-
-function DSSProperty_Get_Description(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(DSSProperty_Get_Description_AnsiString());
+                Result := DSS_GetAsPAnsiChar(PropertyHelp^[DSSPrime.FPropIndex]);
 end;
 //------------------------------------------------------------------------------
-function DSSProperty_Get_Name_AnsiString(): Ansistring; inline;
+function DSSProperty_Get_Name(): PAnsiChar; CDECL;
 begin
-    Result := '';
+    Result := nil;
     if (DSSPrime.ActiveCircuit <> NIL) and (DSSPrime.FPropIndex <> 0) {and (DSSPrime.FPropClass <> Nil)} then
         with DSSPrime.ActiveDSSObject.ParentClass do
         begin
             if IsPropIndexInvalid(33005) then
                 Exit;
-            Result := PropertyName^[DSSPrime.FPropIndex];
+            Result := DSS_GetAsPAnsiChar(PropertyName^[DSSPrime.FPropIndex]);
         end;
 end;
-
-function DSSProperty_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(DSSProperty_Get_Name_AnsiString());
-end;
 //------------------------------------------------------------------------------
-function DSSProperty_Get_Val_AnsiString(): Ansistring; inline;
+function DSSProperty_Get_Val(): PAnsiChar; CDECL;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then
         Exit;
     with DSSPrime.ActiveDSSObject do
     begin
         if IsPropIndexInvalid(33004) then
             Exit;
-        Result := PropertyValue[ParentClass.PropertyIdxMap[DSSPrime.FPropIndex]];
-    end;
-end;
 
-function DSSProperty_Get_Val(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(DSSProperty_Get_Val_AnsiString());
+        Result := DSS_GetAsPAnsiChar(PropertyValue[ParentClass.PropertyIdxMap[DSSPrime.FPropIndex]]);
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure DSSProperty_Set_Val(const Value: PAnsiChar); CDECL;

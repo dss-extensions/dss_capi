@@ -81,26 +81,17 @@ begin
         Result := DSSPrime.LineCodeClass.Next;
 end;
 //------------------------------------------------------------------------------
-function LineCodes_Get_Name_AnsiString(): Ansistring; inline;
+function LineCodes_Get_Name(): PAnsiChar; CDECL;
 var
     pLineCode: TLineCodeObj;
-
 begin
-    Result := '';  // signify no name
+    Result := nil;
     if DSSPrime.ActiveCircuit <> NIL then
     begin
         pLineCode := DSSPrime.LineCodeClass.GetActiveObj;
         if pLineCode <> NIL then
-        begin
-            Result := pLineCode.Name;
-        end;
+            Result := DSS_GetAsPAnsiChar(pLineCode.Name);
     end;
-
-end;
-
-function LineCodes_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(LineCodes_Get_Name_AnsiString());
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_Name(const Value: PAnsiChar); CDECL;

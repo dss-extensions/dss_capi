@@ -102,20 +102,15 @@ begin
         until (Result > 0) or (pElem = NIL);
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_Name_AnsiString(): Ansistring; inline;
+function Reclosers_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TRecloserObj;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then Exit;
     elem := DSSPrime.ActiveCircuit.Reclosers.Active;
     if elem <> NIL then
-        Result := elem.Name;
-end;
-
-function Reclosers_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Reclosers_Get_Name_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_Next(): Integer; CDECL;
@@ -179,21 +174,16 @@ begin
         Set_parameter('monitoredterm', IntToStr(Value));
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_SwitchedObj_AnsiString(): Ansistring; inline;
+function Reclosers_Get_SwitchedObj(): PAnsiChar; CDECL;
 var
     elem: TRecloserObj;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then 
         Exit;
     elem := DSSPrime.ActiveCircuit.Reclosers.Active;
     if elem <> NIL then
-        Result := elem.ElementName;
-end;
-
-function Reclosers_Get_SwitchedObj(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Reclosers_Get_SwitchedObj_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.ElementName);
 end;
 //------------------------------------------------------------------------------
 procedure Reclosers_Set_SwitchedObj(const Value: PAnsiChar); CDECL;
@@ -207,21 +197,16 @@ begin
         Set_parameter('SwitchedObj', Value);
 end;
 //------------------------------------------------------------------------------
-function Reclosers_Get_MonitoredObj_AnsiString(): Ansistring; inline;
+function Reclosers_Get_MonitoredObj(): PAnsiChar; CDECL;
 var
     elem: TRecloserObj;
 begin
-    Result := '';
+    Result := nil;
     if DSSPrime.ActiveCircuit = NIL then 
         Exit;
     elem := DSSPrime.ActiveCircuit.Reclosers.Active;
     if elem <> NIL then
-        Result := elem.MonitoredElementName;
-end;
-
-function Reclosers_Get_MonitoredObj(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Reclosers_Get_MonitoredObj_AnsiString());
+        Result := DSS_GetAsPAnsiChar(elem.MonitoredElementName);
 end;
 //------------------------------------------------------------------------------
 function Reclosers_Get_SwitchedTerm(): Integer; CDECL;
