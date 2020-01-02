@@ -349,9 +349,6 @@ begin
             else
                 ParamPointer := CommandList.GetCommand(ParamName);
 
-            // if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-            //     PropertyValue[ParamPointer] := Param;
-
             if (ParamPointer <= NumPropsThisClass) then case TLoadShapeProp(ParamPointer) of
                 TLoadShapeProp.INVALID:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 610);
@@ -437,9 +434,15 @@ begin
                     Do2ColCSVFile(Param);
             end
             else
+            begin
                 // Inherited parameters
-                ClassEdit(DSS.ActiveLoadShapeObj, ParamPointer - NumPropsThisClass);
 
+                //TODO: Remove after all classes are handled without PropertyValue.
+                //      Note that if the value is invalid, this would save it anyway.
+                PropertyValue[ParamPointer] := Param;
+
+                ClassEdit(DSS.ActiveLoadShapeObj, ParamPointer - NumPropsThisClass);
+            end;
 
             if (ParamPointer <= NumPropsThisClass) then case TLoadShapeProp(ParamPointer) of
                 TLoadShapeProp.mult, TLoadShapeProp.csvfile, TLoadShapeProp.sngfile, TLoadShapeProp.dblfile:

@@ -409,9 +409,6 @@ begin
             else
                 ParamPointer := CommandList.GetCommand(ParamName);
 
-            // if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-            //     PropertyValue[ParamPointer] := Param;
-
             if (ParamPointer <= NumPropsThisClass) then 
             begin 
                 case TReactorProp(ParamPointer) of
@@ -458,8 +455,15 @@ begin
                 end
             end
             else
-            // Inherited Property Edits
+            begin
+                // Inherited Property Edits
+
+                //TODO: Remove after all classes are handled without PropertyValue.
+                //      Note that if the value is invalid, this would save it anyway.
+                PropertyValue[ParamPointer] := Param;
+
                 ClassEdit(DSS.ActiveReactorObj, ParamPointer - NumPropsThisClass);
+            end;
 
          // Some specials ...
             if (ParamPointer <= NumPropsThisClass) then case TReactorProp(ParamPointer) of

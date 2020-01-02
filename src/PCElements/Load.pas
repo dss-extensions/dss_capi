@@ -633,9 +633,6 @@ begin
             else
                 ParamPointer := CommandList.GetCommand(ParamName);
 
-            // if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
-            //     PropertyValue[ParamPointer] := Param;
-
             if (ParamPointer <= NumPropsThisClass) then case TLoadProp(ParamPointer) of
                 TLoadProp.INVALID:
                     DoSimpleMsg(DSS, 'Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 580);
@@ -731,8 +728,15 @@ begin
                     FXRharmRatio := DSS.Parser.DblValue;
             end
             else
+            begin
                 // Inherited edits
+
+                //TODO: Remove after all classes are handled without PropertyValue.
+                //      Note that if the value is invalid, this would save it anyway.
+                PropertyValue[ParamPointer] := Param;  
+
                 ClassEdit(DSS.ActiveLoadObj, paramPointer - NumPropsThisClass);
+            end;
 
          // << SIDE EFFECTS >>
          // keep kvar nominal up to date WITH kW and PF
