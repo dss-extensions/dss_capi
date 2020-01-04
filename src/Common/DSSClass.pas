@@ -443,8 +443,8 @@ begin
     FirstPDelement := '';
     
     ComParser := ParserDel.TParser.Create;  // create COM Parser object
-    FCOMControlProxyObj := TCOMControlProxyObj.Create(NIL, 'COM_Proxy');
     ActiveAction := NIL;
+    FCOMControlProxyObj := TCOMControlProxyObj.Create(NIL, 'COM_Proxy');
     
     DSSExecutive := TExecutive.Create(self);
     DSSExecutive.CreateDefaultDSSItems;
@@ -461,6 +461,8 @@ begin
     ComParser.Free;
     TCOMControlProxyObj(FCOMControlProxyObj).Free;
     
+    // No need to free ActiveAction, it only points to the action
+
     inherited Destroy;
 end;
 
