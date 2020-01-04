@@ -452,6 +452,11 @@ end;
 
 destructor TDSSContext.Destroy;
 begin
+    TCOMControlProxyObj(FCOMControlProxyObj).Free;
+    // No need to free ActiveAction, it only points to the action
+    
+    // DSSExecutive.Free?
+    
     AuxParser.Free;
     EventStrings.Free;
     SavedFileList.Free;
@@ -459,9 +464,7 @@ begin
     ParserVars.Free;
     Parser.Free;
     ComParser.Free;
-    TCOMControlProxyObj(FCOMControlProxyObj).Free;
     
-    // No need to free ActiveAction, it only points to the action
 
     inherited Destroy;
 end;
