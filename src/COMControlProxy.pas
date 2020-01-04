@@ -20,7 +20,7 @@ type
         procedure ClearActionList;
         function PopAction: Boolean;
 
-        constructor Create(context: TDSSContext; const COMProxyName: String);
+        constructor Create(context: TDSSContext);
         destructor Destroy; OVERRIDE;
 
         procedure DoPendingAction(const Code, ProxyHdl: Integer); OVERRIDE;   // Do the action that is pending from last sample
@@ -28,6 +28,9 @@ type
     end;
 
 implementation
+
+uses 
+    DSSClassDefs;
 
 procedure TCOMControlProxyObj.DoPendingAction(const Code, ProxyHdl: Integer);
 var
@@ -47,17 +50,21 @@ begin
     while PopAction do ;  // spin until it is done
 end;
 
-constructor TCOMControlProxyObj.Create(context: TDSSContext; const COMProxyName: String);
+constructor TCOMControlProxyObj.Create(context: TDSSContext);
 begin
     DSS := context;
-    Name := COMProxyName;
+    Name := 'COM_Proxy';
     ActionList := TList.Create;
+    DSSObjType := DSS_OBJECT + HIDDEN_ELEMENT;
+    
+    pUuid := nil;
 end;
 
 destructor TCOMControlProxyObj.Destroy;
 begin
     ClearActionList;
     ActionList.Free;
+    DSS := nil;
     inherited;
 end;
 

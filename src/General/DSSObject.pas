@@ -98,11 +98,15 @@ begin
 end;
 
 destructor TDSSObject.Destroy;
-
 var
     i: Integer;
-
 begin
+    if DSS = nil then
+    begin
+        inherited Destroy;
+        exit;
+    end;
+
     for i := 1 to ParentClass.NumProperties do
         FPropertyValue^[i] := '';
     Reallocmem(FPropertyValue, 0);

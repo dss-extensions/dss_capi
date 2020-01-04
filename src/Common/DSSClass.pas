@@ -444,7 +444,7 @@ begin
     
     ComParser := ParserDel.TParser.Create;  // create COM Parser object
     ActiveAction := NIL;
-    FCOMControlProxyObj := TCOMControlProxyObj.Create(self, 'COM_Proxy');
+    FCOMControlProxyObj := TCOMControlProxyObj.Create(self);
     
     DSSExecutive := TExecutive.Create(self);
     DSSExecutive.CreateDefaultDSSItems;
@@ -454,7 +454,9 @@ destructor TDSSContext.Destroy;
 begin
     // DSSExecutive.Free?
     
-    TCOMControlProxyObj(FCOMControlProxyObj).Free;
+    if FCOMControlProxyObj <> nil then
+        TCOMControlProxyObj(FCOMControlProxyObj).Free;
+
     // No need to free ActiveAction, it only points to the action
     
     AuxParser.Free;

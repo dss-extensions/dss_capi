@@ -237,6 +237,12 @@ destructor TDSSCktElement.Destroy;
 var
     i: Integer;
 begin
+    if DSS = NIL then
+    begin
+        inherited Destroy;
+        exit;
+    end;
+
     for i := 1 to FNTerms do
         Terminals^[i].Free;
     for i := 1 to FNTerms do

@@ -14,11 +14,12 @@ type
     TUuid = TGuid;    // this is a GUID compliant to RFC 4122, v4
 
     TNamedObject = class(TObject)
+    PROTECTED
+        pUuid: ^TUuid;  // compliant to RFC 4122, v4
     PRIVATE
         PName: String;  // path name, or class name for DSS
         LName: String;  // localName is unique within a class, like the old FName
         DName: String;  // for optional display, does not have to be unique
-        pUuid: ^TUuid;  // compliant to RFC 4122, v4
 
         function Get_QualifiedName: String;
         function Get_DisplayName: String;
