@@ -1052,10 +1052,15 @@ end;
 
 Finalization
 
-  DSSPrime.Free;  {Writes to Registry}
+    if DSSPrime <> nil then
+    begin
+        DSSPrime.Free;  {Writes to Registry}
+        DSSPrime := nil;
+    end;
+        
 {$IFNDEF DSS_CAPI}
-  DSS_Registry.Free;  {Close Registry}
+    DSS_Registry.Free;  {Close Registry}
 {$ENDIF}
 
-  ExecCommands.DisposeStrings;
+    ExecCommands.DisposeStrings;
 End.
