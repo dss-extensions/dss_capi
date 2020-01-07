@@ -129,6 +129,7 @@ type
       kvar_out                : Double;
       kW_out                  : Double;
       kvarRequested           : Double;
+      Fpf_wp_nominal          : Double;
       kWRequested             : Double;
       FvarMode                : Integer;
 
@@ -173,6 +174,7 @@ type
 
       FVWMode                 : Boolean; //boolean indicating if under volt-watt control mode from InvControl (not ExpControl)
       FVVMode                 : Boolean; //boolean indicating if under volt-var mode from InvControl
+      FWPMode                 : Boolean; //boolean indicating if under watt-pf mode from InvControl
       FDRCMode                : Boolean; //boolean indicating if under DRC mode from InvControl
 
       PROCEDURE CalcDailyMult(Hr:double);  // now incorporates DutyStart offset
@@ -219,6 +221,7 @@ type
       PROCEDURE Set_PresentkW(const Value: Double);
       PROCEDURE Set_PowerFactor(const Value: Double);
       PROCEDURE Set_PresentIrradiance(const Value: Double);
+      PROCEDURE Set_pf_wp_nominal(const Value: Double);
 
       procedure Set_kVARating(const Value: Double);
       procedure Set_puPmpp(const Value: Double);
@@ -231,6 +234,9 @@ type
 
       function  Get_VVmode: Boolean;
       procedure Set_VVmode(const Value: Boolean);
+
+      function  Get_WPmode: Boolean;
+      procedure Set_WPmode(const Value: Boolean);
 
       function  Get_DRCmode: Boolean;
       procedure Set_DRCmode(const Value: Boolean);
@@ -332,12 +338,14 @@ type
       Property Varmode      : Integer          read Get_Varmode                 Write Set_Varmode;  // 0=constant PF; 1=kvar specified
       Property VWmode       : Boolean          read Get_VWmode                  Write Set_VWmode;
       Property VVmode       : Boolean          read Get_VVmode                  Write Set_VVmode;
+      Property WPmode       : Boolean          read Get_WPmode                  Write Set_WPmode;
       Property DRCmode      : Boolean          read Get_DRCmode                 Write Set_DRCmode;
       Property InverterON   : Boolean          read Get_InverterON              Write Set_InverterON;
       Property VarFollowInverter : Boolean     read Get_VarFollowInverter       Write Set_VarFollowInverter;
       Property kvarLimit      : Double         read PVSystem2Vars.Fkvarlimit     Write Set_Maxkvar;
       Property kvarLimitneg   : Double         Read PVSystem2Vars.Fkvarlimitneg  Write Set_Maxkvarneg;
       Property MinModelVoltagePU : Double      Read VminPu;
+      Property pf_wp_nominal : Double                                            Write Set_pf_wp_nominal;
    End;
 
 var
@@ -906,6 +914,7 @@ FUNCTION TPVsystem2.MakeLike(Const OtherPVsystem2ObjName:String):Integer;
             RandomMult                      := OtherPVsystem2Obj.RandomMult;
             FVWMode                         := OtherPVsystem2Obj.FVWMode;
             FVVMode                         := OtherPVsystem2Obj.FVVMode;
+            FWPMode                         := OtherPVsystem2Obj.FWPMode;
             FDRCMode                        := OtherPVsystem2Obj.FDRCMode;
             UserModel.Name                  := OtherPVsystem2Obj.UserModel.Name;  // Connect to user written models
 
@@ -1052,6 +1061,8 @@ Constructor TPVsystem2Obj.Create(ParClass:TDSSClass; const SourceName:String);
     FpctPminNoVars                := -1.0;
     FpctPminkvarLimit             := -1.0;
 
+    Fpf_wp_nominal                := 1.0;
+
     {Output rating stuff}
     kW_out                        := 500.0;
     kvar_out                      := 0.0;
@@ -1082,6 +1093,7 @@ Constructor TPVsystem2Obj.Create(ParClass:TDSSClass; const SourceName:String);
     SpectrumObj                   := nil;
     FVWMode                       := FALSE;
     FVVMode                       := FALSE;
+    FWPMode                       := FALSE;
     FDRCMode                      := FALSE;
     InitPropertyValues(0);
     RecalcElementData(ActiveActor);
@@ -1619,13 +1631,17 @@ PROCEDURE TPVsystem2Obj.ComputeInverterPower;
                     else kvar_out := kvarRequested;
                   end;
               end
-            else if ((kvarRequested > 0.0) and (abs(kvarRequested) > Fkvarlimit)) or ((kvarRequested < 0.0) and (abs(kvarRequested) > Fkvarlimitneg)) then
+            else if ((kvarRequested > 0.0) and (abs(kvarRequested) >= Fkvarlimit)) or ((kvarRequested < 0.0) and (abs(kvarRequested) >= Fkvarlimitneg)) then
               begin
                 if (kvarRequested > 0.0) then kvar_Out := Fkvarlimit * sign(kvarRequested)
                 else kvar_Out := Fkvarlimitneg * sign(kvarRequested);
 
+                if (varMode = VARMODEKVAR) and PF_Priority and FWPMode then
+                  begin
+                    kW_out := abs(kvar_out) * sqrt(1.0/(1.0 - Sqr(Fpf_wp_nominal)) - 1.0) * sign(kW_out);
+                  end
                 // Forces constant power factor when kvar limit is exceeded and PF Priority is true. Temp PF is calculated based on kvarRequested
-                if PF_Priority and (not FVVMode or not FDRCMode) then
+                else if PF_Priority and (not FVVMode or not FDRCMode) then
                   Begin
                     if abs(kvarRequested) > 0.0  then
                       begin
@@ -1650,6 +1666,11 @@ PROCEDURE TPVsystem2Obj.ComputeInverterPower;
                 kW_out := FkVArating * PFnominal;
                 kvar_out := FkVArating * sqrt(1 - Sqr(PFnominal)) * sign(PFnominal);
               End
+            Else if (varMode = VARMODEKVAR) and PF_Priority and FWPMode then
+              begin
+                kW_out := FkVArating * abs(Fpf_wp_nominal) * sign(kW_out);
+                kvar_out := FkVArating * abs(sin(ArcCos(Fpf_wp_nominal))) * sign(kvarRequested)
+              end
             Else if (varMode = VARMODEKVAR) and PF_Priority and (not FVVMode or not FDRCMode) then
               // Operates under constant power factor (PF implicitly calculated based on kw and kvar)
               Begin
@@ -2592,6 +2613,12 @@ function TPVsystem2Obj.Get_VVmode: Boolean;
   end;
 
 // ============================================================Get_VWmode===============================
+function TPVsystem2Obj.Get_WPmode: Boolean;
+  begin
+    If FWPmode Then Result := TRUE else Result := FALSE;                                                               //  engaged from InvControl (not ExpControl)
+  end;
+
+// ============================================================Get_VWmode===============================
 function TPVsystem2Obj.Get_DRCmode: Boolean;
   begin
     If FDRCmode Then Result := TRUE else Result := FALSE;                                                               //  engaged from InvControl (not ExpControl)
@@ -2681,6 +2708,12 @@ procedure TPVsystem2Obj.Set_VWmode(const Value: Boolean);
 procedure TPVsystem2Obj.Set_VVmode(const Value: Boolean);
   begin
     FVVmode := Value;
+  end;
+
+// ===========================================================================================
+procedure TPVsystem2Obj.Set_WPmode(const Value: Boolean);
+  begin
+    FWPmode := Value;
   end;
 
 // ===========================================================================================
@@ -2852,6 +2885,11 @@ PROCEDURE TPVsystem2Obj.Set_PresentkW(const Value: Double);
 PROCEDURE TPVsystem2Obj.Set_Presentkvar(const Value: Double);
   Begin
     kvarRequested := Value;
+  End;
+
+PROCEDURE TPVsystem2Obj.Set_pf_wp_nominal(const Value: Double);
+  Begin
+    Fpf_wp_nominal := Value;
   End;
 
 procedure TPVsystem2Obj.Set_puPmpp(const Value: Double);

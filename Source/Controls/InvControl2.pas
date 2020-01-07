@@ -128,10 +128,12 @@ type
       // Reactive power
       QDesireEndpu            : Array of Double;  // Q value used in the convergency algorithm
       QDesireVVpu             : Array of Double; // Q desired caculated in volt-var curve
+      QDesireWPpu             : Array of Double; // Q desired caculated in watt-pf curve
       QDesireDRCpu            : Array of Double;  // Q desired from the DRC equation
       QDesireLimitedpu        : Array of Double; // Calculates possible Q considering kVA (watt priority) and kvarlimit limits
       QDesireOptionpu         : Array of Double; // Calculates Q Limit considering LPF and RF
-      QDesiredVV              : Array of Double; //volt-var new set-point
+      QDesiredVV              : Array of Double; // volt-var new set-point
+      QDesiredWP              : Array of Double; // watt-pf new set-point
       QOld                    : Array of Double;
       QOldVV                  : Array of Double;
       QOldDRC                 : Array of Double;
@@ -213,6 +215,13 @@ type
       priorRollAvgWindow      : Array of Double;
       FRollAvgWindowLengthIntervalUnit  : String;
 
+      // watt-pf
+      Fwattpf_curve_size    : Integer;
+      Fwattpf_curve         : TXYcurveObj;
+      Fwattpf_curvename     : String;
+      Fpf_ref               : String;
+      pf_wp_nominal         : Double;
+
       // DRC
       FDbVMin                 : Double;
       FDbVMax                 : Double;
@@ -241,6 +250,7 @@ type
       FVWOperation            : Array of Double;
       FDRCOperation           : Array of Double;
       FVVDRCOperation         : Array of Double;
+      FWPOperation            : Array of Double;
 
       {Others}
       cBuffer                 : Array of Array of Complex;    // Complex array buffer
@@ -257,10 +267,12 @@ type
       procedure   UpdateDERParameters(i: Integer);
       procedure   CalcVoltWatt_watts(j: Integer; ActorID : Integer);
       procedure   CalcQVVcurve_desiredpu(j: Integer; ActorID : Integer);
+      procedure   CalcQWPcurve_desiredpu(j: Integer; ActorID : Integer);
       procedure   CalcQDRC_desiredpu(j: Integer; ActorID : Integer);
       procedure   Check_Qlimits(j: Integer; Q: Double; ActorID : Integer);
       procedure   Calc_QHeadRoom(j: Integer; ActorID : Integer);
       procedure   CalcVoltVar_vars(j: Integer; ActorID : Integer);
+      procedure   CalcWATTPF_vars(j: Integer; ActorID : Integer);
       procedure   CalcDRC_vars(j: Integer; ActorID : Integer);
       procedure   CalcVVDRC_vars(j: Integer; ActorID : Integer);
       procedure   CalcLPF(m: Integer; powertype: String; LPF_desiredpu: Double; ActorID: Integer);
@@ -354,7 +366,7 @@ uses
 
 const
 
-    NumPropsThisClass = 28;
+    NumPropsThisClass = 30;
 
     NONE = 0;
     CHANGEVARLEVEL = 1;
@@ -430,6 +442,8 @@ procedure TInvControl2.DefineProperties;
     PropertyName[26] := 'monBus';
     PropertyName[27] := 'MonBusesVbase';
     PropertyName[28] := 'voltwattCH_curve';
+    PropertyName[29] := 'wattpf_curve';
+    PropertyName[30] := 'wattpfYAxis';
 
     PropertyHelp[1] := 'Array list (full qualified name) of PVSystem2 and/or Storage2 elements to be controlled.  Usually only one element is controlled by one InvControl2. '+CRLF+CRLF+
                       'If not specified, all elements in the circuit are assumed to be controlled by this control, only. ' +CRLF+CRLF+
@@ -609,6 +623,8 @@ procedure TInvControl2.DefineProperties;
                         'Units for the y-axis are either in: (1) per unit of maximum active power output capability of the Storage2, or (2) maximum available active power output capability (defined by the parameter: VoltwattYAxis), '+
                         'corresponding to the terminal voltage (x-axis value in per unit). '+CRLF+CRLF+
                         'No default -- must be specified for VOLTWATT mode for Storage2 element in CHARGING state.';
+    PropertyHelp[29] := 'Required for WATTPF mode.';
+    PropertyHelp[30] := 'Capacitive/Inductive. Default=Inductive.';
 
     ActiveProperty  := NumPropsThisClass;
     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -678,9 +694,14 @@ function TInvControl2.Edit(ActorID : Integer):Integer;
                       ControlMode := 'DYNAMICREACCURR';
                       CombiControlMode := '';
                     end
-                  else if CompareTextShortest(Parser[ActorID].StrValue, 'fixedpf')= 0 then
+                  else if CompareTextShortest(Parser[ActorID].StrValue, 'fixedpf')= 0 then     // (PR) what is this?
                     begin
                       ControlMode := 'FIXEDPF';
+                      CombiControlMode := '';
+                    end
+                  else if CompareTextShortest(Parser[ActorID].StrValue, 'wattpf')= 0 then
+                    begin
+                      ControlMode := 'WATTPF';
                       CombiControlMode := '';
                     end
                   else
@@ -844,6 +865,20 @@ function TInvControl2.Edit(ActorID : Integer):Integer;
                       end;
                   end;
 
+              29: begin
+                  Fwattpf_curvename := Parser[ActorID].StrValue;
+                  if Length(Fwattpf_curvename) > 0 then
+                    begin
+                      Fwattpf_curve := GetXYCurve(Fwattpf_curvename, 'WATTPF');
+                      Fwattpf_curve_size := Fwattpf_curve.NumPoints;
+                    end;
+                 end;
+
+              30: begin
+                  if      CompareTextShortest(Parser[ActorID].StrValue, 'capacitive')= 0         then  Fpf_ref := 'CAP'
+                  else if CompareTextShortest(Parser[ActorID].StrValue, 'inductive')= 0          then  Fpf_ref := 'IND'
+              end;
+
               else
                 // Inherited parameters
                 ClassEdit( ActiveInvControl2Obj, ParamPointer - NumPropsthisClass)
@@ -923,7 +958,12 @@ function TInvControl2.MakeLike(const InvControl2Name:String):Integer;
       FvoltwattCH_curve_size          := OtherInvControl2.FvoltwattCH_curve_size;
       FvoltwattCH_curve               := OtherInvControl2.FvoltwattCH_curve;
       FvoltwattCH_curvename           := OtherInvControl2.FvoltwattCH_curvename;
+      Fwattpf_curve_size              := OtherInvControl2.Fwattpf_curve_size;
+      Fwattpf_curve                   := OtherInvControl2.Fwattpf_curve;
+      Fwattpf_curvename               := OtherInvControl2.Fwattpf_curvename;
+      Fpf_ref                         := OtherInvControl2.Fpf_ref;
       FDbVMin                         := OtherInvControl2.FDbVMin;
+      pf_wp_nominal                   := OtherInvControl2.pf_wp_nominal;
       FDbVMax                         := OtherInvControl2.FDbVMax;
       FArGraLowV                      := OtherInvControl2.FArGraLowV;
       FArGraHiV                       := OtherInvControl2.FArGraHiV;
@@ -1019,10 +1059,12 @@ constructor TInvControl2Obj.Create(ParClass:TDSSClass; const InvControl2Name:Str
     // Reactive power
     QDesireEndpu             := nil;
     QDesireVVpu              := nil;
+    QDesireWPpu              := nil;
     QDesireDRCpu             := nil;
     QDesireLimitedpu         := nil;
     QDesireOptionpu          := nil;
     QDesiredVV               := nil;
+    QDesiredWP               := nil;
     QOld                     := nil;
     QOldVV                   := nil;
     QOldDRC                  := nil;
@@ -1104,6 +1146,13 @@ constructor TInvControl2Obj.Create(ParClass:TDSSClass; const InvControl2Name:Str
     FRollAvgWindowLengthIntervalUnit := 's';
     priorRollAvgWindow       := nil;
 
+    // watt-pf
+    Fwattpf_curve_size       := 0;
+    Fwattpf_curve            := nil;
+    Fwattpf_curvename        := '';
+    Fpf_ref                  := 'IND';
+    pf_wp_nominal            := 0.0;
+
     // DRC
     FDbVMin                  := 0.95;
     FDbVMax                  := 1.05;
@@ -1155,6 +1204,7 @@ destructor TInvControl2Obj.Destroy;
     Finalize(FPresentDRCVpu);
     Finalize(FPendingChange);
     Finalize(QDesiredVV);
+    Finalize(QDesiredWP);
     Finalize(QOld);
     Finalize(QOldVV);
     Finalize(QOldDRC);
@@ -1167,6 +1217,7 @@ destructor TInvControl2Obj.Destroy;
     Finalize(QoutputVVDRCpu);
     Finalize(QDesireEndpu);
     Finalize(QDesireVVpu);
+    Finalize(QDesireWPpu);
     Finalize(QDesireLimitedpu);
     Finalize(QDesireOptionpu);
     Finalize(PLimitEndpu);
@@ -1256,7 +1307,7 @@ procedure TInvControl2Obj.RecalcElementData(ActorID : Integer);
         FDRCRollAvgWindow[i].BuffLength := FDRCRollAvgWindowLength;
 
         // for all modes other than VW, PF priority is not allowed
-        if (Mode <> 'VOLTWATT') Then
+        if ((Mode <> 'VOLTWATT') and (Mode <> 'WATTPF')) Then
         Begin
             if ControlledElement[i].DSSClassName = 'PVSystem2'     then TPVSystem2Obj(ControlledElement[i]).PVSystem2Vars.PF_Priority := FALSE
             else if ControlledElement[i].DSSClassName = 'Storage2' then  TStorage2Obj(ControlledElement[i]).Storage2Vars.PF_Priority := FALSE;
@@ -1460,6 +1511,85 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer;ActorID :
                 if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name +', '+  TStorage2Obj(DERelem).QualifiedName,
                                                     Format('VOLTVAR mode requested Storage2 output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
                                                            [QDesiredVV[k], TStorage2Obj(DERelem).Presentkvar]),ActorID);
+
+              end;
+          end
+
+        {Smart Inverter volt-var function}
+        else if(ControlMode = 'WATTPF') and (CombiControlMode = '') and (PendingChange[k]=CHANGEVARLEVEL) then
+          begin
+            // Set var mode to VARMODEKVAR to indicate we might change kvar
+            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+              begin
+                TPVSystem2Obj(DERelem).VWmode  := FALSE;
+                TPVSystem2Obj(DERelem).Varmode := VARMODEKVAR;
+                TPVSystem2Obj(DERelem).WPmode := TRUE;
+              end
+            else
+              begin
+                TStorage2Obj(DERelem).VWmode     := FALSE;
+                TStorage2Obj(DERelem).Varmode    := VARMODEKVAR;
+              end;
+
+            //--------------------------------------------- Main process ---------------------------------------------//
+
+            // Calculates QDesireWPpu[k]
+            CalcQWPcurve_desiredpu(k, ActorID);
+
+            // Checks kVA (watt priority) and kvarlimit limits
+            Check_Qlimits(k, QDesireWPpu[k], ActorID);
+            QDesireEndpu[k] := Min(abs(QDesireWPpu[k]), abs(QDesireLimitedpu[k])) * sign(QDesireWPpu[k]);
+
+            // Calculates QDesiredWP[k] through the convergence algorithm
+            CalcWATTPF_vars(k, ActorID);
+
+            //--------------------------------------------- end Main process ---------------------------------------------//
+            // Sets PVSystem2/Storage2's pf_wp_nominal
+            if ControlledElement[k].DSSClassName = 'PVSystem2' then TPVSystem2Obj(DERelem).pf_wp_nominal := pf_wp_nominal
+            else TStorage2Obj(DERelem).kvarRequested := QDesiredWP[k];
+
+            // Sets PVSystem2/Storage2's kvar_out
+            if ControlledElement[k].DSSClassName = 'PVSystem2' then TPVSystem2Obj(DERelem).Presentkvar := QDesiredWP[k]
+            else TStorage2Obj(DERelem).kvarRequested := QDesiredWP[k];
+
+            // Uptates PresentkW and Presentkvar considering watt and var priorities
+            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+              begin
+                TPVSystem2Obj(DERelem).SetNominalPVSystem2Ouput(ActorID);
+
+                if QDesiredWP[k] >= 0.0 then Qoutputpu[k] := TPVSystem2Obj(DERelem).Presentkvar / QHeadroom[k]
+                else Qoutputpu[k] := TPVSystem2Obj(DERelem).Presentkvar / QHeadroomNeg[k];
+              end
+            else
+              begin
+                TStorage2Obj(DERelem).SetNominalStorage2Output(ActorID);
+
+                if QDesiredWP[k] >= 0.0 then Qoutputpu[k] := TStorage2Obj(DERelem).Presentkvar / QHeadroom[k]
+                else Qoutputpu[k] := TStorage2Obj(DERelem).Presentkvar / QHeadroomNeg[k];
+              end;
+
+            // Values used in convergence
+            QoutputVVpu[k] := Qoutputpu[k];
+            FAvgpVpuPrior[k] := FPresentVpu[k];
+
+            // Values used in CalcQVVcurve_desiredpu
+            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+              begin
+                QOld[k]   := TPVSystem2Obj(DERelem).Presentkvar;
+                QOldVV[k] := TPVSystem2Obj(DERelem).Presentkvar;
+
+              if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name +', '+ TPVSystem2Obj(DERelem).QualifiedName,
+                                                    Format('WATTPF mode requested PVSystem2 output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                           [QDesiredWP[k], TPVSystem2Obj(DERelem).Presentkvar]),ActorID);
+              end
+            else
+              begin
+                QOld[k]   := TStorage2Obj(DERelem).Presentkvar;
+                QOldVV[k] := TStorage2Obj(DERelem).Presentkvar;
+
+                if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name +', '+  TStorage2Obj(DERelem).QualifiedName,
+                                                    Format('WATTPF mode requested Storage2 output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
+                                                           [QDesiredWP[k], TStorage2Obj(DERelem).Presentkvar]),ActorID);
 
               end;
           end
@@ -2376,6 +2506,55 @@ procedure TInvControl2Obj.Sample(ActorID : Integer);
                   end;
               end
 
+            else if ControlMode = 'WATTPF' then // watt-pf control mode
+              begin
+                // Sets internal variables of PVSystem2/Storage2.
+                // FWPOperation is a flag which indicates if watt-pf function operates or not (-1=absorbing Q, 1=injecting Q, 0=No operation)
+
+                if ControlledElement[i].DSSClassName = 'PVSystem2' then
+                  begin
+                    PVSys.Set_Variable(5,FVreg);
+                    PVSys.Set_Variable(7,FVVOperation[i]);
+                  end
+                else
+                  begin
+                    Storage2.Set_Variable(14,FVreg);
+                    Storage2.Set_Variable(16,FVVOperation[i]);
+                  end;
+
+                // if inverter is off then exit
+                if (FInverterON[i] = FALSE) and (FVarFollowInverter[i] = TRUE) then continue;
+
+                  if Length(Fwattpf_curvename) = 0 then
+                    begin
+                      DoSimpleMsg('XY Curve object representing wattpf_curve does not exist or is not tied to InvControl2.', 382);
+                      exit
+                    end;
+
+                if (ControlledElement[i].DSSClassName = 'PVSystem2') then PVSys.WPmode  := TRUE
+                else Storage2.VVmode  := TRUE;
+
+                  //Trigger from volt-var mode
+                if (((Abs(FPresentVpu[i] - FAvgpVpuPrior[i]) > FVoltageChangeTolerance) or
+                    ((Abs(Abs(QoutputVVpu[i]) - Abs(QDesireEndpu[i])) > FVarChangeTolerance))) or
+                    (ActiveCircuit[ActorID].Solution.ControlIteration = 1)) then
+
+                  begin
+
+                    // Resets DER state variable only if it has not converged yet
+                    FVVOperation[i] := 0;
+
+                    Set_PendingChange(CHANGEVARLEVEL,i);
+
+                    with  ActiveCircuit[ActorID].Solution.DynaVars do
+                      ControlActionHandle := ActiveCircuit[ActorID].ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self, ActorID);
+
+                    if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name+', '+ControlledElement[i].QualifiedName,
+                                                          Format('**Ready to change var output due to volt-var trigger in volt-var mode**, Vavgpu= %.5g, VPriorpu=%.5g',
+                                                                 [FPresentVpu[i],FAvgpVpuPrior[i]]),ActorID);
+                  end;
+              end
+
             else if ControlMode = 'DYNAMICREACCURR' then // dynamic reactive current control mode
               begin
                 // Sets internal variables of PVSystem2/Storage2.
@@ -2509,6 +2688,7 @@ function TInvControl2Obj.MakeDERList:Boolean;
         SetLength(NCondsDER,FListSize+1);
         SetLength(FPendingChange,FListSize+1);
         SetLength(QDesiredVV,FListSize+1);
+        SetLength(QDesiredWP,FListSize+1);
         SetLength(QOld,FListSize+1);
         SetLength(QOldVV,FListSize+1);
         SetLength(QOldDRC,FListSize+1);
@@ -2524,6 +2704,7 @@ function TInvControl2Obj.MakeDERList:Boolean;
         SetLength(QoutputVVDRCpu,FListSize+1);
         SetLength(QDesireEndpu,FListSize+1);
         SetLength(QDesireVVpu, FListSize+1);
+        SetLength(QDesireWPpu, FListSize+1);
         SetLength(QDesireLimitedpu, FListSize+1);
         SetLength(QDesireOptionpu, FListSize+1);
         SetLength(PLimitEndpu,FListSize+1);
@@ -2638,6 +2819,7 @@ function TInvControl2Obj.MakeDERList:Boolean;
         SetLength(cBuffer,FListSize+1,7);  // assuming no more than 6 conductors
         SetLength(FPendingChange,FListSize+1);
         SetLength(QDesiredVV,FListSize+1);
+        SetLength(QDesiredWP,FListSize+1);
         SetLength(QOld,FListSize+1);
         SetLength(QOldVV,FListSize+1);
         SetLength(QOldDRC,FListSize+1);
@@ -2653,6 +2835,7 @@ function TInvControl2Obj.MakeDERList:Boolean;
         SetLength(QoutputVVDRCpu,FListSize+1);
         SetLength(QDesireEndpu,FListSize+1);
         SetLength(QDesireVVpu, FListSize+1);
+        SetLength(QDesireWPpu, FListSize+1);
         SetLength(QDesireLimitedpu, FListSize+1);
         SetLength(QDesireOptionpu, FListSize+1);
         SetLength(PLimitEndpu,FListSize+1);
@@ -2737,6 +2920,7 @@ function TInvControl2Obj.MakeDERList:Boolean;
         FPresentVpu[i]                           := 0.0;
         FPresentDRCVpu[i]                        := 0.0;
         QDesiredVV[i]                            := 0.0;
+        QDesiredWP[i]                            := 0.0;
         QOld[i]                                  := -1.0;
         QOldVV[i]                                := -1.0;
         QOldDRC[i]                               := -1.0;
@@ -2754,6 +2938,7 @@ function TInvControl2Obj.MakeDERList:Boolean;
         QoutputVVDRCpu[i]                        := 0.0;
         QDesireEndpu[i]                          := 0.0;
         QDesireVVpu[i]                           := 0.0;
+        QDesireWPpu[i]                           := 0.0;
         QDesireLimitedpu[i]                      := 0.0;
         QDesireOptionpu[i]                       := 0.0;
         PLimitVWpu[i]                            := 0.0;
@@ -2844,6 +3029,21 @@ function TInvControl2.GetXYCurve(Const CurveName: String;InvControl2Mode: String
           if (Result.YValue_pt[i] < 0.0) or (Result.YValue_pt[i] > 1.0) then
             begin
               DoSimpleMsg('XY Curve object: "' + CurveName + '" has active power value(s) greater than 1.0 per-unit or less than -1.0 per-unit.  Not allowed for VOLTWATT control mode for PVSystem2/Storage2s', 381);
+              Result := NIL;
+              Break;
+            end;
+        end;
+    end;
+
+    // if WATTPF control mode then check for any negative pf values
+    // and values greater than 1.0
+    if InvControl2Mode = 'WATTPF' then
+    begin
+      for i:= 1 to Result.NumPoints do
+        begin
+          if (Result.YValue_pt[i] < 0.0) or (Result.YValue_pt[i] > 1.0) then
+            begin
+              DoSimpleMsg('XY Curve object: "' + CurveName + '" has power factor value(s) greater than 1.0 inductive or capacitive.  Not allowed for WATTPF control mode for PVSystem2/Storage2s', 381);
               Result := NIL;
               Break;
             end;
@@ -3233,6 +3433,14 @@ procedure TInvControl2Obj.CalcVoltVar_vars(j: Integer; ActorID : Integer);
       end;
   end;
 
+procedure TInvControl2Obj.CalcWATTPF_vars(j: Integer; ActorID : Integer);
+
+  begin
+
+    QDesiredWP[j] := QDesireEndpu[j] * QHeadRoom[j];
+
+  end;
+
 procedure TInvControl2Obj.CalcDRC_vars(j: Integer; ActorID : Integer);
   VAR
     DeltaQ                :Double;
@@ -3488,6 +3696,40 @@ procedure TInvControl2Obj.CalcQVVcurve_desiredpu(j: Integer; ActorID : Integer);
 
   end;
 
+procedure TInvControl2Obj.CalcQWPcurve_desiredpu(j: Integer; ActorID : Integer);
+  VAR
+    voltagechangesolution                    :Double;
+    p                                        :Double;
+    pf_priority                              :Boolean;
+
+  begin
+
+    QDesireWPpu[j] := 0.0;
+
+    voltagechangesolution := 0.0;
+
+    // for first two seconds, keep voltagechangesolution equal to zero
+    // we don't have solutions from the time-series power flow, yet
+    if ((ActiveCircuit[ActorID].Solution.DynaVars.dblHour*3600.0 / ActiveCircuit[ActorID].Solution.DynaVars.h)<3.0) then voltagechangesolution := 0.0
+    else if(FVpuSolutionIdx = 1) then voltagechangesolution := FVpuSolution[j,1] - FVpuSolution[j,2]
+    else if(FVpuSolutionIdx = 2) then voltagechangesolution := FVpuSolution[j,2] - FVpuSolution[j,1];
+
+    pf_wp_nominal := Fwattpf_curve.GetYValue(FDCkW[j] * FEffFactor[j] * FpctDCkWRated[j] / FDCkWRated[j]);
+
+    if ControlledElement[j].DSSClassName = 'PVSystem2'     then pf_priority := TPVSystem2Obj(ControlledElement[j]).PVSystem2Vars.PF_Priority
+    else if ControlledElement[j].DSSClassName = 'Storage2' then pf_priority :=  TStorage2Obj(ControlledElement[j]).Storage2Vars.PF_Priority;
+
+
+
+    if (FPPriority[j] = FALSE) and (pf_priority = FALSE) then p := FDCkW[j] * FEffFactor[j] * FpctDCkWRated[j]
+    else p := kW_out_desired[j];
+
+
+    if Fpf_ref = 'CAP' then  QDesireWPpu[j] := p * sqrt(1 / (pf_wp_nominal * pf_wp_nominal) -1) / QHeadRoom[j]
+    else if Fpf_ref = 'IND' then QDesireWPpu[j] := -1 * p * sqrt(1 / (pf_wp_nominal * pf_wp_nominal) -1) / QHeadRoomNeg[j];
+
+  end;
+
 procedure TInvControl2Obj.CalcQDRC_desiredpu(j: Integer; ActorID : Integer);
   VAR
     basekV                                    :Double;
@@ -3542,6 +3784,7 @@ procedure TInvControl2Obj.Check_Qlimits(j: Integer; Q: Double; ActorID : Integer
     // states
     error := 0;
     if (ControlMode = 'VOLTVAR')          then error := 0.005;
+    if (ControlMode = 'WATTPF')           then error := 0.005;
     if (ControlMode = 'DYNAMICREACCURR')  then error := 0.0005;
     if (CombiControlMode = 'VV_DRC')      then error := 0.005;
     if (CombiControlMode = 'VV_VW')       then error := 0.005;
@@ -3563,7 +3806,7 @@ procedure TInvControl2Obj.Check_Qlimits(j: Integer; Q: Double; ActorID : Integer
       end;
 
     // QVV curve desiredpu should be less than the Q avaliable under watt priority  (works just for varmax)
-    if FPPriority[j] and (FReacPower_ref = 'VARMAX') then
+    if FPPriority[j] and ((FReacPower_ref = 'VARMAX') or (ControlMode = 'WATTPF')) then
       begin
         if Q >= 0.0 then Q_Ppriority :=  Sqrt(SQR(FkVARating[j]) - SQR(FpresentkW[j]))/QHeadRoom[j]
         else Q_Ppriority :=  Sqrt(SQR(FkVARating[j]) - SQR(FpresentkW[j]))/QHeadRoomNeg[j];
@@ -3579,6 +3822,7 @@ procedure TInvControl2Obj.Check_Qlimits(j: Integer; Q: Double; ActorID : Integer
 
     // States Flags
     if (ControlMode = 'VOLTVAR')         then FVVOperation[j]    := FOperation;
+//    if (ControlMode = 'WATTPF')          then FWPOperation[j]    := FOperation;
     if (ControlMode = 'DYNAMICREACCURR') then FDRCOperation[j]   := FOperation;
     if (CombiControlMode = 'VV_DRC')     then FVVDRCOperation[j] := FOperation;
     if (CombiControlMode = 'VV_VW')      then FVVOperation[j]    := FOperation;
@@ -3598,7 +3842,7 @@ procedure TInvControl2Obj.Calc_QHeadRoom(j: Integer; ActorID : Integer);
         QHeadRoomNeg[j] := QHeadRoom[j];
       end;
 
-    if FReacPower_ref = 'VARMAX' then
+    if (FReacPower_ref = 'VARMAX') or (ControlMode = 'WATTPF') then
       begin
         QHeadRoom[j] := FkvarLimit[j];
         QHeadRoomNeg[j] := FkvarLimitNeg[j];
