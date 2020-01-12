@@ -95,7 +95,6 @@ begin
             with pElem do
                 if YprimInvalid then
                 begin
-                    //WriteLn('ReCalcInvalidYPrims: CalcYPrim for ', Name, ' (incremental)');
                     CalcYPrim;
                 end;
             pElem := IncrCktElements.Next;
@@ -107,7 +106,6 @@ begin
             with pElem do
                 if YprimInvalid {or ((DSSObjType and CLASSMASK) = LOAD_ELEMENT)} then
                 begin
-                    // WriteLn('ReCalcInvalidYPrims: CalcYPrim for ', Name, ' (normal)');
                     CalcYPrim;
                 end;
             pElem := CktElements.Next;
@@ -164,28 +162,28 @@ var
     coordIt: TCoordSet.TIterator;
     
     i, j, nref, inode, jnode: Integer;
-    //skip: Boolean;
+    abortIncremental: Boolean;
     val: Complex;
 begin
-    changedElements := TCoordSet.Create; //TODO: changedElements.Free;
+    changedElements := TCoordSet.Create;
     changedNodes := TNodeSet.Create;
     Result := False;
     CmatArray := NIL;
     IncrYprim := NIL;
-    
+    abortIncremental := False;
+
     // Incremental Y update, only valid for BuildOption = WHOLEMATRIX.
     pElem := Ckt.IncrCktElements.First;
     while pElem <> NIL do with pElem do
     begin
-        if (Enabled and (Yprim = NIL)) then 
+        if (Enabled and (Yprim = NIL)) then
         begin
-            writeln('TODO: ABORT');
+            abortIncremental := True;
+            break;
         end;
-    
-        if (Enabled and (Yprim <> NIL)) then 
+
+        if (Enabled and (Yprim <> NIL)) then
         begin
-//            writeln('> Incremental update -- handling ', pElem.ClassName, '.', pElem.Name);
-            //writeln('CalcYPrim');
             if IncrYprim <> NIL then
             begin
                 IncrYprim.Free;
@@ -198,9 +196,11 @@ begin
             
             CalcYPrim;
             
+
             if (Yprim = NIL) or (IncrYprim.order <> Yprim.order) then
             begin
-                writeln('TODO: ABORT -- Orders differ?', (IncrYprim.order <> Yprim.order));
+                abortIncremental := True;
+                break;
             end;
             
             IncrYprim.AddFrom(YPrim);
@@ -220,77 +220,93 @@ begin
                         changedNodes.Insert(jnode);
                         // Encode the coordinates as a 64-bit integer
                         changedElements.Insert((QWord(inode) shl 32) or QWord(jnode));
-                        //writeln('!!!!', inode, '   ', jnode);
                     end;
                 end;
             end;
-                
-//                // Retry with the full matrix instead
-//                ActiveCircuit.IncrCktElements.Clear;
-//                ActiveCircuit.Solution.SystemYChanged := True;
-//                writeln('ERROR: Aborting incremental update, running normal method (transformer, branch 2). ', 'CMatArray IS NIL');
-//                BuildYMatrix(BuildOption, AllocateVI);
-//                Exit;
         end;
         pElem := Ckt.IncrCktElements.Next;
     end;
-    
+
     if IncrYprim <> NIL then
     begin
         IncrYprim.Free;
         IncrYprim := NIL;
     end;
-    
-//    writeln('Changed nodes:', changedNodes.Size);
-    coordIt := changedElements.Min;
-    repeat
-        // writeln('>Zeroising row and column for ', (coordIt.Data shr 32), ',', coordIt.Data and $FFFFFFFF);
-        // Zeroise only the exact elements affected to make it faster
-        ZeroiseMatrixElement(Ckt.Solution.hYsystem, (coordIt.Data shr 32), coordIt.Data and $FFFFFFFF);
-    until not coordIt.Next();
-    
 
-//    writeln('Checking all elements');
-    
+    if not abortIncremental then
+    begin
+        coordIt := changedElements.Min;
+        repeat
+            // Zeroise only the exact elements affected to make it faster
+            if ZeroiseMatrixElement(Ckt.Solution.hYsystem, (coordIt.Data shr 32), coordIt.Data and $FFFFFFFF) = 0 then
+            begin
+                // If the element doesn't exist in the current compressed matrix, abort!
+                abortIncremental := True;
+                break;
+            end;
+        until not coordIt.Next();
+    end;
+
     pElem := Ckt.CktElements.First;
-    while pElem <> NIL do with pElem do
+    while (not abortIncremental) and (pElem <> NIL) do with pElem do
     begin
         if (not Enabled) or (Yprim = NIL) then
         begin
             pElem := Ckt.CktElements.Next;
             continue;
         end;
-    
+
         for i := 1 to Yprim.order do
         begin
             inode := NodeRef[i];
             if inode = 0 then continue;
-            if changedNodes.Find(inode) = NIL then 
+            if changedNodes.Find(inode) = NIL then
                 // nothing changed for node "inode", we can skip it completely
-                continue; 
-            
+                continue;
+
             for j := 1 to Yprim.order do
             begin
                 jnode := NodeRef[j];
                 if jnode = 0 then continue;
-                
+
                 if (changedElements.Find((QWord(inode) shl 32) or (QWord(jnode))) = nil) then
                     continue;
-                    
+
                 val := Yprim.GetElement(i, j);
                 if (val.re = 0) and (val.im = 0) then continue;
-                
-                //writeln('IncrementMatrixElement: (', inode, ',', jnode, '): ', val.re, ', ', val.im);
-                IncrementMatrixElement(Ckt.Solution.hYsystem, inode, jnode, val.re, val.im);
+
+                if IncrementMatrixElement(Ckt.Solution.hYsystem, inode, jnode, val.re, val.im) = 0 then
+                begin
+                    abortIncremental := True;
+                    break;
+                end;
             end;
+
+            if abortIncremental then break;
         end;
+
+        if abortIncremental then break;
+
         pElem := Ckt.CktElements.Next;
     end;
 
-    Ckt.IncrCktElements.Clear;
-    Result := True;
-//    writeln('Incremental update finished.');
-//    writeln();
+    if abortIncremental then
+    begin
+        Result := False;
+
+        // Retry with the full matrix
+        Ckt.Solution.SystemYChanged := True;
+        BuildYMatrix(Ckt.DSS, BuildOption, AllocateVI);
+        Ckt.IncrCktElements.Clear;
+    end
+    else
+    begin
+        Ckt.IncrCktElements.Clear;
+        Result := True;
+    end;
+
+    changedElements.Free;
+    changedNodes.Free;
 end;
 {$ENDIF} //DSS_CAPI_INCREMENTAL_Y
 
