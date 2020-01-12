@@ -104,7 +104,7 @@ begin
         while pElem <> NIL do
         begin
             with pElem do
-                if YprimInvalid {or ((DSSObjType and CLASSMASK) = LOAD_ELEMENT)} then
+                if YprimInvalid or ((DSSObjType and CLASSMASK) = LOAD_ELEMENT) then
                 begin
                     CalcYPrim;
                 end;
