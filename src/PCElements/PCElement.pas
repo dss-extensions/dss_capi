@@ -49,7 +49,7 @@ type
         procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present values of terminal
         procedure ComputeIterminal; OVERRIDE;
         function InjCurrents: Integer; OVERRIDE;
-        procedure CalcYPrimContribution(Curr: pComplexArray);
+        procedure CalcYPrimContribution(Curr: pComplexArray); INLINE;
         procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
 
       // Sweep solution removed  PROCEDURE BackwardSweep;Override;
