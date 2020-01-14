@@ -668,7 +668,7 @@ begin
         DoYPrimCalcs(YPrim);
 
 //    writeln('CalcYPrim called for ', ClassName, '.', Name);
-    YPrimInvalid := False; //TODO: make it an option
+    //YPrimInvalid := False; //TODO: make it an option
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
