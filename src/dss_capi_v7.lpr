@@ -1804,7 +1804,9 @@ exports
     WireData_Set_idx,
     XYCurves_Get_idx,
     XYCurves_Set_idx,
-
+    YMatrix_Get_SolverOptions,
+    YMatrix_Set_SolverOptions,
+    
     // Re-export most KLUSolve functions
     NewSparseSet,
     GetFlops,

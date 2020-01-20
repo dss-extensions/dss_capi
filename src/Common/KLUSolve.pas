@@ -94,6 +94,7 @@ FUNCTION GetMatrixElement(id:NativeUInt; i,j:LongWord; Value:pComplex):LongWord;
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
 FUNCTION IncrementMatrixElement(id:NativeUInt; i,j:LongWord; re: Double; im: Double):LongWord;{$IFNDEF FPC}cdecl;external 'klusolvex.dll';{$ELSE}KLU_CALL;{$ENDIF}
 FUNCTION ZeroiseMatrixElement(id:NativeUInt; i,j:LongWord):LongWord;{$IFNDEF FPC}cdecl;external 'klusolvex.dll';{$ELSE}KLU_CALL;{$ENDIF}
+FUNCTION SetOptions(id:NativeUInt; options: UInt64):LongWord;{$IFNDEF FPC}cdecl;external 'klusolvex.dll';{$ELSE}KLU_CALL;{$ENDIF}
 {$ENDIF}
 
 implementation

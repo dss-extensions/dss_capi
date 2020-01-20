@@ -5894,6 +5894,8 @@ extern "C" {
     DSS_CAPI_DLL void YMatrix_Set_Iteration(int32_t Value);
     DSS_CAPI_DLL void *YMatrix_Get_Handle(void);
 
+    DSS_CAPI_DLL void YMatrix_Set_SolverOptions(uint64_t opts);
+    DSS_CAPI_DLL uint64_t YMatrix_Get_SolverOptions(void);
 
     /*
     Selected KLUSolveX functions, re-exported through DSS C-API.
@@ -5922,6 +5924,16 @@ extern "C" {
     DSS_CAPI_DLL int ZeroiseMatrixElement(void* handle, int i, int j);
     DSS_CAPI_DLL void mvmult(int32_t N, double* b, double* A, double* x);
 
+    enum SolverOptions {
+        // The values themselves are subject to change in future versions,
+        // use this enum for easier upgrades
+        SolverOptions_ReuseNothing = 0,
+        SolverOptions_ReuseCompressedMatrix = 1, // Reuse only the prepared CSC matrix
+        SolverOptions_ReuseSymbolicFactorization = 2, // Reuse the symbolic factorization, implies ReuseCompressedMatrix
+        SolverOptions_ReuseNumericFactorization = 3, // Reuse the numeric factorization, implies ReuseSymbolicFactorization
+        
+        SolverOptions_AlwaysResetYPrimInvalid = 0x100000000 // Bit flag, see CktElement.pas
+    };
 
 #ifdef __cplusplus
 } // extern "C"

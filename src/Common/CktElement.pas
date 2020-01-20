@@ -176,6 +176,7 @@ uses
     SysUtils,
     Utilities,
     Math,
+    Solution,
     DSSHelper;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -667,8 +668,8 @@ begin
     if YPrim <> NIL then
         DoYPrimCalcs(YPrim);
 
-//    writeln('CalcYPrim called for ', ClassName, '.', Name);
-    //YPrimInvalid := False; //TODO: make it an option
+    if ((DSS.ActiveCircuit.Solution.SolverOptions and ord(TSolverOptions.AlwaysResetYPrimInvalid)) <> 0) then
+        YPrimInvalid := False;
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

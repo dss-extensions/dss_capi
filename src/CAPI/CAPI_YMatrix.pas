@@ -33,7 +33,8 @@ procedure YMatrix_Set_SolutionInitialized(arg: Boolean); CDECL;
 function YMatrix_Get_SolutionInitialized(): Boolean; CDECL;
 procedure YMatrix_SetGeneratordQdV(); CDECL;
 function YMatrix_Get_Handle(): NativeUInt; CDECL;
-
+procedure YMatrix_Set_SolverOptions(opts: UInt64); CDECL;
+function YMatrix_Get_SolverOptions():UInt64; CDECL;
 
 implementation
 
@@ -213,6 +214,22 @@ begin
         Result := 0;
 end;
 
+procedure YMatrix_Set_SolverOptions(opts: UInt64); CDECL;
+begin
+    if DSSPrime.ActiveCircuit = NIL then Exit;
+    with DSSPrime.ActiveCircuit.Solution do
+    begin
+        SolverOptions := opts;
+        if hY <> 0 then
+            KLUSolve.SetOptions(hY, SolverOptions and $FFFFFFFF);
+    end;
+end;
 
-//---------------------------------------------------------------------------------
+function YMatrix_Get_SolverOptions():UInt64; CDECL;
+begin
+    Result := 0;
+    if DSSPrime.ActiveCircuit = NIL then Exit;
+    Result := DSSPrime.ActiveCircuit.Solution.SolverOptions;
+end;
+
 end.

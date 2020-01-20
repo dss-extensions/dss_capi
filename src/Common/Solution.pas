@@ -89,6 +89,22 @@ const
 
 
 type
+
+{$IFDEF DSS_CAPI_INCREMENTAL_Y}
+{$SCOPEDENUMS ON}
+    TSolverOptions = (
+        // The values themselves are subject to change in future versions,
+        // use this enum for easier upgrades
+        ReuseNothing = 0,
+        ReuseCompressedMatrix = 1, // Reuse only the prepared CSC matrix
+        ReuseSymbolicFactorization = 2, // Reuse the symbolic factorization, implies ReuseCompressedMatrix
+        ReuseNumericFactorization = 3, // Reuse the numeric factorization, implies ReuseSymbolicFactorization
+        
+        AlwaysResetYPrimInvalid = $100000000 // Bit flag, see CktElement.pas
+    );
+{$SCOPEDENUMS OFF}
+{$ENDIF}
+
     EControlProblem = class(Exception);
     ESolveError = class(Exception);  // Raised when solution aborted
 
@@ -178,6 +194,7 @@ type
     PUBLIC
 
         Algorithm: Integer;      // NORMALSOLVE or NEWTONSOLVE
+        SolverOptions: Uint64;   // KLUSolveX options
         AuxCurrents: pComplexArray;  // For injections like AutoAdd
         ControlActionsDone: Boolean;
         ControlIteration: Integer;
@@ -455,7 +472,7 @@ begin
     inherited Create(ParClass);
     Name := LowerCase(SolutionName);
 
-//    i := SetLogFile ('c:\\temp\\KLU_Log.txt', 1);
+    SolverOptions := 0;
 
     FYear := 0;
     DynaVars.intHour := 0;

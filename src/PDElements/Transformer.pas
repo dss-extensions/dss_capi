@@ -249,6 +249,7 @@ uses
     Sysutils,
     Utilities,
     XfmrCode,
+    Solution,
     DSSHelper;
 
 const
@@ -644,7 +645,7 @@ begin
                 8:
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
                     // Try to handle tap changes incrementally
-                    if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and 
+                    if (DSS.ActiveCircuit.Solution.SolverOptions <> ord(TSolverOptions.ReuseNothing)) and 
                        (not DSS.ActiveCircuit.Solution.SystemYChanged) and 
                        (YPrim <> NIL) and 
                        (not YPrimInvalid)
@@ -1588,7 +1589,7 @@ begin
                 puTap := TempVal;
                 // Writeln(ActiveCircuit.Solution.dynavars.dblHour, ' Transformer.', Name, '.Tap = ', puTap);
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
-                if (DSS_CAPI_ALLOW_INCREMENTAL_Y) and 
+                if (DSS.ActiveCircuit.Solution.SolverOptions <> ord(TSolverOptions.ReuseNothing)) and 
                    (not DSS.ActiveCircuit.Solution.SystemYChanged) and 
                    (YPrim <> NIL) and 
                    (not YPrimInvalid)
