@@ -465,7 +465,7 @@ begin
                 12, 13:
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
                     // For changes in NumSteps and States, try to handle it incrementally
-                    if (DSS.ActiveCircuit.Solution.SolverOptions <> ord(TSolverOptions.ReuseNothing)) and 
+                    if ((DSS.ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
                        (not DSS.ActiveCircuit.Solution.SystemYChanged) and 
                        (YPrim <> NIL) and 
                        (not YPrimInvalid)
@@ -948,7 +948,7 @@ begin
         FStates^[Idx] := Value;
 
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}        
-        if (DSS.ActiveCircuit.Solution.SolverOptions <> ord(TSolverOptions.ReuseNothing)) and 
+        if ((DSS.ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
            (not DSS.ActiveCircuit.Solution.SystemYChanged) and 
            (YPrim <> NIL) and 
            (not YPrimInvalid)
@@ -1093,7 +1093,7 @@ begin
      // Force rebuild of YPrims if necessary.
     if Value <> FLastStepInService then
 {$IFDEF DSS_CAPI_INCREMENTAL_Y}
-        if (DSS.ActiveCircuit.Solution.SolverOptions <> ord(TSolverOptions.ReuseNothing)) and 
+        if ((DSS.ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
            (not DSS.ActiveCircuit.Solution.SystemYChanged) and 
            (YPrim <> NIL) and 
            (not YPrimInvalid)
@@ -1323,7 +1323,7 @@ begin
         for i := 1 to Fnphases do
             Terminals^[ActiveTerminalIdx].Conductors^[i].Closed := Value;
         
-        if (DSS.ActiveCircuit.Solution.SolverOptions <> ord(TSolverOptions.ReuseNothing)) and 
+        if ((DSS.ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
            (not DSS.ActiveCircuit.Solution.SystemYChanged) and 
            (YPrim <> NIL) and 
            (not YPrimInvalid)
@@ -1340,7 +1340,7 @@ begin
     begin
         Terminals^[ActiveTerminalIdx].Conductors^[index].Closed := Value;
             
-        if (DSS.ActiveCircuit.Solution.SolverOptions <> ord(TSolverOptions.ReuseNothing)) and 
+        if ((DSS.ActiveCircuit.Solution.SolverOptions and $FFFFFFFF) <> ord(TSolverOptions.ReuseNothing)) and 
            (not DSS.ActiveCircuit.Solution.SystemYChanged) and 
            (YPrim <> NIL) and 
            (not YPrimInvalid)
