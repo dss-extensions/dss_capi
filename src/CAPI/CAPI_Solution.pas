@@ -94,9 +94,7 @@ function Solution_Get_IntervalHrs(): Double; CDECL;
 procedure Solution_Set_IntervalHrs(Value: Double); CDECL;
 function Solution_Get_MinIterations(): Integer; CDECL;
 procedure Solution_Set_MinIterations(Value: Integer); CDECL;
-{$IFDEF DSS_CAPI_PM}
 procedure Solution_SolveAll();cdecl;
-{$ENDIF}
 procedure Solution_Get_IncMatrix(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
 procedure Solution_Get_IncMatrix_GR(); CDECL;
 procedure Solution_Get_Laplacian(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
@@ -848,6 +846,11 @@ begin
     begin
         DSSPrime.CmdResult := DoSetCmd(DSSPrime.Children[i], 1);
     end;
+end;
+{$ELSE}
+procedure Solution_SolveAll();cdecl;
+begin
+    DoSimpleMsg(DSSPrime, 'Parallel machine functions were not compiled', 7983);
 end;
 {$ENDIF}
 //------------------------------------------------------------------------------

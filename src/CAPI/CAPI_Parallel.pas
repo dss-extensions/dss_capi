@@ -40,6 +40,8 @@ uses
     DSSClass,
     DSSHelper;
 
+
+{$IFDEF DSS_CAPI_PM}
 function Parallel_Get_NumCPUs(): Integer; CDECL;
 begin
     Result := CPU_Cores;
@@ -167,4 +169,96 @@ begin
     DSSPrime.ConcatenateReports := (Value = 1);
 end;
 //------------------------------------------------------------------------------
+{$ELSE}
+function NotAvailable(): Integer;
+begin
+    DoSimpleMsg(DSSPrime, 'Parallel machine functions were not compiled', 7982);
+    Result := -1;
+end;
+
+function Parallel_Get_NumCPUs(): Integer; CDECL;
+begin
+    Result := NotAvailable();
+end;
+
+function Parallel_Get_NumCores(): Integer; CDECL;
+begin
+    Result := NotAvailable();
+end;
+
+function Parallel_Get_ActiveActor(): Integer; CDECL;
+begin
+    Result := NotAvailable();
+end;
+
+procedure Parallel_Set_ActiveActor(Value: Integer); CDECL;
+begin
+    NotAvailable();
+end;
+
+procedure Parallel_CreateActor(); CDECL;
+begin
+    NotAvailable();
+end;
+
+function Parallel_Get_ActorCPU(): Integer; CDECL;
+begin
+    Result := NotAvailable();
+end;
+
+procedure Parallel_Set_ActorCPU(Value: Integer); CDECL;
+begin
+    NotAvailable();
+end;
+
+function Parallel_Get_NumOfActors(): Integer; CDECL;
+begin
+    Result := NotAvailable();
+end;
+
+procedure Parallel_Wait(); CDECL;
+begin
+    NotAvailable();
+end;
+
+procedure Parallel_Get_ActorProgress(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+begin
+    NotAvailable();
+end;
+
+procedure Parallel_Get_ActorProgress_GR(); CDECL;
+begin
+    NotAvailable();
+end;
+
+procedure Parallel_Get_ActorStatus(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+begin
+    NotAvailable();
+end;
+
+procedure Parallel_Get_ActorStatus_GR(); CDECL;
+begin
+    NotAvailable();
+end;
+
+function Parallel_Get_ActiveParallel(): Integer; CDECL;
+begin
+    Result := NotAvailable();
+end;
+
+procedure Parallel_Set_ActiveParallel(Value: Integer); CDECL;
+begin
+    NotAvailable();
+end;
+
+function Parallel_Get_ConcatenateReports(): Integer; CDECL;
+begin
+    Result := NotAvailable();
+end;
+
+procedure Parallel_Set_ConcatenateReports(Value: Integer); CDECL;
+begin
+    NotAvailable();
+end;
+{$ENDIF}
 end.

@@ -233,9 +233,7 @@ uses
     CAPI_LoadShapes in 'CAPI/CAPI_LoadShapes.pas',
     CAPI_Meters in 'CAPI/CAPI_Meters.pas',
     CAPI_Monitors in 'CAPI/CAPI_Monitors.pas',
-{$IFDEF DSS_CAPI_PM}
     CAPI_Parallel in 'CAPI/CAPI_Parallel.pas',
-{$ENDIF}
     CAPI_Parser in 'CAPI/CAPI_Parser.pas',
     CAPI_PDElements in 'CAPI/CAPI_PDElements.pas',
     CAPI_PVSystems in 'CAPI/CAPI_PVSystems.pas',
@@ -914,7 +912,6 @@ exports
     Monitors_Set_Element,
     Monitors_Get_Terminal,
     Monitors_Set_Terminal,
-{$IFDEF DSS_CAPI_PM}
     Parallel_Get_NumCPUs,
     Parallel_Get_NumCores,
     Parallel_Get_ActiveActor,
@@ -930,7 +927,6 @@ exports
     Parallel_Set_ActiveParallel,
     Parallel_Get_ConcatenateReports,
     Parallel_Set_ConcatenateReports,
-{$ENDIF}    
     Parser_Get_CmdString,
     Parser_Set_CmdString,
     Parser_Get_NextParam,
@@ -1252,9 +1248,7 @@ exports
     Solution_Set_IntervalHrs,
     Solution_Get_MinIterations,
     Solution_Set_MinIterations,
-{$IFDEF DSS_CAPI_PM}
     Solution_SolveAll,
-{$ENDIF}    
     Solution_Get_IncMatrix,
     Solution_Get_Laplacian,
     Solution_Get_BusLevels,
@@ -1501,10 +1495,8 @@ exports
     Monitors_Get_Channel_GR,
     Monitors_Get_dblFreq_GR,
     Monitors_Get_dblHour_GR,
-{$IFDEF DSS_CAPI_PM}
     Parallel_Get_ActorProgress_GR,
     Parallel_Get_ActorStatus_GR,
-{$ENDIF}
     Parser_Get_Vector_GR,
     Parser_Get_Matrix_GR,
     Parser_Get_SymMatrix_GR,
