@@ -158,8 +158,8 @@ var
     pElem: TDSSCktElement;
     CmatArray: pComplexArray;
     error, n: Integer;
-    changedElements: TCoordSet;
-    changedNodes: TNodeSet;
+    changedElements: TCoordSet; // element from the matrix that have been changed
+    changedNodes: TNodeSet; // nodes which have affected elements
     coordIt: TCoordSet.TIterator;
     
     i, j, nref, inode, jnode: Integer;
@@ -237,6 +237,7 @@ begin
     if not abortIncremental then
     begin
         coordIt := changedElements.Min;
+        if coordIt <> nil then
         repeat
             // Zeroise only the exact elements affected to make it faster
             if ZeroiseMatrixElement(Ckt.Solution.hYsystem, (coordIt.Data shr 32), coordIt.Data and $FFFFFFFF) = 0 then
