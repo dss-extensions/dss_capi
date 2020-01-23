@@ -188,6 +188,16 @@ begin
                End;
            End;
      End;
+    end;
+  11: begin  // PVSystems.IrradianceNow
+       Result := -1.0;  // not set
+       IF ActiveCircuit[ActiveActor]<> NIL THEN Begin
+             WITH ActiveCircuit[ActiveActor].PVSystems Do Begin
+                 IF ActiveIndex<>0 THEN Begin
+                     Result := TPVSystemObj(Active).IrradianceNow;
+                 End;
+             End;
+       End;
     end
   else
       Result:=-1.0;

@@ -36,6 +36,7 @@ type
     procedure Set_kvar(Value: Double); stdcall;
     function Get_Pmpp: Double; safecall;
     procedure Set_Pmpp(Value: Double); safecall;
+    function Get_IrradianceNow: Double; safecall;
 
   end;
 
@@ -365,6 +366,18 @@ begin
       End;
     End;
   End;
+end;
+
+function TPVSystems.Get_IrradianceNow: Double;
+begin
+   Result := -1.0;  // not set
+   IF ActiveCircuit[ActiveActor]<> NIL THEN Begin
+         WITH ActiveCircuit[ActiveActor].PVSystems Do Begin
+             IF ActiveIndex<>0 THEN Begin
+                 Result := TPVSystemObj(Active).IrradianceNow;
+             End;
+         End;
+   End;
 end;
 
 initialization
