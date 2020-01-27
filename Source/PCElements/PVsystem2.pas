@@ -759,8 +759,8 @@ FUNCTION TPVsystem2.Edit(ActorID : Integer):Integer;
                 propKVA           : With PVSystem2Vars Do
                                       Begin
                                         FkVArating    := Parser[ActorID].DblValue;
-                                        if not kvarLimitSet                       then PVSystem2Vars.Fkvarlimit    := Parser[ActorID].DblValue;
-                                        if not kvarLimitSet and not kvarLimitNegSet then PVSystem2Vars.Fkvarlimitneg := Parser[ActorID].DblValue;
+                                        if not kvarLimitSet                       then PVSystem2Vars.Fkvarlimit    := FkVArating;
+                                        if not kvarLimitSet and not kvarLimitNegSet then PVSystem2Vars.Fkvarlimitneg := FkVArating;
                                       End;
                 propUSERMODEL     : UserModel.Name := Parser[ActorID].StrValue;  // Connect to user written models
                 propUSERDATA      : UserModel.Edit := Parser[ActorID].StrValue;  // Send edit string to user model
@@ -773,7 +773,7 @@ FUNCTION TPVsystem2.Edit(ActorID : Integer):Integer;
                 propkvarLimit     : Begin
                                       PVSystem2Vars.Fkvarlimit     := Abs(Parser[ActorID].DblValue);
                                       kvarLimitSet := True;
-                                      if not kvarLimitNegSet then PVSystem2Vars.Fkvarlimitneg := Abs(Parser[ActorID].DblValue);
+                                      if not kvarLimitNegSet then PVSystem2Vars.Fkvarlimitneg := Abs(PVSystem2Vars.Fkvarlimit);
 
                                     End;
                 propDutyStart     : DutyStart := Parser[ActorID].DblValue;

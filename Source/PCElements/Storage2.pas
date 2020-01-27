@@ -874,8 +874,8 @@ Begin
                propKVA          : With Storage2Vars Do Begin
                                       FkVArating     := Parser[ActorID].DblValue;
                                       kVASet         := TRUE;
-                                      if not kvarLimitSet                         then Storage2Vars.Fkvarlimit    := Parser[ActorID].DblValue;
-                                      if not kvarLimitSet and not kvarLimitNegSet then Storage2Vars.Fkvarlimitneg := Parser[ActorID].DblValue;
+                                      if not kvarLimitSet                         then Storage2Vars.Fkvarlimit    := FkVArating;
+                                      if not kvarLimitSet and not kvarLimitNegSet then Storage2Vars.Fkvarlimitneg := FkVArating;
                                   End;
                propKWRATED      : Storage2Vars.kWrating     := Parser[ActorID].DblValue ;
                propKWHRATED     : Storage2Vars.kWhrating    := Parser[ActorID].DblValue;
@@ -897,7 +897,7 @@ Begin
                propkvarLimit    : Begin
                                     Storage2Vars.Fkvarlimit := Abs(Parser[ActorID].DblValue);
                                     kvarLimitSet := True;
-                                    if not kvarLimitNegSet then Storage2Vars.Fkvarlimitneg := Abs(Parser[ActorID].DblValue);
+                                    if not kvarLimitNegSet then Storage2Vars.Fkvarlimitneg := Abs(Storage2Vars.Fkvarlimit);
 
                                   End;
                propPPriority    : Storage2Vars.P_priority   := InterpretYesNo(Param);  // watt priority flag
