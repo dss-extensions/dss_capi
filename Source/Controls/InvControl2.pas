@@ -529,7 +529,8 @@ procedure TInvControl2.DefineProperties;
                        'The averaging window will calculate the average PVSystem2/Storage2 terminal voltage over the specified period of time, up to and including the last power flow solution.  Note, if the solution stepsize is larger than '+
                        'the window length, then the voltage will be assumed to have been constant over the time-frame specified by the window length.';
 
-    PropertyHelp[14] := 'Required for the VOLTVAR and DYNAMICREACCURR modes.  Defaults to 0.7. '+CRLF+CRLF+
+    PropertyHelp[14] := 'Required for the VOLTVAR and DYNAMICREACCURR modes.  Defaults to -1.0. '+CRLF+CRLF+
+                       'Defining -1.0, OpenDSS takes care internally of delta_Q itself. It tries to improve convergence as well as speed up process'+CRLF+CRLF+
                        'Sets the maximum change (in per unit) from the prior var output level to the desired var output level during each control iteration. '+CRLF+CRLF+CRLF+
                        'if numerical instability is noticed in solutions such as var sign changing from one control iteration to the next and voltages oscillating between two values with some separation, '+
                        'this is an indication of numerical instability (use the EventLog to diagnose). '+CRLF+CRLF+
@@ -592,8 +593,9 @@ procedure TInvControl2.DefineProperties;
                        'for VOLTVAR mode, the units for this number are in  per-unit of the y-axis quantity of RefReactivePower/second.'+CRLF+CRLF+
                        'Note:  Set to -1 to disable the rise/fall limit.  Otherwise, set it to a positive value for both rise limit and fall limit. ';
 
-    PropertyHelp[21] := 'Required for the VOLTWATT modes.  Defaults to 1.0. '+CRLF+CRLF+
-                       'Sets the maximum change (in unit of the y-axis) from the prior active power output level to the desired active power output level during each control iteration. '+CRLF+CRLF+CRLF+
+    PropertyHelp[21] := 'Required for the VOLTWATT modes.  Defaults to -1.0. '+CRLF+CRLF+
+                       'Defining -1.0, OpenDSS takes care internally of delta_P itself. It tries to improve convergence as well as speed up process'+CRLF+CRLF+
+                       'Defining between 0.05 and 1.0, it sets the maximum change (in unit of the y-axis) from the prior active power output level to the desired active power output level during each control iteration. '+CRLF+CRLF+CRLF+
                        'if numerical instability is noticed in solutions such as active power changing substantially from one control iteration to the next and/or voltages oscillating between two values with some separation, '+
                        'this is an indication of numerical instability (use the EventLog to diagnose). '+CRLF+CRLF+
                        'if the maximum control iterations are exceeded, and no numerical instability is seen in the EventLog of via monitors, then try increasing the value of this parameter to reduce the number '+
