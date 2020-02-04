@@ -80,15 +80,15 @@ type
 
       function Edit(ActorID : Integer):Integer; override;     // uses global parser
       function NewObject(const ObjName:String):Integer; override;
-      function GetXYCurve(Const CurveName: String; InvControl2Mode: String): TXYcurveObj;
+      function GetXYCurve(Const CurveName: String; InvControl2Mode: Integer): TXYcurveObj;
       procedure UpdateAll(ActorID : integer);
    end;
 
   TInvControl2Obj = class(TControlElem)
 
     private
-      ControlMode             : String;
-      CombiControlMode        : String;
+      ControlMode             : Integer;
+      CombiControlMode        : Integer;
       ControlActionHandle     : Integer;
       ControlledElement       : Array of TPCElement;
       MonitoredElement        : TDSSCktElement;  // First DER element for now (the first element from ControlledElement TPointerList)
@@ -257,6 +257,7 @@ type
       FDRCOperation           : Array of Double;
       FVVDRCOperation         : Array of Double;
       FWPOperation            : Array of Double;
+      FWVOperation            : Array of Double;
 
       {Others}
       cBuffer                 : Array of Array of Complex;    // Complex array buffer
@@ -331,8 +332,8 @@ type
       Property    PendingChange[DevIndex: Integer]:Integer Read Get_PendingChange Write Set_PendingChange;
 
       {Properties that give access to this Class variables}
-      property Mode      				         : String             read ControlMode;
-      property CombiMode 				         : String             read CombiControlMode;
+      property Mode      				         : Integer            read ControlMode;
+      property CombiMode 				         : Integer            read CombiControlMode;
       property DERNameList         	     : TStringList        read FDERNameList;
       property vvc_curve1           	   : String             read Fvvc_curvename;
       property hysteresis_offset    	   : Double             read Fvvc_curveOffset;
@@ -391,6 +392,20 @@ const
     FLAGDELTAP = -1.0;
     DELTAQDEFAULT = 0.5;
     DELTAPDEFAULT = 0.5;
+
+    // Modes
+    NONE_MODE = 0;
+    VOLTVAR   = 1;
+    VOLTWATT  = 2;
+    DRC       = 3;
+    WATTPF    = 4;
+    WATTVAR   = 5;
+
+    // Combi Modes
+    NONE_COMBMODE = 0;
+    VV_VW         = 1;
+    VV_DRC        = 2;
+
 
 constructor TInvControl2.Create;  // Creates superstructure for all InvControl objects
   begin
@@ -692,38 +707,38 @@ function TInvControl2.Edit(ActorID : Integer):Integer;
               2: begin
                   if CompareTextShortest(Parser[ActorID].StrValue, 'voltvar')= 0 then
                     begin
-                      ControlMode := 'VOLTVAR';
-                      CombiControlMode := '';
+                      ControlMode := VOLTVAR;
+                      CombiControlMode := NONE_COMBMODE;
                     end
                   else if CompareTextShortest(Parser[ActorID].StrValue, 'voltwatt')= 0 then
                     begin
-                      ControlMode := 'VOLTWATT';
-                      CombiControlMode := '';
+                      ControlMode := VOLTWATT;
+                      CombiControlMode := NONE_COMBMODE;
                     end
                   else if CompareTextShortest(Parser[ActorID].StrValue, 'dynamicreaccurr')= 0 then
                     begin
-                      ControlMode := 'DYNAMICREACCURR';
-                      CombiControlMode := '';
+                      ControlMode := DRC;
+                      CombiControlMode := NONE_COMBMODE;
                     end
-                  else if CompareTextShortest(Parser[ActorID].StrValue, 'fixedpf')= 0 then     // (PR) what is this?
-                    begin
-                      ControlMode := 'FIXEDPF';
-                      CombiControlMode := '';
-                    end
+//                  else if CompareTextShortest(Parser[ActorID].StrValue, 'fixedpf')= 0 then     // (PR) what is this?
+//                    begin
+//                      ControlMode := 'FIXEDPF';
+//                      CombiControlMode := '';
+//                    end
                   else if CompareTextShortest(Parser[ActorID].StrValue, 'wattpf')= 0 then
                     begin
-                      ControlMode := 'WATTPF';
-                      CombiControlMode := '';
+                      ControlMode := WATTPF;
+                      CombiControlMode := NONE_COMBMODE;
                     end
                   else if CompareTextShortest(Parser[ActorID].StrValue, 'wattvar')= 0 then
                     begin
-                      ControlMode := 'WATTVAR';
-                      CombiControlMode := '';
+                      ControlMode := WATTVAR;
+                      CombiControlMode := NONE_COMBMODE;
                     end
                   else
                     begin
-                      if ControlMode = '' then DoSimpleMsg('Invalid Control Mode selected', 1366);
-                      CombiControlMode := '';
+                      if ControlMode = NONE_MODE then DoSimpleMsg('Invalid Control Mode selected', 1366);
+                      CombiControlMode := NONE_COMBMODE;
                       SolutionAbort := True;
                       exit;
                     end;
@@ -732,18 +747,18 @@ function TInvControl2.Edit(ActorID : Integer):Integer;
               3: begin
                   if CompareTextShortest(Parser[ActorID].StrValue, 'vv_vw')= 0 then
                     begin
-                      ControlMode := '';
-                      CombiControlMode := 'VV_VW';
+                      ControlMode := NONE_MODE;
+                      CombiControlMode := VV_VW;
                     end
                   else if CompareTextShortest(Parser[ActorID].StrValue, 'vv_drc')= 0 then
                     begin
-                      ControlMode := '';
-                      CombiControlMode := 'VV_DRC';
+                      ControlMode := NONE_MODE;
+                      CombiControlMode := VV_DRC;
                     end
                   else
                     begin
-                      if CombiControlMode = '' then DoSimpleMsg('Invalid CombiControl Mode selected', 1367);
-                      CombiControlMode := '';
+                      if CombiControlMode = NONE_COMBMODE then DoSimpleMsg('Invalid CombiControl Mode selected', 1367);
+                      CombiControlMode := NONE_COMBMODE;
                       SolutionAbort := True;
                       exit;
                     end;
@@ -753,7 +768,7 @@ function TInvControl2.Edit(ActorID : Integer):Integer;
                   Fvvc_curvename := Parser[ActorID].StrValue;
                   if Length(Fvvc_curvename) > 0 then
                     begin
-                      Fvvc_curve := GetXYCurve(Fvvc_curvename, 'VOLTVAR');
+                      Fvvc_curve := GetXYCurve(Fvvc_curvename, VOLTVAR);
                       Fvvc_curve_size := Fvvc_curve.NumPoints;
                     end;
                  end;
@@ -777,7 +792,7 @@ function TInvControl2.Edit(ActorID : Integer):Integer;
                   Fvoltwatt_curvename := Parser[ActorID].StrValue;
                   if Length(Fvoltwatt_curvename) > 0 then
                     begin
-                      Fvoltwatt_curve := GetXYCurve(Fvoltwatt_curvename, 'VOLTWATT');
+                      Fvoltwatt_curve := GetXYCurve(Fvoltwatt_curvename, VOLTWATT);
                       Fvoltwatt_curve_size := Fvoltwatt_curve.NumPoints;
                     end;
                  end;
@@ -876,7 +891,7 @@ function TInvControl2.Edit(ActorID : Integer):Integer;
                     FvoltwattCH_curvename := Parser[ActorID].StrValue;
                     if Length(FvoltwattCH_curvename) > 0 then
                       begin
-                        FvoltwattCH_curve      := GetXYCurve(FvoltwattCH_curvename, 'VOLTWATT');
+                        FvoltwattCH_curve      := GetXYCurve(FvoltwattCH_curvename, VOLTWATT);
                         FvoltwattCH_curve_size := FvoltwattCH_curve.NumPoints;
                       end;
                   end;
@@ -885,7 +900,7 @@ function TInvControl2.Edit(ActorID : Integer):Integer;
                   Fwattpf_curvename := Parser[ActorID].StrValue;
                   if Length(Fwattpf_curvename) > 0 then
                     begin
-                      Fwattpf_curve := GetXYCurve(Fwattpf_curvename, 'WATTPF');
+                      Fwattpf_curve := GetXYCurve(Fwattpf_curvename, WATTPF);
                       Fwattpf_curve_size := Fwattpf_curve.NumPoints;
                     end;
                  end;
@@ -894,7 +909,7 @@ function TInvControl2.Edit(ActorID : Integer):Integer;
                   Fwattvar_curvename := Parser[ActorID].StrValue;
                   if Length(Fwattvar_curvename) > 0 then
                     begin
-                      Fwattvar_curve := GetXYCurve(Fwattvar_curvename, 'WATTVAR');
+                      Fwattvar_curve := GetXYCurve(Fwattvar_curvename, WATTVAR);
                       Fwattvar_curve_size := Fwattvar_curve.NumPoints;
                     end;
                  end;
@@ -1042,8 +1057,8 @@ constructor TInvControl2Obj.Create(ParClass:TDSSClass; const InvControl2Name:Str
     Fnconds                  := 3;
     Nterms                   := 1;  // this forces allocation of terminals and conductors
                        // in base class
-    ControlMode              := '';
-    CombiControlMode         := '';
+    ControlMode              := NONE_MODE;
+    CombiControlMode         := NONE_COMBMODE;
     ControlledElement        := nil;
 
     {Variables for voltages}
@@ -1206,6 +1221,8 @@ constructor TInvControl2Obj.Create(ParClass:TDSSClass; const InvControl2Name:Str
     FVWOperation             := nil;
     FDRCOperation            := nil;
     FVVDRCOperation          := nil;
+    FWPOperation             := nil;
+    FWVOperation             := nil;
 
     {Others}
     FPendingChange           := nil;
@@ -1282,6 +1299,8 @@ destructor TInvControl2Obj.Destroy;
     Finalize(FVWOperation);
     Finalize(FDRCOperation);
     Finalize(FVVDRCOperation);
+    Finalize(FWPOperation);
+    Finalize(FWVOperation);
     Finalize(FMonBuses);
     Finalize(FMonBusesNodes);
     Finalize(FVBase);
@@ -1337,7 +1356,7 @@ procedure TInvControl2Obj.RecalcElementData(ActorID : Integer);
         FDRCRollAvgWindow[i].BuffLength := FDRCRollAvgWindowLength;
 
         // for all modes other than VW and WATTPF, PF priority is not allowed
-        if ((Mode <> 'VOLTWATT') and (Mode <> 'WATTPF')) Then
+        if ((Mode <> VOLTWATT) and (Mode <> WATTPF)) Then
         Begin
             if ControlledElement[i].DSSClassName = 'PVSystem2'     then TPVSystem2Obj(ControlledElement[i]).PVSystem2Vars.PF_Priority := FALSE
             else if ControlledElement[i].DSSClassName = 'Storage2' then  TStorage2Obj(ControlledElement[i]).Storage2Vars.PF_Priority := FALSE;
@@ -1451,7 +1470,7 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer;ActorID :
 
         // -------------------Smart Inverter Functions------------------------//
         {Smart Inverter volt-var function}
-        if(ControlMode = 'VOLTVAR') and (CombiControlMode = '') and (PendingChange[k]=CHANGEVARLEVEL) then
+        if(ControlMode = VOLTVAR) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
           begin
             // Set var mode to VARMODEKVAR to indicate we might change kvar
             if ControlledElement[k].DSSClassName = 'PVSystem2' then
@@ -1546,7 +1565,7 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer;ActorID :
           end
 
         {Smart Inverter watt-pf function}
-        else if(ControlMode = 'WATTPF') and (CombiControlMode = '') and (PendingChange[k]=CHANGEVARLEVEL) then
+        else if(ControlMode = WATTPF) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
           begin
             // Set var mode to VARMODEKVAR to indicate we might change kvar
             if ControlledElement[k].DSSClassName = 'PVSystem2' then
@@ -1625,13 +1644,14 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer;ActorID :
           end
 
         {Smart Inverter watt-var function}
-        else if(ControlMode = 'WATTVAR') and (CombiControlMode = '') and (PendingChange[k]=CHANGEVARLEVEL) then
+        else if(ControlMode = WATTVAR) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
           begin
             // Set var mode to VARMODEKVAR to indicate we might change kvar
             if ControlledElement[k].DSSClassName = 'PVSystem2' then
               begin
                 TPVSystem2Obj(DERelem).VWmode  := FALSE;
                 TPVSystem2Obj(DERelem).Varmode := VARMODEKVAR;
+                TPVSystem2Obj(DERelem).WVmode := TRUE;
               end
             else
               begin
@@ -1700,7 +1720,7 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer;ActorID :
           end
 
         {Smart Inverter DRC function}
-        else if(ControlMode = 'DYNAMICREACCURR') and (CombiControlMode = '') and (PendingChange[k]=CHANGEVARLEVEL) then
+        else if(ControlMode = DRC) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
           begin
 
             // Set var mode to VARMODEKVAR to indicate we might change kvar
@@ -1796,7 +1816,7 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer;ActorID :
           end
 
         {Smart Inverter VV_DRC function}
-        else if(ControlMode = '') and (CombiControlMode = 'VV_DRC') and (PendingChange[k]=CHANGEDRCVVARLEVEL) then
+        else if(ControlMode = NONE_MODE) and (CombiControlMode = VV_DRC) and (PendingChange[k]=CHANGEDRCVVARLEVEL) then
           begin
 
             // Set var mode to VARMODEKVAR to indicate we might change kvar
@@ -1895,7 +1915,7 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer;ActorID :
           end
 
         {Smart Inverter volt-watt function}
-        else if(ControlMode = 'VOLTWATT') and (CombiControlMode = '') and (PendingChange[k]=CHANGEWATTLEVEL) then
+        else if(ControlMode = VOLTWATT) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEWATTLEVEL) then
           begin
 
             if ControlledElement[k].DSSClassName = 'PVSystem2' then
@@ -1981,7 +2001,7 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer;ActorID :
               end;
           end
 
-        else if(ControlMode = '') and (CombiControlMode = 'VV_VW') and (PendingChange[k]=CHANGEWATTVARLEVEL) then
+        else if(ControlMode = NONE_MODE) and (CombiControlMode = VV_VW) and (PendingChange[k]=CHANGEWATTVARLEVEL) then
           begin
 
             if ControlledElement[k].DSSClassName = 'PVSystem2' then
@@ -2324,7 +2344,7 @@ procedure TInvControl2Obj.Sample(ActorID : Integer);
             // FVreg is the pu voltage used in the volt-var and volt-watt curves
             FVreg := FPresentVpu[i];
 
-            if CombiControlMode = 'VV_DRC' then
+            if CombiControlMode = VV_DRC then
               begin
                   // Sets internal variables of controlled element.
                   // FVVDRCOperation is a flag which indicates if VVDRC function operates or not (-1=absorbing Q, 1=injecting Q, 0=No operation)
@@ -2406,7 +2426,7 @@ procedure TInvControl2Obj.Sample(ActorID : Integer);
                     end;
               end
 
-            else if CombiControlMode = 'VV_VW' then
+            else if CombiControlMode = VV_VW then
               begin
                 // Sets internal variables of controlled element.
                 // FVVOperation is a flag which indicates if volt-var function operates or not (-1=absorbing Q, 1=injecting Q, 0=No operation)
@@ -2505,7 +2525,7 @@ procedure TInvControl2Obj.Sample(ActorID : Integer);
                   end;
               end
 
-            else if ControlMode = 'VOLTWATT' then  // volt-watt control mode
+            else if ControlMode = VOLTWATT then  // volt-watt control mode
               begin
                 // Sets internal variables of controlled element.
                 // FVWOperation is a flag which indicates if volt-watt function operates or not
@@ -2562,7 +2582,7 @@ procedure TInvControl2Obj.Sample(ActorID : Integer);
                   end;
               end
 
-            else if ControlMode = 'VOLTVAR' then // volt-var control mode
+            else if ControlMode = VOLTVAR then // volt-var control mode
               begin
                 // Sets internal variables of PVSystem2/Storage2.
                 // FVVOperation is a flag which indicates if volt-var function operates or not (-1=absorbing Q, 1=injecting Q, 0=No operation)
@@ -2611,7 +2631,7 @@ procedure TInvControl2Obj.Sample(ActorID : Integer);
                   end;
               end
 
-            else if ControlMode = 'WATTPF' then // watt-pf control mode
+            else if ControlMode = WATTPF then // watt-pf control mode
               begin
                 // Sets internal variables of PVSystem2/Storage2.
                 // FWPOperation is a flag which indicates if watt-pf function operates or not (-1=absorbing Q, 1=injecting Q, 0=No operation)
@@ -2619,12 +2639,12 @@ procedure TInvControl2Obj.Sample(ActorID : Integer);
                 if ControlledElement[i].DSSClassName = 'PVSystem2' then
                   begin
                     PVSys.Set_Variable(5,FVreg);
-                    PVSys.Set_Variable(7,FVVOperation[i]);
+                    PVSys.Set_Variable(11,FWPOperation[i]);
                   end
                 else
                   begin
                     Storage2.Set_Variable(14,FVreg);
-                    Storage2.Set_Variable(16,FVVOperation[i]);
+                    Storage2.Set_Variable(16,FWPOperation[i]);
                   end;
 
                 // if inverter is off then exit
@@ -2647,7 +2667,7 @@ procedure TInvControl2Obj.Sample(ActorID : Integer);
                   begin
 
                     // Resets DER state variable only if it has not converged yet
-                    FVVOperation[i] := 0;
+                    FWPOperation[i] := 0;
 
                     Set_PendingChange(CHANGEVARLEVEL,i);
 
@@ -2660,7 +2680,7 @@ procedure TInvControl2Obj.Sample(ActorID : Integer);
                   end;
               end
 
-            else if ControlMode = 'WATTVAR' then // watt-var control mode
+            else if ControlMode = WATTVAR then // watt-var control mode
               begin
                 // Sets internal variables of PVSystem2/Storage2.
                 // FWVOperation is a flag which indicates if watt-var function operates or not (-1=absorbing Q, 1=injecting Q, 0=No operation)
@@ -2668,12 +2688,12 @@ procedure TInvControl2Obj.Sample(ActorID : Integer);
                 if ControlledElement[i].DSSClassName = 'PVSystem2' then
                   begin
                     PVSys.Set_Variable(5,FVreg);
-                    PVSys.Set_Variable(7,FVVOperation[i]);
+                    PVSys.Set_Variable(12,FWVOperation[i]);        //CHANGE HERE
                   end
                 else
                   begin
                     Storage2.Set_Variable(14,FVreg);
-                    Storage2.Set_Variable(16,FVVOperation[i]);
+                    Storage2.Set_Variable(16,FWVOperation[i]);
                   end;
 
                 // if inverter is off then exit
@@ -2685,7 +2705,7 @@ procedure TInvControl2Obj.Sample(ActorID : Integer);
                       exit
                     end;
 
-                if (ControlledElement[i].DSSClassName = 'PVSystem2') then PVSys.Varmode := VARMODEKVAR
+                if (ControlledElement[i].DSSClassName = 'PVSystem2') then PVSys.WVmode := TRUE
                 else Storage2.VVmode  := TRUE;
 
                   //Trigger from volt-var mode
@@ -2696,7 +2716,7 @@ procedure TInvControl2Obj.Sample(ActorID : Integer);
                   begin
 
                     // Resets DER state variable only if it has not converged yet
-                    FVVOperation[i] := 0;
+                    FWVOperation[i] := 0;
 
                     Set_PendingChange(CHANGEVARLEVEL,i);
 
@@ -2709,7 +2729,7 @@ procedure TInvControl2Obj.Sample(ActorID : Integer);
                   end;
               end
 
-            else if ControlMode = 'DYNAMICREACCURR' then // dynamic reactive current control mode
+            else if ControlMode = DRC then // dynamic reactive current control mode
               begin
                 // Sets internal variables of PVSystem2/Storage2.
                 // FDRCOperation is a flag which indicates if DRC function operates or not (-1=absorbing Q, 1=injecting Q, 0=No operation)
@@ -2892,6 +2912,8 @@ function TInvControl2Obj.MakeDERList:Boolean;
         SetLength(FPriorvars, FListSize+1);
         SetLength(FFlagVWOperates, FListSize+1);
         SetLength(FVVOperation, FListSize+1);
+        SetLength(FWPOperation, FListSize+1);
+        SetLength(FWVOperation, FListSize+1);
         SetLength(FVWOperation, FListSize+1);
         SetLength(FDRCOperation, FListSize+1);
         SetLength(FVVDRCOperation, FListSize+1);
@@ -3025,6 +3047,8 @@ function TInvControl2Obj.MakeDERList:Boolean;
         SetLength(FPriorvars, FListSize+1);
         SetLength(FFlagVWOperates, FListSize+1);
         SetLength(FVVOperation, FListSize+1);
+        SetLength(FWVOperation, FListSize+1);
+        SetLength(FWPOperation, FListSize+1);
         SetLength(FVWOperation, FListSize+1);
         SetLength(FDRCOperation, FListSize+1);
         SetLength(FVVDRCOperation, FListSize+1);
@@ -3133,6 +3157,8 @@ function TInvControl2Obj.MakeDERList:Boolean;
         FVWOperation[i]                          := 0.0;
         FDRCOperation[i]                         := 0.0;
         FVVDRCOperation[i]                       := 0.0;
+        FWPOperation[i]                          := 0.0;
+        FWVOperation[i]                          := 0.0;
 
         for j := 1 to 2 do  FVpuSolution[i,j]    := 0.0;
 
@@ -3166,7 +3192,7 @@ procedure TInvControl2Obj.Reset;
     // inherited;
   end;
 
-function TInvControl2.GetXYCurve(Const CurveName: String;InvControl2Mode: String): TXYcurveObj;
+function TInvControl2.GetXYCurve(Const CurveName: String;InvControl2Mode: Integer): TXYcurveObj;
   VAR
     i   : Integer;
 
@@ -3182,7 +3208,7 @@ function TInvControl2.GetXYCurve(Const CurveName: String;InvControl2Mode: String
 
     // if VOLTWATT control mode then check for any negative watt values (pu)
     // and values greater than 1.0 per-unit (=100 percent output)
-    if InvControl2Mode = 'VOLTWATT' then
+    if InvControl2Mode = VOLTWATT then
     begin
       for i:= 1 to Result.NumPoints do
         begin
@@ -3197,7 +3223,7 @@ function TInvControl2.GetXYCurve(Const CurveName: String;InvControl2Mode: String
 
     // if WATTPF control mode then check for any negative pf values
     // and values greater than 1.0
-    if InvControl2Mode = 'WATTPF' then
+    if InvControl2Mode = WATTPF then
     begin
       for i:= 1 to Result.NumPoints do
         begin
@@ -3212,7 +3238,7 @@ function TInvControl2.GetXYCurve(Const CurveName: String;InvControl2Mode: String
 
     // if WATTVAR control mode then check for any negative pf values
     // and values greater than 1.0
-    if InvControl2Mode = 'WATTVAR' then
+    if InvControl2Mode = WATTVAR then
     begin
       for i:= 1 to Result.NumPoints do
         begin
@@ -3344,12 +3370,12 @@ function TInvControl2Obj.GetPropertyValue(Index: Integer): String;
 
     CASE Index of
       1 : Result := ReturnElementsList;
-      2 :
-        begin
-          if ControlMode = 'VOLTVAR' then Result := 'VOLTVAR';
-          if ControlMode = 'VOLTWATT' then Result := 'VOLTWATT';
-          if ControlMode = 'DYNAMICREACCURR' then Result := 'DYNAMICREACCURR';
-        end;
+//      2 :
+//        begin
+//          if ControlMode = VOLTVAR then Result := VOLTVAR;
+//          if ControlMode = VOLTWATT then Result := VOLTWATT;
+//          if ControlMode = DRC then Result := DRC;
+//        end;
 
       4 : Result := Format ('%s',[Fvvc_curvename]);
       5 : Result := Format('%-.6g', [Fvvc_curveOffset]);
@@ -3482,6 +3508,8 @@ procedure TInvControl2Obj.UpdateInvControl2(i:integer; ActorID : Integer);
           FVWOperation[j]   := 0;
           FDRCOperation[j]  := 0;
           FVVDRCOperation[j]:= 0;
+          FWPOperation[j]   := 0;
+          FWVOperation[j]   := 0;
 
           // Reinitialize convergence arrays.
           //FdeltaQFactor[j] := DELTAQDEFAULT;
@@ -3992,12 +4020,12 @@ procedure TInvControl2Obj.Check_Qlimits(j: Integer; Q: Double; ActorID : Integer
 
     // states
     error := 0;
-    if (ControlMode = 'VOLTVAR')          then error := 0.005;
-    if (ControlMode = 'WATTPF')           then error := 0.005;
-    if (ControlMode = 'WATTVAR')           then error := 0.005;
-    if (ControlMode = 'DYNAMICREACCURR')  then error := 0.0005;
-    if (CombiControlMode = 'VV_DRC')      then error := 0.005;
-    if (CombiControlMode = 'VV_VW')       then error := 0.005;
+    if (ControlMode = VOLTVAR)          then error := 0.005;
+    if (ControlMode = WATTPF)           then error := 0.005;
+    if (ControlMode = WATTVAR)          then error := 0.005;
+    if (ControlMode = DRC)              then error := 0.0005;
+    if (CombiControlMode = VV_DRC)      then error := 0.005;
+    if (CombiControlMode = VV_VW)       then error := 0.005;
 
     if Q < -error then FOperation := -1.0
     else if Q > error then  FOperation := 1.0
@@ -4016,7 +4044,7 @@ procedure TInvControl2Obj.Check_Qlimits(j: Integer; Q: Double; ActorID : Integer
       end;
 
     // Qdesiredpu should be less than the Q avaliable under watt priority  (works just for varmax)
-    if FPPriority[j] and ((FReacPower_ref = 'VARMAX') or (ControlMode = 'WATTPF')) then
+    if FPPriority[j] and ((FReacPower_ref = 'VARMAX') or (ControlMode = WATTPF)) then
       begin
         if Q >= 0.0 then Q_Ppriority :=  Sqrt(SQR(FkVARating[j]) - SQR(FpresentkW[j]))/QHeadRoom[j]
         else Q_Ppriority :=  Sqrt(SQR(FkVARating[j]) - SQR(FpresentkW[j]))/QHeadRoomNeg[j];
@@ -4031,12 +4059,12 @@ procedure TInvControl2Obj.Check_Qlimits(j: Integer; Q: Double; ActorID : Integer
 
 
     // States Flags
-    if (ControlMode = 'VOLTVAR')         then FVVOperation[j]    := FOperation;
-//    if (ControlMode = 'WATTPF')          then FWPOperation[j]    := FOperation;
-//    if (ControlMode = 'WATTVAR')          then FWVOperation[j]    := FOperation;
-    if (ControlMode = 'DYNAMICREACCURR') then FDRCOperation[j]   := FOperation;
-    if (CombiControlMode = 'VV_DRC')     then FVVDRCOperation[j] := FOperation;
-    if (CombiControlMode = 'VV_VW')      then FVVOperation[j]    := FOperation;
+    if (ControlMode = VOLTVAR)         then FVVOperation[j]    := FOperation;
+    if (ControlMode = WATTPF)          then FWPOperation[j]    := FOperation;
+    if (ControlMode = WATTVAR)         then FWVOperation[j]    := FOperation;
+    if (ControlMode = DRC)             then FDRCOperation[j]   := FOperation;
+    if (CombiControlMode = VV_DRC)     then FVVDRCOperation[j] := FOperation;
+    if (CombiControlMode = VV_VW)      then FVVOperation[j]    := FOperation;
 
   end;
 
@@ -4053,7 +4081,7 @@ procedure TInvControl2Obj.Calc_QHeadRoom(j: Integer; ActorID : Integer);
         QHeadRoomNeg[j] := QHeadRoom[j];
       end;
 
-    if (FReacPower_ref = 'VARMAX') or (ControlMode = 'WATTPF') then
+    if (FReacPower_ref = 'VARMAX') or (ControlMode = WATTPF) then
       begin
         QHeadRoom[j] := FkvarLimit[j];
         QHeadRoomNeg[j] := FkvarLimitNeg[j];
