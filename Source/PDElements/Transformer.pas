@@ -156,6 +156,8 @@ TYPE
 
         XHLChanged        :Boolean;
 
+        kVARatings        : TRatingsArray;
+
         PROCEDURE SetTermRef;
       Public
         ActiveWinding   :Integer;  // public for COM interface
@@ -425,7 +427,7 @@ Begin
                          'Defaults to 85% of %R property';
      PropertyHelp[48] := 'Defines the number of ratings to be defined for the transfomer, to be used only when defining seasonal ratings using the "Ratings" property.';
      PropertyHelp[49] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
-                         CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in transformers.';
+                         CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in transformers. Is given in kVA';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -528,12 +530,12 @@ Begin
            47: Winding^[ActiveWinding].RdcOhms := Parser[ActorID].DblValue;
            48: Begin
                  NumAmpRatings         :=  Parser[ActorID].IntValue;
-                 setlength(AmpRatings,NumAmpRatings);
+                 setlength(kVARatings,NumAmpRatings);
                End;
            49: Begin
-                 setlength(AmpRatings,NumAmpRatings);
+                 setlength(kVARatings,NumAmpRatings);
                  Param := Parser[ActiveActor].StrValue;
-                 NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
+                 NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(kVARatings));
                End
          ELSE
            // Inherited properties
@@ -855,9 +857,9 @@ Begin
           If i<>45 Then PropertyValue[i] := OtherTransf.PropertyValue[i];
 
        NumAmpratings    :=  OtherTransf.NumAmpRatings;
-       setlength(AmpRatings,NumAmpRatings);
-       for i := 0 to High(AmpRatings) do
-        AmpRatings[i] :=  OtherTransf.AmpRatings[i];
+       setlength(kVARatings,NumAmpRatings);
+       for i := 0 to High(kVARatings) do
+        kVARatings[i] :=  OtherTransf.kVARatings[i];
 
        Result := 1;
    End
@@ -936,11 +938,14 @@ Begin
 
   Yorder := fNTerms * fNconds;
   InitPropertyValues(0);
-  RecalcElementData(ActiveActor);
 
   NumAmpRatings         :=  1;
-  setlength(AmpRatings,NumAmpRatings);
-  AmpRatings[0]       :=  NormAmps;
+  setlength(kVARatings,NumAmpRatings);
+  kVARatings[0]       :=  NormMaxHkVA;
+
+  RecalcElementData(ActiveActor);
+
+
 End;
 
 
@@ -1089,6 +1094,10 @@ Begin
      {Divide per phase kVA by voltage to neutral}
      NormAmps  := NormMaxHkVA  / Fnphases / Vfactor;
      EmergAmps := EmergMaxHkVA / Fnphases / Vfactor;
+
+     setlength(AmpRatings,NumAmpRatings);
+     for i := 0 to High(AmpRatings) do
+      AmpRatings[i]  :=  kVARatings[i] / Fnphases / Vfactor;
 
      CalcY_Terminal(1.0);   // Calc Y_Terminal at base frequency
 End;
@@ -1751,7 +1760,7 @@ begin
            49  : Begin
                    TempStr   :=  '[';
                    for  k:= 1 to NumAmpRatings do
-                    TempStr :=  TempStr + floattoStrf(AmpRatings[k-1],ffGeneral,8,4) + ',';
+                    TempStr :=  TempStr + floattoStrf(kVARatings[k-1],ffGeneral,8,4) + ',';
                    TempStr   :=  TempStr + ']';
                    Result  :=  TempStr;
                  End;
@@ -2292,12 +2301,14 @@ begin
     YprimInvalid[ActiveActor] := True;
     Y_Terminal_FreqMult := 0.0;
 
+    NumAmpRatings    :=  Obj.NumAmpRatings;
+    setlength(kVARatings,NumAmpRatings);
+    for i := 0 to High(kVARatings) do
+      kVARatings[i] :=  Obj.AmpRatings[i];
+
     RecalcElementData(ActiveActor);
 
-    NumAmpRatings    :=  Obj.NumAmpRatings;
-    setlength(AmpRatings,NumAmpRatings);
-    for i := 0 to High(Ampratings) do
-      AmpRatings[i] :=  Obj.AmpRatings[i];
+
 
 
   end else
