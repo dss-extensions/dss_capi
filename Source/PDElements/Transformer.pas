@@ -241,7 +241,7 @@ USES    DSSClassDefs, DSSGlobals, Sysutils, Utilities, XfmrCode;
 var
    XfmrCodeClass:TXfmrCode;
 
-Const NumPropsThisClass = 47;
+Const NumPropsThisClass = 49;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TTransf.Create;  // Creates superstructure for all Transformer objects
@@ -331,6 +331,8 @@ Begin
      PropertyName[45] := 'WdgCurrents';
      PropertyName[46] := 'Core';
      PropertyName[47] := 'RdcOhms';
+     PropertyName[48] := 'Seasons';
+     PropertyName[49] := 'Ratings';
 
 
      // define Property help values
@@ -421,6 +423,9 @@ Begin
      PropertyHelp[46] := '{Shell*|5-leg|3-Leg|1-phase} Core Type. Used for GIC analysis';
      PropertyHelp[47] := 'Winding dc resistance in OHMS. Useful for GIC analysis. From transformer test report. ' +
                          'Defaults to 85% of %R property';
+     PropertyHelp[48] := 'Defines the number of ratings to be defined for the transfomer, to be used only when defining seasonal ratings using the "Ratings" property.';
+     PropertyHelp[49] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
+                         CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in transformers.';
 
      ActiveProperty := NumPropsThisClass;
      inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -521,6 +526,15 @@ Begin
            45: PropertyValue[45] := '';  // placeholder, do nothing just throw value away if someone tries to set it.
            46: strCoreType := Param;
            47: Winding^[ActiveWinding].RdcOhms := Parser[ActorID].DblValue;
+           48: Begin
+                 NumAmpRatings         :=  Parser[ActorID].IntValue;
+                 setlength(AmpRatings,NumAmpRatings);
+               End;
+           49: Begin
+                 setlength(AmpRatings,NumAmpRatings);
+                 Param := Parser[ActiveActor].StrValue;
+                 NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, Pointer(AmpRatings));
+               End
          ELSE
            // Inherited properties
               ClassEdit(ActiveTransfObj, ParamPointer - NumPropsThisClass)
@@ -839,6 +853,12 @@ Begin
        FOR i := 1 to ParentClass.NumProperties Do
          // Skip readonly properties
           If i<>45 Then PropertyValue[i] := OtherTransf.PropertyValue[i];
+
+       NumAmpratings    :=  OtherTransf.NumAmpRatings;
+       setlength(AmpRatings,NumAmpRatings);
+       for i := 0 to High(AmpRatings) do
+        AmpRatings[i] :=  OtherTransf.AmpRatings[i];
+
        Result := 1;
    End
    ELSE  DoSimpleMsg('Error in Transf MakeLike: "' + TransfName + '" Not Found.', 113);
@@ -917,7 +937,10 @@ Begin
   Yorder := fNTerms * fNconds;
   InitPropertyValues(0);
   RecalcElementData(ActiveActor);
-  AmpRatings :=  Nil;
+
+  NumAmpRatings         :=  1;
+  setlength(AmpRatings,NumAmpRatings);
+  AmpRatings[0]       :=  NormAmps;
 End;
 
 
@@ -1340,6 +1363,7 @@ Begin
      NumTaps      := 32;
      MaxTap       := 1.10;
      MinTap       := 0.90;
+
      
 End;
 
@@ -1659,7 +1683,8 @@ FUNCTION TTransfObj.GetPropertyValue(Index: Integer): String;
 { gets the property for the active winding ; Set the active winding before calling}
 
 VAR
-   i: Integer;
+   i,k      : Integer;
+   TempStr  : String;
 
 begin
         Case Index of
@@ -1722,6 +1747,14 @@ begin
                    5: Result := '5-Leg';
                End;
            47: Result := Format('%.7g',[Winding^[ActiveWinding].RdcOhms]);
+           48  : Result := inttostr(NumAmpRatings);
+           49  : Begin
+                   TempStr   :=  '[';
+                   for  k:= 1 to NumAmpRatings do
+                    TempStr :=  TempStr + floattoStrf(AmpRatings[k-1],ffGeneral,8,4) + ',';
+                   TempStr   :=  TempStr + ']';
+                   Result  :=  TempStr;
+                 End;
 
         ELSE
           Result := Inherited GetPropertyValue(index);
@@ -2206,8 +2239,9 @@ end;
 
 PROCEDURE TTransfObj.FetchXfmrCode(Const Code:String);
 var
-  Obj: TXfmrCodeObj;
-  i: Integer;
+  Obj           : TXfmrCodeObj;
+  i             : Integer;
+
 begin
   if XfmrCodeClass=Nil then XfmrCodeClass := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('xfmrcode'));
 
@@ -2258,7 +2292,14 @@ begin
     YprimInvalid[ActiveActor] := True;
     Y_Terminal_FreqMult := 0.0;
 
-    RecalcElementData(ActiveActor)
+    RecalcElementData(ActiveActor);
+
+    NumAmpRatings    :=  Obj.NumAmpRatings;
+    setlength(AmpRatings,NumAmpRatings);
+    for i := 0 to High(Ampratings) do
+      AmpRatings[i] :=  Obj.AmpRatings[i];
+
+
   end else
     DoSimpleMsg('Xfmr Code:' + Code + ' not found.', 180);
 End;
