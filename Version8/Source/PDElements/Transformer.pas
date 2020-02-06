@@ -1097,7 +1097,7 @@ Begin
 
      setlength(AmpRatings,NumAmpRatings);
      for i := 0 to High(AmpRatings) do
-      AmpRatings[i]  :=  kVARatings[i] / Fnphases / Vfactor;
+      AmpRatings[i]  :=  1.1 * kVARatings[i] / Fnphases / Vfactor;
 
      CalcY_Terminal(1.0);   // Calc Y_Terminal at base frequency
 End;
