@@ -469,36 +469,39 @@ procedure TInvControl2.DefineProperties;
     PropertyName[29] := 'wattpf_curve';
     PropertyName[30] := 'wattvar_curve';
 
-    PropertyHelp[1] := 'Array list (full qualified name) of PVSystem2 and/or Storage2 elements to be controlled.  Usually only one element is controlled by one InvControl2. '+CRLF+CRLF+
-                      'If not specified, all elements in the circuit are assumed to be controlled by this control, only. ' +CRLF+CRLF+
+    PropertyHelp[1] := 'Array list of PVSystem2 and/or Storage2 elements to be controlled. ' +
+                       'If not specified, all PVSystem2 and Storage2 in the circuit are assumed to be controlled by this control. '  +CRLF+CRLF+
                       'No capability of hierarchical control between two controls for a single element is implemented at this time.';
 
-    PropertyHelp[2] := 'Mode with which the InvControl2 will control the elements(s) specified in DERList. '+CRLF+CRLF+
-                      'Must be one of: {'', VOLTVAR* | VOLTWATT | DYNAMICREACCURR} ' +
-                       CRLF+CRLF+'Default is volt-var control mode.  if the user desires to use modes simultaneously, then set the CombiMode property.  Setting the Mode to any valid value disables combination mode'+
-                       CRLF+CRLF+'In volt-var mode (Default), the control attempts to dispatch the vars according to one or two volt-var curves, depending on the local terminal voltage, present active power output, and the capabilities of the PVSystem2/Storage2. ' +
-                       CRLF+CRLF+'In volt-watt mode , the control attempts to dispatch the watts according to one defined volt-watt curve, depending on the local terminal voltage and the capabilities of the PVSystem2/Storage2. '+
-                       CRLF+CRLF+'In dynamic reactive current mode, the control attempts to increasingly counter deviations outside the deadband (around nominal, or average) by injecting increasing amounts of inductive or capacitive vars, within the capabilities of the PVSystem2/Storage2.';
+    PropertyHelp[2] := 'Smart inverter function in which the InvControl2 will control the PC elements specified in DERList, according to the options below:' +CRLF+CRLF+
+                      'Must be one of: {VOLTVAR* | VOLTWATT | DYNAMICREACCURR | WATTPF | WATTVAR} ' +CRLF+
+                      'if the user desires to use modes simultaneously, then set the CombiMode property. Setting the Mode to any valid value disables combination mode.'+
 
-    PropertyHelp[3] := 'Combination of Modes with which the InvControl2 will control the element(s) specified in DERList. '+CRLF+CRLF+
+                       CRLF+CRLF+'In volt-var mode (Default). This mode attempts to CONTROL the vars, according to one or two volt-var curves, depending on the monitored voltages, present active power output, and the capabilities of the PVSystem2/Storage2. ' +
+                       CRLF+CRLF+'In volt-watt mode. This mode attempts to LIMIT the watts, according to one defined volt-watt curve, depending on the monitored voltages and the capabilities of the PVSystem2/Storage2. '+
+                       CRLF+CRLF+'In dynamic reactive current mode. This mode attempts to increasingly counter deviations by CONTROLLING vars, depending on the monitored voltages, present active power output, and the capabilities of the of the PVSystem2/Storage2.'+
+                       CRLF+CRLF+'In watt-pf mode. This mode attempts to CONTROL the vars, according to a watt-pf curve, depending on the present active power output, and the capabilities of the PVSystem2/Storage2. '+
+                       CRLF+CRLF+'In watt-var mode. This mode attempts to CONTROL the vars, according to a watt-var curve, depending on the present active power output, and the capabilities of the PVSystem2/Storage2. ';
+
+    PropertyHelp[3] := 'Combination of smart inverter functions in which the InvControl2 will control the PC elements in DERList, according to the options below: '+CRLF+CRLF+
                       'Must be a combination of the following: {VV_VW | VV_DRC}. Default is to not set this property, in which case the single control mode in Mode is active.  ' +
+
                        CRLF+CRLF+'In combined VV_VW mode, both volt-var and volt-watt control modes are active simultaneously.  See help individually for volt-var mode and volt-watt mode in Mode property.'+
                        CRLF+'Note that the PVSystem2/Storage2 will attempt to achieve both the volt-watt and volt-var set-points based on the capabilities of the inverter in the PVSystem2/Storage2 (kVA rating, etc), any limits set on maximum active power,' +
-                       CRLF+', any limits set on maximum reactive power. '+
-                       CRLF+'Precedence will be given to either watt production or var production based on the setting of RefReactivePower.'+
-                       CRLF+CRLF+'In combined VV_DRC, both the volt-var and the dynamic reactive current modes are simultaneously active.' +
-                       CRLF+CRLF+'The volt-var function will attempt to achieve its set-point based on the volt-var curve, and present voltage.  The dynamic '+
-                       CRLF+'reactive power mode function will also be active and it will add or subtract from the reactive power set-point desired by the volt-var function.'+
-                       CRLF+'Note that the precedence of active and reactive power production is defined by the RefReactivePower property.  In no event will the reactive '+
-                       CRLF+'power exceed the maximum var limit of the PVSystem2, and the combination of the active and reactive power output will not exceed the kVA rating of '+
-                       CRLF+'the inverter (set in the PVSystem2/Storage2).';
+//                       CRLF+', any limits set on maximum reactive power. '+
+//                       CRLF+'Precedence will be given to either watt production or var production based on the setting of RefReactivePower.'+
+                       CRLF+CRLF+'In combined VV_DRC, both the volt-var and the dynamic reactive current modes are simultaneously active.';
+//                       CRLF+CRLF+'The volt-var function will attempt to achieve its set-point based on the volt-var curve, and present voltage.  The dynamic '+
+//                       CRLF+'reactive power mode function will also be active and it will add or subtract from the reactive power set-point desired by the volt-var function.'+
+//                       CRLF+'Note that the precedence of active and reactive power production is defined by the RefReactivePower property.  In no event will the reactive '+
+//                       CRLF+'power exceed the maximum var limit of the PVSystem2, and the combination of the active and reactive power output will not exceed the kVA rating of '+
+//                       CRLF+'the inverter (set in the PVSystem2/Storage2).';
 
     PropertyHelp[4] := 'Required for VOLTVAR mode. '+CRLF+CRLF+
-                      'The name of an XYCurve object that describes the variation in var output (as per unit of available vars, given present active power output and the capabilities of the PVSystem2/Storage2). '+CRLF+CRLF+
-                      'Units for the x-axis are per-unit voltage, which may be in per unit of the rated voltage for the PVSystem2/Storage2, or may be in per unit of the average voltage at the terminals over a user-defined number of prior solutions. '+CRLF+CRLF+
-                      'Units for the y-axis are in per-unit available desired vars, corresponding to the terminal voltage (x-axis value in per unit).  The per-unit available vars depends on the kva rating of the PVSystem2/Storage2 as well as the present '+
-                      'output of active power.  '+CRLF+CRLF+
-                      'Must be specified for VOLTVAR mode.';
+                      'Name of the XYCurve object containing the volt-var curve. The positive values of the y-axis of the volt-var curve represent values in pu of the provided base reactive power. ' +
+                      'The negative values of the y-axis are values in pu of the absorbed base reactive power. ' +CRLF+
+                      'Provided and absorbed base reactive power values are defined in the RefReactivePower property' +CRLF+CRLF+
+                      'Units for the x-axis are per-unit voltage, which may be in per unit of the rated voltage for the PVSystem2/Storage2, or may be in per unit of the average voltage at the terminals over a user-defined number of prior solutions. ';
 
     PropertyHelp[5] := 'Required for VOLTVAR mode, and defaults to 0. '+CRLF+CRLF+
                       'for the times when the terminal voltage is decreasing, this is the off-set in per-unit voltage of a curve whose shape is the same as vvc_curve. '+
@@ -510,11 +513,11 @@ procedure TInvControl2.DefineProperties;
 
     PropertyHelp[6] := 'Required for VOLTVAR and VOLTWATT modes, and defaults to rated.  Possible values are: {rated|avg|ravg}.  '+CRLF+CRLF+
                       'Defines whether the x-axis values (voltage in per unit) for vvc_curve1 and the volt-watt curve corresponds to:'+CRLF+CRLF+
-                      'rated:    The rated voltage for the PVSystem2/Storage2 object (1.0 in the volt-var curve equals rated voltage)'+CRLF+CRLF+
-                      'avg:      The average terminal voltage recorded over a certain number of prior power-flow solutions.'+CRLF+
-                      '          with the avg setting, 1.0 per unit on the x-axis of the volt-var curve(s) corresponds to the average voltage'+CRLF+
-                      '          from a certain number of prior intervals.  See avgwindowlen parameter.'+CRLF+CRLF+
-                      'ravg:     Same as avg, with the exception that the avgerage terminal voltage is divided by the rated voltage.';
+                      'rated. The rated voltage for the PVSystem2/Storage2 object (1.0 in the volt-var curve equals rated voltage).'+CRLF+CRLF+
+                      'avg. The average terminal voltage recorded over a certain number of prior power-flow solutions.'+CRLF+
+                      'with the avg setting, 1.0 per unit on the x-axis of the volt-var curve(s) corresponds to the average voltage.'+CRLF+
+                      'from a certain number of prior intervals.  See avgwindowlen parameter.'+CRLF+CRLF+
+                      'ravg. Same as avg, with the exception that the avgerage terminal voltage is divided by the rated voltage.';
 
     PropertyHelp[7] := 'Required for VOLTVAR mode and VOLTWATT mode, and defaults to 0 seconds (0s). '+CRLF+CRLF+
                       'Sets the length of the averaging window over which the average PVSystem2/Storage2 terminal voltage is calculated. '+CRLF+CRLF+
@@ -523,11 +526,9 @@ procedure TInvControl2.DefineProperties;
                       'Note, if the solution stepsize is larger than the window length, then the voltage will be assumed to have been constant over the time-frame specified by the window length.';
 
     PropertyHelp[8] := 'Required for VOLTWATT mode. '+CRLF+CRLF+
-                      'The name of an XYCurve object that describes the variation in active power output (in per unit of maximum active power outut for the PVSystem2/Storage2). '+CRLF+CRLF+
+                      'Name of the XYCurve object containing the volt-watt curve. '+CRLF+CRLF+
                       'Units for the x-axis are per-unit voltage, which may be in per unit of the rated voltage for the PVSystem2/Storage2, or may be in per unit of the average voltage at the terminals over a user-defined number of prior solutions. '+CRLF+CRLF+
-                      'Units for the y-axis are either in: (1) per unit of maximum active power output capability of the PVSystem2/Storage2, or (2) maximum available active power output capability (defined by the parameter: VoltwattYAxis), '+
-                      'corresponding to the terminal voltage (x-axis value in per unit). '+CRLF+CRLF+
-                      'No default -- must be specified for VOLTWATT mode.';
+                      'Units for the y-axis are either in one of the options described in the VoltwattYAxis property. ';
 
     PropertyHelp[9] := 'Required for the dynamic reactive current mode (DYNAMICREACCURR), and defaults to 0.95 per-unit voltage (referenced to the PVSystem2/Storage2 object rated voltage or a windowed average value). '+CRLF+CRLF+
                       'This parameter is the minimum voltage that defines the voltage dead-band within which no reactive power is allowed to be generated. ';
@@ -561,87 +562,79 @@ procedure TInvControl2.DefineProperties;
                        'if the maximum control iterations are exceeded, and no numerical instability is seen in the EventLog of via monitors, then try increasing the value of this parameter to reduce the number '+
                        'of control iterations needed to achieve the control criteria, and move to the power flow solution.';
 
-    PropertyHelp[15] := 'Required for VOLTVAR and DYNAMICREACCURR modes.  Defaults to 0.0001 per-unit voltage.  This parameter should only be modified by advanced users of '+
-                       'the InvControl2 under these modes.  '+CRLF+CRLF+
-                       'This is the change in voltage from one control iteration solution to the next that is one determining '+
-                       'parameter to stop additional control iterations.  '+CRLF+CRLF+
-                       'This is the difference between the present per-unit voltage at the '+
-                       'terminals of the PVSystem2/Storage2 and the prior control iteration PVSystem2/Storage2 terminal voltage(s) (in per unit), as an absolute value (without sign). '+CRLF+CRLF+
-                       'This voltage tolerance value plus the var tolerance value (VarChangeTolerance) determine, together, when to stop control iterations by the '+
-                       'InvControl2. '+CRLF+CRLF+
-                       'if an InvControl2 is controlling more than one PVSystem2/Storage2, each PVSystem2/Storage2 has this quantity calculated independently, and so an individual '+
-                       'PVSystem2/Storage2 may reach the tolerance within different numbers of control iterations.';
+    PropertyHelp[15] := 'Defaults to 0.0001 per-unit voltage.  This parameter should only be modified by advanced users of the InvControl2.  '+CRLF+CRLF+
+                        'Tolerance in pu of the control loop convergence associated to the monitored voltage in pu. ' +
+                        'This value is compared with the difference of the monitored voltage in pu of the current and previous control iterations of the control loop'+CRLF+CRLF+
 
-    PropertyHelp[16] := 'Required for VOLTVAR and DYNAMICREACCURR modes.  Defaults to 0.025 per unit of available vars (for VOLTVAR mode) and 0.025 per unit of the inverter '+
-                       'full steady-state current rating (at rated voltage), which is the kva rating (for DYNAMICREACCURR mode). '+CRLF+CRLF+
-                       'This parameter should only be modified by advanced users of the InvControl2 under these modes. '+CRLF+CRLF+
-                       'This is the change in vars from one control iteration solution to the next that is one determining '+
-                       'parameter to stop additional control iterations.  '+CRLF+CRLF+
-                       'This is the difference between the desired target vars (in per-unit) of the PVSystem2/Storage2 '+
-                       'and the present reactive power output (in per unit), as an absolute value (without sign). '+CRLF+CRLF+
-                       'This reactive power tolerance value plus the voltage tolerance value (VarChangeTolerance) determine, together, when to stop control iterations by the '+
-                       'InvControl2.  '+CRLF+CRLF+
-                       'if an InvControl2 is controlling more than one PVSystem2/Storage2, each PVSystem2/Storage2 has this quantity calculated independently, and so an individual '+
+                        'This voltage tolerance value plus the var/watt tolerance value (VarChangeTolerance/ActivePChangeTolerance) determine, together, when to stop control iterations by the InvControl2. '+CRLF+CRLF+
+
+                        'If an InvControl2 is controlling more than one PVSystem2/Storage2, each PVSystem2/Storage2 has this quantity calculated independently, and so an individual '+
+                        'PVSystem2/Storage2 may reach the tolerance within different numbers of control iterations.';
+
+    PropertyHelp[16] := 'Required for VOLTVAR and DYNAMICREACCURR modes.  Defaults to 0.025 per unit of the base provided or absorbed reactive power described in the RefReactivePower property '+
+
+                       'This parameter should only be modified by advanced users of the InvControl2. '+CRLF+CRLF+
+
+                       'Tolerance in pu of the convergence of the control loop associated with reactive power. ' +
+                       'For the same control iteration, this value is compared to the difference, as an absolute value (without sign), between the desired reactive power value in pu and the output reactive power in pu of the controlled element.'+CRLF+CRLF+
+
+                       'This reactive power tolerance value plus the voltage tolerance value (VoltageChangeTolerance) determine, together, when to stop control iterations by the InvControl2.  '+CRLF+CRLF+
+
+                       'If an InvControl2 is controlling more than one PVSystem2/Storage2, each PVSystem2/Storage2 has this quantity calculated independently, and so an individual '+
                        'PVSystem2/Storage2 may reach the tolerance within different numbers of control iterations.';
 
     PropertyHelp[17] := 'Required for VOLTWATT mode.  Must be one of: {PMPPPU* | PAVAILABLEPU| PCTPMPPPU | KVARATINGPU}.  The default is PMPPPU.  '+CRLF+CRLF+
                        'Units for the y-axis of the volt-watt curve while in volt-watt mode. '+CRLF+CRLF+
-                       'When set to PMPPPU the y-axis for the volt-watt curve is understood to be in per unit of the full active power output capability of the PVSystem2/Storage2, which is Pmpp. '+CRLF+CRLF+
-                       'When set to PAVAILABLEPU the y-axis for the volt-watt curve is understood to be in per unit of available power at any given time, given Pmpp rating, '+
-                       'efficiency factor of the PVSystem2/Storage2, and present irradiance.'+CRLF+CRLF+
-                       'When set to PCTPMPPPU the y-axis for the volt-watt curve is understood to be in per unit of the Pmpp rating times the pctPmpp defined in the PVSystem2/Storage2.' +CRLF+CRLF+
-                       'When set to KVARATINGPU the y-axis for the volt-watt curve is understood to be in per unit of the inverter rating, which is kVA property of the PVSystem2/Storage2.';
+                       'When set to PMPPPU. The y-axis corresponds to the value in pu of Pmpp property of the PVSystem2. '+CRLF+CRLF+
+                       'When set to PAVAILABLEPU. The y-axis corresponds to the value in pu of the available active power of the PVSystem2. '+CRLF+CRLF+
+                       'When set to PCTPMPPPU. The y-axis corresponds to the value in pu of the power Pmpp multiplied by 1/100 of the %Pmpp property of the PVSystem2.' +CRLF+CRLF+
+                       'When set to KVARATINGPU. The y-axis corresponds to the value in pu of the kVA property of the PVSystem2.';
 
 
     PropertyHelp[18] := 'Required for VOLTWATT and VOLTVAR mode.  Must be one of: {INACTIVE* | LPF | RISEFALL }.  The default is INACTIVE.  '+CRLF+CRLF+
-                       'Defines the rate of change mode for VOLTWATT and VOLTVAR control modes. '+CRLF+CRLF+
-                       'INACTIVE indicates there is no limit on rate of change imposed for either active or reactive power output. '+CRLF+CRLF+
-                       'Note:  FdeltaQFactor still applies to VOLTVAR control mode. '+CRLF+CRLF+
-                       'LPF indicates a low-pass RC filter is applied to the desired power output level to determine the power output level '+
-                       'as a function of a time constant, tau. '+CRLF+CRLF+
-                       'RISEFALL indicates a rise and fall limit in the change of active or reactive power expressed in terms of per-unit power per second. '+CRLF+CRLF+
-                       'for VOLTVAR mode the rise/fall limit is in terms  (per-unit QAvailable)/second. '+CRLF+CRLF+
-                       'for VOLTWATT mode the rise/fall limit is either in terms of (per-unit Pmpp)/second or (per-unit WAvailable)/second depending on the setting '+
-                       'of the parameter VoltwattYAxis.';
+                       'Auxiliary option that aims to limit the changes of the desired reactive power and the active power limit between time steps, the alternatives are listed below: '
+                       +CRLF+CRLF+ 'INACTIVE. It indicates there is no limit on rate of change imposed for either active or reactive power output. '
+                       +CRLF+CRLF+ 'LPF. A low-pass RC filter is applied to the desired reactive power and/or the active power limit to determine the output power as a function of a time constant defined in the LPFTau property. '
+                       +CRLF+CRLF+ 'RISEFALL. A rise and fall limit in the change of active and/or reactive power expressed in terms of pu power per second, defined in the RiseFallLimit, is applied to the desired reactive power and/or the active power limit. ';
 
 
     PropertyHelp[19] := 'Not required. Defaults to 0 seconds. '+CRLF+CRLF+
-                       'if RateofChangeMode equals LPF or COMBINED, this defines the time constant in seconds for a low pass filter '+
-                       'that limits the rate of change in input/output for VOLTWATT or VOLTVAR control modes. '+CRLF+CRLF+
-                       'The time constant will cause the low-pass filter to achieve 95% of the target value in 3 time constants. '+CRLF;
+                        'Filter time constant of the LPF option of the RateofChangeMode property. ' +
+                        'The time constant will cause the low-pass filter to achieve 95% of the target value in 3 time constants.';
 
     PropertyHelp[20] := 'Not required.  Defaults to no limit (-1). Must be -1 (no limit) or a positive value.  '+CRLF+CRLF+
-                       'Defines the rise/fall rate of change limit in per-unit power per second for VOLTWATT or VOLTVAR control modes. '+CRLF+CRLF+
-                       'for VOLTWATT mode, when the y-axis for the volt-watt curve is in units of PMPPPU, then the units of this number are in: per-unit Pmpp/second. '+CRLF+CRLF+
-                       'for VOLTWATT mode, when the y-axis for the volt-watt curve is in units of PAVAILABLEPU, then the units of this number are in: per-unit WAvailable/second. '+CRLF+CRLF+
-                       'for VOLTVAR mode, the units for this number are in  per-unit of the y-axis quantity of RefReactivePower/second.'+CRLF+CRLF+
-                       'Note:  Set to -1 to disable the rise/fall limit.  Otherwise, set it to a positive value for both rise limit and fall limit. ';
+                        'Limit in power in pu per second used by the RISEFALL option of the RateofChangeMode property.' +
+                        'The base value for this ramp is defined in the RefReactivePower property and/or in VoltwattYAxis.';
 
     PropertyHelp[21] := 'Required for the VOLTWATT modes.  Defaults to -1.0. '+CRLF+CRLF+
                        'Defining -1.0, OpenDSS takes care internally of delta_P itself. It tries to improve convergence as well as speed up process'+CRLF+CRLF+
                        'Defining between 0.05 and 1.0, it sets the maximum change (in unit of the y-axis) from the prior active power output level to the desired active power output level during each control iteration. '+CRLF+CRLF+CRLF+
-                       'if numerical instability is noticed in solutions such as active power changing substantially from one control iteration to the next and/or voltages oscillating between two values with some separation, '+
+                       'If numerical instability is noticed in solutions such as active power changing substantially from one control iteration to the next and/or voltages oscillating between two values with some separation, '+
                        'this is an indication of numerical instability (use the EventLog to diagnose). '+CRLF+CRLF+
-                       'if the maximum control iterations are exceeded, and no numerical instability is seen in the EventLog of via monitors, then try increasing the value of this parameter to reduce the number '+
+                       'If the maximum control iterations are exceeded, and no numerical instability is seen in the EventLog of via monitors, then try increasing the value of this parameter to reduce the number '+
                        'of control iterations needed to achieve the control criteria, and move to the power flow solution.';
 
     PropertyHelp[22] := '{Yes/True* | No/False} Default is YES for InvControl2. Log control actions to Eventlog.';
 
-    PropertyHelp[23] := 'Required for any mode that has VOLTVAR in it. Defaults to VARAVAL_WATTS. Possible Settings: VARAVAL_WATTS|VARMAX_VARS|VARMAX_WATTS'+CRLF+CRLF+
-                       'When the VOLTVAR mode is active (alone or in conjunction with other modes, this property defines the reference for the percent value given on the y-axis of the volt-var curve.'+CRLF+CRLF+
-                       'VARAVAL_WATTS: When set to VARAVAL_WATTS the units of the y-axis for the volt-var curve are given in percent of available reactive power given present active power output and the kVA rating of the PVSystem2/Storage2.'+CRLF+
-                       'Active power output is given precedence over reactive power output/absorption, so the reactive power output/absorption possibly may not achieve the desired available reactive power level as defined by the volt-var curve if little headroonm.'+CRLF+CRLF+
-                       'VARMAX_VARS: When set to VARMAX_VARS the units of the y-axis for the volt-var curve are given in percent of the maximum reactive power setting of each of the PVSystem2/Storage2s.  Reactive power generation/absorption has'+CRLF+
-                       'precedence over active power generation.'+CRLF+CRLF+
-                       'VARMAX_WATTS: When set to VARMAX_WATTS the units of the y-axis for the volt-var curve are given in percent of the maximum reactive power setting of each of the PVSystem2/Storage2s.  Active power generation has'+CRLF+
-                       'precedence over reactive power generation/absorption.'+CRLF;
-    PropertyHelp[24] := 'ActivePChangeTolerance is the active power tolerance required to be met between control iterations to signal achieving convergence. Default is 0.01';
+    PropertyHelp[23] := 'Required for any mode that has VOLTVAR, DYNAMICREACCURR and WATTVAR. Defaults to VARAVAL.' +CRLF+CRLF+
+                        'Defines the base reactive power for both the provided and absorbed reactive power, according to one of the following options: '
+                        +CRLF+CRLF+ 'VARAVAL. The base values for the provided and absorbed reactive power are equal to the available reactive power.'
+                        +CRLF+CRLF+ 'VARMAX: The base values of the provided and absorbed reactive power are equal to the value defined in the kvarMax and kvarMaxAbs properties, respectively.';
+
+    PropertyHelp[24] :=  'Required for VOLTWATT. Default is 0.01'+CRLF+CRLF+
+                         'Tolerance in pu of the convergence of the control loop associated with active power. ' +
+                         'For the same control iteration, this value is compared to the difference between the active power limit in pu resulted from the convergence process and the one resulted from the volt-watt function.'+CRLF+CRLF+
+
+                         'This reactive power tolerance value plus the voltage tolerance value (VoltageChangeTolerance) determine, together, when to stop control iterations by the InvControl2.  '+CRLF+CRLF+
+
+                        'If an InvControl2 is controlling more than one PVSystem2/Storage2, each PVSystem2/Storage2 has this quantity calculated independently, and so an individual '+
+                        'PVSystem2/Storage2 may reach the tolerance within different numbers of control iterations.';
 
     PropertyHelp[25] := 'Number of the phase being monitored or one of {AVG | MAX | MIN} for all phases. Default=AVG. ';
 
     PropertyHelp[26] := 'Name of monitored bus used by the voltage-dependente control modes. Default is bus of the controlled PVSystem2/Storage2 or Storage2.' ;
 
-    PropertyHelp[27] := 'Array list of rated voltages of the buses and their nodes presented in the monBus property. This list may have different line-to-line and/or line-to-ground voltages' ;
+    PropertyHelp[27] := 'Array list of rated voltages of the buses and their nodes presented in the monBus property. This list may have different line-to-line and/or line-to-ground voltages.' ;
 
     PropertyHelp[28] := 'Required for VOLTWATT mode for Storage2 element in CHARGING state. '+CRLF+CRLF+
                         'The name of an XYCurve object that describes the variation in active power output (in per unit of maximum active power outut for the Storage2). '+CRLF+CRLF+
@@ -649,8 +642,28 @@ procedure TInvControl2.DefineProperties;
                         'Units for the y-axis are either in: (1) per unit of maximum active power output capability of the Storage2, or (2) maximum available active power output capability (defined by the parameter: VoltwattYAxis), '+
                         'corresponding to the terminal voltage (x-axis value in per unit). '+CRLF+CRLF+
                         'No default -- must be specified for VOLTWATT mode for Storage2 element in CHARGING state.';
-    PropertyHelp[29] := 'Required for WATTPF mode.';
-    PropertyHelp[30] := 'Required for WATTVAR mode.';
+
+    PropertyHelp[29] := 'Required for WATTPF mode.' +CRLF+CRLF+
+                      'Name of the XYCurve object containing the watt-pf curve.' +CRLF+
+                      'The positive values of the y-axis are positive power factor values. ' +
+                      'The negative values of the the y-axis are negative power factor values. ' +
+                      'When positive, the output reactive power has the same direction of the output active power, and when negative, it has the opposite direction.' +CRLF+
+                      'Units for the x-axis are per-unit output active power, and the base active power is the Pmpp for PVSystem2 and kWrated for Storage2.'+CRLF+CRLF+
+                      'The y-axis represents the power factor and the reference is power factor equal to 0. '+CRLF+CRLF+
+
+                      'For example, if the user wants to define the following XY coordinates: (0, 0.9); (0.2, 0.9); (0.5, -0.9); (1, -0.9).'+CRLF+
+                      'Try to plot them considering the y-axis reference equal to unity power factor.' +CRLF+CRLF+
+                      'The user needs to translate this curve into a plot in which the y-axis reference is equal to 0 power factor.' +
+                      'It means that two new XY coordinates need to be included, in this case they are: (0.35, 1); (0.35, -1).'+CRLF+
+                      'Try to plot them considering the y-axis reference equal to 0 power factor.' +CRLF+
+                      'The discontinity in 0.35pu is not a problem since var is zero for either power factor equal to 1 or -1.';
+
+    PropertyHelp[30] := 'Required for WATTVAR mode. '+CRLF+CRLF+
+                      'Name of the XYCurve object containing the watt-var curve. The positive values of the y-axis of the watt-var curve represent values in pu of the provided base reactive power. ' +
+                      'The negative values of the y-axis are values in pu of the absorbed base reactive power. ' +CRLF+
+                      'Provided and absorbed base reactive power values are defined in the RefReactivePower property.' +CRLF+CRLF+
+                      'Units for the x-axis are per-unit output active power, and the base active power is the Pmpp for PVSystem2 and kWrated for Storage2.';
+
 
     ActiveProperty  := NumPropsThisClass;
     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
@@ -1572,12 +1585,13 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer;ActorID :
               begin
                 TPVSystem2Obj(DERelem).VWmode  := FALSE;
                 TPVSystem2Obj(DERelem).Varmode := VARMODEKVAR;
-                TPVSystem2Obj(DERelem).WPmode := TRUE;
+                TPVSystem2Obj(DERelem).WPmode  := TRUE;
               end
             else
               begin
                 TStorage2Obj(DERelem).VWmode     := FALSE;
                 TStorage2Obj(DERelem).Varmode    := VARMODEKVAR;
+                TStorage2Obj(DERelem).WPmode     := TRUE;
               end;
 
             //--------------------------------------------- Main process ---------------------------------------------//
@@ -1651,12 +1665,13 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer;ActorID :
               begin
                 TPVSystem2Obj(DERelem).VWmode  := FALSE;
                 TPVSystem2Obj(DERelem).Varmode := VARMODEKVAR;
-                TPVSystem2Obj(DERelem).WVmode := TRUE;
+                TPVSystem2Obj(DERelem).WVmode  := TRUE;
               end
             else
               begin
                 TStorage2Obj(DERelem).VWmode     := FALSE;
                 TStorage2Obj(DERelem).Varmode    := VARMODEKVAR;
+                TStorage2Obj(DERelem).WVmode     := TRUE;
               end;
 
             //--------------------------------------------- Main process ---------------------------------------------//
@@ -2657,7 +2672,7 @@ procedure TInvControl2Obj.Sample(ActorID : Integer);
                     end;
 
                 if (ControlledElement[i].DSSClassName = 'PVSystem2') then PVSys.WPmode  := TRUE
-                else Storage2.VVmode  := TRUE;
+                else Storage2.WPmode  := TRUE;
 
                   //Trigger from volt-var mode
                 if (((Abs(FPresentVpu[i] - FAvgpVpuPrior[i]) > FVoltageChangeTolerance) or
@@ -2706,7 +2721,7 @@ procedure TInvControl2Obj.Sample(ActorID : Integer);
                     end;
 
                 if (ControlledElement[i].DSSClassName = 'PVSystem2') then PVSys.WVmode := TRUE
-                else Storage2.VVmode  := TRUE;
+                else Storage2.WVmode  := TRUE;
 
                   //Trigger from volt-var mode
                 if (((Abs(FPresentVpu[i] - FAvgpVpuPrior[i]) > FVoltageChangeTolerance) or
