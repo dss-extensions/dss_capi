@@ -1652,7 +1652,7 @@ PROCEDURE TPVsystem2Obj.ComputeInverterPower;
                     kW_out := abs(kvar_out) * sqrt(1.0/(1.0 - Sqr(Fpf_wp_nominal)) - 1.0) * sign(kW_out);
                   end
                 // Forces constant power factor when kvar limit is exceeded and PF Priority is true. Temp PF is calculated based on kvarRequested
-                else if PF_Priority and (not FVVMode or not FDRCMode) then
+                else if PF_Priority and (not FVVMode or not FDRCMode or not FWVmode) then
                   Begin
                     if abs(kvarRequested) > 0.0  then
                       begin
@@ -1682,7 +1682,7 @@ PROCEDURE TPVsystem2Obj.ComputeInverterPower;
                 kW_out := FkVArating * abs(Fpf_wp_nominal) * sign(kW_out);
                 kvar_out := FkVArating * abs(sin(ArcCos(Fpf_wp_nominal))) * sign(kvarRequested)
               end
-            Else if (varMode = VARMODEKVAR) and PF_Priority and (not FVVMode or not FDRCMode) then
+            Else if (varMode = VARMODEKVAR) and PF_Priority and (not FVVMode or not FDRCMode or not FWVmode) then
               // Operates under constant power factor (PF implicitly calculated based on kw and kvar)
               Begin
                 if abs(kvar_out) = Fkvarlimit then
