@@ -70,6 +70,7 @@ type
     function Get_SumBranchFltRates: Double; safecall;
     function Get_SectSeqIdx: Integer; safecall;
     function Get_SectTotalCust: Integer; safecall;
+
     { Protected declarations }
   end;
 
@@ -83,6 +84,7 @@ uses ComServ,
      Variants,
      CktElement,
      PDElement,
+     MemoryMap_lib,
      CktTree;
 
 function TMeters.Get_AllNames: OleVariant;
@@ -971,6 +973,7 @@ begin
 
 
 end;
+
 
 initialization
   TAutoObjectFactory.Create(ComServer, TMeters, Class_Meters,
