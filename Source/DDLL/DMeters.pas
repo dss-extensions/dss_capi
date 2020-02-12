@@ -16,6 +16,7 @@ uses EnergyMeter,
      Variants,
      CktElement,
      PDElement,
+     MemoryMap_lib,
      CktTree;
 
 function MetersI(mode: longint; arg: longint):Longint;cdecl;
