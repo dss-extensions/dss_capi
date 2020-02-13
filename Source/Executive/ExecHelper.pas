@@ -84,7 +84,7 @@ interface
          FUNCTION DoZscRefresh(ActorID : Integer):Integer;
 
          FUNCTION DoBusCoordsCmd(SwapXY:Boolean; CoordType  : Integer):Integer;
-         FUNCTION DoGuidsCmd:Integer;
+         FUNCTION DoUuidsCmd:Integer;
          FUNCTION DoSetLoadAndGenKVCmd:Integer;
          FUNCTION DoVarValuesCmd:Integer;
          FUNCTION DoVarNamesCmd :Integer;
@@ -149,14 +149,14 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      uComplex,  mathutil,  Bus,  SolutionAlgs,
      {$IFNDEF FPC}DSSForms,DssPlot,{$ELSE}CmdForms,{$ENDIF} ExecCommands, Executive,
      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
-     Classes,  CktElementClass, Sensor,  { ExportCIMXML,} NamedObject,
+     Classes,  CktElementClass, Sensor,  ExportCIMXML, NamedObject,
      {$IFNDEF FPC}RegularExpressionsCore,{$ELSE}RegExpr,{$ENDIF} PstCalc,
      PDELement, ReduceAlgs{$IFDEF FPC}, Fncs{$ENDIF};
 
 Var
    SaveCommands, DistributeCommands,  DI_PlotCommands,
    ReconductorCommands, RephaseCommands, AddMarkerCommands,
-   SetBusXYCommands, PstCalcCommands, RemoveCommands, FNCSPubCommands   :TCommandList;
+   SetBusXYCommands, PstCalcCommands, RemoveCommands, FNCSPubCommands :TCommandList;
 
 
 
@@ -464,8 +464,7 @@ Begin
           Else Begin
               SetCurrentDir(SaveDir);    // set back to where we were for redirect, but not compile
               ParserVars.Add('@lastredirectfile', ReDirFile);
-
-          end;
+          End;
       END;
 
     End;  // ELSE ignore altogether IF null filename
@@ -3528,45 +3527,55 @@ Begin
 
 End;
 
-FUNCTION DoGuidsCmd:Integer;
+FUNCTION DoUuidsCmd:Integer;
 Var
   F:TextFile;
-  ParamName, Param, S, NameVal, GuidVal, DevClass, DevName: String;
+  ParamName, Param, S, NameVal, UuidVal, DevClass, DevName: String;
   pName: TNamedObject;
-Begin
+  idx: integer;
+begin
+  StartUuidList (ActiveCircuit[ActiveActor].NumBuses + 2 * ActiveCircuit[ActiveActor].NumDevices);
   Result := 0;
   ParamName := Parser[ActiveActor].NextParam;
   Param := Parser[ActiveActor].StrValue;
   Try
     AssignFile(F, Param);
     Reset(F);
+    AuxParser[ActiveActor].Delimiters := ',';
     While not EOF(F) Do Begin
       Readln(F, S);
       With AuxParser[ActiveActor] Do Begin
         pName := nil;
         CmdString := S;
         NextParam;  NameVal := StrValue;
-        NextParam;  GuidVal := StrValue;
-        // format the GUID properly
-        if Pos ('{', GuidVal) < 1 then
-          GuidVal := '{' + GuidVal + '}';
-        // find this object
-        ParseObjectClassAndName (NameVal, DevClass, DevName);
-        IF CompareText (DevClass, 'circuit')=0 THEN begin
-          pName := ActiveCircuit[ActiveActor]
-        end else begin
+        NextParam;  UuidVal := StrValue;
+        // format the UUID properly
+        if Pos ('{', UuidVal) < 1 then
+          UuidVal := '{' + UuidVal + '}';
+        if Pos ('=', NameVal) > 0 then begin  // it's a non-identified object in OpenDSS
+          AddHashedUuid (NameVal, UuidVal);
+        end else begin  // find this as a descendant of TNamedObject
+          pName := nil;
+          ParseObjectClassAndName (NameVal, DevClass, DevName);
+          IF CompareText (DevClass, 'circuit')=0 THEN begin
+            pName := ActiveCircuit[ActiveActor]
+          end else if CompareText (DevClass, 'Bus')=0 then begin
+            idx := ActiveCircuit[ActiveActor].BusList.Find (DevName);
+            pName := ActiveCircuit[ActiveActor].Buses^[idx];
+          end else begin
           LastClassReferenced[ActiveActor] := ClassNames[ActiveActor].Find (DevClass);
           ActiveDSSClass[ActiveActor] := DSSClassList[ActiveActor].Get(LastClassReferenced[ActiveActor]);
-          if ActiveDSSClass[ActiveActor] <> nil then begin
-            ActiveDSSClass[ActiveActor].SetActive (DevName);
-            pName := ActiveDSSClass[ActiveActor].GetActiveObj;
+          if ActiveDSSClass[ActiveActor] <> nil then
+            if ActiveDSSClass[ActiveActor].SetActive (DevName) then
+              pName := ActiveDSSClass[ActiveActor].GetActiveObj;
           end;
+          // re-assign its UUID
+          if pName <> nil then pName.UUID := StringToUuid (UuidVal);
         end;
-        // re-assign its GUID
-        if pName <> nil then pName.GUID := StringToGuid (GuidVal);
       End;
     End;
   Finally
+    AuxParser[ActiveActor].ResetDelims;
     CloseFile(F);
   End;
 End;
