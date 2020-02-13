@@ -2,6 +2,7 @@ unit VCCS;
 {
   ----------------------------------------------------------
   Copyright (c) 2016, University of Pittsburgh
+  Copyright (c) 2019-2020, Battelle Memorial Institute
   All rights reserved.
   ----------------------------------------------------------
 }

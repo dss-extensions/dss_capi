@@ -40,7 +40,7 @@ Procedure ExportY(FileNm:String; TripletOpt:Boolean);
 Procedure ExportSeqZ(FileNm:String);
 Procedure ExportBusCoords(FileNm:String);
 Procedure ExportLosses(FileNm:String);
-Procedure ExportGuids(FileNm:String);
+Procedure ExportUuids(FileNm:String);
 Procedure ExportCounts(FileNm:String);
 Procedure ExportSummary(FileNm:String);
 Procedure ExportProfile(FileNm:String; PhasesToPlot:Integer);
@@ -78,7 +78,8 @@ Uses uComplex,  Arraydef, Sysutils,   Circuit, DSSClassDefs, DSSGlobals,
      uCMatrix,  solution, CktElement, Utilities, Bus, MathUtil, DSSClass,
      PDElement, PCElement, Generator,  Sensor, Load, RegControl, Transformer,
      ParserDel, Math, Ymatrix, LineGeometry, WireData, LineCode, XfmrCode, NamedObject,
-     GICTransformer, PVSystem, PVSystem2, Storage, Storage2, KLUSolve;
+     GICTransformer, PVSystem, PVSystem2, Storage, Storage2, KLUSolve, ExportCIMXML,
+     LineSpacing, CNData, TSData;
 
 Procedure WriteElementVoltagesExportFile(Var F:TextFile; pElem:TDSSCktElement;MaxNumNodes:Integer);
 
@@ -3055,20 +3056,27 @@ Begin
 
 End;
 
-Procedure ExportGuids(FileNm:String);
+Procedure ExportUuids(FileNm:String);
 Var
   F       : TextFile;
-  clsCode : TLineCode;
+  clsLnCd : TLineCode;
   clsGeom : TLineGeometry;
   clsWire : TWireData;
-  clsXfmr : TXfmrCode;
+  clsXfCd : TXfmrCode;
+  clsSpac : TLineSpacing;
+  clsTape : TTSData;
+  clsConc : TCNData;
   pName   : TNamedObject;
+  i       : integer;
 Begin
   Try
-    clsCode := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('linecode'));
+    clsLnCd := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('linecode'));
     clsWire := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('wiredata'));
     clsGeom := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('linegeometry'));
-    clsXfmr := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('xfmrcode'));
+    clsXfCd := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('xfmrcode'));
+    clsSpac := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('linespacing'));
+    clsTape := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('TSData'));
+    clsConc := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('CNData'));
 
     Assignfile(F, FileNm);
     ReWrite(F);
@@ -3076,16 +3084,21 @@ Begin
     pName := ActiveCircuit[ActiveActor];
     Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
 
+    for i :=1 to ActiveCircuit[ActiveActor].NumBuses do begin
+      pName := ActiveCircuit[ActiveActor].Buses^[i];
+      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+    end;
+
     pName := ActiveCircuit[ActiveActor].CktElements.First;
     while pName <> nil do begin
       Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
       pName := ActiveCircuit[ActiveActor].CktElements.Next;
     End;
 
-    pName := clsCode.ElementList.First;
+    pName := clsLnCd.ElementList.First;
     while pName <> nil do begin
       Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-      pName := clsCode.ElementList.Next;
+      pName := clsLnCd.ElementList.Next;
     End;
 
     pName := clsWire.ElementList.First;
@@ -3100,14 +3113,35 @@ Begin
       pName := clsGeom.ElementList.Next;
     End;
 
-    pName := clsXfmr.ElementList.First;
+    pName := clsXfCd.ElementList.First;
     while pName <> nil do begin
       Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-      pName := clsXfmr.ElementList.Next;
+      pName := clsXfCd.ElementList.Next;
     End;
+
+    pName := clsSpac.ElementList.First;
+    while pName <> nil do begin
+      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+      pName := clsSpac.ElementList.Next;
+    End;
+
+    pName := clsTape.ElementList.First;
+    while pName <> nil do begin
+      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+      pName := clsTape.ElementList.Next;
+    End;
+
+    pName := clsConc.ElementList.First;
+    while pName <> nil do begin
+      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+      pName := clsConc.ElementList.Next;
+    End;
+
+    WriteHashedUUIDs (F);
 
   Finally
     CloseFile(F);
+    FreeUuidList;
   End;
 End;
 
@@ -4032,7 +4066,7 @@ Begin
      ReWrite(F);
 
      // Write Header
-     Writeln(F, 'Meter, SectionID, SeqIndex, DeviceType, NumCustomers, NumBranches, AvgRepairHrs, TotalDownlineCust, SectFaultRate,SumFltRatesXRepairHrs, SumBranchFltRates, HeadBranch ');
+     Writeln(F, 'Meter, SectionID, SeqIndex, DeviceType, NumCustomers, NumBranches, AvgRepairHrs, TotalDownlineCust, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates, HeadBranch ');
 
    If Assigned(pMeter) Then
      // If a meter is specified, export that meter only
