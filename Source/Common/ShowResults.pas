@@ -167,6 +167,7 @@ Begin
      With ActiveCircuit[ActiveActor] Do Begin
        jj := 1;
        With Buses^[i] Do
+
        For j := 1 to NumNodesThisBus DO Begin
          // Get the index of the next Node in numerical sequence
 
