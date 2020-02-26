@@ -10,129 +10,144 @@ unit PointerList;
 
 interface
 
-  USES Arraydef, SysUtils;
+uses
+    Arraydef,
+    SysUtils;
 
-TYPE
-   TPointerList = class(TObject)
-   private
-      NumInList:Integer;
-      MaxAllocated:Integer;
-      ActiveItem :Integer;
-      List:pPointerArray;
-      IncrementSize:Integer;
+type
+    TPointerList = class(TObject)
+    PRIVATE
+        NumInList: Integer;
+        MaxAllocated: Integer;
+        ActiveItem: Integer;
+        List: pPointerArray;
+        IncrementSize: Integer;
 
-      Function Get_First:Pointer;
-      Function Get_Next:Pointer;
-      Function Get_Active:Pointer;
-      Procedure Set_New(value:Pointer);
+        function Get_First: Pointer;
+        function Get_Next: Pointer;
+        function Get_Active: Pointer;
+        procedure Set_New(value: Pointer);
 
-   public
-     constructor Create(Size:Integer);
-     destructor Destroy; override;
+    PUBLIC
+        constructor Create(Size: Integer);
+        destructor Destroy; OVERRIDE;
 
-     Procedure Clear;
+        procedure Clear;
 
-     Function Add(p:Pointer):Integer;  // Returns index of item
-     Function Get(i:Integer):Pointer;
+        function Add(p: Pointer): Integer;  // Returns index of item
+        function Get(i: Integer): Pointer;
 
-     Property First:Pointer Read Get_First;
-     Property Next:Pointer Read Get_Next;
-     Property ListSize:Integer Read NumInList;
-     Property New:Pointer write Set_New;
-     Property Active:Pointer Read Get_Active;
-     Property ActiveIndex:Integer Read ActiveItem;
+        property First: Pointer READ Get_First;
+        property Next: Pointer READ Get_Next;
+        property ListSize: Integer READ NumInList;
+        property New: Pointer WRITE Set_New;
+        property Active: Pointer READ Get_Active;
+        property ActiveIndex: Integer READ ActiveItem;
 
-   published 
+    PUBLISHED
 
-   end;
+    end;
 
 
 implementation
 
-constructor TPointerList.Create(Size:Integer);
+constructor TPointerList.Create(Size: Integer);
 //-------------------------------------------------------------------------
-BEGIN
-   Inherited Create;
+begin
+    inherited Create;
 
-   MaxAllocated := Size;
-   If MaxAllocated <=0 THEN  MaxAllocated := 10;    // Default Size & Increment
-   List := AllocMem(SizeOf(List^[1]) * MaxAllocated);
-   NumInList := 0;
-   ActiveItem := 0;
-   IncrementSize := MaxAllocated;  // Increment is equal to original allocation
-END;
+    MaxAllocated := Size;
+    if MaxAllocated <= 0 then
+        MaxAllocated := 10;    // Default Size & Increment
+    List := AllocMem(SizeOf(List^[1]) * MaxAllocated);
+    NumInList := 0;
+    ActiveItem := 0;
+    IncrementSize := MaxAllocated;  // Increment is equal to original allocation
+end;
 
 //-------------------------------------------------------------------------
 destructor TPointerList.Destroy;
-BEGIN
-   Freemem(List, Sizeof(List^[1])*MaxAllocated);
-   Inherited Destroy;
-END;
+begin
+    Freemem(List, Sizeof(List^[1]) * MaxAllocated);
+    inherited Destroy;
+end;
 
 //-------------------------------------------------------------------------
-Function TPointerList.Add(p:Pointer):Integer;
-BEGIN
+function TPointerList.Add(p: Pointer): Integer;
+begin
     Inc(NumInList);
-    If NumInList>MaxAllocated THEN BEGIN
+    if NumInList > MaxAllocated then
+    begin
         MaxAllocated := MaxAllocated + IncrementSize;
         ReallocMem(List, SizeOf(List^[1]) * MaxAllocated);
-    END;
+    end;
     List^[NumInList] := p;
     Result := NumInList;
     ActiveItem := Result;
-END;
+end;
 
 //-------------------------------------------------------------------------
-Procedure TPointerList.Set_New(value:Pointer);
-BEGIN
+procedure TPointerList.Set_New(value: Pointer);
+begin
     Add(Value);
-END;
+end;
 
 //-------------------------------------------------------------------------
-Function TPointerList.Get_Active:Pointer;
-BEGIN
-    IF (ActiveItem>0) AND (ActiveItem<=NumInList) THEN Result := Get(ActiveItem)
-    ELSE Result := nil;
-END;
+function TPointerList.Get_Active: Pointer;
+begin
+    if (ActiveItem > 0) and (ActiveItem <= NumInList) then
+        Result := Get(ActiveItem)
+    else
+        Result := NIL;
+end;
 
 //-------------------------------------------------------------------------
-Function TPointerList.Get_First:Pointer;
-BEGIN
-    IF NumInList>0 THEN BEGIN
-       ActiveItem := 1;
-       Result := List^[ActiveItem];
-    END
-    ELSE BEGIN
+function TPointerList.Get_First: Pointer;
+begin
+    if NumInList > 0 then
+    begin
+        ActiveItem := 1;
+        Result := List^[ActiveItem];
+    end
+    else
+    begin
         ActiveItem := 0;
-        Result := nil;
-    END;
-END;
+        Result := NIL;
+    end;
+end;
 
 //-------------------------------------------------------------------------
-Function TPointerList.Get_Next:Pointer;
-BEGIN
-    IF NumInList>0 THEN BEGIN
-       Inc(ActiveItem);
-       IF ActiveItem>NumInList THEN BEGIN
-          ActiveItem := NumInList;
-          Result := Nil;
-       END
-       ELSE  Result := List^[ActiveItem];
-    END
-    ELSE BEGIN
+function TPointerList.Get_Next: Pointer;
+begin
+    if NumInList > 0 then
+    begin
+        Inc(ActiveItem);
+        if ActiveItem > NumInList then
+        begin
+            ActiveItem := NumInList;
+            Result := NIL;
+        end
+        else
+            Result := List^[ActiveItem];
+    end
+    else
+    begin
         ActiveItem := 0;
-        Result := nil;
-    END;
-END;
+        Result := NIL;
+    end;
+end;
 
 //-------------------------------------------------------------------------
-Function TPointerList.Get(i:Integer):Pointer;
-BEGIN
-    If (i<1) OR (i>NumInList) THEN Result := nil ELSE BEGIN
-      Result := List^[i];
-      ActiveItem := i;
-    END;
-END;
+function TPointerList.Get(i: Integer): Pointer;
+begin
+    if (i < 1) or (i > NumInList) then
+        Result := NIL
+    else
+    begin
+        Result := List^[i];
+        ActiveItem := i;
+    end;
+end;
 
 procedure TPointerList.Clear;
 begin

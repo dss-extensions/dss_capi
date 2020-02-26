@@ -5,191 +5,228 @@ unit ImplReduce;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSengine_TLB, StdVcl;
+    ComObj,
+    ActiveX,
+    OpenDSSengine_TLB,
+    StdVcl;
 
 type
-  TReduceCkt = class(TAutoObject, IReduceCkt)
-  protected
-    function Get_Zmag: Double; safecall;
-    procedure Set_Zmag(Value: Double); safecall;
-    function Get_KeepLoad: WordBool; safecall;
-    procedure Set_KeepLoad(Value: WordBool); safecall;
-    function Get_EditString: WideString; safecall;
-    procedure Set_EditString(const Value: WideString); safecall;
-    function Get_StartPDElement: WideString; safecall;
-    procedure Set_StartPDElement(const Value: WideString); safecall;
-    function Get_EnergyMeter: WideString; safecall;
-    procedure SaveCircuit(const CktName: WideString); safecall;
-    procedure Set_EnergyMeter(const Value: WideString); safecall;
-    procedure DoDefault; safecall;
-    procedure DoShortLines; safecall;
-    procedure Do1phLaterals; safecall;
-    procedure DoBranchRemove; safecall;
-    procedure DoDangling; safecall;
-    procedure DoLoopBreak; safecall;
-    procedure DoParallelLines; safecall;
-    procedure DoSwitches; safecall;
+    TReduceCkt = class(TAutoObject, IReduceCkt)
+    PROTECTED
+        function Get_Zmag: Double; SAFECALL;
+        procedure Set_Zmag(Value: Double); SAFECALL;
+        function Get_KeepLoad: Wordbool; SAFECALL;
+        procedure Set_KeepLoad(Value: Wordbool); SAFECALL;
+        function Get_EditString: Widestring; SAFECALL;
+        procedure Set_EditString(const Value: Widestring); SAFECALL;
+        function Get_StartPDElement: Widestring; SAFECALL;
+        procedure Set_StartPDElement(const Value: Widestring); SAFECALL;
+        function Get_EnergyMeter: Widestring; SAFECALL;
+        procedure SaveCircuit(const CktName: Widestring); SAFECALL;
+        procedure Set_EnergyMeter(const Value: Widestring); SAFECALL;
+        procedure DoDefault; SAFECALL;
+        procedure DoShortLines; SAFECALL;
+        procedure Do1phLaterals; SAFECALL;
+        procedure DoBranchRemove; SAFECALL;
+        procedure DoDangling; SAFECALL;
+        procedure DoLoopBreak; SAFECALL;
+        procedure DoParallelLines; SAFECALL;
+        procedure DoSwitches; SAFECALL;
 
-  end;
+    end;
 
 implementation
 
-uses Circuit, DSSGlobals, ComServ, Executive, EnergyMeter, ReduceAlgs, PDElement;
+uses
+    Circuit,
+    DSSGlobals,
+    ComServ,
+    Executive,
+    EnergyMeter,
+    ReduceAlgs,
+    PDElement;
 
-Var  ReduceEditString : String;
-     EnergyMeterName  : String;
-     FirstPDelement   : String;  // Full name
+var
+    ReduceEditString: String;
+    EnergyMeterName: String;
+    FirstPDelement: String;  // Full name
 
 function TReduceCkt.Get_Zmag: Double;
 begin
-     if Assigned(ActiveCircuit) then
+    if Assigned(ActiveCircuit) then
         Result := ActiveCircuit.ReductionZmag
 end;
 
 procedure TReduceCkt.Set_Zmag(Value: Double);
 begin
-     if Assigned(ActiveCircuit) then
+    if Assigned(ActiveCircuit) then
         ActiveCircuit.ReductionZmag := Value;
 end;
 
-function TReduceCkt.Get_KeepLoad: WordBool;
+function TReduceCkt.Get_KeepLoad: Wordbool;
 begin
-     if Assigned(ActiveCircuit) then
+    if Assigned(ActiveCircuit) then
         Result := ActiveCircuit.ReduceLateralsKeepLoad;
 end;
 
-procedure TReduceCkt.Set_KeepLoad(Value: WordBool);
+procedure TReduceCkt.Set_KeepLoad(Value: Wordbool);
 begin
-     if Assigned(ActiveCircuit) then
+    if Assigned(ActiveCircuit) then
         ActiveCircuit.ReduceLateralsKeepLoad := Value;
 end;
 
-function TReduceCkt.Get_EditString: WideString;
+function TReduceCkt.Get_EditString: Widestring;
 begin
-     Result := ReduceEditString;
+    Result := ReduceEditString;
 end;
 
-procedure TReduceCkt.Set_EditString(const Value: WideString);
+procedure TReduceCkt.Set_EditString(const Value: Widestring);
 begin
-     ReduceEditString := Value;
+    ReduceEditString := Value;
 end;
 
-function TReduceCkt.Get_StartPDElement: WideString;
+function TReduceCkt.Get_StartPDElement: Widestring;
 begin
-     Result := FirstPDelement;
+    Result := FirstPDelement;
 end;
 
-procedure TReduceCkt.Set_StartPDElement(const Value: WideString);
+procedure TReduceCkt.Set_StartPDElement(const Value: Widestring);
 begin
-     FirstPDelement := Value;
+    FirstPDelement := Value;
 end;
 
-function TReduceCkt.Get_EnergyMeter: WideString;
+function TReduceCkt.Get_EnergyMeter: Widestring;
 begin
     Result := EnergyMeterName;
 end;
 
-procedure TReduceCkt.SaveCircuit(const CktName: WideString);
+procedure TReduceCkt.SaveCircuit(const CktName: Widestring);
 begin
-      DSSExecutive.Command := 'Save Circuit Dir=' + CktName;
+    DSSExecutive.Command := 'Save Circuit Dir=' + CktName;
    // Master file name is returned in DSSText.Result
 end;
 
-procedure TReduceCkt.Set_EnergyMeter(const Value: WideString);
+procedure TReduceCkt.Set_EnergyMeter(const Value: Widestring);
 begin
-      EnergyMeterName := Value;
+    EnergyMeterName := Value;
 end;
 
 procedure TReduceCkt.DoDefault;
 begin
-       If EnergyMeterClass.SetActive(EnergyMeterName) Then ActiveEnergyMeterObj:= EnergyMeterClass.ElementList.Active;
-       if Assigned(ActiveEnergyMeterObj) then
-       With ActiveEnergyMeterObj Do   Begin
-       If not assigned(BranchList) Then MakeMeterZoneLists;
-           DoReduceDefault(BranchList );
-       End;
+    if EnergyMeterClass.SetActive(EnergyMeterName) then
+        ActiveEnergyMeterObj := EnergyMeterClass.ElementList.Active;
+    if Assigned(ActiveEnergyMeterObj) then
+        with ActiveEnergyMeterObj do
+        begin
+            if not assigned(BranchList) then
+                MakeMeterZoneLists;
+            DoReduceDefault(BranchList);
+        end;
 end;
 
 procedure TReduceCkt.DoShortLines;
 begin
-       If EnergyMeterClass.SetActive(EnergyMeterName) Then ActiveEnergyMeterObj:= EnergyMeterClass.ElementList.Active;
-       if Assigned(ActiveEnergyMeterObj) then
-       With ActiveEnergyMeterObj Do   Begin
-           If not assigned(BranchList) Then MakeMeterZoneLists;
-           DoReduceShortLines(BranchList );
-       End;
+    if EnergyMeterClass.SetActive(EnergyMeterName) then
+        ActiveEnergyMeterObj := EnergyMeterClass.ElementList.Active;
+    if Assigned(ActiveEnergyMeterObj) then
+        with ActiveEnergyMeterObj do
+        begin
+            if not assigned(BranchList) then
+                MakeMeterZoneLists;
+            DoReduceShortLines(BranchList);
+        end;
 end;
 
 procedure TReduceCkt.Do1phLaterals;
 begin
-       If EnergyMeterClass.SetActive(EnergyMeterName) Then ActiveEnergyMeterObj:= EnergyMeterClass.ElementList.Active;
-       if Assigned(ActiveEnergyMeterObj) then
-       With ActiveEnergyMeterObj Do   Begin
-           If not assigned(BranchList) Then MakeMeterZoneLists;
-           DoRemoveAll_1ph_Laterals(BranchList );
-       End;
+    if EnergyMeterClass.SetActive(EnergyMeterName) then
+        ActiveEnergyMeterObj := EnergyMeterClass.ElementList.Active;
+    if Assigned(ActiveEnergyMeterObj) then
+        with ActiveEnergyMeterObj do
+        begin
+            if not assigned(BranchList) then
+                MakeMeterZoneLists;
+            DoRemoveAll_1ph_Laterals(BranchList);
+        end;
 end;
 
 procedure TReduceCkt.DoBranchRemove;
 begin
-     if Assigned(ActiveCircuit) then Begin
-       If EnergyMeterClass.SetActive(EnergyMeterName) Then ActiveEnergyMeterObj:= EnergyMeterClass.ElementList.Active;
-       if Assigned(ActiveEnergyMeterObj) then
-       With ActiveEnergyMeterObj Do   Begin
-           If not assigned(BranchList) Then MakeMeterZoneLists;
-           With ActiveCircuit Do Begin
-               If SetElementActive(FirstPDelement)>= 0 Then // element was found  0-based array
-               DoRemoveBranches(BranchList, ActiveCktElement as TPDElement, ReduceLateralsKeepLoad, ReduceEditString);
-           End;
-       End;
-     End;
+    if Assigned(ActiveCircuit) then
+    begin
+        if EnergyMeterClass.SetActive(EnergyMeterName) then
+            ActiveEnergyMeterObj := EnergyMeterClass.ElementList.Active;
+        if Assigned(ActiveEnergyMeterObj) then
+            with ActiveEnergyMeterObj do
+            begin
+                if not assigned(BranchList) then
+                    MakeMeterZoneLists;
+                with ActiveCircuit do
+                begin
+                    if SetElementActive(FirstPDelement) >= 0 then // element was found  0-based array
+                        DoRemoveBranches(BranchList, ActiveCktElement as TPDElement, ReduceLateralsKeepLoad, ReduceEditString);
+                end;
+            end;
+    end;
 end;
 
 procedure TReduceCkt.DoDangling;
 begin
-       If EnergyMeterClass.SetActive(EnergyMeterName) Then ActiveEnergyMeterObj:= EnergyMeterClass.ElementList.Active;
-       if Assigned(ActiveEnergyMeterObj) then
-       With ActiveEnergyMeterObj Do   Begin
-           If not assigned(BranchList) Then MakeMeterZoneLists;
-           DoReduceDangling(BranchList );
-       End;
+    if EnergyMeterClass.SetActive(EnergyMeterName) then
+        ActiveEnergyMeterObj := EnergyMeterClass.ElementList.Active;
+    if Assigned(ActiveEnergyMeterObj) then
+        with ActiveEnergyMeterObj do
+        begin
+            if not assigned(BranchList) then
+                MakeMeterZoneLists;
+            DoReduceDangling(BranchList);
+        end;
 end;
 
 procedure TReduceCkt.DoLoopBreak;
 begin
-       If EnergyMeterClass.SetActive(EnergyMeterName) Then ActiveEnergyMeterObj:= EnergyMeterClass.ElementList.Active;
-       if Assigned(ActiveEnergyMeterObj) then
-       With ActiveEnergyMeterObj Do   Begin
-           If not assigned(BranchList) Then MakeMeterZoneLists;
-           DoBreakLoops(BranchList );
-       End;
+    if EnergyMeterClass.SetActive(EnergyMeterName) then
+        ActiveEnergyMeterObj := EnergyMeterClass.ElementList.Active;
+    if Assigned(ActiveEnergyMeterObj) then
+        with ActiveEnergyMeterObj do
+        begin
+            if not assigned(BranchList) then
+                MakeMeterZoneLists;
+            DoBreakLoops(BranchList);
+        end;
 end;
 
 procedure TReduceCkt.DoParallelLines;
 begin
-       If EnergyMeterClass.SetActive(EnergyMeterName) Then ActiveEnergyMeterObj:= EnergyMeterClass.ElementList.Active;
-       if Assigned(ActiveEnergyMeterObj) then
-       With ActiveEnergyMeterObj Do   Begin
-           If not assigned(BranchList) Then MakeMeterZoneLists;
-           DoMergeParallelLines(BranchList );
-       End;
+    if EnergyMeterClass.SetActive(EnergyMeterName) then
+        ActiveEnergyMeterObj := EnergyMeterClass.ElementList.Active;
+    if Assigned(ActiveEnergyMeterObj) then
+        with ActiveEnergyMeterObj do
+        begin
+            if not assigned(BranchList) then
+                MakeMeterZoneLists;
+            DoMergeParallelLines(BranchList);
+        end;
 end;
 
 procedure TReduceCkt.DoSwitches;
 begin
-       If EnergyMeterClass.SetActive(EnergyMeterName) Then ActiveEnergyMeterObj:= EnergyMeterClass.ElementList.Active;
-       if Assigned(ActiveEnergyMeterObj) then
-       With ActiveEnergyMeterObj Do   Begin
-           If not assigned(BranchList) Then MakeMeterZoneLists;
-           DoRemoveAll_1ph_Laterals(BranchList );
-       End;
+    if EnergyMeterClass.SetActive(EnergyMeterName) then
+        ActiveEnergyMeterObj := EnergyMeterClass.ElementList.Active;
+    if Assigned(ActiveEnergyMeterObj) then
+        with ActiveEnergyMeterObj do
+        begin
+            if not assigned(BranchList) then
+                MakeMeterZoneLists;
+            DoRemoveAll_1ph_Laterals(BranchList);
+        end;
 end;
 
 initialization
-  TAutoObjectFactory.Create(ComServer, TReduceCkt, Class_ReduceCkt,
-    ciInternal, tmApartment);
+    TAutoObjectFactory.Create(ComServer, TReduceCkt, Class_ReduceCkt,
+        ciInternal, tmApartment);
 
-  ReduceEditString := ''; // Init to null string
-  EnergyMeterName  := '';
-  FirstPDelement := '';
+    ReduceEditString := ''; // Init to null string
+    EnergyMeterName := '';
+    FirstPDelement := '';
 end.

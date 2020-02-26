@@ -44,67 +44,67 @@ interface
 
 {Add other modules accessed by this class}
 
-USES  
-     DSSClass,   // Base class for most DSS objects
-     PCClass,    // Base class for collection manager for PC elements
-     PCElement,  // Base class for PC  Elements
-     ucmatrix,     // Unit for managing complex matrice (for Yprim, etc)
-     ucomplex,     // Complex math functions, type definitions
-     ArrayDef,     // definitions of basic DSS arrays
+uses
+    DSSClass,   // Base class for most DSS objects
+    PCClass,    // Base class for collection manager for PC elements
+    PCElement,  // Base class for PC  Elements
+    ucmatrix,     // Unit for managing complex matrice (for Yprim, etc)
+    ucomplex,     // Complex math functions, type definitions
+    ArrayDef,     // definitions of basic DSS arrays
 
     // common modules used in PC elements
-     LoadShape,    // class for supporting/representing loadshapes
-     GrowthShape,  // Class for holding growth shapes
-     Spectrum,     // Definitions for harmonic spectra
-     Dynamics,
-     GeneratorVars;     // for elements that interact with dynamics variables
+    LoadShape,    // class for supporting/representing loadshapes
+    GrowthShape,  // Class for holding growth shapes
+    Spectrum,     // Definitions for harmonic spectra
+    Dynamics,
+    GeneratorVars;     // for elements that interact with dynamics variables
 
 
-TYPE
+type
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 { Collection manager for this class of element }
-   TIndMach012 = CLASS(TPCClass)   { Notes Andres: -- definition of the class -- }
-     private
+    TIndMach012 = class(TPCClass)   { Notes Andres: -- definition of the class -- }
+    PRIVATE
 
       {These private functions are generally helper functions for Edit procedure}
 
       { A typical function }
-       Procedure SetNcondsForConnection;
+        procedure SetNcondsForConnection;
 
-     Protected
-       Procedure DefineProperties;    // Define the property names and help strings
-       Function  MakeLike(Const OtherIndMach012Name:STring):Integer;Override;  // copy properties of another similar object
+    PROTECTED
+        procedure DefineProperties;    // Define the property names and help strings
+        function MakeLike(const OtherIndMach012Name: String): Integer; OVERRIDE;  // copy properties of another similar object
 
-     public
+    PUBLIC
 
-       constructor Create;
-       destructor Destroy; override;
+        constructor Create;
+        destructor Destroy; OVERRIDE;
 
-       Function Edit(ActorID : Integer):Integer; override;      // Definition of the main property editing function
-       Function Init(Handle:Integer; ActorID : Integer):Integer; override;  // Initialize by handle (index), if necessary
+        function Edit(ActorID: Integer): Integer; OVERRIDE;      // Definition of the main property editing function
+        function Init(Handle: Integer; ActorID: Integer): Integer; OVERRIDE;  // Initialize by handle (index), if necessary
 
 
-       Function NewObject(const ObjName:String):Integer; override; // This function is called by the DSS New command
+        function NewObject(const ObjName: String): Integer; OVERRIDE; // This function is called by the DSS New command
 
      {any public functions that might be called from other elements}
 
-   End;
+    end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 { Class definition for this class of element}
-    TSymCompArray = Array[0..2] of Complex;
+    TSymCompArray = array[0..2] of Complex;
     //pTDynamicsRec =  ^TDynamicsRec;
     //pTGeneratorVars = ^TGeneratorVars;
 
-   TIndMach012Obj = class(TPCElement)
-      Private
+    TIndMach012Obj = class(TPCElement)
+    PRIVATE
 
       {Private variables of this class}
-        Connection      :Integer;  {0 = line-neutral; 1=Delta}
-        Yeq             :Complex;   // Y at nominal voltage
+        Connection: Integer;  {0 = line-neutral; 1=Delta}
+        Yeq: Complex;   // Y at nominal voltage
 
         puRs, puXs, puRr, puXr, puXm,
         S1,        // Pos seq slip
@@ -116,141 +116,141 @@ TYPE
         Xopen,
         Xp,
         T0p // Rotor time constant
-        :Double;
+        : Double;
 
-        InDynamics:Boolean;
+        InDynamics: Boolean;
 
         Zs, Zm, Zr,
         Is1, Ir1, V1,    // Keep the last computed voltages and currents
-        Is2, Ir2, V2  :Complex;
+        Is2, Ir2, V2: Complex;
 
         {Complex variables for dynamics}
         E1, E1n, dE1dt, dE1dtn,
         E2, E2n, dE2dt, dE2dtn,
-        Zsp:Complex;
+        Zsp: Complex;
 
-        FirstIteration, FixedSlip:Boolean;
+        FirstIteration, FixedSlip: Boolean;
 
-        RandomMult  :Double;
-        IndMach012SolutionCount : Integer;
-        IndMach012SwitchOpen    : Boolean;
+        RandomMult: Double;
+        IndMach012SolutionCount: Integer;
+        IndMach012SwitchOpen: Boolean;
 
         // Debugging
-        TraceFile  :TextFile;
-        DebugTrace :Boolean;
+        TraceFile: TextFile;
+        DebugTrace: Boolean;
 
-        MachineData : TGeneratorVars;    // Use generator variable structure
+        MachineData: TGeneratorVars;    // Use generator variable structure
 
         // Andres: NEW variables from generator
-        MachineON       :Boolean;
-        ShapeFactor     :Complex;
+        MachineON: Boolean;
+        ShapeFactor: Complex;
 
-        ShapeIsActual   :Boolean;
+        ShapeIsActual: Boolean;
         // Andres: end NEW variables from generator
 
-        VBase           :Double;
-        kWBase          :Double;
+        VBase: Double;
+        kWBase: Double;
 
-        Procedure InterpretOption(s:String);
+        procedure InterpretOption(s: String);
 
         procedure set_Localslip(const Value: Double);
 
-        Procedure Get_PFlowModelCurrent(Const V:Complex; Const S:Double; var Istator, Irotor:Complex);
-        Procedure Get_DynamicModelCurrent;
+        procedure Get_PFlowModelCurrent(const V: Complex; const S: Double; var Istator, Irotor: Complex);
+        procedure Get_DynamicModelCurrent;
         procedure Set_Slip(const Value: Double);
 
-        Function  GetRotorLosses  :Double;
-        Function  GetStatorLosses :Double;
-        Function  Compute_dSdP:Double;
-        Procedure Randomize(Opt:Integer);
-        procedure InitModel(V012, I012:TSymCompArray);
+        function GetRotorLosses: Double;
+        function GetStatorLosses: Double;
+        function Compute_dSdP: Double;
+        procedure Randomize(Opt: Integer);
+        procedure InitModel(V012, I012: TSymCompArray);
 
-        Procedure CalcYPrimMatrix(Ymatrix:TcMatrix; ActorID : Integer);
-        Procedure CalcIndMach012ModelContribution(ActorID : Integer);
-        Procedure CalcInjCurrentArray(ActorID : Integer);
+        procedure CalcYPrimMatrix(Ymatrix: TcMatrix; ActorID: Integer);
+        procedure CalcIndMach012ModelContribution(ActorID: Integer);
+        procedure CalcInjCurrentArray(ActorID: Integer);
 
-        Procedure DoIndMach012Model(ActorID : Integer);
+        procedure DoIndMach012Model(ActorID: Integer);
 
-        Procedure CalcModel(V, I:pComplexArray; ActorID : Integer);
+        procedure CalcModel(V, I: pComplexArray; ActorID: Integer);
 
         // Andres: NEW procedures from generator
-        PROCEDURE CalcDailyMult(Hr:double);
-        PROCEDURE CalcYearlyMult(Hr:double);
-        PROCEDURE CalcDutyMult(Hr:double);
+        procedure CalcDailyMult(Hr: Double);
+        procedure CalcYearlyMult(Hr: Double);
+        procedure CalcDutyMult(Hr: Double);
         // Andres: NEW procedures from generator
 
-        PROCEDURE InitTraceFile;
-        PROCEDURE WriteTraceRecord(ActorID : Integer);
-        FUNCTION  Get_PresentkV: Double;
-        PROCEDURE Set_PresentkV(const Value: Double);
+        procedure InitTraceFile;
+        procedure WriteTraceRecord(ActorID: Integer);
+        function Get_PresentkV: Double;
+        procedure Set_PresentkV(const Value: Double);
 
-        PROCEDURE SetPowerkW(const PkW:Double);
+        procedure SetPowerkW(const PkW: Double);
 
-      Protected
+    PROTECTED
 
         {A couple of virtual procedures you can override}
-        PROCEDURE Set_ConductorClosed(Index:Integer; ActorID:integer; Value:Boolean); Override;
-        Procedure GetTerminalCurrents(Curr:pComplexArray; ActorID : Integer); Override ;
+        procedure Set_ConductorClosed(Index: Integer; ActorID: Integer; Value: Boolean); OVERRIDE;
+        procedure GetTerminalCurrents(Curr: pComplexArray; ActorID: Integer); OVERRIDE;
 
-        PROCEDURE DoDynamicMode(ActorID : Integer);
-        PROCEDURE DoHarmonicMode(ActorID : Integer);
+        procedure DoDynamicMode(ActorID: Integer);
+        procedure DoHarmonicMode(ActorID: Integer);
 
-      public
+    PUBLIC
 
         {Variables and functions accessed by DSS and other objects}
 
         // Andres: new variables from generator
-        DailyDispShape  :String;  // Daily (24 HR) Generator shape
-        DailyDispShapeObj :TLoadShapeObj;  // Daily Generator Shape for this load
-        DutyShapeObj    :TLoadShapeObj;  // Shape for this generator
-        DutyShape  :String;  //
-        YearlyShape     :String;  // ='fixed' means no variation  on all the time
-        YearlyShapeObj  :TLoadShapeObj;  // Shape for this Generator
+        DailyDispShape: String;  // Daily (24 HR) Generator shape
+        DailyDispShapeObj: TLoadShapeObj;  // Daily Generator Shape for this load
+        DutyShapeObj: TLoadShapeObj;  // Shape for this generator
+        DutyShape: String;  //
+        YearlyShape: String;  // ='fixed' means no variation  on all the time
+        YearlyShapeObj: TLoadShapeObj;  // Shape for this Generator
         // Andres: New variables from generator
 
-        constructor Create(ParClass :TDSSClass; const IndMach012ObjName :String);
-        destructor  Destroy; override;
+        constructor Create(ParClass: TDSSClass; const IndMach012ObjName: String);
+        destructor Destroy; OVERRIDE;
 
-        Procedure RecalcElementData(ActorID : Integer); Override;   // Generally called after Edit is complete to recompute variables
-        Procedure CalcYPrim(ActorID : Integer); Override;   // Calculate Primitive Y matrix
-        Procedure Integrate(ActorID : Integer);
-        Procedure CalcDynamic(Var V012, I012: TSymCompArray);
-        Procedure CalcPFlow(Var V012, I012: TSymCompArray);
-        Procedure SetNominalPower(ActorID : Integer);
+        procedure RecalcElementData(ActorID: Integer); OVERRIDE;   // Generally called after Edit is complete to recompute variables
+        procedure CalcYPrim(ActorID: Integer); OVERRIDE;   // Calculate Primitive Y matrix
+        procedure Integrate(ActorID: Integer);
+        procedure CalcDynamic(var V012, I012: TSymCompArray);
+        procedure CalcPFlow(var V012, I012: TSymCompArray);
+        procedure SetNominalPower(ActorID: Integer);
 
         // Injection current management functions (unique to PC Elements)
-	      // This is how the DSS represents elements with nonlinear characteristics
+          // This is how the DSS represents elements with nonlinear characteristics
         // Inj currents are the difference between the desired total terminal currents and the
         // currents that result from the linear admittance matrix of the element
-        Function  InjCurrents(ActorID : Integer):Integer; Override;
-        Procedure GetInjCurrents(Curr:pComplexArray; ActorID : Integer); Override;
+        function InjCurrents(ActorID: Integer): Integer; OVERRIDE;
+        procedure GetInjCurrents(Curr: pComplexArray; ActorID: Integer); OVERRIDE;
 
-      	// State variable management functions, if any
+          // State variable management functions, if any
         // You can omit these if your PC element model is not using these
         // Default behavior is to basically do nothing
-        Function  NumVariables:Integer;Override;
-        Procedure GetAllVariables(States:pDoubleArray);Override;
-        Function  Get_Variable(i: Integer): Double; Override;
-        procedure Set_Variable(i: Integer; Value: Double);  Override;
-        Function  VariableName(i:Integer):String ;Override;
+        function NumVariables: Integer; OVERRIDE;
+        procedure GetAllVariables(States: pDoubleArray); OVERRIDE;
+        function Get_Variable(i: Integer): Double; OVERRIDE;
+        procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
+        function VariableName(i: Integer): String; OVERRIDE;
 
         // Support for Dynamics Mode
-        Procedure InitStateVars(ActorID : Integer);  Override;
-        Procedure IntegrateStates(ActorID : Integer);Override;
+        procedure InitStateVars(ActorID: Integer); OVERRIDE;
+        procedure IntegrateStates(ActorID: Integer); OVERRIDE;
 
         // Support for Harmonics Mode
-        Procedure InitHarmonics(ActorID : Integer); Override;
+        procedure InitHarmonics(ActorID: Integer); OVERRIDE;
 
-        PROCEDURE MakePosSequence(ActorID : Integer);Override;  // Make a positive Sequence Model, if possible
+        procedure MakePosSequence(ActorID: Integer); OVERRIDE;  // Make a positive Sequence Model, if possible
 
        // Functions required for managing values of properties
-        PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
-        Procedure DumpProperties(Var F:TextFile; Complete:Boolean);Override;
-        FUNCTION  GetPropertyValue(Index:Integer):String;Override;
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
+        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
-        Property LocalSlip:Double read S1 write set_Localslip;
-        Property Slip:Double              Write Set_Slip;
-        Property PresentkV :Double  Read Get_PresentkV   Write Set_PresentkV;
+        property LocalSlip: Double READ S1 WRITE set_Localslip;
+        property Slip: Double WRITE Set_Slip;
+        property PresentkV: Double READ Get_PresentkV WRITE Set_PresentkV;
 
        //Property Variable[i:Integer]:Double Read Get_Variable Write Set_Variable;
 
@@ -261,111 +261,113 @@ TYPE
          Property ConnectedkVA        :Double Read FConnectedkVA        Write Set_ConnectedkVA;
        }
 
-   End;
+    end;
 
-VAR
-    IndMach012Class    :TIndMach012;
-    ActiveIndMach012Obj:TIndMach012Obj;
+var
+    IndMach012Class: TIndMach012;
+    ActiveIndMach012Obj: TIndMach012Obj;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 implementation
 
 {Typical Uses Clause -- not all may not be needed}
-USES  ParserDel,     // DSS parser
-      DSSClassDefs,  // Where class is instantiated
-      DSSGlobals,    // Global DSS variables
-      Circuit,       // If access to circuit variables is needed
-      Command,       // DSS command and property support module
-      Sysutils,      // Delphi misc utility functions
-      Math,          // Delphi Math functions
-      MathUtil,      // DSS Math utilities
-      Utilities;     // DSS misc utility functions
+uses
+    ParserDel,     // DSS parser
+    DSSClassDefs,  // Where class is instantiated
+    DSSGlobals,    // Global DSS variables
+    Circuit,       // If access to circuit variables is needed
+    Command,       // DSS command and property support module
+    Sysutils,      // Delphi misc utility functions
+    Math,          // Delphi Math functions
+    MathUtil,      // DSS Math utilities
+    Utilities;     // DSS misc utility functions
 
-CONST
-     NumPropsThisClass = 21; // Set this constant to the actual number of properties you define
-     NumIndMach012Variables = 22;
-
-
-VAR  // Define any useful module vars here, for example:
-     cBuffer:Array[1..24] of Complex;  // Temp buffer for complex math calcs; allows up to 24-phase models.
-     CDOUBLEONE: Complex;   // 1 + j1  (see Initialization section below)
+const
+    NumPropsThisClass = 21; // Set this constant to the actual number of properties you define
+    NumIndMach012Variables = 22;
 
 
-Function CmplxArrayToString(cpxarray:pComplexArray; count:integer):String;
+var  // Define any useful module vars here, for example:
+    cBuffer: array[1..24] of Complex;  // Temp buffer for complex math calcs; allows up to 24-phase models.
+    CDOUBLEONE: Complex;   // 1 + j1  (see Initialization section below)
+
+
+function CmplxArrayToString(cpxarray: pComplexArray; count: Integer): String;
 // Put array values in brackets separated by commas.
 // Special version that appends magnitude and angle.
 
-VAR
-   i:Integer;
+var
+    i: Integer;
 
-   Procedure AppendMagAngle;
-   Begin
-       Result :=Result + Format(' (%.6g, %.5g)',[Cabs(cpxarray^[i]), Cdang(cpxarray^[i])] );
-   End;
+    procedure AppendMagAngle;
+    begin
+        Result := Result + Format(' (%.6g, %.5g)', [Cabs(cpxarray^[i]), Cdang(cpxarray^[i])]);
+    end;
 
-Begin
+begin
 
-     Result := '[NULL]';
-     If count>0 Then
-     Begin
-           Result :=Format('[%.6g +j %.6g',[cpxarray^[1].re, cpxarray^[1].im ] );
-           i:=1;
-           AppendMagAngle;
-           FOR i := 2 to count do Begin
-                Result := Result + Format(', %.6g +j %.6g',[cpxarray^[i].re, cpxarray^[i].im]);
-                AppendMagAngle;
-           End;
-           Result := Result + ']';
-     End;
+    Result := '[NULL]';
+    if count > 0 then
+    begin
+        Result := Format('[%.6g +j %.6g', [cpxarray^[1].re, cpxarray^[1].im]);
+        i := 1;
+        AppendMagAngle;
+        for i := 2 to count do
+        begin
+            Result := Result + Format(', %.6g +j %.6g', [cpxarray^[i].re, cpxarray^[i].im]);
+            AppendMagAngle;
+        end;
+        Result := Result + ']';
+    end;
 
 end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TIndMach012.Create;  // Creates main collection handler for all IndMach012 objects
-Begin
-     Inherited Create;  // make the base class  and init DSSClassType
+begin
+    inherited Create;  // make the base class  and init DSSClassType
 
      // Specify class name and bit mask ID for this class type
      // IndMach012_ELEMENT must be defined in DSSClassDefs as nn*8
      // First 3 bits are used for base class type (DSSClassType)
-     Class_Name := 'IndMach012';
-     DSSClassType := DSSClassType + INDMACH012_ELEMENT;
+    Class_Name := 'IndMach012';
+    DSSClassType := DSSClassType + INDMACH012_ELEMENT;
 
-     ActiveElement := 0;   // no active elements yet; init to 0
+    ActiveElement := 0;   // no active elements yet; init to 0
 
      {Initialize any other special variables here}
 
-     DefineProperties;   // This is where the properties for this class are defined
+    DefineProperties;   // This is where the properties for this class are defined
 
      // Use the Command processor to manage property names
      // PropertyName is an array of String defined in DefineProperties
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
-     CommandList.Abbrev := TRUE;
+    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList.Abbrev := TRUE;
 
-     IndMach012Class := Self;
-End;
+    IndMach012Class := Self;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Destructor TIndMach012.Destroy;
+destructor TIndMach012.Destroy;
 
-Begin
+begin
 
     // ElementList and  CommandList freed in inherited destroy
-    Inherited Destroy;
+    inherited Destroy;
 
-End;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TIndMach012.DefineProperties;
+procedure TIndMach012.DefineProperties;
 
 // This is where the properties are defined, assigned names, indexes, and help strings
 // The Help strings will automatically show up when the Help is invoked
 
-Begin
+begin
 
-     Numproperties := NumPropsThisClass;
-     CountProperties;   // Get inherited property count
-     AllocatePropertyArrays;   {see DSSClass}
+    Numproperties := NumPropsThisClass;
+    CountProperties;   // Get inherited property count
+    AllocatePropertyArrays;   {see DSSClass}
 
      // Refer to other classes for alternative methods of assigning properties
      // This example uses the AddProperty function to assign Name, Index, and Help string
@@ -381,134 +383,137 @@ Begin
      // statement in the EDIT function
 
 
-     PropertyName[1] := 'phases';
-     PropertyName[2] := 'bus1';
-     PropertyName[3] := 'kv';
-     PropertyName[4] := 'kW';
-     PropertyName[5] := 'pf';
-     PropertyName[6] := 'conn';
-     PropertyName[7] := 'kVA';
-     PropertyName[8] := 'H';
-     PropertyName[9] := 'D';
-     PropertyName[10] := 'puRs';
-     PropertyName[11] := 'puXs';
-     PropertyName[12] := 'puRr';
-     PropertyName[13] := 'puXr';
-     PropertyName[14] := 'puXm';
-     PropertyName[15] := 'Slip';
-     PropertyName[16] := 'MaxSlip';
-     PropertyName[17] := 'SlipOption';
-     PropertyName[18] := 'Yearly';
-     PropertyName[19] := 'Daily';
-     PropertyName[20] := 'Duty';
-     PropertyName[21] := 'Debugtrace';
+    PropertyName[1] := 'phases';
+    PropertyName[2] := 'bus1';
+    PropertyName[3] := 'kv';
+    PropertyName[4] := 'kW';
+    PropertyName[5] := 'pf';
+    PropertyName[6] := 'conn';
+    PropertyName[7] := 'kVA';
+    PropertyName[8] := 'H';
+    PropertyName[9] := 'D';
+    PropertyName[10] := 'puRs';
+    PropertyName[11] := 'puXs';
+    PropertyName[12] := 'puRr';
+    PropertyName[13] := 'puXr';
+    PropertyName[14] := 'puXm';
+    PropertyName[15] := 'Slip';
+    PropertyName[16] := 'MaxSlip';
+    PropertyName[17] := 'SlipOption';
+    PropertyName[18] := 'Yearly';
+    PropertyName[19] := 'Daily';
+    PropertyName[20] := 'Duty';
+    PropertyName[21] := 'Debugtrace';
 
-     PropertyHelp[1] := 'Number of Phases, this Induction Machine.  ';
-     PropertyHelp[2] := 'Bus to which the Induction Machine is connected.  May include specific node specification.';
-     PropertyHelp[3] := 'Nominal rated (1.0 per unit) voltage, kV. For 2- and 3-phase machines, specify phase-phase kV. '+
-                        'Otherwise, specify actual kV across each branch of the machine. '+
-                        'If wye (star), specify phase-neutral kV. '+
-                        'If delta or phase-phase connected, specify phase-phase kV.';  // line-neutral voltage//  base voltage
-     PropertyHelp[4] := 'Shaft Power, kW, for the Induction Machine.  A positive value denotes power for a load. '+CRLF+
-                        'Negative value denotes an induction generator. ';
-     PropertyHelp[5] := '[Read Only] Present power factor for the machine. ';
-     PropertyHelp[6] := 'Connection of stator: Delta or Wye. Default is Delta.';
-     PropertyHelp[7] := 'Rated kVA for the machine.';
-     PropertyHelp[8] := 'Per unit mass constant of the machine.  MW-sec/MVA.  Default is 1.0.';
-     PropertyHelp[9] := 'Damping constant.  Usual range is 0 to 4. Default is 1.0.  Adjust to get damping in Dynamics mode,';
-     PropertyHelp[10] := 'Per unit stator resistance. Default is 0.0053.';
-     PropertyHelp[11] := 'Per unit stator leakage reactance. Default is 0.106.';
-     PropertyHelp[12] := 'Per unit rotor  resistance. Default is 0.007.';
-     PropertyHelp[13] := 'Per unit rotor leakage reactance. Default is 0.12.';
-     PropertyHelp[14] := 'Per unit magnetizing reactance.Default is 4.0.';
-     PropertyHelp[15] := 'Initial slip value. Default is 0.007';
-     PropertyHelp[16] := 'Max slip value to allow. Default is 0.1. Set this before setting slip.';
-     PropertyHelp[17] := 'Option for slip model. One of {fixedslip | variableslip*  }';
-     PropertyHelp[18] := 'LOADSHAPE object to use for yearly simulations.  Must be previously defined '+
-                        'as a Loadshape object. Is set to the Daily load shape ' +
-                        ' when Daily is defined.  The daily load shape is repeated in this case. '+
-                        'Set Status=Fixed to ignore Loadshape designation. ' +
-                        'Set to NONE to reset to no loadahape. ' +
-                        'The default is no variation.';
-     PropertyHelp[19] := 'LOADSHAPE object to use for daily simulations.  Must be previously defined '+
-                        'as a Loadshape object of 24 hrs, typically. ' +
-                        'Set Status=Fixed to ignore Loadshape designation. ' +
-                        'Set to NONE to reset to no loadahape. ' +
-                        'Default is no variation (constant) if not defined. ' +
-                        'Side effect: Sets Yearly load shape if not already defined.';
-     PropertyHelp[20] := 'LOADSHAPE object to use for duty cycle simulations.  Must be previously defined '+
-                        'as a Loadshape object.  Typically would have time intervals less than 1 hr. '+
-                        'Designate the number of points to solve using the Set Number=xxxx command. '+
-                        'If there are fewer points in the actual shape, the shape is assumed to repeat.'+
-                        'Set to NONE to reset to no loadahape. ' +
-                        'Set Status=Fixed to ignore Loadshape designation. ' +
-                        ' Defaults to Daily curve If not specified.';
-     PropertyHelp[21] := '[Yes | No*] Write DebugTrace file.';
+    PropertyHelp[1] := 'Number of Phases, this Induction Machine.  ';
+    PropertyHelp[2] := 'Bus to which the Induction Machine is connected.  May include specific node specification.';
+    PropertyHelp[3] := 'Nominal rated (1.0 per unit) voltage, kV. For 2- and 3-phase machines, specify phase-phase kV. ' +
+        'Otherwise, specify actual kV across each branch of the machine. ' +
+        'If wye (star), specify phase-neutral kV. ' +
+        'If delta or phase-phase connected, specify phase-phase kV.';  // line-neutral voltage//  base voltage
+    PropertyHelp[4] := 'Shaft Power, kW, for the Induction Machine.  A positive value denotes power for a load. ' + CRLF +
+        'Negative value denotes an induction generator. ';
+    PropertyHelp[5] := '[Read Only] Present power factor for the machine. ';
+    PropertyHelp[6] := 'Connection of stator: Delta or Wye. Default is Delta.';
+    PropertyHelp[7] := 'Rated kVA for the machine.';
+    PropertyHelp[8] := 'Per unit mass constant of the machine.  MW-sec/MVA.  Default is 1.0.';
+    PropertyHelp[9] := 'Damping constant.  Usual range is 0 to 4. Default is 1.0.  Adjust to get damping in Dynamics mode,';
+    PropertyHelp[10] := 'Per unit stator resistance. Default is 0.0053.';
+    PropertyHelp[11] := 'Per unit stator leakage reactance. Default is 0.106.';
+    PropertyHelp[12] := 'Per unit rotor  resistance. Default is 0.007.';
+    PropertyHelp[13] := 'Per unit rotor leakage reactance. Default is 0.12.';
+    PropertyHelp[14] := 'Per unit magnetizing reactance.Default is 4.0.';
+    PropertyHelp[15] := 'Initial slip value. Default is 0.007';
+    PropertyHelp[16] := 'Max slip value to allow. Default is 0.1. Set this before setting slip.';
+    PropertyHelp[17] := 'Option for slip model. One of {fixedslip | variableslip*  }';
+    PropertyHelp[18] := 'LOADSHAPE object to use for yearly simulations.  Must be previously defined ' +
+        'as a Loadshape object. Is set to the Daily load shape ' +
+        ' when Daily is defined.  The daily load shape is repeated in this case. ' +
+        'Set Status=Fixed to ignore Loadshape designation. ' +
+        'Set to NONE to reset to no loadahape. ' +
+        'The default is no variation.';
+    PropertyHelp[19] := 'LOADSHAPE object to use for daily simulations.  Must be previously defined ' +
+        'as a Loadshape object of 24 hrs, typically. ' +
+        'Set Status=Fixed to ignore Loadshape designation. ' +
+        'Set to NONE to reset to no loadahape. ' +
+        'Default is no variation (constant) if not defined. ' +
+        'Side effect: Sets Yearly load shape if not already defined.';
+    PropertyHelp[20] := 'LOADSHAPE object to use for duty cycle simulations.  Must be previously defined ' +
+        'as a Loadshape object.  Typically would have time intervals less than 1 hr. ' +
+        'Designate the number of points to solve using the Set Number=xxxx command. ' +
+        'If there are fewer points in the actual shape, the shape is assumed to repeat.' +
+        'Set to NONE to reset to no loadahape. ' +
+        'Set Status=Fixed to ignore Loadshape designation. ' +
+        ' Defaults to Daily curve If not specified.';
+    PropertyHelp[21] := '[Yes | No*] Write DebugTrace file.';
 
 
      { add properties here }
 
      // Finally, we have to pick up any properties that were inherited
-     ActiveProperty := NumPropsThisClass;
-     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
+    ActiveProperty := NumPropsThisClass;
+    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
      // You can optionally override default help string of an inherited property, for example
-     PropertyHelp[NumPropsThisClass +1] := 'Name of harmonic voltage or current spectrum for this IndMach012. ' +
-                         'Voltage behind Xd" for machine - default. Current injection for inverter. ' +
-                         'Default value is "default", which is defined when the DSS starts.';
+    PropertyHelp[NumPropsThisClass + 1] := 'Name of harmonic voltage or current spectrum for this IndMach012. ' +
+        'Voltage behind Xd" for machine - default. Current injection for inverter. ' +
+        'Default value is "default", which is defined when the DSS starts.';
 
-End;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TIndMach012.NewObject(const ObjName:String):Integer;
+function TIndMach012.NewObject(const ObjName: String): Integer;
 
 // This function is called  by the DSS whenever a New IndMach012... command is encountered
 
-Begin
+begin
     // Make a new IndMach012 and add it to IndMach012 class list
-    With ActiveCircuit[ActiveActor] Do
-    Begin
-      ActiveCktElement := TIndMach012Obj.Create(Self, ObjName);
-      Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
-    End;
+    with ActiveCircuit[ActiveActor] do
+    begin
+        ActiveCktElement := TIndMach012Obj.Create(Self, ObjName);
+        Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
+    end;
 
-End;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TIndMach012.SetNcondsForConnection;
+procedure TIndMach012.SetNcondsForConnection;
 
 // This is a typical helper function found in many DSS circuit element class
 // for defining the number of conductors per terminal (Nconds) based on Y or delta connection
 
-Begin
+begin
 
-  With ActiveIndMach012Obj Do
-  Begin
-     CASE Connection OF
-       0: NConds := Fnphases;  // Neutral is not connected for induction machine
-       1: CASE Fnphases OF        // Delta connection
-              1,2: NConds := Fnphases +1; // L-L and Open-delta
-          ELSE
-              NConds := Fnphases;    // no neutral for this connection
-          End;
-     End;
-  End;
+    with ActiveIndMach012Obj do
+    begin
+        case Connection of
+            0:
+                NConds := Fnphases;  // Neutral is not connected for induction machine
+            1:
+                case Fnphases of        // Delta connection
+                    1, 2:
+                        NConds := Fnphases + 1; // L-L and Open-delta
+                else
+                    NConds := Fnphases;    // no neutral for this connection
+                end;
+        end;
+    end;
 
-End;
+end;
 
 
 //- - - - - - - - - - - - - MAIN EDIT FUNCTION  - - - - - - - - - - - - - - -
 //----------------------------------------------------------------------------
-Function TIndMach012.Edit(ActorID : Integer):Integer;
+function TIndMach012.Edit(ActorID: Integer): Integer;
 //----------------------------------------------------------------------------
 
 // This function is the heart of the property managment for this class
 
-VAR     // Define some local vars for handling parser results
+var     // Define some local vars for handling parser results
 
-   ParamPointer:Integer;
-   ParamName:String;
-   Param:String;
+    ParamPointer: Integer;
+    ParamName: String;
+    Param: String;
 
 // The Edit function starts where the Parser is presently pointing and
 // manages the parsing of the rest of the command line in the parser.
@@ -516,302 +521,341 @@ VAR     // Define some local vars for handling parser results
 // The DSS executive processes the command verb on the front of the line and
 // then passes control to the appropriate Edit function
 
-Begin
+begin
 
   // set the present element active
   // and continue parsing with contents of Parser
-  ActiveIndMach012Obj := ElementList.Active;
-  ActiveCircuit[ActorID].ActiveCktElement := ActiveIndMach012Obj;
+    ActiveIndMach012Obj := ElementList.Active;
+    ActiveCircuit[ActorID].ActiveCktElement := ActiveIndMach012Obj;
 
-  Result := 0;
+    Result := 0;
 
-  With ActiveIndMach012Obj Do
-  Begin
+    with ActiveIndMach012Obj do
+    begin
      // peel off the next token on the edit line
-     ParamPointer := 0;
-     ParamName := Parser[ActorID].NextParam;
-     Param := Parser[ActorID].StrValue;
+        ParamPointer := 0;
+        ParamName := Parser[ActorID].NextParam;
+        Param := Parser[ActorID].StrValue;
 
-     While Length(Param)>0 Do
-     Begin
+        while Length(Param) > 0 do
+        begin
          // Find the index for the CASE statement
          // If property is not named, just increment the index to the next property
-         If  (Length(ParamName) = 0) Then Inc(ParamPointer)
-         ELSE ParamPointer := CommandList.GetCommand(ParamName);
+            if (Length(ParamName) = 0) then
+                Inc(ParamPointer)
+            else
+                ParamPointer := CommandList.GetCommand(ParamName);
 
          // Update the PropertyValy for this property
          // Actual index is mapped via PropertyIdxMap array for this class
-         If  (ParamPointer>0) and (ParamPointer<=NumProperties)
-         Then PropertyValue[PropertyIdxMap[ParamPointer]] := Param
-         ELSE DoSimpleMsg('Unknown parameter "'+ParamName+'" for IndMach012 "'+Name+'"', 560);
+            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
+                PropertyValue[PropertyIdxMap[ParamPointer]] := Param
+            else
+                DoSimpleMsg('Unknown parameter "' + ParamName + '" for IndMach012 "' + Name + '"', 560);
 
          // --------------- MAIN CASE STATEMENT ----------------------
-         If ParamPointer > 0 Then
+            if ParamPointer > 0 then
          // since we used AddProperty function to define properties, have to
          // use PropertyIdxMap to map to the correct Case index
-         CASE PropertyIdxMap[ParamPointer] OF
-            0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 561);
-            1: NPhases    := Parser[ActorID].Intvalue; // num phases
-            2: SetBus(1, param);
-            3: PresentkV    := Parser[ActorID].DblValue;
-            4: kWBase       := Parser[ActorID].DblValue;
-            5: ; // Do nothing; read only power factor    := Parser.DblValue;
-            6: InterpretConnection(Parser[ActorID].StrValue);
-            7: MachineData.kVArating   := Parser[ActorID].DblValue;
-            8: MachineData.Hmass   := Parser[ActorID].DblValue;
-            9: MachineData.D       := Parser[ActorID].DblValue;
-            10: puRs := Parser[ActorID].DblValue;
-            11: puXs := Parser[ActorID].DblValue;
-            12: puRr := Parser[ActorID].DblValue;
-            13: puXr := Parser[ActorID].DblValue;
-            14: puXm := Parser[ActorID].DblValue;
-            15: Slip := Parser[ActorID].DblValue;
-            16: MaxSlip := Parser[ActorID].DblValue;
-            17: InterpretOption(Parser[ActorID].StrValue);
-            18: YearlyShape  := Param;
-            19: DailyDispShape   := Param;
-            20: DutyShape  := Param;
-            21: DebugTrace   := InterpretYesNo(Param);
+                case PropertyIdxMap[ParamPointer] of
+                    0:
+                        DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 561);
+                    1:
+                        NPhases := Parser[ActorID].Intvalue; // num phases
+                    2:
+                        SetBus(1, param);
+                    3:
+                        PresentkV := Parser[ActorID].DblValue;
+                    4:
+                        kWBase := Parser[ActorID].DblValue;
+                    5: ; // Do nothing; read only power factor    := Parser.DblValue;
+                    6:
+                        InterpretConnection(Parser[ActorID].StrValue);
+                    7:
+                        MachineData.kVArating := Parser[ActorID].DblValue;
+                    8:
+                        MachineData.Hmass := Parser[ActorID].DblValue;
+                    9:
+                        MachineData.D := Parser[ActorID].DblValue;
+                    10:
+                        puRs := Parser[ActorID].DblValue;
+                    11:
+                        puXs := Parser[ActorID].DblValue;
+                    12:
+                        puRr := Parser[ActorID].DblValue;
+                    13:
+                        puXr := Parser[ActorID].DblValue;
+                    14:
+                        puXm := Parser[ActorID].DblValue;
+                    15:
+                        Slip := Parser[ActorID].DblValue;
+                    16:
+                        MaxSlip := Parser[ActorID].DblValue;
+                    17:
+                        InterpretOption(Parser[ActorID].StrValue);
+                    18:
+                        YearlyShape := Param;
+                    19:
+                        DailyDispShape := Param;
+                    20:
+                        DutyShape := Param;
+                    21:
+                        DebugTrace := InterpretYesNo(Param);
 
-         ELSE
+                else
            // Handle Inherited properties
-             ClassEdit(ActiveIndMach012Obj, ParamPointer - NumPropsThisClass)
-         End;
+                    ClassEdit(ActiveIndMach012Obj, ParamPointer - NumPropsThisClass)
+                end;
 
          // ---------------- SIDE EFFECTS CASE STATEMENT ---------------------
          // This case statment handles any side effects from setting a property
          // (for example, from Generator)
-         If ParamPointer > 0 Then
-         CASE PropertyIdxMap[ParamPointer] OF
-            1: SetNcondsForConnection;  // Force Reallocation of terminal info
-            18: Begin
-                    YearlyShapeObj := LoadShapeClass[ActorID].Find(YearlyShape);
-                    If Assigned(YearlyShapeObj) then With YearlyShapeObj Do
-                        If UseActual then SetPowerkW(MaxP);
-               End;
-            19: Begin
-                    DailyDispShapeObj := LoadShapeClass[ActorID].Find(DailyDispShape);
-                    If Assigned(DailyDispShapeObj) then With DailyDispShapeObj Do
-                        If UseActual then SetPowerkW(MaxP);
-               End;
-            20: Begin
-                    DutyShapeObj := LoadShapeClass[ActorID].Find(DutyShape);
-                    If Assigned(DutyShapeObj) then With DutyShapeObj Do
-                        If UseActual then SetPowerkW(MaxP);
-               End;
-         Else
-         End;
+            if ParamPointer > 0 then
+                case PropertyIdxMap[ParamPointer] of
+                    1:
+                        SetNcondsForConnection;  // Force Reallocation of terminal info
+                    18:
+                    begin
+                        YearlyShapeObj := LoadShapeClass[ActorID].Find(YearlyShape);
+                        if Assigned(YearlyShapeObj) then
+                            with YearlyShapeObj do
+                                if UseActual then
+                                    SetPowerkW(MaxP);
+                    end;
+                    19:
+                    begin
+                        DailyDispShapeObj := LoadShapeClass[ActorID].Find(DailyDispShape);
+                        if Assigned(DailyDispShapeObj) then
+                            with DailyDispShapeObj do
+                                if UseActual then
+                                    SetPowerkW(MaxP);
+                    end;
+                    20:
+                    begin
+                        DutyShapeObj := LoadShapeClass[ActorID].Find(DutyShape);
+                        if Assigned(DutyShapeObj) then
+                            with DutyShapeObj do
+                                if UseActual then
+                                    SetPowerkW(MaxP);
+                    end;
+                else
+                end;
 
          // Get next token off Parser and continue editing properties
-         ParamName := Parser[ActorID].NextParam;
-         Param     := Parser[ActorID].StrValue;
-     End;
+            ParamName := Parser[ActorID].NextParam;
+            Param := Parser[ActorID].StrValue;
+        end;
 
      // After editing is complete, the typical next step is to call the RecalcElementData function
-     RecalcElementData(ActorID);
-     YprimInvalid[ActorID] := True; // Setting this flag notifies the DSS that something has changed
+        RecalcElementData(ActorID);
+        YprimInvalid[ActorID] := TRUE; // Setting this flag notifies the DSS that something has changed
                            // and the Yprim will have to be rebuilt
 
-  End;
+    end;
 
-End;
+end;
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-Function TIndMach012.MakeLike(Const OtherIndMach012Name:String):Integer;
+function TIndMach012.MakeLike(const OtherIndMach012Name: String): Integer;
 
 // This function should be defined to handle the Like property inherited from
 // the base class.
 
 // The function copies the essential properties of another object of this class
 
-VAR
-   OtherIndMach012:TIndMach012Obj;
-   i:Integer;
+var
+    OtherIndMach012: TIndMach012Obj;
+    i: Integer;
 
-Begin
-   Result := 0;
+begin
+    Result := 0;
    {See if we can find this IndMach012 name in the present collection}
-   OtherIndMach012 := Find(OtherIndMach012Name);
-   If   (OtherIndMach012 <> Nil)   // skip if not found
-   Then With ActiveIndMach012Obj Do
-   Begin
+    OtherIndMach012 := Find(OtherIndMach012Name);
+    if (OtherIndMach012 <> NIL)   // skip if not found
+    then
+        with ActiveIndMach012Obj do
+        begin
        // You should first set the basic circuit element properties, for example
-       If (Fnphases <> OtherIndMach012.Fnphases) Then
-       Begin
-         Nphases := OtherIndMach012.Fnphases;
-         NConds := Fnphases;  // Forces reallocation of terminal stuff
+            if (Fnphases <> OtherIndMach012.Fnphases) then
+            begin
+                Nphases := OtherIndMach012.Fnphases;
+                NConds := Fnphases;  // Forces reallocation of terminal stuff
 
-         Yorder := Fnconds*Fnterms;
-         YprimInvalid[ActiveActor] := True;
-       End;
+                Yorder := Fnconds * Fnterms;
+                YprimInvalid[ActiveActor] := TRUE;
+            end;
 
-       PresentkV := OtherIndMach012.PresentkV;
-       kWBase := OtherIndMach012.kWBase;
+            PresentkV := OtherIndMach012.PresentkV;
+            kWBase := OtherIndMach012.kWBase;
 
-       puRs := OtherIndMach012.puRs;
-       puRr := OtherIndMach012.puRr;
-       puXr := OtherIndMach012.puXr;
-       puXm := OtherIndMach012.puXm;
-       puXs := OtherIndMach012.puXs;
-       MaxSlip := OtherIndMach012.MaxSlip;
+            puRs := OtherIndMach012.puRs;
+            puRr := OtherIndMach012.puRr;
+            puXr := OtherIndMach012.puXr;
+            puXm := OtherIndMach012.puXm;
+            puXs := OtherIndMach012.puXs;
+            MaxSlip := OtherIndMach012.MaxSlip;
 
-       MachineData.kVArating := OtherIndMach012.MachineData.kVArating;
-       MachineData.Hmass     := OtherIndMach012.MachineData.Hmass;
-       MachineData.D         := OtherIndMach012.MachineData.D;
+            MachineData.kVArating := OtherIndMach012.MachineData.kVArating;
+            MachineData.Hmass := OtherIndMach012.MachineData.Hmass;
+            MachineData.D := OtherIndMach012.MachineData.D;
 
        // Do inherited properties
-       ClassMakeLike(OtherIndMach012);
+            ClassMakeLike(OtherIndMach012);
 
        // Finally initialize all the property value strings to be the same as
        // the copied element
-       For i := 1 to ParentClass.NumProperties Do
+            for i := 1 to ParentClass.NumProperties do
           // Skip read only properties
-          If i<>5 then FPropertyValue^[i] := OtherIndMach012.FPropertyValue^[i];
+                if i <> 5 then
+                    FPropertyValue^[i] := OtherIndMach012.FPropertyValue^[i];
 
-       Result := 1;
-   End
-   ELSE  DoSimpleMsg('Error in Load MakeLike: "' + OtherIndMach012Name + '" Not Found.', 562);
+            Result := 1;
+        end
+    else
+        DoSimpleMsg('Error in Load MakeLike: "' + OtherIndMach012Name + '" Not Found.', 562);
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-Function TIndMach012.Init(Handle:Integer; ActorID : Integer):Integer;
+function TIndMach012.Init(Handle: Integer; ActorID: Integer): Integer;
 //----------------------------------------------------------------------------
 
 // Optional function if you want to do anything to initialize objects of this class
 
-VAR
-   p:TIndMach012Obj;
+var
+    p: TIndMach012Obj;
 
-Begin
+begin
 
-   If (Handle = 0)   Then Begin  // init all
-       p := elementList.First;
-       WHILE (p <> nil) Do
-       Begin
+    if (Handle = 0) then
+    begin  // init all
+        p := elementList.First;
+        while (p <> NIL) do
+        begin
             p.Randomize(0);
             p := elementlist.Next;
-       End;
-   End
-   ELSE Begin
-       Active := Handle;
-       p := GetActiveObj;
-       p.Randomize(0);
-   End;
+        end;
+    end
+    else
+    begin
+        Active := Handle;
+        p := GetActiveObj;
+        p.Randomize(0);
+    end;
 
-   DoSimpleMsg('Need to implement TIndMach012.Init', -1);
-   Result := 0;
+    DoSimpleMsg('Need to implement TIndMach012.Init', -1);
+    Result := 0;
 
-End;
+end;
 
 
 //------------------------- MAIN OBJECT CONSTRUCTOR ---------------------
-Constructor TIndMach012Obj.Create(ParClass:TDSSClass; const IndMach012ObjName:String);
+constructor TIndMach012Obj.Create(ParClass: TDSSClass; const IndMach012ObjName: String);
 //----------------------------------------------------------------------------
-Begin
-     Inherited create(ParClass);
-     Name := LowerCase(IndMach012ObjName);
-     DSSObjType := ParClass.DSSClassType ; // Same as Parent Class
+begin
+    inherited create(ParClass);
+    Name := LowerCase(IndMach012ObjName);
+    DSSObjType := ParClass.DSSClassType; // Same as Parent Class
 
      // Set some basic circuit element properties
-     Nphases      := 3;  // typical DSS default for a circuit element
-     Fnconds      := 3;  // defaults to delta
-     Yorder       := 0;  // To trigger an initial allocation
-     Nterms       := 1;  // forces allocations of terminal quantities
-     kWBase       := 1000.0;
+    Nphases := 3;  // typical DSS default for a circuit element
+    Fnconds := 3;  // defaults to delta
+    Yorder := 0;  // To trigger an initial allocation
+    Nterms := 1;  // forces allocations of terminal quantities
+    kWBase := 1000.0;
 
-     YearlyShape    := '';
-     YearlyShapeObj := nil;  // if YearlyShapeobj = nil then the load alway stays nominal * global multipliers
-     DailyDispShape := '';
-     DailyDispShapeObj := nil;  // if DaillyShapeobj = nil then the load alway stays nominal * global multipliers
-     DutyShape         := '';
-     DutyShapeObj      := nil;  // if DutyShapeobj = nil then the load alway stays nominal * global multipliers
+    YearlyShape := '';
+    YearlyShapeObj := NIL;  // if YearlyShapeobj = nil then the load alway stays nominal * global multipliers
+    DailyDispShape := '';
+    DailyDispShapeObj := NIL;  // if DaillyShapeobj = nil then the load alway stays nominal * global multipliers
+    DutyShape := '';
+    DutyShapeObj := NIL;  // if DutyShapeobj = nil then the load alway stays nominal * global multipliers
 
-     Debugtrace := FALSE;
+    Debugtrace := FALSE;
 
-     Yorder           := Fnterms * Fnconds;
-     ShapeIsActual    := FALSE;
-     IndMach012SwitchOpen := FALSE;
+    Yorder := Fnterms * Fnconds;
+    ShapeIsActual := FALSE;
+    IndMach012SwitchOpen := FALSE;
 
-      Connection        := 1;  // Delta Default
+    Connection := 1;  // Delta Default
 
-      MachineData.kVGeneratorBase  := 12.47;
+    MachineData.kVGeneratorBase := 12.47;
 
-      MachineData.kVArating  := kWBase * 1.2;
-      With MachineData Do
-      Begin
-           Hmass      := 1.0;       //  W-sec/VA rating
-           Theta      := 0.0;
-           w0         := TwoPi * Basefrequency;
-           Speed      := 0.0;  // relative speed
-           dSpeed     := 0.0;
-           D          := 1.0;
-           XRdp       := 20.0;   // not used for indmach
+    MachineData.kVArating := kWBase * 1.2;
+    with MachineData do
+    begin
+        Hmass := 1.0;       //  W-sec/VA rating
+        Theta := 0.0;
+        w0 := TwoPi * Basefrequency;
+        Speed := 0.0;  // relative speed
+        dSpeed := 0.0;
+        D := 1.0;
+        XRdp := 20.0;   // not used for indmach
 
            // newly added
-           Conn := connection;
-           NumPhases := Fnphases;
-           NumConductors := Fnconds;
-      End;
+        Conn := connection;
+        NumPhases := Fnphases;
+        NumConductors := Fnconds;
+    end;
 
     {---- end note Andres: from dll model ----}
 
     {Typical machine impedance data}
-      puRs := 0.0053;
-      puXs := 0.106;
-      puRr := 0.007;
-      puXr := 0.12;
-      puXm := 4.0;
+    puRs := 0.0053;
+    puXs := 0.106;
+    puRr := 0.007;
+    puXr := 0.12;
+    puXm := 4.0;
 
       // Set slip local and make generator model agree
-      MaxSlip := 0.1;  // 10% slip limit     - set this before setting slip
-      Slip := 0.007;   // About 1 pu power
-      FixedSlip := FALSE;  // Allow Slip to float to match specified power
+    MaxSlip := 0.1;  // 10% slip limit     - set this before setting slip
+    Slip := 0.007;   // About 1 pu power
+    FixedSlip := FALSE;  // Allow Slip to float to match specified power
 
-      InDynamics := FALSE;
+    InDynamics := FALSE;
 
      // call the procedure to set the initial property string values
-      InitPropertyValues(0);
+    InitPropertyValues(0);
 
      // Update anything that has to be calculated from property values
-      RecalcElementData(ActiveActor);
+    RecalcElementData(ActiveActor);
 
-End;
+end;
 
 
 //----------------------------------------------------------------------------
-Destructor TIndMach012Obj.Destroy;
+destructor TIndMach012Obj.Destroy;
 //----------------------------------------------------------------------------
 
 // Free everything here that needs to be freed
 // If you allocated anything, dispose of it here
 
-Begin
+begin
 
-    Inherited Destroy;   // This will take care of most common circuit element arrays, etc.
+    inherited Destroy;   // This will take care of most common circuit element arrays, etc.
 
-End;
+end;
 
 
 //----------------------------------------------------------------------------
-Procedure TIndMach012Obj.RecalcElementData(ActorID : Integer);
+procedure TIndMach012Obj.RecalcElementData(ActorID: Integer);
 //----------------------------------------------------------------------------
 
-Var
-      Rs, Xs,
-      Rr, Xr,
-      Xm, ZBase:Double;
+var
+    Rs, Xs,
+    Rr, Xr,
+    Xm, ZBase: Double;
 
 begin
 
-    With MachineData Do
-      Begin
-          ZBase := Sqr(kVGeneratorBase)/kVArating * 1000.0;
-          Conn := connection;
-          NumPhases := Fnphases;
-          NumConductors := Fnconds;
-      End;
+    with MachineData do
+    begin
+        ZBase := Sqr(kVGeneratorBase) / kVArating * 1000.0;
+        Conn := connection;
+        NumPhases := Fnphases;
+        NumConductors := Fnconds;
+    end;
 
 
     Rs := puRs * ZBase;
@@ -824,108 +868,120 @@ begin
     Zr := Cmplx(Rr, Xr);
 
     Xopen := Xs + Xm;
-    Xp    := Xs + (Xr*Xm)/(Xr+Xm);
-    Zsp   := Cmplx(Rs, Xp);
+    Xp := Xs + (Xr * Xm) / (Xr + Xm);
+    Zsp := Cmplx(Rs, Xp);
     //Yeq := Cinv(Zsp);   // for Yprim  for dynamics
     //Yeq := Cmplx(1.0/ZBase, -0.5/Zbase);   // vars are half the watts
-    Yeq := Cmplx(0.0, -1.0/ZBase);   // vars only for power flow
-    T0p := (Xr + Xm)/(MachineData.w0 *Rr);
+    Yeq := Cmplx(0.0, -1.0 / ZBase);   // vars only for power flow
+    T0p := (Xr + Xm) / (MachineData.w0 * Rr);
 
     dSdP := Compute_dSdP;
 
     Is1 := CZERO;
-    V1  := CZERO;
+    V1 := CZERO;
     Is2 := CZERO;
-    V2  := CZERO;
+    V2 := CZERO;
 
-    FirstIteration := True;
+    FirstIteration := TRUE;
 
-    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1])*Yorder);
+    Reallocmem(InjCurrent, SizeOf(InjCurrent^[1]) * Yorder);
 
     SetNominalPower(ActorID);
 
-    If CompareText(YearlyShape,    'none')=0 Then YearlyShape    := '';
-    If CompareText(DailyDispShape, 'none')=0 Then DailyDispShape := '';
-    If CompareText(DutyShape,      'none')=0 Then DutyShape      := '';
+    if CompareText(YearlyShape, 'none') = 0 then
+        YearlyShape := '';
+    if CompareText(DailyDispShape, 'none') = 0 then
+        DailyDispShape := '';
+    if CompareText(DutyShape, 'none') = 0 then
+        DutyShape := '';
 
-    If YearlyShapeObj=Nil Then
-      If Length(YearlyShape)>0 Then DoSimpleMsg('WARNING! Yearly load shape: "'+ YearlyShape +'" Not Found.', 563);
-    If DailyDispShapeObj=Nil Then
-      If Length(DailyDispShape)>0 Then DoSimpleMsg('WARNING! Daily load shape: "'+ DailyDispShape +'" Not Found.', 564);
-    If DutyShapeObj=Nil Then
-      If Length(DutyShape)>0 Then DoSimpleMsg('WARNING! Duty load shape: "'+ DutyShape +'" Not Found.', 565);
+    if YearlyShapeObj = NIL then
+        if Length(YearlyShape) > 0 then
+            DoSimpleMsg('WARNING! Yearly load shape: "' + YearlyShape + '" Not Found.', 563);
+    if DailyDispShapeObj = NIL then
+        if Length(DailyDispShape) > 0 then
+            DoSimpleMsg('WARNING! Daily load shape: "' + DailyDispShape + '" Not Found.', 564);
+    if DutyShapeObj = NIL then
+        if Length(DutyShape) > 0 then
+            DoSimpleMsg('WARNING! Duty load shape: "' + DutyShape + '" Not Found.', 565);
 
     SpectrumObj := SpectrumClass[ActorID].Find(Spectrum);
-    If SpectrumObj=Nil Then DoSimpleMsg('ERROR! Spectrum "'+Spectrum+'" Not Found.', 566);
+    if SpectrumObj = NIL then
+        DoSimpleMsg('ERROR! Spectrum "' + Spectrum + '" Not Found.', 566);
 
-    If DebugTrace Then InitTraceFile;
+    if DebugTrace then
+        InitTraceFile;
 end;
-
-
 
 
 function TIndMach012obj.Get_PresentkV: Double;
 begin
-     Result := MachineData.kVGeneratorBase;
+    Result := MachineData.kVGeneratorBase;
 end;
 
 procedure TIndMach012obj.Set_PresentkV(const Value: Double);
 begin
-   With MachineData Do Begin
-      kVGeneratorBase := Value ;
-      Case FNphases Of
-           2,3: VBase := kVGeneratorBase * InvSQRT3x1000;
-      Else
-                VBase := kVGeneratorBase * 1000.0 ;
-      End;
-   End;
+    with MachineData do
+    begin
+        kVGeneratorBase := Value;
+        case FNphases of
+            2, 3:
+                VBase := kVGeneratorBase * InvSQRT3x1000;
+        else
+            VBase := kVGeneratorBase * 1000.0;
+        end;
+    end;
 end;
 
 procedure TIndMach012obj.InterpretOption(s: String);
 begin
-     Case Uppercase(s)[1] of
-       'F': Fixedslip := TRUE;
-       'V': Fixedslip := FALSE;
-     Else
+    case Uppercase(s)[1] of
+        'F':
+            Fixedslip := TRUE;
+        'V':
+            Fixedslip := FALSE;
+    else
 
-     End;
+    end;
 end;
 
 //----------------------------------------------------------------------------
 procedure TIndMach012Obj.SetPowerkW(const PkW: Double);
 begin
-     kWBase      := PkW;
+    kWBase := PkW;
 end;
 
 //----------------------------------------------------------------------------
 //--------------------- MAIN CALC ROUTINES -----------------------------------
 
 //----------------------------------------------------------------------------
-procedure TIndMach012Obj.Integrate(ActorID : Integer);
+procedure TIndMach012Obj.Integrate(ActorID: Integer);
 //----------------------------------------------------------------------------
 
-Var  h2:double;
+var
+    h2: Double;
 
 begin
-   With  ActiveCircuit[ActorID].Solution.Dynavars do
-   Begin
-      If IterationFlag =0 Then Begin  // on predictor step
-          E1n := E1;            // update old values
-          dE1dtn := dE1dt;
-          E2n := E2;
-          dE2dtn := dE2dt;
-      End;
+    with  ActiveCircuit[ActorID].Solution.Dynavars do
+    begin
+        if IterationFlag = 0 then
+        begin  // on predictor step
+            E1n := E1;            // update old values
+            dE1dtn := dE1dt;
+            E2n := E2;
+            dE2dtn := dE2dt;
+        end;
 
      // Derivative of E
       // dEdt = -jw0SE' - (E' - j(X-X')I')/T0'
-      dE1dt := Csub(cmul(cmplx(0.0, -MachineData.w0*S1), E1), Cdivreal(Csub(E1, cmul(cmplx(0.0, (Xopen-Xp)), Is1)),T0p));
-      dE2dt := Csub(cmul(cmplx(0.0, -MachineData.w0*S2), E2), Cdivreal(Csub(E2, cmul(cmplx(0.0, (Xopen-Xp)), Is2)),T0p));
+        dE1dt := Csub(cmul(cmplx(0.0, -MachineData.w0 * S1), E1), Cdivreal(Csub(E1, cmul(cmplx(0.0, (Xopen - Xp)), Is1)), T0p));
+        dE2dt := Csub(cmul(cmplx(0.0, -MachineData.w0 * S2), E2), Cdivreal(Csub(E2, cmul(cmplx(0.0, (Xopen - Xp)), Is2)), T0p));
 
       // Trapezoidal Integration
-      h2 :=  h*0.5;
-      E1 := Cadd(E1n, CmulReal(Cadd(dE1dt, dE1dtn), h2 ));
-      E2 := Cadd(E2n, CmulReal(Cadd(dE2dt, dE2dtn), h2 ));
-   End;
+        h2 := h * 0.5;
+        E1 := Cadd(E1n, CmulReal(Cadd(dE1dt, dE1dtn), h2));
+        E2 := Cadd(E2n, CmulReal(Cadd(dE2dt, dE2dtn), h2));
+    end;
 
 end;
 
@@ -934,17 +990,18 @@ procedure TIndMach012Obj.CalcDynamic(var V012, I012: TSymCompArray);
 //----------------------------------------------------------------------------
 begin
       {In dynamics mode, slip is allowed to vary}
-       InDynamics := TRUE;
-       V1 := V012[1];   // Save for variable calcs
-       V2 := V012[2];
+    InDynamics := TRUE;
+    V1 := V012[1];   // Save for variable calcs
+    V2 := V012[2];
       {Gets slip from shaft speed}
-       With MachineData Do LocalSlip := (-Speed)/w0;
-       Get_DynamicModelCurrent;
+    with MachineData do
+        LocalSlip := (-Speed) / w0;
+    Get_DynamicModelCurrent;
 
      //  Get_ModelCurrent(V2, S2, Is2, Ir2);
-       I012[1] := Is1;    // Save for variable calcs
-       I012[2] := Is2;
-       I012[0] := cmplx(0.0, 0.0);
+    I012[1] := Is1;    // Save for variable calcs
+    I012[2] := Is2;
+    I012[0] := cmplx(0.0, 0.0);
 
 end;
 
@@ -953,53 +1010,58 @@ end;
 procedure TIndMach012Obj.CalcPFlow(var V012, I012: TSymCompArray);
 //----------------------------------------------------------------------------
 
-Var P_Error:Double;
+var
+    P_Error: Double;
 
 begin
-       V1 := V012[1];   // Save for variable calcs
-       V2 := V012[2];
+    V1 := V012[1];   // Save for variable calcs
+    V2 := V012[2];
 
-       InDynamics := FALSE;
+    InDynamics := FALSE;
 
-       If FirstIteration then Begin
-         Get_PFlowModelCurrent(V1, S1, Is1, Ir1);  // initialize Is1
-         FirstIteration := False;
-       End;
+    if FirstIteration then
+    begin
+        Get_PFlowModelCurrent(V1, S1, Is1, Ir1);  // initialize Is1
+        FirstIteration := FALSE;
+    end;
 
       {If Fixed slip option set, then use the value set by the user}
-       If Not FixedSlip Then Begin
-           P_Error := MachineData.PnominalperPhase - Cmul(V1,Conjg(Is1)).re;
-           LocalSlip := S1 + dSdP * P_Error;   // make new guess at slip
-       End;
+    if not FixedSlip then
+    begin
+        P_Error := MachineData.PnominalperPhase - Cmul(V1, Conjg(Is1)).re;
+        LocalSlip := S1 + dSdP * P_Error;   // make new guess at slip
+    end;
 
-       Get_PFlowModelCurrent(V1, S1, Is1, Ir1);
-       Get_PFlowModelCurrent(V2, S2, Is2, Ir2);
+    Get_PFlowModelCurrent(V1, S1, Is1, Ir1);
+    Get_PFlowModelCurrent(V2, S2, Is2, Ir2);
 
-       I012[1] := Is1;    // Save for variable calcs
-       I012[2] := Is2;
-       I012[0] := cmplx(0.0, 0.0);
+    I012[1] := Is1;    // Save for variable calcs
+    I012[2] := Is2;
+    I012[0] := cmplx(0.0, 0.0);
 
 end;
 
 
 //----------------------------------------------------------------------------
-Procedure TIndMach012Obj.Randomize(Opt:Integer);
+procedure TIndMach012Obj.Randomize(Opt: Integer);
 //----------------------------------------------------------------------------
 
 // typical proc for handling randomization in DSS fashion
 
-Begin
-   CASE Opt OF
-       0: RandomMult := 1.0;
+begin
+    case Opt of
+        0:
+            RandomMult := 1.0;
     //   GAUSSIAN:  RandomMult := Gauss(YearlyShapeObj.Mean, YearlyShapeObj.StdDev);
-       UNIfORM:   RandomMult := Random;  // number between 0 and 1.0
+        UNIfORM:
+            RandomMult := Random;  // number between 0 and 1.0
      //  LOGNORMAL: RandomMult := QuasiLognormal(YearlyShapeObj.Mean);
-   End;
-End;
+    end;
+end;
 
 
 {-------------------------------------------------------------------------------------------------------------}
-procedure TIndMach012Obj.InitModel(V012, I012:TSymCompArray);
+procedure TIndMach012Obj.InitModel(V012, I012: TSymCompArray);
 {-------------------------------------------------------------------------------------------------------------}
 
 // Init for Dynamics mode
@@ -1008,207 +1070,229 @@ begin
 
    // Compute Voltage behind transient reactance and set derivatives to zero
   // *** already done *** E1 := csub(V012[1], cmul(I012[1], Zsp));
-   dE1dt := czero;
-   E1n := E1;
-   dE1dtn := dE1dt;
-   E2 := csub(V012[2], cmul(I012[2], Zsp));
-   dE2dt := czero;
-   E2n := E2;
-   dE2dtn := dE2dt;
+    dE1dt := czero;
+    E1n := E1;
+    dE1dtn := dE1dt;
+    E2 := csub(V012[2], cmul(I012[2], Zsp));
+    dE2dt := czero;
+    E2n := E2;
+    dE2dtn := dE2dt;
 
 end;
 
 
 //----------------------------------------------------------------------------
-PROCEDURE TIndMach012Obj.InitStateVars(ActorID : Integer);
+procedure TIndMach012Obj.InitStateVars(ActorID: Integer);
 //----------------------------------------------------------------------------
 
-Var
-    i     :Integer;
+var
+    i: Integer;
     V012,
-    I012  :TSymCompArray;
-    Vabc  :Array[1..3] of Complex;
+    I012: TSymCompArray;
+    Vabc: array[1..3] of Complex;
 
 begin
 
-  YprimInvalid[ActorID] := TRUE;  // Force rebuild of YPrims
+    YprimInvalid[ActorID] := TRUE;  // Force rebuild of YPrims
 
-  With MachineData Do Begin
+    with MachineData do
+    begin
 
      {Compute nominal Positive sequence voltage behind transient reactance}
 
-     IF MachineON Then With ActiveCircuit[ActorID].Solution Do
-       Begin
+        if MachineON then
+            with ActiveCircuit[ActorID].Solution do
+            begin
 
-         Yeq := Cinv(Zsp);
+                Yeq := Cinv(Zsp);
 
-         ComputeIterminal(ActorID);
+                ComputeIterminal(ActorID);
 
-         case Fnphases of
+                case Fnphases of
 
-              1: Begin
-                      E1      := Csub( CSub(NodeV^[NodeRef^[1]], NodeV^[NodeRef^[2]]) , Cmul(ITerminal^[1], Zsp));
-                 End;
+                    1:
+                    begin
+                        E1 := Csub(CSub(NodeV^[NodeRef^[1]], NodeV^[NodeRef^[2]]), Cmul(ITerminal^[1], Zsp));
+                    end;
 
-              3: Begin
+                    3:
+                    begin
                  // Calculate E1 based on Pos Seq only
-                     Phase2SymComp(ITerminal, @I012);   // terminal currents
+                        Phase2SymComp(ITerminal, @I012);   // terminal currents
 
                      // Voltage behind Zsp  (transient reactance), volts
 
-                     For i := 1 to FNphases Do Vabc[i] := NodeV^[NodeRef^[i]];   // Wye Voltage
-                     Phase2SymComp(@Vabc, @V012);
-                     E1  := Csub( V012[1] , Cmul(I012[1], Zsp));    // Pos sequence
-                 End;
-         Else
-              DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Motors. IndMach012.'+name+' has %d phases.', [Fnphases]), 5672);
-              SolutionAbort := TRUE;
-         end;
+                        for i := 1 to FNphases do
+                            Vabc[i] := NodeV^[NodeRef^[i]];   // Wye Voltage
+                        Phase2SymComp(@Vabc, @V012);
+                        E1 := Csub(V012[1], Cmul(I012[1], Zsp));    // Pos sequence
+                    end;
+                else
+                    DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Motors. IndMach012.' + name + ' has %d phases.', [Fnphases]), 5672);
+                    SolutionAbort := TRUE;
+                end;
 
-         InitModel(V012, I012); // E2, etc
+                InitModel(V012, I012); // E2, etc
 
          // Shaft variables
-         Theta  := Cang(E1) ;
-         dTheta := 0.0;
-         w0     := Twopi * ActiveCircuit[ActorID].Solution.Frequency;
+                Theta := Cang(E1);
+                dTheta := 0.0;
+                w0 := Twopi * ActiveCircuit[ActorID].Solution.Frequency;
          // recalc Mmass and D in case the frequency has changed
-         With MachineData Do Begin
-             Mmass := 2.0 * Hmass * kVArating * 1000.0/ (w0);   // M = W-sec
-             D     := Dpu * kVArating * 1000.0/ (w0);
-         End;
-         Pshaft := Power[1,ActorID].re; // Initialize Pshaft to present power consumption of motor
+                with MachineData do
+                begin
+                    Mmass := 2.0 * Hmass * kVArating * 1000.0 / (w0);   // M = W-sec
+                    D := Dpu * kVArating * 1000.0 / (w0);
+                end;
+                Pshaft := Power[1, ActorID].re; // Initialize Pshaft to present power consumption of motor
 
-         Speed := -LocalSlip * w0;    // relative to synch speed
-         dSpeed := 0.0;
+                Speed := -LocalSlip * w0;    // relative to synch speed
+                dSpeed := 0.0;
 
-         IF DebugTrace Then     // Put in a separator record
-         Begin
-             Append(TraceFile);
-             Writeln(TraceFile);
-             Writeln(TraceFile, '*************** Entering Dynamics Mode ***********************');
-             Writeln(TraceFile);
-             Close(Tracefile);
-         End;
+                if DebugTrace then     // Put in a separator record
+                begin
+                    Append(TraceFile);
+                    Writeln(TraceFile);
+                    Writeln(TraceFile, '*************** Entering Dynamics Mode ***********************');
+                    Writeln(TraceFile);
+                    Close(Tracefile);
+                end;
 
-       End
-     ELSE  Begin
-         Theta  := 0.0;
-         dTheta := 0.0;
-         w0     := 0;
-         Speed  := 0.0;
-         dSpeed := 0.0;
-     End;
-  End;  {With}
+            end
+        else
+        begin
+            Theta := 0.0;
+            dTheta := 0.0;
+            w0 := 0;
+            Speed := 0.0;
+            dSpeed := 0.0;
+        end;
+    end;  {With}
 end;
 
 //----------------------------------------------------------------------------
-Procedure TIndMach012Obj.CalcYPrimMatrix(Ymatrix:TcMatrix; ActorID : Integer);
+procedure TIndMach012Obj.CalcYPrimMatrix(Ymatrix: TcMatrix; ActorID: Integer);
 
 {A typical helper function for PC elements to assist in the computation
  of Yprim
 }
 
-Var
-   Y , Yij, Yadder:Complex;
-   i,j :Integer;
-   FreqMultiplier :Double;
+var
+    Y, Yij, Yadder: Complex;
+    i, j: Integer;
+    FreqMultiplier: Double;
 
-Begin
+begin
 
-   FYprimFreq := ActiveCircuit[ActorID].Solution.Frequency  ;
-   FreqMultiplier := FYprimFreq / BaseFrequency;  // ratio to adjust reactances for present solution frequency
+    FYprimFreq := ActiveCircuit[ActorID].Solution.Frequency;
+    FreqMultiplier := FYprimFreq / BaseFrequency;  // ratio to adjust reactances for present solution frequency
 
-   With  ActiveCircuit[ActorID].solution  Do
-   IF IsDynamicModel or IsHarmonicModel Then
+    with  ActiveCircuit[ActorID].solution do
+        if IsDynamicModel or IsHarmonicModel then
    // for Dynamics and Harmonics modes use constant equivalent Y
-     Begin
-       IF MachineON Then   Y  := Yeq   // L-N value computed in initialization routines
-       ELSE Y := Cmplx(EPSILON, 0.0);
+        begin
+            if MachineON then
+                Y := Yeq   // L-N value computed in initialization routines
+            else
+                Y := Cmplx(EPSILON, 0.0);
 
-       IF Connection=1 Then Y := CDivReal(Y, 3.0); // Convert to delta impedance
-       Y.im := Y.im / FreqMultiplier;  // adjust for frequency
-       Yij := Cnegate(Y);
-       FOR i := 1 to Fnphases Do
-         Begin
-           Case Connection of
-           0: Begin
-                 Ymatrix.SetElement(i, i, Y);  // sets the element
+            if Connection = 1 then
+                Y := CDivReal(Y, 3.0); // Convert to delta impedance
+            Y.im := Y.im / FreqMultiplier;  // adjust for frequency
+            Yij := Cnegate(Y);
+            for i := 1 to Fnphases do
+            begin
+                case Connection of
+                    0:
+                    begin
+                        Ymatrix.SetElement(i, i, Y);  // sets the element
                  {
                    Ymatrix.AddElement(Fnconds, Fnconds, Y);  // sums the element
                    Ymatrix.SetElemsym(i, Fnconds, Yij);
                  }
-              End;
-           1: Begin   {Delta connection}
-                 Yadder := CmulReal(Y, 1.000001);  // to prevent floating delta
-                 Ymatrix.SetElement(i, i, Cadd(Y, Yadder));   // add a little bit to diagonal
-                 Ymatrix.AddElement(i, i, Y);  // put it in again
-                 For j := 1 to i-1 Do Ymatrix.SetElemsym(i, j, Yij);
-              End;
-           End;
-         End;
-     End
+                    end;
+                    1:
+                    begin   {Delta connection}
+                        Yadder := CmulReal(Y, 1.000001);  // to prevent floating delta
+                        Ymatrix.SetElement(i, i, Cadd(Y, Yadder));   // add a little bit to diagonal
+                        Ymatrix.AddElement(i, i, Y);  // put it in again
+                        for j := 1 to i - 1 do
+                            Ymatrix.SetElemsym(i, j, Yij);
+                    end;
+                end;
+            end;
+        end
 
-   ELSE Begin
+        else
+        begin
 
     //  Typical code for a regular power flow  model
     //  Borrowed from Generator object
 
        {Yeq is typically expected as the equivalent line-neutral admittance}
 
-       Y := Yeq;  //     Yeq is L-N quantity
+            Y := Yeq;  //     Yeq is L-N quantity
 
        // ****** Need to modify the base admittance for real harmonics calcs
-       Y.im   := Y.im / FreqMultiplier;
+            Y.im := Y.im / FreqMultiplier;
 
-         CASE Connection OF
+            case Connection of
 
-           0: With YMatrix Do Begin // WYE
-                     FOR i := 1 to Fnphases Do Begin
-                     SetElement(i, i, Y);
+                0:
+                    with YMatrix do
+                    begin // WYE
+                        for i := 1 to Fnphases do
+                        begin
+                            SetElement(i, i, Y);
                      {
                      AddElement(Fnconds, Fnconds, Y);
                      SetElemsym(i, Fnconds, Yij);
                      }
-                 End;
-              End;
+                        end;
+                    end;
 
-           1: With YMatrix Do Begin  // Delta  or L-L
-                  Y    := CDivReal(Y, 3.0); // Convert to delta impedance
-                  Yij  := Cnegate(Y);
-                  FOR i := 1 to Fnphases Do Begin
-                     j := i+1;
-                     If j>Fnconds Then j := 1;  // wrap around for closed connections
-                     AddElement(i,i, Y);
-                     AddElement(j,j, Y);
-                     AddElemSym(i,j, Yij);
-                  End;
-              End;
-         End;
-     End;  {ELSE IF Solution.mode}
+                1:
+                    with YMatrix do
+                    begin  // Delta  or L-L
+                        Y := CDivReal(Y, 3.0); // Convert to delta impedance
+                        Yij := Cnegate(Y);
+                        for i := 1 to Fnphases do
+                        begin
+                            j := i + 1;
+                            if j > Fnconds then
+                                j := 1;  // wrap around for closed connections
+                            AddElement(i, i, Y);
+                            AddElement(j, j, Y);
+                            AddElemSym(i, j, Yij);
+                        end;
+                    end;
+            end;
+        end;  {ELSE IF Solution.mode}
 
-End;
+end;
 
 {--- Notes Andres: Added according to IndMach012.dll model }
 function TIndMach012Obj.Compute_dSdP: Double;
 begin
 // dSdP based on rated slip and rated voltage
-    V1 := Cmplx(MachineData.kvGeneratorBase*1000.0/1.732, 0.0);
-    If S1 <> 0.0 Then Get_PFlowModelCurrent(V1, S1, Is1, Ir1);
-    Result := S1/Cmul(V1, Conjg(Is1)).Re;
+    V1 := Cmplx(MachineData.kvGeneratorBase * 1000.0 / 1.732, 0.0);
+    if S1 <> 0.0 then
+        Get_PFlowModelCurrent(V1, S1, Is1, Ir1);
+    Result := S1 / Cmul(V1, Conjg(Is1)).Re;
 end;
 
 //----------------------------------------------------------------------------
-Procedure TIndMach012Obj.CalcYPrim(ActorID : Integer);
+procedure TIndMach012Obj.CalcYPrim(ActorID: Integer);
 
 // Required routine to calculate the primitive Y matrix for this element
 
 // This example uses a helper function (CalcYPrimMatrix) to keep the code
 // here clean
 
-Var
-        i:integer;
-        
-Begin
+var
+    i: Integer;
+
+begin
 
 {
   There are three Yprim matrices that could be computed:
@@ -1224,89 +1308,97 @@ Begin
 
      // First clear present value; redefine if necessary
      // Note: Complex matrix (TcMatrix -- see uCmatrix.pas) is used for this
-     If YprimInvalid[ActorID]
-     Then  Begin
-         If YPrim_Shunt<>nil Then YPrim_Shunt.Free;
-         YPrim_Shunt := TcMatrix.CreateMatrix(Yorder);
-         IF YPrim_Series <> nil THEN Yprim_Series.Free;
-         YPrim_Series := TcMatrix.CreateMatrix(Yorder);
-         If YPrim <> nil Then  YPrim.Free;
-         YPrim := TcMatrix.CreateMatrix(Yorder);
-     End
+    if YprimInvalid[ActorID] then
+    begin
+        if YPrim_Shunt <> NIL then
+            YPrim_Shunt.Free;
+        YPrim_Shunt := TcMatrix.CreateMatrix(Yorder);
+        if YPrim_Series <> NIL then
+            Yprim_Series.Free;
+        YPrim_Series := TcMatrix.CreateMatrix(Yorder);
+        if YPrim <> NIL then
+            YPrim.Free;
+        YPrim := TcMatrix.CreateMatrix(Yorder);
+    end
 
-     ELSE Begin
-          YPrim_Shunt.Clear;
-          YPrim_Series.Clear;
-          YPrim.Clear;
-     End;
+    else
+    begin
+        YPrim_Shunt.Clear;
+        YPrim_Series.Clear;
+        YPrim.Clear;
+    end;
 
 
      // call helper routine to compute YPrim_Shunt
-     CalcYPrimMatrix(YPrim_Shunt, ActorID);
+    CalcYPrimMatrix(YPrim_Shunt, ActorID);
 
      // Set YPrim_Series based on a small fraction of the diagonals of YPrim_shunt
      // so that CalcVoltages doesn't fail
      // This is just one of a number of possible strategies but seems to work most of the time
-     For i := 1 to Yorder Do Yprim_Series.SetElement(i, i, CmulReal(Yprim_Shunt.Getelement(i, i), 1.0e-10));
+    for i := 1 to Yorder do
+        Yprim_Series.SetElement(i, i, CmulReal(Yprim_Shunt.Getelement(i, i), 1.0e-10));
 
      // copy YPrim_shunt into YPrim; That's all that is needed for most PC Elements
-     YPrim.CopyFrom(YPrim_Shunt);
+    YPrim.CopyFrom(YPrim_Shunt);
 
      // Account for Open Conductors -- done in base class
-     Inherited CalcYPrim(ActorID);
+    inherited CalcYPrim(ActorID);
 
-End;
+end;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
 
 //----------------------------------------------------------------------------
-PROCEDURE TIndMach012Obj.DoIndMach012Model(ActorID : Integer);
+procedure TIndMach012Obj.DoIndMach012Model(ActorID: Integer);
 //----------------------------------------------------------------------------
 {Compute total terminal Current }
-Var
-   i:Integer;
+var
+    i: Integer;
 
-Begin
+begin
 
-   CalcYPrimContribution(InjCurrent, ActorID);  // Init InjCurrent Array
+    CalcYPrimContribution(InjCurrent, ActorID);  // Init InjCurrent Array
 
-   CalcModel (Vterminal, Iterminal, ActorID);
+    CalcModel(Vterminal, Iterminal, ActorID);
 
-   set_ITerminalUpdated(TRUE, ActorID);
+    set_ITerminalUpdated(TRUE, ActorID);
 
-   FOR i := 1 to Nphases Do Caccum(InjCurrent^[i], Cnegate(Iterminal^[i]));
-   If (DebugTrace) Then WriteTraceRecord(ActorID);
+    for i := 1 to Nphases do
+        Caccum(InjCurrent^[i], Cnegate(Iterminal^[i]));
+    if (DebugTrace) then
+        WriteTraceRecord(ActorID);
 
-End;
+end;
 
-Procedure  TIndMach012Obj.CalcModel(V, I:pComplexArray; ActorID : Integer); // given voltages returns currents
+procedure TIndMach012Obj.CalcModel(V, I: pComplexArray; ActorID: Integer); // given voltages returns currents
 
-Var
-    V012, I012:TSymCompArray;
+var
+    V012, I012: TSymCompArray;
 
-Begin
+begin
 
     // Convert abc voltages to 012
-       Phase2SymComp(V, @V012);
+    Phase2SymComp(V, @V012);
 
     // compute I012
 
-       Case ActiveCircuit[ActorID].Solution.DynaVars.SolutionMode of
-           DYNAMICMODE: Begin
-                          CalcDynamic(V012, I012);
-                        End;
-       Else  {All other modes are power flow modes}
-             Begin
-                CalcPflow(V012, I012);
-             End;
-       End;
+    case ActiveCircuit[ActorID].Solution.DynaVars.SolutionMode of
+        DYNAMICMODE:
+        begin
+            CalcDynamic(V012, I012);
+        end;
+    else  {All other modes are power flow modes}
+    begin
+        CalcPflow(V012, I012);
+    end;
+    end;
 
-       SymComp2Phase(I, @I012);       // convert back to I abc
+    SymComp2Phase(I, @I012);       // convert back to I abc
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-PROCEDURE TIndMach012Obj.DoDynamicMode(ActorID : Integer);
+procedure TIndMach012Obj.DoDynamicMode(ActorID: Integer);
 //----------------------------------------------------------------------------
 
 { This is an example taken from Generator illustrating how a PC element might
@@ -1317,26 +1409,27 @@ PROCEDURE TIndMach012Obj.DoDynamicMode(ActorID : Integer);
 
 {Compute Total Current and add into InjTemp}
 
-Var
-   i     : Integer;
+var
+    i: Integer;
 
-Begin
+begin
 
    // Start off by getting the current in the admittance branch of the model
-   CalcYPrimContribution(InjCurrent, ActorID);  // Init InjCurrent Array
+    CalcYPrimContribution(InjCurrent, ActorID);  // Init InjCurrent Array
 
    {Inj = -Itotal (in) - Yprim*Vtemp}
 
-   CalcModel (Vterminal, Iterminal, ActorID);
+    CalcModel(Vterminal, Iterminal, ActorID);
 
-   set_ITerminalUpdated(TRUE, ActorID);
-   For i:=1 to Nphases Do Caccum(InjCurrent^[i], Cnegate(ITerminal^[i]));
+    set_ITerminalUpdated(TRUE, ActorID);
+    for i := 1 to Nphases do
+        Caccum(InjCurrent^[i], Cnegate(ITerminal^[i]));
 
-End;
+end;
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-PROCEDURE TIndMach012Obj.DoHarmonicMode(ActorID : Integer);
+procedure TIndMach012Obj.DoHarmonicMode(ActorID: Integer);
 
 {
   Example taken from Generator illustrating how a PC element might handle
@@ -1351,66 +1444,72 @@ PROCEDURE TIndMach012Obj.DoHarmonicMode(ActorID : Integer);
 {Assumes spectrum is a voltage source behind subtransient reactance and YPrim has been built}
 {Vd is the fundamental frequency voltage behind Xd" for phase 1}
 
-Var
-   i     :Integer;
-   E     :Complex;
-   GenHarmonic :double;
+var
+    i: Integer;
+    E: Complex;
+    GenHarmonic: Double;
 
-Begin
+begin
 
    // Set the VTerminal array
-   ComputeVterminal(ActorID);
+    ComputeVterminal(ActorID);
 
-   WITH ActiveCircuit[ActorID].Solution Do
-     Begin
-        GenHarmonic := Frequency/BaseFrequency; // harmonic based on the fundamental for this object
+    with ActiveCircuit[ActorID].Solution do
+    begin
+        GenHarmonic := Frequency / BaseFrequency; // harmonic based on the fundamental for this object
         // get the spectrum multiplier and multiply by the V thev (or Norton current for load objects)
       // ???  E := CmulReal(SpectrumObj.GetMult(GenHarmonic), VThevHarm); // Get base harmonic magnitude
       // ???  RotatePhasorRad(E, GenHarmonic, ThetaHarm);  // Time shift by fundamental frequency phase shift
 
         // Put the values in a temp complex buffer
-        FOR i := 1 to Fnphases DO Begin
-           cBuffer[i] := E;
-           If i < Fnphases Then RotatePhasorDeg(E, GenHarmonic, -120.0);  // Assume 3-phase IndMach012
-        End;
-     END;
+        for i := 1 to Fnphases do
+        begin
+            cBuffer[i] := E;
+            if i < Fnphases then
+                RotatePhasorDeg(E, GenHarmonic, -120.0);  // Assume 3-phase IndMach012
+        end;
+    end;
 
    {Handle Wye Connection}
-   IF Connection=0 THEN cbuffer[Fnconds] := Vterminal^[Fnconds];  // assume no neutral injection voltage
+    if Connection = 0 then
+        cbuffer[Fnconds] := Vterminal^[Fnconds];  // assume no neutral injection voltage
 
    // In this case the injection currents are simply Yprim(frequency) times the voltage buffer
    // Refer to Load.Pas for load-type objects
    {Inj currents = Yprim (E) }
-   YPrim.MVMult(InjCurrent,@cBuffer);
+    YPrim.MVMult(InjCurrent, @cBuffer);
 
-End;
-
-
+end;
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-Procedure TIndMach012Obj.CalcIndMach012ModelContribution(ActorID : Integer);
+procedure TIndMach012Obj.CalcIndMach012ModelContribution(ActorID: Integer);
 
 // Main dispatcher for computing PC Element currnts
 
 // Calculates IndMach012 current and adds it properly into the injcurrent array
 // routines may also compute ITerminal  (ITerminalUpdated flag)
 
-Begin
-  set_ITerminalUpdated(FALSE, ActorID);
-  WITH  ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution DO Begin
-      IF      IsDynamicModel THEN  DoDynamicMode(ActorID)
-      ELSE IF IsHarmonicModel and (Frequency <> Fundamental) THEN  DoHarmonicMode(ActorID)
-      ELSE DoIndMach012Model(ActorID);
+begin
+    set_ITerminalUpdated(FALSE, ActorID);
+    with  ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
+        if IsDynamicModel then
+            DoDynamicMode(ActorID)
+        else
+        if IsHarmonicModel and (Frequency <> Fundamental) then
+            DoHarmonicMode(ActorID)
+        else
+            DoIndMach012Model(ActorID);
 
-   END; {WITH}
+    end; {WITH}
 
    {When this is done, ITerminal is up to date}
 
-End;
+end;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-Procedure TIndMach012Obj.CalcInjCurrentArray(ActorID : Integer);
+procedure TIndMach012Obj.CalcInjCurrentArray(ActorID: Integer);
 //----------------------------------------------------------------------------
 
 // Main procedure for controlling computation of InjCurrent array
@@ -1418,20 +1517,22 @@ Procedure TIndMach012Obj.CalcInjCurrentArray(ActorID : Integer);
 // InjCurrent is difference between currents in YPrim and total terminal current
 
 
-Begin
+begin
 
 // You usually will want some logic like this
 
        // If the element is open, just zero the array and return
-       If IndMach012SwitchOpen Then ZeroInjCurrent
+    if IndMach012SwitchOpen then
+        ZeroInjCurrent
 
        // otherwise, go to a routine that manages the calculation
-       Else CalcIndMach012ModelContribution(ActorID);
+    else
+        CalcIndMach012ModelContribution(ActorID);
 
-End;
+end;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-Procedure TIndMach012Obj.GetTerminalCurrents(Curr:pComplexArray; ActorID : Integer);
+procedure TIndMach012Obj.GetTerminalCurrents(Curr: pComplexArray; ActorID: Integer);
 //----------------------------------------------------------------------------
 
 // This function controls the calculation of the total terminal currents
@@ -1440,234 +1541,267 @@ Procedure TIndMach012Obj.GetTerminalCurrents(Curr:pComplexArray; ActorID : Integ
 // Otherwise, Iterminal array already contains the currents
 
 
-Begin
+begin
 
-   WITH ActiveCircuit[ActorID].Solution  DO
-     Begin
-        If IterminalSolutionCount[ActorID] <> ActiveCircuit[ActorID].Solution.SolutionCount Then
-        Begin     // recalc the contribution
+    with ActiveCircuit[ActorID].Solution do
+    begin
+        if IterminalSolutionCount[ActorID] <> ActiveCircuit[ActorID].Solution.SolutionCount then
+        begin     // recalc the contribution
           // You will likely want some logic like this
-          IF Not IndMach012SwitchOpen Then CalcIndMach012ModelContribution(ActorID);  // Adds totals in Iterminal as a side effect
-        End;
-        Inherited GetTerminalCurrents(Curr, ActorID); // add in inherited contribution
-     End;
+            if not IndMach012SwitchOpen then
+                CalcIndMach012ModelContribution(ActorID);  // Adds totals in Iterminal as a side effect
+        end;
+        inherited GetTerminalCurrents(Curr, ActorID); // add in inherited contribution
+    end;
 
-End;
+end;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-Function TIndMach012Obj.InjCurrents(ActorID : Integer):Integer;
+function TIndMach012Obj.InjCurrents(ActorID: Integer): Integer;
 //----------------------------------------------------------------------------
 
 // Required function for managing computing of InjCurrents
 
-Begin
+begin
 
-   With ActiveCircuit[ActorID].Solution Do
-    Begin
+    with ActiveCircuit[ActorID].Solution do
+    begin
 
       // Generators and Loads use logic like this:
-      If LoadsNeedUpdating Then SetNominalPower(ActorID); // Set the nominal kW, etc for the type of solution being done
+        if LoadsNeedUpdating then
+            SetNominalPower(ActorID); // Set the nominal kW, etc for the type of solution being done
 
        // call the main function for doing calculation
-       CalcInjCurrentArray(ActorID);          // Difference between currents in YPrim and total terminal current
+        CalcInjCurrentArray(ActorID);          // Difference between currents in YPrim and total terminal current
 
       // If (DebugTrace) Then WriteTraceRecord;
 
        // Add into System Injection Current Array
-       Result := Inherited InjCurrents(ActorID);
+        Result := inherited InjCurrents(ActorID);
 
-    End;
+    end;
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-Procedure TIndMach012Obj.SetNominalPower(ActorID : Integer);
+procedure TIndMach012Obj.SetNominalPower(ActorID: Integer);
 //----------------------------------------------------------------------------
 // Set shaft power
-VAR
-   Factor      : Double;
-   MachineOn_Saved : Boolean;
+var
+    Factor: Double;
+    MachineOn_Saved: Boolean;
 
-Begin
-   MachineOn_Saved := MachineON;
-   ShapeFactor := CDOUBLEONE;
+begin
+    MachineOn_Saved := MachineON;
+    ShapeFactor := CDOUBLEONE;
     // Check to make sure the generation is ON
-   With ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
-   Begin
-    IF NOT (IsDynamicModel or IsHarmonicModel) THEN     // Leave machine in whatever state it was prior to entering Dynamic mode
-      Begin
-        MachineON := TRUE;   // Init to on then check if it should be off
-      End;
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
+        if not (IsDynamicModel or IsHarmonicModel) then     // Leave machine in whatever state it was prior to entering Dynamic mode
+        begin
+            MachineON := TRUE;   // Init to on then check if it should be off
+        end;
 
 
-    IF NOT MachineON  THEN
-      Begin
+        if not MachineON then
+        begin
          // If Machine is OFF enter as tiny resistive load (.0001 pu) so we don't get divide by zero in matrix
-          MachineData.Pnominalperphase   := -0.1 * kWBase / Fnphases;
+            MachineData.Pnominalperphase := -0.1 * kWBase / Fnphases;
           // Pnominalperphase   := 0.0;
-          MachineData.Qnominalperphase := 0.0;   // This really doesn't matter
-      End
-    ELSE
-      Begin    // Generator is on, compute it's nominal watts and vars
-        With Solution Do
+            MachineData.Qnominalperphase := 0.0;   // This really doesn't matter
+        end
+        else
+        begin    // Generator is on, compute it's nominal watts and vars
+            with Solution do
 
-            CASE Mode OF
-                SNAPSHOT:     Factor :=  1.0;
-                DAILYMODE:    Begin
-                                   Factor := 1.0;
-                                   CalcDailyMult(DynaVars.dblHour) // Daily dispatch curve
-                              End;
-                YEARLYMODE:   Begin Factor := 1.0; CalcYearlyMult(DynaVars.dblHour);  End;
-                DUTYCYCLE:    Begin Factor := 1.0; CalcDutyMult(DynaVars.dblHour) ; End;
-                GENERALTIME,   // General sequential time simulation
-                DYNAMICMODE:  Begin
-                                   Factor := 1.0;
+                case Mode of
+                    SNAPSHOT:
+                        Factor := 1.0;
+                    DAILYMODE:
+                    begin
+                        Factor := 1.0;
+                        CalcDailyMult(DynaVars.dblHour) // Daily dispatch curve
+                    end;
+                    YEARLYMODE:
+                    begin
+                        Factor := 1.0;
+                        CalcYearlyMult(DynaVars.dblHour);
+                    end;
+                    DUTYCYCLE:
+                    begin
+                        Factor := 1.0;
+                        CalcDutyMult(DynaVars.dblHour);
+                    end;
+                    GENERALTIME,   // General sequential time simulation
+                    DYNAMICMODE:
+                    begin
+                        Factor := 1.0;
                                    // This mode allows use of one class of load shape
-                                   case ActiveCircuit[ActorID].ActiveLoadShapeClass of
-                                        USEDAILY:  CalcDailyMult(DynaVars.dblHour);
-                                        USEYEARLY: CalcYearlyMult(DynaVars.dblHour);
-                                        USEDUTY:   CalcDutyMult(DynaVars.dblHour);
-                                   else
-                                        ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
-                                   end;
-                              End;
-                MONTECARLO1,
-                MONTEFAULT,
-                FAULTSTUDY:  Factor := 1.0;
-                MONTECARLO2,
-                MONTECARLO3,
-                LOADDURATION1,
-                LOADDURATION2:Begin Factor := 1.0; CalcDailyMult(DynaVars.dblHour); End;
-                PEAKDAY:      Begin Factor := 1.0; CalcDailyMult(DynaVars.dblHour); End;
-                AUTOADDFLAG:  Factor := 1.0;
-            ELSE
-                Factor := 1.0
-            End;
+                        case ActiveCircuit[ActorID].ActiveLoadShapeClass of
+                            USEDAILY:
+                                CalcDailyMult(DynaVars.dblHour);
+                            USEYEARLY:
+                                CalcYearlyMult(DynaVars.dblHour);
+                            USEDUTY:
+                                CalcDutyMult(DynaVars.dblHour);
+                        else
+                            ShapeFactor := CDOUBLEONE     // default to 1 + j1 if not known
+                        end;
+                    end;
+                    MONTECARLO1,
+                    MONTEFAULT,
+                    FAULTSTUDY:
+                        Factor := 1.0;
+                    MONTECARLO2,
+                    MONTECARLO3,
+                    LOADDURATION1,
+                    LOADDURATION2:
+                    begin
+                        Factor := 1.0;
+                        CalcDailyMult(DynaVars.dblHour);
+                    end;
+                    PEAKDAY:
+                    begin
+                        Factor := 1.0;
+                        CalcDailyMult(DynaVars.dblHour);
+                    end;
+                    AUTOADDFLAG:
+                        Factor := 1.0;
+                else
+                    Factor := 1.0
+                end;
 
-          IF NOT (IsDynamicModel or IsHarmonicModel) THEN         //******
-            Begin
-                If ShapeIsActual then
-                      MachineData.Pnominalperphase   := 1000.0* ShapeFactor.re / Fnphases
-                else  MachineData.Pnominalperphase   := 1000.0* kWBase * Factor * ShapeFactor.re / Fnphases;
+            if not (IsDynamicModel or IsHarmonicModel) then         //******
+            begin
+                if ShapeIsActual then
+                    MachineData.Pnominalperphase := 1000.0 * ShapeFactor.re / Fnphases
+                else
+                    MachineData.Pnominalperphase := 1000.0 * kWBase * Factor * ShapeFactor.re / Fnphases;
 
                 // cannot dispatch vars in induction machine
                 // you get what you get
 
-            End;
-      End; {ELSE GenON}
+            end;
+        end; {ELSE GenON}
 
-   End;  {With ActiveCircuit}
+    end;  {With ActiveCircuit}
 
    // If machine state changes, force re-calc of Y matrix
-   If MachineON <> MachineOn_Saved Then YprimInvalid[ActorID] := True;
+    if MachineON <> MachineOn_Saved then
+        YprimInvalid[ActorID] := TRUE;
 
-End;
+end;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-Procedure TIndMach012Obj.CalcDailyMult(Hr:Double);
+procedure TIndMach012Obj.CalcDailyMult(Hr: Double);
 //----------------------------------------------------------------------------
 
-Begin
-     If (DailyDispShapeObj <> Nil) Then
-       Begin
-         ShapeFactor   := DailyDispShapeObj.GetMult(Hr);
-         ShapeIsActual := DailyDispShapeObj.UseActual;
-       End
-     ELSE ShapeFactor := CDOUBLEONE;  // Default to no daily variation
-End;
+begin
+    if (DailyDispShapeObj <> NIL) then
+    begin
+        ShapeFactor := DailyDispShapeObj.GetMult(Hr);
+        ShapeIsActual := DailyDispShapeObj.UseActual;
+    end
+    else
+        ShapeFactor := CDOUBLEONE;  // Default to no daily variation
+end;
 
 //----------------------------------------------------------------------------
-Procedure TIndMach012Obj.CalcDutyMult(Hr:Double);
+procedure TIndMach012Obj.CalcDutyMult(Hr: Double);
 //----------------------------------------------------------------------------
 
-Begin
-     If DutyShapeObj <> Nil Then
-       Begin
-         ShapeFactor   := DutyShapeObj.GetMult(Hr);
-         ShapeIsActual := DutyShapeObj.UseActual;
-       End
-     ELSE CalcDailyMult(Hr);  // Default to Daily Mult if no duty curve specified
-End;
+begin
+    if DutyShapeObj <> NIL then
+    begin
+        ShapeFactor := DutyShapeObj.GetMult(Hr);
+        ShapeIsActual := DutyShapeObj.UseActual;
+    end
+    else
+        CalcDailyMult(Hr);  // Default to Daily Mult if no duty curve specified
+end;
 
 //----------------------------------------------------------------------------
-Procedure TIndMach012Obj.CalcYearlyMult(Hr:Double);
+procedure TIndMach012Obj.CalcYearlyMult(Hr: Double);
 //----------------------------------------------------------------------------
 
-Begin
+begin
 {Yearly curve is assumed to be hourly only}
- If YearlyShapeObj<>Nil Then Begin
-      ShapeFactor   := YearlyShapeObj.GetMult(Hr);
-      ShapeIsActual := YearlyShapeObj.UseActual;
- End
- ELSE
-      ShapeFactor := CDOUBLEONE;  // Defaults to no variation
+    if YearlyShapeObj <> NIL then
+    begin
+        ShapeFactor := YearlyShapeObj.GetMult(Hr);
+        ShapeIsActual := YearlyShapeObj.UseActual;
+    end
+    else
+        ShapeFactor := CDOUBLEONE;  // Defaults to no variation
 
-End;
+end;
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-Procedure TIndMach012Obj.GetInjCurrents(Curr:pComplexArray; ActorID : Integer);
+procedure TIndMach012Obj.GetInjCurrents(Curr: pComplexArray; ActorID: Integer);
 //----------------------------------------------------------------------------
 
 // Gets the currents for the last solution performed
 
 // Do not call anything that may change the basic element values from the last solution
 
-VAR
-   i:Integer;
+var
+    i: Integer;
 
-Begin
+begin
 
-   CalcInjCurrentArray(ActorID);  // Difference between currents in YPrim and total current
+    CalcInjCurrentArray(ActorID);  // Difference between currents in YPrim and total current
 
-   TRY    // an exception here generally means an array boundary overrun
+    try    // an exception here generally means an array boundary overrun
    // Copy into buffer array
-     FOR i := 1 TO Yorder Do Curr^[i] := InjCurrent^[i];
+        for i := 1 to Yorder do
+            Curr^[i] := InjCurrent^[i];
 
-   EXCEPT
-     ON E: Exception Do
-        DoErrorMsg('IndMach012 Object: "' + Name + '" in GetInjCurrents function.',
-                    E.Message,
-                   'Current buffer not big enough.', 568);
-   End;
+    except
+        ON E: Exception do
+            DoErrorMsg('IndMach012 Object: "' + Name + '" in GetInjCurrents function.',
+                E.Message,
+                'Current buffer not big enough.', 568);
+    end;
 
-End;
+end;
 //= = =  = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
 // - - - - - - - - - - - - - - - - - - - - - - - -- - - - - - - - - - - - - - - - - -
-Procedure TIndMach012Obj.DumpProperties(Var F:TextFile; Complete:Boolean);
+procedure TIndMach012Obj.DumpProperties(var F: TextFile; Complete: Boolean);
 //----------------------------------------------------------------------------
 {
  This procedure is require to respond to various commands such as Dump that
  write all the device's property values to a file.
 }
 
-Var
-   i, idx :Integer;
+var
+    i, idx: Integer;
 
-Begin
-    Inherited DumpProperties(F, Complete);
+begin
+    inherited DumpProperties(F, Complete);
 
     {Write out any specials here, usually preceded by a "!"}
 
-    With ParentClass Do
-     For i := 1 to NumProperties Do
-     Begin
-        idx := PropertyIdxMap[i] ; // Map to get proper index into property value array
-        Case idx of
+    with ParentClass do
+        for i := 1 to NumProperties do
+        begin
+            idx := PropertyIdxMap[i]; // Map to get proper index into property value array
+            case idx of
           {Trap any specials here, such as values that are array properties, for example}
-           34, 36: Writeln(F,'~ ',PropertyName^[i],'=(',PropertyValue[idx],')')
-        Else
-          Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[idx]);
-        End;
-     End;
+                34, 36:
+                    Writeln(F, '~ ', PropertyName^[i], '=(', PropertyValue[idx], ')')
+            else
+                Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[idx]);
+            end;
+        end;
 
     Writeln(F);
 
-End;
+end;
 
 
 //----------------------------------------------------------------------------
-Procedure TIndMach012Obj.InitHarmonics(ActorID : Integer);
+procedure TIndMach012Obj.InitHarmonics(ActorID: Integer);
 //----------------------------------------------------------------------------
 
 {Procedure to initialize for Harmonics solution}
@@ -1676,11 +1810,11 @@ Procedure TIndMach012Obj.InitHarmonics(ActorID : Integer);
  Refer to Load for how to do a Norton equivalent
  }
 
-Var
-  E, Va:complex;
+var
+    E, Va: complex;
 begin
 
-     YprimInvalid[ActorID]   := TRUE;  // Force rebuild of YPrims
+    YprimInvalid[ActorID] := TRUE;  // Force rebuild of YPrims
 
 (****
      GenFundamental := ActiveCircuit.Solution.Frequency ;  // Whatever the frequency is when we enter here.
@@ -1730,32 +1864,32 @@ procedure TIndMach012Obj.InitPropertyValues(ArrayOffset: Integer);
 
 begin
    // Some examples
-     PropertyValue[1]      := '3';        //'phases';
-     PropertyValue[2]      := Getbus(1);  //'bus1';
-     PropertyValue[3]      := '12.47';
-     PropertyValue[4]      := '100';
-     PropertyValue[5]      := '.80';
-     PropertyValue[6]      := 'Delta';
-     PropertyValue[7]      := Format('%-g', [MachineData.kVARating]);
-     PropertyValue[8]      := Format('%-g', [MachineData.Hmass]);
-     PropertyValue[9]      := Format('%-g', [MachineData.D]);
-     PropertyValue[10]      := '0.0053';
-     PropertyValue[11]      := '0.106';
-     PropertyValue[12]      := '0.007';
-     PropertyValue[13]      := '0.12';
-     PropertyValue[14]      := '4.0';
+    PropertyValue[1] := '3';        //'phases';
+    PropertyValue[2] := Getbus(1);  //'bus1';
+    PropertyValue[3] := '12.47';
+    PropertyValue[4] := '100';
+    PropertyValue[5] := '.80';
+    PropertyValue[6] := 'Delta';
+    PropertyValue[7] := Format('%-g', [MachineData.kVARating]);
+    PropertyValue[8] := Format('%-g', [MachineData.Hmass]);
+    PropertyValue[9] := Format('%-g', [MachineData.D]);
+    PropertyValue[10] := '0.0053';
+    PropertyValue[11] := '0.106';
+    PropertyValue[12] := '0.007';
+    PropertyValue[13] := '0.12';
+    PropertyValue[14] := '4.0';
 
-     PropertyValue[15]      := '0.007';
-     PropertyValue[16]      := '0.1';
-     PropertyValue[17]      := 'variable';
+    PropertyValue[15] := '0.007';
+    PropertyValue[16] := '0.1';
+    PropertyValue[17] := 'variable';
 
-     PropertyValue[18]      := '';
-     PropertyValue[19]      := '';
-     PropertyValue[20]      := '';     {...}
-     PropertyValue[21]      := 'NO';
+    PropertyValue[18] := '';
+    PropertyValue[19] := '';
+    PropertyValue[20] := '';     {...}
+    PropertyValue[21] := 'NO';
 
 {Call inherited function to init inherited property values}
-  inherited  InitPropertyValues(NumPropsThisClass);
+    inherited  InitPropertyValues(NumPropsThisClass);
 
 end;
 
@@ -1768,34 +1902,42 @@ function TIndMach012Obj.GetPropertyValue(Index: Integer): String;
 
 begin
 
-      Result := '';   // Init the string
-      CASE Index of
+    Result := '';   // Init the string
+    case Index of
          // Put special cases here
          // often a good idea to convert numeric values to strings, for example
-         4:  Result := Format('%.6g', [kWBase]);
-         5:  Result := Format('%.6g', [PowerFactor(Power[1,ActiveActor])]);
-         7:  Result := Format('%.6g', [MachineData.kVArating]);
-         8:  Result := Format('%.6g', [MachineData.Hmass]);
-         9:  Result := Format('%.6g', [MachineData.D]);
-         15:  Result := Format('%.6g', [localslip]);
-         18:  Result := YearlyShape;
-         19:  Result := DailyDispShape;
-         20:  Result := DutyShape;
+        4:
+            Result := Format('%.6g', [kWBase]);
+        5:
+            Result := Format('%.6g', [PowerFactor(Power[1, ActiveActor])]);
+        7:
+            Result := Format('%.6g', [MachineData.kVArating]);
+        8:
+            Result := Format('%.6g', [MachineData.Hmass]);
+        9:
+            Result := Format('%.6g', [MachineData.D]);
+        15:
+            Result := Format('%.6g', [localslip]);
+        18:
+            Result := YearlyShape;
+        19:
+            Result := DailyDispShape;
+        20:
+            Result := DutyShape;
          {...}
-      ELSE
+    else
 
          // The default is to just return the current string value of the property
-         Result := Inherited GetPropertyValue(index);
+        Result := inherited GetPropertyValue(index);
 
-      END;
+    end;
 end;
 
 // ******************* END PROPERTY VALUES   *******************
 
 
-
 //----------------------------------------------------------------------------
-procedure TIndMach012Obj.IntegrateStates(ActorID : Integer);
+procedure TIndMach012Obj.IntegrateStates(ActorID: Integer);
 //----------------------------------------------------------------------------
 
 {
@@ -1810,39 +1952,43 @@ procedure TIndMach012Obj.IntegrateStates(ActorID : Integer);
 
 // Present technique is a predictor-corrector trapezoidal rule
 
-Var
-    TracePower:Complex;
+var
+    TracePower: Complex;
 
 
 begin
    // Compute Derivatives and then integrate
 
-   ComputeIterminal(ActorID);
+    ComputeIterminal(ActorID);
 
-    With ActiveCircuit[ActorID].Solution, MachineData Do  Begin
+    with ActiveCircuit[ActorID].Solution, MachineData do
+    begin
 
-      With DynaVars Do
-      If (IterationFlag = 0) Then Begin {First iteration of new time step}
-          ThetaHistory := Theta + 0.5*h*dTheta;
-          SpeedHistory := Speed + 0.5*h*dSpeed;
-      End;
+        with DynaVars do
+            if (IterationFlag = 0) then
+            begin {First iteration of new time step}
+                ThetaHistory := Theta + 0.5 * h * dTheta;
+                SpeedHistory := Speed + 0.5 * h * dSpeed;
+            end;
 
       // Compute shaft dynamics
-      TracePower := TerminalPowerIn(Vterminal,Iterminal,FnPhases) ; // in watts
-      dSpeed := (TracePower.re - Pshaft - abs(D*Speed)) / Mmass;
-      dTheta  := Speed ;
+        TracePower := TerminalPowerIn(Vterminal, Iterminal, FnPhases); // in watts
+        dSpeed := (TracePower.re - Pshaft - abs(D * Speed)) / Mmass;
+        dTheta := Speed;
 
      // Trapezoidal method
-      With DynaVars Do Begin
-       Speed := SpeedHistory + 0.5*h*dSpeed;
-       Theta := ThetaHistory + 0.5*h*dTheta;
-      End;
+        with DynaVars do
+        begin
+            Speed := SpeedHistory + 0.5 * h * dSpeed;
+            Theta := ThetaHistory + 0.5 * h * dTheta;
+        end;
 
-      If DebugTrace Then WriteTraceRecord(ActorID);
+        if DebugTrace then
+            WriteTraceRecord(ActorID);
 
-      Integrate(ActorID);
+        Integrate(ActorID);
 
-   End;
+    end;
 end;
 
 //----------------------------------------------------------------------------
@@ -1850,31 +1996,35 @@ procedure TIndMach012Obj.Get_DynamicModelCurrent;
 //----------------------------------------------------------------------------
 begin
 
-    Is1 := Cdiv(Csub(V1, E1),Zsp); // I = (V-E')/Z'
-    Is2 := Cdiv(Csub(V2, E2),Zsp); // I = (V-E')/Z'
+    Is1 := Cdiv(Csub(V1, E1), Zsp); // I = (V-E')/Z'
+    Is2 := Cdiv(Csub(V2, E2), Zsp); // I = (V-E')/Z'
 
     // rotor current  Ir1= Is1-Vm/jXm
-    Ir1 := Csub(Is1 ,Cdiv( Csub(V1, cmul(Is1, Zsp)), Zm ));
-    Ir2 := Csub(Is2 ,Cdiv( Csub(V2, cmul(Is2, Zsp)), Zm ));
+    Ir1 := Csub(Is1, Cdiv(Csub(V1, cmul(Is1, Zsp)), Zm));
+    Ir2 := Csub(Is2, Cdiv(Csub(V2, cmul(Is2, Zsp)), Zm));
 
 end;
 
 //----------------------------------------------------------------------------
-procedure TIndMach012Obj.Get_PFlowModelCurrent(Const V:Complex; Const S:Double; var Istator, Irotor:Complex);
+procedure TIndMach012Obj.Get_PFlowModelCurrent(const V: Complex; const S: Double; var Istator, Irotor: Complex);
 //----------------------------------------------------------------------------
-Var  RL :Double;
-     ZRotor, Numerator, Zmotor:Complex;
+var
+    RL: Double;
+    ZRotor, Numerator, Zmotor: Complex;
 
 begin
 
-    IF s <> 0.0 Then RL := Zr.re * (1.0 - s)/s  Else RL := Zr.re * 1.0e6;
+    if s <> 0.0 then
+        RL := Zr.re * (1.0 - s) / s
+    else
+        RL := Zr.re * 1.0e6;
 
     ZRotor := Cadd(Cmplx(RL, 0.0), Zr);
-    Numerator := Cmul(Zm, Zrotor );
-    Zmotor := Cadd(Zs, Cdiv(Numerator, Cadd(ZRotor,Zm) ));
+    Numerator := Cmul(Zm, Zrotor);
+    Zmotor := Cadd(Zs, Cdiv(Numerator, Cadd(ZRotor, Zm)));
     Istator := Cdiv(V, Zmotor);
     {Ir = Is -(V-ZsIs)/Zm}
-    Irotor := Csub(Istator, Cdiv(Csub(V, Cmul(Zs, Istator)), Zm) );
+    Irotor := Csub(Istator, Cdiv(Csub(V, Cmul(Zs, Istator)), Zm));
 
 end;
 
@@ -1894,12 +2044,12 @@ function TIndMach012Obj.NumVariables: Integer;
 }
 
 begin
-     Result  := NumIndMach012Variables;
+    Result := NumIndMach012Variables;
 end;
 
 
 //----------------------------------------------------------------------------
-Function TIndMach012Obj.VariableName(i: Integer):String;
+function TIndMach012Obj.VariableName(i: Integer): String;
 //----------------------------------------------------------------------------
 
 {
@@ -1910,95 +2060,146 @@ Function TIndMach012Obj.VariableName(i: Integer):String;
 }
 
 begin
-    If i<1 Then Exit;  // This means Someone goofed
-    Case i of
+    if i < 1 then
+        Exit;  // This means Someone goofed
+    case i of
 
-        1:Result := 'Frequency';
-        2:Result := 'Theta (deg)';
-        3:Result := 'E1';
-        4:Result := 'Pshaft';
-        5:Result := 'dSpeed (deg/sec)';
-        6:Result := 'dTheta (deg)';
-        7:Result := 'Slip';
-        8:Result := 'puRs';
-        9:Result := 'puXs';
-       10:Result := 'puRr';
-       11:Result := 'puXr';
-       12:Result := 'puXm';
-       13:Result := 'Maxslip';
-       14:Result := 'Is1';
-       15:Result := 'Is2';
-       16:Result := 'Ir1';
-       17:Result := 'Ir2';
-       18:Result := 'Stator Losses';
-       19:Result := 'Rotor Losses';
-       20:Result := 'Shaft Power (hp)';
-       21:Result := 'Power Factor';
-       22:Result := 'Efficiency (%)';
-    Else
-    End;
+        1:
+            Result := 'Frequency';
+        2:
+            Result := 'Theta (deg)';
+        3:
+            Result := 'E1';
+        4:
+            Result := 'Pshaft';
+        5:
+            Result := 'dSpeed (deg/sec)';
+        6:
+            Result := 'dTheta (deg)';
+        7:
+            Result := 'Slip';
+        8:
+            Result := 'puRs';
+        9:
+            Result := 'puXs';
+        10:
+            Result := 'puRr';
+        11:
+            Result := 'puXr';
+        12:
+            Result := 'puXm';
+        13:
+            Result := 'Maxslip';
+        14:
+            Result := 'Is1';
+        15:
+            Result := 'Is2';
+        16:
+            Result := 'Ir1';
+        17:
+            Result := 'Ir2';
+        18:
+            Result := 'Stator Losses';
+        19:
+            Result := 'Rotor Losses';
+        20:
+            Result := 'Shaft Power (hp)';
+        21:
+            Result := 'Power Factor';
+        22:
+            Result := 'Efficiency (%)';
+    else
+    end;
 
 end;
 
 //----------------------------------------------------------------------------
-Function TIndMach012Obj.Get_Variable(i: Integer): Double;
+function TIndMach012Obj.Get_Variable(i: Integer): Double;
 //----------------------------------------------------------------------------
 begin
 
     Result := -9999.99;   // Error Value
 
-    With MachineData Do
-    Case i of
-       1: Result := (w0+Speed)/TwoPi;  // Frequency, Hz
-       2: Result := (Theta ) * RadiansToDegrees;  // Report in Deg
-       3: Result := Cabs(E1)/vbase;      // Report in pu
-       4: Result := Pshaft;
-       5: Result := dSpeed * RadiansToDegrees; // Report in Deg      57.29577951
-       6: Result := dTheta;
-       7: Result := LocalSlip;
-       8: Result := puRs;
-       9: Result := puXs;
-      10: Result := puRr;
-      11: Result := puXr;
-      12: Result := puXm;
-      13: Result := MaxSlip;
-      14: Result := Cabs(Is1);
-      15: Result := Cabs(Is2);
-      16: Result := Cabs(Ir1);
-      17: Result := Cabs(Ir2);
-      18: Result := GetStatorLosses;
-      19: Result := GetRotorLosses;
-      20: Begin  // Shaft Power  (hp)
-             Result := 3.0/746.0*(Sqr(Cabs(Ir1))*(1.0 - S1)/S1 + Sqr(Cabs(Ir2))*(1.0 - S2)/S2 )* Zr.re;
-          End;
-      21: Result := PowerFactor(Power[1,ActiveActor]);
-      22: Result := (1.0 - (GetStatorLosses + GetRotorLosses) / power[1,ActiveActor].re) * 100.0;    // Efficiency
-    Else
+    with MachineData do
+        case i of
+            1:
+                Result := (w0 + Speed) / TwoPi;  // Frequency, Hz
+            2:
+                Result := (Theta) * RadiansToDegrees;  // Report in Deg
+            3:
+                Result := Cabs(E1) / vbase;      // Report in pu
+            4:
+                Result := Pshaft;
+            5:
+                Result := dSpeed * RadiansToDegrees; // Report in Deg      57.29577951
+            6:
+                Result := dTheta;
+            7:
+                Result := LocalSlip;
+            8:
+                Result := puRs;
+            9:
+                Result := puXs;
+            10:
+                Result := puRr;
+            11:
+                Result := puXr;
+            12:
+                Result := puXm;
+            13:
+                Result := MaxSlip;
+            14:
+                Result := Cabs(Is1);
+            15:
+                Result := Cabs(Is2);
+            16:
+                Result := Cabs(Ir1);
+            17:
+                Result := Cabs(Ir2);
+            18:
+                Result := GetStatorLosses;
+            19:
+                Result := GetRotorLosses;
+            20:
+            begin  // Shaft Power  (hp)
+                Result := 3.0 / 746.0 * (Sqr(Cabs(Ir1)) * (1.0 - S1) / S1 + Sqr(Cabs(Ir2)) * (1.0 - S2) / S2) * Zr.re;
+            end;
+            21:
+                Result := PowerFactor(Power[1, ActiveActor]);
+            22:
+                Result := (1.0 - (GetStatorLosses + GetRotorLosses) / power[1, ActiveActor].re) * 100.0;    // Efficiency
+        else
 
-    End;
+        end;
 
 end;
 
 //----------------------------------------------------------------------------
-Procedure TIndMach012Obj.Set_Variable(i: Integer;  Value: Double);
+procedure TIndMach012Obj.Set_Variable(i: Integer; Value: Double);
 //----------------------------------------------------------------------------
 begin
-    Case i of
+    case i of
 
-      7:  Slip:= Value;
-      8:  puRs:= Value;
-      9:  puXs:= Value;
-     10:  puRr:= Value;
-     11:  puXr:= Value;
-     12:  puXm:= Value;
+        7:
+            Slip := Value;
+        8:
+            puRs := Value;
+        9:
+            puXs := Value;
+        10:
+            puRr := Value;
+        11:
+            puXr := Value;
+        12:
+            puXm := Value;
 
-    Else
+    else
         {Do Nothing for other variables: they are read only}
-    End;
+    end;
 end;
 
 //----------------------------------------------------------------------------
-Procedure TIndMach012Obj.GetAllVariables(States: pDoubleArray);
+procedure TIndMach012Obj.GetAllVariables(States: pDoubleArray);
 //----------------------------------------------------------------------------
 {
   Return all state variables in double array (allocated by calling function)
@@ -2006,35 +2207,34 @@ Procedure TIndMach012Obj.GetAllVariables(States: pDoubleArray);
   This is a virtual function. You do not need to write this routine
   if you are not defining state variables.
 }
-Var  i, N:Integer;
+var
+    i, N: Integer;
 begin
-     N := 0;
-     For i := 1 to NumIndMach012Variables Do States^[i] := Variable[i];
+    N := 0;
+    for i := 1 to NumIndMach012Variables do
+        States^[i] := Variable[i];
 end;
 
 // ********************** END VARIABLES ***************************************
 
 
-
-
 //----------------------------------------------------------------------------
-Function TIndMach012Obj.GetRotorLosses: Double;
+function TIndMach012Obj.GetRotorLosses: Double;
 //----------------------------------------------------------------------------
 begin
-      Result := 3.0*(Sqr(Ir1.re) + Sqr(Ir1.im) + Sqr(Ir2.re) + Sqr(Ir2.im))*Zr.re;
+    Result := 3.0 * (Sqr(Ir1.re) + Sqr(Ir1.im) + Sqr(Ir2.re) + Sqr(Ir2.im)) * Zr.re;
 end;
 
 //----------------------------------------------------------------------------
-Function TIndMach012Obj.GetStatorLosses: Double;
+function TIndMach012Obj.GetStatorLosses: Double;
 //----------------------------------------------------------------------------
 begin
-      Result := 3.0*(Sqr(Is1.re) + Sqr(Is1.im) + Sqr(Is2.re) + Sqr(Is2.im))*Zs.re;
+    Result := 3.0 * (Sqr(Is1.re) + Sqr(Is1.im) + Sqr(Is2.re) + Sqr(Is2.im)) * Zs.re;
 end;
 
 
-
 //----------------------------------------------------------------------------
-Procedure TIndMach012Obj.MakePosSequence(ActorID : Integer);
+procedure TIndMach012Obj.MakePosSequence(ActorID: Integer);
 //----------------------------------------------------------------------------
 
 {
@@ -2045,9 +2245,9 @@ Procedure TIndMach012Obj.MakePosSequence(ActorID : Integer);
 // Routine to convert existing three-phase models to a single-phase positive-
 // sequence model
 
-Var
-    S :String;
-    V :Double;
+var
+    S: String;
+    V: Double;
 
 begin
 
@@ -2067,7 +2267,7 @@ begin
  // example from Generator class
  // Modify as necessary
 
-  S := 'Phases=1 conn=wye';    // Positive sequence model is 1-phase wye
+    S := 'Phases=1 conn=wye';    // Positive sequence model is 1-phase wye
 
   (****
 
@@ -2096,15 +2296,18 @@ begin
 end;
 
 //----------------------------------------------------------------------------
-procedure TIndMach012Obj.Set_ConductorClosed(Index: Integer; ActorID:integer;  Value: Boolean);
+procedure TIndMach012Obj.Set_ConductorClosed(Index: Integer; ActorID: Integer; Value: Boolean);
 //----------------------------------------------------------------------------
 
 // Routine for handling Open/Close procedures
 
 begin
-   inherited;
+    inherited;
 
-   If Value Then IndMach012SwitchOpen := FALSE Else IndMach012SwitchOpen := TRUE;
+    if Value then
+        IndMach012SwitchOpen := FALSE
+    else
+        IndMach012SwitchOpen := TRUE;
 
 end;
 
@@ -2113,21 +2316,28 @@ end;
 procedure TIndMach012Obj.set_Localslip(const Value: Double);
 //----------------------------------------------------------------------------
 
-  Function Sign(const x:Double):Double;
-  Begin If x<0.0 then Result := -1.0 Else Result := 1.0; End;
+    function Sign(const x: Double): Double;
+    begin
+        if x < 0.0 then
+            Result := -1.0
+        else
+            Result := 1.0;
+    end;
 
 begin
-     S1 := Value;
-     If Not InDynamics Then If Abs(S1)>MaxSlip Then S1 := Sign(S1)*MaxSlip;   // Put limits on the slip  unless dynamics
-     S2 := 2.0 - S1;
+    S1 := Value;
+    if not InDynamics then
+        if Abs(S1) > MaxSlip then
+            S1 := Sign(S1) * MaxSlip;   // Put limits on the slip  unless dynamics
+    S2 := 2.0 - S1;
 end;
 
 //----------------------------------------------------------------------------
 procedure TIndMach012Obj.Set_Slip(const Value: Double);
 //----------------------------------------------------------------------------
 begin
-        LocalSlip := Value;
-        MachineData.Speed := MachineData.w0 *  (-S1); // make motor speed agree
+    LocalSlip := Value;
+    MachineData.Speed := MachineData.w0 * (-S1); // make motor speed agree
 end;
 
 //----------------------------------------------------------------------------
@@ -2135,32 +2345,32 @@ procedure TIndMach012Obj.InitTraceFile;
 //----------------------------------------------------------------------------
 begin
 
-     AssignFile(TraceFile, Format('%s_IndMach012_Trace.CSV', [Name]));
-     Rewrite(TraceFile);
+    AssignFile(TraceFile, Format('%s_IndMach012_Trace.CSV', [Name]));
+    Rewrite(TraceFile);
 
-     Write(TraceFile, 'Time, Iteration, S1, |IS1|, |IS2|, |E1|, |dE1dt|, |E2|, |dE2dt|, |V1|, |V2|, Pshaft, Pin, Speed, dSpeed');
-     Writeln(TraceFile);
+    Write(TraceFile, 'Time, Iteration, S1, |IS1|, |IS2|, |E1|, |dE1dt|, |E2|, |dE2dt|, |V1|, |V2|, Pshaft, Pin, Speed, dSpeed');
+    Writeln(TraceFile);
 
-     CloseFile(TraceFile);
+    CloseFile(TraceFile);
 end;
 
 //----------------------------------------------------------------------------
-procedure TIndMach012Obj.WriteTraceRecord(ActorID : Integer);
+procedure TIndMach012Obj.WriteTraceRecord(ActorID: Integer);
 //----------------------------------------------------------------------------
 begin
-      Append(TraceFile);
-      With ActiveCircuit[ActorID].Solution Do
-      Write(TraceFile, Format('%-.6g, %d, %-.6g, ',[Dynavars.dblHour*3600.0, Iteration, S1]));
+    Append(TraceFile);
+    with ActiveCircuit[ActorID].Solution do
+        Write(TraceFile, Format('%-.6g, %d, %-.6g, ', [Dynavars.dblHour * 3600.0, Iteration, S1]));
 
-      Write(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(Is1), Cabs(Is2)]));
-      Write(TraceFile, Format('%-.6g, %-.6g, %-.6g, %-.6g, ', [Cabs(E1), Cabs(dE1dt), Cabs(E2), Cabs(dE2dt)]));
-      Write(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(V1), Cabs(V2)]));
-      Write(TraceFile, Format('%-.6g, %-.6g, ', [MachineData.Pshaft, power[1,ActorID].re]));
-      Write(TraceFile, Format('%-.6g, %-.6g, ', [MachineData.speed, MachineData.dSpeed]));
+    Write(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(Is1), Cabs(Is2)]));
+    Write(TraceFile, Format('%-.6g, %-.6g, %-.6g, %-.6g, ', [Cabs(E1), Cabs(dE1dt), Cabs(E2), Cabs(dE2dt)]));
+    Write(TraceFile, Format('%-.6g, %-.6g, ', [Cabs(V1), Cabs(V2)]));
+    Write(TraceFile, Format('%-.6g, %-.6g, ', [MachineData.Pshaft, power[1, ActorID].re]));
+    Write(TraceFile, Format('%-.6g, %-.6g, ', [MachineData.speed, MachineData.dSpeed]));
 
-      Writeln(TraceFile);
+    Writeln(TraceFile);
 
-      CloseFile(TraceFile);
+    CloseFile(TraceFile);
 end;
 
 initialization

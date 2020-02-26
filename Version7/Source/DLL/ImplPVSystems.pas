@@ -1,4 +1,5 @@
 unit ImplPVSystems;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -10,341 +11,383 @@ unit ImplPVSystems;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSengine_TLB, StdVcl;
+    ComObj,
+    ActiveX,
+    OpenDSSengine_TLB,
+    StdVcl;
 
 type
-  TPVSystems = class(TAutoObject, IPVSystems)
-  protected
-    function Get_AllNames: OleVariant; safecall;
-    function Get_RegisterNames: OleVariant; safecall;
-    function Get_RegisterValues: OleVariant; safecall;
-    function Get_First: Integer; safecall;
-    function Get_Next: Integer; safecall;
-    function Get_Count: Integer; safecall;
-    function Get_idx: Integer; safecall;
-    procedure Set_idx(Value: Integer); safecall;
-    function Get_Name: WideString; safecall;
-    procedure Set_Name(const Value: WideString); safecall;
-    function Get_Irradiance: Double; safecall;
-    procedure Set_Irradiance(Value: Double); safecall;
-    function Get_kvar: Double; safecall;
-    function Get_kVArated: Double; safecall;
-    function Get_kW: Double; safecall;
-    function Get_PF: Double; safecall;
-    procedure Set_kVArated(Value: Double); stdcall;
-    procedure Set_PF(Value: Double); stdcall;
-    procedure Set_kvar(Value: Double); stdcall;
+    TPVSystems = class(TAutoObject, IPVSystems)
+    PROTECTED
+        function Get_AllNames: Olevariant; SAFECALL;
+        function Get_RegisterNames: Olevariant; SAFECALL;
+        function Get_RegisterValues: Olevariant; SAFECALL;
+        function Get_First: Integer; SAFECALL;
+        function Get_Next: Integer; SAFECALL;
+        function Get_Count: Integer; SAFECALL;
+        function Get_idx: Integer; SAFECALL;
+        procedure Set_idx(Value: Integer); SAFECALL;
+        function Get_Name: Widestring; SAFECALL;
+        procedure Set_Name(const Value: Widestring); SAFECALL;
+        function Get_Irradiance: Double; SAFECALL;
+        procedure Set_Irradiance(Value: Double); SAFECALL;
+        function Get_kvar: Double; SAFECALL;
+        function Get_kVArated: Double; SAFECALL;
+        function Get_kW: Double; SAFECALL;
+        function Get_PF: Double; SAFECALL;
+        procedure Set_kVArated(Value: Double); STDCALL;
+        procedure Set_PF(Value: Double); STDCALL;
+        procedure Set_kvar(Value: Double); STDCALL;
 
-  end;
+    end;
 
 implementation
 
-uses ComServ, DSSGlobals, PVSystem, Variants, SysUtils;
+uses
+    ComServ,
+    DSSGlobals,
+    PVSystem,
+    Variants,
+    SysUtils;
 
-function TPVSystems.Get_AllNames: OleVariant;
-Var
-  PVSystemElem:TPVSystemObj;
-  k:Integer;
+function TPVSystems.Get_AllNames: Olevariant;
+var
+    PVSystemElem: TPVSystemObj;
+    k: Integer;
 
-Begin
+begin
     Result := VarArrayCreate([0, 0], varOleStr);
     Result[0] := 'NONE';
-    IF ActiveCircuit <> Nil THEN
-     WITH ActiveCircuit DO
-     If PVSystems.ListSize>0 Then
-     Begin
-       VarArrayRedim(result, PVSystems.ListSize-1);
-       k:=0;
-       PVSystemElem := PVSystems.First;
-       WHILE PVSystemElem<>Nil DO  Begin
-          Result[k] := PVSystemElem.Name;
-          Inc(k);
-          PVSystemElem := PVSystems.Next;
-       End;
-     End;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+            if PVSystems.ListSize > 0 then
+            begin
+                VarArrayRedim(result, PVSystems.ListSize - 1);
+                k := 0;
+                PVSystemElem := PVSystems.First;
+                while PVSystemElem <> NIL do
+                begin
+                    Result[k] := PVSystemElem.Name;
+                    Inc(k);
+                    PVSystemElem := PVSystems.Next;
+                end;
+            end;
 end;
 
-function TPVSystems.Get_RegisterNames: OleVariant;
-Var
-    k :integer;
+function TPVSystems.Get_RegisterNames: Olevariant;
+var
+    k: Integer;
 
-Begin
+begin
     Result := VarArrayCreate([0, NumPVSystemRegisters - 1], varOleStr);
-    For k := 0 to  NumPVSystemRegisters - 1  Do Begin
-       Result[k] := PVSystemClass.RegisterNames[k + 1];
-    End;
+    for k := 0 to NumPVSystemRegisters - 1 do
+    begin
+        Result[k] := PVSystemClass.RegisterNames[k + 1];
+    end;
 end;
 
-function TPVSystems.Get_RegisterValues: OleVariant;
-Var
-   PVSystem :TPVSystemObj;
-   k     :Integer;
-Begin
+function TPVSystems.Get_RegisterValues: Olevariant;
+var
+    PVSystem: TPVSystemObj;
+    k: Integer;
+begin
 
-   IF ActiveCircuit <> Nil THEN
-   Begin
-        PVSystem :=  TPVSystemObj(ActiveCircuit.PVSystems.Active);
-        If PVSystem <> Nil Then
-        Begin
-            Result := VarArrayCreate([0, numPVSystemRegisters-1], varDouble);
-            FOR k := 0 to numPVSystemRegisters-1 DO
-            Begin
-                Result[k] := PVSystem.Registers[k+1];
-            End;
-        End
-        Else
+    if ActiveCircuit <> NIL then
+    begin
+        PVSystem := TPVSystemObj(ActiveCircuit.PVSystems.Active);
+        if PVSystem <> NIL then
+        begin
+            Result := VarArrayCreate([0, numPVSystemRegisters - 1], varDouble);
+            for k := 0 to numPVSystemRegisters - 1 do
+            begin
+                Result[k] := PVSystem.Registers[k + 1];
+            end;
+        end
+        else
             Result := VarArrayCreate([0, 0], varDouble);
-   End
-   ELSE Begin
+    end
+    else
+    begin
         Result := VarArrayCreate([0, 0], varDouble);
-   End;
-
+    end;
 
 
 end;
 
 function TPVSystems.Get_First: Integer;
-Var
-   pPVSystem:TpVSystemObj;
+var
+    pPVSystem: TpVSystemObj;
 
-Begin
+begin
 
-   Result := 0;
-   If ActiveCircuit <> Nil Then
-   Begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
         pPVSystem := ActiveCircuit.pVSystems.First;
-        If pPVSystem <> Nil Then
-        Begin
-          Repeat
-            If pPVSystem.Enabled
-            Then Begin
-              ActiveCircuit.ActiveCktElement := pPVSystem;
-              Result := 1;
-            End
-            Else pPVSystem := ActiveCircuit.pVSystems.Next;
-          Until (Result = 1) or (pPVSystem = nil);
-        End
-        Else
+        if pPVSystem <> NIL then
+        begin
+            repeat
+                if pPVSystem.Enabled then
+                begin
+                    ActiveCircuit.ActiveCktElement := pPVSystem;
+                    Result := 1;
+                end
+                else
+                    pPVSystem := ActiveCircuit.pVSystems.Next;
+            until (Result = 1) or (pPVSystem = NIL);
+        end
+        else
             Result := 0;  // signify no more
-   End;
+    end;
 
 end;
 
 function TPVSystems.Get_Next: Integer;
-Var
-   pPVSystem:TPVSystemObj;
+var
+    pPVSystem: TPVSystemObj;
 
-Begin
+begin
 
-   Result := 0;
-   If ActiveCircuit <> Nil Then
-   Begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
         pPVSystem := ActiveCircuit.PVSystems.Next;
-        If pPVSystem <> Nil Then
-        Begin
-          Repeat
-            If pPVSystem.Enabled
-            Then Begin
-              ActiveCircuit.ActiveCktElement := pPVSystem;
-              Result := ActiveCircuit.PVSystems.ActiveIndex;
-            End
-            Else pPVSystem := ActiveCircuit.PVSystems.Next;
-          Until (Result > 0) or (pPVSystem = nil);
-        End
-        Else
+        if pPVSystem <> NIL then
+        begin
+            repeat
+                if pPVSystem.Enabled then
+                begin
+                    ActiveCircuit.ActiveCktElement := pPVSystem;
+                    Result := ActiveCircuit.PVSystems.ActiveIndex;
+                end
+                else
+                    pPVSystem := ActiveCircuit.PVSystems.Next;
+            until (Result > 0) or (pPVSystem = NIL);
+        end
+        else
             Result := 0;  // signify no more
-   End;
+    end;
 
 end;
 
 function TPVSystems.Get_Count: Integer;
 begin
-    If Assigned(Activecircuit) Then
-          Result := ActiveCircuit.PVSystems.ListSize;
+    if Assigned(Activecircuit) then
+        Result := ActiveCircuit.PVSystems.ListSize;
 end;
 
 function TPVSystems.Get_idx: Integer;
 begin
-    if ActiveCircuit <> Nil then
-       Result := ActiveCircuit.PVSystems.ActiveIndex
-    else Result := 0;
+    if ActiveCircuit <> NIL then
+        Result := ActiveCircuit.PVSystems.ActiveIndex
+    else
+        Result := 0;
 end;
 
 procedure TPVSystems.Set_idx(Value: Integer);
-Var
-    pPVSystem:TPVSystemObj;
+var
+    pPVSystem: TPVSystemObj;
 begin
-    if ActiveCircuit <> Nil then   Begin
+    if ActiveCircuit <> NIL then
+    begin
         pPVSystem := ActiveCircuit.PVSystems.Get(Value);
-        If pPVSystem <> Nil Then ActiveCircuit.ActiveCktElement := pPVSystem;
-    End;
+        if pPVSystem <> NIL then
+            ActiveCircuit.ActiveCktElement := pPVSystem;
+    end;
 end;
 
-function TPVSystems.Get_Name: WideString;
-Var
-   pPVSystem:TPVSystemObj;
+function TPVSystems.Get_Name: Widestring;
+var
+    pPVSystem: TPVSystemObj;
 
-Begin
-   Result := '';
-   If ActiveCircuit <> Nil Then
-   Begin
+begin
+    Result := '';
+    if ActiveCircuit <> NIL then
+    begin
         pPVSystem := ActiveCircuit.PVSystems.Active;
-        If pPVSystem <> Nil Then
-        Begin
-          Result := pPVSystem.Name;
-        End
-        Else
+        if pPVSystem <> NIL then
+        begin
+            Result := pPVSystem.Name;
+        end
+        else
             Result := '';  // signify no name
-   End;
+    end;
 
 end;
 
-procedure TPVSystems.Set_Name(const Value: WideString);
-VAR
-    activesave :integer;
-    PVSystem:TPVSystemObj;
+procedure TPVSystems.Set_Name(const Value: Widestring);
+var
+    activesave: Integer;
+    PVSystem: TPVSystemObj;
     S: String;
-    Found :Boolean;
-Begin
+    Found: Boolean;
+begin
 
 
-  IF ActiveCircuit <> NIL
-  THEN Begin      // Search list of PVSystems in active circuit for name
-       WITH ActiveCircuit.PVSystems DO
-         Begin
-             S := Value;  // Convert to Pascal String
-             Found := FALSE;
-             ActiveSave := ActiveIndex;
-             PVSystem := First;
-             While PVSystem <> NIL Do
-             Begin
-                IF (CompareText(PVSystem.Name, S) = 0)
-                THEN Begin
+    if ActiveCircuit <> NIL then
+    begin      // Search list of PVSystems in active circuit for name
+        with ActiveCircuit.PVSystems do
+        begin
+            S := Value;  // Convert to Pascal String
+            Found := FALSE;
+            ActiveSave := ActiveIndex;
+            PVSystem := First;
+            while PVSystem <> NIL do
+            begin
+                if (CompareText(PVSystem.Name, S) = 0) then
+                begin
                     ActiveCircuit.ActiveCktElement := PVSystem;
                     Found := TRUE;
                     Break;
-                End;
+                end;
                 PVSystem := Next;
-             End;
-             IF NOT Found
-             THEN Begin
-                 DoSimpleMsg('PVSystem "'+S+'" Not Found in Active Circuit.', 5003);
-                 PVSystem := Get(ActiveSave);    // Restore active PVSystem
-                 ActiveCircuit.ActiveCktElement := PVSystem;
-             End;
-         End;
-  End;
+            end;
+            if not Found then
+            begin
+                DoSimpleMsg('PVSystem "' + S + '" Not Found in Active Circuit.', 5003);
+                PVSystem := Get(ActiveSave);    // Restore active PVSystem
+                ActiveCircuit.ActiveCktElement := PVSystem;
+            end;
+        end;
+    end;
 
 end;
 
 function TPVSystems.Get_Irradiance: Double;
 begin
-   Result := -1.0;  // not set
-   IF ActiveCircuit<> NIL THEN Begin
-         WITH ActiveCircuit.PVSystems Do Begin
-             IF ActiveIndex<>0 THEN Begin
-                 Result := TPVSystemObj(Active).PVSystemVars.FIrradiance;
-             End;
-         End;
-   End;
+    Result := -1.0;  // not set
+    if ActiveCircuit <> NIL then
+    begin
+        with ActiveCircuit.PVSystems do
+        begin
+            if ActiveIndex <> 0 then
+            begin
+                Result := TPVSystemObj(Active).PVSystemVars.FIrradiance;
+            end;
+        end;
+    end;
 end;
 
 procedure TPVSystems.Set_Irradiance(Value: Double);
 begin
-   IF ActiveCircuit<> NIL THEN Begin
-         WITH ActiveCircuit.PVSystems Do Begin
-             IF ActiveIndex<>0 THEN Begin
-                  TPVSystemObj(Active).PVSystemVars.FIrradiance  := Value;
-             End;
-         End;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        with ActiveCircuit.PVSystems do
+        begin
+            if ActiveIndex <> 0 then
+            begin
+                TPVSystemObj(Active).PVSystemVars.FIrradiance := Value;
+            end;
+        end;
+    end;
 end;
 
 function TPVSystems.Get_kvar: Double;
 begin
-   Result := 0.0;  // not set
-   IF ActiveCircuit<> NIL THEN Begin
-         WITH ActiveCircuit.PVSystems Do Begin
-             IF ActiveIndex<>0 THEN Begin
-                 Result := TPVSystemObj(Active).Presentkvar;
-             End;
-         End;
-   End;
+    Result := 0.0;  // not set
+    if ActiveCircuit <> NIL then
+    begin
+        with ActiveCircuit.PVSystems do
+        begin
+            if ActiveIndex <> 0 then
+            begin
+                Result := TPVSystemObj(Active).Presentkvar;
+            end;
+        end;
+    end;
 end;
 
 function TPVSystems.Get_kVArated: Double;
 begin
-   Result := -1.0;  // not set
-   IF ActiveCircuit<> NIL THEN Begin
-         WITH ActiveCircuit.PVSystems Do Begin
-             IF ActiveIndex<>0 THEN Begin
-                 Result := TPVSystemObj(Active).kVARating ;
-             End;
-         End;
-   End;
+    Result := -1.0;  // not set
+    if ActiveCircuit <> NIL then
+    begin
+        with ActiveCircuit.PVSystems do
+        begin
+            if ActiveIndex <> 0 then
+            begin
+                Result := TPVSystemObj(Active).kVARating;
+            end;
+        end;
+    end;
 end;
 
 function TPVSystems.Get_kW: Double;
 begin
-   Result := 0.0;  // not set
-   IF ActiveCircuit<> NIL THEN Begin
-         WITH ActiveCircuit.PVSystems Do Begin
-             IF ActiveIndex<>0 THEN Begin
-                 Result := TPVSystemObj(Active).PresentkW;
-             End;
-         End;
-   End;
+    Result := 0.0;  // not set
+    if ActiveCircuit <> NIL then
+    begin
+        with ActiveCircuit.PVSystems do
+        begin
+            if ActiveIndex <> 0 then
+            begin
+                Result := TPVSystemObj(Active).PresentkW;
+            end;
+        end;
+    end;
 end;
 
 function TPVSystems.Get_PF: Double;
 begin
-   Result := 0.0;  // not set
-   IF ActiveCircuit<> NIL THEN Begin
-         WITH ActiveCircuit.PVSystems Do Begin
-             IF ActiveIndex<>0 THEN Begin
-                 Result := TPVSystemObj(Active).PowerFactor ;
-             End;
-         End;
-   End;
+    Result := 0.0;  // not set
+    if ActiveCircuit <> NIL then
+    begin
+        with ActiveCircuit.PVSystems do
+        begin
+            if ActiveIndex <> 0 then
+            begin
+                Result := TPVSystemObj(Active).PowerFactor;
+            end;
+        end;
+    end;
 end;
 
 procedure TPVSystems.Set_kVArated(Value: Double);
 begin
-   IF ActiveCircuit<> NIL THEN Begin
-         WITH ActiveCircuit.PVSystems Do Begin
-             IF ActiveIndex<>0 THEN Begin
-                  TPVSystemObj(Active).kVARating  := Value;
-             End;
-         End;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        with ActiveCircuit.PVSystems do
+        begin
+            if ActiveIndex <> 0 then
+            begin
+                TPVSystemObj(Active).kVARating := Value;
+            end;
+        end;
+    end;
 end;
 
 
 procedure TPVSystems.Set_PF(Value: Double);
 begin
-   IF ActiveCircuit<> NIL THEN Begin
-         WITH ActiveCircuit.PVSystems Do Begin
-             IF ActiveIndex<>0 THEN Begin
-                  TPVSystemObj(Active).Varmode := 0;
-                  TPVSystemObj(Active).PowerFactor  := Value;
-             End;
-         End;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        with ActiveCircuit.PVSystems do
+        begin
+            if ActiveIndex <> 0 then
+            begin
+                TPVSystemObj(Active).Varmode := 0;
+                TPVSystemObj(Active).PowerFactor := Value;
+            end;
+        end;
+    end;
 end;
 
 procedure TPVSystems.Set_kvar(Value: Double);
 begin
-   IF ActiveCircuit<> NIL THEN Begin
-         WITH ActiveCircuit.PVSystems Do Begin
-             IF ActiveIndex<>0 THEN Begin
-                  TPVSystemObj(Active).Varmode := VARMODEKVAR;
-                  TPVSystemObj(Active).Presentkvar := Value;
-             End;
-         End;
-   End;
+    if ActiveCircuit <> NIL then
+    begin
+        with ActiveCircuit.PVSystems do
+        begin
+            if ActiveIndex <> 0 then
+            begin
+                TPVSystemObj(Active).Varmode := VARMODEKVAR;
+                TPVSystemObj(Active).Presentkvar := Value;
+            end;
+        end;
+    end;
 end;
 
 initialization
-  TAutoObjectFactory.Create(ComServer, TPVSystems, Class_PVSystems,
-    ciInternal, tmApartment);
+    TAutoObjectFactory.Create(ComServer, TPVSystems, Class_PVSystems,
+        ciInternal, tmApartment);
 end.

@@ -1,4 +1,5 @@
 unit TCC_Curve;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -17,474 +18,524 @@ unit TCC_Curve;
 
 interface
 
-USES
-   Command, DSSClass, DSSObject, UcMatrix, Arraydef;
+uses
+    Command,
+    DSSClass,
+    DSSObject,
+    UcMatrix,
+    Arraydef;
+
+type
+
+    TTCC_Curve = class(TDSSClass)
+    PRIVATE
+
+        function Get_Code: String;  // Returns active TCC_Curve string
+        procedure Set_Code(const Value: String);  // sets the  active TCC_Curve
+
+    PROTECTED
+        procedure DefineProperties;
+        function MakeLike(const ShapeName: String): Integer; OVERRIDE;
+    PUBLIC
+        constructor Create;
+        destructor Destroy; OVERRIDE;
+
+        function Edit: Integer; OVERRIDE;     // uses global parser
+        function Init(Handle: Integer): Integer; OVERRIDE;
+        function NewObject(const ObjName: String): Integer; OVERRIDE;
 
 
-TYPE
-
-   TTCC_Curve = class(TDSSClass)
-     private
-
-       Function  Get_Code:String;  // Returns active TCC_Curve string
-       Procedure Set_Code(const Value:String);  // sets the  active TCC_Curve
-
-     Protected
-       Procedure DefineProperties;
-       Function MakeLike(Const ShapeName:String):Integer;  Override;
-     public
-       constructor Create;
-       destructor Destroy; override;
-
-       Function Edit:Integer; override;     // uses global parser
-       Function Init(Handle:Integer):Integer; override;
-       Function NewObject(const ObjName:String):Integer; override;
-
-       
        // Set this property to point ActiveTCC_CurveObj to the right value
-       Property Code:String Read Get_Code  Write Set_Code;
+        property Code: String READ Get_Code WRITE Set_Code;
 
 
-   end;
+    end;
 
-   TTCC_CurveObj = class(TDSSObject)
-     private
+    TTCC_CurveObj = class(TDSSObject)
+    PRIVATE
         LastValueAccessed,
-        Npts :Integer;  // Number of points in curve
+        Npts: Integer;  // Number of points in curve
 
         Logt, LogC,        // Logarithms of t_values and c_values
         t_values,          // Time values (hr) if Interval > 0.0  Else nil
-        c_values :pDoubleArray;
+        c_values: pDoubleArray;
 
 
-      public
+    PUBLIC
 
-        constructor Create(ParClass:TDSSClass; const TCC_CurveName:String);
-        destructor  Destroy; override;
+        constructor Create(ParClass: TDSSClass; const TCC_CurveName: String);
+        destructor Destroy; OVERRIDE;
 
-        Function  GetTCCTime(const C_Value:double):double;  // Return operating time for a particular time value
-        Function  GetUVTime(const V_Value:Double):double;  // Return operating time for undervoltage relay
-        Function  GetOVTime(const V_Value:Double):double;  // Return operating time for overvoltage relay
-        Function  Value(i:Integer):Double;  // get C_Value by index
-        Function  Time(i:Integer):Double;  // get time value (sec) corresponding to point index
+        function GetTCCTime(const C_Value: Double): Double;  // Return operating time for a particular time value
+        function GetUVTime(const V_Value: Double): Double;  // Return operating time for undervoltage relay
+        function GetOVTime(const V_Value: Double): Double;  // Return operating time for overvoltage relay
+        function Value(i: Integer): Double;  // get C_Value by index
+        function Time(i: Integer): Double;  // get time value (sec) corresponding to point index
 
-        FUNCTION  GetPropertyValue(Index:Integer):String;Override;
-        PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
-        PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
+        function GetPropertyValue(Index: Integer): String; OVERRIDE;
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
+        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
 
-        Property NumPoints :Integer Read Npts;
+        property NumPoints: Integer READ Npts;
 
-   end;
+    end;
 
-VAR
-   ActiveTCC_CurveObj:TTCC_CurveObj;
+var
+    ActiveTCC_CurveObj: TTCC_CurveObj;
 
 implementation
 
-USES  ParserDel,  DSSClassDefs, DSSGlobals, Sysutils, Ucomplex, MathUtil, Utilities;
+uses
+    ParserDel,
+    DSSClassDefs,
+    DSSGlobals,
+    Sysutils,
+    Ucomplex,
+    MathUtil,
+    Utilities;
 
-Const NumPropsThisClass = 3;
+const
+    NumPropsThisClass = 3;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TTCC_Curve.Create;  // Creates superstructure for all Line objects
-BEGIN
-     Inherited Create;
-     Class_Name := 'TCC_Curve';
-     DSSClassType := DSS_OBJECT;
+begin
+    inherited Create;
+    Class_Name := 'TCC_Curve';
+    DSSClassType := DSS_OBJECT;
 
-     ActiveElement := 0;
+    ActiveElement := 0;
 
-     DefineProperties;
+    DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
-     CommandList.Abbrev := TRUE;
+    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList.Abbrev := TRUE;
 
 
-
-END;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Destructor TTCC_Curve.Destroy;
+destructor TTCC_Curve.Destroy;
 
-BEGIN
+begin
     // ElementList and  CommandList freed in inherited destroy
-    Inherited Destroy;
-END;
+    inherited Destroy;
+end;
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TTCC_Curve.DefineProperties;
-Begin
+procedure TTCC_Curve.DefineProperties;
+begin
 
-     Numproperties := NumPropsThisClass;
-     CountProperties;   // Get inherited property count
-     AllocatePropertyArrays;
+    Numproperties := NumPropsThisClass;
+    CountProperties;   // Get inherited property count
+    AllocatePropertyArrays;
 
 
      // Define Property names
-     PropertyName[1] := 'npts';     // Number of points to expect
-     PropertyName[2] := 'C_array';     // vector of multiplier values
-     PropertyName[3] := 'T_array';     // vextor of time values , Sec
+    PropertyName[1] := 'npts';     // Number of points to expect
+    PropertyName[2] := 'C_array';     // vector of multiplier values
+    PropertyName[3] := 'T_array';     // vextor of time values , Sec
 
      // define Property help values
 
-     PropertyHelp[1] := 'Number of points to expect in time-current arrays.';     // Number of points to expect
-     PropertyHelp[2] := 'Array of current (or voltage) values corresponding to time values (see help on T_Array).';     // vector of multiplier values
-     PropertyHelp[3] := 'Array of time values in sec. Typical array syntax: ' +CRLF+
-                        't_array = (1, 2, 3, 4, ...)' + CRLF+CRLF+
-                        'Can also substitute a file designation: ' +CRLF+
-                        't_array =  (file=filename)'+CRLF+CRLF+
-                        'The specified file has one value per line.';
+    PropertyHelp[1] := 'Number of points to expect in time-current arrays.';     // Number of points to expect
+    PropertyHelp[2] := 'Array of current (or voltage) values corresponding to time values (see help on T_Array).';     // vector of multiplier values
+    PropertyHelp[3] := 'Array of time values in sec. Typical array syntax: ' + CRLF +
+        't_array = (1, 2, 3, 4, ...)' + CRLF + CRLF +
+        'Can also substitute a file designation: ' + CRLF +
+        't_array =  (file=filename)' + CRLF + CRLF +
+        'The specified file has one value per line.';
 
-     ActiveProperty := NumPropsThisClass;
-     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
+    ActiveProperty := NumPropsThisClass;
+    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
-End;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TTCC_Curve.NewObject(const ObjName:String):Integer;
-BEGIN
+function TTCC_Curve.NewObject(const ObjName: String): Integer;
+begin
    // create a new object of this class and add to list
-   With ActiveCircuit Do
-   Begin
-    ActiveDSSObject := TTCC_CurveObj.Create(Self, ObjName);
-    Result := AddObjectToList(ActiveDSSObject);
-   End;
-END;
+    with ActiveCircuit do
+    begin
+        ActiveDSSObject := TTCC_CurveObj.Create(Self, ObjName);
+        Result := AddObjectToList(ActiveDSSObject);
+    end;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure CalcLogPoints(Const X, LogX:PDoubleArray; N:Integer);
+procedure CalcLogPoints(const X, LogX: PDoubleArray; N: Integer);
 
-VAR
-   i:Integer;
+var
+    i: Integer;
 
-Begin
-     FOR i := 1 to N Do
-       IF   X^[i] > 0.0
-       THEN LogX^[i] := Ln(X^[i])
-       ELSE LogX^[i] := Ln(0.001);
-End;
+begin
+    for i := 1 to N do
+        if X^[i] > 0.0 then
+            LogX^[i] := Ln(X^[i])
+        else
+            LogX^[i] := Ln(0.001);
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TTCC_Curve.Edit:Integer;
-VAR
-   ParamPointer:Integer;
-   ParamName:String;
-   Param:String;
+function TTCC_Curve.Edit: Integer;
+var
+    ParamPointer: Integer;
+    ParamName: String;
+    Param: String;
 
-BEGIN
-  Result := 0;
+begin
+    Result := 0;
   // continue parsing with contents of Parser
-  ActiveTCC_CurveObj := ElementList.Active;
-  ActiveDSSObject := ActiveTCC_CurveObj;
+    ActiveTCC_CurveObj := ElementList.Active;
+    ActiveDSSObject := ActiveTCC_CurveObj;
 
-  WITH ActiveTCC_CurveObj DO BEGIN
+    with ActiveTCC_CurveObj do
+    begin
 
-     ParamPointer := 0;
-     ParamName := Parser.NextParam;
-     Param := Parser.StrValue;
-     WHILE Length(Param)>0 DO BEGIN
-         IF Length(ParamName) = 0 THEN Inc(ParamPointer)
-         ELSE ParamPointer := CommandList.GetCommand(ParamName);
- 
-         If (ParamPointer>0) and (ParamPointer<=NumProperties) Then PropertyValue[ParamPointer]:= Param;
+        ParamPointer := 0;
+        ParamName := Parser.NextParam;
+        Param := Parser.StrValue;
+        while Length(Param) > 0 do
+        begin
+            if Length(ParamName) = 0 then
+                Inc(ParamPointer)
+            else
+                ParamPointer := CommandList.GetCommand(ParamName);
 
-         CASE ParamPointer OF
-            0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 420);
-            1: Npts := Parser.Intvalue;
-            2: InterpretDblArray(Param, Npts, C_Values);   // Parser.ParseAsVector(Npts, Multipliers);
-            3: InterpretDblArray(Param, Npts, T_values);   // Parser.ParseAsVector(Npts, Hours);
-         ELSE
+            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
+                PropertyValue[ParamPointer] := Param;
+
+            case ParamPointer of
+                0:
+                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 420);
+                1:
+                    Npts := Parser.Intvalue;
+                2:
+                    InterpretDblArray(Param, Npts, C_Values);   // Parser.ParseAsVector(Npts, Multipliers);
+                3:
+                    InterpretDblArray(Param, Npts, T_values);   // Parser.ParseAsVector(Npts, Hours);
+            else
            // Inherited parameters
-             ClassEdit( ActiveTCC_CurveObj, ParamPointer - NumPropsThisClass)
-         END;
+                ClassEdit(ActiveTCC_CurveObj, ParamPointer - NumPropsThisClass)
+            end;
 
-         CASE ParamPointer OF
-           1: Begin    // Reallocate arrays to corresponde to Npts
-                 ReAllocmem(C_Values, Sizeof(C_Values^[1])*Npts);
-                 ReAllocmem(LogC, Sizeof(LogC^[1])*Npts);
-                 ReAllocmem(T_values, Sizeof(T_values^[1])*Npts);
-                 ReAllocmem(LogT, Sizeof(LogT^[1])*Npts);
-              End;
-           2: CalcLogPoints(C_Values, LogC, Npts);
-           3: CalcLogPoints(T_Values, LogT, Npts);
-         END;
+            case ParamPointer of
+                1:
+                begin    // Reallocate arrays to corresponde to Npts
+                    ReAllocmem(C_Values, Sizeof(C_Values^[1]) * Npts);
+                    ReAllocmem(LogC, Sizeof(LogC^[1]) * Npts);
+                    ReAllocmem(T_values, Sizeof(T_values^[1]) * Npts);
+                    ReAllocmem(LogT, Sizeof(LogT^[1]) * Npts);
+                end;
+                2:
+                    CalcLogPoints(C_Values, LogC, Npts);
+                3:
+                    CalcLogPoints(T_Values, LogT, Npts);
+            end;
 
-         ParamName := Parser.NextParam;
-         Param := Parser.StrValue;
-     END; {WHILE}
-  END; {WITH}
-END;
+            ParamName := Parser.NextParam;
+            Param := Parser.StrValue;
+        end; {WHILE}
+    end; {WITH}
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TTCC_Curve.MakeLike(Const ShapeName:String):Integer;
-VAR
-   OtherTCC_Curve:TTCC_CurveObj;
-   i:Integer;
-BEGIN
-   Result := 0;
+function TTCC_Curve.MakeLike(const ShapeName: String): Integer;
+var
+    OtherTCC_Curve: TTCC_CurveObj;
+    i: Integer;
+begin
+    Result := 0;
    {See if we can find this line code in the present collection}
-   OtherTCC_Curve := Find(ShapeName);
-   IF OtherTCC_Curve<>Nil THEN
-    WITH ActiveTCC_CurveObj DO BEGIN
-        Npts := OtherTCC_Curve.Npts;
-        ReAllocmem(C_Values, Sizeof(C_Values^[1])*Npts);
-        ReAllocmem(LogC, Sizeof(LogC^[1])*Npts);
-        ReAllocmem(T_values, Sizeof(T_values^[1])*Npts);
-        ReAllocmem(LogT, Sizeof(LogT^[1])*Npts);
-        FOR i := 1 To Npts DO C_Values^[i] := OtherTCC_Curve.C_Values^[i];
-        FOR i := 1 To Npts DO T_values^[i] := OtherTCC_Curve.T_values^[i];
-        FOR i := 1 To Npts DO LogC^[i] := OtherTCC_Curve.LogC^[i];
-        FOR i := 1 To Npts DO LogT^[i] := OtherTCC_Curve.LogT^[i];
+    OtherTCC_Curve := Find(ShapeName);
+    if OtherTCC_Curve <> NIL then
+        with ActiveTCC_CurveObj do
+        begin
+            Npts := OtherTCC_Curve.Npts;
+            ReAllocmem(C_Values, Sizeof(C_Values^[1]) * Npts);
+            ReAllocmem(LogC, Sizeof(LogC^[1]) * Npts);
+            ReAllocmem(T_values, Sizeof(T_values^[1]) * Npts);
+            ReAllocmem(LogT, Sizeof(LogT^[1]) * Npts);
+            for i := 1 to Npts do
+                C_Values^[i] := OtherTCC_Curve.C_Values^[i];
+            for i := 1 to Npts do
+                T_values^[i] := OtherTCC_Curve.T_values^[i];
+            for i := 1 to Npts do
+                LogC^[i] := OtherTCC_Curve.LogC^[i];
+            for i := 1 to Npts do
+                LogT^[i] := OtherTCC_Curve.LogT^[i];
 
-       For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherTCC_Curve.PropertyValue[i];
-    END
-   ELSE  DoSimpleMsg('Error in TCC_Curve MakeLike: "' + ShapeName + '" Not Found.', 421);
+            for i := 1 to ParentClass.NumProperties do
+                PropertyValue[i] := OtherTCC_Curve.PropertyValue[i];
+        end
+    else
+        DoSimpleMsg('Error in TCC_Curve MakeLike: "' + ShapeName + '" Not Found.', 421);
 
 
-END;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TTCC_Curve.Init(Handle:Integer):Integer;
-
-BEGIN
-   DoSimpleMsg('Need to implement TTCC_Curve.Init', -1);
-   REsult := 0;
-END;
-
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TTCC_Curve.Get_Code:String;  // Returns active line code string
-VAR
-  TCC_CurveObj:TTCC_CurveObj;
-
-BEGIN
-
-  TCC_CurveObj := ElementList.Active;
-  Result := TCC_CurveObj.Name;
-
-END;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TTCC_Curve.Set_Code(const Value:String);  // sets the  active TCC_Curve
+function TTCC_Curve.Init(Handle: Integer): Integer;
 
-VAR
-  TCC_CurveObj:TTCC_CurveObj;
-  
-BEGIN
+begin
+    DoSimpleMsg('Need to implement TTCC_Curve.Init', -1);
+    REsult := 0;
+end;
 
-    ActiveTCC_CurveObj := Nil;
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+function TTCC_Curve.Get_Code: String;  // Returns active line code string
+var
+    TCC_CurveObj: TTCC_CurveObj;
+
+begin
+
+    TCC_CurveObj := ElementList.Active;
+    Result := TCC_CurveObj.Name;
+
+end;
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+procedure TTCC_Curve.Set_Code(const Value: String);  // sets the  active TCC_Curve
+
+var
+    TCC_CurveObj: TTCC_CurveObj;
+
+begin
+
+    ActiveTCC_CurveObj := NIL;
     TCC_CurveObj := ElementList.First;
-    WHILE TCC_CurveObj<>Nil DO BEGIN
+    while TCC_CurveObj <> NIL do
+    begin
 
-       IF CompareText(TCC_CurveObj.Name, Value)=0 THEN BEGIN
-          ActiveTCC_CurveObj := TCC_CurveObj;
-          Exit;
-       END;
+        if CompareText(TCC_CurveObj.Name, Value) = 0 then
+        begin
+            ActiveTCC_CurveObj := TCC_CurveObj;
+            Exit;
+        end;
 
-       TCC_CurveObj := ElementList.Next;
-    END;
+        TCC_CurveObj := ElementList.Next;
+    end;
 
     DoSimpleMsg('TCC_Curve: "' + Value + '" not Found.', 422);
 
-END;
+end;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //      TTCC_Curve Obj
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-constructor TTCC_CurveObj.Create(ParClass:TDSSClass; const TCC_CurveName:String);
+constructor TTCC_CurveObj.Create(ParClass: TDSSClass; const TCC_CurveName: String);
 
-BEGIN
-     Inherited Create(ParClass);
-     Name := LowerCase(TCC_CurveName);
-     DSSObjType := ParClass.DSSClassType;
+begin
+    inherited Create(ParClass);
+    Name := LowerCase(TCC_CurveName);
+    DSSObjType := ParClass.DSSClassType;
 
-     LastValueAccessed := 1;
-     Npts := 0;
-     C_Values := Nil;
-     T_Values := Nil;
-     LogC     := Nil;
-     LogT     := Nil;
+    LastValueAccessed := 1;
+    Npts := 0;
+    C_Values := NIL;
+    T_Values := NIL;
+    LogC := NIL;
+    LogT := NIL;
 
-     InitPropertyValues(0);
+    InitPropertyValues(0);
 
-END;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TTCC_CurveObj.Destroy;
-BEGIN
+begin
 
     ReallocMem(T_Values, 0);
     ReallocMem(C_Values, 0);
     ReallocMem(LogC, 0);
     ReallocMem(LogT, 0);
-    Inherited destroy;
-END;
+    inherited destroy;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TTCC_CurveObj.GetTCCtime(const C_Value:double):double;
+function TTCC_CurveObj.GetTCCtime(const C_Value: Double): Double;
 
 // This function returns the operation time for the value given.
 // If the value is less than the first entry, return = -1 for No operation.
 // Log-Log  interpolation is used.
 
-VAR
-   i:Integer;
-   Logtest :Double;
+var
+    i: Integer;
+    Logtest: Double;
 
-BEGIN
+begin
 
-  Result := -1.0;    // default return value
+    Result := -1.0;    // default return value
 
   {If current is less than first point, just leave}
-  IF C_Value < C_Values^[1] THEN Exit;
+    if C_Value < C_Values^[1] then
+        Exit;
 
 
-  IF NPts>0 THEN         // Handle Exceptional cases
-  IF NPts=1 THEN Result := T_Values^[1]
-  ELSE BEGIN
+    if NPts > 0 then         // Handle Exceptional cases
+        if NPts = 1 then
+            Result := T_Values^[1]
+        else
+        begin
 
       { Start with previous value accessed under the assumption that most
         of the time, this function will be called sequentially}
 
-       IF C_Values^[LastValueAccessed] > C_Value THEN LastValueAccessed := 1;  // Start over from beginning
-       FOR i := LastValueAccessed+1 TO Npts DO BEGIN
+            if C_Values^[LastValueAccessed] > C_Value then
+                LastValueAccessed := 1;  // Start over from beginning
+            for i := LastValueAccessed + 1 to Npts do
+            begin
 
-           IF C_Values^[i]=C_Value THEN BEGIN
-             Result := T_Values^[i];        // direct hit!
-             LastValueAccessed := i;
-             Exit;
-           END
+                if C_Values^[i] = C_Value then
+                begin
+                    Result := T_Values^[i];        // direct hit!
+                    LastValueAccessed := i;
+                    Exit;
+                end
 
-           ELSE IF C_Values^[i]>C_Value THEN BEGIN   // Log-Log interpolation
-             LastValueAccessed := i-1;
-             IF C_value > 0.0
-                THEN LogTest := Ln(C_Value)
-                ELSE LogTest := Ln(0.001);
-             Result :=  exp( LogT^[LastValueAccessed] +
-                            (LogTest - LogC^[LastValueAccessed]) / (LogC^[i] - LogC^[LastValueAccessed])*
-                            (LogT^[i] - LogT^[LastValueAccessed]) );
-             Exit ;
-           END;
-       END;
+                else
+                if C_Values^[i] > C_Value then
+                begin   // Log-Log interpolation
+                    LastValueAccessed := i - 1;
+                    if C_value > 0.0 then
+                        LogTest := Ln(C_Value)
+                    else
+                        LogTest := Ln(0.001);
+                    Result := exp(LogT^[LastValueAccessed] +
+                        (LogTest - LogC^[LastValueAccessed]) / (LogC^[i] - LogC^[LastValueAccessed]) *
+                        (LogT^[i] - LogT^[LastValueAccessed]));
+                    Exit;
+                end;
+            end;
 
        // If we fall through the loop, just use last value
-       LastValueAccessed := Npts-1;
-       Result := T_Values^[Npts];
-  END;
+            LastValueAccessed := Npts - 1;
+            Result := T_Values^[Npts];
+        end;
 
-END;
+end;
 
-FUNCTION TTCC_CurveObj.GetOVTime(const V_Value: Double): double;
+function TTCC_CurveObj.GetOVTime(const V_Value: Double): Double;
 // Over-voltage, definite time relay
-VAR
-        i:integer;
+var
+    i: Integer;
 begin
-     result := -1.0;  // No op return
+    result := -1.0;  // No op return
 
-     IF V_Value > C_Values^[1]
-     THEN Begin
-         IF Npts = 1
-         THEN Result := T_Values^[1]
-         ELSE Begin
-             i := 1;
-             WHILE C_Values^[i] < V_Value Do
-             Begin
+    if V_Value > C_Values^[1] then
+    begin
+        if Npts = 1 then
+            Result := T_Values^[1]
+        else
+        begin
+            i := 1;
+            while C_Values^[i] < V_Value do
+            begin
                 inc(i);
-                IF i>Npts THEN Break;
-             End;
-             Result := T_Values^[i-1];
-         End;
+                if i > Npts then
+                    Break;
+            end;
+            Result := T_Values^[i - 1];
+        end;
 
-     End;
+    end;
 
 end;
 
 
-FUNCTION TTCC_CurveObj.GetUVTime(const V_Value: Double): double;
+function TTCC_CurveObj.GetUVTime(const V_Value: Double): Double;
 
 // Under-voltage, definite time relay
-VAR
-        i:integer;
+var
+    i: Integer;
 begin
-     result := -1.0;  // No op return
+    result := -1.0;  // No op return
 
-     IF V_Value < C_Values^[Npts] THEN
-      Begin
-         IF Npts = 1
-         THEN Result := T_Values^[1]
-         ELSE Begin
-             i := Npts;
-             WHILE C_Values^[i] > V_Value Do
-             Begin
+    if V_Value < C_Values^[Npts] then
+    begin
+        if Npts = 1 then
+            Result := T_Values^[1]
+        else
+        begin
+            i := Npts;
+            while C_Values^[i] > V_Value do
+            begin
                 dec(i);
-                IF i=0 THEN Break;
-             End;
-             Result := T_Values^[i+1];
-         End;
-      End;
+                if i = 0 then
+                    Break;
+            end;
+            Result := T_Values^[i + 1];
+        end;
+    end;
 
 end;
 
 
-
-Function TTCC_CurveObj.Value(i:Integer) :Double;
-Begin
-
-     If (i <= Npts) and (i > 0) Then Begin
-      Result := C_Values^[i];
-      LastValueAccessed := i;
-     End Else
-      Result := 0.0;
-
-End;
-
-FUNCTION TTCC_CurveObj.Time(i:Integer) :Double;
-Begin
-
-     If (i <= Npts) and (i > 0) Then Begin
-      Result := T_Values^[i];
-      LastValueAccessed := i;
-     End Else
-      Result := 0.0;
-
-End;
-
-
-PROCEDURE TTCC_CurveObj.DumpProperties(var F: TextFile; Complete: Boolean);
-
-Var
-   i :Integer;
-
-Begin
-    Inherited DumpProperties(F, Complete);
-
-    WITH ParentClass Do
-     FOR i := 1 to NumProperties Do
-     Begin
-          Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[i]);
-     End;
-end;
-
-FUNCTION TTCC_CurveObj.GetPropertyValue(Index: Integer): String;
+function TTCC_CurveObj.Value(i: Integer): Double;
 begin
-        Result := '';
 
-        CASE Index of
-          2: Result := GetDSSArray_Real( Npts, C_Values);
-          3: Result := GetDSSArray_Real( Npts, T_Values);
-        ELSE
-             Result := Inherited GetPropertyValue(index);
-        END;
+    if (i <= Npts) and (i > 0) then
+    begin
+        Result := C_Values^[i];
+        LastValueAccessed := i;
+    end
+    else
+        Result := 0.0;
+
+end;
+
+function TTCC_CurveObj.Time(i: Integer): Double;
+begin
+
+    if (i <= Npts) and (i > 0) then
+    begin
+        Result := T_Values^[i];
+        LastValueAccessed := i;
+    end
+    else
+        Result := 0.0;
+
+end;
+
+
+procedure TTCC_CurveObj.DumpProperties(var F: TextFile; Complete: Boolean);
+
+var
+    i: Integer;
+
+begin
+    inherited DumpProperties(F, Complete);
+
+    with ParentClass do
+        for i := 1 to NumProperties do
+        begin
+            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+        end;
+end;
+
+function TTCC_CurveObj.GetPropertyValue(Index: Integer): String;
+begin
+    Result := '';
+
+    case Index of
+        2:
+            Result := GetDSSArray_Real(Npts, C_Values);
+        3:
+            Result := GetDSSArray_Real(Npts, T_Values);
+    else
+        Result := inherited GetPropertyValue(index);
+    end;
 end;
 
 procedure TTCC_CurveObj.InitPropertyValues(ArrayOffset: Integer);
 begin
-     PropertyValue[1] := '0';     // Number of points to expect
-     PropertyValue[2] := '';     // vector of multiplier values
-     PropertyValue[3] := '';     // vextor of sec values
+    PropertyValue[1] := '0';     // Number of points to expect
+    PropertyValue[2] := '';     // vector of multiplier values
+    PropertyValue[3] := '';     // vextor of sec values
 
-     Inherited InitPropertyValues(NumPropsThisClass);
-     
+    inherited InitPropertyValues(NumPropsThisClass);
+
 end;
 
 end.

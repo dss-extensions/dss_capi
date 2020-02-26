@@ -1,4 +1,5 @@
 unit MeterClass;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -14,117 +15,123 @@ unit MeterClass;
 
 interface
 
-USES
+uses
     CktElementClass;
 
-TYPE
+type
     TMeterClass = class(TCktElementClass)
-    private
+    PRIVATE
 
-    protected
-      FUNCTION ClassEdit(Const ActiveMeterObj:Pointer; Const ParamPointer:Integer):Integer;
-      PROCEDURE ClassMakeLike(Const OtherObj:Pointer);
+    PROTECTED
+        function ClassEdit(const ActiveMeterObj: Pointer; const ParamPointer: Integer): Integer;
+        procedure ClassMakeLike(const OtherObj: Pointer);
 
-      PROCEDURE CountProperties;  // Add no. of intrinsic properties
-      PROCEDURE DefineProperties;  // Add Properties of this class to propName
+        procedure CountProperties;  // Add no. of intrinsic properties
+        procedure DefineProperties;  // Add Properties of this class to propName
 
-    public
-      NumMeterClassProps :Integer;
-      constructor Create;
-      destructor Destroy; override;
+    PUBLIC
+        NumMeterClassProps: Integer;
+        constructor Create;
+        destructor Destroy; OVERRIDE;
 
-       PROCEDURE ResetAll; Virtual;
-       PROCEDURE SampleAll; Virtual;  // Force all monitors to take a sample
-       PROCEDURE SaveAll;  Virtual;   // Force all monitors to save their buffers to disk
-    published
+        procedure ResetAll; VIRTUAL;
+        procedure SampleAll; VIRTUAL;  // Force all monitors to take a sample
+        procedure SaveAll; VIRTUAL;   // Force all monitors to save their buffers to disk
+    PUBLISHED
 
     end;
 
 
 implementation
 
-Uses MeterElement, ParserDel, DSSClassDefs, DSSGlobals;
+uses
+    MeterElement,
+    ParserDel,
+    DSSClassDefs,
+    DSSGlobals;
 
 constructor TMeterClass.Create;
 begin
 
-     Inherited Create;
-     NumMeterClassProps := 0;
-     DSSClassType := METER_ELEMENT;
+    inherited Create;
+    NumMeterClassProps := 0;
+    DSSClassType := METER_ELEMENT;
 end;
 
 destructor TMeterClass.Destroy;
 
 begin
-     Inherited Destroy;
-End;
+    inherited Destroy;
+end;
 
-PROCEDURE TMeterClass.CountProperties;
-Begin
-     NumProperties := NumProperties + NumMeterClassProps;
-     Inherited CountProperties;
-End;
+procedure TMeterClass.CountProperties;
+begin
+    NumProperties := NumProperties + NumMeterClassProps;
+    inherited CountProperties;
+end;
 
-PROCEDURE TMeterClass.DefineProperties;
+procedure TMeterClass.DefineProperties;
 
 // Define the properties for the base power delivery element class
 
-Begin
+begin
    // no properties
      // PropertyName^[ActiveProperty + 1] := 'propname';
      // PropertyHelp^[ActiveProperty + 1] := 'prop help';
 
-     ActiveProperty := ActiveProperty + NumMeterClassProps;
+    ActiveProperty := ActiveProperty + NumMeterClassProps;
 
-     Inherited DefineProperties;
-End;
+    inherited DefineProperties;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-FUNCTION TMeterClass.ClassEdit(Const ActiveMeterObj:Pointer; Const ParamPointer:Integer):Integer;
+function TMeterClass.ClassEdit(const ActiveMeterObj: Pointer; const ParamPointer: Integer): Integer;
 
 
-BEGIN
-  Result := 0;
+begin
+    Result := 0;
   // continue parsing with contents of Parser
-  If ParamPointer > 0 Then
-  WITH TMeterElement(ActiveMeterObj) DO BEGIN
+    if ParamPointer > 0 then
+        with TMeterElement(ActiveMeterObj) do
+        begin
 
       //CASE ParamPointer OF
        //1: BaseFrequency := Parser.Dblvalue;
        //ELSE
-       Inherited ClassEdit(ActiveMeterObj, ParamPointer - NumMeterClassProps)
+            inherited ClassEdit(ActiveMeterObj, ParamPointer - NumMeterClassProps)
       //END;
-  End;
+        end;
 
-End;
+end;
 
-PROCEDURE TMeterClass.ClassMakeLike(Const OtherObj:Pointer);
+procedure TMeterClass.ClassMakeLike(const OtherObj: Pointer);
 
 //Var
 //   OtherMeterObj : TMeterElement;
-Begin
+begin
 
 //     OtherMeterObj := TMeterElement(OtherObj);
-  TMeterElement.Create (OtherObj);
+    TMeterElement.Create(OtherObj);
      //With TPCElement(ActiveDSSObject) Do
      //Begin
      //  value:= OtherMeterObj.value;
      //End;
 
-End;
+end;
+
 procedure TMeterClass.ResetAll;
 begin
-     DoSimpleMsg('Programming Error: Base MeterClass.ResetAll Reached for Class: '+Name, 760);
+    DoSimpleMsg('Programming Error: Base MeterClass.ResetAll Reached for Class: ' + Name, 760);
 end;
 
 procedure TMeterClass.SampleAll;
 begin
-     DoSimpleMsg('Programming Error: Base MeterClass.SampleAll Reached for Class: '+Name, 761);
+    DoSimpleMsg('Programming Error: Base MeterClass.SampleAll Reached for Class: ' + Name, 761);
 end;
 
 procedure TMeterClass.SaveAll;
 begin
-     DoSimpleMsg('Programming Error: Base MeterClass.SaveAll Reached for Class: '+Name, 762);
+    DoSimpleMsg('Programming Error: Base MeterClass.SaveAll Reached for Class: ' + Name, 762);
 end;
 
 end.

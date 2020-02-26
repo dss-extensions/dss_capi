@@ -1,4 +1,5 @@
 unit DSSObject;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -8,109 +9,117 @@ unit DSSObject;
 
 interface
 
-Uses Arraydef, DSSClass, NamedObject;
+uses
+    Arraydef,
+    DSSClass,
+    NamedObject;
 
-TYPE
+type
 
-  TDSSObject = class(TNamedObject)
-    private
-      function  Get_PropertyValue(Index: Integer): String;
-      procedure Set_PropertyValue(Index: Integer; const Value: String);
-      function Get_Name: String;
-      procedure Set_Name(const Value: String);
+    TDSSObject = class(TNamedObject)
+    PRIVATE
+        function Get_PropertyValue(Index: Integer): String;
+        procedure Set_PropertyValue(Index: Integer; const Value: String);
+        function Get_Name: String;
+        procedure Set_Name(const Value: String);
 
-    protected
+    PROTECTED
 
-      PropSeqCount   :Integer;
-      FPropertyValue :pStringArray;
-      PrpSequence    :pIntegerArray;
+        PropSeqCount: Integer;
+        FPropertyValue: pStringArray;
+        PrpSequence: pIntegerArray;
 
-      Function  GetNextPropertySet(idx:Integer):Integer;
+        function GetNextPropertySet(idx: Integer): Integer;
 
-    public
+    PUBLIC
 
-      DSSObjType    :Integer; // PD, PC, Monitor, CondCode, etc.
-      ParentClass   :TDSSClass;
-      ClassIndex    :Integer;    // Index into the class collection list
+        DSSObjType: Integer; // PD, PC, Monitor, CondCode, etc.
+        ParentClass: TDSSClass;
+        ClassIndex: Integer;    // Index into the class collection list
 
-      HasBeenSaved  :Boolean;
-      Flag          :Boolean;  // General purpose Flag for each object  don't assume inited
+        HasBeenSaved: Boolean;
+        Flag: Boolean;  // General purpose Flag for each object  don't assume inited
 
-      constructor Create(ParClass:TDSSClass);
-      destructor Destroy; override;
+        constructor Create(ParClass: TDSSClass);
+        destructor Destroy; OVERRIDE;
 
-      Function Edit:Integer;  // Allow Calls to edit from object itself
+        function Edit: Integer;  // Allow Calls to edit from object itself
 
       {Get actual values of properties}
-      FUNCTION  GetPropertyValue(Index:Integer):String; Virtual;  // Use dssclass.propertyindex to get index by name
-      PROCEDURE InitPropertyValues(ArrayOffset:Integer); Virtual;
-      PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Virtual;
-      PROCEDURE SaveWrite(Var F:TextFile);Virtual;
+        function GetPropertyValue(Index: Integer): String; VIRTUAL;  // Use dssclass.propertyindex to get index by name
+        procedure InitPropertyValues(ArrayOffset: Integer); VIRTUAL;
+        procedure DumpProperties(var F: TextFile; Complete: Boolean); VIRTUAL;
+        procedure SaveWrite(var F: TextFile); VIRTUAL;
 
-      Procedure ClearPropSeqArray;
+        procedure ClearPropSeqArray;
 
-      Property PropertyValue[Index:Integer]:String Read Get_PropertyValue Write Set_PropertyValue;
+        property PropertyValue[Index: Integer]: String READ Get_PropertyValue WRITE Set_PropertyValue;
 
-      Property Name:String Read Get_Name Write Set_Name;
- END;
+        property Name: String READ Get_Name WRITE Set_Name;
+    end;
 
 
 implementation
 
-Uses Sysutils, Utilities;
+uses
+    Sysutils,
+    Utilities;
 
 procedure TDSSObject.ClearPropSeqArray;
-Var
-   i:Integer;
+var
+    i: Integer;
 begin
-     PropSeqCount := 0;
-     For i := 1 to ParentClass.NumProperties Do PrpSequence^[i] := 0;
+    PropSeqCount := 0;
+    for i := 1 to ParentClass.NumProperties do
+        PrpSequence^[i] := 0;
 
 end;
 
-constructor TDSSObject.Create(ParClass:TDSSClass);
-BEGIN
-   Inherited Create(ParClass.Name);
-   DSSObjType := 0;
-   PropSeqCount := 0;
-   ParentClass := ParClass;
-   FPropertyValue := Allocmem(SizeOf(FPropertyValue^[1])*ParentClass.NumProperties);
+constructor TDSSObject.Create(ParClass: TDSSClass);
+begin
+    inherited Create(ParClass.Name);
+    DSSObjType := 0;
+    PropSeqCount := 0;
+    ParentClass := ParClass;
+    FPropertyValue := Allocmem(SizeOf(FPropertyValue^[1]) * ParentClass.NumProperties);
 
    // init'd to zero when allocated
-   PrpSequence := Allocmem(SizeOf(PrpSequence^[1])*ParentClass.NumProperties);
+    PrpSequence := Allocmem(SizeOf(PrpSequence^[1]) * ParentClass.NumProperties);
 
-   HasBeenSaved := False;
+    HasBeenSaved := FALSE;
 
-END;
+end;
 
 destructor TDSSObject.Destroy;
 
-Var i:Integer;
+var
+    i: Integer;
 
-BEGIN
-   For i := 1 to ParentClass.NumProperties DO FPropertyValue^[i] := '';
-   Reallocmem(FPropertyValue,0);
-   Reallocmem(PrpSequence,0);
+begin
+    for i := 1 to ParentClass.NumProperties do
+        FPropertyValue^[i] := '';
+    Reallocmem(FPropertyValue, 0);
+    Reallocmem(PrpSequence, 0);
 
-   Inherited Destroy;
-END;
+    inherited Destroy;
+end;
 
 
-Procedure TDSSObject.DumpProperties(Var F:TextFile; Complete:Boolean);
-BEGIN
+procedure TDSSObject.DumpProperties(var F: TextFile; Complete: Boolean);
+begin
     Writeln(F);
-    Writeln(F,'New ', DSSClassName, '.', Name);
-END;
+    Writeln(F, 'New ', DSSClassName, '.', Name);
+end;
 
 function TDSSObject.Edit: Integer;
 begin
-     ParentClass.Active := ClassIndex;
-     Result := ParentClass.Edit;
+    ParentClass.Active := ClassIndex;
+    Result := ParentClass.Edit;
 end;
 
 function TDSSObject.GetPropertyValue(Index: Integer): String;
 begin
-     Result := FPropertyValue^[Index];  // Default Behavior   for all DSS Objects
+    Result := FPropertyValue^[Index];  // Default Behavior   for all DSS Objects
 end;
 
 function TDSSObject.Get_PropertyValue(Index: Integer): String;
@@ -120,71 +129,76 @@ end;
 
 procedure TDSSObject.InitPropertyValues(ArrayOffset: Integer);
 begin
-     PropertyValue[ArrayOffset+1] := ''; //Like   Property
+    PropertyValue[ArrayOffset + 1] := ''; //Like   Property
 
      // Clear propertySequence Array  after initialization
-     ClearPropSeqArray;
+    ClearPropSeqArray;
 
 end;
 
 procedure TDSSObject.SaveWrite(var F: TextFile);
 var
-   iprop:Integer;
-   str  :String;
+    iprop: Integer;
+    str: String;
 begin
    {Write only properties that were explicitly set in the
    final order they were actually set}
-   iProp := GetNextPropertySet(0); // Works on ActiveDSSObject
-   While iProp >0 Do
-     Begin
-      str:= trim(PropertyValue[iProp]);
-      if Comparetext(str, '----')=0 then str:=''; // set to ignore this property
-      if Length(str)>0 then  Begin
-          With ParentClass Do Write(F,' ', PropertyName^[RevPropertyIdxMap[iProp]]);
-          Write(F, '=', CheckForBlanks(str));
-      End;
-      iProp := GetNextPropertySet(iProp);
-     End;
+    iProp := GetNextPropertySet(0); // Works on ActiveDSSObject
+    while iProp > 0 do
+    begin
+        str := trim(PropertyValue[iProp]);
+        if Comparetext(str, '----') = 0 then
+            str := ''; // set to ignore this property
+        if Length(str) > 0 then
+        begin
+            with ParentClass do
+                Write(F, ' ', PropertyName^[RevPropertyIdxMap[iProp]]);
+            Write(F, '=', CheckForBlanks(str));
+        end;
+        iProp := GetNextPropertySet(iProp);
+    end;
 end;
 
-Function TDSSObject.GetNextPropertySet(idx:Integer):Integer;
+function TDSSObject.GetNextPropertySet(idx: Integer): Integer;
 // Find next larger property sequence number
 // return 0 if none found
 
-Var
-   i, smallest:integer;
-Begin
+var
+    i, smallest: Integer;
+begin
 
-     Smallest := 9999999; // some big number
-     Result := 0;
+    Smallest := 9999999; // some big number
+    Result := 0;
 
-     If idx>0 Then idx := PrpSequence^[idx];
-     For i := 1 to ParentClass.NumProperties Do
-     Begin
-        If PrpSequence^[i]>idx Then
-          If PrpSequence^[i]<Smallest Then
-            Begin
-               Smallest := PrpSequence^[i];
-               Result := i;
-            End;
-     End;
+    if idx > 0 then
+        idx := PrpSequence^[idx];
+    for i := 1 to ParentClass.NumProperties do
+    begin
+        if PrpSequence^[i] > idx then
+            if PrpSequence^[i] < Smallest then
+            begin
+                Smallest := PrpSequence^[i];
+                Result := i;
+            end;
+    end;
 
-End;
+end;
 
 procedure TDSSObject.Set_Name(const Value: String);
 begin
 // If renamed, then let someone know so hash list can be updated;
-  If Length(LocalName)>0 Then ParentClass.ElementNamesOutOfSynch := True;
-  LocalName := Value;
+    if Length(LocalName) > 0 then
+        ParentClass.ElementNamesOutOfSynch := TRUE;
+    LocalName := Value;
 end;
 
-function TDSSObject.Get_Name:String;
+function TDSSObject.Get_Name: String;
 begin
-   Result:=LocalName;
+    Result := LocalName;
 end;
 
 procedure TDSSObject.Set_PropertyValue(Index: Integer;
-  const Value: String);
+    const Value: String);
 begin
     FPropertyValue^[Index] := Value;
 

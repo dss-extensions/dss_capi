@@ -2,120 +2,152 @@ unit DActiveClass;
 
 interface
 
-function ActiveClassI(mode:longint; arg: longint):longint; cdecl;
-function ActiveClassS(mode:longint; arg: pAnsiChar):pAnsiChar; cdecl;
-procedure ActiveClassV(mode:longint; out arg: variant); cdecl;
+function ActiveClassI(mode: Longint; arg: Longint): Longint; CDECL;
+function ActiveClassS(mode: Longint; arg: pAnsiChar): pAnsiChar; CDECL;
+procedure ActiveClassV(mode: Longint; out arg: Variant); CDECL;
 
 implementation
 
-uses DSSGlobals, DSSObject, Variants, CktElement, PCElement, DSSClass, PDClass, PCClass, MeterClass, ControlClass;
+uses
+    DSSGlobals,
+    DSSObject,
+    Variants,
+    CktElement,
+    PCElement,
+    DSSClass,
+    PDClass,
+    PCClass,
+    MeterClass,
+    ControlClass;
 
-function ActiveClassI(mode:longint; arg: longint):longint; cdecl;
+function ActiveClassI(mode: Longint; arg: Longint): Longint; CDECL;
 begin
-  case mode of
-  0: begin  // ActiveClass.First
-       Result := 0;
-       If (ActiveCircuit[ActiveActor] <> Nil) and Assigned(ActiveDSSClass[ActiveActor]) Then
-       Begin
-            Result := ActiveDSSClass[ActiveActor].First;  // sets active objects
-       End;
-  end;
-  1: begin  // ActiveClass.Next
-       Result := 0;
-       If (ActiveCircuit[ActiveActor] <> Nil) and Assigned(ActiveDSSClass[ActiveActor]) Then
-       Begin
-            Result := ActiveDSSClass[ActiveActor].Next;  // sets active objects
-       End;
-  end;
-  2: begin  //ActiveClass.NumElements
-        if Assigned(ActiveDSSClass[ActiveActor]) then  Result := ActiveDSSCLass[ActiveActor].ElementCount
-         Else Result := 0;
-  end;
-  3: begin  //ActiveClass.Count
-         if Assigned(ActiveDSSClass[ActiveActor]) then  Result := ActiveDSSCLass[ActiveActor].ElementCount
-         Else Result := 0;
-  end
-  else
-      Result:=-1;
-  end;
+    case mode of
+        0:
+        begin  // ActiveClass.First
+            Result := 0;
+            if (ActiveCircuit[ActiveActor] <> NIL) and Assigned(ActiveDSSClass[ActiveActor]) then
+            begin
+                Result := ActiveDSSClass[ActiveActor].First;  // sets active objects
+            end;
+        end;
+        1:
+        begin  // ActiveClass.Next
+            Result := 0;
+            if (ActiveCircuit[ActiveActor] <> NIL) and Assigned(ActiveDSSClass[ActiveActor]) then
+            begin
+                Result := ActiveDSSClass[ActiveActor].Next;  // sets active objects
+            end;
+        end;
+        2:
+        begin  //ActiveClass.NumElements
+            if Assigned(ActiveDSSClass[ActiveActor]) then
+                Result := ActiveDSSCLass[ActiveActor].ElementCount
+            else
+                Result := 0;
+        end;
+        3:
+        begin  //ActiveClass.Count
+            if Assigned(ActiveDSSClass[ActiveActor]) then
+                Result := ActiveDSSCLass[ActiveActor].ElementCount
+            else
+                Result := 0;
+        end
+    else
+        Result := -1;
+    end;
 end;
 
 //***************************String type properties*****************************
-function ActiveClassS(mode:longint; arg: pAnsiChar):pAnsiChar; cdecl;
+function ActiveClassS(mode: Longint; arg: pAnsiChar): pAnsiChar; CDECL;
 
-Var
-  pelem:TDSSObject;
+var
+    pelem: TDSSObject;
 
 begin
-  Result:=pAnsiChar(AnsiString('0'));
-  case mode of
-  0: begin  // ActiveClass.Name read
-      if Assigned(ActiveDSSObject[ActiveActor]) then  Result := pAnsiChar(AnsiString(ActiveDSSObject[ActiveActor].Name))
-      Else Result := pAnsiChar(AnsiString(''));
-  end;
-  1: begin  // ActiveClass.Name write
-     If  Assigned(ActiveDSSClass[ActiveActor]) Then  Begin
-         pelem := ActiveDSSClass[ActiveActor].Find(widestring(arg));
-         if pelem <> Nil then Begin
-            if pelem is TDSSCktElement then
-             ActiveCircuit[ActiveActor].ActiveCktElement := TDSSCktElement(pelem)  // sets ActiveDSSobject
-          Else
-             ActiveDSSObject[ActiveActor] := pelem;
-         End;
-     End;
-  end;
-  2: begin  // ActiveClass.ActiveClassName
-     if Assigned(ActiveDSSClass[ActiveActor]) then  Result := pAnsiChar(AnsiString(ActiveDSSCLass[ActiveActor].Name))
-     Else Result := pAnsiChar(AnsiString(''));
-  end;
-  3: begin  // ActiveClass.ActiveClassParent
-     if Assigned(ActiveDSSClass[ActiveActor]) then
-     Begin
-      Result  :=  pAnsiChar('Generic Object');
+    Result := pAnsiChar(Ansistring('0'));
+    case mode of
+        0:
+        begin  // ActiveClass.Name read
+            if Assigned(ActiveDSSObject[ActiveActor]) then
+                Result := pAnsiChar(Ansistring(ActiveDSSObject[ActiveActor].Name))
+            else
+                Result := pAnsiChar(Ansistring(''));
+        end;
+        1:
+        begin  // ActiveClass.Name write
+            if Assigned(ActiveDSSClass[ActiveActor]) then
+            begin
+                pelem := ActiveDSSClass[ActiveActor].Find(Widestring(arg));
+                if pelem <> NIL then
+                begin
+                    if pelem is TDSSCktElement then
+                        ActiveCircuit[ActiveActor].ActiveCktElement := TDSSCktElement(pelem)  // sets ActiveDSSobject
+                    else
+                        ActiveDSSObject[ActiveActor] := pelem;
+                end;
+            end;
+        end;
+        2:
+        begin  // ActiveClass.ActiveClassName
+            if Assigned(ActiveDSSClass[ActiveActor]) then
+                Result := pAnsiChar(Ansistring(ActiveDSSCLass[ActiveActor].Name))
+            else
+                Result := pAnsiChar(Ansistring(''));
+        end;
+        3:
+        begin  // ActiveClass.ActiveClassParent
+            if Assigned(ActiveDSSClass[ActiveActor]) then
+            begin
+                Result := pAnsiChar('Generic Object');
 
-      if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TPCClass) then
-        Result  :=  pAnsiChar('TPCClas');
-      if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TPDClass) then
-        Result  :=  pAnsiChar('TPDClass');
-      if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TMeterClass) then
-        Result  :=  pAnsiChar('TMeterClass');
-      if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TControlClass) then
-        Result  :=  pAnsiChar('TControlClass');
-     End
-     Else Result := pAnsiChar(AnsiString('Parent Class unknonwn'));
-  end
-  else
-      Result:=pAnsiChar(AnsiString('Error, parameter not recognized'));
-  end;
+                if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TPCClass) then
+                    Result := pAnsiChar('TPCClas');
+                if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TPDClass) then
+                    Result := pAnsiChar('TPDClass');
+                if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TMeterClass) then
+                    Result := pAnsiChar('TMeterClass');
+                if ActiveDSSClass[ActiveActor].ClassType.InheritsFrom(TControlClass) then
+                    Result := pAnsiChar('TControlClass');
+            end
+            else
+                Result := pAnsiChar(Ansistring('Parent Class unknonwn'));
+        end
+    else
+        Result := pAnsiChar(Ansistring('Error, parameter not recognized'));
+    end;
 end;
 
 //*****************************Variant type properties**************************
-procedure ActiveClassV(mode:longint; out arg: Variant); cdecl;
+procedure ActiveClassV(mode: Longint; out arg: Variant); CDECL;
 
-Var
-  idx: Integer;
-  k:Integer;
+var
+    idx: Integer;
+    k: Integer;
 
 begin
-  case mode of
-  0: begin
-    If (ActiveCircuit[ActiveActor] <> Nil) and Assigned(ActiveDSSClass[ActiveActor]) Then
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       arg := VarArrayCreate([0, ActiveDSSClass[ActiveActor].ElementCount-1], varOleStr);
-       k:=0;
-       idx := ActiveDSSClass[ActiveActor].First;
-       WHILE idx > 0 DO  Begin
-          arg[k] := ActiveDSSObject[ActiveActor].Name;
-          Inc(k);
-          idx := ActiveDSSClass[ActiveActor].Next;
-       End;
-     End
-    ELSE arg := VarArrayCreate([0, 0], varOleStr);
-  end
-  else
-      arg[0]:='Error,parameter not recognized';
-  end;
+    case mode of
+        0:
+        begin
+            if (ActiveCircuit[ActiveActor] <> NIL) and Assigned(ActiveDSSClass[ActiveActor]) then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    arg := VarArrayCreate([0, ActiveDSSClass[ActiveActor].ElementCount - 1], varOleStr);
+                    k := 0;
+                    idx := ActiveDSSClass[ActiveActor].First;
+                    while idx > 0 do
+                    begin
+                        arg[k] := ActiveDSSObject[ActiveActor].Name;
+                        Inc(k);
+                        idx := ActiveDSSClass[ActiveActor].Next;
+                    end;
+                end
+            else
+                arg := VarArrayCreate([0, 0], varOleStr);
+        end
+    else
+        arg[0] := 'Error,parameter not recognized';
+    end;
 end;
 
 end.

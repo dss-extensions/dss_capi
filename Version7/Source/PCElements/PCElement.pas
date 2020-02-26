@@ -10,180 +10,197 @@ unit PCElement;
 
 interface
 
-USES CktElement, ucomplex, DSSClass, Spectrum, Arraydef, Meterelement;
+uses
+    CktElement,
+    ucomplex,
+    DSSClass,
+    Spectrum,
+    Arraydef,
+    Meterelement;
 
-TYPE
-   TPCElement = class(TDSSCktElement)
-  private
-      FIterminalUpdated:Boolean;
-    procedure set_ITerminalUpdated(const Value: Boolean);
-    Protected
-      Procedure GetTerminalCurrents(Curr:pComplexArray); virtual;
-      function Get_Variable(i: Integer): Double; virtual;
-      procedure Set_Variable(i: Integer;  Value: Double);  virtual;
+type
+    TPCElement = class(TDSSCktElement)
+    PRIVATE
+        FIterminalUpdated: Boolean;
+        procedure set_ITerminalUpdated(const Value: Boolean);
+    PROTECTED
+        procedure GetTerminalCurrents(Curr: pComplexArray); VIRTUAL;
+        function Get_Variable(i: Integer): Double; VIRTUAL;
+        procedure Set_Variable(i: Integer; Value: Double); VIRTUAL;
 
-     public
-
-       
-       Spectrum:String;
-       SpectrumObj:TSpectrumObj;
-
-       MeterObj,  {Upline Energymeter}
-       SensorObj  :TMeterElement; // Upline Sensor for this element
-
-       InjCurrent:pComplexArray;
+    PUBLIC
 
 
+        Spectrum: String;
+        SpectrumObj: TSpectrumObj;
 
-       constructor Create(ParClass:TDSSClass);
-       destructor Destroy; override;
+        MeterObj,  {Upline Energymeter}
+        SensorObj: TMeterElement; // Upline Sensor for this element
 
-       Procedure ZeroInjCurrent;
+        InjCurrent: pComplexArray;
 
-       PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
-       Procedure GetCurrents(Curr: pComplexArray); Override; // Get present values of terminal
-       Procedure GetInjCurrents(Curr: pComplexArray); Override; // Get present values of terminal
-       Procedure ComputeIterminal;Override;
-       Function  InjCurrents:Integer; Override;
-       Procedure CalcYPrimContribution(Curr: pComplexArray);
-       Procedure DumpProperties(Var F:TextFile; Complete:Boolean);Override;
+
+        constructor Create(ParClass: TDSSClass);
+        destructor Destroy; OVERRIDE;
+
+        procedure ZeroInjCurrent;
+
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
+        procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present values of terminal
+        procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE; // Get present values of terminal
+        procedure ComputeIterminal; OVERRIDE;
+        function InjCurrents: Integer; OVERRIDE;
+        procedure CalcYPrimContribution(Curr: pComplexArray);
+        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
 
       // Sweep solution removed  PROCEDURE BackwardSweep;Override;
 
       // For Harmonics Mode
-       Procedure InitHarmonics; Virtual;
+        procedure InitHarmonics; VIRTUAL;
 
        // For Dynamics Mode and Control Devices
-       Procedure InitStateVars; Virtual;
-       Procedure IntegrateStates;Virtual;
-       Function NumVariables:Integer; Virtual;
-       Procedure GetAllVariables( States:pDoubleArray);Virtual;
+        procedure InitStateVars; VIRTUAL;
+        procedure IntegrateStates; VIRTUAL;
+        function NumVariables: Integer; VIRTUAL;
+        procedure GetAllVariables(States: pDoubleArray); VIRTUAL;
 
-       Function VariableName(i:Integer):String;Virtual;
-       Function LookupVariable(const s:string):Integer;
-       
-       Property Variable[i:Integer]:Double read Get_Variable write Set_Variable;
+        function VariableName(i: Integer): String; VIRTUAL;
+        function LookupVariable(const s: String): Integer;
 
-       Property ITerminalUpdated:Boolean read FITerminalUpdated write set_ITerminalUpdated;
+        property Variable[i: Integer]: Double READ Get_Variable WRITE Set_Variable;
 
-   end;
+        property ITerminalUpdated: Boolean READ FITerminalUpdated WRITE set_ITerminalUpdated;
+
+    end;
 
 
 implementation
 
-USES
-    DSSClassDefs, DSSGlobals, Sysutils;
+uses
+    DSSClassDefs,
+    DSSGlobals,
+    Sysutils;
 
-
-Constructor TPCElement.Create(ParClass:TDSSClass);
-Begin
-    Inherited Create(ParClass);
+constructor TPCElement.Create(ParClass: TDSSClass);
+begin
+    inherited Create(ParClass);
     Spectrum := 'default';
     SpectrumObj := NIL;  // have to allocate later because not guaranteed there will be one now.
-    SensorObj   := NIL;
-    MeterObj    := NIL;
-    InjCurrent  := NIL;
+    SensorObj := NIL;
+    MeterObj := NIL;
+    InjCurrent := NIL;
     FIterminalUpdated := FALSE;
-    
+
     DSSObjType := PC_ELEMENT;
-End;
+end;
 
 destructor TPCElement.Destroy;
-Begin
-   If Assigned(InjCurrent) Then Reallocmem(InjCurrent, 0);
-   Inherited Destroy;
-End;
+begin
+    if Assigned(InjCurrent) then
+        Reallocmem(InjCurrent, 0);
+    inherited Destroy;
+end;
 
-Function TPCElement.InjCurrents:Integer;
+function TPCElement.InjCurrents: Integer;
 
 // Add injection currents into System currents array
 
-VAR
-   i:Integer;
-Begin
+var
+    i: Integer;
+begin
     Result := 0;
-    With ActiveCircuit.Solution Do
-    FOR i := 1 TO Yorder Do Caccum(Currents^[NodeRef^[i]], InjCurrent^[i]);
-End;
+    with ActiveCircuit.Solution do
+        for i := 1 to Yorder do
+            Caccum(Currents^[NodeRef^[i]], InjCurrent^[i]);
+end;
 
-Procedure TPCElement.GetInjCurrents(Curr: pComplexArray);
-Begin
-    DoErrorMsg('PCElement.InjCurrents',('Improper call to GetInjCurrents for Element: ' + Name + '.'),
+procedure TPCElement.GetInjCurrents(Curr: pComplexArray);
+begin
+    DoErrorMsg('PCElement.InjCurrents', ('Improper call to GetInjCurrents for Element: ' + Name + '.'),
         'Called PCELEMENT class virtual function instead of actual.', 640)
-End;
+end;
 
 //= = =  = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure TPCElement.GetTerminalCurrents(Curr:pComplexArray);
+procedure TPCElement.GetTerminalCurrents(Curr: pComplexArray);
 
 // This is called only if we need to compute the terminal currents from the inj currents
 // Such as for Harmonic model
 
-Var i:Integer;
-Begin
+var
+    i: Integer;
+begin
 
-    If ITerminalUpdated Then
-    Begin   // Just copy iTerminal unless iTerminal=Curr
-       If Curr <> ITerminal Then
-         For i := 1 to Yorder Do Curr^[i] := ITerminal^[i];
-    End
-    Else Begin
+    if ITerminalUpdated then
+    begin   // Just copy iTerminal unless iTerminal=Curr
+        if Curr <> ITerminal then
+            for i := 1 to Yorder do
+                Curr^[i] := ITerminal^[i];
+    end
+    else
+    begin
         YPrim.MVmult(Curr, VTerminal);
-        For i := 1 to Yorder Do CAccum(Curr^[i], CNegate(Injcurrent^[i]));
+        for i := 1 to Yorder do
+            CAccum(Curr^[i], CNegate(Injcurrent^[i]));
         IterminalUpdated := TRUE;
-    End;
+    end;
     IterminalSolutionCount := ActiveCircuit.Solution.SolutionCount;
-End;
+end;
 
 //= = =  = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-Procedure TPCElement.GetCurrents(Curr: pComplexArray);
+procedure TPCElement.GetCurrents(Curr: pComplexArray);
 
 {Gets total Currents going INTO a devices terminals}
 
-VAR
-   i:Integer;
+var
+    i: Integer;
 
-Begin
-  TRY
+begin
+    try
 
-   WITH ActiveCircuit.Solution DO  Begin
-     If  (Enabled)
-     THEN Begin
+        with ActiveCircuit.Solution do
+        begin
+            if (Enabled) then
+            begin
 
-       IF (LastSolutionWasDirect) AND (NOT (IsDynamicModel or IsHarmonicModel))
-       THEN Begin
-       
+                if (LastSolutionWasDirect) and (not (IsDynamicModel or IsHarmonicModel)) then
+                begin
+
            // Take a short cut and get Currents from YPrim only
            // For case where model is entirely in Y matrix
 
-           CalcYPrimContribution(Curr);
+                    CalcYPrimContribution(Curr);
 
-       End
-       ELSE Begin
+                end
+                else
+                begin
 
-           GetTerminalCurrents(Curr);
-       End; {IF}
+                    GetTerminalCurrents(Curr);
+                end; {IF}
 
-     End
-     ELSE Begin   // not enabled
-          FOR i := 1 TO Yorder DO Curr^[i] := CZERO;
-     End;
-   End;  {With}
+            end
+            else
+            begin   // not enabled
+                for i := 1 to Yorder do
+                    Curr^[i] := CZERO;
+            end;
+        end;  {With}
 
 
-  EXCEPT
-    On E: Exception Do DoErrorMsg(('GetCurrents for Element: ' + Name + '.'), E.Message,
-        'Inadequate storage allotted for circuit element.', 641);
-  End;
+    except
+        On E: Exception do
+            DoErrorMsg(('GetCurrents for Element: ' + Name + '.'), E.Message,
+                'Inadequate storage allotted for circuit element.', 641);
+    end;
 
-End;
+end;
 
-PROCEDURE TPCElement.CalcYPrimContribution(Curr: pComplexArray);
+procedure TPCElement.CalcYPrimContribution(Curr: pComplexArray);
 
 begin
-      ComputeVTerminal;
+    ComputeVTerminal;
       // Apply these voltages to Yprim
-      YPrim.MVMult(Curr, Vterminal);
+    YPrim.MVMult(Curr, Vterminal);
 end;
 
 procedure TPCElement.InitHarmonics;
@@ -195,9 +212,9 @@ end;
 procedure TPCElement.InitPropertyValues(ArrayOffset: Integer);
 begin
 
-  PropertyValue[ArrayOffset + 1] := Spectrum;
+    PropertyValue[ArrayOffset + 1] := Spectrum;
 
-  inherited InitPropertyValues(ArrayOffset + 1);
+    inherited InitPropertyValues(ArrayOffset + 1);
 
 end;
 
@@ -214,93 +231,96 @@ begin
 
 end;
 
-procedure TPCElement.GetAllVariables( States: pDoubleArray);
+procedure TPCElement.GetAllVariables(States: pDoubleArray);
 begin
      {Do Nothing}
 end;
 
 function TPCElement.NumVariables: Integer;
 begin
-     Result := 0;
+    Result := 0;
 end;
 
-Function TPCElement.VariableName(i: Integer):String;
+function TPCElement.VariableName(i: Integer): String;
 begin
    {Do Nothing}
-   Result := '';
+    Result := '';
 end;
 
-function TPCElement.LookupVariable(const S: string): Integer;
+function TPCElement.LookupVariable(const S: String): Integer;
 
 {Search through variable name list and return index if found}
 {Compare up to length of S}
 
-Var i, TestLength:integer;
+var
+    i, TestLength: Integer;
 
 begin
-     Result := -1;   // Returns -1 for error not found
-     TestLength := Length(S);
-     For i := 1 to NumVariables Do
-       Begin
-         If CompareText(Copy(VariableName(i),1,TestLength), S) = 0 Then
-           Begin
-             Result := i;
-             Break;
-           End;
-       End;
+    Result := -1;   // Returns -1 for error not found
+    TestLength := Length(S);
+    for i := 1 to NumVariables do
+    begin
+        if CompareText(Copy(VariableName(i), 1, TestLength), S) = 0 then
+        begin
+            Result := i;
+            Break;
+        end;
+    end;
 end;
 
 
 procedure TPCElement.DumpProperties(var F: TextFile; Complete: Boolean);
-Var
-  i:Integer;
+var
+    i: Integer;
 begin
-  inherited DumpProperties(F, Complete);
+    inherited DumpProperties(F, Complete);
 
-  If Complete then
-    Begin
-        Writeln(F,'! VARIABLES');
-        For i := 1 to NumVariables Do
-          Begin
-              Writeln(F, '! ',i:2, ': ',VariableName(i),' = ', Format('%-.5g',[Get_Variable(i)]));
-          End;
-    End;
+    if Complete then
+    begin
+        Writeln(F, '! VARIABLES');
+        for i := 1 to NumVariables do
+        begin
+            Writeln(F, '! ', i: 2, ': ', VariableName(i), ' = ', Format('%-.5g', [Get_Variable(i)]));
+        end;
+    end;
 
 end;
 
 function TPCElement.Get_Variable(i: Integer): Double;
 begin
    {do Nothing here -- up to override function}
-   Result := -9999.99;
+    Result := -9999.99;
 end;
 
-procedure TPCElement.Set_Variable(i: Integer;  Value: Double);
+procedure TPCElement.Set_Variable(i: Integer; Value: Double);
 begin
   {Do Nothing}
 end;
 
 
-
 procedure TPCElement.ComputeIterminal;
 begin
-  IF IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount THEN
-    Begin
-      GetCurrents(Iterminal);
-      IterminalSolutionCount := ActiveCircuit.Solution.SolutionCount;
-    End;
+    if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
+    begin
+        GetCurrents(Iterminal);
+        IterminalSolutionCount := ActiveCircuit.Solution.SolutionCount;
+    end;
 
 end;
 
 procedure TPCElement.ZeroInjCurrent;
-Var i:Integer;
+var
+    i: Integer;
 begin
-  For i := 1 to Yorder Do InjCurrent^[i] := CZERO ;
+    for i := 1 to Yorder do
+        InjCurrent^[i] := CZERO;
 end;
 
 procedure TPCElement.set_ITerminalUpdated(const Value: Boolean);
 begin
-  FITerminalUpdated := Value;
-  If Value Then ITerminalSolutionCount :=  ActiveCircuit.Solution.SolutionCount;
+    FITerminalUpdated := Value;
+    if Value then
+        ITerminalSolutionCount := ActiveCircuit.Solution.SolutionCount;
 end;
 
 end.

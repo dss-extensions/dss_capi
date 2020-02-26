@@ -1,4 +1,5 @@
 unit Utilities;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -13,617 +14,702 @@ unit Utilities;
 
 interface
 
-Uses ArrayDef, CktElement, PDElement, UComplex, UcMatrix, DSSClass, Classes{, StdCtrls};
+uses
+    ArrayDef,
+    CktElement,
+    PDElement,
+    UComplex,
+    UcMatrix,
+    DSSClass,
+    Classes{, StdCtrls};
 
-Function  CompareTextShortest(Const S1, S2:String):Integer;
-Procedure FireOffEditor(FileNm:String);
-Procedure DoDOSCmd(CmdString:String);
-Function  StripExtension(const S:String):String;
-Function  StripClassName(const S:String):String;  // Return only element name sans class.
-Function  GetNodeString(const Busname:String):String;
-Function  Pad(Const S:String; Width:Integer):String;
-Function  PadDots(Const S:String; Width:Integer):String;
-Function  PadTrunc(Const S:String; Width:Integer):String;
-Function  IntArrayToString( iarray:pIntegerArray; count:integer):String;
-Function  DblArrayToString(dblarray:pDoubleArray; count:integer):String;
-Function  CmplxArrayToString(cpxarray:pComplexArray; count:integer):String;
-Function  EncloseQuotes(Const s:String):String;
-Procedure ShowMessageBeep(Const s:String);
-Function  FullName(pElem :TDSSCktElement):String;
+function CompareTextShortest(const S1, S2: String): Integer;
+procedure FireOffEditor(FileNm: String);
+procedure DoDOSCmd(CmdString: String);
+function StripExtension(const S: String): String;
+function StripClassName(const S: String): String;  // Return only element name sans class.
+function GetNodeString(const Busname: String): String;
+function Pad(const S: String; Width: Integer): String;
+function PadDots(const S: String; Width: Integer): String;
+function PadTrunc(const S: String; Width: Integer): String;
+function IntArrayToString(iarray: pIntegerArray; count: Integer): String;
+function DblArrayToString(dblarray: pDoubleArray; count: Integer): String;
+function CmplxArrayToString(cpxarray: pComplexArray; count: Integer): String;
+function EncloseQuotes(const s: String): String;
+procedure ShowMessageBeep(const s: String);
+function FullName(pElem: TDSSCktElement): String;
 
 {Parsing Utilities}
-PROCEDURE ParseObjectClassandName(const FullObjName :String; Var ClassName, ObjName :String);
-PROCEDURE ParseIntArray(VAR iarray:pIntegerArray; VAR count:Integer; const s:string);
-FUNCTION  InterpretSolveMode(const s :string) :Integer;
-FUNCTION  InterpretControlMode(const s :string) :Integer;
-FUNCTION  InterpretLoadModel(const s :String) :Integer;
-FUNCTION  InterpretYesNo(const s :String) :Boolean;
-FUNCTION  InterpretRandom(const s :string) :Integer;
-FUNCTION  InterpretAddType(const s :string) :Integer;
-FUNCTION  InterpretConnection(const s :string) :Integer;
-FUNCTION  InterpretSolveAlg(const s :string) :Integer;
-FUNCTION  InterpretCktModel(const s :string) :Boolean;
-Procedure InitDblArray(NumValues:Integer; Xarray:pDoubleArray; Value:Double);
-procedure InitIntArray(NumValues:Integer; Xarray:pIntegerArray; Value:Integer);
-FUNCTION  InterpretDblArray(const s: string; MaxValues:Integer; ResultArray :pDoubleArray):Integer;
-FUNCTION  InterpretIntArray(const s: string; MaxValues:Integer; ResultArray :pIntegerArray):Integer;
-PROCEDURE InterpretAndAllocStrArray(const s: string; var Size:Integer;var ResultArray :pStringArray);
-PROCEDURE InterpretTStringListArray(const s: string; var ResultList :TStringList);
-FUNCTION  InterpretTimeStepSize(const s:string):double;
-FUNCTION  InterpretLoadShapeClass(const s:string):Integer;
-FUNCTION  InterpretEarthModel(const s:string):Integer;
-FUNCTION  InterpretColorName(const s:string):Integer;
-FUNCTION  InterpretComplex(const s:String):Complex;
-FUNCTION  ConstructElemName(const Param:string):string;
-FUNCTION  InterpretCoreType(const str:String):Integer;
+procedure ParseObjectClassandName(const FullObjName: String; var ClassName, ObjName: String);
+procedure ParseIntArray(var iarray: pIntegerArray; var count: Integer; const s: String);
+function InterpretSolveMode(const s: String): Integer;
+function InterpretControlMode(const s: String): Integer;
+function InterpretLoadModel(const s: String): Integer;
+function InterpretYesNo(const s: String): Boolean;
+function InterpretRandom(const s: String): Integer;
+function InterpretAddType(const s: String): Integer;
+function InterpretConnection(const s: String): Integer;
+function InterpretSolveAlg(const s: String): Integer;
+function InterpretCktModel(const s: String): Boolean;
+procedure InitDblArray(NumValues: Integer; Xarray: pDoubleArray; Value: Double);
+procedure InitIntArray(NumValues: Integer; Xarray: pIntegerArray; Value: Integer);
+function InterpretDblArray(const s: String; MaxValues: Integer; ResultArray: pDoubleArray): Integer;
+function InterpretIntArray(const s: String; MaxValues: Integer; ResultArray: pIntegerArray): Integer;
+procedure InterpretAndAllocStrArray(const s: String; var Size: Integer; var ResultArray: pStringArray);
+procedure InterpretTStringListArray(const s: String; var ResultList: TStringList);
+function InterpretTimeStepSize(const s: String): Double;
+function InterpretLoadShapeClass(const s: String): Integer;
+function InterpretEarthModel(const s: String): Integer;
+function InterpretColorName(const s: String): Integer;
+function InterpretComplex(const s: String): Complex;
+function ConstructElemName(const Param: String): String;
+function InterpretCoreType(const str: String): Integer;
 
-FUNCTION GetSolutionModeID:String;
-FUNCTION GetSolutionModeIDName(idx:Integer):String;
-FUNCTION GetControlModeID:String;
-FUNCTION GetRandomModeID:String;
-FUNCTION GetLoadModel:String;
-FUNCTION GetActiveLoadShapeClass:String;
-FUNCTION GetDSSArray_Real(n:Integer; dbls:pDoubleArray):String;
-FUNCTION GetDSSArray_Integer(n:Integer; ints:pIntegerArray):String;
-FUNCTION GetEarthModel(n:Integer):String;
-FUNCTION GetOCPDeviceType(pElem:TDSSCktElement) : Integer;
-FUNCTION GetOCPDeviceTypeString(icode:integer):String;
+function GetSolutionModeID: String;
+function GetSolutionModeIDName(idx: Integer): String;
+function GetControlModeID: String;
+function GetRandomModeID: String;
+function GetLoadModel: String;
+function GetActiveLoadShapeClass: String;
+function GetDSSArray_Real(n: Integer; dbls: pDoubleArray): String;
+function GetDSSArray_Integer(n: Integer; ints: pIntegerArray): String;
+function GetEarthModel(n: Integer): String;
+function GetOCPDeviceType(pElem: TDSSCktElement): Integer;
+function GetOCPDeviceTypeString(icode: Integer): String;
 
 
 {misc functions}
-Function  DoExecutiveCommand(const s:String):Integer;
-FUNCTION  GetCktElementIndex(const FullObjName :String) :Integer;
-FUNCTION  IsShuntElement(const Elem:TDSSCktElement):Boolean;
-FUNCTION  IsLineElement(const Elem:TDSSCktElement):Boolean;
-FUNCTION  IsTransformerElement(const Elem:TDSSCktElement):Boolean;
+function DoExecutiveCommand(const s: String): Integer;
+function GetCktElementIndex(const FullObjName: String): Integer;
+function IsShuntElement(const Elem: TDSSCktElement): Boolean;
+function IsLineElement(const Elem: TDSSCktElement): Boolean;
+function IsTransformerElement(const Elem: TDSSCktElement): Boolean;
 // --- moved to ReduceAlgs 2/13/19 Function  IsStubLine(const Elem:TDSSCktElement):Boolean;
-FUNCTION  CheckParallel(const Line1, Line2:TDSSCktElement): Boolean;
-FUNCTION  AllTerminalsClosed(ThisElement:TDSSCktElement):Boolean;
-FUNCTION  Str_Real(Const Value :Double; NumDecimals :Integer) :String;
-PROCEDURE DumpAllDSSCommands(Var Filename:String);
-PROCEDURE DumpAllocationFactors(Var Filename:String);
-PROCEDURE DumpComplexMatrix(Var F:TextFile; AMatrix:TcMatrix);
-FUNCTION  NearestBasekV(kV:Double):Double;
-FUNCTION  PresentTimeInSec:Double;
-FUNCTION  DoResetFaults:Integer;
-FUNCTION  DoResetControls:Integer;
-PROCEDURE DoResetKeepList;
-FUNCTION  GetNodeNum(NodeRef:Integer):Integer;
-PROCEDURE InitStringToNull(Var S:String);
-FUNCTION  CmulReal_im(const a:Complex; const Mult:Double):Complex;  // Multiply only imaginary part by a real
+function CheckParallel(const Line1, Line2: TDSSCktElement): Boolean;
+function AllTerminalsClosed(ThisElement: TDSSCktElement): Boolean;
+function Str_Real(const Value: Double; NumDecimals: Integer): String;
+procedure DumpAllDSSCommands(var Filename: String);
+procedure DumpAllocationFactors(var Filename: String);
+procedure DumpComplexMatrix(var F: TextFile; AMatrix: TcMatrix);
+function NearestBasekV(kV: Double): Double;
+function PresentTimeInSec: Double;
+function DoResetFaults: Integer;
+function DoResetControls: Integer;
+procedure DoResetKeepList;
+function GetNodeNum(NodeRef: Integer): Integer;
+procedure InitStringToNull(var S: String);
+function CmulReal_im(const a: Complex; const Mult: Double): Complex;  // Multiply only imaginary part by a real
 //FUNCTION IsValidNumericField(const NumberField:TEdit):Boolean;
-FUNCTION  MaxdblArrayValue(npts:Integer; dbls:pDoubleArray):Double;
-FUNCTION  iMaxAbsdblArrayValue(npts:Integer; dbls:pDoubleArray):Integer;
-FUNCTION QuadSolver(Const a, b, c: Double):Double; // returns largest of two answers
+function MaxdblArrayValue(npts: Integer; dbls: pDoubleArray): Double;
+function iMaxAbsdblArrayValue(npts: Integer; dbls: pDoubleArray): Integer;
+function QuadSolver(const a, b, c: Double): Double; // returns largest of two answers
 
 
 {Save Function Helper}
-Function  WriteClassFile(Const DSS_Class:TDSSClass; FileName:String; IsCktElement:Boolean):Boolean;
-Function  WriteVsourceClassFile(Const DSS_Class:TDSSClass; IsCktElement:Boolean):Boolean;
-Procedure WriteActiveDSSObject(Var F:TextFile; const NeworEdit:String);
-Function  checkforblanks(const S:String): String;
-Function  RewriteAlignedFile(const Filename:String):Boolean;
+function WriteClassFile(const DSS_Class: TDSSClass; FileName: String; IsCktElement: Boolean): Boolean;
+function WriteVsourceClassFile(const DSS_Class: TDSSClass; IsCktElement: Boolean): Boolean;
+procedure WriteActiveDSSObject(var F: TextFile; const NeworEdit: String);
+function checkforblanks(const S: String): String;
+function RewriteAlignedFile(const Filename: String): Boolean;
 
 {Event Log}
-PROCEDURE ClearEventLog;
-PROCEDURE AppendToEventLog(const opdev:string; Const action:String);
-PROCEDURE LogThisEvent(Const EventName:String);
+procedure ClearEventLog;
+procedure AppendToEventLog(const opdev: String; const action: String);
+procedure LogThisEvent(const EventName: String);
 
-PROCEDURE ClearErrorLog;
+procedure ClearErrorLog;
 
 {Routines for doing common things to complex numbers}
-PROCEDURE RotatePhasorDeg(Var Phasor:Complex; const  h, AngleDeg:Double);
-PROCEDURE RotatePhasorRad(Var Phasor:Complex; const  h, AngleRad:Double);
-Procedure ConvertComplexArrayToPolar(Const Buffer:pComplexArray; N:Integer);
-Procedure ConvertComplexArrayToPowerandPF(Const Buffer:pComplexArray;N:Integer);
-FUNCTION  Residual(p: Pointer; Nph:Integer):Complex;
-FUNCTION  ResidualPolar(p: Pointer; Nph:Integer):Complex;
-FUNCTION  Powerfactor(Const S:Complex):Double;
-FUNCTION  ConvertPFToPFRange2(const value:double):Double;
-FUNCTION  ConvertPFRange2ToPF(const value:double):Double;
-PROCEDURE CmulArray(pc:pcomplexarray; Multiplier:double; size:Integer);  // Multiply a complex array times a double
+procedure RotatePhasorDeg(var Phasor: Complex; const h, AngleDeg: Double);
+procedure RotatePhasorRad(var Phasor: Complex; const h, AngleRad: Double);
+procedure ConvertComplexArrayToPolar(const Buffer: pComplexArray; N: Integer);
+procedure ConvertComplexArrayToPowerandPF(const Buffer: pComplexArray; N: Integer);
+function Residual(p: Pointer; Nph: Integer): Complex;
+function ResidualPolar(p: Pointer; Nph: Integer): Complex;
+function Powerfactor(const S: Complex): Double;
+function ConvertPFToPFRange2(const value: Double): Double;
+function ConvertPFRange2ToPF(const value: Double): Double;
+procedure CmulArray(pc: pcomplexarray; Multiplier: Double; size: Integer);  // Multiply a complex array times a double
 
 {Support for going in and out of Dynamics Mode and Harmonics Mode}
-PROCEDURE CalcInitialMachineStates;
-PROCEDURE InvalidateAllPCELEMENTS;
-FUNCTION  InitializeForHarmonics:Boolean;
-FUNCTION  SavePresentVoltages:Boolean;
-FUNCTION  RetrieveSavedVoltages:Boolean;
+procedure CalcInitialMachineStates;
+procedure InvalidateAllPCELEMENTS;
+function InitializeForHarmonics: Boolean;
+function SavePresentVoltages: Boolean;
+function RetrieveSavedVoltages: Boolean;
 
-Function GetMaxPUVoltage:Double;
-Function GetMinPUVoltage(IgnoreNeutrals:Boolean):Double;
-Function GetTotalPowerFromSources:Complex;
-Function GetMaxCktElementSize:Integer;
-Function GetUniqueNodeNumber(const sBusName:String; StartNode:Integer):Integer;
+function GetMaxPUVoltage: Double;
+function GetMinPUVoltage(IgnoreNeutrals: Boolean): Double;
+function GetTotalPowerFromSources: Complex;
+function GetMaxCktElementSize: Integer;
+function GetUniqueNodeNumber(const sBusName: String; StartNode: Integer): Integer;
 
 {TraceBack Functions}
-Function  IsPathBetween(FromLine, ToLine:TPDElement):Boolean;
-Procedure TraceAndEdit(FromLine, ToLine:TPDElement; NPhases: Integer; EditStr:String);
-Procedure GoForwardAndRephase(FromLine:TPDElement; const PhaseString, EditStr, ScriptFileName:String; TransStop:Boolean);
+function IsPathBetween(FromLine, ToLine: TPDElement): Boolean;
+procedure TraceAndEdit(FromLine, ToLine: TPDElement; NPhases: Integer; EditStr: String);
+procedure GoForwardAndRephase(FromLine: TPDElement; const PhaseString, EditStr, ScriptFileName: String; TransStop: Boolean);
 
-Procedure MakeDistributedGenerators(kW, PF:double; How:String; Skip:Integer; Fname:String; DoGenerators:Boolean);
+procedure MakeDistributedGenerators(kW, PF: Double; How: String; Skip: Integer; Fname: String; DoGenerators: Boolean);
 
-Procedure Obfuscate;
+procedure Obfuscate;
 
 
 {Feeder Utilities} // not currently used
-Procedure EnableFeeders;
-Procedure DisableFeeders;
-Procedure InitializeFeeders;
-Procedure ForwardSweepAllFeeders;
-Procedure BackwardSweepAllFeeders;
-
+procedure EnableFeeders;
+procedure DisableFeeders;
+procedure InitializeFeeders;
+procedure ForwardSweepAllFeeders;
+procedure BackwardSweepAllFeeders;
 
 
 implementation
 
-Uses {$IFDEF FPC} Process, CmdForms,{$ELSE} Windows, ShellAPI, Dialogs, Graphics, DSSForms,{$ENDIF}
-     SysUtils,   DSSClassDefs,
-     DSSGlobals, Dynamics, Executive, ExecCommands, ExecOptions,
-     Solution,   DSSObject,math,
-     ParserDel,  Capacitor,Reactor,  Generator, Load,
-     Line,       Fault,    Feeder,    HashList,
-     EnergyMeter,PCElement,ControlElem;
+uses
+{$IFDEF FPC}
+    Process,
+    CmdForms,
+{$ELSE}
+    Windows,
+    ShellAPI,
+    Dialogs,
+    Graphics,
+    DSSForms,
+{$ENDIF}
+    SysUtils,
+    DSSClassDefs,
+    DSSGlobals,
+    Dynamics,
+    Executive,
+    ExecCommands,
+    ExecOptions,
+    Solution,
+    DSSObject,
+    math,
+    ParserDel,
+    Capacitor,
+    Reactor,
+    Generator,
+    Load,
+    Line,
+    Fault,
+    Feeder,
+    HashList,
+    EnergyMeter,
+    PCElement,
+    ControlElem;
 
-Const ZERONULL      :Integer=0;
-      padString     :String='                                                  '; //50 blanks
-      paddotsString :String=' .................................................'; //50 dots
+const
+    ZERONULL: Integer = 0;
+    padString: String = '                                                  '; //50 blanks
+    paddotsString: String = ' .................................................'; //50 dots
 
 
+function CompareTextShortest(const S1, S2: String): Integer;
+var
+    Teststr: String;
+begin
 
+    if Length(S1) < Length(S2) then
+    begin
+        TestStr := Copy(S2, 1, Length(S1));
+        Result := CompareText(TestStr, S1);
+    end
+    else
+    begin
+        TestStr := Copy(S1, 1, Length(S2));
+        Result := CompareText(TestStr, S2);
+    end;
 
-Function CompareTextShortest(Const S1, S2:String):Integer;
-VAR
-   Teststr:String;
-BEGIN
-
-   IF Length(S1)<Length(S2) THEN
-     BEGIN
-         TestStr := Copy(S2,1,Length(S1));
-         Result  := CompareText(TestStr,S1);
-     END
-   ELSE
-     BEGIN
-         TestStr := Copy(S1,1,Length(S2));
-         Result  := CompareText(TestStr,S2);
-     END;
-
-END;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Function Pad(Const S:String; Width:Integer):String;
+function Pad(const S: String; Width: Integer): String;
 // Pad out a string with blanks to Width characters
-BEGIN
-   Result := Copy(S,1,Length(S)) + Copy(padString, 1,(Width-Length(S)));
+begin
+    Result := Copy(S, 1, Length(S)) + Copy(padString, 1, (Width - Length(S)));
   // For i := 1 to Width-Length(S) DO Result := Result + ' ';
-END;
+end;
 
-Function PadDots(Const S:String; Width:Integer):String;
+function PadDots(const S: String; Width: Integer): String;
 // Pad out a string with dots to Width characters
-BEGIN
-   Result := Copy(S,1,Length(S)) + Copy(paddotsString, 1,(Width-Length(S)));
-END;
+begin
+    Result := Copy(S, 1, Length(S)) + Copy(paddotsString, 1, (Width - Length(S)));
+end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Function PadTrunc(Const S:String; Width:Integer):String;
+function PadTrunc(const S: String; Width: Integer): String;
 // Pad out a string with blanks to Width characters or truncate to Width Chars
-BEGIN
-     Result := Copy(Pad(S, Width), 1, Width);
-END;
+begin
+    Result := Copy(Pad(S, Width), 1, Width);
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Function FullName(pElem :TDSSCktElement):String;
-Begin
+function FullName(pElem: TDSSCktElement): String;
+begin
     Result := EncloseQuotes(pElem.DSSClassName + '.' + UpperCase(pElem.Name));
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Function StripExtension(const S:String):String;
+function StripExtension(const S: String): String;
 
 {Strips off everything up to a period.}
 
-VAR dotpos:Integer;
+var
+    dotpos: Integer;
 
-BEGIN
-    dotpos := pos('.',S) - 1;
-    If dotpos=(-1) THEN dotpos := Length(S);
+begin
+    dotpos := pos('.', S) - 1;
+    if dotpos = (-1) then
+        dotpos := Length(S);
     Result := Copy(S, 1, dotpos);
-END;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Function StripClassName(const S:String):String;
+function StripClassName(const S: String): String;
 {Returns everything past the first period}
 
-VAR dotpos:Integer;
+var
+    dotpos: Integer;
 
-BEGIN
-    dotpos := pos('.',S);
-    Result := Copy(S, dotpos+1, Length(S));
-End;
+begin
+    dotpos := pos('.', S);
+    Result := Copy(S, dotpos + 1, Length(S));
+end;
 
 {$IFDEF FPC}
-Procedure FireOffEditor(FileNm:String);
-Var
-   s: string;
-Begin
-  TRY
-  If FileExists(FileNm) Then
-  Begin
+procedure FireOffEditor(FileNm: String);
+var
+    s: String;
+begin
+    try
+        if FileExists(FileNm) then
+        begin
 {$IF (defined(Windows) or defined(MSWindows))}
-      RunCommand (DefaultEditor, [FileNm], s);
+            RunCommand(DefaultEditor, [FileNm], s);
 {$ELSE}
-      RunCommand ('/bin/bash',['-c', DefaultEditor + ' ' + FileNm],s);
+            RunCommand('/bin/bash', ['-c', DefaultEditor + ' ' + FileNm], s);
 {$ENDIF}
-  End;
-  EXCEPT
-      On E: Exception DO
-        DoErrorMsg('FireOffEditor.', E.Message,
-                   'Default Editor correctly specified???', 704);
-  END;
-End;
+        end;
+    except
+        On E: Exception do
+            DoErrorMsg('FireOffEditor.', E.Message,
+                'Default Editor correctly specified???', 704);
+    end;
+end;
 
-Procedure DoDOSCmd(CmdString:String);
-Var //Handle:Word;
-   s: string;
-Begin
-  TRY
+procedure DoDOSCmd(CmdString: String);
+var //Handle:Word;
+    s: String;
+begin
+    try
 {$IF (defined(Windows) or defined(MSWindows))}
-    RunCommand('cmd',['/c',CmdString],s);
+        RunCommand('cmd', ['/c', CmdString], s);
 {$ELSE}
-    RunCommand('/bin/bash',['-c',CmdString],s);
+        RunCommand('/bin/bash', ['-c', CmdString], s);
 {$ENDIF}
-  EXCEPT
-      On E: Exception DO
-        DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"',[E.Message, CmdString]), 704);
-  END;
-End;
+    except
+        On E: Exception do
+            DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"', [E.Message, CmdString]), 704);
+    end;
+end;
 
 {$ELSE}
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure FireOffEditor(FileNm:String);
-Var retval:Word;
-Begin
-  TRY
-  If FileExists(FileNm) Then
-  Begin
-      retval := ShellExecute (0, Nil, PChar(encloseQuotes(DefaultEditor)), PChar(encloseQuotes(FileNm)), Nil, SW_SHOW);
-      SetLastResultFile( FileNm);
+procedure FireOffEditor(FileNm: String);
+var
+    retval: Word;
+begin
+    try
+        if FileExists(FileNm) then
+        begin
+            retval := ShellExecute(0, NIL, Pchar(encloseQuotes(DefaultEditor)), Pchar(encloseQuotes(FileNm)), NIL, SW_SHOW);
+            SetLastResultFile(FileNm);
 
-      Case Retval of
-          0: DoSimpleMsg('System out of memory. Cannot start Editor.', 700);
-          ERROR_BAD_FORMAT: DoSimpleMsg('Editor File is Invalid.', 701);
-          ERROR_FILE_NOT_FOUND: DoSimpleMsg('Editor "'+DefaultEditor+'"  Not Found.'
-                                            +CRLF+'Did you set complete path name?', 702);
-          ERROR_PATH_NOT_FOUND: DoSimpleMsg('Path for Editor "'+DefaultEditor+'" Not Found.', 703);
-      End;
-  End;
-  EXCEPT
-      On E: Exception DO
-        DoErrorMsg('FireOffEditor.', E.Message,
-                   'Default Editor correctly specified???', 704);
-  END;
-End;
+            case Retval of
+                0:
+                    DoSimpleMsg('System out of memory. Cannot start Editor.', 700);
+                ERROR_BAD_FORMAT:
+                    DoSimpleMsg('Editor File is Invalid.', 701);
+                ERROR_FILE_NOT_FOUND:
+                    DoSimpleMsg('Editor "' + DefaultEditor + '"  Not Found.' + CRLF + 'Did you set complete path name?', 702);
+                ERROR_PATH_NOT_FOUND:
+                    DoSimpleMsg('Path for Editor "' + DefaultEditor + '" Not Found.', 703);
+            end;
+        end;
+    except
+        On E: Exception do
+            DoErrorMsg('FireOffEditor.', E.Message,
+                'Default Editor correctly specified???', 704);
+    end;
+end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure DoDOSCmd(CmdString:String);
-Var Handle:Word;
-Begin
-  TRY
-      Handle := 0;
-      ShellExecute(Handle, 'open', PChar('cmd.exe'), PChar(CmdString), nil, SW_SHOW);
+procedure DoDOSCmd(CmdString: String);
+var
+    Handle: Word;
+begin
+    try
+        Handle := 0;
+        ShellExecute(Handle, 'open', Pchar('cmd.exe'), Pchar(CmdString), NIL, SW_SHOW);
 
-  EXCEPT
-      On E: Exception DO
-        DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"',[E.Message, CmdString]), 704);
-  END;
-End;
+    except
+        On E: Exception do
+            DoSimpleMsg(Format('DoDOSCmd Error:%s. Error in Command "%s"', [E.Message, CmdString]), 704);
+    end;
+end;
 
 {$ENDIF}
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Function IntArrayToString( iarray:pIntegerArray; count:integer):String;
+function IntArrayToString(iarray: pIntegerArray; count: Integer): String;
 // Put array values in parentheses separated by commas.
 
-VAR
-   i:Integer;
+var
+    i: Integer;
 
-Begin
+begin
 
-     Result := '[NULL]';
-     If count>0 Then
-     Begin
-           Result := '[';
-           FOR i := 1 to count do
-           Begin
-               Result := Result + IntToStr(iarray^[i]);
-               IF i<> count
-               THEN Result := Result + ', ';
-           End;
-           Result := Result + ']';
-     End;
-
-end;
-
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Function DblArrayToString(dblarray:pDoubleArray; count:integer):String;
-// Put array values in brackets separated by commas.
-
-VAR
-   i:Integer;
-
-Begin
-     Result := '[NULL]';
-     If count>0 Then
-     Begin
-           Result :=Format('[%.10g',[dblarray^[1]] );
-           FOR i := 2 to count do Result := Result + Format(', %.10g',[dblarray^[i]]);
-           Result := Result + ']';
-     End;
+    Result := '[NULL]';
+    if count > 0 then
+    begin
+        Result := '[';
+        for i := 1 to count do
+        begin
+            Result := Result + IntToStr(iarray^[i]);
+            if i <> count then
+                Result := Result + ', ';
+        end;
+        Result := Result + ']';
+    end;
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Function CmplxArrayToString(cpxarray:pComplexArray; count:integer):String;
+function DblArrayToString(dblarray: pDoubleArray; count: Integer): String;
 // Put array values in brackets separated by commas.
 
-VAR
-   i:Integer;
+var
+    i: Integer;
 
-Begin
+begin
+    Result := '[NULL]';
+    if count > 0 then
+    begin
+        Result := Format('[%.10g', [dblarray^[1]]);
+        for i := 2 to count do
+            Result := Result + Format(', %.10g', [dblarray^[i]]);
+        Result := Result + ']';
+    end;
 
-     Result := '[NULL]';
-     If count>0 Then
-     Begin
-           Result :=Format('[%.10g +j %.10g',[cpxarray^[1].re, cpxarray^[1].im ] );
-           FOR i := 2 to count do Result := Result + Format(', %.10g +j %.10g',[cpxarray^[i].re, cpxarray^[i].im]);
-           Result := Result + ']';
-     End;
+end;
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+function CmplxArrayToString(cpxarray: pComplexArray; count: Integer): String;
+// Put array values in brackets separated by commas.
+
+var
+    i: Integer;
+
+begin
+
+    Result := '[NULL]';
+    if count > 0 then
+    begin
+        Result := Format('[%.10g +j %.10g', [cpxarray^[1].re, cpxarray^[1].im]);
+        for i := 2 to count do
+            Result := Result + Format(', %.10g +j %.10g', [cpxarray^[i].re, cpxarray^[i].im]);
+        Result := Result + ']';
+    end;
 
 end;
 
 
-Function EncloseQuotes(Const s:String):String;
-Begin
+function EncloseQuotes(const s: String): String;
+begin
     Result := '"' + s + '"';
-End;
-
+end;
 
 
 //----------------------------------------------------------------------------
-FUNCTION InterpretSolveMode(const s:string):Integer;
+function InterpretSolveMode(const s: String): Integer;
 
 // interpret solution mode
 // could be "nominal" "daily"  "yearly" "montecarlo" "dutycycle"  "loadduration" "peakdays" , etc.
 
-VAR
-    SLC:String;
-Begin
+var
+    SLC: String;
+begin
     SLC := lowercase(s);
 
-    CASE SLC[1] OF
-      's': Result := SNAPSHOT;
-      'd': CASE SLC[2] OF
-           'u': Result := DUTYCYCLE;
-           'i': Result := DIRECT;
-           'y': Result := DYNAMICMODE;
-           ELSE
-             Result := DAILYMODE;
-           End;
-      'f': Result := FAULTSTUDY;
-      'h': CASE SLC[9] of                   //Modification added by Davis Montenegro 25/06/2014
-           't':Result := HARMONICMODET;     // For adding the harmoncis mode in time domain
-           ELSE
-           Result := HARMONICMODE;
-           END;
-      'y': Result := YEARLYMODE;
-      'm': CASE SLC[2] of
-            '1': Result := MONTECARLO1;
-            '2': Result := MONTECARLO2;
-            '3': Result := MONTECARLO3;
-            'f': Result := MONTEFAULT;
-           ELSE
-            Result := MONTECARLO1;
-           End;
-      'p': Result := PEAKDAY;
-      'a': Result := AUTOADDFLAG;
-      'l': CASE SLC[2] of
-            'd': Case SLC[3] of
-                 '1': Result := LOADDURATION1;
-                 '2': Result := LOADDURATION2;
-                 Else
-                   Result := LOADDURATION1;
-                 End;
-           ELSE
-             Result := LOADDURATION1;
-           End;
-      't': Result := GENERALTIME;
+    case SLC[1] of
+        's':
+            Result := SNAPSHOT;
+        'd':
+            case SLC[2] of
+                'u':
+                    Result := DUTYCYCLE;
+                'i':
+                    Result := DIRECT;
+                'y':
+                    Result := DYNAMICMODE;
+            else
+                Result := DAILYMODE;
+            end;
+        'f':
+            Result := FAULTSTUDY;
+        'h':
+            case SLC[9] of                   //Modification added by Davis Montenegro 25/06/2014
+                't':
+                    Result := HARMONICMODET;     // For adding the harmoncis mode in time domain
+            else
+                Result := HARMONICMODE;
+            end;
+        'y':
+            Result := YEARLYMODE;
+        'm':
+            case SLC[2] of
+                '1':
+                    Result := MONTECARLO1;
+                '2':
+                    Result := MONTECARLO2;
+                '3':
+                    Result := MONTECARLO3;
+                'f':
+                    Result := MONTEFAULT;
+            else
+                Result := MONTECARLO1;
+            end;
+        'p':
+            Result := PEAKDAY;
+        'a':
+            Result := AUTOADDFLAG;
+        'l':
+            case SLC[2] of
+                'd':
+                    case SLC[3] of
+                        '1':
+                            Result := LOADDURATION1;
+                        '2':
+                            Result := LOADDURATION2;
+                    else
+                        Result := LOADDURATION1;
+                    end;
+            else
+                Result := LOADDURATION1;
+            end;
+        't':
+            Result := GENERALTIME;
 
-   ELSE
-     Result := SNAPSHOT;
-   End;
+    else
+        Result := SNAPSHOT;
+    end;
 
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-FUNCTION InterpretControlMode(const s:string):Integer;
+function InterpretControlMode(const s: String): Integer;
 
 // interpret solution control mode
 
-VAR
-    SLC:String;
-Begin
+var
+    SLC: String;
+begin
     SLC := lowercase(s);
 
-    CASE SLC[1] OF
-      'o': Result := CONTROLSOFF;
-      'e': Result := EVENTDRIVEN;    // "event"
-      't': Result := TIMEDRIVEN;     // "time"
-      'm': Result := MULTIRATE;     // "MultiRate"
-    ELSE
-       Result := CTRLSTATIC;
-    End;
+    case SLC[1] of
+        'o':
+            Result := CONTROLSOFF;
+        'e':
+            Result := EVENTDRIVEN;    // "event"
+        't':
+            Result := TIMEDRIVEN;     // "time"
+        'm':
+            Result := MULTIRATE;     // "MultiRate"
+    else
+        Result := CTRLSTATIC;
+    end;
 
 
-End;
+end;
 //----------------------------------------------------------------------------
-FUNCTION InterpretLoadModel(const s :String) :Integer;
-VAR
-   S2 :String;
-Begin
-   S2 := LowerCase(S);
-   Case S2[1] of
-     'a': Result := ADMITTANCE;
-     'p': Result := POWERFLOW;
-     else Result := ADMITTANCE;
-   End;
+function InterpretLoadModel(const s: String): Integer;
+var
+    S2: String;
+begin
+    S2 := LowerCase(S);
+    case S2[1] of
+        'a':
+            Result := ADMITTANCE;
+        'p':
+            Result := POWERFLOW;
+    else
+        Result := ADMITTANCE;
+    end;
 { If this represents a change, invalidate all the PC Yprims}
-   IF Result <> ActiveCircuit.Solution.LoadModel THEN
-     ActiveCircuit.InvalidateAllPCElements;
+    if Result <> ActiveCircuit.Solution.LoadModel then
+        ActiveCircuit.InvalidateAllPCElements;
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-FUNCTION InterpretYesNo(const s :String) :Boolean;
+function InterpretYesNo(const s: String): Boolean;
 
 //' Interpret Yes / no properties  - can also be True/False
-VAR
-   S2 :char;
-Begin
-   S2 := LowerCase(S)[1];
-   Case S2 of
-     'y','t': Result := TRUE;
-     'n','f': Result := FALSE;
-   ELSE
-     Result := FALSE;
-   End;
+var
+    S2: Char;
+begin
+    S2 := LowerCase(S)[1];
+    case S2 of
+        'y', 't':
+            Result := TRUE;
+        'n', 'f':
+            Result := FALSE;
+    else
+        Result := FALSE;
+    end;
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-FUNCTION InterpretRandom(const s :string) :Integer;
+function InterpretRandom(const s: String): Integer;
 
 // interpret the type of random variation in the load
 // none|gaussian|uniform |lognormal
 
-VAR
-    SLC :String;
-Begin
+var
+    SLC: String;
+begin
     SLC := lowercase(s);
 
-    CASE SLC[1] OF
-       'g':Result := GAUSSIAN;  //gaussian
-       'u':Result := UNIFORM;  //uniform
-       'l':Result := LOGNORMAL; // Log-Normal
-    ELSE
-           Result := 0;  // no variation for any other entry
-    End
+    case SLC[1] of
+        'g':
+            Result := GAUSSIAN;  //gaussian
+        'u':
+            Result := UNIFORM;  //uniform
+        'l':
+            Result := LOGNORMAL; // Log-Normal
+    else
+        Result := 0;  // no variation for any other entry
+    end
 
-End;
+end;
 
 
 //----------------------------------------------------------------------------
-FUNCTION  InterpretAddType(const s :string) :Integer;
+function InterpretAddType(const s: String): Integer;
 // type of device to automatically add. Default is capacitor
 
-VAR
-    SLC :String;
-Begin
+var
+    SLC: String;
+begin
     SLC := lowercase(s);
 
-    CASE SLC[1] OF
-        'g':Result := GENADD;
-    ELSE
-            Result := CAPADD;
-    End
+    case SLC[1] of
+        'g':
+            Result := GENADD;
+    else
+        Result := CAPADD;
+    end
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-FUNCTION  InterpretConnection(const s :string) :Integer;
+function InterpretConnection(const s: String): Integer;
 { Accepts  (Case insensitive)
     delta or LL    Result=1       
     Y, wye, or LN  Result=0
 }
-Begin
-     Result := 0;
-     CASE lowercase(S)[1] OF
-       'y','w': Result := 0;  {Wye}
-       'd': Result := 1;  {Delta or line-Line}
-       'l': CASE lowercase(s)[2] OF
-            'n': Result := 0;
-            'l': Result := 1;
-            End;
-     End;
-End;
+begin
+    Result := 0;
+    case lowercase(S)[1] of
+        'y', 'w':
+            Result := 0;  {Wye}
+        'd':
+            Result := 1;  {Delta or line-Line}
+        'l':
+            case lowercase(s)[2] of
+                'n':
+                    Result := 0;
+                'l':
+                    Result := 1;
+            end;
+    end;
+end;
 
 //----------------------------------------------------------------------------
-FUNCTION  InterpretSolveAlg(const s :string) :Integer;
+function InterpretSolveAlg(const s: String): Integer;
 
-VAR
-    SLC :String;
+var
+    SLC: String;
 
-Begin
+begin
     SLC := copy(lowercase(s), 1, 2);
 
-    If CompareText( SLC, 'ne')=0
-    Then  Result := NEWTONSOLVE
-    ELSE  Result := NORMALSOLVE;
+    if CompareText(SLC, 'ne') = 0 then
+        Result := NEWTONSOLVE
+    else
+        Result := NORMALSOLVE;
 
-End;
+end;
 
 
 //----------------------------------------------------------------------------
-FUNCTION  InterpretCktModel(const s :string) :Boolean;
+function InterpretCktModel(const s: String): Boolean;
 
 {Returns True if Positive Sequence}
 
-Begin
+begin
 
-     CASE s[1] of
-       'p', 'P': Result := True
-     ELSE
-         Result := False
-     END;
+    case s[1] of
+        'p', 'P':
+            Result := TRUE
+    else
+        Result := FALSE
+    end;
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-Function InterpretComplex(const s:String):Complex;
+function InterpretComplex(const s: String): Complex;
 
 // interpret first two entries as complex numbers
 
-VAR
-   ParmName :String;
+var
+    ParmName: String;
 
-Begin
-     Auxparser.CmdString := S;
-     ParmName := Auxparser.NextParam ;
-     Result.re  := AuxParser.dblvalue;
-     ParmName := Auxparser.NextParam ;
-     Result.im  := AuxParser.dblvalue;
-End;
+begin
+    Auxparser.CmdString := S;
+    ParmName := Auxparser.NextParam;
+    Result.re := AuxParser.dblvalue;
+    ParmName := Auxparser.NextParam;
+    Result.im := AuxParser.dblvalue;
+end;
 
 //----------------------------------------------------------------------------
 
-procedure InitDblArray(NumValues:Integer; Xarray:pDoubleArray; Value:Double);
-Var i :Integer;
+procedure InitDblArray(NumValues: Integer; Xarray: pDoubleArray; Value: Double);
+var
+    i: Integer;
 {Set all elements of a double array}
 begin
-      For i := 1 to NumValues Do Xarray^[i] := Value;
+    for i := 1 to NumValues do
+        Xarray^[i] := Value;
 end;
 
 //----------------------------------------------------------------------------
 
-procedure InitIntArray(NumValues:Integer; Xarray:pIntegerArray; Value:Integer);
-Var i :Integer;
+procedure InitIntArray(NumValues: Integer; Xarray: pIntegerArray; Value: Integer);
+var
+    i: Integer;
 {Set all elements of a Integer array}
 begin
-      For i := 1 to NumValues Do Xarray^[i] := Value;
+    for i := 1 to NumValues do
+        Xarray^[i] := Value;
 end;
 
 //----------------------------------------------------------------------------
-FUNCTION InterpretDblArray(const s: string; MaxValues:Integer; ResultArray :pDoubleArray):Integer;
+function InterpretDblArray(const s: String; MaxValues: Integer; ResultArray: pDoubleArray): Integer;
 
 { Get numeric values from an array specified either as a list on numbers or a text file spec.
   ResultArray must be allocated to MaxValues by calling routine.
@@ -644,1925 +730,2115 @@ FUNCTION InterpretDblArray(const s: string; MaxValues:Integer; ResultArray :pDou
 
 }
 
-VAR
-   ParmName,
-   Param    :String;
-   F        :Textfile;
-   MyStream :TMemoryStream;
-   i        :Integer;
-   Temp     :Single;
-   CSVFileName :String;
-   CSVColumn    :Integer;
-   CSVHeader   :Boolean;
-   InputLIne   :String;
-   iskip       :Integer;
+var
+    ParmName,
+    Param: String;
+    F: Textfile;
+    MyStream: TMemoryStream;
+    i: Integer;
+    Temp: Single;
+    CSVFileName: String;
+    CSVColumn: Integer;
+    CSVHeader: Boolean;
+    InputLIne: String;
+    iskip: Integer;
 
-Begin
+begin
 
-     Auxparser.CmdString := S;
-     ParmName := Auxparser.NextParam ;
-     Param := AuxParser.StrValue;
-     Result := MaxValues; // Default Return Value;
+    Auxparser.CmdString := S;
+    ParmName := Auxparser.NextParam;
+    Param := AuxParser.StrValue;
+    Result := MaxValues; // Default Return Value;
 
      {Syntax can be either a list of numeric values or a file specification:  File= ...}
 
-     If CompareText(Parmname, 'file') = 0  THEN
-     Begin
+    if CompareText(Parmname, 'file') = 0 then
+    begin
          {Default values}
-         If compareText(param, '%result%')=0 Then CSVFileName := LastResultFile
-                                             Else CSVFileName := Param;
-         If Not FileExists(CSVFileName) Then
-         Begin
-             DoSimpleMsg(Format('CSV file "%s" does not exist', [CSVFileName]), 70401);
-             Exit;
-         End;
+        if compareText(param, '%result%') = 0 then
+            CSVFileName := LastResultFile
+        else
+            CSVFileName := Param;
+        if not FileExists(CSVFileName) then
+        begin
+            DoSimpleMsg(Format('CSV file "%s" does not exist', [CSVFileName]), 70401);
+            Exit;
+        end;
 
          // Default options
-         CSVColumn := 1;
-         CSVHeader := FALSE;
+        CSVColumn := 1;
+        CSVHeader := FALSE;
 
          // Look for other options  (may be in either order)
-         ParmName := Auxparser.NextParam ;
-         Param := AuxParser.StrValue;
-         While Length(Param) > 0 Do  Begin
-             If CompareTextShortest(ParmName, 'column')= 0 Then CSVColumn := AuxParser.IntValue;
-             If CompareTextShortest(ParmName, 'header')= 0 Then CSVHeader := InterpretYesNo(param);
-             ParmName := Auxparser.NextParam ;
-             Param := AuxParser.StrValue;
-         End;
+        ParmName := Auxparser.NextParam;
+        Param := AuxParser.StrValue;
+        while Length(Param) > 0 do
+        begin
+            if CompareTextShortest(ParmName, 'column') = 0 then
+                CSVColumn := AuxParser.IntValue;
+            if CompareTextShortest(ParmName, 'header') = 0 then
+                CSVHeader := InterpretYesNo(param);
+            ParmName := Auxparser.NextParam;
+            Param := AuxParser.StrValue;
+        end;
 
          // load the list from a file
 
-         TRY
-             AssignFile(F, CSVFileName);
-             Reset(F);
+        try
+            AssignFile(F, CSVFileName);
+            Reset(F);
 
-             If CSVHeader Then Readln(F, InputLIne);  // skip the header row
+            if CSVHeader then
+                Readln(F, InputLIne);  // skip the header row
 
-             FOR i := 1 to MaxValues Do Begin
+            for i := 1 to MaxValues do
+            begin
 
-                 TRY
-                    IF Not EOF(F) THEN
+                try
+                    if not EOF(F) then
                     begin
-                      Readln(F, InputLIne);
-                      Auxparser.CmdString := InputLine;
-                      For iskip := 1 to CSVColumn Do ParmName := AuxParser.NextParam;
-                      ResultArray^[i] := AuxParser.dblValue;
+                        Readln(F, InputLIne);
+                        Auxparser.CmdString := InputLine;
+                        for iskip := 1 to CSVColumn do
+                            ParmName := AuxParser.NextParam;
+                        ResultArray^[i] := AuxParser.dblValue;
                     end
-                    ELSE Begin
-                      Result := i-1 ;  // This will be different if less found;
-                      Break;
-                    End;
-                 Except
-                    On E:Exception Do Begin
-                      DoSimpleMsg(Format('Error reading %d-th numeric array value from file: "%s" Error is:', [i, Param, E.message]), 705);
-                      Result := i-1;
-                      Break;
-                    End;
-                 END;
+                    else
+                    begin
+                        Result := i - 1;  // This will be different if less found;
+                        Break;
+                    end;
+                except
+                    On E: Exception do
+                    begin
+                        DoSimpleMsg(Format('Error reading %d-th numeric array value from file: "%s" Error is:', [i, Param, E.message]), 705);
+                        Result := i - 1;
+                        Break;
+                    end;
+                end;
 
-             End;
+            end;
 
-         FINALLY
+        finally
 
-             CloseFile(F);
+            CloseFile(F);
 
-         END;
-     End
+        end;
+    end
 
-     ELSE If (Length(Parmname)>0) and (CompareTextShortest(Parmname, 'dblfile') = 0)  THEN
-     Begin
+    else
+    if (Length(Parmname) > 0) and (CompareTextShortest(Parmname, 'dblfile') = 0) then
+    begin
          // load the list from a file of doubles (no checking done on type of data)
-             MyStream := TMemoryStream.Create;
+        MyStream := TMemoryStream.Create;
 
-             If FileExists(Param) then  Begin
-                MyStream.LoadFromFile(Param);
+        if FileExists(Param) then
+        begin
+            MyStream.LoadFromFile(Param);
             // Now move the doubles from the file into the destination array
-                Result := Min(Maxvalues, MyStream.Size div sizeof(ResultArray^[1]));  // no. of doubles
-                MyStream.ReadBuffer(ResultArray^[1], SizeOf(ResultArray^[1])*Result);
-             End
-             Else DoSimpleMsg(Format('File of doubles "%s" not found.',[Param]), 70501);
-             MyStream.Free;
-     End
+            Result := Min(Maxvalues, MyStream.Size div sizeof(ResultArray^[1]));  // no. of doubles
+            MyStream.ReadBuffer(ResultArray^[1], SizeOf(ResultArray^[1]) * Result);
+        end
+        else
+            DoSimpleMsg(Format('File of doubles "%s" not found.', [Param]), 70501);
+        MyStream.Free;
+    end
 
-     ELSE If (Length(Parmname)>0) and (CompareTextShortest(Parmname, 'sngfile') = 0)  THEN
-     Begin
+    else
+    if (Length(Parmname) > 0) and (CompareTextShortest(Parmname, 'sngfile') = 0) then
+    begin
          // load the list from a file of singles (no checking done on type of data)
-             MyStream := TMemoryStream.Create;
+        MyStream := TMemoryStream.Create;
 
-             If FileExists(Param) then  Begin
-                MyStream.LoadFromFile(Param);
+        if FileExists(Param) then
+        begin
+            MyStream.LoadFromFile(Param);
             // Now move the singles from the file into the destination array
-                Result := Min(Maxvalues, MyStream.Size div sizeof(Single));  // no. of singles
-                For i  := 1 to Result Do Begin
-                    MyStream.Read(Temp, Sizeof(Single));
-                    ResultArray^[i] := Temp;  // Single to Double
-                End;
-             End
-             Else DoSimpleMsg(Format('File of Singles "%s" not found.',[Param]), 70502);
-             MyStream.Free;
+            Result := Min(Maxvalues, MyStream.Size div sizeof(Single));  // no. of singles
+            for i := 1 to Result do
+            begin
+                MyStream.Read(Temp, Sizeof(Single));
+                ResultArray^[i] := Temp;  // Single to Double
+            end;
+        end
+        else
+            DoSimpleMsg(Format('File of Singles "%s" not found.', [Param]), 70502);
+        MyStream.Free;
 
-     End
+    end
 
-     ELSE
-       Begin  // Parse list of values off input string
+    else
+    begin  // Parse list of values off input string
 
          // Parse Values of array list
-         For i := 1 to MaxValues Do
-           BEGIN
-                ResultArray^[i] := AuxParser.DblValue;    // Fills array with zeros if we run out of numbers
-                AuxParser.NextParam;
-           END;
-       End;
-End;
+        for i := 1 to MaxValues do
+        begin
+            ResultArray^[i] := AuxParser.DblValue;    // Fills array with zeros if we run out of numbers
+            AuxParser.NextParam;
+        end;
+    end;
+end;
 
-FUNCTION InterpretIntArray(const s: string; MaxValues:Integer; ResultArray :pIntegerArray):Integer;
+function InterpretIntArray(const s: String; MaxValues: Integer; ResultArray: pIntegerArray): Integer;
 
 { Get numeric values from an array specified either as a list on numbers or a text file spec.
   ResultArray must be allocated to MaxValues by calling routine.
   File is assumed to have one value per line.}
 
-VAR
-   ParmName,
-   Param    :String;
-   F        :Textfile;
-   i        :Integer;
+var
+    ParmName,
+    Param: String;
+    F: Textfile;
+    i: Integer;
 
-Begin
-     Auxparser.CmdString := S;
-     ParmName := Auxparser.NextParam ;
-     Param := AuxParser.StrValue;
-     Result := Maxvalues;  // Default return value
+begin
+    Auxparser.CmdString := S;
+    ParmName := Auxparser.NextParam;
+    Param := AuxParser.StrValue;
+    Result := Maxvalues;  // Default return value
 
      {Syntax can be either a list of numeric values or a file specification:  File= ...}
 
-     If CompareText(Parmname, 'file') = 0  THEN
-       Begin
+    if CompareText(Parmname, 'file') = 0 then
+    begin
          // load the list from a file
-         TRY
-             AssignFile(F, Param);
-             Reset(F);
-             FOR i := 1 to MaxValues Do
-               Begin
-                    IF Not EOF(F)
-                    THEN Readln(F, ResultArray^[i])
-                    ELSE Begin
-                      Result := i-1;
-                      Break;
-                    End;
-               End;
-             CloseFile(F);
+        try
+            AssignFile(F, Param);
+            Reset(F);
+            for i := 1 to MaxValues do
+            begin
+                if not EOF(F) then
+                    Readln(F, ResultArray^[i])
+                else
+                begin
+                    Result := i - 1;
+                    Break;
+                end;
+            end;
+            CloseFile(F);
 
-         EXCEPT
-             On E:Exception Do DoSimpleMsg('Error trying to read numeric array values from file: "'+Param +'"  Error is: '+E.message, 706);
-         END;
-       End
-     ELSE
-       Begin  // Parse list of values off input string
+        except
+            On E: Exception do
+                DoSimpleMsg('Error trying to read numeric array values from file: "' + Param + '"  Error is: ' + E.message, 706);
+        end;
+    end
+    else
+    begin  // Parse list of values off input string
 
          // Parse Values of array list
-         For i := 1 to MaxValues Do
-           BEGIN
-                ResultArray^[i] := AuxParser.IntValue;    // Fills array with zeros if we run out of numbers
-                AuxParser.NextParam;
-           END;
-       End;
-End;
+        for i := 1 to MaxValues do
+        begin
+            ResultArray^[i] := AuxParser.IntValue;    // Fills array with zeros if we run out of numbers
+            AuxParser.NextParam;
+        end;
+    end;
+end;
 
-FUNCTION  InterpretTimeStepSize(const s:string):double;
+function InterpretTimeStepSize(const s: String): Double;
 {Return stepsize in seconds}
-Var
-   Code :Integer;
-   ch :char;
-   s2 :String;
+var
+    Code: Integer;
+    ch: Char;
+    s2: String;
 
-Begin
+begin
      {Try to convert and see if we get an error}
-     val(s,Result, Code);
-     If Code = 0 then  Exit;  // Only a number was specified, so must be seconds
+    val(s, Result, Code);
+    if Code = 0 then
+        Exit;  // Only a number was specified, so must be seconds
 
      {Error occurred so must have a units specifier}
-     ch := s[Length(s)];  // get last character
-     s2 := copy(s, 1, Length(s)-1);
-     Val(S2, Result, Code);
-     If Code>0 then Begin   {check for error}
-       Result := ActiveCircuit.solution.DynaVars.h; // Don't change it
-       DosimpleMsg('Error in specification of StepSize: ' + s, 99933);
-       Exit;
-     End;
-     case ch of
-        'h': Result := Result * 3600.0;
-        'm': Result := Result * 60.0;
-        's':; // Do nothing
-     Else
-         Result := ActiveCircuit.solution.DynaVars.h; // Don't change it
-         DosimpleMsg('Error in specification of StepSize: "' + s +'" Units can only be h, m, or s (single char only) ', 99934);
-     end;
-     
-End;
+    ch := s[Length(s)];  // get last character
+    s2 := copy(s, 1, Length(s) - 1);
+    Val(S2, Result, Code);
+    if Code > 0 then
+    begin   {check for error}
+        Result := ActiveCircuit.solution.DynaVars.h; // Don't change it
+        DosimpleMsg('Error in specification of StepSize: ' + s, 99933);
+        Exit;
+    end;
+    case ch of
+        'h':
+            Result := Result * 3600.0;
+        'm':
+            Result := Result * 60.0;
+        's': ; // Do nothing
+    else
+        Result := ActiveCircuit.solution.DynaVars.h; // Don't change it
+        DosimpleMsg('Error in specification of StepSize: "' + s + '" Units can only be h, m, or s (single char only) ', 99934);
+    end;
+
+end;
 
 
 //----------------------------------------------------------------------------
-Procedure InitStringToNull(Var S:String);
+procedure InitStringToNull(var S: String);
 
-Begin
-     Move(ZeroNull, S, 4);
-End;
-
-//----------------------------------------------------------------------------
-PROCEDURE InterpretAndAllocStrArray(const s: string; var Size:Integer; var ResultArray :pStringArray);
-
-{ Get string values from an array specified either as a list on strings or a text file spec.
-  ResultArray is allocated as needed.
-  File is assumed to have one value per line.}
-
-VAR
-   ParmName,
-   Param    :String;
-   F        :Textfile;
-   MaxSize  :Integer;
-
-
-   Procedure ReallocStringArray;
-   var j  :Integer;
-   Begin
-      Reallocmem(ResultArray, Sizeof(ResultArray^[1])*MaxSize);
-      For j := Size+1 to MaxSize Do InitStringToNull(ResultArray^[j]) ;    // Init string values
-   End;
-
-   Procedure BumpUpStringArray;
-   Begin
-       Inc(MaxSize, 100);
-       ReallocStringArray;
-   End;
-
-   Procedure FreeStringArray;
-   Var j  :integer;
-   Begin
-     IF Assigned(ResultArray) Then
-       Begin
-         For j := 1 to Size Do
-           Begin
-              ResultArray^[j] := '';
-           End;
-         ReallocMem(ResultArray, 0);
-       End;
-   End;
-
-Begin
-
-     //  Throw Away any Previous Allocation
-     FreeStringArray;
-
-     // Now Reallocate
-     MaxSize := 100;  // initialize
-     Size := 0;
-     ReAllocStringArray;
-
-     Auxparser.CmdString := S;
-     ParmName := Auxparser.NextParam ;
-     Param := AuxParser.StrValue;
-
-     {Syntax can be either a list of string values or a file specification:  File= ...}
-
-     If CompareText(Parmname, 'file') = 0  THEN
-       Begin
-         // load the list from a file
-
-         TRY
-             AssignFile(F, Param);
-             Reset(F);
-             While Not EOF(F) Do
-               Begin
-                  Readln(F, Param);
-                  IF Param <> '' Then
-                    Begin     // Ignore Blank Lines in File
-                      Inc(Size);
-                      IF Size > Maxsize Then BumpUpStringArray;
-                      ResultArray^[Size] := Param;
-                    End;
-               End;
-             CloseFile(F);
-
-         EXCEPT
-             On E:Exception Do DoSimpleMsg('Error trying to read numeric array values from a file. Error is: '+E.message, 707);
-         END;
-
-
-       End
-     ELSE
-       Begin  // Parse list of values off input string
-
-         // Parse Values of array list
-         While Param <> '' Do
-           BEGIN
-              Inc(Size);
-              IF Size > Maxsize Then BumpUpStringArray;
-              ResultArray^[Size] := Param;
-              ParmName := AuxParser.NextParam;
-              Param :=  AuxParser.StrValue;
-           END;
-       End;
-
-     MaxSize := Size;   // Get rid of Excess Allocation
-     ReallocStringArray;
-
-End;
-
-//----------------------------------------------------------------------------
-PROCEDURE InterpretTStringListArray(const s: string; var ResultList :TStringList);
-
-{ Get string values from an array specified either as a list on strings or a text file spec.
-  ResultArray is allocated as needed.
-  File is assumed to have one value per line.}
-
-VAR
-   ParmName,
-   Param,
-   NextParam    :String;
-   F        :Textfile;
-
-
-
-Begin
-
-     //  Throw Away any Previous Allocation
-     ResultList.Clear;
-
-
-     Auxparser.CmdString := S;
-     ParmName := Auxparser.NextParam ;
-     Param := AuxParser.StrValue;
-
-     {Syntax can be either a list of string values or a file specification:  File= ...}
-
-     If CompareText(Parmname, 'file') = 0  THEN
-       Begin
-         // load the list from a file
-
-         TRY
-             AssignFile(F, Param);
-             Reset(F);
-             While Not EOF(F) Do
-               Begin
-                  Readln(F, Param);
-                  Auxparser.CmdString := Param;
-                  ParmName := Auxparser.NextParam ;
-                  NextParam := AuxParser.StrValue;
-                  IF Length(NextParam) > 0 Then
-                    Begin     // Ignore Blank Lines in File
-                      ResultList.Add(NextParam);
-                    End;
-               End;
-             CloseFile(F);
-
-         EXCEPT
-             On E:Exception Do DoSimpleMsg('Error trying to read numeric array values from a file. Error is: '+E.message, 708);
-         END;
-
-
-       End
-     ELSE
-       Begin  // Parse list of values off input string
-
-         // Parse Values of array list
-         While Param <> '' Do
-           BEGIN
-              ResultList.add(Param);
-              ParmName := AuxParser.NextParam;
-              Param :=  AuxParser.StrValue;
-           END;
-       End;
-
-End;
-
-FUNCTION InterpretCoreType(const str: String): Integer;
 begin
-     Case str[1] of
-          '1':Result := 1;  // 1-phase
-          '3':Result := 3;  // 3-Leg
-          '5':Result := 5;  // 5-Leg
-     Else
-         Result := 0; // default to shell
-     End;
+    Move(ZeroNull, S, 4);
 end;
 
 //----------------------------------------------------------------------------
-PROCEDURE ParseObjectClassandName(const FullObjName:String; Var ClassName, ObjName:String);
+procedure InterpretAndAllocStrArray(const s: String; var Size: Integer; var ResultArray: pStringArray);
 
-Var
-   dotpos :Integer;
+{ Get string values from an array specified either as a list on strings or a text file spec.
+  ResultArray is allocated as needed.
+  File is assumed to have one value per line.}
 
-Begin
+var
+    ParmName,
+    Param: String;
+    F: Textfile;
+    MaxSize: Integer;
+
+
+    procedure ReallocStringArray;
+    var
+        j: Integer;
+    begin
+        Reallocmem(ResultArray, Sizeof(ResultArray^[1]) * MaxSize);
+        for j := Size + 1 to MaxSize do
+            InitStringToNull(ResultArray^[j]);    // Init string values
+    end;
+
+    procedure BumpUpStringArray;
+    begin
+        Inc(MaxSize, 100);
+        ReallocStringArray;
+    end;
+
+    procedure FreeStringArray;
+    var
+        j: Integer;
+    begin
+        if Assigned(ResultArray) then
+        begin
+            for j := 1 to Size do
+            begin
+                ResultArray^[j] := '';
+            end;
+            ReallocMem(ResultArray, 0);
+        end;
+    end;
+
+begin
+
+     //  Throw Away any Previous Allocation
+    FreeStringArray;
+
+     // Now Reallocate
+    MaxSize := 100;  // initialize
+    Size := 0;
+    ReAllocStringArray;
+
+    Auxparser.CmdString := S;
+    ParmName := Auxparser.NextParam;
+    Param := AuxParser.StrValue;
+
+     {Syntax can be either a list of string values or a file specification:  File= ...}
+
+    if CompareText(Parmname, 'file') = 0 then
+    begin
+         // load the list from a file
+
+        try
+            AssignFile(F, Param);
+            Reset(F);
+            while not EOF(F) do
+            begin
+                Readln(F, Param);
+                if Param <> '' then
+                begin     // Ignore Blank Lines in File
+                    Inc(Size);
+                    if Size > Maxsize then
+                        BumpUpStringArray;
+                    ResultArray^[Size] := Param;
+                end;
+            end;
+            CloseFile(F);
+
+        except
+            On E: Exception do
+                DoSimpleMsg('Error trying to read numeric array values from a file. Error is: ' + E.message, 707);
+        end;
+
+
+    end
+    else
+    begin  // Parse list of values off input string
+
+         // Parse Values of array list
+        while Param <> '' do
+        begin
+            Inc(Size);
+            if Size > Maxsize then
+                BumpUpStringArray;
+            ResultArray^[Size] := Param;
+            ParmName := AuxParser.NextParam;
+            Param := AuxParser.StrValue;
+        end;
+    end;
+
+    MaxSize := Size;   // Get rid of Excess Allocation
+    ReallocStringArray;
+
+end;
+
+//----------------------------------------------------------------------------
+procedure InterpretTStringListArray(const s: String; var ResultList: TStringList);
+
+{ Get string values from an array specified either as a list on strings or a text file spec.
+  ResultArray is allocated as needed.
+  File is assumed to have one value per line.}
+
+var
+    ParmName,
+    Param,
+    NextParam: String;
+    F: Textfile;
+
+
+begin
+
+     //  Throw Away any Previous Allocation
+    ResultList.Clear;
+
+
+    Auxparser.CmdString := S;
+    ParmName := Auxparser.NextParam;
+    Param := AuxParser.StrValue;
+
+     {Syntax can be either a list of string values or a file specification:  File= ...}
+
+    if CompareText(Parmname, 'file') = 0 then
+    begin
+         // load the list from a file
+
+        try
+            AssignFile(F, Param);
+            Reset(F);
+            while not EOF(F) do
+            begin
+                Readln(F, Param);
+                Auxparser.CmdString := Param;
+                ParmName := Auxparser.NextParam;
+                NextParam := AuxParser.StrValue;
+                if Length(NextParam) > 0 then
+                begin     // Ignore Blank Lines in File
+                    ResultList.Add(NextParam);
+                end;
+            end;
+            CloseFile(F);
+
+        except
+            On E: Exception do
+                DoSimpleMsg('Error trying to read numeric array values from a file. Error is: ' + E.message, 708);
+        end;
+
+
+    end
+    else
+    begin  // Parse list of values off input string
+
+         // Parse Values of array list
+        while Param <> '' do
+        begin
+            ResultList.add(Param);
+            ParmName := AuxParser.NextParam;
+            Param := AuxParser.StrValue;
+        end;
+    end;
+
+end;
+
+function InterpretCoreType(const str: String): Integer;
+begin
+    case str[1] of
+        '1':
+            Result := 1;  // 1-phase
+        '3':
+            Result := 3;  // 3-Leg
+        '5':
+            Result := 5;  // 5-Leg
+    else
+        Result := 0; // default to shell
+    end;
+end;
+
+//----------------------------------------------------------------------------
+procedure ParseObjectClassandName(const FullObjName: String; var ClassName, ObjName: String);
+
+var
+    dotpos: Integer;
+
+begin
 
       // Split off Obj class and name
-      dotpos := Pos('.', FullObjName);
-      CASE dotpos OF
-         0: Begin
-             ObjName   := Copy(FullObjName, 1, Length(FullObjName));  // assume it is all objname; class defaults
-             ClassName := '';
-            End;
-      ELSE
-         Begin
-             ClassName := Copy(FullObjName, 1, dotpos-1);
-             ObjName   := Copy(FullObjName, dotpos+1, Length(FullObjName));
-         End;
-      End;
+    dotpos := Pos('.', FullObjName);
+    case dotpos of
+        0:
+        begin
+            ObjName := Copy(FullObjName, 1, Length(FullObjName));  // assume it is all objname; class defaults
+            ClassName := '';
+        end;
+    else
+    begin
+        ClassName := Copy(FullObjName, 1, dotpos - 1);
+        ObjName := Copy(FullObjName, dotpos + 1, Length(FullObjName));
+    end;
+    end;
 
       // Check object name in case it is a variable
-      Parser.CheckforVar(ObjName);
+    Parser.CheckforVar(ObjName);
 
-End;
+end;
 
-FUNCTION GetSolutionModeIDName(idx:Integer):String;
-Begin
+function GetSolutionModeIDName(idx: Integer): String;
+begin
 
-    CASE idx OF
+    case idx of
 
-      SNAPSHOT:     Result := 'Snap';
-      DAILYMODE:    Result := 'Daily';
-      YEARLYMODE:   Result := 'Yearly';
-      MONTECARLO1:  Result := 'M1';
-      MONTECARLO2:  Result := 'M2';
-      MONTECARLO3:  Result := 'M3';
-      LOADDURATION1:Result := 'LD1';
-      LOADDURATION2:Result := 'LD2';
-      PEAKDAY:      Result := 'Peakday';
-      DUTYCYCLE:    Result := 'DUtycycle';
-      DIRECT:       Result := 'DIrect';
-      DYNAMICMODE:  Result := 'DYnamic';
-      MONTEFAULT:   Result := 'MF';
-      FAULTSTUDY:   Result := 'Faultstudy';
-      AUTOADDFLAG:  Result := 'Autoadd';
-      HARMONICMODE: Result := 'Harmonic';
-      HARMONICMODET:Result :='HarmonicT';
-      GENERALTIME:  Result := 'Time';
-    ELSE
-                    Result := 'UNKNOWN'
-    End;
+        SNAPSHOT:
+            Result := 'Snap';
+        DAILYMODE:
+            Result := 'Daily';
+        YEARLYMODE:
+            Result := 'Yearly';
+        MONTECARLO1:
+            Result := 'M1';
+        MONTECARLO2:
+            Result := 'M2';
+        MONTECARLO3:
+            Result := 'M3';
+        LOADDURATION1:
+            Result := 'LD1';
+        LOADDURATION2:
+            Result := 'LD2';
+        PEAKDAY:
+            Result := 'Peakday';
+        DUTYCYCLE:
+            Result := 'DUtycycle';
+        DIRECT:
+            Result := 'DIrect';
+        DYNAMICMODE:
+            Result := 'DYnamic';
+        MONTEFAULT:
+            Result := 'MF';
+        FAULTSTUDY:
+            Result := 'Faultstudy';
+        AUTOADDFLAG:
+            Result := 'Autoadd';
+        HARMONICMODE:
+            Result := 'Harmonic';
+        HARMONICMODET:
+            Result := 'HarmonicT';
+        GENERALTIME:
+            Result := 'Time';
+    else
+        Result := 'UNKNOWN'
+    end;
 
-End;
+end;
 
-FUNCTION GetSolutionModeID:String;
+function GetSolutionModeID: String;
 
-Begin
-   Result := 'UNKNOWN';
-   If ActiveCircuit <> Nil Then
-    Result := GetSolutionModeIDName(ActiveCircuit.Solution.mode);
-End;
+begin
+    Result := 'UNKNOWN';
+    if ActiveCircuit <> NIL then
+        Result := GetSolutionModeIDName(ActiveCircuit.Solution.mode);
+end;
 
-FUNCTION GetControlModeID:String;
+function GetControlModeID: String;
 
-Begin
-   Result := 'Unknown';
-   If ActiveCircuit <> Nil Then
-    CASE ActiveCircuit.Solution.Controlmode OF
-      CTRLSTATIC  : Result := 'STATIC';
-      EVENTDRIVEN : Result := 'EVENT';
-      TIMEDRIVEN  : Result := 'TIME';
-      MULTIRATE   : Result :=  'MULTIRATE';
-      CONTROLSOFF : Result := 'OFF';
-    ELSE
-                    Result := 'UNKNOWN'
-    End;
+begin
+    Result := 'Unknown';
+    if ActiveCircuit <> NIL then
+        case ActiveCircuit.Solution.Controlmode of
+            CTRLSTATIC:
+                Result := 'STATIC';
+            EVENTDRIVEN:
+                Result := 'EVENT';
+            TIMEDRIVEN:
+                Result := 'TIME';
+            MULTIRATE:
+                Result := 'MULTIRATE';
+            CONTROLSOFF:
+                Result := 'OFF';
+        else
+            Result := 'UNKNOWN'
+        end;
 
-End;
+end;
 
-FUNCTION GetRandomModeID:String;
+function GetRandomModeID: String;
 
-Begin
-   Result := 'Unknown';
-   If ActiveCircuit <> Nil Then
-    CASE ActiveCircuit.Solution.RandomType OF
+begin
+    Result := 'Unknown';
+    if ActiveCircuit <> NIL then
+        case ActiveCircuit.Solution.RandomType of
 
-         0: Result := 'None';
-         GAUSSIAN: Result := 'Gaussian';
-         UNIFORM: Result := 'Uniform';
-         LOGNORMAL: Result := 'LogNormal';
-    ELSE
-                   Result := 'Unknown'
-    End;
+            0:
+                Result := 'None';
+            GAUSSIAN:
+                Result := 'Gaussian';
+            UNIFORM:
+                Result := 'Uniform';
+            LOGNORMAL:
+                Result := 'LogNormal';
+        else
+            Result := 'Unknown'
+        end;
 
-End;
+end;
 
-FUNCTION GetLoadModel:String;
-Begin
+function GetLoadModel: String;
+begin
 
-     Case ActiveCircuit.solution.LoadModel of
-          ADMITTANCE:Result := 'Admittance';
-     Else
-         Result := 'PowerFlow'
-     End;
+    case ActiveCircuit.solution.LoadModel of
+        ADMITTANCE:
+            Result := 'Admittance';
+    else
+        Result := 'PowerFlow'
+    end;
 
 
-End;
+end;
 
-PROCEDURE ParseIntArray(VAR iarray:pIntegerArray; VAR count:Integer; const s:string);
+procedure ParseIntArray(var iarray: pIntegerArray; var count: Integer; const s: String);
 
-VAR
-   paramName :String;
-   param     :String;
-   i         :Integer;
+var
+    paramName: String;
+    param: String;
+    i: Integer;
 
-Begin
+begin
 
 // Parse the line once to get the count of tokens on string, S
-     AuxParser.cmdString := S;
-     Count := 0;
-     REPEAT
-           ParamName := AuxParser.NextParam;
-           Param     := AuxParser.StrValue;
-           IF Length(Param) > 0 Then Inc(Count);
-     UNTIL Length(Param) = 0;
+    AuxParser.cmdString := S;
+    Count := 0;
+    repeat
+        ParamName := AuxParser.NextParam;
+        Param := AuxParser.StrValue;
+        if Length(Param) > 0 then
+            Inc(Count);
+    until Length(Param) = 0;
 
 //  reallocate iarray  to new size
-     ReallocMem(iarray, sizeof(iarray^[1]) * count);
+    ReallocMem(iarray, sizeof(iarray^[1]) * count);
 
 // Parse again for real
-     AuxParser.cmdString := S;
-     FOR i := 1 to Count Do
-       Begin
-             ParamName  := AuxParser.NextParam;
-             iarray^[i] := AuxParser.IntValue;
-       End;
+    AuxParser.cmdString := S;
+    for i := 1 to Count do
+    begin
+        ParamName := AuxParser.NextParam;
+        iarray^[i] := AuxParser.IntValue;
+    end;
 
 
-End;
+end;
 
-FUNCTION IsShuntElement(const Elem:TDSSCktElement):Boolean;
-Begin
+function IsShuntElement(const Elem: TDSSCktElement): Boolean;
+begin
 
-     CASE (Elem.DSSObjType and CLASSMASK) of
+    case (Elem.DSSObjType and CLASSMASK) of
 
-       CAP_ELEMENT:     Result := TCapacitorObj(Elem).IsShunt ;
-       REACTOR_ELEMENT: Result := TReactorObj(Elem).IsShunt ;
+        CAP_ELEMENT:
+            Result := TCapacitorObj(Elem).IsShunt;
+        REACTOR_ELEMENT:
+            Result := TReactorObj(Elem).IsShunt;
 
-    ELSE
+    else
         Result := FALSE;
-    End;
+    end;
 
-End;
+end;
 
-FUNCTION IsLineElement(const Elem:TDSSCktElement):Boolean;
-Begin
+function IsLineElement(const Elem: TDSSCktElement): Boolean;
+begin
 
-    IF ((Elem.DSSObjType and CLASSMASK) =  LINE_ELEMENT) Then  Result := TRUE
-    ELSE   Result := FALSE;
+    if ((Elem.DSSObjType and CLASSMASK) = LINE_ELEMENT) then
+        Result := TRUE
+    else
+        Result := FALSE;
 
-End;
+end;
 
 
+function IsTransformerElement(const Elem: TDSSCktElement): Boolean;
+begin
 
-FUNCTION IsTransformerElement(const Elem:TDSSCktElement):Boolean;
-Begin
+    if ((Elem.DSSObjType and CLASSMASK) = XFMR_ELEMENT) then
+        Result := TRUE
+    else
+        Result := FALSE;
 
-    IF ((Elem.DSSObjType and CLASSMASK) =  XFMR_ELEMENT) Then  Result := TRUE
-    ELSE   Result := FALSE;
-
-End;
-
+end;
 
 
 //----------------------------------------------------------------------------
-FUNCTION  GetCktElementIndex(const FullObjName:String):Integer;
+function GetCktElementIndex(const FullObjName: String): Integer;
 
 // Given the full object name, return the index to the circuit element in the
 // active circuit.  Use full name if given. Else assume last class referenced.
 
-VAR
-   DevClassIndex, DevIndex : Integer;
-   DevClassName,  DevName  : String;
+var
+    DevClassIndex, DevIndex: Integer;
+    DevClassName, DevName: String;
 
-Begin
-     Result := 0; // Default return value
-     ParseObjectClassandName (FullObjName, DevClassName, DevName);
-     DevClassIndex := ClassNames.Find(DevClassName);
-     IF DevClassIndex = 0 THEN DevClassIndex := LastClassReferenced;
+begin
+    Result := 0; // Default return value
+    ParseObjectClassandName(FullObjName, DevClassName, DevName);
+    DevClassIndex := ClassNames.Find(DevClassName);
+    if DevClassIndex = 0 then
+        DevClassIndex := LastClassReferenced;
 
      // Since there could be devices of the same name of different classes,
      // loop until we find one of the correct class
-     WITH ActiveCircuit DO
-     Begin
-       Devindex := DeviceList.Find(DevName);
-       WHILE DevIndex>0 DO
-       Begin
-           IF DeviceRef^[Devindex].CktElementClass=DevClassIndex THEN   // we got a match
-             Begin
+    with ActiveCircuit do
+    begin
+        Devindex := DeviceList.Find(DevName);
+        while DevIndex > 0 do
+        begin
+            if DeviceRef^[Devindex].CktElementClass = DevClassIndex then   // we got a match
+            begin
                 Result := DevIndex;
                 Exit;
-             End;
-           Devindex := Devicelist.FindNext;
-       End;
-     End;
+            end;
+            Devindex := Devicelist.FindNext;
+        end;
+    end;
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-FUNCTION  Str_Real(Const Value :Double; NumDecimals :Integer) :String;
-Begin
-   Try
+function Str_Real(const Value: Double; NumDecimals: Integer): String;
+begin
+    try
 //         Str(Value:0:NumDecimals, Result);
-         Result := FloatToStrF (Value, ffFixed, 0, NumDecimals);
-   Except
-         Result := '*****';
-   End;
+        Result := FloatToStrF(Value, ffFixed, 0, NumDecimals);
+    except
+        Result := '*****';
+    end;
 
-End;
-
-
+end;
 
 
 // - - - - - --------------------------------------------------
-FUNCTION ReplaceCRLF(Const S:String):String;
+function ReplaceCRLF(const S: String): String;
 
-Var
-   nPos :Integer;
+var
+    nPos: Integer;
 
-Begin
+begin
     {Replace CRLF with a \n character sequence}
     Result := S;
     nPos := Pos(CRLF, Result);
-    While nPos>0 Do
-      Begin
-           Result[nPos] := '\';
-           Result[nPos+1] := 'n';
-           nPos := Pos(CRLF, Result);
-      End;
-End;
+    while nPos > 0 do
+    begin
+        Result[nPos] := '\';
+        Result[nPos + 1] := 'n';
+        nPos := Pos(CRLF, Result);
+    end;
+end;
 
 // - - - - - --------------------------------------------------
-FUNCTION RestoreCRLF(Const S:String):String;
+function RestoreCRLF(const S: String): String;
 
-Var
-   nPos :Integer;
+var
+    nPos: Integer;
 
-Begin
+begin
     {Replace CRLF with a \n character sequence}
     Result := S;
     nPos := Pos('\n', Result);
-    While nPos>0 Do
-      Begin
-           Result[nPos] := chr(13);
-           Result[nPos+1] := chr(10);
-           nPos := Pos('\n', Result);
-      End;
-End;
+    while nPos > 0 do
+    begin
+        Result[nPos] := chr(13);
+        Result[nPos + 1] := chr(10);
+        nPos := Pos('\n', Result);
+    end;
+end;
 
 // - - - - - --------------------------------------------------
-PROCEDURE DumpAllocationFactors (Var FileName:String);
+procedure DumpAllocationFactors(var FileName: String);
 
-Var
-   F:  TextFile;
-   pLoad: TLoadObj;
+var
+    F: TextFile;
+    pLoad: TLoadObj;
 
-Begin
+begin
 
-  TRY
-      AssignFile(F, FileName);
-      Rewrite(F);
-  EXCEPT
-      On E:Exception DO
-        Begin
-          DoErrorMsg('Error opening '+FileName+' for writing.', E.Message, ' File protected or other file error.', 709);
-          Exit;
-        End;
-  End;
+    try
+        AssignFile(F, FileName);
+        Rewrite(F);
+    except
+        On E: Exception do
+        begin
+            DoErrorMsg('Error opening ' + FileName + ' for writing.', E.Message, ' File protected or other file error.', 709);
+            Exit;
+        end;
+    end;
 
-  WITH ActiveCircuit Do
-    Begin
-     pLoad := Loads.First;
-     While pLoad <> Nil Do
-       Begin
-         Case pLoad.LoadSpecType of
-            3: Writeln(F, 'Load.'+pLoad.Name+'.AllocationFactor=', Format('%-.5g',[pLoad.kVAAllocationFactor]));
-            4: Writeln(F, 'Load.'+pLoad.Name+'.CFactor=', Format('%-.5g',[pLoad.CFactor]));
-         End;
-         pLoad := Loads.Next;
-       End; {While}
-    End; {With}
+    with ActiveCircuit do
+    begin
+        pLoad := Loads.First;
+        while pLoad <> NIL do
+        begin
+            case pLoad.LoadSpecType of
+                3:
+                    Writeln(F, 'Load.' + pLoad.Name + '.AllocationFactor=', Format('%-.5g', [pLoad.kVAAllocationFactor]));
+                4:
+                    Writeln(F, 'Load.' + pLoad.Name + '.CFactor=', Format('%-.5g', [pLoad.CFactor]));
+            end;
+            pLoad := Loads.Next;
+        end; {While}
+    end; {With}
 
-  CloseFile(F);
+    CloseFile(F);
 
-  GlobalResult := FileName;
+    GlobalResult := FileName;
 
-End;
+end;
 
 
 // - - - - - --------------------------------------------------
-PROCEDURE DumpAllDSSCommands(Var FileName:String);
+procedure DumpAllDSSCommands(var FileName: String);
 
-Var
-   F:  TextFile;
-   pClass:  TDSSClass;
-   i: Integer;
+var
+    F: TextFile;
+    pClass: TDSSClass;
+    i: Integer;
 
-Begin
+begin
 
-  TRY
-      FileName := GetOutputDirectory +  'DSSCommandsDump.Txt';
-      AssignFile(F, FileName);
-      Rewrite(F);
-  EXCEPT
-      On E:Exception DO
-       Begin
-        DoErrorMsg('Error opening '+FileName + ' for writing.', E.Message, 'Disk protected or other file error', 710);
-        Exit;
-       End;
-  End;
+    try
+        FileName := GetOutputDirectory + 'DSSCommandsDump.Txt';
+        AssignFile(F, FileName);
+        Rewrite(F);
+    except
+        On E: Exception do
+        begin
+            DoErrorMsg('Error opening ' + FileName + ' for writing.', E.Message, 'Disk protected or other file error', 710);
+            Exit;
+        end;
+    end;
 
   // dump Executive commands
-  Writeln(F,'[execcommands]');
-  For i := 1 to NumExecCommands Do
-    Begin
-      Writeln(F,i:0,', "',Execcommand[i], '", "',
-         ReplaceCRLF(CommandHelp[i]),'"');
-    End;
+    Writeln(F, '[execcommands]');
+    for i := 1 to NumExecCommands do
+    begin
+        Writeln(F, i: 0, ', "', Execcommand[i], '", "',
+            ReplaceCRLF(CommandHelp[i]), '"');
+    end;
 
   // Dump Executive Options
-  Writeln(F,'[execoptions]');
-  For i := 1 to NumExecOptions Do
-    Begin
-      Writeln(F,i:0,', "',ExecOption[i], '", "',
-         ReplaceCRLF(OptionHelp[i]),'"');
-    End;
+    Writeln(F, '[execoptions]');
+    for i := 1 to NumExecOptions do
+    begin
+        Writeln(F, i: 0, ', "', ExecOption[i], '", "',
+            ReplaceCRLF(OptionHelp[i]), '"');
+    end;
 
   // Dump All presend DSSClasses
-  pClass := DSSClassList.First;
-  While pClass<>Nil Do
-    Begin
-      Writeln(F,'[',pClass.name,']');
-      For i := 1 to pClass.NumProperties Do
-        Begin
-          Writeln(F,i:0,', "',pClass.PropertyName^[i], '", "',
-             ReplaceCRLF(pClass.PropertyHelp^[i]),'"');
-        End;
-      pClass := DSSClassList.Next;
-    End;
+    pClass := DSSClassList.First;
+    while pClass <> NIL do
+    begin
+        Writeln(F, '[', pClass.name, ']');
+        for i := 1 to pClass.NumProperties do
+        begin
+            Writeln(F, i: 0, ', "', pClass.PropertyName^[i], '", "',
+                ReplaceCRLF(pClass.PropertyHelp^[i]), '"');
+        end;
+        pClass := DSSClassList.Next;
+    end;
 
 
-  CloseFile(F);
+    CloseFile(F);
 
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-FUNCTION NearestBasekV(kV:Double):Double;
+function NearestBasekV(kV: Double): Double;
 
 {Find closest base voltage}
 
-Var
-   TestkV  :Double;
-   Count   :Integer;
-   Diff,
-   MinDiff :Double;
+var
+    TestkV: Double;
+    Count: Integer;
+    Diff,
+    MinDiff: Double;
 
-Begin
+begin
 
-     Count := 1;
-     TestkV := ActiveCircuit.LegalVoltageBases^[1];
-     Result := TestkV;
-     MinDiff := 1.0E50;  // Big whompin number
+    Count := 1;
+    TestkV := ActiveCircuit.LegalVoltageBases^[1];
+    Result := TestkV;
+    MinDiff := 1.0E50;  // Big whompin number
 
-     While TestkV <> 0.0 Do
-       Begin
-          Diff := Abs(1.0 - kV/TestkV);     // Get Per unit difference
-          If Diff < MinDiff Then
-           Begin
-              MinDiff := Diff;
-              Result := TestkV;
-           End;
+    while TestkV <> 0.0 do
+    begin
+        Diff := Abs(1.0 - kV / TestkV);     // Get Per unit difference
+        if Diff < MinDiff then
+        begin
+            MinDiff := Diff;
+            Result := TestkV;
+        end;
 
-          Inc(Count);
-          TestkV := ActiveCircuit.LegalVoltageBases^[Count];
-       End;
+        Inc(Count);
+        TestkV := ActiveCircuit.LegalVoltageBases^[Count];
+    end;
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-FUNCTION SavePresentVoltages:Boolean;
+function SavePresentVoltages: Boolean;
 
-VAR
-    F:File of Double;
-    i:integer;
-    dNumNodes:Double;
-Begin
-     Result := TRUE;
-     TRY
-         Assignfile(F,GetOutputDirectory + CircuitName_ + 'SavedVoltages.dbl');
-         Rewrite(F);
+var
+    F: file of Double;
+    i: Integer;
+    dNumNodes: Double;
+begin
+    Result := TRUE;
+    try
+        Assignfile(F, GetOutputDirectory + CircuitName_ + 'SavedVoltages.dbl');
+        Rewrite(F);
 
-     EXCEPT
-         On E:Exception Do
-           Begin
-              DoSimpleMsg('Error opening/creating file to save voltages: ' + E.message, 711);
-              Result := FALSE;
-              Exit;
-           End;
-     END;
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg('Error opening/creating file to save voltages: ' + E.message, 711);
+            Result := FALSE;
+            Exit;
+        end;
+    end;
 
-     TRY
-         WITH ActiveCircuit, ActiveCircuit.Solution Do Begin
-             dNumNodes := NumNodes;
-             Write(F, dNumNodes);
-             For i := 1 to NumNodes Do  Write(F, NodeV^[i].re, NodeV^[i].im);
-         End;
+    try
+        with ActiveCircuit, ActiveCircuit.Solution do
+        begin
+            dNumNodes := NumNodes;
+            Write(F, dNumNodes);
+            for i := 1 to NumNodes do
+                Write(F, NodeV^[i].re, NodeV^[i].im);
+        end;
 
-         CloseFile(F);
+        CloseFile(F);
 
-     EXCEPT
-         On E:Exception Do Begin
+    except
+        On E: Exception do
+        begin
             DoSimpleMsg('Error writing file to save voltages: ' + E.message, 712);
             Result := FALSE;
-         End;
-     END;
+        end;
+    end;
 
 
-
-End;
+end;
 
 //----------------------------------------------------------------------------
-FUNCTION RetrieveSavedVoltages:Boolean;
+function RetrieveSavedVoltages: Boolean;
 
-VAR
-    F:File of Double;
-    i:integer;
-    dNumNodes:Double;
-Begin
+var
+    F: file of Double;
+    i: Integer;
+    dNumNodes: Double;
+begin
 
-     Result := TRUE;
-     TRY
-         Assignfile(F, GetOutputDirectory + CircuitName_ + 'SavedVoltages.dbl');
-         Reset(F);
+    Result := TRUE;
+    try
+        Assignfile(F, GetOutputDirectory + CircuitName_ + 'SavedVoltages.dbl');
+        Reset(F);
 
-     EXCEPT
-         On E:Exception Do Begin
+    except
+        On E: Exception do
+        begin
             DoSimpleMsg('Error opening file to retrieve saved voltages: ' + E.message, 713);
             Result := FALSE;
             Exit;
-         End;
-     END;
+        end;
+    end;
 
-     TRY
-         WITH ActiveCircuit, ActiveCircuit.Solution Do Begin
-             Read(F, dNumNodes);
-             IF NumNodes = Round(dNumNodes) THEN
-                 For i := 1 to NumNodes Do Read(F, NodeV^[i].re, NodeV^[i].im)
-             ELSE  Begin
-                 DoSimpleMsg('Saved results do not match present circuit. Aborting.', 714);
-                 Result := FALSE;
-             END;
-         End;
+    try
+        with ActiveCircuit, ActiveCircuit.Solution do
+        begin
+            Read(F, dNumNodes);
+            if NumNodes = Round(dNumNodes) then
+                for i := 1 to NumNodes do
+                    Read(F, NodeV^[i].re, NodeV^[i].im)
+            else
+            begin
+                DoSimpleMsg('Saved results do not match present circuit. Aborting.', 714);
+                Result := FALSE;
+            end;
+        end;
 
-         CloseFile(F);
+        CloseFile(F);
 
-     EXCEPT
-         On E:Exception Do Begin
+    except
+        On E: Exception do
+        begin
             DoSimpleMsg('Error reading file to retrieve saved voltages: ' + E.message, 715);
             Result := FALSE;
-         End;
-     END;
+        end;
+    end;
 
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-FUNCTION InitializeForHarmonics:Boolean;
+function InitializeForHarmonics: Boolean;
 
 {Intialize PCELEMENT base values for harmonics analysis}
 
-Var
-   pcElem: TPCElement;
+var
+    pcElem: TPCElement;
 
-Begin
+begin
 
- IF SavePresentVoltages   // Zap voltage vector to disk
- THEN WITH ActiveCircuit
- Do Begin
+    if SavePresentVoltages   // Zap voltage vector to disk
+    then
+        with ActiveCircuit do
+        begin
     // Go through all PC Elements
-        pcElem := PCElements.First;
-        WHILE   pcElem <> NIL
-        Do Begin
-            If pcElem.Enabled Then pcElem.InitHarmonics;   // Virtual function
-            pcElem := PCElements.Next;
-        End;
-        Result := TRUE;
-     End {With}
- ELSE Result := FALSE;
+            pcElem := PCElements.First;
+            while pcElem <> NIL do
+            begin
+                if pcElem.Enabled then
+                    pcElem.InitHarmonics;   // Virtual function
+                pcElem := PCElements.Next;
+            end;
+            Result := TRUE;
+        end {With}
+    else
+        Result := FALSE;
 
-End;
+end;
 
 
 //----------------------------------------------------------------------------
-PROCEDURE CalcInitialMachineStates;
+procedure CalcInitialMachineStates;
 
-Var
-   pcelem: TPCElement;
+var
+    pcelem: TPCElement;
 
-Begin
+begin
 
 // Do All PC Elements
 
 // If state variables not defined for a PC class, does nothing
 
- WITH ActiveCircuit Do
-   Begin
-      pcelem := PCElements.First;
+    with ActiveCircuit do
+    begin
+        pcelem := PCElements.First;
 
-      WHILE pcelem <> NIL Do
-       Begin
-          If pcelem.Enabled Then pcelem.InitStateVars;
-          pcelem := PCElements.Next;
-       End;
-   End;
+        while pcelem <> NIL do
+        begin
+            if pcelem.Enabled then
+                pcelem.InitStateVars;
+            pcelem := PCElements.Next;
+        end;
+    end;
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-PROCEDURE InvalidateAllPCELEMENTS;
+procedure InvalidateAllPCELEMENTS;
 
-Var
-   pcelem: TPCElement;
+var
+    pcelem: TPCElement;
 
-Begin
+begin
 
 // Invalidate All PC Elements; Any could be a machine
 
- WITH ActiveCircuit Do
-   Begin
-      pcelem := PCElements.First;
+    with ActiveCircuit do
+    begin
+        pcelem := PCElements.First;
 
-      WHILE pcelem <> NIL Do
-       Begin
-          If pcelem.Enabled Then pcelem.YPrimInvalid := TRUE;
-          pcelem := PCElements.Next;
-       End;
-   End;
-End;
+        while pcelem <> NIL do
+        begin
+            if pcelem.Enabled then
+                pcelem.YPrimInvalid := TRUE;
+            pcelem := PCElements.Next;
+        end;
+    end;
+end;
 
-FUNCTION PresentTimeInSec:Double;
-
-Begin
-    With ActiveCircuit.Solution Do
-       Result := Dynavars.t + DynaVars.intHour*3600.0;
-End;
-
-
-//----------------------------------------------------------------------------
-FUNCTION DoResetFaults:Integer;
-VAR
-   pFault:TFaultOBj;
+function PresentTimeInSec: Double;
 
 begin
-  Result := 0;
-  WITH ActiveCircuit Do
-       Begin
-          pFault := TFaultObj(Faults.First);
-          WHILE pFault <> NIL Do
-           Begin
-             pFault.Reset;
-             pFault := TFaultObj(Faults.Next);
-           End;
-       End;  {End With}
-End;
+    with ActiveCircuit.Solution do
+        Result := Dynavars.t + DynaVars.intHour * 3600.0;
+end;
 
 
 //----------------------------------------------------------------------------
-FUNCTION DoResetControls:Integer;
-VAR
-   ControlDevice:TControlElem;
+function DoResetFaults: Integer;
+var
+    pFault: TFaultOBj;
 
 begin
-     Result := 0;
-     WITH ActiveCircuit Do
-       Begin
-          ControlDevice := DSSControls.First;
-          WHILE ControlDevice <> Nil Do
-          Begin
-               IF ControlDevice.Enabled THEN ControlDevice.Reset;
-               ControlDevice := DSSControls.Next;
-          End;
-       End;  {End With}
-End;
-
-//----------------------------------------------------------------------------
-FUNCTION GetNodeNum(NodeRef:Integer):Integer;
-Begin
-     If NodeRef = 0 Then Result := 0
-     Else Result := ActiveCircuit.MapNodeToBus^[NodeRef].NodeNum
-End;
+    Result := 0;
+    with ActiveCircuit do
+    begin
+        pFault := TFaultObj(Faults.First);
+        while pFault <> NIL do
+        begin
+            pFault.Reset;
+            pFault := TFaultObj(Faults.Next);
+        end;
+    end;  {End With}
+end;
 
 
 //----------------------------------------------------------------------------
-PROCEDURE RotatePhasorDeg(Var Phasor:Complex; const  h, AngleDeg:Double);
+function DoResetControls: Integer;
+var
+    ControlDevice: TControlElem;
+
+begin
+    Result := 0;
+    with ActiveCircuit do
+    begin
+        ControlDevice := DSSControls.First;
+        while ControlDevice <> NIL do
+        begin
+            if ControlDevice.Enabled then
+                ControlDevice.Reset;
+            ControlDevice := DSSControls.Next;
+        end;
+    end;  {End With}
+end;
+
+//----------------------------------------------------------------------------
+function GetNodeNum(NodeRef: Integer): Integer;
+begin
+    if NodeRef = 0 then
+        Result := 0
+    else
+        Result := ActiveCircuit.MapNodeToBus^[NodeRef].NodeNum
+end;
+
+
+//----------------------------------------------------------------------------
+procedure RotatePhasorDeg(var Phasor: Complex; const h, AngleDeg: Double);
 
 // rotate a phasor by an angle and harmonic
 
-Begin
+begin
 
-    Phasor := Cmul(Phasor, pdegtocomplex(1.0, h*AngleDeg));
+    Phasor := Cmul(Phasor, pdegtocomplex(1.0, h * AngleDeg));
 
-End;
+end;
 
-PROCEDURE RotatePhasorRad(Var Phasor:Complex; const  h, AngleRad:Double);
+procedure RotatePhasorRad(var Phasor: Complex; const h, AngleRad: Double);
 
 // rotate a phasor by an angle and harmonic
 
-Begin
+begin
 
-    Phasor := Cmul(Phasor, pclx(1.0, h*AngleRad));
+    Phasor := Cmul(Phasor, pclx(1.0, h * AngleRad));
 
-End;
+end;
 
 //----------------------------------------------------------------------------
-Procedure ConvertComplexArrayToPowerandPF(Const Buffer:pComplexArray;N:Integer);
+procedure ConvertComplexArrayToPowerandPF(const Buffer: pComplexArray; N: Integer);
 
 {Creates continous PF function from 1 to 2 where 1-2 range is leading (opposite sign)}
-Var
-   Mag, PF :Double;
-   i: Integer;
+var
+    Mag, PF: Double;
+    i: Integer;
 
-   Function PFSign(Const S:Complex):Double;
-   Begin
-       If S.re*S.im < 0.0 Then Result := -1.0 Else Result := 1.0;
-   End;
-Begin
+    function PFSign(const S: Complex): Double;
+    begin
+        if S.re * S.im < 0.0 then
+            Result := -1.0
+        else
+            Result := 1.0;
+    end;
+
+begin
 
 {Assume we get P + jQ}
 
-        FOR i := 1 to N DO Begin
-            Mag := Cabs(Buffer^[i]);
-            If Mag>0.0 Then Begin
-              PF := PFSign(Buffer^[i])*Abs(Buffer^[i].Re)/ Mag;
-              IF PF<0.0 Then PF := 2.0 - abs(PF);
-            End
-            Else PF := 1.0;  // for zero power
-            Buffer^[i].im := PF;
-         End;
-End;
-
+    for i := 1 to N do
+    begin
+        Mag := Cabs(Buffer^[i]);
+        if Mag > 0.0 then
+        begin
+            PF := PFSign(Buffer^[i]) * Abs(Buffer^[i].Re) / Mag;
+            if PF < 0.0 then
+                PF := 2.0 - abs(PF);
+        end
+        else
+            PF := 1.0;  // for zero power
+        Buffer^[i].im := PF;
+    end;
+end;
 
 
 //----------------------------------------------------------------------------
-Procedure ConvertComplexArrayToPolar(Const Buffer:pComplexArray; N:Integer);
-Var
-   X:Polar;
-   i: Integer;
-Begin
-        FOR i := 1 to N DO
-         Begin
-            x := CtoPolarDeg(Buffer^[i]);
-            With Buffer^[i], x  Do
-              Begin
-                re := Mag;
-                im := Ang;
-              End;
-         End;
-End;
+procedure ConvertComplexArrayToPolar(const Buffer: pComplexArray; N: Integer);
+var
+    X: Polar;
+    i: Integer;
+begin
+    for i := 1 to N do
+    begin
+        x := CtoPolarDeg(Buffer^[i]);
+        with Buffer^[i], x do
+        begin
+            re := Mag;
+            im := Ang;
+        end;
+    end;
+end;
 
 //----------------------------------------------------------------------------
-FUNCTION Residual(p: Pointer; Nph:Integer):Complex;
+function Residual(p: Pointer; Nph: Integer): Complex;
 // Assume p points to complex array
 // compute residual of the number of phases specified and convert to polar
-VAR
-   pc:pComplexArray;
-   i:Integer;
+var
+    pc: pComplexArray;
+    i: Integer;
 
-Begin
-     pc := p;
-     Result := CZERO;
-     FOR i := 1 to Nph DO Caccum(Result, pc^[i]);
-End;
+begin
+    pc := p;
+    Result := CZERO;
+    for i := 1 to Nph do
+        Caccum(Result, pc^[i]);
+end;
 
 //----------------------------------------------------------------------------
-FUNCTION ResidualPolar(p: Pointer; Nph:Integer):Complex;
+function ResidualPolar(p: Pointer; Nph: Integer): Complex;
 // Assume p points to complex array
 // compute residual of the number of phases specified and convert to polar
 
-VAR
-   x:Complex;
-Begin
+var
+    x: Complex;
+begin
 
-     x := Residual(p, Nph);
-     Result.re := Cabs(x);
-     Result.im := Cdang(x);
+    x := Residual(p, Nph);
+    Result.re := Cabs(x);
+    Result.im := Cdang(x);
 
-End;
+end;
 
-FUNCTION Powerfactor(Const S:Complex):Double;
+function Powerfactor(const S: Complex): Double;
 
-  Function Sign(x:double):Double;
-  Begin
-      If x<0.0 then result := -1.0 else result := 1.0;
-  End;
+    function Sign(x: Double): Double;
+    begin
+        if x < 0.0 then
+            result := -1.0
+        else
+            result := 1.0;
+    end;
 
-Begin
-   If (S.re <> 0.0) and (S.im <> 0.0) Then Result := Sign(S.re*S.im)*Abs(S.re)/Cabs(S)
-   Else Result := 1.0;
-End;
+begin
+    if (S.re <> 0.0) and (S.im <> 0.0) then
+        Result := Sign(S.re * S.im) * Abs(S.re) / Cabs(S)
+    else
+        Result := 1.0;
+end;
 
-FUNCTION ConvertPFToPFRange2(const value:double):Double;
+function ConvertPFToPFRange2(const value: Double): Double;
 {Convert PF from +/- 1 to 0..2 Where 1..2 is leading}
-Begin
-     If value<0.0 Then Result := 2.0 + Value
-     Else Result := Value;
-End;
+begin
+    if value < 0.0 then
+        Result := 2.0 + Value
+    else
+        Result := Value;
+end;
 
-FUNCTION ConvertPFRange2ToPF(const value:double):Double;
+function ConvertPFRange2ToPF(const value: Double): Double;
 
-Begin
-     If value > 1.0 Then Result := value - 2.0
-     Else Result := Value;
-End;
+begin
+    if value > 1.0 then
+        Result := value - 2.0
+    else
+        Result := Value;
+end;
 
-PROCEDURE ClearEventLog;
+procedure ClearEventLog;
 
-Begin
-  Try
+begin
+    try
 {****  WriteDLLDebugFile(Format('ClearEventLog: EventStrings= %p', [@EventStrings])); }
-       EventStrings.Clear;
-  Except
-       On E:Exception Do
-          Dosimplemsg(Format('Exception clearing event log: %s, @EventStrings=%p', [E.Message, @EventStrings]), 7151);
-  End;
-End;
+        EventStrings.Clear;
+    except
+        On E: Exception do
+            Dosimplemsg(Format('Exception clearing event log: %s, @EventStrings=%p', [E.Message, @EventStrings]), 7151);
+    end;
+end;
 
-PROCEDURE ClearErrorLog;
+procedure ClearErrorLog;
 
-Begin
-  Try
+begin
+    try
 {****  WriteDLLDebugFile(Format('ClearEventLog: EventStrings= %p', [@EventStrings])); }
-       ErrorStrings.Clear;
-  Except
-       On E:Exception Do
-          Dosimplemsg(Format('Exception clearing error log: %s, @EventStrings=%p', [E.Message, @EventStrings]), 71511);
-  End;
-End;
+        ErrorStrings.Clear;
+    except
+        On E: Exception do
+            Dosimplemsg(Format('Exception clearing error log: %s, @EventStrings=%p', [E.Message, @EventStrings]), 71511);
+    end;
+end;
 
-PROCEDURE LogThisEvent(Const EventName:String);
+procedure LogThisEvent(const EventName: String);
 
-Begin
+begin
     {****  WriteDLLDebugFile(Format('LogThisEvent: EventStrings= %p', [@EventStrings])); }
-    With ActiveCircuit.Solution do
-    EventStrings.Add(Format('Hour=%d, Sec=%-.8g, Iteration=%d, ControlIter=%d, Event=%s',
-          [DynaVars.intHour, Dynavars.t, iteration, ControlIteration, EventName ]));
+    with ActiveCircuit.Solution do
+        EventStrings.Add(Format('Hour=%d, Sec=%-.8g, Iteration=%d, ControlIter=%d, Event=%s',
+            [DynaVars.intHour, Dynavars.t, iteration, ControlIteration, EventName]));
 
      //     'Time=' + TimeToStr(Time)+': '+EventName);
  {****  ShowMessageForm(EventStrings); }
-End;
+end;
 
-PROCEDURE AppendToEventLog(const opdev:string; Const action:String);
-VAR
-        S:String;
+procedure AppendToEventLog(const opdev: String; const action: String);
+var
+    S: String;
 
-Begin
+begin
   {****  WriteDLLDebugFile(Format('LogThisEvent: EventStrings= %p', [@EventStrings])); }
-          With  ActiveCircuit.Solution  Do
-          S :=  Format('Hour=%d, Sec=%-.5g, ControlIter=%d, Element=%s, Action=%s',
-          [DynaVars.intHour, Dynavars.t, ControlIteration, OpDev, Uppercase(action) ]);
-          EventStrings.Add(S);
+    with  ActiveCircuit.Solution do
+        S := Format('Hour=%d, Sec=%-.5g, ControlIter=%d, Element=%s, Action=%s',
+            [DynaVars.intHour, Dynavars.t, ControlIteration, OpDev, Uppercase(action)]);
+    EventStrings.Add(S);
   {****  ShowMessageForm(EventStrings); }
-End;
+end;
 
 
-Procedure DumpComplexMatrix(Var F:TextFile; AMatrix:TcMatrix);
+procedure DumpComplexMatrix(var F: TextFile; AMatrix: TcMatrix);
 
-Var  i, j:integer;
+var
+    i, j: Integer;
 
-Begin
-     Try
-        IF AMatrix<>nil THEN
-          Begin
-             Writeln(F, '!(Real part)');
-             With AMatrix Do
-               Begin
-                  FOR i := 1 to Order DO
-                   Begin
-                     Write(F, '! ');
-                       For j := 1 to i DO Write(F, Format('%g ', [GetElement(i,j).re]));
-                     Writeln(F);
-                   End;
-                 Writeln(F, '!(Imaginary part) = ');
-                 FOR i := 1 to Order DO
-                   Begin
-                     Write(F, '! ');
-                      For j := 1 to i DO  Write(F, Format('%g ', [GetElement(i,j).im]));;
-                     Writeln(F);
-                   End;
-               End;
-          End;
-     Except
-         On E:Exception Do
-           Begin
-                DoSimpleMsg('Error in Dump Complex Matrix: '+E.message+'  Write aborted.', 716);
-           End;
+begin
+    try
+        if AMatrix <> NIL then
+        begin
+            Writeln(F, '!(Real part)');
+            with AMatrix do
+            begin
+                for i := 1 to Order do
+                begin
+                    Write(F, '! ');
+                    for j := 1 to i do
+                        Write(F, Format('%g ', [GetElement(i, j).re]));
+                    Writeln(F);
+                end;
+                Writeln(F, '!(Imaginary part) = ');
+                for i := 1 to Order do
+                begin
+                    Write(F, '! ');
+                    for j := 1 to i do
+                        Write(F, Format('%g ', [GetElement(i, j).im]));
+                    ;
+                    Writeln(F);
+                end;
+            end;
+        end;
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg('Error in Dump Complex Matrix: ' + E.message + '  Write aborted.', 716);
+        end;
 
-     End;
+    end;
 
 
-End;
+end;
 
-Function AllTerminalsClosed(ThisElement:TDSSCktElement):Boolean;
+function AllTerminalsClosed(ThisElement: TDSSCktElement): Boolean;
 // check all conductors of this element to see IF it is closed.
 // Make sure at least one phase on each terminal is closed.
-VAR
-   i,j:Integer;
+var
+    i, j: Integer;
 
-Begin
-   Result := False;
-   FOR i := 1 to ThisElement.Nterms DO
-   Begin
-       Result := False;
-       ThisElement.ActiveTerminalIdx := i;
-       FOR j := 1 to ThisElement.NPhases DO
-       IF   ThisElement.Closed[j]
-       Then Begin
-           Result := True;
-           Break;
-       End;
-       IF Not Result Then Exit;  // didn't find a closed phase on this terminal
-   End;
-End;
+begin
+    Result := FALSE;
+    for i := 1 to ThisElement.Nterms do
+    begin
+        Result := FALSE;
+        ThisElement.ActiveTerminalIdx := i;
+        for j := 1 to ThisElement.NPhases do
+            if ThisElement.Closed[j] then
+            begin
+                Result := TRUE;
+                Break;
+            end;
+        if not Result then
+            Exit;  // didn't find a closed phase on this terminal
+    end;
+end;
 
 
-
-Function WriteVsourceClassFile(Const DSS_Class:TDSSClass; IsCktElement:Boolean):Boolean;
+function WriteVsourceClassFile(const DSS_Class: TDSSClass; IsCktElement: Boolean): Boolean;
 {Special Function to write the Vsource class and change the DSS command of the first Source
  so that there is no problem with duplication when the circuit is subsequently created}
 
-Var
-   F:TextFile;
-   ClassName:String;
-Begin
-   Result := TRUE;
-   If DSS_Class.ElementCount =0 Then Exit;
-   Try
-     ClassName := DSS_Class.Name;
-     AssignFile(F, ClassName + '.dss');
-     Rewrite(F);
-     SavedFileList.Add(ClassName + '.dss');
-     DSS_Class.First;   // Sets ActiveDSSObject
-     WriteActiveDSSObject(F, 'Edit'); // Write First Vsource out as an Edit
-      While DSS_Class.Next >0 Do
-      Begin
+var
+    F: TextFile;
+    ClassName: String;
+begin
+    Result := TRUE;
+    if DSS_Class.ElementCount = 0 then
+        Exit;
+    try
+        ClassName := DSS_Class.Name;
+        AssignFile(F, ClassName + '.dss');
+        Rewrite(F);
+        SavedFileList.Add(ClassName + '.dss');
+        DSS_Class.First;   // Sets ActiveDSSObject
+        WriteActiveDSSObject(F, 'Edit'); // Write First Vsource out as an Edit
+        while DSS_Class.Next > 0 do
+        begin
        // Skip Cktelements that have been checked before and written out by
        // something else
-       If TDSSCktElement(ActiveDSSObject).HasBeenSaved Then Continue;
+            if TDSSCktElement(ActiveDSSObject).HasBeenSaved then
+                Continue;
        // Skip disabled circuit elements; write all general DSS objects
-       WriteActiveDSSObject(F, 'New');    // sets HasBeenSaved := TRUE
-      End;
-     CloseFile(F);
-     DSS_Class.Saved := TRUE;
+            WriteActiveDSSObject(F, 'New');    // sets HasBeenSaved := TRUE
+        end;
+        CloseFile(F);
+        DSS_Class.Saved := TRUE;
 
-   Except
-       On E:Exception Do
-        Begin
-         DoSimpleMsg('WriteClassFile Error: '+E.Message, 717);
-         Result := FALSE;
-        End;
-   End;
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg('WriteClassFile Error: ' + E.Message, 717);
+            Result := FALSE;
+        end;
+    end;
 
-End;
+end;
 
-Function WriteClassFile(Const DSS_Class:TDSSClass; FileName:String; IsCktElement:Boolean):Boolean;
+function WriteClassFile(const DSS_Class: TDSSClass; FileName: String; IsCktElement: Boolean): Boolean;
 
-Var
-   F:TextFile;
-   ClassName:String;
-   Nrecords:Integer;
+var
+    F: TextFile;
+    ClassName: String;
+    Nrecords: Integer;
 
 
-Begin
+begin
 
-   Result := TRUE;
+    Result := TRUE;
 
-   If DSS_Class.ElementCount =0 Then Exit;
+    if DSS_Class.ElementCount = 0 then
+        Exit;
 
-   Try
-     ClassName := DSS_Class.Name;
-     If Length(FileName)=0 Then FileName := ClassName + '.DSS';   // default file name
-     AssignFile(F, FileName);
-     Rewrite(F);
+    try
+        ClassName := DSS_Class.Name;
+        if Length(FileName) = 0 then
+            FileName := ClassName + '.DSS';   // default file name
+        AssignFile(F, FileName);
+        Rewrite(F);
 
-     Nrecords:= 0;
+        Nrecords := 0;
 
-      DSS_Class.First;   // Sets ActiveDSSObject
-      Repeat
+        DSS_Class.First;   // Sets ActiveDSSObject
+        repeat
 
        // Skip Cktelements that have been checked before and written out by
        // something else
-       If IsCktElement Then With TDSSCktElement(ActiveDSSObject) Do
-                            If HasBeenSaved or (not Enabled) Then Continue;
+            if IsCktElement then
+                with TDSSCktElement(ActiveDSSObject) do
+                    if HasBeenSaved or (not Enabled) then
+                        Continue;
 
-        WriteActiveDSSObject(F, 'New');  // sets HasBeenSaved := TRUE
-        Inc(Nrecords); // count the actual records
+            WriteActiveDSSObject(F, 'New');  // sets HasBeenSaved := TRUE
+            Inc(Nrecords); // count the actual records
 
-      Until DSS_Class.Next = 0;
+        until DSS_Class.Next = 0;
 
-     CloseFile(F);
+        CloseFile(F);
 
-     If Nrecords>0 Then SavedFileList.Add(FileName) else DeleteFile(FileName);
+        if Nrecords > 0 then
+            SavedFileList.Add(FileName)
+        else
+            DeleteFile(FileName);
 
-     DSS_Class.Saved := TRUE;
+        DSS_Class.Saved := TRUE;
 
-   Except
-       On E:Exception Do
-        Begin
-         DoSimpleMsg('WriteClassFile Error: '+E.Message, 718);
-         Result := FALSE;
-        End;
-   End;
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg('WriteClassFile Error: ' + E.Message, 718);
+            Result := FALSE;
+        end;
+    end;
 
-End;
+end;
 
-Function checkforblanks(const S:String): String;
+function checkforblanks(const S: String): String;
 {Checks for blanks in the name and puts quotes around it}
-Begin
-   Result := s;
-   If Pos(' ', S)>0 Then
-      If S[1] <> '(' Then  // Ignore if already quoted
-        If S[1] <> '[' Then  // Ignore if already quoted
-         If S[1] <> '{' Then  // Ignore if already quoted
-          Result := '"'+S+'"';
-End;
+begin
+    Result := s;
+    if Pos(' ', S) > 0 then
+        if S[1] <> '(' then  // Ignore if already quoted
+            if S[1] <> '[' then  // Ignore if already quoted
+                if S[1] <> '{' then  // Ignore if already quoted
+                    Result := '"' + S + '"';
+end;
 
 
-Procedure WriteActiveDSSObject(Var F:TextFile; const NeworEdit:String);
+procedure WriteActiveDSSObject(var F: TextFile; const NeworEdit: String);
 
-Var
-   ParClass:TDssClass;
+var
+    ParClass: TDssClass;
 
 
-Begin
-   ParClass := ActiveDSSObject.ParentClass;
+begin
+    ParClass := ActiveDSSObject.ParentClass;
   //  Write(F, NeworEdit, ' "', ParClass.Name + '.' + ActiveDSSObject.Name,'"');
-   Write(F, Format('%s "%s.%s"',[NeworEdit, ParClass.Name, ActiveDSSObject.Name ]));
+    Write(F, Format('%s "%s.%s"', [NeworEdit, ParClass.Name, ActiveDSSObject.Name]));
 
-   ActiveDSSObject.SaveWrite(F);
-
+    ActiveDSSObject.SaveWrite(F);
 
 
    // Handle disabled circuit elements;   Modified to allow applets to save disabled elements 12-28-06
-   IF (ActiveDSSObject.DSSObjType AND ClassMask) <> DSS_Object Then
-      If Not TDSSCktElement( ActiveDSSObject).Enabled Then Write(F, ' ENABLED=NO');
-   Writeln(F); // Terminate line
+    if (ActiveDSSObject.DSSObjType and ClassMask) <> DSS_Object then
+        if not TDSSCktElement(ActiveDSSObject).Enabled then
+            Write(F, ' ENABLED=NO');
+    Writeln(F); // Terminate line
 
-   ActiveDSSObject.HasBeenSaved := TRUE;
+    ActiveDSSObject.HasBeenSaved := TRUE;
 
-End;
+end;
 
-PROCEDURE DoResetKeepList;
+procedure DoResetKeepList;
 
-Var i:Integer;
+var
+    i: Integer;
 
-Begin
+begin
 
-    With ActiveCircuit Do
-      For i := 1 to NumBuses Do Buses^[i].Keep := FALSE; 
+    with ActiveCircuit do
+        for i := 1 to NumBuses do
+            Buses^[i].Keep := FALSE;
 
-End;
+end;
 
-Function ExtractComment(const s:string):String;
+function ExtractComment(const s: String): String;
 
-Begin
+begin
 
-   Result := copy(s, pos('!', s), Length(s));
+    Result := copy(s, pos('!', s), Length(s));
 
-End;
+end;
 
-Function RewriteAlignedFile(const Filename:String):Boolean;
+function RewriteAlignedFile(const Filename: String): Boolean;
 
-Var Fin, Fout:TextFile;
-    SaveDelims, Line, Field, AlignedFile:String;
-    FieldLength:pIntegerArray;
-    ArraySize,FieldLen,FieldNum:Integer;
+var
+    Fin, Fout: TextFile;
+    SaveDelims, Line, Field, AlignedFile: String;
+    FieldLength: pIntegerArray;
+    ArraySize, FieldLen, FieldNum: Integer;
 
-Begin
-   Result := TRUE;
+begin
+    Result := TRUE;
 
-   Try
-     AssignFile(Fin, FileName);
-     Reset(Fin);
-   Except
-     On E:Exception Do Begin
-       DoSimplemsg('Error opening file: '+Filename+', '+E.message, 719);
-       Result := False;
-       Exit
-     End;
-   End;
+    try
+        AssignFile(Fin, FileName);
+        Reset(Fin);
+    except
+        On E: Exception do
+        begin
+            DoSimplemsg('Error opening file: ' + Filename + ', ' + E.message, 719);
+            Result := FALSE;
+            Exit
+        end;
+    end;
 
-   Try
-     AlignedFile := ExtractFilePath(FileName) + 'Aligned_' + ExtractFileName(FileName);
-     AssignFile(Fout, AlignedFile );
-     Rewrite(Fout);
-   Except
-     On E:Exception Do Begin
-       DoSimplemsg('Error opening file: '+ AlignedFile +', '+E.message, 720);
-       CloseFile(Fin);
-       Result := False;
-       Exit;
-     End;
-   End;
+    try
+        AlignedFile := ExtractFilePath(FileName) + 'Aligned_' + ExtractFileName(FileName);
+        AssignFile(Fout, AlignedFile);
+        Rewrite(Fout);
+    except
+        On E: Exception do
+        begin
+            DoSimplemsg('Error opening file: ' + AlignedFile + ', ' + E.message, 720);
+            CloseFile(Fin);
+            Result := FALSE;
+            Exit;
+        end;
+    end;
 
-   SaveDelims := AuxParser.Delimiters;
-   AuxParser.Delimiters := ',';
-   ArraySize   := 10;
-   FieldLength := Allocmem(Sizeof(Integer) * ArraySize);
+    SaveDelims := AuxParser.Delimiters;
+    AuxParser.Delimiters := ',';
+    ArraySize := 10;
+    FieldLength := Allocmem(Sizeof(Integer) * ArraySize);
 
- Try
+    try
    {Scan once to set field lengths}
-   While Not Eof(Fin) Do
-   Begin
-       Readln(Fin, line);
-       AuxParser.CmdString := Line;  // Load the parsr
-       FieldNum := 0;
-       Repeat
-         AuxParser.NextParam;
-         Field := Auxparser.StrValue;
-         FieldLen := Length(Field);
-         If pos(' ', Field)>0 Then FieldLen := FieldLen + 2;
-         If FieldLen>0 Then
-         Begin
-            Inc(FieldNum);
-            If FieldNum>ArraySize Then
-             Begin
-                 ArraySize := FieldNum;
-                 Reallocmem(FieldLength, Sizeof(FieldLength^[1])*ArraySize);
-                 FieldLength^[FieldNum] := FieldLen;
-             End
-            Else If FieldLen>FieldLength^[Fieldnum] then
-                  FieldLength^[FieldNum] := FieldLen;
+        while not Eof(Fin) do
+        begin
+            Readln(Fin, line);
+            AuxParser.CmdString := Line;  // Load the parsr
+            FieldNum := 0;
+            repeat
+                AuxParser.NextParam;
+                Field := Auxparser.StrValue;
+                FieldLen := Length(Field);
+                if pos(' ', Field) > 0 then
+                    FieldLen := FieldLen + 2;
+                if FieldLen > 0 then
+                begin
+                    Inc(FieldNum);
+                    if FieldNum > ArraySize then
+                    begin
+                        ArraySize := FieldNum;
+                        Reallocmem(FieldLength, Sizeof(FieldLength^[1]) * ArraySize);
+                        FieldLength^[FieldNum] := FieldLen;
+                    end
+                    else
+                    if FieldLen > FieldLength^[Fieldnum] then
+                        FieldLength^[FieldNum] := FieldLen;
 
-         End;
-       Until FieldLen=0;
+                end;
+            until FieldLen = 0;
 
-   End;
+        end;
 
    {Now go back and re-read while writing the new file}
-   Reset(Fin);
+        Reset(Fin);
 
-   While Not EOF(Fin) Do
-   Begin
-       Readln(Fin, Line);
-       AuxParser.CmdString := Line;  // Load the parser
-       FieldNum := 0;
-       Repeat
-         AuxParser.NextParam;
-         Field := Auxparser.StrValue;
-         If pos(' ', Field)>0 Then Field := '"'+Field+'"';  // add quotes if a space in field
-         FieldLen := Length(Field);
-         If FieldLen>0 Then
-         Begin
-            Inc(FieldNum);
-            Write(Fout, Pad(Field, FieldLength^[FieldNum]+1));
-         End;
-       Until FieldLen=0;
+        while not EOF(Fin) do
+        begin
+            Readln(Fin, Line);
+            AuxParser.CmdString := Line;  // Load the parser
+            FieldNum := 0;
+            repeat
+                AuxParser.NextParam;
+                Field := Auxparser.StrValue;
+                if pos(' ', Field) > 0 then
+                    Field := '"' + Field + '"';  // add quotes if a space in field
+                FieldLen := Length(Field);
+                if FieldLen > 0 then
+                begin
+                    Inc(FieldNum);
+                    Write(Fout, Pad(Field, FieldLength^[FieldNum] + 1));
+                end;
+            until FieldLen = 0;
 
-       If (pos('!', Line)>0) Then Write(Fout, ExtractComment(Line));
+            if (pos('!', Line) > 0) then
+                Write(Fout, ExtractComment(Line));
 
-       Writeln(Fout);
-   End;
+            Writeln(Fout);
+        end;
 
- Finally     {Make sure we do this stuff ...}
+    finally     {Make sure we do this stuff ...}
 
-   Closefile(Fin);
-   CloseFile(Fout);
+        Closefile(Fin);
+        CloseFile(Fout);
 
-   Reallocmem(FieldLength,0);
-   AuxParser.Delimiters := SaveDelims;
+        Reallocmem(FieldLength, 0);
+        AuxParser.Delimiters := SaveDelims;
 
- End;
+    end;
 
- GlobalResult :=  AlignedFile;
+    GlobalResult := AlignedFile;
 
-End;
+end;
 
-Function DoExecutiveCommand(const s:String):Integer;
+function DoExecutiveCommand(const s: String): Integer;
 
-Begin
+begin
     DSSExecutive.command := S;
     Result := DSSExecutive.Error;
-End;
+end;
 
 
-FUNCTION CheckParallel(const Line1, Line2:TDSSCktElement): Boolean;
+function CheckParallel(const Line1, Line2: TDSSCktElement): Boolean;
   {Check to see if two lines are in parallel}
-Begin
+begin
     Result := FALSE;
-    If Line1.Terminals^[1].BusRef = Line2.Terminals^[1].BusRef then
-       If Line1.Terminals^[2].BusRef = Line2.Terminals^[2].BusRef then
-       Begin
-           Result := TRUE;
-           Exit;
-       End;
-    If Line1.Terminals^[2].BusRef = Line2.Terminals^[1].BusRef then
-       If Line1.Terminals^[1].BusRef = Line2.Terminals^[2].BusRef then
-       Begin
-           Result := TRUE;
-           Exit;
-       End;
-End;
+    if Line1.Terminals^[1].BusRef = Line2.Terminals^[1].BusRef then
+        if Line1.Terminals^[2].BusRef = Line2.Terminals^[2].BusRef then
+        begin
+            Result := TRUE;
+            Exit;
+        end;
+    if Line1.Terminals^[2].BusRef = Line2.Terminals^[1].BusRef then
+        if Line1.Terminals^[1].BusRef = Line2.Terminals^[2].BusRef then
+        begin
+            Result := TRUE;
+            Exit;
+        end;
+end;
 
-Function GetMaxPUVoltage:Double;
-Var i,j, nref:Integer;
-Begin
+function GetMaxPUVoltage: Double;
+var
+    i, j, nref: Integer;
+begin
     Result := -1.0;
-    With ActiveCircuit Do Begin
-       For i := 1 to NumBuses do
-       Begin
-           If buses^[i].kVBase > 0.0 Then Begin
-               For j := 1 to Buses^[i].NumNodesThisBus Do Begin
-                Nref := Buses^[i].GetRef (j);
-                If Nref>0 Then
-                 Result := Max(Result, Cabs(Solution.NodeV^[nref])/Buses^[i].kvbase);
-               end;
-           End;
-       End;
-       Result := Result * 0.001;
-    End;
-End;
+    with ActiveCircuit do
+    begin
+        for i := 1 to NumBuses do
+        begin
+            if buses^[i].kVBase > 0.0 then
+            begin
+                for j := 1 to Buses^[i].NumNodesThisBus do
+                begin
+                    Nref := Buses^[i].GetRef(j);
+                    if Nref > 0 then
+                        Result := Max(Result, Cabs(Solution.NodeV^[nref]) / Buses^[i].kvbase);
+                end;
+            end;
+        end;
+        Result := Result * 0.001;
+    end;
+end;
 
-Function GetMinPUVoltage(IgnoreNeutrals:Boolean):Double;
-Var i,j, nref :Integer;
-    MinFound  :Boolean;
-    Vmagpu    :Double;
-Begin
-    Result   := 1.0e50; // start with big number
-    MinFound := False;
+function GetMinPUVoltage(IgnoreNeutrals: Boolean): Double;
+var
+    i, j, nref: Integer;
+    MinFound: Boolean;
+    Vmagpu: Double;
+begin
+    Result := 1.0e50; // start with big number
+    MinFound := FALSE;
 
-    With ActiveCircuit Do Begin
-       For i := 1 to NumBuses Do
-         With buses^[i] Do
-           If kVBase > 0.0 Then Begin
-               For j := 1 to NumNodesThisBus Do Begin
-                  Nref := GetRef (j);
-                  If Nref>0 Then Begin
-                     Vmagpu := Cabs(Solution.NodeV^[nref])/kvbase;
-                     If IgnoreNeutrals Then Begin
-                        if (Vmagpu > 100.0) then Begin  // 0.1 pu
-                           Result   := Min(Result, Vmagpu);   // only check buses greater than 10%
-                           MinFound := True;
-                        End;
-                     End Else Begin
-                         Result   := Min(Result, Vmagpu);
-                         MinFound := True;
-                     End;
-                  End;
-               End;
-           End;
-       Result := Result * 0.001;
-    End;
+    with ActiveCircuit do
+    begin
+        for i := 1 to NumBuses do
+            with buses^[i] do
+                if kVBase > 0.0 then
+                begin
+                    for j := 1 to NumNodesThisBus do
+                    begin
+                        Nref := GetRef(j);
+                        if Nref > 0 then
+                        begin
+                            Vmagpu := Cabs(Solution.NodeV^[nref]) / kvbase;
+                            if IgnoreNeutrals then
+                            begin
+                                if (Vmagpu > 100.0) then
+                                begin  // 0.1 pu
+                                    Result := Min(Result, Vmagpu);   // only check buses greater than 10%
+                                    MinFound := TRUE;
+                                end;
+                            end
+                            else
+                            begin
+                                Result := Min(Result, Vmagpu);
+                                MinFound := TRUE;
+                            end;
+                        end;
+                    end;
+                end;
+        Result := Result * 0.001;
+    end;
 
-    If not MinFound Then Result := -1.0;
+    if not MinFound then
+        Result := -1.0;
 
-End;
+end;
 
-Function GetTotalPowerFromSources:Complex;
+function GetTotalPowerFromSources: Complex;
 
-Var CktElem:TDSSCktElement;
+var
+    CktElem: TDSSCktElement;
 
-Begin
-  Result := CZERO;
-  cktElem := ActiveCircuit.Sources.First;
-  While CktElem <>nil Do Begin
+begin
+    Result := CZERO;
+    cktElem := ActiveCircuit.Sources.First;
+    while CktElem <> NIL do
+    begin
      //----CktElem.ActiveTerminalIdx := 1;
-     Caccum( Result, Cnegate(CktElem.power[1]));
-     cktElem := ActiveCircuit.Sources.Next;
-  End;
-End;
+        Caccum(Result, Cnegate(CktElem.power[1]));
+        cktElem := ActiveCircuit.Sources.Next;
+    end;
+end;
 
-Procedure WriteUniformGenerators(var F:TextFile; kW, PF:Double; DoGenerators:Boolean);
+procedure WriteUniformGenerators(var F: TextFile; kW, PF: Double; DoGenerators: Boolean);
  { Distribute the generators uniformly amongst the feeder nodes that have loads}
 
-Var
-   kWeach:double;
-   LoadClass:TDSSClass;
-   pLoad : TLoadObj;
-   Count, i :Integer;
+var
+    kWeach: Double;
+    LoadClass: TDSSClass;
+    pLoad: TLoadObj;
+    Count, i: Integer;
 
-Begin
-   LoadClass := GetDSSClassPtr('load');
-   Count := LoadClass.ElementList.ListSize ;
+begin
+    LoadClass := GetDSSClassPtr('load');
+    Count := LoadClass.ElementList.ListSize;
 
-   kWEach := kW/Max(1.0,round(Count));
-   If ActiveCircuit.PositiveSequence Then  kWEach := kWeach/3.0;
+    kWEach := kW / Max(1.0, round(Count));
+    if ActiveCircuit.PositiveSequence then
+        kWEach := kWeach / 3.0;
 
-   For i := 1 to Count Do Begin
-      pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-      If pLoad.Enabled Then Begin
-        If DoGenerators Then Write(F, Format('new generator.DG_%d  bus1=%s',[i, pLoad.GetBus(1)]))
-                        else Write(F, Format('new load.DL_%d  bus1=%s',[i, pLoad.GetBus(1)]));
-        With ActiveCircuit Do Begin
-            Write(F, Format(' phases=%d kV=%-g',[pLoad.NPhases, pLoad.kVLoadBase]));
-            Write(F, Format(' kW=%-g',[kWeach]));
-            Write(F, Format(' PF=%-.3g',[PF]));
-        End;
-        Write(F, ' model=1');
-        Writeln(F);
-      End;
-   End;
-End;
+    for i := 1 to Count do
+    begin
+        pLoad := TLoadObj(LoadClass.ElementList.Get(i));
+        if pLoad.Enabled then
+        begin
+            if DoGenerators then
+                Write(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
+            else
+                Write(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
+            with ActiveCircuit do
+            begin
+                Write(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
+                Write(F, Format(' kW=%-g', [kWeach]));
+                Write(F, Format(' PF=%-.3g', [PF]));
+            end;
+            Write(F, ' model=1');
+            Writeln(F);
+        end;
+    end;
+end;
 
-Procedure WriteRandomGenerators(var F:TextFile; kW, PF:Double; DoGenerators:Boolean);
+procedure WriteRandomGenerators(var F: TextFile; kW, PF: Double; DoGenerators: Boolean);
 {Distribute Generators randomly to loaded buses}
 
-Var
-   kWeach: double;
-   LoadClass: TDSSClass;
-   pLoad : TLoadObj;
-   Count, i,  LoadCount :Integer;
+var
+    kWeach: Double;
+    LoadClass: TDSSClass;
+    pLoad: TLoadObj;
+    Count, i, LoadCount: Integer;
 
-Begin
-   LoadClass := GetDSSClassPtr('load');
-   Count := LoadClass.ElementList.ListSize ;
+begin
+    LoadClass := GetDSSClassPtr('load');
+    Count := LoadClass.ElementList.ListSize;
    {Count enabled loads}
-   LoadCount := 0;
-   For i := 1 to Count Do Begin
-      pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-      If pLoad.Enabled Then inc(LoadCount);
-   End;
+    LoadCount := 0;
+    for i := 1 to Count do
+    begin
+        pLoad := TLoadObj(LoadClass.ElementList.Get(i));
+        if pLoad.Enabled then
+            inc(LoadCount);
+    end;
 
 
-   kWEach := kW/LoadCount;  // median sized generator
-   If ActiveCircuit.PositiveSequence Then kWEach := kWEach/3.0;
+    kWEach := kW / LoadCount;  // median sized generator
+    if ActiveCircuit.PositiveSequence then
+        kWEach := kWEach / 3.0;
 
-   randomize;
+    randomize;
 
    {Place random sizes on load buses so that total is approximately what was spec'd}
-   For i := 1 to Count Do Begin
-      pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-      If pLoad.Enabled Then Begin
-        If DoGenerators Then Write(F, Format('new generator.DG_%d  bus1=%s',[i, pLoad.GetBus(1)]))
-                        else Write(F, Format('new load.DL_%d  bus1=%s',[i, pLoad.GetBus(1)]));
-        With ActiveCircuit Do Begin
-            Write(F, Format(' phases=%d kV=%-g',[pLoad.NPhases, pLoad.kVLoadBase]));
-            Write(F, Format(' kW=%-g',[kWeach*random*2.0]));
-            Write(F, Format(' PF=%-.3g',[PF]));
-        End;
-        Write(F, ' model=1');
-        Writeln(F);
-      End;
-   End;
+    for i := 1 to Count do
+    begin
+        pLoad := TLoadObj(LoadClass.ElementList.Get(i));
+        if pLoad.Enabled then
+        begin
+            if DoGenerators then
+                Write(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
+            else
+                Write(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
+            with ActiveCircuit do
+            begin
+                Write(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
+                Write(F, Format(' kW=%-g', [kWeach * random * 2.0]));
+                Write(F, Format(' PF=%-.3g', [PF]));
+            end;
+            Write(F, ' model=1');
+            Writeln(F);
+        end;
+    end;
 
 
-End;
+end;
 
-Procedure WriteEveryOtherGenerators(var F:TextFile; kW, PF:Double; Skip:Integer; DoGenerators:Boolean);
+procedure WriteEveryOtherGenerators(var F: TextFile; kW, PF: Double; Skip: Integer; DoGenerators: Boolean);
 
 {distribute generators on every other load, skipping the number specified}
 
 {Distribute the generator Proportional to load}
 
 
-Var
-   kWeach, TotalkW:double;
-   LoadClass:TDSSClass;
-   pLoad : TLoadObj;
-   Count, i, skipcount :Integer;
+var
+    kWeach, TotalkW: Double;
+    LoadClass: TDSSClass;
+    pLoad: TLoadObj;
+    Count, i, skipcount: Integer;
 
-Begin
+begin
 
-   LoadClass := GetDSSClassPtr('load');
-   Count := LoadClass.ElementList.ListSize ;
+    LoadClass := GetDSSClassPtr('load');
+    Count := LoadClass.ElementList.ListSize;
    {Add up the rated load in the enabled loads where gens will be placed}
-   TotalkW := 0.0;
-   Skipcount := Skip;
-   For i := 1 to Count Do Begin
-      pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-      If pLoad.Enabled Then
+    TotalkW := 0.0;
+    Skipcount := Skip;
+    for i := 1 to Count do
+    begin
+        pLoad := TLoadObj(LoadClass.ElementList.Get(i));
+        if pLoad.Enabled then
         {Do not count skipped loads}
-        If Skipcount=0 Then Begin
-            TotalkW := TotalkW + pLoad.kWBase;  // will be right value if pos seq, too
-            SkipCount := Skip;  // start counter over again
-        End Else Dec(SkipCount);
-   End;
+            if Skipcount = 0 then
+            begin
+                TotalkW := TotalkW + pLoad.kWBase;  // will be right value if pos seq, too
+                SkipCount := Skip;  // start counter over again
+            end
+            else
+                Dec(SkipCount);
+    end;
 
-   If ActiveCircuit.PositiveSequence then  kWeach :=  kW/TotalkW/3.0
-   Else   kWeach :=  kW/TotalkW;
+    if ActiveCircuit.PositiveSequence then
+        kWeach := kW / TotalkW / 3.0
+    else
+        kWeach := kW / TotalkW;
 
-   SkipCount := Skip;
-   For i := 1 to Count Do Begin
-      pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-      If pLoad.Enabled Then
-       If SkipCount=0 then Begin
-        If DoGenerators Then Write(F, Format('new generator.DG_%d  bus1=%s',[i, pLoad.GetBus(1)]))
-                        else Write(F, Format('new load.DL_%d  bus1=%s',[i, pLoad.GetBus(1)]));
-        With ActiveCircuit Do Begin
-            Write(F, Format(' phases=%d kV=%-g',[pLoad.NPhases, pLoad.kVLoadBase]));
-            Write(F, Format(' kW=%-g ',[kWeach * pLoad.kWBase]));
-            Write(F, Format(' PF=%-.3g',[PF]));
-        End;
-        Write(F, ' model=1');
-        Writeln(F);
-        SkipCount := Skip;
-       End
-       Else Dec(SkipCount);
-   End;
+    SkipCount := Skip;
+    for i := 1 to Count do
+    begin
+        pLoad := TLoadObj(LoadClass.ElementList.Get(i));
+        if pLoad.Enabled then
+            if SkipCount = 0 then
+            begin
+                if DoGenerators then
+                    Write(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
+                else
+                    Write(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
+                with ActiveCircuit do
+                begin
+                    Write(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
+                    Write(F, Format(' kW=%-g ', [kWeach * pLoad.kWBase]));
+                    Write(F, Format(' PF=%-.3g', [PF]));
+                end;
+                Write(F, ' model=1');
+                Writeln(F);
+                SkipCount := Skip;
+            end
+            else
+                Dec(SkipCount);
+    end;
 
-End;
+end;
 
-Procedure WriteProportionalGenerators(var F:TextFile; kW, PF:Double; DoGenerators:Boolean);
+procedure WriteProportionalGenerators(var F: TextFile; kW, PF: Double; DoGenerators: Boolean);
 
 {Distribute the generator Proportional to load}
 
 
-Var
-   kWeach,
-   TotalkW   :double;
-   LoadClass :TDSSClass;
-   pLoad     :TLoadObj;
-   Count, i  :Integer;
+var
+    kWeach,
+    TotalkW: Double;
+    LoadClass: TDSSClass;
+    pLoad: TLoadObj;
+    Count, i: Integer;
 
-Begin
-   LoadClass := GetDSSClassPtr('load');
-   Count := LoadClass.ElementList.ListSize ;
+begin
+    LoadClass := GetDSSClassPtr('load');
+    Count := LoadClass.ElementList.ListSize;
    {Add up the rated load in the enabled loads}
-   TotalkW := 0.0;
-   For i := 1 to Count Do Begin
-      pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-      If pLoad.Enabled Then Begin
-          TotalkW := TotalkW + pLoad.kWBase;  // will be right value if pos seq, too
-      End;
-   End;
+    TotalkW := 0.0;
+    for i := 1 to Count do
+    begin
+        pLoad := TLoadObj(LoadClass.ElementList.Get(i));
+        if pLoad.Enabled then
+        begin
+            TotalkW := TotalkW + pLoad.kWBase;  // will be right value if pos seq, too
+        end;
+    end;
 
-   If ActiveCircuit.PositiveSequence then  kWeach :=  kW/TotalkW/3.0
-   Else   kWeach :=  kW/TotalkW;
+    if ActiveCircuit.PositiveSequence then
+        kWeach := kW / TotalkW / 3.0
+    else
+        kWeach := kW / TotalkW;
 
-   For i := 1 to Count Do Begin
-      pLoad := TLoadObj(LoadClass.ElementList.Get(i));
-      If pLoad.Enabled Then Begin
-        If DoGenerators Then Write(F, Format('new generator.DG_%d  bus1=%s',[i, pLoad.GetBus(1)]))
-                        else Write(F, Format('new load.DL_%d  bus1=%s',[i, pLoad.GetBus(1)]));
-        With ActiveCircuit Do Begin
-            Write(F, Format(' phases=%d kV=%-g',[pLoad.NPhases, pLoad.kVLoadBase]));
-            Write(F, Format(' kW=%-g',[kWeach*pLoad.kWBase]));
-            Write(F, Format(' PF=%-.3g',[PF]));
-        End;
-        Write(F, ' model=1');
-        Writeln(F);
-      End;
-   End;
+    for i := 1 to Count do
+    begin
+        pLoad := TLoadObj(LoadClass.ElementList.Get(i));
+        if pLoad.Enabled then
+        begin
+            if DoGenerators then
+                Write(F, Format('new generator.DG_%d  bus1=%s', [i, pLoad.GetBus(1)]))
+            else
+                Write(F, Format('new load.DL_%d  bus1=%s', [i, pLoad.GetBus(1)]));
+            with ActiveCircuit do
+            begin
+                Write(F, Format(' phases=%d kV=%-g', [pLoad.NPhases, pLoad.kVLoadBase]));
+                Write(F, Format(' kW=%-g', [kWeach * pLoad.kWBase]));
+                Write(F, Format(' PF=%-.3g', [PF]));
+            end;
+            Write(F, ' model=1');
+            Writeln(F);
+        end;
+    end;
 
-End;
+end;
 
 
-Procedure MakeDistributedGenerators(kW, PF:double; How:String; Skip:Integer; Fname:String; DoGenerators:Boolean);
+procedure MakeDistributedGenerators(kW, PF: Double; How: String; Skip: Integer; Fname: String; DoGenerators: Boolean);
 
-Var
-   F:TextFile;
-   WhatStr : String;
+var
+    F: TextFile;
+    WhatStr: String;
 
-Begin
+begin
     {Write outputfile and then redirect command parser to it.}
 
-    Try
-       If FileExists(Fname) Then DoSimpleMsg('File "'+Fname+'" is about to be overwritten. Rename it now before continuing if you wish to keep it.', 721);
-       AssignFile(F, Fname);
-       Rewrite(F);
-    Except
-        On E:Exception Do Begin
+    try
+        if FileExists(Fname) then
+            DoSimpleMsg('File "' + Fname + '" is about to be overwritten. Rename it now before continuing if you wish to keep it.', 721);
+        AssignFile(F, Fname);
+        Rewrite(F);
+    except
+        On E: Exception do
+        begin
             DoSimpleMsg('Error opening "' + Fname + '" for writing. Aborting.', 722);
             Exit;
-        End;
-    End;
+        end;
+    end;
 
-    Try
-      if DoGenerators then  WhatStr := 'Generators' else WhatStr := 'Loads';
+    try
+        if DoGenerators then
+            WhatStr := 'Generators'
+        else
+            WhatStr := 'Loads';
 
-      Writeln(F, '! Created with Distribute Command:');
-      Writeln(f, Format('! Distribute kW=%-.6g PF=%-.6g How=%s Skip=%d  file=%s  what=%s', [kW, PF, How, Skip, Fname, WhatStr]));
-      Writeln(F);
+        Writeln(F, '! Created with Distribute Command:');
+        Writeln(f, Format('! Distribute kW=%-.6g PF=%-.6g How=%s Skip=%d  file=%s  what=%s', [kW, PF, How, Skip, Fname, WhatStr]));
+        Writeln(F);
      // Writeln(F, 'Set allowduplicates=yes');
-      If Length(How)=0 Then How:='P';
-      Case Uppercase(How)[1] of
-          'U':  WriteUniformGenerators(F, kW, PF, DoGenerators);
-          'R':  WriteRandomGenerators (F, kW, PF, DoGenerators);
-          'S':  WriteEveryOtherGenerators(F, kW, PF, Skip, DoGenerators);
-      Else
-           WriteProportionalGenerators(F, kW, PF, DoGenerators);
-      End;
-      GlobalResult := Fname;
-    Finally
+        if Length(How) = 0 then
+            How := 'P';
+        case Uppercase(How)[1] of
+            'U':
+                WriteUniformGenerators(F, kW, PF, DoGenerators);
+            'R':
+                WriteRandomGenerators(F, kW, PF, DoGenerators);
+            'S':
+                WriteEveryOtherGenerators(F, kW, PF, Skip, DoGenerators);
+        else
+            WriteProportionalGenerators(F, kW, PF, DoGenerators);
+        end;
+        GlobalResult := Fname;
+    finally
    // Writeln(F, 'Set allowduplicates=no');
-    CloseFile(F);
-    SetlastResultFile(Fname);
-    End;
+        CloseFile(F);
+        SetlastResultFile(Fname);
+    end;
 
-End;
+end;
 
 {Feeder Utilities}
-Procedure EnableFeeders;
+procedure EnableFeeders;
 
-Var
-    pMeter:TEnergyMeterObj;
+var
+    pMeter: TEnergyMeterObj;
 
     // Let EnergyMeter Objects control re-enabling of Feeders
     // Feeder could have been dumped in meantime by setting Feeder=False in EnergyMeter
 
-Begin
-   With ActiveCircuit Do Begin
-       pMeter := EnergyMeters.First;
-       While pMeter <> Nil Do Begin
-           pMeter.EnableFeeder; // also sets CktElement feeder flags true   if a valid feeder
-           pMeter := EnergyMeters.Next;
-       End;
-   End;
-End;
+begin
+    with ActiveCircuit do
+    begin
+        pMeter := EnergyMeters.First;
+        while pMeter <> NIL do
+        begin
+            pMeter.EnableFeeder; // also sets CktElement feeder flags true   if a valid feeder
+            pMeter := EnergyMeters.Next;
+        end;
+    end;
+end;
 
-Procedure DisableFeeders;
+procedure DisableFeeders;
 
-Var
-    pFeeder:TFeederObj;
+var
+    pFeeder: TFeederObj;
 
-Begin
-   With ActiveCircuit Do Begin
-       pFeeder := Feeders.First;
-       While pFeeder <> Nil Do Begin
-           pFeeder.Enabled := FALSE;
-           pFeeder.SetCktElementFeederFlags (FALSE);
-           pFeeder := Feeders.Next;
-       End;
-   End;
+begin
+    with ActiveCircuit do
+    begin
+        pFeeder := Feeders.First;
+        while pFeeder <> NIL do
+        begin
+            pFeeder.Enabled := FALSE;
+            pFeeder.SetCktElementFeederFlags(FALSE);
+            pFeeder := Feeders.Next;
+        end;
+    end;
 
-   
 
-End;
+end;
 
-Procedure InitializeFeeders;
+procedure InitializeFeeders;
 // Var i:Integer;
-Begin
+begin
     (*    Do Nothing for now
     With ActiveCircuit Do
     For i := 1 to Feeders.ListSize Do Begin
         If Not SolutionAbort Then TFeederObj(Feeders.Get(i)).InitForSweep;
     End;
     *)
-End;
+end;
 
-Procedure ForwardSweepAllFeeders;
+procedure ForwardSweepAllFeeders;
 // Var i:Integer;
-Begin
+begin
     (*    Do Nothing for now
     With ActiveCircuit Do
     For i := 1 to Feeders.ListSize Do Begin
         If Not SolutionAbort Then TFeederObj(Feeders.Get(i)).ForwardSweep;
     End;
 *)
-End;
+end;
 
-Procedure BackwardSweepAllFeeders;
+procedure BackwardSweepAllFeeders;
 // Var i:Integer;
-Begin
+begin
     (*    Do Nothing for now
     With ActiveCircuit Do
     For i := 1 to Feeders.ListSize Do Begin
         If Not SolutionAbort Then TFeederObj(Feeders.Get(i)).BackwardSweep;
     End;
     *)
-End;
+end;
 
-FUNCTION GetDSSArray_Real(n:Integer; dbls:pDoubleArray):String;
-VAr
-   i:Integer;
+function GetDSSArray_Real(n: Integer; dbls: pDoubleArray): String;
+var
+    i: Integer;
 
-BEGIN
-   Result := '[';
-   For i := 1 to n Do Result := Result + Format(' %-.6g',[dbls^[i]]);
-   Result := Result + ']';
-END;
+begin
+    Result := '[';
+    for i := 1 to n do
+        Result := Result + Format(' %-.6g', [dbls^[i]]);
+    Result := Result + ']';
+end;
 
-FUNCTION GetDSSArray_Integer(n:Integer; ints:pIntegerArray):String;
+function GetDSSArray_Integer(n: Integer; ints: pIntegerArray): String;
 
-VAr
-   i:Integer;
+var
+    i: Integer;
 
-BEGIN
-   Result := '[';
-   For i := 1 to n Do Result := Result + Format(' %-.d',[ints^[i]]);
-   Result := Result + ']';
-END;
+begin
+    Result := '[';
+    for i := 1 to n do
+        Result := Result + Format(' %-.d', [ints^[i]]);
+    Result := Result + ']';
+end;
 
-FUNCTION CmulReal_im(const a:Complex; const Mult:Double):Complex;  // Multiply only imaginary part by a real
+function CmulReal_im(const a: Complex; const Mult: Double): Complex;  // Multiply only imaginary part by a real
 
-Begin
-    Result := cmplx(a.re, a.im*mult);
-End;
+begin
+    Result := cmplx(a.re, a.im * mult);
+end;
 
-PROCEDURE CmulArray(pc:pcomplexarray; Multiplier:double; size:Integer);  // Multiply a complex array times a double
-VAR i:Integer;
-BEGIN
-   FOR i := 1 to size DO pc^[i] := CMulReal(pc^[i], Multiplier);
-END;
+procedure CmulArray(pc: pcomplexarray; Multiplier: Double; size: Integer);  // Multiply a complex array times a double
+var
+    i: Integer;
+begin
+    for i := 1 to size do
+        pc^[i] := CMulReal(pc^[i], Multiplier);
+end;
 
-Function GetMaxCktElementSize:Integer;
-Var i:integer;
+function GetMaxCktElementSize: Integer;
+var
+    i: Integer;
 
-Begin
-   Result := 0;
+begin
+    Result := 0;
 
-   With ActiveCircuit Do
-      For i := 1 to NumDevices Do Result := max(result, TDSSCktElement(CktElements.Get(i)).Yorder);
+    with ActiveCircuit do
+        for i := 1 to NumDevices do
+            Result := max(result, TDSSCktElement(CktElements.Get(i)).Yorder);
 
-End;
+end;
 
 (*
 FUNCTION IsValidNumericField(const NumberField:TEdit):Boolean;
@@ -2581,558 +2857,660 @@ Begin
      End;
 End;
 *)
-Function GetUniqueNodeNumber(const sBusName:String; StartNode:Integer):Integer;
+function GetUniqueNodeNumber(const sBusName: String; StartNode: Integer): Integer;
 {To help avoid collisions of neutral numbers, this function returns a node number that is not being used,
  Starting at the StartNode value}
-Var
-   iBusidx :Integer;
-Begin
+var
+    iBusidx: Integer;
+begin
     Result := StartNode;
     iBusidx := ActiveCircuit.Buslist.Find(sBusName);
-    If iBusidx>0 Then While ActiveCircuit.Buses^[iBusidx].FindIdx(Result) <> 0 Do Inc(Result);
-    ActiveCircuit.Buses^[iBusidx].Add (result);  // add it to the list so next call will be unique
-End;
+    if iBusidx > 0 then
+        while ActiveCircuit.Buses^[iBusidx].FindIdx(Result) <> 0 do
+            Inc(Result);
+    ActiveCircuit.Buses^[iBusidx].Add(result);  // add it to the list so next call will be unique
+end;
 
-Procedure ShowMessageBeep(Const s:String);
-Begin
+procedure ShowMessageBeep(const s: String);
+begin
     Beep;
     DSSInfoMessageDlg(s);
-End;
+end;
 
-Function IsPathBetween(FromLine, ToLine:TPDElement):Boolean;
-Var
-   PDElem :TPDelement;
-Begin
-   PDElem := FromLine;
-   Result := False;
-   while PDElem <> NIL do Begin
-     If PDElem = ToLine then Begin
-       Result := True;
-       Exit;
-     End;
-     PDElem := PDElem.ParentPDElement;
-   End;
-End;
+function IsPathBetween(FromLine, ToLine: TPDElement): Boolean;
+var
+    PDElem: TPDelement;
+begin
+    PDElem := FromLine;
+    Result := FALSE;
+    while PDElem <> NIL do
+    begin
+        if PDElem = ToLine then
+        begin
+            Result := TRUE;
+            Exit;
+        end;
+        PDElem := PDElem.ParentPDElement;
+    end;
+end;
 
-Procedure TraceAndEdit(FromLine, ToLine:TPDElement; NPhases:  Integer; EditStr:String);
+procedure TraceAndEdit(FromLine, ToLine: TPDElement; NPhases: Integer; EditStr: String);
 {Trace back up a tree and execute an edit command string}
-Var
-   pLine :TPDElement;
-Begin
-   pLine := FromLine;
-   while pLine <> NIL do Begin
-     if (pLine.NPhases = NPhases) or (Nphases=0) then begin
-      Parser.CmdString := EditStr;
-      pLine.Edit;   // Uses Parser
-     end;
-     If pLine = ToLine then Break;
-     pLine := pLine.ParentPDElement;
-   End;
-End;
+var
+    pLine: TPDElement;
+begin
+    pLine := FromLine;
+    while pLine <> NIL do
+    begin
+        if (pLine.NPhases = NPhases) or (Nphases = 0) then
+        begin
+            Parser.CmdString := EditStr;
+            pLine.Edit;   // Uses Parser
+        end;
+        if pLine = ToLine then
+            Break;
+        pLine := pLine.ParentPDElement;
+    end;
+end;
 
-Procedure GoForwardAndRephase(FromLine:TPDElement; const PhaseString, EditStr, ScriptFileName:String; TransStop:Boolean);
+procedure GoForwardAndRephase(FromLine: TPDElement; const PhaseString, EditStr, ScriptFileName: String; TransStop: Boolean);
 {Trace forward down a tree and Generate a script file to change the phase}
-Var
-   pPDelem :TPDElement;
-   pShuntObject :TDSSCktElement;
-   pMeter  :TEnergyMeterObj;
-   i       :Integer;
-   S       :String;
-   Fout    :Textfile;
-   FileName :String;
-   XfmrLevel:Integer;
+var
+    pPDelem: TPDElement;
+    pShuntObject: TDSSCktElement;
+    pMeter: TEnergyMeterObj;
+    i: Integer;
+    S: String;
+    Fout: Textfile;
+    FileName: String;
+    XfmrLevel: Integer;
 
-Begin
+begin
 
-   pMeter := FromLine.MeterObj as TEnergyMeterObj;
+    pMeter := FromLine.MeterObj as TEnergyMeterObj;
 
    {Search for starting line in branchlist}
-   pPDelem := pMeter.BranchList.first;
-   while pPDelem <> Nil do  Begin
-        If (FromLine = pPDelem) then Begin
+    pPDelem := pMeter.BranchList.first;
+    while pPDelem <> NIL do
+    begin
+        if (FromLine = pPDelem) then
+        begin
             Break;
-        End;
+        end;
         pPDelem := pMeter.BranchList.GoForward;
-   End;
+    end;
 
    {Error check}
-   If pPDelem=nil then Begin
-       DosimpleMsg(FromLine.ParentClass.Name + '.' + FromLine.Name + ' Not found in Meter Zone.', 723);
-       Exit;
-   End;
+    if pPDelem = NIL then
+    begin
+        DosimpleMsg(FromLine.ParentClass.Name + '.' + FromLine.Name + ' Not found in Meter Zone.', 723);
+        Exit;
+    end;
 
-try
-   FileName := GetOutputDirectory + CircuitName_ + ScriptFileName;
-   GlobalResult := FileName;
+    try
+        FileName := GetOutputDirectory + CircuitName_ + ScriptFileName;
+        GlobalResult := FileName;
 
-   Assignfile(Fout, fileName);
-   Rewrite(Fout);
+        Assignfile(Fout, fileName);
+        Rewrite(Fout);
 
-   pMeter.BranchList.StartHere;
-   pPDelem := pMeter.BranchList.GoForward;
+        pMeter.BranchList.StartHere;
+        pPDelem := pMeter.BranchList.GoForward;
 
-   While pPDelem <> NIL do Begin
-     S := 'edit ' + pPDelem.ParentClass.Name + '.' + pPDElem.Name;
+        while pPDelem <> NIL do
+        begin
+            S := 'edit ' + pPDelem.ParentClass.Name + '.' + pPDElem.Name;
 
 {----------------LINES---------------------------------------------------}
 
-     If IsLineElement(pPDelem) then  Begin
+            if IsLineElement(pPDelem) then
+            begin
 
-         For i := 1 to pPDElem.NTerms  Do Begin
-             S := S + Format(' Bus%d=%s%s',[i, StripExtension(pPDelem.GetBus(i)), PhaseString]);
+                for i := 1 to pPDElem.NTerms do
+                begin
+                    S := S + Format(' Bus%d=%s%s', [i, StripExtension(pPDelem.GetBus(i)), PhaseString]);
            //  Parser.CmdString := Format('Bus$d=%s%s',[i, StripExtension(pPDelem.GetBus(i)), PhaseString]);
            //  pPDelem.Edit;
-         End;
+                end;
 
          {When we're done with that, we'll send the Edit string}
-         If Length(EditStr)>0 then  Begin
-           S := S + '  ' + EditStr;
+                if Length(EditStr) > 0 then
+                begin
+                    S := S + '  ' + EditStr;
            //  Parser.CmdString := EditStr;
            //  pPDelem.Edit;   // Uses Parser
-         End;
+                end;
 
-         Writeln(Fout, S);
+                Writeln(Fout, S);
 
          {Now get all shunt objects connected to this branch}
-           pShuntObject := pMeter.BranchList.FirstObject;
-           While pShuntObject <> NIL Do Begin
+                pShuntObject := pMeter.BranchList.FirstObject;
+                while pShuntObject <> NIL do
+                begin
                {1st Terminal Only}
-               i := 1;
-               S := 'edit ' + pShuntObject.ParentClass.Name + '.' + pShuntObject.Name;
-               S := S + Format(' Bus%d=%s%s',[i, StripExtension(pShuntObject.GetBus(i)), PhaseString]);
-               If Length(EditStr)>0 then  S := S + '  ' + EditStr;
-               Writeln(Fout, S);
+                    i := 1;
+                    S := 'edit ' + pShuntObject.ParentClass.Name + '.' + pShuntObject.Name;
+                    S := S + Format(' Bus%d=%s%s', [i, StripExtension(pShuntObject.GetBus(i)), PhaseString]);
+                    if Length(EditStr) > 0 then
+                        S := S + '  ' + EditStr;
+                    Writeln(Fout, S);
              //  Parser.CmdString := Format('Bus$d=%s%s',[i, StripExtension(pShuntObject.GetBus(1)), PhaseString]);
              //  pShuntObject.Edit;
-               pShuntObject := pMeter.BranchList.NextObject
-           End;
-     pPDelem := pMeter.BranchList.GoForward;
-     End    {IsLine}
+                    pShuntObject := pMeter.BranchList.NextObject
+                end;
+                pPDelem := pMeter.BranchList.GoForward;
+            end    {IsLine}
 
 {----------------TRANSFORMERS---------------------------------------------------}
 
-     Else If IsTransformerElement(pPDELEM) Then Begin
+            else
+            if IsTransformerElement(pPDELEM) then
+            begin
 
      {
        We'll stop at transformers and change only the primary winding.
        Then we'll cycle forward until the lexical level is less or we're done
      }
-          XFmrLevel := pMeter.BranchList.Level;
-          S := S + Format(' wdg=1 Bus=%s%s  %s',[StripExtension(pPDelem.GetBus(1)), PhaseString, EditStr]);
-          If not TransStop then
-          S := S + Format(' wdg=2 Bus=%s%s  %s',[StripExtension(pPDelem.GetBus(2)), PhaseString, EditStr]);
-          Writeln(Fout, S);
+                XFmrLevel := pMeter.BranchList.Level;
+                S := S + Format(' wdg=1 Bus=%s%s  %s', [StripExtension(pPDelem.GetBus(1)), PhaseString, EditStr]);
+                if not TransStop then
+                    S := S + Format(' wdg=2 Bus=%s%s  %s', [StripExtension(pPDelem.GetBus(2)), PhaseString, EditStr]);
+                Writeln(Fout, S);
 
      {Be default Go forward in the tree until we bounce back up to a line section above the transformer}
-       If TransStop then Begin
-           Repeat
-                 pPDelem := pMeter.BranchList.GoForward;
-           Until (pPDelem = Nil) or (pMeter.BranchList.Level <= XfmrLevel);
-       End
-       Else pPDelem := pMeter.BranchList.GoForward;  {Then we get lines and loads beyond transformer}
-     End;
+                if TransStop then
+                begin
+                    repeat
+                        pPDelem := pMeter.BranchList.GoForward;
+                    until (pPDelem = NIL) or (pMeter.BranchList.Level <= XfmrLevel);
+                end
+                else
+                    pPDelem := pMeter.BranchList.GoForward;  {Then we get lines and loads beyond transformer}
+            end;
 
-   End;
+        end;
 
-finally
+    finally
 
-   Closefile(Fout);
-   FireOffEditor(FileName);
+        Closefile(Fout);
+        FireOffEditor(FileName);
+
+    end;
+
+
+end;
+
+function MaxdblArrayValue(npts: Integer; dbls: pDoubleArray): Double;
+// returns max value of an array of doubles
+var
+    i: Integer;
+begin
+    Result := 0.0;
+    if npts = 0 then
+        exit;
+
+    Result := dbls^[1];
+    for i := 2 to npts do
+        Result := max(Result, dbls^[i]);
+end;
+
+function iMaxAbsdblArrayValue(npts: Integer; dbls: pDoubleArray): Integer;
+// Returns index of max array value  in abs value
+var
+    i: Integer;
+    MaxValue: Double;
+begin
+    Result := 0;
+    if npts = 0 then
+        exit;
+
+    Result := 1;
+    MaxValue := abs(dbls^[1]);
+    for i := 2 to npts do
+        if abs(dbls^[i]) > Maxvalue then
+        begin
+            Maxvalue := abs(dbls^[i]);
+            Result := i;   // save index
+        end;
+end;
+
+function InterpretLoadShapeClass(const s: String): Integer;
+var
+    ss: String;
+begin
+    ss := lowercase(s);
+    Result := USENONE;
+
+    case ss[1] of
+        'd':
+            case ss[2] of
+                'a':
+                    Result := USEDAILY;
+                'u':
+                    Result := USEDUTY;
+            end;
+        'y':
+            Result := USEYEARLY;
+        'n':
+            Result := USENONE;
+    end;
+
+end;
+
+function InterpretEarthModel(const s: String): Integer;
+
+var
+    ss: String;
+begin
+    ss := lowercase(s);
+    Result := SIMPLECARSON;
+    case ss[1] of
+        'c':
+            Result := SIMPLECARSON;
+        'f':
+            Result := FULLCARSON;
+        'd':
+            Result := DERI;
+    end;
+
+end;
+
+function GetActiveLoadShapeClass: String;
+
+begin
+    case ActiveCircuit.ActiveLoadShapeClass of
+        USEDAILY:
+            Result := 'Daily';
+        USEYEARLY:
+            Result := 'Yearly';
+        USEDUTY:
+            Result := 'Duty';
+        USENONE:
+            Result := 'None';
+    end;
+
+end;
+
+function GetEarthModel(n: Integer): String;
+
+begin
+    case n of
+        SIMPLECARSON:
+            Result := 'Carson';
+        FULLCARSON:
+            Result := 'FullCarson';
+        DERI:
+            Result := 'Deri';
+    end;
 
 end;
 
 
-End;
+function InterpretColorName(const s: String): Integer;
 
-FUNCTION MaxdblArrayValue(npts:Integer; dbls:pDoubleArray):Double;
-// returns max value of an array of doubles
-VAR
-   i:Integer;
-Begin
-     Result := 0.0;
-     If npts=0 then exit;
-
-     Result := dbls^[1];
-     For i := 2 to npts Do  Result := max(Result, dbls^[i]);
-End;
-
-FUNCTION iMaxAbsdblArrayValue(npts:Integer; dbls:pDoubleArray):Integer;
-// Returns index of max array value  in abs value
-VAR
-   i:Integer;
-   MaxValue:Double;
-Begin
-     Result := 0;
-     If npts=0 then exit;
-
-     Result := 1;
-     MaxValue := abs(dbls^[1]);
-     For i := 2 to npts Do
-       if abs(dbls^[i]) > Maxvalue Then Begin
-          Maxvalue := abs(dbls^[i]);
-          Result := i;   // save index
-       End;
-End;
-
-FUNCTION  InterpretLoadShapeClass(const s:string):Integer;
-Var
-   ss:String;
-Begin
-     ss := lowercase(s);
-     Result := USENONE;
-
-     Case ss[1] of
-          'd': Case ss[2] of
-                 'a': Result := USEDAILY;
-                 'u': Result := USEDUTY;
-               End;
-          'y': Result := USEYEARLY;
-          'n': Result := USENONE;
-     End;
-
-End;
-
-FUNCTION InterpretEarthModel(const s:string):Integer;
-
-Var
-   ss:String;
-Begin
-     ss := lowercase(s);
-     Result := SIMPLECARSON;
-      case ss[1] of
-          'c':Result := SIMPLECARSON;
-          'f':Result := FULLCARSON;
-          'd':Result := DERI;
-      end;
-
-End;
-
-FUNCTION GetActiveLoadShapeClass:String;
-
-Begin
-      case ActiveCircuit.ActiveLoadShapeClass  of
-            USEDAILY: Result := 'Daily';
-            USEYEARLY:Result := 'Yearly';
-            USEDUTY:  Result := 'Duty';
-            USENONE:  Result := 'None';
-      end;
-
-End;
-
-FUNCTION GetEarthModel(n:integer):String;
-
-Begin
-      case n of
-            SIMPLECARSON: Result := 'Carson';
-            FULLCARSON:Result := 'FullCarson';
-            DERI:  Result := 'Deri';
-      end;
-
-End;
-
-
-FUNCTION  InterpretColorName(const s:string):Integer;
-
-Begin
+begin
 {$IFDEF FPC}
-        Result := 0; // RGB for black
+    Result := 0; // RGB for black
 {$ELSE}
-        Result := clBlue;  // default color
-        Try
-            if      CompareTextShortest(S,'black')=0  then Result := clBlack
-            else if CompareTextShortest(S,'Maroon')=0 then Result := clMaroon
-            else if CompareTextShortest(S,'Green')=0  then Result := clGreen
-            else if CompareTextShortest(S,'Olive')=0  then Result := clOlive
-            else if CompareTextShortest(S,'Navy')=0   then Result := clNavy
-            else if CompareTextShortest(S,'Purple')=0 then Result := clPurple
-            else if CompareTextShortest(S,'Teal')=0   then Result := clTeal
-            else if CompareTextShortest(S,'Gray')=0   then Result := clGray
-            else if CompareTextShortest(S,'Silver')=0 then Result := clSilver
-            else if CompareTextShortest(S,'Red')=0    then Result := clRed
-            else if CompareTextShortest(S,'Lime')=0   then Result := clLime
-            else if CompareTextShortest(S,'Yellow')=0 then Result := clYellow
-            else if CompareTextShortest(S,'Blue')=0   then Result := clBlue
-            else if CompareTextShortest(S,'Fuchsia')=0 then Result := clFuchsia
-            else if CompareTextShortest(S,'Aqua')=0   then Result := clAqua
-            else if CompareTextShortest(S,'LtGray')=0 then Result := clLtGray
-            else if CompareTextShortest(S,'DkGray')=0 then Result := clDkGray
-            else if CompareTextShortest(S,'White')=0  then Result := clWhite
-            else Result := StrToInt(S);
-        Except
-           On E:Exception Do DoSimpleMsg('Invalid Color Specification: "' + S + '".', 724);
-        End;
+    Result := clBlue;  // default color
+    try
+        if CompareTextShortest(S, 'black') = 0 then
+            Result := clBlack
+        else
+        if CompareTextShortest(S, 'Maroon') = 0 then
+            Result := clMaroon
+        else
+        if CompareTextShortest(S, 'Green') = 0 then
+            Result := clGreen
+        else
+        if CompareTextShortest(S, 'Olive') = 0 then
+            Result := clOlive
+        else
+        if CompareTextShortest(S, 'Navy') = 0 then
+            Result := clNavy
+        else
+        if CompareTextShortest(S, 'Purple') = 0 then
+            Result := clPurple
+        else
+        if CompareTextShortest(S, 'Teal') = 0 then
+            Result := clTeal
+        else
+        if CompareTextShortest(S, 'Gray') = 0 then
+            Result := clGray
+        else
+        if CompareTextShortest(S, 'Silver') = 0 then
+            Result := clSilver
+        else
+        if CompareTextShortest(S, 'Red') = 0 then
+            Result := clRed
+        else
+        if CompareTextShortest(S, 'Lime') = 0 then
+            Result := clLime
+        else
+        if CompareTextShortest(S, 'Yellow') = 0 then
+            Result := clYellow
+        else
+        if CompareTextShortest(S, 'Blue') = 0 then
+            Result := clBlue
+        else
+        if CompareTextShortest(S, 'Fuchsia') = 0 then
+            Result := clFuchsia
+        else
+        if CompareTextShortest(S, 'Aqua') = 0 then
+            Result := clAqua
+        else
+        if CompareTextShortest(S, 'LtGray') = 0 then
+            Result := clLtGray
+        else
+        if CompareTextShortest(S, 'DkGray') = 0 then
+            Result := clDkGray
+        else
+        if CompareTextShortest(S, 'White') = 0 then
+            Result := clWhite
+        else
+            Result := StrToInt(S);
+    except
+        On E: Exception do
+            DoSimpleMsg('Invalid Color Specification: "' + S + '".', 724);
+    end;
 {$ENDIF}
-End;
+end;
 
-Function MakeNewCktElemName(const oldname:string):string;
-Begin
-     SetObject(OldName);  // set opject active
-     With ActiveDSSObject Do Result := Format('%s.%s%d',[ParentClass.Name, copy(ParentClass.Name, 1, 4), ClassIndex]);
-End;
+function MakeNewCktElemName(const oldname: String): String;
+begin
+    SetObject(OldName);  // set opject active
+    with ActiveDSSObject do
+        Result := Format('%s.%s%d', [ParentClass.Name, copy(ParentClass.Name, 1, 4), ClassIndex]);
+end;
 
-Function ConstructElemName(const Param:string):string;
+function ConstructElemName(const Param: String): String;
 {Construct an element name, sustituting @var values if any}
 
-Var      FClassName, FObjName: String;
+var
+    FClassName, FObjName: String;
 
-Begin
+begin
 
-       ParseObjectClassandName(lowercase(param), FClassName, FObjName);  // insert @var test
-       result := Format('%s.%s',[FClassName, FObjName]);
+    ParseObjectClassandName(lowercase(param), FClassName, FObjName);  // insert @var test
+    result := Format('%s.%s', [FClassName, FObjName]);
 
-End;
+end;
 
-Procedure Obfuscate;
+procedure Obfuscate;
 {Rename Buses and element names to generic names to remove identifiable names}
-Var
-   i, bref     :Integer;
-   dotpos      :Integer;
-   DevListSize :Integer;
-   TempBusList :THashList;
-   pCktElem    :TDSSCktElement;
-   pCtrlElem   :TDSSCktElement;
-   S, Nodes      :String;
-   OldBusName  :String;
-   NewBusName  :String;
-   Baseclass   :Integer;
-   ElemClass   :Integer;
-   ControlUpDateStrings   :TstringList;
-   ControlUpDatePtrs      :Tlist;
+var
+    i, bref: Integer;
+    dotpos: Integer;
+    DevListSize: Integer;
+    TempBusList: THashList;
+    pCktElem: TDSSCktElement;
+    pCtrlElem: TDSSCktElement;
+    S, Nodes: String;
+    OldBusName: String;
+    NewBusName: String;
+    Baseclass: Integer;
+    ElemClass: Integer;
+    ControlUpDateStrings: TstringList;
+    ControlUpDatePtrs: Tlist;
 
    {-------------------------------------------------------------}
-   Procedure RenameCktElem(pelem:TDSSCktElement); // local proc
-   Begin
-     With pelem Do
-      Begin
-           Name := Format('%s%d',[copy(ParentClass.Name, 1, 4), ClassIndex]);
-           ActiveCircuit.DeviceList.Add(Name); // Make a new device list corresponding to the CktElements List
-           pelem.Checked := TRUE;
-      End;
-   End;
+    procedure RenameCktElem(pelem: TDSSCktElement); // local proc
+    begin
+        with pelem do
+        begin
+            Name := Format('%s%d', [copy(ParentClass.Name, 1, 4), ClassIndex]);
+            ActiveCircuit.DeviceList.Add(Name); // Make a new device list corresponding to the CktElements List
+            pelem.Checked := TRUE;
+        end;
+    end;
+
    {-------------------------------------------------------------}
 
-Begin
+begin
 
 {Make sure buslist exists}
 
-If ActiveCircuit=nil Then Exit;
-If ActiveCircuit.BusList.ListSize <= 0 Then Exit;
-With ActiveCircuit Do
-Begin
-    TempBusList := THashList.Create(BusList.ListSize);
+    if ActiveCircuit = NIL then
+        Exit;
+    if ActiveCircuit.BusList.ListSize <= 0 then
+        Exit;
+    with ActiveCircuit do
+    begin
+        TempBusList := THashList.Create(BusList.ListSize);
 
     {Rename Buses}
-     For i := 1 to BusList.ListSize Do TempBusList.Add(Format('B_%d', [i]));
+        for i := 1 to BusList.ListSize do
+            TempBusList.Add(Format('B_%d', [i]));
 
-    BusList.Free;
-    BusList := TempBusList; // Reassign
+        BusList.Free;
+        BusList := TempBusList; // Reassign
 
     {Rename the bus names in each circuit element before renaming the elements}
-    pCktElem := Cktelements.First;
-    While pCktElem<>Nil Do
-    Begin
-         BaseClass    := (pCktElem.DSSObjType and BASECLASSMASK) ;
-         If (BaseClass = PC_ELEMENT) or (BaseClass = PD_ELEMENT) Then
-         Begin
-             S := '';
-             For i := 1 to pCktElem.NTerms  Do
-                Begin
+        pCktElem := Cktelements.First;
+        while pCktElem <> NIL do
+        begin
+            BaseClass := (pCktElem.DSSObjType and BASECLASSMASK);
+            if (BaseClass = PC_ELEMENT) or (BaseClass = PD_ELEMENT) then
+            begin
+                S := '';
+                for i := 1 to pCktElem.NTerms do
+                begin
                     OldBusName := pCktElem.GetBus(i);
-                    dotpos     := pos('.', OldBusName);
-                    If dotpos=0
-                       Then  Nodes := ''
-                       Else  Nodes := Copy(OldBusName, dotpos, length(OldBusName));    // preserve node designations if any
-                    bref  := pCktElem.terminals^[i].BusRef;
+                    dotpos := pos('.', OldBusName);
+                    if dotpos = 0 then
+                        Nodes := ''
+                    else
+                        Nodes := Copy(OldBusName, dotpos, length(OldBusName));    // preserve node designations if any
+                    bref := pCktElem.terminals^[i].BusRef;
                     NewBusName := Format('B_%d%s', [bref, Nodes]);
                     //Check for Transformer because that will be an exception
-                    CASE (pCktElem.DSSObjType And CLASSMASK) of
-                        XFMR_ELEMENT: S := S + Format('Wdg=%d Bus=%s ', [i, NewBusName]);
-                    ELSE
+                    case (pCktElem.DSSObjType and CLASSMASK) of
+                        XFMR_ELEMENT:
+                            S := S + Format('Wdg=%d Bus=%s ', [i, NewBusName]);
+                    else
                         S := S + Format('Bus%d=%s ', [i, NewBusName]);
-                    END;
-                End;
-             Parser.CmdString := S;
-             pCktElem.Edit;
-         End;
-         pCktElem := CktElements.Next;
-    End;
+                    end;
+                end;
+                Parser.CmdString := S;
+                pCktElem.Edit;
+            end;
+            pCktElem := CktElements.Next;
+        end;
 
     {Rename the circuit elements to generic values}
     {Have to catch the control elements and edit some of their parameters}
 
     {first, make scripts to change the monitored element names in the controls to what they will be}
-    ControlUpDateStrings := TStringList.Create;
-    ControlUpDatePtrs    := TList.Create;
+        ControlUpDateStrings := TStringList.Create;
+        ControlUpDatePtrs := TList.Create;
 
-    pCktElem := Cktelements.First;
-    While pCktElem<>Nil Do
-    Begin
-        CASE  (pCktElem.DSSObjType and CLASSMASK) of
-            CAP_CONTROL:Begin
-                S := Format('Element=%s ',[MakeNewCktElemName(pCktElem.GetPropertyValue(1))]);
-                ControlUpDateStrings.Add (S + Format('Capacitor=%s ',[Copy(MakeNewCktElemName('capacitor.' + pCktElem.GetPropertyValue(3)), 11,100)]));
-                ControlUpDatePtrs.Add(pCktElem);
-            End;
-            REG_CONTROL:;   // handled below
-            RELAY_CONTROL:Begin
-                S := Format('MonitoredObj=%s ',[MakeNewCktElemName(pCktElem.GetPropertyValue(1))]);
-                ControlUpDateStrings.Add ( S + Format('SwitchedObj=%s ',[MakeNewCktElemName(pCktElem.GetPropertyValue(3))]));
-                ControlUpDatePtrs.Add(pCktElem);
-            End;
-            RECLOSER_CONTROL:Begin
-                S := Format('MonitoredObj=%s ',[MakeNewCktElemName(pCktElem.GetPropertyValue(1))]);
-                ControlUpDateStrings.Add ( S + Format('SwitchedObj=%s ',[MakeNewCktElemName(pCktElem.GetPropertyValue(3))]));
-                ControlUpDatePtrs.Add(pCktElem);
-            End;
-            FUSE_CONTROL:Begin
-                S := Format('MonitoredObj=%s ',[MakeNewCktElemName(pCktElem.GetPropertyValue(1))]);
-                ControlUpDateStrings.Add ( S + Format('SwitchedObj=%s ',[MakeNewCktElemName(pCktElem.GetPropertyValue(3))]));
-                ControlUpDatePtrs.Add(pCktElem);
-            End;
-            GEN_CONTROL:Begin
-                ControlUpDateStrings.Add (Format('Element=%s ',[MakeNewCktElemName(pCktElem.GetPropertyValue(1))]));
-                ControlUpDatePtrs.Add(pCktElem);
-            End;
-            STORAGE_CONTROL:Begin
-                ControlUpDateStrings.Add (Format('Element=%s ',[MakeNewCktElemName(pCktElem.GetPropertyValue(1))]));
-                ControlUpDatePtrs.Add(pCktElem);
-            End;
-            SWT_CONTROL:Begin
-                ControlUpDateStrings.Add (Format('SwitchedObj=%s ',[MakeNewCktElemName(pCktElem.GetPropertyValue(1))]));
-                ControlUpDatePtrs.Add(pCktElem);
-            End;
-        END;
+        pCktElem := Cktelements.First;
+        while pCktElem <> NIL do
+        begin
+            case (pCktElem.DSSObjType and CLASSMASK) of
+                CAP_CONTROL:
+                begin
+                    S := Format('Element=%s ', [MakeNewCktElemName(pCktElem.GetPropertyValue(1))]);
+                    ControlUpDateStrings.Add(S + Format('Capacitor=%s ', [Copy(MakeNewCktElemName('capacitor.' + pCktElem.GetPropertyValue(3)), 11, 100)]));
+                    ControlUpDatePtrs.Add(pCktElem);
+                end;
+                REG_CONTROL: ;   // handled below
+                RELAY_CONTROL:
+                begin
+                    S := Format('MonitoredObj=%s ', [MakeNewCktElemName(pCktElem.GetPropertyValue(1))]);
+                    ControlUpDateStrings.Add(S + Format('SwitchedObj=%s ', [MakeNewCktElemName(pCktElem.GetPropertyValue(3))]));
+                    ControlUpDatePtrs.Add(pCktElem);
+                end;
+                RECLOSER_CONTROL:
+                begin
+                    S := Format('MonitoredObj=%s ', [MakeNewCktElemName(pCktElem.GetPropertyValue(1))]);
+                    ControlUpDateStrings.Add(S + Format('SwitchedObj=%s ', [MakeNewCktElemName(pCktElem.GetPropertyValue(3))]));
+                    ControlUpDatePtrs.Add(pCktElem);
+                end;
+                FUSE_CONTROL:
+                begin
+                    S := Format('MonitoredObj=%s ', [MakeNewCktElemName(pCktElem.GetPropertyValue(1))]);
+                    ControlUpDateStrings.Add(S + Format('SwitchedObj=%s ', [MakeNewCktElemName(pCktElem.GetPropertyValue(3))]));
+                    ControlUpDatePtrs.Add(pCktElem);
+                end;
+                GEN_CONTROL:
+                begin
+                    ControlUpDateStrings.Add(Format('Element=%s ', [MakeNewCktElemName(pCktElem.GetPropertyValue(1))]));
+                    ControlUpDatePtrs.Add(pCktElem);
+                end;
+                STORAGE_CONTROL:
+                begin
+                    ControlUpDateStrings.Add(Format('Element=%s ', [MakeNewCktElemName(pCktElem.GetPropertyValue(1))]));
+                    ControlUpDatePtrs.Add(pCktElem);
+                end;
+                SWT_CONTROL:
+                begin
+                    ControlUpDateStrings.Add(Format('SwitchedObj=%s ', [MakeNewCktElemName(pCktElem.GetPropertyValue(1))]));
+                    ControlUpDatePtrs.Add(pCktElem);
+                end;
+            end;
 
-        pCktElem := Cktelements.Next;
-    End;
+            pCktElem := Cktelements.Next;
+        end;
 
-    pCktElem := Cktelements.First;
-    While pCktElem<>Nil Do
-    Begin
-        pCktElem.Checked := FALSE;     // Initialize to not checked
-        pCktElem := Cktelements.Next;
-    End;
+        pCktElem := Cktelements.First;
+        while pCktElem <> NIL do
+        begin
+            pCktElem.Checked := FALSE;     // Initialize to not checked
+            pCktElem := Cktelements.Next;
+        end;
 
-    DevListSize := DeviceList.ListSize;
-    DeviceList.Free;
-    DeviceList := THashList.Create(DevListSize);
+        DevListSize := DeviceList.ListSize;
+        DeviceList.Free;
+        DeviceList := THashList.Create(DevListSize);
 
-    pCktElem := Cktelements.First;
-    While pCktElem<>Nil Do
-    Begin
-        If Not pCktElem.Checked Then
-        Begin
-            ElemClass := (pCktElem.DSSObjType and CLASSMASK);
-            RenameCktElem(pCktElem);
-            CASE ElemClass of
-                XFMR_ELEMENT: If pCktElem.HasControl Then Begin
-                    pCtrlElem := pCktElem.ControlElementList.First;
-                    While assigned(pCtrlElem) Do
-                    Begin
-                        If (pCtrlElem.DSSObjType And CLASSMASK) = REG_CONTROL Then
-                        Begin
-                            Parser.CmdString := Format('Transformer=%s',[pCktElem.Name]);
-                            pCtrlElem.Edit;
-                        End;
-                        pCtrlElem := pCktElem.ControlElementList.Next;
-                    End;
-                End;
-            ELSE
+        pCktElem := Cktelements.First;
+        while pCktElem <> NIL do
+        begin
+            if not pCktElem.Checked then
+            begin
+                ElemClass := (pCktElem.DSSObjType and CLASSMASK);
+                RenameCktElem(pCktElem);
+                case ElemClass of
+                    XFMR_ELEMENT:
+                        if pCktElem.HasControl then
+                        begin
+                            pCtrlElem := pCktElem.ControlElementList.First;
+                            while assigned(pCtrlElem) do
+                            begin
+                                if (pCtrlElem.DSSObjType and CLASSMASK) = REG_CONTROL then
+                                begin
+                                    Parser.CmdString := Format('Transformer=%s', [pCktElem.Name]);
+                                    pCtrlElem.Edit;
+                                end;
+                                pCtrlElem := pCktElem.ControlElementList.Next;
+                            end;
+                        end;
+                else
                 {nada}
-            END;
-        End;
-        pCktElem := Cktelements.Next;
-    End;
+                end;
+            end;
+            pCktElem := Cktelements.Next;
+        end;
 
 
     {Run the control update scripts now that everything is renamed}
 
-    For i  := 0 to ControlUpDatePtrs.Count-1 Do
-     Begin
-         pCktElem         := ControlUpDatePtrs.Items[i];
-         Parser.CmdString := ControlUpDateStrings.Strings[i];
-         pCktElem.Edit;
-     End;
+        for i := 0 to ControlUpDatePtrs.Count - 1 do
+        begin
+            pCktElem := ControlUpDatePtrs.Items[i];
+            Parser.CmdString := ControlUpDateStrings.Strings[i];
+            pCktElem.Edit;
+        end;
 
-    ControlUpDateStrings.Free;
-    ControlUpDatePtrs.Free;
+        ControlUpDateStrings.Free;
+        ControlUpDatePtrs.Free;
 
-End;  {With}
+    end;  {With}
 
-End;
-
-FUNCTION QuadSolver(Const a, b, c: Double):Double; // returns largest of two answers
-
-VAR
-   Ans1, Ans2, MidTerm, a2: Double;
-
-Begin
-    Result := 0.0;   // default return
-    If a=0.0 Then  Begin
-        If b <> 0.0 Then  Result := -c/b;
-    End Else
-    Begin
-        MidTerm := sqrt(b*b - 4.0*a*c) ;
-        a2 := 2.0*a;
-        Ans1 := (-b + MidTerm)/a2;
-        Ans2 := (-b - MidTerm)/a2;
-        // return most positive number
-        If (Ans1 > Ans2)
-        Then  Result := Ans1
-        Else  Result := Ans2;
-    End;
-
-End;
-
-{-------------------------------------------------------------------------------}
-function GetOCPDeviceType(pElem:TDSSCktElement): Integer;
-Var
-   i : integer;
-   pCktElement : TDSSCktElement;
-begin
-     Result := 0;
-     i := 1;
-     Repeat
-          pCktElement :=  pElem.ControlElementList.Get(i);
-          If pCktElement <> Nil Then
-          Case (pCktElement.DSSObjType and CLASSMASK) of
-
-            FUSE_CONTROL     : Result := 1;
-            RECLOSER_CONTROL : Result := 2;
-            RELAY_CONTROL    : Result := 3;
-
-          End;
-          inc(i);
-     Until (i > pElem.ControlElementList.listSize) or (Result > 0);
 end;
 
-Function GetOCPDeviceTypeString(icode:integer):String;
-Begin
-     case iCode of
-          1: Result := 'FUSE';
-          2: Result := 'RECLOSER';
-          3: Result := 'RELAY';
-     Else
-         Result := 'Unknown';
-     end;
-End;
+function QuadSolver(const a, b, c: Double): Double; // returns largest of two answers
 
-Function GetNodeString(const Busname:String):String;
-Var
-   dotpos:Integer;
+var
+    Ans1, Ans2, MidTerm, a2: Double;
 
-Begin
-      dotpos     := pos('.', BusName);
-      If dotpos = 0
-         Then  Result := ''
-         Else  Result := Copy(BusName, dotpos, length(BusName));    // preserve node designations if any
-End;
+begin
+    Result := 0.0;   // default return
+    if a = 0.0 then
+    begin
+        if b <> 0.0 then
+            Result := -c / b;
+    end
+    else
+    begin
+        MidTerm := sqrt(b * b - 4.0 * a * c);
+        a2 := 2.0 * a;
+        Ans1 := (-b + MidTerm) / a2;
+        Ans2 := (-b - MidTerm) / a2;
+        // return most positive number
+        if (Ans1 > Ans2) then
+            Result := Ans1
+        else
+            Result := Ans2;
+    end;
+
+end;
+
+{-------------------------------------------------------------------------------}
+function GetOCPDeviceType(pElem: TDSSCktElement): Integer;
+var
+    i: Integer;
+    pCktElement: TDSSCktElement;
+begin
+    Result := 0;
+    i := 1;
+    repeat
+        pCktElement := pElem.ControlElementList.Get(i);
+        if pCktElement <> NIL then
+            case (pCktElement.DSSObjType and CLASSMASK) of
+
+                FUSE_CONTROL:
+                    Result := 1;
+                RECLOSER_CONTROL:
+                    Result := 2;
+                RELAY_CONTROL:
+                    Result := 3;
+
+            end;
+        inc(i);
+    until (i > pElem.ControlElementList.listSize) or (Result > 0);
+end;
+
+function GetOCPDeviceTypeString(icode: Integer): String;
+begin
+    case iCode of
+        1:
+            Result := 'FUSE';
+        2:
+            Result := 'RECLOSER';
+        3:
+            Result := 'RELAY';
+    else
+        Result := 'Unknown';
+    end;
+end;
+
+function GetNodeString(const Busname: String): String;
+var
+    dotpos: Integer;
+
+begin
+    dotpos := pos('.', BusName);
+    if dotpos = 0 then
+        Result := ''
+    else
+        Result := Copy(BusName, dotpos, length(BusName));    // preserve node designations if any
+end;
 
 initialization
 
-Finalization
-
+finalization
 
 
 end.
-

@@ -1,4 +1,5 @@
 unit ConductorData;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2020, Electric Power Research Institute, Inc.
@@ -19,291 +20,358 @@ interface
  Then the values of that code can be retrieved via the public variables.
  }
 
-USES
-   Command, DSSClass, DSSObject, ArrayDef;
+uses
+    Command,
+    DSSClass,
+    DSSObject,
+    ArrayDef;
 
-TYPE
-  ConductorChoice = (Overhead, ConcentricNeutral, TapeShield, Unknown);
+type
+    ConductorChoice = (Overhead, ConcentricNeutral, TapeShield, Unknown);
 
-  ConductorChoiceArray = Array[1..100] of ConductorChoice;
-  pConductorChoiceArray = ^ConductorChoiceArray;
+    ConductorChoiceArray = array[1..100] of ConductorChoice;
+    pConductorChoiceArray = ^ConductorChoiceArray;
 
-  TConductorData = class(TDSSClass)
-    private
+    TConductorData = class(TDSSClass)
+    PRIVATE
 
-    Protected
-      Procedure CountProperties;
-      Procedure DefineProperties;
-      Function ClassEdit(Const ActiveObj:Pointer; Const ParamPointer:Integer):Integer;
-      Procedure ClassMakeLike(Const OtherObj:Pointer);
-    public
-      NumConductorClassProps: Integer;
-      constructor Create;
-      destructor Destroy; override;
-  end;
-
-  TConductorDataObj = class(TDSSObject)
-    private
-      FRDC              : Double;
-      FR60              : Double;
-      FGMR60            : Double;
-      Fcapradius60      : Double;  // in case it is different than radius for cap calcs
-      Fradius           : Double;
-      FGMRUnits         : Integer;
-      FResistanceUnits  : Integer;
-      FRadiusUnits      : Integer;
-    public
-      NormAmps          : Double;
-      EmergAmps         : Double;
-      NumAmpRatings     : Integer;
-      AmpRatings        : TRatingsArray;
-
-      constructor Create(ParClass:TDSSClass; const ConductorDataName:String);
-      destructor Destroy; override;
-
-      Property Rdc:Double Read FRDC;
-      Property Rac:Double Read FR60;
-      Property GMR:Double Read FGMR60;
-      Property CapRadius:Double Read Fcapradius60;
-      Property Radius:Double Read FRadius;
-      Property ResUnits:Integer Read FresistanceUnits;
-      Property RadiusUnits:Integer Read FradiusUnits;
-      Property GMRUnits:Integer Read FGMRUnits;
-
-      PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
-      PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
+    PROTECTED
+        procedure CountProperties;
+        procedure DefineProperties;
+        function ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer): Integer;
+        procedure ClassMakeLike(const OtherObj: Pointer);
+    PUBLIC
+        NumConductorClassProps: Integer;
+        constructor Create;
+        destructor Destroy; OVERRIDE;
     end;
 
-   TConductorDataArray = Array[1..100] of TConductorDataObj;
-   pConductorDataArray = ^TConductorDataArray;
-VAR
-   ActiveConductorDataObj:TConductorDataObj;
+    TConductorDataObj = class(TDSSObject)
+    PRIVATE
+        FRDC: Double;
+        FR60: Double;
+        FGMR60: Double;
+        Fcapradius60: Double;  // in case it is different than radius for cap calcs
+        Fradius: Double;
+        FGMRUnits: Integer;
+        FResistanceUnits: Integer;
+        FRadiusUnits: Integer;
+    PUBLIC
+        NormAmps: Double;
+        EmergAmps: Double;
+        NumAmpRatings: Integer;
+        AmpRatings: TRatingsArray;
+
+        constructor Create(ParClass: TDSSClass; const ConductorDataName: String);
+        destructor Destroy; OVERRIDE;
+
+        property Rdc: Double READ FRDC;
+        property Rac: Double READ FR60;
+        property GMR: Double READ FGMR60;
+        property CapRadius: Double READ Fcapradius60;
+        property Radius: Double READ FRadius;
+        property ResUnits: Integer READ FresistanceUnits;
+        property RadiusUnits: Integer READ FradiusUnits;
+        property GMRUnits: Integer READ FGMRUnits;
+
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
+        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+    end;
+
+    TConductorDataArray = array[1..100] of TConductorDataObj;
+    pConductorDataArray = ^TConductorDataArray;
+
+var
+    ActiveConductorDataObj: TConductorDataObj;
 
 implementation
 
-USES  ParserDel,  DSSGlobals, DSSClassDefs, Sysutils, Ucomplex,  LineUNits, Utilities;
+uses
+    ParserDel,
+    DSSGlobals,
+    DSSClassDefs,
+    Sysutils,
+    Ucomplex,
+    LineUNits,
+    Utilities;
 
-Const
-  LineUnitsHelp = '{mi|kft|km|m|Ft|in|cm|mm} Default=none.';
+const
+    LineUnitsHelp = '{mi|kft|km|m|Ft|in|cm|mm} Default=none.';
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TConductorData.Create;  // Creates superstructure for all Line objects
-BEGIN
-  Inherited Create;
-  NumConductorClassProps := 13;
-  DSSClassType := DSS_OBJECT;
-END;
+begin
+    inherited Create;
+    NumConductorClassProps := 13;
+    DSSClassType := DSS_OBJECT;
+end;
 
-Destructor TConductorData.Destroy;
-BEGIN
-  Inherited Destroy;
-END;
+destructor TConductorData.Destroy;
+begin
+    inherited Destroy;
+end;
 
-Procedure TConductorData.CountProperties;
-Begin
-  NumProperties := NumProperties + NumConductorClassProps;
-  Inherited CountProperties;
-End;
+procedure TConductorData.CountProperties;
+begin
+    NumProperties := NumProperties + NumConductorClassProps;
+    inherited CountProperties;
+end;
 
-Procedure TConductorData.DefineProperties;
-Begin
-  PropertyName^[ActiveProperty + 1] := 'Rdc';
-  PropertyName^[ActiveProperty + 2] := 'Rac';
-  PropertyName^[ActiveProperty + 3] := 'Runits';
-  PropertyName^[ActiveProperty + 4] := 'GMRac';
-  PropertyName^[ActiveProperty + 5] := 'GMRunits';
-  PropertyName^[ActiveProperty + 6] := 'radius';
-  PropertyName^[ActiveProperty + 7] := 'radunits';
-  PropertyName^[ActiveProperty + 8] := 'normamps';
-  PropertyName^[ActiveProperty + 9] := 'emergamps';
-  PropertyName^[ActiveProperty + 10]:= 'diam';
-  PropertyName^[ActiveProperty + 11]:= 'Seasons';
-  PropertyName^[ActiveProperty + 12]:= 'Ratings';
-  PropertyName^[ActiveProperty + 13]:= 'Capradius';
+procedure TConductorData.DefineProperties;
+begin
+    PropertyName^[ActiveProperty + 1] := 'Rdc';
+    PropertyName^[ActiveProperty + 2] := 'Rac';
+    PropertyName^[ActiveProperty + 3] := 'Runits';
+    PropertyName^[ActiveProperty + 4] := 'GMRac';
+    PropertyName^[ActiveProperty + 5] := 'GMRunits';
+    PropertyName^[ActiveProperty + 6] := 'radius';
+    PropertyName^[ActiveProperty + 7] := 'radunits';
+    PropertyName^[ActiveProperty + 8] := 'normamps';
+    PropertyName^[ActiveProperty + 9] := 'emergamps';
+    PropertyName^[ActiveProperty + 10] := 'diam';
+    PropertyName^[ActiveProperty + 11] := 'Seasons';
+    PropertyName^[ActiveProperty + 12] := 'Ratings';
+    PropertyName^[ActiveProperty + 13] := 'Capradius';
 
-  PropertyHelp^[ActiveProperty + 1] := 'dc Resistance, ohms per unit length (see Runits). Defaults to Rac/1.02 if not specified.';
-  PropertyHelp^[ActiveProperty + 2] := 'Resistance at 60 Hz per unit length. Defaults to 1.02*Rdc if not specified.';
-  PropertyHelp^[ActiveProperty + 3] := 'Length units for resistance: ohms per ' + LineUnitsHelp;
-  PropertyHelp^[ActiveProperty + 4] := 'GMR at 60 Hz. Defaults to .7788*radius if not specified.';
-  PropertyHelp^[ActiveProperty + 5] := 'Units for GMR: ' + LineUnitsHelp;
-  PropertyHelp^[ActiveProperty + 6] := 'Outside radius of conductor. Defaults to GMR/0.7788 if not specified.';
-  PropertyHelp^[ActiveProperty + 7] := 'Units for outside radius: ' + LineUnitsHelp;
-  PropertyHelp^[ActiveProperty + 8] := 'Normal ampacity, amperes. Defaults to Emergency amps/1.5 if not specified.';
-  PropertyHelp^[ActiveProperty + 9] := 'Emergency ampacity, amperes. Defaults to 1.5 * Normal Amps if not specified.';
-  PropertyHelp^[ActiveProperty + 10]:= 'Diameter; Alternative method for entering radius.';
-  PropertyHelp^[ActiveProperty + 11]:= 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
-  PropertyHelp^[ActiveProperty + 12]:= 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
-                                        CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
-  PropertyHelp^[ActiveProperty + 13]:= 'Equivalent conductor radius for capacitor calcs. Specify this for bundled conductors. Defaults to same value as radius.';
+    PropertyHelp^[ActiveProperty + 1] := 'dc Resistance, ohms per unit length (see Runits). Defaults to Rac/1.02 if not specified.';
+    PropertyHelp^[ActiveProperty + 2] := 'Resistance at 60 Hz per unit length. Defaults to 1.02*Rdc if not specified.';
+    PropertyHelp^[ActiveProperty + 3] := 'Length units for resistance: ohms per ' + LineUnitsHelp;
+    PropertyHelp^[ActiveProperty + 4] := 'GMR at 60 Hz. Defaults to .7788*radius if not specified.';
+    PropertyHelp^[ActiveProperty + 5] := 'Units for GMR: ' + LineUnitsHelp;
+    PropertyHelp^[ActiveProperty + 6] := 'Outside radius of conductor. Defaults to GMR/0.7788 if not specified.';
+    PropertyHelp^[ActiveProperty + 7] := 'Units for outside radius: ' + LineUnitsHelp;
+    PropertyHelp^[ActiveProperty + 8] := 'Normal ampacity, amperes. Defaults to Emergency amps/1.5 if not specified.';
+    PropertyHelp^[ActiveProperty + 9] := 'Emergency ampacity, amperes. Defaults to 1.5 * Normal Amps if not specified.';
+    PropertyHelp^[ActiveProperty + 10] := 'Diameter; Alternative method for entering radius.';
+    PropertyHelp^[ActiveProperty + 11] := 'Defines the number of ratings to be defined for the wire, to be used only when defining seasonal ratings using the "Ratings" property.';
+    PropertyHelp^[ActiveProperty + 12] := 'An array of ratings to be used when the seasonal ratings flag is True. It can be used to insert' +
+        CRLF + 'multiple ratings to change during a QSTS simulation to evaluate different ratings in lines.';
+    PropertyHelp^[ActiveProperty + 13] := 'Equivalent conductor radius for capacitor calcs. Specify this for bundled conductors. Defaults to same value as radius.';
 
-  ActiveProperty := ActiveProperty + NumConductorClassProps;
-  Inherited DefineProperties;
-End;
+    ActiveProperty := ActiveProperty + NumConductorClassProps;
+    inherited DefineProperties;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Function TConductorData.ClassEdit (Const ActiveObj:Pointer; Const ParamPointer:Integer):Integer;
+function TConductorData.ClassEdit(const ActiveObj: Pointer; const ParamPointer: Integer): Integer;
 var
-  Param : String;
-BEGIN
-  Result := 0;
+    Param: String;
+begin
+    Result := 0;
   // continue parsing with contents of Parser
-  If ParamPointer > 0 Then
-    WITH TConductorDataObj(ActiveObj) DO BEGIN
-      CASE ParamPointer OF
-        1:  FRDC             :=  Parser[ActiveActor].Dblvalue;
-        2:  FR60             :=  Parser[ActiveActor].DblValue;
-        3:  FresistanceUnits :=  GetUnitsCode(Parser[ActiveActor].StrValue);
-        4:  FGMR60           :=  Parser[ActiveActor].DblValue;
-        5:  FGMRUnits        :=  GetUnitsCode(Parser[ActiveActor].StrValue);
-        6:  Fradius          :=  Parser[ActiveActor].DblValue;
-        7:  FRadiusUnits     :=  GetUnitsCode(Parser[ActiveActor].StrValue);
-        8:  NormAmps         :=  Parser[ActiveActor].DblValue ;
-        9:  EmergAmps        :=  Parser[ActiveActor].DblValue ;
-       10:  Fradius          :=  Parser[ActiveActor].DblValue / 2.0;
-       11:  Begin
-              NumAmpRatings         :=  Parser[ActiveActor].IntValue;
-              setlength(AmpRatings,NumAmpRatings);
-            End;
-       12:  Begin
-              setlength(AmpRatings,NumAmpRatings);
-              Param := Parser[ActiveActor].StrValue;
-              NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, pointer(AmpRatings));
-            End;
-       13: Fcapradius60        := Parser[ActiveActor].DblValue;
-      ELSE
-        Inherited ClassEdit(ActiveObj, ParamPointer - NumConductorClassProps)
-      END;
+    if ParamPointer > 0 then
+        with TConductorDataObj(ActiveObj) do
+        begin
+            case ParamPointer of
+                1:
+                    FRDC := Parser[ActiveActor].Dblvalue;
+                2:
+                    FR60 := Parser[ActiveActor].DblValue;
+                3:
+                    FresistanceUnits := GetUnitsCode(Parser[ActiveActor].StrValue);
+                4:
+                    FGMR60 := Parser[ActiveActor].DblValue;
+                5:
+                    FGMRUnits := GetUnitsCode(Parser[ActiveActor].StrValue);
+                6:
+                    Fradius := Parser[ActiveActor].DblValue;
+                7:
+                    FRadiusUnits := GetUnitsCode(Parser[ActiveActor].StrValue);
+                8:
+                    NormAmps := Parser[ActiveActor].DblValue;
+                9:
+                    EmergAmps := Parser[ActiveActor].DblValue;
+                10:
+                    Fradius := Parser[ActiveActor].DblValue / 2.0;
+                11:
+                begin
+                    NumAmpRatings := Parser[ActiveActor].IntValue;
+                    setlength(AmpRatings, NumAmpRatings);
+                end;
+                12:
+                begin
+                    setlength(AmpRatings, NumAmpRatings);
+                    Param := Parser[ActiveActor].StrValue;
+                    NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, pointer(AmpRatings));
+                end;
+                13:
+                    Fcapradius60 := Parser[ActiveActor].DblValue;
+            else
+                inherited ClassEdit(ActiveObj, ParamPointer - NumConductorClassProps)
+            end;
       {Set defaults}
-      CASE ParamPointer OF
-        1: If FR60<0.0        Then FR60         := 1.02* FRDC;
-        2: If FRDC<0.0        Then FRDC         := FR60 / 1.02;
-        4: If Fradius<0.0     Then Fradius      := FGMR60 / 0.7788;
-        5: If FradiusUnits =0 Then FradiusUnits := FGMRunits;
-        6: Begin
-             If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
-             if Fcapradius60<0.0 then Fcapradius60 := Fradius;    // default to radius
-           End;
-        7: If FGMRUnits=0   Then FGMRunits := FradiusUnits;
-        8: IF EmergAmps<0.0 Then EmergAmps := 1.5*NormAmps;
-        9: If NormAmps<0.0  Then NormAmps := EmergAmps/1.5;
-       10: Begin
-              If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
-              if Fcapradius60<0.0 then Fcapradius60 := Fradius;    // default to radius
-           End;
-       13: If Fcapradius60<0.0    Then Fcapradius60 := FRadius;
-      END;
+            case ParamPointer of
+                1:
+                    if FR60 < 0.0 then
+                        FR60 := 1.02 * FRDC;
+                2:
+                    if FRDC < 0.0 then
+                        FRDC := FR60 / 1.02;
+                4:
+                    if Fradius < 0.0 then
+                        Fradius := FGMR60 / 0.7788;
+                5:
+                    if FradiusUnits = 0 then
+                        FradiusUnits := FGMRunits;
+                6:
+                begin
+                    if FGMR60 < 0.0 then
+                        FGMR60 := 0.7788 * FRadius;
+                    if Fcapradius60 < 0.0 then
+                        Fcapradius60 := Fradius;    // default to radius
+                end;
+                7:
+                    if FGMRUnits = 0 then
+                        FGMRunits := FradiusUnits;
+                8:
+                    if EmergAmps < 0.0 then
+                        EmergAmps := 1.5 * NormAmps;
+                9:
+                    if NormAmps < 0.0 then
+                        NormAmps := EmergAmps / 1.5;
+                10:
+                begin
+                    if FGMR60 < 0.0 then
+                        FGMR60 := 0.7788 * FRadius;
+                    if Fcapradius60 < 0.0 then
+                        Fcapradius60 := Fradius;    // default to radius
+                end;
+                13:
+                    if Fcapradius60 < 0.0 then
+                        Fcapradius60 := FRadius;
+            end;
       {Check for critical errors}
-      CASE ParamPointer OF
-        4: If (Fradius = 0.0)  Then DoSimpleMsg('Error: Radius is specified as zero for ConductorData.' + Name,999);
-        6: If (FGMR60 = 0.0)   Then DoSimpleMsg('Error: GMR is specified as zero for ConductorData.' + Name,999);
-      END;
-    End;
-END;
+            case ParamPointer of
+                4:
+                    if (Fradius = 0.0) then
+                        DoSimpleMsg('Error: Radius is specified as zero for ConductorData.' + Name, 999);
+                6:
+                    if (FGMR60 = 0.0) then
+                        DoSimpleMsg('Error: GMR is specified as zero for ConductorData.' + Name, 999);
+            end;
+        end;
+end;
 
-Procedure TConductorData.ClassMakeLike(Const OtherObj:Pointer);
-VAR
-  OtherConductorData:TConductorDataObj;
-BEGIN
-  OtherConductorData := TConductorDataObj(OtherObj);
-  WITH TConductorDataObj(ActiveDSSObject[ActiveActor]) DO BEGIN
-    FRDC              := OtherConductorData.FRDC;
-    FR60              := OtherConductorData.FR60;
-    FResistanceUnits  := OtherConductorData.FResistanceUnits;
-    FGMR60            := OtherConductorData.FGMR60;
-    Fcapradius60      := OtherConductorData.Fcapradius60;
-    FGMRUnits         := OtherConductorData.FGMRUnits;
-    FRadius           := OtherConductorData.FRadius;
-    FRadiusUnits      := OtherConductorData.FRadiusUnits;
-    NormAmps          := OtherConductorData.NormAmps;
-    EmergAmps         := OtherConductorData.EmergAmps;
-  END;
+procedure TConductorData.ClassMakeLike(const OtherObj: Pointer);
+var
+    OtherConductorData: TConductorDataObj;
+begin
+    OtherConductorData := TConductorDataObj(OtherObj);
+    with TConductorDataObj(ActiveDSSObject[ActiveActor]) do
+    begin
+        FRDC := OtherConductorData.FRDC;
+        FR60 := OtherConductorData.FR60;
+        FResistanceUnits := OtherConductorData.FResistanceUnits;
+        FGMR60 := OtherConductorData.FGMR60;
+        Fcapradius60 := OtherConductorData.Fcapradius60;
+        FGMRUnits := OtherConductorData.FGMRUnits;
+        FRadius := OtherConductorData.FRadius;
+        FRadiusUnits := OtherConductorData.FRadiusUnits;
+        NormAmps := OtherConductorData.NormAmps;
+        EmergAmps := OtherConductorData.EmergAmps;
+    end;
   // Inherited ClassMakeLike(OtherObj);
-END;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //      TConductorData Obj
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-constructor TConductorDataObj.Create(ParClass:TDSSClass; const ConductorDataName:String);
+constructor TConductorDataObj.Create(ParClass: TDSSClass; const ConductorDataName: String);
 
-BEGIN
-  Inherited Create(ParClass);
-  Name := LowerCase(ConductorDataName);
-  DSSObjType := ParClass.DSSClassType;
+begin
+    inherited Create(ParClass);
+    Name := LowerCase(ConductorDataName);
+    DSSObjType := ParClass.DSSClassType;
 
-  FRDC              := -1.0;
-  FR60              := -1.0;
-  FGMR60            := -1.0;
-  Fradius           := -1.0;
-  Fcapradius60      := -1.0;   // init to not defined
-  FGMRUnits         := 0;
-  FResistanceUnits  := 0;
-  FRadiusUnits      := 0;
-  Normamps    := -1.0;
-  EmergAmps   := -1.0;
+    FRDC := -1.0;
+    FR60 := -1.0;
+    FGMR60 := -1.0;
+    Fradius := -1.0;
+    Fcapradius60 := -1.0;   // init to not defined
+    FGMRUnits := 0;
+    FResistanceUnits := 0;
+    FRadiusUnits := 0;
+    Normamps := -1.0;
+    EmergAmps := -1.0;
   {Initialize dynamic array for ratings}
-  NumAmpRatings    :=  1;
-  setlength(AmpRatings,NumAmpRatings);
-  AmpRatings[0]  :=  NormAmps;
-END;
+    NumAmpRatings := 1;
+    setlength(AmpRatings, NumAmpRatings);
+    AmpRatings[0] := NormAmps;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 destructor TConductorDataObj.Destroy;
-BEGIN
-  Inherited destroy;
-END;
+begin
+    inherited destroy;
+end;
 
-PROCEDURE TConductorDataObj.DumpProperties(var F: TextFile; Complete: Boolean);
-Var
-  j,
-  i       : Integer;
-  TempStr : String;
-Begin
-  Inherited DumpProperties(F, Complete);
-  WITH ParentClass Do Begin
-    For i := 1 to NumProperties Do Begin
-      Write(F,'~ ',PropertyName^[i],'=');
-      Case i of
-        1 : Writeln(F, Format('%.6g',[FRDC]));
-        2 : Writeln(F, Format('%.6g',[FR60]));
-        3 : Writeln(F, Format('%s',[LineUnitsStr(FresistanceUnits)]));
-        4 : Writeln(F, Format('%.6g',[FGMR60]));
-        5 : Writeln(F, Format('%s',[LineUnitsStr(FGMRUnits)]));
-        6 : Writeln(F, Format('%.6g',[Fradius]));
-        7 : Writeln(F, Format('%s',[LineUnitsStr(FRadiusUnits)]));
-        8 : Writeln(F, Format('%.6g',[NormAmps]));
-        9 : Writeln(F, Format('%.6g',[EmergAmps]));
-       10 : Writeln(F, Format('%.6g',[radius*2.0]));
-       11 : Writeln(F, Format('%d',[NumAmpRatings]));
-       12 : Begin
-              TempStr   :=  '[';
-              for  j:= 1 to NumAmpRatings do
-                TempStr :=  TempStr + floattoStrf(AmpRatings[j-1],ffgeneral,8,4) + ',';
-              TempStr   :=  TempStr + ']';
-              Writeln(F, TempStr);
-            End;
-       13: Writeln(F, Format('%.6g',[Fcapradius60]));
-      END;
-    End;
-  End;
+procedure TConductorDataObj.DumpProperties(var F: TextFile; Complete: Boolean);
+var
+    j,
+    i: Integer;
+    TempStr: String;
+begin
+    inherited DumpProperties(F, Complete);
+    with ParentClass do
+    begin
+        for i := 1 to NumProperties do
+        begin
+            Write(F, '~ ', PropertyName^[i], '=');
+            case i of
+                1:
+                    Writeln(F, Format('%.6g', [FRDC]));
+                2:
+                    Writeln(F, Format('%.6g', [FR60]));
+                3:
+                    Writeln(F, Format('%s', [LineUnitsStr(FresistanceUnits)]));
+                4:
+                    Writeln(F, Format('%.6g', [FGMR60]));
+                5:
+                    Writeln(F, Format('%s', [LineUnitsStr(FGMRUnits)]));
+                6:
+                    Writeln(F, Format('%.6g', [Fradius]));
+                7:
+                    Writeln(F, Format('%s', [LineUnitsStr(FRadiusUnits)]));
+                8:
+                    Writeln(F, Format('%.6g', [NormAmps]));
+                9:
+                    Writeln(F, Format('%.6g', [EmergAmps]));
+                10:
+                    Writeln(F, Format('%.6g', [radius * 2.0]));
+                11:
+                    Writeln(F, Format('%d', [NumAmpRatings]));
+                12:
+                begin
+                    TempStr := '[';
+                    for  j := 1 to NumAmpRatings do
+                        TempStr := TempStr + floattoStrf(AmpRatings[j - 1], ffgeneral, 8, 4) + ',';
+                    TempStr := TempStr + ']';
+                    Writeln(F, TempStr);
+                end;
+                13:
+                    Writeln(F, Format('%.6g', [Fcapradius60]));
+            end;
+        end;
+    end;
 end;
 
 procedure TConductorDataObj.InitPropertyValues(ArrayOffset: Integer);
 begin
-  PropertyValue[ArrayOffset + 1] := '-1';
-  PropertyValue[ArrayOffset + 2] :=  '-1';
-  PropertyValue[ArrayOffset + 3] :=  'none';
-  PropertyValue[ArrayOffset + 4] :=  '-1';
-  PropertyValue[ArrayOffset + 5] :=  'none';
-  PropertyValue[ArrayOffset + 6] :=  '-1';
-  PropertyValue[ArrayOffset + 7] :=  'none';
-  PropertyValue[ArrayOffset + 8] :=  '-1';
-  PropertyValue[ArrayOffset + 9] :=  '-1';
-  PropertyValue[ArrayOffset + 10] :=  '-1';
-  PropertyValue[ArrayOffset + 11] :=  '1';
-  PropertyValue[ArrayOffset + 12] :=  '[-1]';
-  PropertyValue[ArrayOffset + 13] :=  '-1';
-  inherited InitPropertyValues(ArrayOffset + 13);
+    PropertyValue[ArrayOffset + 1] := '-1';
+    PropertyValue[ArrayOffset + 2] := '-1';
+    PropertyValue[ArrayOffset + 3] := 'none';
+    PropertyValue[ArrayOffset + 4] := '-1';
+    PropertyValue[ArrayOffset + 5] := 'none';
+    PropertyValue[ArrayOffset + 6] := '-1';
+    PropertyValue[ArrayOffset + 7] := 'none';
+    PropertyValue[ArrayOffset + 8] := '-1';
+    PropertyValue[ArrayOffset + 9] := '-1';
+    PropertyValue[ArrayOffset + 10] := '-1';
+    PropertyValue[ArrayOffset + 11] := '1';
+    PropertyValue[ArrayOffset + 12] := '[-1]';
+    PropertyValue[ArrayOffset + 13] := '-1';
+    inherited InitPropertyValues(ArrayOffset + 13);
 end;
 
 end.

@@ -11,36 +11,36 @@ unit LD_fm_infos;
 
 interface
 
-Uses
-      UComplex;
+uses
+    UComplex;
       //PointerList;
 
-TYPE
+type
 
    {Fmonitor public data/state variable structure}
-   TLD_fm_infos = packed Record
+    TLD_fm_infos = packed record
    //properties for Nodes
          // highest voltage node
-         ndnum_hghst : integer;
-         b_ctrl_hghst : boolean; //can contribute more to the high volt problem
-         volt_hghst : double;    //low volt in pu
-         volt_hgh_lmt :double;   //low limit in pu
-         Pinjec_hghst : double;  //net P injection on this node
+        ndnum_hghst: Integer;
+        b_ctrl_hghst: Boolean; //can contribute more to the high volt problem
+        volt_hghst: Double;    //low volt in pu
+        volt_hgh_lmt: Double;   //low limit in pu
+        Pinjec_hghst: Double;  //net P injection on this node
 
          // lowest voltage node
-         ndnum_lwst : integer;
-         b_ctrl_lwst : boolean; //can contribute more to the high volt problem
-         volt_lwst : double;  //low volt in pu
-         volt_lw_lmt :double; //low limit in pu
-         Pinjec_lwst : double; // net P injection on this node
+        ndnum_lwst: Integer;
+        b_ctrl_lwst: Boolean; //can contribute more to the high volt problem
+        volt_lwst: Double;  //low volt in pu
+        volt_lw_lmt: Double; //low limit in pu
+        Pinjec_lwst: Double; // net P injection on this node
 
          // overview information
-         volt_avg : double;
-         total_pg : double; //total generation of this cluster
-         total_pl : double; //total load of this cluster
+        volt_avg: Double;
+        total_pg: Double; //total generation of this cluster
+        total_pl: Double; //total load of this cluster
 
-         b_Curt_Ctrl : boolean;
-    End;
+        b_Curt_Ctrl: Boolean;
+    end;
 
 implementation
 

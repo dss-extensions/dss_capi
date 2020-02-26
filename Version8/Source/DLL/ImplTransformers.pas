@@ -1,4 +1,5 @@
 unit ImplTransformers;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -10,557 +11,603 @@ unit ImplTransformers;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSengine_TLB, StdVcl;
+    ComObj,
+    ActiveX,
+    OpenDSSengine_TLB,
+    StdVcl;
 
 type
-  TTransformers = class(TAutoObject, ITransformers)
-  protected
-    function Get_AllNames: OleVariant; safecall;
-    function Get_First: Integer; safecall;
-    function Get_IsDelta: WordBool; safecall;
-    function Get_kV: Double; safecall;
-    function Get_kVA: Double; safecall;
-    function Get_MaxTap: Double; safecall;
-    function Get_MinTap: Double; safecall;
-    function Get_Name: WideString; safecall;
-    function Get_Next: Integer; safecall;
-    function Get_NumTaps: Integer; safecall;
-    function Get_NumWindings: Integer; safecall;
-    function Get_R: Double; safecall;
-    function Get_Rneut: Double; safecall;
-    function Get_Tap: Double; safecall;
-    function Get_Wdg: Integer; safecall;
-    function Get_XfmrCode: WideString; safecall;
-    function Get_Xhl: Double; safecall;
-    function Get_Xht: Double; safecall;
-    function Get_Xlt: Double; safecall;
-    function Get_Xneut: Double; safecall;
-    procedure Set_IsDelta(Value: WordBool); safecall;
-    procedure Set_kV(Value: Double); safecall;
-    procedure Set_kVA(Value: Double); safecall;
-    procedure Set_MaxTap(Value: Double); safecall;
-    procedure Set_MinTap(Value: Double); safecall;
-    procedure Set_Name(const Value: WideString); safecall;
-    procedure Set_NumTaps(Value: Integer); safecall;
-    procedure Set_NumWindings(Value: Integer); safecall;
-    procedure Set_R(Value: Double); safecall;
-    procedure Set_Rneut(Value: Double); safecall;
-    procedure Set_Tap(Value: Double); safecall;
-    procedure Set_Wdg(Value: Integer); safecall;
-    procedure Set_XfmrCode(const Value: WideString); safecall;
-    procedure Set_Xhl(Value: Double); safecall;
-    procedure Set_Xht(Value: Double); safecall;
-    procedure Set_Xlt(Value: Double); safecall;
-    procedure Set_Xneut(Value: Double); safecall;
-    function Get_Count: Integer; safecall;
-    function Get_CoreType: Integer; safecall;
-    procedure Set_CoreType(Value: Integer); safecall;
-    function Get_WdgCurrents: OleVariant; safecall;
-    function Get_WdgVoltages: OleVariant; safecall;
-    function Get_StrWdgCurrents: WideString; safecall;
-    function Get_RdcOhms: Double; safecall;
-    procedure Set_RdcOhms(Value: Double); safecall;
-  end;
+    TTransformers = class(TAutoObject, ITransformers)
+    PROTECTED
+        function Get_AllNames: Olevariant; SAFECALL;
+        function Get_First: Integer; SAFECALL;
+        function Get_IsDelta: Wordbool; SAFECALL;
+        function Get_kV: Double; SAFECALL;
+        function Get_kVA: Double; SAFECALL;
+        function Get_MaxTap: Double; SAFECALL;
+        function Get_MinTap: Double; SAFECALL;
+        function Get_Name: Widestring; SAFECALL;
+        function Get_Next: Integer; SAFECALL;
+        function Get_NumTaps: Integer; SAFECALL;
+        function Get_NumWindings: Integer; SAFECALL;
+        function Get_R: Double; SAFECALL;
+        function Get_Rneut: Double; SAFECALL;
+        function Get_Tap: Double; SAFECALL;
+        function Get_Wdg: Integer; SAFECALL;
+        function Get_XfmrCode: Widestring; SAFECALL;
+        function Get_Xhl: Double; SAFECALL;
+        function Get_Xht: Double; SAFECALL;
+        function Get_Xlt: Double; SAFECALL;
+        function Get_Xneut: Double; SAFECALL;
+        procedure Set_IsDelta(Value: Wordbool); SAFECALL;
+        procedure Set_kV(Value: Double); SAFECALL;
+        procedure Set_kVA(Value: Double); SAFECALL;
+        procedure Set_MaxTap(Value: Double); SAFECALL;
+        procedure Set_MinTap(Value: Double); SAFECALL;
+        procedure Set_Name(const Value: Widestring); SAFECALL;
+        procedure Set_NumTaps(Value: Integer); SAFECALL;
+        procedure Set_NumWindings(Value: Integer); SAFECALL;
+        procedure Set_R(Value: Double); SAFECALL;
+        procedure Set_Rneut(Value: Double); SAFECALL;
+        procedure Set_Tap(Value: Double); SAFECALL;
+        procedure Set_Wdg(Value: Integer); SAFECALL;
+        procedure Set_XfmrCode(const Value: Widestring); SAFECALL;
+        procedure Set_Xhl(Value: Double); SAFECALL;
+        procedure Set_Xht(Value: Double); SAFECALL;
+        procedure Set_Xlt(Value: Double); SAFECALL;
+        procedure Set_Xneut(Value: Double); SAFECALL;
+        function Get_Count: Integer; SAFECALL;
+        function Get_CoreType: Integer; SAFECALL;
+        procedure Set_CoreType(Value: Integer); SAFECALL;
+        function Get_WdgCurrents: Olevariant; SAFECALL;
+        function Get_WdgVoltages: Olevariant; SAFECALL;
+        function Get_StrWdgCurrents: Widestring; SAFECALL;
+        function Get_RdcOhms: Double; SAFECALL;
+        procedure Set_RdcOhms(Value: Double); SAFECALL;
+    end;
 
 implementation
 
-uses ComServ, DSSGlobals, Executive, Transformer, Variants, SysUtils, PointerList, ucomplex;
+uses
+    ComServ,
+    DSSGlobals,
+    Executive,
+    Transformer,
+    Variants,
+    SysUtils,
+    PointerList,
+    ucomplex;
 
 function ActiveTransformer: TTransfObj;
 begin
-  Result := nil;
-  if ActiveCircuit[ActiveActor] <> Nil then Result := ActiveCircuit[ActiveActor].Transformers.Active;
+    Result := NIL;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        Result := ActiveCircuit[ActiveActor].Transformers.Active;
 end;
 
 // assuming the active winding has already been set
-procedure Set_Parameter(const parm: string; const val: string);
+procedure Set_Parameter(const parm: String; const val: String);
 var
-  cmd: string;
+    cmd: String;
 begin
-  if not Assigned (ActiveCircuit[ActiveActor]) then exit;
-  SolutionAbort := FALSE;  // Reset for commands entered from outside
-  cmd := Format ('transformer.%s.%s=%s', [ActiveTransformer.Name, parm, val]);
-  DSSExecutive[ActiveActor].Command := cmd;
+    if not Assigned(ActiveCircuit[ActiveActor]) then
+        exit;
+    SolutionAbort := FALSE;  // Reset for commands entered from outside
+    cmd := Format('transformer.%s.%s=%s', [ActiveTransformer.Name, parm, val]);
+    DSSExecutive[ActiveActor].Command := cmd;
 end;
 
-function TTransformers.Get_AllNames: OleVariant;
-Var
-  elem: TTransfObj;
-  lst: TPointerList;
-  k: Integer;
-Begin
-  Result := VarArrayCreate([0, 0], varOleStr);
-  Result[0] := 'NONE';
-  IF ActiveCircuit[ActiveActor] <> Nil THEN WITH ActiveCircuit[ActiveActor] DO
-  If Transformers.ListSize > 0 Then
-    Begin
-      lst := Transformers;
-      VarArrayRedim(Result, lst.ListSize-1);
-      k:=0;
-      elem := lst.First;
-      WHILE elem<>Nil DO Begin
-        Result[k] := elem.Name;
-        Inc(k);
-        elem := lst.Next;
-      End;
-    End;
+function TTransformers.Get_AllNames: Olevariant;
+var
+    elem: TTransfObj;
+    lst: TPointerList;
+    k: Integer;
+begin
+    Result := VarArrayCreate([0, 0], varOleStr);
+    Result[0] := 'NONE';
+    if ActiveCircuit[ActiveActor] <> NIL then
+        with ActiveCircuit[ActiveActor] do
+            if Transformers.ListSize > 0 then
+            begin
+                lst := Transformers;
+                VarArrayRedim(Result, lst.ListSize - 1);
+                k := 0;
+                elem := lst.First;
+                while elem <> NIL do
+                begin
+                    Result[k] := elem.Name;
+                    Inc(k);
+                    elem := lst.Next;
+                end;
+            end;
 end;
 
 function TTransformers.Get_First: Integer;
-Var
-  elem: TTransfObj;
-  lst: TPointerList;
-Begin
-  Result := 0;
-  If ActiveCircuit[ActiveActor] <> Nil Then begin
-    lst := ActiveCircuit[ActiveActor].Transformers;
-    elem := lst.First;
-    If elem <> Nil Then Begin
-      Repeat
-        If elem.Enabled Then Begin
-          ActiveCircuit[ActiveActor].ActiveCktElement := elem;
-          Result := 1;
-        End
-        Else elem := lst.Next;
-      Until (Result = 1) or (elem = nil);
-    End;
-  End;
+var
+    elem: TTransfObj;
+    lst: TPointerList;
+begin
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        lst := ActiveCircuit[ActiveActor].Transformers;
+        elem := lst.First;
+        if elem <> NIL then
+        begin
+            repeat
+                if elem.Enabled then
+                begin
+                    ActiveCircuit[ActiveActor].ActiveCktElement := elem;
+                    Result := 1;
+                end
+                else
+                    elem := lst.Next;
+            until (Result = 1) or (elem = NIL);
+        end;
+    end;
 end;
 
-function TTransformers.Get_IsDelta: WordBool;
+function TTransformers.Get_IsDelta: Wordbool;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := FALSE;
-  elem := ActiveTransformer;
-  if elem <> nil then
-    if elem.WdgConnection[elem.ActiveWinding] > 0 then Result := TRUE;
+    Result := FALSE;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        if elem.WdgConnection[elem.ActiveWinding] > 0 then
+            Result := TRUE;
 end;
 
 function TTransformers.Get_kV: Double;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0.0;
-  elem := ActiveTransformer;
-  if elem <> nil then
-    Result := elem.Winding^[elem.ActiveWinding].kvll;
+    Result := 0.0;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.Winding^[elem.ActiveWinding].kvll;
 end;
 
 function TTransformers.Get_kVA: Double;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0.0;
-  elem := ActiveTransformer;
-  if elem <> nil then
-    Result := elem.WdgKVA[elem.ActiveWinding];
+    Result := 0.0;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.WdgKVA[elem.ActiveWinding];
 end;
 
 function TTransformers.Get_MaxTap: Double;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0.0;
-  elem := ActiveTransformer;
-  if elem <> nil then
-    Result := elem.Maxtap[elem.ActiveWinding];
+    Result := 0.0;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.Maxtap[elem.ActiveWinding];
 end;
 
 function TTransformers.Get_MinTap: Double;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0.0;
-  elem := ActiveTransformer;
-  if elem <> nil then
-    Result := elem.Mintap[elem.ActiveWinding];
+    Result := 0.0;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.Mintap[elem.ActiveWinding];
 end;
 
-function TTransformers.Get_Name: WideString;
-Var
-  elem: TTransfObj;
-Begin
-  Result := '';
-  If ActiveCircuit[ActiveActor] <> Nil Then Begin
-    elem := ActiveCircuit[ActiveActor].Transformers.Active;
-    If elem <> Nil Then Result := elem.Name;
-  End;
+function TTransformers.Get_Name: Widestring;
+var
+    elem: TTransfObj;
+begin
+    Result := '';
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        elem := ActiveCircuit[ActiveActor].Transformers.Active;
+        if elem <> NIL then
+            Result := elem.Name;
+    end;
 end;
 
 function TTransformers.Get_Next: Integer;
-Var
-  elem: TTransfObj;
-  lst: TPointerList;
-Begin
-  Result := 0;
-  If ActiveCircuit[ActiveActor] <> Nil Then Begin
-    lst := ActiveCircuit[ActiveActor].Transformers;
-    elem := lst.Next;
-    if elem <> nil then begin
-      Repeat
-        If elem.Enabled Then Begin
-          ActiveCircuit[ActiveActor].ActiveCktElement := elem;
-          Result := lst.ActiveIndex;
-        End
-        Else elem := lst.Next;
-      Until (Result > 0) or (elem = nil);
-    End
-  End;
+var
+    elem: TTransfObj;
+    lst: TPointerList;
+begin
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        lst := ActiveCircuit[ActiveActor].Transformers;
+        elem := lst.Next;
+        if elem <> NIL then
+        begin
+            repeat
+                if elem.Enabled then
+                begin
+                    ActiveCircuit[ActiveActor].ActiveCktElement := elem;
+                    Result := lst.ActiveIndex;
+                end
+                else
+                    elem := lst.Next;
+            until (Result > 0) or (elem = NIL);
+        end
+    end;
 end;
 
 function TTransformers.Get_NumTaps: Integer;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0;
-  elem := ActiveTransformer;
-  if elem <> nil then
-    Result := elem.NumTaps[elem.ActiveWinding];
+    Result := 0;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.NumTaps[elem.ActiveWinding];
 end;
 
 function TTransformers.Get_NumWindings: Integer;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0;
-  elem := ActiveTransformer;
-  if elem <> nil then Result := elem.NumberOfWindings;
+    Result := 0;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.NumberOfWindings;
 end;
 
 function TTransformers.Get_R: Double;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0.0;
-  elem := ActiveTransformer;
-  if elem <> nil then
-    Result := elem.WdgResistance[elem.ActiveWinding];
+    Result := 0.0;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.WdgResistance[elem.ActiveWinding];
 end;
 
 function TTransformers.Get_Rneut: Double;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0.0;
-  elem := ActiveTransformer;
-  if elem <> nil then
-    Result := elem.WdgRneutral[elem.ActiveWinding];
+    Result := 0.0;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.WdgRneutral[elem.ActiveWinding];
 end;
 
 function TTransformers.Get_Tap: Double;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0.0;
-  elem := ActiveTransformer;
-  if elem <> nil then
-    Result := elem.PresentTap[elem.ActiveWinding,ActiveActor];
+    Result := 0.0;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.PresentTap[elem.ActiveWinding, ActiveActor];
 end;
 
 function TTransformers.Get_Wdg: Integer;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0;
-  elem := ActiveTransformer;
-  if elem <> nil then Result := elem.ActiveWinding;
+    Result := 0;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.ActiveWinding;
 end;
 
-function TTransformers.Get_XfmrCode: WideString;
+function TTransformers.Get_XfmrCode: Widestring;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := '';
-  elem := ActiveTransformer;
-  if elem <> nil then Result := elem.XfmrCode;
+    Result := '';
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.XfmrCode;
 end;
 
 function TTransformers.Get_Xhl: Double;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0.0;
-  elem := ActiveTransformer;
-  if elem <> nil then Result := elem.XhlVal;
+    Result := 0.0;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.XhlVal;
 end;
 
 function TTransformers.Get_Xht: Double;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0.0;
-  elem := ActiveTransformer;
-  if elem <> nil then Result := elem.XhtVal;
+    Result := 0.0;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.XhtVal;
 end;
 
 function TTransformers.Get_Xlt: Double;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0.0;
-  elem := ActiveTransformer;
-  if elem <> nil then Result := elem.XltVal;
+    Result := 0.0;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.XltVal;
 end;
 
 function TTransformers.Get_Xneut: Double;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0.0;
-  elem := ActiveTransformer;
-  if elem <> nil then
-    Result := elem.WdgXneutral[elem.ActiveWinding];
+    Result := 0.0;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.WdgXneutral[elem.ActiveWinding];
 end;
 
-procedure TTransformers.Set_IsDelta(Value: WordBool);
+procedure TTransformers.Set_IsDelta(Value: Wordbool);
 begin
-  if Value = TRUE then
-    Set_Parameter ('Conn', 'Delta')
-  else
-    Set_Parameter ('Conn', 'Wye')
+    if Value = TRUE then
+        Set_Parameter('Conn', 'Delta')
+    else
+        Set_Parameter('Conn', 'Wye')
 end;
 
 procedure TTransformers.Set_kV(Value: Double);
 begin
-  Set_Parameter ('kv', FloatToStr (Value));
+    Set_Parameter('kv', FloatToStr(Value));
 end;
 
 procedure TTransformers.Set_kVA(Value: Double);
 begin
-  Set_Parameter ('kva', FloatToStr (Value));
+    Set_Parameter('kva', FloatToStr(Value));
 end;
 
 procedure TTransformers.Set_MaxTap(Value: Double);
 begin
-  Set_Parameter ('MaxTap', FloatToStr (Value));
+    Set_Parameter('MaxTap', FloatToStr(Value));
 end;
 
 procedure TTransformers.Set_MinTap(Value: Double);
 begin
-  Set_Parameter ('MinTap', FloatToStr (Value));
+    Set_Parameter('MinTap', FloatToStr(Value));
 end;
 
-procedure TTransformers.Set_Name(const Value: WideString);
+procedure TTransformers.Set_Name(const Value: Widestring);
 var
-  ActiveSave : Integer;
-  S: String;
-  Found :Boolean;
-  elem: TTransfObj;
-  lst: TPointerList;
-Begin
-  IF ActiveCircuit[ActiveActor] <> NIL THEN Begin
-    lst := ActiveCircuit[ActiveActor].Transformers;
-    S := Value;  // Convert to Pascal String
-    Found := FALSE;
-    ActiveSave := lst.ActiveIndex;
-    elem := lst.First;
-    While elem <> NIL Do Begin
-      IF (CompareText(elem.Name, S) = 0) THEN Begin
-        ActiveCircuit[ActiveActor].ActiveCktElement := elem;
-        Found := TRUE;
-        Break;
-      End;
-      elem := lst.Next;
-    End;
-    IF NOT Found THEN Begin
-      DoSimpleMsg('Transformer "'+S+'" Not Found in Active Circuit.', 5003);
-      elem := lst.Get(ActiveSave);    // Restore active Load
-      ActiveCircuit[ActiveActor].ActiveCktElement := elem;
-    End;
-  End;
+    ActiveSave: Integer;
+    S: String;
+    Found: Boolean;
+    elem: TTransfObj;
+    lst: TPointerList;
+begin
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        lst := ActiveCircuit[ActiveActor].Transformers;
+        S := Value;  // Convert to Pascal String
+        Found := FALSE;
+        ActiveSave := lst.ActiveIndex;
+        elem := lst.First;
+        while elem <> NIL do
+        begin
+            if (CompareText(elem.Name, S) = 0) then
+            begin
+                ActiveCircuit[ActiveActor].ActiveCktElement := elem;
+                Found := TRUE;
+                Break;
+            end;
+            elem := lst.Next;
+        end;
+        if not Found then
+        begin
+            DoSimpleMsg('Transformer "' + S + '" Not Found in Active Circuit.', 5003);
+            elem := lst.Get(ActiveSave);    // Restore active Load
+            ActiveCircuit[ActiveActor].ActiveCktElement := elem;
+        end;
+    end;
 end;
 
 procedure TTransformers.Set_NumTaps(Value: Integer);
 begin
-  Set_Parameter ('NumTaps', IntToStr (Value));
+    Set_Parameter('NumTaps', IntToStr(Value));
 end;
 
 procedure TTransformers.Set_NumWindings(Value: Integer);
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  elem := ActiveTransformer;
-  if elem <> nil then
-    elem.SetNumWindings (Value);
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        elem.SetNumWindings(Value);
 end;
 
 procedure TTransformers.Set_R(Value: Double);
 begin
-  Set_Parameter ('%R', FloatToStr (Value));
+    Set_Parameter('%R', FloatToStr(Value));
 end;
 
 procedure TTransformers.Set_Rneut(Value: Double);
 begin
-  Set_Parameter ('Rneut', FloatToStr (Value));
+    Set_Parameter('Rneut', FloatToStr(Value));
 end;
 
 procedure TTransformers.Set_Tap(Value: Double);
 begin
-  Set_Parameter ('Tap', FloatToStr (Value));
+    Set_Parameter('Tap', FloatToStr(Value));
 end;
 
 procedure TTransformers.Set_Wdg(Value: Integer);
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  elem := ActiveTransformer;
-  if elem <> nil then
-    if (value > 0) and (value <= elem.NumberOfWindings) then
-      elem.ActiveWinding := Value;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        if (value > 0) and (value <= elem.NumberOfWindings) then
+            elem.ActiveWinding := Value;
 end;
 
-procedure TTransformers.Set_XfmrCode(const Value: WideString);
+procedure TTransformers.Set_XfmrCode(const Value: Widestring);
 begin
-  Set_Parameter ('XfmrCode', Value);
+    Set_Parameter('XfmrCode', Value);
 end;
 
 procedure TTransformers.Set_Xhl(Value: Double);
 begin
-  Set_Parameter ('Xhl', FloatToStr (Value));
+    Set_Parameter('Xhl', FloatToStr(Value));
 end;
 
 procedure TTransformers.Set_Xht(Value: Double);
 begin
-  Set_Parameter ('Xht', FloatToStr (Value));
+    Set_Parameter('Xht', FloatToStr(Value));
 end;
 
 procedure TTransformers.Set_Xlt(Value: Double);
 begin
-  Set_Parameter ('Xlt', FloatToStr (Value));
+    Set_Parameter('Xlt', FloatToStr(Value));
 end;
 
 procedure TTransformers.Set_Xneut(Value: Double);
 begin
-  Set_Parameter ('Xneut', FloatToStr (Value));
+    Set_Parameter('Xneut', FloatToStr(Value));
 end;
 
 function TTransformers.Get_Count: Integer;
 begin
-     If Assigned(ActiveCircuit[ActiveActor]) Then
-          Result := ActiveCircuit[ActiveActor].Transformers.ListSize;
+    if Assigned(ActiveCircuit[ActiveActor]) then
+        Result := ActiveCircuit[ActiveActor].Transformers.ListSize;
 end;
 
 function TTransformers.Get_CoreType: Integer;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0;  // default = shell
-  elem := ActiveTransformer;
-  if elem <> nil then
-    Result := elem.CoreType ;
+    Result := 0;  // default = shell
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.CoreType;
 end;
 
 procedure TTransformers.Set_CoreType(Value: Integer);
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  elem := ActiveTransformer;
-  if elem <> nil then
-  Begin
-    elem.CoreType := Value;
-    Case Value of
-       1: elem.strCoreType := '1-phase';
-       3: elem.strCoreType := '3-leg';
-       5: elem.strCoreType := '5-leg';
-    Else
-        elem.strCoreType := 'shell';
-    End;
-  End;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+    begin
+        elem.CoreType := Value;
+        case Value of
+            1:
+                elem.strCoreType := '1-phase';
+            3:
+                elem.strCoreType := '3-leg';
+            5:
+                elem.strCoreType := '5-leg';
+        else
+            elem.strCoreType := 'shell';
+        end;
+    end;
 end;
 
-function TTransformers.Get_WdgCurrents: OleVariant;
+function TTransformers.Get_WdgCurrents: Olevariant;
 var
-  elem: TTransfObj;
-  TempCurrentBuffer:pComplexArray;
-  NumCurrents,
-   i,
-   iV : Integer;
+    elem: TTransfObj;
+    TempCurrentBuffer: pComplexArray;
+    NumCurrents,
+    i,
+    iV: Integer;
 begin
 
-  elem := ActiveTransformer;
-  if elem <> nil then
-  Begin
-       NumCurrents := 2*elem.NPhases*elem.NumberOfWindings; // 2 currents per winding
-       Result := VarArrayCreate([0, 2*NumCurrents-1], varDouble);
-       TempCurrentBuffer := AllocMem(Sizeof(Complex) * NumCurrents );;
-       elem.GetAllWindingCurrents(TempCurrentBuffer, ActiveActor);
-       iV :=0;
-        For i := 1 to  NumCurrents DO Begin
-             Result[iV] := TempCurrentBuffer^[i].re;
-             Inc(iV);
-             Result[iV] := TempCurrentBuffer^[i].im;
-             Inc(iV);
-        End;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+    begin
+        NumCurrents := 2 * elem.NPhases * elem.NumberOfWindings; // 2 currents per winding
+        Result := VarArrayCreate([0, 2 * NumCurrents - 1], varDouble);
+        TempCurrentBuffer := AllocMem(Sizeof(Complex) * NumCurrents);
+        ;
+        elem.GetAllWindingCurrents(TempCurrentBuffer, ActiveActor);
+        iV := 0;
+        for i := 1 to NumCurrents do
+        begin
+            Result[iV] := TempCurrentBuffer^[i].re;
+            Inc(iV);
+            Result[iV] := TempCurrentBuffer^[i].im;
+            Inc(iV);
+        end;
 
         Reallocmem(TempCurrentBuffer, 0);
 
-  End Else
-      Result := VarArrayCreate([0, 0], varDouble);
+    end
+    else
+        Result := VarArrayCreate([0, 0], varDouble);
 
 end;
 
-function TTransformers.Get_WdgVoltages: OleVariant;
+function TTransformers.Get_WdgVoltages: Olevariant;
 var
-  elem: TTransfObj;
-  TempVoltageBuffer:pComplexArray;
-   i,
-   iV : Integer;
+    elem: TTransfObj;
+    TempVoltageBuffer: pComplexArray;
+    i,
+    iV: Integer;
 begin
 
-  elem := ActiveTransformer;
-  if elem <> nil then
-  Begin
-  if (elem.ActiveWinding > 0) and (elem.ActiveWinding <= elem.NumberOfWindings) Then
-    Begin
-       Result := VarArrayCreate([0, 2*elem.nphases-1], varDouble);
-       TempVoltageBuffer := AllocMem(Sizeof(Complex)*elem.nphases );
-       elem.GetWindingVoltages( elem.ActiveWinding, TempVoltageBuffer, ActiveActor);
-       iV :=0;
-        For i := 1 to  elem.Nphases DO Begin
-             Result[iV] := TempVoltageBuffer^[i].re;
-             Inc(iV);
-             Result[iV] := TempVoltageBuffer^[i].im;
-             Inc(iV);
-        End;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+    begin
+        if (elem.ActiveWinding > 0) and (elem.ActiveWinding <= elem.NumberOfWindings) then
+        begin
+            Result := VarArrayCreate([0, 2 * elem.nphases - 1], varDouble);
+            TempVoltageBuffer := AllocMem(Sizeof(Complex) * elem.nphases);
+            elem.GetWindingVoltages(elem.ActiveWinding, TempVoltageBuffer, ActiveActor);
+            iV := 0;
+            for i := 1 to elem.Nphases do
+            begin
+                Result[iV] := TempVoltageBuffer^[i].re;
+                Inc(iV);
+                Result[iV] := TempVoltageBuffer^[i].im;
+                Inc(iV);
+            end;
 
-        Reallocmem(TempVoltageBuffer, 0);
-    End Else
-        Result := VarArrayCreate([0, 0], varDouble);;
+            Reallocmem(TempVoltageBuffer, 0);
+        end
+        else
+            Result := VarArrayCreate([0, 0], varDouble);
+        ;
 
-  End Else
-      Result := VarArrayCreate([0, 0], varDouble);
+    end
+    else
+        Result := VarArrayCreate([0, 0], varDouble);
 
 end;
 
-function TTransformers.Get_StrWdgCurrents: WideString;
+function TTransformers.Get_StrWdgCurrents: Widestring;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 
 begin
-  elem := ActiveTransformer;
-  if elem <> nil then
-  Begin
-      Result := elem.GetWindingCurrentsResult(ActiveActor) ;
-  End;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+    begin
+        Result := elem.GetWindingCurrentsResult(ActiveActor);
+    end;
 end;
 
 function TTransformers.Get_RdcOhms: Double;
 var
-  elem: TTransfObj;
+    elem: TTransfObj;
 begin
-  Result := 0.0;
-  elem := ActiveTransformer;
-  if elem <> nil then
-    Result := elem.WdgRdc[elem.ActiveWinding];
+    Result := 0.0;
+    elem := ActiveTransformer;
+    if elem <> NIL then
+        Result := elem.WdgRdc[elem.ActiveWinding];
 end;
 
 procedure TTransformers.Set_RdcOhms(Value: Double);
 begin
-  Set_Parameter ('RdcOhms', FloatToStr (Value));
+    Set_Parameter('RdcOhms', FloatToStr(Value));
 end;
 
 initialization
-  TAutoObjectFactory.Create(ComServer, TTransformers, Class_Transformers,
-    ciInternal, tmApartment);
+    TAutoObjectFactory.Create(ComServer, TTransformers, Class_Transformers,
+        ciInternal, tmApartment);
 end.

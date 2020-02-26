@@ -1,4 +1,5 @@
 unit ImplDSSimComs;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -9,20 +10,33 @@ unit ImplDSSimComs;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSengine_TLB, StdVcl,UComplex;
+    ComObj,
+    ActiveX,
+    OpenDSSengine_TLB,
+    StdVcl,
+    UComplex;
 
 type
-  TDSSimComs = class(TAutoObject, IDSSimComs)
+    TDSSimComs = class(TAutoObject, IDSSimComs)
 
-  protected
+    PROTECTED
 //    function Get_I0: OleVariant; safecall;
-    function BusVoltagepu(Index: SYSUINT): OleVariant; safecall;
-    function BusVoltage(Index: SYSUINT): OleVariant; safecall;
-  end;
+        function BusVoltagepu(Index: SYSUINT): Olevariant; SAFECALL;
+        function BusVoltage(Index: SYSUINT): Olevariant; SAFECALL;
+    end;
 
 implementation
 
-uses ComServ, DSSGlobals, Executive, Dialogs, SysUtils, solution, Variants,CktElement;
+uses
+    ComServ,
+    DSSGlobals,
+    Executive,
+    Dialogs,
+    SysUtils,
+    solution,
+    Variants,
+    CktElement;
+
 {*    // This routine is under test, the aim is to get the actual inj currents vector
 function TDSSimComs.Get_I0: OleVariant;
 var
@@ -41,49 +55,54 @@ begin
       end;
 end;
 *}
-function TDSSimComs.BusVoltagepu(Index: SYSUINT): OleVariant;
-VAR
-   i,j:Integer;
-   Volts,BaseFactor:Double;
+function TDSSimComs.BusVoltagepu(Index: SYSUINT): Olevariant;
+var
+    i, j: Integer;
+    Volts, BaseFactor: Double;
 begin
-    IF ActiveCircuit <> Nil THEN
-     WITH ActiveCircuit DO
-     Begin
-       i:=Index;
-       Result := VarArrayCreate([0, Buses^[i].NumNodesThisBus-1], varDouble);
-       If Buses^[i].kVBase >0.0 then BaseFactor :=  1000.0* Buses^[i].kVBase  Else BaseFactor := 1.0;
-         For j := 1 to Buses^[i].NumNodesThisBus  DO
-         Begin
-           Volts := Cabs(ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)]);
-           Result[j-1] := Volts/BaseFactor;
-         End;
-     End
-    ELSE Result := VarArrayCreate([0, 0], varDouble);
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+        begin
+            i := Index;
+            Result := VarArrayCreate([0, Buses^[i].NumNodesThisBus - 1], varDouble);
+            if Buses^[i].kVBase > 0.0 then
+                BaseFactor := 1000.0 * Buses^[i].kVBase
+            else
+                BaseFactor := 1.0;
+            for j := 1 to Buses^[i].NumNodesThisBus do
+            begin
+                Volts := Cabs(ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)]);
+                Result[j - 1] := Volts / BaseFactor;
+            end;
+        end
+    else
+        Result := VarArrayCreate([0, 0], varDouble);
 end;
 
-function TDSSimComs.BusVoltage(Index: SYSUINT): OleVariant;
-VAR
-   i,j,k:Integer;
-   Volts:Complex;
+function TDSSimComs.BusVoltage(Index: SYSUINT): Olevariant;
+var
+    i, j, k: Integer;
+    Volts: Complex;
 begin
-   IF ActiveCircuit <> Nil THEN
-     WITH ActiveCircuit DO
-     Begin
-       i:=Index;
-       Result := VarArrayCreate([0, 2*Buses^[i].NumNodesThisBus-1], varDouble);
-         For j := 1 to Buses^[i].NumNodesThisBus DO
-         Begin
-           Volts := ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)];
-           k:=(j-1)*2;
-           Result[k] := Volts.re;
-           Result[k+1] := Volts.im;
-         End;
-     End
-    ELSE Result := VarArrayCreate([0, 0], varDouble);
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+        begin
+            i := Index;
+            Result := VarArrayCreate([0, 2 * Buses^[i].NumNodesThisBus - 1], varDouble);
+            for j := 1 to Buses^[i].NumNodesThisBus do
+            begin
+                Volts := ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)];
+                k := (j - 1) * 2;
+                Result[k] := Volts.re;
+                Result[k + 1] := Volts.im;
+            end;
+        end
+    else
+        Result := VarArrayCreate([0, 0], varDouble);
 
 end;
 
 initialization
-  TAutoObjectFactory.Create(ComServer, TDSSimComs, Class_DSSimComs,
-  ciInternal, tmApartment);
+    TAutoObjectFactory.Create(ComServer, TDSSimComs, Class_DSSimComs,
+        ciInternal, tmApartment);
 end.

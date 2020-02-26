@@ -1,4 +1,5 @@
 unit HashList;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -26,145 +27,157 @@ unit HashList;
 
 {$M+}
 
-INTERFACE
+interface
 
-   USES ArrayDef;
+uses
+    ArrayDef;
 
-   TYPE
+type
 
    //pStringArray = ^StringArray;
   // StringArray = Array[1..100] of String;
 
-   TSubList =  RECORD
-        Nelem:Cardinal;
-        NAllocated:Cardinal;
-        Str:pStringArray;
-        Idx:pLongIntArray;
-   END;
+    TSubList = record
+        Nelem: Cardinal;
+        NAllocated: Cardinal;
+        Str: pStringArray;
+        Idx: pLongIntArray;
+    end;
 
-   pSubListArray = ^SubListArray;
-   SubListArray = Array[1..100] of TSubList;
+    pSubListArray = ^SubListArray;
+    SubListArray = array[1..100] of TSubList;
 
-   THashList  = CLASS(TObject)
-      private
-        NumElementsAllocated:Cardinal;
-        NumLists:Cardinal;
-        NumElements:Cardinal;
-        StringPtr:pStringArray;
-        ListPtr:pSubListArray;
-        AllocationInc:Cardinal;
-        LastFind:Cardinal;
-        LastHash:Cardinal;
-        LastSearchString:String;
+    THashList = class(TObject)
+    PRIVATE
+        NumElementsAllocated: Cardinal;
+        NumLists: Cardinal;
+        NumElements: Cardinal;
+        StringPtr: pStringArray;
+        ListPtr: pSubListArray;
+        AllocationInc: Cardinal;
+        LastFind: Cardinal;
+        LastHash: Cardinal;
+        LastSearchString: String;
 
-        Procedure ResizeSubList(Var SubList:TSubList);
-        Function Hash(Const S:String):Cardinal;
-        Procedure ResizeStrPtr;
-      protected
+        procedure ResizeSubList(var SubList: TSubList);
+        function Hash(const S: String): Cardinal;
+        procedure ResizeStrPtr;
+    PROTECTED
 
-      public
-        InitialAllocation:Cardinal;
-        Constructor Create(Nelements:Cardinal);
-        Destructor Destroy;Override;
-        Function   Add(Const S:String):Integer;
-        Function   Find(Const S:String):Integer;
-        Function   FindNext:Integer;  //  repeat find for duplicate string in same hash list
-        Function   FindAbbrev(Const S:String):Integer;
-        Function   Get(i:Cardinal):String;
-        Procedure  Expand(NewSize:Cardinal);   {Expands number of elements}
-        Procedure  DumpToFile(const fname:string);
-        Procedure  Clear;
-        Property   ListSize:Cardinal read NumElements;
-      published
+    PUBLIC
+        InitialAllocation: Cardinal;
+        constructor Create(Nelements: Cardinal);
+        destructor Destroy; OVERRIDE;
+        function Add(const S: String): Integer;
+        function Find(const S: String): Integer;
+        function FindNext: Integer;  //  repeat find for duplicate string in same hash list
+        function FindAbbrev(const S: String): Integer;
+        function Get(i: Cardinal): String;
+        procedure Expand(NewSize: Cardinal);   {Expands number of elements}
+        procedure DumpToFile(const fname: String);
+        procedure Clear;
+        property ListSize: Cardinal READ NumElements;
+    PUBLISHED
 
-   END;
+    end;
 
 
-IMPLEMENTATION
+implementation
 
-USES  Sysutils, math;
+uses
+    Sysutils,
+    math;
 
-Constructor THashList.Create(Nelements:Cardinal);
-VAR
-   i:Integer;
-   Elementsperlist:Cardinal;
-BEGIN
-     Inherited Create;
-     NumElements :=0;
-     InitialAllocation := Nelements;
-     StringPtr := nil;  // Allocmem(Sizeof(StringPtr^[1]) * Nelements);
+constructor THashList.Create(Nelements: Cardinal);
+var
+    i: Integer;
+    Elementsperlist: Cardinal;
+begin
+    inherited Create;
+    NumElements := 0;
+    InitialAllocation := Nelements;
+    StringPtr := NIL;  // Allocmem(Sizeof(StringPtr^[1]) * Nelements);
 
-     NumLists := round(sqrt(Nelements));
-     If NumLists<1 Then NumLists := 1;  // make sure at least one list
-     ElementsPerList := Nelements div NumLists + 1;
-     AllocationInc := ElementsPerList;
+    NumLists := round(sqrt(Nelements));
+    if NumLists < 1 then
+        NumLists := 1;  // make sure at least one list
+    ElementsPerList := Nelements div NumLists + 1;
+    AllocationInc := ElementsPerList;
 
-     Getmem(ListPtr, Sizeof(Listptr^[1]) * NumLists);
-     FOR i := 1 to NumLists DO BEGIN
+    Getmem(ListPtr, Sizeof(Listptr^[1]) * NumLists);
+    for i := 1 to NumLists do
+    begin
          {Allocate initial Sublists to zero; alocated on demand}
-         WITH ListPtr^[i] DO BEGIN
-           Str := nil;
-           Idx := nil;
-           Nallocated := 0;
-           Nelem := 0;
-         END;
-     END;
-     NumElementsAllocated := 0;
-     LastFind := 0;
-     LastHash := 0;
-     LastSearchString := '';
-END;
+        with ListPtr^[i] do
+        begin
+            Str := NIL;
+            Idx := NIL;
+            Nallocated := 0;
+            Nelem := 0;
+        end;
+    end;
+    NumElementsAllocated := 0;
+    LastFind := 0;
+    LastHash := 0;
+    LastSearchString := '';
+end;
 
-Destructor THashList.Destroy;
-VAR
-    i,j:Integer;
-Begin
+destructor THashList.Destroy;
+var
+    i, j: Integer;
+begin
 
-     FOR i := 1 to NumLists DO BEGIN
+    for i := 1 to NumLists do
+    begin
          {DeAllocated  Sublists}
-         WITH ListPtr^[i] DO BEGIN
-           For j := 1 to Nallocated DO Str^[j] := ''; // decrement ref count on string
-           Freemem(Str, SizeOf(Str^[1]) * Nallocated);
-           Freemem(Idx, SizeOf(Idx^[1]) * Nallocated);
-         END;
-     END;
+        with ListPtr^[i] do
+        begin
+            for j := 1 to Nallocated do
+                Str^[j] := ''; // decrement ref count on string
+            Freemem(Str, SizeOf(Str^[1]) * Nallocated);
+            Freemem(Idx, SizeOf(Idx^[1]) * Nallocated);
+        end;
+    end;
 
-     Freemem(ListPtr, Sizeof(Listptr^[1]) * NumLists);
+    Freemem(ListPtr, Sizeof(Listptr^[1]) * NumLists);
 
-     FOR i := 1 to NumElementsAllocated Do StringPtr^[i] := ''; // get rid of string storage
+    for i := 1 to NumElementsAllocated do
+        StringPtr^[i] := ''; // get rid of string storage
 
-     Freemem(StringPtr, Sizeof(StringPtr^[1]) * NumElementsAllocated);
+    Freemem(StringPtr, Sizeof(StringPtr^[1]) * NumElementsAllocated);
 
-     Inherited Destroy;
-End;
+    inherited Destroy;
+end;
 
-Procedure ReallocStr(Var S:pStringArray; oldSize, NewSize:Integer);
+procedure ReallocStr(var S: pStringArray; oldSize, NewSize: Integer);
 // Make a bigger block to hold the pointers to the strings
-VAR
-    X:pStringArray;
-BEGIN
+var
+    X: pStringArray;
+begin
     X := Allocmem(NewSize);   // Zero fills new string pointer array (important!)
-    IF OldSize>0 THEN BEGIN
-      Move(S^, X^, OldSize);
-      Freemem(S,Oldsize);
-    END;
+    if OldSize > 0 then
+    begin
+        Move(S^, X^, OldSize);
+        Freemem(S, Oldsize);
+    end;
     S := X;
-END;
+end;
 
-Procedure THashList.ResizeSubList(Var SubList:TSubList);
-VAR
-   OldAllocation:Cardinal;
-BEGIN
+procedure THashList.ResizeSubList(var SubList: TSubList);
+var
+    OldAllocation: Cardinal;
+begin
     // resize by reasonable amount
 
-    WITH SubList Do BEGIN
-      OldAllocation := Nallocated;
-      Nallocated := OldAllocation + AllocationInc;
-      ReallocStr(Str, Sizeof(Str^[1]) * OldAllocation, Sizeof(Str^[1]) * Nallocated);
-      Reallocmem(Idx, Sizeof(Idx^[1]) * Nallocated);
-    END;
+    with SubList do
+    begin
+        OldAllocation := Nallocated;
+        Nallocated := OldAllocation + AllocationInc;
+        ReallocStr(Str, Sizeof(Str^[1]) * OldAllocation, Sizeof(Str^[1]) * Nallocated);
+        Reallocmem(Idx, Sizeof(Idx^[1]) * Nallocated);
+    end;
 
-END;
+end;
 
 (*   This one was for AnsiStrings and just moved up to 8 bytes into an integer
 Function THashList.Hash(Const S:String):Integer;
@@ -201,149 +214,165 @@ END;
 *)
 
 (*   New supposedly fast hash method      *)
-  Function THashList.Hash(Const S:String):Cardinal;
+function THashList.Hash(const S: String): Cardinal;
 
-  VAR
-      Hashvalue:Cardinal;
-      i:Integer;
+var
+    Hashvalue: Cardinal;
+    i: Integer;
 
   {per Stackoverflow.com}
-  BEGIN
-     HashValue := 0;
-     FOR i := 1 to Length(S) DO Begin
-       HashValue := ((HashValue  shl 5) or (HashValue shr 27)) xor Cardinal(S[i]);
-     End;
-     Result := (Hashvalue mod NumLists) + 1;
-  END;
+begin
+    HashValue := 0;
+    for i := 1 to Length(S) do
+    begin
+        HashValue := ((HashValue shl 5) or (HashValue shr 27)) xor Cardinal(S[i]);
+    end;
+    Result := (Hashvalue mod NumLists) + 1;
+end;
 
 
-
-
-Procedure THashList.ResizeStrPtr;
+procedure THashList.ResizeStrPtr;
 
 // make linear string list larger
 
-VAR
-   OldAllocation:Cardinal;
-   NewPointer:pStringArray;
-BEGIN
-   OldAllocation := NumelementsAllocated;
-   NumelementsAllocated := OldAllocation + AllocationInc * NumLists;
+var
+    OldAllocation: Cardinal;
+    NewPointer: pStringArray;
+begin
+    OldAllocation := NumelementsAllocated;
+    NumelementsAllocated := OldAllocation + AllocationInc * NumLists;
 
    // Allocate and zero fill new string space (important!)
-   NewPointer := Allocmem(SizeOf(StringPtr^[1]) * NumElementsAllocated);
+    NewPointer := Allocmem(SizeOf(StringPtr^[1]) * NumElementsAllocated);
 
    //move old stuff to new location then dispose of old stuff
-   If OldAllocation>0 THEN BEGIN
-      Move(StringPtr^[1], NewPointer^[1], SizeOf(StringPtr^[1]) * OldAllocation);
-      Freemem(StringPtr, SizeOf(StringPtr^[1]) * OldAllocation);
-   END;
-   StringPtr := NewPointer;
-END;
+    if OldAllocation > 0 then
+    begin
+        Move(StringPtr^[1], NewPointer^[1], SizeOf(StringPtr^[1]) * OldAllocation);
+        Freemem(StringPtr, SizeOf(StringPtr^[1]) * OldAllocation);
+    end;
+    StringPtr := NewPointer;
+end;
 
-Function   THashList.Add(Const S:String):Integer;
-VAR
-    HashNum:Cardinal;
-    SS:String;
-BEGIN
+function THashList.Add(const S: String): Integer;
+var
+    HashNum: Cardinal;
+    SS: String;
+begin
     SS := LowerCase(S);
     HashNum := Hash(SS);
 
     Inc(NumElements);
-    If NumElements>NumElementsAllocated THEN ResizeStrPtr;
+    if NumElements > NumElementsAllocated then
+        ResizeStrPtr;
     Result := NumElements;
 
-    WITH ListPtr^[hashNum] DO BEGIN
+    with ListPtr^[hashNum] do
+    begin
         Inc(Nelem);
-        IF Nelem>Nallocated THEN  ResizeSubList(ListPtr^[HashNum]);
-    END;
+        if Nelem > Nallocated then
+            ResizeSubList(ListPtr^[HashNum]);
+    end;
 
-    WITH ListPtr^[hashNum] DO BEGIN
+    with ListPtr^[hashNum] do
+    begin
         Str^[Nelem] := SS;   // make copy of whole string, lower case
         StringPtr^[NumElements] := SS;   // increments count to string
         Idx^[Nelem] := NumElements;
-    END;
+    end;
 
-END;
+end;
 
 
-Function   THashList.Find(Const S:String):Integer;
-VAR
-    i:integer;
-BEGIN
+function THashList.Find(const S: String): Integer;
+var
+    i: Integer;
+begin
 
-     LastSearchString := LowerCase(S);
-     LastHash := Hash(LastSearchString);
-     Result := 0;
-     LastFind :=0;
+    LastSearchString := LowerCase(S);
+    LastHash := Hash(LastSearchString);
+    Result := 0;
+    LastFind := 0;
 
-     WITH ListPtr^[LastHash] DO BEGIN
-       FOR i := 1 to Nelem DO BEGIN
-         IF  CompareStr(LastSearchString, Str^[i]) = 0 THEN BEGIN
-             Result := Idx^[i];    // Return the index of this element
-             LastFind := i;
-             Break;
-         END;
-       END;
-     END;
+    with ListPtr^[LastHash] do
+    begin
+        for i := 1 to Nelem do
+        begin
+            if CompareStr(LastSearchString, Str^[i]) = 0 then
+            begin
+                Result := Idx^[i];    // Return the index of this element
+                LastFind := i;
+                Break;
+            end;
+        end;
+    end;
 
-END;
+end;
 
-Function   THashList.FindNext:Integer;
+function THashList.FindNext: Integer;
 
 // Begin search in same list as last
-VAR
-    i:integer;
-BEGIN
+var
+    i: Integer;
+begin
 
-     Result := 0;  // Default return
-     Inc(LastFind); // Start with next item in hash list
+    Result := 0;  // Default return
+    Inc(LastFind); // Start with next item in hash list
 
-     If (LastHash>0) and (LastHash<=NumLists) THEN
-        WITH ListPtr^[LastHash] DO BEGIN
-         FOR i := LastFind to Nelem DO BEGIN
-           IF  CompareStr(LastSearchString, Str^[i]) = 0 THEN BEGIN
-               Result := Idx^[i];    // Return the index of this element
-               LastFind := i;
-               Break;
-           END;
-         END;
-       END;
+    if (LastHash > 0) and (LastHash <= NumLists) then
+        with ListPtr^[LastHash] do
+        begin
+            for i := LastFind to Nelem do
+            begin
+                if CompareStr(LastSearchString, Str^[i]) = 0 then
+                begin
+                    Result := Idx^[i];    // Return the index of this element
+                    LastFind := i;
+                    Break;
+                end;
+            end;
+        end;
 
-END;
+end;
 
 
-Function  THashList.FindAbbrev(Const S:String):Integer;
+function THashList.FindAbbrev(const S: String): Integer;
 {Just make a linear search and test each string until a string is found that
  matches all the characters entered in S}
 
-VAR
-    Test1, Test2:String;
-    i:Integer;
-BEGIN
+var
+    Test1, Test2: String;
+    i: Integer;
+begin
 
-     Result := 0;
-     IF Length(S)>0 THEN BEGIN
-       Test1 := LowerCase(S);
+    Result := 0;
+    if Length(S) > 0 then
+    begin
+        Test1 := LowerCase(S);
 
-       FOR i := 1 to NumElements DO BEGIN
-           Test2 := Copy(StringPtr^[i], 1, Length(Test1));
-           If CompareStr(Test1, Test2) = 0 THEN BEGIN
-               Result := i;
-               Break;
-           END;
-       END;
-     END;
+        for i := 1 to NumElements do
+        begin
+            Test2 := Copy(StringPtr^[i], 1, Length(Test1));
+            if CompareStr(Test1, Test2) = 0 then
+            begin
+                Result := i;
+                Break;
+            end;
+        end;
+    end;
 
-END;
+end;
 
 
-Function   THashList.Get(i:Cardinal):String;
-BEGIN
-   IF (i>0) and (i<= NumElements) THEN  Result := StringPtr^[i] ELSE Result := '';
-END;
+function THashList.Get(i: Cardinal): String;
+begin
+    if (i > 0) and (i <= NumElements) then
+        Result := StringPtr^[i]
+    else
+        Result := '';
+end;
 
-Procedure  THashList.Expand(NewSize:Cardinal);
+procedure THashList.Expand(NewSize: Cardinal);
 
 {
   This procedure creates a new set of string lists and copies the
@@ -351,130 +380,150 @@ Procedure  THashList.Expand(NewSize:Cardinal);
 
 }
 
-VAR
-  NewStringPtr:pStringArray;
-  NewNumLists:Cardinal;
-  ElementsPerList:Cardinal;
-  NewListPtr:pSubListArray;
-  HashNum:Cardinal;
-  S:String;
-  OldNumLists:Cardinal;
-  i,j:Integer;
+var
+    NewStringPtr: pStringArray;
+    NewNumLists: Cardinal;
+    ElementsPerList: Cardinal;
+    NewListPtr: pSubListArray;
+    HashNum: Cardinal;
+    S: String;
+    OldNumLists: Cardinal;
+    i, j: Integer;
 
-BEGIN
-   IF NewSize > NumElementsAllocated THEN BEGIN
+begin
+    if NewSize > NumElementsAllocated then
+    begin
 
-     OldNumLists := NumLists;
+        OldNumLists := NumLists;
 
-     NewStringPtr := AllocMem(SizeOf(string) * NewSize);
-     NewNumLists := round(sqrt(NewSize));
-     ElementsPerList := NewSize div NewNumLists + 1;
-     If NewNumLists < 1 Then NewNumLists := 1;  // make sure at least one list
-     Getmem(NewListPtr, Sizeof(TSubList) * NewNumLists);
-     FOR i := 1 to NumLists DO BEGIN
+        NewStringPtr := AllocMem(SizeOf(String) * NewSize);
+        NewNumLists := round(sqrt(NewSize));
+        ElementsPerList := NewSize div NewNumLists + 1;
+        if NewNumLists < 1 then
+            NewNumLists := 1;  // make sure at least one list
+        Getmem(NewListPtr, Sizeof(TSubList) * NewNumLists);
+        for i := 1 to NumLists do
+        begin
          {Allocate initial Sublists}
-         WITH NewListPtr^[i] DO BEGIN
-           Str := Allocmem(SizeOf(Str^[1]) * ElementsPerList);
-           Idx := Allocmem(SizeOf(Idx^[1]) * ElementsPerList);
-           Nallocated := ElementsPerList;
-           Nelem := 0;
-         END;
-     END;
+            with NewListPtr^[i] do
+            begin
+                Str := Allocmem(SizeOf(Str^[1]) * ElementsPerList);
+                Idx := Allocmem(SizeOf(Idx^[1]) * ElementsPerList);
+                Nallocated := ElementsPerList;
+                Nelem := 0;
+            end;
+        end;
 
-     NumLists := NewNumLists;  // Has to be set so Hash function will work
+        NumLists := NewNumLists;  // Has to be set so Hash function will work
 
 {Add elements from old Hash List to New Hash List}
 
 
-     FOR i := 1 to NumElements DO
-     BEGIN
-       S := StringPtr^[i];
-       HashNum := Hash(S);
+        for i := 1 to NumElements do
+        begin
+            S := StringPtr^[i];
+            HashNum := Hash(S);
 
-       WITH NewListPtr^[hashNum] DO BEGIN
-           Inc(Nelem);
-           IF Nelem>Nallocated THEN  ResizeSubList(NewListPtr^[HashNum]);
-       END;
+            with NewListPtr^[hashNum] do
+            begin
+                Inc(Nelem);
+                if Nelem > Nallocated then
+                    ResizeSubList(NewListPtr^[HashNum]);
+            end;
 
-       WITH NewListPtr^[hashNum] DO BEGIN
-            Str^[Nelem] := S;   
-            NewStringPtr^[NumElements] := Str^[Nelem];
-            Idx^[Nelem] := i;
-       END;
+            with NewListPtr^[hashNum] do
+            begin
+                Str^[Nelem] := S;
+                NewStringPtr^[NumElements] := Str^[Nelem];
+                Idx^[Nelem] := i;
+            end;
 
-     END;
+        end;
 
 {Dump the old StringPtr and ListPtr storage}
 
-     FOR i := 1 to OldNumLists DO BEGIN
+        for i := 1 to OldNumLists do
+        begin
          {DeAllocate  Sublists}
-         WITH ListPtr^[i] DO BEGIN
-           For j := 1 to Nelem DO Str^[j] := ''; // decrement ref count on string
-           Freemem(Str, SizeOf(Str^[1]) * Nallocated);
-           Freemem(Idx, SizeOf(Idx^[1]) * Nallocated);
-         END;
-     END;
-     Freemem(ListPtr, Sizeof(Listptr^[1]) * OldNumLists);
-     Freemem(StringPtr, Sizeof(StringPtr^[1]) * NumElementsAllocated);
+            with ListPtr^[i] do
+            begin
+                for j := 1 to Nelem do
+                    Str^[j] := ''; // decrement ref count on string
+                Freemem(Str, SizeOf(Str^[1]) * Nallocated);
+                Freemem(Idx, SizeOf(Idx^[1]) * Nallocated);
+            end;
+        end;
+        Freemem(ListPtr, Sizeof(Listptr^[1]) * OldNumLists);
+        Freemem(StringPtr, Sizeof(StringPtr^[1]) * NumElementsAllocated);
 
 {Assign new String and List Pointers}
 
-     StringPtr := NewStringPtr;
-     ListPtr := NewListPtr;
-     NumElementsAllocated := NewSize;
+        StringPtr := NewStringPtr;
+        ListPtr := NewListPtr;
+        NumElementsAllocated := NewSize;
 
-   END;
-END;
+    end;
+end;
 
-PROCEDURE  THashList.DumpToFile(const fname:string);
-VAR
-   F:TextFile;
-   i,j:Integer;
-BEGIN
+procedure THashList.DumpToFile(const fname: String);
+var
+    F: TextFile;
+    i, j: Integer;
+begin
 
-   AssignFile(F, fname);
-   Rewrite(F);
-   Writeln(F, Format('Number of Hash Lists = %d, Number of Elements = %d', [NumLists, NumElements]));
+    AssignFile(F, fname);
+    Rewrite(F);
+    Writeln(F, Format('Number of Hash Lists = %d, Number of Elements = %d', [NumLists, NumElements]));
 
-   Writeln(F);
-   Writeln(F, 'Hash List Distribution');
-   For i := 1 to NumLists Do Begin
-        WITH ListPtr^[i] Do Begin
-           Writeln(F,Format('List = %d, Number of elements = %d',[i, Nelem]));
-        END;
-   End;
-   Writeln(F);
+    Writeln(F);
+    Writeln(F, 'Hash List Distribution');
+    for i := 1 to NumLists do
+    begin
+        with ListPtr^[i] do
+        begin
+            Writeln(F, Format('List = %d, Number of elements = %d', [i, Nelem]));
+        end;
+    end;
+    Writeln(F);
 
-   For i := 1 to NumLists DO Begin
-        WITH ListPtr^[i] DO Begin
-           Writeln(F,Format('List = %d, Number of elements = %d',[i, Nelem]));
-           FOR j := 1 to Nelem DO
-           Writeln(F,'"', Str^[j],'"  Idx= ',Idx^[j]:0);
-        END;
+    for i := 1 to NumLists do
+    begin
+        with ListPtr^[i] do
+        begin
+            Writeln(F, Format('List = %d, Number of elements = %d', [i, Nelem]));
+            for j := 1 to Nelem do
+                Writeln(F, '"', Str^[j], '"  Idx= ', Idx^[j]: 0);
+        end;
         Writeln(F);
-   End;
-   Writeln(F,'LINEAR LISTING...');
-   For i := 1 to NumElements DO Begin
-     Writeln(F, i:3, ' = "', Stringptr^[i], '"');
-   End;
-   CloseFile(F);
+    end;
+    Writeln(F, 'LINEAR LISTING...');
+    for i := 1 to NumElements do
+    begin
+        Writeln(F, i: 3, ' = "', Stringptr^[i], '"');
+    end;
+    CloseFile(F);
 
-END;
+end;
 
-Procedure  THashList.Clear;
-VAR i,j:Integer;
+procedure THashList.Clear;
+var
+    i, j: Integer;
 
-BEGIN
-  FOR i := 1 to NumLists DO BEGIN
-    WITH ListPtr^[i] DO BEGIN
-      Nelem := 0;
-      For j := 1 to Nallocated DO ListPtr^[i].Str^[j] := '';
-    END;
-  END;
+begin
+    for i := 1 to NumLists do
+    begin
+        with ListPtr^[i] do
+        begin
+            Nelem := 0;
+            for j := 1 to Nallocated do
+                ListPtr^[i].Str^[j] := '';
+        end;
+    end;
 
-  FOR i := 1 to NumElementsAllocated Do StringPtr^[i] := '';
+    for i := 1 to NumElementsAllocated do
+        StringPtr^[i] := '';
 
-  NumElements := 0;
-END;
+    NumElements := 0;
+end;
 
-END.
+end.

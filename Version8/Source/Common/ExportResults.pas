@@ -11,1224 +11,1356 @@ unit ExportResults;
    5-30-00 Added code for handling positive sequence mode
 }
 
-INTERFACE
+interface
 
-Uses EnergyMeter,
-     XYCurve;
+uses
+    EnergyMeter,
+    XYCurve;
 
-Procedure ExportVoltages(FileNm:String);
-Procedure ExportSeqVoltages(FileNm:String);
-Procedure ExportCurrents(FileNm:String);
-Procedure ExportEstimation(Filenm:String);
-Procedure ExportSeqCurrents(FileNm:String);
-Procedure ExportPowers(FileNm:String; opt :Integer);
-Procedure ExportPbyphase(FileNm:String; opt :Integer);
-Procedure ExportSeqPowers(FileNm:String; opt :Integer);
-Procedure ExportFaultStudy(FileNm:String);
-Procedure ExportMeters(FileNm:String);
-Procedure ExportGenMeters(FileNm:String);
-Procedure ExportPVSystemMeters(FileNm:String);
-Procedure ExportPVSystem2Meters(FileNm:String);
-Procedure ExportStorageMeters(FileNm:String);
-Procedure ExportStorage2Meters(FileNm:String);
-Procedure ExportLoads(FileNm :String);
-Procedure ExportCapacity(FileNm:String);
-Procedure ExportOverloads(FileNm:String);
-Procedure ExportUnserved(FileNm:String; UE_Only:Boolean);
-Procedure ExportYprim(FileNm:String);
-Procedure ExportY(FileNm:String; TripletOpt:Boolean);
-Procedure ExportSeqZ(FileNm:String);
-Procedure ExportBusCoords(FileNm:String);
-Procedure ExportLosses(FileNm:String);
-Procedure ExportUuids(FileNm:String);
-Procedure ExportCounts(FileNm:String);
-Procedure ExportSummary(FileNm:String);
-Procedure ExportProfile(FileNm:String; PhasesToPlot:Integer);
-Procedure ExportEventLog(FileNm:String);
-Procedure ExportVoltagesElements(FileNm:String);
-Procedure ExportGICMvar(FileNm:String);
-Procedure ExportBusReliability(FileNm:String);
-Procedure ExportBranchReliability(FileNm:String);
-Procedure ExportNodeNames(FileNm:String);
-Procedure ExportTaps(FileNm:String);
-Procedure ExportNodeOrder(FileNm:String);
-Procedure ExportElemCurrents(FileNm:String);
-Procedure ExportElemVoltages(FileNm:String);
-Procedure ExportElemPowers(FileNm:String);
-Procedure ExportResult(FileNm:String);
-Procedure ExportYNodeList(FileNM:String);
-Procedure ExportYVoltages(FileNM:String);
-Procedure ExportYCurrents(FileNM:String);
-Procedure ExportSections(FileNM:String; pMeter:TEnergyMeterObj);
-Procedure ExportErrorLog(FileNm:String);
-Procedure ExportIncMatrix(FileNm:String);
-Procedure ExportIncMatrixRows(FileNm:String);
-Procedure ExportIncMatrixCols(FileNm:String);
-Procedure ExportBusLevels(FileNm:String);
-Procedure ExportLaplacian(FileNm:String);
-Procedure ExportZLL(FileNm:String);
-Procedure ExportZCC(FileNm:String);
-Procedure ExportY4(FileNm:String);
-Procedure ExportC(FileNm:String);
-
-
-IMPLEMENTATION
-
-Uses uComplex,  Arraydef, Sysutils,   Circuit, DSSClassDefs, DSSGlobals,
-     uCMatrix,  solution, CktElement, Utilities, Bus, MathUtil, DSSClass,
-     PDElement, PCElement, Generator,  Sensor, Load, RegControl, Transformer,
-     ParserDel, Math, Ymatrix, LineGeometry, WireData, LineCode, XfmrCode, NamedObject,
-     GICTransformer, PVSystem, PVSystem2, Storage, Storage2, KLUSolve, ExportCIMXML,
-     LineSpacing, CNData, TSData;
-
-Procedure WriteElementVoltagesExportFile(Var F:TextFile; pElem:TDSSCktElement;MaxNumNodes:Integer);
-
-Var
-     NCond, Nterm, i,j,k,m,  nref, bref:Integer;
-     Busname:String;
-     Volts:Complex;
-     Vpu, Vmag:Double;
-
-Begin
-  NCond := pElem.NConds;
-  Nterm := pElem.Nterms;
-  k:=0;
-  BusName := (StripExtension(pElem.FirstBus));
-  Write(F, Format('%s.%s',[pElem.DSSClassName, pElem.Name]));
+procedure ExportVoltages(FileNm: String);
+procedure ExportSeqVoltages(FileNm: String);
+procedure ExportCurrents(FileNm: String);
+procedure ExportEstimation(Filenm: String);
+procedure ExportSeqCurrents(FileNm: String);
+procedure ExportPowers(FileNm: String; opt: Integer);
+procedure ExportPbyphase(FileNm: String; opt: Integer);
+procedure ExportSeqPowers(FileNm: String; opt: Integer);
+procedure ExportFaultStudy(FileNm: String);
+procedure ExportMeters(FileNm: String);
+procedure ExportGenMeters(FileNm: String);
+procedure ExportPVSystemMeters(FileNm: String);
+procedure ExportPVSystem2Meters(FileNm: String);
+procedure ExportStorageMeters(FileNm: String);
+procedure ExportStorage2Meters(FileNm: String);
+procedure ExportLoads(FileNm: String);
+procedure ExportCapacity(FileNm: String);
+procedure ExportOverloads(FileNm: String);
+procedure ExportUnserved(FileNm: String; UE_Only: Boolean);
+procedure ExportYprim(FileNm: String);
+procedure ExportY(FileNm: String; TripletOpt: Boolean);
+procedure ExportSeqZ(FileNm: String);
+procedure ExportBusCoords(FileNm: String);
+procedure ExportLosses(FileNm: String);
+procedure ExportUuids(FileNm: String);
+procedure ExportCounts(FileNm: String);
+procedure ExportSummary(FileNm: String);
+procedure ExportProfile(FileNm: String; PhasesToPlot: Integer);
+procedure ExportEventLog(FileNm: String);
+procedure ExportVoltagesElements(FileNm: String);
+procedure ExportGICMvar(FileNm: String);
+procedure ExportBusReliability(FileNm: String);
+procedure ExportBranchReliability(FileNm: String);
+procedure ExportNodeNames(FileNm: String);
+procedure ExportTaps(FileNm: String);
+procedure ExportNodeOrder(FileNm: String);
+procedure ExportElemCurrents(FileNm: String);
+procedure ExportElemVoltages(FileNm: String);
+procedure ExportElemPowers(FileNm: String);
+procedure ExportResult(FileNm: String);
+procedure ExportYNodeList(FileNM: String);
+procedure ExportYVoltages(FileNM: String);
+procedure ExportYCurrents(FileNM: String);
+procedure ExportSections(FileNM: String; pMeter: TEnergyMeterObj);
+procedure ExportErrorLog(FileNm: String);
+procedure ExportIncMatrix(FileNm: String);
+procedure ExportIncMatrixRows(FileNm: String);
+procedure ExportIncMatrixCols(FileNm: String);
+procedure ExportBusLevels(FileNm: String);
+procedure ExportLaplacian(FileNm: String);
+procedure ExportZLL(FileNm: String);
+procedure ExportZCC(FileNm: String);
+procedure ExportY4(FileNm: String);
+procedure ExportC(FileNm: String);
 
 
-  Write(F, Format(',%d',[NTerm]));
+implementation
 
-  FOR j := 1 to NTerm Do Begin
-    Write(F, Format(',%d,',[j]));
-    Write(F, Format('%d,%d,',[NCond,pElem.NPhases]));
+uses
+    uComplex,
+    Arraydef,
+    Sysutils,
+    Circuit,
+    DSSClassDefs,
+    DSSGlobals,
+    uCMatrix,
+    solution,
+    CktElement,
+    Utilities,
+    Bus,
+    MathUtil,
+    DSSClass,
+    PDElement,
+    PCElement,
+    Generator,
+    Sensor,
+    Load,
+    RegControl,
+    Transformer,
+    ParserDel,
+    Math,
+    Ymatrix,
+    LineGeometry,
+    WireData,
+    LineCode,
+    XfmrCode,
+    NamedObject,
+    GICTransformer,
+    PVSystem,
+    PVSystem2,
+    Storage,
+    Storage2,
+    KLUSolve,
+    ExportCIMXML,
+    LineSpacing,
+    CNData,
+    TSData;
 
-    Write(F,Format('%s,',[UpperCase(BusName)]));
-    For i := 1 to NCond Do Begin
-       Inc(k);
-       nref := pElem.NodeRef^[k];
-       Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[nref];
-       Vmag := Cabs(Volts)*0.001;
-       IF nref=0 Then Vpu := 0.0
-       else With ActiveCircuit[ActiveActor] Do Begin
-           bref := MapNodeToBus^[nref].BusRef;
-           If Buses^[bref].kvbase <> 0.0
-           Then Vpu := Vmag / Buses^[bref].kVBase
-           Else Vpu := 0.0;
+procedure WriteElementVoltagesExportFile(var F: TextFile; pElem: TDSSCktElement; MaxNumNodes: Integer);
 
-           if (i = 1) Then Write (F, Format('%6.3f',[Buses^[bref].kvBase*sqrt(3)]));
-       End;
-       With ActiveCircuit[ActiveActor] Do Begin
-           Write(F,Format(', %d, %10.6g, %6.3f, %9.5g',[k, Vmag, cdang(Volts), Vpu]));
-       END; //end with ActiveCircuit
+var
+    NCond, Nterm, i, j, k, m, nref, bref: Integer;
+    Busname: String;
+    Volts: Complex;
+    Vpu, Vmag: Double;
 
-    End; //end numconductors
+begin
+    NCond := pElem.NConds;
+    Nterm := pElem.Nterms;
+    k := 0;
+    BusName := (StripExtension(pElem.FirstBus));
+    Write(F, Format('%s.%s', [pElem.DSSClassName, pElem.Name]));
+
+
+    Write(F, Format(',%d', [NTerm]));
+
+    for j := 1 to NTerm do
+    begin
+        Write(F, Format(',%d,', [j]));
+        Write(F, Format('%d,%d,', [NCond, pElem.NPhases]));
+
+        Write(F, Format('%s,', [UpperCase(BusName)]));
+        for i := 1 to NCond do
+        begin
+            Inc(k);
+            nref := pElem.NodeRef^[k];
+            Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[nref];
+            Vmag := Cabs(Volts) * 0.001;
+            if nref = 0 then
+                Vpu := 0.0
+            else
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    bref := MapNodeToBus^[nref].BusRef;
+                    if Buses^[bref].kvbase <> 0.0 then
+                        Vpu := Vmag / Buses^[bref].kVBase
+                    else
+                        Vpu := 0.0;
+
+                    if (i = 1) then
+                        Write(F, Format('%6.3f', [Buses^[bref].kvBase * sqrt(3)]));
+                end;
+            with ActiveCircuit[ActiveActor] do
+            begin
+                Write(F, Format(', %d, %10.6g, %6.3f, %9.5g', [k, Vmag, cdang(Volts), Vpu]));
+            end; //end with ActiveCircuit
+
+        end; //end numconductors
 
    {Zero Fill row}
-    For m :=  (NCond + 1) to (MaxNumNodes) DO Write(F, ', 0, 0, 0, 0');
+        for m := (NCond + 1) to (MaxNumNodes) do
+            Write(F, ', 0, 0, 0, 0');
 
-    BusName := StripExtension(pElem.Nextbus);
-  End; // end for numterminals
-End; //end procedure
-
+        BusName := StripExtension(pElem.Nextbus);
+    end; // end for numterminals
+end; //end procedure
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportSeqVoltages(FileNm:String);
+procedure ExportSeqVoltages(FileNm: String);
 
 // Export Symmetrical Component bus voltages
 
-Var
-   F :TextFile;
-   i, j :Integer;
-   nref :Integer;
-   Vph, VphLL, V012 : Array[1..3] of Complex;
+var
+    F: TextFile;
+    i, j: Integer;
+    nref: Integer;
+    Vph, VphLL, V012: array[1..3] of Complex;
 
-   V0, V1, V2,
-   Vpu, V2V1 ,V0V1  : Double;
-   Vresidual        : Complex;
-   V_NEMA           : Double;
+    V0, V1, V2,
+    Vpu, V2V1, V0V1: Double;
+    Vresidual: Complex;
+    V_NEMA: Double;
 
-Begin
+begin
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
-     Writeln(F,'Bus,  V1,  p.u.,Base kV, V2, %V2/V1, V0, %V0/V1, Vresidual, %NEMA');
-     WITH ActiveCircuit[ActiveActor] DO
-     BEGIN
-       FOR i := 1 to NumBuses DO
-       BEGIN
+        Writeln(F, 'Bus,  V1,  p.u.,Base kV, V2, %V2/V1, V0, %V0/V1, Vresidual, %NEMA');
+        with ActiveCircuit[ActiveActor] do
+        begin
+            for i := 1 to NumBuses do
+            begin
 
-           IF Buses^[i].NumNodesThisBus < 3
-           THEN BEGIN
-                V0 := 0.0;
-                V2 := 0.0;
-                V_NEMA := 0.0;
-                IF (Buses^[i].NumNodesThisBus = 1) and PositiveSequence
-                THEN  BEGIN // first node
-                   nref := Buses^[i].GetRef(1);
-                   Vph[1] := ActiveCircuit[ActiveActor].Solution.NodeV^[nref];
-                   V1 := Cabs(Vph[1]);
-                END
-                ELSE V1 := 0.0;
-           END
-           ELSE BEGIN
+                if Buses^[i].NumNodesThisBus < 3 then
+                begin
+                    V0 := 0.0;
+                    V2 := 0.0;
+                    V_NEMA := 0.0;
+                    if (Buses^[i].NumNodesThisBus = 1) and PositiveSequence then
+                    begin // first node
+                        nref := Buses^[i].GetRef(1);
+                        Vph[1] := ActiveCircuit[ActiveActor].Solution.NodeV^[nref];
+                        V1 := Cabs(Vph[1]);
+                    end
+                    else
+                        V1 := 0.0;
+                end
+                else
+                begin
 
-             With  ActiveCircuit[ActiveActor].Solution, Buses^[i] Do
-             FOR j := 1 to 3 DO
-             BEGIN      // first nodes named  1, 2, 3
-               Vph[j] := NodeV^[GetRef(FindIdx(j))];
-             END;
+                    with  ActiveCircuit[ActiveActor].Solution, Buses^[i] do
+                        for j := 1 to 3 do
+                        begin      // first nodes named  1, 2, 3
+                            Vph[j] := NodeV^[GetRef(FindIdx(j))];
+                        end;
 
              {Compute LL voltages for Nema unbalance calc}
-             VphLL[1] := Csub(Vph[1], Vph[2]);
-             VphLL[2] := Csub(Vph[2], Vph[3]);
-             VphLL[3] := Csub(Vph[3], Vph[1]);
+                    VphLL[1] := Csub(Vph[1], Vph[2]);
+                    VphLL[2] := Csub(Vph[2], Vph[3]);
+                    VphLL[3] := Csub(Vph[3], Vph[1]);
 
-             Phase2SymComp(@Vph, @V012);
+                    Phase2SymComp(@Vph, @V012);
 
-             V0 := Cabs(V012[1]);
-             V1 := Cabs(V012[2]);
-             V2 := Cabs(V012[3]);
+                    V0 := Cabs(V012[1]);
+                    V1 := Cabs(V012[2]);
+                    V2 := Cabs(V012[3]);
 
-             V_NEMA := PctNemaUnbalance(@VphLL);
-         END;
+                    V_NEMA := PctNemaUnbalance(@VphLL);
+                end;
 
-         IF   Buses^[i].kvbase <> 0.0
-         THEN Vpu := 0.001 * V1 / Buses^[i].kVBase
-         ELSE Vpu := 0.0;
+                if Buses^[i].kvbase <> 0.0 then
+                    Vpu := 0.001 * V1 / Buses^[i].kVBase
+                else
+                    Vpu := 0.0;
 
-         IF V1>0.0 THEN Begin
-            V2V1 := 100.0*V2/V1;
-            V0V1 := 100.0*V0/V1;
-         End Else Begin
-            V2V1 := 0.0;
-            V0V1 := 0.0;
-         End;
+                if V1 > 0.0 then
+                begin
+                    V2V1 := 100.0 * V2 / V1;
+                    V0V1 := 100.0 * V0 / V1;
+                end
+                else
+                begin
+                    V2V1 := 0.0;
+                    V0V1 := 0.0;
+                end;
 
-         Vresidual := CZERO;
-         With ActiveCircuit[ActiveActor].Solution do
-         For j := 1 to Buses^[i].NumNodesThisBus Do Caccum(Vresidual, NodeV^[Buses^[i].GetRef(j)]);
+                Vresidual := CZERO;
+                with ActiveCircuit[ActiveActor].Solution do
+                    for j := 1 to Buses^[i].NumNodesThisBus do
+                        Caccum(Vresidual, NodeV^[Buses^[i].GetRef(j)]);
 
-         Writeln(F,
-         Format('"%s", %10.6g, %9.5g, %8.2f, %10.6g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g',
-                [Uppercase(BusList.Get(i)), V1, Vpu, (Buses^[i].kvbase*SQRT3), V2, V2V1, V0, V0V1, Cabs(Vresidual), V_NEMA]
-         ));
-
-
-       END;
-     END;
+                Writeln(F,
+                    Format('"%s", %10.6g, %9.5g, %8.2f, %10.6g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g',
+                    [Uppercase(BusList.Get(i)), V1, Vpu, (Buses^[i].kvbase * SQRT3), V2, V2V1, V0, V0V1, Cabs(Vresidual), V_NEMA]
+                    ));
 
 
-     GlobalResult := FileNm;
+            end;
+        end;
 
-  FINALLY
 
-     CloseFile(F);
-  End;
+        GlobalResult := FileNm;
 
-End;
+    finally
+
+        CloseFile(F);
+    end;
+
+end;
 
 //-------------------------------------------------------------------
-Procedure ExportVoltages(FileNm:String);
+procedure ExportVoltages(FileNm: String);
 
 // Export Symmetrical Component bus voltages
 
-Var
-   MaxNumNodes  :Integer ;
-   F         :TextFile;
-   i, j, jj  :Integer;
-   BusName   :String;
-   Volts     :Complex;
-   nref      :Integer;
-   NodeIdx   :Integer;
-   Vmag,
-   Vpu       : Double;
+var
+    MaxNumNodes: Integer;
+    F: TextFile;
+    i, j, jj: Integer;
+    BusName: String;
+    Volts: Complex;
+    nref: Integer;
+    NodeIdx: Integer;
+    Vmag,
+    Vpu: Double;
 
 
-Begin
+begin
 
   {Find max nodes at a bus}
-  MaxNumNodes := 0;
-  With ActiveCircuit[ActiveActor] Do
-  For i := 1 to NumBuses Do
-     MaxNumNodes := max(MaxNumNodes, Buses^[i].NumNodesThisBus);
+    MaxNumNodes := 0;
+    with ActiveCircuit[ActiveActor] do
+        for i := 1 to NumBuses do
+            MaxNumNodes := max(MaxNumNodes, Buses^[i].NumNodesThisBus);
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
 
-     Write(F,'Bus, BasekV');
-     For i := 1 to MaxNumNodes Do Write(F,Format(', Node%d, Magnitude%d, Angle%d, pu%d',[i, i, i, i]));
-     Writeln(F);
+        Write(F, 'Bus, BasekV');
+        for i := 1 to MaxNumNodes do
+            Write(F, Format(', Node%d, Magnitude%d, Angle%d, pu%d', [i, i, i, i]));
+        Writeln(F);
 
-     WITH ActiveCircuit[ActiveActor] DO BEGIN
-       FOR i := 1 to NumBuses DO BEGIN
-           BusName := BusList.Get(i);
-           Write(F,Format('"%s", %.5g', [UpperCase(BusName), Buses^[i].kvbase*SQRT3]));
+        with ActiveCircuit[ActiveActor] do
+        begin
+            for i := 1 to NumBuses do
+            begin
+                BusName := BusList.Get(i);
+                Write(F, Format('"%s", %.5g', [UpperCase(BusName), Buses^[i].kvbase * SQRT3]));
 
-           jj := 1;
-           With Buses^[i] Do
-           For j := 1 to NumNodesThisBus DO BEGIN
-             Repeat
-                 NodeIdx := FindIdx(jj);     // Try to find nodes in order
-                 inc(jj)
-             Until NodeIdx>0;
-             nref := GetRef(NodeIdx);
-             Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[nref];
-             Vmag := Cabs(Volts);
-             If kvbase <> 0.0 then Vpu := 0.001 * Vmag / kVBase
-             Else Vpu := 0.0;
+                jj := 1;
+                with Buses^[i] do
+                    for j := 1 to NumNodesThisBus do
+                    begin
+                        repeat
+                            NodeIdx := FindIdx(jj);     // Try to find nodes in order
+                            inc(jj)
+                        until NodeIdx > 0;
+                        nref := GetRef(NodeIdx);
+                        Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[nref];
+                        Vmag := Cabs(Volts);
+                        if kvbase <> 0.0 then
+                            Vpu := 0.001 * Vmag / kVBase
+                        else
+                            Vpu := 0.0;
 
-             Write(F,
-             Format(', %d, %10.6g, %6.1f, %9.5g',
-                    [GetNum(NodeIdx), Vmag, cdang(Volts), Vpu]));
-           END;
+                        Write(F,
+                            Format(', %d, %10.6g, %6.1f, %9.5g',
+                            [GetNum(NodeIdx), Vmag, cdang(Volts), Vpu]));
+                    end;
            {Zero Fill row}
-           For j :=  Buses^[i].NumNodesThisBus+1 to MaxNumNodes DO Write(F, ', 0, 0, 0, 0');
-           Writeln(F);
-       END;
-     END;
+                for j := Buses^[i].NumNodesThisBus + 1 to MaxNumNodes do
+                    Write(F, ', 0, 0, 0, 0');
+                Writeln(F);
+            end;
+        end;
 
-    GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
-  FINALLY
+    finally
 
-     CloseFile(F);
+        CloseFile(F);
 
-  End;
+    end;
 
-End;
+end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-PROCEDURE CalcAndWriteSeqCurrents(Var F:TextFile; j:Integer; pelem:TDSSCktElement; cBuffer:pComplexArray; DoRatings:Boolean);
-VAR
-  I0,I1,I2, I2I1, I0I1, iNormal,iEmerg :Double;
-  i,k,NCond:integer;
-  Iph, I012 : Array[1..3] of Complex;
-  Iresidual:Complex;
-  I_NEMA  :Double;
+procedure CalcAndWriteSeqCurrents(var F: TextFile; j: Integer; pelem: TDSSCktElement; cBuffer: pComplexArray; DoRatings: Boolean);
+var
+    I0, I1, I2, I2I1, I0I1, iNormal, iEmerg: Double;
+    i, k, NCond: Integer;
+    Iph, I012: array[1..3] of Complex;
+    Iresidual: Complex;
+    I_NEMA: Double;
 
 
-Begin
-  NCond := pelem.NConds;
-  IF (pelem.Nphases >= 3) THEN BEGIN
+begin
+    NCond := pelem.NConds;
+    if (pelem.Nphases >= 3) then
+    begin
 
-      For i := 1 to 3 Do
-      Begin
-         k := (j-1)*Ncond + i;
-         Iph[i] :=cBuffer^[k];
-      End;
+        for i := 1 to 3 do
+        begin
+            k := (j - 1) * Ncond + i;
+            Iph[i] := cBuffer^[k];
+        end;
 
-      Phase2SymComp(@Iph, @I012);
-      I0 := Cabs(I012[1]);
-      I1 := Cabs(I012[2]);
-      I2 := Cabs(I012[3]);
+        Phase2SymComp(@Iph, @I012);
+        I0 := Cabs(I012[1]);
+        I1 := Cabs(I012[2]);
+        I2 := Cabs(I012[3]);
 
-      I_NEMA := PctNemaUnbalance(@Iph);
+        I_NEMA := PctNemaUnbalance(@Iph);
 
-  END
-  ELSE BEGIN
-     I0 := 0.0;
-     I1 := 0.0;
-     I2 := 0.0;
-     I_NEMA := 0.0;
-     IF ActiveCircuit[ActiveActor].PositiveSequence    // Use phase 1 only
-     THEN I1 := Cabs(Iph[1]);
+    end
+    else
+    begin
+        I0 := 0.0;
+        I1 := 0.0;
+        I2 := 0.0;
+        I_NEMA := 0.0;
+        if ActiveCircuit[ActiveActor].PositiveSequence    // Use phase 1 only
+        then
+            I1 := Cabs(Iph[1]);
 
-  END;
+    end;
 
-   IF I1>0.0 THEN Begin
-    I2I1 := 100.0*I2/I1;
-    I0I1 := 100.0*I0/I1;
-   End Else Begin
-    I2I1 := 0.0;
-    I0I1 := 0.0;
-   End;
+    if I1 > 0.0 then
+    begin
+        I2I1 := 100.0 * I2 / I1;
+        I0I1 := 100.0 * I0 / I1;
+    end
+    else
+    begin
+        I2I1 := 0.0;
+        I0I1 := 0.0;
+    end;
 
-   IF  DoRatings And (j = 1)  // Only for 1st Terminal
-   THEN Begin
+    if DoRatings and (j = 1)  // Only for 1st Terminal
+    then
+    begin
         iNormal := TPDElement(Pelem).NormAmps;
-        IF iNormal > 0.0 Then iNormal := I1/iNormal*100.0;
-        iEmerg :=  TPDElement(Pelem).EmergAmps;
-        IF iEmerg > 0.0 THEN iEmerg := I1/iEmerg*100.0;
-   End
-   ELSE Begin
+        if iNormal > 0.0 then
+            iNormal := I1 / iNormal * 100.0;
+        iEmerg := TPDElement(Pelem).EmergAmps;
+        if iEmerg > 0.0 then
+            iEmerg := I1 / iEmerg * 100.0;
+    end
+    else
+    begin
         iNormal := 0.0;
         iEmerg := 0.0;
-   End;
+    end;
 
-   Iresidual := CZERO;
-   For i := 1 to Ncond Do Caccum(Iresidual, cBuffer^[i]);
+    Iresidual := CZERO;
+    for i := 1 to Ncond do
+        Caccum(Iresidual, cBuffer^[i]);
 
 
-  Writeln(F, Format('"%s", %3d, %10.6g, %8.4g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g',
-                    [(pelem.DSSClassName + '.' + UpperCase(pelem.Name)),j,I1,iNormal,iEmerg,I2,I2I1,I0,I0I1, Cabs(Iresidual), I_NEMA]));
-End;
+    Writeln(F, Format('"%s", %3d, %10.6g, %8.4g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g, %10.6g, %8.4g',
+        [(pelem.DSSClassName + '.' + UpperCase(pelem.Name)), j, I1, iNormal, iEmerg, I2, I2I1, I0, I0I1, Cabs(Iresidual), I_NEMA]));
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportSeqCurrents(FileNm:String);
+procedure ExportSeqCurrents(FileNm: String);
 
-Var
-    F       :TextFile;
-    j:Integer;
-    pElem :TDSSCktElement;
-    PDElem:TPDElement;
-    PCelem:TPCelement;
-    cBuffer :pComplexArray;  // Allocate to max total conductors
+var
+    F: TextFile;
+    j: Integer;
+    pElem: TDSSCktElement;
+    PDElem: TPDElement;
+    PCelem: TPCelement;
+    cBuffer: pComplexArray;  // Allocate to max total conductors
 
-Begin
+begin
 
-  cBuffer := nil;
+    cBuffer := NIL;
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
 
      {Sequence Currents}
-     Writeln(F,'Element, Terminal,  I1, %Normal, %Emergency, I2, %I2/I1, I0, %I0/I1, Iresidual, %NEMA');
+        Writeln(F, 'Element, Terminal,  I1, %Normal, %Emergency, I2, %I2/I1, I0, %I0/I1, Iresidual, %NEMA');
 
      {Allocate cBuffer big enough for largest circuit element}
-     Getmem(cbuffer, sizeof(cBuffer^[1])* GetMaxCktElementSize);
+        Getmem(cbuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
 
 
      //Sources First
-     Pelem := ActiveCircuit[ActiveActor].Sources.First;
-     WHILE pelem<>nil DO BEGIN
-       IF (pelem.Enabled)  THEN BEGIN
-        pelem.GetCurrents(cBuffer, ActiveActor);
-        FOR j := 1 to pelem.Nterms Do CalcAndWriteSeqCurrents(F, j, pelem, cBuffer, FALSE);
-       END;
-        pelem := ActiveCircuit[ActiveActor].Sources.Next;
-     END;
+        Pelem := ActiveCircuit[ActiveActor].Sources.First;
+        while pelem <> NIL do
+        begin
+            if (pelem.Enabled) then
+            begin
+                pelem.GetCurrents(cBuffer, ActiveActor);
+                for j := 1 to pelem.Nterms do
+                    CalcAndWriteSeqCurrents(F, j, pelem, cBuffer, FALSE);
+            end;
+            pelem := ActiveCircuit[ActiveActor].Sources.Next;
+        end;
 
 
      // PDELEMENTS Next
-     PDelem := ActiveCircuit[ActiveActor].PDElements.First;
+        PDelem := ActiveCircuit[ActiveActor].PDElements.First;
 
-     WHILE PDelem<>nil DO BEGIN
-       IF (PDelem.Enabled) THEN BEGIN
-        PDelem.GetCurrents(cBuffer, ActiveActor);
-        FOR j := 1 to PDelem.Nterms Do  CalcAndWriteSeqCurrents(F, j, pDelem, cBuffer, TRUE);
-       END;
-        PDelem := ActiveCircuit[ActiveActor].PDElements.Next;
-     END;
+        while PDelem <> NIL do
+        begin
+            if (PDelem.Enabled) then
+            begin
+                PDelem.GetCurrents(cBuffer, ActiveActor);
+                for j := 1 to PDelem.Nterms do
+                    CalcAndWriteSeqCurrents(F, j, pDelem, cBuffer, TRUE);
+            end;
+            PDelem := ActiveCircuit[ActiveActor].PDElements.Next;
+        end;
 
     // PCelemENTS next
-     PCelem := ActiveCircuit[ActiveActor].PCelements.First;
+        PCelem := ActiveCircuit[ActiveActor].PCelements.First;
 
-     WHILE PCelem<>nil DO BEGIN
-       IF (PCelem.Enabled)
-       THEN BEGIN
-        PCelem.GetCurrents(cBuffer, ActiveActor);
-        FOR j := 1 to PCelem.Nterms Do CalcAndWriteSeqCurrents(F, j, pCelem, cBuffer, FALSE);
-       END;
-        PCelem := ActiveCircuit[ActiveActor].PCelements.Next;
-     END;
+        while PCelem <> NIL do
+        begin
+            if (PCelem.Enabled) then
+            begin
+                PCelem.GetCurrents(cBuffer, ActiveActor);
+                for j := 1 to PCelem.Nterms do
+                    CalcAndWriteSeqCurrents(F, j, pCelem, cBuffer, FALSE);
+            end;
+            PCelem := ActiveCircuit[ActiveActor].PCelements.Next;
+        end;
 
 
      //Faults Next
-     Pelem := ActiveCircuit[ActiveActor].Faults.First;
-     WHILE pelem<>nil DO BEGIN
-       IF (pelem.Enabled)
-       THEN BEGIN
-        pelem.GetCurrents(cBuffer, ActiveActor);
-        FOR j := 1 to pelem.Nterms Do CalcAndWriteSeqCurrents(F, j, pelem, cBuffer, FALSE);
-       END;
-        pelem := ActiveCircuit[ActiveActor].Faults.Next;
-     END;
+        Pelem := ActiveCircuit[ActiveActor].Faults.First;
+        while pelem <> NIL do
+        begin
+            if (pelem.Enabled) then
+            begin
+                pelem.GetCurrents(cBuffer, ActiveActor);
+                for j := 1 to pelem.Nterms do
+                    CalcAndWriteSeqCurrents(F, j, pelem, cBuffer, FALSE);
+            end;
+            pelem := ActiveCircuit[ActiveActor].Faults.Next;
+        end;
 
-     GlobalResult := FileNm;
-     
+        GlobalResult := FileNm;
 
-  FINALLY
-     If Assigned(Cbuffer) then Freemem(cBuffer);
-     CloseFile(F);
 
-  End;
-End;
+    finally
+        if Assigned(Cbuffer) then
+            Freemem(cBuffer);
+        CloseFile(F);
+
+    end;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-PROCEDURE CalcAndWriteCurrents(Var F:TextFile; pElem:TDSSCktElement; Cbuffer:pComplexArray; CondWidth, TermWidth:Integer);
-VAr
-    i,j,k:Integer;
-    Iresid:Complex;
+procedure CalcAndWriteCurrents(var F: TextFile; pElem: TDSSCktElement; Cbuffer: pComplexArray; CondWidth, TermWidth: Integer);
+var
+    i, j, k: Integer;
+    Iresid: Complex;
 
-Begin
-    k:=0;
-    Write(F, Format('%s', [pelem.DSSClassName+'.'+UpperCase(pElem.Name)]));
-    For      j := 1 to pElem.Nterms Do Begin
-      Iresid := CZERO;
-      For    i := 1 to pElem.NConds  Do Begin
-         Inc(k);
-         Write(F,
-         Format(', %10.6g, %8.2f',  [Cabs(cBuffer^[k]),cdang(cBuffer^[k])]));
-         Caccum(Iresid,cBuffer^[k]);
-      End;
-      For i := pElem.Nconds+1 To CondWidth do Write(F, Format(', %10.6g, %8.2f',  [0.0,0.0]));
-      Write(F,Format(', %10.6g, %8.2f',  [Cabs(Iresid),cdang(Iresid)]));
-    END;
+begin
+    k := 0;
+    Write(F, Format('%s', [pelem.DSSClassName + '.' + UpperCase(pElem.Name)]));
+    for      j := 1 to pElem.Nterms do
+    begin
+        Iresid := CZERO;
+        for    i := 1 to pElem.NConds do
+        begin
+            Inc(k);
+            Write(F,
+                Format(', %10.6g, %8.2f', [Cabs(cBuffer^[k]), cdang(cBuffer^[k])]));
+            Caccum(Iresid, cBuffer^[k]);
+        end;
+        for i := pElem.Nconds + 1 to CondWidth do
+            Write(F, Format(', %10.6g, %8.2f', [0.0, 0.0]));
+        Write(F, Format(', %10.6g, %8.2f', [Cabs(Iresid), cdang(Iresid)]));
+    end;
 
     {Filler if no. terms less than termwidth}
-    For j := pElem.Nterms+1 to TermWidth Do
-      For i := 1 to Condwidth+1 Do Write(F, Format(', %10.6g, %8.2f',  [0.0,0.0]));
+    for j := pElem.Nterms + 1 to TermWidth do
+        for i := 1 to Condwidth + 1 do
+            Write(F, Format(', %10.6g, %8.2f', [0.0, 0.0]));
 
     Writeln(F);
-End;
+end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-PROCEDURE CalcAndWriteMaxCurrents(Var F:TextFile; pElem:TPDElement; Cbuffer:pComplexArray);
-Var
+procedure CalcAndWriteMaxCurrents(var F: TextFile; pElem: TPDElement; Cbuffer: pComplexArray);
+var
     RatingIdx,
-    i           : Integer;
+    i: Integer;
     EmergAmps,
     NormAmps,
     Currmag,
-    MaxCurrent  : Double;
-    LocalPower  : Complex;
-    RSignal     : TXYCurveObj;
+    MaxCurrent: Double;
+    LocalPower: Complex;
+    RSignal: TXYCurveObj;
 
-Begin
+begin
     // Initializes NomrAmps and EmergAmps with the default values for the PDElement
-    NormAmps   :=  pElem.NormAmps;
-    EmergAmps  :=  pElem.EmergAmps;
+    NormAmps := pElem.NormAmps;
+    EmergAmps := pElem.EmergAmps;
 
     if SeasonalRating then
-    Begin
-      if SeasonSignal <> '' then
-      Begin
-        RSignal     :=  XYCurveClass[ActiveActor].Find(SeasonSignal);
-        if RSignal <> nil then
-        Begin
-          RatingIdx   :=  trunc(RSignal.GetYValue(ActiveCircuit[ActiveActor].Solution.DynaVars.intHour));
+    begin
+        if SeasonSignal <> '' then
+        begin
+            RSignal := XYCurveClass[ActiveActor].Find(SeasonSignal);
+            if RSignal <> NIL then
+            begin
+                RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit[ActiveActor].Solution.DynaVars.intHour));
           // Brings the seasonal ratings for the PDElement
-          if (RatingIdx <= PElem.NumAmpRatings) and (PElem.NumAmpRatings > 1) then
-          Begin
-            NormAmps    :=  pElem.AmpRatings[RatingIdx];
-            EmergAmps   :=  pElem.AmpRatings[RatingIdx];
-          End;
-        End
+                if (RatingIdx <= PElem.NumAmpRatings) and (PElem.NumAmpRatings > 1) then
+                begin
+                    NormAmps := pElem.AmpRatings[RatingIdx];
+                    EmergAmps := pElem.AmpRatings[RatingIdx];
+                end;
+            end
+            else
+                SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
+        end
         else
-          SeasonalRating  := False;   // The XYCurve defined doesn't exist
-      End
-      else
-        SeasonalRating  :=  False;    // The user didn't define the seasonal signal
-    End;
+            SeasonalRating := FALSE;    // The user didn't define the seasonal signal
+    end;
 
     Write(F, Format('%s.%s', [pelem.DSSClassName, UpperCase(pElem.Name)]));
     MaxCurrent := 0.0;
-    For    i := 1 to pElem.Nphases  Do Begin
-       Currmag := Cabs(Cbuffer^[i]);
-       If Currmag  > MaxCurrent then   MaxCurrent :=  Currmag;
-    End;
+    for    i := 1 to pElem.Nphases do
+    begin
+        Currmag := Cabs(Cbuffer^[i]);
+        if Currmag > MaxCurrent then
+            MaxCurrent := Currmag;
+    end;
     //----pElem.ActiveTerminalIdx := 1;
-    LocalPower := CmulReal(pElem.Power[1,ActiveActor], 0.001);
-    If (pElem.NormAmps=0.0) or (pElem.EmergAmps=0.0) then
-      Write(F,Format(', %10.6g, %8.2f, %8.2f',  [MaxCurrent, 0.0 , 0.0]))
-    Else
-      Write(F,Format(', %10.6g, %8.2f, %8.2f',  [MaxCurrent, MaxCurrent/NormAmps*100.0 , MaxCurrent/Emergamps*100.0]));
+    LocalPower := CmulReal(pElem.Power[1, ActiveActor], 0.001);
+    if (pElem.NormAmps = 0.0) or (pElem.EmergAmps = 0.0) then
+        Write(F, Format(', %10.6g, %8.2f, %8.2f', [MaxCurrent, 0.0, 0.0]))
+    else
+        Write(F, Format(', %10.6g, %8.2f, %8.2f', [MaxCurrent, MaxCurrent / NormAmps * 100.0, MaxCurrent / Emergamps * 100.0]));
 
-    Write(F, Format(', %10.6g, %10.6g, %d, %d, %d', [Localpower.re, Localpower.im, pElem.BranchNumCustomers, pElem.BranchTotalCustomers, pElem.NPhases   ]));
-    With ActiveCircuit[ActiveActor] Do Write(F, Format(', %-.3g ', [Buses^[MapNodeToBus^[PElem.NodeRef^[1]].BusRef].kVBase ]));
+    Write(F, Format(', %10.6g, %10.6g, %d, %d, %d', [Localpower.re, Localpower.im, pElem.BranchNumCustomers, pElem.BranchTotalCustomers, pElem.NPhases]));
+    with ActiveCircuit[ActiveActor] do
+        Write(F, Format(', %-.3g ', [Buses^[MapNodeToBus^[PElem.NodeRef^[1]].BusRef].kVBase]));
     Writeln(F);
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportCurrents(FileNm:String);
+procedure ExportCurrents(FileNm: String);
 
-Var
-    F          :TextFile;
-    cBuffer    :pComplexArray;
-    pElem      :TDSSCktElement;
-    MaxCond, MaxTerm   :Integer;
-    i,j        :Integer;
+var
+    F: TextFile;
+    cBuffer: pComplexArray;
+    pElem: TDSSCktElement;
+    MaxCond, MaxTerm: Integer;
+    i, j: Integer;
 
-Begin
+begin
 
-  cBuffer := nil;
+    cBuffer := NIL;
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
-     Getmem(cBuffer, sizeof(cBuffer^[1])*GetMaxCktElementSize);
+        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
 
      {Calculate the width of the file}
-     MaxCond := 1;
-     MaxTerm := 2;
-     pElem := ActiveCircuit[ActiveActor].CktElements.First;
-     While pElem<>nil Do Begin
-        If pelem.NTerms > MaxTerm Then MaxTerm := pelem.NTerms;
-        If pelem.NConds > MaxCond Then MaxCond:= pelem.NConds;
-        pElem := ActiveCircuit[ActiveActor].CktElements.Next;
-     End;
+        MaxCond := 1;
+        MaxTerm := 2;
+        pElem := ActiveCircuit[ActiveActor].CktElements.First;
+        while pElem <> NIL do
+        begin
+            if pelem.NTerms > MaxTerm then
+                MaxTerm := pelem.NTerms;
+            if pelem.NConds > MaxCond then
+                MaxCond := pelem.NConds;
+            pElem := ActiveCircuit[ActiveActor].CktElements.Next;
+        end;
 
 
      {Branch Currents}
-     Write(F,'Element');
-     For i := 1 to MaxTerm Do Begin
-     For j := 1 to MaxCond Do Write(F, Format(', I%d_%d, Ang%d_%d',[i,j,i,j]));
-     Write(F, Format(', Iresid%d, AngResid%d',[i ,i]));
-     End;
-     Writeln(F);
+        Write(F, 'Element');
+        for i := 1 to MaxTerm do
+        begin
+            for j := 1 to MaxCond do
+                Write(F, Format(', I%d_%d, Ang%d_%d', [i, j, i, j]));
+            Write(F, Format(', Iresid%d, AngResid%d', [i, i]));
+        end;
+        Writeln(F);
 
 
      // Sources first
-     pElem := ActiveCircuit[ActiveActor].Sources.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-          pElem.GetCurrents(cBuffer, ActiveActor);
-          CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
-       END;
-        pElem := ActiveCircuit[ActiveActor].Sources.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].Sources.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                pElem.GetCurrents(cBuffer, ActiveActor);
+                CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
+            end;
+            pElem := ActiveCircuit[ActiveActor].Sources.Next;
+        end;
 
 
      // PDELEMENTS first
-     pElem := ActiveCircuit[ActiveActor].PDElements.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-        pElem.GetCurrents(cBuffer, ActiveActor);
-        CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
-       END;
-        pElem := ActiveCircuit[ActiveActor].PDElements.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].PDElements.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                pElem.GetCurrents(cBuffer, ActiveActor);
+                CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
+            end;
+            pElem := ActiveCircuit[ActiveActor].PDElements.Next;
+        end;
 
      // Faults
-     pElem := ActiveCircuit[ActiveActor].Faults.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-        pElem.GetCurrents(cBuffer, ActiveActor);
-        CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
-       END;
-        pElem := ActiveCircuit[ActiveActor].Faults.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].Faults.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                pElem.GetCurrents(cBuffer, ActiveActor);
+                CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
+            end;
+            pElem := ActiveCircuit[ActiveActor].Faults.Next;
+        end;
 
      // PCELEMENTS next
-     pElem := ActiveCircuit[ActiveActor].PCElements.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-        pElem.GetCurrents(cBuffer, ActiveActor);
-        CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
-       END;
-        pElem := ActiveCircuit[ActiveActor].PCElements.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].PCElements.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                pElem.GetCurrents(cBuffer, ActiveActor);
+                CalcAndWriteCurrents(F, pElem, Cbuffer, maxcond, maxterm);
+            end;
+            pElem := ActiveCircuit[ActiveActor].PCElements.Next;
+        end;
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
 
-  FINALLY
-     If Assigned(cBuffer) Then Freemem(cBuffer);
-     CloseFile(F);
+    finally
+        if Assigned(cBuffer) then
+            Freemem(cBuffer);
+        CloseFile(F);
 
-  End;
+    end;
 
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-PROCEDURE WriteNodeList(Var F:TextFile; const CktElementName:String);
-VAR
-  NValues, i: Integer;
+procedure WriteNodeList(var F: TextFile; const CktElementName: String);
+var
+    NValues, i: Integer;
 
 
-Begin
+begin
 
 
-  If ActiveCircuit[ActiveActor] <> nil Then
-  If Not ActiveCircuit[ActiveActor].Issolved  Then
-  Begin
-      DoSimpleMsg('Circuit must be solved for this command to execute properly.', 222001);
-      Exit;
-  End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if not ActiveCircuit[ActiveActor].Issolved then
+        begin
+            DoSimpleMsg('Circuit must be solved for this command to execute properly.', 222001);
+            Exit;
+        end;
 
 
-  If Length(CktElementName) > 0  Then
-  Begin
-    SetObject(CktElementName);
+    if Length(CktElementName) > 0 then
+    begin
+        SetObject(CktElementName);
 
 
-
-      If Assigned(ActiveCircuit[ActiveActor].ActiveCktElement) Then
-       WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
-       Begin
-           Write(F, Format('"%s", %d, %d',[CktElementName, Nterms, Nconds ]));
-           NValues := NConds*Nterms;
-           For i := 1 to  NValues DO
-           Begin
-              Write(F, Format(', %d',[GetNodeNum(NodeRef^[i]) ]));
-           End;
-           Writeln(F);
-       End
-  End;
+        if Assigned(ActiveCircuit[ActiveActor].ActiveCktElement) then
+            with ActiveCircuit[ActiveActor].ActiveCktElement do
+            begin
+                Write(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
+                NValues := NConds * Nterms;
+                for i := 1 to NValues do
+                begin
+                    Write(F, Format(', %d', [GetNodeNum(NodeRef^[i])]));
+                end;
+                Writeln(F);
+            end
+    end;
 
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportNodeOrder(FileNm:String);
+procedure ExportNodeOrder(FileNm: String);
 
 { Writes NodeLists in same order as Export Currents function
 }
 
-Var
-    F          :TextFile;
-    pElem      :TDSSCktElement;
-    strName    :String;
+var
+    F: TextFile;
+    pElem: TDSSCktElement;
+    strName: String;
 
-Begin
+begin
 
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
      {Header Record}
-     Write(F,'Element, Nterminals, Nconductors, Node-1, Node-2, Node-3, ...');
-     Writeln(F);
+        Write(F, 'Element, Nterminals, Nconductors, Node-1, Node-2, Node-3, ...');
+        Writeln(F);
 
 
      // Sources first
-     pElem := ActiveCircuit[ActiveActor].Sources.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteNodeList(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].Sources.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].Sources.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteNodeList(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].Sources.Next;
+        end;
 
 
      // PDELEMENTS first
-     pElem := ActiveCircuit[ActiveActor].PDElements.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteNodeList(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].PDElements.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].PDElements.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteNodeList(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].PDElements.Next;
+        end;
 
      // Faults
-     pElem := ActiveCircuit[ActiveActor].Faults.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteNodeList(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].Faults.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].Faults.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteNodeList(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].Faults.Next;
+        end;
 
      // PCELEMENTS next
-     pElem := ActiveCircuit[ActiveActor].PCElements.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteNodeList(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].PCElements.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].PCElements.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteNodeList(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].PCElements.Next;
+        end;
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
 
-  FINALLY
-     CloseFile(F);
+    finally
+        CloseFile(F);
 
-  End;
+    end;
 
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-PROCEDURE WriteElemCurrents(Var F:TextFile; const CktElementName:String);
-VAR
-  NValues, i: Integer;
+procedure WriteElemCurrents(var F: TextFile; const CktElementName: String);
+var
+    NValues, i: Integer;
 
 
-
-Begin
-
-
-  If ActiveCircuit[ActiveActor] <> nil Then
-  If Not ActiveCircuit[ActiveActor].Issolved  Then
-  Begin
-      DoSimpleMsg('Circuit must be solved for this command to execute properly.', 222001);
-      Exit;
-  End;
+begin
 
 
-  If Length(CktElementName) > 0  Then
-  Begin
-    SetObject(CktElementName);
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if not ActiveCircuit[ActiveActor].Issolved then
+        begin
+            DoSimpleMsg('Circuit must be solved for this command to execute properly.', 222001);
+            Exit;
+        end;
 
-      If Assigned(ActiveCircuit[ActiveActor].ActiveCktElement) Then
-       WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
-       Begin
-           ComputeIterminal(ActiveActor);
-           Write(F, Format('"%s", %d, %d',[CktElementName, Nterms, Nconds ]));
-           NValues := NConds*Nterms;
-           For i := 1 to  NValues DO
-           Begin
-              Write(F, Format(', %10.6g, %8.2f',  [Cabs(Iterminal^[i]), cdang(Iterminal^[i])]));
-           End;
-           Writeln(F);
-       End
-  End;
+
+    if Length(CktElementName) > 0 then
+    begin
+        SetObject(CktElementName);
+
+        if Assigned(ActiveCircuit[ActiveActor].ActiveCktElement) then
+            with ActiveCircuit[ActiveActor].ActiveCktElement do
+            begin
+                ComputeIterminal(ActiveActor);
+                Write(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
+                NValues := NConds * Nterms;
+                for i := 1 to NValues do
+                begin
+                    Write(F, Format(', %10.6g, %8.2f', [Cabs(Iterminal^[i]), cdang(Iterminal^[i])]));
+                end;
+                Writeln(F);
+            end
+    end;
 
 
 end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportElemCurrents(FileNm:String);
+procedure ExportElemCurrents(FileNm: String);
 
 { Export currents in same order as NodeOrder export
 }
-Var
-    F          :TextFile;
-    pElem      :TDSSCktElement;
-    strName    :String;
+var
+    F: TextFile;
+    pElem: TDSSCktElement;
+    strName: String;
 
-Begin
+begin
 
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
      {Header Record}
-     Write(F,'Element, Nterminals, Nconductors, I_1, Ang_1, ...');
-     Writeln(F);
+        Write(F, 'Element, Nterminals, Nconductors, I_1, Ang_1, ...');
+        Writeln(F);
 
 
      // Sources first
-     pElem := ActiveCircuit[ActiveActor].Sources.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteElemCurrents(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].Sources.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].Sources.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteElemCurrents(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].Sources.Next;
+        end;
 
 
      // PDELEMENTS first
-     pElem := ActiveCircuit[ActiveActor].PDElements.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteElemCurrents(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].PDElements.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].PDElements.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteElemCurrents(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].PDElements.Next;
+        end;
 
      // Faults
-     pElem := ActiveCircuit[ActiveActor].Faults.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteElemCurrents(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].Faults.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].Faults.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteElemCurrents(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].Faults.Next;
+        end;
 
      // PCELEMENTS next
-     pElem := ActiveCircuit[ActiveActor].PCElements.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteElemCurrents(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].PCElements.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].PCElements.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteElemCurrents(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].PCElements.Next;
+        end;
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
 
-  FINALLY
-     CloseFile(F);
+    finally
+        CloseFile(F);
 
-  End;
-End;
+    end;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-PROCEDURE WriteElemVoltages(Var F:TextFile; const CktElementName:String);
-VAR
-  NValues, i: Integer;
+procedure WriteElemVoltages(var F: TextFile; const CktElementName: String);
+var
+    NValues, i: Integer;
 
 
-
-Begin
-
-
-  If ActiveCircuit[ActiveActor] <> nil Then
-  If Not ActiveCircuit[ActiveActor].Issolved  Then
-  Begin
-      DoSimpleMsg('Circuit must be solved for this command to execute properly.', 222001);
-      Exit;
-  End;
+begin
 
 
-  If Length(CktElementName) > 0  Then
-  Begin
-    SetObject(CktElementName);
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if not ActiveCircuit[ActiveActor].Issolved then
+        begin
+            DoSimpleMsg('Circuit must be solved for this command to execute properly.', 222001);
+            Exit;
+        end;
 
-      If Assigned(ActiveCircuit[ActiveActor].ActiveCktElement) Then
-       WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
-       Begin
-           ComputeVterminal(ActiveActor);
-           Write(F, Format('"%s", %d, %d',[CktElementName, Nterms, Nconds ]));
-           NValues := NConds*Nterms;
-           For i := 1 to  NValues DO
-           Begin
-              Write(F, Format(', %10.6g, %8.2f',  [Cabs(Vterminal^[i]), cdang(Vterminal^[i])]));
-           End;
-           Writeln(F);
-       End
-  End;
+
+    if Length(CktElementName) > 0 then
+    begin
+        SetObject(CktElementName);
+
+        if Assigned(ActiveCircuit[ActiveActor].ActiveCktElement) then
+            with ActiveCircuit[ActiveActor].ActiveCktElement do
+            begin
+                ComputeVterminal(ActiveActor);
+                Write(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
+                NValues := NConds * Nterms;
+                for i := 1 to NValues do
+                begin
+                    Write(F, Format(', %10.6g, %8.2f', [Cabs(Vterminal^[i]), cdang(Vterminal^[i])]));
+                end;
+                Writeln(F);
+            end
+    end;
 
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportElemVoltages(FileNm:String);
+procedure ExportElemVoltages(FileNm: String);
 { Export conductor voltages in same order as NodeOrder export
 }
-Var
-    F          :TextFile;
-    pElem      :TDSSCktElement;
-    strName    :String;
+var
+    F: TextFile;
+    pElem: TDSSCktElement;
+    strName: String;
 
-Begin
+begin
 
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
      {Header Record}
-     Write(F,'Element, Nterminals, Nconductors, V_1, Ang_1, ...');
-     Writeln(F);
+        Write(F, 'Element, Nterminals, Nconductors, V_1, Ang_1, ...');
+        Writeln(F);
 
 
      // Sources first
-     pElem := ActiveCircuit[ActiveActor].Sources.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteElemVoltages(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].Sources.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].Sources.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteElemVoltages(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].Sources.Next;
+        end;
 
 
      // PDELEMENTS first
-     pElem := ActiveCircuit[ActiveActor].PDElements.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteElemVoltages(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].PDElements.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].PDElements.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteElemVoltages(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].PDElements.Next;
+        end;
 
      // Faults
-     pElem := ActiveCircuit[ActiveActor].Faults.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteElemVoltages(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].Faults.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].Faults.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteElemVoltages(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].Faults.Next;
+        end;
 
      // PCELEMENTS next
-     pElem := ActiveCircuit[ActiveActor].PCElements.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteElemVoltages(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].PCElements.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].PCElements.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteElemVoltages(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].PCElements.Next;
+        end;
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
 
-  FINALLY
-     CloseFile(F);
+    finally
+        CloseFile(F);
 
-  End;
+    end;
 
-End;
+end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-PROCEDURE WriteElemPowers(Var F:TextFile; const CktElementName:String);
-VAR
-  NValues, i: Integer;
-  S : Complex;
+procedure WriteElemPowers(var F: TextFile; const CktElementName: String);
+var
+    NValues, i: Integer;
+    S: Complex;
 
-Begin
-
-
-  If ActiveCircuit[ActiveActor] <> nil Then
-  If Not ActiveCircuit[ActiveActor].Issolved  Then
-  Begin
-      DoSimpleMsg('Circuit must be solved for this command to execute properly.', 222001);
-      Exit;
-  End;
+begin
 
 
-  If Length(CktElementName) > 0  Then
-  Begin
-    SetObject(CktElementName);
+    if ActiveCircuit[ActiveActor] <> NIL then
+        if not ActiveCircuit[ActiveActor].Issolved then
+        begin
+            DoSimpleMsg('Circuit must be solved for this command to execute properly.', 222001);
+            Exit;
+        end;
 
-      If Assigned(ActiveCircuit[ActiveActor].ActiveCktElement) Then
-       WITH ActiveCircuit[ActiveActor].ActiveCktElement DO
-       Begin
-           ComputeVterminal(ActiveActor);
-           ComputeIterminal(ActiveActor);
-           Write(F, Format('"%s", %d, %d',[CktElementName, Nterms, Nconds ]));
-           NValues := NConds*Nterms;
-           For i := 1 to  NValues DO
-           Begin
-              S := Cmul(Vterminal^[i], Conjg( Iterminal^[i]));
-              Write(F, Format(', %10.6g, %10.6g',  [S.re * 0.001, S.im * 0.001]));
-           End;
-           Writeln(F);
-       End
-  End;
+
+    if Length(CktElementName) > 0 then
+    begin
+        SetObject(CktElementName);
+
+        if Assigned(ActiveCircuit[ActiveActor].ActiveCktElement) then
+            with ActiveCircuit[ActiveActor].ActiveCktElement do
+            begin
+                ComputeVterminal(ActiveActor);
+                ComputeIterminal(ActiveActor);
+                Write(F, Format('"%s", %d, %d', [CktElementName, Nterms, Nconds]));
+                NValues := NConds * Nterms;
+                for i := 1 to NValues do
+                begin
+                    S := Cmul(Vterminal^[i], Conjg(Iterminal^[i]));
+                    Write(F, Format(', %10.6g, %10.6g', [S.re * 0.001, S.im * 0.001]));
+                end;
+                Writeln(F);
+            end
+    end;
 
 
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportElemPowers(FileNm:String);
+procedure ExportElemPowers(FileNm: String);
 
 { Export conductor powers in same order as NodeOrder export
 }
-Var
-    F          :TextFile;
-    pElem      :TDSSCktElement;
-    strName    :String;
+var
+    F: TextFile;
+    pElem: TDSSCktElement;
+    strName: String;
 
-Begin
+begin
 
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
      {Header Record}
-     Write(F,'Element, Nterminals, Nconductors, P_1, Q_1, ...');
-     Writeln(F);
+        Write(F, 'Element, Nterminals, Nconductors, P_1, Q_1, ...');
+        Writeln(F);
 
 
      // Sources first
-     pElem := ActiveCircuit[ActiveActor].Sources.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteElemPowers(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].Sources.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].Sources.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteElemPowers(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].Sources.Next;
+        end;
 
 
      // PDELEMENTS first
-     pElem := ActiveCircuit[ActiveActor].PDElements.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteElemPowers(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].PDElements.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].PDElements.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteElemPowers(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].PDElements.Next;
+        end;
 
      // Faults
-     pElem := ActiveCircuit[ActiveActor].Faults.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteElemPowers(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].Faults.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].Faults.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteElemPowers(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].Faults.Next;
+        end;
 
      // PCELEMENTS next
-     pElem := ActiveCircuit[ActiveActor].PCElements.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-           strName := pElem.ParentClass.Name + '.' + pElem.Name;
-           WriteElemPowers(F, strName);
-       END;
-        pElem := ActiveCircuit[ActiveActor].PCElements.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].PCElements.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                strName := pElem.ParentClass.Name + '.' + pElem.Name;
+                WriteElemPowers(F, strName);
+            end;
+            pElem := ActiveCircuit[ActiveActor].PCElements.Next;
+        end;
 
-     GlobalResult := FileNm;
-
-
-  FINALLY
-     CloseFile(F);
-
-  End;
-
-End;
+        GlobalResult := FileNm;
 
 
+    finally
+        CloseFile(F);
+
+    end;
+
+end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportPowers(FileNm:String; opt :Integer);
+procedure ExportPowers(FileNm: String; opt: Integer);
 
 {Opt = 0: kVA
  opt = 1: MVA
  }
 
-Var
-    F :TextFile;
-    Nterm,  j :Integer;
-    PDElem :TPDElement;
-    PCElem :TPCElement;
-    S:Complex;
-    Separator :String;
+var
+    F: TextFile;
+    Nterm, j: Integer;
+    PDElem: TPDElement;
+    PCElem: TPCElement;
+    S: Complex;
+    Separator: String;
 
-Begin
-
-
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
-     Separator := ', ';
+begin
 
 
-     CASE Opt of
-          1:Writeln(F,'Element, Terminal, P(MW), Q(Mvar), P_Normal, Q_Normal, P_Emergency, Q_Emergency');
-     ELSE
-          Writeln(F,'Element, Terminal, P(kW), Q(kvar),  P_Normal, Q_Normal, P_Emergency, Q_Emergency');
-     End;
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
+        Separator := ', ';
+
+
+        case Opt of
+            1:
+                Writeln(F, 'Element, Terminal, P(MW), Q(Mvar), P_Normal, Q_Normal, P_Emergency, Q_Emergency');
+        else
+            Writeln(F, 'Element, Terminal, P(kW), Q(kvar),  P_Normal, Q_Normal, P_Emergency, Q_Emergency');
+        end;
 
      // PDELEMENTS first
-     PDElem := ActiveCircuit[ActiveActor].PDElements.First;
+        PDElem := ActiveCircuit[ActiveActor].PDElements.First;
 
-     WHILE PDElem <> nil DO
-     BEGIN
-       IF (PDElem.Enabled)
-       THEN BEGIN
-        Nterm := pDElem.Nterms;
+        while PDElem <> NIL do
+        begin
+            if (PDElem.Enabled) then
+            begin
+                Nterm := pDElem.Nterms;
 
-        FOR j := 1 to NTerm Do
-        Begin
-          Write(F,  Pad('"'+PDelem.DSSClassName + '.' + UpperCase(PDElem.Name)+'"', 24), Separator, j:3);
+                for j := 1 to NTerm do
+                begin
+                    Write(F, Pad('"' + PDelem.DSSClassName + '.' + UpperCase(PDElem.Name) + '"', 24), Separator, j: 3);
            //----PDElem.ActiveTerminalIdx := j;
-           S := PDElem.Power[j,ActiveActor];
-           If Opt=1 Then S := CmulReal(S, 0.001);
-           Write(F, Separator, S.re*0.001:11:1);
-           Write(F, Separator, S.im*0.001:11:1);
-           If j = 1  Then begin
+                    S := PDElem.Power[j, ActiveActor];
+                    if Opt = 1 then
+                        S := CmulReal(S, 0.001);
+                    Write(F, Separator, S.re * 0.001: 11: 1);
+                    Write(F, Separator, S.im * 0.001: 11: 1);
+                    if j = 1 then
+                    begin
              //----PDelem.ActiveTerminalIdx := 1;
-             S := PDElem.ExcesskVANorm[1,ActiveActor];
-             If Opt=1 Then S := CmulReal(S, 0.001);
-             Write(F, Separator, Abs(S.re):11:1);
-             Write(F, Separator, Abs(S.im):11:1);
-             S := PDElem.ExcesskVAEmerg[1,ActiveActor];
-             If Opt=1 Then S := CmulReal(S, 0.001);
-             Write(F, Separator, Abs(S.re):11:1);
-             Write(F, Separator, Abs(S.im):11:1);
-           End;
-           Writeln(F);
-        END;
-       END;
-        PDElem := ActiveCircuit[ActiveActor].PDElements.Next;
-     END;
+                        S := PDElem.ExcesskVANorm[1, ActiveActor];
+                        if Opt = 1 then
+                            S := CmulReal(S, 0.001);
+                        Write(F, Separator, Abs(S.re): 11: 1);
+                        Write(F, Separator, Abs(S.im): 11: 1);
+                        S := PDElem.ExcesskVAEmerg[1, ActiveActor];
+                        if Opt = 1 then
+                            S := CmulReal(S, 0.001);
+                        Write(F, Separator, Abs(S.re): 11: 1);
+                        Write(F, Separator, Abs(S.im): 11: 1);
+                    end;
+                    Writeln(F);
+                end;
+            end;
+            PDElem := ActiveCircuit[ActiveActor].PDElements.Next;
+        end;
 
      // PCELEMENTS Next
-     PCElem := ActiveCircuit[ActiveActor].PCElements.First;
+        PCElem := ActiveCircuit[ActiveActor].PCElements.First;
 
-     WHILE PCElem <> nil DO
-     BEGIN
+        while PCElem <> NIL do
+        begin
 
-       IF (PCElem.Enabled) THEN
-       BEGIN
-        Nterm := PCElem.Nterms;
+            if (PCElem.Enabled) then
+            begin
+                Nterm := PCElem.Nterms;
 
-        FOR j := 1 to NTerm Do
-        Begin
-           Write(F,  Pad('"'+PCElem.DSSClassName + '.' + UpperCase(PCElem.Name)+'"', 24), Separator, j:3);
+                for j := 1 to NTerm do
+                begin
+                    Write(F, Pad('"' + PCElem.DSSClassName + '.' + UpperCase(PCElem.Name) + '"', 24), Separator, j: 3);
            //----pcElem.ActiveTerminalIdx := j;
-           S := pCElem.Power[j,ActiveActor] ;
-           If Opt=1 Then S := CmulReal(S, 0.001);
-           Write(F, Separator, S.re*0.001:11:1);
-           Write(F, Separator, S.im*0.001:11:1);
-           Writeln(F);
+                    S := pCElem.Power[j, ActiveActor];
+                    if Opt = 1 then
+                        S := CmulReal(S, 0.001);
+                    Write(F, Separator, S.re * 0.001: 11: 1);
+                    Write(F, Separator, S.im * 0.001: 11: 1);
+                    Writeln(F);
 
-        END;
-       END;
-        PCElem := ActiveCircuit[ActiveActor].PCElements.Next;
-     END;
+                end;
+            end;
+            PCElem := ActiveCircuit[ActiveActor].PCElements.Next;
+        end;
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
-  FINALLY
-     CloseFile(F);
+    finally
+        CloseFile(F);
 
-  End;
-End;
+    end;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportLosses(FileNm:String);
+procedure ExportLosses(FileNm: String);
 
 {Opt = 0: kVA
  opt = 1: MVA
  }
 
-Var
-    F :TextFile;
-    PDElem :TPDElement;
-    S_total, S_Load, S_NoLoad:Complex;
+var
+    F: TextFile;
+    PDElem: TPDElement;
+    S_total, S_Load, S_NoLoad: Complex;
 
-Begin
+begin
 
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
-     Writeln(F,'Element,  Total(W), Total(var),  I2R(W), I2X(var), No-load(W), No-load(var)');
+        Writeln(F, 'Element,  Total(W), Total(var),  I2R(W), I2X(var), No-load(W), No-load(var)');
      // PDELEMENTS first
-     PDElem := ActiveCircuit[ActiveActor].PDElements.First;
+        PDElem := ActiveCircuit[ActiveActor].PDElements.First;
 
-     WHILE PDElem <> nil DO
-     BEGIN
-       IF (PDElem.Enabled)
-       THEN BEGIN
-            PDElem.GetLosses(S_total, S_Load, S_NoLoad, ActiveActor);
-            Writeln(F, Format('%s.%s, %.7g, %.7g, %.7g, %.7g, %.7g, %.7g', [PDElem.ParentClass.Name, UpperCase(PDElem.Name), S_total.re, S_total.im, S_Load.re, S_Load.im, S_NoLoad.re, S_NoLoad.im]));
-       END;
-        PDElem := ActiveCircuit[ActiveActor].PDElements.Next;
-     END;
+        while PDElem <> NIL do
+        begin
+            if (PDElem.Enabled) then
+            begin
+                PDElem.GetLosses(S_total, S_Load, S_NoLoad, ActiveActor);
+                Writeln(F, Format('%s.%s, %.7g, %.7g, %.7g, %.7g, %.7g, %.7g', [PDElem.ParentClass.Name, UpperCase(PDElem.Name), S_total.re, S_total.im, S_Load.re, S_Load.im, S_NoLoad.re, S_NoLoad.im]));
+            end;
+            PDElem := ActiveCircuit[ActiveActor].PDElements.Next;
+        end;
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
-  FINALLY
-     CloseFile(F);
+    finally
+        CloseFile(F);
 
-  End;
-End;
+    end;
+end;
 
 // ===============================================================================
-Procedure ExportPbyphase(FileNm:String; opt :Integer);
+procedure ExportPbyphase(FileNm: String; opt: Integer);
 
 { Export Powers by phase }
 
@@ -1236,423 +1368,466 @@ Procedure ExportPbyphase(FileNm:String; opt :Integer);
  opt = 1: MVA
  }
 
-Var
-    F :TextFile;
-    i :Integer;
-    PDElem :TPDElement;
-    PCElem :TPCElement;
-    S:Complex;
+var
+    F: TextFile;
+    i: Integer;
+    PDElem: TPDElement;
+    PCElem: TPCElement;
+    S: Complex;
 
-Begin
+begin
 
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
-     CASE Opt of
-          1: Writeln(F,'Element, NumTerminals, NumConductors, NumPhases, MW1, Mvar1, MW2, Mvar2, MW3, Mvar3, ... ');
-     ELSE
-          Writeln(F,'Element, NumTerminals, NumConductors, NumPhases, kW1, kvar1, kW2, kvar2, kW3, kvar3, ... ');
-     End;
+        case Opt of
+            1:
+                Writeln(F, 'Element, NumTerminals, NumConductors, NumPhases, MW1, Mvar1, MW2, Mvar2, MW3, Mvar3, ... ');
+        else
+            Writeln(F, 'Element, NumTerminals, NumConductors, NumPhases, kW1, kvar1, kW2, kvar2, kW3, kvar3, ... ');
+        end;
 
      // PDELEMENTS first
-     PDElem := ActiveCircuit[ActiveActor].PDElements.First;
+        PDElem := ActiveCircuit[ActiveActor].PDElements.First;
 
-     WHILE PDElem <> nil DO
-     BEGIN
-       IF (PDElem.Enabled) THEN
-       BEGIN
-        With PDElem Do Begin
-          ComputeITerminal(ActiveActor);
-          ComputeVTerminal(ActiveActor);
-          Write(F,  Format('"%s.%s", %d, %d, %d', [DSSClassName, Uppercase(Name),  NTerms, NConds, Nphases ]));
-          FOR i := 1 to Yorder Do Begin
-             S := CmulReal(Cmul(Vterminal^[i], conjg(ITerminal^[i])), 0.001);
-             If Opt=1 Then S := CmulReal(S, 0.001);   // convert to MVA
-             Write(F, Format(', %10.3f, %10.3f', [S.re, S.im]));
-          END;
-        End;
-        Writeln(F);
-       END;
-        PDElem := ActiveCircuit[ActiveActor].PDElements.Next;
-     END;
+        while PDElem <> NIL do
+        begin
+            if (PDElem.Enabled) then
+            begin
+                with PDElem do
+                begin
+                    ComputeITerminal(ActiveActor);
+                    ComputeVTerminal(ActiveActor);
+                    Write(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, Uppercase(Name), NTerms, NConds, Nphases]));
+                    for i := 1 to Yorder do
+                    begin
+                        S := CmulReal(Cmul(Vterminal^[i], conjg(ITerminal^[i])), 0.001);
+                        if Opt = 1 then
+                            S := CmulReal(S, 0.001);   // convert to MVA
+                        Write(F, Format(', %10.3f, %10.3f', [S.re, S.im]));
+                    end;
+                end;
+                Writeln(F);
+            end;
+            PDElem := ActiveCircuit[ActiveActor].PDElements.Next;
+        end;
 
      // PCELEMENTS Next
-     PCElem := ActiveCircuit[ActiveActor].PCElements.First;
+        PCElem := ActiveCircuit[ActiveActor].PCElements.First;
 
-     WHILE PCElem <> nil DO
-     BEGIN
+        while PCElem <> NIL do
+        begin
 
-       IF (PCElem.Enabled) THEN
-       BEGIN
-        With PCelem Do Begin
-          ComputeITerminal(ActiveActor);
-          ComputeVTerminal(ActiveActor);
-          Write(F,  Format('"%s.%s", %d, %d, %d', [DSSClassName, Uppercase(Name),  NTerms, NConds, NPhases ]));
-          FOR i := 1 to Yorder Do
-          Begin
-             S := CmulReal(Cmul(Vterminal^[i], conjg(ITerminal^[i])), 0.001);
-             If Opt=1 Then S := CmulReal(S, 0.001);   // convert to MVA
-             Write(F, Format(', %10.3f, %10.3f', [S.re, S.im]));
-          END;
-        End;
-        Writeln(F);
+            if (PCElem.Enabled) then
+            begin
+                with PCelem do
+                begin
+                    ComputeITerminal(ActiveActor);
+                    ComputeVTerminal(ActiveActor);
+                    Write(F, Format('"%s.%s", %d, %d, %d', [DSSClassName, Uppercase(Name), NTerms, NConds, NPhases]));
+                    for i := 1 to Yorder do
+                    begin
+                        S := CmulReal(Cmul(Vterminal^[i], conjg(ITerminal^[i])), 0.001);
+                        if Opt = 1 then
+                            S := CmulReal(S, 0.001);   // convert to MVA
+                        Write(F, Format(', %10.3f, %10.3f', [S.re, S.im]));
+                    end;
+                end;
+                Writeln(F);
 
-       END;
-        PCElem := ActiveCircuit[ActiveActor].PCElements.Next;
-     END;
+            end;
+            PCElem := ActiveCircuit[ActiveActor].PCElements.Next;
+        end;
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
-  FINALLY
-     CloseFile(F);
+    finally
+        CloseFile(F);
 
-  End;
-End;
+    end;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportSeqPowers(FileNm:String; opt :Integer);
+procedure ExportSeqPowers(FileNm: String; opt: Integer);
 
 {Opt = 0: kVA
  opt = 1: MVA
  }
 
-Var
-    F :TextFile;
-    cBuffer :pComplexArray;
-    NCond, Nterm, i, j, k :Integer;
-    PDElem :TPDElement;
-    PCElem :TPCElement;
-    Volts:Complex;
-    S:Complex;
-    nref:Integer;
-    Vph, V012:Array[1..3] of Complex;
-    Iph, I012:Array[1..3] of Complex;
-    Separator :String;
+var
+    F: TextFile;
+    cBuffer: pComplexArray;
+    NCond, Nterm, i, j, k: Integer;
+    PDElem: TPDElement;
+    PCElem: TPCElement;
+    Volts: Complex;
+    S: Complex;
+    nref: Integer;
+    Vph, V012: array[1..3] of Complex;
+    Iph, I012: array[1..3] of Complex;
+    Separator: String;
 
 
-Begin
+begin
 
-  cBuffer := nil;
+    cBuffer := NIL;
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
-     Separator := ', ';
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
+        Separator := ', ';
 
-     Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
+        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
 
-     CASE Opt of
-          1:Writeln(F,'Element, Terminal, P1(MW), Q1(Mvar), P2, Q2, P0, Q0, P_Normal, Q_Normal, P_Emergency, Q_Emergency');
-     ELSE
-          Writeln(F,'Element, Terminal, P1(kW), Q1(kvar), P2, Q2, P0, Q0, P_Normal, Q_Normal, P_Emergency, Q_Emergency');
-     End;
+        case Opt of
+            1:
+                Writeln(F, 'Element, Terminal, P1(MW), Q1(Mvar), P2, Q2, P0, Q0, P_Normal, Q_Normal, P_Emergency, Q_Emergency');
+        else
+            Writeln(F, 'Element, Terminal, P1(kW), Q1(kvar), P2, Q2, P0, Q0, P_Normal, Q_Normal, P_Emergency, Q_Emergency');
+        end;
 
      // PDELEMENTS first
-     PDElem := ActiveCircuit[ActiveActor].PDElements.First;
+        PDElem := ActiveCircuit[ActiveActor].PDElements.First;
 
-     WHILE PDElem <> nil DO
-     BEGIN
-       IF (PDElem.Enabled)
-       THEN BEGIN
-        NCond := pDElem.NConds;
-        Nterm := pDElem.Nterms;
-        PDElem.GetCurrents(cBuffer, ActiveActor);
+        while PDElem <> NIL do
+        begin
+            if (PDElem.Enabled) then
+            begin
+                NCond := pDElem.NConds;
+                Nterm := pDElem.Nterms;
+                PDElem.GetCurrents(cBuffer, ActiveActor);
 
-        FOR j := 1 to NTerm Do
-        Begin
-          Write(F,  Pad('"'+PDelem.DSSClassName + '.' + Uppercase(PDElem.Name) +'"', 24), Separator, j:3);
-          For i := 1 to PDElem.NPhases Do
-          Begin
-             k := (j-1)*Ncond + i;
-             nref := pDElem.NodeRef^[k];
-             Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[nref];
-             Iph[i] := cBuffer^[k];
-             Vph[i] := volts;
-          End;
-          IF  (PDElem.Nphases>=3)
-          THEN Begin
-             Phase2SymComp(@Iph, @I012);
-             Phase2SymComp(@Vph, @V012);
-          End
-          ELSE Begin
-             V012[1] := CZERO;  I012[1] := CZERO;
-             V012[3] := CZERO;  I012[3] := CZERO;
-             IF ActiveCircuit[ActiveActor].PositiveSequence
-             THEN Begin
-                  V012[2] := Vph[1];
-                  I012[2] := Iph[1];
-             End
-             ELSE Begin
-                  V012[2] := CZERO;  I012[2] := CZERO;
-             End;
-          End;
+                for j := 1 to NTerm do
+                begin
+                    Write(F, Pad('"' + PDelem.DSSClassName + '.' + Uppercase(PDElem.Name) + '"', 24), Separator, j: 3);
+                    for i := 1 to PDElem.NPhases do
+                    begin
+                        k := (j - 1) * Ncond + i;
+                        nref := pDElem.NodeRef^[k];
+                        Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[nref];
+                        Iph[i] := cBuffer^[k];
+                        Vph[i] := volts;
+                    end;
+                    if (PDElem.Nphases >= 3) then
+                    begin
+                        Phase2SymComp(@Iph, @I012);
+                        Phase2SymComp(@Vph, @V012);
+                    end
+                    else
+                    begin
+                        V012[1] := CZERO;
+                        I012[1] := CZERO;
+                        V012[3] := CZERO;
+                        I012[3] := CZERO;
+                        if ActiveCircuit[ActiveActor].PositiveSequence then
+                        begin
+                            V012[2] := Vph[1];
+                            I012[2] := Iph[1];
+                        end
+                        else
+                        begin
+                            V012[2] := CZERO;
+                            I012[2] := CZERO;
+                        end;
+                    end;
 
-           S := Cmul(V012[2], conjg(I012[2]));
-           If Opt=1 Then S := CmulReal(S, 0.001);
-           Write(F, Separator, S.re*0.003:11:1);
-           Write(F, Separator, S.im*0.003:11:1);
-           S := Cmul(V012[3], conjg(I012[3]));
-           If Opt=1 Then S := CmulReal(S, 0.001);
-           Write(F, Separator, S.re*0.003:11:1);
-           Write(F, Separator, S.im*0.003:11:1);
-           S := Cmul(V012[1], conjg(I012[1]));
-           If Opt=1 Then S := CmulReal(S, 0.001);
-           Write(F, Separator, S.re*0.003:8:1);
-           Write(F, Separator, S.im*0.003:8:1);
+                    S := Cmul(V012[2], conjg(I012[2]));
+                    if Opt = 1 then
+                        S := CmulReal(S, 0.001);
+                    Write(F, Separator, S.re * 0.003: 11: 1);
+                    Write(F, Separator, S.im * 0.003: 11: 1);
+                    S := Cmul(V012[3], conjg(I012[3]));
+                    if Opt = 1 then
+                        S := CmulReal(S, 0.001);
+                    Write(F, Separator, S.re * 0.003: 11: 1);
+                    Write(F, Separator, S.im * 0.003: 11: 1);
+                    S := Cmul(V012[1], conjg(I012[1]));
+                    if Opt = 1 then
+                        S := CmulReal(S, 0.001);
+                    Write(F, Separator, S.re * 0.003: 8: 1);
+                    Write(F, Separator, S.im * 0.003: 8: 1);
 
-             If j = 1
-             Then begin
+                    if j = 1 then
+                    begin
                  //----PDelem.ActiveTerminalIdx := 1;
-                 S := PDElem.ExcesskVANorm[1,ActiveActor];
-                 If Opt=1 Then S := CmulReal(S, 0.001);
-                 Write(F, Separator, Abs(S.re):11:1);
-                 Write(F, Separator, Abs(S.im):11:1);
-                 S := PDElem.ExcesskVAEmerg[1,ActiveActor];
-                 If Opt=1 Then S := CmulReal(S, 0.001);
-                 Write(F, Separator, Abs(S.re):11:1);
-                 Write(F, Separator, Abs(S.im):11:1);
-             End;
-             Writeln(F);
+                        S := PDElem.ExcesskVANorm[1, ActiveActor];
+                        if Opt = 1 then
+                            S := CmulReal(S, 0.001);
+                        Write(F, Separator, Abs(S.re): 11: 1);
+                        Write(F, Separator, Abs(S.im): 11: 1);
+                        S := PDElem.ExcesskVAEmerg[1, ActiveActor];
+                        if Opt = 1 then
+                            S := CmulReal(S, 0.001);
+                        Write(F, Separator, Abs(S.re): 11: 1);
+                        Write(F, Separator, Abs(S.im): 11: 1);
+                    end;
+                    Writeln(F);
 
-        END;
-       END;
-        PDElem := ActiveCircuit[ActiveActor].PDElements.Next;
-     END;
+                end;
+            end;
+            PDElem := ActiveCircuit[ActiveActor].PDElements.Next;
+        end;
 
      // PCELEMENTS Next
-     PCElem := ActiveCircuit[ActiveActor].PCElements.First;
+        PCElem := ActiveCircuit[ActiveActor].PCElements.First;
 
-     WHILE PCElem <> nil DO
-     BEGIN
+        while PCElem <> NIL do
+        begin
 
-       IF (PCElem.Enabled)
-       THEN BEGIN
-        NCond := PCElem.NConds;
-        Nterm := PCElem.Nterms;
-        PCElem.GetCurrents(cBuffer, ActiveActor);
+            if (PCElem.Enabled) then
+            begin
+                NCond := PCElem.NConds;
+                Nterm := PCElem.Nterms;
+                PCElem.GetCurrents(cBuffer, ActiveActor);
 
-        FOR j := 1 to NTerm Do
-        Begin
-          Write(F,  Pad('"'+PCElem.DSSClassName + '.' + Uppercase(PCElem.Name) +'"', 24), Separator, j:3);
-          For i := 1 to PCElem.NPhases Do
-          Begin
-             k := (j-1)*Ncond + i;
-             nref := PCElem.NodeRef^[k];
-             Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[nref];
-             Iph[i] := cBuffer^[k];
-             Vph[i] := volts;
-          End;
-          IF  (PCElem.Nphases>=3)
-          THEN Begin
-             Phase2SymComp(@Iph, @I012);
-             Phase2SymComp(@Vph, @V012);
-          End
-          ELSE Begin
-             V012[1] := CZERO;
-             I012[1] := CZERO;
-             V012[3] := CZERO;
-             I012[3] := CZERO;
-             IF ActiveCircuit[ActiveActor].PositiveSequence
-             THEN Begin
-                  V012[2] := Vph[1];
-                  I012[2] := Iph[1];
-             End
-             ELSE Begin
-                  V012[2] := CZERO;  I012[2] := CZERO;
-             End;
-          End;
+                for j := 1 to NTerm do
+                begin
+                    Write(F, Pad('"' + PCElem.DSSClassName + '.' + Uppercase(PCElem.Name) + '"', 24), Separator, j: 3);
+                    for i := 1 to PCElem.NPhases do
+                    begin
+                        k := (j - 1) * Ncond + i;
+                        nref := PCElem.NodeRef^[k];
+                        Volts := ActiveCircuit[ActiveActor].Solution.NodeV^[nref];
+                        Iph[i] := cBuffer^[k];
+                        Vph[i] := volts;
+                    end;
+                    if (PCElem.Nphases >= 3) then
+                    begin
+                        Phase2SymComp(@Iph, @I012);
+                        Phase2SymComp(@Vph, @V012);
+                    end
+                    else
+                    begin
+                        V012[1] := CZERO;
+                        I012[1] := CZERO;
+                        V012[3] := CZERO;
+                        I012[3] := CZERO;
+                        if ActiveCircuit[ActiveActor].PositiveSequence then
+                        begin
+                            V012[2] := Vph[1];
+                            I012[2] := Iph[1];
+                        end
+                        else
+                        begin
+                            V012[2] := CZERO;
+                            I012[2] := CZERO;
+                        end;
+                    end;
 
-           S := Cmul(V012[2], conjg(I012[2]));
-           If Opt=1 Then S := CmulReal(S, 0.001);
-           Write(F, Separator, S.re*0.003:11:1);
-           Write(F, Separator, S.im*0.003:11:1);
-           S := Cmul(V012[3], conjg(I012[3]));
-           If Opt=1 Then S := CmulReal(S, 0.001);
-           Write(F, Separator, S.re*0.003:11:1);
-           Write(F, Separator, S.im*0.003:11:1);
-           S := Cmul(V012[1], conjg(I012[1]));
-           If Opt=1 Then S := CmulReal(S, 0.001);
-           Write(F, Separator, S.re*0.003:8:1);
-           Write(F, Separator, S.im*0.003:8:1);
+                    S := Cmul(V012[2], conjg(I012[2]));
+                    if Opt = 1 then
+                        S := CmulReal(S, 0.001);
+                    Write(F, Separator, S.re * 0.003: 11: 1);
+                    Write(F, Separator, S.im * 0.003: 11: 1);
+                    S := Cmul(V012[3], conjg(I012[3]));
+                    if Opt = 1 then
+                        S := CmulReal(S, 0.001);
+                    Write(F, Separator, S.re * 0.003: 11: 1);
+                    Write(F, Separator, S.im * 0.003: 11: 1);
+                    S := Cmul(V012[1], conjg(I012[1]));
+                    if Opt = 1 then
+                        S := CmulReal(S, 0.001);
+                    Write(F, Separator, S.re * 0.003: 8: 1);
+                    Write(F, Separator, S.im * 0.003: 8: 1);
 
-           Writeln(F);
+                    Writeln(F);
 
-        END;
-       END;
-        PCElem := ActiveCircuit[ActiveActor].PCElements.Next;
-     END;
+                end;
+            end;
+            PCElem := ActiveCircuit[ActiveActor].PCElements.Next;
+        end;
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
-  FINALLY
-     If Assigned(cBuffer) Then Freemem(CBuffer);
-     CloseFile(F);
+    finally
+        if Assigned(cBuffer) then
+            Freemem(CBuffer);
+        CloseFile(F);
 
-  End;
-End;
+    end;
+end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportFaultStudy(FileNm:String);
+procedure ExportFaultStudy(FileNm: String);
 
-Var
-   i, iBus, iphs:Integer;
-   YFault  :Tcmatrix;
-   Vfault  :pComplexArray;  {Big temp array}
-   F       :Textfile ;
-   GFault  :complex;
-   Separator :String;
-   MaxCurr,
-   CurrMag :Double;
+var
+    i, iBus, iphs: Integer;
+    YFault: Tcmatrix;
+    Vfault: pComplexArray;  {Big temp array}
+    F: Textfile;
+    GFault: complex;
+    Separator: String;
+    MaxCurr,
+    CurrMag: Double;
 
-Begin
+begin
 
-  Try
+    try
 
-     Assignfile(F, FileNm);
-     ReWrite(F);
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
-     Separator := ', ';
+        Separator := ', ';
 
    { Set source voltage injection currents }
-     With ActiveCircuit[ActiveActor] Do begin
-       With Solution Do Begin
+        with ActiveCircuit[ActiveActor] do
+        begin
+            with Solution do
+            begin
 
      {All Phase Faults}
-           Writeln(F,'Bus,  3-Phase,  1-Phase,  L-L');
-           FOR iBus := 1 to NumBuses DO
+                Writeln(F, 'Bus,  3-Phase,  1-Phase,  L-L');
+                for iBus := 1 to NumBuses do
            {Bus Norton Equivalent Current, Isc has been previously computed}
-           WITH Buses^[iBus] Do
-           Begin
-               Write(F,Pad(Uppercase(BusList.Get(iBus)),12));
-               MaxCurr := 0.0;
-               For i := 1 to NumNodesThisBus Do
-               Begin
-                  IF MaxCurr < Cabs(BusCurrent^[i])
-                  THEN MaxCurr := Cabs(BusCurrent^[i]);;
-               End;
-               Write(F, Separator, maxCurr:10:0);
+                    with Buses^[iBus] do
+                    begin
+                        Write(F, Pad(Uppercase(BusList.Get(iBus)), 12));
+                        MaxCurr := 0.0;
+                        for i := 1 to NumNodesThisBus do
+                        begin
+                            if MaxCurr < Cabs(BusCurrent^[i]) then
+                                MaxCurr := Cabs(BusCurrent^[i]);
+                            ;
+                        end;
+                        Write(F, Separator, maxCurr: 10: 0);
 
            {One Phase Faults}
 
    { Solve for Fault Injection Currents}
 
-             YFault := TcMatrix.CreateMatrix(NumNodesThisBus);
-             Getmem(VFault, Sizeof(Complex)* NumNodesThisBus);
+                        YFault := TcMatrix.CreateMatrix(NumNodesThisBus);
+                        Getmem(VFault, Sizeof(Complex) * NumNodesThisBus);
 
              {Build YscTemp}
 
-             GFault := Cmplx(10000.0, 0.0);
+                        GFault := Cmplx(10000.0, 0.0);
 
-             MaxCurr := 0.0;
+                        MaxCurr := 0.0;
 
-             For iphs := 1 to NumNodesThisBus Do Begin
-                   YFault.CopyFrom(Ysc);
-                   YFault.AddElement(iphs, iphs, GFault);
+                        for iphs := 1 to NumNodesThisBus do
+                        begin
+                            YFault.CopyFrom(Ysc);
+                            YFault.AddElement(iphs, iphs, GFault);
 
                    { Solve for Injection Currents}
-                   YFault.Invert;
-                   YFault.MvMult(VFault, BusCurrent);  {Gets voltage appearing at fault}
+                            YFault.Invert;
+                            YFault.MvMult(VFault, BusCurrent);  {Gets voltage appearing at fault}
 
-                   Currmag := Cabs(Cmul(VFault^[iphs], GFault));
-                   If CurrMag > MaxCurr THEN MaxCurr := Currmag;
+                            Currmag := Cabs(Cmul(VFault^[iphs], GFault));
+                            if CurrMag > MaxCurr then
+                                MaxCurr := Currmag;
 
-             End; {For iphase}
+                        end; {For iphase}
              {Now, Stuff it in the Css Array where it belongs}
-             Write(F, Separator, maxCurr:10:0);
+                        Write(F, Separator, maxCurr: 10: 0);
 
-             Freemem(VFault);
-             YFault.Free;
+                        Freemem(VFault);
+                        YFault.Free;
 
            {Node-Node Faults}
 
            {Bus Norton Equivalent Current, Isc has been previously computed}
 
-             YFault := TcMatrix.CreateMatrix(NumNodesThisBus);
-             Getmem(VFault, Sizeof(VFault^[1])* NumNodesThisBus);
+                        YFault := TcMatrix.CreateMatrix(NumNodesThisBus);
+                        Getmem(VFault, Sizeof(VFault^[1]) * NumNodesThisBus);
 
-             GFault := Cmplx(10000.0, 0.0);
+                        GFault := Cmplx(10000.0, 0.0);
 
-             MaxCurr := 0.0;
+                        MaxCurr := 0.0;
 
-             For iphs := 1 to NumNodesThisBus-1 Do Begin
-                   YFault.CopyFrom(Ysc);
-                   YFault.AddElement(iphs, iphs, GFault);
-                   YFault.AddElement(iphs+1, iphs+1, GFault);
-                   YFault.AddElemSym(iphs, iphs+1, Cnegate(GFault));
+                        for iphs := 1 to NumNodesThisBus - 1 do
+                        begin
+                            YFault.CopyFrom(Ysc);
+                            YFault.AddElement(iphs, iphs, GFault);
+                            YFault.AddElement(iphs + 1, iphs + 1, GFault);
+                            YFault.AddElemSym(iphs, iphs + 1, Cnegate(GFault));
 
                    { Solve for Injection Currents}
-                   YFault.Invert;
-                   YFault.MvMult(VFault,BusCurrent);  {Gets voltage appearing at fault}
+                            YFault.Invert;
+                            YFault.MvMult(VFault, BusCurrent);  {Gets voltage appearing at fault}
 
-                   CurrMag :=   Cabs(Cmul(Csub(VFault^[iphs],VFault^[iphs+1]),GFault));
-                   If CurrMag > MaxCurr  THEN MaxCurr := CurrMag;
-             End; {For iphase}
+                            CurrMag := Cabs(Cmul(Csub(VFault^[iphs], VFault^[iphs + 1]), GFault));
+                            if CurrMag > MaxCurr then
+                                MaxCurr := CurrMag;
+                        end; {For iphase}
              {Now, Stuff it in the Css Array where it belongs}
 
-             Write(F, Separator, MaxCurr:10:0);
+                        Write(F, Separator, MaxCurr: 10: 0);
 
-             Freemem(VFault);
-             YFault.Free;
+                        Freemem(VFault);
+                        YFault.Free;
 
-             Writeln(F);
-           End;  {With bus}
+                        Writeln(F);
+                    end;  {With bus}
 
-       End; {With Solution}
-     End; {With ActiveCircuit}
+            end; {With Solution}
+        end; {With ActiveCircuit}
 
-     GlobalResult := Filenm;
+        GlobalResult := Filenm;
 
-  FINALLY
+    finally
 
-       CloseFile(F);
+        CloseFile(F);
 
-  End;
-End;
+    end;
+end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportEstimation(Filenm:String);
+procedure ExportEstimation(Filenm: String);
 
-Var
-   F  :TextFile;
-   i  :Integer;
-   pEnergyMeterObj  :TEnergyMeterObj;
-   pSensorObj       :TSensorObj;
-   TempX  :Array[1..3] of Double; // temp number buffer
+var
+    F: TextFile;
+    i: Integer;
+    pEnergyMeterObj: TEnergyMeterObj;
+    pSensorObj: TSensorObj;
+    TempX: array[1..3] of Double; // temp number buffer
 
-   Procedure ZeroTempXArray;
-   var ii:Integer;
-   Begin  For ii := 1 to 3 do TempX[ii] := 0.0; End;
+    procedure ZeroTempXArray;
+    var
+        ii: Integer;
+    begin
+        for ii := 1 to 3 do
+            TempX[ii] := 0.0;
+    end;
 
 
-Begin
+begin
 
-    TRY
-          AssignFile(F,  FileNm);
-          Rewrite(F);   // clears file
+    try
+        AssignFile(F, FileNm);
+        Rewrite(F);   // clears file
 
           {Do the EnergyMeters first}
-          Writeln(F, '"Energy Meters" ');
-          Writeln(F, '"energyMeter", "I1 Target", "I2 Target", "I3 Target", "I1 Calc", "I2 Calc", "I3 Calc", "I1 %Err", "I2 %Err", "I3 %Err"'{, "I1 Factor", "I2 Factor", "I3 Factor"'});
+        Writeln(F, '"Energy Meters" ');
+        Writeln(F, '"energyMeter", "I1 Target", "I2 Target", "I3 Target", "I1 Calc", "I2 Calc", "I3 Calc", "I1 %Err", "I2 %Err", "I3 %Err"'{, "I1 Factor", "I2 Factor", "I3 Factor"'});
 
-           pEnergyMeterObj := ActiveCircuit[ActiveActor].energyMeters.First;
-           WHILE pEnergyMeterObj <> NIL Do  Begin
-              IF pEnergyMeterObj.Enabled THEN   BEGIN
-                  Write(F, Format('"Energymeter.%s"',[Uppercase(pEnergyMeterObj.Name) ]));
+        pEnergyMeterObj := ActiveCircuit[ActiveActor].energyMeters.First;
+        while pEnergyMeterObj <> NIL do
+        begin
+            if pEnergyMeterObj.Enabled then
+            begin
+                Write(F, Format('"Energymeter.%s"', [Uppercase(pEnergyMeterObj.Name)]));
                   {Sensor currents (Target)}
-                  ZeroTempXArray;
-                  For i := 1 to pEnergyMeterObj.Nphases do TempX[i] := pEnergyMeterObj.SensorCurrent^[i];
-                  For i := 1 to 3 do Write(F, Format(', %.6g',[TempX[i]]));
+                ZeroTempXArray;
+                for i := 1 to pEnergyMeterObj.Nphases do
+                    TempX[i] := pEnergyMeterObj.SensorCurrent^[i];
+                for i := 1 to 3 do
+                    Write(F, Format(', %.6g', [TempX[i]]));
                   {Calculated Currents}
-                  ZeroTempXArray;
-                  For i := 1 to pEnergyMeterObj.Nphases do TempX[i] := Cabs(pEnergyMeterObj.CalculatedCurrent^[i]);
-                  For i := 1 to 3 do Write(F, Format(', %.6g',[TempX[i]]));
+                ZeroTempXArray;
+                for i := 1 to pEnergyMeterObj.Nphases do
+                    TempX[i] := Cabs(pEnergyMeterObj.CalculatedCurrent^[i]);
+                for i := 1 to 3 do
+                    Write(F, Format(', %.6g', [TempX[i]]));
                   {Percent Error}
-                  For i := 1 to pEnergyMeterObj.Nphases do TempX[i] := (1.0 - TempX[i]/Max(0.001, pEnergyMeterObj.SensorCurrent^[i])) * 100.0;
-                  For i := 1 to 3 do Write(F, Format(', %.6g',[TempX[i]]));
+                for i := 1 to pEnergyMeterObj.Nphases do
+                    TempX[i] := (1.0 - TempX[i] / Max(0.001, pEnergyMeterObj.SensorCurrent^[i])) * 100.0;
+                for i := 1 to 3 do
+                    Write(F, Format(', %.6g', [TempX[i]]));
 
                   (****  Not all that useful
                   {Allocation Factors}
@@ -1661,195 +1836,219 @@ Begin
                   For i := 1 to 3 do Write(F, Format(' %.6g,',[TempX[i]]));
                   *****)
 
-                  Writeln(F);
-              END;
-              pEnergyMeterObj := ActiveCircuit[ActiveActor].EnergyMeters.Next;
-           End;
+                Writeln(F);
+            end;
+            pEnergyMeterObj := ActiveCircuit[ActiveActor].EnergyMeters.Next;
+        end;
 
           {Do the Sensors Next}
-          Writeln(F);
-          Writeln(F, '"Sensors" ');
-          Write(F, '"Sensor", "I1 Target", "I2 Target", "I3 Target", "I1 Calc", "I2 Calc", "I3 Calc", "I1 %Err", "I2 %Err", "I3 %Err",');
-          Writeln(F, ' "V1 Target", "V2 Target", "V3 Target", "V1 Calc", "V2 Calc", "V3 Calc", "V1 %Err", "V2 %Err", "V3 %Err", "WLS Voltage Err", "WLS Current Err"');
+        Writeln(F);
+        Writeln(F, '"Sensors" ');
+        Write(F, '"Sensor", "I1 Target", "I2 Target", "I3 Target", "I1 Calc", "I2 Calc", "I3 Calc", "I1 %Err", "I2 %Err", "I3 %Err",');
+        Writeln(F, ' "V1 Target", "V2 Target", "V3 Target", "V1 Calc", "V2 Calc", "V3 Calc", "V1 %Err", "V2 %Err", "V3 %Err", "WLS Voltage Err", "WLS Current Err"');
 
-           pSensorObj := ActiveCircuit[ActiveActor].Sensors.First;
-           WHILE pSensorObj <> NIL Do  Begin
-              IF pSensorObj.Enabled THEN   BEGIN
-                  Write(F, Format('"Sensor.%s"',[Uppercase(pSensorObj.Name) ]));
+        pSensorObj := ActiveCircuit[ActiveActor].Sensors.First;
+        while pSensorObj <> NIL do
+        begin
+            if pSensorObj.Enabled then
+            begin
+                Write(F, Format('"Sensor.%s"', [Uppercase(pSensorObj.Name)]));
                   {Sensor currents (Target)}
-                  ZeroTempXArray;
-                  For i := 1 to pSensorObj.Nphases do TempX[i] := pSensorObj.SensorCurrent^[i];
-                  For i := 1 to 3 do Write(F, Format(', %.6g',[TempX[i]]));
+                ZeroTempXArray;
+                for i := 1 to pSensorObj.Nphases do
+                    TempX[i] := pSensorObj.SensorCurrent^[i];
+                for i := 1 to 3 do
+                    Write(F, Format(', %.6g', [TempX[i]]));
                   {Calculated Currents}
-                  ZeroTempXArray;
-                  For i := 1 to pSensorObj.Nphases do TempX[i] := Cabs(pSensorObj.CalculatedCurrent^[i]);
-                  For i := 1 to 3 do Write(F, Format(', %.6g',[TempX[i]]));
+                ZeroTempXArray;
+                for i := 1 to pSensorObj.Nphases do
+                    TempX[i] := Cabs(pSensorObj.CalculatedCurrent^[i]);
+                for i := 1 to 3 do
+                    Write(F, Format(', %.6g', [TempX[i]]));
                   {Percent Error}
-                  For i := 1 to pSensorObj.Nphases do TempX[i] := (1.0 - TempX[i]/Max(0.001, pSensorObj.SensorCurrent^[i])) * 100.0;
-                  For i := 1 to 3 do Write(F, Format(', %.6g',[TempX[i]]));
+                for i := 1 to pSensorObj.Nphases do
+                    TempX[i] := (1.0 - TempX[i] / Max(0.001, pSensorObj.SensorCurrent^[i])) * 100.0;
+                for i := 1 to 3 do
+                    Write(F, Format(', %.6g', [TempX[i]]));
                   {Sensor Voltage (Target)}
-                  ZeroTempXArray;
-                  For i := 1 to pSensorObj.Nphases do TempX[i] := pSensorObj.SensorVoltage^[i];
-                  For i := 1 to 3 do Write(F, Format(', %.6g',[TempX[i]]));
+                ZeroTempXArray;
+                for i := 1 to pSensorObj.Nphases do
+                    TempX[i] := pSensorObj.SensorVoltage^[i];
+                for i := 1 to 3 do
+                    Write(F, Format(', %.6g', [TempX[i]]));
                   {Calculated Voltage}
-                  ZeroTempXArray;
-                  For i := 1 to pSensorObj.Nphases do TempX[i] := Cabs(pSensorObj.CalculatedVoltage^[i]);
-                  For i := 1 to 3 do Write(F, Format(', %.6g',[TempX[i]]));
+                ZeroTempXArray;
+                for i := 1 to pSensorObj.Nphases do
+                    TempX[i] := Cabs(pSensorObj.CalculatedVoltage^[i]);
+                for i := 1 to 3 do
+                    Write(F, Format(', %.6g', [TempX[i]]));
                   {Percent Error}
-                  For i := 1 to pSensorObj.Nphases do TempX[i] := (1.0 - TempX[i]/Max(0.001, pSensorObj.SensorVoltage^[i])) * 100.0;
-                  For i := 1 to 3 do Write(F, Format(', %.6g',[TempX[i]]));
+                for i := 1 to pSensorObj.Nphases do
+                    TempX[i] := (1.0 - TempX[i] / Max(0.001, pSensorObj.SensorVoltage^[i])) * 100.0;
+                for i := 1 to 3 do
+                    Write(F, Format(', %.6g', [TempX[i]]));
                   {WLS Errors}
-                  ZeroTempXArray;
-                  Write(F, Format(', %.6g, %.6g',[pSensorObj.WLSVoltageError , pSensorObj.WLSCurrentError]));
+                ZeroTempXArray;
+                Write(F, Format(', %.6g, %.6g', [pSensorObj.WLSVoltageError, pSensorObj.WLSCurrentError]));
 
-                  Writeln(F);
-              END;
-              pSensorObj := ActiveCircuit[ActiveActor].Sensors.Next;
-           End;
+                Writeln(F);
+            end;
+            pSensorObj := ActiveCircuit[ActiveActor].Sensors.Next;
+        end;
 
 
-      FINALLY
+    finally
         AppendGlobalResult(FileNm);
         CloseFile(F);
 
-      END;
+    end;
 
 
-End;
-
+end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure WriteMultipleMeterFiles;
+procedure WriteMultipleMeterFiles;
 
-Var
-   F  :TextFile;
-   i,j:Integer;
-   pElem  :TEnergyMeterObj;
-   MeterClass:TEnergyMeter;
-   FileNm,
-   Separator :String;
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TEnergyMeterObj;
+    MeterClass: TEnergyMeter;
+    FileNm,
+    Separator: String;
 
-Begin
+begin
 
-      MeterClass := TEnergyMeter(GetDSSClassPtr('Energymeter'));
-      If MeterClass = NIL THEN Exit;  // oops somewhere!!
-      Separator := ', ';
+    MeterClass := TEnergyMeter(GetDSSClassPtr('Energymeter'));
+    if MeterClass = NIL then
+        Exit;  // oops somewhere!!
+    Separator := ', ';
 
-     pElem := ActiveCircuit[ActiveActor].energyMeters.First;
-     WHILE pElem <> NIL Do
-     Begin
-        IF pElem.Enabled THEN
-        BEGIN
-          TRY
-            FileNm := GetOutputDirectory + 'EXP_MTR_'+Uppercase(pElem.Name)+'.CSV';
+    pElem := ActiveCircuit[ActiveActor].energyMeters.First;
+    while pElem <> NIL do
+    begin
+        if pElem.Enabled then
+        begin
+            try
+                FileNm := GetOutputDirectory + 'EXP_MTR_' + Uppercase(pElem.Name) + '.CSV';
 
-            IF Not FileExists(FileNm)
-            THEN Begin
-                AssignFile(F,  FileNm);
-                Rewrite(F);
+                if not FileExists(FileNm) then
+                begin
+                    AssignFile(F, FileNm);
+                    Rewrite(F);
                 {Write New Header}
-                Write(F, 'Year, LDCurve, Hour, Meter');
-                For i := 1 to NumEMRegisters Do Write(F, Separator, '"'+ pelem.RegisterNames[i]+'"');
+                    Write(F, 'Year, LDCurve, Hour, Meter');
+                    for i := 1 to NumEMRegisters do
+                        Write(F, Separator, '"' + pelem.RegisterNames[i] + '"');
+                    Writeln(F);
+                    CloseFile(F);
+                end;
+
+                AssignFile(F, FileNm);
+                Append(F);
+                Write(F, ActiveCircuit[ActiveActor].Solution.Year: 0, Separator);
+                Write(F, ActiveCircuit[ActiveActor].LoadDurCurve, Separator);
+                Write(F, ActiveCircuit[ActiveActor].Solution.DynaVars.intHour: 0, Separator);
+                Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                for j := 1 to NumEMRegisters do
+                    Write(F, Separator, PElem.Registers[j]: 10: 0);
                 Writeln(F);
+                AppendGlobalResult(FileNm);
+            finally
                 CloseFile(F);
-            End;
+            end;
 
-            AssignFile(F,  FileNm);
-            Append(F);
-            Write(F,ActiveCircuit[ActiveActor].Solution.Year:0, Separator);
-            Write(F,ActiveCircuit[ActiveActor].LoadDurCurve,    Separator);
-            Write(F,ActiveCircuit[ActiveActor].Solution.DynaVars.intHour:0, Separator);
-            Write(F,Pad('"'+Uppercase(pElem.Name)+'"', 14));
-            FOR j := 1 to NumEMRegisters Do Write(F, Separator, PElem.Registers[j]:10:0);
-            Writeln(F);
-            AppendGlobalResult(FileNm);
-          FINALLY
-            CloseFile(F);
-          END;
-
-        END;
+        end;
         pElem := ActiveCircuit[ActiveActor].EnergyMeters.Next;
-     End;
+    end;
 
 
-
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure WriteSingleMeterFile(const FileNm:String);
-Var
-   F  :TextFile;
-   i,j:Integer;
-   pElem  :TEnergyMeterObj;
-   TestStr,
-   Separator :String;
-   RewriteFile  :Boolean;
-Begin
+procedure WriteSingleMeterFile(const FileNm: String);
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TEnergyMeterObj;
+    TestStr,
+    Separator: String;
+    RewriteFile: Boolean;
+begin
 
-  Separator := ', ';
+    Separator := ', ';
 
- TRY
+    try
 
-    IF FileExists(FileNm)
-    THEN Begin  // See if it has already been written on
-         Assignfile(F, FileNm);
-         Reset(F);
-         IF  Not EOF(F)
-         THEN Begin
-             Read(F, TestStr);
+        if FileExists(FileNm) then
+        begin  // See if it has already been written on
+            Assignfile(F, FileNm);
+            Reset(F);
+            if not EOF(F) then
+            begin
+                Read(F, TestStr);
              {See if it likely that the file is OK}
-             IF  CompareText(Copy(TestStr,1,4), 'Year')=0
-             THEN RewriteFile := FALSE       // Assume the file is OK
-             ELSE RewriteFile := TRUE;
-         End
-         ELSE RewriteFile := TRUE;
+                if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
+                    RewriteFile := FALSE       // Assume the file is OK
+                else
+                    RewriteFile := TRUE;
+            end
+            else
+                RewriteFile := TRUE;
 
-         CloseFile(F);
+            CloseFile(F);
 
-    End
-    ELSE Begin
-         ReWriteFile := TRUE;
-         AssignFile(F,  FileNm);
-    End;
+        end
+        else
+        begin
+            ReWriteFile := TRUE;
+            AssignFile(F, FileNm);
+        end;
 
    {Either open or append the file}
-    IF RewriteFile  THEN Begin
-        ReWrite(F);
+        if RewriteFile then
+        begin
+            ReWrite(F);
         {Write New Header}
-        pElem := ActiveCircuit[ActiveActor].energyMeters.First;
-        Write(F, 'Year, LDCurve, Hour, Meter');
-        For i := 1 to NumEMRegisters Do Write(F, Separator, '"'+ pElem.RegisterNames[i]+'"');
-        Writeln(F);
-    END
-    ELSE Append(F);
-
-
-     pElem := ActiveCircuit[ActiveActor].energyMeters.First;
-     WHILE pElem <> NIL Do  Begin
-        IF pElem.Enabled THEN   BEGIN
-            Write(F,ActiveCircuit[ActiveActor].Solution.Year:0, Separator);
-            Write(F,ActiveCircuit[ActiveActor].LoadDurCurve,    Separator);
-            Write(F,ActiveCircuit[ActiveActor].Solution.DynaVars.intHour:0, Separator);
-            Write(F,Pad('"'+ Uppercase(pElem.Name) +'"', 14));
-            FOR j := 1 to NumEMRegisters Do Write(F, Separator, PElem.Registers[j]:10:0);
+            pElem := ActiveCircuit[ActiveActor].energyMeters.First;
+            Write(F, 'Year, LDCurve, Hour, Meter');
+            for i := 1 to NumEMRegisters do
+                Write(F, Separator, '"' + pElem.RegisterNames[i] + '"');
             Writeln(F);
-        END;
-        pElem := ActiveCircuit[ActiveActor].EnergyMeters.Next;
-     End;
+        end
+        else
+            Append(F);
 
-     GlobalResult := FileNm;
 
-  FINALLY
+        pElem := ActiveCircuit[ActiveActor].energyMeters.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                Write(F, ActiveCircuit[ActiveActor].Solution.Year: 0, Separator);
+                Write(F, ActiveCircuit[ActiveActor].LoadDurCurve, Separator);
+                Write(F, ActiveCircuit[ActiveActor].Solution.DynaVars.intHour: 0, Separator);
+                Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                for j := 1 to NumEMRegisters do
+                    Write(F, Separator, PElem.Registers[j]: 10: 0);
+                Writeln(F);
+            end;
+            pElem := ActiveCircuit[ActiveActor].EnergyMeters.Next;
+        end;
 
-     CloseFile(F);
+        GlobalResult := FileNm;
 
-  End;
+    finally
 
-End;
+        CloseFile(F);
+
+    end;
+
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportMeters(FileNm:String);
+procedure ExportMeters(FileNm: String);
 
 // Export Values of  Meter Elements
 
@@ -1857,1801 +2056,1979 @@ Procedure ExportMeters(FileNm:String);
 
 // If switch /m is specified, a separate file is created for each meter using the meter's name
 
-Begin
+begin
 
 
-  If Lowercase(Copy(FileNm,1,2)) = '/m' THEN WriteMultipleMeterFiles
-                                        ELSE WriteSingleMeterFile(FileNM);
-End;
+    if Lowercase(Copy(FileNm, 1, 2)) = '/m' then
+        WriteMultipleMeterFiles
+    else
+        WriteSingleMeterFile(FileNM);
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure WriteMultipleGenMeterFiles;
+procedure WriteMultipleGenMeterFiles;
 
-Var
-   F  :TextFile;
-   i,j:Integer;
-   pElem  :TGeneratorObj;
-   GeneratorClass:TGenerator;
-   FileNm,
-   Separator :String;
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TGeneratorObj;
+    GeneratorClass: TGenerator;
+    FileNm,
+    Separator: String;
 
-Begin
+begin
 
-      GeneratorClass := TGenerator(GetDSSClassPtr('generator'));
-      If GeneratorClass = NIL THEN Exit;  // oops somewhere!!
-      Separator := ', ';
+    GeneratorClass := TGenerator(GetDSSClassPtr('generator'));
+    if GeneratorClass = NIL then
+        Exit;  // oops somewhere!!
+    Separator := ', ';
 
-     pElem := ActiveCircuit[ActiveActor].Generators.First;
-     WHILE pElem <> NIL Do
-     Begin
-        IF pElem.Enabled THEN
-        BEGIN
-          TRY
-            FileNm := GetOutputDirectory + 'EXP_GEN_' + Uppercase(pElem.Name) + '.CSV';
+    pElem := ActiveCircuit[ActiveActor].Generators.First;
+    while pElem <> NIL do
+    begin
+        if pElem.Enabled then
+        begin
+            try
+                FileNm := GetOutputDirectory + 'EXP_GEN_' + Uppercase(pElem.Name) + '.CSV';
 
-            IF Not FileExists(FileNm)
-            THEN Begin
-                AssignFile(F, FileNm);
-                Rewrite(F);
+                if not FileExists(FileNm) then
+                begin
+                    AssignFile(F, FileNm);
+                    Rewrite(F);
                 {Write New Header}
-                Write(F, 'Year, LDCurve, Hour, Generator');
-                For i := 1 to NumGenRegisters Do Write(F, Separator, '"' + GeneratorClass.RegisterNames[i]+'"');
-                Writeln(F);
+                    Write(F, 'Year, LDCurve, Hour, Generator');
+                    for i := 1 to NumGenRegisters do
+                        Write(F, Separator, '"' + GeneratorClass.RegisterNames[i] + '"');
+                    Writeln(F);
+                    CloseFile(F);
+                end;
+
+                AssignFile(F, FileNm);
+                Append(F);
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    Write(F, Solution.Year: 0, Separator);
+                    Write(F, LoadDurCurve, Separator);
+                    Write(F, Solution.DynaVars.intHour: 0, Separator);
+                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    for j := 1 to NumGenRegisters do
+                        Write(F, Separator, PElem.Registers[j]: 10: 0);
+                    Writeln(F);
+                end;
+                AppendGlobalResult(FileNm);
+            finally
                 CloseFile(F);
-            End;
+            end;
 
-            AssignFile(F, FileNm);
-            Append(F);
-            With ActiveCircuit[ActiveActor] Do Begin
-                Write(F,Solution.Year:0, Separator);
-                Write(F,LoadDurCurve, Separator);
-                Write(F,Solution.DynaVars.intHour:0, Separator);
-                Write(F,Pad('"'+Uppercase(pElem.Name)+'"', 14));
-                FOR j := 1 to NumGenRegisters Do Write(F, Separator, PElem.Registers[j]:10:0);
-                Writeln(F);
-            End;
-            AppendGlobalResult(FileNm);
-          FINALLY
-            CloseFile(F);
-          END;
-
-        END;
+        end;
         pElem := ActiveCircuit[ActiveActor].Generators.Next;
-     End;
+    end;
 
-End;
+end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure WriteSingleGenMeterFile(FileNm:String);
+procedure WriteSingleGenMeterFile(FileNm: String);
 
-Var
-   F  :TextFile;
-   i,j:Integer;
-   pElem  :TGeneratorObj;
-   GeneratorClass:TGenerator;
-   Separator, TestStr :String;
-   ReWriteFile :Boolean;
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TGeneratorObj;
+    GeneratorClass: TGenerator;
+    Separator, TestStr: String;
+    ReWriteFile: Boolean;
 
-Begin
-
-
-  GeneratorClass := TGenerator(GetDSSClassPtr('generator'));
-  If GeneratorClass = NIL THEN Exit;  // oops somewhere!!
-  Separator := ', ';
+begin
 
 
- TRY
+    GeneratorClass := TGenerator(GetDSSClassPtr('generator'));
+    if GeneratorClass = NIL then
+        Exit;  // oops somewhere!!
+    Separator := ', ';
 
-    IF FileExists(FileNm)
-    THEN Begin  // See if it has already been written on
-         Assignfile(F,FileNm);
-         Reset(F);
-         IF  Not EOF(F)
-         THEN Begin
-             Read(F, TestStr);
+
+    try
+
+        if FileExists(FileNm) then
+        begin  // See if it has already been written on
+            Assignfile(F, FileNm);
+            Reset(F);
+            if not EOF(F) then
+            begin
+                Read(F, TestStr);
              {See if it likely that the file is OK}
-             IF  CompareText(Copy(TestStr,1,4), 'Year')=0
-             THEN RewriteFile := FALSE       // Assume the file is OK
-             ELSE RewriteFile := TRUE;
-         End
-         ELSE RewriteFile := TRUE;
+                if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
+                    RewriteFile := FALSE       // Assume the file is OK
+                else
+                    RewriteFile := TRUE;
+            end
+            else
+                RewriteFile := TRUE;
 
-         CloseFile(F);
+            CloseFile(F);
 
-    End
-    ELSE Begin
-         ReWriteFile := TRUE;
-         AssignFile(F, FileNm);
-    End;
+        end
+        else
+        begin
+            ReWriteFile := TRUE;
+            AssignFile(F, FileNm);
+        end;
 
    {Either open or append the file}
-    IF RewriteFile
-    THEN Begin
-        ReWrite(F);
+        if RewriteFile then
+        begin
+            ReWrite(F);
         {Write New Header}
-        Write(F, 'Year, LDCurve, Hour, Generator');
-        For i := 1 to NumGenRegisters Do Write(F, Separator, '"'+ GeneratorClass.RegisterNames[i]+'"');
-        Writeln(F);
-    END
-    ELSE Append(F);
-
-
-     pElem := ActiveCircuit[ActiveActor].Generators.First;
-     WHILE pElem <> NIL Do
-     Begin
-        IF pElem.Enabled THEN With ActiveCircuit[ActiveActor] Do
-        BEGIN
-            Write(F,Solution.Year:0, Separator);
-            Write(F,LoadDurCurve, Separator);
-            Write(F,Solution.DynaVars.intHour:0, Separator);
-            Write(F,Pad('"'+Uppercase(pElem.Name)+'"', 14));
-            FOR j := 1 to NumGenRegisters Do Write(F, Separator, PElem.Registers[j]:10:0);
+            Write(F, 'Year, LDCurve, Hour, Generator');
+            for i := 1 to NumGenRegisters do
+                Write(F, Separator, '"' + GeneratorClass.RegisterNames[i] + '"');
             Writeln(F);
-        END;
-
-        pElem := ActiveCircuit[ActiveActor].Generators.Next;
-     End;
-
-     GlobalResult := FileNm;
-
-  FINALLY
-
-     CloseFile(F);
-
-  End;
+        end
+        else
+            Append(F);
 
 
-End;
+        pElem := ActiveCircuit[ActiveActor].Generators.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    Write(F, Solution.Year: 0, Separator);
+                    Write(F, LoadDurCurve, Separator);
+                    Write(F, Solution.DynaVars.intHour: 0, Separator);
+                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    for j := 1 to NumGenRegisters do
+                        Write(F, Separator, PElem.Registers[j]: 10: 0);
+                    Writeln(F);
+                end;
+
+            pElem := ActiveCircuit[ActiveActor].Generators.Next;
+        end;
+
+        GlobalResult := FileNm;
+
+    finally
+
+        CloseFile(F);
+
+    end;
+
+
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure WriteMultiplePVSystemMeterFiles;
+procedure WriteMultiplePVSystemMeterFiles;
 
-Var
-   F  :TextFile;
-   i,j:Integer;
-   pElem  :TPVSystemObj;
-   FileNm,
-   Separator :String;
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TPVSystemObj;
+    FileNm,
+    Separator: String;
 
-Begin
+begin
 
-     If PVSystemClass[ActiveActor] = NIL THEN Exit;  // oops somewhere!!
-     Separator := ', ';
+    if PVSystemClass[ActiveActor] = NIL then
+        Exit;  // oops somewhere!!
+    Separator := ', ';
 
-     pElem := ActiveCircuit[ActiveActor].PVSystems.First;
-     WHILE pElem <> NIL Do
-     Begin
-        IF pElem.Enabled THEN
-        BEGIN
-          TRY
-            FileNm := GetOutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
+    pElem := ActiveCircuit[ActiveActor].PVSystems.First;
+    while pElem <> NIL do
+    begin
+        if pElem.Enabled then
+        begin
+            try
+                FileNm := GetOutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
 
-            IF Not FileExists(FileNm)
-            THEN Begin
-                AssignFile(F, FileNm);
-                Rewrite(F);
+                if not FileExists(FileNm) then
+                begin
+                    AssignFile(F, FileNm);
+                    Rewrite(F);
                 {Write New Header}
-                Write(F, 'Year, LDCurve, Hour, PVSystem');
-                For i := 1 to NumPVSystemRegisters Do Write(F, Separator, '"' + PVSystemClass[ActiveActor].RegisterNames[i]+'"');
-                Writeln(F);
+                    Write(F, 'Year, LDCurve, Hour, PVSystem');
+                    for i := 1 to NumPVSystemRegisters do
+                        Write(F, Separator, '"' + PVSystemClass[ActiveActor].RegisterNames[i] + '"');
+                    Writeln(F);
+                    CloseFile(F);
+                end;
+
+                AssignFile(F, FileNm);
+                Append(F);
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    Write(F, Solution.Year: 0, Separator);
+                    Write(F, LoadDurCurve, Separator);
+                    Write(F, Solution.DynaVars.intHour: 0, Separator);
+                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    for j := 1 to NumPVSystemRegisters do
+                        Write(F, Separator, PElem.Registers[j]: 10: 0);
+                    Writeln(F);
+                end;
+                AppendGlobalResult(FileNm);
+            finally
                 CloseFile(F);
-            End;
+            end;
 
-            AssignFile(F, FileNm);
-            Append(F);
-            With ActiveCircuit[ActiveActor] Do Begin
-                Write(F,Solution.Year:0, Separator);
-                Write(F,LoadDurCurve, Separator);
-                Write(F,Solution.DynaVars.intHour:0, Separator);
-                Write(F,Pad('"'+Uppercase(pElem.Name)+'"', 14));
-                FOR j := 1 to NumPVSystemRegisters Do Write(F, Separator, PElem.Registers[j]:10:0);
-                Writeln(F);
-            End;
-            AppendGlobalResult(FileNm);
-          FINALLY
-            CloseFile(F);
-          END;
-
-        END;
+        end;
         pElem := ActiveCircuit[ActiveActor].PVSystems.Next;
-     End;
+    end;
 
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure WriteMultiplePVSystem2MeterFiles;
+procedure WriteMultiplePVSystem2MeterFiles;
 
-Var
-   F  :TextFile;
-   i,j:Integer;
-   pElem  :TPVSystem2Obj;
-   FileNm,
-   Separator :String;
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TPVSystem2Obj;
+    FileNm,
+    Separator: String;
 
-Begin
+begin
 
-     If PVSystem2Class[ActiveActor] = NIL THEN Exit;  // oops somewhere!!
-     Separator := ', ';
+    if PVSystem2Class[ActiveActor] = NIL then
+        Exit;  // oops somewhere!!
+    Separator := ', ';
 
-     pElem := ActiveCircuit[ActiveActor].PVSystems2.First;
-     WHILE pElem <> NIL Do
-     Begin
-        IF pElem.Enabled THEN
-        BEGIN
-          TRY
-            FileNm := GetOutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
+    pElem := ActiveCircuit[ActiveActor].PVSystems2.First;
+    while pElem <> NIL do
+    begin
+        if pElem.Enabled then
+        begin
+            try
+                FileNm := GetOutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
 
-            IF Not FileExists(FileNm)
-            THEN Begin
-                AssignFile(F, FileNm);
-                Rewrite(F);
+                if not FileExists(FileNm) then
+                begin
+                    AssignFile(F, FileNm);
+                    Rewrite(F);
                 {Write New Header}
-                Write(F, 'Year, LDCurve, Hour, PVSystem2');
-                For i := 1 to NumPVSystem2Registers Do Write(F, Separator, '"' + PVSystem2Class[ActiveActor].RegisterNames[i]+'"');
-                Writeln(F);
+                    Write(F, 'Year, LDCurve, Hour, PVSystem2');
+                    for i := 1 to NumPVSystem2Registers do
+                        Write(F, Separator, '"' + PVSystem2Class[ActiveActor].RegisterNames[i] + '"');
+                    Writeln(F);
+                    CloseFile(F);
+                end;
+
+                AssignFile(F, FileNm);
+                Append(F);
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    Write(F, Solution.Year: 0, Separator);
+                    Write(F, LoadDurCurve, Separator);
+                    Write(F, Solution.DynaVars.intHour: 0, Separator);
+                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    for j := 1 to NumPVSystem2Registers do
+                        Write(F, Separator, PElem.Registers[j]: 10: 0);
+                    Writeln(F);
+                end;
+                AppendGlobalResult(FileNm);
+            finally
                 CloseFile(F);
-            End;
+            end;
 
-            AssignFile(F, FileNm);
-            Append(F);
-            With ActiveCircuit[ActiveActor] Do Begin
-                Write(F,Solution.Year:0, Separator);
-                Write(F,LoadDurCurve, Separator);
-                Write(F,Solution.DynaVars.intHour:0, Separator);
-                Write(F,Pad('"'+Uppercase(pElem.Name)+'"', 14));
-                FOR j := 1 to NumPVSystem2Registers Do Write(F, Separator, PElem.Registers[j]:10:0);
-                Writeln(F);
-            End;
-            AppendGlobalResult(FileNm);
-          FINALLY
-            CloseFile(F);
-          END;
-
-        END;
+        end;
         pElem := ActiveCircuit[ActiveActor].PVSystems2.Next;
-     End;
+    end;
 
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure WriteSinglePVSystemMeterFile(FileNm:String);
+procedure WriteSinglePVSystemMeterFile(FileNm: String);
 
-Var
-   F  :TextFile;
-   i,j:Integer;
-   pElem  :TPVSystemObj;
-   Separator, TestStr :String;
-   ReWriteFile :Boolean;
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TPVSystemObj;
+    Separator, TestStr: String;
+    ReWriteFile: Boolean;
 
-Begin
-
-
-  If PVSystemClass[ActiveActor] = NIL THEN Exit;  // oops somewhere!!
-  Separator := ', ';
+begin
 
 
- TRY
+    if PVSystemClass[ActiveActor] = NIL then
+        Exit;  // oops somewhere!!
+    Separator := ', ';
 
-    IF FileExists(FileNm)
-    THEN Begin  // See if it has already been written on
-         Assignfile(F,FileNm);
-         Reset(F);
-         IF  Not EOF(F)
-         THEN Begin
-             Read(F, TestStr);
+
+    try
+
+        if FileExists(FileNm) then
+        begin  // See if it has already been written on
+            Assignfile(F, FileNm);
+            Reset(F);
+            if not EOF(F) then
+            begin
+                Read(F, TestStr);
              {See if it likely that the file is OK}
-             IF  CompareText(Copy(TestStr,1,4), 'Year')=0
-             THEN RewriteFile := FALSE       // Assume the file is OK
-             ELSE RewriteFile := TRUE;
-         End
-         ELSE RewriteFile := TRUE;
+                if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
+                    RewriteFile := FALSE       // Assume the file is OK
+                else
+                    RewriteFile := TRUE;
+            end
+            else
+                RewriteFile := TRUE;
 
-         CloseFile(F);
-
-    End
-    ELSE Begin
-         ReWriteFile := TRUE;
-         AssignFile(F, FileNm);
-    End;
-
-   {Either open or append the file}
-    IF RewriteFile
-    THEN Begin
-        ReWrite(F);
-        {Write New Header}
-        Write(F, 'Year, LDCurve, Hour, PVSystem');
-        For i := 1 to NumGenRegisters Do Write(F, Separator, '"'+ PVSystemClass[ActiveActor].RegisterNames[i]+'"');
-        Writeln(F);
-    END
-    ELSE Append(F);
-
-
-     pElem := ActiveCircuit[ActiveActor].PVSystems.First;
-     WHILE pElem <> NIL Do
-     Begin
-        IF pElem.Enabled THEN With ActiveCircuit[ActiveActor] Do
-        BEGIN
-            Write(F,Solution.Year:0, Separator);
-            Write(F,LoadDurCurve, Separator);
-            Write(F,Solution.DynaVars.intHour:0, Separator);
-            Write(F,Pad('"'+Uppercase(pElem.Name)+'"', 14));
-            FOR j := 1 to NumPVSystemRegisters Do Write(F, Separator, PElem.Registers[j]:10:0);
-            Writeln(F);
-        END;
-
-        pElem := ActiveCircuit[ActiveActor].PVSystems.Next;
-     End;
-
-     GlobalResult := FileNm;
-
-  FINALLY
-
-     CloseFile(F);
-
-  End;
-
-
-End;
-
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure WriteSinglePVSystem2MeterFile(FileNm:String);
-
-Var
-   F  :TextFile;
-   i,j:Integer;
-   pElem  :TPVSystem2Obj;
-   Separator, TestStr :String;
-   ReWriteFile :Boolean;
-
-Begin
-
-
-  If PVSystem2Class[ActiveActor] = NIL THEN Exit;  // oops somewhere!!
-  Separator := ', ';
-
-
- TRY
-
-    IF FileExists(FileNm)
-    THEN Begin  // See if it has already been written on
-         Assignfile(F,FileNm);
-         Reset(F);
-         IF  Not EOF(F)
-         THEN Begin
-             Read(F, TestStr);
-             {See if it likely that the file is OK}
-             IF  CompareText(Copy(TestStr,1,4), 'Year')=0
-             THEN RewriteFile := FALSE       // Assume the file is OK
-             ELSE RewriteFile := TRUE;
-         End
-         ELSE RewriteFile := TRUE;
-
-         CloseFile(F);
-
-    End
-    ELSE Begin
-         ReWriteFile := TRUE;
-         AssignFile(F, FileNm);
-    End;
-
-   {Either open or append the file}
-    IF RewriteFile
-    THEN Begin
-        ReWrite(F);
-        {Write New Header}
-        Write(F, 'Year, LDCurve, Hour, PVSystem2');
-        For i := 1 to NumGenRegisters Do Write(F, Separator, '"'+ PVSystem2Class[ActiveActor].RegisterNames[i]+'"');
-        Writeln(F);
-    END
-    ELSE Append(F);
-
-
-     pElem := ActiveCircuit[ActiveActor].PVSystems2.First;
-     WHILE pElem <> NIL Do
-     Begin
-        IF pElem.Enabled THEN With ActiveCircuit[ActiveActor] Do
-        BEGIN
-            Write(F,Solution.Year:0, Separator);
-            Write(F,LoadDurCurve, Separator);
-            Write(F,Solution.DynaVars.intHour:0, Separator);
-            Write(F,Pad('"'+Uppercase(pElem.Name)+'"', 14));
-            FOR j := 1 to NumPVSystem2Registers Do Write(F, Separator, PElem.Registers[j]:10:0);
-            Writeln(F);
-        END;
-
-        pElem := ActiveCircuit[ActiveActor].PVSystems2.Next;
-     End;
-
-     GlobalResult := FileNm;
-
-  FINALLY
-
-     CloseFile(F);
-
-  End;
-
-
-End;
-
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure WriteMultipleStorageMeterFiles;
-
-Var
-   F  :TextFile;
-   i,j:Integer;
-   pElem  :TStorageObj;
-   FileNm,
-   Separator :String;
-
-Begin
-
-     If StorageClass = NIL THEN Exit;  // oops somewhere!!
-     Separator := ', ';
-
-     pElem := ActiveCircuit[ActiveActor].StorageElements.First;
-     WHILE pElem <> NIL Do
-     Begin
-        IF pElem.Enabled THEN
-        BEGIN
-          TRY
-            FileNm := GetOutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
-
-            IF Not FileExists(FileNm)
-            THEN Begin
-                AssignFile(F, FileNm);
-                Rewrite(F);
-                {Write New Header}
-                Write(F, 'Year, LDCurve, Hour, Storage');
-                For i := 1 to NumStorageRegisters Do Write(F, Separator, '"' + StorageClass[ActiveActor].RegisterNames[i]+'"');
-                Writeln(F);
-                CloseFile(F);
-            End;
-
-            AssignFile(F, FileNm);
-            Append(F);
-            With ActiveCircuit[ActiveActor] Do Begin
-                Write(F,Solution.Year:0, Separator);
-                Write(F,LoadDurCurve, Separator);
-                Write(F,Solution.DynaVars.intHour:0, Separator);
-                Write(F,Pad('"'+Uppercase(pElem.Name)+'"', 14));
-                FOR j := 1 to NumStorageRegisters Do Write(F, Separator, PElem.Registers[j]:10:0);
-                Writeln(F);
-            End;
-            AppendGlobalResult(FileNm);
-          FINALLY
             CloseFile(F);
-          END;
 
-        END;
-        pElem := ActiveCircuit[ActiveActor].StorageElements.Next;
-     End;
-
-End;
-
-Procedure WriteMultipleStorage2MeterFiles;
-
-Var
-   F  :TextFile;
-   i,j:Integer;
-   pElem  :TStorage2Obj;
-   FileNm,
-   Separator :String;
-
-Begin
-
-     If Storage2Class = NIL THEN Exit;  // oops somewhere!!
-     Separator := ', ';
-
-     pElem := ActiveCircuit[ActiveActor].Storage2Elements.First;
-     WHILE pElem <> NIL Do
-     Begin
-        IF pElem.Enabled THEN
-        BEGIN
-          TRY
-            FileNm := GetOutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
-
-            IF Not FileExists(FileNm)
-            THEN Begin
-                AssignFile(F, FileNm);
-                Rewrite(F);
-                {Write New Header}
-                Write(F, 'Year, LDCurve, Hour, Storage2');
-                For i := 1 to NumStorage2Registers Do Write(F, Separator, '"' + Storage2Class[ActiveActor].RegisterNames[i]+'"');
-                Writeln(F);
-                CloseFile(F);
-            End;
-
+        end
+        else
+        begin
+            ReWriteFile := TRUE;
             AssignFile(F, FileNm);
+        end;
+
+   {Either open or append the file}
+        if RewriteFile then
+        begin
+            ReWrite(F);
+        {Write New Header}
+            Write(F, 'Year, LDCurve, Hour, PVSystem');
+            for i := 1 to NumGenRegisters do
+                Write(F, Separator, '"' + PVSystemClass[ActiveActor].RegisterNames[i] + '"');
+            Writeln(F);
+        end
+        else
             Append(F);
-            With ActiveCircuit[ActiveActor] Do Begin
-                Write(F,Solution.Year:0, Separator);
-                Write(F,LoadDurCurve, Separator);
-                Write(F,Solution.DynaVars.intHour:0, Separator);
-                Write(F,Pad('"'+Uppercase(pElem.Name)+'"', 14));
-                FOR j := 1 to NumStorage2Registers Do Write(F, Separator, PElem.Registers[j]:10:0);
-                Writeln(F);
-            End;
-            AppendGlobalResult(FileNm);
-          FINALLY
+
+
+        pElem := ActiveCircuit[ActiveActor].PVSystems.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    Write(F, Solution.Year: 0, Separator);
+                    Write(F, LoadDurCurve, Separator);
+                    Write(F, Solution.DynaVars.intHour: 0, Separator);
+                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    for j := 1 to NumPVSystemRegisters do
+                        Write(F, Separator, PElem.Registers[j]: 10: 0);
+                    Writeln(F);
+                end;
+
+            pElem := ActiveCircuit[ActiveActor].PVSystems.Next;
+        end;
+
+        GlobalResult := FileNm;
+
+    finally
+
+        CloseFile(F);
+
+    end;
+
+
+end;
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+procedure WriteSinglePVSystem2MeterFile(FileNm: String);
+
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TPVSystem2Obj;
+    Separator, TestStr: String;
+    ReWriteFile: Boolean;
+
+begin
+
+
+    if PVSystem2Class[ActiveActor] = NIL then
+        Exit;  // oops somewhere!!
+    Separator := ', ';
+
+
+    try
+
+        if FileExists(FileNm) then
+        begin  // See if it has already been written on
+            Assignfile(F, FileNm);
+            Reset(F);
+            if not EOF(F) then
+            begin
+                Read(F, TestStr);
+             {See if it likely that the file is OK}
+                if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
+                    RewriteFile := FALSE       // Assume the file is OK
+                else
+                    RewriteFile := TRUE;
+            end
+            else
+                RewriteFile := TRUE;
+
             CloseFile(F);
-          END;
 
-        END;
-        pElem := ActiveCircuit[ActiveActor].Storage2Elements.Next;
-     End;
-
-End;
-
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure WriteSingleStorageMeterFile(FileNm:String);
-
-Var
-   F  :TextFile;
-   i,j:Integer;
-   pElem  :TStorageObj;
-   Separator, TestStr :String;
-   ReWriteFile :Boolean;
-
-Begin
-
-
-  If StorageClass = NIL THEN Exit;  // oops somewhere!!
-  Separator := ', ';
-
-
- TRY
-
-    IF FileExists(FileNm)
-    THEN Begin  // See if it has already been written on
-         Assignfile(F,FileNm);
-         Reset(F);
-         IF  Not EOF(F)
-         THEN Begin
-             Read(F, TestStr);
-             {See if it likely that the file is OK}
-             IF  CompareText(Copy(TestStr,1,4), 'Year')=0
-             THEN RewriteFile := FALSE       // Assume the file is OK
-             ELSE RewriteFile := TRUE;
-         End
-         ELSE RewriteFile := TRUE;
-
-         CloseFile(F);
-
-    End
-    ELSE Begin
-         ReWriteFile := TRUE;
-         AssignFile(F, FileNm);
-    End;
+        end
+        else
+        begin
+            ReWriteFile := TRUE;
+            AssignFile(F, FileNm);
+        end;
 
    {Either open or append the file}
-    IF RewriteFile
-    THEN Begin
-        ReWrite(F);
+        if RewriteFile then
+        begin
+            ReWrite(F);
         {Write New Header}
-        Write(F, 'Year, LDCurve, Hour, Storage');
-        For i := 1 to NumStorageRegisters Do Write(F, Separator, '"'+ StorageClass[ActiveActor].RegisterNames[i]+'"');
-        Writeln(F);
-    END
-    ELSE Append(F);
-
-
-     pElem := ActiveCircuit[ActiveActor].StorageElements.First;
-     WHILE pElem <> NIL Do
-     Begin
-        IF pElem.Enabled THEN With ActiveCircuit[ActiveActor] Do
-        BEGIN
-            Write(F,Solution.Year:0, Separator);
-            Write(F,LoadDurCurve, Separator);
-            Write(F,Solution.DynaVars.intHour:0, Separator);
-            Write(F,Pad('"'+Uppercase(pElem.Name)+'"', 14));
-            FOR j := 1 to NumStorageRegisters Do Write(F, Separator, PElem.Registers[j]:10:0);
+            Write(F, 'Year, LDCurve, Hour, PVSystem2');
+            for i := 1 to NumGenRegisters do
+                Write(F, Separator, '"' + PVSystem2Class[ActiveActor].RegisterNames[i] + '"');
             Writeln(F);
-        END;
+        end
+        else
+            Append(F);
 
+
+        pElem := ActiveCircuit[ActiveActor].PVSystems2.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    Write(F, Solution.Year: 0, Separator);
+                    Write(F, LoadDurCurve, Separator);
+                    Write(F, Solution.DynaVars.intHour: 0, Separator);
+                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    for j := 1 to NumPVSystem2Registers do
+                        Write(F, Separator, PElem.Registers[j]: 10: 0);
+                    Writeln(F);
+                end;
+
+            pElem := ActiveCircuit[ActiveActor].PVSystems2.Next;
+        end;
+
+        GlobalResult := FileNm;
+
+    finally
+
+        CloseFile(F);
+
+    end;
+
+
+end;
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+procedure WriteMultipleStorageMeterFiles;
+
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TStorageObj;
+    FileNm,
+    Separator: String;
+
+begin
+
+    if StorageClass = NIL then
+        Exit;  // oops somewhere!!
+    Separator := ', ';
+
+    pElem := ActiveCircuit[ActiveActor].StorageElements.First;
+    while pElem <> NIL do
+    begin
+        if pElem.Enabled then
+        begin
+            try
+                FileNm := GetOutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
+
+                if not FileExists(FileNm) then
+                begin
+                    AssignFile(F, FileNm);
+                    Rewrite(F);
+                {Write New Header}
+                    Write(F, 'Year, LDCurve, Hour, Storage');
+                    for i := 1 to NumStorageRegisters do
+                        Write(F, Separator, '"' + StorageClass[ActiveActor].RegisterNames[i] + '"');
+                    Writeln(F);
+                    CloseFile(F);
+                end;
+
+                AssignFile(F, FileNm);
+                Append(F);
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    Write(F, Solution.Year: 0, Separator);
+                    Write(F, LoadDurCurve, Separator);
+                    Write(F, Solution.DynaVars.intHour: 0, Separator);
+                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    for j := 1 to NumStorageRegisters do
+                        Write(F, Separator, PElem.Registers[j]: 10: 0);
+                    Writeln(F);
+                end;
+                AppendGlobalResult(FileNm);
+            finally
+                CloseFile(F);
+            end;
+
+        end;
         pElem := ActiveCircuit[ActiveActor].StorageElements.Next;
-     End;
+    end;
 
-     GlobalResult := FileNm;
+end;
 
-  FINALLY
+procedure WriteMultipleStorage2MeterFiles;
 
-     CloseFile(F);
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TStorage2Obj;
+    FileNm,
+    Separator: String;
 
-  End;
+begin
+
+    if Storage2Class = NIL then
+        Exit;  // oops somewhere!!
+    Separator := ', ';
+
+    pElem := ActiveCircuit[ActiveActor].Storage2Elements.First;
+    while pElem <> NIL do
+    begin
+        if pElem.Enabled then
+        begin
+            try
+                FileNm := GetOutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
+
+                if not FileExists(FileNm) then
+                begin
+                    AssignFile(F, FileNm);
+                    Rewrite(F);
+                {Write New Header}
+                    Write(F, 'Year, LDCurve, Hour, Storage2');
+                    for i := 1 to NumStorage2Registers do
+                        Write(F, Separator, '"' + Storage2Class[ActiveActor].RegisterNames[i] + '"');
+                    Writeln(F);
+                    CloseFile(F);
+                end;
+
+                AssignFile(F, FileNm);
+                Append(F);
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    Write(F, Solution.Year: 0, Separator);
+                    Write(F, LoadDurCurve, Separator);
+                    Write(F, Solution.DynaVars.intHour: 0, Separator);
+                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    for j := 1 to NumStorage2Registers do
+                        Write(F, Separator, PElem.Registers[j]: 10: 0);
+                    Writeln(F);
+                end;
+                AppendGlobalResult(FileNm);
+            finally
+                CloseFile(F);
+            end;
+
+        end;
+        pElem := ActiveCircuit[ActiveActor].Storage2Elements.Next;
+    end;
+
+end;
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+procedure WriteSingleStorageMeterFile(FileNm: String);
+
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TStorageObj;
+    Separator, TestStr: String;
+    ReWriteFile: Boolean;
+
+begin
 
 
-End;
-
-Procedure WriteSingleStorage2MeterFile(FileNm:String);
-
-Var
-   F  :TextFile;
-   i,j:Integer;
-   pElem  :TStorage2Obj;
-   Separator, TestStr :String;
-   ReWriteFile :Boolean;
-
-Begin
+    if StorageClass = NIL then
+        Exit;  // oops somewhere!!
+    Separator := ', ';
 
 
-  If Storage2Class = NIL THEN Exit;  // oops somewhere!!
-  Separator := ', ';
+    try
 
-
- TRY
-
-    IF FileExists(FileNm)
-    THEN Begin  // See if it has already been written on
-         Assignfile(F,FileNm);
-         Reset(F);
-         IF  Not EOF(F)
-         THEN Begin
-             Read(F, TestStr);
+        if FileExists(FileNm) then
+        begin  // See if it has already been written on
+            Assignfile(F, FileNm);
+            Reset(F);
+            if not EOF(F) then
+            begin
+                Read(F, TestStr);
              {See if it likely that the file is OK}
-             IF  CompareText(Copy(TestStr,1,4), 'Year')=0
-             THEN RewriteFile := FALSE       // Assume the file is OK
-             ELSE RewriteFile := TRUE;
-         End
-         ELSE RewriteFile := TRUE;
+                if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
+                    RewriteFile := FALSE       // Assume the file is OK
+                else
+                    RewriteFile := TRUE;
+            end
+            else
+                RewriteFile := TRUE;
 
-         CloseFile(F);
+            CloseFile(F);
 
-    End
-    ELSE Begin
-         ReWriteFile := TRUE;
-         AssignFile(F, FileNm);
-    End;
+        end
+        else
+        begin
+            ReWriteFile := TRUE;
+            AssignFile(F, FileNm);
+        end;
 
    {Either open or append the file}
-    IF RewriteFile
-    THEN Begin
-        ReWrite(F);
+        if RewriteFile then
+        begin
+            ReWrite(F);
         {Write New Header}
-        Write(F, 'Year, LDCurve, Hour, Storage2');
-        For i := 1 to NumStorage2Registers Do Write(F, Separator, '"'+ Storage2Class[ActiveActor].RegisterNames[i]+'"');
-        Writeln(F);
-    END
-    ELSE Append(F);
-
-
-     pElem := ActiveCircuit[ActiveActor].Storage2Elements.First;
-     WHILE pElem <> NIL Do
-     Begin
-        IF pElem.Enabled THEN With ActiveCircuit[ActiveActor] Do
-        BEGIN
-            Write(F,Solution.Year:0, Separator);
-            Write(F,LoadDurCurve, Separator);
-            Write(F,Solution.DynaVars.intHour:0, Separator);
-            Write(F,Pad('"'+Uppercase(pElem.Name)+'"', 14));
-            FOR j := 1 to NumStorage2Registers Do Write(F, Separator, PElem.Registers[j]:10:0);
+            Write(F, 'Year, LDCurve, Hour, Storage');
+            for i := 1 to NumStorageRegisters do
+                Write(F, Separator, '"' + StorageClass[ActiveActor].RegisterNames[i] + '"');
             Writeln(F);
-        END;
-
-        pElem := ActiveCircuit[ActiveActor].Storage2Elements.Next;
-     End;
-
-     GlobalResult := FileNm;
-
-  FINALLY
-
-     CloseFile(F);
-
-  End;
+        end
+        else
+            Append(F);
 
 
-End;
+        pElem := ActiveCircuit[ActiveActor].StorageElements.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    Write(F, Solution.Year: 0, Separator);
+                    Write(F, LoadDurCurve, Separator);
+                    Write(F, Solution.DynaVars.intHour: 0, Separator);
+                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    for j := 1 to NumStorageRegisters do
+                        Write(F, Separator, PElem.Registers[j]: 10: 0);
+                    Writeln(F);
+                end;
+
+            pElem := ActiveCircuit[ActiveActor].StorageElements.Next;
+        end;
+
+        GlobalResult := FileNm;
+
+    finally
+
+        CloseFile(F);
+
+    end;
+
+
+end;
+
+procedure WriteSingleStorage2MeterFile(FileNm: String);
+
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TStorage2Obj;
+    Separator, TestStr: String;
+    ReWriteFile: Boolean;
+
+begin
+
+
+    if Storage2Class = NIL then
+        Exit;  // oops somewhere!!
+    Separator := ', ';
+
+
+    try
+
+        if FileExists(FileNm) then
+        begin  // See if it has already been written on
+            Assignfile(F, FileNm);
+            Reset(F);
+            if not EOF(F) then
+            begin
+                Read(F, TestStr);
+             {See if it likely that the file is OK}
+                if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
+                    RewriteFile := FALSE       // Assume the file is OK
+                else
+                    RewriteFile := TRUE;
+            end
+            else
+                RewriteFile := TRUE;
+
+            CloseFile(F);
+
+        end
+        else
+        begin
+            ReWriteFile := TRUE;
+            AssignFile(F, FileNm);
+        end;
+
+   {Either open or append the file}
+        if RewriteFile then
+        begin
+            ReWrite(F);
+        {Write New Header}
+            Write(F, 'Year, LDCurve, Hour, Storage2');
+            for i := 1 to NumStorage2Registers do
+                Write(F, Separator, '"' + Storage2Class[ActiveActor].RegisterNames[i] + '"');
+            Writeln(F);
+        end
+        else
+            Append(F);
+
+
+        pElem := ActiveCircuit[ActiveActor].Storage2Elements.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+                with ActiveCircuit[ActiveActor] do
+                begin
+                    Write(F, Solution.Year: 0, Separator);
+                    Write(F, LoadDurCurve, Separator);
+                    Write(F, Solution.DynaVars.intHour: 0, Separator);
+                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    for j := 1 to NumStorage2Registers do
+                        Write(F, Separator, PElem.Registers[j]: 10: 0);
+                    Writeln(F);
+                end;
+
+            pElem := ActiveCircuit[ActiveActor].Storage2Elements.Next;
+        end;
+
+        GlobalResult := FileNm;
+
+    finally
+
+        CloseFile(F);
+
+    end;
+
+
+end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportGenMeters(FileNm:String);
+procedure ExportGenMeters(FileNm: String);
 
 // Export Values of Generator Meter Elements
 // If switch /m is specified, a separate file is created for each generator using the generator's name
 
-Begin
+begin
 
 
-  If Lowercase(Copy(FileNm,1,2)) = '/m'
-  THEN WriteMultipleGenMeterFiles
-  ELSE WriteSingleGenMeterFile(FileNM);
+    if Lowercase(Copy(FileNm, 1, 2)) = '/m' then
+        WriteMultipleGenMeterFiles
+    else
+        WriteSingleGenMeterFile(FileNM);
 
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportPVSystemMeters(FileNm:String);
+procedure ExportPVSystemMeters(FileNm: String);
 
 // Export Values of Generator Meter Elements
 // If switch /m is specified, a separate file is created for each generator using the generator's name
 
-Begin
+begin
 
 
-  If Lowercase(Copy(FileNm,1,2)) = '/m'
-  THEN WriteMultiplePVSystemMeterFiles
-  ELSE WriteSinglePVSystemMeterFile(FileNM);
+    if Lowercase(Copy(FileNm, 1, 2)) = '/m' then
+        WriteMultiplePVSystemMeterFiles
+    else
+        WriteSinglePVSystemMeterFile(FileNM);
 
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportPVSystem2Meters(FileNm:String);
+procedure ExportPVSystem2Meters(FileNm: String);
 
 // Export Values of Generator Meter Elements
 // If switch /m is specified, a separate file is created for each generator using the generator's name
 
-Begin
+begin
 
 
-  If Lowercase(Copy(FileNm,1,2)) = '/m'
-  THEN WriteMultiplePVSystem2MeterFiles
-  ELSE WriteSinglePVSystem2MeterFile(FileNM);
+    if Lowercase(Copy(FileNm, 1, 2)) = '/m' then
+        WriteMultiplePVSystem2MeterFiles
+    else
+        WriteSinglePVSystem2MeterFile(FileNM);
 
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportStorageMeters(FileNm:String);
+procedure ExportStorageMeters(FileNm: String);
 
 // Export Values of Generator Meter Elements
 // If switch /m is specified, a separate file is created for each generator using the generator's name
 
-Begin
+begin
 
 
-  If Lowercase(Copy(FileNm,1,2)) = '/m'
-  THEN WriteMultipleStorageMeterFiles
-  ELSE WriteSingleStorageMeterFile(FileNM);
+    if Lowercase(Copy(FileNm, 1, 2)) = '/m' then
+        WriteMultipleStorageMeterFiles
+    else
+        WriteSingleStorageMeterFile(FileNM);
 
-End;
+end;
 
-Procedure ExportStorage2Meters(FileNm:String);
+procedure ExportStorage2Meters(FileNm: String);
 
 // Export Values of Generator Meter Elements
 // If switch /m is specified, a separate file is created for each generator using the generator's name
 
-Begin
+begin
 
 
-  If Lowercase(Copy(FileNm,1,2)) = '/m'
-  THEN WriteMultipleStorage2MeterFiles
-  ELSE WriteSingleStorage2MeterFile(FileNM);
+    if Lowercase(Copy(FileNm, 1, 2)) = '/m' then
+        WriteMultipleStorage2MeterFiles
+    else
+        WriteSingleStorage2MeterFile(FileNM);
 
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportLoads(FileNm:String);
+procedure ExportLoads(FileNm: String);
 
 // Export Loads to view present allocation
 
 
-Var
-   F  :TextFile;
-   pElem  :TLoadObj;
-   Separator :String;
+var
+    F: TextFile;
+    pElem: TLoadObj;
+    Separator: String;
 
-Begin
+begin
 
-  Separator := ', ';
+    Separator := ', ';
 
 
- TRY
+    try
 
-     AssignFile(F, FileNm);
-     ReWrite(F);
+        AssignFile(F, FileNm);
+        ReWrite(F);
      {Write  Header}
-     Writeln(F, 'Load, Connected KVA, Allocation Factor, Phases, kW, kvar, PF, Model');
+        Writeln(F, 'Load, Connected KVA, Allocation Factor, Phases, kW, kvar, PF, Model');
 
-     pElem := ActiveCircuit[ActiveActor].Loads.First;
-     WHILE pElem <> NIL Do
-     Begin
-        IF pElem.Enabled THEN
-        WITH pElem Do
-        BEGIN
-            Write(F, Uppercase(Name));
-            Write(F, Separator, ConnectedkVA:8:1);
-            Write(F, Separator, kVAAllocationFactor:5:3);
-            Write(F, Separator, NPhases:0);
-            Write(F, Separator, kWBase:8:1);
-            Write(F, Separator, kvarBase:8:1);
-            Write(F, Separator, PFNominal:5:3);
-            Write(F, Separator, FLoadModel:0);
-        END;
-        Writeln(F);
-        pElem := ActiveCircuit[ActiveActor].Loads.Next;
-     End;
+        pElem := ActiveCircuit[ActiveActor].Loads.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+                with pElem do
+                begin
+                    Write(F, Uppercase(Name));
+                    Write(F, Separator, ConnectedkVA: 8: 1);
+                    Write(F, Separator, kVAAllocationFactor: 5: 3);
+                    Write(F, Separator, NPhases: 0);
+                    Write(F, Separator, kWBase: 8: 1);
+                    Write(F, Separator, kvarBase: 8: 1);
+                    Write(F, Separator, PFNominal: 5: 3);
+                    Write(F, Separator, FLoadModel: 0);
+                end;
+            Writeln(F);
+            pElem := ActiveCircuit[ActiveActor].Loads.Next;
+        end;
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
-  FINALLY
+    finally
 
-     CloseFile(F);
+        CloseFile(F);
 
-  End;
+    end;
 
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportCapacity(FileNm:String);
+procedure ExportCapacity(FileNm: String);
 
 {
  Similar to export currents except does only max of the phases and compares that
  to the Normamps and Emergamps rating
 }
 
-Var
-    F          :TextFile;
-    cBuffer    :pComplexArray;
-    pElem      :TPDElement;
+var
+    F: TextFile;
+    cBuffer: pComplexArray;
+    pElem: TPDElement;
 
-Begin
+begin
 
-  cBuffer := nil;
+    cBuffer := NIL;
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
-     Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
+        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
 
-     Writeln(F, 'Name, Imax, %normal, %emergency, kW, kvar, NumCustomers, TotalCustomers, NumPhases, kVBase');
+        Writeln(F, 'Name, Imax, %normal, %emergency, kW, kvar, NumCustomers, TotalCustomers, NumPhases, kVBase');
 
      // PDELEMENTS ONLY
-     pElem := ActiveCircuit[ActiveActor].PDElements.First;
-     WHILE pElem<>nil DO BEGIN
-       IF pElem.Enabled THEN BEGIN
-          pElem.GetCurrents(cBuffer, ActiveActor);
-          CalcAndWriteMaxCurrents(F, pElem, Cbuffer);
-       END;
-        pElem := ActiveCircuit[ActiveActor].PDElements.Next;
-     END;
+        pElem := ActiveCircuit[ActiveActor].PDElements.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+            begin
+                pElem.GetCurrents(cBuffer, ActiveActor);
+                CalcAndWriteMaxCurrents(F, pElem, Cbuffer);
+            end;
+            pElem := ActiveCircuit[ActiveActor].PDElements.Next;
+        end;
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
-  FINALLY
-     If Assigned(cBuffer) Then Freemem(cBuffer);
-     CloseFile(F);
+    finally
+        if Assigned(cBuffer) then
+            Freemem(cBuffer);
+        CloseFile(F);
 
-  End;
+    end;
 
 
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportOverloads(FileNm:String);
+procedure ExportOverloads(FileNm: String);
 
-Var
-    F              :TextFile;
-    cBuffer        :pComplexArray;  // Allocate to max total conductors
+var
+    F: TextFile;
+    cBuffer: pComplexArray;  // Allocate to max total conductors
     NCond,
     i,
-    j              :Integer;
-    PDElem         :TPDElement;
+    j: Integer;
+    PDElem: TPDElement;
     Iph,
-    I012           :Array[1..3] of Complex;
-    I0,I1,I2,
+    I012: array[1..3] of Complex;
+    I0, I1, I2,
     iNormal,
-    iEmerg, Cmax   :Double;
-    Separator      :String;
-    Spower         :Double;
+    iEmerg, Cmax: Double;
+    Separator: String;
+    Spower: Double;
 
-Begin
+begin
 
-  cBuffer := nil;
-  
-  Try
-     Assignfile(F,FileNm);
-     ReWrite(F);
+    cBuffer := NIL;
+
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
     {Allocate cBuffer big enough for largest circuit element}
-     Getmem(cbuffer, sizeof(cBuffer^[1])* GetMaxCktElementSize);
+        Getmem(cbuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
 
      {Sequence Currents}
-     Writeln(F,'Element, Terminal,  I1, AmpsOver, kVAOver, %Normal, %Emergency, I2, %I2/I1, I0, %I0/I1');
+        Writeln(F, 'Element, Terminal,  I1, AmpsOver, kVAOver, %Normal, %Emergency, I2, %I2/I1, I0, %I0/I1');
 
-     Separator := ', ';
+        Separator := ', ';
 
      // PDELEMENTS Only
-     PDelem := ActiveCircuit[ActiveActor].PDElements.First;
+        PDelem := ActiveCircuit[ActiveActor].PDElements.First;
 
-     WHILE PDelem<>nil DO BEGIN
-       IF (PDelem.Enabled)
-       THEN IF (CLASSMASK AND PDElem.DSSObjType) <> CAP_ELEMENT    // ignore caps
-       THEN BEGIN
-        NCond := PDelem.NConds;
-        PDelem.GetCurrents(cBuffer, ActiveActor);
+        while PDelem <> NIL do
+        begin
+            if (PDelem.Enabled) then
+                if (CLASSMASK and PDElem.DSSObjType) <> CAP_ELEMENT    // ignore caps
+                then
+                begin
+                    NCond := PDelem.NConds;
+                    PDelem.GetCurrents(cBuffer, ActiveActor);
 
-        FOR j := 1 to 1 Do       // only for terminal 1
-        BEGIN
-            Cmax := 0.0;
-            For i := 1 to Min(PDelem.Nphases, 3) Do Begin   // Check only first 3 phases
-               Iph[i] :=cBuffer^[(j-1)*Ncond + i];
-               Cmax := max(Cmax, Cabs(Iph[i]));
-            End;
-            IF (PDelem.Nphases >= 3)
-              THEN BEGIN   // Report Symmetrical Component Currents for
-                  Phase2SymComp(@Iph, @I012);
-                  I0 := Cabs(I012[1]);   // Get abs values to report
-                  I1 := Cabs(I012[2]);
-                  I2 := Cabs(I012[3]);
-              END
-              ELSE BEGIN   // Other than 3-phase
-                 I0 := 0.0;
-                 I1 := Cabs(Iph[1]);    // Ambiguous: Report only first phase
-                 I2 := 0.0;
-                 Cmax := I1;
-              END;
+                    for j := 1 to 1 do       // only for terminal 1
+                    begin
+                        Cmax := 0.0;
+                        for i := 1 to Min(PDelem.Nphases, 3) do
+                        begin   // Check only first 3 phases
+                            Iph[i] := cBuffer^[(j - 1) * Ncond + i];
+                            Cmax := max(Cmax, Cabs(Iph[i]));
+                        end;
+                        if (PDelem.Nphases >= 3) then
+                        begin   // Report Symmetrical Component Currents for
+                            Phase2SymComp(@Iph, @I012);
+                            I0 := Cabs(I012[1]);   // Get abs values to report
+                            I1 := Cabs(I012[2]);
+                            I2 := Cabs(I012[3]);
+                        end
+                        else
+                        begin   // Other than 3-phase
+                            I0 := 0.0;
+                            I1 := Cabs(Iph[1]);    // Ambiguous: Report only first phase
+                            I2 := 0.0;
+                            Cmax := I1;
+                        end;
 
-            IF (PdElem.Normamps > 0.0) OR (PdElem.Emergamps>0.0)
-            THEN
-             IF (CMax > PDElem.NormAmps) OR (Cmax > pdelem.EmergAmps)
-             THEN Begin
+                        if (PdElem.Normamps > 0.0) or (PdElem.Emergamps > 0.0) then
+                            if (CMax > PDElem.NormAmps) or (Cmax > pdelem.EmergAmps) then
+                            begin
                // Get terminal 1 power
-                 Spower := Cabs(PDElem.Power[1,ActiveActor]) * 0.001;   // kW
+                                Spower := Cabs(PDElem.Power[1, ActiveActor]) * 0.001;   // kW
 
-                 Write(F, Format('%s, %d, ' ,[Pad(('"'+pDelem.DSSClassName + '.' + Uppercase(pDelem.Name)+'"'), 22),j]));
-                 Write(F, Format('%8.2f, ',[I1 ]));
-                 IF  j = 1 THEN Begin // Only for 1st Terminal
-                      iNormal := PDelem.NormAmps;
-                      IF iNormal > 0.0
-                          THEN Begin
-                                    Write(F, Format('%8.2f, %10.2f', [(Cmax - iNormal), Spower*(Cmax-iNormal)/iNormal ]));
-                                    Write(F, Separator, Cmax/iNormal*100.0:8:1);
-                               End
-                          ELSE Write(F, Separator, '     0.0');
-                      iEmerg :=  PDelem.EmergAmps;
-                      IF iEmerg > 0.0
-                          THEN Write(F, Separator, Cmax/iEmerg*100.0:8:1)
-                          ELSE Write(F, Separator, '     0.0');
-                   End
-                 ELSE Write(F, Separator, '       0', Separator, '       0');
-                 Write(F, Separator, I2:8:1);
-                 IF I1>0.0 THEN Write(F, Separator, 100.0*I2/I1:8:1) ELSE Write(F, Separator,'0.0');
-                 Write(F, Separator, I0:8:1);
-                 IF I1>0.0 THEN Write(F, Separator, 100.0*I0/I1:8:1) ELSE Write(F, Separator,'0.0');
-                 Writeln(F);
-             End;
+                                Write(F, Format('%s, %d, ', [Pad(('"' + pDelem.DSSClassName + '.' + Uppercase(pDelem.Name) + '"'), 22), j]));
+                                Write(F, Format('%8.2f, ', [I1]));
+                                if j = 1 then
+                                begin // Only for 1st Terminal
+                                    iNormal := PDelem.NormAmps;
+                                    if iNormal > 0.0 then
+                                    begin
+                                        Write(F, Format('%8.2f, %10.2f', [(Cmax - iNormal), Spower * (Cmax - iNormal) / iNormal]));
+                                        Write(F, Separator, Cmax / iNormal * 100.0: 8: 1);
+                                    end
+                                    else
+                                        Write(F, Separator, '     0.0');
+                                    iEmerg := PDelem.EmergAmps;
+                                    if iEmerg > 0.0 then
+                                        Write(F, Separator, Cmax / iEmerg * 100.0: 8: 1)
+                                    else
+                                        Write(F, Separator, '     0.0');
+                                end
+                                else
+                                    Write(F, Separator, '       0', Separator, '       0');
+                                Write(F, Separator, I2: 8: 1);
+                                if I1 > 0.0 then
+                                    Write(F, Separator, 100.0 * I2 / I1: 8: 1)
+                                else
+                                    Write(F, Separator, '0.0');
+                                Write(F, Separator, I0: 8: 1);
+                                if I1 > 0.0 then
+                                    Write(F, Separator, 100.0 * I0 / I1: 8: 1)
+                                else
+                                    Write(F, Separator, '0.0');
+                                Writeln(F);
+                            end;
 
-        END;
-       END;
-        PDelem := ActiveCircuit[ActiveActor].PDElements.Next;
-     END;
+                    end;
+                end;
+            PDelem := ActiveCircuit[ActiveActor].PDElements.Next;
+        end;
 
-     GlobalResult := FileNm;
-     
+        GlobalResult := FileNm;
 
-  FINALLY
-     If Assigned(Cbuffer) then Freemem(cBuffer);
-     CloseFile(F);
 
-  End;
-End;
+    finally
+        if Assigned(Cbuffer) then
+            Freemem(cBuffer);
+        CloseFile(F);
 
-Procedure ExportUnserved(FileNm:String; UE_Only:Boolean);
+    end;
+end;
 
-Var
-    F       :TextFile;
-    PLoad:TLoadObj;
-    DoIt :Boolean;
+procedure ExportUnserved(FileNm: String; UE_Only: Boolean);
 
-Begin
+var
+    F: TextFile;
+    PLoad: TLoadObj;
+    DoIt: Boolean;
 
-  Try
-     Assignfile(F,FileNm);
-     ReWrite(F);
+begin
 
-     Writeln(F,'Load, Bus, kW, EEN_Factor,  UE_Factor');
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
+
+        Writeln(F, 'Load, Bus, kW, EEN_Factor,  UE_Factor');
 
      // Load
-     pLoad := ActiveCircuit[ActiveActor].Loads.First;
-     WHILE pLoad<>nil DO
-     Begin
-           IF (pLoad.Enabled)
-           THEN Begin
-              DoIt := FALSE;
-              IF UE_Only THEN Begin
-                IF pLoad.Unserved[ActiveActor] THEN DoIt := TRUE; end
-              ELSE
-                IF pLoad.Get_ExceedsNormal(ActiveActor) THEN DoIt := TRUE;
+        pLoad := ActiveCircuit[ActiveActor].Loads.First;
+        while pLoad <> NIL do
+        begin
+            if (pLoad.Enabled) then
+            begin
+                DoIt := FALSE;
+                if UE_Only then
+                begin
+                    if pLoad.Unserved[ActiveActor] then
+                        DoIt := TRUE;
+                end
+                else
+                if pLoad.Get_ExceedsNormal(ActiveActor) then
+                    DoIt := TRUE;
 
-              IF DoIt
-              THEN Begin
-                  Write(F, Uppercase(pLoad.Name),', ');
-                  Write(F, pLoad.GetBus(1),', ');
-                  Write(F, pLoad.kWBase:8:0,', ');
-                  Write(F, pLoad.EEN_Factor:9:3,', ');
-                  Write(F, pLoad.UE_Factor:9:3);
-                  Writeln(F);
-              End;
+                if DoIt then
+                begin
+                    Write(F, Uppercase(pLoad.Name), ', ');
+                    Write(F, pLoad.GetBus(1), ', ');
+                    Write(F, pLoad.kWBase: 8: 0, ', ');
+                    Write(F, pLoad.EEN_Factor: 9: 3, ', ');
+                    Write(F, pLoad.UE_Factor: 9: 3);
+                    Writeln(F);
+                end;
 
-           End;
-       pLoad := ActiveCircuit[ActiveActor].Loads.Next;
-     End;
+            end;
+            pLoad := ActiveCircuit[ActiveActor].Loads.Next;
+        end;
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
-  Finally
+    finally
 
-     CloseFile(F);
+        CloseFile(F);
 
-  End;
+    end;
 
-End;
+end;
 
-Procedure ExportYprim(FileNm:String);
+procedure ExportYprim(FileNm: String);
 
 {Exports  YPrim matrices for all  Circuit Elements}
 
-Var
-    F       :TextFile;
-    i, j, k :Integer;
-    cValues :pComplexArray;
+var
+    F: TextFile;
+    i, j, k: Integer;
+    cValues: pComplexArray;
 
-Begin
+begin
 
-  If ActiveCircuit[ActiveActor]=Nil then Exit;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
 
-  Try
-     Assignfile(F,FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
-     With ActiveCircuit[ActiveActor] Do Begin
-        For k := 1 to NumDevices Do BEGIN
-          ActiveCktElement := CktElements.Get(k);
-          If  ActiveCktElement.Enabled THEN Begin
-              If (ActiveCktElement is TPDElement) or (ActiveCktElement is TPCElement) then
-              With ActiveCktElement Do  Begin
-                Writeln(F, ParentClass.Name,'.',Uppercase(Name));
-                cValues := GetYprimValues(ALL_YPRIM);
-                For i := 1 to Yorder Do  Begin
-                 For j := 1 to Yorder Do Write(F, Format('%-13.10g, %-13.10g, ',[cValues^[i+(j-1)*Yorder].re, cValues^[i+(j-1)*Yorder].im]));
-                 Writeln(F);
-                End;
-              End;
-          End;
-        End;
-     END ;
+        with ActiveCircuit[ActiveActor] do
+        begin
+            for k := 1 to NumDevices do
+            begin
+                ActiveCktElement := CktElements.Get(k);
+                if ActiveCktElement.Enabled then
+                begin
+                    if (ActiveCktElement is TPDElement) or (ActiveCktElement is TPCElement) then
+                        with ActiveCktElement do
+                        begin
+                            Writeln(F, ParentClass.Name, '.', Uppercase(Name));
+                            cValues := GetYprimValues(ALL_YPRIM);
+                            for i := 1 to Yorder do
+                            begin
+                                for j := 1 to Yorder do
+                                    Write(F, Format('%-13.10g, %-13.10g, ', [cValues^[i + (j - 1) * Yorder].re, cValues^[i + (j - 1) * Yorder].im]));
+                                Writeln(F);
+                            end;
+                        end;
+                end;
+            end;
+        end;
 
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
-  Finally
+    finally
 
-     CloseFile(F);
+        CloseFile(F);
 
-  End;
+    end;
 
-End;
+end;
 
 // illustrate retrieval of System Y using compressed column format
-Procedure ExportY(FileNm:String; TripletOpt:Boolean);
+procedure ExportY(FileNm: String; TripletOpt: Boolean);
 
 {Exports System Y Matrix in Node Order}
 
-Var
-    F                :TextFile;
-    i,j,p            :LongWord;
-    col,row          :LongWord;
-    hY               :NativeUInt;
-    nBus, nNZ        :LongWord;
-    ColPtr, RowIdx   :array of LongWord;
-    cVals            :array of Complex;
-    re, im           :Double;
+var
+    F: TextFile;
+    i, j, p: Longword;
+    col, row: Longword;
+    hY: NativeUInt;
+    nBus, nNZ: Longword;
+    ColPtr, RowIdx: array of Longword;
+    cVals: array of Complex;
+    re, im: Double;
 
-Begin
+begin
 
-  If ActiveCircuit[ActiveActor]=Nil then Exit;
-  hY := ActiveCircuit[ActiveActor].Solution.hY;
-  If hY <= 0 Then Begin
-     DoSimpleMsg('Y Matrix not Built.', 222);
-     Exit;
-  End;
+    if ActiveCircuit[ActiveActor] = NIL then
+        Exit;
+    hY := ActiveCircuit[ActiveActor].Solution.hY;
+    if hY <= 0 then
+    begin
+        DoSimpleMsg('Y Matrix not Built.', 222);
+        Exit;
+    end;
   // this compresses the entries if necessary - no extra work if already solved
-  FactorSparseMatrix(hY);
-  GetNNZ(hY, @nNZ);
-  GetSize(hY, @nBus); // we should already know this
+    FactorSparseMatrix(hY);
+    GetNNZ(hY, @nNZ);
+    GetSize(hY, @nBus); // we should already know this
 
-  Try
-     Assignfile(F,FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
-     if TripletOpt then begin
-       SetLength (ColPtr, nNZ);
-       SetLength (RowIdx, nNZ);
-       SetLength (cVals, nNZ);
-       GetTripletMatrix (hY, nNZ, @RowIdx[0], @ColPtr[0], @cVals[0]);
-       Writeln(F, 'Row,Col,G,B');
-       for i := 0 to nNZ - 1 do begin
-         col := ColPtr[i] + 1;
-         row := RowIdx[i] + 1;
-         if row >= col then begin
-           re := cVals[i].re;
-           im := cVals[i].im;
-           Writeln (F, Format('%d,%d,%.10g,%.10g', [row, col, re, im]));
-         end;
-       end;
-     end else begin
-       SetLength (ColPtr, nBus + 1);
-       SetLength (RowIdx, nNZ);
-       SetLength (cVals, nNZ);
-       GetCompressedMatrix (hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
+        if TripletOpt then
+        begin
+            SetLength(ColPtr, nNZ);
+            SetLength(RowIdx, nNZ);
+            SetLength(cVals, nNZ);
+            GetTripletMatrix(hY, nNZ, @RowIdx[0], @ColPtr[0], @cVals[0]);
+            Writeln(F, 'Row,Col,G,B');
+            for i := 0 to nNZ - 1 do
+            begin
+                col := ColPtr[i] + 1;
+                row := RowIdx[i] + 1;
+                if row >= col then
+                begin
+                    re := cVals[i].re;
+                    im := cVals[i].im;
+                    Writeln(F, Format('%d,%d,%.10g,%.10g', [row, col, re, im]));
+                end;
+            end;
+        end
+        else
+        begin
+            SetLength(ColPtr, nBus + 1);
+            SetLength(RowIdx, nNZ);
+            SetLength(cVals, nNZ);
+            GetCompressedMatrix(hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
        {Write out fully qualified Bus Names}
-       With ActiveCircuit[ActiveActor] Do Begin
-          Writeln(F, Format('%d, ',[NumNodes]));
+            with ActiveCircuit[ActiveActor] do
+            begin
+                Writeln(F, Format('%d, ', [NumNodes]));
   (*        For i := 1 to NumNodes DO BEGIN
              j :=  MapNodeToBus^[i].BusRef;
              Write(F, Format('%s.%-d, +j,',[BusList.Get(j), MapNodeToBus^[i].NodeNum]));
           END;
           Writeln(F);
   *)
-          For i := 1 to NumNodes Do Begin
-             j :=  MapNodeToBus^[i].BusRef;
-             Write(F, Format('"%s.%-d", ',[Uppercase(BusList.Get(j)), MapNodeToBus^[i].NodeNum]));
-             For j := 1 to NumNodes Do Begin
-                re := 0.0;
-                im := 0.0;
+                for i := 1 to NumNodes do
+                begin
+                    j := MapNodeToBus^[i].BusRef;
+                    Write(F, Format('"%s.%-d", ', [Uppercase(BusList.Get(j)), MapNodeToBus^[i].NodeNum]));
+                    for j := 1 to NumNodes do
+                    begin
+                        re := 0.0;
+                        im := 0.0;
                 // search for a non-zero element [i,j]
                 //  DSS indices are 1-based, KLU indices are 0-based
-                for p := ColPtr[j-1] to ColPtr[j] - 1 do begin
-                  if RowIdx[p] + 1 = i then begin
-                    re := cVals[p].re;
-                    im := cVals[p].im;
-                  end;
+                        for p := ColPtr[j - 1] to ColPtr[j] - 1 do
+                        begin
+                            if RowIdx[p] + 1 = i then
+                            begin
+                                re := cVals[p].re;
+                                im := cVals[p].im;
+                            end;
+                        end;
+                        Write(F, Format('%-13.10g, +j %-13.10g,', [re, im]));
+                    end;
+                    Writeln(F);
                 end;
-                Write(F, Format('%-13.10g, +j %-13.10g,', [re, im]));
-             End;
-             Writeln(F);
-          End;
-        End;
-     end;
+            end;
+        end;
 
-     GlobalResult := FileNm;
-  Finally
-     CloseFile(F);
-  End;
-End;
+        GlobalResult := FileNm;
+    finally
+        CloseFile(F);
+    end;
+end;
 
-Procedure ExportSeqZ(FileNm:String);
+procedure ExportSeqZ(FileNm: String);
 
 // Export Symmetrical Component Impedances at each bus
 
-Var
-   F :TextFile;
-   i:Integer;
-   Z1, Z0 :Complex;
-   X1R1, X0R0 : Double;
+var
+    F: TextFile;
+    i: Integer;
+    Z1, Z0: Complex;
+    X1R1, X0R0: Double;
 
-
-Begin
-
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
-
-     Writeln(F,'Bus,  NumNodes, R1, X1, R0, X0, Z1, Z0, "X1/R1", "X0/R0"');
-     WITH ActiveCircuit[ActiveActor] DO
-     BEGIN
-       FOR i := 1 to NumBuses DO
-       BEGIN
-
-         Z1 := Buses^[i].Zsc1;
-         Z0 := Buses^[i].Zsc0;
-         If Z1.re<>0.0 then  X1R1 := Z1.im/Z1.re Else X1R1 := 1000.0;
-         If Z0.re<>0.0 then  X0R0 := Z0.im/Z0.re Else X0R0 := 1000.0;
-
-         Writeln(F,
-         Format('"%s", %d, %10.6g, %10.6g, %10.6g, %10.6g, %10.6g, %10.6g, %8.4g, %8.4g',
-                [Uppercase(BusList.Get(i)), Buses^[i].NumNodesThisBus,
-                 Z1.re, Z1.im, Z0.Re, Z0.im, Cabs(Z1), Cabs(Z0), X1R1, X0R0 ]
-         ));
-
-       END;
-     END;
-
-
-     GlobalResult := FileNm;
-
-  FINALLY
-
-     CloseFile(F);
-  End;
-
-End;
-
-Procedure ExportUuids(FileNm:String);
-Var
-  F       : TextFile;
-  clsLnCd : TLineCode;
-  clsGeom : TLineGeometry;
-  clsWire : TWireData;
-  clsXfCd : TXfmrCode;
-  clsSpac : TLineSpacing;
-  clsTape : TTSData;
-  clsConc : TCNData;
-  pName   : TNamedObject;
-  i       : integer;
-Begin
-  Try
-    clsLnCd := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('linecode'));
-    clsWire := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('wiredata'));
-    clsGeom := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('linegeometry'));
-    clsXfCd := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('xfmrcode'));
-    clsSpac := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('linespacing'));
-    clsTape := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('TSData'));
-    clsConc := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('CNData'));
-
-    Assignfile(F, FileNm);
-    ReWrite(F);
-
-    pName := ActiveCircuit[ActiveActor];
-    Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-
-    for i :=1 to ActiveCircuit[ActiveActor].NumBuses do begin
-      pName := ActiveCircuit[ActiveActor].Buses^[i];
-      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-    end;
-
-    pName := ActiveCircuit[ActiveActor].CktElements.First;
-    while pName <> nil do begin
-      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-      pName := ActiveCircuit[ActiveActor].CktElements.Next;
-    End;
-
-    pName := clsLnCd.ElementList.First;
-    while pName <> nil do begin
-      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-      pName := clsLnCd.ElementList.Next;
-    End;
-
-    pName := clsWire.ElementList.First;
-    while pName <> nil do begin
-      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-      pName := clsWire.ElementList.Next;
-    End;
-
-    pName := clsGeom.ElementList.First;
-    while pName <> nil do begin
-      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-      pName := clsGeom.ElementList.Next;
-    End;
-
-    pName := clsXfCd.ElementList.First;
-    while pName <> nil do begin
-      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-      pName := clsXfCd.ElementList.Next;
-    End;
-
-    pName := clsSpac.ElementList.First;
-    while pName <> nil do begin
-      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-      pName := clsSpac.ElementList.Next;
-    End;
-
-    pName := clsTape.ElementList.First;
-    while pName <> nil do begin
-      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-      pName := clsTape.ElementList.Next;
-    End;
-
-    pName := clsConc.ElementList.First;
-    while pName <> nil do begin
-      Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-      pName := clsConc.ElementList.Next;
-    End;
-
-    WriteHashedUUIDs (F);
-
-  Finally
-    CloseFile(F);
-    FreeUuidList;
-  End;
-End;
-
-Procedure ExportCounts(FileNm:String);
-Var
-  F   : TextFile;
-  cls :TDSSClass;
-Begin
-  Try
-    Assignfile(F, FileNm);
-    ReWrite(F);
-    Writeln (F, 'Format: DSS Class Name = Instance Count');
-    Writeln (F);
-    cls := DSSClassList[ActiveActor].First;
-    while cls <> nil do begin
-      Writeln (F, Format ('%s = %d', [cls.Name, cls.ElementCount]));
-      cls := DSSClassList[ActiveActor].Next;
-    end;
-  Finally
-    CloseFile(F);
-  End;
-End;
-
-Procedure ExportSummary(FileNm:String);
-Var
-  F   : TextFile;
-  cPower, cLosses :Complex;
-
-Begin
-  Try
-
-    Assignfile(F, FileNm);
-    If FileExists(FileNm) then Append(F) Else
-    Begin    // Create and write the header
-        ReWrite(F);
-        Write(F, 'DateTime, CaseName, ');
-        Write (F, 'Status, Mode, Number, LoadMult, NumDevices, NumBuses, NumNodes');
-        Write (F, ', Iterations, ControlMode, ControlIterations');
-        Write (F, ', MostIterationsDone');
-        If ActiveCircuit[ActiveActor] <> Nil Then
-          If ActiveCircuit[ActiveActor].Issolved and not ActiveCircuit[ActiveActor].BusNameRedefined Then
-          Begin
-              Write(F, ', Year, Hour, MaxPuVoltage, MinPuVoltage, TotalMW, TotalMvar');
-              Write(F, ', MWLosses, pctLosses, MvarLosses, Frequency');
-          End;
-
-        Writeln (F);
-    End;
-
-    Write(F, Format('"%s", ',  [DateTimeToStr(Now)]));
-    If ActiveCircuit[ActiveActor] <> Nil Then Write(F, Format('%s, ',  [ActiveCircuit[ActiveActor].CaseName]))
-                            Else Write(F, 'NONE, ');
-
-    IF ActiveCircuit[ActiveActor].Issolved Then Write(F,'SOLVED')
-                              Else Write(F,'UnSolved');
-
-    Write(F, Format(', %s',    [GetSolutionModeID]));
-    Write(F, Format(', %d',    [ActiveCircuit[ActiveActor].Solution.NumberofTimes]));
-    Write(F, Format(', %8.3f', [ActiveCircuit[ActiveActor].LoadMultiplier]));
-    Write(F, Format(', %d',    [ActiveCircuit[ActiveActor].NumDevices]));
-    Write(F, Format(', %d',    [ActiveCircuit[ActiveActor].NumBuses]));
-    Write(F, Format(', %d',    [ActiveCircuit[ActiveActor].NumNodes]));
-    Write(F, Format(', %d',    [ActiveCircuit[ActiveActor].Solution.Iteration]));
-    Write(F, Format(', %s',    [GetControlModeID]));
-    Write(F, Format(', %d',    [ActiveCircuit[ActiveActor].Solution.ControlIteration]));
-    Write(F, Format(', %d',    [ActiveCircuit[ActiveActor].Solution.MostIterationsDone ]));
-    If ActiveCircuit[ActiveActor] <> Nil Then
-      If ActiveCircuit[ActiveActor].Issolved and not ActiveCircuit[ActiveActor].BusNameRedefined Then
-      Begin
-          Write(F, Format(', %d',    [ActiveCircuit[ActiveActor].Solution.Year]));
-          Write(F, Format(', %d',    [ActiveCircuit[ActiveActor].Solution.DynaVars.intHour]));
-          Write(F, Format(', %-.5g', [GetMaxPUVoltage]));
-          Write(F, Format(', %-.5g', [GetMinPUVoltage(TRUE)]));
-          cPower :=  CmulReal(GetTotalPowerFromSources(ActiveActor), 0.000001);  // MVA
-          Write(F, Format(', %-.6g', [cPower.re]));
-          Write(F, Format(', %-.6n', [cPower.im]));
-          cLosses := CmulReal(ActiveCircuit[ActiveActor].Losses[ActiveActor], 0.000001);
-          If cPower.re <> 0.0 Then Write(F, Format(', %-.6g, %-.4g',[cLosses.re,(Closses.re/cPower.re*100.0)]))
-          Else Write(F, 'Total Active Losses:   ****** MW, (**** %%)');
-          Write(F, Format(', %-.6g',  [cLosses.im]));
-          Write(F, Format(', %-g',    [ActiveCircuit[ActiveActor].Solution.Frequency]));
-      End;
-
-    Writeln(F);
-
-    GlobalResult := FileNm;
-
-  Finally
-    CloseFile(F);
-  End;
-End;
-
-Procedure ExportBusCoords(FileNm:String);
-// Export bus x, y coordinates
-
-Var
-   F :TextFile;
-   i:Integer;
-
-
-Begin
-
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
-
-     With ActiveCircuit[ActiveActor] Do
-     For i := 1 to NumBuses Do
-       Begin
-           If Buses^[i].CoordDefined then Writeln(F, Format('%s, %-13.11g, %-13.11g', [CheckForBlanks(Uppercase(BusList.Get(i))), Buses^[i].X, Buses^[i].Y]));
-       End;
-
-     GlobalResult := FileNm;
-
-  FINALLY
-
-     CloseFile(F);
-  End;
-End;
-
-Procedure WriteNewLine(Var F:TextFile;
-                       Const CktELementName:String; DistFromMeter1, puV1, DistFromMeter2, puV2:Double;
-                       ColorCode, Thickness, LineType:Integer;
-                       MarkCenter:Integer;
-                       CenterMarkerCode,  NodeMarkerCode, NodeMarkerWidth:Integer );
-
-Begin
-       Write(F, Format('%s, %.6g, %.6g, %.6g, %.6g,',[Uppercase(CktElementName), DistFromMeter1, puV1, DistFromMeter2, puV2 ]));
-       Write(F, Format('%d, %d, %d, ',[ColorCode, Thickness, LineType ]));
-       Write(F, Format('%d, ',[ MarkCenter ]));
-       Write(F, Format('%d, %d, %d',[CenterMarkerCode,  NodeMarkerCode, NodeMarkerWidth ]));
-       Writeln(F);
-End;
-
-
-Procedure ExportProfile(FileNm:String; PhasesToPlot:Integer);
-
-Var
-   iEnergyMeter       :Integer;
-   ActiveEnergyMeter  :TEnergyMeterObj;
-   PresentCktElement  :TDSSCktElement;
-   Bus1, Bus2         :TDSSbus;
-   puV1, puV2         :Double;
-   iphs               :Integer;
-   iphs2              :Integer;
-   S                  :String;
-   F                  :TextFile;
-   Linetype           :Integer;
 
 begin
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
-     Write(F, 'Name, Distance1, puV1, Distance2, puV2, Color, Thickness, Linetype, Markcenter, Centercode, NodeCode, NodeWidth,');
+        Writeln(F, 'Bus,  NumNodes, R1, X1, R0, X0, Z1, Z0, "X1/R1", "X0/R0"');
+        with ActiveCircuit[ActiveActor] do
+        begin
+            for i := 1 to NumBuses do
+            begin
 
-    {New graph created before this routine is entered}
-       case phasesToPlot of
-           PROFILELL, PROFILELLALL, PROFILELLPRI:  S  := 'L-L Voltage Profile';
-       else
-            S  := 'L-N Voltage Profile';
-       end;
+                Z1 := Buses^[i].Zsc1;
+                Z0 := Buses^[i].Zsc0;
+                if Z1.re <> 0.0 then
+                    X1R1 := Z1.im / Z1.re
+                else
+                    X1R1 := 1000.0;
+                if Z0.re <> 0.0 then
+                    X0R0 := Z0.im / Z0.re
+                else
+                    X0R0 := 1000.0;
 
-       Writeln(F, 'Title=',S, ', Distance in km');
+                Writeln(F,
+                    Format('"%s", %d, %10.6g, %10.6g, %10.6g, %10.6g, %10.6g, %10.6g, %8.4g, %8.4g',
+                    [Uppercase(BusList.Get(i)), Buses^[i].NumNodesThisBus,
+                    Z1.re, Z1.im, Z0.Re, Z0.im, Cabs(Z1), Cabs(Z0), X1R1, X0R0]
+                    ));
 
-      iEnergyMeter := EnergyMeterClass[ActiveActor].First;
-      while iEnergyMeter >0  do  Begin
+            end;
+        end;
 
-          ActiveEnergyMeter := EnergyMeterClass[ActiveActor].GetActiveObj;
-          {Go down each branch list and draw a line}
-          PresentCktElement := ActiveEnergyMeter.BranchList.First;
-          while PresentCktElement <> Nil Do Begin
-          If IslineElement(PresentCktElement) Then  With ActiveCircuit[ActiveActor] Do Begin
-              Bus1 := Buses^[PresentCktElement.Terminals^[1].BusRef];
-              Bus2 := Buses^[PresentCktElement.Terminals^[2].BusRef];
-            {Now determin which phase to plot}
-              If (Bus1.kVBase > 0.0) and (Bus2.kVBase > 0.0) then
-              CASE PhasesToPlot of
-                  {3ph only}
-                  PROFILE3PH: If (PresentCktElement.NPhases >= 3) and (Bus1.kVBase > 1.0) then
-                                For iphs := 1 to 3 do Begin
-                                  puV1 := CABS(Solution.NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))]) / Bus1.kVBase / 1000.0;
-                                  puV2 := CABS(Solution.NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))]) / Bus2.kVBase / 1000.0;
-                                  WriteNewLine(F, PresentCktElement.Name, Bus1.DistFromMeter, puV1, Bus2.DistFromMeter, puV2,
-                                         iphs, 2, 0,   0, 0,  NodeMarkerCode, NodeMarkerWidth );
-                                End;
-                  {Plot all phases present (between 1 and 3)}
-                  PROFILEALL: Begin
-                                For iphs := 1 to 3 do
-                                  if (Bus1.FindIdx(Iphs)>0) and (Bus2.FindIdx(Iphs)>0) then Begin
-                                    if Bus1.kVBase < 1.0 then  Linetype := 2 else Linetype := 0;
-                                    puV1 := CABS(Solution.NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))]) / Bus1.kVBase / 1000.0;
-                                    puV2 := CABS(Solution.NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))]) / Bus2.kVBase / 1000.0;
-                                    WriteNewLine(F, PresentCktElement.Name, Bus1.DistFromMeter, puV1, Bus2.DistFromMeter, puV2,
-                                           iphs, 2, Linetype,   0, 0,  NodeMarkerCode, NodeMarkerWidth );
-                                End;
-                              End;
-                  {Plot all phases present (between 1 and 3) for Primary only}
-                  PROFILEALLPRI: Begin
-                                If Bus1.kVBase > 1.0 then
-                                For iphs := 1 to 3 do
-                                  if (Bus1.FindIdx(Iphs)>0) and (Bus2.FindIdx(Iphs)>0) then Begin
-                                    if Bus1.kVBase < 1.0 then Linetype := 2 else Linetype := 0;
-                                    puV1 := CABS(Solution.NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))]) / Bus1.kVBase / 1000.0;
-                                    puV2 := CABS(Solution.NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))]) / Bus2.kVBase / 1000.0;
-                                    WriteNewLine(F, PresentCktElement.Name, Bus1.DistFromMeter, puV1, Bus2.DistFromMeter, puV2,
-                                           iphs, 2, Linetype,  0, 0,  NodeMarkerCode, NodeMarkerWidth );
-                                End;
-                              End;
-                  PROFILELL: Begin
-                                If (PresentCktElement.NPhases >= 3)  then
-                                For iphs := 1 to 3 do Begin
-                                    iphs2 := iphs + 1; If iphs2 > 3 Then iphs2 := 1;
-                                    if (Bus1.FindIdx(Iphs)>0)  and (Bus2.FindIdx(Iphs)>0)  and
-                                       (Bus1.FindIdx(Iphs2)>0) and (Bus2.FindIdx(Iphs2)>0) then
-                                    Begin
-                                      if Bus1.kVBase < 1.0 then  Linetype := 2 else Linetype := 0;
-                                      With Solution Do Begin
-                                        puV1 := CABS(CSUB(NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))],NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs2))])) / Bus1.kVBase / 1732.0;
-                                        puV2 := CABS(CSUB(NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))],NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs2))])) / Bus2.kVBase / 1732.0;
-                                      End;
-                                      WriteNewLine(F, PresentCktElement.Name, Bus1.DistFromMeter, puV1, Bus2.DistFromMeter, puV2,
-                                             iphs, 2, Linetype,  0, 0,  NodeMarkerCode, NodeMarkerWidth );
-                                    End;
-                                End;
-                              End;
-                  PROFILELLALL: Begin
-                                For iphs := 1 to 3 do Begin
-                                    iphs2 := iphs + 1; If iphs2 > 3 Then iphs2 := 1;
-                                    if (Bus1.FindIdx(Iphs)>0)  and (Bus2.FindIdx(Iphs)>0)  and
-                                       (Bus1.FindIdx(Iphs2)>0) and (Bus2.FindIdx(Iphs2)>0) then
-                                    Begin
-                                      if Bus1.kVBase < 1.0 then  Linetype := 2 else Linetype := 0;
-                                      With Solution Do Begin
-                                        puV1 := CABS(CSUB(NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))],NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs2))])) / Bus1.kVBase / 1732.0;
-                                        puV2 := CABS(CSUB(NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))],NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs2))])) / Bus2.kVBase / 1732.0;
-                                      End;
-                                      WriteNewLine(F, PresentCktElement.Name, Bus1.DistFromMeter, puV1, Bus2.DistFromMeter, puV2,
-                                             iphs, 2, Linetype,  0, 0,  NodeMarkerCode, NodeMarkerWidth );
-                                    End;
-                                End;
-                              End;
-                  PROFILELLPRI: Begin
-                                If Bus1.kVBase > 1.0 then
-                                For iphs := 1 to 3 do Begin
-                                    iphs2 := iphs + 1; If iphs2 > 3 Then iphs2 := 1;
-                                    if (Bus1.FindIdx(Iphs)>0)  and (Bus2.FindIdx(Iphs)>0)  and
-                                       (Bus1.FindIdx(Iphs2)>0) and (Bus2.FindIdx(Iphs2)>0) then
-                                    Begin
-                                      if Bus1.kVBase < 1.0 then  Linetype := 2 else Linetype := 0;
-                                      With Solution Do Begin
-                                        puV1 := CABS(CSUB(NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))],NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs2))])) / Bus1.kVBase / 1732.0;
-                                        puV2 := CABS(CSUB(NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))],NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs2))])) / Bus2.kVBase / 1732.0;
-                                      End;
-                                      WriteNewLine(F, PresentCktElement.Name, Bus1.DistFromMeter, puV1, Bus2.DistFromMeter, puV2,
-                                             iphs, 2, Linetype, 0, 0,  NodeMarkerCode, NodeMarkerWidth );
-                                    End;
-                                End;
-                              End;
-                  ELSE     // plot just the selected phase
-                      iphs := PhasesToPlot;
-                      if (Bus1.FindIdx(Iphs)>0) and (Bus2.FindIdx(Iphs)>0) then  Begin
-                          if Bus1.kVBase < 1.0 then Linetype := 2 else Linetype := 0;
-                          puV1 := CABS(ActiveCircuit[ActiveActor].Solution.NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))]) / Bus1.kVBase / 1000.0;
-                          puV2 := CABS(ActiveCircuit[ActiveActor].Solution.NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))]) / Bus2.kVBase / 1000.0;
-                          WriteNewLine(F, PresentCktElement.Name, Bus1.DistFromMeter, puV1, Bus2.DistFromMeter, puV2,
-                             iphs, 2, Linetype, 0, 0,
-                                  NodeMarkerCode, NodeMarkerWidth);
-                      End;
 
-              END;
+        GlobalResult := FileNm;
 
-            End;
+    finally
 
-             PresentCktElement := ActiveEnergyMeter.BranchList.GoForward;
-          End;
-
-          iEnergyMeter := EnergyMeterClass[ActiveActor].Next;
-      End;
-
-      GlobalResult := FileNm;
-
-  FINALLY
-
-     CloseFile(F);
-
-  End;
+        CloseFile(F);
+    end;
 
 end;
 
-Procedure ExportEventLog(FileNm:String);
+procedure ExportUuids(FileNm: String);
+var
+    F: TextFile;
+    clsLnCd: TLineCode;
+    clsGeom: TLineGeometry;
+    clsWire: TWireData;
+    clsXfCd: TXfmrCode;
+    clsSpac: TLineSpacing;
+    clsTape: TTSData;
+    clsConc: TCNData;
+    pName: TNamedObject;
+    i: Integer;
+begin
+    try
+        clsLnCd := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('linecode'));
+        clsWire := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('wiredata'));
+        clsGeom := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('linegeometry'));
+        clsXfCd := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('xfmrcode'));
+        clsSpac := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('linespacing'));
+        clsTape := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('TSData'));
+        clsConc := DSSClassList[ActiveActor].Get(ClassNames[ActiveActor].Find('CNData'));
+
+        Assignfile(F, FileNm);
+        ReWrite(F);
+
+        pName := ActiveCircuit[ActiveActor];
+        Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+
+        for i := 1 to ActiveCircuit[ActiveActor].NumBuses do
+        begin
+            pName := ActiveCircuit[ActiveActor].Buses^[i];
+            Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+        end;
+
+        pName := ActiveCircuit[ActiveActor].CktElements.First;
+        while pName <> NIL do
+        begin
+            Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            pName := ActiveCircuit[ActiveActor].CktElements.Next;
+        end;
+
+        pName := clsLnCd.ElementList.First;
+        while pName <> NIL do
+        begin
+            Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            pName := clsLnCd.ElementList.Next;
+        end;
+
+        pName := clsWire.ElementList.First;
+        while pName <> NIL do
+        begin
+            Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            pName := clsWire.ElementList.Next;
+        end;
+
+        pName := clsGeom.ElementList.First;
+        while pName <> NIL do
+        begin
+            Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            pName := clsGeom.ElementList.Next;
+        end;
+
+        pName := clsXfCd.ElementList.First;
+        while pName <> NIL do
+        begin
+            Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            pName := clsXfCd.ElementList.Next;
+        end;
+
+        pName := clsSpac.ElementList.First;
+        while pName <> NIL do
+        begin
+            Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            pName := clsSpac.ElementList.Next;
+        end;
+
+        pName := clsTape.ElementList.First;
+        while pName <> NIL do
+        begin
+            Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            pName := clsTape.ElementList.Next;
+        end;
+
+        pName := clsConc.ElementList.First;
+        while pName <> NIL do
+        begin
+            Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            pName := clsConc.ElementList.Next;
+        end;
+
+        WriteHashedUUIDs(F);
+
+    finally
+        CloseFile(F);
+        FreeUuidList;
+    end;
+end;
+
+procedure ExportCounts(FileNm: String);
+var
+    F: TextFile;
+    cls: TDSSClass;
+begin
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
+        Writeln(F, 'Format: DSS Class Name = Instance Count');
+        Writeln(F);
+        cls := DSSClassList[ActiveActor].First;
+        while cls <> NIL do
+        begin
+            Writeln(F, Format('%s = %d', [cls.Name, cls.ElementCount]));
+            cls := DSSClassList[ActiveActor].Next;
+        end;
+    finally
+        CloseFile(F);
+    end;
+end;
+
+procedure ExportSummary(FileNm: String);
+var
+    F: TextFile;
+    cPower, cLosses: Complex;
+
+begin
+    try
+
+        Assignfile(F, FileNm);
+        if FileExists(FileNm) then
+            Append(F)
+        else
+        begin    // Create and write the header
+            ReWrite(F);
+            Write(F, 'DateTime, CaseName, ');
+            Write(F, 'Status, Mode, Number, LoadMult, NumDevices, NumBuses, NumNodes');
+            Write(F, ', Iterations, ControlMode, ControlIterations');
+            Write(F, ', MostIterationsDone');
+            if ActiveCircuit[ActiveActor] <> NIL then
+                if ActiveCircuit[ActiveActor].Issolved and not ActiveCircuit[ActiveActor].BusNameRedefined then
+                begin
+                    Write(F, ', Year, Hour, MaxPuVoltage, MinPuVoltage, TotalMW, TotalMvar');
+                    Write(F, ', MWLosses, pctLosses, MvarLosses, Frequency');
+                end;
+
+            Writeln(F);
+        end;
+
+        Write(F, Format('"%s", ', [DateTimeToStr(Now)]));
+        if ActiveCircuit[ActiveActor] <> NIL then
+            Write(F, Format('%s, ', [ActiveCircuit[ActiveActor].CaseName]))
+        else
+            Write(F, 'NONE, ');
+
+        if ActiveCircuit[ActiveActor].Issolved then
+            Write(F, 'SOLVED')
+        else
+            Write(F, 'UnSolved');
+
+        Write(F, Format(', %s', [GetSolutionModeID]));
+        Write(F, Format(', %d', [ActiveCircuit[ActiveActor].Solution.NumberofTimes]));
+        Write(F, Format(', %8.3f', [ActiveCircuit[ActiveActor].LoadMultiplier]));
+        Write(F, Format(', %d', [ActiveCircuit[ActiveActor].NumDevices]));
+        Write(F, Format(', %d', [ActiveCircuit[ActiveActor].NumBuses]));
+        Write(F, Format(', %d', [ActiveCircuit[ActiveActor].NumNodes]));
+        Write(F, Format(', %d', [ActiveCircuit[ActiveActor].Solution.Iteration]));
+        Write(F, Format(', %s', [GetControlModeID]));
+        Write(F, Format(', %d', [ActiveCircuit[ActiveActor].Solution.ControlIteration]));
+        Write(F, Format(', %d', [ActiveCircuit[ActiveActor].Solution.MostIterationsDone]));
+        if ActiveCircuit[ActiveActor] <> NIL then
+            if ActiveCircuit[ActiveActor].Issolved and not ActiveCircuit[ActiveActor].BusNameRedefined then
+            begin
+                Write(F, Format(', %d', [ActiveCircuit[ActiveActor].Solution.Year]));
+                Write(F, Format(', %d', [ActiveCircuit[ActiveActor].Solution.DynaVars.intHour]));
+                Write(F, Format(', %-.5g', [GetMaxPUVoltage]));
+                Write(F, Format(', %-.5g', [GetMinPUVoltage(TRUE)]));
+                cPower := CmulReal(GetTotalPowerFromSources(ActiveActor), 0.000001);  // MVA
+                Write(F, Format(', %-.6g', [cPower.re]));
+                Write(F, Format(', %-.6n', [cPower.im]));
+                cLosses := CmulReal(ActiveCircuit[ActiveActor].Losses[ActiveActor], 0.000001);
+                if cPower.re <> 0.0 then
+                    Write(F, Format(', %-.6g, %-.4g', [cLosses.re, (Closses.re / cPower.re * 100.0)]))
+                else
+                    Write(F, 'Total Active Losses:   ****** MW, (**** %%)');
+                Write(F, Format(', %-.6g', [cLosses.im]));
+                Write(F, Format(', %-g', [ActiveCircuit[ActiveActor].Solution.Frequency]));
+            end;
+
+        Writeln(F);
+
+        GlobalResult := FileNm;
+
+    finally
+        CloseFile(F);
+    end;
+end;
+
+procedure ExportBusCoords(FileNm: String);
+// Export bus x, y coordinates
+
+var
+    F: TextFile;
+    i: Integer;
+
+
+begin
+
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
+
+        with ActiveCircuit[ActiveActor] do
+            for i := 1 to NumBuses do
+            begin
+                if Buses^[i].CoordDefined then
+                    Writeln(F, Format('%s, %-13.11g, %-13.11g', [CheckForBlanks(Uppercase(BusList.Get(i))), Buses^[i].X, Buses^[i].Y]));
+            end;
+
+        GlobalResult := FileNm;
+
+    finally
+
+        CloseFile(F);
+    end;
+end;
+
+procedure WriteNewLine(var F: TextFile;
+    const CktELementName: String; DistFromMeter1, puV1, DistFromMeter2, puV2: Double;
+    ColorCode, Thickness, LineType: Integer;
+    MarkCenter: Integer;
+    CenterMarkerCode, NodeMarkerCode, NodeMarkerWidth: Integer);
+
+begin
+    Write(F, Format('%s, %.6g, %.6g, %.6g, %.6g,', [Uppercase(CktElementName), DistFromMeter1, puV1, DistFromMeter2, puV2]));
+    Write(F, Format('%d, %d, %d, ', [ColorCode, Thickness, LineType]));
+    Write(F, Format('%d, ', [MarkCenter]));
+    Write(F, Format('%d, %d, %d', [CenterMarkerCode, NodeMarkerCode, NodeMarkerWidth]));
+    Writeln(F);
+end;
+
+
+procedure ExportProfile(FileNm: String; PhasesToPlot: Integer);
+
+var
+    iEnergyMeter: Integer;
+    ActiveEnergyMeter: TEnergyMeterObj;
+    PresentCktElement: TDSSCktElement;
+    Bus1, Bus2: TDSSbus;
+    puV1, puV2: Double;
+    iphs: Integer;
+    iphs2: Integer;
+    S: String;
+    F: TextFile;
+    Linetype: Integer;
+
+begin
+
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
+
+        Write(F, 'Name, Distance1, puV1, Distance2, puV2, Color, Thickness, Linetype, Markcenter, Centercode, NodeCode, NodeWidth,');
+
+    {New graph created before this routine is entered}
+        case phasesToPlot of
+            PROFILELL, PROFILELLALL, PROFILELLPRI:
+                S := 'L-L Voltage Profile';
+        else
+            S := 'L-N Voltage Profile';
+        end;
+
+        Writeln(F, 'Title=', S, ', Distance in km');
+
+        iEnergyMeter := EnergyMeterClass[ActiveActor].First;
+        while iEnergyMeter > 0 do
+        begin
+
+            ActiveEnergyMeter := EnergyMeterClass[ActiveActor].GetActiveObj;
+          {Go down each branch list and draw a line}
+            PresentCktElement := ActiveEnergyMeter.BranchList.First;
+            while PresentCktElement <> NIL do
+            begin
+                if IslineElement(PresentCktElement) then
+                    with ActiveCircuit[ActiveActor] do
+                    begin
+                        Bus1 := Buses^[PresentCktElement.Terminals^[1].BusRef];
+                        Bus2 := Buses^[PresentCktElement.Terminals^[2].BusRef];
+            {Now determin which phase to plot}
+                        if (Bus1.kVBase > 0.0) and (Bus2.kVBase > 0.0) then
+                            case PhasesToPlot of
+                  {3ph only}
+                                PROFILE3PH:
+                                    if (PresentCktElement.NPhases >= 3) and (Bus1.kVBase > 1.0) then
+                                        for iphs := 1 to 3 do
+                                        begin
+                                            puV1 := CABS(Solution.NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))]) / Bus1.kVBase / 1000.0;
+                                            puV2 := CABS(Solution.NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))]) / Bus2.kVBase / 1000.0;
+                                            WriteNewLine(F, PresentCktElement.Name, Bus1.DistFromMeter, puV1, Bus2.DistFromMeter, puV2,
+                                                iphs, 2, 0, 0, 0, NodeMarkerCode, NodeMarkerWidth);
+                                        end;
+                  {Plot all phases present (between 1 and 3)}
+                                PROFILEALL:
+                                begin
+                                    for iphs := 1 to 3 do
+                                        if (Bus1.FindIdx(Iphs) > 0) and (Bus2.FindIdx(Iphs) > 0) then
+                                        begin
+                                            if Bus1.kVBase < 1.0 then
+                                                Linetype := 2
+                                            else
+                                                Linetype := 0;
+                                            puV1 := CABS(Solution.NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))]) / Bus1.kVBase / 1000.0;
+                                            puV2 := CABS(Solution.NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))]) / Bus2.kVBase / 1000.0;
+                                            WriteNewLine(F, PresentCktElement.Name, Bus1.DistFromMeter, puV1, Bus2.DistFromMeter, puV2,
+                                                iphs, 2, Linetype, 0, 0, NodeMarkerCode, NodeMarkerWidth);
+                                        end;
+                                end;
+                  {Plot all phases present (between 1 and 3) for Primary only}
+                                PROFILEALLPRI:
+                                begin
+                                    if Bus1.kVBase > 1.0 then
+                                        for iphs := 1 to 3 do
+                                            if (Bus1.FindIdx(Iphs) > 0) and (Bus2.FindIdx(Iphs) > 0) then
+                                            begin
+                                                if Bus1.kVBase < 1.0 then
+                                                    Linetype := 2
+                                                else
+                                                    Linetype := 0;
+                                                puV1 := CABS(Solution.NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))]) / Bus1.kVBase / 1000.0;
+                                                puV2 := CABS(Solution.NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))]) / Bus2.kVBase / 1000.0;
+                                                WriteNewLine(F, PresentCktElement.Name, Bus1.DistFromMeter, puV1, Bus2.DistFromMeter, puV2,
+                                                    iphs, 2, Linetype, 0, 0, NodeMarkerCode, NodeMarkerWidth);
+                                            end;
+                                end;
+                                PROFILELL:
+                                begin
+                                    if (PresentCktElement.NPhases >= 3) then
+                                        for iphs := 1 to 3 do
+                                        begin
+                                            iphs2 := iphs + 1;
+                                            if iphs2 > 3 then
+                                                iphs2 := 1;
+                                            if (Bus1.FindIdx(Iphs) > 0) and (Bus2.FindIdx(Iphs) > 0) and
+                                                (Bus1.FindIdx(Iphs2) > 0) and (Bus2.FindIdx(Iphs2) > 0) then
+                                            begin
+                                                if Bus1.kVBase < 1.0 then
+                                                    Linetype := 2
+                                                else
+                                                    Linetype := 0;
+                                                with Solution do
+                                                begin
+                                                    puV1 := CABS(CSUB(NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))], NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs2))])) / Bus1.kVBase / 1732.0;
+                                                    puV2 := CABS(CSUB(NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))], NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs2))])) / Bus2.kVBase / 1732.0;
+                                                end;
+                                                WriteNewLine(F, PresentCktElement.Name, Bus1.DistFromMeter, puV1, Bus2.DistFromMeter, puV2,
+                                                    iphs, 2, Linetype, 0, 0, NodeMarkerCode, NodeMarkerWidth);
+                                            end;
+                                        end;
+                                end;
+                                PROFILELLALL:
+                                begin
+                                    for iphs := 1 to 3 do
+                                    begin
+                                        iphs2 := iphs + 1;
+                                        if iphs2 > 3 then
+                                            iphs2 := 1;
+                                        if (Bus1.FindIdx(Iphs) > 0) and (Bus2.FindIdx(Iphs) > 0) and
+                                            (Bus1.FindIdx(Iphs2) > 0) and (Bus2.FindIdx(Iphs2) > 0) then
+                                        begin
+                                            if Bus1.kVBase < 1.0 then
+                                                Linetype := 2
+                                            else
+                                                Linetype := 0;
+                                            with Solution do
+                                            begin
+                                                puV1 := CABS(CSUB(NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))], NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs2))])) / Bus1.kVBase / 1732.0;
+                                                puV2 := CABS(CSUB(NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))], NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs2))])) / Bus2.kVBase / 1732.0;
+                                            end;
+                                            WriteNewLine(F, PresentCktElement.Name, Bus1.DistFromMeter, puV1, Bus2.DistFromMeter, puV2,
+                                                iphs, 2, Linetype, 0, 0, NodeMarkerCode, NodeMarkerWidth);
+                                        end;
+                                    end;
+                                end;
+                                PROFILELLPRI:
+                                begin
+                                    if Bus1.kVBase > 1.0 then
+                                        for iphs := 1 to 3 do
+                                        begin
+                                            iphs2 := iphs + 1;
+                                            if iphs2 > 3 then
+                                                iphs2 := 1;
+                                            if (Bus1.FindIdx(Iphs) > 0) and (Bus2.FindIdx(Iphs) > 0) and
+                                                (Bus1.FindIdx(Iphs2) > 0) and (Bus2.FindIdx(Iphs2) > 0) then
+                                            begin
+                                                if Bus1.kVBase < 1.0 then
+                                                    Linetype := 2
+                                                else
+                                                    Linetype := 0;
+                                                with Solution do
+                                                begin
+                                                    puV1 := CABS(CSUB(NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))], NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs2))])) / Bus1.kVBase / 1732.0;
+                                                    puV2 := CABS(CSUB(NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))], NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs2))])) / Bus2.kVBase / 1732.0;
+                                                end;
+                                                WriteNewLine(F, PresentCktElement.Name, Bus1.DistFromMeter, puV1, Bus2.DistFromMeter, puV2,
+                                                    iphs, 2, Linetype, 0, 0, NodeMarkerCode, NodeMarkerWidth);
+                                            end;
+                                        end;
+                                end;
+                            else     // plot just the selected phase
+                                iphs := PhasesToPlot;
+                                if (Bus1.FindIdx(Iphs) > 0) and (Bus2.FindIdx(Iphs) > 0) then
+                                begin
+                                    if Bus1.kVBase < 1.0 then
+                                        Linetype := 2
+                                    else
+                                        Linetype := 0;
+                                    puV1 := CABS(ActiveCircuit[ActiveActor].Solution.NodeV^[Bus1.GetRef(Bus1.FindIdx(iphs))]) / Bus1.kVBase / 1000.0;
+                                    puV2 := CABS(ActiveCircuit[ActiveActor].Solution.NodeV^[Bus2.GetRef(Bus2.FindIdx(iphs))]) / Bus2.kVBase / 1000.0;
+                                    WriteNewLine(F, PresentCktElement.Name, Bus1.DistFromMeter, puV1, Bus2.DistFromMeter, puV2,
+                                        iphs, 2, Linetype, 0, 0,
+                                        NodeMarkerCode, NodeMarkerWidth);
+                                end;
+
+                            end;
+
+                    end;
+
+                PresentCktElement := ActiveEnergyMeter.BranchList.GoForward;
+            end;
+
+            iEnergyMeter := EnergyMeterClass[ActiveActor].Next;
+        end;
+
+        GlobalResult := FileNm;
+
+    finally
+
+        CloseFile(F);
+
+    end;
+
+end;
+
+procedure ExportEventLog(FileNm: String);
 // Export the present set of EventStrings
-Begin
-     EventStrings[ActiveActor].SaveToFile(FileNm);
-     GlobalResult := FileNm;
-End;
+begin
+    EventStrings[ActiveActor].SaveToFile(FileNm);
+    GlobalResult := FileNm;
+end;
 
-Procedure ExportErrorLog(FileNm:String);
+procedure ExportErrorLog(FileNm: String);
 // Export the present set of ErrorStrings
-Begin
-     ErrorStrings[ActiveActor].SaveToFile(FileNm);
-     GlobalResult := FileNm;
-End;
+begin
+    ErrorStrings[ActiveActor].SaveToFile(FileNm);
+    GlobalResult := FileNm;
+end;
 
-Procedure ExportIncMatrix(FileNm:String);
+procedure ExportIncMatrix(FileNm: String);
 var
-  F             : TextFile;
-  i             : Integer;
-Begin
-  with ActiveCircuit[ActiveActor].Solution do
-  Begin
-    Assignfile(F,FileNm);
-    ReWrite(F);
-    Writeln(F,'Row,Col,Value');
-    for i := 0 to (IncMat.NZero -1) do
+    F: TextFile;
+    i: Integer;
+begin
+    with ActiveCircuit[ActiveActor].Solution do
     begin
-      Writeln(F,inttostr(IncMat.data[i][0]) + ',' + inttostr(IncMat.data[i][1]) + ',' + inttostr(IncMat.data[i][2]));
+        Assignfile(F, FileNm);
+        ReWrite(F);
+        Writeln(F, 'Row,Col,Value');
+        for i := 0 to (IncMat.NZero - 1) do
+        begin
+            Writeln(F, inttostr(IncMat.data[i][0]) + ',' + inttostr(IncMat.data[i][1]) + ',' + inttostr(IncMat.data[i][2]));
+        end;
+        GlobalResult := FileNm;
+        CloseFile(F);
     end;
-    GlobalResult := FileNm;
-    CloseFile(F);
-  End;
-End;
+end;
 
-Procedure ExportIncMatrixRows(FileNm:String);
+procedure ExportIncMatrixRows(FileNm: String);
 var
-  F             : TextFile;
-  i             : Integer;
-Begin
-  with ActiveCircuit[ActiveActor].Solution do
-  Begin
-    Assignfile(F,FileNm);
-    ReWrite(F);
-    Writeln(F,'B2N Incidence Matrix Row Names (PDElements)');
-    for i := 0 to (length(Inc_Mat_Rows)-1) do
+    F: TextFile;
+    i: Integer;
+begin
+    with ActiveCircuit[ActiveActor].Solution do
     begin
-      Writeln(F,Inc_Mat_Rows[i]);
+        Assignfile(F, FileNm);
+        ReWrite(F);
+        Writeln(F, 'B2N Incidence Matrix Row Names (PDElements)');
+        for i := 0 to (length(Inc_Mat_Rows) - 1) do
+        begin
+            Writeln(F, Inc_Mat_Rows[i]);
+        end;
+        GlobalResult := FileNm;
+        CloseFile(F);
     end;
-    GlobalResult := FileNm;
-    CloseFile(F);
-  End;
-End;
+end;
 //-------------------------------------------------------------------
-Procedure ExportIncMatrixCols(FileNm:String);
+procedure ExportIncMatrixCols(FileNm: String);
 var
-  F             : TextFile;
-  i             : Integer;
-Begin
-  with ActiveCircuit[ActiveActor].Solution do
-  Begin
-    Assignfile(F,FileNm);
-    ReWrite(F);
-    Writeln(F,'B2N Incidence Matrix Column Names (Buses)');
-    for i := 0 to (length(Inc_Mat_Cols)-1) do
+    F: TextFile;
+    i: Integer;
+begin
+    with ActiveCircuit[ActiveActor].Solution do
     begin
-      Writeln(F,Inc_Mat_Cols[i]);
+        Assignfile(F, FileNm);
+        ReWrite(F);
+        Writeln(F, 'B2N Incidence Matrix Column Names (Buses)');
+        for i := 0 to (length(Inc_Mat_Cols) - 1) do
+        begin
+            Writeln(F, Inc_Mat_Cols[i]);
+        end;
+        GlobalResult := FileNm;
+        CloseFile(F);
     end;
-    GlobalResult := FileNm;
-    CloseFile(F);
-  End;
-End;
+end;
 //-------------------------------------------------------------------
-Procedure ExportBusLevels(FileNm:String);
+procedure ExportBusLevels(FileNm: String);
 var
-  F             : TextFile;
-  i             : Integer;
-Begin
-  with ActiveCircuit[ActiveActor].Solution do
-  Begin
-    Assignfile(F,FileNm);
-    ReWrite(F);
-    Writeln(F,'B2N Incidence Matrix Column Names (Buses) and their level within the matrix');
-    Writeln(F,'Bus Name,Bus Level');
-    for i := 0 to (length(Inc_Mat_Cols)-1) do
+    F: TextFile;
+    i: Integer;
+begin
+    with ActiveCircuit[ActiveActor].Solution do
     begin
-      Writeln(F,Inc_Mat_Cols[i] + ',' + inttostr(Inc_Mat_levels[i]));
+        Assignfile(F, FileNm);
+        ReWrite(F);
+        Writeln(F, 'B2N Incidence Matrix Column Names (Buses) and their level within the matrix');
+        Writeln(F, 'Bus Name,Bus Level');
+        for i := 0 to (length(Inc_Mat_Cols) - 1) do
+        begin
+            Writeln(F, Inc_Mat_Cols[i] + ',' + inttostr(Inc_Mat_levels[i]));
+        end;
+        GlobalResult := FileNm;
+        CloseFile(F);
     end;
-    GlobalResult := FileNm;
-    CloseFile(F);
-  End;
-End;
+end;
 //-------------------------------------------------------------------
-Procedure ExportLaplacian(FileNm:String);
+procedure ExportLaplacian(FileNm: String);
 var
-  F             : TextFile;
-  i             : Integer;
-Begin
-  with ActiveCircuit[ActiveActor].Solution do
-  Begin
-    Assignfile(F,FileNm);
-    ReWrite(F);
-    Writeln(F,'Row,Col,Value');
-    for i := 0 to (Laplacian.NZero -1) do
+    F: TextFile;
+    i: Integer;
+begin
+    with ActiveCircuit[ActiveActor].Solution do
     begin
-      Writeln(F,inttostr(Laplacian.data[i][0]) + ',' + inttostr(Laplacian.data[i][1]) + ',' + inttostr(Laplacian.data[i][2]));
+        Assignfile(F, FileNm);
+        ReWrite(F);
+        Writeln(F, 'Row,Col,Value');
+        for i := 0 to (Laplacian.NZero - 1) do
+        begin
+            Writeln(F, inttostr(Laplacian.data[i][0]) + ',' + inttostr(Laplacian.data[i][1]) + ',' + inttostr(Laplacian.data[i][2]));
+        end;
+        GlobalResult := FileNm;
+        CloseFile(F);
     end;
-    GlobalResult := FileNm;
-    CloseFile(F);
-  End;
-End;
+end;
 //-------------------------------------------------------------------
-Procedure ExportZLL(FileNm:String);
+procedure ExportZLL(FileNm: String);
 var
-  F             : TextFile;
-  i             : Integer;
-Begin
-  if ADiakoptics then
-  Begin
-    with ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution do
-    Begin
-      Assignfile(F,FileNm);
-      ReWrite(F);
-      Writeln(F,'Row,Col,Value(Real), Value(Imag)');
-      for i := 0 to (ZLL.NZero -1) do
-      begin
-        Writeln(F,inttostr(ZLL.CData[i].Row) + ',' + inttostr(ZLL.CData[i].Col) + ',' + floattostr(ZLL.CData[i].Value.Re)+ ',' + floattostr(ZLL.CData[i].Value.Im));
-      end;
-      GlobalResult := FileNm;
-      CloseFile(F);
-    End;
-  End;
-End;
+    F: TextFile;
+    i: Integer;
+begin
+    if ADiakoptics then
+    begin
+        with ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution do
+        begin
+            Assignfile(F, FileNm);
+            ReWrite(F);
+            Writeln(F, 'Row,Col,Value(Real), Value(Imag)');
+            for i := 0 to (ZLL.NZero - 1) do
+            begin
+                Writeln(F, inttostr(ZLL.CData[i].Row) + ',' + inttostr(ZLL.CData[i].Col) + ',' + floattostr(ZLL.CData[i].Value.Re) + ',' + floattostr(ZLL.CData[i].Value.Im));
+            end;
+            GlobalResult := FileNm;
+            CloseFile(F);
+        end;
+    end;
+end;
 //-------------------------------------------------------------------
-Procedure ExportZCC(FileNm:String);
+procedure ExportZCC(FileNm: String);
 var
-  F             : TextFile;
-  i             : Integer;
-Begin
-  if ADiakoptics then
-  Begin
-    with ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution do
-    Begin
-      Assignfile(F,FileNm);
-      ReWrite(F);
-      Writeln(F,'Row,Col,Value(Real), Value(Imag)');
-      for i := 0 to (ZCC.NZero -1) do
-      begin
-        Writeln(F,inttostr(ZCC.CData[i].Row) + ',' + inttostr(ZCC.CData[i].Col) + ',' + floattostr(ZCC.CData[i].Value.Re)+ ',' + floattostr(ZCC.CData[i].Value.Im));
-      end;
-      GlobalResult := FileNm;
-      CloseFile(F);
-    End;
-  End;
-End;
+    F: TextFile;
+    i: Integer;
+begin
+    if ADiakoptics then
+    begin
+        with ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution do
+        begin
+            Assignfile(F, FileNm);
+            ReWrite(F);
+            Writeln(F, 'Row,Col,Value(Real), Value(Imag)');
+            for i := 0 to (ZCC.NZero - 1) do
+            begin
+                Writeln(F, inttostr(ZCC.CData[i].Row) + ',' + inttostr(ZCC.CData[i].Col) + ',' + floattostr(ZCC.CData[i].Value.Re) + ',' + floattostr(ZCC.CData[i].Value.Im));
+            end;
+            GlobalResult := FileNm;
+            CloseFile(F);
+        end;
+    end;
+end;
 //-------------------------------------------------------------------
-Procedure ExportY4(FileNm:String);
+procedure ExportY4(FileNm: String);
 var
-  F             : TextFile;
-  i             : Integer;
-Begin
-  if ADiakoptics then
-  Begin
-    with ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution do
-    Begin
-      Assignfile(F,FileNm);
-      ReWrite(F);
-      Writeln(F,'Row,Col,Value(Real), Value(Imag)');
-      for i := 0 to (Y4.NZero -1) do
-      begin
-        Writeln(F,inttostr(Y4.CData[i].Row) + ',' + inttostr(Y4.CData[i].Col) + ',' + floattostr(Y4.CData[i].Value.Re)+ ',' + floattostr(Y4.CData[i].Value.Im));
-      end;
-      GlobalResult := FileNm;
-      CloseFile(F);
-    End;
-  End;
-End;
+    F: TextFile;
+    i: Integer;
+begin
+    if ADiakoptics then
+    begin
+        with ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution do
+        begin
+            Assignfile(F, FileNm);
+            ReWrite(F);
+            Writeln(F, 'Row,Col,Value(Real), Value(Imag)');
+            for i := 0 to (Y4.NZero - 1) do
+            begin
+                Writeln(F, inttostr(Y4.CData[i].Row) + ',' + inttostr(Y4.CData[i].Col) + ',' + floattostr(Y4.CData[i].Value.Re) + ',' + floattostr(Y4.CData[i].Value.Im));
+            end;
+            GlobalResult := FileNm;
+            CloseFile(F);
+        end;
+    end;
+end;
 //-------------------------------------------------------------------
-Procedure ExportC(FileNm:String);
+procedure ExportC(FileNm: String);
 var
-  F             : TextFile;
-  i             : Integer;
-Begin
-  if ADiakoptics then
-  Begin
-    with ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution do
-    Begin
-      Assignfile(F,FileNm);
-      ReWrite(F);
-      Writeln(F,'Row,Col,Value');
-      for i := 0 to (Contours.NZero -1) do
-      begin
-        Writeln(F,inttostr(Contours.CData[i].Row) + ',' + inttostr(Contours.CData[i].Col) + ',' + floattostr(Contours.CData[i].Value.Re));
-      end;
-      GlobalResult := FileNm;
-      CloseFile(F);
-    End;
-  End;
-End;
+    F: TextFile;
+    i: Integer;
+begin
+    if ADiakoptics then
+    begin
+        with ActiveCircuit[ActiveActor], ActiveCircuit[ActiveActor].Solution do
+        begin
+            Assignfile(F, FileNm);
+            ReWrite(F);
+            Writeln(F, 'Row,Col,Value');
+            for i := 0 to (Contours.NZero - 1) do
+            begin
+                Writeln(F, inttostr(Contours.CData[i].Row) + ',' + inttostr(Contours.CData[i].Col) + ',' + floattostr(Contours.CData[i].Value.Re));
+            end;
+            GlobalResult := FileNm;
+            CloseFile(F);
+        end;
+    end;
+end;
 //-------------------------------------------------------------------
-Procedure ExportVoltagesElements(FileNm:String);
+procedure ExportVoltagesElements(FileNm: String);
 
 // Export element voltages, by terminal and node/bus
 
-Var
-   MaxNumNodes  :Integer ;
-   MaxNumTerminals : Integer;
-   F         :TextFile;
-   i, j      :Integer;
-   pElem     :TDSSCktElement;
+var
+    MaxNumNodes: Integer;
+    MaxNumTerminals: Integer;
+    F: TextFile;
+    i, j: Integer;
+    pElem: TDSSCktElement;
 
-Begin
+begin
 
-     MaxNumTerminals := 2;
-     MaxNumNodes := 0;
-     pElem := ActiveCircuit[ActiveActor].CktElements.First;
-     While pElem<>nil Do Begin
-        MaxNumTerminals := max(MaxNumTerminals, pElem.NTerms );
-        MaxNumNodes := max(MaxNumNodes, pElem.NConds );
+    MaxNumTerminals := 2;
+    MaxNumNodes := 0;
+    pElem := ActiveCircuit[ActiveActor].CktElements.First;
+    while pElem <> NIL do
+    begin
+        MaxNumTerminals := max(MaxNumTerminals, pElem.NTerms);
+        MaxNumNodes := max(MaxNumNodes, pElem.NConds);
         pElem := ActiveCircuit[ActiveActor].CktElements.Next;
-     End;
+    end;
 {
     MaxNumNodes := 0;
     With ActiveCircuit Do
@@ -3659,453 +4036,467 @@ Begin
        MaxNumNodes := max(MaxNumNodes, Buses^[j].NumNodesThisBus);
 }
 
-    Try
-       Assignfile(F, FileNm);
-       ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
-       Write(F, 'Element,NumTerminals');
+        Write(F, 'Element,NumTerminals');
 
        //Write out the header
-       for i := 1 to MaxNumTerminals do
+        for i := 1 to MaxNumTerminals do
         begin
-          Write(F,Format(', Terminal%d',[i]));
-          Write(F,',NumConductors,NPhases,');
-          Write(F,'Bus, BasekV');
-          For j := 1 to MaxNumNodes Do Write(F,Format(', Node%d_%d, Magnitude%d_%d, Angle%d_%d, pu%d_%d',[i, j, i, j, i, j, i, j]));
+            Write(F, Format(', Terminal%d', [i]));
+            Write(F, ',NumConductors,NPhases,');
+            Write(F, 'Bus, BasekV');
+            for j := 1 to MaxNumNodes do
+                Write(F, Format(', Node%d_%d, Magnitude%d_%d, Angle%d_%d, pu%d_%d', [i, j, i, j, i, j, i, j]));
         end;
 
-       Writeln(F);
+        Writeln(F);
 
        //Go through all the sources
-       WITH ActiveCircuit[ActiveActor] DO BEGIN
-         pElem := sources.First;
+        with ActiveCircuit[ActiveActor] do
+        begin
+            pElem := sources.First;
 
-         WHILE pElem<>nil DO Begin
-         IF pElem.Enabled THEN begin
-               WriteElementVoltagesExportFile(F, pElem, MaxNumNodes);
-               Writeln(F);
-               end;
-          pElem := ActiveCircuit[ActiveActor].sources.Next;
-         End;
+            while pElem <> NIL do
+            begin
+                if pElem.Enabled then
+                begin
+                    WriteElementVoltagesExportFile(F, pElem, MaxNumNodes);
+                    Writeln(F);
+                end;
+                pElem := ActiveCircuit[ActiveActor].sources.Next;
+            end;
 
 
        //Go through all the PDElements
-     pElem := ActiveCircuit[ActiveActor].PDElements.First;
+            pElem := ActiveCircuit[ActiveActor].PDElements.First;
 
-     WHILE pElem<>nil DO Begin
-       IF pElem.Enabled THEN
-       begin
-         WriteElementVoltagesExportFile(F, pElem, MaxNumNodes);
-         Writeln(F);
-       end;
-       pElem := ActiveCircuit[ActiveActor].PDElements.Next;
-     End;
-
+            while pElem <> NIL do
+            begin
+                if pElem.Enabled then
+                begin
+                    WriteElementVoltagesExportFile(F, pElem, MaxNumNodes);
+                    Writeln(F);
+                end;
+                pElem := ActiveCircuit[ActiveActor].PDElements.Next;
+            end;
 
 
      //Go through all the PCElements
-     pElem := ActiveCircuit[ActiveActor].PCElements.First;
+            pElem := ActiveCircuit[ActiveActor].PCElements.First;
 
-     WHILE pElem<>nil DO Begin
-       IF pElem.Enabled THEN
-       begin
-         WriteElementVoltagesExportFile(F, pElem, MaxNumNodes);
-         Writeln(F);
-       end;
-       pElem := ActiveCircuit[ActiveActor].PCElements.Next;
-     End;
-   End;
+            while pElem <> NIL do
+            begin
+                if pElem.Enabled then
+                begin
+                    WriteElementVoltagesExportFile(F, pElem, MaxNumNodes);
+                    Writeln(F);
+                end;
+                pElem := ActiveCircuit[ActiveActor].PCElements.Next;
+            end;
+        end;
 
-      GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
-   FINALLY
+    finally
 
-       CloseFile(F);
+        CloseFile(F);
 
-   End;
+    end;
 
-End;
+end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-Procedure ExportGICMvar(FileNm:String);
+procedure ExportGICMvar(FileNm: String);
 
-Var
-    F          :TextFile;
-    pElem      :TGICTransformerObj;
-    GICClass   :TGICTransformer;
+var
+    F: TextFile;
+    pElem: TGICTransformerObj;
+    GICClass: TGICTransformer;
 
-Begin
+begin
 
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
-     GICClass := TGICTransformer(GetDSSClassPtr('GICTransformer'));
+        GICClass := TGICTransformer(GetDSSClassPtr('GICTransformer'));
 
-     Writeln(F, 'Bus, Mvar, GIC Amps per phase');
-     pElem := TGICTransformerObj(GICClass.ElementList.First);
-     while PElem <> Nil do
-     Begin
-         pElem.WriteVarOutputRecord(F, ActiveActor);
-         pElem := TGICTransformerObj(GICClass.ElementList.Next);
-     End;
+        Writeln(F, 'Bus, Mvar, GIC Amps per phase');
+        pElem := TGICTransformerObj(GICClass.ElementList.First);
+        while PElem <> NIL do
+        begin
+            pElem.WriteVarOutputRecord(F, ActiveActor);
+            pElem := TGICTransformerObj(GICClass.ElementList.Next);
+        end;
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
-  Finally
-     CloseFile(F);
-  End;
+    finally
+        CloseFile(F);
+    end;
 
-End;
-
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportBusReliability(FileNm:String);
-Var
-   F :TextFile;
-   i:Integer;
-
-Begin
-
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
-     Writeln(F, 'Bus, Lambda, Num-Interruptions, Num-Customers, Cust-Interruptions, Duration, Total-Miles');
-     With ActiveCircuit[ActiveActor] Do
-     For i := 1 to NumBuses Do
-       With Buses^[i] Do
-       Begin
-           Writeln(F, Format('%s, %-.11g, %-.11g, %d, %-.11g, %-.11g, %-.11g',
-              [CheckForBlanks(Uppercase(BusList.Get(i))), BusFltRate, Bus_Num_Interrupt, BusTotalNumCustomers, BusCustInterrupts, Bus_Int_Duration, BusTotalMiles ]));
-       End;
-
-     GlobalResult := FileNm;
-
-  FINALLY
-
-     CloseFile(F);
-  End;
-
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportBranchReliability(FileNm:String);
-Var
-   F : TextFile;
-   pElem : TPDElement;
-   pBus  : TDSSBus;
-   SAIFI : Double;
-   MaxCustomers : Integer;
+procedure ExportBusReliability(FileNm: String);
+var
+    F: TextFile;
+    i: Integer;
 
-Begin
+begin
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
-     Writeln(F, 'Element, Lambda, "Accumulated-Lambda", Num-Customers, Total-Customers, Num-Interrupts, Cust-Interruptions, Cust-Durations, Total-Miles, Cust-Miles, SAIFI');
-     With ActiveCircuit[ActiveActor] Do
-     Begin
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
+        Writeln(F, 'Bus, Lambda, Num-Interruptions, Num-Customers, Cust-Interruptions, Duration, Total-Miles');
+        with ActiveCircuit[ActiveActor] do
+            for i := 1 to NumBuses do
+                with Buses^[i] do
+                begin
+                    Writeln(F, Format('%s, %-.11g, %-.11g, %d, %-.11g, %-.11g, %-.11g',
+                        [CheckForBlanks(Uppercase(BusList.Get(i))), BusFltRate, Bus_Num_Interrupt, BusTotalNumCustomers, BusCustInterrupts, Bus_Int_Duration, BusTotalMiles]));
+                end;
+
+        GlobalResult := FileNm;
+
+    finally
+
+        CloseFile(F);
+    end;
+
+end;
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+procedure ExportBranchReliability(FileNm: String);
+var
+    F: TextFile;
+    pElem: TPDElement;
+    pBus: TDSSBus;
+    SAIFI: Double;
+    MaxCustomers: Integer;
+
+begin
+
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
+        Writeln(F, 'Element, Lambda, "Accumulated-Lambda", Num-Customers, Total-Customers, Num-Interrupts, Cust-Interruptions, Cust-Durations, Total-Miles, Cust-Miles, SAIFI');
+        with ActiveCircuit[ActiveActor] do
+        begin
 
      // Find Maxcustomers of any PDElement for Duke Recloser siting algorithm
-       MaxCustomers := 0;
-       pElem := ActiveCircuit[ActiveActor].PDElements.First;
-       WHILE pElem <> nil DO
-       BEGIN
-         IF pElem.Enabled THEN WITH pElem Do
-            BEGIN
-                pBus := Buses^[Terminals^[FromTerminal].BusRef] ;
-                With pBus Do If BusTotalNumCustomers > MaxCustomers Then
-                     MaxCustomers := BusTotalNumCustomers;
-            END;
-         pElem := ActiveCircuit[ActiveActor].PDElements.Next;
-       END;
+            MaxCustomers := 0;
+            pElem := ActiveCircuit[ActiveActor].PDElements.First;
+            while pElem <> NIL do
+            begin
+                if pElem.Enabled then
+                    with pElem do
+                    begin
+                        pBus := Buses^[Terminals^[FromTerminal].BusRef];
+                        with pBus do
+                            if BusTotalNumCustomers > MaxCustomers then
+                                MaxCustomers := BusTotalNumCustomers;
+                    end;
+                pElem := ActiveCircuit[ActiveActor].PDElements.Next;
+            end;
 
 
      // write report for PDELEMENTS only
-       pElem := ActiveCircuit[ActiveActor].PDElements.First;
-       WHILE pElem <> nil DO
-       BEGIN
-         IF pElem.Enabled THEN WITH pElem Do
-            BEGIN
-                pBus := Buses^[Terminals^[FromTerminal].BusRef] ;
-                With pBus Do If BusTotalNumCustomers>0 Then
-                     SAIFI := BusCustInterrupts/BusTotalNumCustomers Else SAIFI := 0.0 ;
+            pElem := ActiveCircuit[ActiveActor].PDElements.First;
+            while pElem <> NIL do
+            begin
+                if pElem.Enabled then
+                    with pElem do
+                    begin
+                        pBus := Buses^[Terminals^[FromTerminal].BusRef];
+                        with pBus do
+                            if BusTotalNumCustomers > 0 then
+                                SAIFI := BusCustInterrupts / BusTotalNumCustomers
+                            else
+                                SAIFI := 0.0;
 
-                Writeln(F, Format('%s.%s, %-.11g, %-.11g, %d, %d, %-.11g, %-.11g, %-.11g, %-.11g, %-.11g, %-.11g',
-                [ParentClass.Name, Name, BranchFltRate, AccumulatedBrFltRate, BranchNumCustomers, BranchTotalCustomers,
-                 pBus.Bus_Num_Interrupt, BranchTotalCustomers*pBus.Bus_Num_Interrupt, pBus.BusCustDurations,
-                 AccumulatedMilesDownStream, (MaxCustomers - BranchTotalCustomers) * AccumulatedMilesDownStream, SAIFI ]));
-            END;
-         pElem := ActiveCircuit[ActiveActor].PDElements.Next;
-       END;
-     END;
+                        Writeln(F, Format('%s.%s, %-.11g, %-.11g, %d, %d, %-.11g, %-.11g, %-.11g, %-.11g, %-.11g, %-.11g',
+                            [ParentClass.Name, Name, BranchFltRate, AccumulatedBrFltRate, BranchNumCustomers, BranchTotalCustomers,
+                            pBus.Bus_Num_Interrupt, BranchTotalCustomers * pBus.Bus_Num_Interrupt, pBus.BusCustDurations,
+                            AccumulatedMilesDownStream, (MaxCustomers - BranchTotalCustomers) * AccumulatedMilesDownStream, SAIFI]));
+                    end;
+                pElem := ActiveCircuit[ActiveActor].PDElements.Next;
+            end;
+        end;
 
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
-  FINALLY
+    finally
 
-     CloseFile(F);
-  End;
+        CloseFile(F);
+    end;
 
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportNodeNames(FileNm:String);
-Var
-   F : TextFile;
-   i : Integer;
-   j : Integer;
-   BusName : String;
+procedure ExportNodeNames(FileNm: String);
+var
+    F: TextFile;
+    i: Integer;
+    j: Integer;
+    BusName: String;
 
-Begin
+begin
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
-     Writeln(F, 'Node_Name');
-     With ActiveCircuit[ActiveActor] Do
-     Begin
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
+        Writeln(F, 'Node_Name');
+        with ActiveCircuit[ActiveActor] do
+        begin
 
-       FOR i := 1 to NumBuses DO
-       Begin
-           BusName := BusList.Get(i);
-           With Buses^[i] Do
-           FOR j := 1 to NumNodesThisBus DO
-           Begin
-                Writeln(F, Format('%s.%d ', [BusName, GetNum(j)]) );
-           End;
-       End;
+            for i := 1 to NumBuses do
+            begin
+                BusName := BusList.Get(i);
+                with Buses^[i] do
+                    for j := 1 to NumNodesThisBus do
+                    begin
+                        Writeln(F, Format('%s.%d ', [BusName, GetNum(j)]));
+                    end;
+            end;
 
-     END;
+        end;
 
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
-  FINALLY
+    finally
 
-     CloseFile(F);
-  End;
+        CloseFile(F);
+    end;
 
-End;
+end;
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-Function TapPosition(const Transformer:TTransfObj; iWind:Integer):Integer;
+function TapPosition(const Transformer: TTransfObj; iWind: Integer): Integer;
 
 {Assumes 0  is 1.0 per unit tap}
 
-Begin
-        With Transformer Do
-        Result :=   Round((PresentTap[iWind,ActiveActor] - (Maxtap[iWind] + Mintap[iWind])/2.0 ) / TapIncrement[iWind]  );
+begin
+    with Transformer do
+        Result := Round((PresentTap[iWind, ActiveActor] - (Maxtap[iWind] + Mintap[iWind]) / 2.0) / TapIncrement[iWind]);
 
-End;
+end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportTaps(FileNm:String);
-Var
-   F : TextFile;
-   iWind :Integer;
-   pReg: TRegControlObj;
-Begin
+procedure ExportTaps(FileNm: String);
+var
+    F: TextFile;
+    iWind: Integer;
+    pReg: TRegControlObj;
+begin
 
-  Try
+    try
 
-         Assignfile(F,FileNm);
-         ReWrite(F);
-         Writeln(F, 'Name, Tap, Min, Max, Step, Position');
+        Assignfile(F, FileNm);
+        ReWrite(F);
+        Writeln(F, 'Name, Tap, Min, Max, Step, Position');
 
-         WITH ActiveCircuit[ActiveActor] Do
-         Begin
-             pReg := RegControls.First;
-             WHILE pReg <> NIL Do
-             Begin
-                  WITH pReg.Transformer Do
-                  Begin
-                       iWind := pReg.TrWinding;
-                       Write(F, Name );
-                       Writeln(F, Format(', %8.5f, %8.5f, %8.5f, %8.5f, %d' , [PresentTap[iWind,ActiveActor], MinTap[iWind], MaxTap[iWind], TapIncrement[iWind], TapPosition(pREg.Transformer, iWind)]));
-                  End;
-                 pReg := RegControls.Next;
-             End;
-         End;
-
-
-     GlobalResult := FileNm;
-
-  FINALLY
-
-     CloseFile(F);
-  End;
-
-End;
-
-Procedure ExportResult(FileNm:String);
-
-Var
-   F : TextFile;
-
-Begin
-
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
-     Parservars.Lookup('@result');
-     Writeln(F, Parservars.Value );
-
-     GlobalResult := FileNm;
-
-  FINALLY
-
-     CloseFile(F);
-  End;
+        with ActiveCircuit[ActiveActor] do
+        begin
+            pReg := RegControls.First;
+            while pReg <> NIL do
+            begin
+                with pReg.Transformer do
+                begin
+                    iWind := pReg.TrWinding;
+                    Write(F, Name);
+                    Writeln(F, Format(', %8.5f, %8.5f, %8.5f, %8.5f, %d', [PresentTap[iWind, ActiveActor], MinTap[iWind], MaxTap[iWind], TapIncrement[iWind], TapPosition(pREg.Transformer, iWind)]));
+                end;
+                pReg := RegControls.Next;
+            end;
+        end;
 
 
-End;
+        GlobalResult := FileNm;
 
-Procedure ExportYNodeList(FileNM:String);
-VAR
-   i : Integer;
-   F : TextFile;
+    finally
 
-Begin
+        CloseFile(F);
+    end;
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+end;
 
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       FOR i := 1 to NumNodes DO
-       Begin
-             With MapNodeToBus^[i] do
-             Writeln(F, Format('"%s.%-d"',[Uppercase(BusList.Get(Busref)), NodeNum]));
-       End;
-     End;
+procedure ExportResult(FileNm: String);
 
-    GlobalResult := FileNm;
+var
+    F: TextFile;
 
-  Finally
-      CloseFile(F);
-  End;
+begin
 
-End;
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
+        Parservars.Lookup('@result');
+        Writeln(F, Parservars.Value);
 
-Procedure ExportYVoltages(FileNM:String);
-VAR
-   i : Integer;
-   F : TextFile;
+        GlobalResult := FileNm;
 
-Begin
+    finally
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
-
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       FOR i := 1 to NumNodes DO
-       Begin
-            With solution.NodeV^[i] Do
-             Writeln(F, Format('%10.6g, %10.6g',[re, im]));
-       End;
-     End;
-
-    GlobalResult := FileNm;
-
-  Finally
-      CloseFile(F);
-  End;
+        CloseFile(F);
+    end;
 
 
-End;
+end;
 
-Procedure ExportYCurrents(FileNM:String);
-VAR
-   i : Integer;
-   F : TextFile;
+procedure ExportYNodeList(FileNM: String);
+var
+    i: Integer;
+    F: TextFile;
 
-Begin
+begin
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-     WITH ActiveCircuit[ActiveActor] DO
-     Begin
-       FOR i := 1 to NumNodes DO
-       Begin
-            With solution.Currents^[i] Do
-             Writeln(F, Format('%10.6g, %10.6g',[re, im]));
-       End;
-     End;
+        if ActiveCircuit[ActiveActor] <> NIL then
+            with ActiveCircuit[ActiveActor] do
+            begin
+                for i := 1 to NumNodes do
+                begin
+                    with MapNodeToBus^[i] do
+                        Writeln(F, Format('"%s.%-d"', [Uppercase(BusList.Get(Busref)), NodeNum]));
+                end;
+            end;
 
-    GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
-  Finally
-      CloseFile(F);
-  End;
+    finally
+        CloseFile(F);
+    end;
 
-End;
+end;
+
+procedure ExportYVoltages(FileNM: String);
+var
+    i: Integer;
+    F: TextFile;
+
+begin
+
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
+
+        if ActiveCircuit[ActiveActor] <> NIL then
+            with ActiveCircuit[ActiveActor] do
+            begin
+                for i := 1 to NumNodes do
+                begin
+                    with solution.NodeV^[i] do
+                        Writeln(F, Format('%10.6g, %10.6g', [re, im]));
+                end;
+            end;
+
+        GlobalResult := FileNm;
+
+    finally
+        CloseFile(F);
+    end;
 
 
-Procedure ExportSections(FileNM:String; pMeter:TEnergyMeterObj);
+end;
 
-Var
-   MyMeterPtr:TEnergyMeterObj;
-   iMeter, i : Integer;
-   F : TextFile;
+procedure ExportYCurrents(FileNM: String);
+var
+    i: Integer;
+    F: TextFile;
+
+begin
+
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
+
+        if ActiveCircuit[ActiveActor] <> NIL then
+            with ActiveCircuit[ActiveActor] do
+            begin
+                for i := 1 to NumNodes do
+                begin
+                    with solution.Currents^[i] do
+                        Writeln(F, Format('%10.6g, %10.6g', [re, im]));
+                end;
+            end;
+
+        GlobalResult := FileNm;
+
+    finally
+        CloseFile(F);
+    end;
+
+end;
 
 
-Begin
+procedure ExportSections(FileNM: String; pMeter: TEnergyMeterObj);
 
-  Try
-     Assignfile(F, FileNm);
-     ReWrite(F);
+var
+    MyMeterPtr: TEnergyMeterObj;
+    iMeter, i: Integer;
+    F: TextFile;
+
+
+begin
+
+    try
+        Assignfile(F, FileNm);
+        ReWrite(F);
 
      // Write Header
-     Writeln(F, 'Meter, SectionID, SeqIndex, DeviceType, NumCustomers, NumBranches, AvgRepairHrs, TotalDownlineCust, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates, HeadBranch ');
+        Writeln(F, 'Meter, SectionID, SeqIndex, DeviceType, NumCustomers, NumBranches, AvgRepairHrs, TotalDownlineCust, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates, HeadBranch ');
 
-   If Assigned(pMeter) Then
+        if Assigned(pMeter) then
      // If a meter is specified, export that meter only
-     With pMeter Do Begin
-         for i  := 1 to SectionCount  do
-           With FeederSections^[i] Do Begin
-              ActiveCircuit[ActiveActor].ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
-              Writeln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
-              [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
-               FullName(ActiveCircuit[ActiveActor].ActiveCktElement)  ]));
-           End;
-     End
-   Else    // export sections for all meters
-     Begin
-        iMeter := EnergyMeterClass[ActiveActor].First;
-        while iMeter>0 do Begin
-             MyMeterPtr:=EnergyMeterClass[ActiveActor].GetActiveObj;
-             With MyMeterPtr Do Begin
-                 for i  := 1 to SectionCount  do
-                    With FeederSections^[i] Do Begin
-                      ActiveCircuit[ActiveActor].ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
-                      Writeln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
-                      [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
-                      FullName(ActiveCircuit[ActiveActor].ActiveCktElement)  ]));
-                    End;
-                iMeter := EnergyMeterClass[ActiveActor].Next;
-            End;
-        End;
-     End;
+            with pMeter do
+            begin
+                for i := 1 to SectionCount do
+                    with FeederSections^[i] do
+                    begin
+                        ActiveCircuit[ActiveActor].ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
+                        Writeln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
+                            [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
+                            FullName(ActiveCircuit[ActiveActor].ActiveCktElement)]));
+                    end;
+            end
+        else    // export sections for all meters
+        begin
+            iMeter := EnergyMeterClass[ActiveActor].First;
+            while iMeter > 0 do
+            begin
+                MyMeterPtr := EnergyMeterClass[ActiveActor].GetActiveObj;
+                with MyMeterPtr do
+                begin
+                    for i := 1 to SectionCount do
+                        with FeederSections^[i] do
+                        begin
+                            ActiveCircuit[ActiveActor].ActiveCktElement := TDSSCktElement(sequenceList.Get(SeqIndex));
+                            Writeln(F, Format('%s, %d, %d, %s, %d, %d, %-.6g, %d, %-.6g, %-.6g, %-.6g, %s',
+                                [Name, i, SeqIndex, GetOCPDeviceTypeString(OCPDeviceType), NCustomers, NBranches, AverageRepairTime, TotalCustomers, SectFaultRate, SumFltRatesXRepairHrs, SumBranchFltRates,
+                                FullName(ActiveCircuit[ActiveActor].ActiveCktElement)]));
+                        end;
+                    iMeter := EnergyMeterClass[ActiveActor].Next;
+                end;
+            end;
+        end;
 
-     GlobalResult := FileNm;
+        GlobalResult := FileNm;
 
-  Finally
-     CloseFile(F);
-  End;
+    finally
+        CloseFile(F);
+    end;
 
-End;
+end;
 
 
 end.
-
-

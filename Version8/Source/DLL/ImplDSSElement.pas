@@ -1,4 +1,5 @@
 unit ImplDSSElement;
+
  {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -10,112 +11,119 @@ unit ImplDSSElement;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSengine_TLB, StdVcl;
+    ComObj,
+    ActiveX,
+    OpenDSSengine_TLB,
+    StdVcl;
 
 type
-  TDSSElement = class(TAutoObject, IDSSElement)
-  protected
-    function Get_AllPropertyNames: OleVariant; safecall;
-    function Get_Name: WideString; safecall;
-    function Get_NumProperties: Integer; safecall;
-    function Get_Properties(Indx: OleVariant): IDSSProperty; safecall;
+    TDSSElement = class(TAutoObject, IDSSElement)
+    PROTECTED
+        function Get_AllPropertyNames: Olevariant; SAFECALL;
+        function Get_Name: Widestring; SAFECALL;
+        function Get_NumProperties: Integer; SAFECALL;
+        function Get_Properties(Indx: Olevariant): IDSSProperty; SAFECALL;
 
-  end;
+    end;
 
 implementation
 
-uses ComServ,
-     DSSGlobals,
-     Variants,
-     ImplGlobals,
-     Sysutils
-     ;
+uses
+    ComServ,
+    DSSGlobals,
+    Variants,
+    ImplGlobals,
+    Sysutils;
 
-function TDSSElement.Get_AllPropertyNames: OleVariant;
-VAR
-   k:Integer;
+function TDSSElement.Get_AllPropertyNames: Olevariant;
+var
+    k: Integer;
 begin
-  Result := VarArrayCreate([0, 0], varOleStr);
-  IF ActiveCircuit <> Nil THEN
-   WITH ActiveCircuit[ActiveActor] DO
-   Begin
-     If ActiveDSSObject[ActiveActor]<>Nil THEN
-     WITH ActiveDSSObject[ActiveActor] DO
-     Begin
-          WITH ParentClass Do
-          Begin
-              Result := VarArrayCreate([0, NumProperties-1], varOleStr);
-              For k := 1 to NumProperties DO Begin
-                  Result[k-1] := PropertyName^[k];
-              End;
-          End;
-     End
-   End;
+    Result := VarArrayCreate([0, 0], varOleStr);
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit[ActiveActor] do
+        begin
+            if ActiveDSSObject[ActiveActor] <> NIL then
+                with ActiveDSSObject[ActiveActor] do
+                begin
+                    with ParentClass do
+                    begin
+                        Result := VarArrayCreate([0, NumProperties - 1], varOleStr);
+                        for k := 1 to NumProperties do
+                        begin
+                            Result[k - 1] := PropertyName^[k];
+                        end;
+                    end;
+                end
+        end;
 
 end;
 
-function TDSSElement.Get_Name: WideString;
-Begin
-   If ActiveCircuit <> Nil Then
-     if ActiveDSSObject <> Nil then
-      WITH ActiveDSSObject[ActiveActor] DO
-      Begin
-        Result := ParentClass.Name + '.' + Name;
-      End
-   Else
-      Result := '';
+function TDSSElement.Get_Name: Widestring;
+begin
+    if ActiveCircuit <> NIL then
+        if ActiveDSSObject <> NIL then
+            with ActiveDSSObject[ActiveActor] do
+            begin
+                Result := ParentClass.Name + '.' + Name;
+            end
+        else
+            Result := '';
 end;
 
 function TDSSElement.Get_NumProperties: Integer;
 begin
-  Result := 0;
-  IF ActiveCircuit <> Nil THEN
-   WITH ActiveCircuit[ActiveActor] DO
-   Begin
-     If ActiveDSSObject[ActiveActor]<>Nil THEN
-     WITH ActiveDSSObject[ActiveActor] DO
-     Begin
-          Result := ParentClass.NumProperties ;
-     End
-   End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit[ActiveActor] do
+        begin
+            if ActiveDSSObject[ActiveActor] <> NIL then
+                with ActiveDSSObject[ActiveActor] do
+                begin
+                    Result := ParentClass.NumProperties;
+                end
+        end;
 end;
 
-function TDSSElement.Get_Properties(Indx: OleVariant): IDSSProperty;
-Var
-   Str:String;
-   i :Integer;
+function TDSSElement.Get_Properties(Indx: Olevariant): IDSSProperty;
+var
+    Str: String;
+    i: Integer;
 begin
 
-  If ActiveCircuit <> Nil Then
-  Begin
+    if ActiveCircuit <> NIL then
+    begin
 
-     Case (Vartype(Indx) and VarTypeMask) of
-         VarSmallint, VarInteger: FPropIndex := Integer(Indx) + 1;    // INdex is zero based to match arrays
-         VarOleStr:
-           Begin
-              FPropClass := ActiveDSSObject[ActiveActor].ParentClass;
-              FPropIndex := 0;
-              Str := Indx;
-              If FPropClass <> Nil Then
-               With FPropClass Do
-               For i := 1 to NumProperties Do Begin
-                   If CompareText(Str, PropertyName^[i]) = 0 Then Begin
-                       FPropIndex := i;
-                       Break;
-                   End;
-               End;
-           End;
-     Else
-         DoSimpleMsg('Illegal Var Type Passed to Properties Interface: '+ Format('$%x',[VarType(Indx)]), 5011);
-     End;
+        case (Vartype(Indx) and VarTypeMask) of
+            VarSmallint, VarInteger:
+                FPropIndex := Integer(Indx) + 1;    // INdex is zero based to match arrays
+            VarOleStr:
+            begin
+                FPropClass := ActiveDSSObject[ActiveActor].ParentClass;
+                FPropIndex := 0;
+                Str := Indx;
+                if FPropClass <> NIL then
+                    with FPropClass do
+                        for i := 1 to NumProperties do
+                        begin
+                            if CompareText(Str, PropertyName^[i]) = 0 then
+                            begin
+                                FPropIndex := i;
+                                Break;
+                            end;
+                        end;
+            end;
+        else
+            DoSimpleMsg('Illegal Var Type Passed to Properties Interface: ' + Format('$%x', [VarType(Indx)]), 5011);
+        end;
 
-  End;
+    end;
 
-  Result := FDSSProperty As IDSSProperty;
+    Result := FDSSProperty as IDSSProperty;
 
 end;
 
 initialization
-  TAutoObjectFactory.Create(ComServer, TDSSElement, Class_DSSElement,
-    ciInternal, tmApartment);
+    TAutoObjectFactory.Create(ComServer, TDSSElement, Class_DSSElement,
+        ciInternal, tmApartment);
 end.

@@ -1,4 +1,5 @@
 unit ImplDSSProperty;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -13,63 +14,72 @@ unit ImplDSSProperty;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSEngine_TLB, StdVcl;
+    ComObj,
+    ActiveX,
+    OpenDSSEngine_TLB,
+    StdVcl;
 
 type
-  TDSSProperty = class(TAutoObject, IDSSProperty)
-  protected
-    function Get_Description: WideString; safecall;
-    function Get_Name: WideString; safecall;
-    function Get_Val: WideString; safecall;
-    procedure Set_Val(const Value: WideString); safecall;
-  end;
+    TDSSProperty = class(TAutoObject, IDSSProperty)
+    PROTECTED
+        function Get_Description: Widestring; SAFECALL;
+        function Get_Name: Widestring; SAFECALL;
+        function Get_Val: Widestring; SAFECALL;
+        procedure Set_Val(const Value: Widestring); SAFECALL;
+    end;
 
 implementation
 
-uses ComServ, DSSClass, DSSGlobals, ImplGlobals, Executive, SysUtils;
+uses
+    ComServ,
+    DSSClass,
+    DSSGlobals,
+    ImplGlobals,
+    Executive,
+    SysUtils;
 
-function TDSSProperty.Get_Description: WideString;
+function TDSSProperty.Get_Description: Widestring;
 begin
-      Result := '';
-      If (ActiveCircuit<> Nil) and (FPropIndex <> 0) {and (FPropClass <> Nil)} Then
-      With  ActiveDSSObject[ActiveActor].ParentClass Do
-        If FPropIndex <= NumProperties Then
-          Result := PropertyHelp^[FPropIndex];
+    Result := '';
+    if (ActiveCircuit <> NIL) and (FPropIndex <> 0) {and (FPropClass <> Nil)} then
+        with  ActiveDSSObject[ActiveActor].ParentClass do
+            if FPropIndex <= NumProperties then
+                Result := PropertyHelp^[FPropIndex];
 
 end;
 
-function TDSSProperty.Get_Name: WideString;
+function TDSSProperty.Get_Name: Widestring;
 begin
-      Result := '';
-      If (ActiveCircuit<> Nil) and (FPropIndex <> 0) {and (FPropClass <> Nil)} Then
-        With  ActiveDSSObject[ActiveActor].ParentClass   Do
-        If FPropIndex <= NumProperties Then
-          Result := PropertyName^[FPropIndex];
+    Result := '';
+    if (ActiveCircuit <> NIL) and (FPropIndex <> 0) {and (FPropClass <> Nil)} then
+        with  ActiveDSSObject[ActiveActor].ParentClass do
+            if FPropIndex <= NumProperties then
+                Result := PropertyName^[FPropIndex];
 
 end;
 
 
-function TDSSProperty.Get_Val: WideString;
+function TDSSProperty.Get_Val: Widestring;
 begin
-       Result := '';
-      If (ActiveCircuit<> Nil)
-      THEN  With ActiveDSSObject[ActiveActor] Do
-        If FPropIndex <= ParentClass.NumProperties Then
-              Result := PropertyValue[ParentClass.PropertyIdxMap[FPropIndex]];
+    Result := '';
+    if (ActiveCircuit <> NIL) then
+        with ActiveDSSObject[ActiveActor] do
+            if FPropIndex <= ParentClass.NumProperties then
+                Result := PropertyValue[ParentClass.PropertyIdxMap[FPropIndex]];
 
 end;
 
-procedure TDSSProperty.Set_Val(const Value: WideString);
+procedure TDSSProperty.Set_Val(const Value: Widestring);
 begin
-      If (ActiveCircuit<> Nil)
-      THEN  With ActiveDSSObject[ActiveActor] Do
-        If FPropIndex <= ParentClass.NumProperties Then
-              DSSExecutive[ActiveActor].Command := 'Edit ' + ParentClass.Name + '.' + Name + ' ' +
-                     ParentClass.PropertyName^[FPropIndex] + '=' +
-                     String(Value);
-End;
+    if (ActiveCircuit <> NIL) then
+        with ActiveDSSObject[ActiveActor] do
+            if FPropIndex <= ParentClass.NumProperties then
+                DSSExecutive[ActiveActor].Command := 'Edit ' + ParentClass.Name + '.' + Name + ' ' +
+                    ParentClass.PropertyName^[FPropIndex] + '=' +
+                    String(Value);
+end;
 
 
 initialization
-  TAutoObjectFactory.Create(ComServer, TDSSProperty, Class_DSSProperty, ciInternal, tmApartment);
+    TAutoObjectFactory.Create(ComServer, TDSSProperty, Class_DSSProperty, ciInternal, tmApartment);
 end.

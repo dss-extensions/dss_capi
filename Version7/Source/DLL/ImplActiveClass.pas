@@ -1,4 +1,5 @@
 unit ImplActiveClass;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -10,113 +11,133 @@ unit ImplActiveClass;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSengine_TLB, StdVcl;
+    ComObj,
+    ActiveX,
+    OpenDSSengine_TLB,
+    StdVcl;
 
 type
-  TActiveClass = class(TAutoObject, IActiveClass)
-  protected
-    function Get_AllNames: OleVariant; safecall;
-    function Get_First: Integer; safecall;
-    function Get_Next: Integer; safecall;
-    function Get_Name: WideString; safecall;
-    procedure Set_Name(const Value: WideString); safecall;
-    function Get_NumElements: Integer; safecall;
-    function Get_ActiveClassName: WideString; safecall;
-    function Get_Count: Integer; safecall;
+    TActiveClass = class(TAutoObject, IActiveClass)
+    PROTECTED
+        function Get_AllNames: Olevariant; SAFECALL;
+        function Get_First: Integer; SAFECALL;
+        function Get_Next: Integer; SAFECALL;
+        function Get_Name: Widestring; SAFECALL;
+        procedure Set_Name(const Value: Widestring); SAFECALL;
+        function Get_NumElements: Integer; SAFECALL;
+        function Get_ActiveClassName: Widestring; SAFECALL;
+        function Get_Count: Integer; SAFECALL;
 
-  end;
+    end;
 
 implementation
 
-uses ComServ, DSSGlobals, DSSObject, Variants, CktElement;
+uses
+    ComServ,
+    DSSGlobals,
+    DSSObject,
+    Variants,
+    CktElement;
 
-function TActiveClass.Get_AllNames: OleVariant;
-Var
-  idx: Integer;
-  k:Integer;
+function TActiveClass.Get_AllNames: Olevariant;
+var
+    idx: Integer;
+    k: Integer;
 
-Begin
-    If (ActiveCircuit <> Nil) and Assigned(ActiveDSSClass) Then
-     WITH ActiveCircuit DO
-     Begin
-       Result := VarArrayCreate([0, ActiveDSSClass.ElementCount-1], varOleStr);
-       k:=0;
-       idx := ActiveDSSClass.First;
-       WHILE idx > 0 DO  Begin
-          Result[k] := ActiveDSSObject.Name;
-          Inc(k);
-          idx := ActiveDSSClass.Next;
-       End;
-     End
-    ELSE Result := VarArrayCreate([0, 0], varOleStr);
+begin
+    if (ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
+        with ActiveCircuit do
+        begin
+            Result := VarArrayCreate([0, ActiveDSSClass.ElementCount - 1], varOleStr);
+            k := 0;
+            idx := ActiveDSSClass.First;
+            while idx > 0 do
+            begin
+                Result[k] := ActiveDSSObject.Name;
+                Inc(k);
+                idx := ActiveDSSClass.Next;
+            end;
+        end
+    else
+        Result := VarArrayCreate([0, 0], varOleStr);
 
 end;
 
 function TActiveClass.Get_First: Integer;
 
-Begin
+begin
 
-   Result := 0;
-   If (ActiveCircuit <> Nil) and Assigned(ActiveDSSClass) Then
-   Begin
+    Result := 0;
+    if (ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
+    begin
         Result := ActiveDSSClass.First;  // sets active objects
-   End;
+    end;
 
 end;
 
 function TActiveClass.Get_Next: Integer;
 
-Begin
+begin
 
-   Result := 0;
-   If (ActiveCircuit <> Nil) and Assigned(ActiveDSSClass) Then
-   Begin
+    Result := 0;
+    if (ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
+    begin
         Result := ActiveDSSClass.Next;  // sets active objects
-   End;
+    end;
 
 end;
 
-function TActiveClass.Get_Name: WideString;
+function TActiveClass.Get_Name: Widestring;
 begin
-      if Assigned(ActiveDSSObject) then  Result := ActiveDSSObject.Name
-      Else Result := '';
+    if Assigned(ActiveDSSObject) then
+        Result := ActiveDSSObject.Name
+    else
+        Result := '';
 end;
 
-procedure TActiveClass.Set_Name(const Value: WideString);
+procedure TActiveClass.Set_Name(const Value: Widestring);
 // set object active by name
-Var
-  pelem:TDSSObject;
+var
+    pelem: TDSSObject;
 begin
-     If  Assigned(ActiveDSSClass) Then  Begin
-         pelem := ActiveDSSClass.Find(Value);
-         if pelem <> Nil then Begin
+    if Assigned(ActiveDSSClass) then
+    begin
+        pelem := ActiveDSSClass.Find(Value);
+        if pelem <> NIL then
+        begin
             if pelem is TDSSCktElement then
-             ActiveCircuit.ActiveCktElement := TDSSCktElement(pelem)  // sets ActiveDSSobject
-          Else
-             ActiveDSSObject := pelem;
-         End;
-     End;
+                ActiveCircuit.ActiveCktElement := TDSSCktElement(pelem)  // sets ActiveDSSobject
+            else
+                ActiveDSSObject := pelem;
+        end;
+    end;
 end;
 
 function TActiveClass.Get_NumElements: Integer;
 begin
-    if Assigned(ActiveDSSClass) then  Result := ActiveDSSCLass.ElementCount
-     Else Result := 0;
+    if Assigned(ActiveDSSClass) then
+        Result := ActiveDSSCLass.ElementCount
+    else
+        Result := 0;
 end;
 
-function TActiveClass.Get_ActiveClassName: WideString;
+function TActiveClass.Get_ActiveClassName: Widestring;
 begin
-     if Assigned(ActiveDSSClass) then  Result := ActiveDSSCLass.Name
-     Else Result := '';
+    if Assigned(ActiveDSSClass) then
+        Result := ActiveDSSCLass.Name
+    else
+        Result := '';
 end;
 
 function TActiveClass.Get_Count: Integer;
 begin
-     if Assigned(ActiveDSSClass) then  Result := ActiveDSSCLass.ElementCount
-     Else Result := 0;
+    if Assigned(ActiveDSSClass) then
+        Result := ActiveDSSCLass.ElementCount
+    else
+        Result := 0;
 end;
 
 initialization
-  TAutoObjectFactory.Create(ComServer, TActiveClass, Class_ActiveClass,
-    ciInternal, tmApartment);
+    TAutoObjectFactory.Create(ComServer, TActiveClass, Class_ActiveClass,
+        ciInternal, tmApartment);
 end.

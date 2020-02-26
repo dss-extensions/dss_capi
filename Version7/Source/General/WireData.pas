@@ -1,4 +1,5 @@
 unit WireData;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -11,182 +12,204 @@ interface
 {Used for overhead line impedances.
 }
 
-USES
-  Command, DSSClass, DSSObject, ConductorData;
+uses
+    Command,
+    DSSClass,
+    DSSObject,
+    ConductorData;
 
-TYPE
-  TWireData = class(TConductorData)
-    private
-      Function Get_Code:String;  // Returns active line code string
-      Procedure Set_Code(const Value:String);  // sets the  active WireData
-    Protected
-      Procedure DefineProperties;
-      Function MakeLike(Const WireName:String):Integer;  Override;
-    public
-      constructor Create;
-      destructor Destroy; override;
+type
+    TWireData = class(TConductorData)
+    PRIVATE
+        function Get_Code: String;  // Returns active line code string
+        procedure Set_Code(const Value: String);  // sets the  active WireData
+    PROTECTED
+        procedure DefineProperties;
+        function MakeLike(const WireName: String): Integer; OVERRIDE;
+    PUBLIC
+        constructor Create;
+        destructor Destroy; OVERRIDE;
 
-      Function Edit:Integer; override;     // uses global parser
-      Function Init(Handle:Integer):Integer; override;
-      Function NewObject(const ObjName:String):Integer; override;
+        function Edit: Integer; OVERRIDE;     // uses global parser
+        function Init(Handle: Integer): Integer; OVERRIDE;
+        function NewObject(const ObjName: String): Integer; OVERRIDE;
 
       // Set this property to point ActiveWireDataObj to the right value
-      Property Code:String Read Get_Code  Write Set_Code;
-  end;
+        property Code: String READ Get_Code WRITE Set_Code;
+    end;
 
-  TWireDataObj = class(TConductorDataObj)
-    public
-      constructor Create(ParClass:TDSSClass; const WireDataName:String);
-      destructor Destroy; override;
+    TWireDataObj = class(TConductorDataObj)
+    PUBLIC
+        constructor Create(ParClass: TDSSClass; const WireDataName: String);
+        destructor Destroy; OVERRIDE;
 
-      PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
-      PROCEDURE DumpProperties(Var F:TextFile; Complete:Boolean);Override;
-   end;
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
+        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+    end;
 
 implementation
 
-USES  ParserDel,  DSSGlobals, DSSClassDefs, Sysutils, Ucomplex, Arraydef,  LineUNits;
+uses
+    ParserDel,
+    DSSGlobals,
+    DSSClassDefs,
+    Sysutils,
+    Ucomplex,
+    Arraydef,
+    LineUNits;
 
-Const
-  NumPropsThisClass = 0; // because they were all moved to ConductorData
+const
+    NumPropsThisClass = 0; // because they were all moved to ConductorData
 
 constructor TWireData.Create;  // Creates superstructure for all Line objects
-BEGIN
-  Inherited Create;
-  Class_Name := 'WireData';
-  DSSClassType := DSS_OBJECT;
-  ActiveElement := 0;
+begin
+    inherited Create;
+    Class_Name := 'WireData';
+    DSSClassType := DSS_OBJECT;
+    ActiveElement := 0;
 
-  DefineProperties;
+    DefineProperties;
 
-  CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
-  CommandList.Abbrev := TRUE;
-END;
+    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList.Abbrev := TRUE;
+end;
 
-Destructor TWireData.Destroy;
-BEGIN
-  Inherited Destroy;
-END;
+destructor TWireData.Destroy;
+begin
+    inherited Destroy;
+end;
 
-Procedure TWireData.DefineProperties;
-Begin
-  NumProperties := NumPropsThisClass;
-  CountProperties;   // Get inherited property count
-  AllocatePropertyArrays;
+procedure TWireData.DefineProperties;
+begin
+    NumProperties := NumPropsThisClass;
+    CountProperties;   // Get inherited property count
+    AllocatePropertyArrays;
 
-  ActiveProperty := NumPropsThisClass;
-  inherited DefineProperties;  // Add defs of inherited properties to bottom of list
-End;
+    ActiveProperty := NumPropsThisClass;
+    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
+end;
 
-Function TWireData.NewObject(const ObjName:String):Integer;
-BEGIN
+function TWireData.NewObject(const ObjName: String): Integer;
+begin
   // create a new object of this class and add to list
-  With ActiveCircuit Do Begin
-    ActiveDSSObject := TWireDataObj.Create(Self, ObjName);
-    Result := AddObjectToList(ActiveDSSObject);
-  End;
-END;
+    with ActiveCircuit do
+    begin
+        ActiveDSSObject := TWireDataObj.Create(Self, ObjName);
+        Result := AddObjectToList(ActiveDSSObject);
+    end;
+end;
 
-Function TWireData.Edit:Integer;
-VAR
-  ParamPointer:Integer;
-  ParamName:String;
-  Param:String;
-BEGIN
-  Result := 0;
+function TWireData.Edit: Integer;
+var
+    ParamPointer: Integer;
+    ParamName: String;
+    Param: String;
+begin
+    Result := 0;
   // continue parsing with contents of Parser
-  ActiveConductorDataObj := ElementList.Active;
-  ActiveDSSObject := ActiveConductorDataObj;
-  WITH ActiveConductorDataObj DO BEGIN
-    ParamPointer := 0;
-    ParamName := Parser.NextParam;
-    Param := Parser.StrValue;
-    WHILE Length(Param)>0 DO BEGIN
-      IF Length(ParamName) = 0 THEN Inc(ParamPointer)
-      ELSE ParamPointer := CommandList.GetCommand(ParamName);
+    ActiveConductorDataObj := ElementList.Active;
+    ActiveDSSObject := ActiveConductorDataObj;
+    with ActiveConductorDataObj do
+    begin
+        ParamPointer := 0;
+        ParamName := Parser.NextParam;
+        Param := Parser.StrValue;
+        while Length(Param) > 0 do
+        begin
+            if Length(ParamName) = 0 then
+                Inc(ParamPointer)
+            else
+                ParamPointer := CommandList.GetCommand(ParamName);
 
-      If (ParamPointer>0) and (ParamPointer<=NumProperties) Then PropertyValue[ParamPointer]:= Param;
+            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
+                PropertyValue[ParamPointer] := Param;
 
-      CASE ParamPointer OF
-        0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 101);
-      ELSE
+            case ParamPointer of
+                0:
+                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 101);
+            else
         // Inherited parameters
-        ClassEdit(ActiveConductorDataObj, ParamPointer - NumPropsThisClass)
-      END;
-      ParamName := Parser.NextParam;
-      Param := Parser.StrValue;
-    END;
-  END;
-END;
+                ClassEdit(ActiveConductorDataObj, ParamPointer - NumPropsThisClass)
+            end;
+            ParamName := Parser.NextParam;
+            Param := Parser.StrValue;
+        end;
+    end;
+end;
 
-Function TWireData.MakeLike(Const WireName:String):Integer;
-VAR
-  OtherWireData:TWireDataObj;
-  i:Integer;
-BEGIN
-  Result := 0;
-  OtherWireData := Find(WireName);
-  IF OtherWireData<>Nil THEN
-    WITH ActiveConductorDataObj DO BEGIN
-      ClassMakeLike(OtherWireData);
-      For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherWireData.PropertyValue[i];
-      Result := 1;
-    END
-  ELSE  DoSimpleMsg('Error in Wire MakeLike: "' + WireName + '" Not Found.', 102);
-END;
+function TWireData.MakeLike(const WireName: String): Integer;
+var
+    OtherWireData: TWireDataObj;
+    i: Integer;
+begin
+    Result := 0;
+    OtherWireData := Find(WireName);
+    if OtherWireData <> NIL then
+        with ActiveConductorDataObj do
+        begin
+            ClassMakeLike(OtherWireData);
+            for i := 1 to ParentClass.NumProperties do
+                PropertyValue[i] := OtherWireData.PropertyValue[i];
+            Result := 1;
+        end
+    else
+        DoSimpleMsg('Error in Wire MakeLike: "' + WireName + '" Not Found.', 102);
+end;
 
-Function TWireData.Init(Handle:Integer):Integer;
-BEGIN
-  DoSimpleMsg('Need to implement TWireData.Init', -1);
-  REsult := 0;
-END;
+function TWireData.Init(Handle: Integer): Integer;
+begin
+    DoSimpleMsg('Need to implement TWireData.Init', -1);
+    REsult := 0;
+end;
 
-Function TWireData.Get_Code:String;  // Returns active line code string
-BEGIN
-  Result := TWireDataObj(ElementList.Active).Name;
-END;
+function TWireData.Get_Code: String;  // Returns active line code string
+begin
+    Result := TWireDataObj(ElementList.Active).Name;
+end;
 
-Procedure TWireData.Set_Code(const Value:String);  // sets the  active WireData
-VAR
-  WireDataObj:TWireDataObj;
-BEGIN
-  ActiveConductorDataObj := Nil;
-  WireDataObj := ElementList.First;
-  WHILE WireDataObj<>Nil DO BEGIN
-    IF CompareText(WireDataObj.Name, Value)=0 THEN BEGIN
-      ActiveConductorDataObj := WireDataObj;
-      Exit;
-    END;
-    WireDataObj := ElementList.Next;
-  END;
-  DoSimpleMsg('WireData: "' + Value + '" not Found.', 103);
-END;
+procedure TWireData.Set_Code(const Value: String);  // sets the  active WireData
+var
+    WireDataObj: TWireDataObj;
+begin
+    ActiveConductorDataObj := NIL;
+    WireDataObj := ElementList.First;
+    while WireDataObj <> NIL do
+    begin
+        if CompareText(WireDataObj.Name, Value) = 0 then
+        begin
+            ActiveConductorDataObj := WireDataObj;
+            Exit;
+        end;
+        WireDataObj := ElementList.Next;
+    end;
+    DoSimpleMsg('WireData: "' + Value + '" not Found.', 103);
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //      TWireData Obj
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-constructor TWireDataObj.Create(ParClass:TDSSClass; const WireDataName:String);
-BEGIN
-  Inherited Create(ParClass, WireDataName);
-  Name := LowerCase(WireDataName);
-  DSSObjType := ParClass.DSSClassType;
-  InitPropertyValues(0);
-END;
+constructor TWireDataObj.Create(ParClass: TDSSClass; const WireDataName: String);
+begin
+    inherited Create(ParClass, WireDataName);
+    Name := LowerCase(WireDataName);
+    DSSObjType := ParClass.DSSClassType;
+    InitPropertyValues(0);
+end;
 
 destructor TWireDataObj.Destroy;
-BEGIN
-  Inherited destroy;
-END;
+begin
+    inherited destroy;
+end;
 
-PROCEDURE TWireDataObj.DumpProperties(var F: TextFile; Complete: Boolean);
-Begin
-  Inherited DumpProperties(F, Complete);
+procedure TWireDataObj.DumpProperties(var F: TextFile; Complete: Boolean);
+begin
+    inherited DumpProperties(F, Complete);
 end;
 
 procedure TWireDataObj.InitPropertyValues(ArrayOffset: Integer);
 begin
-  inherited InitPropertyValues(ArrayOffset + NumPropsThisClass);
+    inherited InitPropertyValues(ArrayOffset + NumPropsThisClass);
 end;
 
 end.
