@@ -52,6 +52,7 @@ const
     STORAGE_CONTROL = 22 * 8;
     SWT_CONTROL = 23 * 8;
     PVSYSTEM_ELEMENT = 24 * 8;
+    PVSYSTEM2_ELEMENT = 25 * 8; // Using 25 (PR)
       // Deleted --- VV_CONTROL       = 25 * 8;
     GIC_Line = 26 * 8;
     GIC_Transformer = 27 * 8;
@@ -65,6 +66,9 @@ const
     INDMACH012_ELEMENT = 35 * 8;
     GIC_SOURCE = 36 * 8;
     AUTOTRANS_ELEMENT = 37 * 8;
+    INV_CONTROL2 = 40 * 8;
+    STORAGE2_ELEMENT = 41 * 8;
+    STORAGE2_CONTROL = 42 * 8;
 
 var
     NumIntrinsicClasses,
@@ -121,10 +125,14 @@ uses
     Feeder,
     XfmrCode,
     Storage,
+    Storage2,
     StorageController,
+    StorageController2,
     SwtControl,
     PVSystem,
+    PVSystem2,
     InvControl,
+    InvControl2,
     GICLine,
     GICTransformer,
     VSConverter,
@@ -240,8 +248,14 @@ begin
     StorageClass := TStorage.Create;
     DSSClasses.New := StorageClass;
 
+    Storage2Class := TStorage2.Create;
+    DSSClasses.New := Storage2Class;
+
     StorageControllerClass := TStorageController.Create;
     DSSClasses.New := StorageControllerClass;
+    
+    StorageController2Class := TStorageController2.Create;
+    DSSClasses.New := StorageController2Class;
 
     RelayClass := TRelay.Create;
     DSSClasses.New := RelayClass;
@@ -260,6 +274,9 @@ begin
 
     PVSystemClass := TPVSystem.Create;
     DSSClasses.New := PVSystemClass;
+    
+    PVSystem2Class := TPVSystem2.Create;
+    DSSClasses.New := PVSystem2Class;
 
     UPFCClass := TUPFC.Create;
     DSSClasses.New := UPFCClass;
@@ -281,6 +298,9 @@ begin
 
     InvControlClass := TInvControl.Create;
     DSSClasses.New := InvControlClass;
+
+    InvControl2Class := TInvControl2.Create;
+    DSSClasses.New := InvControl2Class;
 
     ExpControlClass := TExpControl.Create;
     DSSClasses.New := ExpControlClass;

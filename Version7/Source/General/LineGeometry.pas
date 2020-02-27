@@ -1037,6 +1037,7 @@ begin
         FLineData.X[i, Funits^[i]] := FX^[i];
         FLineData.Y[i, Funits^[i]] := FY^[i];
         FLineData.radius[i, FWireData^[i].RadiusUnits] := FWireData^[i].Radius;
+        FLineData.capradius[i, FWireData^[i].RadiusUnits] := FWireData^[i].capRadius;
         FLineData.GMR[i, FWireData^[i].GMRUnits] := FWireData^[i].GMR;
         FLineData.Rdc[i, FWireData^[i].ResUnits] := FWireData^[i].Rdc;
         FLineData.Rac[i, FWireData^[i].ResUnits] := FWireData^[i].Rac;
@@ -1083,7 +1084,7 @@ begin
     end
     else
     begin
-        FLineData.Calc(f);
+        FLineData.Calc(f); {***** Line impedance calc'd here ****}
         if FReduce then
             FLineData.Reduce; // reduce out neutrals
     end;

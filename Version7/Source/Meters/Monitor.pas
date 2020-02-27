@@ -237,7 +237,8 @@ uses
     Dynamics,
     PstCalc,
     Capacitor,
-    Storage;
+    Storage,
+    Storage2;
 
 const
     SEQUENCEMASK = 16;
@@ -714,7 +715,7 @@ begin
 
             7:
             begin                                                // Checking if the element is a storage device
-                if (MeteredElement.DSSObjType and CLASSMASK) <> STORAGE_ELEMENT then
+                if ((MeteredElement.DSSObjType and CLASSMASK) <> STORAGE_ELEMENT) and ((MeteredElement.DSSObjType and CLASSMASK) <> STORAGE2_ELEMENT) then
                 begin
                     DoSimpleMsg(MeteredElement.Name + ' is not a storage device!', 2016002);
                     Exit;
@@ -1416,13 +1417,28 @@ begin
         end;
         7:
         begin     // Monitor Storage Device state variables
-            with TStorageObj(MeteredElement) do
-            begin
-                AddDblToBuffer(PresentkW);
-                AddDblToBuffer(Presentkvar);
-                AddDblToBuffer(StorageVars.kWhStored);
-                AddDblToBuffer(((StorageVars.kWhStored) / (StorageVars.kWhRating)) * 100);
-                AddDblToBuffer(StorageState);
+            if (MeteredElement.DSSObjType and CLASSMASK) = STORAGE_ELEMENT then
+            begin  // Storage Element
+                with TStorageObj(MeteredElement) do
+                begin
+                    AddDblToBuffer(PresentkW);
+                    AddDblToBuffer(Presentkvar);
+                    AddDblToBuffer(StorageVars.kWhStored);
+                    AddDblToBuffer(((StorageVars.kWhStored) / (StorageVars.kWhRating)) * 100);
+                    AddDblToBuffer(StorageState);
+                end;
+            end
+            else
+            if (MeteredElement.DSSObjType and CLASSMASK) = STORAGE2_ELEMENT then
+            begin   // Storage2 Element
+                with TStorage2Obj(MeteredElement) do
+                begin
+                    AddDblToBuffer(PresentkW);
+                    AddDblToBuffer(Presentkvar);
+                    AddDblToBuffer(Storage2Vars.kWhStored);
+                    AddDblToBuffer(((Storage2Vars.kWhStored) / (Storage2Vars.kWhRating)) * 100);
+                    AddDblToBuffer(Storage2State);
+                end;
             end;
             Exit;  // Done with this mode now.
         end;

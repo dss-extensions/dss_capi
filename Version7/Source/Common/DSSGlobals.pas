@@ -42,8 +42,11 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      TSData,
      LineSpacing,
      Storage,
+     Storage2,
      PVSystem,
+     PVSystem2,
      InvControl,
+     InvControl2,
      ExpControl,
 
      LineCode,
@@ -62,6 +65,7 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      Generator,
      GenDispatcher,
      StorageController,
+     StorageController2,
      Relay,
      Recloser,
      Fuse,
@@ -242,8 +246,11 @@ VAR
    LineSpacingClass   :TLineSpacing;
    LineCodeClass      :TLineCode;
    StorageClass       :TStorage;
+   Storage2Class      :TStorage2;
    PVSystemClass      :TPVSystem;
-   InvControlClass     :TInvControl;
+   PVSystem2Class     :TPVSystem2;
+   InvControlClass    :TInvControl;
+   InvControl2Class   :TInvControl2;
    ExpControlClass    :TExpControl;
 
    LineClass          :TLine;
@@ -260,6 +267,7 @@ VAR
    GeneratorClass     :TGenerator;
    GenDispatcherClass :TGenDispatcher;
    StorageControllerClass: TStorageController;
+   StorageController2Class: TStorageController2;
    RelayClass         :TRelay;
    RecloserClass      :TRecloser;
    FuseClass          :TFuse;

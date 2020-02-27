@@ -13,7 +13,7 @@ uses
     Command;
 
 const
-    NumExportOptions = 61;
+    NumExportOptions = 62;
 
 function DoExportCmd: Integer;
 
@@ -108,6 +108,7 @@ begin
     ExportOption[59] := 'ZCC';
     ExportOption[60] := 'Contours';
     ExportOption[61] := 'Y4';
+    ExportOption[62] := 'PVSystem2_Meters';
 
     ExportHelp[1] := '(Default file = EXP_VOLTAGES.CSV) Voltages to ground by bus/node.';
     ExportHelp[2] := '(Default file = EXP_SEQVOLTAGES.CSV) Sequence voltages.';
@@ -136,7 +137,7 @@ begin
     ExportHelp[22] := '** Deprecated ** (IEC 61968-13, CDPSM Asset profile)';
     ExportHelp[23] := '[Default file = EXP_BUSCOORDS.CSV] Bus coordinates in csv form.';
     ExportHelp[24] := '[Default file = EXP_LOSSES.CSV] Losses for each element.';
-    ExportHelp[25] := '[Default file = EXP_UUIDS.CSV] Uuids for each element.';
+    ExportHelp[25] := '[Default file = EXP_UUIDS.CSV] Uuids for each element. This frees the UUID list after export.';
     ExportHelp[26] := '[Default file = EXP_Counts.CSV] (instance counts for each class)';
     ExportHelp[27] := '[Default file = EXP_Summary.CSV] Solution summary.';
     ExportHelp[28] := '** Deprecated ** (IEC 61968-13, CDPSM Electrical Properties profile)';
@@ -178,6 +179,8 @@ begin
     ExportHelp[59] := 'Exports the connectivity matrix (ZCC) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates.  If A-Diakoptics is not initialized this command does nothing';
     ExportHelp[60] := 'Exports the Contours matrix (C) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are integers.  If A-Diakoptics is not initialized this command does nothing';
     ExportHelp[61] := 'Exports the inverse of Z4 (ZCC) calculated after initilizing A-Diakoptics. The output format is compressed coordianted and the values are complex conjugates.  If A-Diakoptics is not initialized this command does nothing';
+    ExportHelp[62] := '(Default file = EXP_PVMETERS.CSV) Present values of PVSystem2 meters. Adding the switch "/multiple" or "/m" will ' +
+        ' cause a separate file to be written for each PVSystem2.';
 end;
 
 //----------------------------------------------------------------------------
@@ -235,10 +238,7 @@ begin
     Substation := ActiveCircuit.Name + '_Substation';
     SubGeographicRegion := ActiveCircuit.Name + '_SubRegion';
     GeographicRegion := ActiveCircuit.Name + '_Region';
-    FdrUuid := ActiveCircuit.UUID;  // default is to not change the feeder mrid 
-    CreateUUID4(SubUuid);      // these next 3 are created on the fly for CIM export
-    CreateUUID4(SubGeoUuid);
-    CreateUUID4(RgnUuid);
+    DefaultCircuitUUIDs (FdrUuid, SubUuid, RgnUuid, SubGeoUuid);
 
     case ParamPointer of
         9, 19:
@@ -642,7 +642,8 @@ begin
             ExportC(FileName);
         61:
             ExportY4(FileName);
-
+        62:
+            ExportPVSystem2Meters(FileName);
     else
         // ExportVoltages(FileName);    // default
         DoSimpleMsg('Error: Unknown Export command: "' + parm1 + '"', 24713);

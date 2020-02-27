@@ -14,7 +14,8 @@ unit ExportResults;
 interface
 
 uses
-    EnergyMeter;
+    EnergyMeter,
+    XYCurve;
 
 procedure ExportVoltages(FileNm: String);
 procedure ExportSeqVoltages(FileNm: String);
@@ -28,7 +29,9 @@ procedure ExportFaultStudy(FileNm: String);
 procedure ExportMeters(FileNm: String);
 procedure ExportGenMeters(FileNm: String);
 procedure ExportPVSystemMeters(FileNm: String);
+procedure ExportPVSystem2Meters(FileNm: String);
 procedure ExportStorageMeters(FileNm: String);
+procedure ExportStorage2Meters(FileNm: String);
 procedure ExportLoads(FileNm: String);
 procedure ExportCapacity(FileNm: String);
 procedure ExportOverloads(FileNm: String);
@@ -103,8 +106,14 @@ uses
     NamedObject,
     GICTransformer,
     PVSystem,
+    PVSystem2,
     Storage,
-    KLUSolve;
+    Storage2,
+    KLUSolve,
+    ExportCIMXML,
+    LineSpacing,
+    CNData,
+    TSData;
 
 procedure WriteElementVoltagesExportFile(var F: TextFile; pElem: TDSSCktElement; MaxNumNodes: Integer);
 
@@ -559,11 +568,42 @@ end;
 
 procedure CalcAndWriteMaxCurrents(var F: TextFile; pElem: TPDElement; Cbuffer: pComplexArray);
 var
+    RatingIdx,
     i: Integer;
-    Currmag, MaxCurrent: Double;
+    EmergAmps,
+    NormAmps,
+    Currmag,
+    MaxCurrent: Double;
     LocalPower: Complex;
+    RSignal: TXYCurveObj;
 
 begin
+    // Initializes NomrAmps and EmergAmps with the default values for the PDElement
+    NormAmps := pElem.NormAmps;
+    EmergAmps := pElem.EmergAmps;
+
+    if SeasonalRating then
+    begin
+        if SeasonSignal <> '' then
+        begin
+            RSignal := XYCurveClass.Find(SeasonSignal);
+            if RSignal <> NIL then
+            begin
+                RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));
+          // Brings the seasonal ratings for the PDElement
+                if (RatingIdx <= PElem.NumAmpRatings) and (PElem.NumAmpRatings > 1) then
+                begin
+                    NormAmps := pElem.AmpRatings[RatingIdx];
+                    EmergAmps := pElem.AmpRatings[RatingIdx];
+                end;
+            end
+            else
+                SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
+        end
+        else
+            SeasonalRating := FALSE;    // The user didn't define the seasonal signal
+    end;
+
     Write(F, Format('%s.%s', [pelem.DSSClassName, UpperCase(pElem.Name)]));
     MaxCurrent := 0.0;
     for    i := 1 to pElem.Nphases do
@@ -577,12 +617,14 @@ begin
     if (pElem.NormAmps = 0.0) or (pElem.EmergAmps = 0.0) then
         Write(F, Format(', %10.6g, %8.2f, %8.2f', [MaxCurrent, 0.0, 0.0]))
     else
-        Write(F, Format(', %10.6g, %8.2f, %8.2f', [MaxCurrent, MaxCurrent / pElem.NormAmps * 100.0, MaxCurrent / pElem.Emergamps * 100.0]));
+        Write(F, Format(', %10.6g, %8.2f, %8.2f', [MaxCurrent, MaxCurrent / NormAmps * 100.0, MaxCurrent / Emergamps * 100.0]));
+
     Write(F, Format(', %10.6g, %10.6g, %d, %d, %d', [Localpower.re, Localpower.im, pElem.BranchNumCustomers, pElem.BranchTotalCustomers, pElem.NPhases]));
     with ActiveCircuit do
         Write(F, Format(', %-.3g ', [Buses^[MapNodeToBus^[PElem.NodeRef^[1]].BusRef].kVBase]));
     Writeln(F);
 end;
+
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ExportCurrents(FileNm: String);
@@ -2236,6 +2278,66 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+procedure WriteMultiplePVSystem2MeterFiles;
+
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TPVSystem2Obj;
+    FileNm,
+    Separator: String;
+
+begin
+
+    if PVSystem2Class = NIL then
+        Exit;  // oops somewhere!!
+    Separator := ', ';
+
+    pElem := ActiveCircuit.PVSystems2.First;
+    while pElem <> NIL do
+    begin
+        if pElem.Enabled then
+        begin
+            try
+                FileNm := GetOutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
+
+                if not FileExists(FileNm) then
+                begin
+                    AssignFile(F, FileNm);
+                    Rewrite(F);
+                {Write New Header}
+                    Write(F, 'Year, LDCurve, Hour, PVSystem2');
+                    for i := 1 to NumPVSystem2Registers do
+                        Write(F, Separator, '"' + PVSystem2Class.RegisterNames[i] + '"');
+                    Writeln(F);
+                    CloseFile(F);
+                end;
+
+                AssignFile(F, FileNm);
+                Append(F);
+                with ActiveCircuit do
+                begin
+                    Write(F, Solution.Year: 0, Separator);
+                    Write(F, LoadDurCurve, Separator);
+                    Write(F, Solution.DynaVars.intHour: 0, Separator);
+                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    for j := 1 to NumPVSystem2Registers do
+                        Write(F, Separator, PElem.Registers[j]: 10: 0);
+                    Writeln(F);
+                end;
+                AppendGlobalResult(FileNm);
+            finally
+                CloseFile(F);
+            end;
+
+        end;
+        pElem := ActiveCircuit.PVSystems2.Next;
+    end;
+
+end;
+
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure WriteSinglePVSystemMeterFile(FileNm: String);
 
 var
@@ -2324,6 +2426,95 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+procedure WriteSinglePVSystem2MeterFile(FileNm: String);
+
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TPVSystem2Obj;
+    Separator, TestStr: String;
+    ReWriteFile: Boolean;
+
+begin
+
+
+    if PVSystem2Class = NIL then
+        Exit;  // oops somewhere!!
+    Separator := ', ';
+
+
+    try
+
+        if FileExists(FileNm) then
+        begin  // See if it has already been written on
+            Assignfile(F, FileNm);
+            Reset(F);
+            if not EOF(F) then
+            begin
+                Read(F, TestStr);
+             {See if it likely that the file is OK}
+                if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
+                    RewriteFile := FALSE       // Assume the file is OK
+                else
+                    RewriteFile := TRUE;
+            end
+            else
+                RewriteFile := TRUE;
+
+            CloseFile(F);
+
+        end
+        else
+        begin
+            ReWriteFile := TRUE;
+            AssignFile(F, FileNm);
+        end;
+
+   {Either open or append the file}
+        if RewriteFile then
+        begin
+            ReWrite(F);
+        {Write New Header}
+            Write(F, 'Year, LDCurve, Hour, PVSystem2');
+            for i := 1 to NumGenRegisters do
+                Write(F, Separator, '"' + PVSystem2Class.RegisterNames[i] + '"');
+            Writeln(F);
+        end
+        else
+            Append(F);
+
+
+        pElem := ActiveCircuit.PVSystems2.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+                with ActiveCircuit do
+                begin
+                    Write(F, Solution.Year: 0, Separator);
+                    Write(F, LoadDurCurve, Separator);
+                    Write(F, Solution.DynaVars.intHour: 0, Separator);
+                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    for j := 1 to NumPVSystem2Registers do
+                        Write(F, Separator, PElem.Registers[j]: 10: 0);
+                    Writeln(F);
+                end;
+
+            pElem := ActiveCircuit.PVSystems2.Next;
+        end;
+
+        GlobalResult := FileNm;
+
+    finally
+
+        CloseFile(F);
+
+    end;
+
+
+end;
+
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure WriteMultipleStorageMeterFiles;
 
 var
@@ -2381,6 +2572,65 @@ begin
     end;
 
 end;
+
+procedure WriteMultipleStorage2MeterFiles;
+
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TStorage2Obj;
+    FileNm,
+    Separator: String;
+
+begin
+
+    if Storage2Class = NIL then
+        Exit;  // oops somewhere!!
+    Separator := ', ';
+
+    pElem := ActiveCircuit.Storage2Elements.First;
+    while pElem <> NIL do
+    begin
+        if pElem.Enabled then
+        begin
+            try
+                FileNm := GetOutputDirectory + 'EXP_PV_' + Uppercase(pElem.Name) + '.CSV';
+
+                if not FileExists(FileNm) then
+                begin
+                    AssignFile(F, FileNm);
+                    Rewrite(F);
+                {Write New Header}
+                    Write(F, 'Year, LDCurve, Hour, Storage2');
+                    for i := 1 to NumStorage2Registers do
+                        Write(F, Separator, '"' + Storage2Class.RegisterNames[i] + '"');
+                    Writeln(F);
+                    CloseFile(F);
+                end;
+
+                AssignFile(F, FileNm);
+                Append(F);
+                with ActiveCircuit do
+                begin
+                    Write(F, Solution.Year: 0, Separator);
+                    Write(F, LoadDurCurve, Separator);
+                    Write(F, Solution.DynaVars.intHour: 0, Separator);
+                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    for j := 1 to NumStorage2Registers do
+                        Write(F, Separator, PElem.Registers[j]: 10: 0);
+                    Writeln(F);
+                end;
+                AppendGlobalResult(FileNm);
+            finally
+                CloseFile(F);
+            end;
+
+        end;
+        pElem := ActiveCircuit.Storage2Elements.Next;
+    end;
+
+end;
+
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure WriteSingleStorageMeterFile(FileNm: String);
@@ -2471,6 +2721,93 @@ begin
 end;
 
 
+procedure WriteSingleStorage2MeterFile(FileNm: String);
+
+var
+    F: TextFile;
+    i, j: Integer;
+    pElem: TStorage2Obj;
+    Separator, TestStr: String;
+    ReWriteFile: Boolean;
+
+begin
+
+
+    if Storage2Class = NIL then
+        Exit;  // oops somewhere!!
+    Separator := ', ';
+
+
+    try
+
+        if FileExists(FileNm) then
+        begin  // See if it has already been written on
+            Assignfile(F, FileNm);
+            Reset(F);
+            if not EOF(F) then
+            begin
+                Read(F, TestStr);
+             {See if it likely that the file is OK}
+                if CompareText(Copy(TestStr, 1, 4), 'Year') = 0 then
+                    RewriteFile := FALSE       // Assume the file is OK
+                else
+                    RewriteFile := TRUE;
+            end
+            else
+                RewriteFile := TRUE;
+
+            CloseFile(F);
+
+        end
+        else
+        begin
+            ReWriteFile := TRUE;
+            AssignFile(F, FileNm);
+        end;
+
+   {Either open or append the file}
+        if RewriteFile then
+        begin
+            ReWrite(F);
+        {Write New Header}
+            Write(F, 'Year, LDCurve, Hour, Storage2');
+            for i := 1 to NumStorage2Registers do
+                Write(F, Separator, '"' + Storage2Class.RegisterNames[i] + '"');
+            Writeln(F);
+        end
+        else
+            Append(F);
+
+
+        pElem := ActiveCircuit.Storage2Elements.First;
+        while pElem <> NIL do
+        begin
+            if pElem.Enabled then
+                with ActiveCircuit do
+                begin
+                    Write(F, Solution.Year: 0, Separator);
+                    Write(F, LoadDurCurve, Separator);
+                    Write(F, Solution.DynaVars.intHour: 0, Separator);
+                    Write(F, Pad('"' + Uppercase(pElem.Name) + '"', 14));
+                    for j := 1 to NumStorage2Registers do
+                        Write(F, Separator, PElem.Registers[j]: 10: 0);
+                    Writeln(F);
+                end;
+
+            pElem := ActiveCircuit.Storage2Elements.Next;
+        end;
+
+        GlobalResult := FileNm;
+
+    finally
+
+        CloseFile(F);
+
+    end;
+
+
+end;
+
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ExportGenMeters(FileNm: String);
 
@@ -2504,6 +2841,22 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+procedure ExportPVSystem2Meters(FileNm: String);
+
+// Export Values of Generator Meter Elements
+// If switch /m is specified, a separate file is created for each generator using the generator's name
+
+begin
+
+
+    if Lowercase(Copy(FileNm, 1, 2)) = '/m' then
+        WriteMultiplePVSystem2MeterFiles
+    else
+        WriteSinglePVSystem2MeterFile(FileNM);
+
+end;
+
+// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 procedure ExportStorageMeters(FileNm: String);
 
 // Export Values of Generator Meter Elements
@@ -2516,6 +2869,21 @@ begin
         WriteMultipleStorageMeterFiles
     else
         WriteSingleStorageMeterFile(FileNM);
+
+end;
+
+procedure ExportStorage2Meters(FileNm: String);
+
+// Export Values of Generator Meter Elements
+// If switch /m is specified, a separate file is created for each generator using the generator's name
+
+begin
+
+
+    if Lowercase(Copy(FileNm, 1, 2)) = '/m' then
+        WriteMultipleStorage2MeterFiles
+    else
+        WriteSingleStorage2MeterFile(FileNM);
 
 end;
 
@@ -3007,24 +3375,37 @@ end;
 procedure ExportUuids(FileNm: String);
 var
     F: TextFile;
-    clsCode: TLineCode;
+    clsLnCd: TLineCode;
     clsGeom: TLineGeometry;
     clsWire: TWireData;
-    clsXfmr: TXfmrCode;
+    clsXfCd: TXfmrCode;
+    clsSpac: TLineSpacing;
+    clsTape: TTSData;
+    clsConc: TCNData;
     pName: TNamedObject;
+    i: integer;
 begin
     try
-        clsCode := DSSClassList.Get(ClassNames.Find('linecode'));
+        clsLnCd := DSSClassList.Get(ClassNames.Find('linecode'));
         clsWire := DSSClassList.Get(ClassNames.Find('wiredata'));
         clsGeom := DSSClassList.Get(ClassNames.Find('linegeometry'));
-        clsXfmr := DSSClassList.Get(ClassNames.Find('xfmrcode'));
-
+        clsXfCd := DSSClassList.Get(ClassNames.Find('xfmrcode'));
+        clsSpac := DSSClassList.Get(ClassNames.Find('linespacing'));
+        clsTape := DSSClassList.Get(ClassNames.Find('TSData'));
+        clsConc := DSSClassList.Get(ClassNames.Find('CNData'));
+    
         Assignfile(F, FileNm);
         ReWrite(F);
 
         pName := ActiveCircuit;
         Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-
+ 
+        for i :=1 to ActiveCircuit.NumBuses do 
+        begin
+            pName := ActiveCircuit.Buses^[i];
+            Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+        end;
+    
         pName := ActiveCircuit.CktElements.First;
         while pName <> NIL do
         begin
@@ -3032,11 +3413,11 @@ begin
             pName := ActiveCircuit.CktElements.Next;
         end;
 
-        pName := clsCode.ElementList.First;
+        pName := clsLnCd.ElementList.First;
         while pName <> NIL do
         begin
             Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-            pName := clsCode.ElementList.Next;
+            pName := clsLnCd.ElementList.Next;
         end;
 
         pName := clsWire.ElementList.First;
@@ -3053,15 +3434,38 @@ begin
             pName := clsGeom.ElementList.Next;
         end;
 
-        pName := clsXfmr.ElementList.First;
+        pName := clsXfCd.ElementList.First;
+        while pName <> nil do 
+        begin
+            Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            pName := clsXfCd.ElementList.Next;
+        end;
+        
+        pName := clsSpac.ElementList.First;
+        while pName <> NIL do begin
+            Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            pName := clsSpac.ElementList.Next;
+        end;
+        
+        pName := clsTape.ElementList.First;
+        while pName <> NIL do 
+        begin
+            Writeln (F, Format ('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
+            pName := clsTape.ElementList.Next;
+        end;
+
+        pName := clsConc.ElementList.First;
         while pName <> NIL do
         begin
             Writeln(F, Format('%s.%s %s', [pName.DSSClassName, pName.LocalName, pName.ID]));
-            pName := clsXfmr.ElementList.Next;
+            pName := clsConc.ElementList.Next;
         end;
+
+        WriteHashedUUIDs (F);
 
     finally
         CloseFile(F);
+        FreeUuidList;
     end;
 end;
 

@@ -29,6 +29,9 @@ function PVSystems_Get_PF(): Double; CDECL;
 procedure PVSystems_Set_kVArated(Value: Double); CDECL;
 procedure PVSystems_Set_PF(Value: Double); CDECL;
 procedure PVSystems_Set_kvar(Value: Double); CDECL;
+function PVSystems_Get_Pmpp(): Double; CDECL;
+procedure PVSystems_Set_Pmpp(Value: Double); CDECL;
+function PVSystems_Get_IrradianceNow(): Double; CDECL;
 
 // API Extensions
 function PVSystems_Get_daily(): PAnsiChar; CDECL;
@@ -567,6 +570,46 @@ begin
         YearlyTShape := Value;
         YearlyTShapeObj := TShapeClass.Find(YearlyTShape);
     end;
+end;
+//------------------------------------------------------------------------------
+function PVSystems_Get_Pmpp(): Double; CDECL;
+begin
+    Result := -1.0;  // not set
+    if ActiveCircuit <> NIL then
+    begin
+        with ActiveCircuit.PVSystems do
+        begin
+            if ActiveIndex <> 0 then
+            begin
+                Result := TPVSystemObj(Active).pmpp;
+            end;
+        end;
+    end;
+end;
+//------------------------------------------------------------------------------
+procedure PVSystems_Set_Pmpp(Value: Double); CDECL;
+begin
+    if ActiveCircuit <> NIL then
+    begin
+        with ActiveCircuit.PVSystems do
+        begin
+            if ActiveIndex <> 0 then
+            begin
+                TPVSystemObj(Active).pmpp := Value;
+            end;
+        end;
+    end;
+end;
+//------------------------------------------------------------------------------
+function PVSystems_Get_IrradianceNow(): Double; CDECL;
+begin
+    Result := -1.0;  // not set
+    if ActiveCircuit = nil then
+        Exit;
+    if ActiveCircuit.PVSystems.ActiveIndex = 0 then
+        Exit;
+        
+    Result := TPVSystemObj(ActiveCircuit.PVSystems.Active).IrradianceNow;
 end;
 //------------------------------------------------------------------------------
 end.

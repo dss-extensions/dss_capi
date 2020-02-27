@@ -109,6 +109,7 @@ interface
          FUNCTION DoRephaseCmd:Integer;
          FUNCTION DoSetBusXYCmd:Integer;
          FUNCTION DoUpdateStorageCmd:Integer;
+         FUNCTION DoUpdateStorage2Cmd:Integer;
          FUNCTION DoPstCalc:Integer;
          FUNCTION DoValVarCmd:Integer;
          FUNCTION DoLambdaCalcs:Integer;
@@ -145,7 +146,7 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      uComplex,  mathutil,  Bus,  SolutionAlgs,
      {$IFDEF FPC}CmdForms,{$ELSE}DSSForms,DssPlot,{$ENDIF} ExecCommands, Executive,
      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
-     Classes,  CktElementClass, Sensor,  { ExportCIMXML,} NamedObject,
+     Classes,  CktElementClass, Sensor, ExportCIMXML, NamedObject,
      {$IFDEF FPC}RegExpr,{$ELSE}RegularExpressionsCore,{$ENDIF} PstCalc,
      PDELement, ReduceAlgs;
 
@@ -3633,13 +3634,16 @@ Var
   F:TextFile;
   ParamName, Param, S, NameVal, UuidVal, DevClass, DevName: String;
   pName: TNamedObject;
+  idx: integer;
 Begin
+  StartUuidList (ActiveCircuit.NumBuses + 2 * ActiveCircuit.NumDevices);
   Result := 0;
   ParamName := Parser.NextParam;
   Param := Parser.StrValue;
   Try
     AssignFile(F, Param);
     Reset(F);
+    AuxParser.Delimiters := ',';
     While not EOF(F) Do Begin
       Readln(F, S);
       With AuxParser Do Begin
@@ -3650,23 +3654,38 @@ Begin
         // format the UUID properly
         if Pos ('{', UuidVal) < 1 then
           UuidVal := '{' + UuidVal + '}';
-        // find this object
-        ParseObjectClassAndName (NameVal, DevClass, DevName);
-        IF CompareText (DevClass, 'circuit')=0 THEN begin
-          pName := ActiveCircuit
-        end else begin
-          LastClassReferenced := ClassNames.Find (DevClass);
-          ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
-          if ActiveDSSClass <> nil then begin
-            ActiveDSSClass.SetActive (DevName);
-            pName := ActiveDSSClass.GetActiveObj;
+        if Pos ('=', NameVal) > 0 then 
+        begin  // it's a non-identified object in OpenDSS
+          AddHashedUuid (NameVal, UuidVal);
+        end 
+        else 
+        begin  // find this as a descendant of TNamedObject
+          pName := nil;
+          ParseObjectClassAndName (NameVal, DevClass, DevName);
+          IF CompareText (DevClass, 'circuit')=0 THEN 
+          begin
+            pName := ActiveCircuit
+          end 
+          else 
+          if CompareText (DevClass, 'Bus')=0 then 
+          begin
+            idx := ActiveCircuit.BusList.Find (DevName);
+            pName := ActiveCircuit.Buses^[idx];
+          end else 
+          begin
+            LastClassReferenced := ClassNames.Find (DevClass);
+            ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
+            if ActiveDSSClass <> nil then
+              if ActiveDSSClass.SetActive (DevName) then
+                pName := ActiveDSSClass.GetActiveObj;
           end;
+          // re-assign its UUID
+          if pName <> nil then pName.UUID := StringToUuid (UuidVal);
         end;
-        // re-assign its UUID
-        if pName <> nil then pName.UUID := StringToUuid (UuidVal);
       End;
     End;
   Finally
+    AuxParser.ResetDelims;
     CloseFile(F);
   End;
 End;
@@ -3890,6 +3909,13 @@ FUNCTION DoUpdateStorageCmd:Integer;
 
 Begin
        StorageClass.UpdateAll;
+       Result := 0;
+End;
+
+FUNCTION DoUpdateStorage2Cmd:Integer;
+
+Begin
+       Storage2Class.UpdateAll;
        Result := 0;
 End;
 

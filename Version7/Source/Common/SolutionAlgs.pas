@@ -97,7 +97,9 @@ procedure EndOfTimeStepCleanup;
 }
 begin
     StorageClass.UpdateAll;
+    Storage2Class.UpdateAll;
     InvControlClass.UpdateAll;
+    InvControl2Class.UpdateAll;
     ExpControlClass.UpdateAll;
 
     // End of Time Step Timer

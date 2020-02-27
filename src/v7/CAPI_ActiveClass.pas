@@ -16,6 +16,7 @@ procedure ActiveClass_Set_Name(const Value: PAnsiChar); CDECL;
 function ActiveClass_Get_NumElements(): Integer; CDECL;
 function ActiveClass_Get_ActiveClassName(): PAnsiChar; CDECL;
 function ActiveClass_Get_Count(): Integer; CDECL;
+function ActiveClass_Get_ActiveClassParent(): PAnsiChar; CDECL;
 
 implementation
 
@@ -23,7 +24,11 @@ uses
     CAPI_Constants,
     DSSGlobals,
     DSSObject,
-    CktElement;
+    CktElement,
+    PCClass, 
+    PDClass, 
+    MeterClass, 
+    ControlClass;
 
 procedure ActiveClass_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
@@ -137,6 +142,24 @@ begin
         Result := ActiveDSSCLass.ElementCount
     else
         Result := 0;
+end;
+//------------------------------------------------------------------------------
+function ActiveClass_Get_ActiveClassParent(): PAnsiChar;
+begin
+    if Assigned(ActiveDSSClass) then
+    begin
+        Result := PAnsiChar('Generic Object');
+        if ActiveDSSClass.ClassType.InheritsFrom(TPCClass) then
+            Result := PAnsiChar('TPCClas'); //NOTE: kept as "Clas" for compatibility
+        if ActiveDSSClass.ClassType.InheritsFrom(TPDClass) then
+            Result := PAnsiChar('TPDClass');
+        if ActiveDSSClass.ClassType.InheritsFrom(TMeterClass) then
+            Result := PAnsiChar('TMeterClass');
+        if ActiveDSSClass.ClassType.InheritsFrom(TControlClass) then
+            Result := PAnsiChar('TControlClass');
+    end
+    else 
+        Result := PAnsiChar(AnsiString('Parent Class unknonwn'));
 end;
 //------------------------------------------------------------------------------
 end.

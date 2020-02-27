@@ -13,7 +13,7 @@ uses
     Command;
 
 const
-    NumExecCommands = 111;
+    NumExecCommands = 114;
 
 var
 
@@ -38,7 +38,7 @@ uses
     ExportOptions,
     ParserDel,
     LoadShape,
-     {$IFDEF FPC}
+{$IFDEF FPC}
     CmdForms,
 {$ELSE}
     PlotOptions,
@@ -47,7 +47,9 @@ uses
 {$ENDIF}
     sysutils,
     Utilities,
-    SolutionAlgs;
+    SolutionAlgs,
+    EnergyMeter,
+    MemoryMap_lib;
 
 procedure DefineCommands;
 
@@ -165,6 +167,9 @@ begin
     ExecCommand[109] := 'CalcIncMatrix_O';
     ExecCommand[110] := 'Refine_BusLevels';
     ExecCommand[111] := 'CalcLaplacian';
+    ExecCommand[112] := 'UpdateStorage2';
+    ExecCommand[113] := 'ExportOverloads';
+    ExecCommand[114] := 'ExportVViolations';
 
     CommandHelp[1] := 'Create a new object within the DSS. Object becomes the ' +
         'active object' + CRLF +
@@ -501,6 +506,9 @@ begin
     CommandHelp[111] := 'Calculate the laplacian matrix using the incidence matrix' + CRLF +
         'previously calculated, this means that before calling this command' + CRLF +
         'the incidence matrix needs to be calculated using calcincmatrix/calcincmatrix_o';
+    CommandHelp[112] := 'Update Storage2 elements based on present solution and time interval. ';
+    CommandHelp[113] := 'Exports the overloads report with the content available at the moment of the call. It only affects the overloads report for the active actor.';
+    CommandHelp[114] := 'Exports the voltage violations report with the content available at the moment of the call. It only affects the voltage violations report for the active actor.';
 
 end;
 
@@ -889,6 +897,18 @@ begin
       {$ENDIF}
             107:
                 DoRemoveCmd;
+            112:
+                CmdResult := DoUpDateStorage2Cmd;
+            113: 
+            begin
+                if OV_MHandle <> nil then
+                    CloseMHandler(OV_MHandle, EnergyMeterClass.DI_Dir + PathDelim + 'DI_Overloads' + '.CSV', OV_Append);
+            end;
+            114: 
+            begin
+                if VR_MHandle <> nil then
+                    CloseMHandler(VR_MHandle, EnergyMeterClass.DI_Dir + PathDelim + 'DI_VoltExceptions' + '.CSV', VR_Append);
+            end
         else
        // Ignore excess parameters
         end;

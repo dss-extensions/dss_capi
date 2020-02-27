@@ -22,7 +22,6 @@ type
     TPCElement = class(TDSSCktElement)
     PRIVATE
         FIterminalUpdated: Boolean;
-        procedure set_ITerminalUpdated(const Value: Boolean);
     PROTECTED
         procedure GetTerminalCurrents(Curr: pComplexArray); VIRTUAL;
         function Get_Variable(i: Integer): Double; VIRTUAL;
@@ -52,6 +51,7 @@ type
         function InjCurrents: Integer; OVERRIDE;
         procedure CalcYPrimContribution(Curr: pComplexArray);
         procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        procedure set_ITerminalUpdated(const Value: Boolean);
 
       // Sweep solution removed  PROCEDURE BackwardSweep;Override;
 

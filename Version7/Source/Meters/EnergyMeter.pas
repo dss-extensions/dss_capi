@@ -384,6 +384,41 @@ var
     ActiveEnergyMeterObj: TEnergyMeterObj;
   { RegisterNameList      :TCommandList; }
 
+{*******************************************************************************
+*    Nomenclature:                                                             *
+*                  OV_ Overloads                                               *
+*                  VR_ Voltage report                                          *
+*                  DI_ Demand interval                                         *
+*                  SI_ System Demand interval                                  *
+*                  TDI_ DI Totals                                              *
+*                  FM_  Meter Totals                                           *
+*                  SM_  System Mater                                           *
+*                  EMT_  Energy Meter Totals                                   *
+*                  PHV_  Phase Voltage Report                                  *
+*     These prefixes are applied to the variables of each file mapped into     *
+*     Memory using the MemoryMap_Lib                                           *
+********************************************************************************
+}
+    OV_MHandle: TBytesStream;  // a. Handle to the file in memory
+    VR_MHandle: TBytesStream;
+    DI_MHandle: TBytesStream;
+    SDI_MHandle: TBytesStream;
+    TDI_MHandle: TBytesStream;
+    SM_MHandle: TBytesStream;
+    EMT_MHandle: TBytesStream;
+    PHV_MHandle: TBytesStream;
+    FM_MHandle: TBytesStream;
+
+//*********** Flags for appending Files*****************************************
+    OV_Append: Boolean;
+    VR_Append: Boolean;
+    DI_Append: Boolean;
+    SDI_Append: Boolean;
+    TDI_Append: Boolean;
+    SM_Append: Boolean;
+    EMT_Append: Boolean;
+    PHV_Append: Boolean;
+    FM_Append: Boolean;
 
 implementation
 
@@ -421,42 +456,6 @@ var
    // adjacency lists for PC and PD elements at each bus, built for faster searches
     BusAdjPC: TAdjArray; // also includes shunt PD elements
     BusAdjPD: TAdjArray;
-
-{*******************************************************************************
-*    Nomenclature:                                                             *
-*                  OV_ Overloads                                               *
-*                  VR_ Voltage report                                          *
-*                  DI_ Demand interval                                         *
-*                  SI_ System Demand interval                                  *
-*                  TDI_ DI Totals                                              *
-*                  FM_  Meter Totals                                           *
-*                  SM_  System Mater                                           *
-*                  EMT_  Energy Meter Totals                                   *
-*                  PHV_  Phase Voltage Report                                  *
-*     These prefixes are applied to the variables of each file mapped into     *
-*     Memory using the MemoryMap_Lib                                           *
-********************************************************************************
-}
-    OV_MHandle: TBytesStream;  // a. Handle to the file in memory
-    VR_MHandle: TBytesStream;
-    DI_MHandle: TBytesStream;
-    SDI_MHandle: TBytesStream;
-    TDI_MHandle: TBytesStream;
-    SM_MHandle: TBytesStream;
-    EMT_MHandle: TBytesStream;
-    PHV_MHandle: TBytesStream;
-    FM_MHandle: TBytesStream;
-
-//*********** Flags for appending Files*****************************************
-    OV_Append: Boolean;
-    VR_Append: Boolean;
-    DI_Append: Boolean;
-    SDI_Append: Boolean;
-    TDI_Append: Boolean;
-    SM_Append: Boolean;
-    EMT_Append: Boolean;
-    PHV_Append: Boolean;
-    FM_Append: Boolean;
 
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -967,7 +966,9 @@ begin
       // Reset Generator Objects, too
     GeneratorClass.ResetRegistersAll;
     StorageClass.ResetRegistersAll;
+    Storage2Class.ResetRegistersAll;
     PVSystemClass.ResetRegistersAll;
+    PVSystem2Class.ResetRegistersAll;
 
 
 end;
@@ -1008,7 +1009,9 @@ begin
       // Sample Generator ans Storage Objects, too
     GeneratorClass.SampleAll;
     StorageClass.SampleAll;  // samples energymeter part of storage elements (not update)
+    Storage2Class.SampleAll;
     PVSystemClass.SampleAll;
+    PVSystem2Class.SampleAll;
 
 end;
 
@@ -2044,7 +2047,7 @@ begin
                             BranchList.PresentBranch.IsDangling := FALSE;   // Something is connected here
                 // Is this a load or a generator or a Capacitor or reactor??
                             PCElementType := (pPCelem.DSSObjType and CLASSMASK);
-                            if (PCElementType = LOAD_ELEMENT) or (PCElementType = GEN_ELEMENT) or (PCElementType = PVSYSTEM_ELEMENT) or (PCElementType = STORAGE_ELEMENT) or (PCElementType = CAP_ELEMENT)  // Capacitor and Reactor put on the PC list if IsShunt=TRUE
+                            if (PCElementType = LOAD_ELEMENT) or (PCElementType = GEN_ELEMENT) or (PCElementType = PVSYSTEM_ELEMENT) or (PCElementType = PVSYSTEM2_ELEMENT) or (PCElementType = STORAGE_ELEMENT) or (PCElementType = STORAGE2_ELEMENT) or (PCElementType = CAP_ELEMENT)  // Capacitor and Reactor put on the PC list if IsShunt=TRUE
                                 or (PCElementType = REACTOR_ELEMENT) then
                             begin
                                 BranchList.NewObject := pPCelem; // This adds element to the Shunt list in CktTree

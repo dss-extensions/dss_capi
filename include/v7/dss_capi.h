@@ -115,6 +115,11 @@ extern "C" {
     DSS_CAPI_V7_DLL int32_t ActiveClass_Get_Count(void);
 
     /*
+    Use this property (Read only) for getting the name of the parent class' name of the active class
+    */
+    DSS_CAPI_V7_DLL char* ActiveClass_Get_ActiveClassParent(void);
+
+    /*
     Name of Bus
     */
     DSS_CAPI_V7_DLL char* Bus_Get_Name(void);
@@ -3579,6 +3584,18 @@ extern "C" {
     */
     DSS_CAPI_V7_DLL char* PVSystems_Get_Tyearly(void);
     DSS_CAPI_V7_DLL void PVSystems_Set_Tyearly(char* Value);
+    
+    /*
+    Gets/sets the rated max power of the PV array for 1.0 kW/sq-m irradiance and a user-selected array temperature of the active PVSystem.
+    */
+    DSS_CAPI_V7_DLL double PVSystems_Get_Pmpp(void);
+    DSS_CAPI_V7_DLL void PVSystems_Set_Pmpp(double Value);
+
+    /*
+    Returns the current irradiance value for the active PVSystem. Use it to 
+    know what's the current irradiance value for the PV during a simulation.
+    */
+    DSS_CAPI_V7_DLL double PVSystems_Get_IrradianceNow(void);
 
     /*
     Array of strings with names of all Reclosers in Active Circuit
