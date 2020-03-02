@@ -319,7 +319,6 @@ var
     NValues, iV, i: Integer;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-    Result[0] := 0;
     
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) then
         Exit;
@@ -358,7 +357,6 @@ var
 begin
     // Return voltages for all terminals
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-    Result[0] := 0;
     
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) then
         Exit;
@@ -419,7 +417,6 @@ var
     LossValue: complex;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-    Result[0] := 0;
     
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) then
         Exit;
@@ -467,7 +464,6 @@ begin
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-        Result[0] := 0;
         Exit;
     end;
 
@@ -507,7 +503,6 @@ begin
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-        Result[0] := 0;
         Exit;
     end;
 
@@ -537,7 +532,6 @@ var
     S: String;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-    Result[0] := 0;
     
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) or (not ActiveCircuit.ActiveCktElement.Enabled) then
         Exit;
@@ -591,7 +585,6 @@ var
 
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-    Result[0] := 0;
     
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) {or (not ActiveCircuit.ActiveCktElement.Enabled)} then
         Exit;
@@ -678,7 +671,6 @@ var
 
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-    Result[0] := 0;
     
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) or (not ActiveCircuit.ActiveCktElement.Enabled) then
         Exit;
@@ -838,16 +830,17 @@ var
     cBuffer: pComplexArray;
     iV, i, j, k: Integer;
     cResid: Complex;
+
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-    Result[0] := 0;
-    
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
+    end;
 
     with ActiveCircuit.ActiveCktElement do
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NTerms);    // 2 values per terminal
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NTerms);    // 2 values per terminal
         cBuffer := Allocmem(sizeof(Complex) * Yorder);
         GetCurrents(cBuffer);
         iV := 0;
@@ -888,7 +881,6 @@ var
 
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-    Result[0] := 0;
     
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) then
         Exit;
@@ -1077,7 +1069,6 @@ var
 
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-    Result[0] := 0;
 
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) or (not ActiveCircuit.ActiveCktElement.Enabled) then
         Exit;
@@ -1133,7 +1124,6 @@ var
 
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-    Result[0] := 0;
     
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) or (not ActiveCircuit.ActiveCktElement.Enabled) then
         Exit;
@@ -1220,7 +1210,6 @@ var
 
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-    Result[0] := 0;
     
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) then
         Exit;
@@ -1303,7 +1292,6 @@ begin
     begin
         // Just ignore as the original code did
         Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
-        Result[0] := 0;
         Exit;
     end;
     
@@ -1314,7 +1302,6 @@ begin
             // Warn and exit
             DoSimpleMsg('Nodes are not initialized. Try solving the system first.', 15013);
             Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
-            Result[0] := 0;
             Exit;
         end;
 
@@ -1364,28 +1351,24 @@ var
     pCktElement: TDSSCktElement;
 
 begin
+    Result := 0;
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) then
-    begin
-        Result := 0;
         Exit;
-    end;
 
     with ActiveCircuit do
     begin
         iControl := 1;
         repeat
-       // cycle through the list of controls until we find a fuse, recloser, or relay
+            // cycle through the list of controls until we find a fuse, recloser, or relay
             pCktElement := ActiveCktElement.ControlElementList.Get(iControl);
             if pCktElement <> NIL then
                 case (pCktElement.DSSObjType and CLASSMASK) of
-
                     FUSE_CONTROL:
                         Result := iControl;
                     RECLOSER_CONTROL:
                         Result := iControl;
                     RELAY_CONTROL:
                         Result := iControl;
-
                 end;
             inc(iControl);
         until (iControl > ActiveCktElement.ControlElementList.listSize) or (Result > 0);
@@ -1414,7 +1397,6 @@ begin
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-        Result[0] := 0;
         Exit;
     end;
 
@@ -1456,7 +1438,6 @@ begin
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-        Result[0] := 0;
         Exit;
     end;
 
