@@ -2,7 +2,7 @@ unit ConductorData;
 
 {
   ----------------------------------------------------------
-  Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
+  Copyright (c) 2008-2020, Electric Power Research Institute, Inc.
   All rights reserved.
   ----------------------------------------------------------
 }
@@ -197,7 +197,8 @@ begin
                     Param := Parser.StrValue;
                     NumAmpRatings := InterpretDblArray(Param, NumAmpRatings, pointer(AmpRatings));
                 end;
-                13: Fcapradius60        := Parser.DblValue;
+                13:
+                    Fcapradius60 := Parser.DblValue;
             else
                 inherited ClassEdit(ActiveObj, ParamPointer - NumConductorClassProps)
             end;
@@ -216,8 +217,12 @@ begin
                     if FradiusUnits = 0 then
                         FradiusUnits := FGMRunits;
                 6:
+                begin
                     if FGMR60 < 0.0 then
                         FGMR60 := 0.7788 * FRadius;
+                    if Fcapradius60 < 0.0 then
+                        Fcapradius60 := Fradius;    // default to radius
+                end;
                 7:
                     if FGMRUnits = 0 then
                         FGMRunits := FradiusUnits;
@@ -228,8 +233,12 @@ begin
                     if NormAmps < 0.0 then
                         NormAmps := EmergAmps / 1.5;
                 10:
+                begin
                     if FGMR60 < 0.0 then
                         FGMR60 := 0.7788 * FRadius;
+                    if Fcapradius60 < 0.0 then
+                        Fcapradius60 := Fradius;    // default to radius
+                end;
                 13: 
                     if Fcapradius60 < 0.0 then 
                         Fcapradius60 := FRadius;
