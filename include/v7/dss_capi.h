@@ -1126,6 +1126,7 @@ extern "C" {
 
     /*
     Array of integer containing the node numbers (representing phases, for example) for each conductor of each terminal.
+    Be sure to run a solution to initialize the values after the circuit is created or modified.
     */
     DSS_CAPI_V7_DLL void CktElement_Get_NodeOrder(int32_t** ResultPtr, int32_t* ResultCount);
     /*
