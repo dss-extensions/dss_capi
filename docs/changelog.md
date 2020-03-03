@@ -19,7 +19,6 @@
 - This version should be fully API compatible with 0.10.3+.
 - `Bus` and `CktElement` API functions reworked with some more checks.
 - Updated up to revision 2837 of the official OpenDSS code:
-    - The changes affect at least the following components: CIMXML export, `Capacitor`, `InvControl`, `LineGeometry`, `PVsystem`, `StorageController`, `Storage`, `Vsource`, `VCCS`.
     - Ported changes from SVN (v7 and v8) into DSS C-API v7 variation (v8 was left untouched).
     - 4 new API level functions (`ActiveClass_Get_ActiveClassParent`, `PVSystems_Get_Pmpp`, `PVSystems_Set_Pmpp`, `PVSystems_Get_IrradianceNow`)
     - 4 new components: `PVsystem2`, `Storage2`, `InvControl2`, `StorageController2` -- *added for early testing, no dedicated API functions yet*. At the moment, please consider them experimental features subject to change.
