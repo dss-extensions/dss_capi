@@ -6,12 +6,30 @@
     - drop the GR API for strings (bytes, ints and floats will continue)
 
 - **Planned**:
+    - **(WIP)** potentially unify the v7 and v8 codebases into a single library. Since v8 is unstable and hard to debug, it might be dropped due to lack of time.
+    - **(WIP)** simplify the types used by the interface. For example, dropping the `uint16_t` type (used for booleans) and using int32_t instead -- this was an artifact from the COM code.
     - extend the API to work with 64-bit integers where appropriate
-    - simplify the types used by the interface. For example, dropping the `uint16_t` type (used for booleans) and using int32_t instead -- this was an artifact from the COM code.
     - complement the API with the missing classes
     - initial work on the plotting and extended reporting API
-    - potentially unify the v7 and v8 codebases into a single library. Since v8 is unstable and hard to debug, it might be dropped due to lack of time.
-    
+  
+  
+# Version 0.10.5
+
+- Disable builds and distribution of v8-only variation -- the extra/missing parallel-machine will be completely merged in a mixed (v7+v8) codebase in the coming months.
+- This version should be fully API compatible with 0.10.3+.
+- `Bus` and `CktElement` API functions reworked with some more checks.
+- Updated up to revision 2837 of the official OpenDSS code:
+    - The changes affect at least the following components: CIMXML export, `Capacitor`, `InvControl`, `LineGeometry`, `PVsystem`, `StorageController`, `Storage`, `Vsource`, `VCCS`.
+    - Ported changes from SVN (v7 and v8) into DSS C-API v7 variation (v8 was left untouched).
+    - 4 new API level functions (`ActiveClass_Get_ActiveClassParent`, `PVSystems_Get_Pmpp`, `PVSystems_Set_Pmpp`, `PVSystems_Get_IrradianceNow`)
+    - 4 new components: `PVsystem2`, `Storage2`, `InvControl2`, `StorageController2` -- *added for early testing, no dedicated API functions yet*. At the moment, please consider them experimental features subject to change.
+    - `CIM100`: several changes
+    - `ExpControl`: new `Tresponse` property
+    - `ConductorData`, `LineConstants`, `LineGeometry`: new `Capradius` property
+    - `XfmrCode`, `Transformer`: new Seasons and Ratings properties
+    - `Bus_Get_puVLL` and `Bus_Get_VLL` -- see revision 2836 (official SVN). Included an extra fix in DSS C-API to avoid some corner cases.
+    - Other small bug fixes like the Full Carson fix -- see https://sourceforge.net/p/electricdss/discussion/861976/thread/2de01d0cdb/ and revision 2805 (official SVN)
+
 # Version 0.10.4
 
 - Updated up to revision 2761 of the official OpenDSS code. The changes affect at least the following components: CIMXML export, `Capacitor`, `InvControl`, `LineGeometry`, `PVsystem`, `StorageController`, `Storage`, `Vsource`, `VCCS`.

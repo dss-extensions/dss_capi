@@ -38,10 +38,12 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
 
 - The DSS commands `dump buslist`, `dump commands` and `dump devicelist` are allowed to run when `AllowForms` is false. The user can disable the editor with `DSS_Set_AllowEditor` and still get the relevant results in the output text files. After each of the `dump` commands, the output file name is copied to the global result, enabling easier automation.
 
-- Version 7 include the following ported from Version 8: 
+- Notable changes ported from Version 8 to Version 7 include the following: 
     - `StorageController`: `PeakShaveLow` mode
     - DSS commands: `CalcIncMatrix`, `CalcIncMatrix_O`, `Refine_BusLevels`, `CalcLaplacian` -- also includes related API functions
     - Export options: `IncMatrix`, `IncMatrixRows`, `IncMatrixCols`, `BusLevels`, `Laplacian`, `ZLL`, `ZCC`, `Contours`, `Y4`
+    - `XfmrCode`, `Transformer`: new Seasons and Ratings properties
+    - 4 components: `PVsystem2`, `Storage2`, `InvControl2`, `StorageController2` -- *added for early testing, no dedicated API functions yet*. At the moment, please consider them experimental features subject to change.
     
 - Other API extensions include:
     - Access by `idx` for many more DSS elements (21 new function pairs).
@@ -52,3 +54,6 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
     - `Loads_Get_Phases`/`Loads_Set_Phases`
     - `XYCurves_Get_AllNames` (was missing)
     - `CktElement_Get_IsIsolated`
+
+- Notable omissions:
+    - `Generic5` and `FMonitor` have not been ported yet due to lack of usage examples for validation. Please open an issue ticket on GitHub if you'd like us to port those.

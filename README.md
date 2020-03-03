@@ -18,10 +18,10 @@ If you are looking for the bindings to other languages:
 - [DSS Sharp](http://github.com/dss-extensions/dss_sharp/) is available for .NET/C#, also mimics the COM classes, but Windows-only at the moment. Soon it will be possible to use it via COM too.
 - [DSS MATLAB](http://github.com/dss-extensions/dss_sharp/) presents multi-platform integration (Windows, Linux, MacOS) with DSS C-API and is also very compatible bastante with the COM classes.
 
-Version 0.10.4, based on OpenDSS revision 2761 (which is slightly newer than OpenDSS v8.6.5.3 and v7.6.5.91)
+Version 0.10.5, based on OpenDSS revision 2836 (which is slightly newer than OpenDSS v8.6.7.1).
 
 While the main objective of COM compatibility has been reach, this is still a work-in-progress and is subject to changes. 
-*Note that, while the interface with OpenDSS is stable (v7, classic version), the OpenDSS-PM (v8, actor-based parallel machine version) interface is experimental in our builds.* From version 0.10, the v8 interface is a lot more stable than in 0.9.8.
+*Note that, while the interface with OpenDSS is stable (v7, classic version), the OpenDSS-PM (v8, actor-based parallel machine version) interface is experimental in our builds.* From version 0.10, the v8 interface is a lot more stable than in 0.9.8. Since version 0.10.5, the parallel-machine code from Version 8 is not built for binary releases anymore -- stay tuned for a future unified version.
 
 Instead of using extra numeric parameters as in the official DDLL interface, each original COM property is exposed as a pair of functions. For example, the load kVA property is exposed as:
 
@@ -34,13 +34,14 @@ Besides low-level details such as memory management, most of the COM documentati
 
 **Starting in version 0.9.8, we disabled the `opendsscmd.ini` creation. You can set the default base frequency using the environment variable DSS_BASE_FREQUENCY, or just set it in the DSS scripts (recommended). This also means that the initial datapath is set to the current working directory.**
 
-Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to build DSS C-API. The API code is at the `src/` folder, while the main OpenDSS code is kept in `Version7/` and `Version8/`. The upstream/official code is kept in the branch named `opendss-official-svn` and is periodically merged -- see also the [upstream branch](https://github.com/dss-extensions/dss_capi/blob/master/docs/upstream_branch.md) document.
+Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to build DSS C-API. The API code is at the `src/` folder, while the main OpenDSS code is kept in `Version7/` and `Version8/`. The upstream/official code is kept in the branch named `opendss-official-svn` and is periodically merged -- see also the [upstream branch](https://github.com/dss-extensions/dss_capi/blob/master/docs/upstream_branch.md) document. 
 
 ## Recent changes
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/master/docs/changelog.md) for a detailed list.
 
-- **2019-11-16 / version 0.10.4: Maintenance release. Fixes issue with long paths on Linux, includes some changes ported from COM and the official OpenDSS codebase.**
+- **2020-03-03 / version 0.10.5: Maintenance release with several minor fixes. Includes changes ported from COM and the official OpenDSS codebase. Version 8 binary releases excluded.**
+- 2019-11-16 / version 0.10.4: Maintenance release. Fixes issue with long paths on Linux, includes some changes ported from COM and the official OpenDSS codebase.
 - 2019-05-22 / version 0.10.3: Some important fixes, better general performance, new API extensions, new features ported from COM and the OpenDSS version 8 codebase.
 - 2019-03-05: the Git repository `electricdss-src` was merged into `dss_capi`.
 - 2019-02-28 / version 0.10.2: Highlights: implements the missing `CtrlQueue_Push`; reworks `LoadShapes` for performance and validation; introduces `DSS_Get_AllowEditor`/`DSS_Set_AllowEditor` to toggle the editor calls.**
