@@ -234,7 +234,8 @@ uses
   ImplReduce in 'ImplReduce.pas',
   Splash_Screen in '..\Forms\Splash_Screen.pas' {SplashScreen},
   GISCommands in '..\GISCommands\GISCommands.pas',
-  djson in '..\Common\djson.pas';
+  djson in '..\Common\djson.pas',
+  NumCPULib in '..\Parallel_Lib\NumCPULib.pas';
 
 exports
   DllGetClassObject,

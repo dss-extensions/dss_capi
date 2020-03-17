@@ -69,7 +69,8 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      IdComponent,
      IdTCPConnection,
      IdTCPClient,
-     IdThreadComponent
+     IdThreadComponent,
+     NumCPULib
 
 ;
 
@@ -270,9 +271,9 @@ VAR
 
    UpdateRegistry     :Boolean;  // update on program exit
    CPU_Freq           : int64;          // Used to store the CPU frequency
-   CPU_Cores          : integer;
+   CPU_Cores          : int32;
    NumNUMA            : integer;        // To store the number of NUMA nodes (should be the same as sockets)
-   CPU_Physical       : integer;
+   CPU_Physical       : int32;
    ActiveActor        : integer;
    NumOfActors        : integer;
    ActorCPU           : Array of integer;
@@ -1151,15 +1152,9 @@ var
   idx         : integer;
 
 Begin
-  NumNUMA          :=  GetMaximumProcessorGroupCount();
-  CPU_Physical     :=  0;
-  CPU_Cores        :=  0;
-
-  for idx := 0 to Pred(NumNUMA) do
-  Begin
-    CPU_Physical     :=  (GetActiveProcessorCount(idx) div 2) + CPU_Physical; // Until finding a more elegant way to do it
-    CPU_Cores        :=  GetActiveProcessorCount(idx) + CPU_Cores;
-  End;
+  NumNUMA          :=  1;
+  CPU_Physical     :=  TNumCPULib.GetPhysicalCPUCount();
+  CPU_Cores        :=  TNumCPULib.GetLogicalCPUCount();
 End;
 
 constructor TProgressActor.Create();

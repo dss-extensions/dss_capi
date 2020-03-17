@@ -218,7 +218,8 @@ uses
   DGICSources in 'DGICSources.pas',
   djson in '..\Common\djson.pas',
   Splash_Screen in '..\Forms\Splash_Screen.pas' {SplashScreen},
-  GISCommands in '..\GISCommands\GISCommands.pas';
+  GISCommands in '..\GISCommands\GISCommands.pas',
+  NumCPULib in '..\Parallel_Lib\NumCPULib.pas';
 
 //**************************end of the functions*************************************
 exports
