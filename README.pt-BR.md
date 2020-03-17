@@ -8,7 +8,7 @@
 Esta biblioteca expõe o motor do OpenDSS/OpenDSS-PM (v7/v8) através de uma interface C plana, que tenta reproduzir a maioria dos métodos COM. De fato, a maior parte do código foi inicialmente derivado dos arquivos da implementação COM. O DLL resultante pode ser usado diretamente ou através de módulos de interface, como o módulo `DSS Python`. DSS Python representa um módulo para linguagem Python que imita a mesma estrutura do módulo COM (como exposto via `win32com` ou `comtypes`), efetivamente nos permitindo alcançar compatilibilidade multi-plataforma a nível de Python. Também há suporte para outras linguagens diversas -- caso tenha interesse numa linguagem não suportada, abra um novo "issue".
 
 <p align="center">
-    <img alt="Visão geral dos repositórios relacionados" src="https://raw.githubusercontent.com/dss-extensions/dss_capi/master/docs/images/repomap.svg?sanitize=true" width=600>
+    <img alt="Visão geral dos repositórios relacionados" src="https://raw.githubusercontent.com/dss-extensions/dss_capi/master/docs/images/repomap.png" width=600>
 </p>
 
 Caso procure integração com outras linguagens de programação:
