@@ -202,7 +202,8 @@ uses
   Splash_Screen in '..\Forms\Splash_Screen.pas' {SplashScr},
   GISCommands in '..\GISCommands\GISCommands.pas',
   djson in '..\Common\djson.pas',
-  Storage2 in '..\PCElements\Storage2.pas';
+  Storage2 in '..\PCElements\Storage2.pas',
+  NumCPULib in '..\Parallel_Lib\NumCPULib.pas';
 
 {$R *.RES}
 
