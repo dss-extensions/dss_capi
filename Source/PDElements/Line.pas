@@ -588,7 +588,7 @@ Begin
               GeometrySpecified := False;
              End;
           4,20:     // for Reliability calcs -- see PDElement.Pas
-             MilesThisLine := len * ConvertLineUnits(LengthUnits, UNITS_MILES);
+             MilesThisLine := Len * ConvertLineUnits(LengthUnits, UNITS_MILES);
 
           5: {Change the number of phases ... only valid if SymComponentsModel=TRUE}
              IF Fnphases <> Parser.IntValue THEN
@@ -616,7 +616,7 @@ Begin
                 SymComponentsChanged := True;  YprimInvalid := True;
                 GeometrySpecified := FALSE; SpacingSpecified := False;
                 r1 := 1.0; x1 := 1.0; r0 := 1.0; x0 := 1.0;
-                c1 := 1.1 * 1.0e-9; c0 := 1.0 * 1.0e-9;  len := 0.001;
+                c1 := 1.1 * 1.0e-9; c0 := 1.0 * 1.0e-9;  Len := 0.001;
                 ResetLengthUnits;
               End;
 
@@ -1089,7 +1089,7 @@ Begin
         Writeln(F,'~ ',PropertyName^[2],'=',nextbus);
 
         Writeln(F,'~ ',PropertyName^[3],'=',CondCode);
-        Writeln(F,'~ ',PropertyName^[4],'=',len:0:3);
+        Writeln(F,'~ ',PropertyName^[4],'=',Len:0:3);
         Writeln(F,'~ ',PropertyName^[5],'=',Fnphases:0);
         Writeln(F,'~ ',PropertyName^[6],'=',R1:0:5);
         Writeln(F,'~ ',PropertyName^[7],'=',X1:0:5);
@@ -1175,7 +1175,7 @@ begin
                  Begin
                      For j := 1 to i Do
                        Begin  // report in per unit Length in length units
-                           If GeometrySpecified Or SpacingSpecified Then  Result := Result + Format('%-.7g',[Z.GetElement(i,j).re/len]) + ' '
+                           If GeometrySpecified Or SpacingSpecified Then  Result := Result + Format('%-.7g',[Z.GetElement(i,j).re/Len]) + ' '
                            Else Result := Result + Format('%-.7g',[Z.GetElement(i,j).re/FUnitsConvert]) + ' ';
                        End;
                      IF i < FNconds Then Result := Result + '|';
@@ -1319,6 +1319,7 @@ procedure TLineObj.MakePosSequence;
 Var
   S:String;
   C1_new, Cs, Cm:Double;
+  LengthMult :Double;
   Z1, ZS, Zm:Complex;
   i,j:Integer;
 begin
@@ -1328,6 +1329,9 @@ begin
     // Kill certain propertyvalue elements to get a cleaner looking save
     PrpSequence^[3] := 0;
     For i := 6 to 14 Do PrpSequence^[i] := 0;
+
+    // If GeometrySpecified Or SpacingSpecified then length is embedded in Z and Yc    4-9-2020
+    If GeometrySpecified Or SpacingSpecified  Then LengthMult := Len else LengthMult := 1.0;
 
     If IsSwitch then begin
       S := ' R1=1 X1=1 C1=1.1 Phases=1 Len=0.001'
@@ -1340,20 +1344,24 @@ begin
         // average the diagonal and off-dialgonal elements
         Zs := CZERO;
         For i := 1 to FnPhases  Do Caccum(Zs, Z.GetElement(i,i));
-        Zs := CdivReal(Zs, Fnphases);
+        Zs := CdivReal(Zs, (Fnphases * LengthMult));
         Zm := CZERO;
-        For i := 1 to FnPhases-1 Do  // Corrected 6-21-04
-        For j := i+1 to FnPhases Do  Caccum(Zm, Z.GetElement(i,j));
-        Zm := CdivReal(Zm, (Fnphases*(FnPhases-1.0)/2.0));
+        For i := 1 to FnPhases-1 Do     // Corrected 6-21-04
+        Begin
+          For j := i+1 to FnPhases Do
+              Caccum(Zm, Z.GetElement(i,j));
+        End;
+        Zm := CdivReal(Zm, (LengthMult*Fnphases*(FnPhases-1.0)/2.0));
         Z1 := CSub(Zs, Zm);
 
         // Do same for Capacitances
         Cs := 0.0;
         For i := 1 to FnPhases  Do Cs := Cs + Yc.GetElement(i,i).im;
         Cm := 0.0;
-        For i := 2 to FnPhases Do
-        For j := i+1 to FnPhases Do  Cm := Cm + Yc.GetElement(i,j).im;
-        C1_new := (Cs - Cm)/TwoPi/BaseFrequency/(Fnphases*(FnPhases-1.0)/2.0) * 1.0e9; // nanofarads
+        For i := 1 to FnPhases-1 Do    // corrected 4-9-2020
+        For j := i+1 to FnPhases Do
+            Cm := Cm + Yc.GetElement(i,j).im;
+        C1_new := (Cs - Cm)/TwoPi/BaseFrequency/(LengthMult*Fnphases*(FnPhases-1.0)/2.0) * 1.0e9; // nanofarads
 
         // compensate for length units
         Z1 := CDivReal(Z1, FunitsConvert);
@@ -1739,8 +1747,8 @@ Begin
 
           ActiveEarthModel := FEarthModel;
 
-          Z    := FLineGeometryObj.Zmatrix[ f, len, LengthUnits];
-          Yc   := FLineGeometryObj.YCmatrix[f, len, LengthUnits];
+          Z    := FLineGeometryObj.Zmatrix[ f, Len, LengthUnits];
+          Yc   := FLineGeometryObj.YCmatrix[f, Len, LengthUnits];
           {Init Zinv}
           if Assigned(Z) then
             Begin
@@ -1777,8 +1785,8 @@ Begin
 
   ActiveEarthModel := FEarthModel;
 
-  Z    := pGeo.Zmatrix[ f, len, LengthUnits];
-  Yc   := pGeo.YCmatrix[f, len, LengthUnits];
+  Z    := pGeo.Zmatrix[ f, Len, LengthUnits];
+  Yc   := pGeo.YCmatrix[f, Len, LengthUnits];
   if Assigned(Z) then
     begin
       Zinv := TCMatrix.CreateMatrix(Z.order);  // Either no. phases or no. conductors
