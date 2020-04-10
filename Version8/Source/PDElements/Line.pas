@@ -1365,6 +1365,7 @@ procedure TLineObj.MakePosSequence(ActorID : Integer);
 Var
   S:String;
   C1_new, Cs, Cm:Double;
+  LengthMult :Double;
   Z1, ZS, Zm:Complex;
   i,j:Integer;
 begin
@@ -1374,6 +1375,9 @@ begin
     // Kill certain propertyvalue elements to get a cleaner looking save
     PrpSequence^[3] := 0;
     For i := 6 to 14 Do PrpSequence^[i] := 0;
+
+    // If GeometrySpecified Or SpacingSpecified then length is embedded in Z and Yc    4-9-2020
+    If GeometrySpecified Or SpacingSpecified  Then LengthMult := Len else LengthMult := 1.0;
 
     If IsSwitch then begin
       S := ' R1=1 X1=1 C1=1.1 Phases=1 Len=0.001'
@@ -1386,20 +1390,24 @@ begin
         // average the diagonal and off-dialgonal elements
         Zs := CZERO;
         For i := 1 to FnPhases  Do Caccum(Zs, Z.GetElement(i,i));
-        Zs := CdivReal(Zs, Fnphases);
+        Zs := CdivReal(Zs, (Fnphases * LengthMult));
         Zm := CZERO;
-        For i := 1 to FnPhases-1 Do  // Corrected 6-21-04
-        For j := i+1 to FnPhases Do  Caccum(Zm, Z.GetElement(i,j));
-        Zm := CdivReal(Zm, (Fnphases*(FnPhases-1.0)/2.0));
+        For i := 1 to FnPhases-1 Do     // Corrected 6-21-04
+        Begin
+          For j := i+1 to FnPhases Do
+              Caccum(Zm, Z.GetElement(i,j));
+        End;
+        Zm := CdivReal(Zm, (LengthMult*Fnphases*(FnPhases-1.0)/2.0));
         Z1 := CSub(Zs, Zm);
 
         // Do same for Capacitances
         Cs := 0.0;
         For i := 1 to FnPhases  Do Cs := Cs + Yc.GetElement(i,i).im;
         Cm := 0.0;
-        For i := 2 to FnPhases Do
-        For j := i+1 to FnPhases Do  Cm := Cm + Yc.GetElement(i,j).im;
-        C1_new := (Cs - Cm)/TwoPi/BaseFrequency/(Fnphases*(FnPhases-1.0)/2.0) * 1.0e9; // nanofarads
+        For i := 1 to FnPhases-1 Do    // corrected 4-9-2020
+        For j := i+1 to FnPhases Do
+            Cm := Cm + Yc.GetElement(i,j).im;
+        C1_new := (Cs - Cm)/TwoPi/BaseFrequency/(LengthMult*Fnphases*(FnPhases-1.0)/2.0) * 1.0e9; // nanofarads
 
         // compensate for length units
         Z1 := CDivReal(Z1, FunitsConvert);
