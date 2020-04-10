@@ -720,9 +720,10 @@ Var
     p_Elem :TDSSCktElement;
     PDElem :TPDElement;
     PCElem :TPCElement;
-    Volts:Complex;
-    S, Saccum:Complex;
-    nref:Integer;
+    Volts  :Complex;
+    S,
+    Saccum :Complex;
+    nref, nref1, nref2:Integer;
     Vph, V012:Array[1..3] of Complex;
     Iph, I012:Array[1..3] of Complex;
 
@@ -1002,6 +1003,28 @@ Begin
         k:=0;
         FromBus := Pad(StripExtension(p_Elem.FirstBus),MaxBusNameLength);
         Writeln(F, 'ELEMENT = ', FullName(p_elem));
+
+        {**** Added April 6 2020 *****}
+        if (NTerm=2) and (NCond=1) then // 1-phase devices with two terminals that might be floating
+        Begin
+         Saccum := CZERO;
+         Inc(k);
+         nref1 := p_Elem.NodeRef^[k];
+         nref2 := p_Elem.NodeRef^[k+1];
+         With ActiveCircuit.Solution Do
+              Volts := CSub(NodeV^[nref1], NodeV^[nref2]);
+         S := Cmul(Volts, conjg(c_Buffer^[k]));
+         IF { (p_Elem.nphases=1) and } ActiveCircuit.PositiveSequence
+         THEN S := CmulReal(S, 3.0);
+         If Opt=1 Then S := CmulReal(S, 0.001);
+         Caccum(Saccum, S);
+         Write(F,UpperCase(FromBus),'  ',GetNodeNum(p_Elem.NodeRef^[k]):4,'    ',S.re/1000.0:8:1,' +j ',S.im/1000.0:8:1);
+         Writeln(F, '   ', Cabs(S)/1000.0:8:1,'     ', PowerFactor(S):8:4);
+         Write(F,Paddots('   TERMINAL TOTAL', MaxBusNameLength+10),Saccum.re/1000.0:8:1,' +j ',Saccum.im/1000.0:8:1);
+          Writeln(F, '   ', Cabs(Saccum)/1000.0:8:1,'     ', PowerFactor(Saccum):8:4);
+          FromBus := Pad(StripExtension(p_Elem.Nextbus),MaxBusNameLength);
+
+        End Else
         FOR j := 1 to NTerm Do Begin
           Saccum := CZERO;
           For i := 1 to NCond Do Begin
