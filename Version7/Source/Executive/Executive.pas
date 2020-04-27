@@ -195,6 +195,13 @@ Begin
    Command := 'New TCC_Curve.D 5 c_array=(1, 2.5, 4.5, 8.0, 14.)  t_array=(6 0.7 .2 .06 .02)';
    Command := 'New TCC_Curve.TLink 7 c_array=(2 2.1 3 4 6 22 50)  t_array=(300 100 10.1 4.0 1.4 0.1  0.02)';
    Command := 'New TCC_Curve.KLink 6 c_array=(2 2.2 3 4 6 30)    t_array=(300 20 4 1.3 0.41 0.02)';
+   Command := 'New "TCC_Curve.uv1547" npts=2 C_array=(0.5, 0.9, ) T_array=(0.166, 2, )';
+   Command := 'New "TCC_Curve.ov1547" npts=2 C_array=(1.1, 1.2, ) T_array=(2, 0.166, )';
+   Command := 'New "TCC_Curve.mod_inv" npts=15 C_array=(1.1, 1.3, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 50, 100, ) T_array=(27.1053, 9.9029, 6.439, 3.8032, 2.4322, 1.9458, 1.6883, 1.5255, 1.4117, 1.3267, 1.2604, 1.2068, 0.9481, 0.7468, 0.6478, )';
+   Command := 'New "TCC_Curve.very_inv" npts=15 C_array=(1.1, 1.3, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 50, 100, ) T_array=(93.872, 28.9113, 16.179, 7.0277, 2.9423, 1.7983, 1.3081, 1.0513, 0.8995, 0.8023, 0.7361, 0.6891, 0.5401, 0.4988, 0.493, )';
+   Command := 'New "TCC_Curve.ext_inv" npts=15 C_array=(1.1, 1.3, 1.5, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 50, 100, ) T_array=(134.4074, 40.9913, 22.6817, 9.5217, 3.6467, 2.0017, 1.2967, 0.9274, 0.7092, 0.5693, 0.4742, 0.4065, 0.1924, 0.133, 0.1245, )';
+   Command := 'New "TCC_Curve.definite" npts=3 C_array=(1, 1.001, 100, ) T_array=(300, 1, 1, )';
+
    End;
 
 

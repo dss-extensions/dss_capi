@@ -1500,6 +1500,7 @@ Begin
         CASE  ActiveDSSClass.DSSClassType Of
             // These can be added WITHout having an active circuit
             // Duplicates not allowed in general DSS objects;
+            // If the name is the same, Edit is executed instead of New
              DSS_OBJECT :  IF  NOT  ActiveDSSClass.SetActive(Name)
                            THEN Begin
                                Result := ActiveDSSClass.NewObject(Name);
