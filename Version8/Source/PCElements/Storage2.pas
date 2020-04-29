@@ -468,7 +468,9 @@ Const
 
   propkvarLimitneg       = 50;
 
-  NumPropsThisClass = 50; // Make this agree with the last property constant
+  propIDLEKVAR           = 51;
+
+  NumPropsThisClass = 51; // Make this agree with the last property constant
 
 VAR
 
@@ -619,6 +621,8 @@ Begin
                               'Percentage efficiency for DISCHARGING the Storage2 element. Default = 90.');
      AddProperty('%IdlingkW', propIDLEKW,
                               'Percentage of rated kW consumed by idling losses. Default = 1.');
+     AddProperty('%Idlingkvar', propIDLEKVAR,
+                              'Deprecated.');
      AddProperty('%R',        propPCTR,
                               'Equivalent percentage internal resistance, ohms. Default is 0. Placed in series with internal voltage source' +
                               ' for harmonics and dynamics modes. Use a combination of %IdlingkW, %EffCharge and %EffDischarge to account for ' +
@@ -872,7 +876,8 @@ Begin
                propPCTR         : pctR               := Parser[ActorID].DblValue;
                propPCTX         : pctX               := Parser[ActorID].DblValue;
                propIDLEKW       : pctIdlekW          := Parser[ActorID].DblValue;
-               propCLASS        : Storage2Class       := Parser[ActorID].IntValue;
+               propIDLEKVAR     : ;  // Do nothing. Deprecated property.
+               propCLASS        : Storage2Class      := Parser[ActorID].IntValue;
                propInvEffCurve  : InverterCurve      := Param;
                propDISPOUTTRIG  : DischargeTrigger   := Parser[ActorID].DblValue;
                propDISPINTRIG   : ChargeTrigger      := Parser[ActorID].DblValue;
@@ -1331,6 +1336,7 @@ Begin
      PropertyValue[propPCTX]                  := Format('%-g', [pctX]);
 
      PropertyValue[propIDLEKW]                := '1';       // PERCENT
+     PropertyValue[propIDLEKVAR]              := '';   // deprecated
      PropertyValue[propCLASS]                 := '1'; //'class'
      PropertyValue[propDISPOUTTRIG]           := '0';   // 0 MEANS NO TRIGGER LEVEL
      PropertyValue[propDISPINTRIG]            := '0';
@@ -1399,6 +1405,7 @@ Begin
           propPCTR       : Result := Format('%.6g', [pctR]);
           propPCTX       : Result := Format('%.6g', [pctX]);
           propIDLEKW     : Result := Format('%.6g', [pctIdlekW]);
+          propIDLEKVAR   : Result := '';       // deprecated
           {propCLASS      = 17;}
           propInvEffCurve: Result := InverterCurve;
           propCutin      : Result := Format('%.6g', [FpctCutin]);
