@@ -3311,6 +3311,7 @@ begin
      Clear;
      This_Meter_DIFileIsOpen := FALSE;
      SDI_MHandle[ActiveActor]     :=  nil;
+     TDI_MHandle[ActiveActor]     :=  nil;
      VR_MHandle[ActiveActor]      :=  nil;
      OV_MHandle[ActiveActor]      :=  nil;
 end;
