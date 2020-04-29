@@ -80,11 +80,14 @@ TYPE
             TotalkWCapacity,
             TotalkWhCapacity,
             pctFleetReserve,
+            ResetLevel,
             kWNeeded,
             DispFactor               :Double;  // for slower convergence
 
-            FStorage2NameList         :TStringList;
+            FStorage2NameList        :TStringList;
             FleetPointerList         :PointerList.TPointerList;
+            SeasonTargets,
+            SeasonTargetsLow         :TRatingsArray;
             FWeights                 :pDoubleArray;
             cBuffer : pComplexArray;    // Complex Array buffer
 
@@ -98,6 +101,7 @@ TYPE
             Wait4Step,
             FkWBandSpecified         :Boolean;  // true if kWBand specified as an absolute value (for use in Follow Discharge Mode to update the target)
 
+            Seasons,
             FleetSize,
             FleetState,
             DischargeMode,
@@ -136,6 +140,7 @@ TYPE
             PROCEDURE CalcDailyMult(Hr:double);
             PROCEDURE CalcDutyMult(Hr:double);
 
+            FUNCTION  ReturnSeasonTarget(THigh :  Integer):String;
             FUNCTION  ReturnElementsList:String;
             FUNCTION  ReturnWeightsList:String;
 
@@ -154,6 +159,8 @@ TYPE
             function  Get_FleetkWh: Double;
             function  Get_FleetkWhRating: Double;
             function  Get_FleetReservekWh: Double;
+
+            function Get_DynamicTarget(THigh : Integer; ActorID : Integer): Double;
 
      public
 
@@ -192,50 +199,56 @@ IMPLEMENTATION
 
 USES
 
-    ParserDel, DSSClassDefs, DSSGlobals, Circuit,  Storage2, Sysutils, uCmatrix, MathUtil, Math, Solution, Dynamics;
+    ParserDel, DSSClassDefs, DSSGlobals, Circuit,  Storage2,
+    Sysutils, uCmatrix, MathUtil, Math, Solution, Dynamics,
+    XYCurve;
 
 CONST
 
-    propELEMENT       = 1;
-    propTERMINAL      = 2;
-    propMONPHASE      = 3;
-    propKWTARGET      = 4;
-    propKWTARGETLOW   = 5;
-    propPCTKWBAND     = 6;
-    propKWBAND        = 7;
-    propPCTKWBANDLOW  = 8;
-    propKWBANDLOW     = 9;
+    propELEMENT               = 1;
+    propTERMINAL              = 2;
+    propMONPHASE              = 3;
+    propKWTARGET              = 4;
+    propKWTARGETLOW           = 5;
+    propPCTKWBAND             = 6;
+    propKWBAND                = 7;
+    propPCTKWBANDLOW          = 8;
+    propKWBANDLOW             = 9;
 //    propPFTARGET      = 7;
 //    propPFBAND        = 8;
-    propELEMENTLIST   = 10;
-    propWEIGHTS       = 11;
-    propMODEDISCHARGE = 12;
-    propMODECHARGE    = 13;
-    propTIMEDISCHARGETRIGGER = 14;
-    propTIMECHARGETRIGGER    = 15;
-    propRATEKW        = 16;
+    propELEMENTLIST           = 10;
+    propWEIGHTS               = 11;
+    propMODEDISCHARGE         = 12;
+    propMODECHARGE            = 13;
+    propTIMEDISCHARGETRIGGER  = 14;
+    propTIMECHARGETRIGGER     = 15;
+    propRATEKW                = 16;
 //    propRATEKVAR      = 16;
-    propRATECHARGE    = 17;
-    propRESERVE       = 18;
-    propKWHTOTAL      = 19;
-    propKWTOTAL       = 20;
-    propKWHACTUAL     = 21;
-    propKWACTUAL      = 22;
-    propKWNEED        = 23;
+    propRATECHARGE            = 17;
+    propRESERVE               = 18;
+    propKWHTOTAL              = 19;
+    propKWTOTAL               = 20;
+    propKWHACTUAL             = 21;
+    propKWACTUAL              = 22;
+    propKWNEED                = 23;
 //    propPARTICIPATION = 24;
-    propYEARLY        = 24;
-    propDAILY         = 25;
-    propDUTY          = 26;
-    propEVENTLOG      = 27;
+    propYEARLY                = 24;
+    propDAILY                 = 25;
+    propDUTY                  = 26;
+    propEVENTLOG              = 27;
 //    propVARDISPATCH   = 29;
-    propINHIBITTIME   = 28;
-    propTUPRAMP       = 29;
-    propTFLAT         = 30;
-    propTDNRAMP       = 31;
-    propKWTHRESHOLD   = 32;
-    propDispFactor    = 33;
+    propINHIBITTIME           = 28;
+    propTUPRAMP               = 29;
+    propTFLAT                 = 30;
+    propTDNRAMP               = 31;
+    propKWTHRESHOLD           = 32;
+    propDispFactor            = 33;
+    propRESETLEVEL            = 34;
+    propSEASONS               = 35;
+    propSEASONTARGETS         = 36;
+    propSEASONTARGETSLOW      = 37;
 
-    NumPropsThisClass = 33;
+    NumPropsThisClass         = 37;
 
 //= = = = = = = = = = = = = = DEFINE CONTROL MODE CONSTANTS = = = = = = = = = = = = = = = = = = = = = = = = =
 
@@ -324,6 +337,10 @@ Begin
      PropertyName[propTDNRAMP]                := 'Tdn';
      PropertyName[propKWTHRESHOLD]            := 'kWThreshold';
      PropertyName[propDispFactor]             := 'DispFactor';
+     PropertyName[propRESETLEVEL]             := 'ResetLevel';
+     PropertyName[propSEASONS]                := 'Seasons';
+     PropertyName[propSEASONTARGETS]          := 'SeasonTargets';
+     PropertyName[propSEASONTARGETSLOW]       := 'SeasonTargetsLow';
 
     PropertyHelp[propELEMENT]             :=
       'Full object name of the circuit element, typically a line or transformer, '+
@@ -332,7 +349,7 @@ Begin
       'Number of the terminal of the circuit element to which the StorageController2 control is connected. '+
       '1 or 2, typically.  Default is 1. Make sure to select the proper direction on the power for the respective dispatch mode.';
     PropertyHelp[propMONPHASE]            :=
-      'Number of the phase being monitored or one of {AVG | MAX | MIN} for all phases. Default=AVG. ' +
+      'Number of the phase being monitored or one of {AVG | MAX | MIN} for all phases. Default=MAX. ' +
       'Must be less than the number of phases. Used in PeakShave, Follow, Support and I-PeakShave discharging modes ' +
       'and in PeakShaveLow, I-PeakShaveLow charging modes. For modes based on active power measurements, the value ' +
       'used by the control is the monitored one multiplied by the number of phases of the monitored element.';
@@ -445,6 +462,22 @@ Begin
       + CRLF + CRLF + 'Use this parameter to reduce the amount of power requested by the controller in each control iteration. ' +
       'It can be useful when maximum control iterations are exceeded due to numerical instability such as ' +
       'fleet being set to charging and idling in subsequent control iterations (check the Eventlog). ';
+     PropertyHelp[propRESETLEVEL]         := 'The level of charge required for allowing the storage to discharge again after reaching ' +
+                                      'the reserve storage level. After reaching this level, the storage control  will not allow ' +
+                                      'the storage device to discharge, forcing the storage to charge. Once the storage reaches this' +
+                                      'level, the storage will be able to discharge again. This value is a number between 0.2 and 1';
+     PropertyHelp[propSEASONS]            := 'With this property the user can' +
+                                        ' specify the number of targets to be used by the controller using the list given at "SeasonTargets"/' +
+                                        '"SeasonTargetsLow", which can be used to dynamically adjust the storage controller during a QSTS' +
+                                        ' simulation. The default value is 1. This property needs to be defined before defining SeasonTargets/SeasonTargetsLow.';
+     PropertyHelp[propSEASONTARGETS]      := 'An array of doubles specifying the targets to be used during a QSTS simulation. These targets will take effect' +
+                                        ' only if SeasonRating=true. The number of targets cannot exceed the number of seasons defined at the SeasonSignal.' +
+                                        'The difference between the targets defined at SeasonTargets and SeasonTargetsLow is that SeasonTargets' +
+                                        ' applies to discharging modes, while SeasonTargetsLow applies to charging modes.';
+     PropertyHelp[propSEASONTARGETSLOW]   := 'An array of doubles specifying the targets to be used during a QSTS simulation. These targets will take effect' +
+                                        ' only if SeasonRating=true. The number of targets cannot exceed the number of seasons defined at the SeasonSignal.' +
+                                        'The difference between the targets defined at SeasonTargets and SeasonTargetsLow is that SeasonTargets' +
+                                        ' applies to discharging modes, while SeasonTargetsLow applies to charging modes.';
 
 
      ActiveProperty  := NumPropsThisClass;
@@ -494,56 +527,74 @@ Begin
 
          CASE ParamPointer OF
             0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 14407);
-            propELEMENT:  ElementName      := lowercase(param);
-            propTERMINAL: ElementTerminal  := Parser[ActorID].IntValue;
-            propMONPHASE: If      CompareTextShortest(param, 'avg') = 0 Then FMonPhase := AVG
-                          Else If CompareTextShortest(param, 'max') = 0 Then FMonPhase := MAXPHASE
-                          Else If CompareTextShortest(param, 'min') = 0 Then FMonPhase := MINPHASE
-                          Else FMonPhase := max(1, Parser[ActorID].IntValue);
-            propKWTARGET:       FkWTarget     := Parser[ActorID].DblValue;
-            propKWTARGETLOW:    FkWTargetLow  := Parser[ActorID].DblValue;
-            propPCTKWBAND:      FpctkWBand    := Parser[ActorID].DblValue;
-            propKWBAND:         FkWBand       := Parser[ActorID].DblValue;
-            propPCTKWBANDLOW:   FpctkWBandLow := Parser[ActorID].DblValue;
-            propKWBANDLOW:      FkWBandLow    := Parser[ActorID].DblValue;
+            propELEMENT       : ElementName      := lowercase(param);
+            propTERMINAL      : ElementTerminal  := Parser[ActorID].IntValue;
+            propMONPHASE      : If      CompareTextShortest(param, 'avg') = 0 Then FMonPhase := AVG
+                                Else If CompareTextShortest(param, 'max') = 0 Then FMonPhase := MAXPHASE
+                                Else If CompareTextShortest(param, 'min') = 0 Then FMonPhase := MINPHASE
+                                Else FMonPhase := max(1, Parser[ActorID].IntValue);
+            propKWTARGET      : FkWTarget     := Parser[ActorID].DblValue;
+            propKWTARGETLOW   : FkWTargetLow  := Parser[ActorID].DblValue;
+            propPCTKWBAND     : FpctkWBand    := Parser[ActorID].DblValue;
+            propKWBAND        : FkWBand       := Parser[ActorID].DblValue;
+            propPCTKWBANDLOW  : FpctkWBandLow := Parser[ActorID].DblValue;
+            propKWBANDLOW     : FkWBandLow    := Parser[ActorID].DblValue;
 //            propPFTARGET: FPFTarget        := ConvertPFToPFRange2(Parser[ActorID].DblValue);
 //            propPFBAND:   FPFBand          := Parser[ActorID].DblValue;
-            propELEMENTLIST: InterpretTStringListArray(Param, FStorage2NameList);
-            propWEIGHTS:
-                Begin
-                  FleetSize := FStorage2NameList.count;
-                  IF FleetSize>0 Then
-                  Begin
-                    Reallocmem(FWeights, Sizeof(FWeights^[1])*FleetSize);
-                    FleetSize := InterpretDblArray(Param, FleetSize, FWeights);
-                  End;
-                End;
-            propMODEDISCHARGE: DisChargeMode := InterpretMode(propMODEDISCHARGE, Param);
-            propMODECHARGE:    ChargeMode    := InterpretMode(propMODECHARGE, Param);
+            propELEMENTLIST   : InterpretTStringListArray(Param, FStorage2NameList);
+            propWEIGHTS       :
+                              Begin
+                                FleetSize   := FStorage2NameList.count;
+                                IF FleetSize>0 Then
+                                Begin
+                                  Reallocmem(FWeights, Sizeof(FWeights^[1])*FleetSize);
+                                  FleetSize := InterpretDblArray(Param, FleetSize, FWeights);
+                                End;
+                              End;
+            propMODEDISCHARGE : DisChargeMode := InterpretMode(propMODEDISCHARGE, Param);
+            propMODECHARGE    : ChargeMode    := InterpretMode(propMODECHARGE, Param);
             propTIMEDISCHARGETRIGGER: DischargeTriggerTime := Parser[ActorID].DblValue;
             propTIMECHARGETRIGGER:    ChargeTriggerTime    := Parser[ActorID].DblValue;
-            propRATEKW:      pctkWRate      := Parser[ActorID].DblValue;
+            propRATEKW        : pctkWRate      := Parser[ActorID].DblValue;
 //            propRATEKVAR:    pctkvarRate    := Parser[ActorID].DblValue;
-            propRATECHARGE:  pctChargeRate  := Parser[ActorID].DblValue;
-            propRESERVE:     pctFleetReserve:= Parser[ActorID].DblValue;
-            propKWHTOTAL:  ;  // Do nothing (Read ONly)
-            propKWTOTAL:   ;  // Do nothing (Read ONly)
-            propKWHACTUAL:  ;  // Do nothing (Read ONly)
-            propKWACTUAL:  ;  // Do nothing (Read ONly)
-            propKWNEED:    ;  // Do nothing (Read ONly)
+            propRATECHARGE    : pctChargeRate  := Parser[ActorID].DblValue;
+            propRESERVE       : pctFleetReserve:= Parser[ActorID].DblValue;
+            propKWHTOTAL      : ;  // Do nothing (Read ONly)
+            propKWTOTAL       : ;  // Do nothing (Read ONly)
+            propKWHACTUAL     : ;  // Do nothing (Read ONly)
+            propKWACTUAL      : ;  // Do nothing (Read ONly)
+            propKWNEED        : ;  // Do nothing (Read ONly)
 //            propPARTICIPATION: ;
-            propYEARLY:  YearlyShape  := Param;
-            propDAILY:   DailyShape   := Param;
-            propDUTY:    DutyShape    := Param;
-            propEVENTLOG: ShowEventLog := InterpretYesNo(Param);
+            propYEARLY        : YearlyShape  := Param;
+            propDAILY         : DailyShape   := Param;
+            propDUTY          : DutyShape    := Param;
+            propEVENTLOG      : ShowEventLog := InterpretYesNo(Param);
 //            propVARDISPATCH: DispatchVars := InterpretYesNo(Param);
-            propINHIBITTIME: Inhibithrs   := Max(1, Parser[ActorID].IntValue);  // >=1
-            propTUPRAMP: UpRamptime    := Parser[ActorID].DblValue;
-            propTFLAT:   FlatTime      := Parser[ActorID].DblValue;
-            propTDNRAMP: DnrampTime    := Parser[ActorID].DblValue;
-            propKWTHRESHOLD: FkWThreshold := Parser[ActorID].DblValue;
-            propDispFactor:  if (Parser[ActorID].DblValue > 1.0) or (Parser[ActorID].DblValue <= 0.0) then  DispFactor:= 1.0
-                             else DispFactor := Parser[ActorID].DblValue;
+            propINHIBITTIME   : Inhibithrs   := Max(1, Parser[ActorID].IntValue);  // >=1
+            propTUPRAMP       : UpRamptime   := Parser[ActorID].DblValue;
+            propTFLAT         : FlatTime     := Parser[ActorID].DblValue;
+            propTDNRAMP       : DnrampTime   := Parser[ActorID].DblValue;
+            propKWTHRESHOLD   : FkWThreshold := Parser[ActorID].DblValue;
+            propDispFactor    : if (Parser[ActorID].DblValue > 1.0) or (Parser[ActorID].DblValue <= 0.0) then  DispFactor:= 1.0
+                                else DispFactor := Parser[ActorID].DblValue;
+            propRESETLEVEL    : ResetLevel   := Parser[ActorID].DblValue;
+            propSEASONS       : Seasons      := Parser[ActorID].IntValue;
+            propSEASONTARGETS :
+                            Begin
+                              IF Seasons > 1 Then
+                              Begin
+                                setlength(SeasonTargets, Seasons);
+                                Seasons := InterpretDblArray(Param, Seasons, Pointer(SeasonTargets));
+                              End;
+                            End;
+            propSEASONTARGETSLOW :
+                            Begin
+                              IF Seasons > 1 Then
+                              Begin
+                                setlength(SeasonTargetsLow, Seasons);
+                                Seasons := InterpretDblArray(Param, Seasons, Pointer(SeasonTargetsLow));
+                              End;
+                            End;
 
          ELSE
            // Inherited parameters
@@ -688,6 +739,7 @@ Begin
 //        FPFTarget             := OtherStorageController.FPFTarget;
 //        FPFBand               := OtherStorageController.FPFBand;
 //        HalfPFBand            := OtherStorageController.HalfPFBand;
+        ResetLevel            := OtherStorageController2.ResetLevel;
 
         FkWBandSpecified      := OtherStorageController2.FkWBandSpecified;
         FStorage2NameList.Clear;
@@ -720,7 +772,17 @@ Begin
         FlatTime              := OtherStorageController2.FlatTime;
         DnrampTime            := OtherStorageController2.DnrampTime;
 
-
+        Seasons               := OtherStorageController2.Seasons;
+        IF Seasons > 1 Then
+        Begin
+            setlength(SeasonTargets, Seasons);
+            setlength(SeasonTargetsLow, Seasons);
+            For i := 0 to (Seasons - 1) Do
+            Begin
+              SeasonTargets[i]    := OtherStoragecontroller2.SeasonTargets[i];
+              SeasonTargetsLow[i] := OtherStoragecontroller2.SeasonTargetsLow[i];
+            End;
+        End;
 
 
         //**** fill in private properties
@@ -768,7 +830,7 @@ Begin
      ControlledElement        := nil;    // not used in this control
      ElementTerminal          := 1;
      MonitoredElement         := Nil;
-     FMonPhase                := AVG;
+     FMonPhase                := MAXPHASE;
      cBuffer                  := Nil; // Complex buffer
 
      FStorage2NameList         := TSTringList.Create;
@@ -819,6 +881,13 @@ Begin
      DnrampTime               := 0.25;
      LastpctDischargeRate     := 0.0;
      Wait4Step                := False;     // for sync discharge with charge when there is a transition
+     ResetLevel               := 0.8;
+     Seasons                  := 1;         // For dynamic targets
+     setlength(SeasonTargets,1);
+     SeasonTargets[0]         := FkWTarget;
+     setlength(SeasonTargetsLow,1);
+     SeasonTargetsLow[0]      := FkWTargetLow;
+
 
      InitPropertyValues(0);
 
@@ -885,6 +954,10 @@ Begin
      PropertyValue[propTDNRAMP]              := '0.25';
      PropertyValue[propKWTHRESHOLD]          := '4000';
      PropertyValue[propDispFactor]           := '1.0';
+     PropertyValue[propRESETLEVEL]           := '0.8';
+     PropertyValue[propSEASONS]              := '1';
+     PropertyValue[propSEASONTARGETS]        := '[8000,]';
+     PropertyValue[propSEASONTARGETSLOW]     := '[4000,]';
 
 
   inherited  InitPropertyValues(NumPropsThisClass);
@@ -935,6 +1008,10 @@ Begin
           propTDNRAMP              : Result := Format('%.6g', [DnrampTime]);
           propKWTHRESHOLD          : Result := Format('%.6g', [FkWThreshold]);
           propDispFactor           : Result := Format('%.6g', [DispFactor]);
+          propRESETLEVEL           : Result := Format('%.6g', [ResetLevel]);
+          propSEASONS              : Result := Format('%d', [seasons]);
+          propSEASONTARGETS        : Result := ReturnSeasonTarget(1);
+          propSEASONTARGETSLOW     : Result := ReturnSeasonTarget(0);
 
      ELSE  // take the generic handler
            Result := Inherited GetPropertyValue(index);
@@ -1378,6 +1455,37 @@ begin
 end;
 
 {--------------------------------------------------------------------------}
+Function TStorageController2Obj.Get_DynamicTarget(THigh : Integer; ActorID : Integer): Double;
+var
+  Temp , temp2       : Double;
+  RatingIdx   : Integer;
+  RSignal     : TXYCurveObj;
+Begin
+  if SeasonSignal <> '' then
+  Begin
+    RSignal     :=  XYCurveClass[ActorID].Find(SeasonSignal);
+    if RSignal <> nil then
+      RatingIdx :=  trunc(RSignal.GetYValue(ActiveCircuit[ActorID].Solution.DynaVars.intHour));
+
+    if (RatingIdx <= Seasons) and (Seasons > 1) then
+    Begin
+      if THigh = 1 then
+        Result    :=  SeasonTargets[RatingIdx]
+       else
+        Result    :=  SeasonTargetsLow[RatingIdx]
+    End
+    else
+    Begin
+      if THigh = 1 then
+        Result    :=  FkWTarget
+      else
+        Result    :=  FkWTargetLow
+    End;
+  End;
+End;
+
+
+{--------------------------------------------------------------------------}
 PROCEDURE TStorageController2Obj.DoLoadFollowMode(ActorID : Integer);
 
 Var
@@ -1388,6 +1496,7 @@ Var
    StorekvarChanged,
    SkipkWDispatch     :Boolean;
    VoltsArr           :pComplexArray;
+   kWhActual,
    ElemVolts,
    Amps,
    AmpsDiff,
@@ -1396,6 +1505,7 @@ Var
    DispatchkW,
 //   Dispatchkvar,
    RemainingkWh,
+   CtrlTarget,
    ReservekWh,
    ActualkWDispatch   :Double;
 
@@ -1422,6 +1532,12 @@ Begin
        end
        else GetControlPower(S, ActorID);
 
+       // In case of having seasonal targets
+       if SeasonalRating then
+        CtrlTarget  :=  Get_DynamicTarget(1, ActorID)
+       else
+        CtrlTarget  :=  FkWTarget;
+
 
        CASE  DischargeMode of
              // Following Load; try to keep load below kW Target
@@ -1445,12 +1561,12 @@ Begin
                                 End;
 
              MODEPEAKSHAVE:     Begin
-                                  PDiff         := S.re * 0.001 - FkWTarget;  // Assume S.re is normally positive
+                                  PDiff         := S.re * 0.001 - CtrlTarget;  // Assume S.re is normally positive
 //                                  PFDiff        := ConvertPFToPFRange2(PowerFactor(S)) - FPFTarget;  // for peak shaving
                                 End;
 
              CURRENTPEAKSHAVE:  Begin
-                                  PDiff         := Amps - FkWTarget * 1000;  // Gets the difference in terms of amps
+                                  PDiff         := Amps - CtrlTarget * 1000;  // Gets the difference in terms of amps
 //                                  DispatchVars  :=  False;
                                 End;
        ELSE
@@ -1520,6 +1636,17 @@ Begin
                   Begin  // Don't bother trying to dispatch
                        ChargingAllowed  := TRUE;
                        SkipkWDispatch   := TRUE;
+                       if OutofOomph then  // --------------------------------- new 04/20/2020 ----------
+                       Begin
+                         For i := 1 to FleetSize Do
+                         Begin
+                           StorageObj := FleetPointerList.Get(i);
+                           kWhActual  :=  StorageObj.Storage2Vars.kWhStored / StorageObj.Storage2Vars.kWhRating;
+                           OutOfOomph := OutOfOomph and (kWhActual >= ResetLevel);  // If we have more than the 80% we are good to dispatch
+                         End;
+                         OutOfOomph :=  not OutOfOomph;  // If everybody in the fleet has at least the 80% of the storage capacity full
+
+                       End;    // -----------------------------------------------------------------------
                   End;
 //                STORE_DISCHARGING: If ((PDiff + FleetkW) < 0.0)  or OutOfOomph Then
 //                STORE_DISCHARGING: If (((PDiff + FleetkW) < 0.0) and (abs(PDiff) > HalfkWBand)) or OutOfOomph Then // CR: set to idle only if out of band
@@ -1550,7 +1677,7 @@ Begin
                  If Not (FleetState=STORE_DISCHARGING) Then
                   Begin
                     SetFleetToDischarge;
-                    StorekWChanged:= TRUE;  // if not already discharging, force new power flow.
+//                    StorekWChanged:= TRUE;  // if not already discharging, force new power flow.
                   End;
                  If ShowEventLog Then  AppendToEventLog('StorageController2.' + Self.Name, Format('Attempting to dispatch %-.6g kW with %-.6g kWh remaining and %-.6g kWh reserve.', [kWNeeded, RemainingkWh, ReservekWh]),ActorID);
                  For i := 1 to FleetSize Do
@@ -1691,6 +1818,7 @@ Var
    ActualkW,
    TotalRatingkWh,
    KwtoPercentagekW,
+   CtrlTarget,
    ActualkWDispatch   : Double;
 
 Begin
@@ -1703,6 +1831,13 @@ Begin
        StorekWChanged := FALSE;
        SkipkWCharge   := FALSE;
 
+
+       if SeasonalRating then
+         CtrlTarget  :=  Get_DynamicTarget(0, ActorID)
+       else
+         CtrlTarget  :=  FkWTargetLow;
+
+
        //----MonitoredElement.ActiveTerminalIdx := ElementTerminal;
        if Chargemode = CURRENTPEAKSHAVELOW then
        Begin
@@ -1710,12 +1845,12 @@ Begin
           MonitoredElement.GetCurrents(cBuffer, ActorID);
           GetControlCurrent(Amps);
 //         Amps         := MonitoredElement.MaxCurrent[ElementTerminal,ActorID]; // Max current in active terminal
-          PDiff        := Amps - FkWTargetLow * 1000;  // Gets the difference in terms of amps
+          PDiff        := Amps - CtrlTarget * 1000;  // Gets the difference in terms of amps
        End
        else
        Begin
           GetControlPower(S, ActorID);
-          PDiff        := S.re * 0.001 - FkWTargetLow;  // Assume S.re is normally positive
+          PDiff        := S.re * 0.001 - CtrlTarget;  // Assume S.re is normally positive
        end;
 
        ActualkW       := FleetkW;
@@ -1802,7 +1937,7 @@ Begin
                Begin // Attempt to change storage kW charge
                    If Not (FleetState=STORE_CHARGING) Then Begin
                       SetFleetToCharge;
-                      StorekWChanged:= TRUE;  // if not already charging, force new power flow.
+//                      StorekWChanged:= TRUE;  // if not already charging, force new power flow.
                    End;
   //                       If ShowEventLog Then  AppendToEventLog('StorageController.' + Self.Name, Format('Attempting to charge %-.6g kW with %-.6g kWh remaining and %-.6g rating.', [kWNeeded, (TotalRatingkWh-ActualkWh), TotalRatingkWh]), ActorID);
                    If ShowEventLog Then  AppendToEventLog('StorageController2.' + Self.Name, Format('Attempting to charge %-.6g kW with %-.6g kWh remaining and %-.6g rating.', [kWNeeded, (TotalRatingkWh-ActualkWh), TotalRatingkWh]), ActorID);
@@ -2306,6 +2441,30 @@ Begin
      Result := Result + ']';  // terminate the array
 
 End;
+
+//----------------------------------------------------------------------------
+FUNCTION TStorageController2Obj.ReturnSeasonTarget(THigh :  Integer):String;
+VAR
+     i :Integer;
+Begin
+     If Seasons=1 Then
+       Begin
+            Result := '';
+            Exit;
+       End;
+
+     Result := '[';
+     For i := 0 to (Seasons - 1) Do
+       Begin
+          if THigh = 1 then
+             Result := Result + format('%.6g',[SeasonTargets[i]]) + ', '
+          else
+             Result := Result + format('%.6g',[SeasonTargetsLow[i]]) + ', ';
+       End;
+     Result := Result + ']';  // terminate the array
+
+End;
+
 
 //----------------------------------------------------------------------------
 FUNCTION TStorageController2Obj.ReturnWeightsList: String;
