@@ -240,7 +240,7 @@ Begin
 
      InvControlClass[ActiveActor] := TInvControl.Create;
      DSSClasses.New               := InvControlClass[ActiveActor];
-     InvControl2Class[ActiveActor] := TInvControl2.Create;
+     InvControl2Class[ActiveActor]:= TInvControl2.Create;
      DSSClasses.New               := InvControl2Class[ActiveActor];
 
      ExpControlClass[ActiveActor] := TExpControl.Create;
@@ -287,6 +287,7 @@ End;
 PROCEDURE   DisposeDSSClasses(AllActors: Boolean);
 
 VAR
+    k,
     DSSCidx,
     temp,
     i                 : Integer;
@@ -320,10 +321,13 @@ BEGIN
        For i := 1 to DSSClassList[ActiveActor].ListSize Do
        Begin
         DSSClass_idx  :=  DSSClassList[ActiveActor].Get(i);
-        FreeAndNil(DSSClass_idx);
+        TraceName :=  DSSClass_idx.Name;
+        TDSSClass(DSSClass_idx).Free;
        End;
        TraceName                  :=  '(DSS Class List)';
        FreeAndNil(DSSClassList[ActiveActor]);
+       TraceName                  := '(DSS Classes)';
+       FreeAndNil(DSSClasses);
        TraceName                  :=  '(ClassNames)';
        FreeAndNil(ClassNames[ActiveActor]);
 
