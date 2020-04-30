@@ -43,11 +43,8 @@ Uses Classes, DSSClassDefs, DSSObject, DSSClass, ParserDel, Hashlist, PointerLis
      TSData,
      LineSpacing,
      Storage,
-     Storage2,
      PVSystem,
-     PVSystem2,
      InvControl,
-     InvControl2,
      ExpControl,
      variants,
      {$IFNDEF FPC}
@@ -254,11 +251,8 @@ VAR
    TSDataClass        :Array of TTSData;
    LineSpacingClass   :Array of TLineSpacing;
    StorageClass       :Array of TStorage;
-   Storage2Class      :Array of TStorage2;
    PVSystemClass      :Array of TPVSystem;
-   PVSystem2Class     :Array of TPVSystem2;
    InvControlClass    :Array of TInvControl;
-   InvControl2Class    :Array of TInvControl2;
    ExpControlClass    :Array of TExpControl;
    ActiveVSource      :Array of TVsource;   // created on 01/14/2019 to facilitate actors to modify VSources while simulating
 
@@ -1287,11 +1281,11 @@ initialization
    setlength(TSDataClass,CPU_Cores + 1);
    setlength(LineSpacingClass,CPU_Cores + 1);
    setlength(StorageClass,CPU_Cores + 1);
-   setlength(Storage2Class,CPU_Cores + 1);
+//   setlength(Storage2Class,CPU_Cores + 1);
    setlength(PVSystemClass,CPU_Cores + 1);
-   setlength(PVSystem2Class,CPU_Cores + 1);
+//   setlength(PVSystem2Class,CPU_Cores + 1);
    setlength(InvControlClass,CPU_Cores + 1);
-   setlength(InvControl2Class,CPU_Cores + 1);
+//   setlength(InvControl2Class,CPU_Cores + 1);
    setlength(ExpControlClass,CPU_Cores + 1);
    setlength(EventStrings,CPU_Cores + 1);
    setlength(SavedFileList,CPU_Cores + 1);

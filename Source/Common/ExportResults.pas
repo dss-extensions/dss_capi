@@ -28,9 +28,9 @@ Procedure ExportFaultStudy(FileNm:String);
 Procedure ExportMeters(FileNm:String);
 Procedure ExportGenMeters(FileNm:String);
 Procedure ExportPVSystemMeters(FileNm:String);
-Procedure ExportPVSystem2Meters(FileNm:String);
+//Procedure ExportPVSystem2Meters(FileNm:String);
 Procedure ExportStorageMeters(FileNm:String);
-Procedure ExportStorage2Meters(FileNm:String);
+//Procedure ExportStorage2Meters(FileNm:String);
 Procedure ExportLoads(FileNm :String);
 Procedure ExportCapacity(FileNm:String);
 Procedure ExportOverloads(FileNm:String);
@@ -78,7 +78,7 @@ Uses uComplex,  Arraydef, Sysutils,   Circuit, DSSClassDefs, DSSGlobals,
      uCMatrix,  solution, CktElement, Utilities, Bus, MathUtil, DSSClass,
      PDElement, PCElement, Generator,  Sensor, Load, RegControl, Transformer,
      ParserDel, Math, Ymatrix, LineGeometry, WireData, LineCode, XfmrCode, NamedObject,
-     GICTransformer, PVSystem, PVSystem2, Storage, Storage2, KLUSolve, ExportCIMXML,
+     GICTransformer, PVSystem, Storage, KLUSolve, ExportCIMXML,
      LineSpacing, CNData, TSData;
 
 Procedure WriteElementVoltagesExportFile(Var F:TextFile; pElem:TDSSCktElement;MaxNumNodes:Integer);
@@ -2065,13 +2065,13 @@ Procedure WriteMultiplePVSystem2MeterFiles;
 Var
    F  :TextFile;
    i,j:Integer;
-   pElem  :TPVSystem2Obj;
+   pElem  :TPVSystemObj;
    FileNm,
    Separator :String;
 
 Begin
 
-     If PVSystem2Class[ActiveActor] = NIL THEN Exit;  // oops somewhere!!
+     If PVSystemClass[ActiveActor] = NIL THEN Exit;  // oops somewhere!!
      Separator := ', ';
 
      pElem := ActiveCircuit[ActiveActor].PVSystems2.First;
@@ -2087,8 +2087,8 @@ Begin
                 AssignFile(F, FileNm);
                 Rewrite(F);
                 {Write New Header}
-                Write(F, 'Year, LDCurve, Hour, PVSystem2');
-                For i := 1 to NumPVSystem2Registers Do Write(F, Separator, '"' + PVSystem2Class[ActiveActor].RegisterNames[i]+'"');
+                Write(F, 'Year, LDCurve, Hour, PVSystem');
+                For i := 1 to NumPVSystemRegisters Do Write(F, Separator, '"' + PVSystemClass[ActiveActor].RegisterNames[i]+'"');
                 Writeln(F);
                 CloseFile(F);
             End;
@@ -2100,7 +2100,7 @@ Begin
                 Write(F,LoadDurCurve, Separator);
                 Write(F,Solution.DynaVars.intHour:0, Separator);
                 Write(F,Pad('"'+Uppercase(pElem.Name)+'"', 14));
-                FOR j := 1 to NumPVSystem2Registers Do Write(F, Separator, PElem.Registers[j]:10:0);
+                FOR j := 1 to NumPVSystemRegisters Do Write(F, Separator, PElem.Registers[j]:10:0);
                 Writeln(F);
             End;
             AppendGlobalResult(FileNm);
@@ -2195,19 +2195,19 @@ Begin
 End;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure WriteSinglePVSystem2MeterFile(FileNm:String);
+{Procedure WriteSinglePVSystemMeterFile(FileNm:String);
 
 Var
    F  :TextFile;
    i,j:Integer;
-   pElem  :TPVSystem2Obj;
+   pElem  :TPVSystemObj;
    Separator, TestStr :String;
    ReWriteFile :Boolean;
 
 Begin
 
 
-  If PVSystem2Class[ActiveActor] = NIL THEN Exit;  // oops somewhere!!
+  If PVSystemClass[ActiveActor] = NIL THEN Exit;  // oops somewhere!!
   Separator := ', ';
 
 
@@ -2220,7 +2220,7 @@ Begin
          IF  Not EOF(F)
          THEN Begin
              Read(F, TestStr);
-             {See if it likely that the file is OK}
+
              IF  CompareText(Copy(TestStr,1,4), 'Year')=0
              THEN RewriteFile := FALSE       // Assume the file is OK
              ELSE RewriteFile := TRUE;
@@ -2235,13 +2235,13 @@ Begin
          AssignFile(F, FileNm);
     End;
 
-   {Either open or append the file}
+
     IF RewriteFile
     THEN Begin
         ReWrite(F);
-        {Write New Header}
-        Write(F, 'Year, LDCurve, Hour, PVSystem2');
-        For i := 1 to NumGenRegisters Do Write(F, Separator, '"'+ PVSystem2Class[ActiveActor].RegisterNames[i]+'"');
+
+        Write(F, 'Year, LDCurve, Hour, PVSystem');
+        For i := 1 to NumGenRegisters Do Write(F, Separator, '"'+ PVSystemClass[ActiveActor].RegisterNames[i]+'"');
         Writeln(F);
     END
     ELSE Append(F);
@@ -2256,7 +2256,7 @@ Begin
             Write(F,LoadDurCurve, Separator);
             Write(F,Solution.DynaVars.intHour:0, Separator);
             Write(F,Pad('"'+Uppercase(pElem.Name)+'"', 14));
-            FOR j := 1 to NumPVSystem2Registers Do Write(F, Separator, PElem.Registers[j]:10:0);
+            FOR j := 1 to NumPVSystemRegisters Do Write(F, Separator, PElem.Registers[j]:10:0);
             Writeln(F);
         END;
 
@@ -2272,7 +2272,7 @@ Begin
   End;
 
 
-End;
+End; }
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 Procedure WriteMultipleStorageMeterFiles;
@@ -2334,13 +2334,13 @@ Procedure WriteMultipleStorage2MeterFiles;
 Var
    F  :TextFile;
    i,j:Integer;
-   pElem  :TStorage2Obj;
+   pElem  :TStorageObj;
    FileNm,
    Separator :String;
 
 Begin
 
-     If Storage2Class = NIL THEN Exit;  // oops somewhere!!
+     If StorageClass = NIL THEN Exit;  // oops somewhere!!
      Separator := ', ';
 
      pElem := ActiveCircuit[ActiveActor].Storage2Elements.First;
@@ -2357,7 +2357,7 @@ Begin
                 Rewrite(F);
                 {Write New Header}
                 Write(F, 'Year, LDCurve, Hour, Storage2');
-                For i := 1 to NumStorage2Registers Do Write(F, Separator, '"' + Storage2Class[ActiveActor].RegisterNames[i]+'"');
+                For i := 1 to NumStorageRegisters Do Write(F, Separator, '"' + StorageClass[ActiveActor].RegisterNames[i]+'"');
                 Writeln(F);
                 CloseFile(F);
             End;
@@ -2369,7 +2369,7 @@ Begin
                 Write(F,LoadDurCurve, Separator);
                 Write(F,Solution.DynaVars.intHour:0, Separator);
                 Write(F,Pad('"'+Uppercase(pElem.Name)+'"', 14));
-                FOR j := 1 to NumStorage2Registers Do Write(F, Separator, PElem.Registers[j]:10:0);
+                FOR j := 1 to NumStorageRegisters Do Write(F, Separator, PElem.Registers[j]:10:0);
                 Writeln(F);
             End;
             AppendGlobalResult(FileNm);
@@ -2468,14 +2468,14 @@ Procedure WriteSingleStorage2MeterFile(FileNm:String);
 Var
    F  :TextFile;
    i,j:Integer;
-   pElem  :TStorage2Obj;
+   pElem  :TStorageObj;
    Separator, TestStr :String;
    ReWriteFile :Boolean;
 
 Begin
 
 
-  If Storage2Class = NIL THEN Exit;  // oops somewhere!!
+  If StorageClass = NIL THEN Exit;  // oops somewhere!!
   Separator := ', ';
 
 
@@ -2509,7 +2509,7 @@ Begin
         ReWrite(F);
         {Write New Header}
         Write(F, 'Year, LDCurve, Hour, Storage2');
-        For i := 1 to NumStorage2Registers Do Write(F, Separator, '"'+ Storage2Class[ActiveActor].RegisterNames[i]+'"');
+        For i := 1 to NumStorageRegisters Do Write(F, Separator, '"'+ StorageClass[ActiveActor].RegisterNames[i]+'"');
         Writeln(F);
     END
     ELSE Append(F);
@@ -2524,7 +2524,7 @@ Begin
             Write(F,LoadDurCurve, Separator);
             Write(F,Solution.DynaVars.intHour:0, Separator);
             Write(F,Pad('"'+Uppercase(pElem.Name)+'"', 14));
-            FOR j := 1 to NumStorage2Registers Do Write(F, Separator, PElem.Registers[j]:10:0);
+            FOR j := 1 to NumStorageRegisters Do Write(F, Separator, PElem.Registers[j]:10:0);
             Writeln(F);
         END;
 
@@ -2574,21 +2574,7 @@ Begin
 End;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure ExportPVSystem2Meters(FileNm:String);
 
-// Export Values of Generator Meter Elements
-// If switch /m is specified, a separate file is created for each generator using the generator's name
-
-Begin
-
-
-  If Lowercase(Copy(FileNm,1,2)) = '/m'
-  THEN WriteMultiplePVSystem2MeterFiles
-  ELSE WriteSinglePVSystem2MeterFile(FileNM);
-
-End;
-
-// = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 Procedure ExportStorageMeters(FileNm:String);
 
 // Export Values of Generator Meter Elements
@@ -2602,8 +2588,8 @@ Begin
   ELSE WriteSingleStorageMeterFile(FileNM);
 
 End;
-
-Procedure ExportStorage2Meters(FileNm:String);
+{
+Procedure ExportStorageMeters(FileNm:String);
 
 // Export Values of Generator Meter Elements
 // If switch /m is specified, a separate file is created for each generator using the generator's name
@@ -2612,10 +2598,10 @@ Begin
 
 
   If Lowercase(Copy(FileNm,1,2)) = '/m'
-  THEN WriteMultipleStorage2MeterFiles
-  ELSE WriteSingleStorage2MeterFile(FileNM);
+  THEN WriteMultipleStorageMeterFiles
+  ELSE WriteSingleStorageMeterFile(FileNM);
 
-End;
+End;}
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 Procedure ExportLoads(FileNm:String);

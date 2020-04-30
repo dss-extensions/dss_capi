@@ -116,7 +116,6 @@ uses
   ProgressForm in '..\Forms\ProgressForm.pas' {Progress},
   PropEdit in '..\Forms\PropEdit.pas' {PropEditForm},
   PVsystem in '..\PCElements\PVsystem.pas',
-  PVsystem2 in '..\PCElements\PVsystem2.pas',
   PVSystemUserModel in '..\PCElements\PVSystemUserModel.pas',
   Reactor in '..\PDElements\Reactor.pas',
   Recloser in '..\Controls\Recloser.pas',
@@ -133,7 +132,6 @@ uses
   StackDef in '..\Shared\StackDef.pas',
   Storage in '..\PCElements\Storage.pas',
   StorageController in '..\Controls\StorageController.pas',
-  StorageController2 in '..\Controls\StorageController2.pas',
   StoreUserModel in '..\PCElements\StoreUserModel.pas',
   SwtControl in '..\Controls\SwtControl.pas',
   TCC_Curve in '..\General\TCC_Curve.pas',
@@ -170,11 +168,9 @@ uses
   DSSGraph in '..\Plot\DSSGraph.pas',
   CapUserControl in '..\Controls\CapUserControl.pas',
   StorageVars in '..\PCElements\StorageVars.pas',
-  Storage2Vars in '..\PCElements\Storage2Vars.pas',
   GeneratorVars in '..\PCElements\GeneratorVars.pas',
   CapControlVars in '..\Controls\CapControlVars.pas',
   InvControl in '..\Controls\InvControl.pas',
-  InvControl2 in '..\Controls\InvControl2.pas',
   GICTransformer in '..\PDElements\GICTransformer.pas',
   ExpControl in '..\Controls\ExpControl.pas',
   UPFC in '..\PCElements\UPFC.pas',
@@ -202,7 +198,6 @@ uses
   Splash_Screen in '..\Forms\Splash_Screen.pas' {SplashScr},
   GISCommands in '..\GISCommands\GISCommands.pas',
   djson in '..\Common\djson.pas',
-  Storage2 in '..\PCElements\Storage2.pas',
   NumCPULib in '..\Parallel_Lib\NumCPULib.pas';
 
 {$R *.RES}

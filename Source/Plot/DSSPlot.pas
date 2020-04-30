@@ -200,9 +200,9 @@ Uses DSSGraph,
    Monitor,
    Capacitor,
    PVSystem,
-   PVSystem2,
+//   PVSystem2,
    Storage,
-   Storage2,
+//   Storage2,
    RegControl,
    Fuse,
    Recloser,
@@ -3183,17 +3183,17 @@ end;
 
 procedure TDSSPlot.MarkThePVSystems2;
 Var
-     pPVSystem2:TPVSystem2Obj;
+     pPVSystem:TPVSystemObj;
      BusIdx: Integer;
      MyBus : TDSSBus;
 
 begin
-   pPVSystem2 := ActiveCircuit[ActiveActor].PVSystems2.first;
-   While pPVSystem2 <> Nil Do
+   pPVSystem := ActiveCircuit[ActiveActor].PVSystems2.first;
+   While pPVSystem <> Nil Do
    Begin
-      If pPVSystem2.Enabled Then
+      If pPVSystem.Enabled Then
          Begin
-            BusIdx := pPVSystem2.Terminals^[1].BusRef;
+            BusIdx := pPVSystem.Terminals^[1].BusRef;
             If BusIdx > 0 Then
             With ActiveCircuit[ActiveActor] Do  Begin
                MyBus :=  Buses^[BusIdx];
@@ -3203,7 +3203,7 @@ begin
                End;
             End;
          End;
-      pPVSystem2 := ActiveCircuit[ActiveActor].PVSystems2.Next;
+      pPVSystem := ActiveCircuit[ActiveActor].PVSystems.Next;
    End;
 end;
 
@@ -3235,7 +3235,7 @@ end;
 
 procedure TDSSPlot.MarkTheStorage2;
 Var
-     pStorage2:TStorage2Obj;
+     pStorage2:TStorageObj;
      BusIdx: Integer;
      MyBus : TDSSBus;
 
