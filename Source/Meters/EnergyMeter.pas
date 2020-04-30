@@ -842,9 +842,9 @@ Begin
       // Reset Generator Objects, too
       GeneratorClass.ResetRegistersAll(ActorID);
       StorageClass[ActorID].ResetRegistersAll;
-      Storage2Class[ActorID].ResetRegistersAll;
+//      Storage2Class[ActorID].ResetRegistersAll;
       PVSystemClass[ActorID].ResetRegistersAll;
-      PVSystem2Class[ActorID].ResetRegistersAll;
+//      PVSystem2Class[ActorID].ResetRegistersAll;
 
 
 End;
@@ -878,9 +878,9 @@ Begin
       // Sample Generator ans Storage Objects, too
       GeneratorClass.SampleAll(ActorID);
       StorageClass[ActorID].SampleAll(ActorID);  // samples energymeter part of storage elements (not update)
-      Storage2Class[ActorID].SampleAll(ActorID);
+//      Storage2Class[ActorID].SampleAll(ActorID);
       PVSystemClass[ActorID].SampleAll(ActorID);
-      PVSystem2Class[ActorID].SampleAll(ActorID);
+//      PVSystem2Class[ActorID].SampleAll(ActorID);
 
 End;
 

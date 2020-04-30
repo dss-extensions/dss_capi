@@ -3843,7 +3843,7 @@ End;
 FUNCTION DoUpdateStorage2Cmd:Integer;
 
 Begin
-       Storage2Class[ActiveActor].UpdateAll(ActiveActor);
+       StorageClass[ActiveActor].UpdateAll(ActiveActor);
        Result := 0;
 End;
 

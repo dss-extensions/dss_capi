@@ -18,17 +18,39 @@ Type
 {Struct to pass basic data to user-written DLLs}
    TStorageVars = Packed Record
 
-        kWrating        :double;
+        kWrating        :Double;
         kWhRating       :Double;
         kWhStored       :Double;
         kWhReserve      :Double;
+
         ChargeEff       :Double;
         DisChargeEff    :Double;
-        kVArating       :Double;
         kVStorageBase   :Double;
-        kvarRequested   :Double;
         RThev           :Double;
         XThev           :Double;
+
+        // Inverter Related Properties
+        FkVArating      :Double;
+        Fkvarlimit      :Double;
+        Fkvarlimitneg   :Double;
+        P_Priority      :Boolean;
+        PF_Priority     :Boolean;
+        FpctkWrated     :Double;
+        EffFactor       :Double;
+
+
+        // Interaction with InvControl
+        Vreg            :Double;
+        Vavg            :Double;
+        VVOperation     :Double;
+        VWOperation     :Double;
+        DRCOperation    :Double;
+        VVDRCOperation  :Double;
+        WPOperation     : Double;
+        WVOperation     : Double;
+//        kW_out_desired  :Double;
+
+
         // Dynamics variables
         Vthev           :Complex;  {Thevenin equivalent voltage (complex) for dynamic model}
         ZThev           :Complex;
