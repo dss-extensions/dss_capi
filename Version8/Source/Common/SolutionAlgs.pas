@@ -80,9 +80,9 @@ PROCEDURE EndOfTimeStepCleanup(ActorID: integer);
 }
 Begin
     StorageClass[ActorID].UpdateAll(ActorID);
-    Storage2Class[ActorID].UpdateAll(ActorID);
+//    Storage2Class[ActorID].UpdateAll(ActorID);
     InvControlClass[ActorID].UpdateAll(ActorID);
-    InvControl2Class[ActorID].UpdateAll(ActorID);
+//    InvControl2Class[ActorID].UpdateAll(ActorID);
     ExpControlClass[ActorID].UpdateAll(ActorID);
 
     // End of Time Step Timer

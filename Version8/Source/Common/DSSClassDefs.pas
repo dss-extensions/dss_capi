@@ -128,14 +128,14 @@ USES
      Feeder,
      XfmrCode,
      Storage,
-     Storage2,
+//     Storage2,
      StorageController,
-     StorageController2,
+//     StorageController2,
      SwtControl,
      PVSystem,
-     PVSystem2,
+//     PVSystem2,
      InvControl,
-     InvControl2,
+//     InvControl2,
      GICLine,
      GICTransformer,
      VSConverter,
@@ -215,10 +215,10 @@ Begin
      DSSClasses.New               := TGenDispatcher.Create;
      StorageClass[ActiveActor]    := TStorage.Create;
      DSSClasses.New               := StorageClass[ActiveActor];
-     Storage2Class[ActiveActor]   := TStorage2.Create;
-     DSSClasses.New               := Storage2Class[ActiveActor];
+//     Storage2Class[ActiveActor]   := TStorage2.Create;
+//     DSSClasses.New               := Storage2Class[ActiveActor];
      DSSClasses.New               := TStorageController.Create;
-     DSSClasses.New               := TStorageController2.Create;
+//     DSSClasses.New               := TStorageController2.Create;
      DSSClasses.New               := TRelay.Create;
      DSSClasses.New               := TRecloser.Create;
      DSSClasses.New               := TFuse.Create;
@@ -227,8 +227,8 @@ Begin
      DSSClasses.New               := TSwtControl.Create;
      PVSystemClass[ActiveActor]   := TPVSystem.Create;
      DSSClasses.New               := PVSystemClass[ActiveActor];
-     PVSystem2Class[ActiveActor]  := TPVSystem2.Create;
-     DSSClasses.New               := PVSystem2Class[ActiveActor];
+//     PVSystem2Class[ActiveActor]  := TPVSystem2.Create;
+//     DSSClasses.New               := PVSystem2Class[ActiveActor];
      DSSClasses.New               := TUPFC.Create;
      DSSClasses.New               := TUPFCControl.Create;
      DSSClasses.New               := TESPVLControl.Create;
@@ -240,8 +240,8 @@ Begin
 
      InvControlClass[ActiveActor] := TInvControl.Create;
      DSSClasses.New               := InvControlClass[ActiveActor];
-     InvControl2Class[ActiveActor]:= TInvControl2.Create;
-     DSSClasses.New               := InvControl2Class[ActiveActor];
+//     InvControl2Class[ActiveActor]:= TInvControl2.Create;
+//     DSSClasses.New               := InvControl2Class[ActiveActor];
 
      ExpControlClass[ActiveActor] := TExpControl.Create;
      DSSClasses.New               := ExpControlClass[ActiveActor];
