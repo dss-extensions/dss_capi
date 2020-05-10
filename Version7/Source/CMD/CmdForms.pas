@@ -10,7 +10,7 @@ unit CmdForms;
 {
 	08/17/2016  Created from OpenDSS
  ----------------------------------------------------------
-  Copyright (c) 2016 Battelle Memorial Institute
+  Copyright (c) 2016-2020 Battelle Memorial Institute
  ----------------------------------------------------------
 }
 
@@ -86,8 +86,8 @@ Procedure ShowAboutBox;
 begin
 	writeln ('Console OpenDSS (Electric Power Distribution System Simulator)');
 	writeln ('Version: ' + VersionString);
-	writeln ('Copyright (c) 2008-2019, Electric Power Research Institute, Inc.');
-	writeln ('Copyright (c) 2016-2019, Battelle Memorial Institute');
+	writeln ('Copyright (c) 2008-2020, Electric Power Research Institute, Inc.');
+	writeln ('Copyright (c) 2016-2020, Battelle Memorial Institute');
 	writeln ('All rights reserved.');
 End;
 
