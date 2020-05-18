@@ -3549,7 +3549,7 @@ begin
             pName := ActiveCircuit
           end else if CompareText (DevClass, 'Bus')=0 then begin
             idx := ActiveCircuit.BusList.Find (DevName);
-            pName := ActiveCircuit.Buses^[idx];
+            if idx > 0 then pName := ActiveCircuit.Buses^[idx];
           end else begin
             LastClassReferenced := ClassNames.Find (DevClass);
             ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
