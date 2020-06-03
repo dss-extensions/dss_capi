@@ -2211,7 +2211,7 @@ Begin
           val := pXf.imagPct / 100.0 / zbase;
           DoubleNode (EpPrf, 'TransformerCoreAdmittance.b', val);
           DoubleNode (EpPrf, 'TransformerCoreAdmittance.b0', val);
-          RefNode (FunPrf, 'TransformerCoreAdmittance.TransformerEnd', WdgList[0]);
+          RefNode (EpPrf, 'TransformerCoreAdmittance.TransformerEnd', WdgList[0]);
           EndInstance (EpPrf, 'TransformerCoreAdmittance');
           seq := 1; // write mesh Z
           for i:=1 to NumberOfWindings do begin
@@ -2288,7 +2288,7 @@ Begin
           StartInstance (FunPrf, 'Terminal', pName2);
           RefNode (FunPrf, 'Terminal.ConductingEquipment', pBank);
           IntegerNode (FunPrf, 'ACDCTerminal.sequenceNumber', i);
-          FD.WriteCimLn (TopoPrf, Format('<cim:Terminal.ConnectivityNode rdf:resource="#%s"/>',
+          FD.WriteCimLn (TopoPrf, Format('  <cim:Terminal.ConnectivityNode rdf:resource="#%s"/>',
             [ActiveCircuit.Buses[j].CIM_ID]));
           if i = 1 then begin   // write the current limit on HV winding, assuming that's winding 1
             LimitName := GetOpLimIName (pXf.NormAmps, pXf.EmergAmps);
