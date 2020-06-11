@@ -331,6 +331,7 @@ End;
 {--------------------------------------------------------------------------}
 FUNCTION TRelay.Edit(ActorID : Integer):Integer;
 VAR
+
    ParamPointer:Integer;
    ParamName:String;
    Param:String;
@@ -402,15 +403,14 @@ Begin
               2: ElementTerminal := MonitoredElementTerminal;
               5: Begin        {Set Default Reclose Intervals}
                     CASE lowercase(param)[1] of
-                      'c': PropertyValue[14] := '(0.5, 2.0, 2.0)';
-                      'v': PropertyValue[14] := '(5.0)';
+                      'c': PropertyValue[14] := '[0.5, 2.0, 2.0]';
+                      'v': PropertyValue[14] := '[5.0]';
                     END;
                     AuxParser[ActorID].CmdString := PropertyValue[14];
                     ParamName := AuxParser[ActorID].NextParam;
                     NumReclose := AuxParser[ActorID].ParseAsVector(4, RecloseIntervals);
                  End;
          END;
-
          ParamName := Parser[ActorID].NextParam;
          Param := Parser[ActorID].StrValue;
      End;
@@ -861,16 +861,16 @@ VAR
 begin
         Result := '';
         With ParentClass Do
-        CASE PropertyIdxMap[Index] of
-          14: Begin
-                Result := '(';
-                If NumReclose=0 Then Result := Result + 'NONE' Else
-                   FOR i := 1 to NumReclose Do Result := Result + Format('%-g, ' , [RecloseIntervals^[i]]);
-                Result := Result + ')';
-              End;
-        ELSE
-           Result := Inherited GetPropertyValue(Index);
-        END;
+          CASE Index of
+            14: Begin
+                  Result := '(';
+                  If NumReclose=0 Then Result := Result + 'NONE' Else
+                     FOR i := 1 to NumReclose Do Result := Result + Format('%-g, ' , [RecloseIntervals^[i]]);
+                  Result := Result + ')';
+                End;
+          ELSE
+             Result := Inherited GetPropertyValue(Index);
+          END;
 end;
 
 
