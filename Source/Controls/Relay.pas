@@ -860,7 +860,7 @@ VAR
 begin
         Result := '';
         With ParentClass Do
-        CASE PropertyIdxMap[Index] of
+        CASE Index of
           14: Begin
                 Result := '(';
                 If NumReclose=0 Then Result := Result + 'NONE' Else
