@@ -12,10 +12,10 @@ unit OpenDSSengine_TLB;
 // ************************************************************************ //
 
 // $Rev: 52393 $
-// File generated on 2/12/2020 9:23:11 AM from Type Library described below.
+// File generated on 6/18/2020 3:06:45 PM from Type Library described below.
 
 // ************************************************************************  //
-// Type Lib: C:\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
+// Type Lib: C:\Users\prdu001\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
 // LIBID: {8BFDE413-245A-4514-B151-B16DCC243796}
 // LCID: 0
 // Helpfile:
@@ -24,8 +24,6 @@ unit OpenDSSengine_TLB;
 //   (1) v2.0 stdole, (C:\Windows\SysWOW64\stdole2.tlb)
 //   (2) v1.0 stdole, (stdole32.tlb)
 // SYS_KIND: SYS_WIN32
-// Errors:
-//   Hint: Member 'Class' of 'ILoads' changed to 'Class_'
 // ************************************************************************ //
 {$TYPEDADDRESS OFF} // Unit must be compiled without type-checked pointers.
 {$WARN SYMBOL_PLATFORM OFF}
@@ -905,6 +903,8 @@ type
     function Get_puVmagAngle: OleVariant; safecall;
     function Get_TotalMiles: Double; safecall;
     function Get_SectionID: Integer; safecall;
+    function Get_LineList: OleVariant; safecall;
+    function Get_LoadList: OleVariant; safecall;
     property Name: WideString read Get_Name;
     property NumNodes: Integer read Get_NumNodes;
     property Voltages: OleVariant read Get_Voltages;
@@ -935,6 +935,8 @@ type
     property puVmagAngle: OleVariant read Get_puVmagAngle;
     property TotalMiles: Double read Get_TotalMiles;
     property SectionID: Integer read Get_SectionID;
+    property LineList: OleVariant read Get_LineList;
+    property LoadList: OleVariant read Get_LoadList;
   end;
 
 // *********************************************************************//
@@ -976,6 +978,8 @@ type
     property puVmagAngle: OleVariant readonly dispid 216;
     property TotalMiles: Double readonly dispid 217;
     property SectionID: Integer readonly dispid 218;
+    property LineList: OleVariant readonly dispid 219;
+    property LoadList: OleVariant readonly dispid 220;
   end;
 
 // *********************************************************************//
