@@ -48,12 +48,14 @@ type
     function Get_VMagAngle: OleVariant; safecall;
     function Get_TotalMiles: Double; safecall;
     function Get_SectionID: Integer; safecall;
+    function Get_LineList: OleVariant; safecall;
+    function Get_LoadList: OleVariant; safecall;
   end;
 
 implementation
 
 uses ComServ, DSSGlobals, ImplGlobals, Circuit, Ucomplex, MathUtil, sysutils,
-     ExecHelper, SolutionAlgs, Variants, Utilities, Bus;
+     ExecHelper, SolutionAlgs, Variants, Utilities, Bus, CktElement;
 
 function TBus.Get_Name: WideString;
 begin
@@ -863,6 +865,111 @@ begin
     With ActiveCircuit[ActiveActor] Do
       if ActiveBusIndex > 0 then
          Result := Buses^[ActiveBusIndex].BusSectionID  ;
+end;
+
+Function CheckBusReference(cktElem:TDSSCktElement; BusReference:Integer; Var TerminalIndex:integer):Boolean;
+
+{Check all terminals of cktelement to see if bus connected to busreference}
+
+Var  i:integer;
+Begin
+     Result := FALSE;
+     With cktElem Do
+     For i := 1 to NTerms Do Begin
+         If Terminals^[i].BusRef = BusReference Then Begin
+             TerminalIndex := i;
+             Result := TRUE;
+             Break;
+         End;
+     End;
+End;
+
+
+function TBus.Get_LineList: OleVariant;
+ { Returns list of LINE elements connected to this bus}
+Var BusReference, i, j, k, LineCount:Integer;
+    pElem:TDSSCktElement;
+
+begin
+
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+     WITH ActiveCircuit[ActiveActor] DO
+     Begin
+       BusReference := ActiveBusIndex;
+       { Count number of Lines connected to this bus }
+       LineCount := 0;
+       pElem:=TDSSCktElement(Lines.First);
+       while Assigned(pElem) do
+       Begin
+           if CheckBusReference(pElem, BusReference, j) then Inc(LineCount);
+           pElem := TDSSCktElement(Lines.Next);
+       End;
+
+       if LineCount > 0 then
+       Begin
+       // Allocate Variant Array
+         Result := VarArrayCreate([0, LineCount-1], varOleStr);
+         pElem:=TDSSCktElement(Lines.First);
+         k := 0;
+         while Assigned(pElem) do
+         Begin
+             if CheckBusReference(pElem, BusReference, j) then
+             Begin
+               Result[k] :=  'LINE.' + pElem.name;
+               Inc(k);
+             End;
+             pElem := TDSSCktElement(Lines.Next);
+         End;
+
+       End
+       ELSE  Result := VarArrayCreate([0, 0], varOleStr);
+     End
+    ELSE Result := VarArrayCreate([0, 0], varOleStr);
+end;
+
+function TBus.Get_LoadList: OleVariant;
+
+{ Returns list of LOAD elements connected to this bus}
+
+Var BusReference, i, j, k, LoadCount:Integer;
+    pElem:TDSSCktElement;
+
+begin
+
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+     WITH ActiveCircuit[ActiveActor] DO
+     Begin
+       BusReference := ActiveBusIndex;
+       { Count number of LOAD elements connected to this bus }
+       LoadCount := 0;
+       pElem:=TDSSCktElement(Loads.First);
+       while Assigned(pElem) do
+       Begin
+           if CheckBusReference(pElem, BusReference, j) then Inc(LoadCount);
+           pElem := TDSSCktElement(Loads.Next);
+       End;
+
+       if LoadCount > 0 then
+       Begin
+       // Allocate Variant Array
+         Result := VarArrayCreate([0, LoadCount-1], varOleStr);
+
+         k := 0;
+         pElem:=TDSSCktElement(Loads.First);
+         While Assigned(pElem) do
+         Begin
+             if CheckBusReference(pElem, BusReference, j) then
+             Begin
+               Result[k] :=  'LOAD.' + pElem.name;
+               Inc(k);
+             End;
+             pElem := TDSSCktElement(Loads.Next);
+         End;
+
+       End
+       ELSE  Result := VarArrayCreate([0, 0], varOleStr);
+     End
+    ELSE Result := VarArrayCreate([0, 0], varOleStr);
 end;
 
 initialization
