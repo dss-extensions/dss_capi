@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 2/12/2020 9:40:37 AM (- $Rev: 12980 $, 3941953).
+// File generated on 6/18/2020 3:06:59 PM (- $Rev: 12980 $, 21341031).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -718,6 +718,10 @@ library OpenDSSengine
     HRESULT _stdcall TotalMiles([out, retval] double* Value);
     [propget, id(0x000000DA), helpstring("Integer ID of the feeder section in which this bus is located.")]
     HRESULT _stdcall SectionID([out, retval] long* Value);
+    [propget, id(0x000000DB), helpstring("Variant Array of Strings: List of LINE elements connected to this bus. Complete name Line.xxxx")]
+    HRESULT _stdcall LineList([out, retval] VARIANT* Value);
+    [propget, id(0x000000DC), helpstring("Variant array of strings: Full Names of LOAD elelments connected to this bus.")]
+    HRESULT _stdcall LoadList([out, retval] VARIANT* Value);
   };
 
   [
