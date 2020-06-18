@@ -156,21 +156,22 @@ begin
 
   Screen.Cursor := crDefault;
 
-  If Not IsDLL and (ActorHandle[1] <> nil) Then
+  If Not IsDLL Then
   Begin
-//    if (ActorStatus[ActiveActor] = 1) then
-//    begin
+    if ActorHandle[1] <> nil then
+    Begin
       UpdateResultForm;
       if not ProgressCmd then
         UpdateSummaryForm('1');
+    End;
 
-      If Assigned(ActiveCircuit[ActiveActor]) Then With ActiveCircuit[ActiveActor] Do
-        if (SolutionWasAttempted[ActiveActor]) and (Not IsSolved) then Begin
-          Beep;
-          ControlPanel.ResultPages.ActivePage := ControlPanel.SummaryTab;
-        End;
-      ControlPanel.UpdateStatus;
-//    end;
+    If Assigned(ActiveCircuit[ActiveActor]) Then With ActiveCircuit[ActiveActor] Do
+    if (SolutionWasAttempted[ActiveActor]) and (Not IsSolved) then
+    Begin
+      Beep;
+      ControlPanel.ResultPages.ActivePage := ControlPanel.SummaryTab;
+    End;
+    ControlPanel.UpdateStatus;
   end;
 end;
 
@@ -274,7 +275,7 @@ begin
               End Else With Lines Do Begin
                 Add('No Circuits Have been Defined for this Actor');
               End;
-              If Not IsDLL Then ControlPanel.UpdateStatus;
+
               Lines.EndUpdate;
             End;
           End;
@@ -296,6 +297,7 @@ begin
           End;
         end;
         ControlPanel.ResultPages.ActivePage := ControlPanel.SummaryTab;
+        If Not IsDLL Then ControlPanel.UpdateStatus;
     End;
 
 end;
