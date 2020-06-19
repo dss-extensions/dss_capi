@@ -10,7 +10,24 @@ procedure BUSV(mode: longint; out arg: Variant); cdecl;
 implementation
 
 uses DSSGlobals, Circuit, Ucomplex, MathUtil, sysutils,
-     ExecHelper, SolutionAlgs, Variants, Utilities, Bus;
+     ExecHelper, SolutionAlgs, Variants, Utilities, Bus, CktElement;
+
+Function CheckBusReference(cktElem:TDSSCktElement; BusReference:Integer; Var TerminalIndex:integer):Boolean;
+
+{Check all terminals of cktelement to see if bus connected to busreference}
+
+Var  i:integer;
+Begin
+     Result := FALSE;
+     With cktElem Do
+     For i := 1 to NTerms Do Begin
+         If Terminals^[i].BusRef = BusReference Then Begin
+             TerminalIndex := i;
+             Result := TRUE;
+             Break;
+         End;
+     End;
+End;
 
 function BUSI(mode: longint; arg: longint): longint; cdecl;
 
@@ -175,14 +192,30 @@ end;
 procedure BUSV(mode: longint; out arg: Variant); cdecl;
 
 var
-  Nvalues,i,  iV, NodeIdx, jj, NodeIdxj, NodeIdxi : Integer;
-  Volts, Voc, Isc : Complex;
-  pBus : TDSSBus;
-  VPh, V012 : Array[1..3] of Complex;
-  BaseFactor:Double;
-  Nelements, j : Integer;
-  Z, Y1:Complex;
-  voltsp: polar;
+  BusReference,
+  k,
+  LoadCount,
+  LineCount,
+  Nvalues,
+  i,
+  iV,
+  NodeIdx,
+  jj,
+  NodeIdxj,
+  Nelements,
+  j,
+  NodeIdxi          : Integer;
+  Volts,
+  Voc,
+  Z,
+  Y1,
+  Isc               : Complex;
+  pBus              : TDSSBus;
+  VPh,
+  V012              : Array[1..3] of Complex;
+  BaseFactor        : Double;
+  voltsp            : polar;
+  pElem             : TDSSCktElement;
 
 begin
   case mode of
@@ -646,6 +679,77 @@ begin
           End;
       End
       ELSE arg := VarArrayCreate([0, 0], varDouble);  // just return null array
+  end;
+  15: begin   // Bus.LineList
+        IF ActiveCircuit[ActiveActor] <> Nil THEN
+          WITH ActiveCircuit[ActiveActor] DO
+          Begin
+            BusReference := ActiveBusIndex;
+           { Count number of Lines connected to this bus }
+            LineCount := 0;
+            pElem:=TDSSCktElement(Lines.First);
+            while Assigned(pElem) do
+            Begin
+              if CheckBusReference(pElem, BusReference, j) then Inc(LineCount);
+              pElem := TDSSCktElement(Lines.Next);
+            End;
+
+            if LineCount > 0 then
+            Begin
+           // Allocate Variant Array
+              arg := VarArrayCreate([0, LineCount-1], varOleStr);
+              pElem:=TDSSCktElement(Lines.First);
+              k := 0;
+              while Assigned(pElem) do
+              Begin
+                 if CheckBusReference(pElem, BusReference, j) then
+                 Begin
+                   arg[k] :=  'LINE.' + pElem.name;
+                   Inc(k);
+                 End;
+                 pElem := TDSSCktElement(Lines.Next);
+              End;
+
+            End
+            ELSE  arg := VarArrayCreate([0, 0], varOleStr);
+          End
+        ELSE arg := VarArrayCreate([0, 0], varOleStr);
+  end;
+  16: begin   // Bus.LoadList
+      IF ActiveCircuit[ActiveActor] <> Nil THEN
+        WITH ActiveCircuit[ActiveActor] DO
+        Begin
+          BusReference := ActiveBusIndex;
+         { Count number of LOAD elements connected to this bus }
+          LoadCount := 0;
+          pElem:=TDSSCktElement(Loads.First);
+          while Assigned(pElem) do
+          Begin
+             if CheckBusReference(pElem, BusReference, j) then Inc(LoadCount);
+             pElem := TDSSCktElement(Loads.Next);
+          End;
+
+          if LoadCount > 0 then
+          Begin
+         // Allocate Variant Array
+            arg := VarArrayCreate([0, LoadCount-1], varOleStr);
+
+            k := 0;
+            pElem:=TDSSCktElement(Loads.First);
+            While Assigned(pElem) do
+            Begin
+               if CheckBusReference(pElem, BusReference, j) then
+               Begin
+                 arg[k] :=  'LOAD.' + pElem.name;
+                 Inc(k);
+               End;
+               pElem := TDSSCktElement(Loads.Next);
+            End;
+
+          End
+          ELSE  arg := VarArrayCreate([0, 0], varOleStr);
+        End
+      ELSE arg := VarArrayCreate([0, 0], varOleStr);
   end
   else
       arg := VarArrayCreate([0, 0], varDouble);  // just return null array
