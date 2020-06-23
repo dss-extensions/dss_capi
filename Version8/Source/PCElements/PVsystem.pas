@@ -1676,7 +1676,7 @@ PROCEDURE TPVsystemObj.ComputeInverterPower;
             If (varMode = VARMODEPF) and PF_Priority then
               // Operates under constant power factor when kVA rating is exceeded. PF must be specified and PFPriority must be TRUE
               Begin
-                kW_out := FkVArating * PFnominal;
+                kW_out := FkVArating * abs(PFnominal);
                 kvar_out := FkVArating * sqrt(1 - Sqr(PFnominal)) * sign(PFnominal);
               End
             Else if (varMode = VARMODEKVAR) and PF_Priority and FWPMode then
