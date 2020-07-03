@@ -4,6 +4,9 @@
 	"publishMode":"CIM",
 	"topics":{
 		"Bus":{
+      "house":{
+				"Voltage":["A","B"]
+      },
 			"611":{
 				"Voltage":["C"]		
 			},

@@ -150,6 +150,7 @@ type
 		procedure GetBranchesForTopics (oad:ObjectAttributeDict);
     procedure GetValuesForTopics;
     procedure TopicsToJsonStream;
+    procedure TopicsToPublication;
 //    function RoundToSignificantFigure(value:double;digit:Integer):double;
   end;
 
@@ -361,7 +362,7 @@ begin
 //						 [dssName, attKey, trmKey, valKey, idxPhs, idxLoc, idxNode, Volts.re, Volts.im]));
 //					cvd[valKey] := RoundToSignificantFigure(Volts.re,6).ToString
 //					  + sign + RoundToSignificantFigure(Volts.im,6).ToString+'i';
-					cvd[valKey] := Format('%.3f%s%.3f%s', [Volts.re, sign, Volts.im, 'i']);
+					cvd[valKey] := Format('%.3f%s%.3f%s', [Volts.re, sign, Volts.im, 'j']); // ### i or j
 				end;
 			end;
 		end;
@@ -444,6 +445,10 @@ begin
 		ReadFncsJsonConfig (fname)
 	else
 		ReadFncsTextConfig (fname);
+  if log_level >= fncsLogInfo then begin
+    Writeln('  ReadFncsPubConfig'); // ###
+    system.flush (stdout);
+  end;
 end;
 
 procedure TFNCS.ReadFncsTextConfig (fname: string);
@@ -457,9 +462,18 @@ begin
 		for i := 1 to lines.Count do begin
 			writeln(lines[i-1]);
 		end;
+    system.flush (stdout);
 	finally
+    if log_level >= fncsLogInfo then begin
+      Writeln(Format('  ReadFncsTextConfig %u lines', [lines.count])); // ###
+      system.flush (stdout);
+    end;
 		lines.free;
 	end;
+  if log_level >= fncsLogInfo then begin
+    Writeln('  Exiting ReadFncsTextConfig'); // ###
+    system.flush (stdout);
+  end;
 end;
 
 procedure TFNCS.ReadFncsJsonConfig (fname: string);
@@ -565,6 +579,40 @@ begin
 		DumpFNCSTopics;
 end;
 
+procedure TFNCS.TopicsToPublication;
+var
+  attri:TPair<string,TerminalConductorDict>;
+  cls:TPair<string,ObjectAttributeDict>;
+  map:TPair<string,TFNCSMap>;
+  atd:AttributeTerminalDict;
+  terminal:TPair<string,ConductorValueDict>;
+  conductor:TPair<string,string>;
+  gen_key, sep:string;
+begin
+  sep := '/';
+  if topics.Count > 0 then begin
+    for cls in topics do begin
+      for map in cls.Value do begin
+        atd := map.value.atd;
+        for attri in atd do begin
+          for terminal in attri.Value do begin
+            for conductor in terminal.Value do begin
+              if attri.Value.count > 1 Then
+                gen_key := cls.Key + sep + map.Key + sep + attri.Key + sep + terminal.Key + sep + conductor.Key
+              else if conductor.Key='-1' Then
+                gen_key := cls.Key + sep + map.Key + sep + attri.Key
+              else
+                gen_key := cls.Key + sep + map.Key + sep + attri.Key + sep + conductor.Key;
+              fncs_publish (PChar(gen_key), PChar(conductor.Value));
+//              writeln(Format('Publishing %s=%s', [gen_key, conductor.Value]));
+            end;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
 procedure TFNCS.TopicsToJsonStream;
 var
   attri:TPair<string,TerminalConductorDict>;
@@ -631,6 +679,7 @@ var
 	Sec: double;
 begin
   // execution blocks here, until FNCS permits the time step loop to continue
+//  Writeln(Format('  entering FncsTimeRequest for %u', [next_fncs]));system.Flush(stdout); // ###
 	time_granted := 0;
 	while time_granted < next_fncs do begin
 		time_granted := fncs_time_request (next_fncs);
@@ -651,6 +700,7 @@ begin
 				GetValuesForTopics;
 				TopicsToJsonStream;
 				fncs_publish ('fncs_output', PChar(fncsOutputStream.DataString));
+        TopicsToPublication;
 			end;
 			while next_fncs_publish <= time_granted do
 				next_fncs_publish := next_fncs_publish + PublishInterval;
@@ -728,13 +778,15 @@ begin
 						for ival := 0 to nvalues-1 do begin
 							value := values[ival];
 							if log_level >= fncsLogDebug1 then begin
-								writeln(Format('FNCS command %s at %u', [value, time_granted]));
+								writeln(Format('FNCS command %s at %u, val %u of %u, evt %u of %u', 
+                  [value, time_granted, ival, nvalues, i, ilast]));
 								system.flush (stdout);
 							end;
 							DSSExecutive.Command := value;
 //							fncs_publish ('fncs_command', value);
 							if log_level >= fncsLogDebug1 then begin
-								writeln(Format('Finished with %s at %u', [value, time_granted]));
+								writeln(Format('Finished with %s at %u, val %u of %u, evt %u of %u', 
+                  [value, time_granted, ival, nvalues, i, ilast]));
 								system.flush (stdout);
 							end;
 						end;

@@ -59,6 +59,9 @@ object house {
 	mass_temperature 68.886;
   cooling_setpoint cooling5*1.099+1.19;
 	heating_setpoint heating5*1.043+1.41;
+  external_pf_mode TWOV;
+  external_v1N 120.0;
+  external_v2N -120.0;
 object ZIPload {
 	schedule_skew 577;
 	heat_fraction 0.889;
@@ -146,9 +149,7 @@ object recorder {
 }
 object recorder {
 	parent F1_house_B0;
-	property air_temperature,outdoor_temperature,cooling_setpoint,cooling_demand,hvac_load,panel.power;
+	property hvac_load,panel.power,voltage_1N,voltage_2N,voltage_12;
 	interval 15;
 	file F1_house_B0.csv;
 }
-
-

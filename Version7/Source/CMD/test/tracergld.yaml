@@ -2,6 +2,12 @@ name: tracer
 time_delta: 1s
 broker: tcp://localhost:5570
 values:
+    v1:
+        topic: opendss/bus/house/voltage/A
+        default: 120
+    v2:
+        topic: opendss/bus/house/voltage/B
+        default: -120
     output:
         topic: opendss/fncs_output
         default: 0
