@@ -3,8 +3,8 @@
 
 where /q fpc
 if errorlevel 1 (
-    if exist c:\lazarus\fpc\3.0.4\bin\x86_64-win64\fpc.exe (
-        set "PATH=%PATH%;c:\lazarus\fpc\3.0.4\bin\x86_64-win64"
+    if exist c:\lazarus\fpc\3.2.0\bin\x86_64-win64\fpc.exe (
+        set "PATH=%PATH%;c:\lazarus\fpc\3.2.0\bin\x86_64-win64"
     ) else (
         echo ERROR: Please put fpc.exe in your executable search path and try again.
         exit /B 1

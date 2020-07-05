@@ -662,6 +662,8 @@ BEGIN
     {$IFDEF DSS_CAPI_MVMULT}
               + ' MVMULT'
     {$ENDIF}
+              + '  [FPC ' + {$include %FPCVersion%} + ']'
+    
               ;
 END;
 {$ELSE}
