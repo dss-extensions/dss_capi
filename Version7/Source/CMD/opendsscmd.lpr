@@ -41,7 +41,7 @@ program opendsscmd;
 {
 	08/17/2016  Created from OpenDSS
  ----------------------------------------------------------
-  Copyright (c) 2016 Battelle Memorial Institute
+  Copyright (c) 2016-2020 Battelle Memorial Institute
  ----------------------------------------------------------
 }
 
@@ -173,13 +173,7 @@ uses
   XYcurve in '..\General\XYcurve.pas',
   Ymatrix in '..\Common\Ymatrix.pas',
   FNCS in 'fncs.pas',
-	generics.collections in '..\generics.collections\generics.collections.pas',
-	generics.defaults in '..\generics.collections\generics.defaults.pas',
-	generics.hashes in '..\generics.collections\generics.hashes.pas',
-	generics.helpers in '..\generics.collections\generics.helpers.pas',
-	generics.memoryexpanders in '..\generics.collections\generics.memoryexpanders.pas',
-	generics.strings in '..\generics.collections\generics.strings.pas',
-//  editline in 'editline.pas',
+  epiktimer in '..\epiktimer\epiktimer.pas',
   linenoise in 'linenoise.pas';
 
 

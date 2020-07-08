@@ -2,9 +2,9 @@
 0	command	redirect IEEE13Base.dss
 4 command new pvsystem.pv1 bus1=634 phases=3 kV=0.48 irradiance=1 pmpp=285 kVA=300
 9 command solve
-11 command	set controlmode=static
-12 command	set maxcontroliter=1000
+11 command set controlmode=static
+12 command set maxcontroliter=1000
 13 command fncspub fname=test.json
-14 command solve mode=daily stepsize=1s number=86400
+14 command solve mode=daily stepsize=1s number=900
 42401500000000 command open Line.671692 1
 86401000000000 command quit
