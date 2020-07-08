@@ -12,7 +12,7 @@
 10 command	export summary pvsnap_summary.csv
 11 command	set controlmode=static
 12 command	set maxcontroliter=1000
-13 command fncspub fname=test.json
+13 command fncspub fname=houses.json
 14 command solve mode=daily stepsize=1s number=86400
 42401500000000 command open Line.671692 1
 86401000000000 command export monitors pv1v

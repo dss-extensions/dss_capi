@@ -1,12 +1,9 @@
 {
 	"name":"opendss",
 	"publishInterval":1,
-	"publishMode":"CIM",
+	"publishMode":"JSON",
 	"topics":{
-		"Bus":{
-      "house":{
-				"Voltage":["A","B"]
-      },
+    "Bus":{
 			"611":{
 				"Voltage":["C"]		
 			},

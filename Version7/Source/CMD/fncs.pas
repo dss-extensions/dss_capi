@@ -32,6 +32,7 @@ type
                 fncsTapPosition, fncsNoAttribute);
   TFNCSLogLevel = (fncsLogWarning, fncsLogInfo, fncsLogDebug1, fncsLogDebug2,
                 fncsLogDebug3, fncsLogDebug4);
+  TFNCSPublishMode = (fncsPublishJSON, fncsPublishText);
   TFNCSSubTopic = class (TObject)
   public
     tag: String;            // what FNCS calls it
@@ -134,10 +135,12 @@ type
     fncsOutputStream: TStringStream;
     procedure ReadFNCSJsonConfig (fname: string);
     procedure ReadFNCSTextConfig (fname: string);
+    procedure SetPublishInterval (val: Integer);
+    procedure SetPublishMode (val: string);
 
   public
     PublishInterval:Integer;
-    PublishMode:string;
+    PublishMode:TFNCSPublishMode;
     FedName:string;
 
     function IsReady:Boolean;
@@ -147,7 +150,7 @@ type
     destructor Destroy; override;
     function FncsTimeRequest (next_fncs:fncs_time):Boolean;
     procedure ReadFNCSPubConfig (fname: string);
-    procedure TopicsListToPublication (toJson:Boolean);
+    procedure TopicsListToPublication;
     procedure DumpFNCSLists;
   end;
 
@@ -160,12 +163,13 @@ uses
   fpjson, jsonparser, jsonscanner, strutils, Transformer, Load, Storage, EpikTimer; // RegControl,ControlElem;
 
 var
-  ET: TEpikTimer;
+  ET: TEpikTimer; // for profiling
+  sep: string;    // for delimiting tokens in a FNCS topic key; this is always '.' for DSS
 
 constructor TFNCSTopic.Create (clsKey, objKey: String);
 begin
   dss := clsKey + '.' + objKey;
-  tag := dss;
+  tag := clsKey + sep + objKey;
   if clsKey = 'bus' then
     cls := fncsBus
   else if clsKey = 'line' then
@@ -199,12 +203,7 @@ var
   Ncond, Nterm, kmax, k: Integer;
   PhaseTable: array[1..2, 0..3] of Integer; // index into cBuffer by terminal, then phase
 begin
-//  writeln(Format ('Creating %s/%s/%s/%d', [attKey, trmKey, phsKey, idxRoot]));
   trm := StrToInt (trmKey);
-  if trm > 0 then
-    tag := attKey + '.' + trmKey + '.' + phsKey
-  else
-    tag := attKey;
   if attKey = 'voltage' then
     att := fncsVoltage
   else if attKey = 'current' then
@@ -217,6 +216,13 @@ begin
     att := fncsTapPosition
   else
     att := fncsNoAttribute;
+  if trm > 0 then
+    if att = fncsVoltage then
+      tag := attKey + sep + phsKey
+    else
+      tag := attKey + sep + trmKey + sep + phsKey
+  else
+    tag := attKey;
   ref := 0;
   if idxRoot <= 0 then begin
     att := fncsNoAttribute;
@@ -279,16 +285,32 @@ Begin
   end;
 End;
          
+procedure TFNCS.SetPublishInterval (val: Integer);
+begin
+  if val > 0 then PublishInterval := val;
+end;
+
+procedure TFNCS.SetPublishMode (val: string);
+var
+  tok: string;
+begin
+  tok := LowerCase(val);
+  if tok = 'json' then
+    PublishMode := fncsPublishJSON
+  else if tok = 'text' then
+    PublishMode := fncsPublishText;
+end;
+
 //  pStore: TStorageObj;
 //  pStore := TStorageObj (pElem);
 //  val := Format ('%.3f', [pStore.StorageVars.kwhStored]);
          
-procedure TFNCS.TopicsListToPublication (toJson:Boolean);
+procedure TFNCS.TopicsListToPublication;
 var
   top: TFNCSTopic;
   sub: TFNCSSubTopic;
   Flow, Volts: Complex;
-  sep, sign: String;
+  sign: String;
   pElem :TDSSCktElement;
   pXf: TTransfObj;
   cBuffer :pComplexArray;
@@ -299,7 +321,7 @@ var
   pos1,pos2,i:Int64;
 begin
   if log_level >= fncsLogDebug3 then writeln ('Entering TopicsListToPublication');
-  if toJson then begin
+  if PublishMode = fncsPublishJSON then begin
     pos1 := fncsOutputStream.Position;
     fncsOutputStream.Seek (0, soFromBeginning);
     fncsOutputStream.WriteString ('{"'+FedName+'":{');
@@ -310,15 +332,14 @@ begin
     cBuffer^[k].re := 0.0;
     cBuffer^[k].im := 0.0;
   end;
-  sep := '/';
   for top in topicList do begin
-    if toJson then begin
+    if PublishMode = fncsPublishJSON then begin
       if not firstObjectFlag then fncsOutputStream.WriteString (',');
       fncsOutputStream.WriteString (Format('"%s":{', [top.tag]));
       firstObjectFlag := False;
     end;
     for sub in top.sub do begin
-      if toJson then
+      if PublishMode = fncsPublishJSON then
         key := PChar (sub.tag)
       else
         key := PChar (Format ('%s%s%s',[top.tag, sep, sub.tag]));
@@ -358,7 +379,7 @@ begin
         val := PChar (Format ('%d', [tap]));
       end;
       if assigned(val) then begin
-        if toJson then begin
+        if PublishMode = fncsPublishJSON then begin
           if writeKeyComma then fncsOutputStream.WriteString (',');
           writeKeyComma := True;
           fncsOutputStream.WriteString (Format ('"%s":"%s"', [key, val]));
@@ -368,12 +389,12 @@ begin
         end;
       end;
     end;
-    if toJson then begin
+    if PublishMode = fncsPublishJSON then begin
       fncsOutputStream.WriteString ('}');
       writeKeyComma:=False;
     end;
   end;
-  if toJson then begin
+  if PublishMode = fncsPublishJSON then begin
     fncsOutputStream.WriteString ('}}');
     pos2 := fncsOutputStream.Position;
     if pos2 < pos1 then
@@ -464,9 +485,9 @@ begin
         if el.Key = 'name' then
           FedName:=el.Value.AsString
         else if el.Key = 'publishInterval' then
-          PublishInterval:=el.Value.AsInteger
+          SetPublishInterval (el.Value.AsInteger)
         else if el.Key = 'publishMode' then
-          PublishMode:=el.Value.AsString
+          SetPublishMode (el.Value.AsString)
         else if el.Key = 'topics' then begin
           for cls in el.Value do begin
             clsKey:=LowerCase(cls.Key);
@@ -552,7 +573,7 @@ begin
         end;
         ET.Clear;
         ET.Start;
-        TopicsListToPublication(True);
+        TopicsListToPublication;
         ETFncsPublish := ETFncsPublish + ET.Elapsed;
         ET.Clear;
       end;
@@ -690,6 +711,9 @@ constructor TFNCS.Create;
 var 
   s: String;
 begin
+  sep := '/';
+  PublishInterval := 1;
+  PublishMode := fncsPublishJSON;
   ET := TEpikTimer.Create(nil);
   ETFncsReadPub := 0.0;
   ETFncsPublish := 0.0;
