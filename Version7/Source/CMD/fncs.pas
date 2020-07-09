@@ -36,6 +36,7 @@ type
   TFNCSSubTopic = class (TObject)
   public
     tag: String;            // what FNCS calls it
+    text_key: String;       // in Text-mode export we need to include the higher-level topic tag, and cache it
     att: TFNCSAttribute;
     trm: Integer;           // terminal number
     ref: Integer;           // index into the phases
@@ -301,10 +302,7 @@ begin
     PublishMode := fncsPublishText;
 end;
 
-//  pStore: TStorageObj;
-//  pStore := TStorageObj (pElem);
-//  val := Format ('%.3f', [pStore.StorageVars.kwhStored]);
-         
+// for performance reasons, we avoid concatenating strings or calling the Format function here         
 procedure TFNCS.TopicsListToPublication;
 var
   top: TFNCSTopic;
@@ -313,6 +311,8 @@ var
   sign: String;
   pElem :TDSSCktElement;
   pXf: TTransfObj;
+//  pStore: TStorageObj;
+//  val := Format ('%.3f', [pStore.StorageVars.kwhStored]);
   cBuffer :pComplexArray;
   k, kmax, idxWdg, tap: integer;
   key, val: PChar;
@@ -320,11 +320,16 @@ var
   writeKeyComma:Boolean=false;
   pos1,pos2,i:Int64;
 begin
+  ET.Clear;
+  ET.Start;
   if log_level >= fncsLogDebug3 then writeln ('Entering TopicsListToPublication');
   if PublishMode = fncsPublishJSON then begin
     pos1 := fncsOutputStream.Position;
     fncsOutputStream.Seek (0, soFromBeginning);
-    fncsOutputStream.WriteString ('{"'+FedName+'":{');
+//    fncsOutputStream.WriteString ('{"'+FedName+'":{');
+    fncsOutputStream.WriteString ('{"');
+    fncsOutputStream.WriteString (FedName);
+    fncsOutputStream.WriteString ('":{');
   end;
   kmax := GetMaxCktElementSize;
   Getmem(cBuffer, sizeof(cBuffer^[1])*kmax);
@@ -335,14 +340,17 @@ begin
   for top in topicList do begin
     if PublishMode = fncsPublishJSON then begin
       if not firstObjectFlag then fncsOutputStream.WriteString (',');
-      fncsOutputStream.WriteString (Format('"%s":{', [top.tag]));
+//      fncsOutputStream.WriteString (Format('"%s":{', [top.tag]));
+      fncsOutputStream.WriteString ('"');
+      fncsOutputStream.WriteString (top.tag);
+      fncsOutputStream.WriteString ('":{');
       firstObjectFlag := False;
     end;
     for sub in top.sub do begin
       if PublishMode = fncsPublishJSON then
         key := PChar (sub.tag)
       else
-        key := PChar (Format ('%s%s%s',[top.tag, sep, sub.tag]));
+        key := PChar (sub.text_key);
       val := nil;
       if sub.att = fncsVoltage then begin
         Volts := ActiveCircuit.Solution.NodeV^[sub.ref];
@@ -350,7 +358,8 @@ begin
           sign:=''
         else
           sign:='+';
-        val := PChar (Format('%.3f%s%.3f%s', [Volts.re, sign, Volts.im, 'j']));
+//        val := PChar (Format('%.3f%s%.3f%s', [Volts.re, sign, Volts.im, 'j']));
+        val := PChar (FloatToStrF(Volts.re, ffFixed, 0, 3) + sign + FloatToStrF(Volts.im, ffFixed, 0, 3) + 'j');
       end else if (sub.att = fncsCurrent) or (sub.att = fncsPower) then begin
         pElem := ActiveCircuit.CktElements.Get(top.idx);
         pElem.GetCurrents(cBuffer);
@@ -365,7 +374,8 @@ begin
           sign:=''
         else
           sign:='+';
-        val := PChar (Format('%.3f%s%.3f%s', [Flow.re, sign, Flow.im, 'i']));
+//        val := PChar (Format('%.3f%s%.3f%s', [Flow.re, sign, Flow.im, 'i']));
+        val := PChar (FloatToStrF(Flow.re, ffFixed, 0, 3) + sign + FloatToStrF(Flow.im, ffFixed, 0, 3) + 'j');
       end else if (sub.att = fncsSwitchState) then begin
         pElem := ActiveCircuit.CktElements.Get(top.idx);
         if AllTerminalsClosed (pElem) then 
@@ -376,13 +386,18 @@ begin
         pXf := TTransfObj (ActiveCircuit.CktElements.Get(top.idx));
         idxWdg := 2; // TODO: identify and map this using pReg.Transformer and pReg.TrWinding
         tap := Round((pXf.PresentTap[idxWdg]-(pXf.Maxtap[idxWdg]+pXf.Mintap[idxWdg])/2.0)/pXf.TapIncrement[idxWdg]);
-        val := PChar (Format ('%d', [tap]));
+        val := PChar (IntToStr (tap));
       end;
       if assigned(val) then begin
         if PublishMode = fncsPublishJSON then begin
           if writeKeyComma then fncsOutputStream.WriteString (',');
           writeKeyComma := True;
-          fncsOutputStream.WriteString (Format ('"%s":"%s"', [key, val]));
+//          fncsOutputStream.WriteString (Format ('"%s":"%s"', [key, val]));
+          fncsOutputStream.WriteString ('"');
+          fncsOutputStream.WriteString (key);
+          fncsOutputStream.WriteString ('":"');
+          fncsOutputStream.WriteString (val);
+          fncsOutputStream.WriteString ('"');
         end else begin
           fncs_publish (key, val);
           if log_level >= fncsLogDebug3 then writeln(Format ('Publish %s = %s', [key, val]));
@@ -402,8 +417,10 @@ begin
         fncsOutputStream.WriteString (' ');
     fncs_publish ('fncs_output', PChar(fncsOutputStream.DataString));
   end;
+  ETFncsPublish := ETFncsPublish + ET.Elapsed;
+  ET.Clear;
 end;
-         
+
 procedure TFNCS.DumpFNCSLists;
 var
   top: TFNCSTopic;
@@ -529,6 +546,10 @@ begin
     inputfile.Free;
   end;
 
+  for top in topicList do
+    for sub in top.sub do
+      sub.text_key := Format ('%s%s%s',[top.tag, sep, sub.tag]);
+
   if log_level >= fncsLogInfo then
     writeln('Done reading FNCS publication requests from: ' + fname);
   if log_level >= fncsLogDebug1 then begin
@@ -550,7 +571,6 @@ var
   Sec: double;
 begin
   // execution blocks here, until FNCS permits the time step loop to continue
-//  Writeln(Format('  entering FncsTimeRequest for %u', [next_fncs]));system.Flush(stdout); // ###
   time_granted := 0;
   while time_granted < next_fncs do begin
     ET.Clear;
@@ -571,11 +591,7 @@ begin
             [fncsOutputStream.size, time_granted, next_fncs_publish, PublishInterval, Hour, Sec]));
           system.flush (stdout);
         end;
-        ET.Clear;
-        ET.Start;
         TopicsListToPublication;
-        ETFncsPublish := ETFncsPublish + ET.Elapsed;
-        ET.Clear;
       end;
       while next_fncs_publish <= time_granted do
         next_fncs_publish := next_fncs_publish + PublishInterval;
