@@ -293,7 +293,7 @@ procedure CktElement_Set_BusNames(ValuePtr: PPAnsiChar; ValueCount: Integer); CD
 var
     Value: PPAnsiCharArray;
     i: Integer;
-    Count, Low: Integer;
+    Count: Integer;
 begin
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) then
         Exit;
@@ -301,13 +301,12 @@ begin
     Value := PPAnsiCharArray(ValuePtr);
     with ActiveCircuit do
     begin
-        Low := 0;
-        Count := ValueCount - Low;
+        Count := ValueCount;
         if Count > ActiveCktElement.NTerms then
             Count := ActiveCktElement.NTerms;
         for i := 1 to Count do
         begin
-            ActiveCktElement.SetBus(i, Value[i - 1 + Low]);
+            ActiveCktElement.SetBus(i, Value[i - 1]);
         end;
     end;
 end;
@@ -315,8 +314,7 @@ end;
 procedure CktElement_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
     Result: PDoubleArray;
-    cBuffer: pComplexArray;
-    NValues, iV, i: Integer;
+    NValues: Integer;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     
@@ -327,17 +325,7 @@ begin
     begin
         NValues := NConds * NTerms;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
-        cBuffer := Allocmem(sizeof(Complex) * NValues);
-        GetCurrents(cBuffer);
-        iV := 0;
-        for i := 1 to NValues do
-        begin
-            Result[iV] := cBuffer^[i].re;
-            Inc(iV);
-            Result[iV] := cBuffer^[i].im;
-            Inc(iV);
-        end;
-        Reallocmem(cBuffer, 0);
+        GetCurrents(pComplexArray(Result));
     end
 end;
 
@@ -457,9 +445,7 @@ procedure CktElement_Get_PhaseLosses(var ResultPtr: PDouble; ResultCount: PInteg
 // Returns Phase losses in kW, kVar
 var
     Result: PDoubleArray;
-    cBuffer: pComplexArray;
-    NValues, i, iV: Integer;
-
+    NValues, i: Integer;
 begin
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) then
     begin
@@ -471,17 +457,11 @@ begin
     begin
         NValues := NPhases;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
-        cBuffer := Allocmem(sizeof(Complex) * NValues);
-        GetPhaseLosses(NValues, cBuffer);
-        iV := 0;
-        for i := 1 to NValues do
+        GetPhaseLosses(NValues, pComplexArray(Result));
+        for i := 1 to 2 * NValues do
         begin
-            Result[iV] := cBuffer^[i].re * 0.001;
-            Inc(iV);
-            Result[iV] := cBuffer^[i].im * 0.001;
-            Inc(iV);
+            Result[i] := Result[i] * 0.001;
         end;
-        Reallocmem(cBuffer, 0);
     end
 end;
 
@@ -1132,21 +1112,9 @@ begin
     begin
         try
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * NTerms);
-
-            i012 := Allocmem(sizeof(Complex) * 3 * Nterms);
+            i012 := pComplexArray(Result);
             // get complex seq voltages
             CalcSeqCurrents(ActiveCktElement, i012);
-            // return 0 based array
-            iV := 0;
-            for i := 1 to 3 * Nterms do
-            begin
-                Result[iV] := i012^[i].re;
-                inc(iV);
-                Result[iV] := i012^[i].im;
-                inc(iV);
-            end;
-
-            Reallocmem(i012, 0);  // throw away temp memory
 
         except
             On E: Exception do
@@ -1392,7 +1360,6 @@ var
     cBuffer: pComplexArray;
     CMagAng: polar;
     NValues, iV, i: Integer;
-
 begin
     if (ActiveCircuit = NIL) or (ActiveCircuit.ActiveCktElement = NIL) then
     begin
@@ -1404,7 +1371,7 @@ begin
     begin
         NValues := NConds * NTerms;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
-        cBuffer := Allocmem(sizeof(Complex) * NValues);
+        cBuffer := PComplexArray(ResultPtr);
         GetCurrents(cBuffer);
         iV := 0;
         for i := 1 to NValues do
@@ -1415,7 +1382,6 @@ begin
             Result[iV] := CMagAng.ang;
             Inc(iV);
         end;
-        Reallocmem(cBuffer, 0);
     end;
 end;
 
