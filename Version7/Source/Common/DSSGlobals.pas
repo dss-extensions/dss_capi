@@ -662,8 +662,10 @@ BEGIN
     {$IFDEF DSS_CAPI_MVMULT}
               + ' MVMULT'
     {$ENDIF}
-              + '  [FPC ' + {$include %FPCVersion%} + ']'
-    
+              + ' [FPC ' + {$include %FPCVersion%} + ']'
+    {$IFDEF DSS_CAPI_DEBUG_BUILD}
+              + ' DEBUG'
+    {$ENDIF}
               ;
 END;
 {$ELSE}
