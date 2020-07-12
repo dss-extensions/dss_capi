@@ -5,6 +5,8 @@ if [ ! -d "build/units_v7_x64" ]; then
 fi
 fpc -Px86_64 @src/v7/linux-x64.cfg -B src/v7/dss_capi_v7.lpr
 bash custom_link.sh lib/linux_x64
+fpc -Px86_64 @src/v7/linux-x64-dbg.cfg -B src/v7/dss_capi_v7d.lpr
+bash custom_link.sh lib/linux_x64
 
 # if [ ! -d "build/units_v8_x64" ]; then
     # mkdir build/units_v8_x64

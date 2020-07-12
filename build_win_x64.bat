@@ -26,7 +26,7 @@ if exist lib\win_x64\dss_capi_v7.dll (
     where /q dumpbin
     if errorlevel 1 (
         echo WARNING: dumpbin.exe is not in your path. Be sure to run this script on 
-        echo          the "x64 Native Tools Command Prompt for VS 2017" or the 
+        echo          the "Developer Command Prompt for VS 2019" or the 
         echo          equivalent for your Visual Studio version.
         exit /B 1
     )
@@ -42,6 +42,31 @@ if exist lib\win_x64\dss_capi_v7.dll (
     del /s lib\win_x64\exports.txt
 ) else (
     echo ERROR: DSS_CAPI_V7.DLL file not found. Check previous messages for possible causes.
+    exit /B 1
+)
+
+fpc -Px86_64 @src\v7\windows-x64-dbg.cfg -B src\v7\dss_capi_v7d.lpr
+if errorlevel 1 exit /B 1
+if exist lib\win_x64\dss_capi_v7d.dll (
+    where /q dumpbin
+    if errorlevel 1 (
+        echo WARNING: dumpbin.exe is not in your path. Be sure to run this script on 
+        echo          the "Developer Command Prompt for VS 2019" or the 
+        echo          equivalent for your Visual Studio version.
+        exit /B 1
+    )
+    dumpbin /exports "lib\win_x64\dss_capi_v7d.dll" > lib\win_x64\exports.txt
+    echo LIBRARY DSS_CAPI_V7D > lib\win_x64\dss_capi_v7d.def
+    echo EXPORTS >> lib\win_x64\dss_capi_v7d.def
+    for /f "skip=19 tokens=4" %%A in (lib\win_x64\exports.txt) do echo %%A >> lib\win_x64\dss_capi_v7d.def
+    lib /def:lib\win_x64\dss_capi_v7d.def /out:lib\win_x64\dss_capi_v7d.lib /machine:X64
+    dlltool --as-flags=--64 -d lib\win_x64\dss_capi_v7d.def -m i386:x86-64 -l lib\win_x64\dss_capi_v7d.dll.a
+    
+    del /s lib\win_x64\dss_capi_v7d.exp
+    del /s lib\win_x64\dss_capi_v7d.def
+    del /s lib\win_x64\exports.txt
+) else (
+    echo ERROR: DSS_CAPI_V7D.DLL file not found. Check previous messages for possible causes.
     exit /B 1
 )
 
