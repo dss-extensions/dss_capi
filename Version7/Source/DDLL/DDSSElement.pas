@@ -2,86 +2,91 @@ unit DDSSElement;
 
 interface
 
-function DSSElementI(mode:longint; arg: longint):longint;cdecl;
-function DSSElementS(mode:longint; arg: pAnsiChar):pAnsiChar;cdecl;
-procedure DSSElementV(mode: longint; out arg:variant);cdecl;
+function DSSElementI(mode: Longint; arg: Longint): Longint; CDECL;
+function DSSElementS(mode: Longint; arg: pAnsiChar): pAnsiChar; CDECL;
+procedure DSSElementV(mode: Longint; out arg: Variant); CDECL;
 
 implementation
 
-uses DSSGlobals,
-     Variants,
-     Sysutils;
+uses
+    DSSGlobals,
+    Variants,
+    Sysutils;
 
-function DSSElementI(mode:longint; arg: longint):longint;cdecl;
+function DSSElementI(mode: Longint; arg: Longint): Longint; CDECL;
 begin
-  Result:=0; // Default return value
-  case mode of
-  0: begin  // DSSElement.NumProperties
-    Result := 0;
-    IF ActiveCircuit <> Nil THEN
-     WITH ActiveCircuit DO
-     Begin
-       If ActiveDSSObject<>Nil THEN
-       WITH ActiveDSSObject DO
-       Begin
-            Result := ParentClass.NumProperties ;
-       End
-     End;
-  end
-  else
-      Result:=-1;
-  end;
+    Result := 0; // Default return value
+    case mode of
+        0:
+        begin  // DSSElement.NumProperties
+            Result := 0;
+            if ActiveCircuit <> NIL then
+                with ActiveCircuit do
+                begin
+                    if ActiveDSSObject <> NIL then
+                        with ActiveDSSObject do
+                        begin
+                            Result := ParentClass.NumProperties;
+                        end
+                end;
+        end
+    else
+        Result := -1;
+    end;
 end;
 
 //*********************************String type properties**************************
-function DSSElementS(mode:longint; arg: pAnsiChar):pAnsiChar;cdecl;
+function DSSElementS(mode: Longint; arg: pAnsiChar): pAnsiChar; CDECL;
 begin
-  Result:=pAnsiChar(AnsiString(''));// Default return value
-  case mode of
-  0: begin
-     If ActiveCircuit <> Nil Then
-       if ActiveDSSObject <> Nil then
-        WITH ActiveDSSObject DO
-        Begin
-          Result := pAnsiChar(AnsiString(ParentClass.Name + '.' + Name));
-        End
-     Else
-        Result := pAnsiChar(AnsiString(''));
-  end
-  else
-      Result:=pAnsiChar(AnsiString('Error, parameter not recognized'));
-  end;
+    Result := pAnsiChar(Ansistring(''));// Default return value
+    case mode of
+        0:
+        begin
+            if ActiveCircuit <> NIL then
+                if ActiveDSSObject <> NIL then
+                    with ActiveDSSObject do
+                    begin
+                        Result := pAnsiChar(Ansistring(ParentClass.Name + '.' + Name));
+                    end
+                else
+                    Result := pAnsiChar(Ansistring(''));
+        end
+    else
+        Result := pAnsiChar(Ansistring('Error, parameter not recognized'));
+    end;
 end;
 
 //*****************************Variant type properties**************************
-procedure DSSElementV(mode: longint; out arg:variant);cdecl;
+procedure DSSElementV(mode: Longint; out arg: Variant); CDECL;
 
-VAR
-   k:Integer;
+var
+    k: Integer;
 
 begin
-  case mode of
-  0: begin  // DSSElement.AllPropertyNames
-    arg := VarArrayCreate([0, 0], varOleStr);
-    IF ActiveCircuit <> Nil THEN
-     WITH ActiveCircuit DO
-     Begin
-       If ActiveDSSObject<>Nil THEN
-       WITH ActiveDSSObject DO
-       Begin
-            WITH ParentClass Do
-            Begin
-                arg := VarArrayCreate([0, NumProperties-1], varOleStr);
-                For k := 1 to NumProperties DO Begin
-                    arg[k-1] := PropertyName^[k];
-                End;
-            End;
-       End
-     End;
-  end
-  else
-      arg[0]:='Error, parameter not recognized';
-  end;
+    case mode of
+        0:
+        begin  // DSSElement.AllPropertyNames
+            arg := VarArrayCreate([0, 0], varOleStr);
+            if ActiveCircuit <> NIL then
+                with ActiveCircuit do
+                begin
+                    if ActiveDSSObject <> NIL then
+                        with ActiveDSSObject do
+                        begin
+                            with ParentClass do
+                            begin
+                                arg := VarArrayCreate([0, NumProperties - 1], varOleStr);
+                                for k := 1 to NumProperties do
+                                begin
+                                    arg[k - 1] := PropertyName^[k];
+                                end;
+                            end;
+                        end
+                end;
+        end
+    else
+        arg[0] := 'Error, parameter not recognized';
+    end;
 end;
 
 end.

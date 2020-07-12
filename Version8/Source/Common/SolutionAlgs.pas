@@ -1,4 +1,5 @@
 unit SolutionAlgs;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -17,68 +18,82 @@ unit SolutionAlgs;
 
 interface
 
- FUNCTION SolveMonte1(ActorID: integer):Integer;   // Solve Monte Carlo Solution
- FUNCTION SolveMonte2(ActorID: integer):Integer;   // Solve Monte Carlo Solution
- FUNCTION SolveMonte3(ActorID: integer):Integer;   // Solve Monte Carlo Solution
- FUNCTION SolveMonteFault(ActorID: integer):Integer;  // Solve Monte Carlo Fault Study
- FUNCTION SolveFaultStudy(ActorID: integer):Integer;  // Full Fault Study
- FUNCTION SolveDaily(ActorID: integer):Integer;    // Solve Following Daily Cycle
- FUNCTION SolvePeakDay(ActorID: integer):Integer;   // Solve Following Daily Cycle at peak load
- FUNCTION SolveYearly(ActorID: integer):Integer;   // Solve Following Yearly Cycle
- FUNCTION SolveDuty(ActorID: integer):Integer;     // Solve Following Duty Cycle
- FUNCTION SolveDynamic(ActorID: integer):Integer;  // Solve Dynamics
- FUNCTION SolveLD1(ActorID: integer):Integer;      // solve Load-Duration Curve, 1
- FUNCTION SolveLD2(ActorID: integer):Integer;      // solve Load-Duration Curve, 2
- FUNCTION SolveHarmonic(ActorID: integer):Integer;
- FUNCTION SolveHarmonicT(ActorID: integer):Integer;  // Sequential-Time Harmonics, Added 07-06-2015
- FUNCTION SolveHarmTime(ActorID: integer):Integer;  // solve harmonics vs time (like general time mode) created by Davis Montenegro 25/06/2014
- FUNCTION SolveGeneralTime(ActorID: integer):Integer;
+function SolveMonte1(ActorID: Integer): Integer;   // Solve Monte Carlo Solution
+function SolveMonte2(ActorID: Integer): Integer;   // Solve Monte Carlo Solution
+function SolveMonte3(ActorID: Integer): Integer;   // Solve Monte Carlo Solution
+function SolveMonteFault(ActorID: Integer): Integer;  // Solve Monte Carlo Fault Study
+function SolveFaultStudy(ActorID: Integer): Integer;  // Full Fault Study
+function SolveDaily(ActorID: Integer): Integer;    // Solve Following Daily Cycle
+function SolvePeakDay(ActorID: Integer): Integer;   // Solve Following Daily Cycle at peak load
+function SolveYearly(ActorID: Integer): Integer;   // Solve Following Yearly Cycle
+function SolveDuty(ActorID: Integer): Integer;     // Solve Following Duty Cycle
+function SolveDynamic(ActorID: Integer): Integer;  // Solve Dynamics
+function SolveLD1(ActorID: Integer): Integer;      // solve Load-Duration Curve, 1
+function SolveLD2(ActorID: Integer): Integer;      // solve Load-Duration Curve, 2
+function SolveHarmonic(ActorID: Integer): Integer;
+function SolveHarmonicT(ActorID: Integer): Integer;  // Sequential-Time Harmonics, Added 07-06-2015
+function SolveHarmTime(ActorID: Integer): Integer;  // solve harmonics vs time (like general time mode) created by Davis Montenegro 25/06/2014
+function SolveGeneralTime(ActorID: Integer): Integer;
 
-  PROCEDURE ComputeYsc(iB:integer; ActorID : Integer);
-  PROCEDURE ComputeAllYsc(ActorID: integer);
-  Procedure IntegratePCStates(ActorID : Integer);
-  PROCEDURE EndOfTimeStepCleanup(ActorID: integer);
-  PROCEDURE FinishTimeStep(ActorID: integer);
+procedure ComputeYsc(iB: Integer; ActorID: Integer);
+procedure ComputeAllYsc(ActorID: Integer);
+procedure IntegratePCStates(ActorID: Integer);
+procedure EndOfTimeStepCleanup(ActorID: Integer);
+procedure FinishTimeStep(ActorID: Integer);
 
 implementation
 
-Uses
-    ArrayDef, DSSGlobals,
+uses
+    ArrayDef,
+    DSSGlobals,
 {$IFNDEF FPC}
     DSSForms,
     System.Classes,
 {$ENDIF}
-    Utilities, SysUtils, MathUtil, Math, Fault, uComplex, YMatrix,
-    PCElement, Spectrum, Vsource, Isource, KLUSolve;
+    Utilities,
+    SysUtils,
+    MathUtil,
+    Math,
+    Fault,
+    uComplex,
+    YMatrix,
+    PCElement,
+    Spectrum,
+    Vsource,
+    Isource,
+    KLUSolve;
 
-VAR ProgressCount:Integer;
+var
+    ProgressCount: Integer;
 
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-PROCEDURE FinishTimeStep(ActorID: integer);
+procedure FinishTimeStep(ActorID: Integer);
 {
    Cample Cleanup and increment time
 
    For custom solutions.
 
 }
-Begin
+begin
     MonitorClass[ActorID].SampleAll(ActorID);
-    With ActiveCircuit[ActorID].Solution Do Begin
-        If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID);   // Save Demand interval Files
+    with ActiveCircuit[ActorID].Solution do
+    begin
+        if SampleTheMeters then
+            EnergyMeterClass[ActorID].SampleAll(ActorID);   // Save Demand interval Files
         EndOfTimeStepCleanup(ActorID);
         Increment_time;
-    End;
-End;
+    end;
+end;
 
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-PROCEDURE EndOfTimeStepCleanup(ActorID: integer);
+procedure EndOfTimeStepCleanup(ActorID: Integer);
 {
    Put stuff in this procedure that needs to happen at the end of the time step
    in main solution loops (see below)
 }
-Begin
+begin
     StorageClass[ActorID].UpdateAll(ActorID);
 //    Storage2Class[ActorID].UpdateAll(ActorID);
     InvControlClass[ActorID].UpdateAll(ActorID);
@@ -88,63 +103,69 @@ Begin
     // End of Time Step Timer
     ActiveCircuit[ActorID].Solution.UpdateLoopTime;
     MonitorClass[ActorID].SampleAllMode5(ActorID);  // sample all mode 5 monitors to get timings
-End;
+end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-PROCEDURE Show10PctProgress(i, N:Integer; ActorID : Integer);
+procedure Show10PctProgress(i, N: Integer; ActorID: Integer);
 
-Begin
-    If NoFormsAllowed Then Exit;
+begin
+    if NoFormsAllowed then
+        Exit;
 
-    If ((i*10) div N) > ProgressCount Then
-    Begin
+    if ((i * 10) div N) > ProgressCount then
+    begin
         Inc(ProgressCount);
 //        ShowPctProgress( ProgressCount * 10, ActorID);
-    End;
-End;
+    end;
+end;
 
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-FUNCTION SolveYearly(ActorID : integer):Integer;
+function SolveYearly(ActorID: Integer): Integer;
 
-VAR
-   N, Twopct :Integer;
+var
+    N, Twopct: Integer;
 
-Begin
- Result := 0;
+begin
+    Result := 0;
 { ProgressCaption( 'Solving Year '+ IntToStr(ActiveCircuit[ActorID].Solution.Year) + ' Actor: ' + IntToStr(ActorID) + ' CPU: ' + IntToStr(ActorCPU[ActorID]),ActorID);
  ActorProgressCount[ActorID] := 0;
  ShowPctProgress(ActorProgressCount[ActorID],ActorID);
 }
- WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
- Begin
-  Try
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
+        try
 
-    IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage elements
-    IF Not DIFilesAreOpen[ActorID] then EnergyMeterClass[ActorID].OpenAllDIFiles(ActorID);   // Open Demand Interval Files, if desired   Creates DI_Totals
-    Twopct := Max(NumberOfTimes div 50, 1);
-    FOR N := 1 TO NumberOfTimes Do
-      IF Not SolutionAbort Then With Dynavars do Begin
-          Increment_time;
-          DefaultHourMult := DefaultYearlyShapeObj.getmult(dblHour);
-          IF PriceCurveObj <> NIL THEN PriceSignal := PriceCurveObj.GetPrice(dblHour);
-          SolveSnap(ActorID);
-          MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
-          If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
-          EndOfTimeStepCleanup(ActorID);
-          ActorPctProgress[ActorID]  :=  (N*100) div NumberofTimes;
+            IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage elements
+            if not DIFilesAreOpen[ActorID] then
+                EnergyMeterClass[ActorID].OpenAllDIFiles(ActorID);   // Open Demand Interval Files, if desired   Creates DI_Totals
+            Twopct := Max(NumberOfTimes div 50, 1);
+            for N := 1 to NumberOfTimes do
+                if not SolutionAbort then
+                    with Dynavars do
+                    begin
+                        Increment_time;
+                        DefaultHourMult := DefaultYearlyShapeObj.getmult(dblHour);
+                        if PriceCurveObj <> NIL then
+                            PriceSignal := PriceCurveObj.GetPrice(dblHour);
+                        SolveSnap(ActorID);
+                        MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+                        if SampleTheMeters then
+                            EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
+                        EndOfTimeStepCleanup(ActorID);
+                        ActorPctProgress[ActorID] := (N * 100) div NumberofTimes;
 //          If (N mod Twopct)=0 Then ShowPctProgress((N*100) div NumberofTimes,ActorID);
-      End;
-  Finally
-    MonitorClass[ActorID].SaveAll(ActorID);
+                    end;
+        finally
+            MonitorClass[ActorID].SaveAll(ActorID);
 //    EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files    See DIFilesAreOpen Logic
-  End;
- End;
-End;
+        end;
+    end;
+end;
 
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-FUNCTION SolveDaily(ActorID: integer):Integer;
+function SolveDaily(ActorID: Integer): Integer;
 
 {
   Solves following the daily load curve.
@@ -152,46 +173,52 @@ FUNCTION SolveDaily(ActorID: integer):Integer;
   Load is modified by yearly growth, time of day, and global load multiplier.
 }
 
-VAR
-   N:Integer;
+var
+    N: Integer;
 
-Begin
-   Result := 0;
+begin
+    Result := 0;
 
-   WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
-   Begin
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
       // t:=0.0;
       // MonitorClass.ResetAll;
       // EnergyMeterClass.ResetAll;
-    Try
+        try
 
-      IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters
-      IF Not DIFilesAreOpen[ActorID] then EnergyMeterClass[ActorID].OpenAllDIFiles(ActorID);   // Append Demand Interval Files, if desired
+            IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters
+            if not DIFilesAreOpen[ActorID] then
+                EnergyMeterClass[ActorID].OpenAllDIFiles(ActorID);   // Append Demand Interval Files, if desired
 
-      FOR N := 1 TO NumberOfTimes Do
-        IF Not SolutionAbort Then With DynaVars Do Begin
-            Increment_time;
-            DefaultHourMult := DefaultDailyShapeObj.getmult(dblHour);
-            IF PriceCurveObj<> NIL THEN PriceSignal := PriceCurveObj.GetPrice(dblHour);
-            SolveSnap(ActorID);
-            MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
-            If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
+            for N := 1 to NumberOfTimes do
+                if not SolutionAbort then
+                    with DynaVars do
+                    begin
+                        Increment_time;
+                        DefaultHourMult := DefaultDailyShapeObj.getmult(dblHour);
+                        if PriceCurveObj <> NIL then
+                            PriceSignal := PriceCurveObj.GetPrice(dblHour);
+                        SolveSnap(ActorID);
+                        MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+                        if SampleTheMeters then
+                            EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
 
-            EndOfTimeStepCleanup(ActorID);
-            ActorPctProgress[ActorID]  :=  (N*100) div NumberofTimes;
+                        EndOfTimeStepCleanup(ActorID);
+                        ActorPctProgress[ActorID] := (N * 100) div NumberofTimes;
 
-        End;
+                    end;
 
-    Finally
-      MonitorClass[ActorID].SaveAll(ActorID);
-      If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
-    End; {Try}
-   End;  {WITH}
-End;
+        finally
+            MonitorClass[ActorID].SaveAll(ActorID);
+            if SampleTheMeters then
+                EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
+        end; {Try}
+    end;  {WITH}
+end;
 
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-FUNCTION SolvePeakDay(ActorID: integer):Integer;
+function SolvePeakDay(ActorID: Integer): Integer;
 
 {
  Solves peak day
@@ -202,192 +229,207 @@ FUNCTION SolvePeakDay(ActorID: integer):Integer;
     Differs from Daily mode in that the global load multiplier is ignored.
 }
 
-VAR
-   N:Integer;
+var
+    N: Integer;
 
-Begin
-   Result := 0;
-   WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
-   Begin
-        DynaVars.t:=0.0;
+begin
+    Result := 0;
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
+        DynaVars.t := 0.0;
 
         // MonitorClass.ResetAll;
         // EnergyMeterClass.ResetAll;
-     Try
-        DynaVars.intHour := 0; DynaVars.dblHour := 0.0;
-        IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
-        If Not DIFilesAreOpen[ActorID] Then EnergyMeterClass[ActorID].OpenAllDIFiles(ActorID);   // Open Demand Interval Files, if desired
+        try
+            DynaVars.intHour := 0;
+            DynaVars.dblHour := 0.0;
+            IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
+            if not DIFilesAreOpen[ActorID] then
+                EnergyMeterClass[ActorID].OpenAllDIFiles(ActorID);   // Open Demand Interval Files, if desired
 
-        FOR N := 1 TO NumberOfTimes Do
-        IF Not SolutionAbort Then With DynaVars Do Begin
-            Increment_time;
-            DefaultHourMult := DefaultDailyShapeObj.GetMult(dblHour);
-            IF PriceCurveObj<> NIL THEN PriceSignal := PriceCurveObj.GetPrice(dblHour);
-            SolveSnap(ActorID);
-            MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
-            If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
+            for N := 1 to NumberOfTimes do
+                if not SolutionAbort then
+                    with DynaVars do
+                    begin
+                        Increment_time;
+                        DefaultHourMult := DefaultDailyShapeObj.GetMult(dblHour);
+                        if PriceCurveObj <> NIL then
+                            PriceSignal := PriceCurveObj.GetPrice(dblHour);
+                        SolveSnap(ActorID);
+                        MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+                        if SampleTheMeters then
+                            EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
 
-            EndOfTimeStepCleanup(ActorID);
+                        EndOfTimeStepCleanup(ActorID);
 
-        End;
-      Finally
-        MonitorClass[ActorID].SaveAll(ActorID);
-        If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
-      End;
-     End;  {WITH}
-End;
+                    end;
+        finally
+            MonitorClass[ActorID].SaveAll(ActorID);
+            if SampleTheMeters then
+                EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
+        end;
+    end;  {WITH}
+end;
 
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-FUNCTION SolveDuty(ActorID: integer):Integer;
+function SolveDuty(ActorID: Integer): Integer;
 
-VAR
-   N, TwoPct, Temp0:Integer;
-   Temp1 : Boolean;
+var
+    N, TwoPct, Temp0: Integer;
+    Temp1: Boolean;
 
-Begin
-   Result := 0;
+begin
+    Result := 0;
 
 {   ProgressCaption( 'Duty Cycle Solution', ActorID);
    ProgressCount := 0;
    ShowPctProgress(0, ActorID);       }
 
-   WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
-   Begin
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
      //   t:=0.0;
         // MonitorClass.ResetAll;
-     TwoPct := Max(1, NumberOfTimes div 50);
-      Try
-        IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
-        FOR N := 1 TO NumberOfTimes Do
-        IF Not SolutionAbort Then With DynaVars Do Begin
-            ActiveCircuit[ActorID].Solution.Increment_time;
-            DefaultHourMult := DefaultDailyShapeObj.getmult(dblHour);
+        TwoPct := Max(1, NumberOfTimes div 50);
+        try
+            IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
+            for N := 1 to NumberOfTimes do
+                if not SolutionAbort then
+                    with DynaVars do
+                    begin
+                        ActiveCircuit[ActorID].Solution.Increment_time;
+                        DefaultHourMult := DefaultDailyShapeObj.getmult(dblHour);
             // Assume pricesignal stays constant for dutycycle calcs
-            SolveSnap(ActorID);
-            MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
-            If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
-            EndOfTimeStepCleanup(ActorID);
+                        SolveSnap(ActorID);
+                        MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+                        if SampleTheMeters then
+                            EnergyMeterClass[ActorID].SampleAll(ActorID); // Make all Energy Meters take a sample
+                        EndOfTimeStepCleanup(ActorID);
 
-            ActorPctProgress[ActorID] :=  (N*100) div NumberofTimes;
-            If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
+                        ActorPctProgress[ActorID] := (N * 100) div NumberofTimes;
+                        if SampleTheMeters then
+                            EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
 //            If (N mod Twopct)=0 Then ShowPctProgress((N*100) div NumberofTimes, ActorID);
-        End;
-      Finally
-        MonitorClass[ActorID].SaveAll(ActorID);
+                    end;
+        finally
+            MonitorClass[ActorID].SaveAll(ActorID);
 //        ProgressHide(ActorID);
-      End;
-    End;
-End;
+        end;
+    end;
+end;
 
-FUNCTION SolveGeneralTime(ActorID: integer):Integer;
+function SolveGeneralTime(ActorID: Integer): Integer;
 
 {
    For Rolling your own solution modes
 }
-VAR
-   N:Integer;
+var
+    N: Integer;
 
-Begin
-   Result := 0;
+begin
+    Result := 0;
 
-   WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
-   Begin
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
         IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
-        FOR N := 1 TO NumberOfTimes Do
-          IF Not SolutionAbort Then With DynaVars Do
-          Begin
+        for N := 1 to NumberOfTimes do
+            if not SolutionAbort then
+                with DynaVars do
+                begin
               {Compute basic multiplier from Default loadshape to use in generator dispatch, if any}
-                DefaultHourMult := DefaultDailyShapeObj.getmult(dblHour);
+                    DefaultHourMult := DefaultDailyShapeObj.getmult(dblHour);
 
-                SolveSnap(ActorID);
+                    SolveSnap(ActorID);
 
-                FinishTimeStep(ActorID);
-                ActorPctProgress[ActorID] :=  (N*100) div NumberofTimes;
-           End;
-    End;
-End;
-
-
+                    FinishTimeStep(ActorID);
+                    ActorPctProgress[ActorID] := (N * 100) div NumberofTimes;
+                end;
+    end;
+end;
 
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure IntegratePCStates(ActorID : Integer);
+procedure IntegratePCStates(ActorID: Integer);
  {Integrate states in all PC Elements.  At present, only PC Elements
   can have dynamic states}
 
-Var
-   pcelem: TPCElement;
+var
+    pcelem: TPCElement;
 
-Begin
-    With ActiveCircuit[ActorID] Do Begin
+begin
+    with ActiveCircuit[ActorID] do
+    begin
         pcelem := PCelements.First;
-        WHILE pcelem <> NIL Do Begin
-              pcelem.IntegrateStates(ActorID);
-              pcelem := PCelements.Next;
-        End;
-    End;
-End;
+        while pcelem <> NIL do
+        begin
+            pcelem.IntegrateStates(ActorID);
+            pcelem := PCelements.Next;
+        end;
+    end;
+end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-FUNCTION SolveDynamic(ActorID: integer):Integer;
+function SolveDynamic(ActorID: Integer): Integer;
 
-VAR
-   N:Integer;
+var
+    N: Integer;
 
-Begin
-   Result := 0;
+begin
+    Result := 0;
 
-   WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
-   Begin
-     Try
-        SolutionInitialized := True; // If we're in dynamics mode, no need to re-initialize.
-        IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
-        FOR N := 1 TO NumberOfTimes Do
-        IF Not SolutionAbort Then With DynaVars Do Begin
-          Increment_time;
-          DefaultHourMult := DefaultDailyShapeObj.getmult(dblHour);
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
+        try
+            SolutionInitialized := TRUE; // If we're in dynamics mode, no need to re-initialize.
+            IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
+            for N := 1 to NumberOfTimes do
+                if not SolutionAbort then
+                    with DynaVars do
+                    begin
+                        Increment_time;
+                        DefaultHourMult := DefaultDailyShapeObj.getmult(dblHour);
           // Assume price signal stays constant for dynamic calcs
        {Predictor}
-          IterationFlag := 0;
-          IntegratePCStates(ActorID);
-          SolveSnap(ActorID);
+                        IterationFlag := 0;
+                        IntegratePCStates(ActorID);
+                        SolveSnap(ActorID);
        {Corrector}
-          IterationFlag := 1;
-          IntegratePCStates(ActorID);
-          SolveSnap(ActorID);
-          MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
-          FmonitorClass[ActorID].update_sys_ld_info(ActorID);//get current value in INFO Broker -> UCF
+                        IterationFlag := 1;
+                        IntegratePCStates(ActorID);
+                        SolveSnap(ActorID);
+                        MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+                        FmonitorClass[ActorID].update_sys_ld_info(ActorID);//get current value in INFO Broker -> UCF
 
           // attack and defense -> UCF
-          FmonitorClass[ActorID].update_atks(ActorID);
-          FmonitorClass[ActorID].update_defense_layer(ActorID);
+                        FmonitorClass[ActorID].update_atks(ActorID);
+                        FmonitorClass[ActorID].update_defense_layer(ActorID);
           //-------------------------------
-          EndOfTimeStepCleanup(ActorID);
+                        EndOfTimeStepCleanup(ActorID);
 
-        End;
-      Finally
-        MonitorClass[ActorID].SaveAll(ActorID);
-      End;
-    End;
-End;
+                    end;
+        finally
+            MonitorClass[ActorID].SaveAll(ActorID);
+        end;
+    end;
+end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-FUNCTION SolveMonte1(ActorID: integer):Integer;
+function SolveMonte1(ActorID: Integer): Integer;
 
-VAR
-  N:Integer;
+var
+    N: Integer;
 
-Begin
-   Result := 0;
+begin
+    Result := 0;
 
-   WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
-   Begin
-     Try
-        LoadMultiplier := 1.0;   // Always set with prop in case matrix must be rebuilt
-        IntervalHrs := 1.0;     // needed for energy meters and storage devices
-        DynaVars.intHour := 0;  DynaVars.dblHour := 0.0;// Use hour to denote Case number
-        DynaVars.t := 0.0;
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
+        try
+            LoadMultiplier := 1.0;   // Always set with prop in case matrix must be rebuilt
+            IntervalHrs := 1.0;     // needed for energy meters and storage devices
+            DynaVars.intHour := 0;
+            DynaVars.dblHour := 0.0;// Use hour to denote Case number
+            DynaVars.t := 0.0;
 
         // MonitorClass.ResetAll;
         // EnergyMeterClass.ResetAll;
@@ -395,262 +437,289 @@ Begin
 {        ProgressCaption( 'Monte Carlo Mode 1, ' + IntToStr(NumberofTimes) + ' Random Loads.', ActorID);
         ProgressCount := 0;    }
 
-        FOR N := 1 TO NumberOfTimes Do
-        If Not SolutionAbort Then  Begin
-            Inc(DynaVars.intHour);
-            SolveSnap(ActorID);
-            MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
-            If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
-            ActorPctProgress[ActorID] :=  (N*100) div NumberofTimes;
+            for N := 1 to NumberOfTimes do
+                if not SolutionAbort then
+                begin
+                    Inc(DynaVars.intHour);
+                    SolveSnap(ActorID);
+                    MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+                    if SampleTheMeters then
+                        EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
+                    ActorPctProgress[ActorID] := (N * 100) div NumberofTimes;
 //            Show10PctProgress(N, NumberOfTimes, ActorID);
-        End
-        Else  Begin
-           ErrorNumber := SOLUTION_ABORT;
-           CmdResult := ErrorNumber;
-           GlobalResult := 'Solution Aborted';
-           Break;
-        End;
-     Finally
-        MonitorClass[ActorID].SaveAll(ActorID);
-        If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID) ;
+                end
+                else
+                begin
+                    ErrorNumber := SOLUTION_ABORT;
+                    CmdResult := ErrorNumber;
+                    GlobalResult := 'Solution Aborted';
+                    Break;
+                end;
+        finally
+            MonitorClass[ActorID].SaveAll(ActorID);
+            if SampleTheMeters then
+                EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);
 //        ProgressHide(ActorID);
-     End;
-   End;
+        end;
+    end;
 
-End;
+end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-FUNCTION SolveMonte2(ActorID: integer):Integer;
+function SolveMonte2(ActorID: Integer): Integer;
 
 // Do a daily load solution for several Random days
 
-VAR
-  i, N, Ndaily:Integer;
+var
+    i, N, Ndaily: Integer;
 
-Begin
+begin
     Result := 0;
 
-    WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].solution
-    Do Begin
-     Try
-        DynaVars.t := 0.0;
-        DynaVars.intHour := 0;   DynaVars.dblHour := 0.0;
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].solution do
+    begin
+        try
+            DynaVars.t := 0.0;
+            DynaVars.intHour := 0;
+            DynaVars.dblHour := 0.0;
         // MonitorClass.ResetAll;
         // EnergyMeterClass.ResetAll;
-        IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
-        Ndaily := Round(24.0 / IntervalHrs);
+            IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
+            Ndaily := Round(24.0 / IntervalHrs);
 
-        If Not DIFilesAreOpen[ActorID] Then EnergyMeterClass[ActorID].OpenAllDIFiles(ActorID);   // Open Demand Interval Files, if desired
+            if not DIFilesAreOpen[ActorID] then
+                EnergyMeterClass[ActorID].OpenAllDIFiles(ActorID);   // Open Demand Interval Files, if desired
 
 {        ProgressCaption('Monte Carlo Mode 2, ' + IntToStr(NumberofTimes) + ' Days.', ActorID);
         ProgressCount := 0;       }
 
-        FOR N := 1 TO NumberOfTimes Do
+            for N := 1 to NumberOfTimes do
 
-        If   NOT SolutionAbort
-        THEN Begin       // Number of Days
+                if not SolutionAbort then
+                begin       // Number of Days
 
           // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
-          Case Randomtype of
-           UNIFORM:  LoadMultiplier := Random;  // number between 0 and 1
-           GAUSSIAN: LoadMultiplier := Gauss(DefaultDailyShapeObj.Mean, DefaultDailyShapeObj.StdDev );
-          End;
+                    case Randomtype of
+                        UNIFORM:
+                            LoadMultiplier := Random;  // number between 0 and 1
+                        GAUSSIAN:
+                            LoadMultiplier := Gauss(DefaultDailyShapeObj.Mean, DefaultDailyShapeObj.StdDev);
+                    end;
 
-          With DynaVars Do FOR i := 1 to Ndaily Do
-          Begin
-            Increment_time;
-            DefaultHourMult := DefaultDailyShapeObj.GetMult(dblHour);
-            SolveSnap(ActorID);
+                    with DynaVars do
+                        for i := 1 to Ndaily do
+                        begin
+                            Increment_time;
+                            DefaultHourMult := DefaultDailyShapeObj.GetMult(dblHour);
+                            SolveSnap(ActorID);
 
-            MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
-            If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
+                            MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+                            if SampleTheMeters then
+                                EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
 
-            EndOfTimeStepCleanup(ActorID);
+                            EndOfTimeStepCleanup(ActorID);
 
-          End;
+                        end;
 
-          ActorPctProgress[ActorID] :=  (N*100) div NumberofTimes;
+                    ActorPctProgress[ActorID] := (N * 100) div NumberofTimes;
 //          Show10PctProgress(N, NumberOfTimes, ActorID);
 
-        End
-        ELSE Begin
-           ErrorNumber := SOLUTION_ABORT;
-           CmdResult := ErrorNumber;
-           GlobalResult := 'Solution Aborted.';
-           Break;
-        End;
-      Finally
-        MonitorClass[ActorID].SaveAll(ActorID);
-        If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
+                end
+                else
+                begin
+                    ErrorNumber := SOLUTION_ABORT;
+                    CmdResult := ErrorNumber;
+                    GlobalResult := 'Solution Aborted.';
+                    Break;
+                end;
+        finally
+            MonitorClass[ActorID].SaveAll(ActorID);
+            if SampleTheMeters then
+                EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
 //        ProgressHide(ActorID);
-      End;
-    End;
-End;
+        end;
+    end;
+end;
 
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-FUNCTION SolveMonte3(ActorID: integer):Integer;
+function SolveMonte3(ActorID: Integer): Integer;
 
 // Hold time fixed and just vary the global load multiplier
 
-VAR
-  N:Integer;
+var
+    N: Integer;
 
-Begin
+begin
     Result := 0;
 
-    WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution
-    Do Begin
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
     // Time must be set beFore entering this routine
-      Try
+        try
         // MonitorClass.ResetAll;
         // EnergyMeterClass.ResetAll;
-        IntervalHrs := 1.0;  // just get per unit energy and multiply result as necessary
+            IntervalHrs := 1.0;  // just get per unit energy and multiply result as necessary
 
-        If Not DIFilesAreOpen[ActorID] Then EnergyMeterClass[ActorID].OpenAllDIFiles(ActorID);   // Open Demand Interval Files, if desired
+            if not DIFilesAreOpen[ActorID] then
+                EnergyMeterClass[ActorID].OpenAllDIFiles(ActorID);   // Open Demand Interval Files, if desired
 
 {        ProgressCaption( 'Monte Carlo Mode 3, ' + IntToStr(NumberofTimes) + ' Different Load Levels.', ActorID);
         ProgressCount := 0;    }
 
-        DefaultHourMult := DefaultDailyShapeObj.GetMult(DynaVars.dblHour);
-        IF PriceCurveObj<> NIL THEN PriceSignal := PriceCurveObj.GetPrice(DynaVars.dblHour);
+            DefaultHourMult := DefaultDailyShapeObj.GetMult(DynaVars.dblHour);
+            if PriceCurveObj <> NIL then
+                PriceSignal := PriceCurveObj.GetPrice(DynaVars.dblHour);
 
-        FOR N := 1 TO NumberOfTimes Do
-        If Not SolutionAbort Then
-        Begin
+            for N := 1 to NumberOfTimes do
+                if not SolutionAbort then
+                begin
 
         // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
-            Case Randomtype of
-             UNIFORM:  LoadMultiplier := Random;  // number between 0 and 1
-             GAUSSIAN: LoadMultiplier := Gauss(DefaultDailyShapeObj.Mean, DefaultDailyShapeObj.StdDev);
-             LOGNORMAL: LoadMultiplier := QuasiLognormal(DefaultDailyShapeObj.Mean);
-            End;
+                    case Randomtype of
+                        UNIFORM:
+                            LoadMultiplier := Random;  // number between 0 and 1
+                        GAUSSIAN:
+                            LoadMultiplier := Gauss(DefaultDailyShapeObj.Mean, DefaultDailyShapeObj.StdDev);
+                        LOGNORMAL:
+                            LoadMultiplier := QuasiLognormal(DefaultDailyShapeObj.Mean);
+                    end;
 
-            SolveSnap(ActorID);
+                    SolveSnap(ActorID);
 
-            MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
-            If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
+                    MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+                    if SampleTheMeters then
+                        EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
 
-            ActorPctProgress[ActorID] :=  (N*100) div NumberofTimes;
+                    ActorPctProgress[ActorID] := (N * 100) div NumberofTimes;
 //            Show10PctProgress(N, NumberOfTimes, ActorID);
-        End
-        Else
-        Begin
-           CmdResult := SOLUTION_ABORT;
-           ErrorNumber := CmdResult;
-           GlobalResult := 'Solution Aborted';
-           Break;
-        End;
-      Finally
-        MonitorClass[ActorID].SaveAll(ActorID);
-        If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
+                end
+                else
+                begin
+                    CmdResult := SOLUTION_ABORT;
+                    ErrorNumber := CmdResult;
+                    GlobalResult := 'Solution Aborted';
+                    Break;
+                end;
+        finally
+            MonitorClass[ActorID].SaveAll(ActorID);
+            if SampleTheMeters then
+                EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
 //        ProgressHide(ActorID);
-      End;
-    End; {WITH}
-End;
+        end;
+    end; {WITH}
+end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-FUNCTION SolveLD1(ActorID: integer):Integer;
+function SolveLD1(ActorID: Integer): Integer;
 
 // Do a Daily Simulation based on a load duration curve
 
-VAR
-  N, Ndaily, i:Integer;
+var
+    N, Ndaily, i: Integer;
 
 
-Begin
-  Result := 0;
+begin
+    Result := 0;
 
-  WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
-  Begin
-    Try
-      If LoadDurCurveObj = nil THEN Begin
-          Dosimplemsg('Load Duration Curve Not Defined (Set LDCurve=... command). Cannot perForm solution.', 470);
-          Exit;
-      End;
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
+        try
+            if LoadDurCurveObj = NIL then
+            begin
+                Dosimplemsg('Load Duration Curve Not Defined (Set LDCurve=... command). Cannot perForm solution.', 470);
+                Exit;
+            end;
 
   // Time must be set beFore entering this routine
 
       // MonitorClass.ResetAll;
       // EnergyMeterClass.ResetAll;
 
-      NDaily := Round(24.0 / DynaVars.h * 3600.0);
+            NDaily := Round(24.0 / DynaVars.h * 3600.0);
 
-      If Not DIFilesAreOpen[ActorID] Then EnergyMeterClass[ActorID].OpenAllDIFiles(ActorID);   // Open Demand Interval Files, if desired
+            if not DIFilesAreOpen[ActorID] then
+                EnergyMeterClass[ActorID].OpenAllDIFiles(ActorID);   // Open Demand Interval Files, if desired
 
 //      ProgressCaption( 'Load-Duration Mode 1 Solution. ', ActorID);
 
       // (set in Solve method) DefaultGrowthFactor :=  IntPower(DefaultGrowthRate, (Year-1));
 
-      DynaVars.intHour := 0;
-      With DynaVars Do FOR i := 1 to Ndaily Do Begin
+            DynaVars.intHour := 0;
+            with DynaVars do
+                for i := 1 to Ndaily do
+                begin
 
       // Set the time
-        Increment_time;
+                    Increment_time;
 
-        DefaultHourMult := DefaultDailyShapeObj.GetMult(dblHour);
+                    DefaultHourMult := DefaultDailyShapeObj.GetMult(dblHour);
 
-        If    NOT SolutionAbort
-        THEN  Begin
-           FOR N := 1 TO LoadDurCurveObj.NumPoints Do
-           Begin
+                    if not SolutionAbort then
+                    begin
+                        for N := 1 to LoadDurCurveObj.NumPoints do
+                        begin
 
-              LoadMultiplier := LoadDurCurveObj.Mult(N);  // Always set LoadMultiplier with prop in case matrix must be rebuilt
+                            LoadMultiplier := LoadDurCurveObj.Mult(N);  // Always set LoadMultiplier with prop in case matrix must be rebuilt
               // Adjust meter interval to interval on value of present Load-Duration Curve
-              IntervalHrs := LoadDurCurveObj.PresentInterval;
+                            IntervalHrs := LoadDurCurveObj.PresentInterval;
 
           // Price curve must correspond to load-duration curve
-              IF PriceCurveObj<> NIL THEN PriceSignal := PriceCurveObj.Price(N);
+                            if PriceCurveObj <> NIL then
+                                PriceSignal := PriceCurveObj.Price(N);
 
-              SolveSnap(ActorID);
+                            SolveSnap(ActorID);
 
-              MonitorClass[ActorID].SampleAll(ActorID);     // Make all monitors take a sample
-              If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
+                            MonitorClass[ActorID].SampleAll(ActorID);     // Make all monitors take a sample
+                            if SampleTheMeters then
+                                EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
 
-              EndOfTimeStepCleanup(ActorID);
+                            EndOfTimeStepCleanup(ActorID);
 
 
-           End;
+                        end;
 
-            ActorPctProgress[ActorID] :=  (i * 100) div NDaily;
+                        ActorPctProgress[ActorID] := (i * 100) div NDaily;
 //           ShowPctProgress((i * 100) div NDaily, ActorID);
-        End
-        Else
-        Begin
-           CmdResult := SOLUTION_ABORT;
-           ErrorNumber := CmdResult;
-           GlobalResult := 'Solution Aborted';
-           Break;
-        End;
+                    end
+                    else
+                    begin
+                        CmdResult := SOLUTION_ABORT;
+                        ErrorNumber := CmdResult;
+                        GlobalResult := 'Solution Aborted';
+                        Break;
+                    end;
 
-      End;
-    Finally
-      MonitorClass[ActorID].SaveAll(ActorID);
-      If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
+                end;
+        finally
+            MonitorClass[ActorID].SaveAll(ActorID);
+            if SampleTheMeters then
+                EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
 //      ProgressHide(ActorID);
-    End;
- End; {WITH ActiveCircuit[ActiveActor]}
+        end;
+    end; {WITH ActiveCircuit[ActiveActor]}
 
-End;
+end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-FUNCTION SolveLD2(ActorID: integer):Integer;
+function SolveLD2(ActorID: Integer): Integer;
 
 // Hold time fixed and just vary the global load multiplier according to the global
 // Load-Duration Curve
 
-VAR
-  N:Integer;
+var
+    N: Integer;
 
-Begin
-  Result := 0;
+begin
+    Result := 0;
 
-  WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
-  Begin
-    If LoadDurCurveObj = nil THEN Begin
-        Dosimplemsg('Load Duration Curve Not Defined (Set LDCurve=... command). Cannot perForm solution.', 471);
-        Exit;
-    End;
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
+        if LoadDurCurveObj = NIL then
+        begin
+            Dosimplemsg('Load Duration Curve Not Defined (Set LDCurve=... command). Cannot perForm solution.', 471);
+            Exit;
+        end;
 
 // Time must be set beFore entering this routine
 
@@ -658,85 +727,92 @@ Begin
     // MonitorClass.ResetAll;
     // EnergyMeterClass.ResetAll;
 
-    DefaultHourMult := DefaultDailyShapeObj.GetMult(DynaVars.dblHour);
-    If Not DIFilesAreOpen[ActorID] Then EnergyMeterClass[ActorID].OpenAllDIFiles(ActorID);   // Open Demand Interval Files, if desired
+        DefaultHourMult := DefaultDailyShapeObj.GetMult(DynaVars.dblHour);
+        if not DIFilesAreOpen[ActorID] then
+            EnergyMeterClass[ActorID].OpenAllDIFiles(ActorID);   // Open Demand Interval Files, if desired
 
     // (set in Solve Method) DefaultGrowthFactor :=  IntPower(DefaultGrowthRate, (Year-1));
 
-    Try
-      If SolutionAbort Then
-      Begin
-           CmdResult := SOLUTION_ABORT;
-           ErrorNumber := CmdResult;
-           GlobalResult := 'Solution Aborted.';
-           Exit;
-      End ;
+        try
+            if SolutionAbort then
+            begin
+                CmdResult := SOLUTION_ABORT;
+                ErrorNumber := CmdResult;
+                GlobalResult := 'Solution Aborted.';
+                Exit;
+            end;
 
-      FOR N := 1 TO LoadDurCurveObj.NumPoints Do Begin
+            for N := 1 to LoadDurCurveObj.NumPoints do
+            begin
 
         // Adjust meter interval to interval on value of present Load-Duration Curve
-        LoadMultiplier := LoadDurCurveObj.Mult(N);     // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
-        IntervalHrs := LoadDurCurveObj.PresentInterval;
+                LoadMultiplier := LoadDurCurveObj.Mult(N);     // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
+                IntervalHrs := LoadDurCurveObj.PresentInterval;
 
         // Price curve must correspond to load-duration curve
-        IF PriceCurveObj<> NIL THEN PriceSignal := PriceCurveObj.Price(N);
+                if PriceCurveObj <> NIL then
+                    PriceSignal := PriceCurveObj.Price(N);
 
-        SolveSnap(ActorID);
+                SolveSnap(ActorID);
 
-        MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
-        If SampleTheMeters then EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
+                MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+                if SampleTheMeters then
+                    EnergyMeterClass[ActorID].SampleAll(ActorID);  // Make all meters take a sample
 
-        EndOfTimeStepCleanup(ActorID);
+                EndOfTimeStepCleanup(ActorID);
 
-      End;
-    Finally
-      MonitorClass[ActorID].SaveAll(ActorID);
-      If SampleTheMeters then EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
-    End;
-  End; {WITH ActiveCircuit[ActiveActor]}
+            end;
+        finally
+            MonitorClass[ActorID].SaveAll(ActorID);
+            if SampleTheMeters then
+                EnergyMeterClass[ActorID].CloseAllDIFiles(ActorID);   // Save Demand interval Files
+        end;
+    end; {WITH ActiveCircuit[ActiveActor]}
 
-End;
+end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-PROCEDURE PickAFault(ActorID : Integer);
+procedure PickAFault(ActorID: Integer);
 // Enable one of the faults in the circuit.  Disable the rest
-VAR
-   NumFaults, i, Whichone:Integer;
-   FaultObj : TFaultObj;
-Begin
+var
+    NumFaults, i, Whichone: Integer;
+    FaultObj: TFaultObj;
+begin
     NumFaults := ActiveCircuit[ActorID].Faults.Listsize;
     Whichone := Trunc(Random * NumFaults) + 1;
-    IF   Whichone > NumFaults
-    THEN Whichone := NumFaults;
+    if Whichone > NumFaults then
+        Whichone := NumFaults;
 
-    FOR i := 1 to NumFaults Do
-    Begin
-     FaultObj := ActiveCircuit[ActorID].Faults.Get(i);
-     IF   i=Whichone   THEN Begin
-       ActiveFaultObj := FaultObj; // in Fault Unit
-       FaultObj.Enabled := TRUE;
-     End
-     Else
-       FaultObj.Enabled := FALSE;
-    End;
-End;
+    for i := 1 to NumFaults do
+    begin
+        FaultObj := ActiveCircuit[ActorID].Faults.Get(i);
+        if i = Whichone then
+        begin
+            ActiveFaultObj := FaultObj; // in Fault Unit
+            FaultObj.Enabled := TRUE;
+        end
+        else
+            FaultObj.Enabled := FALSE;
+    end;
+end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-FUNCTION SolveMonteFault(ActorID: integer):Integer;
+function SolveMonteFault(ActorID: Integer): Integer;
 
-VAR
-  N:Integer;
+var
+    N: Integer;
 
-Begin
-  Result := 0;
+begin
+    Result := 0;
 
-  WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
-  Begin
-    Try
-      LoadModel := ADMITTANCE;   // All Direct solution
-      LoadMultiplier := 1.0;    // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
-      DynaVars.intHour := 0; DynaVars.dblHour := 0.0; // Use hour to denote Case number
-      DynaVars.t := 0.0;
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
+        try
+            LoadModel := ADMITTANCE;   // All Direct solution
+            LoadMultiplier := 1.0;    // Always set LoadMultiplier WITH prop in case matrix must be rebuilt
+            DynaVars.intHour := 0;
+            DynaVars.dblHour := 0.0; // Use hour to denote Case number
+            DynaVars.t := 0.0;
 
 
       // MonitorClass.ResetAll;
@@ -744,141 +820,154 @@ Begin
 {      ProgressCaption( 'Monte Carlo Fault Study: ' + IntToStr(NumberofTimes) + ' Different Faults.', ActorID);
       ProgressCount := 0;            }
 
-      SetGeneratorDispRef(ActorID);
+            SetGeneratorDispRef(ActorID);
 
-      FOR N := 1 TO NumberOfTimes Do
-      IF Not SolutionAbort Then Begin
-          Inc(DynaVars.intHour);
-          PickAFault(ActorID);  // Randomly enable one of the faults
-          ActiveFaultObj.Randomize(ActorID);  // Randomize the fault resistance
-          SolveDirect(ActorID);
-          MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
+            for N := 1 to NumberOfTimes do
+                if not SolutionAbort then
+                begin
+                    Inc(DynaVars.intHour);
+                    PickAFault(ActorID);  // Randomly enable one of the faults
+                    ActiveFaultObj.Randomize(ActorID);  // Randomize the fault resistance
+                    SolveDirect(ActorID);
+                    MonitorClass[ActorID].SampleAll(ActorID);  // Make all monitors take a sample
 
-          ActorPctProgress[ActorID] :=  (N * 100) div NumberOfTimes;
+                    ActorPctProgress[ActorID] := (N * 100) div NumberOfTimes;
 //          Show10PctProgress(N, NumberOfTimes, ActorID);
-      End;
-    Finally
-      MonitorClass[ActorID].SaveAll(ActorID);
+                end;
+        finally
+            MonitorClass[ActorID].SaveAll(ActorID);
 //      ProgressHide(ActorID);
-    End;
-  End;
+        end;
+    end;
 
-End;
-{--------------------------------------------------------------------------}
-PROCEDURE AllocateAllSCParms(ActorID: integer);
-Var
-   i:Integer;
-Begin
-   WITH ActiveCircuit[ActorID] Do Begin
-      FOR i := 1 to NumBuses Do
-        Buses^[i].AllocateBusQuantities;
-   End;
-End;
-
+end;
 
 {--------------------------------------------------------------------------}
-PROCEDURE ComputeIsc(ActorID : Integer);
+procedure AllocateAllSCParms(ActorID: Integer);
+var
+    i: Integer;
+begin
+    with ActiveCircuit[ActorID] do
+    begin
+        for i := 1 to NumBuses do
+            Buses^[i].AllocateBusQuantities;
+    end;
+end;
+
+
+{--------------------------------------------------------------------------}
+procedure ComputeIsc(ActorID: Integer);
 { Compute Isc at all buses for current values of Voc and Ysc }
-Var
-   i:Integer;
-Begin
-   WITH ActiveCircuit[ActorID] Do Begin
-      FOR i := 1 to NumBuses Do
-       WITH Buses^[i] Do Begin
-          Ysc.MVMult(BusCurrent, VBus);
-       End;
-   End;
-End;
+var
+    i: Integer;
+begin
+    with ActiveCircuit[ActorID] do
+    begin
+        for i := 1 to NumBuses do
+            with Buses^[i] do
+            begin
+                Ysc.MVMult(BusCurrent, VBus);
+            end;
+    end;
+end;
 
 
 {--------------------------------------------------------------------------}
-PROCEDURE ComputeYsc(iB:integer; ActorID : integer);
+procedure ComputeYsc(iB: Integer; ActorID: Integer);
 
 {Compute YSC for I-th bus}
 {Assume InjCurr is zeroed}
 
-Var
-   i,
-   j,
-   ref1 :Integer;
+var
+    i,
+    j,
+    ref1: Integer;
 
-Begin
-  WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do begin
-    WITH Buses^[iB] Do Begin
-      Zsc.Clear;
-      FOR i := 1 to NumNodesThisBus Do Begin
-        ref1 := GetRef(i);
-        IF ref1>0 Then Begin
-          Currents^[ref1] := cONE;
+begin
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
+        with Buses^[iB] do
+        begin
+            Zsc.Clear;
+            for i := 1 to NumNodesThisBus do
+            begin
+                ref1 := GetRef(i);
+                if ref1 > 0 then
+                begin
+                    Currents^[ref1] := cONE;
           {SparseSet expects 1st element of voltage array, not 0-th element}
-          IF   SolveSparseSet(hYsystem, @NodeV^[1], @Currents^[1]) < 1
-          THEN Raise EEsolv32Problem.Create('Error Solving System Y Matrix in ComputeYsc. Problem with Sparse matrix solver.');
+                    if SolveSparseSet(hYsystem, @NodeV^[1], @Currents^[1]) < 1 then
+                        raise EEsolv32Problem.Create('Error Solving System Y Matrix in ComputeYsc. Problem with Sparse matrix solver.');
           {Extract Voltage Vector = column of Zsc}
-          FOR j := 1 to NumNodesThisBus Do Begin
-            Zsc.SetElement(j ,i, NodeV^[GetRef(j)]);
-          End;
-          Currents^[Ref1] :=cZERO;
-        End; {IF ref...}
-      End;
-      Ysc.CopyFrom (Zsc);
-      Ysc.invert; {Save as admittance}
-    End;
-  end;
-End;
+                    for j := 1 to NumNodesThisBus do
+                    begin
+                        Zsc.SetElement(j, i, NodeV^[GetRef(j)]);
+                    end;
+                    Currents^[Ref1] := cZERO;
+                end; {IF ref...}
+            end;
+            Ysc.CopyFrom(Zsc);
+            Ysc.invert; {Save as admittance}
+        end;
+    end;
+end;
 
 
 {--------------------------------------------------------------------------}
-PROCEDURE ComputeAllYsc(ActorID: integer);
-Var
-   iB, j:Integer;
+procedure ComputeAllYsc(ActorID: Integer);
+var
+    iB, j: Integer;
 
 
-Begin
+begin
 
-   WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
-   Begin
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
 
-     FOR j := 1 to NumNodes Do Currents^[j] := cZERO;
+        for j := 1 to NumNodes do
+            Currents^[j] := cZERO;
 
-     ActorProgressCount[ActorID] := 0;
+        ActorProgressCount[ActorID] := 0;
 
-     FOR iB := 1 to NumBuses Do
-     Begin
-        ComputeYsc(iB, ActorID);  // Compute YSC for iB-th Bus
-        If ((iB * 10) div NumBuses) > ProgressCount Then  Begin
-            Inc(ActorProgressCount[ActorID]);
+        for iB := 1 to NumBuses do
+        begin
+            ComputeYsc(iB, ActorID);  // Compute YSC for iB-th Bus
+            if ((iB * 10) div NumBuses) > ProgressCount then
+            begin
+                Inc(ActorProgressCount[ActorID]);
 //            ShowPctProgress(30 + ActorProgressCount[ActorID] * 5, ActorID);
-        End;
-     End;
-   End;
-End;
+            end;
+        end;
+    end;
+end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-PROCEDURE DisableAllFaults(ActorID: integer);
-Begin
-   WITH ActiveCircuit[ActorID] Do Begin
-       ActiveFaultObj := Faults.First;
-       WHILE ActiveFaultObj<>Nil Do Begin
-          ActiveFaultObj.Enabled := False;
-          ActiveFaultObj := Faults.Next;
-       End
-   End;
-End;
+procedure DisableAllFaults(ActorID: Integer);
+begin
+    with ActiveCircuit[ActorID] do
+    begin
+        ActiveFaultObj := Faults.First;
+        while ActiveFaultObj <> NIL do
+        begin
+            ActiveFaultObj.Enabled := FALSE;
+            ActiveFaultObj := Faults.Next;
+        end
+    end;
+end;
 
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-FUNCTION  SolveFaultStudy(ActorID: integer):Integer;
+function SolveFaultStudy(ActorID: Integer): Integer;
 
 
-
-Begin
-   Result := 0;
-    ActorPctProgress[ActorID] :=  0;
+begin
+    Result := 0;
+    ActorPctProgress[ActorID] := 0;
 //   ShowPctProgress( 0, ActorID);
 //   ProgressCaption( 'Computing Open-Circuit Voltages', ActorID);
 
-     With ActiveCircuit[ActorID].solution Do
-     Begin
+    with ActiveCircuit[ActorID].solution do
+    begin
         LoadModel := ADMITTANCE;
         DisableAllFaults(ActorID);
 
@@ -886,281 +975,316 @@ Begin
 
         AllocateAllSCParms(ActorID);   // Reallocate bus quantities
         UpdateVBus(ActorID);  // Put present solution Voc's in bus quantities
-     End;
+    end;
 
-     ActorPctProgress[ActorID] :=  30;
+    ActorPctProgress[ActorID] := 30;
   {   ProgressCaption ('Computing Ysc Matrices for Each Bus', ActorID);
      ShowPctProgress (30, ActorID);}
-     ComputeAllYsc(ActorID);
+    ComputeAllYsc(ActorID);
 
-     ActorPctProgress[ActorID] :=  80;
+    ActorPctProgress[ActorID] := 80;
   {   ProgressCaption( 'Computing Short-circuit currents.', ActorID);
      ShowPctProgress (80, ActorID);}
-     ComputeIsc(ActorID);
+    ComputeIsc(ActorID);
 
-     ActorPctProgress[ActorID] :=  100;
+    ActorPctProgress[ActorID] := 100;
   {   ShowPctProgress ( 100, ActorID);
      ProgressCaption ('Done.', ActorID);}
   //   ProgressHide(ActorID);
      // Now should have all we need to make a short circuit report
 
-End;
+end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure AddFrequency(Var FreqList:pDoublearray; Var NumFreq, MaxFreq:Integer; F:Double);
+procedure AddFrequency(var FreqList: pDoublearray; var NumFreq, MaxFreq: Integer; F: Double);
 
 {Add unique Frequency, F to list in ascending order, reallocating if necessary}
 
-Var i, j :integer;
+var
+    i, j: Integer;
 
-Begin
+begin
 
      {See if F is in List}
 
-     For i := 1 to NumFreq Do Begin
+    for i := 1 to NumFreq do
+    begin
          {Allow a little tolerance (0.1 hz) for the Frequency for round off error}
-         If Abs(F-FreqList^[i]) < 0.1  Then Exit; // Already in List, nothing to do
-     End;
+        if Abs(F - FreqList^[i]) < 0.1 then
+            Exit; // Already in List, nothing to do
+    end;
 
      {OK, it's not in list, so let's Add it}
-     Inc(NumFreq);
-     If NumFreq > MaxFreq Then Begin  // Let's make a little more room
-         Inc(MaxFreq, 20);
-         ReallocMem(FreqList, SizeOf(FreqList^[1]) * MaxFreq);
-     End;
+    Inc(NumFreq);
+    if NumFreq > MaxFreq then
+    begin  // Let's make a little more room
+        Inc(MaxFreq, 20);
+        ReallocMem(FreqList, SizeOf(FreqList^[1]) * MaxFreq);
+    end;
 
      {Let's add it in ascending order}
-     For i := 1 to NumFreq-1 Do Begin
-         IF F < FreqList^[i] Then Begin
+    for i := 1 to NumFreq - 1 do
+    begin
+        if F < FreqList^[i] then
+        begin
              {Push down array and insert it}
-             For j := NumFreq-1 Downto i Do FreqList^[j+1] := FreqList^[j];
-             FreqList^[i] := F;
-             Exit;  // We're done!
-         End;
-     End;
+            for j := NumFreq - 1 downto i do
+                FreqList^[j + 1] := FreqList^[j];
+            FreqList^[i] := F;
+            Exit;  // We're done!
+        end;
+    end;
 
      {If we fall through, tack it on to the end}
-     FreqList^[NumFreq] := F;
+    FreqList^[NumFreq] := F;
 
-End;
+end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Function GetSourceFrequency(pc:TPCElement):Double; // TODO - applicable to VCCS?
+function GetSourceFrequency(pc: TPCElement): Double; // TODO - applicable to VCCS?
 
-Var
-    pVsrc:TVsourceObj;
-    pIsrc:TIsourceObj;
-Begin
+var
+    pVsrc: TVsourceObj;
+    pIsrc: TIsourceObj;
+begin
 
-    If Comparetext(pc.DSSClassName,'vsource')=0 Then Begin
+    if Comparetext(pc.DSSClassName, 'vsource') = 0 then
+    begin
         pVsrc := pc as TVsourceObj;
         Result := pVsrc.srcFrequency;
-    End Else Begin
+    end
+    else
+    begin
         pIsrc := pc as TIsourceObj;
         Result := pIsrc.srcFrequency;
-    End;
+    end;
 
-End;
+end;
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-Procedure CollectAllFrequencies( Var FreqList:pDoubleArray; Var NumFreq:Integer; ActorID : integer);
+procedure CollectAllFrequencies(var FreqList: pDoubleArray; var NumFreq: Integer; ActorID: Integer);
 
-Var
-   SpectrumInUse:pIntegerArray;
-   p : TPCElement;
-   MaxFreq, i, j :Integer;
-   pSpectrum:TSpectrumObj;
-   f:Double;
+var
+    SpectrumInUse: pIntegerArray;
+    p: TPCElement;
+    MaxFreq, i, j: Integer;
+    pSpectrum: TSpectrumObj;
+    f: Double;
 
-Begin
+begin
     {Make a List of all frequencies in Use}
 
     {accumulate all unique Frequencies}
     MaxFreq := 20;    // Initial List size
     NumFreq := 0;
-    Reallocmem(FreqList, Sizeof(FreqList^[1])*MaxFreq);
+    Reallocmem(FreqList, Sizeof(FreqList^[1]) * MaxFreq);
 
-    WITH ActiveCircuit[ActorID] Do Begin
+    with ActiveCircuit[ActorID] do
+    begin
         {Check Sources -- each could have a different base frequency}
         p := Sources.First;
-        WHILE p <> NIL Do Begin
-              If p.Enabled then
-              If SpectrumClass[ActorID].Find(p.Spectrum) <> NIL Then Begin
-                  pSpectrum := SpectrumClass[ActorID].GetActiveObj;
-                  f := GetSourceFrequency(p);
-                  For j := 1 to pSpectrum.NumHarm Do Begin
-                     AddFrequency(FreqList, NumFreq, MaxFreq, pSpectrum.HarmArray^[j] * f);
-                  End;
-              End;
-              p := Sources.Next;
-        End;
-    End;
+        while p <> NIL do
+        begin
+            if p.Enabled then
+                if SpectrumClass[ActorID].Find(p.Spectrum) <> NIL then
+                begin
+                    pSpectrum := SpectrumClass[ActorID].GetActiveObj;
+                    f := GetSourceFrequency(p);
+                    for j := 1 to pSpectrum.NumHarm do
+                    begin
+                        AddFrequency(FreqList, NumFreq, MaxFreq, pSpectrum.HarmArray^[j] * f);
+                    end;
+                end;
+            p := Sources.Next;
+        end;
+    end;
 
     {Mark Spectra being used}
         {Check loads and generators - these are assumed to be at fundamental frequency}
-    SpectrumInUse := AllocMem(SizeOf(SpectruminUse^[1])*SpectrumClass[ActorID].ElementCount);  //Allocate and zero
-    WITH ActiveCircuit[ActorID] Do Begin
+    SpectrumInUse := AllocMem(SizeOf(SpectruminUse^[1]) * SpectrumClass[ActorID].ElementCount);  //Allocate and zero
+    with ActiveCircuit[ActorID] do
+    begin
         p := PCelements.First;
-        WHILE p <> NIL Do Begin
-              If p.enabled Then
-              If SpectrumClass[ActorID].Find(p.Spectrum) <> NIL Then Begin
-                  SpectrumInUse^[SpectrumClass[ActorID].Active] := 1;
-              End;
-              p := PCelements.Next;
-        End;
-    End; {With}
+        while p <> NIL do
+        begin
+            if p.enabled then
+                if SpectrumClass[ActorID].Find(p.Spectrum) <> NIL then
+                begin
+                    SpectrumInUse^[SpectrumClass[ActorID].Active] := 1;
+                end;
+            p := PCelements.Next;
+        end;
+    end; {With}
 
     {Add marked Spectra to list}
-    For i := 1 to SpectrumClass[ActorID].ElementCount Do Begin
-        If SpectrumInUse^[i]=1 Then Begin
+    for i := 1 to SpectrumClass[ActorID].ElementCount do
+    begin
+        if SpectrumInUse^[i] = 1 then
+        begin
             SpectrumClass[ActorID].Active := i;
             pSpectrum := SpectrumClass[ActorID].GetActiveObj;
-            For j := 1 to pSpectrum.NumHarm Do Begin
-                AddFrequency(FreqList, NumFreq, MaxFreq, pSpectrum.HarmArray^[j]*ActiveCircuit[ActorID].Fundamental);
-            End;
-        End;
-    End;
+            for j := 1 to pSpectrum.NumHarm do
+            begin
+                AddFrequency(FreqList, NumFreq, MaxFreq, pSpectrum.HarmArray^[j] * ActiveCircuit[ActorID].Fundamental);
+            end;
+        end;
+    end;
 
     ReallocMem(SpectrumInUse, 0);
 
 
-End;
+end;
 
 
 //= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-FUNCTION  SolveHarmonic(ActorID: integer):Integer;
+function SolveHarmonic(ActorID: Integer): Integer;
 
-Var
-   FrequencyList :pDoubleArray;
-   i, NFreq:Integer;
+var
+    FrequencyList: pDoubleArray;
+    i, NFreq: Integer;
 
-Begin
-   Result := 0;
+begin
+    Result := 0;
 
-   FrequencyList := NIL;   // Set up for Reallocmem
+    FrequencyList := NIL;   // Set up for Reallocmem
 {   ShowPctProgress ( 0, ActorID);
    ProgressCaption( 'Performing Harmonic Solution', ActorID);    }
 
-   With ActiveCircuit[ActorID], ActiveCircuit[ActorID].solution Do
-   Begin
-     Try
-     
-       IF Frequency <> Fundamental Then Begin     // Last solution was something other than fundamental
-           Frequency := Fundamental;
-           IF Not RetrieveSavedVoltages THEN Exit;  {Get Saved fundamental frequency solution}
-       End;
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].solution do
+    begin
+        try
 
-       MonitorClass[ActorID].SampleAll(ActorID);   // Store the fundamental frequency in the monitors
+            if Frequency <> Fundamental then
+            begin     // Last solution was something other than fundamental
+                Frequency := Fundamental;
+                if not RetrieveSavedVoltages then
+                    Exit;  {Get Saved fundamental frequency solution}
+            end;
+
+            MonitorClass[ActorID].SampleAll(ActorID);   // Store the fundamental frequency in the monitors
 
        { Get the list of Harmonic Frequencies to solve at}
-       IF DoAllHarmonics THEN CollectAllFrequencies(FrequencyList, NFreq, ActorID)   // Allocates FrequencyList
-       ELSE Begin
-                Reallocmem(FrequencyList, Sizeof(FrequencyList^[1])*HarmonicListSize);
+            if DoAllHarmonics then
+                CollectAllFrequencies(FrequencyList, NFreq, ActorID)   // Allocates FrequencyList
+            else
+            begin
+                Reallocmem(FrequencyList, Sizeof(FrequencyList^[1]) * HarmonicListSize);
                 NFreq := HarmonicListSize;
-                For i := 1 to NFreq Do FrequencyList^[i] := Fundamental * HarmonicList^[i];
-            End;
+                for i := 1 to NFreq do
+                    FrequencyList^[i] := Fundamental * HarmonicList^[i];
+            end;
 
-       FOR i := 1 to NFreq Do Begin
+            for i := 1 to NFreq do
+            begin
 
-           Frequency := FrequencyList^[i];
-           If Abs(Harmonic - 1.0) > EPSILON THEN Begin    // Skip fundamental
+                Frequency := FrequencyList^[i];
+                if Abs(Harmonic - 1.0) > EPSILON then
+                begin    // Skip fundamental
 {               ProgressCaption ( 'Solving at Frequency = ' + Format('%-g', [Frequency]), ActorID);
                ShowPctProgress ( Round((100.0*i)/Nfreq), ActorID);}
-              ActorPctProgress[ActorID] :=  Round((100.0*i)/Nfreq);
-               SolveDirect(ActorID);
-               MonitorClass[ActorID].SampleAll(ActorID);
+                    ActorPctProgress[ActorID] := Round((100.0 * i) / Nfreq);
+                    SolveDirect(ActorID);
+                    MonitorClass[ActorID].SampleAll(ActorID);
                // Storage devices are assumed to stay the same since there is no time variation in this mode
-           End;
+                end;
 
-       End; {FOR}
+            end; {FOR}
 
 {       ShowPctProgress ( 100, ActorID);
        ProgressCaption ( 'Done.',ActorID);    }
-     Finally
+        finally
 //       ProgressHide(ActorID);
-       MonitorClass[ActorID].SaveAll(ActorID);
-       ReallocMem(FrequencyList, 0);
-     End;
+            MonitorClass[ActorID].SaveAll(ActorID);
+            ReallocMem(FrequencyList, 0);
+        end;
      // Now should have all we need to make a short circuit report
 
-   End;
+    end;
 
-End;
+end;
 //========================================================================================
-FUNCTION SolveHarmTime(ActorID: integer):Integer;     // It is based in SolveGeneralTime routine
+function SolveHarmTime(ActorID: Integer): Integer;     // It is based in SolveGeneralTime routine
 
-Begin
-   Result := 0;
+begin
+    Result := 0;
 
-   WITH ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution Do
-   Begin
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].Solution do
+    begin
         IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
-          IF Not SolutionAbort Then With DynaVars Do
-          Begin
+        if not SolutionAbort then
+            with DynaVars do
+            begin
               {Compute basic multiplier from Default loadshape to use in generator dispatch, if any}
                 DefaultHourMult := DefaultDailyShapeObj.getmult(dblHour);
 
                 SolveSnap(ActorID);
           //      Increment_time;  // This function is handeled from SolveHarmonics (04-10-2013)
-          End;
-    End;
-End;
+            end;
+    end;
+end;
 //=============================================================================
-FUNCTION SolveHarmonicT(ActorID: integer):Integer;
-Var
-    FrequencyList :pDoubleArray;
-   i, NFreq:Integer;
+function SolveHarmonicT(ActorID: Integer): Integer;
+var
+    FrequencyList: pDoubleArray;
+    i, NFreq: Integer;
 
-Begin
-   Result := 0;
+begin
+    Result := 0;
 
-   FrequencyList := NIL;   // Set up for Reallocmem
+    FrequencyList := NIL;   // Set up for Reallocmem
 
-   With ActiveCircuit[ActorID], ActiveCircuit[ActorID].solution Do
-   Begin
-     IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
-     Try
-        IF Frequency <> Fundamental Then Begin     // Last solution was something other than fundamental
-           Frequency := Fundamental;
-           IF Not RetrieveSavedVoltages THEN Exit;  {Get Saved fundamental frequency solution}
-       End;
+    with ActiveCircuit[ActorID], ActiveCircuit[ActorID].solution do
+    begin
+        IntervalHrs := DynaVars.h / 3600.0;  // needed for energy meters and storage devices
+        try
+            if Frequency <> Fundamental then
+            begin     // Last solution was something other than fundamental
+                Frequency := Fundamental;
+                if not RetrieveSavedVoltages then
+                    Exit;  {Get Saved fundamental frequency solution}
+            end;
 //     DefaultHourMult := DefaultDailyShapeObj.getmult(DynaVars.dblHour);
 //     IF Load_Changed THEN Begin    //Added to update the current sources of all frequencies any time
             InitializeForHarmonics(ActorID);  //the value of a load changes in a proportional way
 //            Load_Changed:=FALSE;     // Added 05 dec 2013 - D. Montenegro
 //     End;
-       SolveSnap(ActorID);
-       MonitorClass[ActorID].SampleAll(ActorID);   // Store the fundamental frequency in the monitors
+            SolveSnap(ActorID);
+            MonitorClass[ActorID].SampleAll(ActorID);   // Store the fundamental frequency in the monitors
        { Get the list of Harmonic Frequencies to solve at}
-       IF DoAllHarmonics THEN CollectAllFrequencies(FrequencyList, NFreq, ActorID)   // Allocates FrequencyList
-       ELSE Begin
-                Reallocmem(FrequencyList, Sizeof(FrequencyList^[1])*HarmonicListSize);
+            if DoAllHarmonics then
+                CollectAllFrequencies(FrequencyList, NFreq, ActorID)   // Allocates FrequencyList
+            else
+            begin
+                Reallocmem(FrequencyList, Sizeof(FrequencyList^[1]) * HarmonicListSize);
                 NFreq := HarmonicListSize;
-                For i := 1 to NFreq Do FrequencyList^[i] := Fundamental * HarmonicList^[i];
-            End;
+                for i := 1 to NFreq do
+                    FrequencyList^[i] := Fundamental * HarmonicList^[i];
+            end;
 
-       FOR i := 1 to NFreq Do Begin
+            for i := 1 to NFreq do
+            begin
 
-           Frequency := FrequencyList^[i];
-           If Abs(Harmonic - 1.0) > EPSILON THEN Begin    // Skip fundamental
+                Frequency := FrequencyList^[i];
+                if Abs(Harmonic - 1.0) > EPSILON then
+                begin    // Skip fundamental
 //               DefaultHourMult := DefaultDailyShapeObj.getmult(DynaVars.dblHour);
-               SolveHarmTime(ActorID);
-               MonitorClass[ActorID].SampleAll(ActorID);
-               EndOfTimeStepCleanup(ActorID);
+                    SolveHarmTime(ActorID);
+                    MonitorClass[ActorID].SampleAll(ActorID);
+                    EndOfTimeStepCleanup(ActorID);
               // Storage devices are assumed to stay the same since there is no time variation in this mode  (Not necessarelly now)
-           End;
-       End; {FOR}
-     Increment_time;
-     Finally
-       MonitorClass[ActorID].SaveAll(ActorID);
-       ReallocMem(FrequencyList, 0);
-     End;
-  End;
+                end;
+            end; {FOR}
+            Increment_time;
+        finally
+            MonitorClass[ActorID].SaveAll(ActorID);
+            ReallocMem(FrequencyList, 0);
+        end;
+    end;
 
-End;
+end;
 
 initialization
 
-    IsMultiThread :=  True;
+    IsMultiThread := TRUE;
 
 end.

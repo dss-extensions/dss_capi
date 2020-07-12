@@ -11,42 +11,42 @@ library IndMach012a;
   using PChar or ShortString parameters. }
 
 uses
-  SysUtils,
-  Classes,
-  MainUnit in 'MainUnit.pas',
-  Arraydef in '..\Shared\Arraydef.pas',
-  Dynamics in '..\Shared\Dynamics.pas',
-  Command in '..\Shared\Command.pas',
-  mathutil in '..\Shared\mathutil.pas',
-  HashList in '..\Shared\HashList.pas',
-  Ucmatrix in '..\Shared\Ucmatrix.pas',
-  IndMach012Model in 'IndMach012Model.pas',
-  RPN in '..\Parser\RPN.pas',
-  Ucomplex in '..\Shared\Ucomplex.pas',
-  ParserDel in 'ParserDel.pas',
-  GeneratorVars in '..\PCElements\GeneratorVars.pas';
+    SysUtils,
+    Classes,
+    MainUnit in 'MainUnit.pas',
+    Arraydef in '..\Shared\Arraydef.pas',
+    Dynamics in '..\Shared\Dynamics.pas',
+    Command in '..\Shared\Command.pas',
+    mathutil in '..\Shared\mathutil.pas',
+    HashList in '..\Shared\HashList.pas',
+    Ucmatrix in '..\Shared\Ucmatrix.pas',
+    IndMach012Model in 'IndMach012Model.pas',
+    RPN in '..\Parser\RPN.pas',
+    Ucomplex in '..\Shared\Ucomplex.pas',
+    ParserDel in 'ParserDel.pas',
+    GeneratorVars in '..\PCElements\GeneratorVars.pas';
 
 // Special version of ParserDel
 
-Exports
+exports
 
-     New,
-     Delete,
-     Select,
+    New,
+    Delete,
+    Select,
 
-     Init,
-     Calc,
-     Integrate,
-     Save,
-     Restore,
-     Edit,
-     UpdateModel,
+    Init,
+    Calc,
+    Integrate,
+    Save,
+    Restore,
+    Edit,
+    UpdateModel,
 
-     NumVars,
-     GetAllVars,
-     GetVariable,
-     SetVariable,
-     GetVarName;
+    NumVars,
+    GetAllVars,
+    GetVariable,
+    SetVariable,
+    GetVarName;
 
 {$R *.RES}
 

@@ -1,4 +1,5 @@
 unit ImplMeters;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -14,654 +15,706 @@ unit ImplMeters;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSEngine_TLB, StdVcl;
+    ComObj,
+    ActiveX,
+    OpenDSSEngine_TLB,
+    StdVcl;
 
 type
-  TMeters = class(TAutoObject, IMeters)
-  protected
-    function Get_AllNames: OleVariant; safecall;
-    function Get_First: Integer; safecall;
-    function Get_Name: WideString; safecall;
-    function Get_Next: Integer; safecall;
-    function Get_RegisterNames: OleVariant; safecall;
-    function Get_RegisterValues: OleVariant; safecall;
-    procedure Reset; safecall;
-    procedure ResetAll; safecall;
-    procedure Sample; safecall;
-    procedure Save; safecall;
-    procedure Set_Name(const Value: WideString); safecall;
-    function Get_Totals: OleVariant; safecall;
-    function Get_Peakcurrent: OleVariant; safecall;
-    procedure Set_Peakcurrent(Value: OleVariant); safecall;
-    function Get_CalcCurrent: OleVariant; safecall;
-    procedure Set_CalcCurrent(Value: OleVariant); safecall;
-    function Get_AllocFactors: OleVariant; safecall;
-    procedure Set_AllocFactors(Value: OleVariant); safecall;
-    function Get_MeteredElement: WideString; safecall;
-    function Get_MeteredTerminal: Integer; safecall;
-    procedure Set_MeteredElement(const Value: WideString); safecall;
-    procedure Set_MeteredTerminal(Value: Integer); safecall;
-    function Get_DIFilesAreOpen: WordBool; safecall;
-    procedure CloseAllDIFiles; safecall;
-    procedure OpenAllDIFiles; safecall;
-    procedure SampleAll; safecall;
-    procedure SaveAll; safecall;
-    function Get_AllEndElements: OleVariant; safecall;
-    function Get_CountEndElements: Integer; safecall;
-    function Get_Count: Integer; safecall;
-    function Get_AllBranchesInZone: OleVariant; safecall;
-    function Get_CountBranches: Integer; safecall;
-    function Get_SAIFI: Double; safecall;
-    function Get_SequenceIndex: Integer; safecall;
-    procedure Set_SequenceIndex(Value: Integer); safecall;
-    function Get_SAIFIKW: Double; safecall;
-    procedure DoReliabilityCalc(AssumeRestoration: WordBool); safecall;
-    function Get_SeqListSize: Integer; safecall;
-    function Get_TotalCustomers: Integer; safecall;
-    function Get_SAIDI: Double; safecall;
-    function Get_CustInterrupts: Double; safecall;
-    function Get_NumSections: Integer; safecall;
-    procedure SetActiveSection(SectIdx: Integer); safecall;
-    function Get_AvgRepairTime: Double; safecall;
-    function Get_FaultRateXRepairHrs: Double; safecall;
-    function Get_NumSectionBranches: Integer; safecall;
-    function Get_NumSectionCustomers: Integer; safecall;
-    function Get_OCPDeviceType: Integer; safecall;
-    function Get_SumBranchFltRates: Double; safecall;
-    function Get_SectSeqIdx: Integer; safecall;
-    function Get_SectTotalCust: Integer; safecall;
+    TMeters = class(TAutoObject, IMeters)
+    PROTECTED
+        function Get_AllNames: Olevariant; SAFECALL;
+        function Get_First: Integer; SAFECALL;
+        function Get_Name: Widestring; SAFECALL;
+        function Get_Next: Integer; SAFECALL;
+        function Get_RegisterNames: Olevariant; SAFECALL;
+        function Get_RegisterValues: Olevariant; SAFECALL;
+        procedure Reset; SAFECALL;
+        procedure ResetAll; SAFECALL;
+        procedure Sample; SAFECALL;
+        procedure Save; SAFECALL;
+        procedure Set_Name(const Value: Widestring); SAFECALL;
+        function Get_Totals: Olevariant; SAFECALL;
+        function Get_Peakcurrent: Olevariant; SAFECALL;
+        procedure Set_Peakcurrent(Value: Olevariant); SAFECALL;
+        function Get_CalcCurrent: Olevariant; SAFECALL;
+        procedure Set_CalcCurrent(Value: Olevariant); SAFECALL;
+        function Get_AllocFactors: Olevariant; SAFECALL;
+        procedure Set_AllocFactors(Value: Olevariant); SAFECALL;
+        function Get_MeteredElement: Widestring; SAFECALL;
+        function Get_MeteredTerminal: Integer; SAFECALL;
+        procedure Set_MeteredElement(const Value: Widestring); SAFECALL;
+        procedure Set_MeteredTerminal(Value: Integer); SAFECALL;
+        function Get_DIFilesAreOpen: Wordbool; SAFECALL;
+        procedure CloseAllDIFiles; SAFECALL;
+        procedure OpenAllDIFiles; SAFECALL;
+        procedure SampleAll; SAFECALL;
+        procedure SaveAll; SAFECALL;
+        function Get_AllEndElements: Olevariant; SAFECALL;
+        function Get_CountEndElements: Integer; SAFECALL;
+        function Get_Count: Integer; SAFECALL;
+        function Get_AllBranchesInZone: Olevariant; SAFECALL;
+        function Get_CountBranches: Integer; SAFECALL;
+        function Get_SAIFI: Double; SAFECALL;
+        function Get_SequenceIndex: Integer; SAFECALL;
+        procedure Set_SequenceIndex(Value: Integer); SAFECALL;
+        function Get_SAIFIKW: Double; SAFECALL;
+        procedure DoReliabilityCalc(AssumeRestoration: Wordbool); SAFECALL;
+        function Get_SeqListSize: Integer; SAFECALL;
+        function Get_TotalCustomers: Integer; SAFECALL;
+        function Get_SAIDI: Double; SAFECALL;
+        function Get_CustInterrupts: Double; SAFECALL;
+        function Get_NumSections: Integer; SAFECALL;
+        procedure SetActiveSection(SectIdx: Integer); SAFECALL;
+        function Get_AvgRepairTime: Double; SAFECALL;
+        function Get_FaultRateXRepairHrs: Double; SAFECALL;
+        function Get_NumSectionBranches: Integer; SAFECALL;
+        function Get_NumSectionCustomers: Integer; SAFECALL;
+        function Get_OCPDeviceType: Integer; SAFECALL;
+        function Get_SumBranchFltRates: Double; SAFECALL;
+        function Get_SectSeqIdx: Integer; SAFECALL;
+        function Get_SectTotalCust: Integer; SAFECALL;
     { Protected declarations }
-  end;
+    end;
 
 implementation
 
-uses ComServ,
-     EnergyMeter,
-     DSSGlobals,
-     SysUtils,
-     ucomplex,
-     Variants,
-     CktElement,
-     PDElement,
-     CktTree;
+uses
+    ComServ,
+    EnergyMeter,
+    DSSGlobals,
+    SysUtils,
+    ucomplex,
+    Variants,
+    CktElement,
+    PDElement,
+    CktTree;
 
-function TMeters.Get_AllNames: OleVariant;
-Var
-  MeterElem:TEnergyMeterObj;
-  k:Integer;
+function TMeters.Get_AllNames: Olevariant;
+var
+    MeterElem: TEnergyMeterObj;
+    k: Integer;
 
-Begin
+begin
     Result := VarArrayCreate([0, 0], varOleStr);
     Result[0] := 'NONE';
-    IF ActiveCircuit <> Nil THEN
-     WITH ActiveCircuit DO
-     If EnergyMeters.ListSize>0 Then
-     Begin
-       VarArrayRedim(Result, EnergyMeters.ListSize-1);
-       k:=0;
-       MeterElem := EnergyMeters.First;
-       WHILE MeterElem<>Nil DO
-       Begin
-          Result[k] := MeterElem.Name;
-          Inc(k);
-          MeterElem := EnergyMeters.Next;
-       End;
-     End;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+            if EnergyMeters.ListSize > 0 then
+            begin
+                VarArrayRedim(Result, EnergyMeters.ListSize - 1);
+                k := 0;
+                MeterElem := EnergyMeters.First;
+                while MeterElem <> NIL do
+                begin
+                    Result[k] := MeterElem.Name;
+                    Inc(k);
+                    MeterElem := EnergyMeters.Next;
+                end;
+            end;
 
 end;
 
 function TMeters.Get_First: Integer;
-Var
-   pMeter:TEnergyMeterObj;
+var
+    pMeter: TEnergyMeterObj;
 
-Begin
+begin
 
-   Result := 0;
-   If ActiveCircuit <> Nil Then
-   With ActiveCircuit Do
-   Begin
-        pMeter := EnergyMeters.First;
-        If pMeter <> Nil Then
-        Begin
-          Repeat
-            If pMeter.Enabled
-            Then Begin
-              ActiveCktElement := pMeter;
-              Result := 1;
-            End
-            Else  pMeter := EnergyMeters.Next;
-          Until (Result = 1) or (pMeter = nil);
-        End
-        Else
-            Result := 0;  // signify no more
-   End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+        begin
+            pMeter := EnergyMeters.First;
+            if pMeter <> NIL then
+            begin
+                repeat
+                    if pMeter.Enabled then
+                    begin
+                        ActiveCktElement := pMeter;
+                        Result := 1;
+                    end
+                    else
+                        pMeter := EnergyMeters.Next;
+                until (Result = 1) or (pMeter = NIL);
+            end
+            else
+                Result := 0;  // signify no more
+        end;
 
 end;
 
-function TMeters.Get_Name: WideString;
-Var
-   pMeterObj:TEnergyMeterObj;
+function TMeters.Get_Name: Widestring;
+var
+    pMeterObj: TEnergyMeterObj;
 
-Begin
+begin
 
-   If ActiveCircuit <> Nil Then
-   Begin
+    if ActiveCircuit <> NIL then
+    begin
         pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        If pMeterObj <> Nil Then   Result := pMeterObj.name;
-   End;
+        if pMeterObj <> NIL then
+            Result := pMeterObj.name;
+    end;
 end;
 
 function TMeters.Get_Next: Integer;
 
-Var
-   pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 
-Begin
+begin
 
-   Result := 0;
-   If ActiveCircuit <> Nil Then
-   Begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
         pMeterObj := ActiveCircuit.EnergyMeters.next;
-        If pMeterObj <> Nil Then
-        Begin
-          Repeat   // Find an Enabled Meter
-            If pMeterObj.Enabled  Then Begin
-              ActiveCircuit.ActiveCktElement := pMeterObj;
-              Result := ActiveCircuit.EnergyMeters.ActiveIndex;
-            End
-            Else  pMeterObj := ActiveCircuit.EnergyMeters.next;
-          Until (Result > 0) or (pMeterObj = nil);
-        End
-        Else
+        if pMeterObj <> NIL then
+        begin
+            repeat   // Find an Enabled Meter
+                if pMeterObj.Enabled then
+                begin
+                    ActiveCircuit.ActiveCktElement := pMeterObj;
+                    Result := ActiveCircuit.EnergyMeters.ActiveIndex;
+                end
+                else
+                    pMeterObj := ActiveCircuit.EnergyMeters.next;
+            until (Result > 0) or (pMeterObj = NIL);
+        end
+        else
             Result := 0;  // signify no more
-   End;
+    end;
 
 end;
 
-function TMeters.Get_RegisterNames: OleVariant;
+function TMeters.Get_RegisterNames: Olevariant;
 
-Var
-    pMeterObj :TEnergyMeterObj;
-    k :integer;
+var
+    pMeterObj: TEnergyMeterObj;
+    k: Integer;
 
-Begin
+begin
     pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-    if Assigned(pMeterObj) then  Begin
-      Result := VarArrayCreate([0, NumEMRegisters - 1], varOleStr);
-      For k := 0 to  NumEMRegisters - 1  Do Begin
-         Result[k] := pMeterObj.RegisterNames[k + 1];
-      End;
-    End
-    Else Result := VarArrayCreate([0, 0], varOleStr); // null array
+    if Assigned(pMeterObj) then
+    begin
+        Result := VarArrayCreate([0, NumEMRegisters - 1], varOleStr);
+        for k := 0 to NumEMRegisters - 1 do
+        begin
+            Result[k] := pMeterObj.RegisterNames[k + 1];
+        end;
+    end
+    else
+        Result := VarArrayCreate([0, 0], varOleStr); // null array
 end;
 
-function TMeters.Get_RegisterValues: OleVariant;
+function TMeters.Get_RegisterValues: Olevariant;
 
-Var
-   pMeterObj :TEnergyMeterObj;
-   k         :Integer;
-Begin
+var
+    pMeterObj: TEnergyMeterObj;
+    k: Integer;
+begin
 
 // First make sure active circuit element is a meter
-   IF ActiveCircuit <> Nil THEN
-   Begin
-        pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        If pMeterObj <> Nil Then
-        Begin
-            Result := VarArrayCreate([0, numEMRegisters-1], varDouble);
-            FOR k := 0 to numEMRegisters-1 DO
-            Begin
-                Result[k] := pMeterObj.Registers[k+1];
-            End;
-        End
-        Else
+    if ActiveCircuit <> NIL then
+    begin
+        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        if pMeterObj <> NIL then
+        begin
+            Result := VarArrayCreate([0, numEMRegisters - 1], varDouble);
+            for k := 0 to numEMRegisters - 1 do
+            begin
+                Result[k] := pMeterObj.Registers[k + 1];
+            end;
+        end
+        else
             Result := VarArrayCreate([0, 0], varDouble);
-   End
-   ELSE Begin
+    end
+    else
+    begin
         Result := VarArrayCreate([0, 0], varDouble);
-   End;
+    end;
 
 end;
 
 procedure TMeters.Reset;
-Var
-   pMeter:TEnergyMeterObj;
+var
+    pMeter: TEnergyMeterObj;
 
-Begin
+begin
 
-   If ActiveCircuit <> Nil Then
-   Begin
+    if ActiveCircuit <> NIL then
+    begin
         pMeter := ActiveCircuit.EnergyMeters.Active;
-        If pMeter <> Nil Then pMeter.ResetRegisters;
-   End;
+        if pMeter <> NIL then
+            pMeter.ResetRegisters;
+    end;
 
 end;
 
 procedure TMeters.ResetAll;
 
-Begin
-     IF ActiveCircuit <> Nil THEN Begin
+begin
+    if ActiveCircuit <> NIL then
+    begin
         EnergyMeterClass.ResetAll;
-     End;
+    end;
 end;
 
 procedure TMeters.Sample;
 
-Var
-   pMeter:TEnergyMeterObj;
+var
+    pMeter: TEnergyMeterObj;
 
-Begin
+begin
 
-   If ActiveCircuit <> Nil Then
-   Begin
+    if ActiveCircuit <> NIL then
+    begin
         pMeter := ActiveCircuit.EnergyMeters.Active;
-        If pMeter <> Nil Then
-          pMeter.TakeSample;
-   End;
+        if pMeter <> NIL then
+            pMeter.TakeSample;
+    end;
 
 end;
 
 procedure TMeters.Save;
 
-Var
-   pMeter:TEnergyMeterObj;
+var
+    pMeter: TEnergyMeterObj;
 
-Begin
+begin
 
-   If ActiveCircuit <> Nil Then
-   Begin
+    if ActiveCircuit <> NIL then
+    begin
         pMeter := ActiveCircuit.EnergyMeters.Active;
-        If pMeter <> Nil Then
-          pMeter.SaveRegisters;
-   End;
+        if pMeter <> NIL then
+            pMeter.SaveRegisters;
+    end;
 
 end;
 
-procedure TMeters.Set_Name(const Value: WideString);
-VAR
-    activesave :integer;
-    pMeterObj:TEnergyMeterObj;
+procedure TMeters.Set_Name(const Value: Widestring);
+var
+    activesave: Integer;
+    pMeterObj: TEnergyMeterObj;
     TestStr: String;
-    Found :Boolean;
-Begin
+    Found: Boolean;
+begin
 
 
-  IF ActiveCircuit <> NIL
-  THEN Begin      // Search list of EnergyMeters in active circuit for name
-       WITH ActiveCircuit.EnergyMeters DO
-         Begin
-             TestStr := Value;  // Convert to Pascal String for testing
-             Found := FALSE;
-             ActiveSave := ActiveIndex;
-             pMeterObj := First;
-             While pMeterObj <> NIL Do
-             Begin
-                IF (CompareText(pMeterObj.Name, TestStr) = 0)
-                THEN Begin
+    if ActiveCircuit <> NIL then
+    begin      // Search list of EnergyMeters in active circuit for name
+        with ActiveCircuit.EnergyMeters do
+        begin
+            TestStr := Value;  // Convert to Pascal String for testing
+            Found := FALSE;
+            ActiveSave := ActiveIndex;
+            pMeterObj := First;
+            while pMeterObj <> NIL do
+            begin
+                if (CompareText(pMeterObj.Name, TestStr) = 0) then
+                begin
                     ActiveCircuit.ActiveCktElement := pMeterObj;
                     Found := TRUE;
                     Break;
-                End;
+                end;
                 pMeterObj := Next;
-             End;
-             IF NOT Found
-             THEN Begin
-                 DoSimpleMsg('EnergyMeter "'+TestStr+'" Not Found in Active Circuit.', 5005);
-                 pMeterObj := Get(ActiveSave);    // Restore active Meter
-                 ActiveCircuit.ActiveCktElement := pMeterObj;
-             End;
-         End;
-  End;
+            end;
+            if not Found then
+            begin
+                DoSimpleMsg('EnergyMeter "' + TestStr + '" Not Found in Active Circuit.', 5005);
+                pMeterObj := Get(ActiveSave);    // Restore active Meter
+                ActiveCircuit.ActiveCktElement := pMeterObj;
+            end;
+        end;
+    end;
 
 end;
 
-function TMeters.Get_Totals: OleVariant;
-Var
-   i:Integer;
-   
+function TMeters.Get_Totals: Olevariant;
+var
+    i: Integer;
+
 begin
 
-     If ActiveCircuit <> Nil Then With ActiveCircuit Do Begin
-          TotalizeMeters;
-          Result := VarArrayCreate([0, NumEMRegisters-1], varDouble);
-          For i := 1 to NumEMregisters Do Result[i-1] := RegisterTotals[i];
-     End
-     Else Begin
-          Result := VarArrayCreate([0, 0], varDouble);
-     End;
-
-end;
-
-function TMeters.Get_Peakcurrent: OleVariant;
-Var
-   pMeterObj :TEnergyMeterObj;
-   k         :Integer;
-Begin
-
-// First make sure active circuit element is a meter
-   IF ActiveCircuit <> Nil THEN
-   Begin
-        pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        If pMeterObj <> Nil Then
-        Begin
-            Result := VarArrayCreate([0, pMeterObj.NPhases -1], varDouble);
-            FOR k := 0 to pMeterObj.NPhases-1 DO  Result[k] := pMeterObj.SensorCurrent^[k+1];
-        End
-        Else Result := VarArrayCreate([0, 0], varDouble);
-   End
-   ELSE Begin
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+        begin
+            TotalizeMeters;
+            Result := VarArrayCreate([0, NumEMRegisters - 1], varDouble);
+            for i := 1 to NumEMregisters do
+                Result[i - 1] := RegisterTotals[i];
+        end
+    else
+    begin
         Result := VarArrayCreate([0, 0], varDouble);
-   End;
+    end;
 
 end;
 
-procedure TMeters.Set_Peakcurrent(Value: OleVariant);
-Var
-   pMeterObj :TEnergyMeterObj;
-   k, i      :Integer;
-Begin
+function TMeters.Get_Peakcurrent: Olevariant;
+var
+    pMeterObj: TEnergyMeterObj;
+    k: Integer;
+begin
 
 // First make sure active circuit element is a meter
-   IF ActiveCircuit <> Nil THEN
-   Begin
-        pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        If pMeterObj <> Nil Then
-        Begin
-            k := VarArrayLowBound(Value, 1);   // get starting index for Value array
-            FOR i := 1 to pMeterObj.NPhases DO Begin
-               pMeterObj.SensorCurrent^[i] := Value[k];
-               inc(k);
-            End;
-        End;
-   End;
-
-end;
-
-function TMeters.Get_CalcCurrent: OleVariant;
-Var
-   pMeterObj :TEnergyMeterObj;
-   k         :Integer;
-Begin
-
-// First make sure active circuit element is a meter
-   IF ActiveCircuit <> Nil THEN
-   Begin
-        pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        If pMeterObj <> Nil Then
-        Begin
-            Result := VarArrayCreate([0, pMeterObj.NPhases -1], varDouble);
-            FOR k := 0 to pMeterObj.NPhases-1 DO  Result[k] := Cabs(pMeterObj.CalculatedCurrent^[k+1]);
-        End
-        Else Result := VarArrayCreate([0, 0], varDouble);
-   End
-   ELSE Begin
+    if ActiveCircuit <> NIL then
+    begin
+        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        if pMeterObj <> NIL then
+        begin
+            Result := VarArrayCreate([0, pMeterObj.NPhases - 1], varDouble);
+            for k := 0 to pMeterObj.NPhases - 1 do
+                Result[k] := pMeterObj.SensorCurrent^[k + 1];
+        end
+        else
+            Result := VarArrayCreate([0, 0], varDouble);
+    end
+    else
+    begin
         Result := VarArrayCreate([0, 0], varDouble);
-   End;
+    end;
 
 end;
 
-procedure TMeters.Set_CalcCurrent(Value: OleVariant);
-Var
-   pMeterObj :TEnergyMeterObj;
-   k, i      :Integer;
-Begin
+procedure TMeters.Set_Peakcurrent(Value: Olevariant);
+var
+    pMeterObj: TEnergyMeterObj;
+    k, i: Integer;
+begin
 
 // First make sure active circuit element is a meter
-   IF ActiveCircuit <> Nil THEN
-   Begin
-        pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        If pMeterObj <> Nil Then
-        Begin
+    if ActiveCircuit <> NIL then
+    begin
+        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        if pMeterObj <> NIL then
+        begin
             k := VarArrayLowBound(Value, 1);   // get starting index for Value array
-            FOR i := 1 to pMeterObj.NPhases DO Begin
-               pMeterObj.CalculatedCurrent^[i] := cmplx(Value[k], 0.0);   // Just set the real part
-               inc(k);
-            End;
-        End;
-   End;
+            for i := 1 to pMeterObj.NPhases do
+            begin
+                pMeterObj.SensorCurrent^[i] := Value[k];
+                inc(k);
+            end;
+        end;
+    end;
 
 end;
 
-function TMeters.Get_AllocFactors: OleVariant;
-Var
-   pMeterObj :TEnergyMeterObj;
-   k         :Integer;
-Begin
+function TMeters.Get_CalcCurrent: Olevariant;
+var
+    pMeterObj: TEnergyMeterObj;
+    k: Integer;
+begin
 
 // First make sure active circuit element is a meter
-   IF ActiveCircuit <> Nil THEN
-   Begin
-        pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        If pMeterObj <> Nil Then
-        Begin
-            Result := VarArrayCreate([0, pMeterObj.NPhases -1], varDouble);
-            FOR k := 0 to pMeterObj.NPhases-1 DO  Result[k] := pMeterObj.PhsAllocationFactor^[k+1];
-        End
-        Else Result := VarArrayCreate([0, 0], varDouble);
-   End
-   ELSE Begin
+    if ActiveCircuit <> NIL then
+    begin
+        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        if pMeterObj <> NIL then
+        begin
+            Result := VarArrayCreate([0, pMeterObj.NPhases - 1], varDouble);
+            for k := 0 to pMeterObj.NPhases - 1 do
+                Result[k] := Cabs(pMeterObj.CalculatedCurrent^[k + 1]);
+        end
+        else
+            Result := VarArrayCreate([0, 0], varDouble);
+    end
+    else
+    begin
         Result := VarArrayCreate([0, 0], varDouble);
-   End;
+    end;
 
 end;
 
-procedure TMeters.Set_AllocFactors(Value: OleVariant);
-Var
-   pMeterObj :TEnergyMeterObj;
-   k, i      :Integer;
-Begin
+procedure TMeters.Set_CalcCurrent(Value: Olevariant);
+var
+    pMeterObj: TEnergyMeterObj;
+    k, i: Integer;
+begin
 
 // First make sure active circuit element is a meter
-   IF ActiveCircuit <> Nil THEN
-   Begin
-        pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        If pMeterObj <> Nil Then
-        Begin
+    if ActiveCircuit <> NIL then
+    begin
+        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        if pMeterObj <> NIL then
+        begin
             k := VarArrayLowBound(Value, 1);   // get starting index for Value array
-            FOR i := 1 to pMeterObj.NPhases DO Begin
-               pMeterObj.PhsAllocationFactor^[i] := Value[k];   // Just set the real part
-               inc(k);
-            End;
-        End;
-   End;
+            for i := 1 to pMeterObj.NPhases do
+            begin
+                pMeterObj.CalculatedCurrent^[i] := cmplx(Value[k], 0.0);   // Just set the real part
+                inc(k);
+            end;
+        end;
+    end;
 
 end;
 
-function TMeters.Get_MeteredElement: WideString;
-Var
-   pMeterObj :TEnergyMeterObj;
-Begin
+function TMeters.Get_AllocFactors: Olevariant;
+var
+    pMeterObj: TEnergyMeterObj;
+    k: Integer;
+begin
 
 // First make sure active circuit element is a meter
-   IF ActiveCircuit <> Nil THEN
-   Begin
-        pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        If pMeterObj <> Nil Then
-        Begin
+    if ActiveCircuit <> NIL then
+    begin
+        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        if pMeterObj <> NIL then
+        begin
+            Result := VarArrayCreate([0, pMeterObj.NPhases - 1], varDouble);
+            for k := 0 to pMeterObj.NPhases - 1 do
+                Result[k] := pMeterObj.PhsAllocationFactor^[k + 1];
+        end
+        else
+            Result := VarArrayCreate([0, 0], varDouble);
+    end
+    else
+    begin
+        Result := VarArrayCreate([0, 0], varDouble);
+    end;
+
+end;
+
+procedure TMeters.Set_AllocFactors(Value: Olevariant);
+var
+    pMeterObj: TEnergyMeterObj;
+    k, i: Integer;
+begin
+
+// First make sure active circuit element is a meter
+    if ActiveCircuit <> NIL then
+    begin
+        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        if pMeterObj <> NIL then
+        begin
+            k := VarArrayLowBound(Value, 1);   // get starting index for Value array
+            for i := 1 to pMeterObj.NPhases do
+            begin
+                pMeterObj.PhsAllocationFactor^[i] := Value[k];   // Just set the real part
+                inc(k);
+            end;
+        end;
+    end;
+
+end;
+
+function TMeters.Get_MeteredElement: Widestring;
+var
+    pMeterObj: TEnergyMeterObj;
+begin
+
+// First make sure active circuit element is a meter
+    if ActiveCircuit <> NIL then
+    begin
+        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        if pMeterObj <> NIL then
+        begin
             Result := pMeterObj.ElementName;
-        End
-        Else Result := '';
-   End
-   ELSE Begin
+        end
+        else
+            Result := '';
+    end
+    else
+    begin
         Result := '';
-   End;
+    end;
 
 end;
 
 function TMeters.Get_MeteredTerminal: Integer;
-Var
-   pMeterObj :TEnergyMeterObj;
-Begin
+var
+    pMeterObj: TEnergyMeterObj;
+begin
 
 // First make sure active circuit element is a meter
-   IF ActiveCircuit <> Nil THEN
-     Begin
-          pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-          If pMeterObj <> Nil Then
-            Begin
-                Result := pMeterObj.MeteredTerminal;
-            End
-          Else Result := 0;
-     End
-   ELSE Begin
+    if ActiveCircuit <> NIL then
+    begin
+        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        if pMeterObj <> NIL then
+        begin
+            Result := pMeterObj.MeteredTerminal;
+        end
+        else
+            Result := 0;
+    end
+    else
+    begin
         Result := 0;
-   End;
+    end;
 
 end;
 
-procedure TMeters.Set_MeteredElement(const Value: WideString);
-Var
-   pMeterObj :TEnergyMeterObj;
-Begin
+procedure TMeters.Set_MeteredElement(const Value: Widestring);
+var
+    pMeterObj: TEnergyMeterObj;
+begin
 
 // First make sure active circuit element is a meter
-   IF ActiveCircuit <> Nil THEN
-   Begin
-        pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        If pMeterObj <> Nil Then
-        Begin
+    if ActiveCircuit <> NIL then
+    begin
+        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        if pMeterObj <> NIL then
+        begin
             pMeterObj.elementName := Value;
             pMeterObj.MeteredElementChanged := TRUE;
             pMeterObj.RecalcElementData;
-        End;
-   End;
+        end;
+    end;
 
 end;
 
 procedure TMeters.Set_MeteredTerminal(Value: Integer);
-Var
-   pMeterObj :TEnergyMeterObj;
-Begin
+var
+    pMeterObj: TEnergyMeterObj;
+begin
 
 // First make sure active circuit element is a meter
-   IF ActiveCircuit <> Nil THEN
-   Begin
-        pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        If pMeterObj <> Nil Then
-        Begin
+    if ActiveCircuit <> NIL then
+    begin
+        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        if pMeterObj <> NIL then
+        begin
             pMeterObj.MeteredTerminal := Value;
             pMeterObj.MeteredElementChanged := TRUE;
             pMeterObj.RecalcElementData;
-        End;
-   End;
+        end;
+    end;
 
 end;
 
-function TMeters.Get_DIFilesAreOpen: WordBool;
+function TMeters.Get_DIFilesAreOpen: Wordbool;
 begin
-     IF ActiveCircuit <> Nil THEN Begin
-            Result := DIFilesAreOpen;    // Global variable
-     End;
+    if ActiveCircuit <> NIL then
+    begin
+        Result := DIFilesAreOpen;    // Global variable
+    end;
 end;
 
 procedure TMeters.CloseAllDIFiles;
 begin
-     IF ActiveCircuit <> Nil THEN Begin
+    if ActiveCircuit <> NIL then
+    begin
         EnergyMeterClass.CloseAllDIFiles;
-     End;
+    end;
 end;
 
 procedure TMeters.OpenAllDIFiles;
 begin
-     IF ActiveCircuit <> Nil THEN Begin
+    if ActiveCircuit <> NIL then
+    begin
         EnergyMeterClass.OpenAllDIFiles;
-     End;
+    end;
 end;
 
 procedure TMeters.SampleAll;
 begin
-     IF ActiveCircuit <> Nil THEN Begin
+    if ActiveCircuit <> NIL then
+    begin
         EnergyMeterClass.SampleAll;
-     End;
+    end;
 end;
 
 procedure TMeters.SaveAll;
 begin
-     IF ActiveCircuit <> Nil THEN Begin
+    if ActiveCircuit <> NIL then
+    begin
         EnergyMeterClass.SaveAll;
-     End;
+    end;
 end;
 
-function TMeters.Get_AllEndElements: OleVariant;
-Var
-  pMeterObj :TEnergyMeterObj;
-  k, last:Integer;
-  elem : TDSSCktElement;
-  node : TCktTreeNode;
-Begin
-  Result := VarArrayCreate([0, 0], varOleStr);
-  IF ActiveCircuit <> Nil THEN WITH ActiveCircuit DO Begin
-    pMeterObj := EnergyMeters.Active;
-    if pMeterObj <> Nil then begin
-      last := pMeterObj.BranchList.ZoneEndsList.NumEnds - 1;
-      VarArrayRedim (Result, last);
-      for k := 0 to last do begin
-        pMeterObj.BranchList.ZoneEndsList.Get(k+1, node);
-        elem := node.CktObject;
-        Result[k] := Format ('%s.%s', [elem.ParentClass.Name, elem.Name]);
-      end;
-    end;
-  End;
+function TMeters.Get_AllEndElements: Olevariant;
+var
+    pMeterObj: TEnergyMeterObj;
+    k, last: Integer;
+    elem: TDSSCktElement;
+    node: TCktTreeNode;
+begin
+    Result := VarArrayCreate([0, 0], varOleStr);
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+        begin
+            pMeterObj := EnergyMeters.Active;
+            if pMeterObj <> NIL then
+            begin
+                last := pMeterObj.BranchList.ZoneEndsList.NumEnds - 1;
+                VarArrayRedim(Result, last);
+                for k := 0 to last do
+                begin
+                    pMeterObj.BranchList.ZoneEndsList.Get(k + 1, node);
+                    elem := node.CktObject;
+                    Result[k] := Format('%s.%s', [elem.ParentClass.Name, elem.Name]);
+                end;
+            end;
+        end;
 end;
 
 function TMeters.Get_CountEndElements: Integer;
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 begin
-  Result := 0;
-  if ActiveCircuit <> Nil then begin
-    pMeterObj :=  TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-    If pMeterObj <> Nil Then Begin
-      Result := pMeterObj.BranchList.ZoneEndsList.NumEnds;
-    End;
-  End;
+    Result := 0;
+    if ActiveCircuit <> NIL then
+    begin
+        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
+        if pMeterObj <> NIL then
+        begin
+            Result := pMeterObj.BranchList.ZoneEndsList.NumEnds;
+        end;
+    end;
 end;
 
 function TMeters.Get_Count: Integer;
 begin
-     If Assigned(ActiveCircuit) Then
-       Result := ActiveCircuit.EnergyMeters.ListSize;
+    if Assigned(ActiveCircuit) then
+        Result := ActiveCircuit.EnergyMeters.ListSize;
 end;
 
-function TMeters.Get_AllBranchesInZone: OleVariant;
-Var
-  pMeterObj   :TEnergyMeterObj;
-  k           :Integer;
-  BranchCount :Integer;
-  pElem       :TDSSCktElement;
-Begin
-  Result := VarArrayCreate([0, 0], varOleStr);
-  IF ActiveCircuit <> Nil THEN WITH ActiveCircuit DO Begin
-    pMeterObj := EnergyMeters.Active;
-    if pMeterObj <> Nil then begin
+function TMeters.Get_AllBranchesInZone: Olevariant;
+var
+    pMeterObj: TEnergyMeterObj;
+    k: Integer;
+    BranchCount: Integer;
+    pElem: TDSSCktElement;
+begin
+    Result := VarArrayCreate([0, 0], varOleStr);
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+        begin
+            pMeterObj := EnergyMeters.Active;
+            if pMeterObj <> NIL then
+            begin
       // Get count of branches
-      BranchCount := Get_CountBranches;
-      If BranchCount > 0 Then Begin
-          VarArrayRedim (Result, BranchCount-1);
-          pElem := pMeterObj.BranchList.First;
-          k := 0;
-          while pElem <> Nil do   Begin
-             Result[k] := Format ('%s.%s', [pElem.ParentClass.Name, pElem.Name]);
-             inc(k);
-             pElem := pMeterObj.BranchList.GoForward;
-          End;
-      End;
-    end;
-  End;
+                BranchCount := Get_CountBranches;
+                if BranchCount > 0 then
+                begin
+                    VarArrayRedim(Result, BranchCount - 1);
+                    pElem := pMeterObj.BranchList.First;
+                    k := 0;
+                    while pElem <> NIL do
+                    begin
+                        Result[k] := Format('%s.%s', [pElem.ParentClass.Name, pElem.Name]);
+                        inc(k);
+                        pElem := pMeterObj.BranchList.GoForward;
+                    end;
+                end;
+            end;
+        end;
 
 end;
 
 function TMeters.Get_CountBranches: Integer;
 
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
   // pelem : TDSSCktElement;
-Begin
-  Result := 0;
-  IF ActiveCircuit <> Nil THEN WITH ActiveCircuit DO Begin
-    pMeterObj := EnergyMeters.Active;
-    if pMeterObj <> Nil then
-    Result := pMeterObj.SequenceList.ListSize;
+begin
+    Result := 0;
+    if ActiveCircuit <> NIL then
+        with ActiveCircuit do
+        begin
+            pMeterObj := EnergyMeters.Active;
+            if pMeterObj <> NIL then
+                Result := pMeterObj.SequenceList.ListSize;
 
     (*
     If pMeterObj.BranchList <> Nil then Begin
@@ -674,305 +727,361 @@ Begin
     end;
     *)
 
-  End;
+        end;
 end;
 
 function TMeters.Get_SAIFI: Double;
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 
 begin
-     Result := 0.0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then Begin
+    Result := 0.0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+            begin
 
-             Result := pMeterObj.SAIFI;
+                Result := pMeterObj.SAIFI;
 
-         End;
-     End;
+            end;
+        end;
 end;
 
 function TMeters.Get_SequenceIndex: Integer;
 
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 
 begin
-     Result := 0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then Begin
-             Result := pMeterObj.SequenceList.ActiveIndex;
-         End;
-     End;
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+            begin
+                Result := pMeterObj.SequenceList.ActiveIndex;
+            end;
+        end;
 end;
 
 procedure TMeters.Set_SequenceIndex(Value: Integer);
 
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 
 begin
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then With pMeterObj Do
-         Begin
-             If (Value>0) and (Value<=SequenceList.ListSize) Then
-                      ActiveCktElement := SequenceList.Get(Value)
-             Else
-                DoSimpleMsg(Format('Invalid index for SequenceList: %d. List size is %d.',[Value, SequenceList.ListSize]), 500501);
-         End;
-     End;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+                with pMeterObj do
+                begin
+                    if (Value > 0) and (Value <= SequenceList.ListSize) then
+                        ActiveCktElement := SequenceList.Get(Value)
+                    else
+                        DoSimpleMsg(Format('Invalid index for SequenceList: %d. List size is %d.', [Value, SequenceList.ListSize]), 500501);
+                end;
+        end;
 end;
 
 function TMeters.Get_SAIFIKW: Double;
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 
 begin
-     Result := 0.0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then Begin
+    Result := 0.0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+            begin
 
-             Result := pMeterObj.SAIFIkW;
+                Result := pMeterObj.SAIFIkW;
 
-         End;
-     End;
+            end;
+        end;
 end;
 
 
-procedure TMeters.DoReliabilityCalc(AssumeRestoration: WordBool);
-Var
-  pMeterObj :TEnergyMeterObj;
+procedure TMeters.DoReliabilityCalc(AssumeRestoration: Wordbool);
+var
+    pMeterObj: TEnergyMeterObj;
 
 begin
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then Begin
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+            begin
 
                 pMeterObj.CalcReliabilityIndices(AssumeRestoration);
 
-         End;
-     End;
+            end;
+        end;
 end;
 
 function TMeters.Get_SeqListSize: Integer;
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 
 begin
-     Result := 0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then Begin
-             Result := pMeterObj.SequenceList.ListSize ;
-         End;
-     End;
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+            begin
+                Result := pMeterObj.SequenceList.ListSize;
+            end;
+        end;
 end;
 
 function TMeters.Get_TotalCustomers: Integer;
-Var
-  pMeterObj :TEnergyMeterObj;
-  PD_Element   :TPDElement;
+var
+    pMeterObj: TEnergyMeterObj;
+    PD_Element: TPDElement;
 
 begin
-     Result := 0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then Begin
-             PD_Element := pMeterObj.SequenceList.Get(1) ;
-             If Assigned (PD_Element) Then With PD_Element Do
-                 Result := Buses^[Terminals^[FromTerminal].BusRef].BusTotalNumCustomers;
-         End;
-     End;
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+            begin
+                PD_Element := pMeterObj.SequenceList.Get(1);
+                if Assigned(PD_Element) then
+                    with PD_Element do
+                        Result := Buses^[Terminals^[FromTerminal].BusRef].BusTotalNumCustomers;
+            end;
+        end;
 end;
 
 function TMeters.Get_SAIDI: Double;
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 
 begin
-     Result := 0.0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then Begin
-             Result := pMeterObj.SAIDI;
-         End;
-     End;
+    Result := 0.0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+            begin
+                Result := pMeterObj.SAIDI;
+            end;
+        end;
 end;
 
 function TMeters.Get_CustInterrupts: Double;
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 
 begin
-     Result := 0.0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then Begin
-             Result := pMeterObj.CustInterrupts;
-         End;
-     End;
+    Result := 0.0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+            begin
+                Result := pMeterObj.CustInterrupts;
+            end;
+        end;
 end;
 
 function TMeters.Get_NumSections: Integer;
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 begin
-     Result := 0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then Begin
-             Result := pMeterObj.SectionCount ;
-         End;
-     End;
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+            begin
+                Result := pMeterObj.SectionCount;
+            end;
+        end;
 end;
 
 procedure TMeters.SetActiveSection(SectIdx: Integer);
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 begin
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then Begin
-             If (SectIdx > 0) and (SectIdx <= pMeterObj.SectionCount) Then
-                pMeterObj.ActiveSection := SectIdx
-             Else pMeterObj.ActiveSection := 0;
-         End;
-     End;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+            begin
+                if (SectIdx > 0) and (SectIdx <= pMeterObj.SectionCount) then
+                    pMeterObj.ActiveSection := SectIdx
+                else
+                    pMeterObj.ActiveSection := 0;
+            end;
+        end;
 
 end;
 
 function TMeters.Get_AvgRepairTime: Double;
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 begin
-     Result := 0.0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then With pMeterObj Do Begin
-             If ActiveSection>0 then Result := FeederSections^[ActiveSection].AverageRepairTime ;
-         End;
-     End;
+    Result := 0.0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+                with pMeterObj do
+                begin
+                    if ActiveSection > 0 then
+                        Result := FeederSections^[ActiveSection].AverageRepairTime;
+                end;
+        end;
 end;
 
 function TMeters.Get_FaultRateXRepairHrs: Double;
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 begin
-     Result := 0.0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then With pMeterObj Do Begin
-             If ActiveSection>0 then Result := FeederSections^[ActiveSection].SumFltRatesXRepairHrs  ;
-         End;
-     End;
+    Result := 0.0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+                with pMeterObj do
+                begin
+                    if ActiveSection > 0 then
+                        Result := FeederSections^[ActiveSection].SumFltRatesXRepairHrs;
+                end;
+        end;
 end;
 
 function TMeters.Get_NumSectionBranches: Integer;
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 begin
-     Result := 0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then With pMeterObj Do Begin
-             If ActiveSection>0 then Result := FeederSections^[ActiveSection].NBranches  ;
-         End;
-     End;
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+                with pMeterObj do
+                begin
+                    if ActiveSection > 0 then
+                        Result := FeederSections^[ActiveSection].NBranches;
+                end;
+        end;
 end;
 
 function TMeters.Get_NumSectionCustomers: Integer;
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 begin
-     Result := 0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then With pMeterObj Do Begin
-             If ActiveSection>0 then Result := FeederSections^[ActiveSection].NCustomers   ;
-         End;
-     End;
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+                with pMeterObj do
+                begin
+                    if ActiveSection > 0 then
+                        Result := FeederSections^[ActiveSection].NCustomers;
+                end;
+        end;
 end;
 
 function TMeters.Get_OCPDeviceType: Integer;
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 begin
-     Result := 0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then With pMeterObj Do Begin
-             If ActiveSection>0 then Result := FeederSections^[ActiveSection].OCPDeviceType ;
-         End;
-     End;
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+                with pMeterObj do
+                begin
+                    if ActiveSection > 0 then
+                        Result := FeederSections^[ActiveSection].OCPDeviceType;
+                end;
+        end;
 end;
 
 function TMeters.Get_SumBranchFltRates: Double;
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 begin
-     Result := 0.0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then With pMeterObj Do Begin
-             If ActiveSection>0 then Result := FeederSections^[ActiveSection].SumBranchFltRates ;
-         End;
-     End;
+    Result := 0.0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+                with pMeterObj do
+                begin
+                    if ActiveSection > 0 then
+                        Result := FeederSections^[ActiveSection].SumBranchFltRates;
+                end;
+        end;
 
 end;
 
 function TMeters.Get_SectSeqIdx: Integer;
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 begin
-     Result := 0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then With pMeterObj Do Begin
-             If ActiveSection>0 then Result := FeederSections^[ActiveSection].SeqIndex ;
-         End;
-     End;
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+                with pMeterObj do
+                begin
+                    if ActiveSection > 0 then
+                        Result := FeederSections^[ActiveSection].SeqIndex;
+                end;
+        end;
 
 end;
 
 function TMeters.Get_SectTotalCust: Integer;
-Var
-  pMeterObj :TEnergyMeterObj;
+var
+    pMeterObj: TEnergyMeterObj;
 begin
-     Result := 0;
-     If Assigned(ActiveCircuit) Then With ActiveCircuit Do
-     Begin
-         pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-         If pMeterObj <> Nil Then With pMeterObj Do Begin
-             If ActiveSection>0 then Result := FeederSections^[ActiveSection].TotalCustomers ;
-         End;
-     End;
+    Result := 0;
+    if Assigned(ActiveCircuit) then
+        with ActiveCircuit do
+        begin
+            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+            if pMeterObj <> NIL then
+                with pMeterObj do
+                begin
+                    if ActiveSection > 0 then
+                        Result := FeederSections^[ActiveSection].TotalCustomers;
+                end;
+        end;
 
 
 end;
 
 initialization
-  TAutoObjectFactory.Create(ComServer, TMeters, Class_Meters,
-    ciInternal, tmApartment);
+    TAutoObjectFactory.Create(ComServer, TMeters, Class_Meters,
+        ciInternal, tmApartment);
 end.
