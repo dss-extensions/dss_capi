@@ -196,22 +196,24 @@ var
     i, j, k: Integer;
 
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if ActiveCircuit = NIL then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    with ActiveCircuit do
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NumNodes);
+        k := 0;
+        for i := 1 to NumBuses do
         begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (NumNodes - 1) + 1);
-            k := 0;
-            for i := 1 to NumBuses do
+            for j := 1 to Buses^[i].NumNodesThisBus do
             begin
-                for j := 1 to Buses^[i].NumNodesThisBus do
-                begin
-                    Result[k] := Cabs(ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)]);
-                    Inc(k);
-                end;
+                Result[k] := Cabs(ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)]);
+                Inc(k);
             end;
-        end
-    else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        end;
+    end
 end;
 
 procedure Circuit_Get_AllBusVmag_GR(); CDECL;
@@ -228,26 +230,27 @@ var
     Volts: Complex;
 
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if ActiveCircuit = NIL then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    with ActiveCircuit do
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2 * NumNodes - 1) + 1);
+        k := 0;
+        for i := 1 to NumBuses do
         begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2 * NumNodes - 1) + 1);
-            k := 0;
-            for i := 1 to NumBuses do
+            for j := 1 to Buses^[i].NumNodesThisBus do
             begin
-                for j := 1 to Buses^[i].NumNodesThisBus do
-                begin
-                    Volts := ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)];
-                    Result[k] := Volts.re;
-                    Inc(k);
-                    Result[k] := Volts.im;
-                    Inc(k);
-                end;
+                Volts := ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)];
+                Result[k] := Volts.re;
+                Inc(k);
+                Result[k] := Volts.im;
+                Inc(k);
             end;
-        end
-    else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-
+        end;
+    end
 end;
 
 procedure Circuit_Get_AllBusVolts_GR(); CDECL;
@@ -263,18 +266,21 @@ var
     i: Integer;
 
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if ActiveCircuit = NIL then
+    begin
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    
+    with ActiveCircuit do
+    begin
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumDevices);
+        for i := 1 to NumDevices do
         begin
-            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumDevices - 1) + 1);
-            for i := 1 to NumDevices do
-            begin
-                with  TDSSCktElement(CktElements.Get(i)) do
-                    Result[i - 1] := DSS_CopyStringAsPChar(ParentClass.Name + '.' + Name);
-            end;
-        end
-    else
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+            with  TDSSCktElement(CktElements.Get(i)) do
+                Result[i - 1] := DSS_CopyStringAsPChar(ParentClass.Name + '.' + Name);
+        end;
+    end
 end;
 
 procedure Circuit_Get_AllElementNames_GR(); CDECL;
@@ -289,29 +295,28 @@ var
     Result: PDoubleArray;
     pTransf: TTransfObj;
     Loss: Complex;
-
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-        begin
-            pTransf := Transformers.First;
-            Loss := Cmplx(0.0, 0.0);
-            while pTransf <> NIL do
-            begin
-                if pTransf.Issubstation then
-                    Caccum(Loss, pTransf.Losses);
-                pTransf := Transformers.Next;
-            end;
-            Result[0] := Loss.re * 0.001;
-            Result[1] := Loss.im * 0.001;
-        end
-    else
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+    if ActiveCircuit = NIL then 
     begin
         Result[0] := 0.0;
         Result[1] := 0.0;
+        Exit;
     end;
-
+    
+    with ActiveCircuit do
+    begin
+        pTransf := Transformers.First;
+        Loss := Cmplx(0.0, 0.0);
+        while pTransf <> NIL do
+        begin
+            if pTransf.Issubstation then
+                Caccum(Loss, pTransf.Losses);
+            pTransf := Transformers.Next;
+        end;
+        Result[0] := Loss.re * 0.001;
+        Result[1] := Loss.im * 0.001;
+    end
 end;
 
 procedure Circuit_Get_SubstationLosses_GR(); CDECL;
@@ -325,33 +330,31 @@ procedure Circuit_Get_TotalPower(var ResultPtr: PDouble; ResultCount: PInteger);
 // Total power being consumed in the circuit.
 // Add up all power being contributed by sources.
 // Returns result in kW
-
 var
     Result: PDoubleArray;
     pCktElem: TDSSCktElement;
     cPower: Complex;
-
 begin
-
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-        begin
-            pCktElem := Sources.First;
-            cPower := Cmplx(0.0, 0.0);
-            while pCktElem <> NIL do
-            begin
-                CAccum(cPower, pcktElem.Power[1]);
-                pCktElem := Sources.Next;
-            end;
-            Result[0] := cPower.re * 0.001;
-            Result[1] := cPower.im * 0.001;
-        end
-    else
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+    if ActiveCircuit = NIL then
     begin
         Result[0] := 0.0;
         Result[1] := 0.0;
+        Exit;
     end;
+    
+    with ActiveCircuit do
+    begin
+        pCktElem := Sources.First;
+        cPower := Cmplx(0.0, 0.0);
+        while pCktElem <> NIL do
+        begin
+            CAccum(cPower, pcktElem.Power[1]);
+            pCktElem := Sources.Next;
+        end;
+        Result[0] := cPower.re * 0.001;
+        Result[1] := cPower.im * 0.001;
+    end
 end;
 
 procedure Circuit_Get_TotalPower_GR(); CDECL;
@@ -363,19 +366,21 @@ end;
 //------------------------------------------------------------------------------
 procedure Circuit_Disable(const Name: PAnsiChar); CDECL;
 begin
-
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-        begin
-            SetElementActive(Name);
-            if ActiveCktElement <> NIL then
-                ActiveCktElement.Enabled := FALSE;
-        end;
-
+    if ActiveCircuit = NIL then
+        Exit;
+        
+    with ActiveCircuit do
+    begin
+        SetElementActive(Name);
+        if ActiveCktElement <> NIL then
+            ActiveCktElement.Enabled := FALSE;
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Circuit_Enable(const Name: PAnsiChar); CDECL;
 begin
+    if ActiveCircuit = NIL then
+        Exit;
 
     with ActiveCircuit do
     begin
@@ -383,7 +388,6 @@ begin
         if ActiveCktElement <> NIL then
             ActiveCktElement.Enabled := TRUE;
     end;
-
 end;
 //------------------------------------------------------------------------------
 function Circuit_FirstPCElement(): Integer; CDECL;
@@ -391,28 +395,25 @@ var
     p: TDSSCktElement;
 
 { Returns first enabled element}
-
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        p := ActiveCircuit.PCElements.First;
-        if p <> NIL then
-        begin
-            repeat
-                if p.enabled then
-                begin
-                    Result := 1;
-                    ActiveCircuit.ActiveCktElement := p;
-                end
-                else
-                    p := ActiveCircuit.PCElements.Next;
+    if ActiveCircuit = NIL then
+        Exit;
+        
+    p := ActiveCircuit.PCElements.First;
+    if p = NIL then
+        Exit;
 
-            until (Result = 1) or (p = NIL);
+    repeat
+        if p.enabled then
+        begin
+            Result := 1;
+            ActiveCircuit.ActiveCktElement := p;
         end
         else
-            Result := 0;
-    end;
+            p := ActiveCircuit.PCElements.Next;
+
+    until (Result = 1) or (p = NIL);
 end;
 //------------------------------------------------------------------------------
 function Circuit_FirstPDElement(): Integer; CDECL;
@@ -420,25 +421,22 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        ActivePDElement := ActiveCircuit.PDElements.First;
-        if ActivePDElement <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+        
+    ActivePDElement := ActiveCircuit.PDElements.First;
+    if ActivePDElement = NIL then
+        Exit;
+        
+    repeat
+        if ActivePDElement.enabled then
         begin
-            repeat
-                if ActivePDElement.enabled then
-                begin
-                    Result := 1;
-                    ActiveCircuit.ActiveCktElement := ActivePDElement;
-                end
-                else
-                    ActivePDElement := ActiveCircuit.PDElements.Next;
-            until (Result = 1) or (ActivePDELement = NIL);
+            Result := 1;
+            ActiveCircuit.ActiveCktElement := ActivePDElement;
         end
         else
-            Result := 0;
-    end;
-
+            ActivePDElement := ActiveCircuit.PDElements.Next;
+    until (Result = 1) or (ActivePDELement = NIL);
 end;
 //------------------------------------------------------------------------------
 function Circuit_NextPCElement(): Integer; CDECL;
@@ -447,24 +445,22 @@ var
 
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        p := ActiveCircuit.PCElements.Next;
-        if p <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+        
+    p := ActiveCircuit.PCElements.Next;
+    if p = NIL then
+        Exit;
+        
+    repeat
+        if p.enabled then
         begin
-            repeat
-                if p.enabled then
-                begin
-                    Result := ActiveCircuit.PCElements.ActiveIndex;
-                    ActiveCircuit.ActiveCktElement := p;
-                end
-                else
-                    p := ActiveCircuit.PCElements.Next;
-            until (Result > 0) or (p = NIL);
+            Result := ActiveCircuit.PCElements.ActiveIndex;
+            ActiveCircuit.ActiveCktElement := p;
         end
         else
-            Result := 0;
-    end;
+            p := ActiveCircuit.PCElements.Next;
+    until (Result > 0) or (p = NIL);
 end;
 //------------------------------------------------------------------------------
 function Circuit_NextPDElement(): Integer; CDECL;
@@ -472,26 +468,22 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        ActivePDElement := ActiveCircuit.PDElements.Next;
-        if ActivePDElement <> NIL then
+    if ActiveCircuit = NIL then
+        Exit;
+        
+    ActivePDElement := ActiveCircuit.PDElements.Next;
+    if ActivePDElement = NIL then
+        Exit;
+        
+    repeat
+        if ActivePDElement.Enabled then
         begin
-            repeat
-                if ActivePDElement.Enabled then
-                begin
-                    Result := ActiveCircuit.PDElements.ActiveIndex;
-                    ActiveCircuit.ActiveCktElement := ActivePDElement;
-                end
-                else
-                    ActivePDElement := ActiveCircuit.PDElements.Next;
-            until (Result > 0) or (ActivePDElement = NIL);
+            Result := ActiveCircuit.PDElements.ActiveIndex;
+            ActiveCircuit.ActiveCktElement := ActivePDElement;
         end
         else
-        begin
-            Result := 0;
-        end;
-    end;
+            ActivePDElement := ActiveCircuit.PDElements.Next;
+    until (Result > 0) or (ActivePDElement = NIL);
 end;
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllBusNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -501,17 +493,19 @@ var
     i: Integer;
 
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if ActiveCircuit = NIL then
+    begin
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    with ActiveCircuit do
+    begin
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumBuses);
+        for i := 0 to NumBuses - 1 do
         begin
-            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumBuses - 1) + 1);
-            for i := 0 to NumBuses - 1 do
-            begin
-                Result[i] := DSS_CopyStringAsPChar(BusList.Get(i + 1));
-            end;
-        end
-    else
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+            Result[i] := DSS_CopyStringAsPChar(BusList.Get(i + 1));
+        end;
+    end
 end;
 
 procedure Circuit_Get_AllBusNames_GR(); CDECL;
@@ -528,23 +522,25 @@ var
     pCktElem: TDSSCktElement;
     i: Integer;
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-        begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumDevices);
-            CResultPtr := pComplex(ResultPtr);
-            pCktElem := CktElements.First;
-            while pCktElem <> NIL do
-            begin
-                CResultPtr^ := pCktElem.Losses;
-                Inc(CResultPtr);
-                pCktElem := CktElements.Next;
-            end;
-            for i := 0 to 2*NumDevices - 1 do
-                Result[i] := Result[i] * 0.001;
-        end
-    else
+    if ActiveCircuit = NIL then
+    begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    with ActiveCircuit do
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumDevices);
+        CResultPtr := pComplex(ResultPtr);
+        pCktElem := CktElements.First;
+        while pCktElem <> NIL do
+        begin
+            CResultPtr^ := pCktElem.Losses;
+            Inc(CResultPtr);
+            pCktElem := CktElements.Next;
+        end;
+        for i := 0 to 2*NumDevices - 1 do
+            Result[i] := Result[i] * 0.001;
+    end
 end;
 
 procedure Circuit_Get_AllElementLosses_GR(); CDECL;
@@ -594,20 +590,20 @@ end;
 //------------------------------------------------------------------------------
 function Circuit_Capacity(Start, Increment: Double): Double; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-        begin
-            CapacityStart := Start;
-            CapacityIncrement := Increment;
-            if ComputeCapacity then
-                Result := RegisterTotals[3] + RegisterTotals[19]
-            else
-                Result := 0.0;
-        end
-    else
+    if ActiveCircuit = NIL then
     begin
         Result := 0.0;
+        Exit;
     end;
+    with ActiveCircuit do
+    begin
+        CapacityStart := Start;
+        CapacityIncrement := Increment;
+        if ComputeCapacity then
+            Result := RegisterTotals[3] + RegisterTotals[19]
+        else
+            Result := 0.0;
+    end
 end;
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllBusVmagPu(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -617,27 +613,29 @@ var
     Volts, BaseFactor: Double;
 
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if ActiveCircuit = NIL then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    with ActiveCircuit do
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NumNodes);
+        k := 0;
+        for i := 1 to NumBuses do
         begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (NumNodes - 1) + 1);
-            k := 0;
-            for i := 1 to NumBuses do
+            if Buses^[i].kVBase > 0.0 then
+                BaseFactor := 1000.0 * Buses^[i].kVBase
+            else
+                BaseFactor := 1.0;
+            for j := 1 to Buses^[i].NumNodesThisBus do
             begin
-                if Buses^[i].kVBase > 0.0 then
-                    BaseFactor := 1000.0 * Buses^[i].kVBase
-                else
-                    BaseFactor := 1.0;
-                for j := 1 to Buses^[i].NumNodesThisBus do
-                begin
-                    Volts := Cabs(ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)]);
-                    Result[k] := Volts / BaseFactor;
-                    Inc(k);
-                end;
+                Volts := Cabs(ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(j)]);
+                Result[k] := Volts / BaseFactor;
+                Inc(k);
             end;
-        end
-    else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        end;
+    end
 end;
 
 procedure Circuit_Get_AllBusVmagPu_GR(); CDECL;
@@ -660,15 +658,17 @@ function Circuit_SetActiveBusi(BusIndex: Integer): Integer; CDECL;
 { BusIndex is Zero Based}
 begin
     Result := -1;   // Signifies Error
-    if Assigned(Activecircuit) then
-        with ActiveCircuit do
+    if ActiveCircuit = NIL then
+        Exit;
+
+    with ActiveCircuit do
+    begin
+        if (BusIndex >= 0) and (BusIndex < Numbuses) then
         begin
-            if (BusIndex >= 0) and (BusIndex < Numbuses) then
-            begin
-                ActiveBusIndex := BusIndex + 1;
-                Result := 0;
-            end;
+            ActiveBusIndex := BusIndex + 1;
+            Result := 0;
         end;
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure Circuit_Get_AllNodeNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -678,25 +678,26 @@ var
     Result: PPAnsiCharArray;
     i, j, k: Integer;
     BusName: String;
-
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if ActiveCircuit = NIL then
+    begin
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1); 
+        Exit;
+    end;
+    with ActiveCircuit do
+    begin
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumNodes);
+        k := 0;
+        for i := 1 to NumBuses do
         begin
-            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumNodes - 1) + 1);
-            k := 0;
-            for i := 1 to NumBuses do
+            BusName := BusList.Get(i);
+            for j := 1 to Buses^[i].NumNodesThisBus do
             begin
-                BusName := BusList.Get(i);
-                for j := 1 to Buses^[i].NumNodesThisBus do
-                begin
-                    Result[k] := DSS_CopyStringAsPChar(BusName + '.' + IntToStr(Buses^[i].GetNum(j)));
-                    Inc(k);
-                end;
+                Result[k] := DSS_CopyStringAsPChar(BusName + '.' + IntToStr(Buses^[i].GetNum(j)));
+                Inc(k);
             end;
-        end
-    else
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+        end;
+    end;
 end;
 
 // this calls the compressed column
@@ -721,47 +722,43 @@ var
     cVals: array of Complex;
 
 begin
+    { Return zero length Array if no circuit or no Y matrix}
+    if (ActiveCircuit = NIL) or (ActiveCircuit.Solution.hY = 0) then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    with ActiveCircuit do
+    begin
+        hY := ActiveCircuit.Solution.hY;
 
-{ Return zero length Array if no circuit or no Y matrix}
-    if ActiveCircuit = NIL then
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
-    else
-    if ActiveCircuit.Solution.hY = 0 then
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1)
-    else
-        with ActiveCircuit do
-        begin
-            hY := ActiveCircuit.Solution.hY;
+        // get the compressed columns out of KLU
+        FactorSparseMatrix(hY); // no extra work if already done
+        GetNNZ(hY, @nNZ);
+        GetSize(hY, @nBus);
+        SetLength(ColPtr, nBus + 1);
+        SetLength(RowIdx, nNZ);
+        SetLength(cVals, nNZ);
+        GetCompressedMatrix(hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
 
-      // get the compressed columns out of KLU
-            FactorSparseMatrix(hY); // no extra work if already done
-            GetNNZ(hY, @nNZ);
-            GetSize(hY, @nBus);
-            SetLength(ColPtr, nBus + 1);
-            SetLength(RowIdx, nNZ);
-            SetLength(cVals, nNZ);
-            GetCompressedMatrix(hY, nBus + 1, nNZ, @ColPtr[0], @RowIdx[0], @cVals[0]);
+        // allocate a square matrix
+        NValues := SQR(NumNodes);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);  // Make array for complex
 
-      // allocate a square matrix
-            NValues := SQR(NumNodes);
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2 * NValues - 1) + 1);  // Make variant array for complex
-
-      // the new way, first set all elements to zero
-            for iV := 0 to 2 * NValues - 1 do
-                Result[iV] := 0.0;
-      // then back-fill the non-zero values
-            for j := 0 to nBus - 1 do
-            begin /// the zero-based column
-                for p := ColPtr[j] to ColPtr[j + 1] - 1 do
-                begin
-                    i := RowIdx[p];  // the zero-based row
-                    iV := i * nBus + j; // the zero-based, row-wise, complex result index
-                    Result[iV * 2] := cVals[p].re;
-                    Result[iV * 2 + 1] := cVals[p].im;
-                end;
+        // DSS_RecreateArray_PDouble already zero-fills the array
+            
+        // then back-fill the non-zero values
+        for j := 0 to nBus - 1 do
+        begin /// the zero-based column
+            for p := ColPtr[j] to ColPtr[j + 1] - 1 do
+            begin
+                i := RowIdx[p];  // the zero-based row
+                iV := i * nBus + j; // the zero-based, row-wise, complex result index
+                Result[iV * 2] := cVals[p].re;
+                Result[iV * 2 + 1] := cVals[p].im;
             end;
         end;
-
+    end;
 end;
 
 procedure Circuit_Get_SystemY_GR(); CDECL;
@@ -778,18 +775,19 @@ var
     i: Integer;
 
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if ActiveCircuit = NIL then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    with ActiveCircuit do
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NumBuses);
+        for i := 0 to NumBuses - 1 do
         begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (NumBuses - 1) + 1);
-            for i := 0 to NumBuses - 1 do
-            begin
-                Result[i] := Buses^[i + 1].DistFromMeter;
-            end;
-        end
-    else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-
+            Result[i] := Buses^[i + 1].DistFromMeter;
+        end;
+    end;
 end;
 
 procedure Circuit_Get_AllBusDistances_GR(); CDECL;
@@ -807,23 +805,24 @@ var
     i, j, k: Integer;
 
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if ActiveCircuit = NIL then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    with ActiveCircuit do
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NumNodes);
+        k := 0;
+        for i := 1 to NumBuses do
         begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (NumNodes - 1) + 1);
-            k := 0;
-            for i := 1 to NumBuses do
+            for j := 1 to Buses^[i].NumNodesThisBus do
             begin
-                for j := 1 to Buses^[i].NumNodesThisBus do
-                begin
-                    Result[k] := Buses^[i].DistFromMeter;
-                    Inc(k);
-                end;
+                Result[k] := Buses^[i].DistFromMeter;
+                Inc(k);
             end;
-        end
-    else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-
+        end;
+    end
 end;
 
 procedure Circuit_Get_AllNodeDistances_GR(); CDECL;
@@ -837,36 +836,33 @@ procedure Circuit_Get_AllNodeDistancesByPhase(var ResultPtr: PDouble; ResultCoun
 var
     Result: PDoubleArray;
     i, k, NodeIdx: Integer;
-    Temp: PDoubleArray;
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-        begin
-            // Make a Temporary Array big enough to hold all nodes
-            Temp := AllocMem(SizeOF(Double) * NumNodes);
-
-            // Find nodes connected to specified phase
-            k := 0;
-            for i := 1 to NumBuses do
-            begin
-                NodeIdx := Buses^[i].FindIdx(Phase);
-                if NodeIdx > 0 then   // Node found with this phase number
-                begin
-                    Temp^[k] := Buses^[i].DistFromMeter;
-                    Inc(k);
-                end;
-            end;
-
-            // Assign to result and free temp array
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, k);
-            for i := 0 to k - 1 do
-                Result[i] := Temp^[i];
-
-            Freemem(Temp, SizeOF(Double) * NumNodes);
-        end
-    else
+    if ActiveCircuit = NIL then
+    begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    
+    with ActiveCircuit do
+    begin
+        // First allocate as many elements as nodes
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NumNodes);
 
+        // Find nodes connected to specified phase
+        k := 0;
+        for i := 1 to NumBuses do
+        begin
+            NodeIdx := Buses^[i].FindIdx(Phase);
+            if NodeIdx > 0 then   // Node found with this phase number
+            begin
+                Result[k] := Buses^[i].DistFromMeter;
+                Inc(k);
+            end;
+        end;
+
+        // Finally "resize" the end result
+        ResultCount[0] := k;
+    end
 end;
 
 procedure Circuit_Get_AllNodeDistancesByPhase_GR(Phase: Integer); CDECL;
@@ -880,37 +876,32 @@ procedure Circuit_Get_AllNodeVmagByPhase(var ResultPtr: PDouble; ResultCount: PI
 var
     Result: PDoubleArray;
     i, k, NodeIdx: Integer;
-    Temp: PDoubleArray;
-
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-        begin
-       // Make a Temporary Array big enough to hold all nodes
-            Temp := AllocMem(SizeOF(Double) * NumNodes);
-
-       // Find nodes connected to specified phase
-            k := 0;
-            for i := 1 to NumBuses do
-            begin
-                NodeIdx := Buses^[i].FindIdx(Phase);
-                if NodeIdx > 0 then   // Node found with this phase number
-                begin
-                    Temp^[k] := Cabs(ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(NodeIdx)]);
-                    Inc(k);
-                end;
-            end;
-
-       // Assign to result and free temp array
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, k);
-            for i := 0 to k - 1 do
-                Result[i] := Temp^[i];
-
-            Freemem(Temp, SizeOF(Double) * NumNodes);
-        end
-    else
+    if ActiveCircuit = NIL then
+    begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    with ActiveCircuit do
+    begin
+        // First allocate as many elements as nodes
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NumNodes);
 
+        // Find nodes connected to specified phase
+        k := 0;
+        for i := 1 to NumBuses do
+        begin
+            NodeIdx := Buses^[i].FindIdx(Phase);
+            if NodeIdx > 0 then   // Node found with this phase number
+            begin
+                Result[k] := Cabs(ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(NodeIdx)]);
+                Inc(k);
+            end;
+        end;
+
+        // Finally "resize" the end result
+        ResultCount[0] := k;
+    end
 end;
 
 procedure Circuit_Get_AllNodeVmagByPhase_GR(Phase: Integer); CDECL;
@@ -924,42 +915,38 @@ procedure Circuit_Get_AllNodeVmagPUByPhase(var ResultPtr: PDouble; ResultCount: 
 var
     Result: PDoubleArray;
     i, k, NodeIdx: Integer;
-    Temp: PDoubleArray;
     BaseFactor: Double;
-
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-        begin
-            // Make a Temporary Array big enough to hold all nodes
-            Temp := AllocMem(SizeOF(Double) * NumNodes);
-
-            // Find nodes connected to specified phase
-            k := 0;
-            for i := 1 to NumBuses do
-            begin
-                NodeIdx := Buses^[i].FindIdx(Phase);
-                if NodeIdx > 0 then   // Node found with this phase number
-                begin
-                    if Buses^[i].kVBase > 0.0 then
-                        BaseFactor := 1000.0 * Buses^[i].kVBase
-                    else
-                        BaseFactor := 1.0;
-                    Temp^[k] := Cabs(ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(NodeIdx)]) / Basefactor;
-                    Inc(k);
-                end;
-            end;
-
-            // Assign to result and free temp array
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, k);
-            for i := 0 to k - 1 do
-                Result[i] := Temp^[i];
-
-            Freemem(Temp, SizeOF(Double) * NumNodes);
-        end
-    else
+    if ActiveCircuit = NIL then
+    begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    
+    with ActiveCircuit do
+    begin
+        // First allocate as many elements as nodes
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NumNodes);
 
+        // Find nodes connected to specified phase
+        k := 0;
+        for i := 1 to NumBuses do
+        begin
+            NodeIdx := Buses^[i].FindIdx(Phase);
+            if NodeIdx > 0 then   // Node found with this phase number
+            begin
+                if Buses^[i].kVBase > 0.0 then
+                    BaseFactor := 1000.0 * Buses^[i].kVBase
+                else
+                    BaseFactor := 1.0;
+                Result[k] := Cabs(ActiveCircuit.Solution.NodeV^[Buses^[i].GetRef(NodeIdx)]) / Basefactor;
+                Inc(k);
+            end;
+        end;
+
+        // Finally "resize" the end result
+        ResultCount[0] := k;
+    end
 end;
 
 procedure Circuit_Get_AllNodeVmagPUByPhase_GR(Phase: Integer); CDECL;
@@ -976,34 +963,36 @@ var
     Temp: Array of String;
 
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-        begin
-            // Make a Temporary Array big enough to hold all nodes
-            SetLength(Temp, NumNodes);
-
-            // Find nodes connected to specified phase
-            k := 0;
-            for i := 1 to NumBuses do
-            begin
-                NodeIdx := Buses^[i].FindIdx(Phase);
-                if NodeIdx > 0 then   // Node found with this phase number
-                begin
-                    Temp[k] := Format('%s.%d', [BusList.Get(i), Phase]);
-                    Inc(k);
-                end;
-            end;
-
-            // Assign to result and free temp array
-            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, k);
-            for i := 0 to k - 1 do
-                Result[i] := DSS_CopyStringAsPChar(Temp[i]);
-
-            SetLength(Temp, 0);
-        end
-    else
+    if ActiveCircuit = NIL then
+    begin
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    
+    with ActiveCircuit do
+    begin
+        // Make a Temporary Array big enough to hold all nodes
+        SetLength(Temp, NumNodes);
 
+        // Find nodes connected to specified phase
+        k := 0;
+        for i := 1 to NumBuses do
+        begin
+            NodeIdx := Buses^[i].FindIdx(Phase);
+            if NodeIdx > 0 then   // Node found with this phase number
+            begin
+                Temp[k] := Format('%s.%d', [BusList.Get(i), Phase]);
+                Inc(k);
+            end;
+        end;
+
+        // Assign to result and free temp array
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, k);
+        for i := 0 to k - 1 do
+            Result[i] := DSS_CopyStringAsPChar(Temp[i]);
+
+        SetLength(Temp, 0);
+    end;
 end;
 
 procedure Circuit_Get_AllNodeNamesByPhase_GR(Phase: Integer); CDECL;
@@ -1016,7 +1005,6 @@ end;
 function Circuit_SetActiveClass(const ClassName: PAnsiChar): Integer; CDECL;
 var
     DevClassIndex: Integer;
-
 begin
     Result := 0;
     DevClassIndex := ClassNames.Find(ClassName);
@@ -1036,11 +1024,7 @@ function Circuit_FirstElement(): Integer; CDECL;
 begin
     Result := 0;
     if (ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
-    begin
         Result := ActiveDSSClass.First;
-    end
-    else
-        Result := 0;
 end;
 //------------------------------------------------------------------------------
 function Circuit_NextElement(): Integer; CDECL;
@@ -1048,11 +1032,7 @@ function Circuit_NextElement(): Integer; CDECL;
 begin
     Result := 0;
     if (ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
-    begin
         Result := ActiveDSSClass.Next;
-    end
-    else
-        Result := 0;
 end;
 //------------------------------------------------------------------------------
 procedure Circuit_UpdateStorage(); CDECL;
@@ -1079,7 +1059,6 @@ begin
                 Result := ActivePDElement.ClassIndex;  // should be >0
             end;
         end;
-
 end;
 //------------------------------------------------------------------------------
 procedure Circuit_EndOfTimeStepUpdate(); CDECL;
@@ -1093,20 +1072,23 @@ var
     i, k: Integer;
 
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if ActiveCircuit = NIL then
+    begin
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    
+    with ActiveCircuit do
+    begin
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumNodes);
+        k := 0;
+        for i := 1 to NumNodes do
         begin
-            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumNodes - 1) + 1);
-            k := 0;
-            for i := 1 to NumNodes do
-            begin
-                with MapNodeToBus^[i] do
-                    Result[k] := DSS_CopyStringAsPChar(Format('%s.%-d', [Uppercase(BusList.Get(Busref)), NodeNum]));
-                Inc(k);
-            end;
-        end
-    else
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
+            with MapNodeToBus^[i] do
+                Result[k] := DSS_CopyStringAsPChar(Format('%s.%-d', [Uppercase(BusList.Get(Busref)), NodeNum]));
+            Inc(k);
+        end;
+    end
 
 end;
 
@@ -1120,27 +1102,24 @@ end;
 procedure Circuit_Get_YCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
     Result: PDoubleArray;
-    i, k: Integer;
-    Curr: Complex;
-
+    CResultPtr: pComplex;
+    i: Integer;
 begin
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if ActiveCircuit = NIL then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    with ActiveCircuit do
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumNodes);
+        CResultPtr := pComplex(ResultPtr);
+        for i := 1 to NumNodes do
         begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2 * NumNodes - 1) + 1);
-            k := 0;
-            for i := 1 to NumNodes do
-            begin
-                Curr := ActiveCircuit.Solution.Currents^[i];
-                Result[k] := Curr.re;
-                Inc(k);
-                Result[k] := Curr.im;
-                Inc(k);
-            end;
-        end
-    else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-
+            CResultPtr^ := ActiveCircuit.Solution.Currents^[i];
+            Inc(CResultPtr);
+        end;
+    end
 end;
 
 procedure Circuit_Get_YCurrents_GR(); CDECL;
@@ -1153,27 +1132,24 @@ end;
 procedure Circuit_Get_YNodeVarray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
     Result: PDoubleArray;
-    i, k: Integer;
-    Volts: Complex;
-
+    CResultPtr: pComplex;
+    i: Integer;
 begin
-    if ActiveCircuit <> NIL then
+    if ActiveCircuit = NIL then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
         with ActiveCircuit do
         begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (2 * NumNodes - 1) + 1);
-            k := 0;
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumNodes);
+            CResultPtr := pComplex(ResultPtr);
             for i := 1 to NumNodes do
             begin
-                Volts := ActiveCircuit.Solution.NodeV^[i];
-                Result[k] := Volts.re;
-                Inc(k);
-                Result[k] := Volts.im;
-                Inc(k);
+                CResultPtr^ := ActiveCircuit.Solution.NodeV^[i];
+                Inc(CResultPtr);
             end;
         end
-    else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-
 end;
 
 procedure Circuit_Get_YNodeVarray_GR(); CDECL;
