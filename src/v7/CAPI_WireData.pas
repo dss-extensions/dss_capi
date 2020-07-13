@@ -11,7 +11,7 @@ uses
 
 type
   //TODO: create a simple script to extract this directly from the Pascal files from electricdss-src
-    ConductorProps = (Rdc = 1, Rac, Runits, GMRac, GMRunits, radius, radunits, normamps, emergamps, diam);
+    ConductorProps = (Rdc = 1, Rac, Runits, GMRac, GMRunits, radius, radunits, normamps, emergamps, diam, seasons, ratings, capradius);
 
 
 function WireData_Get_Count(): Integer; CDECL;
@@ -41,6 +41,9 @@ function WireData_Get_NormAmps(): Double; CDECL;
 procedure WireData_Set_NormAmps(Value: Double); CDECL;
 function WireData_Get_EmergAmps(): Double; CDECL;
 procedure WireData_Set_EmergAmps(Value: Double); CDECL;
+function WireData_Get_CapRadius(): Double; CDECL;
+procedure WireData_Set_CapRadius(Value: Double); CDECL;
+
 
 procedure ConductorSetDefaults(prop: ConductorProps; conductor: TConductorDataObj);
 
@@ -89,6 +92,9 @@ begin
             ConductorProps.diam:
                 if FGMR60 < 0.0 then
                     FGMR60 := 0.7788 * FRadius;
+            ConductorProps.capradius:
+                if Fcapradius60 < 0.0 then
+                    Fcapradius60 := Fradius;
         end;
     {Check for critical errors}
         case prop of
@@ -356,6 +362,36 @@ begin
         begin
             FRDC := Value;
             ConductorSetDefaults(ConductorProps.Rdc, pWireData);
+        end;
+    end;
+end;
+//------------------------------------------------------------------------------
+function WireData_Get_CapRadius(): Double; CDECL;
+var
+    pWireData: TWireDataObj;
+begin
+    Result := 0;
+    if ActiveCircuit = NIL then 
+        Exit;
+    
+    pWireData := WireDataClass.GetActiveObj;
+    if pWireData = NIL then 
+        Exit;
+    
+    Result := pWireData.CapRadius;
+end;
+//------------------------------------------------------------------------------
+procedure WireData_Set_CapRadius(Value: Double); CDECL;
+var
+    pWireData: TWireDataObj;
+begin
+    if ActiveCircuit <> NIL then
+    begin
+        pWireData := WireDataClass.GetActiveObj;
+        with pWireData do
+        begin
+            pWireData.Fcapradius60 := Value;
+            ConductorSetDefaults(ConductorProps.CapRadius, pWireData);
         end;
     end;
 end;

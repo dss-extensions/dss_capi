@@ -5904,6 +5904,8 @@ extern "C" {
     DSS_CAPI_V7_DLL void WireData_Set_NormAmps(double Value);
     DSS_CAPI_V7_DLL double WireData_Get_EmergAmps(void);
     DSS_CAPI_V7_DLL void WireData_Set_EmergAmps(double Value);
+    DSS_CAPI_V7_DLL double WireData_Get_CapRadius(void);
+    DSS_CAPI_V7_DLL void WireData_Set_CapRadius(double Value);
 
     /*
     Set the next bus as active. Returns -1 if no more buses, 0 otherwise.

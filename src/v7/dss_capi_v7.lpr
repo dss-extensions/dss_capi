@@ -1783,6 +1783,8 @@ exports
     WireData_Set_NormAmps,
     WireData_Get_EmergAmps,
     WireData_Set_EmergAmps,
+    WireData_Get_CapRadius,
+    WireData_Set_CapRadius,
 
     Bus_Get_Next,
     CNData_Get_idx,
