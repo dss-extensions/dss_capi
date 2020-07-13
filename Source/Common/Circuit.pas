@@ -1578,9 +1578,9 @@ BEGIN
        FEEDER_ELEMENT :Feeders.Add(ActiveCktElement);
 
        STORAGE_ELEMENT:StorageElements.Add(ActiveCktElement);
-       STORAGE2_ELEMENT:Storage2Elements.Add(ActiveCktElement);
+//       STORAGE2_ELEMENT:Storage2Elements.Add(ActiveCktElement);
        PVSYSTEM_ELEMENT:PVSystems.Add(ActiveCktElement);
-       PVSYSTEM2_ELEMENT:PVSystems2.Add(ActiveCktElement);
+//       PVSYSTEM2_ELEMENT:PVSystems2.Add(ActiveCktElement);
    END;
 
   // AddDeviceHandle(Handle); // Keep Track of this device result is handle

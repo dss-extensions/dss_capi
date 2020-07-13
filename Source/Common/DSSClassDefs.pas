@@ -53,7 +53,7 @@ CONST
       STORAGE_CONTROL  = 22 * 8;
       SWT_CONTROL      = 23 * 8;
       PVSYSTEM_ELEMENT = 24 * 8;
-      PVSYSTEM2_ELEMENT = 25 * 8; // Using 25 (PR)
+//      PVSYSTEM2_ELEMENT = 25 * 8; // Using 25 (PR)
       // Deleted --- VV_CONTROL       = 25 * 8;
       GIC_Line         = 26 * 8;
       GIC_Transformer  = 27 * 8;

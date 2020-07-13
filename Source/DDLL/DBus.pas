@@ -10,7 +10,8 @@ procedure BUSV(mode: longint; out arg: Variant); cdecl;
 implementation
 
 uses DSSGlobals, Circuit, Ucomplex, MathUtil, sysutils,
-     ExecHelper, SolutionAlgs, Variants, Utilities, Bus, CktElement;
+     ExecHelper, SolutionAlgs, Variants, Utilities, Bus, CktElement,
+     Ucmatrix, Arraydef;
 
 Function CheckBusReference(cktElem:TDSSCktElement; BusReference:Integer; Var TerminalIndex:integer):Boolean;
 
@@ -197,6 +198,7 @@ var
   LoadCount,
   LineCount,
   Nvalues,
+  Norder,
   i,
   iV,
   NodeIdx,
@@ -216,6 +218,8 @@ var
   BaseFactor        : Double;
   voltsp            : polar;
   pElem             : TDSSCktElement;
+  Zsc012Temp        : TCmatrix;
+  pValues           : pDoubleArray;
 
 begin
   case mode of
@@ -750,6 +754,42 @@ begin
           ELSE  arg := VarArrayCreate([0, 0], varOleStr);
         End
       ELSE arg := VarArrayCreate([0, 0], varOleStr);
+  end;
+  17: begin   // Bus.ZSC012Matrix
+       IF ActiveCircuit[ActiveActor] = nil Then Begin
+            arg := VarArrayCreate([0, 0], varDouble)
+       End
+       Else With ActiveCircuit[ActiveActor] Do
+        With ActiveCircuit[ActiveActor] Do
+        Begin
+           pBus    := Buses^[ActiveBusIndex];
+           With pBus Do
+            Begin
+
+              If NumNodesThisBus = 3 Then
+                 Begin
+                      Nvalues := SQR(NumNodesThisBus)*2;  // Should be 9 complex numbers
+                      arg  := VarArrayCreate( [0, NValues -1], varDouble);
+                      // Compute ZSC012 for 3-phase buses else leave it zeros
+                      // ZSC012 = Ap2s Zsc As2p
+                      Zsc012Temp:= Zsc.MtrxMult(As2p);  // temp for intermediate result
+                      if Assigned(ZSC012) then ZSC012.Free;
+                      ZSC012 := Ap2s.MtrxMult(Zsc012Temp);
+                      // Cleanup
+                      Zsc012Temp.Free;
+
+                  {Return all the elements of ZSC012}
+                      k := 0;
+                      pValues := pDoubleArray(ZSC012.GetValuesArrayPtr(Norder));
+                      For i := 1 to Nvalues do Begin
+                          arg[k] := pValues^[i];
+                          Inc(k);
+                      End;
+                 End
+
+               Else  arg := VarArrayCreate([0, 0], varDouble);   // default null array
+            End;
+        End;
   end
   else
       arg := VarArrayCreate([0, 0], varDouble);  // just return null array
