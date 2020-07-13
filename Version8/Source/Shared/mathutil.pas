@@ -9,7 +9,10 @@ unit Mathutil;
 
 interface
 
-Uses Arraydef, uComplex;
+Uses Arraydef, uComplex, uCmatrix;
+
+Var
+   As2p, Ap2s, ClarkeF, ClarkeR:TcMatrix; {Symmetrical Component Conversion Matrices}
 
          Procedure AB02Phase( Vph, VaB0:pComplexArray);     // Reverse Clarke
          FUNCTION  Bessel_I0 (CONST a:  Complex):  Complex;
@@ -33,10 +36,9 @@ Uses Arraydef, uComplex;
 implementation
 
 uses
-    uCmatrix, Math;
+     Math;
 
-Var
-   As2p, Ap2s, ClarkeF, ClarkeR:TcMatrix; {Symmetrical Component Conversion Matrices}
+
    // Sqrt23:Double;
 
 Procedure ETKInvert(A:pDoubleArray; Norder:Integer; Var Error:Integer);

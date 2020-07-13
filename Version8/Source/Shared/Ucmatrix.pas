@@ -49,6 +49,7 @@ type
     Function AvgDiagonal:Complex;   // Average of Diagonal Elements
     Function AvgOffDiagonal:Complex;
     Procedure MultByConst( x:Double);  // Multiply all elements by a constant
+    Function MtrxMult(B: TcMatrix):TcMatrix; // Multiply two square matrices of same order.  Result = A*B
 
     Function Kron(EliminationRow:Integer):TcMatrix;  // Perform Kron reduction on last row/col and return new matrix
 
@@ -76,7 +77,8 @@ implementation
        inherited Create;
        Norder := N;
        InvertError := 0;
-       getmem(Values,Sizeof(Complex)*Norder*Norder);    {Allocate}
+       Values := Nil;
+       Reallocmem(Values,Sizeof(Complex)*Norder*Norder);    {Allocate}
        For i := 1 to (Norder*Norder) Do values^[i] := Cmplx(0.0,0.0);
 
      Except
@@ -90,7 +92,7 @@ implementation
 
    Begin
 
-       Freemem(Values,Sizeof(Complex)*Norder*Norder);
+       Reallocmem(Values, 0);
        Inherited Destroy;
    End;
 
@@ -406,6 +408,35 @@ begin
 
   End;
 
+end;
+
+Function TcMatrix.MtrxMult(B: TcMatrix): TCmatrix;
+// multiply two scquare matrices of same order
+// C (result) = A*B
+
+Var
+    i, j : Integer;
+    cTemp1, cTemp2 : pComplexArray;
+
+begin
+    Result := Nil;   // returns Nil pointer if illegal operation
+    If B.Norder = Norder then
+    Begin
+       Result := TcMatrix.CreateMatrix(Norder);
+
+       cTemp1 := Allocmem(Sizeof(Complex)*Norder);   // Temp array to hold column
+       cTemp2 := Allocmem(Sizeof(Complex)*Norder);   // Temp array
+
+       For j := 1 to Norder do   // Column j
+       Begin
+            For i := 1 to Norder do cTemp2^[i] := B.GetElement(i, j); // Row i
+            MVmult(cTemp1, cTemp2);
+            For i := 1 to Norder do  Result.SetElement(i, j, cTemp1^[i]);
+       End;
+
+       Reallocmem(cTemp1,0);    // Discard temp arrays
+       Reallocmem(cTemp2,0);
+    End;
 end;
 
 procedure TcMatrix.MultByConst(x: Double);

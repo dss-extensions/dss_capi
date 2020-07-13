@@ -34,10 +34,11 @@ TYPE
        VBus,
        BusCurrent   :pComplexArray;
        Zsc,
-       Ysc          :TCMatrix;
+       Ysc,
+       Zsc012          :TCMatrix;
 
        lat, long,         // GIS coords
-       x,y,               // coordinates
+       x, y,               // coordinates
        kVBase,            // Base kV for each node to ground (0)
        DistFromMeter       :Double;
 
@@ -48,14 +49,14 @@ TYPE
        IsRadialBus  :Boolean;  // Flag for general use in bus searches
 
        // ***** Reliability Variables
-       BusFltRate       : Double;  // Accumulated failure rate  downstream from this bus faults per year
-       Bus_Num_Interrupt: Double;  // Number of interruptions this bus per year
-       Bus_Int_Duration : Double; // Avg Annual Interruption duration for this bus
+       BusFltRate        : Double;  // Accumulated failure rate  downstream from this bus faults per year
+       Bus_Num_Interrupt : Double;  // Number of interruptions this bus per year
+       Bus_Int_Duration  : Double; // Avg Annual Interruption duration for this bus
        BusCustInterrupts : Double; // Accumulated Number of customer interruptions from this bus
        BusCustDurations  : Double; // Accumulated Customer outage durations
        BusTotalNumCustomers   : Integer;  // Total Number of customers served from this bus
-       BusTotalMiles  : Double;  // Total length of lines downstream from this bus for Duke siting algorithm
-       BusSectionID   : Integer; // ID of the feeder section this bus belongs to
+       BusTotalMiles     : Double;  // Total length of lines downstream from this bus for Duke siting algorithm
+       BusSectionID      : Integer; // ID of the feeder section this bus belongs to
 
        constructor Create;
        destructor  Destroy; override;
@@ -101,6 +102,7 @@ Begin
     FNumNodesThisBus    := 0;
     Ysc                 := Nil;
     Zsc                 := Nil;
+    Zsc012              := Nil;
     VBus                := nil;
     BusCurrent          := nil;
     kVBase              := 0.0;  // Signify that it has not been set
@@ -199,10 +201,12 @@ End;
 PROCEDURE TDSSBus.AllocateBusQuantities;
 // Have to perform a short circuit study to get this allocated
 Begin
-    If Assigned(Ysc) Then Ysc.Free;
-    If Assigned(Zsc) Then Zsc.Free;
-    Ysc := Tcmatrix.CreateMatrix(FNumNodesThisBus);
-    Zsc := Tcmatrix.CreateMatrix(FNumNodesThisBus);
+    If Assigned(Ysc)    Then Ysc.Free;
+    If Assigned(Zsc)    Then Zsc.Free;
+    If Assigned(Zsc012) Then Zsc012.Free;
+    Ysc    := Tcmatrix.CreateMatrix(FNumNodesThisBus);
+    Zsc    := Tcmatrix.CreateMatrix(FNumNodesThisBus);
+    Zsc012 := Tcmatrix.CreateMatrix(3); //  can only be 3x3  -- 0, 1, 2
     AllocateBusVoltages;
     AllocateBusCurrents;
 
