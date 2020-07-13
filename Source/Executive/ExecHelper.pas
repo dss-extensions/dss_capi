@@ -82,6 +82,8 @@ interface
          FUNCTION DoZscCmd(Zmatrix:Boolean): Integer;
          FUNCTION DoZsc10Cmd: Integer;
          FUNCTION DoZscRefresh(ActorID : Integer):Integer;
+         FUNCTION DoZsc012Cmd: Integer;
+
 
          FUNCTION DoBusCoordsCmd(SwapXY:Boolean; CoordType  : Integer):Integer;
          FUNCTION DoUuidsCmd:Integer;
@@ -151,7 +153,7 @@ USES Command, ArrayDef, ParserDel, SysUtils, DSSClassDefs, DSSGlobals,
      Dynamics, Capacitor, Reactor, Line, Lineunits, Math,
      Classes,  CktElementClass, Sensor,  ExportCIMXML, NamedObject,
      {$IFNDEF FPC}RegularExpressionsCore,{$ELSE}RegExpr,{$ENDIF} PstCalc,
-     PDELement, ReduceAlgs{$IFDEF FPC}, Fncs{$ENDIF};
+     PDELement, ReduceAlgs{$IFDEF FPC}, Fncs{$ENDIF}, Ucmatrix;
 
 Var
    SaveCommands, DistributeCommands,  DI_PlotCommands,
@@ -2145,6 +2147,61 @@ Begin
             End;
 
          End;
+        End
+        Else GlobalResult := 'No Active Bus.';
+      End
+    ELSE GlobalResult := 'No Active Circuit.';
+
+end;
+
+
+//----------------------------------------------------------------------------
+FUNCTION DoZsc012Cmd: Integer;
+// Bus Short Circuit matrix
+
+VAR
+  i:Integer;
+  ActiveBus:TDSSBus;
+  Z0, Z1, Z2:Complex;
+  Temp1, Temp2 : pComplexArray;
+  Zsc012Temp   :TcMatrix;
+Begin
+
+    Result := 0;
+    IF ActiveCircuit[ActiveActor] <> Nil THEN
+      WITH ActiveCircuit[ActiveActor] DO
+      Begin
+        If ActiveBusIndex <> 0 THEN
+        Begin
+         ActiveBus := Buses^[ActiveBusIndex];
+         GlobalResult := '';
+         If not assigned(ActiveBus.Zsc) Then Exit;
+
+         With ActiveBus Do
+           If NumNodesThisBus = 3 Then
+             Begin
+
+        // Compute ZSC012 for 3-phase buses else leave it zeros
+        // ZSC012 = Ap2s Zsc As2p
+                  Zsc012Temp:= Zsc.MtrxMult(As2p);  // temp for intermediate result
+                  if Assigned(ZSC012) then ZSC012.Free;
+                  ZSC012 := Ap2s.MtrxMult(Zsc012Temp);
+                  // Cleanup
+                  Zsc012Temp.Free;
+
+
+              {Just return diagonal elements only}
+
+                 Z0 := Zsc012.GetElement(1,1);
+                 Z1 := Zsc012.GetElement(2,2);
+                 Z2 := Zsc012.GetElement(3,3);
+                 GlobalResult := GlobalResult + Format('Z0, (%-.5g, +j %-.5g), ', [Z0.re, Z0.im]) + CRLF;
+                 GlobalResult := GlobalResult + Format('Z1, (%-.5g, +j %-.5g), ', [Z1.re, Z1.im]) + CRLF;
+                 GlobalResult := GlobalResult + Format('Z2, (%-.5g, +j %-.5g), ', [Z2.re, Z2.im]);
+
+             End
+           Else GlobalResult :=  'Not a 3-phase bus. Cannot compute Symmetrical Component matrix.';
+
         End
         Else GlobalResult := 'No Active Bus.';
       End
