@@ -394,11 +394,11 @@ Begin
      OptionHelp[86] := '{YES/TRUE | NO/FALSE}  Default is NO. Mark Storage locations with a symbol. See StoreMarkerCode and StoreMarkerSize. ';
      OptionHelp[87] := 'Numeric marker code (0..47 -- see Users Manual) for Capacitors. Default is 38.';
      OptionHelp[88] := 'Numeric marker code (0..47 see Users Manual) for Regulators. Default is 17. (red)';
-     OptionHelp[89] := 'Numeric marker code (0..47 see Users Manual) for PVSystems and PVSystem2. Default is 15.';
+     OptionHelp[89] := 'Numeric marker code (0..47 see Users Manual) for PVSystems and PVSystem. Default is 15.';
      OptionHelp[90] := 'Numeric marker code (0..47 see Users Manual) for Storage elements. Default is 9.';
      OptionHelp[91] := 'Size of Capacitor marker. Default is 3.';
      OptionHelp[92] := 'Size of Regulator marker. Default is 5.';
-     OptionHelp[93] := 'Size of PVsystem and PVSystem2 markers. Default is 1.';
+     OptionHelp[93] := 'Size of PVsystem and PVSystem markers. Default is 1.';
      OptionHelp[94] := 'Size of Storage marker. Default is 1.';
      OptionHelp[95] := '{YES/TRUE | NO/FALSE}  Default is NO. For Harmonic solution, neglect the Load shunt admittance branch that can siphon off some of the Load injection current. ' + CRLF + CRLF +
                        'If YES, the current injected from the LOAD at harmonic frequencies will be nearly ideal.';
@@ -449,7 +449,7 @@ Begin
                         'at the PDElement or at the general object definition such as linecodes, lineGeometry, etc.';
      OptionHelp[129] := 'Delivers the number of Non-uniform memory access nodes (NUMA Nodes) available on the machine (read Only). This information is vital when working' +
                         'with processor clusters (HPC). It will help you know the number of processors in the cluster';
-     OptionHelp[130] := '{YES/TRUE | NO/FALSE}  Default is NO. Mark PVSystem2 locations with a symbol. See PVMarkerCode and PVMarkerSize. ';
+     OptionHelp[130] := '{YES/TRUE | NO/FALSE}  Default is NO. Mark PVSystem locations with a symbol. See PVMarkerCode and PVMarkerSize. ';
      OptionHelp[131] := 'Returns Yes/No if the OpenDSS GIS installation is detected in the local machine (Read Only)';
      OptionHelp[132] := '{YES/TRUE | NO/FALSE}  Default is NO. Mark Storage2 locations with a symbol. See StoreMarkerCode and StoreMarkerSize. ';
 
