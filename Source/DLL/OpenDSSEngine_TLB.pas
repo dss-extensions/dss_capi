@@ -11,8 +11,8 @@ unit OpenDSSengine_TLB;
 // manual modifications will be lost.
 // ************************************************************************ //
 
-// $Rev: 52393 $
-// File generated on 6/18/2020 3:06:45 PM from Type Library described below.
+// $Rev: 98336 $
+// File generated on 7/13/2020 2:57:22 PM from Type Library described below.
 
 // ************************************************************************  //
 // Type Lib: C:\Users\prdu001\OpenDSS\Version8\Source\DLL\OpenDSSengine (1)
@@ -24,6 +24,8 @@ unit OpenDSSengine_TLB;
 //   (1) v2.0 stdole, (C:\Windows\SysWOW64\stdole2.tlb)
 //   (2) v1.0 stdole, (stdole32.tlb)
 // SYS_KIND: SYS_WIN32
+// Errors:
+//   Hint: Member 'Class' of 'ILoads' changed to 'Class_'
 // ************************************************************************ //
 {$TYPEDADDRESS OFF} // Unit must be compiled without type-checked pointers.
 {$WARN SYMBOL_PLATFORM OFF}
@@ -905,6 +907,7 @@ type
     function Get_SectionID: Integer; safecall;
     function Get_LineList: OleVariant; safecall;
     function Get_LoadList: OleVariant; safecall;
+    function Get_ZSC012Matrix: OleVariant; safecall;
     property Name: WideString read Get_Name;
     property NumNodes: Integer read Get_NumNodes;
     property Voltages: OleVariant read Get_Voltages;
@@ -937,6 +940,7 @@ type
     property SectionID: Integer read Get_SectionID;
     property LineList: OleVariant read Get_LineList;
     property LoadList: OleVariant read Get_LoadList;
+    property ZSC012Matrix: OleVariant read Get_ZSC012Matrix;
   end;
 
 // *********************************************************************//
@@ -980,6 +984,7 @@ type
     property SectionID: Integer readonly dispid 218;
     property LineList: OleVariant readonly dispid 219;
     property LoadList: OleVariant readonly dispid 220;
+    property ZSC012Matrix: OleVariant readonly dispid 221;
   end;
 
 // *********************************************************************//

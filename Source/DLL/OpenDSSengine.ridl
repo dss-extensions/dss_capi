@@ -6,7 +6,7 @@
 // However, when applying changes via the Editor this file will be regenerated
 // and comments or formatting changes will be lost.
 // ************************************************************************ //
-// File generated on 6/19/2020 10:19:44 AM (- $Rev: 12980 $, 4436546).
+// File generated on 7/13/2020 2:57:25 PM (- $Rev: 12980 $, 24453578).
 
 [
   uuid(8BFDE413-245A-4514-B151-B16DCC243796),
@@ -722,6 +722,8 @@ library OpenDSSengine
     HRESULT _stdcall LineList([out, retval] VARIANT* Value);
     [propget, id(0x000000DC), helpstring("Variant array of strings: Full Names of LOAD elelments connected to this bus.")]
     HRESULT _stdcall LoadList([out, retval] VARIANT* Value);
+    [propget, id(0x000000DD), helpstring("Variant array of doubles (complex) containing the complete 012 Zsc matrix")]
+    HRESULT _stdcall ZSC012Matrix([out, retval] VARIANT* Value);
   };
 
   [

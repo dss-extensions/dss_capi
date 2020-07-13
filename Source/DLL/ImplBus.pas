@@ -50,12 +50,14 @@ type
     function Get_SectionID: Integer; safecall;
     function Get_LineList: OleVariant; safecall;
     function Get_LoadList: OleVariant; safecall;
+    function Get_ZSC012Matrix: OleVariant; safecall;
   end;
 
 implementation
 
 uses ComServ, DSSGlobals, ImplGlobals, Circuit, Ucomplex, MathUtil, sysutils,
-     ExecHelper, SolutionAlgs, Variants, Utilities, Bus, CktElement;
+     ExecHelper, SolutionAlgs, Variants, Utilities, Bus, CktElement, Ucmatrix,
+     Arraydef;
 
 function TBus.Get_Name: WideString;
 begin
@@ -970,6 +972,55 @@ begin
        ELSE  Result := VarArrayCreate([0, 0], varOleStr);
      End
     ELSE Result := VarArrayCreate([0, 0], varOleStr);
+end;
+
+function TBus.Get_ZSC012Matrix: OleVariant;
+
+Var
+    Zsc012Temp : TCmatrix;
+    NValues    : Integer;
+    Norder     : Integer;
+    i, k   : Integer;
+    pBus       : TDSSBus;
+    pValues    : pDoubleArray;   // Temp array to move the data
+
+begin
+
+   IF ActiveCircuit[ActiveActor] = nil Then Begin
+        Result := VarArrayCreate([0, 0], varDouble)
+   End
+   Else With ActiveCircuit[ActiveActor] Do
+    With ActiveCircuit[ActiveActor] Do
+    Begin
+       pBus    := Buses^[ActiveBusIndex];
+       With pBus Do
+        Begin
+
+          If NumNodesThisBus = 3 Then
+             Begin
+                  Nvalues := SQR(NumNodesThisBus)*2;  // Should be 9 complex numbers
+                  Result  := VarArrayCreate( [0, NValues -1], varDouble);
+                  // Compute ZSC012 for 3-phase buses else leave it zeros
+                  // ZSC012 = Ap2s Zsc As2p
+                  Zsc012Temp:= Zsc.MtrxMult(As2p);  // temp for intermediate result
+                  if Assigned(ZSC012) then ZSC012.Free;
+                  ZSC012 := Ap2s.MtrxMult(Zsc012Temp);
+                  // Cleanup
+                  Zsc012Temp.Free;
+
+              {Return all the elements of ZSC012}
+                  k := 0;
+                  pValues := pDoubleArray(ZSC012.GetValuesArrayPtr(Norder));
+                  For i := 1 to Nvalues do Begin
+                      Result[k] := pValues^[i];
+                      Inc(k);
+                  End;
+             End
+
+           Else  Result := VarArrayCreate([0, 0], varDouble);   // default null array
+        End;
+    End;
+
 end;
 
 initialization
