@@ -227,6 +227,8 @@ procedure TExecutive.Clear;
 begin
        IF   (NumCircuits > 0)  THEN
        Begin
+          if DIFilesAreOpen then
+            EnergyMeterClass.CloseAllDIFiles;
 
           {First get rid of all existing stuff}
           ClearAllCircuits;
