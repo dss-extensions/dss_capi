@@ -1827,9 +1827,9 @@ Begin
                 IF (PCElementType = LOAD_ELEMENT)
                 OR (PCElementType = GEN_ELEMENT)
                 OR (PCElementType = PVSYSTEM_ELEMENT)
-                OR (PCElementType = PVSYSTEM2_ELEMENT)
+//                OR (PCElementType = PVSYSTEM2_ELEMENT)
                 OR (PCElementType = STORAGE_ELEMENT)
-                OR (PCElementType = STORAGE2_ELEMENT)
+//                OR (PCElementType = STORAGE2_ELEMENT)
                 OR (PCElementType = CAP_ELEMENT)  // Capacitor and Reactor put on the PC list if IsShunt=TRUE
                 OR (PCElementType = REACTOR_ELEMENT) Then Begin
                       BranchList.NewObject      := pPCelem; // This adds element to the Shunt list in CktTree
