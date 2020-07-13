@@ -905,24 +905,21 @@ begin
     if not IsLine(ActiveCircuit.ActiveCktElement) then 
         Exit;
         
-    if not SeasonalRating then 
-        Exit;
-        
-    if SeasonSignal <> '' then
+    if (not SeasonalRating) or (SeasonSignal = '') then 
     begin
-        RSignal := XYCurveClass.Find(SeasonSignal);
-        
-        if RSignal <> NIL then
-            RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));
-        
-        // Just in case
-        if (RatingIdx >= TLineObj(ActiveCircuit.ActiveCktElement).NumAmpRatings) or (RatingIdx < 0) then
-            Result := TLineObj(ActiveCircuit.ActiveCktElement).NormAmps
-        else
-            Result := TLineObj(ActiveCircuit.ActiveCktElement).AmpRatings[RatingIdx];
-    end
-    else
         Result := TLineObj(ActiveCircuit.ActiveCktElement).NormAmps;
+        Exit;
+    end;
+    
+    RSignal := XYCurveClass.Find(SeasonSignal);
+    if RSignal <> NIL then
+        RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));
+    
+    // Just in case
+    if (RatingIdx >= TLineObj(ActiveCircuit.ActiveCktElement).NumAmpRatings) or (RatingIdx < 0) then
+        Result := TLineObj(ActiveCircuit.ActiveCktElement).NormAmps
+    else
+        Result := TLineObj(ActiveCircuit.ActiveCktElement).AmpRatings[RatingIdx];
 end;
 //------------------------------------------------------------------------------
 procedure Lines_Set_IsSwitch(Value: Wordbool); CDECL;

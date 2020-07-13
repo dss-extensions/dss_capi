@@ -919,7 +919,7 @@ begin
                 RecordSize := TCapacitorObj(MeteredElement).NumSteps;     // Capacitor Taps
                 for i := 1 to RecordSize do
                 begin
-                    Str_Temp := Ansistring('Step_' + inttostr(i) + ' ');
+                    Str_Temp := Ansistring('Step_' + inttostr(i) + ',');
                     strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
                 end;
             end;

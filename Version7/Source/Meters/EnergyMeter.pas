@@ -3604,15 +3604,14 @@ begin
                     with ActiveCircuit.Solution do
                         WriteintoMem(OV_MHandle, DynaVars.dblHour);
                     WriteintoMemStr(OV_MHandle, ', ' + FullName(PDelem));
-                    WriteintoMem(OV_MHandle, NormAmps);
-                    WriteintoMem(OV_MHandle, EmergAmps);
-
+                    WriteintoMem(OV_MHandle, PDElem.NormAmps);
+                    WriteintoMem(OV_MHandle, pdelem.EmergAmps);
                     if PDElem.Normamps > 0.0 then
-                        WriteintoMem(OV_MHandle, Cmax / Normamps * 100.0)
+                        WriteintoMem(OV_MHandle, Cmax / PDElem.Normamps * 100.0)
                     else
                         WriteintoMem(OV_MHandle, 0.0);
                     if PDElem.Emergamps > 0.0 then
-                        WriteintoMem(OV_MHandle, Cmax / Emergamps * 100.0)
+                        WriteintoMem(OV_MHandle, Cmax / PDElem.Emergamps * 100.0)
                     else
                         WriteintoMem(OV_MHandle, 0.0);
                     with ActiveCircuit do // Find bus of first terminal

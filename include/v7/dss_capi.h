@@ -342,6 +342,26 @@ extern "C" {
     Integer ID of the feeder section in which this bus is located.
     */
     DSS_CAPI_V7_DLL int32_t Bus_Get_SectionID(void);
+    
+    /*
+    Array of strings: Full Names of LINE elements connected to the active bus.
+    */
+    DSS_CAPI_V7_DLL void Bus_Get_LineList(char*** ResultPtr, int32_t* ResultCount);
+    
+    /*
+    Same as Bus_Get_LineList but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void Bus_Get_LineList_GR();
+
+    /*
+    Array of strings: Full Names of LOAD elements connected to the active bus.
+    */
+    DSS_CAPI_V7_DLL void Bus_Get_LoadList(char*** ResultPtr, int32_t* ResultCount);
+    
+    /*
+    Same as Bus_Get_LineList but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void Bus_Get_LoadList_GR();
 
     /*
     Array of strings with all Capacitor names in the circuit.

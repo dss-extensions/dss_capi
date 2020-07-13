@@ -856,8 +856,9 @@ var
     PDElem: TPDElement;
     PCElem: TPCElement;
     Volts: Complex;
-    S, Saccum: Complex;
-    nref: Integer;
+    S,
+    Saccum: Complex;
+    nref, nref1, nref2: Integer;
     Vph, V012: array[1..3] of Complex;
     Iph, I012: array[1..3] of Complex;
 
@@ -1183,6 +1184,29 @@ begin
                         k := 0;
                         FromBus := Pad(StripExtension(p_Elem.FirstBus), MaxBusNameLength);
                         Writeln(F, 'ELEMENT = ', FullName(p_elem));
+
+                        {**** Added April 6 2020 *****}
+                        if (NTerm = 2) and (NCond = 1) then // 1-phase devices with two terminals that might be floating
+                        begin
+                            Saccum := CZERO;
+                            Inc(k);
+                            nref1 := p_Elem.NodeRef^[k];
+                            nref2 := p_Elem.NodeRef^[k + 1];
+                            with ActiveCircuit.Solution do
+                                Volts := CSub(NodeV^[nref1], NodeV^[nref2]);
+                            S := Cmul(Volts, conjg(c_Buffer^[k]));
+                            if { (p_Elem.nphases=1) and } ActiveCircuit.PositiveSequence then
+                                S := CmulReal(S, 3.0);
+                            if Opt = 1 then
+                                S := CmulReal(S, 0.001);
+                            Caccum(Saccum, S);
+                            Write(F, UpperCase(FromBus), '  ', GetNodeNum(p_Elem.NodeRef^[k]): 4, '    ', S.re / 1000.0: 8: 1, ' +j ', S.im / 1000.0: 8: 1);
+                            Writeln(F, '   ', Cabs(S) / 1000.0: 8: 1, '     ', PowerFactor(S): 8: 4);
+                            Write(F, Paddots('   TERMINAL TOTAL', MaxBusNameLength + 10), Saccum.re / 1000.0: 8: 1, ' +j ', Saccum.im / 1000.0: 8: 1);
+                            Writeln(F, '   ', Cabs(Saccum) / 1000.0: 8: 1, '     ', PowerFactor(Saccum): 8: 4);
+                            FromBus := Pad(StripExtension(p_Elem.Nextbus), MaxBusNameLength);
+                        end
+                        else
                         for j := 1 to NTerm do
                         begin
                             Saccum := CZERO;

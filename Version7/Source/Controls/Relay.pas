@@ -942,7 +942,7 @@ var
 begin
     Result := '';
     with ParentClass do
-        case PropertyIdxMap[Index] of
+        case Index of
             14:
             begin
                 Result := '(';

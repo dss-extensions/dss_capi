@@ -57,6 +57,10 @@ procedure Bus_Get_VMagAngle_GR(); CDECL;
 function Bus_Get_TotalMiles(): Double; CDECL;
 function Bus_Get_SectionID(): Integer; CDECL;
 function Bus_Get_Next(): Integer; CDECL; // API Extension
+procedure Bus_Get_LineList(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Bus_Get_LineList_GR(); CDECL;
+procedure Bus_Get_LoadList(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+procedure Bus_Get_LoadList_GR(); CDECL;
 
 implementation
 
@@ -70,7 +74,8 @@ uses
     ExecHelper,
     SolutionAlgs,
     Utilities,
-    Bus;
+    Bus,
+    CktElement;
 
 function Bus_Get_Name_AnsiString(): Ansistring; inline;
 begin
@@ -1046,5 +1051,139 @@ begin
             end;
         end;
 end;
+//------------------------------------------------------------------------------
+function CheckBusReference(cktElem: TDSSCktElement; BusReference: Integer; var TerminalIndex: Integer): Boolean;
+{Check all terminals of cktelement to see if bus connected to busreference}
+var
+    i: Integer;
+begin
+    Result := FALSE;
+    with cktElem do
+        for i := 1 to NTerms do
+        begin
+            if Terminals^[i].BusRef = BusReference then
+            begin
+                TerminalIndex := i;
+                Result := TRUE;
+                Break;
+            end;
+        end;
+end;
+//------------------------------------------------------------------------------
+procedure Bus_Get_LineList(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+{ Returns list of LINE elements connected to this bus}
+var
+    BusReference, i, j, k, LineCount: Integer;
+    pElem: TDSSCktElement;
+    Result: PPAnsiCharArray;
+begin
+    if ActiveCircuit = NIL then
+    begin
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        Result[0] := DSS_CopyStringAsPChar('');
+        Exit;
+    end;
+
+    with ActiveCircuit do
+    begin
+        BusReference := ActiveBusIndex;
+        { Count number of Lines connected to this bus }
+        LineCount := 0;
+        pElem := TDSSCktElement(Lines.First);
+        while Assigned(pElem) do
+        begin
+            if CheckBusReference(pElem, BusReference, j) then
+                Inc(LineCount);
+            pElem := TDSSCktElement(Lines.Next);
+        end;
+
+        if LineCount <= 0 then
+        begin
+            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+            Result[0] := DSS_CopyStringAsPChar('');
+            Exit;
+        end;
+
+        //TODO: same list of elements to avoid a second loop through them all?
+
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, LineCount);
+        pElem := TDSSCktElement(Lines.First);
+        k := 0;
+        while Assigned(pElem) do
+        begin
+            if CheckBusReference(pElem, BusReference, j) then
+            begin
+                Result[k] := DSS_CopyStringAsPChar('LINE.' + pElem.name);
+                Inc(k);
+            end;
+            pElem := TDSSCktElement(Lines.Next);
+        end;
+    end;
+end;
+
+procedure Bus_Get_LineList_GR(); CDECL;
+// Same as Bus_Get_LineList but uses global result (GR) pointers
+begin
+    Bus_Get_LineList(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
+//------------------------------------------------------------------------------
+procedure Bus_Get_LoadList(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
+{ Returns list of LOAD elements connected to this bus}
+var
+    BusReference, i, j, k, LoadCount: Integer;
+    pElem: TDSSCktElement;
+    Result: PPAnsiCharArray;
+begin
+    if ActiveCircuit = NIL then
+    begin
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        Result[0] := DSS_CopyStringAsPChar('');
+        Exit;
+    end;
+
+    with ActiveCircuit do
+    begin
+        BusReference := ActiveBusIndex;
+        { Count number of LOAD elements connected to this bus }
+        LoadCount := 0;
+        pElem := TDSSCktElement(Loads.First);
+        while pElem <> NIL do
+        begin
+            if CheckBusReference(pElem, BusReference, j) then
+                Inc(LoadCount);
+            pElem := TDSSCktElement(Loads.Next);
+        end;
+
+        if LoadCount <= 0 then
+        begin
+            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+            Result[0] := DSS_CopyStringAsPChar('');
+            Exit;
+        end;
+        
+        //TODO: same list of elements to avoid a second loop through them all?
+        
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, LoadCount);
+        k := 0;
+        pElem := TDSSCktElement(Loads.First);
+        while Assigned(pElem) do
+        begin
+            if CheckBusReference(pElem, BusReference, j) then
+            begin
+                Result[k] := DSS_CopyStringAsPChar('LOAD.' + pElem.name);
+                Inc(k);
+            end;
+            pElem := TDSSCktElement(Loads.Next);
+        end;
+    end;
+end;
+
+procedure Bus_Get_LoadList_GR(); CDECL;
+// Same as Bus_Get_LoadList but uses global result (GR) pointers
+begin
+    Bus_Get_LoadList(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
 //------------------------------------------------------------------------------
 end.

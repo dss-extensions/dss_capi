@@ -3636,7 +3636,7 @@ Var
   pName: TNamedObject;
   idx: integer;
 Begin
-  StartUuidList (ActiveCircuit.NumBuses + 2 * ActiveCircuit.NumDevices);
+  StartUuidList(ActiveCircuit.NumBuses + 2 * ActiveCircuit.NumDevices);
   Result := 0;
   ParamName := Parser.NextParam;
   Param := Parser.StrValue;
@@ -3656,12 +3656,12 @@ Begin
           UuidVal := '{' + UuidVal + '}';
         if Pos ('=', NameVal) > 0 then 
         begin  // it's a non-identified object in OpenDSS
-          AddHashedUuid (NameVal, UuidVal);
+          AddHashedUuid(NameVal, UuidVal);
         end 
         else 
         begin  // find this as a descendant of TNamedObject
           pName := nil;
-          ParseObjectClassAndName (NameVal, DevClass, DevName);
+          ParseObjectClassAndName(NameVal, DevClass, DevName);
           IF CompareText (DevClass, 'circuit')=0 THEN 
           begin
             pName := ActiveCircuit
@@ -3669,8 +3669,8 @@ Begin
           else 
           if CompareText (DevClass, 'Bus')=0 then 
           begin
-            idx := ActiveCircuit.BusList.Find (DevName);
-            pName := ActiveCircuit.Buses^[idx];
+            idx := ActiveCircuit.BusList.Find(DevName);
+            if idx > 0 then pName := ActiveCircuit.Buses^[idx];
           end else 
           begin
             LastClassReferenced := ClassNames.Find (DevClass);
@@ -3680,7 +3680,7 @@ Begin
                 pName := ActiveDSSClass.GetActiveObj;
           end;
           // re-assign its UUID
-          if pName <> nil then pName.UUID := StringToUuid (UuidVal);
+          if pName <> nil then pName.UUID := StringToUuid(UuidVal);
         end;
       End;
     End;
