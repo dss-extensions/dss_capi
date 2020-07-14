@@ -12,7 +12,11 @@ interface
 
 uses
     Arraydef,
-    uComplex;
+    uComplex,
+    uCmatrix;
+
+Var
+   As2p, Ap2s, ClarkeF, ClarkeR: TcMatrix; {Symmetrical Component Conversion Matrices}
 
 procedure AB02Phase(Vph, VaB0: pComplexArray);     // Reverse Clarke
 function Bessel_I0(const a: Complex): Complex;
@@ -36,14 +40,7 @@ procedure DblInc(var x: Double; const y: Double); inline; // increment a double
 implementation
 
 uses
-    uCmatrix,
     Math;
-
-var
-    As2p, Ap2s, ClarkeF, ClarkeR: TcMatrix;
-
-{Symmetrical Component Conversion Matrices}
-   // Sqrt23:Double;
 
 procedure ETKInvert(A: pDoubleArray; Norder: Integer; var Error: Integer);
 

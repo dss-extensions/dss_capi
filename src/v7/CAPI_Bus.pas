@@ -61,6 +61,8 @@ procedure Bus_Get_LineList(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CD
 procedure Bus_Get_LineList_GR(); CDECL;
 procedure Bus_Get_LoadList(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 procedure Bus_Get_LoadList_GR(); CDECL;
+procedure Bus_Get_ZSC012Matrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure Bus_Get_ZSC012Matrix_GR(); CDECL;
 
 implementation
 
@@ -75,7 +77,8 @@ uses
     SolutionAlgs,
     Utilities,
     Bus,
-    CktElement;
+    CktElement,
+    Ucmatrix;
 
 function Bus_Get_Name_AnsiString(): Ansistring; inline;
 begin
@@ -1183,6 +1186,53 @@ procedure Bus_Get_LoadList_GR(); CDECL;
 // Same as Bus_Get_LoadList but uses global result (GR) pointers
 begin
     Bus_Get_LoadList(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar)
+end;
+
+//------------------------------------------------------------------------------
+procedure Bus_Get_ZSC012Matrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL; //TODO: remove duplication between this and DoZsc012Cmd
+var
+    Result: PDoubleArray;
+    Zsc012Temp: TCmatrix;
+    NValues: Integer;
+    Norder: Integer;
+    pBus: TDSSBus;
+begin
+    if (ActiveCircuit = NIL) or 
+        (not ((ActiveCircuit.ActiveBusIndex > 0) and (ActiveCircuit.ActiveBusIndex <= ActiveCircuit.NumBuses))) then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    
+    pBus := ActiveCircuit.Buses^[ActiveCircuit.ActiveBusIndex];
+    with pBus do
+    begin
+        if NumNodesThisBus <> 3 then
+        begin
+            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);        
+            Exit;
+        end;
+        
+        Nvalues := SQR(NumNodesThisBus) * 2;  // Should be 9 complex numbers
+        // Compute ZSC012 for 3-phase buses else leave it zeros
+        // ZSC012 = Ap2s Zsc As2p
+        Zsc012Temp := Zsc.MtrxMult(As2p);  // temp for intermediate result
+        if Assigned(ZSC012) then
+            ZSC012.Free;
+        ZSC012 := Ap2s.MtrxMult(Zsc012Temp);
+        // Cleanup
+        Zsc012Temp.Free;
+
+        {Return all the elements of ZSC012}
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValues);
+        Move(ZSC012.Values[1], ResultPtr[0], NValues * SizeOf(Double));
+    end;
+end;
+
+procedure Bus_Get_ZSC012Matrix_GR(); CDECL;
+// Same as Bus_Get_ZSC012Matrix but uses global result (GR) pointers
+begin
+    Bus_Get_ZSC012Matrix(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
 end;
 
 //------------------------------------------------------------------------------

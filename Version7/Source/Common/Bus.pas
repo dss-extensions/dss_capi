@@ -39,7 +39,8 @@ type
         VBus,
         BusCurrent: pComplexArray;
         Zsc,
-        Ysc: TCMatrix;
+        Ysc,
+        Zsc012: TCMatrix;
 
         x, y,              // coordinates
         kVBase,           // Base kV for each node to ground (0)
@@ -105,6 +106,7 @@ begin
     FNumNodesThisBus := 0;
     Ysc := NIL;
     Zsc := NIL;
+    Zsc012 := NIL;
     VBus := NIL;
     BusCurrent := NIL;
     kVBase := 0.0;  // Signify that it has not been set
@@ -213,8 +215,11 @@ begin
         Ysc.Free;
     if Assigned(Zsc) then
         Zsc.Free;
+    if Assigned(Zsc012) then
+        Zsc012.Free;
     Ysc := Tcmatrix.CreateMatrix(FNumNodesThisBus);
     Zsc := Tcmatrix.CreateMatrix(FNumNodesThisBus);
+    Zsc012 := Tcmatrix.CreateMatrix(3); //  can only be 3x3  -- 0, 1, 2
     AllocateBusVoltages;
     AllocateBusCurrents;
 

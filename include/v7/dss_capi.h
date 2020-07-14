@@ -364,6 +364,15 @@ extern "C" {
     DSS_CAPI_V7_DLL void Bus_Get_LoadList_GR();
 
     /*
+    Array of 18 doubles (9 complex values) containing the complete 012 Zsc matrix
+    */
+    DSS_CAPI_V7_DLL void Bus_Get_ZSC012Matrix(double** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as Bus_Get_ZSC012Matrix but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void Bus_Get_ZSC012Matrix_GR(void);
+
+    /*
     Array of strings with all Capacitor names in the circuit.
     */
     DSS_CAPI_V7_DLL void Capacitors_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);

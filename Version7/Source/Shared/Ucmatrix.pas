@@ -20,14 +20,9 @@ uses
 type
     TcMatrix = class(TObject)
 
-    PRIVATE
-    { Private declarations }
+    PUBLIC
         Norder: Integer;
         Values: pComplexArray;
-
-
-    PUBLIC
-    { Public declarations }
         InvertError: Integer;
 
         constructor CreateMatrix(N: Integer);
@@ -51,6 +46,7 @@ type
         function AvgDiagonal: Complex;   // Average of Diagonal Elements
         function AvgOffDiagonal: Complex;
         procedure MultByConst(x: Double);  // Multiply all elements by a constant
+        function MtrxMult(B: TcMatrix): TcMatrix; // Multiply two square matrices of same order.  Result = A*B
 
         function Kron(EliminationRow: Integer): TcMatrix;  // Perform Kron reduction on last row/col and return new matrix
 
@@ -68,9 +64,7 @@ uses
 
 {$R-}  { Turn off range checking}
 {--------------------------------------------------------------------------}
-
 constructor TcMatrix.CreateMatrix(N: Integer);
-
 var
     i: Integer;
 
@@ -80,34 +74,24 @@ begin
         inherited Create;
         Norder := N;
         InvertError := 0;
-        getmem(Values, Sizeof(Complex) * Norder * Norder);    {Allocate}
-        for i := 1 to (Norder * Norder) do
-            values^[i] := Cmplx(0.0, 0.0);
-
+        Values := NIL;
+        Reallocmem(Values, Sizeof(Complex) * Norder * Norder);    {Allocate}
+        FillByte(Values^, Sizeof(Complex) * Norder * Norder, 0);
     except
         Destroy;
     end;
-
 end;
-
- {--------------------------------------------------------------------------}
+{--------------------------------------------------------------------------}
 destructor TcMatrix.Destroy;
-
 begin
-
-    Freemem(Values, Sizeof(Complex) * Norder * Norder);
+    Reallocmem(Values, 0);
     inherited Destroy;
 end;
-
 {--------------------------------------------------------------------------}
 procedure TcMatrix.Clear;
-var
-    i: Integer;
 begin
-    for i := 1 to (Norder * Norder) do
-        values^[i] := Cmplx(0.0, 0.0);
+    FillByte(Values^, Sizeof(Complex) * Norder * Norder, 0);
 end;
-
 {--------------------------------------------------------------------------}
 procedure TcMatrix.MvMult(b, x: pComplexArray); inline;
 {$IFDEF DSS_CAPI_MVMULT}
@@ -130,7 +114,6 @@ begin
     end;
 end;
 {$ENDIF}
-
 {--------------------------------------------------------------------------}
 // procedure TcMatrix.MvMultAccum(b, x: pComplexArray);
 //    // Same as MVMult except accumulates b
@@ -423,7 +406,6 @@ begin
     Result := NIL;   // Nil result means it failed
     if (Norder > 1) and (EliminationRow <= Norder) and (EliminationRow > 0) then
     begin
-
         Result := TCMatrix.CreateMatrix(Norder - 1);
         N := EliminationRow;
         NNElement := GetElement(N, N);
@@ -441,9 +423,33 @@ begin
                         Result.SetElement(ii, jj, CSub(GetElement(i, j), Cdiv(Cmul(GetElement(i, N), GetElement(N, j)), NNElement)));
                     end;
             end;
-
     end;
+end;
 
+function TcMatrix.MtrxMult(B: TcMatrix): TCmatrix; //TODO: C++ version if better performance is useful here
+// multiply two scquare matrices of same order
+// C (result) = A*B
+var
+    i, j: Integer;
+    cTemp1, cTemp2: pComplexArray;
+begin
+    Result := NIL;   // returns Nil pointer if illegal operation
+    if B.Norder = Norder then
+    begin
+        Result := TcMatrix.CreateMatrix(Norder);
+        cTemp1 := Allocmem(Sizeof(Complex) * Norder);   // Temp array to hold column
+        cTemp2 := Allocmem(Sizeof(Complex) * Norder);   // Temp array
+        for j := 1 to Norder do   // Column j
+        begin
+            for i := 1 to Norder do
+                cTemp2^[i] := B.GetElement(i, j); // Row i
+            MVmult(cTemp1, cTemp2);
+            for i := 1 to Norder do
+                Result.SetElement(i, j, cTemp1^[i]);
+        end;
+        Reallocmem(cTemp1, 0);    // Discard temp arrays
+        Reallocmem(cTemp2, 0);
+    end;
 end;
 
 procedure TcMatrix.MultByConst(x: Double);
