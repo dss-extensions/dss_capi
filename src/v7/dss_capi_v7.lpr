@@ -35,7 +35,7 @@ library dss_capi_v7;
 }
 
 {
-Copyright (c) 2017-2019, Paulo Meira
+Copyright (c) 2017-2020, Paulo Meira
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -955,6 +955,10 @@ exports
     PDElements_Get_TotalMiles,
     PDElements_Get_SectionID,
     PDElements_Set_RepairTime,
+    PDElements_Get_AllNames, // API Extension
+    PDElements_Get_AllMaxCurrents, // API Extension
+    PDElements_Get_AllPctNorm, // API Extension
+    PDElements_Get_AllPctEmerg, // API Extension
     PVSystems_Get_AllNames,
     PVSystems_Get_RegisterNames,
     PVSystems_Get_RegisterValues,
@@ -1502,6 +1506,10 @@ exports
     Parser_Get_Vector_GR,
     Parser_Get_Matrix_GR,
     Parser_Get_SymMatrix_GR,
+    PDElements_Get_AllNames_GR,
+    PDElements_Get_AllMaxCurrents_GR,
+    PDElements_Get_AllPctNorm_GR,
+    PDElements_Get_AllPctEmerg_GR,
     PVSystems_Get_AllNames_GR,
     PVSystems_Get_RegisterNames_GR,
     PVSystems_Get_RegisterValues_GR,

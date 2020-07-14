@@ -351,7 +351,7 @@ begin
         Inc(k);
         elem := pList.Next;
     end;
-    if Restore then 
+    if Restore and ((idx_before > 0) and (idx_before <= pList.ListSize)) then 
         pList.Get(idx_before);
 end;
 //------------------------------------------------------------------------------

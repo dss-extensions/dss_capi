@@ -28,10 +28,10 @@ type
     pStringArray = ^StringArray;
     StringArray = array[1..100] of String;
 
-    pDouble = ^Double;
-    pSingle = ^Single;
-    pSmallInt = ^Smallint;
-    pLongInt = ^Longint;
+    //pDouble = ^Double;
+    //pSingle = ^Single;
+    //pSmallInt = ^Smallint;
+    //pLongInt = ^Longint;
 
 function AllocStringArray(Size: Integer): pStringArray;
 procedure FreeStringArray(var pS: pStringArray; Size: Integer);

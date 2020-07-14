@@ -2960,7 +2960,7 @@ begin
         Assignfile(F, FileNm);
         ReWrite(F);
 
-        Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
+        Getmem(cBuffer, sizeof(Complex) * GetMaxCktElementSize);
 
         Writeln(F, 'Name, Imax, %normal, %emergency, kW, kvar, NumCustomers, TotalCustomers, NumPhases, kVBase');
 
