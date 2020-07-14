@@ -388,6 +388,11 @@ begin
     if ActiveCircuit <> NIL then
     begin
         pWireData := WireDataClass.GetActiveObj;
+        if pWireData = NIL then 
+        begin
+            Exit;
+        end;
+        
         with pWireData do
         begin
             pWireData.Fcapradius60 := Value;
