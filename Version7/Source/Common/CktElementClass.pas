@@ -12,81 +12,88 @@ unit CktElementClass;
 
 interface
 
-USES
+uses
     DSSClass;
 
-TYPE
+type
     TCktElementClass = class(TDSSClass)
-    private
+    PRIVATE
 
-    protected
-      Function ClassEdit(Const ActiveCktElemObj:Pointer; Const ParamPointer:Integer):Integer;
-      Procedure ClassMakeLike(Const OtherObj:Pointer);
+    PROTECTED
+        function ClassEdit(const ActiveCktElemObj: Pointer; const ParamPointer: Integer): Integer;
+        procedure ClassMakeLike(const OtherObj: Pointer);
 
-      Procedure CountProperties;  // Add no. of intrinsic properties
-      Procedure DefineProperties;  // Add Properties of this class to propName
+        procedure CountProperties;  // Add no. of intrinsic properties
+        procedure DefineProperties;  // Add Properties of this class to propName
 
-    public
-      NumCktElemClassProps :Integer;
-      constructor Create;
-      destructor Destroy; override;
-    published 
+    PUBLIC
+        NumCktElemClassProps: Integer;
+        constructor Create;
+        destructor Destroy; OVERRIDE;
+    PUBLISHED
 
     end;
 
 implementation
 
-uses CktElement, ParserDel, Utilities, DSSGlobals;
+uses
+    CktElement,
+    ParserDel,
+    Utilities,
+    DSSGlobals;
 
 { TCktElementClass }
 
 function TCktElementClass.ClassEdit(const ActiveCktElemObj: Pointer;
-  const ParamPointer: Integer): Integer;
+    const ParamPointer: Integer): Integer;
 
-BEGIN
-  Result := 0;
+begin
+    Result := 0;
   // continue parsing with contents of Parser
-  If ParamPointer > 0 Then
-  WITH TDSSCktElement(ActiveCktElemObj) DO BEGIN
+    if ParamPointer > 0 then
+        with TDSSCktElement(ActiveCktElemObj) do
+        begin
 
-      CASE ParamPointer OF
-       1: BaseFrequency := Parser.Dblvalue;
-       2: Enabled := InterpretYesNo(Parser.StrValue);
-       ELSE
-       Inherited ClassEdit(ActiveCktElemObj, ParamPointer - NumCktElemClassProps)
-      END;
-  End;
+            case ParamPointer of
+                1:
+                    BaseFrequency := Parser.Dblvalue;
+                2:
+                    Enabled := InterpretYesNo(Parser.StrValue);
+            else
+                inherited ClassEdit(ActiveCktElemObj, ParamPointer - NumCktElemClassProps)
+            end;
+        end;
 
 end;
 
 procedure TCktElementClass.ClassMakeLike(const OtherObj: Pointer);
-Var
-   OtherCktObj : TDSSCktElement;
-Begin
+var
+    OtherCktObj: TDSSCktElement;
+begin
 
-     OtherCktObj := TDSSCktElement(OtherObj);
+    OtherCktObj := TDSSCktElement(OtherObj);
 
-     With TDSSCktElement(ActiveDSSObject) Do
-     Begin
-       BaseFrequency:= OtherCktObj.BaseFrequency;
-       Enabled := TRUE;
-     End;
+    with TDSSCktElement(ActiveDSSObject) do
+    begin
+        BaseFrequency := OtherCktObj.BaseFrequency;
+        Enabled := TRUE;
+    end;
 
 end;
 
 procedure TCktElementClass.CountProperties;
 
-Begin
-     NumProperties := NumProperties + NumCktElemClassProps;
-     Inherited CountProperties;
+begin
+    NumProperties := NumProperties + NumCktElemClassProps;
+    inherited CountProperties;
 
 end;
 
 constructor TCktElementClass.Create;
 begin
 
-     Inherited Create;
-     NumCktElemClassProps := 2;
+    inherited Create;
+    NumCktElemClassProps := 2;
 
 end;
 
@@ -94,22 +101,22 @@ procedure TCktElementClass.DefineProperties;
 
 // Define the properties for the base power delivery element class
 
-Begin
-     PropertyName^[ActiveProperty + 1] := 'basefreq';
-     PropertyName^[ActiveProperty + 2] := 'enabled';
+begin
+    PropertyName^[ActiveProperty + 1] := 'basefreq';
+    PropertyName^[ActiveProperty + 2] := 'enabled';
 
-     PropertyHelp^[ActiveProperty + 1] := 'Base Frequency for ratings.';
-     PropertyHelp^[ActiveProperty + 2] := '{Yes|No or True|False} Indicates whether this element is enabled.';
+    PropertyHelp^[ActiveProperty + 1] := 'Base Frequency for ratings.';
+    PropertyHelp^[ActiveProperty + 2] := '{Yes|No or True|False} Indicates whether this element is enabled.';
 
-     ActiveProperty := ActiveProperty + NumCktElemClassProps;
+    ActiveProperty := ActiveProperty + NumCktElemClassProps;
 
-     Inherited DefineProperties;
+    inherited DefineProperties;
 
 end;
 
 destructor TCktElementClass.Destroy;
 begin
-  inherited Destroy;
+    inherited Destroy;
 
 end;
 

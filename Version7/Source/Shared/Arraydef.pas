@@ -1,4 +1,5 @@
 unit Arraydef;
+
  {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -8,53 +9,57 @@ unit Arraydef;
 
 interface
 
-Type
+type
 
 { Define arrays with dummy dimension of 100 so we can hard code
   constants for accessing small order elements;  Otherwise, always
   allocate arrays of these types before using}
     pSmallIntArray = ^SmallIntArray;
-    SmallIntArray = Array[1..100] of SmallInt;
+    SmallIntArray = array[1..100] of Smallint;
     pIntegerArray = ^LongIntArray;
     pLongIntArray = ^LongIntArray;
-    LongIntArray = Array[1..100] of LongInt;
+    LongIntArray = array[1..100] of Longint;
     pDoubleArray = ^DoubleArray;
-    DoubleArray = Array[1..100] of Double;
+    DoubleArray = array[1..100] of Double;
     pSingleArray = ^SingleArray;
-    SingleArray = Array[1..100] of Single;
+    SingleArray = array[1..100] of Single;
     pPointerArray = ^PointerArray;
-    PointerArray = Array[1..100] of Pointer;
+    PointerArray = array[1..100] of Pointer;
     pStringArray = ^StringArray;
-    StringArray = Array[1..100] of String;
+    StringArray = array[1..100] of String;
 
     pDouble = ^Double;
     pSingle = ^Single;
-    pSmallInt = ^SmallInt;
-    pLongInt = ^LongInt;
+    pSmallInt = ^Smallint;
+    pLongInt = ^Longint;
 
-Function AllocStringArray(Size:Integer):pStringArray;
-Procedure FreeStringArray(var pS:pStringArray; Size:Integer);
+function AllocStringArray(Size: Integer): pStringArray;
+procedure FreeStringArray(var pS: pStringArray; Size: Integer);
 {--------------------------------------------------------------------------}
 
 implementation
 
-uses SysUtils;
+uses
+    SysUtils;
 
-Function AllocStringArray(Size:Integer):pStringArray;
+function AllocStringArray(Size: Integer): pStringArray;
 // Allocates a string array initialized with nil values
-Begin
-      Result := AllocMem(SizeOf(string)*Size);
-End;
+begin
+    Result := AllocMem(SizeOf(String) * Size);
+end;
 
-Procedure FreeStringArray(var pS:pStringArray; Size:Integer);
-Var i:Integer;
-Begin
-    IF Assigned(ps) Then Begin
-        For i := 1 to Size Do Begin
+procedure FreeStringArray(var pS: pStringArray; Size: Integer);
+var
+    i: Integer;
+begin
+    if Assigned(ps) then
+    begin
+        for i := 1 to Size do
+        begin
             pS^[i] := '';  // decrement counter in string
-        End;
+        end;
         Reallocmem(ps, 0);  // Throw it away and set it to NIL
-    End;
-End;
+    end;
+end;
 
 end.

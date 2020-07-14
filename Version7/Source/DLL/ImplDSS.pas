@@ -1,4 +1,5 @@
 unit ImplDSS;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -11,87 +12,93 @@ unit ImplDSS;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSEngine_TLB, StdVcl;
+    ComObj,
+    ActiveX,
+    OpenDSSEngine_TLB,
+    StdVcl;
 
 type
-  TDSS = class(TAutoObject,  IDSS)
-  protected
-    function Get_ActiveCircuit: ICircuit; safecall;
-    function Get_Circuits(Idx: OleVariant): ICircuit; safecall;
-    function Get_NumCircuits: Integer; safecall;
-    function Get_Error: IError; safecall;
-    function Get_Text: IText; safecall;
-    function NewCircuit(Const Name: WideString): ICircuit; safecall;
-    procedure ClearAll; safecall;
-    procedure ShowPanel; safecall;
-    function Get_Version: WideString; safecall;
-    function Start(code: Integer): WordBool; safecall;
-    function Get_DSSProgress: IDSSProgress; safecall;
-    function Get_Classes: OleVariant; safecall;
-    function Get_UserClasses: OleVariant; safecall;
-    function Get_NumClasses: Integer; safecall;
-    function Get_NumUserClasses: Integer; safecall;
-    function Get_AllowForms: WordBool; safecall;
-    function Get_DataPath: WideString; safecall;
-    procedure Set_DataPath(const Value: WideString); safecall;
-    procedure Reset; safecall;
-    procedure Set_AllowForms(Value: WordBool); safecall;
-    function Get_DefaultEditor: WideString; safecall;
-    function Get_ActiveClass: IActiveClass; safecall;
-    function SetActiveClass(const ClassName: WideString): Integer; safecall;
-    function Get_Executive: IDSS_Executive; safecall;
-    function Get_Events: IDSSEvents; safecall;
-    function Get_CmathLib: ICmathLib; safecall;
-    function Get_Parser: IParser; safecall;
-    function Get_DSSim_Coms: IDSSimComs; safecall;
-  end;
+    TDSS = class(TAutoObject, IDSS)
+    PROTECTED
+        function Get_ActiveCircuit: ICircuit; SAFECALL;
+        function Get_Circuits(Idx: Olevariant): ICircuit; SAFECALL;
+        function Get_NumCircuits: Integer; SAFECALL;
+        function Get_Error: IError; SAFECALL;
+        function Get_Text: IText; SAFECALL;
+        function NewCircuit(const Name: Widestring): ICircuit; SAFECALL;
+        procedure ClearAll; SAFECALL;
+        procedure ShowPanel; SAFECALL;
+        function Get_Version: Widestring; SAFECALL;
+        function Start(code: Integer): Wordbool; SAFECALL;
+        function Get_DSSProgress: IDSSProgress; SAFECALL;
+        function Get_Classes: Olevariant; SAFECALL;
+        function Get_UserClasses: Olevariant; SAFECALL;
+        function Get_NumClasses: Integer; SAFECALL;
+        function Get_NumUserClasses: Integer; SAFECALL;
+        function Get_AllowForms: Wordbool; SAFECALL;
+        function Get_DataPath: Widestring; SAFECALL;
+        procedure Set_DataPath(const Value: Widestring); SAFECALL;
+        procedure Reset; SAFECALL;
+        procedure Set_AllowForms(Value: Wordbool); SAFECALL;
+        function Get_DefaultEditor: Widestring; SAFECALL;
+        function Get_ActiveClass: IActiveClass; SAFECALL;
+        function SetActiveClass(const ClassName: Widestring): Integer; SAFECALL;
+        function Get_Executive: IDSS_Executive; SAFECALL;
+        function Get_Events: IDSSEvents; SAFECALL;
+        function Get_CmathLib: ICmathLib; SAFECALL;
+        function Get_Parser: IParser; SAFECALL;
+        function Get_DSSim_Coms: IDSSimComs; SAFECALL;
+    end;
 
 implementation
 
-uses ComServ,
-     DSSClassDefs,
-     DSSGlobals,
-     DSSForms,
-     Forms,
-     ScriptFormNormal,
-     DSSClass,
-     ImplGlobals,
-     Exechelper,
-     sysUtils,
-     Executive,
-     Variants,
-     ParserDel;
+uses
+    ComServ,
+    DSSClassDefs,
+    DSSGlobals,
+    DSSForms,
+    Forms,
+    ScriptFormNormal,
+    DSSClass,
+    ImplGlobals,
+    Exechelper,
+    sysUtils,
+    Executive,
+    Variants,
+    ParserDel;
 
 function TDSS.Get_ActiveCircuit: ICircuit;
 begin
-      Result := FCircuit as ICircuit;
+    Result := FCircuit as ICircuit;
 end;
 
-function TDSS.Get_Circuits(Idx: OleVariant): ICircuit;
-Var
-   i  :Integer;
-   S  :String;
+function TDSS.Get_Circuits(Idx: Olevariant): ICircuit;
+var
+    i: Integer;
+    S: String;
 begin
 
-     Case (VarType(Idx) and varTypeMask) Of
-       varSmallint,VarInteger: Begin
-                       i := Idx;
-                       If (Circuits.ListSize > i) and (i >= 0) Then
-                         ActiveCircuit := Circuits.Get(i+1)
-                       Else
-                         DoSimpleMsg('Circuit index requested ('+ IntToStr(i) +') is invalid', 5009);
+    case (VarType(Idx) and varTypeMask) of
+        varSmallint, VarInteger:
+        begin
+            i := Idx;
+            if (Circuits.ListSize > i) and (i >= 0) then
+                ActiveCircuit := Circuits.Get(i + 1)
+            else
+                DoSimpleMsg('Circuit index requested (' + IntToStr(i) + ') is invalid', 5009);
 
-                   End;
-       VarOleStr:  Begin
-                      S := Idx;
-                      SetActiveCircuit(s);
-                   End;
-     Else
-         DoSimpleMsg('Illegal Var Type Passed to Circuits Interface: '+ Format('$%x',[VarType(Idx)]), 5010);
+        end;
+        VarOleStr:
+        begin
+            S := Idx;
+            SetActiveCircuit(s);
+        end;
+    else
+        DoSimpleMsg('Illegal Var Type Passed to Circuits Interface: ' + Format('$%x', [VarType(Idx)]), 5010);
 
-     End;
+    end;
 
-     Result := FCircuit As ICircuit;  // Return interface that operates on active circuit
+    Result := FCircuit as ICircuit;  // Return interface that operates on active circuit
 end;
 
 function TDSS.Get_NumCircuits: Integer;
@@ -102,21 +109,21 @@ end;
 
 function TDSS.Get_Error: IError;
 begin
-    Result := FError As IError;
+    Result := FError as IError;
 end;
 
 function TDSS.Get_Text: IText;
 begin
-     Result := FText as IText;
+    Result := FText as IText;
 end;
 
 
-function TDSS.NewCircuit(Const Name: WideString): ICircuit;
+function TDSS.NewCircuit(const Name: Widestring): ICircuit;
 begin
 
-     MakeNewCircuit(Name);
+    MakeNewCircuit(Name);
 
-     Result := FCircuit as ICircuit;
+    Result := FCircuit as ICircuit;
 
 end;
 
@@ -129,26 +136,26 @@ procedure TDSS.ShowPanel;
 begin
 
 //    ShowControlPanel; // in DSSForms
-    If Not Assigned (MainEditFormNormal) Then
-    Begin
-          MainEditFormNormal := TMainEditFormnormal.Create(Nil);
-          MainEditFormNormal.Caption := 'OpenDSS Script Form';
-          MainEditFormNormal.isMainWindow := TRUE;
-    End;
+    if not Assigned(MainEditFormNormal) then
+    begin
+        MainEditFormNormal := TMainEditFormnormal.Create(NIL);
+        MainEditFormNormal.Caption := 'OpenDSS Script Form';
+        MainEditFormNormal.isMainWindow := TRUE;
+    end;
 
     MainEditFormNormal.Show;
 
 end;
 
-function TDSS.Get_Version: WideString;
+function TDSS.Get_Version: Widestring;
 begin
-     Result := VersionString +'; License Status: Open ' ;
+    Result := VersionString + '; License Status: Open ';
 end;
 
-function TDSS.Start(code: Integer): WordBool;
+function TDSS.Start(code: Integer): Wordbool;
 {Place any start code here}
 begin
-  Result :=  TRUE;
+    Result := TRUE;
  (*      Reverted to original method. 3/1/17. see dpr file
       InitializeInterfaces;
       IsDLL := TRUE;
@@ -160,75 +167,77 @@ end;
 
 function TDSS.Get_DSSProgress: IDSSProgress;
 begin
-    Result := FDSSProgress As IDSSProgress;
+    Result := FDSSProgress as IDSSProgress;
 end;
 
-function TDSS.Get_Classes: OleVariant;
-Var
-  i,k:Integer;
+function TDSS.Get_Classes: Olevariant;
+var
+    i, k: Integer;
 
-Begin
+begin
 
-   Result := VarArrayCreate([0, NumIntrinsicClasses-1], varOleStr);
-   k:=0;
-   For i := 1 to NumIntrinsicClasses Do
-   Begin
-      Result[k] := TDSSClass(DssClassList.Get(i)).Name;
-      Inc(k);
-   End;
+    Result := VarArrayCreate([0, NumIntrinsicClasses - 1], varOleStr);
+    k := 0;
+    for i := 1 to NumIntrinsicClasses do
+    begin
+        Result[k] := TDSSClass(DssClassList.Get(i)).Name;
+        Inc(k);
+    end;
 
 end;
 
-function TDSS.Get_UserClasses: OleVariant;
-Var
-  i,k:Integer;
+function TDSS.Get_UserClasses: Olevariant;
+var
+    i, k: Integer;
 
-Begin
-     If NumUserClasses > 0 Then
-     Begin
-         Result := VarArrayCreate([0, NumUserClasses-1], varOleStr);
-         k:=0;
-         For i := NumIntrinsicClasses+1 To DSSClassList.ListSize   Do
-         Begin
+begin
+    if NumUserClasses > 0 then
+    begin
+        Result := VarArrayCreate([0, NumUserClasses - 1], varOleStr);
+        k := 0;
+        for i := NumIntrinsicClasses + 1 to DSSClassList.ListSize do
+        begin
             Result[k] := TDSSClass(DssClassList.Get(i)).Name;
             Inc(k);
-         End;
-     End
-     Else
-     Result := VarArrayCreate([0, 0], varOleStr);
+        end;
+    end
+    else
+        Result := VarArrayCreate([0, 0], varOleStr);
 end;
 
 function TDSS.Get_NumClasses: Integer;
 begin
 
-        Result := NumIntrinsicClasses;
+    Result := NumIntrinsicClasses;
 
 end;
 
 function TDSS.Get_NumUserClasses: Integer;
 begin
-     Result := NumUserClasses;
+    Result := NumUserClasses;
 end;
 
-function TDSS.Get_AllowForms: WordBool;
+function TDSS.Get_AllowForms: Wordbool;
 begin
-     Result := Not NoFormsAllowed;
+    Result := not NoFormsAllowed;
 end;
 
 
-procedure TDSS.Set_AllowForms(Value: WordBool);
+procedure TDSS.Set_AllowForms(Value: Wordbool);
 begin
-     If Not Value Then NoFormsAllowed := Not Value;  // Only set to False
-     If NoFormsAllowed Then CloseDownForms;  // DSSForms
+    if not Value then
+        NoFormsAllowed := not Value;  // Only set to False
+    if NoFormsAllowed then
+        CloseDownForms;  // DSSForms
 
 end;
 
-function TDSS.Get_DataPath: WideString;
+function TDSS.Get_DataPath: Widestring;
 begin
-     Result := DataDirectory;
+    Result := DataDirectory;
 end;
 
-procedure TDSS.Set_DataPath(const Value: WideString);
+procedure TDSS.Set_DataPath(const Value: Widestring);
 begin
     SetDataPath(Value);
 end;
@@ -242,65 +251,64 @@ begin
 end;
 
 
-
-function TDSS.Get_DefaultEditor: WideString;
+function TDSS.Get_DefaultEditor: Widestring;
 begin
-     Result := DSSGlobals.DefaultEditor;
+    Result := DSSGlobals.DefaultEditor;
 end;
 
 function TDSS.Get_ActiveClass: IActiveClass;
 begin
-     Result := FActiveClass as IActiveClass;
+    Result := FActiveClass as IActiveClass;
 end;
 
-function TDSS.SetActiveClass(const ClassName: WideString): Integer;
-Var
-   DevClassIndex :Integer;
+function TDSS.SetActiveClass(const ClassName: Widestring): Integer;
+var
+    DevClassIndex: Integer;
 
 begin
-     Result := 0;
-     DevClassIndex := ClassNames.Find(ClassName);
-     If DevClassIndex = 0 Then  Begin
-        DoSimplemsg('Error: Class ' + ClassName + ' not found.' , 5016);
+    Result := 0;
+    DevClassIndex := ClassNames.Find(ClassName);
+    if DevClassIndex = 0 then
+    begin
+        DoSimplemsg('Error: Class ' + ClassName + ' not found.', 5016);
         Exit;
-     End;
+    end;
 
-     LastClassReferenced := DevClassIndex;
-     ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
-     Result := LastClassReferenced;
+    LastClassReferenced := DevClassIndex;
+    ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
+    Result := LastClassReferenced;
 
 end;
-
 
 
 function TDSS.Get_Executive: IDSS_Executive;
 begin
-     Result := FDSS_Executive as IDSS_Executive;
+    Result := FDSS_Executive as IDSS_Executive;
 end;
 
 function TDSS.Get_Events: IDSSEvents;
 begin
-     Result := FEvents as IDSSEvents;
+    Result := FEvents as IDSSEvents;
 end;
 
 function TDSS.Get_DSSim_Coms: IDSSimComs;
 begin
-     Result := FDSSim_Coms as IDSSimComs;
+    Result := FDSSim_Coms as IDSSimComs;
 end;
 
 function TDSS.Get_CmathLib: ICmathLib;
 begin
-     Result := FCmathlib as ICmathLib;
+    Result := FCmathlib as ICmathLib;
 end;
 
 function TDSS.Get_Parser: IParser;
 begin
-     Result := Fparser as IParser;
+    Result := Fparser as IParser;
 end;
 
 initialization
 
 {This is the only class that gets registered "OpenDSSengine.DSS" The rest are all ciInternal}
-  TAutoObjectFactory.Create(ComServer, TDSS, Class_DSS, ciMultiInstance, tmApartment);
+    TAutoObjectFactory.Create(ComServer, TDSS, Class_DSS, ciMultiInstance, tmApartment);
 
 end.

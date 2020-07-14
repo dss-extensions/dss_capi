@@ -1,4 +1,5 @@
 unit HelpForm;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -9,281 +10,310 @@ unit HelpForm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls;
+    Windows,
+    Messages,
+    SysUtils,
+    Classes,
+    Graphics,
+    Controls,
+    Forms,
+    Dialogs,
+    StdCtrls,
+    ComCtrls;
 
 type
-  THelpForm1 = class(TForm)
-    TreeView1: TTreeView;
-    Memo1: TMemo;
-    Button1: TButton;
-    Button2: TButton;
-    SaveDialog1: TSaveDialog;
-    rdoAlphabetical: TRadioButton;
-    rdoNumerical: TRadioButton;
-    Label1: TLabel;
-    PROCEDURE TreeView1Change(Sender: TObject; Node: TTreeNode);
-    PROCEDURE Button1Click(Sender: TObject);
-    PROCEDURE Button2Click(Sender: TObject);
-    PROCEDURE BuildTreeViewList;
-    procedure rdoAlphabeticalClick(Sender: TObject);
-    procedure rdoNumericalClick(Sender: TObject);
-  private
+    THelpForm1 = class(TForm)
+        TreeView1: TTreeView;
+        Memo1: TMemo;
+        Button1: TButton;
+        Button2: TButton;
+        SaveDialog1: TSaveDialog;
+        rdoAlphabetical: TRadioButton;
+        rdoNumerical: TRadioButton;
+        Label1: TLabel;
+        procedure TreeView1Change(Sender: TObject; Node: TTreeNode);
+        procedure Button1Click(Sender: TObject);
+        procedure Button2Click(Sender: TObject);
+        procedure BuildTreeViewList;
+        procedure rdoAlphabeticalClick(Sender: TObject);
+        procedure rdoNumericalClick(Sender: TObject);
+    PRIVATE
     { Private declarations }
-    PROCEDURE AddHelpForClasses(BaseClass:Word);
-  public
+        procedure AddHelpForClasses(BaseClass: Word);
+    PUBLIC
     { Public declarations }
-  end;
+    end;
 
 var
-  HelpFormObj: THelpForm1;
+    HelpFormObj: THelpForm1;
 
 implementation
 
 {$R *.DFM}
 
-Uses DSSClassDefs, DSSGlobals, ExecCommands,
-     ExecOptions, ShowOptions, PlotOptions,
-     ExportOptions, DSSClass;
+uses
+    DSSClassDefs,
+    DSSGlobals,
+    ExecCommands,
+    ExecOptions,
+    ShowOptions,
+    PlotOptions,
+    ExportOptions,
+    DSSClass;
 
-const TreeSep: String = '== classes ==';
+const
+    TreeSep: String = '== classes ==';
 
 function CompareClassNames(Item1, Item2: Pointer): Integer;
 begin
-  Result := CompareText(TDSSClass(Item1).name, TDSSClass(Item2).name);
+    Result := CompareText(TDSSClass(Item1).name, TDSSClass(Item2).name);
 end;
 
-PROCEDURE THelpForm1.TreeView1Change(Sender: TObject; Node: TTreeNode);
+procedure THelpForm1.TreeView1Change(Sender: TObject; Node: TTreeNode);
 begin
-     Memo1.Clear;
-     If Treeview1.selected.data<> Nil Then Memo1.Text := string(Treeview1.selected.data^);
+    Memo1.Clear;
+    if Treeview1.selected.data <> NIL then
+        Memo1.Text := String(Treeview1.selected.data^);
 end;
 
-FUNCTION TranslateCRLF(Const s:String):String;
+function TranslateCRLF(const s: String): String;
 
 { Translate Every CRLF to chr(11) soft return for Word}
-VAR
-   i :Integer;
-Begin
-     Result := '';
-     FOR i := 1 to Length(S) Do
-     Begin
-        Case S[i] of
-           Chr(13): Result := Result + Chr(11);
-           Chr(10):  {Do Nothing}
-        Else
+var
+    i: Integer;
+begin
+    Result := '';
+    for i := 1 to Length(S) do
+    begin
+        case S[i] of
+            Chr(13):
+                Result := Result + Chr(11);
+            Chr(10):  {Do Nothing}
+        else
             Result := Result + S[i]
-        End;
-     End;
-End;
+        end;
+    end;
+end;
 
-PROCEDURE WriteItem(Var F:Textfile; Str:String; p:Pointer);
+procedure WriteItem(var F: Textfile; Str: String; p: Pointer);
 
-Begin
-  Write(F, Str, chr(9));
-  If p<> NIL Then
-  Begin
-    Write(F, TranslateCRLF(String(p^)));
-  End;
-  Writeln(F);
-End;
+begin
+    Write(F, Str, chr(9));
+    if p <> NIL then
+    begin
+        Write(F, TranslateCRLF(String(p^)));
+    end;
+    Writeln(F);
+end;
 
-PROCEDURE THelpForm1.Button1Click(Sender: TObject);
-VAR
-   Fname :String;
-   ObjectItem,
-   CmdItem,
-   OptItem :TTreeNode;
-   F :TextFile;
+procedure THelpForm1.Button1Click(Sender: TObject);
+var
+    Fname: String;
+    ObjectItem,
+    CmdItem,
+    OptItem: TTreeNode;
+    F: TextFile;
 
 begin
 
 // Save present contents of HelpForm to a Disk File
 
 // first prompt for a file
-       WITH SaveDialog1 Do
-       Begin
-          Filter :=  'Text files (*.txt)|*.TXT';
-          FileName := 'DSSHelp.Txt';
+    with SaveDialog1 do
+    begin
+        Filter := 'Text files (*.txt)|*.TXT';
+        FileName := 'DSSHelp.Txt';
 
-          If Execute Then
-          Begin
-             Fname := FileName;
+        if Execute then
+        begin
+            Fname := FileName;
 
-            TRY
-               AssignFile(F, Fname);
-               Rewrite(F);
+            try
+                AssignFile(F, Fname);
+                Rewrite(F);
 
-               TRY
-                 ObjectItem := TreeView1.Items.GetFirstNode;
-                 WHILE ObjectItem <> NIL Do Begin
-                    if ObjectItem.Text <> TreeSep then begin
-                      Writeln(F);
-                      Writeln(F, 'Object = ', UpperCase( ObjectItem.Text ));
-                      Writeln(F,'Property', Chr(9), 'Description');
-                      CmdItem :=  ObjectItem.GetFirstChild;
-                      WHILE CmdItem <> NIL DO  Begin
-                         WriteItem(F, CmdItem.Text, CmdItem.Data);
-                         OptItem := CmdItem.GetFirstChild;
-                         WHILE OptItem <> NIL Do Begin
-                             Write(F,'   ');
-                             WriteItem(F, OptItem.Text, OptItem.Data);
-                             OptItem := OptItem.GetNextSibling;
-                         End;
-                         CmdItem := CmdItem.GetNextSibling;
-                      End;
+                try
+                    ObjectItem := TreeView1.Items.GetFirstNode;
+                    while ObjectItem <> NIL do
+                    begin
+                        if ObjectItem.Text <> TreeSep then
+                        begin
+                            Writeln(F);
+                            Writeln(F, 'Object = ', UpperCase(ObjectItem.Text));
+                            Writeln(F, 'Property', Chr(9), 'Description');
+                            CmdItem := ObjectItem.GetFirstChild;
+                            while CmdItem <> NIL do
+                            begin
+                                WriteItem(F, CmdItem.Text, CmdItem.Data);
+                                OptItem := CmdItem.GetFirstChild;
+                                while OptItem <> NIL do
+                                begin
+                                    Write(F, '   ');
+                                    WriteItem(F, OptItem.Text, OptItem.Data);
+                                    OptItem := OptItem.GetNextSibling;
+                                end;
+                                CmdItem := CmdItem.GetNextSibling;
+                            end;
+                        end;
+                        ObjectItem := ObjectItem.GetNextSibling;
                     end;
-                    ObjectItem := ObjectItem.GetNextSibling;
-                 End;
 
-                 Closefile(F);
+                    Closefile(F);
 
-               except
-                  On E:Exception DO
-                  Begin
-                    DoErrorMsg('Problem writing file: ' + Fname + '.', E.Message, 'Disk protected or other file error', 140);
-                  End;
-               end;
+                except
+                    On E: Exception do
+                    begin
+                        DoErrorMsg('Problem writing file: ' + Fname + '.', E.Message, 'Disk protected or other file error', 140);
+                    end;
+                end;
 
 
             except
-                On E:Exception DO
-                Begin
-                  DoErrorMsg('Problem opening ' + Fname + ' for writing.', E.Message, 'Disk protected or other file error', 141);
-                End;
+                On E: Exception do
+                begin
+                    DoErrorMsg('Problem opening ' + Fname + ' for writing.', E.Message, 'Disk protected or other file error', 141);
+                end;
             end;
 
-          End;
+        end;
 
-       End;
-
+    end;
 
 
 end;
 
-PROCEDURE THelpForm1.Button2Click(Sender: TObject);
+procedure THelpForm1.Button2Click(Sender: TObject);
 begin
-     Close;
+    Close;
 end;
 
 procedure THelpForm1.rdoAlphabeticalClick(Sender: TObject);
 begin
-  BuildTreeViewList;
+    BuildTreeViewList;
 end;
 
 procedure THelpForm1.rdoNumericalClick(Sender: TObject);
 begin
-  BuildTreeViewList;
+    BuildTreeViewList;
 end;
 
-procedure THelpForm1.AddHelpForClasses(BaseClass: WORD);
-Var
-    HelpList  : TList;
-    Node1     :TTreeNode;
-    pDSSClass :TDSSClass;
-    i,j       :Integer;
+procedure THelpForm1.AddHelpForClasses(BaseClass: Word);
+var
+    HelpList: TList;
+    Node1: TTreeNode;
+    pDSSClass: TDSSClass;
+    i, j: Integer;
 begin
 
-     WITH Treeview1.Items DO
-     Begin
+    with Treeview1.Items do
+    begin
 
  // put the other DSS Classes in alphabetical order within Base Class
         HelpList := TList.Create();
         pDSSClass := DSSClassList[ActiveActor].First;
-        WHILE pDSSClass<>Nil DO Begin
-          If (pDSSClass.DSSClassType AND BASECLASSMASK) = BaseClass
-           Then HelpList.Add (pDSSClass);
-          pDSSClass := DSSClassList[ActiveActor].Next;
-        End;
+        while pDSSClass <> NIL do
+        begin
+            if (pDSSClass.DSSClassType and BASECLASSMASK) = BaseClass then
+                HelpList.Add(pDSSClass);
+            pDSSClass := DSSClassList[ActiveActor].Next;
+        end;
         HelpList.Sort(@CompareClassNames);
 
         // now display the other DSS classes
-        for i := 1 to HelpList.Count do begin
-          pDSSClass := HelpList.Items[i-1];
-          Node1 := AddObject(nil, pDSSClass.name,nil);
-          if rdoAlphabetical.Checked then begin
-            FOR j := 1 to pDSSClass.NumProperties DO
-               AddChildObject(Node1, pDSSClass.PropertyName[j], @pDSSClass.PropertyHelp^[j]);
-            Node1.AlphaSort();
-          end
-          else begin
-            FOR j := 1 to pDSSClass.NumProperties DO
-               AddChildObject(Node1, '(' + IntToStr(j)  + ') ' + pDSSClass.PropertyName[j], @pDSSClass.PropertyHelp^[j]);
-          end;
-        End;
+        for i := 1 to HelpList.Count do
+        begin
+            pDSSClass := HelpList.Items[i - 1];
+            Node1 := AddObject(NIL, pDSSClass.name, NIL);
+            if rdoAlphabetical.Checked then
+            begin
+                for j := 1 to pDSSClass.NumProperties do
+                    AddChildObject(Node1, pDSSClass.PropertyName[j], @pDSSClass.PropertyHelp^[j]);
+                Node1.AlphaSort();
+            end
+            else
+            begin
+                for j := 1 to pDSSClass.NumProperties do
+                    AddChildObject(Node1, '(' + IntToStr(j) + ') ' + pDSSClass.PropertyName[j], @pDSSClass.PropertyHelp^[j]);
+            end;
+        end;
         HelpList.Free;
 
-      End;
+    end;
 
 end;
 
 procedure THelpForm1.BuildTreeViewList;
 
-Var
-   Node1:TTreeNode;
-   i:Integer;
-
+var
+    Node1: TTreeNode;
+    i: Integer;
 
 
 begin
-     Treeview1.Items.Clear;
-     WITH Treeview1.Items DO
-     Begin
+    Treeview1.Items.Clear;
+    with Treeview1.Items do
+    begin
      // Do Executive Commands
-        Node1 := AddObject(nil,'Executive',nil);
-        FOR i := 1 to NumExeccommands Do Begin
+        Node1 := AddObject(NIL, 'Executive', NIL);
+        for i := 1 to NumExeccommands do
+        begin
           // AddChildObject returns a Node2, if we wanted to link another level
-          AddChildObject(Node1, ExecCommand[i], @CommandHelp[i]);
-        End;
+            AddChildObject(Node1, ExecCommand[i], @CommandHelp[i]);
+        end;
         Node1.AlphaSort();
 
      // Do Exec Options
-        Node1 := AddObject(nil, 'Options' ,nil);
-        FOR i := 1 to NumExecOptions Do  Begin
-          AddChildObject(Node1, ExecOption[i], @OptionHelp[i]);
-        End;
+        Node1 := AddObject(NIL, 'Options', NIL);
+        for i := 1 to NumExecOptions do
+        begin
+            AddChildObject(Node1, ExecOption[i], @OptionHelp[i]);
+        end;
         Node1.AlphaSort();
 
       // Do Show Options
-        Node1 := AddObject(nil, 'Show' ,nil);
-        FOR i := 1 to NumShowOptions Do  Begin
-          AddChildObject(Node1, ShowOption[i], @ShowHelp[i]);
-        End;
+        Node1 := AddObject(NIL, 'Show', NIL);
+        for i := 1 to NumShowOptions do
+        begin
+            AddChildObject(Node1, ShowOption[i], @ShowHelp[i]);
+        end;
         Node1.AlphaSort();    // always sort
 
 
       // Do Export Options
-        Node1 := AddObject(nil, 'Export' ,nil);
-        FOR i := 1 to NumExportOptions Do  Begin
-          AddChildObject(Node1, ExportOption[i], @ExportHelp[i]);
-        End;
+        Node1 := AddObject(NIL, 'Export', NIL);
+        for i := 1 to NumExportOptions do
+        begin
+            AddChildObject(Node1, ExportOption[i], @ExportHelp[i]);
+        end;
         Node1.AlphaSort();    // always sort
 
       // Do Plot Options
-        Node1 := AddObject(nil, 'Plot' ,nil);
-        FOR i := 1 to NumPlotOptions Do  Begin
+        Node1 := AddObject(NIL, 'Plot', NIL);
+        for i := 1 to NumPlotOptions do
+        begin
             AddChildObject(Node1, PlotOption[i], @PlotHelp[i]);
-        End;
-        If rdoAlphabetical.Checked Then Node1.AlphaSort();
+        end;
+        if rdoAlphabetical.Checked then
+            Node1.AlphaSort();
 
         // separator
         // AddObject (nil, TreeSep, nil);
 
-        AddObject (nil, '=== PD Elements ===', nil);
+        AddObject(NIL, '=== PD Elements ===', NIL);
         AddHelpForClasses(PD_ELEMENT);
-        AddObject (nil, '=== PC Elements ===', nil);
+        AddObject(NIL, '=== PC Elements ===', NIL);
         AddHelpForClasses(PC_ELEMENT);
-        AddObject (nil, '=== Controls ===', nil);
+        AddObject(NIL, '=== Controls ===', NIL);
         AddHelpForClasses(CTRL_ELEMENT);
-        AddObject (nil, '=== General ===', nil);
+        AddObject(NIL, '=== General ===', NIL);
         AddHelpForClasses(0);
-        AddObject (nil, '=== Meters ===', nil);
+        AddObject(NIL, '=== Meters ===', NIL);
         AddHelpForClasses(METER_ELEMENT);
-        AddObject (nil, '=== Other ===', nil);
+        AddObject(NIL, '=== Other ===', NIL);
         AddHelpForClasses(NON_PCPD_ELEM);
 
-     End;
-     Caption := 'DSS Commands & Properties';
+    end;
+    Caption := 'DSS Commands & Properties';
 
 end;
 

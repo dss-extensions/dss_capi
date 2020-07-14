@@ -1,4 +1,5 @@
 unit Monitor;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2018, Electric Power Research Institute, Inc.
@@ -90,133 +91,153 @@ unit Monitor;
 
 interface
 
-USES
-     Command, MeterClass, Meterelement, DSSClass, Arraydef, ucomplex, utilities, Classes;
+uses
+    Command,
+    MeterClass,
+    Meterelement,
+    DSSClass,
+    Arraydef,
+    ucomplex,
+    utilities,
+    Classes;
 
-TYPE
-    TMonitorStrBuffer = Array[1..256] of AnsiChar;
+type
+    TMonitorStrBuffer = array[1..256] of AnsiChar;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
    {This has to be named TDSSMonitor because Delphi has a TMonitor Class and the compiler will get confused}
-   TDSSMonitor = class(TMeterClass)
-     private
+    TDSSMonitor = class(TMeterClass)
+    PRIVATE
 
-     protected
-        Procedure DefineProperties;
-        Function  MakeLike(const MonitorName:String):Integer;  Override;
-     public
-       constructor Create;
-       destructor  Destroy; override;
+    PROTECTED
+        procedure DefineProperties;
+        function MakeLike(const MonitorName: String): Integer; OVERRIDE;
+    PUBLIC
+        constructor Create;
+        destructor Destroy; OVERRIDE;
 
-       Function Edit(ActorID : Integer):Integer;                 override;     // uses global parser
-       Function Init(Handle:Integer;ActorID : Integer):Integer; override;
-       Function NewObject(const ObjName:String):Integer;  override;
+        function Edit(ActorID: Integer): Integer; OVERRIDE;     // uses global parser
+        function Init(Handle: Integer; ActorID: Integer): Integer; OVERRIDE;
+        function NewObject(const ObjName: String): Integer; OVERRIDE;
 
-       Procedure ResetAll(ActorID : Integer);   Override;
-       Procedure SampleAll(ActorID : Integer);  Override;  // Force all monitors to take a sample
-       Procedure SampleAllMode5(ActorID : Integer);  // Sample just Mode 5 monitors
-       Procedure SaveAll(ActorID : Integer);    Override;   // Force all monitors to save their buffers to disk
-       Procedure PostProcessAll(ActorID : Integer);
-       Procedure TOPExport(Objname:String);
+        procedure ResetAll(ActorID: Integer); OVERRIDE;
+        procedure SampleAll(ActorID: Integer); OVERRIDE;  // Force all monitors to take a sample
+        procedure SampleAllMode5(ActorID: Integer);  // Sample just Mode 5 monitors
+        procedure SaveAll(ActorID: Integer); OVERRIDE;   // Force all monitors to save their buffers to disk
+        procedure PostProcessAll(ActorID: Integer);
+        procedure TOPExport(Objname: String);
 
-   end;
+    end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
-   TMonitorObj = class(TMeterElement)
-     private
-       BufferSize      :Integer;
-       Hour            :Integer;
-       Sec             :Double;    // last time entered in the buffer
-       MonBuffer       :pSingleArray;
-       Bufptr          :Integer;  // point to present (last) element in buffer must be incremented to add
+    TMonitorObj = class(TMeterElement)
+    PRIVATE
+        BufferSize: Integer;
+        Hour: Integer;
+        Sec: Double;    // last time entered in the buffer
+        MonBuffer: pSingleArray;
+        Bufptr: Integer;  // point to present (last) element in buffer must be incremented to add
 
-       CurrentBuffer     :pComplexArray;
-       VoltageBuffer     :pComplexArray;
-       WdgCurrentsBuffer :pComplexArray;
-       WdgVoltagesBuffer :pComplexArray;
-       PhsVoltagesBuffer :pComplexArray;
-       NumTransformerCurrents :Integer;
-       NumWindingVoltages :Integer;
+        CurrentBuffer: pComplexArray;
+        VoltageBuffer: pComplexArray;
+        WdgCurrentsBuffer: pComplexArray;
+        WdgVoltagesBuffer: pComplexArray;
+        PhsVoltagesBuffer: pComplexArray;
+        NumTransformerCurrents: Integer;
+        NumWindingVoltages: Integer;
 
-       NumStateVars    :Integer;
-       StateBuffer     :pDoubleArray;
+        NumStateVars: Integer;
+        StateBuffer: pDoubleArray;
 
-       FlickerBuffer   :pComplexArray; // store phase voltages in polar form
+        FlickerBuffer: pComplexArray; // store phase voltages in polar form
                                        // then convert to re=flicker level, update every time step
                                        //             and im=Pst, update every 10 minutes
-       SolutionBuffer  :pDoubleArray;
+        SolutionBuffer: pDoubleArray;
 
 
-       IncludeResidual :Boolean;
-       VIpolar         :Boolean;
-       Ppolar          :Boolean;
+        IncludeResidual: Boolean;
+        VIpolar: Boolean;
+        Ppolar: Boolean;
 
-       FileSignature   :Integer;
-       FileVersion     :Integer;
+        FileSignature: Integer;
+        FileVersion: Integer;
 
-       BaseFrequency   :Double;
+        BaseFrequency: Double;
 
-       BufferFile      :String;  // Name of file for catching buffer overflow
+        BufferFile: String;  // Name of file for catching buffer overflow
 
-       IsFileOpen      :Boolean;
-       ValidMonitor    :Boolean;
-       IsProcessed     :Boolean;
+        IsFileOpen: Boolean;
+        ValidMonitor: Boolean;
+        IsProcessed: Boolean;
 
-       Procedure AddDblsToBuffer(Dbl:pDoubleArray; Ndoubles:Integer);
-       Procedure AddDblToBuffer(const Dbl:Double);
+        procedure AddDblsToBuffer(Dbl: pDoubleArray; Ndoubles: Integer);
+        procedure AddDblToBuffer(const Dbl: Double);
 
-       Procedure DoFlickerCalculations(ActorID : Integer);  // call from CloseMonitorStream
+        procedure DoFlickerCalculations(ActorID: Integer);  // call from CloseMonitorStream
        // function  Get_FileName: String;
 
 
+    PUBLIC
+        Mode: Integer;
+        MonitorStream: TMemoryStream;
+        SampleCount: Integer;  // This is the number of samples taken
 
-     public
-       Mode          :Integer;
-       MonitorStream :TMemoryStream;
-       SampleCount   :Integer;  // This is the number of samples taken
+        constructor Create(ParClass: TDSSClass; const MonitorName: String);
+        destructor Destroy; OVERRIDE;
 
-       constructor Create(ParClass:TDSSClass; const MonitorName:String);
-       destructor Destroy; override;
+        procedure MakePosSequence(ActorID: Integer); OVERRIDE;  // Make a positive Sequence Model, reset nphases
+        procedure RecalcElementData(ActorID: Integer); OVERRIDE;
+        procedure CalcYPrim(ActorID: Integer); OVERRIDE;    // Always Zero for a monitor
+        procedure TakeSample(ActorID: Integer); OVERRIDE; // Go add a sample to the buffer
+        procedure ResetIt(ActorID: Integer);
+        procedure Save;     // Saves present buffer to file
+        procedure PostProcess(ActorID: Integer); // calculates Pst or other post-processing
 
-       PROCEDURE MakePosSequence(ActorID : Integer);    Override;  // Make a positive Sequence Model, reset nphases
-       Procedure RecalcElementData(ActorID : Integer);  Override;
-       Procedure CalcYPrim(ActorID : Integer);          Override;    // Always Zero for a monitor
-       Procedure TakeSample(ActorID : Integer);         Override; // Go add a sample to the buffer
-       Procedure ResetIt(ActorID : Integer);
-       Procedure Save;     // Saves present buffer to file
-       Procedure PostProcess(ActorID : Integer); // calculates Pst or other post-processing
+        procedure OpenMonitorStream;
+        procedure ClearMonitorStream(ActorID: Integer);
+        procedure CloseMonitorStream(ActorID: Integer);
 
-       Procedure OpenMonitorStream;
-       Procedure ClearMonitorStream(ActorID : Integer);
-       Procedure CloseMonitorStream(ActorID : Integer);
+        procedure TranslateToCSV(Show: Boolean; ActorID: Integer);
 
-       Procedure TranslateToCSV(Show:Boolean; ActorID : Integer);
-
-       Procedure GetCurrents(Curr: pComplexArray; ActorID : Integer);                Override; // Get present value of terminal Curr
-       Procedure GetInjCurrents(Curr: pComplexArray; ActorID : Integer);             Override;   // Returns Injextion currents
-       PROCEDURE InitPropertyValues(ArrayOffset:Integer);         Override;
-       Procedure DumpProperties(Var F:TextFile; Complete:Boolean);Override;
-       function  Get_FileName(ActorID : Integer): String;
+        procedure GetCurrents(Curr: pComplexArray; ActorID: Integer); OVERRIDE; // Get present value of terminal Curr
+        procedure GetInjCurrents(Curr: pComplexArray; ActorID: Integer); OVERRIDE;   // Returns Injextion currents
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
+        procedure DumpProperties(var F: TextFile; Complete: Boolean); OVERRIDE;
+        function Get_FileName(ActorID: Integer): String;
        //Property  MonitorFileName:String read BufferFile;
 
 //       Property CSVFileName:String Read Get_FileName;
-   end;
+    end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
 
-VAR
-    ActiveMonitorObj:TMonitorObj;
+var
+    ActiveMonitorObj: TMonitorObj;
 
 {--------------------------------------------------------------------------}
 implementation
 
-USES
+uses
+    ParserDel,
+    DSSClassDefs,
+    DSSGlobals,
+    Circuit,
+    CktElement,
+    Transformer,
+    AutoTrans,
+    PCElement,
+    Sysutils,
+    ucmatrix,
+    showresults,
+    mathUtil,
+    PointerList,
+    TOPExport,
+    Dynamics,
+    PstCalc,
+    Capacitor,
+    Storage;
 
-    ParserDel, DSSClassDefs, DSSGlobals, Circuit, CktElement,Transformer, AutoTrans, PCElement,
-    Sysutils, ucmatrix, showresults, mathUtil, PointerList, TOPExport, Dynamics, PstCalc,
-    Capacitor, Storage;
-
-CONST
+const
     SEQUENCEMASK = 16;
     MAGNITUDEMASK = 32;
     POSSEQONLYMASK = 64;
@@ -225,290 +246,326 @@ CONST
     NumPropsThisClass = 7;
     NumSolutionVars = 12;
 
-VAR
-    StrBuffer:TMonitorStrBuffer;
+var
+    StrBuffer: TMonitorStrBuffer;
 
 {--------------------------------------------------------------------------}
 constructor TDSSMonitor.Create;  // Creates superstructure for all Monitor objects
-Begin
-     Inherited Create;
+begin
+    inherited Create;
 
-     Class_name   := 'Monitor';
-     DSSClassType := DSSClassType + MON_ELEMENT;
+    Class_name := 'Monitor';
+    DSSClassType := DSSClassType + MON_ELEMENT;
 
-     DefineProperties;
+    DefineProperties;
 
-     CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
-     CommandList.Abbrev := TRUE;
-End;
+    CommandList := TCommandList.Create(Slice(PropertyName^, NumProperties));
+    CommandList.Abbrev := TRUE;
+end;
 
 {--------------------------------------------------------------------------}
 destructor TDSSMonitor.Destroy;
 
-Begin
-     Inherited Destroy;
-End;
+begin
+    inherited Destroy;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Procedure TDSSMonitor.DefineProperties;
-Begin
+procedure TDSSMonitor.DefineProperties;
+begin
 
-     Numproperties := NumPropsThisClass;
-     CountProperties;   // Get inherited property count
-     AllocatePropertyArrays;
+    Numproperties := NumPropsThisClass;
+    CountProperties;   // Get inherited property count
+    AllocatePropertyArrays;
 
      // Define Property names
 
-     PropertyName[1] := 'element';
-     PropertyName[2] := 'terminal';
-     PropertyName[3] := 'mode';
-     PropertyName[4] := 'action';  // buffer=clear|save
-     PropertyName[5] := 'residual';  // buffer=clear|save
-     PropertyName[6] := 'VIPolar';  // V I in mag and angle rather then re and im
-     PropertyName[7] := 'PPolar';  // Power in power PF rather then power and vars
+    PropertyName[1] := 'element';
+    PropertyName[2] := 'terminal';
+    PropertyName[3] := 'mode';
+    PropertyName[4] := 'action';  // buffer=clear|save
+    PropertyName[5] := 'residual';  // buffer=clear|save
+    PropertyName[6] := 'VIPolar';  // V I in mag and angle rather then re and im
+    PropertyName[7] := 'PPolar';  // Power in power PF rather then power and vars
 
-     PropertyHelp[1] := 'Name (Full Object name) of element to which the monitor is connected.';
-     PropertyHelp[2] := 'Number of the terminal of the circuit element to which the monitor is connected. '+
-                    '1 or 2, typically. For monitoring states, attach monitor to terminal 1.';
-     PropertyHelp[3] := 'Bitmask integer designating the values the monitor is to capture: '+CRLF+
-                    '0 = Voltages and currents' + CRLF+
-                    '1 = Powers'+CRLF+
-                    '2 = Tap Position (Transformer Device only)'+CRLF+
-                    '3 = State Variables (PCElements only)' +CRLF+
-                    '4 = Flicker level and severity index (Pst) for voltages. No adders apply.' +CRLF+
-                    '    Flicker level at simulation time step, Pst at 10-minute time step.' +CRLF+
-                    '5 = Solution variables (Iterations, etc).' +CRLF+
-                    'Normally, these would be actual phasor quantities from solution.' + CRLF+
-                    '6 = Capacitor Switching (Capacitors only)'+CRLF+
-                    '7 = Storage state vars (Storage device only)'+CRLF+
-                    '8 = All winding currents (Transformer device only)'+CRLF+
-                    '9 = Losses, watts and var (of monitored device)'+CRLF+ CRLF+
-                    '10 = All Winding voltages (Transformer device only)'+CRLF+ CRLF+
-                    'Normally, these would be actual phasor quantities from solution.' + CRLF+
-                    'Combine mode with adders below to achieve other results for terminal quantities:' + CRLF+
-                    '+16 = Sequence quantities' + CRLF+
-                    '+32 = Magnitude only' + CRLF+
-                    '+64 = Positive sequence only or avg of all phases' + CRLF+
-                     CRLF +
-                    'Mix adder to obtain desired results. For example:' + CRLF+
-                    'Mode=112 will save positive sequence voltage and current magnitudes only' + CRLF+
-                    'Mode=48 will save all sequence voltages and currents, but magnitude only.';
-     PropertyHelp[4] := '{Clear | Save | Take | Process}' + CRLF +
-                        '(C)lears or (S)aves current buffer.' + CRLF +
-                        '(T)ake action takes a sample.'+ CRLF +
-                        '(P)rocesses the data taken so far (e.g. Pst for mode 4).' + CRLF + CRLF +
-                        'Note that monitors are automatically reset (cleared) when the Set Mode= command is issued. '+
-                        'Otherwise, the user must explicitly reset all monitors (reset monitors command) or individual ' +
-                        'monitors with the Clear action.';
-     PropertyHelp[5] := '{Yes/True | No/False} Default = No.  Include Residual cbannel (sum of all phases) for voltage and current. ' +
-                        'Does not apply to sequence quantity modes or power modes.';
-     PropertyHelp[6] := '{Yes/True | No/False} Default = YES. Report voltage and current in polar form (Mag/Angle). (default)  Otherwise, it will be real and imaginary.';
-     PropertyHelp[7] := '{Yes/True | No/False} Default = YES. Report power in Apparent power, S, in polar form (Mag/Angle).(default)  Otherwise, is P and Q';
+    PropertyHelp[1] := 'Name (Full Object name) of element to which the monitor is connected.';
+    PropertyHelp[2] := 'Number of the terminal of the circuit element to which the monitor is connected. ' +
+        '1 or 2, typically. For monitoring states, attach monitor to terminal 1.';
+    PropertyHelp[3] := 'Bitmask integer designating the values the monitor is to capture: ' + CRLF +
+        '0 = Voltages and currents' + CRLF +
+        '1 = Powers' + CRLF +
+        '2 = Tap Position (Transformer Device only)' + CRLF +
+        '3 = State Variables (PCElements only)' + CRLF +
+        '4 = Flicker level and severity index (Pst) for voltages. No adders apply.' + CRLF +
+        '    Flicker level at simulation time step, Pst at 10-minute time step.' + CRLF +
+        '5 = Solution variables (Iterations, etc).' + CRLF +
+        'Normally, these would be actual phasor quantities from solution.' + CRLF +
+        '6 = Capacitor Switching (Capacitors only)' + CRLF +
+        '7 = Storage state vars (Storage device only)' + CRLF +
+        '8 = All winding currents (Transformer device only)' + CRLF +
+        '9 = Losses, watts and var (of monitored device)' + CRLF + CRLF +
+        '10 = All Winding voltages (Transformer device only)' + CRLF + CRLF +
+        'Normally, these would be actual phasor quantities from solution.' + CRLF +
+        'Combine mode with adders below to achieve other results for terminal quantities:' + CRLF +
+        '+16 = Sequence quantities' + CRLF +
+        '+32 = Magnitude only' + CRLF +
+        '+64 = Positive sequence only or avg of all phases' + CRLF +
+        CRLF +
+        'Mix adder to obtain desired results. For example:' + CRLF +
+        'Mode=112 will save positive sequence voltage and current magnitudes only' + CRLF +
+        'Mode=48 will save all sequence voltages and currents, but magnitude only.';
+    PropertyHelp[4] := '{Clear | Save | Take | Process}' + CRLF +
+        '(C)lears or (S)aves current buffer.' + CRLF +
+        '(T)ake action takes a sample.' + CRLF +
+        '(P)rocesses the data taken so far (e.g. Pst for mode 4).' + CRLF + CRLF +
+        'Note that monitors are automatically reset (cleared) when the Set Mode= command is issued. ' +
+        'Otherwise, the user must explicitly reset all monitors (reset monitors command) or individual ' +
+        'monitors with the Clear action.';
+    PropertyHelp[5] := '{Yes/True | No/False} Default = No.  Include Residual cbannel (sum of all phases) for voltage and current. ' +
+        'Does not apply to sequence quantity modes or power modes.';
+    PropertyHelp[6] := '{Yes/True | No/False} Default = YES. Report voltage and current in polar form (Mag/Angle). (default)  Otherwise, it will be real and imaginary.';
+    PropertyHelp[7] := '{Yes/True | No/False} Default = YES. Report power in Apparent power, S, in polar form (Mag/Angle).(default)  Otherwise, is P and Q';
 
-     ActiveProperty := NumPropsThisClass;
-     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
+    ActiveProperty := NumPropsThisClass;
+    inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
-End;
+end;
 
 {--------------------------------------------------------------------------}
-Function TDSSMonitor.NewObject(const ObjName:String):Integer;
-Begin
+function TDSSMonitor.NewObject(const ObjName: String): Integer;
+begin
     // Make a new Monitor and add it to Monitor class list
-    With ActiveCircuit[ActiveActor] Do
-    Begin
-      ActiveCktElement := TMonitorObj.Create(Self, ObjName);
-      Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
-    End;
-End;
+    with ActiveCircuit[ActiveActor] do
+    begin
+        ActiveCktElement := TMonitorObj.Create(Self, ObjName);
+        Result := AddObjectToList(ActiveDSSObject[ActiveActor]);
+    end;
+end;
 
 {--------------------------------------------------------------------------}
-Function TDSSMonitor.Edit(ActorID : Integer):Integer;
-VAR
-   ParamPointer:Integer;
-   ParamName:String;
-   Param:String;
-   recalc: integer;
+function TDSSMonitor.Edit(ActorID: Integer): Integer;
+var
+    ParamPointer: Integer;
+    ParamName: String;
+    Param: String;
+    recalc: Integer;
 
-Begin
+begin
 
   // continue parsing with contents of Parser
   // continue parsing with contents of Parser
-  ActiveMonitorObj := ElementList.Active;
-  ActiveCircuit[ActorID].ActiveCktElement := ActiveMonitorObj;
+    ActiveMonitorObj := ElementList.Active;
+    ActiveCircuit[ActorID].ActiveCktElement := ActiveMonitorObj;
 
-  Result := 0;
-  recalc:=0;
+    Result := 0;
+    recalc := 0;
 
-  WITH ActiveMonitorObj DO Begin
+    with ActiveMonitorObj do
+    begin
 
-     ParamPointer := 0;
-     ParamName := Parser[ActorID].NextParam;
-     Param := Parser[ActorID].StrValue;
-     WHILE Length(Param)>0 DO Begin
-         IF Length(ParamName) = 0 THEN Inc(ParamPointer)
-         ELSE ParamPointer := CommandList.GetCommand(ParamName);
+        ParamPointer := 0;
+        ParamName := Parser[ActorID].NextParam;
+        Param := Parser[ActorID].StrValue;
+        while Length(Param) > 0 do
+        begin
+            if Length(ParamName) = 0 then
+                Inc(ParamPointer)
+            else
+                ParamPointer := CommandList.GetCommand(ParamName);
 
-         If (ParamPointer>0) and (ParamPointer<=NumProperties) Then PropertyValue[ParamPointer]:= Param;
-         inc (recalc);
+            if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
+                PropertyValue[ParamPointer] := Param;
+            inc(recalc);
 
-         CASE ParamPointer OF
-            0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 661);
-            1: Begin
-                 ElementName := ConstructElemName(lowercase(param));   // subtitute @var values if any
-                 PropertyValue[1] := ElementName;
-               End;
-            2: MeteredTerminal := Parser[ActorID].IntValue;
-            3: Mode := Parser[ActorID].IntValue;
-            4: Begin
-                  param := lowercase(param);
-                  Case param[1] of
-                    's':Save;
-                    'c','r':ResetIt(ActorID);
-                    't': TakeSample(ActorID);
-                    'p': begin PostProcess(ActorID); dec(recalc) end
-                  End;
-               End;  // buffer
-            5: IncludeResidual := InterpretYesNo(Param);
-            6: VIpolar := InterpretYesNo(Param);
-            7: Ppolar := InterpretYesNo(Param);
-         ELSE
+            case ParamPointer of
+                0:
+                    DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name + '.' + Name + '"', 661);
+                1:
+                begin
+                    ElementName := ConstructElemName(lowercase(param));   // subtitute @var values if any
+                    PropertyValue[1] := ElementName;
+                end;
+                2:
+                    MeteredTerminal := Parser[ActorID].IntValue;
+                3:
+                    Mode := Parser[ActorID].IntValue;
+                4:
+                begin
+                    param := lowercase(param);
+                    case param[1] of
+                        's':
+                            Save;
+                        'c', 'r':
+                            ResetIt(ActorID);
+                        't':
+                            TakeSample(ActorID);
+                        'p':
+                        begin
+                            PostProcess(ActorID);
+                            dec(recalc)
+                        end
+                    end;
+                end;  // buffer
+                5:
+                    IncludeResidual := InterpretYesNo(Param);
+                6:
+                    VIpolar := InterpretYesNo(Param);
+                7:
+                    Ppolar := InterpretYesNo(Param);
+            else
            // Inherited parameters
-           ClassEdit( ActiveMonitorObj, ParamPointer - NumPropsthisClass)
-         End;
+                ClassEdit(ActiveMonitorObj, ParamPointer - NumPropsthisClass)
+            end;
 
-         ParamName := Parser[ActorID].NextParam;
-         Param := Parser[ActorID].StrValue;
-     End;
+            ParamName := Parser[ActorID].NextParam;
+            Param := Parser[ActorID].StrValue;
+        end;
 
-     if recalc > 0 then RecalcElementData(ActorID);
-  End;
+        if recalc > 0 then
+            RecalcElementData(ActorID);
+    end;
 
-End;
-
-{--------------------------------------------------------------------------}
-Procedure TDSSMonitor.ResetAll(ActorID : Integer);  // Force all monitors in the circuit to reset
-
-VAR
-   Mon:TMonitorObj;
-
-Begin
-      Mon := ActiveCircuit[ActorID].Monitors.First;
-      WHILE Mon<>Nil DO
-      Begin
-          If Mon.enabled Then Mon.ResetIt(ActorID);
-          Mon := ActiveCircuit[ActorID].Monitors.Next;
-      End;
-
-End;
+end;
 
 {--------------------------------------------------------------------------}
-Procedure TDSSMonitor.SampleAll(ActorID : Integer);  // Force all monitors in the circuit to take a sample
+procedure TDSSMonitor.ResetAll(ActorID: Integer);  // Force all monitors in the circuit to reset
 
-VAR
-   Mon:TMonitorObj;
+var
+    Mon: TMonitorObj;
+
+begin
+    Mon := ActiveCircuit[ActorID].Monitors.First;
+    while Mon <> NIL do
+    begin
+        if Mon.enabled then
+            Mon.ResetIt(ActorID);
+        Mon := ActiveCircuit[ActorID].Monitors.Next;
+    end;
+
+end;
+
+{--------------------------------------------------------------------------}
+procedure TDSSMonitor.SampleAll(ActorID: Integer);  // Force all monitors in the circuit to take a sample
+
+var
+    Mon: TMonitorObj;
 // sample all monitors except mode 5 monitors
-Begin
-      Mon := ActiveCircuit[ActorID].Monitors.First;
-      WHILE Mon<>Nil DO  Begin
-          If Mon.enabled Then
-             If Mon.Mode <> 5 then Mon.TakeSample(ActorID);
-          Mon := ActiveCircuit[ActorID].Monitors.Next;
-      End;
-End;
+begin
+    Mon := ActiveCircuit[ActorID].Monitors.First;
+    while Mon <> NIL do
+    begin
+        if Mon.enabled then
+            if Mon.Mode <> 5 then
+                Mon.TakeSample(ActorID);
+        Mon := ActiveCircuit[ActorID].Monitors.Next;
+    end;
+end;
 
 {--------------------------------------------------------------------------}
-Procedure TDSSMonitor.SampleAllMode5(ActorID : Integer);  // Force all mode=5 monitors in the circuit to take a sample
+procedure TDSSMonitor.SampleAllMode5(ActorID: Integer);  // Force all mode=5 monitors in the circuit to take a sample
 
-VAR
-   Mon:TMonitorObj;
+var
+    Mon: TMonitorObj;
 // sample all Mode 5 monitors except monitors
-Begin
-      Mon := ActiveCircuit[ActorID].Monitors.First;
-      WHILE Mon<>Nil DO  Begin
-          If Mon.enabled Then
-             If Mon.Mode = 5 then Mon.TakeSample(ActorID);
-          Mon := ActiveCircuit[ActorID].Monitors.Next;
-      End;
-End;
+begin
+    Mon := ActiveCircuit[ActorID].Monitors.First;
+    while Mon <> NIL do
+    begin
+        if Mon.enabled then
+            if Mon.Mode = 5 then
+                Mon.TakeSample(ActorID);
+        Mon := ActiveCircuit[ActorID].Monitors.Next;
+    end;
+end;
 
 {--------------------------------------------------------------------------}
-Procedure TDSSMonitor.PostProcessAll(ActorID : Integer);
-VAR
-   Mon:TMonitorObj;
-Begin
-   Mon := ActiveCircuit[ActorID].Monitors.First;
-   WHILE Mon<>Nil DO Begin
-       If Mon.Enabled Then Mon.PostProcess(ActorID);
-       Mon := ActiveCircuit[ActorID].Monitors.Next;
-   End;
-End;
+procedure TDSSMonitor.PostProcessAll(ActorID: Integer);
+var
+    Mon: TMonitorObj;
+begin
+    Mon := ActiveCircuit[ActorID].Monitors.First;
+    while Mon <> NIL do
+    begin
+        if Mon.Enabled then
+            Mon.PostProcess(ActorID);
+        Mon := ActiveCircuit[ActorID].Monitors.Next;
+    end;
+end;
 
 {--------------------------------------------------------------------------}
-Procedure TDSSMonitor.SaveAll(ActorID : Integer);     // Force all monitors in the circuit to save their buffers to disk
+procedure TDSSMonitor.SaveAll(ActorID: Integer);     // Force all monitors in the circuit to save their buffers to disk
 
-VAR
-   Mon:TMonitorObj;
+var
+    Mon: TMonitorObj;
 
-Begin
-   Mon := ActiveCircuit[ActorID].Monitors.First;
-   WHILE Mon<>Nil DO Begin
-       If Mon.Enabled Then Mon.Save;
-       Mon := ActiveCircuit[ActorID].Monitors.Next;
-   End;
-End;
+begin
+    Mon := ActiveCircuit[ActorID].Monitors.First;
+    while Mon <> NIL do
+    begin
+        if Mon.Enabled then
+            Mon.Save;
+        Mon := ActiveCircuit[ActorID].Monitors.Next;
+    end;
+end;
 
 {--------------------------------------------------------------------------}
-Function TDSSMonitor.MakeLike(const MonitorName:String):Integer;
-VAR
-   OtherMonitor:TMonitorObj;
-   i:Integer;
-Begin
-   Result := 0;
+function TDSSMonitor.MakeLike(const MonitorName: String): Integer;
+var
+    OtherMonitor: TMonitorObj;
+    i: Integer;
+begin
+    Result := 0;
    {See if we can find this Monitor name in the present collection}
-   OtherMonitor := Find(MonitorName);
-   IF OtherMonitor<>Nil THEN
-   WITH ActiveMonitorObj DO Begin
+    OtherMonitor := Find(MonitorName);
+    if OtherMonitor <> NIL then
+        with ActiveMonitorObj do
+        begin
 
-       NPhases := OtherMonitor.Fnphases;
-       NConds  := OtherMonitor.Fnconds; // Force Reallocation of terminal stuff
+            NPhases := OtherMonitor.Fnphases;
+            NConds := OtherMonitor.Fnconds; // Force Reallocation of terminal stuff
 
-       Buffersize := OtherMonitor.Buffersize;
-       ElementName:= OtherMonitor.ElementName;
-       MeteredElement:= OtherMonitor.MeteredElement;  // Pointer to target circuit element
-       MeteredTerminal:= OtherMonitor.MeteredTerminal;
-       Mode := OtherMonitor.Mode;
-       IncludeResidual := OtherMonitor.IncludeResidual;
+            Buffersize := OtherMonitor.Buffersize;
+            ElementName := OtherMonitor.ElementName;
+            MeteredElement := OtherMonitor.MeteredElement;  // Pointer to target circuit element
+            MeteredTerminal := OtherMonitor.MeteredTerminal;
+            Mode := OtherMonitor.Mode;
+            IncludeResidual := OtherMonitor.IncludeResidual;
 
-       For i := 1 to ParentClass.NumProperties Do PropertyValue[i] := OtherMonitor.PropertyValue[i];
+            for i := 1 to ParentClass.NumProperties do
+                PropertyValue[i] := OtherMonitor.PropertyValue[i];
 
-       BaseFrequency:= OtherMonitor.BaseFrequency;
+            BaseFrequency := OtherMonitor.BaseFrequency;
 
-   End
-   ELSE  DoSimpleMsg('Error in Monitor MakeLike: "' + MonitorName + '" Not Found.', 662);
+        end
+    else
+        DoSimpleMsg('Error in Monitor MakeLike: "' + MonitorName + '" Not Found.', 662);
 
-End;
+end;
 
 {--------------------------------------------------------------------------}
-Function TDSSMonitor.Init(Handle:Integer; ActorID : Integer):Integer;
-VAR
-   Mon:TMonitorObj;
+function TDSSMonitor.Init(Handle: Integer; ActorID: Integer): Integer;
+var
+    Mon: TMonitorObj;
 
-Begin
-      Result := 0;
+begin
+    Result := 0;
 
-      IF Handle>0  THEN Begin
-         Mon := ElementList.Get(Handle);
-         Mon.ResetIt(ActorID);
-      End
-      ELSE Begin  // Do 'em all
+    if Handle > 0 then
+    begin
+        Mon := ElementList.Get(Handle);
+        Mon.ResetIt(ActorID);
+    end
+    else
+    begin  // Do 'em all
         Mon := ElementList.First;
-        WHILE Mon<>Nil DO Begin
+        while Mon <> NIL do
+        begin
             Mon.ResetIt(ActorID);
             Mon := ElementList.Next;
-        End;
-      End;
+        end;
+    end;
 
-End;
+end;
 
 
 {==========================================================================}
@@ -516,490 +573,595 @@ End;
 {==========================================================================}
 
 
-
 {--------------------------------------------------------------------------}
-constructor TMonitorObj.Create(ParClass:TDSSClass; const MonitorName:String);
+constructor TMonitorObj.Create(ParClass: TDSSClass; const MonitorName: String);
 
-Begin
-     Inherited Create(ParClass);
-     Name := LowerCase(MonitorName);
+begin
+    inherited Create(ParClass);
+    Name := LowerCase(MonitorName);
 
-     Nphases := 3;  // Directly set conds and phases
-     Fnconds := 3;
-     Nterms  := 1;  // this forces allocation of terminals and conductors
+    Nphases := 3;  // Directly set conds and phases
+    Fnconds := 3;
+    Nterms := 1;  // this forces allocation of terminals and conductors
                          // in base class
 
      {Current Buffer has to be big enough to hold all terminals}
-     CurrentBuffer := Nil;
-     VoltageBuffer := Nil;
-     StateBuffer   := Nil;
-     FlickerBuffer := Nil;
-     SolutionBuffer:= Nil;
-     WdgCurrentsBuffer := Nil;
-     WdgVoltagesBuffer := Nil;
-     PhsVoltagesBuffer := Nil;
+    CurrentBuffer := NIL;
+    VoltageBuffer := NIL;
+    StateBuffer := NIL;
+    FlickerBuffer := NIL;
+    SolutionBuffer := NIL;
+    WdgCurrentsBuffer := NIL;
+    WdgVoltagesBuffer := NIL;
+    PhsVoltagesBuffer := NIL;
 
-     NumTransformerCurrents := 0;
+    NumTransformerCurrents := 0;
 
-     Basefrequency := 60.0;
-     Hour          := 0;
-     Sec           := 0.0;
+    Basefrequency := 60.0;
+    Hour := 0;
+    Sec := 0.0;
 
-     Mode := 0;  // Standard Mode: V & I, complex values
+    Mode := 0;  // Standard Mode: V & I, complex values
 
-     BufferSize := 1024;       // Makes a 4K buffer
-     MonBuffer  := AllocMem(Sizeof(MonBuffer^[1]) * BufferSize);
-     BufPtr     := 0;
+    BufferSize := 1024;       // Makes a 4K buffer
+    MonBuffer := AllocMem(Sizeof(MonBuffer^[1]) * BufferSize);
+    BufPtr := 0;
 
-     ElementName    := TDSSCktElement(ActiveCircuit[ActiveActor].CktElements.Get(1)).Name; // Default to first circuit element (source)
-     MeteredElement := nil;
-     Bufferfile     := '';
+    ElementName := TDSSCktElement(ActiveCircuit[ActiveActor].CktElements.Get(1)).Name; // Default to first circuit element (source)
+    MeteredElement := NIL;
+    Bufferfile := '';
 
-     MonitorStream := TMemoryStream.Create; // Create memory stream
+    MonitorStream := TMemoryStream.Create; // Create memory stream
 
-     IsFileOpen      := FALSE;
-     MeteredTerminal := 1;
-     IncludeResidual := FALSE;
-     VIPolar         := TRUE;
-     Ppolar          := TRUE;
-     FileSignature   := 43756;
-     FileVersion     := 1;
-     SampleCount     := 0;
-     IsProcessed     := FALSE;
+    IsFileOpen := FALSE;
+    MeteredTerminal := 1;
+    IncludeResidual := FALSE;
+    VIPolar := TRUE;
+    Ppolar := TRUE;
+    FileSignature := 43756;
+    FileVersion := 1;
+    SampleCount := 0;
+    IsProcessed := FALSE;
 
-     DSSObjType := ParClass.DSSClassType; //MON_ELEMENT;
+    DSSObjType := ParClass.DSSClassType; //MON_ELEMENT;
 
-     InitPropertyValues(0);
+    InitPropertyValues(0);
 
-End;
+end;
 
 destructor TMonitorObj.Destroy;
-Begin
-     MonitorStream.Free;
-     ElementName := '';
-     Bufferfile := '';
-     ReAllocMem(MonBuffer,0);
-     ReAllocMem(StateBuffer,0);
-     ReAllocMem(CurrentBuffer,0);
-     ReAllocMem(VoltageBuffer,0);
-     ReAllocMem(FlickerBuffer,0);
-     ReAllocMem(SolutionBuffer,0);
-     ReAllocMem(WdgVoltagesBuffer,0);
-     ReAllocMem(WdgCurrentsBuffer,0);
-     ReAllocMem(PhsVoltagesBuffer,0);
-
-     Inherited Destroy;
-End;
-
-
-{--------------------------------------------------------------------------}
-Procedure ConvertBlanks(Var s:String);
-VAR
-    BlankPos:Integer;
-
-Begin
-     { Convert spaces to Underscores }
-     BlankPos := Pos(' ', S);
-     WHILE BlankPos>0 DO Begin
-         S[BlankPos] := '_';
-         BlankPos := Pos(' ', S);
-     End;
-End;
-
-{--------------------------------------------------------------------------}
-Procedure TMonitorObj.RecalcElementData(ActorID : Integer);
-
-VAR
-   DevIndex :Integer;
-
-Begin
-         ValidMonitor := FALSE;
-         Devindex := GetCktElementIndex(ElementName);                   // Global function
-         IF DevIndex>0 THEN Begin                                       // Monitored element must already exist
-             MeteredElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
-             Case (Mode and MODEMASK) of
-                2,8, 10: Begin                                                // Must be transformer
-                          If (MeteredElement.DSSObjType And CLASSMASK) <> XFMR_ELEMENT Then
-                          If (MeteredElement.DSSObjType And CLASSMASK) <> AUTOTRANS_ELEMENT Then
-                          Begin
-                            DoSimpleMsg(MeteredElement.Name + ' is not a transformer!', 663);
-                            Exit;
-                          End;
-                   End;
-                3: Begin                                                // Must be PCElement
-                          If (MeteredElement.DSSObjType And BASECLASSMASK) <> PC_ELEMENT Then Begin
-                            DoSimpleMsg(MeteredElement.Name + ' must be a power conversion element (Load or Generator)!', 664);
-                            Exit;
-                          End;
-                   End;
-                6: begin                                                // Checking Caps Tap
-                          If (MeteredElement.DSSObjType And CLASSMASK) <> CAP_ELEMENT Then Begin
-                            DoSimpleMsg(MeteredElement.Name + ' is not a capacitor!', 2016001);
-                            Exit;
-                          End;
-                   end;
-                7: begin                                                // Checking if the element is a storage device
-                          If ((MeteredElement.DSSObjType And CLASSMASK) <> STORAGE_ELEMENT) and ((MeteredElement.DSSObjType And CLASSMASK) <> STORAGE2_ELEMENT)  Then Begin
-                            DoSimpleMsg(MeteredElement.Name + ' is not a storage device!', 2016002);
-                            Exit;
-                          End;
-
-                   end;
-             End;
-
-             IF MeteredTerminal>MeteredElement.Nterms THEN Begin
-                 DoErrorMsg('Monitor: "' + Name + '"',
-                                 'Terminal no. "' +'" does not exist.',
-                                 'Respecify terminal no.', 665);
-             End
-             ELSE Begin
-                 Nphases := MeteredElement.NPhases;
-                 Nconds  := MeteredElement.NConds;
-
-               // Sets name of i-th terminal's connected bus in monitor's buslist
-               // This value will be used to set the NodeRef array (see TakeSample)
-                 Setbus(1, MeteredElement.GetBus(MeteredTerminal));
-               // Make a name for the Buffer File
-                 BufferFile := {ActiveCircuit[ActiveActor].CurrentDirectory + }
-                               CircuitName_[ActorID] + 'Mon_' + Name + '.mon';
-                 // removed 10/19/99 ConvertBlanks(BufferFile); // turn blanks into '_'
-
-                 {Allocate Buffers}
-
-                 Case (Mode and MODEMASK) of
-                      3: Begin
-                             NumStateVars := TPCElement(MeteredElement).Numvariables;
-                             ReallocMem(StateBuffer, Sizeof(StateBuffer^[1])*NumStatevars);
-                         End;
-                      4: Begin
-                             ReallocMem(FlickerBuffer, Sizeof(FlickerBuffer^[1])*Nphases);
-                         End;
-                      5: Begin
-                             ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer^[1])*NumSolutionVars);
-                         End;
-                      8: Begin
-                             If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
-                             Then With  TAutoTransObj(MeteredElement) Do NumTransformerCurrents := 2* NumberOfWindings * nphases
-                             Else With  TTransfObj(MeteredElement)    Do NumTransformerCurrents := 2* NumberOfWindings * nphases;
-                             ReallocMem(WdgCurrentsBuffer, Sizeof(Complex)*NumTransformerCurrents);
-                         End;
-                     10: Begin
-                             If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
-                             Then With  TAutoTransObj(MeteredElement) Do NumWindingVoltages :=  NumberOfWindings * nphases
-                             ELse With  TTransfObj(MeteredElement)    Do NumWindingVoltages :=  NumberOfWindings * nphases;
-                             ReallocMem(WdgVoltagesBuffer, Sizeof(Complex)*NumWindingVoltages);   // total all phases, all windings
-                             ReallocMem(PhsVoltagesBuffer, Sizeof(Complex)*nphases);
-                         End;
-                 Else
-                     ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
-                     ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1])*MeteredElement.NConds);
-                 End;
-
-                 ClearMonitorStream(ActorID);
-
-                 ValidMonitor := TRUE;
-
-             End;
-
-         End
-         ELSE Begin
-            MeteredElement := nil;   // element not found
-            DoErrorMsg('Monitor: "' + Self.Name + '"', 'Circuit Element "'+ ElementName + '" Not Found.',
-                            ' Element must be defined previously.', 666);
-         End;
-End;
-
-procedure TMonitorObj.MakePosSequence(ActorID : Integer);
 begin
-  if MeteredElement <> Nil then begin
-    Setbus(1, MeteredElement.GetBus(MeteredTerminal));
-    Nphases := MeteredElement.NPhases;
-    Nconds  := MeteredElement.Nconds;
-    Case (Mode and MODEMASK) of
-      3: Begin
-             NumStateVars := TPCElement(MeteredElement).Numvariables;
-             ReallocMem(StateBuffer, Sizeof(StateBuffer^[1])*NumStatevars);
-         End;
-      4: Begin
-              ReallocMem(FlickerBuffer, Sizeof(FlickerBuffer^[1])*Nphases);
-         End;
-      5: Begin
-             ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer^[1])*NumSolutionVars);
-         End;
-      Else
-         ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1])*MeteredElement.Yorder);
-         ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1])*MeteredElement.NConds);
-      End;
-    ClearMonitorStream(ActorID);
-    ValidMonitor := TRUE;
-  end;
-  Inherited;
+    MonitorStream.Free;
+    ElementName := '';
+    Bufferfile := '';
+    ReAllocMem(MonBuffer, 0);
+    ReAllocMem(StateBuffer, 0);
+    ReAllocMem(CurrentBuffer, 0);
+    ReAllocMem(VoltageBuffer, 0);
+    ReAllocMem(FlickerBuffer, 0);
+    ReAllocMem(SolutionBuffer, 0);
+    ReAllocMem(WdgVoltagesBuffer, 0);
+    ReAllocMem(WdgCurrentsBuffer, 0);
+    ReAllocMem(PhsVoltagesBuffer, 0);
+
+    inherited Destroy;
 end;
 
 
 {--------------------------------------------------------------------------}
-Procedure TMonitorObj.CalcYPrim(ActorID : Integer);
-Begin
+procedure ConvertBlanks(var s: String);
+var
+    BlankPos: Integer;
+
+begin
+     { Convert spaces to Underscores }
+    BlankPos := Pos(' ', S);
+    while BlankPos > 0 do
+    begin
+        S[BlankPos] := '_';
+        BlankPos := Pos(' ', S);
+    end;
+end;
+
+{--------------------------------------------------------------------------}
+procedure TMonitorObj.RecalcElementData(ActorID: Integer);
+
+var
+    DevIndex: Integer;
+
+begin
+    ValidMonitor := FALSE;
+    Devindex := GetCktElementIndex(ElementName);                   // Global function
+    if DevIndex > 0 then
+    begin                                       // Monitored element must already exist
+        MeteredElement := ActiveCircuit[ActorID].CktElements.Get(DevIndex);
+        case (Mode and MODEMASK) of
+            2, 8, 10:
+            begin                                                // Must be transformer
+                if (MeteredElement.DSSObjType and CLASSMASK) <> XFMR_ELEMENT then
+                    if (MeteredElement.DSSObjType and CLASSMASK) <> AUTOTRANS_ELEMENT then
+                    begin
+                        DoSimpleMsg(MeteredElement.Name + ' is not a transformer!', 663);
+                        Exit;
+                    end;
+            end;
+            3:
+            begin                                                // Must be PCElement
+                if (MeteredElement.DSSObjType and BASECLASSMASK) <> PC_ELEMENT then
+                begin
+                    DoSimpleMsg(MeteredElement.Name + ' must be a power conversion element (Load or Generator)!', 664);
+                    Exit;
+                end;
+            end;
+            6:
+            begin                                                // Checking Caps Tap
+                if (MeteredElement.DSSObjType and CLASSMASK) <> CAP_ELEMENT then
+                begin
+                    DoSimpleMsg(MeteredElement.Name + ' is not a capacitor!', 2016001);
+                    Exit;
+                end;
+            end;
+            7:
+            begin                                                // Checking if the element is a storage device
+                if ((MeteredElement.DSSObjType and CLASSMASK) <> STORAGE_ELEMENT) and ((MeteredElement.DSSObjType and CLASSMASK) <> STORAGE2_ELEMENT) then
+                begin
+                    DoSimpleMsg(MeteredElement.Name + ' is not a storage device!', 2016002);
+                    Exit;
+                end;
+
+            end;
+        end;
+
+        if MeteredTerminal > MeteredElement.Nterms then
+        begin
+            DoErrorMsg('Monitor: "' + Name + '"',
+                'Terminal no. "' + '" does not exist.',
+                'Respecify terminal no.', 665);
+        end
+        else
+        begin
+            Nphases := MeteredElement.NPhases;
+            Nconds := MeteredElement.NConds;
+
+               // Sets name of i-th terminal's connected bus in monitor's buslist
+               // This value will be used to set the NodeRef array (see TakeSample)
+            Setbus(1, MeteredElement.GetBus(MeteredTerminal));
+               // Make a name for the Buffer File
+            BufferFile := {ActiveCircuit[ActiveActor].CurrentDirectory + }
+                CircuitName_[ActorID] + 'Mon_' + Name + '.mon';
+                 // removed 10/19/99 ConvertBlanks(BufferFile); // turn blanks into '_'
+
+                 {Allocate Buffers}
+
+            case (Mode and MODEMASK) of
+                3:
+                begin
+                    NumStateVars := TPCElement(MeteredElement).Numvariables;
+                    ReallocMem(StateBuffer, Sizeof(StateBuffer^[1]) * NumStatevars);
+                end;
+                4:
+                begin
+                    ReallocMem(FlickerBuffer, Sizeof(FlickerBuffer^[1]) * Nphases);
+                end;
+                5:
+                begin
+                    ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer^[1]) * NumSolutionVars);
+                end;
+                8:
+                begin
+                    if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
+                        with  TAutoTransObj(MeteredElement) do
+                            NumTransformerCurrents := 2 * NumberOfWindings * nphases
+                    else
+                        with  TTransfObj(MeteredElement) do
+                            NumTransformerCurrents := 2 * NumberOfWindings * nphases;
+                    ReallocMem(WdgCurrentsBuffer, Sizeof(Complex) * NumTransformerCurrents);
+                end;
+                10:
+                begin
+                    if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
+                        with  TAutoTransObj(MeteredElement) do
+                            NumWindingVoltages := NumberOfWindings * nphases
+                    else
+                        with  TTransfObj(MeteredElement) do
+                            NumWindingVoltages := NumberOfWindings * nphases;
+                    ReallocMem(WdgVoltagesBuffer, Sizeof(Complex) * NumWindingVoltages);   // total all phases, all windings
+                    ReallocMem(PhsVoltagesBuffer, Sizeof(Complex) * nphases);
+                end;
+            else
+                ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1]) * MeteredElement.Yorder);
+                ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1]) * MeteredElement.NConds);
+            end;
+
+            ClearMonitorStream(ActorID);
+
+            ValidMonitor := TRUE;
+
+        end;
+
+    end
+    else
+    begin
+        MeteredElement := NIL;   // element not found
+        DoErrorMsg('Monitor: "' + Self.Name + '"', 'Circuit Element "' + ElementName + '" Not Found.',
+            ' Element must be defined previously.', 666);
+    end;
+end;
+
+procedure TMonitorObj.MakePosSequence(ActorID: Integer);
+begin
+    if MeteredElement <> NIL then
+    begin
+        Setbus(1, MeteredElement.GetBus(MeteredTerminal));
+        Nphases := MeteredElement.NPhases;
+        Nconds := MeteredElement.Nconds;
+        case (Mode and MODEMASK) of
+            3:
+            begin
+                NumStateVars := TPCElement(MeteredElement).Numvariables;
+                ReallocMem(StateBuffer, Sizeof(StateBuffer^[1]) * NumStatevars);
+            end;
+            4:
+            begin
+                ReallocMem(FlickerBuffer, Sizeof(FlickerBuffer^[1]) * Nphases);
+            end;
+            5:
+            begin
+                ReallocMem(SolutionBuffer, Sizeof(SolutionBuffer^[1]) * NumSolutionVars);
+            end;
+        else
+            ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1]) * MeteredElement.Yorder);
+            ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1]) * MeteredElement.NConds);
+        end;
+        ClearMonitorStream(ActorID);
+        ValidMonitor := TRUE;
+    end;
+    inherited;
+end;
+
+
+{--------------------------------------------------------------------------}
+procedure TMonitorObj.CalcYPrim(ActorID: Integer);
+begin
 
   {A Monitor is a zero current source; Yprim is always zero.}
   // leave YPrims as nil and they will be ignored
   // Yprim is zeroed when created.  Leave it as is.
-End;
+end;
 
 {--------------------------------------------------------------------------}
-Procedure TMonitorObj.ClearMonitorStream(ActorID : Integer);
+procedure TMonitorObj.ClearMonitorStream(ActorID: Integer);
 
-VAR
-    i,j         :Integer;
-    iMax        :Integer;
-    iMin        :Integer;
-    IsPosSeq    :Boolean;
-    IsPower     :Boolean;
-    NameOfState :AnsiString;
-    strPtr      :pAnsiChar;
-    Str_Temp    :AnsiString;
+var
+    i, j: Integer;
+    iMax: Integer;
+    iMin: Integer;
+    IsPosSeq: Boolean;
+    IsPower: Boolean;
+    NameOfState: Ansistring;
+    strPtr: pAnsiChar;
+    Str_Temp: Ansistring;
 
-    NumVI       :Integer;
-    RecordSize  :Integer;
+    NumVI: Integer;
+    RecordSize: Integer;
 
-Begin
-  Try
+begin
+    try
 
-     MonitorStream.Clear;
-     IsProcessed := FALSE;
-     SampleCount  :=  0;
-     IsPosSeq := False;
-     fillchar(StrBuffer, Sizeof(TMonitorStrBuffer), 0);  {clear buffer}
-     strPtr := @StrBuffer;
-     strPtr^ := chr(0);     // Init string
-     If ActiveCircuit[ActorID].Solution.IsHarmonicModel Then strLcat(strPtr, pAnsiChar('Freq, Harmonic, '), Sizeof(TMonitorStrBuffer))
-                                                        Else strLcat(strPtr, pAnsiChar('hour, t(sec), '),   Sizeof(TMonitorStrBuffer));
-     
-     CASE (Mode and MODEMASK) of
+        MonitorStream.Clear;
+        IsProcessed := FALSE;
+        SampleCount := 0;
+        IsPosSeq := FALSE;
+        fillchar(StrBuffer, Sizeof(TMonitorStrBuffer), 0);  {clear buffer}
+        strPtr := @StrBuffer;
+        strPtr^ := chr(0);     // Init string
+        if ActiveCircuit[ActorID].Solution.IsHarmonicModel then
+            strLcat(strPtr, pAnsiChar('Freq, Harmonic, '), Sizeof(TMonitorStrBuffer))
+        else
+            strLcat(strPtr, pAnsiChar('hour, t(sec), '), Sizeof(TMonitorStrBuffer));
 
-     2: Begin
-              RecordSize := 1;     // Transformer Taps
-              strLcat(strPtr, pAnsiChar('Tap (pu)'), Sizeof(TMonitorStrBuffer));
-        End;
-     3: Begin
-              RecordSize := NumStateVars;   // Statevariabes
-              For i := 1 to NumStateVars Do Begin
-                  NameofState := AnsiString(TpcElement(MeteredElement).VariableName(i) + ',');
-                  strLcat(strPtr, pAnsiChar(NameofState), Sizeof(TMonitorStrBuffer));
-              End;
-        End;
-     4: Begin
-              RecordSize := 2 * FnPhases;
-              For i := 1 to FnPhases Do Begin  //AnsString and pAnsiChar replaced with AnsiString and pAnsiChar to make it compatible with Linux
-                strLcat(strPtr, pAnsiChar(AnsiString('Flk'+IntToStr(i)+', Pst'+IntToStr(i))), Sizeof(TMonitorStrBuffer));
-                if i < FnPhases then strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
-              End;
-        End;
-     5: Begin
-             RecordSize := NumSolutionVars;
-             strLcat(strPtr, pAnsiChar('TotalIterations, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('ControlIteration, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('MaxIterations, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('MaxControlIterations, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('Converged, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('IntervalHrs, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('SolutionCount, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('Mode, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('Frequency, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('Year, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('SolveSnap_uSecs, '), Sizeof(TMonitorStrBuffer));
-             strLcat(strPtr, pAnsiChar('TimeStep_uSecs, '), Sizeof(TMonitorStrBuffer));
-        End;
-     6: Begin
-              RecordSize := TCapacitorObj(MeteredElement).NumSteps;     // Capacitor Taps
-              for i := 1 to RecordSize do
+        case (Mode and MODEMASK) of
+
+            2:
+            begin
+                RecordSize := 1;     // Transformer Taps
+                strLcat(strPtr, pAnsiChar('Tap (pu)'), Sizeof(TMonitorStrBuffer));
+            end;
+            3:
+            begin
+                RecordSize := NumStateVars;   // Statevariabes
+                for i := 1 to NumStateVars do
                 begin
-                  Str_Temp  :=  AnsiString('Step_' + inttostr(i) + ',');
-                  strLcat(strPtr, pAnsiChar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                    NameofState := Ansistring(TpcElement(MeteredElement).VariableName(i) + ',');
+                    strLcat(strPtr, pAnsiChar(NameofState), Sizeof(TMonitorStrBuffer));
+                end;
+            end;
+            4:
+            begin
+                RecordSize := 2 * FnPhases;
+                for i := 1 to FnPhases do
+                begin  //AnsString and pAnsiChar replaced with AnsiString and pAnsiChar to make it compatible with Linux
+                    strLcat(strPtr, pAnsiChar(Ansistring('Flk' + IntToStr(i) + ', Pst' + IntToStr(i))), Sizeof(TMonitorStrBuffer));
+                    if i < FnPhases then
+                        strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                end;
+            end;
+            5:
+            begin
+                RecordSize := NumSolutionVars;
+                strLcat(strPtr, pAnsiChar('TotalIterations, '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, pAnsiChar('ControlIteration, '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, pAnsiChar('MaxIterations, '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, pAnsiChar('MaxControlIterations, '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, pAnsiChar('Converged, '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, pAnsiChar('IntervalHrs, '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, pAnsiChar('SolutionCount, '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, pAnsiChar('Mode, '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, pAnsiChar('Frequency, '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, pAnsiChar('Year, '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, pAnsiChar('SolveSnap_uSecs, '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, pAnsiChar('TimeStep_uSecs, '), Sizeof(TMonitorStrBuffer));
+            end;
+            6:
+            begin
+                RecordSize := TCapacitorObj(MeteredElement).NumSteps;     // Capacitor Taps
+                for i := 1 to RecordSize do
+                begin
+                    Str_Temp := Ansistring('Step_' + inttostr(i) + ',');
+                    strLcat(strPtr, pAnsiChar(Str_Temp), Sizeof(TMonitorStrBuffer));
                 end;
 
-        End;
-     7: Begin
-              RecordSize := 5;     // Storage state vars
-              strLcat(strPtr, ('kW output, '), Sizeof(TMonitorStrBuffer));
-              strLcat(strPtr, ('kvar output, '), Sizeof(TMonitorStrBuffer));
-              strLcat(strPtr, ('kW Stored, '), Sizeof(TMonitorStrBuffer));
-              strLcat(strPtr, ('%kW Stored, '), Sizeof(TMonitorStrBuffer));
-              strLcat(strPtr, ('State, '), Sizeof(TMonitorStrBuffer));
-        End;
-     8: Begin   // All winding Currents
-              If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
-              Then With TAutoTransObj(MeteredElement) Do
-                Begin
-                    RecordSize := NumTransformerCurrents;     // Transformer Winding Currents
-                    for i := 1 to Nphases do
-                      Begin
-                        for j := 1 to NumberOfWindings do
-                          begin
-                            Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
-                            strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
-                          end;
-                      End;
-                End
-              Else With TTransfObj(MeteredElement) Do
-                Begin
-                    RecordSize := NumTransformerCurrents;     // Transformer Winding Currents
-                    for i := 1 to Nphases do
-                      Begin
-                        for j := 1 to NumberOfWindings do
-                          begin
-                            Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
-                            strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
-                          end;
-                      End;
-                End;
-        End;
-     9: Begin // watts vars of meteredElement
-              RecordSize := 2;
-              strLcat(strPtr,  pAnsichar('watts, vars'), Sizeof(TMonitorStrBuffer));
-        End;
-    10: Begin // All Winding Voltages
-              If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
-              Then With TAutoTransObj(MeteredElement) Do
-                 Begin
-                    RecordSize := 2 * NumberOfWindings * Nphases;     // Transformer Winding woltages
-                    for i := 1 to Nphases do
-                      Begin
-                        for j := 1 to NumberOfWindings do
-                          begin
-                            Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
-                            strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
-                          end;
-                      End;
-                 End
-              Else With TTransfObj(MeteredElement) Do
-                 Begin
-                    RecordSize := 2 * NumberOfWindings * Nphases;     // Transformer Winding woltages
-                    for i := 1 to Nphases do
-                      Begin
-                        for j := 1 to NumberOfWindings do
-                          begin
-                            Str_Temp  :=  AnsiString(Format('P%dW%d,Deg, ', [i,j] ));
-                            strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
-                          end;
-                      End;
-                 End;
-        End;
+            end;
+            7:
+            begin
+                RecordSize := 5;     // Storage state vars
+                strLcat(strPtr, ('kW output, '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, ('kvar output, '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, ('kW Stored, '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, ('%kW Stored, '), Sizeof(TMonitorStrBuffer));
+                strLcat(strPtr, ('State, '), Sizeof(TMonitorStrBuffer));
+            end;
+            8:
+            begin   // All winding Currents
+                if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
+                    with TAutoTransObj(MeteredElement) do
+                    begin
+                        RecordSize := NumTransformerCurrents;     // Transformer Winding Currents
+                        for i := 1 to Nphases do
+                        begin
+                            for j := 1 to NumberOfWindings do
+                            begin
+                                Str_Temp := Ansistring(Format('P%dW%d,Deg, ', [i, j]));
+                                strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                            end;
+                        end;
+                    end
+                else
+                    with TTransfObj(MeteredElement) do
+                    begin
+                        RecordSize := NumTransformerCurrents;     // Transformer Winding Currents
+                        for i := 1 to Nphases do
+                        begin
+                            for j := 1 to NumberOfWindings do
+                            begin
+                                Str_Temp := Ansistring(Format('P%dW%d,Deg, ', [i, j]));
+                                strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                            end;
+                        end;
+                    end;
+            end;
+            9:
+            begin // watts vars of meteredElement
+                RecordSize := 2;
+                strLcat(strPtr, pAnsichar('watts, vars'), Sizeof(TMonitorStrBuffer));
+            end;
+            10:
+            begin // All Winding Voltages
+                if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
+                    with TAutoTransObj(MeteredElement) do
+                    begin
+                        RecordSize := 2 * NumberOfWindings * Nphases;     // Transformer Winding woltages
+                        for i := 1 to Nphases do
+                        begin
+                            for j := 1 to NumberOfWindings do
+                            begin
+                                Str_Temp := Ansistring(Format('P%dW%d,Deg, ', [i, j]));
+                                strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                            end;
+                        end;
+                    end
+                else
+                    with TTransfObj(MeteredElement) do
+                    begin
+                        RecordSize := 2 * NumberOfWindings * Nphases;     // Transformer Winding woltages
+                        for i := 1 to Nphases do
+                        begin
+                            for j := 1 to NumberOfWindings do
+                            begin
+                                Str_Temp := Ansistring(Format('P%dW%d,Deg, ', [i, j]));
+                                strLcat(strPtr, pAnsichar(Str_Temp), Sizeof(TMonitorStrBuffer));
+                            end;
+                        end;
+                    end;
+            end;
 
-     Else Begin
+        else
+        begin
          // Compute RecordSize
          // Use same logic as in TakeSample Method
 
-          IF ((Mode AND SEQUENCEMASK)>0) And (Fnphases=3)
-          THEN Begin  // Convert to Symmetrical components
-              IsPosSeq := True;
-              NumVI := 3;
-          End
-          ELSE Begin
-              NumVI:=Fnconds;
-          End;
+            if ((Mode and SEQUENCEMASK) > 0) and (Fnphases = 3) then
+            begin  // Convert to Symmetrical components
+                IsPosSeq := TRUE;
+                NumVI := 3;
+            end
+            else
+            begin
+                NumVI := Fnconds;
+            end;
           // Convert Voltage Buffer to power kW, kvar
-          IF  ((Mode AND MODEMASK) = 1)
-             THEN IsPower := TRUE
-             ELSE IsPower := FALSE;
+            if ((Mode and MODEMASK) = 1) then
+                IsPower := TRUE
+            else
+                IsPower := FALSE;
 
-          CASE (Mode AND (MAGNITUDEMASK + POSSEQONLYMASK)) OF
-            32:Begin // Save Magnitudes only
-                 RecordSize := 0;
-                 FOR i := 1 to NumVI DO Inc(RecordSize,1);
-                 IF Not IsPower
-                 THEN Begin
-                      FOR i := 1 to NumVI DO Inc(RecordSize,1);
-                      IF IncludeResidual Then Inc(RecordSize, 2);
-                       For i := 1 to NumVI Do Begin
-                           strLcat(strPtr, pAnsiChar(AnsiString(Format('|V|%d (volts)',[i]))), Sizeof(TMonitorStrBuffer));
-                           strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
-                       End;
-                       IF IncludeResidual Then Begin
-                           strLcat(strPtr, pAnsiChar('|VN| (volts)'), Sizeof(TMonitorStrBuffer));
-                           strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
-                       End;
-                       For i := 1 to NumVI Do Begin
-                           strLcat(strPtr, pAnsiChar(AnsiString('|I|'+IntToStr(i)+' (amps)')), Sizeof(TMonitorStrBuffer));
-                           If i<NumVI Then strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
-                       End;
-                       IF IncludeResidual Then Begin
-                           strLcat(strPtr, pAnsiChar(',|IN| (amps)'), Sizeof(TMonitorStrBuffer));
-                       End;
-                 End
-                 Else Begin  // Power
-                       For i := 1 to NumVI Do
-                       Begin
-                           If PPolar Then strLcat(strPtr, pAnsiChar(AnsiString('S'+IntToStr(i)+' (kVA)')), Sizeof(TMonitorStrBuffer))
-                                     Else strLcat(strPtr, pAnsiChar(AnsiString('P'+IntToStr(i)+' (kW)')), Sizeof(TMonitorStrBuffer));
-                           If i<NumVI Then strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
-                       End;
-                 End;
-              End ;
-            64:Begin // Save Pos Seq or Total of all Phases or Total power (Complex)
-                     RecordSize := 2;
-                     IF Not IsPower THEN Begin
-                        RecordSize := RecordSize+ 2;
-                        If VIPolar Then strLcat(strPtr, pAnsiChar('V1, V1ang, I1, I1ang'), Sizeof(TMonitorStrBuffer))
-                                   Else strLcat(strPtr, pAnsiChar('V1.re, V1.im, I1.re, I1.im'), Sizeof(TMonitorStrBuffer));
-                     End
-                     Else Begin
-                        If Ppolar Then strLcat(strPtr, pAnsiChar('S1 (kVA), Ang '), Sizeof(TMonitorStrBuffer))
-                                  Else strLcat(strPtr, pAnsiChar('P1 (kW), Q1 (kvar)'), Sizeof(TMonitorStrBuffer));
-                     End;
-               End ;
-            96:Begin  // Save Pos Seq or Aver magnitude of all Phases of total kVA (Magnitude)
-                     RecordSize := 1;
-                     IF Not IsPower
-                     THEN Begin
-                       RecordSize := RecordSize+ 1;
-                       strLcat(strPtr, pAnsiChar('V, I '), Sizeof(TMonitorStrBuffer));
-                     End
-                     Else Begin  // Power
-                        If Ppolar Then strLcat(strPtr, pAnsiChar('S1 (kVA)'), Sizeof(TMonitorStrBuffer))
-                                  Else strLcat(strPtr, pAnsiChar('P1 (kW)'), Sizeof(TMonitorStrBuffer));
-                     End;
-               End ;
+            case (Mode and (MAGNITUDEMASK + POSSEQONLYMASK)) of
+                32:
+                begin // Save Magnitudes only
+                    RecordSize := 0;
+                    for i := 1 to NumVI do
+                        Inc(RecordSize, 1);
+                    if not IsPower then
+                    begin
+                        for i := 1 to NumVI do
+                            Inc(RecordSize, 1);
+                        if IncludeResidual then
+                            Inc(RecordSize, 2);
+                        for i := 1 to NumVI do
+                        begin
+                            strLcat(strPtr, pAnsiChar(Ansistring(Format('|V|%d (volts)', [i]))), Sizeof(TMonitorStrBuffer));
+                            strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                        end;
+                        if IncludeResidual then
+                        begin
+                            strLcat(strPtr, pAnsiChar('|VN| (volts)'), Sizeof(TMonitorStrBuffer));
+                            strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                        end;
+                        for i := 1 to NumVI do
+                        begin
+                            strLcat(strPtr, pAnsiChar(Ansistring('|I|' + IntToStr(i) + ' (amps)')), Sizeof(TMonitorStrBuffer));
+                            if i < NumVI then
+                                strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                        end;
+                        if IncludeResidual then
+                        begin
+                            strLcat(strPtr, pAnsiChar(',|IN| (amps)'), Sizeof(TMonitorStrBuffer));
+                        end;
+                    end
+                    else
+                    begin  // Power
+                        for i := 1 to NumVI do
+                        begin
+                            if PPolar then
+                                strLcat(strPtr, pAnsiChar(Ansistring('S' + IntToStr(i) + ' (kVA)')), Sizeof(TMonitorStrBuffer))
+                            else
+                                strLcat(strPtr, pAnsiChar(Ansistring('P' + IntToStr(i) + ' (kW)')), Sizeof(TMonitorStrBuffer));
+                            if i < NumVI then
+                                strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                        end;
+                    end;
+                end;
+                64:
+                begin // Save Pos Seq or Total of all Phases or Total power (Complex)
+                    RecordSize := 2;
+                    if not IsPower then
+                    begin
+                        RecordSize := RecordSize + 2;
+                        if VIPolar then
+                            strLcat(strPtr, pAnsiChar('V1, V1ang, I1, I1ang'), Sizeof(TMonitorStrBuffer))
+                        else
+                            strLcat(strPtr, pAnsiChar('V1.re, V1.im, I1.re, I1.im'), Sizeof(TMonitorStrBuffer));
+                    end
+                    else
+                    begin
+                        if Ppolar then
+                            strLcat(strPtr, pAnsiChar('S1 (kVA), Ang '), Sizeof(TMonitorStrBuffer))
+                        else
+                            strLcat(strPtr, pAnsiChar('P1 (kW), Q1 (kvar)'), Sizeof(TMonitorStrBuffer));
+                    end;
+                end;
+                96:
+                begin  // Save Pos Seq or Aver magnitude of all Phases of total kVA (Magnitude)
+                    RecordSize := 1;
+                    if not IsPower then
+                    begin
+                        RecordSize := RecordSize + 1;
+                        strLcat(strPtr, pAnsiChar('V, I '), Sizeof(TMonitorStrBuffer));
+                    end
+                    else
+                    begin  // Power
+                        if Ppolar then
+                            strLcat(strPtr, pAnsiChar('S1 (kVA)'), Sizeof(TMonitorStrBuffer))
+                        else
+                            strLcat(strPtr, pAnsiChar('P1 (kW)'), Sizeof(TMonitorStrBuffer));
+                    end;
+                end;
 
-          ELSE // save  V and I in mag and angle or complex kW, kvar
-                RecordSize := NumVI*2;
-                IF Not IsPower THEN Begin
-                     If isPosSeq then Begin iMin := 0; iMax := NumVI-1; End
-                     Else Begin iMin := 1; iMax := NumVI; End;
-                     RecordSize := RecordSize + NumVI*2;
-                     IF IncludeResidual Then Inc(RecordSize, 4);
-                     For i := iMin to iMax Do Begin
-                        If VIPolar Then strLcat(strPtr, pAnsiChar(AnsiString('V'+IntToStr(i)+', VAngle'+IntToStr(i))), Sizeof(TMonitorStrBuffer))
-                                   Else strLcat(strPtr, pAnsiChar(AnsiString('V'+IntToStr(i)+'.re, V'+IntToStr(i)+'.im')), Sizeof(TMonitorStrBuffer));
+            else // save  V and I in mag and angle or complex kW, kvar
+                RecordSize := NumVI * 2;
+                if not IsPower then
+                begin
+                    if isPosSeq then
+                    begin
+                        iMin := 0;
+                        iMax := NumVI - 1;
+                    end
+                    else
+                    begin
+                        iMin := 1;
+                        iMax := NumVI;
+                    end;
+                    RecordSize := RecordSize + NumVI * 2;
+                    if IncludeResidual then
+                        Inc(RecordSize, 4);
+                    for i := iMin to iMax do
+                    begin
+                        if VIPolar then
+                            strLcat(strPtr, pAnsiChar(Ansistring('V' + IntToStr(i) + ', VAngle' + IntToStr(i))), Sizeof(TMonitorStrBuffer))
+                        else
+                            strLcat(strPtr, pAnsiChar(Ansistring('V' + IntToStr(i) + '.re, V' + IntToStr(i) + '.im')), Sizeof(TMonitorStrBuffer));
                         strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
-                     End;
-                     IF IncludeResidual Then Begin
-                        If VIPolar Then strLcat(strPtr, pAnsiChar('VN, VNAngle'), Sizeof(TMonitorStrBuffer))
-                                   Else strLcat(strPtr, pAnsiChar('VN.re, VN.im'), Sizeof(TMonitorStrBuffer));
+                    end;
+                    if IncludeResidual then
+                    begin
+                        if VIPolar then
+                            strLcat(strPtr, pAnsiChar('VN, VNAngle'), Sizeof(TMonitorStrBuffer))
+                        else
+                            strLcat(strPtr, pAnsiChar('VN.re, VN.im'), Sizeof(TMonitorStrBuffer));
                         strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
-                     End;
-                     For i := iMin to iMax Do Begin
-                        If VIPolar Then strLcat(strPtr, pAnsiChar(AnsiString('I'+IntToStr(i)+', IAngle'+IntToStr(i))), Sizeof(TMonitorStrBuffer))
-                                   Else strLcat(strPtr, pAnsiChar(AnsiString('I'+IntToStr(i)+'.re, I'+IntToStr(i)+'.im')), Sizeof(TMonitorStrBuffer));
-                        If i<NumVI Then strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
-                     End;
-                     IF IncludeResidual Then Begin
-                        If VIPolar Then strLcat(strPtr, pAnsiChar(', IN, INAngle'), Sizeof(TMonitorStrBuffer))
-                        Else strLcat(strPtr, pAnsiChar(', IN.re, IN.im'), Sizeof(TMonitorStrBuffer));
-                     End;
-                End
-                Else Begin
-                    If isPosSeq then Begin iMin := 0; iMax := NumVI-1; End
-                    Else Begin iMin := 1; iMax := NumVI; End;
-                    For i := iMin to iMax Do Begin
-                        If Ppolar Then strLcat(strPtr, pAnsiChar(AnsiString('S'+IntToStr(i)+' (kVA), Ang'+IntToStr(i))), Sizeof(TMonitorStrBuffer))
-                                  Else strLcat(strPtr, pAnsiChar(AnsiString('P'+IntToStr(i)+' (kW), Q'+IntToStr(i)+' (kvar)')), Sizeof(TMonitorStrBuffer));
-                        If i<NumVI Then strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
-                    End;
-                End;
-          END;
-         End;
-     END;  {CASE}
+                    end;
+                    for i := iMin to iMax do
+                    begin
+                        if VIPolar then
+                            strLcat(strPtr, pAnsiChar(Ansistring('I' + IntToStr(i) + ', IAngle' + IntToStr(i))), Sizeof(TMonitorStrBuffer))
+                        else
+                            strLcat(strPtr, pAnsiChar(Ansistring('I' + IntToStr(i) + '.re, I' + IntToStr(i) + '.im')), Sizeof(TMonitorStrBuffer));
+                        if i < NumVI then
+                            strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                    end;
+                    if IncludeResidual then
+                    begin
+                        if VIPolar then
+                            strLcat(strPtr, pAnsiChar(', IN, INAngle'), Sizeof(TMonitorStrBuffer))
+                        else
+                            strLcat(strPtr, pAnsiChar(', IN.re, IN.im'), Sizeof(TMonitorStrBuffer));
+                    end;
+                end
+                else
+                begin
+                    if isPosSeq then
+                    begin
+                        iMin := 0;
+                        iMax := NumVI - 1;
+                    end
+                    else
+                    begin
+                        iMin := 1;
+                        iMax := NumVI;
+                    end;
+                    for i := iMin to iMax do
+                    begin
+                        if Ppolar then
+                            strLcat(strPtr, pAnsiChar(Ansistring('S' + IntToStr(i) + ' (kVA), Ang' + IntToStr(i))), Sizeof(TMonitorStrBuffer))
+                        else
+                            strLcat(strPtr, pAnsiChar(Ansistring('P' + IntToStr(i) + ' (kW), Q' + IntToStr(i) + ' (kvar)')), Sizeof(TMonitorStrBuffer));
+                        if i < NumVI then
+                            strLcat(strPtr, pAnsiChar(', '), Sizeof(TMonitorStrBuffer));
+                    end;
+                end;
+            end;
+        end;
+        end;  {CASE}
 
 
      // RecordSize is the number of singles in the sample (after the hour and sec)
@@ -1008,13 +1170,14 @@ Begin
      // Write ID so we know it is a DSS Monitor file and which version in case we
      // change it down the road
 
-     With MonitorStream Do Begin
-         Write(FileSignature, Sizeof(FileSignature) );
-         Write(FileVersion,   Sizeof(FileVersion) );
-         Write(RecordSize,    Sizeof(RecordSize) );
-         Write(Mode,          Sizeof(Mode)       );
-         Write(StrBuffer,     Sizeof(TMonitorStrBuffer)  );
-     End;
+        with MonitorStream do
+        begin
+            Write(FileSignature, Sizeof(FileSignature));
+            Write(FileVersion, Sizeof(FileVersion));
+            Write(RecordSize, Sizeof(RecordSize));
+            Write(Mode, Sizeof(Mode));
+            Write(StrBuffer, Sizeof(TMonitorStrBuffer));
+        end;
 
 {    So the file now looks like:
        FileSignature (4 bytes)    32-bit Integers
@@ -1030,735 +1193,846 @@ Begin
 
  }
 
-  Except
-      On E: Exception DO DoErrorMsg('Cannot open Monitor file.',
-                    E.Message,
-                    'Monitor: "' + Name + '"', 670)
+    except
+        On E: Exception do
+            DoErrorMsg('Cannot open Monitor file.',
+                E.Message,
+                'Monitor: "' + Name + '"', 670)
 
-  End;
-End;
+    end;
+end;
 
 
 {--------------------------------------------------------------------------}
-Procedure TMonitorObj.OpenMonitorStream;
-Begin
+procedure TMonitorObj.OpenMonitorStream;
+begin
 
-    If NOT IsFileOpen then Begin
+    if not IsFileOpen then
+    begin
 {$IFDEF MSWINDOWS}
-       MonitorStream.Seek(0, soFromEnd	);    // Positioned at End of Stream
+        MonitorStream.Seek(0, soFromEnd);    // Positioned at End of Stream
 {$ENDIF}
-       IsFileOpen := True;
-    End;
+        IsFileOpen := TRUE;
+    end;
 
-End;
+end;
 
 {--------------------------------------------------------------------------}
-Procedure TMonitorObj.CloseMonitorStream(ActorID : Integer);
-Begin
-  Try
-     If IsFileOpen THEN Begin  // only close open files
-        PostProcess(ActorID);
+procedure TMonitorObj.CloseMonitorStream(ActorID: Integer);
+begin
+    try
+        if IsFileOpen then
+        begin  // only close open files
+            PostProcess(ActorID);
 {$IFDEF MSWINDOWS}
-        MonitorStream.Seek(0, soFromBeginning);   // just move stream position to the beginning
+            MonitorStream.Seek(0, soFromBeginning);   // just move stream position to the beginning
 {$ENDIF}
-        IsFileOpen := false;
-     End;
-  Except
-      On E: Exception DO DoErrorMsg('Cannot close Monitor stream.',
-                    E.Message,
-                    'Monitor: "' + Name + '"', 671)
-  End;
-End;
+            IsFileOpen := FALSE;
+        end;
+    except
+        On E: Exception do
+            DoErrorMsg('Cannot close Monitor stream.',
+                E.Message,
+                'Monitor: "' + Name + '"', 671)
+    end;
+end;
 
 {--------------------------------------------------------------------------}
-Procedure TMonitorObj.Save;
+procedure TMonitorObj.Save;
 
 // Saves present buffer to monitor file, resets bufferptrs and continues
 
-Begin
+begin
 
-     If NOT IsFileOpen THEN OpenMonitorStream; // Position to end of stream
+    if not IsFileOpen then
+        OpenMonitorStream; // Position to end of stream
 
      {Write present monitor buffer to monitorstream}
-     MonitorStream.Write(MonBuffer^, SizeOF(MonBuffer^[1]) * BufPtr);
+    MonitorStream.Write(MonBuffer^, SizeOF(MonBuffer^[1]) * BufPtr);
 
-     BufPtr := 0; // reset Buffer for next
+    BufPtr := 0; // reset Buffer for next
 
-End;
-
+end;
 
 
 {--------------------------------------------------------------------------}
-Procedure TMonitorObj.ResetIt(ActorID : Integer);
-Begin
-     BufPtr := 0;
-     ClearMonitorStream(ActorID);
-End;
+procedure TMonitorObj.ResetIt(ActorID: Integer);
+begin
+    BufPtr := 0;
+    ClearMonitorStream(ActorID);
+end;
 
 {--------------------------------------------------------------------------}
-Procedure TMonitorObj.PostProcess(ActorID : Integer);
-Begin
-  if IsProcessed = FALSE then begin
-    if (mode = 4) and (MonitorStream.Position > 0) then DoFlickerCalculations(ACtorID);
-  end;
-  IsProcessed := TRUE;
-End;
+procedure TMonitorObj.PostProcess(ActorID: Integer);
+begin
+    if IsProcessed = FALSE then
+    begin
+        if (mode = 4) and (MonitorStream.Position > 0) then
+            DoFlickerCalculations(ACtorID);
+    end;
+    IsProcessed := TRUE;
+end;
 
 {--------------------------------------------------------------------------}
-Procedure TMonitorObj.TakeSample(ActorID : Integer);
-VAR
-    dHour             :Double;
-    dSum              :Double;
-    i,j,k             :Integer;
-    IsPower           :Boolean;
-    IsSequence        :Boolean;
-    NumVI             :Integer;
-    Offset            :Integer;
-    ResidualCurr      :Complex;
-    ResidualVolt      :Complex;
-    Sum               :Complex;
-    CplxLosses        :Complex;
-    V012,I012         :Array[1..3] of Complex;
+procedure TMonitorObj.TakeSample(ActorID: Integer);
+var
+    dHour: Double;
+    dSum: Double;
+    i, j, k: Integer;
+    IsPower: Boolean;
+    IsSequence: Boolean;
+    NumVI: Integer;
+    Offset: Integer;
+    ResidualCurr: Complex;
+    ResidualVolt: Complex;
+    Sum: Complex;
+    CplxLosses: Complex;
+    V012, I012: array[1..3] of Complex;
 
 
-Begin
+begin
 
-   If Not (ValidMonitor and Enabled) Then Exit;
+    if not (ValidMonitor and Enabled) then
+        Exit;
 
-   inc(SampleCount);
+    inc(SampleCount);
 
-   Hour := ActiveCircuit[ActorID].Solution.DynaVars.intHour;
-   Sec :=  ActiveCircuit[ActorID].Solution.Dynavars.t;
+    Hour := ActiveCircuit[ActorID].Solution.DynaVars.intHour;
+    Sec := ActiveCircuit[ActorID].Solution.Dynavars.t;
 
-   Offset := (MeteredTerminal-1)  * MeteredElement.NConds;
+    Offset := (MeteredTerminal - 1) * MeteredElement.NConds;
 
    //Save time unless Harmonics mode and then save Frequency and Harmonic
-   WITH ActiveCircuit[ActorID].Solution Do
-     IF IsHarmonicModel Then Begin
-         AddDblsToBuffer(@Frequency, 1);  // put freq in hour slot as a double
-         AddDblsToBuffer(@Harmonic ,1);  // stick harmonic in time slot in buffer
-     End
-     ELSE Begin
-         dHour := Hour;      // convert to double
-         AddDblsToBuffer(@dHour, 1);  // put hours in buffer as a double
-         AddDblsToBuffer(@Sec, 1);  // stick time in sec in buffer
-     End;
+    with ActiveCircuit[ActorID].Solution do
+        if IsHarmonicModel then
+        begin
+            AddDblsToBuffer(@Frequency, 1);  // put freq in hour slot as a double
+            AddDblsToBuffer(@Harmonic, 1);  // stick harmonic in time slot in buffer
+        end
+        else
+        begin
+            dHour := Hour;      // convert to double
+            AddDblsToBuffer(@dHour, 1);  // put hours in buffer as a double
+            AddDblsToBuffer(@Sec, 1);  // stick time in sec in buffer
+        end;
 
-   CASE  (Mode AND MODEMASK) of
+    case (Mode and MODEMASK) of
 
-     0,1:       // Voltage, current. Powers
-       Begin
+        0, 1:       // Voltage, current. Powers
+        begin
 
             // MeteredElement.GetCurrents(CurrentBuffer);
             // To save some time, call ComputeITerminal
             MeteredElement.ComputeIterminal(ActorID);   // only does calc if needed
-            For i := 1 to MeteredElement.Yorder Do CurrentBuffer^[i] := MeteredElement.Iterminal^[i];
+            for i := 1 to MeteredElement.Yorder do
+                CurrentBuffer^[i] := MeteredElement.Iterminal^[i];
 
-            TRY
-              FOR i := 1 to Fnconds DO
-              Begin
+            try
+                for i := 1 to Fnconds do
+                begin
                 // NodeRef is set by the main Circuit object
                 // It is the index of the terminal into the system node list
-                  VoltageBuffer^[i] := ActiveCircuit[ActorID].Solution.NodeV^[NodeRef^[i]];
-              End;
-            EXCEPT
-               On E:Exception Do DoSimpleMsg(E.Message + CRLF + 'NodeRef is invalid. Try solving a snapshot or direct before solving in a mode that takes a monitor sample.', 672);
-            END;
-       End;
+                    VoltageBuffer^[i] := ActiveCircuit[ActorID].Solution.NodeV^[NodeRef^[i]];
+                end;
+            except
+                On E: Exception do
+                    DoSimpleMsg(E.Message + CRLF + 'NodeRef is invalid. Try solving a snapshot or direct before solving in a mode that takes a monitor sample.', 672);
+            end;
+        end;
 
-     2: Begin     // Monitor Transformer Tap Position
-             If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
-             Then With TAutoTransObj(MeteredElement) Do AddDblToBuffer(PresentTap[MeteredTerminal, ActorID ])
-             Else With TTransfObj(MeteredElement)    Do AddDblToBuffer(PresentTap[MeteredTerminal, ActorID]);
+        2:
+        begin     // Monitor Transformer Tap Position
+            if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
+                with TAutoTransObj(MeteredElement) do
+                    AddDblToBuffer(PresentTap[MeteredTerminal, ActorID])
+            else
+                with TTransfObj(MeteredElement) do
+                    AddDblToBuffer(PresentTap[MeteredTerminal, ActorID]);
 
-              Exit;  // Done with this mode now.
-        End;
+            Exit;  // Done with this mode now.
+        end;
 
-     3: Begin   // Pick up device state variables
-              TPCElement(MeteredElement).GetAllVariables(StateBuffer);
-              AddDblsToBuffer(StateBuffer, NumStateVars);
-              Exit; // Done with this mode now
-        End;
+        3:
+        begin   // Pick up device state variables
+            TPCElement(MeteredElement).GetAllVariables(StateBuffer);
+            AddDblsToBuffer(StateBuffer, NumStateVars);
+            Exit; // Done with this mode now
+        end;
 
-     4: Begin   // RMS phase voltages for flicker evaluation
-            TRY
-              FOR i := 1 to Fnphases DO Begin
-                  FlickerBuffer^[i] := ActiveCircuit[ActorID].Solution.NodeV^[NodeRef^[i]];
-              End;
-            EXCEPT
-               On E:Exception Do DoSimpleMsg(E.Message + CRLF + 'NodeRef is invalid. Try solving a snapshot or direct before solving in a mode that takes a monitor sample.', 672);
-            END;
-        End;
+        4:
+        begin   // RMS phase voltages for flicker evaluation
+            try
+                for i := 1 to Fnphases do
+                begin
+                    FlickerBuffer^[i] := ActiveCircuit[ActorID].Solution.NodeV^[NodeRef^[i]];
+                end;
+            except
+                On E: Exception do
+                    DoSimpleMsg(E.Message + CRLF + 'NodeRef is invalid. Try solving a snapshot or direct before solving in a mode that takes a monitor sample.', 672);
+            end;
+        end;
 
-     5: Begin
+        5:
+        begin
             (* Capture Solution Variables *)
-            With ActiveCircuit[ActorID].Solution Do Begin
-             SolutionBuffer^[1]   :=  Iteration;
-             SolutionBuffer^[2]   :=  ControlIteration;
-             SolutionBuffer^[3]   :=  MaxIterations;
-             SolutionBuffer^[4]   :=  MaxControlIterations;
-             If ConvergedFlag then SolutionBuffer^[5] := 1 else SolutionBuffer^[5] := 0;
-             SolutionBuffer^[6]   :=  IntervalHrs;
-             SolutionBuffer^[7]   :=  SolutionCount;
-             SolutionBuffer^[8]   :=  Mode;
-             SolutionBuffer^[9]   :=  Frequency;
-             SolutionBuffer^[10]  :=  Year;
-             SolutionBuffer^[11]  :=  Time_Solve;
-             SolutionBuffer^[12]  :=  Time_Step;
-            End;
+            with ActiveCircuit[ActorID].Solution do
+            begin
+                SolutionBuffer^[1] := Iteration;
+                SolutionBuffer^[2] := ControlIteration;
+                SolutionBuffer^[3] := MaxIterations;
+                SolutionBuffer^[4] := MaxControlIterations;
+                if ConvergedFlag then
+                    SolutionBuffer^[5] := 1
+                else
+                    SolutionBuffer^[5] := 0;
+                SolutionBuffer^[6] := IntervalHrs;
+                SolutionBuffer^[7] := SolutionCount;
+                SolutionBuffer^[8] := Mode;
+                SolutionBuffer^[9] := Frequency;
+                SolutionBuffer^[10] := Year;
+                SolutionBuffer^[11] := Time_Solve;
+                SolutionBuffer^[12] := Time_Step;
+            end;
 
-        End;
+        end;
 
-     6: Begin     // Monitor Capacitor State
+        6:
+        begin     // Monitor Capacitor State
 
-              With TCapacitorObj(MeteredElement) Do Begin
-                  for i := 1 to NumSteps do
-                    begin
-                      AddDblToBuffer(States[i,ActorID]);
-                    end;
-              End;
-              Exit;  // Done with this mode now.
-        End;
-     7: Begin     // Monitor Storage Device state variables
-              If (MeteredElement.DSSObjType And CLASSMASK) = STORAGE_ELEMENT Then Begin  // Storage Element
-                With TStorageObj(MeteredElement) Do Begin
-                  AddDblToBuffer(PresentkW);
-                  AddDblToBuffer(Presentkvar);
-                  AddDblToBuffer(StorageVars.kWhStored);
-                  AddDblToBuffer(((StorageVars.kWhStored)/(StorageVars.kWhRating))*100);
-                  AddDblToBuffer(StorageState);
-                End;
-              End
-              Else if (MeteredElement.DSSObjType And CLASSMASK) = STORAGE2_ELEMENT Then Begin   // Storage2 Element
-                With TStorageObj(MeteredElement) Do Begin
-                  AddDblToBuffer(PresentkW);
-                  AddDblToBuffer(Presentkvar);
-                  AddDblToBuffer(StorageVars.kWhStored);
-                  AddDblToBuffer(((StorageVars.kWhStored)/(StorageVars.kWhRating))*100);
-                  AddDblToBuffer(StorageState);
-                End;
-              End;
-              Exit;  // Done with this mode now.
-        End;
+            with TCapacitorObj(MeteredElement) do
+            begin
+                for i := 1 to NumSteps do
+                begin
+                    AddDblToBuffer(States[i, ActorID]);
+                end;
+            end;
+            Exit;  // Done with this mode now.
+        end;
+        7:
+        begin     // Monitor Storage Device state variables
+            if (MeteredElement.DSSObjType and CLASSMASK) = STORAGE_ELEMENT then
+            begin  // Storage Element
+                with TStorageObj(MeteredElement) do
+                begin
+                    AddDblToBuffer(PresentkW);
+                    AddDblToBuffer(Presentkvar);
+                    AddDblToBuffer(StorageVars.kWhStored);
+                    AddDblToBuffer(((StorageVars.kWhStored) / (StorageVars.kWhRating)) * 100);
+                    AddDblToBuffer(StorageState);
+                end;
+            end
+            else
+            if (MeteredElement.DSSObjType and CLASSMASK) = STORAGE2_ELEMENT then
+            begin   // Storage2 Element
+                with TStorageObj(MeteredElement) do
+                begin
+                    AddDblToBuffer(PresentkW);
+                    AddDblToBuffer(Presentkvar);
+                    AddDblToBuffer(StorageVars.kWhStored);
+                    AddDblToBuffer(((StorageVars.kWhStored) / (StorageVars.kWhRating)) * 100);
+                    AddDblToBuffer(StorageState);
+                end;
+            end;
+            Exit;  // Done with this mode now.
+        end;
 
-      8: Begin   // Winding Currents
+        8:
+        begin   // Winding Currents
               // Get all currents in each end of each winding
-             If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
-             Then With TAutoTransObj(MeteredElement) Do
-                Begin
-                  GetAllWindingCurrents(WdgCurrentsBuffer, ActorID);
-                  ConvertComplexArrayToPolar( WdgCurrentsBuffer, NumTransformerCurrents);
+            if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
+                with TAutoTransObj(MeteredElement) do
+                begin
+                    GetAllWindingCurrents(WdgCurrentsBuffer, ActorID);
+                    ConvertComplexArrayToPolar(WdgCurrentsBuffer, NumTransformerCurrents);
                   // Put every other Current into buffer
                   // Current magnitude is same in each end
-                  k := 1;
-                  for i := 1 to Nphases*NumberOfWindings  do
-                  Begin
+                    k := 1;
+                    for i := 1 to Nphases * NumberOfWindings do
+                    begin
                         AddDblsToBuffer(@WdgCurrentsBuffer^[k].re, 2);  // Add Mag, Angle
                         k := k + 2;
-                  End;
-                End
-             Else With TTransfobj(MeteredElement) Do
-                Begin
-                  GetAllWindingCurrents(WdgCurrentsBuffer, ActorID);
-                  ConvertComplexArrayToPolar( WdgCurrentsBuffer, NumTransformerCurrents);
+                    end;
+                end
+            else
+                with TTransfobj(MeteredElement) do
+                begin
+                    GetAllWindingCurrents(WdgCurrentsBuffer, ActorID);
+                    ConvertComplexArrayToPolar(WdgCurrentsBuffer, NumTransformerCurrents);
                   // Put every other Current into buffer
                   // Current magnitude is same in each end
-                  k := 1;
-                  for i := 1 to Nphases*NumberOfWindings  do
-                  Begin
+                    k := 1;
+                    for i := 1 to Nphases * NumberOfWindings do
+                    begin
                         AddDblsToBuffer(@WdgCurrentsBuffer^[k].re, 2);  // Add Mag, Angle
                         k := k + 2;
-                  End;
+                    end;
                  // AddDblsToBuffer(@WdgCurrentsBuffer^[1].re, NumTransformerCurrents);
-                End;
-              Exit;
-         End;
+                end;
+            Exit;
+        end;
 
-      9: Begin  // losses
-             CplxLosses := MeteredElement.Losses[ActorID];
-             AddDblToBuffer(CplxLosses.re);
-             AddDblToBuffer(CplxLosses.im);
-             Exit; // Done with this mode now.
-         End;
+        9:
+        begin  // losses
+            CplxLosses := MeteredElement.Losses[ActorID];
+            AddDblToBuffer(CplxLosses.re);
+            AddDblToBuffer(CplxLosses.im);
+            Exit; // Done with this mode now.
+        end;
 
-     10: Begin   // Winding Voltages
+        10:
+        begin   // Winding Voltages
               // Get all Voltages across each winding and put into buffer
-             If (MeteredElement.DSSObjType And CLASSMASK) = AUTOTRANS_ELEMENT
-             Then With TAutoTransObj(MeteredElement) Do
-              Begin
-                  For i := 1 to NumberOfWindings Do  Begin
-                    GetAutoWindingVoltages(i, PhsVoltagesBuffer, ActorID);
-                    For j := 1 to nphases Do
-                       WdgVoltagesBuffer^[i + (j-1)*NumberofWindings] := PhsVoltagesBuffer^[j];
-                  End;
-                  ConvertComplexArrayToPolar( WdgVoltagesBuffer, NumWindingVoltages);
+            if (MeteredElement.DSSObjType and CLASSMASK) = AUTOTRANS_ELEMENT then
+                with TAutoTransObj(MeteredElement) do
+                begin
+                    for i := 1 to NumberOfWindings do
+                    begin
+                        GetAutoWindingVoltages(i, PhsVoltagesBuffer, ActorID);
+                        for j := 1 to nphases do
+                            WdgVoltagesBuffer^[i + (j - 1) * NumberofWindings] := PhsVoltagesBuffer^[j];
+                    end;
+                    ConvertComplexArrayToPolar(WdgVoltagesBuffer, NumWindingVoltages);
                   {Put winding Voltages into Monitor}
-                  AddDblsToBuffer(@WdgVoltagesBuffer^[1].re, 2 * NumWindingVoltages);  // Add Mag, Angle each winding
-              End
+                    AddDblsToBuffer(@WdgVoltagesBuffer^[1].re, 2 * NumWindingVoltages);  // Add Mag, Angle each winding
+                end
 
-             Else With TTransfobj(MeteredElement) Do
-              Begin
-                  For i := 1 to NumberOfWindings Do  Begin
-                    GetWindingVoltages(i, PhsVoltagesBuffer, ActorID);
-                    For j := 1 to nphases Do
-                       WdgVoltagesBuffer^[i + (j-1)*NumberofWindings] := PhsVoltagesBuffer^[j];
-                  End;
-                  ConvertComplexArrayToPolar( WdgVoltagesBuffer, NumWindingVoltages);
+            else
+                with TTransfobj(MeteredElement) do
+                begin
+                    for i := 1 to NumberOfWindings do
+                    begin
+                        GetWindingVoltages(i, PhsVoltagesBuffer, ActorID);
+                        for j := 1 to nphases do
+                            WdgVoltagesBuffer^[i + (j - 1) * NumberofWindings] := PhsVoltagesBuffer^[j];
+                    end;
+                    ConvertComplexArrayToPolar(WdgVoltagesBuffer, NumWindingVoltages);
                   {Put winding Voltages into Monitor}
-                  AddDblsToBuffer(@WdgVoltagesBuffer^[1].re, 2 * NumWindingVoltages);  // Add Mag, Angle each winding
-              End;
-              Exit;
-         End;
-     Else Exit  // Ignore invalid mask
+                    AddDblsToBuffer(@WdgVoltagesBuffer^[1].re, 2 * NumWindingVoltages);  // Add Mag, Angle each winding
+                end;
+            Exit;
+        end;
+    else
+        Exit  // Ignore invalid mask
 
-   End;
+    end;
 
 
-   IF ((Mode AND SEQUENCEMASK)>0) And (Fnphases=3)
-   THEN Begin  // Convert to Symmetrical components
-       Phase2SymComp(VoltageBuffer, @V012);
-       Phase2SymComp(@CurrentBuffer^[Offset + 1], @I012);
-       NumVI      := 3;
-       IsSequence := TRUE;
+    if ((Mode and SEQUENCEMASK) > 0) and (Fnphases = 3) then
+    begin  // Convert to Symmetrical components
+        Phase2SymComp(VoltageBuffer, @V012);
+        Phase2SymComp(@CurrentBuffer^[Offset + 1], @I012);
+        NumVI := 3;
+        IsSequence := TRUE;
        // Replace voltage and current buffer with sequence quantities
-       FOR i := 1 to 3 DO VoltageBuffer^[i]         := V012[i];
-       FOR i := 1 to 3 DO CurrentBuffer[Offset + i] := I012[i];
-   End
-   ELSE Begin
-       NumVI      :=Fnconds;
-       IsSequence := FALSE;
-   End;
+        for i := 1 to 3 do
+            VoltageBuffer^[i] := V012[i];
+        for i := 1 to 3 do
+            CurrentBuffer[Offset + i] := I012[i];
+    end
+    else
+    begin
+        NumVI := Fnconds;
+        IsSequence := FALSE;
+    end;
 
-   IsPower := False;  // Init so compiler won't complain
-   CASE  (Mode AND MODEMASK) of
-     0: Begin        // Convert to Mag, Angle   and compute residual if required
-          IsPower := FALSE;
-          IF IncludeResidual THEN Begin
-             If VIPolar Then Begin
-                 ResidualVolt := ResidualPolar(@VoltageBuffer^[1], Fnphases);
-                 ResidualCurr := ResidualPolar(@CurrentBuffer^[Offset+1], Fnphases);
-             End Else Begin
-                 ResidualVolt := Residual(@VoltageBuffer^[1], Fnphases);
-                 ResidualCurr := Residual(@CurrentBuffer^[Offset+1], Fnphases);
-             End;
-          End;
-          If VIPolar Then Begin
-             ConvertComplexArrayToPolar(VoltageBuffer, NumVI);
-             ConvertComplexArrayToPolar(@CurrentBuffer^[Offset+1], NumVI );    // Corrected 3-11-13
-          End;
-        End;
-     1: Begin     // Convert Voltage Buffer to power kW, kvar or Mag/Angle
-          CalckPowers(VoltageBuffer, VoltageBuffer, @CurrentBuffer^[Offset+1], NumVI);
-          IF (IsSequence OR ActiveCircuit[ActorID].PositiveSequence) THEN  CmulArray(VoltageBuffer, 3.0, NumVI); // convert to total power
-          If Ppolar Then ConvertComplexArrayToPolar(VoltageBuffer, NumVI);
-          IsPower := TRUE;
-        End;
-     4: Begin
-          IsPower := FALSE;
-          ConvertComplexArrayToPolar(FlickerBuffer, Fnphases);
-        End
-   Else
-   End;
+    IsPower := FALSE;  // Init so compiler won't complain
+    case (Mode and MODEMASK) of
+        0:
+        begin        // Convert to Mag, Angle   and compute residual if required
+            IsPower := FALSE;
+            if IncludeResidual then
+            begin
+                if VIPolar then
+                begin
+                    ResidualVolt := ResidualPolar(@VoltageBuffer^[1], Fnphases);
+                    ResidualCurr := ResidualPolar(@CurrentBuffer^[Offset + 1], Fnphases);
+                end
+                else
+                begin
+                    ResidualVolt := Residual(@VoltageBuffer^[1], Fnphases);
+                    ResidualCurr := Residual(@CurrentBuffer^[Offset + 1], Fnphases);
+                end;
+            end;
+            if VIPolar then
+            begin
+                ConvertComplexArrayToPolar(VoltageBuffer, NumVI);
+                ConvertComplexArrayToPolar(@CurrentBuffer^[Offset + 1], NumVI);    // Corrected 3-11-13
+            end;
+        end;
+        1:
+        begin     // Convert Voltage Buffer to power kW, kvar or Mag/Angle
+            CalckPowers(VoltageBuffer, VoltageBuffer, @CurrentBuffer^[Offset + 1], NumVI);
+            if (IsSequence or ActiveCircuit[ActorID].PositiveSequence) then
+                CmulArray(VoltageBuffer, 3.0, NumVI); // convert to total power
+            if Ppolar then
+                ConvertComplexArrayToPolar(VoltageBuffer, NumVI);
+            IsPower := TRUE;
+        end;
+        4:
+        begin
+            IsPower := FALSE;
+            ConvertComplexArrayToPolar(FlickerBuffer, Fnphases);
+        end
+    else
+    end;
 
    // Now check to see what to write to disk
-   CASE (Mode AND (MAGNITUDEMASK + POSSEQONLYMASK)) OF
-     32:Begin // Save Magnitudes only
-          FOR i := 1 to NumVI DO AddDblToBuffer(VoltageBuffer^[i].re {Cabs(VoltageBuffer^[i])});
-          IF IncludeResidual Then AddDblToBuffer(ResidualVolt.re);
-          IF Not IsPower
-          THEN  Begin
-               FOR i := 1 to NumVI DO AddDblToBuffer(CurrentBuffer^[Offset+i].re {Cabs(CurrentBuffer^[Offset+i])});
-               IF IncludeResidual Then AddDblToBuffer(ResidualCurr.re);
-          End;
-        End ;
-     64:Begin // Save Pos Seq or Avg of all Phases or Total power (Complex)
-           If isSequence THEN Begin
-              AddDblsToBuffer(@VoltageBuffer^[2].re, 2);
-              IF Not IsPower THEN AddDblsToBuffer(@CurrentBuffer^[Offset+2].re, 2);
-           End
-           ELSE Begin
-              If IsPower Then Begin
-                  Sum := cZero;
-                  FOR i := 1 to Fnphases DO Caccum(Sum, VoltageBuffer^[i]);
-                  AddDblsToBuffer(@Sum.re,2);
-                End
-              ELSE Begin  // Average the phase magnitudes and  sum angles
-                   Sum := cZero;
-                   FOR i := 1 to Fnphases DO Caccum(Sum, VoltageBuffer^[i]);
-                   Sum.re := Sum.re / FnPhases;
-                   AddDblsToBuffer(@Sum.re,2);
-                   Sum := cZero;
-                   FOR i := 1 to Fnphases DO Caccum(Sum, CurrentBuffer^[Offset+i]);   // Corrected 3-11-13
-                   Sum.re := Sum.re / FnPhases;
-                   AddDblsToBuffer(@Sum.re,2);
-                End;
-           End;
-        End ;
-     96:Begin  // Save Pos Seq or Aver magnitude of all Phases of total kVA (Magnitude)
-           If isSequence THEN Begin
-              AddDblToBuffer(VoltageBuffer^[2].Re);    // First double is magnitude
-              IF Not IsPower THEN AddDblToBuffer(CurrentBuffer^[Offset+2].Re);
-           End
-           ELSE Begin
-              dSum := 0.0;
-              FOR i := 1 to Fnphases DO dSum := dSum + VoltageBuffer^[i].re; //Cabs(VoltageBuffer^[i]);
-              If Not IsPower THEN dSum := dSum/Fnphases;
-              AddDblToBuffer(dSum);
-              IF Not IsPower THEN Begin
+    case (Mode and (MAGNITUDEMASK + POSSEQONLYMASK)) of
+        32:
+        begin // Save Magnitudes only
+            for i := 1 to NumVI do
+                AddDblToBuffer(VoltageBuffer^[i].re {Cabs(VoltageBuffer^[i])});
+            if IncludeResidual then
+                AddDblToBuffer(ResidualVolt.re);
+            if not IsPower then
+            begin
+                for i := 1 to NumVI do
+                    AddDblToBuffer(CurrentBuffer^[Offset + i].re {Cabs(CurrentBuffer^[Offset+i])});
+                if IncludeResidual then
+                    AddDblToBuffer(ResidualCurr.re);
+            end;
+        end;
+        64:
+        begin // Save Pos Seq or Avg of all Phases or Total power (Complex)
+            if isSequence then
+            begin
+                AddDblsToBuffer(@VoltageBuffer^[2].re, 2);
+                if not IsPower then
+                    AddDblsToBuffer(@CurrentBuffer^[Offset + 2].re, 2);
+            end
+            else
+            begin
+                if IsPower then
+                begin
+                    Sum := cZero;
+                    for i := 1 to Fnphases do
+                        Caccum(Sum, VoltageBuffer^[i]);
+                    AddDblsToBuffer(@Sum.re, 2);
+                end
+                else
+                begin  // Average the phase magnitudes and  sum angles
+                    Sum := cZero;
+                    for i := 1 to Fnphases do
+                        Caccum(Sum, VoltageBuffer^[i]);
+                    Sum.re := Sum.re / FnPhases;
+                    AddDblsToBuffer(@Sum.re, 2);
+                    Sum := cZero;
+                    for i := 1 to Fnphases do
+                        Caccum(Sum, CurrentBuffer^[Offset + i]);   // Corrected 3-11-13
+                    Sum.re := Sum.re / FnPhases;
+                    AddDblsToBuffer(@Sum.re, 2);
+                end;
+            end;
+        end;
+        96:
+        begin  // Save Pos Seq or Aver magnitude of all Phases of total kVA (Magnitude)
+            if isSequence then
+            begin
+                AddDblToBuffer(VoltageBuffer^[2].Re);    // First double is magnitude
+                if not IsPower then
+                    AddDblToBuffer(CurrentBuffer^[Offset + 2].Re);
+            end
+            else
+            begin
                 dSum := 0.0;
-                FOR i := 1 to Fnphases DO dSum := dSum + CurrentBuffer^[Offset+i].re; //Cabs(CurrentBuffer^[Offset+i]);
-                dSum := dSum/Fnphases;
+                for i := 1 to Fnphases do
+                    dSum := dSum + VoltageBuffer^[i].re; //Cabs(VoltageBuffer^[i]);
+                if not IsPower then
+                    dSum := dSum / Fnphases;
                 AddDblToBuffer(dSum);
-              End;
-           End;
-       End ;
-
-   ELSE
-     CASE Mode of
-        4:   AddDblsToBuffer(@FlickerBuffer^[1].re, Fnphases*2);
-        5:   AddDblsToBuffer(@SolutionBuffer^[1], NumSolutionVars);
-       else begin
-         AddDblsToBuffer(@VoltageBuffer^[1].re, NumVI*2);
-         IF Not IsPower THEN Begin
-            IF IncludeResidual THEN AddDblsToBuffer(@ResidualVolt, 2);
-            AddDblsToBuffer(@CurrentBuffer^[Offset + 1].re, NumVI*2);
-            IF IncludeResidual THEN AddDblsToBuffer(@ResidualCurr, 2);
-         End;
-     End;
-     END;
-   END;
-End;
-
-{--------------------------------------------------------------------------}
-Procedure TMonitorObj.AddDblsToBuffer( Dbl:pDoubleArray; Ndoubles:Integer);
-
-VAR
-   i:Integer;
-
-Begin
-   FOR i := 1 to Ndoubles DO AddDblToBuffer(Dbl^[i]);
-End;
-
-{--------------------------------------------------------------------------}
-Procedure TMonitorObj.AddDblToBuffer(const Dbl:Double);
-
-Begin
-    // first check to see if there's enough room
-    // if not, save to monitorstream first.
-    IF BufPtr=BufferSize THEN Save;
-    Inc(BufPtr);
-    MonBuffer^[BufPtr]:=Dbl;
-End;
-
-Procedure TMonitorObj.DoFlickerCalculations(ActorID : Integer);
-var
-  FSignature  :Integer;
-  Fversion    :Integer;
-  RecordSize  :Cardinal;
-  RecordBytes :Cardinal;
-  SngBuffer   :Array[1..100] of Single;
-  hr          :single;
-  s           :single;
-  N           :Integer;
-  Npst        :Integer;
-  i, p        :Integer;
-  bStart      :Integer;
-  data        :Array of pSingleArray; // indexed from zero (time) to FnPhases
-  pst         :Array of pSingleArray; // indexed from zero to FnPhases - 1
-  ipst        :integer;
-  tpst        :single;
-  defaultpst  :single;
-  Vbase       :single;
-  busref      :integer;
-begin
-  N := SampleCount;
-  With MonitorStream Do Begin
-{$IFDEF MSWINDOWS}
-    Seek(0, soFromBeginning);  // Start at the beginning of the Stream
-{$ENDIF}
-    Read( Fsignature, Sizeof(Fsignature));
-    Read( Fversion,   Sizeof(Fversion));
-    Read( RecordSize, Sizeof(RecordSize));
-    Read( Mode,       Sizeof(Mode));
-    Read( StrBuffer,  Sizeof(StrBuffer));
-    bStart := Position;
-  End;
-  RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
-  Try
-    // read rms voltages out of the monitor stream into arrays
-    SetLength (data, Fnphases + 1);
-    SetLength (pst, Fnphases);
-    for p := 0 to FnPhases do data[p] := AllocMem (Sizeof(SngBuffer[1]) * N);
-    i := 1;
-    while Not (MonitorStream.Position>=MonitorStream.Size) do Begin
-      With MonitorStream Do Begin
-        Read( hr, SizeOf(hr));
-        Read( s,  SizeOf(s));
-        Read(SngBuffer, RecordBytes);
-        data[0][i] := s + 3600.0 * hr;
-        for p := 1 to FnPhases do data[p][i] := SngBuffer[2*p - 1];
-        i := i + 1;
-      End;
-    End;
-
-    // calculate the flicker level and pst
-    Npst := 1 + Trunc (data[0][N] / 600.0); // pst updates every 10 minutes or 600 seconds
-    for p := 0 to FnPhases-1 do begin
-      pst[p] := AllocMem (Sizeof(SngBuffer[1]) * Npst);
-      busref := MeteredElement.Terminals[MeteredTerminal].BusRef;
-      Vbase := 1000.0 * ActiveCircuit[ActorID].Buses^[busref].kVBase;
-      FlickerMeter (N, BaseFrequency, Vbase, data[0], data[p+1], pst[p]);
-    end;
-
-    // stuff the flicker level and pst back into the monitor stream
-    with MonitorStream do begin
-      Position := bStart;
-      tpst:=0.0;
-      ipst:=0;
-      defaultpst:=0;
-      for i := 1 to N do begin
-        if (data[0][i] - tpst) >= 600.0 then begin
-          inc(ipst);
-          tpst:=data[0][i];
+                if not IsPower then
+                begin
+                    dSum := 0.0;
+                    for i := 1 to Fnphases do
+                        dSum := dSum + CurrentBuffer^[Offset + i].re; //Cabs(CurrentBuffer^[Offset+i]);
+                    dSum := dSum / Fnphases;
+                    AddDblToBuffer(dSum);
+                end;
+            end;
         end;
-        Position:=Position + 2 * SizeOf(hr); // don't alter the time
-        for p := 1 to FnPhases do begin
-          Write (data[p][i], sizeof(data[p][i]));
-          if (ipst > 0) and (ipst <= Npst) then
-            Write (pst[p-1][ipst], sizeof(pst[p-1][ipst]))
-          else
-            Write (defaultpst, sizeof(defaultpst))
+
+    else
+        case Mode of
+            4:
+                AddDblsToBuffer(@FlickerBuffer^[1].re, Fnphases * 2);
+            5:
+                AddDblsToBuffer(@SolutionBuffer^[1], NumSolutionVars);
+        else
+        begin
+            AddDblsToBuffer(@VoltageBuffer^[1].re, NumVI * 2);
+            if not IsPower then
+            begin
+                if IncludeResidual then
+                    AddDblsToBuffer(@ResidualVolt, 2);
+                AddDblsToBuffer(@CurrentBuffer^[Offset + 1].re, NumVI * 2);
+                if IncludeResidual then
+                    AddDblsToBuffer(@ResidualCurr, 2);
+            end;
         end;
-      end;
+        end;
     end;
-  Finally
-    for p := 0 to FnPhases do ReAllocMem (data[p], 0);
-    for p := 0 to FnPhases-1 do ReAllocMem (pst[p], 0);
-  end;
 end;
 
 {--------------------------------------------------------------------------}
-Procedure TMonitorObj.TranslateToCSV(Show:Boolean; ActorID : Integer);
+procedure TMonitorObj.AddDblsToBuffer(Dbl: pDoubleArray; Ndoubles: Integer);
 
+var
+    i: Integer;
 
-VAR
-    CSVName       :String;
-    F             :TextFile;
-    FSignature    :Integer;
-    Fversion      :Integer;
-    hr            :single;
-    i             :Cardinal;
-    Mode          :Integer;
-    Nread         :Cardinal;
-    pStr          :pAnsiChar;
-    RecordBytes   :Cardinal;
-    RecordSize    :Cardinal;
-    s             :single;
-    sngBuffer     :Array[1..100] of Single;
-
-Begin
-
-     Save;  // Save present buffer
-     CloseMonitorStream(ActorID);   // Position at beginning
-
-     CSVName := Get_FileName(ActorID);
-
-     TRY
-      AssignFile(F, CSVName);    // Make CSV file
-      if ConcatenateReports and (ActorID <> 1) then
-        Append(F)
-      else
-        Rewrite(F);
-     EXCEPT
-      On E: Exception DO Begin
-         DoSimpleMsg('Error opening CSVFile "'+CSVName+'" for writing' +CRLF + E.Message, 672);
-         Exit
-      End;
-     End;
-
-     With MonitorStream Do Begin
-{$IFDEF MSWINDOWS}
-         Seek(0, soFromBeginning);  // Start at the beginning of the Stream
-{$ENDIF}
-         Read( Fsignature, Sizeof(Fsignature));
-         Read( Fversion,   Sizeof(Fversion));
-         Read( RecordSize, Sizeof(RecordSize));
-         Read( Mode,       Sizeof(Mode));
-         Read( StrBuffer,  Sizeof(StrBuffer));
-     End;
-
-     pStr := @StrBuffer;
-     if not ConcatenateReports or (ActorID=1) then
-     Writeln(F, pStr);
-     RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
-
-     TRY
-       TRY
-
-           WHILE Not (MonitorStream.Position>=MonitorStream.Size) DO  Begin
-              With MonitorStream Do Begin
-                Read( hr, SizeOF(hr));
-                Read( s,  SizeOf(s));
-                Nread := Read( sngBuffer, RecordBytes);
-              End;
-              If Nread < RecordBytes then Break;
-              Write(F, hr:0:0);          // hours
-              Write(F, ', ', s:0:5);     // sec
-              FOR i := 1 to RecordSize DO Begin
-                 Write(F,', ', Format('%-.6g', [sngBuffer[i]]))
-              End;
-              Writeln(F);
-           End;
-
-       EXCEPT
-
-           On E: Exception DO Begin
-             DoSimpleMsg('Error Writing CSVFile "'+CSVName+'" ' +CRLF + E.Message, 673);
-           End;
-
-       END;
-
-     FINALLY
-
-       CloseMonitorStream(ActorID);
-       CloseFile(F);
-
-     END;
-
-     IF Show Then FireOffEditor(CSVName);
-
-     GlobalResult := CSVName;
-End;
+begin
+    for i := 1 to Ndoubles do
+        AddDblToBuffer(Dbl^[i]);
+end;
 
 {--------------------------------------------------------------------------}
-Procedure TMonitorObj.GetCurrents(Curr: pComplexArray; ActorID : Integer);  //Get present value of terminal Curr for reports
-VAR
-   i:Integer;
-Begin
+procedure TMonitorObj.AddDblToBuffer(const Dbl: Double);
+
+begin
+    // first check to see if there's enough room
+    // if not, save to monitorstream first.
+    if BufPtr = BufferSize then
+        Save;
+    Inc(BufPtr);
+    MonBuffer^[BufPtr] := Dbl;
+end;
+
+procedure TMonitorObj.DoFlickerCalculations(ActorID: Integer);
+var
+    FSignature: Integer;
+    Fversion: Integer;
+    RecordSize: Cardinal;
+    RecordBytes: Cardinal;
+    SngBuffer: array[1..100] of Single;
+    hr: Single;
+    s: Single;
+    N: Integer;
+    Npst: Integer;
+    i, p: Integer;
+    bStart: Integer;
+    data: array of pSingleArray; // indexed from zero (time) to FnPhases
+    pst: array of pSingleArray; // indexed from zero to FnPhases - 1
+    ipst: Integer;
+    tpst: Single;
+    defaultpst: Single;
+    Vbase: Single;
+    busref: Integer;
+begin
+    N := SampleCount;
+    with MonitorStream do
+    begin
+{$IFDEF MSWINDOWS}
+        Seek(0, soFromBeginning);  // Start at the beginning of the Stream
+{$ENDIF}
+        Read(Fsignature, Sizeof(Fsignature));
+        Read(Fversion, Sizeof(Fversion));
+        Read(RecordSize, Sizeof(RecordSize));
+        Read(Mode, Sizeof(Mode));
+        Read(StrBuffer, Sizeof(StrBuffer));
+        bStart := Position;
+    end;
+    RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
+    try
+    // read rms voltages out of the monitor stream into arrays
+        SetLength(data, Fnphases + 1);
+        SetLength(pst, Fnphases);
+        for p := 0 to FnPhases do
+            data[p] := AllocMem(Sizeof(SngBuffer[1]) * N);
+        i := 1;
+        while not (MonitorStream.Position >= MonitorStream.Size) do
+        begin
+            with MonitorStream do
+            begin
+                Read(hr, SizeOf(hr));
+                Read(s, SizeOf(s));
+                Read(SngBuffer, RecordBytes);
+                data[0][i] := s + 3600.0 * hr;
+                for p := 1 to FnPhases do
+                    data[p][i] := SngBuffer[2 * p - 1];
+                i := i + 1;
+            end;
+        end;
+
+    // calculate the flicker level and pst
+        Npst := 1 + Trunc(data[0][N] / 600.0); // pst updates every 10 minutes or 600 seconds
+        for p := 0 to FnPhases - 1 do
+        begin
+            pst[p] := AllocMem(Sizeof(SngBuffer[1]) * Npst);
+            busref := MeteredElement.Terminals[MeteredTerminal].BusRef;
+            Vbase := 1000.0 * ActiveCircuit[ActorID].Buses^[busref].kVBase;
+            FlickerMeter(N, BaseFrequency, Vbase, data[0], data[p + 1], pst[p]);
+        end;
+
+    // stuff the flicker level and pst back into the monitor stream
+        with MonitorStream do
+        begin
+            Position := bStart;
+            tpst := 0.0;
+            ipst := 0;
+            defaultpst := 0;
+            for i := 1 to N do
+            begin
+                if (data[0][i] - tpst) >= 600.0 then
+                begin
+                    inc(ipst);
+                    tpst := data[0][i];
+                end;
+                Position := Position + 2 * SizeOf(hr); // don't alter the time
+                for p := 1 to FnPhases do
+                begin
+                    Write(data[p][i], sizeof(data[p][i]));
+                    if (ipst > 0) and (ipst <= Npst) then
+                        Write(pst[p - 1][ipst], sizeof(pst[p - 1][ipst]))
+                    else
+                        Write(defaultpst, sizeof(defaultpst))
+                end;
+            end;
+        end;
+    finally
+        for p := 0 to FnPhases do
+            ReAllocMem(data[p], 0);
+        for p := 0 to FnPhases - 1 do
+            ReAllocMem(pst[p], 0);
+    end;
+end;
+
+{--------------------------------------------------------------------------}
+procedure TMonitorObj.TranslateToCSV(Show: Boolean; ActorID: Integer);
+
+
+var
+    CSVName: String;
+    F: TextFile;
+    FSignature: Integer;
+    Fversion: Integer;
+    hr: Single;
+    i: Cardinal;
+    Mode: Integer;
+    Nread: Cardinal;
+    pStr: pAnsiChar;
+    RecordBytes: Cardinal;
+    RecordSize: Cardinal;
+    s: Single;
+    sngBuffer: array[1..100] of Single;
+
+begin
+
+    Save;  // Save present buffer
+    CloseMonitorStream(ActorID);   // Position at beginning
+
+    CSVName := Get_FileName(ActorID);
+
+    try
+        AssignFile(F, CSVName);    // Make CSV file
+        if ConcatenateReports and (ActorID <> 1) then
+            Append(F)
+        else
+            Rewrite(F);
+    except
+        On E: Exception do
+        begin
+            DoSimpleMsg('Error opening CSVFile "' + CSVName + '" for writing' + CRLF + E.Message, 672);
+            Exit
+        end;
+    end;
+
+    with MonitorStream do
+    begin
+{$IFDEF MSWINDOWS}
+        Seek(0, soFromBeginning);  // Start at the beginning of the Stream
+{$ENDIF}
+        Read(Fsignature, Sizeof(Fsignature));
+        Read(Fversion, Sizeof(Fversion));
+        Read(RecordSize, Sizeof(RecordSize));
+        Read(Mode, Sizeof(Mode));
+        Read(StrBuffer, Sizeof(StrBuffer));
+    end;
+
+    pStr := @StrBuffer;
+    if not ConcatenateReports or (ActorID = 1) then
+        Writeln(F, pStr);
+    RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
+
+    try
+        try
+
+            while not (MonitorStream.Position >= MonitorStream.Size) do
+            begin
+                with MonitorStream do
+                begin
+                    Read(hr, SizeOF(hr));
+                    Read(s, SizeOf(s));
+                    Nread := Read(sngBuffer, RecordBytes);
+                end;
+                if Nread < RecordBytes then
+                    Break;
+                Write(F, hr: 0: 0);          // hours
+                Write(F, ', ', s: 0: 5);     // sec
+                for i := 1 to RecordSize do
+                begin
+                    Write(F, ', ', Format('%-.6g', [sngBuffer[i]]))
+                end;
+                Writeln(F);
+            end;
+
+        except
+
+            On E: Exception do
+            begin
+                DoSimpleMsg('Error Writing CSVFile "' + CSVName + '" ' + CRLF + E.Message, 673);
+            end;
+
+        end;
+
+    finally
+
+        CloseMonitorStream(ActorID);
+        CloseFile(F);
+
+    end;
+
+    if Show then
+        FireOffEditor(CSVName);
+
+    GlobalResult := CSVName;
+end;
+
+{--------------------------------------------------------------------------}
+procedure TMonitorObj.GetCurrents(Curr: pComplexArray; ActorID: Integer);  //Get present value of terminal Curr for reports
+var
+    i: Integer;
+begin
 
 {
   Revised 12-7-99 to return Zero current instead of Monitored element current because
  it was messing up Newton iteration.
 }
 
-  For i := 1 to Fnconds Do Curr^[i] := CZERO;
+    for i := 1 to Fnconds do
+        Curr^[i] := CZERO;
 
-End;
+end;
 
-Procedure TMonitorObj.GetInjCurrents(Curr: pComplexArray; ActorID : Integer);
-Var i:Integer;
-Begin
-     FOR i := 1 to Fnconds DO Curr^[i] := CZERO;
-End;
+procedure TMonitorObj.GetInjCurrents(Curr: pComplexArray; ActorID: Integer);
+var
+    i: Integer;
+begin
+    for i := 1 to Fnconds do
+        Curr^[i] := CZERO;
+end;
 
 {--------------------------------------------------------------------------}
-Procedure TMonitorObj.DumpProperties(Var F:TextFile; Complete:Boolean);
+procedure TMonitorObj.DumpProperties(var F: TextFile; Complete: Boolean);
 
-VAR
-   i, k:Integer;
+var
+    i, k: Integer;
 
-Begin
-    Inherited DumpProperties(F,Complete);
+begin
+    inherited DumpProperties(F, Complete);
 
-    With ParentClass Do
-     For i := 1 to NumProperties Do
-       Begin
-          Writeln(F,'~ ',PropertyName^[i],'=',PropertyValue[i]);
-       End;
+    with ParentClass do
+        for i := 1 to NumProperties do
+        begin
+            Writeln(F, '~ ', PropertyName^[i], '=', PropertyValue[i]);
+        end;
 
 
-    If Complete Then Begin
-      Writeln(F);
-      Writeln(F,'// BufferSize=',BufferSize:0);
-      Writeln(F,'// Hour=',Hour:0);
-      Writeln(F,'// Sec=',Sec:0);
-      Writeln(F,'// BaseFrequency=',BaseFrequency:0:1);
-      Writeln(F,'// Bufptr=',BufPtr:0);
-      Writeln(F,'// Buffer=');
-      k:=0;
-      FOR i := 1 to BufPtr DO Begin
-        Write(F, MonBuffer^[i]:0:1,', ');
-        Inc(k);
-        IF k=(2 + Fnconds*4) THEN Begin
-          Writeln(F);
-          k:=0;
-        End;
-      End;
-      Writeln(F);
-    End;
+    if Complete then
+    begin
+        Writeln(F);
+        Writeln(F, '// BufferSize=', BufferSize: 0);
+        Writeln(F, '// Hour=', Hour: 0);
+        Writeln(F, '// Sec=', Sec: 0);
+        Writeln(F, '// BaseFrequency=', BaseFrequency: 0: 1);
+        Writeln(F, '// Bufptr=', BufPtr: 0);
+        Writeln(F, '// Buffer=');
+        k := 0;
+        for i := 1 to BufPtr do
+        begin
+            Write(F, MonBuffer^[i]: 0: 1, ', ');
+            Inc(k);
+            if k = (2 + Fnconds * 4) then
+            begin
+                Writeln(F);
+                k := 0;
+            end;
+        end;
+        Writeln(F);
+    end;
 
-End;
+end;
 
 procedure TMonitorObj.InitPropertyValues(ArrayOffset: Integer);
 begin
 
-     PropertyValue[1] := ''; //'element';
-     PropertyValue[2] := '1'; //'terminal';
-     PropertyValue[3] := '0'; //'mode';
-     PropertyValue[4] := ''; // 'action';  // buffer=clear|save|take|process
-     PropertyValue[5] := 'NO';
-     PropertyValue[6] := 'YES';
-     PropertyValue[7] := 'YES';
+    PropertyValue[1] := ''; //'element';
+    PropertyValue[2] := '1'; //'terminal';
+    PropertyValue[3] := '0'; //'mode';
+    PropertyValue[4] := ''; // 'action';  // buffer=clear|save|take|process
+    PropertyValue[5] := 'NO';
+    PropertyValue[6] := 'YES';
+    PropertyValue[7] := 'YES';
 
-  inherited  InitPropertyValues(NumPropsThisClass);
+    inherited  InitPropertyValues(NumPropsThisClass);
 
 end;
 
 
 {--------------------------------------------------------------------------}
 
-procedure TDSSMonitor.TOPExport(ObjName:String);
+procedure TDSSMonitor.TOPExport(ObjName: String);
 
-Var
-   NameList, CNames:TStringList;
-   Vbuf, CBuf:pDoubleArray;
-   Obj:TMonitorObj;
-   i: Integer;
-   MaxTime :Double;
-   ObjList:TPointerList;
-   Hours:Boolean;
-   StrBuffer:TMonitorStrBuffer;
-   pStrBuffer:pAnsiChar;
-   Fversion, FSignature, iMode:Integer;
-   Nread, RecordSize, RecordBytes, PositionSave:Cardinal;
-   sngBuffer:Array[1..100] of Single;
-   time:Double;
-   hr, s:single;
-   TrialFileName,FileNumber:String;
+var
+    NameList, CNames: TStringList;
+    Vbuf, CBuf: pDoubleArray;
+    Obj: TMonitorObj;
+    i: Integer;
+    MaxTime: Double;
+    ObjList: TPointerList;
+    Hours: Boolean;
+    StrBuffer: TMonitorStrBuffer;
+    pStrBuffer: pAnsiChar;
+    Fversion, FSignature, iMode: Integer;
+    Nread, RecordSize, RecordBytes, PositionSave: Cardinal;
+    sngBuffer: array[1..100] of Single;
+    time: Double;
+    hr, s: Single;
+    TrialFileName, FileNumber: String;
 
 begin
      // Create a unique file name
-     TrialFileName := GetOutputDirectory + 'TOP_Mon_'+ObjName;
-     FileNumber := '';
-     i := 0;
-     While FileExists(TrialFileName + FileNumber + '.STO') Do Begin
-         Inc(i);
-         FileNumber := IntToStr(i);
-     End;
-     TOPTransferFile.FileName := TrialFileName + Filenumber + '.STO';
-     TRY                                 
-         TOPTransferFile.Open;
-     EXCEPT
-        ON E:Exception Do
-        Begin
-          DoSimpleMsg('TOP Transfer File Error: '+E.message, 674);
-          TRY
-              TopTransferFile.Close;
-          EXCEPT
+    TrialFileName := GetOutputDirectory + 'TOP_Mon_' + ObjName;
+    FileNumber := '';
+    i := 0;
+    while FileExists(TrialFileName + FileNumber + '.STO') do
+    begin
+        Inc(i);
+        FileNumber := IntToStr(i);
+    end;
+    TOPTransferFile.FileName := TrialFileName + Filenumber + '.STO';
+    try
+        TOPTransferFile.Open;
+    except
+        ON E: Exception do
+        begin
+            DoSimpleMsg('TOP Transfer File Error: ' + E.message, 674);
+            try
+                TopTransferFile.Close;
+            except
               {OK if Error}
-          End;
-          Exit;
-        End;
-     END;
+            end;
+            Exit;
+        end;
+    end;
 
      {Send only fixed interval data}
 
-     ObjList := TPointerList.Create(10);
-     NameList := TStringList.Create;
-     CNames := TStringList.Create;
+    ObjList := TPointerList.Create(10);
+    NameList := TStringList.Create;
+    CNames := TStringList.Create;
 
      {Make a List of fixed interval data where the interval is greater than 1 minute}
-     IF CompareText(ObjName, 'ALL')=0 Then Begin
+    if CompareText(ObjName, 'ALL') = 0 then
+    begin
         DoSimpleMsg('ALL option not yet implemented.', 675);
      {
        Obj := ElementList.First;
@@ -1767,141 +2041,163 @@ begin
           Obj := ElementList.Next;
        End;
      }
-     End
-     ELSE Begin
-       Obj := Find(ObjName);
-       If Obj <>  Nil Then  ObjList.Add(Obj)
-       Else DoSimpleMsg('Monitor.'+ObjName+' not found.', 676);
-     End;
+    end
+    else
+    begin
+        Obj := Find(ObjName);
+        if Obj <> NIL then
+            ObjList.Add(Obj)
+        else
+            DoSimpleMsg('Monitor.' + ObjName + ' not found.', 676);
+    end;
 
      {If none found, exit}
-     If ObjList.ListSize >0 Then Begin
+    if ObjList.ListSize > 0 then
+    begin
 
-     Obj := ObjList.First;  {And only}
-     With Obj Do Begin
+        Obj := ObjList.First;  {And only}
+        with Obj do
+        begin
 
-           Save;  // Save present buffer
-           CloseMonitorStream(ActiveActor);
+            Save;  // Save present buffer
+            CloseMonitorStream(ActiveActor);
 
-           pStrBuffer := @StrBuffer;
-           With MonitorStream Do Begin
+            pStrBuffer := @StrBuffer;
+            with MonitorStream do
+            begin
 {$IFDEF MSWINDOWS}
-               Seek(0, soFromBeginning);  // Start at the beginning of the Stream
+                Seek(0, soFromBeginning);  // Start at the beginning of the Stream
 {$ENDIF}
-               Read( Fsignature, Sizeof(Fsignature));
-               Read( Fversion,   Sizeof(Fversion));
-               Read( RecordSize, Sizeof(RecordSize));
-               Read( iMode,      Sizeof(iMode));
-               Read( StrBuffer,  Sizeof(StrBuffer));
-           End;
+                Read(Fsignature, Sizeof(Fsignature));
+                Read(Fversion, Sizeof(Fversion));
+                Read(RecordSize, Sizeof(RecordSize));
+                Read(iMode, Sizeof(iMode));
+                Read(StrBuffer, Sizeof(StrBuffer));
+            end;
 
            {Parse off Channel Names}
-           AuxParser[ActiveActor].Whitespace := '';
-           AuxParser[ActiveActor].CmdString := String(pStrBuffer);
-              AuxParser[ActiveActor].NextParam;  // pop off two
-              AuxParser[ActiveActor].NextParam;
-           For i := 1 to RecordSize Do Begin
-              AuxParser[ActiveActor].NextParam;
-              NameList.Add(AuxParser[ActiveActor].StrValue);
-           End;
-           AuxParser[ActiveActor].ResetDelims;
+            AuxParser[ActiveActor].Whitespace := '';
+            AuxParser[ActiveActor].CmdString := String(pStrBuffer);
+            AuxParser[ActiveActor].NextParam;  // pop off two
+            AuxParser[ActiveActor].NextParam;
+            for i := 1 to RecordSize do
+            begin
+                AuxParser[ActiveActor].NextParam;
+                NameList.Add(AuxParser[ActiveActor].StrValue);
+            end;
+            AuxParser[ActiveActor].ResetDelims;
 
            {Write TOP Header}
 
           {Find Max number of points}
-           RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
-           VBuf := AllocMem(Sizeof(Double)* RecordSize);  // Put Everything in here for now
-           CBuf := AllocMem(Sizeof(Double)* 1);   // just a dummy -- Cbuf is ignored here
+            RecordBytes := Sizeof(SngBuffer[1]) * RecordSize;
+            VBuf := AllocMem(Sizeof(Double) * RecordSize);  // Put Everything in here for now
+            CBuf := AllocMem(Sizeof(Double) * 1);   // just a dummy -- Cbuf is ignored here
 
            {Get first time value and set the interval to this value}
-           hr:= 0.0;
-           s := 0.0;
-           If Not (MonitorStream.Position>=MonitorStream.Size) Then
-             With MonitorStream Do Begin
-                  Read( hr, 4);  // singles
-                  Read( s, 4);
-                  Read( sngBuffer, RecordBytes);
-             End;
+            hr := 0.0;
+            s := 0.0;
+            if not (MonitorStream.Position >= MonitorStream.Size) then
+                with MonitorStream do
+                begin
+                    Read(hr, 4);  // singles
+                    Read(s, 4);
+                    Read(sngBuffer, RecordBytes);
+                end;
            {Set Hours or Seconds for Interval}
-           Hours := TRUE;
-           If (s > 0.0) and (s < 100.0) Then Hours := FALSE ;
+            Hours := TRUE;
+            if (s > 0.0) and (s < 100.0) then
+                Hours := FALSE;
 
-           CASE ActiveCircuit[ActiveActor].Solution.DynaVars.SolutionMode of
-             HARMONICMODE: Time := hr;
-           ELSE
-             If Hours Then Time := hr + s/3600.0 // in hrs
-                      Else Time := Hr * 3600.0 + s; // in sec
-           END;
+            case ActiveCircuit[ActiveActor].Solution.DynaVars.SolutionMode of
+                HARMONICMODE:
+                    Time := hr;
+            else
+                if Hours then
+                    Time := hr + s / 3600.0 // in hrs
+                else
+                    Time := Hr * 3600.0 + s; // in sec
+            end;
 
            {Now find Maxtime in Monitor}
-           PositionSave := MonitorStream.Position;
+            PositionSave := MonitorStream.Position;
 {$IFDEF MSWINDOWS}
-           MonitorStream.Seek(-(Recordbytes+8), soFromEnd);
+            MonitorStream.Seek(-(Recordbytes + 8), soFromEnd);
 {$ENDIF}
-           If Not (MonitorStream.Position>=MonitorStream.Size) Then
-             With MonitorStream Do Begin
-                  Read( hr, 4);  // singles
-                  Read( s, 4);
-                  Read( sngBuffer, RecordBytes);
-             End;
+            if not (MonitorStream.Position >= MonitorStream.Size) then
+                with MonitorStream do
+                begin
+                    Read(hr, 4);  // singles
+                    Read(s, 4);
+                    Read(sngBuffer, RecordBytes);
+                end;
 
-           CASE ActiveCircuit[ActiveActor].Solution.DynaVars.SolutionMode of
-             HARMONICMODE: MaxTime := hr;
-           ELSE
-             If Hours Then MaxTime := hr + s/3600.0 // in hrs
-                      Else MaxTime := Hr * 3600.0 + s; // in sec
-           END;
+            case ActiveCircuit[ActiveActor].Solution.DynaVars.SolutionMode of
+                HARMONICMODE:
+                    MaxTime := hr;
+            else
+                if Hours then
+                    MaxTime := hr + s / 3600.0 // in hrs
+                else
+                    MaxTime := Hr * 3600.0 + s; // in sec
+            end;
 
            {Go Back to where we were}
 {$IFDEF MSWINDOWS}
-           MonitorStream.Seek(PositionSave, soFromBeginning);
+            MonitorStream.Seek(PositionSave, soFromBeginning);
 {$ENDIF}
 
-           TopTransferFile.WriteHeader(Time, MaxTime, Time, RecordSize, 0, 16,  'DSS (TM), EPRI (R)');
-           TopTransferFile.WriteNames(NameList, CNames);
+            TopTransferFile.WriteHeader(Time, MaxTime, Time, RecordSize, 0, 16, 'DSS (TM), EPRI (R)');
+            TopTransferFile.WriteNames(NameList, CNames);
 
            {Now Process rest of monitor file}
 
-           If Not (MonitorStream.Position>=MonitorStream.Size) Then
-           Repeat
-              FOR i := 1 to RecordSize DO VBuf^[i] := SngBuffer[i];
-              TopTransferFile.WriteData(Time, Vbuf, Cbuf);
-              With MonitorStream Do Begin
-                Read( hr, SizeOF(hr));
-                Read( s, SizeOf(s));
-                Nread := Read( sngBuffer, RecordBytes);
-              End;
-              If Nread < RecordBytes then Break;
-              CASE ActiveCircuit[ActiveActor].Solution.DynaVars.SolutionMode of
-                 HARMONICMODE: Time := hr;
-               ELSE
-                  If Hours Then Time := hr + s/3600.0 // in hrs
-                           Else Time := hr * 3600.0 + s; // in sec
-               END;
-           Until (MonitorStream.Position>=MonitorStream.Size);
+            if not (MonitorStream.Position >= MonitorStream.Size) then
+                repeat
+                    for i := 1 to RecordSize do
+                        VBuf^[i] := SngBuffer[i];
+                    TopTransferFile.WriteData(Time, Vbuf, Cbuf);
+                    with MonitorStream do
+                    begin
+                        Read(hr, SizeOF(hr));
+                        Read(s, SizeOf(s));
+                        Nread := Read(sngBuffer, RecordBytes);
+                    end;
+                    if Nread < RecordBytes then
+                        Break;
+                    case ActiveCircuit[ActiveActor].Solution.DynaVars.SolutionMode of
+                        HARMONICMODE:
+                            Time := hr;
+                    else
+                        if Hours then
+                            Time := hr + s / 3600.0 // in hrs
+                        else
+                            Time := hr * 3600.0 + s; // in sec
+                    end;
+                until (MonitorStream.Position >= MonitorStream.Size);
 
-           CloseMonitorStream(ActiveActor);
+            CloseMonitorStream(ActiveActor);
 
-           TopTransferFile.Close;
-           TopTransferFile.SendToTop;
-           Reallocmem(Vbuf,0);
-           Reallocmem(Cbuf,0);
-     End;
+            TopTransferFile.Close;
+            TopTransferFile.SendToTop;
+            Reallocmem(Vbuf, 0);
+            Reallocmem(Cbuf, 0);
+        end;
 
-     End;
-     
-     ObjList.Free;
-     NameList.Free;
-     CNames.Free;
+    end;
+
+    ObjList.Free;
+    NameList.Free;
+    CNames.Free;
 
 end;
 
-function TMonitorObj.Get_FileName(ActorID : Integer): String;
+function TMonitorObj.Get_FileName(ActorID: Integer): String;
 begin
-  if ConcatenateReports then
-    Result := GetOutputDirectory +  CircuitName_[ActorID] + 'Mon_' + Name + '.csv'
-  else
-    Result := GetOutputDirectory +  CircuitName_[ActorID] + 'Mon_' + Name + '_' +inttostr(ActorID) + '.csv'
+    if ConcatenateReports then
+        Result := GetOutputDirectory + CircuitName_[ActorID] + 'Mon_' + Name + '.csv'
+    else
+        Result := GetOutputDirectory + CircuitName_[ActorID] + 'Mon_' + Name + '_' + inttostr(ActorID) + '.csv'
 end;
 
 initialization

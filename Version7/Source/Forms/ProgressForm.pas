@@ -1,4 +1,5 @@
 unit ProgressForm;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -15,32 +16,40 @@ unit ProgressForm;
 interface
 
 uses
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ComCtrls;
+    Windows,
+    Messages,
+    SysUtils,
+    Classes,
+    Graphics,
+    Controls,
+    Forms,
+    Dialogs,
+    StdCtrls,
+    ComCtrls;
 
 type
-  TProgress = class(TForm)
-    ProgressBar1: TProgressBar;
-    Label1: TLabel;
-    AbortBtn: TButton;
-    FormCaption: TLabel;
-    procedure AbortBtnClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure FormShow(Sender: TObject);
-    procedure FormHide(Sender: TObject);
-  private
+    TProgress = class(TForm)
+        ProgressBar1: TProgressBar;
+        Label1: TLabel;
+        AbortBtn: TButton;
+        FormCaption: TLabel;
+        procedure AbortBtnClick(Sender: TObject);
+        procedure FormCreate(Sender: TObject);
+        procedure FormShow(Sender: TObject);
+        procedure FormHide(Sender: TObject);
+    PRIVATE
     { Private declarations }
-    Procedure Set_PctProgress(Value : Integer);
-    Procedure Set_Caption(Const Value :String);
+        procedure Set_PctProgress(Value: Integer);
+        procedure Set_Caption(const Value: String);
 
-  public
+    PUBLIC
     { Public declarations }
-    Property Caption :String Write Set_Caption;
-    Property PctProgress :Integer Write Set_PctProgress;
-  end;
+        property Caption: String WRITE Set_Caption;
+        property PctProgress: Integer WRITE Set_PctProgress;
+    end;
 
 var
-  Progress: TProgress;
+    Progress: TProgress;
 
 implementation
 
@@ -51,29 +60,29 @@ uses
 
 procedure TProgress.AbortBtnClick(Sender: TObject);
 begin
-     SolutionAbort := True;
+    SolutionAbort := TRUE;
 end;
 
-Procedure TProgress.Set_PctProgress(Value : Integer);
-Begin
-     Progressbar1.Position := Value;
-End;
+procedure TProgress.Set_PctProgress(Value: Integer);
+begin
+    Progressbar1.Position := Value;
+end;
 
-Procedure TProgress.Set_Caption(Const Value :String);
-Begin
-     Formcaption.Caption := Value;
-     Application.ProcessMessages;
-End;
+procedure TProgress.Set_Caption(const Value: String);
+begin
+    Formcaption.Caption := Value;
+    Application.ProcessMessages;
+end;
 
 
 procedure TProgress.FormCreate(Sender: TObject);
 begin
-   FormCaption.Caption := '';
+    FormCaption.Caption := '';
 end;
 
 procedure TProgress.FormShow(Sender: TObject);
 begin
-     SolutionAbort := False;
+    SolutionAbort := FALSE;
 end;
 
 procedure TProgress.FormHide(Sender: TObject);

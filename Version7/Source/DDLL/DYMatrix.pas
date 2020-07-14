@@ -2,150 +2,172 @@ unit DYMatrix;
 
 interface
 
-Uses Arraydef, UComplex, Solution;
+uses
+    Arraydef,
+    UComplex,
+    Solution;
 
-Function  InitAndGetYparams(var hY:NativeUInt; var nBus, nNZ:LongWord): Longword; cdecl;
-Procedure GetCompressedYMatrix(hY:NativeUInt; nBus, nNz:Longword; Var ColPtr, RowIdx:pIntegerArray; Var cVals:pComplexArray); cdecl;
+function InitAndGetYparams(var hY: NativeUInt; var nBus, nNZ: Longword): Longword; CDECL;
+procedure GetCompressedYMatrix(hY: NativeUInt; nBus, nNz: Longword; var ColPtr, RowIdx: pIntegerArray; var cVals: pComplexArray); CDECL;
 //01202016
-procedure ZeroInjCurr; cdecl;
-procedure GetSourceInjCurrents; cdecl;
-procedure GetPCInjCurr; cdecl;
-function SystemYChanged(mode, arg: longint): longint; cdecl;
-procedure BuildYMatrixD(BuildOps, AllocateVI: longint); cdecl;
-function UseAuxCurrents(mode, arg: longint): longint; cdecl;
-procedure AddInAuxCurrents(SType: integer); cdecl;
-procedure getIpointer(var IvectorPtr: pNodeVarray);cdecl;
-procedure getVpointer(var VvectorPtr: pNodeVarray);cdecl;
-function SolveSystem(var NodeV:pNodeVarray): integer; cdecl;
+procedure ZeroInjCurr; CDECL;
+procedure GetSourceInjCurrents; CDECL;
+procedure GetPCInjCurr; CDECL;
+function SystemYChanged(mode, arg: Longint): Longint; CDECL;
+procedure BuildYMatrixD(BuildOps, AllocateVI: Longint); CDECL;
+function UseAuxCurrents(mode, arg: Longint): Longint; CDECL;
+procedure AddInAuxCurrents(SType: Integer); CDECL;
+procedure getIpointer(var IvectorPtr: pNodeVarray); CDECL;
+procedure getVpointer(var VvectorPtr: pNodeVarray); CDECL;
+function SolveSystem(var NodeV: pNodeVarray): Integer; CDECL;
 
 
 implementation
 
-Uses DSSGlobals, Ymatrix, KLUSolve;
+uses
+    DSSGlobals,
+    Ymatrix,
+    KLUSolve;
 
-Var {Global variables in this Module}
-   Yhandle : NativeUInt;
-   NumNZ, NumBuses : LongWord;
-   YColumns,
-   YRows   : pIntegerArray;
-   YValues : pComplexArray;
+var {Global variables in this Module}
+    Yhandle: NativeUInt;
+    NumNZ, NumBuses: Longword;
+    YColumns,
+    YRows: pIntegerArray;
+    YValues: pComplexArray;
 
 
-Function InitAndGetYparams(var hY:NativeUInt; var nBus, nNZ:LongWord): Longword; cdecl;
+function InitAndGetYparams(var hY: NativeUInt; var nBus, nNZ: Longword): Longword; CDECL;
 
 // Call this first
 
 // Save a copy of these in permanent heap memory here before returning
 
-Begin
-  Result := 0;    // indicates error
-  If ActiveCircuit=Nil then Exit;
-  Yhandle := ActiveCircuit.Solution.hY;
-  If Yhandle <= 0 Then Begin
-     DoSimpleMsg('Y Matrix not Built.', 222);
-     Exit;
-  End;
+begin
+    Result := 0;    // indicates error
+    if ActiveCircuit = NIL then
+        Exit;
+    Yhandle := ActiveCircuit.Solution.hY;
+    if Yhandle <= 0 then
+    begin
+        DoSimpleMsg('Y Matrix not Built.', 222);
+        Exit;
+    end;
 
-  hY := Yhandle;
+    hY := Yhandle;
 
-  FactorSparseMatrix (hY);
-  GetNNZ  (hY, @NumNz);
-  GetSize (hY, @NumBuses);
+    FactorSparseMatrix(hY);
+    GetNNZ(hY, @NumNz);
+    GetSize(hY, @NumBuses);
 
-  nBus := NumBuses;
-  nNZ  := NumNZ;
+    nBus := NumBuses;
+    nNZ := NumNZ;
 
-  Result := 1;
-End;
+    Result := 1;
+end;
 
 
-Procedure GetCompressedYMatrix(hY:NativeUInt; nBus, nNz:Longword; Var ColPtr, RowIdx:pIntegerArray; Var cVals:pComplexArray); cdecl;
+procedure GetCompressedYMatrix(hY: NativeUInt; nBus, nNz: Longword; var ColPtr, RowIdx: pIntegerArray; var cVals: pComplexArray); CDECL;
 
 {Returns Pointers to column and row and matrix values}
 
 {Call InitAndGetYparams first to factor the sparse matrix ...}
 
-Begin
+begin
 
  // Allocate space on the heap and put the values there
-     ReAllocmem(YColumns, sizeof(YColumns^[1])*(nBus+1));
-     ReAllocmem(YRows,    sizeof(YRows^[1])   *nNZ);
-     ReAllocmem(YValues,  sizeof(YValues^[1]) *nNZ);
+    ReAllocmem(YColumns, sizeof(YColumns^[1]) * (nBus + 1));
+    ReAllocmem(YRows, sizeof(YRows^[1]) * nNZ);
+    ReAllocmem(YValues, sizeof(YValues^[1]) * nNZ);
      // Fill in the memory
-     GetCompressedMatrix (hY, nBus + 1, nNZ, @YColumns^[1], @YRows^[1], @YValues^[1]);
+    GetCompressedMatrix(hY, nBus + 1, nNZ, @YColumns^[1], @YRows^[1], @YValues^[1]);
 
      // Set the pointers in the calling program to the heap variables
-     ColPtr := YColumns;
-     RowIdx := YRows;
-     cVals  := YValues;
-End;
-
-procedure ZeroInjCurr; cdecl;
-Begin
-     IF ActiveCircuit <> Nil THEN ActiveCircuit.Solution.ZeroInjCurr;
+    ColPtr := YColumns;
+    RowIdx := YRows;
+    cVals := YValues;
 end;
 
-procedure GetSourceInjCurrents; cdecl;
-Begin
-     IF ActiveCircuit <> Nil THEN ActiveCircuit.Solution.GetSourceInjCurrents;
-end;
-
-procedure GetPCInjCurr; cdecl;
-Begin
-     IF ActiveCircuit <> Nil THEN ActiveCircuit.Solution.GetPCInjCurr;
-end;
-
-function SystemYChanged(mode, arg: longint): longint; cdecl;
+procedure ZeroInjCurr; CDECL;
 begin
-    Result:=0;
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.ZeroInjCurr;
+end;
+
+procedure GetSourceInjCurrents; CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.GetSourceInjCurrents;
+end;
+
+procedure GetPCInjCurr; CDECL;
+begin
+    if ActiveCircuit <> NIL then
+        ActiveCircuit.Solution.GetPCInjCurr;
+end;
+
+function SystemYChanged(mode, arg: Longint): Longint; CDECL;
+begin
+    Result := 0;
     case mode of
-        0: if ActiveCircuit.Solution.SystemYChanged then  Result:=1;  // Read
-        1: begin                                                      // Write
-           if arg=1 then ActiveCircuit.Solution.SystemYChanged:= TRUE
-           else ActiveCircuit.Solution.SystemYChanged:= FALSE;
+        0:
+            if ActiveCircuit.Solution.SystemYChanged then
+                Result := 1;  // Read
+        1:
+        begin                                                      // Write
+            if arg = 1 then
+                ActiveCircuit.Solution.SystemYChanged := TRUE
+            else
+                ActiveCircuit.Solution.SystemYChanged := FALSE;
         end;
     end;
 end;
 
-procedure BuildYMatrixD(BuildOps, AllocateVI: longint); cdecl;
+procedure BuildYMatrixD(BuildOps, AllocateVI: Longint); CDECL;
 var
-  AllocateV: boolean;
+    AllocateV: Boolean;
 begin
-   AllocateV:=FALSE;
-   if AllocateVI=1 then AllocateV:=TRUE;
-   BuildYMatrix(BuildOps,AllocateV);
+    AllocateV := FALSE;
+    if AllocateVI = 1 then
+        AllocateV := TRUE;
+    BuildYMatrix(BuildOps, AllocateV);
 end;
 
-function UseAuxCurrents(mode, arg: longint): longint; cdecl;
+function UseAuxCurrents(mode, arg: Longint): Longint; CDECL;
 begin
-    Result:=0;
+    Result := 0;
     case mode of
-        0: if ActiveCircuit.Solution.UseAuxCurrents then  Result:=1;  // Read
-        1: begin                                                      // Write
-           if arg=1 then ActiveCircuit.Solution.UseAuxCurrents:= TRUE
-           else ActiveCircuit.Solution.UseAuxCurrents:= FALSE;
+        0:
+            if ActiveCircuit.Solution.UseAuxCurrents then
+                Result := 1;  // Read
+        1:
+        begin                                                      // Write
+            if arg = 1 then
+                ActiveCircuit.Solution.UseAuxCurrents := TRUE
+            else
+                ActiveCircuit.Solution.UseAuxCurrents := FALSE;
         end;
     end;
 end;
 
-procedure AddInAuxCurrents(SType: integer); cdecl;
+procedure AddInAuxCurrents(SType: Integer); CDECL;
 begin
     ActiveCircuit.Solution.AddInAuxCurrents(SType);
 end;
 
-procedure getIpointer(var IvectorPtr: pNodeVarray);cdecl;
+procedure getIpointer(var IvectorPtr: pNodeVarray); CDECL;
 begin
-     IVectorPtr:=ActiveCircuit.Solution.Currents;
+    IVectorPtr := ActiveCircuit.Solution.Currents;
 end;
 
-procedure getVpointer(var VvectorPtr: pNodeVarray);cdecl;
+procedure getVpointer(var VvectorPtr: pNodeVarray); CDECL;
 begin
-     VVectorPtr:=ActiveCircuit.Solution.NodeV;
+    VVectorPtr := ActiveCircuit.Solution.NodeV;
 end;
 
-function SolveSystem(var NodeV:pNodeVarray): integer; cdecl;
+function SolveSystem(var NodeV: pNodeVarray): Integer; CDECL;
 begin
-  Result:=ActiveCircuit.Solution.SolveSystem(NodeV);
+    Result := ActiveCircuit.Solution.SolveSystem(NodeV);
 end;
 
 //---------------------------------------------------------------------------------
@@ -153,15 +175,15 @@ end;
 initialization
 
 // Initialize so Reallocmem will work reliably
-   Ycolumns := Nil;
-   YRows    := Nil;
-   YValues  := Nil;
+    Ycolumns := NIL;
+    YRows := NIL;
+    YValues := NIL;
 
 finalization
 
 // Be a good citizen and clean up
-     ReAllocmem(YColumns, 0);
-     ReAllocmem(YRows,    0);
-     ReAllocmem(YValues,  0);
+    ReAllocmem(YColumns, 0);
+    ReAllocmem(YRows, 0);
+    ReAllocmem(YValues, 0);
 
 end.

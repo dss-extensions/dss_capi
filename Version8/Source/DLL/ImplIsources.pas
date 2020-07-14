@@ -1,4 +1,5 @@
 unit ImplIsources;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -10,179 +11,201 @@ unit ImplIsources;
 interface
 
 uses
-  ComObj, ActiveX, OpenDSSengine_TLB, StdVcl;
+    ComObj,
+    ActiveX,
+    OpenDSSengine_TLB,
+    StdVcl;
 
 type
-  TISources = class(TAutoObject,  IISources)
-  protected
-    function Get_AllNames: OleVariant; safecall;
-    function Get_Count: Integer; safecall;
-    function Get_First: Integer; safecall;
-    function Get_Next: Integer; safecall;
-    function Get_Name: WideString; safecall;
-    procedure Set_Name(const Value: WideString); safecall;
-    function Get_Amps: Double; safecall;
-    procedure Set_Amps(Value: Double); safecall;
-    function Get_AngleDeg: Double; safecall;
-    function Get_Frequency: Double; safecall;
-    procedure Set_AngleDeg(Value: Double); safecall;
-    procedure Set_Frequency(Value: Double); safecall;
+    TISources = class(TAutoObject, IISources)
+    PROTECTED
+        function Get_AllNames: Olevariant; SAFECALL;
+        function Get_Count: Integer; SAFECALL;
+        function Get_First: Integer; SAFECALL;
+        function Get_Next: Integer; SAFECALL;
+        function Get_Name: Widestring; SAFECALL;
+        procedure Set_Name(const Value: Widestring); SAFECALL;
+        function Get_Amps: Double; SAFECALL;
+        procedure Set_Amps(Value: Double); SAFECALL;
+        function Get_AngleDeg: Double; SAFECALL;
+        function Get_Frequency: Double; SAFECALL;
+        procedure Set_AngleDeg(Value: Double); SAFECALL;
+        procedure Set_Frequency(Value: Double); SAFECALL;
 
-  end;
+    end;
 
 implementation
 
-uses ComServ, Variants, PointerList, Isource, DSSGlobals, CktElement;
+uses
+    ComServ,
+    Variants,
+    PointerList,
+    Isource,
+    DSSGlobals,
+    CktElement;
 
-function TISources.Get_AllNames: OleVariant;
-Var
-  elem: TIsourceObj;
-  pList: TPointerList;
-  k: Integer;
+function TISources.Get_AllNames: Olevariant;
+var
+    elem: TIsourceObj;
+    pList: TPointerList;
+    k: Integer;
 
-Begin
+begin
     Result := VarArrayCreate([0, 0], varOleStr);
     Result[0] := 'NONE';
-    IF ActiveCircuit[ActiveActor] <> Nil THEN
-    Begin
-        If IsourceClass.ElementList.ListSize > 0 then
-        Begin
-          pList := IsourceClass.ElementList;
-          VarArrayRedim(Result, pList.ListSize -1);
-          k:=0;
-          elem := pList.First;
-          WHILE elem<>Nil DO Begin
-              Result[k] := elem.Name;
-              Inc(k);
-              elem := pList.next ;
-          End;
-        End;
-    End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        if IsourceClass.ElementList.ListSize > 0 then
+        begin
+            pList := IsourceClass.ElementList;
+            VarArrayRedim(Result, pList.ListSize - 1);
+            k := 0;
+            elem := pList.First;
+            while elem <> NIL do
+            begin
+                Result[k] := elem.Name;
+                Inc(k);
+                elem := pList.next;
+            end;
+        end;
+    end;
 
 end;
 
 function TISources.Get_Count: Integer;
-Begin
-     Result := 0;
-     If ActiveCircuit[ActiveActor] <> Nil Then
+begin
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
         Result := IsourceClass.ElementList.ListSize;
 end;
 
 function TISources.Get_First: Integer;
-Var
-   pElem : TIsourceObj;
+var
+    pElem: TIsourceObj;
 begin
-     Result := 0;
-     If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pElem := IsourceClass.ElementList.First;
-        If pElem <> Nil Then
-        Repeat
-          If pElem.Enabled Then Begin
-              ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-              Result := 1;
-          End
-          Else pElem := IsourceClass.ElementList.Next;
-        Until (Result = 1) or (pElem = nil);
-     End;
+        if pElem <> NIL then
+            repeat
+                if pElem.Enabled then
+                begin
+                    ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
+                    Result := 1;
+                end
+                else
+                    pElem := IsourceClass.ElementList.Next;
+            until (Result = 1) or (pElem = NIL);
+    end;
 end;
 
 function TISources.Get_Next: Integer;
-Var
-   pElem : TIsourceObj;
+var
+    pElem: TIsourceObj;
 begin
-     Result := 0;
-     If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
+    Result := 0;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
         pElem := IsourceClass.ElementList.Next;
-        If pElem <> Nil Then
-        Repeat
-          If pElem.Enabled Then Begin
-              ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
-              Result := IsourceClass.ElementList.ActiveIndex;
-          End
-          Else pElem := IsourceClass.ElementList.Next;
-        Until (Result > 0) or (pElem = nil);
-     End;
+        if pElem <> NIL then
+            repeat
+                if pElem.Enabled then
+                begin
+                    ActiveCircuit[ActiveActor].ActiveCktElement := pElem;
+                    Result := IsourceClass.ElementList.ActiveIndex;
+                end
+                else
+                    pElem := IsourceClass.ElementList.Next;
+            until (Result > 0) or (pElem = NIL);
+    end;
 end;
 
-function TISources.Get_Name: WideString;
-Var
-   elem: TDSSCktElement;
-Begin
+function TISources.Get_Name: Widestring;
+var
+    elem: TDSSCktElement;
+begin
     Result := '';
     elem := ActiveCircuit[ActiveActor].ActiveCktElement;
-    If elem <> Nil Then Result := elem.Name;
+    if elem <> NIL then
+        Result := elem.Name;
 end;
 
-procedure TISources.Set_Name(const Value: WideString);
+procedure TISources.Set_Name(const Value: Widestring);
 // Set element active by name
 
 begin
-     If ActiveCircuit[ActiveActor] <> Nil Then
-     Begin
-          If IsourceClass.SetActive(Value) Then
-          Begin
-               ActiveCircuit[ActiveActor].ActiveCktElement := IsourceClass.ElementList.Active ;
-          End
-          Else Begin
-              DoSimpleMsg('Isource "'+ Value +'" Not Found in Active Circuit.', 77003);
-          End;
-     End;
+    if ActiveCircuit[ActiveActor] <> NIL then
+    begin
+        if IsourceClass.SetActive(Value) then
+        begin
+            ActiveCircuit[ActiveActor].ActiveCktElement := IsourceClass.ElementList.Active;
+        end
+        else
+        begin
+            DoSimpleMsg('Isource "' + Value + '" Not Found in Active Circuit.', 77003);
+        end;
+    end;
 end;
 
 function TISources.Get_Amps: Double;
 var
-  elem: TIsourceObj;
+    elem: TIsourceObj;
 begin
-  Result := 0.0;
-  elem := IsourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.Amps   ;
+    Result := 0.0;
+    elem := IsourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.Amps;
 end;
 
 procedure TISources.Set_Amps(Value: Double);
 var
-  elem: TIsourceObj;
+    elem: TIsourceObj;
 begin
-  elem := IsourceClass.GetActiveObj ;
-  if elem <> nil then elem.Amps := Value;
+    elem := IsourceClass.GetActiveObj;
+    if elem <> NIL then
+        elem.Amps := Value;
 end;
 
 function TISources.Get_AngleDeg: Double;
 var
-  elem: TIsourceObj;
+    elem: TIsourceObj;
 begin
-  Result := 0.0;
-  elem := IsourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.Angle ;
+    Result := 0.0;
+    elem := IsourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.Angle;
 end;
 
 function TISources.Get_Frequency: Double;
 var
-  elem: TIsourceObj;
+    elem: TIsourceObj;
 begin
-  Result := 0.0;
-  elem := IsourceClass.ElementList.Active ;
-  if elem <> nil then Result := elem.SrcFrequency  ;
+    Result := 0.0;
+    elem := IsourceClass.ElementList.Active;
+    if elem <> NIL then
+        Result := elem.SrcFrequency;
 end;
 
 procedure TISources.Set_AngleDeg(Value: Double);
 var
-  elem: TIsourceObj;
+    elem: TIsourceObj;
 begin
-  elem := IsourceClass.GetActiveObj ;
-  if elem <> nil then elem.Angle := Value;
+    elem := IsourceClass.GetActiveObj;
+    if elem <> NIL then
+        elem.Angle := Value;
 end;
 
 procedure TISources.Set_Frequency(Value: Double);
 var
-  elem: TIsourceObj;
+    elem: TIsourceObj;
 begin
-  elem := IsourceClass.GetActiveObj ;
-  if elem <> nil then elem.SrcFrequency := Value;
+    elem := IsourceClass.GetActiveObj;
+    if elem <> NIL then
+        elem.SrcFrequency := Value;
 end;
 
 initialization
-  TAutoObjectFactory.Create(ComServer, TISources, Class_ISources,
-    ciInternal, tmApartment);
+    TAutoObjectFactory.Create(ComServer, TISources, Class_ISources,
+        ciInternal, tmApartment);
 end.

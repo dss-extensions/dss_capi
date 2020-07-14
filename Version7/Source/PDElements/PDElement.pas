@@ -1,4 +1,5 @@
 unit PDElement;
+
 {
   ----------------------------------------------------------
   Copyright (c) 2008-2015, Electric Power Research Institute, Inc.
@@ -15,101 +16,116 @@ unit PDElement;
 
 interface
 
-USES CktElement, ucomplex, ucmatrix, DSSClass, MeterElement;
+uses
+    CktElement,
+    ucomplex,
+    ucmatrix,
+    DSSClass,
+    MeterElement;
 
-TYPE
+type
 
-   TPDElement = class(TDSSCktElement)
-     private
+    TPDElement = class(TDSSCktElement)
+    PRIVATE
 
-       FUNCTION Get_ExcessKVANorm (idxTerm:Integer):Complex;
-       FUNCTION Get_ExcessKVAEmerg(idxTerm:Integer):Complex;
+        function Get_ExcessKVANorm(idxTerm: Integer): Complex;
+        function Get_ExcessKVAEmerg(idxTerm: Integer): Complex;
 
-     public
+    PUBLIC
 
-       NormAmps,
-       EmergAmps,
-       FaultRate,  // annual faults per year
-       PctPerm,    // percent of faults that are permanent in this element
-       BranchFltRate,    // net failure rate for this branch
-       AccumulatedBrFltRate,  // accumulated failure rate for this branch
-       MilesThisLine,  // length in miles if line
-       AccumulatedMilesDownStream, // total miles downstream
-       HrsToRepair       : Double;
+        NormAmps,
+        EmergAmps,
+        FaultRate,  // annual faults per year
+        PctPerm,    // percent of faults that are permanent in this element
+        BranchFltRate,    // net failure rate for this branch
+        AccumulatedBrFltRate,  // accumulated failure rate for this branch
+        MilesThisLine,  // length in miles if line
+        AccumulatedMilesDownStream, // total miles downstream
+        HrsToRepair: Double;
 
-       FromTerminal,
-       ToTerminal        : Integer;  // Set by Meter zone for radial feeder
-       IsShunt           : Boolean;
+        FromTerminal,
+        ToTerminal: Integer;  // Set by Meter zone for radial feeder
+        IsShunt: Boolean;
 
-       BranchNumCustomers      : Integer;
-       BranchTotalCustomers    : Integer;
+        BranchNumCustomers: Integer;
+        BranchTotalCustomers: Integer;
 
-       BranchCustWeight        : Double; // Weighting factor for customers on this elemebt
-       BranchSectionID         : Integer; // ID of the section that this PD element belongs to
+        BranchCustWeight: Double; // Weighting factor for customers on this elemebt
+        BranchSectionID: Integer; // ID of the section that this PD element belongs to
 
-       ParentPDElement   : TPDElement;
+        ParentPDElement: TPDElement;
 
-       MeterObj,                     {Upline energymeter}
-       SensorObj   : TMeterElement; // Upline Sensor for this element  for allocation and estimation
+        MeterObj,                     {Upline energymeter}
+        SensorObj: TMeterElement; // Upline Sensor for this element  for allocation and estimation
 
-       Overload_UE,
-       OverLoad_EEN  :double;  // Indicate amount of branch overload
+        Overload_UE,
+        OverLoad_EEN: Double;  // Indicate amount of branch overload
 
-       constructor Create(ParClass:TDSSClass);
-       destructor Destroy; override;
+        constructor Create(ParClass: TDSSClass);
+        destructor Destroy; OVERRIDE;
 
-       PROCEDURE InitPropertyValues(ArrayOffset:Integer);Override;
-       PROCEDURE GetCurrents(Curr: pComplexArray); Override; // Get present values of terminal
+        procedure InitPropertyValues(ArrayOffset: Integer); OVERRIDE;
+        procedure GetCurrents(Curr: pComplexArray); OVERRIDE; // Get present values of terminal
 
-       PROCEDURE CalcFltRate; virtual;  // Calc failure rates for section and buses
-       PROCEDURE AccumFltRate;
-       PROCEDURE CalcNum_Int(Var SectionCount:Integer; AssumeRestoration:Boolean);  // Calc Number of Interruptions in forward sweep
-       PROCEDURE CalcCustInterrupts;
-       PROCEDURE ZeroReliabilityAccums; // Zero out reliability accumulators
+        procedure CalcFltRate; VIRTUAL;  // Calc failure rates for section and buses
+        procedure AccumFltRate;
+        procedure CalcNum_Int(var SectionCount: Integer; AssumeRestoration: Boolean);  // Calc Number of Interruptions in forward sweep
+        procedure CalcCustInterrupts;
+        procedure ZeroReliabilityAccums; // Zero out reliability accumulators
 
-       Property ExcesskVANorm[idxTerm:Integer] :Complex Read Get_ExcesskVANorm;
-       Property ExcesskVAEmerg[idxTerm:Integer]:Complex Read Get_ExcesskVAEmerg;
+        property ExcesskVANorm[idxTerm: Integer]: Complex READ Get_ExcesskVANorm;
+        property ExcesskVAEmerg[idxTerm: Integer]: Complex READ Get_ExcesskVAEmerg;
 
-   end;
-
+    end;
 
 
 implementation
 
-USES
-    DSSClassDefs, DSSGlobals, Sysutils, Bus;
+uses
+    DSSClassDefs,
+    DSSGlobals,
+    Sysutils,
+    Bus;
 
 {---------Summing Utility proc-------}
-procedure accumsum(var a : Double; b : Double); Inline;
-Begin  a := a + b; End;
+procedure accumsum(var a: Double; b: Double); inline;
+begin
+    a := a + b;
+end;
+
 {------------------------------------}
 
 procedure TPDElement.AccumFltRate;
 
-Var
-    FromBus : TDSSBus;
-    ToBus   : TDSSBus;
+var
+    FromBus: TDSSBus;
+    ToBus: TDSSBus;
 
 begin
 
-    WITH ActiveCircuit Do Begin
-        If FromTerminal = 2 Then Toterminal := 1 Else ToTerminal := 2;
+    with ActiveCircuit do
+    begin
+        if FromTerminal = 2 then
+            Toterminal := 1
+        else
+            ToTerminal := 2;
 
         {Get fault Rate for TO bus and add it to this section failure rate}
-        ToBus :=  Buses^[Terminals^[ToTerminal].BusRef];
+        ToBus := Buses^[Terminals^[ToTerminal].BusRef];
         AccumulatedBrFltRate := ToBus.BusFltRate + BranchFltRate;
-        FromBus :=   Buses^[Terminals^[FromTerminal].BusRef];
-        FromBus.BusTotalNumCustomers :=  FromBus.BusTotalNumCustomers + BranchTotalCustomers;
+        FromBus := Buses^[Terminals^[FromTerminal].BusRef];
+        FromBus.BusTotalNumCustomers := FromBus.BusTotalNumCustomers + BranchTotalCustomers;
 
-        AccumulatedMilesDownStream :=  ToBus.BusTotalMiles + MilesThisLine;
+        AccumulatedMilesDownStream := ToBus.BusTotalMiles + MilesThisLine;
         accumsum(FromBus.BusTotalMiles, AccumulatedMilesDownStream);
 
         {Compute accumulated to FROM Bus; if a fault interrupter, assume it isolates all downline faults}
-        If NOT HasOcpDevice Then Begin
+        if not HasOcpDevice then
+        begin
             // accumlate it to FROM bus
             accumsum(FromBus.BusFltRate, AccumulatedBrFltRate);
-        End;
-    End;
+        end;
+    end;
 
 end;
 
@@ -119,197 +135,213 @@ begin
       {Default base algorithm for radial fault rate calculation}
       {May be overridden by specific device class behavior}
 
-      BranchFltRate := Faultrate * pctperm * 0.01;
+    BranchFltRate := Faultrate * pctperm * 0.01;
 
 end;
 
 procedure TPDElement.CalcCustInterrupts;
-Var
-   FromBus : TDSSBus;
+var
+    FromBus: TDSSBus;
 begin
-     FromBus := ActiveCircuit.Buses^[Terminals^[FromTerminal].BusRef];
-     WITH  FromBus Do Begin
-         accumsum(BusCustInterrupts, Bus_Num_Interrupt * BranchTotalCustomers);
-     End;
+    FromBus := ActiveCircuit.Buses^[Terminals^[FromTerminal].BusRef];
+    with  FromBus do
+    begin
+        accumsum(BusCustInterrupts, Bus_Num_Interrupt * BranchTotalCustomers);
+    end;
 end;
 
-procedure TPDElement.CalcNum_Int(Var SectionCount:Integer; AssumeRestoration:Boolean);
+procedure TPDElement.CalcNum_Int(var SectionCount: Integer; AssumeRestoration: Boolean);
 {This is called on the forward sweep to set the number of interruptions at the To bus.}
-Var
-   FromBus : TDSSBus;
-   ToBus   : TDSSBus;
+var
+    FromBus: TDSSBus;
+    ToBus: TDSSBus;
 
 begin
 
-    With ActiveCircuit Do
-    Begin
-        If FromTerminal = 2 Then ToTerminal := 1 Else ToTerminal := 2;
-        ToBus   :=  Buses^[Terminals^[ToTerminal].BusRef];
-        FromBus :=  Buses^[Terminals^[FromTerminal].BusRef];
+    with ActiveCircuit do
+    begin
+        if FromTerminal = 2 then
+            ToTerminal := 1
+        else
+            ToTerminal := 2;
+        ToBus := Buses^[Terminals^[ToTerminal].BusRef];
+        FromBus := Buses^[Terminals^[FromTerminal].BusRef];
 
         // If no interrupting device then the downline bus will have the same num of interruptions
-        ToBus.Bus_Num_Interrupt  :=  FromBus.Bus_Num_Interrupt;
+        ToBus.Bus_Num_Interrupt := FromBus.Bus_Num_Interrupt;
 
         { If Interrupting device (on FROM side)then downline bus will have
           additional interruptions  ---- including for fused lateral
          If assuming restoration and the device is an automatic device, the To bus will be
          interrupted only for  faults on the main section, not including fused sections.
         }
-        If HasOCPDevice Then Begin
-            If AssumeRestoration and HasAutoOCPDevice Then
+        if HasOCPDevice then
+        begin
+            if AssumeRestoration and HasAutoOCPDevice then
                {To Bus will be interrupted only for faults on this section.
                 AccumulatedBrFltRate does not include Branches down from
                 Branches with OCP devics}
                 ToBus.Bus_Num_Interrupt := AccumulatedBrFltRate
-            Else
+            else
                 accumsum(ToBus.Bus_Num_Interrupt, AccumulatedBrFltRate);
 
             {If there is an OCP device on this PDElement, this is the
              beginning of a new section.}
             inc(SectionCount);
             ToBus.BusSectionID := SectionCount; // Assign it to the new section
-        End
-        Else ToBus.BusSectionID := FromBus.BusSectionID ;   // else it's in the same section
+        end
+        else
+            ToBus.BusSectionID := FromBus.BusSectionID;   // else it's in the same section
 
-        BranchSectionID := ToBus.BusSectionID ;
-    End;
+        BranchSectionID := ToBus.BusSectionID;
+    end;
 
 end;
 
-Constructor TPDElement.Create(ParClass:TDSSClass);
-Begin
-    Inherited Create(ParClass);
+constructor TPDElement.Create(ParClass: TDSSClass);
+begin
+    inherited Create(ParClass);
 
-    IsShunt          := FALSE;
+    IsShunt := FALSE;
 
-    FromTerminal     := 1;
-    BranchNumCustomers     := 0;
-    BranchTotalCustomers   := 0;
+    FromTerminal := 1;
+    BranchNumCustomers := 0;
+    BranchTotalCustomers := 0;
     AccumulatedBrFltRate := 0.0;
-    MilesThisLine     := 0.0;
-    SensorObj         := NIL;
-    MeterObj          := NIL;
-    ParentPDElement   := NIL;
-    DSSObjType        := PD_ELEMENT;
+    MilesThisLine := 0.0;
+    SensorObj := NIL;
+    MeterObj := NIL;
+    ParentPDElement := NIL;
+    DSSObjType := PD_ELEMENT;
 
 
-End;
+end;
 
 destructor TPDElement.Destroy;
-Begin
+begin
 
-    Inherited Destroy;
-End;
+    inherited Destroy;
+end;
 
-PROCEDURE TPDElement.GetCurrents(Curr: pComplexArray);
-VAR
-   i:Integer;
-Begin
-  TRY
+procedure TPDElement.GetCurrents(Curr: pComplexArray);
+var
+    i: Integer;
+begin
+    try
 
-   If Enabled Then
-   Begin
-   
-     WITH ActiveCircuit.Solution DO
-     FOR i := 1 TO Yorder DO Vterminal^[i] := NodeV^[NodeRef^[i]];
+        if Enabled then
+        begin
 
-     YPrim.MVMult(Curr, Vterminal);
-  End
-  Else For i := 1 to Yorder Do Curr^[i] := cZero;
+            with ActiveCircuit.Solution do
+                for i := 1 to Yorder do
+                    Vterminal^[i] := NodeV^[NodeRef^[i]];
 
-  EXCEPT
-    On E: Exception Do DoErrorMsg(('Trying to Get Currents for Element: ' + Name + '.'), E.Message,
-        'Has the circuit been solved?', 660);
-  End;
+            YPrim.MVMult(Curr, Vterminal);
+        end
+        else
+            for i := 1 to Yorder do
+                Curr^[i] := cZero;
 
-End;
+    except
+        On E: Exception do
+            DoErrorMsg(('Trying to Get Currents for Element: ' + Name + '.'), E.Message,
+                'Has the circuit been solved?', 660);
+    end;
+
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - -
-FUNCTION TPDElement.Get_ExcessKVANorm(idxTerm:Integer):Complex;
+function TPDElement.Get_ExcessKVANorm(idxTerm: Integer): Complex;
 
-VAR
-   Factor:Double;
-   kVA :Complex;
-Begin
+var
+    Factor: Double;
+    kVA: Complex;
+begin
 
-     IF (NormAmps = 0.0) OR NOT Enabled   THEN Begin
-          OverLoad_EEN := 0.0;  // bug fixed 1/10/00
-          Result := cZero;
-          Exit;
-     End;
+    if (NormAmps = 0.0) or not Enabled then
+    begin
+        OverLoad_EEN := 0.0;  // bug fixed 1/10/00
+        Result := cZero;
+        Exit;
+    end;
 
-     kVA    := CmulReal(Power[idxTerm], 0.001);  // Also forces computation of Current into Itemp
-     Factor := (MaxTerminalOneIMag/NormAmps - 1.0);
-     IF    (Factor > 0.0) THEN  Begin
+    kVA := CmulReal(Power[idxTerm], 0.001);  // Also forces computation of Current into Itemp
+    Factor := (MaxTerminalOneIMag / NormAmps - 1.0);
+    if (Factor > 0.0) then
+    begin
         OverLoad_EEN := Factor;
-        Factor := 1.0 - 1.0/(Factor + 1.0);   // To get factor
-        Result := CmulReal(kVA, Factor) ;
-     End  ELSE Begin
-         OverLoad_EEN := 0.0;
-         Result := cZero;
-     End;
+        Factor := 1.0 - 1.0 / (Factor + 1.0);   // To get factor
+        Result := CmulReal(kVA, Factor);
+    end
+    else
+    begin
+        OverLoad_EEN := 0.0;
+        Result := cZero;
+    end;
 
-End;
+end;
 
 //- - - - - - - - - - - - - - - - - - - - - -
-FUNCTION TPDElement.Get_ExcessKVAEmerg(idxTerm:Integer):Complex;
-VAR
-   Factor:Double;
-   kVA :Complex;
-Begin
-     IF (EmergAmps=0.0) OR NOT Enabled
-     THEN Begin
-          Overload_UE := 0.0;  // bug fixed 1/10/00
-          Result := cZero;
-          Exit;
-     End;
+function TPDElement.Get_ExcessKVAEmerg(idxTerm: Integer): Complex;
+var
+    Factor: Double;
+    kVA: Complex;
+begin
+    if (EmergAmps = 0.0) or not Enabled then
+    begin
+        Overload_UE := 0.0;  // bug fixed 1/10/00
+        Result := cZero;
+        Exit;
+    end;
 
-     kVA := CmulReal(Power[idxTerm], 0.001);  // Also forces computation of Current into Itemp
+    kVA := CmulReal(Power[idxTerm], 0.001);  // Also forces computation of Current into Itemp
 
-     Factor := (MaxTerminalOneIMag/EmergAmps-1.0);
-     IF    Factor > 0.0
-     THEN  Begin
+    Factor := (MaxTerminalOneIMag / EmergAmps - 1.0);
+    if Factor > 0.0 then
+    begin
         Overload_UE := Factor;
-        Factor := 1.0 - 1.0/(Factor + 1.0);  // To get Excess
+        Factor := 1.0 - 1.0 / (Factor + 1.0);  // To get Excess
         Result := CmulReal(kVA, Factor);
-     End
-     ELSE Begin
-         Overload_UE := 0.0;
-         Result := cZero;
-     End;
+    end
+    else
+    begin
+        Overload_UE := 0.0;
+        Result := cZero;
+    end;
 
-End;
+end;
 
 procedure TPDElement.InitPropertyValues(ArrayOffset: Integer);
 begin
 
 
-   PropertyValue[ArrayOffset + 1] := '400';  //Normamps
-   PropertyValue[ArrayOffset + 2] := '600';  //emergamps
-   PropertyValue[ArrayOffset + 3] := '0.1';  //Fault rate
-   PropertyValue[ArrayOffset + 4] := '20';   // Pct Perm
-   PropertyValue[ArrayOffset + 5] := '3';    // Hrs to repair
+    PropertyValue[ArrayOffset + 1] := '400';  //Normamps
+    PropertyValue[ArrayOffset + 2] := '600';  //emergamps
+    PropertyValue[ArrayOffset + 3] := '0.1';  //Fault rate
+    PropertyValue[ArrayOffset + 4] := '20';   // Pct Perm
+    PropertyValue[ArrayOffset + 5] := '3';    // Hrs to repair
 
-  inherited initPropertyValues(ArrayOffset + 5);
+    inherited initPropertyValues(ArrayOffset + 5);
 
 end;
 
 
 procedure TPDElement.ZeroReliabilityAccums;
-Var
-   FromBus : TDSSBus;
+var
+    FromBus: TDSSBus;
 
 begin
-     FromBus := ActiveCircuit.Buses^[Terminals^[FromTerminal].BusRef];
-     WITH  FromBus Do Begin
-          BusCustInterrupts    := 0.0;
-          BusFltRate            := 0.0;
-          BusTotalNumCustomers := 0;
-          BusTotalMiles        := 0.0;
-          BusCustDurations     := 0.0;
-          Bus_Num_Interrupt    := 0.0;
-          BusSectionID         := -1; // signify not set
-     End;
+    FromBus := ActiveCircuit.Buses^[Terminals^[FromTerminal].BusRef];
+    with  FromBus do
+    begin
+        BusCustInterrupts := 0.0;
+        BusFltRate := 0.0;
+        BusTotalNumCustomers := 0;
+        BusTotalMiles := 0.0;
+        BusCustDurations := 0.0;
+        Bus_Num_Interrupt := 0.0;
+        BusSectionID := -1; // signify not set
+    end;
 
 end;
 

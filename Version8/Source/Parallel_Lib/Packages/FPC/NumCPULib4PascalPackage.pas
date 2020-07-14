@@ -8,7 +8,7 @@ unit NumCPULib4PascalPackage;
 interface
 
 uses
-  NumCPULib;
+    NumCPULib;
 
 implementation
 
