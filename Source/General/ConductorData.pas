@@ -177,7 +177,10 @@ BEGIN
       CASE ParamPointer OF
         1: If FR60<0.0        Then FR60         := 1.02* FRDC;
         2: If FRDC<0.0        Then FRDC         := FR60 / 1.02;
-        4: If Fradius<0.0     Then Fradius      := FGMR60 / 0.7788;
+        4: Begin
+              If Fradius<0.0     Then Fradius      := FGMR60 / 0.7788;  // Default to cylindrical conductor
+              if Fcapradius60<0.0 then Fcapradius60 := Fradius;    // default to radius
+           End;
         5: If FradiusUnits =0 Then FradiusUnits := FGMRunits;
         6: Begin
              If FGMR60<0.0    Then FGMR60 := 0.7788 * FRadius;
