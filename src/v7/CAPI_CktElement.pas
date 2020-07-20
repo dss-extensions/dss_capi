@@ -553,7 +553,7 @@ end;
 
 //------------------------------------------------------------------------------
 procedure CktElement_Get_SeqPowers(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
-// All seq Powers of active 3-phase ciruit element
+// All seq Powers of active 3-phase circuit element
 // returns kW + j kvar
 var
     Result: PDoubleArray;
@@ -593,7 +593,7 @@ begin
                     Result[icount] := S.re * 0.003; // 3-phase kW conversion
                     inc(icount);
                     Result[icount] := S.im * 0.003; // 3-phase kvar conversion
-                    inc(icount, 6);
+                    inc(icount, 5);
                 end;
                 Reallocmem(cBuffer, 0);
             end
