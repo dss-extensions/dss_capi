@@ -20,9 +20,14 @@ uses
 type
     TcMatrix = class(TObject)
 
-    PUBLIC
+    PRIVATE
+    { Private declarations }
         Norder: Integer;
         Values: pComplexArray;
+
+
+    PUBLIC
+    { Public declarations }
         InvertError: Integer;
 
         constructor CreateMatrix(N: Integer);

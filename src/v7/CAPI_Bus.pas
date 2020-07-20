@@ -1225,7 +1225,7 @@ begin
 
         {Return all the elements of ZSC012}
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValues);
-        Move(ZSC012.Values[1], ResultPtr[0], NValues * SizeOf(Double));
+        Move(ZSC012.GetValuesArrayPtr(Norder)[1], ResultPtr[0], NValues * SizeOf(Double));
     end;
 end;
 
