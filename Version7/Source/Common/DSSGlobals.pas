@@ -152,6 +152,7 @@ VAR
    DSS_CAPI_EARLY_ABORT : Boolean;
    DSS_CAPI_ALLOW_EDITOR: Boolean;
    DSS_CAPI_LOADS_TERMINAL_CHECK: Boolean = True;
+   DSS_CAPI_ITERATE_DISABLED: Integer = 0; // default to 0 for compatibility
 {$ENDIF}
    // Global variables for the DSS visualization tool
    DSS_Viz_installed   :Boolean=False; // DSS visualization tool (flag of existance)

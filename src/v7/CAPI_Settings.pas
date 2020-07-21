@@ -45,6 +45,8 @@ function Settings_Get_PriceCurve(): PAnsiChar; CDECL;
 function Settings_Get_PriceSignal(): Double; CDECL;
 procedure Settings_Set_PriceCurve(const Value: PAnsiChar); CDECL;
 procedure Settings_Set_PriceSignal(Value: Double); CDECL;
+procedure Settings_Set_IterateDisabled(Value: Integer); CDECL;
+function Settings_Get_IterateDisabled(): Integer; CDECL;
 
 // API extensions
 function Settings_Get_LoadsTerminalCheck(): Wordbool; CDECL;
@@ -479,6 +481,16 @@ end;
 procedure Settings_Set_LoadsTerminalCheck(Value: Wordbool); CDECL;
 begin
     DSS_CAPI_LOADS_TERMINAL_CHECK := Value;
+end;
+//------------------------------------------------------------------------------
+procedure Settings_Set_IterateDisabled(Value: Integer); CDECL;
+begin
+    DSS_CAPI_ITERATE_DISABLED := Value;
+end;
+//------------------------------------------------------------------------------
+function Settings_Get_IterateDisabled(): Integer; CDECL;
+begin
+    Result := DSS_CAPI_ITERATE_DISABLED;
 end;
 //------------------------------------------------------------------------------
 end.
