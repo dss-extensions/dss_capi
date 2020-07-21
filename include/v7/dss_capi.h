@@ -325,7 +325,7 @@ extern "C" {
     DSS_CAPI_V7_DLL void Bus_Get_puVmagAngle_GR(void);
 
     /*
-    Variant Array of doubles containing voltages in Magnitude (VLN), angle (deg)
+    Array of doubles containing voltages in Magnitude (VLN), angle (deg)
     */
     DSS_CAPI_V7_DLL void Bus_Get_VMagAngle(double** ResultPtr, int32_t* ResultCount);
     /*
@@ -3377,7 +3377,7 @@ extern "C" {
     DSS_CAPI_V7_DLL int32_t PDElements_Get_First(void);
 
     /*
-    Variant boolean indicating of PD element should be treated as a shunt element rather than a series element. Applies to Capacitor and Reactor elements in particular.
+    Boolean indicating of PD element should be treated as a shunt element rather than a series element. Applies to Capacitor and Reactor elements in particular.
     */
     DSS_CAPI_V7_DLL uint16_t PDElements_Get_IsShunt(void);
 
@@ -3453,7 +3453,169 @@ extern "C" {
     DSS_CAPI_V7_DLL void PDElements_Set_RepairTime(double Value);
 
     /*
-    Vairant array of strings with all PVSystem names
+    Array of strings consisting of all PD element names.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
+
+    /*
+    Same as PDElements_Get_AllNames but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllNames_GR();
+
+
+    /*
+    Array of doubles with the maximum current across the conductors, for each PD element.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllMaxCurrents(double** ResultPtr, int32_t* ResultCount);
+
+    /*
+    Same as PDElements_Get_AllMaxCurrents but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllMaxCurrents_GR();
+
+
+    /*
+    Array of doubles with the maximum current across the conductors as a percentage of the Normal Ampere Rating, for each PD element.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllPctNorm(double** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as PDElements_Get_AllPctNorm but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllPctNorm_GR();
+
+
+    /*
+    Array of doubles with the maximum current across the conductors as a percentage of the Emergency Ampere Rating, for each PD element.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllPctEmerg(double** ResultPtr, int32_t* ResultCount);
+
+    /*
+    Same as PDElements_Get_AllPctEmerg but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllPctEmerg_GR();
+
+
+    /*
+    Complex array of currents for all conductors, all terminals, for each PD element.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllCurrents(double** ResultPtr, int32_t* ResultCount);
+
+    /*
+    Same as PDElements_Get_AllCurrents but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllCurrents_GR();
+
+
+    /*
+    Complex array (magnitude and angle format) of currents for all conductors, all terminals, for each PD element.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllCurrentsMagAng(double** ResultPtr, int32_t* ResultCount);
+
+    /*
+    Same as PDElements_Get_AllCurrentsMagAng but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllCurrentsMagAng_GR();
+
+
+    /*
+    Complex double array of Sequence Currents for all conductors of all terminals, for each PD elements.
+
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllCplxSeqCurrents(double** ResultPtr, int32_t* ResultCount);
+
+    /*
+    Same as PDElements_Get_AllCplxSeqCurrents but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllCplxSeqCurrents_GR();
+
+
+    /*
+    Double array of the symmetrical component currents into each 3-phase terminal, for each PD element.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllSeqCurrents(double** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as PDElements_Get_AllSeqCurrents but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllSeqCurrents_GR();
+
+
+    /*
+    Complex array of powers into each conductor of each terminal, for each PD element.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllPowers(double** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as PDElements_Get_AllPowers but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllPowers_GR();
+
+
+    /*
+    Double array of sequence powers into each 3-phase teminal, for each PD element
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllSeqPowers(double** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as PDElements_Get_AllSeqPowers but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllSeqPowers_GR();
+
+
+    /*
+    Integer array listing the number of phases of all PD elements
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllNumPhases(int32_t* ValuePtr, int32_t ValueCount);
+    /*
+    Same as PDElements_Get_AllNumPhases but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllNumPhases_GR();
+
+
+    /*
+    Integer array listing the number of conductors of all PD elements
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllNumConductors(int32_t* ValuePtr, int32_t ValueCount);
+    /*
+    Same as PDElements_Get_AllNumConductors but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllNumConductors_GR();
+
+
+    /*
+    Integer array listing the number of terminals of all PD elements
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllNumTerminals(int32_t* ValuePtr, int32_t ValueCount);
+
+    /*
+    Same as PDElements_Get_AllNumTerminals but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void PDElements_Get_AllNumTerminals_GR();
+
+    /*
+    Array of strings with all PVSystem names
     */
     DSS_CAPI_V7_DLL void PVSystems_Get_AllNames(char*** ResultPtr, int32_t* ResultCount);
     /*
@@ -3462,7 +3624,7 @@ extern "C" {
     DSS_CAPI_V7_DLL void PVSystems_Get_AllNames_GR(void);
 
     /*
-    Variant Array of PVSYSTEM energy meter register names
+    Array of PVSYSTEM energy meter register names
     */
     DSS_CAPI_V7_DLL void PVSystems_Get_RegisterNames(char*** ResultPtr, int32_t* ResultCount);
     /*
@@ -3695,7 +3857,7 @@ extern "C" {
     DSS_CAPI_V7_DLL int32_t Reclosers_Get_NumFast(void);
 
     /*
-    Variant Array of Doubles: reclose intervals, s, between shots.
+    Array of Doubles: reclose intervals, s, between shots.
     */
     DSS_CAPI_V7_DLL void Reclosers_Get_RecloseIntervals(double** ResultPtr, int32_t* ResultCount);
     /*
@@ -5918,6 +6080,8 @@ extern "C" {
 
     /*
     Set the next bus as active. Returns -1 if no more buses, 0 otherwise.
+    
+    (API Extension)
     */
     DSS_CAPI_V7_DLL int32_t Bus_Get_Next(void);
 
@@ -5926,6 +6090,8 @@ extern "C" {
     occurs and early abortion is enabled (default), the processing of the
     script is always halted. Otherwise, the processing of the script continues
     until a major error occurs or it finishes.
+    
+    (API Extension)
     */
     DSS_CAPI_V7_DLL uint16_t Error_Get_EarlyAbort(void);
     DSS_CAPI_V7_DLL void Error_Set_EarlyAbort(uint16_t Value);

@@ -456,14 +456,14 @@ begin
         ReWrite(F);
 
 
-     {Sequence Currents}
+        {Sequence Currents}
         Writeln(F, 'Element, Terminal,  I1, %Normal, %Emergency, I2, %I2/I1, I0, %I0/I1, Iresidual, %NEMA');
 
-     {Allocate cBuffer big enough for largest circuit element}
-        Getmem(cbuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
+        {Allocate cBuffer big enough for largest circuit element}
+        Getmem(cbuffer, sizeof(Complex) * GetMaxCktElementSize);
 
 
-     //Sources First
+        //Sources First
         Pelem := ActiveCircuit.Sources.First;
         while pelem <> NIL do
         begin
@@ -477,7 +477,7 @@ begin
         end;
 
 
-     // PDELEMENTS Next
+        // PDELEMENTS Next
         PDelem := ActiveCircuit.PDElements.First;
 
         while PDelem <> NIL do
@@ -491,7 +491,7 @@ begin
             PDelem := ActiveCircuit.PDElements.Next;
         end;
 
-    // PCelemENTS next
+        // PCelemENTS next
         PCelem := ActiveCircuit.PCelements.First;
 
         while PCelem <> NIL do
@@ -506,7 +506,7 @@ begin
         end;
 
 
-     //Faults Next
+        //Faults Next
         Pelem := ActiveCircuit.Faults.First;
         while pelem <> NIL do
         begin
@@ -646,7 +646,7 @@ begin
 
         Getmem(cBuffer, sizeof(cBuffer^[1]) * GetMaxCktElementSize);
 
-     {Calculate the width of the file}
+        {Calculate the width of the file}
         MaxCond := 1;
         MaxTerm := 2;
         pElem := ActiveCircuit.CktElements.First;
@@ -660,7 +660,7 @@ begin
         end;
 
 
-     {Branch Currents}
+        {Branch Currents}
         Write(F, 'Element');
         for i := 1 to MaxTerm do
         begin

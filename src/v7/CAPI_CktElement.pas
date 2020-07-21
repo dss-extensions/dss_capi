@@ -92,7 +92,10 @@ uses
     CktElement,
     Utilities;
 
-procedure CalcSeqCurrents(pActiveElement: TDSSCktElement; i012: pComplexArray);
+type
+    PDoubleArray = CAPI_Utils.PDoubleArray;
+
+procedure _CalcSeqCurrents(pActiveElement: TDSSCktElement; i012: pComplexArray);
 {Assumes V012 is properly allocated before call.}
 var
     Nvalues, i, j, k, iV: Integer;
@@ -104,7 +107,7 @@ begin
         Nvalues := NPhases;
         if Nvalues <> 3 then
         begin
-        {Handle non-3 phase elements}
+            {Handle non-3 phase elements}
             if (Nphases = 1) and PositiveSequence then
             begin
                 NValues := NConds * NTerms;
@@ -460,7 +463,7 @@ begin
         GetPhaseLosses(NValues, pComplexArray(Result));
         for i := 1 to 2 * NValues do
         begin
-            Result[i] := Result[i] * 0.001;
+            Result[i] *= 0.001;
         end;
     end
 end;
@@ -492,7 +495,7 @@ begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
         GetPhasePower(pComplexArray(ResultPtr));
         for i := 0 to (2 * NValues) - 1 do
-            Result[i] := Result[i] * 0.001;
+            Result[i] *= 0.001;
     end
 end;
 
@@ -523,7 +526,7 @@ begin
 
             i012 := Allocmem(sizeof(Complex) * 3 * Nterms);
             // get complex seq voltages
-            CalcSeqCurrents(ActiveCktElement, i012);
+            _CalcSeqCurrents(ActiveCktElement, i012);
             // return 0 based array
             for i := 1 to 3 * Nterms do
                 Result[i - 1] := Cabs(i012^[i]);  // return mag only
@@ -1114,7 +1117,7 @@ begin
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * 3 * NTerms);
             i012 := pComplexArray(Result);
             // get complex seq voltages
-            CalcSeqCurrents(ActiveCktElement, i012);
+            _CalcSeqCurrents(ActiveCktElement, i012);
 
         except
             On E: Exception do

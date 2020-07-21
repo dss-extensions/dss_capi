@@ -959,6 +959,15 @@ exports
     PDElements_Get_AllMaxCurrents, // API Extension
     PDElements_Get_AllPctNorm, // API Extension
     PDElements_Get_AllPctEmerg, // API Extension
+    PDElements_Get_AllCurrents, // API Extension
+    PDElements_Get_AllCurrentsMagAng, // API Extension
+    PDElements_Get_AllCplxSeqCurrents, // API Extension
+    PDElements_Get_AllSeqCurrents, // API Extension
+    PDElements_Get_AllPowers, // API Extension
+    PDElements_Get_AllSeqPowers, // API Extension
+    PDElements_Get_AllNumPhases, // API Extension
+    PDElements_Get_AllNumConductors, // API Extension
+    PDElements_Get_AllNumTerminals, // API Extension
     PVSystems_Get_AllNames,
     PVSystems_Get_RegisterNames,
     PVSystems_Get_RegisterValues,
@@ -1510,6 +1519,15 @@ exports
     PDElements_Get_AllMaxCurrents_GR,
     PDElements_Get_AllPctNorm_GR,
     PDElements_Get_AllPctEmerg_GR,
+    PDElements_Get_AllCurrents_GR,
+    PDElements_Get_AllCurrentsMagAng_GR,
+    PDElements_Get_AllCplxSeqCurrents_GR,
+    PDElements_Get_AllSeqCurrents_GR,
+    PDElements_Get_AllPowers_GR,
+    PDElements_Get_AllSeqPowers_GR,
+    PDElements_Get_AllNumPhases_GR,
+    PDElements_Get_AllNumConductors_GR,
+    PDElements_Get_AllNumTerminals_GR,
     PVSystems_Get_AllNames_GR,
     PVSystems_Get_RegisterNames_GR,
     PVSystems_Get_RegisterValues_GR,

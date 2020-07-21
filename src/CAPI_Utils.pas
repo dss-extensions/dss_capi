@@ -61,7 +61,7 @@ function DSS_GR_CountPtr_PByte(): PInteger; CDECL;
 
 procedure DSS_DisposeGRData(); CDECL;
 
-function DSS_GetAsPAnsiChar(s: Ansistring): PAnsiChar; inline;
+function DSS_GetAsPAnsiChar(s: Ansistring): PAnsiChar;
 procedure DSS_ResetStringBuffer(); CDECL;
 
 function DSS_CopyStringAsPChar(s: Ansistring): PAnsiChar; // TODO: check possible memory leaks for := DSS_CopyStringAsPChar('NONE')
@@ -105,7 +105,7 @@ begin
     StrCopy(result, PAnsiChar(s));
 end;
 
-function DSS_GetAsPAnsiChar(s: Ansistring): PAnsiChar; inline;
+function DSS_GetAsPAnsiChar(s: Ansistring): PAnsiChar;
 begin
     // keep a reference to the string to make sure the memory is not deallocated
     tempBuffer := s;

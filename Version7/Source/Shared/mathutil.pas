@@ -153,30 +153,20 @@ end; {Proc Invert}
 {-------------------------------------------------------------}
 procedure Phase2SymComp(Vph, V012: pComplexArray);
 begin
-    with Ap2s do
-    begin
-        MvMult(V012, Vph);
-    end;
-
+    Ap2s.MvMult(V012, Vph);
 end;
 
 {-------------------------------------------------------------}
 procedure SymComp2Phase(Vph, V012: pComplexArray);
 begin
-    with As2p do
-    begin
-        MvMult(Vph, V012);
-    end;
-
+    As2p.MvMult(Vph, V012);
 end;
 
 {-------------------------------------------------------------}
 procedure SetClarkeMatrices;
 var
     Sin2pi3: Double;
-
 begin
-
     Sin2pi3 := Sin(2.0 * PI / 3.0);
     with ClarkeF do
     begin       // Forward Clarke

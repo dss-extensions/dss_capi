@@ -28,6 +28,7 @@ function PDElements_Get_TotalMiles(): Double; CDECL;
 function PDElements_Get_SectionID(): Integer; CDECL;
 procedure PDElements_Set_RepairTime(Value: Double); CDECL;
 
+// Extensions below
 procedure PDElements_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 procedure PDElements_Get_AllNames_GR(); CDECL;
 procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -36,6 +37,24 @@ procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PIntege
 procedure PDElements_Get_AllPctNorm_GR(); CDECL;
 procedure PDElements_Get_AllPctEmerg(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure PDElements_Get_AllPctEmerg_GR(); CDECL;
+procedure PDElements_Get_AllCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllCurrents_GR(); CDECL;
+procedure PDElements_Get_AllCurrentsMagAng(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllCurrentsMagAng_GR(); CDECL;
+procedure PDElements_Get_AllCplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllCplxSeqCurrents_GR(); CDECL;
+procedure PDElements_Get_AllSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllSeqCurrents_GR(); CDECL;
+procedure PDElements_Get_AllPowers(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllPowers_GR(); CDECL;
+procedure PDElements_Get_AllSeqPowers(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllSeqPowers_GR(); CDECL;
+procedure PDElements_Get_AllNumPhases(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllNumPhases_GR(); CDECL;
+procedure PDElements_Get_AllNumConductors(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllNumConductors_GR(); CDECL;
+procedure PDElements_Get_AllNumTerminals(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllNumTerminals_GR(); CDECL;
 
 implementation
 
@@ -50,10 +69,13 @@ uses
     XYCurve,
     ucomplex,
     ArrayDef,
-    Utilities;
+    Utilities,
+    Math,
+    MathUtil;
     
 type
     PDoubleArray = CAPI_Utils.PDoubleArray;
+    PIntegerArray = OBJPAS.PIntegerArray;
 
 function PDElements_Get_Count(): Integer; CDECL;
 begin
@@ -409,7 +431,7 @@ end;
 procedure PDElements_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
-    idx_before, k: Integer;
+    idx_before, k, numEnabled: Integer;
     elem: TPDElement;
     pList: TPointerList;
 begin
@@ -422,14 +444,28 @@ begin
     if pList.ListSize <= 0 then
         Exit;
         
-    DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pList.ListSize);
+    
     idx_before := pList.ActiveIndex;
     k := 0;
+    numEnabled := pList.ListSize;
+//    elem := pList.First;
+//    while elem <> NIL do
+//    begin
+//        if elem.Enabled then 
+//            Inc(numEnabled);
+//        elem := pList.Next;
+//    end;
     elem := pList.First;
+    DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, numEnabled);
+    
+    
     while elem <> NIL do
     begin
-        Result[k] := DSS_CopyStringAsPChar(elem.DSSClassName + '.' + elem.Name);
-        Inc(k);
+        // if (elem.Enabled or DSS_CAPI_ITERATE_DISABLED) then
+        begin
+            Result[k] := DSS_CopyStringAsPChar(elem.DSSClassName + '.' + elem.Name);
+            Inc(k);
+        end;
         elem := pList.Next;
     end;
     if (idx_before > 0) and (idx_before <= pList.ListSize) then
@@ -441,16 +477,16 @@ procedure PDElements_Get_AllNames_GR(); CDECL;
 begin
     PDElements_Get_AllNames(GR_DataPtr_PPAnsiChar, GR_CountPtr_PPAnsiChar);
 end;
+
 //------------------------------------------------------------------------------
-function _PDElements_Get_pctCapacity_for(const What: integer; pElem: TPDElement; cBuffer: pComplexArray): Double; inline;
+function _PDElements_Get_pctCapacity_for(const What: integer; RatingIdx: Integer; pElem: TPDElement; cBuffer: pComplexArray): Double; inline;
 var
-    RatingIdx,
     i: Integer;
     EmergAmps,
     NormAmps,
     Currmag,
     MaxCurrent: Double;
-    RSignal: TXYCurveObj;
+    
 begin
     Result := 0;
     MaxCurrent := 0.0;
@@ -468,29 +504,12 @@ begin
     
     NormAmps := pElem.NormAmps;
     EmergAmps := pElem.EmergAmps;
-
-    if SeasonalRating then
+    if (RatingIdx <= pElem.NumAmpRatings) and (pElem.NumAmpRatings > 1) then
     begin
-        if SeasonSignal <> '' then
-        begin
-            RSignal := XYCurveClass.Find(SeasonSignal);
-            if RSignal <> NIL then
-            begin
-                RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));
-                // Brings the seasonal ratings for the PDElement
-                if (RatingIdx <= PElem.NumAmpRatings) and (PElem.NumAmpRatings > 1) then
-                begin
-                    NormAmps := pElem.AmpRatings[RatingIdx];
-                    EmergAmps := pElem.AmpRatings[RatingIdx];
-                end;
-            end
-            else
-                SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
-        end
-        else
-            SeasonalRating := FALSE;    // The user didn't define the seasonal signal
+        NormAmps := pElem.AmpRatings[RatingIdx];
+        EmergAmps := pElem.AmpRatings[RatingIdx];
     end;
-    
+
     case What of
         1: if NormAmps <> 0 then Result := 100 * MaxCurrent / NormAmps;
         2: if EmergAmps <> 0 then Result := 100 * MaxCurrent / EmergAmps;
@@ -502,11 +521,12 @@ procedure _PDElements_Get_x(var ResultPtr: PDouble; ResultCount: PInteger; const
 // MaxCurrent (0), CapacityNorm (1), CapacityEmerg (2), Power (3)
 var
     Result: CAPI_Utils.PDoubleArray;
-    k, idx_before: Integer;
+    k, idx_before, maxSize, RatingIdx: Integer;
     pElem: TPDElement;
     pList: TPointerList;
     LocalPower: Complex;
     cBuffer: pComplexArray;
+    RSignal: TXYCurveObj;
 begin
     cBuffer := NIL;
     if (ActiveCircuit = NIL) or (ActiveCircuit.PDElements.ListSize <= 0) then 
@@ -526,21 +546,45 @@ begin
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pList.ListSize * 2); // complex
             while pElem <> NIL do
             begin
-                LocalPower := pElem.Power[1];
-                Result[k] := Localpower.re * 0.001;
-                Result[k + 1] := Localpower.im * 0.001;
+                if pElem.Enabled then
+                begin
+                    LocalPower := pElem.Power[1];
+                    Result[k] := Localpower.re * 0.001;
+                    Result[k + 1] := Localpower.im * 0.001;
+                end;
                 Inc(k, 2);
                 pElem := pList.Next;
             end;
         end;
     0, 1, 2:
         try
-            Getmem(cBuffer, sizeof(Complex) * GetMaxCktElementSize);
+            RatingIdx := -1;
+            if SeasonalRating then
+            begin
+                if SeasonSignal <> '' then
+                begin
+                    RSignal := XYCurveClass.Find(SeasonSignal);
+                    if RSignal <> NIL then
+                    begin
+                        RatingIdx := trunc(RSignal.GetYValue(ActiveCircuit.Solution.DynaVars.intHour));
+                    end
+                    else
+                        SeasonalRating := FALSE;   // The XYCurve defined doesn't exist
+                end
+                else
+                    SeasonalRating := FALSE;    // The user didn't define the seasonal signal
+            end;
+
+            maxSize := GetMaxCktElementSize();
+            Getmem(cBuffer, sizeof(Complex) * maxSize);
             Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pList.ListSize); // real
             while pElem <> NIL do
             begin
-                pElem.GetCurrents(cBuffer);
-                Result[k] := _PDElements_Get_pctCapacity_for(What, pElem, cBuffer);
+                if pElem.Enabled then
+                begin
+                    pElem.GetCurrents(cBuffer);
+                    Result[k] := _PDElements_Get_pctCapacity_for(What, RatingIdx, pElem, cBuffer);
+                end;
                 Inc(k);
                 pElem := pList.Next;
             end;
@@ -591,4 +635,514 @@ begin
 end;
 
 //------------------------------------------------------------------------------
+procedure _PDElements_Get_AllCurrents_x(var ResultPtr: PDouble; ResultCount: PInteger; const What: Integer);
+// What=1 for polar form, otherwise rectangular
+type
+    PPolar = ^Polar;
+var
+    Result: PDoubleArray;
+    idx_before: Integer;
+    pElem: TPDElement;
+    pList: TPointerList;
+    cBuffer: pComplexArray;
+    NValuesTotal, NValues, i: Integer;
+    CResultPtr: PPolar;
+begin
+    if (ActiveCircuit = NIL) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    pList := ActiveCircuit.PDElements;
+    idx_before := pList.ActiveIndex;
+
+    // Get the total number of (complex) elements
+    pElem := pList.First;
+    NValuesTotal := 0;
+    while pElem <> NIL do
+    begin
+        Inc(NValuesTotal, pElem.NConds * pElem.NTerms);
+        pElem := pList.Next;
+    end;
+
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2);
+    CResultPtr := PPolar(ResultPtr);
+
+    // Get the actual values
+    pElem := pList.First;
+    while pElem <> NIL do
+    begin
+        NValues := pElem.NConds * pElem.NTerms;
+        if pElem.Enabled then
+            pElem.GetCurrents(pComplexArray(CResultPtr));
+            
+        Inc(CResultPtr, NValues);
+        pElem := pList.Next;
+    end;
+    
+    case What of
+        1: //Polar (Mag/Angle)
+        begin
+            cBuffer := pComplexArray(ResultPtr);
+            CResultPtr := PPolar(ResultPtr);
+            for i := 1 to NValuesTotal do
+            begin
+                CResultPtr^ := ctopolardeg(cBuffer^[i]);
+                inc(CResultPtr);
+            end;
+        end;
+    end;
+    
+    if (idx_before > 0) and (idx_before <= pList.ListSize) then
+        pList.Get(idx_before);
+end;
+
+//------------------------------------------------------------------------------
+procedure PDElements_Get_AllCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+begin
+    _PDElements_Get_AllCurrents_x(ResultPtr, ResultCount, 0);
+end;
+
+procedure PDElements_Get_AllCurrents_GR(); CDECL;
+// Same as PDElements_Get_AllCurrentsMagAng but uses global result (GR) pointers
+begin
+    PDElements_Get_AllCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble);
+end;
+//------------------------------------------------------------------------------
+procedure PDElements_Get_AllCurrentsMagAng(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+begin
+    _PDElements_Get_AllCurrents_x(ResultPtr, ResultCount, 1);
+end;
+
+procedure PDElements_Get_AllCurrentsMagAng_GR(); CDECL;
+// Same as PDElements_Get_AllCurrentsMagAng but uses global result (GR) pointers
+begin
+    PDElements_Get_AllCurrentsMagAng(GR_DataPtr_PDouble, GR_CountPtr_PDouble);
+end;
+
+//------------------------------------------------------------------------------
+procedure _PDElements_Get_AllxSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger; magnitude: boolean);
+type
+    PPolar = ^Polar;
+var
+    Result: PDoubleArray;
+    idx_before: Integer;
+    pList: TPointerList;
+    pElem: TPDElement;
+    cBuffer: pComplexArray;
+    i012v, i012: pComplex;
+    maxSize, NTermsTotal, i, j, k: Integer;
+begin
+    if (ActiveCircuit = NIL) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    
+    pList := ActiveCircuit.PDElements;
+    idx_before := pList.ActiveIndex;
+
+    // Get the total number of (complex) elements, max. terminals, max. conductors
+    pElem := pList.First;
+    NTermsTotal := 0;
+    while pElem <> NIL do
+    begin
+        Inc(NTermsTotal, pElem.NTerms);
+        pElem := pList.Next;
+    end;
+
+    // Get the actual values
+    pElem := pList.First;
+    i012v := AllocMem(SizeOf(Complex) * 3 * NTermsTotal);
+    i012 := i012v; // this is a running pointer
+    maxSize := GetMaxCktElementSize();
+    cBuffer := AllocMem(SizeOf(Complex) * maxSize);
+    while pElem <> NIL do
+    begin
+        with pElem do
+        begin
+            if pElem.Enabled then
+                GetCurrents(cBuffer)
+            else
+                FillByte(cBuffer^, SizeOf(Complex) * maxSize, 0);
+            
+            // _CalcSeqCurrents(pElem, i012);
+            if NPhases <> 3 then
+            begin
+                {Handle non-3 phase elements}
+                if (Nphases = 1) and ActiveCircuit.PositiveSequence then
+                begin
+                    {Populate only phase 1 quantities in Pos seq}
+                    Inc(i012);
+                    for j := 1 to NTerms do
+                    begin
+                        k := (j - 1) * NConds;
+                        i012^ := cBuffer[1 + k];
+                        Inc(i012, 3);  // inc to pos seq of next terminal
+                    end;
+                    Dec(i012);
+                end
+                // if neither 3-phase or pos seq model, just put in -1.0 for each element
+                else
+                begin
+                    for i := 1 to 3 * NTerms do
+                    begin
+                        i012^ := Cmplx(-1.0, 0.0);  // Signify n/A
+                        Inc(i012);
+                    end;
+                end;
+            end
+            else
+            begin    // for 3-phase elements
+                for j := 1 to NTerms do
+                begin
+                    k := (j - 1) * NConds;
+                    Phase2SymComp(pComplexArray(@cBuffer[1 + k]), pComplexArray(i012));
+                    Inc(i012, 3);
+                end;
+            end;
+        end;
+        pElem := pList.Next;
+    end;
+    
+    if magnitude then
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NTermsTotal * 3);
+        i012 := i012v;
+        for i := 0 to NTermsTotal * 3 - 1 do
+        begin
+            Result[i] := Cabs(i012^);
+            Inc(i012);
+        end;
+    end
+    else
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NTermsTotal * 3 * 2);
+        Move(i012v^, ResultPtr[0], NTermsTotal * 3 * 2 * SizeOf(Double));
+    end;
+
+    ReallocMem(i012v, 0);
+    
+    if (idx_before > 0) and (idx_before <= pList.ListSize) then
+        pList.Get(idx_before);
+end;
+
+//------------------------------------------------------------------------------
+procedure PDElements_Get_AllSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+begin
+    _PDElements_Get_AllxSeqCurrents(ResultPtr, ResultCount, True);
+end;
+
+procedure PDElements_Get_AllSeqCurrents_GR(); CDECL;
+// Same as PDElements_Get_AllSeqCurrents but uses global result (GR) pointers
+begin
+    PDElements_Get_AllSeqCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble);
+end;
+
+//------------------------------------------------------------------------------
+procedure PDElements_Get_AllCplxSeqCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+begin
+    _PDElements_Get_AllxSeqCurrents(ResultPtr, ResultCount, False);
+end;
+
+procedure PDElements_Get_AllCplxSeqCurrents_GR(); CDECL;
+// Same as PDElements_Get_AllCplxSeqCurrents but uses global result (GR) pointers
+begin
+    PDElements_Get_AllCplxSeqCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble);
+end;
+
+//------------------------------------------------------------------------------
+procedure PDElements_Get_AllPowers(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+// Return complex kW, kvar in each conductor for each terminal, for each PDElement
+var
+    Result: PDoubleArray;
+    NValuesTotal, NValues, i: Integer;
+    idx_before: Integer;
+    pList: TPointerList;
+    pElem: TPDElement;
+    CResultPtr: PComplex;
+begin
+    if (ActiveCircuit = NIL) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    pList := ActiveCircuit.PDElements;
+    idx_before := pList.ActiveIndex;
+
+    // Get the total number of (complex) elements
+    pElem := pList.First;
+    NValuesTotal := 0;
+    while pElem <> NIL do
+    begin
+        Inc(NValuesTotal, pElem.NConds * pElem.NTerms);
+        pElem := pList.Next;
+    end;
+
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2);
+    CResultPtr := PComplex(ResultPtr);
+
+    // Get the actual values
+    pElem := pList.First;
+    while pElem <> NIL do
+    begin
+        NValues := pElem.NConds * pElem.NTerms;
+        
+        if pElem.Enabled then
+            pElem.GetPhasePower(pComplexArray(CResultPtr));
+            
+        Inc(CResultPtr, NValues);
+        pElem := pList.Next;
+    end;
+    
+    if (idx_before > 0) and (idx_before <= pList.ListSize) then
+        pList.Get(idx_before);
+
+    for i := 0 to (2 * NValuesTotal) - 1 do
+        Result[i] *= 0.001;
+end;
+
+procedure PDElements_Get_AllPowers_GR(); CDECL;
+// Same as PDElements_Get_AllPowers but uses global result (GR) pointers
+begin
+    PDElements_Get_AllPowers(GR_DataPtr_PDouble, GR_CountPtr_PDouble);
+end;
+
+//------------------------------------------------------------------------------
+procedure PDElements_Get_AllSeqPowers(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+// All seq Powers of each PD element
+// returns kW + j kvar
+var
+    Result, ElemResult: PDoubleArray;
+    NValuesTotal, NValues, MaxNValues, i, j, k, n, iCount: Integer;
+    idx_before: Integer;
+    pList: TPointerList;
+    pElem: TPDElement;
+    CResultPtr: PComplex;
+    cBuffer: pComplexArray;
+    VPh, V012: array[1..3] of Complex;
+    IPh, I012: array[1..3] of Complex;
+    S: Complex;
+begin
+    if (ActiveCircuit = NIL) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    pList := ActiveCircuit.PDElements;
+    idx_before := pList.ActiveIndex;
+
+    // Get the total number of (complex) elements
+    pElem := pList.First;
+    NValuesTotal := 0;
+    MaxNValues := 0;
+    
+    while pElem <> NIL do
+    begin
+        if pElem.Enabled then
+        begin
+            Inc(NValuesTotal, 3 * pElem.NTerms);
+            MaxNValues := Max(MaxNValues, pElem.NConds * pElem.NTerms);
+        end;
+        pElem := pList.Next;
+    end;
+
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2);
+    CResultPtr := PComplex(ResultPtr);
+    cBuffer := Allocmem(sizeof(Complex) * MaxNValues);
+
+    // Get the actual values
+    pElem := pList.First;
+    iCount := 0;
+    while pElem <> NIL do
+    begin
+        with ActiveCircuit, pElem do
+        begin
+//            if not pElem.Enabled then  
+//            begin
+//                pElem := pList.Next;
+//                continue;
+//            end;
+            
+            if NPhases <> 3 then
+            begin
+                if (Nphases = 1) and PositiveSequence then
+                begin
+                    if pElem.Enabled then  
+                        GetCurrents(cBuffer)
+                    else
+                        FillByte(cBuffer^, SizeOf(Complex) * MaxNValues, 0);
+
+                    Inc(iCount, 2);  // Start with kW1
+                    {Put only phase 1 quantities in Pos seq}
+                    for j := 1 to NTerms do
+                    begin
+                        k := (j - 1) * NConds;
+                        n := NodeRef^[k + 1];
+                        Vph[1] := Solution.NodeV^[n];  // Get voltage at node
+                        S := Cmul(Vph[1], conjg(cBuffer^[k + 1]));   // Compute power per phase
+                        Result[icount] := S.re * 0.003; // 3-phase kW conversion
+                        Result[icount + 1] := S.im * 0.003; // 3-phase kvar conversion
+                        Inc(icount, 6);
+                    end;
+                    Dec(iCount, 2);
+                end
+                else
+                begin
+                    for i := 0 to 2 * 3 * NTerms - 1 do
+                        Result[iCount + i] := -1.0;  // Signify n/A
+                        
+                    Inc(iCount, 6 * NTerms);
+                end;
+            end
+            else
+            begin
+                if pElem.Enabled then  
+                    GetCurrents(cBuffer)
+                else
+                    FillByte(cBuffer^, SizeOf(Complex) * MaxNValues, 0);
+            
+                for j := 1 to NTerms do
+                begin
+                    k := (j - 1) * NConds;
+                    for i := 1 to 3 do
+                        Vph[i] := Solution.NodeV^[NodeRef^[i + k]];
+                    for i := 1 to 3 do
+                        Iph[i] := cBuffer^[k + i];
+
+                    Phase2SymComp(@Iph, @I012);
+                    Phase2SymComp(@Vph, @V012);
+
+                    for i := 1 to 3 do
+                    begin
+                        S := Cmul(V012[i], conjg(I012[i]));
+                        Result[icount] := S.re * 0.003; // 3-phase kW conversion
+                        Result[icount + 1] := S.im * 0.003; // 3-phase kW conversion
+                        Inc(icount, 2);
+                    end;
+                end;
+            end;
+            Inc(CResultPtr, 3 * pElem.NTerms);
+            pElem := pList.Next;
+        end;
+    end;
+    ReAllocMem(cBuffer, 0);
+
+    if (idx_before > 0) and (idx_before <= pList.ListSize) then
+        pList.Get(idx_before);
+end;
+
+procedure PDElements_Get_AllSeqPowers_GR(); CDECL;
+// Same as PDElements_Get_AllPowers but uses global result (GR) pointers
+begin
+    PDElements_Get_AllSeqPowers(GR_DataPtr_PDouble, GR_CountPtr_PDouble);
+end;
+
+//------------------------------------------------------------------------------
+procedure _PDElements_Get_AllNum_x(var ResultPtr: PInteger; ResultCount: PInteger; const what: Integer);
+var
+    Result: PIntegerArray;
+    idx_before, numEnabled: Integer;
+    pElem: TPDElement;
+    pList: TPointerList;
+    pval: PInteger;
+begin
+    if ActiveCircuit = NIL then 
+    begin
+        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+        Result[0] := -1;
+        Exit;
+    end;
+    pList := ActiveCircuit.PDElements;
+    if pList.ListSize <= 0 then
+        Exit;
+    
+    idx_before := pList.ActiveIndex;
+    numEnabled := pList.ListSize;
+//    pElem := pList.First;
+//    while pElem <> NIL do
+//    begin
+//        if pElem.Enabled then 
+//            Inc(numEnabled);
+//        pElem := pList.Next;
+//    end;
+    pElem := pList.First;
+    
+    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, numEnabled);
+    pval := ResultPtr;
+    
+    case what of
+        0:
+            while pElem <> NIL do
+            begin
+                // if pElem.Enabled then
+                begin
+                    pval^ := pElem.NPhases;
+                    Inc(pval);
+                end;
+                pElem := pList.Next;
+            end;
+        1:
+            while pElem <> NIL do
+            begin
+                // if pElem.Enabled then
+                begin
+                    pval^ := pElem.Nconds;
+                    Inc(pval);
+                end;
+                pElem := pList.Next;
+            end;
+        2:
+            while pElem <> NIL do
+            begin
+                // if pElem.Enabled then
+                begin
+                    pval^ := pElem.Nterms;
+                    Inc(pval);
+                end;
+                pElem := pList.Next;
+            end;
+    end;
+        
+    if (idx_before > 0) and (idx_before <= pList.ListSize) then
+        pList.Get(idx_before);
+end;
+//------------------------------------------------------------------------------
+procedure PDElements_Get_AllNumPhases(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+begin
+    _PDElements_Get_AllNum_x(ResultPtr, ResultCount, 0);
+end;
+
+procedure PDElements_Get_AllNumPhases_GR(); CDECL;
+// Same as PDElements_Get_AllNumPhases but uses global result (GR) pointers
+begin
+    PDElements_Get_AllNumPhases(GR_DataPtr_PInteger, GR_CountPtr_PInteger);
+end;
+
+//------------------------------------------------------------------------------
+procedure PDElements_Get_AllNumConductors(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+begin
+    _PDElements_Get_AllNum_x(ResultPtr, ResultCount, 1);
+end;
+
+procedure PDElements_Get_AllNumConductors_GR(); CDECL;
+// Same as PDElements_Get_AllNumConductors but uses global result (GR) pointers
+begin
+    PDElements_Get_AllNumConductors(GR_DataPtr_PInteger, GR_CountPtr_PInteger);
+end;
+
+//------------------------------------------------------------------------------
+procedure PDElements_Get_AllNumTerminals(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
+begin
+    _PDElements_Get_AllNum_x(ResultPtr, ResultCount, 2);
+end;
+
+procedure PDElements_Get_AllNumTerminals_GR(); CDECL;
+// Same as PDElements_Get_AllNumPhases but uses global result (GR) pointers
+begin
+    PDElements_Get_AllNumTerminals(GR_DataPtr_PInteger, GR_CountPtr_PInteger);
+end;
+
+//------------------------------------------------------------------------------
+
 end.
