@@ -27,9 +27,9 @@ type
 
   // lists for FNCS classic publications
   TFNCSClass = (fncsBus, fncsLine, fncsSwitch, fncsCapacitor, fncsPVSystem, 
-                fncsVSource, fncsTransformer, fncsFault, fncsNoClass);
+                fncsVSource, fncsTransformer, fncsFault, fncsStorage, fncsNoClass);
   TFNCSAttribute = (fncsVoltage, fncsCurrent, fncsPower, fncsSwitchState, 
-                fncsTapPosition, fncsNoAttribute);
+                fncsTapPosition, fncsEnergy, fncsNoAttribute);
   TFNCSLogLevel = (fncsLogWarning, fncsLogInfo, fncsLogDebug1, fncsLogDebug2,
                 fncsLogDebug3, fncsLogDebug4);
   TFNCSPublishMode = (fncsPublishJSON, fncsPublishText);
@@ -181,6 +181,8 @@ begin
     cls := fncsCapacitor
   else if clsKey = 'pvsystem' then
     cls := fncsPVSystem
+  else if clsKey = 'storage' then
+    cls := fncsStorage
   else if clsKey = 'vsource' then
     cls := fncsVSource
   else if clsKey = 'transformer' then
@@ -215,6 +217,8 @@ begin
     att := fncsSwitchState
   else if attKey = 'tapposition' then
     att := fncsTapPosition
+  else if attKey = 'kwhstored' then
+    att := fncsEnergy
   else
     att := fncsNoAttribute;
   if trm > 0 then
@@ -311,8 +315,7 @@ var
   sign: String;
   pElem :TDSSCktElement;
   pXf: TTransfObj;
-//  pStore: TStorageObj;
-//  val := Format ('%.3f', [pStore.StorageVars.kwhStored]);
+  pStore: TStorageObj;
   cBuffer :pComplexArray;
   k, kmax, idxWdg, tap: integer;
   key, val: PChar;
@@ -387,6 +390,9 @@ begin
         idxWdg := 2; // TODO: identify and map this using pReg.Transformer and pReg.TrWinding
         tap := Round((pXf.PresentTap[idxWdg]-(pXf.Maxtap[idxWdg]+pXf.Mintap[idxWdg])/2.0)/pXf.TapIncrement[idxWdg]);
         val := PChar (IntToStr (tap));
+      end else if (sub.att = fncsEnergy) then begin
+        pStore := TStorageObj (ActiveCircuit.CktElements.Get(top.idx));
+        val := PChar (FloatToStrF(pStore.StorageVars.kwhStored, ffFixed, 0, 3));
       end;
       if assigned(val) then begin
         if PublishMode = fncsPublishJSON then begin
