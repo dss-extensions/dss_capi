@@ -64,7 +64,7 @@ var
 begin
   if not Assigned (ActiveCircuit) then exit;
   SolutionAbort := FALSE;  // Reset for commands entered from outside
-  cmd := Format ('capacitor.%s.%s=%s', [ActiveSensor.Name, parm, val]);
+  cmd := Format ('sensor.%s.%s=%s', [ActiveSensor.Name, parm, val]);
   DSSExecutive.Command := cmd;
 end;
 
