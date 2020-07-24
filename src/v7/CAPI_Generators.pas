@@ -51,13 +51,34 @@ uses
     CktElement,
     SysUtils;
 
+//------------------------------------------------------------------------------
+function _activeObj(out obj: TGeneratorObj): Boolean; inline;
+begin
+    Result := False;
+    obj := NIL;
+    if InvalidCircuit then
+        Exit;
+    
+    obj := ActiveCircuit.Generators.Active;
+    if obj = NIL then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg('No active Generator object found! Activate one and retry.', 8989);
+        end;
+        Exit;
+    end;
+    
+    Result := True;
+end;
+//------------------------------------------------------------------------------
 procedure Generators_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Generators, False);
 end;
@@ -72,80 +93,59 @@ end;
 function Generators_Get_First(): Integer; CDECL;
 var
     pGen: TGeneratorObj;
-
 begin
-
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pGen := ActiveCircuit.Generators.First;
-        if pGen <> NIL then
+    if InvalidCircuit then
+        Exit;
+        
+    pGen := ActiveCircuit.Generators.First;
+    if pGen = NIL then
+        Exit;
+        
+    repeat
+        if pGen.Enabled then
         begin
-            repeat
-                if pGen.Enabled then
-                begin
-                    ActiveCircuit.ActiveCktElement := pGen;
-                    Result := 1;
-                end
-                else
-                    pGen := ActiveCircuit.Generators.Next;
-            until (Result = 1) or (pGen = NIL);
+            ActiveCircuit.ActiveCktElement := pGen;
+            Result := 1;
         end
         else
-            Result := 0;  // signify no more
-    end;
+            pGen := ActiveCircuit.Generators.Next;
+    until (Result = 1) or (pGen = NIL);
 end;
 //------------------------------------------------------------------------------
-function Generators_Get_Name_AnsiString(): Ansistring; inline;
+function Generators_Get_Name(): PAnsiChar; CDECL;
 var
     pGen: TGeneratorObj;
-
 begin
-    Result := '';
-    if ActiveCircuit <> NIL then
-    begin
-        pGen := ActiveCircuit.Generators.Active;
-        if pGen <> NIL then
-        begin
-            Result := pGen.Name;
-        end
-        else
-            Result := '';  // signify no name
-    end;
+    Result := NIL;
+    if not _activeObj(pGen) then
+        Exit;
 
-end;
-
-function Generators_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Generators_Get_Name_AnsiString());
+    Result := DSS_GetAsPAnsiChar(pGen.Name);
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Next(): Integer; CDECL;
 var
     pGen: TGeneratorObj;
-
 begin
-
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pGen := ActiveCircuit.Generators.Next;
-        if pGen <> NIL then
+
+    if InvalidCircuit then
+        Exit;
+    
+    pGen := ActiveCircuit.Generators.Next;
+    if pGen = NIL then
+        Exit;
+
+    repeat
+        if pGen.Enabled then
         begin
-            repeat
-                if pGen.Enabled then
-                begin
-                    ActiveCircuit.ActiveCktElement := pGen;
-                    Result := ActiveCircuit.Generators.ActiveIndex;
-                end
-                else
-                    pGen := ActiveCircuit.Generators.Next;
-            until (Result > 0) or (pGen = NIL);
+            ActiveCircuit.ActiveCktElement := pGen;
+            Result := ActiveCircuit.Generators.ActiveIndex;
         end
         else
-            Result := 0;  // signify no more
-    end;
-
+            pGen := ActiveCircuit.Generators.Next;
+    until (Result > 0) or (pGen = NIL);
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -160,7 +160,6 @@ begin
     begin
         Result[k] := DSS_CopyStringAsPChar(GeneratorCls.RegisterNames[k + 1]);
     end;
-
 end;
 
 procedure Generators_Get_RegisterNames_GR(); CDECL;
@@ -176,27 +175,17 @@ var
     Gen: TGeneratorObj;
     k: Integer;
 begin
-
-    if ActiveCircuit <> NIL then
+    if not _activeObj(Gen) then
     begin
-        Gen := TGeneratorObj(ActiveCircuit.Generators.Active);
-        if Gen <> NIL then
-        begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (numGenRegisters - 1) + 1);
-            for k := 0 to numGenRegisters - 1 do
-            begin
-                Result[k] := Gen.Registers[k + 1];
-            end;
-        end
-        else
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    end
-    else
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
     end;
 
-
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, numGenRegisters);
+    for k := 0 to numGenRegisters - 1 do
+    begin
+        Result[k] := Gen.Registers[k + 1];
+    end;
 end;
 
 procedure Generators_Get_RegisterValues_GR(); CDECL;
@@ -207,39 +196,29 @@ end;
 
 //------------------------------------------------------------------------------
 function Generators_Get_ForcedON(): Wordbool; CDECL;
+var
+    pGen: TGeneratorObj;
 begin
     Result := FALSE;
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                Result := TGeneratorObj(Active).ForcedON;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+
+    Result := pGen.ForcedON;
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_ForcedON(Value: Wordbool); CDECL;
+var
+    pGen: TGeneratorObj;
 begin
+    if not _activeObj(pGen) then
+        Exit;
 
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                TGeneratorObj(Active).ForcedON := Value;
-            end;
-        end;
-    end;
-
+    pGen.ForcedON := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     if GeneratorClass.SetActive(Value) then
     begin
@@ -253,172 +232,131 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_kV(): Double; CDECL;
+var
+    pGen: TGeneratorObj;
 begin
     Result := -1.0;  // not set
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                Result := TGeneratorObj(Active).GenVars.kVGeneratorBase;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+
+    Result := pGen.GenVars.kVGeneratorBase;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_kvar(): Double; CDECL;
+var
+    pGen: TGeneratorObj;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                Result := TGeneratorObj(Active).Presentkvar;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+
+    Result := pGen.Presentkvar;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_kW(): Double; CDECL;
+var
+    pGen: TGeneratorObj;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                Result := TGeneratorObj(Active).PresentkW;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+
+    Result := pGen.PresentkW;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_PF(): Double; CDECL;
+var
+    pGen: TGeneratorObj;
 begin
     Result := 0.0;
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                Result := TGeneratorObj(Active).PowerFactor;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+
+    Result := pGen.PowerFactor;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Phases(): Integer; CDECL;
+var
+    pGen: TGeneratorObj;
 begin
     Result := 0;  // not set
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                Result := TGeneratorObj(Active).nphases;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+
+    Result := pGen.nphases;
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_kV(Value: Double); CDECL;
+var
+    pGen: TGeneratorObj;
 begin
+    if not _activeObj(pGen) then
+        Exit;
 
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                TGeneratorObj(Active).PresentkV := Value;
-            end;
-        end;
-    end;
-
+    pGen.PresentkV := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_kvar(Value: Double); CDECL;
+var
+    pGen: TGeneratorObj;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                TGeneratorObj(Active).Presentkvar := Value;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+
+    pGen.Presentkvar := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_kW(Value: Double); CDECL;
+var
+    pGen: TGeneratorObj;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                TGeneratorObj(Active).PresentkW := Value;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+
+    pGen.PresentkW := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_PF(Value: Double); CDECL;
+var
+    pGen: TGeneratorObj;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                TGeneratorObj(Active).PowerFactor := Value;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+
+    pGen.PowerFactor := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Phases(Value: Integer); CDECL;
+var
+    pGen: TGeneratorObj;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                TGeneratorObj(Active).Nphases := Value;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+
+    pGen.Nphases := Value;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(Activecircuit) then
-        Result := ActiveCircuit.Generators.ListSize;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.Generators.ListSize;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Generators.ActiveIndex
-    else
-        Result := 0;
+    Result := 0;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.Generators.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_idx(Value: Integer); CDECL;
 var
     pGen: TGeneratorObj;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     pGen := ActiveCircuit.Generators.Get(Value);
     if pGen = NIL then
@@ -430,134 +368,93 @@ begin
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Model(): Integer; CDECL;
+var
+    pGen: TGeneratorObj;
 begin
     Result := -1;
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                Result := TGeneratorObj(Active).GenModel;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+    
+    Result := pGen.GenModel;
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Model(Value: Integer); CDECL;
+var
+    pGen: TGeneratorObj;
 begin
-    if ActiveCircuit <> NIL then
+    if not _activeObj(pGen) then
+        Exit;
+
+    with pGen do
     begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                with TGeneratorObj(Active) do
-                begin
-                    GenModel := Value;
-                     // Handle side effect
-                    if GenModel = 3 then
-                        ActiveCircuit.Solution.SolutionInitialized := FALSE;
-                end;
-            end;
-        end;
+        GenModel := Value;
+         // Handle side effect
+        if GenModel = 3 then
+            ActiveCircuit.Solution.SolutionInitialized := FALSE;
     end;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_kVArated(): Double; CDECL;
+var
+    pGen: TGeneratorObj;
 begin
     Result := -1.0;
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                Result := TGeneratorObj(Active).Genvars.kVArating;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+
+    Result := pGen.Genvars.kVArating;
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_kVArated(Value: Double); CDECL;
+var
+    pGen: TGeneratorObj;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                with TGeneratorObj(Active) do
-                begin
-                    Genvars.kVArating := Value;
-                end;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+
+    pGen.Genvars.kVArating := Value;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Vmaxpu(): Double; CDECL;
+var
+    pGen: TGeneratorObj;
 begin
     Result := -1.0;
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                Result := TGeneratorObj(Active).Vmaxpu;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+    
+    Result := pGen.Vmaxpu;
 end;
 //------------------------------------------------------------------------------
 function Generators_Get_Vminpu(): Double; CDECL;
+var
+    pGen: TGeneratorObj;
 begin
     Result := -1.0;
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                Result := TGeneratorObj(Active).Vminpu;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+
+    Result := pGen.Vminpu;
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Vmaxpu(Value: Double); CDECL;
+var
+    pGen: TGeneratorObj;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                with TGeneratorObj(Active) do
-                begin
-                    VMaxPu := Value;
-                end;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+
+    pGen.VMaxPu := Value;
 end;
 //------------------------------------------------------------------------------
 procedure Generators_Set_Vminpu(Value: Double); CDECL;
+var
+    pGen: TGeneratorObj;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        with ActiveCircuit.Generators do
-        begin
-            if ActiveIndex <> 0 then
-            begin
-                with TGeneratorObj(Active) do
-                begin
-                    VMinPu := Value;
-                end;
-            end;
-        end;
-    end;
+    if not _activeObj(pGen) then
+        Exit;
+
+    pGen.VMinPu := Value;
 end;
 //------------------------------------------------------------------------------
 end.

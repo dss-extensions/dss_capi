@@ -90,14 +90,9 @@ begin
     DoClearCmd;
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_Version_AnsiString(): Ansistring; inline;
-begin
-    Result := VersionString + '; License Status: Open ';
-end;
-
 function DSS_Get_Version(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSS_Get_Version_AnsiString());
+    Result := DSS_GetAsPAnsiChar(VersionString + '; License Status: Open ');
 end;
 //------------------------------------------------------------------------------
 function DSS_Start(code: Integer): Wordbool; CDECL;
@@ -166,9 +161,7 @@ end;
 //------------------------------------------------------------------------------
 function DSS_Get_NumClasses(): Integer; CDECL;
 begin
-
     Result := NumIntrinsicClasses;
-
 end;
 //------------------------------------------------------------------------------
 function DSS_Get_NumUserClasses(): Integer; CDECL;
@@ -176,14 +169,9 @@ begin
     Result := NumUserClasses;
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_DataPath_AnsiString(): Ansistring; inline;
-begin
-    Result := DataDirectory;
-end;
-
 function DSS_Get_DataPath(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSS_Get_DataPath_AnsiString());
+    Result := DSS_GetAsPAnsiChar(DataDirectory);
 end;
 //------------------------------------------------------------------------------
 procedure DSS_Set_DataPath(const Value: PAnsiChar); CDECL;
@@ -195,23 +183,16 @@ procedure DSS_Reset(); CDECL;
 begin
      {Put any code here necessary to reset for specific systems};
  // revert to original -- DSSExecutive.Free;
-
 end;
 //------------------------------------------------------------------------------
-function DSS_Get_DefaultEditor_AnsiString(): Ansistring; inline;
-begin
-    Result := DSSGlobals.DefaultEditor;
-end;
-
 function DSS_Get_DefaultEditor(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSS_Get_DefaultEditor_AnsiString());
+    Result := DSS_GetAsPAnsiChar(DSSGlobals.DefaultEditor);
 end;
 //------------------------------------------------------------------------------
 function DSS_SetActiveClass(const ClassName: PAnsiChar): Integer; CDECL;
 var
     DevClassIndex: Integer;
-
 begin
     Result := 0;
     DevClassIndex := ClassNames.Find(ClassName);
@@ -224,7 +205,6 @@ begin
     LastClassReferenced := DevClassIndex;
     ActiveDSSClass := DSSClassList.Get(LastClassReferenced);
     Result := LastClassReferenced;
-
 end;
 //------------------------------------------------------------------------------
 end.

@@ -191,7 +191,6 @@ var
     Parm1,
     Parm2,
     FileName: String;
-    i,
     MVAopt: Integer;
     UEonlyOpt: Boolean;
     TripletOpt: Boolean;
@@ -208,6 +207,7 @@ begin
     AbortExport := FALSE;
     FileName := '';
 
+    Parm2 := '';
     ParamName := Parser.NextParam;
     Parm1 := LowerCase(Parser.StrValue);
     ParamPointer := ExportCommands.Getcommand(Parm1);

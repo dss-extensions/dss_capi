@@ -48,7 +48,7 @@ function CommonReduceCktChecks(): Boolean; inline;
 begin
     Result := False;
     
-    if ActiveCircuit = NIL then 
+    if InvalidCircuit then
         Exit;
     
     if EnergyMeterClass.SetActive(EnergyMeterName) then
@@ -65,26 +65,32 @@ end;
 //------------------------------------------------------------------------------
 function ReduceCkt_Get_Zmag(): Double; CDECL;
 begin
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.ReductionZmag
+    Result := 0.0;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.ReductionZmag
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_Set_Zmag(Value: Double); CDECL;
 begin
-    if Assigned(ActiveCircuit) then
-        ActiveCircuit.ReductionZmag := Value;
+    if InvalidCircuit then
+        Exit;
+    ActiveCircuit.ReductionZmag := Value;
 end;
 //------------------------------------------------------------------------------
 function ReduceCkt_Get_KeepLoad(): Wordbool; CDECL;
 begin
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.ReduceLateralsKeepLoad;
+    Result := FALSE;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.ReduceLateralsKeepLoad;
 end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_Set_KeepLoad(Value: Wordbool); CDECL;
 begin
-    if Assigned(ActiveCircuit) then
-        ActiveCircuit.ReduceLateralsKeepLoad := Value;
+    if InvalidCircuit then
+        Exit;
+    ActiveCircuit.ReduceLateralsKeepLoad := Value;
 end;
 //------------------------------------------------------------------------------
 function ReduceCkt_Get_EditString(): PAnsiChar; CDECL;
@@ -114,6 +120,9 @@ end;
 //------------------------------------------------------------------------------
 procedure ReduceCkt_SaveCircuit(const CktName: PAnsiChar); CDECL;
 begin
+    if InvalidCircuit then
+        Exit;
+
     DSSExecutive.Command := 'Save Circuit Dir=' + CktName;
    // Master file name is returned in DSSText.Result
 end;

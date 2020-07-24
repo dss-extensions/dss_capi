@@ -293,9 +293,7 @@ type
       procedure   Change_deltaQ_factor(j: Integer);
       procedure   Change_deltaP_factor(j: Integer);
 
-    protected
 
-      procedure Set_Enabled(Value:Boolean);Override;
 
     public
 
@@ -306,6 +304,7 @@ type
       constructor Create(ParClass:TDSSClass; const InvControl2Name:String);
       destructor  Destroy; override;
 
+      procedure Set_Enabled(Value:Boolean);Override;
       procedure   MakePosSequence(); Override;  // Make a positive Sequence Model
       procedure   RecalcElementData(); Override;
       procedure   CalcYPrim(); Override;    // Always Zero for a InvControl

@@ -45,21 +45,36 @@ uses
     SysUtils,
     PointerList;
 
-function ActiveCapacitor: TCapacitorObj;
+//------------------------------------------------------------------------------
+function _activeObj(out obj: TCapacitorObj): Boolean; inline;
 begin
-    Result := NIL;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.ShuntCapacitors.Active;
+    Result := False;
+    obj := NIL;
+    if InvalidCircuit then
+        Exit;
+    
+    obj := ActiveCircuit.ShuntCapacitors.Active;
+    if obj = NIL then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg('No active Capacitor object found! Activate one and retry.', 8989);
+        end;
+        Exit;
+    end;
+    
+    Result := True;
 end;
 //------------------------------------------------------------------------------
 procedure Set_Parameter(const parm: String; const val: String);
 var
     cmd: String;
+    elem: TCapacitorObj;
 begin
-    if not Assigned(ActiveCircuit) then
-        exit;
+    if not _activeObj(elem) then
+        Exit;
     SolutionAbort := FALSE;  // Reset for commands entered from outside
-    cmd := Format('capacitor.%s.%s=%s', [ActiveCapacitor.Name, parm, val]);
+    cmd := Format('capacitor.%s.%s=%s', [elem.Name, parm, val]);
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
@@ -69,8 +84,9 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
+
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.ShuntCapacitors, False);
 end;
 
@@ -87,23 +103,23 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        lst := ActiveCircuit.ShuntCapacitors;
-        elem := lst.First;
-        if elem <> NIL then
+    if InvalidCircuit then
+        Exit;
+        
+    lst := ActiveCircuit.ShuntCapacitors;
+    elem := lst.First;
+    if elem = NIL then
+        Exit;
+
+    repeat
+        if elem.Enabled then
         begin
-            repeat
-                if elem.Enabled then
-                begin
-                    ActiveCircuit.ActiveCktElement := elem;
-                    Result := 1;
-                end
-                else
-                    elem := lst.Next;
-            until (Result = 1) or (elem = NIL);
-        end;
-    end;
+            ActiveCircuit.ActiveCktElement := elem;
+            Result := 1;
+        end
+        else
+            elem := lst.Next;
+    until (Result = 1) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_IsDelta(): Wordbool; CDECL;
@@ -111,10 +127,9 @@ var
     elem: TCapacitorObj;
 begin
     Result := FALSE;
-    elem := ActiveCapacitor;
-    if elem <> NIL then
-        if elem.Connection > 0 then
-            Result := TRUE;
+    if not _activeObj(elem) then
+        Exit;
+    Result := (elem.Connection > 0);
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_kV(): Double; CDECL;
@@ -122,9 +137,9 @@ var
     elem: TCapacitorObj;
 begin
     Result := 0.0;
-    elem := ActiveCapacitor;
-    if elem <> NIL then
-        Result := elem.NomKV;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.NomKV;
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_kvar(): Double; CDECL;
@@ -132,24 +147,19 @@ var
     elem: TCapacitorObj;
 begin
     Result := 0.0;
-    elem := ActiveCapacitor;
-    if elem <> NIL then
-        Result := elem.Totalkvar;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.Totalkvar;
 end;
 //------------------------------------------------------------------------------
-function Capacitors_Get_Name_AnsiString(): Ansistring; inline;
+function Capacitors_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TCapacitorObj;
 begin
-    Result := '';
-    elem := ActiveCapacitor;
-    if elem <> NIL then
-        Result := elem.Name;
-end;
-
-function Capacitors_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Capacitors_Get_Name_AnsiString());
+    Result := NIL;
+    if not _activeObj(elem) then
+        Exit;
+    Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_Next(): Integer; CDECL;
@@ -158,23 +168,23 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        lst := ActiveCircuit.ShuntCapacitors;
-        elem := lst.Next;
-        if elem <> NIL then
+    if InvalidCircuit then
+        Exit;
+
+    lst := ActiveCircuit.ShuntCapacitors;
+    elem := lst.Next;
+    if elem = NIL then
+        Exit;
+        
+    repeat
+        if elem.Enabled then
         begin
-            repeat
-                if elem.Enabled then
-                begin
-                    ActiveCircuit.ActiveCktElement := elem;
-                    Result := lst.ActiveIndex;
-                end
-                else
-                    elem := lst.Next;
-            until (Result > 0) or (elem = NIL);
+            ActiveCircuit.ActiveCktElement := elem;
+            Result := lst.ActiveIndex;
         end
-    end;
+        else
+            elem := lst.Next;
+    until (Result > 0) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_NumSteps(): Integer; CDECL;
@@ -182,18 +192,18 @@ var
     elem: TCapacitorObj;
 begin
     Result := 0;
-    elem := ActiveCapacitor;
-    if elem <> NIL then
-        Result := elem.NumSteps;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.NumSteps;
 end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Set_IsDelta(Value: Wordbool); CDECL;
 var
     elem: TCapacitorObj;
 begin
-    elem := ActiveCapacitor;
-    if elem <> NIL then
-        elem.Connection := Integer(Value);
+    if not _activeObj(elem) then
+        Exit;
+    elem.Connection := Integer(Value);
 end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Set_kV(Value: Double); CDECL;
@@ -208,8 +218,9 @@ end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
+
     if CapacitorClass.SetActive(Value) then
     begin
         ActiveCircuit.ActiveCktElement := CapacitorClass.ElementList.Active;
@@ -229,61 +240,54 @@ end;
 function Capacitors_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.ShuntCapacitors.ListSize;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.ShuntCapacitors.ListSize;
 end;
 //------------------------------------------------------------------------------
 function Capacitors_AddStep(): Wordbool; CDECL;
 var
     elem: TCapacitorObj;
 begin
-    elem := ActiveCapacitor;
-    if elem <> NIL then
-        Result := elem.AddStep;
+    Result := FALSE;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.AddStep();
 end;
 //------------------------------------------------------------------------------
 function Capacitors_SubtractStep(): Wordbool; CDECL;
 var
     elem: TCapacitorObj;
 begin
-    elem := ActiveCapacitor;
-    if elem <> NIL then
-        Result := elem.SubtractStep;
-
+    Result := FALSE;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.SubtractStep();
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_AvailableSteps(): Integer; CDECL;
 var
     elem: TCapacitorObj;
 begin
-    elem := ActiveCapacitor;
-    if elem <> NIL then
-        Result := elem.AvailableSteps;
+    Result := 0;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.AvailableSteps;
 end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Get_States(var ResultPtr: PInteger; ResultCount: PInteger); CDECL;
 var
     Result: PIntegerArray;
     elem: TCapacitorObj;
-    i, k: Integer;
 begin
-    Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, (0) + 1);
-    Result[0] := -1;     // error code
-    if ActiveCircuit <> NIL then
+    if not _activeObj(elem) then
     begin
-        Elem := ActiveCapacitor;
-        if Elem <> NIL then
-        begin
-            DSS_RecreateArray_PInteger(Result, ResultPtr, ResultCount, (elem.NumSteps - 1) + 1);
-            k := 0;
-            for i := 1 to elem.Numsteps do
-            begin
-                Result[k] := elem.States[i];
-                Inc(k);
-            end;
-        end;
+        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+        Result[0] := -1;     // error code
     end;
 
+    DSS_RecreateArray_PInteger(Result, ResultPtr, ResultCount, elem.NumSteps);
+    Move(elem.FStates[1], ResultPtr^, elem.NumSteps * SizeOf(Integer));
 end;
 
 procedure Capacitors_Get_States_GR(); CDECL;
@@ -297,31 +301,33 @@ procedure Capacitors_Set_States(ValuePtr: PInteger; ValueCount: Integer); CDECL;
 var
     Value: PIntegerArray;
     elem: TCapacitorObj;
-    i, k, LoopLimit: Integer;
-
+    i, LoopLimit: Integer;
 begin
-    Value := PIntegerArray(ValuePtr);
-    elem := ActiveCapacitor;
-    if elem <> NIL then
+    if not _activeObj(elem) then
+        Exit;
+
+    if (ValueCount <> elem.NumSteps) and DSS_CAPI_EXT_ERRORS then
     begin
-         // allocate space based on present value of NumSteps
-         // setting NumSteps allocates the memory
-         // only put as many elements as proviced up to nZIPV
-
-        LoopLimit := (ValueCount - 1);
-        if (LoopLimit - (0) + 1) > elem.NumSteps then
-            LoopLimit := (0) + elem.NumSteps - 1;
-
-        k := 1;
-        for i := (0) to LoopLimit do
-        begin
-            elem.States[k] := Value[i];
-            inc(k);
-        end;
-
-        elem.FindLastStepInService;
+        DoSimpleMsg(Format('The number of states provided (%d) does not match the number of steps (%d) in the active capacitor.', 
+            [ValueCount, elem.NumSteps]), 
+            8989
+        );
+        Exit;
     end;
 
+    Value := PIntegerArray(ValuePtr);
+    LoopLimit := ValueCount;
+    if LoopLimit > elem.NumSteps then
+    begin
+        LoopLimit := elem.NumSteps;
+    end;
+
+    for i := 1 to LoopLimit do
+    begin
+        elem.States[i] := Value[i - 1];
+    end;
+
+    elem.FindLastStepInService();
 end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Open(); CDECL;
@@ -330,19 +336,12 @@ var
     elem: TCapacitorObj;
     i: Integer;
 begin
+    if not _activeObj(elem) then
+        Exit;
 
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-        begin
-            elem := ActiveCapacitor;
-            if elem <> NIL then
-                with elem do
-                begin
-                    for i := 1 to NumSteps do
-                        States[i] := 0;   // open all steps
-                end;
-        end;
-
+    with elem do
+        for i := 1 to NumSteps do
+            States[i] := 0;   // open all steps
 end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Close(); CDECL;
@@ -350,36 +349,33 @@ var
     elem: TCapacitorObj;
     i: Integer;
 begin
-
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-        begin
-            elem := ActiveCapacitor;
-            if elem <> NIL then
-                with elem do
-                begin
-                    ActiveTerminal := Terminals^[1];  // make sure terminal 1 is closed
-                    Closed[0] := TRUE;    // closes all phases
-                    for i := 1 to NumSteps do
-                        States[i] := 1;
-                end;
-        end;
+    if not _activeObj(elem) then
+        Exit;
+    
+    with elem do
+    begin
+        ActiveTerminal := Terminals^[1];  // make sure terminal 1 is closed
+        Closed[0] := TRUE;    // closes all phases
+        for i := 1 to NumSteps do
+            States[i] := 1;
+    end;
 end;
 //------------------------------------------------------------------------------
 function Capacitors_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.ShuntCapacitors.ActiveIndex
-    else
-        Result := 0
+    Result := 0;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.ShuntCapacitors.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure Capacitors_Set_idx(Value: Integer); CDECL;
 var
     pCapacitor: TCapacitorObj;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
+
     pCapacitor := ActiveCircuit.ShuntCapacitors.Get(Value);
     if pCapacitor = NIL then
     begin

@@ -77,10 +77,49 @@ type
     PDoubleArray = CAPI_Utils.PDoubleArray;
     PIntegerArray = OBJPAS.PIntegerArray;
 
+//------------------------------------------------------------------------------
+function _activeObj(out obj: TPDElement): Boolean; inline;
+begin
+    Result := False;
+    obj := NIL;
+    if InvalidCircuit then
+        Exit;
+    
+    if (ActiveCircuit.ActiveCktElement = NIL) then 
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg('No active PD Element found! Activate one and retry.', 8989);
+        end;
+        Exit;
+    end;
+        
+    if not (ActiveCircuit.ActiveCktElement is TPDElement) then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg('No active PD Element found! Activate one and retry.', 8989);
+        end;
+        Exit;
+    end;
+    
+    obj := ActiveCircuit.ActiveCktElement as TPDElement;
+    if obj = NIL then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg('No active PD Element found! Activate one and retry.', 8989);
+        end;
+        Exit;
+    end;
+    
+    Result := True;
+end;
+//------------------------------------------------------------------------------
 function PDElements_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     
     Result := ActiveCircuit.PDElements.ListSize;
@@ -91,15 +130,9 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if ActiveCircuit = NIL then
+    if _activeObj(ActivePDElement) then
         Exit;
-        
-    with ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            Result := ActivePDElement.Faultrate;
-        end;
+    Result := ActivePDElement.Faultrate;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_First(): Integer; CDECL;
@@ -107,7 +140,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then 
+    if InvalidCircuit then
         Exit;
         
     with ActiveCircuit do
@@ -133,15 +166,9 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := FALSE;
-    if ActiveCircuit = NIL then
+    if _activeObj(ActivePDElement) then
         Exit;
-        
-    with ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            Result := ActivePDElement.IsShunt;
-        end;
+    Result := ActivePDElement.IsShunt;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_Next(): Integer; CDECL;
@@ -149,24 +176,24 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
         
     with ActiveCircuit do
     begin
         ActivePDElement := PDElements.Next;
-        if ActivePDElement <> NIL then
-        begin
-            repeat
-                if ActivePDElement.enabled then
-                begin
-                    Result := 1;
-                    ActiveCktElement := ActivePDElement;
-                end
-                else
-                    ActivePDElement := PDElements.Next;
-            until (Result = 1) or (ActivePDELement = NIL);
-        end;
+        if ActivePDElement = NIL then
+            Exit;
+            
+        repeat
+            if ActivePDElement.enabled then
+            begin
+                Result := 1;
+                ActiveCktElement := ActivePDElement;
+            end
+            else
+                ActivePDElement := PDElements.Next;
+        until (Result = 1) or (ActivePDELement = NIL);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -175,75 +202,46 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if ActiveCircuit = NIL then
+    if _activeObj(ActivePDElement) then
         Exit;
-        
-    with ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            Result := ActivePDElement.PctPerm;
-        end;
+    Result := ActivePDElement.PctPerm;
 end;
 //------------------------------------------------------------------------------
 procedure PDElements_Set_FaultRate(Value: Double); CDECL;
 var
     ActivePDElement: TPDElement;
 begin
-    if ActiveCircuit = NIL then
+    if _activeObj(ActivePDElement) then
         Exit;
-        
-    with ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            ActivePDElement.FaultRate := Value;
-        end;
+    ActivePDElement.FaultRate := Value;
 end;
 //------------------------------------------------------------------------------
 procedure PDElements_Set_pctPermanent(Value: Double); CDECL;
 var
     ActivePDElement: TPDElement;
 begin
-    if ActiveCircuit = NIL then
+    if _activeObj(ActivePDElement) then
         Exit;
-        
-    with ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            ActivePDElement.PctPerm := Value;
-        end;
+    ActivePDElement.PctPerm := Value;
 end;
 //------------------------------------------------------------------------------
-function PDElements_Get_Name_AnsiString(): Ansistring; inline;
+function PDElements_Get_Name(): PAnsiChar; CDECL;
 var
     ActivePDElement: TPDElement;
 begin
-    Result := '';   // return null if not a PD element
-    if ActiveCircuit = NIL then
+    Result := NIL;   // return null if not a PD element
+    if _activeObj(ActivePDElement) then
         Exit;
-        
-    with ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            with ActivePDElement do
-                Result := Format('%s.%s', [Parentclass.Name, Name]);  // full name
-        end;
+    Result := DSS_GetAsPAnsiChar(Format('%s.%s', [ActivePDElement.Parentclass.Name, ActivePDElement.Name]));  // full name
 end;
 
-function PDElements_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(PDElements_Get_Name_AnsiString());
-end;
 //------------------------------------------------------------------------------
 procedure PDElements_Set_Name(const Value: PAnsiChar); CDECL; //TODO: rewrite to use a hashmap?
 var
     ActivePDElement: TPDElement;
     TestString: String;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
         
     with ActiveCircuit do
@@ -269,15 +267,9 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if ActiveCircuit = NIL then
+    if _activeObj(ActivePDElement) then
         Exit;
-        
-    with ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            Result := ActivePDElement.AccumulatedBrFltRate;
-        end;
+    Result := ActivePDElement.AccumulatedBrFltRate;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_Lambda(): Double; CDECL;
@@ -285,15 +277,9 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if ActiveCircuit = NIL then
+    if _activeObj(ActivePDElement) then
         Exit;
-        
-    with ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            Result := ActivePDElement.BranchFltRate;
-        end;
+    Result := ActivePDElement.BranchFltRate;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_Numcustomers(): Integer; CDECL;
@@ -301,15 +287,9 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if _activeObj(ActivePDElement) then
         Exit;
-        
-    with ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            Result := ActivePDElement.BranchNumCustomers;
-        end;
+    Result := ActivePDElement.BranchNumCustomers;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_ParentPDElement(): Integer; CDECL;
@@ -317,19 +297,13 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if _activeObj(ActivePDElement) then
         Exit;
-        
-    with ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            if ActivePDElement.ParentPDElement <> NIL then    // leaves ActiveCktElement as is
-            begin
-                ActiveCktElement := ActivePDElement.ParentPDElement;
-                Result := ActivecktElement.ClassIndex;
-            end;
-        end;
+    if ActivePDElement.ParentPDElement <> NIL then    // leaves ActiveCktElement as is
+    begin
+        ActiveCircuit.ActiveCktElement := ActivePDElement.ParentPDElement;
+        Result := ActiveCircuit.ActivecktElement.ClassIndex;
+    end;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_RepairTime(): Double; CDECL;
@@ -337,15 +311,9 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if ActiveCircuit = NIL then
+    if _activeObj(ActivePDElement) then
         Exit;
-        
-    with ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            Result := ActivePDElement.HrsToRepair;
-        end;
+    Result := ActivePDElement.HrsToRepair;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_Totalcustomers(): Integer; CDECL;
@@ -353,7 +321,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
         
     with ActiveCircuit do
@@ -369,15 +337,9 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if _activeObj(ActivePDElement) then
         Exit;
-        
-    with ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            Result := ActivePDElement.FromTerminal;
-        end;
+    Result := ActivePDElement.FromTerminal;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_TotalMiles(): Double; CDECL;
@@ -386,15 +348,9 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if ActiveCircuit = NIL then
+    if _activeObj(ActivePDElement) then
         Exit;
-        
-    with ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            Result := ActivePDElement.AccumulatedMilesDownStream;
-        end;
+    Result := ActivePDElement.AccumulatedMilesDownStream;
 end;
 //------------------------------------------------------------------------------
 function PDElements_Get_SectionID(): Integer; CDECL;
@@ -402,30 +358,18 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if _activeObj(ActivePDElement) then
         Exit;
-        
-    with ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            Result := ActivePDElement.BranchSectionID;
-        end;
+    Result := ActivePDElement.BranchSectionID;
 end;
 //------------------------------------------------------------------------------
 procedure PDElements_Set_RepairTime(Value: Double); CDECL;
 var
     ActivePDElement: TPDElement;
 begin
-    if ActiveCircuit = NIL then
+    if _activeObj(ActivePDElement) then
         Exit;
-        
-    with ActiveCircuit do
-        if ActiveCktElement is TPDElement then
-        begin
-            ActivePDElement := ActiveCktelement as TPDElement;
-            ActivePDElement.HrsToRepair := Value;
-        end;
+    ActivePDElement.HrsToRepair := Value;
 end;
 //------------------------------------------------------------------------------
 procedure PDElements_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -437,13 +381,12 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
 
     pList := ActiveCircuit.PDElements;
     if pList.ListSize <= 0 then
         Exit;
-        
     
     idx_before := pList.ActiveIndex;
     k := 0;
@@ -486,11 +429,10 @@ var
     NormAmps,
     Currmag,
     MaxCurrent: Double;
-    
 begin
     Result := 0;
     MaxCurrent := 0.0;
-    for  i := 1 to pElem.Nphases do
+    for i := 1 to pElem.Nphases do
     begin
         Currmag := Cabs(Cbuffer^[i]);
         if Currmag > MaxCurrent then
@@ -529,7 +471,7 @@ var
     RSignal: TXYCurveObj;
 begin
     cBuffer := NIL;
-    if (ActiveCircuit = NIL) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    if (InvalidCircuit) or (ActiveCircuit.PDElements.ListSize <= 0) then 
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Result[0] := -1;
@@ -640,7 +582,6 @@ procedure _PDElements_Get_AllCurrents_x(var ResultPtr: PDouble; ResultCount: PIn
 type
     PPolar = ^Polar;
 var
-    Result: PDoubleArray;
     idx_before: Integer;
     pElem: TPDElement;
     pList: TPointerList;
@@ -648,9 +589,9 @@ var
     NValuesTotal, NValues, i: Integer;
     CResultPtr: PPolar;
 begin
-    if (ActiveCircuit = NIL) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    if (InvalidCircuit) or (ActiveCircuit.PDElements.ListSize <= 0) then 
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
     pList := ActiveCircuit.PDElements;
@@ -665,7 +606,7 @@ begin
         pElem := pList.Next;
     end;
 
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2);
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NValuesTotal * 2);
     CResultPtr := PPolar(ResultPtr);
 
     // Get the actual values
@@ -733,9 +674,9 @@ var
     i012v, i012: pComplex;
     maxSize, NTermsTotal, i, j, k: Integer;
 begin
-    if (ActiveCircuit = NIL) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    if (InvalidCircuit) or (ActiveCircuit.PDElements.ListSize <= 0) then 
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
     
@@ -862,9 +803,9 @@ var
     pElem: TPDElement;
     CResultPtr: PComplex;
 begin
-    if (ActiveCircuit = NIL) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    if (InvalidCircuit) or (ActiveCircuit.PDElements.ListSize <= 0) then 
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
     pList := ActiveCircuit.PDElements;
@@ -913,8 +854,8 @@ procedure PDElements_Get_AllSeqPowers(var ResultPtr: PDouble; ResultCount: PInte
 // All seq Powers of each PD element
 // returns kW + j kvar
 var
-    Result, ElemResult: PDoubleArray;
-    NValuesTotal, NValues, MaxNValues, i, j, k, n, iCount: Integer;
+    Result: PDoubleArray;
+    NValuesTotal, MaxNValues, i, j, k, n, iCount: Integer;
     idx_before: Integer;
     pList: TPointerList;
     pElem: TPDElement;
@@ -924,9 +865,9 @@ var
     IPh, I012: array[1..3] of Complex;
     S: Complex;
 begin
-    if (ActiveCircuit = NIL) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    if (InvalidCircuit) or (ActiveCircuit.PDElements.ListSize <= 0) then 
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
     pList := ActiveCircuit.PDElements;
@@ -1047,7 +988,7 @@ var
     pList: TPointerList;
     pval: PInteger;
 begin
-    if ActiveCircuit = NIL then 
+    if InvalidCircuit then
     begin
         Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
         Result[0] := -1;
@@ -1055,7 +996,11 @@ begin
     end;
     pList := ActiveCircuit.PDElements;
     if pList.ListSize <= 0 then
+    begin
+        Result := DSS_RecreateArray_PInteger(ResultPtr, ResultCount, 1);
+        Result[0] := -1;
         Exit;
+    end;
     
     idx_before := pList.ActiveIndex;
     numEnabled := pList.ListSize;

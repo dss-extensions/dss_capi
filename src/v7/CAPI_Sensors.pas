@@ -58,21 +58,36 @@ uses
     Executive,
     SysUtils;
 
-function ActiveSensor: TSensorObj;
+//------------------------------------------------------------------------------
+function _activeObj(out obj: TSensorObj): Boolean; inline;
 begin
-    Result := NIL;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Sensors.Active;
+    Result := False;
+    obj := NIL;
+    if InvalidCircuit then
+        Exit;
+    
+    obj := ActiveCircuit.Sensors.Active;
+    if obj = NIL then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg('No active Sensor object found! Activate one and retry.', 8989);
+        end;
+        Exit;
+    end;
+    
+    Result := True;
 end;
 //------------------------------------------------------------------------------
 procedure Set_Parameter(const parm: String; const val: String);
 var
     cmd: String;
+    elem: TSensorObj;
 begin
-    if not Assigned(ActiveCircuit) then
-        exit;
+    if not _activeObj(elem) then
+        Exit;
     SolutionAbort := FALSE;  // Reset for commands entered from outside
-    cmd := Format('sensor.%s.%s=%s', [ActiveSensor.Name, parm, val]);
+    cmd := Format('sensor.%s.%s=%s', [elem.Name, parm, val]);
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
@@ -82,7 +97,7 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.Sensors, False);
 end;
@@ -97,25 +112,23 @@ end;
 function Sensors_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.Sensors.ListSize;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.Sensors.ListSize;
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Get_Currents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
-    Result: PDoubleArray;
     elem: TSensorObj;
-    k: Integer;
 begin
-    elem := ActiveSensor;
-    if elem <> NIL then
+    if not _activeObj(elem) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases - 1) + 1);
-        for k := 0 to elem.NPhases - 1 do
-            Result[k] := elem.SensorCurrent^[k + 1];
-    end
-    else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
+    Move(elem.SensorCurrent[1], ResultPtr^, elem.NPhases * SizeOf(Double));
 end;
 
 procedure Sensors_Get_Currents_GR(); CDECL;
@@ -131,23 +144,23 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        lst := ActiveCircuit.Sensors;
-        elem := lst.First;
-        if elem <> NIL then
+    if InvalidCircuit then
+        Exit;
+
+    lst := ActiveCircuit.Sensors;
+    elem := lst.First;
+    if elem = NIL then
+        Exit;
+        
+    repeat
+        if elem.Enabled then
         begin
-            repeat
-                if elem.Enabled then
-                begin
-                    ActiveCircuit.ActiveCktElement := elem;
-                    Result := 1;
-                end
-                else
-                    elem := lst.Next;
-            until (Result = 1) or (elem = NIL);
-        end;
-    end;
+            ActiveCircuit.ActiveCktElement := elem;
+            Result := 1;
+        end
+        else
+            elem := lst.Next;
+    until (Result = 1) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_IsDelta(): Wordbool; CDECL;
@@ -155,27 +168,22 @@ var
     elem: TSensorObj;
 begin
     Result := FALSE;
-    elem := ActiveSensor;
-    if elem <> NIL then
-        if elem.Conn > 0 then
-            Result := TRUE;
+    if not _activeObj(elem) then
+        Exit;
+    Result := (elem.Conn > 0);
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Get_kVARS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
-    Result: PDoubleArray;
     elem: TSensorObj;
-    k: Integer;
 begin
-    elem := ActiveSensor;
-    if elem <> NIL then
+    if not _activeObj(elem) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases - 1) + 1);
-        for k := 0 to elem.NPhases - 1 do
-            Result[k] := elem.SensorQ^[k + 1];
-    end
-    else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
+    Move(elem.SensorQ[1], ResultPtr^, elem.NPhases * SizeOf(Double));
 end;
 
 procedure Sensors_Get_kVARS_GR(); CDECL;
@@ -187,19 +195,15 @@ end;
 //------------------------------------------------------------------------------
 procedure Sensors_Get_kVS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
-    Result: PDoubleArray;
     elem: TSensorObj;
-    k: Integer;
 begin
-    elem := ActiveSensor;
-    if elem <> NIL then
+    if not _activeObj(elem) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases - 1) + 1);
-        for k := 0 to elem.NPhases - 1 do
-            Result[k] := elem.SensorVoltage^[k + 1];
-    end
-    else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
+    Move(elem.SensorVoltage[1], ResultPtr^, elem.NPhases * SizeOf(Double));
 end;
 
 procedure Sensors_Get_kVS_GR(); CDECL;
@@ -211,19 +215,15 @@ end;
 //------------------------------------------------------------------------------
 procedure Sensors_Get_kWS(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
-    Result: PDoubleArray;
     elem: TSensorObj;
-    k: Integer;
 begin
-    elem := ActiveSensor;
-    if elem <> NIL then
+    if not _activeObj(elem) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (elem.NPhases - 1) + 1);
-        for k := 0 to elem.NPhases - 1 do
-            Result[k] := elem.SensorP^[k + 1];
-    end
-    else
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, elem.NPhases);
+    Move(elem.SensorP[1], ResultPtr^, elem.NPhases * SizeOf(Double));
 end;
 
 procedure Sensors_Get_kWS_GR(); CDECL;
@@ -233,19 +233,14 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function Sensors_Get_MeteredElement_AnsiString(): Ansistring; inline;
+function Sensors_Get_MeteredElement(): PAnsiChar; CDECL;
 var
     elem: TSensorObj;
 begin
-    Result := '';
-    elem := ActiveSensor;
-    if elem <> NIL then
-        Result := elem.ElementName;
-end;
-
-function Sensors_Get_MeteredElement(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Sensors_Get_MeteredElement_AnsiString());
+    Result := NIL;
+    if not _activeObj(elem) then
+        Exit;
+    Result := DSS_GetAsPAnsiChar(elem.ElementName);
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_MeteredTerminal(): Integer; CDECL;
@@ -253,24 +248,19 @@ var
     elem: TSensorObj;
 begin
     Result := 0;
-    elem := ActiveSensor;
-    if elem <> NIL then
-        Result := elem.MeteredTerminal;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.MeteredTerminal;
 end;
 //------------------------------------------------------------------------------
-function Sensors_Get_Name_AnsiString(): Ansistring; inline;
+function Sensors_Get_Name(): PAnsiChar; CDECL;
 var
     elem: TSensorObj;
 begin
-    Result := '';
-    elem := ActiveSensor;
-    if elem <> NIL then
-        Result := elem.Name;
-end;
-
-function Sensors_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Sensors_Get_Name_AnsiString());
+    Result := NIL;
+    if not _activeObj(elem) then
+        Exit;
+    Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_Next(): Integer; CDECL;
@@ -279,23 +269,23 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        lst := ActiveCircuit.Sensors;
-        elem := lst.Next;
-        if elem <> NIL then
+    if InvalidCircuit then
+        Exit;
+
+    lst := ActiveCircuit.Sensors;
+    elem := lst.Next;
+    if elem = NIL then
+        Exit;
+        
+    repeat
+        if elem.Enabled then
         begin
-            repeat
-                if elem.Enabled then
-                begin
-                    ActiveCircuit.ActiveCktElement := elem;
-                    Result := lst.ActiveIndex;
-                end
-                else
-                    elem := lst.Next;
-            until (Result > 0) or (elem = NIL);
+            ActiveCircuit.ActiveCktElement := elem;
+            Result := lst.ActiveIndex;
         end
-    end;
+        else
+            elem := lst.Next;
+    until (Result > 0) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_PctError(): Double; CDECL;
@@ -303,9 +293,9 @@ var
     elem: TSensorObj;
 begin
     Result := 0.0;
-    elem := ActiveSensor;
-    if elem <> NIL then
-        Result := elem.pctError;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.pctError;
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_ReverseDelta(): Wordbool; CDECL;
@@ -313,10 +303,9 @@ var
     elem: TSensorObj;
 begin
     Result := FALSE;
-    elem := ActiveSensor;
-    if elem <> NIL then
-        if elem.DeltaDirection < 0 then
-            Result := TRUE;
+    if not _activeObj(elem) then
+        Exit;
+    Result := (elem.DeltaDirection < 0);
 end;
 //------------------------------------------------------------------------------
 function Sensors_Get_Weight(): Double; CDECL;
@@ -324,109 +313,94 @@ var
     elem: TSensorObj;
 begin
     Result := 0.0;
-    elem := ActiveSensor;
-    if elem <> NIL then
-        Result := elem.Weight;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.Weight;
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Reset(); CDECL;
 var
     elem: TSensorObj;
 begin
-    elem := ActiveSensor;
-    if elem <> NIL then
-        elem.ResetIt;
+    if not _activeObj(elem) then
+        Exit;
+    elem.ResetIt();
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_ResetAll(); CDECL;
 begin
-    if assigned(ActiveCircuit) then
-        SensorClass.ResetAll;
+    if InvalidCircuit then
+        Exit;
+    SensorClass.ResetAll();
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_Currents(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 var
-    Value: PDoubleArray;
     elem: TSensorObj;
-    i, k: Integer;
 begin
-    Value := PDoubleArray(ValuePtr);
-    elem := ActiveSensor;
-    if elem <> NIL then
+    if not _activeObj(elem) then
+        Exit;
+
+    if ValueCount <> elem.NPhases then
     begin
-        k := (0);
-        for i := 1 to elem.NPhases do
-        begin
-            elem.SensorCurrent^[i] := Value[k];
-            inc(k);
-        end;
+        DoSimpleMsg('The provided number of values does not match the element''s number of phases.', 5023);
+        Exit;
     end;
+    Move(ValuePtr^, elem.SensorCurrent[1], elem.NPhases * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_IsDelta(Value: Wordbool); CDECL;
 var
     elem: TSensorObj;
 begin
-    elem := ActiveSensor;
-    if elem <> NIL then
-        elem.Conn := Integer(Value);
+    if not _activeObj(elem) then
+        Exit;
+    elem.Conn := Integer(Value);
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_kVARS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 var
-    Value: PDoubleArray;
     elem: TSensorObj;
-    i, k: Integer;
 begin
-    Value := PDoubleArray(ValuePtr);
-    elem := ActiveSensor;
-    if elem <> NIL then
+    if not _activeObj(elem) then
+        Exit;
+
+    if ValueCount <> elem.NPhases then
     begin
-        k := (0);
-        for i := 1 to elem.NPhases do
-        begin
-            elem.SensorQ^[i] := Value[k];
-            inc(k);
-        end;
+        DoSimpleMsg('The provided number of values does not match the element''s number of phases.', 5024);
+        Exit;
     end;
+    Move(ValuePtr^, elem.SensorQ[1], elem.NPhases * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_kVS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 var
-    Value: PDoubleArray;
     elem: TSensorObj;
-    i, k: Integer;
 begin
-    Value := PDoubleArray(ValuePtr);
-    elem := ActiveSensor;
-    if elem <> NIL then
+    if not _activeObj(elem) then
+        Exit;
+
+    if ValueCount <> elem.NPhases then
     begin
-        k := (0);
-        for i := 1 to elem.NPhases do
-        begin
-            elem.SensorVoltage^[i] := Value[k];
-            inc(k);
-        end;
+        DoSimpleMsg('The provided number of values does not match the element''s number of phases.', 5024);
+        Exit;
     end;
+    Move(ValuePtr^, elem.SensorVoltage[1], elem.NPhases * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_kWS(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 var
-    Value: PDoubleArray;
     elem: TSensorObj;
-    i, k: Integer;
 begin
-    Value := PDoubleArray(ValuePtr);
-    elem := ActiveSensor;
-    if elem <> NIL then
+    if not _activeObj(elem) then
+        Exit;
+
+    if ValueCount <> elem.NPhases then
     begin
-        k := (0);
-        for i := 1 to elem.NPhases do
-        begin
-            elem.SensorP^[i] := Value[k];
-            inc(k);
-        end;
+        DoSimpleMsg('The provided number of values does not match the element''s number of phases.', 5024);
+        Exit;
     end;
+    Move(ValuePtr^, elem.SensorP[1], elem.NPhases * SizeOf(Double));
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_MeteredElement(const Value: PAnsiChar); CDECL;
@@ -441,7 +415,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     if SensorClass.SetActive(Value) then
     begin
@@ -477,9 +451,9 @@ var
     elem: TSensorObj;
 begin
     Result := 0.0;
-    elem := ActiveSensor;
-    if elem <> NIL then
-        Result := elem.BaseKV;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.BaseKV;
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_kVbase(Value: Double); CDECL;
@@ -489,17 +463,17 @@ end;
 //------------------------------------------------------------------------------
 function Sensors_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Sensors.ActiveIndex
-    else
-        Result := 0;
+    Result := 0;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.Sensors.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure Sensors_Set_idx(Value: Integer); CDECL;
 var
     pSensor: TSensorObj;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     pSensor := ActiveCircuit.Sensors.Get(Value);
     if pSensor = NIL then

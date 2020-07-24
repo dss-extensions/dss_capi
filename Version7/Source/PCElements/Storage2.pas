@@ -279,7 +279,6 @@ type
         function Get_CutInkWAC: Double;
 
     PROTECTED
-        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
 
     PUBLIC
@@ -330,6 +329,7 @@ type
         constructor Create(ParClass: TDSSClass; const SourceName: String);
         destructor Destroy; OVERRIDE;
 
+        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure RecalcElementData(); OVERRIDE;
         procedure CalcYPrim(); OVERRIDE;
 

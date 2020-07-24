@@ -196,8 +196,8 @@ type
         GeneratorClass: TGenerator;
         FSaveDemandInterval: Boolean;
         FDI_Verbose: Boolean;
-        FOverLoadFile: Textfile;
-        FVoltageFile: TextFile;
+        // FOverLoadFile: Textfile;
+        // FVoltageFile: TextFile;
 
         procedure ProcessOptions(const Opts: String);
         procedure Set_SaveDemandInterval(const Value: Boolean);
@@ -294,11 +294,11 @@ type
         VPhaseMin: pDoubleArray;
         VPhaseAccum: pDoubleArray;
         VPhaseAccumCount: pIntegerArray;
-        VPhase_File: TextFile;
+        // VPhase_File: TextFile;
         VPhaseReportFileIsOpen: Boolean;
 
        {Demand Interval File variables}
-        DI_File: TextFile;
+        // DI_File: TextFile;
         This_Meter_DIFileIsOpen: Boolean;
 
 
@@ -1555,8 +1555,8 @@ begin
             ParenElem := BranchList.Parent;
             if (ParenElem <> NIL) then
             begin
-                CktElem.OverLoad_EEN := Maxvalue([CktElem.Overload_EEN, ParenElem.Overload_EEN]);
-                CktElem.OverLoad_UE := Maxvalue([CktElem.OverLoad_UE, ParenElem.OverLoad_UE]);
+                CktElem.OverLoad_EEN := Max(CktElem.Overload_EEN, ParenElem.Overload_EEN);
+                CktElem.OverLoad_UE := Max(CktElem.OverLoad_UE, ParenElem.OverLoad_UE);
             end;
 
          // Mark loads (not generators) by the degree of overload if the meter's zone is to be considered radial
@@ -1787,7 +1787,7 @@ begin
     begin
         if (S_Local_KVA = 0.0) then
             S_Local_KVA := MaxZonekVA_Norm;
-        Integrate(Reg_OverloadkWhNorm, Maxvalue([0.0, (ZonekW * (1.0 - MaxZonekVA_Norm / S_Local_KVA))]), Delta_Hrs);
+        Integrate(Reg_OverloadkWhNorm, Max(0.0, (ZonekW * (1.0 - MaxZonekVA_Norm / S_Local_KVA))), Delta_Hrs);
     end
     else
     begin
@@ -1798,7 +1798,7 @@ begin
     begin
         if (S_Local_KVA = 0.0) then
             S_Local_KVA := MaxZonekVA_Emerg;
-        Integrate(Reg_OverloadkWhEmerg, Maxvalue([0.0, (ZonekW * (1.0 - MaxZonekVA_Emerg / S_Local_KVA))]), Delta_Hrs);
+        Integrate(Reg_OverloadkWhEmerg, Max(0.0, (ZonekW * (1.0 - MaxZonekVA_Emerg / S_Local_KVA))), Delta_Hrs);
     end
     else
     begin
@@ -2316,7 +2316,7 @@ end;
 procedure TEnergyMeter.ProcessOptions(const Opts: String);
 
 var
-    S1, S2: String;
+    {S1,} S2: String;
 begin
 
     AuxParser.CmdString := Opts;  // Load up aux Parser
@@ -2324,7 +2324,7 @@ begin
     {Loop until no more options found}
     with ActiveEnergymeterObj do
         repeat
-            S1 := AuxParser.NextParam; // ignore any parameter name  not expecting any
+            {S1 := }AuxParser.NextParam; // ignore any parameter name  not expecting any
             S2 := lowercase(AuxParser.StrValue);
             if Length(S2) > 0 then
                 case s2[1] of
@@ -3501,7 +3501,6 @@ var
     EmergAmps,
     NormAmps,
     Cmax: Double;
-    mtr: TEnergyMeterObj;
     ClassName: String;
     RSignal: TXYCurveObj;
     i, j, k,
@@ -3515,6 +3514,7 @@ begin
   This is called only if in Demand Interval (DI) mode and the file is open.
 }
 {    Prepares everything for using seasonal ratings if required}
+    RatingIdx := -1;
     if SeasonalRating then
     begin
         if SeasonSignal <> '' then
@@ -3546,7 +3546,7 @@ begin
                 ClassName := lowercase(PDElem.DSSClassName);
                 if SeasonalRating and (ClassName = 'line') and (PDElem.NumAmpRatings > 1) then
                 begin
-                    if RatingIdx > PDElem.NumAmpRatings then
+                    if (RatingIdx > PDElem.NumAmpRatings) or (RatingIdx < 0) then
                     begin
                         NormAmps := PDElem.NormAmps;
                         EmergAmps := pdelem.EmergAmps;
@@ -3750,8 +3750,6 @@ begin
 end;
 
 procedure TSystemMeter.OpenDemandIntervalFile;
-var
-    F_header: String;
 begin
     try
         if This_Meter_DIFileIsOpen then
@@ -3907,8 +3905,6 @@ var
     mtr: TEnergyMeterObj;
     Regsum: TRegisterArray;
     i: Integer;
-    F: Textfile;
-
 begin
   {Sum up all registers of all meters and write to Totals.CSV}
     for i := 1 to NumEMRegisters do

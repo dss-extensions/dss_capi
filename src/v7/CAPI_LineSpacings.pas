@@ -44,61 +44,71 @@ uses
     Line,
     UcMatrix;
 
+//------------------------------------------------------------------------------
+function _activeObj(out obj: TLineSpacingObj): Boolean; inline;
+begin
+    Result := False;
+    obj := NIL;
+    if InvalidCircuit then
+        Exit;
+    
+    obj := LineSpacingClass.GetActiveObj;
+    if obj = NIL then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg('No active LineSpacing object found! Activate one and retry.', 8989);
+        end;
+        Exit;
+    end;
+    
+    Result := True;
+end;
+//------------------------------------------------------------------------------
 function LineSpacings_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := LineSpacingClass.ElementCount;
+    if InvalidCircuit then
+        Exit;
+    Result := LineSpacingClass.ElementCount;
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := LineSpacingClass.First;
+    if InvalidCircuit then
+        Exit;
+    Result := LineSpacingClass.First;
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := LineSpacingClass.Next;
+    if InvalidCircuit then
+        Exit;
+    Result := LineSpacingClass.Next;
 end;
 //------------------------------------------------------------------------------
-function LineSpacings_Get_Name_AnsiString(): Ansistring; inline;
+function LineSpacings_Get_Name(): PAnsiChar; CDECL;
 var
     pLineSpacing: TLineSpacingObj;
-
 begin
-    Result := '';  // signify no name
-    if ActiveCircuit <> NIL then
-    begin
-        pLineSpacing := LineSpacingClass.GetActiveObj;
-        if pLineSpacing <> NIL then
-        begin
-            Result := pLineSpacing.Name;
-        end;
-    end;
-
-end;
-
-function LineSpacings_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(LineSpacings_Get_Name_AnsiString());
+    Result := NIL;  // signify no name
+    if not _activeObj(pLineSpacing) then
+        Exit;
+        
+    Result := DSS_GetAsPAnsiChar(pLineSpacing.Name);
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Set_Name(const Value: PAnsiChar); CDECL;
-// set LineCode active by name
-
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        if not LineSpacingClass.SetActive(Value) then
-            DoSimpleMsg('LineSpacing "' + Value + '" Not Found in Active Circuit.', 51008);
+    if InvalidCircuit then
+        Exit;
 
-         // Still same active object if not found
-    end;
+    if not LineSpacingClass.SetActive(Value) then
+        DoSimpleMsg('LineSpacing "' + Value + '" Not Found in Active Circuit.', 51008);
 
+    // Still same active object if not found
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_Nconds(): Integer; CDECL;
@@ -106,32 +116,24 @@ var
     pLineSpacing: TLineSpacingObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pLineSpacing := LineSpacingClass.GetActiveObj;
-        Result := pLineSpacing.NWires;
-    end
+    if not _activeObj(pLineSpacing) then
+        Exit;
+        
+    Result := pLineSpacing.NWires;
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Set_Nconds(Value: Integer); CDECL;
 var
     pLineSpacing: TLineSpacingObj;
-
 begin
-
-    if ActiveCircuit <> NIL then
+    if (Value < 1) then
     begin
-        pLineSpacing := LineSpacingClass.GetActiveObj;
-        if (Value < 1) then
-        begin
-            DoSimpleMsg('Invalid number of conductors sent via COM interface.  Please enter a value within range.', 183);
-        end
-        else
-        begin
-            pLineSpacing.DataChanged := TRUE;
-            pLineSpacing.NWires := Value;
-        end;
+        DoSimpleMsg(Format('Invalid number of conductors (%d) sent via C-API. Please use a value within the valid range (>0).', [Value]), 183);
     end;
+    if not _activeObj(pLineSpacing) then
+        Exit;
+    pLineSpacing.DataChanged := TRUE;
+    pLineSpacing.NWires := Value;
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_Phases(): Integer; CDECL;
@@ -139,27 +141,21 @@ var
     pLineSpacing: TLineSpacingObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pLineSpacing := LineSpacingClass.GetActiveObj;
-        Result := pLineSpacing.NPhases;
-    end
-
+    if not _activeObj(pLineSpacing) then
+        Exit;
+        
+    Result := pLineSpacing.NPhases;
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Set_Phases(Value: Integer); CDECL;
 var
     pLineSpacing: TLineSpacingObj;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        pLineSpacing := LineSpacingClass.GetActiveObj;
-        with pLineSpacing do
-        begin
-            DataChanged := TRUE;
-            NPhases := Value;
-        end;
-    end
+    if not _activeObj(pLineSpacing) then
+        Exit;
+        
+    pLineSpacing.DataChanged := TRUE;
+    pLineSpacing.NPhases := Value;
 end;
 
 //------------------------------------------------------------------------------
@@ -167,15 +163,11 @@ procedure LineSpacings_Set_Units(Value: Integer); CDECL;
 var
     pLineSpacing: TLineSpacingObj;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        pLineSpacing := LineSpacingClass.GetActiveObj;
-        with pLineSpacing do
-        begin
-            Units := Value;
-            DataChanged := TRUE;
-        end;
-    end
+    if not _activeObj(pLineSpacing) then
+        Exit;
+
+    pLineSpacing.Units := Value;
+    pLineSpacing.DataChanged := TRUE;
 end;
 //------------------------------------------------------------------------------
 function LineSpacings_Get_Units(): Integer; CDECL;
@@ -183,57 +175,49 @@ var
     pLineSpacing: TLineSpacingObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pLineSpacing := LineSpacingClass.GetActiveObj;
-        with pLineSpacing do
-        begin
-            Result := Units;
-        end;
-    end
+    if not _activeObj(pLineSpacing) then
+        Exit;
+
+    Result := pLineSpacing.Units;
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Set_Ycoords(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 var
     pLineSpacing: TLineSpacingObj;
-    i: Integer;
 begin
-    if ActiveCircuit <> NIL then
+    if not _activeObj(pLineSpacing) then
+        Exit;
+
+    with pLineSpacing do
     begin
-        pLineSpacing := LineSpacingClass.GetActiveObj;
-        with pLineSpacing do
+        if NWires <> ValueCount then
         begin
-            if NWires <> ValueCount then
-            begin
-                DoSimpleMsg('Invalid number of items sent via COM interface.  Please enter a value within range.', 183);
-                Exit;
-            end;
-
-            for i := 1 to ValueCount do
-                Ycoord[i] := ValuePtr[i - 1];
-
-            DataChanged := TRUE;
+            DoSimpleMsg(Format(
+                'The number of values provided (%d) does not match the number of wires (%d).', 
+                [ValueCount, NWires]
+            ), 183);
+            Exit;
         end;
-    end
+        Move(ValuePtr^, FY[1], ValueCount * SizeOf(Double));
+        DataChanged := TRUE;
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Get_Ycoords(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
-    Result: PDoubleArray;
     pLineSpacing: TLineSpacingObj;
-    i: Integer;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if ActiveCircuit <> NIL then
+    if not _activeObj(pLineSpacing) then
     begin
-        pLineSpacing := LineSpacingClass.GetActiveObj;
-        with pLineSpacing do
-        begin
-            DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, (NWires - 1) + 1);
-            for i := 1 to NWires do
-                Result[i - 1] := Ycoord[i];
-        end;
-    end
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    
+    with pLineSpacing do
+    begin
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NWires);
+        Move(FY[1], ResultPtr^, ResultCount^ * SizeOf(Double));
+    end;
 end;
 
 procedure LineSpacings_Get_Ycoords_GR(); CDECL;
@@ -246,44 +230,40 @@ end;
 procedure LineSpacings_Set_Xcoords(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 var
     pLineSpacing: TLineSpacingObj;
-    i: Integer;
 begin
-    if ActiveCircuit <> NIL then
+    if not _activeObj(pLineSpacing) then
+        Exit;
+
+    with pLineSpacing do
     begin
-        pLineSpacing := LineSpacingClass.GetActiveObj;
-        with pLineSpacing do
+        if NWires <> ValueCount then
         begin
-            if NWires <> ValueCount then
-            begin
-                DoSimpleMsg('Invalid number of items sent via COM interface.  Please enter a value within range.', 183);
-                Exit;
-            end;
-
-            for i := 1 to ValueCount do
-                Xcoord[i] := ValuePtr[i - 1];
-
-            DataChanged := TRUE;
+            DoSimpleMsg(Format(
+                'The number of values provided (%d) does not match the number of wires (%d).', 
+                [ValueCount, NWires]
+            ), 183);
+            Exit;
         end;
-    end
+        Move(ValuePtr^, FX[1], ValueCount * SizeOf(Double));
+        DataChanged := TRUE;
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure LineSpacings_Get_Xcoords(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
-    Result: PDoubleArray;
     pLineSpacing: TLineSpacingObj;
-    i: Integer;
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if ActiveCircuit <> NIL then
+    if not _activeObj(pLineSpacing) then
     begin
-        pLineSpacing := LineSpacingClass.GetActiveObj;
-        with pLineSpacing do
-        begin
-            DSS_RecreateArray_PDouble(Result, ResultPtr, ResultCount, (NWires - 1) + 1);
-            for i := 1 to NWires do
-                Result[i - 1] := Xcoord[i];
-        end;
-    end
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+
+    with pLineSpacing do
+    begin
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NWires);
+        Move(FX[1], ResultPtr^, ResultCount^ * SizeOf(Double));
+    end;
 end;
 
 procedure LineSpacings_Get_Xcoords_GR(); CDECL;
@@ -299,7 +279,7 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, LineSpacingClass.ElementList, False);
 end;

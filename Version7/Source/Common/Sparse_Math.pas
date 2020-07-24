@@ -205,8 +205,7 @@ end;
 //Inserts elements into the sparse matrix
 function Tsparse_matrix.insert(r, c, val: Integer): Integer;
 var
-    lrow,
-    lcol: Integer;  // To store the current lenght of the data matrix
+    lrow: Integer;  // To store the current lenght of the data matrix
 begin
     Result := 1;
 
@@ -591,8 +590,7 @@ end;
 //Inserts elements into the sparse matrix
 function Tsparse_Complex.insert(r, c: Integer; val: Complex): Integer;
 var
-    lrow,
-    lcol: Integer;  // To store the current lenght of the data matrix
+    lrow: Integer;  // To store the current lenght of the data matrix
 begin
     Result := 1;
 

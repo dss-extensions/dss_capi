@@ -177,6 +177,9 @@ uses
     Utilities,
     Math;
 
+var
+    cEpsilon : Complex;
+
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TDSSCktElement.Create(ParClass: TDSSClass);
 begin
@@ -781,7 +784,6 @@ function TDSSCktElement.Get_MaxVoltage(idxTerm: Integer): Double;
 {Get Voltage at the specified terminal 09/17/2019}
 var
     volts,
-    VN,
     cPower: Complex;
     ClassIdx,
     i, k,
@@ -827,9 +829,11 @@ begin
             else
                 volts := csub(NodeV^[nref], NodeV^[nrefN]);
         end;
-    end;
+        Result := cabs(volts);
+    end
+    else
+        Result := 0;
 
-    Result := cabs(volts);
 end;
 
 function TDSSCktElement.Get_MaxPower(idxTerm: Integer): Complex;
@@ -837,7 +841,6 @@ function TDSSCktElement.Get_MaxPower(idxTerm: Integer): Complex;
  2/12/2019}
 var
     volts,
-    VN,
     cPower: Complex;
     ClassIdx,
     i, k,
@@ -903,11 +906,10 @@ end;
 
 function TDSSCktElement.Get_MaxCurrent(idxTerm: Integer): Double;
 var
-    i, k,
-    nref: Integer;
+    i, k: Integer;
     MaxCurr,
     CurrMag: Double;
-    MaxPhase: Integer;
+    // MaxPhase: Integer;
 
 begin
     ActiveTerminalIdx := idxTerm;   // set active Terminal
@@ -915,9 +917,9 @@ begin
     if FEnabled then
     begin
         ComputeIterminal;
-    // Method: Get max current at terminal (magnitude)
+        // Method: Get max current at terminal (magnitude)
         MaxCurr := 0.0;
-        MaxPhase := 1;  // Init this so it has a non zero value
+        // MaxPhase := 1;  // Init this so it has a non zero value
         k := (idxTerm - 1) * Fnconds; // starting index of terminal
         for i := 1 to Fnphases do
         begin
@@ -925,7 +927,7 @@ begin
             if CurrMag > MaxCurr then
             begin
                 MaxCurr := CurrMag;
-                MaxPhase := i
+                // MaxPhase := i
             end;
         end;
     end;
@@ -1085,8 +1087,6 @@ var
     Ynn, Yij, Yin, Ynj: Complex;
     RowEliminated: pIntegerArray;
     ElementOpen: Boolean;
-    cEpsilon: Complex;
-
 begin
      {Now Account for Open Conductors
       Perform a Kron Reduction on rows where I is forced to zero.
@@ -1106,7 +1106,6 @@ begin
                     begin
                         RowEliminated := AllocMem(Sizeof(Integer) * Yorder);
                         ElementOpen := TRUE;
-                        cEpsilon := Cmplx(EPSILON, 0.0);
                     end;
                 // First do Kron Reduction
                     ElimRow := j + k;
@@ -1299,4 +1298,7 @@ begin
         ITerminal^[i] := CZERO;
 end;
 
+initialization
+    cEpsilon.re := EPSILON;
+    cEpsilon.im := 0.0;
 end.

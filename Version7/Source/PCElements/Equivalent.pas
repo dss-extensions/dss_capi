@@ -707,6 +707,8 @@ end;
 
 function TEquivalentObj.GetPropertyValue(Index: Integer): String;
 begin
+    Result := '';
+
     case Index of
         1:
         begin
@@ -768,17 +770,16 @@ end;
 procedure TEquivalent.InterpretAllBuses(const S: String);
 //  routine expecting all winding connections expressed in one array of strings
 var
-    S1, BusNam: String;
+    {S1,} BusNam: String;
     i: Integer;
 begin
-
     AuxParser.CmdString := S;  // Load up Parser
 
     {Loop for no more than the expected number of windings;  Ignore omitted values}
     with ActiveEquivalentObj do
         for i := 1 to FNterms do
         begin
-            S1 := AuxParser.NextParam; // ignore any parameter name  not expecting any
+            {S1 :=} AuxParser.NextParam; // ignore any parameter name  not expecting any
             BusNam := AuxParser.StrValue;
             if Length(BusNam) > 0 then
                 SetBus(i, BusNam);

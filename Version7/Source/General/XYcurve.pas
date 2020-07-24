@@ -77,14 +77,15 @@ type
     end;
 
     TXYcurveObj = class(TDSSObject)
+    PUBLIC
+        XValues,
+        YValues: pDoubleArray;
     PRIVATE
         LastValueAccessed,
         FNumPoints: Integer;  // Number of points in curve
         ArrayPropertyIndex: Integer;
         FX,
         FY: Double;
-        XValues,
-        YValues: pDoubleArray;
 
         procedure Set_NumPoints(const Value: Integer);
         function InterpolatePoints(i, j: Integer; X: Double; Xarray, Yarray: pDoubleArray): Double;

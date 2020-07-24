@@ -76,10 +76,10 @@ Uses ComObj, AnsiStrings, SysUtils, Dialogs, ActiveX, DSSGlobals;
 {$ELSE}
 Uses SysUtils, DSSGlobals, CmdForms, Variants;
 {$ENDIF}
+{$IFNDEF FPC}
 Var
   TOP_Inited:Boolean;
 
-{$IFNDEF FPC}
 function StrCopy(Dest: PAnsiChar; const Source: PAnsiChar): PAnsiChar; inline;
 begin
   Result := System.AnsiStrings.StrCopy(Dest, Source);
@@ -266,11 +266,11 @@ END;
 
 Initialization
 
-    TOP_Inited := FALSE;
     TOPTransferFile:= TOutFile32.Create;
     TOPTransferFile.Fname := 'DSSTransfer.STO';
 
 {$IFNDEF FPC}
+    TOP_Inited := FALSE;
     CoInitialize(Nil);
 {$ENDIF}
 end.

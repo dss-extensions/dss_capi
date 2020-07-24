@@ -1804,7 +1804,7 @@ begin
         DoubleNode(CatPrf, 'WireInfo.rAC25', Rac * v1);
         DoubleNode(CatPrf, 'WireInfo.rAC50', Rac * v1);
         DoubleNode(CatPrf, 'WireInfo.rAC75', Rac * v1);
-        DoubleNode(CatPrf, 'WireInfo.ratedCurrent', MaxValue([NormAmps, 0.0]));
+        DoubleNode(CatPrf, 'WireInfo.ratedCurrent', Max(NormAmps, 0.0));
         IntegerNode(CatPrf, 'WireInfo.strandCount', 0);
         IntegerNode(CatPrf, 'WireInfo.coreStrandCount', 0);
         DoubleNode(CatPrf, 'WireInfo.coreRadius', 0.0);

@@ -216,7 +216,7 @@ BEGIN
     ElementList.New := Obj; // Stuff it in this collection's element list
 {$IFNDEF DSS_CAPI_HASHLIST}
     ElementNameList.Add(TDSSObject(Obj).Name);
-    If Cardinal(ElementList.ListSize) > 2* ElementNameList.InitialAllocation Then ReallocateElementNameList;
+    If Cardinal(ElementList.ListSize) > 2 * ElementNameList.InitialAllocation Then ReallocateElementNameList;
 {$ELSE}    
     ElementNameList.Add(LowerCase(TDSSObject(Obj).Name), Pointer(ElementList.ListSize));
 {$ENDIF}
@@ -271,10 +271,7 @@ END;
 Function TDSSClass.GetActiveObj:Pointer; // Get address of active obj of this class
 BEGIN
     ActiveElement := ElementList.ActiveIndex;
-    If ActiveElement>0 THEN
-        Result := ElementList.Get(ActiveElement)
-    Else
-       Result := Nil;
+    Result := ElementList.Active;
 END;
 
 Function TDSSClass.Get_FirstPropertyName:String;

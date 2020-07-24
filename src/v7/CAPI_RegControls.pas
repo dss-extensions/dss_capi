@@ -73,21 +73,36 @@ uses
     SysUtils,
     PointerList;
 
-function ActiveRegControl: TRegControlObj;
+//------------------------------------------------------------------------------
+function _activeObj(out obj: TRegControlObj): Boolean; inline;
 begin
-    Result := NIL;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.RegControls.Active;
+    Result := False;
+    obj := NIL;
+    if InvalidCircuit then
+        Exit;
+    
+    obj := ActiveCircuit.RegControls.Active;
+    if obj = NIL then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg('No active RegControl object found! Activate one and retry.', 8989);
+        end;
+        Exit;
+    end;
+    
+    Result := True;
 end;
 //------------------------------------------------------------------------------
 procedure Set_Parameter(const parm: String; const val: String);
 var
     cmd: String;
+    elem: TRegControlObj;
 begin
-    if not Assigned(ActiveCircuit) then
-        exit;
+    if not _activeObj(elem) then
+        Exit;
     SolutionAbort := FALSE;  // Reset for commands entered from outside
-    cmd := Format('regcontrol.%s.%s=%s', [ActiveRegControl.Name, parm, val]);
+    cmd := Format('regcontrol.%s.%s=%s', [elem.Name, parm, val]);
     DSSExecutive.Command := cmd;
 end;
 //------------------------------------------------------------------------------
@@ -95,10 +110,12 @@ procedure RegControls_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInte
 var
     Result: PPAnsiCharArray;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
+    begin
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        Result[0] := DSS_CopyStringAsPChar('NONE');
         Exit;
+    end;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.RegControls, False);
 end;
 
@@ -114,9 +131,9 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.CT;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.CT;
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_Delay(): Double; CDECL;
@@ -124,9 +141,9 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.InitialDelay;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.InitialDelay;
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_First(): Integer; CDECL;
@@ -135,23 +152,23 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        lst := ActiveCircuit.RegControls;
-        elem := lst.First;
-        if elem <> NIL then
+    if InvalidCircuit then
+        Exit;
+        
+    lst := ActiveCircuit.RegControls;
+    elem := lst.First;
+    if elem = NIL then
+        Exit;
+
+    repeat
+        if elem.Enabled then
         begin
-            repeat
-                if elem.Enabled then
-                begin
-                    ActiveCircuit.ActiveCktElement := elem;
-                    Result := 1;
-                end
-                else
-                    elem := lst.Next;
-            until (Result = 1) or (elem = NIL);
-        end;
-    end;
+            ActiveCircuit.ActiveCktElement := elem;
+            Result := 1;
+        end
+        else
+            elem := lst.Next;
+    until (Result = 1) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_ForwardBand(): Double; CDECL;
@@ -159,9 +176,9 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.BandVoltage;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.BandVoltage;
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_ForwardR(): Double; CDECL;
@@ -169,9 +186,9 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.LineDropR;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.LineDropR;
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_ForwardVreg(): Double; CDECL;
@@ -179,9 +196,9 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.TargetVoltage;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.TargetVoltage;
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_ForwardX(): Double; CDECL;
@@ -189,9 +206,9 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.LineDropX;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.LineDropX;
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_IsInverseTime(): Wordbool; CDECL;
@@ -199,10 +216,9 @@ var
     elem: TRegControlObj;
 begin
     Result := FALSE;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        if elem.IsInverseTime then
-            Result := TRUE;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.IsInverseTime;
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_IsReversible(): Wordbool; CDECL;
@@ -210,10 +226,9 @@ var
     elem: TRegControlObj;
 begin
     Result := FALSE;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        if elem.UseReverseDrop then
-            Result := TRUE;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.UseReverseDrop;
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_MaxTapChange(): Integer; CDECL;
@@ -221,39 +236,29 @@ var
     elem: TRegControlObj;
 begin
     Result := 0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.MaxTapChange;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.MaxTapChange;
 end;
 //------------------------------------------------------------------------------
-function RegControls_Get_MonitoredBus_AnsiString(): Ansistring; inline;
-var
-    elem: TRegControlObj;
-begin
-    Result := '';
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.ControlledBusName;
-end;
-
 function RegControls_Get_MonitoredBus(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(RegControls_Get_MonitoredBus_AnsiString());
-end;
-//------------------------------------------------------------------------------
-function RegControls_Get_Name_AnsiString(): Ansistring; inline;
 var
     elem: TRegControlObj;
 begin
-    Result := '';
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.Name;
+    Result := NIL;
+    if not _activeObj(elem) then
+        Exit;
+    Result := DSS_GetAsPAnsiChar(elem.ControlledBusName);
 end;
-
+//------------------------------------------------------------------------------
 function RegControls_Get_Name(): PAnsiChar; CDECL;
+var
+    elem: TRegControlObj;
 begin
-    Result := DSS_GetAsPAnsiChar(RegControls_Get_Name_AnsiString());
+    Result := NIL;
+    if not _activeObj(elem) then
+        Exit;
+    Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_Next(): Integer; CDECL;
@@ -262,23 +267,23 @@ var
     lst: TPointerList;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        lst := ActiveCircuit.RegControls;
-        elem := lst.Next;
-        if elem <> NIL then
+    if InvalidCircuit then
+        Exit;
+    
+    lst := ActiveCircuit.RegControls;
+    elem := lst.Next;
+    if elem = NIL then
+        Exit;
+        
+    repeat
+        if elem.Enabled then
         begin
-            repeat
-                if elem.Enabled then
-                begin
-                    ActiveCircuit.ActiveCktElement := elem;
-                    Result := lst.ActiveIndex;
-                end
-                else
-                    elem := lst.Next;
-            until (Result > 0) or (elem = NIL);
+            ActiveCircuit.ActiveCktElement := elem;
+            Result := lst.ActiveIndex;
         end
-    end;
+        else
+            elem := lst.Next;
+    until (Result > 0) or (elem = NIL);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_PTratio(): Double; CDECL;
@@ -286,9 +291,9 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.PT;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.PT;
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_ReverseBand(): Double; CDECL;
@@ -296,9 +301,9 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.RevBandVoltage;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.RevBandVoltage;
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_ReverseR(): Double; CDECL;
@@ -306,9 +311,9 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.RevLineDropR;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.RevLineDropR;
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_ReverseVreg(): Double; CDECL;
@@ -316,9 +321,9 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.RevTargetVoltage;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.RevTargetVoltage;
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_ReverseX(): Double; CDECL;
@@ -326,9 +331,9 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.RevLineDropX;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.RevLineDropX;
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_TapDelay(): Double; CDECL;
@@ -336,9 +341,9 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.SubsequentDelay;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.SubsequentDelay;
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_TapWinding(): Integer; CDECL;
@@ -346,24 +351,19 @@ var
     elem: TRegControlObj;
 begin
     Result := 0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.TrWinding;  // has the taps
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.TrWinding;  // has the taps
 end;
 //------------------------------------------------------------------------------
-function RegControls_Get_Transformer_AnsiString(): Ansistring; inline;
+function RegControls_Get_Transformer(): PAnsiChar; CDECL;
 var
     elem: TRegControlObj;
 begin
-    Result := '';
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.Transformer.Name;
-end;
-
-function RegControls_Get_Transformer(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(RegControls_Get_Transformer_AnsiString());
+    Result := NIL;
+    if not _activeObj(elem) then
+        Exit;
+    Result := DSS_GetAsPAnsiChar(elem.Transformer.Name);
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_VoltageLimit(): Double; CDECL;
@@ -371,9 +371,9 @@ var
     elem: TRegControlObj;
 begin
     Result := 0.0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.VoltageLimit;
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.VoltageLimit;
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_Winding(): Integer; CDECL;
@@ -381,9 +381,9 @@ var
     elem: TRegControlObj;
 begin
     Result := 0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.ElementTerminal;  // monitored winding
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.ElementTerminal;  // monitored winding
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_TapNumber(): Integer; CDECL;
@@ -391,9 +391,9 @@ var
     elem: TRegControlObj;
 begin
     Result := 0;
-    elem := ActiveRegControl;
-    if elem <> NIL then
-        Result := elem.TapNum;  // tap number on the controlled-winding of the transformer controlled by this regcontrol
+    if not _activeObj(elem) then
+        Exit;
+    Result := elem.TapNum;  // tap number on the controlled-winding of the transformer controlled by this regcontrol
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_CTPrimary(Value: Double); CDECL;
@@ -454,7 +454,7 @@ end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     if RegControlClass.SetActive(Value) then
     begin
@@ -525,35 +525,33 @@ end;
 function RegControls_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(Activecircuit) then
-        Result := ActiveCircuit.RegControls.ListSize;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.RegControls.ListSize;
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Reset(); CDECL;
 var
     elem: TRegControlObj;
 begin
-    elem := ActiveRegControl;
-    if elem <> NIL then
-    begin
-        elem.Reset;
-    end;
-
+    if not _activeObj(elem) then
+        Exit;
+    elem.Reset();
 end;
 //------------------------------------------------------------------------------
 function RegControls_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.RegControls.ActiveIndex
-    else
-        Result := 0;
+    Result := 0;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.RegControls.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure RegControls_Set_idx(Value: Integer); CDECL;
 var
     pRegControl: TRegControlObj;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     pRegControl := ActiveCircuit.RegControls.Get(Value);
     if pRegControl = NIL then

@@ -1258,9 +1258,6 @@ begin
 end;
 // ===========================================================================================
 procedure TSolutionObj.Upload2IncMatrix;
-var
-    CIdx: Integer;
-
 begin
   // Uploads the values to the incidence matrix
     IncMat.insert((ActiveIncCell[0] - 1), (ActiveIncCell[1] - 2), ActiveIncCell[2]);
@@ -1272,16 +1269,13 @@ var
     LineBus: String;
     elem: TLineObj;
     TermIdx,
-    CIdx,
     BusdotIdx: Integer;
     EndFlag: Boolean;
-    counter: Integer;
 begin
-// This rouitne adds the Lines to the incidence matrix vectors
+    // This rouitne adds the Lines to the incidence matrix vectors
     with ActiveCircuit do
     begin
         elem := Lines.First;
-//    Counter     :=  0;
         while elem <> NIL do
         begin
             if elem.Enabled then
@@ -1296,7 +1290,7 @@ begin
                     BusdotIdx := ansipos('.', LineBus);
                     if BusdotIdx <> 0 then
                         LineBus := Copy(LineBus, 0, BusdotIdx - 1);  // removes the dot from the Bus Name
-            // Evaluates the position of the Bus in the array
+                    // Evaluates the position of the Bus in the array
                     ActiveIncCell[1] := 1;
                     EndFlag := TRUE;
                     while (ActiveIncCell[1] <= NumBuses) and (EndFlag) do
@@ -1306,17 +1300,11 @@ begin
                         ActiveIncCell[1] := ActiveIncCell[1] + 1;
                     end;
                     Upload2IncMatrix;
-//            inc(Counter);
                 end;
                 inc(ActiveIncCell[0]);
-            end
-            else
-            begin
-                Counter := 0;
             end;
             elem := Lines.Next;
         end;
-//    Counter :=  Counter;
     end;
 end;
 // ===========================================================================================
@@ -1325,12 +1313,9 @@ var
     LineBus: String;
     elem: TTransfObj;
     TermIdx,
-    BusdotIdx,
-    CIdx: Integer;
+    BusdotIdx: Integer;
     EndFlag: Boolean;
     lst: TPointerList;
-    Counter: Integer;
-
 begin
 // This rouitne adds the Transformers to the incidence matrix vectors
     with ActiveCircuit do
@@ -1375,8 +1360,7 @@ var
     elem: TCapacitorObj;
     lst: TPointerList;
     CapTermIdx,
-    BusdotIdx,
-    CIdx: Integer;
+    BusdotIdx: Integer;
     CapEndFlag: Boolean;
 begin
 // This rouitne adds the series capacitors to the incidence matrix vectors
@@ -1425,8 +1409,7 @@ var
     elem,
     DevClassIndex: Integer;
     TermIdx,
-    BusdotIdx,
-    CIdx: Integer;
+    BusdotIdx: Integer;
     EndFlag: Boolean;
 begin
 // This rouitne adds the series reactors to the incidence matrix vectors
@@ -1473,8 +1456,6 @@ end;
 //*     The order depends on the way the lines, xfmr, series cap and reactors  *
 //******************************************************************************
 procedure TSolutionObj.Calc_Inc_Matrix;
-var
-    dlong: Integer;
 begin
   // If the sparse matrix obj doesn't exists creates it, otherwise deletes the content
     if IncMat = NIL then

@@ -205,8 +205,6 @@ end;
             FUNCTION  InterpretDRCAvgVWindowLen(const s:string):Integer;
             FUNCTION  ReturnElementsList:String;
             PROCEDURE UpdateInvControl(i:integer);
-     protected
-            PROCEDURE Set_Enabled(Value:Boolean);Override;
      public
             {$IFNDEF FPC}
             MyMemoryManagerState: System.TMemoryManagerState;
@@ -214,6 +212,7 @@ end;
             constructor Create(ParClass:TDSSClass; const InvControlName:String);
             destructor  Destroy; override;
 
+            PROCEDURE Set_Enabled(Value:Boolean);Override;
             PROCEDURE   MakePosSequence; Override;  // Make a positive Sequence Model
             PROCEDURE   RecalcElementData; Override;
             PROCEDURE   CalcYPrim; Override;    // Always Zero for a InvControl

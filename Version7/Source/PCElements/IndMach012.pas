@@ -188,7 +188,6 @@ type
     PROTECTED
 
         {A couple of virtual procedures you can override}
-        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
 
         procedure DoDynamicMode;
@@ -210,6 +209,7 @@ type
         constructor Create(ParClass: TDSSClass; const IndMach012ObjName: String);
         destructor Destroy; OVERRIDE;
 
+        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure RecalcElementData; OVERRIDE;   // Generally called after Edit is complete to recompute variables
         procedure CalcYPrim; OVERRIDE;   // Calculate Primitive Y matrix
         procedure Integrate;

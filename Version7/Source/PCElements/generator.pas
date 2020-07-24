@@ -234,7 +234,6 @@ type
         procedure SetkWkvar(const PkW, Qkvar: Double);
 
     PROTECTED
-        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
 
     PUBLIC
@@ -269,6 +268,7 @@ type
         procedure RecalcElementData; OVERRIDE;
         procedure CalcYPrim; OVERRIDE;
 
+        procedure Set_ConductorClosed(Index: Integer; Value: Boolean); OVERRIDE;
         function InjCurrents: Integer; OVERRIDE;
         procedure GetInjCurrents(Curr: pComplexArray); OVERRIDE;
         function NumVariables: Integer; OVERRIDE;
@@ -2974,6 +2974,7 @@ var
     pName: pAnsichar;
 
 begin
+    Result := 'ERROR';
     n := 0;
     if i < 1 then
         Exit;  // Someone goofed

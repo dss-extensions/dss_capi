@@ -142,9 +142,6 @@ uses
 const
     NumPropsThisClass = 31;
 
-var
-    CDOUBLEONE: Complex;
-
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 constructor TVsource.Create;  // Creates superstructure for all Line objects
 begin
@@ -1461,7 +1458,4 @@ begin
 
 end;
 
-initialization
-
-    CDOUBLEONE := CMplx(1.0, 1.0);
 end.

@@ -743,7 +743,7 @@ end;
 procedure TTransf.InterpretAllConns(const S: String);
 //  routine expecting all winding connections expressed in one array of strings
 var
-    S1,
+    {S1,}
     S2: String;
     i: Integer;
 begin
@@ -755,7 +755,7 @@ begin
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
-            S1 := AuxParser.NextParam; // ignore any parameter name  not expecting any
+            {S1 :=} AuxParser.NextParam; // ignore any parameter name  not expecting any
             S2 := AuxParser.StrValue;
             if Length(S2) > 0 then
                 InterpretConnection(S2);
@@ -2309,7 +2309,9 @@ procedure TTransfObj.GICBuildYTerminal;
 var
     i, j, idx: Integer;
     yR: Complex;
+{$IFDEF TRANSDEBUG}    
     F: TextFile;
+{$ENDIF}
     Yadder: Complex;
 
 begin

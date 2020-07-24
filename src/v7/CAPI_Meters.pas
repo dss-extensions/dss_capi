@@ -86,6 +86,26 @@ uses
     CktTree;
 
 //------------------------------------------------------------------------------
+function _activeObj(out obj: TEnergyMeterObj): Boolean; inline;
+begin
+    Result := False;
+    obj := NIL;
+    if InvalidCircuit then
+        Exit;
+    
+    obj := ActiveCircuit.EnergyMeters.Active;
+    if obj = NIL then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg('No active EnergyMeter object found! Activate one and retry.', 8989);
+        end;
+        Exit;
+    end;
+    
+    Result := True;
+end;
+//------------------------------------------------------------------------------
 procedure InvalidActiveSection(); inline;
 begin
     DoSimpleMsg('Invalid active section. Has SetActiveSection been called?', 5055);
@@ -97,7 +117,7 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, ActiveCircuit.EnergyMeters, False);
 end;
@@ -114,47 +134,34 @@ var
     pMeter: TEnergyMeterObj;
 
 begin
-
     Result := 0;
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if InvalidCircuit then
+        Exit;
+        
+    pMeter := ActiveCircuit.EnergyMeters.First;
+    if pMeter = NIL then
+        Exit;
+        
+    repeat
+        if pMeter.Enabled then
         begin
-            pMeter := EnergyMeters.First;
-            if pMeter <> NIL then
-            begin
-                repeat
-                    if pMeter.Enabled then
-                    begin
-                        ActiveCktElement := pMeter;
-                        Result := 1;
-                    end
-                    else
-                        pMeter := EnergyMeters.Next;
-                until (Result = 1) or (pMeter = NIL);
-            end
-            else
-                Result := 0;  // signify no more
-        end;
-
+            ActiveCircuit.ActiveCktElement := pMeter;
+            Result := 1;
+        end
+        else
+            pMeter := ActiveCircuit.EnergyMeters.Next;
+    until (Result = 1) or (pMeter = NIL);
 end;
 //------------------------------------------------------------------------------
-function Meters_Get_Name_AnsiString(): Ansistring; inline;
+function Meters_Get_Name(): PAnsiChar; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
-
 begin
-
-    if ActiveCircuit <> NIL then
-    begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        if pMeterObj <> NIL then
-            Result := pMeterObj.name;
-    end;
-end;
-
-function Meters_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Meters_Get_Name_AnsiString());
+    Result := NIL;
+    if not _activeObj(pMeterObj) then
+        Exit;
+    
+    Result := DSS_GetAsPAnsiChar(pMeterObj.name);
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_Next(): Integer; CDECL;
@@ -162,24 +169,22 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pMeterObj := ActiveCircuit.EnergyMeters.next;
-        if pMeterObj <> NIL then
+    if InvalidCircuit then
+        Exit;
+        
+    pMeterObj := ActiveCircuit.EnergyMeters.next;
+    if pMeterObj = NIL then
+        Exit;
+           
+    repeat   // Find an Enabled Meter
+        if pMeterObj.Enabled then
         begin
-            repeat   // Find an Enabled Meter
-                if pMeterObj.Enabled then
-                begin
-                    ActiveCircuit.ActiveCktElement := pMeterObj;
-                    Result := ActiveCircuit.EnergyMeters.ActiveIndex;
-                end
-                else
-                    pMeterObj := ActiveCircuit.EnergyMeters.next;
-            until (Result > 0) or (pMeterObj = NIL);
+            ActiveCircuit.ActiveCktElement := pMeterObj;
+            Result := ActiveCircuit.EnergyMeters.ActiveIndex;
         end
         else
-            Result := 0;  // signify no more
-    end;
+            pMeterObj := ActiveCircuit.EnergyMeters.next;
+    until (Result > 0) or (pMeterObj = NIL);
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_RegisterNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -187,23 +192,18 @@ var
     Result: PPAnsiCharArray;
     pMeterObj: TEnergyMeterObj;
     k: Integer;
-
 begin
-    if ActiveCircuit <> NIL then 
+    if not _activeObj(pMeterObj) then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        if Assigned(pMeterObj) then
-        begin
-            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumEMRegisters);
-            for k := 0 to NumEMRegisters - 1 do
-            begin
-                Result[k] := DSS_CopyStringAsPChar(pMeterObj.RegisterNames[k + 1]);
-            end;
-            Exit;
-        end;
+        DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1); // null array
+        Exit;
     end;
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1); // null array
-    Result[0] := nil;
+
+    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumEMRegisters);
+    for k := 0 to NumEMRegisters - 1 do
+    begin
+        Result[k] := DSS_CopyStringAsPChar(pMeterObj.RegisterNames[k + 1]);
+    end;
 end;
 
 procedure Meters_Get_RegisterNames_GR(); CDECL;
@@ -215,31 +215,16 @@ end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_RegisterValues(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
-    Result: PDoubleArray;
     pMeterObj: TEnergyMeterObj;
-    k: Integer;
 begin
-
-// First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if not _activeObj(pMeterObj) then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        if pMeterObj <> NIL then
-        begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (numEMRegisters - 1) + 1);
-            for k := 0 to numEMRegisters - 1 do
-            begin
-                Result[k] := pMeterObj.Registers[k + 1];
-            end;
-        end
-        else
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    end
-    else
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
     end;
-
+    
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, numEMRegisters);
+    Move(pMeterObj.Registers[1], ResultPtr^, numEMRegisters * SizeOf(Double));
 end;
 
 procedure Meters_Get_RegisterValues_GR(); CDECL;
@@ -252,59 +237,43 @@ end;
 procedure Meters_Reset(); CDECL;
 var
     pMeter: TEnergyMeterObj;
-
 begin
-
-    if ActiveCircuit <> NIL then
-    begin
-        pMeter := ActiveCircuit.EnergyMeters.Active;
-        if pMeter <> NIL then
-            pMeter.ResetRegisters;
-    end;
-
+    if not _activeObj(pMeter) then
+        Exit;
+        
+    pMeter.ResetRegisters();
 end;
 //------------------------------------------------------------------------------
 procedure Meters_ResetAll(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        EnergyMeterClass.ResetAll;
-    end;
+    if InvalidCircuit then
+        Exit;
+    EnergyMeterClass.ResetAll;
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Sample(); CDECL;
 var
     pMeter: TEnergyMeterObj;
-
 begin
-
-    if ActiveCircuit <> NIL then
-    begin
-        pMeter := ActiveCircuit.EnergyMeters.Active;
-        if pMeter <> NIL then
-            pMeter.TakeSample;
-    end;
-
+    if not _activeObj(pMeter) then
+        Exit;
+    
+    pMeter.TakeSample();
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Save(); CDECL;
 var
     pMeter: TEnergyMeterObj;
-
 begin
+    if not _activeObj(pMeter) then
+        Exit;
 
-    if ActiveCircuit <> NIL then
-    begin
-        pMeter := ActiveCircuit.EnergyMeters.Active;
-        if pMeter <> NIL then
-            pMeter.SaveRegisters;
-    end;
-
+    pMeter.SaveRegisters();
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     if EnergyMeterClass.SetActive(Value) then
     begin
@@ -318,25 +287,19 @@ begin
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_Totals(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
-var
-    Result: PDoubleArray;
-    i: Integer;
-
 begin
-
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-        begin
-            TotalizeMeters;
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (NumEMRegisters - 1) + 1);
-            for i := 1 to NumEMregisters do
-                Result[i - 1] := RegisterTotals[i];
-        end
-    else
+    if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
     end;
-
+    
+    with ActiveCircuit do
+    begin
+        TotalizeMeters();
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, NumEMRegisters);
+        Move(RegisterTotals[1], ResultPtr^, ResultCount^ * SizeOf(Double));
+    end
 end;
 
 procedure Meters_Get_Totals_GR(); CDECL;
@@ -348,29 +311,16 @@ end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_Peakcurrent(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
-    Result: PDoubleArray;
     pMeterObj: TEnergyMeterObj;
-    k: Integer;
 begin
-
-// First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if not _activeObj(pMeterObj) then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        if pMeterObj <> NIL then
-        begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMeterObj.NPhases - 1) + 1);
-            for k := 0 to pMeterObj.NPhases - 1 do
-                Result[k] := pMeterObj.SensorCurrent^[k + 1];
-        end
-        else
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    end
-    else
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
     end;
 
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pMeterObj.NPhases);
+    Move(pMeterObj.SensorCurrent[1], ResultPtr^, ResultCount^ * SizeOf(Double));
 end;
 
 procedure Meters_Get_Peakcurrent_GR(); CDECL;
@@ -382,26 +332,17 @@ end;
 //------------------------------------------------------------------------------
 procedure Meters_Set_Peakcurrent(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 var
-    Value: PDoubleArray;
     pMeterObj: TEnergyMeterObj;
-    k, i: Integer;
 begin
-    Value := PDoubleArray(ValuePtr);
-// First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
-    begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        if pMeterObj <> NIL then
-        begin
-            k := (0);   // get starting index for Value array
-            for i := 1 to pMeterObj.NPhases do
-            begin
-                pMeterObj.SensorCurrent^[i] := Value[k];
-                inc(k);
-            end;
-        end;
-    end;
+    if not _activeObj(pMeterObj) then
+        Exit;
 
+    if ValueCount <> pMeterObj.NPhases then
+    begin
+        DoSimpleMsg('The provided number of values does not match the element''s number of phases.', 5026);
+        Exit;
+    end;
+    Move(ValuePtr^, pMeterObj.SensorCurrent[1], ValueCount * SizeOf(Double));    
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_CalcCurrent(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -410,25 +351,15 @@ var
     pMeterObj: TEnergyMeterObj;
     k: Integer;
 begin
-
-// First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if not _activeObj(pMeterObj) then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        if pMeterObj <> NIL then
-        begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMeterObj.NPhases - 1) + 1);
-            for k := 0 to pMeterObj.NPhases - 1 do
-                Result[k] := Cabs(pMeterObj.CalculatedCurrent^[k + 1]);
-        end
-        else
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    end
-    else
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
     end;
 
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pMeterObj.NPhases);
+    for k := 0 to pMeterObj.NPhases - 1 do
+        Result[k] := Cabs(pMeterObj.CalculatedCurrent^[k + 1]);
 end;
 
 procedure Meters_Get_CalcCurrent_GR(); CDECL;
@@ -442,51 +373,34 @@ procedure Meters_Set_CalcCurrent(ValuePtr: PDouble; ValueCount: Integer); CDECL;
 var
     Value: PDoubleArray;
     pMeterObj: TEnergyMeterObj;
-    k, i: Integer;
+    i: Integer;
 begin
-    Value := PDoubleArray(ValuePtr);
-// First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
-    begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        if pMeterObj <> NIL then
-        begin
-            k := (0);   // get starting index for Value array
-            for i := 1 to pMeterObj.NPhases do
-            begin
-                pMeterObj.CalculatedCurrent^[i] := cmplx(Value[k], 0.0);   // Just set the real part
-                inc(k);
-            end;
-        end;
-    end;
+    if not _activeObj(pMeterObj) then
+        Exit;
 
+    if ValueCount <> pMeterObj.NPhases then
+    begin
+        DoSimpleMsg('The provided number of values does not match the element''s number of phases.', 5025);
+        Exit;
+    end;
+        
+    Value := PDoubleArray(ValuePtr);
+    for i := 1 to pMeterObj.NPhases do
+        pMeterObj.CalculatedCurrent^[i] := cmplx(Value[i - 1], 0.0);   // Just set the real part
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_AllocFactors(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
-    Result: PDoubleArray;
     pMeterObj: TEnergyMeterObj;
-    k: Integer;
 begin
-
-// First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if not _activeObj(pMeterObj) then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        if pMeterObj <> NIL then
-        begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (pMeterObj.NPhases - 1) + 1);
-            for k := 0 to pMeterObj.NPhases - 1 do
-                Result[k] := pMeterObj.PhsAllocationFactor^[k + 1];
-        end
-        else
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    end
-    else
-    begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
     end;
 
+    DSS_RecreateArray_PDouble(ResultPtr, ResultCount, pMeterObj.NPhases);
+    Move(pMeterObj.PhsAllocationFactor[1], ResultPtr^, ResultCount^ * SizeOf(Double));
 end;
 
 procedure Meters_Get_AllocFactors_GR(); CDECL;
@@ -500,183 +414,131 @@ procedure Meters_Set_AllocFactors(ValuePtr: PDouble; ValueCount: Integer); CDECL
 var
     Value: PDoubleArray;
     pMeterObj: TEnergyMeterObj;
-    k, i: Integer;
+    i: Integer;
 begin
+    if not _activeObj(pMeterObj) then
+        Exit;
+
     Value := PDoubleArray(ValuePtr);
-// First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
+    if ValueCount <> pMeterObj.NPhases then
     begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        if pMeterObj <> NIL then
-        begin
-            k := (0);   // get starting index for Value array
-            for i := 1 to pMeterObj.NPhases do
-            begin
-                pMeterObj.PhsAllocationFactor^[i] := Value[k];   // Just set the real part
-                inc(k);
-            end;
-        end;
+        DoSimpleMsg('The provided number of values does not match the element''s number of phases.', 5026);
+        Exit;
     end;
 
+    for i := 1 to pMeterObj.NPhases do
+    begin
+        pMeterObj.PhsAllocationFactor^[i] := Value[i - 1];
+    end;
 end;
 //------------------------------------------------------------------------------
-function Meters_Get_MeteredElement_AnsiString(): Ansistring; inline;
+function Meters_Get_MeteredElement(): PAnsiChar; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
 begin
+    Result := NIL;
+    if not _activeObj(pMeterObj) then
+        Exit;
 
-// First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
-    begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        if pMeterObj <> NIL then
-        begin
-            Result := pMeterObj.ElementName;
-        end
-        else
-            Result := '';
-    end
-    else
-    begin
-        Result := '';
-    end;
-
-end;
-
-function Meters_Get_MeteredElement(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Meters_Get_MeteredElement_AnsiString());
+    Result := DSS_GetAsPAnsiChar(pMeterObj.ElementName);
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_MeteredTerminal(): Integer; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
 begin
+    Result := 0;
+    if not _activeObj(pMeterObj) then
+        Exit;
 
-// First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
-    begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        if pMeterObj <> NIL then
-        begin
-            Result := pMeterObj.MeteredTerminal;
-        end
-        else
-            Result := 0;
-    end
-    else
-    begin
-        Result := 0;
-    end;
-
+    Result := pMeterObj.MeteredTerminal;
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Set_MeteredElement(const Value: PAnsiChar); CDECL;
 var
     pMeterObj: TEnergyMeterObj;
 begin
+    if not _activeObj(pMeterObj) then
+        Exit;
 
-// First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
-    begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        if pMeterObj <> NIL then
-        begin
-            pMeterObj.elementName := Value;
-            pMeterObj.MeteredElementChanged := TRUE;
-            pMeterObj.RecalcElementData;
-        end;
-    end;
-
+    pMeterObj.elementName := Value;
+    pMeterObj.MeteredElementChanged := TRUE;
+    pMeterObj.RecalcElementData;
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Set_MeteredTerminal(Value: Integer); CDECL;
 var
     pMeterObj: TEnergyMeterObj;
 begin
+    if not _activeObj(pMeterObj) then
+        Exit;
 
-// First make sure active circuit element is a meter
-    if ActiveCircuit <> NIL then
-    begin
-        pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-        if pMeterObj <> NIL then
-        begin
-            pMeterObj.MeteredTerminal := Value;
-            pMeterObj.MeteredElementChanged := TRUE;
-            pMeterObj.RecalcElementData;
-        end;
-    end;
-
+    pMeterObj.MeteredTerminal := Value;
+    pMeterObj.MeteredElementChanged := TRUE;
+    pMeterObj.RecalcElementData;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_DIFilesAreOpen(): Wordbool; CDECL;
 begin
     Result := False;
-    if ActiveCircuit <> NIL then
-    begin
-        Result := DIFilesAreOpen;    // Global variable
-    end;
+    if InvalidCircuit then
+        Exit;
+    Result := DIFilesAreOpen;    // Global variable
 end;
 //------------------------------------------------------------------------------
 procedure Meters_CloseAllDIFiles(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        EnergyMeterClass.CloseAllDIFiles;
-    end;
+    if InvalidCircuit then
+        Exit;
+    EnergyMeterClass.CloseAllDIFiles;
 end;
 //------------------------------------------------------------------------------
 procedure Meters_OpenAllDIFiles(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        EnergyMeterClass.OpenAllDIFiles;
-    end;
+    if InvalidCircuit then
+        Exit;
+    EnergyMeterClass.OpenAllDIFiles;
 end;
 //------------------------------------------------------------------------------
 procedure Meters_SampleAll(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        EnergyMeterClass.SampleAll;
-    end;
+    if InvalidCircuit then
+        Exit;
+    EnergyMeterClass.SampleAll;
 end;
 //------------------------------------------------------------------------------
 procedure Meters_SaveAll(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        EnergyMeterClass.SaveAll;
-    end;
+    if InvalidCircuit then
+        Exit;
+    EnergyMeterClass.SaveAll;
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_AllEndElements(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
     pMeterObj: TEnergyMeterObj;
-    k, last: Integer;
+    k, num: Integer;
     elem: TDSSCktElement;
     node: TCktTreeNode;
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    if ActiveCircuit = NIL then
+    if not _activeObj(pMeterObj) then
         Exit;
-    with ActiveCircuit do
-    begin
-        pMeterObj := EnergyMeters.Active;
-        if pMeterObj = NIL then
-            Exit;
-        if not pMeterObj.CheckBranchList(5502) then
-            Exit;
-        last := pMeterObj.BranchList.ZoneEndsList.NumEnds - 1;
-        DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (last) + 1);
-        for k := 0 to last do
-        begin
-            pMeterObj.BranchList.ZoneEndsList.Get(k + 1, node);
-            elem := node.CktObject;
-            Result[k] := DSS_CopyStringAsPChar(Format('%s.%s', [elem.ParentClass.Name, elem.Name]));
-        end;
 
+    if not pMeterObj.CheckBranchList(5502) then
+        Exit;
+    
+    if pMeterObj.BranchList.ZoneEndsList = NIL then
+        Exit;
+
+    num := pMeterObj.BranchList.ZoneEndsList.NumEnds;
+    DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, num);
+    for k := 0 to num - 1 do
+    begin
+        pMeterObj.BranchList.ZoneEndsList.Get(k + 1, node);
+        elem := node.CktObject;
+        Result[k] := DSS_CopyStringAsPChar(Format('%s.%s', [elem.ParentClass.Name, elem.Name]));
     end;
 end;
 
@@ -692,21 +554,24 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if not _activeObj(pMeterObj) then
         Exit;
-    pMeterObj := TEnergyMeterObj(ActiveCircuit.EnergyMeters.Active);
-    if pMeterObj = NIL then
-        Exit;
+    
     if not pMeterObj.CheckBranchList(5500) then
         Exit;
+
+    if pMeterObj.BranchList.ZoneEndsList = NIL then
+        Exit;
+
     Result := pMeterObj.BranchList.ZoneEndsList.NumEnds;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        Result := ActiveCircuit.EnergyMeters.ListSize;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.EnergyMeters.ListSize;
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Get_AllBranchesInZone(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -718,33 +583,26 @@ var
     pElem: TDSSCktElement;
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    if ActiveCircuit = NIL then
+    if not _activeObj(pMeterObj) then
         Exit;
 
-    with ActiveCircuit do
-    begin
-        pMeterObj := EnergyMeters.Active;
-        if pMeterObj = NIL then
-            Exit;
+    if not pMeterObj.CheckBranchList(5501) then
+        Exit;
+
     // Get count of branches
-        if not pMeterObj.CheckBranchList(5501) then
-            Exit;
-
-        BranchCount := Meters_Get_CountBranches;
-        if BranchCount > 0 then
-        begin
-            DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, BranchCount);
-            pElem := pMeterObj.BranchList.First;
-            k := 0;
-            while pElem <> NIL do
-            begin
-                Result[k] := DSS_CopyStringAsPChar(Format('%s.%s', [pElem.ParentClass.Name, pElem.Name]));
-                inc(k);
-                pElem := pMeterObj.BranchList.GoForward;
-            end;
-        end;
+    BranchCount := Meters_Get_CountBranches;
+    if BranchCount <= 0 then 
+        Exit;
+        
+    DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, BranchCount);
+    pElem := pMeterObj.BranchList.First;
+    k := 0;
+    while pElem <> NIL do
+    begin
+        Result[k] := DSS_CopyStringAsPChar(Format('%s.%s', [pElem.ParentClass.Name, pElem.Name]));
+        inc(k);
+        pElem := pMeterObj.BranchList.GoForward;
     end;
-
 end;
 
 procedure Meters_Get_AllBranchesInZone_GR(); CDECL;
@@ -754,137 +612,96 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function Meters_Get_CountBranches(): Integer; CDECL;
+function Meters_Get_CountBranches(): Integer; CDECL; //TODO: check -- same as Meters_Get_SeqListSize?
 var
     pMeterObj: TEnergyMeterObj;
   // pelem : TDSSCktElement;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-        begin
-            pMeterObj := EnergyMeters.Active;
-            if pMeterObj <> NIL then
-                Result := pMeterObj.SequenceList.ListSize;
-
+    if not _activeObj(pMeterObj) then
+        Exit;
+        
+    if pMeterObj.SequenceList = NIL then
+        Exit;
+        
+    Result := pMeterObj.SequenceList.ListSize;
     (*
-    If pMeterObj.BranchList <> Nil then Begin
-      // Get count of branches
-      pElem := pMeterObj.BranchList.First;
-      while pElem <> Nil do   Begin
+      while pElem <> Nil do   
+      Begin
          inc(Result);
          pElem := pMeterObj.BranchList.GoForward;
       End;
-    end;
     *)
-
-        end;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SAIFI(): Double; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
-
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-            begin
-                Result := pMeterObj.SAIFI;
-            end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
+
+    Result := pMeterObj.SAIFI;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SequenceIndex(): Integer; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
-
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-            begin
-                Result := pMeterObj.SequenceList.ActiveIndex;
-            end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
+
+    Result := pMeterObj.SequenceList.ActiveIndex;
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Set_SequenceIndex(Value: Integer); CDECL;
 var
     pMeterObj: TEnergyMeterObj;
-
 begin
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-                with pMeterObj do
-                begin
-                    if (Value > 0) and (Value <= SequenceList.ListSize) then
-                        ActiveCktElement := SequenceList.Get(Value)
-                    else
-                        DoSimpleMsg(Format('Invalid index for SequenceList: %d. List size is %d.', [Value, SequenceList.ListSize]), 500501);
-                end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
+
+    with pMeterObj do
+    begin
+        if (Value > 0) and (Value <= SequenceList.ListSize) then
+            ActiveCircuit.ActiveCktElement := SequenceList.Get(Value)
+        else
+            DoSimpleMsg(Format('Invalid index for SequenceList: %d. List size is %d.', [Value, SequenceList.ListSize]), 500501);
+    end;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SAIFIKW(): Double; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
-
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-            begin
-                Result := pMeterObj.SAIFIkW;
-            end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
+
+    Result := pMeterObj.SAIFIkW;
 end;
 //------------------------------------------------------------------------------
 procedure Meters_DoReliabilityCalc(AssumeRestoration: Wordbool); CDECL;
 var
     pMeterObj: TEnergyMeterObj;
-
 begin
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-            begin
-
-                pMeterObj.CalcReliabilityIndices(AssumeRestoration);
-
-            end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
+        
+    pMeterObj.CalcReliabilityIndices(AssumeRestoration);
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SeqListSize(): Integer; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
-
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-            begin
-                Result := pMeterObj.SequenceList.ListSize;
-            end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
+        
+    Result := pMeterObj.SequenceList.ListSize;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_TotalCustomers(): Integer; CDECL;
@@ -894,52 +711,47 @@ var
 
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-            begin
-                PD_Element := pMeterObj.SequenceList.Get(1);
-                if Assigned(PD_Element) then
-                    with PD_Element do
-                        Result := Buses^[Terminals^[FromTerminal].BusRef].BusTotalNumCustomers;
-            end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
+
+    with ActiveCircuit do
+    begin
+        if Buses = NIL then 
+            Exit;
+    
+        pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
+        if pMeterObj = NIL then
+            Exit;
+        
+        PD_Element := pMeterObj.SequenceList.Get(1);
+        if PD_Element = NIL then
+            Exit;
+            
+        with PD_Element do
+            Result := Buses^[Terminals^[FromTerminal].BusRef].BusTotalNumCustomers;
+    end;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SAIDI(): Double; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
-
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-            begin
-                Result := pMeterObj.SAIDI;
-            end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
+    
+    Result := pMeterObj.SAIDI;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_CustInterrupts(): Double; CDECL;
 var
     pMeterObj: TEnergyMeterObj;
-
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-            begin
-                Result := pMeterObj.CustInterrupts;
-            end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
+
+    Result := pMeterObj.CustInterrupts;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_NumSections(): Integer; CDECL;
@@ -947,34 +759,23 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-            begin
-                Result := pMeterObj.SectionCount;
-            end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
+
+    Result := pMeterObj.SectionCount;
 end;
 //------------------------------------------------------------------------------
 procedure Meters_SetActiveSection(SectIdx: Integer); CDECL;
 var
     pMeterObj: TEnergyMeterObj;
 begin
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-            begin
-                if (SectIdx > 0) and (SectIdx <= pMeterObj.SectionCount) then
-                    pMeterObj.ActiveSection := SectIdx
-                else
-                    pMeterObj.ActiveSection := 0;
-            end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
 
+    if (SectIdx > 0) and (SectIdx <= pMeterObj.SectionCount) then
+        pMeterObj.ActiveSection := SectIdx
+    else
+        pMeterObj.ActiveSection := 0;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_AvgRepairTime(): Double; CDECL;
@@ -982,19 +783,16 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-                with pMeterObj do
-                begin
-                    if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].AverageRepairTime
-                    else
-                        InvalidActiveSection();
-                end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
+
+    with pMeterObj do
+    begin
+        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
+            Result := FeederSections^[ActiveSection].AverageRepairTime
+        else
+            InvalidActiveSection();
+    end;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_FaultRateXRepairHrs(): Double; CDECL;
@@ -1002,19 +800,16 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-                with pMeterObj do
-                begin
-                    if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].SumFltRatesXRepairHrs
-                    else
-                        InvalidActiveSection();
-                end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
+
+    with pMeterObj do
+    begin
+        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
+            Result := FeederSections^[ActiveSection].SumFltRatesXRepairHrs
+        else
+            InvalidActiveSection();
+    end;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_NumSectionBranches(): Integer; CDECL;
@@ -1022,19 +817,16 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-                with pMeterObj do
-                begin
-                    if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].NBranches
-                    else
-                        InvalidActiveSection();
-                end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
+
+    with pMeterObj do
+    begin
+        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
+            Result := FeederSections^[ActiveSection].NBranches
+        else
+            InvalidActiveSection();
+    end;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_NumSectionCustomers(): Integer; CDECL;
@@ -1042,19 +834,16 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-                with pMeterObj do
-                begin
-                    if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].NCustomers
-                    else
-                        InvalidActiveSection();
-                end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
+        
+    with pMeterObj do
+    begin
+        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
+            Result := FeederSections^[ActiveSection].NCustomers
+        else
+            InvalidActiveSection();
+    end;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_OCPDeviceType(): Integer; CDECL;
@@ -1062,19 +851,16 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-                with pMeterObj do
-                begin
-                    if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].OCPDeviceType
-                    else
-                        InvalidActiveSection();
-                end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
+    
+    with pMeterObj do
+    begin
+        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
+            Result := FeederSections^[ActiveSection].OCPDeviceType
+        else
+            InvalidActiveSection();
+    end;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SumBranchFltRates(): Double; CDECL;
@@ -1082,20 +868,16 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0.0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-                with pMeterObj do
-                begin
-                    if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].SumBranchFltRates
-                    else
-                        InvalidActiveSection();
-                end;
-        end;
-
+    if not _activeObj(pMeterObj) then
+        Exit;
+    
+    with pMeterObj do
+    begin
+        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
+            Result := FeederSections^[ActiveSection].SumBranchFltRates
+        else
+            InvalidActiveSection();
+    end;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SectSeqIdx(): Integer; CDECL;
@@ -1103,20 +885,16 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-                with pMeterObj do
-                begin
-                    if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].SeqIndex
-                    else
-                        InvalidActiveSection();
-                end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
 
+    with pMeterObj do
+    begin
+        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
+            Result := FeederSections^[ActiveSection].SeqIndex
+        else
+            InvalidActiveSection();
+    end;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_SectTotalCust(): Integer; CDECL;
@@ -1124,36 +902,31 @@ var
     pMeterObj: TEnergyMeterObj;
 begin
     Result := 0;
-    if Assigned(ActiveCircuit) then
-        with ActiveCircuit do
-        begin
-            pMeterObj := TEnergyMeterObj(EnergyMeters.Active);
-            if pMeterObj <> NIL then
-                with pMeterObj do
-                begin
-                    if ActiveSection > 0 then
-                        Result := FeederSections^[ActiveSection].TotalCustomers
-                    else
-                        InvalidActiveSection();
-                end;
-        end;
+    if not _activeObj(pMeterObj) then
+        Exit;
 
-
+    with pMeterObj do
+    begin
+        if (ActiveSection > 0) and (ActiveSection <= SectionCount) then
+            Result := FeederSections^[ActiveSection].TotalCustomers
+        else
+            InvalidActiveSection();
+    end;
 end;
 //------------------------------------------------------------------------------
 function Meters_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.EnergyMeters.ActiveIndex
-    else
-        Result := 0
+    Result := 0;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.EnergyMeters.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure Meters_Set_idx(Value: Integer); CDECL;
 var
     pEnergyMeter: TEnergyMeterObj;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     pEnergyMeter := ActiveCircuit.EnergyMeters.Get(Value);
     if pEnergyMeter = NIL then

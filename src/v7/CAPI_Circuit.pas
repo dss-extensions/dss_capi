@@ -96,39 +96,37 @@ uses
     SolutionAlgs,
     KLUSolve;
 
-function Circuit_Get_Name_AnsiString(): Ansistring; inline;
-begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.Name
-    else
-        Result := '';
-end;
-
+//------------------------------------------------------------------------------
 function Circuit_Get_Name(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Circuit_Get_Name_AnsiString());
+    Result := NIL;
+    if InvalidCircuit then
+        Exit;
+    Result := DSS_GetAsPAnsiChar(ActiveCircuit.Name)
 end;
 //------------------------------------------------------------------------------
 function Circuit_Get_NumBuses(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.NumBuses
-    else
-        Result := 0;
+    Result := 0;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.NumBuses
 end;
 //------------------------------------------------------------------------------
 function Circuit_Get_NumCktElements(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.NumDevices;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.NumDevices;
 end;
 //------------------------------------------------------------------------------
 function Circuit_Get_NumNodes(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.NumNodes;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.NumNodes;
 end;
 //------------------------------------------------------------------------------
 procedure Circuit_Get_LineLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -136,26 +134,22 @@ var
     Result: PDoubleArray;
     pLine: TLineObj;
     Loss: Complex;
-    V: PDoubleArray;
-
 begin
-    V := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (1) + 1);
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+    if InvalidCircuit then
+        Exit;
+    with ActiveCircuit do
+    begin
+        pLine := Lines.First;
+        Loss := Cmplx(0.0, 0.0);
+        while pLine <> NIL do
         begin
-            pLine := Lines.First;
-            Loss := Cmplx(0.0, 0.0);
-            while pLine <> NIL do
-            begin
-                CAccum(Loss, pLine.Losses);
-                pLine := Lines.Next;
-            end;
-            V[0] := Loss.re * 0.001;
-            V[1] := Loss.im * 0.001;
+            CAccum(Loss, pLine.Losses);
+            pLine := Lines.Next;
         end;
-
-    Result := V;
-
+        Result[0] := Loss.re * 0.001;
+        Result[1] := Loss.im * 0.001;
+    end;
 end;
 
 procedure Circuit_Get_LineLosses_GR(); CDECL;
@@ -170,17 +164,16 @@ var
     Result: PDoubleArray;
     LossValue: complex;
 begin
-
-    if ActiveCircuit <> NIL then
+    if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-        LossValue := ActiveCircuit.Losses;
-        Result[0] := LossValue.re;
-        Result[1] := LossValue.im;
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
-    Result[0] := 0;
+
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
+    LossValue := ActiveCircuit.Losses;
+    Result[0] := LossValue.re;
+    Result[1] := LossValue.im;
 end;
 
 procedure Circuit_Get_Losses_GR(); CDECL;
@@ -196,7 +189,7 @@ var
     i, j, k: Integer;
 
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -230,7 +223,7 @@ var
     Volts: Complex;
 
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -266,7 +259,7 @@ var
     i: Integer;
 
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
         Exit;
@@ -297,12 +290,8 @@ var
     Loss: Complex;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-    if ActiveCircuit = NIL then 
-    begin
-        Result[0] := 0.0;
-        Result[1] := 0.0;
+    if InvalidCircuit then 
         Exit;
-    end;
     
     with ActiveCircuit do
     begin
@@ -336,12 +325,8 @@ var
     cPower: Complex;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-    if ActiveCircuit = NIL then
-    begin
-        Result[0] := 0.0;
-        Result[1] := 0.0;
+    if InvalidCircuit then
         Exit;
-    end;
     
     with ActiveCircuit do
     begin
@@ -366,7 +351,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Circuit_Disable(const Name: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
         
     with ActiveCircuit do
@@ -379,7 +364,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Circuit_Enable(const Name: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
 
     with ActiveCircuit do
@@ -397,7 +382,7 @@ var
 { Returns first enabled element}
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
         
     p := ActiveCircuit.PCElements.First;
@@ -421,7 +406,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
         
     ActivePDElement := ActiveCircuit.PDElements.First;
@@ -445,7 +430,7 @@ var
 
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
         
     p := ActiveCircuit.PCElements.Next;
@@ -468,7 +453,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
         
     ActivePDElement := ActiveCircuit.PDElements.Next;
@@ -493,9 +478,9 @@ var
     i: Integer;
 
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
         Exit;
     end;
     with ActiveCircuit do
@@ -522,9 +507,9 @@ var
     pCktElem: TDSSCktElement;
     i: Integer;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
     with ActiveCircuit do
@@ -579,7 +564,7 @@ end;
 function Circuit_SetActiveElement(const FullName: PAnsiChar): Integer; CDECL;
 begin
     Result := -1;
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
         DoSimpleMsg('Create a circuit before trying to set an element active!', 5015);
         Exit;
@@ -590,7 +575,7 @@ end;
 //------------------------------------------------------------------------------
 function Circuit_Capacity(Start, Increment: Double): Double; CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
         Result := 0.0;
         Exit;
@@ -611,11 +596,10 @@ var
     Result: PDoubleArray;
     i, j, k: Integer;
     Volts, BaseFactor: Double;
-
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
     with ActiveCircuit do
@@ -658,7 +642,7 @@ function Circuit_SetActiveBusi(BusIndex: Integer): Integer; CDECL;
 { BusIndex is Zero Based}
 begin
     Result := -1;   // Signifies Error
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
 
     with ActiveCircuit do
@@ -679,9 +663,9 @@ var
     i, j, k: Integer;
     BusName: String;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1); 
+        DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1); 
         Exit;
     end;
     with ActiveCircuit do
@@ -723,9 +707,9 @@ var
 
 begin
     { Return zero length Array if no circuit or no Y matrix}
-    if (ActiveCircuit = NIL) or (ActiveCircuit.Solution.hY = 0) then
+    if (InvalidCircuit) or (ActiveCircuit.Solution.hY = 0) then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
     with ActiveCircuit do
@@ -775,9 +759,9 @@ var
     i: Integer;
 
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
     with ActiveCircuit do
@@ -803,11 +787,10 @@ procedure Circuit_Get_AllNodeDistances(var ResultPtr: PDouble; ResultCount: PInt
 var
     Result: PDoubleArray;
     i, j, k: Integer;
-
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
     with ActiveCircuit do
@@ -837,9 +820,9 @@ var
     Result: PDoubleArray;
     i, k, NodeIdx: Integer;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
     
@@ -877,9 +860,9 @@ var
     Result: PDoubleArray;
     i, k, NodeIdx: Integer;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
     with ActiveCircuit do
@@ -917,9 +900,9 @@ var
     i, k, NodeIdx: Integer;
     BaseFactor: Double;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
     
@@ -963,9 +946,9 @@ var
     Temp: Array of String;
 
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
         Exit;
     end;
     
@@ -1023,7 +1006,7 @@ function Circuit_FirstElement(): Integer; CDECL;
 { Sets first element in active class to be active}
 begin
     Result := 0;
-    if (ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
+    if (not InvalidCircuit) and Assigned(ActiveDSSClass) then
         Result := ActiveDSSClass.First;
 end;
 //------------------------------------------------------------------------------
@@ -1031,7 +1014,7 @@ function Circuit_NextElement(): Integer; CDECL;
 { Sets next element in active class to be active}
 begin
     Result := 0;
-    if (ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
+    if (not InvalidCircuit) and Assigned(ActiveDSSClass) then
         Result := ActiveDSSClass.Next;
 end;
 //------------------------------------------------------------------------------
@@ -1046,7 +1029,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
 
     with ActiveCircuit do
@@ -1072,7 +1055,7 @@ var
     i, k: Integer;
 
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
         Exit;
@@ -1101,18 +1084,17 @@ end;
 //------------------------------------------------------------------------------
 procedure Circuit_Get_YCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
-    Result: PDoubleArray;
     CResultPtr: pComplex;
     i: Integer;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
     with ActiveCircuit do
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumNodes);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumNodes);
         CResultPtr := pComplex(ResultPtr);
         for i := 1 to NumNodes do
         begin
@@ -1131,18 +1113,17 @@ end;
 //------------------------------------------------------------------------------
 procedure Circuit_Get_YNodeVarray(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 var
-    Result: PDoubleArray;
     CResultPtr: pComplex;
     i: Integer;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
-        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
     end;
         with ActiveCircuit do
         begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumNodes);
+            DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NumNodes);
             CResultPtr := pComplex(ResultPtr);
             for i := 1 to NumNodes do
             begin
@@ -1161,7 +1142,7 @@ end;
 //------------------------------------------------------------------------------
 procedure Circuit_SetCktElementIndex(const Value: Integer); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
     begin
         DoSimpleMsg('Create a circuit before trying to set an element active!', 5015);
         Exit;

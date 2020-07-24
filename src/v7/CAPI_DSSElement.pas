@@ -24,24 +24,21 @@ var
     Result: PPAnsiCharArray;
     k: Integer;
 begin
-    Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (0) + 1);
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
+    if (InvalidCircuit) or (ActiveDSSObject = NIL) then
+    begin
+        DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+        
+    with ActiveDSSObject do
+        with ParentClass do
         begin
-            if ActiveDSSObject <> NIL then
-                with ActiveDSSObject do
-                begin
-                    with ParentClass do
-                    begin
-                        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, (NumProperties - 1) + 1);
-                        for k := 1 to NumProperties do
-                        begin
-                            Result[k - 1] := DSS_CopyStringAsPChar(PropertyName^[k]);
-                        end;
-                    end;
-                end
+            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumProperties);
+            for k := 1 to NumProperties do
+            begin
+                Result[k - 1] := DSS_CopyStringAsPChar(PropertyName^[k]);
+            end;
         end;
-
 end;
 
 procedure DSSElement_Get_AllPropertyNames_GR(); CDECL;
@@ -51,35 +48,23 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function DSSElement_Get_Name_AnsiString(): Ansistring; inline;
-begin
-    if ActiveCircuit <> NIL then
-        if ActiveDSSObject <> NIL then
-            with ActiveDSSObject do
-            begin
-                Result := ParentClass.Name + '.' + Name;
-            end
-        else
-            Result := '';
-end;
-
 function DSSElement_Get_Name(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(DSSElement_Get_Name_AnsiString());
+    Result := NIL;
+    if (InvalidCircuit) or (ActiveDSSObject = NIL) then
+        Exit;
+    with ActiveDSSObject do
+        Result := DSS_GetAsPAnsiChar(ParentClass.Name + '.' + Name);
 end;
 //------------------------------------------------------------------------------
 function DSSElement_Get_NumProperties(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        with ActiveCircuit do
-        begin
-            if ActiveDSSObject <> NIL then
-                with ActiveDSSObject do
-                begin
-                    Result := ParentClass.NumProperties;
-                end
-        end;
+    if (InvalidCircuit) or (ActiveDSSObject = NIL) then
+        Exit;
+        
+    with ActiveDSSObject do
+        Result := ParentClass.NumProperties;
 end;
 //------------------------------------------------------------------------------
 end.

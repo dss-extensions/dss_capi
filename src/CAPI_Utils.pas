@@ -90,14 +90,30 @@ function DSS_RecreateArray_PPAnsiChar(var p: PPAnsiChar; cnt: PInteger; const in
 // this just gets a single string from the pointer of strings
 function DSS_Get_PAnsiChar(var p: Pointer; Index: Integer): PAnsiChar; CDECL;
 
-procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger; pList: TPointerList; Restore: Boolean); inline;
+procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger; pList: TPointerList; const Restore: Boolean); inline;
+
+function InvalidCircuit(): Boolean; inline;
 
 implementation
 
-Uses DSSObject;
+Uses DSSObject, DSSGlobals;
 
 var
     tempBuffer: Ansistring;
+
+function InvalidCircuit(): Boolean; inline;
+begin
+    if ActiveCircuit = NIL then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg('There is no active circuit! Create a circuit and retry.', 8888);
+        end;
+        Result := True;
+        Exit;
+    end;
+    Result := False;
+end;
 
 function DSS_CopyStringAsPChar(s: Ansistring): PAnsiChar;
 begin
@@ -332,7 +348,7 @@ begin
     GR_CountPtr_PByte[1] := 0;
 end;
 //------------------------------------------------------------------------------
-procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger; pList: TPointerList; Restore: Boolean); inline;
+procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger; pList: TPointerList; const Restore: Boolean); inline;
 var
     Result: PPAnsiCharArray;
     idx_before, k: Integer;
@@ -341,8 +357,7 @@ begin
     if pList.ListSize <= 0 then
         Exit;
     DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, pList.ListSize);
-    if Restore then 
-        idx_before := pList.ActiveIndex;
+    idx_before := pList.ActiveIndex;
     k := 0;
     elem := pList.First;
     while elem <> NIL do

@@ -59,77 +59,83 @@ uses
     ParserDel,
     Ucomplex;
 
+//------------------------------------------------------------------------------
+function _activeObj(out obj: TLineCodeObj): Boolean; inline;
+begin
+    Result := False;
+    obj := NIL;
+    if InvalidCircuit then
+        Exit;
+    
+    obj := LineCodeClass.GetActiveObj;
+    if obj = NIL then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg('No active LineCode object found! Activate one and retry.', 8989);
+        end;
+        Exit;
+    end;
+    
+    Result := True;
+end;
+//------------------------------------------------------------------------------
 function LineCodes_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := LineCodeClass.ElementCount;
+    if InvalidCircuit then
+        Exit;
+    Result := LineCodeClass.ElementCount;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_First(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := LineCodeClass.First;
+    if InvalidCircuit then
+        Exit;
+    Result := LineCodeClass.First;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_Next(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := LineCodeClass.Next;
+    if InvalidCircuit then
+        Exit;
+    Result := LineCodeClass.Next;
 end;
 //------------------------------------------------------------------------------
-function LineCodes_Get_Name_AnsiString(): Ansistring; inline;
+function LineCodes_Get_Name(): PAnsiChar; CDECL;
 var
     pLineCode: TLineCodeObj;
-
 begin
-    Result := '';  // signify no name
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        if pLineCode <> NIL then
-        begin
-            Result := pLineCode.Name;
-        end;
-    end;
-
-end;
-
-function LineCodes_Get_Name(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(LineCodes_Get_Name_AnsiString());
+    Result := NIL;  // signify no name
+    if not _activeObj(pLineCode) then
+        Exit;
+    
+    Result := DSS_GetAsPAnsiChar(pLineCode.Name);
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_Name(const Value: PAnsiChar); CDECL;
 // set LineCode active by name
-
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        if not LineCodeClass.SetActive(Value) then
-            DoSimpleMsg('LineCode "' + Value + '" Not Found in Active Circuit.', 51008);
+    if InvalidCircuit then
+        Exit;
+        
+    if not LineCodeClass.SetActive(Value) then
+        DoSimpleMsg('LineCode "' + Value + '" Not Found in Active Circuit.', 51008);
 
-         // Still same active object if not found
-    end;
-
+    // Still same active object if not found
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_IsZ1Z0(): Wordbool; CDECL;
 var
     pLineCode: TLineCodeObj;
-
 begin
     Result := TRUE;
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        if pLineCode <> NIL then
-        begin
-            Result := pLineCode.SymComponentsModel;
-        end;
-    end;
+    if not _activeObj(pLineCode) then
+        Exit;
+    
+    Result := pLineCode.SymComponentsModel;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_Units(): Integer; CDECL;
@@ -137,33 +143,28 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        Result := pLineCode.Units;
-    end
+    if not _activeObj(pLineCode) then
+        Exit;
+    
+    Result := pLineCode.Units;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_Units(Value: Integer); CDECL;
 var
     pLineCode: TLineCodeObj;
-
 begin
+    if not _activeObj(pLineCode) then
+        Exit;
 
-    if ActiveCircuit <> NIL then
+    with pLineCode do
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        with pLineCode do
+        if Value < dssLineUnitsMaxnum then
         begin
-            if Value < dssLineUnitsMaxnum then
-            begin
-                Parser.CmdString := Format('units=%s', [LineUnitsStr(Value)]);
-                Edit;
-            end
-            else
-                DoSimpleMsg('Invalid line units integer sent via COM interface.  Please enter a value within range.', 183);
-
-        end;
+            Parser.CmdString := Format('units=%s', [LineUnitsStr(Value)]);
+            Edit;
+        end
+        else
+            DoSimpleMsg('Invalid line units integer sent via COM interface.  Please enter a value within range.', 183);
     end;
 end;
 //------------------------------------------------------------------------------
@@ -172,24 +173,20 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        Result := pLineCode.FNPhases;
-    end
-
+    if not _activeObj(pLineCode) then
+        Exit;
+        
+    Result := pLineCode.FNPhases;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_Phases(Value: Integer); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        pLineCode.NumPhases := Value;   // use property value to force reallocations
-    end
+    if not _activeObj(pLineCode) then
+        Exit;
 
+    pLineCode.NumPhases := Value;   // use property value to force reallocations
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_R1(): Double; CDECL;
@@ -197,30 +194,21 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        Result := pLineCode.R1;
-    end
+    if not _activeObj(pLineCode) then
+        Exit;
 
+    Result := pLineCode.R1;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_R1(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
-
 begin
+    if not _activeObj(pLineCode) then
+        Exit;
 
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        with pLineCode do
-        begin
-            Parser.CmdString := Format('R1=%g', [Value]);
-            Edit;
-        end;
-    end;
-
+    Parser.CmdString := Format('R1=%g', [Value]);
+    pLineCode.Edit;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_X1(): Double; CDECL;
@@ -228,30 +216,21 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        Result := pLineCode.X1;
-    end
+    if not _activeObj(pLineCode) then
+        Exit;
 
+    Result := pLineCode.X1;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_X1(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
-
 begin
+    if not _activeObj(pLineCode) then
+        Exit;
 
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        with pLineCode do
-        begin
-            Parser.CmdString := Format('X1=%g', [Value]);
-            Edit;
-        end;
-    end;
-
+    Parser.CmdString := Format('X1=%g', [Value]);
+    pLineCode.Edit;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_R0(): Double; CDECL;
@@ -259,62 +238,43 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        Result := pLineCode.R0;
-    end
-
+    if not _activeObj(pLineCode) then
+        Exit;
+    
+    Result := pLineCode.R0;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_X0(): Double; CDECL;
 var
     pLineCode: TLineCodeObj;
-
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        Result := pLineCode.X0;
-    end
+    if not _activeObj(pLineCode) then
+        Exit;
 
+    Result := pLineCode.X0;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_R0(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
-
 begin
+    if not _activeObj(pLineCode) then
+        Exit;
 
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        with pLineCode do
-        begin
-            Parser.CmdString := Format('R0=%g', [Value]);
-            Edit;
-        end;
-    end;
-
+    Parser.CmdString := Format('R0=%g', [Value]);
+    pLineCode.Edit;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_X0(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
-
 begin
+    if not _activeObj(pLineCode) then
+        Exit;
 
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        with pLineCode do
-        begin
-            Parser.CmdString := Format('X0=%g', [Value]);
-            Edit;
-        end;
-    end;
-
+    Parser.CmdString := Format('X0=%g', [Value]);
+    pLineCode.Edit;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_C0(): Double; CDECL;
@@ -322,12 +282,10 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        Result := pLineCode.C0;
-    end
+    if not _activeObj(pLineCode) then
+        Exit;
 
+    Result := pLineCode.C0;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_C1(): Double; CDECL;
@@ -335,48 +293,32 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        Result := pLineCode.C1;
-    end
+    if not _activeObj(pLineCode) then
+        Exit;
 
+    Result := pLineCode.C1;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_C0(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
-
 begin
+    if not _activeObj(pLineCode) then
+        Exit;
 
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        with pLineCode do
-        begin
-            Parser.CmdString := Format('C0=%g', [Value]);
-            Edit;
-        end;
-    end;
-
+    Parser.CmdString := Format('C0=%g', [Value]);
+    pLineCode.Edit;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_C1(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
-
 begin
+    if not _activeObj(pLineCode) then
+        Exit;
 
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        with pLineCode do
-        begin
-            Parser.CmdString := Format('C1=%g', [Value]);
-            Edit;
-        end;
-    end;
-
+    Parser.CmdString := Format('C1=%g', [Value]);
+    pLineCode.Edit;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Get_Cmatrix(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -385,27 +327,25 @@ var
     i, j, k: Integer;
     pLineCode: TLineCodeObj;
     Factor: Double;
-
 begin
-
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if ActiveCircuit <> NIL then
+    if not _activeObj(pLineCode) then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        with pLineCode do
-        begin
-            Factor := (TwoPi * BaseFrequency * 1.0e-9);
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(FNphases) - 1) + 1);
-            k := 0;
-            for i := 1 to FNPhases do
-                for j := 1 to FNphases do
-                begin
-                    Result[k] := YC.GetElement(i, j).im / Factor;
-                    Inc(k);
-                end;
-        end;
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
     end;
 
+    with pLineCode do
+    begin
+        Factor := (TwoPi * BaseFrequency * 1.0e-9);
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Sqr(FNphases));
+        k := 0;
+        for i := 1 to FNPhases do
+            for j := 1 to FNphases do
+            begin
+                Result[k] := YC.GetElement(i, j).im / Factor;
+                Inc(k);
+            end;
+    end;
 end;
 
 procedure LineCodes_Get_Cmatrix_GR(); CDECL;
@@ -422,24 +362,23 @@ var
     pLineCode: TLineCodeObj;
 
 begin
-
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if ActiveCircuit <> NIL then
+    if not _activeObj(pLineCode) then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        with pLineCode do
-        begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(FNphases) - 1) + 1);
-            k := 0;
-            for i := 1 to FNPhases do
-                for j := 1 to FNphases do
-                begin
-                    Result[k] := Z.GetElement(i, j).re;
-                    Inc(k);
-                end;
-        end;
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
     end;
 
+    with pLineCode do
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Sqr(FNphases));
+        k := 0;
+        for i := 1 to FNPhases do
+            for j := 1 to FNphases do
+            begin
+                Result[k] := Z.GetElement(i, j).re;
+                Inc(k);
+            end;
+    end;
 end;
 
 procedure LineCodes_Get_Rmatrix_GR(); CDECL;
@@ -456,23 +395,23 @@ var
     pLineCode: TLineCodeObj;
 
 begin
-    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (0) + 1);
-    if ActiveCircuit <> NIL then
+    if not _activeObj(pLineCode) then
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        with pLineCode do
-        begin
-            Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, (Sqr(FNphases) - 1) + 1);
-            k := 0;
-            for i := 1 to FNPhases do
-                for j := 1 to FNphases do
-                begin
-                    Result[k] := Z.GetElement(i, j).im;
-                    Inc(k);
-                end;
-        end;
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
     end;
 
+    with pLineCode do
+    begin
+        Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, Sqr(FNphases));
+        k := 0;
+        for i := 1 to FNPhases do
+            for j := 1 to FNphases do
+            begin
+                Result[k] := Z.GetElement(i, j).im;
+                Inc(k);
+            end;
+    end;
 end;
 
 procedure LineCodes_Get_Xmatrix_GR(); CDECL;
@@ -488,26 +427,32 @@ var
     i, j, k: Integer;
     Factor: Double;
     pLineCode: TLineCodeObj;
-
 begin
+    if not _activeObj(pLineCode) then
+        Exit;
+
     Value := PDoubleArray(ValuePtr);
 
-    if ActiveCircuit <> NIL then
+    with pLineCode do
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        with pLineCode do
+        if (FNPhases * FNPhases) <> ValueCount then
         begin
-            Factor := TwoPi * BaseFrequency * 1.0e-9;
-            k := (0);
-            for i := 1 to FNPhases do
-                for j := 1 to FNphases do
-                begin
-                    Yc.SetElement(i, j, Cmplx(0.0, Value[k] * Factor));
-                    Inc(k);
-                end;
+            DoSimpleMsg(Format(
+                'The number of values provided (%d) does not match the expected (%d).', 
+                [ValueCount, FNPhases * FNPhases]
+            ), 183);
+            Exit;
         end;
+    
+        Factor := TwoPi * BaseFrequency * 1.0e-9;
+        k := 0;
+        for i := 1 to FNPhases do
+            for j := 1 to FNphases do
+            begin
+                Yc.SetElement(i, j, Cmplx(0.0, Value[k] * Factor));
+                Inc(k);
+            end;
     end;
-
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_Rmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
@@ -518,24 +463,31 @@ var
     Ztemp: complex;
 
 begin
+    if not _activeObj(pLineCode) then
+        Exit;
+
     Value := PDoubleArray(ValuePtr);
 
-    if ActiveCircuit <> NIL then
+    with pLineCode do
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        with pLineCode do
+        if (FNPhases * FNPhases) <> ValueCount then
         begin
-            k := (0);
-            for i := 1 to FNPhases do
-                for j := 1 to FNphases do
-                begin
-                    ZTemp := Z.GetElement(i, j);
-                    Z.SetElement(i, j, Cmplx(Value[k], ZTemp.im));
-                    Inc(k);
-                end;
+            DoSimpleMsg(Format(
+                'The number of values provided (%d) does not match the expected (%d).', 
+                [ValueCount, FNPhases * FNPhases]
+            ), 183);
+            Exit;
         end;
-    end;
 
+        k := 0;
+        for i := 1 to FNPhases do
+            for j := 1 to FNphases do
+            begin
+                ZTemp := Z.GetElement(i, j);
+                Z.SetElement(i, j, Cmplx(Value[k], ZTemp.im));
+                Inc(k);
+            end;
+    end;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_Xmatrix(ValuePtr: PDouble; ValueCount: Integer); CDECL;
@@ -546,24 +498,31 @@ var
     Ztemp: complex;
 
 begin
+    if not _activeObj(pLineCode) then
+        Exit;
+
     Value := PDoubleArray(ValuePtr);
 
-    if ActiveCircuit <> NIL then
+    with pLineCode do
     begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        with pLineCode do
+        if (FNPhases * FNPhases) <> ValueCount then
         begin
-            k := (0);
-            for i := 1 to FNPhases do
-                for j := 1 to FNphases do
-                begin
-                    ZTemp := Z.GetElement(i, j);
-                    Z.SetElement(i, j, Cmplx(ZTemp.re, Value[k]));
-                    Inc(k);
-                end;
+            DoSimpleMsg(Format(
+                'The number of values provided (%d) does not match the expected (%d).', 
+                [ValueCount, FNPhases * FNPhases]
+            ), 183);
+            Exit;
         end;
+    
+        k := 0;
+        for i := 1 to FNPhases do
+            for j := 1 to FNphases do
+            begin
+                ZTemp := Z.GetElement(i, j);
+                Z.SetElement(i, j, Cmplx(ZTemp.re, Value[k]));
+                Inc(k);
+            end;
     end;
-
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_NormAmps(): Double; CDECL;
@@ -571,24 +530,20 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        Result := pLineCode.NormAmps;
-    end
+    if not _activeObj(pLineCode) then
+        Exit;
 
+    Result := pLineCode.NormAmps;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_NormAmps(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        pLineCode.NormAmps := Value;
-    end
+    if not _activeObj(pLineCode) then
+        Exit;
 
+    pLineCode.NormAmps := Value;
 end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_EmergAmps(): Double; CDECL;
@@ -596,24 +551,20 @@ var
     pLineCode: TLineCodeObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        Result := pLineCode.EmergAmps;
-    end
+    if not _activeObj(pLineCode) then
+        Exit;
 
+    Result := pLineCode.EmergAmps;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Set_EmergAmps(Value: Double); CDECL;
 var
     pLineCode: TLineCodeObj;
 begin
-    if ActiveCircuit <> NIL then
-    begin
-        pLineCode := LineCodeClass.GetActiveObj;
-        pLineCode.EmergAmps := Value;
-    end
-
+    if not _activeObj(pLineCode) then
+        Exit;
+        
+    pLineCode.EmergAmps := Value;
 end;
 //------------------------------------------------------------------------------
 procedure LineCodes_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -622,7 +573,7 @@ var
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, LineCodeClass.ElementList, False);
 end;
@@ -636,6 +587,9 @@ end;
 //------------------------------------------------------------------------------
 function LineCodes_Get_idx(): Integer; CDECL;
 begin
+    Result := 0;
+    if InvalidCircuit then
+        Exit;
     Result := LineCodeClass.ElementList.ActiveIndex
 end;
 //------------------------------------------------------------------------------

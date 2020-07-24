@@ -75,13 +75,12 @@ INTERFACE
             FUNCTION  Get_PendingChange(DevIndex: Integer):Integer;
             FUNCTION  ReturnElementsList:String;
             PROCEDURE UpdateExpControl(i:integer);
-    protected
-            PROCEDURE Set_Enabled(Value:Boolean);Override;
     public
 
             constructor Create(ParClass:TDSSClass; const ExpControlName:String);
             destructor  Destroy; override;
 
+            PROCEDURE Set_Enabled(Value:Boolean);Override;
             PROCEDURE   MakePosSequence; Override;  // Make a positive Sequence Model
             PROCEDURE   RecalcElementData; Override;
             PROCEDURE   CalcYPrim; Override;    // Always Zero for an ExpControl

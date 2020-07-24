@@ -6095,6 +6095,26 @@ extern "C" {
     */
     DSS_CAPI_V7_DLL uint16_t Error_Get_EarlyAbort(void);
     DSS_CAPI_V7_DLL void Error_Set_EarlyAbort(uint16_t Value);
+    
+    /*
+    Gets/controls the extended error behavior.
+    Extended errors are errors derived from checks across the API to ensure
+    a valid state. Although many of these checks are already present in the 
+    original/official COM interface, the checks do not produce any error 
+    message. An error value can be returned by a function but this value
+    can, for many of the functions, be a valid value. As such, the user
+    has no means to detect an invalid API call. 
+    
+    Extended errors use the Error interface to provide a more clear message
+    and should help users, especially new users, to find usage issues earlier.
+    
+    The current default state is ON. For compatibility, the user can turn it
+    off to restore the previous behavior.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL uint16_t Error_Get_ExtendedErrors(void);
+    DSS_CAPI_V7_DLL void Error_Set_ExtendedErrors(uint16_t Value);
 
     DSS_CAPI_V7_DLL int32_t CNData_Get_idx(void);
     DSS_CAPI_V7_DLL void CNData_Set_idx(int32_t Value);

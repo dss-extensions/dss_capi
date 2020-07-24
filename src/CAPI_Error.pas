@@ -9,9 +9,13 @@ uses
 
 function Error_Get_Description(): PAnsiChar; CDECL;
 function Error_Get_Number(): Integer; CDECL;
+
+// API Extensions
 function Error_Get_NumberPtr(): PInteger; CDECL;
 function Error_Get_EarlyAbort(): Wordbool; CDECL;
 procedure Error_Set_EarlyAbort(Value: Wordbool); CDECL;
+function Error_Get_ExtendedErrors(): Wordbool; CDECL;
+procedure Error_Set_ExtendedErrors(Value: Wordbool); CDECL;
 
 implementation
 
@@ -49,6 +53,16 @@ end;
 procedure Error_Set_EarlyAbort(Value: Wordbool); CDECL;
 begin
     DSS_CAPI_EARLY_ABORT := Value;
+end;
+//------------------------------------------------------------------------------
+function Error_Get_ExtendedErrors(): Wordbool; CDECL;
+begin
+    Result := DSS_CAPI_EXT_ERRORS;
+end;
+//------------------------------------------------------------------------------
+procedure Error_Set_ExtendedErrors(Value: Wordbool); CDECL;
+begin
+    DSS_CAPI_EXT_ERRORS := Value;
 end;
 //------------------------------------------------------------------------------
 end.

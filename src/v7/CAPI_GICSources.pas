@@ -45,13 +45,33 @@ uses
     CktElement,
     SysUtils;
 //------------------------------------------------------------------------------
+function _activeObj(out obj: TGICSourceObj): Boolean; inline;
+begin
+    Result := False;
+    obj := NIL;
+    if InvalidCircuit then
+        Exit;
+    
+    obj := GICsourceClass.ElementList.Active;
+    if obj = NIL then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg('No active GICSource object found! Activate one and retry.', 8989);
+        end;
+        Exit;
+    end;
+    
+    Result := True;
+end;
+//------------------------------------------------------------------------------
 procedure GICSources_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 var
     Result: PPAnsiCharArray;
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
     Result[0] := DSS_CopyStringAsPChar('NONE');
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     Generic_Get_AllNames(ResultPtr, ResultCount, GICsourceClass.ElementList, True);
 end;
@@ -65,8 +85,9 @@ end;
 function GICSources_Get_Count(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := GICsourceClass.ElementList.ListSize;
+    if InvalidCircuit then
+        Exit;
+    Result := GICsourceClass.ElementList.ListSize;
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_First(): Integer; CDECL;
@@ -74,20 +95,22 @@ var
     pElem: TGICSourceObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pElem := GICsourceClass.ElementList.First;
-        if pElem <> NIL then
-            repeat
-                if pElem.Enabled then
-                begin
-                    ActiveCircuit.ActiveCktElement := pElem;
-                    Result := 1;
-                end
-                else
-                    pElem := GICsourceClass.ElementList.Next;
-            until (Result = 1) or (pElem = NIL);
-    end;
+    if InvalidCircuit then
+        Exit;
+
+    pElem := GICsourceClass.ElementList.First;
+    if pElem = NIL then
+        Exit;
+        
+    repeat
+        if pElem.Enabled then
+        begin
+            ActiveCircuit.ActiveCktElement := pElem;
+            Result := 1;
+        end
+        else
+            pElem := GICsourceClass.ElementList.Next;
+    until (Result = 1) or (pElem = NIL);
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Next(): Integer; CDECL;
@@ -95,42 +118,39 @@ var
     pElem: TGICSourceObj;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        pElem := GICsourceClass.ElementList.Next;
-        if pElem <> NIL then
-            repeat
-                if pElem.Enabled then
-                begin
-                    ActiveCircuit.ActiveCktElement := pElem;
-                    Result := GICsourceClass.ElementList.ActiveIndex;
-                end
-                else
-                    pElem := GICsourceClass.ElementList.Next;
-            until (Result > 0) or (pElem = NIL);
-    end;
+
+    if InvalidCircuit then
+        Exit;
+        
+    pElem := GICsourceClass.ElementList.Next;
+    if pElem = NIL then
+        Exit;
+        
+    repeat
+        if pElem.Enabled then
+        begin
+            ActiveCircuit.ActiveCktElement := pElem;
+            Result := GICsourceClass.ElementList.ActiveIndex;
+        end
+        else
+            pElem := GICsourceClass.ElementList.Next;
+    until (Result > 0) or (pElem = NIL);
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Name_AnsiString(): Ansistring; inline;
-var
-    elem: TDSSCktElement;
-begin
-    Result := '';
-    if ActiveCircuit = NIL then
-        Exit;
-    elem := ActiveCircuit.ActiveCktElement;
-    if elem <> NIL then
-        Result := elem.Name;
-end;
-
 function GICSources_Get_Name(): PAnsiChar; CDECL;
+var
+    elem: TGICSourceObj;
 begin
-    Result := DSS_GetAsPAnsiChar(GICSources_Get_Name_AnsiString());
+    Result := NIL;
+    if not _activeObj(elem) then
+        Exit;
+
+    Result := DSS_GetAsPAnsiChar(elem.Name);
 end;
 //------------------------------------------------------------------------------
 procedure GICSources_Set_Name(const Value: PAnsiChar); CDECL;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     if GICsourceClass.SetActive(Value) then
     begin
@@ -147,66 +167,64 @@ var
     elem: TGICSourceObj;
 begin
     Result := 0;
-    elem := GICsourceClass.ElementList.Active;
-    if elem <> NIL then
-        Result := elem.NPhases;
+    if not _activeObj(elem) then
+        Exit;
+    
+    Result := elem.NPhases;
 end;
 //------------------------------------------------------------------------------
 procedure GICSources_Set_Phases(Value: Integer); CDECL;
 var
     elem: TGICSourceObj;
 begin
-    elem := GICsourceClass.GetActiveObj;
-    if elem <> NIL then
-    begin
-        elem.nphases := Value;
-        Elem.NConds := Value;  // Force reallocation of terminal info
-    end;
+    if not _activeObj(elem) then
+        Exit;
+
+    elem.nphases := Value;
+    Elem.NConds := Value;  // Force reallocation of terminal info
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Bus1_AnsiString(): Ansistring; inline;
-begin
-    Result := '';
-    if ActiveCircuit = NIL then
-        Exit;
-    Result := ActiveCircuit.ActiveCktElement.GetBus(1);
-end;
-
 function GICSources_Get_Bus1(): PAnsiChar; CDECL;
+var
+    elem: TGICSourceObj;
 begin
-    Result := DSS_GetAsPAnsiChar(GICSources_Get_Bus1_AnsiString());
+    Result := NIL;
+    if not _activeObj(elem) then
+        Exit;
+
+    Result := DSS_GetAsPAnsiChar(elem.GetBus(1));
 end;
 //------------------------------------------------------------------------------
-function GICSources_Get_Bus2_AnsiString(): Ansistring; inline;
-begin
-    Result := '';
-    if ActiveCircuit = NIL then
-        Exit;
-    Result := ActiveCircuit.ActiveCktElement.GetBus(2);
-end;
-
 function GICSources_Get_Bus2(): PAnsiChar; CDECL;
+var
+    elem: TGICSourceObj;
 begin
-    Result := DSS_GetAsPAnsiChar(GICSources_Get_Bus2_AnsiString());
+    Result := NIL;
+    if not _activeObj(elem) then
+        Exit;
+
+    Result := DSS_GetAsPAnsiChar(elem.GetBus(2));
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_EN(): Double; CDECL;
 var
-    elem: TGICsourceObj;
+    elem: TGICSourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
-    if elem <> NIL then
-        Result := elem.ENorth;
+    if not _activeObj(elem) then
+        Exit;
+        
+    Result := elem.ENorth;
 end;
 //------------------------------------------------------------------------------
 procedure GICSources_Set_EN(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
-    if elem <> NIL then
-        elem.ENorth := Value;
+    if not _activeObj(elem) then
+        Exit;
+    
+    elem.ENorth := Value;
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_EE(): Double; CDECL;
@@ -214,18 +232,20 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
-    if elem <> NIL then
-        Result := elem.EEast;
+    if not _activeObj(elem) then
+        Exit;
+    
+    Result := elem.EEast;
 end;
 //------------------------------------------------------------------------------
 procedure GICSources_Set_EE(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
-    if elem <> NIL then
-        elem.EEast := Value;
+    if not _activeObj(elem) then
+        Exit;
+    
+    elem.EEast := Value;
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Lat1(): Double; CDECL;
@@ -233,22 +253,21 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
-    if elem <> NIL then
-        Result := elem.Lat1;
+    if not _activeObj(elem) then
+        Exit;
 
+    Result := elem.Lat1;
 end;
 //------------------------------------------------------------------------------
 procedure GICSources_Set_Lat1(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
-    if elem <> NIL then
-    begin
-        elem.Lat1 := Value;
-        elem.VoltsSpecified := FALSE;
-    end;
+    if not _activeObj(elem) then
+        Exit;
+
+    elem.Lat1 := Value;
+    elem.VoltsSpecified := FALSE;
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Lat2(): Double; CDECL;
@@ -256,23 +275,21 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
-    if elem <> NIL then
-        Result := elem.Lat2;
-
+    if not _activeObj(elem) then
+        Exit;
+    
+    Result := elem.Lat2;
 end;
 //------------------------------------------------------------------------------
 procedure GICSources_Set_Lat2(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
-    if elem <> NIL then
-    begin
-        elem.Lat2 := Value;
-        elem.VoltsSpecified := FALSE;
-    end;
+    if not _activeObj(elem) then
+        Exit;
 
+    elem.Lat2 := Value;
+    elem.VoltsSpecified := FALSE;
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Lon1(): Double; CDECL;
@@ -280,22 +297,21 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
-    if elem <> NIL then
-        Result := elem.Lon1;
+    if not _activeObj(elem) then
+        Exit;
 
+    Result := elem.Lon1;
 end;
 //------------------------------------------------------------------------------
 procedure GICSources_Set_Lon1(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
-    if elem <> NIL then
-    begin
-        elem.Lon1 := Value;
-        elem.VoltsSpecified := FALSE;
-    end;
+    if not _activeObj(elem) then
+        Exit;
+
+    elem.Lon1 := Value;
+    elem.VoltsSpecified := FALSE;
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Lon2(): Double; CDECL;
@@ -303,23 +319,21 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
-    if elem <> NIL then
-        Result := elem.Lon2;
+    if not _activeObj(elem) then
+        Exit;
 
+    Result := elem.Lon2;
 end;
 //------------------------------------------------------------------------------
 procedure GICSources_Set_Lon2(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
-    if elem <> NIL then
-    begin
-        elem.Lon2 := Value;
-        elem.VoltsSpecified := FALSE;
-    end;
+    if not _activeObj(elem) then
+        Exit;
 
+    elem.Lon2 := Value;
+    elem.VoltsSpecified := FALSE;
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_Volts(): Double; CDECL;
@@ -327,36 +341,36 @@ var
     elem: TGICsourceObj;
 begin
     Result := 0.0;
-    elem := GICSourceClass.ElementList.Active;
-    if elem <> NIL then
-        Result := elem.Volts;
+    if not _activeObj(elem) then
+        Exit;
+
+    Result := elem.Volts;
 end;
 //------------------------------------------------------------------------------
 procedure GICSources_Set_Volts(Value: Double); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    elem := GICSourceClass.ElementList.Active;
-    if elem <> NIL then
-    begin
-        elem.Volts := Value;
-        elem.VoltsSpecified := TRUE;
-    end;
+    if not _activeObj(elem) then
+        Exit;
+
+    elem.Volts := Value;
+    elem.VoltsSpecified := TRUE;
 end;
 //------------------------------------------------------------------------------
 function GICSources_Get_idx(): Integer; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        Result := GICSourceClass.ElementList.ActiveIndex
-    else
-        Result := 0
+    Result := 0;
+    if InvalidCircuit then
+        Exit;
+    Result := GICSourceClass.ElementList.ActiveIndex
 end;
 //------------------------------------------------------------------------------
 procedure GICSources_Set_idx(Value: Integer); CDECL;
 var
     elem: TGICsourceObj;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
 
     elem := GICSourceClass.ElementList.Get(Value);

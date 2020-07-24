@@ -356,7 +356,7 @@ FUNCTION DoRedirect(IsCompile:Boolean):Integer;
 
 VAR
     Fin:TextFile;
-    ParamName,  InputLine, CurrDir, SaveDir, ReDirFileExp : String;
+    {ParamName,}  InputLine, CurrDir, SaveDir, ReDirFileExp : String;
     LocalCompFileName  : String;
     InBlockComment : Boolean;
     strings: TStringList;
@@ -371,7 +371,7 @@ Begin
     // Going back up the redirect stack
 
     // Get next parm and try to interpret as a file name
-    ParamName := Parser.NextParam;
+    {ParamName :=} Parser.NextParam;
     
     // Expanded path is required later as other Free Pascal functions 
     // may fail with relative paths
@@ -578,7 +578,7 @@ FUNCTION DoSelectCmd:Integer;
 // select element=elementname terminal=terminalnumber
 VAR
    ObjClass, ObjName,
-   ParamName, Param:String;
+   {ParamName,} Param:String;
 
 Begin
 
@@ -615,7 +615,7 @@ Begin
              ELSE Begin   // for circuit types, set ActiveCircuit Element, too
                    ActiveCktElement := ActiveDSSClass.GetActiveObj;
                    // Now check for active terminal designation
-                   ParamName := LowerCase(Parser.NextParam);
+                   {ParamName := LowerCase(}Parser.NextParam;
                    Param := Parser.StrValue;
                    If Length(Param)>0
                    THEN ActiveCktElement.ActiveTerminalIdx := Parser.Intvalue
@@ -945,7 +945,7 @@ VAR
    SingleObject, Debugdump, IsSolution:Boolean;
    i:Integer;
    FileName:String;
-   ParamName:String;
+   {ParamName:String;}
    Param, Param2, ObjClass, ObjName:String;
 
 Begin
@@ -958,7 +958,7 @@ Begin
  ObjName := ' ';
  
  // Continue parsing command line - check for object name
- ParamName := Parser.NextParam;
+ {ParamName :=} Parser.NextParam;
  Param := Parser.StrValue;
  IF Length(Param)>0 THEN
  Begin
@@ -1025,7 +1025,7 @@ Begin
          Begin
             SingleObject := TRUE;
            // Check to see IF we want a debugdump on this object
-            ParamName := Parser.NextParam;
+            {ParamName :=} Parser.NextParam;
             Param2 := Parser.StrValue;
             IF CompareText(Param2,'debug')=0 THEN DebugDump := TRUE;
             // Set active Element to be value in Param
@@ -1198,7 +1198,7 @@ VAR
    retval    :Integer;
    Terminal  :Integer;
    Conductor :Integer;
-   ParamName :string;
+   //ParamName :string;
 
 // syntax:  "Open class.name term=xx cond=xx"
 //  IF cond is omitted, all conductors are opened.
@@ -1207,9 +1207,9 @@ Begin
   retval := SetActiveCktElement;
   IF retval>0 THEN
   Begin
-        ParamName := Parser.NextParam;
+        {ParamName :=} Parser.NextParam;
         Terminal  := Parser.IntValue;
-        ParamName := Parser.NextParam;
+        {ParamName :=} Parser.NextParam;
         Conductor := Parser.IntValue;
 
         With ActiveCircuit Do
@@ -1235,7 +1235,7 @@ VAR
    retval:Integer;
    Terminal:Integer;
    Conductor:Integer;
-   ParamName : string;
+//   ParamName : string;
 
 // syntax:  "Close class.name term=xx cond=xx"
 //  IF cond is omitted, all conductors are opened
@@ -1244,9 +1244,9 @@ Begin
   retval := SetActiveCktElement;
   IF retval>0 THEN
     Begin
-       ParamName := Parser.NextParam;                 
+       {ParamName :=} Parser.NextParam;                 
        Terminal  := Parser.IntValue;
-       ParamName := Parser.NextParam;
+       {ParamName :=} Parser.NextParam;
        Conductor := Parser.IntValue;
 
         With ActiveCircuit Do
@@ -1268,13 +1268,13 @@ End;
 //----------------------------------------------------------------------------
 FUNCTION DoResetCmd:Integer;
 VAR
-    ParamName, Param  :String;
+    {ParamName,} Param  :String;
 
 Begin
     Result := 0;
 
     // Get next parm and try to interpret as a file name
-    ParamName := Parser.NextParam;
+    {ParamName :=} Parser.NextParam;
     Param := UpperCase(Parser.StrValue);
     IF Length(Param) = 0
        THEN Begin
@@ -1535,13 +1535,13 @@ End;
 //----------------------------------------------------------------------------
 FUNCTION DoNextCmd:Integer;
 VAR
-    ParamName, Param  :String;
+    {ParamName,} Param  :String;
 
 Begin
     Result := 0;
 
     // Get next parm and try to interpret as a file name
-    ParamName := Parser.NextParam;
+    {ParamName :=} Parser.NextParam;
     Param := Parser.StrValue;
 
     With ActiveCircuit.Solution Do
@@ -2716,7 +2716,7 @@ FUNCTION DoBusCoordsCmd(SwapXY:Boolean):Integer;
 Var
 
    F : TextFile;
-   ParamName, Param,
+   {ParamName,} Param,
    S,
    BusName : String;
    iB      : Integer;
@@ -2727,7 +2727,7 @@ Begin
 
     {Get next parameter on command line}
 
-    ParamName := Parser.NextParam;
+    {ParamName :=} Parser.NextParam;
     Param := Parser.StrValue;
 
     Try
@@ -2841,14 +2841,14 @@ FUNCTION DoInterpolateCmd:Integer;
 VAR
     MetObj:TEnergyMeterObj;
     MeterClass: TEnergyMeter;
-    ParamName, Param  :String;
+    {ParamName,} Param  :String;
     DevClassIndex:Integer;
     CktElem:TDSSCktElement;
 
 Begin
     Result := 0;
 
-    ParamName := Parser.NextParam;
+    {ParamName :=} Parser.NextParam;
     Param := UpperCase(Parser.StrValue);
 
     // initialize the Checked Flag FOR all circuit Elements
@@ -2894,11 +2894,11 @@ End;
 FUNCTION DoAlignFileCmd:Integer;
 {Rewrites designated file, aligning the fields into columns}
 Var
-    ParamName, Param  :String;
+    {ParamName,} Param  :String;
 
 Begin
   Result := 0;
-  ParamName := Parser.NextParam;
+  {ParamName :=} Parser.NextParam;
   Param := Parser.StrValue;
 
 
@@ -2920,14 +2920,14 @@ FUNCTION DoTOPCmd:Integer;
 { Sends Monitors, Loadshapes, GrowthShapes, or TCC Curves to TOP as an STO file}
 
 Var
-    ParamName, Param, ObjName  :String;
+    {ParamName,} Param, ObjName  :String;
 
 Begin
     Result := 0;
-    ParamName := Parser.NextParam;
+    {ParamName :=} Parser.NextParam;
     Param := UpperCase(Parser.StrValue);
 
-    ParamName := Parser.NextParam;
+    {ParamName :=} Parser.NextParam;
     ObjName := UpperCase(Parser.StrValue);
 
     If Length(ObjName)=0 Then ObjName := 'ALL';
@@ -2969,14 +2969,14 @@ FUNCTION DoRotateCmd:Integer;
 Var
         i:Integer;
         Angle, xmin,xmax, ymin, ymax, xc, yc:Double;
-         ParamName:String;
+         //ParamName:String;
          a, vector: Complex;
 
 Begin
     Result := 0;
     If ActiveCircuit <> NIl then Begin
 
-        ParamName := Parser.NextParam;
+        {ParamName :=} Parser.NextParam;
         Angle := Parser.DblValue * PI/180.0;   // Deg to rad
 
         a := cmplx(cos(Angle), Sin(Angle));
@@ -3684,13 +3684,13 @@ End;
 FUNCTION DoUuidsCmd:Integer;
 Var
   F:TextFile;
-  ParamName, Param, S, NameVal, UuidVal, DevClass, DevName: String;
+  {ParamName,} Param, S, NameVal, UuidVal, DevClass, DevName: String;
   pName: TNamedObject;
   idx: integer;
 Begin
   StartUuidList(ActiveCircuit.NumBuses + 2 * ActiveCircuit.NumDevices);
   Result := 0;
-  ParamName := Parser.NextParam;
+  {ParamName :=} Parser.NextParam;
   Param := Parser.StrValue;
   Try
     AssignFile(F, Param);
@@ -3747,14 +3747,14 @@ Var
    pLoadshape :TLoadShapeObj;
    iLoadshape :Integer;
    LoadShapeClass :TLoadShape;
-   ParamName      :String;
+   //ParamName      :String;
    Param          :String;
    Action         :String;
    F              :TextFile;
    Fname          :String;
 
 Begin
-    ParamName := Parser.NextParam;
+    {ParamName :=} Parser.NextParam;
     Param := Parser.StrValue;
 
     If length(param)=0 then  Param := 's';
@@ -4042,7 +4042,7 @@ FUNCTION DoLambdaCalcs:Integer;
 
 Var pMeter : TEnergyMeterObj;
     i      : Integer;
-    ParamName,
+    //ParamName,
     Param  : String;
     AssumeRestoration : Boolean;
 
@@ -4056,7 +4056,7 @@ Begin
         Exit;
       End;
 
-      ParamName := Parser.NextParam;
+      {ParamName :=} Parser.NextParam;
       Param := Parser.StrValue ;
 
       If Length(Param)>0 Then

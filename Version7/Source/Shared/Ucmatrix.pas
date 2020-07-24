@@ -43,7 +43,7 @@ type
         function GetElement(i, j: Integer): Complex;
         function GetErrorCode: Integer;
         // function SumBlock(row1, row2, col1, col2: Integer): Complex;
-        procedure MVmult(b, x: pComplexArray); inline; {b = Ax}
+        procedure MVmult(b, x: pComplexArray); {inline;} {b = Ax}
         // procedure MVmultAccum(b, x: pComplexArray);  {b = Ax}
         function GetValuesArrayPtr(var Order: Integer): pComplexArray;
         procedure ZeroRow(iRow: Integer);
@@ -70,9 +70,6 @@ uses
 {$R-}  { Turn off range checking}
 {--------------------------------------------------------------------------}
 constructor TcMatrix.CreateMatrix(N: Integer);
-var
-    i: Integer;
-
 begin
 
     try
@@ -98,7 +95,7 @@ begin
     FillByte(Values^, Sizeof(Complex) * Norder * Norder, 0);
 end;
 {--------------------------------------------------------------------------}
-procedure TcMatrix.MvMult(b, x: pComplexArray); inline;
+procedure TcMatrix.MvMult(b, x: pComplexArray); {inline;}
 {$IFDEF DSS_CAPI_MVMULT}
 begin
     KLUSolve.mvmult(Norder, b, values, x);

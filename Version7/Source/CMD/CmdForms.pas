@@ -131,10 +131,25 @@ begin
     result := 0;
 {$IFDEF DSS_CAPI}
     if DSS_CAPI_EARLY_ABORT then
-        result := -1;
+        // If the result is handled outside and this is not and error message,
+        // we can let the caller decide if the error should halt or not
+        result := -1; 
 {$ENDIF}
     if NoFormsAllowed then
+    begin
+{$IFDEF DSS_CAPI}
+        if err then
+        begin
+            // If this is an error message, We need to pass the message somehow. 
+            // Decided to use the error interface here and, if early abort is on,
+            // set the global Redirect_Abort.
+            DoSimpleMsg(Msg, 65535);
+            if DSS_CAPI_EARLY_ABORT then
+                Redirect_Abort := True;
+        end;
+{$ENDIF}
         Exit;
+    end;
     if err then
         write('** Error: ');
     writeln(Msg);

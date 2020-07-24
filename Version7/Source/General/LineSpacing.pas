@@ -46,11 +46,12 @@ type
 
 
     TLineSpacingObj = class(TDSSObject)
+    PUBLIC
+        FX: pDoubleArray;
+        FY: pDoubleArray;
     PRIVATE
         FNConds: Integer;
         FNPhases: Integer;
-        FX: pDoubleArray;
-        FY: pDoubleArray;
         FUnits: Integer;
 {$IFNDEF DSS_CAPI}
         DataChanged: Boolean;

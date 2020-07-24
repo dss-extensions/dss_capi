@@ -708,7 +708,7 @@ end;
 procedure TAutoTrans.InterpretAllConns(const S: String);
 //  routine expecting all winding connections expressed in one array of strings
 var
-    S1,
+    {S1,}
     S2: String;
     i: Integer;
 begin
@@ -720,7 +720,7 @@ begin
         for i := 1 to Numwindings do
         begin
             ActiveWinding := i;
-            S1 := AuxParser.NextParam; // ignore any parameter name  not expecting any
+            {S1 :=} AuxParser.NextParam; // ignore any parameter name  not expecting any
             S2 := AuxParser.StrValue;
             if Length(S2) > 0 then
                 InterpretAutoConnection(S2);
@@ -1019,8 +1019,6 @@ procedure TAutoTransObj.SetBusAuto(iwdg: Integer; const s: String);
 var
     NNodes: array[1..50] of Integer; // big integer buffer
     NumNodes: Integer;
-    DotPos: Integer;
-    FirstNeut: Integer; // First Neutral Node
     ii: Integer;
     strBusName,
     strNewBusName: String;
@@ -1328,7 +1326,7 @@ procedure TAutoTransObj.SetTermRef;
 // phase and neutral conductors of the AutoTrans according to the winding connection
 
 var
-    i, j, k, NumCondPerPhase: Integer;
+    i, j, k: Integer;
 
 begin
     k := 0;
@@ -1944,7 +1942,7 @@ end;
 
 procedure TAutoTransObj.GetCurrents(Curr: pComplexArray);
 var
-    i, j: Integer;
+    i: Integer;
 
 begin
     inherited GetCurrents(Curr);
@@ -2314,7 +2312,9 @@ procedure TAutoTransObj.GICBuildYTerminal;
 var
     i, j, idx: Integer;
     yR: Complex;
+{$IFDEF AUTOTRANDEBUG}
     F: TextFile;
+{$ENDIF}
     Yadder: Complex;
 
 begin

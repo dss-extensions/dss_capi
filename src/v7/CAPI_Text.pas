@@ -19,17 +19,12 @@ uses
     Executive,
     SysUtils;
 
-const
-    nothing: Ansistring = #0#0;
+//TODO: Text_Run_Script or Text_Run_Commands -- run multiple lines at one
 
-function Text_Get_Command_AnsiString(): Ansistring; inline;
-begin
-    Result := DSSExecutive.Command;
-end;
-
+//------------------------------------------------------------------------------
 function Text_Get_Command(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(Text_Get_Command_AnsiString());
+    Result := DSS_GetAsPAnsiChar(DSSExecutive.Command);
 end;
 //------------------------------------------------------------------------------
 procedure Text_Set_Command(const Value: PAnsiChar); CDECL;
@@ -38,12 +33,12 @@ begin
     DSSExecutive.Command := Value;  {Convert to String}
 end;
 //------------------------------------------------------------------------------
-function Text_Get_Result_AnsiString(): Ansistring; inline;
+function Text_Get_Result(): PAnsiChar; CDECL;
 begin
     if Length(GlobalResult) < 1 then
-        Result := nothing
+        Result := NIL
     else
-        Result := GlobalResult;
+        Result := DSS_GetAsPAnsiChar(GlobalResult);
     {****}
     {
       Need to implement a protocol for determining whether to go get the
@@ -51,11 +46,6 @@ begin
       from operations where the result is voluminous.
     }
 
-end;
-
-function Text_Get_Result(): PAnsiChar; CDECL;
-begin
-    Result := DSS_GetAsPAnsiChar(Text_Get_Result_AnsiString());
 end;
 //------------------------------------------------------------------------------
 end.

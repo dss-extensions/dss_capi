@@ -1,6 +1,4 @@
 // Created by PMeira based on DDLL/DYMatrix.pas, revision 2091
-// Note: YMatrix_GetCompressedYMatrix is different from the original since 
-// I wanted to export the original, non-factorized YMatrix in CSC form too.
 unit CAPI_YMatrix;
 
 interface
@@ -41,7 +39,7 @@ var
     NumNZ, NumBuses: Longword;
     tmpCnt: array[0..1] of Integer;
 begin
-    if ActiveCircuit = NIL then
+    if InvalidCircuit then
         Exit;
     Yhandle := ActiveCircuit.Solution.hY;
     if Yhandle <= 0 then
@@ -74,29 +72,37 @@ end;
 
 procedure YMatrix_ZeroInjCurr; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.ZeroInjCurr;
+    if InvalidCircuit then
+        Exit;
+    ActiveCircuit.Solution.ZeroInjCurr;
 end;
 
 procedure YMatrix_GetSourceInjCurrents; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.GetSourceInjCurrents;
+    if InvalidCircuit then
+        Exit;
+    ActiveCircuit.Solution.GetSourceInjCurrents;
 end;
 
 procedure YMatrix_GetPCInjCurr; CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.Solution.GetPCInjCurr;
+    if InvalidCircuit then
+        Exit;
+    ActiveCircuit.Solution.GetPCInjCurr;
 end;
 
 procedure YMatrix_Set_SystemYChanged(arg: Wordbool); CDECL;
 begin
+    if InvalidCircuit then
+        Exit;
     ActiveCircuit.Solution.SystemYChanged := arg;
 end;
 
 function YMatrix_Get_SystemYChanged(): Wordbool; CDECL;
 begin
+    Result := FALSE;
+    if InvalidCircuit then
+        Exit;
     Result := ActiveCircuit.Solution.SystemYChanged;
 end;
 
@@ -104,37 +110,53 @@ procedure YMatrix_BuildYMatrixD(BuildOps, AllocateVI: Longint); CDECL;
 var
     AllocateV: Boolean;
 begin
+    if InvalidCircuit then
+        Exit;
     AllocateV := (AllocateVI <> 0);
     BuildYMatrix(BuildOps, AllocateV);
 end;
 
 procedure YMatrix_Set_UseAuxCurrents(arg: Wordbool); CDECL;
 begin
+    if InvalidCircuit then
+        Exit;
     ActiveCircuit.Solution.UseAuxCurrents := arg;
 end;
 
 function YMatrix_Get_UseAuxCurrents(): Wordbool; CDECL;
 begin
+    Result := FALSE;
+    if InvalidCircuit then
+        Exit;
     Result := ActiveCircuit.Solution.UseAuxCurrents;
 end;
 
 procedure YMatrix_AddInAuxCurrents(SType: Integer); CDECL;
 begin
+    if InvalidCircuit then
+        Exit;
     ActiveCircuit.Solution.AddInAuxCurrents(SType);
 end;
 
 procedure YMatrix_getIpointer(var IvectorPtr: pNodeVarray); CDECL;
 begin
+    if InvalidCircuit then
+        Exit;
     IVectorPtr := ActiveCircuit.Solution.Currents;
 end;
 
 procedure YMatrix_getVpointer(var VvectorPtr: pNodeVarray); CDECL;
 begin
+    if InvalidCircuit then
+        Exit;
     VVectorPtr := ActiveCircuit.Solution.NodeV;
 end;
 
 function YMatrix_SolveSystem(var NodeV: pNodeVarray): Integer; CDECL;
 begin
+    Result := 0;
+    if InvalidCircuit then
+        Exit;
     Result := ActiveCircuit.Solution.SolveSystem(NodeV);
 end;
 

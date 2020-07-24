@@ -241,6 +241,8 @@ begin
                     Filname := 'Curr_Seq';
                 1:
                     Filname := 'Curr_Elem';
+            else
+                FilName := 'ERROR';
             end;
             ShowCurrents(GetOutputDirectory + CircuitName_ + FilName + '.Txt', ShowResid, ShowOptionCode);
         end;

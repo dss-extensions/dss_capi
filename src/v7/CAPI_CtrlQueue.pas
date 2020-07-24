@@ -65,34 +65,39 @@ var
 
 procedure CtrlQueue_ClearQueue(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.ControlQueue.Clear;
+    if InvalidCircuit then
+        Exit;
+    ActiveCircuit.ControlQueue.Clear();
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_Delete(ActionHandle: Integer); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.ControlQueue.Delete(ActionHandle);
+    if InvalidCircuit then
+        Exit;
+    ActiveCircuit.ControlQueue.Delete(ActionHandle);
 end;
 //------------------------------------------------------------------------------
 function CtrlQueue_Get_ActionCode(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveAction <> NIL then
-        Result := ActiveAction^.ActionCode;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveAction^.ActionCode;
 end;
 //------------------------------------------------------------------------------
 function CtrlQueue_Get_DeviceHandle(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveAction <> NIL then
-        Result := ActiveAction^.DeviceHandle;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveAction^.DeviceHandle;
 end;
 //------------------------------------------------------------------------------
 function CtrlQueue_Get_NumActions(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then Exit;
+    if InvalidCircuit then
+        Exit;
     Result := COMControlProxyObj.ActionList.Count;
 end;
 //------------------------------------------------------------------------------
@@ -100,35 +105,38 @@ function CtrlQueue_Push(Hour: Integer; Seconds: Double; ActionCode, DeviceHandle
 // returns handle on control queue
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-    begin
-        Result := ActiveCircuit.ControlQueue.push(Hour, Seconds, ActionCode, DeviceHandle, COMControlProxyObj);
-    end;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.ControlQueue.push(Hour, Seconds, ActionCode, DeviceHandle, COMControlProxyObj);
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_Show(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.ControlQueue.ShowQueue(GetOutputDirectory + 'COMProxy_ControlQueue.CSV');
+    if InvalidCircuit then
+        Exit;
+    ActiveCircuit.ControlQueue.ShowQueue(GetOutputDirectory + 'COMProxy_ControlQueue.CSV');
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_ClearActions(); CDECL;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if InvalidCircuit then
+        Exit;
     COMControlProxyObj.ClearActionList;
 end;
 //------------------------------------------------------------------------------
 function CtrlQueue_Get_PopAction(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit = NIL then Exit;
+    if InvalidCircuit then
+        Exit;
     Result := COMControlProxyObj.ActionList.Count;
     COMControlProxyObj.PopAction;
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_Set_Action(Param1: Integer); CDECL;
 begin
-    if ActiveCircuit = NIL then Exit;
+    if InvalidCircuit then
+        Exit;
     with COMControlProxyObj do
         if Param1 < ActionList.Count then
             ActiveAction := ActionList.Items[Param1 - 1];
@@ -137,14 +145,16 @@ end;
 function CtrlQueue_Get_QueueSize(): Integer; CDECL;
 begin
     Result := 0;
-    if ActiveCircuit <> NIL then
-        Result := ActiveCircuit.ControlQueue.QueueSize;
+    if InvalidCircuit then
+        Exit;
+    Result := ActiveCircuit.ControlQueue.QueueSize;
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_DoAllQueue(); CDECL;
 begin
-    if ActiveCircuit <> NIL then
-        ActiveCircuit.ControlQueue.DoAllActions;
+    if InvalidCircuit then
+        Exit;
+    ActiveCircuit.ControlQueue.DoAllActions;
 end;
 //------------------------------------------------------------------------------
 procedure CtrlQueue_Get_Queue(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
@@ -156,9 +166,9 @@ var
 
 begin
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-    if ActiveCircuit <> NIL then
+    if not InvalidCircuit then
     begin
-        QSize := CtrlQueue_Get_queuesize;
+        QSize := CtrlQueue_Get_QueueSize();
         if QSize > 0 then
         begin
             DSS_RecreateArray_PPAnsiChar(Result, ResultPtr, ResultCount, (QSize) + 1);

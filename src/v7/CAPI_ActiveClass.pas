@@ -37,22 +37,24 @@ var
     k: Integer;
 
 begin
-    if (ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
-        with ActiveCircuit do
+    if (InvalidCircuit) or (ActiveDSSClass = NIL) then
+    begin
+        DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+        
+    with ActiveCircuit do
+    begin
+        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, ActiveDSSClass.ElementCount);
+        k := 0;
+        idx := ActiveDSSClass.First;
+        while idx > 0 do
         begin
-            Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, ActiveDSSClass.ElementCount);
-            k := 0;
-            idx := ActiveDSSClass.First;
-            while idx > 0 do
-            begin
-                Result[k] := DSS_CopyStringAsPChar(ActiveDSSObject.Name);
-                Inc(k);
-                idx := ActiveDSSClass.Next;
-            end;
-        end
-    else
-        Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, 1);
-
+            Result[k] := DSS_CopyStringAsPChar(ActiveDSSObject.Name);
+            Inc(k);
+            idx := ActiveDSSClass.Next;
+        end;
+    end;
 end;
 
 procedure ActiveClass_Get_AllNames_GR(); CDECL;
@@ -64,37 +66,27 @@ end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_First(): Integer; CDECL;
 begin
-
     Result := 0;
-    if (ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
-    begin
-        Result := ActiveDSSClass.First;  // sets active objects
-    end;
-
+    if (InvalidCircuit) or (ActiveDSSClass = NIL) then
+        Exit;
+    Result := ActiveDSSClass.First;  // sets active objects
 end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_Next(): Integer; CDECL;
 begin
-
     Result := 0;
-    if (ActiveCircuit <> NIL) and Assigned(ActiveDSSClass) then
-    begin
-        Result := ActiveDSSClass.Next;  // sets active objects
-    end;
-
+    if (InvalidCircuit) or (ActiveDSSClass = NIL) then
+        Exit;
+    Result := ActiveDSSClass.Next;  // sets active objects
 end;
 //------------------------------------------------------------------------------
-function ActiveClass_Get_Name_AnsiString(): Ansistring; inline;
-begin
-    if Assigned(ActiveDSSObject) then
-        Result := ActiveDSSObject.Name
-    else
-        Result := '';
-end;
-
 function ActiveClass_Get_Name(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(ActiveClass_Get_Name_AnsiString());
+    Result := NIL;
+    if ActiveDSSObject = NIL then
+        Exit;
+    
+    Result := DSS_GetAsPAnsiChar(ActiveDSSObject.Name)
 end;
 //------------------------------------------------------------------------------
 procedure ActiveClass_Set_Name(const Value: PAnsiChar); CDECL;
@@ -102,64 +94,61 @@ procedure ActiveClass_Set_Name(const Value: PAnsiChar); CDECL;
 var
     pelem: TDSSObject;
 begin
-    if Assigned(ActiveDSSClass) then
-    begin
-        pelem := ActiveDSSClass.Find(Value);
-        if pelem <> NIL then
-        begin
-            if pelem is TDSSCktElement then
-                ActiveCircuit.ActiveCktElement := TDSSCktElement(pelem)  // sets ActiveDSSobject
-            else
-                ActiveDSSObject := pelem;
-        end;
-    end;
+    if ActiveDSSClass = NIL then
+        Exit;
+        
+    pelem := ActiveDSSClass.Find(Value);
+    if pelem = NIL then
+        Exit;
+
+    if pelem is TDSSCktElement then
+        ActiveCircuit.ActiveCktElement := TDSSCktElement(pelem)  // sets ActiveDSSobject
+    else
+        ActiveDSSObject := pelem;
 end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_NumElements(): Integer; CDECL;
 begin
-    if Assigned(ActiveDSSClass) then
-        Result := ActiveDSSCLass.ElementCount
-    else
-        Result := 0;
+    Result := 0;
+    if ActiveDSSClass = NIL then
+        Exit;
+    Result := ActiveDSSCLass.ElementCount
 end;
 //------------------------------------------------------------------------------
-function ActiveClass_Get_ActiveClassName_AnsiString(): Ansistring; inline;
-begin
-    if Assigned(ActiveDSSClass) then
-        Result := ActiveDSSCLass.Name
-    else
-        Result := '';
-end;
-
 function ActiveClass_Get_ActiveClassName(): PAnsiChar; CDECL;
 begin
-    Result := DSS_GetAsPAnsiChar(ActiveClass_Get_ActiveClassName_AnsiString());
+    Result := NIL;
+    if ActiveDSSClass = NIL then
+        Exit;
+    Result := DSS_GetAsPAnsiChar(ActiveDSSCLass.Name)
 end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_Count(): Integer; CDECL;
 begin
-    if Assigned(ActiveDSSClass) then
-        Result := ActiveDSSCLass.ElementCount
-    else
-        Result := 0;
+    Result := 0;
+    if ActiveDSSClass = NIL then
+        Exit;
+    Result := ActiveDSSCLass.ElementCount
 end;
 //------------------------------------------------------------------------------
 function ActiveClass_Get_ActiveClassParent(): PAnsiChar;
 begin
-    if Assigned(ActiveDSSClass) then
+    if ActiveDSSClass = NIL then
     begin
-        Result := PAnsiChar('Generic Object');
-        if ActiveDSSClass.ClassType.InheritsFrom(TPCClass) then
-            Result := PAnsiChar('TPCClas'); //NOTE: kept as "Clas" for compatibility
-        if ActiveDSSClass.ClassType.InheritsFrom(TPDClass) then
-            Result := PAnsiChar('TPDClass');
-        if ActiveDSSClass.ClassType.InheritsFrom(TMeterClass) then
-            Result := PAnsiChar('TMeterClass');
-        if ActiveDSSClass.ClassType.InheritsFrom(TControlClass) then
-            Result := PAnsiChar('TControlClass');
-    end
+        Result := DSS_GetAsPAnsiChar('Parent Class unknonwn');
+        Exit;
+    end;
+
+    if ActiveDSSClass.ClassType.InheritsFrom(TMeterClass) then
+        Result := DSS_GetAsPAnsiChar('TMeterClass')
+    else if ActiveDSSClass.ClassType.InheritsFrom(TControlClass) then
+        Result := DSS_GetAsPAnsiChar('TControlClass')
+    else  if ActiveDSSClass.ClassType.InheritsFrom(TPDClass) then
+        Result := DSS_GetAsPAnsiChar('TPDClass')
+    else if ActiveDSSClass.ClassType.InheritsFrom(TPCClass) then
+        Result := DSS_GetAsPAnsiChar('TPCClas') //NOTE: kept as "Clas" for compatibility
     else 
-        Result := PAnsiChar(AnsiString('Parent Class unknonwn'));
+        Result := DSS_GetAsPAnsiChar('Generic Object');
 end;
 //------------------------------------------------------------------------------
 end.

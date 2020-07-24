@@ -1150,10 +1150,10 @@ end;
 ********************************************************************************}
 function TDSSCircuit.Tear_Circuit(): Integer;
 var
-  FileCreated   : Boolean;
-  Ftree,
+  // FileCreated   : Boolean;
+  // Ftree,
   F             : TextFile;
-  TreeNm,                                           // For debugging
+  // TreeNm,                                           // For debugging
   MeTISCmd,
   BusName,
   Terminal,
@@ -1163,10 +1163,10 @@ var
   // SEInfo        : TShellExecuteInfo;                // Shell Info handle
   NodeIdx,
   Num_Pieces,
-  Location_idx,                                     // Active Location
-  j,jj,dbg,dbg2,
+  // Location_idx,                                     // Active Location
+  j,jj,dbg,
   i             : Integer;                          // Generic counter variables
-  Candidates    : Array of Integer;                 // Array for 0 level buses idx
+  // Candidates    : Array of Integer;                 // Array for 0 level buses idx
 
   EMeter        : TEnergyMeterObj;
   pBus          : TDSSBus;
@@ -2050,7 +2050,6 @@ end;
 
 function TDSSCircuit.SaveVoltageBases: Boolean;
 Var  F:TextFile;
-     i:integer;
      VBases:string;
 Begin
 

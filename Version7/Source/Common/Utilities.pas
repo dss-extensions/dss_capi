@@ -3120,6 +3120,8 @@ begin
             Result := 'Duty';
         USENONE:
             Result := 'None';
+    else
+        Result := 'ERROR';
     end;
 
 end;
@@ -3134,6 +3136,8 @@ begin
             Result := 'FullCarson';
         DERI:
             Result := 'Deri';
+    else
+        Result := 'ERROR';
     end;
 
 end;

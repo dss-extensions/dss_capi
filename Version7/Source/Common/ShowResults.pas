@@ -2393,14 +2393,14 @@ var
     pMtrClass: TEnergyMeter;
     PDelem: TPDelement;
     LoadElem: TLoadObj;
-    ParamName: String;
+    // ParamName: String;
     Param: String;
 
 begin
 
     try
         FileNm := StripExtension(FileNm);
-        ParamName := Parser.NextParam;
+        {ParamName :=} Parser.NextParam;
         Param := Parser.StrValue;
 
         FileNm := FileNm + '_' + Param + '.txt';
@@ -2465,7 +2465,7 @@ begin
 
         CloseFile(F);
 
-        ParamName := Parser.NextParam;
+        {ParamName :=} Parser.NextParam;
         Param := Parser.strvalue;
 
         case length(Param) of

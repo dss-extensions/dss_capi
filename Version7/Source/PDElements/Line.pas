@@ -2238,7 +2238,7 @@ procedure TLineObj.ConvertZinvToPosSeqR;
 
 var
     Z1, ZS, Zm: Complex;
-    i, j: Integer;
+    i: Integer;
 
 begin
 
