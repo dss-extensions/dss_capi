@@ -469,7 +469,7 @@ begin
         NValues := NPhases;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
         GetPhaseLosses(NValues, pComplexArray(Result));
-        for i := 1 to 2 * NValues do
+        for i := 0 to (2 * NValues - 1) do
         begin
             Result[i] *= 0.001;
         end;
@@ -502,7 +502,7 @@ begin
         NValues := NConds * Nterms;
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * NValues);
         GetPhasePower(pComplexArray(ResultPtr));
-        for i := 0 to (2 * NValues) - 1 do
+        for i := 0 to (2 * NValues - 1) do
             Result[i] *= 0.001;
     end
 end;
@@ -873,7 +873,7 @@ begin
         cValues := GetYprimValues(ALL_YPRIM);  // Get pointer to complex array of values
         if cValues = NIL then Exit;
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * SQR(Yorder));
-        Move(cValues[1], ResultPtr, ResultCount^ * SizeOf(Double));
+        Move(cValues^, ResultPtr^, ResultCount^ * SizeOf(Double));
     end
 end;
 

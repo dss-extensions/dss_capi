@@ -1,6 +1,6 @@
 unit CAPI_Lines;
 
-{$inline off}
+{$inline on}
 
 interface
 
