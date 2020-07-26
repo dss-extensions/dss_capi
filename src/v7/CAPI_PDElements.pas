@@ -85,34 +85,28 @@ begin
     if InvalidCircuit then
         Exit;
     
-    if (ActiveCircuit.ActiveCktElement = NIL) then 
+    with ActiveCircuit do
     begin
-        if DSS_CAPI_EXT_ERRORS then
+        if ActiveCktElement = NIL then 
         begin
-            DoSimpleMsg('No active PD Element found! Activate one and retry.', 8989);
+            if DSS_CAPI_EXT_ERRORS then
+            begin
+                DoSimpleMsg('No active PD Element found! Activate one and retry.', 8989);
+            end;
+            Exit;
         end;
-        Exit;
-    end;
+
+        if not (ActiveCktElement is TPDElement) then
+        begin
+            if DSS_CAPI_EXT_ERRORS then
+            begin
+                DoSimpleMsg('No active PD Element found! Activate one and retry.', 8989);
+            end;
+            Exit;
+        end;
         
-    if not (ActiveCircuit.ActiveCktElement is TPDElement) then
-    begin
-        if DSS_CAPI_EXT_ERRORS then
-        begin
-            DoSimpleMsg('No active PD Element found! Activate one and retry.', 8989);
-        end;
-        Exit;
+        obj := ActiveCktElement as TPDElement;
     end;
-    
-    obj := ActiveCircuit.ActiveCktElement as TPDElement;
-    if obj = NIL then
-    begin
-        if DSS_CAPI_EXT_ERRORS then
-        begin
-            DoSimpleMsg('No active PD Element found! Activate one and retry.', 8989);
-        end;
-        Exit;
-    end;
-    
     Result := True;
 end;
 //------------------------------------------------------------------------------
@@ -130,7 +124,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if _activeObj(ActivePDElement) then
+    if not _activeObj(ActivePDElement) then
         Exit;
     Result := ActivePDElement.Faultrate;
 end;
@@ -166,7 +160,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := FALSE;
-    if _activeObj(ActivePDElement) then
+    if not _activeObj(ActivePDElement) then
         Exit;
     Result := ActivePDElement.IsShunt;
 end;
@@ -202,7 +196,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if _activeObj(ActivePDElement) then
+    if not _activeObj(ActivePDElement) then
         Exit;
     Result := ActivePDElement.PctPerm;
 end;
@@ -211,7 +205,7 @@ procedure PDElements_Set_FaultRate(Value: Double); CDECL;
 var
     ActivePDElement: TPDElement;
 begin
-    if _activeObj(ActivePDElement) then
+    if not _activeObj(ActivePDElement) then
         Exit;
     ActivePDElement.FaultRate := Value;
 end;
@@ -220,7 +214,7 @@ procedure PDElements_Set_pctPermanent(Value: Double); CDECL;
 var
     ActivePDElement: TPDElement;
 begin
-    if _activeObj(ActivePDElement) then
+    if not _activeObj(ActivePDElement) then
         Exit;
     ActivePDElement.PctPerm := Value;
 end;
@@ -230,7 +224,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := NIL;   // return null if not a PD element
-    if _activeObj(ActivePDElement) then
+    if not _activeObj(ActivePDElement) then
         Exit;
     Result := DSS_GetAsPAnsiChar(Format('%s.%s', [ActivePDElement.Parentclass.Name, ActivePDElement.Name]));  // full name
 end;
@@ -267,7 +261,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if _activeObj(ActivePDElement) then
+    if not _activeObj(ActivePDElement) then
         Exit;
     Result := ActivePDElement.AccumulatedBrFltRate;
 end;
@@ -277,7 +271,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if _activeObj(ActivePDElement) then
+    if not _activeObj(ActivePDElement) then
         Exit;
     Result := ActivePDElement.BranchFltRate;
 end;
@@ -287,7 +281,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if _activeObj(ActivePDElement) then
+    if not _activeObj(ActivePDElement) then
         Exit;
     Result := ActivePDElement.BranchNumCustomers;
 end;
@@ -297,7 +291,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if _activeObj(ActivePDElement) then
+    if not _activeObj(ActivePDElement) then
         Exit;
     if ActivePDElement.ParentPDElement <> NIL then    // leaves ActiveCktElement as is
     begin
@@ -311,7 +305,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if _activeObj(ActivePDElement) then
+    if not _activeObj(ActivePDElement) then
         Exit;
     Result := ActivePDElement.HrsToRepair;
 end;
@@ -337,7 +331,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if _activeObj(ActivePDElement) then
+    if not _activeObj(ActivePDElement) then
         Exit;
     Result := ActivePDElement.FromTerminal;
 end;
@@ -348,7 +342,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0.0;
-    if _activeObj(ActivePDElement) then
+    if not _activeObj(ActivePDElement) then
         Exit;
     Result := ActivePDElement.AccumulatedMilesDownStream;
 end;
@@ -358,7 +352,7 @@ var
     ActivePDElement: TPDElement;
 begin
     Result := 0;
-    if _activeObj(ActivePDElement) then
+    if not _activeObj(ActivePDElement) then
         Exit;
     Result := ActivePDElement.BranchSectionID;
 end;
@@ -367,7 +361,7 @@ procedure PDElements_Set_RepairTime(Value: Double); CDECL;
 var
     ActivePDElement: TPDElement;
 begin
-    if _activeObj(ActivePDElement) then
+    if not _activeObj(ActivePDElement) then
         Exit;
     ActivePDElement.HrsToRepair := Value;
 end;
