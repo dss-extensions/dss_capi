@@ -149,9 +149,10 @@ var
     pElem: TRecloserObj;
 begin
     Result := 0;
-    if not _activeObj(pElem) then
+    if InvalidCircuit then
         Exit;
-
+    pElem := ActiveCircuit.Reclosers.Next;
+    if pElem = NIL then Exit;
     repeat
         if pElem.Enabled then
         begin
@@ -168,7 +169,6 @@ procedure Reclosers_Set_Name(const Value: PAnsiChar); CDECL;
 begin
     if InvalidCircuit then
         Exit;
-
     if RecloserClass.SetActive(Value) then
     begin
         ActiveCircuit.ActiveCktElement := RecloserClass.ElementList.Active;
