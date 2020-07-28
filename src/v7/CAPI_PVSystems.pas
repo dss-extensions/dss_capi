@@ -126,14 +126,14 @@ begin
         Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumPVSystemRegisters);
         for k := 0 to NumPVSystemRegisters - 1 do
         begin
-            Result[k] := DSS_CopyStringAsPChar(TPVSystem(PVSystemClass).RegisterNames[k + 1]);
+            Result[k] := DSS_CopyStringAsPChar(PVSystemClass.RegisterNames[k + 1]);
         end;
         Exit;
     end;
     Result := DSS_RecreateArray_PPAnsiChar(ResultPtr, ResultCount, NumPVSystem2Registers);
     for k := 0 to NumPVSystem2Registers - 1 do
     begin
-        Result[k] := DSS_CopyStringAsPChar(TPVSystem2(PVSystemClass).RegisterNames[k + 1]);
+        Result[k] := DSS_CopyStringAsPChar(PVSystem2Class.RegisterNames[k + 1]);
     end;
 end;
 
@@ -287,10 +287,24 @@ begin
     if InvalidCircuit then
         Exit;
 
-    if PVSystemClass.SetActive(Value) then
+    if DSS_CAPI_LEGACY_MODELS then
     begin
-        ActiveCircuit.ActiveCktElement := PVSystemClass.ElementList.Active;
-        ActiveCircuit.PVSystems.Get(PVSystemClass.Active);
+        if PVSystemClass.SetActive(Value) then
+        begin
+            ActiveCircuit.ActiveCktElement := PVSystemClass.ElementList.Active;
+            ActiveCircuit.PVSystems.Get(PVSystemClass.Active);
+        end
+        else
+        begin
+            DoSimpleMsg('PVSystem "' + Value + '" Not Found in Active Circuit.', 5003);
+        end;
+        Exit;
+    end;
+
+    if PVSystem2Class.SetActive(Value) then
+    begin
+        ActiveCircuit.ActiveCktElement := PVSystem2Class.ElementList.Active;
+        ActiveCircuit.PVSystems.Get(PVSystem2Class.Active);
     end
     else
     begin
