@@ -6,7 +6,7 @@ unit Storage2Vars;
   All rights reserved.
   ----------------------------------------------------------
 
-       Definition of Storage2 Public Data Record for passing to DLLs and other object
+       Definition of Storage Public Data Record for passing to DLLs and other object
 }
 
 interface
@@ -26,7 +26,7 @@ type
 
         ChargeEff: Double;
         DisChargeEff: Double;
-        kVStorage2Base: Double;
+        kVStorageBase: Double;
         RThev: Double;
         XThev: Double;
 

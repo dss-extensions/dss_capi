@@ -19,13 +19,13 @@ unit PVsystem2;
     Complete Harmonics mode algorithm (generator mode is implemented)
 }
 {
-  The PVsystem2 element is essentially a generator that consists of a PV panel and an inverter.
+  The PVsystem element is essentially a generator that consists of a PV panel and an inverter.
 
-  The PVsystem2 element can also produce or absorb vars within the kVA rating of the inverter.
+  The PVsystem element can also produce or absorb vars within the kVA rating of the inverter.
   // WGS: Updated 9/24/2015 to allow for simultaneous modes and additional functionality in the InvControl.
 }
 
-//  The PVsystem2 element is assumed balanced over the no. of phases defined
+//  The PVsystem element is assumed balanced over the no. of phases defined
 
 
 interface
@@ -55,7 +55,7 @@ type
     TPVSystem2Vars = packed record
 
         FkVArating: Double;
-        kVPVSystem2Base: Double;
+        kVPVSystemBase: Double;
         RThev: Double;
         XThev: Double;
         Vthevharm: Double;  {Thevinen equivalent voltage mag  for Harmonic model}
@@ -100,7 +100,7 @@ type
 
     PROTECTED
         procedure DefineProperties;
-        function MakeLike(const OtherPVsystem2ObjName: String): Integer; OVERRIDE;
+        function MakeLike(const OtherPVsystemObjName: String): Integer; OVERRIDE;
 
     PUBLIC
         RegisterNames: array[1..NumPVSystem2Registers] of String;
@@ -128,9 +128,9 @@ type
         LastThevAngle: Double;
 
         DebugTrace: Boolean;
-        PVSystem2SolutionCount: Integer;
-        PVSystem2Fundamental: Double;  {Thevinen equivalent voltage mag and angle reference for Harmonic model}
-        PVsystem2ObjSwitchOpen: Boolean;
+        PVSystemSolutionCount: Integer;
+        PVSystemFundamental: Double;  {Thevinen equivalent voltage mag and angle reference for Harmonic model}
+        PVsystemObjSwitchOpen: Boolean;
         FirstSampleAfterReset: Boolean;
 
       //PFSpecified             :Boolean;
@@ -160,7 +160,7 @@ type
         pctR: Double;
         pctX: Double;
 
-        OpenPVSystem2SolutionCount: Integer;
+        OpenPVSystemSolutionCount: Integer;
 
         Pnominalperphase: Double;
         Qnominalperphase: Double;
@@ -203,15 +203,15 @@ type
         procedure ComputeInverterPower;
         procedure ComputekWkvar;
 
-        procedure CalcPVSystem2ModelContribution();   // This is where the power gets computed
+        procedure CalcPVSystemModelContribution();   // This is where the power gets computed
         procedure CalcInjCurrentArray();
       (*PROCEDURE CalcVterminal;*)
         procedure CalcVTerminalPhase();
 
         procedure CalcYPrimMatrix(Ymatrix: TcMatrix);
 
-        procedure DoConstantPQPVsystem2Obj();
-        procedure DoConstantZPVsystem2Obj();
+        procedure DoConstantPQPVsystemObj();
+        procedure DoConstantZPVsystemObj();
         procedure DoDynamicMode();
         procedure DoHarmonicMode();
         procedure DoUserModel();
@@ -223,40 +223,18 @@ type
         procedure WriteTraceRecord(const s: String);
 
       // PROCEDURE SetKWandKvarOut;
-        procedure UpdatePVSystem2;    // Update PVSystem elements based on present kW and IntervalHrs variable
+        procedure UpdatePVSystem;    // Update PVSystem elements based on present kW and IntervalHrs variable
 
         function Get_PresentkW: Double;
         function Get_Presentkvar: Double;
-        function Get_PresentkV: Double;
         function Get_PresentIrradiance: Double;
 
         procedure Set_PresentkV(const Value: Double);
-        procedure Set_Presentkvar(const Value: Double);
-        procedure Set_PresentkW(const Value: Double);
         procedure Set_PowerFactor(const Value: Double);
-        procedure Set_PresentIrradiance(const Value: Double);
         procedure Set_pf_wp_nominal(const Value: Double);
 
         procedure Set_kVARating(const Value: Double);
-        procedure Set_puPmpp(const Value: Double);
-        function Get_Varmode: Integer;
-
-        procedure Set_Varmode(const Value: Integer);
-
-        function Get_VWmode: Boolean;
-        procedure Set_VWmode(const Value: Boolean);
-
-        function Get_VVmode: Boolean;
-        procedure Set_VVmode(const Value: Boolean);
-
-        function Get_WPmode: Boolean;
-        procedure Set_WPmode(const Value: Boolean);
-
-        function Get_WVmode: Boolean;
-        procedure Set_WVmode(const Value: Boolean);
-
-        function Get_DRCmode: Boolean;
-        procedure Set_DRCmode(const Value: Boolean);
+        procedure Set_Pmpp(const Value: Double);
 
         procedure kWOut_Calc;
 
@@ -264,7 +242,7 @@ type
         procedure GetTerminalCurrents(Curr: pComplexArray); OVERRIDE;
 
     PUBLIC
-        PVSystem2Vars: TPVSystem2Vars;
+        PVSystemVars: TPVSystem2Vars;
 
         VBase: Double;  // Base volts suitable for computing currents
         CurrentkvarLimit: Double;
@@ -316,14 +294,10 @@ type
         procedure Set_Variable(i: Integer; Value: Double); OVERRIDE;
         function VariableName(i: Integer): String; OVERRIDE;
 
-        function Get_InverterON: Boolean;
-        procedure Set_InverterON(const Value: Boolean);
-        function Get_VarFollowInverter: Boolean;
-        procedure Set_VarFollowInverter(const Value: Boolean);
         procedure Set_Maxkvar(const Value: Double);
         procedure Set_Maxkvarneg(const Value: Double);
 
-        procedure SetNominalPVSystem2Ouput();
+        procedure SetNominalPVSystemOuput();
         procedure Randomize(Opt: Integer);   // 0 = reset to 1.0; 1 = Gaussian around mean and std Dev  ;  // 2 = uniform
 
 
@@ -344,26 +318,27 @@ type
         function GetPropertyValue(Index: Integer): String; OVERRIDE;
 
       {Porperties}
-        property PresentIrradiance: Double READ Get_PresentIrradiance WRITE Set_PresentIrradiance;
-        property PresentkW: Double READ Get_PresentkW WRITE Set_PresentkW;
-        property Presentkvar: Double READ Get_Presentkvar WRITE Set_Presentkvar;
-        property PresentkV: Double READ Get_PresentkV WRITE Set_PresentkV;
+        property PresentIrradiance: Double READ Get_PresentIrradiance WRITE PVSystemVars.FIrradiance;
+        property PresentkW: Double READ Get_PresentkW WRITE kWRequested;
+        property Presentkvar: Double READ Get_Presentkvar WRITE kvarRequested;
+        property PresentkV: Double READ PVSystemVars.kVPVSystemBase WRITE Set_PresentkV;
         property PowerFactor: Double READ PFnominal WRITE Set_PowerFactor;
-        property kVARating: Double READ PVSystem2Vars.FkVARating WRITE Set_kVARating;
-        property Pmpp: Double READ PVSystem2Vars.FPmpp;
-        property puPmpp: Double READ PVSystem2Vars.FpuPmpp WRITE Set_puPmpp;
-        property Varmode: Integer READ Get_Varmode WRITE Set_Varmode;  // 0=constant PF; 1=kvar specified
-        property VWmode: Boolean READ Get_VWmode WRITE Set_VWmode;
-        property VVmode: Boolean READ Get_VVmode WRITE Set_VVmode;
-        property WPmode: Boolean READ Get_WPmode WRITE Set_WPmode;
-        property WVmode: Boolean READ Get_WVmode WRITE Set_WVmode;
-        property DRCmode: Boolean READ Get_DRCmode WRITE Set_DRCmode;
-        property InverterON: Boolean READ Get_InverterON WRITE Set_InverterON;
-        property VarFollowInverter: Boolean READ Get_VarFollowInverter WRITE Set_VarFollowInverter;
-        property kvarLimit: Double READ PVSystem2Vars.Fkvarlimit WRITE Set_Maxkvar;
-        property kvarLimitneg: Double READ PVSystem2Vars.Fkvarlimitneg WRITE Set_Maxkvarneg;
+        property kVARating: Double READ PVSystemVars.FkVARating WRITE Set_kVARating;
+        property Pmpp: Double READ PVSystemVars.FPmpp WRITE Set_pmpp;
+        property puPmpp: Double READ PVSystemVars.FpuPmpp WRITE PVSystemVars.FpuPmpp;
+        property Varmode: Integer READ FvarMode WRITE FvarMode;  // 0=constant PF; 1=kvar specified
+        property VWmode: Boolean READ FVWmode WRITE FVWmode;
+        property VVmode: Boolean READ FVVmode WRITE FVVmode;
+        property WPmode: Boolean READ FWPmode WRITE FWPmode;
+        property WVmode: Boolean READ FWVmode WRITE FWVmode;
+        property DRCmode: Boolean READ FDRCmode WRITE FDRCmode;
+        property InverterON: Boolean READ FInverterON WRITE FInverterON;
+        property VarFollowInverter: Boolean READ FVarFollowInverter WRITE FVarFollowInverter;
+        property kvarLimit: Double READ PVSystemVars.Fkvarlimit WRITE Set_Maxkvar;
+        property kvarLimitneg: Double READ PVSystemVars.Fkvarlimitneg WRITE Set_Maxkvarneg;
         property MinModelVoltagePU: Double READ VminPu;
         property pf_wp_nominal: Double WRITE Set_pf_wp_nominal;
+        property IrradianceNow: Double READ ShapeFactor.re;
     end;
 
 var
@@ -442,8 +417,8 @@ var
 constructor TPVsystem2.Create;  // Creates superstructure for all PVSystem elements
 begin
     inherited Create;
-    Class_Name := 'PVSystem2';
-    DSSClassType := DSSClassType + PVSYSTEM2_ELEMENT;  // In both PCelement and PVSystem element list
+    Class_Name := 'PVSystem';
+    DSSClassType := DSSClassType + PVSYSTEM_ELEMENT;  // In both PCelement and PVSystem element list
 
     ActiveElement := 0;
 
@@ -482,12 +457,12 @@ begin
 
     }
     AddProperty('phases', 1,
-        'Number of Phases, this PVSystem2 element.  Power is evenly divided among phases.');
+        'Number of Phases, this PVSystem element.  Power is evenly divided among phases.');
     AddProperty('bus1', 2,
-        'Bus to which the PVSystem2 element is connected.  May include specific node specification.');
+        'Bus to which the PVSystem element is connected.  May include specific node specification.');
     AddProperty('kv', propKV,
-        'Nominal rated (1.0 per unit) voltage, kV, for PVSystem2 element. For 2- and 3-phase PVSystem2 elements, specify phase-phase kV. ' +
-        'Otherwise, specify actual kV across each branch of the PVSystem2 element. ' +
+        'Nominal rated (1.0 per unit) voltage, kV, for PVSystem element. For 2- and 3-phase PVSystem elements, specify phase-phase kV. ' +
+        'Otherwise, specify actual kV across each branch of the PVSystem element. ' +
         'If 1-phase wye (star or LN), specify phase-neutral kV. ' +
         'If 1-phase delta or phase-phase connected, specify phase-phase kV.');  // line-neutral voltage//  base voltage
     AddProperty('irradiance', propIrradiance,
@@ -507,7 +482,7 @@ begin
         'Nominally, the power factor for the output power. Default is 1.0. ' +
         'Setting this property will cause the inverter to operate in constant power factor mode.' +
         'Enter negative when kW and kvar have opposite signs.' + CRLF +
-        'A positive power factor signifies that the PVSystem2 element produces vars ' + CRLF +
+        'A positive power factor signifies that the PVSystem element produces vars ' + CRLF +
         'as is typical for a generator.  ');
     AddProperty('conn', propCONNECTION,
         '={wye|LN|delta|LL}.  Default is wye.');
@@ -541,8 +516,8 @@ begin
     AddProperty('model', propMODEL,
         'Integer code (default=1) for the model to use for power output variation with voltage. ' +
         'Valid values are:' + CRLF + CRLF +
-        '1:PVSystem2 element injects a CONSTANT kW at specified power factor.' + CRLF +
-        '2:PVSystem2 element is modeled as a CONSTANT ADMITTANCE.' + CRLF +
+        '1:PVSystem element injects a CONSTANT kW at specified power factor.' + CRLF +
+        '2:PVSystem element is modeled as a CONSTANT ADMITTANCE.' + CRLF +
         '3:Compute load injection from User-written Model.');
 
     AddProperty('Vminpu', propVMINPU,
@@ -561,11 +536,11 @@ begin
         'Dispatch shape to use for yearly simulations.  Must be previously defined ' +
         'as a Loadshape object. If this is not specified, the Daily dispatch shape, if any, is repeated ' +
         'during Yearly solution modes. In the default dispatch mode, ' +
-        'the PVSystem2 element uses this loadshape to trigger State changes.');
+        'the PVSystem element uses this loadshape to trigger State changes.');
     AddProperty('daily', propDAILY,
         'Dispatch shape to use for daily simulations.  Must be previously defined ' +
         'as a Loadshape object of 24 hrs, typically.  In the default dispatch mode, ' +
-        'the PVSystem2 element uses this loadshape to trigger State changes.'); // daily dispatch (hourly)
+        'the PVSystem element uses this loadshape to trigger State changes.'); // daily dispatch (hourly)
     AddProperty('duty', propDUTY,
         'Load shape to use for duty cycle dispatch simulations such as for solar ramp rate studies. ' +
         'Must be previously defined as a Loadshape object. ' +
@@ -577,12 +552,12 @@ begin
         'Temperature shape to use for yearly simulations.  Must be previously defined ' +
         'as a TShape object. If this is not specified, the Daily dispatch shape, if any, is repeated ' +
         'during Yearly solution modes. ' +
-        'The PVSystem2 element uses this TShape to determine the Pmpp from the Pmpp vs T curve. ' +
+        'The PVSystem element uses this TShape to determine the Pmpp from the Pmpp vs T curve. ' +
         'Units must agree with the Pmpp vs T curve.');
     AddProperty('Tdaily', propTDAILY,
         'Temperature shape to use for daily simulations.  Must be previously defined ' +
         'as a TShape object of 24 hrs, typically.  ' +
-        'The PVSystem2 element uses this TShape to determine the Pmpp from the Pmpp vs T curve. ' +
+        'The PVSystem element uses this TShape to determine the Pmpp from the Pmpp vs T curve. ' +
         'Units must agree with the Pmpp vs T curve.'); // daily dispatch (hourly)
     AddProperty('Tduty', propTDUTY,
         'Temperature shape to use for duty cycle dispatch simulations such as for solar ramp rate studies. ' +
@@ -590,10 +565,10 @@ begin
         'Typically would have time intervals of 1-5 seconds. ' +
         'Designate the number of points to solve using the Set Number=xxxx command. ' +
         'If there are fewer points in the actual shape, the shape is assumed to repeat. ' +
-        'The PVSystem2 model uses this TShape to determine the Pmpp from the Pmpp vs T curve. ' +
+        'The PVSystem model uses this TShape to determine the Pmpp from the Pmpp vs T curve. ' +
         'Units must agree with the Pmpp vs T curve.');  // Cloud transient simulation
     AddProperty('class', propCLASS,
-        'An arbitrary integer number representing the class of PVSystem2 element so that PVSystem2 values may ' +
+        'An arbitrary integer number representing the class of PVSystem element so that PVSystem values may ' +
         'be segregated by class.'); // integer
 
     AddProperty('UserModel', propUSERMODEL,
@@ -602,16 +577,16 @@ begin
     AddProperty('UserData', propUSERDATA,
         'String (in quotes or parentheses) that gets passed to user-written model for defining the data required for that model.');
     AddProperty('debugtrace', propDEBUGTRACE,
-        '{Yes | No }  Default is no.  Turn this on to capture the progress of the PVSystem2 model ' +
-        'for each iteration.  Creates a separate file for each PVSystem2 element named "PVSystem2_name.CSV".');
+        '{Yes | No }  Default is no.  Turn this on to capture the progress of the PVSystem model ' +
+        'for each iteration.  Creates a separate file for each PVSystem element named "PVSystem_name.CSV".');
     AddProperty('VarFollowInverter', propVarFollowInverter,
         'Boolean variable (Yes|No) or (True|False). Defaults to False which indicates that the reactive power generation/absorption does not respect the inverter status.' +
-        'When set to True, the PVSystem2 reactive power generation/absorption will cease when the inverter status is off, due to panel kW dropping below %Cutout.  The reactive power ' +
-        'generation/absorption will begin again when the panel kW is above %Cutin.  When set to False, the PVSystem2 will generate/absorb reactive power regardless of the status of the inverter.');
+        'When set to True, the PVSystem reactive power generation/absorption will cease when the inverter status is off, due to panel kW dropping below %Cutout.  The reactive power ' +
+        'generation/absorption will begin again when the panel kW is above %Cutin.  When set to False, the PVSystem will generate/absorb reactive power regardless of the status of the inverter.');
 
 
     AddProperty('DutyStart', propDutyStart,
-        'Starting time offset [hours] into the duty cycle shape for this PVSystem2, defaults to 0');
+        'Starting time offset [hours] into the duty cycle shape for this PVSystem, defaults to 0');
     AddProperty('WattPriority', propPPriority,
         '{Yes/No*/True/False} Set inverter to watt priority instead of the default var priority');
     AddProperty('PFPriority', propPFPriority,
@@ -636,7 +611,7 @@ begin
     inherited DefineProperties;  // Add defs of inherited properties to bottom of list
 
     // Override default help string
-    PropertyHelp[NumPropsThisClass + 1] := 'Name of harmonic voltage or current spectrum for this PVSystem2 element. ' +
+    PropertyHelp[NumPropsThisClass + 1] := 'Name of harmonic voltage or current spectrum for this PVSystem element. ' +
         'A harmonic voltage source is assumed for the inverter. ' +
         'Default value is "default", which is defined when the DSS starts.';
 
@@ -677,7 +652,7 @@ begin
     for i := 1 to ElementList.ListSize do
         with TPVsystem2Obj(ElementList.Get(i)) do
             if Enabled then
-                UpdatePVSystem2;
+                UpdatePVSystem;
 end;
 
 procedure TPVsystem2.InterpretConnection(const S: String);
@@ -709,12 +684,12 @@ begin
 
       {VBase is always L-N voltage unless 1-phase device or more than 3 phases}
 
-        with PVSystem2Vars do
+        with PVSystemVars do
             case Fnphases of
                 2, 3:
-                    VBase := kVPVSystem2Base * InvSQRT3x1000;    // L-N Volts
+                    VBase := kVPVSystemBase * InvSQRT3x1000;    // L-N Volts
             else
-                VBase := kVPVSystem2Base * 1000.0;   // Just use what is supplied
+                VBase := kVPVSystemBase * 1000.0;   // Just use what is supplied
             end;
 
         VBaseMin := Vminpu * VBase;
@@ -759,7 +734,7 @@ begin
             if (ParamPointer > 0) and (ParamPointer <= NumProperties) then
                 PropertyValue[PropertyIdxMap[ParamPointer]] := Param   // Update the string value of the property
             else
-                DoSimpleMsg('Unknown parameter "' + ParamName + '" for PVSystem2 "' + Name + '"', 560);
+                DoSimpleMsg('Unknown parameter "' + ParamName + '" for PVSystem "' + Name + '"', 560);
 
             if (ParamPointer > 0) then
             begin
@@ -774,7 +749,7 @@ begin
                     propKV:
                         PresentkV := Parser.DblValue;
                     propIrradiance:
-                        PVSystem2Vars.FIrradiance := Parser.DblValue;
+                        PVSystemVars.FIrradiance := Parser.DblValue;
                     propPF:
                     begin
                         varMode := VARMODEPF;
@@ -810,9 +785,9 @@ begin
                     propInvEffCurve:
                         InverterCurve := Param;
                     propTemp:
-                        PVSystem2Vars.FTemperature := Parser.DblValue;
+                        PVSystemVars.FTemperature := Parser.DblValue;
                     propPmpp:
-                        PVSystem2Vars.FPmpp := Parser.DblValue;
+                        PVSystemVars.FPmpp := Parser.DblValue;
                     propP_T_Curve:
                         Power_TempCurve := Param;
                     propCutin:
@@ -824,13 +799,13 @@ begin
                     propVMAXPU:
                         VMaxPu := Parser.DblValue;
                     propKVA:
-                        with PVSystem2Vars do
+                        with PVSystemVars do
                         begin
                             FkVArating := Parser.DblValue;
                             if not kvarLimitSet then
-                                PVSystem2Vars.Fkvarlimit := FkVArating;
+                                PVSystemVars.Fkvarlimit := FkVArating;
                             if not kvarLimitSet and not kvarLimitNegSet then
-                                PVSystem2Vars.Fkvarlimitneg := FkVArating;
+                                PVSystemVars.Fkvarlimitneg := FkVArating;
                         end;
                     propUSERMODEL:
                         UserModel.Name := Parser.StrValue;  // Connect to user written models
@@ -839,7 +814,7 @@ begin
                     propDEBUGTRACE:
                         DebugTrace := InterpretYesNo(Param);
                     proppctPmpp:
-                        PVSystem2Vars.FpuPmpp := Parser.DblValue / 100.0;  // convert to pu
+                        PVSystemVars.FpuPmpp := Parser.DblValue / 100.0;  // convert to pu
                     propBalanced:
                         ForceBalanced := InterpretYesNo(Param);
                     propLimited:
@@ -848,18 +823,18 @@ begin
                         FVarFollowInverter := InterpretYesNo(Param);
                     propkvarLimit:
                     begin
-                        PVSystem2Vars.Fkvarlimit := Abs(Parser.DblValue);
+                        PVSystemVars.Fkvarlimit := Abs(Parser.DblValue);
                         kvarLimitSet := TRUE;
                         if not kvarLimitNegSet then
-                            PVSystem2Vars.Fkvarlimitneg := Abs(PVSystem2Vars.Fkvarlimit);
+                            PVSystemVars.Fkvarlimitneg := Abs(PVSystemVars.Fkvarlimit);
 
                     end;
                     propDutyStart:
                         DutyStart := Parser.DblValue;
                     propPPriority:
-                        PVSystem2Vars.P_priority := InterpretYesNo(Param);  // set watt priority flag
+                        PVSystemVars.P_priority := InterpretYesNo(Param);  // set watt priority flag
                     propPFPriority:
-                        PVSystem2Vars.PF_priority := InterpretYesNo(Param);
+                        PVSystemVars.PF_priority := InterpretYesNo(Param);
 
                     propPminNoVars:
                         FpctPminNoVars := abs(Parser.DblValue);
@@ -868,7 +843,7 @@ begin
 
                     propkvarLimitneg:
                     begin
-                        PVSystem2Vars.Fkvarlimitneg := Abs(Parser.DblValue);
+                        PVSystemVars.Fkvarlimitneg := Abs(Parser.DblValue);
                         kvarLimitNegSet := TRUE;
                     end;
 
@@ -907,7 +882,7 @@ begin
                         begin   // Init trace file
                             AssignFile(TraceFile, GetOutputDirectory + 'STOR_' + Name + '.CSV');
                             ReWrite(TraceFile);
-                            Write(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, PVSystem2Model,  Qnominalperphase, Pnominalperphase, CurrentType');
+                            Write(TraceFile, 't, Iteration, LoadMultiplier, Mode, LoadModel, PVSystemModel,  Qnominalperphase, Pnominalperphase, CurrentType');
                             for i := 1 to nphases do
                                 Write(Tracefile, ', |Iinj' + IntToStr(i) + '|');
                             for i := 1 to nphases do
@@ -932,103 +907,103 @@ begin
 
 end;
 
-function TPVsystem2.MakeLike(const OtherPVsystem2ObjName: String): Integer;
+function TPVsystem2.MakeLike(const OtherPVsystemObjName: String): Integer;
 
 // Copy over essential properties from other object
 
 var
-    OtherPVsystem2Obj: TPVsystem2Obj;
+    OtherPVsystemObj: TPVsystem2Obj;
     i: Integer;
 
 begin
     Result := 0;
     {See If we can find this line name in the present collection}
-    OtherPVsystem2Obj := Find(OtherPVsystem2ObjName);
-    if (OtherPVsystem2Obj <> NIL) then
+    OtherPVsystemObj := Find(OtherPVsystemObjName);
+    if (OtherPVsystemObj <> NIL) then
     begin
         with ActivePVsystem2Obj do
         begin
-            if (Fnphases <> OtherPVsystem2Obj.Fnphases) then
+            if (Fnphases <> OtherPVsystemObj.Fnphases) then
             begin
-                Nphases := OtherPVsystem2Obj.Fnphases;
+                Nphases := OtherPVsystemObj.Fnphases;
                 NConds := Fnphases;  // Forces reallocation of terminal stuff
                 Yorder := Fnconds * Fnterms;
                 YprimInvalid := TRUE;
             end;
 
-            PVSystem2Vars.kVPVSystem2Base := OtherPVsystem2Obj.PVSystem2Vars.kVPVSystem2Base;
-            Vbase := OtherPVsystem2Obj.Vbase;
-            Vminpu := OtherPVsystem2Obj.Vminpu;
-            Vmaxpu := OtherPVsystem2Obj.Vmaxpu;
-            VBaseMin := OtherPVsystem2Obj.VBaseMin;
-            VBaseMax := OtherPVsystem2Obj.VBaseMax;
-            kW_out := OtherPVsystem2Obj.kW_out;
-            kvar_out := OtherPVsystem2Obj.kvar_out;
-            Pnominalperphase := OtherPVsystem2Obj.Pnominalperphase;
-            PFnominal := OtherPVsystem2Obj.PFnominal;
-            Qnominalperphase := OtherPVsystem2Obj.Qnominalperphase;
-            Connection := OtherPVsystem2Obj.Connection;
-            YearlyShape := OtherPVsystem2Obj.YearlyShape;
-            YearlyShapeObj := OtherPVsystem2Obj.YearlyShapeObj;
-            DailyShape := OtherPVsystem2Obj.DailyShape;
-            DailyShapeObj := OtherPVsystem2Obj.DailyShapeObj;
-            DutyShape := OtherPVsystem2Obj.DutyShape;
-            DutyShapeObj := OtherPVsystem2Obj.DutyShapeObj;
-            DutyStart := OtherPVsystem2Obj.DutyStart;
-            YearlyTShape := OtherPVsystem2Obj.YearlyTShape;
-            YearlyTShapeObj := OtherPVsystem2Obj.YearlyTShapeObj;
-            DailyTShape := OtherPVsystem2Obj.DailyTShape;
-            DailyTShapeObj := OtherPVsystem2Obj.DailyTShapeObj;
-            DutyTShape := OtherPVsystem2Obj.DutyTShape;
-            DutyTShapeObj := OtherPVsystem2Obj.DutyTShapeObj;
-            InverterCurve := OtherPVsystem2Obj.InverterCurve;
-            InverterCurveObj := OtherPVsystem2Obj.InverterCurveObj;
-            Power_TempCurve := OtherPVsystem2Obj.Power_TempCurve;
-            Power_TempCurveObj := OtherPVsystem2Obj.Power_TempCurveObj;
-            FClass := OtherPVsystem2Obj.FClass;
-            VoltageModel := OtherPVsystem2Obj.VoltageModel;
+            PVSystemVars.kVPVSystemBase := OtherPVsystemObj.PVSystemVars.kVPVSystemBase;
+            Vbase := OtherPVsystemObj.Vbase;
+            Vminpu := OtherPVsystemObj.Vminpu;
+            Vmaxpu := OtherPVsystemObj.Vmaxpu;
+            VBaseMin := OtherPVsystemObj.VBaseMin;
+            VBaseMax := OtherPVsystemObj.VBaseMax;
+            kW_out := OtherPVsystemObj.kW_out;
+            kvar_out := OtherPVsystemObj.kvar_out;
+            Pnominalperphase := OtherPVsystemObj.Pnominalperphase;
+            PFnominal := OtherPVsystemObj.PFnominal;
+            Qnominalperphase := OtherPVsystemObj.Qnominalperphase;
+            Connection := OtherPVsystemObj.Connection;
+            YearlyShape := OtherPVsystemObj.YearlyShape;
+            YearlyShapeObj := OtherPVsystemObj.YearlyShapeObj;
+            DailyShape := OtherPVsystemObj.DailyShape;
+            DailyShapeObj := OtherPVsystemObj.DailyShapeObj;
+            DutyShape := OtherPVsystemObj.DutyShape;
+            DutyShapeObj := OtherPVsystemObj.DutyShapeObj;
+            DutyStart := OtherPVsystemObj.DutyStart;
+            YearlyTShape := OtherPVsystemObj.YearlyTShape;
+            YearlyTShapeObj := OtherPVsystemObj.YearlyTShapeObj;
+            DailyTShape := OtherPVsystemObj.DailyTShape;
+            DailyTShapeObj := OtherPVsystemObj.DailyTShapeObj;
+            DutyTShape := OtherPVsystemObj.DutyTShape;
+            DutyTShapeObj := OtherPVsystemObj.DutyTShapeObj;
+            InverterCurve := OtherPVsystemObj.InverterCurve;
+            InverterCurveObj := OtherPVsystemObj.InverterCurveObj;
+            Power_TempCurve := OtherPVsystemObj.Power_TempCurve;
+            Power_TempCurveObj := OtherPVsystemObj.Power_TempCurveObj;
+            FClass := OtherPVsystemObj.FClass;
+            VoltageModel := OtherPVsystemObj.VoltageModel;
 
-            PVSystem2Vars.FTemperature := OtherPVsystem2Obj.PVSystem2Vars.FTemperature;
-            PVSystem2Vars.FPmpp := OtherPVsystem2Obj.PVSystem2Vars.FPmpp;
-            FpctCutin := OtherPVsystem2Obj.FpctCutin;
-            FpctCutout := OtherPVsystem2Obj.FpctCutout;
-            FVarFollowInverter := OtherPVsystem2Obj.FVarFollowInverter;
-            PVSystem2Vars.Fkvarlimit := OtherPVsystem2Obj.PVSystem2Vars.Fkvarlimit;
-            PVSystem2Vars.Fkvarlimitneg := OtherPVsystem2Obj.PVSystem2Vars.Fkvarlimitneg;
-            FpctPminNoVars := OtherPVsystem2Obj.FpctPminNoVars;
-            FpctPminkvarLimit := OtherPVsystem2Obj.FpctPminkvarLimit;
-            kvarLimitSet := OtherPVsystem2Obj.kvarLimitSet;
-            kvarLimitNegSet := OtherPVsystem2Obj.kvarLimitNegSet;
+            PVSystemVars.FTemperature := OtherPVsystemObj.PVSystemVars.FTemperature;
+            PVSystemVars.FPmpp := OtherPVsystemObj.PVSystemVars.FPmpp;
+            FpctCutin := OtherPVsystemObj.FpctCutin;
+            FpctCutout := OtherPVsystemObj.FpctCutout;
+            FVarFollowInverter := OtherPVsystemObj.FVarFollowInverter;
+            PVSystemVars.Fkvarlimit := OtherPVsystemObj.PVSystemVars.Fkvarlimit;
+            PVSystemVars.Fkvarlimitneg := OtherPVsystemObj.PVSystemVars.Fkvarlimitneg;
+            FpctPminNoVars := OtherPVsystemObj.FpctPminNoVars;
+            FpctPminkvarLimit := OtherPVsystemObj.FpctPminkvarLimit;
+            kvarLimitSet := OtherPVsystemObj.kvarLimitSet;
+            kvarLimitNegSet := OtherPVsystemObj.kvarLimitNegSet;
 
 
-            PVSystem2Vars.FIrradiance := OtherPVsystem2Obj.PVSystem2Vars.FIrradiance;
+            PVSystemVars.FIrradiance := OtherPVsystemObj.PVSystemVars.FIrradiance;
 
-            PVSystem2Vars.FkVArating := OtherPVsystem2Obj.PVSystem2Vars.FkVArating;
+            PVSystemVars.FkVArating := OtherPVsystemObj.PVSystemVars.FkVArating;
 
-            pctR := OtherPVsystem2Obj.pctR;
-            pctX := OtherPVsystem2Obj.pctX;
+            pctR := OtherPVsystemObj.pctR;
+            pctX := OtherPVsystemObj.pctX;
 
-            RandomMult := OtherPVsystem2Obj.RandomMult;
-            FVWMode := OtherPVsystem2Obj.FVWMode;
-            FVVMode := OtherPVsystem2Obj.FVVMode;
-            FWPMode := OtherPVsystem2Obj.FWPMode;
-            FWVMode := OtherPVsystem2Obj.FWPMode;
-            FDRCMode := OtherPVsystem2Obj.FDRCMode;
-            UserModel.Name := OtherPVsystem2Obj.UserModel.Name;  // Connect to user written models
+            RandomMult := OtherPVsystemObj.RandomMult;
+            FVWMode := OtherPVsystemObj.FVWMode;
+            FVVMode := OtherPVsystemObj.FVVMode;
+            FWPMode := OtherPVsystemObj.FWPMode;
+            FWVMode := OtherPVsystemObj.FWPMode;
+            FDRCMode := OtherPVsystemObj.FDRCMode;
+            UserModel.Name := OtherPVsystemObj.UserModel.Name;  // Connect to user written models
 
-            ForceBalanced := OtherPVsystem2Obj.ForceBalanced;
-            CurrentLimited := OtherPVsystem2Obj.CurrentLimited;
+            ForceBalanced := OtherPVsystemObj.ForceBalanced;
+            CurrentLimited := OtherPVsystemObj.CurrentLimited;
 
-            ClassMakeLike(OtherPVsystem2Obj);
+            ClassMakeLike(OtherPVsystemObj);
 
             for i := 1 to ParentClass.NumProperties do
-                FPropertyValue^[i] := OtherPVsystem2Obj.FPropertyValue^[i];
+                FPropertyValue^[i] := OtherPVsystemObj.FPropertyValue^[i];
 
             Result := 1;
         end;
     end
     else
-        DoSimpleMsg('Error in PVSystem2 MakeLike: "' + OtherPVsystem2ObjName + '" Not Found.', 562);
+        DoSimpleMsg('Error in PVSystem MakeLike: "' + OtherPVsystemObjName + '" Not Found.', 562);
 end;
 
 function TPVsystem2.Init(Handle: Integer): Integer;
@@ -1052,7 +1027,7 @@ begin
         p.Randomize(0);
     end;
 
-    DoSimpleMsg('Need to implement TPVsystem2.Init', -1);
+    DoSimpleMsg('Need to implement TPVSystem.Init', -1);
     Result := 0;
 end;
 
@@ -1085,7 +1060,7 @@ constructor TPVsystem2Obj.Create(ParClass: TDSSClass; const SourceName: String);
 begin
     inherited create(ParClass);
     Name := LowerCase(SourceName);
-    DSSObjType := ParClass.DSSClassType; // + PVSystem2_ELEMENT;  // In both PCelement and PVSystemelement list
+    DSSObjType := ParClass.DSSClassType; // + PVSystem_ELEMENT;  // In both PCelement and PVSystemelement list
 
     Nphases := 3;
     Fnconds := 4;  // defaults to wye
@@ -1116,11 +1091,11 @@ begin
     VoltageModel := 1;  {Typical fixed kW negative load}
     FClass := 1;
 
-    PVSystem2SolutionCount := -1;  // For keep track of the present solution in Injcurrent calcs
-    OpenPVSystem2SolutionCount := -1;
+    PVSystemSolutionCount := -1;  // For keep track of the present solution in Injcurrent calcs
+    OpenPVSystemSolutionCount := -1;
     YPrimOpenCond := NIL;
 
-    PVSystem2Vars.kVPVSystem2Base := 12.47;
+    PVSystemVars.kVPVSystemBase := 12.47;
     VBase := 7200.0;
     Vminpu := 0.90;
     Vmaxpu := 1.10;
@@ -1135,7 +1110,7 @@ begin
     ForceBalanced := FALSE;
     CurrentLimited := FALSE;
 
-    with PVSystem2Vars do
+    with PVSystemVars do
     begin
         FTemperature := 25.0;
         FIrradiance := 1.0;  // kW/sq-m
@@ -1174,7 +1149,7 @@ begin
     ;
     pctX := 0.0;
 
-    PublicDataStruct := @PVSystem2Vars;
+    PublicDataStruct := @PVSystemVars;
     PublicDataSize := SizeOf(TPVSystem2Vars);
 
     kvarLimitSet := FALSE;
@@ -1191,7 +1166,7 @@ begin
     Reg_Price := 6;
 
     DebugTrace := FALSE;
-    PVsystem2ObjSwitchOpen := FALSE;
+    PVsystemObjSwitchOpen := FALSE;
     Spectrum := '';  // override base class
     SpectrumObj := NIL;
     FVWMode := FALSE;
@@ -1209,12 +1184,12 @@ procedure TPVsystem2Obj.InitPropertyValues(ArrayOffset: Integer);
 // Define default values for the properties
 begin
 
-    with PVSystem2Vars do
+    with PVSystemVars do
     begin
         PropertyValue[1] := '3';         //'phases';
         PropertyValue[2] := Getbus(1);   //'bus1';
 
-        PropertyValue[propKV] := Format('%-g', [kVPVSystem2Base]);
+        PropertyValue[propKV] := Format('%-g', [kVPVSystemBase]);
         PropertyValue[propIrradiance] := Format('%-g', [FIrradiance]);
         PropertyValue[propPF] := Format('%-g', [PFnominal]);
         PropertyValue[propMODEL] := '1';
@@ -1264,10 +1239,10 @@ function TPVsystem2Obj.GetPropertyValue(Index: Integer): String;
 
 begin
     Result := '';
-    with PVSystem2Vars do
+    with PVSystemVars do
         case Index of
             propKV:
-                Result := Format('%.6g', [kVPVSystem2Base]);
+                Result := Format('%.6g', [kVPVSystemBase]);
             propIrradiance:
                 Result := Format('%.6g', [FIrradiance]);
             propPF:
@@ -1394,7 +1369,7 @@ begin
         TShapeValue := DailyTShapeObj.GetTemperature(Hr);
     end
     else
-        TShapeValue := PVSystem2Vars.FTemperature;
+        TShapeValue := PVSystemVars.FTemperature;
     ;  // Default to no  variation
 end;
 
@@ -1445,7 +1420,7 @@ begin
 
     varBase := 1000.0 * kvar_out / Fnphases;
 
-    with PVSystem2Vars do
+    with PVSystemVars do
     begin
         // values in ohms for thevenin equivalents
         RThev := pctR * 0.01 * SQR(PresentkV) / FkVArating * 1000.0;
@@ -1466,7 +1441,7 @@ begin
 
     end;
 
-    SetNominalPVSystem2Ouput();
+    SetNominalPVSystemOuput();
 
     {Now check for errors.  If any of these came out nil and the string was not nil, give warning}
     if YearlyShapeObj = NIL then
@@ -1508,11 +1483,11 @@ begin
 
 end;
 
-procedure TPVsystem2Obj.SetNominalPVSystem2Ouput();
+procedure TPVsystem2Obj.SetNominalPVSystemOuput();
 begin
 
     ShapeFactor := CDOUBLEONE;  // init here; changed by curve routine
-    TShapeValue := PVSystem2Vars.FTemperature; // init here; changed by curve routine
+    TShapeValue := PVSystemVars.FTemperature; // init here; changed by curve routine
 
     // Check to make sure the PVSystem element is ON
     with ActiveCircuit, ActiveCircuit.Solution do
@@ -1611,7 +1586,7 @@ begin
 
             { Like Model 7 generator, max current is based on amount of current to get out requested power at min voltage
             }
-                with PVSystem2vars do
+                with PVSystemvars do
                 begin
                     PhaseCurrentLimit := Cdivreal(Cmplx(Pnominalperphase, Qnominalperphase), VBaseMin);
                     MaxDynPhaseCurrent := Cabs(PhaseCurrentLimit);
@@ -1727,10 +1702,10 @@ var
 
 begin
     // Reset CurrentkvarLimit to kvarLimit
-    CurrentkvarLimit := PVSystem2Vars.Fkvarlimit;
-    CurrentkvarLimitNeg := PVSystem2Vars.Fkvarlimitneg;
+    CurrentkvarLimit := PVSystemVars.Fkvarlimit;
+    CurrentkvarLimitNeg := PVSystemVars.Fkvarlimitneg;
 
-    with PVSystem2Vars do
+    with PVSystemVars do
     begin
         EffFactor := 1.0;
         kW_Out := 0.0;
@@ -1894,7 +1869,7 @@ begin
             if (varMode = VARMODEPF) and PF_Priority then
               // Operates under constant power factor when kVA rating is exceeded. PF must be specified and PFPriority must be TRUE
             begin
-                kW_out := FkVArating * PFnominal;
+                kW_out := FkVArating * abs(PFnominal);
                 kvar_out := FkVArating * sqrt(1 - Sqr(PFnominal)) * sign(PFnominal);
             end
             else
@@ -1935,7 +1910,7 @@ begin
         end;
         if (FInverterON = FALSE) and (FVarFollowInverter = TRUE) then
             kvar_out := 0.0;
-    end;  {With PVSystemVars}
+    end;  {With PVSystemvars}
 end;
 
 
@@ -1948,7 +1923,7 @@ end;
 // ===========================================================================================
 procedure TPVsystem2Obj.ComputePanelPower;
 begin
-    with PVSystem2Vars do
+    with PVSystemVars do
     begin
         TempFactor := 1.0;
         if Assigned(Power_TempCurveObj) then
@@ -1987,7 +1962,7 @@ begin
         YPrim.Clear;
     end;
 
-    SetNominalPVSystem2Ouput();
+    SetNominalPVSystemOuput();
     CalcYPrimMatrix(YPrim_Shunt);
 
     // Set YPrim_Series based on diagonals of YPrim_shunt  so that CalcVoltages Doesn't fail
@@ -2071,7 +2046,7 @@ end;
 
 
 // ===========================================================================================
-procedure TPVsystem2Obj.DoConstantPQPVsystem2Obj();
+procedure TPVsystem2Obj.DoConstantPQPVsystemObj();
 
 {Compute total terminal current for Constant PQ}
 
@@ -2114,7 +2089,7 @@ begin
                 begin
                     {Current-Limited Model}
                     PhaseCurr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), VLN));
-                    if Cabs(PhaseCurr) > PVSystem2vars.MaxDynPhaseCurrent then
+                    if Cabs(PhaseCurr) > PVSystemVars.MaxDynPhaseCurrent then
                         PhaseCurr := Conjg(Cdiv(PhaseCurrentLimit, CDivReal(VLN, VMagLN)));
                 end
                 else
@@ -2143,7 +2118,7 @@ begin
                 begin
                     {Current-Limited Model}
                     DeltaCurr := Conjg(Cdiv(Cmplx(Pnominalperphase, Qnominalperphase), VLL));
-                    if Cabs(DeltaCurr) * SQRT3 > PVSystem2vars.MaxDynPhaseCurrent then
+                    if Cabs(DeltaCurr) * SQRT3 > PVSystemVars.MaxDynPhaseCurrent then
                         DeltaCurr := Conjg(Cdiv(PhaseCurrentLimit, CDivReal(VLL, VMagLL / SQRT3)));
                 end
                 else
@@ -2177,7 +2152,7 @@ begin
 end;
 
 // ===========================================================================================
-procedure TPVsystem2Obj.DoConstantZPVsystem2Obj;
+procedure TPVsystem2Obj.DoConstantZPVsystemObj;
 {constant Z model}
 var
     i: Integer;
@@ -2238,7 +2213,7 @@ begin
         end;
     end
     else
-        DoSimpleMsg('PVSystem2.' + name + ' model designated to use user-written model, but user-written model is not defined.', 567);
+        DoSimpleMsg('PVSystem.' + name + ' model designated to use user-written model, but user-written model is not defined.', 567);
 
 end;
 
@@ -2262,7 +2237,7 @@ var
     begin
         {Try to keep in phase with terminal voltage}
 
-        with PVSystem2Vars do
+        with PVSystemVars do
         begin
 
             if Cabs(V) > 0.20 * Vbase then
@@ -2290,7 +2265,7 @@ begin
             end
             else
             begin
-                DoSimpleMsg(Format('Dynamics model missing for PVSystem2.%s ', [Name]), 5671);
+                DoSimpleMsg(Format('Dynamics model missing for PVSystem.%s ', [Name]), 5671);
                 SolutionAbort := TRUE;
             end;
     else  {All other models -- current-limited like Generator Model 7}
@@ -2300,7 +2275,7 @@ begin
 
         case Fnphases of  {No user model, use default Thevinen equivalent for standard Generator model}
             1:
-                with PVSystem2Vars do
+                with PVSystemVars do
                 begin
                     // 1-phase generators have 2 conductors
                     // Assume inverter stays in phase with terminal voltage
@@ -2317,7 +2292,7 @@ begin
                 end;
 
             3:
-                with PVSystem2Vars do
+                with PVSystemVars do
                 begin
                     Phase2SymComp(Vterminal, @V012);  // convert Vabc to V012
 
@@ -2379,25 +2354,25 @@ procedure TPVsystem2Obj.DoHarmonicMode();
 var
     i: Integer;
     E: Complex;
-    PVSystem2Harmonic: Double;
+    PVSystemHarmonic: Double;
 
 begin
     ComputeVterminal();
 
-    with ActiveCircuit.Solution, PVSystem2Vars do
+    with ActiveCircuit.Solution, PVSystemVars do
     begin
-        PVSystem2Harmonic := Frequency / PVSystem2Fundamental;
+        PVSystemHarmonic := Frequency / PVSystemFundamental;
         if SpectrumObj <> NIL then
-            E := CmulReal(SpectrumObj.GetMult(PVSystem2Harmonic), VThevHarm) // Get base harmonic magnitude
+            E := CmulReal(SpectrumObj.GetMult(PVSystemHarmonic), VThevHarm) // Get base harmonic magnitude
         else
             E := CZERO;
 
-        RotatePhasorRad(E, PVSystem2Harmonic, ThetaHarm);  // Time shift by fundamental frequency phase shift
+        RotatePhasorRad(E, PVSystemHarmonic, ThetaHarm);  // Time shift by fundamental frequency phase shift
         for i := 1 to Fnphases do
         begin
             cBuffer[i] := E;
             if i < Fnphases then
-                RotatePhasorDeg(E, PVSystem2Harmonic, -120.0);  // Assume 3-phase PVSystem element
+                RotatePhasorDeg(E, PVSystemHarmonic, -120.0);  // Assume 3-phase PVSystem element
         end;
     end;
 
@@ -2440,13 +2415,13 @@ begin
         end;
     end;
 
-    PVSystem2SolutionCount := ActiveCircuit.Solution.SolutionCount;
+    PVSystemSolutionCount := ActiveCircuit.Solution.SolutionCount;
 
 end;
 
 // ===========================================================================================
 (*
-PROCEDURE TPVsystemObj.CalcVTerminal;
+PROCEDURE TPVsystem2Obj.CalcVTerminal;
 {Put terminal voltages in an array}
 Begin
    ComputeVTerminal;
@@ -2456,7 +2431,7 @@ End;
 
 
 // ============================================CalcPVSystemModelContribution===============================================
-procedure TPVsystem2Obj.CalcPVSystem2ModelContribution();
+procedure TPVsystem2Obj.CalcPVSystemModelContribution();
 
 // Calculates PVSystem element current and adds it properly into the injcurrent array
 // routines may also compute ITerminal  (ITerminalUpdated flag)
@@ -2475,14 +2450,14 @@ begin
             //  compute currents and put into InjTemp array;
             case VoltageModel of
                 1:
-                    DoConstantPQPVsystem2Obj();
+                    DoConstantPQPVsystemObj();
                 2:
-                    DoConstantZPVsystem2Obj();
+                    DoConstantZPVsystemObj();
                 3:
                     DoUserModel();
 
             else
-                DoConstantPQPVsystem2Obj();  // for now, until we implement the other models.
+                DoConstantPQPVsystemObj();  // for now, until we implement the other models.
             end;
         end; {ELSE}
     end; {WITH}
@@ -2495,10 +2470,10 @@ procedure TPVsystem2Obj.CalcInjCurrentArray();
   // Difference between currents in YPrim and total current
 begin
     // Now Get Injection Currents
-    if PVsystem2ObjSwitchOpen then
+    if PVsystemObjSwitchOpen then
         ZeroInjCurrent
     else
-        CalcPVSystem2ModelContribution();
+        CalcPVSystemModelContribution();
 end;
 
 // =========================================GetTerminalCurrents==================================================
@@ -2510,8 +2485,8 @@ begin
     begin
         if IterminalSolutionCount <> ActiveCircuit.Solution.SolutionCount then
         begin     // recalc the contribution
-            if not PVsystem2ObjSwitchOpen then
-                CalcPVSystem2ModelContribution();  // Adds totals in Iterminal as a side effect
+            if not PVsystemObjSwitchOpen then
+                CalcPVSystemModelContribution();  // Adds totals in Iterminal as a side effect
         end;
         inherited GetTerminalCurrents(Curr);
     end;
@@ -2528,7 +2503,7 @@ begin
     with ActiveCircuit.Solution do
     begin
         if LoadsNeedUpdating then
-            SetNominalPVSystem2Ouput(); // Set the nominal kW, etc for the type of solution being Done
+            SetNominalPVSystemOuput(); // Set the nominal kW, etc for the type of solution being Done
 
         CalcInjCurrentArray();          // Difference between currents in YPrim and total terminal current
 
@@ -2561,7 +2536,7 @@ begin
 
     except
         ON E: Exception do
-            DoErrorMsg('PVSystem2 Object: "' + Name + '" in GetInjCurrents FUNCTION.', E.Message, 'Current buffer not big enough.', 568);
+            DoErrorMsg('PVSystem Object: "' + Name + '" in GetInjCurrents FUNCTION.', E.Message, 'Current buffer not big enough.', 568);
     end;
 
 end;
@@ -2633,7 +2608,7 @@ begin
     end;
 end;
 
-procedure TPVsystem2Obj.UpdatePVSystem2;
+procedure TPVsystem2Obj.UpdatePVSystem;
 {Update PVSystem levels}
 begin
 
@@ -2648,25 +2623,12 @@ end;
 
 function TPVsystem2Obj.Get_PresentIrradiance: Double;
 begin
-    Result := PVSystem2Vars.FIrradiance * ShapeFactor.re;
-end;
-
-function TPVsystem2Obj.Get_PresentkV: Double;
-begin
-    Result := PVSystem2Vars.kVPVSystem2Base;
+    Result := PVSystemVars.FIrradiance * ShapeFactor.re;
 end;
 
 function TPVsystem2Obj.Get_Presentkvar: Double;
 begin
     Result := Qnominalperphase * 0.001 * Fnphases;
-end;
-
-function TPVsystem2Obj.Get_VarFollowInverter: Boolean;
-begin
-    if FVarFollowInverter then
-        Result := TRUE
-    else
-        Result := FALSE;
 end;
 
 procedure TPVsystem2Obj.DumpProperties(var F: TextFile; Complete: Boolean);
@@ -2703,7 +2665,7 @@ var
 
 begin
     YprimInvalid := TRUE;  // Force rebuild of YPrims
-    PVSystem2Fundamental := ActiveCircuit.Solution.Frequency;  // Whatever the frequency is when we enter here.
+    PVSystemFundamental := ActiveCircuit.Solution.Frequency;  // Whatever the frequency is when we enter here.
 
     {Compute reference Thevinen voltage from phase 1 current}
 
@@ -2724,7 +2686,7 @@ begin
         end;
     end;
 
-    with PVSystem2Vars do
+    with PVSystemVars do
     begin
         YEQ := Cinv(Cmplx(RThev, XThev));           // used for current calcs  Always L-N
         E := Csub(Va, Cmul(Iterminal^[1], cmplx(Rthev, Xthev)));
@@ -2751,7 +2713,7 @@ var
 begin
     YprimInvalid := TRUE;  // Force rebuild of YPrims
 
-    with PVSystem2Vars do
+    with PVSystemVars do
     begin
         NumPhases := Fnphases;     // set Publicdata vars
         NumConductors := Fnconds;
@@ -2789,7 +2751,7 @@ begin
                     ThetaDyn := Cang(Edp); // initial thev equivalent phase angle
                 end;
             else
-                DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. PVSystem2.' + name + ' has %d phases.', [Fnphases]), 5673);
+                DoSimpleMsg(Format('Dynamics mode is implemented only for 1- or 3-phase Generators. PVSystem.' + name + ' has %d phases.', [Fnphases]), 5673);
                 SolutionAbort := TRUE;
             end;
 
@@ -2864,7 +2826,7 @@ begin
         Exit;
     // for now, report kWhstored and mode
 
-    with PVSystem2Vars do
+    with PVSystemVars do
         case i of
             1:
                 Result := PresentIrradiance;
@@ -2909,66 +2871,6 @@ begin
         end;
 end;
 
-function TPVsystem2Obj.Get_InverterON: Boolean;
-begin
-    if FInverterON then
-        Result := TRUE
-    else
-        Result := FALSE;
-end;
-
-// ============================================================Get_Varmode===============================
-function TPVsystem2Obj.Get_Varmode: Integer;
-begin
-    Result := FvarMode;
-end;
-
-// ============================================================Get_VWmode===============================
-function TPVsystem2Obj.Get_VWmode: Boolean;
-begin
-    if FVWmode then
-        Result := TRUE
-    else
-        Result := FALSE;    // TRUE if volt-watt mode                                                            //  engaged from InvControl (not ExpControl)
-end;
-
-// ============================================================Get_VVmode===============================
-function TPVsystem2Obj.Get_VVmode: Boolean;
-begin
-    if FVVmode then
-        Result := TRUE
-    else
-        Result := FALSE;                                                               //  engaged from InvControl (not ExpControl)
-end;
-
-// ============================================================Get_WPmode===============================
-function TPVsystem2Obj.Get_WPmode: Boolean;
-begin
-    if FWPmode then
-        Result := TRUE
-    else
-        Result := FALSE;                                                               //  engaged from InvControl (not ExpControl)
-end;
-
-// ============================================================Get_WVmode===============================
-function TPVsystem2Obj.Get_WVmode: Boolean;
-begin
-    if FWVmode then
-        Result := TRUE
-    else
-        Result := FALSE;                                                               //  engaged from InvControl (not ExpControl)
-end;
-
-// ============================================================Get_DRCmode===============================
-function TPVsystem2Obj.Get_DRCmode: Boolean;
-begin
-    if FDRCmode then
-        Result := TRUE
-    else
-        Result := FALSE;                                                               //  engaged from InvControl (not ExpControl)
-end;
-
-
 // ============================================================kWOut_Calc===============================
 procedure TPVsystem2Obj.kWOut_Calc;
 
@@ -2977,7 +2879,7 @@ var
     PpctLimit: Double;
 
 begin
-    with PVSystem2Vars do
+    with PVSystemVars do
     begin
         Pac := PanelkW * EffFactor;
 
@@ -3009,7 +2911,7 @@ begin
     if i < 1 then
         Exit;  // No variables to set
 
-    with PVSystem2Vars do
+    with PVSystemVars do
         case i of
             1:
                 FIrradiance := Value;
@@ -3049,43 +2951,6 @@ begin
         end;
         end;
 
-end;
-
-
-procedure TPVsystem2Obj.Set_Varmode(const Value: Integer);
-begin
-    FvarMode := Value;
-end;
-
-// ===========================================================================================
-procedure TPVsystem2Obj.Set_VWmode(const Value: Boolean);
-begin
-    FVWmode := Value;
-end;
-
-// ===========================================================================================
-procedure TPVsystem2Obj.Set_VVmode(const Value: Boolean);
-begin
-    FVVmode := Value;
-end;
-
-// ===========================================================================================
-procedure TPVsystem2Obj.Set_WVmode(const Value: Boolean);
-begin
-    FWVmode := Value;
-end;
-
-
-// ===========================================================================================
-procedure TPVsystem2Obj.Set_WPmode(const Value: Boolean);
-begin
-    FWPmode := Value;
-end;
-
-// ===========================================================================================
-procedure TPVsystem2Obj.Set_DRCmode(const Value: Boolean);
-begin
-    FDRCmode := Value;
 end;
 
 // ===========================================================================================
@@ -3182,13 +3047,13 @@ begin
 
     S := 'Phases=1 conn=wye';
 
-    with PVSystem2Vars do
+    with PVSystemVars do
     begin
         // Make sure voltage is line-neutral
         if (Fnphases > 1) or (connection <> 0) then
-            V := kVPVSystem2Base / SQRT3
+            V := kVPVSystemBase / SQRT3
         else
-            V := kVPVSystem2Base;
+            V := kVPVSystemBase;
 
         S := S + Format(' kV=%-.5g', [V]);
 
@@ -3208,29 +3073,32 @@ begin
     inherited;
 
     // Just turn PVSystem element on or off;
-
-    if Value then
-        PVsystem2ObjSwitchOpen := FALSE
-    else
-        PVsystem2ObjSwitchOpen := TRUE;
+    PVsystemObjSwitchOpen := not Value;
 end;
 
 procedure TPVsystem2Obj.Set_Maxkvar(const Value: Double);
 begin
-    PVSystem2Vars.Fkvarlimit := Value;
-    PropertyValue[propkvarLimit] := Format('%-g', [PVSystem2Vars.Fkvarlimit]);
+    PVSystemVars.Fkvarlimit := Value;
+    PropertyValue[propkvarLimit] := Format('%-g', [PVSystemVars.Fkvarlimit]);
 end;
 
 procedure TPVsystem2Obj.Set_Maxkvarneg(const Value: Double);
 begin
-    PVSystem2Vars.Fkvarlimitneg := Value;
-    PropertyValue[propkvarLimitneg] := Format('%-g', [PVSystem2Vars.Fkvarlimitneg]);
+    PVSystemVars.Fkvarlimitneg := Value;
+    PropertyValue[propkvarLimitneg] := Format('%-g', [PVSystemVars.Fkvarlimitneg]);
 end;
 
 procedure TPVsystem2Obj.Set_kVARating(const Value: Double);
 begin
-    PVSystem2Vars.FkVARating := Value;
-    PropertyValue[propKVA] := Format('%-g', [PVSystem2Vars.FkVArating]);
+    PVSystemVars.FkVARating := Value;
+    PropertyValue[propKVA] := Format('%-g', [PVSystemVars.FkVArating]);
+end;
+
+// ===========================================================================================
+procedure TPVsystem2Obj.Set_Pmpp(const Value: Double);
+begin
+    PVSystemVars.FPmpp := Value;
+    PropertyValue[propPmpp] := Format('%-g', [PVSystemVars.FkVArating]);
 end;
 
 procedure TPVsystem2Obj.Set_PowerFactor(const Value: Double);
@@ -3239,53 +3107,23 @@ begin
     varMode := VARMODEPF;
 end;
 
-procedure TPVsystem2Obj.Set_PresentIrradiance(const Value: Double);
-begin
-    PVSystem2Vars.FIrradiance := Value;
-end;
-
 procedure TPVsystem2Obj.Set_PresentkV(const Value: Double);
 begin
-    with PVSystem2Vars do
+    with PVSystemVars do
     begin
-        kVPVSystem2Base := Value;
+        kVPVSystemBase := Value;
         case FNphases of
             2, 3:
-                VBase := kVPVSystem2Base * InvSQRT3x1000;
+                VBase := kVPVSystemBase * InvSQRT3x1000;
         else
-            VBase := kVPVSystem2Base * 1000.0;
+            VBase := kVPVSystemBase * 1000.0;
         end;
     end;
-end;
-
-procedure TPVsystem2Obj.Set_VarFollowInverter(const Value: Boolean);
-begin
-    FVarFollowInverter := Value;
-end;
-
-procedure TPVsystem2Obj.Set_InverterON(const Value: Boolean);
-begin
-    FInverterON := Value;
-end;
-
-procedure TPVsystem2Obj.Set_PresentkW(const Value: Double);
-begin
-    kWRequested := Value;
-end;
-
-procedure TPVsystem2Obj.Set_Presentkvar(const Value: Double);
-begin
-    kvarRequested := Value;
 end;
 
 procedure TPVsystem2Obj.Set_pf_wp_nominal(const Value: Double);
 begin
     Fpf_wp_nominal := Value;
-end;
-
-procedure TPVsystem2Obj.Set_puPmpp(const Value: Double);
-begin
-    PVSystem2Vars.FpuPmpp := Value;
 end;
 
 procedure TPVsystem2Obj.SetDragHandRegister(Reg: Integer; const Value: Double);

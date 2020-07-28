@@ -2219,6 +2219,8 @@ begin
 end;
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+procedure WriteMultiplePVSystem2MeterFiles; forward;
+
 procedure WriteMultiplePVSystemMeterFiles;
 
 var
@@ -2229,6 +2231,11 @@ var
     Separator: String;
 
 begin
+    if not DSS_CAPI_LEGACY_MODELS then
+    begin
+        WriteMultiplePVSystem2MeterFiles();
+        Exit;
+    end;
 
     if PVSystemClass = NIL then
         Exit;  // oops somewhere!!
@@ -2293,7 +2300,7 @@ begin
         Exit;  // oops somewhere!!
     Separator := ', ';
 
-    pElem := ActiveCircuit.PVSystems2.First;
+    pElem := ActiveCircuit.PVSystems.First;
     while pElem <> NIL do
     begin
         if pElem.Enabled then
@@ -2306,7 +2313,7 @@ begin
                     AssignFile(F, FileNm);
                     Rewrite(F);
                 {Write New Header}
-                    Write(F, 'Year, LDCurve, Hour, PVSystem2');
+                    Write(F, 'Year, LDCurve, Hour, PVSystem');
                     for i := 1 to NumPVSystem2Registers do
                         Write(F, Separator, '"' + PVSystem2Class.RegisterNames[i] + '"');
                     Writeln(F);
@@ -2331,13 +2338,15 @@ begin
             end;
 
         end;
-        pElem := ActiveCircuit.PVSystems2.Next;
+        pElem := ActiveCircuit.PVSystems.Next;
     end;
 
 end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+procedure WriteSinglePVSystem2MeterFile(FileNm: String); forward;
+
 procedure WriteSinglePVSystemMeterFile(FileNm: String);
 
 var
@@ -2348,6 +2357,11 @@ var
     ReWriteFile: Boolean;
 
 begin
+    if not DSS_CAPI_LEGACY_MODELS then
+    begin
+        WriteSinglePVSystem2MeterFile(FileNm);
+        Exit;
+    end;
 
 
     if PVSystemClass = NIL then
@@ -2475,7 +2489,7 @@ begin
         begin
             ReWrite(F);
         {Write New Header}
-            Write(F, 'Year, LDCurve, Hour, PVSystem2');
+            Write(F, 'Year, LDCurve, Hour, PVSystem');
             for i := 1 to NumGenRegisters do
                 Write(F, Separator, '"' + PVSystem2Class.RegisterNames[i] + '"');
             Writeln(F);
@@ -2484,7 +2498,7 @@ begin
             Append(F);
 
 
-        pElem := ActiveCircuit.PVSystems2.First;
+        pElem := ActiveCircuit.PVSystems.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
@@ -2499,7 +2513,7 @@ begin
                     Writeln(F);
                 end;
 
-            pElem := ActiveCircuit.PVSystems2.Next;
+            pElem := ActiveCircuit.PVSystems.Next;
         end;
 
         GlobalResult := FileNm;
@@ -2515,6 +2529,9 @@ end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+procedure WriteMultipleStorage2MeterFiles; forward;
+
 procedure WriteMultipleStorageMeterFiles;
 
 var
@@ -2525,6 +2542,11 @@ var
     Separator: String;
 
 begin
+    if not DSS_CAPI_LEGACY_MODELS then
+    begin
+        WriteMultipleStorage2MeterFiles;
+        Exit;
+    end;
 
     if StorageClass = NIL then
         Exit;  // oops somewhere!!
@@ -2588,7 +2610,7 @@ begin
         Exit;  // oops somewhere!!
     Separator := ', ';
 
-    pElem := ActiveCircuit.Storage2Elements.First;
+    pElem := ActiveCircuit.StorageElements.First;
     while pElem <> NIL do
     begin
         if pElem.Enabled then
@@ -2601,7 +2623,7 @@ begin
                     AssignFile(F, FileNm);
                     Rewrite(F);
                 {Write New Header}
-                    Write(F, 'Year, LDCurve, Hour, Storage2');
+                    Write(F, 'Year, LDCurve, Hour, Storage');
                     for i := 1 to NumStorage2Registers do
                         Write(F, Separator, '"' + Storage2Class.RegisterNames[i] + '"');
                     Writeln(F);
@@ -2626,13 +2648,15 @@ begin
             end;
 
         end;
-        pElem := ActiveCircuit.Storage2Elements.Next;
+        pElem := ActiveCircuit.StorageElements.Next;
     end;
 
 end;
 
 
 // = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+procedure WriteSingleStorage2MeterFile(FileNm: String); forward;
+
 procedure WriteSingleStorageMeterFile(FileNm: String);
 
 var
@@ -2643,7 +2667,11 @@ var
     ReWriteFile: Boolean;
 
 begin
-
+    if not DSS_CAPI_LEGACY_MODELS then
+    begin
+        WriteSingleStorage2MeterFile(FileNm);
+        Exit;
+    end;
 
     if StorageClass = NIL then
         Exit;  // oops somewhere!!
@@ -2733,7 +2761,7 @@ var
 begin
 
 
-    if Storage2Class = NIL then
+    if StorageClass = NIL then
         Exit;  // oops somewhere!!
     Separator := ', ';
 
@@ -2770,7 +2798,7 @@ begin
         begin
             ReWrite(F);
         {Write New Header}
-            Write(F, 'Year, LDCurve, Hour, Storage2');
+            Write(F, 'Year, LDCurve, Hour, Storage');
             for i := 1 to NumStorage2Registers do
                 Write(F, Separator, '"' + Storage2Class.RegisterNames[i] + '"');
             Writeln(F);
@@ -2779,7 +2807,7 @@ begin
             Append(F);
 
 
-        pElem := ActiveCircuit.Storage2Elements.First;
+        pElem := ActiveCircuit.StorageElements.First;
         while pElem <> NIL do
         begin
             if pElem.Enabled then
@@ -2794,7 +2822,7 @@ begin
                     Writeln(F);
                 end;
 
-            pElem := ActiveCircuit.Storage2Elements.Next;
+            pElem := ActiveCircuit.StorageElements.Next;
         end;
 
         GlobalResult := FileNm;

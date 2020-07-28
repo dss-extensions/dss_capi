@@ -965,12 +965,17 @@ begin
 
       // Reset Generator Objects, too
     GeneratorClass.ResetRegistersAll;
-    StorageClass.ResetRegistersAll;
-    Storage2Class.ResetRegistersAll;
-    PVSystemClass.ResetRegistersAll;
-    PVSystem2Class.ResetRegistersAll;
 
-
+    if DSS_CAPI_LEGACY_MODELS then
+    begin
+        StorageClass.ResetRegistersAll;
+        PVSystemClass.ResetRegistersAll;
+    end
+    else
+    begin
+        Storage2Class.ResetRegistersAll;
+        PVSystem2Class.ResetRegistersAll;
+    end;
 end;
 
 {--------------------------------------------------------------------------}
@@ -1008,11 +1013,18 @@ begin
 
       // Sample Generator ans Storage Objects, too
     GeneratorClass.SampleAll;
-    StorageClass.SampleAll;  // samples energymeter part of storage elements (not update)
-    Storage2Class.SampleAll;
-    PVSystemClass.SampleAll;
-    PVSystem2Class.SampleAll;
-
+    
+    if DSS_CAPI_LEGACY_MODELS then
+    begin
+        StorageClass.SampleAll; // samples energymeter part of storage elements (not update)
+        PVSystemClass.SampleAll;
+    end
+    else
+    begin
+        Storage2Class.SampleAll; // samples energymeter part of storage elements (not update)
+        PVSystem2Class.SampleAll;
+    end;
+   
 end;
 
 {--------------------------------------------------------------------------}
@@ -2047,7 +2059,7 @@ begin
                             BranchList.PresentBranch.IsDangling := FALSE;   // Something is connected here
                 // Is this a load or a generator or a Capacitor or reactor??
                             PCElementType := (pPCelem.DSSObjType and CLASSMASK);
-                            if (PCElementType = LOAD_ELEMENT) or (PCElementType = GEN_ELEMENT) or (PCElementType = PVSYSTEM_ELEMENT) or (PCElementType = PVSYSTEM2_ELEMENT) or (PCElementType = STORAGE_ELEMENT) or (PCElementType = STORAGE2_ELEMENT) or (PCElementType = CAP_ELEMENT)  // Capacitor and Reactor put on the PC list if IsShunt=TRUE
+                            if (PCElementType = LOAD_ELEMENT) or (PCElementType = GEN_ELEMENT) or (PCElementType = PVSYSTEM_ELEMENT) or (PCElementType = STORAGE_ELEMENT) or (PCElementType = CAP_ELEMENT)  // Capacitor and Reactor put on the PC list if IsShunt=TRUE
                                 or (PCElementType = REACTOR_ELEMENT) then
                             begin
                                 BranchList.NewObject := pPCelem; // This adds element to the Shunt list in CktTree

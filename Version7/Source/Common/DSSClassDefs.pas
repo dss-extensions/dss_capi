@@ -52,7 +52,6 @@ const
     STORAGE_CONTROL = 22 * 8;
     SWT_CONTROL = 23 * 8;
     PVSYSTEM_ELEMENT = 24 * 8;
-    PVSYSTEM2_ELEMENT = 25 * 8; // Using 25 (PR)
       // Deleted --- VV_CONTROL       = 25 * 8;
     GIC_Line = 26 * 8;
     GIC_Transformer = 27 * 8;
@@ -66,9 +65,6 @@ const
     INDMACH012_ELEMENT = 35 * 8;
     GIC_SOURCE = 36 * 8;
     AUTOTRANS_ELEMENT = 37 * 8;
-    INV_CONTROL2 = 40 * 8;
-    STORAGE2_ELEMENT = 41 * 8;
-    STORAGE2_CONTROL = 42 * 8;
 
 var
     NumIntrinsicClasses,
@@ -150,7 +146,8 @@ procedure CreateDSSClasses;
 
 
 begin
-
+    DSS_CAPI_LEGACY_MODELS_PREV := DSS_CAPI_LEGACY_MODELS;
+    
     Classnames := THashList.Create(25);   // Makes 5 sub lists
     DSSClassList := TPointerList.Create(10);  // 10 is initial size and increment
     DSSClasses := TDSSClasses.Create;  // class to handle junk for defining DSS classes
@@ -245,17 +242,31 @@ begin
     GenDispatcherClass := TGenDispatcher.Create;
     DSSClasses.New := GenDispatcherClass;
 
-    StorageClass := TStorage.Create;
-    DSSClasses.New := StorageClass;
+    if DSS_CAPI_LEGACY_MODELS then
+    begin
+        StorageClass := TStorage.Create;
+        Storage2Class := NIL;
+        DSSClasses.New := StorageClass;
+    end
+    else
+    begin
+    	StorageClass := NIL;
+        Storage2Class := TStorage2.Create;
+        DSSClasses.New := Storage2Class;
+    end;
 
-    Storage2Class := TStorage2.Create;
-    DSSClasses.New := Storage2Class;
-
-    StorageControllerClass := TStorageController.Create;
-    DSSClasses.New := StorageControllerClass;
-    
-    StorageController2Class := TStorageController2.Create;
-    DSSClasses.New := StorageController2Class;
+    if DSS_CAPI_LEGACY_MODELS then
+    begin
+        StorageControllerClass := TStorageController.Create;
+        StorageController2Class := NIL;
+        DSSClasses.New := StorageControllerClass;
+    end
+    else
+    begin
+    	StorageControllerClass := NIL;
+        StorageController2Class := TStorageController2.Create;
+        DSSClasses.New := StorageController2Class;
+    end;
 
     RelayClass := TRelay.Create;
     DSSClasses.New := RelayClass;
@@ -272,11 +283,18 @@ begin
     SwtControlClass := TSwtControl.Create;
     DSSClasses.New := SwtControlClass;
 
-    PVSystemClass := TPVSystem.Create;
-    DSSClasses.New := PVSystemClass;
-    
-    PVSystem2Class := TPVSystem2.Create;
-    DSSClasses.New := PVSystem2Class;
+    if DSS_CAPI_LEGACY_MODELS then
+    begin
+        PVSystemClass := TPVSystem.Create;
+        PVSystem2Class := NIL;
+        DSSClasses.New := PVSystemClass;
+    end
+    else
+    begin
+    	PVSystemClass := NIL;
+        PVSystem2Class := TPVSystem2.Create;
+        DSSClasses.New := PVSystem2Class;
+    end;
 
     UPFCClass := TUPFC.Create;
     DSSClasses.New := UPFCClass;
@@ -296,12 +314,19 @@ begin
     AutoTransClass := TAutoTrans.Create; // Auto Transformer
     DSSClasses.New := AutoTransClass;
 
-    InvControlClass := TInvControl.Create;
-    DSSClasses.New := InvControlClass;
-
-    InvControl2Class := TInvControl2.Create;
-    DSSClasses.New := InvControl2Class;
-
+    if DSS_CAPI_LEGACY_MODELS then
+    begin
+        InvControlClass := TInvControl.Create;
+        InvControl2Class := NIL;
+        DSSClasses.New := InvControlClass;
+    end
+    else
+    begin
+    	InvControlClass := NIL;
+        InvControl2Class := TInvControl2.Create;
+        DSSClasses.New := InvControl2Class;
+    end;
+    
     ExpControlClass := TExpControl.Create;
     DSSClasses.New := ExpControlClass;
 

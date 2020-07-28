@@ -225,7 +225,7 @@ end;
 
 procedure TExecutive.Clear;
 begin
-       IF   (NumCircuits > 0)  THEN
+       IF (NumCircuits > 0) OR (DSS_CAPI_LEGACY_MODELS <> DSS_CAPI_LEGACY_MODELS_PREV) THEN
        Begin
           if DIFilesAreOpen then
             EnergyMeterClass.CloseAllDIFiles;

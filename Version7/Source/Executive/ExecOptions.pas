@@ -13,7 +13,7 @@ uses
     Command;
 
 const
-    NumExecOptions = 117;
+    NumExecOptions = 115;
 
 var
     ExecOption,
@@ -159,8 +159,6 @@ begin
     ExecOption[113] := 'Zmag';
     ExecOption[114] := 'SeasonRating';
     ExecOption[115] := 'SeasonSignal';
-    ExecOption[116] := 'MarkPVSystems2';
-    ExecOption[117] := 'MarkStorage2';
 
 
     OptionHelp[1] := 'Sets the active DSS class type.  Same as Class=...';
@@ -420,8 +418,6 @@ begin
     OptionHelp[114] := 'Enables/disables the seasonal selection of the rating for determining if an element is overloaded. When enabled, the energy meter will' + CRLF +
         'look for the rating (NormAmps) using the SeasonSignal to eavluate if the element is overloaded';
     OptionHelp[115] := 'Is the name of the XY curve defining the seasonal change when performing QSTS simulations.';
-    OptionHelp[116] := '{YES/TRUE | NO/FALSE}  Default is NO. Mark PVSystem2 locations with a symbol. See PVMarkerCode and PVMarkerSize. ';
-    OptionHelp[117] := '{YES/TRUE | NO/FALSE}  Default is NO. Mark Storage2 locations with a symbol. See StoreMarkerCode and StoreMarkerSize. ';
     
 end;
 //----------------------------------------------------------------------------
@@ -787,10 +783,6 @@ begin
                 SeasonalRating := InterpretYesNo(Param);
             115:
                 SeasonSignal := Param;
-            116: 
-                ActiveCircuit.MarkPVSystems2 := InterpretYesNo(Param);
-            117:
-                ActiveCircuit.MarkStorage2 := InterpretYesNo(Param);
         else
            // Ignore excess parameters
         end;
@@ -1183,16 +1175,6 @@ begin
                         AppendGlobalResult('No');
                 115:
                     AppendGlobalResult(SeasonSignal);
-                116: 
-                    if ActiveCircuit.MarkPVSystems2 then 
-                        AppendGlobalResult('Yes') 
-                    else 
-                        AppendGlobalResult('No');
-                117: 
-                    if ActiveCircuit.MarkStorage2 then 
-                        AppendGlobalResult('Yes') 
-                    else 
-                        AppendGlobalResult('No');
             else
            // Ignore excess parameters
             end;

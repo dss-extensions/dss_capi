@@ -508,8 +508,10 @@ exports
     DSS_SetActiveClass,
     DSS_Get_AllowForms,
     DSS_Set_AllowForms,
-    DSS_Get_AllowEditor,
-    DSS_Set_AllowEditor,
+    DSS_Get_AllowEditor,  // API extension
+    DSS_Set_AllowEditor,  // API extension
+    DSS_Get_LegacyModels, // API extension
+    DSS_Set_LegacyModels, // API extension
     DSSElement_Get_AllPropertyNames,
     DSSElement_Get_Name,
     DSSElement_Get_NumProperties,

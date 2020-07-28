@@ -1,6 +1,6 @@
 #ifndef DSS_CAPI_V7_DLL_H
 #define DSS_CAPI_V7_DLL_H
-#define DSS_CAPI_V7_VERSION "0.10.4"
+#define DSS_CAPI_V7_VERSION "0.10.6"
 #ifndef DSS_CAPI_V7_DLL
 //#define DSS_CAPI_V7_DLL __declspec(dllimport)
 #define DSS_CAPI_V7_DLL
@@ -1389,6 +1389,20 @@ extern "C" {
     */
     DSS_CAPI_V7_DLL uint16_t DSS_Get_AllowEditor(void);
     DSS_CAPI_V7_DLL void DSS_Set_AllowEditor(uint16_t Value);
+
+    /*
+    If enabled, the legacy/deprecated models for PVSystem, InvControl, Storage and StorageControl are used.
+    WARNING: Changing the active value runs a "Clear" command, discarding the current circuit. 
+    
+    Defaults to False (disabled state).
+    
+    This can also be set through the environment variable DSS_CAPI_LEGACY_MODELS. Setting it to 1 enables
+    the legacy components, using the old models from the start.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL uint16_t DSS_Get_LegacyModels(void);
+    DSS_CAPI_V7_DLL void DSS_Set_LegacyModels(uint16_t Value);
 
     /*
     Array of strings containing the names of all properties for the active DSS object.
@@ -4555,6 +4569,8 @@ extern "C" {
     /*
     Controls whether the terminals are checked when updating the currents in Load component. Defaults to True.
     If the loads are guaranteed to have their terminals closed throughout the simulation, this can be set to False to save some time.
+    
+    (API Extension)
     */
     DSS_CAPI_V7_DLL uint16_t Settings_Get_LoadsTerminalCheck(void);
     DSS_CAPI_V7_DLL void Settings_Set_LoadsTerminalCheck(uint16_t Value);

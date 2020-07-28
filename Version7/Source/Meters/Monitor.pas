@@ -715,7 +715,7 @@ begin
 
             7:
             begin                                                // Checking if the element is a storage device
-                if ((MeteredElement.DSSObjType and CLASSMASK) <> STORAGE_ELEMENT) and ((MeteredElement.DSSObjType and CLASSMASK) <> STORAGE2_ELEMENT) then
+                if ((MeteredElement.DSSObjType and CLASSMASK) <> STORAGE_ELEMENT) then
                 begin
                     DoSimpleMsg(MeteredElement.Name + ' is not a storage device!', 2016002);
                     Exit;
@@ -785,6 +785,8 @@ begin
                 ReallocMem(CurrentBuffer, SizeOf(CurrentBuffer^[1]) * MeteredElement.Yorder);
                 ReallocMem(VoltageBuffer, SizeOf(VoltageBuffer^[1]) * MeteredElement.NConds);
             end;
+
+
 
             ClearMonitorStream;
 
@@ -866,7 +868,7 @@ begin
         IsPosSeq := FALSE;
         fillchar(StrBuffer, Sizeof(TMonitorStrBuffer), 0);  {clear buffer}
         strPtr := @StrBuffer;
-        strPtr^ := chr(0);     // Init string
+        // strPtr^ := chr(0);     // Init string -- it's already filled with 0
         if ActiveCircuit.Solution.IsHarmonicModel then
             strLcat(strPtr, pAnsichar('Freq, Harmonic, '), Sizeof(TMonitorStrBuffer))
         else
@@ -1417,7 +1419,7 @@ begin
         end;
         7:
         begin     // Monitor Storage Device state variables
-            if (MeteredElement.DSSObjType and CLASSMASK) = STORAGE_ELEMENT then
+            if ((MeteredElement.DSSObjType and CLASSMASK) = STORAGE_ELEMENT) and DSS_CAPI_LEGACY_MODELS then
             begin  // Storage Element
                 with TStorageObj(MeteredElement) do
                 begin
@@ -1429,15 +1431,15 @@ begin
                 end;
             end
             else
-            if (MeteredElement.DSSObjType and CLASSMASK) = STORAGE2_ELEMENT then
+            if ((MeteredElement.DSSObjType and CLASSMASK) = STORAGE_ELEMENT) and not DSS_CAPI_LEGACY_MODELS then
             begin   // Storage2 Element
                 with TStorage2Obj(MeteredElement) do
                 begin
                     AddDblToBuffer(PresentkW);
                     AddDblToBuffer(Presentkvar);
-                    AddDblToBuffer(Storage2Vars.kWhStored);
-                    AddDblToBuffer(((Storage2Vars.kWhStored) / (Storage2Vars.kWhRating)) * 100);
-                    AddDblToBuffer(Storage2State);
+                    AddDblToBuffer(StorageVars.kWhStored);
+                    AddDblToBuffer(((StorageVars.kWhStored) / (StorageVars.kWhRating)) * 100);
+                    AddDblToBuffer(StorageState);
                 end;
             end;
             Exit;  // Done with this mode now.

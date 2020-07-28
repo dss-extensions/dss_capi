@@ -110,7 +110,6 @@ interface
          FUNCTION DoRephaseCmd:Integer;
          FUNCTION DoSetBusXYCmd:Integer;
          FUNCTION DoUpdateStorageCmd:Integer;
-         FUNCTION DoUpdateStorage2Cmd:Integer;
          FUNCTION DoPstCalc:Integer;
          FUNCTION DoValVarCmd:Integer;
          FUNCTION DoLambdaCalcs:Integer;
@@ -1357,13 +1356,13 @@ FUNCTION DoReduceCmd:Integer;
 VAR
     MetObj:TEnergyMeterObj;
     MeterClass: TEnergyMeter;
-    ParamName, Param  :String;
+    {ParamName,} Param  :String;
     DevClassIndex:Integer;
 
 Begin
     Result := 0;
     // Get next parm and try to interpret as a file name
-    ParamName := Parser.NextParam;
+    {ParamName :=} Parser.NextParam;
     Param := UpperCase(Parser.StrValue);
 
     {Mark Capacitor and Reactor buses as Keep so we don't lose them}
@@ -1423,13 +1422,13 @@ End;
 FUNCTION DoFileEditCmd:Integer;
 
 VAR
-    ParamName, Param  :String;
+    {ParamName,} Param  :String;
 
 Begin
     Result := 0;
 
     // Get next parm and try to interpret as a file name
-    ParamName := Parser.NextParam;
+    {ParamName :=} Parser.NextParam;
     Param := Parser.StrValue;
 
     IF  FileExists(Param) THEN FireOffEditor(Param)
@@ -1486,7 +1485,7 @@ FUNCTION DoQueryCmd:Integer;
 { ? Command }
 { Syntax:  ? Line.Line1.R1}
 VAR
-   ParamName:String;
+   // ParamName:String;
    Param, ObjName, PropName:String;
    PropIndex:Integer;
 
@@ -1494,7 +1493,7 @@ VAR
 Begin
 
      Result := 0;
-     ParamName := Parser.NextParam;
+     {ParamName :=} Parser.NextParam;
      Param := Parser.StrValue;
 
      ParseObjName(Param, ObjName, PropName);
@@ -1908,7 +1907,7 @@ end;
 FUNCTION DoNodeListCmd: Integer;
 VAR
   NValues, i: Integer;
-  CktElementName, S : String;
+  CktElementName: String;
 
 
 Begin
@@ -1917,7 +1916,7 @@ Begin
 
   If ActiveCircuit <> Nil Then
   Begin
-    S := Parser.NextParam;
+    {S :=} Parser.NextParam;
     CktElementName := Parser.StrValue ;
 
     If Length(CktElementName) > 0  Then  SetObject(CktElementName);
@@ -2261,10 +2260,10 @@ end;
 FUNCTION DoZsc012Cmd: Integer;
 // Bus Short Circuit matrix
 VAR
-    i: Integer;
+    // i: Integer;
     ActiveBus: TDSSBus;
     Z0, Z1, Z2: Complex;
-    Temp1, Temp2: pComplexArray;
+    // Temp1, Temp2: pComplexArray;
     Zsc012Temp: TcMatrix;
 Begin
     Result := 0;
@@ -3960,15 +3959,12 @@ End;
 FUNCTION DoUpdateStorageCmd:Integer;
 
 Begin
-       StorageClass.UpdateAll;
-       Result := 0;
-End;
+    if DSS_CAPI_LEGACY_MODELS then
+        StorageClass.UpdateAll
+    else
+        Storage2Class.UpdateAll;
 
-FUNCTION DoUpdateStorage2Cmd:Integer;
-
-Begin
-       Storage2Class.UpdateAll;
-       Result := 0;
+    Result := 0;
 End;
 
 FUNCTION DoPstCalc;

@@ -375,7 +375,7 @@ uses
 
 const
 
-    NumPropsThisClass = 30;
+    NumPropsThisClass = 32;
 
     NONE = 0;
     CHANGEVARLEVEL = 1;
@@ -405,13 +405,18 @@ const
     VV_VW         = 1;
     VV_DRC        = 2;
 
+type
+    TPVSystemObj = TPVSystem2Obj;
+    TStorageObj = TStorage2Obj;
+
+
 
 constructor TInvControl2.Create;  // Creates superstructure for all InvControl objects
   begin
     Inherited Create;
 
-     Class_name   := 'InvControl2';
-     DSSClassType := DSSClassType + INV_CONTROL2;
+     Class_name   := 'InvControl';
+     DSSClassType := DSSClassType + INV_CONTROL;
 
      DefineProperties;
 
@@ -467,90 +472,92 @@ procedure TInvControl2.DefineProperties;
     PropertyName[28] := 'voltwattCH_curve';
     PropertyName[29] := 'wattpf_curve';
     PropertyName[30] := 'wattvar_curve';
+    PropertyName[31] := 'VV_RefReactivePower';
+    PropertyName[32] := 'PVSystemList';
 
-    PropertyHelp[1] := 'Array list of PVSystem2 and/or Storage2 elements to be controlled. ' +
-                       'If not specified, all PVSystem2 and Storage2 in the circuit are assumed to be controlled by this control. '  +CRLF+CRLF+
+    PropertyHelp[1] := 'Array list of PVSystem and/or Storage elements to be controlled. ' +
+                       'If not specified, all PVSystem and Storage in the circuit are assumed to be controlled by this control. '  +CRLF+CRLF+
                       'No capability of hierarchical control between two controls for a single element is implemented at this time.';
 
     PropertyHelp[2] := 'Smart inverter function in which the InvControl2 will control the PC elements specified in DERList, according to the options below:' +CRLF+CRLF+
                       'Must be one of: {VOLTVAR* | VOLTWATT | DYNAMICREACCURR | WATTPF | WATTVAR} ' +CRLF+
                       'if the user desires to use modes simultaneously, then set the CombiMode property. Setting the Mode to any valid value disables combination mode.'+
 
-                       CRLF+CRLF+'In volt-var mode (Default). This mode attempts to CONTROL the vars, according to one or two volt-var curves, depending on the monitored voltages, present active power output, and the capabilities of the PVSystem2/Storage2. ' +
-                       CRLF+CRLF+'In volt-watt mode. This mode attempts to LIMIT the watts, according to one defined volt-watt curve, depending on the monitored voltages and the capabilities of the PVSystem2/Storage2. '+
-                       CRLF+CRLF+'In dynamic reactive current mode. This mode attempts to increasingly counter deviations by CONTROLLING vars, depending on the monitored voltages, present active power output, and the capabilities of the of the PVSystem2/Storage2.'+
-                       CRLF+CRLF+'In watt-pf mode. This mode attempts to CONTROL the vars, according to a watt-pf curve, depending on the present active power output, and the capabilities of the PVSystem2/Storage2. '+
-                       CRLF+CRLF+'In watt-var mode. This mode attempts to CONTROL the vars, according to a watt-var curve, depending on the present active power output, and the capabilities of the PVSystem2/Storage2. ';
+                       CRLF+CRLF+'In volt-var mode (Default). This mode attempts to CONTROL the vars, according to one or two volt-var curves, depending on the monitored voltages, present active power output, and the capabilities of the PVSystem/Storage. ' +
+                       CRLF+CRLF+'In volt-watt mode. This mode attempts to LIMIT the watts, according to one defined volt-watt curve, depending on the monitored voltages and the capabilities of the PVSystem/Storage. '+
+                       CRLF+CRLF+'In dynamic reactive current mode. This mode attempts to increasingly counter deviations by CONTROLLING vars, depending on the monitored voltages, present active power output, and the capabilities of the of the PVSystem/Storage.'+
+                       CRLF+CRLF+'In watt-pf mode. This mode attempts to CONTROL the vars, according to a watt-pf curve, depending on the present active power output, and the capabilities of the PVSystem/Storage. '+
+                       CRLF+CRLF+'In watt-var mode. This mode attempts to CONTROL the vars, according to a watt-var curve, depending on the present active power output, and the capabilities of the PVSystem/Storage. ';
 
     PropertyHelp[3] := 'Combination of smart inverter functions in which the InvControl2 will control the PC elements in DERList, according to the options below: '+CRLF+CRLF+
                       'Must be a combination of the following: {VV_VW | VV_DRC}. Default is to not set this property, in which case the single control mode in Mode is active.  ' +
 
                        CRLF+CRLF+'In combined VV_VW mode, both volt-var and volt-watt control modes are active simultaneously.  See help individually for volt-var mode and volt-watt mode in Mode property.'+
-                       CRLF+'Note that the PVSystem2/Storage2 will attempt to achieve both the volt-watt and volt-var set-points based on the capabilities of the inverter in the PVSystem2/Storage2 (kVA rating, etc), any limits set on maximum active power,' +
+                       CRLF+'Note that the PVSystem/Storage will attempt to achieve both the volt-watt and volt-var set-points based on the capabilities of the inverter in the PVSystem/Storage (kVA rating, etc), any limits set on maximum active power,' +
 //                       CRLF+', any limits set on maximum reactive power. '+
 //                       CRLF+'Precedence will be given to either watt production or var production based on the setting of RefReactivePower.'+
                        CRLF+CRLF+'In combined VV_DRC, both the volt-var and the dynamic reactive current modes are simultaneously active.';
 //                       CRLF+CRLF+'The volt-var function will attempt to achieve its set-point based on the volt-var curve, and present voltage.  The dynamic '+
 //                       CRLF+'reactive power mode function will also be active and it will add or subtract from the reactive power set-point desired by the volt-var function.'+
 //                       CRLF+'Note that the precedence of active and reactive power production is defined by the RefReactivePower property.  In no event will the reactive '+
-//                       CRLF+'power exceed the maximum var limit of the PVSystem2, and the combination of the active and reactive power output will not exceed the kVA rating of '+
-//                       CRLF+'the inverter (set in the PVSystem2/Storage2).';
+//                       CRLF+'power exceed the maximum var limit of the PVSystem, and the combination of the active and reactive power output will not exceed the kVA rating of '+
+//                       CRLF+'the inverter (set in the PVSystem/Storage).';
 
     PropertyHelp[4] := 'Required for VOLTVAR mode. '+CRLF+CRLF+
                       'Name of the XYCurve object containing the volt-var curve. The positive values of the y-axis of the volt-var curve represent values in pu of the provided base reactive power. ' +
                       'The negative values of the y-axis are values in pu of the absorbed base reactive power. ' +CRLF+
                       'Provided and absorbed base reactive power values are defined in the RefReactivePower property' +CRLF+CRLF+
-                      'Units for the x-axis are per-unit voltage, which may be in per unit of the rated voltage for the PVSystem2/Storage2, or may be in per unit of the average voltage at the terminals over a user-defined number of prior solutions. ';
+                      'Units for the x-axis are per-unit voltage, which may be in per unit of the rated voltage for the PVSystem/Storage, or may be in per unit of the average voltage at the terminals over a user-defined number of prior solutions. ';
 
     PropertyHelp[5] := 'Required for VOLTVAR mode, and defaults to 0. '+CRLF+CRLF+
                       'for the times when the terminal voltage is decreasing, this is the off-set in per-unit voltage of a curve whose shape is the same as vvc_curve. '+
                       'It is offset by a certain negative value of per-unit voltage, which is defined by the base quantity for the x-axis of the volt-var curve (see help for voltage_curvex_ref)'+CRLF+CRLF+
-                      'if the PVSystem2/Storage2 terminal voltage has been increasing, and has not changed directions, utilize vvc_curve1 for the volt-var response. '+CRLF+CRLF+
-                      'if the PVSystem2/Storage2 terminal voltage has been increasing and changes directions and begins to decrease, then move from utilizing vvc_curve1 to a volt-var curve of the same shape, but offset by a certain per-unit voltage value. '+CRLF+CRLF+
-                      'Maintain the same per-unit available var output level (unless head-room has changed due to change in active power or kva rating of PVSystem2/Storage2).  Per-unit var values remain the same for this internally constructed second curve (hysteresis curve). '+CRLF+CRLF+
+                      'if the PVSystem/Storage terminal voltage has been increasing, and has not changed directions, utilize vvc_curve1 for the volt-var response. '+CRLF+CRLF+
+                      'if the PVSystem/Storage terminal voltage has been increasing and changes directions and begins to decrease, then move from utilizing vvc_curve1 to a volt-var curve of the same shape, but offset by a certain per-unit voltage value. '+CRLF+CRLF+
+                      'Maintain the same per-unit available var output level (unless head-room has changed due to change in active power or kva rating of PVSystem/Storage).  Per-unit var values remain the same for this internally constructed second curve (hysteresis curve). '+CRLF+CRLF+
                       'if the terminal voltage has been decreasing and changes directions and begins to increase , then move from utilizing the offset curve, back to the vvc_curve1 for volt-var response, but stay at the same per-unit available vars output level.';
 
     PropertyHelp[6] := 'Required for VOLTVAR and VOLTWATT modes, and defaults to rated.  Possible values are: {rated|avg|ravg}.  '+CRLF+CRLF+
                       'Defines whether the x-axis values (voltage in per unit) for vvc_curve1 and the volt-watt curve corresponds to:'+CRLF+CRLF+
-                      'rated. The rated voltage for the PVSystem2/Storage2 object (1.0 in the volt-var curve equals rated voltage).'+CRLF+CRLF+
+                      'rated. The rated voltage for the PVSystem/Storage object (1.0 in the volt-var curve equals rated voltage).'+CRLF+CRLF+
                       'avg. The average terminal voltage recorded over a certain number of prior power-flow solutions.'+CRLF+
                       'with the avg setting, 1.0 per unit on the x-axis of the volt-var curve(s) corresponds to the average voltage.'+CRLF+
                       'from a certain number of prior intervals.  See avgwindowlen parameter.'+CRLF+CRLF+
                       'ravg. Same as avg, with the exception that the avgerage terminal voltage is divided by the rated voltage.';
 
     PropertyHelp[7] := 'Required for VOLTVAR mode and VOLTWATT mode, and defaults to 0 seconds (0s). '+CRLF+CRLF+
-                      'Sets the length of the averaging window over which the average PVSystem2/Storage2 terminal voltage is calculated. '+CRLF+CRLF+
+                      'Sets the length of the averaging window over which the average PVSystem/Storage terminal voltage is calculated. '+CRLF+CRLF+
                       'Units are indicated by appending s, m, or h to the integer value. '+CRLF+CRLF+
-                      'The averaging window will calculate the average PVSystem2/Storage2 terminal voltage over the specified period of time, up to and including the last power flow solution. '+CRLF+CRLF+
+                      'The averaging window will calculate the average PVSystem/Storage terminal voltage over the specified period of time, up to and including the last power flow solution. '+CRLF+CRLF+
                       'Note, if the solution stepsize is larger than the window length, then the voltage will be assumed to have been constant over the time-frame specified by the window length.';
 
     PropertyHelp[8] := 'Required for VOLTWATT mode. '+CRLF+CRLF+
                       'Name of the XYCurve object containing the volt-watt curve. '+CRLF+CRLF+
-                      'Units for the x-axis are per-unit voltage, which may be in per unit of the rated voltage for the PVSystem2/Storage2, or may be in per unit of the average voltage at the terminals over a user-defined number of prior solutions. '+CRLF+CRLF+
+                      'Units for the x-axis are per-unit voltage, which may be in per unit of the rated voltage for the PVSystem/Storage, or may be in per unit of the average voltage at the terminals over a user-defined number of prior solutions. '+CRLF+CRLF+
                       'Units for the y-axis are either in one of the options described in the VoltwattYAxis property. ';
 
-    PropertyHelp[9] := 'Required for the dynamic reactive current mode (DYNAMICREACCURR), and defaults to 0.95 per-unit voltage (referenced to the PVSystem2/Storage2 object rated voltage or a windowed average value). '+CRLF+CRLF+
+    PropertyHelp[9] := 'Required for the dynamic reactive current mode (DYNAMICREACCURR), and defaults to 0.95 per-unit voltage (referenced to the PVSystem/Storage object rated voltage or a windowed average value). '+CRLF+CRLF+
                       'This parameter is the minimum voltage that defines the voltage dead-band within which no reactive power is allowed to be generated. ';
 
-    PropertyHelp[10] := 'Required for the dynamic reactive current mode (DYNAMICREACCURR), and defaults to 1.05 per-unit voltage (referenced to the PVSystem2 object rated voltage or a windowed average value). '+CRLF+CRLF+
+    PropertyHelp[10] := 'Required for the dynamic reactive current mode (DYNAMICREACCURR), and defaults to 1.05 per-unit voltage (referenced to the PVSystem object rated voltage or a windowed average value). '+CRLF+CRLF+
                       'This parameter is the maximum voltage that defines the voltage dead-band within which no reactive power is allowed to be generated. ';
 
     PropertyHelp[11] := 'Required for the dynamic reactive current mode (DYNAMICREACCURR), and defaults to 0.1  '+CRLF+CRLF+
                        'This is a gradient, expressed in unit-less terms of %/%, to establish the ratio by which percentage capacitive reactive power production is increased as the  percent delta-voltage decreases below DbVMin. '+CRLF+CRLF+
-                       'Percent delta-voltage is defined as the present PVSystem2/Storage2 terminal voltage minus the moving average voltage, expressed as a percentage of the rated voltage for the PVSystem2/Storage2 object. '+CRLF+CRLF+
+                       'Percent delta-voltage is defined as the present PVSystem/Storage terminal voltage minus the moving average voltage, expressed as a percentage of the rated voltage for the PVSystem/Storage object. '+CRLF+CRLF+
                        'Note, the moving average voltage for the dynamic reactive current mode is different than the moving average voltage for the volt-watt and volt-var modes.';
 
     PropertyHelp[12] := 'Required for the dynamic reactive current mode (DYNAMICREACCURR), and defaults to 0.1  '+CRLF+CRLF+
                        'This is a gradient, expressed in unit-less terms of %/%, to establish the ratio by which percentage inductive reactive power production is increased as the  percent delta-voltage decreases above DbVMax. '+CRLF+CRLF+
-                       'Percent delta-voltage is defined as the present PVSystem2/Storage2 terminal voltage minus the moving average voltage, expressed as a percentage of the rated voltage for the PVSystem2/Storage2 object. '+CRLF+CRLF+
+                       'Percent delta-voltage is defined as the present PVSystem/Storage terminal voltage minus the moving average voltage, expressed as a percentage of the rated voltage for the PVSystem/Storage object. '+CRLF+CRLF+
                        'Note, the moving average voltage for the dynamic reactive current mode is different than the mmoving average voltage for the volt-watt and volt-var modes.';
 
     PropertyHelp[13] := 'Required for the dynamic reactive current mode (DYNAMICREACCURR), and defaults to 1 seconds (1s). do not use a value smaller than 1.0 '+CRLF+CRLF+
-                       'Sets the length of the averaging window over which the average PVSystem2/Storage2 terminal voltage is calculated '+
+                       'Sets the length of the averaging window over which the average PVSystem/Storage terminal voltage is calculated '+
                        'for the dynamic reactive current mode. '+CRLF+CRLF+
                        'Units are indicated by appending s, m, or h to the integer value. '+CRLF+CRLF+
                        'Typically this will be a shorter averaging window than the volt-var and volt-watt averaging window.'+CRLF+CRLF+
-                       'The averaging window will calculate the average PVSystem2/Storage2 terminal voltage over the specified period of time, up to and including the last power flow solution.  Note, if the solution stepsize is larger than '+
+                       'The averaging window will calculate the average PVSystem/Storage terminal voltage over the specified period of time, up to and including the last power flow solution.  Note, if the solution stepsize is larger than '+
                        'the window length, then the voltage will be assumed to have been constant over the time-frame specified by the window length.';
 
     PropertyHelp[14] := 'Required for the VOLTVAR and DYNAMICREACCURR modes.  Defaults to -1.0. '+CRLF+CRLF+
@@ -561,33 +568,33 @@ procedure TInvControl2.DefineProperties;
                        'if the maximum control iterations are exceeded, and no numerical instability is seen in the EventLog of via monitors, then try increasing the value of this parameter to reduce the number '+
                        'of control iterations needed to achieve the control criteria, and move to the power flow solution.';
 
-    PropertyHelp[15] := 'Defaults to 0.0001 per-unit voltage.  This parameter should only be modified by advanced users of the InvControl2.  '+CRLF+CRLF+
+    PropertyHelp[15] := 'Defaults to 0.0001 per-unit voltage.  This parameter should only be modified by advanced users of the InvControl.  '+CRLF+CRLF+
                         'Tolerance in pu of the control loop convergence associated to the monitored voltage in pu. ' +
                         'This value is compared with the difference of the monitored voltage in pu of the current and previous control iterations of the control loop'+CRLF+CRLF+
 
-                        'This voltage tolerance value plus the var/watt tolerance value (VarChangeTolerance/ActivePChangeTolerance) determine, together, when to stop control iterations by the InvControl2. '+CRLF+CRLF+
+                        'This voltage tolerance value plus the var/watt tolerance value (VarChangeTolerance/ActivePChangeTolerance) determine, together, when to stop control iterations by the InvControl. '+CRLF+CRLF+
 
-                        'If an InvControl2 is controlling more than one PVSystem2/Storage2, each PVSystem2/Storage2 has this quantity calculated independently, and so an individual '+
-                        'PVSystem2/Storage2 may reach the tolerance within different numbers of control iterations.';
+                        'If an InvControl2 is controlling more than one PVSystem/Storage, each PVSystem/Storage has this quantity calculated independently, and so an individual '+
+                        'PVSystem/Storage may reach the tolerance within different numbers of control iterations.';
 
     PropertyHelp[16] := 'Required for VOLTVAR and DYNAMICREACCURR modes.  Defaults to 0.025 per unit of the base provided or absorbed reactive power described in the RefReactivePower property '+
 
-                       'This parameter should only be modified by advanced users of the InvControl2. '+CRLF+CRLF+
+                       'This parameter should only be modified by advanced users of the InvControl. '+CRLF+CRLF+
 
                        'Tolerance in pu of the convergence of the control loop associated with reactive power. ' +
                        'For the same control iteration, this value is compared to the difference, as an absolute value (without sign), between the desired reactive power value in pu and the output reactive power in pu of the controlled element.'+CRLF+CRLF+
 
-                       'This reactive power tolerance value plus the voltage tolerance value (VoltageChangeTolerance) determine, together, when to stop control iterations by the InvControl2.  '+CRLF+CRLF+
+                       'This reactive power tolerance value plus the voltage tolerance value (VoltageChangeTolerance) determine, together, when to stop control iterations by the InvControl.  '+CRLF+CRLF+
 
-                       'If an InvControl2 is controlling more than one PVSystem2/Storage2, each PVSystem2/Storage2 has this quantity calculated independently, and so an individual '+
-                       'PVSystem2/Storage2 may reach the tolerance within different numbers of control iterations.';
+                       'If an InvControl2 is controlling more than one PVSystem/Storage, each PVSystem/Storage has this quantity calculated independently, and so an individual '+
+                       'PVSystem/Storage may reach the tolerance within different numbers of control iterations.';
 
     PropertyHelp[17] := 'Required for VOLTWATT mode.  Must be one of: {PMPPPU* | PAVAILABLEPU| PCTPMPPPU | KVARATINGPU}.  The default is PMPPPU.  '+CRLF+CRLF+
                        'Units for the y-axis of the volt-watt curve while in volt-watt mode. '+CRLF+CRLF+
-                       'When set to PMPPPU. The y-axis corresponds to the value in pu of Pmpp property of the PVSystem2. '+CRLF+CRLF+
-                       'When set to PAVAILABLEPU. The y-axis corresponds to the value in pu of the available active power of the PVSystem2. '+CRLF+CRLF+
-                       'When set to PCTPMPPPU. The y-axis corresponds to the value in pu of the power Pmpp multiplied by 1/100 of the %Pmpp property of the PVSystem2.' +CRLF+CRLF+
-                       'When set to KVARATINGPU. The y-axis corresponds to the value in pu of the kVA property of the PVSystem2.';
+                       'When set to PMPPPU. The y-axis corresponds to the value in pu of Pmpp property of the PVSystem. '+CRLF+CRLF+
+                       'When set to PAVAILABLEPU. The y-axis corresponds to the value in pu of the available active power of the PVSystem. '+CRLF+CRLF+
+                       'When set to PCTPMPPPU. The y-axis corresponds to the value in pu of the power Pmpp multiplied by 1/100 of the %Pmpp property of the PVSystem.' +CRLF+CRLF+
+                       'When set to KVARATINGPU. The y-axis corresponds to the value in pu of the kVA property of the PVSystem.';
 
 
     PropertyHelp[18] := 'Required for VOLTWATT and VOLTVAR mode.  Must be one of: {INACTIVE* | LPF | RISEFALL }.  The default is INACTIVE.  '+CRLF+CRLF+
@@ -613,7 +620,7 @@ procedure TInvControl2.DefineProperties;
                        'If the maximum control iterations are exceeded, and no numerical instability is seen in the EventLog of via monitors, then try increasing the value of this parameter to reduce the number '+
                        'of control iterations needed to achieve the control criteria, and move to the power flow solution.';
 
-    PropertyHelp[22] := '{Yes/True* | No/False} Default is YES for InvControl2. Log control actions to Eventlog.';
+    PropertyHelp[22] := '{Yes/True* | No/False} Default is YES for InvControl. Log control actions to Eventlog.';
 
     PropertyHelp[23] := 'Required for any mode that has VOLTVAR, DYNAMICREACCURR and WATTVAR. Defaults to VARAVAL.' +CRLF+CRLF+
                         'Defines the base reactive power for both the provided and absorbed reactive power, according to one of the following options: '
@@ -624,30 +631,30 @@ procedure TInvControl2.DefineProperties;
                          'Tolerance in pu of the convergence of the control loop associated with active power. ' +
                          'For the same control iteration, this value is compared to the difference between the active power limit in pu resulted from the convergence process and the one resulted from the volt-watt function.'+CRLF+CRLF+
 
-                         'This reactive power tolerance value plus the voltage tolerance value (VoltageChangeTolerance) determine, together, when to stop control iterations by the InvControl2.  '+CRLF+CRLF+
+                         'This reactive power tolerance value plus the voltage tolerance value (VoltageChangeTolerance) determine, together, when to stop control iterations by the InvControl.  '+CRLF+CRLF+
 
-                        'If an InvControl2 is controlling more than one PVSystem2/Storage2, each PVSystem2/Storage2 has this quantity calculated independently, and so an individual '+
-                        'PVSystem2/Storage2 may reach the tolerance within different numbers of control iterations.';
+                        'If an InvControl2 is controlling more than one PVSystem/Storage, each PVSystem/Storage has this quantity calculated independently, and so an individual '+
+                        'PVSystem/Storage may reach the tolerance within different numbers of control iterations.';
 
     PropertyHelp[25] := 'Number of the phase being monitored or one of {AVG | MAX | MIN} for all phases. Default=AVG. ';
 
-    PropertyHelp[26] := 'Name of monitored bus used by the voltage-dependente control modes. Default is bus of the controlled PVSystem2/Storage2 or Storage2.' ;
+    PropertyHelp[26] := 'Name of monitored bus used by the voltage-dependente control modes. Default is bus of the controlled PVSystem/Storage or Storage.' ;
 
     PropertyHelp[27] := 'Array list of rated voltages of the buses and their nodes presented in the monBus property. This list may have different line-to-line and/or line-to-ground voltages.' ;
 
-    PropertyHelp[28] := 'Required for VOLTWATT mode for Storage2 element in CHARGING state. '+CRLF+CRLF+
-                        'The name of an XYCurve object that describes the variation in active power output (in per unit of maximum active power outut for the Storage2). '+CRLF+CRLF+
-                        'Units for the x-axis are per-unit voltage, which may be in per unit of the rated voltage for the Storage2, or may be in per unit of the average voltage at the terminals over a user-defined number of prior solutions. '+CRLF+CRLF+
-                        'Units for the y-axis are either in: (1) per unit of maximum active power output capability of the Storage2, or (2) maximum available active power output capability (defined by the parameter: VoltwattYAxis), '+
+    PropertyHelp[28] := 'Required for VOLTWATT mode for Storage element in CHARGING state. '+CRLF+CRLF+
+                        'The name of an XYCurve object that describes the variation in active power output (in per unit of maximum active power outut for the Storage). '+CRLF+CRLF+
+                        'Units for the x-axis are per-unit voltage, which may be in per unit of the rated voltage for the Storage, or may be in per unit of the average voltage at the terminals over a user-defined number of prior solutions. '+CRLF+CRLF+
+                        'Units for the y-axis are either in: (1) per unit of maximum active power output capability of the Storage, or (2) maximum available active power output capability (defined by the parameter: VoltwattYAxis), '+
                         'corresponding to the terminal voltage (x-axis value in per unit). '+CRLF+CRLF+
-                        'No default -- must be specified for VOLTWATT mode for Storage2 element in CHARGING state.';
+                        'No default -- must be specified for VOLTWATT mode for Storage element in CHARGING state.';
 
     PropertyHelp[29] := 'Required for WATTPF mode.' +CRLF+CRLF+
                       'Name of the XYCurve object containing the watt-pf curve.' +CRLF+
                       'The positive values of the y-axis are positive power factor values. ' +
                       'The negative values of the the y-axis are negative power factor values. ' +
                       'When positive, the output reactive power has the same direction of the output active power, and when negative, it has the opposite direction.' +CRLF+
-                      'Units for the x-axis are per-unit output active power, and the base active power is the Pmpp for PVSystem2 and kWrated for Storage2.'+CRLF+CRLF+
+                      'Units for the x-axis are per-unit output active power, and the base active power is the Pmpp for PVSystem and kWrated for Storage.'+CRLF+CRLF+
                       'The y-axis represents the power factor and the reference is power factor equal to 0. '+CRLF+CRLF+
 
                       'For example, if the user wants to define the following XY coordinates: (0, 0.9); (0.2, 0.9); (0.5, -0.9); (1, -0.9).'+CRLF+
@@ -661,7 +668,9 @@ procedure TInvControl2.DefineProperties;
                       'Name of the XYCurve object containing the watt-var curve. The positive values of the y-axis of the watt-var curve represent values in pu of the provided base reactive power. ' +
                       'The negative values of the y-axis are values in pu of the absorbed base reactive power. ' +CRLF+
                       'Provided and absorbed base reactive power values are defined in the RefReactivePower property.' +CRLF+CRLF+
-                      'Units for the x-axis are per-unit output active power, and the base active power is the Pmpp for PVSystem2 and kWrated for Storage2.';
+                      'Units for the x-axis are per-unit output active power, and the base active power is the Pmpp for PVSystem and kWrated for Storage.';
+    PropertyHelp[31] := 'Deprecated, use RefReactivePower instead.';
+    PropertyHelp[32] := 'Deprecated, use DERList instead.';
 
 
     ActiveProperty  := NumPropsThisClass;
@@ -681,14 +690,16 @@ function TInvControl2.NewObject(const ObjName:String):Integer;
 
 function TInvControl2.Edit():Integer;
   VAR
-    ParamPointer      : Integer;
-    ParamName         : String;
+    CharPos,
+    ParamPointer,
+    i,
+    j,
+    NNode             : Integer;
+
+    StrTemp,
+    ParamName,
     Param             : String;
 
-    i                 : integer;
-    j                 : integer;
-
-    NNode             : Integer;
     NodeBuffer        : Array[1..10] of Integer;
 
   begin
@@ -715,7 +726,7 @@ function TInvControl2.Edit():Integer;
 
             CASE ParamPointer OF
               0: DoSimpleMsg('Unknown parameter "' + ParamName + '" for Object "' + Class_Name +'.'+ Name + '"', 364);
-              1: InterpretTStringListArray(Param, FDERNameList); // Read list of PVSystem2 and Storage2 objects in OpenDSS format and add to FDERNameList StringList.
+              1: InterpretTStringListArray(Param, FDERNameList); // Read list of PVSystem and Storage objects in OpenDSS format and add to FDERNameList StringList.
               2: begin
                   if CompareTextShortest(Parser.StrValue, 'voltvar')= 0 then
                     begin
@@ -926,6 +937,24 @@ function TInvControl2.Edit():Integer;
                     end;
                  end;
 
+              31: begin
+                    StrTemp :=  Parser.StrValue;
+                    Charpos :=  ansipos('_', StrTemp);
+                    if CharPos <> 0 then
+                      StrTemp :=  StrTemp.Substring(0,CharPos - 1);
+
+                    if      CompareTextShortest(StrTemp, 'varaval')= 0         then  FReacPower_ref := 'VARAVAL'
+                    else if CompareTextShortest(StrTemp, 'varmax')= 0          then  FReacPower_ref := 'VARMAX'
+                 end;
+
+              32: begin
+                    InterpretTStringListArray(Param, FDERNameList); // Read list of PVSystem and Storage objects in OpenDSS format and add to FDERNameList StringList.
+                    // Because is using this command from the previous version of InvControl, we assume that the list includes only
+                    // PVSystems, so the list is updated
+                    for CharPos := 0 to (FDERNameList.Count - 1) do
+                      FDERNameList[CharPos] :=  'PVSystem.' + FDERNameList[CharPos];
+                 end;
+
               else
                 // Inherited parameters
                 ClassEdit( ActiveInvControl2Obj, ParamPointer - NumPropsthisClass)
@@ -951,94 +980,94 @@ end;
 
 function TInvControl2.MakeLike(const InvControl2Name:String):Integer;
   VAR
-    OtherInvControl2   : TInvControl2Obj;
+    OtherInvControl   : TInvControl2Obj;
     i, j              : Integer;
 
   begin
     Result := 0;
     {See if we can find this InvControl name in the present collection}
-    OtherInvControl2 := Find(InvControl2Name);
+    OtherInvControl := Find(InvControl2Name);
 
-   if OtherInvControl2<>Nil then
+   if OtherInvControl<>Nil then
 
     with ActiveInvControl2Obj do begin
 
-      NPhases := OtherInvControl2.Fnphases;
-      NConds  := OtherInvControl2.Fnconds; // Force Reallocation of terminal stuff
+      NPhases := OtherInvControl.Fnphases;
+      NConds  := OtherInvControl.Fnconds; // Force Reallocation of terminal stuff
 
       for i := 1 to FDERPointerList.ListSize do
         begin
 
-          ControlledElement[i]        := OtherInvControl2.ControlledElement[i];
-          CondOffset[i]               := OtherInvControl2.CondOffset[i];
+          ControlledElement[i]        := OtherInvControl.ControlledElement[i];
+          CondOffset[i]               := OtherInvControl.CondOffset[i];
 
-          FVBase[i]                   :=  OtherInvControl2.FVBase[i];
-          FVarFollowInverter[i]       :=  OtherInvControl2.FVarFollowInverter[i];
-          FInverterON[i]              :=  OtherInvControl2.FInverterON[i];
-          FpresentkW[i]               :=  OtherInvControl2.FpresentkW[i];
-          FkVARating[i]               :=  OtherInvControl2.FkVARating[i];
-          Fpresentkvar[i]             :=  OtherInvControl2.Fpresentkvar[i];
-          FkvarLimit[i]               :=  OtherInvControl2.FkvarLimit[i];
-          FkvarLimitNeg[i]            :=  OtherInvControl2.FkvarLimitNeg[i];
-          FCurrentkvarLimit[i]        :=  OtherInvControl2.FCurrentkvarLimit[i];
-          FCurrentkvarLimitNeg[i]     :=  OtherInvControl2.FCurrentkvarLimitNeg[i];
-          FDCkWRated[i]               :=  OtherInvControl2.FDCkWRated[i];
-          FpctDCkWRated[i]            :=  OtherInvControl2.FpctDCkWRated[i];
-          FEffFactor[i]               :=  OtherInvControl2.FEffFactor[i];
-          FDCkW[i]                    :=  OtherInvControl2.FDCkW[i];
-          FPPriority[i]               :=  OtherInvControl2.FPPriority[i];
+          FVBase[i]                   :=  OtherInvControl.FVBase[i];
+          FVarFollowInverter[i]       :=  OtherInvControl.FVarFollowInverter[i];
+          FInverterON[i]              :=  OtherInvControl.FInverterON[i];
+          FpresentkW[i]               :=  OtherInvControl.FpresentkW[i];
+          FkVARating[i]               :=  OtherInvControl.FkVARating[i];
+          Fpresentkvar[i]             :=  OtherInvControl.Fpresentkvar[i];
+          FkvarLimit[i]               :=  OtherInvControl.FkvarLimit[i];
+          FkvarLimitNeg[i]            :=  OtherInvControl.FkvarLimitNeg[i];
+          FCurrentkvarLimit[i]        :=  OtherInvControl.FCurrentkvarLimit[i];
+          FCurrentkvarLimitNeg[i]     :=  OtherInvControl.FCurrentkvarLimitNeg[i];
+          FDCkWRated[i]               :=  OtherInvControl.FDCkWRated[i];
+          FpctDCkWRated[i]            :=  OtherInvControl.FpctDCkWRated[i];
+          FEffFactor[i]               :=  OtherInvControl.FEffFactor[i];
+          FDCkW[i]                    :=  OtherInvControl.FDCkW[i];
+          FPPriority[i]               :=  OtherInvControl.FPPriority[i];
          end;
 
-      ControlMode                     := OtherInvControl2.ControlMode;
-      CombiControlMode                := OtherInvControl2.CombiControlMode;
-      FListSize                       := OtherInvControl2.FListSize;
-      Fvvc_curve_size                 := OtherInvControl2.Fvvc_curve_size;
-      Fvvc_curve                      := OtherInvControl2.Fvvc_curve;
-      Fvvc_curvename                  := OtherInvControl2.Fvvc_curvename;
-      Fvvc_curveOffset                := OtherInvControl2.Fvvc_curveOffset;
-      FVoltage_CurveX_ref             := OtherInvControl2.FVoltage_CurveX_ref;
-      FDRCVAvgWindowLengthSec         := OtherInvControl2.FDRCVAvgWindowLengthSec;
-      FVAvgWindowLengthSec            := OtherInvControl2.FVAvgWindowLengthSec;
-      Fvoltwatt_curve_size            := OtherInvControl2.Fvoltwatt_curve_size;
-      Fvoltwatt_curve                 := OtherInvControl2.Fvoltwatt_curve;
-      Fvoltwatt_curvename             := OtherInvControl2.Fvoltwatt_curvename;
-      FvoltwattCH_curve_size          := OtherInvControl2.FvoltwattCH_curve_size;
-      FvoltwattCH_curve               := OtherInvControl2.FvoltwattCH_curve;
-      FvoltwattCH_curvename           := OtherInvControl2.FvoltwattCH_curvename;
-      Fwattpf_curve_size              := OtherInvControl2.Fwattpf_curve_size;
-      Fwattpf_curve                   := OtherInvControl2.Fwattpf_curve;
-      Fwattpf_curvename               := OtherInvControl2.Fwattpf_curvename;
-      Fwattvar_curve_size             := OtherInvControl2.Fwattvar_curve_size;
-      Fwattvar_curve                  := OtherInvControl2.Fwattvar_curve;
-      Fwattvar_curvename              := OtherInvControl2.Fwattvar_curvename;
-      FDbVMin                         := OtherInvControl2.FDbVMin;
-      pf_wp_nominal                   := OtherInvControl2.pf_wp_nominal;
-      FDbVMax                         := OtherInvControl2.FDbVMax;
-      FArGraLowV                      := OtherInvControl2.FArGraLowV;
-      FArGraHiV                       := OtherInvControl2.FArGraHiV;
-      FActiveVVCurve                  := OtherInvControl2.FActiveVVCurve;
-      FRollAvgWindowLength            := OtherInvControl2.FRollAvgWindowLength;
-      FRollAvgWindowLengthIntervalUnit      := OtherInvControl2.FRollAvgWindowLengthIntervalUnit;
-      FDRCRollAvgWindowLength         := OtherInvControl2.FDRCRollAvgWindowLength;
-      FDRCRollAvgWindowLengthIntervalUnit   := OtherInvControl2.FDRCRollAvgWindowLengthIntervalUnit;
-      FActivePChangeTolerance         := OtherInvControl2.FActivePChangeTolerance;
-      FdeltaQ_factor                  := OtherInvControl2.FdeltaQ_factor;
-      FdeltaP_factor                  := OtherInvControl2.FdeltaP_factor;
-      FVoltageChangeTolerance         := OtherInvControl2.FVoltageChangeTolerance;
-      FVarChangeTolerance             := OtherInvControl2.FVarChangeTolerance;
-      FVoltwattYAxis                  := OtherInvControl2.FVoltwattYAxis;
-      RateofChangeMode                := OtherInvControl2.RateofChangeMode;
-      FLPFTau                         := OtherInvControl2.FLPFTau;
-      FRiseFallLimit                  := OtherInvControl2.FRiseFallLimit;
-      FMonBusesPhase                        := OtherInvControl2.FMonBusesPhase;
-      FMonBuses                    := OtherInvControl2.FMonBuses;
-      FMonBusesNodes                     := OtherInvControl2.FMonBusesNodes;
+      ControlMode                     := OtherInvControl.ControlMode;
+      CombiControlMode                := OtherInvControl.CombiControlMode;
+      FListSize                       := OtherInvControl.FListSize;
+      Fvvc_curve_size                 := OtherInvControl.Fvvc_curve_size;
+      Fvvc_curve                      := OtherInvControl.Fvvc_curve;
+      Fvvc_curvename                  := OtherInvControl.Fvvc_curvename;
+      Fvvc_curveOffset                := OtherInvControl.Fvvc_curveOffset;
+      FVoltage_CurveX_ref             := OtherInvControl.FVoltage_CurveX_ref;
+      FDRCVAvgWindowLengthSec         := OtherInvControl.FDRCVAvgWindowLengthSec;
+      FVAvgWindowLengthSec            := OtherInvControl.FVAvgWindowLengthSec;
+      Fvoltwatt_curve_size            := OtherInvControl.Fvoltwatt_curve_size;
+      Fvoltwatt_curve                 := OtherInvControl.Fvoltwatt_curve;
+      Fvoltwatt_curvename             := OtherInvControl.Fvoltwatt_curvename;
+      FvoltwattCH_curve_size          := OtherInvControl.FvoltwattCH_curve_size;
+      FvoltwattCH_curve               := OtherInvControl.FvoltwattCH_curve;
+      FvoltwattCH_curvename           := OtherInvControl.FvoltwattCH_curvename;
+      Fwattpf_curve_size              := OtherInvControl.Fwattpf_curve_size;
+      Fwattpf_curve                   := OtherInvControl.Fwattpf_curve;
+      Fwattpf_curvename               := OtherInvControl.Fwattpf_curvename;
+      Fwattvar_curve_size             := OtherInvControl.Fwattvar_curve_size;
+      Fwattvar_curve                  := OtherInvControl.Fwattvar_curve;
+      Fwattvar_curvename              := OtherInvControl.Fwattvar_curvename;
+      FDbVMin                         := OtherInvControl.FDbVMin;
+      pf_wp_nominal                   := OtherInvControl.pf_wp_nominal;
+      FDbVMax                         := OtherInvControl.FDbVMax;
+      FArGraLowV                      := OtherInvControl.FArGraLowV;
+      FArGraHiV                       := OtherInvControl.FArGraHiV;
+      FActiveVVCurve                  := OtherInvControl.FActiveVVCurve;
+      FRollAvgWindowLength            := OtherInvControl.FRollAvgWindowLength;
+      FRollAvgWindowLengthIntervalUnit      := OtherInvControl.FRollAvgWindowLengthIntervalUnit;
+      FDRCRollAvgWindowLength         := OtherInvControl.FDRCRollAvgWindowLength;
+      FDRCRollAvgWindowLengthIntervalUnit   := OtherInvControl.FDRCRollAvgWindowLengthIntervalUnit;
+      FActivePChangeTolerance         := OtherInvControl.FActivePChangeTolerance;
+      FdeltaQ_factor                  := OtherInvControl.FdeltaQ_factor;
+      FdeltaP_factor                  := OtherInvControl.FdeltaP_factor;
+      FVoltageChangeTolerance         := OtherInvControl.FVoltageChangeTolerance;
+      FVarChangeTolerance             := OtherInvControl.FVarChangeTolerance;
+      FVoltwattYAxis                  := OtherInvControl.FVoltwattYAxis;
+      RateofChangeMode                := OtherInvControl.RateofChangeMode;
+      FLPFTau                         := OtherInvControl.FLPFTau;
+      FRiseFallLimit                  := OtherInvControl.FRiseFallLimit;
+      FMonBusesPhase                        := OtherInvControl.FMonBusesPhase;
+      FMonBuses                    := OtherInvControl.FMonBuses;
+      FMonBusesNodes                     := OtherInvControl.FMonBusesNodes;
 
       ReallocMem(FMonBusesVbase, SizeOf(FMonBusesVbase^[1])*FMonBusesNameList.Count);
-      for j := 1 to FMonBusesNameList.Count do FMonBusesVbase^[j] := OtherInvControl2.FMonBusesVbase^[j];
+      for j := 1 to FMonBusesNameList.Count do FMonBusesVbase^[j] := OtherInvControl.FMonBusesVbase^[j];
 
-      TimeDelay                  := OtherInvControl2.TimeDelay;
-      for j := 1 to ParentClass.NumProperties do PropertyValue[j] := OtherInvControl2.PropertyValue[j];
+      TimeDelay                  := OtherInvControl.TimeDelay;
+      for j := 1 to ParentClass.NumProperties do PropertyValue[j] := OtherInvControl.PropertyValue[j];
 
     end
    else  DoSimpleMsg('Error in InvControl2 MakeLike: "' + InvControl2Name + '" Not Found.', 370);
@@ -1046,7 +1075,7 @@ function TInvControl2.MakeLike(const InvControl2Name:String):Integer;
 end;
 
 {==========================================================================}
-{                    TInvControlObj                                        }
+{                    TInvControl2Obj                                        }
 {==========================================================================}
 constructor TInvControl2Obj.Create(ParClass:TDSSClass; const InvControl2Name:String);
 
@@ -1346,7 +1375,7 @@ procedure TInvControl2Obj.RecalcElementData();
     if FDERPointerList.ListSize = 0 then  MakeDERList;
 
     if FDERPointerList.ListSize > 0  then
-    {Setting the terminal of the InvControl device to same as the 1st PVSystem2/Storage2 element}
+    {Setting the terminal of the InvControl device to same as the 1st PVSystem/Storage element}
     { This sets it to a realistic value to avoid crashes later }
       begin
         MonitoredElement :=  TDSSCktElement(FDERPointerList.Get(1));   // Set MonitoredElement to 1st elemnent in list
@@ -1356,8 +1385,8 @@ procedure TInvControl2Obj.RecalcElementData();
     for i := 1 to FDERPointerList.ListSize do
       begin
 
-        // User ControlledElement[] as the pointer to the PVSystem2/Storage2 elements
-        ControlledElement[i] :=  TPCElement(FDERPointerList.Get(i));  // pointer to i-th PVSystem2/Storage2 element
+        // User ControlledElement[] as the pointer to the PVSystem/Storage elements
+        ControlledElement[i] :=  TPCElement(FDERPointerList.Get(i));  // pointer to i-th PVSystem/Storage element
         SetLength(cBuffer[i], SizeOF(Complex) * ControlledElement[i].Yorder );
 
 
@@ -1370,8 +1399,8 @@ procedure TInvControl2Obj.RecalcElementData();
         // for all modes other than VW and WATTPF, PF priority is not allowed
         if ((Mode <> VOLTWATT) and (Mode <> WATTPF)) Then
         Begin
-            if ControlledElement[i].DSSClassName = 'PVSystem2'     then TPVSystem2Obj(ControlledElement[i]).PVSystem2Vars.PF_Priority := FALSE
-            else if ControlledElement[i].DSSClassName = 'Storage2' then  TStorage2Obj(ControlledElement[i]).Storage2Vars.PF_Priority := FALSE;
+            if ControlledElement[i].DSSClassName = 'PVSystem'     then TPVSystemObj(ControlledElement[i]).PVSystemVars.PF_Priority := FALSE
+            else if ControlledElement[i].DSSClassName = 'Storage' then  TStorageObj(ControlledElement[i]).StorageVars.PF_Priority := FALSE;
         End;
 
         //FdeltaQFactor[i]                := FdeltaQ_factor;
@@ -1385,7 +1414,7 @@ procedure TInvControl2Obj.RecalcElementData();
           ControlledElement[i] := nil;
           DoErrorMsg('InvControl2: "' + Self.Name + '"',
                           'Controlled Element "' + FDERNameList.Strings[i-1] + '" Not Found.',
-                          ' PVSystem2 or Storage2 object must be defined previously.', 361);
+                          ' PVSystem or Storage object must be defined previously.', 361);
         end;
       end;
 
@@ -1393,7 +1422,7 @@ procedure TInvControl2Obj.RecalcElementData();
 
 procedure TInvControl2Obj.MakePosSequence();
 
-// ***  This assumes the PVSystem2/Storage2 devices have already been converted to pos seq
+// ***  This assumes the PVSystem/Storage devices have already been converted to pos seq
 
   begin
 
@@ -1403,10 +1432,10 @@ procedure TInvControl2Obj.MakePosSequence();
     Setbus(1, MonitoredElement.GetBus(ElementTerminal));
 
     if FDERPointerList.ListSize > 0  then
-    {Setting the terminal of the InvControl device to same as the 1st PVSystem2/Storage2 element}
+    {Setting the terminal of the InvControl device to same as the 1st PVSystem/Storage element}
     { This sets it to a realistic value to avoid crashes later }
       begin
-        MonitoredElement :=  TDSSCktElement(FDERPointerList.Get(1));   // Set MonitoredElement to 1st PVSystem2/Storage2 in list
+        MonitoredElement :=  TDSSCktElement(FDERPointerList.Get(1));   // Set MonitoredElement to 1st PVSystem/Storage in list
         Setbus(1, MonitoredElement.Firstbus);
         Nphases := MonitoredElement.NPhases;
         Nconds := Nphases;
@@ -1485,17 +1514,17 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
         if(ControlMode = VOLTVAR) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
           begin
             // Set var mode to VARMODEKVAR to indicate we might change kvar
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                TPVSystem2Obj(DERelem).VWmode  := FALSE;
-                TPVSystem2Obj(DERelem).Varmode := VARMODEKVAR;
-                TPVSystem2Obj(DERelem).VVmode := TRUE;
+                TPVSystemObj(DERelem).VWmode  := FALSE;
+                TPVSystemObj(DERelem).Varmode := VARMODEKVAR;
+                TPVSystemObj(DERelem).VVmode := TRUE;
               end
             else
               begin
-                TStorage2Obj(DERelem).VWmode     := FALSE;
-                TStorage2Obj(DERelem).Varmode    := VARMODEKVAR;
-                TStorage2Obj(DERelem).VVmode     := TRUE;
+                TStorageObj(DERelem).VWmode     := FALSE;
+                TStorageObj(DERelem).Varmode    := VARMODEKVAR;
+                TStorageObj(DERelem).VVmode     := TRUE;
               end;
 
             //--------------------------------------------- Main process ---------------------------------------------//
@@ -1530,24 +1559,24 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
 
             //--------------------------------------------- end Main process ---------------------------------------------//
 
-            // Sets PVSystem2/Storage2's kvar_out
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then TPVSystem2Obj(DERelem).Presentkvar := QDesiredVV[k]
-            else TStorage2Obj(DERelem).kvarRequested := QDesiredVV[k];
+            // Sets PVSystem/Storage's kvar_out
+            if ControlledElement[k].DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).Presentkvar := QDesiredVV[k]
+            else TStorageObj(DERelem).kvarRequested := QDesiredVV[k];
 
             // Uptates PresentkW and Presentkvar considering watt and var priorities
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                TPVSystem2Obj(DERelem).SetNominalPVSystem2Ouput();
+                TPVSystemObj(DERelem).SetNominalPVSystemOuput();
 
-                if QDesiredVV[k] >= 0.0 then Qoutputpu[k] := TPVSystem2Obj(DERelem).Presentkvar / QHeadroom[k]
-                else Qoutputpu[k] := TPVSystem2Obj(DERelem).Presentkvar / QHeadroomNeg[k];
+                if QDesiredVV[k] >= 0.0 then Qoutputpu[k] := TPVSystemObj(DERelem).Presentkvar / QHeadroom[k]
+                else Qoutputpu[k] := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg[k];
               end
             else
               begin
-                TStorage2Obj(DERelem).SetNominalStorage2Output();
+                TStorageObj(DERelem).SetNominalStorageOutput();
 
-                if QDesiredVV[k] >= 0.0 then Qoutputpu[k] := TStorage2Obj(DERelem).Presentkvar / QHeadroom[k]
-                else Qoutputpu[k] := TStorage2Obj(DERelem).Presentkvar / QHeadroomNeg[k];
+                if QDesiredVV[k] >= 0.0 then Qoutputpu[k] := TStorageObj(DERelem).Presentkvar / QHeadroom[k]
+                else Qoutputpu[k] := TStorageObj(DERelem).Presentkvar / QHeadroomNeg[k];
               end;
 
             // Values used in convergence
@@ -1555,23 +1584,23 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
             FAvgpVpuPrior[k] := FPresentVpu[k];
 
             // Values used in CalcQVVcurve_desiredpu
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                QOld[k]   := TPVSystem2Obj(DERelem).Presentkvar;
-                QOldVV[k] := TPVSystem2Obj(DERelem).Presentkvar;
+                QOld[k]   := TPVSystemObj(DERelem).Presentkvar;
+                QOldVV[k] := TPVSystemObj(DERelem).Presentkvar;
 
-              if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name +', '+ TPVSystem2Obj(DERelem).QualifiedName,
-                                                    Format('VOLTVAR mode requested PVSystem2 output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredVV[k], TPVSystem2Obj(DERelem).Presentkvar]));
+              if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
+                                                    Format('VOLTVAR mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                           [QDesiredVV[k], TPVSystemObj(DERelem).Presentkvar]));
               end
             else
               begin
-                QOld[k]   := TStorage2Obj(DERelem).Presentkvar;
-                QOldVV[k] := TStorage2Obj(DERelem).Presentkvar;
+                QOld[k]   := TStorageObj(DERelem).Presentkvar;
+                QOldVV[k] := TStorageObj(DERelem).Presentkvar;
 
-                if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name +', '+  TStorage2Obj(DERelem).QualifiedName,
-                                                    Format('VOLTVAR mode requested Storage2 output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredVV[k], TStorage2Obj(DERelem).Presentkvar]));
+                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
+                                                    Format('VOLTVAR mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
+                                                           [QDesiredVV[k], TStorageObj(DERelem).Presentkvar]));
 
               end;
           end
@@ -1580,17 +1609,17 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
         else if(ControlMode = WATTPF) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
           begin
             // Set var mode to VARMODEKVAR to indicate we might change kvar
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                TPVSystem2Obj(DERelem).VWmode  := FALSE;
-                TPVSystem2Obj(DERelem).Varmode := VARMODEKVAR;
-                TPVSystem2Obj(DERelem).WPmode  := TRUE;
+                TPVSystemObj(DERelem).VWmode  := FALSE;
+                TPVSystemObj(DERelem).Varmode := VARMODEKVAR;
+                TPVSystemObj(DERelem).WPmode  := TRUE;
               end
             else
               begin
-                TStorage2Obj(DERelem).VWmode     := FALSE;
-                TStorage2Obj(DERelem).Varmode    := VARMODEKVAR;
-                TStorage2Obj(DERelem).WPmode     := TRUE;
+                TStorageObj(DERelem).VWmode     := FALSE;
+                TStorageObj(DERelem).Varmode    := VARMODEKVAR;
+                TStorageObj(DERelem).WPmode     := TRUE;
               end;
 
             //--------------------------------------------- Main process ---------------------------------------------//
@@ -1606,28 +1635,28 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
             CalcWATTPF_vars(k);
 
             //--------------------------------------------- end Main process ---------------------------------------------//
-            // Sets PVSystem2/Storage2's pf_wp_nominal
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then TPVSystem2Obj(DERelem).pf_wp_nominal := pf_wp_nominal
-            else TStorage2Obj(DERelem).kvarRequested := QDesiredWP[k];
+            // Sets PVSystem/Storage's pf_wp_nominal
+            if ControlledElement[k].DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).pf_wp_nominal := pf_wp_nominal
+            else TStorageObj(DERelem).kvarRequested := QDesiredWP[k];
 
-            // Sets PVSystem2/Storage2's kvar_out
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then TPVSystem2Obj(DERelem).Presentkvar := QDesiredWP[k]
-            else TStorage2Obj(DERelem).kvarRequested := QDesiredWP[k];
+            // Sets PVSystem/Storage's kvar_out
+            if ControlledElement[k].DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).Presentkvar := QDesiredWP[k]
+            else TStorageObj(DERelem).kvarRequested := QDesiredWP[k];
 
             // Uptates PresentkW and Presentkvar considering watt and var priorities
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                TPVSystem2Obj(DERelem).SetNominalPVSystem2Ouput();
+                TPVSystemObj(DERelem).SetNominalPVSystemOuput();
 
-                if QDesiredWP[k] >= 0.0 then Qoutputpu[k] := TPVSystem2Obj(DERelem).Presentkvar / QHeadroom[k]
-                else Qoutputpu[k] := TPVSystem2Obj(DERelem).Presentkvar / QHeadroomNeg[k];
+                if QDesiredWP[k] >= 0.0 then Qoutputpu[k] := TPVSystemObj(DERelem).Presentkvar / QHeadroom[k]
+                else Qoutputpu[k] := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg[k];
               end
             else
               begin
-                TStorage2Obj(DERelem).SetNominalStorage2Output();
+                TStorageObj(DERelem).SetNominalStorageOutput();
 
-                if QDesiredWP[k] >= 0.0 then Qoutputpu[k] := TStorage2Obj(DERelem).Presentkvar / QHeadroom[k]
-                else Qoutputpu[k] := TStorage2Obj(DERelem).Presentkvar / QHeadroomNeg[k];
+                if QDesiredWP[k] >= 0.0 then Qoutputpu[k] := TStorageObj(DERelem).Presentkvar / QHeadroom[k]
+                else Qoutputpu[k] := TStorageObj(DERelem).Presentkvar / QHeadroomNeg[k];
               end;
 
             // Values used in convergence
@@ -1635,23 +1664,23 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
             FAvgpVpuPrior[k] := FPresentVpu[k];
 
             // Values used in CalcQVVcurve_desiredpu
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                QOld[k]   := TPVSystem2Obj(DERelem).Presentkvar;
-                QOldVV[k] := TPVSystem2Obj(DERelem).Presentkvar;
+                QOld[k]   := TPVSystemObj(DERelem).Presentkvar;
+                QOldVV[k] := TPVSystemObj(DERelem).Presentkvar;
 
-              if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name +', '+ TPVSystem2Obj(DERelem).QualifiedName,
-                                                    Format('WATTPF mode requested PVSystem2 output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredWP[k], TPVSystem2Obj(DERelem).Presentkvar]));
+              if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
+                                                    Format('WATTPF mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                           [QDesiredWP[k], TPVSystemObj(DERelem).Presentkvar]));
               end
             else
               begin
-                QOld[k]   := TStorage2Obj(DERelem).Presentkvar;
-                QOldVV[k] := TStorage2Obj(DERelem).Presentkvar;
+                QOld[k]   := TStorageObj(DERelem).Presentkvar;
+                QOldVV[k] := TStorageObj(DERelem).Presentkvar;
 
-                if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name +', '+  TStorage2Obj(DERelem).QualifiedName,
-                                                    Format('WATTPF mode requested Storage2 output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredWP[k], TStorage2Obj(DERelem).Presentkvar]));
+                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
+                                                    Format('WATTPF mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
+                                                           [QDesiredWP[k], TStorageObj(DERelem).Presentkvar]));
 
               end;
           end
@@ -1660,17 +1689,17 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
         else if(ControlMode = WATTVAR) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEVARLEVEL) then
           begin
             // Set var mode to VARMODEKVAR to indicate we might change kvar
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                TPVSystem2Obj(DERelem).VWmode  := FALSE;
-                TPVSystem2Obj(DERelem).Varmode := VARMODEKVAR;
-                TPVSystem2Obj(DERelem).WVmode  := TRUE;
+                TPVSystemObj(DERelem).VWmode  := FALSE;
+                TPVSystemObj(DERelem).Varmode := VARMODEKVAR;
+                TPVSystemObj(DERelem).WVmode  := TRUE;
               end
             else
               begin
-                TStorage2Obj(DERelem).VWmode     := FALSE;
-                TStorage2Obj(DERelem).Varmode    := VARMODEKVAR;
-                TStorage2Obj(DERelem).WVmode     := TRUE;
+                TStorageObj(DERelem).VWmode     := FALSE;
+                TStorageObj(DERelem).Varmode    := VARMODEKVAR;
+                TStorageObj(DERelem).WVmode     := TRUE;
               end;
 
             //--------------------------------------------- Main process ---------------------------------------------//
@@ -1687,24 +1716,24 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
 
             //--------------------------------------------- end Main process ---------------------------------------------//
 
-            // Sets PVSystem2/Storage2's kvar_out
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then TPVSystem2Obj(DERelem).Presentkvar := QDesiredWV[k]
-            else TStorage2Obj(DERelem).kvarRequested := QDesiredWV[k];
+            // Sets PVSystem/Storage's kvar_out
+            if ControlledElement[k].DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).Presentkvar := QDesiredWV[k]
+            else TStorageObj(DERelem).kvarRequested := QDesiredWV[k];
 
             // Uptates PresentkW and Presentkvar considering watt and var priorities
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                TPVSystem2Obj(DERelem).SetNominalPVSystem2Ouput();
+                TPVSystemObj(DERelem).SetNominalPVSystemOuput();
 
-                if QDesiredWV[k] >= 0.0 then Qoutputpu[k] := TPVSystem2Obj(DERelem).Presentkvar / QHeadroom[k]
-                else Qoutputpu[k] := TPVSystem2Obj(DERelem).Presentkvar / QHeadroomNeg[k];
+                if QDesiredWV[k] >= 0.0 then Qoutputpu[k] := TPVSystemObj(DERelem).Presentkvar / QHeadroom[k]
+                else Qoutputpu[k] := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg[k];
               end
             else
               begin
-                TStorage2Obj(DERelem).SetNominalStorage2Output();
+                TStorageObj(DERelem).SetNominalStorageOutput();
 
-                if QDesiredWV[k] >= 0.0 then Qoutputpu[k] := TStorage2Obj(DERelem).Presentkvar / QHeadroom[k]
-                else Qoutputpu[k] := TStorage2Obj(DERelem).Presentkvar / QHeadroomNeg[k];
+                if QDesiredWV[k] >= 0.0 then Qoutputpu[k] := TStorageObj(DERelem).Presentkvar / QHeadroom[k]
+                else Qoutputpu[k] := TStorageObj(DERelem).Presentkvar / QHeadroomNeg[k];
               end;
 
             // Values used in convergence
@@ -1712,23 +1741,23 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
             FAvgpVpuPrior[k] := FPresentVpu[k];
 
             // Values used in CalcQVVcurve_desiredpu
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                QOld[k]   := TPVSystem2Obj(DERelem).Presentkvar;
-                QOldVV[k] := TPVSystem2Obj(DERelem).Presentkvar;
+                QOld[k]   := TPVSystemObj(DERelem).Presentkvar;
+                QOldVV[k] := TPVSystemObj(DERelem).Presentkvar;
 
-              if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name +', '+ TPVSystem2Obj(DERelem).QualifiedName,
-                                                    Format('WATTVAR mode requested PVSystem2 output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredWV[k], TPVSystem2Obj(DERelem).Presentkvar]));
+              if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
+                                                    Format('WATTVAR mode requested PVSystem output var level to**, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                           [QDesiredWV[k], TPVSystemObj(DERelem).Presentkvar]));
               end
             else
               begin
-                QOld[k]   := TStorage2Obj(DERelem).Presentkvar;
-                QOldVV[k] := TStorage2Obj(DERelem).Presentkvar;
+                QOld[k]   := TStorageObj(DERelem).Presentkvar;
+                QOldVV[k] := TStorageObj(DERelem).Presentkvar;
 
-                if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name +', '+  TStorage2Obj(DERelem).QualifiedName,
-                                                    Format('WATTVAR mode requested Storage2 output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredWV[k], TStorage2Obj(DERelem).Presentkvar]));
+                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
+                                                    Format('WATTVAR mode requested Storage output var level to **, kvar = %.5g. Actual output set to kvar= %.5g.',
+                                                           [QDesiredWV[k], TStorageObj(DERelem).Presentkvar]));
 
               end;
           end
@@ -1738,17 +1767,17 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
           begin
 
             // Set var mode to VARMODEKVAR to indicate we might change kvar
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                TPVSystem2Obj(DERelem).VWmode  := FALSE;
-                TPVSystem2Obj(DERelem).Varmode := VARMODEKVAR;
-                TPVSystem2Obj(DERelem).DRCmode := TRUE;
+                TPVSystemObj(DERelem).VWmode  := FALSE;
+                TPVSystemObj(DERelem).Varmode := VARMODEKVAR;
+                TPVSystemObj(DERelem).DRCmode := TRUE;
               end
             else
               begin
-                TStorage2Obj(DERelem).VWmode  := FALSE;
-                TStorage2Obj(DERelem).Varmode := VARMODEKVAR;
-                TStorage2Obj(DERelem).DRCmode := TRUE;
+                TStorageObj(DERelem).VWmode  := FALSE;
+                TStorageObj(DERelem).Varmode := VARMODEKVAR;
+                TStorageObj(DERelem).DRCmode := TRUE;
               end;
 
             //--------------------------------------------- Main process ---------------------------------------------//
@@ -1784,23 +1813,23 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
             //--------------------------------------------- end main process ---------------------------------------------//
 
             // Sets DER kvar_out
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then TPVSystem2Obj(DERelem).Presentkvar := QDesiredDRC[k]
-            else TStorage2Obj(DERelem).kvarRequested := QDesiredDRC[k];
+            if ControlledElement[k].DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).Presentkvar := QDesiredDRC[k]
+            else TStorageObj(DERelem).kvarRequested := QDesiredDRC[k];
 
             // Uptates PresentkW and Presentkvar considering watt and var priorities
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                TPVSystem2Obj(DERelem).SetNominalPVSystem2Ouput();
+                TPVSystemObj(DERelem).SetNominalPVSystemOuput();
 
-                if QDesiredDRC[k] >= 0.0 then Qoutputpu[k] := TPVSystem2Obj(DERelem).Presentkvar / QHeadroom[k]
-                else Qoutputpu[k] := TPVSystem2Obj(DERelem).Presentkvar / QHeadroomNeg[k];
+                if QDesiredDRC[k] >= 0.0 then Qoutputpu[k] := TPVSystemObj(DERelem).Presentkvar / QHeadroom[k]
+                else Qoutputpu[k] := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg[k];
               end
             else
               begin
-                TStorage2Obj(DERelem).SetNominalStorage2Output();
+                TStorageObj(DERelem).SetNominalStorageOutput();
 
-                if QDesiredDRC[k] >= 0.0 then Qoutputpu[k] := TStorage2Obj(DERelem).Presentkvar / QHeadroom[k]
-                else Qoutputpu[k] := TStorage2Obj(DERelem).Presentkvar / QHeadroomNeg[k];
+                if QDesiredDRC[k] >= 0.0 then Qoutputpu[k] := TStorageObj(DERelem).Presentkvar / QHeadroom[k]
+                else Qoutputpu[k] := TStorageObj(DERelem).Presentkvar / QHeadroomNeg[k];
               end;
 
             // Values used in convergence
@@ -1808,23 +1837,23 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
             FAvgpDRCVpuPrior[k] := FPresentDRCVpu[k];
 
             // Values used in CalcDRC_vars
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                QOld[k]    := TPVSystem2Obj(DERelem).Presentkvar;
-                QOldDRC[k] := TPVSystem2Obj(DERelem).Presentkvar;
+                QOld[k]    := TPVSystemObj(DERelem).Presentkvar;
+                QOldDRC[k] := TPVSystemObj(DERelem).Presentkvar;
 
-                if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name +', '+ TPVSystem2Obj(DERelem).QualifiedName,
-                                                    Format('DRC mode requested PVSystem2 output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredDRC[k], TPVSystem2Obj(DERelem).Presentkvar]));
+                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
+                                                    Format('DRC mode requested PVSystem output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                           [QDesiredDRC[k], TPVSystemObj(DERelem).Presentkvar]));
               end
             else
               begin
-                QOld[k]    := TStorage2Obj(DERelem).Presentkvar;
-                QOldDRC[k] := TStorage2Obj(DERelem).Presentkvar;
+                QOld[k]    := TStorageObj(DERelem).Presentkvar;
+                QOldDRC[k] := TStorageObj(DERelem).Presentkvar;
 
-                if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name +', '+  TStorage2Obj(DERelem).QualifiedName,
-                                                    Format('DRC mode requested Storage2 output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredDRC[k], TStorage2Obj(DERelem).Presentkvar]));
+                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
+                                                    Format('DRC mode requested Storage output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                           [QDesiredDRC[k], TStorageObj(DERelem).Presentkvar]));
 
               end;
           end
@@ -1834,19 +1863,19 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
           begin
 
             // Set var mode to VARMODEKVAR to indicate we might change kvar
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                TPVSystem2Obj(DERelem).VWmode  := FALSE;
-                TPVSystem2Obj(DERelem).Varmode := VARMODEKVAR;
-                TPVSystem2Obj(DERelem).VVmode  := TRUE;
-                TPVSystem2Obj(DERelem).DRCmode := TRUE;
+                TPVSystemObj(DERelem).VWmode  := FALSE;
+                TPVSystemObj(DERelem).Varmode := VARMODEKVAR;
+                TPVSystemObj(DERelem).VVmode  := TRUE;
+                TPVSystemObj(DERelem).DRCmode := TRUE;
               end
             else
               begin
-                TStorage2Obj(DERelem).VWmode  := FALSE;
-                TStorage2Obj(DERelem).Varmode := VARMODEKVAR;
-                TStorage2Obj(DERelem).VVmode  := TRUE;
-                TStorage2Obj(DERelem).DRCmode := TRUE;
+                TStorageObj(DERelem).VWmode  := FALSE;
+                TStorageObj(DERelem).Varmode := VARMODEKVAR;
+                TStorageObj(DERelem).VVmode  := TRUE;
+                TStorageObj(DERelem).DRCmode := TRUE;
               end;
 
             //--------------------------------------------- Main process ---------------------------------------------//
@@ -1883,23 +1912,23 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
             //--------------------------------------------- end main process ---------------------------------------------//
 
             // Sets DER kvar_out
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then TPVSystem2Obj(DERelem).Presentkvar := QDesiredVVDRC[k]
-            else TStorage2Obj(DERelem).kvarRequested := QDesiredVVDRC[k];
+            if ControlledElement[k].DSSClassName = 'PVSystem' then TPVSystemObj(DERelem).Presentkvar := QDesiredVVDRC[k]
+            else TStorageObj(DERelem).kvarRequested := QDesiredVVDRC[k];
 
             // Uptates PresentkW and Presentkvar considering watt and var priorities
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                TPVSystem2Obj(DERelem).SetNominalPVSystem2Ouput();
+                TPVSystemObj(DERelem).SetNominalPVSystemOuput();
 
-                if QDesiredVVDRC[k] >= 0.0 then Qoutputpu[k] := TPVSystem2Obj(DERelem).Presentkvar / QHeadroom[k]
-                else Qoutputpu[k] := TPVSystem2Obj(DERelem).Presentkvar / QHeadroomNeg[k];
+                if QDesiredVVDRC[k] >= 0.0 then Qoutputpu[k] := TPVSystemObj(DERelem).Presentkvar / QHeadroom[k]
+                else Qoutputpu[k] := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg[k];
               end
             else
               begin
-                TStorage2Obj(DERelem).SetNominalStorage2Output();
+                TStorageObj(DERelem).SetNominalStorageOutput();
 
-                if QDesiredVVDRC[k] >= 0.0 then Qoutputpu[k] := TStorage2Obj(DERelem).Presentkvar / QHeadroom[k]
-                else Qoutputpu[k] := TStorage2Obj(DERelem).Presentkvar / QHeadroomNeg[k];
+                if QDesiredVVDRC[k] >= 0.0 then Qoutputpu[k] := TStorageObj(DERelem).Presentkvar / QHeadroom[k]
+                else Qoutputpu[k] := TStorageObj(DERelem).Presentkvar / QHeadroomNeg[k];
               end;
 
             // Values used in convergence
@@ -1908,23 +1937,23 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
             FAvgpDRCVpuPrior[k] := FPresentDRCVpu[k];
 
             // Values used in CalcQVVcurve_desiredpu and CalcVVDRC_vars
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                QOld[k]      := TPVSystem2Obj(DERelem).Presentkvar;
-                QOldVVDRC[k] := TPVSystem2Obj(DERelem).Presentkvar;
+                QOld[k]      := TPVSystemObj(DERelem).Presentkvar;
+                QOldVVDRC[k] := TPVSystemObj(DERelem).Presentkvar;
 
-                if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name +', '+ TPVSystem2Obj(DERelem).QualifiedName,
-                                                    Format('**VV_DRC mode requested PVSystem2 output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredVVDRC[k], TPVSystem2Obj(DERelem).Presentkvar]));
+                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
+                                                    Format('**VV_DRC mode requested PVSystem output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                           [QDesiredVVDRC[k], TPVSystemObj(DERelem).Presentkvar]));
               end
             else
               begin
-                QOld[k]      := TStorage2Obj(DERelem).Presentkvar;
-                QOldVVDRC[k] := TStorage2Obj(DERelem).Presentkvar;
+                QOld[k]      := TStorageObj(DERelem).Presentkvar;
+                QOldVVDRC[k] := TStorageObj(DERelem).Presentkvar;
 
-                if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name +', '+  TStorage2Obj(DERelem).QualifiedName,
-                                                    Format('**VV_DRC mode requested Storage2 output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredVVDRC[k], TStorage2Obj(DERelem).Presentkvar]));
+                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+  TStorageObj(DERelem).QualifiedName,
+                                                    Format('**VV_DRC mode requested Storage output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                           [QDesiredVVDRC[k], TStorageObj(DERelem).Presentkvar]));
               end;
           end
 
@@ -1932,13 +1961,13 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
         else if(ControlMode = VOLTWATT) and (CombiControlMode = NONE_COMBMODE) and (PendingChange[k]=CHANGEWATTLEVEL) then
           begin
 
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                TPVSystem2Obj(DERelem).VWmode            := TRUE;
+                TPVSystemObj(DERelem).VWmode            := TRUE;
               end
             else
               begin
-                TStorage2Obj(DERelem).VWmode            := TRUE;
+                TStorageObj(DERelem).VWmode            := TRUE;
               end;
 
             //--------------------------------------------- Main process ---------------------------------------------//
@@ -1974,20 +2003,20 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
             //--------------------------------------------- end main process ---------------------------------------------//
 
             // Sets DER kW_out
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                TPVSystem2Obj(DERelem).PresentkW := PLimitVW[k];
+                TPVSystemObj(DERelem).PresentkW := PLimitVW[k];
 
                 // Uptates PresentkW and Presentkvar considering watt and var priorities
-                TPVSystem2Obj(DERelem).SetNominalPVSystem2Ouput();
+                TPVSystemObj(DERelem).SetNominalPVSystemOuput();
 
               end
             else
               begin
-                TStorage2Obj(DERelem).kWRequested := PLimitVW[k];
+                TStorageObj(DERelem).kWRequested := PLimitVW[k];
 
                 // Uptates PresentkW and Presentkvar considering watt and var priorities
-                TStorage2Obj(DERelem).SetNominalStorage2Output();
+                TStorageObj(DERelem).SetNominalStorageOutput();
               end;
 
 
@@ -1996,21 +2025,21 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
             POldVWpu[k] := PLimitVW[k] / PBase[k];
 
             // Flag has to do set to 0 when kW_out is lower than Ptemp (max power allowed from volt-watt function)
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                if ((abs(PLimitVW[k]) > 0.0) and (abs(TPVSystem2Obj(DERelem).presentkW - PLimitVW[k]) / PLimitVW[k] > 0.0001)) then FVWOperation[k] := 0; // 0.01% is the value chosen at the moment
+                if ((abs(PLimitVW[k]) > 0.0) and (abs(TPVSystemObj(DERelem).presentkW - PLimitVW[k]) / PLimitVW[k] > 0.0001)) then FVWOperation[k] := 0; // 0.01% is the value chosen at the moment
 
-                if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name+', '+TPVSystem2Obj(DERelem).QualifiedName,
-                                                    Format('**VOLTWATT mode set PVSystem2 kw output limit to **, kw= %.5g. Actual output is kw= %.5g.',
-                                                           [PLimitVW[k], TPVSystem2Obj(DERelem).presentkW]));
+                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+TPVSystemObj(DERelem).QualifiedName,
+                                                    Format('**VOLTWATT mode set PVSystem kw output limit to **, kw= %.5g. Actual output is kw= %.5g.',
+                                                           [PLimitVW[k], TPVSystemObj(DERelem).presentkW]));
               end
             else
               begin
-                if abs(abs(TStorage2Obj(DERelem).presentkW) - PLimitVW[k]) / PLimitVW[k] > 0.0001 then FVWOperation[k] := 0; // 0.01% is the value chosen at the moment
+                if abs(abs(TStorageObj(DERelem).presentkW) - PLimitVW[k]) / PLimitVW[k] > 0.0001 then FVWOperation[k] := 0; // 0.01% is the value chosen at the moment
 
-                if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name+', '+  TStorage2Obj(DERelem).QualifiedName,
-                                                    Format('**VOLTWATT mode set Storage2 kw output limit to ** kw= %.5g. Actual output is kw= %.5g.',
-                                                           [PLimitVW[k], TStorage2Obj(DERelem).presentkW]));
+                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+  TStorageObj(DERelem).QualifiedName,
+                                                    Format('**VOLTWATT mode set Storage kw output limit to ** kw= %.5g. Actual output is kw= %.5g.',
+                                                           [PLimitVW[k], TStorageObj(DERelem).presentkW]));
 
               end;
           end
@@ -2018,17 +2047,17 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
         else if(ControlMode = NONE_MODE) and (CombiControlMode = VV_VW) and (PendingChange[k]=CHANGEWATTVARLEVEL) then
           begin
 
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                TPVSystem2Obj(DERelem).VWmode  := TRUE;
-                TPVSystem2Obj(DERelem).Varmode := VARMODEKVAR;
-                TPVSystem2Obj(DERelem).VVmode  := TRUE;
+                TPVSystemObj(DERelem).VWmode  := TRUE;
+                TPVSystemObj(DERelem).Varmode := VARMODEKVAR;
+                TPVSystemObj(DERelem).VVmode  := TRUE;
               end
             else
               begin
-                TStorage2Obj(DERelem).VWmode  := TRUE;
-                TStorage2Obj(DERelem).Varmode := VARMODEKVAR;
-                TStorage2Obj(DERelem).VVmode  := TRUE;
+                TStorageObj(DERelem).VWmode  := TRUE;
+                TStorageObj(DERelem).Varmode := VARMODEKVAR;
+                TStorageObj(DERelem).VVmode  := TRUE;
               end;
 
             //--------------------------------------------- Main process ---------------------------------------------//
@@ -2080,31 +2109,31 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
             //--------------------------------------------- end main process ---------------------------------------------//
 
             // Sets DER kvar_out and kW_out
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                TPVSystem2Obj(DERelem).Presentkvar := QDesiredVV[k];
-                TPVSystem2Obj(DERelem).presentkW   := PLimitVW[k];
+                TPVSystemObj(DERelem).Presentkvar := QDesiredVV[k];
+                TPVSystemObj(DERelem).presentkW   := PLimitVW[k];
               end
             else
               begin
-                TStorage2Obj(DERelem).kvarRequested := QDesiredVV[k];
-                TStorage2Obj(DERelem).kWRequested   := PLimitVW[k];
+                TStorageObj(DERelem).kvarRequested := QDesiredVV[k];
+                TStorageObj(DERelem).kWRequested   := PLimitVW[k];
               end;
 
             // Uptates PresentkW and Presentkvar considering watt and var priorities
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                TPVSystem2Obj(DERelem).SetNominalPVSystem2Ouput();
+                TPVSystemObj(DERelem).SetNominalPVSystemOuput();
 
-                if QDesiredVV[k] >= 0.0 then Qoutputpu[k] := TPVSystem2Obj(DERelem).Presentkvar / QHeadroom[k]
-                else Qoutputpu[k] := TPVSystem2Obj(DERelem).Presentkvar / QHeadroomNeg[k];
+                if QDesiredVV[k] >= 0.0 then Qoutputpu[k] := TPVSystemObj(DERelem).Presentkvar / QHeadroom[k]
+                else Qoutputpu[k] := TPVSystemObj(DERelem).Presentkvar / QHeadroomNeg[k];
               end
             else
               begin
-                TStorage2Obj(DERelem).SetNominalStorage2Output();
+                TStorageObj(DERelem).SetNominalStorageOutput();
 
-                if QDesiredVV[k] >= 0.0 then Qoutputpu[k] := TStorage2Obj(DERelem).Presentkvar / QHeadroom[k]
-                else Qoutputpu[k] := TStorage2Obj(DERelem).Presentkvar / QHeadroomNeg[k];
+                if QDesiredVV[k] >= 0.0 then Qoutputpu[k] := TStorageObj(DERelem).Presentkvar / QHeadroom[k]
+                else Qoutputpu[k] := TStorageObj(DERelem).Presentkvar / QHeadroomNeg[k];
               end;
 
             // Values used in convergence
@@ -2113,41 +2142,41 @@ procedure TInvControl2Obj.DoPendingAction(Const Code, ProxyHdl:Integer);
             POldVWpu[k] := PLimitVW[k] / PBase[k];
 
             // Values used in CalcQVVcurve_desiredpu
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                QOld[k]   := TPVSystem2Obj(DERelem).Presentkvar;
-                QOldVV[k] := TPVSystem2Obj(DERelem).Presentkvar;
+                QOld[k]   := TPVSystemObj(DERelem).Presentkvar;
+                QOldVV[k] := TPVSystemObj(DERelem).Presentkvar;
 
-                if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name +', '+ TPVSystem2Obj(DERelem).QualifiedName,
-                                                    Format('**VV_VW mode requested PVSystem2 output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredVV[k], TPVSystem2Obj(DERelem).presentkvar]));
+                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TPVSystemObj(DERelem).QualifiedName,
+                                                    Format('**VV_VW mode requested PVSystem output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                           [QDesiredVV[k], TPVSystemObj(DERelem).presentkvar]));
               end
             else
               begin
-                QOld[k]   := TStorage2Obj(DERelem).Presentkvar;
-                QOldVV[k] := TStorage2Obj(DERelem).Presentkvar;
+                QOld[k]   := TStorageObj(DERelem).Presentkvar;
+                QOldVV[k] := TStorageObj(DERelem).Presentkvar;
 
-                if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name +', '+ TStorage2Obj(DERelem).QualifiedName,
-                                                    Format('**VV_VW mode requested Storage2 output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
-                                                           [QDesiredVV[k], TStorage2Obj(DERelem).presentkvar]));
+                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name +', '+ TStorageObj(DERelem).QualifiedName,
+                                                    Format('**VV_VW mode requested Storage output var level to **, kvar= %.5g. Actual output set to kvar= %.5g.',
+                                                           [QDesiredVV[k], TStorageObj(DERelem).presentkvar]));
               end;
 
             // Flag has to do set to 0 when kW_out is lower than Ptemp (max power allowed from volt-watt function)
-            if ControlledElement[k].DSSClassName = 'PVSystem2' then
+            if ControlledElement[k].DSSClassName = 'PVSystem' then
               begin
-                if abs(TPVSystem2Obj(DERelem).presentkW - PLimitVW[k]) / PLimitVW[k] > 0.0001 then FVWOperation[k] := 0; // 0.01% is the value chosen at the moment
+                if abs(TPVSystemObj(DERelem).presentkW - PLimitVW[k]) / PLimitVW[k] > 0.0001 then FVWOperation[k] := 0; // 0.01% is the value chosen at the moment
 
-                if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name+', '+TPVSystem2Obj(DERelem).QualifiedName,
-                                                    Format('**VV_VW mode set PVSystem2 kw output limit to **, kw= %.5g. Actual output is kw= %.5g.',
-                                                           [PLimitVW[k], TPVSystem2Obj(DERelem).presentkW]));
+                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+TPVSystemObj(DERelem).QualifiedName,
+                                                    Format('**VV_VW mode set PVSystem kw output limit to **, kw= %.5g. Actual output is kw= %.5g.',
+                                                           [PLimitVW[k], TPVSystemObj(DERelem).presentkW]));
               end
             else
               begin
-                if abs(abs(TStorage2Obj(DERelem).presentkW) - PLimitVW[k]) / PLimitVW[k] > 0.0001 then FVWOperation[k] := 0; // 0.01% is the value chosen at the moment
+                if abs(abs(TStorageObj(DERelem).presentkW) - PLimitVW[k]) / PLimitVW[k] > 0.0001 then FVWOperation[k] := 0; // 0.01% is the value chosen at the moment
 
-                if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name+', '+  TStorage2Obj(DERelem).QualifiedName,
-                                    Format('**VV_VW mode set Storage2 kw output limit to** kw= %.5g. Actual output is kw= %.5g.',
-                                           [PLimitVW[k], TStorage2Obj(DERelem).presentkW]));
+                if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+  TStorageObj(DERelem).QualifiedName,
+                                    Format('**VV_VW mode set Storage kw output limit to** kw= %.5g. Actual output is kw= %.5g.',
+                                           [PLimitVW[k], TStorageObj(DERelem).presentkW]));
               end;
 
           end;
@@ -2164,7 +2193,7 @@ procedure TInvControl2Obj.GetmonVoltage(var Vpresent: Double; i: Integer; BasekV
     j           : integer;
     rBus        : TDSSBus;
     numNodes    : Integer;
-    v           : Complex;
+    // v           : Complex;
     vi          : Complex;
     vj          : Complex;
 
@@ -2183,12 +2212,12 @@ procedure TInvControl2Obj.GetmonVoltage(var Vpresent: Double; i: Integer; BasekV
               vi := (ActiveCircuit.Solution.NodeV^[rBus.GetRef(FMonBusesNodes[j][0])]);
               vj := (ActiveCircuit.Solution.NodeV^[rBus.GetRef(FMonBusesNodes[j][1])]);
               cBuffer[i,j] := cmulreal(Csub(vi, vj), BasekV * 1000.0 / FMonBusesVbase[j+1]);
-              v := cBuffer[i,j];
+              // v := cBuffer[i,j];
               end
             else
               begin
                 cBuffer[i,j] := cmulreal(ActiveCircuit.Solution.NodeV^[rBus.GetRef(FMonBusesNodes[j][0])], BasekV * 1000.0 / FMonBusesVbase[j+1]);
-                v := cBuffer[i,j];
+                // v := cBuffer[i,j];
               end;
           end;
 
@@ -2258,9 +2287,9 @@ procedure TInvControl2Obj.UpdateDERParameters(i: Integer);
   begin
 
     with ControlledElement[i] do
-      if ControlledElement[i].DSSClassName = 'PVSystem2' then
+      if ControlledElement[i].DSSClassName = 'PVSystem' then
         begin
-          with TPVSystem2Obj(ControlledElement[i]) do
+          with TPVSystemObj(ControlledElement[i]) do
             begin
               CondOffset[i]   := (NTerms-1) * NCondsDER[i]; // for speedy sampling
 
@@ -2276,15 +2305,15 @@ procedure TInvControl2Obj.UpdateDERParameters(i: Integer);
               FCurrentkvarLimitNeg[i] :=  CurrentkvarLimitNeg;
               FDCkWRated[i]           :=  Pmpp;
               FpctDCkWRated[i]        :=  puPmpp;
-              FEffFactor[i]           :=  PVSystem2Vars.EffFactor;
-              FDCkW[i]                :=  PVSystem2Vars.PanelkW;
-              FPPriority[i]           :=  PVSystem2Vars.P_Priority;
+              FEffFactor[i]           :=  PVSystemVars.EffFactor;
+              FDCkW[i]                :=  PVSystemVars.PanelkW;
+              FPPriority[i]           :=  PVSystemVars.P_Priority;
 
             end;
         end
-      else if ControlledElement[i].DSSClassName = 'Storage2' then
+      else if ControlledElement[i].DSSClassName = 'Storage' then
         begin
-          with TStorage2Obj(ControlledElement[i]) do
+          with TStorageObj(ControlledElement[i]) do
             begin
               FVBase[i]               :=  Vbase;
               FVarFollowInverter[i]   :=  VarFollowInverter;
@@ -2296,11 +2325,11 @@ procedure TInvControl2Obj.UpdateDERParameters(i: Integer);
               FkvarLimitNeg[i]        :=  kvarLimitNeg;
               FCurrentkvarLimit[i]    :=  CurrentkvarLimit;
               FCurrentkvarLimitNeg[i] :=  CurrentkvarLimitNeg;
-              FDCkWRated[i]           :=  Storage2Vars.kWrating;
+              FDCkWRated[i]           :=  StorageVars.kWrating;
               FpctDCkWRated[i]        :=  pctkWrated;
-              FEffFactor[i]           :=  Storage2vars.EffFactor;
-              FDCkW[i]                :=  0.0; // not using it (using TStorage2Obj.DCkW directly)
-              FPPriority[i]           :=  Storage2Vars.P_priority;
+              FEffFactor[i]           :=  Storagevars.EffFactor;
+              FDCkW[i]                :=  0.0; // not using it (using TStorageObj.DCkW directly)
+              FPPriority[i]           :=  StorageVars.P_priority;
 
             end
         end;
@@ -2312,23 +2341,23 @@ procedure TInvControl2Obj.Sample();
     i                           :Integer;
     basekV                      :Double;
     Vpresent                    :Double;
-    PVSys                       :TPVSystem2Obj;
-    Storage2                    :TStorage2Obj;
+    PVSys                       :TPVSystemObj;
+    Storage                    :TStorageObj;
 
   begin
-    // if list is not defined, go make one from all PVSystem2/Storage2 in circuit
+    // if list is not defined, go make one from all PVSystem/Storage in circuit
      if FDERPointerList.ListSize=0 then   RecalcElementData();
 
      if (FListSize>0) then
       begin
-        // if an InvControl2 controls more than one PVSystem2/Storage2, control each one
-        // separately based on the PVSystem2/Storage2's terminal voltages, etc.
+        // if an InvControl2 controls more than one PVSystem/Storage, control each one
+        // separately based on the PVSystem/Storage's terminal voltages, etc.
         for i := 1 to FDERPointerList.ListSize do
           begin
             UpdateDERParameters(i);
 
-            if ControlledElement[i].DSSClassName = 'PVSystem2' then PVSys := ControlledElement[i] as TPVSystem2Obj
-            else Storage2 := ControlledElement[i] as TStorage2Obj;
+            if ControlledElement[i].DSSClassName = 'PVSystem' then PVSys := ControlledElement[i] as TPVSystemObj
+            else Storage := ControlledElement[i] as TStorageObj;
 
             BasekV := FVBase[i] / 1000.0; // It's a line-to-ground voltage
 
@@ -2341,7 +2370,7 @@ procedure TInvControl2Obj.Sample();
               FAvgpDRCVpuPrior[i] := FPresentDRCVpu[i];
             end;
 
-            kW_out_desired[i] := FpresentkW[i]; // necessary to update kW_out_desired at every control iteration for Storage2 with SC
+            kW_out_desired[i] := FpresentkW[i]; // necessary to update kW_out_desired at every control iteration for Storage with SC
 
             // Help says that it must be used just for vv and vw
             // convert to per-unit on bus' kvbase, or
@@ -2362,18 +2391,18 @@ procedure TInvControl2Obj.Sample();
               begin
                   // Sets internal variables of controlled element.
                   // FVVDRCOperation is a flag which indicates if VVDRC function operates or not (-1=absorbing Q, 1=injecting Q, 0=No operation)
-                  if ControlledElement[i].DSSClassName = 'PVSystem2' then
-                  begin
+                  if ControlledElement[i].DSSClassName = 'PVSystem' then
+                    begin
                       PVSys.Set_Variable(5,FVreg);
                       PVSys.Set_Variable(6,FDRCRollAvgWindow[i].Get_AvgVal / (basekV * 1000.0)); // save rolling average voltage in monitor
                       PVSys.Set_Variable(10,FVVDRCOperation[i]);
-                  end
+                    end
                   else
-                  begin
-                      Storage2.Set_Variable(14,FVreg);
-                      Storage2.Set_Variable(15,FDRCRollAvgWindow[i].Get_AvgVal / (basekV * 1000.0)); // save rolling average voltage in monitor
-                      Storage2.Set_Variable(19,FVVDRCOperation[i]);
-                  end;
+                    begin
+                      Storage.Set_Variable(14,FVreg);
+                      Storage.Set_Variable(15,FDRCRollAvgWindow[i].Get_AvgVal / (basekV * 1000.0)); // save rolling average voltage in monitor
+                      Storage.Set_Variable(19,FVVDRCOperation[i]);
+                    end;
 
                   // if inverter is off then exit
                   if (FInverterON[i] = FALSE) and (FVarFollowInverter[i] = TRUE) then continue;
@@ -2381,19 +2410,19 @@ procedure TInvControl2Obj.Sample();
                   // if the volt-var curve does not exist, exit
                   if Length(Fvvc_curvename) = 0 then
                     begin
-                      DoSimpleMsg('XY Curve object representing vvc1_curve does not exist or is not tied to InvControl2.', 382);
+                      DoSimpleMsg('XY Curve object representing vvc1_curve does not exist or is not tied to InvControl.', 382);
                       exit
                     end;
 
-                  if (ControlledElement[i].DSSClassName = 'PVSystem2') then
+                  if (ControlledElement[i].DSSClassName = 'PVSystem') then
                   Begin
                       PVSys.VVmode   := TRUE;
                       PVSys.DRCmode  := TRUE;
                   End
                   else
                   Begin
-                      Storage2.VVmode   := TRUE;
-                      Storage2.DRCmode  := TRUE;
+                      Storage.VVmode   := TRUE;
+                      Storage.DRCmode  := TRUE;
                   End;
 
                   //DRC triggers
@@ -2412,7 +2441,7 @@ procedure TInvControl2Obj.Sample();
                             ControlActionHandle := ActiveCircuit.ControlQueue.Push
                               (intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
-                          if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name+', '+ControlledElement[i].QualifiedName,
+                          if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+ControlledElement[i].QualifiedName,
                                                                 Format('**Ready to change var output due to DRC trigger in VV_DRC mode**, Vavgpu= %.5g, VPriorpu=%.5g',
                                                                        [FPresentDRCVpu[i],FAvgpDRCVpuPrior[i]]));
                         end;
@@ -2433,7 +2462,7 @@ procedure TInvControl2Obj.Sample();
                         ControlActionHandle := ActiveCircuit.ControlQueue.Push
                         (intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
-                      if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name+', '+ControlledElement[i].QualifiedName,
+                      if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+ControlledElement[i].QualifiedName,
                                                             Format('**Ready to change VV_DRC output due to volt-var trigger in VV_DRC mode**, Vavgpu= %.5g, VPriorpu=%.5g',
                                                                    [FPresentVpu[i],FAvgpVpuPrior[i]]));
 
@@ -2447,7 +2476,7 @@ procedure TInvControl2Obj.Sample();
                 // FVWOperation is a flag which indicates if volt-watt function operates or not
                 // Combined modes operation is shown through TWO flags. It allows us to verify which of the individual function operates or not
 
-                if ControlledElement[i].DSSClassName = 'PVSystem2' then
+                if ControlledElement[i].DSSClassName = 'PVSystem' then
                   begin
                     PVSys.Set_Variable(5,FVreg);
                     PVSys.Set_Variable(7,FVVOperation[i]);
@@ -2455,20 +2484,20 @@ procedure TInvControl2Obj.Sample();
                   end
                 else
                   begin
-                    Storage2.Set_Variable(14,FVreg);
-                    Storage2.Set_Variable(16,FVVOperation[i]);
-                    Storage2.Set_Variable(17,FVWOperation[i]);
+                    Storage.Set_Variable(14,FVreg);
+                    Storage.Set_Variable(16,FVVOperation[i]);
+                    Storage.Set_Variable(17,FVWOperation[i]);
                   end;
 
                 // if inverter is off then exit
                 if (FInverterON[i] = FALSE) and (FVarFollowInverter[i] = TRUE) then continue;
 
                 // if volt-watt curve does not exist, exit
-                if ControlledElement[i].DSSClassName = 'PVSystem2' then
+                if ControlledElement[i].DSSClassName = 'PVSystem' then
                 begin
                    if Length(Fvoltwatt_curvename) = 0 then
                   begin
-                    DoSimpleMsg('XY Curve object representing voltwatt_curve does not exist or is not tied to InvControl2.', 381);
+                    DoSimpleMsg('XY Curve object representing voltwatt_curve does not exist or is not tied to InvControl.', 381);
                       exit
                   end;
                 end
@@ -2476,7 +2505,7 @@ procedure TInvControl2Obj.Sample();
                 begin
                    if (Length(Fvoltwatt_curvename) = 0) and (Length(FvoltwattCH_curvename) = 0) then
                   begin
-                    DoSimpleMsg('XY Curve object representing voltwatt_curve does not exist or is not tied to InvControl2.', 381);
+                    DoSimpleMsg('XY Curve object representing voltwatt_curve does not exist or is not tied to InvControl.', 381);
                       exit
                   end;
                 end;
@@ -2484,19 +2513,19 @@ procedure TInvControl2Obj.Sample();
                 // if the volt-var curve does not exist, exit
                 if Length(Fvvc_curvename) = 0 then
                   begin
-                    DoSimpleMsg('XY Curve object representing vvc1_curve does not exist or is not tied to InvControl2.', 382);
+                    DoSimpleMsg('XY Curve object representing vvc1_curve does not exist or is not tied to InvControl.', 382);
                       exit
                   end;
 
-                if (ControlledElement[i].DSSClassName = 'PVSystem2') then
+                if (ControlledElement[i].DSSClassName = 'PVSystem') then
                 Begin
                   PVSys.VVmode     := TRUE;
                   PVSys.VWmode     := TRUE
                 End
                 else
                 Begin
-                  Storage2.VVmode   := TRUE;
-                  Storage2.VWmode   := TRUE;
+                  Storage.VVmode   := TRUE;
+                  Storage.VWmode   := TRUE;
                 End;
 
                 // Trigger from volt-watt mode
@@ -2514,7 +2543,7 @@ procedure TInvControl2Obj.Sample();
                       ControlActionHandle := ActiveCircuit.ControlQueue.Push
                       (intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
-                    if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name+', '+ControlledElement[i].QualifiedName,
+                    if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+ControlledElement[i].QualifiedName,
                                                           Format('**Ready to change VV_VW output due to volt-watt trigger**, Vavgpu= %.5g, VPriorpu=%.5g',
                                                                  [FPresentVpu[i],FAvgpVpuPrior[i]]));;
                   end;
@@ -2533,7 +2562,7 @@ procedure TInvControl2Obj.Sample();
                       ControlActionHandle := ActiveCircuit.ControlQueue.Push
                       (intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
-                    if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name+', '+ControlledElement[i].QualifiedName,
+                    if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+ControlledElement[i].QualifiedName,
                                                           Format('**Ready to change VV_VW output due to volt-var trigger**, Vavgpu= %.5g, VPriorpu=%.5g',
                                                                  [FPresentVpu[i],FAvgpVpuPrior[i]]));
                   end;
@@ -2544,24 +2573,24 @@ procedure TInvControl2Obj.Sample();
                 // Sets internal variables of controlled element.
                 // FVWOperation is a flag which indicates if volt-watt function operates or not
 
-                if ControlledElement[i].DSSClassName = 'PVSystem2' then
+                if ControlledElement[i].DSSClassName = 'PVSystem' then
                   begin
                     PVSys.Set_Variable(5,FVreg);
                     PVSys.Set_Variable(8,FVWOperation[i]);
                   end
                 else
                   begin
-                    Storage2.Set_Variable(14,FVreg);
-                    Storage2.Set_Variable(17,FVWOperation[i]);
+                    Storage.Set_Variable(14,FVreg);
+                    Storage.Set_Variable(17,FVWOperation[i]);
                   end;
 
                 if (FInverterON[i] = FALSE) then continue;
 
-                if ControlledElement[i].DSSClassName = 'PVSystem2' then
+                if ControlledElement[i].DSSClassName = 'PVSystem' then
                   begin
                     if Length(Fvoltwatt_curvename) = 0 then
                       begin
-                        DoSimpleMsg('XY Curve object representing voltwatt_curve does not exist or is not tied to InvControl2.', 381);
+                        DoSimpleMsg('XY Curve object representing voltwatt_curve does not exist or is not tied to InvControl.', 381);
                         exit
                       end;
                   end
@@ -2569,14 +2598,14 @@ procedure TInvControl2Obj.Sample();
                   begin
                       if (Length(Fvoltwatt_curvename) = 0) and (Length(FvoltwattCH_curvename) = 0) then
                         begin
-                          DoSimpleMsg('XY Curve object representing voltwatt_curve does not exist or is not tied to InvControl2.', 381);
+                          DoSimpleMsg('XY Curve object representing voltwatt_curve does not exist or is not tied to InvControl.', 381);
                           exit
                         end;
 
                   end;
 
-                if (ControlledElement[i].DSSClassName = 'PVSystem2') then PVSys.VWmode  := TRUE
-                else Storage2.VWmode  := TRUE;
+                if (ControlledElement[i].DSSClassName = 'PVSystem') then PVSys.VWmode  := TRUE
+                else Storage.VWmode  := TRUE;
 
                 if ((Abs(FPresentVpu[i] - FAvgpVpuPrior[i]) > FVoltageChangeTolerance) or (Abs(PLimitEndpu[i]-POldVWpu[i])>FActivePChangeTolerance) or
                   (ActiveCircuit.Solution.ControlIteration = 1))  then
@@ -2590,7 +2619,7 @@ procedure TInvControl2Obj.Sample();
                     with  ActiveCircuit.Solution.DynaVars do
                       ControlActionHandle := ActiveCircuit.ControlQueue.Push
                       (intHour, t + TimeDelay, PendingChange[i], 0, Self);
-                    if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name+', '+ControlledElement[i].QualifiedName,
+                    if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+ControlledElement[i].QualifiedName,
                                                           Format('**Ready to limit watt output due to VOLTWATT mode**, Vavgpu= %.5g, VPriorpu=%.5g',
                                                                  [FPresentVpu[i],FAvgpVpuPrior[i]]));
                   end;
@@ -2598,18 +2627,18 @@ procedure TInvControl2Obj.Sample();
 
             else if ControlMode = VOLTVAR then // volt-var control mode
               begin
-                // Sets internal variables of PVSystem2/Storage2.
+                // Sets internal variables of PVSystem/Storage.
                 // FVVOperation is a flag which indicates if volt-var function operates or not (-1=absorbing Q, 1=injecting Q, 0=No operation)
 
-                if ControlledElement[i].DSSClassName = 'PVSystem2' then
+                if ControlledElement[i].DSSClassName = 'PVSystem' then
                   begin
                     PVSys.Set_Variable(5,FVreg);
                     PVSys.Set_Variable(7,FVVOperation[i]);
                   end
                 else
                   begin
-                    Storage2.Set_Variable(14,FVreg);
-                    Storage2.Set_Variable(16,FVVOperation[i]);
+                    Storage.Set_Variable(14,FVreg);
+                    Storage.Set_Variable(16,FVVOperation[i]);
                   end;
 
                 // if inverter is off then exit
@@ -2617,12 +2646,12 @@ procedure TInvControl2Obj.Sample();
 
                   if Length(Fvvc_curvename) = 0 then
                     begin
-                      DoSimpleMsg('XY Curve object representing vvc1_curve does not exist or is not tied to InvControl2.', 382);
+                      DoSimpleMsg('XY Curve object representing vvc1_curve does not exist or is not tied to InvControl.', 382);
                       exit
                     end;
 
-                if (ControlledElement[i].DSSClassName = 'PVSystem2') then PVSys.VVmode  := TRUE
-                else Storage2.VVmode  := TRUE;
+                if (ControlledElement[i].DSSClassName = 'PVSystem') then PVSys.VVmode  := TRUE
+                else Storage.VVmode  := TRUE;
 
                   //Trigger from volt-var mode
                 if (((Abs(FPresentVpu[i] - FAvgpVpuPrior[i]) > FVoltageChangeTolerance) or
@@ -2639,7 +2668,7 @@ procedure TInvControl2Obj.Sample();
                     with  ActiveCircuit.Solution.DynaVars do
                       ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
-                    if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name+', '+ControlledElement[i].QualifiedName,
+                    if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+ControlledElement[i].QualifiedName,
                                                           Format('**Ready to change var output due to volt-var trigger in volt-var mode**, Vavgpu= %.5g, VPriorpu=%.5g',
                                                                  [FPresentVpu[i],FAvgpVpuPrior[i]]));
                   end;
@@ -2647,18 +2676,18 @@ procedure TInvControl2Obj.Sample();
 
             else if ControlMode = WATTPF then // watt-pf control mode
               begin
-                // Sets internal variables of PVSystem2/Storage2.
+                // Sets internal variables of PVSystem/Storage.
                 // FWPOperation is a flag which indicates if watt-pf function operates or not (-1=absorbing Q, 1=injecting Q, 0=No operation)
 
-                if ControlledElement[i].DSSClassName = 'PVSystem2' then
+                if ControlledElement[i].DSSClassName = 'PVSystem' then
                   begin
                     PVSys.Set_Variable(5,FVreg);
                     PVSys.Set_Variable(11,FWPOperation[i]);
                   end
                 else
                   begin
-                    Storage2.Set_Variable(14,FVreg);
-                    Storage2.Set_Variable(16,FWPOperation[i]);
+                    Storage.Set_Variable(14,FVreg);
+                    Storage.Set_Variable(16,FWPOperation[i]);
                   end;
 
                 // if inverter is off then exit
@@ -2666,12 +2695,12 @@ procedure TInvControl2Obj.Sample();
 
                   if Length(Fwattpf_curvename) = 0 then
                     begin
-                      DoSimpleMsg('XY Curve object representing wattpf_curve does not exist or is not tied to InvControl2.', 382);
+                      DoSimpleMsg('XY Curve object representing wattpf_curve does not exist or is not tied to InvControl.', 382);
                       exit
                     end;
 
-                if (ControlledElement[i].DSSClassName = 'PVSystem2') then PVSys.WPmode  := TRUE
-                else Storage2.WPmode  := TRUE;
+                if (ControlledElement[i].DSSClassName = 'PVSystem') then PVSys.WPmode  := TRUE
+                else Storage.WPmode  := TRUE;
 
                   //Trigger from volt-var mode
                 if (((Abs(FPresentVpu[i] - FAvgpVpuPrior[i]) > FVoltageChangeTolerance) or
@@ -2688,7 +2717,7 @@ procedure TInvControl2Obj.Sample();
                     with  ActiveCircuit.Solution.DynaVars do
                       ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
-                    if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name+', '+ControlledElement[i].QualifiedName,
+                    if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+ControlledElement[i].QualifiedName,
                                                           Format('**Ready to change var output due to watt-pf trigger in watt-pf mode**, Vavgpu= %.5g, VPriorpu=%.5g',
                                                                  [FPresentVpu[i],FAvgpVpuPrior[i]]));
                   end;
@@ -2696,18 +2725,18 @@ procedure TInvControl2Obj.Sample();
 
             else if ControlMode = WATTVAR then // watt-var control mode
               begin
-                // Sets internal variables of PVSystem2/Storage2.
+                // Sets internal variables of PVSystem/Storage.
                 // FWVOperation is a flag which indicates if watt-var function operates or not (-1=absorbing Q, 1=injecting Q, 0=No operation)
 
-                if ControlledElement[i].DSSClassName = 'PVSystem2' then
+                if ControlledElement[i].DSSClassName = 'PVSystem' then
                   begin
                     PVSys.Set_Variable(5,FVreg);
                     PVSys.Set_Variable(12,FWVOperation[i]);        //CHANGE HERE
                   end
                 else
                   begin
-                    Storage2.Set_Variable(14,FVreg);
-                    Storage2.Set_Variable(16,FWVOperation[i]);
+                    Storage.Set_Variable(14,FVreg);
+                    Storage.Set_Variable(16,FWVOperation[i]);
                   end;
 
                 // if inverter is off then exit
@@ -2715,12 +2744,12 @@ procedure TInvControl2Obj.Sample();
 
                   if Length(Fwattvar_curvename) = 0 then
                     begin
-                      DoSimpleMsg('XY Curve object representing wattvar_curve does not exist or is not tied to InvControl2.', 382);
+                      DoSimpleMsg('XY Curve object representing wattvar_curve does not exist or is not tied to InvControl.', 382);
                       exit
                     end;
 
-                if (ControlledElement[i].DSSClassName = 'PVSystem2') then PVSys.WVmode := TRUE
-                else Storage2.WVmode  := TRUE;
+                if (ControlledElement[i].DSSClassName = 'PVSystem') then PVSys.WVmode := TRUE
+                else Storage.WVmode  := TRUE;
 
                   //Trigger from volt-var mode
                 if (((Abs(FPresentVpu[i] - FAvgpVpuPrior[i]) > FVoltageChangeTolerance) or
@@ -2737,7 +2766,7 @@ procedure TInvControl2Obj.Sample();
                     with  ActiveCircuit.Solution.DynaVars do
                       ControlActionHandle := ActiveCircuit.ControlQueue.Push(intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
-                    if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name+', '+ControlledElement[i].QualifiedName,
+                    if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+ControlledElement[i].QualifiedName,
                                                           Format('**Ready to change var output due to watt-var trigger in watt-var mode**, Vavgpu= %.5g, VPriorpu=%.5g',
                                                                  [FPresentVpu[i],FAvgpVpuPrior[i]]));
                   end;
@@ -2745,10 +2774,10 @@ procedure TInvControl2Obj.Sample();
 
             else if ControlMode = DRC then // dynamic reactive current control mode
               begin
-                // Sets internal variables of PVSystem2/Storage2.
+                // Sets internal variables of PVSystem/Storage.
                 // FDRCOperation is a flag which indicates if DRC function operates or not (-1=absorbing Q, 1=injecting Q, 0=No operation)
 
-                if ControlledElement[i].DSSClassName = 'PVSystem2' then
+                if ControlledElement[i].DSSClassName = 'PVSystem' then
                 begin
                   PVSys.Set_Variable(5,FVreg);
                   PVSys.Set_Variable(6,FDRCRollAvgWindow[i].Get_AvgVal / (basekV * 1000.0)); // save rolling average voltage in monitor
@@ -2756,9 +2785,9 @@ procedure TInvControl2Obj.Sample();
                 end
                 else
                 begin
-                  Storage2.Set_Variable(14,FVreg);
-                  Storage2.Set_Variable(15,FDRCRollAvgWindow[i].Get_AvgVal / (basekV * 1000.0)); // save rolling average voltage in monitor
-                  Storage2.Set_Variable(18,FDRCOperation[i]);
+                  Storage.Set_Variable(14,FVreg);
+                  Storage.Set_Variable(15,FDRCRollAvgWindow[i].Get_AvgVal / (basekV * 1000.0)); // save rolling average voltage in monitor
+                  Storage.Set_Variable(18,FDRCOperation[i]);
                 end;
 
                 // if inverter is off then exit
@@ -2781,14 +2810,14 @@ procedure TInvControl2Obj.Sample();
                           ControlActionHandle := ActiveCircuit.ControlQueue.Push
                           (intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
-                        if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name+', '+ControlledElement[i].QualifiedName,
+                        if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+ControlledElement[i].QualifiedName,
                                                               Format('**Ready to change var output due to DRC trigger in DRC mode**, Vavgpu= %.5g, VPriorpu=%.5g',
                                                                      [FPresentDRCVpu[i],FAvgpDRCVpuPrior[i]]));
                       end;
                   end;
 
-                if (ControlledElement[i].DSSClassName = 'PVSystem2') then PVSys.DRCmode  := TRUE
-                else Storage2.DRCmode  := TRUE;
+                if (ControlledElement[i].DSSClassName = 'PVSystem') then PVSys.DRCmode  := TRUE
+                else Storage.DRCmode  := TRUE;
 
                 if ((Abs(FPresentDRCVpu[i] - FAvgpDRCVpuPrior[i]) > FVoltageChangeTolerance) or
                   (Abs(Abs(QoutputDRCpu[i]) - Abs(QDesireEndpu[i])) > FVarChangeTolerance) or // TEMc; also tried checking against QDesireEndpu
@@ -2800,7 +2829,7 @@ procedure TInvControl2Obj.Sample();
                         ControlActionHandle := ActiveCircuit.ControlQueue.Push
                         (intHour, t + TimeDelay, PendingChange[i], 0, Self);
 
-                      if ShowEventLog then AppendtoEventLog('InvControl2.' + Self.Name+', '+ControlledElement[i].QualifiedName,
+                      if ShowEventLog then AppendtoEventLog('InvControl.' + Self.Name+', '+ControlledElement[i].QualifiedName,
                                                             Format('**Ready to change var output due to DRC trigger in DRC mode**, Vavgpu= %.5g, VPriorpu=%.5g, QoutPU=%.3g, QDesiredEndpu=%.3g',
                                                                    [FPresentDRCVpu[i],FAvgpDRCVpuPrior[i],QoutputDRCpu[i],QDesireEndpu[i]]));
 
@@ -2813,7 +2842,7 @@ procedure TInvControl2Obj.Sample();
 
 procedure TInvControl2Obj.InitPropertyValues(ArrayOffset: Integer);
   begin
-    PropertyValue[1]  := ''; //PVSystem2/Storage2 list
+    PropertyValue[1]  := ''; //PVSystem/Storage list
     PropertyValue[2]  := 'VOLTVAR'; // initial mode
     PropertyValue[3]  := ''; // initial combination mode
     PropertyValue[4]  := '';
@@ -2850,24 +2879,24 @@ function TInvControl2Obj.MakeDERList:Boolean;
 
   VAR
      PVSysClass    : TDSSClass;
-     Storage2Class : TDSSClass;
-     PVSys         : TPVsystem2Obj;
-     Storage2      : TStorage2Obj;
+     StorageClass : TDSSClass;
+     PVSys         : TPVSystemObj;
+     Storage      : TStorageObj;
      DERElem       : TPCElement;
      i,j           : Integer;
 
   begin
 
     Result := FALSE;
-    PVSysClass := GetDSSClassPtr('PVsystem2');
-    Storage2Class := GetDSSClassPtr('Storage2');
+    PVSysClass := GetDSSClassPtr('PVSystem');
+    StorageClass := GetDSSClassPtr('Storage');
 
     if FListSize > 0 then
       begin    // Name list is defined - Use it
 
         SetLength(CondOffset,FListSize+1);
         SetLength(cBuffer,FListSize+1,7);  // assuming no more than 6 conductors
-        SetLength(ControlledElement,FListSize+1);  // Use this as the main pointer to PVSystem2 and Storage2 Elements
+        SetLength(ControlledElement,FListSize+1);  // Use this as the main pointer to PVSystem and Storage Elements
         SetLength(FAvgpVpuPrior, FListSize+1);
         SetLength(FAvgpDRCVpuPrior, FListSize+1);
         SetLength(FPresentVpu, FListSize+1);
@@ -2950,7 +2979,7 @@ function TInvControl2Obj.MakeDERList:Boolean;
 
         for i := 1 to FListSize do
           begin
-            if StripExtension(LowerCase(FDERNameList.Strings[i-1])) = 'pvsystem2' then
+            if StripExtension(LowerCase(FDERNameList.Strings[i-1])) = 'pvsystem' then
               begin
                 PVSys := PVSysClass.Find(StripClassName(FDERNameList.Strings[i-1]));
 
@@ -2958,20 +2987,20 @@ function TInvControl2Obj.MakeDERList:Boolean;
                     If PVSys.Enabled Then FDERPointerList.New := PVSys
                 End
                 Else Begin
-                    DoSimpleMsg('Error: PVSystem2 Element "' + FDERNameList.Strings[i-1] + '" not found.', 14403);
+                    DoSimpleMsg('Error: PVSystem Element "' + FDERNameList.Strings[i-1] + '" not found.', 14403);
                     Exit;
                 End;
 
               end
-            else if StripExtension(LowerCase(FDERNameList.Strings[i-1])) = 'storage2' then
+            else if StripExtension(LowerCase(FDERNameList.Strings[i-1])) = 'storage' then
               begin
-                Storage2 := Storage2Class.Find(StripClassName(FDERNameList.Strings[i-1]));
+                Storage := StorageClass.Find(StripClassName(FDERNameList.Strings[i-1]));
 
-                If Assigned(Storage2) Then Begin
-                    If Storage2.Enabled Then FDERPointerList.New := Storage2
+                If Assigned(Storage) Then Begin
+                    If Storage.Enabled Then FDERPointerList.New := Storage
                 End
                 Else Begin
-                    DoSimpleMsg('Error: Storage2 Element "' + FDERNameList.Strings[i-1] + '" not found.', 14403);
+                    DoSimpleMsg('Error: Storage Element "' + FDERNameList.Strings[i-1] + '" not found.', 14403);
                     Exit;
                 End;
 
@@ -2981,21 +3010,21 @@ function TInvControl2Obj.MakeDERList:Boolean;
       end
     else
       begin
-        {Search through the entire circuit for enabled PVSystem2 and Storage2 objects and add them to the list}
+        {Search through the entire circuit for enabled PVSystem and Storage objects and add them to the list}
 
-        // Adding PVSystem2 elements
+        // Adding PVSystem elements
         for i := 1 to PVSysClass.ElementCount do
           begin
             PVSys :=  PVSysClass.ElementList.Get(i);
             if PVSys.Enabled then FDERPointerList.New := PVSys;
             FDERNameList.Add(PVSys.QualifiedName);
           end;
-        // Adding Storage2 elements
-        for i := 1 to Storage2Class.ElementCount do
+        // Adding Storage elements
+        for i := 1 to StorageClass.ElementCount do
           begin
-            Storage2 :=  Storage2Class.ElementList.Get(i);
-            if Storage2.Enabled then FDERPointerList.New := Storage2;
-            FDERNameList.Add(Storage2.QualifiedName);
+            Storage :=  StorageClass.ElementList.Get(i);
+            if Storage.Enabled then FDERPointerList.New := Storage;
+            FDERNameList.Add(Storage.QualifiedName);
           end;
 
         FListSize := FDERPointerList.ListSize;
@@ -3090,7 +3119,7 @@ function TInvControl2Obj.MakeDERList:Boolean;
     for i := 1 to FlistSize do
       begin
 
-        if StripExtension(LowerCase(FDERNameList.Strings[i-1])) = 'pvsystem2' then
+        if StripExtension(LowerCase(FDERNameList.Strings[i-1])) = 'pvsystem' then
           begin
             PVSys := PVSysClass.Find(StripClassName(FDERNameList.Strings[i-1]));
             if (PVSys <> nil) then
@@ -3098,9 +3127,9 @@ function TInvControl2Obj.MakeDERList:Boolean;
           end
         else
           begin
-            Storage2 := Storage2Class.Find(StripClassName(FDERNameList.Strings[i-1]));
-            if (Storage2 <> nil) then
-               DERElem := TPCElement(Storage2)
+            Storage := StorageClass.Find(StripClassName(FDERNameList.Strings[i-1]));
+            if (Storage <> nil) then
+               DERElem := TPCElement(Storage)
           end;
 
 
@@ -3228,7 +3257,7 @@ function TInvControl2.GetXYCurve(Const CurveName: String;InvControl2Mode: Intege
         begin
           if (Result.YValue_pt[i] < 0.0) or (Result.YValue_pt[i] > 1.0) then
             begin
-              DoSimpleMsg('XY Curve object: "' + CurveName + '" has active power value(s) greater than 1.0 per-unit or less than -1.0 per-unit.  Not allowed for VOLTWATT control mode for PVSystem2/Storage2s', 381);
+              DoSimpleMsg('XY Curve object: "' + CurveName + '" has active power value(s) greater than 1.0 per-unit or less than -1.0 per-unit.  Not allowed for VOLTWATT control mode for PVSystem/Storages', 381);
               Result := NIL;
               Break;
             end;
@@ -3243,7 +3272,7 @@ function TInvControl2.GetXYCurve(Const CurveName: String;InvControl2Mode: Intege
         begin
           if (Result.YValue_pt[i] < -1.0) or (Result.YValue_pt[i] > 1.0) then
             begin
-              DoSimpleMsg('XY Curve object: "' + CurveName + '" has power factor value(s) greater than 1.0 or less than -1.0.  Not allowed for WATTPF control mode for PVSystem2/Storage2s', 381);
+              DoSimpleMsg('XY Curve object: "' + CurveName + '" has power factor value(s) greater than 1.0 or less than -1.0.  Not allowed for WATTPF control mode for PVSystem/Storages', 381);
               Result := NIL;
               Break;
             end;
@@ -3258,7 +3287,7 @@ function TInvControl2.GetXYCurve(Const CurveName: String;InvControl2Mode: Intege
         begin
           if (Result.YValue_pt[i] < -1.0) or (Result.YValue_pt[i] > 1.0) then
             begin
-              DoSimpleMsg('XY Curve object: "' + CurveName + '" has reactive power value(s) greater than 1.0 per-unit or less than -1.0 per-unit.  Not allowed for WATTVAR control mode for PVSystem2/Storage2s', 381);
+              DoSimpleMsg('XY Curve object: "' + CurveName + '" has reactive power value(s) greater than 1.0 per-unit or less than -1.0 per-unit.  Not allowed for WATTVAR control mode for PVSystem/Storages', 381);
               Result := NIL;
               Break;
             end;
@@ -3462,7 +3491,7 @@ procedure TInvControl2Obj.Set_Enabled(Value: Boolean);
   begin
     inherited;
 
-    {Reset controlled PVSystem2/Storage2s to original PF}
+    {Reset controlled PVSystem/Storages to original PF}
 
   end;
 
@@ -3477,8 +3506,8 @@ procedure TInvControl2Obj.UpdateInvControl2(i:integer);
     j,k                    : Integer;
     solnvoltage            : Double;
     tempVbuffer            : pComplexArray;
-    PVSys                  : TPVSystem2Obj;
-    Storage2               : TStorage2Obj;
+    PVSys                  : TPVSystemObj;
+    Storage               : TStorageObj;
     BasekV                 : Double;
 
   begin
@@ -3494,8 +3523,8 @@ procedure TInvControl2Obj.UpdateInvControl2(i:integer);
               else FVpuSolutionIdx := FVpuSolutionIdx+1;
             end;
 
-          if ControlledElement[j].DSSClassName = 'PVSystem2' then PVSys := ControlledElement[j] as TPVSystem2Obj
-          else Storage2 := ControlledElement[j] as TStorage2Obj;
+          if ControlledElement[j].DSSClassName = 'PVSystem' then PVSys := ControlledElement[j] as TPVSystemObj
+          else Storage := ControlledElement[j] as TStorageObj;
 
           BasekV :=    FVBase[i] / 1000.0;
 
@@ -3505,14 +3534,14 @@ procedure TInvControl2Obj.UpdateInvControl2(i:integer);
           FPriorQDesireOptionpu[j]  := QDesireOptionpu[j];
 
           // Used to update the VW resquested kW
-          if ControlledElement[j].DSSClassName = 'PVSystem2' then PVSys.VWmode := FALSE
-          else Storage2.VWMode := FALSE;
+          if ControlledElement[j].DSSClassName = 'PVSystem' then PVSys.VWmode := FALSE
+          else Storage.VWMode := FALSE;
 
-          if ControlledElement[j].DSSClassName = 'PVSystem2' then PVSys.VVmode := FALSE
-          else Storage2.VVMode := FALSE;
+          if ControlledElement[j].DSSClassName = 'PVSystem' then PVSys.VVmode := FALSE
+          else Storage.VVMode := FALSE;
 
-          if ControlledElement[j].DSSClassName = 'PVSystem2' then PVSys.DRCmode := FALSE
-          else Storage2.DRCMode := FALSE;
+          if ControlledElement[j].DSSClassName = 'PVSystem' then PVSys.DRCmode := FALSE
+          else Storage.DRCMode := FALSE;
 
 
           FFlagVWOperates[j] := False;
@@ -3690,15 +3719,11 @@ procedure TInvControl2Obj.CalcVVDRC_vars(j: Integer);
     DeltaQ                :Double;
 
   begin
-    if QDesireEndpu[j] >= 0.0 then 
-        DeltaQ := QDesireEndpu[j] * QHeadRoom[j] - QOldVVDRC[j]
-    else 
-        DeltaQ := QDesireEndpu[j] * QHeadRoomNeg[j] - QOldVVDRC[j];
+    if QDesireEndpu[j] >= 0.0 then DeltaQ := QDesireEndpu[j] * QHeadRoom[j] - QOldVVDRC[j]
+    else DeltaQ := QDesireEndpu[j] * QHeadRoomNeg[j] - QOldVVDRC[j];
 
-    if FdeltaQ_factor = FLAGDELTAQ then 
-        Change_deltaQ_factor(j)
-    else 
-        FdeltaQFactor[j] := FdeltaQ_factor;
+    if FdeltaQ_factor = FLAGDELTAQ then Change_deltaQ_factor(j)
+    else FdeltaQFactor[j] := FdeltaQ_factor;
 
     QDesiredVVDRC[j] := QOldVVDRC[j] + DeltaQ * FdeltaQFactor[j];
 
@@ -3712,7 +3737,7 @@ procedure TInvControl2Obj.Calc_PBase(j: Integer);
 
     DERelem := ControlledElement[j];
 
-    if DERelem.DSSClassName = 'PVSystem2' then
+    if DERelem.DSSClassName = 'PVSystem' then
       begin
         if(FVoltwattYaxis = 0)  then PBase[j] := FDCkW[j] * FEffFactor[j]
 
@@ -3724,7 +3749,7 @@ procedure TInvControl2Obj.Calc_PBase(j: Integer);
       end
     else
       begin
-        if(FVoltwattYaxis = 0)  then PBase[j] := TStorage2Obj(DERelem).DCkW * FEffFactor[j]
+        if(FVoltwattYaxis = 0)  then PBase[j] := TStorageObj(DERelem).DCkW * FEffFactor[j]
 
         else if(FVoltwattYaxis = 1)  then PBase[j] := FDCkWRated[j]
 
@@ -3788,18 +3813,18 @@ procedure TInvControl2Obj.CalcRF(m: Integer; powertype: String; RF_desiredpu: Do
 procedure TInvControl2Obj.CalcPVWcurve_limitpu(j: Integer);
   begin
 
-     if ControlledElement[j].DSSClassName = 'PVSystem2' then PLimitVWpu[j] := Fvoltwatt_curve.GetYValue(FPresentVpu[j])
+     if ControlledElement[j].DSSClassName = 'PVSystem' then PLimitVWpu[j] := Fvoltwatt_curve.GetYValue(FPresentVpu[j])
      else
       begin
-        if TStorage2Obj(ControlledElement[j]).Storage2State  = STORE_DISCHARGING then
+        if TStorageObj(ControlledElement[j]).StorageState  = STORE_DISCHARGING then
         Begin
-            if TStorage2Obj(ControlledElement[j]).FVWStateRequested then PLimitVWpu[j] := FvoltwattCH_curve.GetYValue(FPresentVpu[j])
+            if TStorageObj(ControlledElement[j]).FVWStateRequested then PLimitVWpu[j] := FvoltwattCH_curve.GetYValue(FPresentVpu[j])
             else PLimitVWpu[j] := Fvoltwatt_curve.GetYValue(FPresentVpu[j]);
 
         End
-        else if (TStorage2Obj(ControlledElement[j]).Storage2State  = STORE_CHARGING) and (FvoltwattCH_curve <> Nil) then
+        else if (TStorageObj(ControlledElement[j]).StorageState  = STORE_CHARGING) and (FvoltwattCH_curve <> Nil) then
         Begin
-            if TStorage2Obj(ControlledElement[j]).FVWStateRequested then PLimitVWpu[j] := Fvoltwatt_curve.GetYValue(FPresentVpu[j])
+            if TStorageObj(ControlledElement[j]).FVWStateRequested then PLimitVWpu[j] := Fvoltwatt_curve.GetYValue(FPresentVpu[j])
             else PLimitVWpu[j] := FvoltwattCH_curve.GetYValue(FPresentVpu[j]) // try with positive PlimitVWpu
         End
 
@@ -3971,8 +3996,8 @@ procedure TInvControl2Obj.CalcQWPcurve_desiredpu(j: Integer);
 
     pf_wp_nominal := Fwattpf_curve.GetYValue(FDCkW[j] * FEffFactor[j] * FpctDCkWRated[j] / FDCkWRated[j]);
 
-    if ControlledElement[j].DSSClassName = 'PVSystem2'     then pf_priority := TPVSystem2Obj(ControlledElement[j]).PVSystem2Vars.PF_Priority
-    else if ControlledElement[j].DSSClassName = 'Storage2' then pf_priority :=  TStorage2Obj(ControlledElement[j]).Storage2Vars.PF_Priority;
+    if ControlledElement[j].DSSClassName = 'PVSystem'     then pf_priority := TPVSystemObj(ControlledElement[j]).PVSystemVars.PF_Priority
+    else if ControlledElement[j].DSSClassName = 'Storage' then pf_priority :=  TStorageObj(ControlledElement[j]).StorageVars.PF_Priority;
 
     if (FPPriority[j] = FALSE) and (pf_priority = FALSE) then p := FDCkW[j] * FEffFactor[j] * FpctDCkWRated[j]
     else p := kW_out_desired[j];

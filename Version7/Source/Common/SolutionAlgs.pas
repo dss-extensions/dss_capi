@@ -96,10 +96,16 @@ procedure EndOfTimeStepCleanup;
    in main solution loops (see below)
 }
 begin
-    StorageClass.UpdateAll;
-    Storage2Class.UpdateAll;
-    InvControlClass.UpdateAll;
-    InvControl2Class.UpdateAll;
+    if DSS_CAPI_LEGACY_MODELS then
+    begin
+        StorageClass.UpdateAll;
+        InvControlClass.UpdateAll;
+    end
+    else
+    begin
+        Storage2Class.UpdateAll;
+        InvControl2Class.UpdateAll;
+    end;
     ExpControlClass.UpdateAll;
 
     // End of Time Step Timer

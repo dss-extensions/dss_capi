@@ -57,7 +57,8 @@ implementation
 uses
     CAPI_Constants,
     DSSGlobals,
-    ExecHelper;
+    ExecHelper,
+    Executive;
 
 function Settings_Get_AllowDuplicates(): Wordbool; CDECL;
 begin

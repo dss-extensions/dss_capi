@@ -154,6 +154,8 @@ VAR
    DSS_CAPI_LOADS_TERMINAL_CHECK: Boolean = True;
    DSS_CAPI_ITERATE_DISABLED: Integer = 0; // default to 0 for compatibility
    DSS_CAPI_EXT_ERRORS: Boolean = True;
+   DSS_CAPI_LEGACY_MODELS: Boolean = False;
+   DSS_CAPI_LEGACY_MODELS_PREV: Boolean = False;
 {$ENDIF}
    // Global variables for the DSS visualization tool
    DSS_Viz_installed   :Boolean=False; // DSS visualization tool (flag of existance)
@@ -1083,6 +1085,10 @@ initialization
    // Default is True, enable at initialization when DSS_CAPI_ALLOW_EDITOR = 0
    DSS_CAPI_ALLOW_EDITOR := (GetEnvironmentVariable('DSS_CAPI_ALLOW_EDITOR') <> '0');
    DSS_CAPI_EXT_ERRORS := (GetEnvironmentVariable('DSS_CAPI_EXT_ERRORS') <> '0');
+   
+   // Default is False, enable at initialization when DSS_CAPI_LEGACY_MODELS = 1
+   DSS_CAPI_LEGACY_MODELS := (GetEnvironmentVariable('DSS_CAPI_LEGACY_MODELS') = '1');
+   DSS_CAPI_LEGACY_MODELS := DSS_CAPI_LEGACY_MODELS_PREV;
 {$ENDIF}
 
 Finalization
