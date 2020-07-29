@@ -3480,36 +3480,60 @@ extern "C" {
 
 
     /*
-    Array of doubles with the maximum current across the conductors, for each PD element.
+    Array of doubles with the maximum current across the conductors, for each PD 
+    element.
+    
+    By default, only the *first terminal* is used for the maximum current, matching
+    the behavior of the "export capacity" command. Pass `AllNodes=True` to 
+    force the analysis to all terminals.
+    
+    See also: 
+    https://sourceforge.net/p/electricdss/discussion/beginners/thread/da5b93ca/
     
     (API Extension)
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllMaxCurrents(double** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_V7_DLL void PDElements_Get_AllMaxCurrents(double** ResultPtr, int32_t* ResultCount, uint16_t AllNodes);
 
     /*
     Same as PDElements_Get_AllMaxCurrents but using the global buffer interface for results
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllMaxCurrents_GR();
+    DSS_CAPI_V7_DLL void PDElements_Get_AllMaxCurrents_GR(uint16_t AllNodes);
 
 
     /*
-    Array of doubles with the maximum current across the conductors as a percentage of the Normal Ampere Rating, for each PD element.
+    Array of doubles with the maximum current across the conductors as a percentage 
+    of the Normal Ampere Rating, for each PD element.
+
+    By default, only the *first terminal* is used for the maximum current, matching
+    the behavior of the "export capacity" command. Pass `AllNodes=True` to 
+    force the analysis to all terminals.
+    
+    See also: 
+    https://sourceforge.net/p/electricdss/discussion/beginners/thread/da5b93ca/
     
     (API Extension)
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllPctNorm(double** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_V7_DLL void PDElements_Get_AllPctNorm(double** ResultPtr, int32_t* ResultCount, uint16_t AllNodes);
     /*
     Same as PDElements_Get_AllPctNorm but using the global buffer interface for results
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllPctNorm_GR();
+    DSS_CAPI_V7_DLL void PDElements_Get_AllPctNorm_GR(uint16_t AllNodes);
 
 
     /*
-    Array of doubles with the maximum current across the conductors as a percentage of the Emergency Ampere Rating, for each PD element.
+    Array of doubles with the maximum current across the conductors as a percentage
+    of the Emergency Ampere Rating, for each PD element.
+
+    By default, only the *first terminal* is used for the maximum current, matching
+    the behavior of the "export capacity" command. Pass `AllNodes=True` to 
+    force the analysis to all terminals.
+    
+    See also: 
+    https://sourceforge.net/p/electricdss/discussion/beginners/thread/da5b93ca/
     
     (API Extension)
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllPctEmerg(double** ResultPtr, int32_t* ResultCount);
+    DSS_CAPI_V7_DLL void PDElements_Get_AllPctEmerg(double** ResultPtr, int32_t* ResultCount, uint16_t AllNodes);
 
     /*
     Same as PDElements_Get_AllPctEmerg but using the global buffer interface for results
@@ -3597,7 +3621,7 @@ extern "C" {
     
     (API Extension)
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllNumPhases(int32_t* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_V7_DLL void PDElements_Get_AllNumPhases(int32_t** ResultPtr, int32_t* ResultCount);
     /*
     Same as PDElements_Get_AllNumPhases but using the global buffer interface for results
     */
@@ -3609,7 +3633,7 @@ extern "C" {
     
     (API Extension)
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllNumConductors(int32_t* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_V7_DLL void PDElements_Get_AllNumConductors(int32_t** ResultPtr, int32_t* ResultCount);
     /*
     Same as PDElements_Get_AllNumConductors but using the global buffer interface for results
     */
@@ -3621,7 +3645,7 @@ extern "C" {
     
     (API Extension)
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllNumTerminals(int32_t* ValuePtr, int32_t ValueCount);
+    DSS_CAPI_V7_DLL void PDElements_Get_AllNumTerminals(int32_t** ResultPtr, int32_t* ResultCount);
 
     /*
     Same as PDElements_Get_AllNumTerminals but using the global buffer interface for results
@@ -5431,20 +5455,12 @@ extern "C" {
     Transformer Core Type: 0=shell;1 = 1-phase; 3= 3-leg; 5= 5-leg
     */
     DSS_CAPI_V7_DLL int32_t Transformers_Get_CoreType(void);
-
-    /*
-    Transformer Core Type: 0=shell;1 = 1-phase; 3= 3-leg; 5= 5-leg
-    */
     DSS_CAPI_V7_DLL void Transformers_Set_CoreType(int32_t Value);
 
     /*
     dc Resistance of active winding in ohms for GIC analysis
     */
     DSS_CAPI_V7_DLL double Transformers_Get_RdcOhms(void);
-
-    /*
-    dc Resistance of active winding in ohms for GIC analysis
-    */
     DSS_CAPI_V7_DLL void Transformers_Set_RdcOhms(double Value);
 
     /*

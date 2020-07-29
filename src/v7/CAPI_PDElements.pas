@@ -31,12 +31,12 @@ procedure PDElements_Set_RepairTime(Value: Double); CDECL;
 // Extensions below
 procedure PDElements_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger); CDECL;
 procedure PDElements_Get_AllNames_GR(); CDECL;
-procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
-procedure PDElements_Get_AllMaxCurrents_GR(); CDECL;
-procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
-procedure PDElements_Get_AllPctNorm_GR(); CDECL;
-procedure PDElements_Get_AllPctEmerg(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
-procedure PDElements_Get_AllPctEmerg_GR(); CDECL;
+procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllMaxCurrents_GR(const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllPctNorm_GR(const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllPctEmerg(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
+procedure PDElements_Get_AllPctEmerg_GR(const AllNodes: WordBool); CDECL;
 procedure PDElements_Get_AllCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 procedure PDElements_Get_AllCurrents_GR(); CDECL;
 procedure PDElements_Get_AllCurrentsMagAng(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
@@ -416,17 +416,24 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-function _PDElements_Get_pctCapacity_for(const What: integer; RatingIdx: Integer; pElem: TPDElement; cBuffer: pComplexArray): Double; inline;
+function _PDElements_Get_pctCapacity_for(const AllNodes: Boolean; const What: integer; RatingIdx: Integer; pElem: TPDElement; cBuffer: pComplexArray): Double; inline;
 var
     i: Integer;
     EmergAmps,
     NormAmps,
     Currmag,
     MaxCurrent: Double;
+    NumNodes: Integer;
 begin
     Result := 0;
     MaxCurrent := 0.0;
-    for i := 1 to pElem.Nphases do
+    
+    if AllNodes then
+        NumNodes := pElem.NConds * pElem.NTerms
+    else
+        NumNodes := pElem.Nphases;
+    
+    for i := 1 to NumNodes do
     begin
         Currmag := Cabs(Cbuffer^[i]);
         if Currmag > MaxCurrent then
@@ -452,7 +459,7 @@ begin
     end;
 end;
 
-procedure _PDElements_Get_x(var ResultPtr: PDouble; ResultCount: PInteger; const What: integer);
+procedure _PDElements_Get_x(var ResultPtr: PDouble; ResultCount: PInteger; const What: integer; const AllNodes: Boolean);
 // Internal helper function to calculate for all PDElements
 // MaxCurrent (0), CapacityNorm (1), CapacityEmerg (2), Power (3)
 var
@@ -519,7 +526,7 @@ begin
                 if pElem.Enabled then
                 begin
                     pElem.GetCurrents(cBuffer);
-                    Result[k] := _PDElements_Get_pctCapacity_for(What, RatingIdx, pElem, cBuffer);
+                    Result[k] := _PDElements_Get_pctCapacity_for(AllNodes, What, RatingIdx, pElem, cBuffer);
                 end;
                 Inc(k);
                 pElem := pList.Next;
@@ -535,39 +542,39 @@ begin
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllMaxCurrents(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
 begin
-    _PDElements_Get_x(ResultPtr, ResultCount, 0);
+    _PDElements_Get_x(ResultPtr, ResultCount, 0, AllNodes);
 end;
 
 procedure PDElements_Get_AllMaxCurrents_GR(); CDECL;
 // Same as PDElements_Get_AllMaxCurrents but uses global result (GR) pointers
 begin
-    PDElements_Get_AllMaxCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    PDElements_Get_AllMaxCurrents(GR_DataPtr_PDouble, GR_CountPtr_PDouble, AllNodes)
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllPctNorm(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
 begin
-    _PDElements_Get_x(ResultPtr, ResultCount, 1);
+    _PDElements_Get_x(ResultPtr, ResultCount, 1, AllNodes);
 end;
 
-procedure PDElements_Get_AllPctNorm_GR(); CDECL;
+procedure PDElements_Get_AllPctNorm_GR(const AllNodes: WordBool); CDECL;
 // Same as PDElements_Get_AllPctNorm but uses global result (GR) pointers
 begin
-    PDElements_Get_AllPctNorm(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    PDElements_Get_AllPctNorm(GR_DataPtr_PDouble, GR_CountPtr_PDouble, AllNodes)
 end;
 
 //------------------------------------------------------------------------------
-procedure PDElements_Get_AllPctEmerg(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
+procedure PDElements_Get_AllPctEmerg(var ResultPtr: PDouble; ResultCount: PInteger; const AllNodes: WordBool); CDECL;
 begin
-    _PDElements_Get_x(ResultPtr, ResultCount, 2);
+    _PDElements_Get_x(ResultPtr, ResultCount, 2, AllNodes);
 end;
 
-procedure PDElements_Get_AllPctEmerg_GR(); CDECL;
+procedure PDElements_Get_AllPctEmerg_GR(const AllNodes: WordBool); CDECL;
 // Same as PDElements_Get_AllPctEmerg but uses global result (GR) pointers
 begin
-    PDElements_Get_AllPctEmerg(GR_DataPtr_PDouble, GR_CountPtr_PDouble)
+    PDElements_Get_AllPctEmerg(GR_DataPtr_PDouble, GR_CountPtr_PDouble, AllNodes)
 end;
 
 //------------------------------------------------------------------------------
