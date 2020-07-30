@@ -351,7 +351,7 @@ extern "C" {
     /*
     Same as Bus_Get_LineList but using the global buffer interface for results
     */
-    DSS_CAPI_V7_DLL void Bus_Get_LineList_GR();
+    DSS_CAPI_V7_DLL void Bus_Get_LineList_GR(void);
 
     /*
     Array of strings: Full Names of LOAD elements connected to the active bus.
@@ -361,7 +361,7 @@ extern "C" {
     /*
     Same as Bus_Get_LineList but using the global buffer interface for results
     */
-    DSS_CAPI_V7_DLL void Bus_Get_LoadList_GR();
+    DSS_CAPI_V7_DLL void Bus_Get_LoadList_GR(void);
 
     /*
     Array of 18 doubles (9 complex values) containing the complete 012 Zsc matrix
@@ -3476,7 +3476,7 @@ extern "C" {
     /*
     Same as PDElements_Get_AllNames but using the global buffer interface for results
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllNames_GR();
+    DSS_CAPI_V7_DLL void PDElements_Get_AllNames_GR(void);
 
 
     /*
@@ -3538,7 +3538,7 @@ extern "C" {
     /*
     Same as PDElements_Get_AllPctEmerg but using the global buffer interface for results
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllPctEmerg_GR();
+    DSS_CAPI_V7_DLL void PDElements_Get_AllPctEmerg_GR(void);
 
 
     /*
@@ -3551,7 +3551,7 @@ extern "C" {
     /*
     Same as PDElements_Get_AllCurrents but using the global buffer interface for results
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllCurrents_GR();
+    DSS_CAPI_V7_DLL void PDElements_Get_AllCurrents_GR(void);
 
 
     /*
@@ -3564,7 +3564,7 @@ extern "C" {
     /*
     Same as PDElements_Get_AllCurrentsMagAng but using the global buffer interface for results
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllCurrentsMagAng_GR();
+    DSS_CAPI_V7_DLL void PDElements_Get_AllCurrentsMagAng_GR(void);
 
 
     /*
@@ -3577,7 +3577,7 @@ extern "C" {
     /*
     Same as PDElements_Get_AllCplxSeqCurrents but using the global buffer interface for results
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllCplxSeqCurrents_GR();
+    DSS_CAPI_V7_DLL void PDElements_Get_AllCplxSeqCurrents_GR(void);
 
 
     /*
@@ -3589,7 +3589,7 @@ extern "C" {
     /*
     Same as PDElements_Get_AllSeqCurrents but using the global buffer interface for results
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllSeqCurrents_GR();
+    DSS_CAPI_V7_DLL void PDElements_Get_AllSeqCurrents_GR(void);
 
 
     /*
@@ -3601,7 +3601,7 @@ extern "C" {
     /*
     Same as PDElements_Get_AllPowers but using the global buffer interface for results
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllPowers_GR();
+    DSS_CAPI_V7_DLL void PDElements_Get_AllPowers_GR(void);
 
 
     /*
@@ -3613,7 +3613,7 @@ extern "C" {
     /*
     Same as PDElements_Get_AllSeqPowers but using the global buffer interface for results
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllSeqPowers_GR();
+    DSS_CAPI_V7_DLL void PDElements_Get_AllSeqPowers_GR(void);
 
 
     /*
@@ -3625,7 +3625,7 @@ extern "C" {
     /*
     Same as PDElements_Get_AllNumPhases but using the global buffer interface for results
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllNumPhases_GR();
+    DSS_CAPI_V7_DLL void PDElements_Get_AllNumPhases_GR(void);
 
 
     /*
@@ -3637,7 +3637,7 @@ extern "C" {
     /*
     Same as PDElements_Get_AllNumConductors but using the global buffer interface for results
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllNumConductors_GR();
+    DSS_CAPI_V7_DLL void PDElements_Get_AllNumConductors_GR(void);
 
 
     /*
@@ -3650,7 +3650,7 @@ extern "C" {
     /*
     Same as PDElements_Get_AllNumTerminals but using the global buffer interface for results
     */
-    DSS_CAPI_V7_DLL void PDElements_Get_AllNumTerminals_GR();
+    DSS_CAPI_V7_DLL void PDElements_Get_AllNumTerminals_GR(void);
 
     /*
     Array of strings with all PVSystem names
