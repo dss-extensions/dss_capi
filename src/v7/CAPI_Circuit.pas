@@ -136,7 +136,7 @@ var
     Loss: Complex;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-    if InvalidCircuit then
+    if MissingSolution then
         Exit;
     with ActiveCircuit do
     begin
@@ -189,7 +189,7 @@ var
     i, j, k: Integer;
 
 begin
-    if InvalidCircuit then
+    if MissingSolution then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -223,7 +223,7 @@ var
     Volts: Complex;
 
 begin
-    if InvalidCircuit then
+    if MissingSolution then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -290,7 +290,7 @@ var
     Loss: Complex;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-    if InvalidCircuit then 
+    if MissingSolution then 
         Exit;
     
     with ActiveCircuit do
@@ -325,7 +325,7 @@ var
     cPower: Complex;
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2);
-    if InvalidCircuit then
+    if MissingSolution then
         Exit;
     
     with ActiveCircuit do
@@ -507,7 +507,7 @@ var
     pCktElem: TDSSCktElement;
     i: Integer;
 begin
-    if InvalidCircuit then
+    if MissingSolution then
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -597,7 +597,7 @@ var
     i, j, k: Integer;
     Volts, BaseFactor: Double;
 begin
-    if InvalidCircuit then
+    if MissingSolution then
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -860,7 +860,7 @@ var
     Result: PDoubleArray;
     i, k, NodeIdx: Integer;
 begin
-    if InvalidCircuit then
+    if MissingSolution then
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -900,7 +900,7 @@ var
     i, k, NodeIdx: Integer;
     BaseFactor: Double;
 begin
-    if InvalidCircuit then
+    if MissingSolution then
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;

@@ -329,9 +329,9 @@ var
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     
-    if InvalidCktElement then
+    if InvalidCktElement or MissingSolution then
         Exit;
-
+        
     with ActiveCircuit.ActiveCktElement do
     begin
         NValues := NConds * NTerms;
@@ -357,7 +357,7 @@ begin
     // Return voltages for all terminals
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     
-    if InvalidCktElement then
+    if InvalidCktElement or MissingSolution then
         Exit;
 
     with ActiveCircuit, ActiveCktElement do
@@ -417,7 +417,7 @@ var
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     
-    if InvalidCktElement then
+    if InvalidCktElement or MissingSolution then
         Exit;
 
     with ActiveCircuit do
@@ -449,8 +449,6 @@ begin
             with ActiveCktElement as TPDElement do
                 Result := NormAmps;
 end;
-
-
 //------------------------------------------------------------------------------
 procedure CktElement_Get_PhaseLosses(var ResultPtr: PDouble; ResultCount: PInteger); CDECL;
 // Returns Phase losses in kW, kVar
@@ -458,7 +456,7 @@ var
     Result: PDoubleArray;
     NValues, i: Integer;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement or MissingSolution then
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -491,7 +489,7 @@ var
     NValues,
     i: Integer;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement or MissingSolution then
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -524,7 +522,7 @@ var
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     
-    if InvalidCktElement or (not ActiveCircuit.ActiveCktElement.Enabled) then
+    if InvalidCktElement or MissingSolution or (not ActiveCircuit.ActiveCktElement.Enabled) then
         Exit;
 
     with ActiveCircuit, ActiveCktElement do
@@ -577,7 +575,7 @@ var
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     
-    if InvalidCktElement {or (not ActiveCircuit.ActiveCktElement.Enabled)} then
+    if InvalidCktElement or MissingSolution {or (not ActiveCircuit.ActiveCktElement.Enabled)} then
         Exit;
 
     with ActiveCircuit, ActiveCktElement do
@@ -659,7 +657,7 @@ var
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     
-    if InvalidCktElement or (not ActiveCircuit.ActiveCktElement.Enabled) then
+    if InvalidCktElement or MissingSolution or (not ActiveCircuit.ActiveCktElement.Enabled) then
         Exit;
 
     with ActiveCircuit, ActiveCktElement do
@@ -820,7 +818,7 @@ var
     cResid: Complex;
 
 begin
-    if InvalidCktElement then
+    if InvalidCktElement or MissingSolution then
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -1014,7 +1012,7 @@ var
 begin
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
 
-    if InvalidCktElement or (not ActiveCircuit.ActiveCktElement.Enabled) then
+    if InvalidCktElement or MissingSolution or (not ActiveCircuit.ActiveCktElement.Enabled) then
         Exit;
 
     with ActiveCircuit, ActiveCktElement do
@@ -1054,7 +1052,7 @@ var
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     
-    if InvalidCktElement or (not ActiveCircuit.ActiveCktElement.Enabled) then
+    if InvalidCktElement or MissingSolution or (not ActiveCircuit.ActiveCktElement.Enabled) then
         Exit;
 
     with ActiveCircuit, ActiveCktElement do
@@ -1310,7 +1308,7 @@ var
     CMagAng: polar;
     NValues, iV, i: Integer;
 begin
-    if InvalidCktElement then
+    if InvalidCktElement or MissingSolution then
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -1350,7 +1348,7 @@ var
 
 begin
     // Return voltages for all terminals
-    if InvalidCktElement then
+    if InvalidCktElement or MissingSolution then
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;

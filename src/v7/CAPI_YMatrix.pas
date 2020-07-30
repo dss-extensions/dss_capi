@@ -39,7 +39,7 @@ var
     NumNZ, NumBuses: Longword;
     tmpCnt: array[0..1] of Integer;
 begin
-    if InvalidCircuit then
+    if MissingSolution then
         Exit;
     Yhandle := ActiveCircuit.Solution.hY;
     if Yhandle <= 0 then
@@ -140,14 +140,14 @@ end;
 
 procedure YMatrix_getIpointer(var IvectorPtr: pNodeVarray); CDECL;
 begin
-    if InvalidCircuit then
+    if MissingSolution then
         Exit;
     IVectorPtr := ActiveCircuit.Solution.Currents;
 end;
 
 procedure YMatrix_getVpointer(var VvectorPtr: pNodeVarray); CDECL;
 begin
-    if InvalidCircuit then
+    if MissingSolution then
         Exit;
     VVectorPtr := ActiveCircuit.Solution.NodeV;
 end;

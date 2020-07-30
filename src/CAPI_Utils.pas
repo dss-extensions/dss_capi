@@ -93,6 +93,7 @@ function DSS_Get_PAnsiChar(var p: Pointer; Index: Integer): PAnsiChar; CDECL;
 procedure Generic_Get_AllNames(var ResultPtr: PPAnsiChar; ResultCount: PInteger; pList: TPointerList; const Restore: Boolean); inline;
 
 function InvalidCircuit(): Boolean; inline;
+function MissingSolution(): Boolean; inline;
 
 implementation
 
@@ -101,6 +102,7 @@ Uses DSSObject, DSSGlobals;
 var
     tempBuffer: Ansistring;
 
+//------------------------------------------------------------------------------
 function InvalidCircuit(): Boolean; inline;
 begin
     if ActiveCircuit = NIL then
@@ -114,25 +116,42 @@ begin
     end;
     Result := False;
 end;
-
+//------------------------------------------------------------------------------
+function MissingSolution(): Boolean; inline;
+begin
+    Result := InvalidCircuit;
+    if Result then
+        Exit;
+        
+    if ActiveCircuit.Solution.NodeV = NIL then
+    begin
+        if DSS_CAPI_EXT_ERRORS then
+        begin
+            DoSimpleMsg('Solution state is not initialized for the active circuit!', 8899);
+        end;
+        Result := True;
+        Exit;
+    end;
+    Result := False;
+end;
+//------------------------------------------------------------------------------
 function DSS_CopyStringAsPChar(s: Ansistring): PAnsiChar;
 begin
     result := GetMem(Length(s) * (sizeof(AnsiChar) + 1));
     StrCopy(result, PAnsiChar(s));
 end;
-
+//------------------------------------------------------------------------------
 function DSS_GetAsPAnsiChar(s: Ansistring): PAnsiChar;
 begin
     // keep a reference to the string to make sure the memory is not deallocated
     tempBuffer := s;
     result := PAnsiChar(tempBuffer);
 end;
-
+//------------------------------------------------------------------------------
 procedure DSS_ResetStringBuffer(); CDECL;
 begin
     tempBuffer := '';
 end;
-
 //------------------------------------------------------------------------------
 procedure DSS_Dispose_PByte(var p: PByte); CDECL;
 begin

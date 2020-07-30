@@ -472,7 +472,7 @@ var
     RSignal: TXYCurveObj;
 begin
     cBuffer := NIL;
-    if (InvalidCircuit) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    if (MissingSolution) or (ActiveCircuit.PDElements.ListSize <= 0) then 
     begin
         Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Result[0] := -1;
@@ -675,7 +675,7 @@ var
     i012v, i012: pComplex;
     maxSize, NTermsTotal, i, j, k: Integer;
 begin
-    if (InvalidCircuit) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    if (MissingSolution) or (ActiveCircuit.PDElements.ListSize <= 0) then 
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
@@ -866,7 +866,7 @@ var
     IPh, I012: array[1..3] of Complex;
     S: Complex;
 begin
-    if (InvalidCircuit) or (ActiveCircuit.PDElements.ListSize <= 0) then 
+    if (MissingSolution) or (ActiveCircuit.PDElements.ListSize <= 0) then 
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;
