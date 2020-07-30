@@ -396,7 +396,11 @@ begin
         I_NEMA := 0.0;
         if ActiveCircuit.PositiveSequence    // Use phase 1 only
         then
+        begin
+            k := (j - 1) * Ncond + 1;
+            Iph[1] := cBuffer^[k];
             I1 := Cabs(Iph[1]);
+        end;
 
     end;
 
