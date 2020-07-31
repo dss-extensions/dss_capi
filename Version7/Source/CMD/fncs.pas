@@ -358,11 +358,10 @@ begin
       if sub.att = fncsVoltage then begin
         Volts := ActiveCircuit.Solution.NodeV^[sub.ref];
         if Volts.im < 0 then
-          sign:=''
+          sign:='-'
         else
           sign:='+';
-//        val := PChar (Format('%.3f%s%.3f%s', [Volts.re, sign, Volts.im, 'j']));
-        val := PChar (FloatToStrF(Volts.re, ffFixed, 0, 3) + sign + FloatToStrF(Volts.im, ffFixed, 0, 3) + 'j');
+        val := PChar (FloatToStrF(Volts.re, ffFixed, 0, 3) + sign + FloatToStrF(abs(Volts.im), ffFixed, 0, 3) + 'j');
       end else if (sub.att = fncsCurrent) or (sub.att = fncsPower) then begin
         pElem := ActiveCircuit.CktElements.Get(top.idx);
         pElem.GetCurrents(cBuffer);
@@ -374,11 +373,10 @@ begin
           if ActiveCircuit.PositiveSequence then Flow:=CmulReal(Flow, 3.0);
         end;
         if Flow.im < 0 then
-          sign:=''
+          sign:='-'
         else
           sign:='+';
-//        val := PChar (Format('%.3f%s%.3f%s', [Flow.re, sign, Flow.im, 'i']));
-        val := PChar (FloatToStrF(Flow.re, ffFixed, 0, 3) + sign + FloatToStrF(Flow.im, ffFixed, 0, 3) + 'j');
+        val := PChar (FloatToStrF(Flow.re, ffFixed, 0, 3) + sign + FloatToStrF(abs(Flow.im), ffFixed, 0, 3) + 'j');
       end else if (sub.att = fncsSwitchState) then begin
         pElem := ActiveCircuit.CktElements.Get(top.idx);
         if AllTerminalsClosed (pElem) then 
