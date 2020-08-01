@@ -1,7 +1,5 @@
 unit CAPI_ReduceCkt;
 
-{$inline on}
-
 interface
 
 uses

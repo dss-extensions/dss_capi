@@ -1,7 +1,5 @@
 unit CAPI_Generators;
 
-{$inline on}
-
 interface
 
 uses

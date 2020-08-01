@@ -1,7 +1,5 @@
 unit CAPI_PDElements;
 
-{$inline on}
-
 interface
 
 uses

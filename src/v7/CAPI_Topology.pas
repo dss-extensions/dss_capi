@@ -1,7 +1,5 @@
 unit CAPI_Topology;
 
-{$inline on}
-
 interface
 
 uses

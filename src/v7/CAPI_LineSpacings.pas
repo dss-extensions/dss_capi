@@ -1,7 +1,5 @@
 unit CAPI_LineSpacings;
 
-{$inline on}
-
 interface
 
 uses

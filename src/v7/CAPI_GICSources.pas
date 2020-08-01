@@ -1,7 +1,5 @@
 unit CAPI_GICSources;
 
-{$inline on}
-
 interface
 
 uses

@@ -11,9 +11,8 @@ if errorlevel 1 (
     )
 )
 
-if not exist .\build\units_v7_x64 (
-    mkdir .\build\units_v7_x64
-) 
+rd /s /q build\units_v7_x64
+mkdir .\build\units_v7_x64
 
 REM if not exist .\build\units_v8_x64 (
     REM mkdir .\build\units_v8_x64
@@ -45,6 +44,8 @@ if exist lib\win_x64\dss_capi_v7.dll (
     exit /B 1
 )
 
+rd /s /q build\units_v7_x64
+mkdir .\build\units_v7_x64
 fpc -Px86_64 @src\v7\windows-x64-dbg.cfg -B src\v7\dss_capi_v7d.lpr
 if errorlevel 1 exit /B 1
 if exist lib\win_x64\dss_capi_v7d.dll (
@@ -65,6 +66,14 @@ if exist lib\win_x64\dss_capi_v7d.dll (
     del /s lib\win_x64\dss_capi_v7d.exp
     del /s lib\win_x64\dss_capi_v7d.def
     del /s lib\win_x64\exports.txt
+    
+    where /q cv2pdb
+    if errorlevel 1 (
+        echo WARNING: cv2pdb not found, PDB file will not be created.
+    ) else (
+        echo Creating PDB file...
+        cv2pdb lib\win_x64\dss_capi_v7d.dll
+    )
 ) else (
     echo ERROR: DSS_CAPI_V7D.DLL file not found. Check previous messages for possible causes.
     exit /B 1

@@ -1,7 +1,5 @@
 unit CAPI_WireData;
 
-{$inline on}
-
 interface
 
 uses

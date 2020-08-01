@@ -1,7 +1,5 @@
 unit CAPI_Capacitors;
 
-{$inline on}
-
 interface
 
 uses

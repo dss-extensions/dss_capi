@@ -1,7 +1,5 @@
 unit CAPI_DSSProperty;
 
-{$inline on}
-
 interface
 
 uses

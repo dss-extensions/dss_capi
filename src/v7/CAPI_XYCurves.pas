@@ -1,7 +1,5 @@
 unit CAPI_XYCurves;
 
-{$inline on}
-
 interface
 
 uses

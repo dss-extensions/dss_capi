@@ -1,8 +1,6 @@
 
 unit CAPI_LineGeometries;
 
-{$inline on}
-
 interface
 
 uses

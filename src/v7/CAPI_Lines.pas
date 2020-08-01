@@ -1,7 +1,5 @@
 unit CAPI_Lines;
 
-{$inline on}
-
 interface
 
 uses

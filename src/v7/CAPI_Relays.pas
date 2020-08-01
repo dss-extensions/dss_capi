@@ -1,7 +1,5 @@
 unit CAPI_Relays;
 
-{$inline on}
-
 interface
 
 uses

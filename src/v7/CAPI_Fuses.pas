@@ -1,7 +1,5 @@
 unit CAPI_Fuses;
 
-{$inline on}
-
 interface
 
 uses

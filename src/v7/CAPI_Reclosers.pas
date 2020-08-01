@@ -1,7 +1,5 @@
 unit CAPI_Reclosers;
 
-{$inline on}
-
 interface
 
 uses

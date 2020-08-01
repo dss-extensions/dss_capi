@@ -1,7 +1,5 @@
 unit CAPI_Monitors;
 
-{$inline on}
-
 interface
 
 uses

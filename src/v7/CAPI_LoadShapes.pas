@@ -1,7 +1,5 @@
 unit CAPI_LoadShapes;
 
-{$inline on}
-
 interface
 
 uses

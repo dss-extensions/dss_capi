@@ -1,7 +1,5 @@
 unit CAPI_Error;
 
-{$inline on}
-
 interface
 
 uses

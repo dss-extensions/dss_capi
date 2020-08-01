@@ -1,7 +1,5 @@
 unit CAPI_DSSElement;
 
-{$inline on}
-
 interface
 
 uses

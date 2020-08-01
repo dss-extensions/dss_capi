@@ -15,11 +15,11 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
 
 ## Differences
 
-- There is no direct support for plots from the DSS language or general GUI elements. As a library, DSS C-API can, of course, be integrate with GUI environments.
+- There is no direct support for plots from the DSS language or general GUI elements. As a library, DSS C-API can, of course, be integrate with GUI environments. If there are enough users to justify it at some point in the future, optional integration with some plotting system can be investigated.
 - The TCP connection options are disabled.
 - This library contains fixes for user-written DLLs ("UserModels" and "UserControls" for elements like Generators and CapUserControls) which include truncated pointers and correct support for the DSS language `Edit` command.
 - Free Pascal hashlists are used for tracking elements. This means that accessing elements by name is usually faster in DSS C-API and present a linear behavior.
-- A custom version of the KLUSolve library is used. It generalizes the original code to use the upstream SuiteSparse code and adds extra functions to achieve better performance. It is also compatible with MATLAB on Linux.
+- A custom version (soon to be renamed) of the KLUSolve library is used. It generalizes the original code to use the upstream SuiteSparse code and adds extra functions to achieve better performance. It is also compatible with MATLAB on Linux.
 - Optimized (small, dense) matrix-vector multiplication.
 - Settings like the default circuit frequency are not saved to disk. 
     - Unlike the OpenDSS COM API, DSS C-API doesn't save and change the current working directory when you start it. The `Compile` command will still change to the script directory though.
@@ -28,13 +28,14 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
 
 - There are some new settings:
     - The `DSS_CAPI_ALLOW_EDITOR` environment variable (also controlled through `DSS_Set_AllowEditor`): defaults to `1` (true, set to `0` to disable),  controls whether DSS commands like `Show` can trigger the external editor. 
-    - The `DSS_CAPI_EARLY_ABORT` environment variable (also controlled through `DSS_Set_EarlyAbort`):  Controls the DSS script error-handling behavior. If a warning or error occurs and early abortion is enabled (default), the processing of the
-    script is always halted. Otherwise, the processing of the script continues until a major error occurs or it finishes.
+    - The `DSS_CAPI_EARLY_ABORT` environment variable (also controlled through `DSS_Set_EarlyAbort`):  Controls the DSS script error-handling behavior. If a warning or error occurs and early abortion is enabled (default), the processing of the script is always halted. Otherwise, the processing of the script continues until a major error occurs or it finishes.
     - `Settings_Set_LoadsTerminalCheck`/`Settings_Get_LoadsTerminalCheck`: Use with care! Controls whether the terminals are checked when updating the currents in Load component. Defaults to True (that is, no change from the official OpenDSS). If the loads are guaranteed to have their terminals closed throughout the simulation, this can be set to False to save some precious simulation time.
+    - The `DSS_CAPI_EXTENDED_ERRORS` environment variable (also controlled through `Error_Set_ExtendedErrors`): If enabled (default is true since v0.10.6), the active element and active circuit checks use the Error interface to report issues. When disabled, the usual behavior from the official COM implementation is followed -- return a signaling or default value if appropriate.
+    - The `DSS_CAPI_LEGACY_MODELS` environment variable (also controlled through `DSS_Set_LegacyModels`): If enabled (default is false since v0.10.6), the legacy/pre-OpenDSS 9.0 models for some components (`PVsystem`, `Storage`, `InvControl`, and `StorageController`) are used. If toggled at runtime through the API, a DSS command `clear` is issued and the component models are exchanged.
 
 - The symmetric component transformation matrix uses more decimal places (a bit more precise) and its inverse is also more precise. This might explain some small differences in systems that use sequence values.
 
-- The DSS command `var` (which lists current DSS language variables) returns all variables in a string in the global result (`Text_Get_Result()`), which is equivalent to the COM property `DSS.Text.Result`. In COM, this uses a message form.
+- The DSS command `var` (which lists current DSS language variables) returns all variables in a string in the global result (`Text_Get_Result()`), which is equivalent to the official OpenDSS COM property `DSS.Text.Result`. In COM, this uses a message form.
 
 - The DSS commands `dump buslist`, `dump commands` and `dump devicelist` are allowed to run when `AllowForms` is false. The user can disable the editor with `DSS_Set_AllowEditor` and still get the relevant results in the output text files. After each of the `dump` commands, the output file name is copied to the global result, enabling easier automation.
 
@@ -43,9 +44,10 @@ This document assumes some knowledge of the COM API and the basic model of DSS C
     - DSS commands: `CalcIncMatrix`, `CalcIncMatrix_O`, `Refine_BusLevels`, `CalcLaplacian` -- also includes related API functions
     - Export options: `IncMatrix`, `IncMatrixRows`, `IncMatrixCols`, `BusLevels`, `Laplacian`, `ZLL`, `ZCC`, `Contours`, `Y4`
     - `XfmrCode`, `Transformer`: new Seasons and Ratings properties
-    - 4 components: `PVsystem2`, `Storage2`, `InvControl2`, `StorageController2` -- *added for early testing, no dedicated API functions yet*. At the moment, please consider them experimental features subject to change.
+    - New component models for `PVsystem`, `Storage`, `InvControl`, `StorageController`. On DSS C-API 0.10.6, these component models became the default ones, following OpenDSS 9. Unlike OpenDSS 9, you can still use the old components via LegacyModels as mentioned above.
     
 - Other API extensions include:
+    - Many `PDElements` functions: `AllNames`, `AllMaxCurrents`, `AllPctNorm`, `AllPctEmerg`, `AllCurrents`, `AllCurrentsMagAng`, `AllCplxSeqCurrents`, `AllSeqCurrents`, `AllPowers`, `AllSeqPowers`, `AllNumPhases`, `AllNumConductors`, `AllNumTerminals`.
     - Access by `idx` for many more DSS elements (21 new function pairs).
     - Experimental access to the following classes: `WireData`, `TSData`, `Reactors`, `LineSpacings`, `LineGeometries`, `CNData`.
     - `Error_Get_NumberPtr` returns a pointer to the global error number variable. This can be used to get for errors with lower overhead.

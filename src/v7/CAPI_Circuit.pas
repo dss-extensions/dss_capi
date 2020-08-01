@@ -1,7 +1,5 @@
 unit CAPI_Circuit;
 
-{$inline on}
-
 interface
 
 uses

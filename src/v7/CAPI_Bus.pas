@@ -1,7 +1,5 @@
 unit CAPI_Bus;
 
-{$inline on}
-
 interface
 
 uses

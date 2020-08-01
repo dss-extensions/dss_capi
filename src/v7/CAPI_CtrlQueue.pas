@@ -1,7 +1,5 @@
 unit CAPI_CtrlQueue;
 
-{$inline on}
-
 interface
 
 uses

@@ -1,7 +1,5 @@
 unit CAPI_SwtControls;
 
-{$inline on}
-
 interface
 
 uses

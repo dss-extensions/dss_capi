@@ -1,7 +1,5 @@
 unit CAPI_LineCodes;
 
-{$inline on}
-
 interface
 
 uses

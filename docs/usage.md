@@ -7,6 +7,8 @@ In both interfaces, there are three main classes of functions:
 - Array property access
 - General functions
 
+If you find an issue, such as an unexpected runtime exception or crash, and want to help find it in the Pascal code, see the [Debugging](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/debug.md) document for basic instructions.
+
 ## Simple properties
 
 All simple properties are implemented as a pair of functions. Some properties only have one function, indicating they are either read-only or write-only. 
@@ -82,7 +84,7 @@ Until 0.9.8, `numZipv` here would be a simple integer:
 
 Since version 0.10.0, the parameter become a 2-element array. The first element of this array represents the actual count of elements in the result, and the second represents the allocated capacity of the array. This means that we can reuse the same pointer. In the interface code, if the result doesn't fit the current pointer, it will reallocate it to a larger memory block. Since most functions have predictible memory requirements, it is expected that the allocated size stabilizes quickly.
 
-On v0.10.0, the memory is allocated as instructed. That is, when it grows, the new pointer will contain exactly the required amount of memory. We can still investigate more optimal reallocation strategies in the future (such as over-allocated to avoid constant resizing), although there is no expectation that it will help much for most of DSS interfaces.
+On v0.10.0, the memory is allocated as instructed. That is, when it grows, the new pointer will contain exactly the required amount of memory. We can still investigate more optimal reallocation strategies in the future (such as over-allocated to avoid constant resizing), although there is no expectation that it will help much for most of the DSS interfaces.
 
 
 ```c
@@ -166,7 +168,7 @@ Then, instead of calling the IR functions, call the GR flavor. For example, the 
     }
 ```
 
-Remember to be careful to use or copy the data before another GR call of the same result type.
+**Remember to be careful to use or copy the data before another GR call of the same result type.**
 
 ## General functions
 

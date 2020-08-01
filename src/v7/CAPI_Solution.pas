@@ -1,7 +1,5 @@
 unit CAPI_Solution;
 
-{$inline on}
-
 interface
 
 uses

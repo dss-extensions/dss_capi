@@ -1,7 +1,5 @@
 unit CAPI_Meters;
 
-{$inline on}
-
 interface
 
 uses

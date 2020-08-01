@@ -1,7 +1,5 @@
 unit CAPI_TSData;
 
-{$inline on}
-
 interface
 
 uses

@@ -1,7 +1,5 @@
 unit CAPI_RegControls;
 
-{$inline on}
-
 interface
 
 uses

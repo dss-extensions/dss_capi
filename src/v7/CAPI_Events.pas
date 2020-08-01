@@ -1,7 +1,5 @@
 unit CAPI_DSSEvents;
 
-{$inline on}
-
 interface
 
 uses

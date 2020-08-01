@@ -1,7 +1,5 @@
 unit CAPI_CNData;
 
-{$inline on}
-
 interface
 
 uses

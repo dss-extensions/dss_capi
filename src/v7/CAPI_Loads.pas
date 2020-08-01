@@ -1,8 +1,6 @@
 
 unit CAPI_Loads;
 
-{$inline on}
-
 interface
 
 uses

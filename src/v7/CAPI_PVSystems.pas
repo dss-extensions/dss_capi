@@ -1,7 +1,5 @@
 unit CAPI_PVSystems;
 
-{$inline on}
-
 interface
 
 uses

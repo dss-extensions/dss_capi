@@ -1,7 +1,5 @@
 unit CAPI_ISources;
 
-{$inline on}
-
 interface
 
 uses

@@ -1,7 +1,5 @@
 unit CAPI_Parser;
 
-{$inline on}
-
 interface
 
 uses

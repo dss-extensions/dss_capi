@@ -1,7 +1,5 @@
 unit CAPI_Sensors;
 
-{$inline on}
-
 interface
 
 uses

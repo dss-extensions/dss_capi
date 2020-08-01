@@ -1,7 +1,5 @@
 unit CAPI_Reactors;
 
-{$inline on}
-
 interface
 
 uses

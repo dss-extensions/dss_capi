@@ -41,7 +41,8 @@ Since 2019-03-05, the `dss_capi` repository contains all the Pascal code used to
 
 See [the changelog](https://github.com/dss-extensions/dss_capi/blob/0.10.x/docs/changelog.md) for a detailed list.
 
-- **2020-03-03 / version 0.10.5: Maintenance release with several minor fixes. Includes changes ported from COM and the official OpenDSS codebase. Version 8 binary releases excluded.**
+- **2020-07-31 / version 0.10.6: Ports changes from the official OpenDSS codebase. Includes some bugfixes, a new extended validation error messages and new compatibility toggles.**
+- 2020-03-03 / version 0.10.5: Maintenance release with several minor fixes. Includes changes ported from COM and the official OpenDSS codebase. Version 8 binary releases excluded.
 - 2019-11-16 / version 0.10.4: Maintenance release. Fixes issue with long paths on Linux, includes some changes ported from COM and the official OpenDSS codebase.
 - 2019-05-22 / version 0.10.3: Some important fixes, better general performance, new API extensions, new features ported from COM and the OpenDSS version 8 codebase.
 - 2019-03-05: the Git repository `electricdss-src` was merged into `dss_capi`.

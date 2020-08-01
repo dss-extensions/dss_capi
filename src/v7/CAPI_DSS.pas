@@ -1,7 +1,5 @@
 unit CAPI_DSS;
 
-{$inline on}
-
 interface
 
 uses

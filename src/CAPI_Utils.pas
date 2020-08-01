@@ -1,7 +1,5 @@
 unit CAPI_Utils;
 
-{$inline on}
-
 interface
 
 uses

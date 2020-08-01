@@ -1,7 +1,5 @@
 unit CAPI_DSSProgress;
 
-{$inline on}
-
 interface
 
 uses

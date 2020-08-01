@@ -1,7 +1,5 @@
 unit CAPI_CmathLib;
 
-{$inline on}
-
 interface
 
 uses

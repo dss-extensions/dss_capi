@@ -1,7 +1,5 @@
 unit CAPI_CktElement;
 
-{$inline on}
-
 interface
 
 uses
@@ -357,7 +355,7 @@ begin
     // Return voltages for all terminals
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     
-    if InvalidCktElement or MissingSolution then
+    if InvalidCktElement or MissingSolution or (ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
         Exit;
 
     with ActiveCircuit, ActiveCktElement do
@@ -575,7 +573,7 @@ var
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     
-    if InvalidCktElement or MissingSolution {or (not ActiveCircuit.ActiveCktElement.Enabled)} then
+    if InvalidCktElement or MissingSolution or (ActiveCircuit.ActiveCktElement.NodeRef = NIL) {or (not ActiveCircuit.ActiveCktElement.Enabled)} then
         Exit;
 
     with ActiveCircuit, ActiveCktElement do
@@ -657,7 +655,11 @@ var
 begin
     Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
     
-    if InvalidCktElement or MissingSolution or (not ActiveCircuit.ActiveCktElement.Enabled) then
+    if InvalidCktElement 
+        or MissingSolution 
+        or (not ActiveCircuit.ActiveCktElement.Enabled)  
+        or (ActiveCircuit.ActiveCktElement.NodeRef = NIL) 
+    then
         Exit;
 
     with ActiveCircuit, ActiveCktElement do
@@ -1012,7 +1014,11 @@ var
 begin
     DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
 
-    if InvalidCktElement or MissingSolution or (not ActiveCircuit.ActiveCktElement.Enabled) then
+    if InvalidCktElement 
+        or MissingSolution 
+        or (not ActiveCircuit.ActiveCktElement.Enabled) 
+        or (ActiveCircuit.ActiveCktElement.NodeRef = NIL)
+     then
         Exit;
 
     with ActiveCircuit, ActiveCktElement do
@@ -1348,7 +1354,7 @@ var
 
 begin
     // Return voltages for all terminals
-    if InvalidCktElement or MissingSolution then
+    if InvalidCktElement or MissingSolution or (ActiveCircuit.ActiveCktElement.NodeRef = NIL) then
     begin
         DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
         Exit;

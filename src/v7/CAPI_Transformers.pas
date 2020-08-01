@@ -1,7 +1,5 @@
 unit CAPI_Transformers;
 
-{$inline on}
-
 interface
 
 uses

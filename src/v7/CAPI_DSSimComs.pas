@@ -1,7 +1,5 @@
 unit CAPI_DSSimComs;
 
-{$inline on}
-
 interface
 
 uses
