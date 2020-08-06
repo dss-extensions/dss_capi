@@ -67,6 +67,10 @@ procedure Circuit_Get_YNodeVarray_GR(); CDECL;
 procedure Circuit_SetCktElementIndex(const Value: Integer); CDECL;
 procedure Circuit_SetCktElementName(const Value: PAnsiChar); CDECL;
 
+// Extensions
+procedure Circuit_Get_ElementLosses(var ResultPtr: PDouble; ResultCount: PInteger; ElementsPtr: PInteger; ElementsCount: Integer); CDECL;
+procedure Circuit_Get_ElementLosses_GR(ElementsPtr: PInteger; ElementsCount: Integer); CDECL;
+
 implementation
 
 uses
@@ -1124,5 +1128,41 @@ begin
         DoSimpleMsg(Format('Invalid CktElement name "%s"', [Value]), 5031);
     end;
 end;
+//------------------------------------------------------------------------------
+procedure Circuit_Get_ElementLosses(var ResultPtr: PDouble; ResultCount: PInteger; ElementsPtr: PInteger; ElementsCount: Integer); CDECL;
+var
+    Result: PDoubleArray;
+    Elements: PIntegerArray;
+    CResultPtr: pComplex;
+    pCktElem: TDSSCktElement;
+    i: Integer;
+begin
+    if MissingSolution then
+    begin
+        DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 1);
+        Exit;
+    end;
+    
+    Elements := PIntegerArray(ElementsPtr);
+    Result := DSS_RecreateArray_PDouble(ResultPtr, ResultCount, 2 * ElementsCount);
+    CResultPtr := pComplex(ResultPtr);
+
+    for i := 0 to ElementsCount - 1 do
+    begin
+        pCktElem := ActiveCircuit.CktElements.Get(Elements[i]);
+        CResultPtr^ := pCktElem.Losses;
+        Inc(CResultPtr);
+    end;
+        
+    for i := 0 to 2*ElementsCount - 1 do
+        Result[i] := Result[i] * 0.001;
+end;
+
+procedure Circuit_Get_ElementLosses_GR(ElementsPtr: PInteger; ElementsCount: Integer); CDECL;
+// Same as Circuit_Get_ElementLosses but uses global result (GR) pointers for output
+begin
+    Circuit_Get_ElementLosses(GR_DataPtr_PDouble, GR_CountPtr_PDouble, ElementsPtr, ElementsCount)
+end;
+
 //------------------------------------------------------------------------------
 end.

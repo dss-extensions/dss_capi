@@ -6074,6 +6074,17 @@ extern "C" {
     DSS_CAPI_DLL int32_t XYCurves_Get_idx(void);
     DSS_CAPI_DLL void XYCurves_Set_idx(int32_t Value);
 
+
+    /*
+    Array of total losses (complex) in a selection of elements.
+    Use the element indices (starting at 1) as parameter.
+    */
+    DSS_CAPI_DLL void Circuit_Get_ElementLosses(double** ResultPtr, int32_t* ResultCount, int32_t *ElementsPtr, int32_t ElementsCount);
+    /*
+    Same as Circuit_Get_ElementLosses but using the global buffer interface for results
+    */
+    DSS_CAPI_DLL void Circuit_Get_ElementLosses_GR(int32_t *ElementsPtr, int32_t ElementsCount);
+
     /*
     Array of integers, a copy of the internal NodeRef of the CktElement.
     

@@ -1810,6 +1810,9 @@ exports
     XYCurves_Get_idx,
     XYCurves_Set_idx,
 
+    Circuit_Get_ElementLosses,
+    Circuit_Get_ElementLosses_GR,
+    
     CktElement_Get_NodeRef,
     CktElement_Get_NodeRef_GR,
     
