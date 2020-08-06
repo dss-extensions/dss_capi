@@ -5994,6 +5994,17 @@ extern "C" {
     DSS_CAPI_V7_DLL int32_t XYCurves_Get_idx(void);
     DSS_CAPI_V7_DLL void XYCurves_Set_idx(int32_t Value);
 
+    /*
+    Array of integers, a copy of the internal NodeRef of the CktElement.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void CktElement_Get_NodeRef(int32_t** ResultPtr, int32_t* ResultCount);
+    /*
+    Same as CktElement_Get_NodeRef but using the global buffer interface for results
+    */
+    DSS_CAPI_V7_DLL void CktElement_Get_NodeRef_GR(void);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

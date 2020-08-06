@@ -1804,7 +1804,10 @@ exports
     WireData_Get_idx,
     WireData_Set_idx,
     XYCurves_Get_idx,
-    XYCurves_Set_idx;
+    XYCurves_Set_idx,
+
+    CktElement_Get_NodeRef,
+    CktElement_Get_NodeRef_GR;
 
 begin
   IsDLL := TRUE;
