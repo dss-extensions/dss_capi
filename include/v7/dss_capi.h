@@ -6005,6 +6005,46 @@ extern "C" {
     */
     DSS_CAPI_V7_DLL void CktElement_Get_NodeRef_GR(void);
 
+
+    /*
+    Sets all numeric arrays for the active LoadShape.
+
+    If ExternalMemory is 0/False, the data is copied, allocating memory.
+    If ExternalMemory is 1/True, the data is NOT copied. The caller is required to keep the
+    pointers alive while the LoadShape is used, as well as deallocating them later.
+
+    If IsFloat32 is 0/False, the pointers are interpreted as pointers to float64/double precision numbers.
+    Otherwise, the pointers are interpreted as pointers to float32/single precision numbers.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void LoadShapes_Set_Points(int32_t Npts, void *HoursPtr, void *PMultPtr, void *QMultPtr, uint16_t ExternalMemory, uint16_t IsFloat32);
+
+    /*
+    Converts the current LoadShape data to float32/single precision.
+    If there is no data or the data is already represented using float32, nothing is done.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void LoadShapes_UseFloat32(void);
+
+    /*
+    Converts the current LoadShape data to float64/double precision.
+    If there is no data or the data is already represented using float64, nothing is done.
+    
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void LoadShapes_UseFloat64(void);
+
+    /*
+    Call the internal SetMaxPandQ for the LoadShape.
+    To be used with external memory loadshapes only, if required.
+        
+    (API Extension)
+    */
+    DSS_CAPI_V7_DLL void LoadShapes_SetMaxPandQ(void);
+
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
