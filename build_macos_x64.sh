@@ -10,9 +10,9 @@ bash custom_link.sh lib/darwin_x64
 
 # Make the lib look in the same folder for KLUSolve
 DSS_CAPI_LIB="lib/darwin_x64/libdss_capi.dylib"
-CURRENT_LIBKLUSOLVE=`otool -L "$DSS_CAPI_LIB" | grep libklusolvex | cut -f 1 -d ' ' | sed $'s/^[ \t]*//'`
-NEW_LIBKLUSOLVE="@loader_path/./libklusolvex.dylib"
-install_name_tool -change "$CURRENT_LIBKLUSOLVE" "$NEW_LIBKLUSOLVE" "$DSS_CAPI_LIB"
+CURRENT_LIBKLUSOLVEX=`otool -L "$DSS_CAPI_LIB" | grep libklusolvex | cut -f 1 -d ' ' | sed $'s/^[ \t]*//'`
+NEW_LIBKLUSOLVEX="@loader_path/./libklusolvex.dylib"
+install_name_tool -change "$CURRENT_LIBKLUSOLVEX" "$NEW_LIBKLUSOLVEX" "$DSS_CAPI_LIB"
 install_name_tool -id "@loader_path/./libdss_capi.dylib" "$DSS_CAPI_LIB"
 
 fpc -Px86_64 @src/darwin-x64-dbg.cfg -B src/dss_capid.lpr
@@ -20,9 +20,9 @@ bash custom_link.sh lib/darwin_x64
 
 # Make the lib look in the same folder for KLUSolve
 DSS_CAPI_LIB="lib/darwin_x64/libdss_capid.dylib"
-CURRENT_LIBKLUSOLVE=`otool -L "$DSS_CAPI_LIB" | grep libklusolvex | cut -f 1 -d ' ' | sed $'s/^[ \t]*//'`
-NEW_LIBKLUSOLVE="@loader_path/./libklusolvex.dylib"
-install_name_tool -change "$CURRENT_LIBKLUSOLVE" "$NEW_LIBKLUSOLVE" "$DSS_CAPI_LIB"
+CURRENT_LIBKLUSOLVEX=`otool -L "$DSS_CAPI_LIB" | grep libklusolvex | cut -f 1 -d ' ' | sed $'s/^[ \t]*//'`
+NEW_LIBKLUSOLVEX="@loader_path/./libklusolvex.dylib"
+install_name_tool -change "$CURRENT_LIBKLUSOLVEX" "$NEW_LIBKLUSOLVEX" "$DSS_CAPI_LIB"
 install_name_tool -id "@loader_path/./libdss_capi.dylib" "$DSS_CAPI_LIB"
 
 mkdir -p release/dss_capi/lib

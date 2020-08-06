@@ -39,7 +39,7 @@ matrix:
     - name: "osx_x64"
       os: osx
       env:
-        - KLUSOLVEX_URL=https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolve_1.0.0a1_darwin_x64.tar.gz
+        - KLUSOLVEX_URL=https://github.com/dss-extensions/klusolve/releases/download/1.0.0a1/klusolvex_1.0.0a1_darwin_x64.tar.gz
       before_install:
         - |
           wget https://sourceforge.net/projects/freepascal/files/Mac%20OS%20X/3.2.0/fpc-3.2.0.intel-macosx.dmg/download -Ofpc.dmg -q
