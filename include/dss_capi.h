@@ -9,7 +9,7 @@
 #ifdef __cplusplus
 #    ifdef _MSC_VER
 #       if _MSC_VER <= 1500
-#           include "../stdint_compat.h"
+#           include "./stdint_compat.h"
 #       else
 #           include <cstdint>
 #       endif
@@ -19,7 +19,7 @@
 #else
 #    ifdef _MSC_VER
 #       if _MSC_VER <= 1500
-#           include "../stdint_compat.h"
+#           include "./stdint_compat.h"
 #       else
 #           include <stdint.h>
 #       endif
@@ -5838,7 +5838,6 @@ extern "C" {
     DSS_CAPI_DLL void LineGeometries_Get_Ycoords_GR(void);
     DSS_CAPI_DLL void LineGeometries_Set_Ycoords(double* ValuePtr, int32_t ValueCount);
     DSS_CAPI_DLL void LineGeometries_Get_Conductors(char*** ResultPtr, int32_t* ResultCount);
-    DSS_CAPI_DLL void LineGeometries_Get_Conductors_GR(void);
     DSS_CAPI_DLL int8_t LineGeometries_Get_Reduce(void);
     DSS_CAPI_DLL void LineGeometries_Set_Reduce(int8_t Value);
     DSS_CAPI_DLL double LineGeometries_Get_RhoEarth(void);
@@ -6142,7 +6141,7 @@ extern "C" {
     DSS_CAPI_DLL int8_t YMatrix_CheckConvergence(void);
     DSS_CAPI_DLL void YMatrix_SetGeneratordQdV(void);
 
-    DSS_CAPI_DLL uint16_tuint16_t YMatrix_Get_LoadsNeedUpdating(void);
+    DSS_CAPI_DLL int8_t YMatrix_Get_LoadsNeedUpdating(void);
     DSS_CAPI_DLL void YMatrix_Set_LoadsNeedUpdating(int8_t Value);
     DSS_CAPI_DLL int8_t YMatrix_Get_SolutionInitialized(void);
     DSS_CAPI_DLL void YMatrix_Set_SolutionInitialized(int8_t Value);
